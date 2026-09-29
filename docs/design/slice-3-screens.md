@@ -66,7 +66,7 @@ Desktop: the same column at 640 px; the photograph floats left of the headline a
 
 ### 2.3 Losing, and the voter's morning
 
-No front page. The count headline and the player's personal line (*Misses the Last Seat by 3* / *Your Vote Counted: …*) appear as ordinary headlines in the headline block, and the Polling Day row reads *Polls closed: … tops the poll* → the count.
+No front page. The count headline and the player's personal line (*Misses the Last Seat by 3*, *Loses the Last Seat on the Tie-Break*, *Your Vote Counted: …*) appear as ordinary headlines in the headline block. The Polling Day row follows the §2.1 order (politics §17 Q6): a player eligible to stand sees **Stand for the council · 10 PC**, since nominations are open on the count morning; everyone else sees *Polls closed: … tops the poll* → the count.
 
 ---
 

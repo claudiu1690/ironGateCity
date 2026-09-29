@@ -339,7 +339,7 @@ All ten are bounded modifiers on numbers this sheet already models. Values below
 
 | Ordinance | Effect | Worth per day | Who wants it |
 |---|---|---|---|
-| Public Works Order | Job pay +10 % | **+22 Iron** (216 → 238; the half pay and the shift both rise) | Everyone, a little; the streak bonus stacks on the raised pay |
+| Public Works Order | Job pay +10 % | **+22 Iron** (216 → 238; the half pay and the shift both rise) | Everyone, a little. The streak bonus and the ordinance line are each a percentage of the unmodified 216 (GDD §9.1), so the shift shows *Streak +43 · Public Works Order +11* and the day is +22, not +27 |
 | Shift Hours Order | Shift −1 Energy; each shift adds two days of streak | +1 Energy (~5 XP); a new job's streak reaches +20 % in five shifts instead of ten: about **+10 Iron a day** over those days | Players with a young streak: new members, job switchers, returners; the Collective's motion |
 | Street Permits | Propaganda swing +15 % | Morale +0.02 a day for the reference mix (~100 propaganda Energy) | The branch, when morale is near a threshold |
 | Rally Permits | Speeches 12 → 10 Energy, rewards unchanged | Speeches pay 5.4 XP / 0.7 FXP / 2.4 Iron per Energy instead of 4.5 / 0.6 / 2: **+20 % on speech Energy**; at a quarter of the political spend, **+5 % of the day's XP** | CHA-heavy builds (the coat, *talked them out*); the Vanguard's motion |
@@ -378,3 +378,17 @@ On a polling day the morning adds two taps (the Polling Day row, the ballot) and
 | 23 | *Fired up* is the normal state for an active branch | A permanent +7 % FXP rather than a reward | Lower the bonus before touching thresholds |
 | 24 | The branch's endorsement counts double in small branches | Candidacy too easy for a lone player | Require the orders on both days of the window |
 | 25 | No running totals during polling | Loses the "it's close" hook | A turnout count without candidate totals |
+
+### 14.8 Ambition chapter 2 (*Stand where he stood*, slice 3)
+
+Unlocks after the first ballot and seven days after chapter 1: **about day 8** for the reference recruit, day 9–12 for a casual. One play, ever, so it moves no daily rate; the check is whether its numbers are a modest beat rather than a milestone-mover.
+
+| | Chapter 1 (day 1) | Chapter 2 (day ~8) | Reference day at that point |
+|---|---|---|---|
+| Difficulty · Energy | 8 · 10 | **14 · 15** | — |
+| Success | 150 XP / 40 FXP / 100 Iron | **300 XP / 80 FXP / 150 Iron** | ~1,780 XP · ~205 FXP · ~720 Iron a day |
+| Partial | 75 / 20 / 50 | 150 / 40 / 75 | |
+| Failure | 25 / 0 / 0 | 50 / 0 / 0 | |
+
+Odds for the reference recruit at day 8 (INT ~30 from levels and training, CHA 5 with the coat): the INT approach is at the 95 % clamp, the CHA+INT approach about 65 %; a casual at day 12 (INT ~18) sees about 66 % and 40 %. Success is a sixth of a day's XP, two fifths of a day's FXP and a fifth of a day's Iron: worth opening the Letter for, not worth planning around. **Rank 3 moves by about 0.4 day at most** (80 of the ~2,000 FXP), which keeps the first candidacy on day 10–14 (§14.1). Rested applies as for chapter 1. No opinion, no Standing, no Party-order credit.
+

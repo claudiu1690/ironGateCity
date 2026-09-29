@@ -189,7 +189,7 @@ The candidate appears on the **slate** at once (name, rank, standing, *endorseme
 
 - **Two are needed** by the close of nominations; up to five count towards the total (+3 each, §4.2).
 - **Members endorse** for 10 PC: Rank 2+, resident, one per cycle per city, not themselves, irrevocable. Endorsements are **public** (the slate shows *endorsed by …*, up to five names, then *and n more*): endorsing is a visible act of party politics, unlike the secret ballot.
-- **The branch's endorsement.** The party secretary (Holm, Stahl, Grey) endorses any filed candidate who **completes all three Party orders on a day of the nominations window while filed** (once per candidacy). It counts as one endorsement. The Jobs-card-style line on the council card reads *All orders carried out · the branch endorses you*. This ties candidacy to the daily loop and gives a lone player a fair route to the ballot.
+- **The branch's endorsement.** The party secretary (Holm, Stahl, Grey) endorses any filed candidate on **any day of the nominations window on which the candidacy is filed and all three Party orders are done, whichever came first** (once per candidacy; if the orders were finished before filing, the endorsement lands at filing: §17 Q2). It counts as one endorsement. The Jobs-card-style line on the council card reads *All orders carried out · the branch endorses you*. This ties candidacy to the daily loop and gives a lone player a fair route to the ballot.
 - **Small branches.** When **fewer than three other eligible endorsers** live in the city (resident Rank 2+ members active in the last seven days, counted at the close of nominations), the branch's endorsement **counts as two**. The slate says so openly: *Endorsements 1 / 2 · the branch will make up the number*. So one player, alone in the city, who does the day's orders, is on the ballot. With three or more colleagues, one of them must sign.
 
 ### 6.4 Platform lines
@@ -210,7 +210,7 @@ One tap on the slate before polls open: *Withdraw*. The deposit stays with the b
 
 1. **The morning.** The paper's *Polling Day* section: *Coalport votes today · polls open until Saturday midnight* (the player's local clock, as every time in the game) with the CTA **Cast your ballot**; or, when the city is not polling, the phase line (*Nominations open · Coalport votes from Thursday*; *Polls closed · the count is in this morning's paper*).
 2. **The ballot.** One screen: the nine-or-more names with their lines and marks, one tap selects a name, a sticky CTA **Cast your ballot for {name}** commits. The caption above the CTA reads *One ballot, final. The count is at 01:00 on Sunday.*
-3. **The result modal** (one modal, as every result): stamp **Ballot cast**, headline *Your ballot is in the box*, text *One vote for {name}. The Clarion carries the count on Sunday morning.* Knock-on lines: *Turnout so far is not shown; the ballot is secret* (small, once) · *Coalport morale +0.5* (§11.2) · **Continue**. No Again.
+3. **The result modal** (one modal, as every result): stamp **Ballot cast**, headline *Your ballot is in the box*, text *One vote for {name}. Nobody sees who you voted for. The count is in the Clarion on Sunday morning.* (the six result texts with their tokens: §17.3). Knock-on lines: *Turnout so far is not shown; the ballot is secret* (small, once) · *Coalport morale +0.5* (§11.2) · **Continue**. No Again.
 4. **The count** arrives in the next paper (§8). The player's own vote is echoed there.
 
 Nothing here needs the player at a set time, and the whole thing is three taps.
@@ -227,10 +227,15 @@ Conditions use the slice-1 pattern (a condition kind per template; the architect
 |---|---|---|---|---|
 | `hl.seat-won` | personal 0 | elected at last night's count | {name} Takes a Seat on Coalport Council | Elected {ordinal} of seven with {votes} votes. The council sits from this morning. Secretary Holm: "Now do something with it." |
 | `hl.seat-top` | personal 0 | elected first | {name} Tops the Poll in Coalport | First of seven with {votes} votes. The Union Hall has a new name on the door. |
-| `hl.seat-lost` | personal 1 | stood, not elected | {name} Misses the Last Seat by {margin} | {last} took the seventh seat. Nominations open again on {weekday}. The branch keeps the deposit. |
-| `hl.filed` | personal 2 | declared yesterday | {name} Files for the Council | Endorsements {endorsements} / 2 by {weekday} midnight, or the name comes off the ballot. |
+| `hl.seat-lost` | personal 1 | stood, not elected | {name} Misses the Last Seat by {margin} | {last} took the seventh seat. Nominations are open again today. The branch keeps the deposit. |
+| `hl.seat-lost-tie` | personal 1 | stood, not elected, on a tie-break (margin 0) | {name} Loses the Last Seat on the Tie-Break | Level with {last} on {votes}. The seat went on members' votes, then endorsements, then standing. Nominations are open again today. |
+| `hl.filed` | personal 2 | declared yesterday, nominations still open | {name} Files for the Council | Endorsements {endorsements} / 2 by {weekday} midnight, or the name comes off the ballot. |
+| `hl.on-ballot` | personal 2 | filed; nominations closed last night with the name on the ballot | {name} Is on the Ballot | On the ballot with {endorsements} endorsements. Polls open today until {until}. A candidate may vote for themselves. |
+| `hl.struck` | personal 2 | filed; struck at the close last night | {name} Comes Off the Ballot | Short of two endorsements at the close. The deposit is returned; nominations open again on {weekday}. |
 | `hl.voted-won` | personal 2 | the player's candidate won | Your Vote Counted: {voted} Takes a Seat | {voted} finished {ordinal} of seven. Turnout {turnout}. |
 | `hl.voted-lost` | personal 2 | the player's candidate lost | Your Vote Counted: {voted} Falls Short | Short by {margin}. The seventh seat went to {last}. Turnout {turnout}. |
+| `hl.voted-lost-tie` | personal 2 | the player's candidate lost on a tie-break | Your Vote Counted: {voted} Falls Short | {voted} finished level with {last} on {votes} and lost the tie-break. Turnout {turnout}. |
+| `hl.moved` | personal 2 | moved an ordinance yesterday | Councillor {name} Moves {ordinance} | {ordinanceLine} The council divides at {until}. |
 | `hl.seat-ended` | personal 2 | a term ended at the count | Councillor {name} Rises | Five days, one ordinance. The council thanks its member; nominations for the next but one open today. |
 | `hl.council-passed` | personal 2 | councillor; the division passed a motion | Council Passes {ordinance} | In force from this morning for five days. {ordinanceLine} |
 | `hl.council-failed` | personal 2 | councillor; no motion reached four | Council Rises Without a Motion | No ordinance reached four votes. Coalport goes without for five days. |
@@ -247,10 +252,15 @@ Conditions use the slice-1 pattern (a condition kind per template; the architect
 |---|---|---|
 | `hl.v.seat-won` | {name} Seated on Duskwall Council | Elected {ordinal} of seven with {votes} votes. Organiser Stahl: "The committee expects a full term." |
 | `hl.v.seat-top` | {name} Heads the Poll in Duskwall | First of seven with {votes} votes. Beacon House notes it in the minutes. |
-| `hl.v.seat-lost` | {name} Short of the Last Seat by {margin} | {last} took the seventh seat. Nominations reopen on {weekday}. The deposit stays with the district. |
+| `hl.v.seat-lost` | {name} Short of the Last Seat by {margin} | {last} took the seventh seat. Nominations reopen today. The deposit stays with the district. |
+| `hl.v.seat-lost-tie` | {name} Loses the Last Seat on the Tie-Break | Level with {last} on {votes}; the rules gave them the seat. Nominations reopen today. The deposit stays with the district. |
 | `hl.v.filed` | {name} Files for Duskwall Council | Endorsements {endorsements} / 2 by {weekday} midnight. The committee does not extend deadlines. |
+| `hl.v.on-ballot` | {name} Is on the Ballot | On the ballot with {endorsements} endorsements. Polls open today until {until}. The committee expects every member to vote. |
+| `hl.v.struck` | {name} Comes Off the Ballot | Short of two endorsements at the close. The deposit is returned. Nominations reopen on {weekday}; the committee does not extend deadlines. |
 | `hl.v.voted-won` | Your Vote Counted: {voted} Seated | {voted} finished {ordinal} of seven. Turnout {turnout}. |
 | `hl.v.voted-lost` | Your Vote Counted: {voted} Falls Short | Short by {margin}. The seventh seat went to {last}. Turnout {turnout}. |
+| `hl.v.voted-lost-tie` | Your Vote Counted: {voted} Falls Short | {voted} finished level with {last} on {votes} and lost the tie-break. Turnout {turnout}. |
+| `hl.v.moved` | Councillor {name} Moves {ordinance} | {ordinanceLine} The council divides at {until}. Beacon House expects a full chamber. |
 | `hl.v.seat-ended` | Councillor {name} Stands Down in Good Order | Five days, one ordinance, minutes filed. Nominations for the next but one open today. |
 | `hl.v.council-passed` | Council Passes {ordinance} | In force from this morning for five days. {ordinanceLine} |
 | `hl.v.council-failed` | Council Rises Without a Motion | No ordinance reached four votes. Beacon House will want to know why. |
@@ -266,10 +276,15 @@ Conditions use the slice-1 pattern (a condition kind per template; the architect
 |---|---|---|
 | `hl.a.seat-won` | {name} Elected to Ashford Council | {ordinal} of seven with {votes} votes. Mr Grey: "Good. Now read the standing orders." |
 | `hl.a.seat-top` | {name} Tops the Poll in Ashford | First of seven with {votes} votes. The Rooms are, for once, unanimous. |
-| `hl.a.seat-lost` | {name} Misses the Last Seat by {margin} | {last} took the seventh seat. Nominations reopen on {weekday}. Deposits are not returned; the Gazette has asked. |
+| `hl.a.seat-lost` | {name} Misses the Last Seat by {margin} | {last} took the seventh seat. Nominations reopen today. Deposits are not returned; the Gazette has asked. |
+| `hl.a.seat-lost-tie` | {name} Loses the Last Seat on the Tie-Break | Level with {last} on {votes}. The returning officer applied the rules; the Gazette has checked them. Nominations reopen today. |
 | `hl.a.filed` | {name} Files for Ashford Council | Endorsements {endorsements} / 2 by {weekday} midnight, says the returning officer, who means it. |
+| `hl.a.on-ballot` | {name} Is on the Ballot | On the ballot with {endorsements} endorsements. Polls open today until {until}. The Gazette wishes every candidate luck, impartially. |
+| `hl.a.struck` | {name} Comes Off the Ballot | Short of two endorsements at the close. The deposit is returned, says the returning officer, who has counted it. Nominations reopen on {weekday}. |
 | `hl.a.voted-won` | Your Vote Counted: {voted} Elected | {voted} finished {ordinal} of seven. Turnout {turnout}. |
 | `hl.a.voted-lost` | Your Vote Counted: {voted} Falls Short | Short by {margin}. The seventh seat went to {last}. Turnout {turnout}. |
+| `hl.a.voted-lost-tie` | Your Vote Counted: {voted} Falls Short | {voted} finished level with {last} on {votes} and lost the tie-break. Turnout {turnout}. |
+| `hl.a.moved` | Councillor {name} Moves {ordinance} | {ordinanceLine} The council divides at {until}. The Gazette prints the division in full. |
 | `hl.a.seat-ended` | Councillor {name} Retires from the Chamber | Five days, one ordinance. Nominations for the next but one open today. |
 | `hl.a.council-passed` | Council Passes {ordinance} | In force from this morning for five days. {ordinanceLine} |
 | `hl.a.council-failed` | Council Rises Without a Motion | No ordinance reached four votes. The Gazette's leader column is not kind. |
@@ -279,7 +294,7 @@ Conditions use the slice-1 pattern (a condition kind per template; the architect
 | `hl.a.ordinance-city` | {ordinance} in Force | {ordinanceLine} Five days, by order of the council. |
 | `hl.a.stands-firm` | Ashford Stands Firm | Morale back above sixty. The Rooms thank everyone who knocked a door. |
 
-All decks ≤ 200 characters; "midnight" is the boundary rendered in the player's local clock by the same helper as the shift ticket (*until Saturday 01:00* for a UTC+1 player; the copy is `untilBoundary(weekday)`).
+All decks ≤ 200 characters; "{weekday} midnight" is the boundary rendered in the player's local clock by the same helper as the shift ticket, transcribed as the `{until}` token (*Saturday midnight* for a UTC player is *Sunday 01:00* at UTC+1 and *Saturday 19:00* at UTC−5; §17 Q8). The count morning's decks say *today* rather than name a weekday, since nominations are open that morning (§17 Q7). `{weekday}`, where it remains, is the next nominations day 0 after today. The tie-break, on-ballot, struck and moved rows were added by §17 (Q9, Q16, Q18).
 
 ---
 
@@ -303,7 +318,7 @@ Ten ordinances, all with effects on systems that exist in slices 1–2, all with
 
 | Id | Name | One line (≤ 120 chars) | Effect in the city | Bound |
 |---|---|---|---|---|
-| `ord.public-works` | Public Works Order | The council puts the town to work: every wage in the city goes up. | **Job pay +10 %** (the half pay at the boundary and the shift, streak bonus on top) | max +10 % |
+| `ord.public-works` | Public Works Order | The council puts the town to work: every wage in the city goes up. | **Job pay +10 %** (the half pay at the boundary and the shift; the streak bonus and the ordinance line are each a percentage of the unmodified daily pay, §17 Q11) | max +10 % |
 | `ord.shift-hours` | Shift Hours Order | Shifts end an hour early, by order of the council, and count double towards the streak. | **Job shifts −1 Energy** (never below 2); **each shift adds two days to the work streak** (the +20 % cap is unchanged) | −1 · ×2 |
 | `ord.street-permits` | Street Permits | Leaflets and posters go up without a permit for the week. | **Propaganda opinion swing +15 %** (0.040 → 0.046 per 8-Energy action) | max +15 % |
 | `ord.rally-permits` | Rally Permits | Speeches licensed on every corner; no one moves you on. | **Speech actions −2 Energy** (12 → 10; rewards unchanged) | −2 |
@@ -393,7 +408,7 @@ Starting from the 70 baseline with nobody playing, morale sits at 70 (*Steady*) 
 
 1. The paper: *{name} Made Activist by the Branch* ("The vote follows."), and the **Polling Day** section: *Coalport votes today · polls open until Saturday midnight* → **Cast your ballot**.
 2. The ballot: nine names. Every line has a mark, a rank or *ward*, a standing, and its line. The player taps one; **Cast your ballot for Anna Weiss**.
-3. The modal: stamp *Ballot cast*. *One vote for Anna Weiss. The Clarion carries the count on Sunday morning.* **Continue**.
+3. The modal: stamp *Ballot cast*. *One vote for Anna Weiss. Nobody sees who you voted for. The count is in the Clarion on Sunday morning.* **Continue**.
 4. Sunday's paper: *Polls Close in Coalport: Weiss Tops the Poll* and *Your Vote Counted: Anna Weiss Takes a Seat*, with the count table.
 
 Four taps over two sessions. When the city is not polling on the day the player makes Rank 2, step 1 reads *Nominations open · Coalport votes from Thursday* with the CTA **See who's standing** (the slate), and the ballot follows within two days.
@@ -419,7 +434,7 @@ That is one screen, one stamp, one portrait, and a headline with the player's na
 
 ### 12.4 Losing
 
-The paper: *{name} Misses the Last Seat by 3* and the count table with the player's row marked. No stamp. The Polling Day section: *Nominations open again on Friday*. Nothing else changes; the deposit is gone and the screen said so before the tap.
+The paper: *{name} Misses the Last Seat by 3* (or *Loses the Last Seat on the Tie-Break*, §17.5) and the count table with the player's row marked. No stamp. The Polling Day row: nominations for the next council are open that morning, so an eligible loser sees **Stand for the council · 10 PC** (§17 Q6). Nothing else changes; the deposit is gone and the screen said so before the tap.
 
 ---
 
@@ -475,10 +490,169 @@ Companion edit: `docs/economy.md` §14.
 7. **Rested cap +50** must not destroy Rested when the ordinance expires: the pool keeps its value and simply stops banking above 200 (being away never costs assets).
 8. **Seeding.** On deploy, each city needs a sitting NPC council and the branch's motion in force, so no city is council-less on day 1. Existing characters need `offices: []`, `endorsementsGiven: []` and nothing else.
 9. **Ambition chapter 2** (*Stand where he stood*, Rank 2) keys off the first vote and its requirement is met in this slice. Its script is not in scope here; say if you want it in slice 3, and I will write it as content in a day.
-10. **PC in the HUD on phones** has been hidden since slice 1. With the first sinks it should show once PC > 0, or live on the council card and the Me tab if the bar is full. Your call; the screens doc assumes the bar.
+10. **PC in the HUD on phones** has been hidden since slice 1. With the first sinks it should show once PC > 0, or live on the council card and the Me tab if the bar is full. Your call; the screens doc assumes the bar. **Answered (QA slice 2, `slice-2-onboarding.md` §14.1): the bar.** PC shows in the HUD on every screen size once above 0; the Me tab carries the full name and the sinks; nothing on the plate or the council card (GDD §6.5, §7.5).
 
 ---
 
 ## 16. Content-policy check
 
 Every string above was read against `docs/design/content-policy-review.md` §7: no rank word the army uses, no salute, colour, symbol or slogan, no "front", "war", "enemy" or "uprising". The Vanguard's slate is clerks, storekeepers, a signalman, a schoolmistress and a landlady; its lines ask for order, fixed prices, permits and quiet streets, and no line argues that it is right. The Sentinel's decks are cold ("The committee does not extend deadlines"). The Collective's titles are unions' (shop steward, docker, furnace man). Chalking, torches and marks are absent. Vocabulary throughout is electoral: nominations, slate, ballot, poll, count, seat, order paper, motion, division.
+
+---
+
+## 17. Answers to the slice-3 tech design (§20.1)
+
+Game designer, 29 Sep 2026. Twenty-one questions from `docs/tech/slice-3.md` §20.1. "Default stands" means the tech design's default is the rule. Every rule that is new or changed is pinned in the GDD section named; the new copy is in §17.1–17.7 below and, where it belongs to a table the content tests read, in the tables of §8 above (edited in place). Pacing changes are in `docs/economy.md` §14.4 and §14.8.
+
+| # | Question | Answer | Pinned in |
+|---|---|---|---|
+| 1 | When the ward vote is read | **Default stands: at the count.** Standing earned during the polls counts; a candidate who canvasses on polling days is doing what the ward vote measures. The NPC jitter is drawn when nominations open, as §3.2 of the tech design has it. | GDD §15.3 |
+| 2 | The branch's endorsement when the orders were done before declaring | **Default stands.** The branch endorses on any day of the nominations window on which the candidacy is filed **and** all three orders are done, whichever came first; if the orders were finished before filing, the endorsement lands at filing. The strict reading would punish a player for doing the day's work first. §6.3 above reworded. | GDD §15.3 |
+| 3 | An endorsement given to a candidate who withdraws | **Default stands: spent.** One endorsement per member per cycle in each city, irrevocable; a withdrawal doesn't hand it back. §6.5 already says the PC isn't returned. | GDD §15.3 |
+| 4 | The NPC standing label on the ballot | **Default stands: derived**, `profile × 5` through the Standing thresholds. The top three names of every slate (44, 38, 33 → 220, 190, 165) read *One of Us*; the other six (145 … 75) read *Trusted*. No label in content. | GDD §15.10 |
+| 5 | Ties on Standing Successes for NPCs | **Default stands: `profile × 5`**, before the jitter (the jitter belongs to the ward vote, not to standing). The endorsement column shows all endorsements; the tie uses all of them; the total counts at most five. | GDD §15.3 |
+| 6 | Polling Day when several states apply | **Default order stands.** On the count morning an eligible loser sees *Stand for the council* (the count and their own line are in the headlines, and nominations are open today); a Rank-2 voter sees *Polls closed: … tops the poll*. `slice-3-screens.md` §2.3 and §12.4 above are corrected to say so. | screens §2.1 |
+| 7 | `hl.seat-lost` on the count morning | **Reworded, no `{weekday}`:** *Nominations are open again today* (Clarion) / *Nominations reopen today* (Sentinel, Gazette). Three decks in §17.1; the §8 tables carry them. | design §8 |
+| 8 | Local times in headlines | **Confirmed.** Every *{weekday} midnight* is `{until}`; every *at 01:00 on {weekday}* is `{at}`. The example is corrected: polls that close *Saturday midnight* for a UTC player close *Sunday 01:00* at UTC+1 and *Saturday 19:00* at UTC−5. `{weekday}` (server-side) is the weekday of the **next nominations day 0 strictly after today**, never today; its only uses left are the withdraw modal and `hl.struck`. §17.3 lists every string checked. | design §8; GDD §3.3 |
+| 9 | `hl.moved` for the Sentinel and the Gazette | **Written**, §17.2; the Clarion's stays as §10.2 has it. All three use `{until}`. | design §8 |
+| 10 | The *Restore the base* orders | **Written**, §17.4: two titles shared by the three factions (*Restore the base: the doors* · *Restore the base: say it*) and six secretary's lines in each voice. | GDD §14.11 |
+| 11 | Cost ordinances and rewards; pay bonuses; streak steps | **Default stands on all three.** A cost ordinance changes the cost only (Reading Room at INT 12 costs 35 and pays 99 XP; Rally Permits explicit). Public Works and Ward Fund change the two half pays; **the streak bonus and the ordinance line are each a percentage of the unmodified daily pay**, so the tiles add up and the economy's +22 / −54 hold (§10.1 above and `economy.md` §14.4 said "streak on top", which was wrong; corrected). **Streak headlines fire on crossing, not equality:** `streakHitYesterday` is true on the day the streak first reaches or passes 5 or 10, so Shift Hours' +2 steps (4 → 6) still print *Five Straight Shifts*. | GDD §9.1, §15.3 |
+| 12 | The salary at a boundary | **Default stands:** the ordinance in force on the day that ended. | GDD §9.1 |
+| 13 | `hl.polls-open` and `hl.nominations` | **Default stands: every day of their window**, city 0. Ties inside city 0 in this order: the count · *Stands Firm* · the ordinance in force · polls open / nominations. | design §8 |
+| 14 | The front page and the headline block; a winner who opens the game later | **Default stands** for the layout: the front page on top, the other headlines below it, the seat headline left out whenever the front page shows. **Changed for the late winner:** the front page shows on the **first edition the winner opens during the term** (`fromDay ≤ today < toDay`, `frontPageSeenAt` unset), not only on the count morning. Being away costs the opportunity to vote in the chamber, never the moment. After the term: the count view and the Me tab only. | GDD §3.3 |
+| 15 | Every player councillor votes *Against all* | **Default stands: the branch's motion passes.** *Against all* is a recorded vote, not a preference the NPCs can follow: NPC councillors never vote against, and a single seat must not be able to leave a city without an ordinance. Reconsider when a Chair's whip exists (Appendix C #26). | GDD §15.3, §15.10; Appendix C #26 |
+| 16 | Losing on a tie-break | **A tie variant**, `hl.seat-lost-tie` (personal 1, condition `seatLost` with `tie: true`), and `hl.voted-lost-tie` for the voter whose candidate lost the same way. Six strings in §17.5; the condition carries `tie` when the margin is 0. | design §8; GDD §15.3 |
+| 17 | Turnout's *eligible* | **Changed: resident Rank 2+ members active in the last seven days at the count**, the same roll the small-branch rule counts at the close of nominations. One definition of "the branch", and a turnout line that measures the live branch rather than an ever-growing register (*3 of 40* by month two would read as failure for a branch that had turned out every active member). | GDD §15.3 |
+| 18 | `hl.filed` only for a day-0 filing | **OK**, and two templates added for every candidate on the morning the polls open, so nobody is struck in silence: `hl.on-ballot` (*{name} Is on the Ballot*) and `hl.struck` (*{name} Comes Off the Ballot*), personal 2, condition `nominationsClosed` with `struck: boolean`. Nine strings in §17.6. | design §8 |
+| 19 | The six result texts | **Transcribed and checked**, §17.3. `{paper}` is the short name with its article (*the Clarion*), so it never opens a sentence; `{countDay}` is the count's weekday; `{n}` in the endorse text is the candidate's endorsements **after** yours, so the text reads right at any count. | design §7, screens §9 |
+| 20 | *Unrest* ending mid-day | **Default stands:** the day's crisis orders stay until the next City Day; orders are set once a day and never swapped under a player. | GDD §14.11 |
+| 21 | Ambition chapter 2 | **Agreed: ship it in slice 3 as content, non-blocking (T19).** It unlocks **after the first ballot** (`requires: { ballotCast: true }`, which implies Rank 2) and seven City Days after chapter 1; the chapter-1 hook now reads *after your first ballot*. Script in §17.7: difficulty 14, 15 Energy, Success 300 XP / 80 FXP / 150 Iron, keepsake *His election bill*, hook to chapter 3, *The deposit*, at Rank 3. **The other two Ambitions get chapter 2 later**, with the systems they are about: *The riverside house* with slice 5 (Heat), *The night foreman* with slice 8 (the Dossier); their requirement stays Level 6 and the Letters row is simply absent until then (slice-2 §13 Q12). | GDD §17.1, §21.4; `economy.md` §14.8 |
+
+### 17.1 Q7: `hl.seat-lost` on the count morning
+
+The count morning is cycle day 0: nominations for the next council are already open, so the deck says so and needs no weekday.
+
+| Paper | Id | Headline | Deck |
+|---|---|---|---|
+| Clarion | `hl.seat-lost` | {name} Misses the Last Seat by {margin} | {last} took the seventh seat. Nominations are open again today. The branch keeps the deposit. |
+| Sentinel | `hl.v.seat-lost` | {name} Short of the Last Seat by {margin} | {last} took the seventh seat. Nominations reopen today. The deposit stays with the district. |
+| Gazette | `hl.a.seat-lost` | {name} Misses the Last Seat by {margin} | {last} took the seventh seat. Nominations reopen today. Deposits are not returned; the Gazette has asked. |
+
+`hl.seat-ended` already reads *nominations for the next but one open today*; `hl.v.seat-ended` and `hl.a.seat-ended` likewise. Nothing else in §8 names a weekday for the count morning.
+
+### 17.2 Q9: `hl.moved` for the three papers
+
+Personal, priority 2, condition `movedYesterday`. The ordinance line is at most 90 characters in the menu, so every rendered deck stays under 200 with the longest `{until}` (*Wednesday 01:00*).
+
+| Paper | Id | Headline | Deck |
+|---|---|---|---|
+| Clarion | `hl.moved` | Councillor {name} Moves {ordinance} | {ordinanceLine} The council divides at {until}. |
+| Sentinel | `hl.v.moved` | Councillor {name} Moves {ordinance} | {ordinanceLine} The council divides at {until}. Beacon House expects a full chamber. |
+| Gazette | `hl.a.moved` | Councillor {name} Moves {ordinance} | {ordinanceLine} The council divides at {until}. The Gazette prints the division in full. |
+
+### 17.3 Q8 and Q19: the time tokens, and the six result texts
+
+**The rule.** `{until}` is the boundary that closes the window, rendered by the client in the player's clock: *Tuesday midnight* when the local time at the boundary is 00:00, otherwise *{weekday} hh:mm* of the local moment (*Wednesday 01:00* at UTC+1, *Tuesday 19:00* at UTC−5). `{at}` is the same moment as *hh:mm on {weekday}* (*00:00 on Wednesday*; *01:00 on Wednesday*; *19:00 on Tuesday*). The prose examples in §7 and §12 above were written for a UTC clock and are illustrative; the pinned calendar is the tech design's §3.1. **Corrected:** §8's "*until Saturday 01:00* for a UTC+1 player" read *Sunday 01:00* (the boundary at the end of Saturday is 00:00 UTC Sunday).
+
+**Every string with a boundary, and its token:**
+
+| Where | String as designed | Token |
+|---|---|---|
+| `hl.filed` ×3 | *by {weekday} midnight* | `{until}` |
+| `hl.polls-open` ×3 | *until {weekday} midnight* | `{until}` |
+| `hl.nominations` ×3 | *until {weekday} midnight* | `{until}` |
+| `hl.moved` ×3 | *divides at {weekday} midnight* | `{until}` |
+| `hl.on-ballot` ×3 (new, §17.6) | *until {until}* | `{until}` |
+| Polling Day row (screens §2.1) | *Nominations close Tuesday midnight* · *Polls open until Saturday midnight* · *Divides Tuesday midnight* | `{until}` |
+| Ballot caption (screens §4) | *The count is at {hh:mm} on {weekday}* | `{at}` |
+| Council caption (screens §6.3) | *The council divides at {hh:mm} on {weekday}* | `{at}` |
+| Results: declare, endorse | *by Tuesday midnight* | `{until}` |
+| Results: propose, council vote | *at 01:00 on Tuesday* | `{at}` |
+| Results: withdraw · `hl.struck` ×3 | *Nominations open again on Friday* | `{weekday}`, server-side: the next nominations day 0 **after today** |
+| Results: ballot | *on Sunday morning* | `{countDay}`, server-side: the weekday of the count's day key |
+| Polling Day (not polling) · *Below Rank 2* row | *Coalport votes from Thursday* | server-side weekday of the city's next polls day 2 |
+| Me tab, HUD | *term ends Thursday* | server-side weekday of `toDay` |
+
+**The six result texts** (`content.politics.results[act]`, each ≤ 240 characters):
+
+| Act | Stamp | Headline | Body |
+|---|---|---|---|
+| `ballot` | Ballot cast | Your ballot is in the box | One vote for {name}. Nobody sees who you voted for. The count is in {paper} on {countDay} morning. |
+| `declare` | Filed | Your name is on the slate | Two endorsements by {until} and your name is printed. Do today's orders and the branch backs you. |
+| `endorse` | Endorsed | {name} has your name | An endorsement is public and final. {name} now has {n}: two by {until} put the name on the ballot, and up to five count. |
+| `withdraw` | Withdrawn | Your name comes off the slate | The deposit stays with the branch. Nominations open again on {weekday}. |
+| `propose` | Moved | {ordinance} is on the order paper | {ordinanceLine} The council divides at {at}. |
+| `councilVote` | Voted | Your vote is recorded | For {ordinance}. Public in the chamber, final. The council divides at {at}; {paper} prints the result. |
+
+`{paper}` resolves to *the Clarion* / *the Sentinel* / *the Gazette* (the short name with its article); the texts are written so it never opens a sentence. The knock-on lines are unchanged from screens §9. The results are one set for all three factions; "the branch" is the neutral word (the Sentinel's "district" is the paper's voice, not the modal's).
+
+### 17.4 Q10: the *Restore the base* orders
+
+Six crisis templates (`use: 'crisis'`, `doneFxp: 40`), slot A any canvass in the home city ×3 attempts, slot B any speech in the home city ×1 attempt, signed by the secretary like every order. The titles are shared so the crisis reads the same in every city; the lines carry the voice. Slot C keeps the day's rotation.
+
+| Id | Faction · slot | Title | Line |
+|---|---|---|---|
+| `dir.restore-canvass` | Collective · A | Restore the base: the doors | The wards are asking what the branch is for. Answer them at the door: three conversations, today. |
+| `dir.restore-speech` | Collective · B | Restore the base: say it | The Anchor says the party has gone quiet. Prove it wrong, out loud, from the plinth. |
+| `dir.v.restore-canvass` | Vanguard · A | Restore the base: the doors | Rampart Row has questions. Three wards, three answers, in order, on my desk tonight. |
+| `dir.v.restore-speech` | Vanguard · B | Restore the base: say it | The town doubts the committee. Address the town today and leave no doubt. |
+| `dir.a.restore-canvass` | Alliance · A | Restore the base: the doors | Ashford is muttering. Three wards, three honest conversations, and listen more than you talk. |
+| `dir.a.restore-speech` | Alliance · B | Restore the base: say it | The Rooms have gone quiet and the town has noticed. Speak today, anywhere with a crowd. |
+
+Matches: `{ actionTypes: ['canvass'], cityId: <home> }` and `{ actionTypes: ['speech'], cityId: <home> }`, `counts: 'attempts'`. Content-policy check: no rank word, no colour, no symbol; the Vanguard's lines are an organiser wanting reports and a firm speech, nothing more.
+
+### 17.5 Q16: losing on a tie-break
+
+When the margin is 0 the seat went on the tie-break (members' votes, then endorsements, then Standing Successes, then filing order). `seatLost` and `votedFor` carry `tie: true`; the tie templates take the place of `hl.seat-lost` / `hl.voted-lost` that morning.
+
+| Paper | Id | Headline | Deck |
+|---|---|---|---|
+| Clarion | `hl.seat-lost-tie` (personal 1) | {name} Loses the Last Seat on the Tie-Break | Level with {last} on {votes}. The seat went on members' votes, then endorsements, then standing. Nominations are open again today. |
+| Sentinel | `hl.v.seat-lost-tie` | {name} Loses the Last Seat on the Tie-Break | Level with {last} on {votes}; the rules gave them the seat. Nominations reopen today. The deposit stays with the district. |
+| Gazette | `hl.a.seat-lost-tie` | {name} Loses the Last Seat on the Tie-Break | Level with {last} on {votes}. The returning officer applied the rules; the Gazette has checked them. Nominations reopen today. |
+| All three | `hl.voted-lost-tie` · `hl.v.voted-lost-tie` · `hl.a.voted-lost-tie` (personal 2) | Your Vote Counted: {voted} Falls Short | {voted} finished level with {last} on {votes} and lost the tie-break. Turnout {turnout}. |
+
+### 17.6 Q18: the morning the polls open, for a candidate
+
+Personal 2, condition `nominationsClosed` with `struck: boolean`; shown once, on cycle day 2, to every player who filed. `{endorsements}` is the counted number (the branch's double counts as two), so it is never below two on the ballot.
+
+| Paper | Id | Headline | Deck |
+|---|---|---|---|
+| Clarion | `hl.on-ballot` | {name} Is on the Ballot | On the ballot with {endorsements} endorsements. Polls open today until {until}. A candidate may vote for themselves. |
+| Clarion | `hl.struck` | {name} Comes Off the Ballot | Short of two endorsements at the close. The deposit is returned; nominations open again on {weekday}. |
+| Sentinel | `hl.v.on-ballot` | {name} Is on the Ballot | On the ballot with {endorsements} endorsements. Polls open today until {until}. The committee expects every member to vote. |
+| Sentinel | `hl.v.struck` | {name} Comes Off the Ballot | Short of two endorsements at the close. The deposit is returned. Nominations reopen on {weekday}; the committee does not extend deadlines. |
+| Gazette | `hl.a.on-ballot` | {name} Is on the Ballot | On the ballot with {endorsements} endorsements. Polls open today until {until}. The Gazette wishes every candidate luck, impartially. |
+| Gazette | `hl.a.struck` | {name} Comes Off the Ballot | Short of two endorsements at the close. The deposit is returned, says the returning officer, who has counted it. Nominations reopen on {weekday}. |
+
+The desk's *Deposit returned* line (tech §11) stays; the headline is the explanation.
+
+### 17.7 Q21: Finish His Work — Chapter 2: *Stand where he stood*
+
+**Rules (GDD §17.1).** Unlocks **after the player's first ballot** (`requires: { ballotCast: true }`; a ballot implies Rank 2) and seven City Days after chapter 1, so about day 8 for the reference recruit: after the first vote (days 2–4), before the first candidacy (days 10–14). Delivered as a Letter; the row reads **From the back of the ward book** · *His election bill* · *Chapter 2 is ready · 15 Energy*. Three steps, one check, never fails, no encounter, no opinion, Rested applies; counts in *Today*, not as an attempt. **Difficulty 14, 15 Energy.** Rewards Success **300 XP / 80 FXP / 150 Iron**, Partial **150 / 40 / 75**, Failure **50 / 0 / 0**; keepsake `keep.election-bill` (*His election bill*, no slot, no effect) on every outcome. Chapter 1's hook line becomes *Chapter 2, "Stand where he stood": from {date}, after your first ballot*; the hook format gains the phrase *after your first ballot* beside *at Rank n* / *at Level n*.
+
+**Step 1** · kicker *Ambition · Finish His Work · Chapter 2 of 12* · art: `home-hq` (the map crop around the faction HQ)
+Folded into the back of the ward book: his election bill from '21. His name in capitals on browned paper, and the corner by {hq} where he spoke at six every evening. You've cast a ballot here now. He'd have asked what came next.
+
+| | Choice | Hint | Flag |
+|---|---|---|---|
+| A | Tell {secretary} you'll speak where he did | The branch can bring a crowd, and will want a say in what you tell it. | `told-branch` |
+| B | Go at six, alone, and see who stops | Whoever comes, comes for the name. | `went-alone` |
+
+**Step 2** · *Six o'clock*
+Same corner, same hour, twenty-five years on. People slow because a stranger is standing where somebody used to. You have his name, your own, the bill in your pocket and about five minutes before they walk on.
+
+| Approach | Check | Chance for the reference recruit (day 8: INT ~30, CHA 5 with the coat) |
+|---|---|---|
+| Speak from the step: his name first, then yours | CHA+INT vs 14 | about 65 % |
+| Work the edge of the crowd one at a time, the bill in your hand | INT vs 14 | 95 % (the clamp) |
+
+A casual player at day 12 (INT ~18) sees about 40 % and 66 %. CTA: **Stand where he stood · 15 Energy**
+
+**Step 3** · the result
+- Success — *They stopped* — Thirty by the end, and an old woman at the front who says he stood exactly there and lost by eleven votes. She asks if you're standing. You say: when the branch lets me. She says that's what he said.
+- Partial — *A few stopped* — Nine, two of them because they took it for a tram queue. One old man knew him and says so, loudly, which helps more than the speech. You get through it. The corner is yours if you want it.
+- Failure — *A corner is only a corner* — Rain at six, and the square empties before you've said his name. A boy asks who you're talking to. You finish anyway, to nobody, and walk home with the bill under your coat. Same corner tomorrow, if the rain lets you.
+- Knock-on lines: *Keepsake: His election bill* · *Chapter 3, "The deposit": from {date}, at Rank 3*
+
+Every text is under 240 characters with the longest `{hq}` and at most four sentences. Chapter 3 (*The deposit*: filing, the ten marks, the name on the slate) is written with the slice that follows; its requirement is Rank 3, so the reference recruit reaches it about day 15, after the first candidacy.

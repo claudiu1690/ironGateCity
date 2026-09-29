@@ -158,7 +158,7 @@ CTA: **Walk his ward · 10 Energy**
 - Success — *Two of the three remember him* — One cries, one puts the kettle on, one shuts the door and then opens it again. All three take a leaflet. The third asks, on the step, whether you'll be standing. You say not yet.
 - Partial — *One door opens* — New tenants at two of the three; the third remembers the name and not much else. She takes a leaflet for the landing. It's a start, and the book is still two hundred names long.
 - Failure — *Nobody home* — No one answers at any of the three. You leave a leaflet with his name written on each and walk back through the ward in the rain. The book goes back in the suitcase, for now.
-- Knock-on lines: *Keepsake: His ward book* · *Chapter 2, "Stand where he stood": from {date}, at Rank 2*, where `{date}` is the weekday and day-month seven City Days after the day the chapter was played (*Tuesday 6 October* for a chapter played on 29 September; §13 Q2)
+- Knock-on lines: *Keepsake: His ward book* · *Chapter 2, "Stand where he stood": from {date}, after your first ballot*, where `{date}` is the weekday and day-month seven City Days after the day the chapter was played (*Tuesday 6 October* for a chapter played on 29 September; §13 Q2). **Superseded in slice 3** (`slice-3-politics.md` §17 Q21): the requirement was *at Rank 2* when this was written; chapter 2 now keys off the first ballot, and its script is in that document's §17.7.
 
 ### 3.3 Clear His Name — Chapter 1: *The prison letter*
 
@@ -452,7 +452,7 @@ Game designer, 29 Sep 2026. Thirteen questions from `docs/tech/slice-2.md` §20.
 | 5 | §3.2 odds | **Corrected.** CHA+INT for the reference recruit: 46 %; coat A **52 %**; coat C **54 %**. §2.4's "rise 4–6 / 6–8 points" was also wrong: coat A is always **+6**, coat C **+8** (the average rises by 1.5 or 2). | `docs/economy.md` §13.1 (already right) |
 | 6 | Card crest vs the plain square | **The SVG passes.** An iron gate beneath a lantern, gold line on black, in a square frame: the city's gate, no real-world emblem. Default stands: SVG crests on the street cards and the party card; the plain square, circle and triangle only as small marks. §5.3 corrected. | GDD §7.3; this doc §5.3 |
 | 7 | Migrated characters | **Default stands.** *Finish His Work* chapter 1 as a Letter in their next paper; no face until chosen. Until then the HUD shows the empty portrait ring and the Me tab carries a dot with the line *No face yet*; nothing is blocked. | ADR 0016 (no GDD rule) |
-| 8 | The Paper tab dot for a Letter | **Default stands.** Shown while a chapter is `ready` and not yet opened; not for `midway`. | — |
+| 8 | The Paper tab dot for a Letter | ~~**Default stands.** Shown while a chapter is `ready` and not yet opened; not for `midway`.~~ **Superseded by §14.3 (n7):** shown while `ready`, opened or not; off once played or `midway`. | GDD §17.1 |
 | 9 | The first-landing sheet | **Default stands.** First edition only; later mornings open the map. | GDD §7.5 (as written) |
 | 10 | Failure wording | **Default stands.** The stamp reads *Failure*; nothing else in the modal or the texts says "failed". Consistency with §8.4 matters more than a softer stamp; Appendix C #20 holds the fallback (no Failure band) if the playtest shows the word landing badly. | GDD §17.1 |
 | 11 | Copy review | **Approved with three notes**, below. Six avatar alt texts written below. | — |
@@ -497,3 +497,62 @@ The answer table (§2.1–2.2) was always the rule; three sentences summarising 
 | The other two stats | 5–8 | **5–11** |
 
 The minimum of 8 is one build: a Vanguard recruit who fished, talked them out and read people (STR 8 / INT 8 / AGI 8, CHA base 3). **Accepted, not changed**, for three reasons: it is what those answers describe (a people person in a party of clerks and foremen); CHA base 3 is permanent and adds to every outfit bought later, which is a better long-run trade than +2 to a trained stat; and at 50 % the build still reaches Level 2 inside the first bar and the 95 % clamp by about day 5 (`docs/economy.md` §13.1). Changing an answer would have meant content changes mid-build for a corner case no pacing target depends on. The reference recruits and every number in the tech design's §6.3 tests are unchanged.
+
+---
+
+## 14. QA slice 2 — design answers
+
+Game designer, 29 Sep 2026. Answers to the design calls in `docs/qa/slice-2.md` (m5, m3, the copy nits and n8). The developer applies them with the slice-2 fixes. Every string below is exact; every rule is also in the GDD (§0 rows under "QA slice 2").
+
+### 14.1 m5: Political Capital on phones
+
+**Decision: the HUD shows PC on every screen size once PC > 0.** The GDD's intent stands (§7.5, §6.5): PC is introduced by the moment it is first earned, and from slice 3 it is the price on every political button, so the player must be able to see the balance where they see Energy and Iron. Nothing else is added.
+
+- **HUD:** the existing PC column (value over the caps label *PC*) loses `hidden … sm:flex` and shows on all widths when `pc > 0`. The Iron and PC columns are the same shape, so a phone HUD reads *… 100 / 100 · 150 Iron · 5 PC*. If the row is tight at 360 px the name truncates first; the Energy status line (*full at 14:20*) may drop to the number alone below 360 px. The desktop HUD is unchanged.
+- **Before PC > 0:** no column, no zero. The first appearance is the same moment on every device: the modal line *All orders carried out · +5 PC* (`copy.allOrdersDone`), then the column.
+- **Me tab:** from slice 3 the line pinned in `slice-3-screens.md` §8: *Political Capital 45 · declare 10 · endorse 10 · propose 20*. In slice 2 the Me tab shows *Political Capital 5* (the same row without the sinks). This is also where the full name lives; the HUD says *PC*.
+- **Not on the plate.** The plate is the city's, the HUD is the character's (`slice-3-politics.md` §8). Political tickets and buttons carry their price (*Declare · 10 PC*, *Needs 10 PC*), which is enough at the point of spend.
+
+GDD: §7.5 now reads "on phones as on desktop"; §6.5 says where PC is shown. `slice-3-politics.md` §15 Q10 is answered: the bar, not the council card.
+
+### 14.2 m3: a blank name, and the name rules
+
+**Decision: the name is 2–40 characters after trimming; sign-up refuses anything else.** Runs of inner spaces collapse to one. No character class is restricted (accents and apostrophes are normal names in a Central European republic). Forty, not sixty: the name is printed in a headline on day 1 (*{name} Arrives at Duskwall Station*) and in the HUD at 15 px, and sixty characters make a three-line headline. The form's `maxLength` and the server's `NAME_MAX` both become 40.
+
+Validation copy, in the voice of *Choose your face* and *At least 8 characters.* (no full stop on a bare line, second person, no "please"):
+
+| Case | String | Key |
+|---|---|---|
+| Blank, or spaces only | **Your name can't be blank** | `copy.nameBlank` |
+| One character | **Your name needs at least 2 characters** | `copy.nameTooShort` |
+| Over 40 characters | **Your name can have at most 40 characters** | `copy.nameTooLong` |
+
+Shown under the field on submit, the same pattern as the face. The server refuses the same cases at sign-up and at the join, so the fallback below can only ever be reached by an account made before this rule.
+
+**The fallback is neutral and lives in content:** `copy.unnamed: 'A Newcomer'`. The arrival headline then reads *A Newcomer Arrives at Duskwall Station* and the HUD *A Newcomer*, in every faction. *Comrade* is removed from the server; the source sweep's allowance for it goes with it.
+
+GDD: §7.3 gains the name rule (a §0 row).
+
+### 14.3 The nits whose fix is copy or content
+
+| Nit | Decision | Exact strings |
+|---|---|---|
+| **n7** Paper-tab dot while a Letter is ready | **The deviation stands and becomes the rule:** the dot shows while a chapter is `ready`, whether or not the Letter has been opened, and goes off when the chapter is played or `midway`. A Letter is a call to action, and "opened but not played" is exactly the case a player forgets. §13 Q8 above is superseded. | — |
+| **n9** *1 · MINISTRY* on a customs house | **Kind labels move to content** (`copy.kindLabel(kind)`), one per §13.5 kind, so a new kind never needs client code. `ministry` reads **Public office**, which fits a customs house, police HQ and a ministry alike. The full list: `factory-gate` **Factory gate** · `docks` **Docks** · `market` **Market** · `station` **Station** · `street` **Street** · `square` **Square** · `bar` **Bar** · `hotel` **Hotel** · `press` **Press** · `faction-hq` **Party hall** · `hospital` **Hospital** · `jail` **Jail** · `court` **Courts** · `university` **University** · `library` **Library** · `gym` **Club** · `barracks` **Landmark** · `parliament` **Parliament** · `ministry` **Public office**. *Club* rather than *Gym* (the period word, and Vanguard House is a club); *Landmark* for the old barracks, which no faction uses and which should not read as a military place on a ticket. | `Public office`, `Club`, `Landmark`, `Party hall`, `Courts` |
+| **n10** The ticker's red square | **A neutral separator:** a middle dot **·** (U+00B7) in the dim text colour, `aria-hidden`. No faction mark is used as punctuation anywhere; the marks are the factions' own. | `·` |
+| **n13** The chapter screen after chapter 1 | **The screen shows the hook, not an empty chapter.** Kicker *Ambition · Finish His Work · Chapter 2 of 12*, title *Stand where he stood*, one Courier line with the same computed hook as the modal, and the CTA **Back to the paper**. No choices, no odds. When the date and requirement are met the Letters row takes over as designed. | Line: `From {Weekday D Month}, at {Rank n or Level n}` → *From Tuesday 6 October, at Rank 2*; with no requirement: *From Tuesday 6 October*. Key `copy.chapterWaitsUntil(from, needs)`. CTA: `Back to the paper` |
+| **n5** `garrison-gate` in the URL | **No rename.** Ids are addresses, not text; the review's rule ("never shown") means never shown as copy, and a query string is not copy. Renaming now would touch content, logs, tests and the migration for a corner nobody reads. New ids follow the reviewed names (a Fortress Gate made today would be `duskwall.fortress-gate`). | — |
+| **n6** The Collective crest's alt text | **Waiting on the user** (content-policy review §5). The alt text stays honest about what is drawn until the crest is decided; when it is, the alt text changes with it. | — |
+| **m1** Faction colours on the reward tiles | An art-direction note, not a copy change: add a **text variant** of each faction colour for values on paper, as `energy-light` was added; the crest and mark colours stay. Measured on `#f6f0e1`: Vanguard **#7d5f18** (5.24:1), Alliance **#3a5b78** (6.27:1); the Collective red `#8c2b23` already passes (7.43:1) and needs no variant. | tokens `--vanguard-text: #7d5f18`, `--alliance-text: #3a5b78` |
+| **n12** Report shares as 0–1 | Print as a percentage with the space before the sign, as the game does: *first action was welcome order A: 62 %*. | `62 %` |
+
+The rest (M1, M2, m2, m4, n1–n4, n11) are layout or code and belong to the developer; the GDD needs nothing for them.
+
+### 14.4 n8: Ashford's first-session art (929 KB)
+
+**Acceptable for the slice-2 playtest; nothing is cut.** The 1 MB of ADR 0015 is a ceiling, not a target, and the weight is where it should be: the city map is the game's main screen and the one image a player looks at for the whole session. Ashford is heavier than Duskwall and Coalport because its pen map has more line work (the lettered press front, the colonnade, the terraces), which compresses worse than open ground. Two rules for what comes next, so the ceiling holds:
+
+1. **Nothing new on the first path until slice 4.** The first path is sign-up → origin → street → welcome edition → first landing → first modal. Any art added to it (an Alliance HQ scene, a chapter-1 story panel) is measured against 1 MB on the Alliance path first, since that is the tight one. Art off the first path (scenes for pins 2–6, the Me tab's item images) is free.
+2. **In slice 4 the train loads a city's map only when the player travels there**, never on sign-in, so the first session stays at one map whatever the destination. The night map is loaded only when the player lands at night (already the case).
+
+**Art-direction note, not a change:** if the pipeline can take the Ashford day map at 2560 to about 400 KB with one AVIF quality step and no visible loss on the pen lines, take it; if the lines go muddy, leave it at 525 KB. The pen style is the look; a soft map is worse than a heavy one.
