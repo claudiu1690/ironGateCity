@@ -32,6 +32,12 @@ export function noticeFor(error: unknown): string | undefined {
     case 'ORIGIN_INCOMPLETE':
     case 'ALREADY_ARRIVED':
       return 'This story moved on in another window. Reload to carry on.';
+    case 'BAD_NAME':
+      return game.problem === 'long'
+        ? copy.nameTooLong
+        : game.problem === 'short'
+          ? copy.nameTooShort
+          : copy.nameBlank;
     case 'CHAPTER_NOT_READY':
       return 'This chapter is not open yet.';
     case 'CHOOSE_FIRST':

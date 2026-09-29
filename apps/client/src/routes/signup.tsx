@@ -1,4 +1,6 @@
 import { copy } from '@irongate/content/copy';
+import { NAME, checkName } from '@irongate/rules';
+import type { NameProblem } from '@irongate/rules';
 import { AvatarPicker, Button, Field } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
@@ -7,6 +9,13 @@ import type { FormEvent } from 'react';
 import { AuthLayout } from '../components/AuthLayout';
 import { authClient, resetSession } from '../lib/auth';
 import { trpcClient, trpc } from '../lib/trpc';
+
+/** The name's refusal under the field (onboarding §14.2). */
+const NAME_ERROR: Record<NameProblem, string> = {
+  blank: copy.nameBlank,
+  short: copy.nameTooShort,
+  long: copy.nameTooLong,
+};
 
 /**
  * Sign-up with a face (slice-2 tech design §12.1, GDD §7.3): name, the six faces (required, no
@@ -18,20 +27,22 @@ export function SignupPage() {
   const faces = useQuery({ ...trpc.arrival.faces.queryOptions(), staleTime: Infinity });
   const [face, setFace] = useState<string | null>(null);
   const [faceError, setFaceError] = useState<string | undefined>();
+  const [nameError, setNameError] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!face) {
-      setFaceError(copy.chooseYourFace);
-      return;
-    }
     const form = new FormData(event.currentTarget);
+    // QA m3 (§7.3): 2–40 characters once trimmed; the server refuses the same.
+    const name = checkName(String(form.get('name') ?? ''));
+    setNameError(name.ok ? undefined : NAME_ERROR[name.reason]);
+    if (!face) setFaceError(copy.chooseYourFace);
+    if (!name.ok || !face) return;
     setPending(true);
     setError(null);
     const { error: err } = await authClient.signUp.email({
-      name: String(form.get('name') ?? '').trim(),
+      name: name.name,
       email: String(form.get('email') ?? '').trim(),
       password: String(form.get('password') ?? ''),
     });
@@ -50,7 +61,15 @@ export function SignupPage() {
   return (
     <AuthLayout title={copy.signupTitle} wide>
       <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate={false}>
-        <Field label="Your name" name="name" autoComplete="name" required maxLength={60} />
+        <Field
+          label="Your name"
+          name="name"
+          autoComplete="name"
+          required
+          maxLength={NAME.max}
+          error={nameError}
+          onChange={() => setNameError(undefined)}
+        />
         {faces.data ? (
           <AvatarPicker
             faces={faces.data}

@@ -47,6 +47,8 @@ export function TabBar({ items, active, onNavigate }: TabBarProps) {
   return (
     <nav
       aria-label="Main"
+      // The desktop dock floats over the city map: its first view keeps every pin clear (QA M2).
+      data-map-overlay="bottom"
       className={cx(
         'fixed inset-x-0 bottom-0 z-20 flex h-16 border-t border-ink-2 bg-ink pb-[env(safe-area-inset-bottom)]',
         'lg:inset-x-auto lg:bottom-12 lg:left-[calc(50%-210px)] lg:h-auto lg:border-0 lg:shadow-[0_0_0_1px_var(--color-paper),0_10px_30px_rgb(0_0_0/0.5)]',

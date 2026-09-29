@@ -1,5 +1,5 @@
 import type { AssetView } from '@irongate/rules';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { KeepScale, TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
@@ -23,8 +23,10 @@ export interface CityMapProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   /**
-   * Overlays that don't pan (the city plate). Mark a full-width overlay with
-   * `data-map-overlay="top"` or `"bottom"` and the first view keeps every pin clear of it.
+   * Overlays that don't pan (the city plate, the orders panel). Mark each with `data-map-overlay`
+   * (`"top"` or `"bottom"` for a band across the map) and the first view keeps every pin clear of
+   * it. Any other element marked `data-map-overlay` that lies over the map (the desktop tab dock)
+   * is kept clear too.
    */
   children?: ReactNode;
   className?: string;
@@ -38,17 +40,36 @@ export interface CityMapProps {
 const MAX_SCALE = 2.5;
 /** Room around a pin: half its 44 px target plus a margin, so no pin touches an edge. */
 const PIN_PAD = 30;
-/** An overlay narrower than this share of the map is ignored (the desktop plate sits in a corner). */
-const OVERLAY_MIN_WIDTH_SHARE = 0.6;
+/**
+ * An overlay at least this share of the map wide is a band across it (the phone plate, the phone
+ * orders panel): the pins go between the bands. A narrower one (the desktop plate in its corner, the
+ * tab dock) is a block the pins must stay out of (slice-2 QA M2).
+ */
+const OVERLAY_BAND_WIDTH_SHARE = 0.6;
+/** Each step of the search for a first view clear of the blocks zooms out by this factor. */
+const FIT_STEP = 0.97;
+/** Positions tried per axis at each scale of that search. */
+const FIT_GRID = 24;
+const MIN_FIT_SCALE = 0.2;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** A rectangle in the map box's pixels. */
+export interface MapRect {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
 export interface MapInsets {
   top: number;
   bottom: number;
+  /** Overlays that are not bands across the map: no pin may sit under one (QA M2). */
+  blocks?: MapRect[];
 }
 
 export interface MapView {
@@ -57,18 +78,96 @@ export interface MapView {
   y: number;
 }
 
-/**
- * The first view of the map (QA M2): the largest scale up to 1 ("cover") at which every pin fits
- * the box between the insets with PIN_PAD around it, the pins' box centred there. The image may
- * then be narrower or shorter than the box (as in the MobileCity mockup), never offset past an edge
- * that the pan limits would snap back.
- */
-export function fitPinsView(i: {
+type FitInput = {
   box: { w: number; h: number };
   content: { w: number; h: number };
   pins: ReadonlyArray<{ x: number; y: number }>;
   insets: MapInsets;
-}): MapView {
+};
+
+/** Every pin, with PIN_PAD around it, inside the box and between the bands at this view. */
+function betweenBands(i: FitInput, v: MapView): boolean {
+  const e = 0.5; // rounding
+  return i.pins.every((p) => {
+    const px = v.x + p.x * i.content.w * v.scale;
+    const py = v.y + p.y * i.content.h * v.scale;
+    return (
+      px >= PIN_PAD - e &&
+      px <= i.box.w - PIN_PAD + e &&
+      py >= i.insets.top + PIN_PAD - e &&
+      py <= i.box.h - i.insets.bottom - PIN_PAD + e
+    );
+  });
+}
+
+/** No pin's target (with PIN_PAD around its centre) overlaps a block at this view. */
+function clearOfBlocks(i: FitInput, v: MapView): boolean {
+  const blocks = i.insets.blocks ?? [];
+  return i.pins.every((p) => {
+    const px = v.x + p.x * i.content.w * v.scale;
+    const py = v.y + p.y * i.content.h * v.scale;
+    return blocks.every(
+      (b) => px + PIN_PAD <= b.x0 || px - PIN_PAD >= b.x1 || py + PIN_PAD <= b.y0 || py - PIN_PAD >= b.y1,
+    );
+  });
+}
+
+/**
+ * The first view of the map (QA M2): the largest scale up to 1 ("cover") at which every pin fits
+ * the box between the bands with PIN_PAD around it, the pins' box centred there. The image may
+ * then be narrower or shorter than the box (as in the MobileCity mockup), never offset past an edge
+ * that the pan limits would snap back.
+ *
+ * Slice-2 QA M2: if that view leaves a pin under a block (the desktop plate in its corner, the tab
+ * dock) or outside the bands (the pan limits keep an image shorter than the box inside it, which
+ * can pull the pins back under a tall plate), the view is searched for instead, from that scale
+ * down: at each scale the positions that keep every pin between the bands and the image within its
+ * pan limits are tried, nearest the centred one first, and the first that keeps every pin clear of
+ * every block wins. The map may then show a margin of dark ground beside the image, under the plate.
+ */
+export function fitPinsView(i: FitInput): MapView {
+  const first = fitBetweenBands(i);
+  if (i.pins.length === 0 || (betweenBands(i, first) && clearOfBlocks(i, first))) return first;
+  const { box, content, pins, insets } = i;
+  const xs = pins.map((p) => p.x);
+  const ys = pins.map((p) => p.y);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  for (let scale = first.scale; scale >= MIN_FIT_SCALE; scale *= FIT_STEP) {
+    const cw = content.w * scale;
+    const ch = content.h * scale;
+    const dx = box.w - cw;
+    const dy = box.h - ch;
+    // Every pin inside the box (between the bands), and the image within its pan limits.
+    const xr = [
+      Math.max(PIN_PAD - x0 * cw, Math.min(dx, 0)),
+      Math.min(box.w - PIN_PAD - x1 * cw, Math.max(dx, 0)),
+    ];
+    const yr = [
+      Math.max(insets.top + PIN_PAD - y0 * ch, Math.min(dy, 0)),
+      Math.min(box.h - insets.bottom - PIN_PAD - y1 * ch, Math.max(dy, 0)),
+    ];
+    if (xr[0]! > xr[1]! || yr[0]! > yr[1]!) continue;
+    const centred = fitBetweenBands({ ...i, box }, scale);
+    let best: MapView | null = null;
+    let bestD = Infinity;
+    for (let a = 0; a <= FIT_GRID; a++) {
+      const x = xr[0]! + ((xr[1]! - xr[0]!) * a) / FIT_GRID;
+      for (let b = 0; b <= FIT_GRID; b++) {
+        const y = yr[0]! + ((yr[1]! - yr[0]!) * b) / FIT_GRID;
+        const d = (x - centred.x) ** 2 + (y - centred.y) ** 2;
+        if (d < bestD && clearOfBlocks(i, { scale, x, y })) {
+          best = { scale, x, y };
+          bestD = d;
+        }
+      }
+    }
+    if (best) return best;
+  }
+  return first;
+}
+
+/** The pins' box centred between the bands at the largest scale that fits it (or at `atScale`). */
+function fitBetweenBands(i: FitInput, atScale?: number): MapView {
   const { box, content, pins, insets } = i;
   if (pins.length === 0) return { scale: 1, ...clampPosition(box, content, 1, 0, 0) };
   const xs = pins.map((p) => p.x);
@@ -81,17 +180,50 @@ export function fitPinsView(i: {
     bottom: box.h - insets.bottom - PIN_PAD,
   };
   const fits = (span: number, room: number, size: number) => (span > 0 ? room / (span * size) : Infinity);
-  const scale = clamp(
-    Math.min(
-      fits(x1 - x0, safe.right - safe.left, content.w),
-      fits(y1 - y0, safe.bottom - safe.top, content.h),
+  const scale =
+    atScale ??
+    clamp(
+      Math.min(
+        fits(x1 - x0, safe.right - safe.left, content.w),
+        fits(y1 - y0, safe.bottom - safe.top, content.h),
+        1,
+      ),
+      0.2,
       1,
-    ),
-    0.2,
-    1,
+    );
+  const cw = content.w * scale;
+  const ch = content.h * scale;
+  // QA n11: an image shorter than the box, centred on its pins, left one empty dark band of about
+  // 130 px between the map and the phone's orders panel. Where the pins allow it, the image covers
+  // the clear area between the bands (any empty ground goes under the plate or the panel); if it is
+  // too short for that, it sits in the middle of the clear area, so what is left is split evenly.
+  // `centred`: the position that centres the pins; [lo, hi]: the clear area; [pinLo, pinHi]: the
+  // positions that keep every pin inside it.
+  const cover = (centred: number, lo: number, hi: number, size: number, pinLo: number, pinHi: number) => {
+    if (pinLo > pinHi) return centred;
+    if (size >= hi - lo) {
+      const from = Math.max(hi - size, pinLo);
+      const to = Math.min(lo, pinHi);
+      return from <= to ? clamp(centred, from, to) : centred;
+    }
+    return clamp(lo + (hi - lo - size) / 2, pinLo, pinHi);
+  };
+  const x = cover(
+    (safe.left + safe.right) / 2 - ((x0 + x1) / 2) * cw,
+    0,
+    box.w,
+    cw,
+    safe.left - x0 * cw,
+    safe.right - x1 * cw,
   );
-  const x = (safe.left + safe.right) / 2 - ((x0 + x1) / 2) * content.w * scale;
-  const y = (safe.top + safe.bottom) / 2 - ((y0 + y1) / 2) * content.h * scale;
+  const y = cover(
+    (safe.top + safe.bottom) / 2 - ((y0 + y1) / 2) * ch,
+    insets.top,
+    box.h - insets.bottom,
+    ch,
+    safe.top - y0 * ch,
+    safe.bottom - y1 * ch,
+  );
   return { scale, ...clampPosition(box, content, scale, x, y) };
 }
 
@@ -108,18 +240,31 @@ function clampPosition(
   return { x: clamp(x, Math.min(dx, 0), Math.max(dx, 0)), y: clamp(y, Math.min(dy, 0), Math.max(dy, 0)) };
 }
 
-/** Full-width overlays marked with `data-map-overlay`, measured against the map box. */
+/**
+ * The overlays marked with `data-map-overlay` that lie over the map box (its own children, and the
+ * shell's, like the desktop tab dock), measured against it: wide ones marked `top` or `bottom` as
+ * bands, the rest as blocks (QA M2).
+ */
 function measureInsets(box: HTMLElement): MapInsets {
   const b = box.getBoundingClientRect();
-  const insets: MapInsets = { top: 0, bottom: 0 };
-  for (const el of box.querySelectorAll<HTMLElement>('[data-map-overlay]')) {
+  const insets: MapInsets = { top: 0, bottom: 0, blocks: [] };
+  for (const el of box.ownerDocument.querySelectorAll<HTMLElement>('[data-map-overlay]')) {
     const r = el.getBoundingClientRect();
-    if (r.height === 0 || r.width < b.width * OVERLAY_MIN_WIDTH_SHARE) continue;
-    if (el.dataset.mapOverlay === 'top') insets.top = Math.max(insets.top, r.bottom - b.top);
-    if (el.dataset.mapOverlay === 'bottom') insets.bottom = Math.max(insets.bottom, b.bottom - r.top);
+    const x0 = Math.round(Math.max(r.left, b.left) - b.left);
+    const x1 = Math.round(Math.min(r.right, b.right) - b.left);
+    const y0 = Math.round(Math.max(r.top, b.top) - b.top);
+    const y1 = Math.round(Math.min(r.bottom, b.bottom) - b.top);
+    if (x1 <= x0 || y1 <= y0) continue; // hidden, or not over the map
+    const band = r.width >= b.width * OVERLAY_BAND_WIDTH_SHARE;
+    if (band && el.dataset.mapOverlay === 'top') insets.top = Math.max(insets.top, y1);
+    else if (band && el.dataset.mapOverlay === 'bottom')
+      insets.bottom = Math.max(insets.bottom, Math.round(b.height) - y0);
+    else insets.blocks!.push({ x0, y0, x1, y1 });
   }
   return insets;
 }
+
+const sameInsets = (a: MapInsets, b: MapInsets) => JSON.stringify(a) === JSON.stringify(b);
 
 /**
  * The city's detailed map (mockups City, MobileCity) with numbered hotspots at their map fractions.
@@ -141,22 +286,43 @@ export function CityMap({
   const boxRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef<ReactZoomPanPinchRef>(null);
   const [size, setSize] = useState<{ w: number; h: number; insets: MapInsets } | null>(null);
-  // Slice 2 (first-session art budget, ADR 0015): the night art is fetched only once it is night.
+  // Slice 2 (first-session art budget, ADR 0015): the night art is fetched only once it is night,
+  // and the day art only once it is day (a first landing at night loads one map, not two).
   const [nightMounted, setNightMounted] = useState(isNight);
+  const [dayMounted, setDayMounted] = useState(!isNight);
   useEffect(() => {
     if (isNight) setNightMounted(true);
+    else setDayMounted(true);
   }, [isNight]);
 
+  // While a pin is selected the overlays are not re-measured: the desktop plate folds under an open
+  // sheet, and the first view is the one for the unfolded plate (QA M2). Measured again on close.
+  const selectedRef = useRef(selectedId);
+  selectedRef.current = selectedId;
+  const measureRef = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
     const el = boxRef.current;
     if (!el) return;
     // jsdom has no layout: fall back to a phone-sized box so the map still renders in tests.
     const measure = () =>
-      setSize({ w: el.clientWidth || 390, h: el.clientHeight || 480, insets: measureInsets(el) });
+      setSize((prev) => {
+        const next = {
+          w: el.clientWidth || 390,
+          h: el.clientHeight || 480,
+          insets: prev && selectedRef.current ? prev.insets : measureInsets(el),
+        };
+        return prev && prev.w === next.w && prev.h === next.h && sameInsets(prev.insets, next.insets)
+          ? prev
+          : next;
+      });
+    measureRef.current = measure;
     measure();
     if (typeof ResizeObserver === 'undefined') return;
+    // The box (a banner above the map shrinks it) and the overlays in it (the plate grows when the
+    // orders load or unfold): either changes the first view (QA M2).
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    for (const o of el.querySelectorAll('[data-map-overlay]')) ro.observe(o);
     return () => ro.disconnect();
   }, []);
 
@@ -169,26 +335,99 @@ export function CityMap({
   const contentH = contentW / aspect;
   const box = { w, h };
   const content = { w: contentW, h: contentH };
-  const fitted = fitPinsView({ box, content, pins: locations.map((l) => l.map), insets });
+  const pinsKey = locations.map((l) => `${l.map.x},${l.map.y}`).join(';');
+  const fitted = useMemo(
+    () =>
+      fitPinsView({
+        box: { w, h },
+        content: { w: contentW, h: contentH },
+        pins: locations.map((l) => l.map),
+        insets,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [w, h, contentW, contentH, pinsKey, insets],
+  );
   // The transform library keeps its initial position rounded to 2 decimals; the reset after a sheet
   // closes uses the same numbers, so it lands on exactly the view the map mounted with.
   const initial = { scale: fitted.scale, x: Number(fitted.x.toFixed(2)), y: Number(fitted.y.toFixed(2)) };
+  const initialRef = useRef(initial);
+  initialRef.current = initial;
+  const contentKey = `${Math.round(contentW)}x${Math.round(contentH)}`;
+  const viewKey = `${initial.x}|${initial.y}|${initial.scale}`;
+
+  /**
+   * The map is at its first view: just mounted, or reset, and not moved since by the player or by a
+   * pan to a pin. Only then does a new first view (the box or an overlay changed size) move it.
+   */
+  const atFirstView = useRef(true);
+  /** The first view the transform shows: the one it mounted with, or the last one applied. */
+  const applied = useRef<{ content: string; view: string } | null>(null);
+  /**
+   * Back to the first view, in place: never by remounting the transform, which would replace every
+   * pin button just as the player taps one (the lost-tap fix, c732d64). 1 ms, not 0: an animated
+   * transform first cancels any momentum still running from a flick (an instant one would set the
+   * view and let that momentum carry on over it); it lands on the next frame.
+   */
+  const verifyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(verifyTimer.current), []);
+  const resetView = () => {
+    const v = initialRef.current;
+    atFirstView.current = true;
+    applied.current = { content: contentKey, view: `${v.x}|${v.y}|${v.scale}` };
+    void zoomRef.current?.setTransform(v.x, v.y, v.scale, 1);
+    // The library aligns the view to its box when its own size observer sees the box change (a
+    // banner above the map), and that cancels an animation in flight: when it lands after this
+    // reset, the reset is lost. Once things have settled, set the first view again if it did not
+    // hold (instantly: nothing is moving by then).
+    clearTimeout(verifyTimer.current);
+    verifyTimer.current = setTimeout(() => {
+      const z = zoomRef.current;
+      const t = initialRef.current;
+      if (!z || !atFirstView.current || selectedRef.current) return;
+      const s = z.instance.state;
+      const off =
+        Math.abs(s.positionX - t.x) > 0.5 ||
+        Math.abs(s.positionY - t.y) > 0.5 ||
+        Math.abs(s.scale - t.scale) > 1e-3;
+      if (off) void z.setTransform(t.x, t.y, t.scale, 0);
+    }, 150);
+  };
+  useEffect(() => {
+    if (w === 0) return;
+    const prev = applied.current;
+    if (!prev || prev.content !== contentKey) {
+      // Mounted, or remounted for a new size: the transform starts at this first view.
+      applied.current = { content: contentKey, view: viewKey };
+      atFirstView.current = true;
+      return;
+    }
+    if (prev.view === viewKey || selectedId || !atFirstView.current) return;
+    resetView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentKey, viewKey, selectedId, w]);
 
   /**
    * Pan (keeping the zoom) so that a pin sits in the middle of the clear area. A focus pan is
    * instant: the focused pin must be visible at once, and it needs no animation frame.
    */
-  const panTo = (target: MapHotspot, mode: 'select' | 'focus') => {
+  const panTo = (target: MapHotspot, mode: 'select' | 'focus'): boolean => {
     const z = zoomRef.current;
-    if (!z || w === 0) return;
+    if (!z || w === 0) return false;
     // The ref's `state` is a snapshot from mount; the instance holds the live transform.
     const { scale: current, positionX, positionY } = z.instance.state;
     const px = positionX + target.map.x * contentW * current;
     const py = positionY + target.map.y * contentH * current;
     // Visible: the whole 44 px target is inside the box and clear of the overlays.
     const half = 22;
-    const visible = px >= half && px <= w - half && py >= insets.top + half && py <= h - insets.bottom - half;
-    if (mode === 'focus' && visible) return;
+    const visible =
+      px >= half &&
+      px <= w - half &&
+      py >= insets.top + half &&
+      py <= h - insets.bottom - half &&
+      (insets.blocks ?? []).every(
+        (b) => px + half <= b.x0 || px - half >= b.x1 || py + half <= b.y0 || py - half >= b.y1,
+      );
+    if (mode === 'focus' && visible) return false;
     const bottom = mode === 'select' ? Math.max(insets.bottom, coverBottom) : insets.bottom;
     const cx = w / 2;
     const cy = (insets.top + h - bottom) / 2;
@@ -211,29 +450,30 @@ export function CityMap({
     // Instant for a focus, and under a phone's sheet (it slides in over the map anyway, and an
     // animation still running when the sheet closes would outlive the reset to the first view).
     const instant = mode === 'focus' || coverBottom > 0 || prefersReducedMotion();
+    if (Math.abs(p.x - positionX) < 0.5 && Math.abs(p.y - positionY) < 0.5 && scale === current) return false;
+    atFirstView.current = false;
     void z.setTransform(p.x, p.y, scale, instant ? 0 : 250);
+    return true;
   };
 
   // Pan to a newly selected location (also the one selected on arrival, once the box is measured).
-  // A pan made to clear a phone's sheet is undone when the sheet closes: back to the first view,
-  // every pin on screen again (QA M2). The view is reset in place, never by remounting the
-  // transform: a remount replaces every pin button just after the sheet closes, so a pin the player
-  // has just focused or started to tap is detached and the Enter or the tap is lost.
-  const pannedUnderSheet = useRef(false);
+  // A pan made for a sheet is undone when the sheet closes: back to the first view, every pin on
+  // screen and clear of the plate again (QA M2; on desktop the plate unfolds as the sheet closes).
+  // The view is reset in place (resetView), so a pin the player has just focused or started to tap
+  // is never detached and the Enter or the tap is not lost.
+  const pannedForSheet = useRef(false);
   useEffect(() => {
     if (w === 0) return;
     const target = locations.find((l) => l.id === selectedId);
+    // Closed: measure the overlays again (they were held while the sheet was open).
+    if (!target) measureRef.current();
     // The first measure remounts the transform (its key): wait a frame for the new instance.
     const id = requestAnimationFrame(() => {
       if (target) {
-        panTo(target, 'select');
-        pannedUnderSheet.current = coverBottom > 0;
-      } else if (pannedUnderSheet.current) {
-        pannedUnderSheet.current = false;
-        // 1 ms, not 0: an animated transform first cancels any momentum still running from a flick
-        // (an instant one would set the view and let that momentum carry on over it). It lands on
-        // the target on the next frame.
-        void zoomRef.current?.setTransform(initial.x, initial.y, initial.scale, 1);
+        pannedForSheet.current = panTo(target, 'select') || pannedForSheet.current;
+      } else if (pannedForSheet.current) {
+        pannedForSheet.current = false;
+        resetView();
       }
     });
     return () => cancelAnimationFrame(id);
@@ -245,6 +485,10 @@ export function CityMap({
   const lastPointerDown = useRef(0);
   const onPinFocus = (l: MapHotspot) => {
     if (Date.now() - lastPointerDown.current > 1_000) panTo(l, 'focus');
+  };
+  /** The player moved the map: a new first view no longer moves it. */
+  const moved = () => {
+    atFirstView.current = false;
   };
 
   // The browser also scrolls the clipped wrappers to reveal a focused element, which would shift the
@@ -266,7 +510,7 @@ export function CityMap({
     <div ref={boxRef} className={cx('relative overflow-hidden bg-ink', className)} data-testid="city-map">
       {size && w > 0 && h > 0 && (
         <TransformWrapper
-          key={`${Math.round(contentW)}x${Math.round(contentH)}`}
+          key={contentKey}
           ref={zoomRef}
           initialScale={initial.scale}
           initialPositionX={initial.x}
@@ -276,18 +520,23 @@ export function CityMap({
           limitToBounds
           doubleClick={{ disabled: true }}
           panning={{ excluded: ['hotspot'] }}
+          onPanning={moved}
+          onPinch={moved}
+          onWheel={moved}
         >
           <TransformComponent
             wrapperStyle={{ width: w, height: h }}
             contentStyle={{ width: contentW, height: contentH }}
           >
             <div className="relative" style={{ width: contentW, height: contentH }}>
-              <Picture
-                asset={map.day}
-                sizes={`${Math.round(contentW)}px`}
-                loading="eager"
-                className="absolute inset-0 size-full select-none"
-              />
+              {dayMounted && (
+                <Picture
+                  asset={map.day}
+                  sizes={`${Math.round(contentW)}px`}
+                  loading="eager"
+                  className="absolute inset-0 size-full select-none"
+                />
+              )}
               <div
                 className="absolute inset-0 transition-opacity duration-700"
                 style={{ opacity: isNight ? 1 : 0 }}

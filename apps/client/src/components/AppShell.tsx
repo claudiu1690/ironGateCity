@@ -3,6 +3,7 @@ import { HudBar, TabBar } from '@irongate/ui';
 import type { TabId, TabItem } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
+import { useLayoutEffect, useRef } from 'react';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { trpc } from '../lib/trpc';
 import { useMinWidth } from '../lib/useNow';
@@ -21,6 +22,14 @@ export function AppShell() {
   // The ticker (wide screens) and the "paper is in" banner both need the paper's name.
   const paper = useQuery({ ...trpc.paper.today.queryOptions(), enabled: !!character && (wide || paperDue) });
 
+  // QA m4: one <main> scrolls every screen, so a new screen (another tab, a chapter) opens at its
+  // top instead of at the last one's scroll position. A change of search only (a pin's sheet on the
+  // city map) keeps it.
+  const mainRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    if (mainRef.current) mainRef.current.scrollTop = 0;
+  }, [pathname]);
+
   const active: TabId = pathname.startsWith('/paper') ? 'paper' : pathname.startsWith('/me') ? 'me' : 'map';
   const cityHref = character ? `/city/${character.cityId}` : '/';
   const items: TabItem[] = [
@@ -29,7 +38,7 @@ export function AppShell() {
       id: 'paper',
       label: 'Paper',
       href: '/paper',
-      // Slice-2 §20 Q8: also while an Ambition chapter is ready (a Letter).
+      // Also while an Ambition chapter is ready, the Letter opened or not (onboarding §14.3 n7).
       dot: (!!character?.paperDue || (character?.lettersWaiting ?? 0) > 0) && active !== 'paper',
     },
     { id: 'dossier', label: 'Dossier', href: '#', disabled: true },
@@ -67,7 +76,7 @@ export function AppShell() {
           {copy.paperIsIn(paper.data.paper.shortName)}
         </Link>
       )}
-      <main className="relative min-h-0 flex-1 overflow-y-auto pb-16 lg:pb-0">
+      <main ref={mainRef} className="relative min-h-0 flex-1 overflow-y-auto pb-16 lg:pb-0">
         <Outlet />
       </main>
       {wide && (slotA || lead) && (
@@ -82,8 +91,9 @@ export function AppShell() {
           )}
           {lead && (
             <>
-              <span className="text-collective" aria-hidden="true">
-                ■
+              {/* n10: a neutral middle dot, no faction's mark as punctuation (onboarding §14.3). */}
+              <span className="text-dim" aria-hidden="true">
+                ·
               </span>
               <span className="font-mono text-[13px]">{lead.headline}</span>
             </>

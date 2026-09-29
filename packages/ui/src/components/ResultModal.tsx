@@ -259,8 +259,40 @@ function ResultBody({
           <h3 id="effects" className="label-caps mb-1 text-[10px] text-muted">
             Knock-on effects
           </h3>
-          {(item || hooks.length > 0) && (
+          {/* n2: the level-up and its stat point first, so on a desktop it is on the first screen with
+              Continue, not below the list of effects. */}
+          {e.levelUp && (
+            <div
+              className="mb-2 flex flex-col gap-1.5 border-[1.5px] border-xp bg-paper-card p-2.5"
+              data-testid="effect-level"
+            >
+              <span className="font-label text-[14px]">
+                {copy.levelUpLine(e.levelUp.from, e.levelUp.to, e.levelUp.statPoints)}
+              </span>
+              {statPoints && onPlaceStat && !later && (
+                <StatPointsPanel
+                  pending={statPoints.pending}
+                  level={statPoints.level}
+                  stats={statPoints.stats}
+                  onPlace={onPlaceStat}
+                  placing={placing}
+                  onLater={() => setLater(true)}
+                  title={statPoints.pending > 0 ? copy.pointsToPlace(statPoints.pending) : undefined}
+                />
+              )}
+            </div>
+          )}
+          {(item || hooks.length > 0 || e.ordersAllDone) && (
             <ul className="flex flex-col">
+              {/* m5: where PC first appears, the same line on every device (onboarding §14.1). */}
+              {e.ordersAllDone && (
+                <li
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  data-testid="effect-all-orders"
+                >
+                  {copy.allOrdersDone(e.ordersAllDone.pc)}
+                </li>
+              )}
               {item && (
                 <li
                   className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
@@ -299,9 +331,6 @@ function ResultBody({
                 testId="effect-order"
               />
             ))}
-            {e.ordersAllDone && (
-              <Effect label="All three orders done" value={`+${e.ordersAllDone.pc} Political Capital`} />
-            )}
             {e.rankUp && <Effect label={`Rank ${e.rankUp.to}`} value={e.rankUp.title} />}
             {e.stat && (
               <Effect
@@ -338,27 +367,6 @@ function ResultBody({
             )}
             {e.pc && <Effect label="Political Capital" value={`${e.pc.before} → ${e.pc.after}`} />}
           </dl>
-          {e.levelUp && (
-            <div
-              className="mt-2 flex flex-col gap-1.5 border-[1.5px] border-xp bg-paper-card p-2.5"
-              data-testid="effect-level"
-            >
-              <span className="font-label text-[14px]">
-                {copy.levelUpLine(e.levelUp.from, e.levelUp.to, e.levelUp.statPoints)}
-              </span>
-              {statPoints && onPlaceStat && !later && (
-                <StatPointsPanel
-                  pending={statPoints.pending}
-                  level={statPoints.level}
-                  stats={statPoints.stats}
-                  onPlace={onPlaceStat}
-                  placing={placing}
-                  onLater={() => setLater(true)}
-                  title={statPoints.pending > 0 ? copy.pointsToPlace(statPoints.pending) : undefined}
-                />
-              )}
-            </div>
-          )}
         </section>
       </div>
 

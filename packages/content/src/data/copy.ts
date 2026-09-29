@@ -3,6 +3,34 @@
  * British English, no exclamation marks. Times are formatted by the caller in the player's local
  * clock ("UTC" never appears on a button). Plain data: safe to import in the client.
  */
+import type { LocationKind } from '../schemas';
+
+/**
+ * The kicker on a location's sheet, "1 · Public office" (onboarding §14.3 n9): one per §13.5 kind,
+ * so a new kind needs content, never client code.
+ */
+const KIND_LABELS: Record<LocationKind, string> = {
+  'factory-gate': 'Factory gate',
+  docks: 'Docks',
+  market: 'Market',
+  station: 'Station',
+  street: 'Street',
+  square: 'Square',
+  bar: 'Bar',
+  hotel: 'Hotel',
+  press: 'Press',
+  'faction-hq': 'Party hall',
+  hospital: 'Hospital',
+  jail: 'Jail',
+  court: 'Courts',
+  university: 'University',
+  library: 'Library',
+  gym: 'Club',
+  barracks: 'Landmark',
+  parliament: 'Parliament',
+  ministry: 'Public office',
+};
+
 /** "Mill Gate, Market Row or Harbour Quays": commas, then a final "or". */
 function listOr(items: string[]): string {
   if (items.length <= 1) return items[0] ?? '';
@@ -91,6 +119,23 @@ export const copy = {
     ]
       .filter(Boolean)
       .join(', '),
+  // Slice-2 QA design answers (onboarding §14).
+  /** The sign-up name, under the field on submit (§14.2; GDD §7.3): 2–40 characters once trimmed. */
+  nameBlank: "Your name can't be blank",
+  nameTooShort: 'Your name needs at least 2 characters',
+  nameTooLong: 'Your name can have at most 40 characters',
+  /** The name of an account made before the name rule with none (§14.2): neutral in every faction. */
+  unnamed: 'A Newcomer',
+  /** Me tab (§14.1): "Political Capital 5"; the HUD says "PC". */
+  politicalCapital: (pc: number) => `Political Capital ${pc}`,
+  /** The location sheet's kicker (§14.3 n9). */
+  kindLabel: (kind: string) => KIND_LABELS[kind as LocationKind] ?? String(kind).replace(/-/g, ' '),
+  /**
+   * The chapter screen while the next chapter waits (§14.3 n13): "From Tuesday 6 October, at Rank 2",
+   * or "From Tuesday 6 October" with no requirement.
+   */
+  chapterWaitsUntil: (from: string, needs: string | null) => `From ${from}${needs ? `, at ${needs}` : ''}`,
+  backToThePaper: 'Back to the paper',
 } as const;
 
 export type Copy = typeof copy;

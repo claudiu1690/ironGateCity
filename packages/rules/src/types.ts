@@ -328,7 +328,10 @@ export interface CharacterView {
     status: ChapterStatusKind;
     readyFrom: number | null;
   };
-  /** The Paper tab's dot for a Letter (§20 Q8): 1 while a chapter is ready, else 0. */
+  /**
+   * The Paper tab's dot for a Letter: 1 while a chapter is ready, whether or not the Letter was
+   * opened; 0 once it is played or midway (onboarding §14.3 n7, which supersedes §13 Q8).
+   */
   lettersWaiting: number;
 }
 
@@ -579,7 +582,9 @@ export type GameErrorReason =
   | 'CHAPTER_NOT_READY'
   | 'CHOOSE_FIRST'
   | 'UNKNOWN_CHOICE'
-  | 'UNKNOWN_APPROACH';
+  | 'UNKNOWN_APPROACH'
+  // Slice-2 QA m3: the name rule (§7.3) at the join; `problem` is blank, short or long.
+  | 'BAD_NAME';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -659,4 +664,9 @@ export interface AmbitionView {
   /** ready → the choose screen; midway → the check screen. */
   screen: StoryScreenView | null;
   letterFrom: string | null;
+  /**
+   * With no screen, while the next chapter waits (or is not written yet): the hook, "From Tuesday
+   * 6 October, at Rank 2" (onboarding §14.3 n13), or null when no chapter follows.
+   */
+  waitsUntil: string | null;
 }

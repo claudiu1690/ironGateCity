@@ -2,7 +2,7 @@ import { copy } from '@irongate/content/copy';
 import type { GameContent } from '@irongate/content';
 import { Arrival, Character, City, PaperEntry, isDuplicateKeyError } from '@irongate/db';
 import type { ArrivalDoc, CharacterDoc } from '@irongate/db';
-import { buildNewCharacter, resolveOrigin } from '@irongate/rules';
+import { NAME, buildNewCharacter, checkName, resolveOrigin } from '@irongate/rules';
 import type {
   ArrivalView,
   CharacterView,
@@ -24,7 +24,17 @@ import { assetView, toCharacterView } from './views';
  * the character, its first City Day and its welcome edition in one transaction.
  */
 
-const NAME_MAX = 60;
+/**
+ * The draft's name from the account's (§7.3, onboarding §14.2). Sign-up refuses a name outside the
+ * rule, so this only changes an account made before it: none or one character becomes the neutral
+ * `copy.unnamed` ("A Newcomer", in every faction), a longer one is cut to 40 characters.
+ */
+function draftName(accountName: string): string {
+  const r = checkName(accountName);
+  if (r.ok) return r.name;
+  if (r.reason === 'long') return [...r.name].slice(0, NAME.max).join('').trim();
+  return copy.unnamed;
+}
 
 type Landing = { cityId: string; locationId: string };
 
@@ -108,7 +118,7 @@ function street(content: GameContent, a: ArrivalDoc): NonNullable<ArrivalView['s
 }
 
 function arrivalView(content: GameContent, a: ArrivalDoc | null, user: SessionUser): ArrivalView {
-  const name = a?.name ?? user.name;
+  const name = a?.name ?? draftName(user.name);
   const avatar = a?.avatarId ? assetView(content, a.avatarId) : null;
   const base = { name, avatar, faces: null, screen: null, questionId: null, street: null, landing: null };
   if (!a || !a.avatarId) {
@@ -171,7 +181,7 @@ export async function startArrival(
       {
         $setOnInsert: {
           userId: user.id,
-          name: user.name.trim().slice(0, NAME_MAX) || 'Comrade',
+          name: draftName(user.name),
           answers: [],
         },
         $set: { avatarId },
@@ -256,6 +266,9 @@ export async function joinArrival(
         const a = await Arrival.findOne({ userId: user.id }).session(session).lean<ArrivalDoc>();
         if (!a || !a.avatarId) throw new GameError('NO_FACE');
         if (a.completedAt) throw new VersionConflict(); // someone joined first: read their character
+        // §7.3: the name rule again at the join (the character is named from the draft).
+        const named = checkName(a.name);
+        if (!named.ok) throw new GameError('BAD_NAME', { problem: named.reason }, 'BAD_REQUEST');
         const faction = content.faction(factionId);
         const answers = a.answers.map((x) => ({ questionId: x.questionId, answerId: x.answerId }));
         const o = resolveOrigin({ origin: content.originSpec, answers, faction });
@@ -264,7 +277,7 @@ export async function joinArrival(
         const _id = new Types.ObjectId();
         const state = buildNewCharacter({
           userId: user.id,
-          name: a.name,
+          name: named.name,
           avatarId: a.avatarId,
           factionId,
           homeCityId: faction.homeCityId,

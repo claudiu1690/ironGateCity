@@ -37,6 +37,47 @@ describe('HTTP', () => {
     expect(typeof res.json().version).toBe('string');
   });
 
+  // Slice-2 QA m3 (§7.3, onboarding §14.2): the name is 2–40 characters once trimmed.
+  it('sign-up refuses a blank, one-character or 41-character name, and stores a name normalised', async () => {
+    const signUp = (name: string) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/auth/sign-up/email',
+        headers: { 'content-type': 'application/json', origin: ORIGIN },
+        payload: {
+          name,
+          email: `name-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`,
+          password: 'correct-horse-battery',
+        },
+      });
+    for (const [name, code, message] of [
+      ['   ', 'NAME_BLANK', "Your name can't be blank"],
+      ['', 'NAME_BLANK', "Your name can't be blank"],
+      [' K ', 'NAME_TOO_SHORT', 'Your name needs at least 2 characters'],
+      ['A'.repeat(41), 'NAME_TOO_LONG', 'Your name can have at most 40 characters'],
+    ] as const) {
+      const res = await signUp(name);
+      expect(res.statusCode, JSON.stringify(name)).toBe(400);
+      expect(res.json()).toMatchObject({ code, message });
+    }
+    const ok = await signUp("  Zoë   O'Hara ");
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().user.name).toBe("Zoë O'Hara");
+    // A later change through Better Auth's update-user is held to the same rule.
+    const cookie = cookieHeader(ok.headers['set-cookie']);
+    const update = (name: string) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/auth/update-user',
+        headers: { 'content-type': 'application/json', origin: ORIGIN, cookie },
+        payload: { name },
+      });
+    expect((await update('  ')).statusCode).toBe(400);
+    expect((await update(' Zoë  Hara ')).statusCode).toBe(200);
+    const session = await app.inject({ method: 'GET', url: '/api/auth/get-session', headers: { cookie } });
+    expect(session.json().user.name).toBe('Zoë Hara');
+  });
+
   // Slice 2 (ADR 0011): sign-up leads to the arrival; the character exists once it is done.
   it('sign up → session cookie → the arrival → character.me', async () => {
     const email = `mara-${Date.now()}@example.test`;

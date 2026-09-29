@@ -2,7 +2,7 @@ export { Button } from './components/Button';
 export type { ButtonProps, ButtonVariant } from './components/Button';
 export { CheckBreakdownList } from './components/CheckBreakdownList';
 export { CityMap, fitPinsView } from './components/CityMap';
-export type { CityMapProps, MapHotspot, MapInsets, MapView } from './components/CityMap';
+export type { CityMapProps, MapHotspot, MapInsets, MapRect, MapView } from './components/CityMap';
 export { FACTION_STYLE, FactionCrest } from './components/FactionCrest';
 export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';
@@ -35,5 +35,12 @@ export type { StampProps, StampTone } from './components/Stamp';
 export { TYPE_LABEL, Ticket } from './components/Ticket';
 export type { TicketProps } from './components/Ticket';
 export * from './format';
-export { AvatarPicker, FactionCard, ItemLine, LettersRow, StoryScreen } from './components/Story';
+export {
+  AvatarPicker,
+  FactionCard,
+  ItemLine,
+  LettersRow,
+  STORY_SETTLE_MS,
+  StoryScreen,
+} from './components/Story';
 export type { AvatarPickerProps, FactionCardProps, StoryScreenProps } from './components/Story';

@@ -97,6 +97,53 @@ describe('arrival: the face and the origin (ADR 0011)', () => {
     });
   });
 
+  it('QA M1: an answer is bound to the question it was shown for; a late tap on an answered question changes nothing', async () => {
+    const { user, caller } = fresh();
+    await caller.arrival.start({ avatarId: 'avatar.woman-20s' });
+    const shown = await caller.arrival.get();
+    expect(shown.questionId).toBe(REF[0]!.questionId);
+    const after = await caller.arrival.answer({ questionId: shown.questionId!, answerId: 'a' });
+    expect(after.questionId).toBe(REF[1]!.questionId);
+    // The double tap's second tap, still carrying the first question's id (its button was rendered
+    // for it), with the same answer and with another: nothing is stored for question 2, and the
+    // player is shown question 2, unanswered.
+    for (const answerId of ['a', 'b', 'c']) {
+      const v = await caller.arrival.answer({ questionId: shown.questionId!, answerId });
+      expect(v.questionId).toBe(REF[1]!.questionId);
+      expect(v.screen?.echo).toBe(after.screen?.echo);
+    }
+    const stored = (await Arrival.findOne({ userId: user.id }).lean())!.answers;
+    expect(stored.map((s) => [s.questionId, s.answerId])).toEqual([[REF[0]!.questionId, 'a']]);
+  });
+
+  it('QA m3: an account named before the name rule: blank or one letter reads "A Newcomer", a long name is cut to 40', async () => {
+    const named = async (accountName: string) => {
+      const { caller } = fresh(accountName);
+      return (await caller.arrival.start({ avatarId: 'avatar.woman-20s' })).name;
+    };
+    expect(await named('   ')).toBe('A Newcomer');
+    expect(await named('K')).toBe('A Newcomer');
+    expect(await named('  Mara   Lenk ')).toBe('Mara Lenk');
+    expect(await named(`${'Abcdefghij'.repeat(4)} Lenk`)).toBe('Abcdefghij'.repeat(4));
+    // The face screen (before any draft) names them the same way.
+    expect((await fresh('  ').caller.arrival.get()).name).toBe('A Newcomer');
+  });
+
+  it('QA m3: the join refuses a draft whose name breaks the rule (BAD_NAME), and names the character normalised', async () => {
+    const { user, caller } = fresh('Mara Lenk');
+    await caller.arrival.start({ avatarId: 'avatar.woman-20s' });
+    for (const a of REF) await caller.arrival.answer(a);
+    await Arrival.updateOne({ userId: user.id }, { $set: { name: 'K' } });
+    expect(await refusal(caller.arrival.join({ factionId: 'vanguard' }))).toMatchObject({
+      code: 'BAD_REQUEST',
+      game: { reason: 'BAD_NAME', problem: 'short' },
+    });
+    expect(await Character.countDocuments({ userId: user.id })).toBe(0);
+    await Arrival.updateOne({ userId: user.id }, { $set: { name: 'Mara   Lenk' } });
+    const r = await caller.arrival.join({ factionId: 'vanguard' });
+    expect(r.character.name).toBe('Mara Lenk');
+  });
+
   it('the street: three cards, the wish tag on the card of the father wish, the confirm labels', async () => {
     const { caller } = fresh();
     await caller.arrival.start({ avatarId: 'avatar.woman-20s' });

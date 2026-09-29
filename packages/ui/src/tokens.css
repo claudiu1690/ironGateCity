@@ -36,6 +36,10 @@
   --color-vanguard: #c39a3a;
   --color-collective: #8c2b23;
   --color-alliance: #4b7394;
+  /* Faction colours as text on paper (4.5:1 on paper-card; slice-2 QA m1, design §14.3). The
+     Collective's red already passes. Fills, crests and marks keep the colours above. */
+  --color-vanguard-text: #7d5f18;
+  --color-alliance-text: #3a5b78;
   --color-neutral: #8a8577;
 
   /* Type */

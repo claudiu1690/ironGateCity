@@ -331,7 +331,8 @@ export function toCharacterView(
       status: status.kind,
       readyFrom: status.kind === 'waiting' ? dayStart(status.readyFrom) : null,
     },
-    // §20 Q8: the Paper tab's dot while a chapter is ready (not mid-way).
+    // The Paper tab's dot while a chapter is ready, opened or not; off when played or mid-way
+    // (onboarding §14.3 n7).
     lettersWaiting: status.kind === 'ready' ? 1 : 0,
   };
 }

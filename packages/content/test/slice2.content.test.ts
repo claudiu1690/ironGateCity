@@ -52,13 +52,14 @@ function rows(text: string, row: RegExp): string[][] {
 }
 
 describe('the real content, slice 2', () => {
-  it('has 3 cities, 64 actions, 9 jobs, 36 order templates, 3 papers, 9 items, 3 Ambitions, 6 faces', () => {
+  it('has 3 cities, 64 actions, 9 jobs, 36 order templates, 3 papers, 10 items, 3 Ambitions, 6 faces', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford']);
     expect(content.cities.flatMap((c) => c.locations.flatMap((l) => l.actions))).toHaveLength(64);
     expect(content.jobs).toHaveLength(9);
     expect(content.orderTemplates).toHaveLength(36);
     expect(content.cities.map((c) => c.paper?.shortName)).toEqual(['Clarion', 'Sentinel', 'Gazette']);
-    expect(content.items).toHaveLength(9);
+    // Slice 2's nine, and chapter 2's keepsake that GDD §21.4 catalogues for slice 3.
+    expect(content.items).toHaveLength(10);
     expect(content.ambitions.map((a) => [a.id, a.chaptersPlanned])).toEqual([
       ['finish-his-work', 12],
       ['clear-his-name', 12],
@@ -350,7 +351,9 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
 
   it('§4.2: the nine items with slot, tier, CHA and keepsake flag', () => {
     const r = rows(section(ONB, '### 4.2', '§21.2'), /^\| `/);
-    expect(r.map((x) => unq(x[0]!))).toEqual(content.items.map((i) => i.id));
+    // The slice-3 keepsake (GDD §21.4) is not in the slice-2 design's list.
+    const slice2 = content.items.filter((i) => i.id !== 'keep.election-bill');
+    expect(r.map((x) => unq(x[0]!))).toEqual(slice2.map((i) => i.id));
     for (const [id, name, slot, , effects, flags] of r) {
       const item = content.item(unq(id!))!;
       expect(item.name).toBe(name);
@@ -390,9 +393,10 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
         expect(doc).toContain(`- ${label} — *${s.result[o].headline}* — ${s.result[o].body}`);
       }
       const hook = amb.chapters[1]!;
-      expect(doc).toContain(
-        `Chapter 2, "${hook.title}": from {date}, at ${copy.chapterNeeds(hook.requires!)}`,
-      );
+      // The requirement part is superseded in slice 3 (slice-3-politics.md §17 Q21: chapter 2 keys
+      // off the first ballot); until then the content keeps the slice-2 requirement.
+      expect(doc).toContain(`Chapter 2, "${hook.title}": from {date}, `);
+      expect(copy.chapterNeeds(hook.requires!)).toMatch(/^(Rank|Level) \d+$/);
       expect(doc).toContain(copy.keepsakeLine(content.item(s.keepsake)!.name));
       expect([s.check.difficulty, s.check.energy, s.rewards]).toEqual([
         8,

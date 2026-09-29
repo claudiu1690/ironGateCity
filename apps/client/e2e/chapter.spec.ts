@@ -53,4 +53,14 @@ test('Letters → choose → approach → Walk his ward → keepsake and hook �
   await page.getByRole('link', { name: /^Paper/ }).click();
   await expect(page.getByTestId('desk')).toBeVisible();
   await expect(page.getByTestId('letters-row')).toHaveCount(0);
+
+  // n13: the chapter screen now shows the hook instead of an empty chapter, and leads back.
+  await page.goto('/story/ambition');
+  await expect(page.getByRole('heading', { name: 'Stand where he stood' })).toBeVisible();
+  await expect(page.getByTestId('chapter-waits')).toHaveText(
+    /^From [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, at Rank 2$/,
+  );
+  await expect(page.getByTestId('story-choice')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Back to the paper' }).click();
+  await expect(page).toHaveURL(/\/paper$/);
 });

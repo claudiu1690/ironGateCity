@@ -19,3 +19,4 @@ export * from './paper';
 export * from './items';
 export * from './origin';
 export * from './ambition';
+export * from './name';

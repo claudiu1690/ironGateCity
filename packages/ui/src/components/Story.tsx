@@ -1,7 +1,7 @@
 import { copy } from '@irongate/content/copy';
 import type { AssetView, FactionCardView, LetterView, StoryScreenView } from '@irongate/rules';
-import { useId } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import { cx, statLabel } from '../format';
 import { CheckBreakdownList } from './CheckBreakdownList';
 import { FACTION_STYLE } from './FactionCrest';
@@ -46,10 +46,77 @@ function StoryArt({ view }: { view: StoryScreenView }) {
   );
 }
 
+/**
+ * QA M1: how long a new screen's choices and approaches ignore taps. The second tap of a double tap
+ * lands 80–400 ms after the first; when the answer is back before it, the next question is already
+ * on screen, in the same place. A tap that early cannot be meant for a question the player has not
+ * read yet, so a screen's choices take taps only once they have been on screen this long.
+ */
+export const STORY_SETTLE_MS = 500;
+
+/**
+ * QA n4: the arrow keys of the ARIA radio group on a `role="radio"` button: Up/Left and Down/Right
+ * move to the previous or next radio of its group and pick it, Home and End to the first and last.
+ * Each radio stays its own Tab stop as well (players reach the cards with Tab).
+ */
+export function onRadioArrowKey(e: KeyboardEvent<HTMLElement>): void {
+  const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+  if (step === undefined && e.key !== 'Home' && e.key !== 'End') return;
+  const group = e.currentTarget.closest('[role="radiogroup"]');
+  if (!group) return;
+  const radios = [...group.querySelectorAll<HTMLElement>('[role="radio"]')];
+  const at = radios.indexOf(e.currentTarget);
+  const to =
+    e.key === 'Home' ? 0 : e.key === 'End' ? radios.length - 1 : (at + step! + radios.length) % radios.length;
+  const next = radios[to];
+  if (!next) return;
+  e.preventDefault();
+  next.focus();
+  next.click(); // a key press: `detail` 0, so a settling screen does not hold it back
+}
+
+/** A key for a screen when the caller gives none: what the player reads on it. */
+const keyOf = (v: StoryScreenView) =>
+  [v.kicker, v.title, v.prompt, ...v.choices.map((c) => c.id), ...v.approaches.map((a) => a.id)].join('|');
+
+/**
+ * True once the screen `key` has been shown for `settleMs` (QA M1). Until then a tap does nothing.
+ * The first screen settles too when `settleOnMount` (it replaced a screen the player just tapped:
+ * the face, the Letters row); a screen opened by a page load takes taps at once. A keyboard
+ * activation (`detail === 0`) is not held back: the focus leaves the choices when the screen
+ * changes (below), so a repeated Enter or Space cannot land on the next screen's choices.
+ */
+function useSettled(key: string, settleMs: number, settleOnMount: boolean): boolean {
+  const [settledKey, setSettledKey] = useState<string | null>(settleOnMount && settleMs > 0 ? null : key);
+  useEffect(() => {
+    if (settleMs <= 0) return;
+    const t = setTimeout(() => setSettledKey(key), settleMs);
+    return () => clearTimeout(t);
+  }, [key, settleMs]);
+  return settleMs <= 0 || settledKey === key;
+}
+
 export interface StoryScreenProps {
   view: StoryScreenView;
-  /** One tap commits a choice (the origin, chapter step 1). */
-  onChoose?: (id: string) => void;
+  /**
+   * What this screen is (the question id, the chapter step). Its choices are keyed by it, so the
+   * next screen's choices are new buttons, and each tap carries the key of the screen its button
+   * was rendered for (QA M1). Defaults to the view's texts.
+   */
+  screenKey?: string;
+  /** Taps are ignored this long after the screen changes (QA M1). */
+  settleMs?: number;
+  /**
+   * The first screen shown also ignores taps for `settleMs`: set it when the screen replaces one the
+   * player has just tapped (the face's Continue, the Letters row), so a double tap there cannot
+   * reach a choice. Off for a screen opened by a page load.
+   */
+  settleOnMount?: boolean;
+  /**
+   * One tap commits a choice (the origin, chapter step 1). `screenKey` is the screen the tapped
+   * button was rendered for: the caller drops a tap for a screen that is no longer current.
+   */
+  onChoose?: (id: string, screenKey: string) => void;
   /** The choice being sent: every choice is disabled meanwhile. */
   pendingChoice?: string | null;
   /** Chapter step 2: the picked approach (client state until the CTA). */
@@ -79,6 +146,9 @@ export interface StoryScreenProps {
  */
 export function StoryScreen({
   view,
+  screenKey,
+  settleMs = STORY_SETTLE_MS,
+  settleOnMount = false,
   onChoose,
   pendingChoice = null,
   selectedApproach = null,
@@ -96,6 +166,26 @@ export function StoryScreen({
   const full = layout === 'fullscreen';
   const cta = view.cta;
   const short = cta !== null && cta.readyAt !== null;
+  const key = screenKey ?? keyOf(view);
+  const settled = useSettled(key, settleMs, settleOnMount);
+  /** A tap (not a key press) on a screen that is still settling: ignored (QA M1). */
+  const early = (e: MouseEvent) => !settled && e.detail !== 0;
+
+  // When the screen changes its old buttons go, and the focus with them: put it on the new prompt
+  // (or the title), so a screen reader reads the new question and Tab moves on to its choices.
+  const sectionRef = useRef<HTMLElement>(null);
+  const promptRef = useRef<HTMLParagraphElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const shownKey = useRef(key);
+  useEffect(() => {
+    if (shownKey.current === key) return;
+    shownKey.current = key;
+    const active = document.activeElement;
+    // The player is elsewhere (another field, the corner button): leave the focus there.
+    if (active && active !== document.body && !sectionRef.current?.contains(active)) return;
+    (promptRef.current ?? headingRef.current)?.focus({ preventScroll: true });
+  }, [key]);
+
   return (
     <div
       className={cx(
@@ -106,6 +196,7 @@ export function StoryScreen({
       )}
     >
       <section
+        ref={sectionRef}
         aria-labelledby={titleId}
         className={cx(
           'relative mx-auto flex flex-col bg-paper lg:flex-row lg:shadow-[0_0_0_1px_var(--color-ink),0_30px_80px_rgb(0_0_0/0.6)]',
@@ -124,7 +215,12 @@ export function StoryScreen({
           />
           <div className="absolute inset-x-0 bottom-0 flex flex-col gap-0.5 px-4 pb-2.5 text-paper lg:bg-ink lg:px-5 lg:py-4">
             <span className="label-caps text-[10px] text-dim lg:text-[11px]">{view.kicker}</span>
-            <h1 id={titleId} className="font-display text-[24px] leading-[1.05] font-black lg:text-[28px]">
+            <h1
+              id={titleId}
+              ref={headingRef}
+              tabIndex={-1}
+              className="font-display text-[24px] leading-[1.05] font-black outline-none lg:text-[28px]"
+            >
               {view.title}
             </h1>
           </div>
@@ -152,7 +248,9 @@ export function StoryScreen({
                   />
                 )}
                 <p
-                  className="font-display text-[18px] leading-tight font-bold lg:text-[21px]"
+                  ref={promptRef}
+                  tabIndex={-1}
+                  className="font-display text-[18px] leading-tight font-bold outline-none lg:text-[21px]"
                   data-testid="story-prompt"
                 >
                   “{view.prompt}”
@@ -160,17 +258,30 @@ export function StoryScreen({
               </div>
             )}
             {view.choices.length > 0 && (
-              <div className="flex flex-col gap-2" role="group" aria-label={view.prompt ?? view.title}>
+              <div
+                className={cx(
+                  'flex flex-col gap-2 transition-opacity duration-300',
+                  !settled && 'opacity-60',
+                )}
+                role="group"
+                aria-label={view.prompt ?? view.title}
+              >
                 {view.choices.map((c) => (
                   <button
-                    key={c.id}
+                    // Keyed by the screen: the next question's choices are new buttons (QA M1).
+                    key={`${key}:${c.id}`}
                     type="button"
                     disabled={pendingChoice !== null}
+                    aria-disabled={!settled || undefined}
                     aria-busy={pendingChoice === c.id || undefined}
-                    onClick={() => onChoose?.(c.id)}
+                    onClick={(e) => {
+                      if (early(e)) return;
+                      onChoose?.(c.id, key);
+                    }}
                     className={cx(
-                      'flex min-h-14 w-full cursor-pointer flex-col items-start justify-center gap-0.5 border-[1.5px] border-ink bg-paper-card px-3.5 py-2 text-left',
-                      'hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol',
+                      'flex min-h-14 w-full flex-col items-start justify-center gap-0.5 border-[1.5px] border-ink bg-paper-card px-3.5 py-2 text-left',
+                      'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol',
+                      settled ? 'cursor-pointer hover:bg-ink hover:text-paper' : 'cursor-default',
                       'disabled:cursor-default disabled:opacity-70 disabled:hover:bg-paper-card disabled:hover:text-ink',
                       pendingChoice === c.id && 'bg-ink! text-paper! opacity-100!',
                     )}
@@ -183,17 +294,29 @@ export function StoryScreen({
               </div>
             )}
             {view.approaches.length > 0 && (
-              <div className="flex flex-col gap-2" role="radiogroup" aria-label="Choose your approach">
+              <div
+                className={cx(
+                  'flex flex-col gap-2 transition-opacity duration-300',
+                  !settled && 'opacity-60',
+                )}
+                role="radiogroup"
+                aria-label="Choose your approach"
+              >
                 <span className="label-caps text-[10px] text-muted">Choose your approach</span>
                 {view.approaches.map((a) => {
                   const on = selectedApproach === a.id;
                   return (
-                    <div key={a.id} className="flex flex-col">
+                    <div key={`${key}:${a.id}`} className="flex flex-col">
                       <button
                         type="button"
                         role="radio"
                         aria-checked={on}
-                        onClick={() => onSelectApproach?.(a.id)}
+                        aria-disabled={!settled || undefined}
+                        onClick={(e) => {
+                          if (early(e)) return;
+                          onSelectApproach?.(a.id);
+                        }}
+                        onKeyDown={onRadioArrowKey}
                         className={cx(
                           'flex min-h-14 w-full cursor-pointer flex-col gap-1.5 border-[1.5px] border-ink px-3.5 py-2.5 text-left',
                           on ? 'bg-ink text-paper' : 'bg-paper-card hover:bg-paper',
@@ -277,14 +400,22 @@ export interface FactionCardProps {
 export function FactionCard({ card, selected, onSelect }: FactionCardProps) {
   const first = card.blurb.split(/(?<=\.)\s/)[0];
   const color = FACTION_STYLE[card.factionId].color;
+  // QA n3: a selected card grows by its blurb and facts; bring the whole card into view, above the
+  // sticky confirm (scroll-margin), so the facts are not left under it on a small phone.
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (selected) ref.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [selected]);
   return (
     <button
+      ref={ref}
       type="button"
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
+      onKeyDown={onRadioArrowKey}
       className={cx(
-        'flex w-full cursor-pointer gap-3 border-[1.5px] border-ink p-3 text-left',
+        'flex w-full scroll-mt-4 scroll-mb-36 cursor-pointer gap-3 border-[1.5px] border-ink p-3 text-left',
         selected ? 'bg-paper-card shadow-[inset_4px_0_0_var(--faction)]' : 'bg-paper hover:bg-paper-card',
       )}
       style={{ ['--faction' as string]: color }}

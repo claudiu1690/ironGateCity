@@ -7,8 +7,8 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { getContent } from '@irongate/content';
 import type { ActionResult } from '@irongate/rules';
-import { ActionLog, Arrival, Character, PaperEntry, connectDb, disconnectDb } from '../src';
-import { buildArrivalFunnels } from '../src/funnel';
+import { ActionLog, Arrival, Character, PaperEntry, RequestLog, connectDb, disconnectDb } from '../src';
+import { buildArrivalFunnels, formatShare, jobTakeRows } from '../src/funnel';
 import type { Funnel } from '../src/funnel';
 import { buildPlaytestReport } from '../src/report';
 
@@ -40,6 +40,18 @@ try {
     },
   ).lean();
   const papers = await PaperEntry.find({}, { characterId: 1, day: 1, readAt: 1 }).lean();
+  // QA m2: taking a job is a request log (ADR 0008), not an action log; it completes order C.
+  // Request logs expire after 7 days, so run the report within a week of the playtest.
+  const jobTakes = await RequestLog.find(
+    { kind: 'job.take' },
+    {
+      characterId: 1,
+      createdAt: 1,
+      'result.job.id': 1,
+      'result.outcome': 1,
+      'result.character.orders.allDone': 1,
+    },
+  ).lean();
 
   const report = buildPlaytestReport(
     characters.map((c) => ({ id: c._id.toHexString(), name: c.name, createdAt: c.createdAt })),
@@ -83,17 +95,26 @@ try {
       jobSinceDay: c.job?.since ?? null,
       welcomeActionId: welcomeAction(c.factionId),
     })),
-    logs.map((l) => {
-      const effects = (l.result as Partial<ActionResult> | undefined)?.effects;
-      return {
-        characterId: l.characterId.toHexString(),
-        createdAt: l.createdAt,
-        kind: l.kind ?? 'checked',
-        actionId: l.actionId,
-        ordersCompleted: effects?.orders?.filter((o) => o.fxp > 0).length ?? 0,
-        allOrdersDone: !!effects?.ordersAllDone,
-      };
-    }),
+    [
+      ...logs.map((l) => {
+        const effects = (l.result as Partial<ActionResult> | undefined)?.effects;
+        return {
+          characterId: l.characterId.toHexString(),
+          createdAt: l.createdAt,
+          kind: l.kind ?? 'checked',
+          actionId: l.actionId,
+          ordersCompleted: effects?.orders?.filter((o) => o.fxp > 0).length ?? 0,
+          allOrdersDone: !!effects?.ordersAllDone,
+        };
+      }),
+      ...jobTakeRows(
+        jobTakes.map((j) => ({
+          characterId: j.characterId.toHexString(),
+          createdAt: j.createdAt,
+          result: j.result,
+        })),
+      ),
+    ],
   );
 
   if (process.argv.includes('--json')) {
@@ -108,23 +129,30 @@ try {
         'sessions/day': p.sessionsPerDay,
         'energy/session': p.energyPerSession,
         'median return h': p.medianReturnHours,
-        'returns 2–4 h': p.returns2to4h,
-        '×3 share': p.x3Share,
-        'paper read': p.paperReadRate,
+        'returns 2–4 h': formatShare(p.returns2to4h),
+        '×3 share': formatShare(p.x3Share),
+        'paper read': formatShare(p.paperReadRate),
         'orders/day': p.ordersPerDay,
         'shifts/day': p.shiftsPerDay,
         'level d1/d2/d3': p.levelByDay.join('/'),
       })),
     );
     console.log('Overall:');
-    console.table(report.overall);
+    console.table({
+      ...report.overall,
+      returns2to4h: formatShare(report.overall.returns2to4h),
+      x3Share: formatShare(report.overall.x3Share),
+      paperReadRate: formatShare(report.overall.paperReadRate),
+      contendedTransactions: formatShare(report.overall.contendedTransactions),
+    });
     const show = (title: string, f: Funnel) => {
       console.log(`\n${title}`);
       console.table(f.steps);
       console.table(f.times);
       console.table({
-        'first action was welcome order A': f.firstActionMatch,
-        'second tap was Again': f.secondTapAgain,
+        // n12: shares as the game prints them, "62 %", beside the player counts.
+        'first action was welcome order A': formatShare(f.firstActionMatch),
+        'second tap was Again': formatShare(f.secondTapAgain),
         'resumed after 10+ minutes': f.resumes,
       });
     };

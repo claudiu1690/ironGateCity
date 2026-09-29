@@ -25,6 +25,7 @@ import {
   formatOpinionDelta,
   formatSigned,
 } from '../src';
+import type { MapRect } from '../src';
 
 const mill = cityViewFixture.locations[0]!;
 const canvass = mill.actions[0]!;
@@ -121,6 +122,21 @@ describe('CityMap', () => {
     expect(onSelect).toHaveBeenCalledWith('coalport.union-hall');
     expect(screen.getByTestId('map-night')).toHaveStyle({ opacity: '0' });
     expect(artUrl('map.coalport.day', 1280, 'avif')).toBe('/art/map.coalport.day-1280.avif');
+  });
+
+  it('a landing at night loads the night map only; the day map comes when day does (art budget)', () => {
+    const props = {
+      map: cityViewFixture.map,
+      locations: cityViewFixture.locations,
+      selectedId: null,
+      onSelect: () => undefined,
+    };
+    const { rerender, container } = render(<CityMap {...props} isNight />);
+    const srcs = () => [...container.querySelectorAll('img, source')].map((e) => e.outerHTML).join(' ');
+    expect(srcs()).toContain('map.coalport.night');
+    expect(srcs()).not.toContain('map.coalport.day');
+    rerender(<CityMap {...props} isNight={false} />);
+    expect(srcs()).toContain('map.coalport.day');
   });
 });
 
@@ -235,9 +251,17 @@ describe('HudBar v2', () => {
     );
     expect(screen.getByTestId('hud-iron')).toHaveTextContent('20');
     expect(screen.getByTestId('hud-pc')).toHaveTextContent('5');
+    // m5 (onboarding §14.1): the PC column shows on phones as on desktop.
+    expect(screen.getByTestId('hud-pc').parentElement).not.toHaveClass('hidden');
     await user.click(screen.getByRole('button', { name: '1 point to place' }));
     await user.click(screen.getByRole('button', { name: 'INT 12 → 13' }));
     expect(onPlaceStat).toHaveBeenCalledWith('int');
+  });
+
+  it('m5: no PC column, and no zero, before the first PC is earned', () => {
+    render(<HudBar character={{ ...characterViewFixture, pc: 0 }} nextTickIn={425_000} />);
+    expect(screen.queryByTestId('hud-pc')).toBeNull();
+    expect(screen.queryByText('PC')).toBeNull();
   });
 });
 
@@ -316,5 +340,111 @@ describe('fitPinsView (QA M2: every pin on screen at the first view)', () => {
       expect(v.y).toBeGreaterThanOrEqual(Math.min(dy, 0) - 1e-9);
       expect(v.y).toBeLessThanOrEqual(Math.max(dy, 0) + 1e-9);
     }
+  });
+
+  // Slice-2 QA M2: from 640 px the plate (with the orders list and Today) sits in the top-left
+  // corner, 420 px wide, and the desktop tab dock floats over the bottom middle. Ashford's first two
+  // pins are in the map's top-left corner.
+  const ASHFORD = [
+    { x: 0.18, y: 0.16 },
+    { x: 0.33, y: 0.11 },
+    { x: 0.59, y: 0.3 },
+    { x: 0.78, y: 0.2 },
+    { x: 0.2, y: 0.45 },
+    { x: 0.69, y: 0.69 },
+  ];
+  const DUSKWALL = [
+    { x: 0.47, y: 0.44 },
+    { x: 0.5, y: 0.65 },
+    { x: 0.64, y: 0.78 },
+    { x: 0.77, y: 0.36 },
+    { x: 0.18, y: 0.64 },
+    { x: 0.14, y: 0.84 },
+  ];
+  const clearView = (w: number, h: number, pins: typeof ASHFORD, blocks: MapRect[]) => {
+    const cw = Math.max(w, h * ASPECT);
+    const content = { w: cw, h: cw / ASPECT };
+    const v = fitPinsView({ box: { w, h }, content, pins, insets: { top: 0, bottom: 0, blocks } });
+    const at = pins.map((p) => ({ x: v.x + p.x * content.w * v.scale, y: v.y + p.y * content.h * v.scale }));
+    for (const [n, p] of at.entries()) {
+      // Inside the box, the whole 44 px target clear of every block.
+      expect(p.x - 22, `pin ${n + 1}`).toBeGreaterThanOrEqual(0);
+      expect(p.x + 22, `pin ${n + 1}`).toBeLessThanOrEqual(w);
+      expect(p.y - 22, `pin ${n + 1}`).toBeGreaterThanOrEqual(0);
+      expect(p.y + 22, `pin ${n + 1}`).toBeLessThanOrEqual(h);
+      for (const b of blocks) {
+        const clear = p.x + 22 <= b.x0 || p.x - 22 >= b.x1 || p.y + 22 <= b.y0 || p.y - 22 >= b.y1;
+        expect(clear, `pin ${n + 1} under ${JSON.stringify(b)}`).toBe(true);
+      }
+    }
+    const dx = w - content.w * v.scale;
+    const dy = h - content.h * v.scale;
+    expect(v.x).toBeGreaterThanOrEqual(Math.min(dx, 0) - 1e-9);
+    expect(v.x).toBeLessThanOrEqual(Math.max(dx, 0) + 1e-9);
+    expect(v.y).toBeGreaterThanOrEqual(Math.min(dy, 0) - 1e-9);
+    expect(v.y).toBeLessThanOrEqual(Math.max(dy, 0) + 1e-9);
+    return v;
+  };
+
+  it('n11: on a phone the map sits in the middle of the area between the plate and the orders panel', () => {
+    for (const pins of [PINS, ASHFORD, DUSKWALL]) {
+      const [w, h, top, bottom] = [375, 692, 72, 110];
+      const cw = Math.max(w, h * ASPECT);
+      const content = { w: cw, h: cw / ASPECT };
+      const v = fitPinsView({ box: { w, h }, content, pins, insets: { top, bottom } });
+      // The image is shorter than the clear area here (the pins' width sets the scale): what is left
+      // is split between the top and the bottom, not one band above the orders panel.
+      const above = v.y - top;
+      const below = h - bottom - (v.y + content.h * v.scale);
+      expect(Math.abs(above - below)).toBeLessThanOrEqual(1);
+      for (const p of pins) {
+        const y = v.y + p.y * content.h * v.scale;
+        expect(y - 22).toBeGreaterThanOrEqual(top);
+        expect(y + 22).toBeLessThanOrEqual(h - bottom);
+      }
+    }
+  });
+
+  it('keeps Ashford clear of the corner plate and the dock at 1920, 1440, 1280, 1024 and 768 wide', () => {
+    for (const [w, h, plateH] of [
+      [1920, 994, 330],
+      [1440, 814, 330],
+      [1280, 714, 330],
+      [1024, 682, 330],
+      [768, 904, 330],
+    ] as const) {
+      const plate = { x0: 10, y0: 10, x1: 430, y1: 10 + plateH };
+      const dock = { x0: w / 2 - 210, y0: h - 34, x1: w / 2 + 210, y1: h };
+      clearView(w, h, ASHFORD, w >= 1024 ? [plate, dock] : [plate]);
+    }
+  });
+
+  it('640 wide: the plate is a band, and the pan limits must not pull Ashford back under it', () => {
+    // 640 × 735 map, the plate with its orders 232 px deep across 420 px (a band at this width).
+    const [w, h, top] = [640, 735, 232];
+    const cw = Math.max(w, h * ASPECT);
+    const content = { w: cw, h: cw / ASPECT };
+    const v = fitPinsView({ box: { w, h }, content, pins: ASHFORD, insets: { top, bottom: 0 } });
+    const dy = h - content.h * v.scale;
+    expect(v.y).toBeGreaterThanOrEqual(Math.min(dy, 0) - 1e-9);
+    expect(v.y).toBeLessThanOrEqual(Math.max(dy, 0) + 1e-9);
+    for (const p of ASHFORD) {
+      const y = v.y + p.y * content.h * v.scale;
+      expect(y - 22).toBeGreaterThanOrEqual(top);
+      expect(y + 22).toBeLessThanOrEqual(h);
+    }
+  });
+
+  it('a first view already clear of the blocks is kept as it was (Duskwall at 1440 × 814)', () => {
+    const plate = { x0: 10, y0: 10, x1: 430, y1: 340 };
+    const cw = Math.max(1440, 814 * ASPECT);
+    const content = { w: cw, h: cw / ASPECT };
+    const without = fitPinsView({
+      box: { w: 1440, h: 814 },
+      content,
+      pins: DUSKWALL,
+      insets: { top: 0, bottom: 0 },
+    });
+    expect(clearView(1440, 814, DUSKWALL, [plate])).toEqual(without);
   });
 });

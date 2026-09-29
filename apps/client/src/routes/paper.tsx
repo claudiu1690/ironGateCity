@@ -62,7 +62,7 @@ export function PaperPage() {
 
   return (
     <article className="paper-grain min-h-full text-ink">
-      <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-4 pb-8 lg:pb-28">
+      <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-4 pb-8 lg:pb-[132px]">
         <Masthead paper={p} />
         {lead && (
           <section className="flex flex-col gap-2 border-b border-ink pb-3" data-testid="headline">
@@ -99,8 +99,10 @@ export function PaperPage() {
           />
         ))}
         <DeskList desk={p.desk} />
-        {/* Sticky on phones, so "To the city" is on the first screen (§12.3). */}
-        <div className="sticky bottom-0 z-10 -mx-4 border-t border-track bg-paper px-4 pt-2 pb-2 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0">
+        {/* Sticky, so "To the city" is on the first screen (§12.3). On wide screens it rides above
+            the floating tab dock (QA n1), and the page's bottom padding lets the Letters row and the
+            desk scroll clear of both. */}
+        <div className="sticky bottom-0 z-10 -mx-4 border-t border-track bg-paper px-4 pt-2 pb-2 lg:bottom-[124px] lg:mx-0 lg:border lg:border-ink lg:p-2 lg:shadow-[0_8px_24px_rgb(0_0_0/0.35)]">
           <Button onClick={() => void toCity()} className="w-full">
             {copy.toTheCity}
           </Button>

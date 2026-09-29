@@ -115,6 +115,16 @@ export function ambitionView(content: GameContent, c: CharacterDoc, now: number)
   const chapter = content.chapter(c.ambition.id, c.ambition.chapter);
   const status = ambitionStatus(content, c, today);
   const open = status.kind === 'ready' || status.kind === 'midway';
+  // n13: the hook on the chapter screen, as the last chapter's modal gave it: seven City Days after
+  // the chapter last played, at the next chapter's requirement (also a chapter not playable yet).
+  const last = c.ambition.history?.at(-1);
+  const waitsFrom =
+    status.kind === 'waiting'
+      ? status.readyFrom
+      : status.kind === 'none' && chapter && last
+        ? last.day + AMBITION.daysBetweenChapters
+        : null;
+  const needs = status.kind === 'waiting' ? status.needs : (chapter?.requires ?? null);
   return {
     id: c.ambition.id,
     title: amb?.title ?? c.ambition.id,
@@ -126,6 +136,10 @@ export function ambitionView(content: GameContent, c: CharacterDoc, now: number)
     needs: status.kind === 'waiting' ? status.needs : null,
     screen: open && chapter ? chapterScreen(content, c, chapter, now) : null,
     letterFrom: chapter?.story?.letterFrom ?? null,
+    waitsUntil:
+      !open && waitsFrom !== null
+        ? copy.chapterWaitsUntil(dayName(waitsFrom), needs ? copy.chapterNeeds(needs) : null)
+        : null,
   };
 }
 

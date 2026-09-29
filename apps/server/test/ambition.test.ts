@@ -53,6 +53,14 @@ describe('ambition.get and choose', () => {
     ]);
   });
 
+  it('n7: the Paper dot stays while the chapter is ready, even once the Letter was opened', async () => {
+    const { caller } = await arrived();
+    expect((await caller.character.me()).lettersWaiting).toBe(1);
+    // Opening the Letter (the chapter screen) without choosing keeps the dot (onboarding §14.3 n7).
+    expect((await caller.ambition.get()).status).toBe('ready');
+    expect((await caller.character.me()).lettersWaiting).toBe(1);
+  });
+
   it('choose is set-once: five taps at once write once; the check screen shows the odds', async () => {
     const { user, caller } = await arrived();
     const before = (await Character.findOne({ userId: user.id }).lean())!.version;
@@ -168,6 +176,13 @@ describe('ambition.attempt', () => {
     expect(me.ambition.status).toBe('none');
     expect(me.keepsakes.map((k) => k.name)).toEqual(['His ward book']);
     expect((await caller.paper.today()).letters).toEqual([]);
+    // n13: the chapter screen now shows the hook, the same as the modal's, and no choices.
+    expect(await caller.ambition.get()).toMatchObject({
+      chapter: 2,
+      chapterTitle: 'Stand where he stood',
+      screen: null,
+      waitsUntil: 'From Tuesday 6 October, at Rank 2',
+    });
     expect(
       await refusal(
         caller.ambition.attempt({ chapter: 1, approachId: 'sort', idempotencyKey: randomUUID() }),

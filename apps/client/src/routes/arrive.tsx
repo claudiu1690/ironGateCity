@@ -23,12 +23,20 @@ export function ArrivePage() {
   const busy = useRef(false);
   const settle = { onSettled: () => (busy.current = false) };
   const start = useMutation({ ...trpc.arrival.start.mutationOptions(), onSuccess: setView, ...settle });
+  /**
+   * QA M1: the question an answer was sent for. It is not released when the answer comes back: the
+   * next question has another id, and its choices take taps only once they have settled on screen
+   * (StoryScreen). Released on a refusal or a lost connection, so the player can tap again.
+   */
+  const answeredFor = useRef<string | null>(null);
+  /** The origin follows the face screen in this visit: its first question settles too (QA M1). */
+  const fromFace = useRef(false);
   const answer = useMutation({
     ...trpc.arrival.answer.mutationOptions(),
-    // Set-once by question index: a retry of the same tap returns the same view.
+    // Set-once by question id: a retry of the same tap returns the same view.
     retry: (n, e) => n < 2 && isNetworkError(e),
     onSuccess: setView,
-    ...settle,
+    onError: () => (answeredFor.current = null),
   });
   const join = useMutation({
     ...trpc.arrival.join.mutationOptions(),
@@ -102,6 +110,7 @@ export function ArrivePage() {
           pending={start.isPending}
           onClick={() => {
             if (!face) return setFaceError(copy.chooseYourFace);
+            fromFace.current = true;
             start.mutate({ avatarId: face });
           }}
         >
@@ -114,16 +123,23 @@ export function ArrivePage() {
 
   if (v.phase === 'story' && v.screen && v.questionId) {
     const questionId = v.questionId;
+    const sending = answer.isPending && answer.variables?.questionId === questionId;
     return (
       <StoryScreen
         view={v.screen}
+        screenKey={questionId}
+        // The first question replaces the face screen the player just tapped Continue on (QA M1).
+        settleOnMount={fromFace.current}
         corner={signOutButton}
-        pendingChoice={answer.isPending ? (answer.variables?.answerId ?? null) : null}
+        pendingChoice={sending ? (answer.variables?.answerId ?? null) : null}
         error={noticeFor(answer.error)}
-        onChoose={(answerId) => {
-          if (busy.current) return;
-          busy.current = true;
-          answer.mutate({ questionId, answerId });
+        onChoose={(answerId, shownFor) => {
+          // The tap is bound to the question its button was rendered for (QA M1): one that is no
+          // longer current, or already sent, does nothing. The server stores an answer only for
+          // the current question id (set-once, in order), so a late copy changes nothing there.
+          if (shownFor !== questionId || answeredFor.current === shownFor) return;
+          answeredFor.current = shownFor;
+          answer.mutate({ questionId: shownFor, answerId });
         }}
       />
     );

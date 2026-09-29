@@ -197,7 +197,9 @@ export function MePage() {
             max={rankSpan}
             tone="collective"
           />
-          <span className="font-mono text-[12px] text-muted">Political Capital {c.pc}</span>
+          <span className="font-mono text-[12px] text-muted" data-testid="me-pc">
+            {copy.politicalCapital(c.pc)}
+          </span>
         </Card>
 
         <Card title="Level">

@@ -30,6 +30,11 @@ export function AmbitionPage() {
     void queryClient.invalidateQueries({ queryKey: trpc.paper.today.queryKey() });
     void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
   };
+  /**
+   * QA M1, as in the origin: the step a choice was sent for, kept after the answer so the next
+   * step's approaches are guarded by their settle time only (StoryScreen); released on an error.
+   */
+  const chosenFor = useRef<string | null>(null);
   const choose = useMutation({
     ...trpc.ambition.choose.mutationOptions(),
     retry: (n, e) => n < 2 && isNetworkError(e),
@@ -38,7 +43,7 @@ export function AmbitionPage() {
       void queryClient.invalidateQueries({ queryKey: trpc.character.me.queryKey() });
       refresh();
     },
-    onSettled: () => (busy.current = false),
+    onError: () => (chosenFor.current = null),
   });
   const attempt = useMutation({
     ...trpc.ambition.attempt.mutationOptions(),
@@ -98,7 +103,8 @@ export function AmbitionPage() {
   );
 
   if (!v.screen) {
-    // Nothing open: the chapter is done, or the next one waits for its day and requirement.
+    // Nothing open: the next chapter waits for its day and requirement (or is not written yet). The
+    // screen shows the hook, as the last modal did (onboarding §14.3 n13): no choices, no odds.
     return (
       <div className="paper-grain min-h-full p-4 text-ink">
         <div className="mx-auto flex max-w-[640px] flex-col gap-3">
@@ -106,8 +112,19 @@ export function AmbitionPage() {
             {copy.chapterKicker(v.title, v.chapter, v.of)}
           </span>
           <h1 className="font-display text-[26px] font-black">{v.chapterTitle || v.title}</h1>
-          <Button variant="outline" onClick={() => void leave()}>
-            Continue
+          {v.waitsUntil && (
+            <p className="font-mono text-[13px] text-text-2" data-testid="chapter-waits">
+              {v.waitsUntil}
+            </p>
+          )}
+          <Button
+            variant="outline"
+            onClick={async () => {
+              await queryClient.invalidateQueries({ queryKey: trpc.ambition.get.queryKey() });
+              await navigate({ to: '/paper' });
+            }}
+          >
+            {copy.backToThePaper}
           </Button>
         </div>
         {modal}
@@ -121,6 +138,8 @@ export function AmbitionPage() {
     ? { ...screen, cta: { ...screen.cta, readyAt: energyReadyAt(character.energy, screen.cta.energy) } }
     : screen;
   const pick = approach;
+  // Step 1 (a choice) and step 2 (the approaches) of this chapter.
+  const stepKey = `${v.id}:${v.chapter}:${screen.approaches.length > 0 ? 'check' : 'choice'}`;
 
   return (
     <>
@@ -136,10 +155,14 @@ export function AmbitionPage() {
             Close
           </button>
         }
+        screenKey={stepKey}
+        // Opened by a tap on the Letters row: a double tap there must not reach a choice (QA M1).
+        settleOnMount
         pendingChoice={choose.isPending ? (choose.variables?.choiceId ?? null) : null}
-        onChoose={(choiceId) => {
-          if (busy.current) return;
-          busy.current = true;
+        onChoose={(choiceId, shownFor) => {
+          // Bound to the step its button was rendered for (QA M1); the server's choice is set-once.
+          if (shownFor !== stepKey || chosenFor.current === shownFor) return;
+          chosenFor.current = shownFor;
           choose.mutate({ chapter: v.chapter, choiceId });
         }}
         selectedApproach={pick}

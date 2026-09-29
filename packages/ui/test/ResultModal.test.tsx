@@ -5,7 +5,7 @@ import {
   trainingResultFixture,
 } from '@irongate/rules/testing';
 import type { ActionResult } from '@irongate/rules';
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ResultModal } from '../src';
@@ -129,6 +129,33 @@ describe('ResultModal v2', () => {
     expect(onAgain).toHaveBeenCalledWith(3);
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('m5: the order that completes all three shows "All orders carried out · +5 PC"', () => {
+    const { dialog } = renderModal({
+      ...actionResultFixture,
+      effects: { ...actionResultFixture.effects, ordersAllDone: { pc: 5 }, pc: { before: 0, after: 5 } },
+    });
+    const d = within(dialog);
+    expect(d.getByTestId('effect-all-orders')).toHaveTextContent('All orders carried out · +5 PC');
+    expect(d.getByText('Political Capital')).toBeInTheDocument();
+  });
+
+  it('m1: the Faction XP and opinion values use the faction text colour, never the fill colour', () => {
+    for (const [factionId, cls] of [
+      ['vanguard', 'text-vanguard-text'],
+      ['alliance', 'text-alliance-text'],
+      ['collective', 'text-collective'],
+    ] as const) {
+      const { dialog } = renderModal({
+        ...actionResultFixture,
+        character: { ...actionResultFixture.character, factionId },
+      });
+      const value = within(dialog).getByTestId('tile-faction-xp').querySelector(`.${cls}`);
+      expect(value, factionId).not.toBeNull();
+      expect(within(dialog).getByTestId('tile-opinion').querySelector(`.${cls}`), factionId).not.toBeNull();
+      cleanup();
+    }
   });
 
   it('renders nothing without a result', () => {

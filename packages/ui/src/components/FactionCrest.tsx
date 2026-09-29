@@ -3,11 +3,12 @@ import type { FactionId } from '@irongate/rules';
 /** Crest shapes and colours (design canvas): ■ Vanguard ochre, ● Collective oxblood, ▲ Alliance slate. */
 export const FACTION_STYLE: Record<
   FactionId,
+  /** `text`: the colour as text on paper, at 4.5:1 (QA m1). */
   { shape: 'square' | 'circle' | 'triangle'; color: string; text: string }
 > = {
-  vanguard: { shape: 'square', color: 'var(--color-vanguard)', text: 'text-vanguard' },
+  vanguard: { shape: 'square', color: 'var(--color-vanguard)', text: 'text-vanguard-text' },
   collective: { shape: 'circle', color: 'var(--color-collective)', text: 'text-collective' },
-  alliance: { shape: 'triangle', color: 'var(--color-alliance)', text: 'text-alliance' },
+  alliance: { shape: 'triangle', color: 'var(--color-alliance)', text: 'text-alliance-text' },
 };
 
 export interface FactionCrestProps {

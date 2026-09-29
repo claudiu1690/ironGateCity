@@ -18,7 +18,12 @@ export interface FunnelArrival {
 export interface FunnelAction {
   characterId: string;
   createdAt: Date;
-  kind: 'checked' | 'training' | 'shift' | 'chapter';
+  /**
+   * `job`: a job taken (a `job.take` request log, not an action log; QA m2). It completes the
+   * "Take a job" order, but it is not a tap on a ticket, so it is never the first or second action.
+   */
+  kind: 'checked' | 'training' | 'shift' | 'chapter' | 'job';
+  /** The action, or the job for `job`. */
   actionId: string;
   /** Party orders this action completed. */
   ordersCompleted: number;
@@ -31,7 +36,8 @@ export interface FunnelCharacter {
   factionId: string;
   /** The join. */
   createdAt: Date;
-  /** The City Day a job was taken, or null. */
+  /** The City Day the current job was taken, or null (a job taken on day 1 and switched later shows
+   * the later day: the `job` rows count the take itself). */
   jobSinceDay: number | null;
   /** The welcome set's slot-A action (the first pin's canvass). */
   welcomeActionId: string;
@@ -49,9 +55,9 @@ export interface Funnel {
     'signupToJoin' | 'joinToFirstAction' | 'joinToAllOrders' | 'joinToChapter',
     { median: number | null; p75: number | null }
   >;
-  /** Share of players whose first action is the welcome order A's (the open sheet worked). */
+  /** Share (0–1) of players whose first action is the welcome order A's (the open sheet worked). */
   firstActionMatch: number | null;
-  /** Share whose second tap repeats the first within two minutes (Again from the modal). */
+  /** Share (0–1) whose second tap repeats the first within two minutes (Again from the modal). */
   secondTapAgain: number | null;
   /** Arrivals with a gap of more than 10 minutes between two answers that still joined. */
   resumes: number;
@@ -84,6 +90,8 @@ export function buildArrivalFunnel(
       return f(a, c, c ? actionsOf(c.id) : []);
     }).length;
   const day1 = (c: FunnelCharacter, a: FunnelAction) => dayOf(a.createdAt) === dayOf(c.createdAt);
+  /** A tap on a ticket: not a chapter, not a job taken. */
+  const tap = (a: FunnelAction) => a.kind !== 'chapter' && a.kind !== 'job';
 
   const steps: FunnelStep[] = [
     { step: 'accounts', players: arrivals.length },
@@ -93,7 +101,7 @@ export function buildArrivalFunnel(
       players: count((a) => a.answeredAt.length >= n),
     })),
     { step: 'joined', players: joined.length },
-    { step: 'first action', players: count((_a, c, acts) => !!c && acts.some((x) => x.kind !== 'chapter')) },
+    { step: 'first action', players: count((_a, c, acts) => !!c && acts.some(tap)) },
     ...[1, 2, 3].map((n) => ({
       step: `welcome orders ${n} / 3 on day 1`,
       players: count(
@@ -103,7 +111,10 @@ export function buildArrivalFunnel(
     })),
     {
       step: 'job taken on day 1',
-      players: count((_a, c) => !!c && c.jobSinceDay === dayOf(c.createdAt)),
+      players: count(
+        (_a, c, acts) =>
+          !!c && (c.jobSinceDay === dayOf(c.createdAt) || acts.some((x) => x.kind === 'job' && day1(c, x))),
+      ),
     },
     {
       step: 'chapter 1 done on day 1',
@@ -122,7 +133,7 @@ export function buildArrivalFunnel(
   for (const a of joined) {
     const c = byId.get(a.characterId!)!;
     signupToJoin.push(secs(a.createdAt, a.completedAt!));
-    const acts = actionsOf(c.id).filter((x) => x.kind !== 'chapter');
+    const acts = actionsOf(c.id).filter(tap);
     const first = acts[0];
     if (first) {
       joinToFirstAction.push(secs(c.createdAt, first.createdAt));
@@ -161,6 +172,42 @@ export function buildArrivalFunnel(
     resumes,
   };
 }
+
+/**
+ * `job.take` request logs (ADR 0008) as funnel rows (QA m2): taking a job is not an action log, but
+ * it completes the welcome set's "Take a job" order, and may be the one that completes all three.
+ * `result` is the stored TakeJobResult; a row whose result has another shape is skipped.
+ */
+export function jobTakeRows(
+  logs: Array<{ characterId: string; createdAt: Date; result: unknown }>,
+): FunnelAction[] {
+  return logs.flatMap((l) => {
+    const r = l.result as
+      | {
+          job?: { id?: string };
+          outcome?: { orderCompleted?: boolean };
+          character?: { orders?: { allDone?: boolean } };
+        }
+      | null
+      | undefined;
+    if (!r?.job?.id || !r.outcome) return [];
+    const completed = !!r.outcome.orderCompleted;
+    return [
+      {
+        characterId: l.characterId,
+        createdAt: l.createdAt,
+        kind: 'job' as const,
+        actionId: r.job.id,
+        ordersCompleted: completed ? 1 : 0,
+        allOrdersDone: completed && !!r.character?.orders?.allDone,
+      },
+    ];
+  });
+}
+
+/** A share (0–1) as the game prints one: "62 %" (n12); "–" when there is none. */
+export const formatShare = (share: number | null): string =>
+  share === null ? '–' : `${Math.round(share * 100)} %`;
 
 /** The funnel per faction, so one city's first ten minutes can be compared with another's. */
 export function buildArrivalFunnels(

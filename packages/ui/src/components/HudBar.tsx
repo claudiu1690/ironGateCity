@@ -101,8 +101,9 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBa
           </span>
           <span className="label-caps text-[9px] text-dim">Iron</span>
         </div>
+        {/* PC on every screen size once earned, never a zero (GDD §6.5, §7.5; onboarding §14.1). */}
         {c.pc > 0 && (
-          <div className="hidden shrink-0 flex-col items-end gap-0.5 border-l border-ink-2 pl-2.5 sm:flex">
+          <div className="flex shrink-0 flex-col items-end gap-0.5 border-l border-ink-2 pl-2.5">
             <span className="font-label text-[14px] font-medium" data-testid="hud-pc">
               {c.pc}
             </span>

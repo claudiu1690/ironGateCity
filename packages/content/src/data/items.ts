@@ -92,4 +92,15 @@ export const items: Item[] = [
     keepsake: true,
     art: 'item.document-folder',
   },
+  // GDD §21.4: Finish His Work chapter 2's keepsake. Its chapter is slice 3; the item is catalogued
+  // now because the GDD's table lists it.
+  {
+    id: 'keep.election-bill',
+    name: 'His election bill',
+    slot: null,
+    tier: null,
+    cha: 0,
+    keepsake: true,
+    art: 'item.document-folder',
+  },
 ];

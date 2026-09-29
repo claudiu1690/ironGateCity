@@ -25,16 +25,6 @@ import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { isNetworkError, trpc } from '../lib/trpc';
 import { useMinWidth } from '../lib/useNow';
 
-const KIND_LABEL: Record<string, string> = {
-  'factory-gate': 'Factory gate',
-  'faction-hq': 'Party hall',
-  docks: 'Docks',
-  market: 'Market',
-  street: 'Street',
-  bar: 'Bar',
-};
-const kindLabel = (kind: string) => KIND_LABEL[kind] ?? kind.replace(/-/g, ' ');
-
 /** The city screen (tech design §12.2): the map, the plate, the location sheet and the result modal. */
 export function CityPage() {
   const { cityId } = useParams({ from: '/app/city/$cityId' });
@@ -191,7 +181,7 @@ export function CityPage() {
             if (!o) select(null);
           }}
           n={location.n}
-          kindLabel={kindLabel(location.kind)}
+          kindLabel={copy.kindLabel(location.kind)}
           name={location.name}
           blurb={location.blurb}
           tags={character.rested > 0 ? [`Rested ${character.rested} · +50 % XP and Iron`] : []}

@@ -124,3 +124,9 @@ export const AMBITION = { daysBetweenChapters: 7, chaptersPlanned: 12 } as const
 
 /** §8.4: a chapter check uses the tier-3 outcome bands (Success / Partial / Failure). */
 export const CHAPTER = { tier: 3 } as const;
+
+/**
+ * §7.3 (onboarding §14.2): a player's name is 2–40 characters once trimmed, inner runs of spaces
+ * collapsed to one. Forty: the name is printed in a day-1 headline and in the HUD.
+ */
+export const NAME = { min: 2, max: 40 } as const;

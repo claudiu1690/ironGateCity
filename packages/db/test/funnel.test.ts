@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildArrivalFunnel, buildArrivalFunnels } from '../src/funnel';
+import { buildArrivalFunnel, buildArrivalFunnels, formatShare, jobTakeRows } from '../src/funnel';
 import type { FunnelAction, FunnelArrival, FunnelCharacter } from '../src/funnel';
 
 const T0 = Date.UTC(2026, 8, 29, 9);
@@ -84,5 +84,78 @@ describe('the arrival funnel (tech design §14.1)', () => {
     const { byFaction } = buildArrivalFunnels(arrivals, characters, actions);
     expect(Object.keys(byFaction)).toEqual(['collective', 'vanguard']);
     expect(byFaction.vanguard!.steps.find((s) => s.step === 'joined')?.players).toBe(1);
+  });
+});
+
+describe('QA m2: taking a job counts towards the welcome orders (a request log, not an action log)', () => {
+  // Three Vanguard players, each with all three welcome orders done on day 1: the canvass order
+  // (two canvasses), the job, and the third order.
+  const takeLog = (userId: string, s: number, over: { completed?: boolean; allDone?: boolean } = {}) => ({
+    characterId: `c-${userId}`,
+    createdAt: at(s),
+    result: {
+      character: { orders: { allDone: over.allDone ?? false } },
+      job: { id: 'duskwall.archives.clerk' },
+      outcome: { switched: false, orderCompleted: over.completed ?? true, fxp: 20, firstPayAt: 0 },
+    },
+  });
+  const users = ['p', 'q', 'r'];
+  const arrivals = users.map((u) => arrival(u, [10, 20, 30, 40, 50, 60], 120, 'vanguard'));
+  // Player r took the job on day 1 and switched to another on day 2: the current job's `since` is 2.
+  const characters = users.map((u) => character(u, 120, u === 'r' ? DAY + 1 : DAY, 'vanguard'));
+  const actions: FunnelAction[] = users.flatMap((u) => [
+    act(u, 150, { actionId: 'duskwall.garrison-gate.canvass' }),
+    act(u, 170, { actionId: 'duskwall.garrison-gate.canvass', ordersCompleted: 1 }),
+    act(u, 400, { actionId: 'duskwall.vanguard-house.drill', ordersCompleted: 1 }),
+  ]);
+  const takes = users.map((u) => takeLog(u, 300, { allDone: true }));
+
+  it('turns job.take logs into rows: the order it completed, and whether it was the last of the three', () => {
+    expect(
+      jobTakeRows([takeLog('p', 300, { allDone: true }), takeLog('q', 310, { completed: false })]),
+    ).toEqual([
+      {
+        characterId: 'c-p',
+        createdAt: at(300),
+        kind: 'job',
+        actionId: 'duskwall.archives.clerk',
+        ordersCompleted: 1,
+        allOrdersDone: true,
+      },
+      {
+        characterId: 'c-q',
+        createdAt: at(310),
+        kind: 'job',
+        actionId: 'duskwall.archives.clerk',
+        ordersCompleted: 0,
+        allOrdersDone: false,
+      },
+    ]);
+    // A row of another shape (a stat point placed) is skipped.
+    expect(jobTakeRows([{ characterId: 'c-p', createdAt: at(1), result: { stats: {} } }])).toEqual([]);
+  });
+
+  it('three players with all three orders on day 1 read 3 / 3, with the job taken on day 1 even after a switch', () => {
+    const f = buildArrivalFunnel(arrivals, characters, [...actions, ...jobTakeRows(takes)]);
+    expect(Object.fromEntries(f.steps.map((s) => [s.step, s.players]))).toMatchObject({
+      'first action': 3,
+      'welcome orders 1 / 3 on day 1': 3,
+      'welcome orders 2 / 3 on day 1': 3,
+      'welcome orders 3 / 3 on day 1': 3,
+      'job taken on day 1': 3,
+    });
+    // The job is not a tap on a ticket: the first two actions are still the two canvasses.
+    expect(f.firstActionMatch).toBe(0);
+    expect(f.secondTapAgain).toBe(1);
+    // Without the job rows, as before the fix, the headline row read 0.
+    const before = buildArrivalFunnel(arrivals, characters, actions);
+    expect(before.steps.find((s) => s.step === 'welcome orders 3 / 3 on day 1')?.players).toBe(0);
+  });
+
+  it('prints shares as the game does: "62 %" (n12)', () => {
+    expect(formatShare(0.62)).toBe('62 %');
+    expect(formatShare(1)).toBe('100 %');
+    expect(formatShare(0)).toBe('0 %');
+    expect(formatShare(null)).toBe('–');
   });
 });
