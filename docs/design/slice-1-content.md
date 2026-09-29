@@ -331,7 +331,7 @@ First screen when the City Day has changed since the player last saw it, or afte
 
 ### 7.4 Headline templates (15)
 
-Up to three per day: **at most two personal** (highest priority first), then **one city or ambient**. Each has a headline and a one-to-two-line deck. `{name}` is the character's name; `{rank}` is the character's **current** faction rank title (Collective: Recruit / Activist / Organiser / Commissar / Delegate / Comrade-General / Chairman, §5.4), never a hard-coded word. Where a template has variants, exactly one of them can match on a given morning.
+Up to three per day: **at most two personal** (highest priority first), then **one city or ambient**. Each has a headline and a one-to-two-line deck. `{name}` is the character's name; `{rank}` is the character's **current** faction rank title (Collective: Recruit / Activist / Organiser / Convenor / Delegate / Tribune / Chairman, §5.4), never a hard-coded word. Where a template has variants, exactly one of them can match on a given morning.
 
 | Id | Priority | Condition | Headline | Deck |
 |---|---|---|---|---|
@@ -424,7 +424,7 @@ Game designer, 29 Sep 2026, to `docs/tech/slice-1.md` §19. Each answer is "defa
 | 5 | Mixed ×3 narrative | **Change: majority rule.** Success text when more than half the rows succeeded (×3: 2 or 3; ×1: 1; later ×5: 3+), otherwise the partial text. The batch stamp always reads *n of 3*, *3 of 3* and *0 of 3* included. No third text | §13.1 |
 | 6 | Dateline | **Default stands, made exact.** `{Weekday} · {D Month} · Coalport` from the real UTC date, British form, no year: *Tuesday · 29 September · Coalport*. No year is printed anywhere in the paper | §3.3 |
 | 7 | Short UI copy | See §12.1 below | — |
-| 8 | Collective Rank 5 title | **Change: Delegate.** Recruit / Activist / Organiser / Commissar / **Delegate** / Comrade-General / Chairman. No faction renamed; Appendix C #10 stays parked | §5.4 |
+| 8 | Collective Rank 5 title | **Change: Delegate.** Recruit / Activist / Organiser / Commissar / **Delegate** / Comrade-General / Chairman (Commissar and Comrade-General became **Convenor** and **Tribune** in the content-policy review of 29 Sep 2026, `docs/design/content-policy-review.md`). No faction renamed; Appendix C #10 stays parked | §5.4 |
 | 9 | Salary in long absences | **Change: cap at 14 half-pays per return.** A settlement credits min(boundaries crossed, 14); the job is kept and pay resumes at the next boundary. Away 30 days as Factory worker: 1,512 Iron, not 3,240 | §4.2, §9.1, App. C #17 |
 
 **Why, in one line each.**
@@ -535,7 +535,7 @@ GDD §4.3 rule 2 now reads: *"A single missed day never breaks a streak. Two sic
 
 ### 13.5 n1, n2 — level-up and rank-up headlines
 
-`{rank}` is the character's current Collective rank title from §5.4 (Recruit / Activist / Organiser / Commissar / Delegate / Comrade-General / Chairman), passed by the server; no headline hard-codes a title. `{energyYesterday}` is the previous City Day's Energy from the Today tally (§5).
+`{rank}` is the character's current Collective rank title from §5.4 (Recruit / Activist / Organiser / Convenor / Delegate / Tribune / Chairman), passed by the server; no headline hard-codes a title. `{energyYesterday}` is the previous City Day's Energy from the Today tally (§5).
 
 | Id | Priority | Condition | Headline | Deck |
 |---|---|---|---|---|

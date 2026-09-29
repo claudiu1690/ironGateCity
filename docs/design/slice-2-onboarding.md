@@ -1,6 +1,6 @@
 # Slice 2 — "Arrival": the onboarding script
 
-Game designer, 29 Sep 2026. Companion to `docs/design/slice-2-cities.md` (Duskwall and Ashford content) and `docs/economy.md` §13. The architect writes the slice-2 tech design from these two documents; every rule and number here is also in the GDD (edits listed in §12).
+Game designer, 29 Sep 2026; Vanguard strings revised the same day by the content-policy review (`docs/design/content-policy-review.md`). Companion to `docs/design/slice-2-cities.md` (Duskwall and Ashford content) and `docs/economy.md` §13. The architect writes the slice-2 tech design from these two documents; every rule and number here is also in the GDD (edits listed in §12).
 
 **Playtest question:** does a brand-new player understand what to do in the first 10 minutes, without a tutorial screen?
 
@@ -98,7 +98,7 @@ Narrative: Near the end he holds your wrist harder than a dying man should. Ther
 
 | | Answer | Effect |
 |---|---|---|
-| A | Order. Someone needs to hold the line. | +50 FXP seed, paid if you join the Vanguard |
+| A | Order. Somebody has to keep the streets quiet. | +50 FXP seed, paid if you join the Vanguard |
 | B | Justice. The workers deserve better. | +50 FXP seed, paid if you join the Collective |
 | C | Truth. Let the people decide. | +50 FXP seed, paid if you join the Alliance |
 
@@ -258,8 +258,8 @@ The faction outfit is the *plain clothes* of §14.12: a player who wears the coa
 
 Each card: crest, name, three lines, and three facts. The faction's home city is where the player will start (§7.4); the card says so.
 
-**■ Iron Vanguard** — Order, discipline, and the nation above all. A movement of ex-soldiers and clerks who want the streets quiet, the ration fair and the frontier shut. They hold Duskwall, the garrison town in the mountains.
-*+3 Strength · Starts in Duskwall · Their event: the Torchlight March*
+**■ Iron Vanguard** — Order, discipline and a strong hand. A party of clerks, foremen and old officials who want the streets quiet, the ration fair and the frontier shut. They hold Duskwall, the frontier town in the mountains.
+*+3 Strength · Starts in Duskwall · Their event: the Grand Rally*
 
 **● Red Collective** — The mill and the docks against the men who own them. Strikes, solidarity, and a union hall in every town. They hold Coalport, the steel town on the river.
 *+2 Strength, +1 Intelligence · Starts in Coalport · Their event: the General Strike*
@@ -275,13 +275,14 @@ Each card answers four questions in under thirty words: who they are, what they 
 
 ### 5.3 Vanguard content review (CLAUDE.md rule 6, GDD §26)
 
-The Vanguard is a period antagonist written cold, never an aspiration. Reviewed in this change, for the card, the Duskwall content and the paper:
+The Vanguard is a period antagonist written cold, never an aspiration. Reviewed in this change and again in the content-policy review of 29 Sep 2026 (`docs/design/content-policy-review.md`, which holds the old → new table and the checklist), for the card, the Duskwall content and the paper:
 
-- **No real-world symbols, salutes, uniform colours, titles or slogans.** The crest on the faction card and the party card is `crests/crest-vanguard.svg`: an iron gate beneath a lantern, gold line on black, inside a square frame (reviewed 29 Sep 2026, §13 Q6: it passes; it is the city's gate, and nothing in it is a real-world emblem). The plain square is the **small mark** only (list bullets, the map plate, the chalked mark on a wall). The chalked line is *HOLD THE LINE*, which is the GDD's own phrase. Ranks are generic military (Initiate to Marshal). The NPC is an *organiser*, the office is a *committee*, the party is *the movement* or *the district*. No leader is named or titled.
-- **Vocabulary avoided:** purity, blood, race, storm, march on, shirts of any colour, torches beyond the GDD's existing *Torchlight March* (an event name in §16.1; it is flagged in Appendix C #7 for the moderation policy).
-- **§16.1's description** said "strength, order and national purity"; it now reads "strength, order and the nation above all", so the phrase can't leak into player-facing copy.
-- **Tone:** the Duskwall texts show the movement through what it does to a town (curfew bells, provosts, ration queues, a searchlight) and how people react (fear, relief, compliance); they never argue that it is right. The player can play it; the game never praises it.
-- **Faction names stay as they are** (naming is parked).
+- **A party, not a militia.** The Vanguard has a committee, an organiser, volunteers and stewards. It has no drill, muster, garrison, uniform, march, roll call, patrol or barracks. The state's customs men and police are the state's; the Vanguard courts them (canvasses the customs shift, holds the Archives' keys), it is not them. Its patron is a commissioner, not a colonel.
+- **No real-world symbols, salutes, uniform colours, titles, slogans or names.** The crest on the faction card and the party card is `crests/crest-vanguard.svg`: an iron gate beneath a lantern, gold line on black, inside a square frame (reviewed 29 Sep 2026, §13 Q6: it passes; it is the city's gate, and nothing in it is a real-world emblem). The plain square is the **small mark** only (list bullets, the map plate). **Nothing is chalked or painted on walls as a mark**: chalking is words, as election chalking was (*ORDER AND BREAD* and the movement's name). Ranks are a party's offices (Initiate / Steward / Bailiff / Prefect / Intendant / Guardian / Keeper of the Gate, §5.4), never military. The NPC is an *organiser*, the office is a *committee*, the party is *the movement* (lower case, a common noun) or *the district*; the paper says *by the Vanguard*, never *by the Movement*. No leader is named or titled.
+- **Vocabulary avoided:** purity, blood, race, storm, march on, torches, shirts of any colour, "above all", "the nation first", purge, leader as a title, salute, any rank or word the army uses (footsoldier, sergeant, captain, marshal, drill, muster, garrison, billet, parade, bugle).
+- **§16.1's description** said "strength, order and national purity", then "the nation above all" (an echo of a real anthem); it now reads "strength, order and a strong hand at the top". The card reads "Order, discipline and a strong hand."
+- **Tone:** the Duskwall texts show the movement through what it does to a town (curfew bells, inspectors, ration queues, a searchlight on the party office) and how people react (fear, relief, compliance); they never argue that it is right. The player can play it; the game never praises it.
+- **Faction names and the ideology labels stay as they are** (naming is parked).
 
 ---
 
@@ -313,7 +314,7 @@ Three, in this order: the personal welcome, the city's arrival notice (first edi
 |---|---|---|---|---|
 | Coalport | `hl.welcome` (replaces `hl.first-day`) | personal 1, `firstEdition` | Welcome to Coalport | Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Mill Gate first. |
 | Coalport | `hl.arrival` | city 0, `firstEdition` | {name} Steps Off the Irongate Train | One more pair of hands for the branch, says the Union Hall. The mill is hiring. |
-| Duskwall | `hl.v.welcome` | personal 1, `firstEdition` | Welcome to Duskwall | Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Garrison Gate first. |
+| Duskwall | `hl.v.welcome` | personal 1, `firstEdition` | Welcome to Duskwall | Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Fortress Gate first. |
 | Duskwall | `hl.v.arrival` | city 0, `firstEdition` | {name} Arrives at Duskwall Station | Papers in order, says the station office. Beacon House expects a visit. |
 | Ashford | `hl.a.welcome` | personal 1, `firstEdition` | Welcome to Ashford | Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at Gazette House first. |
 | Ashford | `hl.a.arrival` | city 0, `firstEdition` | {name} Arrives on the Irongate Train | The Assembly Rooms note one new volunteer. The Gazette, as ever, is hiring. |
@@ -390,7 +391,7 @@ Rested (the desk row explains it when it first has a value), Local Standing (the
 | Ashford press (Gazette House) | `mvp/scenes/newsroom.png` | `mvp/portraits/grey.png` on orders | — |
 | Ashford HQ (Assembly Rooms) | none yet: map crop. **Art request:** an Alliance HQ scene | — | — |
 
-Existing and checked: all of the above exist in `E:\Projects\ironGateCity Docs\art-direction\`. Missing and requested, none blocking: an Alliance HQ scene; scenes for `barracks`, `library`, `station`, `street`, `market`, `university`, `court` (the map crop stands in for all of them by design).
+Existing and checked: all of the above exist in `E:\Projects\ironGateCity Docs\art-direction\`. Missing and requested, none blocking: an Alliance HQ scene; scenes for `ministry`, `library`, `station`, `street`, `market`, `university`, `court` (the map crop stands in for all of them by design).
 
 ---
 
@@ -429,7 +430,7 @@ The Story mockup (`docs/mockups/Story.dc.html`) is the shape for every tier-3 sc
 | §13.5 | Duskwall's and Ashford's six locations listed against their kinds |
 | §13.7 | Stahl and Grey as secretaries; the welcome set for the first City Day |
 | §14.11 | Duskwall and Ashford baselines pinned (were provisional) |
-| §16.1 | "national purity" → "the nation above all" |
+| §16.1 | "national purity" → "the nation above all" (since replaced by "a strong hand at the top" in the content-policy review, which also changed §5.4, §16.3, §17.2 and the Duskwall content; `docs/design/content-policy-review.md`) |
 | §17.1 | Chapter rules: three steps, never fails, difficulty and Energy per chapter, chapter 1 numbers, the Letter, the seven-day spacing; chapter 1 titles; *Finish His Work* built first |
 | §21.2, §21.4 (new) | Tier I examples matched to the art; the slice-2 item catalogue and the keepsake flag |
 | Appendix C | #6 closed (*Finish His Work* first); #12 closed (stacking accepted); new #18 (the welcome set is per character), #19 (the avatar has no bearing on anything: keep it so), #20 (the Ambition failure texts on day 1) |
@@ -440,7 +441,7 @@ Companion edit: `docs/economy.md` §13 (day-1 arithmetic with the FXP seed, the 
 
 ## 13. Answers to the slice-2 tech design (§20.1)
 
-Game designer, 29 Sep 2026. Thirteen questions from `docs/tech/slice-2.md` §20.1. "Default stands" means the design's default is the rule; where a rule is new it is pinned in the GDD section named. The content-policy flags in §20.3 are not answered here; they are the user's.
+Game designer, 29 Sep 2026. Thirteen questions from `docs/tech/slice-2.md` §20.1. "Default stands" means the design's default is the rule; where a rule is new it is pinned in the GDD section named. The content-policy flags in §20.3 were the user's; they are decided in `docs/design/content-policy-review.md` (29 Sep 2026), and every string in this document already reads in its reviewed form.
 
 | # | Question | Answer | Pinned in |
 |---|---|---|---|
@@ -463,7 +464,7 @@ Game designer, 29 Sep 2026. Thirteen questions from `docs/tech/slice-2.md` §20.
 The §12.4 strings are approved as drafted, with these exact forms:
 
 - `keepsakeLine(name)` → `Keepsake: {name}` with the catalogue name verbatim: *Keepsake: His ward book* · *Keepsake: The prison letter* · *Keepsake: The marker*. (The design's *Keepsake: his ward book* is superseded; the capital is the item's name as it appears in the wardrobe.)
-- `theirEvent(name)` → `Their event: {name}`, and the article travels with the content string: *Their event: the General Strike* · *Their event: the Headline Story* · *Their event: the Torchlight March* (the last is flagged in §20.3 and is the user's to change).
+- `theirEvent(name)` → `Their event: {name}`, and the article travels with the content string: *Their event: the General Strike* · *Their event: the Headline Story* · *Their event: the Grand Rally*.
 - `partyCard(faction, rank, date)` → *Iron Vanguard · Initiate · member since 29 September* (lower-case *member*, no year, as the dateline).
 - *Your face* is the sign-up field label; *Choose your face* is the line shown when the form is submitted without one, and the heading on the Me tab when changing it.
 - Everything else as drafted: *Close the game now and this waits for you* · *His wish · +50 Faction XP* · *Join the {name} · take the train to {city}* · *+2 Strength, +1 Intelligence* · *Starts in {city}* · *Chapter 1 is ready · 10 Energy* · *waiting for you* · *Wearing: Your father's coat · CHA 5* · *Ambition · Finish His Work · Chapter 1 of 12*.
@@ -495,4 +496,4 @@ The answer table (§2.1–2.2) was always the rule; three sentences summarising 
 | Best stat after the faction's +3 | 10–16, typically 12–14 | **8–16, typically 11–14** |
 | The other two stats | 5–8 | **5–11** |
 
-The minimum of 8 is one build: a Vanguard recruit who fished, talked them out and read people (STR 8 / INT 8 / AGI 8, CHA base 3). **Accepted, not changed**, for three reasons: it is what those answers describe (a people person in the party of ex-soldiers); CHA base 3 is permanent and adds to every outfit bought later, which is a better long-run trade than +2 to a trained stat; and at 50 % the build still reaches Level 2 inside the first bar and the 95 % clamp by about day 5 (`docs/economy.md` §13.1). Changing an answer would have meant content changes mid-build for a corner case no pacing target depends on. The reference recruits and every number in the tech design's §6.3 tests are unchanged.
+The minimum of 8 is one build: a Vanguard recruit who fished, talked them out and read people (STR 8 / INT 8 / AGI 8, CHA base 3). **Accepted, not changed**, for three reasons: it is what those answers describe (a people person in a party of clerks and foremen); CHA base 3 is permanent and adds to every outfit bought later, which is a better long-run trade than +2 to a trained stat; and at 50 % the build still reaches Level 2 inside the first bar and the 95 % clamp by about day 5 (`docs/economy.md` §13.1). Changing an answer would have meant content changes mid-build for a corner case no pacing target depends on. The reference recruits and every number in the tech design's §6.3 tests are unchanged.

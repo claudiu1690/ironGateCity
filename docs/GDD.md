@@ -37,8 +37,8 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 | Travel was instant and cost Energy, so distance meant nothing | Cities are farther apart. **Travel takes real time** by train or car, costs a ticket instead of Energy, and has **journey events** along the way | §14.10 |
 | Every mission risked becoming a multi-step scene, and needed art | **Three tiers**: one-tap actions (~80 %), one-choice missions (~15 %), multi-step stories (~5 %). **Local Standing** rewards repetition. Art comes from a reusable fallback ladder, never per mission | §13 |
 | Every kind of play was unlocked by day 3, so the game felt finished in a week | Unlocks and power are spread over months: an **office ladder** where you must serve in the rung below before standing for the next; slower pacing; long collections (standing in 5 cities, patrons, homes) | §3.6, §5, §15.1, §17.4 |
-| The odds shown on buttons had no defined maths, and combat had no numbers | **One check formula** for everything (50 % + 4 % × (stat − difficulty) + bonuses), stat growth targets, and combat as one choice with power, AGI, Wits and bribe values per enemy | §8.4, §8.5, §20 |
-| All five cities were fought over in the same way, so the conflict was spread thin | **Home cities and battlegrounds**: each faction starts in, and permanently holds, its home city. Irongate and Clearwater are where power is won (70 % of the national weight). Enemy home cities are dangerous ground for spies | §7.4, §14.1, §14.8, §14.11, §14.12 |
+| The odds shown on buttons had no defined maths, and combat had no numbers | **One check formula** for everything (50 % + 4 % × (stat − difficulty) + bonuses), stat growth targets, and combat as one choice with power, AGI, Wits and bribe values per opponent | §8.4, §8.5, §20 |
+| All five cities were fought over in the same way, so the conflict was spread thin | **Home cities and battlegrounds**: each faction starts in, and permanently holds, its home city. Irongate and Clearwater are where power is won (70 % of the national weight). Rival home cities are dangerous ground for spies | §7.4, §14.1, §14.8, §14.11, §14.12 |
 
 **Added 29 Sep 2026 (slice-0 answers):**
 
@@ -86,7 +86,7 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 | No item catalogue, so "Charisma is worn" had nothing to wear | **§21.4**: Tier I outfits per faction at CHA 2, the father's coat at 5, party card, keepsakes; CHA base 0–4 | §8.2, §21.2, §21.4 |
 | Duskwall and Ashford had no content, secretary or paper | Six locations each against the kinds; **Viktor Stahl** and **Thomas Grey**; *The Duskwall Sentinel* and *The Ashford Gazette*; baselines pinned; Stores hand and Copy clerk jobs | §3.3, §9.2, §13.5, §13.7, §14.11 |
 | The Alliance's Rank 3 title was *Councillor*, the office the rank lets you stand for | Rank 3 Alliance title is **Agent** | §5.4 |
-| §16.1 described the Vanguard with a phrase that could leak into copy | "national purity" → "the nation above all"; the Vanguard review checklist lives in the onboarding doc §5.3 | §16.1 |
+| §16.1 described the Vanguard with a phrase that could leak into copy | "national purity" → "the nation above all" (itself replaced by "a strong hand at the top" in the content-policy review below); the Vanguard review checklist lives in the onboarding doc §5.3 | §16.1 |
 
 **Added 29 Sep 2026 (answers to the slice-2 tech design, `docs/design/slice-2-onboarding.md` §13):**
 
@@ -94,6 +94,12 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 |---|---|---|
 | §7.2 and §8.5 said the origin gives "8–9 points across STR, INT and AGI" and a best stat of "10–16", but two answers pay CHA base instead, so the build (which follows the answer table) gives **6–9** trained points and a best stat as low as **8** | **The table stands; the sentences are corrected**: 6–9 points across STR/INT/AGI (8–9 counting CHA base), at most +8 to one stat, CHA base 0–4; best stat **8–16, typically 11–14**; the flattest build named and accepted | §7.2, §8.5, Appendix C #12 |
 | The chapter hook, the Today tally and origin taps were left to the build | The next-chapter hook names a **date** (seven City Days on) · a chapter counts its Energy, XP, FXP and Iron in *Today* but no attempt or win · an origin answer is **final once tapped** · the chapter's third stamp reads *Failure* and nothing else says "failed" | §7.2, §17.1 |
+
+**Added 29 Sep 2026 (content-policy review, `docs/design/content-policy-review.md`):**
+
+| Problem | Change | Section |
+|---|---|---|
+| Vanguard content carried military and real-world echoes (military rank titles, the *Torchlight March*, "a paramilitary movement", a garrison as the home pin, a chalked symbol with a slogan, "the nation above all"), and the Collective's *Commissar*, *Comrade-General*, *Red Guard* and *People's Commissar* were real-world names; "enemy", "uprising", "conscription", "martial law", "purge" and "raid squad" were war framing | The Vanguard is **an authoritarian nationalist party, not a militia**: ranks **Initiate / Steward / Bailiff / Prefect / Intendant / Guardian / Keeper of the Gate**; its event is the **Grand Rally** (Speaker, Stand-builder, 2 Stewards, Lookout; mechanics unchanged); its exclusive location is **Vanguard House** (kind `gym`); Duskwall is a **frontier customs town** (Fortress Gate `ministry`, the Customs Market) and its patron is **Commissioner** Reinholt; the wish is *Order. Somebody has to keep the streets quiet.*; chalking is words (*ORDER AND BREAD*), never a mark. Collective ranks **Convenor** and **Tribune**; opponents *Vanguard Doorman*, *Strike Picket*, *Branch Inspector*; *Emergency Permits Act*; *Clear out the rot*; Season Twists *Direct Rule in Duskwall* and *The Upset*; "rival" for "enemy" everywhere, "opponent" in combat. Faction names and the ideology labels untouched (naming stays parked) | §5.4, §7.2, §8.2, §8.4, §9.2, §12.1, §13.5, §14, §15.8, §16.1, §16.3, §17.2, §20.2, §21.2, §22.3, §26, Appendix C #7 |
 
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes.
 
@@ -257,7 +263,7 @@ The first days give a **taste** of everything: one-tap play, a vote, a group eve
 | **Days 1–3: home** | Your faction's **home city** (a Collective recruit starts in Coalport, §14.11). Safe ground: no encounters, the police are on your side | The origin story and Ambition chapter 1 · the welcome edition of the Morning Paper and first Party Orders · one-tap actions, the first job and outfit · the first tier-2 mission · the first Campaign Event with faction mates · **the first vote** (day 2, Rank 2) in the home council race · your name in the paper |
 | **Days 4–14: the district** | Home, with first trips out | **Level 10 opens the train** (about day 5) · the first visit to a battleground and the first journey event · **Rank 3** (about day 10): stand for your home council if you're *Known* locally and 2 faction members endorse you · illegal missions and Heat · safehouses |
 | **Weeks 3–4: the move** | The big decision: **move to a battleground** (an Irongate district or Clearwater) to vote and stand where power is decided, or stay home and rise in the party | The first patron at Associate · the first Case File · a first council seat for the committed |
-| **Months 2–3: the city** | Home or a battleground | **Governor or Mayor** after a council term · **Faction Chair** at Rank 4 · spy trips into enemy home cities (§14.12) · exposés · running your own events · a better home (§17.4) |
+| **Months 2–3: the city** | Home or a battleground | **Governor or Mayor** after a council term · **Faction Chair** at Rank 4 · spy trips into rival home cities (§14.12) · exposés · running your own events · a better home (§17.4) |
 | **End of season 1: the nation** | | **Rank 5**: Legislature deputy (after being Governor or serving 3 council terms) and ministries · the Season Election, where only the most dedicated stand for head of government |
 | **Season 2 and after: the republic** | | **President or Chancellor** · Speaker · Legacy perks · Tier V regalia · Protégé patrons · the second Ambition · the Hall of Fame · and every office has to be won again each term |
 
@@ -378,16 +384,18 @@ Rank gives the **right** to stand. Each office also needs the rung below it on t
 | Rank | FXP | Title (Vanguard / Collective / Alliance) | Unlocks |
 |---|---|---|---|
 | 1 | 0 | Initiate / Recruit / Volunteer | Faction HQ, faction chat, Tier I faction missions |
-| 2 | **400** | Footsoldier / Activist / Canvasser | **Vote in all elections**, Campaign Event roles, Dossier missions, sign Recall Petitions |
-| 3 | 2,000 | Sergeant / Organiser / Agent | **Stand for City Council** (with the ladder conditions), **schedule Campaign Events**, illegal missions, safehouses, faction equipment, Jobs board Tier II |
-| 4 | 6,000 | Lieutenant / Commissar / Senator | **Stand for Faction Chair** (after a council term), Political Protection perk (§11.4) |
-| 5 | 15,000 | Captain / Delegate / Representative | **Stand for the Legislature** and **be appointed Minister** (after a term as Governor or 3 council terms), Operation missions |
-| 6 | 25,000 | Commander / Comrade-General / Speaker | **Stand for President or Chancellor** (after a term as deputy or minister), eligible for Speaker, Tier V quest chains |
-| 7 | 60,000 | Marshal / Chairman / Prime Minister | Honorific title, Legacy unlocks, faction Hall of Fame |
+| 2 | **400** | Steward / Activist / Canvasser | **Vote in all elections**, Campaign Event roles, Dossier missions, sign Recall Petitions |
+| 3 | 2,000 | Bailiff / Organiser / Agent | **Stand for City Council** (with the ladder conditions), **schedule Campaign Events**, illegal missions, safehouses, faction equipment, Jobs board Tier II |
+| 4 | 6,000 | Prefect / Convenor / Senator | **Stand for Faction Chair** (after a council term), Political Protection perk (§11.4) |
+| 5 | 15,000 | Intendant / Delegate / Representative | **Stand for the Legislature** and **be appointed Minister** (after a term as Governor or 3 council terms), Operation missions |
+| 6 | 25,000 | Guardian / Tribune / Speaker | **Stand for President or Chancellor** (after a term as deputy or minister), eligible for Speaker, Tier V quest chains |
+| 7 | 60,000 | Keeper of the Gate / Chairman / Prime Minister | Honorific title, Legacy unlocks, faction Hall of Fame |
 
 Rank 2 was 500 in the first 3.1 draft; at the §5.5 rates the reference player reached it on day 3, not day 2, so it is now 400 (`docs/economy.md` §7).
 
 The Collective's Rank 5 title was *Vanguard* in the first 3.1 draft, which read as the rival faction's name. It is now **Delegate**: what a workers' party sends to its Congress (§15.5) and to the Legislature, which is exactly what Rank 5 unlocks. The Alliance's Rank 3 title was *Councillor*, the office that rank lets you stand for; it is now **Agent** (a constituency agent runs campaigns, which is what Rank 3 unlocks). No faction is renamed (Appendix C #10 stays parked).
+
+**The Vanguard ladder is a party's, not an army's** (content-policy review, 29 Sep 2026; `docs/design/content-policy-review.md`). *Footsoldier, Sergeant, Lieutenant, Captain, Commander, Marshal* were military and are gone. The titles now climb through the offices of an authoritarian party that runs its wards like a prefecture: a **Steward** keeps order at meetings (Rank 2 unlocks event roles), a **Bailiff** runs a ward (Rank 3, council), a **Prefect** a district (Rank 4, Chair), an **Intendant** sits above the prefects (Rank 5, the Legislature), a **Guardian** is the movement's elder (Rank 6) and the **Keeper of the Gate** is its honorific, from the crest. The Collective's *Commissar* and *Comrade-General* were real-world titles; they are now **Convenor** (the convenor of shop stewards, Rank 4) and **Tribune** (Rank 6). The Sentinel's rank headlines read *Made {rank} by the Vanguard*, as the Gazette's read *by the Alliance*.
 
 ### 5.5 Reward rates per mission tier (starting values)
 
@@ -449,7 +457,7 @@ Heat measures how much attention the authorities are paying you right now. It's 
 | | |
 |---|---|
 | **Range** | 0–100 |
-| **Rises with** | Illegal actions: Disruption +8, Sabotage +12, extended surveillance +5, vandalism +6, blackmail +10, Operations +15. **Doubled in an enemy home city** (§14.12) |
+| **Rises with** | Illegal actions: Disruption +8, Sabotage +12, extended surveillance +5, vandalism +6, blackmail +10, Operations +15. **Doubled in a rival home city** (§14.12) |
 | **Cools** | 5 per hour (from 100 to 0 in about 20 h); faster in Safehouses |
 
 | Heat | Status | Effect |
@@ -522,7 +530,7 @@ The origin is a **tier-3 story of three steps** (§13.1), two questions to a ste
 | 2 *The talent* | "You always had a talent. What was it?" | I could outrun anyone on the block | I could fix anything with my hands | I could read people like a book | A +3 AGI · B +3 STR +1 INT · C +1 CHA (base) +3 INT |
 | 2 | "Take my coat. It's all I have left." | Take it, and say nothing | No. I'll earn my own | Take it, and promise to bring it back | A *Your father's coat* (clothing, Tier I, **CHA 5**, worn from the start) · B **+150 IM** · C the same coat as a **keepsake** (unique, never sold or crafted) and **+1 CHA base**; the promise returns in a later chapter |
 | 3 *The promise* | "Promise me one thing…" | "…I'll clear your name." | "…I'll settle what you owed." | "…I'll finish what you started." | Chooses the player's **Ambition** (§17.1) |
-| 3 | "And you. What do you want, when all this is over?" | Order. Someone needs to hold the line. | Justice. The workers deserve better. | Truth. Let the people decide. | +50 FXP seed toward Vanguard / Collective / Alliance, paid if you join that faction; the matching card on the faction screen shows *His wish · +50 Faction XP* |
+| 3 | "And you. What do you want, when all this is over?" | Order. Somebody has to keep the streets quiet. | Justice. The workers deserve better. | Truth. Let the people decide. | +50 FXP seed toward Vanguard / Collective / Alliance, paid if you join that faction; the matching card on the faction screen shows *His wish · +50 Faction XP* |
 
 **The answers stack as written** (Appendix C #12, closed): the three memory answers add **8 or 9 points counting CHA base**, of which **6–9 go to STR, INT and AGI** (the summer +3; the trouble +2 STR, +2 INT or +2 CHA base; the talent +3, or +4 with *fix anything* or *read people*), at most **+8 to one stat**, and up to **+4 CHA base** (talked them out +2, read people +1, the promised coat +1). A cap would silently waste the answers of a player who answered consistently, since no number is ever shown. See §8.5 for what that makes a new character.
 
@@ -542,7 +550,7 @@ From **Rank 3** you can **move** your residence to a **battleground city** (Clea
 
 - You can move once every 7 City Days, for 500 IM. Moving resets your council eligibility for one cycle.
 - You can always move back home.
-- You can't live in an enemy home city. You can visit, at your own risk (§14.12).
+- You can't live in a rival home city. You can visit, at your own risk (§14.12).
 
 ### 7.5 The first ten minutes (new)
 
@@ -577,10 +585,10 @@ Unchanged from v3.0. Your CHA is the total of your equipped clothing and accesso
 | Work jacket and cap / Mill work coat / Worn wool overcoat (Tier I) | 2 | The starting outfit of the Vanguard / Collective / Alliance (§21.4); the *plain clothes* of §14.12 |
 | Your father's coat (Tier I) | 5 | The origin's coat (§7.2); worn from the start if accepted |
 | Standard coat (Tier I) | 5 | |
-| Faction uniform (Tier II) | 12 | FXP bonus on faction missions |
+| Party outfit (Tier II) | 12 | FXP bonus on faction missions |
 | Officer's suit (Tier III) | 22 | Opera and university events |
 | Press correspondent outfit (Alliance T III) | 25 | INT bonus on political missions |
-| Ceremonial Vanguard uniform (T IV) | 35 | Risky in rival-held cities |
+| Vanguard dress suit (T IV) | 35 | Risky in rival-held cities |
 | Tailored three-piece suit (T IV, neutral) | 38 | |
 | Full regalia (T V Legendary) | 50 | Senior leadership |
 
@@ -615,7 +623,7 @@ Almost every tap in the game is a **check**: a stat against a difficulty. The fo
 | Tier-2 mission | 14–20, set per mission |
 | Tier-3 story, Operation | 22–30 |
 | Social mission | Its CHA requirement |
-| **In an enemy home city** | **+4** on top |
+| **In a rival home city** | **+4** on top |
 
 Missions unlock by Level, so the odds on a player's own tier sit mostly between **60 % and 85 %**. Old content drifts up to 95 %; new content starts lower.
 
@@ -627,7 +635,7 @@ Missions unlock by Level, so the odds on a player's own tier sit mostly between 
 | The right item (§21) | +5 % to +10 % (forged papers on checkpoints, a propaganda kit on posters, a press pass on interviews) |
 | Weather (§14.7) | −10 % to +10 % on outdoor checks |
 | Battleground bonus (§14.4) | +5 % |
-| The People's Commissar or similar enemy effects | −10 % |
+| The Branch Inspector or similar opponent effects | −10 % |
 
 Heat, Party Directives and Rested don't change the odds. Heat changes the separate **caught check** (§11.2); Directives and Rested change the rewards.
 
@@ -648,7 +656,7 @@ A shown 72 % succeeds on rolls 1–72: exactly 72 times in 100. The clamp means 
 | Canvass in Coalport (home), INT 12, no Standing yet (the reference recruit, §8.5) | 50 + 4 × (12 − 8) | **66 %** |
 | Canvass in Coalport (home), INT 12 | 50 + 4 × (12 − 8) + 6 (Standing *Known*) | **72 %** |
 | Speech to the picket, INT 18, difficulty 12 | 50 + 4 × (18 − 12) | **74 %** |
-| Sabotage in Duskwall (enemy home), AGI 17, difficulty 16 + 4 | 50 + 4 × (17 − 20) + 10 (forged papers) | **48 %** |
+| Sabotage in Duskwall (rival home), AGI 17, difficulty 16 + 4 | 50 + 4 × (17 − 20) + 10 (forged papers) | **48 %** |
 
 ### 8.5 Stat growth (new)
 
@@ -708,7 +716,7 @@ Unchanged from v3.0 apart from the pay rules.
 |---|---|---|---|---|---|
 | Street vendor | Level 1 | 3 | 80–120 | — | Any outdoor location |
 | Factory worker | Level 1 | 4 | 150–200 | STR 5 | Coalport; Collective +20 % |
-| Stores hand | Level 1 | 4 | 150–200 | STR 5 | Duskwall (the garrison stores); Vanguard +20 % |
+| Stores hand | Level 1 | 4 | 150–200 | STR 5 | Duskwall (the customs stores); Vanguard +20 % |
 | Copy clerk | Level 1 | 4 | 150–200 | INT 5 | Ashford (the *Gazette*); Alliance +20 % |
 | Driver | Level 3 | 4 | 180–250 | AGI 10 | |
 | Market trader | Level 3 | 5 | 200–300 | INT 8 | Buy-low/sell-high mini-game |
@@ -719,7 +727,7 @@ Unchanged from v3.0 apart from the pay rules.
 | Professor | Level 16 | 7 | 900–1,200 | INT 30 | Ashford University; small INT gain per shift |
 | Political aide | Level 20 | 8 | 1,500–2,500 | Rank 4 | Also gives FXP and 2 PC per shift |
 
-**Pinned for the home cities (slices 1 and 2):** each home city places three jobs. **Street vendor 100** (Market Row / the Quartermaster's Market / Bridge Street), the faction's day-1 job at **180, 216 for members** (Factory worker at the Mill Gate / Stores hand at the Garrison Gate / Copy clerk at Gazette House) and **Driver 200** (Harbour Quays / Goods Yard / Bridge Street). A job belongs to one location, so "Driver" is three jobs with three ids. The other jobs keep their ranges until they are placed. The Market trader's mini-game is deferred with the job.
+**Pinned for the home cities (slices 1 and 2):** each home city places three jobs. **Street vendor 100** (Market Row / the Customs Market / Bridge Street), the faction's day-1 job at **180, 216 for members** (Factory worker at the Mill Gate / Stores hand at the Fortress Gate / Copy clerk at Gazette House) and **Driver 200** (Harbour Quays / Goods Yard / Bridge Street). A job belongs to one location, so "Driver" is three jobs with three ids. The other jobs keep their ranges until they are placed. The Market trader's mini-game is deferred with the job.
 
 ---
 
@@ -826,7 +834,7 @@ Bodyguards are hired on **prepaid 7-day contracts** that you renew by hand or se
 | Trained enforcer | 2,000 | 1,400 | −20 % damage; +10 % flee; 15 % chance to avoid hospital | 2 |
 | Elite operative | 8,000 | 5,600 | −30 % damage; +15 % flee; 25 % hospital prevention; intercepts 1 ambush a day | 1 |
 
-Hired at Vanguard Barracks, Safehouses, or the Black Market (any faction, +25 % cost).
+Hired at Vanguard House, Safehouses, or the Black Market (any faction, +25 % cost).
 
 ---
 
@@ -838,7 +846,7 @@ Most of the time, spending Energy should be **fast**. A full bar of 100 Energy s
 
 | Tier | Share of content | How it plays | Examples |
 |---|---|---|---|
-| **1. Actions** | ~80 % | **One tap.** Resolves straight into a result modal (§13.1a). Repeatable ×1 / ×3 / ×5 (checked actions only: training and job shifts are ×1, §8.5, §9.1). **Never triggers an encounter**, except in an enemy home city (§14.12); a failure just pays less. | Canvass, paste posters, a street speech, work a shift, train, safe surveillance, buy a round |
+| **1. Actions** | ~80 % | **One tap.** Resolves straight into a result modal (§13.1a). Repeatable ×1 / ×3 / ×5 (checked actions only: training and job shifts are ×1, §8.5, §9.1). **Never triggers an encounter**, except in a rival home city (§14.12); a failure just pays less. | Canvass, paste posters, a street speech, work a shift, train, safe surveillance, buy a round |
 | **2. Missions** | ~15 % | **One choice.** A short briefing with 2–3 approaches, each showing its stat check and success chance, then the result. The game **remembers your approach**, so after the first time a Repeat button makes it one tap. | Anything illegal (disruption, sabotage, extended surveillance), exposés, social events, bigger faction missions |
 | **3. Stories** | ~5 % | **2–3 short steps at most**: choices, an encounter, named NPCs, illustration. Always **resumable**: close the tab mid-story and it waits where you left it. | Ambition chapters, patron Requests, the origin story, encounters from tier 2 |
 
@@ -849,7 +857,7 @@ Most of the time, spending Energy should be **fast**. A full bar of 100 Energy s
 
 **Rules that give tier 2 weight:**
 - Every tier-2 mission shows its **odds and its risks before you commit**: Heat, encounter chance, record points if caught.
-- Encounters (§20) only come from tier 2 and 3, and from tier 1 in enemy home cities (§14.12).
+- Encounters (§20) only come from tier 2 and 3, and from tier 1 in rival home cities (§14.12).
 
 #### 13.1a The result modal
 
@@ -926,18 +934,18 @@ Tier 1 needs no art at all. With a finite set of about 60 images, a new mission 
 |---|---|---|---|
 | `factory-gate` | Mill Gate, pit-heads, the power plant | `hospital` | St. Agnes, city infirmaries |
 | `docks` | Dockyard, riverside quays | `jail` | Police cells, the county jail |
-| `market` | Market Row, Market Square, the military market | `court` | Courts district, the Supreme Court |
+| `market` | Market Row, Market Square, the Customs Market | `court` | Courts district, the Supreme Court |
 | `station` | Rail stations, the tram junction | `university` | Ashford University, lecture halls |
 | `street` | Tenement streets, canvass wards, the street at night | `library` | Reading rooms, the state archives |
-| `square` | Rally grounds, forecourts, the town square | `gym` | Boxing clubs, the running track |
-| `bar` | The Anchor, workers' bars, society clubs | `barracks` | Vanguard Barracks, the old barracks |
+| `square` | Rally grounds, forecourts, the town square | `gym` | Boxing clubs, the running track, Vanguard House |
+| `bar` | The Anchor, workers' bars, society clubs | `barracks` | The old barracks on Garrison Hill (a landmark; no faction building uses this kind) |
 | `hotel` | Lodging houses, the Grand Hotel | `parliament` | Parliament, the Legislative Chamber |
 | `press` | Underground Press, the *Herald*, the Press Club | `ministry` | Ministries, police HQ, offices of state |
 | `faction-hq` | Each faction's HQ and union hall; the scene is picked by the faction | | |
 
 Nineteen kinds, which fits the "about 25" scenes budgeted above (`faction-hq` needs one per faction). **Final** as of the slice-1 Coalport list, which uses six of them: Mill Gate `factory-gate`, Market Row `market`, Union Hall `faction-hq`, Foundry Row `street`, Harbour Quays `docks`, The Anchor `bar`. Kinds can be added, never removed.
 
-**Duskwall** (slice 2, `docs/design/slice-2-cities.md` §1): Garrison Gate `barracks`, Quartermaster's Market `market`, Beacon House `faction-hq`, State Archives `library`, Goods Yard `station`, Rampart Row `street`. **Ashford** (§2 there): Gazette House `press`, Assembly Rooms `faction-hq`, University Quad `university`, The Courts `court`, Bridge Street `market`, Weavers' Row `street`. Scenes exist for the Vanguard HQ and the press; the other kinds use the map crop until a scene is drawn.
+**Duskwall** (slice 2, `docs/design/slice-2-cities.md` §1): Fortress Gate `ministry`, Customs Market `market`, Beacon House `faction-hq`, State Archives `library`, Goods Yard `station`, Rampart Row `street`. **Ashford** (§2 there): Gazette House `press`, Assembly Rooms `faction-hq`, University Quad `university`, The Courts `court`, Bridge Street `market`, Weavers' Row `street`. Scenes exist for the Vanguard HQ and the press; the other kinds use the map crop until a scene is drawn.
 
 ### 13.6 Social missions
 
@@ -977,9 +985,9 @@ See §15.4. Directives are the faction's *agenda for the day*, set by the electe
 | **Clearwater** | **Battleground** · the swing city | Wealthy suburbs beside a restless working class | 25 min | Society district, tram hub, black market |
 | **Ashford** | **Home city** of the Alliance | University town: media, courts, debate | 12 min | University, courts district, Press Club |
 | **Coalport** | **Home city** of the Collective | Industrial heartland: factories, docks, workers' councils | 12 min | Steel Mill, dockyard, underground press |
-| **Duskwall** | **Home city** of the Vanguard | Garrison city on the border: discipline and checkpoints | 15 min | Vanguard Barracks, state archives, military market |
+| **Duskwall** | **Home city** of the Vanguard | Frontier town in the mountains: the old fortress, customs and checkpoints | 15 min | Vanguard House, state archives, the Customs Market |
 
-The cities sit well apart, joined by rail lines through the capital, and the map shows the distance. See §14.10 for travel, §14.11 for home cities and battlegrounds, and §14.12 for visiting an enemy home city.
+The cities sit well apart, joined by rail lines through the capital, and the map shows the distance. See §14.10 for travel, §14.11 for home cities and battlegrounds, and §14.12 for visiting a rival home city.
 
 ### 14.2 Influence
 
@@ -1015,8 +1023,8 @@ This puts the reference player (§5.2) at about **+0.8 to +1.2 points a day** fr
 | State | Condition | Effect |
 |---|---|---|
 | **Contested** | No faction above 50 % | Standard prices; all missions open; **Battleground bonus** can apply |
-| **Control** | Above 50 % | The faction's buildings open (Barracks, Safehouse, Press Club), service prices shift (§19), it holds the council majority most of the time |
-| **Dominance** | Above 70 % | Exclusive high-tier missions and cosmetic city dressing (posters, banners, uniforms in text) |
+| **Control** | Above 50 % | The faction's buildings open (Vanguard House, Safehouse, Press Club), service prices shift (§19), it holds the council majority most of the time |
+| **Dominance** | Above 70 % | Exclusive high-tier missions and cosmetic city dressing (posters, banners, bunting in text) |
 
 **No reward multiplier ever scales with control.** A faction that holds more cities gets more *places to go*, not more XP or FXP per action. EVE Online's faction warfare showed that multipliers tied to control make winners snowball.
 
@@ -1051,7 +1059,7 @@ This is Irongate's signature mechanic. **Every city has two live public concerns
 | Press Censorship | Dress Code or Propaganda laws | Suppress "subversive" papers | Underground press | Free press campaign | Exposé strength ±25 % |
 | Border Incident | Duskwall, random | Mobilise | Peace rallies | Diplomacy | Journeys to Duskwall ±25 % time |
 | Tram Fare Hike | Clearwater, Irongate | Make the trams run on time | Fare boycott | Consumer inquiry | Tickets from the city ±50 % |
-| Corruption Scandal | After a Blackmail or Exposé | Purge the traitors | Expose the elite | Independent inquiry | Bribe costs ±25 % |
+| Corruption Scandal | After a Blackmail or Exposé | Clear out the rot | Expose the elite | Independent inquiry | Bribe costs ±25 % |
 | Unemployment | After a factory closure | Public works under discipline | Workers' co-ops | Retraining scheme | Job pay +10 % |
 | University Protests | Ashford, spring | Close the campus | Join the students | Open debate | Lecture rewards +25 % |
 | Heatwave Riots | Summer heatwave | Restore order | Water for the districts | Emergency relief | Encounter aggression ±10 % |
@@ -1139,7 +1147,7 @@ Journeys between two outer cities run through the capital: the two legs added to
 - You can cancel before departure, not once the train has left.
 - Scheduled Campaign Events show a **"leave by"** time for players in other cities.
 - Modifiers: snow +25 % time; the Open Borders law −25 %; the Tram Subsidy ordinance halves ticket prices from that city. Entering a Vanguard-controlled city adds a **checkpoint** on about half of journeys.
-- **A journey into an enemy home city always triggers an event**, from the hostile-ground deck (§14.12).
+- **A journey into a rival home city always triggers an event**, from the hostile-ground deck (§14.12).
 - **No journey takes more than 30 minutes**, except the night train. The NPC default Directives favour the player's current city and the capital, so the daily loop never forces a trip.
 
 **Journey events.** On about one trip in three, a card appears during the journey. It's always optional; ignore it and you "slept through it", with a neutral outcome.
@@ -1179,7 +1187,7 @@ Each faction has a **home city** it can never lose. Power is won or lost in the 
 - **Morale.** The home faction's share in its home city is its **morale**. Rival spy actions (§14.12), unresolved Issues and neglect lower it. **Keeping your base fired up is a job.** Morale never falls below 50 %, so a faction never loses its home, but low morale has real consequences (see *Morale states* below).
 - **Politics within the party.** Home council seats are contested between members of the same faction: rival candidates, party wings, endorsements. The primary is where a new player first competes.
 
-**Why a home city is never lost.** New players start there, so an enemy-held home would make a terrible first day. Losing a home would also snowball (fewer new players, a weaker faction, more losses) and invite coordinated griefing. So the floor stays, and neglect is punished through morale states instead.
+**Why a home city is never lost.** New players start there, so a rival-held home would make a terrible first day. Losing a home would also snowball (fewer new players, a weaker faction, more losses) and invite coordinated griefing. So the floor stays, and neglect is punished through morale states instead.
 
 **Morale states:**
 
@@ -1200,7 +1208,7 @@ Each faction has a **home city** it can never lose. Power is won or lost in the 
 - **The way out:** get morale back above 60 %. A *"Coalport stands firm"* headline and a Legacy entry go to everyone who helped.
 
 **Guardrails:**
-- **Rival pressure is capped per day.** A raid squad can cause a crisis but can't keep one going forever.
+- **Rival pressure is capped per day.** A rival crew can cause a crisis but can't keep one going forever.
 - **Home morale recovers faster** than battleground opinion: it drifts toward 70 % at 2 % a day, against 1 % a day elsewhere.
 
 **Baselines.** Each meter starts a season at its baseline and drifts back toward it (§14.2, §22.2). Home cities start at the 70 % drift target, with the rest split so that the undecided outnumber either rival. The three home cities are pinned (slices 0 and 2); the battlegrounds are provisional until slice 4.
@@ -1219,9 +1227,9 @@ Each faction has a **home city** it can never lose. Power is won or lost in the 
 
 In Coalport the Vanguard sits above the Alliance because the Vanguard recruits in industrial towns (§16.1); Ashford is the mirror. The Alliance's home has the Collective as the stronger rival for the same reason.
 
-**The one exception:** a rare **Season Twist**, *The Uprising* (§22.3), where for one season a home city really can be contested. It is announced a week ahead and applies equally to everyone.
+**The one exception:** a rare **Season Twist**, *The Upset* (§22.3), where for one season a home city really can be contested. It is announced a week ahead and applies equally to everyone.
 
-### 14.12 Hostile ground: enemy home cities (new)
+### 14.12 Hostile ground: rival home cities (new)
 
 A player can travel to a rival faction's home city and act there. It is the most dangerous place in the game and pays the best.
 
@@ -1231,7 +1239,7 @@ A player can travel to a rival faction's home city and act there. It is the most
 |---|---|---|---|---|
 | Your home city | Safe | No encounters | Normal | Normal |
 | A battleground | Occasional event | No encounters | Normal encounter chance | Normal |
-| **An enemy home city** | **Always an event** | **10–20 % encounter** | **Encounter chance ×2** | **×2** |
+| **A rival home city** | **Always an event** | **10–20 % encounter** | **Encounter chance ×2** | **×2** |
 
 **Journey events on the way in** (the hostile-ground deck):
 
@@ -1255,7 +1263,7 @@ A player can travel to a rival faction's home city and act there. It is the most
 **Fame is dangerous.** The chance of being *recognised* grows with your Legacy and any office you hold. A new player walks through Duskwall unnoticed; a sitting councillor is spotted at the station. That makes going undercover a late-game skill:
 - **Plain clothes.** Low CHA is good here: swap the suit for work clothes and you blend in.
 - **Forged papers** (a utility item).
-- **Safehouses.** Your faction's underground cell in each enemy home city (Rank 3+): Heat cools there and your odds improve.
+- **Safehouses.** Your faction's underground cell in each rival home city (Rank 3+): Heat cools there and your odds improve.
 - **Bodyguards and night travel**: fewer checkpoints, but the risk of curfew.
 
 **Rewards behind the lines:**
@@ -1269,7 +1277,7 @@ A player can travel to a rival faction's home city and act there. It is the most
 - **Deported**: put on the next train home, with no travel to that city for 24 h.
 - **Hospital** if you lose a fight, as anywhere.
 
-You can't live or stand for office in an enemy home city.
+You can't live or stand for office in a rival home city.
 
 ---
 
@@ -1379,7 +1387,7 @@ That's **about 111 offices every term**. With council terms of 5 days, **38 coun
 
 | Category | Example | Effect (bounded) | Duration | Factional? |
 |---|---|---|---|---|
-| Energy | Emergency Conscription Act (Vanguard) | Missions +2 Energy for non-Vanguard players (max +2) | 14 days | Yes, needs 60 % |
+| Energy | Emergency Permits Act (Vanguard) | Missions +2 Energy for non-Vanguard players (max +2) | 14 days | Yes, needs 60 % |
 | XP | People's Education Decree (Collective) | Mission XP +15 % for all (max +20 %) | 7 days | No |
 | Economy | Free Market Charter (Alliance) | Iron earned +10 % for all (max +15 %) | 30 days | No |
 | Order | Curfew Order (Vanguard) | Night encounter chance ×2 (max ×2) | 7 days | No |
@@ -1412,11 +1420,11 @@ Politics has to work with 50 players or 50,000:
 
 ### 16.1 The three factions
 
-**The Iron Vanguard (Fascists).** A paramilitary movement that believes strength, order and the nation above all are the only way forward. Its strongholds are the industrial outer cities, held through discipline and hierarchy.
+**The Iron Vanguard (Fascists).** An authoritarian nationalist party that believes strength, order and a strong hand at the top are the only way forward. Its strongholds are the frontier and industrial outer cities, held through discipline and hierarchy. It is a party, not a militia: it has a committee, an organiser, volunteers and stewards, and it courts the police and the customs rather than being them.
 - Starting bonus: +3 STR
 - Legislation style: order, curfews, costs for the opposition
-- Signature event: **Torchlight March**
-- Exclusive location: **Vanguard Barracks** (faster STR/AGI training, cheaper bodyguards, military market)
+- Signature event: **Grand Rally**
+- Exclusive location: **Vanguard House** (the movement's gymnasium and club, kind `gym`: faster STR/AGI training, cheaper bodyguards, a surplus market)
 
 **The Red Collective (Communists).** A grassroots movement that wants the working class to take Irongate's industries from a corrupt elite. It works through solidarity, underground networks and collective action.
 - Starting bonus: +2 STR +1 INT
@@ -1452,7 +1460,7 @@ This is co-op politics: short, scheduled events that faction members fill togeth
 | **Rally** | Speaker, Organiser, Security, Press | CHA+INT, INT, STR, INT | All factions; strong on Issues |
 | **Canvass Drive** | 3–5 Canvassers, a Coordinator | CHA, INT | Low risk, steady influence; good for new players |
 | **Town Hall** | Moderator, 2 Speakers, Press | INT, CHA, INT | Adds Recall signatures in the city |
-| **Torchlight March** (Vanguard) | Standard-bearer, Drummer, 2 Marshals, Lookout | CHA, STR, STR, AGI | Big swing; +Heat for participants in rival-held cities |
+| **Grand Rally** (Vanguard) | Speaker, Stand-builder, 2 Stewards, Lookout | CHA, STR, STR, AGI | The movement fills the main square by the thousand: a show of numbers and discipline. Big swing; +Heat for participants in rival-held cities |
 | **General Strike** (Collective) | Shop Steward, Picket Captain, Printer, Runner | CHA, STR, INT, AGI | Suspends factory jobs in the city for 1 day; strong Groundswell |
 | **Headline Story** (Alliance) | Reporter, Editor, Source-handler, Lawyer | INT, INT, AGI, INT | Needs a Case File; biggest single swing against a rival |
 
@@ -1491,7 +1499,7 @@ Each city has a powerful NPC patron who can be cultivated **over real days**. Th
 | **Edith Crane**, owner of the *Irongate Herald* | Irongate | Neutral | Media and headlines |
 | **Senator Aurelia Voss** | Ashford | Alliance | Law, courts, respectability |
 | **Mikhail "Misha" Draganov**, dockworkers' union boss | Coalport | Collective | Labour and crowds |
-| **Colonel Anton Reinholt**, garrison commander | Duskwall | Vanguard | Order, the police, the archives |
+| **Commissioner Anton Reinholt**, frontier commissioner (customs and checkpoints) | Duskwall | Vanguard | Order, the police, the archives |
 | **Julius Marr**, banker | Clearwater | Neutral | Money, the underworld, society |
 
 **Favour (0–100)** grows through patron **Requests** (1 every 2 days, hold up to 2), gifts (1 a day), social missions and Ambition chapters. **Favour never decays**; unanswered Requests simply expire. You can cultivate **2 active patrons** at a time and change them weekly.
@@ -1642,26 +1650,26 @@ Combat is a **hazard**, not the core of the game. It triggers from encounters an
 |---|---|---|---|
 | **Fight** | **50 % + 3 % × (your power − their power)**, 5–95 % | You win; you lose some Health (below) | Hospital |
 | **Flee** | **(your AGI ÷ their AGI) × 60 %**, +5 % per bodyguard tier, up to 95 % | You escape; the mission fails; Heat as normal | Extra damage, then the fight goes ahead at −10 % |
-| **Bluff** | The check formula (§8.4): **CHA against the enemy's Wits** | They let you go; the mission continues | They get angrier: the fight goes ahead at −10 % |
-| **Bribe** | **90 %** if the enemy can be bribed | They look away; Heat stays; sometimes a Dossier entry | Iron lost; +10 Heat; the fight goes ahead |
+| **Bluff** | The check formula (§8.4): **CHA against their Wits** | They let you go; the mission continues | They get angrier: the fight goes ahead at −10 % |
+| **Bribe** | **90 %** if they can be bribed | They look away; Heat stays; sometimes a Dossier entry | Iron lost; +10 Heat; the fight goes ahead |
 
 **Combat power = STR × 1.5 + weapon + armour ÷ 2 + 5 per bodyguard tier.**
 
 **Health lost when you win a fight:** their power × 0.8 (±20 %), less your armour value. **Losing** always means the hospital (§19.1).
 
-### 20.2 Enemies
+### 20.2 Opponents
 
-| Enemy | Side | Power | AGI | Wits | Bribe | Where |
+| Opponent | Side | Power | AGI | Wits | Bribe | Where |
 |---|---|---|---|---|---|---|
 | Street Enforcer | Vanguard | 22 | 10 | 10 | 60 Iron | Common in Vanguard-held areas |
-| Militia Guard | Vanguard | 35 | 9 | 12 | 150 Iron | Duskwall, Operations |
-| Red Guard | Collective | 25 | 12 | 11 | 80 Iron | Sabotage missions, Coalport |
-| People's Commissar | Collective | 17 | 11 | 16 | Not bribable | Lowers your Fight odds by 10 % |
+| Vanguard Doorman | Vanguard | 35 | 9 | 12 | 150 Iron | Duskwall, Operations |
+| Strike Picket | Collective | 25 | 12 | 11 | 80 Iron | Sabotage missions, Coalport |
+| Branch Inspector | Collective | 17 | 11 | 16 | Not bribable | Lowers your Fight odds by 10 % |
 | Party Thug | Alliance | 19 | 10 | 10 | 50 Iron | Rare |
 | City Police | Neutral | 30 | 12 | 14 | 300 Iron | Illegal missions; more common with Heat |
-| Secret Police | Vanguard | 43 | 14 | 20 | Not bribable | Operations, Level 20+ |
+| Secret Police | State (Vanguard-held cities) | 43 | 14 | 20 | Not bribable | Operations in Vanguard-held cities, Level 20+ |
 
-**Scaling:** enemy power rises **+10 % per mission tier above tier 1**, and **+4 in an enemy home city**. Named NPCs (for example Inspector Kessler) have their own values.
+**Scaling:** opponent power rises **+10 % per mission tier above tier 1**, and **+4 in a rival home city**. Named NPCs (for example Inspector Kessler) have their own values.
 
 ### 20.3 Weapons and armour
 
@@ -1696,10 +1704,10 @@ Armour is also clothing, so its CHA (§8.2) counts too. The best armour for a fi
 | Tier | Name | Unlock | Armour CHA | Examples (Vanguard / Collective / Alliance) |
 |---|---|---|---|---|
 | I | Improvised | Level 1 | 2–5 | Work jacket / mill coat / worn overcoat (§21.4) |
-| II | Standard | Level 6 | 8–15 | Field jacket / commissar coat / campaign suit |
-| III | Quality | Level 16 | 18–28 | Officer's overcoat / Vanguard uniform / barrister's vest |
-| IV | Elite | Level 31 | 30–40 | Dress uniform / Red Guard regalia / senator's suit |
-| V | Legendary | Level 51, Rank 6 | 42–50 | Marshal's regalia / People's Hero attire / Prime Minister's frock coat |
+| II | Standard | Level 6 | 8–15 | Steward's jacket / convenor's coat / campaign suit |
+| III | Quality | Level 16 | 18–28 | Prefect's overcoat / delegate's greatcoat / barrister's vest |
+| IV | Elite | Level 31 | 30–40 | Intendant's dress suit / Congress regalia / senator's suit |
+| V | Legendary | Level 51, Rank 6 | 42–50 | Keeper's regalia / Chairman's regalia / Prime Minister's frock coat |
 
 ### 21.3 Where equipment comes from
 
@@ -1748,10 +1756,10 @@ A **Political Season** is one in-game year: 12 weeks, ending in the Season Elect
 Each season adds **one rule change** to the setting, announced a week in advance:
 - *The Long Winter*: winter lasts 6 weeks; Bread Prices and Flu come up more often.
 - *Foreign Loan Crisis*: economic Issues dominate; Iron is scarcer.
-- *Martial Law in Duskwall*: Duskwall's council is suspended and its Governor is appointed by the head of government.
+- *Direct Rule in Duskwall*: Duskwall's council is suspended and its Governor is appointed by the head of government.
 - *Free Press Spring*: exposés +50 %; propaganda −25 %.
 - *The Great Exhibition*: social missions and CHA matter twice as much; a new patron arrives.
-- *The Uprising*: for this season only, one home city loses its 50 % floor and can genuinely be contested (§14.11). Rare, and never the same city twice in a row.
+- *The Upset*: for this season only, one home city loses its 50 % floor and can genuinely be contested (§14.11). Rare, and never the same city twice in a row.
 
 ### 22.4 Season track
 
@@ -1814,7 +1822,7 @@ See §3.6 for the timeline. In more detail:
 
 **Phase 3 — The Councillor** (months 2–3; home or a battleground; Level 20–40; Rank 3–5)
 - Council terms won and lost; **Governor or Mayor** after a term; Faction Chair at Rank 4.
-- Spy trips into enemy home cities; the first exposé that brings down an NPC official.
+- Spy trips into rival home cities; the first exposé that brings down an NPC official.
 - A flat, then a townhouse; Confidant of a patron; the Ambition's middle chapters.
 - The first Season Election as a campaigner.
 
@@ -1842,7 +1850,7 @@ See §3.6 for the timeline. In more detail:
 | City Councils, Governors, ordinances | ✔ | | |
 | Capital districts (5) | ✔ | | Districts in other cities |
 | Home cities, battlegrounds, morale | ✔ | | |
-| Hostile ground (enemy home cities) | ✔ (4 journey events, 3 encounters) | Full decks, missions only possible there | |
+| Hostile ground (rival home cities) | ✔ (4 journey events, 3 encounters) | Full decks, missions only possible there | |
 | The office ladder | ✔ | | |
 | Mission tiers, Local Standing, result modal | ✔ | | |
 | Homes | Rented room and flat | Townhouse, villa | |
@@ -1954,7 +1962,7 @@ The API (`apps/api`) was built against v3.0. Main changes:
 | `jobs/workers/criminalDecay.ts` | Minor-point expiry | Keep; Heat cooling can be calculated when read |
 | `jobs/workers/weatherRotate.ts` | Weather rotation | Per city, per City Day; 21-day weather seasons |
 | Mission checks (`services/missionService.ts`) | Success chance = a base value plus small STR, INT, CHA and equipment bonuses, capped at 95 %; outcome bands at 65 % and 30 % of that chance | Replace with the §8.4 formula (50 % + 4 % × (stat − difficulty) + bonuses, 5–95 %) and the Success / Partial / Failure bands; return the breakdown so the result modal can show it |
-| Combat (`services/combatService.ts`) | Up to 10 rounds simulated, armour and bodyguard reduction | Keep the simulation on the server, but expose it as one choice: return the odds for Fight, Flee, Bluff and Bribe (§20.1) before the player picks, and one result after. Add enemy AGI, Wits and bribe values (§20.2) |
+| Combat (`services/combatService.ts`) | Up to 10 rounds simulated, armour and bodyguard reduction | Keep the simulation on the server, but expose it as one choice: return the odds for Fight, Flee, Bluff and Bribe (§20.1) before the player picks, and one result after. Add opponent AGI, Wits and bribe values (§20.2) |
 | Travel (`services/characterService.ts`, `routes/character.ts`) | Instant move, Energy cost | Timed journeys: a Journey record with departure, arrival, mode and event; arrival resolved by a `journeyArrive` job; no Energy cost |
 | New workers | — | `journeyArrive`, `issueRotate` (weekly), `directiveReset` (daily), `campaignEventResolve`, `patronRequests`, `seasonRollover`, `morningPaper` digest |
 | Schema (new) | — | District, DistrictInfluence, Journey, Office, OfficeTerm (for the ladder), CouncilSeat, Ordinance, Issue, IssueMomentum, InfluenceLedger, LocalStanding, CampaignEvent, EventRole, Directive, Patron, PatronFavour, LegacyEntry, AmbitionProgress, Home, Season; City gets `role` (home or battleground) and `homeFactionId`; new Character fields: `heat`, `politicalCapital`, `rested`, `homeCityId`, `homeDistrictId`, `workStreak`, `sickDaysLeft`, buff timestamps |
@@ -1970,7 +1978,7 @@ The API (`apps/api`) was built against v3.0. Main changes:
 4. **Counter-Demonstrations:** they'd give the game its first faction-vs-faction contest. MVP or v1.1?
 5. **Season length:** 12 weeks, or 8 to keep it punchier?
 6. **Ambition at launch:** ~~which of the three gets fully built first? "Finish His Work" teaches politics best.~~ **Closed (29 Sep 2026): *Finish His Work* first**, to twelve chapters; the other two get chapter 1 in slice 2 and four chapters by launch (§17.1).
-7. **Vanguard presentation:** it needs a content and moderation policy before public testing.
+7. **Vanguard presentation:** ~~it needs a content and moderation policy before public testing.~~ **Content policy closed (29 Sep 2026):** the vocabulary rules and the review of every Vanguard string are in `docs/design/content-policy-review.md` (ranks, the Grand Rally, Duskwall as a customs town, chalking as words). **Still open:** the chat moderation policy before public testing.
 8. **Journey times:** are 12–25 minutes right, or should the nearer cities be shorter (5–8 min) so a trip fits inside one session?
 9. **District weights:** should the Government Quarter count for more than the other four districts in Irongate's average?
 10. **Faction naming** (parked): plain names (Fascists, Communists, Democrats) everywhere, plain names first with party names as flavour, or keep the party names (Iron Vanguard, Red Collective, Civic Alliance) with the ideology stated.

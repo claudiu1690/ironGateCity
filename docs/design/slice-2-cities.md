@@ -1,6 +1,6 @@
 # Slice 2 — "Arrival": Duskwall and Ashford content
 
-Game designer, 29 Sep 2026. Companion to `docs/design/slice-2-onboarding.md` (the origin, the kit, the welcome edition and the day-1 order) and `docs/economy.md` §13. Follows the Coalport format (`docs/design/slice-1-content.md`) so the same content schema holds; everything Coalport has, each of these cities has: six locations with a kind and a map position, about twenty tier-1 actions with Success and Partial text, three jobs, a party secretary, twelve order templates and the paper's headline templates. The GDD edits are listed in the onboarding doc §12.
+Game designer, 29 Sep 2026; Duskwall revised the same day by the content-policy review (`docs/design/content-policy-review.md`: a customs town, not a garrison; ids unchanged). Companion to `docs/design/slice-2-onboarding.md` (the origin, the kit, the welcome edition and the day-1 order) and `docs/economy.md` §13. Follows the Coalport format (`docs/design/slice-1-content.md`) so the same content schema holds; everything Coalport has, each of these cities has: six locations with a kind and a map position, about twenty tier-1 actions with Success and Partial text, three jobs, a party secretary, twelve order templates and the paper's headline templates. The GDD edits are listed in the onboarding doc §12.
 
 **The rules every action here obeys are Coalport's** (`slice-1-content.md` §2.1): one roll per attempt, tier 1 never fails, §5.5 rates by type and Energy, two-stat checks average, ×3 on checked actions only, Standing +3 % per level, Party orders +25 % FXP, opinion 0.005 points per Energy drawn from Neutral first. Outcome texts are ≤ 240 characters and ≤ 4 sentences (GDD §1.2); the longest below is 224.
 
@@ -13,27 +13,27 @@ Game designer, 29 Sep 2026. Companion to `docs/design/slice-2-onboarding.md` (th
 | | |
 |---|---|
 | City | `duskwall`, home city of the Vanguard (§14.11). Baseline opinion **Vanguard 70 / Collective 6 / Alliance 9 / Neutral 15** (pinned in this change; was provisional) |
-| Character (§14.1) | Garrison city on the border, in the mountains: the old fortress, the frontier checkpoint, the goods yard where the frontier freight comes in |
+| Character (§14.1) | Frontier town in the mountains: the old fortress, now the customs house; the checkpoint on the road below it; the goods yard where the frontier freight comes in |
 | Map | `maps-pen/duskwall.png` (day) and `duskwall-night.png`, both 5056 × 3392, RGB (no alpha, no flatten). Positions are x/y fractions of the image |
 | Paper | *The Duskwall Sentinel* · short name *Sentinel* · strapline *For the city and the frontier* · 5 marks (§3.3) |
 | Party secretary | **Viktor Stahl**, district organiser of the Vanguard in Duskwall (§1.3) |
 | Faction HQ | Beacon House (`faction-hq`, scene `mvp/scenes/vanguard-office.png`) |
-| The movement's idiom | "the movement", "the district", "muster", "hold the line", "order and bread at a fixed price". Never a real-world salute, uniform colour, symbol, title or slogan; see the onboarding doc §5.3 for the review |
+| The movement's idiom | "the movement", "the district", "the committee", "in good order", "order and bread at a fixed price". A party, not a militia: it has an organiser, a committee, volunteers and stewards; it courts the customs men and the police, it is not them. Never a real-world salute, uniform colour, symbol, title or slogan; see the onboarding doc §5.3 and `docs/design/content-policy-review.md` |
 
 ### 1.1 Locations (6)
 
 | # | Id | Name | Kind | Map x, y | Blurb (one line, ≤ 200 chars) |
 |---|---|---|---|---|---|
-| 1 | `duskwall.garrison-gate` | Garrison Gate | `barracks` | 0.47, 0.44 | The gatehouse of the old fortress, now the garrison's front door. The guard changes at four, and the whole town sets its watch by it. |
-| 2 | `duskwall.quartermaster-market` | Quartermaster's Market | `market` | 0.50, 0.65 | Tents and trestles under the walls, where the garrison sells what it doesn't need and the town buys what it can't get elsewhere. |
-| 3 | `duskwall.beacon-house` | Beacon House | `faction-hq` | 0.64, 0.78 | The movement's district office, named for the searchlight on its roof. The committee sits upstairs; the volunteers muster in the yard at six. |
+| 1 | `duskwall.garrison-gate` | Fortress Gate | `ministry` | 0.47, 0.44 | The gatehouse of the old fortress, now the frontier customs house. The shift changes at four, and the whole town sets its watch by it. |
+| 2 | `duskwall.quartermaster-market` | Customs Market | `market` | 0.50, 0.65 | Tents and trestles under the walls, where the customs auctions what it seizes at the frontier and the town buys what it can't get elsewhere. |
+| 3 | `duskwall.beacon-house` | Beacon House | `faction-hq` | 0.64, 0.78 | The movement's district office, named for the searchlight on its roof. The committee sits upstairs; the volunteers gather in the yard at six. |
 | 4 | `duskwall.archives` | State Archives | `library` | 0.77, 0.36 | The republic's records, kept in a stone quadrangle the movement now holds the keys to. Every ration book, lease and conviction in the district is in here somewhere. |
 | 5 | `duskwall.goods-yard` | Goods Yard | `station` | 0.18, 0.64 | The sidings below the fortress wall, where the frontier freight is broken down and the coal comes in. The loaders eat at noon with their backs to the wagons. |
 | 6 | `duskwall.rampart-row` | Rampart Row | `street` | 0.14, 0.84 | Railwaymen's terraces along the line below the walls. Washing across the street, children on the steps, and doors that open for the right accent. |
 
-Where the pins land on the art (checked on the full-size map): 1 on the arched gatehouse in the fortress's south wall, where the road enters the parade ground; 2 in the middle of the tent rows and stacked crates south of the wall; 3 on the tall building at the foot of the searchlight tower; 4 on the colonnaded front of the big square courtyard building east of the fortress; 5 on the goods shed beside the freight train in the sidings, bottom left; 6 in the middle of the terrace row along the railway, bottom left.
+Where the pins land on the art (checked on the full-size map): 1 on the arched gatehouse in the fortress's south wall, where the road enters the fortress square; 2 in the middle of the tent rows and stacked crates south of the wall; 3 on the tall building at the foot of the searchlight tower; 4 on the colonnaded front of the big square courtyard building east of the fortress; 5 on the goods shed beside the freight train in the sidings, bottom left; 6 in the middle of the terrace row along the railway, bottom left.
 
-**Reserved, not in slice 2:** the frontier checkpoint on the road below the gate (0.50, 0.53; kind `ministry`, the hostile-ground journey events of slice 5) and a railwaymen's bar, *The Bugle*, in the terraces east of the tower (0.85, 0.66; kind `bar`, bar services from slice 5). Neither needs a new kind.
+**Reserved, not in slice 2:** the frontier checkpoint on the road below the gate (0.50, 0.53; kind `ministry`, the hostile-ground journey events of slice 5) and a railwaymen's bar, *The Signal Lamp*, in the terraces east of the tower (0.85, 0.66; kind `bar`, bar services from slice 5). Neither needs a new kind.
 
 ### 1.2 Tier-1 actions (21)
 
@@ -41,17 +41,17 @@ Rewards are Success / Partial at the §5.5 rates. E = Energy. Opinion in points 
 
 | Id | Title | Type | Std | E | XP | FXP | Iron | Opinion |
 |---|---|---|---|---|---|---|---|---|
-| `duskwall.garrison-gate.canvass` | Canvass the guard change | canvass | STR | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `duskwall.garrison-gate.canvass` | Canvass the customs shift | canvass | STR | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `duskwall.garrison-gate.speech` | Speak from the gate steps | speech | CHA+STR | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
-| `duskwall.garrison-gate.drill` | Drill with the recruits | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
-| `duskwall.garrison-gate.stores` | Work your shift in the garrison stores | job (Stores hand) | — | 4 | — | — | see §1.3 | — |
+| `duskwall.garrison-gate.drill` | Shift crates in the bonded store | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
+| `duskwall.garrison-gate.stores` | Work your shift in the customs stores | job (Stores hand) | — | 4 | — | — | see §1.3 | — |
 | `duskwall.quartermaster-market.canvass` | Canvass the ration queue | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `duskwall.quartermaster-market.leaflets` | Hand out leaflets between the tents | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
 | `duskwall.quartermaster-market.speech` | Speak from the lorry bed | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
-| `duskwall.quartermaster-market.stall` | Work the sutler's stall | job (Street vendor) | — | 3 | — | — | see §1.3 | — |
+| `duskwall.quartermaster-market.stall` | Work the market stall | job (Street vendor) | — | 3 | — | — | see §1.3 | — |
 | `duskwall.beacon-house.committee` | Sit in on the district committee | council | INT | 10 | 45 / 23 | **9 / 5** | 20 / 10 | — |
 | `duskwall.beacon-house.duplicator` | Run the duplicator | propaganda | INT | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `duskwall.beacon-house.muster` | Address the evening muster | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
+| `duskwall.beacon-house.muster` | Address the evening volunteers | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
 | `duskwall.archives.reading-room` | Study in the reading room | training (INT) | — | 20 + 2×INT | half rate | — | — | — |
 | `duskwall.archives.registers` | Search the registers | intelligence | INT | 4 | 18 / 9 | — | 8 / 4 | — |
 | `duskwall.archives.clerks` | Canvass the clerks at closing time | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
@@ -60,8 +60,8 @@ Rewards are Success / Partial at the §5.5 rates. E = Energy. Opinion in points 
 | `duskwall.goods-yard.manifests` | Note the manifests | intelligence | INT | 3 | 14 / 7 | — | 6 / 3 | — |
 | `duskwall.goods-yard.lorry` | Drive the yard lorry | job (Driver) | — | 4 | — | — | see §1.3 | — |
 | `duskwall.rampart-row.canvass` | Canvass door to door | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `duskwall.rampart-row.chalk` | Chalk the movement's mark | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `duskwall.rampart-row.run` | Run messages for the street warden | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
+| `duskwall.rampart-row.chalk` | Chalk the slogan on the gable end | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `duskwall.rampart-row.run` | Run messages for the ward office | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
 
 **Count by type:** canvass 5 · speech 3 · propaganda 4 · training 3 · intelligence 2 · council 1 · job 3 = **21**.
 
@@ -71,21 +71,21 @@ Rewards are Success / Partial at the §5.5 rates. E = Energy. Opinion in points 
 
 | Job | Id | Location and action | Unlock | Shift Energy | Daily pay | Notes |
 |---|---|---|---|---|---|---|
-| **Stores hand** | `duskwall-stores-hand` | Garrison Gate, *Work your shift in the garrison stores* | Level 1, STR 5 | 4 | **180**, **216 for Vanguard members** (+20 %) | The Factory worker's mirror: the job every Duskwall recruit should take on day 1. New in §9.2 |
-| **Street vendor** | `duskwall-street-vendor` | Quartermaster's Market, *Work the sutler's stall* | Level 1 | 3 | **100** | The fallback; no requirement |
+| **Stores hand** | `duskwall-stores-hand` | Fortress Gate, *Work your shift in the customs stores* | Level 1, STR 5 | 4 | **180**, **216 for Vanguard members** (+20 %) | The Factory worker's mirror: the job every Duskwall recruit should take on day 1. New in §9.2 |
+| **Street vendor** | `duskwall-street-vendor` | Customs Market, *Work the market stall* | Level 1 | 3 | **100** | The fallback; no requirement |
 | **Driver** | `duskwall-driver` | Goods Yard, *Drive the yard lorry* | Level 3, AGI 10 | 4 | **200** | Visible and locked for most recruits (AGI 5): the first thing training AGI unlocks |
 
 Blurbs (≤ 160 characters):
 
-- **Stores hand** — Eight hours counting blankets and boots in the garrison stores. Vanguard members draw a fifth more.
-- **Street vendor** — Bootlaces, tobacco and yesterday's Sentinel from a stall in the Quartermaster's Market. The provost has stopped asking.
-- **Driver** — The yard lorry between the sidings and the garrison depot, a full load each way. Needs a quick hand on the frost.
+- **Stores hand** — Eight hours counting seized tobacco and bonded spirits in the customs stores. Vanguard members draw a fifth more.
+- **Street vendor** — Bootlaces, tobacco and yesterday's Sentinel from a stall in the Customs Market. The inspector has stopped asking.
+- **Driver** — The yard lorry between the sidings and the customs depot, a full load each way. Needs a quick hand on the frost.
 
 Job ids are prefixed by city because a job belongs to one location and a player who moves (slice 4) keeps the job where it is. See §3, question 1, for Coalport's ids.
 
 ### 1.4 The party secretary
 
-**Viktor Stahl**, district organiser of the Vanguard in Duskwall (`npcs`: id `stahl`, portrait `mvp/portraits/stahl.png`, the bald man in the heavy dark coat and yellow scarf; a 4:5 head-and-shoulders crop like Holm's). Voice: clipped and formal, talks in wards, lists and times, treats every order as already agreed, never raises his voice and never uses a slogan. Signs "— V.S." He is the movement's administrator, not its face: the face is Colonel Reinholt (§17.2), who arrives with patrons in slice 8. He sets the Vanguard's Party orders until a Chair exists (§13.7).
+**Viktor Stahl**, district organiser of the Vanguard in Duskwall (`npcs`: id `stahl`, portrait `mvp/portraits/stahl.png`, the bald man in the heavy dark coat and yellow scarf; a 4:5 head-and-shoulders crop like Holm's). Voice: clipped and formal, talks in wards, lists and times, treats every order as already agreed, never raises his voice and never uses a slogan. Signs "— V.S." He is the movement's administrator, not its face: the face is Commissioner Reinholt, the frontier commissioner (§17.2), who arrives with patrons in slice 8. He sets the Vanguard's Party orders until a Chair exists (§13.7).
 
 ### 1.5 Order templates (12)
 
@@ -94,7 +94,7 @@ Same slots and rotation as Coalport (A[day mod 5], B[day mod 4], C[day mod 3]); 
 | Id | Slot | Order (title) | Matches | Target | Stahl's line |
 |---|---|---|---|---|---|
 | `dir.v.canvass-duskwall` | A | Canvass Duskwall | any `canvass` in Duskwall | 3 attempts | Three wards. Three reports on my desk by tonight. |
-| `dir.v.guard-change` | A | Be at the gate | `duskwall.garrison-gate.canvass` | 2 attempts | The guard changes at four. Be at the gate before it. |
+| `dir.v.guard-change` | A | Be at the gate | `duskwall.garrison-gate.canvass` | 2 attempts | The customs shift changes at four. Be at the gate before it. |
 | `dir.v.rampart-row` | A | Knock Rampart Row | `duskwall.rampart-row.canvass` | 2 attempts | Every door on Rampart Row. Top to bottom, no gaps. |
 | `dir.v.loaders` | A | The yard at the break | `duskwall.goods-yard.loaders` | 2 attempts | The loaders stop at noon. So do you, beside them. |
 | `dir.v.clerks` | A | The clerks at closing | `duskwall.archives.clerks` | 2 attempts | The clerks leave at five. Catch them on the steps. |
@@ -103,70 +103,70 @@ Same slots and rotation as Coalport (A[day mod 5], B[day mod 4], C[day mod 3]); 
 | `dir.v.report` | B | Report to Beacon House | `duskwall.beacon-house.committee` | 1 attempt | Committee at six. Bring your ward lists, in order. |
 | `dir.v.eyes-open` | B | Eyes open | any `intelligence` in Duskwall | 2 attempts | Watch, note, report. Names and times, nothing else. |
 | `dir.v.work-shift` | C | Work your shift (no job: *Take a job*) | any job shift / take a job | 1 | The movement does not pay wages. The stores do. |
-| `dir.v.sharpen-up` | C | Sharpen up | any `training` | 1 point | A soft organiser is no use to me. The drill square, or the reading room. |
+| `dir.v.sharpen-up` | C | Sharpen up | any `training` | 1 point | A soft organiser is no use to me. The bonded store, or the reading room. |
 | `dir.v.full-day` | C | A full day | any checked action in Duskwall | 6 Successes | Six wins before lights out. |
 
 ### 1.6 The Duskwall Sentinel: headline templates
 
-Same conditions, priorities and groups as the Clarion's (`slice-1-content.md` §7.4 and §13.5); `{rank}` is the Vanguard title (Initiate / Footsoldier / Sergeant / Lieutenant / Captain / Commander / Marshal). Only the text differs. The first-edition templates (`hl.v.welcome`, `hl.v.arrival`) are in the onboarding doc §7.
+Same conditions, priorities and groups as the Clarion's (`slice-1-content.md` §7.4 and §13.5); `{rank}` is the Vanguard title (Initiate / Steward / Bailiff / Prefect / Intendant / Guardian / Keeper of the Gate, §5.4). Only the text differs. The first-edition templates (`hl.v.welcome`, `hl.v.arrival`) are in the onboarding doc §7.
 
 | Id | Group · priority | Condition | Headline | Deck |
 |---|---|---|---|---|
-| `hl.v.rank-up-2` | personal 2 | rank rose to 2 | {name} Made Footsoldier by the Movement | Initiates become Footsoldiers on the strength of their work. The vote follows. |
-| `hl.v.rank-up-3` | personal 2 | rank rose to 3 | {name} Made Sergeant by the Movement | A Sergeant can stand for the council. Organiser Stahl: "Now we shall see." |
-| `hl.v.rank-up` | personal 2 | rank rose to 4+ | {name} Made {rank} by the Movement | Made {rank} on the strength of district work. Beacon House takes note. |
+| `hl.v.rank-up-2` | personal 2 | rank rose to 2 | {name} Made Steward by the Vanguard | Initiates become Stewards on the strength of their work. The vote follows. |
+| `hl.v.rank-up-3` | personal 2 | rank rose to 3 | {name} Made Bailiff by the Vanguard | A Bailiff can stand for the council. Organiser Stahl: "Now we shall see." |
+| `hl.v.rank-up` | personal 2 | rank rose to 4+ | {name} Made {rank} by the Vanguard | Made {rank} on the strength of district work. Beacon House takes note. |
 | `hl.v.level-up` | personal 3 | level rose, Energy yesterday ≥ 1 | Duskwall {rank} Rises to Level {level} | {name} of the Vanguard spent {energyYesterday} Energy on the ward yesterday. Beacon House has noticed. |
 | `hl.v.level-up-quiet` | personal 3 | level rose, Energy yesterday = 0 | Duskwall {rank} Rises to Level {level} | {name} of the Vanguard has been putting the hours in on the ward. Beacon House has noticed. |
 | `hl.v.standing` | personal 4 | standing rose | A {standing} Face in Duskwall | Duskwall knows {name} now: {standing}. Actions here get +{bonus} %. |
-| `hl.v.orders-done` | personal 5 | all three orders done yesterday | Movement Commends Its Canvassers | Every order carried out yesterday. Organiser Stahl: "As it should be." +5 Political Capital banked. |
+| `hl.v.orders-done` | personal 5 | all three orders done yesterday | Vanguard Commends Its Canvassers | Every order carried out yesterday. Organiser Stahl: "As it should be." +5 Political Capital banked. |
 | `hl.v.streak-5` / `-10` | personal 6 | streak hit 5 / 10 | Five / Ten Straight Shifts and Counting | {name} has not missed a shift in {streak} days. Pay is up {bonus} %. |
 | `hl.v.away` | personal 7 | 2+ days, half-pays ≥ 1 | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. |
-| `hl.v.away-no-job` | personal 7 | 2+ days, half-pays = 0 | While You Were Away | No job, so no half pay banked. Rested is full and the ward is where you left it. The garrison stores are still hiring: the Jobs card is at the Garrison Gate. |
+| `hl.v.away-no-job` | personal 7 | 2+ days, half-pays = 0 | While You Were Away | No job, so no half pay banked. Rested is full and the ward is where you left it. The customs stores are still hiring: the Jobs card is at the Fortress Gate. |
 | `hl.v.idle` | personal 8 | idle yesterday | Quiet Day on the Ramparts | No leaflets went out yesterday. Today's orders are below. |
-| `hl.v.morale-fired` | city 1 | share ≥ 80 | Vanguard Holds Duskwall at {share} % | The garrison town stands in step. |
+| `hl.v.morale-fired` | city 1 | share ≥ 80 | Vanguard Holds Duskwall at {share} % | The frontier town is of one mind. |
 | `hl.v.morale-steady` | city 1 | 60–79 | Vanguard Holds Duskwall at {share} % | "Steady," says Beacon House. Steady is not enough. |
 | `hl.v.morale-unrest` | city 1 | < 60 | Vanguard Holds Duskwall at {share} % | Unrest in Duskwall: the railwaymen question the movement. |
 | `hl.v.orders-call` | city 2 | no personal headline | Organiser Stahl Calls for {ordersTitle} | {ordersLine} |
 | `hl.v.ambient-0..9` | ambient | fewer than 3 | one of the pool below, `day mod 10` | — |
 
-**Ambient pool** (headline only): Curfew Bell to Ring at Ten Until Further Notice · Mountain Pass Closed by Early Snow · Garrison Band to Play Sunday in the Square · Coal Train Held at the Frontier Checkpoint · Searchlight on Beacon House Repaired · Ration Books: New Issue at the Archives Counter · Three Fined for Chalking on the Ramparts · Timber Prices Up at the Mountain Mills · Station Clock Stopped Since Tuesday · Archives Open Late on Thursdays.
+**Ambient pool** (headline only): Curfew Bell to Ring at Ten Until Further Notice · Mountain Pass Closed by Early Snow · Town Band to Play Sunday in the Fortress Square · Coal Train Held at the Frontier Checkpoint · Searchlight on Beacon House Repaired · Ration Books: New Issue at the Archives Counter · Three Fined for Chalking on the Ramparts · Timber Prices Up at the Mountain Mills · Station Clock Stopped Since Tuesday · Archives Open Late on Thursdays.
 
 The morale headlines use a no-break space before "%", as the Clarion's do.
 
 ### 1.7 Outcome text
 
-#### Garrison Gate
+#### Fortress Gate
 
-**Canvass the guard change** (`duskwall.garrison-gate.canvass`)
-- Success — *They stop for one of their own* — The guard comes off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A corporal takes ten leaflets for the billet.
-- Partial — *Most of them march past* — The relief marches through and the old guard heads for the canteen without slowing. You press leaflets on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.
+**Canvass the customs shift** (`duskwall.garrison-gate.canvass`)
+- Success — *They stop for one of their own* — The customs men come off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A senior man takes ten leaflets for the office.
+- Partial — *Most of them go past* — The night shift goes in and the day shift heads for the canteen without slowing. You press leaflets on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.
 
 **Speak from the gate steps** (`duskwall.garrison-gate.speech`)
-- Success — *The square goes quiet* — You take the top step under the arch and pitch it to the back of the square. Order on the streets, bread at a fixed price, the frontier held. Nobody heckles here. When you finish, the sergeant of the guard nods once.
-- Partial — *The bugle cuts you off* — You get through prices and the checkpoint queues before the bugle goes for the relief and the square empties at the double. A few townsfolk stay to hear the end. The sergeant looks at his watch.
+- Success — *The square goes quiet* — You take the top step under the arch and pitch it to the back of the square. Order on the streets, bread at a fixed price, the frontier shut. Nobody heckles here. When you finish, the chief of customs nods once.
+- Partial — *The four o'clock bell cuts you off* — You get through prices and the checkpoint queues before the bell goes for the shift and the square empties at a trot. A few townsfolk stay to hear the end. The chief looks at his watch.
 
-**Drill with the recruits** (`duskwall.garrison-gate.drill`, training STR)
-- Trained — *An hour on the square* — The drill sergeant doesn't ask which party you're with; he asks if you can carry a pack. You can, by the end. Your shoulders will tell you about it tomorrow.
+**Shift crates in the bonded store** (`duskwall.garrison-gate.drill`, training STR)
+- Trained — *An hour in the bonded store* — The storeman doesn't ask which party you're with; he asks if you can get a crate of tinned beef onto the top rack. You can, by the end. Your shoulders will tell you about it tomorrow.
 
-**Work your shift in the garrison stores** (`duskwall.garrison-gate.stores`, Stores hand)
-- Worked — *Eight hours among the crates* — Blankets, boots, tinned beef, counted in and counted out under a corporal who trusts nobody. The paybook gets its stamp. Half came at midnight; here's the rest, with the streak on top.
+**Work your shift in the customs stores** (`duskwall.garrison-gate.stores`, Stores hand)
+- Worked — *Eight hours among the crates* — Seized tobacco, bonded spirits, tinned beef, counted in and counted out under a storeman who trusts nobody. The paybook gets its stamp. Half came at midnight; here's the rest, with the streak on top.
 
-#### Quartermaster's Market
+#### Customs Market
 
 **Canvass the ration queue** (`duskwall.quartermaster-market.canvass`)
-- Success — *The queue has nowhere to go* — Sixty people and one tent with sugar in it. You work the line with the price list and the leaflet. By the time the corporal shouts next, half the queue knows what the movement would do about the ration.
-- Partial — *The sugar runs out early* — Three people in, the corporal drops the flap and the queue turns into an argument. A few leaflets go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.
+- Success — *The queue has nowhere to go* — Sixty people and one tent with sugar in it. You work the line with the price list and the leaflet. By the time the clerk shouts next, half the queue knows what the movement would do about the ration.
+- Partial — *The sugar runs out early* — Three people in, the clerk drops the flap and the queue turns into an argument. A few leaflets go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.
 
 **Hand out leaflets between the tents** (`duskwall.quartermaster-market.leaflets`)
-- Success — *Quick hands, empty bag* — You work the tent rows at a trot, a leaflet into every basket before the owner looks up. The bag is empty in ten minutes and the market provost never sees you.
-- Partial — *The provost sees you* — Half the bag is gone when the market provost plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The leaflets you handed out are still out there.
+- Success — *Quick hands, empty bag* — You work the tent rows at a trot, a leaflet into every basket before the owner looks up. The bag is empty in ten minutes and the market inspector never sees you.
+- Partial — *The inspector sees you* — Half the bag is gone when the market inspector plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The leaflets you handed out are still out there.
 
 **Speak from the lorry bed** (`duskwall.quartermaster-market.speech`)
 - Success — *A crowd between the tents* — You climb onto the tailboard of a parked lorry and give it to them. Prices, the ration, who queues and who doesn't. The stallholders heckle, the crowd laughs, and by the end the laughs are on your side.
-- Partial — *The lorry has to leave* — You've a fair crowd until the driver climbs into the cab and you're speaking from a moving platform. You finish on the ground for the tea stall and a provost who looks bored. The tea stall gives you a nod.
+- Partial — *The lorry has to leave* — You've a fair crowd until the driver climbs into the cab and you're speaking from a moving platform. You finish on the ground for the tea stall and an inspector who looks bored. The tea stall gives you a nod.
 
-**Work the sutler's stall** (`duskwall.quartermaster-market.stall`, Street vendor)
-- Worked — *A day's trade* — Bootlaces, tobacco, yesterday's Sentinel. You know the regulars by their boots now. The takings won't make anyone rich, but they come in every day, and the provost has stopped asking.
+**Work the market stall** (`duskwall.quartermaster-market.stall`, Street vendor)
+- Worked — *A day's trade* — Bootlaces, tobacco, yesterday's Sentinel. You know the regulars by their boots now. The takings won't make anyone rich, but they come in every day, and the inspector has stopped asking.
 
 #### Beacon House
 
@@ -178,7 +178,7 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 - Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred bulletins in an hour, stacked for the morning runners. Your hands are purple to the wrist and the office smells of spirit.
 - Partial — *The stencil tears* — The stencil tears at copy two hundred and the rest come out ghosted. Half a stack goes out; the other half goes in the stove. The organiser shows you how to cut the next one.
 
-**Address the evening muster** (`duskwall.beacon-house.muster`)
+**Address the evening volunteers** (`duskwall.beacon-house.muster`)
 - Success — *The yard listens* — Forty volunteers in the yard at six, caps off, waiting to be told. You tell them: which streets tonight, which doors, what to say at each. Nobody asks a question. That's the compliment here.
 - Partial — *Half the yard is thinking about supper* — You get the street list out before the back rows start shuffling. The front row writes it down, which is something. The organiser says: shorter, next time.
 
@@ -188,7 +188,7 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 - Trained — *An evening with the registers* — The reading room is cold and the light is bad, but the shelves hold everything from the frontier acts to the grain returns of 1913. You leave knowing the argument better than the man who'll make it against you.
 
 **Search the registers** (`duskwall.archives.registers`)
-- Success — *Names, dates, addresses* — You sign for a ledger and read it like a paper. Who moved into the officers' terrace last spring, who sold a lease in a hurry, who's drawing two ration books. It goes in your notebook for later.
+- Success — *Names, dates, addresses* — You sign for a ledger and read it like a paper. Who moved into the new terrace by the fortress last spring, who sold a lease in a hurry, who's drawing two ration books. It goes in your notebook for later.
 - Partial — *The wrong volume* — The clerk brings the wrong year and takes an hour to find the right one. You get one address worth writing down before closing. Not nothing.
 
 **Canvass the clerks at closing time** (`duskwall.archives.clerks`)
@@ -210,7 +210,7 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 - Partial — *Nothing much moves* — An hour on the bollard and one wagon, which is checked, stamped and shunted. Your notebook has a firm and a time. Not nothing.
 
 **Drive the yard lorry** (`duskwall.goods-yard.lorry`, Driver)
-- Worked — *Six runs to the depot* — Six runs between the sidings and the garrison depot, a full load each way and a checker who wants it faster. The lorry fights you on the frost. The pay clerk doesn't.
+- Worked — *Six runs to the depot* — Six runs between the sidings and the customs depot, a full load each way and a checker who wants it faster. The lorry fights you on the frost. The pay clerk doesn't.
 
 #### Rampart Row
 
@@ -218,11 +218,11 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 - Success — *The kettle goes on* — Sixty doors below the wall. Most open a crack; a dozen open wide, and at three the kettle goes on. Railwaymen's wives talk about the curfew and the price of coal. You leave with a list of names.
 - Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones on the step. One man says he's heard the movement's speeches from the wall already. Come back after the shift.
 
-**Chalk the movement's mark** (`duskwall.rampart-row.chalk`)
-- Success — *White letters on the gable end* — The gable end at the bottom of the row is the biggest wall on the line. You get HOLD THE LINE up in fair capitals, the square beneath it, before the rent-man's boy comes round the corner. Then you're away down the entry.
-- Partial — *Half a slogan* — You get as far as HOLD THE before a window goes up and someone shouts about their wall. You finish the last word small and leave by the back entry. It reads, just about.
+**Chalk the slogan on the gable end** (`duskwall.rampart-row.chalk`)
+- Success — *White letters on the gable end* — The gable end at the bottom of the row is the biggest wall on the line. You get ORDER AND BREAD up in fair capitals, the movement's name beneath it, before the rent-man's boy comes round the corner. Then you're away down the entry.
+- Partial — *Half a slogan* — You get as far as ORDER AND before a window goes up and someone shouts about their wall. You finish the last word small and leave by the back entry. It reads, just about.
 
-**Run messages for the street warden** (`duskwall.rampart-row.run`, training AGI)
+**Run messages for the ward office** (`duskwall.rampart-row.run`, training AGI)
 - Trained — *Every entry below the wall* — Six notes, five streets, one hour. You learn which entries connect and which end in a wall, and you learn them at a run. By the end you could do it in the dark, which is the point.
 
 ---
@@ -449,11 +449,12 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 
 ## 3. Notes and questions for the architect
 
-**Content that follows the slice-1 schema unchanged:** both cities are `City` documents (`role: 'home'`, `homeFactionId`, `baselineOpinion`, `map`, `paper`, `locations[]`); the actions use the existing `CheckedAction` / `TrainingAction` / `ShiftAction` shapes; jobs, NPCs, order templates and headline templates use the existing sections keyed by `factionId` or `cityId`. No new action type, kind or condition is needed. New art assets: `map.duskwall.day` / `.night`, `map.ashford.day` / `.night` (no flatten: both day maps are RGB), `portrait.stahl`, `portrait.grey`, `scene.vanguard-office` (bound to `faction-hq` + `vanguard`), `scene.newsroom` (bound to `press`). The kinds `barracks`, `library`, `station`, `street`, `market`, `university`, `court` have no scene yet and fall back to the map crop (§13.5 rung 3), which is by design; an Alliance HQ scene is an art request, not a blocker.
+**Content that follows the slice-1 schema unchanged:** both cities are `City` documents (`role: 'home'`, `homeFactionId`, `baselineOpinion`, `map`, `paper`, `locations[]`); the actions use the existing `CheckedAction` / `TrainingAction` / `ShiftAction` shapes; jobs, NPCs, order templates and headline templates use the existing sections keyed by `factionId` or `cityId`. No new action type, kind or condition is needed. New art assets: `map.duskwall.day` / `.night`, `map.ashford.day` / `.night` (no flatten: both day maps are RGB), `portrait.stahl`, `portrait.grey`, `scene.vanguard-office` (bound to `faction-hq` + `vanguard`), `scene.newsroom` (bound to `press`). The kinds `ministry`, `library`, `station`, `street`, `market`, `university`, `court` have no scene yet and fall back to the map crop (§13.5 rung 3), which is by design; an Alliance HQ scene is an art request, not a blocker.
 
 1. **Job ids.** Jobs here are prefixed by city (`duskwall-stores-hand`). Coalport's are not (`street-vendor`, `factory-worker`, `driver`). Recommend renaming Coalport's to `coalport-street-vendor`, `coalport-factory-worker`, `coalport-driver` in slice 2, while no production data exists, so that "the Driver job" in three cities is three jobs at three locations. Job *names* stay identical across cities ("Driver"); only ids differ.
 2. **Factions without a secretary** were nullable in slice 1 (`OrdersView.issuer`). From slice 2 every faction has one (`holm`, `stahl`, `grey`), so `Faction.secretary` can become required.
 3. **Headline template ids** are prefixed per city (`hl.v.*`, `hl.a.*`) to keep them unique in the flat `headlines[]` array; the Clarion's `hl.*` ids can stay as they are.
 4. **Order template ids** are likewise `dir.v.*` and `dir.a.*`; the Coalport `dir.*` ids stay. The `cityId: 'home'` match on the *full day* orders already resolves to the member's home city.
 5. **The `library` kind at the Archives** is the GDD's own mapping (§13.5: "reading rooms, the state archives"); the Archives are not a `ministry` even though the movement holds them. The kind decides art and presence text only.
-6. **Reserved pins** (checkpoint, The Bugle, Ashford Station, the wharf) are listed here so the mockups' extra pins have a home; nothing about them is data in slice 2.
+6. **Reserved pins** (checkpoint, The Signal Lamp, Ashford Station, the wharf) are listed here so the mockups' extra pins have a home; nothing about them is data in slice 2.
+7. **Ids after the content-policy review** (29 Sep 2026): the Duskwall ids `duskwall.garrison-gate` (and its four actions, including `.drill`), `duskwall.quartermaster-market` (and its four), `duskwall.beacon-house.muster`, `duskwall.rampart-row.chalk` and `dir.v.guard-change` keep their ids; only display text changed, and a character's job, order progress and logs reference them. Ids are never shown to players. Rename them, if wanted, with the next migration that touches Duskwall. The one data change that is not text is the Fortress Gate's kind: `barracks` → `ministry` (no scene either way; the map crop stands in).
