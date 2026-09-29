@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Grows one slice ahead of the build |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). Grows one slice ahead of the build |
 | **Sources** | GDD §5.2–5.5, §6.2–6.3, §6.5, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §14.11, §15.1–15.3, §15.4, §15.10, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md`, `slice-3-politics.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 29 Sep 2026 (slice-3 §14 added) |
+| **Updated** | 29 Sep 2026 (slice-4 §15 added) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -392,3 +392,98 @@ Unlocks after the first ballot and seven days after chapter 1: **about day 8** f
 
 Odds for the reference recruit at day 8 (INT ~30 from levels and training, CHA 5 with the coat): the INT approach is at the 95 % clamp, the CHA+INT approach about 65 %; a casual at day 12 (INT ~18) sees about 66 % and 40 %. Success is a sixth of a day's XP, two fifths of a day's FXP and a fifth of a day's Iron: worth opening the Letter for, not worth planning around. **Rank 3 moves by about 0.4 day at most** (80 of the ~2,000 FXP), which keeps the first candidacy on day 10–14 (§14.1). Rested applies as for chapter 1. No opinion, no Standing, no Party-order credit.
 
+
+---
+
+## 15. Slice 4: travel, the capital and the Issues
+
+Slice 4 adds no tier-1 rate. It adds the **first Iron sinks** (tickets, the move, the room), a second difficulty (10 in Irongate, with +5 % in a battleground district), the **Battleground** bonus on FXP and opinion, Issue momentum and two new PC sources. Rules: `docs/design/slice-4-battleground.md`; GDD §14.4–14.6, §14.9–14.11, §15.3, §18.3.
+
+### 15.1 The sinks
+
+| Sink | Iron | Against a reference day (~950) | Who pays it |
+|---|---|---|---|
+| A third-class ticket | 20 (10 under the Tram Subsidy or the Tram Fare Hike; floor 5) | 2 %; a round trip 4 % | The visitor: about three round trips a week in the model, **~120 a week** |
+| Registering a residence | 500, both ways | About half a day's income; **11 % of the ~4,500 a reference player holds on day 5**, 4 % of the ~12,000 held on day 14 | Once; a second time if they go home |
+| A room in Irongate | 100 for 7 days (50 under the Evictions effect) | 1.5 % of a week's income | Optional; the once-a-day player is the one it pays (below) |
+| The card school's stake | 20, returned on Partial | — | Optional, on one journey in seven |
+
+**Verdict:** the sinks are small next to income, on purpose (§18.1: Iron sinks are acceleration, and the balance has had nothing to buy for three slices). The move is the only one that is felt, and only on the day it is paid. The Iron balance keeps growing at about 90 % of its slice-3 rate; the wardrobe and the flat (slice 8) remain the sinks that matter. Nothing here is mandatory: a player who never travels pays nothing new.
+
+### 15.2 Odds in the capital
+
+Difficulty 10 costs **−8 %** on every check against home; the Battleground bonus gives **+5 %** back on political checks in a battleground district; Standing restarts at *Stranger* (the +12 % cap at home is gone until it is earned again: *Known* about a day and a half after arrival, *One of Us* about five days). For the reference player who first visits on day 5 (INT ~17 from levels and training):
+
+| Check | At home (day 5, *Trusted*, +9 %) | Irongate, battleground district, no Standing | Irongate, leaning district |
+|---|---|---|---|
+| INT canvass | 95 % (clamp) | 50 + 4 × (17 − 10) + 5 = **83 %** | 78 % |
+| CHA+INT speech (CHA 5) | 50 + 4 × (11 − 8) + 9 = 71 % | 50 + 4 × (11 − 10) + 5 = **59 %** | 54 % |
+| INT intelligence | 95 % | 78 % | 78 % |
+
+Expected reward factors: 0.92 at the clamp → 0.89 (INT) and 0.86 → 0.80 (CHA+INT) in a battleground district. **About −5 % on XP and Iron per Energy** for a fresh arrival, closing to −2 % once *Trusted* in Irongate (about day 3 in the capital) and to nothing at the clamp a few days later. The capital reads a little harder for the first week, which is the GDD's "new content starts lower" (§8.4) and what makes Standing worth restarting (§7.4).
+
+### 15.3 A capital resident's day (reference player, 300 Energy, from day 7)
+
+| | Home (slice-3 sheet) | Capital, battleground district | Capital, leaning district |
+|---|---|---|---|
+| XP / day | ~1,780 | ~1,700 (−5 % odds, closing) | ~1,650 |
+| FXP from actions | ~145 | ~145 × 0.95 × **1.25** ≈ 172 | ~138 |
+| FXP from orders (+25 % match, 3 × 20) | ~60 | ~60 | ~60 |
+| *Fired up* (+10 %, home only) | ~14 | — | — |
+| Councillor's stipend (if seated) | 20 | 20 | 20 |
+| **FXP / day** | **~205 (225 seated)** | **~232 (+13 %)** | ~198 (−3 %) |
+| Iron from actions (with Rested) | ~720 | ~690 | ~670 |
+| Job: Factory worker kept (half pay only, no shift) | 108 + 121 | 108 | 108 |
+| Job: Porter after the switch (streak from 0, +2 %/day to +20 %) | — | 90 + ~100 | 90 + ~100 |
+| **Iron / day** | **~950** | **~800 (home job) · ~880 (Porter)** | ~780 · ~860 |
+| Opinion moved / day | +1.15 (morale) | +1.15 × **1.25** ≈ +1.44 in the district (+2.2 in a week with a tagged Issue on half the Energy) | +1.15 |
+
+**Milestones:** Rank 3 for a player who moves on day 5 arrives about **day 9** (was 9.5 at home with *Fired up*); Rank 4 about day 28 for a resident who lives in a battleground district (was ~30). The capital pays about **+13 % FXP** while the fight is on and **−7 to −15 % Iron**; in a leaning district it pays nothing extra and costs the same Iron. Level pacing is untouched within a day (Level 10 day 5, Level 16 day 12–13). **Verdict:** the capital is a little richer in FXP and a little poorer in Iron, which is the trade §14.11 describes ("a natural ladder: home, then a battleground"); no §5.2 milestone moves by more than a day. Flag: the bonus is district-shaped, so if the leaning districts empty out, that is the design working, not a bug; if *every* district is a battleground by week two (three factions within ten everywhere), the +25 % is a permanent +13 % and the lever is the ten-point band.
+
+### 15.4 The first trip and the first move against the calendar
+
+| Milestone | Reference | Casual | Heavy |
+|---|---|---|---|
+| Level 10 (the train) | day 5 | day 7 | day 3 |
+| Rank 2 (may register) | day 2 | day 3 | day 2 |
+| 500 Iron in hand after a ticket | from day 1 | from day 1 | from day 1 |
+| **Earliest move** | **day 5** | **day 7** | **day 3** |
+| First capital ballot (polls open after registering, offset 0) | day 6–10 | day 8–12 | day 4–8 |
+| *Known* in Irongate (30 Successes) | ~1.5 days after arrival | ~2 days | ~1 day |
+| First capital candidacy (Rank 3 + *Known* + nominations) | day 9–13 | day 15–18 | day 7–9 |
+| First capital seat | day 12–16 | day 18–21 | day 10–12 |
+
+So the playtest's question ("do players choose to move?") can be answered inside two weeks for every profile; the seat, as at home, is week 2–3.
+
+### 15.5 Issues and heroes: the PC budget
+
+| Source | PC | Per cycle or week for a daily player |
+|---|---|---|
+| All three orders (unchanged) | 5 / day | 25 a cycle |
+| Councillor's stipend (unchanged) | 10 / day seated | 50 a term |
+| **Issue top five** (new) | 4 per Issue owned | 0–8 a week (two Issues a city); at low population a daily player is in the top five of anything they touch |
+| **District Hero** (new) | 25 per cycle | 0–25 a cycle; at low population, most cycles for the district's most active player |
+
+A daily capital player earns about **35–60 PC a cycle** against a maximum political spend of 40 (file 10, endorse 10, propose 20), so PC accumulates a little faster than at home; the Chair candidacy (25), petitions (10) and favours (15–40) in slices 7–8 are the sinks. **Flag:** at low population District Hero is nearly automatic for whoever is most active in a district, and the +0.5 minimum is what keeps it from being free; at scale the brackets do the work. If the playtest shows one player collecting 25 PC every cycle with no contest, raise the minimum to +1.0 before touching the reward.
+
+**Momentum sizes:** a reference player who spends half their political Energy on tagged actions adds ~120 momentum a day (Success ~85 %, Partial half); a week is ~700; five members of one faction on one Issue: ~3,500. Totals are printed as integers and mean "Energy spent on the argument", which the Issues section can say in one Courier line.
+
+### 15.6 Journey cards
+
+Seven cards, at most one per journey; the first journey always, then one in three. Expected value per card, all choices at the reference player's odds (INT 83 %, AGI 5 → 30 %, CHA+INT 59 %): about **+10 XP, +2 FXP, +8 Iron, +0.02 opinion**, or +10 Rested for the doze. Over a week of three round trips that is two cards and under **1 % of any daily total**. They are flavour with a number on them, as intended; nothing here is worth travelling for, which keeps the train a choice about *where* to play, not a reward loop.
+
+### 15.7 Session shape (pillar 7)
+
+Boarding is two taps and five seconds; the journey is twelve minutes in the background; a card is one tap; a tram is one tap; a move is two taps and a sheet read; a capital ballot is two taps. The Issues section adds ten seconds of reading to the paper. Nothing in slice 4 requires the player at a set time: journeys arrive whether or not the game is open, Issues resolve at the Monday boundary, the count at the Irongate boundary, and every window is at least a City Day.
+
+### 15.8 Flags (GDD Appendix C)
+
+| # | Flag | Risk | Lever |
+|---|---|---|---|
+| 8 | Journey times 12 / 15 / 25 | Players close the app rather than wait, and the train feels like a wall | Measure dwell; shorten the near legs to 6–8 min if dwell is under a minute and trips are rare |
+| 27 | Rank 2 to move | Players move before they know their branch | A day count, not the rank |
+| 28 | No early Issue resolution | Lopsided weeks feel dead by Wednesday | A *decided* state |
+| 29 | Groundswell never fires at low population | The anti-snowball rule is untested | Seed one district above 50 for a week |
+| 30 | Cross-faction ballots | Tactical griefing of a bloc | Own faction plus NPCs only |
+| — | The capital's +13 % FXP is district-shaped | Leaning districts empty; or every district is a battleground and the bonus is permanent | The ten-point band |
+| — | District Hero is nearly automatic at low population | 25 PC a cycle for turning up | The +0.5 minimum → +1.0 |

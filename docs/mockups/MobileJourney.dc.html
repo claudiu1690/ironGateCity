@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Journey — train to Coalport, phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=Oswald:wght@400;500;600&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#EFE6D2}
+.lbl{font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.14em}
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;background:#F6F0E1;color:#15181A;border:1.5px solid #15181A;padding:10px 12px;cursor:pointer;min-height:52px;box-sizing:border-box;font-family:'Source Serif 4',Georgia,serif}
+.choice-sel{background:#15181A;color:#EFE6D2}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-grow:1;color:#B8B09F;text-decoration:none;font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;position:relative;min-height:56px}
+.tab-on{color:#EFE6D2;box-shadow:inset 0 3px 0 #EFE6D2}
+a{color:#8C2B23}
+</style>
+</helmet>
+<div style="width: 390px; height: 1000px; position: relative; overflow: hidden; background: #EFE6D2; color: #15181A; font-family: 'Source Serif 4', Georgia, serif">
+
+<div style="position: relative; height: 218px; overflow: hidden; background: #15181A">
+<img src="/_blob/b75dae148ff44c5de789b1842f2cd5b3" alt="Inside a third-class train compartment: a man in a coat reads a newspaper; a parcel sits on the opposite seat" style="position: absolute; left: -80px; top: 0; width: 550px; height: 307px; object-fit: cover">
+<div style="position: absolute; left: 10px; top: 10px; background: #15181A; color: #EFE6D2; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px">
+<span class="lbl" style="font-size: 10px; color: #cfc7b5">Third class · car 4</span>
+<span style="font-family: Oswald, sans-serif; font-size: 15px; font-weight: 500">The 14:10 to Coalport</span>
+</div>
+</div>
+
+<div style="background: #15181A; color: #EFE6D2; padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px">Irongate</span>
+<span style="font-family: Oswald, sans-serif; font-size: 13px; color: #6FB3B0">{{remaining}} min to go · arrives 14:22</span>
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px">Coalport</span>
+</div>
+<div style="position: relative; height: 14px; display: flex; align-items: center">
+<div style="position: absolute; left: 0; right: 0; height: 3px; background: repeating-linear-gradient(90deg, #EFE6D2 0 8px, transparent 8px 12px)"></div>
+<div style="position: absolute; left: 0; width: {{progress}}; height: 3px; background: #6FB3B0"></div>
+<span style="position: absolute; left: 0; width: 12px; height: 12px; border-radius: 50%; background: #EFE6D2; transform: translateX(-2px)"></span>
+<span style="position: absolute; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #EFE6D2; box-sizing: border-box; background: #15181A"></span>
+<span style="position: absolute; left: {{progress}}; transform: translateX(-50%); width: 22px; height: 14px; background: #6FB3B0; border: 2px solid #15181A; box-sizing: border-box"></span>
+</div>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11px; color: #cfc7b5">You can close the game. You’ll arrive either way, and Energy keeps refilling on the way.</span>
+</div>
+
+<div style="padding: 14px 16px 90px; display: flex; flex-direction: column; gap: 14px">
+
+<div style="border: 2px solid #15181A; background: #F6F0E1; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #15181A">
+<span class="lbl" style="font-size: 11px; font-weight: 600">On the way · journey event</span>
+<span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #8C2B23; border: 1.5px solid #8C2B23; padding: 2px 6px; transform: rotate(-3deg)">Optional</span>
+</div>
+<div style="padding: 12px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 24px; line-height: 1.05">The Parcel</span>
+<p style="margin: 0; font-size: 15px; line-height: 1.5">The man in the grey coat folds his newspaper. “Someone will meet the train at Coalport and ask for this. Fifty marks now, fifty when it’s collected. Don’t open it.”</p>
+<sc-for list="{{choices}}" as="ch" hint-placeholder-count="3">
+<button type="button" class="{{ch.cls}}" onClick="{{ch.pick}}" aria-pressed="{{ch.selected}}">
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px">{{ch.title}}</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11px; opacity: .85">{{ch.detail}}</span>
+</button>
+</sc-for>
+<sc-if value="{{hasOutcome}}" hint-placeholder-val="{{false}}">
+<div style="background: #1E4D52; color: #EFE6D2; padding: 10px 12px; font-size: 14px; line-height: 1.45">{{outcome}}</div>
+</sc-if>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11px; color: #5b564b">Ignore it and you sleep through it. Nothing happens.</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 3px double #15181A; padding-top: 6px">
+<span class="lbl" style="font-size: 11px; font-weight: 600">Fellow travellers</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11px; color: #5b564b">3 players on this train</span>
+</div>
+<div style="display: flex; gap: 8px; align-items: center">
+<span style="display: flex; gap: 5px; align-items: center; font-family: Oswald, sans-serif; font-size: 13px"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#8C2B23"></circle></svg>J. Sorel</span>
+<span style="display: flex; gap: 5px; align-items: center; font-family: Oswald, sans-serif; font-size: 13px"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#8C2B23"></circle></svg>A. Brandt</span>
+<span style="display: flex; gap: 5px; align-items: center; font-family: Oswald, sans-serif; font-size: 13px"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect width="10" height="10" fill="#C39A3A"></rect></svg>E. Karst</span>
+</div>
+<a href="MobileJourney.dc.html" style="display: flex; justify-content: space-between; align-items: center; border: 1.5px solid #15181A; color: #15181A; padding: 11px 14px; font-family: Oswald, sans-serif; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; min-height: 44px; box-sizing: border-box"><span>Open carriage chat</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg></a>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span class="lbl" style="font-size: 11px; color: #5b564b">While you ride</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<a href="MobilePaper.dc.html" style="border: 1px solid #15181A; padding: 10px; color: #15181A; text-decoration: none; display: flex; flex-direction: column; gap: 2px; min-height: 44px"><span style="font-family: Oswald, sans-serif; font-size: 13px; letter-spacing: .12em; text-transform: uppercase">Read the Paper</span><span style="font-family: 'Courier Prime', monospace; font-size: 11px; color: #5b564b">3 unread</span></a>
+<a href="City.dc.html" style="border: 1px solid #15181A; padding: 10px; color: #15181A; text-decoration: none; display: flex; flex-direction: column; gap: 2px; min-height: 44px"><span style="font-family: Oswald, sans-serif; font-size: 13px; letter-spacing: .12em; text-transform: uppercase">Sort the Dossier</span><span style="font-family: 'Courier Prime', monospace; font-size: 11px; color: #5b564b">2 going stale</span></a>
+</div>
+</div>
+
+</div>
+
+<div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 64px; background: #15181A; border-top: 1px solid #3A4043; display: flex">
+<a href="MobileRegion.dc.html" class="tab tab-on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"></path></svg>Map</a>
+<a href="MobilePaper.dc.html" class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"></rect><path d="M7 8h10M7 12h6M7 16h6M15 12h2v4h-2z"></path></svg>Paper</a>
+<a href="MobileCity.dc.html" class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3z"></path></svg>Dossier</a>
+<a href="MobileEvent.dc.html" class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 21V4h11l-2 4 2 4H5"></path></svg>Faction</a>
+<a href="Main.dc.html" class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>Me</a>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"minutesLeft":{"editor":"range","min":0,"max":12,"step":1,"default":5},"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pick: null };
+  }
+  renderVals() {
+    const left = this.props.minutesLeft ?? 5;
+    const opts = [
+      { id: 'carry', title: 'Carry it', detail: '+100 Iron · +10 Heat if Coalport police search the train',
+        outcome: 'You slide the parcel under your coat. At Coalport a boy in a cloth cap asks for “Uncle Tomas’s shoes”. Fifty more marks. The parcel was heavier than shoes.' },
+      { id: 'conductor', title: 'Hand it to the conductor', detail: 'Dossier entry on the man in grey · no Heat',
+        outcome: 'The conductor takes it without a word and writes something in his book. You get a good look at the man in grey as he leaves at the next stop. New Dossier entry.' },
+      { id: 'open', title: 'Open it when he steps out', detail: 'AGI check · about 60% · fail: +15 Heat',
+        outcome: 'Pamphlets, printed in Duskwall, calling for a strike at the Coalport mill — in the Collective’s name. Somebody wants the strike to turn ugly. Ambition clue found.' }
+    ];
+    const pick = this.state.pick;
+    const choices = opts.map((o) => ({
+      ...o,
+      selected: o.id === pick,
+      cls: o.id === pick ? 'choice choice-sel' : 'choice',
+      pick: () => this.setState({ pick: o.id })
+    }));
+    const chosen = opts.find((o) => o.id === pick);
+    return {
+      choices,
+      hasOutcome: !!chosen,
+      outcome: chosen ? chosen.outcome : '',
+      remaining: left,
+      progress: Math.round(((12 - left) / 12) * 100) + '%'
+    };
+  }
+}
+</script>
+</body>
+</html>

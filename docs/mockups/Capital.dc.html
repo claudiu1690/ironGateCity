@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Irongate districts — desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=Oswald:wght@400;500;600&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#15181A}
+.lbl{font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.14em}
+.plate{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:stretch;background:#15181A;color:#EFE6D2;border:1.5px solid #EFE6D2;box-shadow:0 0 0 3px #15181A,0 6px 18px rgba(0,0,0,.45);padding:8px 12px 7px;min-width:150px;gap:5px;cursor:pointer;text-align:left}
+.plate-sel{background:#EFE6D2;color:#15181A;border-color:#15181A;box-shadow:0 0 0 3px #EFE6D2,0 8px 24px rgba(0,0,0,.55)}
+.plate-name{font-family:Oswald,sans-serif;font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;line-height:1}
+.plate-meta{font-family:'Courier Prime',monospace;font-size:11px;opacity:.85}
+.gauge-track{height:6px;background:#3A4043;width:100%}
+.dock-btn{display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;padding:9px 0 8px;color:#EFE6D2;text-decoration:none;font-family:Oswald,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;position:relative}
+.dock-on{background:#EFE6D2;color:#15181A}
+.btn-primary{display:flex;justify-content:space-between;align-items:center;background:#15181A;color:#EFE6D2;border:0;padding:14px 16px;font-family:Oswald,sans-serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;min-height:48px}
+.btn-secondary{display:flex;justify-content:center;align-items:center;background:transparent;color:#15181A;border:1.5px solid #15181A;padding:12px 16px;font-family:Oswald,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;min-height:44px}
+a{color:#8C2B23}a:hover{color:#5f1c16}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #15181A; font-family: 'Source Serif 4', Georgia, serif; color: #EFE6D2">
+
+<div style="position: absolute; left: 0; top: 64px; width: 1064px; height: 806px; overflow: hidden; box-shadow: inset -1px 0 0 #3A4043">
+<div style="position: absolute; left: -72px; top: 0; width: 1209px; height: 806px">
+<img src="{{mapSrc}}" alt="Map of Irongate showing its five districts" style="width: 1209px; height: 806px; display: block">
+<svg viewBox="0 0 100 100" preserveAspectRatio="none" width="1209" height="806" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<polygon points="0,0 26,0 28,22 30,34 26,46 12,50 0,50" fill="{{d0.fill}}" fill-opacity="{{d0.fo}}" stroke="{{d0.stroke}}" stroke-width="{{d0.sw}}" stroke-dasharray="{{d0.dash}}" vector-effect="non-scaling-stroke"></polygon>
+<polygon points="26,0 76,0 72,22 62,28 48,30 30,34 28,22" fill="{{d1.fill}}" fill-opacity="{{d1.fo}}" stroke="{{d1.stroke}}" stroke-width="{{d1.sw}}" stroke-dasharray="{{d1.dash}}" vector-effect="non-scaling-stroke"></polygon>
+<polygon points="30,34 48,30 62,28 72,22 70,45 68,68 55,78 50,100 34,100 36,70 32,56 26,46" fill="{{d2.fill}}" fill-opacity="{{d2.fo}}" stroke="{{d2.stroke}}" stroke-width="{{d2.sw}}" stroke-dasharray="{{d2.dash}}" vector-effect="non-scaling-stroke"></polygon>
+<polygon points="76,0 100,0 100,100 50,100 55,78 68,68 70,45 72,22" fill="{{d3.fill}}" fill-opacity="{{d3.fo}}" stroke="{{d3.stroke}}" stroke-width="{{d3.sw}}" stroke-dasharray="{{d3.dash}}" vector-effect="non-scaling-stroke"></polygon>
+<polygon points="0,50 12,50 26,46 32,56 36,70 34,100 0,100" fill="{{d4.fill}}" fill-opacity="{{d4.fo}}" stroke="{{d4.stroke}}" stroke-width="{{d4.sw}}" stroke-dasharray="{{d4.dash}}" vector-effect="non-scaling-stroke"></polygon>
+</svg>
+<sc-for list="{{districts}}" as="d" hint-placeholder-count="5">
+<button type="button" class="{{d.plateClass}}" style="left: {{d.left}}; top: {{d.top}}" onClick="{{d.pick}}" aria-pressed="{{d.selected}}">
+<span style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+<span class="plate-name">{{d.name}}</span>
+<svg width="11" height="11" viewBox="0 0 10 10" aria-hidden="true"><rect width="10" height="10" fill="{{d.holderColor}}"></rect></svg>
+</span>
+<span style="display: flex; height: 5px; gap: 1px">
+<span style="width: {{d.vw}}; background: #C39A3A"></span>
+<span style="width: {{d.cw}}; background: #8C2B23"></span>
+<span style="width: {{d.aw}}; background: #4B7394"></span>
+<span style="width: {{d.nw}}; background: #8A8577"></span>
+</span>
+<span class="plate-meta">{{d.status}}</span>
+</button>
+</sc-for>
+</div>
+<div style="position: absolute; left: 20px; top: 16px; display: flex; flex-direction: column; gap: 2px; pointer-events: none">
+<span class="lbl" style="font-size: 11px; color: #EFE6D2; text-shadow: 0 1px 3px #000">The capital · 5 districts · Mayor A. Keller (Alliance)</span>
+<span style="font-family: 'Playfair Display', serif; font-style: italic; font-weight: 700; font-size: 26px; color: #EFE6D2; text-shadow: 0 2px 6px #000">Irongate: Vanguard 32 · Collective 30 · Alliance 29</span>
+</div>
+<div style="position: absolute; left: 20px; bottom: 90px; display: flex; gap: 14px; background: rgba(21,24,26,.88); padding: 8px 12px; font-family: 'Courier Prime', monospace; font-size: 12px; align-items: center">
+<span style="display: flex; gap: 6px; align-items: center"><svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true"><rect x="1" y="1" width="20" height="8" fill="#8C2B23" fill-opacity=".4" stroke="#EFE6D2" stroke-width="1.5"></rect></svg>Held (over 50%)</span>
+<span style="display: flex; gap: 6px; align-items: center"><svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true"><rect x="1" y="1" width="20" height="8" fill="none" stroke="#EFE6D2" stroke-width="1.5" stroke-dasharray="3 2"></rect></svg>Contested</span>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; top: 0; width: 1440px; height: 64px; background: #15181A; border-bottom: 1px solid #3A4043; display: flex; align-items: center; gap: 28px; padding: 0 24px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 12px; width: 250px">
+<img src="/_blob/64689c170d636886b2f7e8180d2d0c91" alt="Portrait of Mara Lenk" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: 50% 22%; border: 2px solid #8C2B23; box-shadow: 0 0 0 2px #15181A, 0 0 0 3px #EFE6D2">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px; line-height: 1">Mara Lenk</span>
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Organiser · Red Collective · Lv 14</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 150px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl" style="font-size: 10px; color: #B8B09F">Health</span><span style="font-family: Oswald, sans-serif; font-size: 12px">142 / 165</span></div>
+<div class="gauge-track"><div style="width: 86%; height: 6px; background: #D96B4B"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 190px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl" style="font-size: 10px; color: #B8B09F">Energy</span><span style="font-family: Oswald, sans-serif; font-size: 12px">64 / 100 <span style="color: #6FB3B0">· Rested 120</span></span></div>
+<div class="gauge-track"><div style="width: 64%; height: 6px; background: #6FB3B0"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 110px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl" style="font-size: 10px; color: #B8B09F">Heat</span><span style="font-family: Oswald, sans-serif; font-size: 12px">18 · Cool</span></div>
+<div style="display: flex; gap: 2px"><span style="flex-grow: 1; height: 6px; background: #C39A3A"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span></div>
+</div>
+<div style="display: flex; gap: 20px; align-items: center">
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">Iron Marks</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">4,210</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">Pol. Capital</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">86</span></div>
+</div>
+<div style="margin-left: auto; display: flex; flex-direction: column; gap: 3px; text-align: right">
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Wednesday · Day 17 · Summer</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">14:20 · Irongate, Old Town · Clear 21°</span>
+</div>
+</div>
+
+<div style="position: absolute; top: 84px; right: 20px; width: 340px; background: #EFE6D2; color: #15181A; box-shadow: 0 0 0 1px #15181A, 0 18px 40px rgba(0,0,0,.5); display: flex; flex-direction: column">
+<div style="padding: 18px 20px 14px; border-bottom: 2px solid #15181A; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span class="lbl" style="font-size: 11px; color: #5b564b">District file · {{cur.num}}</span>
+<span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: {{cur.stampColor}}; border: 1.5px solid currentColor; padding: 2px 7px; transform: rotate(-3deg)">{{cur.stamp}}</span>
+</div>
+<h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 32px; line-height: 1.05">{{cur.name}}</h2>
+<p style="margin: 0; font-size: 14px; line-height: 1.45; color: #3d3a33">{{cur.blurb}}</p>
+</div>
+<div style="padding: 12px 20px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid #b9ad91">
+<span class="lbl" style="font-size: 11px; color: #5b564b">District opinion</span>
+<div style="display: flex; height: 10px; gap: 2px">
+<span style="width: {{cur.vw}}; background: #C39A3A"></span>
+<span style="width: {{cur.cw}}; background: #8C2B23"></span>
+<span style="width: {{cur.aw}}; background: #4B7394"></span>
+<span style="width: {{cur.nw}}; background: #8A8577"></span>
+</div>
+<div style="display: flex; justify-content: space-between; font-family: Oswald, sans-serif; font-size: 13px">
+<span>Vanguard {{cur.v}}%</span><span>Collective {{cur.c}}%</span><span>Alliance {{cur.a}}%</span>
+</div>
+</div>
+<div style="padding: 12px 20px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid #b9ad91; font-size: 14px">
+<div style="display: flex; justify-content: space-between; gap: 10px"><span class="lbl" style="font-size: 11px; color: #5b564b">Police answer to</span><span style="font-family: Oswald, sans-serif; font-size: 14px">{{cur.police}}</span></div>
+<div style="display: flex; justify-content: space-between; gap: 10px"><span class="lbl" style="font-size: 11px; color: #5b564b">This week</span><span style="font-family: Oswald, sans-serif; font-size: 14px">{{cur.issue}}</span></div>
+<div style="display: flex; justify-content: space-between; gap: 10px"><span class="lbl" style="font-size: 11px; color: #5b564b">Council seats</span><span style="font-family: 'Courier Prime', monospace; font-size: 12px; text-align: right">{{cur.seats}}</span></div>
+<sc-if value="{{cur.warn}}" hint-placeholder-val="{{false}}">
+<div style="background: #15181A; color: #EFE6D2; padding: 8px 10px; font-family: 'Courier Prime', monospace; font-size: 12px; line-height: 1.4">{{cur.warnText}}</div>
+</sc-if>
+</div>
+<div style="padding: 12px 20px; display: flex; flex-direction: column; gap: 5px; border-bottom: 1px solid #b9ad91">
+<span class="lbl" style="font-size: 11px; color: #5b564b">Places here</span>
+<span style="font-size: 14px; line-height: 1.5">{{cur.places}}</span>
+</div>
+<div style="padding: 14px 20px 18px; display: flex; flex-direction: column; gap: 10px">
+<button type="button" class="btn-primary"><span>{{cur.cta}}</span><span style="color: #6FB3B0">Tram · instant</span></button>
+<button type="button" class="btn-secondary">Show places on the map</button>
+</div>
+</div>
+
+<div style="position: absolute; left: 532px; bottom: 48px; transform: translateX(-50%); display: flex; background: #15181A; box-shadow: 0 0 0 1px #EFE6D2, 0 10px 30px rgba(0,0,0,.5)">
+<a href="Region.dc.html" class="dock-btn dock-on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"></path></svg>Map</a>
+<a href="MobilePaper.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"></rect><path d="M7 8h10M7 12h6M7 16h6M15 12h2v4h-2z"></path></svg>Paper</a>
+<a href="City.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3z"></path></svg>Dossier</a>
+<a href="MobileEvent.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 21V4h11l-2 4 2 4H5"></path></svg>Faction</a>
+<a href="Main.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>Profile</a>
+</div>
+
+<div style="position: absolute; left: 0; bottom: 0; width: 1440px; height: 30px; background: #EFE6D2; color: #15181A; display: flex; align-items: center; gap: 18px; padding: 0 20px; box-sizing: border-box; overflow: hidden; white-space: nowrap">
+<span class="lbl" style="font-size: 11px; font-weight: 600; background: #15181A; color: #EFE6D2; padding: 3px 8px">The Herald</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">Station &amp; Market declared a battleground — three factions within three points</span>
+<span style="color: #8C2B23">■</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">Police raid the Herald’s print room in Old Town</span>
+<span style="color: #8C2B23">■</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">Irongate council votes in 3 days · 10 seats</span>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"time":{"editor":"enum","options":["day","night"],"default":"day"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'station' };
+  }
+  renderVals() {
+    const COL = { V: '#C39A3A', C: '#8C2B23', A: '#4B7394', N: '#8A8577' };
+    const data = [
+      { id: 'old', num: '01', name: 'Old Town', x: 0.13, y: 0.24, v: 18, c: 20, a: 55, n: 7, holder: 'A',
+        blurb: 'Cobbles, cafés and the free press. The Alliance’s home ground, and the Vanguard wants the printing presses shut.',
+        police: 'Civic Alliance', issue: 'Press Censorship', seats: 'F. Ober (A) · Hartmann (A, NPC)',
+        places: 'The Irongate Herald · the opera · the Press Club · Alliance HQ · St. Agnes Hospital', cta: 'Go to Old Town' },
+      { id: 'gov', num: '02', name: 'Government Quarter', x: 0.49, y: 0.17, v: 30, c: 26, a: 33, n: 11, holder: null,
+        blurb: 'White stone and green copper. Ministries, lawyers and lobbyists. Nobody has held it since the war.',
+        police: 'Nobody · contested', issue: 'No Issue this week', seats: 'A. Keller (A) · Vogel (V, NPC)',
+        places: 'Parliament · the ministries · the Supreme Court · the forecourt', cta: 'Go to the Government Quarter' },
+      { id: 'station', num: '03', name: 'Station & Market', x: 0.46, y: 0.50, v: 31, c: 30, a: 28, n: 11, holder: null,
+        blurb: 'Every train in the republic ends here. Crowds, trams, traders and hotels, and all three factions within three points.',
+        police: 'Nobody · contested', issue: 'Tram Fare Hike', seats: 'J. Varga (C) · Stein (V, NPC)',
+        places: 'Central Station · Market Square · the tram junction · the Grand Hotel', cta: 'Go to Station & Market' },
+      { id: 'east', num: '04', name: 'Eastside', x: 0.86, y: 0.62, v: 12, c: 64, a: 16, n: 8, holder: 'C',
+        blurb: 'The docks, warehouses and the far bank: cranes, workshops and tenements. Collective heartland, and your faction’s capital HQ.',
+        police: 'Red Collective', issue: 'No Issue this week', seats: 'P. Novak (C) · R. Albers (C)',
+        places: 'Collective HQ · the Red Lantern bar · riverside quays · the East Union Hall', cta: 'Go to Eastside' },
+      { id: 'garrison', num: '05', name: 'Garrison Hill', x: 0.15, y: 0.78, v: 71, c: 9, a: 12, n: 8, holder: 'V', warn: true,
+        warnText: 'The police here answer to the Vanguard. As a Collective member you gain Heat 25% faster in this district.',
+        blurb: 'Parade ground, barracks and officers’ villas behind a wall. The Vanguard dominates it.',
+        police: 'Iron Vanguard', issue: 'No Issue this week', seats: 'E. Karst (V) · Brandauer (V, NPC)',
+        places: 'Vanguard House · police headquarters · the old barracks · the parade ground', cta: 'Go to Garrison Hill' }
+    ];
+    const sel = this.state.sel;
+    const districts = data.map((d) => {
+      const top2 = [d.v, d.c, d.a].sort((p, q) => q - p);
+      const battle = !d.holder && top2[0] - top2[1] <= 10;
+      const status = d.holder ? ({ V: 'Vanguard', C: 'Collective', A: 'Alliance' }[d.holder] + ' ' + Math.max(d.v, d.c, d.a) + '%' + (Math.max(d.v, d.c, d.a) > 70 ? ' · dominant' : '')) : (battle ? 'Contested · battleground' : 'Contested');
+      const selected = d.id === sel;
+      return {
+        ...d,
+        left: (d.x * 100) + '%', top: (d.y * 100) + '%',
+        vw: d.v + '%', cw: d.c + '%', aw: d.a + '%', nw: d.n + '%',
+        status,
+        stamp: d.holder ? 'Held' : (battle ? 'Battleground' : 'Contested'),
+        stampColor: d.holder ? COL[d.holder] : '#8C2B23',
+        holderColor: d.holder ? COL[d.holder] : 'none',
+        warn: !!d.warn, warnText: d.warnText || '',
+        selected,
+        plateClass: selected ? 'plate plate-sel' : 'plate',
+        poly: {
+          fill: d.holder ? COL[d.holder] : '#EFE6D2',
+          fo: d.holder ? (selected ? '0.42' : '0.28') : (selected ? '0.16' : '0'),
+          stroke: '#EFE6D2',
+          sw: selected ? '4' : '2',
+          dash: d.holder ? 'none' : '8 6'
+        },
+        pick: () => this.setState({ sel: d.id })
+      };
+    });
+    const cur = districts.find((d) => d.id === sel);
+    const night = (this.props.time ?? 'day') === 'night';
+    return {
+      mapSrc: night ? '/_blob/fb2094215984b9e4eb045b09dcd147af' : '/_blob/af20940ece11092068c14edc09a65012',
+      districts, cur,
+      d0: districts[0].poly, d1: districts[1].poly, d2: districts[2].poly, d3: districts[3].poly, d4: districts[4].poly
+    };
+  }
+}
+</script>
+</body>
+</html>
