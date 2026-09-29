@@ -10,8 +10,8 @@ export const actionRouter = router({
         locationId: z.string().min(1),
         /** Created once per tap on the client; a retry reuses it (ADR 0002). */
         idempotencyKey: z.uuid(),
-        /** ×3 / ×5 widen this in slice 1. */
-        times: z.literal(1),
+        /** ×3 is one request (ADR 0006); ×5 widens this later. */
+        times: z.union([z.literal(1), z.literal(3)]),
       }),
     )
     .mutation(({ ctx, input }) =>

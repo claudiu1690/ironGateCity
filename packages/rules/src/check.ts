@@ -1,21 +1,26 @@
 import { CHECK, TIER1_DIFFICULTY } from './constants';
-import type { CheckBonus, CheckBreakdown, CityRole, Outcome, StatKey, Stats, Tier } from './types';
+import type { CheckBonus, CheckBreakdown, CheckStats, CityRole, Outcome, Stats, Tier } from './types';
 
-/** §8.4: Chance = 50 + 4 × (stat − difficulty) + bonuses, clamped 5..95. */
+/**
+ * §8.4: Chance = 50 + 4 × (stat − difficulty) + bonuses, clamped 5..95. A two-stat check uses the
+ * average of the two stats; a .5 average still gives a whole chance (4 × 0.5 = 2).
+ */
 export function computeCheck(i: {
-  stat: StatKey;
-  stats: Stats;
+  stats: CheckStats;
+  values: Stats;
   difficulty: number;
   bonuses?: CheckBonus[];
 }): CheckBreakdown {
   const bonuses = i.bonuses ?? [];
-  const statValue = i.stats[i.stat];
+  const statValues = i.stats.map((s) => i.values[s]);
+  const statValue = statValues.reduce((a, b) => a + b, 0) / statValues.length;
   const statTerm = CHECK.perPoint * (statValue - i.difficulty);
   const bonusTotal = bonuses.reduce((sum, b) => sum + b.value, 0);
   const raw = CHECK.base + statTerm + bonusTotal;
   const chance = Math.min(CHECK.max, Math.max(CHECK.min, raw));
   return {
-    stat: i.stat,
+    stats: [...i.stats] as CheckStats,
+    statValues,
     statValue,
     difficulty: i.difficulty,
     base: CHECK.base,

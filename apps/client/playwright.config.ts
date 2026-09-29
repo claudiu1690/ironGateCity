@@ -11,6 +11,8 @@ const CI = !!process.env.CI;
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
+  // One worker: day.spec moves the server's test clock, which every spec shares.
+  workers: 1,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
   timeout: 60_000,
@@ -38,6 +40,8 @@ export default defineConfig({
         BETTER_AUTH_SECRET: 'e2e-only-secret-e2e-only-secret-e2e-only',
         LOG_LEVEL: 'warn',
         SENTRY_DSN: '',
+        // POST /api/test/clock for day.spec (tech design §7.8); refused outside DB_MODE=memory.
+        E2E_TEST_HOOKS: '1',
       },
     },
     {

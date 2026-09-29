@@ -36,6 +36,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Art files present and within budget (ADR 0007)
+        run: pnpm art:check
+
       - name: Lint, typecheck, test, build
         run: pnpm turbo lint typecheck test build
 

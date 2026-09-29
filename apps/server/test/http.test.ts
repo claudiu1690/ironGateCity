@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app';
 import { createAuth } from '../src/auth';
+import { loadEnv } from '../src/env';
 import { setupDb, teardownDb, testEnv } from './helpers';
 
 let app: FastifyInstance;
@@ -73,6 +74,18 @@ describe('HTTP', () => {
     expect(res.json().error.data.code).toBe('UNAUTHORIZED');
   });
 
+  it('has no test clock unless E2E_TEST_HOOKS is on', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/test/clock', payload: { advanceMs: 1 } });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('refuses E2E_TEST_HOOKS outside DB_MODE=memory', () => {
+    const base = { BETTER_AUTH_SECRET: 'x'.repeat(40), PUBLIC_ORIGIN: ORIGIN, MONGODB_URI: 'mongodb://x' };
+    expect(() => loadEnv({ ...base, E2E_TEST_HOOKS: '1' })).toThrow(/E2E_TEST_HOOKS/);
+    expect(loadEnv({ ...base, DB_MODE: 'memory', E2E_TEST_HOOKS: '1' }).E2E_TEST_HOOKS).toBe(true);
+    expect(loadEnv(base).E2E_TEST_HOOKS).toBe(false);
+  });
+
   it('sign in with the wrong password is refused', async () => {
     const res = await app.inject({
       method: 'POST',
@@ -81,5 +94,28 @@ describe('HTTP', () => {
       payload: { email: 'nobody@example.test', password: 'wrong-password' },
     });
     expect(res.statusCode).toBe(401);
+  });
+});
+
+describe('test clock (E2E_TEST_HOOKS)', () => {
+  it('advances the server clock used by procedures', async () => {
+    const env = { ...testEnv('mongodb://unused'), E2E_TEST_HOOKS: true };
+    const auth = createAuth(env, nativeDb(), mongoose.connection.getClient());
+    const hooked = await buildApp({ env, auth, content: getContent(), now: () => 1_000 });
+    const res = await hooked.inject({
+      method: 'POST',
+      url: '/api/test/clock',
+      payload: { advanceMs: 86_400_000 },
+    });
+    expect(res.json()).toEqual({ offsetMs: 86_400_000, now: 86_401_000 });
+    const ping = await hooked.inject({ method: 'GET', url: '/api/trpc/health.ping' });
+    expect(ping.json().result.data.now).toBe(86_401_000);
+    const bad = await hooked.inject({
+      method: 'POST',
+      url: '/api/test/clock',
+      payload: { advanceMs: 'soon' },
+    });
+    expect(bad.statusCode).toBe(400);
+    await hooked.close();
   });
 });

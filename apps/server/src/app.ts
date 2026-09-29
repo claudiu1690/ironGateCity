@@ -22,7 +22,15 @@ export interface AppDeps {
   now?: () => number;
 }
 
-export async function buildApp({ env, auth, content, now = Date.now }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({
+  env,
+  auth,
+  content,
+  now: baseNow = Date.now,
+}: AppDeps): Promise<FastifyInstance> {
+  // Tech design §7.8: a process-wide clock offset that only Playwright can move.
+  let clockOffsetMs = 0;
+  const now = () => baseNow() + clockOffsetMs;
   const app = Fastify({
     logger: env.NODE_ENV === 'test' ? false : { level: env.LOG_LEVEL },
     trustProxy: true,
@@ -34,6 +42,16 @@ export async function buildApp({ env, auth, content, now = Date.now }: AppDeps):
     const up = isDbUp();
     return reply.code(up ? 200 : 503).send({ ok: up, db: up ? 'up' : 'down', version: APP_VERSION });
   });
+
+  if (env.E2E_TEST_HOOKS) {
+    app.post('/api/test/clock', async (request, reply) => {
+      const body = (request.body ?? {}) as { advanceMs?: unknown };
+      const advanceMs = Number(body.advanceMs);
+      if (!Number.isFinite(advanceMs)) return reply.code(400).send({ error: 'advanceMs must be a number' });
+      clockOffsetMs += advanceMs;
+      return { offsetMs: clockOffsetMs, now: now() };
+    });
+  }
 
   // Better Auth: bridge Fastify's request to a web Request and back (Better Auth's Fastify guide).
   app.route({

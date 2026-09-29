@@ -1,84 +1,166 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import type { ActionAttempt, ActionResult, RewardLine } from '@irongate/rules';
-import { cx, formatGameTime, formatNumber, formatOpinionDelta, formatSigned } from '../format';
+import { copy } from '@irongate/content/copy';
+import { energyReadyAt } from '@irongate/rules';
+import type {
+  ActionResult,
+  NamedStandingView,
+  ResultAttempt,
+  RewardLine,
+  StatPointTarget,
+} from '@irongate/rules';
+import { useState } from 'react';
+import {
+  cx,
+  formatClock,
+  formatNumber,
+  formatOpinionDelta,
+  formatShare,
+  formatSigned,
+  plural,
+  statLabel,
+} from '../format';
 import { Button } from './Button';
+import { CheckBreakdownList } from './CheckBreakdownList';
 import { FACTION_STYLE } from './FactionCrest';
+import { Picture } from './Picture';
+import { StatPointsPanel } from './Shell';
 import { Stamp } from './Stamp';
+import type { StampTone } from './Stamp';
 
 export interface ResultModalProps {
   result: ActionResult | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Again ×1: the caller re-runs the action with a new idempotency key. */
-  onAgain?: () => void;
-  againPending?: boolean;
-  againDisabled?: boolean;
+  /** Again ×1 / ×3: the caller re-runs the action with a new idempotency key. */
+  onAgain?: (times: 1 | 3) => void;
+  againPending?: 1 | 3 | null;
+  /** Live Energy (projected now), for the Again buttons. */
+  energy?: { value: number; nextTickAt: number | null };
+  /** Live stat points (the stored result stays immutable). */
+  statPoints?: { pending: number; level: number; stats: { str: number; int: number } };
+  onPlaceStat?: (stat: StatPointTarget) => void;
+  placing?: StatPointTarget | null;
+}
+
+export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>): {
+  label: string;
+  tone: StampTone;
+} {
+  switch (r.stamp) {
+    case 'success':
+      return { label: 'Success', tone: 'success' };
+    case 'partial':
+      return { label: 'Partial', tone: 'partial' };
+    case 'batch':
+      return {
+        label: `${r.successes} of ${r.action.times}`,
+        tone: r.successes * 2 > r.action.times ? 'success' : 'partial',
+      };
+    case 'worked':
+      return { label: 'Shift worked', tone: 'success' };
+    case 'trained':
+      return { label: 'Trained', tone: 'success' };
+  }
 }
 
 /**
- * The result modal (GDD §13.1a): art and stamp, what happened, how it went (one row per attempt),
- * four reward tiles, knock-on effects, and the buttons. It renders the server's breakdown and
- * computes nothing. Full-screen on phones.
+ * The result modal (GDD §13.1a, tech design §9): art and stamp, what happened, how it went (one
+ * row per attempt), four reward tiles, knock-on effects, and Again ×1 · Again ×3 · Continue. It
+ * renders the server's breakdown and computes nothing. Full-screen on phones.
  */
-export function ResultModal({
-  result,
-  open,
-  onOpenChange,
-  onAgain,
-  againPending,
-  againDisabled,
-}: ResultModalProps) {
+export function ResultModal(props: ResultModalProps) {
+  const { result, open, onOpenChange } = props;
   return (
     <Dialog.Root open={open && result !== null} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/70" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/75" />
         <Dialog.Content
           className={cx(
             'fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper text-ink',
-            'sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[92vh] sm:w-[min(560px,calc(100vw-32px))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]',
+            'sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[92dvh] sm:w-[min(600px,calc(100vw-32px))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]',
           )}
         >
-          {result && (
-            <ResultBody
-              result={result}
-              onAgain={onAgain}
-              againPending={againPending}
-              againDisabled={againDisabled}
-            />
-          )}
+          {result && <ResultBody {...props} result={result} />}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   );
 }
 
+function ArtHeader({ r }: { r: ActionResult }) {
+  const stamp = stampFor(r);
+  const art = r.art;
+  const CROP_W = 1400; // the map is shown at this width, centred on the location (§13.5 rung 3)
+  return (
+    <div className="relative h-[150px] shrink-0 overflow-hidden bg-ink" data-art={art.rung}>
+      {art.rung === 'scene' ? (
+        <Picture
+          asset={art.asset}
+          sizes="600px"
+          decorative
+          className="absolute inset-0 size-full object-cover opacity-85"
+        />
+      ) : (
+        <Picture
+          asset={art.asset}
+          sizes={`${CROP_W}px`}
+          decorative
+          className="absolute max-w-none opacity-80"
+          style={{
+            width: CROP_W,
+            height: (CROP_W * art.asset.height) / art.asset.width,
+            left: `calc(50% - ${art.x * CROP_W}px)`,
+            top: `calc(75px - ${(art.y * CROP_W * art.asset.height) / art.asset.width}px)`,
+          }}
+        />
+      )}
+      <div
+        className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.9)_0%,rgb(21_24_26/0)_55%)]"
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <Stamp tone={stamp.tone} label={stamp.label} />
+      </div>
+      <span className="label-caps absolute bottom-2 left-3 text-[10px] text-dim">
+        {r.place.cityName} · {r.place.locationName} · {formatClock(Date.parse(r.performedAt))}
+      </span>
+    </div>
+  );
+}
+
+function standingLine(s: NonNullable<ActionResult['effects']['standing']>): string {
+  const a: NamedStandingView = s.after;
+  if (a.level > s.before.level) return copy.standingUp(a.cityName, a.name, a.bonus);
+  return a.next === null ? a.name : `${a.name} · ${a.successes} / ${a.next} to ${a.nextName}`;
+}
+
 function ResultBody({
   result: r,
   onAgain,
   againPending,
-  againDisabled,
-}: Pick<ResultModalProps, 'onAgain' | 'againPending' | 'againDisabled'> & { result: ActionResult }) {
-  const stampColor = r.stamp === 'success' ? 'text-success' : 'text-partial';
-  const factionText = FACTION_STYLE[r.effects.opinion.factionId].text;
-  const factionName = r.character.factionName;
+  energy,
+  statPoints,
+  onPlaceStat,
+  placing,
+}: ResultModalProps & { result: ActionResult }) {
+  const [later, setLater] = useState(false);
+  const stamp = stampFor(r);
+  const toneText = stamp.tone === 'success' ? 'text-success' : 'text-partial';
+  const factionText = FACTION_STYLE[r.character.factionId].text;
+  const e = r.effects;
+  const kicker = r.action.times > 1 ? `${r.action.name} · ${r.action.times} times` : r.action.name;
+  const energyNow = energy?.value ?? r.character.energy.value;
+  const short1 = r.again ? energyNow < r.again.cost1 : true;
+  const short3 = r.again ? energyNow < r.again.cost3 : true;
+  const ready1 = r.again && short1 && energy ? energyReadyAt(energy, r.again.cost1) : null;
+
   return (
     <>
-      {/* 1. Art and a stamp (slice 0 has no art: a halftone plate keyed by place kind). */}
-      <div
-        className="relative flex h-[150px] shrink-0 items-center justify-center overflow-hidden bg-ink text-ink-2"
-        data-art-kind={r.place.kind}
-      >
-        <div className="halftone absolute inset-0" aria-hidden="true" />
-        <Stamp outcome={r.stamp} className="relative" />
-        <span className="label-caps absolute bottom-2 left-3 text-[10px] text-dim">
-          {r.place.cityName} · {r.place.locationName} · {formatGameTime(r.performedAt)}
-        </span>
-      </div>
-
+      <ArtHeader r={r} />
       <div className="flex flex-1 flex-col gap-4 px-4 pt-3.5 pb-4">
         {/* 2. What happened */}
         <section className="flex flex-col gap-1">
-          <span className={cx('label-caps text-[10px]', stampColor)}>{r.action.name}</span>
+          <span className={cx('label-caps text-[10px]', toneText)}>{kicker}</span>
           <Dialog.Title className="font-display text-[24px] leading-tight font-black">
             {r.headline}
           </Dialog.Title>
@@ -94,6 +176,17 @@ function ResultBody({
           </h3>
           {r.attempts.map((a) => (
             <AttemptRow key={a.index} attempt={a} />
+          ))}
+          {r.rows.map((row) => (
+            <div
+              key={row.index}
+              className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2"
+              data-testid="attempt-row"
+            >
+              <span className="font-label text-[12px] text-muted">{row.index}</span>
+              <span className="font-label text-[13px]">{row.label}</span>
+              <span className="font-mono text-[11px] text-muted">{row.detail}</span>
+            </div>
           ))}
         </section>
 
@@ -117,12 +210,20 @@ function ResultBody({
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <RewardTile label="Experience" line={r.rewards.xp} />
             <RewardTile label="Faction XP" line={r.rewards.fxp} className={factionText} />
-            <RewardTile label="Iron" line={r.rewards.iron} />
+            <RewardTile
+              label="Iron"
+              line={r.rewards.iron}
+              note={
+                e.shift
+                  ? `${formatSigned(e.shift.half)} half pay, ${formatSigned(e.shift.streakBonus)} streak`
+                  : undefined
+              }
+            />
             <Tile
               label={r.place.cityName}
-              value={`${formatOpinionDelta(r.rewards.opinion)} %`}
+              value={e.opinion ? `${formatOpinionDelta(r.rewards.opinion)} %` : '—'}
               className={factionText}
-              note={`${factionName} opinion`}
+              note={e.opinion ? `${r.character.factionName} opinion` : 'no opinion'}
               testId="tile-opinion"
             />
           </div>
@@ -134,62 +235,159 @@ function ResultBody({
             Knock-on effects
           </h3>
           <dl className="flex flex-col">
-            <Effect
-              label="Energy"
-              value={`${r.effects.energy.before} → ${r.effects.energy.after}`}
-              testId="effect-energy"
-            />
-            {(r.effects.rested.before > 0 || r.effects.rested.after > 0) && (
-              <Effect label="Rested" value={`${r.effects.rested.before} → ${r.effects.rested.after}`} />
+            {e.opinion && (
+              <Effect
+                label={`${r.character.factionName} in ${r.place.cityName}`}
+                value={`${formatShare(e.opinion.shareBefore)} → ${formatShare(e.opinion.shareAfter)} %`}
+                testId="effect-opinion"
+              />
             )}
-            <Effect
-              label="Experience"
-              value={`${formatNumber(r.effects.xp.before)} → ${formatNumber(r.effects.xp.after)}`}
-            />
-            <Effect
-              label="Iron"
-              value={`${formatNumber(r.effects.iron.before)} → ${formatNumber(r.effects.iron.after)}`}
-            />
-            <Effect
-              label={`${factionName} in ${r.place.cityName}`}
-              value={`${formatOpinionDelta(r.effects.opinion.delta)} %${r.effects.opinion.applied ? '' : ' · counted from slice 1'}`}
-            />
+            {e.standing && (
+              <Effect label="Local Standing" value={standingLine(e.standing)} testId="effect-standing" />
+            )}
+            {e.orders.map((o) => (
+              <Effect
+                key={o.id}
+                label={o.title}
+                value={`${o.before} → ${o.after} / ${o.target}${o.done ? ' ✓' : ''}${o.fxp > 0 ? ` · ${copy.orderComplete(o.fxp)}` : ''}`}
+                testId="effect-order"
+              />
+            ))}
+            {e.ordersAllDone && (
+              <Effect label="All three orders done" value={`+${e.ordersAllDone.pc} Political Capital`} />
+            )}
+            {e.rankUp && <Effect label={`Rank ${e.rankUp.to}`} value={e.rankUp.title} />}
+            {e.stat && (
+              <Effect
+                label="Trained"
+                value={`${e.stat.stat.toUpperCase()} ${e.stat.before} → ${e.stat.after}`}
+                testId="effect-stat"
+              />
+            )}
+            {e.shift && (
+              <Effect
+                label="Work streak"
+                value={`${plural(e.shift.streak.after, 'day')} · ${e.shift.sickDaysLeft} sick days left · next shift at ${formatClock(e.shift.nextShiftAt)}`}
+                testId="effect-shift"
+              />
+            )}
+            <Effect label="Energy" value={`${e.energy.before} → ${e.energy.after}`} testId="effect-energy" />
+            {(e.rested.before > 0 || e.rested.after > 0) && (
+              <Effect label="Rested" value={`${e.rested.before} → ${e.rested.after}`} />
+            )}
+            {e.xp.after !== e.xp.before && (
+              <Effect
+                label="Experience"
+                value={`${formatNumber(e.xp.before)} → ${formatNumber(e.xp.after)}`}
+              />
+            )}
+            {e.fxp.after !== e.fxp.before && (
+              <Effect
+                label="Faction XP"
+                value={`${formatNumber(e.fxp.before)} → ${formatNumber(e.fxp.after)}`}
+              />
+            )}
+            {e.iron.after !== e.iron.before && (
+              <Effect label="Iron" value={`${formatNumber(e.iron.before)} → ${formatNumber(e.iron.after)}`} />
+            )}
+            {e.pc && <Effect label="Political Capital" value={`${e.pc.before} → ${e.pc.after}`} />}
           </dl>
+          {e.levelUp && (
+            <div
+              className="mt-2 flex flex-col gap-1.5 border-[1.5px] border-xp bg-paper-card p-2.5"
+              data-testid="effect-level"
+            >
+              <span className="font-label text-[14px]">
+                {copy.levelUpLine(e.levelUp.from, e.levelUp.to, e.levelUp.statPoints)}
+              </span>
+              {statPoints && onPlaceStat && !later && (
+                <StatPointsPanel
+                  pending={statPoints.pending}
+                  level={statPoints.level}
+                  stats={statPoints.stats}
+                  onPlace={onPlaceStat}
+                  placing={placing}
+                  onLater={() => setLater(true)}
+                  title={statPoints.pending > 0 ? copy.pointsToPlace(statPoints.pending) : undefined}
+                />
+              )}
+            </div>
+          )}
         </section>
 
         {/* 6. Buttons */}
-        <div className="mt-auto grid grid-cols-3 gap-2 pt-1">
-          <Button onClick={onAgain} pending={againPending} disabled={againDisabled || !onAgain}>
-            Again ×1
-          </Button>
-          <Button variant="secondary" disabled title="Coming in slice 1" aria-describedby="again3-note">
-            Again ×3
-          </Button>
-          <Dialog.Close asChild>
-            <Button variant="outline">Continue</Button>
-          </Dialog.Close>
-        </div>
-        <p id="again3-note" className="sr-only">
-          Repeating three times arrives in a later update.
-        </p>
+        {r.again && onAgain ? (
+          <div className="mt-auto flex flex-col gap-1.5 pt-1">
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                onClick={() => onAgain(1)}
+                pending={againPending === 1}
+                disabled={short1 || !!againPending}
+              >
+                Again ×1
+                <span aria-hidden="true" className="text-energy normal-case">
+                  {' '}
+                  {r.again.cost1}
+                </span>
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => onAgain(3)}
+                pending={againPending === 3}
+                disabled={short3 || !!againPending}
+                title={short3 ? copy.x3Needs(r.again.cost3) : undefined}
+              >
+                Again ×3
+                <span aria-hidden="true" className="text-energy normal-case">
+                  {' '}
+                  {r.again.cost3}
+                </span>
+              </Button>
+              <Dialog.Close asChild>
+                <Button variant="outline">Continue</Button>
+              </Dialog.Close>
+            </div>
+            {(short1 || short3) && (
+              <p className="font-mono text-[11px] text-muted" data-testid="again-hint">
+                {short1
+                  ? copy.needsEnergy(r.again.cost1, ready1 === null ? '—' : formatClock(ready1))
+                  : copy.x3Needs(r.again.cost3)}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="mt-auto pt-1">
+            <Dialog.Close asChild>
+              <Button variant="outline" className="w-full">
+                Continue
+              </Button>
+            </Dialog.Close>
+          </div>
+        )}
       </div>
     </>
   );
 }
 
-function AttemptRow({ attempt: a }: { attempt: ActionAttempt }) {
+function AttemptRow({ attempt: a }: { attempt: ResultAttempt }) {
+  const [open, setOpen] = useState(false);
   const success = a.outcome === 'success';
-  const label = a.outcome === 'success' ? 'Success' : a.outcome === 'partial' ? 'Partial' : 'Failure';
+  const label = success ? 'Success' : a.outcome === 'partial' ? 'Partial' : 'Failure';
   return (
     <div className="flex flex-col gap-1" data-testid="attempt-row">
-      <div className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="grid min-h-8 cursor-pointer grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 text-left"
+      >
         <span className="font-label text-[12px] text-muted">{a.index}</span>
-        <div
+        <span
           className="relative h-2.5 bg-track"
           role="img"
           aria-label={`Chance ${a.check.chance} %, rolled ${a.roll}`}
         >
-          <div
+          <span
             className={cx('absolute inset-y-0 left-0', success ? 'bg-success-fill' : 'bg-partial-fill')}
             style={{ width: `${a.check.chance}%` }}
           />
@@ -198,32 +396,50 @@ function AttemptRow({ attempt: a }: { attempt: ActionAttempt }) {
             style={{ left: `${a.roll}%` }}
             aria-hidden="true"
           />
-        </div>
+        </span>
         <span
           className={cx(
             'label-caps text-[11px] tracking-[0.06em]',
             success ? 'text-success' : 'text-partial',
           )}
         >
-          {label}
+          {label} · {formatSigned(a.rewards.xp.total)} XP
         </span>
-      </div>
+      </button>
       <span className="pl-6 font-mono text-[11px] text-muted">
-        Rolled {a.roll} against {a.check.chance} % · {a.check.stat.toUpperCase()} {a.check.statValue} vs{' '}
+        Rolled {a.roll} against {a.check.chance} % · {statLabel(a.check.stats)} {a.check.statValue} vs{' '}
         {a.check.difficulty}
         {a.check.bonusTotal !== 0 ? ` · bonuses ${formatSigned(a.check.bonusTotal)} %` : ''}
       </span>
+      {open && (
+        <div className="ml-6 border border-faint bg-paper-card px-2 py-1.5">
+          <CheckBreakdownList check={a.check} />
+        </div>
+      )}
     </div>
   );
 }
 
-function RewardTile({ label, line, className }: { label: string; line: RewardLine; className?: string }) {
+function RewardTile({
+  label,
+  line,
+  className,
+  note,
+}: {
+  label: string;
+  line: RewardLine;
+  className?: string;
+  note?: string;
+}) {
   return (
     <Tile
       label={label}
       value={formatSigned(line.total)}
       className={className}
-      note={line.bonus > 0 ? `${formatSigned(line.base)} and ${formatSigned(line.bonus)} bonus` : undefined}
+      note={
+        note ??
+        (line.bonus > 0 ? `${formatSigned(line.base)} and ${formatSigned(line.bonus)} bonus` : undefined)
+      }
       testId={`tile-${label.toLowerCase().replace(/\s+/g, '-')}`}
     />
   );

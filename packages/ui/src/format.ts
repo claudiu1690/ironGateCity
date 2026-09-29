@@ -38,3 +38,24 @@ export function formatGameTime(iso: string): string {
 export function formatNumber(n: number): string {
   return n.toLocaleString('en-GB');
 }
+
+/** A server instant shown in the player's local clock, 24-hour "14:20" (content §12.1). */
+export function formatClock(ms: number): string {
+  return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+/** Meter shares: one decimal (§14.2), "70.1". */
+export function formatShare(x: number): string {
+  // Halves up, absorbing float noise (70.05 is stored as 70.04999…).
+  return (Math.round(x * 10 + 1e-7) / 10).toFixed(1);
+}
+
+/** "STR", "CHA+INT". */
+export function statLabel(stats: readonly string[]): string {
+  return stats.map((s) => s.toUpperCase()).join('+');
+}
+
+/** "1 day", "4 days". */
+export function plural(n: number, one: string, many = `${one}s`): string {
+  return `${n} ${n === 1 ? one : many}`;
+}

@@ -1,10 +1,17 @@
 export { connectDb, disconnectDb, isDbUp, isDuplicateKeyError, mongoose, nativeDb } from './connect';
 export type { ConnectOptions } from './connect';
 export { ensureIndexes, models } from './indexes';
+export { migrateSlice1CharacterFields } from './migrations/001-slice1-character-fields';
 export { Character } from './models/character';
-export type { CharacterDoc } from './models/character';
+export type { CharacterDoc, StoredJob, StoredOrderItem, StoredOrders } from './models/character';
 export { City } from './models/city';
 export type { CityDoc } from './models/city';
 export { ActionLog } from './models/actionLog';
 export type { ActionLogDoc } from './models/actionLog';
+export { PaperEntry } from './models/paperEntry';
+export type { PaperEntryDoc } from './models/paperEntry';
+export { REQUEST_KINDS, REQUEST_LOG_TTL_SECONDS, RequestLog } from './models/requestLog';
+export type { RequestKind, RequestLogDoc } from './models/requestLog';
 export { seed } from './seed';
+export { SESSION_GAP_MS, buildPlaytestReport } from './report';
+export type { PlaytestReport, PlayerReport, ReportAction, ReportCharacter, ReportPaper } from './report';

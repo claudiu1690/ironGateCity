@@ -1,0 +1,122 @@
+{
+  "map.coalport.day-1280.avif": {
+    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 169656
+  },
+  "map.coalport.day-1280.webp": {
+    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
+    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 241980
+  },
+  "map.coalport.day-2560.avif": {
+    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
+    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 442232
+  },
+  "map.coalport.day-2560.webp": {
+    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
+    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 668840
+  },
+  "map.coalport.night-1280.avif": {
+    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 133841
+  },
+  "map.coalport.night-1280.webp": {
+    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
+    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 175990
+  },
+  "map.coalport.night-2560.avif": {
+    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
+    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 360612
+  },
+  "map.coalport.night-2560.webp": {
+    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
+    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 483816
+  },
+  "portrait.holm-256.avif": {
+    "sourceHash": "f1033a33c81386422e12f9277bba0c54bf37767ba4292e3badb5f6094e4de6e2",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 9525
+  },
+  "portrait.holm-256.webp": {
+    "sourceHash": "f1033a33c81386422e12f9277bba0c54bf37767ba4292e3badb5f6094e4de6e2",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 12692
+  },
+  "portrait.holm-512.avif": {
+    "sourceHash": "f1033a33c81386422e12f9277bba0c54bf37767ba4292e3badb5f6094e4de6e2",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 32521
+  },
+  "portrait.holm-512.webp": {
+    "sourceHash": "f1033a33c81386422e12f9277bba0c54bf37767ba4292e3badb5f6094e4de6e2",
+    "settings": "{\"width\":512,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 44978
+  },
+  "scene.union-hq-640.avif": {
+    "sourceHash": "b9765bae3b47229ea25a64b4e5da532936f8db77cbfcb6ff10ee9712a0db0182",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 30002
+  },
+  "scene.union-hq-640.webp": {
+    "sourceHash": "b9765bae3b47229ea25a64b4e5da532936f8db77cbfcb6ff10ee9712a0db0182",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 42412
+  },
+  "scene.union-hq-1280.avif": {
+    "sourceHash": "b9765bae3b47229ea25a64b4e5da532936f8db77cbfcb6ff10ee9712a0db0182",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 90431
+  },
+  "scene.union-hq-1280.webp": {
+    "sourceHash": "b9765bae3b47229ea25a64b4e5da532936f8db77cbfcb6ff10ee9712a0db0182",
+    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 129924
+  },
+  "scene.bar-anchor-640.avif": {
+    "sourceHash": "d2a03ade771638343431109c961ac6fa7a0e17de5a51bde2f1d0f2d654f8e332",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 33671
+  },
+  "scene.bar-anchor-640.webp": {
+    "sourceHash": "d2a03ade771638343431109c961ac6fa7a0e17de5a51bde2f1d0f2d654f8e332",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 47154
+  },
+  "scene.bar-anchor-1280.avif": {
+    "sourceHash": "d2a03ade771638343431109c961ac6fa7a0e17de5a51bde2f1d0f2d654f8e332",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 102038
+  },
+  "scene.bar-anchor-1280.webp": {
+    "sourceHash": "d2a03ade771638343431109c961ac6fa7a0e17de5a51bde2f1d0f2d654f8e332",
+    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 140942
+  }
+}

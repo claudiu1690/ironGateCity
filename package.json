@@ -20,7 +20,10 @@
     "e2e": "turbo run e2e",
     "build": "turbo run build",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "art:build": "tsx scripts/art/build.ts",
+    "art:check": "tsx scripts/art/build.ts --check",
+    "report:playtest": "pnpm --filter @irongate/db report:playtest"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -30,6 +33,8 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.12.0",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.5",
+    "tsx": "catalog:",
     "turbo": "^2.11.5",
     "typescript": "catalog:",
     "typescript-eslint": "^8.71.0"
@@ -37,7 +42,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "mongodb-memory-server"
+      "mongodb-memory-server",
+      "sharp"
     ]
   }
 }

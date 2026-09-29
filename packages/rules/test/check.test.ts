@@ -7,13 +7,14 @@ const stats = (s: Partial<Stats>): Stats => ({ str: 5, int: 5, agi: 5, cha: 2, .
 describe('computeCheck — the §8.4 examples', () => {
   it('Canvass in Coalport, INT 12, Known standing → 72 %', () => {
     const c = computeCheck({
-      stat: 'int',
-      stats: stats({ int: 12 }),
+      stats: ['int'],
+      values: stats({ int: 12 }),
       difficulty: tier1Difficulty('home'),
       bonuses: [{ id: 'standing', label: 'Known in Coalport', value: 6 }],
     });
     expect(c).toEqual({
-      stat: 'int',
+      stats: ['int'],
+      statValues: [12],
       statValue: 12,
       difficulty: 8,
       base: 50,
@@ -26,20 +27,20 @@ describe('computeCheck — the §8.4 examples', () => {
   });
 
   it('the reference recruit canvassing at home → 66 %', () => {
-    const c = computeCheck({ stat: 'int', stats: stats({ str: 10, int: 12 }), difficulty: 8 });
+    const c = computeCheck({ stats: ['int'], values: stats({ str: 10, int: 12 }), difficulty: 8 });
     expect(c.chance).toBe(66);
     expect(c.bonuses).toEqual([]);
     expect(c.bonusTotal).toBe(0);
   });
 
   it('Speech to the picket, INT 18, difficulty 12 → 74 %', () => {
-    expect(computeCheck({ stat: 'int', stats: stats({ int: 18 }), difficulty: 12 }).chance).toBe(74);
+    expect(computeCheck({ stats: ['int'], values: stats({ int: 18 }), difficulty: 12 }).chance).toBe(74);
   });
 
   it('Sabotage in Duskwall, AGI 17, difficulty 16 + 4, forged papers → 48 %', () => {
     const c = computeCheck({
-      stat: 'agi',
-      stats: stats({ agi: 17 }),
+      stats: ['agi'],
+      values: stats({ agi: 17 }),
       difficulty: 16 + 4,
       bonuses: [{ id: 'item', label: 'Forged papers', value: 10 }],
     });
@@ -48,22 +49,61 @@ describe('computeCheck — the §8.4 examples', () => {
   });
 });
 
+describe('computeCheck — two-stat checks average (§8.4, content §2.2)', () => {
+  const recruit = stats({ str: 10, int: 12, agi: 5, cha: 2 });
+
+  it('single stat is unchanged for the recruit (INT 66 %, STR 58 %, AGI 38 %)', () => {
+    expect(computeCheck({ stats: ['int'], values: recruit, difficulty: 8 }).chance).toBe(66);
+    expect(computeCheck({ stats: ['str'], values: recruit, difficulty: 8 }).chance).toBe(58);
+    expect(computeCheck({ stats: ['agi'], values: recruit, difficulty: 8 }).chance).toBe(38);
+  });
+
+  it('CHA+INT: (2 + 12) / 2 = 7 → 46 %; CHA+STR: 6 → 42 %', () => {
+    const chaInt = computeCheck({ stats: ['cha', 'int'], values: recruit, difficulty: 8 });
+    expect(chaInt).toMatchObject({
+      stats: ['cha', 'int'],
+      statValues: [2, 12],
+      statValue: 7,
+      statTerm: -4,
+      chance: 46,
+    });
+    expect(computeCheck({ stats: ['cha', 'str'], values: recruit, difficulty: 8 }).chance).toBe(42);
+  });
+
+  it('a .5 average still gives a whole chance', () => {
+    const c = computeCheck({ stats: ['cha', 'int'], values: stats({ cha: 2, int: 13 }), difficulty: 8 });
+    expect(c.statValue).toBe(7.5);
+    expect(c.chance).toBe(48);
+    expect(Number.isInteger(c.chance)).toBe(true);
+  });
+
+  it('Known in Coalport +6 → 72 %', () => {
+    const c = computeCheck({
+      stats: ['int'],
+      values: recruit,
+      difficulty: 8,
+      bonuses: [{ id: 'standing', label: 'Known in Coalport', value: 6 }],
+    });
+    expect(c.chance).toBe(72);
+  });
+});
+
 describe('computeCheck — clamps', () => {
   it('clamps to 95 at the top, keeping the raw value', () => {
-    const c = computeCheck({ stat: 'int', stats: stats({ int: 30 }), difficulty: 8 });
+    const c = computeCheck({ stats: ['int'], values: stats({ int: 30 }), difficulty: 8 });
     expect(c.raw).toBe(138);
     expect(c.chance).toBe(95);
   });
 
   it('clamps to 5 at the bottom', () => {
-    const c = computeCheck({ stat: 'cha', stats: stats({ cha: 0 }), difficulty: 25 });
+    const c = computeCheck({ stats: ['cha'], values: stats({ cha: 0 }), difficulty: 25 });
     expect(c.raw).toBe(-50);
     expect(c.chance).toBe(5);
   });
 
   it('does not share the bonus objects it was given', () => {
     const bonuses = [{ id: 'x', label: 'X', value: 1 }];
-    const c = computeCheck({ stat: 'int', stats: stats({}), difficulty: 8, bonuses });
+    const c = computeCheck({ stats: ['int'], values: stats({}), difficulty: 8, bonuses });
     c.bonuses[0]!.value = 99;
     expect(bonuses[0]!.value).toBe(1);
   });

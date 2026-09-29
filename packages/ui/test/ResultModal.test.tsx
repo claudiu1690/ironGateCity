@@ -1,67 +1,120 @@
-import { actionResultFixture } from '@irongate/rules/testing';
+import {
+  actionResultFixture,
+  batchResultFixture,
+  shiftResultFixture,
+  trainingResultFixture,
+} from '@irongate/rules/testing';
 import type { ActionResult } from '@irongate/rules';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ResultModal } from '../src';
 
-function renderModal(result: ActionResult = actionResultFixture) {
+function renderModal(result: ActionResult, energy = { value: 90, nextTickAt: null as number | null }) {
   const onOpenChange = vi.fn();
   const onAgain = vi.fn();
-  render(<ResultModal result={result} open onOpenChange={onOpenChange} onAgain={onAgain} />);
-  return { onOpenChange, onAgain, dialog: screen.getByRole('dialog') };
+  const onPlaceStat = vi.fn();
+  render(
+    <ResultModal
+      result={result}
+      open
+      onOpenChange={onOpenChange}
+      onAgain={onAgain}
+      energy={energy}
+      statPoints={{
+        pending: result.character.statPointsPending,
+        level: result.character.level,
+        stats: { str: 10, int: 12 },
+      }}
+      onPlaceStat={onPlaceStat}
+    />,
+  );
+  return { onOpenChange, onAgain, onPlaceStat, dialog: screen.getByRole('dialog') };
 }
 
-describe('ResultModal', () => {
-  it('renders the six sections of §13.1a from the server breakdown', () => {
-    const { dialog } = renderModal();
+describe('ResultModal v2', () => {
+  it('×1 Success: the six sections of §13.1a from the server breakdown', () => {
+    const { dialog } = renderModal(actionResultFixture);
     const d = within(dialog);
-
-    // 1. Stamp, place and time
     expect(d.getByTestId('stamp')).toHaveTextContent('Success');
     expect(d.getByText('Coalport · Mill Gate · 09:00')).toBeInTheDocument();
-    // 2. Headline and narrative (the dialog's accessible name and description)
     expect(dialog).toHaveAccessibleName('The whistle goes, and they stop');
-    expect(dialog).toHaveAccessibleDescription(/Coal dust, tired faces/);
-    // 3. One attempt row: chance bar, roll marker, the maths
     const rows = d.getAllByTestId('attempt-row');
     expect(rows).toHaveLength(1);
     expect(within(rows[0]!).getByRole('img', { name: 'Chance 66 %, rolled 41' })).toBeInTheDocument();
     expect(within(rows[0]!).getByText(/Rolled 41 against 66 % · INT 12 vs 8/)).toBeInTheDocument();
-    // 4. Four reward tiles
     expect(d.getByTestId('tile-experience')).toHaveTextContent('+45');
     expect(d.getByTestId('tile-faction-xp')).toHaveTextContent('+6');
     expect(d.getByTestId('tile-iron')).toHaveTextContent('+20');
     expect(d.getByTestId('tile-opinion')).toHaveTextContent('Coalport+0.05 %Collective opinion');
-    // 5. Knock-on effects
+    expect(d.getByTestId('effect-opinion')).toHaveTextContent('70.0 → 70.1 %');
+    expect(d.getByTestId('effect-standing')).toHaveTextContent('Stranger · 1 / 10 to Familiar');
     expect(d.getByTestId('effect-energy')).toHaveTextContent('100 → 90');
-    expect(d.getByText('+0.05 % · counted from slice 1')).toBeInTheDocument();
-    // 6. Buttons
     expect(d.getByRole('button', { name: 'Again ×1' })).toBeEnabled();
-    expect(d.getByRole('button', { name: 'Again ×3' })).toBeDisabled();
+    expect(d.getByRole('button', { name: 'Again ×3' })).toBeEnabled();
     expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
   });
 
-  it('shows a Partial stamp and bonus tags with their notes', () => {
-    renderModal({
-      ...actionResultFixture,
-      stamp: 'partial',
-      attempts: [{ ...actionResultFixture.attempts[0]!, roll: 80, outcome: 'partial' }],
-      rewards: { ...actionResultFixture.rewards, xp: { base: 23, bonus: 11, total: 34 } },
-      bonusTags: [{ id: 'rested', label: 'Rested', note: '10 of 10 Energy, +50 % XP and Iron' }],
-      effects: { ...actionResultFixture.effects, rested: { before: 30, after: 20 } },
+  it('a ×3 batch: "2 of 3", three rows, Rested and order tags, the order line, level-up with STR / INT', async () => {
+    const user = userEvent.setup();
+    const { dialog, onPlaceStat } = renderModal(batchResultFixture, {
+      value: 25,
+      nextTickAt: Date.UTC(2026, 8, 29, 9, 10),
     });
-    expect(screen.getByTestId('stamp')).toHaveTextContent('Partial');
-    expect(screen.getByText('Rested: 10 of 10 Energy, +50 % XP and Iron')).toBeInTheDocument();
-    expect(screen.getByTestId('tile-experience')).toHaveTextContent('+34+23 and +11 bonus');
-    expect(screen.getByText('30 → 20')).toBeInTheDocument();
+    const d = within(dialog);
+    expect(d.getByTestId('stamp')).toHaveTextContent('2 of 3');
+    expect(d.getByText('Canvass the shift change · 3 times')).toBeInTheDocument();
+    expect(d.getAllByTestId('attempt-row')).toHaveLength(3);
+    expect(d.getByText('Rested: 22 of 30 Energy, +37 % XP and Iron')).toBeInTheDocument();
+    expect(d.getByText('Party order: +25 % FXP')).toBeInTheDocument();
+    expect(d.getByTestId('effect-order')).toHaveTextContent('0 → 2 / 2 ✓ · Party order complete: +20 FXP');
+    expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · place your point');
+    await user.click(d.getByRole('button', { name: 'STR 10 → 11' }));
+    expect(onPlaceStat).toHaveBeenCalledWith('str');
+    // 25 Energy: ×1 is fine, ×3 needs 30.
+    expect(d.getByRole('button', { name: 'Again ×1' })).toBeEnabled();
+    expect(d.getByRole('button', { name: 'Again ×3' })).toBeDisabled();
+    expect(d.getByTestId('again-hint')).toHaveTextContent('×3 needs 30 Energy');
   });
 
-  it('Continue closes; Again ×1 asks for another run', async () => {
+  it('opens a row to show its breakdown', async () => {
     const user = userEvent.setup();
-    const { onOpenChange, onAgain } = renderModal();
-    await user.click(screen.getByRole('button', { name: 'Again ×1' }));
-    expect(onAgain).toHaveBeenCalledTimes(1);
+    const { dialog } = renderModal(actionResultFixture);
+    await user.click(within(dialog).getAllByTestId('attempt-row')[0]!.querySelector('button')!);
+    expect(within(dialog).getByText('INT 12 vs difficulty 8 (×4)')).toBeInTheDocument();
+  });
+
+  it('training: Trained, one "no roll" row, INT 12 → 13', () => {
+    const { dialog } = renderModal(trainingResultFixture, {
+      value: 5,
+      nextTickAt: Date.UTC(2026, 8, 29, 9, 10),
+    });
+    const d = within(dialog);
+    expect(d.getByTestId('stamp')).toHaveTextContent('Trained');
+    expect(d.getByText('44 Energy · no roll')).toBeInTheDocument();
+    expect(d.getByTestId('effect-stat')).toHaveTextContent('INT 12 → 13');
+    expect(d.getByTestId('tile-opinion')).toHaveTextContent('—');
+    expect(d.getByRole('button', { name: 'Again ×1' })).toBeDisabled();
+    expect(d.getByTestId('again-hint')).toHaveTextContent(/^Needs 46 Energy · ready at \d\d:\d\d$/);
+  });
+
+  it('a shift: Shift worked, half pay and streak, Continue only', () => {
+    const { dialog } = renderModal(shiftResultFixture);
+    const d = within(dialog);
+    expect(d.getByTestId('stamp')).toHaveTextContent('Shift worked');
+    expect(d.getByTestId('tile-iron')).toHaveTextContent('+112+108 half pay, +4 streak');
+    expect(d.getByTestId('effect-shift')).toHaveTextContent(
+      /^1 day · 2 sick days left · next shift at \d\d:\d\d$/,
+    );
+    expect(d.queryByRole('button', { name: 'Again ×1' })).toBeNull();
+    expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
+  });
+
+  it('Continue closes; Again asks for another run with its count', async () => {
+    const user = userEvent.setup();
+    const { onOpenChange, onAgain } = renderModal(actionResultFixture);
+    await user.click(screen.getByRole('button', { name: 'Again ×3' }));
+    expect(onAgain).toHaveBeenCalledWith(3);
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });

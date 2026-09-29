@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
+    // Times are shown in the player's local clock; tests pin it.
+    env: { TZ: 'UTC' },
     include: ['test/**/*.test.{ts,tsx}'],
     setupFiles: ['test/setup.ts'],
   },

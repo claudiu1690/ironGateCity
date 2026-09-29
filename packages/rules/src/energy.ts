@@ -50,17 +50,28 @@ export type SpendResult =
   | { ok: false; reason: 'NOT_ENOUGH_ENERGY'; shortBy: number };
 
 /**
- * Spend `cost` Energy from a projection. Each Energy point spent while Rested > 0 uses one Rested
- * point (§6.3), so `restedUsed = min(rested, cost)`.
+ * Spend `cost` Energy from a projected state (a projection, or the state left by the previous row of
+ * a ×3). Each Energy point spent while Rested > 0 uses one Rested point (§6.3), so
+ * `restedUsed = min(rested, cost)`; with `useRested: false` (job shifts, job switches) Rested is left alone.
  */
-export function spendEnergy(p: EnergyProjection, cost: number): SpendResult {
-  if (p.value < cost) {
-    return { ok: false, reason: 'NOT_ENOUGH_ENERGY', shortBy: cost - p.value };
+export function spendEnergy(s: EnergyState, cost: number, opts: { useRested?: boolean } = {}): SpendResult {
+  if (s.value < cost) {
+    return { ok: false, reason: 'NOT_ENOUGH_ENERGY', shortBy: cost - s.value };
   }
-  const restedUsed = Math.min(p.rested, cost);
+  const restedUsed = opts.useRested === false ? 0 : Math.min(s.rested, cost);
   return {
     ok: true,
     restedUsed,
-    state: { value: p.value - cost, rested: p.rested - restedUsed, updatedAt: p.updatedAt },
+    state: { value: s.value - cost, rested: s.rested - restedUsed, updatedAt: s.updatedAt },
   };
+}
+
+/**
+ * When Energy will reach `cost` (for "Needs 10 Energy · ready at 14:20"), or null if it already has.
+ * `p` is a projection (or an EnergyView) at the moment it was made.
+ */
+export function energyReadyAt(p: { value: number; nextTickAt: number | null }, cost: number): number | null {
+  if (p.value >= cost || p.nextTickAt === null) return null;
+  const ticks = Math.ceil((cost - p.value) / ENERGY.regenPerTick);
+  return p.nextTickAt + (ticks - 1) * ENERGY.tickMs;
 }

@@ -1,13 +1,15 @@
 import type { GameContent } from '@irongate/content';
 import { Character, isDuplicateKeyError } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
-import { ENERGY, projectEnergy } from '@irongate/rules';
-import type { CharacterView, Stats } from '@irongate/rules';
+import { ENERGY, JOBS, emptyTally } from '@irongate/rules';
 import type { SessionUser } from '../trpc/context';
 
 const NAME_MAX = 60;
 
-/** The auto-created character (slice 0): the content's starting character in its faction's home city. */
+/**
+ * The auto-created character: the content's starting character in its faction's home city.
+ * `day.settled: null` makes the first touch settle the first City Day and print the first edition.
+ */
 export function characterDefaults(name: string, content: GameContent, now: number) {
   const start = content.startingCharacter;
   const faction = content.faction(start.factionId);
@@ -24,6 +26,16 @@ export function characterDefaults(name: string, content: GameContent, now: numbe
     level: 1,
     fxp: 0,
     iron: 0,
+    statPointsPending: 0,
+    rank: 1,
+    pc: 0,
+    localStanding: [],
+    job: null,
+    sickDays: { week: 0, left: JOBS.sickDaysPerWeek },
+    day: { settled: null },
+    orders: { day: 0, items: [], allDoneAt: null },
+    today: emptyTally(null),
+    lastActionAt: null,
     version: 0,
     createdAt: at,
     updatedAt: at,
@@ -32,7 +44,7 @@ export function characterDefaults(name: string, content: GameContent, now: numbe
 
 /**
  * Get the user's character, creating it on first call. `$setOnInsert` only, so reading an existing
- * character never writes (lazy timers are projected, not stored).
+ * character never writes here (the City Day settlement is the one write a read can cause, ADR 0005).
  */
 export async function getOrCreateCharacter(
   user: SessionUser,
@@ -56,39 +68,4 @@ export async function getOrCreateCharacter(
     if (!doc) throw err;
     return doc;
   }
-}
-
-/** Stats as a check sees them: CHA is worn (slice 0: chaBase stands in for it). */
-export function wornStats(doc: Pick<CharacterDoc, 'stats'>): Stats {
-  return { str: doc.stats.str, int: doc.stats.int, agi: doc.stats.agi, cha: doc.stats.chaBase };
-}
-
-/** The HUD view: lazy Energy and Rested projected to `now`. */
-export function toCharacterView(doc: CharacterDoc, now: number, content: GameContent): CharacterView {
-  const energy = projectEnergy(
-    { value: doc.energy.value, rested: doc.rested, updatedAt: doc.energy.updatedAt.getTime() },
-    now,
-  );
-  return {
-    id: doc._id.toHexString(),
-    name: doc.name,
-    factionId: doc.factionId,
-    factionName: content.faction(doc.factionId).shortName,
-    homeCityId: doc.homeCityId,
-    cityId: doc.cityId,
-    stats: wornStats(doc),
-    energy: {
-      value: energy.value,
-      max: energy.max,
-      updatedAt: energy.updatedAt,
-      nextTickAt: energy.nextTickAt,
-      fullAt: energy.fullAt,
-    },
-    rested: energy.rested,
-    xp: doc.xp,
-    level: doc.level,
-    fxp: doc.fxp,
-    iron: doc.iron,
-    version: doc.version,
-  };
 }

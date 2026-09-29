@@ -31,6 +31,7 @@ export function testEnv(uri: string): Env {
     PUBLIC_ORIGIN: 'http://localhost:5173',
     SENTRY_DSN: undefined,
     LOG_LEVEL: 'silent',
+    E2E_TEST_HOOKS: false,
   };
 }
 
@@ -57,4 +58,18 @@ export function newUser(name = 'Mara Lenk'): SessionUser {
 export function callerFor(user: SessionUser | null, now: () => number = Date.now) {
   const ctx: Context = { user, content: getContent(), now };
   return createCaller(ctx);
+}
+
+/** `error.cause.toData()` of a refused call, with its tRPC code. */
+export function gameData(err: unknown): { code: string; game: Record<string, unknown> | undefined } {
+  const e = err as { code: string; cause?: { toData?: () => Record<string, unknown> } };
+  return { code: e.code, game: e.cause?.toData?.() };
+}
+
+/** A fresh character (auto-created and settled) with its caller. */
+export async function freshCharacter(clock = testClock(), name = 'Mara Lenk') {
+  const user = newUser(name);
+  const caller = callerFor(user, clock.now);
+  const me = await caller.character.me();
+  return { user, caller, me, clock };
 }

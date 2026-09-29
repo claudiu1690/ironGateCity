@@ -1,66 +1,196 @@
 import { computeCheck, outcomeForRoll, tier1Difficulty } from './check';
+import { DIRECTIVES, FXP_TYPE_MULTIPLIER } from './constants';
 import { projectEnergy, spendEnergy } from './energy';
 import type { EnergyProjection, EnergyState } from './energy';
-import { computeRewards } from './rewards';
+import { advanceOrders, itemSpec, orderMatches } from './orders';
+import { computeRewards, sumRewards } from './rewards';
 import type { Rng } from './rng';
-import type { ActionAttempt, CheckBonus, CityRole, Outcome, Rewards, StatKey, Stats } from './types';
+import { standingBonus, standingView } from './standing';
+import type {
+  ActionAttempt,
+  ActionDescriptor,
+  CheckBonus,
+  CheckStats,
+  CityRole,
+  OrderTemplate,
+  OrdersState,
+  Outcome,
+  Rewards,
+  Stats,
+} from './types';
+
+export interface Tier1Attempt extends ActionAttempt {
+  rewards: Rewards;
+  restedUsed: number;
+  /** The Party order this row advanced (it got the +25 % FXP). */
+  orderId: string | null;
+}
 
 export interface Tier1Resolution {
   seed: string;
-  attempts: ActionAttempt[];
-  outcome: Outcome;
+  times: number;
+  attempts: Tier1Attempt[];
+  /** ×1: Success or Partial. A batch always stamps "n of N" (designer answer §12 Q5). */
+  summary: { stamp: 'success' | 'partial' | 'batch'; successes: number };
+  /** `cost` and `restedUsed` are the run's totals. */
   energy: { before: EnergyProjection; after: EnergyState; cost: number; restedUsed: number };
+  /** Per-line sums of the rows. */
   rewards: Rewards;
+  /** Local Standing Successes in this city. */
+  standing: { before: number; after: number };
+  /** `completed` lists the order ids this run completed; `allDone` if it completed the third. */
+  orders: { before: OrdersState; after: OrdersState; completed: string[]; allDone: boolean };
 }
 
 export type ResolveResult =
   | { ok: true; resolution: Tier1Resolution }
-  | { ok: false; reason: 'NOT_ENOUGH_ENERGY'; shortBy: number; energy: EnergyProjection };
+  | {
+      ok: false;
+      reason: 'NOT_ENOUGH_ENERGY';
+      shortBy: number;
+      /** The run's total cost. */
+      cost: number;
+      energy: EnergyProjection;
+    };
 
 export interface Tier1ActionInput {
-  action: { energy: number; stat: StatKey; givesFxp: boolean; givesOpinion: boolean };
+  action: {
+    id: string;
+    type: string;
+    locationId: string;
+    cityId: string;
+    energy: number;
+    stats: CheckStats;
+    givesFxp: boolean;
+    givesOpinion: boolean;
+  };
   cityRole: CityRole;
-  stats: Stats;
-  bonuses?: CheckBonus[];
+  values: Stats;
   energy: EnergyState;
   now: number;
-  times: 1;
+  times: 1 | 3 | 5;
+  /** Successes so far in this city; `names` are the five level names; label "Known in Coalport". */
+  standing: { successes: number; names: readonly string[]; cityName: string };
+  orders: OrdersState;
+  orderTemplates: readonly OrderTemplate[];
+  homeCityId: string;
+  /** Items, weather: later slices. */
+  bonuses?: CheckBonus[];
+}
+
+/** Stamp for a run of checked attempts (ADR 0006, GDD §13.1): ×1 by outcome, a batch "n of N". */
+export function summarise(outcomes: Outcome[]): Tier1Resolution['summary'] {
+  const successes = outcomes.filter((o) => o === 'success').length;
+  if (outcomes.length > 1) return { stamp: 'batch', successes };
+  return { stamp: successes === 1 ? 'success' : 'partial', successes };
+}
+
+/** GDD §13.1 (designer answer §12 Q5): the success text when more than half the rows succeeded. */
+export function usesSuccessText(successes: number, times: number): boolean {
+  return successes * 2 > times;
 }
 
 /**
- * The one entry point the server calls for a tier-1 action: project Energy, spend it, roll once,
- * pick the outcome and work out the rewards. Same seed + same input ⇒ same resolution.
+ * The one entry point for a checked tier-1 action, ×1 or ×N (ADR 0006): project Energy once,
+ * refuse the whole run if it is short, then resolve each row in order against evolving Energy,
+ * Rested, Local Standing and Party orders, one roll per row from one seed.
+ * Same seed + same input ⇒ identical resolution.
  */
 export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult {
   const before = projectEnergy(i.energy, i.now);
-  const spent = spendEnergy(before, i.action.energy);
-  if (!spent.ok) return { ok: false, reason: spent.reason, shortBy: spent.shortBy, energy: before };
+  const cost = i.action.energy * i.times;
+  if (before.value < cost) {
+    return { ok: false, reason: 'NOT_ENOUGH_ENERGY', shortBy: cost - before.value, cost, energy: before };
+  }
 
-  const check = computeCheck({
-    stat: i.action.stat,
-    stats: i.stats,
-    difficulty: tier1Difficulty(i.cityRole),
-    bonuses: i.bonuses,
-  });
-  const roll = rng.roll100();
-  const outcome = outcomeForRoll(roll, check.chance, 1);
-  const rewards = computeRewards({
-    tier: 1,
-    energy: i.action.energy,
-    outcome,
-    givesFxp: i.action.givesFxp,
-    givesOpinion: i.action.givesOpinion,
-    restedUsed: spent.restedUsed,
-  });
+  const difficulty = tier1Difficulty(i.cityRole);
+  const descriptor: ActionDescriptor = {
+    kind: 'checked',
+    actionId: i.action.id,
+    type: i.action.type,
+    locationId: i.action.locationId,
+    cityId: i.action.cityId,
+  };
+  const fxpRateMultiplier = FXP_TYPE_MULTIPLIER[i.action.type] ?? 1;
+
+  let state: EnergyState = { value: before.value, rested: before.rested, updatedAt: before.updatedAt };
+  let successes = i.standing.successes;
+  let orders = i.orders;
+  const completed: string[] = [];
+  let allDone = false;
+  let restedTotal = 0;
+  const attempts: Tier1Attempt[] = [];
+
+  for (let n = 1; n <= i.times; n++) {
+    const spent = spendEnergy(state, i.action.energy);
+    if (!spent.ok) throw new Error('unreachable: the run cost was checked up front');
+    state = spent.state;
+    restedTotal += spent.restedUsed;
+
+    const label = `${i.standing.names[standingView(successes).level] ?? 'Known'} in ${i.standing.cityName}`;
+    const standing = standingBonus(successes, label);
+    const check = computeCheck({
+      stats: i.action.stats,
+      values: i.values,
+      difficulty,
+      bonuses: [...(i.bonuses ?? []), ...(standing ? [standing] : [])],
+    });
+    const roll = rng.roll100();
+    const outcome = outcomeForRoll(roll, check.chance, 1);
+
+    const adv = advanceOrders(orders, i.orderTemplates, descriptor, outcome, i.homeCityId, i.now);
+    const bonusApplies =
+      adv.advanced !== null ||
+      (!DIRECTIVES.bonusOnlyWhileOpen && matchesAnyOrder(orders, i.orderTemplates, descriptor, i.homeCityId));
+    const rewards = computeRewards({
+      tier: 1,
+      energy: i.action.energy,
+      outcome,
+      givesFxp: i.action.givesFxp,
+      givesOpinion: i.action.givesOpinion,
+      restedUsed: spent.restedUsed,
+      fxpRateMultiplier,
+      fxpBonusShare: bonusApplies ? DIRECTIVES.matchFxpBonus : 0,
+    });
+    orders = adv.orders;
+    if (adv.completed) completed.push(adv.completed.templateId);
+    if (adv.allDone) allDone = true;
+    if (outcome === 'success') successes += 1;
+
+    attempts.push({
+      index: n,
+      check,
+      roll,
+      outcome,
+      rewards,
+      restedUsed: spent.restedUsed,
+      orderId: adv.advanced?.templateId ?? null,
+    });
+  }
 
   return {
     ok: true,
     resolution: {
       seed: rng.seed,
-      attempts: [{ index: 1, check, roll, outcome }],
-      outcome,
-      energy: { before, after: spent.state, cost: i.action.energy, restedUsed: spent.restedUsed },
-      rewards,
+      times: i.times,
+      attempts,
+      summary: summarise(attempts.map((a) => a.outcome)),
+      energy: { before, after: state, cost, restedUsed: restedTotal },
+      rewards: sumRewards(attempts.map((a) => a.rewards)),
+      standing: { before: i.standing.successes, after: successes },
+      orders: { before: i.orders, after: orders, completed, allDone },
     },
   };
+}
+
+function matchesAnyOrder(
+  o: OrdersState,
+  templates: readonly OrderTemplate[],
+  a: ActionDescriptor,
+  homeCityId: string,
+): boolean {
+  return o.items.some((item) => {
+    const t = templates.find((x) => x.id === item.templateId);
+    return t ? orderMatches(itemSpec(item, t).match, a, homeCityId) : false;
+  });
 }

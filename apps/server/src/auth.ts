@@ -18,6 +18,10 @@ export function createAuth(env: Env, db: Db, client: MongoClient) {
     trustedOrigins: [env.PUBLIC_ORIGIN],
     database: mongodbAdapter(db, { client }),
     emailAndPassword: { enabled: true },
+    // Playwright signs up several accounts from one address within seconds; Better Auth's
+    // production rate limit (sign-up included) would refuse the fourth. Only with the test hooks,
+    // which require DB_MODE=memory.
+    ...(env.E2E_TEST_HOOKS ? { rateLimit: { enabled: false } } : {}),
     telemetry: { enabled: false },
   });
 }

@@ -20,10 +20,18 @@ const EnvSchema = z
     PUBLIC_ORIGIN: z.url(),
     SENTRY_DSN: optionalString,
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+    /** Playwright only: registers POST /api/test/clock (tech design §7.8). Refused unless DB_MODE=memory. */
+    E2E_TEST_HOOKS: z
+      .enum(['0', '1', ''])
+      .optional()
+      .transform((v) => v === '1'),
   })
   .superRefine((env, ctx) => {
     if (env.DB_MODE === 'uri' && !env.MONGODB_URI) {
       ctx.addIssue({ code: 'custom', path: ['MONGODB_URI'], message: 'required when DB_MODE=uri' });
+    }
+    if (env.E2E_TEST_HOOKS && env.DB_MODE !== 'memory') {
+      ctx.addIssue({ code: 'custom', path: ['E2E_TEST_HOOKS'], message: 'only allowed with DB_MODE=memory' });
     }
   });
 

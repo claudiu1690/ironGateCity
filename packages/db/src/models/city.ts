@@ -3,7 +3,8 @@ import { Schema, model } from 'mongoose';
 
 /**
  * Live state of a city only (ADR 0003): its name, locations and actions stay in
- * `@irongate/content`, addressed by the same id. Not written in slice 0 beyond the seed.
+ * `@irongate/content`, addressed by the same id. `opinion` is written by action transactions
+ * (ADR 0010); no drift yet.
  */
 export interface CityDoc {
   /** The content id, e.g. "coalport". */

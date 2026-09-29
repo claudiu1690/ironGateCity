@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ENERGY, RESTED, projectEnergy, spendEnergy } from '../src';
+import { ENERGY, RESTED, energyReadyAt, projectEnergy, spendEnergy } from '../src';
 
 const MIN = 60_000;
 const T0 = 1_790_000_000_000;
@@ -114,9 +114,37 @@ describe('spendEnergy', () => {
     expect(partial).toMatchObject({ ok: true, restedUsed: 3, state: { value: 90, rested: 0 } });
   });
 
+  it('leaves Rested alone with useRested: false (shifts, job switches)', () => {
+    expect(spendEnergy(at(100, 50), 4, { useRested: false })).toMatchObject({
+      ok: true,
+      restedUsed: 0,
+      state: { value: 96, rested: 50 },
+    });
+  });
+
+  it('chains on a plain state (the rows of a ×3)', () => {
+    const first = spendEnergy({ value: 30, rested: 15, updatedAt: T0 }, 10);
+    if (!first.ok) throw new Error('expected ok');
+    expect(spendEnergy(first.state, 10)).toMatchObject({
+      ok: true,
+      restedUsed: 5,
+      state: { value: 10, rested: 0 },
+    });
+  });
+
   it('keeps the projection timestamp (the part-tick remainder survives a spend)', () => {
     const p = projectEnergy({ value: 50, rested: 0, updatedAt: T0 }, T0 + 15 * MIN);
     const r = spendEnergy(p, 10);
     expect(r.ok && r.state.updatedAt).toBe(T0 + 10 * MIN);
+  });
+});
+
+describe('energyReadyAt', () => {
+  it('is null when there is enough, else the tick that reaches the cost', () => {
+    const p = projectEnergy({ value: 3, rested: 0, updatedAt: T0 }, T0);
+    expect(energyReadyAt(p, 3)).toBeNull();
+    expect(energyReadyAt(p, 8)).toBe(T0 + 10 * MIN);
+    expect(energyReadyAt(p, 10)).toBe(T0 + 20 * MIN);
+    expect(energyReadyAt({ value: 100, nextTickAt: null }, 200)).toBeNull();
   });
 });

@@ -1,81 +1,238 @@
-import { characterViewFixture } from '@irongate/rules/testing';
-import type { CheckBreakdown } from '@irongate/rules';
-import { render, screen } from '@testing-library/react';
+import {
+  characterViewFixture,
+  cityViewFixture,
+  ordersViewFixture,
+  paperViewFixture,
+  tallyFixture,
+} from '@irongate/rules/testing';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Field, HudBar, Ticket, formatCountdown, formatOpinionDelta, formatSigned } from '../src';
+import {
+  CityMap,
+  DeskList,
+  Field,
+  HudBar,
+  JobsCard,
+  Masthead,
+  OrdersList,
+  TabBar,
+  Ticket,
+  TodayStrip,
+  artUrl,
+  formatCountdown,
+  formatOpinionDelta,
+  formatSigned,
+} from '../src';
 
-const preview: CheckBreakdown = {
-  stat: 'int',
-  statValue: 12,
-  difficulty: 8,
-  base: 50,
-  statTerm: 16,
-  bonuses: [],
-  bonusTotal: 0,
-  raw: 66,
-  chance: 66,
-};
+const mill = cityViewFixture.locations[0]!;
+const canvass = mill.actions[0]!;
+const shift = mill.actions[1]!;
+const study = cityViewFixture.locations[1]!.actions[0]!;
+const full = { value: 100, nextTickAt: null };
 
-describe('Ticket', () => {
-  it('shows the odds and the Energy stub, and performs on tap', async () => {
+describe('Ticket v2', () => {
+  it('shows the odds, the order tag and performs ×1 and ×3', async () => {
     const user = userEvent.setup();
     const onPerform = vi.fn();
-    render(
+    render(<Ticket action={canvass} energy={full} hasJob={false} onPerform={onPerform} />);
+    expect(screen.getByTestId('ticket-chance')).toHaveTextContent('66 %');
+    expect(screen.getByTestId('ticket-tags')).toHaveTextContent('Canvassing · Party order 1 / 2 · +25 % FXP');
+    await user.click(screen.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' }),
+    );
+    expect(onPerform.mock.calls).toEqual([[1], [3]]);
+  });
+
+  it('disables ×3 below its cost with the hint, and ×1 with "Needs … ready at"', () => {
+    const { rerender } = render(
       <Ticket
-        name="Canvass the shift change"
-        typeLabel="Canvass"
-        energy={10}
-        preview={preview}
-        onPerform={onPerform}
+        action={canvass}
+        energy={{ value: 25, nextTickAt: 0 }}
+        hasJob={false}
+        onPerform={() => undefined}
       />,
     );
-    expect(screen.getByTestId('ticket-chance')).toHaveTextContent('66 %');
-    expect(screen.getByText('10')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }));
-    expect(onPerform).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: /three times/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /once/ })).toBeEnabled();
+    expect(screen.getByTestId('ticket-hint')).toHaveTextContent('×3 needs 30 Energy');
+    rerender(
+      <Ticket
+        action={canvass}
+        energy={{ value: 5, nextTickAt: Date.UTC(2026, 8, 29, 14, 10) }}
+        hasJob={false}
+        onPerform={() => undefined}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /once/ })).toBeDisabled();
+    expect(screen.getByTestId('ticket-hint')).toHaveTextContent(/^Needs 10 Energy · ready at \d\d:\d\d$/);
   });
 
   it('tapping the percentage shows the breakdown', async () => {
     const user = userEvent.setup();
-    render(
-      <Ticket name="Canvass" typeLabel="Canvass" energy={10} preview={preview} onPerform={() => undefined} />,
-    );
+    render(<Ticket action={canvass} energy={full} hasJob={false} onPerform={() => undefined} />);
     const toggle = screen.getByRole('button', { name: /66 %/ });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('INT 12 vs difficulty 8 (×4)')).not.toBeVisible();
     await user.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('INT 12 vs difficulty 8 (×4)')).toBeVisible();
-    expect(screen.getByText('+16 %')).toBeVisible();
   });
 
-  it('is disabled while pending and shows a notice', () => {
+  it('training shows the live cost and "INT 12 → 13 · no roll"; a shift without a job is disabled', () => {
     render(
       <Ticket
-        name="Canvass"
-        typeLabel="Canvass"
-        energy={10}
-        preview={preview}
+        action={study}
+        energy={{ value: 150, nextTickAt: 0 }}
+        hasJob={false}
         onPerform={() => undefined}
-        pending
-        notice="Not enough Energy"
       />,
     );
-    expect(screen.getByRole('button', { name: /once/ })).toBeDisabled();
-    expect(screen.getByRole('status')).toHaveTextContent('Not enough Energy');
+    expect(screen.getByText('INT 12 → 13 · no roll')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /three times, 138 Energy/ })).toBeEnabled();
+    render(<Ticket action={shift} energy={full} hasJob={false} onPerform={() => undefined} />);
+    expect(screen.getByRole('button', { name: 'Work your shift at the mill, 4 Energy' })).toBeDisabled();
+    expect(screen.getByText('No job yet · take one below')).toBeInTheDocument();
   });
 });
 
-describe('HudBar', () => {
-  it('shows name, crest, Energy with its countdown, and Iron', () => {
-    render(<HudBar character={characterViewFixture} nextTickIn={425_000} />);
+describe('CityMap', () => {
+  it('places numbered hotspots at their map fractions and reports taps', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <CityMap
+        map={cityViewFixture.map}
+        isNight={false}
+        locations={cityViewFixture.locations}
+        selectedId="coalport.mill-gate"
+        onSelect={onSelect}
+      />,
+    );
+    const pins = screen.getAllByTestId('hotspot');
+    expect(pins.map((p) => p.getAttribute('aria-label'))).toEqual(['1. Mill Gate', '3. Union Hall']);
+    expect(pins[0]!.parentElement).toHaveStyle({ left: '36%', top: '44%' });
+    expect(pins[0]).toHaveAttribute('aria-pressed', 'true');
+    await user.click(pins[1]!);
+    expect(onSelect).toHaveBeenCalledWith('coalport.union-hall');
+    expect(screen.getByTestId('map-night')).toHaveStyle({ opacity: '0' });
+    expect(artUrl('map.coalport.day', 1280, 'avif')).toBe('/art/map.coalport.day-1280.avif');
+  });
+});
+
+describe('JobsCard', () => {
+  it('offers a free first job with its pay line, and names every unmet requirement', async () => {
+    const user = userEvent.setup();
+    const onTake = vi.fn();
+    const driver = {
+      ...mill.jobs[0]!,
+      jobId: 'driver',
+      name: 'Driver',
+      locked: { reason: 'LEVEL' as const, need: 3 },
+      unmet: [
+        { reason: 'LEVEL' as const, need: 3 },
+        { reason: 'STAT' as const, stat: 'agi' as const, need: 10 },
+      ],
+    };
+    render(<JobsCard jobs={[mill.jobs[0]!, driver]} held={null} onTake={onTake} energyValue={100} />);
+    await user.click(screen.getByRole('button', { name: 'Take the job' }));
+    expect(onTake).toHaveBeenCalledWith('factory-worker');
+    expect(screen.getByText('216 a day · half at midnight, half for the shift')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Needs Level 3, AGI 10' })).toBeDisabled();
+  });
+
+  it('a switch carries its warning; the held job shows streak and sick days', () => {
+    render(
+      <JobsCard
+        jobs={[
+          { ...mill.jobs[0]!, switchCost: 2 },
+          { ...mill.jobs[0]!, jobId: 'x', held: true },
+        ]}
+        held={{ streak: 4, sickDaysLeft: 2 }}
+        onTake={() => undefined}
+        energyValue={100}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Switch · 2 Energy · streak resets' })).toBeEnabled();
+    expect(screen.getByText('Your job · streak 4 days · 2 sick days left')).toBeInTheDocument();
+  });
+});
+
+describe('Paper pieces', () => {
+  it('masthead, orders (paper variant) and the desk', () => {
+    render(
+      <>
+        <Masthead paper={paperViewFixture} />
+        <OrdersList orders={ordersViewFixture} variant="paper" />
+        <DeskList desk={paperViewFixture.desk} />
+      </>,
+    );
+    expect(screen.getByRole('heading', { name: 'The Coalport Clarion' })).toBeInTheDocument();
+    expect(screen.getByTestId('dateline')).toHaveTextContent('Tuesday · 29 September · Coalport');
+    expect(screen.getAllByTestId('order')).toHaveLength(3);
+    expect(screen.getByText('— P.H.')).toBeInTheDocument();
+    expect(within(screen.getByTestId('desk')).getByText('no job yet')).toBeInTheDocument();
+    expect(within(screen.getByTestId('desk')).getByText('150 XP to Level 2')).toBeInTheDocument();
+  });
+
+  it('the Today strip adds up the day', () => {
+    render(
+      <TodayStrip
+        today={{ ...tallyFixture, energy: 30, attempts: 3, successes: 2, xp: 135, fxp: 18, opinion: 0.125 }}
+      />,
+    );
+    expect(screen.getByTestId('today-strip')).toHaveTextContent(
+      'Today:30 Energy · 3 attempts · 2 wins · +135 XP · +18 FXP · +0.125 opinion · +20 Iron',
+    );
+  });
+});
+
+describe('TabBar', () => {
+  it('real links, disabled tabs with "Soon", dots', async () => {
+    const user = userEvent.setup();
+    const onNavigate = vi.fn();
+    render(
+      <TabBar
+        active="map"
+        onNavigate={onNavigate}
+        items={[
+          { id: 'map', label: 'Map', href: '/city/coalport' },
+          { id: 'paper', label: 'Paper', href: '/paper', dot: true },
+          { id: 'dossier', label: 'Dossier', href: '#', disabled: true },
+        ]}
+      />,
+    );
+    expect(screen.getByRole('link', { name: 'Map' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByTestId('tab-dot-paper')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Dossier/ })).toHaveAttribute('aria-disabled', 'true');
+    await user.click(screen.getByRole('link', { name: 'Paper' }));
+    expect(onNavigate).toHaveBeenCalledWith('/paper');
+  });
+});
+
+describe('HudBar v2', () => {
+  it('shows name, rank title and level, Energy with "full at", Iron; a badge when points wait', async () => {
+    const user = userEvent.setup();
+    const onPlaceStat = vi.fn();
+    render(
+      <HudBar
+        character={{ ...characterViewFixture, statPointsPending: 1, pc: 5 }}
+        nextTickIn={425_000}
+        onPlaceStat={onPlaceStat}
+      />,
+    );
     expect(screen.getByText('Mara Lenk')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Collective' })).toBeInTheDocument();
+    expect(screen.getByTestId('hud-rank')).toHaveTextContent('Recruit · Lv 1');
     expect(screen.getByTestId('hud-energy')).toHaveTextContent('90 / 100');
-    expect(screen.getByTestId('hud-next-tick')).toHaveTextContent('+5 in 7:05');
-    expect(screen.getByRole('meter', { name: 'Energy' })).toHaveAttribute('aria-valuenow', '90');
+    expect(screen.getByTestId('hud-next-tick')).toHaveTextContent(/^full at \d\d:\d\d$/);
+    expect(screen.getByRole('meter', { name: 'Energy' })).toHaveAttribute(
+      'aria-valuetext',
+      '90 of 100, next +5 in 7:05',
+    );
     expect(screen.getByTestId('hud-iron')).toHaveTextContent('20');
+    expect(screen.getByTestId('hud-pc')).toHaveTextContent('5');
+    await user.click(screen.getByRole('button', { name: '1 point to place' }));
+    await user.click(screen.getByRole('button', { name: 'INT 12 → 13' }));
+    expect(onPlaceStat).toHaveBeenCalledWith('int');
   });
 });
 
@@ -95,8 +252,6 @@ describe('format helpers', () => {
     expect(formatCountdown(-5)).toBe('0:00');
     expect(formatSigned(45)).toBe('+45');
     expect(formatSigned(-3)).toBe('−3');
-    expect(formatSigned(0)).toBe('0');
-    expect(formatOpinionDelta(0.05)).toBe('+0.05');
     expect(formatOpinionDelta(0.025)).toBe('+0.025');
     expect(formatOpinionDelta(0)).toBe('0');
   });

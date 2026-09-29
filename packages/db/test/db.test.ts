@@ -5,6 +5,10 @@ import {
   ActionLog,
   Character,
   City,
+  PaperEntry,
+  REQUEST_LOG_TTL_SECONDS,
+  RequestLog,
+  migrateSlice1CharacterFields,
   connectDb,
   disconnectDb,
   ensureIndexes,
@@ -31,6 +35,9 @@ const logFields = (characterId: Types.ObjectId, idempotencyKey: string) => ({
   actionId: 'coalport.mill-gate.canvass',
   locationId: 'coalport.mill-gate',
   cityId: 'coalport',
+  kind: 'checked' as const,
+  times: 1,
+  txAttempts: 1,
   seed: '0123456789abcdef0123456789abcdef',
   outcome: 'success' as const,
   result: { any: 'payload', nested: { empty: {} }, list: [] } as never,
@@ -56,6 +63,37 @@ describe('indexes', () => {
       expect.objectContaining({ key: { characterId: 1, idempotencyKey: 1 }, unique: true }),
     );
     expect(indexes).toContainEqual(expect.objectContaining({ key: { characterId: 1, createdAt: -1 } }));
+  });
+
+  it('paperEntries is unique per character and day', async () => {
+    const indexes = await PaperEntry.collection.indexes();
+    expect(indexes).toContainEqual(
+      expect.objectContaining({ key: { characterId: 1, day: 1 }, unique: true }),
+    );
+    const characterId = new Types.ObjectId();
+    const edition = {
+      characterId,
+      day: 20_000,
+      cityId: 'coalport',
+      firstEdition: true,
+      headlines: [],
+      desk: { salary: null, streak: null, restedBanked: 0, daysSinceLastPaper: null, yesterday: null },
+      snapshot: { level: 1, rank: 1, standingLevel: 0 },
+    };
+    await PaperEntry.create(edition);
+    const err = await PaperEntry.create(edition).catch((e: unknown) => e);
+    expect(isDuplicateKeyError(err)).toBe(true);
+  });
+
+  it('requestLogs has the idempotency lock and a 7-day TTL', async () => {
+    const indexes = await RequestLog.collection.indexes();
+    expect(indexes).toContainEqual(
+      expect.objectContaining({ key: { characterId: 1, idempotencyKey: 1 }, unique: true }),
+    );
+    expect(indexes).toContainEqual(
+      expect.objectContaining({ key: { createdAt: 1 }, expireAfterSeconds: REQUEST_LOG_TTL_SECONDS }),
+    );
+    expect(REQUEST_LOG_TTL_SECONDS).toBe(604_800);
   });
 
   it('ensureIndexes can run again', async () => {
@@ -107,6 +145,46 @@ describe('transactions', () => {
       }),
     ).rejects.toThrow('abort');
     expect(await ActionLog.countDocuments({ characterId })).toBe(1);
+  });
+});
+
+describe('migration 001 (slice-1 character fields)', () => {
+  it('fills a slice-0 character once and is idempotent', async () => {
+    const now = new Date();
+    const { insertedId } = await Character.collection.insertOne({
+      userId: `slice0-${Date.now()}`,
+      name: 'Old Timer',
+      factionId: 'collective',
+      homeCityId: 'coalport',
+      cityId: 'coalport',
+      stats: { str: 10, int: 12, agi: 5, chaBase: 2 },
+      energy: { value: 50, updatedAt: now },
+      rested: 0,
+      xp: 90,
+      level: 1,
+      fxp: 12,
+      iron: 40,
+      version: 3,
+      createdAt: now,
+      updatedAt: now,
+    });
+    expect(await migrateSlice1CharacterFields()).toBeGreaterThanOrEqual(1);
+    const doc = await Character.findById(insertedId).lean();
+    expect(doc).toMatchObject({
+      statPointsPending: 0,
+      rank: 1,
+      pc: 0,
+      localStanding: [],
+      job: null,
+      day: { settled: null },
+      orders: { items: [], allDoneAt: null },
+      today: { day: null, energy: 0, shiftWorked: false },
+      lastActionAt: null,
+      xp: 90,
+      version: 3,
+    });
+    expect(await migrateSlice1CharacterFields()).toBe(0);
+    expect(await Character.findById(insertedId).lean()).toEqual(doc);
   });
 });
 

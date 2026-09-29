@@ -33,18 +33,49 @@ export function computeRewards(i: {
   givesFxp: boolean;
   givesOpinion: boolean;
   restedUsed: number;
+  /** §13.3: council sessions pay FXP at 1.5× the tier rate. */
+  fxpRateMultiplier?: number;
+  /** §15.4: +25 % of the base FXP when the attempt advances an open Party order. */
+  fxpBonusShare?: number;
 }): Rewards {
   const rates = TIER_RATES[i.tier];
   // §6.3: Rested is spent per Energy point, so its bonus is proportional to the share it covered.
   const restedShare = i.energy > 0 ? Math.min(1, i.restedUsed / i.energy) : 0;
 
   const xp = line(rates.xpPerEnergy * i.energy, RESTED.xpBonus * restedShare, i.outcome);
-  // FXP and influence never get the Rested bonus (§6.3).
-  const fxp = i.givesFxp ? line(rates.fxpPerEnergy * i.energy, 0, i.outcome) : { ...NOTHING };
+  // FXP and influence never get the Rested bonus (§6.3); FXP gets the Party-order bonus instead.
+  const fxp = i.givesFxp
+    ? line(rates.fxpPerEnergy * i.energy * (i.fxpRateMultiplier ?? 1), i.fxpBonusShare ?? 0, i.outcome)
+    : { ...NOTHING };
   const iron = line(rates.ironPerEnergy * i.energy, RESTED.ironBonus * restedShare, i.outcome);
   const opinion = i.givesOpinion
     ? roundOpinion(OPINION_PER_ENERGY[i.tier] * i.energy * OUTCOME_FACTOR[i.outcome])
     : 0;
 
   return { xp, fxp, iron, opinion };
+}
+
+/** Line-by-line sum of several attempts' rewards (the modal's tiles; opinion to three decimals). */
+export function sumRewards(list: Rewards[]): Rewards {
+  const add = (a: RewardLine, b: RewardLine): RewardLine => ({
+    base: a.base + b.base,
+    bonus: a.bonus + b.bonus,
+    total: a.total + b.total,
+  });
+  return list.reduce<Rewards>(
+    (acc, r) => ({
+      xp: add(acc.xp, r.xp),
+      fxp: add(acc.fxp, r.fxp),
+      iron: add(acc.iron, r.iron),
+      opinion: roundOpinion(acc.opinion + r.opinion),
+    }),
+    { xp: { ...NOTHING }, fxp: { ...NOTHING }, iron: { ...NOTHING }, opinion: 0 },
+  );
+}
+
+/** A reward line with no Outcome factor (training XP: 2.25 per Energy plus the Rested bonus). */
+export function flatLine(base: number, bonusShare: number): RewardLine {
+  const b = roundHalfUp(base);
+  const bonus = roundHalfUp(base * bonusShare);
+  return { base: b, bonus, total: b + bonus };
 }

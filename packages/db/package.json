@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "mem": "tsx scripts/memMongo.ts",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "report:playtest": "tsx scripts/playtestReport.ts"
   },
   "dependencies": {
     "@irongate/content": "workspace:*",

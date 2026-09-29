@@ -3,13 +3,18 @@ import { formatSigned } from '../format';
 
 /** §8.4: "tapping the percentage shows the breakdown: stat, difficulty, and each bonus". */
 export function CheckBreakdownList({ check, id }: { check: CheckBreakdown; id?: string }) {
-  const stat = check.stat.toUpperCase();
+  const names = check.stats.map((s) => s.toUpperCase());
+  // Two-stat checks show both stats and the average (§8.4).
+  const stat =
+    names.length === 1
+      ? `${names[0]} ${check.statValue}`
+      : `${names.map((n, i) => `${n} ${check.statValues[i]}`).join(' + ')} → ${check.statValue}`;
   return (
     <dl id={id} className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 font-mono text-[12px] text-text-2">
       <dt>Base</dt>
       <dd className="text-right">{check.base} %</dd>
       <dt>
-        {stat} {check.statValue} vs difficulty {check.difficulty} (×4)
+        {stat} vs difficulty {check.difficulty} (×4)
       </dt>
       <dd className="text-right">{formatSigned(check.statTerm)} %</dd>
       {check.bonuses.map((b) => (
