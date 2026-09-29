@@ -5,6 +5,8 @@ import type {
   CheckBreakdown,
   CityView,
   DailyTally,
+  FactionCardView,
+  StoryScreenView,
   NamedStandingView,
   OrdersView,
   PaperView,
@@ -21,10 +23,23 @@ const DAY_END = (DAY + 1) * 86_400_000;
 
 export const assetFixture = (id: string, width: number, height: number, widths: number[]): AssetView => ({
   id,
+  format: 'raster',
   width,
   height,
   widths,
   alt: `Art ${id}`,
+  focus: null,
+});
+
+/** A vector asset (the faction crests, ADR 0015). */
+export const svgFixture = (id: string): AssetView => ({
+  id,
+  format: 'svg',
+  width: 512,
+  height: 512,
+  widths: [],
+  alt: `Art ${id}`,
+  focus: null,
 });
 
 const holmPortrait = assetFixture('portrait.holm', 880, 1100, [256, 512]);
@@ -73,6 +88,7 @@ export const ordersViewFixture: OrdersView = {
       progress: 1,
       target: 2,
       done: false,
+      pin: { locationId: 'coalport.mill-gate', n: 1 },
     },
     {
       id: 'dir.say-it',
@@ -81,6 +97,7 @@ export const ordersViewFixture: OrdersView = {
       progress: 0,
       target: 1,
       done: false,
+      pin: { locationId: 'coalport.mill-gate', n: 1 },
     },
     {
       id: 'dir.work-shift',
@@ -89,6 +106,7 @@ export const ordersViewFixture: OrdersView = {
       progress: 1,
       target: 1,
       done: true,
+      pin: { locationId: 'coalport.mill-gate', n: 1 },
     },
   ],
   allDone: false,
@@ -121,6 +139,13 @@ export const characterViewFixture: CharacterView = {
   today: tallyFixture,
   orders: ordersViewFixture,
   paperDue: false,
+  avatar: assetFixture('avatar.woman-30s', 760, 950, [128, 256]),
+  chaBase: 0,
+  wearing: { itemId: 'outfit.mill-coat', name: 'Mill work coat', cha: 2 },
+  partyCard: { factionName: 'Red Collective', rankTitle: 'Recruit', memberSince: T0 },
+  keepsakes: [],
+  ambition: { id: 'finish-his-work', title: 'Finish His Work', chapter: 1, status: 'ready', readyFrom: null },
+  lettersWaiting: 1,
 };
 
 export const checkFixture: CheckBreakdown = {
@@ -213,10 +238,13 @@ export const actionResultFixture: ActionResult = {
     ordersAllDone: null,
     stat: null,
     shift: null,
+    item: null,
+    hooks: [],
   },
   today: tallyFixture,
   again: { cost1: 10, cost3: 30 },
   character: characterViewFixture,
+  story: null,
 };
 
 const row = (
@@ -418,14 +446,14 @@ export const cityViewFixture: CityView = {
           energy: 4,
           energy3: null,
           preview: null,
-          shift: { jobId: 'factory-worker', held: false, workedToday: false, nextShiftAt: null },
+          shift: { jobId: 'coalport-factory-worker', held: false, workedToday: false, nextShiftAt: null },
           order: null,
           locked: null,
         },
       ],
       jobs: [
         {
-          jobId: 'factory-worker',
+          jobId: 'coalport-factory-worker',
           name: 'Factory worker',
           blurb: 'Rolling floor at the Coalport Steel Mill.',
           pay: 216,
@@ -496,7 +524,167 @@ export const paperViewFixture: PaperView = {
     level: { level: 1, xpToNext: 150, next: 2, statPointsPending: 0 },
     workStreak: null,
     standing: standingFixture,
+    wearing: { name: 'Mill work coat', cha: 2 },
   },
+  letters: [
+    {
+      kind: 'chapter',
+      from: "From your father's things",
+      title: 'His ward book',
+      chapter: 1,
+      status: 'ready',
+      energy: 10,
+    },
+  ],
+  landing: { cityId: 'coalport', locationId: 'coalport.mill-gate' },
   readAt: null,
   due: true,
+};
+
+// ---------------------------------------------------------------------------------------------
+// Slice 2: tier-3 story screens, the street and a chapter result (tech design §14 UI fixtures).
+// ---------------------------------------------------------------------------------------------
+
+const deathbed = {
+  ...assetFixture('scene.origin-deathbed', 2688, 1520, [640, 1280]),
+  focus: { x: 0.3, y: 0.5 },
+};
+
+/** Origin step 1, second question, with the echo of the first answer. */
+export const originScreenFixture: StoryScreenView = {
+  kicker: 'Irongate · a rented room above the tram depot · night',
+  title: 'The room',
+  narrative:
+    'Your father has the bed by the window and not much else. The trams have stopped. He wants to talk, and there is no one else he can talk to.',
+  art: { kind: 'scene', asset: deathbed, focus: { x: 0.3, y: 0.5 } },
+  portrait: assetFixture('portrait.father', 760, 950, [256, 512]),
+  echo: 'You went fishing with him.',
+  prompt: 'And when the street kids got into trouble. What did you do?',
+  choices: [
+    { id: 'a', text: 'Led them in. Someone had to.', hint: null },
+    { id: 'b', text: 'Talked them out of it.', hint: null },
+    { id: 'c', text: 'Watched from the corner, and learned.', hint: null },
+  ],
+  approaches: [],
+  cta: null,
+  progress: { step: 1, of: 3 },
+};
+
+/** Chapter 1, step 2: two approaches with odds, the CTA short of Energy. */
+export const chapterCheckScreenFixture: StoryScreenView = {
+  kicker: 'Ambition · Finish His Work · Chapter 1 of 12',
+  title: 'Three names',
+  narrative:
+    "Three names in the book have two ticks: the ones who came out for him in the rain. Their street is twenty minutes' walk.",
+  art: { kind: 'map-crop', asset: mapDay, x: 0.66, y: 0.3 },
+  portrait: null,
+  echo: null,
+  prompt: null,
+  choices: [],
+  approaches: [
+    {
+      id: 'knock',
+      text: 'Knock the three doors and say whose child you are',
+      check: {
+        ...checkFixture,
+        stats: ['cha', 'int'],
+        statValues: [2, 12],
+        statValue: 7,
+        statTerm: -4,
+        raw: 46,
+        chance: 46,
+      },
+    },
+    { id: 'sort', text: 'Sort the book by street first, then knock', check: checkFixture },
+  ],
+  cta: { label: 'Walk his ward', energy: 10, readyAt: T0 + 600_000 },
+  progress: { step: 2, of: 3 },
+};
+
+export const factionCardFixtures: FactionCardView[] = [
+  {
+    factionId: 'vanguard',
+    name: 'Iron Vanguard',
+    crest: svgFixture('crest.vanguard'),
+    blurb: 'Order, discipline, and the nation above all.',
+    facts: ['+3 Strength', 'Starts in Duskwall', 'Their event: the Torchlight March'],
+    wish: false,
+    wishLabel: null,
+    confirm: 'Join the Iron Vanguard · take the train to Duskwall',
+  },
+  {
+    factionId: 'collective',
+    name: 'Red Collective',
+    crest: svgFixture('crest.collective'),
+    blurb: 'The mill and the docks against the men who own them.',
+    facts: ['+2 Strength, +1 Intelligence', 'Starts in Coalport', 'Their event: the General Strike'],
+    wish: true,
+    wishLabel: 'His wish · +50 Faction XP',
+    confirm: 'Join the Red Collective · take the train to Coalport',
+  },
+];
+
+/** Chapter 1 ended in a Failure: 25 XP, the keepsake, the hook. */
+export const chapterResultFixture: ActionResult = {
+  ...actionResultFixture,
+  logId: '66f9a0000000000000000006',
+  place: {
+    ...actionResultFixture.place,
+    locationId: 'coalport.union-hall',
+    locationName: 'Union Hall',
+    kind: 'faction-hq',
+  },
+  kind: 'chapter',
+  action: { id: 'finish-his-work.1', name: 'His ward book', type: 'chapter', tier: 3, times: 1 },
+  stamp: 'failure',
+  successes: 0,
+  headline: 'Nobody home',
+  body: 'No one answers at any of the three.',
+  art: { rung: 'map-crop', asset: mapDay, x: 0.66, y: 0.3 },
+  attempts: [
+    {
+      index: 1,
+      roll: 90,
+      outcome: 'failure',
+      check: checkFixture,
+      rewards: {
+        xp: { base: 25, bonus: 0, total: 25 },
+        fxp: { base: 0, bonus: 0, total: 0 },
+        iron: { base: 0, bonus: 0, total: 0 },
+        opinion: 0,
+      },
+      restedUsed: 0,
+      orderId: null,
+    },
+  ],
+  rewards: {
+    xp: { base: 25, bonus: 0, total: 25 },
+    fxp: { base: 0, bonus: 0, total: 0 },
+    iron: { base: 0, bonus: 0, total: 0 },
+    opinion: 0,
+  },
+  effects: {
+    ...actionResultFixture.effects,
+    xp: { before: 0, after: 25 },
+    fxp: { before: 0, after: 0 },
+    iron: { before: 0, after: 0 },
+    opinion: null,
+    standing: null,
+    item: {
+      itemId: 'keep.ward-book',
+      name: 'His ward book',
+      keepsake: true,
+      art: assetFixture('item.document-folder', 512, 512, [128, 256]),
+    },
+    hooks: ['Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2'],
+  },
+  again: null,
+  story: {
+    ambitionId: 'finish-his-work',
+    ambitionTitle: 'Finish His Work',
+    chapter: 1,
+    of: 12,
+    approachId: 'sort',
+    choiceText: 'Keep it to yourself for now',
+  },
 };

@@ -1,4 +1,4 @@
-import type { ActionResult, ActionViewKind, ResultStamp } from '@irongate/rules';
+import type { ActionResult, ActionResultKind, ResultStamp } from '@irongate/rules';
 import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
 
@@ -14,15 +14,15 @@ export interface ActionLogDoc {
   actionId: string;
   locationId: string;
   cityId: string;
-  /** checked, training or shift (tech design §5.3). */
-  kind: ActionViewKind;
+  /** checked, training or shift (slice-1 tech design §5.3); chapter for an Ambition check (slice 2). */
+  kind: ActionResultKind;
   /** ×1 or ×3: one row for the whole run (ADR 0006). */
   times: number;
   /** How many times the transaction callback ran (contention on the city document, ADR 0010). */
   txAttempts: number;
   /** 32 hex chars; `createRng(seed)` replays the roll(s). Generated for every kind. */
   seed: string;
-  /** The stamp: success, partial, batch, worked or trained. */
+  /** The stamp: success, partial, failure (chapters), batch, worked or trained. */
   outcome: ResultStamp;
   result: ActionResult;
   createdAt: Date;
@@ -35,13 +35,13 @@ const actionLogSchema = new Schema<ActionLogDoc>(
     actionId: { type: String, required: true },
     locationId: { type: String, required: true },
     cityId: { type: String, required: true },
-    kind: { type: String, enum: ['checked', 'training', 'shift'], required: true },
+    kind: { type: String, enum: ['checked', 'training', 'shift', 'chapter'], required: true },
     times: { type: Number, required: true, min: 1 },
     txAttempts: { type: Number, required: true, min: 1 },
     seed: { type: String, required: true, match: /^[0-9a-f]{32}$/ },
     outcome: {
       type: String,
-      enum: ['success', 'partial', 'batch', 'worked', 'trained'],
+      enum: ['success', 'partial', 'failure', 'batch', 'worked', 'trained'],
       required: true,
     },
     result: { type: Schema.Types.Mixed, required: true },

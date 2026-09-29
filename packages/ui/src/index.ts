@@ -21,8 +21,13 @@ export { ProgressBar } from './components/ProgressBar';
 export type { ProgressBarProps } from './components/ProgressBar';
 export { ResultModal, stampFor } from './components/ResultModal';
 export type { ResultModalProps } from './components/ResultModal';
-export { JobsCard, LocationSheet, OutOfEnergyCard } from './components/Sheets';
-export type { JobsCardProps, LocationSheetProps, OutOfEnergyCardProps } from './components/Sheets';
+export { BottomSheet, JobsCard, LocationSheet, OutOfEnergyCard } from './components/Sheets';
+export type {
+  BottomSheetProps,
+  JobsCardProps,
+  LocationSheetProps,
+  OutOfEnergyCardProps,
+} from './components/Sheets';
 export { StatPointsPanel, TabBar } from './components/Shell';
 export type { StatPointsPanelProps, TabBarProps, TabId, TabItem } from './components/Shell';
 export { Stamp } from './components/Stamp';
@@ -30,3 +35,5 @@ export type { StampProps, StampTone } from './components/Stamp';
 export { TYPE_LABEL, Ticket } from './components/Ticket';
 export type { TicketProps } from './components/Ticket';
 export * from './format';
+export { AvatarPicker, FactionCard, ItemLine, LettersRow, StoryScreen } from './components/Story';
+export type { AvatarPickerProps, FactionCardProps, StoryScreenProps } from './components/Story';

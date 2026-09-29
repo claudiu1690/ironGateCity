@@ -25,7 +25,8 @@ import type { SessionUser } from '../trpc/context';
 import { buildActionResult } from './actionResult';
 import type { ResultInput } from './actionResult';
 import { ensureSettled, loadCharacter } from './dayService';
-import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction, mayHaveLostToSameKey } from './txn';
+import { runKeyedAction, storedResult } from './keyedAction';
+import { DayChanged, VersionConflict } from './txn';
 import {
   energyState,
   fromOrdersState,
@@ -56,7 +57,7 @@ function locate(content: GameContent, input: PerformInput): LocatedAction {
   return found;
 }
 
-const progressOf = (c: CharacterDoc): Progress => ({
+export const progressOf = (c: CharacterDoc): Progress => ({
   xp: c.xp,
   level: c.level,
   fxp: c.fxp,
@@ -65,7 +66,7 @@ const progressOf = (c: CharacterDoc): Progress => ({
   statPointsPending: c.statPointsPending,
 });
 
-const progressSet = (g: GainsResult) => ({
+export const progressSet = (g: GainsResult) => ({
   xp: g.next.xp,
   level: g.next.level,
   fxp: g.next.fxp,
@@ -73,18 +74,6 @@ const progressSet = (g: GainsResult) => ({
   pc: g.next.pc,
   statPointsPending: g.next.statPointsPending,
 });
-
-async function storedLog(characterId: Types.ObjectId, idempotencyKey: string, input: PerformInput) {
-  const log = await ActionLog.findOne(
-    { characterId, idempotencyKey },
-    { result: 1, actionId: 1, times: 1 },
-  ).lean();
-  if (!log) return null;
-  if (log.actionId !== input.actionId || log.times !== input.times) {
-    throw gameError('CONFLICT', 'KEY_REUSED', { idempotencyKey });
-  }
-  return log.result;
-}
 
 /**
  * Perform a tier-1 action ×1 or ×3 (ADR 0002, 0006): one transaction, one unique idempotency key,
@@ -122,51 +111,31 @@ export async function performAction(deps: {
     }
   }
 
-  // Fast path: a retry or a double tap with the same key.
-  const existing = await storedLog(c0._id, input.idempotencyKey, input);
-  if (existing) return existing;
-
-  let txAttempts = 0;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    try {
-      return await inTransaction(
-        (session) =>
-          resolveAndWrite({
-            content,
-            located,
-            input,
-            characterId: c0._id,
-            now: deps.now(),
-            session,
-            editionReadAt: loaded.editionReadAt,
-            txAttempts: () => txAttempts,
-          }),
-        () => {
-          txAttempts += 1;
-        },
-      );
-    } catch (err) {
-      // A concurrent request with the same key may have committed while this one was in flight:
-      // then its stored result is the answer, not a refusal computed against its state (a retry
-      // at the Energy limit, a second shift) and not another attempt (ADR 0002 step 3).
-      if (mayHaveLostToSameKey(err)) {
-        const winner = await storedLog(c0._id, input.idempotencyKey, input);
-        if (winner) return winner;
-      }
-      if (err instanceof VersionConflict) continue;
-      if (err instanceof DayChanged) {
-        const fresh = await Character.findById(c0._id).lean<CharacterDoc>();
-        if (fresh) await ensureSettled(content, fresh, deps.now());
-        loaded.editionReadAt = null;
-        continue;
-      }
-      if (err instanceof GameError) throw err.toTRPC();
-      throw err;
-    }
-  }
-  const winner = await storedLog(c0._id, input.idempotencyKey, input);
-  if (winner) return winner;
-  throw gameError('CONFLICT', 'ACTION_CONFLICT', { attempts: MAX_ATTEMPTS });
+  return runKeyedAction<ActionResult>({
+    // A retry or a double tap with the same key returns the stored result.
+    stored: () =>
+      storedResult(
+        c0._id,
+        input.idempotencyKey,
+        (log) => log.actionId === input.actionId && log.times === input.times,
+      ),
+    write: (session, txAttempts) =>
+      resolveAndWrite({
+        content,
+        located,
+        input,
+        characterId: c0._id,
+        now: deps.now(),
+        session,
+        editionReadAt: loaded.editionReadAt,
+        txAttempts,
+      }),
+    resettle: async () => {
+      const fresh = await Character.findById(c0._id).lean<CharacterDoc>();
+      if (fresh) await ensureSettled(content, fresh, deps.now());
+      loaded.editionReadAt = null;
+    },
+  });
 }
 
 async function resolveAndWrite(i: {
@@ -217,7 +186,7 @@ async function resolveAndWrite(i: {
           givesOpinion: action.givesOpinion,
         },
         cityRole: city.role,
-        values: wornStats(c),
+        values: wornStats(c, content),
         energy: energyState(c),
         now,
         times: input.times,

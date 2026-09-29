@@ -59,6 +59,25 @@ describe('startOrders', () => {
     });
     expect(startOrders(TEMPLATES, DAY0, true).items[2]!.variant).toBe('main');
   });
+
+  it('builds the welcome set from the given ids, Take a job frozen (ADR 0012)', () => {
+    const welcome = ['dir.shift-change', 'dir.report', 'dir.work-shift'] as const;
+    for (const day of [DAY0, DAY0 + 1, DAY0 + 7]) {
+      const o = startOrders(TEMPLATES, day, false, welcome);
+      expect(o.items.map((i) => [i.templateId, i.variant, i.target])).toEqual([
+        ['dir.shift-change', 'main', 2],
+        ['dir.report', 'main', 1],
+        ['dir.work-shift', 'noJob', 1],
+      ]);
+    }
+    // Without `welcome`, the rotation as before.
+    expect(startOrders(TEMPLATES, DAY0, false).items.map((i) => i.templateId)).toEqual([
+      'dir.canvass-coalport',
+      'dir.paper-the-town',
+      'dir.work-shift',
+    ]);
+    expect(() => startOrders(TEMPLATES, DAY0, false, ['nope', 'dir.report', 'dir.work-shift'])).toThrow();
+  });
 });
 
 describe('orderMatches', () => {

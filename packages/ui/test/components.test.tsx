@@ -130,7 +130,7 @@ describe('JobsCard', () => {
     const onTake = vi.fn();
     const driver = {
       ...mill.jobs[0]!,
-      jobId: 'driver',
+      jobId: 'coalport-driver',
       name: 'Driver',
       locked: { reason: 'LEVEL' as const, need: 3 },
       unmet: [
@@ -140,7 +140,7 @@ describe('JobsCard', () => {
     };
     render(<JobsCard jobs={[mill.jobs[0]!, driver]} held={null} onTake={onTake} energyValue={100} />);
     await user.click(screen.getByRole('button', { name: 'Take the job' }));
-    expect(onTake).toHaveBeenCalledWith('factory-worker');
+    expect(onTake).toHaveBeenCalledWith('coalport-factory-worker');
     expect(screen.getByText('216 a day · half at midnight, half for the shift')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Needs Level 3, AGI 10' })).toBeDisabled();
   });

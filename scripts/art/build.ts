@@ -1,8 +1,9 @@
 /**
- * Web art pipeline (ADR 0007).
+ * Web art pipeline (ADR 0007, ADR 0015).
  *
  *   pnpm art:build   read the sources from IRONGATE_ART_SRC and write apps/client/public/art/<id>-<w>.avif|webp
- *   pnpm art:check   verify every catalogue id has all its files, within budget (no sources needed; CI)
+ *                    (vectors: copied to /art/<id>.svg after the safety check)
+ *   pnpm art:check   verify every catalogue id has all its files, within budget, SVGs safe (no sources; CI)
  *
  * Idempotent: an output whose source hash and settings are unchanged is skipped (.build.json).
  * Over budget, quality steps down to a floor (AVIF 40, WebP 60); still over fails the build.
@@ -27,13 +28,19 @@ const QUALITY: Record<Format, { start: number; floor: number; step: number }> = 
   webp: { start: 72, floor: 60, step: 4 },
 };
 const KB = 1024;
-/** Per-file budgets in bytes by kind and width (ADR 0007); unlisted widths scale with the area. */
-const BUDGETS: Record<Asset['kind'], Record<number, Record<Format, number>>> = {
+type RasterKind = Exclude<Asset['kind'], 'vector'>;
+/** Per-file budgets in bytes by kind and width (ADR 0007, 0015); unlisted widths scale with the area. */
+const BUDGETS: Record<RasterKind, Record<number, Record<Format, number>>> = {
   map: { 2560: { avif: 600 * KB, webp: 850 * KB }, 1280: { avif: 220 * KB, webp: 320 * KB } },
   scene: { 1280: { avif: 150 * KB, webp: 200 * KB }, 640: { avif: 60 * KB, webp: 80 * KB } },
   portrait: { 512: { avif: 45 * KB, webp: 60 * KB }, 256: { avif: 20 * KB, webp: 25 * KB } },
+  avatar: { 256: { avif: 20 * KB, webp: 25 * KB }, 128: { avif: 6 * KB, webp: 8 * KB } },
+  item: { 256: { avif: 20 * KB, webp: 25 * KB }, 128: { avif: 6 * KB, webp: 8 * KB } },
 };
-const TOTAL_BUDGET = 5 * KB * KB;
+/** ADR 0015: a vector is copied, at most 8 KB. */
+const VECTOR_BUDGET = 8 * KB;
+/** ADR 0015: the committed set after slice 2 (raised per slice with a measured figure, never removed). */
+const TOTAL_BUDGET = 12 * KB * KB;
 
 interface ManifestEntry {
   sourceHash: string;
@@ -44,9 +51,28 @@ interface ManifestEntry {
 type Manifest = Record<string, ManifestEntry>;
 
 const fileName = (id: string, width: number, format: Format) => `${id}-${width}.${format}`;
+const svgName = (id: string) => `${id}.svg`;
+
+/**
+ * ADR 0015: an SVG may never carry code into the page. Refused: a <script>, an on…= attribute, a
+ * <foreignObject>, and any external reference (an href or url( that does not start with #).
+ */
+function svgProblems(svg: string): string[] {
+  const out: string[] = [];
+  if (/<script\b/i.test(svg)) out.push('has a <script>');
+  if (/\son[a-z]+\s*=/i.test(svg)) out.push('has an on…= attribute');
+  if (/<foreignObject\b/i.test(svg)) out.push('has a <foreignObject>');
+  for (const m of svg.matchAll(/\b(?:xlink:)?href\s*=\s*["']([^"']*)["']/gi)) {
+    if (!m[1]!.startsWith('#')) out.push(`has an external reference "${m[1]}"`);
+  }
+  for (const m of svg.matchAll(/url\(\s*["']?([^)"']*)/gi)) {
+    if (!m[1]!.startsWith('#')) out.push(`has an external url("${m[1]}")`);
+  }
+  return out;
+}
 
 function budget(a: Asset, width: number, format: Format): number {
-  const table = BUDGETS[a.kind];
+  const table = BUDGETS[a.kind as RasterKind];
   if (table[width]) return table[width][format];
   const [refWidth, ref] = Object.entries(table)
     .map(([w, b]) => [Number(w), b] as const)
@@ -84,6 +110,20 @@ async function build(): Promise<void> {
   let failed = false;
   for (const a of assets) {
     const sourceHash = await hashFile(join(SRC, a.source));
+    if (a.kind === 'vector') {
+      const name = svgName(a.id);
+      const svg = readFileSync(join(SRC, a.source), 'utf8');
+      const bad = svgProblems(svg);
+      if (bad.length > 0 || Buffer.byteLength(svg) > VECTOR_BUDGET) {
+        console.error(`FAIL   ${name}: ${[...bad, `${Buffer.byteLength(svg)} bytes`].join(', ')}`);
+        failed = true;
+        continue;
+      }
+      writeFileSync(join(OUT, name), svg);
+      manifest[name] = { sourceHash, settings: 'copy', quality: 0, bytes: Buffer.byteLength(svg) };
+      console.log(`copied ${name} (${Buffer.byteLength(svg)} bytes)`);
+      continue;
+    }
     for (const width of a.widths) {
       for (const format of FORMATS) {
         const name = fileName(a.id, width, format);
@@ -129,11 +169,24 @@ async function build(): Promise<void> {
   if (failed || !check()) process.exit(1);
 }
 
-/** Every catalogue file present and within budget; the whole set under 5 MB. */
+/** Every catalogue file present and within budget, every SVG safe; the whole set under 12 MB. */
 function check(): boolean {
   const problems: string[] = [];
   let total = 0;
   for (const a of assets) {
+    if (a.kind === 'vector') {
+      const name = svgName(a.id);
+      const path = join(OUT, name);
+      if (!existsSync(path)) {
+        problems.push(`missing ${name}`);
+        continue;
+      }
+      const bytes = statSync(path).size;
+      total += bytes;
+      if (bytes > VECTOR_BUDGET) problems.push(`${name} is over budget (${bytes} bytes)`);
+      for (const p of svgProblems(readFileSync(path, 'utf8'))) problems.push(`${name} ${p}`);
+      continue;
+    }
     for (const width of a.widths) {
       for (const format of FORMATS) {
         const name = fileName(a.id, width, format);
@@ -149,7 +202,8 @@ function check(): boolean {
       }
     }
   }
-  if (total > TOTAL_BUDGET) problems.push(`the art set is ${(total / KB / KB).toFixed(2)} MB, over 5 MB`);
+  if (total > TOTAL_BUDGET)
+    problems.push(`the art set is ${(total / KB / KB).toFixed(2)} MB, over ${TOTAL_BUDGET / KB / KB} MB`);
   if (problems.length > 0) {
     console.error(`art:check failed:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
     return false;

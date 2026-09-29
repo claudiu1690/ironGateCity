@@ -34,28 +34,30 @@ export function TodayStrip({
 
 export interface OrdersListProps {
   orders: OrdersView;
-  /** The paper shows Holm's lines, portrait and signature; the city screen a compact list. */
+  /** The paper shows the secretary's lines, portrait and signature; the city screen a compact list. */
   variant?: 'compact' | 'paper';
   className?: string;
+  /** Slice 2: an open order with a pin links to it ("the map is never a puzzle"). */
+  onPin?: (locationId: string) => void;
 }
 
 /** Today's Party orders (§13.7) with progress. */
-export function OrdersList({ orders, variant = 'compact', className }: OrdersListProps) {
+export function OrdersList({ orders, variant = 'compact', className, onPin }: OrdersListProps) {
   const paper = variant === 'paper';
   return (
     <section aria-label="Party orders" className={cx('flex flex-col', className)} data-testid="orders">
       {paper && (
         <div className="label-caps flex justify-between border-t-[3px] border-b border-double border-ink py-1.5 text-[11px] font-semibold">
           <span>Party orders</span>
-          {orders.issuer && <span className="font-normal">from Secretary {orders.issuer.name}</span>}
+          <span className="font-normal">from {orders.issuer.name}</span>
         </div>
       )}
-      {paper && orders.issuer && (
+      {paper && (
         <div className="flex items-center gap-3 border-b border-dotted border-faint py-2">
           <Picture
             asset={orders.issuer.portrait}
             sizes="56px"
-            className="size-14 shrink-0 rounded-full border-2 border-collective object-cover object-top"
+            className="size-14 shrink-0 rounded-full border-2 border-ink object-cover object-top"
           />
           <div className="flex flex-col">
             <span className="font-display text-[16px] font-bold">{orders.issuer.name}</span>
@@ -84,7 +86,20 @@ export function OrdersList({ orders, variant = 'compact', className }: OrdersLis
                   <rect x="3" y="3" width="18" height="18" />
                   {o.done && <path d="M7 12l3 3 7-7" />}
                 </svg>
-                <span className={o.done ? 'line-through decoration-1' : undefined}>{o.title}</span>
+                {onPin && o.pin && !o.done ? (
+                  <button
+                    type="button"
+                    onClick={() => onPin(o.pin!.locationId)}
+                    className="-my-2 min-h-11 cursor-pointer text-left underline decoration-dotted underline-offset-2 hover:text-petrol"
+                    data-testid="order-pin"
+                    aria-label={`${o.title}: open pin ${o.pin.n}`}
+                  >
+                    {o.title}{' '}
+                    <span className="font-label text-[11px] text-muted no-underline">· {o.pin.n}</span>
+                  </button>
+                ) : (
+                  <span className={o.done ? 'line-through decoration-1' : undefined}>{o.title}</span>
+                )}
                 {o.done && <span className="sr-only">(done)</span>}
               </span>
               <span className="font-label text-[13px]">
@@ -107,9 +122,7 @@ export function OrdersList({ orders, variant = 'compact', className }: OrdersLis
             per order · +{orders.rewards.allDonePc} Political Capital for all three · new orders at{' '}
             {formatClock(orders.resetsAt)}
           </p>
-          {orders.issuer && (
-            <p className="self-end pt-1 font-display text-[15px] italic">{orders.issuer.signature}</p>
-          )}
+          <p className="self-end pt-1 font-display text-[15px] italic">{orders.issuer.signature}</p>
         </>
       )}
     </section>
@@ -194,6 +207,7 @@ export function DeskList({ desk }: { desk: DeskView }) {
               : `${desk.standing.name} · ${desk.standing.successes} / ${desk.standing.next} to ${desk.standing.nextName}`
           }
         />
+        {desk.wearing && <Row label="Wearing" value={`${desk.wearing.name} · CHA ${desk.wearing.cha}`} />}
         {y && (
           <Row
             label="Yesterday"

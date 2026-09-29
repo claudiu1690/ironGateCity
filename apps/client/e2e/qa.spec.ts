@@ -72,7 +72,7 @@ test.describe('phone 375×812', () => {
 
     const sheet = await openAny(page, '1. Mill Gate');
     await sheet.getByRole('button', { name: 'Take the job' }).click();
-    await expect(sheet.getByTestId('job-factory-worker')).toContainText(
+    await expect(sheet.getByTestId('job-coalport-factory-worker')).toContainText(
       'Your job · streak 0 days · 2 sick days left',
     );
     await sheet.getByRole('button', { name: 'Work your shift at the mill, 4 Energy' }).click();
@@ -175,7 +175,7 @@ test.describe('phone 375×812', () => {
 
     sheet = await openAny(page, '2. Market Row');
     await sheet.getByRole('button', { name: 'Switch · 2 Energy · streak resets' }).click();
-    await expect(sheet.getByTestId('job-street-vendor')).toContainText(
+    await expect(sheet.getByTestId('job-coalport-street-vendor')).toContainText(
       /Switched · streak reset · first half pay at \d\d:\d\d/,
     );
     await expect(page.getByTestId('hud-energy')).toHaveText('94 / 100');

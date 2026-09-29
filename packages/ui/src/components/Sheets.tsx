@@ -37,7 +37,8 @@ export function LocationSheet({
         <Dialog.Content
           aria-describedby={undefined}
           className={cx(
-            'fixed inset-x-0 bottom-16 z-30 flex max-h-[72dvh] flex-col overflow-y-auto bg-paper text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
+            // Slice 2 (§12.3): at most 60 dvh on phones, so the map and the pin stay visible above it.
+            'fixed inset-x-0 bottom-16 z-30 flex max-h-[60dvh] flex-col overflow-y-auto bg-paper text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
             'lg:inset-x-auto lg:top-[76px] lg:right-5 lg:bottom-auto lg:max-h-[calc(100dvh-160px)] lg:w-[380px] lg:shadow-[0_0_0_1px_var(--color-ink),0_18px_40px_rgb(0_0_0/0.5)]',
           )}
         >
@@ -185,5 +186,33 @@ export function OutOfEnergyCard({ fullAt, waiting }: OutOfEnergyCardProps) {
         </span>
       )}
     </section>
+  );
+}
+
+export interface BottomSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  children: ReactNode;
+}
+
+/** A bottom sheet on phones, a centred card from 640 px (the Me tab's face change, slice 2 §12.3). */
+export function BottomSheet({ open, onOpenChange, title, children }: BottomSheetProps) {
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/60" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col gap-3 overflow-y-auto bg-paper p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-ink sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2"
+        >
+          <Dialog.Title className="font-display text-[22px] font-bold">{title}</Dialog.Title>
+          {children}
+          <Dialog.Close className="label-caps min-h-11 cursor-pointer border-[1.5px] border-ink px-4 text-[13px] hover:bg-ink hover:text-paper">
+            Close
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

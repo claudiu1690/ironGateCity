@@ -55,12 +55,15 @@ describe('the real content', () => {
       council: 1,
       job: 3,
     });
-    expect(content.jobs.map((j) => [j.id, j.dailyPay, j.shiftEnergy])).toEqual([
-      ['street-vendor', 100, 3],
-      ['factory-worker', 180, 4],
-      ['driver', 200, 4],
+    // Slice 2: Coalport's job ids are prefixed by city (cities §3 Q1).
+    expect(
+      content.jobs.filter((j) => j.id.startsWith('coalport-')).map((j) => [j.id, j.dailyPay, j.shiftEnergy]),
+    ).toEqual([
+      ['coalport-street-vendor', 100, 3],
+      ['coalport-factory-worker', 180, 4],
+      ['coalport-driver', 200, 4],
     ]);
-    expect(content.jobsAt('coalport.mill-gate').map((j) => j.id)).toEqual(['factory-worker']);
+    expect(content.jobsAt('coalport.mill-gate').map((j) => j.id)).toEqual(['coalport-factory-worker']);
   });
 
   it('gives the reference recruit the §2.2 odds: INT 66 · STR 58 · CHA+INT 46 · CHA+STR 42 · AGI 38', () => {
@@ -77,7 +80,11 @@ describe('the real content', () => {
 
   it('has Holm, twelve order templates, the Clarion and its headlines', () => {
     expect(content.npc('holm')).toMatchObject({ name: 'Petra Holm', factionId: 'collective' });
-    expect(content.faction('collective').secretary).toEqual({ npcId: 'holm', signature: '— P.H.' });
+    expect(content.faction('collective').secretary).toEqual({
+      npcId: 'holm',
+      signature: '— P.H.',
+      addressedAs: 'Secretary Holm',
+    });
     expect(content.faction('collective').rankTitles[1]).toBe('Activist');
     expect(content.faction('collective').rankTitles[4]).toBe('Delegate');
     const orders = content.ordersOf('collective');
@@ -89,7 +96,8 @@ describe('the real content', () => {
     const hl = content.headlinesOf('coalport');
     expect(hl.filter((h) => h.group === 'ambient')).toHaveLength(10);
     expect(hl.filter((h) => h.group === 'personal')).toHaveLength(13);
-    expect(hl.find((h) => h.id === 'hl.first-day')?.priority).toBe(1);
+    // Slice 2: hl.first-day became hl.welcome (onboarding §7.2).
+    expect(hl.find((h) => h.id === 'hl.welcome')?.priority).toBe(1);
     expect(content.standingNames).toEqual(['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us']);
     expect(content.asset('portrait.holm').widths).toEqual([256, 512]);
     expect(
@@ -98,11 +106,15 @@ describe('the real content', () => {
     expect(city.paper?.shortName).toBe('Clarion');
   });
 
-  it('starts every character as the reference recruit (§8.5)', () => {
-    expect(content.startingCharacter).toEqual({
-      factionId: 'collective',
-      stats: { str: 10, int: 12, agi: 5, chaBase: 2 },
-    });
+  it('names the reference recruit in the origin (§8.5; startingCharacter is gone, ADR 0011)', () => {
+    expect(content.origin.reference.map((r) => `${r.questionId}:${r.answerId}`)).toEqual([
+      'origin.summer:c',
+      'origin.trouble:c',
+      'origin.talent:b',
+      'origin.coat:b',
+      'origin.promise:c',
+      'origin.wish:b',
+    ]);
   });
 
   it('contains no designer placeholders any more', () => {
@@ -206,10 +218,10 @@ describe('validation', () => {
     expect(() => parseContent(c)).toThrow(ContentError);
   });
 
-  it("rejects a starting faction whose home city isn't loaded", () => {
+  it("rejects a faction whose home city isn't loaded (slice 2: every home city is)", () => {
     const c = clone();
-    c.startingCharacter.factionId = 'vanguard';
-    expect(() => parseContent(c)).toThrow(/home city "duskwall" is not loaded/);
+    c.cities = c.cities.filter((x) => x.id !== 'duskwall');
+    expect(() => parseContent(c)).toThrow(/"duskwall" is not loaded/);
   });
 
   // §4.3 cross-checks, one failing fixture each.
@@ -254,8 +266,9 @@ describe('validation', () => {
     a.orderTemplates[1]!.match = { actionIds: ['coalport.mill-gate.strike'] };
     expect(() => parseContent(a)).toThrow(/unknown action "coalport.mill-gate.strike"/);
     const b = clone();
-    b.orderTemplates[0]!.match = { cityId: 'duskwall' };
-    expect(() => parseContent(b)).toThrow(/city "duskwall" is not loaded/);
+    // Slice 2 loads Duskwall; Clearwater is still not a city.
+    b.orderTemplates[0]!.match = { cityId: 'clearwater' };
+    expect(() => parseContent(b)).toThrow(/city "clearwater" is not loaded/);
     const d = clone();
     d.orderTemplates[0]!.match = {};
     expect(() => parseContent(d)).toThrow(ContentError);

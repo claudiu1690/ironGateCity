@@ -5,8 +5,11 @@
  */
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { getContent } from '@irongate/content';
 import type { ActionResult } from '@irongate/rules';
-import { ActionLog, Character, PaperEntry, connectDb, disconnectDb } from '../src';
+import { ActionLog, Arrival, Character, PaperEntry, connectDb, disconnectDb } from '../src';
+import { buildArrivalFunnels } from '../src/funnel';
+import type { Funnel } from '../src/funnel';
 import { buildPlaytestReport } from '../src/report';
 
 const serverEnv = fileURLToPath(new URL('../../../apps/server/.env', import.meta.url));
@@ -19,7 +22,8 @@ if (!uri) {
 
 await connectDb(uri, { log: console.log });
 try {
-  const characters = await Character.find({}, { name: 1, createdAt: 1 }).lean();
+  const characters = await Character.find({}, { name: 1, createdAt: 1, factionId: 1, job: 1 }).lean();
+  const arrivals = await Arrival.find({}).lean();
   const logs = await ActionLog.find(
     {},
     {
@@ -31,6 +35,8 @@ try {
       'result.effects.energy': 1,
       'result.effects.level': 1,
       'result.effects.orders': 1,
+      'result.effects.ordersAllDone': 1,
+      actionId: 1,
     },
   ).lean();
   const papers = await PaperEntry.find({}, { characterId: 1, day: 1, readAt: 1 }).lean();
@@ -53,8 +59,45 @@ try {
     papers.map((p) => ({ characterId: p.characterId.toHexString(), day: p.day, read: p.readAt !== null })),
   );
 
+  // Slice 2 (tech design §14.1): the arrival funnel, overall and per faction.
+  const content = getContent();
+  const welcomeAction = (factionId: string) => {
+    const f = content.factions.find((x) => x.id === factionId);
+    const t = content.orderTemplates.find((x) => x.id === f?.welcomeOrders[0]);
+    return t?.match.actionIds?.[0] ?? '';
+  };
+  const funnels = buildArrivalFunnels(
+    arrivals.map((a) => ({
+      userId: a.userId,
+      createdAt: a.createdAt,
+      hasFace: a.avatarId !== null,
+      answeredAt: a.answers.map((x) => x.at),
+      completedAt: a.completedAt,
+      factionId: a.factionId,
+      characterId: a.characterId ? a.characterId.toHexString() : null,
+    })),
+    characters.map((c) => ({
+      id: c._id.toHexString(),
+      factionId: c.factionId,
+      createdAt: c.createdAt,
+      jobSinceDay: c.job?.since ?? null,
+      welcomeActionId: welcomeAction(c.factionId),
+    })),
+    logs.map((l) => {
+      const effects = (l.result as Partial<ActionResult> | undefined)?.effects;
+      return {
+        characterId: l.characterId.toHexString(),
+        createdAt: l.createdAt,
+        kind: l.kind ?? 'checked',
+        actionId: l.actionId,
+        ordersCompleted: effects?.orders?.filter((o) => o.fxp > 0).length ?? 0,
+        allOrdersDone: !!effects?.ordersAllDone,
+      };
+    }),
+  );
+
   if (process.argv.includes('--json')) {
-    console.log(JSON.stringify(report, null, 2));
+    console.log(JSON.stringify({ ...report, arrival: funnels }, null, 2));
   } else {
     console.log('\nIs spending a bar of Energy fun, and do players want to come back in 3 hours?\n');
     console.table(
@@ -75,6 +118,21 @@ try {
     );
     console.log('Overall:');
     console.table(report.overall);
+    const show = (title: string, f: Funnel) => {
+      console.log(`\n${title}`);
+      console.table(f.steps);
+      console.table(f.times);
+      console.table({
+        'first action was welcome order A': f.firstActionMatch,
+        'second tap was Again': f.secondTapAgain,
+        'resumed after 10+ minutes': f.resumes,
+      });
+    };
+    console.log(
+      '\nDoes a brand-new player understand what to do in the first 10 minutes? (times in seconds)',
+    );
+    show('Arrival funnel, all factions', funnels.all);
+    for (const [faction, f] of Object.entries(funnels.byFaction)) show(`Arrival funnel, ${faction}`, f);
   }
 } finally {
   await disconnectDb();

@@ -1,13 +1,14 @@
 import { copy } from '@irongate/content/copy';
-import { Button, DeskList, Masthead, OrdersList } from '@irongate/ui';
+import { Button, DeskList, LettersRow, Masthead, OrdersList } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef } from 'react';
 import { trpc } from '../lib/trpc';
 
 /**
- * The Morning Paper (§3.3, mockup MobilePaper): masthead, headlines (the first as the lead),
- * Party orders, Your desk. Opening it marks today's edition read; one tap goes to the city.
+ * The Morning Paper (§3.3 v2, mockup MobilePaper): masthead, headlines (the first as the lead),
+ * Party orders, Letters, Your desk. Opening it marks today's edition read; one tap goes to the
+ * city (the first edition opens the first pin's sheet, §7.5).
  */
 export function PaperPage() {
   const navigate = useNavigate();
@@ -26,6 +27,15 @@ export function PaperPage() {
   }, [day, markRead]);
 
   const toCity = async () => {
+    const landing = paper.data?.landing;
+    if (landing) {
+      await navigate({
+        to: '/city/$cityId',
+        params: { cityId: landing.cityId },
+        search: { loc: landing.locationId },
+      });
+      return;
+    }
     const me = await queryClient.fetchQuery(trpc.character.me.queryOptions());
     await navigate({ to: '/city/$cityId', params: { cityId: me.cityId } });
   };
@@ -81,10 +91,20 @@ export function PaperPage() {
           </div>
         )}
         <OrdersList orders={p.orders} variant="paper" />
+        {p.letters.map((l) => (
+          <LettersRow
+            key={`${l.kind}-${l.title}`}
+            letter={l}
+            onOpen={() => void navigate({ to: '/story/ambition', search: { from: '/paper' } })}
+          />
+        ))}
         <DeskList desk={p.desk} />
-        <Button onClick={() => void toCity()} className="mt-2 w-full">
-          {copy.toTheCity}
-        </Button>
+        {/* Sticky on phones, so "To the city" is on the first screen (§12.3). */}
+        <div className="sticky bottom-0 z-10 -mx-4 border-t border-track bg-paper px-4 pt-2 pb-2 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0">
+          <Button onClick={() => void toCity()} className="w-full">
+            {copy.toTheCity}
+          </Button>
+        </div>
       </div>
     </article>
   );

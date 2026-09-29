@@ -59,7 +59,7 @@ export async function getCityView(
   if (!city) throw gameError('NOT_FOUND', 'UNKNOWN_CITY', { cityId });
 
   const state = await City.findById(city.id).lean();
-  const values = wornStats(c);
+  const values = wornStats(c, content);
   const difficulty = tier1Difficulty(city.role);
   const today = dayKey(now);
   const successes = standingSuccesses(c, city.id);

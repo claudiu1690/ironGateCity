@@ -1,5 +1,12 @@
 import { FACTION_IDS } from '@irongate/rules';
-import type { DailyTally, DayKey, FactionId } from '@irongate/rules';
+import type {
+  AmbitionState,
+  DailyTally,
+  DayKey,
+  Equipment,
+  FactionId,
+  InventoryEntry,
+} from '@irongate/rules';
 import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
 
@@ -38,7 +45,9 @@ export interface CharacterDoc {
   homeCityId: string;
   /** Where the character is now; equals homeCityId until travel (slice 4). */
   cityId: string;
-  /** Worn CHA = chaBase + equipment (slice 2); until then chaBase stands in for it. */
+  /** The face chosen at sign-up; null only for characters migrated from slices 0–1 (ADR 0016). */
+  avatarId: string | null;
+  /** Worn CHA = chaBase (the origin's base, 0–4) + what is equipped (§8.2, ADR 0014). */
   stats: { str: number; int: number; agi: number; chaBase: number };
   /** `updatedAt` only advances by whole 10-minute ticks, never to "now". */
   energy: { value: number; updatedAt: Date };
@@ -66,6 +75,18 @@ export interface CharacterDoc {
   today: DailyTally;
   /** Drives "the paper is due after 3 h" (§3.3). */
   lastActionAt: Date | null;
+  /** The origin, frozen at join (ADR 0011); later chapters read it. */
+  origin: {
+    answers: Array<{ questionId: string; answerId: string }>;
+    arrivedAt: Date;
+    /** Characters from slices 0–1, given the reference answers (ADR 0016). */
+    migrated?: true;
+  };
+  /** §17.1, ADR 0013: the Ambition in progress. `history[].logId` is the actionLogs id (hex). */
+  ambition: AmbitionState;
+  /** ADR 0014: owned instances; equipment points at their uids. */
+  inventory: InventoryEntry[];
+  equipment: Equipment;
   /** Optimistic guard, +1 per game write (ADR 0002). */
   version: number;
   createdAt: Date;
@@ -152,12 +173,62 @@ const characterSchema = new Schema<CharacterDoc>(
     },
     today: { type: tallySchema, default: () => ({}) },
     lastActionAt: { type: Date, default: null },
+    avatarId: { type: String, default: null },
+    origin: {
+      answers: {
+        type: [new Schema({ questionId: String, answerId: String }, { _id: false })],
+        default: [],
+      },
+      arrivedAt: { type: Date },
+      migrated: { type: Boolean },
+    },
+    ambition: {
+      id: { type: String },
+      chapter: { type: Number },
+      step: { type: String, enum: ['choose', 'check'] },
+      choiceId: { type: String, default: null },
+      flags: { type: [String], default: undefined },
+      history: {
+        type: [
+          new Schema(
+            {
+              chapter: Number,
+              day: Number,
+              choiceId: { type: String, default: null },
+              approachId: String,
+              outcome: { type: String, enum: ['success', 'partial', 'failure'] },
+              logId: String,
+            },
+            { _id: false },
+          ),
+        ],
+        default: undefined,
+      },
+    },
+    inventory: {
+      type: [
+        new Schema(
+          {
+            uid: { type: String, required: true },
+            itemId: { type: String, required: true },
+            day: { type: Number, required: true },
+            source: { type: String, enum: ['kit', 'origin', 'chapter', 'migration'], required: true },
+          },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
+    },
+    equipment: {
+      clothing: { type: String, default: null },
+      document: { type: String, default: null },
+    },
     version: { type: Number, required: true, min: 0 },
   },
   { collection: 'characters', strict: true, timestamps: true, versionKey: false, minimize: false },
 );
 
-// get-or-create is an upsert on this.
+// One character per user: the join's natural key (ADR 0011).
 characterSchema.index({ userId: 1 }, { unique: true });
 
 export const Character = model<CharacterDoc>('Character', characterSchema);

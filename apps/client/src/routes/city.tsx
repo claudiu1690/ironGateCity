@@ -23,6 +23,7 @@ import type { PerformTarget } from '../features/action/usePerformAction';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { isNetworkError, trpc } from '../lib/trpc';
+import { useMinWidth } from '../lib/useNow';
 
 const KIND_LABEL: Record<string, string> = {
   'factory-gate': 'Factory gate',
@@ -43,6 +44,7 @@ export function CityPage() {
   const { character } = useCharacter();
   const city = useQuery(trpc.city.get.queryOptions({ cityId }));
   const stat = usePlaceStat();
+  const wide = useMinWidth(1024);
 
   const [result, setResult] = useState<ActionResult | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -127,6 +129,8 @@ export function CityPage() {
         locations={c.locations}
         selectedId={loc ?? null}
         onSelect={(id) => select(id)}
+        // Phones: the sheet covers up to 60 dvh; keep the selected pin above it (§12.3).
+        coverBottom={location && !wide ? Math.round(window.innerHeight * 0.6) : 0}
       >
         {/* The city plate (the map's first view keeps every pin clear of it) */}
         <div
@@ -160,10 +164,14 @@ export function CityPage() {
               ))}
               <span style={{ width: `${c.opinion.neutral}%` }} className="bg-neutral" />
             </div>
-            <div className="hidden flex-col gap-1 px-3 pt-1.5 pb-2 sm:flex">
-              <OrdersList orders={character.orders} />
-              <TodayStrip today={character.today} />
-            </div>
+            {/* Desktop: while a sheet is open the plate folds to its header, so a pin in the
+                map's top-left corner (Ashford's Gazette House) stays visible (slice 2 §12.3). */}
+            {!(wide && location) && (
+              <div className="hidden flex-col gap-1 px-3 pt-1.5 pb-2 sm:flex">
+                <OrdersList orders={character.orders} onPin={(id) => select(id)} />
+                <TodayStrip today={character.today} />
+              </div>
+            )}
           </div>
         </div>
         {/* Phones: orders and today at the bottom of the map */}
@@ -171,7 +179,7 @@ export function CityPage() {
           className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-1 bg-paper/95 px-3 py-2 text-ink shadow-[0_0_0_1px_var(--color-ink)] sm:hidden"
           data-map-overlay="bottom"
         >
-          <OrdersList orders={character.orders} />
+          <OrdersList orders={character.orders} onPin={(id) => select(id)} />
           <TodayStrip today={character.today} />
         </div>
       </CityMap>

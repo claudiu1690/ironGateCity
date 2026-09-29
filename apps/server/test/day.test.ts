@@ -5,7 +5,7 @@ import { dayKey } from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Context } from '../src/trpc/context';
 import { createCaller } from '../src/trpc/router';
-import { freshCharacter, newUser, setupDb, teardownDb, testClock } from './helpers';
+import { freshCharacter, newUser, seedRecruit, setupDb, teardownDb, testClock } from './helpers';
 
 const DAY = 86_400_000;
 const CANVASS = { actionId: 'coalport.mill-gate.canvass', locationId: 'coalport.mill-gate' } as const;
@@ -37,7 +37,7 @@ describe('the City Day (ADR 0005)', () => {
 
   it('concurrent first requests of a new day make one paper and credit the salary once', async () => {
     const { caller, me, clock } = await freshCharacter();
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     clock.advance(DAY);
     await Promise.all([
       caller.character.me(),
@@ -52,6 +52,7 @@ describe('the City Day (ADR 0005)', () => {
   it('an action straddling midnight counts on the new day, after the new day is settled', async () => {
     const clock = testClock(Date.UTC(2026, 8, 29, 23, 59, 59, 900));
     const user = newUser();
+    await seedRecruit(user, clock.now());
     await createCaller({ user, content: getContent(), now: clock.now }).character.me();
     let calls = 0;
     const straddling = () => (calls++ === 0 ? clock.now() : clock.now() + 200);

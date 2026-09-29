@@ -1,9 +1,9 @@
 import { cx } from '../format';
 
-export type StampTone = 'success' | 'partial';
+export type StampTone = 'success' | 'partial' | 'failure';
 
 export interface StampProps {
-  /** Success colour or Partial colour. */
+  /** Success, Partial or Failure colour. */
   tone: StampTone;
   /** The printed word: Success, Partial, "2 of 3", Shift worked, Trained. */
   label: string;
@@ -12,7 +12,12 @@ export interface StampProps {
 
 /** A rotated rubber stamp. */
 export function Stamp({ tone, label, className }: StampProps) {
-  const t = tone === 'success' ? 'text-success border-success' : 'text-partial border-partial';
+  const t =
+    tone === 'success'
+      ? 'text-success border-success'
+      : tone === 'failure'
+        ? 'text-failure border-failure'
+        : 'text-partial border-partial';
   return (
     <span
       data-testid="stamp"

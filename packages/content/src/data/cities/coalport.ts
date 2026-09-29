@@ -71,7 +71,7 @@ export const coalport: City = {
           name: 'Work your shift at the mill',
           tier: 1,
           type: 'job',
-          jobId: 'factory-worker',
+          jobId: 'coalport-factory-worker',
           text: {
             success: {
               headline: 'Eight hours on the rolling floor',
@@ -142,7 +142,7 @@ export const coalport: City = {
           name: 'Work the stall',
           tier: 1,
           type: 'job',
-          jobId: 'street-vendor',
+          jobId: 'coalport-street-vendor',
           text: {
             success: {
               headline: "A day's trade",
@@ -341,7 +341,7 @@ export const coalport: City = {
           name: 'Drive the dock lorry',
           tier: 1,
           type: 'job',
-          jobId: 'driver',
+          jobId: 'coalport-driver',
           text: {
             success: {
               headline: 'Six runs to the goods yard',

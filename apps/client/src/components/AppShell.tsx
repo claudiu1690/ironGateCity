@@ -22,13 +22,25 @@ export function AppShell() {
   const paper = useQuery({ ...trpc.paper.today.queryOptions(), enabled: !!character && (wide || paperDue) });
 
   const active: TabId = pathname.startsWith('/paper') ? 'paper' : pathname.startsWith('/me') ? 'me' : 'map';
-  const cityHref = `/city/${character?.cityId ?? 'coalport'}`;
+  const cityHref = character ? `/city/${character.cityId}` : '/';
   const items: TabItem[] = [
     { id: 'map', label: 'Map', href: cityHref },
-    { id: 'paper', label: 'Paper', href: '/paper', dot: !!character?.paperDue && active !== 'paper' },
+    {
+      id: 'paper',
+      label: 'Paper',
+      href: '/paper',
+      // Slice-2 §20 Q8: also while an Ambition chapter is ready (a Letter).
+      dot: (!!character?.paperDue || (character?.lettersWaiting ?? 0) > 0) && active !== 'paper',
+    },
     { id: 'dossier', label: 'Dossier', href: '#', disabled: true },
     { id: 'faction', label: 'Faction', href: '#', disabled: true },
-    { id: 'me', label: 'Me', href: '/me', dot: (character?.statPointsPending ?? 0) > 0 },
+    {
+      id: 'me',
+      label: 'Me',
+      href: '/me',
+      // Designer answer §13 Q7: a dot until a migrated character picks a face.
+      dot: (character?.statPointsPending ?? 0) > 0 || (!!character && character.avatar === null),
+    },
   ];
 
   const slotA = character?.orders.items[0];

@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
 import type { CharacterDoc, CityDoc, PaperEntryDoc } from '@irongate/db';
-import { JOBS, fillTemplate, ordersForDay, selectHeadlines, standingView } from '@irongate/rules';
+import { JOBS, fillTemplate, itemSpec, selectHeadlines, standingView } from '@irongate/rules';
 import type {
   DayKey,
   HeadlineTemplate,
@@ -11,7 +11,7 @@ import type {
 } from '@irongate/rules';
 import { namedStanding, rankTitle, standingSuccesses } from './views';
 
-type NewEdition = Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
+export type NewEdition = Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
 
 /**
  * Today's Morning Paper (§3.3), set at settlement from the character as it was before the
@@ -54,9 +54,10 @@ export function buildEdition(i: {
   const templates = content.headlinesOf(c.homeCityId);
   const picked = templates.length > 0 ? selectHeadlines(templates, facts, today) : [];
 
-  const slotA = ordersForDay(content.ordersOf(c.factionId), today)[0];
-  const itemA = i.ordersToday.items.find((x) => x.templateId === slotA?.id);
-  const orderA = slotA && itemA?.variant === 'noJob' && slotA.noJob ? slotA.noJob : slotA;
+  // Today's slot A as frozen (the rotation, or the welcome set on a first City Day, ADR 0012).
+  const itemA = i.ordersToday.items[0];
+  const slotA = itemA ? content.ordersOf(c.factionId).find((t) => t.id === itemA.templateId) : undefined;
+  const orderA = itemA && slotA ? itemSpec(itemA, slotA) : undefined;
   const standing = namedStanding(content, c.homeCityId, standingSuccesses(c, c.homeCityId));
   const streak = c.job?.streak ?? 0;
   const baseVars: Partial<Record<Placeholder, string>> = {

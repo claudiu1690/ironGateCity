@@ -6,7 +6,7 @@ import { buildApp } from '../src/app';
 import { CLIENT_IP_HEADER, createAuth } from '../src/auth';
 import type { Auth } from '../src/auth';
 import { loadEnv } from '../src/env';
-import { setupDb, teardownDb, testEnv } from './helpers';
+import { arriveOverHttp, setupDb, teardownDb, testEnv } from './helpers';
 
 let app: FastifyInstance;
 const ORIGIN = 'http://localhost:5173';
@@ -37,7 +37,8 @@ describe('HTTP', () => {
     expect(typeof res.json().version).toBe('string');
   });
 
-  it('sign up → session cookie → character.me', async () => {
+  // Slice 2 (ADR 0011): sign-up leads to the arrival; the character exists once it is done.
+  it('sign up → session cookie → the arrival → character.me', async () => {
     const email = `mara-${Date.now()}@example.test`;
     const signUp = await app.inject({
       method: 'POST',
@@ -50,6 +51,15 @@ describe('HTTP', () => {
     expect(String(setCookie)).toMatch(/session_token=/);
     expect(String(setCookie)).toMatch(/HttpOnly/i);
     expect(String(setCookie)).toMatch(/SameSite=Lax/i);
+
+    const pending = await app.inject({
+      method: 'GET',
+      url: '/api/trpc/character.me',
+      headers: { cookie: cookieHeader(setCookie) },
+    });
+    expect(pending.statusCode).toBe(412);
+    expect(pending.json().error.data.game).toEqual({ reason: 'ARRIVAL_PENDING' });
+    await arriveOverHttp(app, cookieHeader(setCookie));
 
     const me = await app.inject({
       method: 'GET',

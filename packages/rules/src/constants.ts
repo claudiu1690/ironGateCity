@@ -111,3 +111,16 @@ export const PAPER = { dueAfterAbsenceMs: 3 * 3_600_000, personalMax: 2, headlin
 
 /** §13.1 — repeat counts the rules accept (the API allows 1 | 3 in slice 1). */
 export const REPEAT = { allowed: [1, 3, 5] } as const;
+
+// ---------------------------------------------------------------------------------------------
+// Slice 2 (docs/tech/slice-2.md §6.1). Content numbers: docs/design/slice-2-onboarding.md.
+// ---------------------------------------------------------------------------------------------
+
+/** §8.5: 5 in each trained stat before the origin; §21.4: a new character starts with 0 Iron. */
+export const STARTING = { baseStat: 5, iron: 0 } as const;
+
+/** §17.1: at most one chapter every seven City Days; twelve chapters per Ambition. */
+export const AMBITION = { daysBetweenChapters: 7, chaptersPlanned: 12 } as const;
+
+/** §8.4: a chapter check uses the tier-3 outcome bands (Success / Partial / Failure). */
+export const CHAPTER = { tier: 3 } as const;

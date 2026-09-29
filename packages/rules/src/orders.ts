@@ -28,11 +28,27 @@ export function ordersForDay(templates: readonly OrderTemplate[], day: DayKey): 
   return picked;
 }
 
-/** A fresh day's orders; the variant and target are frozen now (no job → "Take a job"). */
-export function startOrders(templates: readonly OrderTemplate[], day: DayKey, hasJob: boolean): OrdersState {
+/**
+ * A fresh day's orders; the variant and target are frozen now (no job → "Take a job"). With
+ * `welcome` (a character's first City Day, ADR 0012) the three items are those templates, in slot
+ * order A, B, C, instead of the rotation.
+ */
+export function startOrders(
+  templates: readonly OrderTemplate[],
+  day: DayKey,
+  hasJob: boolean,
+  welcome?: readonly [string, string, string],
+): OrdersState {
+  const picked = welcome
+    ? welcome.map((id) => {
+        const t = templates.find((x) => x.id === id);
+        if (!t) throw new Error(`welcome order "${id}" is not one of this faction's templates`);
+        return t;
+      })
+    : ordersForDay(templates, day);
   return {
     day,
-    items: ordersForDay(templates, day).map((t) => {
+    items: picked.map((t) => {
       const variant = t.noJob && !hasJob ? 'noJob' : 'main';
       return {
         templateId: t.id,

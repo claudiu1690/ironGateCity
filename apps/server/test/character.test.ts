@@ -2,7 +2,7 @@ import { Character, PaperEntry } from '@irongate/db';
 import { dayKey } from '@irongate/rules';
 import { TRPCError } from '@trpc/server';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { callerFor, newUser, setupDb, teardownDb, testClock } from './helpers';
+import { arrive, callerFor, gameData, newUser, seedRecruit, setupDb, teardownDb, testClock } from './helpers';
 
 beforeAll(async () => {
   await setupDb('character-test');
@@ -10,11 +10,17 @@ beforeAll(async () => {
 afterAll(teardownDb);
 
 describe('character.me v2', () => {
-  it('creates the reference recruit once, settles the first City Day and prints the first edition', async () => {
+  // Slice 2 (ADR 0011): no auto-create; the character is made by the arrival's join, which settles
+  // the first City Day with the welcome set (ADR 0012) and prints the welcome edition.
+  it('creates the reference recruit once at the join, settles the first City Day and prints the first edition', async () => {
     const clock = testClock();
     const user = newUser('Mara Lenk');
     const caller = callerFor(user, clock.now);
+    expect(gameData(await caller.character.me().catch((e: unknown) => e)).game).toEqual({
+      reason: 'ARRIVAL_PENDING',
+    });
 
+    await arrive(caller);
     const first = await caller.character.me();
     const second = await caller.character.me();
     expect(second.id).toBe(first.id);
@@ -32,9 +38,10 @@ describe('character.me v2', () => {
       rested: 0,
       xp: 0,
       level: 1,
-      fxp: 0,
-      iron: 0,
-      version: 1,
+      // The reference answers: the refused coat's 150 Iron and Justice's 50 FXP (onboarding §2.4).
+      fxp: 50,
+      iron: 150,
+      version: 0,
       serverNow: clock.now(),
       day: { key: today, endsAt: (today + 1) * 86_400_000 },
       rank: { value: 1, title: 'Recruit', fxpFloor: 0, fxpNext: 400 },
@@ -46,10 +53,11 @@ describe('character.me v2', () => {
       today: { day: today, energy: 0 },
       paperDue: true,
     });
-    expect(first.orders.items.map((o) => [o.id, o.target])).toEqual([
-      ['dir.shift-change', 2],
-      ['dir.ears-open', 2],
-      ['dir.sharpen-up', 1],
+    // The welcome set, not the rotation (ADR 0012).
+    expect(first.orders.items.map((o) => [o.id, o.title, o.target])).toEqual([
+      ['dir.shift-change', 'Be at the gate', 2],
+      ['dir.report', 'Report to the hall', 1],
+      ['dir.work-shift', 'Take a job', 1],
     ]);
     expect(first.orders.issuer).toMatchObject({
       name: 'Petra Holm',
@@ -59,9 +67,11 @@ describe('character.me v2', () => {
     expect(await PaperEntry.countDocuments({ characterId: first.id })).toBe(1);
   });
 
-  it('creates one character and one edition when first calls race', async () => {
+  it('settles one City Day and prints one edition when first calls race', async () => {
     const user = newUser();
-    const caller = callerFor(user, testClock().now);
+    const clock = testClock();
+    await seedRecruit(user, clock.now());
+    const caller = callerFor(user, clock.now);
     const views = await Promise.all(Array.from({ length: 5 }, () => caller.character.me()));
     expect(new Set(views.map((v) => v.id)).size).toBe(1);
     expect(await Character.countDocuments({ userId: user.id })).toBe(1);
@@ -71,6 +81,7 @@ describe('character.me v2', () => {
   it('projects lazy timers on read without writing (same day)', async () => {
     const clock = testClock();
     const user = newUser();
+    await seedRecruit(user, clock.now());
     const caller = callerFor(user, clock.now);
     await caller.character.me();
     const stored = await Character.findOne({ userId: user.id }).lean();

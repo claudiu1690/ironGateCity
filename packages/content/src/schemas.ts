@@ -1,5 +1,11 @@
 import { ACTION_KINDS, FACTION_IDS, STAT_KEYS, TRAINABLE_STATS } from '@irongate/rules';
-import type { HeadlineCondition, HeadlineTemplate, OrderMatch, OrderTemplate } from '@irongate/rules';
+import type {
+  HeadlineCondition,
+  HeadlineTemplate,
+  OrderMatch,
+  OrderTemplate,
+  OriginEffect as OriginEffectRule,
+} from '@irongate/rules';
 import { z } from 'zod';
 
 /** Internal faction ids. Display names are data (GDD: faction naming is parked). */
@@ -16,6 +22,8 @@ const Id = z
 export const AssetId = Id;
 export const NpcId = Id;
 export const JobId = Id;
+export const ItemId = Id;
+export const AmbitionId = Id;
 
 const HexColour = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'a #RRGGBB colour');
 const Fraction = z.number().min(0).max(1);
@@ -24,19 +32,38 @@ export const Faction = z.strictObject({
   id: FactionId,
   name: z.string().min(1),
   shortName: z.string().min(1),
+  /** The plain shape, for small marks (HUD, plate, lists). */
   crest: Crest,
+  /** The SVG crest (a `vector` asset) for the street card and the party card (onboarding §13 Q6). */
+  crestArt: AssetId,
   homeCityId: z.string().min(1),
-  /** §7.3 / §16.1: Vanguard +3 STR, Collective +2 STR +1 INT, Alliance +3 INT. */
+  /** §7.3 / §16.1: Vanguard +3 STR, Collective +2 STR +1 INT, Alliance +3 INT. CHA is worn, never a bonus. */
   startingBonus: z.strictObject({
     str: z.number().int().optional(),
     int: z.number().int().optional(),
     agi: z.number().int().optional(),
-    cha: z.number().int().optional(),
   }),
   /** §5.4: the seven Rank titles, index 0 = Rank 1. */
   rankTitles: z.array(z.string().min(1)).length(7),
   /** §13.7: the NPC secretary who issues Party orders until a Chair exists. */
-  secretary: z.strictObject({ npcId: NpcId, signature: z.string().min(1) }).optional(),
+  secretary: z.strictObject({
+    npcId: NpcId,
+    signature: z.string().min(1),
+    /** "Secretary Holm": `{secretary}` in story text. */
+    addressedAs: z.string().min(1),
+  }),
+  /** "the Union Hall" / "Beacon House" / "the Rooms": `{hq}` in story text. */
+  hqRef: z.string().min(1),
+  /** §21.4: the outfit worn and the party card carried from the start. */
+  kit: z.strictObject({ outfit: ItemId, card: ItemId }),
+  /** §13.7, ADR 0012: the first City Day's orders, slots A, B and C. */
+  welcomeOrders: z.tuple([Id, Id, Id]),
+  /** §7.3: the street card. */
+  card: z.strictObject({
+    blurb: z.string().min(1).max(240),
+    /** With its article: "the General Strike" (onboarding §13.1). */
+    signatureEvent: z.string().min(1).max(40),
+  }),
 });
 
 /** §13.5: the art key for the fallback ladder. Closed list; kinds may be added, never removed. */
@@ -73,13 +100,13 @@ export const ActionType = z.enum([
 ]);
 
 /** Headline plus a 2–3 line narrative paragraph (CLAUDE.md: short sessions). */
-const OutcomeText = z.strictObject({
+export const OutcomeText = z.strictObject({
   headline: z.string().min(1).max(80),
   body: z.string().min(1).max(400),
 });
 
 /** A check on one stat, or the average of two (§8.4). */
-const CheckStatsSchema = z.union([z.tuple([StatKey]), z.tuple([StatKey, StatKey])]);
+export const CheckStatsSchema = z.union([z.tuple([StatKey]), z.tuple([StatKey, StatKey])]);
 
 /** Canvass, speech, propaganda, intelligence, council: one roll per attempt (§8.4). */
 export const CheckedAction = z.strictObject({
@@ -163,28 +190,21 @@ export const City = z.strictObject({
   locations: z.array(Location),
 });
 
-/** The character every new player gets until the origin story (slice 2). Home city = faction's home. */
-export const StartingCharacter = z.strictObject({
-  factionId: FactionId,
-  stats: z.strictObject({
-    str: z.number().int().min(0),
-    int: z.number().int().min(0),
-    agi: z.number().int().min(0),
-    chaBase: z.number().int().min(0),
-  }),
-});
+export const AssetKind = z.enum(['map', 'scene', 'portrait', 'avatar', 'item', 'vector']);
 
-/** ADR 0007: every image the game references, by id. The build script reads `source`. */
+/** ADR 0007, 0015: every image the game references, by id. The build script reads `source`. */
 export const Asset = z.strictObject({
   id: AssetId,
-  kind: z.enum(['map', 'scene', 'portrait']),
+  kind: AssetKind,
   /** Path relative to the art source folder (IRONGATE_ART_SRC). */
   source: z.string().min(1),
   /** Size of the image after the crop, for its aspect ratio. */
   width: z.number().int().min(1),
   height: z.number().int().min(1),
-  /** Output widths; files are /art/<id>-<width>.avif|webp. */
-  widths: z.array(z.number().int().min(16)).min(1),
+  /** Output widths; files are /art/<id>-<width>.avif|webp. None for a `vector` (/art/<id>.svg). */
+  widths: z.array(z.number().int().min(16)),
+  /** ADR 0015: where a cropping panel centres the image (object-position). */
+  focus: z.strictObject({ x: Fraction, y: Fraction }).optional(),
   alt: z.string().min(1).max(160),
   /** Flatten transparency onto this colour (the day map has alpha). */
   flatten: HexColour.optional(),
@@ -308,11 +328,151 @@ export const HeadlineTemplateSchema = z.strictObject({
   deck: z.string().min(1).max(200).optional(),
 }) satisfies z.ZodType<HeadlineTemplate, unknown>;
 
+// ---------------------------------------------------------------------------------------------
+// Slice 2 (docs/tech/slice-2.md §4.2): items, the origin, Ambitions.
+// ---------------------------------------------------------------------------------------------
+
+/** §21.1: slice 2's slots; weapon, utility and accessory come with the Wardrobe (slice 8). */
+export const ItemSlot = z.enum(['clothing', 'document']);
+
+/** §21.4, ADR 0014. `slot: null` is a keepsake with no slot. */
+export const Item = z.strictObject({
+  id: ItemId,
+  name: z.string().min(1),
+  slot: ItemSlot.nullable(),
+  tier: z.number().int().min(1).max(5).nullable(),
+  cha: z.number().int().min(0).max(50).default(0),
+  keepsake: z.boolean(),
+  /** An `item` or `vector` asset, or the holder's faction crest (the party card). */
+  art: z.union([AssetId, z.literal('faction-crest')]),
+  note: z.string().max(120).optional(),
+});
+
+/** Story texts: at most 240 characters (and, checked by the loader, 4 sentences; GDD §1.2). */
+export const StoryText = z.string().min(1).max(240);
+
+export const OriginEffect = z.discriminatedUnion('kind', [
+  z.strictObject({
+    kind: z.literal('stat'),
+    stat: z.enum(['str', 'int', 'agi']),
+    value: z.number().int().min(1).max(5),
+  }),
+  z.strictObject({ kind: z.literal('chaBase'), value: z.number().int().min(1).max(4) }),
+  z.strictObject({ kind: z.literal('iron'), value: z.number().int().min(1) }),
+  z.strictObject({ kind: z.literal('wear'), itemId: ItemId }),
+  z.strictObject({ kind: z.literal('ambition'), ambitionId: AmbitionId }),
+  z.strictObject({ kind: z.literal('wish'), factionId: FactionId, fxp: z.number().int().min(1) }),
+]) satisfies z.ZodType<OriginEffectRule>;
+
+export const OriginAnswer = z.strictObject({
+  id: z.string().regex(/^[a-z]$/),
+  text: z.string().min(1).max(80),
+  /** Words under the button (the coat, the promise); never a number. */
+  hint: z.string().min(1).max(60).optional(),
+  /** Shown in Courier above the step's second question (onboarding §2). */
+  echo: z.string().min(1).max(80).optional(),
+  effects: z.array(OriginEffect),
+});
+
+export const OriginQuestion = z.strictObject({
+  id: Id,
+  prompt: z.string().min(1).max(120),
+  answers: z.array(OriginAnswer).length(3),
+});
+
+export const OriginStep = z.strictObject({
+  id: Id,
+  kicker: z.string().min(1).max(80),
+  title: z.string().min(1).max(40),
+  narrative: StoryText,
+  /** A scene. */
+  art: AssetId,
+  /** The father, beside the question. */
+  portrait: AssetId,
+  questions: z.tuple([OriginQuestion, OriginQuestion]),
+});
+
+export const Origin = z.strictObject({
+  steps: z.tuple([OriginStep, OriginStep, OriginStep]),
+  street: z.strictObject({
+    kicker: z.string().min(1).max(80),
+    title: z.string().min(1).max(40),
+    narrative: StoryText,
+    art: AssetId,
+    note: z.string().min(1).max(80),
+  }),
+  /** §8.5: the reference recruit's answers (tests, migration 002). */
+  reference: z.array(z.strictObject({ questionId: Id, answerId: z.string() })).length(6),
+});
+
+const ChapterReward = z.strictObject({
+  xp: z.number().int().min(0),
+  fxp: z.number().int().min(0),
+  iron: z.number().int().min(0),
+});
+
+/** §17.1: a chapter with `story` is playable; without it, it is the next chapter's teaser. */
+export const Chapter = z.strictObject({
+  n: z.number().int().min(1).max(12),
+  title: z.string().min(1).max(60),
+  requires: z
+    .strictObject({ rank: z.number().int().min(1).optional(), level: z.number().int().min(1).optional() })
+    .optional(),
+  story: z
+    .strictObject({
+      /** "From your father's things": the Letters row. */
+      letterFrom: z.string().min(1).max(60),
+      choose: z.strictObject({
+        title: z.string().min(1).max(40),
+        narrative: StoryText,
+        choices: z
+          .array(
+            z.strictObject({
+              id: Id,
+              text: z.string().min(1).max(80),
+              hint: z.string().min(1).max(60),
+              /** Remembered for later chapters. */
+              flag: Id,
+            }),
+          )
+          .length(2),
+      }),
+      check: z.strictObject({
+        title: z.string().min(1).max(40),
+        narrative: StoryText,
+        approaches: z
+          .array(z.strictObject({ id: Id, text: z.string().min(1).max(100), stats: CheckStatsSchema }))
+          .length(2),
+        cta: z.string().min(1).max(40),
+        difficulty: z.number().int().min(1),
+        energy: z.number().int().min(1).max(30),
+      }),
+      result: z.strictObject({ success: OutcomeText, partial: OutcomeText, failure: OutcomeText }),
+      rewards: z.strictObject({ success: ChapterReward, partial: ChapterReward, failure: ChapterReward }),
+      keepsake: ItemId,
+      /** §13.5 rung 3: a crop of the home map around the faction HQ. */
+      art: z.literal('home-hq'),
+    })
+    .optional(),
+});
+
+export const Ambition = z.strictObject({
+  id: AmbitionId,
+  title: z.string().min(1),
+  /** §17.1: twelve chapters; "Chapter 1 of 12" reads this, not the chapters written (§13 Q12). */
+  chaptersPlanned: z.number().int().min(1).max(12),
+  chapters: z.array(Chapter).min(1),
+});
+
 export const Content = z.strictObject({
   factions: z.array(Faction).length(FACTION_IDS.length),
   cities: z.array(City).min(1),
-  startingCharacter: StartingCharacter,
   art: z.strictObject({ assets: z.array(Asset), scenes: z.array(SceneBinding) }),
+  /** §7.3: the six faces offered at sign-up. */
+  avatars: z.array(AssetId).length(6),
+  items: z.array(Item),
+  origin: Origin,
+  ambitions: z.array(Ambition),
   npcs: z.array(Npc),
   standingLevels: StandingLevels,
   jobs: z.array(Job),
@@ -329,7 +489,12 @@ export type ShiftAction = z.infer<typeof ShiftAction>;
 export type Action = z.infer<typeof Action>;
 export type Location = z.infer<typeof Location>;
 export type City = z.infer<typeof City>;
-export type StartingCharacter = z.infer<typeof StartingCharacter>;
+export type Item = z.infer<typeof Item>;
+export type Origin = z.infer<typeof Origin>;
+export type OriginInput = z.input<typeof Origin>;
+export type Ambition = z.infer<typeof Ambition>;
+export type AmbitionInput = z.input<typeof Ambition>;
+export type Chapter = z.infer<typeof Chapter>;
 export type Asset = z.infer<typeof Asset>;
 export type SceneBinding = z.infer<typeof SceneBinding>;
 export type Npc = z.infer<typeof Npc>;

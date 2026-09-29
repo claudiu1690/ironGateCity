@@ -28,6 +28,11 @@ export interface CityMapProps {
    */
   children?: ReactNode;
   className?: string;
+  /**
+   * Pixels at the bottom of the map hidden by an open sheet (phones, slice 2 §12.3): a selected pin
+   * is panned into the part above it, so the first landing shows pin 1 over its sheet.
+   */
+  coverBottom?: number;
 }
 
 const MAX_SCALE = 2.5;
@@ -131,10 +136,18 @@ export function CityMap({
   onSelect,
   children,
   className,
+  coverBottom = 0,
 }: CityMapProps) {
   const boxRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef<ReactZoomPanPinchRef>(null);
   const [size, setSize] = useState<{ w: number; h: number; insets: MapInsets } | null>(null);
+  // Slice 2 (first-session art budget, ADR 0015): the night art is fetched only once it is night.
+  const [nightMounted, setNightMounted] = useState(isNight);
+  /** Bumped to return to the first view (its key remounts the transform). */
+  const [firstViews, setFirstViews] = useState(0);
+  useEffect(() => {
+    if (isNight) setNightMounted(true);
+  }, [isNight]);
 
   useLayoutEffect(() => {
     const el = boxRef.current;
@@ -168,25 +181,59 @@ export function CityMap({
     const z = zoomRef.current;
     if (!z || w === 0) return;
     // The ref's `state` is a snapshot from mount; the instance holds the live transform.
-    const { scale, positionX, positionY } = z.instance.state;
-    const px = positionX + target.map.x * contentW * scale;
-    const py = positionY + target.map.y * contentH * scale;
+    const { scale: current, positionX, positionY } = z.instance.state;
+    const px = positionX + target.map.x * contentW * current;
+    const py = positionY + target.map.y * contentH * current;
     // Visible: the whole 44 px target is inside the box and clear of the overlays.
     const half = 22;
     const visible = px >= half && px <= w - half && py >= insets.top + half && py <= h - insets.bottom - half;
     if (mode === 'focus' && visible) return;
-    const x = w / 2 - target.map.x * contentW * scale;
-    const y = (insets.top + h - insets.bottom) / 2 - target.map.y * contentH * scale;
+    const bottom = mode === 'select' ? Math.max(insets.bottom, coverBottom) : insets.bottom;
+    const cx = w / 2;
+    const cy = (insets.top + h - bottom) / 2;
+    // Under a phone's sheet the clear strip is short: zoom in just enough that the pan limits let the
+    // pin reach its middle (slice 2 §12.3: the first landing keeps pin 1 visible above the sheet).
+    let scale = current;
+    if (mode === 'select' && coverBottom > 0) {
+      const { x: tx, y: ty } = target.map;
+      const need = Math.max(
+        tx > 0 ? cx / (tx * contentW) : 0,
+        tx < 1 ? (w - cx) / ((1 - tx) * contentW) : 0,
+        ty > 0 ? cy / (ty * contentH) : 0,
+        ty < 1 ? (h - cy) / ((1 - ty) * contentH) : 0,
+      );
+      scale = clamp(Math.max(current, need), current, MAX_SCALE);
+    }
+    const x = cx - target.map.x * contentW * scale;
+    const y = cy - target.map.y * contentH * scale;
     const p = clampPosition(box, content, scale, x, y);
-    void z.setTransform(p.x, p.y, scale, mode === 'focus' || prefersReducedMotion() ? 0 : 250);
+    // Instant for a focus, and under a phone's sheet (it slides in over the map anyway, and an
+    // animation still running when the sheet closes would outlive the reset to the first view).
+    const instant = mode === 'focus' || coverBottom > 0 || prefersReducedMotion();
+    void z.setTransform(p.x, p.y, scale, instant ? 0 : 250);
   };
 
-  // Pan to a newly selected location.
+  // Pan to a newly selected location (also the one selected on arrival, once the box is measured).
+  // A pan made to clear a phone's sheet is undone when the sheet closes: back to the first view,
+  // every pin on screen again (QA M2).
+  const pannedUnderSheet = useRef(false);
   useEffect(() => {
+    if (w === 0) return;
     const target = locations.find((l) => l.id === selectedId);
-    if (target) panTo(target, 'select');
+    // The first measure remounts the transform (its key): wait a frame for the new instance.
+    const id = requestAnimationFrame(() => {
+      if (target) {
+        panTo(target, 'select');
+        pannedUnderSheet.current = coverBottom > 0;
+      } else if (pannedUnderSheet.current) {
+        pannedUnderSheet.current = false;
+        // Remount the transform: its first view is exactly the fitted one (every pin whole on screen).
+        setFirstViews((n) => n + 1);
+      }
+    });
+    return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId]);
+  }, [selectedId, w > 0, coverBottom]);
 
   // Keyboard focus on a pin that is off-screen or under an overlay pans it into view (WCAG 2.4.11).
   // Not a tap's focus: moving the pin under the finger would lose the tap.
@@ -214,7 +261,7 @@ export function CityMap({
     <div ref={boxRef} className={cx('relative overflow-hidden bg-ink', className)} data-testid="city-map">
       {size && w > 0 && h > 0 && (
         <TransformWrapper
-          key={`${Math.round(contentW)}x${Math.round(contentH)}`}
+          key={`${Math.round(contentW)}x${Math.round(contentH)}-${firstViews}`}
           ref={zoomRef}
           initialScale={initial.scale}
           initialPositionX={initial.x}
@@ -242,12 +289,14 @@ export function CityMap({
                 aria-hidden={!isNight}
                 data-testid="map-night"
               >
-                <Picture
-                  asset={map.night}
-                  sizes={`${Math.round(contentW)}px`}
-                  decorative={!isNight}
-                  className="size-full select-none"
-                />
+                {nightMounted && (
+                  <Picture
+                    asset={map.night}
+                    sizes={`${Math.round(contentW)}px`}
+                    decorative={!isNight}
+                    className="size-full select-none"
+                  />
+                )}
               </div>
               {locations.map((l) => {
                 const selected = l.id === selectedId;

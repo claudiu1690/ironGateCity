@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app';
 import { createAuth } from '../src/auth';
 import { loadEnv } from '../src/env';
-import { setupDb, teardownDb, testEnv } from './helpers';
+import { arriveOverHttp, setupDb, teardownDb, testEnv } from './helpers';
 
 let app: FastifyInstance;
 const ORIGIN = 'http://localhost:5173';
@@ -94,6 +94,8 @@ describe('HTTP security basics', () => {
 
   it('a session cookie opens only its own character; a forged cookie is UNAUTHORIZED', async () => {
     const res = await signUp();
+    // Slice 2: the character exists once the arrival is done (ADR 0011).
+    await arriveOverHttp(app, cookieHeader(res.headers['set-cookie']));
     const forged = await app.inject({
       method: 'GET',
       url: '/api/trpc/character.me',
@@ -110,6 +112,7 @@ describe('HTTP security basics', () => {
 
   it('mutations cannot be sent as GET (tRPC refuses), even with a valid session', async () => {
     const res = await signUp();
+    await arriveOverHttp(app, cookieHeader(res.headers['set-cookie']));
     const input = encodeURIComponent(
       JSON.stringify({
         actionId: 'coalport.mill-gate.canvass',

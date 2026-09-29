@@ -2,6 +2,9 @@ export { connectDb, disconnectDb, isDbUp, isDuplicateKeyError, mongoose, nativeD
 export type { ConnectOptions } from './connect';
 export { ensureIndexes, models } from './indexes';
 export { migrateSlice1CharacterFields } from './migrations/001-slice1-character-fields';
+export { RENAMED_JOBS, migrateSlice2Arrival } from './migrations/002-slice2-arrival';
+export { Arrival } from './models/arrival';
+export type { ArrivalDoc } from './models/arrival';
 export { Character } from './models/character';
 export type { CharacterDoc, StoredJob, StoredOrderItem, StoredOrders } from './models/character';
 export { City } from './models/city';
@@ -14,4 +17,6 @@ export { REQUEST_KINDS, REQUEST_LOG_TTL_SECONDS, RequestLog } from './models/req
 export type { RequestKind, RequestLogDoc } from './models/requestLog';
 export { seed } from './seed';
 export { SESSION_GAP_MS, buildPlaytestReport } from './report';
+export { buildArrivalFunnel, buildArrivalFunnels } from './funnel';
+export type { Funnel, FunnelAction, FunnelArrival, FunnelCharacter } from './funnel';
 export type { PlaytestReport, PlayerReport, ReportAction, ReportCharacter, ReportPaper } from './report';

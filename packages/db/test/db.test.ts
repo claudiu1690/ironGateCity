@@ -1,14 +1,17 @@
 import { getContent } from '@irongate/content';
 import { Types } from 'mongoose';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
+import { equippedItems, wornCha } from '@irongate/rules';
 import {
   ActionLog,
+  Arrival,
   Character,
   City,
   PaperEntry,
   REQUEST_LOG_TTL_SECONDS,
   RequestLog,
   migrateSlice1CharacterFields,
+  migrateSlice2Arrival,
   connectDb,
   disconnectDb,
   ensureIndexes,
@@ -184,6 +187,101 @@ describe('migration 001 (slice-1 character fields)', () => {
       version: 3,
     });
     expect(await migrateSlice1CharacterFields()).toBe(0);
+    expect(await Character.findById(insertedId).lean()).toEqual(doc);
+  });
+});
+
+describe('arrivals (ADR 0011)', () => {
+  it('has one draft per user', async () => {
+    const indexes = await Arrival.collection.indexes();
+    expect(indexes).toContainEqual(expect.objectContaining({ key: { userId: 1 }, unique: true }));
+    await Arrival.create({ userId: 'arrival-u1', name: 'Mara' });
+    const err = await Arrival.create({ userId: 'arrival-u1', name: 'Mara' }).catch((e: unknown) => e);
+    expect(isDuplicateKeyError(err)).toBe(true);
+    const doc = await Arrival.findOne({ userId: 'arrival-u1' }).lean();
+    expect(doc).toMatchObject({
+      avatarId: null,
+      answers: [],
+      completedAt: null,
+      characterId: null,
+      factionId: null,
+    });
+  });
+});
+
+describe('migration 002 (slice-2 arrival, ADR 0016)', () => {
+  it('makes a slice-1 character the reference recruit in place, once', async () => {
+    const content = getContent();
+    const now = new Date(Date.UTC(2026, 8, 20, 9));
+    const { insertedId } = await Character.collection.insertOne({
+      userId: `slice1-${Date.now()}`,
+      name: 'Old Hand',
+      factionId: 'collective',
+      homeCityId: 'coalport',
+      cityId: 'coalport',
+      stats: { str: 11, int: 13, agi: 5, chaBase: 2 },
+      energy: { value: 40, updatedAt: now },
+      rested: 10,
+      xp: 900,
+      level: 4,
+      fxp: 320,
+      iron: 700,
+      statPointsPending: 0,
+      rank: 1,
+      pc: 5,
+      localStanding: [{ cityId: 'coalport', successes: 12 }],
+      job: { id: 'factory-worker', since: 20_700, streak: 3, lastShiftDay: 20_710 },
+      sickDays: { week: 0, left: 2 },
+      day: { settled: 20_711 },
+      orders: { day: 20_711, items: [], allDoneAt: null },
+      today: {
+        day: 20_711,
+        energy: 0,
+        attempts: 0,
+        successes: 0,
+        xp: 0,
+        fxp: 0,
+        iron: 0,
+        pc: 0,
+        opinion: 0,
+        ordersDone: 0,
+        shiftWorked: false,
+        statTrained: 0,
+      },
+      lastActionAt: now,
+      version: 7,
+      createdAt: now,
+      updatedAt: now,
+    });
+    const first = await migrateSlice2Arrival(content);
+    expect(first.jobsRenamed).toBeGreaterThanOrEqual(1);
+    expect(first.migrated).toBeGreaterThanOrEqual(1);
+    const doc = (await Character.findById(insertedId).lean())!;
+    expect(doc).toMatchObject({
+      avatarId: null,
+      stats: { str: 11, int: 13, agi: 5, chaBase: 0 },
+      iron: 700,
+      fxp: 320,
+      xp: 900,
+      version: 7,
+      job: { id: 'coalport-factory-worker', streak: 3 },
+      ambition: { id: 'finish-his-work', chapter: 1, step: 'choose', choiceId: null, flags: [], history: [] },
+      origin: { answers: content.origin.reference, arrivedAt: now, migrated: true },
+    });
+    expect(doc.inventory.map((e) => [e.itemId, e.source])).toEqual([
+      ['outfit.mill-coat', 'migration'],
+      ['doc.party-card', 'migration'],
+    ]);
+    // Worn CHA stays 2: CHA base 0 + the mill work coat.
+    expect(
+      wornCha(
+        doc.stats.chaBase,
+        equippedItems(doc.inventory, doc.equipment, (id) => getContent().itemSpec(id)),
+      ),
+    ).toBe(2);
+
+    const again = await migrateSlice2Arrival(content);
+    expect(again).toEqual({ jobsRenamed: 0, migrated: 0 });
     expect(await Character.findById(insertedId).lean()).toEqual(doc);
   });
 });

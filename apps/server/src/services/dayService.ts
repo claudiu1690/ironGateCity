@@ -1,13 +1,75 @@
 import type { GameContent } from '@irongate/content';
 import { Character, City, PaperEntry, isDuplicateKeyError } from '@irongate/db';
-import type { CharacterDoc } from '@irongate/db';
+import type { CharacterDoc, CityDoc, PaperEntryDoc } from '@irongate/db';
 import { dayKey, jobPay, settleDays, startOrders } from '@irongate/rules';
 import { gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
-import { getOrCreateCharacter } from './characterService';
 import { buildEdition } from './edition';
+import type { NewEdition } from './edition';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import { energyState, fromOrdersState } from './views';
+
+/** What a settlement writes: the character's `$set` and `$inc`, and the edition to insert. */
+export interface SettlementWrite {
+  set: {
+    'day.settled': number;
+    job: CharacterDoc['job'];
+    sickDays: CharacterDoc['sickDays'];
+    today: CharacterDoc['today'];
+    orders: CharacterDoc['orders'];
+  };
+  inc: { iron: number };
+  edition: NewEdition;
+}
+
+/**
+ * The pure middle of a settlement (slice-2 tech design §7.2): settle the boundaries crossed, start
+ * today's Party orders (the welcome set on the first City Day, ADR 0012) and set today's paper.
+ * `c` need not be stored yet: the join settles a character's first day before inserting it.
+ * Returns null when there is nothing to settle.
+ */
+export function computeSettlement(
+  content: GameContent,
+  c: CharacterDoc,
+  now: number,
+  read: { previous: Pick<PaperEntryDoc, 'day' | 'snapshot'> | null; home: Pick<CityDoc, 'opinion'> | null },
+): SettlementWrite | null {
+  const today = dayKey(now);
+  const contentJob = c.job ? content.job(c.job.id) : undefined;
+  const s = settleDays({
+    settled: c.day.settled,
+    today,
+    job: c.job,
+    pay: contentJob ? jobPay(contentJob, c.factionId) : null,
+    sickDays: c.sickDays,
+    tally: c.today,
+    energy: energyState(c),
+    now,
+  });
+  if (!s) return null;
+  const welcome = s.firstEdition ? content.faction(c.factionId).welcomeOrders : undefined;
+  const orders = startOrders(content.ordersOf(c.factionId), today, s.job !== null, welcome);
+  const edition = buildEdition({
+    content,
+    character: c,
+    settlement: s,
+    previous: read.previous,
+    home: read.home,
+    today,
+    ordersToday: orders,
+  });
+  return {
+    set: {
+      'day.settled': today,
+      job: s.job,
+      sickDays: s.sickDays,
+      today: s.today,
+      orders: fromOrdersState(orders),
+    },
+    inc: { iron: s.salary?.total ?? 0 },
+    edition,
+  };
+}
 
 /**
  * ADR 0005: settle every City Day boundary crossed since `day.settled`, on first touch, in one
@@ -30,19 +92,6 @@ export async function ensureSettled(
         if (!c) throw new Error(`character ${c0._id.toHexString()} disappeared`);
         if (c.day.settled !== null && c.day.settled >= today) return c; // someone settled first
 
-        const contentJob = c.job ? content.job(c.job.id) : undefined;
-        const s = settleDays({
-          settled: c.day.settled,
-          today,
-          job: c.job,
-          pay: contentJob ? jobPay(contentJob, c.factionId) : null,
-          sickDays: c.sickDays,
-          tally: c.today,
-          energy: energyState(c),
-          now,
-        });
-        if (!s) return c;
-
         const previous = await PaperEntry.findOne(
           { characterId: c._id, day: { $lt: today } },
           { day: 1, snapshot: 1 },
@@ -51,33 +100,16 @@ export async function ensureSettled(
           .session(session)
           .lean();
         const home = await City.findById(c.homeCityId, { opinion: 1 }).session(session).lean();
-        const orders = startOrders(content.ordersOf(c.factionId), today, s.job !== null);
-        const edition = buildEdition({
-          content,
-          character: c,
-          settlement: s,
-          previous,
-          home,
-          today,
-          ordersToday: orders,
-        });
+        const w = computeSettlement(content, c, now, { previous, home });
+        if (!w) return c;
 
         const updated = await Character.findOneAndUpdate(
           { _id: c._id, version: c.version, 'day.settled': c.day.settled },
-          {
-            $set: {
-              'day.settled': today,
-              job: s.job,
-              sickDays: s.sickDays,
-              today: s.today,
-              orders: fromOrdersState(orders),
-            },
-            $inc: { iron: s.salary?.total ?? 0, version: 1 },
-          },
+          { $set: w.set, $inc: { iron: w.inc.iron, version: 1 } },
           { session, returnDocument: 'after', lean: true },
         );
         if (!updated) throw new VersionConflict();
-        await PaperEntry.create([edition], { session });
+        await PaperEntry.create([w.edition], { session });
         return updated;
       });
     } catch (err) {
@@ -97,13 +129,18 @@ export interface LoadedCharacter {
   editionReadAt: number | null;
 }
 
-/** Every character-scoped procedure starts here: get-or-create, then settle the City Day. */
+/**
+ * Every character-scoped procedure starts here: find the character, then settle the City Day.
+ * There is no auto-create any more (ADR 0011): a user without a character is still arriving.
+ */
 export async function loadCharacter(
   user: SessionUser,
   content: GameContent,
   now: number,
 ): Promise<LoadedCharacter> {
-  const doc = await ensureSettled(content, await getOrCreateCharacter(user, content, now), now);
+  const found = await Character.findOne({ userId: user.id }).lean<CharacterDoc>();
+  if (!found) throw gameError('PRECONDITION_FAILED', 'ARRIVAL_PENDING');
+  const doc = await ensureSettled(content, found, now);
   return { doc, editionReadAt: await editionReadAt(doc, now) };
 }
 

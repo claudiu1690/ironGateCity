@@ -6,6 +6,7 @@ import { formatClock, formatCountdown, formatNumber } from '../format';
 
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { Gauge } from './Gauge';
+import { Picture } from './Picture';
 import { StatPointsPanel } from './Shell';
 
 export interface HudBarProps {
@@ -40,11 +41,27 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBa
       className="relative z-20 border-b border-ink-2 bg-ink text-paper"
     >
       <div className="mx-auto flex min-h-14 max-w-6xl items-center gap-2.5 px-3">
-        <div
-          className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 bg-ink-2"
-          style={{ borderColor: FACTION_STYLE[c.factionId].color }}
-        >
-          <FactionCrest factionId={c.factionId} label={c.factionName} size={14} />
+        {/* Slice 2: the face in a ring of the faction's colour; an empty ring until one is chosen
+            (migrated characters, designer answer §13 Q7), with the small crest mark beside it. */}
+        <div className="relative shrink-0" data-testid="hud-avatar">
+          <div
+            className="size-9 overflow-hidden rounded-full border-2 bg-ink-2"
+            style={{ borderColor: FACTION_STYLE[c.factionId].color }}
+          >
+            {c.avatar ? (
+              <Picture
+                asset={c.avatar}
+                sizes="36px"
+                decorative
+                className="size-full object-cover object-top"
+              />
+            ) : (
+              <span className="sr-only">{copy.noFaceYet}</span>
+            )}
+          </div>
+          <span className="absolute -right-0.5 -bottom-0.5 flex size-3.5 items-center justify-center rounded-full bg-ink">
+            <FactionCrest factionId={c.factionId} label={c.factionName} size={8} />
+          </span>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-baseline gap-2">

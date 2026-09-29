@@ -28,6 +28,9 @@
   --color-success-fill: #9cc3c1;
   --color-partial: #7d5e19;
   --color-partial-fill: #e0c98f;
+  /* Failure (tier-3 checks, Ambition chapters): the oxblood of the canvas. */
+  --color-failure: #8c2b23;
+  --color-failure-fill: #d9a8a2;
 
   /* Factions (with crest shapes: ■ Vanguard, ● Collective, ▲ Alliance) */
   --color-vanguard: #c39a3a;

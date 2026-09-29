@@ -22,28 +22,28 @@ describe('job.take (§9.1)', () => {
     const { caller, me } = await freshCharacter(testClock(MONDAY));
     expect(me.orders.items[2]).toMatchObject({ id: 'dir.work-shift', title: 'Take a job', done: false });
     const key = randomUUID();
-    const r = await caller.job.take({ jobId: 'factory-worker', idempotencyKey: key });
-    expect(r.job).toMatchObject({ id: 'factory-worker', dailyPay: 216, shiftEnergy: 4, streak: 0 });
+    const r = await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: key });
+    expect(r.job).toMatchObject({ id: 'coalport-factory-worker', dailyPay: 216, shiftEnergy: 4, streak: 0 });
     expect(r.outcome).toMatchObject({ switched: false, orderCompleted: true, fxp: 20 });
     expect(r.character).toMatchObject({ fxp: 20, energy: { value: 100 } });
     expect(r.character.orders.items[2]).toMatchObject({ done: true });
-    expect(await caller.job.take({ jobId: 'factory-worker', idempotencyKey: key })).toEqual(r);
+    expect(await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: key })).toEqual(r);
     const again = await caller.job
-      .take({ jobId: 'factory-worker', idempotencyKey: randomUUID() })
+      .take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() })
       .catch((e: unknown) => e);
     expect(gameData(again)).toMatchObject({ code: 'BAD_REQUEST', game: { reason: 'ALREADY_IN_JOB' } });
   });
 
   it('switching costs 2 Energy (Rested untouched) and resets the streak', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(MONDAY));
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     clock.advance(60 * 60_000); // 96 + 30 → 100 and 26 Rested
-    const r = await caller.job.take({ jobId: 'street-vendor', idempotencyKey: randomUUID() });
+    const r = await caller.job.take({ jobId: 'coalport-street-vendor', idempotencyKey: randomUUID() });
     expect(r.outcome.switched).toBe(true);
     expect(r.character.energy.value).toBe(98);
     expect(r.character.rested).toBe(26);
-    expect(r.job).toMatchObject({ id: 'street-vendor', streak: 0, shiftWorkedToday: true });
+    expect(r.job).toMatchObject({ id: 'coalport-street-vendor', streak: 0, shiftWorkedToday: true });
     // One shift per City Day regardless of job changes.
     const shift = await caller.action
       .perform({ ...STALL, idempotencyKey: randomUUID() })
@@ -58,7 +58,7 @@ describe('job.take (§9.1)', () => {
   it('refuses a locked job and unknown jobs', async () => {
     const { caller } = await freshCharacter();
     const locked = await caller.job
-      .take({ jobId: 'driver', idempotencyKey: randomUUID() })
+      .take({ jobId: 'coalport-driver', idempotencyKey: randomUUID() })
       .catch((e: unknown) => e);
     expect(gameData(locked)).toEqual({
       code: 'PRECONDITION_FAILED',
@@ -78,7 +78,7 @@ describe('shifts, salary, streak and sick days', () => {
       .perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() })
       .catch((e: unknown) => e);
     expect(gameData(noJob)).toMatchObject({ game: { reason: 'NOT_YOUR_JOB', jobId: null } });
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
 
     const first = await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     expect(first).toMatchObject({ kind: 'shift', stamp: 'worked', again: null });
@@ -114,7 +114,7 @@ describe('shifts, salary, streak and sick days', () => {
 
   it('two missed days in a week keep the streak; the third ends it; the job is kept', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(MONDAY));
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() }); // Mon
     clock.advance(DAY);
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() }); // Tue, streak 2
@@ -125,22 +125,22 @@ describe('shifts, salary, streak and sick days', () => {
     clock.advance(DAY);
     expect(await caller.character.me()).toMatchObject({ job: { streak: 2 }, sickDaysLeft: 0 }); // Fri
     clock.advance(DAY);
-    expect(await caller.character.me()).toMatchObject({ job: { id: 'factory-worker', streak: 0 } }); // Sat
+    expect(await caller.character.me()).toMatchObject({ job: { id: 'coalport-factory-worker', streak: 0 } }); // Sat
     void me;
   });
 
   it('8 days away pays 8 half-pays, streak 0, job kept', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(MONDAY));
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     clock.advance(8 * DAY);
     const back = await caller.character.me();
     expect(back.iron).toBe(112 + 8 * 108);
-    expect(back.job).toMatchObject({ id: 'factory-worker', streak: 0 });
+    expect(back.job).toMatchObject({ id: 'coalport-factory-worker', streak: 0 });
     const paper = await caller.paper.today();
     expect(paper.desk.salary).toEqual({ jobName: 'Factory worker', days: 8, perDay: 108, total: 864 });
     expect(paper.headlines[0]).toMatchObject({ headline: 'While You Were Away' });
     expect(paper.headlines[0]!.deck).toMatch(/^8 days of half pay banked \(864 Iron\)/);
-    expect((await Character.findById(me.id).lean())!.job?.id).toBe('factory-worker');
+    expect((await Character.findById(me.id).lean())!.job?.id).toBe('coalport-factory-worker');
   });
 });

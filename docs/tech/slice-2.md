@@ -931,3 +931,82 @@ these are listed, not decided. Items 1–3 are player-facing in slice 2.
    *Comrade-General* (§5.4), *Red Guard regalia* (§21.2) and the *Red Guard* enemy (§20.2, a real-world name), the
    *People's Commissar* (§8.4, §20.2), *Ceremonial Vanguard uniform*, *Faction uniform* and *Marshal's regalia* (§8.2,
    §21.2), and the Season Twist ***The Uprising*** (§14.11, §22.3), a word CLAUDE.md rule 2 lists by name.
+
+---
+
+## Deviations (developer, slice 2 build)
+
+Smallest working changes from this design, found while building T1–T17. The game designer's answers to §20.1
+(`docs/design/slice-2-onboarding.md` §13) are built in: the nine echo lines, the computed chapter hook
+(`Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2`), *Keepsake: His ward book*, the party-card
+line, *Choose your face* / *No face yet*, the six avatar alt texts, *of 12* from `chaptersPlanned`, and the §2.4 / Q13
+arithmetic (the rules test asserts 6–9 trained points, 8–9 with CHA base, the flattest build 8 / 8 / 8). No
+`TODO(game-designer)` is left. The content-policy strings of §20.3 are transcribed as designed, live in content only,
+and carry `TODO(content-policy)` comments (Vanguard rank titles, the card blurb, *the Torchlight March*, the Sentinel's
+rank-up headlines, *Drill with the recruits*, *Address the evening muster*, *Chalk the movement's mark*).
+
+**Views and API**
+
+- `ArrivalView.questionId` (the id `arrival.answer` needs; the screen itself carries none), `FactionCardView.wishLabel`
+  (the tag's words come from the server, *His wish · +50 Faction XP*), `LetterView.chapter` (*Chapter 1 is ready*), and
+  `ActionResult.story` is `null` for tier-1 results. `AssetView` gains `focus` beside `format`.
+- `city.get` refuses a *loaded* city other than the character's with `WRONG_CITY`; an unknown id stays
+  `NOT_FOUND UNKNOWN_CITY`.
+- `character.setAvatar` is a plain `$set` without a version bump (a cosmetic value, last write wins; a concurrent game
+  write never touches `avatarId`).
+- A joined character is inserted already settled, so it starts at `version: 0` (slice 1's auto-create reached 1 with its
+  separate first settlement).
+- `chapterStatus` is `none` for a chapter that exists only as a teaser (no `story`): after chapter 1 the Letters row goes
+  and the Me tab reads *Chapter 1 done*; the hook line in the modal names the date and the requirement.
+- `lettersWaiting` (the Paper tab's dot) is 1 while a chapter is `ready`; there is no "opened" state to clear it earlier
+  (§20 Q8 said "ready and not yet opened").
+- `ambition.history[].logId` is stored as the log's hex string, not an ObjectId.
+- `ensureIndexes(content = getContent())`: the migration's content is a default parameter, so every caller keeps working.
+
+**Content**
+
+- Chapter flags are lower kebab-case (`showed-book`, `kept-book`, `read-name`, `told-branch`, `asked-name`,
+  `said-nothing`) because content ids are; the design wrote them in camelCase. Rules never read them.
+- The street's title is its first sentence, *He dies before the first tram.*, and the narrative the rest; origin step ids
+  are `origin.step-room`, `-talent`, `-promise`, answer ids `a`–`c`.
+- `Faction.startingBonus` no longer has a `cha` field, so a CHA bonus is refused by the schema itself.
+- `Asset.widths` may be empty; the loader requires widths for every raster kind and none for a vector.
+- Duskwall and Ashford (locations, actions, texts), their 24 order templates and the two papers' headlines were
+  generated from the design document's tables and are checked word for word against it by
+  `packages/content/test/slice2.content.test.ts`.
+- Two QA vocabulary findings in the designed text (`qa.content.test.ts`): the Vanguard card's *ex-soldiers* is exempted
+  by exact phrase with a `TODO(content-policy)` (it is §20.3 item 3, the user's to decide), and *the front row* (the
+  Duskwall muster text) is added to the allowed uses of "front". Every other occurrence still fails.
+
+**Art (ADR 0015)**
+
+- Portrait crops as Holm's (760 × 950 from 60, 40), except Grey (from 60, 0: the hat) and the young man's face (from
+  60, 20). Scene binding `press` → the newsroom applies to every city's press, as designed.
+- The night map is fetched only once it is night (it was always loaded under the day map); without this the first
+  session on a Pixel 7 would pass 1 MB.
+
+**Client and UI**
+
+- `Picture` renders `<picture class="contents">`, so size and flex classes apply to the `<img>` (round portraits in flex
+  rows); its `<source>`s are hidden.
+- The location sheet is at most 60 dvh on phones. `CityMap` takes `coverBottom`: under a phone's sheet the selected pin is
+  panned (and zoomed in just enough, instantly) into the strip above it; when that sheet closes the map returns to the
+  fitted first view (the transform remounts, so every pin is exactly on screen again, QA M2).
+- Desktop: while a sheet is open the city plate folds to its header, so a pin in the map's top-left corner (Ashford's
+  Gazette House) is not under it.
+- The paper's orders header reads *from {issuer name}* (it said *from Secretary {name}*, wrong for Stahl and Grey), and
+  the secretary's portrait ring is ink, not the Collective's red. *To the city* is sticky on phones.
+- New `BottomSheet` (the Me tab's face change) in `packages/ui`, so the client needs no Radix dependency of its own.
+- The chapter screen shows the chosen step-1 answer as its echo line at step 2.
+- The HUD's face ring is 36 px with the small crest mark on it (the design said 32 px); PC stays hidden on phones as in
+  slice 1.
+
+**Tests**
+
+- `seedRecruit(user, now, overrides)` zeroes Iron and FXP (slice-1 numbers), as §14 says; the e2e `signUp` helper
+  arrives with the reference answers except that it *takes the coat*, so Iron starts at 0 and the slice-1 specs keep their
+  numbers; `arrival.spec.ts` uses the reference answers. `toTheCity` closes the first-landing sheet.
+- The playtest funnel cannot tell "chapter 1 started" (the choice writes no log), so it reports *chapter 1 done on day 1*;
+  "the second tap is Again" is measured as the same action again within two minutes.
+
+**Not verified here:** CI (no remote), Docker, deployment.

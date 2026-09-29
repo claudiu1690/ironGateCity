@@ -11,8 +11,8 @@ test('take a job → shift → next day: the paper is due, half pay on the desk'
   const sheet = await openLocation(page, '1. Mill Gate');
 
   await sheet.getByRole('button', { name: 'Take the job' }).click();
-  await expect(sheet.getByTestId('job-factory-worker')).toContainText(/Taken · /);
-  await expect(sheet.getByTestId('job-factory-worker')).toContainText(
+  await expect(sheet.getByTestId('job-coalport-factory-worker')).toContainText(/Taken · /);
+  await expect(sheet.getByTestId('job-coalport-factory-worker')).toContainText(
     'Your job · streak 0 days · 2 sick days left',
   );
 

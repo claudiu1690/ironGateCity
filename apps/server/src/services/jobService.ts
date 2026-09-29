@@ -63,7 +63,7 @@ export async function takeJob(deps: {
       if (c.cityId !== jobCity)
         throw new GameError('WRONG_CITY', { cityId: c.cityId, jobCityId: jobCity }, 'BAD_REQUEST');
       if (c.job?.id === job.id) throw new GameError('ALREADY_IN_JOB', { jobId: job.id }, 'BAD_REQUEST');
-      const lock = jobLock(job.unlock, { level: c.level, stats: wornStats(c) });
+      const lock = jobLock(job.unlock, { level: c.level, stats: wornStats(c, content) });
       if (lock) throw new GameError('JOB_LOCKED', { ...lock });
 
       const switching = c.job !== null;

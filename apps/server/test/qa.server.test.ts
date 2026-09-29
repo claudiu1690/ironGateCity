@@ -8,7 +8,16 @@ import { ActionLog, Character, City, PaperEntry, RequestLog } from '@irongate/db
 import { createRng, dayKey, sumRewards } from '@irongate/rules';
 import type { ActionResult } from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { callerFor, freshCharacter, gameData, newUser, setupDb, teardownDb, testClock } from './helpers';
+import {
+  callerFor,
+  freshCharacter,
+  gameData,
+  newUser,
+  seedRecruit,
+  setupDb,
+  teardownDb,
+  testClock,
+} from './helpers';
 
 const DAY = 86_400_000;
 const MIN = 60_000;
@@ -63,7 +72,7 @@ describe('permissions and input (CLAUDE.md engineering rule 1)', () => {
       ],
       ['city.get', () => anon.city.get({ cityId: 'coalport' })],
       ['action.perform', () => anon.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 })],
-      ['job.take', () => anon.job.take({ jobId: 'street-vendor', idempotencyKey: randomUUID() })],
+      ['job.take', () => anon.job.take({ jobId: 'coalport-street-vendor', idempotencyKey: randomUUID() })],
       ['paper.today', () => anon.paper.today()],
       ['paper.markRead', () => anon.paper.markRead({ day: 1 })],
     ];
@@ -219,13 +228,13 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
       expect(gameData(err)).toMatchObject({ code: 'CONFLICT', game: { reason: 'KEY_REUSED' } });
     }
     const jobKey = randomUUID();
-    await caller.job.take({ jobId: 'street-vendor', idempotencyKey: jobKey });
+    await caller.job.take({ jobId: 'coalport-street-vendor', idempotencyKey: jobKey });
     const statErr = await caller.character
       .placeStatPoint({ stat: 'int', idempotencyKey: jobKey })
       .catch((e: unknown) => e);
     expect(gameData(statErr).game?.reason).toBe('KEY_REUSED');
     const otherJob = await caller.job
-      .take({ jobId: 'factory-worker', idempotencyKey: jobKey })
+      .take({ jobId: 'coalport-factory-worker', idempotencyKey: jobKey })
       .catch((e: unknown) => e);
     expect(gameData(otherJob).game?.reason).toBe('KEY_REUSED');
   });
@@ -234,11 +243,11 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
     const { caller, me } = await freshCharacter();
     const key = randomUUID();
     await settle(
-      [1, 2, 3, 4, 5].map(() => caller.job.take({ jobId: 'factory-worker', idempotencyKey: key })),
+      [1, 2, 3, 4, 5].map(() => caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: key })),
     );
     expect(await RequestLog.countDocuments({ characterId: me.id, kind: 'job.take' })).toBe(1);
     const after = await caller.character.me();
-    expect(after.job?.id).toBe('factory-worker');
+    expect(after.job?.id).toBe('coalport-factory-worker');
     expect(after.energy.value).toBe(100);
   });
 
@@ -261,7 +270,9 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
     await everyRunIdentical(async () => {
       const { caller } = await freshCharacter();
       const key = randomUUID();
-      return settle([1, 2, 3].map(() => caller.job.take({ jobId: 'factory-worker', idempotencyKey: key })));
+      return settle(
+        [1, 2, 3].map(() => caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: key })),
+      );
     });
   });
 
@@ -290,7 +301,7 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
   it('M1: a shift — every concurrent retry with one key gets the stored result (not SHIFT_ALREADY_WORKED)', async () => {
     await everyRunIdentical(async () => {
       const { caller } = await freshCharacter();
-      await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+      await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
       const key = randomUUID();
       return settle([1, 2, 3].map(() => caller.action.perform({ ...MILL_SHIFT, idempotencyKey: key })));
     });
@@ -298,9 +309,9 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
 
   it('job switches racing with different keys: every committed switch costs exactly 2 Energy', async () => {
     const { caller } = await freshCharacter();
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     const rs = await settle(
-      ['street-vendor', 'factory-worker', 'street-vendor'].map((jobId) =>
+      ['coalport-street-vendor', 'coalport-factory-worker', 'coalport-street-vendor'].map((jobId) =>
         caller.job.take({ jobId, idempotencyKey: randomUUID() }),
       ),
     );
@@ -336,7 +347,7 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
 
   it('two shifts at once with different keys: one pays, the other is SHIFT_ALREADY_WORKED', async () => {
     const { caller } = await freshCharacter();
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     const rs = await settle(
       [1, 2].map(() => caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() })),
     );
@@ -352,6 +363,8 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
   it('the paper is generated exactly once per touched day, even with every read racing, and never for untouched days', async () => {
     const clock = testClock(Date.UTC(2026, 8, 28, 23, 30));
     const user = newUser();
+    // Slice 2: no auto-create (ADR 0011); the recruit is seeded unsettled for today.
+    await seedRecruit(user, clock.now());
     const caller = callerFor(user, clock.now);
     await settle<unknown>([
       caller.character.me(),
@@ -379,7 +392,7 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
 
   it('30 days away: nothing owned is lost; salary is 14 half-pays; Energy full, Rested 200; job kept, streak 0', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(Date.UTC(2026, 8, 28, 9)));
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     await caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 3 });
     await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 });
@@ -396,7 +409,7 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
       statPointsPending: before.statPointsPending,
     });
     expect(after.standing.successes).toBe(before.standing.successes);
-    expect(after.job).toMatchObject({ id: 'factory-worker', streak: 0 });
+    expect(after.job).toMatchObject({ id: 'coalport-factory-worker', streak: 0 });
     expect(after.energy.value).toBe(100);
     expect(after.rested).toBe(200);
     const paper = await caller.paper.today();
@@ -440,9 +453,11 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
   it('the streak across a weekend and the Monday refill through the API: 3rd miss in a week breaks it; a Monday return refills', async () => {
     // Mon 21 Sep: take the job and work Mon–Wed (streak 3); miss Thu, Fri (sick days), work Sat; miss Sun; back Mon.
     const clock = testClock(Date.UTC(2026, 8, 21, 8));
-    const caller = callerFor(newUser(), clock.now);
+    const user = newUser();
+    await seedRecruit(user, clock.now()); // slice 2: no auto-create (ADR 0011)
+    const caller = callerFor(user, clock.now);
     await caller.character.me();
-    await caller.job.take({ jobId: 'factory-worker', idempotencyKey: randomUUID() });
+    await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     const work = () => caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     await work();
     clock.advance(DAY);

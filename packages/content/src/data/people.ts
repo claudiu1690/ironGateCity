@@ -1,6 +1,6 @@
 import type { Npc } from '../schemas';
 
-/** Named NPCs (docs/design/slice-1-content.md §6.1). */
+/** Named NPCs: the three party secretaries (slice-1 content §6.1, slice-2 cities §1.4, §2.4). */
 export const npcs: Npc[] = [
   {
     id: 'holm',
@@ -9,6 +9,24 @@ export const npcs: Npc[] = [
     factionId: 'collective',
     cityId: 'coalport',
     portrait: 'portrait.holm',
+  },
+  {
+    // docs/design/slice-2-cities.md §1.4: the movement's administrator, not its face.
+    id: 'stahl',
+    name: 'Viktor Stahl',
+    title: 'District organiser, Duskwall',
+    factionId: 'vanguard',
+    cityId: 'duskwall',
+    portrait: 'portrait.stahl',
+  },
+  {
+    // docs/design/slice-2-cities.md §2.4: a former Gazette sub-editor who counts words.
+    id: 'grey',
+    name: 'Thomas Grey',
+    title: 'Constituency agent, Ashford',
+    factionId: 'alliance',
+    cityId: 'ashford',
+    portrait: 'portrait.grey',
   },
 ];
 

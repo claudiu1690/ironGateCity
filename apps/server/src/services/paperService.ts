@@ -11,10 +11,19 @@ import {
   weekday,
   xpForLevel,
 } from '@irongate/rules';
-import type { PaperView } from '@irongate/rules';
+import type { LetterView, PaperView } from '@irongate/rules';
 import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
-import { energyState, jobView, namedStanding, ordersView, sickDaysLeft, standingSuccesses } from './views';
+import {
+  ambitionStatus,
+  energyState,
+  jobView,
+  namedStanding,
+  ordersView,
+  sickDaysLeft,
+  standingSuccesses,
+  toCharacterView,
+} from './views';
 
 /**
  * §3.3 Morning Paper v1: today's edition (printed at settlement) with the desk's live rows added at
@@ -35,6 +44,24 @@ export async function getPaper(deps: {
   const energy = projectEnergy(energyState(c), now);
   const job = jobView(content, c, today);
   const readAt = entry.readAt ? entry.readAt.getTime() : null;
+  const wearing = toCharacterView(c, now, content, readAt).wearing;
+  // §3.3 v2 Letters, live at read: the Ambition chapter when it is ready or mid-way.
+  const status = ambitionStatus(content, c, today);
+  const chapter = c.ambition ? content.chapter(c.ambition.id, c.ambition.chapter) : undefined;
+  const letters: LetterView[] =
+    chapter?.story && (status.kind === 'ready' || status.kind === 'midway')
+      ? [
+          {
+            kind: 'chapter',
+            from: chapter.story.letterFrom,
+            title: chapter.title,
+            chapter: chapter.n,
+            status: status.kind,
+            energy: chapter.story.check.energy,
+          },
+        ]
+      : [];
+  const home = content.city(c.homeCityId);
 
   return {
     day: today,
@@ -80,7 +107,12 @@ export async function getPaper(deps: {
       },
       workStreak: job ? { streak: job.streak, sickDaysLeft: sickDaysLeft(c, today) } : null,
       standing: namedStanding(content, c.cityId, standingSuccesses(c, c.cityId)),
+      wearing: wearing ? { name: wearing.name, cha: wearing.cha } : null,
     },
+    letters,
+    // The first edition's "To the city" opens the first pin's sheet (§7.5; designer answer §13 Q9).
+    landing:
+      entry.firstEdition && home?.locations[0] ? { cityId: home.id, locationId: home.locations[0].id } : null,
     readAt,
     due: isPaperDue({
       editionReadAt: readAt,

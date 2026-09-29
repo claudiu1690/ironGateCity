@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Red Collective crest: a hammer raised through a gear wheel</title>
+  <circle cx="128" cy="128" r="120" fill="#8C2B23"/>
+  <circle cx="128" cy="128" r="108" fill="none" stroke="#EFE6D2" stroke-width="5"/>
+  <g fill="#EFE6D2">
+    <rect x="118" y="38" width="20" height="20" transform="rotate(0 128 128)"/>
+    <rect x="118" y="38" width="20" height="20" transform="rotate(45 128 128)"/>
+    <rect x="118" y="38" width="20" height="20" transform="rotate(90 128 128)"/>
+    <rect x="118" y="38" width="20" height="20" transform="rotate(135 128 128)"/>
+    <rect x="118" y="38" width="20" height="20" transform="rotate(180 128 128)"/>
+    <rect x="118" y="38" width="20" height="20" transform="rotate(225 128 128)"/>
+    <rect x="118" y="38" width="20" height="20" transform="rotate(270 128 128)"/>
+    <rect x="118" y="38" width="20" height="20" transform="rotate(315 128 128)"/>
+  </g>
+  <circle cx="128" cy="128" r="66" fill="none" stroke="#EFE6D2" stroke-width="24"/>
+  <g transform="rotate(-30 128 128)" fill="#15181A" stroke="#EFE6D2" stroke-width="4">
+    <rect x="120" y="100" width="16" height="104"/>
+    <rect x="96" y="72" width="64" height="32"/>
+  </g>
+</svg>

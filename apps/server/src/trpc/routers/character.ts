@@ -1,17 +1,23 @@
 import { STAT_POINT_TARGETS } from '@irongate/rules';
 import { z } from 'zod';
+import { setAvatar } from '../../services/avatarService';
 import { loadCharacter } from '../../services/dayService';
 import { placeStatPoint } from '../../services/statService';
 import { toCharacterView } from '../../services/views';
 import { protectedProcedure, router } from '../trpc';
 
 export const characterRouter = router({
-  /** Get-or-create the caller's character, settle the City Day, project Energy and Rested to now. */
+  /** The caller's character (ARRIVAL_PENDING before the join), the City Day settled, timers projected. */
   me: protectedProcedure.query(async ({ ctx }) => {
     const now = ctx.now();
     const { doc, editionReadAt } = await loadCharacter(ctx.user, ctx.content, now);
     return toCharacterView(doc, now, ctx.content, editionReadAt);
   }),
+
+  /** §7.3: change the face, free, any time (a cosmetic value: last write wins, ADR 0008). */
+  setAvatar: protectedProcedure
+    .input(z.object({ avatarId: z.string().min(1) }))
+    .mutation(({ ctx, input }) => setAvatar(ctx.user, ctx.content, ctx.now(), input.avatarId)),
 
   /** §5.3: one tap places one waiting stat point on STR or INT (ADR 0008). */
   placeStatPoint: protectedProcedure

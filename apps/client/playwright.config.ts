@@ -22,7 +22,20 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'phone', use: { ...devices['Pixel 7'] } }],
+  // Slice 2 (§12.3): every spec on a phone; the arrival also on a 360 px touch phone and a desktop.
+  projects: [
+    { name: 'phone', use: { ...devices['Pixel 7'] } },
+    {
+      name: 'small-phone',
+      testMatch: /arrival\.spec\.ts/,
+      use: { ...devices['Pixel 7'], viewport: { width: 360, height: 640 }, deviceScaleFactor: 2 },
+    },
+    {
+      name: 'desktop',
+      testMatch: /arrival\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+  ],
   webServer: [
     {
       command: 'pnpm --filter @irongate/server build && node ../server/dist/index.js',

@@ -9,6 +9,8 @@ function listOr(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} or ${items.at(-1)}`;
 }
 
+const STAT_NAMES = { str: 'Strength', int: 'Intelligence', agi: 'Agility' } as const;
+
 export const copy = {
   needsEnergy: (cost: number, readyAt: string) => `Needs ${cost} Energy · ready at ${readyAt}`,
   energyFull: (rested: number) => `Rested ${rested}`,
@@ -53,6 +55,42 @@ export const copy = {
   // Auth pages (content §13.4).
   signupTitle: 'Join the campaign',
   loginTitle: 'Sign in',
+  // Slice 2 (tech design §12.4; approved in onboarding §13.1).
+  /** The sign-up field label. */
+  yourFace: 'Your face',
+  /** The sign-up form without a face, and the Me tab's heading when changing it. */
+  chooseYourFace: 'Choose your face',
+  /** Me tab, a migrated character with no face yet (onboarding §13 Q7). */
+  noFaceYet: 'No face yet',
+  storyWaits: 'Close the game now and this waits for you',
+  storyProgress: (step: number, of: number) => `Step ${step} of ${of}`,
+  hisWish: (fxp: number) => `His wish · +${fxp} Faction XP`,
+  joinFaction: (name: string, city: string) => `Join the ${name} · take the train to ${city}`,
+  /** "+2 Strength, +1 Intelligence". */
+  statBonus: (bonus: Partial<Record<'str' | 'int' | 'agi', number>>) =>
+    (Object.entries(bonus) as Array<['str' | 'int' | 'agi', number]>)
+      .map(([stat, n]) => `+${n} ${STAT_NAMES[stat]}`)
+      .join(', '),
+  startsIn: (city: string) => `Starts in ${city}`,
+  /** The article travels with the content string: "Their event: the General Strike". */
+  theirEvent: (name: string) => `Their event: ${name}`,
+  letterReady: (chapter: number, energy: number) => `Chapter ${chapter} is ready · ${energy} Energy`,
+  letterMidway: 'waiting for you',
+  wearing: (name: string, cha: number) => `Wearing: ${name} · CHA ${cha}`,
+  /** "Iron Vanguard · Initiate · member since 29 September". */
+  partyCard: (faction: string, rank: string, date: string) => `${faction} · ${rank} · member since ${date}`,
+  keepsakeLine: (name: string) => `Keepsake: ${name}`,
+  chapterKicker: (title: string, n: number, of: number) => `Ambition · ${title} · Chapter ${n} of ${of}`,
+  /** `Chapter {n}, "{title}": from {Weekday D Month}, at {Rank n | Level n}` (onboarding §13 Q2). */
+  chapterHook: (n: number, title: string, from: string, needs: string | null) =>
+    `Chapter ${n}, "${title}": from ${from}${needs ? `, at ${needs}` : ''}`,
+  chapterNeeds: (needs: { rank?: number; level?: number }) =>
+    [
+      needs.rank !== undefined ? `Rank ${needs.rank}` : null,
+      needs.level !== undefined ? `Level ${needs.level}` : null,
+    ]
+      .filter(Boolean)
+      .join(', '),
 } as const;
 
 export type Copy = typeof copy;

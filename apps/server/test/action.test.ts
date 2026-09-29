@@ -60,11 +60,11 @@ describe('city.get v2', () => {
       kind: 'shift',
       energy: 4,
       energy3: null,
-      shift: { jobId: 'factory-worker', held: false, workedToday: false },
+      shift: { jobId: 'coalport-factory-worker', held: false, workedToday: false },
     });
     expect(mill.jobs).toEqual([
       expect.objectContaining({
-        jobId: 'factory-worker',
+        jobId: 'coalport-factory-worker',
         pay: 216,
         held: false,
         locked: null,

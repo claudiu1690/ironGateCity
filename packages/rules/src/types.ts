@@ -184,6 +184,14 @@ export const PLACEHOLDERS = [
 ] as const;
 export type Placeholder = (typeof PLACEHOLDERS)[number];
 
+/**
+ * The placeholders story texts (origin steps, the street, Ambition chapters) may use (slice-2 tech
+ * design §4.4): the character's name, the faction secretary's form of address, the HQ's short
+ * reference and the home city's name. Resolved on the server before any text leaves it.
+ */
+export const STORY_PLACEHOLDERS = ['name', 'secretary', 'hq', 'city'] as const;
+export type StoryPlaceholder = (typeof STORY_PLACEHOLDERS)[number];
+
 // ---------------------------------------------------------------------------------------------
 // Views (docs/tech/slice-1.md §7.2)
 // ---------------------------------------------------------------------------------------------
@@ -229,12 +237,16 @@ export interface NamedStandingView extends StandingView {
 
 export interface AssetView {
   id: string;
+  /** `svg`: one file at /art/<id>.svg (the faction crests, ADR 0015); `raster`: AVIF/WebP widths. */
+  format: 'raster' | 'svg';
   /** Intrinsic size of the (cropped) image, for its aspect ratio. */
   width: number;
   height: number;
-  /** Generated widths; files are /art/<id>-<width>.avif|webp (ADR 0007). */
+  /** Generated widths; files are /art/<id>-<width>.avif|webp (ADR 0007). Empty for `svg`. */
   widths: number[];
   alt: string;
+  /** Where a cropping panel should centre the image (fractions, ADR 0015), or null for the centre. */
+  focus: { x: number; y: number } | null;
 }
 
 export interface JobView {
@@ -258,12 +270,14 @@ export interface OrderView {
   progress: number;
   target: number;
   done: boolean;
+  /** The home-city pin where a tap would advance this order (slice-2 tech design §7.3), or null. */
+  pin: { locationId: string; n: number } | null;
 }
 
 export interface OrdersView {
   day: DayKey;
   resetsAt: number;
-  issuer: { name: string; title: string; signature: string; portrait: AssetView } | null;
+  issuer: { name: string; title: string; signature: string; portrait: AssetView };
   items: OrderView[];
   allDone: boolean;
   rewards: { matchFxpBonusPct: number; orderDoneFxp: number; allDonePc: number };
@@ -298,6 +312,24 @@ export interface CharacterView {
   today: DailyTally;
   orders: OrdersView;
   paperDue: boolean;
+  /** The chosen face, or null (migrated characters, ADR 0016: the HUD shows the crest). */
+  avatar: AssetView | null;
+  /** The origin's CHA base (0–4); `stats.cha` is the worn total (§8.2). */
+  chaBase: number;
+  /** The clothing worn (§8.2), for the Me tab and the paper's desk. */
+  wearing: { itemId: string; name: string; cha: number } | null;
+  /** The party card, as a line on the Me tab (onboarding §4.2). */
+  partyCard: { factionName: string; rankTitle: string; memberSince: number } | null;
+  keepsakes: Array<{ itemId: string; name: string; art: AssetView }>;
+  ambition: {
+    id: string;
+    title: string;
+    chapter: number;
+    status: ChapterStatusKind;
+    readyFrom: number | null;
+  };
+  /** The Paper tab's dot for a Letter (§20 Q8): 1 while a chapter is ready, else 0. */
+  lettersWaiting: number;
 }
 
 export type ActionViewKind = 'checked' | 'training' | 'shift';
@@ -368,8 +400,11 @@ export interface BonusTag {
   note: string;
 }
 
-/** `batch` renders "n of N" (GDD §13.1). */
-export type ResultStamp = 'success' | 'partial' | 'batch' | 'worked' | 'trained';
+/** `batch` renders "n of N" (GDD §13.1); `failure` only for tier-3 checks (Ambition chapters). */
+export type ResultStamp = 'success' | 'partial' | 'failure' | 'batch' | 'worked' | 'trained';
+
+/** What a result is: a tier-1 action kind, or an Ambition chapter (slice-2 tech design §9). */
+export type ActionResultKind = ActionViewKind | 'chapter';
 
 export interface ResultAttempt extends ActionAttempt {
   rewards: Rewards;
@@ -400,9 +435,18 @@ export interface ActionResult {
   performedAt: string;
   seed: string;
   place: { cityId: string; cityName: string; locationId: string; locationName: string; kind: string };
-  kind: ActionViewKind;
-  action: { id: string; name: string; type: string; tier: 1; times: number };
+  kind: ActionResultKind;
+  action: { id: string; name: string; type: string; tier: 1 | 3; times: number };
   stamp: ResultStamp;
+  /** Ambition chapters only: what the modal's kicker needs. */
+  story: {
+    ambitionId: string;
+    ambitionTitle: string;
+    chapter: number;
+    of: number;
+    approachId: string;
+    choiceText: string;
+  } | null;
   /** Successes among `times` (checked actions). */
   successes: number;
   headline: string;
@@ -446,6 +490,10 @@ export interface ActionResult {
       sickDaysLeft: number;
       nextShiftAt: number;
     } | null;
+    /** A chapter's keepsake ("Keepsake: his ward book"). */
+    item: { itemId: string; name: string; keepsake: boolean; art: AssetView } | null;
+    /** Next-chapter hooks, already worded. */
+    hooks: string[];
   };
   /** The Today tally after this tap. */
   today: DailyTally;
@@ -471,6 +519,21 @@ export interface DeskView {
   level: { level: number; xpToNext: number; next: number; statPointsPending: number };
   workStreak: { streak: number; sickDaysLeft: number } | null;
   standing: NamedStandingView;
+  /** "Wearing: Your father's coat · CHA 5" (slice-2 tech design §10). */
+  wearing: { name: string; cha: number } | null;
+}
+
+/** A Letters row (§3.3 v2): an Ambition chapter that is ready or waiting mid-way. */
+export interface LetterView {
+  kind: 'chapter';
+  /** "From your father's things". */
+  from: string;
+  /** "His ward book". */
+  title: string;
+  /** The chapter number ("Chapter 1 is ready"). */
+  chapter: number;
+  status: 'ready' | 'midway';
+  energy: number;
 }
 
 export interface PaperView {
@@ -481,6 +544,9 @@ export interface PaperView {
   headlines: Array<{ group: HeadlineGroup; headline: string; deck?: string }>;
   orders: OrdersView;
   desk: DeskView;
+  letters: LetterView[];
+  /** The first edition's "To the city": the first pin's sheet (slice-2 tech design §10). */
+  landing: { cityId: string; locationId: string } | null;
   readAt: number | null;
   due: boolean;
 }
@@ -501,10 +567,96 @@ export type GameErrorReason =
   | 'NOT_YOUR_JOB'
   | 'SHIFT_ALREADY_WORKED'
   | 'SHIFT_IS_ONCE'
-  | 'TRAINING_IS_ONCE';
+  | 'TRAINING_IS_ONCE'
+  // Slice 2 (tech design §7.1).
+  | 'ARRIVAL_PENDING'
+  | 'ALREADY_ARRIVED'
+  | 'NO_FACE'
+  | 'ORIGIN_INCOMPLETE'
+  | 'OUT_OF_ORDER'
+  | 'UNKNOWN_ANSWER'
+  | 'UNKNOWN_AVATAR'
+  | 'CHAPTER_NOT_READY'
+  | 'CHOOSE_FIRST'
+  | 'UNKNOWN_CHOICE'
+  | 'UNKNOWN_APPROACH';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
   reason: GameErrorReason;
   [key: string]: unknown;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Slice 2 views (docs/tech/slice-2.md §7.3): tier-3 stories share one screen (ADR 0013).
+// ---------------------------------------------------------------------------------------------
+
+export type ChapterStatusKind = 'none' | 'waiting' | 'ready' | 'midway';
+
+/** One tier-3 story screen, every text resolved on the server (ADR 0013). */
+export interface StoryScreenView {
+  kicker: string;
+  title: string;
+  narrative: string;
+  art:
+    | { kind: 'scene'; asset: AssetView; focus: { x: number; y: number } | null }
+    | { kind: 'map-crop'; asset: AssetView; x: number; y: number };
+  /** The speaker beside the question (the father), or null. */
+  portrait: AssetView | null;
+  /** The answer just given, as one line in Courier ("You went fishing with him."), or null. */
+  echo: string | null;
+  /** The question, or null. */
+  prompt: string | null;
+  /** One tap commits. */
+  choices: Array<{ id: string; text: string; hint: string | null }>;
+  /** Chapter step 2: pick one, then the CTA. */
+  approaches: Array<{ id: string; text: string; check: CheckBreakdown }>;
+  /** `readyAt` null = affordable now. */
+  cta: { label: string; energy: number; readyAt: number | null } | null;
+  progress: { step: number; of: number };
+}
+
+/** A faction card on the street (§7.3). */
+export interface FactionCardView {
+  factionId: FactionId;
+  name: string;
+  crest: AssetView;
+  blurb: string;
+  /** "+3 Strength" · "Starts in Duskwall" · "Their event: the Torchlight March". */
+  facts: [string, string, string];
+  /** The father's wish matches this faction. */
+  wish: boolean;
+  /** "His wish · +50 Faction XP" on the matching card, else null. */
+  wishLabel: string | null;
+  /** "Join the Iron Vanguard · take the train to Duskwall". */
+  confirm: string;
+}
+
+export interface ArrivalView {
+  phase: 'face' | 'story' | 'street' | 'arrived';
+  name: string;
+  avatar: AssetView | null;
+  /** Phase 'face' only. */
+  faces: AssetView[] | null;
+  /** Phase 'story': the next unanswered question, and its id for `arrival.answer`. */
+  screen: StoryScreenView | null;
+  questionId: string | null;
+  street: { screen: StoryScreenView; note: string; cards: FactionCardView[] } | null;
+  /** Phase 'arrived'. */
+  landing: { cityId: string; locationId: string } | null;
+}
+
+export interface AmbitionView {
+  id: string;
+  title: string;
+  chapter: number;
+  of: number;
+  chapterTitle: string;
+  status: ChapterStatusKind;
+  /** Epoch ms of the start of the day the next chapter opens, while waiting. */
+  readyFrom: number | null;
+  needs: { rank?: number; level?: number } | null;
+  /** ready → the choose screen; midway → the check screen. */
+  screen: StoryScreenView | null;
+  letterFrom: string | null;
 }

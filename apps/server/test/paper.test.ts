@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Character } from '@irongate/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { freshCharacter, setupDb, teardownDb } from './helpers';
+import { arrive, callerFor, freshCharacter, newUser, setupDb, teardownDb, testClock } from './helpers';
 
 const H = 3_600_000;
 const CANVASS = { actionId: 'coalport.mill-gate.canvass', locationId: 'coalport.mill-gate' } as const;
@@ -12,8 +12,10 @@ beforeAll(async () => {
 afterAll(teardownDb);
 
 describe('paper.today (§3.3)', () => {
+  // Slice 2: the first edition is the welcome edition, printed at the join (onboarding §7).
   it('the first edition: masthead, dateline, 3 headlines, orders signed P.H., the desk', async () => {
-    const { caller } = await freshCharacter();
+    const caller = callerFor(newUser('Mara Lenk'), testClock().now);
+    await arrive(caller);
     const p = await caller.paper.today();
     expect(p.paper).toEqual({
       name: 'The Coalport Clarion',
@@ -24,12 +26,30 @@ describe('paper.today (§3.3)', () => {
     expect(p.dateline).toEqual({ weekday: 'Tuesday', date: '29 September', city: 'Coalport' });
     expect(p.firstEdition).toBe(true);
     expect(p.headlines).toHaveLength(3);
-    expect(p.headlines[0]).toMatchObject({ group: 'personal', headline: 'Welcome to Coalport' });
-    expect(p.headlines[1]).toMatchObject({ group: 'city', headline: 'Collective Holds Coalport at 70.0 %' });
-    expect(p.headlines[2]).toMatchObject({
-      group: 'ambient',
-      headline: 'Night Shift Back to Full Time at the Mill',
+    // The welcome, the arrival notice with the name, the morale line (onboarding §7.2).
+    expect(p.headlines[0]).toEqual({
+      group: 'personal',
+      headline: 'Welcome to Coalport',
+      deck: "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Mill Gate first.",
     });
+    expect(p.headlines[1]).toEqual({
+      group: 'city',
+      headline: 'Mara Lenk Steps Off the Irongate Train',
+      deck: 'One more pair of hands for the branch, says the Union Hall. The mill is hiring.',
+    });
+    expect(p.headlines[2]).toMatchObject({ group: 'city', headline: 'Collective Holds Coalport at 70.0 %' });
+    expect(p.letters).toEqual([
+      {
+        kind: 'chapter',
+        from: "From your father's things",
+        title: 'His ward book',
+        chapter: 1,
+        status: 'ready',
+        energy: 10,
+      },
+    ]);
+    expect(p.landing).toEqual({ cityId: 'coalport', locationId: 'coalport.mill-gate' });
+    expect(p.desk.wearing).toEqual({ name: 'Mill work coat', cha: 2 });
     expect(p.orders.issuer?.signature).toBe('— P.H.');
     expect(p.orders.items).toHaveLength(3);
     expect(p.desk).toMatchObject({

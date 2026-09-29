@@ -1,0 +1,420 @@
+import type { City } from '../../schemas';
+
+/**
+ * Duskwall, home city of the Vanguard (GDD §14.1, §14.11). Locations, actions and text:
+ * docs/design/slice-2-cities.md §1 (generated from its tables, then checked by the content tests).
+ * Rewards are not data: they follow from the type and Energy at the §5.5 rates.
+ *
+ * TODO(content-policy): the Vanguard vocabulary flagged in docs/tech/slice-2.md §20.3 item 3 lives
+ * in this file (drill, muster, the movement's mark); a rename is a change to these strings only.
+ */
+
+const canvass = { tier: 1, type: 'canvass', energy: 10, givesFxp: true, givesOpinion: true } as const;
+const speech = { tier: 1, type: 'speech', energy: 12, givesFxp: true, givesOpinion: true } as const;
+const propaganda = { tier: 1, type: 'propaganda', energy: 8, givesFxp: true, givesOpinion: true } as const;
+const intelligence = { tier: 1, type: 'intelligence', givesFxp: false, givesOpinion: false } as const;
+
+export const duskwall: City = {
+  id: 'duskwall',
+  name: 'Duskwall',
+  role: 'home',
+  homeFactionId: 'vanguard',
+  // §14.11 baseline, pinned in slice 2 (cities §1).
+  baselineOpinion: { vanguard: 70, collective: 6, alliance: 9, neutral: 15 },
+  map: { day: 'map.duskwall.day', night: 'map.duskwall.night' },
+  paper: {
+    name: 'The Duskwall Sentinel',
+    shortName: 'Sentinel',
+    strapline: 'For the city and the frontier',
+    price: '5 marks',
+  },
+  locations: [
+    {
+      id: 'duskwall.garrison-gate',
+      name: 'Garrison Gate',
+      kind: 'barracks',
+      blurb:
+        "The gatehouse of the old fortress, now the garrison's front door. The guard changes at four, and the whole town sets its watch by it.",
+      map: { x: 0.47, y: 0.44 },
+      actions: [
+        {
+          ...canvass,
+          id: 'duskwall.garrison-gate.canvass',
+          name: 'Canvass the guard change',
+          stats: ['str'],
+          text: {
+            success: {
+              headline: 'They stop for one of their own',
+              body: "The guard comes off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A corporal takes ten leaflets for the billet.",
+            },
+            partial: {
+              headline: 'Most of them march past',
+              body: "The relief marches through and the old guard heads for the canteen without slowing. You press leaflets on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.",
+            },
+          },
+        },
+        {
+          ...speech,
+          id: 'duskwall.garrison-gate.speech',
+          name: 'Speak from the gate steps',
+          stats: ['cha', 'str'],
+          text: {
+            success: {
+              headline: 'The square goes quiet',
+              body: 'You take the top step under the arch and pitch it to the back of the square. Order on the streets, bread at a fixed price, the frontier held. Nobody heckles here. When you finish, the sergeant of the guard nods once.',
+            },
+            partial: {
+              headline: 'The bugle cuts you off',
+              body: 'You get through prices and the checkpoint queues before the bugle goes for the relief and the square empties at the double. A few townsfolk stay to hear the end. The sergeant looks at his watch.',
+            },
+          },
+        },
+        // TODO(content-policy): "Drill with the recruits" is flagged as military framing (tech design §20.3)
+        {
+          id: 'duskwall.garrison-gate.drill',
+          name: 'Drill with the recruits',
+          tier: 1,
+          type: 'training',
+          trains: 'str',
+          text: {
+            success: {
+              headline: 'An hour on the square',
+              body: "The drill sergeant doesn't ask which party you're with; he asks if you can carry a pack. You can, by the end. Your shoulders will tell you about it tomorrow.",
+            },
+          },
+        },
+        {
+          id: 'duskwall.garrison-gate.stores',
+          name: 'Work your shift in the garrison stores',
+          tier: 1,
+          type: 'job',
+          jobId: 'duskwall-stores-hand',
+          text: {
+            success: {
+              headline: 'Eight hours among the crates',
+              body: "Blankets, boots, tinned beef, counted in and counted out under a corporal who trusts nobody. The paybook gets its stamp. Half came at midnight; here's the rest, with the streak on top.",
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.quartermaster-market',
+      name: "Quartermaster's Market",
+      kind: 'market',
+      blurb:
+        "Tents and trestles under the walls, where the garrison sells what it doesn't need and the town buys what it can't get elsewhere.",
+      map: { x: 0.5, y: 0.65 },
+      actions: [
+        {
+          ...canvass,
+          id: 'duskwall.quartermaster-market.canvass',
+          name: 'Canvass the ration queue',
+          stats: ['int'],
+          text: {
+            success: {
+              headline: 'The queue has nowhere to go',
+              body: 'Sixty people and one tent with sugar in it. You work the line with the price list and the leaflet. By the time the corporal shouts next, half the queue knows what the movement would do about the ration.',
+            },
+            partial: {
+              headline: 'The sugar runs out early',
+              body: "Three people in, the corporal drops the flap and the queue turns into an argument. A few leaflets go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.",
+            },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'duskwall.quartermaster-market.leaflets',
+          name: 'Hand out leaflets between the tents',
+          stats: ['agi'],
+          text: {
+            success: {
+              headline: 'Quick hands, empty bag',
+              body: 'You work the tent rows at a trot, a leaflet into every basket before the owner looks up. The bag is empty in ten minutes and the market provost never sees you.',
+            },
+            partial: {
+              headline: 'The provost sees you',
+              body: "Half the bag is gone when the market provost plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The leaflets you handed out are still out there.",
+            },
+          },
+        },
+        {
+          ...speech,
+          id: 'duskwall.quartermaster-market.speech',
+          name: 'Speak from the lorry bed',
+          stats: ['cha', 'int'],
+          text: {
+            success: {
+              headline: 'A crowd between the tents',
+              body: "You climb onto the tailboard of a parked lorry and give it to them. Prices, the ration, who queues and who doesn't. The stallholders heckle, the crowd laughs, and by the end the laughs are on your side.",
+            },
+            partial: {
+              headline: 'The lorry has to leave',
+              body: "You've a fair crowd until the driver climbs into the cab and you're speaking from a moving platform. You finish on the ground for the tea stall and a provost who looks bored. The tea stall gives you a nod.",
+            },
+          },
+        },
+        {
+          id: 'duskwall.quartermaster-market.stall',
+          name: "Work the sutler's stall",
+          tier: 1,
+          type: 'job',
+          jobId: 'duskwall-street-vendor',
+          text: {
+            success: {
+              headline: "A day's trade",
+              body: "Bootlaces, tobacco, yesterday's Sentinel. You know the regulars by their boots now. The takings won't make anyone rich, but they come in every day, and the provost has stopped asking.",
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.beacon-house',
+      name: 'Beacon House',
+      kind: 'faction-hq',
+      blurb:
+        "The movement's district office, named for the searchlight on its roof. The committee sits upstairs; the volunteers muster in the yard at six.",
+      map: { x: 0.64, y: 0.78 },
+      actions: [
+        {
+          id: 'duskwall.beacon-house.committee',
+          name: 'Sit in on the district committee',
+          tier: 1,
+          type: 'council',
+          stats: ['int'],
+          energy: 10,
+          givesFxp: true,
+          givesOpinion: false,
+          text: {
+            success: {
+              headline: 'Minutes taken, motion carried',
+              body: 'Coffee, a wall map stuck with pins, and a chairman who likes short answers. The committee wants the ward lists redone by street and you say how. Your name goes in the minutes. In this house, that counts.',
+            },
+            partial: {
+              headline: 'A long meeting',
+              body: 'Two hours on the ward lists and the price of paper. You get one point in before the chairman moves on. The organiser marks you present, which is what matters this week.',
+            },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'duskwall.beacon-house.duplicator',
+          name: 'Run the duplicator',
+          stats: ['int'],
+          text: {
+            success: {
+              headline: 'Five hundred copies, still wet',
+              body: 'The stencil holds and the drum turns. Five hundred bulletins in an hour, stacked for the morning runners. Your hands are purple to the wrist and the office smells of spirit.',
+            },
+            partial: {
+              headline: 'The stencil tears',
+              body: 'The stencil tears at copy two hundred and the rest come out ghosted. Half a stack goes out; the other half goes in the stove. The organiser shows you how to cut the next one.',
+            },
+          },
+        },
+        // TODO(content-policy): "Address the evening muster" is flagged as military framing (tech design §20.3)
+        {
+          ...speech,
+          id: 'duskwall.beacon-house.muster',
+          name: 'Address the evening muster',
+          stats: ['cha', 'int'],
+          text: {
+            success: {
+              headline: 'The yard listens',
+              body: "Forty volunteers in the yard at six, caps off, waiting to be told. You tell them: which streets tonight, which doors, what to say at each. Nobody asks a question. That's the compliment here.",
+            },
+            partial: {
+              headline: 'Half the yard is thinking about supper',
+              body: 'You get the street list out before the back rows start shuffling. The front row writes it down, which is something. The organiser says: shorter, next time.',
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.archives',
+      name: 'State Archives',
+      kind: 'library',
+      blurb:
+        "The republic's records, kept in a stone quadrangle the movement now holds the keys to. Every ration book, lease and conviction in the district is in here somewhere.",
+      map: { x: 0.77, y: 0.36 },
+      actions: [
+        {
+          id: 'duskwall.archives.reading-room',
+          name: 'Study in the reading room',
+          tier: 1,
+          type: 'training',
+          trains: 'int',
+          text: {
+            success: {
+              headline: 'An evening with the registers',
+              body: "The reading room is cold and the light is bad, but the shelves hold everything from the frontier acts to the grain returns of 1913. You leave knowing the argument better than the man who'll make it against you.",
+            },
+          },
+        },
+        {
+          ...intelligence,
+          id: 'duskwall.archives.registers',
+          name: 'Search the registers',
+          stats: ['int'],
+          energy: 4,
+          text: {
+            success: {
+              headline: 'Names, dates, addresses',
+              body: "You sign for a ledger and read it like a paper. Who moved into the officers' terrace last spring, who sold a lease in a hurry, who's drawing two ration books. It goes in your notebook for later.",
+            },
+            partial: {
+              headline: 'The wrong volume',
+              body: 'The clerk brings the wrong year and takes an hour to find the right one. You get one address worth writing down before closing. Not nothing.',
+            },
+          },
+        },
+        {
+          ...canvass,
+          id: 'duskwall.archives.clerks',
+          name: 'Canvass the clerks at closing time',
+          stats: ['int'],
+          text: {
+            success: {
+              headline: 'The steps at five',
+              body: 'The clerks come down the steps at five in a body, ink on their cuffs. You know the wage scales better than they do, so they listen. One asks for three leaflets: for the office, he says.',
+            },
+            partial: {
+              headline: 'Umbrellas up',
+              body: "It's raining at five and the clerks go down the steps at a run. You get leaflets to the ones waiting for the tram. One says the office already reads the Sentinel. Come back when it's dry.",
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.goods-yard',
+      name: 'Goods Yard',
+      kind: 'station',
+      blurb:
+        'The sidings below the fortress wall, where the frontier freight is broken down and the coal comes in. The loaders eat at noon with their backs to the wagons.',
+      map: { x: 0.18, y: 0.64 },
+      actions: [
+        {
+          ...canvass,
+          id: 'duskwall.goods-yard.loaders',
+          name: 'Talk to the loaders at the break',
+          stats: ['str'],
+          text: {
+            success: {
+              headline: 'They make room on the buffer',
+              body: "The loaders eat on the buffers with their backs to the wind. You've the hands for the work and it shows, so they make room. By the time the whistle goes, the gang has agreed to send two men to Beacon House.",
+            },
+            partial: {
+              headline: 'Bread and silence',
+              body: "The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a leaflet for later. Nobody gets up when the whistle goes, which is the loaders' way of saying maybe.",
+            },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'duskwall.goods-yard.posters',
+          name: 'Paste posters on the wagons',
+          stats: ['str'],
+          text: {
+            success: {
+              headline: "A train's length of paper",
+              body: 'Bucket, brush, and a rake of empty wagons waiting for the morning. You get twelve posters up straight and high, one to a wagon. Every station between here and the capital will read them by noon.',
+            },
+            partial: {
+              headline: "The paste won't hold",
+              body: "The wind off the mountains is against you and the paste won't take on the frosted boards. Five posters stay up; the rest go under the wheels. Five is five.",
+            },
+          },
+        },
+        {
+          ...intelligence,
+          id: 'duskwall.goods-yard.manifests',
+          name: 'Note the manifests',
+          stats: ['int'],
+          energy: 3,
+          text: {
+            success: {
+              headline: 'Wagons, firms, times',
+              body: "You sit on a bollard with a paper and a pencil and watch the checker's hut. Three wagons for one firm, two of them sealed, one that leaves without a stamp. It goes in your notebook for later.",
+            },
+            partial: {
+              headline: 'Nothing much moves',
+              body: 'An hour on the bollard and one wagon, which is checked, stamped and shunted. Your notebook has a firm and a time. Not nothing.',
+            },
+          },
+        },
+        {
+          id: 'duskwall.goods-yard.lorry',
+          name: 'Drive the yard lorry',
+          tier: 1,
+          type: 'job',
+          jobId: 'duskwall-driver',
+          text: {
+            success: {
+              headline: 'Six runs to the depot',
+              body: "Six runs between the sidings and the garrison depot, a full load each way and a checker who wants it faster. The lorry fights you on the frost. The pay clerk doesn't.",
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.rampart-row',
+      name: 'Rampart Row',
+      kind: 'street',
+      blurb:
+        "Railwaymen's terraces along the line below the walls. Washing across the street, children on the steps, and doors that open for the right accent.",
+      map: { x: 0.14, y: 0.84 },
+      actions: [
+        {
+          ...canvass,
+          id: 'duskwall.rampart-row.canvass',
+          name: 'Canvass door to door',
+          stats: ['cha', 'int'],
+          text: {
+            success: {
+              headline: 'The kettle goes on',
+              body: "Sixty doors below the wall. Most open a crack; a dozen open wide, and at three the kettle goes on. Railwaymen's wives talk about the curfew and the price of coal. You leave with a list of names.",
+            },
+            partial: {
+              headline: 'Doors on the chain',
+              body: "It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones on the step. One man says he's heard the movement's speeches from the wall already. Come back after the shift.",
+            },
+          },
+        },
+        // TODO(content-policy): "Chalk the movement's mark" (the square with HOLD THE LINE) is flagged (tech design §20.3)
+        {
+          ...propaganda,
+          id: 'duskwall.rampart-row.chalk',
+          name: "Chalk the movement's mark",
+          stats: ['agi'],
+          text: {
+            success: {
+              headline: 'White letters on the gable end',
+              body: "The gable end at the bottom of the row is the biggest wall on the line. You get HOLD THE LINE up in fair capitals, the square beneath it, before the rent-man's boy comes round the corner. Then you're away down the entry.",
+            },
+            partial: {
+              headline: 'Half a slogan',
+              body: 'You get as far as HOLD THE before a window goes up and someone shouts about their wall. You finish the last word small and leave by the back entry. It reads, just about.',
+            },
+          },
+        },
+        {
+          id: 'duskwall.rampart-row.run',
+          name: 'Run messages for the street warden',
+          tier: 1,
+          type: 'training',
+          trains: 'agi',
+          text: {
+            success: {
+              headline: 'Every entry below the wall',
+              body: 'Six notes, five streets, one hour. You learn which entries connect and which end in a wall, and you learn them at a run. By the end you could do it in the dark, which is the point.',
+            },
+          },
+        },
+      ],
+    },
+  ],
+};

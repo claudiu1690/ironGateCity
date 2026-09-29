@@ -51,6 +51,9 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
       return { label: 'Success', tone: 'success' };
     case 'partial':
       return { label: 'Partial', tone: 'partial' };
+    case 'failure':
+      // Designer answer §13 Q10: the stamp says Failure; nothing else in the modal says "failed".
+      return { label: 'Failure', tone: 'failure' };
     case 'batch':
       return {
         label: `${r.successes} of ${r.action.times}`,
@@ -145,10 +148,17 @@ function ResultBody({
 }: ResultModalProps & { result: ActionResult }) {
   const [later, setLater] = useState(false);
   const stamp = stampFor(r);
-  const toneText = stamp.tone === 'success' ? 'text-success' : 'text-partial';
+  const toneText =
+    stamp.tone === 'success' ? 'text-success' : stamp.tone === 'failure' ? 'text-failure' : 'text-partial';
   const factionText = FACTION_STYLE[r.character.factionId].text;
   const e = r.effects;
-  const kicker = r.action.times > 1 ? `${r.action.name} · ${r.action.times} times` : r.action.name;
+  const kicker = r.story
+    ? copy.chapterKicker(r.story.ambitionTitle, r.story.chapter, r.story.of)
+    : r.action.times > 1
+      ? `${r.action.name} · ${r.action.times} times`
+      : r.action.name;
+  const item = e.item ?? null;
+  const hooks = e.hooks ?? [];
   const energyNow = energy?.value ?? r.character.energy.value;
   const short1 = r.again ? energyNow < r.again.cost1 : true;
   const short3 = r.again && r.again.cost3 !== null ? energyNow < r.again.cost3 : false;
@@ -219,13 +229,28 @@ function ResultBody({
                   : undefined
               }
             />
-            <Tile
-              label={r.place.cityName}
-              value={e.opinion ? `${formatOpinionDelta(r.rewards.opinion)} %` : '—'}
-              className={factionText}
-              note={e.opinion ? `${r.character.factionName} opinion` : 'no opinion'}
-              testId="tile-opinion"
-            />
+            {item ? (
+              <div
+                className="flex items-center gap-2 border-[1.5px] border-ink bg-paper-card px-2.5 py-2"
+                data-testid="tile-keepsake"
+              >
+                <Picture asset={item.art} sizes="40px" decorative className="size-10 shrink-0 object-cover" />
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="label-caps text-[9px] text-muted">
+                    {item.keepsake ? 'Keepsake' : 'Item'}
+                  </span>
+                  <span className="font-display text-[14px] leading-tight font-bold">{item.name}</span>
+                </span>
+              </div>
+            ) : (
+              <Tile
+                label={r.place.cityName}
+                value={e.opinion ? `${formatOpinionDelta(r.rewards.opinion)} %` : '—'}
+                className={factionText}
+                note={e.opinion ? `${r.character.factionName} opinion` : 'no opinion'}
+                testId="tile-opinion"
+              />
+            )}
           </div>
         </section>
 
@@ -234,6 +259,27 @@ function ResultBody({
           <h3 id="effects" className="label-caps mb-1 text-[10px] text-muted">
             Knock-on effects
           </h3>
+          {(item || hooks.length > 0) && (
+            <ul className="flex flex-col">
+              {item && (
+                <li
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  data-testid="effect-item"
+                >
+                  {copy.keepsakeLine(item.name)}
+                </li>
+              )}
+              {hooks.map((h) => (
+                <li
+                  key={h}
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  data-testid="effect-hook"
+                >
+                  {h}
+                </li>
+              ))}
+            </ul>
+          )}
           <dl className="flex flex-col">
             {e.opinion && (
               <Effect
@@ -380,6 +426,7 @@ function ResultBody({
 function AttemptRow({ attempt: a }: { attempt: ResultAttempt }) {
   const [open, setOpen] = useState(false);
   const success = a.outcome === 'success';
+  const failure = a.outcome === 'failure';
   const label = success ? 'Success' : a.outcome === 'partial' ? 'Partial' : 'Failure';
   return (
     <div className="flex flex-col gap-1" data-testid="attempt-row">
@@ -396,7 +443,10 @@ function AttemptRow({ attempt: a }: { attempt: ResultAttempt }) {
           aria-label={`Chance ${a.check.chance} %, rolled ${a.roll}`}
         >
           <span
-            className={cx('absolute inset-y-0 left-0', success ? 'bg-success-fill' : 'bg-partial-fill')}
+            className={cx(
+              'absolute inset-y-0 left-0',
+              success ? 'bg-success-fill' : failure ? 'bg-failure-fill' : 'bg-partial-fill',
+            )}
             style={{ width: `${a.check.chance}%` }}
           />
           <span
@@ -408,7 +458,7 @@ function AttemptRow({ attempt: a }: { attempt: ResultAttempt }) {
         <span
           className={cx(
             'label-caps text-[11px] tracking-[0.06em]',
-            success ? 'text-success' : 'text-partial',
+            success ? 'text-success' : failure ? 'text-failure' : 'text-partial',
           )}
         >
           {label} · {formatSigned(a.rewards.xp.total)} XP

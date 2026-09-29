@@ -1,7 +1,7 @@
 import { PAPER } from './constants';
 import { cityDayIndex, mod } from './day';
 import type { DayKey } from './day';
-import type { HeadlineCondition, HeadlineTemplate, Placeholder } from './types';
+import type { HeadlineCondition, HeadlineTemplate, Placeholder, StoryPlaceholder } from './types';
 
 /** What the edition knows when it is set (from the settlement and the previous edition). */
 export interface PaperFacts {
@@ -100,8 +100,14 @@ export function placeholdersIn(text: string): string[] {
   return [...text.matchAll(PLACEHOLDER_RE)].map((m) => m[1]!);
 }
 
-/** Resolve `{name}`-style placeholders; an unknown or missing one is left as written. */
-export function fillTemplate(text: string, vars: Partial<Record<Placeholder, string>>): string {
+/**
+ * Resolve `{name}`-style placeholders (headline and order ones, and the story ones of slice 2); an
+ * unknown or missing one is left as written.
+ */
+export function fillTemplate(
+  text: string,
+  vars: Partial<Record<Placeholder | StoryPlaceholder, string>>,
+): string {
   return text.replace(PLACEHOLDER_RE, (whole, key: string) => vars[key as Placeholder] ?? whole);
 }
 
