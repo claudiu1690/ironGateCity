@@ -1,13 +1,6 @@
 import type { GameContent, LocatedAction } from '@irongate/content';
 import type { CharacterDoc } from '@irongate/db';
-import {
-  DIRECTIVES,
-  itemSpec,
-  projectEnergy,
-  trainingCost,
-  trainingRunCost,
-  usesSuccessText,
-} from '@irongate/rules';
+import { DIRECTIVES, itemSpec, projectEnergy, trainingCost, usesSuccessText } from '@irongate/rules';
 import type {
   ActionResult,
   BonusTag,
@@ -148,7 +141,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
       detail: `${row.cost} Energy · no roll`,
     }));
     stat = r.stat;
-    again = { cost1: trainingCost(r.stat.after), cost3: trainingRunCost(r.stat.after, 3) };
+    again = { cost1: trainingCost(r.stat.after), cost3: null }; // ×1 only (§8.5)
   } else {
     const r = i.resolution;
     stamp = 'worked';

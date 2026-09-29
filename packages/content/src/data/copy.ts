@@ -3,6 +3,12 @@
  * British English, no exclamation marks. Times are formatted by the caller in the player's local
  * clock ("UTC" never appears on a button). Plain data: safe to import in the client.
  */
+/** "Mill Gate, Market Row or Harbour Quays": commas, then a final "or". */
+function listOr(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  return `${items.slice(0, -1).join(', ')} or ${items.at(-1)}`;
+}
+
 export const copy = {
   needsEnergy: (cost: number, readyAt: string) => `Needs ${cost} Energy · ready at ${readyAt}`,
   energyFull: (rested: number) => `Rested ${rested}`,
@@ -11,6 +17,8 @@ export const copy = {
   shiftWorked: (nextAt: string) => `Shift worked · next at ${nextAt}`,
   shiftNotYourJob: 'Not your job · see the Jobs card',
   shiftNoJob: 'No job yet · take one below',
+  /** Me tab, no job: the home city's places with a Jobs card, in pin order (content §13.7, n4). */
+  meNoJob: (places: string[]) => `No job yet · take one at ${listOr(places)}`,
   takeJob: 'Take the job',
   jobPayLine: (pay: number) => `${pay} a day · half at midnight, half for the shift`,
   switchJob: (energy: number) => `Switch · ${energy} Energy · streak resets`,
@@ -40,7 +48,11 @@ export const copy = {
   outOfEnergyRested: "Rested banks once you're full",
   waitingForYou: 'Waiting for you',
   toTheCity: 'To the city',
-  paperIsIn: (paper: string) => `${paper} is in`,
+  /** App shell banner: the city paper's short name ("The Clarion is in", content §13.7, n3). */
+  paperIsIn: (shortName: string) => `The ${shortName} is in`,
+  // Auth pages (content §13.4).
+  signupTitle: 'Join the campaign',
+  loginTitle: 'Sign in',
 } as const;
 
 export type Copy = typeof copy;

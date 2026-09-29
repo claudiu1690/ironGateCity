@@ -1,3 +1,4 @@
+import { copy } from '@irongate/content/copy';
 import { Button, Field } from '@irongate/ui';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -30,7 +31,7 @@ export function SignupPage() {
   }
 
   return (
-    <AuthLayout title="Join the struggle">
+    <AuthLayout title={copy.signupTitle}>
       <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate={false}>
         <Field label="Your name" name="name" autoComplete="name" required maxLength={60} />
         <Field label="Email" name="email" type="email" autoComplete="email" required />

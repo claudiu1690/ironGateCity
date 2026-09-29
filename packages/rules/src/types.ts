@@ -137,15 +137,21 @@ export interface OrdersState {
 
 export type HeadlineGroup = 'personal' | 'city' | 'ambient';
 
+/** Counts in `min` / `max` conditions are inclusive, except `homeShare`'s max (see paper.ts). */
 export type HeadlineCondition =
   | { kind: 'firstEdition' }
-  | { kind: 'rankRose' }
+  /** The rank rose since the last paper; optionally only to one of `values`, or to `min` or higher. */
+  | { kind: 'rankRose'; values?: number[]; min?: number }
   | { kind: 'levelRose' }
   | { kind: 'standingRose' }
   | { kind: 'ordersAllDoneYesterday' }
   | { kind: 'streakHitYesterday'; values: number[] }
   | { kind: 'daysSinceLastPaper'; min: number }
   | { kind: 'idleYesterday' }
+  /** Half-pays credited at the boundaries since the last paper (content §13.1). */
+  | { kind: 'halfPaysCredited'; min?: number; max?: number }
+  /** Energy spent on the previous City Day (0 when the player was not seen). */
+  | { kind: 'energyYesterday'; min?: number; max?: number }
   | { kind: 'noPersonal' }
   | { kind: 'homeShare'; min?: number; max?: number };
 
@@ -305,7 +311,7 @@ export interface ActionView {
   givesFxp: boolean;
   /** ×1 cost (training: the live 20 + 2 × stat; shift: the job's). */
   energy: number;
-  /** ×3 total (training: the rising sum); null for shifts. */
+  /** ×3 total; null for training and shifts (×1 only, §8.5, §13.1). */
   energy3: number | null;
   /** Checked actions only, Standing bonus included. */
   preview: CheckBreakdown | null;
@@ -443,8 +449,11 @@ export interface ActionResult {
   };
   /** The Today tally after this tap. */
   today: DailyTally;
-  /** Live costs for the modal's Again buttons (training rises); null for shifts. */
-  again: { cost1: number; cost3: number } | null;
+  /**
+   * Live costs for the modal's Again buttons (training rises); `cost3` is null for training (×1
+   * only, §8.5); the whole field is null for shifts.
+   */
+  again: { cost1: number; cost3: number | null } | null;
   character: CharacterView;
 }
 
@@ -467,7 +476,7 @@ export interface DeskView {
 export interface PaperView {
   day: DayKey;
   firstEdition: boolean;
-  paper: { name: string; strapline: string; price: string };
+  paper: { name: string; shortName: string; strapline: string; price: string };
   dateline: { weekday: string; date: string; city: string };
   headlines: Array<{ group: HeadlineGroup; headline: string; deck?: string }>;
   orders: OrdersView;
@@ -491,7 +500,8 @@ export type GameErrorReason =
   | 'ALREADY_IN_JOB'
   | 'NOT_YOUR_JOB'
   | 'SHIFT_ALREADY_WORKED'
-  | 'SHIFT_IS_ONCE';
+  | 'SHIFT_IS_ONCE'
+  | 'TRAINING_IS_ONCE';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {

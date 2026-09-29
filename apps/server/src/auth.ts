@@ -3,6 +3,9 @@ import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import type { Db, MongoClient } from 'mongodb';
 import type { Env } from './env';
 
+/** Set by the Fastify bridge from `request.ip` (app.ts); any client-sent value is replaced. */
+export const CLIENT_IP_HEADER = 'x-irongate-client-ip';
+
 /**
  * Better Auth, mounted at /api/auth on the API but addressed through the client's own origin
  * (ADR 0001): `baseURL` and `trustedOrigins` are the public client origin, and cookies stay
@@ -22,6 +25,8 @@ export function createAuth(env: Env, db: Db, client: MongoClient) {
     // production rate limit (sign-up included) would refuse the fourth. Only with the test hooks,
     // which require DB_MODE=memory.
     ...(env.E2E_TEST_HOOKS ? { rateLimit: { enabled: false } } : {}),
+    // The rate limit keys on the address Fastify resolved (TRUST_PROXY), not on X-Forwarded-For.
+    advanced: { ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] } },
     telemetry: { enabled: false },
   });
 }

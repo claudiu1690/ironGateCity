@@ -152,7 +152,13 @@ export const City = z.strictObject({
   map: z.strictObject({ day: AssetId, night: AssetId }),
   /** §3.3: the home city's paper ("The Coalport Clarion"). */
   paper: z
-    .strictObject({ name: z.string().min(1), strapline: z.string().min(1), price: z.string().min(1) })
+    .strictObject({
+      name: z.string().min(1),
+      /** For short lines: "The Clarion is in" (content §13.7). */
+      shortName: z.string().min(1),
+      strapline: z.string().min(1),
+      price: z.string().min(1),
+    })
     .optional(),
   locations: z.array(Location),
 });
@@ -265,13 +271,27 @@ export const OrderTemplateSchema = z.strictObject({
 
 export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('firstEdition') }),
-  z.strictObject({ kind: z.literal('rankRose') }),
+  z.strictObject({
+    kind: z.literal('rankRose'),
+    values: z.array(z.number().int().min(1)).min(1).optional(),
+    min: z.number().int().min(1).optional(),
+  }),
   z.strictObject({ kind: z.literal('levelRose') }),
   z.strictObject({ kind: z.literal('standingRose') }),
   z.strictObject({ kind: z.literal('ordersAllDoneYesterday') }),
   z.strictObject({ kind: z.literal('streakHitYesterday'), values: z.array(z.number().int()).min(1) }),
   z.strictObject({ kind: z.literal('daysSinceLastPaper'), min: z.number().int().min(1) }),
   z.strictObject({ kind: z.literal('idleYesterday') }),
+  z.strictObject({
+    kind: z.literal('halfPaysCredited'),
+    min: z.number().int().min(0).optional(),
+    max: z.number().int().min(0).optional(),
+  }),
+  z.strictObject({
+    kind: z.literal('energyYesterday'),
+    min: z.number().int().min(0).optional(),
+    max: z.number().int().min(0).optional(),
+  }),
   z.strictObject({ kind: z.literal('noPersonal') }),
   z.strictObject({ kind: z.literal('homeShare'), min: z.number().optional(), max: z.number().optional() }),
 ]) satisfies z.ZodType<HeadlineCondition>;

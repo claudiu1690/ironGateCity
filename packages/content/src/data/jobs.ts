@@ -10,7 +10,7 @@ export const jobs: Job[] = [
     unlock: { level: 1 },
     shiftEnergy: 3,
     dailyPay: 100,
-    blurb: "Matches, bootlaces and yesterday's paper from a stall on Market Row.",
+    blurb: "Matches, bootlaces and yesterday's paper from a stall on Market Row. Nobody asks for a permit.",
   },
   {
     id: 'factory-worker',
@@ -21,7 +21,8 @@ export const jobs: Job[] = [
     shiftEnergy: 4,
     dailyPay: 180,
     factionPayBonus: { collective: 0.2 },
-    blurb: 'The rolling floor of the Coalport Steel Mill. Collective members are paid a fifth more.',
+    blurb:
+      'Eight hours on the rolling floor of the Coalport Steel Mill. Collective members draw a fifth more.',
   },
   {
     id: 'driver',
@@ -31,6 +32,7 @@ export const jobs: Job[] = [
     unlock: { level: 3, stats: { agi: 10 } },
     shiftEnergy: 4,
     dailyPay: 200,
-    blurb: 'The dock lorry between the quay and the goods yard, a full load each way.',
+    blurb:
+      'The dock lorry between the quay and the goods yard, a full load each way. Needs a quick hand on the cobbles.',
   },
 ];

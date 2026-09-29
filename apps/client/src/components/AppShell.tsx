@@ -17,7 +17,9 @@ export function AppShell() {
   const { character, nextTickIn } = useCharacter();
   const stat = usePlaceStat();
   const wide = useMinWidth(1024);
-  const paper = useQuery({ ...trpc.paper.today.queryOptions(), enabled: wide && !!character });
+  const paperDue = !!character?.paperDue && !pathname.startsWith('/paper');
+  // The ticker (wide screens) and the "paper is in" banner both need the paper's name.
+  const paper = useQuery({ ...trpc.paper.today.queryOptions(), enabled: !!character && (wide || paperDue) });
 
   const active: TabId = pathname.startsWith('/paper') ? 'paper' : pathname.startsWith('/me') ? 'me' : 'map';
   const cityHref = `/city/${character?.cityId ?? 'coalport'}`;
@@ -44,13 +46,13 @@ export function AppShell() {
       ) : (
         <div className="h-14 shrink-0 border-b border-ink-2 bg-ink" />
       )}
-      {character?.paperDue && active !== 'paper' && (
+      {paperDue && paper.data && (
         <Link
           to="/paper"
-          className="label-caps flex min-h-9 shrink-0 items-center justify-center bg-paper-2 text-[11px] text-ink underline-offset-2 hover:underline"
+          className="label-caps flex min-h-11 shrink-0 items-center justify-center bg-paper-2 text-[11px] text-ink underline-offset-2 hover:underline"
           data-testid="paper-banner"
         >
-          {copy.paperIsIn('The morning paper')}
+          {copy.paperIsIn(paper.data.paper.shortName)}
         </Link>
       )}
       <main className="relative min-h-0 flex-1 overflow-y-auto pb-16 lg:pb-0">

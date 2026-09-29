@@ -39,12 +39,15 @@ export function buildEdition(i: {
   const facts: PaperFacts = {
     firstEdition: s.firstEdition,
     rankRose: prev !== null && c.rank > prev.snapshot.rank,
+    rank: c.rank,
     levelRose: prev !== null && c.level > prev.snapshot.level,
     standingRose: prev !== null && standingLevel > prev.snapshot.standingLevel,
     ordersAllDoneYesterday: c.orders.day === yesterday && c.orders.allDoneAt !== null,
     streakHitYesterday: workedYesterday && c.job ? c.job.streak : null,
     daysSinceLastPaper: prev ? today - prev.day : null,
     idleYesterday: playedYesterday !== null && playedYesterday.energy === 0 && !playedYesterday.shiftWorked,
+    halfPaysCredited: s.salary?.days ?? 0,
+    energyYesterday: playedYesterday?.energy ?? 0,
     homeShare,
   };
 
@@ -60,9 +63,9 @@ export function buildEdition(i: {
     name: c.name,
     level: String(c.level),
     rank: rankTitle(content, c, c.rank),
-    energyYesterday: String(playedYesterday?.energy ?? 0),
+    energyYesterday: String(facts.energyYesterday),
     standing: standing.name,
-    days: String(s.salary?.days ?? 0),
+    days: String(facts.halfPaysCredited),
     iron: String(s.salary?.total ?? 0),
     share: (Math.round(homeShare * 10 + 1e-7) / 10).toFixed(1),
     streak: String(streak),

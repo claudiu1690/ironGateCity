@@ -29,6 +29,7 @@ export function testEnv(uri: string): Env {
     MONGODB_URI: uri,
     BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-000',
     PUBLIC_ORIGIN: 'http://localhost:5173',
+    TRUST_PROXY: 2,
     SENTRY_DSN: undefined,
     LOG_LEVEL: 'silent',
     E2E_TEST_HOOKS: false,

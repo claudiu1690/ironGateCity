@@ -75,7 +75,7 @@ describe('city.get v2', () => {
     expect(study).toMatchObject({
       kind: 'training',
       energy: 44,
-      energy3: 138,
+      energy3: null, // ×1 only (§8.5)
       trains: { stat: 'int', from: 12, to: 13 },
     });
     const driver = city.locations[4]!.jobs[0]!;
@@ -273,42 +273,68 @@ describe('action.perform ×3 (ADR 0006)', () => {
 });
 
 describe('training (§8.5)', () => {
-  it('×1 costs 44, INT 12 → 13, 99 XP, completes Sharpen up; ×3 then costs 46 + 48 + 50', async () => {
+  it('×1 costs 44, INT 12 → 13, 99 XP, completes Sharpen up; Again is ×1 only at the next cost (46)', async () => {
     const { caller } = await freshCharacter();
     const r = await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 });
     expect(r).toMatchObject({ kind: 'training', stamp: 'trained', rewards: { xp: { total: 99 } } });
     expect(r.rows).toEqual([{ index: 1, label: 'INT 12 → 13', detail: '44 Energy · no roll' }]);
     expect(r.effects.stat).toEqual({ stat: 'int', before: 12, after: 13 });
     expect(r.effects.orders[0]).toMatchObject({ id: 'dir.sharpen-up', done: true, fxp: 20 });
-    expect(r.again).toEqual({ cost1: 46, cost3: 144 });
+    expect(r.again).toEqual({ cost1: 46, cost3: null });
     expect(r.art.rung).toBe('scene');
     expect(r.character.stats.int).toBe(13);
+    expect(r.today.statTrained).toBe(1);
+    const again = await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 });
+    expect(again.rows[0]).toMatchObject({ label: 'INT 13 → 14', detail: '46 Energy · no roll' });
     const short = await caller.action
-      .perform({ ...STUDY, idempotencyKey: randomUUID(), times: 3 })
+      .perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 })
       .catch((e: unknown) => e);
     expect(gameData(short).game).toMatchObject({
       reason: 'NOT_ENOUGH_ENERGY',
-      energy: 56,
-      cost: 144,
-      times: 3,
+      energy: 10,
+      cost: 48,
+      times: 1,
     });
   });
 
-  it('×3 trains three points at rising costs (138)', async () => {
+  it('has no ×3 (content §13.2): times 3 is refused with TRAINING_IS_ONCE and spends nothing', async () => {
     const { caller, me, clock } = await freshCharacter();
     await Character.updateOne(
       { _id: me.id },
       { $set: { 'energy.value': 150, 'energy.updatedAt': new Date(clock.now()) } },
     );
-    const r = await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 3 });
-    expect(r.rows.map((x) => x.detail)).toEqual([
-      '44 Energy · no roll',
-      '46 Energy · no roll',
-      '48 Energy · no roll',
-    ]);
-    expect(r.effects.energy).toMatchObject({ before: 150, after: 12 });
-    expect(r.character.stats.int).toBe(15);
-    expect(r.today.statTrained).toBe(3);
+    const err = await caller.action
+      .perform({ ...STUDY, idempotencyKey: randomUUID(), times: 3 })
+      .catch((e: unknown) => e);
+    expect(gameData(err)).toMatchObject({ code: 'BAD_REQUEST', game: { reason: 'TRAINING_IS_ONCE' } });
+    const after = await caller.character.me();
+    expect(after.stats.int).toBe(12);
+    expect(after.energy.value).toBe(150);
+    const city = await caller.city.get({ cityId: 'coalport' });
+    const ticket = city.locations.flatMap((l) => l.actions).find((a) => a.id === STUDY.actionId);
+    expect(ticket).toMatchObject({ kind: 'training', energy: 44, energy3: null });
+  });
+});
+
+describe('same-key copies in flight at once (QA M1)', () => {
+  it('training ×1 and canvass ×3 at the Energy limit: every copy gets the stored result, one log each', async () => {
+    const { caller, me } = await freshCharacter();
+    await Character.updateOne({ _id: me.id }, { $set: { 'energy.value': 44 } });
+    const trainKey = randomUUID();
+    const trained = await Promise.all(
+      [1, 2, 3].map(() => caller.action.perform({ ...STUDY, idempotencyKey: trainKey, times: 1 })),
+    );
+    for (const r of trained) expect(r).toEqual(trained[0]);
+    expect((await caller.character.me()).stats.int).toBe(13);
+
+    await Character.updateOne({ _id: me.id }, { $set: { 'energy.value': 30 } });
+    const batchKey = randomUUID();
+    const batch = await Promise.all(
+      [1, 2, 3].map(() => caller.action.perform({ ...CANVASS, idempotencyKey: batchKey, times: 3 })),
+    );
+    for (const r of batch) expect(r).toEqual(batch[0]);
+    expect(await ActionLog.countDocuments({ characterId: me.id })).toBe(2);
+    expect((await caller.character.me()).energy.value).toBe(0);
   });
 });
 

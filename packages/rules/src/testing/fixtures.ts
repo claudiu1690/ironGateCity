@@ -335,7 +335,7 @@ export const trainingResultFixture: ActionResult = {
     standing: null,
     stat: { stat: 'int', before: 12, after: 13 },
   },
-  again: { cost1: 46, cost3: 144 },
+  again: { cost1: 46, cost3: null },
 };
 
 export const shiftResultFixture: ActionResult = {
@@ -452,7 +452,7 @@ export const cityViewFixture: CityView = {
           kind: 'training',
           givesFxp: false,
           energy: 44,
-          energy3: 138,
+          energy3: null,
           preview: null,
           trains: { stat: 'int', from: 12, to: 13 },
           order: null,
@@ -467,7 +467,12 @@ export const cityViewFixture: CityView = {
 export const paperViewFixture: PaperView = {
   day: DAY,
   firstEdition: true,
-  paper: { name: 'The Coalport Clarion', strapline: 'The voice of the mill and the quays', price: '5 marks' },
+  paper: {
+    name: 'The Coalport Clarion',
+    shortName: 'Clarion',
+    strapline: 'The voice of the mill and the quays',
+    price: '5 marks',
+  },
   dateline: { weekday: 'Tuesday', date: '29 September', city: 'Coalport' },
   headlines: [
     {

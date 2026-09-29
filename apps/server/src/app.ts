@@ -6,6 +6,7 @@ import { fromNodeHeaders } from 'better-auth/node';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import pkg from '../package.json' with { type: 'json' };
+import { CLIENT_IP_HEADER } from './auth';
 import type { Auth } from './auth';
 import type { Env } from './env';
 import { captureException } from './sentry';
@@ -22,6 +23,15 @@ export interface AppDeps {
   now?: () => number;
 }
 
+/**
+ * Fastify 5 treats a bare hop count as "trust nothing" because it cannot check the first peer. A
+ * count is still what the default Vercel → edge topology needs until the edge's addresses are
+ * known, so it becomes an explicit per-hop function here (the risk is documented at TRUST_PROXY).
+ */
+function trustProxyOption(tp: Env['TRUST_PROXY']): string[] | ((addr: string, hop: number) => boolean) {
+  return typeof tp === 'number' ? (_addr, hop) => hop < tp : tp;
+}
+
 export async function buildApp({
   env,
   auth,
@@ -33,7 +43,9 @@ export async function buildApp({
   const now = () => baseNow() + clockOffsetMs;
   const app = Fastify({
     logger: env.NODE_ENV === 'test' ? false : { level: env.LOG_LEVEL },
-    trustProxy: true,
+    // QA m7: trust only the proxy hops of the deployment (env.ts TRUST_PROXY), so request.ip is
+    // the player's address and cannot be chosen with a forged X-Forwarded-For.
+    trustProxy: trustProxyOption(env.TRUST_PROXY),
     // tRPC batches put several procedure names in the path.
     routerOptions: { maxParamLength: 5_000 },
   });
@@ -47,7 +59,10 @@ export async function buildApp({
     app.post('/api/test/clock', async (request, reply) => {
       const body = (request.body ?? {}) as { advanceMs?: unknown };
       const advanceMs = Number(body.advanceMs);
-      if (!Number.isFinite(advanceMs)) return reply.code(400).send({ error: 'advanceMs must be a number' });
+      // Forward only (QA n11): lazy time assumes the clock never runs back past a settled day.
+      if (!Number.isFinite(advanceMs) || advanceMs < 0) {
+        return reply.code(400).send({ error: 'advanceMs must be a number ≥ 0' });
+      }
       clockOffsetMs += advanceMs;
       return { offsetMs: clockOffsetMs, now: now() };
     });
@@ -65,9 +80,11 @@ export async function buildApp({
           : typeof request.body === 'string'
             ? request.body
             : JSON.stringify(request.body);
-      const response = await auth.handler(
-        new Request(url, { method: request.method, headers: fromNodeHeaders(request.headers), body }),
-      );
+      // Better Auth rate-limits by client IP. Hand it the address Fastify resolved with
+      // trustProxy, in a header of our own that a client-sent copy cannot override (QA m7).
+      const headers = fromNodeHeaders(request.headers);
+      headers.set(CLIENT_IP_HEADER, request.ip);
+      const response = await auth.handler(new Request(url, { method: request.method, headers, body }));
       reply.status(response.status);
       response.headers.forEach((value, key) => {
         if (key !== 'set-cookie') reply.header(key, value);

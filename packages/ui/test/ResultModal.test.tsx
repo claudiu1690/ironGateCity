@@ -94,8 +94,20 @@ describe('ResultModal v2', () => {
     expect(d.getByText('44 Energy · no roll')).toBeInTheDocument();
     expect(d.getByTestId('effect-stat')).toHaveTextContent('INT 12 → 13');
     expect(d.getByTestId('tile-opinion')).toHaveTextContent('—');
+    // ×1 only (§8.5, content §13.2): Again ×1 · Continue.
+    expect(d.queryByRole('button', { name: 'Again ×3' })).toBeNull();
+    expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
     expect(d.getByRole('button', { name: 'Again ×1' })).toBeDisabled();
     expect(d.getByTestId('again-hint')).toHaveTextContent(/^Needs 46 Energy · ready at \d\d:\d\d$/);
+  });
+
+  it('keeps Again and Continue in a sticky bar at the bottom of the modal (m2)', () => {
+    const { dialog } = renderModal(actionResultFixture);
+    const bar = within(dialog).getByTestId('result-buttons');
+    expect(bar).toHaveClass('sticky', 'bottom-0');
+    expect(within(bar).getByRole('button', { name: 'Again ×1' })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Again ×3' })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Continue' })).toBeInTheDocument();
   });
 
   it('a shift: Shift worked, half pay and streak, Continue only', () => {

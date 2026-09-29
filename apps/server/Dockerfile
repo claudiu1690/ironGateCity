@@ -29,6 +29,8 @@ RUN pnpm --filter @irongate/server deploy --prod --legacy /out
 
 FROM node:22.12-alpine AS runtime
 ENV NODE_ENV=production
+# Listen on every interface inside the container so Railway/Fly can reach it (the default is loopback).
+ENV HOST=0.0.0.0
 WORKDIR /app
 COPY --from=build /out/package.json ./package.json
 COPY --from=build /out/node_modules ./node_modules

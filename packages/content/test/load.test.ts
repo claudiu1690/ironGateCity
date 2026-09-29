@@ -8,6 +8,7 @@ import {
   loadContent,
   parseContent,
   rawContent,
+  sentenceCount,
 } from '../src';
 import type { ContentInput } from '../src';
 
@@ -87,13 +88,14 @@ describe('the real content', () => {
     expect(city.paper?.name).toBe('The Coalport Clarion');
     const hl = content.headlinesOf('coalport');
     expect(hl.filter((h) => h.group === 'ambient')).toHaveLength(10);
-    expect(hl.filter((h) => h.group === 'personal')).toHaveLength(9);
+    expect(hl.filter((h) => h.group === 'personal')).toHaveLength(13);
     expect(hl.find((h) => h.id === 'hl.first-day')?.priority).toBe(1);
     expect(content.standingNames).toEqual(['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us']);
     expect(content.asset('portrait.holm').widths).toEqual([256, 512]);
     expect(
-      fillTemplate(hl.find((h) => h.id === 'hl.rank-up')!.headline, { name: 'Mara', rank: 'Activist' }),
-    ).toBe('Mara Made Activist by the Branch');
+      fillTemplate(hl.find((h) => h.id === 'hl.rank-up')!.headline, { name: 'Mara', rank: 'Commissar' }),
+    ).toBe('Mara Made Commissar by the Branch');
+    expect(city.paper?.shortName).toBe('Clarion');
   });
 
   it('starts every character as the reference recruit (§8.5)', () => {
@@ -119,6 +121,24 @@ describe('the real content', () => {
     expect(copy.jobNeeds(['Level 3', 'AGI 10'])).toBe('Needs Level 3, AGI 10');
     expect(copy.pointsToPlace(1)).toBe('1 point to place');
     expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % FXP');
+    // Content §13 (QA fix round 1).
+    expect(copy.paperIsIn('Clarion')).toBe('The Clarion is in');
+    expect(copy.meNoJob(['Mill Gate', 'Market Row', 'Harbour Quays'])).toBe(
+      'No job yet · take one at Mill Gate, Market Row or Harbour Quays',
+    );
+    expect(copy.meNoJob(['Mill Gate'])).toBe('No job yet · take one at Mill Gate');
+    expect([copy.signupTitle, copy.loginTitle]).toEqual(['Join the campaign', 'Sign in']);
+  });
+
+  it('keeps every outcome text within GDD §1.2: at most 240 characters and 4 sentences', () => {
+    expect(sentenceCount('One. Two? Three! "Four." Five')).toBe(5);
+    expect(sentenceCount(`Secretary Holm: "That's how it's done." Next.`)).toBe(2);
+    for (const l of city.locations)
+      for (const a of l.actions)
+        for (const t of Object.values(a.text) as Array<{ body: string }>) {
+          expect(t.body.length, a.id).toBeLessThanOrEqual(240);
+          expect(sentenceCount(t.body), a.id).toBeLessThanOrEqual(4);
+        }
   });
 });
 
@@ -248,6 +268,16 @@ describe('validation', () => {
     const b = clone();
     b.headlines = b.headlines.filter((h) => h.group !== 'ambient');
     expect(() => parseContent(b)).toThrow(/no ambient headline/);
+  });
+
+  it('rejects an outcome text over 240 characters or 4 sentences (GDD §1.2)', () => {
+    const a = clone();
+    const action = coalport(a).locations[0]!.actions[0]!;
+    action.text.success.body = 'x'.repeat(241);
+    expect(() => parseContent(a)).toThrow('241 characters (at most 240)');
+    const b = clone();
+    coalport(b).locations[0]!.actions[0]!.text.success.body = 'One. Two. Three. Four. Five.';
+    expect(() => parseContent(b)).toThrow('5 sentences (at most 4)');
   });
 
   it('needs 5 standing levels and 7 rank titles', () => {

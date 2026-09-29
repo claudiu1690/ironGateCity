@@ -128,8 +128,11 @@ export function CityPage() {
         selectedId={loc ?? null}
         onSelect={(id) => select(id)}
       >
-        {/* The city plate */}
-        <div className="pointer-events-none absolute top-2.5 left-2.5 right-2.5 flex flex-col gap-0 sm:right-auto sm:w-[420px]">
+        {/* The city plate (the map's first view keeps every pin clear of it) */}
+        <div
+          className="pointer-events-none absolute top-2.5 left-2.5 right-2.5 flex flex-col gap-0 sm:right-auto sm:w-[420px]"
+          data-map-overlay="top"
+        >
           <div className="pointer-events-auto bg-paper text-ink shadow-[0_0_0_1px_var(--color-ink),0_6px_16px_rgb(0_0_0/0.4)]">
             <div className="flex items-stretch border-b-2 border-ink">
               <div className="flex flex-1 flex-col gap-0.5 px-3 py-2">
@@ -164,7 +167,10 @@ export function CityPage() {
           </div>
         </div>
         {/* Phones: orders and today at the bottom of the map */}
-        <div className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-1 bg-paper/95 px-3 py-2 text-ink shadow-[0_0_0_1px_var(--color-ink)] sm:hidden">
+        <div
+          className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-1 bg-paper/95 px-3 py-2 text-ink shadow-[0_0_0_1px_var(--color-ink)] sm:hidden"
+          data-map-overlay="bottom"
+        >
           <OrdersList orders={character.orders} />
           <TodayStrip today={character.today} />
         </div>

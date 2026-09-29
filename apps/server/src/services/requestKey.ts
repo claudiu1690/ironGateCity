@@ -1,16 +1,17 @@
 import { createHash } from 'node:crypto';
-import { RequestLog, isDuplicateKeyError } from '@irongate/db';
+import { RequestLog } from '@irongate/db';
 import type { RequestKind } from '@irongate/db';
 import type { ClientSession, Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
-import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
+import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction, mayHaveLostToSameKey } from './txn';
 
 const hashInput = (input: unknown) => createHash('sha256').update(JSON.stringify(input)).digest('hex');
 
 /**
  * ADR 0008: one idempotency key per tap for mutations that are not game actions. Fast path →
- * transaction (`fn` writes with the version guard, then the log row is inserted) → on E11000 the
- * winner's stored result. A key reused with a different kind or input is refused (KEY_REUSED).
+ * transaction (`fn` writes with the version guard, then the log row is inserted) → on E11000, a
+ * version miss or a refusal, the winner's stored result if one exists (QA M1). A key reused with a
+ * different kind or input is refused (KEY_REUSED).
  */
 export async function withRequestKey<T>(i: {
   characterId: Types.ObjectId;
@@ -48,19 +49,23 @@ export async function withRequestKey<T>(i: {
         return result;
       });
     } catch (err) {
+      // A concurrent copy of this tap may have committed while this one was in flight: its stored
+      // result is the answer, not a refusal computed against its state (QA M1).
+      if (mayHaveLostToSameKey(err)) {
+        const winner = await stored();
+        if (winner !== null) return winner;
+      }
       if (err instanceof VersionConflict) continue;
       if (err instanceof DayChanged) {
         await i.resettle();
         continue;
       }
-      if (isDuplicateKeyError(err)) {
-        const winner = await stored();
-        if (winner !== null) return winner;
-      }
       if (err instanceof GameError) throw err.toTRPC();
       throw err;
     }
   }
+  const winner = await stored();
+  if (winner !== null) return winner;
   throw gameError('CONFLICT', 'ACTION_CONFLICT', { attempts: MAX_ATTEMPTS });
 }
 

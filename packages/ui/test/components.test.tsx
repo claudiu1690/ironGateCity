@@ -20,6 +20,7 @@ import {
   Ticket,
   TodayStrip,
   artUrl,
+  fitPinsView,
   formatCountdown,
   formatOpinionDelta,
   formatSigned,
@@ -88,7 +89,11 @@ describe('Ticket v2', () => {
       />,
     );
     expect(screen.getByText('INT 12 → 13 · no roll')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /three times, 138 Energy/ })).toBeEnabled();
+    // ×1 only (§8.5, content §13.2): one Train button with the live cost, no ×3.
+    expect(screen.getByRole('button', { name: 'Study in the reading room, 44 Energy' })).toHaveTextContent(
+      'Train',
+    );
+    expect(screen.queryByRole('button', { name: /three times/ })).toBeNull();
     render(<Ticket action={shift} energy={full} hasJob={false} onPerform={() => undefined} />);
     expect(screen.getByRole('button', { name: 'Work your shift at the mill, 4 Energy' })).toBeDisabled();
     expect(screen.getByText('No job yet · take one below')).toBeInTheDocument();
@@ -254,5 +259,62 @@ describe('format helpers', () => {
     expect(formatSigned(-3)).toBe('−3');
     expect(formatOpinionDelta(0.025)).toBe('+0.025');
     expect(formatOpinionDelta(0)).toBe('0');
+  });
+});
+
+describe('fitPinsView (QA M2: every pin on screen at the first view)', () => {
+  // Coalport's six pins (content §1.1) on its 5056 × 3392 map.
+  const PINS = [
+    { x: 0.36, y: 0.44 },
+    { x: 0.43, y: 0.5 },
+    { x: 0.66, y: 0.3 },
+    { x: 0.6, y: 0.14 },
+    { x: 0.5, y: 0.63 },
+    { x: 0.15, y: 0.89 },
+  ];
+  const ASPECT = 5056 / 3392;
+  const view = (w: number, h: number, insets = { top: 0, bottom: 0 }) => {
+    const cw = Math.max(w, h * ASPECT);
+    const content = { w: cw, h: cw / ASPECT };
+    const v = fitPinsView({ box: { w, h }, content, pins: PINS, insets });
+    const at = PINS.map((p) => ({ x: v.x + p.x * content.w * v.scale, y: v.y + p.y * content.h * v.scale }));
+    return { v, at, content };
+  };
+
+  it('a 375 × 692 phone map with the plate (72 px) and the orders panel (110 px): all six clear of both', () => {
+    const { v, at } = view(375, 692, { top: 72, bottom: 110 });
+    expect(v.scale).toBeLessThan(1);
+    for (const p of at) {
+      expect(p.x - 22).toBeGreaterThanOrEqual(0);
+      expect(p.x + 22).toBeLessThanOrEqual(375);
+      expect(p.y - 22).toBeGreaterThanOrEqual(72);
+      expect(p.y + 22).toBeLessThanOrEqual(692 - 110);
+    }
+  });
+
+  it('a 1440 × 814 desktop map keeps the covering scale and every pin inside the box', () => {
+    const { v, at } = view(1440, 814);
+    expect(v.scale).toBe(1);
+    for (const p of at) {
+      expect(p.y - 22).toBeGreaterThanOrEqual(0);
+      expect(p.y + 22).toBeLessThanOrEqual(814);
+    }
+  });
+
+  it('never positions the image past the pan limits (no jump on the first drag)', () => {
+    for (const [w, h] of [
+      [375, 692],
+      [768, 900],
+      [1440, 814],
+      [320, 400],
+    ] as const) {
+      const { v, content } = view(w, h, { top: 60, bottom: 90 });
+      const dx = w - content.w * v.scale;
+      const dy = h - content.h * v.scale;
+      expect(v.x).toBeGreaterThanOrEqual(Math.min(dx, 0) - 1e-9);
+      expect(v.x).toBeLessThanOrEqual(Math.max(dx, 0) + 1e-9);
+      expect(v.y).toBeGreaterThanOrEqual(Math.min(dy, 0) - 1e-9);
+      expect(v.y).toBeLessThanOrEqual(Math.max(dy, 0) + 1e-9);
+    }
   });
 });

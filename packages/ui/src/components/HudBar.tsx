@@ -99,7 +99,7 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBa
             type="button"
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
-            className="label-caps min-h-8 cursor-pointer bg-xp px-2 text-[10px] text-ink"
+            className="label-caps min-h-11 cursor-pointer bg-xp px-3 text-[10px] text-ink"
             data-testid="hud-points"
           >
             {copy.pointsToPlace(c.statPointsPending)}

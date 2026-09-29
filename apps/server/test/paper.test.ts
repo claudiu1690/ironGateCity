@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { Character } from '@irongate/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { freshCharacter, setupDb, teardownDb } from './helpers';
 
@@ -16,6 +17,7 @@ describe('paper.today (§3.3)', () => {
     const p = await caller.paper.today();
     expect(p.paper).toEqual({
       name: 'The Coalport Clarion',
+      shortName: 'Clarion',
       strapline: 'The voice of the mill and the quays',
       price: '5 marks',
     });
@@ -72,5 +74,56 @@ describe('paper.today (§3.3)', () => {
       deck: 'Sixty doors in Foundry Row. Start at the top and work down.',
     });
     expect(p.due).toBe(true);
+  });
+});
+
+describe('headline variants (content §13, QA fix round 1)', () => {
+  const headlinesOf = async (caller: Awaited<ReturnType<typeof freshCharacter>>['caller']) =>
+    (await caller.paper.today()).headlines.map((h) => ({ headline: h.headline, deck: h.deck }));
+
+  it('away 3 days without a job, levelled before leaving: the quiet level-up and the no-job away line', async () => {
+    const { caller, me, clock } = await freshCharacter();
+    await Character.updateOne({ _id: me.id }, { $set: { level: 2, xp: 150 } });
+    clock.advance(3 * 24 * H);
+    expect(await headlinesOf(caller)).toEqual(
+      expect.arrayContaining([
+        {
+          headline: 'Coalport Recruit Rises to Level 2',
+          deck: 'Mara Lenk of the Collective has been putting the hours in on the ward. The branch has noticed.',
+        },
+        {
+          headline: 'While You Were Away',
+          deck: 'No job, so no half pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
+        },
+      ]),
+    );
+  });
+
+  it('the next day after playing: the level-up names the real rank and yesterday’s Energy; a rank-up to 3 is "Organiser"', async () => {
+    const { caller, me, clock } = await freshCharacter();
+    await caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 });
+    await Character.updateOne({ _id: me.id }, { $set: { level: 4, xp: 1_000, rank: 3, fxp: 2_000 } });
+    clock.advance(24 * H);
+    const hl = await headlinesOf(caller);
+    expect(hl.slice(0, 2)).toEqual([
+      {
+        headline: 'Mara Lenk Made Organiser by the Branch',
+        deck: 'An Organiser can stand for the council. Secretary Holm: "Now the real work starts."',
+      },
+      {
+        headline: 'Coalport Organiser Rises to Level 4',
+        deck: 'Mara Lenk of the Collective spent 10 Energy on the ward yesterday. The branch has noticed.',
+      },
+    ]);
+  });
+
+  it('a rank-up to 4 or higher uses the rank title from content', async () => {
+    const { caller, me, clock } = await freshCharacter();
+    await Character.updateOne({ _id: me.id }, { $set: { rank: 4, fxp: 6_000 } });
+    clock.advance(24 * H);
+    expect((await headlinesOf(caller))[0]).toEqual({
+      headline: 'Mara Lenk Made Commissar by the Branch',
+      deck: 'Made Commissar on the strength of party work. The branch takes note.',
+    });
   });
 });

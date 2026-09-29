@@ -39,7 +39,12 @@ export async function getPaper(deps: {
   return {
     day: today,
     firstEdition: entry.firstEdition,
-    paper: city?.paper ?? { name: 'The Irongate Herald', strapline: '', price: '5 marks' },
+    paper: city?.paper ?? {
+      name: 'The Irongate Herald',
+      shortName: 'Herald',
+      strapline: '',
+      price: '5 marks',
+    },
     dateline: {
       weekday: WEEKDAY_NAMES[weekday(today)],
       date: `${date.getUTCDate()} ${MONTH_NAMES[date.getUTCMonth()]}`,

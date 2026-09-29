@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { isCheckedAction, isShiftAction, isTrainingAction } from '@irongate/content';
 import type { GameContent, LocatedAction } from '@irongate/content';
-import { ActionLog, Character, City, isDuplicateKeyError } from '@irongate/db';
+import { ActionLog, Character, City } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
 import {
   addToTally,
@@ -25,7 +25,7 @@ import type { SessionUser } from '../trpc/context';
 import { buildActionResult } from './actionResult';
 import type { ResultInput } from './actionResult';
 import { ensureSettled, loadCharacter } from './dayService';
-import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
+import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction, mayHaveLostToSameKey } from './txn';
 import {
   energyState,
   fromOrdersState,
@@ -100,8 +100,12 @@ export async function performAction(deps: {
   const { user, content, input } = deps;
   const located = locate(content, input);
   const { action } = located;
+  // §8.5, §13.1: training and job shifts have no batch.
   if (isShiftAction(action) && input.times !== 1) {
     throw gameError('BAD_REQUEST', 'SHIFT_IS_ONCE', { actionId: action.id });
+  }
+  if (isTrainingAction(action) && input.times !== 1) {
+    throw gameError('BAD_REQUEST', 'TRAINING_IS_ONCE', { actionId: action.id });
   }
   const loaded = await loadCharacter(user, content, deps.now());
   const c0 = loaded.doc;
@@ -142,6 +146,13 @@ export async function performAction(deps: {
         },
       );
     } catch (err) {
+      // A concurrent request with the same key may have committed while this one was in flight:
+      // then its stored result is the answer, not a refusal computed against its state (a retry
+      // at the Energy limit, a second shift) and not another attempt (ADR 0002 step 3).
+      if (mayHaveLostToSameKey(err)) {
+        const winner = await storedLog(c0._id, input.idempotencyKey, input);
+        if (winner) return winner;
+      }
       if (err instanceof VersionConflict) continue;
       if (err instanceof DayChanged) {
         const fresh = await Character.findById(c0._id).lean<CharacterDoc>();
@@ -149,15 +160,12 @@ export async function performAction(deps: {
         loaded.editionReadAt = null;
         continue;
       }
-      if (isDuplicateKeyError(err)) {
-        // A concurrent request with the same key won: show its result.
-        const winner = await storedLog(c0._id, input.idempotencyKey, input);
-        if (winner) return winner;
-      }
       if (err instanceof GameError) throw err.toTRPC();
       throw err;
     }
   }
+  const winner = await storedLog(c0._id, input.idempotencyKey, input);
+  if (winner) return winner;
   throw gameError('CONFLICT', 'ACTION_CONFLICT', { attempts: MAX_ATTEMPTS });
 }
 
@@ -277,7 +285,6 @@ async function resolveAndWrite(i: {
       base: { str: c.stats.str, int: c.stats.int, agi: c.stats.agi },
       energy: energyState(c),
       now,
-      times: input.times,
       orders,
       orderTemplates: templates,
       homeCityId: c.homeCityId,
@@ -287,7 +294,7 @@ async function resolveAndWrite(i: {
       throw new GameError('NOT_ENOUGH_ENERGY', {
         energy: r.energy.value,
         cost: r.cost,
-        times: input.times,
+        times: 1,
         nextTickAt: r.energy.nextTickAt,
       });
     }

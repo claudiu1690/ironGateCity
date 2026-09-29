@@ -21,6 +21,7 @@ export const coalport: City = {
   map: { day: 'map.coalport.day', night: 'map.coalport.night' },
   paper: {
     name: 'The Coalport Clarion',
+    shortName: 'Clarion',
     strapline: 'The voice of the mill and the quays',
     price: '5 marks',
   },

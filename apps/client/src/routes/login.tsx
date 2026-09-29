@@ -1,3 +1,4 @@
+import { copy } from '@irongate/content/copy';
 import { Button, Field } from '@irongate/ui';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -29,7 +30,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthLayout title="Sign in">
+    <AuthLayout title={copy.loginTitle}>
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
         <Field label="Email" name="email" type="email" autoComplete="email" required />
         <Field label="Password" name="password" type="password" autoComplete="current-password" required />

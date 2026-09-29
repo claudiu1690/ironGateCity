@@ -17,7 +17,6 @@ import {
   standingView,
   tier1Difficulty,
   trainingCost,
-  trainingRunCost,
 } from '@irongate/rules';
 import type { ActionDescriptor, ActionView, CityView, OrdersState } from '@irongate/rules';
 import { gameError } from '../gameError';
@@ -144,7 +143,7 @@ export async function getCityView(
           kind: 'training',
           givesFxp: false,
           energy: trainingCost(from),
-          energy3: trainingRunCost(from, 3),
+          energy3: null,
           preview: null,
           trains: { stat: action.trains, from, to: from + 1 },
           locked: null,

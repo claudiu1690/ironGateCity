@@ -32,7 +32,8 @@ export interface TicketProps {
 
 /**
  * An action as a printed ticket (mockups MobileMission, Mission): Energy stub, name, the odds (tap
- * for the breakdown) or "no roll", a tags line, and ×1 / ×3. It displays the server's numbers.
+ * for the breakdown) or "no roll", a tags line, and ×1 / ×3 (one Work or Train button for shifts and
+ * training). It displays the server's numbers.
  */
 export function Ticket({
   action: a,
@@ -120,7 +121,8 @@ export function Ticket({
             {tags}
           </span>
         </div>
-        {a.kind === 'shift' ? (
+        {a.kind === 'shift' || a.kind === 'training' ? (
+          // Shifts and training have no batch (§8.5, §13.1): one button, the live cost on the stub.
           <button
             type="button"
             onClick={() => onPerform(1)}
@@ -130,7 +132,7 @@ export function Ticket({
             aria-describedby={hint ? hintId : undefined}
             className={cx(button, 'w-16 bg-ink text-[12px] tracking-[0.1em] uppercase hover:bg-ink-2')}
           >
-            {pending === 1 ? '…' : 'Work'}
+            {pending === 1 ? '…' : a.kind === 'shift' ? 'Work' : 'Train'}
           </button>
         ) : (
           <>
@@ -152,6 +154,7 @@ export function Ticket({
               aria-busy={pending === 3 || undefined}
               aria-label={`${a.name}, three times, ${a.energy3 ?? a.energy * 3} Energy`}
               title={short3 && a.energy3 !== null ? copy.x3Needs(a.energy3) : undefined}
+              aria-describedby={hint ? hintId : undefined}
               className={cx(button, 'bg-ink-2 hover:bg-ink')}
             >
               {pending === 3 ? '…' : '×3'}

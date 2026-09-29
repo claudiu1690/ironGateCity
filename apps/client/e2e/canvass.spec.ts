@@ -70,3 +70,40 @@ test('Again ×1 from the modal runs a second action with a new key; sign out and
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByTestId('hud-energy')).toHaveText('80 / 100');
 });
+
+test.describe('375 × 812 phone (QA fix round 1)', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('all six pins on the first view; the ×3 modal keeps Again ×1 · Again ×3 · Continue on screen', async ({
+    page,
+  }) => {
+    await page.goto('/signup');
+    await expect(page.getByRole('heading', { name: 'Join the campaign' })).toBeVisible();
+    await signUp(page);
+    await toTheCity(page);
+    for (const pin of await page.getByTestId('hotspot').all()) await expect(pin).toBeInViewport({ ratio: 1 });
+    const sheet = await openLocation(page, '6. The Anchor');
+    await sheet.getByRole('button', { name: 'Talk the regulars round, three times, 30 Energy' }).click();
+    const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
+    await expect(modal.getByTestId('stamp')).toHaveText(/of 3$/);
+    for (const name of [/Again ×1/, /Again ×3/, 'Continue'])
+      await expect(modal.getByRole('button', { name })).toBeInViewport({ ratio: 1 });
+    await modal.getByRole('button', { name: 'Continue' }).click();
+    await expect(modal).toBeHidden();
+  });
+
+  test('zoomed in, a pin reached with the keyboard is panned into view (WCAG 2.4.11)', async ({ page }) => {
+    await signUp(page);
+    await toTheCity(page);
+    const anchor = page.getByRole('button', { name: '6. The Anchor' });
+    await expect(anchor).toBeInViewport({ ratio: 1 });
+    // Zoom in on the top right of the map until The Anchor (bottom left) is off-screen.
+    await page.mouse.move(330, 300);
+    for (let i = 0; i < 12; i++) await page.mouse.wheel(0, -200);
+    await expect(anchor).not.toBeInViewport();
+    await anchor.focus();
+    await expect(anchor).toBeInViewport({ ratio: 1 });
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('dialog')).toContainText('The Anchor');
+  });
+});

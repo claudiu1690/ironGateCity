@@ -1,8 +1,8 @@
 export { Button } from './components/Button';
 export type { ButtonProps, ButtonVariant } from './components/Button';
 export { CheckBreakdownList } from './components/CheckBreakdownList';
-export { CityMap } from './components/CityMap';
-export type { CityMapProps, MapHotspot } from './components/CityMap';
+export { CityMap, fitPinsView } from './components/CityMap';
+export type { CityMapProps, MapHotspot, MapInsets, MapView } from './components/CityMap';
 export { FACTION_STYLE, FactionCrest } from './components/FactionCrest';
 export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';

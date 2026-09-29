@@ -11,10 +11,12 @@ import {
   formatNumber,
   plural,
 } from '@irongate/ui';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { authClient, resetSession } from '../lib/auth';
+import { trpc } from '../lib/trpc';
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -30,6 +32,15 @@ export function MePage() {
   const navigate = useNavigate();
   const { character: c } = useCharacter();
   const stat = usePlaceStat();
+  // Without a job, the card names the home city's places that have a Jobs card, in pin order.
+  const home = useQuery({
+    ...trpc.city.get.queryOptions({ cityId: c?.homeCityId ?? '' }),
+    enabled: !!c && c.job === null,
+  });
+  const jobPlaces = (home.data?.locations ?? [])
+    .filter((l) => l.jobs.length > 0)
+    .sort((a, b) => a.n - b.n)
+    .map((l) => l.name);
 
   async function signOut() {
     await authClient.signOut();
@@ -133,7 +144,11 @@ export function MePage() {
               </Link>
             </>
           ) : (
-            <span className="font-body text-[14px]">{copy.shiftNoJob}</span>
+            jobPlaces.length > 0 && (
+              <span className="font-body text-[14px]" data-testid="me-no-job">
+                {copy.meNoJob(jobPlaces)}
+              </span>
+            )
           )}
         </Card>
 

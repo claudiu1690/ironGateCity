@@ -11,13 +11,23 @@ const h = (
 
 const TEMPLATES: HeadlineTemplate[] = [
   h('hl.first-day', 'personal', 1, [{ kind: 'firstEdition' }]),
-  h('hl.rank-up', 'personal', 2, [{ kind: 'rankRose' }]),
-  h('hl.level-up', 'personal', 3, [{ kind: 'levelRose' }]),
+  h('hl.rank-up-2', 'personal', 2, [{ kind: 'rankRose', values: [2] }]),
+  h('hl.rank-up-3', 'personal', 2, [{ kind: 'rankRose', values: [3] }]),
+  h('hl.rank-up', 'personal', 2, [{ kind: 'rankRose', min: 4 }]),
+  h('hl.level-up', 'personal', 3, [{ kind: 'levelRose' }, { kind: 'energyYesterday', min: 1 }]),
+  h('hl.level-up-quiet', 'personal', 3, [{ kind: 'levelRose' }, { kind: 'energyYesterday', max: 0 }]),
   h('hl.standing', 'personal', 4, [{ kind: 'standingRose' }]),
   h('hl.orders-done', 'personal', 5, [{ kind: 'ordersAllDoneYesterday' }]),
   h('hl.streak-5', 'personal', 6, [{ kind: 'streakHitYesterday', values: [5] }]),
   h('hl.streak-10', 'personal', 6, [{ kind: 'streakHitYesterday', values: [10] }]),
-  h('hl.away', 'personal', 7, [{ kind: 'daysSinceLastPaper', min: 2 }]),
+  h('hl.away', 'personal', 7, [
+    { kind: 'daysSinceLastPaper', min: 2 },
+    { kind: 'halfPaysCredited', min: 1 },
+  ]),
+  h('hl.away-no-job', 'personal', 7, [
+    { kind: 'daysSinceLastPaper', min: 2 },
+    { kind: 'halfPaysCredited', max: 0 },
+  ]),
   h('hl.idle', 'personal', 8, [{ kind: 'idleYesterday' }]),
   h('hl.morale-fired', 'city', 1, [{ kind: 'homeShare', min: 80 }]),
   h('hl.morale-steady', 'city', 1, [{ kind: 'homeShare', min: 60, max: 80 }]),
@@ -29,12 +39,15 @@ const TEMPLATES: HeadlineTemplate[] = [
 const facts = (over: Partial<PaperFacts> = {}): PaperFacts => ({
   firstEdition: false,
   rankRose: false,
+  rank: 1,
   levelRose: false,
   standingRose: false,
   ordersAllDoneYesterday: false,
   streakHitYesterday: null,
   daysSinceLastPaper: 1,
   idleYesterday: false,
+  halfPaysCredited: 0,
+  energyYesterday: 30,
   homeShare: 70,
   ...over,
 });
@@ -44,8 +57,8 @@ const ids = (f: PaperFacts, day = DIRECTIVES.epochDay + 3) =>
 
 describe('selectHeadlines (§3.3)', () => {
   it('2 personal + city', () => {
-    expect(ids(facts({ levelRose: true, rankRose: true, standingRose: true }))).toEqual([
-      'hl.rank-up',
+    expect(ids(facts({ levelRose: true, rankRose: true, rank: 2, standingRose: true }))).toEqual([
+      'hl.rank-up-2',
       'hl.level-up',
       'hl.morale-steady',
     ]);
@@ -68,9 +81,33 @@ describe('selectHeadlines (§3.3)', () => {
     expect(ids(facts({ streakHitYesterday: 5 }))[0]).toBe('hl.streak-5');
     expect(ids(facts({ streakHitYesterday: 10 }))[0]).toBe('hl.streak-10');
     expect(ids(facts({ streakHitYesterday: 6 }))[0]).toBe('hl.morale-steady');
-    expect(ids(facts({ daysSinceLastPaper: 2 }))[0]).toBe('hl.away');
+    expect(ids(facts({ daysSinceLastPaper: 2, halfPaysCredited: 2 }))[0]).toBe('hl.away');
+    expect(ids(facts({ daysSinceLastPaper: 2 }))[0]).toBe('hl.away-no-job');
+    expect(ids(facts({ daysSinceLastPaper: 1, halfPaysCredited: 1 }))[0]).toBe('hl.morale-steady');
     expect(ids(facts({ daysSinceLastPaper: null }))[0]).toBe('hl.morale-steady');
     expect(ids(facts({ idleYesterday: true }))[0]).toBe('hl.idle');
+  });
+
+  it('variants by rank, Energy yesterday and half-pays: exactly one of each family matches (content §13)', () => {
+    const rose = (rank: number) => ids(facts({ rankRose: true, rank }))[0];
+    expect([rose(2), rose(3), rose(4), rose(7)]).toEqual([
+      'hl.rank-up-2',
+      'hl.rank-up-3',
+      'hl.rank-up',
+      'hl.rank-up',
+    ]);
+    expect(ids(facts({ rank: 3 }))[0]).toBe('hl.morale-steady'); // no rise, no headline
+    expect(ids(facts({ levelRose: true, energyYesterday: 1 }))[0]).toBe('hl.level-up');
+    expect(ids(facts({ levelRose: true, energyYesterday: 0 }))[0]).toBe('hl.level-up-quiet');
+    for (const f of [
+      facts({ rankRose: true, rank: 2, levelRose: true, energyYesterday: 0 }),
+      facts({ daysSinceLastPaper: 5, halfPaysCredited: 0, levelRose: true }),
+    ]) {
+      const picked = ids(f).filter(
+        (id) => id.startsWith('hl.rank') || id.startsWith('hl.level') || id.startsWith('hl.away'),
+      );
+      expect(new Set(picked.map((id) => id.replace(/-(2|3|quiet|no-job)$/, ''))).size).toBe(picked.length);
+    }
   });
 });
 

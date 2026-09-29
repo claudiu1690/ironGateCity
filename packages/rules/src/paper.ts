@@ -7,6 +7,8 @@ import type { HeadlineCondition, HeadlineTemplate, Placeholder } from './types';
 export interface PaperFacts {
   firstEdition: boolean;
   rankRose: boolean;
+  /** The rank now (for `rankRose` with values). */
+  rank: number;
   levelRose: boolean;
   standingRose: boolean;
   ordersAllDoneYesterday: boolean;
@@ -15,16 +17,28 @@ export interface PaperFacts {
   daysSinceLastPaper: number | null;
   /** Seen yesterday, but spent nothing and worked no shift. */
   idleYesterday: boolean;
+  /** Half-pays credited at the boundaries crossed since the last paper (0 without a job). */
+  halfPaysCredited: number;
+  /** Energy spent on the previous City Day (0 when not seen yesterday). */
+  energyYesterday: number;
   /** The home faction's share of its home city, in points. */
   homeShare: number;
 }
+
+/** Inclusive bounds; an absent bound is open. */
+const within = (v: number, c: { min?: number; max?: number }) =>
+  (c.min === undefined || v >= c.min) && (c.max === undefined || v <= c.max);
 
 function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolean {
   switch (c.kind) {
     case 'firstEdition':
       return f.firstEdition;
     case 'rankRose':
-      return f.rankRose;
+      return (
+        f.rankRose &&
+        (c.values === undefined || c.values.includes(f.rank)) &&
+        (c.min === undefined || f.rank >= c.min)
+      );
     case 'levelRose':
       return f.levelRose;
     case 'standingRose':
@@ -37,6 +51,10 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
       return f.daysSinceLastPaper !== null && f.daysSinceLastPaper >= c.min;
     case 'idleYesterday':
       return f.idleYesterday;
+    case 'halfPaysCredited':
+      return within(f.halfPaysCredited, c);
+    case 'energyYesterday':
+      return within(f.energyYesterday, c);
     case 'noPersonal':
       return noPersonal;
     case 'homeShare':

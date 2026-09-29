@@ -151,7 +151,7 @@ function ResultBody({
   const kicker = r.action.times > 1 ? `${r.action.name} · ${r.action.times} times` : r.action.name;
   const energyNow = energy?.value ?? r.character.energy.value;
   const short1 = r.again ? energyNow < r.again.cost1 : true;
-  const short3 = r.again ? energyNow < r.again.cost3 : true;
+  const short3 = r.again && r.again.cost3 !== null ? energyNow < r.again.cost3 : false;
   const ready1 = r.again && short1 && energy ? energyReadyAt(energy, r.again.cost1) : null;
 
   return (
@@ -314,11 +314,17 @@ function ResultBody({
             </div>
           )}
         </section>
+      </div>
 
-        {/* 6. Buttons */}
+      {/* 6. Buttons: a sticky bar, so Again and Continue are on the first screen of a phone
+          (mockup MobileMission) however long the breakdown above runs. */}
+      <div
+        className="sticky bottom-0 z-10 mt-auto flex flex-col gap-1.5 border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
+        data-testid="result-buttons"
+      >
         {r.again && onAgain ? (
-          <div className="mt-auto flex flex-col gap-1.5 pt-1">
-            <div className="grid grid-cols-3 gap-2">
+          <>
+            <div className={cx('grid gap-2', r.again.cost3 === null ? 'grid-cols-2' : 'grid-cols-3')}>
               <Button
                 onClick={() => onAgain(1)}
                 pending={againPending === 1}
@@ -330,19 +336,21 @@ function ResultBody({
                   {r.again.cost1}
                 </span>
               </Button>
-              <Button
-                variant="secondary"
-                onClick={() => onAgain(3)}
-                pending={againPending === 3}
-                disabled={short3 || !!againPending}
-                title={short3 ? copy.x3Needs(r.again.cost3) : undefined}
-              >
-                Again ×3
-                <span aria-hidden="true" className="text-energy normal-case">
-                  {' '}
-                  {r.again.cost3}
-                </span>
-              </Button>
+              {r.again.cost3 !== null && (
+                <Button
+                  variant="secondary"
+                  onClick={() => onAgain(3)}
+                  pending={againPending === 3}
+                  disabled={short3 || !!againPending}
+                  title={short3 ? copy.x3Needs(r.again.cost3) : undefined}
+                >
+                  Again ×3
+                  <span aria-hidden="true" className="text-energy-light normal-case">
+                    {' '}
+                    {r.again.cost3}
+                  </span>
+                </Button>
+              )}
               <Dialog.Close asChild>
                 <Button variant="outline">Continue</Button>
               </Dialog.Close>
@@ -351,18 +359,18 @@ function ResultBody({
               <p className="font-mono text-[11px] text-muted" data-testid="again-hint">
                 {short1
                   ? copy.needsEnergy(r.again.cost1, ready1 === null ? '—' : formatClock(ready1))
-                  : copy.x3Needs(r.again.cost3)}
+                  : r.again.cost3 !== null
+                    ? copy.x3Needs(r.again.cost3)
+                    : null}
               </p>
             )}
-          </div>
+          </>
         ) : (
-          <div className="mt-auto pt-1">
-            <Dialog.Close asChild>
-              <Button variant="outline" className="w-full">
-                Continue
-              </Button>
-            </Dialog.Close>
-          </div>
+          <Dialog.Close asChild>
+            <Button variant="outline" className="w-full">
+              Continue
+            </Button>
+          </Dialog.Close>
         )}
       </div>
     </>
@@ -379,7 +387,7 @@ function AttemptRow({ attempt: a }: { attempt: ResultAttempt }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="grid min-h-8 cursor-pointer grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 text-left"
+        className="grid min-h-11 cursor-pointer grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 text-left"
       >
         <span className="font-label text-[12px] text-muted">{a.index}</span>
         <span

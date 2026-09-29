@@ -42,6 +42,17 @@ export class ContentError extends Error {
 /** §4.3 of the slice-1 tech design: two hotspots closer than this are too close to tap. */
 const MIN_HOTSPOT_DISTANCE = 0.03;
 const ALLOWED_PLACEHOLDERS = new Set<string>(PLACEHOLDERS);
+/** GDD §1.2 pillar 7 (content §13.7, n9): an outcome text is at most 240 characters and 4 sentences. */
+const OUTCOME_TEXT_MAX_CHARS = 240;
+const OUTCOME_TEXT_MAX_SENTENCES = 4;
+
+/** Sentences in a text: split after . ? or ! (and a closing quote), before whitespace. */
+export function sentenceCount(text: string): number {
+  return text
+    .trim()
+    .split(/(?<=[.?!]["'’”)]?)\s+/)
+    .filter((part) => part.length > 0).length;
+}
 
 /**
  * Validate content with the Zod schemas (throws with the path of the bad field) and the
@@ -119,6 +130,20 @@ export function parseContent(raw: unknown): Content {
       }
       for (const action of location.actions) {
         unique('action', action.id);
+        const texts = Object.entries(action.text) as Array<[string, { body: string }]>;
+        for (const [outcome, t] of texts) {
+          if (t.body.length > OUTCOME_TEXT_MAX_CHARS) {
+            problems.push(
+              `action "${action.id}" ${outcome} text is ${t.body.length} characters (at most ${OUTCOME_TEXT_MAX_CHARS})`,
+            );
+          }
+          const n = sentenceCount(t.body);
+          if (n > OUTCOME_TEXT_MAX_SENTENCES) {
+            problems.push(
+              `action "${action.id}" ${outcome} text has ${n} sentences (at most ${OUTCOME_TEXT_MAX_SENTENCES})`,
+            );
+          }
+        }
         actionById.set(action.id, { city, location, action });
         if (!action.id.startsWith(`${location.id}.`)) {
           problems.push(`action "${action.id}" must be dotted under its location "${location.id}"`);

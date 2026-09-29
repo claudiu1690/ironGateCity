@@ -21,6 +21,8 @@
   /* Accents */
   --color-petrol: #1e4d52;
   --color-energy: #6fb3b0;
+  /* Energy text on ink-2 (secondary buttons): #6fb3b0 is only 4.39:1 there, this is 5.11:1 */
+  --color-energy-light: #80c0bd;
   --color-xp: #c39a3a;
   --color-success: #1e4d52;
   --color-success-fill: #9cc3c1;
