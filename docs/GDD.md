@@ -60,6 +60,14 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 | No NPC party secretary or Morning Paper v1 spec | **Petra Holm** sets the Collective's Directives until a Chair exists; per-city mastheads (*The Coalport Clarion*) | §13.7, §3.3 |
 | The economy was never written down | `docs/economy.md`, checked against §5.2 | §5.2 |
 
+**Added 29 Sep 2026 (answers to the slice-1 tech design, `docs/design/slice-1-content.md` §12):**
+
+| Problem | Change | Section |
+|---|---|---|
+| Half pay accrued without limit, so a season away paid a jackpot | A return credits **at most 14 half-pays**; the job is kept and pay resumes at the next boundary | §4.2, §9.1 |
+| The Collective's Rank 5 title was "Vanguard", the rival faction's name | Rank 5 Collective title is **Delegate** (no faction renamed) | §5.4 |
+| Batch text, sick days at streak 0, Rested on shifts, the +25 % after completion and the dateline were unspecified | Batch narrative by **majority**; sick days spent only while a streak runs; Rested untouched by shifts and switches; the +25 % only on open orders; *Take a job* completes on taking; dateline `{Weekday} · {D Month} · {City}`, no year | §3.3, §6.3, §9.1, §13.1, §13.7, §15.4 |
+
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes.
 
 ---
@@ -186,6 +194,8 @@ The first screen after the City Day changes, and after any absence of 3 hours or
 
 **Mastheads.** Each home city has its own paper: *The Coalport Clarion* ("The voice of the mill and the quays"), and, provisionally, the *Ashford Gazette* and the *Duskwall Sentinel*. Battleground residents read the national *Irongate Herald* (Clearwater: the *Clearwater Courier*, provisional). The masthead is content.
 
+**Dateline:** `{Weekday} · {D Month} · {City}` from the real UTC date, British form: *Tuesday · 29 September · Coalport*. **No year is printed anywhere in the paper.** The game is 1946 but the calendar is real (§2: one City Day = one real day, and the weekday drives the Monday sick-day refill), so the weekday must be the true one and a year would either break the fiction or contradict the weekday.
+
 **Slice 1 (v1) scope:** headlines (2–3, at most two personal), **Party orders**, and **Your desk** with salary, Rested banked, Energy and when it is full, work streak and sick days, Level and XP to next, Local Standing, and *Yesterday* (the Today tally of the previous City Day, §3.7). Headline templates, their conditions and priorities are in `docs/design/slice-1-content.md` §7.
 
 ### 3.4 Agendas: what to spend Energy on
@@ -251,6 +261,7 @@ All of these are **positive**: something to look forward to.
 | **3 hours** | Nothing is lost. Energy is full and overflow banks as **Rested** (§6.3). |
 | **1 day** | Your job pays half salary automatically. Rested keeps banking up to its cap. A **sick day** protects your work streak. Today's Directives are missed: a missed opportunity, nothing taken away. |
 | **1 week** | Your work streak ends: you lose the bonus, not the job. Dossier entries are flagged stale. A bodyguard contract may run out. A council term you held has ended normally. |
+| **2 weeks or more** | Half pay stops accruing after **14 boundaries** (§9.1): you keep the job and pay resumes at the next boundary. Unearned pay is opportunity, not an asset. |
 | **1 month or more** | **Welcome Back package**: Rested full, a "While You Were Away" digest, and a returning-operative Ambition chapter. |
 
 ### 4.3 Rules we don't break
@@ -341,11 +352,13 @@ Rank gives the **right** to stand. Each office also needs the rung below it on t
 | 2 | **400** | Footsoldier / Activist / Canvasser | **Vote in all elections**, Campaign Event roles, Dossier missions, sign Recall Petitions |
 | 3 | 2,000 | Sergeant / Organiser / Councillor | **Stand for City Council** (with the ladder conditions), **schedule Campaign Events**, illegal missions, safehouses, faction equipment, Jobs board Tier II |
 | 4 | 6,000 | Lieutenant / Commissar / Senator | **Stand for Faction Chair** (after a council term), Political Protection perk (§11.4) |
-| 5 | 15,000 | Captain / Vanguard / Representative | **Stand for the Legislature** and **be appointed Minister** (after a term as Governor or 3 council terms), Operation missions |
+| 5 | 15,000 | Captain / Delegate / Representative | **Stand for the Legislature** and **be appointed Minister** (after a term as Governor or 3 council terms), Operation missions |
 | 6 | 25,000 | Commander / Comrade-General / Speaker | **Stand for President or Chancellor** (after a term as deputy or minister), eligible for Speaker, Tier V quest chains |
 | 7 | 60,000 | Marshal / Chairman / Prime Minister | Honorific title, Legacy unlocks, faction Hall of Fame |
 
 Rank 2 was 500 in the first 3.1 draft; at the §5.5 rates the reference player reached it on day 3, not day 2, so it is now 400 (`docs/economy.md` §7).
+
+The Collective's Rank 5 title was *Vanguard* in the first 3.1 draft, which read as the rival faction's name. It is now **Delegate**: what a workers' party sends to its Congress (§15.5) and to the Legislature, which is exactly what Rank 5 unlocks. No faction is renamed (Appendix C #10 stays parked).
 
 ### 5.5 Reward rates per mission tier (starting values)
 
@@ -393,7 +406,7 @@ While Energy is full, regen overflows into a **Rested** pool.
 | | |
 |---|---|
 | **Cap** | 200 |
-| **Effect** | Each Energy point spent while Rested > 0 uses 1 Rested and gives **+50 % XP and +50 % Iron** on that action. FXP and influence get no bonus, so absence can't be converted into political power. |
+| **Effect** | Each Energy point spent **on an action Rested can boost** (checked actions and training) while Rested > 0 uses 1 Rested and gives **+50 % XP and +50 % Iron** on that action. Job shifts and job switches spend Energy without touching Rested: there is nothing for it to boost (§9.1). FXP and influence get no bonus, so absence can't be converted into political power. |
 | **Other sources** | Lodging and hotels (§6.7), Welcome Back package |
 
 A player who logs in once a day spends 100 Energy with a +50 % bonus on all of it. A player who logs in three times spends about 400. Neither gets punished; the frequent player simply does more.
@@ -632,11 +645,11 @@ Jobs give a steady income that doesn't depend on faction activity, and they get 
 
 ### 9.1 Rules (reworked)
 
-- A player holds **one job**. Taking a first job is free and one tap at the job's location (a *Jobs* card lists what is offered there, with pay and requirements; requirements are checked on taking, never again). **Switching** costs 2 Energy, takes effect immediately and **resets the streak to 0**.
-- **Daily salary:** at every 00:00 UTC boundary (§2.2) the job held at that moment pays **50 % of its daily pay** automatically, whether or not you worked. A week away banks seven half-pays.
-- **Working a shift:** once per City Day, at any time, at the job location, for the listed Energy. You get the other 50 % plus the streak bonus. **A shift is not a check**: no roll, always paid, one outcome text, stamp *Shift worked*. Shifts pay no XP and no FXP, and Rested does not apply to pay. One shift per City Day regardless of job changes.
+- A player holds **one job**. Taking a first job is free and one tap at the job's location (a *Jobs* card lists what is offered there, with pay and requirements; requirements are checked on taking, never again). **Switching** costs 2 Energy, takes effect immediately, **resets the streak to 0** and does not spend Rested (§6.3).
+- **Daily salary:** at every 00:00 UTC boundary (§2.2) the job held at that moment pays **50 % of its daily pay** automatically, whether or not you worked. A week away banks seven half-pays. **Cap on return:** however long the absence, a return credits **at most 14 half-pays** (a fortnight's back pay); the job is kept and pay resumes at the next boundary. This never touches a player seen at least once a fortnight (§4.2; Appendix C #17).
+- **Working a shift:** once per City Day, at any time, at the job location, for the listed Energy. You get the other 50 % plus the streak bonus. **A shift is not a check**: no roll, always paid, one outcome text, stamp *Shift worked*. Shifts pay no XP and no FXP; Rested is neither applied nor spent (§6.3). One shift per City Day regardless of job changes. The ticket shows the next shift time in the player's local clock.
 - **Work streak:** consecutive City Days with a shift, counting today. **Bonus = 2 % × min(streak, 10) of daily pay**, paid with the shift: the first shift +2 %, the tenth and after +20 %.
-- **Sick days:** 2, refilled to 2 at the Monday 00:00 UTC boundary. A City Day without a shift spends one automatically and the streak survives (it neither grows nor breaks). A missed day with no sick day left ends the streak, back to 0. So a streak only ends on the third missed day in a week (§4.3, rule 2).
+- **Sick days:** 2, refilled to 2 at the Monday 00:00 UTC boundary. A sick day is spent only when an ended City Day had no shift **and a streak was running** (streak > 0); the streak survives (it neither grows nor breaks). At streak 0 (no job, a job just taken or switched, a streak already broken) nothing is spent. A missed day with no sick day left ends the streak, back to 0. At the Monday boundary the ended Sunday is judged first, then the sick days refill. So a streak only ends on the third missed day in a week (§4.3, rule 2).
 - **You are never fired for being away.**
 - Premium **Remote Work**: Tier I–II jobs can be worked from anywhere for +1 Energy.
 
@@ -781,7 +794,7 @@ Most of the time, spending Energy should be **fast**. A full bar of 100 Energy s
 | **3. Stories** | ~5 % | **2–3 short steps at most**: choices, an encounter, named NPCs, illustration. Always **resumable**: close the tab mid-story and it waits where you left it. | Ambition chapters, patron Requests, the origin story, encounters from tier 2 |
 
 **Rules that keep tier 1 fast:**
-- One tap resolves at once. **×3 and ×5** spend Energy in one go and show all the attempts in a single result. A batch rolls each attempt from one seed, shows one row per attempt and a "2 of 3" stamp, counts each row separately for Standing and Directives, and is **disabled when Energy is short** (no partial batch). ×3 ships in slice 1; ×5 later.
+- One tap resolves at once. **×3 and ×5** spend Energy in one go and show all the attempts in a single result. A batch rolls each attempt from one seed, shows one row per attempt and a "2 of 3" stamp, counts each row separately for Standing and Directives, and is **disabled when Energy is short** (no partial batch). ×3 ships in slice 1; ×5 later. **Batch text:** the stamp always reads *n of 3* (*3 of 3* and *0 of 3* included); the narrative is the action's **success text when more than half the rows succeeded** (×3: 2 or 3; ×5: 3 or more), otherwise its partial text. There is no third text: the rows carry the numbers.
 - The result modal's **Again ×1 / Again ×3** buttons let the player chain actions without going back to the location card.
 - Rested, Issue, weather and Directive bonuses are applied automatically and shown as small tags on the card.
 
@@ -896,6 +909,7 @@ See §15.4. Directives are the faction's *agenda for the day*, set by the electe
 - Directives are **faction-wide**: every member gets the same three on the same City Day, chosen deterministically from the day number (slot A: a canvass order; slot B: party work such as propaganda, a speech, a committee session or intelligence; slot C: a habit such as the shift, training or "six Successes"), never the same set two days running. No scheduled job is needed.
 - The three personal targets together fit in about **60 Energy**, so one session clears them.
 - **Progress** counts attempts (Success or Partial) for count-type orders, Successes for the "full day" order, and each row of a ×3.
+- The shift order's no-job variant, ***Take a job***, is frozen at the day boundary and **completes the moment a job is taken** (+20 FXP then, shown as one line on the Jobs card; taking a job is not an action and opens no modal). A later switch never undoes it.
 - The twelve v1 templates are in `docs/design/slice-1-content.md` §6. When Issues (slice 4) and Campaign Events (slice 6) arrive, the secretary's menu grows to the full §15.4 list.
 
 ---
@@ -1263,7 +1277,7 @@ That's **about 111 offices every term**. With council terms of 5 days, **38 coun
 
 - The **Faction Chair** is elected every 28 days by the faction's Rank 2+ members.
 - Every City Day, the Chair sets up to **3 Party Directives** from a menu: canvass [city], address [Issue] in [city], gather intel in [city], support [event], turn out the vote in [city], disrupt [rival] in [city]. Each has a group target and a personal target.
-- Members get **+25 % FXP on matching actions** (on the action's base FXP, rounded per line, Partial included; never XP, Iron or opinion), **+20 FXP** the moment a personal target is reached, and **+5 PC** when all three are complete.
+- Members get **+25 % FXP on matching actions while the order is open** (on the action's base FXP, rounded per line, Partial included; never XP, Iron or opinion), **+20 FXP** the moment a personal target is reached, and **+5 PC** when all three are complete. The completing row gets the +25 %; nothing after it does, including later rows of the same ×3. The ticket tag reads *Party order 2 / 3 · +25 % FXP* while open and *Order done* after. This keeps Directives at about 30 % of daily FXP (`docs/economy.md` §10) whatever the player's volume.
 - Directives **refresh at the 00:00 UTC boundary** (§2.2). Unfinished orders are gone; nothing is taken away and there is no catch-up.
 - If the faction has no Chair, or the Chair sets nothing by 06:00, an **NPC party secretary** (§13.7) issues sensible defaults based on battlegrounds and Issues.
 - Directives do the tutorial's job: a new player always knows the most useful thing to do today.
@@ -1893,4 +1907,5 @@ The API (`apps/api`) was built against v3.0. Main changes:
 14. **Rested and heavy players:** a six-session player earns little Rested and still levels about 35 % faster than the reference player (`docs/economy.md` §6): Level 10 on day 3 and Level 16 on day 8. Intended, but if telemetry shows most players are heavy the level table will read fast. The lever is the §5.3 table, not the Rested bonus (§6.3 is a pillar).
 15. **Level-up points vs the training targets:** +1 stat point per level alone gives the reference player +9 by day 5 and +19 by day 20, which meets the §8.5 "best stat" targets (week 1 ~15, month 1 ~30) without any training; training on top overshoots (INT ~30 by day 7). Harmless while tier-1 odds clamp at 95 %; reconcile before tier-2 difficulties (14–20) are set in slice 5. Options: keep the rule and raise the targets, or give the level point every other level.
 16. **Opinion drift before slice 4:** slice 1 writes the swing but not the 2 %-a-day home drift, so a long playtest with a few testers pins Coalport near the 95 % cap. Acceptable for the slice-1 question; apply the drift lazily at the day boundary if it is cheap.
+17. **Salary cap on return (14 half-pays, §9.1):** "a fortnight's back pay" is a judgement, not a measured number. Revisit when the Welcome Back package (§4.2, 1 month+) is designed; it may replace the cap with a deliberate returning bonus (Rested full, a fixed Iron sum) rather than an accidental one.
 

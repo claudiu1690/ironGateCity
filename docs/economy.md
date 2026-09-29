@@ -214,6 +214,8 @@ Three orders a day sized to ~60 Energy in total: a casual player clears them in 
 
 Nothing in slice 1 needs the player at a set time: Directives refresh at 00:00 UTC and are simply gone if missed; half pay arrives without a login; Rested banks the night.
 
+**Long absences:** a return credits at most 14 half-pays (GDD §9.1), so the largest back-pay windfall is 14 × 108 = **1,512 Iron** for the Factory worker, about 1.6 reference days of income. Uncapped, a 90-day absence would have paid 9,720 Iron (about 10 days of income) for doing nothing. The cap never touches anyone seen at least once a fortnight.
+
 ---
 
 ## 12. Open flags (all tracked in GDD Appendix C)

@@ -47,7 +47,7 @@ Where the pins land on the art: 1 on the arched front of the big rolling shed wh
 - **One roll per attempt** (§8.4): Success at or below the shown chance, Partial otherwise. **Tier 1 never fails.**
 - **Rewards** at §5.5 rates: 4.5 XP, 0.6 FXP, 2 Iron and 0.005 opinion points per Energy on Success; half on Partial; nearest whole, halves up, per line; a paying line never drops below 1 on Partial. Opinion keeps three decimals.
 - **Two-stat checks** use the average of the two (§8.4). CHA is worn CHA (2 for the recruit).
-- **×1 / ×3** (§13.1): ×3 spends three times the Energy in one go, rolls three times from one seed, and shows three rows and a "2 of 3" stamp. The ×3 button is disabled when Energy is short (tooltip "×3 needs 30 Energy"); there is no partial batch. ×5 is deferred to a later slice.
+- **×1 / ×3** (§13.1): ×3 spends three times the Energy in one go, rolls three times from one seed, and shows three rows and an *n of 3* stamp. The narrative is the success text when 2 or 3 rows succeeded, the partial text when 0 or 1 did (§12, Q5). The ×3 button is disabled when Energy is short (tooltip "×3 needs 30 Energy"); there is no partial batch. ×5 is deferred to a later slice.
 - **Rested** (§6.3): per Energy point, +50 % XP and Iron on the covered points. Never FXP or opinion.
 - **Local Standing** (§13.4): +3 % per level on every checked action in Coalport. Every Success on a checked action counts one toward the next level (each row of a ×3 counts).
 - **Party Directives** (§6): +25 % FXP on a matching attempt, shown as a bonus line in the FXP tile.
@@ -217,11 +217,11 @@ Market trader (Level 3, INT 8) has a mini-game and is deferred with it.
 ### 3.1 Rules (pinned in §9.1)
 
 - **Taking a job:** at the job's location, a *Jobs* card lists the jobs there with pay and requirements. *Take the job* is free and one tap. **Switching** to another job costs 2 Energy, takes effect at once, and **resets the streak to 0**. Requirements are checked on taking, never again.
-- **Half pay at the day boundary:** at every 00:00 UTC the job held at that moment pays **50 % of daily pay**, whether or not the player logs in. A player away for a week gets seven half-pays, banked. (Implementation may be lazy at next read or an Agenda job; the rule is per boundary crossed.)
+- **Half pay at the day boundary:** at every 00:00 UTC the job held at that moment pays **50 % of daily pay**, whether or not the player logs in. A player away for a week gets seven half-pays, banked. A return credits **at most 14 half-pays** (§12, Q9); the job is kept. (Implementation may be lazy at next read or an Agenda job; the rule is per boundary crossed.)
 - **The shift:** once per City Day, at the job's location, for the listed Energy. It pays the **other 50 % plus the streak bonus**. Not a check: no roll, always paid, one outcome text. One shift per City Day regardless of job changes; a shift already worked today is not repeated for a new job.
 - **Streak:** consecutive City Days with a shift worked, counting today. **Bonus = 2 % × min(streak, 10) of daily pay**, paid with the shift (first shift +2 %, tenth and after +20 %; Factory worker at +20 % = +43 Iron).
-- **Sick days:** 2, refilled to 2 at the Monday 00:00 UTC boundary. A City Day without a shift spends one automatically and the streak survives (it neither grows nor breaks). A missed day with **no sick day left ends the streak** (back to 0); the job is never lost. In practice the streak only ends on the third missed day in a week, which keeps §4.3 rule 2 ("one missed day can never break a streak").
-- Shifts pay **no XP and no FXP** (§13.3). Rested does not apply to pay.
+- **Sick days:** 2, refilled to 2 at the Monday 00:00 UTC boundary. A City Day without a shift **while a streak is running** spends one automatically and the streak survives (it neither grows nor breaks); at streak 0 nothing is spent (§12, Q1). A missed day with **no sick day left ends the streak** (back to 0); the job is never lost. In practice the streak only ends on the third missed day in a week, which keeps §4.3 rule 2 ("one missed day can never break a streak").
+- Shifts pay **no XP and no FXP** (§13.3). Rested is neither applied nor spent by a shift or a job switch (§12, Q2).
 - **Remote Work** (Premium) is not in slice 1.
 
 ### 3.2 What the modal shows for a shift
@@ -292,7 +292,7 @@ where `day` is the number of City Days since a fixed epoch (2026-01-01), so the 
 
 ### 6.4 Rewards and timing (pinned in §15.4)
 
-- **+25 % FXP** on every matching attempt (base FXP × 0.25, rounded per line; a 6-FXP canvass shows *+2 party order*). Applies on Partial too. Never touches XP, Iron or opinion.
+- **+25 % FXP** on every matching attempt **while the order is open** (base FXP × 0.25, rounded per line; a 6-FXP canvass shows *+2 party order*). Applies on Partial too. Never touches XP, Iron or opinion. Nothing after the completing row (§12, Q3).
 - **+20 FXP** the moment a Directive's personal target is reached (a bonus line in that action's modal: *Party order complete: +20 FXP*).
 - **+5 Political Capital** when all three are complete. PC is **stored and shown from slice 1** (the HUD mockup already has it) and has no sink until slice 3; it is capped at 1,000 and never decays (§6.5).
 - Progress counts **attempts** (Success or Partial) for count-type orders, Successes for *A full day*, and each row of a ×3.
@@ -305,7 +305,7 @@ where `day` is the number of City Days since a fixed epoch (2026-01-01), so the 
 
 ### 7.1 Masthead
 
-**The Coalport Clarion** · "Morning edition · Price 5 marks" · strapline *The voice of the mill and the quays* · dateline *{Weekday} · {date} · Coalport*. Each home city gets its own paper; the national *Irongate Herald* of the mockup is what battleground residents read from slice 4. (Provisional names for later: *Ashford Gazette*, *Duskwall Sentinel*, *Clearwater Courier*.)
+**The Coalport Clarion** · "Morning edition · Price 5 marks" · strapline *The voice of the mill and the quays* · dateline *{Weekday} · {D Month} · Coalport* from the real UTC date, no year (*Tuesday · 29 September · Coalport*; §12, Q6). Each home city gets its own paper; the national *Irongate Herald* of the mockup is what battleground residents read from slice 4. (Provisional names for later: *Ashford Gazette*, *Duskwall Sentinel*, *Clearwater Courier*.)
 
 ### 7.2 When it appears
 
@@ -335,7 +335,7 @@ Up to three per day: **at most two personal** (highest priority first), then **o
 | `hl.standing` | 4 | Standing level rose | A {Familiar / Known / Trusted} Face in Coalport | Coalport knows {name} now: {standing}. Actions here get +{bonus} %. |
 | `hl.orders-done` | 5 | All three Directives done yesterday | Branch Praises Its Canvassers | Every order carried out yesterday. Secretary Holm: "That's how it's done." +5 Political Capital banked. |
 | `hl.streak` | 6 | Streak reached 5 or 10 yesterday | {Five / Ten} Straight Shifts at the Mill | {name} has not missed a shift in {n} days. Pay is up {bonus} %. |
-| `hl.away` | 7 | 2 or more City Days since last paper | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. |
+| `hl.away` | 7 | 2 or more City Days since last paper | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. *({days} is the number credited, at most 14; §12, Q9)* |
 | `hl.idle` | 8 | Seen yesterday, no actions yesterday | Quiet Day in the Ward | No leaflets went out yesterday. Today's orders are below. |
 | `hl.morale` | city | Always | Collective Holds Coalport at {share} % | Fired up (≥ 80): *The mill is singing.* · Steady (60–79): *"Steady," says the branch. Steady isn't enough.* · Unrest (< 60): *Unrest in Coalport: dockers question the party.* |
 | `hl.orders-call` | city | Always (used when no personal headline qualifies) | Secretary Holm Calls for {slot-A title} | {Holm's line for slot A} |
@@ -398,3 +398,77 @@ On top of slice 0: the ×3 stamp and rows · bonus tags for *Rested*, *Party ord
 | §15.4 | Directive rewards pinned (+25 % FXP, +20 FXP per order, +5 PC for all three); refresh 00:00 UTC |
 | §14.2 | Opinion is written from slice 1; drift from slice 4 |
 | Appendix C | #1 closed for the MVP (UTC); new #14 Rested pacing for heavy players, #15 level-up points vs the §8.5 training targets, #16 opinion drift before slice 4 |
+
+---
+
+## 12. Answers to the slice-1 tech design (§19)
+
+Game designer, 29 Sep 2026, to `docs/tech/slice-1.md` §19. Each answer is "default stands" or the change. Every rule pinned here is in the GDD (the source of truth); this section records the decision and the reason. The developer builds from the GDD sections in the last column.
+
+| # | Question | Answer | GDD |
+|---|---|---|---|
+| 1 | Sick days with no streak running | **Default stands.** A sick day is spent only when an ended City Day had no shift **and streak > 0**. At streak 0 (no job, job just taken, just switched, streak already broken) nothing is spent. Refill to 2 at every Monday boundary, unconditionally; the ended Sunday is judged before the refill | §9.1 |
+| 2 | Rested and shifts | **Default stands.** Rested is consumed only by rows it can boost (checked actions, training). Shifts and job switches spend Energy without touching Rested | §6.3, §9.1 |
+| 3 | +25 % FXP after an order is done | **Default stands.** Only rows that advance an **open** order get it, the completing row included. Nothing after, including later rows of the same ×3. Ticket tag: *Party order 2 / 3 · +25 % FXP* → *Order done* | §15.4 |
+| 4 | *Take a job* completes at once | **Default stands.** Completes the moment the job is taken, +20 FXP then, shown as one line on the Jobs card (no modal: taking a job is not an action). A later switch never undoes it | §13.7, §15.4 |
+| 5 | Mixed ×3 narrative | **Change: majority rule.** Success text when more than half the rows succeeded (×3: 2 or 3; ×1: 1; later ×5: 3+), otherwise the partial text. The batch stamp always reads *n of 3*, *3 of 3* and *0 of 3* included. No third text | §13.1 |
+| 6 | Dateline | **Default stands, made exact.** `{Weekday} · {D Month} · Coalport` from the real UTC date, British form, no year: *Tuesday · 29 September · Coalport*. No year is printed anywhere in the paper | §3.3 |
+| 7 | Short UI copy | See §12.1 below | — |
+| 8 | Collective Rank 5 title | **Change: Delegate.** Recruit / Activist / Organiser / Commissar / **Delegate** / Comrade-General / Chairman. No faction renamed; Appendix C #10 stays parked | §5.4 |
+| 9 | Salary in long absences | **Change: cap at 14 half-pays per return.** A settlement credits min(boundaries crossed, 14); the job is kept and pay resumes at the next boundary. Away 30 days as Factory worker: 1,512 Iron, not 3,240 | §4.2, §9.1, App. C #17 |
+
+**Why, in one line each.**
+
+1. Without the streak condition, taking a job on Monday and first working on Wednesday would burn both sick days for nothing. Worked example: job taken Monday, no shift Mon–Tue (streak 0, nothing spent); shift Wed (streak 1); miss Thu (sick day, 1 left, streak 1); shift Fri (streak 2); miss Sat (last sick day); miss Sun (streak → 0); Monday boundary refills to 2. Three missed days in a week end a streak, as §4.3 rule 2 promises.
+2. §6.3 said "each Energy point spent while Rested > 0 uses 1 Rested"; a 4-Energy shift would have burned 4 Rested for no bonus. The GDD now says Rested is spent only on actions it boosts. The shift modal never shows a Rested tag.
+3. The economy sheet's ~30 % Directive share of daily FXP assumes ~60 matching Energy. Open-ended matching would give a heavy player +25 % on 300+ Energy and push Directives past the "about 25 % from outside missions" ceiling in §5.5. A finished order should also read as finished.
+4. The target is "hold a job by day's end"; the moment the player holds one it is met. Waiting for the boundary would give a bonus nobody sees. The variant is frozen at settlement: a player who already holds a job gets *Work your shift*; switching during the day changes nothing.
+5. "1 of 3" under *Two hundred faces, and they listen* reads wrong; majority costs one comparison (`successes × 2 > times`) and stays right for ×5. A third text per action would be 15 more texts carrying no information the rows don't already carry.
+6. The calendar is real (§2: one City Day = one real day; the Monday refill keys off the real weekday), so the weekday must be the true one. 29 September 1946 was a Sunday: printing a 1946 year would contradict the weekday, and printing 2026 would break the fiction. So: no year, ever.
+7. Below.
+8. "Delegate" is what a workers' party sends to its Congress (the Collective's primary is already *the Congress*, §15.5) and to the Legislature, which is exactly what Rank 5 unlocks. *Tribune* was considered (too Roman) and *Cadre* (a role, not a title).
+9. Half pay not yet paid is income, not an asset, so a cap costs opportunity only and §4.3 rule 1 holds; §4.2 already treats a week away as a lost streak. Fourteen covers every §4.2 row up to "1 week" in full, plus a fortnight's holiday. Beyond that the return belongs to the Welcome Back package (1 month+), which should grant a deliberate bonus, not an accidental one. Uncapped, 90 days away would pay 9,720 Iron (about 10 reference days of income) for doing nothing, against §6.3's principle that "the frequent player simply does more". The `hl.away` deck prints the credited count.
+
+### 12.1 Short UI copy (Q7)
+
+British English, no exclamation marks, times in the **player's local clock** (the client converts from `serverNow`; "UTC" never appears on a button). `{hh:mm}` is 24-hour.
+
+| Where | State | Copy |
+|---|---|---|
+| Action ticket, ×1 button | Not enough Energy for the cost | **Needs 10 Energy · ready at 14:20** ({hh:mm} = when Energy reaches the cost; the same string at 0 Energy) |
+| HUD Energy | Below 100 | **37 / 100 · full at 17:40** (already the desk's row; at 100: **100 / 100 · Rested 60**) |
+| Action ticket, ×3 button (tooltip / hint) | Energy short of three times the cost | **×3 needs 30 Energy** (training: **×3 needs 138 Energy**) |
+| Result modal, *Again ×3* | Same | Same tooltip; *Again ×1* shows **Needs 10 Energy · ready at 14:20** when short |
+| Shift ticket | Shift worked today | **Shift worked · next at 01:00** ({hh:mm} = the next 00:00 UTC, local) |
+| Shift ticket | Player holds a different job | **Not your job · see the Jobs card** (disabled) |
+| Shift ticket | Player holds no job | **No job yet · take one below** (disabled) |
+| Jobs card, a job the player can take, no job held | Enabled | Button **Take the job** · subline **216 a day · half at midnight, half for the shift** |
+| Jobs card, a job the player can take, another job held | Enabled | Button **Switch · 2 Energy · streak resets** (no confirm dialog; the button carries the warning) |
+| Jobs card, the job the player holds | — | **Your job · streak 4 days · 2 sick days left** (no button) |
+| Jobs card, locked job | Disabled | Button **Needs Level 3, AGI 10** (only the unmet requirements, in that order: **Needs AGI 10**, **Needs Level 3**, **Needs STR 5**) |
+| Jobs card, just taken | One line under the job, until the next screen | **Taken · first half pay at 01:00**; if the *Take a job* order was open: **Taken · party order complete: +20 FXP** |
+| Jobs card, just switched | Same | **Switched · streak reset · first half pay at 01:00** |
+| Party order tag on a ticket | Order open / done | **Party order 1 / 3 · +25 % FXP** / **Order done** |
+| City screen, orders list, all three done | — | **All orders carried out · +5 PC** |
+| HUD badge (Me tab) | Stat points pending | **1 point to place** / **2 points to place** |
+| Me tab, stats card | Stat points pending | **Level 4 · 1 stat point to place** · buttons **STR 10 → 11** · **INT 12 → 13** |
+| Result modal, knock-on line | Level gained | **Level 4 · place your point: STR · INT · Later** (as §2.5); two levels at once: **Levels 4–5 · 2 points to place** with the same buttons, one point per tap |
+| Result modal, knock-on line | Standing level gained | **Coalport: Familiar · actions here +3 %** |
+| Result modal, bonus line | Order completed by this row | **Party order complete: +20 FXP** (as §6.4) |
+
+### 12.2 GDD edits made in this change
+
+| Section | Edit |
+|---|---|
+| §0 | "Added 29 Sep 2026 (answers to the slice-1 tech design)" change table |
+| §3.3 | Dateline format, real UTC date, no year printed |
+| §4.2 | New row: 2 weeks or more, half pay stops after 14 boundaries |
+| §5.4 | Collective Rank 5 title *Vanguard* → **Delegate**, with the note |
+| §6.3 | Rested is spent only on actions it boosts; shifts and switches don't touch it |
+| §9.1 | Switch doesn't spend Rested · salary cap of 14 half-pays per return · shift neither applies nor spends Rested, next-shift time shown locally · sick days spent only while streak > 0, Sunday judged before the Monday refill |
+| §13.1 | Batch stamp always *n of 3*; narrative by majority; no third text |
+| §13.7 | *Take a job* variant frozen at the boundary, completes on taking, never undone |
+| §15.4 | +25 % only while the order is open; ticket tag copy; the 30 % share rationale |
+| Appendix C | New #17: the 14-half-pay cap, to revisit with the Welcome Back package |
+
+Companion edits: `docs/economy.md` §11 (the windfall arithmetic); this document's §2.1, §3.1, §6.4, §7.1 and `hl.away` now point here.
