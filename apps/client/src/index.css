@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+@import '@irongate/ui/tokens.css';
+
+/* Scan the shared components for class names. */
+@source '../../../packages/ui/src';
+
+@layer base {
+  html,
+  body {
+    background-color: var(--color-ink);
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  :focus-visible {
+    outline-color: var(--color-petrol);
+  }
+}

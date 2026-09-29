@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "cd ../.. && MONGOMS_DISABLE_POSTINSTALL=1 pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@irongate/client",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://<api-host>/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

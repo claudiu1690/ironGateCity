@@ -1,0 +1,77 @@
+/*
+ * Irongate City design tokens: the Noir Lithograph printed-matter look from the design canvas
+ * (https://claude.ai/artifact/Huss4jaqe4JEs47YP3CaCy). Tailwind v4 theme variables, so
+ * `bg-ink`, `text-paper`, `font-display`, `border-collective` and so on exist as utilities.
+ * Consumed by apps/client: @import "tailwindcss"; @import "@irongate/ui/tokens.css";
+ */
+@theme {
+  /* Ground and ink */
+  --color-ink: #15181a;
+  --color-ink-2: #3a4043;
+  --color-paper: #efe6d2;
+  --color-paper-card: #f6f0e1;
+  --color-paper-2: #e2d6bb;
+  --color-rule: #15181a;
+  --color-text-2: #3d3a33;
+  --color-muted: #5b564b;
+  --color-faint: #9b917a;
+  --color-dim: #b8b09f;
+  --color-track: #d3c7ab;
+
+  /* Accents */
+  --color-petrol: #1e4d52;
+  --color-energy: #6fb3b0;
+  --color-xp: #c39a3a;
+  --color-success: #1e4d52;
+  --color-success-fill: #9cc3c1;
+  --color-partial: #7d5e19;
+  --color-partial-fill: #e0c98f;
+
+  /* Factions (with crest shapes: ■ Vanguard, ● Collective, ▲ Alliance) */
+  --color-vanguard: #c39a3a;
+  --color-collective: #8c2b23;
+  --color-alliance: #4b7394;
+  --color-neutral: #8a8577;
+
+  /* Type */
+  --font-display: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
+  --font-label: 'Oswald Variable', 'Oswald', 'Arial Narrow', sans-serif;
+  --font-mono: 'Courier Prime', 'Courier New', monospace;
+
+  /* Printed matter has square corners. */
+  --radius-*: initial;
+
+  --animate-stamp: stamp-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+
+  @keyframes stamp-in {
+    from {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* Oswald caps: kickers, labels, buttons. */
+@utility label-caps {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* A faint printed dot grain for paper surfaces. */
+@utility paper-grain {
+  background-color: var(--color-paper);
+  background-image: radial-gradient(rgb(21 24 26 / 0.06) 0.8px, transparent 1px);
+  background-size: 5px 5px;
+}
+
+/* Halftone dots in the current colour, for art panels without art. */
+@utility halftone {
+  background-image: radial-gradient(currentColor 1px, transparent 1.3px);
+  background-size: 7px 7px;
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@irongate/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/memoryReplSet.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "mem": "tsx scripts/memMongo.ts",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@irongate/content": "workspace:*",
+    "@irongate/rules": "workspace:*",
+    "mongoose": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "mongodb-memory-server": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalEnv": ["NODE_ENV"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_*"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "DB_MODE",
+        "MONGODB_URI",
+        "PORT",
+        "PUBLIC_ORIGIN",
+        "BETTER_AUTH_SECRET",
+        "SENTRY_DSN",
+        "LOG_LEVEL",
+        "VITE_*",
+        "MONGOMS_*"
+      ]
+    },
+    "lint": {},
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^typecheck"],
+      "passThroughEnv": ["MONGOMS_*"],
+      "outputs": ["coverage/**"]
+    },
+    "e2e": {
+      "cache": false,
+      "passThroughEnv": ["MONGOMS_*", "CI", "PLAYWRIGHT_*"]
+    }
+  }
+}

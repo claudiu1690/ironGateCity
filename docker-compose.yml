@@ -1,37 +1,16 @@
+# Local MongoDB: a single-node replica set (transactions need one).
+# MONGODB_URI=mongodb://127.0.0.1:27017/irongate?replicaSet=rs0&directConnection=true
+# The member host is 127.0.0.1 so the Windows host can reach the primary.
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: irongate_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: irongate
-      POSTGRES_PASSWORD: irongate_dev
-      POSTGRES_DB: irongate
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  mongo:
+    image: mongo:7
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    ports: ['27017:27017']
+    volumes: ['mongo_data:/data/db', 'mongo_config:/data/configdb']
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U irongate -d irongate']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: irongate_redis
-    restart: unless-stopped
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
-  redis_data:
+      test: >
+        mongosh --quiet --eval "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '127.0.0.1:27017' }] }).ok }"
+      interval: 5s
+      timeout: 30s
+      retries: 30
+volumes: { mongo_data: {}, mongo_config: {} }

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev-mem",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:mem"],
+      "port": 5173
+    }
+  ]
+}

@@ -1,285 +1,78 @@
-# Irongate City — Local Development Guide
+# Irongate City
 
-## Prerequisites
+A political browser RPG set in a fictional 1946 Central European republic. The v3.0 code that used to live here has been archived (see git history); the game is being rebuilt from scratch in vertical slices. Start with [`CLAUDE.md`](CLAUDE.md) for the project rules and team, [`docs/GDD.md`](docs/GDD.md) for the game design, and [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the stack and the slice plan. The current slice's technical design is [`docs/tech/slice-0.md`](docs/tech/slice-0.md).
 
-| Tool | Version | Install |
-|------|---------|---------|
-| Node.js | 20.x | https://nodejs.org |
-| Docker Desktop | latest | https://docker.com |
-| npm | 10.x (ships with Node 20) | — |
+## Development
 
----
+### Prerequisites
 
-## First-time Setup
+- **Node 22.12** (see `.node-version`) and **pnpm 10.34** (`corepack enable` picks it up from `package.json`).
+- **Docker Desktop**, only for the persistent local database. Everything else, tests and e2e included, runs without it.
+- The first test run downloads a `mongod` binary for `mongodb-memory-server` (about 100 MB on Linux, 600 MB on Windows) to `node_modules/.cache/mongodb-memory-server`, or to `MONGOMS_DOWNLOAD_DIR` if set.
 
-Do this once, the first time you clone the project.
-
-### 1. Start the databases
-
-```powershell
-docker compose up -d
+```sh
+pnpm install
 ```
 
-This starts PostgreSQL on port **5432** and Redis on port **6379**.  
-Wait a few seconds, then verify both are healthy:
+### Run the game
 
-```powershell
-docker compose ps
+Two ways, depending on whether Docker is running.
+
+**Without Docker (in-memory database, data lost on exit):**
+
+```sh
+pnpm dev:mem
 ```
 
-Both services should show `(healthy)`.
+This starts an in-memory MongoDB replica set on `127.0.0.1:27018` (`pnpm db:mem`), the API on <http://localhost:3001> and the client on <http://localhost:5173>. No `.env` is needed. Open the client, sign up, and tap **×1** on _Canvass the shift change_.
 
----
+**With Docker (persistent database):**
 
-### 2. Install all dependencies
-
-From the **project root**:
-
-```powershell
-npm install
+```sh
+cp apps/server/.env.example apps/server/.env   # once; defaults point at the Docker database
+pnpm db:up                                     # mongo:7 single-node replica set on 27017
+pnpm seed                                      # once: collections, indexes, city state (idempotent)
+pnpm dev                                       # API :3001 + client :5173
+pnpm db:down                                   # when you're done
 ```
 
----
+The client proxies `/api` to the API, so the browser only ever talks to its own origin (ADR 0001). Check the API with <http://localhost:3001/healthz>.
 
-### 3. Run database migrations
+### Checks
 
-```powershell
-npm run db:migrate
-```
+| Command          | What it runs                                                                                                                                                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm lint`      | ESLint (typescript-eslint) in every package                                                                                                                                                                                       |
+| `pnpm typecheck` | `tsc --noEmit` in every package                                                                                                                                                                                                   |
+| `pnpm test`      | Vitest: rules (with coverage), content, db, server and ui. The db and server suites start their own in-memory replica set; no Docker needed                                                                                       |
+| `pnpm e2e`       | Playwright: builds the server, runs it with `DB_MODE=memory` behind `vite preview`, and plays sign up → Canvass → result modal on a phone viewport. First time: `pnpm --filter @irongate/client exec playwright install chromium` |
+| `pnpm build`     | Client bundle (`apps/client/dist`) and server bundle (`apps/server/dist/index.js`, `dist/worker.js`)                                                                                                                              |
+| `pnpm format`    | Prettier                                                                                                                                                                                                                          |
 
-This creates all tables in PostgreSQL.  
-When prompted for a migration name, type something like `init` and press Enter.
+Everything at once, as CI does: `pnpm turbo lint typecheck test build && pnpm e2e`.
 
----
-
-### 4. Seed the database
-
-```powershell
-npm run db:seed
-```
-
-This populates cities, missions, items, jobs, and NPC templates.
-
----
-
-### 5. Configure environment
-
-The API and web environments are pre-configured for local development.  
-Verify the files exist:
-
-- `apps/api/.env` — database, Redis, JWT secrets
-- `apps/web/.env.local` — API URL
-
-> **Stripe:** The Store page requires Stripe keys. If you don't have them,  
-> leave the Stripe values as `replace_me` — everything else in the game works  
-> without them.
-
----
-
-## Daily Startup
-
-Once set up, every time you want to develop:
-
-```powershell
-# 1. Start the databases (if Docker isn't already running them)
-docker compose up -d
-
-# 2. Start both servers in one terminal
-npm run dev
-```
-
-This starts:
-- **API** → http://localhost:3001
-- **Web** → http://localhost:3000
-
-Or run them in separate terminals for cleaner logs:
-
-```powershell
-# Terminal 1 — API
-npm run dev:api
-
-# Terminal 2 — Web
-npm run dev:web
-```
-
----
-
-## App URLs
-
-| Service | URL | Notes |
-|---------|-----|-------|
-| Frontend | http://localhost:3000 | Next.js web app |
-| API | http://localhost:3001 | Express REST API |
-| Health check | http://localhost:3001/api/health | DB + Redis status |
-| API base | http://localhost:3001/api/v1 | All game endpoints |
-| Prisma Studio | http://localhost:5555 | Visual DB browser (see below) |
-
----
-
-## Verifying Everything Works
-
-After `npm run dev`, open your browser to:
-
-**http://localhost:3001/api/health**
-
-You should see:
-```json
-{ "status": "healthy", "checks": { "api": "ok", "database": "ok", "redis": "ok" } }
-```
-
-Then go to **http://localhost:3000** — you should see the landing page.
-
----
-
-## Viewing the Database
-
-### Option A — Prisma Studio (GUI)
-
-In a separate terminal:
-
-```powershell
-npm run db:studio
-```
-
-Opens a browser UI at **http://localhost:5555** where you can browse and edit all tables.
-
-### Option B — psql in Docker
-
-```powershell
-docker exec -it irongate_postgres psql -U irongate -d irongate
-```
-
-Useful queries inside psql:
-
-```sql
--- List all tables
-\dt
-
--- View cities and their influence
-SELECT c.name, ci."fascistPct", ci."communistPct", ci."democratPct"
-FROM "City" c JOIN "CityInfluence" ci ON ci."cityId" = c.id;
-
--- View all users
-SELECT id, username, email, "isPremium", "createdAt" FROM "User";
-
--- View characters
-SELECT c.name, c.faction, c.level, c."factionRank", c."ironMarks"
-FROM "Character" c;
-
--- View missions (first 10)
-SELECT slug, title, type, "energyCost", "xpReward" FROM "Mission" LIMIT 10;
-
--- View items (first 10)
-SELECT name, slot, tier, "buyCost" FROM "Item" LIMIT 10;
-
--- Exit psql
-\q
-```
-
-### Option C — Redis CLI
-
-```powershell
-docker exec -it irongate_redis redis-cli
-```
-
-Useful commands inside redis-cli:
+### Repository layout
 
 ```
-# Check all energy keys
-KEYS energy:*
-
-# Read a character's energy state
-HGETALL energy:<characterId>
-
-# Check all rate-limit keys
-KEYS rl:*
-
-# Flush all Redis data (resets energy + rate limits)
-FLUSHALL
-
-# Exit
-quit
+apps/client      React 19 + Vite SPA (TanStack Router and Query, tRPC client, Better Auth client, Tailwind v4)
+apps/server      Fastify + tRPC + Better Auth (src/index.ts) and the Agenda worker (src/worker.ts)
+packages/rules   Pure game maths: seeded RNG, checks, lazy Energy/Rested, rewards, levels. No I/O
+packages/content Factions, cities, locations and actions as Zod-validated data
+packages/db      Mongoose connection, models, indexes, seed, in-memory replica-set helper
+packages/ui      Design tokens, fonts and shared components (HUD, ticket, stamp, result modal)
 ```
 
----
+Workspace packages are consumed as TypeScript source; Vite, `tsx` and `tsup` compile them.
 
-## Common Commands
+### Environment
 
-| Command | What it does |
-|---------|-------------|
-| `npm run dev` | Start API (watch) + Web together |
-| `npm run dev:api` | Start only the API (watch mode — auto-reloads on save) |
-| `npm run dev:web` | Start only the web |
-| `npm run db:migrate` | Create/apply DB migrations |
-| `npm run db:seed` | Seed static game data |
-| `npm run db:studio` | Open Prisma Studio GUI |
-| `docker compose up -d` | Start Postgres + Redis in background |
-| `docker compose down` | Stop Postgres + Redis |
-| `docker compose down -v` | Stop + delete all DB data (full reset) |
+Server variables are validated at start-up (`apps/server/src/env.ts`) and documented in [`apps/server/.env.example`](apps/server/.env.example); client variables are in [`apps/client/.env.example`](apps/client/.env.example).
 
----
+### Deployment (not provisioned yet)
 
-## Full Reset (Start From Scratch)
+- **Client → Vercel:** project root `apps/client`; `apps/client/vercel.json` holds the build and the `/api` rewrite. Replace `<api-host>` with the API's host once it exists.
+- **API and worker → Railway or Fly:** one image from `apps/server/Dockerfile` (build context: the repository root), two services: `node dist/index.js` with health check `/healthz` (see `apps/server/railway.toml`) and `node dist/worker.js`.
+- **Database → MongoDB Atlas:** set `MONGODB_URI`, then run `pnpm seed` against it once.
+- **Sentry (optional):** `SENTRY_DSN` on the server, `VITE_SENTRY_DSN` on the client. Absent means off.
 
-If you want to wipe the database and start fresh:
-
-```powershell
-# Stop and delete all Docker volumes (wipes all data)
-docker compose down -v
-
-# Restart fresh containers
-docker compose up -d
-
-# Re-apply migrations
-npm run db:migrate
-
-# Re-seed
-npm run db:seed
-```
-
----
-
-## Registering Your First Account
-
-1. Go to **http://localhost:3000**
-2. Click **Create Account**
-3. Fill in username, email, password
-4. You'll be taken through the **Origin Story** — answer the 4 dialogue questions and pick your faction
-5. You'll land on the **Dashboard**
-
----
-
-## Known Limitations (Local Dev)
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Energy regeneration | Works | BullMQ worker runs every 1 minute |
-| Background jobs | Works | All 12 BullMQ workers start with the API |
-| WebSockets | Works | `/world` and `/player` namespaces active |
-| Stripe / Store page | Disabled | Set real Stripe keys in `apps/api/.env` to enable |
-| Email verification | Not built | No email service for MVP |
-
----
-
-## Project Structure
-
-```
-ironGateCity/
-├── apps/
-│   ├── api/                   # Express + Prisma backend
-│   │   ├── prisma/            # Schema + migrations + seed
-│   │   └── src/
-│   │       ├── routes/        # REST route handlers
-│   │       ├── services/      # Business logic
-│   │       ├── jobs/          # BullMQ workers
-│   │       ├── socket/        # Socket.io namespaces
-│   │       └── middleware/    # Auth, rate limiting, errors
-│   └── web/                   # Next.js 14 frontend
-│       ├── app/               # App Router pages
-│       ├── components/        # Reusable UI components
-│       ├── store/             # Zustand state stores
-│       ├── hooks/             # Socket + auth hooks
-│       └── lib/               # API client + token utils
-├── docker-compose.yml         # Local Postgres + Redis
-└── package.json               # Monorepo workspace root
-```
+The provisioning steps are listed in `docs/tech/slice-0.md` §18.

@@ -1,0 +1,41 @@
+{
+  "name": "@irongate/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./router": "./src/trpc/router.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "start:worker": "node dist/worker.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agendajs/mongo-backend": "^4.0.3",
+    "@fastify/cors": "^11.3.0",
+    "@irongate/content": "workspace:*",
+    "@irongate/db": "workspace:*",
+    "@irongate/rules": "workspace:*",
+    "@sentry/node": "^11.1.0",
+    "@trpc/server": "^11.19.0",
+    "agenda": "^6.2.6",
+    "better-auth": "^1.7.6",
+    "fastify": "^5.12.5",
+    "mongodb": "catalog:",
+    "mongoose": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "mongodb-memory-server": "catalog:",
+    "tsup": "^8.5.1",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -3,10 +3,13 @@ node_modules/
 .env.local
 .env*.local
 dist/
-.next/
 *.log
 .DS_Store
 Thumbs.db
 .turbo/
 coverage/
-prisma/migrations/
+test-results/
+playwright-report/
+blob-report/
+.vercel/
+*.tsbuildinfo
