@@ -30,6 +30,18 @@ async function openAny(page: Page, label: string): Promise<Locator> {
   return sheet;
 }
 
+/** The labels of pins not wholly inside a viewport of this size. */
+async function offScreenPins(page: Page, vp: { width: number; height: number }): Promise<string[]> {
+  const outside: string[] = [];
+  for (const pin of await page.getByTestId('hotspot').all()) {
+    const b = (await pin.boundingBox())!;
+    if (b.x < 0 || b.y < 0 || b.x + b.width > vp.width || b.y + b.height > vp.height) {
+      outside.push((await pin.getAttribute('aria-label')) ?? '?');
+    }
+  }
+  return outside;
+}
+
 async function continueModal(page: Page) {
   const modal = modalOf(page);
   await modal.getByRole('button', { name: 'Continue' }).click();
@@ -246,13 +258,7 @@ test.describe('phone 375×812', () => {
     await signUp(page);
     await toTheCity(page);
     await mapReady(page);
-    const outside: string[] = [];
-    for (const pin of await page.getByTestId('hotspot').all()) {
-      const b = (await pin.boundingBox())!;
-      if (b.x < 0 || b.y < 0 || b.x + b.width > PHONE.width || b.y + b.height > PHONE.height) {
-        outside.push((await pin.getAttribute('aria-label')) ?? '?');
-      }
-    }
+    const outside = await offScreenPins(page, PHONE);
     test.info().annotations.push({ type: 'off-screen pins', description: outside.join(', ') });
     expect(outside).toEqual([]);
   });
@@ -265,6 +271,41 @@ test.describe('phone 375×812', () => {
     const pin = page.getByRole('button', { name: '6. The Anchor' });
     await pin.focus();
     await expect(pin).toBeInViewport();
+  });
+
+  // Slice 2 regression: closing a phone sheet reset the map by remounting it, which replaced every
+  // pin button 10–20 ms after Close; a pin focused (or tapped) in that window was detached and the
+  // Enter (or tap) was lost. The pins must survive a close, and the first view must still come back.
+  test('closing a sheet keeps the same pin buttons (no lost tap or Enter) and returns to the first view', async ({
+    page,
+  }) => {
+    await signUp(page);
+    await toTheCity(page);
+    // Load the map with no sheet open, so the transform it mounts with is the first view.
+    await page.goto('/city/coalport');
+    await mapReady(page);
+    const transform = () =>
+      page.locator('.react-transform-component').evaluate((el) => (el as HTMLElement).style.transform);
+    const firstView = await transform();
+    // Pin 5 sits low on the map, so its sheet pans (and zooms) the map to keep it clear.
+    const sheet = await openAny(page, '5. Harbour Quays');
+    await expect.poll(transform).not.toBe(firstView);
+    await page.evaluate(() => {
+      (window as unknown as { __pins: Element[] }).__pins = [
+        ...document.querySelectorAll('[data-testid=hotspot]'),
+      ];
+    });
+    await sheet.getByRole('button', { name: /^Close/ }).click();
+    await expect(sheet).toBeHidden();
+    // Back to exactly the first view; by then any remount would have replaced the pins.
+    await expect.poll(transform).toBe(firstView);
+    const detached = await page.evaluate(() =>
+      (window as unknown as { __pins: Element[] }).__pins
+        .filter((p) => !p.isConnected)
+        .map((p) => p.getAttribute('aria-label')),
+    );
+    expect(detached).toEqual([]);
+    expect(await offScreenPins(page, PHONE)).toEqual([]);
   });
 
   // m3 (fixed in fix round 1): attempt rows and the HUD badge are 44 px tall.

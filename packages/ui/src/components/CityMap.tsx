@@ -143,8 +143,6 @@ export function CityMap({
   const [size, setSize] = useState<{ w: number; h: number; insets: MapInsets } | null>(null);
   // Slice 2 (first-session art budget, ADR 0015): the night art is fetched only once it is night.
   const [nightMounted, setNightMounted] = useState(isNight);
-  /** Bumped to return to the first view (its key remounts the transform). */
-  const [firstViews, setFirstViews] = useState(0);
   useEffect(() => {
     if (isNight) setNightMounted(true);
   }, [isNight]);
@@ -171,7 +169,10 @@ export function CityMap({
   const contentH = contentW / aspect;
   const box = { w, h };
   const content = { w: contentW, h: contentH };
-  const initial = fitPinsView({ box, content, pins: locations.map((l) => l.map), insets });
+  const fitted = fitPinsView({ box, content, pins: locations.map((l) => l.map), insets });
+  // The transform library keeps its initial position rounded to 2 decimals; the reset after a sheet
+  // closes uses the same numbers, so it lands on exactly the view the map mounted with.
+  const initial = { scale: fitted.scale, x: Number(fitted.x.toFixed(2)), y: Number(fitted.y.toFixed(2)) };
 
   /**
    * Pan (keeping the zoom) so that a pin sits in the middle of the clear area. A focus pan is
@@ -215,7 +216,9 @@ export function CityMap({
 
   // Pan to a newly selected location (also the one selected on arrival, once the box is measured).
   // A pan made to clear a phone's sheet is undone when the sheet closes: back to the first view,
-  // every pin on screen again (QA M2).
+  // every pin on screen again (QA M2). The view is reset in place, never by remounting the
+  // transform: a remount replaces every pin button just after the sheet closes, so a pin the player
+  // has just focused or started to tap is detached and the Enter or the tap is lost.
   const pannedUnderSheet = useRef(false);
   useEffect(() => {
     if (w === 0) return;
@@ -227,8 +230,10 @@ export function CityMap({
         pannedUnderSheet.current = coverBottom > 0;
       } else if (pannedUnderSheet.current) {
         pannedUnderSheet.current = false;
-        // Remount the transform: its first view is exactly the fitted one (every pin whole on screen).
-        setFirstViews((n) => n + 1);
+        // 1 ms, not 0: an animated transform first cancels any momentum still running from a flick
+        // (an instant one would set the view and let that momentum carry on over it). It lands on
+        // the target on the next frame.
+        void zoomRef.current?.setTransform(initial.x, initial.y, initial.scale, 1);
       }
     });
     return () => cancelAnimationFrame(id);
@@ -261,7 +266,7 @@ export function CityMap({
     <div ref={boxRef} className={cx('relative overflow-hidden bg-ink', className)} data-testid="city-map">
       {size && w > 0 && h > 0 && (
         <TransformWrapper
-          key={`${Math.round(contentW)}x${Math.round(contentH)}-${firstViews}`}
+          key={`${Math.round(contentW)}x${Math.round(contentH)}`}
           ref={zoomRef}
           initialScale={initial.scale}
           initialPositionX={initial.x}
