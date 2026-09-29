@@ -142,8 +142,8 @@ describe('headline variants (content §13, QA fix round 1)', () => {
     await Character.updateOne({ _id: me.id }, { $set: { rank: 4, fxp: 6_000 } });
     clock.advance(24 * H);
     expect((await headlinesOf(caller))[0]).toEqual({
-      headline: 'Mara Lenk Made Commissar by the Branch',
-      deck: 'Made Commissar on the strength of party work. The branch takes note.',
+      headline: 'Mara Lenk Made Convenor by the Branch',
+      deck: 'Made Convenor on the strength of party work. The branch takes note.',
     });
   });
 });

@@ -50,7 +50,7 @@ export const jobs: Job[] = [
     dailyPay: 180,
     factionPayBonus: { vanguard: 0.2 },
     blurb:
-      'Eight hours counting blankets and boots in the garrison stores. Vanguard members draw a fifth more.',
+      'Eight hours counting seized tobacco and bonded spirits in the customs stores. Vanguard members draw a fifth more.',
   },
   {
     id: 'duskwall-street-vendor',
@@ -61,7 +61,7 @@ export const jobs: Job[] = [
     shiftEnergy: 3,
     dailyPay: 100,
     blurb:
-      "Bootlaces, tobacco and yesterday's Sentinel from a stall in the Quartermaster's Market. The provost has stopped asking.",
+      "Bootlaces, tobacco and yesterday's Sentinel from a stall in the Customs Market. The inspector has stopped asking.",
   },
   {
     id: 'duskwall-driver',
@@ -72,7 +72,7 @@ export const jobs: Job[] = [
     shiftEnergy: 4,
     dailyPay: 200,
     blurb:
-      'The yard lorry between the sidings and the garrison depot, a full load each way. Needs a quick hand on the frost.',
+      'The yard lorry between the sidings and the customs depot, a full load each way. Needs a quick hand on the frost.',
   },
   {
     id: 'ashford-copy-clerk',

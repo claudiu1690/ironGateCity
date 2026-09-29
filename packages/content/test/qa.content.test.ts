@@ -199,6 +199,16 @@ describe('content vs docs/design/slice-1-content.md', () => {
     expect(() => loadContent(bad)).toThrow();
   });
 
+  it('§5.4: every faction rank title matches the GDD table (content-policy review §3)', () => {
+    const table = GDD.slice(GDD.indexOf('### 5.4 Faction Rank'), GDD.indexOf('### 5.5'));
+    const rows = [...table.matchAll(/^\| (\d) \| [\d,*]+ \| ([^|]+) \|/gm)].map((m) =>
+      m[2]!.split(' / ').map((t) => t.trim()),
+    );
+    expect(rows).toHaveLength(7);
+    const byFaction = content.factions.map((_, f) => rows.map((r) => r[f]));
+    expect(content.factions.map((f) => f.rankTitles)).toEqual(byFaction);
+  });
+
   it('§12.1 UI copy: the exact strings of the table', () => {
     expect(copy.needsEnergy(10, '14:20')).toBe('Needs 10 Energy · ready at 14:20');
     expect(copy.x3Needs(30)).toBe('×3 needs 30 Energy');
@@ -230,22 +240,34 @@ describe('content vs docs/design/slice-1-content.md', () => {
 
 describe('CLAUDE.md design rules 2 and 6: vocabulary across all player-facing content', () => {
   const allText = JSON.stringify(rawContent) + JSON.stringify(copy) + copySamples();
+  // Allowed, by exact JSON string value only (so the same word in any display text still fails):
+  // the Duskwall ids that keep their original words. Content-policy review §1 ("Ids: no id
+  // changes"): ids are never shown, and characters' jobs, order progress and logs reference them.
+  const legacyIds = /"duskwall\.(garrison-gate(\.(canvass|speech|drill|stores))?|beacon-house\.muster)"/g;
+  const withoutLegacyIds = (s: string) => s.replace(legacyIds, '"[legacy id]"');
 
   it('uses campaign vocabulary: no war framing', () => {
+    // The militia words of docs/design/content-policy-review.md §7 (checklist items 1, 2 and 6) are
+    // banned alongside the war words, so a later slice cannot bring them back.
     const war =
-      /\b(war|wars|warfare|battle|battles|battlefield|uprising|insurrection|revolt|troops|soldiers?|army|armies|militia|invade|invasion|attack|assault|siege|combat|enemy|enemies|weapon|guns?|rifles?|bomb|kill|killed)\b/i;
-    // TODO(content-policy): the Vanguard street card's "A movement of ex-soldiers and clerks" is
-    // transcribed as designed and flagged for the user (docs/tech/slice-2.md §20.3 item 3). It is the
-    // one exception, by exact phrase, until the user decides; every other occurrence still fails.
-    const text = allText.replace(
-      'A movement of ex-soldiers and clerks',
-      'A movement of ex-[flagged] and clerks',
-    );
-    expect(text.match(war)?.[0] ?? null).toBeNull();
+      /\b(war|wars|warfare|battle|battles|battlefield|uprising|insurrection|revolt|troops|soldiers?|army|armies|militia|invade|invasion|attack|assault|siege|combat|enemy|enemies|weapon|guns?|rifles?|bomb|kill|killed|garrisons?|barracks|drill(s|ed|ing)?|musters?|mustered|marshals?|footsoldiers?|sergeants?|uniforms?|purges?|purged|conscription|paramilitar(y|ies))\b/gi;
+    const text = withoutLegacyIds(allText);
+    expect([...text.matchAll(war)].map((m) => m[0])).toEqual([]);
     // "front" only as a building's front ("columns out front") or a row of seats ("the front row"),
     // never as a political front.
     const fronts = [...text.matchAll(/.{0,20}\bfront\b.{0,20}/gi)].map((m) => m[0]);
     for (const f of fronts) expect(f, f).toMatch(/out front|the front of|front door|front room|front row/i);
+  });
+
+  it('the militia words fail in display text, and the legacy-id allowance is exact', () => {
+    // A guard on the guard: the allow-list above must not hide a display string.
+    const war = /\b(garrison|muster|drill)\b/i;
+    const scan = (x: object) => withoutLegacyIds(JSON.stringify(x));
+    expect(scan({ id: 'duskwall.garrison-gate.drill', job: 'duskwall.beacon-house.muster' })).not.toMatch(
+      war,
+    );
+    expect(scan({ name: 'Garrison Gate' })).toMatch(war);
+    expect(scan({ body: 'the evening muster at duskwall.garrison-gate' })).toMatch(war);
   });
 
   it('carries no real-world extremist symbols, slogans or names', () => {

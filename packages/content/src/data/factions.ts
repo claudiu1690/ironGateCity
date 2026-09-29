@@ -16,18 +16,17 @@ export const factions: Faction[] = [
     crestArt: 'crest.vanguard',
     homeCityId: 'duskwall',
     startingBonus: { str: 3 },
-    // TODO(content-policy): the Vanguard rank titles are flagged as military framing (tech design §20.3 item 1).
-    rankTitles: ['Initiate', 'Footsoldier', 'Sergeant', 'Lieutenant', 'Captain', 'Commander', 'Marshal'],
+    // Party ranks, not military ones (content-policy review §1.2, §3; GDD §5.4).
+    rankTitles: ['Initiate', 'Steward', 'Bailiff', 'Prefect', 'Intendant', 'Guardian', 'Keeper of the Gate'],
     secretary: { npcId: 'stahl', signature: '— V.S.', addressedAs: 'Organiser Stahl' },
     hqRef: 'Beacon House',
     kit: { outfit: 'outfit.work-jacket', card: 'doc.party-card' },
     welcomeOrders: ['dir.v.guard-change', 'dir.v.report', 'dir.v.work-shift'],
     card: {
-      // TODO(content-policy): the card text ("ex-soldiers", "the nation above all") is flagged (tech design §20.3 item 3).
+      // Content-policy review §3: a party, not a militia; its Campaign Event is the Grand Rally.
       blurb:
-        'Order, discipline, and the nation above all. A movement of ex-soldiers and clerks who want the streets quiet, the ration fair and the frontier shut. They hold Duskwall, the garrison town in the mountains.',
-      // TODO(content-policy): the Torchlight March is flagged (tech design §20.3 item 2).
-      signatureEvent: 'the Torchlight March',
+        'Order, discipline and a strong hand. A party of clerks, foremen and old officials who want the streets quiet, the ration fair and the frontier shut. They hold Duskwall, the frontier town in the mountains.',
+      signatureEvent: 'the Grand Rally',
     },
   },
   {
@@ -38,8 +37,9 @@ export const factions: Faction[] = [
     crestArt: 'crest.collective',
     homeCityId: 'coalport',
     startingBonus: { str: 2, int: 1 },
-    // Rank 5 is "Delegate" (designer answer, slice-1 content §12 Q8; GDD §5.4).
-    rankTitles: ['Recruit', 'Activist', 'Organiser', 'Commissar', 'Delegate', 'Comrade-General', 'Chairman'],
+    // Rank 5 is "Delegate" (designer answer, slice-1 content §12 Q8; GDD §5.4). Ranks 4 and 6 are
+    // Convenor and Tribune, not real-world titles (content-policy review §1.7, §3).
+    rankTitles: ['Recruit', 'Activist', 'Organiser', 'Convenor', 'Delegate', 'Tribune', 'Chairman'],
     secretary: { npcId: 'holm', signature: '— P.H.', addressedAs: 'Secretary Holm' },
     hqRef: 'the Union Hall',
     kit: { outfit: 'outfit.mill-coat', card: 'doc.party-card' },

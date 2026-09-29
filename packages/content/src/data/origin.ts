@@ -168,7 +168,7 @@ export const origin: OriginInput = {
           answers: [
             {
               id: 'a',
-              text: 'Order. Someone needs to hold the line.',
+              text: 'Order. Somebody has to keep the streets quiet.',
               effects: [{ kind: 'wish', factionId: 'vanguard', fxp: 50 }],
             },
             {

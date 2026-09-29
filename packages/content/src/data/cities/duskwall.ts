@@ -5,8 +5,9 @@ import type { City } from '../../schemas';
  * docs/design/slice-2-cities.md §1 (generated from its tables, then checked by the content tests).
  * Rewards are not data: they follow from the type and Energy at the §5.5 rates.
  *
- * TODO(content-policy): the Vanguard vocabulary flagged in docs/tech/slice-2.md §20.3 item 3 lives
- * in this file (drill, muster, the movement's mark); a rename is a change to these strings only.
+ * Content policy: docs/design/content-policy-review.md §4. Ids keep their original words
+ * (`garrison-gate`, `quartermaster-market`, `muster`, `drill`) because ids are never shown and
+ * characters' jobs, orders and logs reference them; only the display text changed.
  */
 
 const canvass = { tier: 1, type: 'canvass', energy: 10, givesFxp: true, givesOpinion: true } as const;
@@ -31,25 +32,25 @@ export const duskwall: City = {
   locations: [
     {
       id: 'duskwall.garrison-gate',
-      name: 'Garrison Gate',
-      kind: 'barracks',
+      name: 'Fortress Gate',
+      kind: 'ministry',
       blurb:
-        "The gatehouse of the old fortress, now the garrison's front door. The guard changes at four, and the whole town sets its watch by it.",
+        'The gatehouse of the old fortress, now the frontier customs house. The shift changes at four, and the whole town sets its watch by it.',
       map: { x: 0.47, y: 0.44 },
       actions: [
         {
           ...canvass,
           id: 'duskwall.garrison-gate.canvass',
-          name: 'Canvass the guard change',
+          name: 'Canvass the customs shift',
           stats: ['str'],
           text: {
             success: {
               headline: 'They stop for one of their own',
-              body: "The guard comes off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A corporal takes ten leaflets for the billet.",
+              body: "The customs men come off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A senior man takes ten leaflets for the office.",
             },
             partial: {
-              headline: 'Most of them march past',
-              body: "The relief marches through and the old guard heads for the canteen without slowing. You press leaflets on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.",
+              headline: 'Most of them go past',
+              body: "The night shift goes in and the day shift heads for the canteen without slowing. You press leaflets on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.",
             },
           },
         },
@@ -61,38 +62,37 @@ export const duskwall: City = {
           text: {
             success: {
               headline: 'The square goes quiet',
-              body: 'You take the top step under the arch and pitch it to the back of the square. Order on the streets, bread at a fixed price, the frontier held. Nobody heckles here. When you finish, the sergeant of the guard nods once.',
+              body: 'You take the top step under the arch and pitch it to the back of the square. Order on the streets, bread at a fixed price, the frontier shut. Nobody heckles here. When you finish, the chief of customs nods once.',
             },
             partial: {
-              headline: 'The bugle cuts you off',
-              body: 'You get through prices and the checkpoint queues before the bugle goes for the relief and the square empties at the double. A few townsfolk stay to hear the end. The sergeant looks at his watch.',
+              headline: "The four o'clock bell cuts you off",
+              body: 'You get through prices and the checkpoint queues before the bell goes for the shift and the square empties at a trot. A few townsfolk stay to hear the end. The chief looks at his watch.',
             },
           },
         },
-        // TODO(content-policy): "Drill with the recruits" is flagged as military framing (tech design §20.3)
         {
           id: 'duskwall.garrison-gate.drill',
-          name: 'Drill with the recruits',
+          name: 'Shift crates in the bonded store',
           tier: 1,
           type: 'training',
           trains: 'str',
           text: {
             success: {
-              headline: 'An hour on the square',
-              body: "The drill sergeant doesn't ask which party you're with; he asks if you can carry a pack. You can, by the end. Your shoulders will tell you about it tomorrow.",
+              headline: 'An hour in the bonded store',
+              body: "The storeman doesn't ask which party you're with; he asks if you can get a crate of tinned beef onto the top rack. You can, by the end. Your shoulders will tell you about it tomorrow.",
             },
           },
         },
         {
           id: 'duskwall.garrison-gate.stores',
-          name: 'Work your shift in the garrison stores',
+          name: 'Work your shift in the customs stores',
           tier: 1,
           type: 'job',
           jobId: 'duskwall-stores-hand',
           text: {
             success: {
               headline: 'Eight hours among the crates',
-              body: "Blankets, boots, tinned beef, counted in and counted out under a corporal who trusts nobody. The paybook gets its stamp. Half came at midnight; here's the rest, with the streak on top.",
+              body: "Seized tobacco, bonded spirits, tinned beef, counted in and counted out under a storeman who trusts nobody. The paybook gets its stamp. Half came at midnight; here's the rest, with the streak on top.",
             },
           },
         },
@@ -100,10 +100,10 @@ export const duskwall: City = {
     },
     {
       id: 'duskwall.quartermaster-market',
-      name: "Quartermaster's Market",
+      name: 'Customs Market',
       kind: 'market',
       blurb:
-        "Tents and trestles under the walls, where the garrison sells what it doesn't need and the town buys what it can't get elsewhere.",
+        "Tents and trestles under the walls, where the customs auctions what it seizes at the frontier and the town buys what it can't get elsewhere.",
       map: { x: 0.5, y: 0.65 },
       actions: [
         {
@@ -114,11 +114,11 @@ export const duskwall: City = {
           text: {
             success: {
               headline: 'The queue has nowhere to go',
-              body: 'Sixty people and one tent with sugar in it. You work the line with the price list and the leaflet. By the time the corporal shouts next, half the queue knows what the movement would do about the ration.',
+              body: 'Sixty people and one tent with sugar in it. You work the line with the price list and the leaflet. By the time the clerk shouts next, half the queue knows what the movement would do about the ration.',
             },
             partial: {
               headline: 'The sugar runs out early',
-              body: "Three people in, the corporal drops the flap and the queue turns into an argument. A few leaflets go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.",
+              body: "Three people in, the clerk drops the flap and the queue turns into an argument. A few leaflets go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.",
             },
           },
         },
@@ -130,11 +130,11 @@ export const duskwall: City = {
           text: {
             success: {
               headline: 'Quick hands, empty bag',
-              body: 'You work the tent rows at a trot, a leaflet into every basket before the owner looks up. The bag is empty in ten minutes and the market provost never sees you.',
+              body: 'You work the tent rows at a trot, a leaflet into every basket before the owner looks up. The bag is empty in ten minutes and the market inspector never sees you.',
             },
             partial: {
-              headline: 'The provost sees you',
-              body: "Half the bag is gone when the market provost plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The leaflets you handed out are still out there.",
+              headline: 'The inspector sees you',
+              body: "Half the bag is gone when the market inspector plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The leaflets you handed out are still out there.",
             },
           },
         },
@@ -150,20 +150,20 @@ export const duskwall: City = {
             },
             partial: {
               headline: 'The lorry has to leave',
-              body: "You've a fair crowd until the driver climbs into the cab and you're speaking from a moving platform. You finish on the ground for the tea stall and a provost who looks bored. The tea stall gives you a nod.",
+              body: "You've a fair crowd until the driver climbs into the cab and you're speaking from a moving platform. You finish on the ground for the tea stall and an inspector who looks bored. The tea stall gives you a nod.",
             },
           },
         },
         {
           id: 'duskwall.quartermaster-market.stall',
-          name: "Work the sutler's stall",
+          name: 'Work the market stall',
           tier: 1,
           type: 'job',
           jobId: 'duskwall-street-vendor',
           text: {
             success: {
               headline: "A day's trade",
-              body: "Bootlaces, tobacco, yesterday's Sentinel. You know the regulars by their boots now. The takings won't make anyone rich, but they come in every day, and the provost has stopped asking.",
+              body: "Bootlaces, tobacco, yesterday's Sentinel. You know the regulars by their boots now. The takings won't make anyone rich, but they come in every day, and the inspector has stopped asking.",
             },
           },
         },
@@ -174,7 +174,7 @@ export const duskwall: City = {
       name: 'Beacon House',
       kind: 'faction-hq',
       blurb:
-        "The movement's district office, named for the searchlight on its roof. The committee sits upstairs; the volunteers muster in the yard at six.",
+        "The movement's district office, named for the searchlight on its roof. The committee sits upstairs; the volunteers gather in the yard at six.",
       map: { x: 0.64, y: 0.78 },
       actions: [
         {
@@ -213,11 +213,10 @@ export const duskwall: City = {
             },
           },
         },
-        // TODO(content-policy): "Address the evening muster" is flagged as military framing (tech design §20.3)
         {
           ...speech,
           id: 'duskwall.beacon-house.muster',
-          name: 'Address the evening muster',
+          name: 'Address the evening volunteers',
           stats: ['cha', 'int'],
           text: {
             success: {
@@ -262,7 +261,7 @@ export const duskwall: City = {
           text: {
             success: {
               headline: 'Names, dates, addresses',
-              body: "You sign for a ledger and read it like a paper. Who moved into the officers' terrace last spring, who sold a lease in a hurry, who's drawing two ration books. It goes in your notebook for later.",
+              body: "You sign for a ledger and read it like a paper. Who moved into the new terrace by the fortress last spring, who sold a lease in a hurry, who's drawing two ration books. It goes in your notebook for later.",
             },
             partial: {
               headline: 'The wrong volume',
@@ -354,7 +353,7 @@ export const duskwall: City = {
           text: {
             success: {
               headline: 'Six runs to the depot',
-              body: "Six runs between the sidings and the garrison depot, a full load each way and a checker who wants it faster. The lorry fights you on the frost. The pay clerk doesn't.",
+              body: "Six runs between the sidings and the customs depot, a full load each way and a checker who wants it faster. The lorry fights you on the frost. The pay clerk doesn't.",
             },
           },
         },
@@ -384,26 +383,25 @@ export const duskwall: City = {
             },
           },
         },
-        // TODO(content-policy): "Chalk the movement's mark" (the square with HOLD THE LINE) is flagged (tech design §20.3)
         {
           ...propaganda,
           id: 'duskwall.rampart-row.chalk',
-          name: "Chalk the movement's mark",
+          name: 'Chalk the slogan on the gable end',
           stats: ['agi'],
           text: {
             success: {
               headline: 'White letters on the gable end',
-              body: "The gable end at the bottom of the row is the biggest wall on the line. You get HOLD THE LINE up in fair capitals, the square beneath it, before the rent-man's boy comes round the corner. Then you're away down the entry.",
+              body: "The gable end at the bottom of the row is the biggest wall on the line. You get ORDER AND BREAD up in fair capitals, the movement's name beneath it, before the rent-man's boy comes round the corner. Then you're away down the entry.",
             },
             partial: {
               headline: 'Half a slogan',
-              body: 'You get as far as HOLD THE before a window goes up and someone shouts about their wall. You finish the last word small and leave by the back entry. It reads, just about.',
+              body: 'You get as far as ORDER AND before a window goes up and someone shouts about their wall. You finish the last word small and leave by the back entry. It reads, just about.',
             },
           },
         },
         {
           id: 'duskwall.rampart-row.run',
-          name: 'Run messages for the street warden',
+          name: 'Run messages for the ward office',
           tier: 1,
           type: 'training',
           trains: 'agi',

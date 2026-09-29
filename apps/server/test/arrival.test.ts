@@ -124,7 +124,7 @@ describe('arrival: the face and the origin (ADR 0011)', () => {
     expect(v.street?.cards[0]!.facts).toEqual([
       '+3 Strength',
       'Starts in Duskwall',
-      'Their event: the Torchlight March',
+      'Their event: the Grand Rally',
     ]);
   });
 });

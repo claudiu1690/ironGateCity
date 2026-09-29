@@ -215,7 +215,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Duskwall',
-    deck: "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Garrison Gate first.",
+    deck: "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Fortress Gate first.",
   },
   {
     id: 'hl.v.arrival',
@@ -226,34 +226,31 @@ export const headlines: HeadlineInput[] = [
     headline: '{name} Arrives at Duskwall Station',
     deck: 'Papers in order, says the station office. Beacon House expects a visit.',
   },
-  // TODO(content-policy): Vanguard rank titles are flagged (tech design §20.3 item 1)
   {
     id: 'hl.v.rank-up-2',
     cityId: 'duskwall',
     group: 'personal',
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
-    headline: '{name} Made Footsoldier by the Movement',
-    deck: 'Initiates become Footsoldiers on the strength of their work. The vote follows.',
+    headline: '{name} Made Steward by the Vanguard',
+    deck: 'Initiates become Stewards on the strength of their work. The vote follows.',
   },
-  // TODO(content-policy): Vanguard rank titles are flagged (tech design §20.3 item 1)
   {
     id: 'hl.v.rank-up-3',
     cityId: 'duskwall',
     group: 'personal',
     priority: 2,
     when: [{ kind: 'rankRose', values: [3] }],
-    headline: '{name} Made Sergeant by the Movement',
-    deck: 'A Sergeant can stand for the council. Organiser Stahl: "Now we shall see."',
+    headline: '{name} Made Bailiff by the Vanguard',
+    deck: 'A Bailiff can stand for the council. Organiser Stahl: "Now we shall see."',
   },
-  // TODO(content-policy): Vanguard rank titles are flagged (tech design §20.3 item 1)
   {
     id: 'hl.v.rank-up',
     cityId: 'duskwall',
     group: 'personal',
     priority: 2,
     when: [{ kind: 'rankRose', min: 4 }],
-    headline: '{name} Made {rank} by the Movement',
+    headline: '{name} Made {rank} by the Vanguard',
     deck: 'Made {rank} on the strength of district work. Beacon House takes note.',
   },
   {
@@ -289,7 +286,7 @@ export const headlines: HeadlineInput[] = [
     group: 'personal',
     priority: 5,
     when: [{ kind: 'ordersAllDoneYesterday' }],
-    headline: 'Movement Commends Its Canvassers',
+    headline: 'Vanguard Commends Its Canvassers',
     deck: 'Every order carried out yesterday. Organiser Stahl: "As it should be." +5 Political Capital banked.',
   },
   {
@@ -332,7 +329,7 @@ export const headlines: HeadlineInput[] = [
       { kind: 'halfPaysCredited', max: 0 },
     ],
     headline: 'While You Were Away',
-    deck: 'No job, so no half pay banked. Rested is full and the ward is where you left it. The garrison stores are still hiring: the Jobs card is at the Garrison Gate.',
+    deck: 'No job, so no half pay banked. Rested is full and the ward is where you left it. The customs stores are still hiring: the Jobs card is at the Fortress Gate.',
   },
   {
     id: 'hl.v.idle',
@@ -350,7 +347,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'homeShare', min: 80 }],
     headline: 'Vanguard Holds Duskwall at {share} %',
-    deck: 'The garrison town stands in step.',
+    deck: 'The frontier town is of one mind.',
   },
   {
     id: 'hl.v.morale-steady',
@@ -381,7 +378,7 @@ export const headlines: HeadlineInput[] = [
   },
   cityAmbient('v', 'duskwall', 0, 'Curfew Bell to Ring at Ten Until Further Notice'),
   cityAmbient('v', 'duskwall', 1, 'Mountain Pass Closed by Early Snow'),
-  cityAmbient('v', 'duskwall', 2, 'Garrison Band to Play Sunday in the Square'),
+  cityAmbient('v', 'duskwall', 2, 'Town Band to Play Sunday in the Fortress Square'),
   cityAmbient('v', 'duskwall', 3, 'Coal Train Held at the Frontier Checkpoint'),
   cityAmbient('v', 'duskwall', 4, 'Searchlight on Beacon House Repaired'),
   cityAmbient('v', 'duskwall', 5, 'Ration Books: New Issue at the Archives Counter'),

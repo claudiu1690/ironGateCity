@@ -622,7 +622,7 @@ export interface FactionCardView {
   name: string;
   crest: AssetView;
   blurb: string;
-  /** "+3 Strength" · "Starts in Duskwall" · "Their event: the Torchlight March". */
+  /** "+3 Strength" · "Starts in Duskwall" · "Their event: the Grand Rally". */
   facts: [string, string, string];
   /** The father's wish matches this faction. */
   wish: boolean;

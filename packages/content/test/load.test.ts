@@ -101,8 +101,8 @@ describe('the real content', () => {
     expect(content.standingNames).toEqual(['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us']);
     expect(content.asset('portrait.holm').widths).toEqual([256, 512]);
     expect(
-      fillTemplate(hl.find((h) => h.id === 'hl.rank-up')!.headline, { name: 'Mara', rank: 'Commissar' }),
-    ).toBe('Mara Made Commissar by the Branch');
+      fillTemplate(hl.find((h) => h.id === 'hl.rank-up')!.headline, { name: 'Mara', rank: 'Convenor' }),
+    ).toBe('Mara Made Convenor by the Branch');
     expect(city.paper?.shortName).toBe('Clarion');
   });
 

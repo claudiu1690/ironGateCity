@@ -100,7 +100,7 @@ describe('the real content, slice 2', () => {
       'outfit.worn-overcoat',
     ]);
     expect(content.factions.map((f) => copy.theirEvent(f.card.signatureEvent))).toEqual([
-      'Their event: the Torchlight March',
+      'Their event: the Grand Rally',
       'Their event: the General Strike',
       'Their event: the Headline Story',
     ]);
