@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fast play at a location — desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=Oswald:wght@400;500;600&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#15181A}
+.lbl{font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.14em}
+.cap{font-family:'Courier Prime',monospace;font-size:12px;line-height:1.45;color:#5b564b}
+.gauge-track{height:6px;background:#3A4043;width:100%}
+.tk{display:flex;align-items:stretch;background:#F6F0E1;border:1px solid #15181A;min-height:60px}
+.stub{width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-right:1.5px dashed #15181A;background:#E2D6BB}
+.do{width:52px;flex-shrink:0;border:0;border-left:1px solid #15181A;background:#15181A;color:#EFE6D2;font-family:Oswald,sans-serif;font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.do2{background:#3A4043}
+.do:disabled{background:#9b917a;cursor:not-allowed}
+.tag{font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;white-space:nowrap}
+.appr{display:flex;flex-direction:column;gap:5px;text-align:left;background:#F6F0E1;color:#15181A;border:1.5px solid #15181A;padding:11px 14px;cursor:pointer;font-family:'Source Serif 4',Georgia,serif;width:100%;box-sizing:border-box}
+.appr-sel{background:#15181A;color:#EFE6D2}
+.btn{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#15181A;color:#EFE6D2;border:0;padding:0 18px;height:52px;font-family:Oswald,sans-serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;text-decoration:none;box-sizing:border-box}
+.btn:disabled{background:#9b917a;cursor:not-allowed}
+.btn-ghost{background:transparent;color:#15181A;border:1.5px solid #15181A;justify-content:center}
+.link{background:none;border:0;padding:0;cursor:pointer;font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#5b564b;text-decoration:underline}
+.mod{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px dotted #9b917a}
+.tile{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1.5px solid #15181A;background:#F6F0E1}
+a{color:#8C2B23}a:hover{color:#5f1c16}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #15181A; font-family: 'Source Serif 4', Georgia, serif; color: #EFE6D2">
+
+<img src="/_blob/a967a084363224cd3d4af74430b8fe38" alt="Coalport map" style="position: absolute; left: -80px; top: 64px; width: 1300px; height: 872px; object-fit: cover">
+<div style="position: absolute; left: 0; top: 64px; width: 1440px; height: 836px; background: linear-gradient(90deg, rgba(21,24,26,.15) 0%, rgba(21,24,26,.15) 45%, rgba(21,24,26,.75) 60%)"></div>
+<div style="position: absolute; left: 162px; top: 290px; display: flex; align-items: center">
+<span style="width: 38px; height: 38px; border-radius: 50%; background: #EFE6D2; color: #15181A; border: 2px solid #15181A; box-shadow: 0 0 0 3px #EFE6D2, 0 0 0 10px rgba(239,230,210,.35); display: flex; align-items: center; justify-content: center; font-family: Oswald, sans-serif; font-weight: 600">1</span>
+<span style="background: #EFE6D2; color: #15181A; font-family: Oswald, sans-serif; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; padding: 5px 10px; border: 1px solid #15181A; margin-left: -4px">You are here</span>
+</div>
+
+<div style="position: absolute; left: 24px; bottom: 24px; background: rgba(21,24,26,.9); border: 1px solid #EFE6D2; padding: 10px 14px; display: flex; gap: 18px; align-items: center">
+<span class="lbl" style="font-size: 11px">Today at the gate</span>
+<span style="font-family: Oswald, sans-serif; font-size: 15px">+{{tot.xp}} XP</span>
+<span style="font-family: Oswald, sans-serif; font-size: 15px">+{{tot.fxp}} FXP</span>
+<span style="font-family: Oswald, sans-serif; font-size: 15px; color: #d9a39c">+{{tot.op}}% Coalport</span>
+</div>
+
+<div style="position: absolute; left: 0; top: 0; width: 1440px; height: 64px; background: #15181A; border-bottom: 1px solid #3A4043; display: flex; align-items: center; gap: 28px; padding: 0 24px; box-sizing: border-box; z-index: 5">
+<div style="display: flex; align-items: center; gap: 12px; width: 250px">
+<img src="/_blob/64689c170d636886b2f7e8180d2d0c91" alt="Portrait of Mara Lenk" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: 50% 22%; border: 2px solid #8C2B23; box-shadow: 0 0 0 2px #15181A, 0 0 0 3px #EFE6D2">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px; line-height: 1">Mara Lenk</span>
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Organiser · Red Collective · Lv 14</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 150px">
+<div style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 10px; color: #B8B09F">Health</span><span style="font-family: Oswald, sans-serif; font-size: 12px">142 / 165</span></div>
+<div class="gauge-track"><div style="width: 86%; height: 6px; background: #D96B4B"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 190px">
+<div style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 10px; color: #B8B09F">Energy</span><span style="font-family: Oswald, sans-serif; font-size: 12px">{{hud.en}} / 100 <span style="color: #6FB3B0">· Rested {{hud.rested}}</span></span></div>
+<div class="gauge-track"><div style="width: {{hud.enw}}; height: 6px; background: #6FB3B0"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 110px">
+<div style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 10px; color: #B8B09F">Heat</span><span style="font-family: Oswald, sans-serif; font-size: 12px">{{hud.heat}} · {{hud.heatLabel}}</span></div>
+<div style="display: flex; gap: 2px"><span style="flex-grow: 1; height: 6px; background: #C39A3A"></span><span style="flex-grow: 1; height: 6px; background: {{hud.heat2}}"></span><span style="flex-grow: 1; height: 6px; background: {{hud.heat3}}"></span><span style="flex-grow: 1; height: 6px; background: {{hud.heat4}}"></span></div>
+</div>
+<div style="display: flex; gap: 20px; align-items: center">
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">Iron Marks</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">{{hud.iron}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">XP to Lv 15</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">{{hud.xpLeft}}</span></div>
+</div>
+<div style="margin-left: auto; display: flex; flex-direction: column; gap: 3px; text-align: right">
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Wednesday · Day 17 · Summer</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">{{hud.clock}} · Coalport · Overcast 18°</span>
+</div>
+</div>
+
+<div style="position: absolute; right: 20px; top: 80px; width: 600px; height: 804px; background: #EFE6D2; color: #15181A; box-shadow: 0 0 0 1px #15181A, 0 24px 60px rgba(0,0,0,.55); display: flex; flex-direction: column; overflow: hidden">
+
+<div style="position: relative; height: 150px; flex-shrink: 0; overflow: hidden; background: #15181A">
+<img src="/_blob/a967a084363224cd3d4af74430b8fe38" alt="Map crop: the steel mill gate" style="position: absolute; left: -196px; top: -344px; width: 2400px; height: 1610px">
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 16px; background: linear-gradient(0deg, rgba(21,24,26,.95), rgba(21,24,26,0)); color: #EFE6D2; display: flex; justify-content: space-between; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span class="lbl" style="font-size: 10px; color: #cfc7b5">Coalport · location 1 · 5 Collective here now</span>
+<span style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 30px; line-height: 1">Steel Mill Gate</span>
+</div>
+<a href="City.dc.html" style="font-family: Oswald, sans-serif; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #EFE6D2; border: 1px solid #EFE6D2; padding: 6px 10px; text-decoration: none">Leave</a>
+</div>
+</div>
+
+<sc-if value="{{isCard}}" hint-placeholder-val="{{true}}">
+<div style="padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1">
+<div style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 10px; color: #5b564b">Local standing · Coalport</span><span style="font-family: Oswald, sans-serif; font-size: 12px">{{stand.name}} · +{{stand.bonus}}% success</span></div>
+<div style="height: 5px; background: #d3c7ab"><div style="height: 5px; width: {{stand.w}}; background: #8C2B23"></div></div>
+</div>
+<span class="cap" style="width: 130px; text-align: right">{{stand.next}}</span>
+</div>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<span class="tag" style="color: #8C2B23">Issue · +50% opinion</span>
+<span class="tag" style="color: #1E4D52">{{restedTag}}</span>
+<span class="tag" style="color: #5b564b">Overcast · no effect</span>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span class="lbl" style="font-size: 11px; font-weight: 600">Actions · one tap</span><span class="cap">×3 repeats in one go</span></div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<sc-for list="{{acts}}" as="a" hint-placeholder-count="4">
+<div class="tk">
+<span class="stub"><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 20px; line-height: 1">{{a.cost}}</span><span class="lbl" style="font-size: 8px">Energy</span></span>
+<span style="padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
+<span style="display: flex; justify-content: space-between; gap: 8px; align-items: baseline"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px">{{a.title}}</span><span style="font-family: Oswald, sans-serif; font-size: 12px; color: #5b564b; white-space: nowrap">{{a.odds}}</span></span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; color: #5b564b">{{a.reward}}</span>
+</span>
+<button type="button" class="do" onClick="{{a.go1}}" disabled="{{a.cant1}}" aria-label="Do it once">×1</button>
+<button type="button" class="do do2" onClick="{{a.go3}}" disabled="{{a.cant3}}" aria-label="Do it three times">×3</button>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px"><span class="lbl" style="font-size: 11px; font-weight: 600">Missions · one choice</span><span class="cap">your last approach is remembered</span></div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div class="tk">
+<span class="stub"><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 20px; line-height: 1">15</span><span class="lbl" style="font-size: 8px">Energy</span></span>
+<span style="padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
+<span style="display: flex; gap: 8px; align-items: baseline"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px">Address the whole picket</span><span class="tag" style="color: #1E4D52">Speech</span></span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; color: #5b564b">Repeat: {{speechAp}} · {{speechOdds}}% · <button type="button" class="link" onClick="{{openSpeech}}" style="font-size: 11px">change</button></span>
+</span>
+<button type="button" class="do" style="width: 104px; font-size: 13px; letter-spacing: .1em" onClick="{{repeatSpeech}}" disabled="{{cantSpeech}}">REPEAT</button>
+</div>
+<div class="tk">
+<span class="stub" style="background: #15181A; color: #EFE6D2"><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 20px; line-height: 1">25</span><span class="lbl" style="font-size: 8px">Energy</span></span>
+<span style="padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
+<span style="display: flex; gap: 8px; align-items: baseline"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px">Wreck the foremen’s office</span><span class="tag" style="color: #8C2B23">Illegal</span></span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; color: #8C2B23">{{sab.line}}</span>
+</span>
+<button type="button" class="do" style="width: 104px; font-size: 13px; letter-spacing: .1em; background: #8C2B23" onClick="{{openSabotage}}" disabled="{{cantSab}}">{{sab.btn}}</button>
+</div>
+</div>
+
+<a href="MobileEvent.dc.html" style="display: flex; justify-content: space-between; align-items: center; border: 1.5px dashed #8C2B23; padding: 10px 12px; color: #8C2B23; text-decoration: none; margin-top: 4px">
+<span style="display: flex; flex-direction: column; gap: 1px"><span class="lbl" style="font-size: 10px">Story · tonight 19:00</span><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 15px; color: #15181A">General Strike · 3 of 4 roles filled</span></span>
+<span style="font-family: Oswald, sans-serif; font-size: 12px; letter-spacing: .12em; text-transform: uppercase">Open</span>
+</a>
+</div>
+</sc-if>
+
+<sc-if value="{{isBrief}}" hint-placeholder-val="{{false}}">
+<div style="padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1">
+<button type="button" class="link" onClick="{{toCard}}" style="align-self: flex-start">Back to the gate</button>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span class="lbl" style="font-size: 10px; color: {{brief.kc}}">{{brief.kicker}}</span>
+<span style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 28px; line-height: 1.05">{{brief.title}}</span>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: #3d3a33">{{brief.text}}</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<sc-for list="{{brief.aps}}" as="ap" hint-placeholder-count="3">
+<button type="button" class="{{ap.cls}}" onClick="{{ap.pick}}" aria-pressed="{{ap.sel}}">
+<span style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px">{{ap.title}}</span><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 19px">{{ap.chance}}%</span></span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; opacity: .85">{{ap.check}}</span>
+</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{brief.risks}}" as="r" hint-placeholder-count="3">
+<div class="mod"><span>{{r.k}}</span><span style="font-family: Oswald, sans-serif; color: {{r.c}}">{{r.v}}</span></div>
+</sc-for>
+</div>
+<button type="button" class="btn" style="background: {{brief.btnBg}}" onClick="{{runBrief}}"><span>{{brief.cta}}</span><span style="color: #6FB3B0">{{brief.costLabel}}</span></button>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{hasModal}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; left: 0; top: 64px; width: 1440px; height: 836px; background: rgba(12,14,15,.78); display: flex; align-items: center; justify-content: center; z-index: 4">
+<div role="dialog" aria-label="Result" style="width: 1020px; height: 700px; background: #EFE6D2; color: #15181A; box-shadow: 0 0 0 1px #15181A, 0 40px 100px rgba(0,0,0,.7); display: flex">
+
+<div style="width: 330px; flex-shrink: 0; position: relative; overflow: hidden; background: #15181A">
+<img src="{{m.art}}" alt="{{m.artAlt}}" style="position: absolute; left: {{m.artX}}; top: {{m.artY}}; width: {{m.artW}}; height: auto">
+<div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(21,24,26,.92) 0%, rgba(21,24,26,0) 45%)"></div>
+<span style="position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) rotate(-9deg); font-family: Oswald, sans-serif; font-weight: 600; font-size: 34px; letter-spacing: .18em; text-transform: uppercase; color: {{m.color}}; border: 5px double {{m.color}}; padding: 6px 18px; background: rgba(239,230,210,.94); white-space: nowrap">{{m.stamp}}</span>
+<div style="position: absolute; left: 20px; right: 20px; bottom: 18px; color: #EFE6D2; display: flex; flex-direction: column; gap: 4px">
+<span class="lbl" style="font-size: 10px; color: #cfc7b5">{{m.place}}</span>
+<span style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 22px; line-height: 1.1">{{m.action}}</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #cfc7b5">{{m.when}}</span>
+</div>
+</div>
+
+<div style="flex-grow: 1; padding: 26px 30px 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span class="lbl" style="font-size: 11px; color: {{m.color}}">{{m.kicker}}</span>
+<h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 34px; line-height: 1.05">{{m.title}}</h2>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3d3a33">{{m.text}}</p>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span class="lbl" style="font-size: 10px; color: #5b564b">How it went</span>
+<sc-for list="{{m.attempts}}" as="t" hint-placeholder-count="1">
+<div style="display: grid; grid-template-columns: 26px minmax(0, 1fr) 130px 150px; gap: 12px; align-items: center">
+<span style="font-family: Oswald, sans-serif; font-size: 14px; color: #5b564b">{{t.n}}</span>
+<div style="position: relative; height: 12px; background: #d3c7ab"><div style="position: absolute; left: 0; top: 0; height: 12px; width: {{t.chanceW}}; background: {{t.fill}}"></div><span style="position: absolute; left: {{t.rollW}}; top: -4px; width: 3px; height: 20px; background: #15181A"></span></div>
+<span style="font-family: 'Courier Prime', monospace; font-size: 12px">roll {{t.roll}} · need &lt; {{t.chance}}</span>
+<span style="font-family: Oswald, sans-serif; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: {{t.color}}">{{t.label}}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{m.tiles}}" as="r" hint-placeholder-count="4">
+<div class="tile"><span class="lbl" style="font-size: 10px; color: #5b564b">{{r.k}}</span><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 28px; line-height: 1; color: {{r.c}}">{{r.v}}</span><span class="cap" style="font-size: 11px">{{r.note}}</span></div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{m.effects}}" as="e" hint-placeholder-count="3">
+<div class="mod"><span>{{e.k}}</span><span style="font-family: Oswald, sans-serif; color: {{e.c}}">{{e.v}}</span></div>
+</sc-for>
+</div>
+
+<div style="display: flex; gap: 10px; margin-top: auto">
+<sc-if value="{{m.hasEnc}}" hint-placeholder-val="{{false}}">
+<a href="Story.dc.html" class="btn" style="flex-grow: 1; background: #8C2B23"><span>Face the patrol</span><span>Encounter</span></a>
+</sc-if>
+<sc-if value="{{m.canAgain}}" hint-placeholder-val="{{true}}">
+<button type="button" class="btn" onClick="{{m.again1}}" disabled="{{m.cantAgain1}}" style="flex-grow: 1"><span>{{m.again1Label}}</span><span style="color: #6FB3B0">{{m.again1Cost}}</span></button>
+</sc-if>
+<sc-if value="{{m.canAgain3}}" hint-placeholder-val="{{true}}">
+<button type="button" class="btn" onClick="{{m.again3}}" disabled="{{m.cantAgain3}}" style="background: #3A4043"><span>Again ×3</span><span style="color: #6FB3B0">{{m.again3Cost}}</span></button>
+</sc-if>
+<button type="button" class="btn btn-ghost" onClick="{{closeModal}}" style="width: 150px">Continue</button>
+</div>
+</div>
+
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { en: 59, rested: 120, iron: 4210, heat: 18, xp: 0, fxp: 0, op: 0, n: 0, min: 20, succ: 64, issue: 81, screen: 'card', brief: null, ap: { speech: 'numbers', sabotage: null }, pick: 'dock', sabDone: false, modal: null };
+  }
+  roll(n) { return (n * 37 + 23) % 100; }
+  standing(s) {
+    if (s >= 70) return { name: 'Trusted', lvl: 3, next: 'next: One of Us at 150', base: 70, top: 150 };
+    return { name: 'Known', lvl: 2, next: 'next: Trusted at 70', base: 30, top: 70 };
+  }
+  spend(st, cost) {
+    const used = Math.min(st.rested, cost);
+    return { en: st.en - cost, rested: st.rested - used, f: 1 + 0.5 * (used / cost) };
+  }
+  clock(min) { return '14:' + String(min).padStart(2, '0'); }
+  acts() {
+    return [
+      { id: 'canvass', title: 'Canvass the picket line', cost: 10, chance: 76, xp: 60, fxp: 12, op: 0.4, iron: 20, reward: '+60 XP · +12 FXP · +0.4% ×1.5 Issue', type: 'Canvassing',
+        ok: 'You work the line from the gate to the canteen. Most of them sign the pledge card, and a few just want to talk about the price of bread.',
+        part: 'Half the night shift has gone home to sleep. You collect a handful of signatures and a lot of tired shrugs.' },
+      { id: 'posters', title: 'Paste strike posters', cost: 10, chance: 80, xp: 50, fxp: 10, op: 0.35, iron: 15, reward: '+50 XP · +10 FXP · +0.35% ×1.5 Issue', type: 'Propaganda',
+        ok: 'Fresh paste on every wall from the gate to the tram stop. By morning the foremen will have to walk past your words.',
+        part: 'A company man follows you down Dock Street, tearing them down before the paste is dry. Some survive.' },
+      { id: 'picket', title: 'Stand a picket shift', cost: 6, chance: 100, xp: 25, fxp: 8, op: 0.2, iron: 60, reward: 'Strike fund pays 60 Iron · +8 FXP', type: 'Strike duty',
+        ok: 'Six hours at the brazier with the night crew. The strike fund pays sixty marks and a bowl of soup.',
+        part: 'Six hours at the brazier with the night crew.' },
+      { id: 'watch', title: 'Watch the foremen’s window', cost: 3, chance: 70, xp: 20, fxp: 0, op: 0, iron: 0, reward: 'Safe surveillance · chance of a Dossier entry', type: 'Surveillance',
+        ok: 'From the tea stall you watch the foremen’s window. Brandauer takes a telephone call, puts on his coat and leaves in a hurry. Noted.',
+        part: 'The blinds stay down. Nothing worth writing in the Dossier.' }
+    ];
+  }
+  doAct(a, times) {
+    const s0 = this.state;
+    let st = { ...s0 };
+    let ok = 0, xp = 0, fxp = 0, op = 0, iron = 0, restedUsed = 0, dossier = 0;
+    const attempts = [];
+    for (let i = 0; i < times; i++) {
+      if (st.en < a.cost) break;
+      const p = this.spend(st, a.cost);
+      restedUsed += st.rested - p.rested;
+      st.en = p.en; st.rested = p.rested; st.n += 1; st.min += 1;
+      const chance = Math.min(99, a.chance + this.standing(st.succ).lvl * 3);
+      const r = a.chance >= 100 ? 0 : this.roll(st.n);
+      const good = r < chance;
+      const k = good ? 1 : 0.5;
+      if (good) { ok++; st.succ += 1; }
+      const gx = Math.round(a.xp * k * p.f);
+      xp += gx; fxp += Math.round(a.fxp * k); op += a.op * k * 1.5; iron += Math.round(a.iron * k * p.f);
+      if (a.id === 'watch' && good) dossier++;
+      attempts.push({ n: attempts.length + 1, roll: r, chance, chanceW: chance + '%', rollW: r + '%', fill: good ? '#9cc3c1' : '#e0c98f', label: good ? 'Success · +' + gx + ' XP' : 'Partial · +' + gx + ' XP', color: good ? '#1E4D52' : '#9a7420' });
+    }
+    if (!attempts.length) return;
+    const opR = Math.round(op * 10) / 10;
+    const done = attempts.length;
+    const before = this.standing(s0.succ), after = this.standing(st.succ);
+    const allOk = ok === done, noneOk = ok === 0;
+    const issueTo = st.issue + (a.op ? Math.round(opR * 2) : 0);
+    const tiles = [
+      { k: 'Experience', v: '+' + xp, note: restedUsed ? 'incl. Rested bonus' : 'no Rested left', c: '#15181A' },
+      { k: 'Faction XP', v: '+' + fxp, note: 'Red Collective', c: '#8C2B23' },
+      { k: 'Iron', v: '+' + iron, note: a.id === 'picket' ? 'from the strike fund' : 'tips and dues', c: '#15181A' },
+      a.id === 'watch'
+        ? { k: 'Dossier', v: '+' + dossier, note: dossier ? 'Brandauer · location' : 'nothing new', c: dossier ? '#1E4D52' : '#5b564b' }
+        : { k: 'Coalport', v: '+' + opR + '%', note: '×1.5 Issue bonus', c: '#8C2B23' }
+    ];
+    const effects = [];
+    if (before.name !== after.name) effects.push({ k: 'Local standing in Coalport', v: before.name + ' → ' + after.name + ' · now +' + after.lvl * 3 + '% here', c: '#9a7420' });
+    else effects.push({ k: 'Local standing in Coalport', v: after.name + ' · ' + st.succ + ' / ' + after.top, c: '#15181A' });
+    if (a.op) effects.push({ k: 'Issue · Strike at the Mill', v: st.issue + '% → ' + issueTo + '% Collective', c: '#8C2B23' });
+    effects.push({ k: 'Energy', v: s0.en + ' → ' + st.en + (restedUsed ? ' · Rested ' + s0.rested + ' → ' + st.rested : ''), c: '#15181A' });
+    const modal = {
+      kind: 'act', id: a.id, times,
+      stamp: allOk ? 'Success' : noneOk ? 'Partial' : ok + ' of ' + done, color: allOk ? '#1E4D52' : noneOk ? '#9a7420' : '#1E4D52',
+      kicker: a.type + (done > 1 ? ' · ' + done + ' times' : '') + ' · tier 1 action',
+      title: done > 1 ? a.title + ', three times' : a.title,
+      text: noneOk ? a.part : a.ok,
+      place: 'Coalport · Steel Mill Gate', action: a.title, when: 'Day 17 · ' + this.clock(s0.min + 1) + (done > 1 ? '–' + this.clock(st.min) : ''),
+      art: '/_blob/a967a084363224cd3d4af74430b8fe38', artAlt: 'Map crop around the mill gate', artX: '-244px', artY: '-33px', artW: '2200px',
+      attempts, tiles, effects, hasEnc: false
+    };
+    this.setState({ ...st, xp: s0.xp + xp, fxp: s0.fxp + fxp, op: Math.round((s0.op + opR) * 10) / 10, iron: s0.iron + iron, issue: issueTo, modal });
+  }
+  renderVals() {
+    const st = this.state;
+    const stand = this.standing(st.succ);
+    const ACTS = this.acts();
+    const acts = ACTS.map((a) => {
+      const ch = Math.min(99, a.chance + stand.lvl * 3);
+      return { ...a, odds: a.chance >= 100 ? 'certain' : ch + '%', cant1: st.en < a.cost, cant3: st.en < a.cost * 3, go1: () => this.doAct(a, 1), go3: () => this.doAct(a, 3) };
+    });
+
+    const SPEECH_APS = [
+      { id: 'solidarity', title: 'Appeal to solidarity', check: 'Charisma 12 vs 14', chance: 58 },
+      { id: 'numbers', title: 'Lay out the numbers', check: 'Intelligence 18 vs 12', chance: 74 },
+      { id: 'callout', title: 'Name foreman Brandauer', check: 'Dossier entry · +4 Heat', chance: 81 }
+    ];
+    const SAB_APS = [
+      { id: 'dock', title: 'Through the loading dock at shift change', check: 'Agility 17 vs 15 · +9 caught from Heat', chance: 62 },
+      { id: 'watchman', title: 'Bribe the night watchman', check: '80 Iron · his loyalty is to the company', chance: 70 },
+      { id: 'fire', title: 'Start a fire in the coal shed first', check: 'Strength 14 · louder: patrol likely', chance: 55 }
+    ];
+    const isSab = st.brief === 'sabotage';
+    const apsSrc = isSab ? SAB_APS : SPEECH_APS;
+    const cur = st.pick;
+    const brief = {
+      kicker: isSab ? 'Mission · illegal · first time' : 'Mission · speech', kc: isSab ? '#8C2B23' : '#1E4D52',
+      title: isSab ? 'Wreck the foremen’s office' : 'Address the whole picket',
+      text: isSab ? 'The pay ledgers sit in the foremen’s office. Burn them before Monday’s audit and the company cannot prove who struck.' : 'Three hundred at the gate, unpaid since Friday. Say the right thing and the strike holds another week.',
+      costLabel: isSab ? '25 Energy' : 'saved for next time', cta: isSab ? 'Go in tonight' : 'Remember this approach', btnBg: isSab ? '#8C2B23' : '#15181A',
+      aps: apsSrc.map((a) => ({ ...a, sel: a.id === cur, cls: a.id === cur ? 'appr appr-sel' : 'appr', pick: () => this.setState({ pick: a.id }) })),
+      risks: isSab ? [{ k: 'Heat', v: '+12', c: '#8C2B23' }, { k: 'Encounter', v: cur === 'fire' ? '60%' : '25%', c: '#8C2B23' }, { k: 'If caught', v: '3 record points', c: '#8C2B23' }] : [{ k: 'If it works', v: '+90 XP · +22 FXP · +1.4%', c: '#15181A' }, { k: 'Encounter', v: '5%', c: '#15181A' }]
+    };
+
+    const runSab = (apId) => {
+      if (st.en < 25) return;
+      const chosen = SAB_APS.find((a) => a.id === apId);
+      const p = this.spend(st, 25);
+      const n = st.n + 1;
+      const enc = apId === 'fire';
+      const roll = enc ? 71 : 33;
+      const xp = enc ? 0 : Math.round(200 * p.f);
+      const modal = {
+        kind: 'sab', stamp: enc ? 'Encounter' : 'Success', color: enc ? '#8C2B23' : '#1E4D52',
+        kicker: 'Sabotage · illegal · tier 2 mission', title: enc ? 'Whistles in the yard.' : 'The ledgers go up in the stove.',
+        text: enc ? 'The coal shed goes up nicely. Too nicely: the night patrol comes running across the yard, and Inspector Kessler is with them. There is no way out but past them.'
+          : (apId === 'watchman' ? 'Eighty marks buy you a blind watchman and ten quiet minutes. You feed the pay ledgers to the stove page by page. On Monday the company will not be able to say who struck.'
+            : 'In at shift change with the crowd, out through the loading dock. You feed the pay ledgers to the stove page by page. On Monday the company will not be able to say who struck.'),
+        place: 'Coalport · the foremen’s office', action: 'Wreck the foremen’s office', when: 'Day 17 · 22:10',
+        art: '/_blob/8e85506dd5764430fa3127be9450b0c6', artAlt: 'The foremen’s office at night', artX: '-260px', artY: '0px', artW: '1260px',
+        attempts: [{ n: 1, roll, chance: chosen.chance, chanceW: chosen.chance + '%', rollW: roll + '%', fill: enc ? '#e8b3ad' : '#9cc3c1', label: enc ? 'Seen · patrol' : 'Success', color: enc ? '#8C2B23' : '#1E4D52' }],
+        tiles: enc ? [
+          { k: 'Experience', v: '+0', note: 'not yet', c: '#5b564b' }, { k: 'Faction XP', v: '+0', note: 'not yet', c: '#5b564b' },
+          { k: 'Heat', v: '+12', note: 'now ' + (st.heat + 12), c: '#8C2B23' }, { k: 'Energy', v: '−25', note: 'spent', c: '#15181A' }
+        ] : [
+          { k: 'Experience', v: '+' + xp, note: 'incl. Rested bonus', c: '#15181A' }, { k: 'Faction XP', v: '+35', note: 'Red Collective', c: '#8C2B23' },
+          { k: 'Coalport', v: '+1.8%', note: '×1.5 Issue bonus', c: '#8C2B23' }, { k: 'Heat', v: '+12', note: 'now ' + (st.heat + 12), c: '#8C2B23' }
+        ],
+        effects: enc ? [
+          { k: 'What happens next', v: 'An encounter with Kessler’s patrol', c: '#8C2B23' },
+          { k: 'If you lose', v: 'Hospital · 3 record points', c: '#8C2B23' }
+        ] : [
+          { k: 'Issue · Strike at the Mill', v: st.issue + '% → ' + (st.issue + 6) + '% Collective', c: '#8C2B23' },
+          { k: 'Approach saved', v: chosen.title + ' · one tap next time', c: '#15181A' },
+          { k: 'Criminal record', v: 'Not caught · still clean', c: '#1E4D52' }
+        ],
+        hasEnc: enc
+      };
+      this.setState({ en: p.en, rested: p.rested, n, min: st.min + 1, heat: st.heat + 12, iron: apId === 'watchman' ? st.iron - 80 : st.iron, xp: st.xp + xp, fxp: st.fxp + (enc ? 0 : 35), op: Math.round((st.op + (enc ? 0 : 1.8)) * 10) / 10, issue: enc ? st.issue : st.issue + 6, screen: 'card', brief: null, ap: { ...st.ap, sabotage: apId }, sabDone: true, modal });
+    };
+    const runBrief = () => {
+      if (isSab) runSab(cur);
+      else this.setState({ ap: { ...st.ap, speech: cur }, screen: 'card', brief: null });
+    };
+    const repeatSpeech = () => {
+      if (st.en < 15) return;
+      const p = this.spend(st, 15);
+      const n = st.n + 1;
+      const r = this.roll(n);
+      const ap = SPEECH_APS.find((a) => a.id === st.ap.speech);
+      const good = r < ap.chance;
+      const xp = Math.round((good ? 90 : 45) * p.f);
+      const opv = good ? 1.4 : 0.7;
+      const modal = {
+        kind: 'speech', stamp: good ? 'Success' : 'Partial', color: good ? '#1E4D52' : '#9a7420',
+        kicker: 'Speech · ' + ap.title + ' · tier 2 mission', title: good ? 'The strike holds another week.' : 'They listen, but the cold wins.',
+        text: good ? 'You read the mill’s own figures back to them: what the company paid its shareholders in March, what it pays a furnace man in a year. By the end nobody is looking at the foremen’s window. Someone starts the old song, and a reporter from the Herald is writing fast.'
+          : 'The numbers are right and everyone knows it, but it is four degrees and nobody has eaten. Half of them stay. Half of them go home to sleep.',
+        place: 'Coalport · Steel Mill Gate', action: 'Address the whole picket', when: 'Day 17 · ' + this.clock(st.min + 1),
+        art: '/_blob/6bc84ceb729c5b9c81e1b9d583e18935', artAlt: 'Drawing of a woman addressing strikers at the mill gate', artX: '-240px', artY: '0px', artW: '1050px',
+        attempts: [{ n: 1, roll: r, chance: ap.chance, chanceW: ap.chance + '%', rollW: r + '%', fill: good ? '#9cc3c1' : '#e0c98f', label: good ? 'Success' : 'Partial', color: good ? '#1E4D52' : '#9a7420' }],
+        tiles: [
+          { k: 'Experience', v: '+' + xp, note: p.f > 1 ? 'incl. Rested bonus' : 'no Rested left', c: '#15181A' },
+          { k: 'Faction XP', v: '+' + (good ? 22 : 11), note: 'Red Collective', c: '#8C2B23' },
+          { k: 'Iron', v: '+' + Math.round((good ? 30 : 15) * p.f), note: 'collection bucket', c: '#15181A' },
+          { k: 'Coalport', v: '+' + opv + '%', note: '×1.5 Issue bonus', c: '#8C2B23' }
+        ],
+        effects: [
+          { k: 'Issue · Strike at the Mill', v: st.issue + '% → ' + (st.issue + (good ? 3 : 1)) + '% Collective', c: '#8C2B23' },
+          { k: 'Influence ledger, Coalport', v: good ? '3rd → 2nd of 57' : 'still 3rd of 57', c: good ? '#1E4D52' : '#15181A' },
+          { k: 'The Herald', v: good ? 'Your speech may make tomorrow’s paper' : 'No story tonight', c: '#15181A' }
+        ],
+        hasEnc: false
+      };
+      this.setState({ en: p.en, rested: p.rested, n, min: st.min + 1, xp: st.xp + xp, fxp: st.fxp + (good ? 22 : 11), op: Math.round((st.op + opv) * 10) / 10, issue: st.issue + (good ? 3 : 1), iron: st.iron + Math.round((good ? 30 : 15) * p.f), succ: st.succ + (good ? 1 : 0), modal });
+    };
+
+    const md = st.modal;
+    let m = { stamp: '', color: '#15181A', kicker: '', title: '', text: '', place: '', action: '', when: '', art: '', artAlt: '', artX: '0px', artY: '0px', artW: '330px', attempts: [], tiles: [], effects: [], hasEnc: false };
+    if (md) {
+      m = { ...md, canAgain: !md.hasEnc, canAgain3: md.kind === 'act', again1Label: 'Again', again1Cost: '', again3Cost: '', cantAgain1: true, cantAgain3: true, again1: () => {}, again3: () => {} };
+      if (md.kind === 'act') {
+        const a = ACTS.find((x) => x.id === md.id);
+        m.again1Label = 'Again ×1'; m.again1Cost = a.cost + ' Energy'; m.again3Cost = a.cost * 3 + ' Energy';
+        m.cantAgain1 = st.en < a.cost; m.cantAgain3 = st.en < a.cost * 3;
+        m.again1 = () => this.doAct(a, 1); m.again3 = () => this.doAct(a, 3);
+      } else if (md.kind === 'speech') {
+        m.again1Label = 'Speak again'; m.again1Cost = '15 Energy'; m.cantAgain1 = st.en < 15; m.again1 = repeatSpeech;
+      } else if (md.kind === 'sab') {
+        m.again1Label = 'Do it again'; m.again1Cost = '25 Energy · +12 Heat'; m.cantAgain1 = st.en < 25; m.again1 = () => runSab(st.ap.sabotage);
+      }
+    }
+    const speechAp = SPEECH_APS.find((a) => a.id === st.ap.speech);
+    const xpLeft = Math.max(0, 1860 - st.xp);
+    return {
+      isCard: st.screen === 'card', isBrief: st.screen === 'brief', hasModal: !!md, m,
+      acts, brief,
+      stand: { name: stand.name, bonus: stand.lvl * 3, next: stand.next, w: Math.min(100, Math.round((st.succ - stand.base) / (stand.top - stand.base) * 100)) + '%' },
+      restedTag: st.rested > 0 ? 'Rested ' + st.rested + ' · +50% XP & Iron' : 'Not rested',
+      speechAp: speechAp.title, speechOdds: speechAp.chance, cantSpeech: st.en < 15, cantSab: st.en < 25,
+      sab: st.sabDone ? { line: 'Repeat: ' + SAB_APS.find((a) => a.id === st.ap.sabotage).title + ' · +12 Heat each time', btn: 'REPEAT' } : { line: 'First time · open the briefing to choose · +12 Heat · 25% encounter', btn: 'BRIEFING' },
+      openSabotage: st.sabDone ? () => runSab(st.ap.sabotage) : () => this.setState({ screen: 'brief', brief: 'sabotage', pick: 'dock' }),
+      openSpeech: () => this.setState({ screen: 'brief', brief: 'speech', pick: st.ap.speech }),
+      toCard: () => this.setState({ screen: 'card', brief: null }),
+      closeModal: () => this.setState({ modal: null }),
+      runBrief, repeatSpeech,
+      tot: { xp: st.xp, fxp: st.fxp, op: st.op },
+      hud: { en: st.en, enw: st.en + '%', rested: st.rested, heat: st.heat, heatLabel: st.heat >= 75 ? 'Wanted' : st.heat >= 50 ? 'Hot' : st.heat >= 25 ? 'Noticed' : 'Cool', heat2: st.heat >= 25 ? '#C39A3A' : '#3A4043', heat3: st.heat >= 50 ? '#D96B4B' : '#3A4043', heat4: st.heat >= 75 ? '#8C2B23' : '#3A4043', iron: st.iron.toLocaleString('en-US'), xpLeft: xpLeft.toLocaleString('en-US'), clock: this.clock(st.min) }
+    };
+  }
+}
+</script>
+</body>
+</html>
