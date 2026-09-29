@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Grows one slice ahead of the build |
-| **Sources** | GDD §5.2–5.5, §6.2–6.3, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §15.4, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md` |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Grows one slice ahead of the build |
+| **Sources** | GDD §5.2–5.5, §6.2–6.3, §6.5, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §14.11, §15.1–15.3, §15.4, §15.10, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md`, `slice-3-politics.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 29 Sep 2026 (slice-2 §13 added) |
+| **Updated** | 29 Sep 2026 (slice-3 §14 added) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -202,7 +202,7 @@ Successes per day: reference ~24 on day 2, ~25 after.
 
 ## 10. Directives
 
-Three orders a day sized to ~60 Energy in total: a casual player clears them in one session, a heavy player in a quarter of one. Rewards per day: up to +15 FXP from the match bonus, +60 FXP from completions, +5 PC. PC accumulates with no sink until slice 3: a daily player has ~35 PC by the first council election, enough to file a candidacy (10) and endorse twice (10 each) in slice 3.
+Three orders a day sized to ~60 Energy in total: a casual player clears them in one session, a heavy player in a quarter of one. Rewards per day: up to +15 FXP from the match bonus, +60 FXP from completions, +5 PC. PC accumulates with no sink until slice 3; the sinks and the budget are in §14.2.
 
 ---
 
@@ -226,10 +226,11 @@ Nothing in slice 1 needs the player at a set time: Directives refresh at 00:00 U
 |---|---|---|---|
 | 14 | Heavy players level ~35 % faster than the reference | Content tiers feel short for the most engaged | Level table, after slice-3 telemetry |
 | 15 | Level-up stat points alone meet the §8.5 targets; training overshoots | Tier-2 difficulties set against inflated stats | Reconcile §8.5 before slice 5 |
-| 16 | No opinion drift in slice 1 | Coalport pins at 95 % during a long playtest | Lazy drift at the boundary if cheap; else accept |
+| 16 | ~~No opinion drift in slice 1~~ closed: the home drift is built in slice 3 (§14.5) | Coalport still pins at 95 % with a few testers, by design | — |
 | 18 | The welcome set belongs to the City Day of creation | A 23:50 UTC sign-up gets ten minutes of it | Extend to day 2 when day 1 was under two hours, if the playtest shows it |
 | 20 | Chapter 1 can end in Failure on a player's first hour | Read as "I failed the tutorial" | Drop the Failure band for chapter 1, not the difficulty |
-| — | Iron has no sink | None in slices 1–2 (the outfit is given, not sold) | Slice 4 (tickets), slice 8 (wardrobe, the flat) |
+| — | Iron has no sink | None in slices 1–3 (the outfit is given, not sold; politics costs PC, never Iron) | Slice 4 (tickets), slice 8 (wardrobe, the flat) |
+| 21–25 | The slice-3 flags: the day-2–4 ballot, the ward-vote weights, *Fired up* as the normal state, the small-branch endorsement rule, no running totals | See §14 | GDD Appendix C |
 
 ---
 
@@ -285,3 +286,95 @@ Both cities pay the same rates at the same difficulty as Coalport, so §3–§9 
 ### 13.5 Session shape (pillar 7)
 
 From sign-up to the first result modal: eleven taps, about three minutes. The whole first bar, with the origin, the faction, the paper, the welcome set, the job, the shift and the chapter, is **about fifteen minutes**, and every screen in it is resumable. The second session of day 1 (three hours later, 100 Energy and no Rested yet) is the slice-1 regular session of §11.
+
+---
+
+## 14. Slice 3: the first vote, the first sinks, ordinances and morale
+
+Slice 3 adds no tier-1 rate. It adds a calendar (which decides *when* the day-2 target lands), the first Political Capital sinks, an office stipend, a morale bonus and ten ordinances that move existing numbers for five days at a time. Rules: `docs/design/slice-3-politics.md`; GDD §15.3, §14.11, §6.5.
+
+### 14.1 The day-2 vote against the calendar
+
+Rank 2 (400 FXP) is unchanged: the reference recruit has about 475 FXP at the end of day 2 (§13.3), and reaches it in the third session of day 2. The home city's polls are open on cycle days 2–4 of a five-day cycle (§15.3), so what the player gets on the day they make Rank 2 depends on where their day 2 falls in the city's cycle:
+
+| Cycle day when Rank 2 arrives | Share of new players | First ballot |
+|---|---|---|
+| 2, 3 or 4 (polls open) | 60 % | The same day (day 2 for the reference recruit) |
+| 1 (last day of nominations) | 20 % | The next day (day 3) |
+| 0 | 20 % | Two days later (day 4) |
+
+Mean wait after Rank 2: 0.6 days. Casual players (Rank 2 on day 3) vote on day 3–5; heavy players (day 2, second session) on day 2–4. **Verdict:** the §5.2 target is met as restated (*the right on day 2, the ballot by day 4*); the old wording (the ballot itself on day 2) could not be met by any staggered calendar and has been changed (Appendix C #21).
+
+The first candidacy needs Rank 3 (2,000 FXP: reference day 10, regular day 8, casual day 14, heavy day 7) and *Known* (day 3 for all). Nominations are open two days in five, so the first candidacy is filed on day 10–14 and the first seat, three days after nominations close, lands on **day 13–17** for the reference player: "week 2 at the earliest" (§15.1) holds, and it is the *earliest*.
+
+### 14.2 Political Capital: the first budget
+
+Income is unchanged: **+5 PC a day** for completing all three Party orders (from day 1: the welcome set pays it in the first ten minutes). New income: **+10 PC per boundary held as a councillor** (50 a term).
+
+| Sink | PC | Earliest use |
+|---|---|---|
+| Endorse a candidate | 10 | Day 2 (Rank 2), if both days' orders were done |
+| Declare for the council (deposit) | 10 | Day 10–14 (Rank 3) |
+| Move an ordinance | 20 | The first term (day 13–17) |
+
+A daily player who never misses the orders has 50 PC on day 10 and **about 45 allowing a missed day**: enough to file (10), endorse a colleague in the same cycle (10) and, once seated, move an ordinance (20), with a few left. A casual player who completes the orders four days in five has ~40 by day 14, which still covers file + endorse; the proposal waits for the stipend, which pays 10 a day from the seat. A sitting councillor earns 15 a day against a maximum spend of 40 per five-day cycle, so PC accumulates from the first term at about 35 a cycle towards the 1,000 cap; the Chair candidacy (25), petitions (10) and patron favours (15–40) arrive in slices 7–8 to spend it. **Nothing political costs Iron**, so the Iron balance keeps growing as in §5.2.
+
+The deposit is returned when a candidacy is struck for want of endorsements, so a player who files and is refused loses nothing; the small-branch rule (§15.3) means a lone player who does the day's orders is never struck.
+
+### 14.3 FXP: the stipend and the morale bonus
+
+| Source | Per day | Reference player's FXP/day (was 205) |
+|---|---|---|
+| Councillor's stipend | +20 FXP per boundary held (§6.5) | 225 while seated (+10 %) |
+| *Fired up* (§14.11) | +10 % of base FXP on actions in the city; Directive bonuses are not actions | +14–15 on ~145 action FXP (+7 %) |
+| Both | | ~240 (+17 %) |
+
+Milestones (reference, city *Fired up* from about day 9, §14.5): Rank 3 moves from day 10 to about **day 9.5**; Rank 4 (6,000) from about day 33 to **about day 30** for a player seated half the time. The regular player reaches Rank 4 about day 22 (was 24). Directives stay near 30 % of daily FXP (the bonus lines are on actions, so the ratio is unchanged). *Fired up* was +5 % in the GDD; per-line rounding (halves up) turned 5 % of a 6-FXP canvass into 0, so the state showed nothing at tier 1; at 10 % every line shows +1 or more (Appendix C #23).
+
+The public-meetings ordinance (below) adds a further +25 % on action FXP for five days: +36 a day for the reference player, about one extra day of FXP per term. Worth having, not worth planning a rank around.
+
+### 14.4 Ordinances: what each is worth (reference player, per day, while in force)
+
+All ten are bounded modifiers on numbers this sheet already models. Values below are for the reference player (300 Energy, Factory worker at 216, streak ≥ 10, INT canvasses at the 95 % clamp by day 4) unless stated; the casual and heavy figures scale with their Energy.
+
+| Ordinance | Effect | Worth per day | Who wants it |
+|---|---|---|---|
+| Public Works Order | Job pay +10 % | **+22 Iron** (216 → 238; the half pay and the shift both rise) | Everyone, a little; the streak bonus stacks on the raised pay |
+| Shift Hours Order | Shift −1 Energy; each shift adds two days of streak | +1 Energy (~5 XP); a new job's streak reaches +20 % in five shifts instead of ten: about **+10 Iron a day** over those days | Players with a young streak: new members, job switchers, returners; the Collective's motion |
+| Street Permits | Propaganda swing +15 % | Morale +0.02 a day for the reference mix (~100 propaganda Energy) | The branch, when morale is near a threshold |
+| Rally Permits | Speeches 12 → 10 Energy, rewards unchanged | Speeches pay 5.4 XP / 0.7 FXP / 2.4 Iron per Energy instead of 4.5 / 0.6 / 2: **+20 % on speech Energy**; at a quarter of the political spend, **+5 % of the day's XP** | CHA-heavy builds (the coat, *talked them out*); the Vanguard's motion |
+| Reading Room Grant | Training −20 % Energy | INT 12 → 13 costs 35, not 44: **9 Energy saved a day** (~40 XP), or a second point every fourth day | Trainers; the Alliance's motion |
+| Rest Day Order | Rested cap 200 → 250 | Nothing for the three-session player (the pool never fills); **+50 boosted Energy** (~+110 XP-equivalents) for the once-a-day player and the returner | The weekend ordinance; small on purpose |
+| Open Doors | Canvass +4 % chance | +0.02 on the expected factor: **+2–3 % of canvass rewards** off the clamp; nothing at 95 % | New members and off-stat canvassers; a council doing something for its newest |
+| Ward Register | Standing: Successes count two | *Trusted* on day 4 and *One of Us* on day 6 instead of 5 and 8 (the +12 % cap two days early); nothing for a player already at the cap | New members; a good first ordinance for a new player's council |
+| Ward Fund | Iron from checked actions +25 %; job pay −25 % | +180 − 54 = **+126 Iron** (+13 %); casual +122 − 54 = +68; heavy +280 − 54 | Active members, at the wage-earner's expense: the trade-off pair with Public Works |
+| Public Meetings Order | FXP +25 % on actions | **+36 FXP** (+18 %) | Anyone chasing a rank |
+
+No ordinance breaks a §5.2 milestone: the biggest XP lever (Rally Permits, all-in on speeches) is +20 % for five days on the slowest-odds actions; the biggest Iron lever (Ward Fund) is +13 %; the biggest FXP lever is +18 %. All of them expire by the calendar and only one is in force per city. The NPC defaults (Rally Permits, Shift Hours, Reading Room Grant) are three of the smaller ones in raw numbers, which is deliberate: a council of players should be able to do better than the branch.
+
+### 14.5 Morale
+
+Inputs (§14.11): +0.005 per Energy from political actions (the reference player: **+1.15 a day**, §8), the drift of **2 % of the distance to 70 a day**, +0.5 per ballot, +2 per player seat, −3 per count with no player ballot.
+
+| City | Path |
+|---|---|
+| One reference recruit, alone | 70 → 80 (*Fired up*) in **about 9 days**; 90 by about day 25; the 95 cap is never quite reached (the drift is −0.5 there) |
+| One casual, alone | *Fired up* in about 13 days |
+| Five active testers (+5.75 a day) | *Fired up* on **day 2**, the cap by day 5, and it stays there |
+| Nobody | 70, *Steady*; −3 per unvoted count, so *Unrest* after the fourth in a row (day 20); the drift back from 58 is +0.24 a day, so a city that fell into Unrest needs a member's work to leave it (about five reference days) |
+
+The old flag (#16) is closed: with the drift in, Coalport still pins near the cap with a few testers, which is *Fired up* working as designed; the scale problem (hundreds of players moving the meter tens of points a day) stays with Appendix C #13 and slice 4's telemetry.
+
+### 14.6 Session shape (pillar 7)
+
+On a polling day the morning adds two taps (the Polling Day row, the ballot) and one modal, about 20 seconds. Declaring is three taps once a cycle; endorsing one; the ordinance vote one tap plus one for a proposal. A councillor's whole political week is under a minute. Nothing in slice 3 needs the player at a set time: every window is one to three full City Days and closes at the boundary, the count happens without anyone present, and the paper carries the result whenever the player next opens it.
+
+### 14.7 Flags (GDD Appendix C #21–25)
+
+| # | Flag | Risk | Lever |
+|---|---|---|---|
+| 21 | The first ballot lands day 2–4, not day 2 | 40 % of new players wait a day or two | A four-day poll with a one-day nominations window, if the wait kills the moment |
+| 22 | Ward-vote weights (Successes ÷ 5; NPC 44…15) | Lone players always top, or never | Retune from the count tables |
+| 23 | *Fired up* is the normal state for an active branch | A permanent +7 % FXP rather than a reward | Lower the bonus before touching thresholds |
+| 24 | The branch's endorsement counts double in small branches | Candidacy too easy for a lone player | Require the orders on both days of the window |
+| 25 | No running totals during polling | Loses the "it's close" hook | A turnout count without candidate totals |

@@ -101,6 +101,17 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 |---|---|---|
 | Vanguard content carried military and real-world echoes (military rank titles, the *Torchlight March*, "a paramilitary movement", a garrison as the home pin, a chalked symbol with a slogan, "the nation above all"), and the Collective's *Commissar*, *Comrade-General*, *Red Guard* and *People's Commissar* were real-world names; "enemy", "uprising", "conscription", "martial law", "purge" and "raid squad" were war framing | The Vanguard is **an authoritarian nationalist party, not a militia**: ranks **Initiate / Steward / Bailiff / Prefect / Intendant / Guardian / Keeper of the Gate**; its event is the **Grand Rally** (Speaker, Stand-builder, 2 Stewards, Lookout; mechanics unchanged); its exclusive location is **Vanguard House** (kind `gym`); Duskwall is a **frontier customs town** (Fortress Gate `ministry`, the Customs Market) and its patron is **Commissioner** Reinholt; the wish is *Order. Somebody has to keep the streets quiet.*; chalking is words (*ORDER AND BREAD*), never a mark. Collective ranks **Convenor** and **Tribune**; opponents *Vanguard Doorman*, *Strike Picket*, *Branch Inspector*; *Emergency Permits Act*; *Clear out the rot*; Season Twists *Direct Rule in Duskwall* and *The Upset*; "rival" for "enemy" everywhere, "opponent" in combat. Faction names and the ideology labels untouched (naming stays parked) | §5.4, §7.2, §8.2, §8.4, §9.2, §12.1, §13.5, §14, §15.8, §16.1, §16.3, §17.2, §20.2, §21.2, §22.3, §26, Appendix C #7 |
 
+**Added 29 Sep 2026 (slice-3 design, `docs/design/slice-3-politics.md` and `slice-3-screens.md`):**
+
+| Problem | Change | Section |
+|---|---|---|
+| The council calendar had a clock time ("nominations close at 12:00") and a one-day poll, and "the first vote on day 2" could not be kept by any staggered calendar | A **five-day cycle per city from the day key** (offsets Irongate 0 · Ashford 1 · Coalport 2 · Duskwall 3 · Clearwater 4): **two days of nominations, three days with the polls open, the count at the boundary**; no clock times. Rank 2 on day 2 is the right to vote; **the first ballot lands by day 4** | §2, §3.6, §5.2, §15.3 |
+| The home-city race had no count rule, and "endorsed by 2 faction members" was impossible for a branch of one | **Total = ward vote (Standing Successes ÷ 5) + 3 × endorsements + members' votes**; seven seats; ties by votes, endorsements, standing, filing. Endorsements cost 10 PC, one per member per cycle; **the branch endorses a filed candidate who does the day's orders**; in a branch with fewer than three other endorsers the branch's endorsement counts double | §15.3, §15.10, §6.5 |
+| "Voters need 7 days in their faction" contradicted the day-2 vote | Tenure applies **after a faction switch** (7 days to vote, 14 to stand); a new member votes at Rank 2. Council results are final at the count in the MVP | §15.2 |
+| NPC fill had no slate, no marking and no rule for a council of one party | **Nine NPC candidates per faction** (named, in the faction's voice) fill the slate to nine names; NPCs are **marked** (*ward*); NPC councillors vote with the player majority, else the branch's motion; they abstain during Unrest | §15.10, Appendix C #3 |
+| Councillors had nothing to do in slice 3, and the ordinance list touched systems that don't exist yet | **The order paper**: the branch's motion plus up to three proposals (20 PC each); one-tap vote on the first two days of the term; passes with four of seven; **in force for five days, one per city**. A **menu of ten home-city ordinances** with bounded effects on jobs, Energy costs, swing, training, Rested, Standing, Iron and FXP. Stipend **10 PC and 20 FXP** a day | §15.1, §15.3, §6.5 |
+| Morale states had no inputs and *Fired up*'s +5 % rounded to nothing at tier 1 | Inputs: the drift toward 70 (2 % of the distance a day, built now), +0.5 per ballot, +2 per player seat, −3 per election nobody voted in. ***Fired up* is +10 % Faction XP at home**; *Unrest* swaps two Party orders for *Restore the base* at +40 FXP and makes NPC councillors abstain | §14.2, §14.11, Appendix C #16 |
+
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes.
 
 ---
@@ -160,9 +171,9 @@ Every system uses the same clock.
 | Unit | Length | What happens |
 |---|---|---|
 | **Tick** | 10 min | Energy regen, HP regen, Heat cooling |
-| **City Day** | 1 real day, 00:00–24:00 server time (UTC) | Daily resets: weather, salary, Directives, shift availability, bar limits. **One city holds a council election every day.** |
+| **City Day** | 1 real day, 00:00–24:00 server time (UTC) | Daily resets: weather, salary, Directives, shift availability, bar limits. **Polls are open somewhere every day**, and every day some city counts, seats a council or divides on an ordinance. |
 | **Week** | 7 City Days, from Monday 00:00 | Issues of the Week rotate; patron Requests refresh |
-| **Council Cycle** | 5 City Days | Every city elects its council once per cycle, staggered |
+| **Council Cycle** | 5 City Days | Every city elects its council once per cycle, staggered by one day (offsets Irongate 0 · Ashford 1 · Coalport 2 · Duskwall 3 · Clearwater 4). Cycle days **0–1 nominations, 2–4 polls open**, the **count** at the boundary into day 0; the new council **divides on its ordinance** on days 0–1 and the ordinance is in force from day 2 for five days (§15.3). No phase has a clock time |
 | **Term** | 28 City Days | National election, head of government, Legislature |
 | **Political Season** | 84 City Days (12 weeks) = **one in-game year** | 3 national elections; the third is the **Season Election** |
 | **Weather season** | 21 City Days | Spring (weeks 1–3), Summer (4–6), Autumn (7–9), Winter (10–12) |
@@ -233,6 +244,8 @@ The first screen after the City Day changes, and after any absence of 3 hours or
 
 **Slice 2 (v2): the welcome edition and Letters.** The first edition a character sees is the **welcome edition**: three headlines (*Welcome to {city}* with the secretary's name and where to spend the first Energy; the city's arrival notice with the player's name, first edition only; the morale line), the **welcome set** of Party orders (§13.7), a **Letters** row (*From your father's things: Chapter 1 is ready · 10 Energy*, §17.1) and the desk with a *Wearing* row (§8.2). It is the whole tutorial without being one (§7.5). Letters carries Ambition chapters from slice 2 and patron letters from slice 8. Per-city welcome texts are in `docs/design/slice-2-onboarding.md` §7.
 
+**Slice 3 (v3): Polling Day and In Print.** A **Polling Day** row every morning states the home city's phase and carries the one tap that matters (*Cast your ballot*, *Stand for the council · 10 PC*, *The council sits*), or *Coalport votes from Thursday* when nothing is open; it is live at read, never baked into an edition. **In Print** begins with the seat: the morning after a count in which the player took a seat, the front page carries the player's avatar as a printed photograph with the stamp **ELECTED**, the headline with their name, the deck and the count table, and one CTA, *To the council*. Losing, the count and the fate of the player's own vote are ordinary headlines. Templates per paper: `docs/design/slice-3-politics.md` §8; the screen: `docs/design/slice-3-screens.md` §2.
+
 ### 3.4 Agendas: what to spend Energy on
 
 | Agenda | Source | Why it matters |
@@ -260,7 +273,7 @@ The first days give a **taste** of everything: one-tap play, a vote, a group eve
 
 | When | Where the player lives | What opens up |
 |---|---|---|
-| **Days 1–3: home** | Your faction's **home city** (a Collective recruit starts in Coalport, §14.11). Safe ground: no encounters, the police are on your side | The origin story and Ambition chapter 1 · the welcome edition of the Morning Paper and first Party Orders · one-tap actions, the first job and outfit · the first tier-2 mission · the first Campaign Event with faction mates · **the first vote** (day 2, Rank 2) in the home council race · your name in the paper |
+| **Days 1–3: home** | Your faction's **home city** (a Collective recruit starts in Coalport, §14.11). Safe ground: no encounters, the police are on your side | The origin story and Ambition chapter 1 · the welcome edition of the Morning Paper and first Party Orders · one-tap actions, the first job and outfit · the first tier-2 mission · the first Campaign Event with faction mates · **the first vote** in the home council race (the right at Rank 2 on day 2; the ballot by day 4, since the home city's polls are open three days in five) · your name in the paper |
 | **Days 4–14: the district** | Home, with first trips out | **Level 10 opens the train** (about day 5) · the first visit to a battleground and the first journey event · **Rank 3** (about day 10): stand for your home council if you're *Known* locally and 2 faction members endorse you · illegal missions and Heat · safehouses |
 | **Weeks 3–4: the move** | The big decision: **move to a battleground** (an Irongate district or Clearwater) to vote and stand where power is decided, or stay home and rise in the party | The first patron at Associate · the first Case File · a first council seat for the committed |
 | **Months 2–3: the city** | Home or a battleground | **Governor or Mayor** after a council term · **Faction Chair** at Rank 4 · spy trips into rival home cities (§14.12) · exposés · running your own events · a better home (§17.4) |
@@ -333,7 +346,7 @@ All of these are **positive**: something to look forward to.
 | Milestone | Target | Why it matters |
 |---|---|---|
 | First job, first outfit, first Campaign Event | Day 1 | Every core system touched in the first sessions |
-| Rank 2: **vote** | Day 2 | A taste of politics from day 2 |
+| Rank 2: **vote** | Day 2 (the right); **the first ballot by day 4** | A taste of politics from day 2. The home city's polls are open three days in five (§15.3), so 60 % of new players vote the day they make Rank 2 and the rest within two days; the paper says when |
 | Level 10: **train travel** | ~Day 5 | The map opens once the home city is familiar |
 | Rank 3: **stand for council**, lead events, illegal missions | ~Day 10 | The first real political step, in week 2 |
 | Level 16: full map, Case Files | ~Week 2 | |
@@ -477,19 +490,19 @@ Political Capital (PC) is *earned* through political activity. It does not regen
 | Campaign Event participation | 3–15 by outcome |
 | Resolving an Issue (top contributors) | 20 split |
 | City Hero | 25 |
-| Office stipends | Councillor 10/day, Governor 20/day, Deputy 5/day, Minister 25/day, Head of Government 50/day |
+| Office stipends | Councillor **10/day and 20 FXP/day** (paid at every boundary held, present or not; the FXP is the office share of §5.5), Governor 20/day, Deputy 5/day, Minister 25/day, Head of Government 50/day |
 | Patron favours, Ambition chapters | Varies |
 
 | Spent on | Cost |
 |---|---|
-| File candidacy: Council / Legislature / Chair / Head of Government | 10 / 25 / 25 / 100 |
-| Endorse a candidate (+votes, §15.5) | 10 |
+| File candidacy: Council / Legislature / Chair / Head of Government | 10 / 25 / 25 / 100. The council's 10 is a **deposit**: kept if the candidate withdraws or stands, returned if the candidacy is struck for want of endorsements (§15.3) |
+| Endorse a candidate (+3 to a council total, §15.3; +1 % nationally, §15.5) | 10; Rank 2+, resident, **one per member per cycle in each city**, public, irrevocable |
 | Sign a Recall Petition | 10 |
-| Propose an ordinance (councillor) or law (deputy) | 20 / 50 |
+| Propose an ordinance (councillor) or law (deputy) | 20 / 50. A councillor may move one item per term; the order paper holds the branch's motion plus three (§15.3) |
 | Call in a patron favour | 15–40 |
 | Clear 1 Criminal Record point through connections | 30 |
 
-PC is capped at **1,000** and never decays. It can't be bought, traded or transferred. It is **stored and shown from slice 1** (the Directive completion bonus pays it) even though the first thing to spend it on arrives with the council elections in slice 3.
+PC is capped at **1,000** and never decays. It can't be bought, traded or transferred. It is **stored and shown from slice 1** (the Directive completion bonus pays it); **the first sinks arrive in slice 3**: the council deposit, endorsements and ordinance proposals. A daily player has about 45 PC by day 10, enough to file, endorse a colleague and, once seated, move an ordinance (`docs/economy.md` §14.2).
 
 ### 6.6 Iron Marks (IM)
 
@@ -1016,7 +1029,7 @@ Multipliers on the swing: Issue tag +50 % (§14.6), Battleground +25 % (§14.4),
 
 This puts the reference player (§5.2) at about **+0.8 to +1.2 points a day** from tier-1 play at home (the higher figure in week 1, when almost every tap is political), which is what the ledger line in §3.2 promises. The 1 % daily drift (2 % at home) balances a handful of active players per city; see Appendix C for what happens at scale.
 
-**Build order:** the swing is **written to the city meter from slice 1** (the modal shows the delta to three decimals, trimmed, and the city's new share to one decimal); the drift arrives with the calendar in slice 4 (Appendix C #16).
+**Build order:** the swing is **written to the city meter from slice 1** (the modal shows the delta to three decimals, trimmed, and the city's new share to one decimal); the **home-city drift is built in slice 3** with the council calendar (2 % of the distance to 70 a day, at the boundary, moving between the home faction and Neutral; Appendix C #16, closed), along with the ballot and seat inputs of §14.11; the battleground drift arrives in slice 4.
 
 ### 14.3 Control grants access, not multipliers
 
@@ -1189,27 +1202,32 @@ Each faction has a **home city** it can never lose. Power is won or lost in the 
 
 **Why a home city is never lost.** New players start there, so a rival-held home would make a terrible first day. Losing a home would also snowball (fewer new players, a weaker faction, more losses) and invite coordinated griefing. So the floor stays, and neglect is punished through morale states instead.
 
+**What moves morale (slice 3).** Political actions at home (the §14.2 swing) · the daily **drift of 2 % of the distance to 70** at the boundary (95 → 94.5; 60 → 60.2; the points move between the home faction and Neutral), so a lone reference recruit at +1.15 a day takes a city from 70 to *Fired up* in about nine days and five of them do it in two · **+0.5 per ballot cast** by a resident member · **+2 when a player takes a council seat** · **−3 at any count in which no player voted** (the branch stayed home; the only negative input until rival action arrives in slice 5) · ordinances that raise the swing (§15.3). One active member keeps a city *Fired up*; neglect, not absence, is what the state measures, and the cost is the faction's, never a player's asset (§4.3 rule 4).
+
 **Morale states:**
 
 | Morale | State | Effects |
 |---|---|---|
-| **80–100 %** | **Fired up** | +5 % Faction XP on actions at home · more NPC volunteers at Campaign Events · the full 10 % national weight |
+| **80–100 %** | **Fired up** | **+10 % Faction XP on actions at home** (a bonus line on base FXP, rounded per line, so a 6-FXP canvass shows *Fired up: +1*) · more NPC volunteers at Campaign Events · the full 10 % national weight |
 | **60–79 %** | **Steady** | Normal |
 | **50–59 %** | **Unrest** | A **crisis** (below) |
 
+*Fired up* was +5 % in the first 3.1 draft; per-line rounding made that invisible at tier 1, against the rule that every result shows its numbers. At 10 % every line shows. Because an active branch keeps its city *Fired up* almost always, this is a small permanent acceleration (about +6 % Faction XP a day) rather than a bonus; accepted (Appendix C #23).
+
 **A crisis is an event, not a loss:**
 - **Announced** in every Morning Paper: *"Unrest in Coalport: dockers question the party."*
-- **The Chair's Directives switch** to *Restore the base*; players who help earn extra Faction XP and Legacy.
+- **The Chair's Directives switch** to *Restore the base*: in slice 3, the day's slot A and B orders are replaced by a fixed pair (any canvass in the city, 3 attempts; any speech, 1 attempt), each completion paying **+40 FXP** instead of +20; players who help earn Legacy from slice 8.
 - **Consequences while it lasts:**
-  - the home city counts for only 5 % of the faction's national weight
-  - rival spy missions there pay more
-  - NPC councillors from that city may **defect** in the next Legislature vote
-  - the Faction Chair faces an automatic confidence vote among members
-- **The way out:** get morale back above 60 %. A *"Coalport stands firm"* headline and a Legacy entry go to everyone who helped.
+  - **NPC councillors abstain** on ordinances, so a motion needs four player votes (slice 3)
+  - the home city counts for only 5 % of the faction's national weight (slice 7)
+  - rival spy missions there pay more (slice 5)
+  - NPC councillors from that city may **defect** in the next Legislature vote (slice 7)
+  - the Faction Chair faces an automatic confidence vote among members (slice 7)
+- **The way out:** get morale back to 60 % or above. A *"Coalport Stands Firm"* headline (every paper, that morning) and, from slice 8, a Legacy entry go to everyone who helped. The plate shows the state word after the share (*Collective 84.0 % · Fired up*; *Unrest* in the failure colour).
 
 **Guardrails:**
 - **Rival pressure is capped per day.** A rival crew can cause a crisis but can't keep one going forever.
-- **Home morale recovers faster** than battleground opinion: it drifts toward 70 % at 2 % a day, against 1 % a day elsewhere.
+- **Home morale recovers faster** than battleground opinion: it drifts toward 70 % at **2 % of the distance a day**, against 1 % elsewhere. Recovery from Unrest is therefore mostly work, not waiting: from 55 the drift alone gives +0.3 a day; a canvassing member gives four times that.
 
 **Baselines.** Each meter starts a season at its baseline and drifts back toward it (§14.2, §22.2). Home cities start at the 70 % drift target, with the rest split so that the undecided outnumber either rival. The three home cities are pinned (slices 0 and 2); the battlegrounds are provisional until slice 4.
 
@@ -1289,7 +1307,7 @@ This is what the game is about. The rule of v3.1: **politics runs on a calendar,
 
 | Office | Seats | Term | Elected by | Who can stand (the ladder) | Powers |
 |---|---|---|---|---|---|
-| **City Councillor** | 7 per city, 10 in Irongate (2 per district): 38 | 5 days | Residents of that city or district (Rank 2+) | Rank 3 · resident · *Known* Local Standing there (§13.4) · endorsed by 2 faction members | Vote on the city ordinance |
+| **City Councillor** | 7 per city, 10 in Irongate (2 per district): 38 | 5 days, from one count to the next | Residents of that city or district (Rank 2+) | Rank 3 · resident · *Known* Local Standing there (§13.4) · endorsed by 2 faction members (the branch's endorsement counts, §15.3) · not a sitting councillor of that city | **Move** one ordinance a term (20 PC) and **vote** on the order paper (§15.3). Stipend 10 PC and 20 FXP a day. A term counts as completed if held to the count |
 | **Governor** (Mayor, in Irongate) | 1 per city (5) | 5 days | The top-voted councillor of the largest bloc | Must have **completed a council term** before | Chooses which ordinance goes to the vote; once per term, a **Governor's Address** (+Issue momentum) |
 | **Faction Chair** | 1 per faction (3) | 28 days | Faction members, Rank 2+ | Rank 4 · a completed council term · 14 days in faction | Sets Party Directives; schedules faction-wide Campaign Events; NPC whip |
 | **Deputy** (Legislature) | 60 | 28 days | National ballot (faction list) | Rank 5 · a term as **Governor or Mayor**, or **3 council terms** | Propose and vote on laws; no-confidence motions |
@@ -1307,32 +1325,37 @@ That's **about 111 offices every term**. With council terms of 5 days, **38 coun
 
 ### 15.2 Integrity rules
 
-- One account per person. Accounts on the same network can't vote in the same election or endorse each other.
-- Results stay **provisional for 24 h** while admins audit for multi-accounting.
-- Voters need **7 days** in their faction. National candidates need **14 days**.
+- One account per person. Accounts on the same network can't vote in the same election or endorse each other (built with the anti-abuse work in slice 9).
+- National results stay **provisional for 24 h** while admins audit for multi-accounting. **Council results are final at the count** in the MVP; when the audit exists (slice 9) it can unseat, as a recount would.
+- **Tenure applies after a faction switch** (§23.4): a member who switched needs **7 days** in the new faction to vote or endorse and **14 days** to stand. A new member votes the day they make Rank 2 (§5.2). National candidates need 14 days in their faction in every case.
 - Switching faction (paid token) vacates all offices, resets tenure, and halves your PC.
 - Nothing political is for sale: no votes, PC, influence, offices or endorsements for money.
 
 ### 15.3 City Councils
 
-- **Calendar:** each city votes once every 5 days, staggered, so **a council election happens somewhere every day**: Irongate, then Ashford, Coalport, Duskwall, Clearwater, and round again.
-- **Nominations** close at 12:00 the day before. Polls are open for the whole City Day.
-- **Seat allocation in battlegrounds:** each faction's score = **50 % player votes + 50 % city influence**. Seats are allocated proportionally (D'Hondt method). Within a faction, seats go to its candidates in order of personal votes. **Seats with no player candidate go to NPC councillors** (§15.10). In Irongate the same count runs separately in each district for its 2 seats, using district opinion.
-- **Seat allocation in home cities** (§14.11): all 7 seats belong to the home faction. They go to its candidates in order of personal votes from resident faction members, so the race is between members of the same party. Rivals can't live or stand there.
-- **Ordinance:** each council passes **one ordinance per term** from a fixed menu. Ordinances apply to **every** player in the city, regardless of faction.
+- **Calendar (pinned, slice 3):** each city runs a **five-day cycle from the day key**, `cycleDay = (dayKey − offset) mod 5`, with offsets **Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4**. Cycle days **0–1: nominations** (declare, withdraw, endorse); **2–4: polls open**; **the count at the boundary** into the next day 0, when the new council is seated. No phase closes at a clock time; every window is at least one full City Day; polls are open somewhere every day. The count and the division are the only scheduled world events. The phase is a pure function of the day key, so nothing waits on a job.
+- **Nominations:** a candidacy (Rank 3, resident, *Known*, not a sitting councillor there) costs a **10 PC deposit**, spent when the name is printed, returned if the candidacy is **struck** at the close of nominations for want of **two endorsements**. Endorsements: Rank 2+ residents, 10 PC, one per member per cycle in each city, public, irrevocable; **the branch's endorsement** goes to any filed candidate who completes all three Party orders on a day of the window (once per candidacy); where fewer than three other eligible endorsers live in the city, the branch's endorsement counts as two. A candidate may **withdraw** before polls open (the deposit stays with the branch); after that the name is on the ballot. Candidates pick one of three platform lines the faction offers (content, no effect).
+- **The ballot:** single choice, one tap, **secret** (no running totals during polling; every total printed after the count) and **final**. A candidate may vote for themselves; a member may vote for an NPC candidate.
+- **The count in home cities** (§14.11): all 7 seats belong to the home faction. Each candidate's **total = ward vote + 3 × endorsements + members' votes**, where the **ward vote** is the NPC electorate: a player's Local Standing Successes in the city ÷ 5 (rounded down), an NPC candidate's fixed profile with a seeded jitter of ±2 per cycle; at most five endorsements count; members' votes are one each. Seats go to the seven highest totals; **ties** by members' votes, then endorsements, then Standing Successes, then earlier filing. Rivals can't live or stand there. The result is printed in the city's paper (§3.3) and is final.
+- **Seat allocation in battlegrounds** (slice 4): each faction's score = **50 % player votes + 50 % city influence**. Seats are allocated proportionally (D'Hondt method). Within a faction, seats go to its candidates in order of the same total. **Seats with no player candidate go to NPC councillors** (§15.10). In Irongate the same count runs separately in each district for its 2 seats, using district opinion.
+- **The order paper and the division:** the new council sits from the count. On cycle days 0–1 the order paper holds **the branch's motion** (the party secretary's, at no cost: Vanguard *Rally Permits*, Collective *Shift Hours Order*, Alliance *Reading Room Grant*) plus up to **three proposals** by councillors (**20 PC**, one per councillor per term, first come; an item already on the paper cannot be moved again, the ordinance in force can be renewed). Each councillor casts **one vote** for one item or *Against all*, public in the chamber, final. At the boundary into day 2 the council **divides**: NPC councillors vote for the item with most player-councillor votes (ties to the branch's motion, then the earliest moved; the branch's motion if no player voted; they abstain during Unrest, §14.11); the item with most votes **passes with four or more of seven**, otherwise the council rises without a motion. A passed ordinance is **in force from that boundary for five City Days** and replaces the one before: **one ordinance per city at a time**, expiring by the calendar. Ordinances apply to **every** player in the city, regardless of faction. Until a Governor exists (slice 7) the branch's motion is the whip.
+
+**The home-city menu (MVP, slice 3).** Ten ordinances with bounded effects on systems that exist; the bound is the value, since the menu is closed. Bonus lines appear in the result modal named after the ordinance; cost changes show on the ticket.
 
 | Ordinance | Effect in the city (for 5 days) |
 |---|---|
-| Street Permits | Propaganda influence ±15 % |
-| Police Patrols | Heat gained ±25 %; police encounters ±10 % |
-| Rent Control | Lodging −50 % |
-| Market Tax | Food and clothing prices ±15 % |
-| Public Works | Job pay +10 % |
-| Clinic Funding | Hospital costs −25 % |
-| Tram Subsidy | Train and car-hire tickets from the city −50 % |
-| Press Freedom / Press Licensing | Exposé strength and Dossier sale value ±25 % |
-| Festival Permit | Social mission CHA thresholds −3 |
-| Curfew | Night encounter chance +50 %; Disruption caught chance +10 % |
+| Public Works Order | Job pay +10 % (half pay and shift; streak on top) |
+| Shift Hours Order | Job shifts −1 Energy (never below 2); each shift adds two days to the work streak (the +20 % cap is unchanged) |
+| Street Permits | Propaganda opinion swing +15 % |
+| Rally Permits | Speech actions −2 Energy (rewards unchanged) |
+| Reading Room Grant | Training Energy −20 % (rounded, halves up) |
+| Rest Day Order | Rested cap +50 (the pool keeps its value when the order expires) |
+| Open Doors | Canvass actions +4 % success chance (a bonus row in the breakdown; the 95 % clamp applies) |
+| Ward Register | Local Standing: every Success counts two |
+| Ward Fund | Iron from checked actions +25 %; job pay −25 % |
+| Public Meetings Order | Faction XP +25 % on actions in the city (a separate line on base FXP; stacks with a Directive's +25 % as two lines) |
+
+The earlier list (Police Patrols, Rent Control, Market Tax, Clinic Funding, Tram Subsidy, Press Freedom / Licensing, Festival Permit, Curfew) returns, with the same bounds, in the slices that build the systems they touch: Heat and encounters (5), lodging and prices (8), tickets (4), exposés (8), social missions (5).
 
 ### 15.4 Faction Chair and Party Directives
 
@@ -1408,11 +1431,12 @@ That's **about 111 offices every term**. With council terms of 5 days, **38 coun
 
 ### 15.10 NPC fill: politics at any population
 
-Politics has to work with 50 players or 50,000:
-- **NPC candidates and office-holders** fill any seat no player wins. They're named characters: some of them are Dossier targets and patrons' allies.
-- **NPC deputies and councillors** vote with the majority of their faction's player members, or follow the Faction Chair's whip if their faction has none. With no whip either, they abstain.
-- **The influence half of every election score** plays the part of the NPC electorate, so mission work counts even when few players vote.
-- The ratio of NPCs to players is shown openly ("NPC seats: 38 / 60"), so a growing player base can see itself taking over.
+Politics has to work with 1 player or 50,000:
+- **NPC candidates fill the slate to nine names** in every council election: if *p* player candidates are on the ballot, `max(0, 9 − p)` NPCs stand, from the top of the faction's slate in profile order; with nine or more players, none. Nine names for seven seats means at least two lose every cycle, and the bottom of the slate (profiles 19, 17, 15, with a ±2 seeded jitter) is close enough that a handful of members' votes decides the last seat even when no player stands. Each faction has a slate of **nine named NPC candidates** in its own voice, with a platform line each (`docs/design/slice-3-politics.md` §5.2); some of them are Dossier targets and patrons' allies later.
+- **NPC candidates and office-holders** fill any seat no player wins. **They are marked**: the small faction mark in place of a face and the word *ward* in place of a rank title, on every slate, ballot, count and council screen (Appendix C #3, closed). No NPC is ever presented as a player.
+- **NPC councillors** vote for the item with the most votes from player councillors of that council (ties to the branch's motion, then the earliest moved); if no player councillor voted, for the branch's motion, which stands in for the Faction Chair's whip until a Chair exists; **during Unrest they abstain** (§14.11). NPC councillors never move a motion and draw no stipend. **NPC deputies** (slice 7) vote with the majority of their faction's player members, or follow the Chair's whip if their faction has none; with no whip either, they abstain.
+- **The ward vote is the NPC electorate**: in a home city a candidate's Local Standing (§15.3), in a battleground the influence half of every score, so mission work counts even when few players vote.
+- The ratio of NPCs to players is shown openly (*NPC seats: 6 / 7*, *NPC seats: 38 / 60*), so a growing player base can see itself taking over.
 
 ---
 
@@ -1488,7 +1512,7 @@ The father's last request (§7.2) sets a **personal storyline that runs for mont
 
 **Chapter rules (slice 2).** A chapter is a **tier-3 story of at most three steps** (§13.1): a choice with no roll, remembered as a flag for later chapters; one check with two approaches, each showing its stat and chance, paid in Energy on commit; the result modal, which carries the next chapter's hook as a knock-on line. **A chapter never fails:** the check decides the text and rewards (Success / Partial / Failure, §8.4), and the chapter completes on any outcome. Chapters set in the home city trigger no encounter. Each chapter sets its own difficulty and Energy (the §8.4 tier-3 band is for later chapters and Operations). **Chapter 1** unlocks on arrival with no requirement, is delivered as a **Letter** in the welcome edition (§3.3), costs **10 Energy** at **difficulty 8**, and pays Success **150 XP / 40 FXP / 100 Iron**, Partial **75 / 20 / 50**, Failure **25 / 0 / 0**, with a keepsake (§21.4) on every outcome; no opinion; Rested applies; chapter checks count for neither Standing nor Party orders. Later chapters need their requirement and **seven City Days** since the previous one; the result modal's hook names the date, computed from the day the chapter was played (*Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2*). A chapter's Energy, XP, FXP and Iron count in the **Today tally** (§3.7); it adds no attempt or win, since it is not a tier-1 row. The third outcome's stamp reads **Failure**, as §8.4; no text in the chapter says "failed", because the texts are setbacks and the chapter completes. The kicker's *Chapter n of 12* uses the Ambition's declared length, not the number of chapters written; when the next chapter is not yet written the Letters row is simply absent. Everything is resumable (`ambition { id, chapter, step, flags }`).
 
-**Chapter 1 titles:** *His ward book* (Finish His Work: chapter 2 at Rank 2) · *The prison letter* (Clear His Name: chapter 2 at Level 6) · *The marker* (Settle His Debts: chapter 2 at Level 6). Scripts: `docs/design/slice-2-onboarding.md` §3. **All three Ambitions are choosable in the MVP; *Finish His Work* is built to twelve chapters first** (Appendix C #6, closed), the other two to four chapters by launch (§25).
+**Chapter 1 titles:** *His ward book* (Finish His Work: chapter 2 at Rank 2) · *The prison letter* (Clear His Name: chapter 2 at Level 6) · *The marker* (Settle His Debts: chapter 2 at Level 6). Scripts: `docs/design/slice-2-onboarding.md` §3. Chapter 2 of *Finish His Work*, *Stand where he stood*, keys off the first ballot, which slice 3 builds; its script is written when the slice that ships it is chosen (`docs/design/slice-3-politics.md` §15 Q9). **All three Ambitions are choosable in the MVP; *Finish His Work* is built to twelve chapters first** (Appendix C #6, closed), the other two to four chapters by launch (§25).
 
 ### 17.2 Patronage (new)
 
@@ -1974,7 +1998,7 @@ The API (`apps/api`) was built against v3.0. Main changes:
 
 1. **Day boundary:** ~~UTC midnight, or the main audience's region?~~ **Closed for the MVP (29 Sep 2026): 00:00 UTC** (§2.2). Every daily rule is written per boundary crossed, so moving it later is a constant, not a redesign. Revisit with telemetry if the audience clusters far from UTC; the night window (20:00–06:00) moves with it.
 2. **Election weighting:** is 50 % popular vote / 50 % influence right? Low-population servers might need more weight on influence at first.
-3. **NPC visibility:** should NPC office-holders be clearly marked, or blend in with players?
+3. **NPC visibility:** ~~should NPC office-holders be clearly marked, or blend in with players?~~ **Closed (29 Sep 2026): marked.** The faction's small mark in place of a face and *ward* in place of a rank title, on every political list (§15.10). Blending in would make "a growing player base can see itself taking over" impossible to see.
 4. **Counter-Demonstrations:** they'd give the game its first faction-vs-faction contest. MVP or v1.1?
 5. **Season length:** 12 weeks, or 8 to keep it punchier?
 6. **Ambition at launch:** ~~which of the three gets fully built first? "Finish His Work" teaches politics best.~~ **Closed (29 Sep 2026): *Finish His Work* first**, to twelve chapters; the other two get chapter 1 in slice 2 and four chapters by launch (§17.1).
@@ -1987,9 +2011,14 @@ The API (`apps/api`) was built against v3.0. Main changes:
 13. **Opinion swing at scale:** the §14.2 swing rates suit a few dozen active players per city. With hundreds, the meters would move tens of points a day against a 1 % drift. Options: a per-city damping factor (swing × 20 ⁄ active players there, floor ×0.25), a faster drift, or a per-faction daily cap per city. Decide once slice 4 has telemetry.
 14. **Rested and heavy players:** a six-session player earns little Rested and still levels about 35 % faster than the reference player (`docs/economy.md` §6): Level 10 on day 3 and Level 16 on day 8. Intended, but if telemetry shows most players are heavy the level table will read fast. The lever is the §5.3 table, not the Rested bonus (§6.3 is a pillar).
 15. **Level-up points vs the training targets:** +1 stat point per level alone gives the reference player +9 by day 5 and +19 by day 20, which meets the §8.5 "best stat" targets (week 1 ~15, month 1 ~30) without any training; training on top overshoots (INT ~30 by day 7). Harmless while tier-1 odds clamp at 95 %; reconcile before tier-2 difficulties (14–20) are set in slice 5. Options: keep the rule and raise the targets, or give the level point every other level.
-16. **Opinion drift before slice 4:** slice 1 writes the swing but not the 2 %-a-day home drift, so a long playtest with a few testers pins Coalport near the 95 % cap. Acceptable for the slice-1 question; apply the drift lazily at the day boundary if it is cheap.
+16. **Opinion drift before slice 4:** ~~slice 1 writes the swing but not the 2 %-a-day home drift, so a long playtest with a few testers pins Coalport near the 95 % cap. Acceptable for the slice-1 question; apply the drift lazily at the day boundary if it is cheap.~~ **Closed (29 Sep 2026): the home-city drift (2 % of the distance to 70 a day) is built in slice 3** with the council calendar's world job (§14.2, §14.11). Coalport still pins at the 95 cap with a few active testers (+5.75 a day against −0.5 at the cap), which is *Fired up* working as designed; the scale problem is #13.
 17. **Salary cap on return (14 half-pays, §9.1):** "a fortnight's back pay" is a judgement, not a measured number. Revisit when the Welcome Back package (§4.2, 1 month+) is designed; it may replace the cap with a deliberate returning bonus (Rested full, a fixed Iron sum) rather than an accidental one.
 18. **The welcome set is per character** (§13.7) while every other day's orders are faction-wide. A character created at 23:50 UTC gets a ten-minute first City Day and the rotation the next morning. If the slice-2 playtest shows late-evening sign-ups losing the welcome set before they finish it, extend it to the second City Day when the first was shorter than two hours.
 19. **The face has no effect** (§7.3): six portraits, cosmetic only. Keep it that way; the moment appearance carries a bonus, the choice stops being about the player and starts being about the number.
 20. **Ambition failure texts on day 1:** chapter 1 can end in *Failure* (25 XP, the keepsake, no Iron) on a player's first hour. It is written as a setback, not a loss, and the chapter still completes. If the playtest shows new players reading it as "I failed the tutorial", raise chapter 1's difficulty floor to Partial (no Failure band) rather than lowering the difficulty.
+21. **The first ballot lands on day 2–4, not day 2** (§5.2, §15.3): polls are open three days in five, so 40 % of new players wait a day or two after Rank 2, told by the paper. If the slice-3 playtest shows the wait killing the moment, the lever is a four-day poll with a one-day nominations window (harder on casual candidates), not polls that never close.
+22. **The ward-vote weights** (§15.3): Standing Successes ÷ 5 for players and the 44…15 NPC profiles were set so that a day-10 reference recruit alone in a city tops the poll by a hair and a day-14 casual takes the second seat. Retune from the slice-3 count tables if lone players never top, or always do by twenty.
+23. ***Fired up* is the normal state** of any city with an active branch (§14.11), so its +10 % Faction XP is a permanent acceleration for active factions rather than a reward for turning the city round. Accepted for the MVP because the states need visible numbers; if rank pacing runs fast, lower the bonus before touching the thresholds.
+24. **The small-branch endorsement rule** (§15.3: the branch's endorsement counts double when fewer than three other endorsers live in the city) exists so that one player can stand. At scale it never fires. If players find the branch's endorsement (do the day's orders) too easy a route, require it on both days of the window rather than one.
+25. **No running totals during polling** (§15.3) keeps the ballot secret and vote-stacking invisible until the count, at the cost of the "it's close, turn out" hook. Revisit with turnout numbers after slice 3; a turnout count without candidate totals is the middle ground.
 
