@@ -19,7 +19,7 @@ Every number the model uses is a GDD number. Where the GDD left a number open it
 | Partial | half, per line, nearest whole, halves up, never below 1 | | | half |
 | Rested (§6.3) | +50 % on covered points | — | +50 % | — |
 | Directive match (§15.4) | — | +25 % | — | — |
-| Training (§8.5, **pinned**) | 2.25 (half rate) | — | — | — |
+| Training (§8.5, **pinned**; ×1 only, no batch) | 2.25 (half rate) | — | — | — |
 | Job shift (§9) | — | — | pay, not a rate | — |
 
 **Per action** (Success / Partial):
@@ -34,6 +34,8 @@ Every number the model uses is a GDD number. Where the GDD left a number open it
 | 44 / 30 / 40 | Training INT / AGI / STR (recruit) | 99 / 68 / 90 | — | — | — |
 
 A 10-Energy canvass with full Rested pays 68 XP / 6 FXP / 30 Iron. The four-tile modal always adds up because base and bonus are rounded separately.
+
+**Training has no ×3** (GDD §8.5, decided in the QA fix round, `slice-1-content.md` §13.2): three points would cost 126–138 Energy for the reference recruit against a 100-Energy bar. The model already assumed about one trained point a day (§4), so nothing below changes; the removal also takes a little pressure off Appendix C #15 (training overshooting the stat targets).
 
 ---
 

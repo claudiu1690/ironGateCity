@@ -68,6 +68,14 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 | The Collective's Rank 5 title was "Vanguard", the rival faction's name | Rank 5 Collective title is **Delegate** (no faction renamed) | §5.4 |
 | Batch text, sick days at streak 0, Rested on shifts, the +25 % after completion and the dateline were unspecified | Batch narrative by **majority**; sick days spent only while a streak runs; Rested untouched by shifts and switches; the +25 % only on open orders; *Take a job* completes on taking; dateline `{Weekday} · {D Month} · {City}`, no year | §3.3, §6.3, §9.1, §13.1, §13.7, §15.4 |
 
+**Added 29 Sep 2026 (QA fix round 1, `docs/design/slice-1-content.md` §13):**
+
+| Problem | Change | Section |
+|---|---|---|
+| ×3 training cost 126–138 Energy for the reference recruit, more than the bar ever holds, so the button could never be pressed | **Training has no batch**: ×1 only. Job shifts likewise. The cost per point is unchanged | §8.5, §13.1 |
+| §4.3 rule 2 ("one missed day can never break a streak") contradicted §9.1 (the third miss in a week ends it) | §4.3 rule 2 reworded to match §9.1: a single miss never breaks it, sick days cover two, the third ends it | §4.3 |
+| "2–3 lines" of narrative had no measure, and phones wrap the texts to 4–6 lines | Pinned: an outcome text is **at most 240 characters and four sentences** (about 45 words) | §1.2 |
+
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes.
 
 ---
@@ -89,7 +97,7 @@ Irongate City is a persistent browser RPG about **winning power, not fights**. T
 7. **Built for short sessions.** This is a browser game played for a few minutes, several times a day. Every system follows these rules:
    - **One tap or one choice** by default. Flows with several steps are rare, at most 3 steps, and can be resumed after closing the tab.
    - **Never require being online at a set time.** Anything scheduled (Campaign Events, elections, journeys) resolves without the player, and the result waits in the Morning Paper.
-   - **Short text.** Narrative is 2–3 lines; numbers are always visible.
+   - **Short text.** Narrative is 2–3 lines of copy: an outcome text is **at most 240 characters and four sentences** (about 45 words), which wraps to five or six lines on a phone. Numbers are always visible.
    - **One result, one modal.** No long screens to scroll through.
 
 ### 1.3 What makes Irongate different
@@ -267,7 +275,7 @@ All of these are **positive**: something to look forward to.
 ### 4.3 Rules we don't break
 
 1. **Being away never destroys what a player owns.** It costs opportunity only.
-2. **One missed day can never break a streak.**
+2. **A single missed day never breaks a streak.** Two sick days a week cover the first two misses (§9.1); only a third miss in the same week ends the streak, and the job is never lost.
 3. **Losses belong to competition.** Losing an election, an Issue or city control is fine: players had agency and it's part of the story.
 4. **Collective decay is acceptable.** City influence drifting back toward equilibrium is a problem for the faction, and it gives newcomers something to do.
 5. **Every timer is either a reward arriving or a choice to make.** None is a threat.
@@ -625,7 +633,7 @@ The reference recruit's home canvass is a **66 %** check (§8.4). Until the orig
 
 > **Energy for the next point = 20 + 2 × current stat.** Point 15 costs 50 Energy, point 30 costs 80, point 60 costs 140.
 
-**Training rules.** Training is **not a check**: it always succeeds, one tap gives +1 to the stat at once, and the modal shows one row ("no roll") and the stamp *Trained*. It pays **XP at half the tier rate** (2.25 per Energy at tier 1, so the reference recruit's first INT point is 44 Energy for 99 XP) and **no Iron, FXP or opinion**: the stat point is the reward. Rested applies to the XP. **×3** trains three points at the three rising costs and is disabled when Energy is short. Training does not count toward Local Standing. The button always shows the live cost.
+**Training rules.** Training is **not a check**: it always succeeds, one tap gives +1 to the stat at once, and the modal shows one row ("no roll") and the stamp *Trained*. It pays **XP at half the tier rate** (2.25 per Energy at tier 1, so the reference recruit's first INT point is 44 Energy for 99 XP) and **no Iron, FXP or opinion**: the stat point is the reward. Rested applies to the XP. **Training has no batch: ×1 only**, one point per tap (three points would cost 126–138 Energy for the reference recruit, more than the 100-Energy bar ever holds, and three points a session would overshoot the targets below). The training ticket shows one button with the live cost, and the *Trained* modal offers *Again ×1 · Continue*. Training does not count toward Local Standing.
 
 **Targets for a regular player's best stat** (training about 15 % of their Energy, plus level-ups):
 
@@ -789,13 +797,13 @@ Most of the time, spending Energy should be **fast**. A full bar of 100 Energy s
 
 | Tier | Share of content | How it plays | Examples |
 |---|---|---|---|
-| **1. Actions** | ~80 % | **One tap.** Resolves straight into a result modal (§13.1a). Repeatable ×1 / ×3 / ×5. **Never triggers an encounter**, except in an enemy home city (§14.12); a failure just pays less. | Canvass, paste posters, a street speech, work a shift, train, safe surveillance, buy a round |
+| **1. Actions** | ~80 % | **One tap.** Resolves straight into a result modal (§13.1a). Repeatable ×1 / ×3 / ×5 (checked actions only: training and job shifts are ×1, §8.5, §9.1). **Never triggers an encounter**, except in an enemy home city (§14.12); a failure just pays less. | Canvass, paste posters, a street speech, work a shift, train, safe surveillance, buy a round |
 | **2. Missions** | ~15 % | **One choice.** A short briefing with 2–3 approaches, each showing its stat check and success chance, then the result. The game **remembers your approach**, so after the first time a Repeat button makes it one tap. | Anything illegal (disruption, sabotage, extended surveillance), exposés, social events, bigger faction missions |
 | **3. Stories** | ~5 % | **2–3 short steps at most**: choices, an encounter, named NPCs, illustration. Always **resumable**: close the tab mid-story and it waits where you left it. | Ambition chapters, patron Requests, the origin story, encounters from tier 2 |
 
 **Rules that keep tier 1 fast:**
-- One tap resolves at once. **×3 and ×5** spend Energy in one go and show all the attempts in a single result. A batch rolls each attempt from one seed, shows one row per attempt and a "2 of 3" stamp, counts each row separately for Standing and Directives, and is **disabled when Energy is short** (no partial batch). ×3 ships in slice 1; ×5 later. **Batch text:** the stamp always reads *n of 3* (*3 of 3* and *0 of 3* included); the narrative is the action's **success text when more than half the rows succeeded** (×3: 2 or 3; ×5: 3 or more), otherwise its partial text. There is no third text: the rows carry the numbers.
-- The result modal's **Again ×1 / Again ×3** buttons let the player chain actions without going back to the location card.
+- One tap resolves at once. **×3 and ×5** spend Energy in one go and show all the attempts in a single result. A batch rolls each attempt from one seed, shows one row per attempt and a "2 of 3" stamp, counts each row separately for Standing and Directives, and is **disabled when Energy is short** (no partial batch). ×3 ships in slice 1; ×5 later. **Batch text:** the stamp always reads *n of 3* (*3 of 3* and *0 of 3* included); the narrative is the action's **success text when more than half the rows succeeded** (×3: 2 or 3; ×5: 3 or more), otherwise its partial text. There is no third text: the rows carry the numbers. **Training and job shifts have no batch** (§8.5, §9.1): their tickets show one button.
+- The result modal's **Again ×1 / Again ×3** buttons let the player chain actions without going back to the location card (after a *Trained* result: *Again ×1 · Continue*; after a shift: *Continue*).
 - Rested, Issue, weather and Directive bonuses are applied automatically and shown as small tags on the card.
 
 **Rules that give tier 2 weight:**

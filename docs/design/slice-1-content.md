@@ -47,7 +47,7 @@ Where the pins land on the art: 1 on the arched front of the big rolling shed wh
 - **One roll per attempt** (§8.4): Success at or below the shown chance, Partial otherwise. **Tier 1 never fails.**
 - **Rewards** at §5.5 rates: 4.5 XP, 0.6 FXP, 2 Iron and 0.005 opinion points per Energy on Success; half on Partial; nearest whole, halves up, per line; a paying line never drops below 1 on Partial. Opinion keeps three decimals.
 - **Two-stat checks** use the average of the two (§8.4). CHA is worn CHA (2 for the recruit).
-- **×1 / ×3** (§13.1): ×3 spends three times the Energy in one go, rolls three times from one seed, and shows three rows and an *n of 3* stamp. The narrative is the success text when 2 or 3 rows succeeded, the partial text when 0 or 1 did (§12, Q5). The ×3 button is disabled when Energy is short (tooltip "×3 needs 30 Energy"); there is no partial batch. ×5 is deferred to a later slice.
+- **×1 / ×3** (§13.1): ×3 spends three times the Energy in one go, rolls three times from one seed, and shows three rows and an *n of 3* stamp. The narrative is the success text when 2 or 3 rows succeeded, the partial text when 0 or 1 did (§12, Q5). The ×3 button is disabled when Energy is short (tooltip "×3 needs 30 Energy"); there is no partial batch. ×5 is deferred to a later slice. **Training and job shifts are ×1 only** (§13, item 2).
 - **Rested** (§6.3): per Energy point, +50 % XP and Iron on the covered points. Never FXP or opinion.
 - **Local Standing** (§13.4): +3 % per level on every checked action in Coalport. Every Success on a checked action counts one toward the next level (each row of a ×3 counts).
 - **Party Directives** (§6): +25 % FXP on a matching attempt, shown as a bonus line in the FXP tile.
@@ -93,7 +93,7 @@ Rewards are Success / Partial. "Std" = the stat(s) checked. E = Energy. Opinion 
 
 ### 2.3 Outcome text
 
-Two to three lines each. The Mill Gate canvass is the slice-0 text, unchanged.
+Two to three lines each: **at most 240 characters and four sentences** (GDD §1.2, pillar 7; the longest below is 231). The Mill Gate canvass is the slice-0 text, unchanged.
 
 #### Mill Gate
 
@@ -190,14 +190,14 @@ Two to three lines each. The Mill Gate canvass is the slice-0 text, unchanged.
 - Cost = **20 + 2 × the stat's current value** (INT 12 → 44 Energy; AGI 5 → 30; STR 10 → 40). The button shows the live cost.
 - **Always succeeds**, no roll: +1 to the stat at once. Stamp: *Trained*.
 - Pays **XP at half the tier rate** (2.25 per Energy: 99 XP for the recruit's first INT point), no Iron, no FXP, no opinion. Rested applies to the XP.
-- **×3** trains three points at the three rising costs (44 + 46 + 48 = 138 for INT) and is disabled when Energy is short.
+- **No ×3.** Training is ×1 only: the ticket shows one button with the live cost, and the *Trained* modal offers *Again ×1 · Continue*. (Three points would cost 44 + 46 + 48 = 138 Energy for INT, more than the bar holds; see §13, item 2.)
 - Training does not count toward Local Standing or Directive attempt counts, except the *Sharpen up* Directive (§6).
 - CHA is never trained (§8.5).
 
 ### 2.5 Level-ups (§5.3, built in slice 1)
 
 - Level = highest §5.3 threshold reached; one action can cross several.
-- Each level: +5 max HP (stored; Health is shown from slice 5) and **+1 stat point to STR or INT**, placed with **one tap** in the result modal's knock-on section (*Level 4 · place your point: STR / INT · later*) or from the HUD badge. Pending points never expire.
+- Each level: +5 max HP (derived from the level, not stored; Health is shown from slice 5) and **+1 stat point to STR or INT**, placed with **one tap** in the result modal's knock-on section (*Level 4 · place your point: STR / INT · later*) or from the HUD badge. Pending points never expire.
 - The modal stamp stays Success/Partial; the level-up is a knock-on line, not a second modal.
 
 ---
@@ -214,13 +214,19 @@ Three jobs are placed in slice 1. Daily pay is pinned to one figure each (the §
 
 Market trader (Level 3, INT 8) has a mini-game and is deferred with it.
 
+**Blurbs** (one line on the Jobs card, ≤ 160 characters; final text, §13 item 6):
+
+- **Street vendor** — Matches, bootlaces and yesterday's paper from a stall on Market Row. Nobody asks for a permit.
+- **Factory worker** — Eight hours on the rolling floor of the Coalport Steel Mill. Collective members draw a fifth more.
+- **Driver** — The dock lorry between the quay and the goods yard, a full load each way. Needs a quick hand on the cobbles.
+
 ### 3.1 Rules (pinned in §9.1)
 
 - **Taking a job:** at the job's location, a *Jobs* card lists the jobs there with pay and requirements. *Take the job* is free and one tap. **Switching** to another job costs 2 Energy, takes effect at once, and **resets the streak to 0**. Requirements are checked on taking, never again.
 - **Half pay at the day boundary:** at every 00:00 UTC the job held at that moment pays **50 % of daily pay**, whether or not the player logs in. A player away for a week gets seven half-pays, banked. A return credits **at most 14 half-pays** (§12, Q9); the job is kept. (Implementation may be lazy at next read or an Agenda job; the rule is per boundary crossed.)
 - **The shift:** once per City Day, at the job's location, for the listed Energy. It pays the **other 50 % plus the streak bonus**. Not a check: no roll, always paid, one outcome text. One shift per City Day regardless of job changes; a shift already worked today is not repeated for a new job.
 - **Streak:** consecutive City Days with a shift worked, counting today. **Bonus = 2 % × min(streak, 10) of daily pay**, paid with the shift (first shift +2 %, tenth and after +20 %; Factory worker at +20 % = +43 Iron).
-- **Sick days:** 2, refilled to 2 at the Monday 00:00 UTC boundary. A City Day without a shift **while a streak is running** spends one automatically and the streak survives (it neither grows nor breaks); at streak 0 nothing is spent (§12, Q1). A missed day with **no sick day left ends the streak** (back to 0); the job is never lost. In practice the streak only ends on the third missed day in a week, which keeps §4.3 rule 2 ("one missed day can never break a streak").
+- **Sick days:** 2, refilled to 2 at the Monday 00:00 UTC boundary. A City Day without a shift **while a streak is running** spends one automatically and the streak survives (it neither grows nor breaks); at streak 0 nothing is spent (§12, Q1). A missed day with **no sick day left ends the streak** (back to 0); the job is never lost. In practice the streak only ends on the third missed day in a week, which is what §4.3 rule 2 now says ("a single missed day never breaks a streak"; §13, item 3).
 - Shifts pay **no XP and no FXP** (§13.3). Rested is neither applied nor spent by a shift or a job switch (§12, Q2).
 - **Remote Work** (Premium) is not in slice 1.
 
@@ -323,19 +329,23 @@ First screen when the City Day has changed since the player last saw it, or afte
 | Coalport standing | {name} · {n} to {next} |
 | Yesterday | the Today tally for the previous City Day |
 
-### 7.4 Headline templates (11)
+### 7.4 Headline templates (15)
 
-Up to three per day: **at most two personal** (highest priority first), then **one city or ambient**. Each has a headline and a one-to-two-line deck. `{name}` is the character's name; the Collective's Rank 2 title is *Activist* (§5.4).
+Up to three per day: **at most two personal** (highest priority first), then **one city or ambient**. Each has a headline and a one-to-two-line deck. `{name}` is the character's name; `{rank}` is the character's **current** faction rank title (Collective: Recruit / Activist / Organiser / Commissar / Delegate / Comrade-General / Chairman, §5.4), never a hard-coded word. Where a template has variants, exactly one of them can match on a given morning.
 
 | Id | Priority | Condition | Headline | Deck |
 |---|---|---|---|---|
 | `hl.first-day` | 1 | First paper ever | Welcome to Coalport | Your branch secretary has three orders for you below. Spend your Energy; it refills, five points every ten minutes. |
-| `hl.rank-up` | 2 | Rank rose since last paper | {name} Made Activist by the Branch | Recruits become Activists on the strength of their party work. The vote follows. |
-| `hl.level-up` | 3 | Level rose since last paper | Coalport Recruit Rises to Level {level} | {name} of the Collective spent {energy} Energy on the ward yesterday. The branch has noticed. |
+| `hl.rank-up-2` | 2 | Rank rose since last paper, to Rank 2 | {name} Made Activist by the Branch | Recruits become Activists on the strength of their party work. The vote follows. |
+| `hl.rank-up-3` | 2 | Rank rose since last paper, to Rank 3 | {name} Made Organiser by the Branch | An Organiser can stand for the council. Secretary Holm: "Now the real work starts." |
+| `hl.rank-up` | 2 | Rank rose since last paper, to Rank 4 or higher | {name} Made {rank} by the Branch | Made {rank} on the strength of party work. The branch takes note. |
+| `hl.level-up` | 3 | Level rose since last paper, and Energy was spent yesterday (≥ 1) | Coalport {rank} Rises to Level {level} | {name} of the Collective spent {energyYesterday} Energy on the ward yesterday. The branch has noticed. |
+| `hl.level-up-quiet` | 3 | Level rose since last paper, and no Energy was spent yesterday | Coalport {rank} Rises to Level {level} | {name} of the Collective has been putting the hours in on the ward. The branch has noticed. |
 | `hl.standing` | 4 | Standing level rose | A {Familiar / Known / Trusted} Face in Coalport | Coalport knows {name} now: {standing}. Actions here get +{bonus} %. |
 | `hl.orders-done` | 5 | All three Directives done yesterday | Branch Praises Its Canvassers | Every order carried out yesterday. Secretary Holm: "That's how it's done." +5 Political Capital banked. |
-| `hl.streak` | 6 | Streak reached 5 or 10 yesterday | {Five / Ten} Straight Shifts at the Mill | {name} has not missed a shift in {n} days. Pay is up {bonus} %. |
-| `hl.away` | 7 | 2 or more City Days since last paper | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. *({days} is the number credited, at most 14; §12, Q9)* |
+| `hl.streak` | 6 | Streak reached 5 or 10 yesterday | {Five / Ten} Straight Shifts and Counting | {name} has not missed a shift in {n} days. Pay is up {bonus} %. |
+| `hl.away` | 7 | 2 or more City Days since last paper, and at least one half-pay credited since then | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. *({days} is the number credited, at most 14; §12, Q9)* |
+| `hl.away-no-job` | 7 | 2 or more City Days since last paper, and no half-pay credited (no job) | While You Were Away | No job, so no half pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate. |
 | `hl.idle` | 8 | Seen yesterday, no actions yesterday | Quiet Day in the Ward | No leaflets went out yesterday. Today's orders are below. |
 | `hl.morale` | city | Always | Collective Holds Coalport at {share} % | Fired up (≥ 80): *The mill is singing.* · Steady (60–79): *"Steady," says the branch. Steady isn't enough.* · Unrest (< 60): *Unrest in Coalport: dockers question the party.* |
 | `hl.orders-call` | city | Always (used when no personal headline qualifies) | Secretary Holm Calls for {slot-A title} | {Holm's line for slot A} |
@@ -437,11 +447,15 @@ British English, no exclamation marks, times in the **player's local clock** (th
 |---|---|---|
 | Action ticket, ×1 button | Not enough Energy for the cost | **Needs 10 Energy · ready at 14:20** ({hh:mm} = when Energy reaches the cost; the same string at 0 Energy) |
 | HUD Energy | Below 100 | **37 / 100 · full at 17:40** (already the desk's row; at 100: **100 / 100 · Rested 60**) |
-| Action ticket, ×3 button (tooltip / hint) | Energy short of three times the cost | **×3 needs 30 Energy** (training: **×3 needs 138 Energy**) |
+| Action ticket, ×3 button (tooltip / hint) | Energy short of three times the cost | **×3 needs 30 Energy** (training tickets have no ×3 button; §13, item 2) |
 | Result modal, *Again ×3* | Same | Same tooltip; *Again ×1* shows **Needs 10 Energy · ready at 14:20** when short |
 | Shift ticket | Shift worked today | **Shift worked · next at 01:00** ({hh:mm} = the next 00:00 UTC, local) |
 | Shift ticket | Player holds a different job | **Not your job · see the Jobs card** (disabled) |
 | Shift ticket | Player holds no job | **No job yet · take one below** (disabled) |
+| Me tab, job card | Player holds no job | **No job yet · take one at Mill Gate, Market Row or Harbour Quays** (the places with a Jobs card in the home city, in pin order; §13, item 7) |
+| App shell banner | The paper is due | **The Clarion is in** (the city paper's short name; §13, item 7) |
+| Sign-up page | Heading | **Join the campaign** (button **Sign up**, link **Sign in**; §13, item 4) |
+| Sign-in page | Heading | **Sign in** (button **Sign in**, link **Sign up**) |
 | Jobs card, a job the player can take, no job held | Enabled | Button **Take the job** · subline **216 a day · half at midnight, half for the shift** |
 | Jobs card, a job the player can take, another job held | Enabled | Button **Switch · 2 Energy · streak resets** (no confirm dialog; the button carries the warning) |
 | Jobs card, the job the player holds | — | **Your job · streak 4 days · 2 sick days left** (no button) |
@@ -472,3 +486,96 @@ British English, no exclamation marks, times in the **player's local clock** (th
 | Appendix C | New #17: the 14-half-pay cap, to revisit with the Welcome Back package |
 
 Companion edits: `docs/economy.md` §11 (the windfall arithmetic); this document's §2.1, §3.1, §6.4, §7.1 and `hl.away` now point here.
+
+---
+
+## 13. QA fix round 1 — design answers
+
+Game designer, 29 Sep 2026, to `docs/qa/slices-0-1.md` (m1, m4, n1–n5, n9, n10 and the §4 disagreements table). Every string below is final and already written into the section it belongs to (§2.4, §3, §7.4, §12.1); this section is the record of the decision. Placeholders in `{braces}` are filled by the server. British English, no exclamation marks.
+
+| # | Item | Decision |
+|---|---|---|
+| 1 | m1: `hl.away` with no job | Two variants on one headline, chosen by whether any half-pay was credited. No headline is never right: the paper should always acknowledge an absence |
+| 2 | m4: ×3 training | **Removed.** Training is ×1 only; cost per point unchanged. GDD §8.5, §13.1 |
+| 3 | §4.3 rule 2 vs §9.1 | §9.1 and the code are right. §4.3 reworded |
+| 4 | "Join the struggle" | **Join the campaign.** Sign-in heading stays **Sign in**. Both strings move to `copy.ts` |
+| 5 | Headline nits n1, n2 | Real rank title in both headlines; per-rank decks for Ranks 2 and 3 with a fallback; a "quiet" level-up deck when no Energy was spent yesterday |
+| 6 | Job blurbs | Accepted with one added sentence each; final text in §3 |
+| 7 | n3, n4, n5, n9, n10, the `hl.streak` headline, "+5 max HP (stored)" | Answered below |
+
+### 13.1 m1 — While You Were Away, with and without a job
+
+The condition is **"at least one half-pay was credited since the last paper"**, not "holds a job": it is the credited count that the deck prints, and it stays correct if a later rule ever pays nothing for a held job. Both fire only after 2 or more City Days since the last paper; exactly one can match.
+
+| Id | Condition | Headline | Deck |
+|---|---|---|---|
+| `hl.away` | 2+ City Days since last paper **and** half-pays credited ≥ 1 | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. |
+| `hl.away-no-job` | 2+ City Days since last paper **and** half-pays credited = 0 | While You Were Away | No job, so no half pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate. |
+
+`{days}` is always ≥ 2 when `hl.away` fires (two boundaries with a job held), so the plural needs no guard. "The mill is still hiring" points at the Factory worker, the job every Coalport recruit should take (§3).
+
+### 13.2 m4 — training is ×1 only
+
+- **Rule (GDD §8.5, §13.1):** training and job shifts have no batch. The training ticket shows one button with the live cost (*44 Energy*); the *Trained* modal's buttons are **Again ×1 · Continue**. The `×3 needs 138 Energy` hint is gone with the button.
+- **Why not a cheaper or smaller batch:** max Energy is 100 for good (Premium 120, §6.2), so any three-point batch is unreachable for INT and STR from the first point (126 and 138 Energy) and for AGI past 5 (96 at AGI 5, 102 at 6). A "partial batch" would contradict §13.1's "no partial batch" for every other ticket. Cutting the cost per point to fit three in a bar would triple the training rate and overshoot the §8.5 targets that Appendix C #15 already flags as generous. One point per tap, about one point a day for the reference player (`docs/economy.md` §4), is the cadence the economy sheet was built on; nothing there changes.
+- **Same-day test reads:** the level-up point (§2.5) is still the fast way to grow a stat; training is the deliberate one.
+
+### 13.3 §4.3 rule 2 — reworded
+
+GDD §4.3 rule 2 now reads: *"A single missed day never breaks a streak. Two sick days a week cover the first two misses (§9.1); only a third miss in the same week ends the streak, and the job is never lost."* §9.1 is unchanged; §3.1 above now quotes the new wording.
+
+### 13.4 n5 — the sign-up heading
+
+"Struggle" is the Collective's own idiom ("the struggle") and it is conflict framing; the sign-up page is faction-neutral and the game's frame is a campaign. Final copy, to live in `packages/content/src/data/copy.ts` (`signupTitle`, `loginTitle`), not in the client:
+
+| Page | Heading | Button | Link |
+|---|---|---|---|
+| Sign-up | **Join the campaign** | Sign up | Sign in |
+| Sign-in | **Sign in** | Sign in | Sign up |
+
+### 13.5 n1, n2 — level-up and rank-up headlines
+
+`{rank}` is the character's current Collective rank title from §5.4 (Recruit / Activist / Organiser / Commissar / Delegate / Comrade-General / Chairman), passed by the server; no headline hard-codes a title. `{energyYesterday}` is the previous City Day's Energy from the Today tally (§5).
+
+| Id | Priority | Condition | Headline | Deck |
+|---|---|---|---|---|
+| `hl.rank-up-2` | 2 | Rank rose since last paper, new rank = 2 | {name} Made Activist by the Branch | Recruits become Activists on the strength of their party work. The vote follows. |
+| `hl.rank-up-3` | 2 | Rank rose since last paper, new rank = 3 | {name} Made Organiser by the Branch | An Organiser can stand for the council. Secretary Holm: "Now the real work starts." |
+| `hl.rank-up` | 2 | Rank rose since last paper, new rank ≥ 4 | {name} Made {rank} by the Branch | Made {rank} on the strength of party work. The branch takes note. |
+| `hl.level-up` | 3 | Level rose since last paper, Energy spent yesterday ≥ 1 | Coalport {rank} Rises to Level {level} | {name} of the Collective spent {energyYesterday} Energy on the ward yesterday. The branch has noticed. |
+| `hl.level-up-quiet` | 3 | Level rose since last paper, Energy spent yesterday = 0 | Coalport {rank} Rises to Level {level} | {name} of the Collective has been putting the hours in on the ward. The branch has noticed. |
+
+Only one rank-up and one level-up variant can match on a morning, so the two-personal-headline cap is unaffected. The quiet variant also covers the same-day paper (3 hours after the last action) on a player's first day, when there is no yesterday.
+
+### 13.6 Job blurbs (final)
+
+The developer's three lines were right in substance; each gets one short second sentence that tells the player why they might want the job. ≤ 160 characters each (schema).
+
+| Job | Blurb |
+|---|---|
+| Street vendor | Matches, bootlaces and yesterday's paper from a stall on Market Row. Nobody asks for a permit. |
+| Factory worker | Eight hours on the rolling floor of the Coalport Steel Mill. Collective members draw a fifth more. |
+| Driver | The dock lorry between the quay and the goods yard, a full load each way. Needs a quick hand on the cobbles. |
+
+### 13.7 Other nits
+
+| Nit | Decision |
+|---|---|
+| **n3** banner copy | **The Clarion is in.** The city paper gets a `shortName` in content (`Clarion`; provisional `Gazette`, `Sentinel`, `Courier`, `Herald` for the others) and the banner is `The {shortName} is in`. Tech design §10.1 was right; content is data |
+| **n4** Me tab job card | New copy key, not the shift ticket's string: **No job yet · take one at Mill Gate, Market Row or Harbour Quays**. The list is every location in the home city with a Jobs card, in pin order, joined with commas and a final "or", so it needs no code when a job moves |
+| **n9** text length | Rule pinned in GDD §1.2: an outcome text is ≤ 240 characters and ≤ 4 sentences. All 36 slice-1 texts already comply (123–231 characters). No rewrite before the playtest; checklist question 3 ("do they scroll the modal or hit Continue without reading") decides whether to trim later |
+| **n10** 8–10 px caps labels | No content change; a UI readability watch item for the playtest (checklist question 6). If testers say "too small", the developer raises the floor to 10 px |
+| `hl.streak` headline (found in review) | "…at the Mill" was wrong for the Street vendor and the Driver. Headline now **Five Straight Shifts and Counting** / **Ten Straight Shifts and Counting**; the deck is unchanged and job-neutral |
+| QA §4 "+5 max HP (stored)" | Tech design is right: derived from the level, not stored. §2.5 corrected |
+
+### 13.8 GDD edits made in this change
+
+| Section | Edit |
+|---|---|
+| §0 | "Added 29 Sep 2026 (QA fix round 1)" change table |
+| §1.2 pillar 7 | "Short text" pinned: ≤ 240 characters and ≤ 4 sentences, about 45 words |
+| §4.3 | Rule 2 reworded to agree with §9.1 |
+| §8.5 | Training has no batch; the *Trained* modal offers Again ×1 · Continue |
+| §13.1 | Repeatable ×1 / ×3 / ×5 applies to checked actions only; training and shifts ×1; the modal's buttons after a Trained or Shift result |
+
+Companion edits: `docs/economy.md` §1 (training row); this document's §2.1, §2.3, §2.4, §2.5, §3, §3.1, §7.4 and §12.1.
