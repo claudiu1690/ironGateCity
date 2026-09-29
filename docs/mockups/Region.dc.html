@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Region map — desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=Oswald:wght@400;500;600&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#15181A}
+:root{--ink:#15181A;--ink2:#23282B;--paper:#EFE6D2;--paper2:#E2D6BB;--petrol:#1E4D52;--energy:#6FB3B0;--hp:#D96B4B;--v:#C39A3A;--c:#8C2B23;--a:#4B7394;--n:#8A8577;--muted:#B8B09F}
+.lbl{font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.14em}
+.plate{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;background:none;border:0;padding:0;cursor:pointer;color:var(--paper)}
+.plate-box{background:var(--ink);border:1.5px solid var(--paper);box-shadow:0 0 0 3px var(--ink),0 6px 18px rgba(0,0,0,.45);padding:8px 12px 7px;min-width:132px;display:flex;flex-direction:column;gap:5px}
+.plate-sel .plate-box{background:var(--paper);color:var(--ink);border-color:var(--ink);box-shadow:0 0 0 3px var(--paper),0 8px 24px rgba(0,0,0,.55)}
+.plate-name{font-family:Oswald,sans-serif;font-weight:600;font-size:17px;letter-spacing:.16em;text-transform:uppercase;line-height:1}
+.plate-meta{font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:.04em;opacity:.8;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.plate-bar{display:flex;height:5px;gap:1px;width:100%}
+.plate-stem{width:2px;height:16px;background:var(--paper)}
+.plate-dot{width:12px;height:12px;border-radius:50%;background:var(--paper);border:3px solid var(--ink);margin-top:-1px}
+.plate-sel .plate-stem,.plate-sel .plate-dot{background:var(--paper)}
+.badge{font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;display:inline-flex;gap:4px;align-items:center}
+.gauge-track{height:6px;background:#3A4043;width:100%}
+.dock-btn{display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;padding:9px 0 8px;color:var(--paper);text-decoration:none;font-family:Oswald,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;position:relative}
+.dock-on{background:var(--paper);color:var(--ink)}
+.btn-primary{display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:var(--paper);border:0;padding:14px 16px;font-family:Oswald,sans-serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;min-height:48px}
+.btn-secondary{display:flex;justify-content:center;align-items:center;background:transparent;color:var(--ink);border:1.5px solid var(--ink);padding:12px 16px;font-family:Oswald,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;min-height:44px}
+a{color:#8C2B23}a:hover{color:#5f1c16}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #15181A; font-family: 'Source Serif 4', Georgia, serif; color: #EFE6D2">
+
+<div style="position: absolute; left: 0; top: 64px; width: 1440px; height: 806px; overflow: hidden">
+<div style="position: absolute; left: 0; top: -2px; width: 1440px; height: 810px">
+<img src="{{mapSrc}}" alt="Illustrated map of the whole republic: five small cities far apart, joined by long railways" style="width: 1440px; height: 810px; display: block">
+<sc-for list="{{cities}}" as="c" hint-placeholder-count="5">
+<button type="button" class="{{c.plateClass}}" style="left: {{c.left}}; top: {{c.top}}" onClick="{{c.pick}}" aria-pressed="{{c.selected}}">
+<span class="plate-box">
+<span style="display: flex; justify-content: space-between; align-items: center; gap: 10px">
+<span class="plate-name">{{c.name}}</span>
+<sc-if value="{{c.votesToday}}" hint-placeholder-val="{{false}}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-label="Votes today"><rect x="4" y="10" width="16" height="10" rx="1"></rect><path d="M8 10V4h8v6M10 7h4"></path></svg>
+</sc-if>
+</span>
+<span class="plate-bar">
+<span style="width: {{c.vw}}; background: #C39A3A"></span>
+<span style="width: {{c.cw}}; background: #8C2B23"></span>
+<span style="width: {{c.aw}}; background: #4B7394"></span>
+<span style="width: {{c.nw}}; background: #8A8577"></span>
+</span>
+<span class="plate-meta"><span>{{c.control}}</span><span>{{c.fare}}</span></span>
+</span>
+<span class="plate-stem"></span>
+<span class="plate-dot"></span>
+</button>
+</sc-for>
+</div>
+<div style="position: absolute; left: 20px; bottom: 16px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; background: rgba(21,24,26,.82); padding: 10px 14px">
+<span class="lbl" style="font-size: 11px; color: #EFE6D2; text-shadow: 0 1px 3px #000">The Republic · 5 cities</span>
+<span style="font-family: 'Playfair Display', serif; font-style: italic; font-weight: 700; font-size: 21px; color: #EFE6D2">National control: Vanguard 31 · Collective 30 · Alliance 30</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px; color: #EFE6D2; text-shadow: 0 1px 3px #000">Choose a city to open its file</span>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; top: 0; width: 1440px; height: 64px; background: #15181A; border-bottom: 1px solid #3A4043; display: flex; align-items: center; gap: 28px; padding: 0 24px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 12px; width: 250px">
+<img src="/_blob/64689c170d636886b2f7e8180d2d0c91" alt="Portrait of Mara Lenk" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: 50% 22%; border: 2px solid #8C2B23; box-shadow: 0 0 0 2px #15181A, 0 0 0 3px #EFE6D2">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px; line-height: 1">Mara Lenk</span>
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Organiser · Red Collective · Lv 14</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 150px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl" style="font-size: 10px; color: #B8B09F; display: flex; gap: 5px; align-items: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#D96B4B" stroke-width="2.4" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"></path></svg>Health</span><span style="font-family: Oswald, sans-serif; font-size: 12px">142 / 165</span></div>
+<div class="gauge-track"><div style="width: 86%; height: 6px; background: #D96B4B"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 190px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl" style="font-size: 10px; color: #B8B09F; display: flex; gap: 5px; align-items: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6FB3B0" stroke-width="2.4" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>Energy</span><span style="font-family: Oswald, sans-serif; font-size: 12px">64 / 100 <span style="color: #6FB3B0">· Rested 120</span></span></div>
+<div class="gauge-track"><div style="width: 64%; height: 6px; background: #6FB3B0"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 110px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl" style="font-size: 10px; color: #B8B09F; display: flex; gap: 5px; align-items: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C39A3A" stroke-width="2.4" aria-hidden="true"><path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"></path></svg>Heat</span><span style="font-family: Oswald, sans-serif; font-size: 12px">18 · Cool</span></div>
+<div style="display: flex; gap: 2px"><span style="flex-grow: 1; height: 6px; background: #C39A3A"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span></div>
+</div>
+<div style="display: flex; gap: 20px; align-items: center">
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">Iron Marks</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">4,210</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">Pol. Capital</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">86</span></div>
+</div>
+<div style="margin-left: auto; display: flex; align-items: center; gap: 14px; text-align: right">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Wednesday · Day 17 · Summer</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">{{clock}} · Irongate · {{weather}}</span>
+</div>
+</div>
+</div>
+
+<sc-if value="{{hasSel}}" hint-placeholder-val="{{false}}">
+<div style="{{cardStyle}}">
+<div style="background: #EFE6D2; color: #15181A; box-shadow: 0 0 0 1px #15181A, 0 18px 40px rgba(0,0,0,.5); display: flex; flex-direction: column">
+<div style="padding: 20px 22px 16px; border-bottom: 2px solid #15181A; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span class="lbl" style="font-size: 11px; color: #5b564b">City file · {{cur.num}}</span>
+<span style="display: flex; gap: 10px; align-items: center"><span class="badge" style="color: {{cur.stampColor}}; transform: rotate(-3deg)">{{cur.stamp}}</span><button type="button" onClick="{{close}}" aria-label="Close city file" style="width: 32px; height: 32px; border: 1.5px solid #15181A; background: transparent; color: #15181A; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></span>
+</div>
+<h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 40px; line-height: 1">{{cur.name}}</h2>
+<p style="margin: 0; font-size: 14px; line-height: 1.45; color: #3d3a33">{{cur.blurb}}</p>
+</div>
+<div style="padding: 14px 22px; display: flex; flex-direction: column; gap: 9px; border-bottom: 1px solid #b9ad91">
+<span class="lbl" style="font-size: 11px; color: #5b564b">Public opinion</span>
+<div style="display: flex; height: 10px; gap: 2px">
+<span style="width: {{cur.vw}}; background: #C39A3A"></span>
+<span style="width: {{cur.cw}}; background: #8C2B23"></span>
+<span style="width: {{cur.aw}}; background: #4B7394"></span>
+<span style="width: {{cur.nw}}; background: #8A8577"></span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; font-family: Oswald, sans-serif; font-size: 13px">
+<span style="display: flex; justify-content: space-between"><span style="display: flex; gap: 6px; align-items: center"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect width="10" height="10" fill="#C39A3A"></rect></svg>Vanguard</span><span>{{cur.v}}%</span></span>
+<span style="display: flex; justify-content: space-between"><span style="display: flex; gap: 6px; align-items: center"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#8C2B23"></circle></svg>Collective</span><span>{{cur.c}}%</span></span>
+<span style="display: flex; justify-content: space-between"><span style="display: flex; gap: 6px; align-items: center"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 10 10H0z" fill="#4B7394"></path></svg>Alliance</span><span>{{cur.a}}%</span></span>
+<span style="display: flex; justify-content: space-between; color: #5b564b"><span style="display: flex; gap: 6px; align-items: center"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="none" stroke="#8A8577" stroke-width="2"></rect></svg>Neutral</span><span>{{cur.n}}%</span></span>
+</div>
+</div>
+<div style="padding: 14px 22px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #b9ad91">
+<span class="lbl" style="font-size: 11px; color: #5b564b">Issues this week</span>
+<sc-for list="{{cur.issues}}" as="is" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 17px">{{is.name}}</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #3d3a33">{{is.lead}}</span>
+</div>
+<div style="height: 4px; background: #d3c7ab"><div style="height: 4px; width: {{is.mom}}; background: {{is.color}}"></div></div>
+</div>
+</sc-for>
+</div>
+<div style="padding: 14px 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; border-bottom: 1px solid #b9ad91">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span class="lbl" style="font-size: 11px; color: #5b564b">Council vote</span>
+<span style="font-family: Oswald, sans-serif; font-size: 16px; font-weight: 500">{{cur.vote}}</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span class="lbl" style="font-size: 11px; color: #5b564b">Your mark here</span>
+<span style="font-family: Oswald, sans-serif; font-size: 16px; font-weight: 500">{{cur.mark}}</span>
+</div>
+</div>
+<div style="padding: 16px 22px 20px; display: flex; flex-direction: column; gap: 10px">
+<a href="{{ctaHref}}" class="btn-primary" style="text-decoration: none"><span>{{cur.cta}}</span><span style="display: flex; gap: 6px; align-items: center; color: #6FB3B0; font-size: 12px">{{cur.ctaCost}}</span></a>
+<button type="button" class="btn-secondary">Open city map</button>
+</div>
+</div>
+</div>
+
+</sc-if>
+<div style="position: absolute; left: 720px; bottom: 44px; transform: translateX(-50%); display: flex; background: #15181A; box-shadow: 0 0 0 1px #EFE6D2, 0 10px 30px rgba(0,0,0,.5)">
+<a href="Region.dc.html" class="dock-btn dock-on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"></path></svg>Map</a>
+<a href="MobilePaper.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"></rect><path d="M7 8h10M7 12h6M7 16h6M15 12h2v4h-2z"></path></svg>Paper<span style="position: absolute; top: 5px; right: 18px; background: #8C2B23; color: #EFE6D2; font-size: 10px; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; letter-spacing: 0">3</span></a>
+<a href="City.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3z"></path></svg>Dossier</a>
+<a href="MobileEvent.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 21V4h11l-2 4 2 4H5"></path></svg>Faction</a>
+<a href="Main.dc.html" class="dock-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>Profile</a>
+</div>
+
+<div style="position: absolute; left: 0; bottom: 0; width: 1440px; height: 30px; background: #EFE6D2; color: #15181A; display: flex; align-items: center; gap: 18px; padding: 0 20px; box-sizing: border-box; overflow: hidden; white-space: nowrap">
+<span class="lbl" style="font-size: 11px; font-weight: 600; background: #15181A; color: #EFE6D2; padding: 3px 8px">The Herald</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">Duskwall votes today — polls close at midnight</span>
+<span style="color: #8C2B23">■</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">Coalport mill strike enters its third day</span>
+<span style="color: #8C2B23">■</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">Universal Care Act passes the Legislature, 34 to 26</span>
+<span style="color: #8C2B23">■</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">Clearwater declared a battleground</span>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"time":{"editor":"enum","options":["day","night"],"default":"day"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: null };
+  }
+  renderVals() {
+    const night = (this.props.time ?? 'day') === 'night';
+    const V = '#C39A3A', C = '#8C2B23', A = '#4B7394';
+    const data = [
+      { id: 'ashford', num: '02', name: 'Ashford', x: 0.14, y: 0.16, v: 14, c: 18, a: 61, n: 7, control: 'Alliance 61%', fare: '12 min', stamp: 'Alliance held', stampColor: A, votesToday: false,
+        blurb: 'University town of courts, lecture halls and printing presses. The Alliance has held it since the war.',
+        issues: [{ name: 'University Protests', lead: 'Collective leads', mom: '55%', color: C }, { name: 'Corruption Scandal', lead: 'Alliance leads', mom: '40%', color: A }],
+        vote: 'In 4 days', mark: '31st of 40', cta: 'Board the 14:30', ctaCost: '12 min · 20 Iron' },
+      { id: 'duskwall', num: '04', name: 'Duskwall', x: 0.86, y: 0.27, v: 66, c: 12, a: 15, n: 7, control: 'Vanguard 66%', fare: '15 min', stamp: 'Votes today', stampColor: C, votesToday: true,
+        blurb: 'Garrison city on the border. Checkpoints, curfews and the state archives. Collective organisers keep their heads down here.',
+        issues: [{ name: 'Border Incident', lead: 'Vanguard leads', mom: '72%', color: V }, { name: 'Crime Wave', lead: 'Alliance leads', mom: '35%', color: A }],
+        vote: 'Today · until 24:00', mark: 'Not ranked', cta: 'Board the 14:45', ctaCost: '15 min · 20 Iron · checkpoint' },
+      { id: 'irongate', num: '01', name: 'Irongate', x: 0.504, y: 0.40, v: 32, c: 30, a: 29, n: 9, control: '5 districts', fare: 'You are here', stamp: 'Capital', stampColor: '#15181A', votesToday: false,
+        blurb: 'The capital: Parliament, the Herald and every faction’s HQ. Split into five districts, each fought over on its own.',
+        issues: [{ name: 'Tram Fare Hike', lead: 'Alliance leads', mom: '48%', color: A }, { name: 'Press Censorship', lead: 'Vanguard leads', mom: '41%', color: V }],
+        vote: 'In 3 days', mark: '12th of 88', cta: 'Enter Irongate', ctaCost: 'You are here' },
+      { id: 'coalport', num: '03', name: 'Coalport', x: 0.22, y: 0.76, v: 17, c: 58, a: 19, n: 6, control: 'Collective 58%', fare: '12 min', stamp: 'Home city', stampColor: C, votesToday: false,
+        blurb: 'Steel, coal and the docks. Your home city, and the Collective’s stronghold. The mill has been on strike for three days.',
+        issues: [{ name: 'Strike at the Mill', lead: 'Collective leads', mom: '81%', color: C }, { name: 'Bread Prices', lead: 'Vanguard leads', mom: '52%', color: V }],
+        vote: 'Tomorrow', mark: '3rd of 57', cta: 'Board the 14:30', ctaCost: '12 min · 20 Iron' },
+      { id: 'clearwater', num: '05', name: 'Clearwater', x: 0.905, y: 0.76, v: 31, c: 27, a: 33, n: 9, control: 'Contested', fare: '25 min', stamp: 'Battleground', stampColor: C, votesToday: false,
+        blurb: 'Lakeside villas above, crowded worker terraces below. The swing city. Influence here counts for 25% more this cycle.',
+        issues: [{ name: 'Housing Shortage', lead: 'Collective leads', mom: '46%', color: C }, { name: 'Tram Fare Hike', lead: 'Alliance leads', mom: '44%', color: A }],
+        vote: 'In 2 days', mark: '4th of 61 · +2.3%', cta: 'Board the 14:50', ctaCost: '25 min · 20 Iron' }
+    ];
+    const sel = this.state.sel;
+    const cities = data.map((d) => ({
+      ...d,
+      left: (d.x * 100) + '%', top: (d.y * 100) + '%',
+      vw: d.v + '%', cw: d.c + '%', aw: d.a + '%', nw: d.n + '%',
+      selected: d.id === sel,
+      plateClass: d.id === sel ? 'plate plate-sel' : 'plate',
+      pick: () => this.setState({ sel: this.state.sel === d.id ? null : d.id })
+    }));
+    const found = cities.find((c) => c.id === sel);
+    const cur = found || cities[2];
+    const side = found && found.x > 0.5 ? 'left: 20px' : 'right: 20px';
+    return {
+      cities,
+      cur,
+      hasSel: !!found,
+      close: () => this.setState({ sel: null }),
+      cardStyle: 'position: absolute; top: 84px; width: 340px; ' + side,
+      mapSrc: night ? '/_blob/2c4829c8d0261cd0b80f18b70632e68a' : '/_blob/a55fb3a38d61b96e0fe443309ad7c1c3',
+      ctaHref: cur.id === 'irongate' ? 'Capital.dc.html' : 'MobileJourney.dc.html',
+      clock: night ? '21:40' : '14:20',
+      weather: night ? 'Clear night 14°' : 'Clear 21°'
+    };
+  }
+}
+</script>
+</body>
+</html>

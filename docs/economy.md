@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Grows one slice ahead of the build |
-| **Sources** | GDD §5.2–5.5, §6.2–6.3, §8.4–8.5, §9, §13.3–13.4, §14.2, §15.4, §18; content in `docs/design/slice-1-content.md` |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Grows one slice ahead of the build |
+| **Sources** | GDD §5.2–5.5, §6.2–6.3, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §15.4, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 29 Sep 2026 |
+| **Updated** | 29 Sep 2026 (slice-2 §13 added) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -168,7 +168,7 @@ FXP per day at steady state: casual ~160 · reference ~205 · regular ~265 · he
 
 | Milestone | Target | Model | Verdict |
 |---|---|---|---|
-| **Rank 2: vote** | day 2 | reference: 390 at the end of day 2, i.e. **the morning of day 3** at 400; with the origin story's +50 FXP seed (slice 2) it is day 2 | ✓ once slice 2 lands; at the old 500 threshold it was day 3 even with the seed, which is why Rank 2 was lowered |
+| **Rank 2: vote** | day 2 | reference: 390 at the end of day 2 on tier-1 play alone; with slice 2's +50 FXP seed and the 30 FXP of chapter 1 (§13) it is **about 475, during day 2** | ✓ from slice 2; at the old 500 threshold it was day 3 even with the seed, which is why Rank 2 was lowered |
 | Rank 3: stand for council | ~day 10 | reference day 10, regular day 8 | ✓ |
 | Rank 4: Faction Chair | ~week 4 | regular day 24; reference ~day 33 at tier-1 rates only | ✓ for the regular; the reference needs tier-2 FXP (0.8/E) and Campaign Events, both in by then |
 | Rank 5 | ~week 8 | out of scope for tier-1 rates | — |
@@ -227,4 +227,59 @@ Nothing in slice 1 needs the player at a set time: Directives refresh at 00:00 U
 | 14 | Heavy players level ~35 % faster than the reference | Content tiers feel short for the most engaged | Level table, after slice-3 telemetry |
 | 15 | Level-up stat points alone meet the §8.5 targets; training overshoots | Tier-2 difficulties set against inflated stats | Reconcile §8.5 before slice 5 |
 | 16 | No opinion drift in slice 1 | Coalport pins at 95 % during a long playtest | Lazy drift at the boundary if cheap; else accept |
-| — | Iron has no sink | None in slice 1 | Slice 2 (outfit, lodging) |
+| 18 | The welcome set belongs to the City Day of creation | A 23:50 UTC sign-up gets ten minutes of it | Extend to day 2 when day 1 was under two hours, if the playtest shows it |
+| 20 | Chapter 1 can end in Failure on a player's first hour | Read as "I failed the tutorial" | Drop the Failure band for chapter 1, not the difficulty |
+| — | Iron has no sink | None in slices 1–2 (the outfit is given, not sold) | Slice 4 (tickets), slice 8 (wardrobe, the flat) |
+
+---
+
+## 13. Slice 2: what the first day adds
+
+Slice 2 adds no rate and no sink. It adds three one-off sums on day 1 and a choice that moves the CHA odds. The reference player of §3–§7 is unchanged; the figures below are the deltas.
+
+### 13.1 Starting values by origin answer
+
+| Answer | Reference recruit | Range across answers |
+|---|---|---|
+| Stats (§8.5) | STR 10 / INT 12 / AGI 5 | best stat 10–16; the other two 5–8 |
+| Worn CHA | 2 (coat refused) | 2 (refused) · 5 (accepted) · 6 (promised: coat 5 + base 1); up to 9 with *talked them out* and *read people* on top |
+| Iron | 150 (refused) | 0 or 150 |
+| FXP | 50 (the wish matched the faction) | 0 or 50 |
+
+**What the coat is worth.** The CHA+INT actions are a third of each home city's checks (Coalport 4 of 15, Duskwall 3 of 15, Ashford 6 of 16). For the reference recruit they sit at 46 %; coat A lifts them to 52 %, coat C to 54 %, which is +0.03 to +0.04 on the expected reward factor of those actions (0.73 → 0.76 / 0.77) and about **+3 % of a day's XP** for a player who spreads their Energy. Refusing the coat is 150 Iron, which is about a sixth of a reference day's income. The three answers are within a day's play of each other; none is a trap.
+
+### 13.2 Day 1, session 1 (the first bar, 100 Energy, no Rested)
+
+Reference recruit in Coalport, INT approaches, expected values:
+
+| Spend | Energy | XP | FXP | Iron | Other |
+|---|---|---|---|---|---|
+| Welcome set A: canvass ×2 at 66 % | 20 | 75 | 13 + 20 (order done) | 33 | +0.08 opinion |
+| Welcome set C: *Take a job* | 0 | — | 20 | — | streak starts at the shift |
+| The shift (Factory worker) | 4 | — | — | 112 (108 + 2 % streak) | |
+| Welcome set B: committee at 66 % | 10 | 37 | 10 + 20 (order done) | 17 | **+5 PC**, all orders done |
+| Ambition chapter 1 (INT vs 8: 66 / 20 / 14 %) | 10 | 118 | 30 | 76 | a keepsake |
+| Free play: five canvasses and an intel tap | 56 | 200 | 25 | 90 | +0.2 opinion |
+| **First bar** | **100** | **~430** | **~190 (+50 seed = 240)** | **~330 (+150 refused coat = 480)** | Level 2 at 150 XP on the 3rd–4th tap; **Level 3 (450) on the first bar if the chapter succeeds**, otherwise early in session 2 |
+
+Chapter 1 pays about 12 XP per Energy against tier 1's 4.5, which is deliberate: it is one 10-Energy story a week at most, and on day 1 it is the biggest single number the player sees, which is what a story reward should be. Over a week it is under 3 % of XP.
+
+### 13.3 Day 1 and day 2 totals (reference player, three sessions)
+
+| | Slice 1 sheet | With slice 2 | Change |
+|---|---|---|---|
+| XP, end of day 1 | 1,320 (L4) | ~1,440 (L4) | +chapter |
+| FXP, end of day 1 | 190 | ~270 | +50 seed, +30 chapter |
+| FXP, end of day 2 | 390 | **~475 → Rank 2 during day 2** | the §5.2 target met |
+| Iron, end of day 1 | ~760 | ~985 | +150 coat, +76 chapter |
+| Level 6 / Level 10 | day 2 / day 5 | day 2 / day 5 | unchanged |
+
+Casual, regular and heavy players get the same three one-offs; none of the milestones in §6, §7 or §9 moves by more than a few hours.
+
+### 13.4 Duskwall and Ashford
+
+Both cities pay the same rates at the same difficulty as Coalport, so §3–§9 apply unchanged to any faction. What differs is the odds mix of the *reference answers* in each faction (`slice-2-onboarding.md` §2.4): the Vanguard recruit (STR 11 / INT 11) sees 62 % on nine of Duskwall's fifteen checks and 44 % on the four CHA checks; the Alliance recruit (INT 14) sees 74 % on seven of Ashford's sixteen and 50 % on the six CHA+INT checks. Expected reward factors sit between 0.69 and 0.87 in every city, inside the slice-1 spread, so no city levels faster than another by more than a few percent. Ashford is where the coat matters most (six CHA+INT checks) and Duskwall where AGI training matters least (two AGI checks, both propaganda); both are flavour, not balance problems.
+
+### 13.5 Session shape (pillar 7)
+
+From sign-up to the first result modal: eleven taps, about three minutes. The whole first bar, with the origin, the faction, the paper, the welcome set, the job, the shift and the chapter, is **about fifteen minutes**, and every screen in it is resumable. The second session of day 1 (three hours later, 100 Energy and no Rested yet) is the slice-1 regular session of §11.

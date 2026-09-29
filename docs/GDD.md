@@ -76,6 +76,18 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 | §4.3 rule 2 ("one missed day can never break a streak") contradicted §9.1 (the third miss in a week ends it) | §4.3 rule 2 reworded to match §9.1: a single miss never breaks it, sick days cover two, the third ends it | §4.3 |
 | "2–3 lines" of narrative had no measure, and phones wrap the texts to 4–6 lines | Pinned: an outcome text is **at most 240 characters and four sentences** (about 45 words) | §1.2 |
 
+**Added 29 Sep 2026 (slice-2 design, `docs/design/slice-2-onboarding.md` and `slice-2-cities.md`):**
+
+| Problem | Change | Section |
+|---|---|---|
+| The origin answers could stack to +8 on a stat while §8.5 said "up to +5" (Appendix C #12) | **Stacking accepted and stated**: 8–9 points across STR/INT/AGI, at most +8 to one stat, CHA base up to +4; the reference recruit unchanged and fully specified; the dialogue laid out as a three-step story | §7.2, §8.5 |
+| The coat's three effects, the faction screen and the first ten minutes were unspecified | Coat: CHA 5 · +150 Iron · keepsake with +1 CHA base. The faction cards and the wish tag. **§7.5 The first ten minutes**: the welcome edition, the first landing with the first pin's sheet open, a fixed **welcome set** of Party orders on the first City Day | §7.2, §7.3, §7.5, §13.7, §3.3 |
+| Ambitions had no chapter rules | A chapter is a **three-step story that never fails**; chapter 1 at difficulty 8 for 10 Energy, delivered as a Letter on day 1; seven days between chapters; *Finish His Work* built first (Appendix C #6) | §17.1 |
+| No item catalogue, so "Charisma is worn" had nothing to wear | **§21.4**: Tier I outfits per faction at CHA 2, the father's coat at 5, party card, keepsakes; CHA base 0–4 | §8.2, §21.2, §21.4 |
+| Duskwall and Ashford had no content, secretary or paper | Six locations each against the kinds; **Viktor Stahl** and **Thomas Grey**; *The Duskwall Sentinel* and *The Ashford Gazette*; baselines pinned; Stores hand and Copy clerk jobs | §3.3, §9.2, §13.5, §13.7, §14.11 |
+| The Alliance's Rank 3 title was *Councillor*, the office the rank lets you stand for | Rank 3 Alliance title is **Agent** | §5.4 |
+| §16.1 described the Vanguard with a phrase that could leak into copy | "national purity" → "the nation above all"; the Vanguard review checklist lives in the onboarding doc §5.3 | §16.1 |
+
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes.
 
 ---
@@ -200,11 +212,13 @@ The first screen after the City Day changes, and after any absence of 3 hours or
 | **Weather** | Today's weather in each city and its effect on missions |
 | **While You Were Away** | Shown after 2+ days away: a digest of elections, laws and city changes |
 
-**Mastheads.** Each home city has its own paper: *The Coalport Clarion* ("The voice of the mill and the quays"), and, provisionally, the *Ashford Gazette* and the *Duskwall Sentinel*. Battleground residents read the national *Irongate Herald* (Clearwater: the *Clearwater Courier*, provisional). The masthead is content.
+**Mastheads.** Each home city has its own paper: *The Coalport Clarion* ("The voice of the mill and the quays", 5 marks), *The Duskwall Sentinel* ("For the city and the frontier", 5 marks) and *The Ashford Gazette* ("Fair report, free comment", 6 marks). Battleground residents read the national *Irongate Herald* (Clearwater: the *Clearwater Courier*, provisional). The masthead is content; the app-shell banner reads *The {short name} is in*.
 
 **Dateline:** `{Weekday} · {D Month} · {City}` from the real UTC date, British form: *Tuesday · 29 September · Coalport*. **No year is printed anywhere in the paper.** The game is 1946 but the calendar is real (§2: one City Day = one real day, and the weekday drives the Monday sick-day refill), so the weekday must be the true one and a year would either break the fiction or contradict the weekday.
 
 **Slice 1 (v1) scope:** headlines (2–3, at most two personal), **Party orders**, and **Your desk** with salary, Rested banked, Energy and when it is full, work streak and sick days, Level and XP to next, Local Standing, and *Yesterday* (the Today tally of the previous City Day, §3.7). Headline templates, their conditions and priorities are in `docs/design/slice-1-content.md` §7.
+
+**Slice 2 (v2): the welcome edition and Letters.** The first edition a character sees is the **welcome edition**: three headlines (*Welcome to {city}* with the secretary's name and where to spend the first Energy; the city's arrival notice with the player's name, first edition only; the morale line), the **welcome set** of Party orders (§13.7), a **Letters** row (*From your father's things: Chapter 1 is ready · 10 Energy*, §17.1) and the desk with a *Wearing* row (§8.2). It is the whole tutorial without being one (§7.5). Letters carries Ambition chapters from slice 2 and patron letters from slice 8. Per-city welcome texts are in `docs/design/slice-2-onboarding.md` §7.
 
 ### 3.4 Agendas: what to spend Energy on
 
@@ -358,7 +372,7 @@ Rank gives the **right** to stand. Each office also needs the rung below it on t
 |---|---|---|---|
 | 1 | 0 | Initiate / Recruit / Volunteer | Faction HQ, faction chat, Tier I faction missions |
 | 2 | **400** | Footsoldier / Activist / Canvasser | **Vote in all elections**, Campaign Event roles, Dossier missions, sign Recall Petitions |
-| 3 | 2,000 | Sergeant / Organiser / Councillor | **Stand for City Council** (with the ladder conditions), **schedule Campaign Events**, illegal missions, safehouses, faction equipment, Jobs board Tier II |
+| 3 | 2,000 | Sergeant / Organiser / Agent | **Stand for City Council** (with the ladder conditions), **schedule Campaign Events**, illegal missions, safehouses, faction equipment, Jobs board Tier II |
 | 4 | 6,000 | Lieutenant / Commissar / Senator | **Stand for Faction Chair** (after a council term), Political Protection perk (§11.4) |
 | 5 | 15,000 | Captain / Delegate / Representative | **Stand for the Legislature** and **be appointed Minister** (after a term as Governor or 3 council terms), Operation missions |
 | 6 | 25,000 | Commander / Comrade-General / Speaker | **Stand for President or Chancellor** (after a term as deputy or minister), eligible for Speaker, Tier V quest chains |
@@ -366,7 +380,7 @@ Rank gives the **right** to stand. Each office also needs the rung below it on t
 
 Rank 2 was 500 in the first 3.1 draft; at the §5.5 rates the reference player reached it on day 3, not day 2, so it is now 400 (`docs/economy.md` §7).
 
-The Collective's Rank 5 title was *Vanguard* in the first 3.1 draft, which read as the rival faction's name. It is now **Delegate**: what a workers' party sends to its Congress (§15.5) and to the Legislature, which is exactly what Rank 5 unlocks. No faction is renamed (Appendix C #10 stays parked).
+The Collective's Rank 5 title was *Vanguard* in the first 3.1 draft, which read as the rival faction's name. It is now **Delegate**: what a workers' party sends to its Congress (§15.5) and to the Legislature, which is exactly what Rank 5 unlocks. The Alliance's Rank 3 title was *Councillor*, the office that rank lets you stand for; it is now **Agent** (a constituency agent runs campaigns, which is what Rank 3 unlocks). No faction is renamed (Appendix C #10 stays parked).
 
 ### 5.5 Reward rates per mission tier (starting values)
 
@@ -492,20 +506,26 @@ Unchanged from v3.0. The player's father lies dying in a small apartment in Iron
 
 ### 7.2 Dialogue
 
-| Father's question | A | B | C | Effect |
-|---|---|---|---|---|
-| "Do you remember the summer you were ten? What did you do every day?" | Went fishing at the river with you | Helped at the factory after school | Spent hours at the library | A +3 AGI · B +3 STR · C +3 INT |
-| "When the neighbourhood kids got into trouble, what did you do?" | Led the charge — someone had to | Talked them out of it | Watched from the corner, learning | A +2 STR · B +2 CHA (permanent base) · C +2 INT |
-| "You always had a talent. What was it?" | I could outrun anyone on the block | I could fix anything with my hands | I could read people like a book | A +3 AGI · B +3 STR +1 INT · C +1 CHA (base) +3 INT |
-| "What do you want, when all this is over?" | Order. Someone needs to hold the line. | Justice. The workers deserve better. | Truth. Let the people decide. | +50 FXP seed toward Vanguard / Collective / Alliance, applied if you join that faction |
-| "Take my coat. It's all I have left." | (Accept solemnly) | (Refuse — you'll earn your own) | (Accept and promise to return it) | A Tier I coat · B +150 IM · C unique coat cosmetic, +1 CHA |
-| **New:** "Promise me one thing…" | "…I'll clear your name." | "…I'll settle what you owed." | "…I'll finish what you started." | Chooses the player's **Ambition** (§17.1) |
+The origin is a **tier-3 story of three steps** (§13.1), two questions to a step, every answer saved as it is tapped so a closed tab resumes at the next question. No number is shown on any origin screen; the coat and the promise carry a hint in words. Full script, art and copy: `docs/design/slice-2-onboarding.md` §2.
+
+| Step | Father's question | A | B | C | Effect |
+|---|---|---|---|---|---|
+| 1 *The room* | "Do you remember the summer you were ten? What did you do every day?" | Fished the river with you | Worked the factory floor after school | Sat in the library till they threw me out | A +3 AGI · B +3 STR · C +3 INT |
+| 1 | "And when the street kids got into trouble. What did you do?" | Led them in. Someone had to. | Talked them out of it | Watched from the corner, and learned | A +2 STR · B +2 CHA (permanent base) · C +2 INT |
+| 2 *The talent* | "You always had a talent. What was it?" | I could outrun anyone on the block | I could fix anything with my hands | I could read people like a book | A +3 AGI · B +3 STR +1 INT · C +1 CHA (base) +3 INT |
+| 2 | "Take my coat. It's all I have left." | Take it, and say nothing | No. I'll earn my own | Take it, and promise to bring it back | A *Your father's coat* (clothing, Tier I, **CHA 5**, worn from the start) · B **+150 IM** · C the same coat as a **keepsake** (unique, never sold or crafted) and **+1 CHA base**; the promise returns in a later chapter |
+| 3 *The promise* | "Promise me one thing…" | "…I'll clear your name." | "…I'll settle what you owed." | "…I'll finish what you started." | Chooses the player's **Ambition** (§17.1) |
+| 3 | "And you. What do you want, when all this is over?" | Order. Someone needs to hold the line. | Justice. The workers deserve better. | Truth. Let the people decide. | +50 FXP seed toward Vanguard / Collective / Alliance, paid if you join that faction; the matching card on the faction screen shows *His wish · +50 Faction XP* |
+
+**The answers stack as written** (Appendix C #12, closed): three memory answers add **8 points** across STR, INT and AGI (9 with *fix anything*), at most **+8 to one stat**, and up to **+4 CHA base** (talked them out +2, read people +1, the promised coat +1). A cap would silently waste the answers of a player who answered consistently, since no number is ever shown. See §8.5 for what that makes a new character.
 
 ### 7.3 After the prologue
 
-The father dies. The player steps into the street, a newspaper headline announces the crisis, and the Faction Selection screen appears. The faction choice is free and permanent (changing needs a paid Faction Reset token, §23).
+The father dies before the first tram. The player steps into the street with his suitcase, a newsboy shouts that the government has fallen, and **three faction cards** appear on the same screen: crest, name, three lines (who they are, what they want, which city they hold) and three facts (the stat bonus, *Starts in {city}*, their signature event). The card matching the father's wish carries *His wish · +50 Faction XP*. The choice is free and **permanent** (changing needs a paid Faction Reset token, §23); the confirm button reads *Join the {faction} · take the train to {city}*, and the next screen is the home city's welcome edition (§3.3, §7.5). Card copy and the Vanguard review: `docs/design/slice-2-onboarding.md` §5.
 
-**Faction starting bonuses are cut to +3** (Vanguard +3 STR; Collective +2 STR +1 INT; Alliance +3 INT) so the origin choices keep their weight.
+**Faction starting bonuses are cut to +3** (Vanguard +3 STR; Collective +2 STR +1 INT; Alliance +3 INT) so the origin choices keep their weight. Joining also gives the faction's **Tier I outfit** and **party card** (§21.4).
+
+**The face.** Six portraits (three men, three women, in their twenties, thirties and forties) are offered on the sign-up form, before the origin; the choice is required, changeable on the Me tab at any time, and has no effect on anything (Appendix C #19).
 
 ### 7.4 Home City (new)
 
@@ -516,6 +536,17 @@ From **Rank 3** you can **move** your residence to a **battleground city** (Clea
 - You can move once every 7 City Days, for 500 IM. Moving resets your council eligibility for one cycle.
 - You can always move back home.
 - You can't live in an enemy home city. You can visit, at your own risk (§14.12).
+
+### 7.5 The first ten minutes (new)
+
+There is no tutorial screen. From sign-up to the first result modal is **eleven taps and about three minutes**: the face and name, three origin steps, the faction, the welcome edition, one action. After that every new thing is introduced by the thing before it, never by a screen that only explains.
+
+- **The welcome edition** (§3.3): three headlines that say where you are and where to spend the first Energy, the **welcome set** of three Party orders (§13.7: two canvasses at the first pin, one committee session at the HQ, *Take a job*), the Letter that opens Ambition chapter 1, and the desk.
+- **The first landing:** the home-city map with **the first pin's location sheet already open**. The first screen of play is a ticket with its odds and the tag *Party order 0 / 2 · +25 % FXP*, with the day-1 job's Jobs card below it. The orders list on the city plate links each order to its pin.
+- **The order of introduction** (about a minute each): the first canvass and the result modal · *Again ×3* and the second canvass, which completes an order (+20 FXP as a modal line) · Level 2 and the one-tap stat point · *Take the job* and the live shift ticket · the shift · the HQ session, which completes the set (+5 PC, and PC appears in the HUD for the first time) · the Ambition chapter from the Letters row · free play until the Out of Energy card, which says when the bar is full and that Rested banks after that.
+- **What is left for the game to explain itself:** Rested (its desk row, once it has a value), Local Standing (the plate counts *0 / 10*; the modal names it at 10), the day boundary (the shift ticket's *next at hh:mm*), the other cities (the train, slice 4).
+
+Full script and timeline: `docs/design/slice-2-onboarding.md` §8.
 
 ---
 
@@ -532,11 +563,12 @@ From **Rank 3** you can **move** your residence to a **battleground city** (Clea
 
 ### 8.2 Charisma is worn
 
-Unchanged from v3.0. Your CHA is the total of your equipped clothing and accessories, so players keep different outfits for different jobs.
+Unchanged from v3.0. Your CHA is the total of your equipped clothing and accessories plus the origin's **CHA base** (0–4, §7.2), so players keep different outfits for different jobs.
 
 | Item | CHA | Notes |
 |---|---|---|
-| Basic work clothes | 2 | Starting outfit |
+| Work jacket and cap / Mill work coat / Worn wool overcoat (Tier I) | 2 | The starting outfit of the Vanguard / Collective / Alliance (§21.4); the *plain clothes* of §14.12 |
+| Your father's coat (Tier I) | 5 | The origin's coat (§7.2); worn from the start if accepted |
 | Standard coat (Tier I) | 5 | |
 | Faction uniform (Tier II) | 12 | FXP bonus on faction missions |
 | Officer's suit (Tier III) | 22 | Opera and university events |
@@ -617,17 +649,17 @@ A shown 72 % succeeds on rolls 1–72: exactly 72 times in 100. The clamp means 
 |---|---|
 | **STR, INT** | +1 point of your choice per level-up, and training |
 | **AGI** | Training, and every successful stealth action (a quarter of a training point) |
-| **CHA** | Never trained: it is the sum of what you wear, plus up to +3 from the origin story |
+| **CHA** | Never trained: it is the sum of what you wear, plus up to +4 CHA base from the origin story |
 
-**Starting stats:** 5 in each trained stat, plus the origin story (up to +5) and the faction bonus (+3). A new player's best stat is about **10–12**.
+**Starting stats:** 5 in each trained stat, plus the origin story (**8–9 points across STR, INT and AGI, at most +8 to one stat**, §7.2) and the faction bonus (+3). A new player's best stat is **10–16, typically 12–14**; an all-in build reaches 16 (an 82 % home check) at the price of 5 in the other two (38 %). Every build reaches the 95 % clamp on its best stat by day 3–4 from level-up points and Standing (`docs/economy.md` §2), so the spread is flavour with a cost, not a gap.
 
-**The reference recruit.** All tuning, examples and tests use one canonical new character: a Collective recruit who answered the origin story with *the library*, *watched from the corner* and *fix anything* (§7.2), wearing basic work clothes.
+**The reference recruit.** All tuning, examples and tests use one canonical new character: a Collective recruit who answered the origin story with *the library*, *watched from the corner*, *fix anything*, **refused the coat**, wished for *Justice* and promised to *finish his work* (§7.2), in the mill work coat.
 
 | STR | INT | AGI | CHA (worn) | Where it comes from |
 |---|---|---|---|---|
-| 10 | 12 | 5 | 2 | 5 base each · origin +3 STR, +6 INT · Collective +2 STR +1 INT · work clothes CHA 2 |
+| 10 | 12 | 5 | 2 | 5 base each · origin +3 STR, +6 INT · Collective +2 STR +1 INT · mill work coat CHA 2, CHA base 0 · 150 Iron · +50 FXP seed · Ambition *Finish His Work* |
 
-The reference recruit's home canvass is a **66 %** check (§8.4). Until the origin story is built, every new character is created as the reference recruit.
+The reference recruit's home canvass is a **66 %** check (§8.4). The same answers in the other factions give the tuning characters for Duskwall and Ashford: **Vanguard STR 11 / INT 11 / AGI 5 / CHA 2** and **Alliance STR 8 / INT 14 / AGI 5 / CHA 2** (`docs/design/slice-2-onboarding.md` §2.4).
 
 **Training** is a tier-1 action (the gym, the library, the running track). The Energy needed for the next point rises slowly, so stats never run away:
 
@@ -669,6 +701,8 @@ Unchanged from v3.0 apart from the pay rules.
 |---|---|---|---|---|---|
 | Street vendor | Level 1 | 3 | 80–120 | — | Any outdoor location |
 | Factory worker | Level 1 | 4 | 150–200 | STR 5 | Coalport; Collective +20 % |
+| Stores hand | Level 1 | 4 | 150–200 | STR 5 | Duskwall (the garrison stores); Vanguard +20 % |
+| Copy clerk | Level 1 | 4 | 150–200 | INT 5 | Ashford (the *Gazette*); Alliance +20 % |
 | Driver | Level 3 | 4 | 180–250 | AGI 10 | |
 | Market trader | Level 3 | 5 | 200–300 | INT 8 | Buy-low/sell-high mini-game |
 | Security guard | Level 6 | 5 | 300–400 | STR 12, CHA 10 | Opera, university, warehouses |
@@ -678,7 +712,7 @@ Unchanged from v3.0 apart from the pay rules.
 | Professor | Level 16 | 7 | 900–1,200 | INT 30 | Ashford University; small INT gain per shift |
 | Political aide | Level 20 | 8 | 1,500–2,500 | Rank 4 | Also gives FXP and 2 PC per shift |
 
-**Pinned for slice 1 (Coalport):** Street vendor **100** a day at Market Row · Factory worker **180** (**216** for Collective members) at the Mill Gate · Driver **200** at the Harbour Quays. The other jobs keep their ranges until they are placed. The Market trader's mini-game is deferred with the job.
+**Pinned for the home cities (slices 1 and 2):** each home city places three jobs. **Street vendor 100** (Market Row / the Quartermaster's Market / Bridge Street), the faction's day-1 job at **180, 216 for members** (Factory worker at the Mill Gate / Stores hand at the Garrison Gate / Copy clerk at Gazette House) and **Driver 200** (Harbour Quays / Goods Yard / Bridge Street). A job belongs to one location, so "Driver" is three jobs with three ids. The other jobs keep their ranges until they are placed. The Market trader's mini-game is deferred with the job.
 
 ---
 
@@ -896,6 +930,8 @@ Tier 1 needs no art at all. With a finite set of about 60 images, a new mission 
 
 Nineteen kinds, which fits the "about 25" scenes budgeted above (`faction-hq` needs one per faction). **Final** as of the slice-1 Coalport list, which uses six of them: Mill Gate `factory-gate`, Market Row `market`, Union Hall `faction-hq`, Foundry Row `street`, Harbour Quays `docks`, The Anchor `bar`. Kinds can be added, never removed.
 
+**Duskwall** (slice 2, `docs/design/slice-2-cities.md` §1): Garrison Gate `barracks`, Quartermaster's Market `market`, Beacon House `faction-hq`, State Archives `library`, Goods Yard `station`, Rampart Row `street`. **Ashford** (§2 there): Gazette House `press`, Assembly Rooms `faction-hq`, University Quad `university`, The Courts `court`, Bridge Street `market`, Weavers' Row `street`. Scenes exist for the Vanguard HQ and the press; the other kinds use the map crop until a scene is drawn.
+
 ### 13.6 Social missions
 
 | Mission | Requires | Energy | Rewards | Notes |
@@ -912,7 +948,9 @@ Contextual dress checks still apply: meeting the threshold with accessories whil
 
 See §15.4. Directives are the faction's *agenda for the day*, set by the elected Faction Chair. They tell a new player what to do and tie each person's session to the faction's collective plan.
 
-**Directives v1 (slice 1, until a Chair exists).** The NPC party secretary sets them. For the Collective that is **Petra Holm**, Coalport branch secretary (portrait `holm`): brisk and warm, wastes no words, talks in shifts, wards and door counts, never in slogans; signs "— P.H." The other factions get their own secretary when their home cities are built (slice 2).
+**Directives v1 (slice 1, until a Chair exists).** The NPC party secretary sets them. For the Collective that is **Petra Holm**, Coalport branch secretary (portrait `holm`): brisk and warm, wastes no words, talks in shifts, wards and door counts, never in slogans; signs "— P.H." For the Vanguard, **Viktor Stahl**, district organiser in Duskwall (portrait `stahl`): clipped and formal, talks in wards, lists and times, treats every order as already agreed; signs "— V.S." For the Alliance, **Thomas Grey**, constituency agent in Ashford (portrait `grey`): dry and quick, a former *Gazette* sub-editor who counts words; signs "— T.G." Their templates: `docs/design/slice-2-cities.md` §1.5 and §2.5.
+
+- **The welcome set.** On a character's **first City Day** (the day of creation, however short) the three orders are fixed instead of rotated: slot A, two attempts at the first pin's canvass; slot B, one committee session at the HQ; slot C, *Take a job* (frozen as the no-job variant). They fit in 30 Energy and complete in ten minutes, which pays the first +5 PC. From the next day the rotation applies. The ids per city are in `docs/design/slice-2-onboarding.md` §7.3.
 
 - Directives are **faction-wide**: every member gets the same three on the same City Day, chosen deterministically from the day number (slot A: a canvass order; slot B: party work such as propaganda, a speech, a committee session or intelligence; slot C: a habit such as the shift, training or "six Successes"), never the same set two days running. No scheduled job is needed.
 - The three personal targets together fit in about **60 Energy**, so one session clears them.
@@ -1158,13 +1196,13 @@ Each faction has a **home city** it can never lose. Power is won or lost in the 
 - **Rival pressure is capped per day.** A raid squad can cause a crisis but can't keep one going forever.
 - **Home morale recovers faster** than battleground opinion: it drifts toward 70 % at 2 % a day, against 1 % a day elsewhere.
 
-**Baselines.** Each meter starts a season at its baseline and drifts back toward it (§14.2, §22.2). Home cities start at the 70 % drift target, with the rest split so that the undecided outnumber either rival. Coalport is pinned for slice 0; the others are provisional until slice 4.
+**Baselines.** Each meter starts a season at its baseline and drifts back toward it (§14.2, §22.2). Home cities start at the 70 % drift target, with the rest split so that the undecided outnumber either rival. The three home cities are pinned (slices 0 and 2); the battlegrounds are provisional until slice 4.
 
 | City or district | Vanguard | Collective | Alliance | Neutral |
 |---|---|---|---|---|
 | **Coalport** (Collective home) | 9 | **70** | 6 | 15 |
-| Duskwall (Vanguard home) | **70** | 6 | 9 | 15 |
-| Ashford (Alliance home) | 6 | 9 | **70** | 15 |
+| **Duskwall** (Vanguard home) | **70** | 6 | 9 | 15 |
+| **Ashford** (Alliance home) | 6 | 9 | **70** | 15 |
 | Clearwater | 20 | 24 | 24 | 32 |
 | Irongate: Government Quarter | 20 | 20 | 20 | 40 |
 | Irongate: Old Town | 15 | 15 | 35 | 35 |
@@ -1367,7 +1405,7 @@ Politics has to work with 50 players or 50,000:
 
 ### 16.1 The three factions
 
-**The Iron Vanguard (Fascists).** A paramilitary movement that believes strength, order and national purity are the only way forward. Its strongholds are the industrial outer cities, held through discipline and hierarchy.
+**The Iron Vanguard (Fascists).** A paramilitary movement that believes strength, order and the nation above all are the only way forward. Its strongholds are the industrial outer cities, held through discipline and hierarchy.
 - Starting bonus: +3 STR
 - Legislation style: order, curfews, costs for the opposition
 - Signature event: **Torchlight March**
@@ -1432,6 +1470,10 @@ The father's last request (§7.2) sets a **personal storyline that runs for mont
 - **Live content:** new chapters and side stories every term (28 days).
 - Rewards: unique items and outfits, patron introductions, Legacy, and one-off influence events.
 - Ambitions work for any faction; the storylines play out differently depending on which one you joined.
+
+**Chapter rules (slice 2).** A chapter is a **tier-3 story of at most three steps** (§13.1): a choice with no roll, remembered as a flag for later chapters; one check with two approaches, each showing its stat and chance, paid in Energy on commit; the result modal, which carries the next chapter's hook as a knock-on line. **A chapter never fails:** the check decides the text and rewards (Success / Partial / Failure, §8.4), and the chapter completes on any outcome. Chapters set in the home city trigger no encounter. Each chapter sets its own difficulty and Energy (the §8.4 tier-3 band is for later chapters and Operations). **Chapter 1** unlocks on arrival with no requirement, is delivered as a **Letter** in the welcome edition (§3.3), costs **10 Energy** at **difficulty 8**, and pays Success **150 XP / 40 FXP / 100 Iron**, Partial **75 / 20 / 50**, Failure **25 / 0 / 0**, with a keepsake (§21.4) on every outcome; no opinion; Rested applies; chapter checks count for neither Standing nor Party orders. Later chapters need their requirement and **seven City Days** since the previous one. Everything is resumable (`ambition { id, chapter, step, flags }`).
+
+**Chapter 1 titles:** *His ward book* (Finish His Work: chapter 2 at Rank 2) · *The prison letter* (Clear His Name: chapter 2 at Level 6) · *The marker* (Settle His Debts: chapter 2 at Level 6). Scripts: `docs/design/slice-2-onboarding.md` §3. **All three Ambitions are choosable in the MVP; *Finish His Work* is built to twelve chapters first** (Appendix C #6, closed), the other two to four chapters by launch (§25).
 
 ### 17.2 Patronage (new)
 
@@ -1646,7 +1688,7 @@ Armour is also clothing, so its CHA (§8.2) counts too. The best armour for a fi
 
 | Tier | Name | Unlock | Armour CHA | Examples (Vanguard / Collective / Alliance) |
 |---|---|---|---|---|
-| I | Improvised | Level 1 | 2–5 | Work coat / factory apron / worn blazer |
+| I | Improvised | Level 1 | 2–5 | Work jacket / mill coat / worn overcoat (§21.4) |
 | II | Standard | Level 6 | 8–15 | Field jacket / commissar coat / campaign suit |
 | III | Quality | Level 16 | 18–28 | Officer's overcoat / Vanguard uniform / barrister's vest |
 | IV | Elite | Level 31 | 30–40 | Dress uniform / Red Guard regalia / senator's suit |
@@ -1655,6 +1697,22 @@ Armour is also clothing, so its CHA (§8.2) counts too. The best armour for a fi
 ### 21.3 Where equipment comes from
 
 Mission drops, faction stores, clothing shops, the Black Market (with a record check), crafting (combine two items of the same type for a 40 % chance of the next tier), Ambition and patron rewards, and the Tier V quest chains.
+
+### 21.4 The starting catalogue (slice 2)
+
+Slice 2 uses two slots, **clothing** and **document**; the others open with the Wardrobe (slice 8). A character starts with **0 Iron**, the faction's outfit worn, the party card, and the origin coat if it was taken (worn in place of the outfit, which stays in the wardrobe as plain clothes). **Keepsakes** are unique: never sold, crafted, given or lost, marked as such in the wardrobe; some have no slot at all and simply exist in the inventory for later chapters to read.
+
+| Id | Item | Slot | Tier | CHA | Notes |
+|---|---|---|---|---|---|
+| `outfit.work-jacket` | Work jacket and cap | clothing | I | 2 | Vanguard starting outfit |
+| `outfit.mill-coat` | Mill work coat | clothing | I | 2 | Collective starting outfit |
+| `outfit.worn-overcoat` | Worn wool overcoat | clothing | I | 2 | Alliance starting outfit |
+| `outfit.fathers-coat` | Your father's coat | clothing | I | 5 | Origin, coat accepted |
+| `outfit.fathers-coat-promised` | Your father's coat | clothing | I | 5 | Origin, coat promised: keepsake; the player also has +1 CHA base |
+| `doc.party-card` | Party card | document | I | 0 | Keepsake; *Show papers* at checkpoints from slice 5 |
+| `keep.ward-book` · `keep.prison-letter` · `keep.marker` | His ward book · The prison letter · The marker | none | — | — | Chapter 1 keepsakes, read by later chapters |
+
+Art and per-faction kit: `docs/design/slice-2-onboarding.md` §4.
 
 ---
 
@@ -1904,16 +1962,19 @@ The API (`apps/api`) was built against v3.0. Main changes:
 3. **NPC visibility:** should NPC office-holders be clearly marked, or blend in with players?
 4. **Counter-Demonstrations:** they'd give the game its first faction-vs-faction contest. MVP or v1.1?
 5. **Season length:** 12 weeks, or 8 to keep it punchier?
-6. **Ambition at launch:** which of the three gets fully built first? "Finish His Work" teaches politics best.
+6. **Ambition at launch:** ~~which of the three gets fully built first? "Finish His Work" teaches politics best.~~ **Closed (29 Sep 2026): *Finish His Work* first**, to twelve chapters; the other two get chapter 1 in slice 2 and four chapters by launch (§17.1).
 7. **Vanguard presentation:** it needs a content and moderation policy before public testing.
 8. **Journey times:** are 12–25 minutes right, or should the nearer cities be shorter (5–8 min) so a trip fits inside one session?
 9. **District weights:** should the Government Quarter count for more than the other four districts in Irongate's average?
 10. **Faction naming** (parked): plain names (Fascists, Communists, Democrats) everywhere, plain names first with party names as flavour, or keep the party names (Iron Vanguard, Red Collective, Civic Alliance) with the ideology stated.
 11. **Who starts where at low population:** with few players, should new players start in a battleground instead so they meet rivals sooner?
-12. **Origin story stacking:** §8.5 says the origin gives "up to +5", but the §7.2 answers can stack to +8 INT (library, watched, read people) or +8 STR. Either cap the stack at +5 or accept +8 and say so. Decide before slice 2; the reference recruit (§8.5) assumes the answers as written.
+12. **Origin story stacking:** ~~§8.5 says the origin gives "up to +5", but the §7.2 answers can stack to +8 INT (library, watched, read people) or +8 STR. Either cap the stack at +5 or accept +8 and say so.~~ **Closed (29 Sep 2026): the answers stack as written** (8–9 points, at most +8 to one stat, CHA base up to +4; §7.2, §8.5). The reference recruit is unchanged. Revisit only if telemetry shows all-in builds dominating the day-1 odds in a way the 95 % clamp doesn't wash out by day 4.
 13. **Opinion swing at scale:** the §14.2 swing rates suit a few dozen active players per city. With hundreds, the meters would move tens of points a day against a 1 % drift. Options: a per-city damping factor (swing × 20 ⁄ active players there, floor ×0.25), a faster drift, or a per-faction daily cap per city. Decide once slice 4 has telemetry.
 14. **Rested and heavy players:** a six-session player earns little Rested and still levels about 35 % faster than the reference player (`docs/economy.md` §6): Level 10 on day 3 and Level 16 on day 8. Intended, but if telemetry shows most players are heavy the level table will read fast. The lever is the §5.3 table, not the Rested bonus (§6.3 is a pillar).
 15. **Level-up points vs the training targets:** +1 stat point per level alone gives the reference player +9 by day 5 and +19 by day 20, which meets the §8.5 "best stat" targets (week 1 ~15, month 1 ~30) without any training; training on top overshoots (INT ~30 by day 7). Harmless while tier-1 odds clamp at 95 %; reconcile before tier-2 difficulties (14–20) are set in slice 5. Options: keep the rule and raise the targets, or give the level point every other level.
 16. **Opinion drift before slice 4:** slice 1 writes the swing but not the 2 %-a-day home drift, so a long playtest with a few testers pins Coalport near the 95 % cap. Acceptable for the slice-1 question; apply the drift lazily at the day boundary if it is cheap.
 17. **Salary cap on return (14 half-pays, §9.1):** "a fortnight's back pay" is a judgement, not a measured number. Revisit when the Welcome Back package (§4.2, 1 month+) is designed; it may replace the cap with a deliberate returning bonus (Rested full, a fixed Iron sum) rather than an accidental one.
+18. **The welcome set is per character** (§13.7) while every other day's orders are faction-wide. A character created at 23:50 UTC gets a ten-minute first City Day and the rotation the next morning. If the slice-2 playtest shows late-evening sign-ups losing the welcome set before they finish it, extend it to the second City Day when the first was shorter than two hours.
+19. **The face has no effect** (§7.3): six portraits, cosmetic only. Keep it that way; the moment appearance carries a bonus, the choice stops being about the player and starts being about the number.
+20. **Ambition failure texts on day 1:** chapter 1 can end in *Failure* (25 XP, the keepsake, no Iron) on a player's first hour. It is written as a setback, not a loss, and the chapter still completes. If the playtest shows new players reading it as "I failed the tutorial", raise chapter 1's difficulty floor to Partial (no Failure band) rather than lowering the difficulty.
 

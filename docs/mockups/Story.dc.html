@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tier 3 story and encounter — desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=Oswald:wght@400;500;600&amp;family=Courier+Prime:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#15181A}
+.lbl{font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.14em}
+.cap{font-family:'Courier Prime',monospace;font-size:12px;line-height:1.45;color:#5b564b}
+.gauge-track{height:6px;background:#3A4043;width:100%}
+.row{display:flex;align-items:stretch;background:#F6F0E1;border:1px solid #15181A;min-height:76px;cursor:pointer;text-align:left;padding:0;width:100%;font-family:'Source Serif 4',Georgia,serif;color:#15181A}
+.row:hover{background:#fffaf0}
+.stub{width:64px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-right:1.5px dashed #15181A}
+.tag{font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;white-space:nowrap}
+.appr{display:flex;flex-direction:column;gap:6px;text-align:left;background:#F6F0E1;color:#15181A;border:1.5px solid #15181A;padding:12px 14px;cursor:pointer;font-family:'Source Serif 4',Georgia,serif;width:100%;box-sizing:border-box}
+.appr-sel{background:#15181A;color:#EFE6D2}
+.btn{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#15181A;color:#EFE6D2;border:0;padding:0 18px;height:52px;font-family:Oswald,sans-serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.btn-red{background:#8C2B23}
+.btn-ghost{display:flex;justify-content:center;align-items:center;background:transparent;color:#15181A;border:1.5px solid #15181A;padding:0 18px;height:48px;font-family:Oswald,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.mod{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:5px 0;border-bottom:1px dotted #9b917a}
+.rw{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid #15181A;background:#F6F0E1}
+.rw-n{font-family:Oswald,sans-serif;font-weight:600;font-size:24px;line-height:1}
+.act{display:flex;flex-direction:column;align-items:flex-start;gap:3px;background:#15181A;color:#EFE6D2;border:0;padding:12px 14px;cursor:pointer;text-align:left;min-height:64px;font-family:'Source Serif 4',Georgia,serif}
+a{color:#8C2B23}a:hover{color:#5f1c16}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #15181A; font-family: 'Source Serif 4', Georgia, serif; color: #EFE6D2">
+
+<img src="/_blob/a967a084363224cd3d4af74430b8fe38" alt="" style="position: absolute; left: 0; top: 64px; width: 1440px; height: 966px; object-fit: cover; opacity: .35; filter: grayscale(.4)">
+<div style="position: absolute; left: 0; top: 64px; width: 1440px; height: 836px; background: rgba(21,24,26,.55)"></div>
+
+<div style="position: absolute; left: 0; top: 0; width: 1440px; height: 64px; background: #15181A; border-bottom: 1px solid #3A4043; display: flex; align-items: center; gap: 28px; padding: 0 24px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 12px; width: 250px">
+<img src="/_blob/64689c170d636886b2f7e8180d2d0c91" alt="Portrait of Mara Lenk" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: 50% 22%; border: 2px solid #8C2B23; box-shadow: 0 0 0 2px #15181A, 0 0 0 3px #EFE6D2">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px; line-height: 1">Mara Lenk</span>
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Organiser · Red Collective · Lv 14</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 150px">
+<div style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 10px; color: #B8B09F">Health</span><span style="font-family: Oswald, sans-serif; font-size: 12px">{{hud.hp}} / 165</span></div>
+<div class="gauge-track"><div style="width: {{hud.hpw}}; height: 6px; background: #D96B4B"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 190px">
+<div style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 10px; color: #B8B09F">Energy</span><span style="font-family: Oswald, sans-serif; font-size: 12px">{{hud.en}} / 100 <span style="color: #6FB3B0">· Rested {{hud.rested}}</span></span></div>
+<div class="gauge-track"><div style="width: {{hud.enw}}; height: 6px; background: #6FB3B0"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 5px; width: 110px">
+<div style="display: flex; justify-content: space-between"><span class="lbl" style="font-size: 10px; color: #B8B09F">Heat</span><span style="font-family: Oswald, sans-serif; font-size: 12px">{{hud.heat}} · {{hud.heatLabel}}</span></div>
+<div style="display: flex; gap: 2px"><span style="flex-grow: 1; height: 6px; background: #C39A3A"></span><span style="flex-grow: 1; height: 6px; background: {{hud.heat2}}"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span><span style="flex-grow: 1; height: 6px; background: #3A4043"></span></div>
+</div>
+<div style="display: flex; gap: 20px; align-items: center">
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">Iron Marks</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">{{hud.iron}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="lbl" style="font-size: 10px; color: #B8B09F">Pol. Capital</span><span style="font-family: Oswald, sans-serif; font-size: 17px; font-weight: 500">{{hud.pc}}</span></div>
+</div>
+<div style="margin-left: auto; display: flex; flex-direction: column; gap: 3px; text-align: right">
+<span class="lbl" style="font-size: 10px; color: #B8B09F">Wednesday · Day 17 · Summer</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 13px">14:20 · Coalport · Overcast 18°</span>
+</div>
+</div>
+
+<div style="position: absolute; left: 110px; top: 92px; width: 1220px; height: 776px; background: #EFE6D2; color: #15181A; box-shadow: 0 0 0 1px #15181A, 0 30px 80px rgba(0,0,0,.6); display: flex">
+
+<div style="width: 420px; flex-shrink: 0; position: relative; background: #15181A; overflow: hidden">
+<img src="{{art.src}}" alt="{{art.alt}}" style="position: absolute; left: 0; top: 0; width: 420px; height: 776px; object-fit: cover; object-position: {{art.pos}}">
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px; background: #15181A; color: #EFE6D2; display: flex; flex-direction: column; gap: 4px">
+<span class="lbl" style="font-size: 11px; color: #B8B09F">{{art.kicker}}</span>
+<span style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 26px; line-height: 1.05">{{art.title}}</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #cfc7b5">{{art.sub}}</span>
+</div>
+<sc-if value="{{art.hasStamp}}" hint-placeholder-val="{{false}}">
+<span style="position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-9deg); font-family: Oswald, sans-serif; font-weight: 600; font-size: 40px; letter-spacing: .18em; text-transform: uppercase; color: {{art.stampColor}}; border: 5px double {{art.stampColor}}; padding: 8px 22px; background: rgba(239,230,210,.9)">{{art.stamp}}</span>
+</sc-if>
+</div>
+
+<div style="flex-grow: 1; padding: 26px 30px; display: flex; flex-direction: column; gap: 16px; min-width: 0; position: relative">
+<a href="City.dc.html" aria-label="Close and return to the map" style="position: absolute; right: 18px; top: 18px; width: 40px; height: 40px; border: 1.5px solid #15181A; background: transparent; color: #15181A; display: flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></a>
+
+<sc-if value="{{isBoard}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px; padding-right: 50px">
+<span class="lbl" style="font-size: 11px; color: #5b564b">Coalport · Location 1 · 5 here now</span>
+<h1 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 38px; line-height: 1">What will you do at the gate?</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: #3d3a33">The furnaces are banked. Pickets at the gate, Vanguard foremen inside, and nobody has been paid since Friday.</p>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<span class="tag" style="color: #8C2B23">Issue: Strike at the Mill · +50% opinion</span>
+<span class="tag" style="color: #1E4D52">Rested · +50% XP &amp; Iron</span>
+<span class="tag" style="color: #5b564b">Overcast · no weather effect</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{missions}}" as="m" hint-placeholder-count="5">
+<button type="button" class="row" onClick="{{m.open}}">
+<span class="stub" style="background: {{m.stubBg}}; color: {{m.stubFg}}"><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 22px; line-height: 1">{{m.cost}}</span><span class="lbl" style="font-size: 9px">Energy</span></span>
+<span style="padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; flex-grow: 1">
+<span style="display: flex; gap: 10px; align-items: baseline"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 18px">{{m.title}}</span><span class="tag" style="color: {{m.typeColor}}">{{m.type}}</span></span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #5b564b">{{m.line}}</span>
+</span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 2px; padding: 0 14px; min-width: 120px">
+<span style="font-family: Oswald, sans-serif; font-size: 13px">{{m.reward}}</span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 11px; color: {{m.riskColor}}">{{m.risk}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+<p class="cap" style="margin: 0">Quick actions such as a job shift resolve on the spot. Missions open a briefing where you choose how to go about it.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{isBrief}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<button type="button" onClick="{{back}}" style="align-self: flex-start; background: none; border: 0; padding: 0; cursor: pointer; display: flex; gap: 6px; align-items: center; font-family: Oswald, sans-serif; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #5b564b"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>All actions at the gate</button>
+<div style="display: flex; flex-direction: column; gap: 6px; padding-right: 50px">
+<span class="lbl" style="font-size: 11px; color: {{brief.kickerColor}}">{{brief.kicker}}</span>
+<h1 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 36px; line-height: 1">{{brief.title}}</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #3d3a33">{{brief.text}}</p>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="lbl" style="font-size: 11px; color: #5b564b">Choose your approach</span>
+<sc-for list="{{brief.approaches}}" as="ap" hint-placeholder-count="3">
+<button type="button" class="{{ap.cls}}" onClick="{{ap.pick}}" aria-pressed="{{ap.selected}}">
+<span style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 17px">{{ap.title}}</span><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 20px">{{ap.chance}}%</span></span>
+<span style="font-family: 'Courier Prime', monospace; font-size: 12px; opacity: .85">{{ap.check}}</span>
+<span style="height: 5px; background: {{ap.track}}; display: block"><span style="display: block; height: 5px; width: {{ap.chanceW}}; background: {{ap.fill}}"></span></span>
+</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; flex-direction: column">
+<span class="lbl" style="font-size: 11px; color: #5b564b; padding-bottom: 4px">If it works</span>
+<sc-for list="{{brief.rewards}}" as="r" hint-placeholder-count="4">
+<div class="mod"><span>{{r.k}}</span><span style="font-family: Oswald, sans-serif">{{r.v}}</span></div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column">
+<span class="lbl" style="font-size: 11px; color: #5b564b; padding-bottom: 4px">Risks</span>
+<sc-for list="{{brief.risks}}" as="r" hint-placeholder-count="2">
+<div class="mod"><span>{{r.k}}</span><span style="font-family: Oswald, sans-serif; color: {{r.c}}">{{r.v}}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+<div style="display: flex; gap: 12px; align-items: center; margin-top: 4px">
+<button type="button" class="{{brief.btnCls}}" onClick="{{run}}" style="flex-grow: 1"><span>{{brief.cta}}</span><span style="color: #6FB3B0">{{brief.cost}} Energy</span></button>
+<span class="cap" style="width: 200px">You have {{hud.en}} Energy. Resolves instantly.</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isEncounter}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px; padding-right: 50px">
+<span class="lbl" style="font-size: 11px; color: #8C2B23">Encounter · tier 3 story</span>
+<h1 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 34px; line-height: 1.05">The office door opens.</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #3d3a33">The lamp comes on. Inspector Kessler, off duty and not pleased about it, fills the doorway with a constable behind him.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="border: 1.5px solid #15181A; padding: 12px; display: flex; gap: 12px; align-items: center; background: #F6F0E1">
+<img src="/_blob/64689c170d636886b2f7e8180d2d0c91" alt="" style="width: 64px; height: 64px; object-fit: cover; object-position: 50% 22%; border-radius: 50%; border: 2px solid #8C2B23">
+<div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1">
+<div style="display: flex; justify-content: space-between"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 17px">Mara Lenk</span><span style="font-family: Oswald, sans-serif; font-size: 13px">{{fight.youHp}} / 165</span></div>
+<div style="height: 8px; background: #d3c7ab"><div style="height: 8px; width: {{fight.youHpW}}; background: #D96B4B"></div></div>
+<span class="cap">STR 14 · AGI 17 · no weapon · no bodyguard</span>
+</div>
+</div>
+<div style="border: 1.5px solid #15181A; padding: 12px; display: flex; gap: 12px; align-items: center; background: #15181A; color: #EFE6D2">
+<img src="/_blob/cb99a962057ae72606571bfb92114ef7" alt="" style="width: 64px; height: 64px; object-fit: cover; object-position: 50% 18%; border-radius: 50%; border: 2px solid #EFE6D2">
+<div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1">
+<div style="display: flex; justify-content: space-between"><span style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 17px">Kessler &amp; constable</span><span style="font-family: Oswald, sans-serif; font-size: 13px">{{fight.foeHp}} / 55</span></div>
+<div style="height: 8px; background: #3A4043"><div style="height: 8px; width: {{fight.foeHpW}}; background: #B8B09F"></div></div>
+<span style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #cfc7b5">City Police · STR 16 · AGI 12</span>
+</div>
+</div>
+</div>
+<span class="lbl" style="font-size: 11px; color: #5b564b">One choice decides it</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<button type="button" class="act" style="background: #15181A; color: #EFE6D2; min-height: 96px" onClick="{{attack}}"><span style="display: flex; justify-content: space-between; width: 100%; align-items: baseline"><span style="font-family: Oswald, sans-serif; font-size: 16px; letter-spacing: .12em; text-transform: uppercase">Fight</span><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 22px">62%</span></span><span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; opacity: .85">Strength 14 vs 16 · expect about −28 Health</span><span style="display: block; width: 100%; height: 4px; background: rgba(239,230,210,.25)"><span style="display: block; height: 4px; width: 62%; background: #6FB3B0"></span></span></button>
+<button type="button" class="act" style="background: #15181A; color: #EFE6D2; min-height: 96px" onClick="{{flee}}"><span style="display: flex; justify-content: space-between; width: 100%; align-items: baseline"><span style="font-family: Oswald, sans-serif; font-size: 16px; letter-spacing: .12em; text-transform: uppercase">Flee</span><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 22px">85%</span></span><span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; opacity: .85">Agility 17 vs 12 · the ledgers stay behind</span><span style="display: block; width: 100%; height: 4px; background: rgba(239,230,210,.25)"><span style="display: block; height: 4px; width: 85%; background: #6FB3B0"></span></span></button>
+<button type="button" class="act" style="background: #15181A; color: #EFE6D2; min-height: 96px" onClick="{{bluff}}"><span style="display: flex; justify-content: space-between; width: 100%; align-items: baseline"><span style="font-family: Oswald, sans-serif; font-size: 16px; letter-spacing: .12em; text-transform: uppercase">Bluff</span><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 22px">40%</span></span><span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; opacity: .85">Charisma 12 · “I’m from the Herald”</span><span style="display: block; width: 100%; height: 4px; background: rgba(239,230,210,.25)"><span style="display: block; height: 4px; width: 40%; background: #6FB3B0"></span></span></button>
+<button type="button" class="act" style="background: #C39A3A; color: #15181A; min-height: 96px" onClick="{{bribe}}"><span style="display: flex; justify-content: space-between; width: 100%; align-items: baseline"><span style="font-family: Oswald, sans-serif; font-size: 16px; letter-spacing: .12em; text-transform: uppercase">Bribe</span><span style="font-family: Oswald, sans-serif; font-weight: 600; font-size: 22px">90%</span></span><span style="font-family: 'Courier Prime', monospace; font-size: 11.5px; opacity: .85">300 Iron · Kessler looks corruptible</span><span style="display: block; width: 100%; height: 4px; background: rgba(239,230,210,.25)"><span style="display: block; height: 4px; width: 90%; background: #6FB3B0"></span></span></button>
+</div>
+<button type="button" onClick="{{flee}}" style="display: flex; justify-content: space-between; align-items: center; border: 1.5px solid #15181A; background: transparent; color: #15181A; height: 46px; padding: 0 16px; font-family: Oswald, sans-serif; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer"><span>Auto-resolve · best odds without cost</span><span>Flee · 85%</span></button>
+<p class="cap" style="margin: 0">Close the game now and this waits for you; if you never answer, auto-resolve picks for you. Losing a fight means St. Agnes and 2 record points.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{isResult}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px; padding-right: 50px">
+<span class="lbl" style="font-size: 11px; color: {{res.color}}">{{res.kicker}}</span>
+<h1 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 34px; line-height: 1.05">{{res.title}}</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.6; color: #3d3a33">{{res.text}}</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border: 1px solid #15181A; background: #F6F0E1">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span class="lbl" style="font-size: 11px; color: #5b564b">The check</span><span style="font-family: 'Courier Prime', monospace; font-size: 12px">{{res.check}}</span></div>
+<div style="position: relative; height: 14px; background: #d3c7ab">
+<div style="position: absolute; left: 0; top: 0; height: 14px; width: {{res.chanceW}}; background: {{res.chanceColor}}"></div>
+<span style="position: absolute; left: {{res.rollW}}; top: -4px; width: 3px; height: 22px; background: #15181A"></span>
+</div>
+<span class="cap">Anything under the {{res.chance}}% mark succeeds. The roll landed on {{res.roll}}.</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{res.rewards}}" as="r" hint-placeholder-count="4">
+<div class="rw"><span class="lbl" style="font-size: 10px; color: #5b564b">{{r.k}}</span><span class="rw-n" style="color: {{r.c}}">{{r.v}}</span><span class="cap" style="font-size: 11px">{{r.note}}</span></div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{res.lines}}" as="l" hint-placeholder-count="3">
+<div class="mod"><span>{{l.k}}</span><span style="font-family: Oswald, sans-serif; color: {{l.c}}">{{l.v}}</span></div>
+</sc-for>
+</div>
+<div style="display: flex; gap: 12px; margin-top: 4px">
+<button type="button" class="btn" onClick="{{back}}" style="flex-grow: 1"><span>Back to the gate</span><span style="color: #6FB3B0">{{hud.en}} Energy left</span></button>
+<a href="City.dc.html" class="btn-ghost" style="text-decoration: none">Return to the map</a>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: 'board', mission: null, approach: 'numbers', fight: null, outcome: null };
+  }
+  renderVals() {
+    const st = this.state;
+    const go = (patch) => () => this.setState(patch);
+    const MISSIONS = [
+      { id: 'speech', title: 'Speak at the picket line', type: 'Speech', typeColor: '#1E4D52', cost: 15, line: 'Issue: Strike at the Mill · resolves with a choice', reward: '+90 XP · +22 FXP', risk: '5% encounter', riskColor: '#5b564b', stubBg: '#E2D6BB', stubFg: '#15181A' },
+      { id: 'bulletins', title: 'Hand out strike bulletins', type: 'Propaganda', typeColor: '#1E4D52', cost: 10, line: 'Issue: Strike at the Mill · outdoors', reward: '+70 XP · +15 FXP', risk: '10% encounter', riskColor: '#5b564b', stubBg: '#E2D6BB', stubFg: '#15181A' },
+      { id: 'shift', title: 'Work your shift', type: 'Job', typeColor: '#5b564b', cost: 4, line: 'Factory worker · streak 6 days · quick action', reward: '+175 Iron', risk: 'Suspended if the strike holds', riskColor: '#5b564b', stubBg: '#E2D6BB', stubFg: '#15181A' },
+      { id: 'follow', title: 'Follow foreman Brandauer', type: 'Intelligence', typeColor: '#4B7394', cost: 8, line: 'Stealth · Dossier entry on a named NPC', reward: 'Dossier entry', risk: '+5 Heat if seen', riskColor: '#8C2B23', stubBg: '#E2D6BB', stubFg: '#15181A' },
+      { id: 'sabotage', title: 'Wreck the foremen’s office', type: 'Sabotage · illegal', typeColor: '#8C2B23', cost: 25, line: 'Burn the pay ledgers before the Monday audit', reward: '+200 XP · +35 FXP', risk: '+12 Heat · 25% encounter', riskColor: '#8C2B23', stubBg: '#15181A', stubFg: '#EFE6D2' }
+    ].map((m) => ({ ...m, open: (m.id === 'speech' || m.id === 'sabotage') ? go({ screen: 'brief', mission: m.id, approach: m.id === 'speech' ? 'numbers' : 'dock' }) : go({}) }));
+
+    const BRIEFS = {
+      speech: {
+        kicker: 'Speech · Issue: Strike at the Mill', kickerColor: '#1E4D52', title: 'Speak at the picket line', cost: 15, cta: 'Take the crate', btnCls: 'btn',
+        text: 'Three hundred men and women at the gate, cold and unpaid since Friday. The foremen watch from the office window. Say the right thing and the strike holds another week. Say the wrong thing and they drift home.',
+        approaches: [
+          { id: 'solidarity', title: 'Appeal to solidarity', check: 'Charisma 12 (worn) vs 14 · the crowd is tired', chance: 58 },
+          { id: 'numbers', title: 'Lay out the numbers', check: 'Intelligence 18 vs 12 · you read the mill’s books', chance: 74 },
+          { id: 'callout', title: 'Name foreman Brandauer', check: 'Uses your Dossier entry: seen at the police station', chance: 81, extra: true }
+        ],
+        rewards: [{ k: 'Experience', v: '+90 (+45 Rested)' }, { k: 'Faction XP', v: '+22' }, { k: 'Iron', v: '+30 (+15 Rested)' }, { k: 'Coalport opinion', v: '+0.9% ×1.5 Issue' }],
+        risks: [{ k: 'Encounter', v: '5%', c: '#15181A' }, { k: 'Naming Brandauer', v: '+4 Heat', c: '#8C2B23' }]
+      },
+      sabotage: {
+        kicker: 'Sabotage · illegal', kickerColor: '#8C2B23', title: 'Wreck the foremen’s office', cost: 25, cta: 'Go in tonight', btnCls: 'btn btn-red',
+        text: 'The pay ledgers sit in the foremen’s office. If they burn before Monday’s audit, the company cannot prove who struck and who did not. The night watchman does his rounds at ten and at midnight.',
+        approaches: [
+          { id: 'dock', title: 'Through the loading dock at shift change', check: 'Agility 17 vs 15 · caught check +9 from your Heat', chance: 62 },
+          { id: 'watchman', title: 'Bribe the night watchman', check: '80 Iron · his loyalty is to the company', chance: 70 },
+          { id: 'fire', title: 'Start a fire in the coal shed first', check: 'Strength 14 · louder, but draws the guards away', chance: 55 }
+        ],
+        rewards: [{ k: 'Experience', v: '+200 (+100 Rested)' }, { k: 'Faction XP', v: '+35' }, { k: 'Coalport opinion', v: '+1.2% ×1.5 Issue' }, { k: 'Strike at the Mill', v: '+6 momentum' }],
+        risks: [{ k: 'Heat', v: '+12', c: '#8C2B23' }, { k: 'Encounter', v: '25%', c: '#8C2B23' }, { k: 'If caught', v: '3 record points', c: '#8C2B23' }]
+      }
+    };
+
+    const brief0 = st.mission ? BRIEFS[st.mission] : BRIEFS.speech;
+    const brief = {
+      ...brief0,
+      approaches: brief0.approaches.map((a) => {
+        const sel = a.id === st.approach;
+        return { ...a, selected: sel, cls: sel ? 'appr appr-sel' : 'appr', chanceW: a.chance + '%', track: sel ? '#3A4043' : '#d3c7ab', fill: sel ? '#6FB3B0' : '#1E4D52', pick: go({ approach: a.id }) };
+      })
+    };
+    const chosen = brief.approaches.find((a) => a.selected) || brief.approaches[0];
+
+    const run = () => {
+      if (st.mission === 'sabotage') {
+        this.setState({ screen: 'encounter', fight: { round: 1, you: 142, foe: 55, log: [{ t: 'You get in through the loading dock. The ledgers are in the second cabinet.', c: '#3d3a33' }, { t: 'Encounter: the lamp comes on. City Police, 2 men.', c: '#8C2B23' }] } });
+      } else {
+        this.setState({ screen: 'result', outcome: 'speech' });
+      }
+    };
+    const f = st.fight || { round: 1, you: 142, foe: 55, log: [] };
+    const attack = () => this.setState({ screen: 'result', outcome: 'won', fight: { ...f, foe: 0, you: 114 } });
+    const bluff = () => this.setState({ screen: 'result', outcome: 'bluffed' });
+    const flee = () => this.setState({ screen: 'result', outcome: 'fled' });
+    const bribe = () => this.setState({ screen: 'result', outcome: 'bribed' });
+
+    const RESULTS = {
+      speech: {
+        kicker: 'Success', color: '#1E4D52', stamp: 'Success', stampColor: '#1E4D52',
+        title: 'The strike holds another week.',
+        text: 'You read the mill’s own figures back to them: what the company paid its shareholders in March, what it pays a furnace man in a year. By the end nobody is looking at the foremen’s window. Someone starts the old song. A reporter from the Herald is writing fast.',
+        check: 'Intelligence 18 vs 12', chance: 74, roll: 41,
+        rewards: [
+          { k: 'Experience', v: '+135', note: '90 + 45 Rested', c: '#15181A' },
+          { k: 'Faction XP', v: '+22', note: 'Collective rank 3', c: '#8C2B23' },
+          { k: 'Iron', v: '+45', note: '30 + 15 Rested', c: '#15181A' },
+          { k: 'Coalport', v: '+1.4%', note: 'for the Collective', c: '#8C2B23' }
+        ],
+        lines: [
+          { k: 'Influence ledger, Coalport', v: '3rd → 2nd of 57', c: '#1E4D52' },
+          { k: 'Issue · Strike at the Mill', v: '81% → 84% Collective', c: '#8C2B23' },
+          { k: 'Energy', v: '−15 · Rested 120 → 105', c: '#15181A' },
+          { k: 'The Herald', v: 'Your speech may make tomorrow’s paper', c: '#15181A' }
+        ]
+      },
+      won: {
+        kicker: 'Success · after a fight', color: '#1E4D52', stamp: 'Ledgers burned', stampColor: '#8C2B23',
+        title: 'The ledgers go up in the stove.',
+        text: 'The constable goes down over the filing cabinet and Kessler decides his evening is not worth this. You feed the pay ledgers to the stove page by page and leave by the loading dock. Tomorrow the company will not be able to say who struck.',
+        check: 'Agility 17 vs 15 + Heat', chance: 62, roll: 33,
+        rewards: [
+          { k: 'Experience', v: '+300', note: '200 + 100 Rested', c: '#15181A' },
+          { k: 'Faction XP', v: '+35', note: 'Collective rank 3', c: '#8C2B23' },
+          { k: 'Coalport', v: '+1.8%', note: 'for the Collective', c: '#8C2B23' },
+          { k: 'Heat', v: '+12', note: '18 → 30 · Noticed', c: '#8C2B23' }
+        ],
+        lines: [
+          { k: 'Health', v: '142 → ' + (st.fight ? st.fight.you : 114), c: '#D96B4B' },
+          { k: 'Issue · Strike at the Mill', v: '+6 momentum', c: '#8C2B23' },
+          { k: 'Inspector Kessler', v: 'Now has a file on you', c: '#8C2B23' },
+          { k: 'Criminal Record', v: 'Not caught · clean', c: '#1E4D52' }
+        ]
+      },
+      fled: {
+        kicker: 'Failure · you got away', color: '#8C2B23', stamp: 'Failed', stampColor: '#8C2B23',
+        title: 'You are over the wall before the whistle.',
+        text: 'Out the back window, across the coal heaps and over the wall into Dock Street. The ledgers are still in the cabinet. Kessler did not see your face, but the constable saw your scarf.',
+        check: 'Flee · Agility 17 vs 12', chance: 85, roll: 52,
+        rewards: [
+          { k: 'Experience', v: '+20', note: 'consolation', c: '#15181A' },
+          { k: 'Faction XP', v: '0', note: 'no reward on failure', c: '#5b564b' },
+          { k: 'Heat', v: '+12', note: '18 → 30 · Noticed', c: '#8C2B23' },
+          { k: 'Energy', v: '−25', note: 'spent anyway', c: '#15181A' }
+        ],
+        lines: [
+          { k: 'Criminal Record', v: 'Not caught · clean', c: '#1E4D52' },
+          { k: 'Police encounters', v: '+5% while Noticed', c: '#8C2B23' },
+          { k: 'Heat cools', v: '5 per hour · Cool again by 17:00', c: '#15181A' }
+        ]
+      },
+      bluffed: {
+        kicker: 'Failure · the bluff failed', color: '#8C2B23', stamp: 'Arrested', stampColor: '#8C2B23',
+        title: 'Kessler has read the Herald’s staff list.',
+        text: 'Your name isn’t on it. One night in the cells at Dock Street, and a second record point by morning.',
+        check: 'Bluff · Charisma 12', chance: 40, roll: 68,
+        rewards: [
+          { k: 'Experience', v: '+20', note: 'consolation', c: '#15181A' },
+          { k: 'Record', v: '+2', note: 'Known', c: '#8C2B23' },
+          { k: 'Heat', v: '+12', note: 'now 30', c: '#8C2B23' },
+          { k: 'Jail', v: '38 min', note: 'or 400 Iron bail', c: '#8C2B23' }
+        ],
+        lines: [
+          { k: 'A faction mate can post bail', v: 'Request sent to Coalport chat', c: '#1E4D52' },
+          { k: 'Jail storylet', v: 'A cellmate knows Brandauer', c: '#15181A' }
+        ]
+      },
+      bribed: {
+        kicker: 'Mixed · bought off', color: '#C39A3A', stamp: 'Bought off', stampColor: '#9a7420',
+        title: 'Kessler pockets the money and looks at the ceiling.',
+        text: 'Three hundred marks go into the inspector’s coat. He tells the constable they are leaving, and tells you the ledgers had better still be there when the audit comes. They are not. But now Kessler knows your name and your price.',
+        check: 'Bribe · Kessler is corruptible', chance: 90, roll: 12,
+        rewards: [
+          { k: 'Experience', v: '+150', note: 'partial success', c: '#15181A' },
+          { k: 'Faction XP', v: '+18', note: 'half reward', c: '#8C2B23' },
+          { k: 'Iron', v: '−300', note: 'the bribe', c: '#8C2B23' },
+          { k: 'Heat', v: '+12', note: 'the bribe keeps your record clean', c: '#8C2B23' }
+        ],
+        lines: [
+          { k: 'Dossier', v: 'New entry: Kessler takes bribes', c: '#1E4D52' },
+          { k: 'Inspector Kessler', v: 'Can be bribed again · price rises', c: '#15181A' },
+          { k: 'Coalport opinion', v: '+0.9% for the Collective', c: '#8C2B23' }
+        ]
+      }
+    };
+    const r0 = { ...RESULTS[st.outcome || 'speech'] };
+    if (st.outcome === 'speech' || st.outcome === 'won') { r0.check = chosen.check.split(' · ')[0]; r0.chance = chosen.chance; r0.roll = Math.min(chosen.chance - 9, r0.roll); }
+    if (st.outcome === 'speech' && chosen.id === 'callout') { r0.lines = [...r0.lines.slice(0, 3), { k: 'Heat', v: '+4 · you named a foreman', c: '#8C2B23' }]; }
+    const res = { ...r0, chanceW: r0.chance + '%', rollW: r0.roll + '%', chanceColor: r0.color === '#8C2B23' ? '#d9a39c' : '#9cc3c1' };
+
+    const scr = st.screen;
+    const outcome = st.outcome;
+    const spent = scr === 'result' ? (outcome === 'speech' ? 15 : 25) : 0;
+    const heat = scr === 'result' && outcome !== 'speech' ? 30 : 18;
+    const hp = scr === 'encounter' ? f.you : (scr === 'result' && outcome === 'won' && st.fight ? st.fight.you : 142);
+    const iron = scr === 'result' ? (outcome === 'speech' ? '4,255' : outcome === 'bribed' ? '3,910' : '4,210') : '4,210';
+    const hud = {
+      hp, hpw: Math.round(hp / 165 * 100) + '%',
+      en: 59 - spent, enw: (59 - spent) + '%',
+      rested: scr === 'result' && outcome === 'speech' ? 105 : (scr === 'result' && (outcome === 'won' || outcome === 'bribed') ? 95 : 120),
+      heat, heatLabel: heat >= 25 ? 'Noticed' : 'Cool', heat2: heat >= 25 ? '#C39A3A' : '#3A4043',
+      iron, pc: 86
+    };
+
+    let art;
+    if (scr === 'board') art = { src: '/_blob/6bc84ceb729c5b9c81e1b9d583e18935', alt: 'Drawing of strikers at the mill gate', pos: '38% 50%', kicker: 'Coalport · Steel Mill Gate', title: 'The Mill Gate', sub: '5 Collective · 2 Vanguard · 3 strangers', hasStamp: false };
+    else if (scr === 'brief' && st.mission === 'sabotage') art = { src: '/_blob/8e85506dd5764430fa3127be9450b0c6', alt: 'The foremen’s office at night', pos: '45% 50%', kicker: 'Mission · illegal', title: 'The Foremen’s Office', sub: 'Heat 18 · Cool · caught checks +9', hasStamp: false };
+    else if (scr === 'brief') art = { src: '/_blob/6bc84ceb729c5b9c81e1b9d583e18935', alt: 'Drawing of strikers at the mill gate', pos: '30% 50%', kicker: 'Mission · legal', title: 'The Picket Line', sub: 'Three hundred at the gate', hasStamp: false };
+    else if (scr === 'encounter') art = { src: '/_blob/cb99a962057ae72606571bfb92114ef7', alt: 'Inspector Kessler', pos: '50% 20%', kicker: 'Encounter', title: 'Inspector Kessler', sub: 'City Police · off duty · corruptible?', hasStamp: false };
+    else art = { src: outcome === 'speech' ? '/_blob/6bc84ceb729c5b9c81e1b9d583e18935' : '/_blob/8e85506dd5764430fa3127be9450b0c6', alt: '', pos: '40% 50%', kicker: 'Result', title: outcome === 'speech' ? 'The Picket Line' : 'The Foremen’s Office', sub: 'Day 17 · 14:21', hasStamp: true, stamp: r0.stamp, stampColor: r0.stampColor };
+
+    return {
+      isBoard: scr === 'board', isBrief: scr === 'brief', isEncounter: scr === 'encounter', isResult: scr === 'result',
+      missions: MISSIONS, brief, chosen, res, hud, art,
+      fight: { round: f.round, youHp: f.you, youHpW: Math.round(f.you / 165 * 100) + '%', foeHp: f.foe, foeHpW: Math.round(f.foe / 55 * 100) + '%', log: f.log },
+      back: go({ screen: 'board', mission: null, fight: null, outcome: null }),
+      close: go({ screen: 'board', mission: null, fight: null, outcome: null }),
+      run, attack, bluff, flee, bribe
+    };
+  }
+}
+</script>
+</body>
+</html>
