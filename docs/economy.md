@@ -241,12 +241,14 @@ Slice 2 adds no rate and no sink. It adds three one-off sums on day 1 and a choi
 
 | Answer | Reference recruit | Range across answers |
 |---|---|---|
-| Stats (§8.5) | STR 10 / INT 12 / AGI 5 | best stat 10–16; the other two 5–8 |
+| Stats (§8.5) | STR 10 / INT 12 / AGI 5 | best stat 8–16 (the origin gives 6–9 trained points, at most +8 to one stat, plus the faction's +3); the other two 5–11 |
 | Worn CHA | 2 (coat refused) | 2 (refused) · 5 (accepted) · 6 (promised: coat 5 + base 1); up to 9 with *talked them out* and *read people* on top |
 | Iron | 150 (refused) | 0 or 150 |
 | FXP | 50 (the wish matched the faction) | 0 or 50 |
 
 **What the coat is worth.** The CHA+INT actions are a third of each home city's checks (Coalport 4 of 15, Duskwall 3 of 15, Ashford 6 of 16). For the reference recruit they sit at 46 %; coat A lifts them to 52 %, coat C to 54 %, which is +0.03 to +0.04 on the expected reward factor of those actions (0.73 → 0.76 / 0.77) and about **+3 % of a day's XP** for a player who spreads their Energy. Refusing the coat is 150 Iron, which is about a sixth of a reference day's income. The three answers are within a day's play of each other; none is a trap.
+
+**The flattest build.** A Vanguard recruit who fished, talked them out and read people starts at STR 8 / INT 8 / AGI 8 with CHA base 3 (worn CHA 5 refused, 8 with coat A, 9 with coat C): every home check is 50 % (52 % on CHA+INT with coat C), an expected reward factor of 0.75 against the reference recruit's 0.83 on INT. Level 2 arrives on the fourth or fifth canvass instead of the third or fourth, and the first bar pays about 10 % less XP. From day 2 the level-up points close the gap: the build's best stat reaches the 95 % clamp about a day and a half after the reference recruit does (day 5 rather than day 3–4). The CHA base 3 is permanent and adds to every outfit bought later, which is the trade the answers describe. No pacing target in §5.2 moves.
 
 ### 13.2 Day 1, session 1 (the first bar, 100 Energy, no Rested)
 

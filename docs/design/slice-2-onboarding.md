@@ -31,6 +31,14 @@ A tier-3 story in three steps. Each step is one screen: the art panel, a kicker,
 
 **Art:** steps 1–3 use `mvp/scenes/origin-deathbed.png` in the art panel with `mvp/portraits/father.png` as the speaker's portrait beside the question; the street uses `mvp/scenes/origin-street.png` (§9).
 
+**Echo lines** (one per answer to the first question of each step, shown in Courier above the second question; the second question of a step has no echo because the step ends there). An answer is final once tapped (§7.2); the echo is how the player sees what they chose.
+
+| Step | A | B | C |
+|---|---|---|---|
+| 1 *The summer* | You went fishing with him. | You worked the factory floor. | You sat in the library. |
+| 2 *The talent* | You could outrun anyone. | You could fix anything. | You could read people. |
+| 3 *The promise* | You promised to clear his name. | You promised to settle what he owed. | You promised to finish what he started. |
+
 ### 2.1 Step 1 — The room
 
 Kicker: *Irongate · a rented room above the tram depot · night*
@@ -98,9 +106,9 @@ The wish is the last question so that the faction screen can show it (§5): the 
 
 ### 2.4 Appendix C #12, resolved: the answers stack as written
 
-§8.5 said the origin gives "up to +5" to a stat; the table lets three answers stack to +8 (library, watched, read people → +8 INT; factory, led, fix anything → +8 STR). **Decision: accept the stacking and say so.** The origin adds **8 points across STR, INT and AGI** (3 + 2 + 3), or **9** when the talent is *fix anything* (its +1 INT), with **at most +8 to one stat**, plus **up to +4 CHA base** (talked them out +2, read people +1, the promised coat +1). With the faction's +3 (§7.3), a new player's best stat is **10–16, typically 12–14**.
+§8.5 said the origin gives "up to +5" to a stat; the table lets three answers stack to +8 (library, watched, read people → +8 INT; factory, led, fix anything → +8 STR). **Decision: accept the stacking and say so.** The three memory answers add **8 or 9 points counting CHA base**: the summer gives +3 to one trained stat; the trouble gives +2 STR, +2 INT or **+2 CHA base**; the talent gives +3, or +4 with *fix anything* (+3 STR +1 INT) or *read people* (+3 INT **+1 CHA base**). So the origin adds **6–9 points across STR, INT and AGI**, with **at most +8 to one stat**, plus **up to +4 CHA base** (talked them out +2, read people +1, the promised coat +1). With the faction's +3 (§7.3), a new player's best stat is **8–16, typically 11–14**. (Corrected 29 Sep 2026, §13 Q13: the first draft said "8–9 across STR, INT and AGI" and "10–16"; the table was always right and the build follows it.)
 
-Why not cap at +5: the player never sees a number (§7.1), so a cap would silently waste the second and third answers of anyone who answered consistently, which is exactly the player who cared. Why the spread is fine: an all-in build reaches 16 (an 82 % home check) but sits at 5 in everything else (38 %), while the reference recruit's 12 (66 %) comes with 10 in STR; the difference in expected reward on the best stat is 0.91 against 0.83 (`docs/economy.md` §2), and every build reaches the 95 % clamp on its best stat by day 3–4 from level-up points and Standing. The spread is flavour with a cost, not a gap.
+Why not cap at +5: the player never sees a number (§7.1), so a cap would silently waste the second and third answers of anyone who answered consistently, which is exactly the player who cared. Why the spread is fine: an all-in build reaches 16 (an 82 % home check) but sits at 5 in everything else (38 %), while the reference recruit's 12 (66 %) comes with 10 in STR; the difference in expected reward on the best stat is 0.91 against 0.83 (`docs/economy.md` §2). The flattest build, a Vanguard recruit who fished, talked them out and read people, is STR 8 / INT 8 / AGI 8 with CHA base 3: 50 % everywhere on day 1, and the biggest permanent CHA base there is, which every later coat adds to (`docs/economy.md` §13.1). Every build reaches the 95 % clamp on its best stat from level-up points and Standing, the reference recruit by day 3–4 and the flattest by about day 5. The spread is flavour with a cost, not a gap.
 
 **The reference recruits.** The canonical recruit (§8.5) is unchanged and is now fully specified: *library · watched · fix anything · refuse the coat · Justice · Finish His Work*, so **STR 10 / INT 12 / AGI 5 / CHA 2 (worn), 150 Iron, +50 FXP, no coat**. The same answers in the other factions give the tuning characters for Duskwall and Ashford:
 
@@ -110,7 +118,7 @@ Why not cap at +5: the player never sees a number (§7.1), so a cap would silent
 | **Collective** (canonical, +2 STR +1 INT) | 10 | 12 | 5 | 2 | INT 66 % · STR 58 % · CHA+INT 46 % · AGI 38 % |
 | Alliance (reference answers, +3 INT) | 8 | 14 | 5 | 2 | INT 74 % · STR 50 % · CHA+INT 50 % · AGI 38 % |
 
-With coat A (CHA 5) the CHA+INT checks rise 4–6 points; with coat C (CHA 6), 6–8. `docs/economy.md` §13 has the day-1 arithmetic.
+With coat A (CHA 5) every CHA+INT check rises 6 points (the average rises by 1.5); with coat C (CHA 6), 8 points. `docs/economy.md` §13 has the day-1 arithmetic.
 
 ---
 
@@ -141,7 +149,7 @@ Three names in the book have two ticks: the ones who came out for him in the rai
 
 | Approach | Check | Chance for the reference recruit |
 |---|---|---|
-| Knock the three doors and say whose child you are | CHA+INT vs 8 | 46 % (58 % with coat A) |
+| Knock the three doors and say whose child you are | CHA+INT vs 8 | 46 % (52 % with coat A, 54 % with coat C) |
 | Sort the book by street first, then knock | INT vs 8 | 66 % |
 
 CTA: **Walk his ward · 10 Energy**
@@ -150,7 +158,7 @@ CTA: **Walk his ward · 10 Energy**
 - Success — *Two of the three remember him* — One cries, one puts the kettle on, one shuts the door and then opens it again. All three take a leaflet. The third asks, on the step, whether you'll be standing. You say not yet.
 - Partial — *One door opens* — New tenants at two of the three; the third remembers the name and not much else. She takes a leaflet for the landing. It's a start, and the book is still two hundred names long.
 - Failure — *Nobody home* — No one answers at any of the three. You leave a leaflet with his name written on each and walk back through the ward in the rain. The book goes back in the suitcase, for now.
-- Knock-on lines: *Keepsake: his ward book* · *Chapter 2, "Stand where he stood": from day 8, at Rank 2*
+- Knock-on lines: *Keepsake: His ward book* · *Chapter 2, "Stand where he stood": from {date}, at Rank 2*, where `{date}` is the weekday and day-month seven City Days after the day the chapter was played (*Tuesday 6 October* for a chapter played on 29 September; §13 Q2)
 
 ### 3.3 Clear His Name — Chapter 1: *The prison letter*
 
@@ -176,7 +184,7 @@ CTA: **Start asking · 10 Energy**
 - Success — *A name comes back* — One man convicted on the word of a night foreman called Brandauer. Brandauer is alive, retired, and drawing a pension from a senator's office. You write the name down twice, in case.
 - Partial — *A name in pencil* — The report is missing its last page, but someone has written a name in the margin in pencil: Brandauer, foreman. Nobody in the market will say the name out loud. That tells you something too.
 - Failure — *Out on loan* — The file is out on loan to a ministry, and the old men in the market go quiet when you say the year. You leave your name with the clerk, which may have been a mistake.
-- Knock-on: *Keepsake: the prison letter* · *Chapter 2, "The night foreman": from day 8, at Level 6*
+- Knock-on: *Keepsake: The prison letter* · *Chapter 2, "The night foreman": from {date}, at Level 6*
 
 ### 3.4 Settle His Debts — Chapter 1: *The marker*
 
@@ -202,7 +210,7 @@ CTA: **Answer him · 10 Energy**
 - Success — *A month, and a name* — The countersignature is a house on the Clearwater riverside. He shrugs: a month, then they'll want something instead of money. A month is a long time in politics. You write the house down.
 - Partial — *A month, no name* — You get a month, not a name. He takes the stairs two at a time, whistling, and leaves the marker on the banister. You'll see him again; you'd both rather it was later.
 - Failure — *A fortnight* — He gives you a fortnight and no name, and looks round the room as if pricing it. The stairwell is very quiet after he's gone. You put the marker in the suitcase, next to the shirts.
-- Knock-on: *Keepsake: the marker* · *Chapter 2, "The riverside house": from day 8, at Level 6*
+- Knock-on: *Keepsake: The marker* · *Chapter 2, "The riverside house": from {date}, at Level 6*
 
 ---
 
@@ -269,7 +277,7 @@ Each card answers four questions in under thirty words: who they are, what they 
 
 The Vanguard is a period antagonist written cold, never an aspiration. Reviewed in this change, for the card, the Duskwall content and the paper:
 
-- **No real-world symbols, salutes, uniform colours, titles or slogans.** The crest is a plain square. The movement's mark on a wall is the square; its chalked line is *HOLD THE LINE*, which is the GDD's own phrase. Ranks are generic military (Initiate to Marshal). The NPC is an *organiser*, the office is a *committee*, the party is *the movement* or *the district*. No leader is named or titled.
+- **No real-world symbols, salutes, uniform colours, titles or slogans.** The crest on the faction card and the party card is `crests/crest-vanguard.svg`: an iron gate beneath a lantern, gold line on black, inside a square frame (reviewed 29 Sep 2026, §13 Q6: it passes; it is the city's gate, and nothing in it is a real-world emblem). The plain square is the **small mark** only (list bullets, the map plate, the chalked mark on a wall). The chalked line is *HOLD THE LINE*, which is the GDD's own phrase. Ranks are generic military (Initiate to Marshal). The NPC is an *organiser*, the office is a *committee*, the party is *the movement* or *the district*. No leader is named or titled.
 - **Vocabulary avoided:** purity, blood, race, storm, march on, shirts of any colour, torches beyond the GDD's existing *Torchlight March* (an event name in §16.1; it is flagged in Appendix C #7 for the moderation policy).
 - **§16.1's description** said "strength, order and national purity"; it now reads "strength, order and the nation above all", so the phrase can't leak into player-facing copy.
 - **Tone:** the Duskwall texts show the movement through what it does to a town (curfew bells, provosts, ration queues, a searchlight) and how people react (fear, relief, compliance); they never argue that it is right. The player can play it; the game never praises it.
@@ -416,7 +424,7 @@ The Story mockup (`docs/mockups/Story.dc.html`) is the shape for every tier-3 sc
 | §7.3 | The street, the faction cards and the tag for the father's wish; the train to the home city |
 | §7.5 (new) | The first ten minutes: the welcome edition, the first landing, the order of introduction |
 | §8.2 | The table: per-faction Tier I outfits at CHA 2; *Your father's coat* at 5; CHA base 0–4 |
-| §8.5 | Starting stats restated: origin 8–9 points across STR/INT/AGI, at most +8 to one, CHA base up to +4; best stat 10–16; the reference recruit's full answer set and the two mirror recruits |
+| §8.5 | Starting stats restated: origin 6–9 points across STR/INT/AGI (8–9 counting CHA base), at most +8 to one, CHA base up to +4; best stat 8–16 (corrected in §13 Q13); the reference recruit's full answer set and the two mirror recruits |
 | §9.2 | New jobs pinned: Stores hand (Duskwall, 180 / 216) and Copy clerk (Ashford, 180 / 216); Street vendor and Driver placed in each home city |
 | §13.5 | Duskwall's and Ashford's six locations listed against their kinds |
 | §13.7 | Stahl and Grey as secretaries; the welcome set for the first City Day |
@@ -427,3 +435,64 @@ The Story mockup (`docs/mockups/Story.dc.html`) is the shape for every tier-3 sc
 | Appendix C | #6 closed (*Finish His Work* first); #12 closed (stacking accepted); new #18 (the welcome set is per character), #19 (the avatar has no bearing on anything: keep it so), #20 (the Ambition failure texts on day 1) |
 
 Companion edit: `docs/economy.md` §13 (day-1 arithmetic with the FXP seed, the chapter and the coat).
+
+---
+
+## 13. Answers to the slice-2 tech design (§20.1)
+
+Game designer, 29 Sep 2026. Thirteen questions from `docs/tech/slice-2.md` §20.1. "Default stands" means the design's default is the rule; where a rule is new it is pinned in the GDD section named. The content-policy flags in §20.3 are not answered here; they are the user's.
+
+| # | Question | Answer | Pinned in |
+|---|---|---|---|
+| 1 | Echo lines | **Written: nine lines**, in the table under §2 above. One per answer to the first question of each step, Courier, past tense, second person. | GDD §7.2; this doc §2 |
+| 2 | The chapter-2 hook | **Default stands, computed.** *Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2* for a chapter played on 29 September. Format: `Chapter {n}, "{title}": from {Weekday D Month}, at {Rank n \| Level n}`. §3.2–3.4 now read *from {date}*. | GDD §17.1 |
+| 3 | The Today tally | **Default stands.** The chapter's Energy, XP, FXP and Iron count in *Today*; no attempt, no win. | GDD §17.1 |
+| 4 | Going back in the origin | **Default stands: set-once.** No number is shown, so there is nothing to optimise by going back, and the echo line is how the player sees what they tapped. A double tap changes nothing. | GDD §7.2 |
+| 5 | §3.2 odds | **Corrected.** CHA+INT for the reference recruit: 46 %; coat A **52 %**; coat C **54 %**. §2.4's "rise 4–6 / 6–8 points" was also wrong: coat A is always **+6**, coat C **+8** (the average rises by 1.5 or 2). | `docs/economy.md` §13.1 (already right) |
+| 6 | Card crest vs the plain square | **The SVG passes.** An iron gate beneath a lantern, gold line on black, in a square frame: the city's gate, no real-world emblem. Default stands: SVG crests on the street cards and the party card; the plain square, circle and triangle only as small marks. §5.3 corrected. | GDD §7.3; this doc §5.3 |
+| 7 | Migrated characters | **Default stands.** *Finish His Work* chapter 1 as a Letter in their next paper; no face until chosen. Until then the HUD shows the empty portrait ring and the Me tab carries a dot with the line *No face yet*; nothing is blocked. | ADR 0016 (no GDD rule) |
+| 8 | The Paper tab dot for a Letter | **Default stands.** Shown while a chapter is `ready` and not yet opened; not for `midway`. | — |
+| 9 | The first-landing sheet | **Default stands.** First edition only; later mornings open the map. | GDD §7.5 (as written) |
+| 10 | Failure wording | **Default stands.** The stamp reads *Failure*; nothing else in the modal or the texts says "failed". Consistency with §8.4 matters more than a softer stamp; Appendix C #20 holds the fallback (no Failure band) if the playtest shows the word landing badly. | GDD §17.1 |
+| 11 | Copy review | **Approved with three notes**, below. Six avatar alt texts written below. | — |
+| 12 | *Chapter 1 of 12* | **Keep *of 12* for all three.** Twelve is the Ambition's declared length (§17.1) and `of` is read from the Ambition definition in content, not from the number of chapters written. A player who reaches the last written chapter sees no Letters row (`kind: 'none'`), which is the existing behaviour; chapter 5 of either shorter Ambition cannot be reached before day 29 (four chapters, seven days apart), by which time it will be written (§25). | GDD §17.1 |
+| 13 | The origin arithmetic | **The table stands; the sentences were wrong.** Corrected in GDD §7.2, §8.5, §0 and Appendix C #12, in §2.4 above and in `docs/economy.md` §13.1. Detail below. **No content changes.** | GDD §7.2, §8.5 |
+
+### 13.1 Q11: copy notes
+
+The §12.4 strings are approved as drafted, with these exact forms:
+
+- `keepsakeLine(name)` → `Keepsake: {name}` with the catalogue name verbatim: *Keepsake: His ward book* · *Keepsake: The prison letter* · *Keepsake: The marker*. (The design's *Keepsake: his ward book* is superseded; the capital is the item's name as it appears in the wardrobe.)
+- `theirEvent(name)` → `Their event: {name}`, and the article travels with the content string: *Their event: the General Strike* · *Their event: the Headline Story* · *Their event: the Torchlight March* (the last is flagged in §20.3 and is the user's to change).
+- `partyCard(faction, rank, date)` → *Iron Vanguard · Initiate · member since 29 September* (lower-case *member*, no year, as the dateline).
+- *Your face* is the sign-up field label; *Choose your face* is the line shown when the form is submitted without one, and the heading on the Me tab when changing it.
+- Everything else as drafted: *Close the game now and this waits for you* · *His wish · +50 Faction XP* · *Join the {name} · take the train to {city}* · *+2 Strength, +1 Intelligence* · *Starts in {city}* · *Chapter 1 is ready · 10 Energy* · *waiting for you* · *Wearing: Your father's coat · CHA 5* · *Ambition · Finish His Work · Chapter 1 of 12*.
+- Two lines the design implies but does not list, for completeness: the Letters row on day 1 reads **From your father's things** · *{keepsake name}* · *Chapter 1 is ready · 10 Energy*; the Me tab for a migrated character reads *No face yet*.
+
+### 13.2 Q11: the six avatar alt texts
+
+One line each, describing the portrait as drawn (checked against `mvp/avatars/*.png`), no character judgement.
+
+| Asset | Alt text |
+|---|---|
+| `avatar.man-20s` | A young man in a white shirt and braces, sleeves rolled, dark hair uncombed, a small scar over one eyebrow. |
+| `avatar.man-30s` | A man in his thirties with close dark curls and a day's stubble, in a jumper under a leather jacket. |
+| `avatar.man-40s` | A man in his forties, greying hair swept back, round spectacles and a moustache, in a tweed jacket with a cap in his hand. |
+| `avatar.woman-20s` | A young woman with dark curls and freckles, in a knitted cardigan with a red scarf at her throat. |
+| `avatar.woman-30s` | A woman in her thirties with fair waved hair, in a belted trench coat with the collar turned up. |
+| `avatar.woman-40s` | A woman in her forties, dark hair going grey and pinned back, in a plain dark jacket. |
+
+### 13.3 Q13: the corrected origin arithmetic
+
+The answer table (§2.1–2.2) was always the rule; three sentences summarising it were wrong and are now fixed.
+
+| | Was written | Correct |
+|---|---|---|
+| Points across STR, INT and AGI | 8–9 | **6–9** (summer +3; trouble +2 or 0; talent +3 or +4) |
+| Points counting CHA base | — | **8–9** (the promised coat adds a tenth, to CHA base) |
+| At most to one stat | +8 | +8 (unchanged) |
+| CHA base | up to +4 | up to +4 (unchanged) |
+| Best stat after the faction's +3 | 10–16, typically 12–14 | **8–16, typically 11–14** |
+| The other two stats | 5–8 | **5–11** |
+
+The minimum of 8 is one build: a Vanguard recruit who fished, talked them out and read people (STR 8 / INT 8 / AGI 8, CHA base 3). **Accepted, not changed**, for three reasons: it is what those answers describe (a people person in the party of ex-soldiers); CHA base 3 is permanent and adds to every outfit bought later, which is a better long-run trade than +2 to a trained stat; and at 50 % the build still reaches Level 2 inside the first bar and the 95 % clamp by about day 5 (`docs/economy.md` §13.1). Changing an answer would have meant content changes mid-build for a corner case no pacing target depends on. The reference recruits and every number in the tech design's §6.3 tests are unchanged.
