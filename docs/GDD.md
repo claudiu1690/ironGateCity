@@ -142,6 +142,20 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 | The ledger and City Hero had no rows, no minimum and no reward shape | **Ledger rows** for every swing; the plate line; **District Hero** per district and level bracket at the count, at **+0.5 or more**: the title for a cycle, 25 PC, In Print | §14.5 |
 | Party orders for a capital resident matched home locations | A **capital rotation** per faction; `cityId: 'home'` resolves to the residence; the Unrest crisis pair only for home residents | §13.7 |
 
+**Added 30 Sep 2026 (review 1, the user's first play-through; `docs/review/2026-09-30-review-1.md`, answers in `docs/design/review-1-answers.md`):**
+
+| Problem | Change | Section |
+|---|---|---|
+| A job shift cost Energy and paid no XP, so there was no reason to work it (user decision) | **A job is a wage:** full daily pay at every boundary, automatically; no shift, no Energy, no ticket. The streak and sick days go; **seniority** (+2 % a day held, to +20 % after ten days; reset only by switching) replaces them. Switching is free. The 14-day cap on return stays. *Shift Hours Order* becomes the **Long Service Order** (seniority ×2) | §9, §4.2, §4.3, §3.7, §15.3 |
+| A Vanguard recruit with INT 5 met the welcome set's INT committee, an INT chapter and nine INT checks of fifteen at 38 %, against the 60–85 % band | **The first day is played on your best stat:** the welcome set's slot A is chosen by the player's best trained stat (per city, per stat); **council sessions and a third chapter-1 approach, *Legwork*, check the best trained stat**; a ***First day* +10 %** bonus on home checks during the welcome day (the creation day, and the next when created after 22:00 UTC, which closes Appendix C #18); **every ticket names its stat** before the tap | §7.5, §8.4, §13.3, §13.7, §17.1 |
+| Order titles (*Be at the gate*) did not say what to do or where | Every order title is **what to do and where** (*Canvass the customs shift at the Fortress Gate*); the line keeps the secretary's voice; tapping an order opens its pin with the ticket highlighted. All templates rewritten | §13.7 |
+| The check breakdown was unreadable | **One plain sentence by default** (*Your INT 5 is 3 below the 8 this needs: 38 %*) and a one-line roll; the ledger behind a tap, reworded, with a fixed footnote | §8.4 |
+| Standing, the share bar, the HUD and the Today tally were unexplained | **Tap the label**: dotted-underlined labels open a two-line note in the paper's voice; no icons; one first-time hint on the plate on the welcome day | §3.7, §7.5 |
+| Completing the three orders was a line | **A modal in the secretary's voice** after the completing result is closed (+5 PC and the day's order FXP); a single order is a signed line in the result modal | §13.7, §15.4 |
+| The level-up offered STR or INT with no explanation | **STR, INT or AGI**; the choice screen says what each stat does in the residence city, computed from its actions | §5.3, §8.5 |
+| Faction XP was only on the profile | A **Faction XP bar to the next Rank in the HUD**, under the XP bar, labelled with the rank title | §5.4, §7.5 |
+| A Standing level-up said nothing | A **Standing card** in the result modal: the new title, the bonus now, the next level. ***One of Us* pays 1 PC a day** (pinned) | §13.4, §6.5 |
+
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes.
 
 ---
@@ -201,7 +215,7 @@ Every system uses the same clock.
 | Unit | Length | What happens |
 |---|---|---|
 | **Tick** | 10 min | Energy regen, HP regen, Heat cooling |
-| **City Day** | 1 real day, 00:00–24:00 server time (UTC) | Daily resets: weather, salary, Directives, shift availability, bar limits. **Polls are open somewhere every day**, and every day some city counts, seats a council or divides on an ordinance. |
+| **City Day** | 1 real day, 00:00–24:00 server time (UTC) | Daily resets: weather, salary and seniority, Directives, bar limits. **Polls are open somewhere every day**, and every day some city counts, seats a council or divides on an ordinance. |
 | **Week** | 7 City Days, from Monday 00:00 | Issues of the Week rotate; patron Requests refresh |
 | **Council Cycle** | 5 City Days | Every city elects its council once per cycle, staggered by one day (offsets Irongate 0 · Ashford 1 · Coalport 2 · Duskwall 3 · Clearwater 4). Cycle days **0–1 nominations, 2–4 polls open**, the **count** at the boundary into day 0; the new council **divides on its ordinance** on days 0–1 and the ordinance is in force from day 2 for five days (§15.3). No phase has a clock time |
 | **Term** | 28 City Days | National election, head of government, Legislature |
@@ -222,7 +236,7 @@ Council elections, Issues, Directives and Campaign Events run continuously under
 
 ### 2.2 Day and night (new)
 
-- **The City Day boundary is 00:00 UTC for the MVP** (Appendix C #1, closed). Every daily rule (salary, shifts, sick days, Directives, the Today tally, the Morning Paper's "new day") is stated per boundary crossed, so it can be settled lazily on the next read; only true events need a scheduled job.
+- **The City Day boundary is 00:00 UTC for the MVP** (Appendix C #1, closed). Every daily rule (salary and seniority, Directives, the Today tally, the Morning Paper's "new day") is stated per boundary crossed, so it can be settled lazily on the next read; only true events need a scheduled job.
 - **Night is 20:00–06:00 UTC**, the same for everyone. City maps show their night art then. In slice 1 it is **purely cosmetic**: no odds, costs, rewards or availability change. Later rules that mention night (the Curfew ordinance, the night train, CHA 30+ at night in rival cities) use this window, so the map always agrees with the rules.
 
 ---
@@ -259,7 +273,7 @@ The first screen after the City Day changes, and after any absence of 3 hours or
 | **Headline** | The biggest political event since your last visit: a law passed, a city changing hands, a scandal |
 | **The Issues** | Each city's two Issues of the Week and which faction is leading on each |
 | **Polling Day** | Which city votes today, and your ballot if it's your Home City |
-| **Your Desk** | Salary paid, Rested banked, Heat level, Dossier entries going stale, work streak |
+| **Your Desk** | Salary paid and seniority, Rested banked, Heat level, Dossier entries going stale |
 | **Party Orders** | Today's Directives from your Faction Chair |
 | **Letters** | Patron replies and Requests, Ambition chapters ready |
 | **In Print** | **Your name in the paper** when you top a ledger, become City Hero, win a seat or get caught |
@@ -270,7 +284,7 @@ The first screen after the City Day changes, and after any absence of 3 hours or
 
 **Dateline:** `{Weekday} · {D Month} · {City}` from the real UTC date, British form: *Tuesday · 29 September · Coalport*. **No year is printed anywhere in the paper.** The game is 1946 but the calendar is real (§2: one City Day = one real day, and the weekday drives the Monday sick-day refill), so the weekday must be the true one and a year would either break the fiction or contradict the weekday.
 
-**Slice 1 (v1) scope:** headlines (2–3, at most two personal), **Party orders**, and **Your desk** with salary, Rested banked, Energy and when it is full, work streak and sick days, Level and XP to next, Local Standing, and *Yesterday* (the Today tally of the previous City Day, §3.7). Headline templates, their conditions and priorities are in `docs/design/slice-1-content.md` §7.
+**Slice 1 (v1) scope:** headlines (2–3, at most two personal), **Party orders**, and **Your desk** with salary and seniority (*Paid: 216 Iron · Stores hand · seniority 4 days (+8 %)*), Rested banked, Energy and when it is full, Level and XP to next, Local Standing, and *Yesterday* (the Today tally of the previous City Day, §3.7). Headline templates, their conditions and priorities are in `docs/design/slice-1-content.md` §7.
 
 **Slice 2 (v2): the welcome edition and Letters.** The first edition a character sees is the **welcome edition**: three headlines (*Welcome to {city}* with the secretary's name and where to spend the first Energy; the city's arrival notice with the player's name, first edition only; the morale line), the **welcome set** of Party orders (§13.7), a **Letters** row (*From your father's things: Chapter 1 is ready · 10 Energy*, §17.1) and the desk with a *Wearing* row (§8.2). It is the whole tutorial without being one (§7.5). Letters carries Ambition chapters from slice 2 and patron letters from slice 8. Per-city welcome texts are in `docs/design/slice-2-onboarding.md` §7.
 
@@ -285,7 +299,6 @@ The first screen after the City Day changes, and after any absence of 3 hours or
 | **Party Directive** | Your elected Faction Chair (§15.4) | +25 % FXP on matching actions and a daily completion bonus |
 | **Issue** | Issues of the Week (§14.6) | +50 % influence in that city; resolving the Issue gives your faction credit |
 | **Ambition** | Your personal storyline (§17.1) | Unique rewards, patron introductions, Legacy |
-| **Job shift** | Your job (§9) | Full day's pay plus streak bonus |
 | **Patron Request** | Your patrons (§17.2) | Favour, which unlocks perks and endorsements |
 | **Campaign Event** | Scheduled by faction members (§16.3) | Co-op influence swing, PC, a headline |
 | **Election** | The calendar (§15) | Vote, campaign, stand for office |
@@ -314,7 +327,9 @@ The first days give a **taste** of everything: one-tap play, a vote, a group eve
 
 ### 3.7 The "Today" tally (new)
 
-A one-line running total of the current City Day (from 00:00 UTC, §2.2), on the city screen and as *Yesterday* in the Morning Paper: **Energy spent · attempts · Successes · XP · FXP · Iron earned (actions and pay) · opinion moved · Directives done (n / 3) · shift worked · stat points trained.** It resets at the boundary; nothing is lost, it becomes yesterday. It exists so that a five-minute session ends with a visible sum, not a scroll through a log.
+A one-line running total of the current City Day (from 00:00 UTC, §2.2), on the city screen and as *Yesterday* in the Morning Paper: **Energy spent · attempts · Successes · XP · FXP · Iron earned by actions · opinion moved · Directives done (n / 3) · stat points trained.** It resets at the boundary; nothing is lost, it becomes yesterday. The wage is not in the tally: it lands at the boundary and shows on the desk (§9). It exists so that a five-minute session ends with a visible sum, not a scroll through a log.
+
+**Every item has a note (review 1).** The tally's label and each of its items, like every other label that carries a rule (Standing, the share bar, the morale word, the ordinance line, Energy, Rested, XP, Faction XP, PC), is set with a **dotted underline** and opens a **two-line note in the paper's voice** on a tap: *ATTEMPTS · Actions taken today, a ×3 counting three.* No "i" icons anywhere; the paper has none. The one first-time hint is on the city plate on the welcome day: *Anything underlined can be tapped for what it means.* The notes: `docs/design/review-1-answers.md` §5.
 
 ---
 
@@ -327,7 +342,7 @@ All of these are **positive**: something to look forward to.
 | Timescale | Hook |
 |---|---|
 | **Minutes** | Energy refills (100 in 3h20); a Campaign Event you joined is about to start |
-| **Daily** | The Morning Paper; a council election somewhere; new Party Directives; a job shift; bar and social opportunities; new weather |
+| **Daily** | The Morning Paper; a council election somewhere; new Party Directives; a day's pay on the desk; bar and social opportunities; new weather |
 | **Every 5 days** | Your Home City's council election; councillor terms; the Influence Ledger and City Hero titles |
 | **Weekly** | Issues of the Week resolve and new ones arrive; patron Requests; weekly social events (opera, lectures) |
 | **Every 28 days** | National election; a new government and new laws; new Ambition chapters (live content) |
@@ -339,15 +354,15 @@ All of these are **positive**: something to look forward to.
 | Away for | What happens |
 |---|---|
 | **3 hours** | Nothing is lost. Energy is full and overflow banks as **Rested** (§6.3). |
-| **1 day** | Your job pays half salary automatically. Rested keeps banking up to its cap. A **sick day** protects your work streak. Today's Directives are missed: a missed opportunity, nothing taken away. |
-| **1 week** | Your work streak ends: you lose the bonus, not the job. Dossier entries are flagged stale. A bodyguard contract may run out. A council term you held has ended normally. |
-| **2 weeks or more** | Half pay stops accruing after **14 boundaries** (§9.1): you keep the job and pay resumes at the next boundary. Unearned pay is opportunity, not an asset. |
+| **1 day** | Your job pays its full day's wage automatically, and seniority goes on counting. Rested keeps banking up to its cap. Today's Directives are missed: a missed opportunity, nothing taken away. |
+| **1 week** | Dossier entries are flagged stale. A bodyguard contract may run out. A council term you held has ended normally. The job and its seniority are untouched. |
+| **2 weeks or more** | Pay stops accruing after **14 boundaries** (§9.1): you keep the job and pay resumes at the next boundary. Unearned pay is opportunity, not an asset. |
 | **1 month or more** | **Welcome Back package**: Rested full, a "While You Were Away" digest, and a returning-operative Ambition chapter. |
 
 ### 4.3 Rules we don't break
 
 1. **Being away never destroys what a player owns.** It costs opportunity only.
-2. **A single missed day never breaks a streak.** Two sick days a week cover the first two misses (§9.1); only a third miss in the same week ends the streak, and the job is never lost.
+2. **Absence never lowers a rate.** Seniority (§9.1) counts every day the job is held, present or not; only the player's own switch resets it, and the job is never lost.
 3. **Losses belong to competition.** Losing an election, an Issue or city control is fine: players had agency and it's part of the story.
 4. **Collective decay is acceptable.** City influence drifting back toward equilibrium is a problem for the faction, and it gives newcomers something to do.
 5. **Every timer is either a reward arriving or a choice to make.** None is a threat.
@@ -392,7 +407,7 @@ All of these are **positive**: something to look forward to.
 
 ### 5.3 Levels
 
-Each level-up gives +5 max HP and +1 stat point to STR or INT. AGI grows through stealth missions and training; CHA comes from clothing.
+Each level-up gives +5 max HP and +1 stat point to **STR, INT or AGI** (review 1: AGI was training-and-stealth only, which left an AGI origin build with nothing but 30-Energy training until stealth missions arrive in slice 5). CHA comes from clothing. **The choice screen explains the choice:** a lead line computed from the residence city's checked actions (*Most of the work in Duskwall uses INT: 9 of 15 actions. Your best is STR 13.*; a single-stat action counts for its stat, a two-stat action for both, a best-stat action for none) and one line per stat saying which actions here use it and what it opens later; the point still waits on the character screen and nothing is lost by choosing later. Strings: `docs/design/review-1-answers.md` §7.
 
 | Levels | Cumulative XP | Unlocks |
 |---|---|---|
@@ -477,7 +492,7 @@ About 25 % of a player's FXP should come from outside missions: Directive bonuse
 |---|---|
 | **Max** | 100 (Premium: 120) |
 | **Regen** | **5 per 10 min**, server-side. Full from empty in 3h20. |
-| **Spent on** | Missions (5–30), job shifts (3–8), surveillance (3–5), Campaign Event roles (10–20), social missions (5–12), bar activities (2–6) |
+| **Spent on** | Missions (5–30), surveillance (3–5), training (§8.5), Campaign Event roles (10–20), social missions (5–12), bar activities (2–6). Never on a job (§9) |
 
 Travel between cities costs time and a ticket, not Energy (§14.10). The slower regen (v3.0 was 5 per 5 min) fits 3–4 sessions a day without asking players to log in every 100 minutes. Rested absorbs the regen that would otherwise be wasted.
 
@@ -488,7 +503,7 @@ While Energy is full, regen overflows into a **Rested** pool.
 | | |
 |---|---|
 | **Cap** | 200 |
-| **Effect** | Each Energy point spent **on an action Rested can boost** (checked actions and training) while Rested > 0 uses 1 Rested and gives **+50 % XP and +50 % Iron** on that action. Job shifts and job switches spend Energy without touching Rested: there is nothing for it to boost (§9.1). FXP and influence get no bonus, so absence can't be converted into political power. |
+| **Effect** | Each Energy point spent **on an action Rested can boost** (checked actions and training) while Rested > 0 uses 1 Rested and gives **+50 % XP and +50 % Iron** on that action. FXP and influence get no bonus, so absence can't be converted into political power. |
 | **Other sources** | Lodging and hotels (§6.7), Welcome Back package |
 
 A player who logs in once a day spends 100 Energy with a +50 % bonus on all of it. A player who logs in three times spends about 400. Neither gets punished; the frequent player simply does more.
@@ -522,6 +537,7 @@ Political Capital (PC) is *earned* through political activity. It does not regen
 | Campaign Event participation | 3–15 by outcome |
 | Resolving an Issue (the owning faction's top five contributors by momentum) | **4 each** ("20 split"; fewer than five: 4 each, the rest not redistributed; slice 4) |
 | City Hero or District Hero (§14.5) | 25 (slice 4) |
+| *One of Us* in a city (§13.4) | **1 per day** per such city, at the boundary |
 | Office stipends | Councillor **10/day and 20 FXP/day** (paid at every boundary held, present or not; the FXP is the office share of §5.5), Governor 20/day, Deputy 5/day, Minister 25/day, Head of Government 50/day |
 | Patron favours, Ambition chapters | Varies |
 
@@ -603,10 +619,11 @@ From **Rank 3** you can **move** your residence to a **battleground city** (Clea
 
 There is no tutorial screen. From sign-up to the first result modal is **eleven taps and about three minutes**: the face and name, three origin steps, the faction, the welcome edition, one action. After that every new thing is introduced by the thing before it, never by a screen that only explains.
 
-- **The welcome edition** (§3.3): three headlines that say where you are and where to spend the first Energy, the **welcome set** of three Party orders (§13.7: two canvasses at the first pin, one committee session at the HQ, *Take a job*), the Letter that opens Ambition chapter 1, and the desk.
-- **The first landing:** the home-city map with **the first pin's location sheet already open**. The first screen of play is a ticket with its odds and the tag *Party order 0 / 2 · +25 % FXP*, with the day-1 job's Jobs card below it. The orders list on the city plate links each order to its pin.
-- **The order of introduction** (about a minute each): the first canvass and the result modal · *Again ×3* and the second canvass, which completes an order (+20 FXP as a modal line) · Level 2 and the one-tap stat point · *Take the job* and the live shift ticket · the shift · the HQ session, which completes the set (+5 PC, and PC appears in the HUD for the first time, on phones as on desktop; §6.5) · the Ambition chapter from the Letters row · free play until the Out of Energy card, which says when the bar is full and that Rested banks after that.
-- **What is left for the game to explain itself:** Rested (its desk row, once it has a value), Local Standing (the plate counts *0 / 10*; the modal names it at 10), the day boundary (the shift ticket's *next at hh:mm*), the other cities (the train, slice 4).
+- **The welcome edition** (§3.3): three headlines that say where you are and where to spend the first Energy, the **welcome set** of three Party orders (§13.7: two attempts at a political action **chosen by the player's best stat**, one committee session at the HQ, *Take a job at {place}*), the Letter that opens Ambition chapter 1, and the desk.
+- **The first landing:** the home-city map with **the slot-A action's location sheet already open** (the pin depends on the best stat; the welcome headline names the same place). The first screen of play is a ticket with its odds and its stat (*80 % · STR 13*), the tag *Party order 0 / 2 · +25 % FXP* and the bonus row *First day in Duskwall +10 %* (§8.4). The orders list on the city plate links each order to its pin, and every order title says what to do and where (§13.7).
+- **The order of introduction** (about a minute each): the first action and the result modal, whose odds are one plain sentence (§8.4) · *Again ×3* and the second attempt, which completes an order (+20 FXP as a signed line from the secretary) · Level 2 and the one-tap stat point, with its explanation (§5.3) · *Take the job* from the Jobs card (*paid at midnight*; no shift, §9) · the HQ session, a best-stat check, which completes the set: the **orders-complete modal** in the secretary's voice (+5 PC, and PC appears in the HUD for the first time, on phones as on desktop; §6.5) · the Ambition chapter from the Letters row · free play until the Out of Energy card, which says when the bar is full and that Rested banks after that.
+- **What is left for the game to explain itself:** Rested (its desk row, once it has a value), Local Standing (the plate counts *0 / 10*; the Standing card names it at 10, §13.4), the day boundary (the Jobs card's *paid at hh:mm*), the other cities (the train, slice 4). Everything else with a rule behind it answers a tap on its label (§3.7).
+- **The HUD** carries Energy (the word, never *EN*), the XP bar with *{n} to Level {next}*, **the Faction XP bar to the next Rank** (the faction's colour, under the XP bar, labelled with the rank title, or *Rank n* on narrow phones), Iron, and PC once earned.
 
 Full script and timeline: `docs/design/slice-2-onboarding.md` §8.
 
@@ -620,7 +637,7 @@ Full script and timeline: `docs/design/slice-2-onboarding.md` §8.
 |---|---|---|
 | **STR** | Melee damage; physical mission success (marches, strikes, security roles); less damage taken | Level-ups, training, missions |
 | **INT** | Political and espionage success; propaganda quality; Dossier capacity; high-paying jobs; Speaker and Organiser roles | Level-ups, training, missions |
-| **AGI** | Stealth success; caught chance; Energy discounts at milestones; flee chance | Stealth missions, training |
+| **AGI** | Stealth success; caught chance; Energy discounts at milestones; flee chance | Level-ups, training, stealth missions |
 | **CHA** | Social missions, high-society access, speeches, candidacy appeal | **Worn**: the sum of equipped items' CHA plus a small origin base |
 
 ### 8.2 Charisma is worn
@@ -658,8 +675,10 @@ Almost every tap in the game is a **check**: a stat against a difficulty. The fo
 > **Chance = 50 % + 4 % × (your stat − difficulty) + bonuses**, kept between **5 %** and **95 %**.
 
 - **Two-stat checks** (for example a Rally Speaker, CHA + INT) use the average of the two stats.
+- **Best-stat checks** (review 1) use the **highest of STR, INT and AGI**: a committee session (§13.3), and the *Legwork* approach of every Ambition chapter 1 (§17.1). The committee gives you the work you are fit for. The ticket names which stat it took.
 - **Charisma checks** use your *worn* CHA (§8.2).
-- **Every button shows the final chance.** Tapping the percentage shows the breakdown: stat, difficulty, and each bonus.
+- **Every button shows the final chance and the stat it checks**: *62 % · STR 11*, *44 % · CHA 2 + INT 11*, *70 % · your best, STR 13*. Tapping the percentage shows the ledger: stat, difficulty, and each bonus.
+- **The result reads as a sentence** (review 1). Under each row's bar the default is one plain line, *Your INT 5 is 3 below the 8 this needs: 38 %.* (*…is 4 above…*, *…matches the 8…*, *CHA 2 and INT 11 average 6, 2 below…*, *Your best, STR 13, is 5 above…*; bonuses end it, *…: 66 %, and +6 % for being Known here: 72 %.*), and a roll line, *Rolled 26: Success (38 or under).* / *Rolled 51: Partial (39 to 58).* / *Rolled 77: Partial (a canvass never fails).* The ledger behind the tap reads *Even odds · 50 %* / *INT 5, 3 below the 8 needed, 4 % a point · −12 %* / each bonus / *Chance · 38 %*, with one fixed footnote: *Every check starts at even odds and moves 4 % for each point your stat is above or below what the job needs, plus bonuses; never under 5 % or over 95 %. A roll at or under the chance is a Success.* Full strings: `docs/design/review-1-answers.md` §4.
 
 **Difficulty:**
 
@@ -672,13 +691,14 @@ Almost every tap in the game is a **check**: a stat against a difficulty. The fo
 | Social mission | Its CHA requirement |
 | **In a rival home city** | **+4** on top |
 
-Missions unlock by Level, so the odds on a player's own tier sit mostly between **60 % and 85 %**. Old content drifts up to 95 %; new content starts lower.
+Missions unlock by Level, so the odds on a player's own tier sit mostly between **60 % and 85 %**. Old content drifts up to 95 %; new content starts lower. **The first session is inside the band for every build** (review 1): the welcome set routes to the best stat (§13.7), the committee and the chapter's *Legwork* check the best stat, and the *First day* bonus below lifts the flattest build (8 / 8 / 8) to 60 %, the reference recruit to 76 % and a STR 13 Vanguard to 80 %; by the end of day 1 the level points and *Familiar* carry the same odds without the bonus (`docs/design/review-1-answers.md` §2).
 
 **Bonuses:**
 
 | Source | Effect |
 |---|---|
 | Local Standing (§13.4) | +3 % per level, up to +12 % |
+| **First day** (review 1) | **+10 %** on every checked action in the home city during the **welcome day**: the City Day of creation, and the next one too when the character was created after 22:00 UTC (Appendix C #18, closed). A named row, *First day in Duskwall +10 %*. It ends at the boundary, by which time the day's level points and *Familiar* have replaced it, so no build's odds are lower on day 2 than on day 1 |
 | The right item (§21) | +5 % to +10 % (forged papers on checkpoints, a propaganda kit on posters, a press pass on interviews) |
 | Weather (§14.7) | −10 % to +10 % on outdoor checks |
 | Battleground bonus (§14.4) | +5 % on political checks in a battleground city or district |
@@ -709,8 +729,8 @@ A shown 72 % succeeds on rolls 1–72: exactly 72 times in 100. The clamp means 
 
 | Stat | Grows through |
 |---|---|
-| **STR, INT** | +1 point of your choice per level-up, and training |
-| **AGI** | Training, and every successful stealth action (a quarter of a training point) |
+| **STR, INT, AGI** | +1 point of your choice per level-up (§5.3), and training |
+| **AGI** also | Every successful stealth action (a quarter of a training point) |
 | **CHA** | Never trained: it is the sum of what you wear, plus up to +4 CHA base from the origin story |
 
 **Starting stats:** 5 in each trained stat, plus the origin story (**6–9 points across STR, INT and AGI, at most +8 to one stat**; the rest of the 8–9 is CHA base, §7.2) and the faction bonus (+3). A new player's best stat is **8–16, typically 11–14**; an all-in build reaches 16 (an 82 % home check) at the price of 5 in the other two (38 %). The flattest build is a Vanguard recruit who fished, talked them out and read people: **STR 8 / INT 8 / AGI 8** with CHA base 3, a 50 % check everywhere on day 1 and the largest permanent CHA base in the game, which every coat they ever wear adds to. That is accepted: it is one corner of the answer space, it is what those answers describe, and the first level-up point lands inside the first bar. Every build reaches the 95 % clamp on its best stat from level-up points and Standing (`docs/economy.md` §2): the reference recruit by day 3–4, the flattest build by about day 5. The spread is flavour with a cost, not a gap.
@@ -743,39 +763,38 @@ The reference recruit's home canvass is a **66 %** check (§8.4). The same answe
 
 ## 9. Jobs
 
-Jobs give a steady income that doesn't depend on faction activity, and they get players moving around the city.
+**A job is a wage** (review 1, 30 Sep 2026, a user decision). It gives a steady income that costs no Energy and doesn't depend on faction activity, so the whole bar goes on politics. There is no shift: the first 3.1 draft had a daily shift for Energy that paid no XP, and the first play-through asked, rightly, why anyone would work it. What is left to decide is *which* job, and that is enough: the faction's own job pays members a fifth more, the Driver is the first thing training unlocks, later jobs pay in other coin, and the labour ordinances fight over the wage.
 
 ### 9.1 Rules (reworked)
 
-- A player holds **one job**. Taking a first job is free and one tap at the job's location (a *Jobs* card lists what is offered there, with pay and requirements; requirements are checked on taking, never again). **Switching** costs 2 Energy, takes effect immediately, **resets the streak to 0** and does not spend Rested (§6.3).
-- **Daily salary:** at every 00:00 UTC boundary (§2.2) the job held at that moment pays **50 % of its daily pay** automatically, whether or not you worked. A week away banks seven half-pays. **Cap on return:** however long the absence, a return credits **at most 14 half-pays** (a fortnight's back pay); the job is kept and pay resumes at the next boundary. This never touches a player seen at least once a fortnight (§4.2; Appendix C #17).
-- **Working a shift:** once per City Day, at any time, at the job location, for the listed Energy. You get the other 50 % plus the streak bonus. **A shift is not a check**: no roll, always paid, one outcome text, stamp *Shift worked*. Shifts pay no XP and no FXP; Rested is neither applied nor spent (§6.3). One shift per City Day regardless of job changes. The ticket shows the next shift time in the player's local clock.
-- **Work streak:** consecutive City Days with a shift, counting today. **Bonus = 2 % × min(streak, 10) of daily pay**, paid with the shift: the first shift +2 %, the tenth and after +20 %. The *Five Straight Shifts* and *Ten Straight Shifts* headlines fire on the morning after the streak **first reaches or passes** 5 or 10 (an ordinance that adds two days a shift can step over the number).
-- **Pay under an ordinance (§15.3):** the streak bonus and an ordinance's pay line (*Public Works Order +11*, *Ward Fund −27*) are **each a percentage of the unmodified daily pay**, shown as separate lines that add up; the half pay credited at a boundary uses the ordinance in force on the day that ended.
-- **Sick days:** 2, refilled to 2 at the Monday 00:00 UTC boundary. A sick day is spent only when an ended City Day had no shift **and a streak was running** (streak > 0); the streak survives (it neither grows nor breaks). At streak 0 (no job, a job just taken or switched, a streak already broken) nothing is spent. A missed day with no sick day left ends the streak, back to 0. At the Monday boundary the ended Sunday is judged first, then the sick days refill. So a streak only ends on the third missed day in a week (§4.3, rule 2).
+- A player holds **one job**. Taking a job is free and one tap on the *Jobs* card at the job's location (the card lists what is offered there, with pay and requirements; requirements are checked on taking, never again). **Switching** is one tap, free, takes effect at once and **resets seniority to 0**. Nothing about a job costs Energy or touches Rested.
+- **Daily wage:** at every 00:00 UTC boundary (§2.2) the job held at that moment pays its **full daily pay** automatically, present or not. The member's fifth (the faction's own job) is a line of its own on the base pay. The desk row reads *Paid: 216 Iron · Stores hand · seniority 4 days (+8 %)*; the Jobs card reads *216 a day, paid at midnight* (the boundary in the player's clock).
+- **Seniority:** **+2 % of daily pay for every City Day the job has been held** (boundaries paid), **to +20 % after ten days**. Paid as its own line at the boundary (*Seniority 4 days: +17*). It never falls except by switching, and it goes on counting while the player is away (§4.3, rule 2). The *Five Days In* and *Ten Days In, Full Rate* headlines fire the morning after seniority **first reaches or passes** 5 or 10 (the Long Service Order, §15.3, can step over the number).
+- **Cap on return:** however long the absence, a return credits **at most 14 days' pay** (a fortnight's back pay); the job is kept and pay resumes at the next boundary. This never touches a player seen at least once a fortnight (§4.2; Appendix C #17).
+- **Pay under an ordinance (§15.3):** the seniority line and an ordinance's pay line (*Public Works Order +22*, *Ward Fund −54*) are **each a percentage of the unmodified daily pay**, shown as separate lines that add up; the wage at a boundary uses the ordinance in force on the day that ended.
 - **You are never fired for being away.**
-- Premium **Remote Work**: Tier I–II jobs can be worked from anywhere for +1 Energy.
+- **Gone with the shift:** the work streak, sick days, the shift ticket, the `job` action type and its outcome texts, the *Shift worked* stamp, the Today tally's *shift worked*, and Premium *Remote Work* (nothing is left to work remotely). The three *Work your shift* orders leave the rotation; *Take a job* is a welcome-day order only (§13.7).
 
 ### 9.2 Job catalogue
 
-Unchanged from v3.0 apart from the pay rules.
+Unchanged from v3.0 apart from the pay rules; "per shift" effects are now per day.
 
-| Job | Unlock | Shift Energy | Daily pay | Requirements | Notes |
-|---|---|---|---|---|---|
-| Street vendor | Level 1 | 3 | 80–120 | — | Any outdoor location |
-| Factory worker | Level 1 | 4 | 150–200 | STR 5 | Coalport; Collective +20 % |
-| Stores hand | Level 1 | 4 | 150–200 | STR 5 | Duskwall (the customs stores); Vanguard +20 % |
-| Copy clerk | Level 1 | 4 | 150–200 | INT 5 | Ashford (the *Gazette*); Alliance +20 % |
-| Driver | Level 3 | 4 | 180–250 | AGI 10 | |
-| Market trader | Level 3 | 5 | 200–300 | INT 8 | Buy-low/sell-high mini-game |
-| Security guard | Level 6 | 5 | 300–400 | STR 12, CHA 10 | Opera, university, warehouses |
-| Newspaper reporter | Level 6 | 6 | 350–500 | INT 15 | 10 % chance of a free Dossier entry per shift |
-| Factory foreman | Level 10 | 5 | 500–700 | STR 15 | Collective: Rank 3 instead of Level 10 |
-| Lawyer's clerk | Level 10 | 6 | 600–800 | INT 20 | Ashford; Alliance: Rank 2 |
-| Professor | Level 16 | 7 | 900–1,200 | INT 30 | Ashford University; small INT gain per shift |
-| Political aide | Level 20 | 8 | 1,500–2,500 | Rank 4 | Also gives FXP and 2 PC per shift |
+| Job | Unlock | Daily pay | Requirements | Notes |
+|---|---|---|---|---|
+| Street vendor | Level 1 | 80–120 | — | Any outdoor location |
+| Factory worker | Level 1 | 150–200 | STR 5 | Coalport; Collective +20 % |
+| Stores hand | Level 1 | 150–200 | STR 5 | Duskwall (the customs stores); Vanguard +20 % |
+| Copy clerk | Level 1 | 150–200 | INT 5 | Ashford (the *Gazette*); Alliance +20 % |
+| Driver | Level 3 | 180–250 | AGI 10 | |
+| Market trader | Level 3 | 200–300 | INT 8 | Buy-low/sell-high mini-game |
+| Security guard | Level 6 | 300–400 | STR 12, CHA 10 | Opera, university, warehouses |
+| Newspaper reporter | Level 6 | 350–500 | INT 15 | 10 % chance of a free Dossier entry per day |
+| Factory foreman | Level 10 | 500–700 | STR 15 | Collective: Rank 3 instead of Level 10 |
+| Lawyer's clerk | Level 10 | 600–800 | INT 20 | Ashford; Alliance: Rank 2 |
+| Professor | Level 16 | 900–1,200 | INT 30 | Ashford University; small INT gain per day |
+| Political aide | Level 20 | 1,500–2,500 | Rank 4 | Also gives FXP and 2 PC per day |
 
-**Pinned for the home cities (slices 1 and 2):** each home city places three jobs. **Street vendor 100** (Market Row / the Customs Market / Bridge Street), the faction's day-1 job at **180, 216 for members** (Factory worker at the Mill Gate / Stores hand at the Fortress Gate / Copy clerk at Gazette House) and **Driver 200** (Harbour Quays / Goods Yard / Bridge Street). A job belongs to one location, so "Driver" is three jobs with three ids. The other jobs keep their ranges until they are placed. The Market trader's mini-game is deferred with the job.
+**Pinned for the home cities (slices 1 and 2):** each home city places three jobs. **Street vendor 100** (Market Row / the Customs Market / Bridge Street), the faction's day-1 job at **180, 216 for members** (Factory worker at the Mill Gate / Stores hand at the Fortress Gate / Copy clerk at Gazette House) and **Driver 200** (Harbour Quays / Goods Yard / Bridge Street). A job belongs to one location, so "Driver" is three jobs with three ids. The other jobs keep their ranges until they are placed. The Market trader's mini-game is deferred with the job. The capital's Porter (180, slice 4) is for a player with no job: a home job pays in full from anywhere.
 
 ---
 
@@ -894,13 +913,13 @@ Most of the time, spending Energy should be **fast**. A full bar of 100 Energy s
 
 | Tier | Share of content | How it plays | Examples |
 |---|---|---|---|
-| **1. Actions** | ~80 % | **One tap.** Resolves straight into a result modal (§13.1a). Repeatable ×1 / ×3 / ×5 (checked actions only: training and job shifts are ×1, §8.5, §9.1). **Never triggers an encounter**, except in a rival home city (§14.12); a failure just pays less. | Canvass, paste posters, a street speech, work a shift, train, safe surveillance, buy a round |
+| **1. Actions** | ~80 % | **One tap.** Resolves straight into a result modal (§13.1a). Repeatable ×1 / ×3 / ×5 (checked actions only: training is ×1, §8.5). **Never triggers an encounter**, except in a rival home city (§14.12); a failure just pays less. | Canvass, paste posters, a street speech, train, safe surveillance, buy a round |
 | **2. Missions** | ~15 % | **One choice.** A short briefing with 2–3 approaches, each showing its stat check and success chance, then the result. The game **remembers your approach**, so after the first time a Repeat button makes it one tap. | Anything illegal (disruption, sabotage, extended surveillance), exposés, social events, bigger faction missions |
 | **3. Stories** | ~5 % | **2–3 short steps at most**: choices, an encounter, named NPCs, illustration. Always **resumable**: close the tab mid-story and it waits where you left it. | Ambition chapters, patron Requests, the origin story, encounters from tier 2 |
 
 **Rules that keep tier 1 fast:**
-- One tap resolves at once. **×3 and ×5** spend Energy in one go and show all the attempts in a single result. A batch rolls each attempt from one seed, shows one row per attempt and a "2 of 3" stamp, counts each row separately for Standing and Directives, and is **disabled when Energy is short** (no partial batch). ×3 ships in slice 1; ×5 later. **Batch text:** the stamp always reads *n of 3* (*3 of 3* and *0 of 3* included); the narrative is the action's **success text when more than half the rows succeeded** (×3: 2 or 3; ×5: 3 or more), otherwise its partial text. There is no third text: the rows carry the numbers. **Training and job shifts have no batch** (§8.5, §9.1): their tickets show one button.
-- The result modal's **Again ×1 / Again ×3** buttons let the player chain actions without going back to the location card (after a *Trained* result: *Again ×1 · Continue*; after a shift: *Continue*).
+- One tap resolves at once. **×3 and ×5** spend Energy in one go and show all the attempts in a single result. A batch rolls each attempt from one seed, shows one row per attempt and a "2 of 3" stamp, counts each row separately for Standing and Directives, and is **disabled when Energy is short** (no partial batch). ×3 ships in slice 1; ×5 later. **Batch text:** the stamp always reads *n of 3* (*3 of 3* and *0 of 3* included); the narrative is the action's **success text when more than half the rows succeeded** (×3: 2 or 3; ×5: 3 or more), otherwise its partial text. There is no third text: the rows carry the numbers. **Training has no batch** (§8.5): its ticket shows one button.
+- The result modal's **Again ×1 / Again ×3** buttons let the player chain actions without going back to the location card (after a *Trained* result: *Again ×1 · Continue*).
 - Rested, Issue, weather and Directive bonuses are applied automatically and shown as small tags on the card.
 
 **Rules that give tier 2 weight:**
@@ -942,15 +961,14 @@ Every action and mission ends in a **result modal that covers the map**. It neve
 | **Disruption** | 2 | **No** | Yes | Yes (against rivals) | 30 % | Break up a rival meeting |
 | **Sabotage** | 2 | **No** | Yes | Yes | 25 % | Wreck a rival printing press |
 | **Operation** | 3 | Varies | Yes | Large | 40 % | Rank 5+; high risk, high reward |
-| **Council** | 1 | Yes | Yes | No | — | Faction strategy session |
-| **Job shift** | 1 | Yes | No* | No | — | See §9 (*Political aide gives FXP) |
+| **Council** | 1 | Yes | Yes | No | — | Faction strategy session; a **best-stat** check (§8.4) |
 
 Illegal missions pay better influence per Energy, at the cost of Heat and record risk. **You can play entirely legally.**
 
-**Tier-1 Energy by type** (inside the 5–15 band of §5.5): **Canvassing 10** (the reference action), Propaganda 8, street Speech 12, safe Intelligence 3–5, Council session 10, Training and Job shifts as set in §8.5 and §9.2. Ten taps, or two ×5 runs, empty a bar; that keeps a full bar spendable in two or three minutes (§13.1).
+**Tier-1 Energy by type** (inside the 5–15 band of §5.5): **Canvassing 10** (the reference action), Propaganda 8, street Speech 12, safe Intelligence 3–5, Council session 10, Training as set in §8.5. Ten taps, or two ×5 runs, empty a bar; that keeps a full bar spendable in two or three minutes (§13.1).
 
 **Type rules pinned for slice 1:**
-- **Council** sessions pay **FXP at 1.5× the tier rate** (0.9 per Energy at tier 1: 45 XP / 9 FXP / 20 Iron for 10 Energy) and no opinion. They are party work, the pure-FXP choice against canvassing's opinion.
+- **Council** sessions pay **FXP at 1.5× the tier rate** (0.9 per Energy at tier 1: 45 XP / 9 FXP / 20 Iron for 10 Energy) and no opinion. They are party work, the pure-FXP choice against canvassing's opinion. **A session checks the player's best trained stat** (review 1; §8.4): the committee gives you the work you are fit for, so every build has one good check at the HQ. There is no once-a-day rule: a session repeats like any tier-1 action while Energy lasts.
 - **Safe Intelligence** pays XP and Iron only; its Dossier entry arrives with the Dossier (slice 8).
 - **Any tier-1 action may check two stats** (the average, §8.4). A street speech is CHA+INT; door-knocking is CHA+INT; dock work is STR. Content mixes the stats so that INT is the most common check, not the only useful one (`docs/design/slice-1-content.md` §2).
 
@@ -960,9 +978,11 @@ Repetition should feel like progress. Each player has a **Local Standing** in ev
 
 | Standing | Earned by | Effect |
 |---|---|---|
-| **Stranger → Familiar → Known → Trusted → One of Us** (0–4) | Successful tier-1 and tier-2 actions in that city: **10, 30, 70 and 150 Successes** | +3 % success per level on actions there; at *Known*, some tier-2 missions in that city unlock; at *One of Us*, a small daily PC trickle |
+| **Stranger → Familiar → Known → Trusted → One of Us** (0–4) | Successful tier-1 and tier-2 actions in that city: **10, 30, 70 and 150 Successes** | +3 % success per level on actions there; at *Known*, some tier-2 missions in that city unlock; at *One of Us*, **1 PC a day** (§6.5) |
 
-**What counts:** one Success on any **checked** action in the city is one point; Partial, job shifts and training do not count; each row of a ×3 counts on its own. The reference player is *Known* about day 3 and *One of Us* about day 8 at home (`docs/economy.md` §9). Standing never decays. It gives grinding the Mill Gate a point: the tenth canvass in Coalport goes better than the first, and it ties players to their Home City.
+**What counts:** one Success on any **checked** action in the city is one point; Partial and training do not count; each row of a ×3 counts on its own.
+
+**The crossing is a moment** (review 1). Each new level shows as a **Standing card** inside the result modal, in the block the level-up uses: kicker *LOCAL STANDING*, the new title (*Familiar in Duskwall*), one line on what changed (*Every check in Duskwall is now +3 %.*) and one on what the next level brings (*Known at 30 Successes: +6 %, and your name will do for a council candidacy at Bailiff.*); the plate line updates behind it. No second modal: it is a knock-on effect of the action. The plate's *Standing* label opens the whole ladder on a tap (§3.7). Texts: `docs/design/review-1-answers.md` §9. The reference player is *Known* about day 3 and *One of Us* about day 8 at home (`docs/economy.md` §9). Standing never decays. It gives grinding the Mill Gate a point: the tenth canvass in Coalport goes better than the first, and it ties players to their Home City.
 
 ### 13.5 Art for missions: the fallback ladder (new)
 
@@ -1013,13 +1033,16 @@ See §15.4. Directives are the faction's *agenda for the day*, set by the electe
 
 **Directives v1 (slice 1, until a Chair exists).** The NPC party secretary sets them. For the Collective that is **Petra Holm**, Coalport branch secretary (portrait `holm`): brisk and warm, wastes no words, talks in shifts, wards and door counts, never in slogans; signs "— P.H." For the Vanguard, **Viktor Stahl**, district organiser in Duskwall (portrait `stahl`): clipped and formal, talks in wards, lists and times, treats every order as already agreed; signs "— V.S." For the Alliance, **Thomas Grey**, constituency agent in Ashford (portrait `grey`): dry and quick, a former *Gazette* sub-editor who counts words; signs "— T.G." Their templates: `docs/design/slice-2-cities.md` §1.5 and §2.5.
 
-- **The welcome set.** On a character's **first City Day** (the day of creation, however short) the three orders are fixed instead of rotated: slot A, two attempts at the first pin's canvass; slot B, one committee session at the HQ; slot C, *Take a job* (frozen as the no-job variant). They fit in 30 Energy and complete in ten minutes, which pays the first +5 PC. From the next day the rotation applies. The ids per city are in `docs/design/slice-2-onboarding.md` §7.3.
+- **Titles say what and where** (review 1). Every order title is `{Do} at/on/in {Place}`, plain: *Canvass the customs shift at the Fortress Gate*, *Sit in on the committee at Beacon House*, *Canvass anywhere in Duskwall* (city-wide orders name the places in the secretary's line). The UI adds the count. The secretary's line keeps the voice. **Tapping an order opens its pin with the matching ticket highlighted**; a city-wide order opens the first pin in pin order with a matching ticket, and every matching ticket wears the *Party order n / m* tag. All templates: `docs/design/review-1-answers.md` §3.
 
-- Directives are **faction-wide**: every member gets the same three on the same City Day, chosen deterministically from the day number (slot A: a canvass order; slot B: party work such as propaganda, a speech, a committee session or intelligence; slot C: a habit such as the shift, training or "six Successes"), never the same set two days running. No scheduled job is needed.
-- The three personal targets together fit in about **60 Energy**, so one session clears them.
+- **The welcome set.** On a character's **welcome day** (the City Day of creation, and the next one too when created after 22:00 UTC; §8.4, Appendix C #18) the three orders are fixed instead of rotated: **slot A, two attempts at a political action chosen by the player's best trained stat** (the highest of STR, INT and AGI; ties to the faction's bonus stat, then INT, then STR), one per city and stat, so a STR Vanguard canvasses the customs shift at the Fortress Gate, an INT one the ration queue at the Customs Market, an AGI one hands out leaflets there; **slot B, one committee session at the HQ** (a best-stat check); **slot C, *Take a job at {place}***. The first landing opens slot A's pin. They fit in 30 Energy and complete in ten minutes, which pays the first +5 PC. From the next day the rotation applies. The table per city and stat: `docs/design/review-1-answers.md` §2; welcome-only templates carry `use: 'welcome'`.
+
+- Directives are **faction-wide**: every member gets the same three on the same City Day, chosen deterministically from the day number (slot A: a canvass order; slot B: party work such as propaganda, a speech, a committee session or intelligence; slot C: a habit: *Train once*, *Six wins* or *Five attempts*), never the same set two days running. No scheduled job is needed.
+- The three personal targets together fit in about **60 Energy**, so one session clears them (*Five attempts* with a canvass order and a speech is about 90; accepted, it is the volume day).
 - **Progress** counts attempts (Success or Partial) for count-type orders, Successes for the "full day" order, and each row of a ×3.
-- The shift order's no-job variant, ***Take a job***, is frozen at the day boundary and **completes the moment a job is taken** (+20 FXP then, shown as one line on the Jobs card; taking a job is not an action and opens no modal). A later switch never undoes it.
-- The twelve v1 templates are in `docs/design/slice-1-content.md` §6. When Issues (slice 4) and Campaign Events (slice 6) arrive, the secretary's menu grows to the full §15.4 list.
+- ***Take a job*** **completes the moment a job is taken** (+20 FXP then, shown as one line on the Jobs card; taking a job is not an action and opens no modal). A later switch never undoes it. It is only ever a welcome-day order (§9).
+- **Completion has a voice** (review 1). A single order done is a **signed line** in the result modal's knock-on block (*Order carried out · +20 FXP. Two remain. — V.S.*), never a modal. **All three done is a modal**, shown once the completing result is closed: the secretary's portrait, a headline and three lines in their voice, two tiles (*+5 Political Capital* · *+60 Faction XP from orders today*), *Tomorrow's orders are in the morning paper*, one button, *Carry on*. It waits if the tab closes first. Texts per faction: `docs/design/review-1-answers.md` §6.
+- The v1 templates are in `docs/design/slice-1-content.md` §6, superseded by the review-1 rewrite. When Issues (slice 4) and Campaign Events (slice 6) arrive, the secretary's menu grows to the full §15.4 list.
 - **The capital rotation (slice 4).** A member's rotation is chosen by **residence** (§14.11): the home sets for home residents; for a capital resident, four templates per faction (slot A: *Canvass the capital*, any canvass in Irongate ×3; *Knock your own district* ×2; slot B: *Speak to the Issue*, any Issue-tagged action in Irongate ×2; *Report to {HQ}*, the capital committee ×1) with slot C shared, since `cityId: 'home'` in a match resolves to the **residence city** from slice 4. Two new match fields: `districtId: 'home'` and `issueTagged: true`. The Unrest crisis pair (§14.11) replaces slots A and B **only for members resident in the home city**. Texts: `docs/design/slice-4-battleground.md` §10.
 
 ---
@@ -1079,7 +1102,7 @@ This puts the reference player (§5.2) at about **+0.8 to +1.2 points a day** fr
 
 ### 14.4 Battleground and Groundswell
 
-- **Battleground:** a city or district where, **at the City Day boundary**, the top two faction shares are within **10 points** (Neutral is not a faction). For that day every **political action** there (canvass, speech, propaganda, council) gets **+25 % opinion swing, +25 % Faction XP** (a bonus line on base FXP, rounded per line) and **+5 % chance** (§8.4), for every faction; intelligence, training and shifts get nothing. Evaluated once a day so tickets don't change under a player and the paper can mark the day's battlegrounds. At the baselines the Government Quarter and Station & Market are battlegrounds and the three leaning districts are not: the bonus follows the fight. Ticket tag *Battleground · +25 % FXP · +5 %* (slice 4).
+- **Battleground:** a city or district where, **at the City Day boundary**, the top two faction shares are within **10 points** (Neutral is not a faction). For that day every **political action** there (canvass, speech, propaganda, council) gets **+25 % opinion swing, +25 % Faction XP** (a bonus line on base FXP, rounded per line) and **+5 % chance** (§8.4), for every faction; intelligence and training get nothing. Evaluated once a day so tickets don't change under a player and the paper can mark the day's battlegrounds. At the baselines the Government Quarter and Station & Market are battlegrounds and the three leaning districts are not: the bonus follows the fight. Ticket tag *Battleground · +25 % FXP · +5 %* (slice 4).
 - **Groundswell:** when a faction **loses control** of a city or district (its share above 50 at one boundary, 50 or below at the next), it gets **+5 % opinion swing per day there, stacking to +30 %** (day 6 onward), on its own political actions, until it retakes control at a boundary or **14 boundaries** pass. Only the faction that lost. Multiplies with the Battleground and Issue lines, each shown as its own line. In the fiction, public sympathy turns toward whoever was just pushed out. Built in slice 4; it cannot fire until someone has first crossed 50 (Appendix C #29).
 - **Multipliers on one line:** `swing = base × (1 + battleground) × (1 + issue) × (1 + groundswell) × (1 + ordinance)`, in full precision, rounded once to three decimals; the FXP line takes Battleground, *Fired up* (home only) and ordinances only.
 
@@ -1099,7 +1122,7 @@ This is Irongate's signature mechanic. **Every city has two live public concerns
 3. **Tags.** An Issue has a `feeds` match (action types, locations, location kinds, the district): a matching action is **tagged** while the Issue is live (*Issue: Tram Fare Hike · +50 % swing* on the ticket). A tagged action gets **+50 % opinion swing** and adds **momentum** to the actor's faction on that Issue: **its Energy on Success, half on Partial**, each row of a ×3 on its own; journey cards add what they say. **Momentum is public**: the paper's Issues section shows every faction's total and who leads.
 4. **Resolution** at the **Monday boundary, before the new draw** (Sunday night; no early resolution in the MVP, Appendix C #28, so nothing depends on a threshold or a clock time). The faction with the most momentum **owns the Issue** (ties: the higher share in the city or district; then nobody); with no momentum at all it **lapses**. The owner gains **+3 opinion** in the city (in Irongate, in the Issue's **district**), drawn Neutral-first and attributed to the Issue in the ledger; a headline in every paper; its **top five contributors by momentum get 4 PC each**; and the Issue's **effect** applies to the whole city for **7 City Days** as a bounded modifier line like an ordinance's, stacking with the ordinance in force as a separate line.
 
-**The slice-4 deck** is nineteen Issues, every effect a bounded modifier on a number that exists (tickets −50 %, propaganda swing +15 %, rooms −50 %, job pay +10 %, speech −2 Energy, Iron +15 %, FXP +25 %, canvass +4 %, Rested cap +50, Standing ×2, shifts −1 Energy, training −20 %, intelligence −1 Energy), with texts, feeds and stances in `docs/design/slice-4-battleground.md` §9.5. The table below is the roadmap deck whose effects wait for their systems (Heat, hospital costs, bribes, exposés, encounters); the rows already built appear in the slice-4 deck under their slice-4 names.
+**The slice-4 deck** is nineteen Issues, every effect a bounded modifier on a number that exists (tickets −50 %, propaganda swing +15 %, rooms −50 %, job pay +10 %, speech −2 Energy, Iron +15 %, FXP +25 %, canvass +4 %, Rested cap +50, Standing ×2, seniority ×2 (was *shifts −1 Energy*, retired with the shift, §9), training −20 %, intelligence −1 Energy), with texts, feeds and stances in `docs/design/slice-4-battleground.md` §9.5. The table below is the roadmap deck whose effects wait for their systems (Heat, hospital costs, bribes, exposés, encounters); the rows already built appear in the slice-4 deck under their slice-4 names.
 
 | Issue | Typical trigger | Vanguard stance | Collective stance | Alliance stance | Effect if resolved |
 |---|---|---|---|---|---|
@@ -1165,7 +1188,7 @@ The other two: **Station & Market** (Market Square, Tram Junction, Central Stati
 - **Battleground and Groundswell** apply per district.
 - **Issues:** each of the capital's two weekly Issues is tied to a district, e.g. *Eviction Notices in Eastside* or *Press Raids in Old Town*.
 - **Recognition:** the capital awards **District Hero** per district instead of one City Hero.
-- **Council:** the Irongate council has **10 seats, 2 per district**, elected by that district's residents with the battleground count (§15.3: the turnout-weighted score, D'Hondt for two seats), every district counting on the same night (cycle offset 0). **The order paper carries each seated bloc's branch motion** (Vanguard *Rally Permits*, Collective *Shift Hours Order*, Alliance *Reading Room Grant*, in order of seats) plus up to three proposals from the Irongate menu (the ten plus *Tram Subsidy*); NPC councillors vote with **their own faction's player councillors** (else their branch's motion); an item **passes with six of ten**; the ordinance applies to every district. Ten NPCs at 4 / 3 / 3 pass nothing, and one player councillor who crosses the floor carries their NPC colleagues and passes it: the capital's ordinance is a coalition or nothing. The top-voted councillor of the largest bloc is **Mayor of Irongate** (the capital's Governor, slice 7).
+- **Council:** the Irongate council has **10 seats, 2 per district**, elected by that district's residents with the battleground count (§15.3: the turnout-weighted score, D'Hondt for two seats), every district counting on the same night (cycle offset 0). **The order paper carries each seated bloc's branch motion** (Vanguard *Rally Permits*, Collective *Long Service Order*, Alliance *Reading Room Grant*, in order of seats) plus up to three proposals from the Irongate menu (the ten plus *Tram Subsidy*); NPC councillors vote with **their own faction's player councillors** (else their branch's motion); an item **passes with six of ten**; the ordinance applies to every district. Ten NPCs at 4 / 3 / 3 pass nothing, and one player councillor who crosses the floor carries their NPC colleagues and passes it: the capital's ordinance is a coalition or nothing. The top-voted councillor of the largest bloc is **Mayor of Irongate** (the capital's Governor, slice 7).
 - **Moving around:** trams between districts are instant and free (a tram bar on every district view). Only journeys between cities take time.
 - **On the map:** one image (`irongate-districts.png`, 5056 × 3392, day and night) serves both levels: the **district overview** shows it whole with five plates (Old Town 0.13, 0.24 · Government Quarter 0.49, 0.17 · Station & Market 0.46, 0.50 · Eastside 0.86, 0.62 · Garrison Hill 0.15, 0.78) and a **district view** shows the same image through a per-district crop as its initial viewport, so every pin is a fraction of the full image. District borders and states are drawn as an interface overlay on neutral art, so the map never needs repainting. `irongate-closeup.png` is reserved.
 
@@ -1204,7 +1227,7 @@ Journeys between two outer cities run through the capital: the two legs added to
 - **A journey into a rival home city always triggers an event**, from the hostile-ground deck (§14.12).
 - **No journey takes more than 30 minutes**, except the night train. The NPC default Directives favour the player's current city and the capital, so the daily loop never forces a trip.
 
-**Slice 4 (pinned; `docs/design/slice-4-battleground.md` §2–3).** The nation map opens at **Level 10**. **Third class only** (20 Iron; the Tram Subsidy ordinance and the Tram Fare Hike Issue each halve fares *from* their city, never below 5). Destinations: **Irongate and your own home city**; rival home cities (*Hostile ground · from a later edition*, slice 5) and Clearwater (*No service yet*, slice 7) are on the map, locked. **The train leaves at the tap**: no departure time and nothing to cancel. Arrival is settled lazily by any read at or after `arrivesAt`. In transit: no Energy actions, training or shifts; the paper, the Me tab and the nation map, and every **political act of your residence** (ballot, endorse, declare, withdraw, propose, the council vote) work from anywhere, in transit included. Energy actions happen only in the city you are in; the job's half pay arrives wherever you are and the shift needs you at its location. Arrival is one modal (stamp *Arrived*) into Station & Market (Irongate) or the city map. **The first journey a character makes always carries a card; afterwards one in three**, drawn at boarding, seeded, without replacement until all seven have been seen; a card can be answered during the journey and on the arrival modal, and after that it was slept through. The seven cards (a talkative passenger, leaflets on the seats, the parcel, the card school, the reporter, the signal stop, the boy without a ticket) use the §8.4 check at difficulty 10, never fail, pay at most a 10-Energy action's worth, cost no Energy, and never take Iron a player did not stake; opinion from a card goes to the destination (Station & Market for the capital). Presence and carriage chat are slice 6.
+**Slice 4 (pinned; `docs/design/slice-4-battleground.md` §2–3).** The nation map opens at **Level 10**. **Third class only** (20 Iron; the Tram Subsidy ordinance and the Tram Fare Hike Issue each halve fares *from* their city, never below 5). Destinations: **Irongate and your own home city**; rival home cities (*Hostile ground · from a later edition*, slice 5) and Clearwater (*No service yet*, slice 7) are on the map, locked. **The train leaves at the tap**: no departure time and nothing to cancel. Arrival is settled lazily by any read at or after `arrivesAt`. In transit: no Energy actions or training; the paper, the Me tab and the nation map, and every **political act of your residence** (ballot, endorse, declare, withdraw, propose, the council vote) work from anywhere, in transit included. Energy actions happen only in the city you are in; the job's wage arrives wherever you are (§9). Arrival is one modal (stamp *Arrived*) into Station & Market (Irongate) or the city map. **The first journey a character makes always carries a card; afterwards one in three**, drawn at boarding, seeded, without replacement until all seven have been seen; a card can be answered during the journey and on the arrival modal, and after that it was slept through. The seven cards (a talkative passenger, leaflets on the seats, the parcel, the card school, the reporter, the signal stop, the boy without a ticket) use the §8.4 check at difficulty 10, never fail, pay at most a 10-Energy action's worth, cost no Energy, and never take Iron a player did not stake; opinion from a card goes to the destination (Station & Market for the capital). Presence and carriage chat are slice 6.
 
 **Journey events (the roadmap).** On about one trip in three, a card appears during the journey. It's always optional; ignore it and you "slept through it", with a neutral outcome. The table lists the full deck; the rows that need Heat, the Dossier, first class or the car arrive with those systems.
 
@@ -1288,7 +1311,7 @@ Each faction has a **home city** it can never lose. Power is won or lost in the 
 
 In Coalport the Vanguard sits above the Alliance because the Vanguard recruits in industrial towns (§16.1); Ashford is the mirror. The Alliance's home has the Collective as the stronger rival for the same reason.
 
-**Residence (slice 4).** `residence { cityId, districtId?, since }` is where you vote and stand, whose paper you read first, which Party orders you get and whose Issues lead your paper; it starts as the home city, and `homeCityId` keeps meaning the faction's home (the Ambition, *Fired up*). **Moving:** Rank 2 or above, standing in the district (or at home, for the way back), one tap and a sheet that lists the consequences, **500 Iron both ways, seven days between moves** (a residence lasts at least one full council cycle). **What changes:** you vote in the district from the first election whose polls open after you registered; you may stand there from the next nominations (Rank 3, *Known* in Irongate, two endorsements from Irongate members of your faction); a candidacy filed at home is withdrawn (the deposit stays with the branch) and a home council seat is **vacated** at the move and filled by the branch's next NPC (the term is not completed); Party orders come from the capital rotation from the next City Day; the Herald is your paper. **What stays:** the job with its rules (half pay anywhere, the shift only at its location; a capital job is a switch), Local Standing in every city, Iron, XP, Level, FXP, Rank, PC, items, the Ambition, endorsements given. **Residence has no rent** (§18.1). A **room in Irongate** is optional lodging for anyone in the city: 100 Iron for 7 City Days, Rested cap +50 while it runs (the pool keeps its value after), one at a time, renewable; prepaid like a bodyguard contract.
+**Residence (slice 4).** `residence { cityId, districtId?, since }` is where you vote and stand, whose paper you read first, which Party orders you get and whose Issues lead your paper; it starts as the home city, and `homeCityId` keeps meaning the faction's home (the Ambition, *Fired up*). **Moving:** Rank 2 or above, standing in the district (or at home, for the way back), one tap and a sheet that lists the consequences, **500 Iron both ways, seven days between moves** (a residence lasts at least one full council cycle). **What changes:** you vote in the district from the first election whose polls open after you registered; you may stand there from the next nominations (Rank 3, *Known* in Irongate, two endorsements from Irongate members of your faction); a candidacy filed at home is withdrawn (the deposit stays with the branch) and a home council seat is **vacated** at the move and filled by the branch's next NPC (the term is not completed); Party orders come from the capital rotation from the next City Day; the Herald is your paper. **What stays:** the job with its rules (full pay from anywhere; a capital job is a switch, and rarely worth one), Local Standing in every city, Iron, XP, Level, FXP, Rank, PC, items, the Ambition, endorsements given. **Residence has no rent** (§18.1). A **room in Irongate** is optional lodging for anyone in the city: 100 Iron for 7 City Days, Rested cap +50 while it runs (the pool keeps its value after), one at a time, renewable; prepaid like a bodyguard contract.
 
 **The one exception:** a rare **Season Twist**, *The Upset* (§22.3), where for one season a home city really can be contested. It is announced a week ahead and applies equally to everyone.
 
@@ -1384,14 +1407,14 @@ That's **about 111 offices every term**. With council terms of 5 days, **38 coun
 - **The count in home cities** (§14.11): all 7 seats belong to the home faction. Each candidate's **total = ward vote + 3 × endorsements + members' votes**, where the **ward vote** is the NPC electorate: a player's Local Standing Successes in the city ÷ 5 (rounded down), **read at the count**, so work during the polls counts; an NPC candidate's fixed profile with a seeded jitter of ±2 per cycle, drawn when nominations open; at most five endorsements count; members' votes are one each. Seats go to the seven highest totals; **ties** by members' votes, then endorsements (all of them), then Standing Successes (an NPC's is `profile × 5`, without the jitter), then earlier filing (NPCs after every player, in profile order). A seat lost on the tie-break is printed as such, not as "by 0". **Turnout** is *voters of eligible*, where eligible is every resident Rank 2+ member active in the last seven days at the count (the same roll as the small-branch rule). Rivals can't live or stand there. The result is printed in the city's paper (§3.3) and is final.
 - **Seat allocation in battlegrounds (pinned, slice 4).** In Irongate the count runs separately in each district for its **two seats**, every district on the same night. **Who votes:** Rank 2+ residents of the district (resident when its polls opened), **any faction, for any name on the district's ballot**. **Who stands:** Rank 3, resident of the district, *Known* in Irongate, two endorsements from Rank 2+ Irongate residents of the same faction (any district; one per member per cycle in the city), the slice-3 deposit and striking rules. For each faction: `ballotShare` = its candidates' ballots ÷ all ballots (0 if none); `opinionShare` = its district share ÷ the three faction shares; the **turnout weight** `w = 50 × min(1, ballots ÷ 10)` (the ballot half is worth its full 50 % from ten ballots, five points per ballot below, the rest of the weight staying with opinion); **score = w × ballotShare + (100 − w) × opinionShare**. **Two seats by D'Hondt**: the first to the highest score, the second to the highest of score ÷ (seats + 1), so the leader takes both only with more than twice the runner-up. **Ties between factions:** more ballots, then higher opinion share, then a seeded draw for the cycle (*on the returning officer's draw*). **Within a faction** seats go to its candidates by the home-city total (ward vote + 3 × endorsements + members' votes, same ties); NPC candidates fill each faction's list to two names (§15.10); a faction with no candidate forfeits to the next by D'Hondt. Ballots and seats do not move a battleground's opinion. Worked examples: `docs/design/slice-4-battleground.md` §8.2.
 - **The Irongate order paper:** each faction with at least one seat puts its branch's motion on the paper at no cost, in order of seats; then up to three proposals (20 PC) from the Irongate menu (the ten below plus **Tram Subsidy**: tickets from Irongate −50 %, floor 5). NPC councillors vote for the item with most votes from **player councillors of their own faction** (ties to their branch's motion, then the earliest moved; none: their branch's motion); **passes with six or more of ten**; otherwise the council rises without a motion. The ordinance applies to every district.
-- **The order paper and the division:** the new council sits from the count. On cycle days 0–1 the order paper holds **the branch's motion** (the party secretary's, at no cost: Vanguard *Rally Permits*, Collective *Shift Hours Order*, Alliance *Reading Room Grant*) plus up to **three proposals** by councillors (**20 PC**, one per councillor per term, first come; an item already on the paper cannot be moved again, the ordinance in force can be renewed). Each councillor casts **one vote** for one item or *Against all*, public in the chamber, final. At the boundary into day 2 the council **divides**: NPC councillors vote for the item with most player-councillor votes (ties to the branch's motion, then the earliest moved; the branch's motion if no player voted for an item, *Against all* being a recorded vote and not a preference they follow, so a lone councillor cannot leave the city without an ordinance; they abstain during Unrest, §14.11); the item with most votes **passes with four or more of seven**, otherwise the council rises without a motion. A passed ordinance is **in force from that boundary for five City Days** and replaces the one before: **one ordinance per city at a time**, expiring by the calendar. Ordinances apply to **every** player in the city, regardless of faction. Until a Governor exists (slice 7) the branch's motion is the whip.
+- **The order paper and the division:** the new council sits from the count. On cycle days 0–1 the order paper holds **the branch's motion** (the party secretary's, at no cost: Vanguard *Rally Permits*, Collective *Long Service Order*, Alliance *Reading Room Grant*) plus up to **three proposals** by councillors (**20 PC**, one per councillor per term, first come; an item already on the paper cannot be moved again, the ordinance in force can be renewed). Each councillor casts **one vote** for one item or *Against all*, public in the chamber, final. At the boundary into day 2 the council **divides**: NPC councillors vote for the item with most player-councillor votes (ties to the branch's motion, then the earliest moved; the branch's motion if no player voted for an item, *Against all* being a recorded vote and not a preference they follow, so a lone councillor cannot leave the city without an ordinance; they abstain during Unrest, §14.11); the item with most votes **passes with four or more of seven**, otherwise the council rises without a motion. A passed ordinance is **in force from that boundary for five City Days** and replaces the one before: **one ordinance per city at a time**, expiring by the calendar. Ordinances apply to **every** player in the city, regardless of faction. Until a Governor exists (slice 7) the branch's motion is the whip.
 
 **The home-city menu (MVP, slice 3).** Ten ordinances with bounded effects on systems that exist; the bound is the value, since the menu is closed. Bonus lines appear in the result modal named after the ordinance; cost changes show on the ticket. **A cost ordinance changes the cost only**: rewards stay on the content Energy (Reading Room training at INT 12 costs 35 and still pays 99 XP).
 
 | Ordinance | Effect in the city (for 5 days) |
 |---|---|
-| Public Works Order | Job pay +10 % (the half pay and the shift; a line of its own on the unmodified pay, beside the streak's, §9.1) |
-| Shift Hours Order | Job shifts −1 Energy (never below 2); each shift adds two days to the work streak (the +20 % cap is unchanged) |
+| Public Works Order | Job pay +10 % (a line of its own on the unmodified pay, beside seniority's, §9.1) |
+| **Long Service Order** (was *Shift Hours Order*; review 1) | **Seniority builds two days a day** (the +20 % cap is unchanged): a new job reaches the full rate in five days. Line: *The council backs long service: every day at the job counts double towards the rate.* |
 | Street Permits | Propaganda opinion swing +15 % |
 | Rally Permits | Speech actions −2 Energy (rewards unchanged) |
 | Reading Room Grant | Training Energy −20 % (rounded, halves up) |
@@ -1407,7 +1430,7 @@ The earlier list (Police Patrols, Rent Control, Market Tax, Clinic Funding, Tram
 
 - The **Faction Chair** is elected every 28 days by the faction's Rank 2+ members.
 - Every City Day, the Chair sets up to **3 Party Directives** from a menu: canvass [city], address [Issue] in [city], gather intel in [city], support [event], turn out the vote in [city], disrupt [rival] in [city]. Each has a group target and a personal target.
-- Members get **+25 % FXP on matching actions while the order is open** (on the action's base FXP, rounded per line, Partial included; never XP, Iron or opinion), **+20 FXP** the moment a personal target is reached, and **+5 PC** when all three are complete. The completing row gets the +25 %; nothing after it does, including later rows of the same ×3. The ticket tag reads *Party order 2 / 3 · +25 % FXP* while open and *Order done* after. This keeps Directives at about 30 % of daily FXP (`docs/economy.md` §10) whatever the player's volume.
+- Members get **+25 % FXP on matching actions while the order is open** (on the action's base FXP, rounded per line, Partial included; never XP, Iron or opinion), **+20 FXP** the moment a personal target is reached, and **+5 PC** when all three are complete. The completing row gets the +25 %; nothing after it does, including later rows of the same ×3. The ticket tag reads *Party order 2 / 3 · +25 % FXP* while open and *Order done* after. A completed order is a signed line in the result modal; the third completion opens the **orders-complete modal** in the secretary's voice (§13.7). This keeps Directives at about 30 % of daily FXP (`docs/economy.md` §10) whatever the player's volume.
 - Directives **refresh at the 00:00 UTC boundary** (§2.2). Unfinished orders are gone; nothing is taken away and there is no catch-up.
 - If the faction has no Chair, or the Chair sets nothing by 06:00, an **NPC party secretary** (§13.7) issues sensible defaults based on battlegrounds and Issues.
 - Directives do the tutorial's job: a new player always knows the most useful thing to do today.
@@ -1445,7 +1468,7 @@ The earlier list (Police Patrols, Rent Control, Market Tax, Clinic Funding, Tram
 | Ministry | Setting (adjusted once per week, within bounds) |
 |---|---|
 | **Interior** | Police encounter chance ±10 %; Heat cooling rate ±20 % |
-| **Labour** | Job pay ±10 %; work streak cap ±5 % |
+| **Labour** | Job pay ±10 %; seniority cap ±5 % |
 | **Health** | Hospital costs ±25 %; HP regen ±20 % |
 | **Culture & Press** | Social mission CHA thresholds ±3; propaganda influence ±10 % |
 | *Treasury* (v1.2) | *Faction treasury and public spending* |
@@ -1466,7 +1489,7 @@ The earlier list (Police Patrols, Rent Control, Market Tax, Clinic Funding, Tram
 | Culture | Cultural Enrichment Act (Alliance) | Social XP +20 %; CHA thresholds −3 | 14 days | No |
 | Justice | Rehabilitation Act (Alliance) | All records one level lower | 21 days | No |
 | Dress | Dress Code Mandate (Vanguard) | CHA 10 minimum to enter venues in controlled cities | 7 days | Yes, needs 60 % |
-| Labour | Eight-Hour Day (Collective) | Job shifts −1 Energy; salary +10 % | 14 days | No |
+| Labour | Eight-Hour Day (Collective) | Salary +10 %; seniority builds ×2 | 14 days | No |
 | Order | Special Powers Act (Vanguard) | Heat cools +50 % for Vanguard; Disruption against Vanguard +10 caught | 7 days | Yes, needs 60 % |
 
 ### 15.9 Recall, no-confidence and impeachment
@@ -1556,7 +1579,7 @@ The father's last request (§7.2) sets a **personal storyline that runs for mont
 - Rewards: unique items and outfits, patron introductions, Legacy, and one-off influence events.
 - Ambitions work for any faction; the storylines play out differently depending on which one you joined.
 
-**Chapter rules (slice 2).** A chapter is a **tier-3 story of at most three steps** (§13.1): a choice with no roll, remembered as a flag for later chapters; one check with two approaches, each showing its stat and chance, paid in Energy on commit; the result modal, which carries the next chapter's hook as a knock-on line. **A chapter never fails:** the check decides the text and rewards (Success / Partial / Failure, §8.4), and the chapter completes on any outcome. Chapters set in the home city trigger no encounter. Each chapter sets its own difficulty and Energy (the §8.4 tier-3 band is for later chapters and Operations). **Chapter 1** unlocks on arrival with no requirement, is delivered as a **Letter** in the welcome edition (§3.3), costs **10 Energy** at **difficulty 8**, and pays Success **150 XP / 40 FXP / 100 Iron**, Partial **75 / 20 / 50**, Failure **25 / 0 / 0**, with a keepsake (§21.4) on every outcome; no opinion; Rested applies; chapter checks count for neither Standing nor Party orders. Later chapters need their requirement and **seven City Days** since the previous one; the result modal's hook names the date, computed from the day the chapter was played, and the requirement as *at Rank n*, *at Level n* or *after your first ballot* (*Chapter 2, "Stand where he stood": from Tuesday 6 October, after your first ballot*). A chapter's Energy, XP, FXP and Iron count in the **Today tally** (§3.7); it adds no attempt or win, since it is not a tier-1 row. The third outcome's stamp reads **Failure**, as §8.4; no text in the chapter says "failed", because the texts are setbacks and the chapter completes. The kicker's *Chapter n of 12* uses the Ambition's declared length, not the number of chapters written; when the next chapter is not yet written the Letters row is simply absent. **The Paper tab's dot** shows while a chapter is ready, whether or not its Letter has been opened, and goes off once the chapter is played or mid-way (a Letter is a call to action; "opened and forgotten" is the case the dot is for). After a chapter, its screen shows only the next chapter's hook (*From Tuesday 6 October, at Rank 2*) and *Back to the paper*. Everything is resumable (`ambition { id, chapter, step, flags }`).
+**Chapter rules (slice 2).** A chapter is a **tier-3 story of at most three steps** (§13.1): a choice with no roll, remembered as a flag for later chapters; one check with **three approaches** (two written for the story's stats and, from review 1, ***Legwork***, a best-stat check, §8.4, so that every build has an approach at its best stat), each showing its stat and chance, paid in Energy on commit; the result modal, which carries the next chapter's hook as a knock-on line. **A chapter never fails:** the check decides the text and rewards (Success / Partial / Failure, §8.4), and the chapter completes on any outcome. Chapters set in the home city trigger no encounter. Each chapter sets its own difficulty and Energy (the §8.4 tier-3 band is for later chapters and Operations). **Chapter 1** unlocks on arrival with no requirement, is delivered as a **Letter** in the welcome edition (§3.3), costs **10 Energy** at **difficulty 8**, and pays Success **150 XP / 40 FXP / 100 Iron**, Partial **75 / 20 / 50**, Failure **25 / 0 / 0**, with a keepsake (§21.4) on every outcome; no opinion; Rested applies; chapter checks count for neither Standing nor Party orders. Later chapters need their requirement and **seven City Days** since the previous one; the result modal's hook names the date, computed from the day the chapter was played, and the requirement as *at Rank n*, *at Level n* or *after your first ballot* (*Chapter 2, "Stand where he stood": from Tuesday 6 October, after your first ballot*). A chapter's Energy, XP, FXP and Iron count in the **Today tally** (§3.7); it adds no attempt or win, since it is not a tier-1 row. The third outcome's stamp reads **Failure**, as §8.4; no text in the chapter says "failed", because the texts are setbacks and the chapter completes. The kicker's *Chapter n of 12* uses the Ambition's declared length, not the number of chapters written; when the next chapter is not yet written the Letters row is simply absent. **The Paper tab's dot** shows while a chapter is ready, whether or not its Letter has been opened, and goes off once the chapter is played or mid-way (a Letter is a call to action; "opened and forgotten" is the case the dot is for). After a chapter, its screen shows only the next chapter's hook (*From Tuesday 6 October, at Rank 2*) and *Back to the paper*. Everything is resumable (`ambition { id, chapter, step, flags }`).
 
 **Chapter 1 titles:** *His ward book* (Finish His Work: chapter 2 after the first ballot) · *The prison letter* (Clear His Name: chapter 2 at Level 6) · *The marker* (Settle His Debts: chapter 2 at Level 6). Scripts: `docs/design/slice-2-onboarding.md` §3.
 
@@ -1607,7 +1630,7 @@ You can court a patron who leans toward a rival faction. It's slower (Favour gai
 - Rested cap +50
 - −1 Energy on Canvassing
 - +1 % personal vote appeal, up to 3
-- A second job shift once a week
+- An extra day's pay once a week
 - Patron Favour +10 %
 - Heat cools +10 %
 
@@ -1859,7 +1882,7 @@ Each season adds **one rule change** to the setting, announced a week in advance
 
 - Energy cap 120
 - One free Large Pack per day (within the daily cap)
-- Remote Work for Tier I–II jobs
+- ~~Remote Work for Tier I–II jobs~~ (retired with the shift, §9; a replacement perk is open)
 - The season premium track (cosmetic)
 - Profile cosmetics: badge frame, title suffix, colour theme
 - Priority support and beta access
@@ -1919,7 +1942,7 @@ See §3.6 for the timeline. In more detail:
 | Origin Story + Ambition choice | ✔ (1 Ambition fully built, 2 with 4 chapters) | All 3 complete | New Ambitions |
 | Morning Paper, Directives, Issues | ✔ | | |
 | Energy, Rested, Heat, PC, Well-Fed buffs | ✔ | | |
-| Jobs (salary + streak) | ✔ | | |
+| Jobs (wage + seniority) | ✔ | | |
 | Dossier + Case Files | ✔ | | Player Dossiers (v1.5) |
 | City Councils, Governors, ordinances | ✔ | | |
 | Capital districts (5) | ✔ | | Districts in other cities |
@@ -2028,7 +2051,7 @@ The API (`apps/api`) was built against v3.0. Main changes:
 |---|---|---|
 | `jobs/workers/energyTick.ts` | 5 Energy per 5 min | 5 per 10 min; overflow into Rested |
 | `jobs/workers/healthNeglect.ts` | Hunger/fatigue HP drain | **Remove.** Buffs are timestamps on the character; no worker needed |
-| `jobs/workers/jobAbsence.ts` | Fires after missed shifts | **Replace** with a daily payroll job (50 % salary, streak, sick days) |
+| `jobs/workers/jobAbsence.ts` | Fires after missed shifts | **Replace** with a daily payroll at the boundary (full wage, seniority), settled lazily |
 | `jobs/workers/bodyguardUpkeep.ts` | Daily fee; dismiss if unpaid | **Replace** with contract expiry |
 | `jobs/workers/electionCheck.ts`, `electionConclude.ts`, `presidentTerm.ts` | Election triggered at 55 % | **Replace** with a calendar scheduler: a daily council election, a national election every 28 days, season rollover |
 | `jobs/workers/lawExpire.ts` | Law expiry | Keep; add ordinance expiry. Bounds checked in `services/ruleEngine.ts` |
@@ -2062,8 +2085,8 @@ The API (`apps/api`) was built against v3.0. Main changes:
 14. **Rested and heavy players:** a six-session player earns little Rested and still levels about 35 % faster than the reference player (`docs/economy.md` §6): Level 10 on day 3 and Level 16 on day 8. Intended, but if telemetry shows most players are heavy the level table will read fast. The lever is the §5.3 table, not the Rested bonus (§6.3 is a pillar).
 15. **Level-up points vs the training targets:** +1 stat point per level alone gives the reference player +9 by day 5 and +19 by day 20, which meets the §8.5 "best stat" targets (week 1 ~15, month 1 ~30) without any training; training on top overshoots (INT ~30 by day 7). Harmless while tier-1 odds clamp at 95 %; reconcile before tier-2 difficulties (14–20) are set in slice 5. Options: keep the rule and raise the targets, or give the level point every other level.
 16. **Opinion drift before slice 4:** ~~slice 1 writes the swing but not the 2 %-a-day home drift, so a long playtest with a few testers pins Coalport near the 95 % cap. Acceptable for the slice-1 question; apply the drift lazily at the day boundary if it is cheap.~~ **Closed (29 Sep 2026): the home-city drift (2 % of the distance to 70 a day) is built in slice 3** with the council calendar's world job (§14.2, §14.11). Coalport still pins at the 95 cap with a few active testers (+5.75 a day against −0.5 at the cap), which is *Fired up* working as designed; the scale problem is #13.
-17. **Salary cap on return (14 half-pays, §9.1):** "a fortnight's back pay" is a judgement, not a measured number. Revisit when the Welcome Back package (§4.2, 1 month+) is designed; it may replace the cap with a deliberate returning bonus (Rested full, a fixed Iron sum) rather than an accidental one.
-18. **The welcome set is per character** (§13.7) while every other day's orders are faction-wide. A character created at 23:50 UTC gets a ten-minute first City Day and the rotation the next morning. If the slice-2 playtest shows late-evening sign-ups losing the welcome set before they finish it, extend it to the second City Day when the first was shorter than two hours.
+17. **Salary cap on return (14 days' pay, §9.1; was 14 half-pays before the job became a wage):** "a fortnight's back pay" is a judgement, not a measured number. Revisit when the Welcome Back package (§4.2, 1 month+) is designed; it may replace the cap with a deliberate returning bonus (Rested full, a fixed Iron sum) rather than an accidental one.
+18. **The welcome set is per character** (§13.7) while every other day's orders are faction-wide. ~~A character created at 23:50 UTC gets a ten-minute first City Day and the rotation the next morning. If the slice-2 playtest shows late-evening sign-ups losing the welcome set before they finish it, extend it to the second City Day when the first was shorter than two hours.~~ **Closed (30 Sep 2026, review 1): the welcome day is the City Day of creation plus the next one when created after 22:00 UTC** (§8.4, §13.7). The *First day* bonus made the short-day case sharper, so it is pinned rather than waited for.
 19. **The face has no effect** (§7.3): six portraits, cosmetic only. Keep it that way; the moment appearance carries a bonus, the choice stops being about the player and starts being about the number.
 20. **Ambition failure texts on day 1:** chapter 1 can end in *Failure* (25 XP, the keepsake, no Iron) on a player's first hour. It is written as a setback, not a loss, and the chapter still completes. If the playtest shows new players reading it as "I failed the tutorial", raise chapter 1's difficulty floor to Partial (no Failure band) rather than lowering the difficulty.
 21. **The first ballot lands on day 2–4, not day 2** (§5.2, §15.3): polls are open three days in five, so 40 % of new players wait a day or two after Rank 2, told by the paper. If the slice-3 playtest shows the wait killing the moment, the lever is a four-day poll with a one-day nominations window (harder on casual candidates), not polls that never close.
@@ -2076,4 +2099,8 @@ The API (`apps/api`) was built against v3.0. Main changes:
 28. **No early Issue resolution** (§14.6): the GDD's "or early if one faction reaches the momentum threshold" is deferred. Sunday-only keeps every week's fight alive to the end and needs no threshold. If telemetry shows lopsided weeks (one faction with ten times the momentum by Wednesday), add a **decided** state that ends the +50 % and the momentum race early while the effect still starts on Monday.
 29. **Groundswell at low population** (§14.4): it fires only after a faction has crossed 50 in a district and then fallen back, which a handful of testers may never do. Built anyway (it is small and it is the anti-snowball rule); if it never fires in the playtest, seed one district above 50 for a week to see it once.
 30. **Cross-faction ballots** (§15.3): any resident may vote for any name on the district ballot, so a member can vote a rival's candidate in. Chosen because a citizen votes for a person and because it is the only way a three-way count has tactics at low population. If it produces griefing (members voting the weakest rival in to split a bloc), restrict the ballot to the member's own faction plus NPCs.
+31. **Seniority counts absent days** (§9.1): a player who takes a job and leaves for ten days returns at the full +20 % rate. Chosen so that absence never lowers a rate (§4.3), and because the 14-day cap bounds the sum (at most 14 × 1.2 × 216 for the Stores hand). If it reads as a reward for leaving, count only boundaries on which the player was seen in the previous seven days, never resetting.
+32. **Best-stat council sessions** (§13.3): the committee is now the best-odds action in every home city and already the best FXP per Energy, so a rank-chaser can live at the HQ. Accepted: it pays no opinion, and slot B names it one day in four. If the Standing and morale ledgers show HQ-only players, lower the council FXP multiple from 1.5× to 1.25× before touching the check.
+33. **The *First day* bonus is +10 % for one day** (§8.4): sized so the flattest build sits at 60 % and the day-2 odds are never lower. If the playtest shows day-2 odds reading as a drop anyway (the bonus row disappearing is visible in the ledger), the lever is a taper (+10 / +5 over two days), not a larger number.
+34. **AGI level points** (§5.3): the §8.3 milestones (AGI 30 at −1 Energy on stealth) were set for a stat that grew only by training and stealth; an AGI-first player with a point a level reaches 30 about week 4. Harmless until stealth missions exist (slice 5); retune the milestones with them.
 

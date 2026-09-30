@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). Grows one slice ahead of the build |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). Grows one slice ahead of the build |
 | **Sources** | GDD §5.2–5.5, §6.2–6.3, §6.5, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §14.11, §15.1–15.3, §15.4, §15.10, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md`, `slice-3-politics.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 29 Sep 2026 (slice-4 §15 added) |
+| **Updated** | 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -20,7 +20,7 @@ Every number the model uses is a GDD number. Where the GDD left a number open it
 | Rested (§6.3) | +50 % on covered points | — | +50 % | — |
 | Directive match (§15.4) | — | +25 % | — | — |
 | Training (§8.5, **pinned**; ×1 only, no batch) | 2.25 (half rate) | — | — | — |
-| Job shift (§9) | — | — | pay, not a rate | — |
+| Job (§9; review 1: a wage at the boundary, no shift) | — | — | pay, not a rate | — |
 
 **Per action** (Success / Partial):
 
@@ -80,9 +80,9 @@ How the model spends a 300-Energy reference day (day 2 onward):
 
 | Spend | Energy | Notes |
 |---|---|---|
-| Job shift | 4 | Factory worker, once |
+| ~~Job shift~~ | ~~4~~ | Gone (review 1, §16): the job pays at the boundary without Energy |
 | Training | ~44 | One INT point (rises 2 Energy per point) |
-| Intelligence | 8 | Two taps |
+| Intelligence | 12 | Three taps (was two: the shift's 4 Energy goes here) |
 | Political (canvass, propaganda, speech, council) | ~244 | The rest; ~24 attempts |
 | **Total** | **300** | |
 
@@ -97,14 +97,14 @@ Directives: about 60 of the political Energy matches an order (+25 % FXP on it);
 | Source | Casual (200 E) | Reference (300 E) | Regular (400 E) | Heavy (600 E) |
 |---|---|---|---|---|
 | Political and intel actions (with Rested) | ~490 | ~720 | ~930 | ~1,120 |
-| Factory worker: half pay at 00:00 | 108 | 108 | 108 | 108 |
-| Factory worker: shift + streak (avg +12 %) | ~121 | ~121 | ~121 | ~121 |
-| **Iron per day (steady state)** | **~720** | **~950** | **~1,160** | **~1,350** |
-| Day 1 (no Rested at start, no salary yet) | ~580 | ~760 | ~990 | ~1,400 |
+| Factory worker: the wage at 00:00 (review 1; was half pay 108 + a shift ~121) | 216 | 216 | 216 | 216 |
+| Seniority (+2 % a day, +20 % from day 10) | ~43 | ~43 | ~43 | ~43 |
+| **Iron per day (steady state)** | **~750** | **~980** | **~1,190** | **~1,380** |
+| Day 1 (no Rested at start, no wage yet) | ~470 | ~650 | ~880 | ~1,290 |
 
 Checks against §18.2 (week 1: ~1,000–2,000 a day): the reference player lands at the **low end**; the regular player is inside. Acceptable for slice 1, where there is nothing to buy. Revisit when Rested from lodging and the first sinks land (slice 2).
 
-**Jobs are the Iron engine per Energy:** a 4-Energy Factory shift pays 108–151 Iron (27–38 per Energy) against 2 per Energy from a canvass. That is the point of a job: steady income that doesn't depend on faction activity (§9). The Street vendor (100 a day) is the fallback; the Driver (200, AGI 10) is the recruit's first visible goal that training unlocks.
+**Jobs are Iron for no Energy** (review 1): the Factory worker pays 216–259 a day at the boundary against 2 per Energy from a canvass, and costs nothing. That is the point of a job: steady income that doesn't depend on faction activity (§9). The Street vendor (100 a day) is the fallback; the Driver (200, AGI 10) is the recruit's first visible goal that training unlocks.
 
 ### 5.2 Iron sinks in slice 1
 
@@ -210,13 +210,13 @@ Three orders a day sized to ~60 Energy in total: a casual player clears them in 
 
 | Session | What happens | Taps | Minutes |
 |---|---|---|---|
-| Quick check | Paper · one ×3 canvass · shift | 3 | 1 |
+| Quick check | Paper · one ×3 canvass (the wage is already on the desk) | 2 | 1 |
 | Regular | Paper · three ×3 runs · intel tap · one training | 6–7 | 2–3 |
 | Chained | Regular, then keep going as Energy ticks in | — | as long as the player likes |
 
 Nothing in slice 1 needs the player at a set time: Directives refresh at 00:00 UTC and are simply gone if missed; half pay arrives without a login; Rested banks the night.
 
-**Long absences:** a return credits at most 14 half-pays (GDD §9.1), so the largest back-pay windfall is 14 × 108 = **1,512 Iron** for the Factory worker, about 1.6 reference days of income. Uncapped, a 90-day absence would have paid 9,720 Iron (about 10 days of income) for doing nothing. The cap never touches anyone seen at least once a fortnight.
+**Long absences:** a return credits at most 14 days' pay (GDD §9.1; review 1), so the largest back-pay windfall is 14 × 259 = **3,626 Iron** for a Factory worker at full seniority, about 3.7 reference days of income. Uncapped, a 90-day absence would have paid 23,300 Iron (about 24 days of income) for doing nothing. The cap never touches anyone seen at least once a fortnight.
 
 ---
 
@@ -257,13 +257,12 @@ Reference recruit in Coalport, INT approaches, expected values:
 
 | Spend | Energy | XP | FXP | Iron | Other |
 |---|---|---|---|---|---|
-| Welcome set A: canvass ×2 at 66 % | 20 | 75 | 13 + 20 (order done) | 33 | +0.08 opinion |
-| Welcome set C: *Take a job* | 0 | — | 20 | — | streak starts at the shift |
-| The shift (Factory worker) | 4 | — | — | 112 (108 + 2 % streak) | |
-| Welcome set B: committee at 66 % | 10 | 37 | 10 + 20 (order done) | 17 | **+5 PC**, all orders done |
-| Ambition chapter 1 (INT vs 8: 66 / 20 / 14 %) | 10 | 118 | 30 | 76 | a keepsake |
-| Free play: five canvasses and an intel tap | 56 | 200 | 25 | 90 | +0.2 opinion |
-| **First bar** | **100** | **~430** | **~190 (+50 seed = 240)** | **~330 (+150 refused coat = 480)** | Level 2 at 150 XP on the 3rd–4th tap; **Level 3 (450) on the first bar if the chapter succeeds**, otherwise early in session 2 |
+| Welcome set A: canvass ×2 at 76 % (66 + *First day* 10; review 1, §16.2) | 20 | 79 | 14 + 20 (order done) | 35 | +0.09 opinion |
+| Welcome set C: *Take a job* | 0 | — | 20 | — | the first wage at the boundary (review 1: no shift) |
+| Welcome set B: committee (best stat, INT 12) at 76 % | 10 | 40 | 11 + 20 (order done) | 18 | **+5 PC**, all orders done: the secretary's modal |
+| Ambition chapter 1 (INT vs 8: 76 / 20 / 4 %) | 10 | 125 | 32 | 80 | a keepsake |
+| Free play: six canvasses | 60 | 240 | 30 | 105 | +0.27 opinion |
+| **First bar** | **100** | **~485** | **~200 (+50 seed = 250)** | **~240 (+150 refused coat = 390)** | Level 2 at 150 XP on the 3rd tap; **Level 3 (450) on the first bar**; the shift's 112 Iron is gone from day 1 and the wage (220) lands at the boundary |
 
 Chapter 1 pays about 12 XP per Energy against tier 1's 4.5, which is deliberate: it is one 10-Energy story a week at most, and on day 1 it is the biggest single number the player sees, which is what a story reward should be. Over a week it is under 3 % of XP.
 
@@ -285,7 +284,7 @@ Both cities pay the same rates at the same difficulty as Coalport, so §3–§9 
 
 ### 13.5 Session shape (pillar 7)
 
-From sign-up to the first result modal: eleven taps, about three minutes. The whole first bar, with the origin, the faction, the paper, the welcome set, the job, the shift and the chapter, is **about fifteen minutes**, and every screen in it is resumable. The second session of day 1 (three hours later, 100 Energy and no Rested yet) is the slice-1 regular session of §11.
+From sign-up to the first result modal: eleven taps, about three minutes. The whole first bar, with the origin, the faction, the paper, the welcome set, the job and the chapter, is **about fifteen minutes**, and every screen in it is resumable. The second session of day 1 (three hours later, 100 Energy and no Rested yet) is the slice-1 regular session of §11.
 
 ---
 
@@ -335,12 +334,12 @@ The public-meetings ordinance (below) adds a further +25 % on action FXP for fiv
 
 ### 14.4 Ordinances: what each is worth (reference player, per day, while in force)
 
-All ten are bounded modifiers on numbers this sheet already models. Values below are for the reference player (300 Energy, Factory worker at 216, streak ≥ 10, INT canvasses at the 95 % clamp by day 4) unless stated; the casual and heavy figures scale with their Energy.
+All ten are bounded modifiers on numbers this sheet already models. Values below are for the reference player (300 Energy, Factory worker at 216, seniority at the +20 % cap, INT canvasses at the 95 % clamp by day 4) unless stated; the casual and heavy figures scale with their Energy.
 
 | Ordinance | Effect | Worth per day | Who wants it |
 |---|---|---|---|
-| Public Works Order | Job pay +10 % | **+22 Iron** (216 → 238; the half pay and the shift both rise) | Everyone, a little. The streak bonus and the ordinance line are each a percentage of the unmodified 216 (GDD §9.1), so the shift shows *Streak +43 · Public Works Order +11* and the day is +22, not +27 |
-| Shift Hours Order | Shift −1 Energy; each shift adds two days of streak | +1 Energy (~5 XP); a new job's streak reaches +20 % in five shifts instead of ten: about **+10 Iron a day** over those days | Players with a young streak: new members, job switchers, returners; the Collective's motion |
+| Public Works Order | Job pay +10 % | **+22 Iron** (216 → 238 at the boundary) | Everyone, a little. The seniority line and the ordinance line are each a percentage of the unmodified 216 (GDD §9.1), so the desk shows *Seniority +43 · Public Works Order +22* and the day is +22, not +27 |
+| Long Service Order (was *Shift Hours Order*; review 1) | Seniority builds two days a day | A new job reaches +20 % in five days instead of ten: **+108 Iron over ten days**, about +11 a day; nothing for a job already at the cap | New members, job switchers; the Collective's motion. Small on purpose, like the other two defaults |
 | Street Permits | Propaganda swing +15 % | Morale +0.02 a day for the reference mix (~100 propaganda Energy) | The branch, when morale is near a threshold |
 | Rally Permits | Speeches 12 → 10 Energy, rewards unchanged | Speeches pay 5.4 XP / 0.7 FXP / 2.4 Iron per Energy instead of 4.5 / 0.6 / 2: **+20 % on speech Energy**; at a quarter of the political spend, **+5 % of the day's XP** | CHA-heavy builds (the coat, *talked them out*); the Vanguard's motion |
 | Reading Room Grant | Training −20 % Energy | INT 12 → 13 costs 35, not 44: **9 Energy saved a day** (~40 XP), or a second point every fourth day | Trainers; the Alliance's motion |
@@ -350,7 +349,7 @@ All ten are bounded modifiers on numbers this sheet already models. Values below
 | Ward Fund | Iron from checked actions +25 %; job pay −25 % | +180 − 54 = **+126 Iron** (+13 %); casual +122 − 54 = +68; heavy +280 − 54 | Active members, at the wage-earner's expense: the trade-off pair with Public Works |
 | Public Meetings Order | FXP +25 % on actions | **+36 FXP** (+18 %) | Anyone chasing a rank |
 
-No ordinance breaks a §5.2 milestone: the biggest XP lever (Rally Permits, all-in on speeches) is +20 % for five days on the slowest-odds actions; the biggest Iron lever (Ward Fund) is +13 %; the biggest FXP lever is +18 %. All of them expire by the calendar and only one is in force per city. The NPC defaults (Rally Permits, Shift Hours, Reading Room Grant) are three of the smaller ones in raw numbers, which is deliberate: a council of players should be able to do better than the branch.
+No ordinance breaks a §5.2 milestone: the biggest XP lever (Rally Permits, all-in on speeches) is +20 % for five days on the slowest-odds actions; the biggest Iron lever (Ward Fund) is +13 %; the biggest FXP lever is +18 %. All of them expire by the calendar and only one is in force per city. The NPC defaults (Rally Permits, Long Service, Reading Room Grant) are three of the smaller ones in raw numbers, which is deliberate: a council of players should be able to do better than the branch.
 
 ### 14.5 Morale
 
@@ -433,9 +432,9 @@ Expected reward factors: 0.92 at the clamp → 0.89 (INT) and 0.86 → 0.80 (CHA
 | Councillor's stipend (if seated) | 20 | 20 | 20 |
 | **FXP / day** | **~205 (225 seated)** | **~232 (+13 %)** | ~198 (−3 %) |
 | Iron from actions (with Rested) | ~720 | ~690 | ~670 |
-| Job: Factory worker kept (half pay only, no shift) | 108 + 121 | 108 | 108 |
-| Job: Porter after the switch (streak from 0, +2 %/day to +20 %) | — | 90 + ~100 | 90 + ~100 |
-| **Iron / day** | **~950** | **~800 (home job) · ~880 (Porter)** | ~780 · ~860 |
+| Job: Factory worker kept (review 1: the full wage from anywhere) | 216 + 43 | 216 + 43 | 216 + 43 |
+| Job: Porter after a switch (180, seniority from 0): never worth it with a home job | — | — | — |
+| **Iron / day** | **~980** | **~950** | ~930 |
 | Opinion moved / day | +1.15 (morale) | +1.15 × **1.25** ≈ +1.44 in the district (+2.2 in a week with a tagged Issue on half the Energy) | +1.15 |
 
 **Milestones:** Rank 3 for a player who moves on day 5 arrives about **day 9** (was 9.5 at home with *Fired up*); Rank 4 about day 28 for a resident who lives in a battleground district (was ~30). The capital pays about **+13 % FXP** while the fight is on and **−7 to −15 % Iron**; in a leaning district it pays nothing extra and costs the same Iron. Level pacing is untouched within a day (Level 10 day 5, Level 16 day 12–13). **Verdict:** the capital is a little richer in FXP and a little poorer in Iron, which is the trade §14.11 describes ("a natural ladder: home, then a battleground"); no §5.2 milestone moves by more than a day. Flag: the bonus is district-shaped, so if the leaning districts empty out, that is the design working, not a bug; if *every* district is a battleground by week two (three factions within ten everywhere), the +25 % is a permanent +13 % and the lever is the ten-point band.
@@ -487,3 +486,56 @@ Boarding is two taps and five seconds; the journey is twelve minutes in the back
 | 30 | Cross-faction ballots | Tactical griefing of a bloc | Own faction plus NPCs only |
 | — | The capital's +13 % FXP is district-shaped | Leaning districts empty; or every district is a battleground and the bonus is permanent | The ten-point band |
 | — | District Hero is nearly automatic at low population | 25 PC a cycle for turning up | The +0.5 minimum → +1.0 |
+
+---
+
+## 16. Review 1: the job as a wage, the first day on your best stat
+
+Rules: GDD §0 (*Added 30 Sep 2026, review 1*), §9, §8.4, §13.3, §13.7; answers in `docs/design/review-1-answers.md`. Nothing here adds a rate; two numbers move a little and one bar is spent differently.
+
+### 16.1 The job (GDD §9)
+
+| | Before (half pay + shift + streak) | After (the wage + seniority) |
+|---|---|---|
+| Energy a day on the job | 4 | **0** |
+| Factory worker, reference (member, 216) at steady state | 108 + 108 × 1.20 = **238** | 216 × 1.20 = **259** (+21, +9 % on the job, +2 % on the day) |
+| Day 1 | the shift's ~112, in hand at once | **nothing until the boundary**, then 216 × 1.02 = 220 |
+| Days 1–10 of a job (rate climbing) | +2 % a shift | +2 % a boundary; the first boundary pays +2 %, the tenth +20 % |
+| The 4 Energy freed | — | one more intelligence tap (~25 XP, ~11 Iron with Rested): no milestone moves |
+| Iron a day, reference (§5.1) | ~950 | **~980** |
+| Largest windfall on return (14-day cap) | 1,512 | 3,626 (about 3.7 reference days) |
+
+Why the day-1 Iron dip does not matter: there is nothing to buy until slice 4's tickets (20), and the coat's 150 or the first wage covers those. Why the seniority cap is +20 %, unchanged: the streak was tuned so that a fortnight at one job is worth a fifth more than hopping, and the wage keeps that trade with none of the sick-day bookkeeping. Seniority counts absent days (Appendix C #31), which is bounded by the 14-day cap.
+
+**Orders.** The shift order leaves slot C; *Five attempts anywhere in {city}* (5 attempts, ~50 Energy) joins *Train once* and *Six wins*. On its day the three orders total about 90 Energy rather than 60; the +20 FXP per completion is unchanged, so Directives stay at about 30 % of daily FXP (§10). *Take a job* is a welcome-day order only and still pays its +20 FXP on day 1.
+
+**Capital residents (§15.3 above):** the home job now pays in full from anywhere, so the Porter (180) is only for a player with no job; a capital resident's Iron is ~950 rather than ~800–880, three per cent under home.
+
+### 16.2 The first day (GDD §8.4, §13.7)
+
+Three things change the welcome day's odds, none of them a rate:
+
+| Build (best stat, home difficulty 8) | Old slot A | New slot A + *First day* +10 % | End of day 1 (three level points, *Familiar* +3 %) |
+|---|---|---|---|
+| All-in Alliance (INT 16) | 82 % | 92 % | 95 % (clamp) |
+| Reference recruit (INT 12) | 66 % | **76 %** | 81 % |
+| The user's Vanguard (STR 13, INT 5) | **38 %** on the committee and the chapter, 70 % on the gate | **80 %** on the gate, the committee (best-stat) and *Legwork* | 85 % |
+| Flattest (8 / 8 / 8) | 50 % | **60 %** | 65 % |
+
+Expected reward factors on the welcome day (`0.5 + 0.5 × chance`): reference 0.83 → **0.88**, flattest 0.75 → 0.80. That is about **+6 % XP and Iron on day-1 actions**: the reference recruit's first bar goes from ~430 XP to ~455 and the day from ~1,440 to ~1,520; Level 4 at the end of day 1 and Level 6 on day 2 are unchanged, Rank 2 during day 2 is unchanged (about +12 FXP on the day). The bonus ends at the boundary and every build's day-2 odds are at or above its day-1 odds (right-hand column), so nothing reads as a drop (Appendix C #33).
+
+**Best-stat checks.** The committee is now a 70 %+ check for every build (it was 62–74 % for the reference recruits and 38 % for a STR Vanguard). It pays 0.9 FXP per Energy against a canvass's 0.6, so it was already the FXP choice; the odds make it the *best* choice for a rank-chaser in every home city. Modelled: a player who puts all political Energy into the committee earns ~300 FXP a day against the reference ~205 and moves no opinion; Rank 3 about day 7 instead of 10. Accepted for now (Appendix C #32); the lever is the 1.5× multiple.
+
+**AGI level points** change no slice 0–4 number: no check in the home cities is AGI beyond two propaganda actions per city, and AGI training is the cheapest (30 Energy at AGI 5). An AGI-first reference-shaped player reaches AGI 30 about day 24 (Appendix C #34).
+
+### 16.3 Small numbers pinned
+
+| Number | Value | Effect |
+|---|---|---|
+| *One of Us* (150 Successes) | **1 PC a day** per such city | The reference player has it from day 8 at home: +6 PC by day 14 (the §14.2 budget of ~45 becomes ~50) |
+| The welcome day | Creation day, plus the next when created after 22:00 UTC | Closes Appendix C #18; at most 2 % of sign-ups get the two-day version |
+| Slot A for AGI builds | A propaganda action ×2 (16 Energy, not 20) | 4 Energy more for free play on day 1; +2 FXP less from the order's actions, the same +20 for completing it |
+
+### 16.4 Session shape (pillar 7)
+
+The wage removes a tap from every day (the shift) and a modal. The orders-complete modal adds one tap once a day, in place of the line it replaces. The help notes are a tap each and only when asked for. The Standing card and the signed order lines live inside modals that already exist. Nothing new is timed.
