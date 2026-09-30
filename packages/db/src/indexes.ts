@@ -3,6 +3,7 @@ import type { Content } from '@irongate/content';
 import { migrateSlice1CharacterFields } from './migrations/001-slice1-character-fields';
 import { migrateSlice2Arrival } from './migrations/002-slice2-arrival';
 import { migrateSlice3Politics } from './migrations/003-slice3-politics';
+import { migrateReview1Wage } from './migrations/004-review1-wage';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
@@ -43,4 +44,6 @@ export async function ensureIndexes(
   await migrateSlice2Arrival(content);
   // Slice 3: after 002.
   await migrateSlice3Politics();
+  // Review 1: jobs become a wage; after 003 (renames the Shift Hours Order it seeded).
+  await migrateReview1Wage();
 }

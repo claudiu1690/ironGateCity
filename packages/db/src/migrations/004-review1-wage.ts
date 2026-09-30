@@ -20,9 +20,8 @@ export const RENAMED_ORDINANCES: Readonly<Record<string, string>> = { 'ord.shift
  *   and on the order papers (items, votes, divisions).
  * Returns the number of documents changed.
  *
- * Not called from `ensureIndexes` yet: running it at start-up rewrites every existing database the
- * server connects to, so wiring it in is left to the user. The server reads a job stored without
- * `seniority` as seniority 0 and ignores the retired fields, so it works before and after this runs.
+ * Run from `ensureIndexes` at start-up, after 003 (the user approved this on 30 Sep 2026). The server
+ * also reads a job stored without `seniority` as seniority 0 and ignores the retired fields.
  */
 export async function migrateReview1Wage(): Promise<number> {
   let changed = 0;
