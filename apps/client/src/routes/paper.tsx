@@ -6,13 +6,14 @@ import {
   LettersRow,
   Masthead,
   OrdersList,
-  PollingDayRow,
+  ElectionCard,
   renderTimeTokens,
 } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef } from 'react';
 import { trpc } from '../lib/trpc';
+import { useNow } from '../lib/useNow';
 
 /**
  * The Morning Paper (§3.3 v2, mockup MobilePaper): masthead, headlines (the first as the lead),
@@ -23,6 +24,7 @@ export function PaperPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const paper = useQuery({ ...trpc.paper.today.queryOptions(), refetchOnWindowFocus: false });
+  const now = useNow(60_000);
   const markRead = useMutation({
     ...trpc.paper.markRead.mutationOptions(),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: trpc.character.me.queryKey() }),
@@ -111,7 +113,12 @@ export function PaperPage() {
         )}
         <OrdersList orders={p.orders} variant="paper" />
         {p.pollingDay && (
-          <PollingDayRow summary={p.pollingDay} onOpen={(route) => void navigate({ to: route })} />
+          <ElectionCard
+            summary={p.pollingDay}
+            layout="row"
+            now={now}
+            onOpen={(route) => void navigate({ to: route })}
+          />
         )}
         {p.letters.map((l) => (
           <LettersRow

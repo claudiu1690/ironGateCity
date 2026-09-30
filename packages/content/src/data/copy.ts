@@ -37,13 +37,13 @@ function listOr(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} or ${items.at(-1)}`;
 }
 
-const STAT_NAMES = { str: 'Strength', int: 'Intelligence', agi: 'Agility' } as const;
+const STAT_NAMES = { str: 'Strength', int: 'Intelligence', agi: 'Agility', cha: 'Charisma' } as const;
 
 /** "3 of 4", or "nil" when no member was eligible (a quiet city, counted with nobody active). */
 export const turnoutOf = (voters: number, eligible: number) =>
   eligible === 0 ? 'nil' : `${voters} of ${eligible}`;
 
-/** ", at Rank 2" / ", after your first ballot" (the hook format, design §17.7). */
+/** ", at Rank 2" / ", after your first vote" (the hook format, design §17.7). */
 const needsPhrase = (needs: string | null) =>
   needs ? (needs.startsWith('after ') ? `, ${needs}` : `, at ${needs}`) : '';
 
@@ -57,10 +57,29 @@ export const copy = {
     xp: 'XP',
     /** The XP value text by default: "{xp} XP · {n} to Level {next}" (answers §5). */
     xpLine: (xp: string, toNext: string, next: number) => `${xp} XP · ${toNext} to Level ${next}`,
-    /** The FXP bar's label on narrow phones (answers §8). */
+    /** Review 2 (answers §1.9): the Party XP bar's name. */
+    fxp: 'Party XP',
+    /** The Party XP bar's label on narrow phones (answers §8). */
     rankN: (n: number) => `Rank ${n}`,
+    /** Review 2 #7: the Party XP bar's label, "To Steward", and its numbers after the bar. */
+    toRank: (title: string) => `To ${title}`,
+    fxpLine: (fxp: string, next: string) => `${fxp} / ${next} Party XP`,
+    /** At the top rank there is no next one: the total alone. */
+    fxpTop: (fxp: string) => `${fxp} Party XP`,
   },
   x3Needs: (cost: number) => `×3 needs ${cost} Energy`,
+  /** Review 2 (answers §1.11): a ticket locked on reputation, "Needs a Known reputation here". */
+  needsReputation: (level: number) =>
+    `Needs a ${['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us'][level] ?? 'better'} reputation here`,
+  /** The type labels on a ticket (answers §1.11). */
+  typeLabel: {
+    canvass: 'Talk to voters',
+    speech: 'Speech',
+    propaganda: 'Spread the word',
+    intelligence: 'Watch and listen',
+    council: 'Party meeting',
+    training: 'Training',
+  } as Record<string, string>,
   /** Me tab, no job: the home city's places with a Jobs card, in pin order (content §13.7, n4). */
   meNoJob: (places: string[]) => `No job yet · take one at ${listOr(places)}`,
   takeJob: 'Take the job',
@@ -82,12 +101,12 @@ export const copy = {
   /** "Needs Level 3, AGI 10": only the unmet requirements, level first. */
   jobNeeds: (parts: string[]) => `Needs ${parts.join(', ')}`,
   jobTaken: (firstPayAt: string) => `Taken · paid at ${firstPayAt}`,
-  jobTakenOrder: (fxp: number) => `Taken · party order complete: +${fxp} FXP`,
+  jobTakenOrder: (fxp: number) => `Taken · party order complete: +${fxp} Party XP`,
   jobSwitched: (firstPayAt: string) => `Switched · seniority reset · paid at ${firstPayAt}`,
   orderTag: (progress: number, target: number, pct: number) =>
-    `Party order ${progress} / ${target} · +${pct} % FXP`,
+    `Party order ${progress} / ${target} · +${pct} % Party XP`,
   orderDone: 'Order done',
-  allOrdersDone: (pc: number) => `All orders carried out · +${pc} PC`,
+  allOrdersDone: (pc: number) => `All orders carried out · +${pc} Political Capital`,
   /**
    * Review 1 (answers §6): a single order done is a signed line in the result modal. `left` is the
    * number still open; 0 is the third, and the orders-complete note follows.
@@ -95,16 +114,16 @@ export const copy = {
   orderSigned: {
     vanguard: (fxp: number, left: number) =>
       left === 0
-        ? `Order carried out · +${fxp} FXP. That's all three: see the note.`
-        : `Order carried out · +${fxp} FXP. ${left === 1 ? 'One remains' : 'Two remain'}. — V.S.`,
+        ? `Order carried out · +${fxp} Party XP. That's all three: see the note.`
+        : `Order carried out · +${fxp} Party XP. ${left === 1 ? 'One remains' : 'Two remain'}. — V.S.`,
     collective: (fxp: number, left: number) =>
       left === 0
-        ? `Order carried out · +${fxp} FXP. That's all three: see the note.`
-        : `Done, that one · +${fxp} FXP. ${left === 1 ? 'One to go' : 'Two to go'}. — P.H.`,
+        ? `Order carried out · +${fxp} Party XP. That's all three: see the note.`
+        : `Done, that one · +${fxp} Party XP. ${left === 1 ? 'One to go' : 'Two to go'}. — P.H.`,
     alliance: (fxp: number, left: number) =>
       left === 0
-        ? `Order carried out · +${fxp} FXP. That's all three: see the note.`
-        : `Ticked · +${fxp} FXP. ${left === 1 ? 'One left' : 'Two left'}. — T.G.`,
+        ? `Order carried out · +${fxp} Party XP. That's all three: see the note.`
+        : `Ticked · +${fxp} Party XP. ${left === 1 ? 'One left' : 'Two left'}. — T.G.`,
   },
   /** Review 1 (answers §6): the orders-complete note, in the secretary's voice. */
   ordersComplete: {
@@ -116,7 +135,7 @@ export const copy = {
     collective: {
       headline: 'All three done',
       body: (name: string) =>
-        `That's a day's work for the branch, ${name}. Get some tea; the wards will still be there tomorrow. — P.H.`,
+        `That's a day's work for the branch, ${name}. Get some tea; the streets will still be there tomorrow. — P.H.`,
     },
     alliance: {
       headline: 'Three for three',
@@ -124,7 +143,7 @@ export const copy = {
         `Three for three, ${name}. I've written it down, which around here is praise. — T.G.`,
     },
     pcTile: 'Political Capital',
-    fxpTile: 'Faction XP from orders today',
+    fxpTile: 'Party XP from orders today',
     tomorrow: "Tomorrow's orders are in the morning paper",
     carryOn: 'Carry on',
   },
@@ -137,49 +156,57 @@ export const copy = {
     str: (n: number, m: number) =>
       `Strength. Shift changes, loaders, posters, the gate steps: ${n} of ${m} actions here. Later, security work, marches and holding your own.`,
     int: (n: number, m: number) =>
-      `Intelligence. Queues, clerks, committees, the registers: ${n} of ${m} actions here. Later, espionage, exposés and the better-paid desks.`,
+      `Intelligence. Queues, clerks, meetings, the records: ${n} of ${m} actions here. Later, espionage, exposés and the better-paid desks.`,
     agi: (n: number, m: number) =>
-      `Agility. Leaflets, chalk, the evening run: ${n} of ${m} actions here. Later, stealth work and getting away clean.`,
+      `Agility. Flyers, chalk, the paper round: ${n} of ${m} actions here. Later, stealth work and getting away clean.`,
     footer: "Charisma isn't trained. It's worn: your coat, your suit, your party outfit.",
   },
-  /** Review 1 (answers §4, GDD §8.4): the odds as a sentence, the roll line and the ledger. */
+  /**
+   * Review 2 (answers §2, GDD §8.4): the odds are a word, never a number; a result that isn't a
+   * Success says why in one plain line. No string here prints a digit.
+   */
   odds: {
-    above: (stat: string, v: string, d: number, diff: string, pct: number) =>
-      `Your ${stat} ${v} is ${diff} above the ${d} this needs: ${pct} %.`,
-    below: (stat: string, v: string, d: number, diff: string, pct: number) =>
-      `Your ${stat} ${v} is ${diff} below the ${d} this needs: ${pct} %.`,
-    equal: (stat: string, v: string, d: number, pct: number) =>
-      `Your ${stat} ${v} matches the ${d} this needs: ${pct} %.`,
-    /** rel: "2 below" | "4 above" | "level with". */
-    two: (a: string, va: number, b: string, vb: number, avg: string, d: number, rel: string, pct: number) =>
-      `${a} ${va} and ${b} ${vb} average ${avg}, ${rel} the ${d} this needs: ${pct} %.`,
-    best: (stat: string, v: number, d: number, rel: string, pct: number) =>
-      `Your best, ${stat} ${v}, is ${rel} the ${d} this needs: ${pct} %.`,
-    /** The sentence's ending with one bonus, in place of its final ": {pct} %.". */
-    bonusOne: (pct: number, label: string, b: number, total: number) =>
-      `${pct} %, and +${b} % for ${label}: ${total} %.`,
-    bonusMany: (pct: number, b: number, total: number) =>
-      `${pct} %, and bonuses ${b >= 0 ? '+' : ''}${b} %: ${total} %.`,
-    capped: (raw: number, cap: number) => `${raw} %, capped at ${cap} %.`,
-    rollSuccess: (roll: number, chance: number) => `Rolled ${roll}: Success (${chance} or under).`,
-    rollPartial: (roll: number, lo: number, hi: number) => `Rolled ${roll}: Partial (${lo} to ${hi}).`,
-    rollPartialNoFail: (roll: number, what: string) => `Rolled ${roll}: Partial (a ${what} never fails).`,
-    rollFailure: (roll: number) => `Rolled ${roll}: Failure (more than 20 over).`,
-    ledgerEven: 'Even odds',
-    ledgerStat: (stat: string, v: string, rel: string, d: number) =>
-      `${stat} ${v}, ${rel} the ${d} needed, 4 % a point`,
-    ledgerTwo: (a: string, va: number, b: string, vb: number, avg: string, rel: string, d: number) =>
-      `${a} ${va} and ${b} ${vb}, average ${avg}: ${rel} the ${d} needed`,
-    ledgerBest: (stat: string, v: number, rel: string, d: number) =>
-      `Your best stat, ${stat} ${v}: ${rel} the ${d} needed`,
-    ledgerChance: 'Chance',
-    ledgerCapped: (raw: number) => `${raw} before the cap`,
-    ledgerNote:
-      'Every check starts at even odds and moves 4 % for each point your stat is above or below what the job needs, plus bonuses; never under 5 % or over 95 %. A roll at or under the chance is a Success.',
-    /** The ticket before the tap: "62 % · STR 11", "44 % · CHA 2 + INT 11", "70 % · your best, STR 13". */
-    ticket: (pct: number, statLine: string) => `${pct} % · ${statLine}`,
-    ticketBest: (stat: string, v: number) => `your best, ${stat} ${v}`,
+    band: (chance: number) => (chance >= 70 ? 'Good odds' : chance >= 50 ? 'Fair odds' : 'Long shot'),
+    /** "Good odds · Intelligence", "Fair odds · Charisma and Intelligence". */
+    ticket: (band: string, statLine: string) => `${band} · ${statLine}`,
+    statLine: (names: string[]) => names.join(' and '),
+    statBest: (name: string) => `your best, ${name}`,
+    /** "Intelligence 12 → 13 · always works" (training). */
+    alwaysWorks: 'always works',
+    note: {
+      good: (stat: string) => ['Good odds', `About three tries in four come off here. It uses your ${stat}.`],
+      fair: (stat: string) => ['Fair odds', `About one try in two comes off here. It uses your ${stat}.`],
+      long: (stat: string) => [
+        'Long shot',
+        `Fewer than one try in two come off here. It uses your ${stat}; training it would help.`,
+      ],
+    },
+    /** A tag's suffix: "Open Doors · better odds", "First day in Duskwall · better odds". */
+    betterOdds: 'better odds',
+    worseOdds: 'worse odds',
   },
+  /** Review 2 (answers §2.4): the one reason under a row that isn't a Success. */
+  reason: {
+    statLow: (stat: string, place: string | null) =>
+      `Your ${stat} is low for this.${place ? ` Train it at ${place}.` : ''}`,
+    statLowCha: 'Your Charisma is low for this. It comes from what you wear; a better coat helps.',
+    statLowTwo: (a: string, b: string, weak: string, place: string | null) =>
+      `This needs ${a} and ${b}, and your ${weak} is the low one.${weak === 'Charisma' ? ' It comes from what you wear.' : place ? ` Train it at ${place}.` : ''}`,
+    statLowBest: (stat: string) => `Even your best, ${stat}, is low for this. Training anything would help.`,
+    penalty: {
+      weather: 'The rain was against you.',
+      inspector: 'The Branch Inspector was watching.',
+      'rival-ground': 'This is rival ground; everything is harder here.',
+    } as Record<string, string>,
+    luckGood: "Bad luck. The odds were good; it just didn't come off. Try again.",
+    luckFair:
+      'The odds were only fair. Every win here builds your reputation, and reputation lifts the odds.',
+    failure: (cause: string) => `It went badly. ${cause}`,
+    /** ×3 with a shared cause: "2 of 3 didn't come off. …" (the counts are the attempt rows'). */
+    batch: (n: string, of: string, cause: string) => `${n} of ${of} didn't come off. ${cause}`,
+  },
+  /** Stat names in full, in a sentence or on a ticket (answers §1.2). */
+  statNames: STAT_NAMES as Record<'str' | 'int' | 'agi' | 'cha', string>,
   /**
    * Review 1 (answers §5, GDD §3.7): the notes behind the dotted-underlined labels, [kicker, note].
    * `{n}` values are filled by the caller.
@@ -198,29 +225,29 @@ export const copy = {
       `Every action pays Experience. Levels open places, kit and the train, and each one gives a stat point. ${n} more to Level ${next}.`,
     ],
     fxp: (rank2: string, rank3: string, n: string | null, nextTitle: string | null) => [
-      'Faction XP',
-      `Your standing in the party, earned by party work and orders. Ranks give rights: the vote at ${rank2}, a council candidacy at ${rank3}.${n !== null && nextTitle ? ` ${n} more to ${nextTitle}.` : ''}`,
+      'Party XP',
+      `What the party thinks of you, earned by party work and orders. Ranks give rights: the vote at ${rank2}, standing for the council at ${rank3}.${n !== null && nextTitle ? ` ${n} more to ${nextTitle}.` : ''}`,
     ],
     pc: () => [
       'Political Capital',
-      'Spent on politics: filing for the council (10), endorsing a name (10), moving an ordinance (20). Earned by carrying out all three orders (+5 a day) and by holding office.',
+      'Your pull in the party. You earn it by doing all three Party orders (+5 a day) and by holding a council seat. You spend it to stand for the council (10), to back a candidate (10) or to put a rule to the council (20).',
     ],
     standing: (city: string) => [
-      'Local standing',
-      `How well ${city} knows your face. Every Success here counts: Familiar at 10 gives +3 % on every check in the city, Known at 30 +6 %, Trusted at 70 +9 %, One of Us at 150 +12 % and 1 PC a day.`,
+      'Reputation',
+      `How well ${city} knows your face. Every win here counts: Familiar at 10, Known at 30, Trusted at 70, One of Us at 150. Each step makes everything you do here go a little better; One of Us pays 1 Political Capital a day.`,
     ],
     share: (city: string) => [
       `Who holds ${city}`,
-      "Each party's share of the town, and in grey the undecided: Neutral is nobody's, and every canvass draws from it first. A home city never falls below half for its own party; the rest is the fight.",
+      "Each party's share of the town, and in grey the undecided. Everything you do to win voters draws from the undecided first. A home city never falls below half for its own party; the rest is the fight.",
     ],
     shareCaption: (city: string) => `Who holds ${city}`,
     morale: () => [
       'Morale',
-      "The home party's share is its morale. Fired up, 80 and over: party work here pays +10 % Faction XP. Steady: nothing special. Unrest, under 60: the branch is in trouble and the orders change.",
+      "The home party's share is its morale. Fired up, 80 and over: party work here pays +10 % Party XP. Steady: nothing special. Unrest, under 60: the branch is in trouble and the orders change.",
     ],
     ordinance: () => [
-      'Ordinance',
-      "The council's standing order for the town, in force for five days and for everyone here whatever their party. Passed at the council by four votes of seven.",
+      'Council rule',
+      "The council's rule for the town, in force for five days and for everyone here whatever their party. Passed by four councillors of seven.",
     ],
     today: (at: string) => [
       'Today',
@@ -228,22 +255,46 @@ export const copy = {
     ],
     todayEnergy: () => ['Energy spent', "Energy spent today. A ×3 is three actions' worth."],
     todayAttempts: () => ['Attempts', 'Actions taken today, a ×3 counting three.'],
-    todayWins: () => ['Wins', 'Successes today. Each one counts towards your standing here.'],
+    todayWins: () => ['Wins', 'Successes today. Each one builds your reputation here.'],
     todayXp: () => ['Experience today', 'Experience earned today, Rested included.'],
-    todayFxp: () => ['Faction XP today', "Faction XP earned today, the orders' bonuses included."],
+    todayFxp: () => ['Party XP today', "Party XP earned today, the orders' bonuses included."],
     todayIron: () => [
       'Iron today',
       'Iron earned by actions today. Your wage lands at midnight and shows on the desk.',
     ],
     todayOpinion: (city: string) => [
       'Opinion moved',
-      `How far your work moved ${city}'s meter today, in points of the town. A canvass is +0.05.`,
+      `How far your work moved ${city}'s meter today, in points of the town. One round of talking to voters is +0.05.`,
     ],
     todayOrders: () => [
       'Orders',
       'Party orders carried out today, of three. All three: +5 Political Capital.',
     ],
     todayTrained: () => ['Trained', 'Stat points trained today.'],
+    seniority: () => [
+      'Seniority',
+      'Every day you keep the same job adds 2 % to its pay, up to 20 % after ten days. Switching jobs starts it again from nothing.',
+    ],
+    election: (city: string, rank2: string, rank3: string) => [
+      'Election',
+      `${city} elects its council every five days: two days for candidates to put their names in, three days of voting, the result the next morning. ${rank2}s vote; ${rank3}s who are Known here can stand.`,
+    ],
+    rule: (city: string) => [
+      'Council rule',
+      `The seven councillors pick one rule for the town each term. It changes a real number for everyone in ${city} for five days.`,
+    ],
+    backers: () => [
+      'Backers',
+      "A candidate needs two backers to stay on the list. Backing costs 10 Political Capital, is public, and can't be taken back. Do all three Party orders while you're standing and the branch backs you.",
+    ],
+    localSupport: () => [
+      'Local support',
+      "The town's own vote for a candidate: your reputation here, counted as wins ÷ 5. Every round of talking to voters raises it.",
+    ],
+    orders: () => [
+      'Party orders',
+      'Three jobs from the branch every day. Each one done pays +20 Party XP; all three pay +5 Political Capital. Actions that match an order pay +25 % Party XP while it is open.',
+    ],
     /** The one first-time hint, on the plate on the welcome day. */
     firstHint: 'Anything underlined can be tapped for what it means.',
     close: 'Close',
@@ -256,36 +307,36 @@ export const copy = {
   statButton: (stat: string, from: number) => `${stat} ${from} → ${from + 1}`,
   levelUpLine: (from: number, to: number, points: number) =>
     to - from > 1 ? `Levels ${from + 1}–${to} · ${points} points to place` : `Level ${to} · place your point`,
-  standingUp: (city: string, name: string, bonus: number) => `${city}: ${name} · actions here +${bonus} %`,
+  standingUp: (city: string, name: string) => `${city}: ${name} · everything here goes a little better`,
   /**
    * Review 1 (answers §9, GDD §13.4): the Standing card in the result modal on a level crossing.
    * [heading, what changed, what the next level brings].
    */
   standingCard: {
-    kicker: 'Local standing',
+    kicker: 'Reputation',
     1: (city: string, rank3: string) => [
       `Familiar in ${city}`,
-      `Faces nod. Every check in ${city} is now +3 %.`,
-      `Known at 30 Successes: +6 %, and your name will do for a council candidacy at ${rank3}.`,
+      `Faces nod. Everything you do in ${city} goes a little better now.`,
+      `Known at 30 wins: better again, and your name will do to stand for the council once you are a ${rank3}.`,
     ],
     2: (city: string, rank3: string) => [
       `Known in ${city}`,
-      `+6 % on every check here, and the town knows your name well enough to stand for its council once you are a ${rank3}.`,
-      'Trusted at 70: +9 %.',
+      `Doors open a little faster, and the town knows your name well enough to stand for its council once you are a ${rank3}.`,
+      'Trusted at 70 wins: better again.',
     ],
     3: (city: string) => [
       `Trusted in ${city}`,
-      '+9 % on every check here. Doors open before you knock.',
-      'One of Us at 150: +12 % and 1 Political Capital a day.',
+      'Doors open before you knock. Everything here goes better still.',
+      'One of Us at 150 wins: the best it gets, and 1 Political Capital a day.',
     ],
     4: (city: string) => [
       `One of Us in ${city}`,
-      '+12 % on every check here, the most standing gives, and 1 Political Capital a day from the town.',
-      'Nothing above this; it never decays.',
+      'The best reputation the town gives, and 1 Political Capital a day from it.',
+      'Nothing above this; it never fades.',
     ],
   } as Record<'kicker', string> &
     Record<1 | 2 | 3 | 4, (city: string, rank3: string) => [string, string, string]>,
-  orderComplete: (fxp: number) => `Party order complete: +${fxp} FXP`,
+  orderComplete: (fxp: number) => `Party order complete: +${fxp} Party XP`,
   later: 'Later',
   // Not in the §12.1 table: the out-of-Energy card and the Today strip (tech design §12.2).
   outOfEnergy: 'Out of Energy',
@@ -307,7 +358,7 @@ export const copy = {
   noFaceYet: 'No face yet',
   storyWaits: 'Close the game now and this waits for you',
   storyProgress: (step: number, of: number) => `Step ${step} of ${of}`,
-  hisWish: (fxp: number) => `His wish · +${fxp} Faction XP`,
+  hisWish: (fxp: number) => `His wish · +${fxp} Party XP`,
   joinFaction: (name: string, city: string) => `Join the ${name} · take the train to ${city}`,
   /** "+2 Strength, +1 Intelligence". */
   statBonus: (bonus: Partial<Record<'str' | 'int' | 'agi', number>>) =>
@@ -319,7 +370,7 @@ export const copy = {
   theirEvent: (name: string) => `Their event: ${name}`,
   letterReady: (chapter: number, energy: number) => `Chapter ${chapter} is ready · ${energy} Energy`,
   letterMidway: 'waiting for you',
-  wearing: (name: string, cha: number) => `Wearing: ${name} · CHA ${cha}`,
+  wearing: (name: string, cha: number) => `Wearing: ${name} · Charisma ${cha}`,
   /** "Iron Vanguard · Initiate · member since 29 September". */
   partyCard: (faction: string, rank: string, date: string) => `${faction} · ${rank} · member since ${date}`,
   keepsakeLine: (name: string) => `Keepsake: ${name}`,
@@ -327,12 +378,12 @@ export const copy = {
   /** `Chapter {n}, "{title}": from {Weekday D Month}, at {Rank n | Level n}` (onboarding §13 Q2). */
   chapterHook: (n: number, title: string, from: string, needs: string | null) =>
     `Chapter ${n}, "${title}": from ${from}${needsPhrase(needs)}`,
-  /** "Rank 2", "Level 6", or (slice 3, design §17.7) "after your first ballot". */
+  /** "Rank 2", "Level 6", or (slice 3, design §17.7) "after your first vote". */
   chapterNeeds: (needs: { rank?: number; level?: number; ballotCast?: boolean }) =>
     [
       needs.rank !== undefined ? `Rank ${needs.rank}` : null,
       needs.level !== undefined ? `Level ${needs.level}` : null,
-      needs.ballotCast ? 'after your first ballot' : null,
+      needs.ballotCast ? 'after your first vote' : null,
     ]
       .filter(Boolean)
       .join(', '),
@@ -343,7 +394,7 @@ export const copy = {
   nameTooLong: 'Your name can have at most 40 characters',
   /** The name of an account made before the name rule with none (§14.2): neutral in every faction. */
   unnamed: 'A Newcomer',
-  /** Me tab (§14.1): "Political Capital 5"; the HUD says "PC". */
+  /** Me tab (§14.1): "Political Capital 5"; review 2 #5: the HUD spells it out too. */
   politicalCapital: (pc: number) => `Political Capital ${pc}`,
   /** The location sheet's kicker (§14.3 n9). */
   kindLabel: (kind: string) => KIND_LABELS[kind as LocationKind] ?? String(kind).replace(/-/g, ' '),
@@ -353,109 +404,154 @@ export const copy = {
    */
   chapterWaitsUntil: (from: string, needs: string | null) => `From ${from}${needsPhrase(needs)}`,
   backToThePaper: 'Back to the paper',
-  // Slice 3 (docs/design/slice-3-screens.md §2.1, §11). Times are rendered by the caller in the
-  // player's clock (`until`: "Tuesday midnight"; `at`: "01:00 on Sunday"; `weekday`: "Sunday").
-  pollingDay: 'Polling Day',
-  castYourBallot: 'Cast your ballot',
-  castYourBallotFor: (name: string) => `Cast your ballot for ${name}`,
+  // Slice 3, in plain words (review 2: docs/design/slice-3-screens.md §11, review-2-answers §1.2).
+  // Times are rendered by the caller in the player's clock (`until`: "Tuesday midnight"; `at`:
+  // "01:00 on Sunday"; `weekday`: "Sunday").
+  pollingDay: 'Election',
+  castYourBallot: 'Vote now',
+  castYourBallotFor: (name: string) => `Vote for ${name}`,
   chooseAName: 'Choose a name',
-  ballotCaption: (at: string) => `One ballot, final. The count is at ${at}.`,
-  ballotCastLine: (weekday: string) => `Ballot cast · the count is in ${weekday}'s paper`,
-  standForTheCouncil: (pc: number) => `Stand for the council · ${pc} PC`,
-  declare: (pc: number) => `Declare · ${pc} PC`,
-  needsPc: (pc: number) => `Needs ${pc} PC`,
-  endorse: (pc: number) => `Endorse · ${pc} PC`,
-  endorsed: 'Endorsed',
-  youEndorsed: (name: string, pc: number) => `You endorsed ${name} · −${pc} PC`,
-  onTheSlate: (n: number, needed: number) => `On the slate · endorsements ${n} / ${needed}`,
-  branchEndorsesYou: 'All orders carried out · the branch endorses you',
+  ballotCaption: (at: string) => `One vote, final. The result is at ${at}.`,
+  ballotCastLine: (weekday: string) =>
+    `Vote cast · the result is in ${weekday}'s paper and on the Election card`,
+  youVotedFor: (name: string) => `You voted for ${name}`,
+  standForTheCouncil: (pc: number) => `Stand for the council · ${pc} Political Capital`,
+  declare: (pc: number) => `Stand · ${pc} Political Capital`,
+  needsPc: (pc: number) => `Needs ${pc} Political Capital`,
+  endorse: (pc: number) => `Back · ${pc} Political Capital`,
+  endorsed: 'Backed',
+  youEndorsed: (name: string, pc: number) => `You're backing ${name} · −${pc} Political Capital`,
+  onTheSlate: (n: number, needed: number) => `You're standing · backers ${n} of ${needed}`,
+  backersOf: (n: number, needed: number) => `backers ${n} of ${needed}`,
+  backedBy: (names: string) => `Backed by ${names}`,
+  localSupport: (n: number) => `Local support ${n} · from your reputation here`,
+  branchEndorsesYou: 'All orders carried out · the branch backs you',
   branchMakesUpTheNumber: 'The branch will make up the number',
   withdraw: 'Withdraw',
-  depositStays: 'The deposit stays with the branch',
-  depositRule:
-    'The deposit is spent when your name is printed on the ballot. Struck for want of endorsements: returned.',
+  depositStays: 'The 10 Political Capital stays with the branch',
+  depositRule: "Costs 10 Political Capital. You get it back only if you don't find two backers.",
+  withdrawnLine: 'Withdrawn · the 10 Political Capital stayed with the branch',
+  struckLine: 'Not enough backers · your 10 Political Capital is returned',
+  onTheBallotLine: "You're a candidate",
+  tooLateToStand: "Voting is open; it's too late to stand this time.",
+  howDecided:
+    'Seven seats. The seven with most support win. Support = local support (your reputation) + 3 per backer + votes.',
+  namesGoIn: (until: string, weekday: string) => `Names go in until ${until} · voting opens ${weekday}`,
   seeWhosStanding: "See who's standing",
-  seeTheSlate: 'See the slate',
-  wardCandidates: 'Ward candidates',
-  ward: 'ward',
-  npcSeats: (n: number, of: number) => `NPC seats ${n} / ${of}`,
+  seeTheSlate: 'See the candidates',
+  seeTheResult: 'See the result',
+  lastResult: 'Last result',
+  wardCandidates: 'Local candidates',
+  ward: 'local',
+  npcSeats: (n: number, of: number) => `Local seats ${n} / ${of}`,
   turnout: (n: number, m: number) => (m === 0 ? 'Turnout nil' : `Turnout ${n} of ${m} members`),
   theLine: 'the line',
+  electedMark: 'Elected',
   yourVote: 'your vote',
   you: 'you',
   toTheCouncil: 'To the council',
-  theCouncilSits: 'The council sits · vote on the ordinance',
-  theOrderPaper: 'The order paper',
-  branchMotionBy: (secretary: string) => `the branch's motion · ${secretary}`,
-  movedBy: (name: string) => `moved by ${name}`,
-  againstAll: 'Against all',
-  propose: (pc: number) => `Propose · ${pc} PC`,
-  onThePaper: 'on the paper',
-  paperFull: 'The order paper is full',
-  youMoved: (name: string) => `You moved ${name}`,
+  theCouncilSits: "You're on the council · vote on the rule",
+  theOrderPaper: 'Up for a vote',
+  branchMotionBy: (secretary: string) => `the party's proposal · ${secretary}`,
+  movedBy: (name: string) => `put forward by ${name}`,
+  againstAll: 'None of these',
+  propose: (pc: number) => `Put forward a rule · ${pc} Political Capital`,
+  onThePaper: 'already up for a vote',
+  paperFull: 'No room for more proposals this term',
+  youMoved: (name: string) => `You put forward ${name}`,
   voteFor: (name: string) => `Vote for ${name}`,
-  chooseAMotion: 'Choose a motion',
-  councilCaption: (at: string) => `One vote, public in the chamber, final. The council divides at ${at}.`,
-  voteRecorded: (weekday: string) => `Vote recorded · the division is in ${weekday}'s paper`,
+  chooseAMotion: 'Choose a rule',
+  councilCaption: (at: string) => `One vote, final; the whole council sees it. The council votes at ${at}.`,
+  voteRecorded: (weekday: string) =>
+    `Vote recorded · the result is in ${weekday}'s paper and on the Election card`,
   passed: 'Passed',
-  roseWithoutMotion: 'Council rose without a motion',
+  roseWithoutMotion: "The council couldn't agree · no rule this term",
   ordinanceLine: (name: string, days: number) =>
-    `Ordinance: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
+    `Council rule: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
   ordinanceInForce: (name: string, days: number) =>
-    `Ordinance in force: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
+    `Council rule: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
   councillorLine: (city: string, weekday: string) => `Councillor, ${city} · term ends ${weekday}`,
-  noOffice: (rank3Title: string) => `No office · ${rank3Title}s may stand for the council`,
-  pcSinks: (pc: number) => `Political Capital ${pc} · declare 10 · endorse 10 · propose 20`,
+  noOffice: (rank3Title: string) => `No seat · ${rank3Title}s may stand for the council`,
+  pcSinks: (pc: number) => `Political Capital ${pc} · stand 10 · back a candidate 10 · put forward a rule 20`,
   moraleWord: { fired: 'Fired up', steady: 'Steady', unrest: 'Unrest' } as Record<string, string>,
   moraleCrossed: (city: string, state: string) =>
     state === 'fired'
-      ? `${city}: Fired up · +10 % Faction XP at home`
+      ? `${city}: Fired up · +10 % Party XP at home`
       : `${city}: ${state === 'unrest' ? 'Unrest' : 'Steady'}`,
   electedCaption: (name: string, rank: string, city: string) =>
     `${name}, ${rank}, elected to ${city} Council`,
   elected: 'ELECTED',
   formula:
-    "Total = ward vote + 3 × endorsements + members' votes. Ties: votes, endorsements, standing, filing.",
-  ballotSecretNote: 'Turnout so far is not shown; the ballot is secret',
-  pcLeft: (spent: number, left: number) => `−${spent} PC · ${left} left`,
+    'Support = local support + 3 per backer + votes. Ties: votes, backers, reputation, who stood first.',
+  ballotSecretNote: 'Nobody can see who you chose',
+  pcLeft: (spent: number, left: number) => `−${spent} Political Capital · ${left} left`,
   moraleKnockOn: (city: string, delta: string, after: string) => `${city} morale ${delta} → ${after} %`,
-  // The Polling Day row (screens §2.1): line 1 and line 2 of each state.
-  pd: {
-    nominations: (city: string, weekday: string) => [
-      `Nominations open in ${city}`,
-      `${city} votes from ${weekday} · see who's standing`,
+  /** The result table's columns (screens §5.2). */
+  resultColumns: ['#', 'Name', 'Local support', 'Backers', 'Votes', 'Support'] as const,
+  resultColumnsShort: ['#', 'Name', 'Local', 'Back.', 'Votes', 'Support'] as const,
+  /**
+   * Review 2 (screens §1a, §2.1): the Election card on the city screen, the paper's row and the HQ
+   * sheet. Line 1, line 2 and the buttons of each state; the caller renders the times.
+   */
+  election: {
+    kicker: (city: string) => `Election · ${city} Council`,
+    rowKicker: 'Election',
+    firstTime: (city: string, rank3: string) =>
+      `${city} elects its council every five days. You can vote now; ${rank3}s who are Known here can stand.`,
+    days: (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`,
+    belowRank: (city: string, countWeekday: string, rank2: string, fxp: number, have: number) => [
+      `${city} elects its council on ${countWeekday}`,
+      `${rank2}s vote · ${fxp} Party XP makes ${/^[aeiou]/i.test(rank2) ? 'an' : 'a'} ${rank2} · you have ${have}`,
     ],
-    stand: (pc: number, until: string) => [`Stand for the council · ${pc} PC`, `Nominations close ${until}`],
-    filed: (n: number, needed: number, line: string) => [
-      `On the slate · endorsements ${n} / ${needed}`,
-      line,
+    candidates: (pollsWeekday: string, days: string) => [
+      'Candidates are putting their names in',
+      `Voting opens ${pollsWeekday} · ${days} to stand or back someone`,
     ],
-    ballot: (until: string) => ['Cast your ballot', `Polls open until ${until} · the ballot is secret`],
-    voted: (name: string, weekday: string) => [
-      `Ballot cast for ${name}`,
-      `The count is in ${weekday}'s paper`,
+    standing: (n: number, needed: number, until: string) => [
+      `You're standing · backers ${n} of ${needed}`,
+      `Two backers by ${until} or your name comes off · do today's orders and the branch backs you`,
     ],
-    count: (winner: string, npcSeats: number, voters: number, eligible: number) => [
-      `Polls closed: ${winner} tops the poll`,
-      `Seven seats, ${npcSeats} by ward members · turnout ${turnoutOf(voters, eligible)}`,
+    backing: (name: string, pollsWeekday: string, days: string) => [
+      `You're backing ${name}`,
+      `Voting opens ${pollsWeekday} · ${days}`,
     ],
-    councilSits: (until: string) => ['The council sits · vote on the ordinance', `Divides ${until}`],
-    belowRank: (city: string, weekday: string, rank2: string, fxp: number) => [
-      `${city} votes from ${weekday}`,
-      `${rank2}s vote. ${fxp} Faction XP makes ${/^[aeiou]/i.test(rank2) ? 'an' : 'a'} ${rank2}.`,
+    /** "{n} days left" to the closing boundary, rounded up; the last day "closes tonight at midnight". */
+    voting: (until: string, days: number) => [
+      'Voting is open',
+      `${days <= 1 && until.endsWith('midnight') ? 'Closes tonight at midnight' : `Closes ${until} · ${days} ${days === 1 ? 'day' : 'days'} left`} · your vote is secret`,
     ],
-    doOrders: "Do today's orders and the branch backs you",
-  },
-  // The HQ council card (screens §7).
-  cc: {
-    nominations: (until: string) => `Nominations open · closes ${until}`,
-    polling: (until: string) => `Polls open · closes ${until}`,
-    sits: (until: string) => `The council sits · divides ${until}`,
-    castYourBallot: 'Cast your ballot',
-    ballotCast: 'Ballot cast',
-    voteOnTheOrdinance: 'Vote on the ordinance',
+    voted: (name: string, countWeekday: string, paper: string) => [
+      `You voted for ${name}`,
+      `Result ${countWeekday} morning, here and in the ${paper}`,
+    ],
+    candidateVoting: (until: string) => [
+      "You're a candidate · voting is open",
+      `Closes ${until} · you can vote for yourself`,
+    ],
+    result: (winner: string, yourLine: string | null, councilWeekday: string, namesUntil: string) => [
+      `Result: ${winner} topped the poll${yourLine ? ` · ${yourLine}` : ''}`,
+      `Seven seats · the new council sits until ${councilWeekday} · next election: names in until ${namesUntil}`,
+    ],
+    yourLine: {
+      elected: (ordinal: string) => `you: elected, ${ordinal} of 7`,
+      missed: (margin: number) => `you: missed the last seat by ${margin}`,
+      voteWon: (name: string) => `your vote: ${name} was elected`,
+      voteLost: (name: string) => `your vote: ${name} fell short`,
+    },
+    councilSits: (until: string, days: string) => [
+      "You're on the council · vote on the rule",
+      `The council votes ${until} · ${days}`,
+    ],
+    councilVoted: (rule: string, weekday: string) => [`You voted for ${rule}`, `Result ${weekday} morning`],
+    ruleLine: (name: string, days: number) =>
+      `Council rule: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
+    seeWhosStanding: "See who's standing",
+    seeTheCandidates: 'See the candidates',
+    seeTheResult: 'See the result',
     seeTheCouncil: 'See the council',
-    seeTheCount: 'See the count',
+    voteNow: 'Vote now',
+    voteOnTheRule: 'Vote on the rule',
+    noneOfThese: 'None of these',
   },
 } as const;
 

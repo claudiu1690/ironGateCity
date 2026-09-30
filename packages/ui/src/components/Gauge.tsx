@@ -53,10 +53,18 @@ export function Gauge({
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   const t = tones[tone];
   return (
-    <div className={cx('flex min-w-0 items-center gap-2', className)}>
+    <div
+      className={cx(
+        'flex min-w-0 items-center gap-2',
+        // Review 2 #3: on a phone held sideways the three gauges share one row, each with its label
+        // and numbers on one line over its bar.
+        'short:grid short:grid-cols-[auto_minmax(0,1fr)] short:gap-x-1.5 short:gap-y-[3px]',
+        className,
+      )}
+    >
       <span
         className={cx(
-          'label-caps w-[66px] shrink-0 truncate text-[9px] leading-tight whitespace-nowrap min-[400px]:w-[92px] lg:w-auto lg:max-w-[140px]',
+          'label-caps w-[66px] shrink-0 truncate text-[9px] leading-tight whitespace-nowrap min-[400px]:w-[92px] lg:w-auto lg:max-w-[140px] short:w-auto short:max-w-[96px]',
           helpMark,
           t.text,
         )}
@@ -72,21 +80,24 @@ export function Gauge({
         aria-valuemax={max}
         aria-valuenow={value}
         aria-valuetext={valueText}
-        className="h-[5px] min-w-8 flex-1 bg-ink-2"
+        className="h-[5px] min-w-8 flex-1 bg-ink-2 short:col-span-2 short:row-start-2"
       >
         <div
           className={cx('h-[5px] transition-[width] duration-300', fillColor ? null : t.fill)}
           style={{ width: `${pct}%`, ...(fillColor ? { backgroundColor: fillColor } : {}) }}
         />
       </div>
-      <span className="flex w-[138px] shrink-0 items-baseline gap-1.5 overflow-hidden leading-none whitespace-nowrap">
+      <span className="flex w-[138px] shrink-0 items-baseline gap-1.5 overflow-hidden leading-none whitespace-nowrap short:col-start-2 short:row-start-1 short:w-auto">
         {figure !== undefined && (
           <span className="font-label text-[12px] font-medium text-paper" data-testid={figureTestId}>
             {figure}
           </span>
         )}
         {note !== undefined && (
-          <span className={cx('label-caps truncate text-[9px]', t.text)} data-testid={noteTestId}>
+          <span
+            className={cx('label-caps truncate text-[9px] short:hidden', t.text)}
+            data-testid={noteTestId}
+          >
             {note}
           </span>
         )}

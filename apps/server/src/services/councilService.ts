@@ -132,6 +132,8 @@ function buildPoliticalResult(
     place: { cityId: x.spec.city.id, cityName: x.spec.city.name },
     headline: fillTemplate(t.headline, vars),
     body: fillTemplate(t.body, vars),
+    // Review 2 (screens §9): what comes next, the last knock-on line.
+    ...(t.next ? { next: fillTemplate(t.next, vars) } : {}),
     until: r.until ?? null,
     at: r.at ?? null,
     knockOns: { pc: null, morale: null, endorsements: null, ...r.knockOns },
@@ -219,7 +221,7 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
       {
         act: 'declare',
         idempotencyKey: deps.input.idempotencyKey,
-        vars: { name: c.name },
+        vars: { name: c.name, pollsWeekday: weekdayName(cal.election.pollsFrom) },
         until: dayStart(cal.election.pollsFrom),
         knockOns: { pc: { before: c.pc, after: updated.pc } },
         view: { kind: 'election', election: await electionView(content, updated, today, session) },
@@ -312,7 +314,7 @@ export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<Politic
       {
         act: 'endorse',
         idempotencyKey: deps.input.idempotencyKey,
-        vars: { name: cand.name, n: String(n) },
+        vars: { name: cand.name, n: String(n), pollsWeekday: weekdayName(cal.election.pollsFrom) },
         until: dayStart(cal.election.pollsFrom),
         knockOns: {
           pc: { before: c.pc, after: updated.pc },
@@ -514,7 +516,11 @@ export function councilVote(deps: ActDeps<{ choice: string }>): Promise<Politica
     return buildPoliticalResult(content, x, {
       act: 'councilVote',
       idempotencyKey: deps.input.idempotencyKey,
-      vars: { ordinance: o?.name ?? 'Against all', ordinanceLine: o?.line ?? '' },
+      vars: {
+        ordinance: o?.name ?? 'none of these',
+        ordinanceLine: o?.line ?? '',
+        resultWeekday: weekdayName(cal.council.divideDay),
+      },
       at: dayStart(cal.council.divideDay),
       view: { kind: 'council', council: await councilView(content, c, x.city, today, session) },
     });

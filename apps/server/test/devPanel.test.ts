@@ -166,7 +166,9 @@ describe('dev panel with the test hooks on', () => {
 
   it('Boost me: Rank 3, Known at home, 30 PC, full Energy; never the playtest mark; idempotent', async () => {
     const r = await ok('boost');
-    expect(r.line).toMatch(/^Boosted: .*Rank 1 → 3.*One of Us in Coalport.*PC \d+ → 30.* · Energy 100$/);
+    expect(r.line).toMatch(
+      /^Boosted: .*Rank 1 → 3.*One of Us in Coalport.*Political Capital \d+ → 30.* · Energy 100$/,
+    );
     const c = (await character())!;
     expect(c.fxp).toBeGreaterThanOrEqual(2000);
     expect(c.rank).toBeGreaterThanOrEqual(3);

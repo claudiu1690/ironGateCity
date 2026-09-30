@@ -20,8 +20,10 @@ test('paper → map → ×3 canvass → modal → Today strip → reload lands o
   await expect(page.getByTestId('hotspot')).toHaveCount(6);
   const sheet = await openLocation(page, '1. Mill Gate');
   const ticket = sheet.getByTestId('ticket-coalport.mill-gate.canvass');
-  await expect(ticket.getByTestId('ticket-chance')).toHaveText('76 %'); // First day +10 % (review 1)
-  const x3 = sheet.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' });
+  await expect(ticket.getByTestId('ticket-chance')).toHaveText('Good odds'); // review 2: a word
+  const x3 = sheet.getByRole('button', {
+    name: 'Talk to the workers coming off shift, three times, 30 Energy',
+  });
   await expect(x3).toBeEnabled();
   await x3.click();
 

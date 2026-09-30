@@ -64,9 +64,14 @@ export const rawContent: unknown = {
   politics,
 };
 
-/** Review 1: ordinance ids renamed; a stored old id resolves to the new one. */
+/**
+ * Ordinance ids renamed (review 1: the Long Service Order; review 2: the Street Register and the
+ * Street Fund, migration 005); a stored old id resolves to the new one.
+ */
 export const RENAMED_ORDINANCE_IDS: Readonly<Record<string, string>> = {
   'ord.shift-hours': 'ord.long-service',
+  'ord.ward-register': 'ord.street-register',
+  'ord.ward-fund': 'ord.street-fund',
 };
 
 /** Design §10.1: the ten ordinances of the home-city menu. */
@@ -78,8 +83,8 @@ export const DESIGN_ORDINANCE_IDS = [
   'ord.reading-room',
   'ord.rest-day',
   'ord.open-doors',
-  'ord.ward-register',
-  'ord.ward-fund',
+  'ord.street-register',
+  'ord.street-fund',
   'ord.public-meetings',
 ] as const;
 
@@ -546,7 +551,7 @@ export function parseContent(raw: unknown): Content {
     if (t.body.length > OUTCOME_TEXT_MAX_CHARS) problems.push(`${where} is ${t.body.length} characters`);
     const n = sentenceCount(t.body);
     if (n > OUTCOME_TEXT_MAX_SENTENCES) problems.push(`${where} has ${n} sentences (at most 4)`);
-    checkPolitical(where, `${t.headline} ${t.body}`);
+    checkPolitical(where, `${t.headline} ${t.body} ${t.next}`);
   }
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {

@@ -4,6 +4,7 @@ import { migrateSlice1CharacterFields } from './migrations/001-slice1-character-
 import { migrateSlice2Arrival } from './migrations/002-slice2-arrival';
 import { migrateSlice3Politics } from './migrations/003-slice3-politics';
 import { migrateReview1Wage } from './migrations/004-review1-wage';
+import { migrateReview2StreetOrdinances } from './migrations/005-review2-street-ordinances';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
@@ -46,4 +47,6 @@ export async function ensureIndexes(
   await migrateSlice3Politics();
   // Review 1: jobs become a wage; after 003 (renames the Shift Hours Order it seeded).
   await migrateReview1Wage();
+  // Review 2: the Ward Register and the Ward Fund become the Street Register and the Street Fund.
+  await migrateReview2StreetOrdinances();
 }

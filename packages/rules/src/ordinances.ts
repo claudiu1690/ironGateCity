@@ -81,7 +81,7 @@ export function seniorityStep(m?: CityModifiers): number {
   return effect(m, 'seniorityDays')?.value ?? 1;
 }
 
-/** Public Works +10 % (216 → 238) and Ward Fund −25 % (216 → 162) on the daily pay. */
+/** Public Works +10 % (216 → 238) and Street Fund −25 % (216 → 162) on the daily pay. */
 export function jobPayWith(pay: number, m?: CityModifiers): number {
   const e = effect(m, 'jobPayPct');
   return e ? roundHalfUp(pay * (1 + e.value / 100)) : pay;
@@ -99,7 +99,7 @@ export function swingMultiplier(type: string, m?: CityModifiers): number {
   return e ? 1 + e.value / 100 : 1;
 }
 
-/** Ward Register: every Success counts two for Local Standing. */
+/** Street Register: every Success counts two for Local Standing. */
 export function standingPerSuccess(m?: CityModifiers): number {
   return effect(m, 'standingMultiplier')?.value ?? 1;
 }
@@ -120,7 +120,7 @@ export const FIRED_UP = { id: 'morale.fired', label: 'Fired up' } as const;
 
 /**
  * The FXP and Iron bonus shares on a checked action in the city: Fired up +10 % and Public
- * Meetings +25 % of the base FXP, Ward Fund +25 % of the base Iron. The Party-order bonus is added
+ * Meetings +25 % of the base FXP, Street Fund +25 % of the base Iron. The Party-order bonus is added
  * by the caller, since it depends on the row.
  */
 export function rewardShares(i: { type: string; givesFxp: boolean; m?: CityModifiers }): {

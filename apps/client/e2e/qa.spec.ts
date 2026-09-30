@@ -6,7 +6,7 @@
  */
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { signUp, toTheCity } from './helpers';
+import { mapAtRest, signUp, toTheCity } from './helpers';
 
 const PHONE = { width: 375, height: 812 };
 const DESKTOP = { width: 1440, height: 900 };
@@ -16,6 +16,7 @@ const modalOf = (page: Page) => page.getByRole('dialog').filter({ has: page.getB
 /** The map has measured itself and applied its first view (centred on pin 1). */
 async function mapReady(page: Page) {
   await expect(page.getByTestId('hotspot')).toHaveCount(6);
+  await mapAtRest(page);
   await expect(page.getByRole('button', { name: '1. Mill Gate' })).toBeInViewport();
 }
 
@@ -42,9 +43,9 @@ async function offScreenPins(page: Page, vp: { width: number; height: number }):
   return outside;
 }
 
-/** The map's live transform (react-zoom-pan-pinch sets it inline). */
+/** The map's view, "x,y,scale" (review 2: the map's own transform, on its box). */
 async function transformOf(page: Page): Promise<string> {
-  return page.locator('.react-transform-component').evaluate((el) => (el as HTMLElement).style.transform);
+  return (await page.getByTestId('city-map').getAttribute('data-view')) ?? '';
 }
 
 async function continueModal(page: Page) {
@@ -94,7 +95,9 @@ test.describe('phone 375×812', () => {
     await expect(page.getByTestId('hud-energy')).toHaveText('100 / 100');
 
     // One tap = one modal (pillar 7): ×1, then Again ×3 from the modal itself.
-    await sheet.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }).click();
+    await sheet
+      .getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' })
+      .click();
     const modal = modalOf(page);
     await expect(modal.getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);
     await expect(page.getByTestId('stamp')).toHaveCount(1); // one result modal, no second screen
@@ -102,12 +105,22 @@ test.describe('phone 375×812', () => {
     await expect(modal.getByTestId('stamp')).toHaveText(/^[0-3] of 3$/);
     await expect(modal.getByTestId('attempt-row')).toHaveCount(3);
     await expect(modal.getByTestId('effect-energy')).toHaveText('90 → 60');
-    // Every attempt row shows its odds and its roll (§13.1a: the maths is never hidden; review 1:
-    // in a sentence).
+    // Review 2 (GDD §8.4, §13.1a): every row is its outcome and XP; a non-Success row one plain
+    // reason; no roll, chance or maths anywhere in the rows.
     for (const row of await modal.getByTestId('attempt-row').all()) {
-      await expect(row.getByTestId('attempt-odds')).toContainText(/: \d+\s%\.$/); // a no-break space before %
-      await expect(row.getByTestId('attempt-roll')).toHaveText(/^Rolled \d+: (Success|Partial) \(/);
+      await expect(row.getByTestId('attempt-outcome')).toHaveText(/^(Success|Partial)$/);
+      await expect(row).not.toContainText(/Rolled|\d+ %/);
+      // A reason of its own under the row (a shared one prints once under the rows, below).
+      for (const reason of await row.getByTestId('attempt-reason').all())
+        await expect(reason).not.toHaveText(/\d/);
     }
+    const outcomes = await modal
+      .getByTestId('attempt-row')
+      .evaluateAll((rs) => rs.map((r) => r.dataset.outcome));
+    if (outcomes.some((o) => o !== 'success'))
+      await expect(
+        modal.getByTestId('attempt-reason').or(modal.getByTestId('attempts-reason')).first(),
+      ).toBeVisible();
     // 135 XP or more crosses Level 2 (150) with the earlier 23–45: a stat point can be placed from the modal.
     const level = modal.getByTestId('effect-level');
     if (await level.isVisible()) {
@@ -158,16 +171,20 @@ test.describe('phone 375×812', () => {
     const sheet = await openAny(page, '1. Mill Gate');
     // 100 → 10 with three ×3 canvasses.
     for (let i = 0; i < 3; i++) {
-      await sheet.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' }).click();
+      await sheet
+        .getByRole('button', { name: 'Talk to the workers coming off shift, three times, 30 Energy' })
+        .click();
       await expect(modalOf(page).getByTestId('stamp')).toHaveText(/of 3$/);
       await continueModal(page);
     }
     const ticket = sheet.getByTestId('ticket-coalport.mill-gate.canvass');
     await expect(
-      sheet.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' }),
+      sheet.getByRole('button', { name: 'Talk to the workers coming off shift, three times, 30 Energy' }),
     ).toBeDisabled();
     await expect(ticket.getByTestId('ticket-hint')).toHaveText('×3 needs 30 Energy');
-    await sheet.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }).click();
+    await sheet
+      .getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' })
+      .click();
     await expect(modalOf(page).getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);
     await expect(modalOf(page).getByRole('button', { name: /Again ×1/ })).toBeDisabled();
     await expect(modalOf(page).getByTestId('again-hint')).toHaveText(
@@ -175,7 +192,7 @@ test.describe('phone 375×812', () => {
     );
     await continueModal(page);
     await expect(
-      sheet.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }),
+      sheet.getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' }),
     ).toBeDisabled();
     await expect(ticket.getByTestId('ticket-hint')).toHaveText(/^Needs 10 Energy · ready at \d\d:\d\d$/);
     await expect(sheet.getByTestId('out-of-energy')).toContainText(/full at \d\d:\d\d/);
@@ -204,7 +221,7 @@ test.describe('phone 375×812', () => {
 
     sheet = await openAny(page, '3. Union Hall');
     const study = sheet.getByTestId('ticket-coalport.union-hall.reading-room');
-    await expect(study).toContainText('INT 12 → 13 · no roll');
+    await expect(study).toContainText('Intelligence 12 → 13 · always works');
     // m4 (fix round 1): training is ×1 only (content §13.2): one button with the live cost, no ×3
     // (before, a "×3 · 138 Energy" button sat disabled for good on a 100-Energy bar).
     await expect(sheet.getByRole('button', { name: /Study in the reading room, three times/ })).toHaveCount(
@@ -217,14 +234,16 @@ test.describe('phone 375×812', () => {
     await expect(modal.getByRole('button', { name: /Again ×1/ })).toBeVisible();
     await expect(modal.getByRole('button', { name: /Again ×3/ })).toHaveCount(0);
     await continueModal(page);
-    await expect(study).toContainText('INT 13 → 14 · no roll');
+    await expect(study).toContainText('Intelligence 13 → 14 · always works');
     await expect(study).toContainText('46');
     await sheet.getByRole('button', { name: /^Close/ }).click();
 
     // Level 2 is 150 XP: 99 from training + a canvass or two.
     sheet = await openAny(page, '1. Mill Gate');
     while ((await page.getByTestId('hud-points').count()) === 0) {
-      await sheet.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }).click();
+      await sheet
+        .getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' })
+        .click();
       const m = modalOf(page);
       await expect(m.getByTestId('stamp')).toBeVisible();
       const later = m.getByRole('button', { name: 'Later' });
@@ -281,22 +300,25 @@ test.describe('phone 375×812', () => {
   // Slice 2 regression: closing a phone sheet reset the map by remounting it, which replaced every
   // pin button 10-20 ms after Close; a pin focused (or tapped) in that window was detached and the
   // Enter (or tap) was lost. The pins must survive a close.
-  // Review 1 #7 (a deliberate change): closing a sheet no longer puts the map back at its first
-  // view; the map stays where it is, here where it was panned to show pin 5 above its sheet.
-  test('closing a sheet keeps the same pin buttons (no lost tap or Enter) and leaves the map where it is', async ({
+  // Review 2 #8, #9 (a deliberate change from review 1 #7): a pin zooms the map into it, and closing
+  // its sheet zooms back out to the fitted view, in place, with the same pin buttons.
+  test('closing a sheet zooms back to the fitted view with the same pin buttons (no lost tap or Enter)', async ({
     page,
   }) => {
     await signUp(page);
     await toTheCity(page);
-    // Load the map with no sheet open, so the transform it mounts with is the first view.
+    // Load the map with no sheet open: the fitted view.
     await page.goto('/city/coalport');
     await mapReady(page);
-    const firstView = await transformOf(page);
-    // Pin 5 sits low on the map, under its sheet, so the map pans (and zooms if it must) to show it.
+    const fitted = await transformOf(page);
+    // Pin 5 sits low on the map, under where its sheet opens: the zoom puts it above the sheet.
     const sheet = await openAny(page, '5. Harbour Quays');
-    await expect.poll(() => transformOf(page)).not.toBe(firstView);
-    await page.waitForTimeout(300);
-    const withSheet = await transformOf(page);
+    await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'true');
+    expect(await transformOf(page)).not.toBe(fitted);
+    const pin5 = page.locator('[data-testid="hotspot"][aria-label="5. Harbour Quays"]');
+    const top = (await sheet.boundingBox())!.y;
+    const p5 = (await pin5.boundingBox())!;
+    expect(p5.y + p5.height).toBeLessThanOrEqual(top);
     await page.evaluate(() => {
       (window as unknown as { __pins: Element[] }).__pins = [
         ...document.querySelectorAll('[data-testid=hotspot]'),
@@ -304,9 +326,8 @@ test.describe('phone 375×812', () => {
     });
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await expect(sheet).toBeHidden();
-    // Past the map's 150 ms settle check: the view has not moved, and no remount replaced the pins.
-    await page.waitForTimeout(600);
-    expect(await transformOf(page)).toBe(withSheet);
+    // Past the 500 ms zoom: back at the fitted view, and no remount replaced the pins.
+    await expect.poll(() => transformOf(page)).toBe(fitted);
     const detached = await page.evaluate(() =>
       (window as unknown as { __pins: Element[] }).__pins
         .filter((p) => !p.isConnected)
@@ -314,8 +335,7 @@ test.describe('phone 375×812', () => {
     );
     expect(detached).toEqual([]);
     // And a pin tapped at once still opens its sheet.
-    const pin5 = page.getByRole('button', { name: '5. Harbour Quays' });
-    await pin5.click();
+    await page.getByRole('button', { name: '5. Harbour Quays' }).click();
     await expect(page.getByRole('dialog')).toContainText('Harbour Quays');
   });
 
@@ -326,7 +346,9 @@ test.describe('phone 375×812', () => {
     await signUp(page);
     await toTheCity(page);
     const sheet = await openAny(page, '1. Mill Gate');
-    await sheet.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' }).click();
+    await sheet
+      .getByRole('button', { name: 'Talk to the workers coming off shift, three times, 30 Energy' })
+      .click();
     await expect(modalOf(page).getByTestId('stamp')).toBeVisible();
     const small = await smallTargets(page);
     test.info().annotations.push({ type: 'small targets', description: small.join(' | ') });
@@ -339,7 +361,9 @@ test.describe('phone 375×812', () => {
     await signUp(page);
     await toTheCity(page);
     const sheet = await openAny(page, '1. Mill Gate');
-    await sheet.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' }).click();
+    await sheet
+      .getByRole('button', { name: 'Talk to the workers coming off shift, three times, 30 Energy' })
+      .click();
     const modal = modalOf(page);
     await expect(modal.getByTestId('stamp')).toBeVisible();
     const cont = modal.getByRole('button', { name: 'Continue' });
@@ -358,18 +382,19 @@ test.describe('phone 375×812', () => {
 test.describe('desktop 1440×900', () => {
   test.use({ viewport: DESKTOP, isMobile: false, hasTouch: false });
 
-  test('paper → map with the dock and ticker → side panel → ×3 → modal → Continue', async ({ page }) => {
+  test('paper → map with the dock and ticker → centred panel → ×3 → modal → Continue', async ({ page }) => {
     await signUp(page);
     await expect(page.getByTestId('headline')).toHaveCount(3);
     await toTheCity(page);
     await expect(page.getByText('The Coalport Clarion').last()).toBeVisible(); // the ticker
     await expect(page.getByText(/Party order: .+ \(0 of \d\)/)).toBeVisible();
     const sheet = await openAny(page, '3. Union Hall');
+    // Review 2 #2: a panel in the middle of the screen over the dimmed map, not a side sheet.
     const box = (await sheet.boundingBox())!;
-    expect(box.x).toBeGreaterThan(DESKTOP.width / 2); // a right-hand panel, not a bottom sheet
-    await sheet
-      .getByRole('button', { name: 'Sit in on the branch committee, three times, 30 Energy' })
-      .click();
+    expect(Math.abs(box.x + box.width / 2 - DESKTOP.width / 2)).toBeLessThanOrEqual(2);
+    expect(Math.abs(box.y + box.height / 2 - DESKTOP.height / 2)).toBeLessThanOrEqual(2);
+    await expect(page.getByTestId('location-backdrop')).toBeVisible();
+    await sheet.getByRole('button', { name: 'Go to the branch meeting, three times, 30 Energy' }).click();
     const modal = modalOf(page);
     await expect(modal.getByTestId('stamp')).toHaveText(/^[0-3] of 3$/);
     await expect(modal.getByTestId('tile-opinion')).toHaveCount(1);
@@ -378,51 +403,46 @@ test.describe('desktop 1440×900', () => {
     await expect(page.getByTestId('hud-energy')).toHaveText('70 / 100');
   });
 
-  // Review 1 #7: the player zooms and pans the map, opens a pin that is in view and closes its
-  // sheet: the map neither moves for the sheet nor goes back to the first view on close.
-  test('#7: a map the player moved stays where they left it when a sheet opens and closes', async ({
+  // Review 2 #8, #9 (replaces review 1 #7): the map is fixed at rest (no wheel zoom, no drag); a pin
+  // zooms smoothly into it and its panel opens; closing zooms back to the fitted view.
+  test('review 2: a fixed map; a pin zooms in, then its panel opens; closing zooms back out', async ({
     page,
   }) => {
     await signUp(page);
     await toTheCity(page);
     await page.goto('/city/coalport');
     await mapReady(page);
-    const firstView = await transformOf(page);
-    // Zoom in a little around the middle of the map, then drag it.
-    await page.mouse.move(640, 500);
-    for (let i = 0; i < 2; i++) await page.mouse.wheel(0, -200);
+    const fitted = await transformOf(page);
+    // No free zoom or pan at rest.
+    await page.mouse.move(700, 500);
+    for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -200);
     await page.mouse.down();
-    await page.mouse.move(600, 470, { steps: 5 });
+    await page.mouse.move(600, 440, { steps: 5 });
     await page.mouse.up();
-    await page.waitForTimeout(600); // momentum settles
-    const moved = await transformOf(page);
-    expect(moved).not.toBe(firstView);
-    // A pin wholly in view, left of the 400 px sheet and below the plate.
-    const plate = (await page.getByTestId('city-plate').boundingBox())!;
-    let label: string | null = null;
-    for (const pin of await page.getByTestId('hotspot').all()) {
-      const b = await pin.boundingBox();
-      if (
-        b &&
-        b.x > plate.x + 440 &&
-        b.x + b.width < DESKTOP.width - 430 &&
-        b.y > 120 &&
-        b.y + b.height < 800
-      ) {
-        label = await pin.getAttribute('aria-label');
-        break;
-      }
-    }
-    expect(label, 'a pin in view beside the sheet').not.toBeNull();
-    await page.locator(`[data-testid="hotspot"][aria-label="${label}"]`).click();
+    await page.waitForTimeout(300);
+    expect(await transformOf(page)).toBe(fitted);
+    // A pin: the zoom plays first (no panel mid-zoom), then the centred panel opens.
+    await page.getByRole('button', { name: '4. Foundry Row' }).click();
+    await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'true');
+    await expect(page.getByTestId('map-layer')).toHaveCSS('transition-duration', '0.5s');
     const sheet = page.getByRole('dialog');
-    await expect(sheet).toBeVisible();
-    await page.waitForTimeout(400);
-    expect(await transformOf(page)).toBe(moved);
+    await expect(sheet).toContainText('Foundry Row');
+    const zoomed = await transformOf(page);
+    expect(Number(zoomed.split(',')[2])).toBeGreaterThan(Number(fitted.split(',')[2]));
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await expect(sheet).toBeHidden();
-    await page.waitForTimeout(600);
-    expect(await transformOf(page)).toBe(moved);
+    await expect.poll(() => transformOf(page)).toBe(fitted);
+  });
+
+  test('review 2: with reduced motion the zoom is instant', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await signUp(page);
+    await toTheCity(page);
+    await page.goto('/city/coalport');
+    await mapReady(page);
+    await page.getByRole('button', { name: '3. Union Hall' }).click();
+    await expect(page.getByRole('dialog')).toContainText('Union Hall');
+    await expect(page.getByTestId('map-layer')).toHaveCSS('transition-property', 'none');
   });
 
   // M2 (fixed in fix round 1).
@@ -443,7 +463,9 @@ test.describe('lazy time through the real server (E2E_TEST_HOOKS clock)', () => 
     await signUp(page);
     await toTheCity(page);
     const sheet = await openAny(page, '1. Mill Gate');
-    await sheet.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }).click();
+    await sheet
+      .getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' })
+      .click();
     await continueModal(page);
     await page.goto('/');
     await expect(page).toHaveURL(/\/city\/coalport$/);

@@ -89,6 +89,14 @@ export async function toTheCity(page: Page): Promise<void> {
       .click();
     await expect(page).toHaveURL(/\/city\/coalport$/);
   }
+  await mapAtRest(page);
+}
+
+/** Review 2: the map back at its fitted view, the zoom out finished. */
+export async function mapAtRest(page: Page): Promise<void> {
+  const map = page.getByTestId('city-map');
+  await expect(map).toHaveAttribute('data-zoomed', 'false');
+  await expect(map).toHaveAttribute('data-moving', 'false');
 }
 
 /** Open a location's sheet by tapping its numbered hotspot. */

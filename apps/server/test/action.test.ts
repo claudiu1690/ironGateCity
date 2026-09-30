@@ -55,7 +55,7 @@ describe('city.get v2', () => {
       preview: { stats: ['int'], chance: 66 },
       order: {
         id: 'dir.shift-change',
-        title: 'Canvass the shift change at the Mill Gate',
+        title: 'Talk to the workers at the Mill Gate',
         progress: 0,
         target: 2,
       },
@@ -127,7 +127,7 @@ describe('action.perform ×1', () => {
     expect(result.effects.orders).toEqual([
       {
         id: 'dir.shift-change',
-        title: 'Canvass the shift change at the Mill Gate',
+        title: 'Talk to the workers at the Mill Gate',
         before: 0,
         after: 1,
         target: 2,
@@ -135,7 +135,7 @@ describe('action.perform ×1', () => {
         fxp: 0,
       },
     ]);
-    expect(result.bonusTags).toContainEqual({ id: 'order', label: 'Party order', note: '+25 % FXP' });
+    expect(result.bonusTags).toContainEqual({ id: 'order', label: 'Party order', note: '+25 % Party XP' });
     expect(result.today).toMatchObject({ energy: 10, attempts: 1, successes: result.successes });
     expect(result.again).toEqual({ cost1: 10, cost3: 30 });
     expect(await collective()).toBeCloseTo(before + result.effects.opinion!.applied, 6);
@@ -210,7 +210,7 @@ describe('action.perform ×3 (ADR 0006)', () => {
     expect(r.effects.orders).toEqual([
       {
         id: 'dir.shift-change',
-        title: 'Canvass the shift change at the Mill Gate',
+        title: 'Talk to the workers at the Mill Gate',
         before: 0,
         after: 2,
         target: 2,
@@ -283,7 +283,7 @@ describe('training (§8.5)', () => {
     const { caller } = await freshCharacter(testClock(ORDERS_DAY));
     const r = await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 });
     expect(r).toMatchObject({ kind: 'training', stamp: 'trained', rewards: { xp: { total: 99 } } });
-    expect(r.rows).toEqual([{ index: 1, label: 'INT 12 → 13', detail: '44 Energy · no roll' }]);
+    expect(r.rows).toEqual([{ index: 1, label: 'Intelligence 12 → 13', detail: '44 Energy · always works' }]);
     expect(r.effects.stat).toEqual({ stat: 'int', before: 12, after: 13 });
     expect(r.effects.orders[0]).toMatchObject({ id: 'dir.sharpen-up', done: true, fxp: 20 });
     expect(r.again).toEqual({ cost1: 46, cost3: null });
@@ -291,7 +291,10 @@ describe('training (§8.5)', () => {
     expect(r.character.stats.int).toBe(13);
     expect(r.today.statTrained).toBe(1);
     const again = await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 });
-    expect(again.rows[0]).toMatchObject({ label: 'INT 13 → 14', detail: '46 Energy · no roll' });
+    expect(again.rows[0]).toMatchObject({
+      label: 'Intelligence 13 → 14',
+      detail: '46 Energy · always works',
+    });
     const short = await caller.action
       .perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 })
       .catch((e: unknown) => e);

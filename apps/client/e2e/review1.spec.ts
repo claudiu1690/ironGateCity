@@ -23,8 +23,8 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await arrive(page, { faction: 'vanguard', answers: ANSWERS.reference });
   await expect(page.getByTestId('headline').first()).toContainText('Spend it at the Fortress Gate first.');
   const orders = page.getByTestId('orders').getByTestId('order');
-  await expect(orders.nth(0)).toContainText('Canvass the customs shift at the Fortress Gate');
-  await expect(orders.nth(1)).toContainText('Sit in on the committee at Beacon House');
+  await expect(orders.nth(0)).toContainText('Talk to the customs men at the Fortress Gate');
+  await expect(orders.nth(1)).toContainText('Go to the district meeting at Beacon House');
   await expect(orders.nth(2)).toContainText('Take a job at the Fortress Gate');
 
   // The first landing opens slot A's pin; the ticket names its stat; First day +10 % (62 → 72).
@@ -33,12 +33,13 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   let sheet = page.getByRole('dialog');
   await expect(sheet.getByRole('heading', { name: 'Fortress Gate' })).toBeVisible();
   const gate = sheet.getByTestId('ticket-duskwall.garrison-gate.canvass');
-  await expect(gate.getByTestId('ticket-odds')).toHaveText('72 % · STR 11');
+  await expect(gate.getByTestId('ticket-odds')).toHaveText('Good odds · Strength');
+  await expect(gate.getByTestId('ticket-tags')).toContainText('First day in Duskwall · better odds');
   // The job is a wage: no shift ticket; take it (free, no Energy) and Take a job is done.
   await expect(sheet.getByTestId('job-duskwall-stores-hand')).toContainText('216 a day · paid at midnight');
   await sheet.getByRole('button', { name: 'Take the job' }).click();
   await expect(sheet.getByTestId('job-duskwall-stores-hand')).toContainText(
-    'Taken · party order complete: +20 FXP',
+    'Taken · party order complete: +20 Party XP',
   );
   await expect(page.getByTestId('hud-energy')).toHaveText('100 / 100');
   await sheet.getByRole('button', { name: /^Close/ }).click();
@@ -50,7 +51,7 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await page.getByTestId('hud-help').click();
   let note = page.getByTestId('help-note');
   await expect(note).toContainText('Every action costs Energy.');
-  await expect(note).toContainText('the vote at Steward, a council candidacy at Bailiff');
+  await expect(note).toContainText('the vote at Steward, standing for the council at Bailiff');
   await note.getByRole('button', { name: 'Close' }).click();
   await page.getByTestId('standing-help').click();
   note = page.getByTestId('help-note');
@@ -64,7 +65,7 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await page
     .getByTestId('order-pin')
     .filter({ visible: true })
-    .filter({ hasText: 'Canvass the customs shift' })
+    .filter({ hasText: 'Talk to the customs men at' })
     .click();
   sheet = page.getByRole('dialog');
   await expect(sheet.getByTestId('ticket-duskwall.garrison-gate.canvass')).toHaveAttribute(
@@ -72,13 +73,15 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
     'true',
   );
   // Two canvasses: the second completes the order, a signed line from Stahl ("One remains").
-  await sheet.getByRole('button', { name: 'Canvass the customs shift, three times, 30 Energy' }).click();
+  await sheet
+    .getByRole('button', { name: 'Talk to the customs men coming off shift, three times, 30 Energy' })
+    .click();
   let modal = modalOf(page);
-  await expect(modal.getByTestId('attempt-odds').first()).toHaveText(
-    'Your STR 11 is 3 above the 8 this needs: 62 %, and +10 % for your first day in Duskwall: 72 %.',
-  );
+  // Review 2: no odds or roll in the rows; the outcome words only.
+  await expect(modal.getByTestId('attempt-outcome').first()).toHaveText(/^(Success|Partial)$/);
+  await expect(modal.getByTestId('attempt-row').first()).not.toContainText(/Rolled|\d+ %/);
   await expect(modal.getByTestId('effect-order-signed')).toHaveText(
-    'Order carried out · +20 FXP. One remains. — V.S.',
+    'Order carried out · +20 Party XP. One remains. — V.S.',
   );
   await modal.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByTestId('orders-complete')).toHaveCount(0);
@@ -88,18 +91,20 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await page
     .getByTestId('order-pin')
     .filter({ visible: true })
-    .filter({ hasText: 'Sit in on the committee' })
+    .filter({ hasText: 'Go to the district meeting' })
     .click();
   sheet = page.getByRole('dialog');
   const committee = sheet.getByTestId('ticket-duskwall.beacon-house.committee');
-  await expect(committee.getByTestId('ticket-odds')).toHaveText('72 % · your best, STR 11');
+  await expect(committee.getByTestId('ticket-odds')).toHaveText('Good odds · your best, Strength');
   await expect(committee).toHaveAttribute('data-highlight', 'true');
   await committee.getByRole('button', { name: /, once, 10 Energy$/ }).click();
   modal = modalOf(page);
   await expect(modal.getByTestId('effect-order-signed')).toHaveText(
-    "Order carried out · +20 FXP. That's all three: see the note.",
+    "Order carried out · +20 Party XP. That's all three: see the note.",
   );
-  await expect(modal.getByTestId('effect-all-orders')).toHaveText('All orders carried out · +5 PC');
+  await expect(modal.getByTestId('effect-all-orders')).toHaveText(
+    'All orders carried out · +5 Political Capital',
+  );
   await modal.getByRole('button', { name: 'Continue' }).click();
 
   // The secretary's note follows the result, waits across a reload, and goes with Carry on.

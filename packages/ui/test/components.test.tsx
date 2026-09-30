@@ -5,7 +5,7 @@ import {
   paperViewFixture,
   tallyFixture,
 } from '@irongate/rules/testing';
-import { render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -20,7 +20,10 @@ import {
   Ticket,
   TodayStrip,
   artUrl,
+  ZOOM_MS,
   fitPinsView,
+  panLimits,
+  zoomView,
   formatCountdown,
   formatOpinionDelta,
   formatSigned,
@@ -37,8 +40,11 @@ describe('Ticket v2', () => {
     const user = userEvent.setup();
     const onPerform = vi.fn();
     render(<Ticket action={canvass} energy={full} onPerform={onPerform} />);
-    expect(screen.getByTestId('ticket-chance')).toHaveTextContent('66 %');
-    expect(screen.getByTestId('ticket-tags')).toHaveTextContent('Canvassing · Party order 1 / 2 · +25 % FXP');
+    // Review 2 (GDD §8.4): the odds as a word, the plain type label, Party XP.
+    expect(screen.getByTestId('ticket-chance')).toHaveTextContent('Fair odds');
+    expect(screen.getByTestId('ticket-tags')).toHaveTextContent(
+      'Talk to voters · Party order 1 / 2 · +25 % Party XP',
+    );
     await user.click(screen.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }));
     await user.click(
       screen.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' }),
@@ -50,7 +56,7 @@ describe('Ticket v2', () => {
     const done = { ...canvass, order: { ...canvass.order!, progress: 2, target: 2 } };
     render(<Ticket action={done} energy={full} onPerform={() => undefined} />);
     const tags = screen.getByTestId('ticket-tags');
-    expect(tags).toHaveTextContent('Canvassing · Order done');
+    expect(tags).toHaveTextContent('Talk to voters · Order done');
     expect(tags).toHaveClass('text-muted');
     expect(tags).not.toHaveClass('text-collective');
     expect(screen.getByRole('button', { name: /once/ })).toBeEnabled();
@@ -82,16 +88,19 @@ describe('Ticket v2', () => {
     expect(screen.getByTestId('ticket-hint')).toHaveTextContent(/^Needs 10 Energy · ready at \d\d:\d\d$/);
   });
 
-  it('tapping the percentage shows the breakdown', async () => {
+  it('review 2: tapping the odds word opens the band note, never a number', async () => {
     const user = userEvent.setup();
     render(<Ticket action={canvass} energy={full} onPerform={() => undefined} />);
-    const toggle = screen.getByRole('button', { name: /66 %/ });
-    expect(screen.queryByText('INT 12, 4 above the 8 needed, 4 % a point')).not.toBeVisible();
-    await user.click(toggle);
-    expect(screen.getByText('INT 12, 4 above the 8 needed, 4 % a point')).toBeVisible();
+    expect(screen.getByTestId('ticket-odds')).toHaveTextContent('Fair odds · Intelligence');
+    expect(screen.getByTestId(`ticket-${canvass.id}`)).not.toHaveTextContent('%·');
+    await user.click(screen.getByRole('button', { name: /what the odds mean/ }));
+    const note = screen.getByTestId('help-note');
+    expect(note).toHaveTextContent('Fair odds');
+    expect(note).toHaveTextContent('About one try in two comes off here. It uses your Intelligence.');
+    expect(note).not.toHaveTextContent(/\d/);
   });
 
-  it('training shows the live cost and "INT 12 → 13 · no roll"', () => {
+  it('training shows the live cost and "Intelligence 12 → 13 · always works"', () => {
     render(
       <Ticket
         action={study}
@@ -100,7 +109,7 @@ describe('Ticket v2', () => {
         onPerform={() => undefined}
       />,
     );
-    expect(screen.getByText('INT 12 → 13 · no roll')).toBeInTheDocument();
+    expect(screen.getByText('Intelligence 12 → 13 · always works')).toBeInTheDocument();
     // ×1 only (§8.5, content §13.2): one Train button with the live cost, no ×3.
     expect(screen.getByRole('button', { name: 'Study in the reading room, 44 Energy' })).toHaveTextContent(
       'Train',
@@ -108,14 +117,21 @@ describe('Ticket v2', () => {
     expect(screen.queryByRole('button', { name: /three times/ })).toBeNull();
   });
 
-  it('review 1: the odds name their stat before the tap; the ledger is in words with its footnote', async () => {
-    const user = userEvent.setup();
-    render(<Ticket action={canvass} energy={full} onPerform={() => undefined} />);
-    expect(screen.getByTestId('ticket-odds')).toHaveTextContent('66 % · INT 12');
-    await user.click(screen.getByRole('button', { name: /66 %/ }));
-    expect(screen.getByText('Even odds')).toBeVisible();
-    expect(screen.getByText('INT 12, 4 above the 8 needed, 4 % a point')).toBeVisible();
-    expect(screen.getByTestId('ledger-note')).toHaveTextContent(/^Every check starts at even odds/);
+  it('review 2: a first-day bonus is a tag in words; no percentage of chance on the ticket', () => {
+    const first = {
+      ...canvass,
+      preview: {
+        ...canvass.preview!,
+        bonuses: [{ id: 'first-day', label: 'First day in Coalport', value: 10 }],
+        bonusTotal: 10,
+        raw: 76,
+        chance: 76,
+      },
+    };
+    render(<Ticket action={first} energy={full} onPerform={() => undefined} />);
+    expect(screen.getByTestId('ticket-odds')).toHaveTextContent('Good odds · Intelligence');
+    expect(screen.getByTestId('ticket-tags')).toHaveTextContent('First day in Coalport · better odds');
+    expect(screen.getByTestId(`ticket-${canvass.id}`).textContent).not.toMatch(/\d+ %(?! Party XP)/);
   });
 
   it('review 1: a ticket opened from its order is marked', () => {
@@ -139,7 +155,8 @@ describe('CityMap', () => {
     );
     const pins = screen.getAllByTestId('hotspot');
     expect(pins.map((p) => p.getAttribute('aria-label'))).toEqual(['1. Mill Gate', '3. Union Hall']);
-    expect(pins[0]!.parentElement).toHaveStyle({ left: '36%', top: '44%' });
+    expect(pins[0]!.parentElement).toHaveAttribute('data-map-x', '0.36');
+    expect(pins[0]!.parentElement).toHaveAttribute('data-map-y', '0.44');
     expect(pins[0]).toHaveAttribute('aria-pressed', 'true');
     await user.click(pins[1]!);
     expect(onSelect).toHaveBeenCalledWith('coalport.union-hall');
@@ -160,6 +177,99 @@ describe('CityMap', () => {
     expect(srcs()).not.toContain('map.coalport.day');
     rerender(<CityMap {...props} isNight={false} />);
     expect(srcs()).toContain('map.coalport.day');
+  });
+});
+
+describe('the fixed map (review 2 #8, #9)', () => {
+  const props = {
+    map: cityViewFixture.map,
+    isNight: false,
+    locations: cityViewFixture.locations,
+    onSelect: () => undefined,
+  };
+  const viewOf = (el: HTMLElement) => el.getAttribute('data-view')!.split(',').map(Number);
+
+  it('at rest a drag does not move it; a selection zooms in, then says it has arrived', async () => {
+    vi.useFakeTimers();
+    try {
+      const onArrive = vi.fn();
+      const { rerender } = render(<CityMap {...props} selectedId={null} onArrive={onArrive} />);
+      const box = screen.getByTestId('city-map');
+      const rest = box.getAttribute('data-view');
+      expect(box).toHaveAttribute('data-zoomed', 'false');
+      fireEvent.pointerDown(box, { pointerId: 1, button: 0, clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(box, { pointerId: 1, clientX: 180, clientY: 160 });
+      fireEvent.pointerUp(box, { pointerId: 1 });
+      expect(box.getAttribute('data-view')).toBe(rest);
+      const pins = screen.getAllByTestId('hotspot');
+      rerender(<CityMap {...props} selectedId="coalport.union-hall" onArrive={onArrive} />);
+      expect(box).toHaveAttribute('data-zoomed', 'true');
+      expect(viewOf(box)[2]).toBeGreaterThan(Number(rest!.split(',')[2]));
+      expect(screen.getByTestId('map-layer').style.transition).toContain('transform 500ms');
+      expect(onArrive).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(ZOOM_MS));
+      expect(onArrive).toHaveBeenCalledWith('coalport.union-hall');
+      // Zoomed in, a drag pans; the pins are the same elements throughout (no remount).
+      const zoomed = viewOf(box);
+      fireEvent.pointerDown(box, { pointerId: 2, button: 0, clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(box, { pointerId: 2, clientX: 60, clientY: 100 });
+      fireEvent.pointerUp(box, { pointerId: 2 });
+      expect(viewOf(box)[0]).not.toBe(zoomed[0]);
+      rerender(<CityMap {...props} selectedId={null} onArrive={onArrive} />);
+      expect(box.getAttribute('data-view')).toBe(rest);
+      expect(screen.getAllByTestId('hotspot').every((p, i) => p === pins[i])).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('the wheel does nothing on the map (no free zoom)', () => {
+    render(<CityMap {...props} selectedId={null} />);
+    const box = screen.getByTestId('city-map');
+    const rest = box.getAttribute('data-view');
+    const wheel = new WheelEvent('wheel', { deltaY: -200, cancelable: true, bubbles: true });
+    box.dispatchEvent(wheel);
+    expect(wheel.defaultPrevented).toBe(true);
+    expect(box.getAttribute('data-view')).toBe(rest);
+  });
+});
+
+describe('zoomView and panLimits (review 2 #9)', () => {
+  const ASPECT = 5056 / 3392;
+  const box = { w: 390, h: 692 };
+  const content = { w: box.h * ASPECT, h: box.h };
+  const fitted = { scale: 0.6, x: 0, y: 0 };
+
+  it('twice the fitted scale, the pin in the middle of the part the sheet leaves clear', () => {
+    const cover = { bottom: 480 };
+    for (const pin of [
+      { x: 0.36, y: 0.44 },
+      { x: 0.15, y: 0.89 }, // The Anchor, near the bottom edge: past the limits rather than hidden
+      { x: 0.6, y: 0.14 },
+    ]) {
+      const v = zoomView({ box, content, fitted, pin, cover });
+      expect(v.scale).toBeCloseTo(1.25);
+      const px = v.x + pin.x * content.w * v.scale;
+      const py = v.y + pin.y * content.h * v.scale;
+      expect(px).toBeGreaterThanOrEqual(30);
+      expect(px).toBeLessThanOrEqual(box.w - 30);
+      expect(py).toBeGreaterThanOrEqual(30);
+      expect(py).toBeLessThanOrEqual(box.h - cover.bottom - 30);
+      const lim = panLimits(box, content, v);
+      expect(v.x).toBeGreaterThanOrEqual(lim.x[0]);
+      expect(v.x).toBeLessThanOrEqual(lim.x[1]);
+      expect(v.y).toBeGreaterThanOrEqual(lim.y[0]);
+      expect(v.y).toBeLessThanOrEqual(lim.y[1]);
+    }
+  });
+
+  it('never above 2.5 × and never below the fitted scale', () => {
+    expect(zoomView({ box, content, fitted: { scale: 2, x: 0, y: 0 }, pin: { x: 0.5, y: 0.5 } }).scale).toBe(
+      2.5,
+    );
+    expect(
+      zoomView({ box, content, fitted: { scale: 0.3, x: 0, y: 0 }, pin: { x: 0.5, y: 0.5 } }).scale,
+    ).toBe(1.25);
   });
 });
 
@@ -230,7 +340,7 @@ describe('Paper pieces', () => {
       />,
     );
     expect(screen.getByTestId('today-strip')).toHaveTextContent(
-      'Today:30 Energy · 3 attempts · 2 wins · +135 XP · +18 FXP · +0.125 opinion · +20 Iron',
+      'Today:30 Energy · 3 attempts · 2 wins · +135 XP · +18 Party XP · +0.125 opinion · +20 Iron',
     );
   });
 });
@@ -279,8 +389,11 @@ describe('HudBar v2', () => {
     );
     expect(screen.getByTestId('hud-iron')).toHaveTextContent('20');
     expect(screen.getByTestId('hud-pc')).toHaveTextContent('5');
-    // m5 (onboarding §14.1): the PC column shows on phones as on desktop.
-    expect(screen.getByTestId('hud-pc').parentElement).not.toHaveClass('hidden');
+    // m5 (onboarding §14.1): the PC column shows on phones as on desktop; review 2 #5: named in
+    // full, never the bare "PC".
+    expect(screen.getByTestId('hud-pc-block')).not.toHaveClass('hidden');
+    expect(screen.getByTestId('hud-pc-block')).toHaveTextContent('5PoliticalCapital');
+    expect(screen.getByRole('region', { name: 'Character' })).not.toHaveTextContent(/\bPC\b/);
     await user.click(
       screen.getByRole('button', { name: '1 point to place · nothing is lost by choosing later' }),
     );
@@ -303,12 +416,13 @@ describe('HudBar v2', () => {
     expect(xp).toHaveAttribute('aria-valuemax', '300');
     expect(xp).toHaveAttribute('aria-valuetext', '270 XP, 180 to Level 3');
     expect((xp.firstElementChild as HTMLElement).style.width).toBe('40%');
-    // Faction XP (answers §8): the bar labelled with the next rank ("Rank 2" under 400 px), the
-    // numbers in the note behind a tap.
-    expect(screen.getByTestId('hud-fxp-rank')).toHaveTextContent('Rank 2Activist');
-    expect(screen.getByRole('meter', { name: 'Faction XP to next rank' })).toHaveAttribute(
+    // Faction XP (answers §8, review 2 #7): the bar labelled with the next rank ("To Rank 2" under
+    // 400 px) and its numbers always shown after it.
+    expect(screen.getByTestId('hud-fxp-rank')).toHaveTextContent('To Rank 2To Activist');
+    expect(screen.getByTestId('hud-fxp')).toHaveTextContent('31 / 400 Party XP');
+    expect(screen.getByRole('meter', { name: 'Party XP to next rank' })).toHaveAttribute(
       'aria-valuetext',
-      '31 of 400 Faction XP, 369 to Activist',
+      '31 of 400 Party XP, 369 to Activist',
     );
   });
 
@@ -330,8 +444,9 @@ describe('HudBar v2', () => {
         nextTickIn={null}
       />,
     );
-    expect(screen.getByTestId('hud-fxp-rank')).toHaveTextContent('Rank 7Chairman');
-    const fxp = screen.getByRole('meter', { name: 'Faction XP to next rank' });
+    expect(screen.getByTestId('hud-fxp-rank')).toHaveTextContent('Chairman');
+    expect(screen.getByTestId('hud-fxp')).toHaveTextContent('61,000 Party XP');
+    const fxp = screen.getByRole('meter', { name: 'Party XP to next rank' });
     expect((fxp.firstElementChild as HTMLElement).style.width).toBe('100%');
   });
 
@@ -339,6 +454,7 @@ describe('HudBar v2', () => {
     render(<HudBar character={{ ...characterViewFixture, pc: 0 }} nextTickIn={425_000} />);
     expect(screen.queryByTestId('hud-pc')).toBeNull();
     expect(screen.queryByText('PC')).toBeNull();
+    expect(screen.queryByText('Political')).toBeNull();
   });
 });
 

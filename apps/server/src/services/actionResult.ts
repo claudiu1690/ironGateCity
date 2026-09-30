@@ -1,3 +1,4 @@
+import { copy } from '@irongate/content/copy';
 import type { GameContent, LocatedAction } from '@irongate/content';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
@@ -133,18 +134,20 @@ export function buildActionResult(i: ResultInput): ActionResult {
       bonusTags.push({
         id: 'order',
         label: 'Party order',
-        note: `+${Math.round(DIRECTIVES.matchFxpBonus * 100)} % FXP`,
+        note: `+${Math.round(DIRECTIVES.matchFxpBonus * 100)} % Party XP`,
       });
     }
+    // Review 2 (GDD §8.4): a bonus to the odds is named, never numbered; the breakdown keeps the value.
+    const odds = (v: number) => (v >= 0 ? 'better odds' : 'worse odds');
     const standingBonus = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === 'standing');
     if (standingBonus)
-      bonusTags.push({ id: 'standing', label: standingBonus.label, note: `+${standingBonus.value} %` });
+      bonusTags.push({ id: 'standing', label: standingBonus.label, note: odds(standingBonus.value) });
     const firstDay = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === 'first-day');
-    if (firstDay) bonusTags.push({ id: 'first-day', label: firstDay.label, note: `+${firstDay.value} %` });
+    if (firstDay) bonusTags.push({ id: 'first-day', label: firstDay.label, note: odds(firstDay.value) });
     // Slice 3 (tech design §10.2): one tag per ordinance or state that applied.
     const ord = m.ordinance;
     const ordCheck = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === ord?.id);
-    if (ord && ordCheck) bonusTags.push({ id: ord.id, label: ord.name, note: `+${ordCheck.value} %` });
+    if (ord && ordCheck) bonusTags.push({ id: ord.id, label: ord.name, note: odds(ordCheck.value) });
     if (ord && effect(m, 'energyDelta', action.type) && 'energy' in action)
       bonusTags.push({
         id: ord.id,
@@ -154,9 +157,9 @@ export function buildActionResult(i: ResultInput): ActionResult {
     if (ord && r.rewards.iron.parts?.some((p) => p.id === ord.id))
       bonusTags.push({ id: ord.id, label: ord.name, note: `+${effect(m, 'ironPct')!.value} % Iron` });
     if (ord && r.rewards.fxp.parts?.some((p) => p.id === ord.id))
-      bonusTags.push({ id: ord.id, label: ord.name, note: `+${effect(m, 'fxpPct')!.value} % FXP` });
+      bonusTags.push({ id: ord.id, label: ord.name, note: `+${effect(m, 'fxpPct')!.value} % Party XP` });
     if (ord && effect(m, 'standingMultiplier') && r.standing.after > r.standing.before)
-      bonusTags.push({ id: ord.id, label: ord.name, note: 'Standing ×2' });
+      bonusTags.push({ id: ord.id, label: ord.name, note: 'reputation ×2' });
     if (ord && effect(m, 'swingPct', action.type))
       bonusTags.push({
         id: ord.id,
@@ -164,7 +167,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
         note: `+${effect(m, 'swingPct', action.type)!.value} % opinion`,
       });
     if (r.rewards.fxp.parts?.some((p) => p.id === FIRED_UP.id))
-      bonusTags.push({ id: FIRED_UP.id, label: FIRED_UP.label, note: '+10 % FXP' });
+      bonusTags.push({ id: FIRED_UP.id, label: FIRED_UP.label, note: '+10 % Party XP' });
     if (i.opinion) {
       opinion = { cityId: city.id, factionId: before.factionId, delta: r.rewards.opinion, ...i.opinion };
     }
@@ -186,11 +189,12 @@ export function buildActionResult(i: ResultInput): ActionResult {
     const r = i.resolution;
     stamp = 'trained';
     rewards = { xp: r.xp, fxp: { ...NONE }, iron: { ...NONE }, opinion: 0 };
-    const name = r.stat.stat.toUpperCase();
+    // Review 2 (answers §1.2, §2.2): the stat in full; training always works.
+    const name = copy.statNames[r.stat.stat];
     rows = r.rows.map((row) => ({
       index: row.index,
       label: `${name} ${row.from} → ${row.to}`,
-      detail: `${row.cost} Energy · no roll`,
+      detail: `${row.cost} Energy · always works`,
     }));
     stat = r.stat;
     if (m.ordinance && effect(m, 'trainingEnergyPct'))

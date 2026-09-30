@@ -10,95 +10,111 @@ import {
   ResultModal,
   StatPointsPanel,
   TodayStrip,
-  oddsSentence as sentence,
-  rollLine,
+  bandNote,
+  batchReasons,
+  oddsTag,
+  reasonFor,
   statLine,
+  ticketOdds,
 } from '../src';
 
 /** Review 1 (30 Sep 2026): `docs/design/review-1-answers.md` §4–§9 in the components. */
-/** The sentence with its no-break spaces read as spaces. */
-const oddsSentence = (c: CheckBreakdown) => sentence(c).replace(/\u00a0/g, ' ');
 const check = (over: Partial<CheckBreakdown>): CheckBreakdown => ({ ...checkFixture, ...over });
 
-describe('the odds as a sentence (answers §4)', () => {
-  it('above, below, equal, two stats, best stat', () => {
-    expect(oddsSentence(checkFixture)).toBe('Your INT 12 is 4 above the 8 this needs: 66 %.');
-    expect(oddsSentence(check({ statValues: [5], statValue: 5, statTerm: -12, raw: 38, chance: 38 }))).toBe(
-      'Your INT 5 is 3 below the 8 this needs: 38 %.',
+/**
+ * Review 2 (answers §2, GDD §8.4; replaces review 1's odds sentence and roll line): the odds are a
+ * word, and a row that isn't a Success gets one plain reason with no number in it.
+ */
+describe('the odds as a word, the reason in plain words (review 2 §2)', () => {
+  it('bands: Good odds from 70, Fair odds 50–69, Long shot under 50; the stat in full', () => {
+    expect(ticketOdds(check({ chance: 70 }))).toBe('Good odds · Intelligence');
+    expect(ticketOdds(check({ chance: 69 }))).toBe('Fair odds · Intelligence');
+    expect(ticketOdds(check({ chance: 50 }))).toBe('Fair odds · Intelligence');
+    expect(ticketOdds(check({ chance: 49 }))).toBe('Long shot · Intelligence');
+    expect(statLine(check({ stats: ['cha', 'int'], statValues: [2, 11] }))).toBe('Charisma and Intelligence');
+    expect(statLine(check({ stats: ['str'], best: true, statValues: [13] }))).toBe('your best, Strength');
+    expect(bandNote(check({ chance: 76 }))).toEqual([
+      'Good odds',
+      'About three tries in four come off here. It uses your Intelligence.',
+    ]);
+    expect(oddsTag({ label: 'First day in Duskwall', value: 10 })).toBe(
+      'First day in Duskwall · better odds',
     );
-    expect(oddsSentence(check({ statValues: [8], statValue: 8, statTerm: 0, raw: 50, chance: 50 }))).toBe(
-      'Your INT 8 matches the 8 this needs: 50 %.',
+    expect(oddsTag({ label: 'Rain', value: -8 })).toBe('Rain · worse odds');
+  });
+
+  it('the reason: a low stat (with where to train it), a penalty, luck; never a digit', () => {
+    const places = { int: 'the Union Hall', str: 'the Mill Gate' };
+    const low = check({ statValues: [5], statValue: 5, statTerm: -12, raw: 38, chance: 38 });
+    expect(reasonFor(low, 'partial', places)?.text).toBe(
+      'Your Intelligence is low for this. Train it at the Union Hall.',
     );
+    expect(reasonFor(low, 'partial')?.text).toBe('Your Intelligence is low for this.');
+    expect(reasonFor(low, 'success', places)).toBeNull();
     const two = check({
       stats: ['cha', 'int'],
       statValues: [2, 11],
       statValue: 6.5,
       statTerm: -6,
-      raw: 44,
       chance: 44,
     });
-    expect(oddsSentence(two)).toBe('CHA 2 and INT 11 average 6.5, 1.5 below the 8 this needs: 44 %.');
-    expect(statLine(two)).toBe('CHA 2 + INT 11');
+    expect(reasonFor(two, 'partial', places)?.text).toBe(
+      'This needs Charisma and Intelligence, and your Charisma is the low one. It comes from what you wear.',
+    );
+    const cha = check({ stats: ['cha'], statValues: [3], statValue: 3, statTerm: -20, chance: 30 });
+    expect(reasonFor(cha, 'partial')?.text).toBe(
+      'Your Charisma is low for this. It comes from what you wear; a better coat helps.',
+    );
     const best = check({
       stats: ['str'],
       best: true,
-      statValues: [13],
-      statValue: 13,
-      statTerm: 20,
-      raw: 70,
-      chance: 70,
+      statValues: [5],
+      statValue: 5,
+      statTerm: -12,
+      chance: 38,
     });
-    expect(oddsSentence(best)).toBe('Your best, STR 13, is 5 above the 8 this needs: 70 %.');
-    expect(statLine(best)).toBe('your best, STR 13');
+    expect(reasonFor(best, 'partial')?.text).toBe(
+      'Even your best, Strength, is low for this. Training anything would help.',
+    );
+    const rain = check({
+      statValues: [7],
+      statValue: 7,
+      statTerm: -4,
+      bonuses: [{ id: 'weather', label: 'Rain', value: -10 }],
+      chance: 36,
+    });
+    expect(reasonFor(rain, 'partial')?.text).toBe('The rain was against you.');
+    expect(reasonFor(check({ chance: 76 }), 'partial')?.text).toBe(
+      "Bad luck. The odds were good; it just didn't come off. Try again.",
+    );
+    expect(reasonFor(check({ chance: 62 }), 'partial')?.text).toBe(
+      'The odds were only fair. Every win here builds your reputation, and reputation lifts the odds.',
+    );
+    expect(reasonFor(low, 'failure', places)?.text).toBe(
+      'It went badly. Your Intelligence is low for this. Train it at the Union Hall.',
+    );
+    for (const c of [low, two, cha, best, rain, check({ chance: 76 }), check({ chance: 62 })])
+      for (const o of ['partial', 'failure'] as const)
+        expect(reasonFor(c, o, places)?.text).not.toMatch(/\d/);
   });
 
-  it('bonuses end the sentence; the clamp says so', () => {
-    const known = check({
-      bonuses: [{ id: 'standing', label: 'Known in Coalport', value: 6 }],
-      bonusTotal: 6,
-      raw: 72,
-      chance: 72,
-    });
-    expect(oddsSentence(known)).toBe(
-      'Your INT 12 is 4 above the 8 this needs: 66 %, and +6 % for being Known here: 72 %.',
-    );
-    const first = check({
-      bonuses: [{ id: 'first-day', label: 'First day in Duskwall', value: 10 }],
-      bonusTotal: 10,
-      raw: 76,
-      chance: 76,
-    });
-    expect(oddsSentence(first)).toMatch(/and \+10 % for your first day in Duskwall: 76 %\.$/);
-    const many = check({
-      bonuses: [
-        { id: 'first-day', label: 'First day in Coalport', value: 10 },
-        { id: 'standing', label: 'Known in Coalport', value: 6 },
+  it('a batch: a shared cause prints once under the rows; a cause of its own under its row', () => {
+    const low = check({ statValues: [5], statValue: 5, statTerm: -12, raw: 38, chance: 38 });
+    const r = batchReasons(
+      [
+        { index: 1, check: low, outcome: 'partial' },
+        { index: 2, check: low, outcome: 'success' },
+        { index: 3, check: low, outcome: 'partial' },
       ],
-      bonusTotal: 16,
-      raw: 82,
-      chance: 82,
-    });
-    expect(oddsSentence(many)).toMatch(/: 66 %, and bonuses \+16 %: 82 %\.$/);
-    const capped = check({ statValues: [16], statValue: 16, statTerm: 32, raw: 98, chance: 95 });
-    expect(oddsSentence(capped)).toBe('Your INT 16 is 8 above the 8 this needs: 98 %, capped at 95 %.');
-  });
-
-  it('the roll, one line', () => {
-    expect(rollLine({ roll: 26, chance: 38, outcome: 'success', tier: 1, type: 'canvass' })).toBe(
-      'Rolled 26: Success (38 or under).',
+      { int: 'the Union Hall' },
     );
-    expect(rollLine({ roll: 51, chance: 38, outcome: 'partial', tier: 1, type: 'canvass' })).toBe(
-      'Rolled 51: Partial (39 to 58).',
+    expect(r.shared).toBe(
+      "2 of 3 didn't come off. Your Intelligence is low for this. Train it at the Union Hall.",
     );
-    expect(rollLine({ roll: 77, chance: 38, outcome: 'partial', tier: 1, type: 'canvass' })).toBe(
-      'Rolled 77: Partial (a canvass never fails).',
-    );
-    expect(rollLine({ roll: 77, chance: 38, outcome: 'partial', tier: 1, type: 'intelligence' })).toBe(
-      'Rolled 77: Partial (an intelligence never fails).',
-    );
-    expect(rollLine({ roll: 77, chance: 38, outcome: 'failure', tier: 3, type: 'chapter' })).toBe(
-      'Rolled 77: Failure (more than 20 over).',
-    );
+    expect(r.byRow.size).toBe(0);
+    const one = batchReasons([{ index: 1, check: check({ chance: 76 }), outcome: 'partial' }]);
+    expect(one.shared).toBeNull();
+    expect(one.byRow.get(1)).toMatch(/^Bad luck\./);
   });
 });
 
@@ -124,17 +140,17 @@ describe('tap the label (answers §5)', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('the HUD gauges carry one 44 px target with the Energy, XP and Faction XP notes', async () => {
+  it('the HUD gauges carry one 44 px target with the Energy, XP and Party XP notes', async () => {
     const user = userEvent.setup();
     render(<HudBar character={{ ...characterViewFixture, pc: 5 }} nextTickIn={null} />);
     expect(screen.getByRole('meter', { name: 'Energy' })).toBeInTheDocument();
     await user.click(screen.getByTestId('hud-help'));
     const note = screen.getByTestId('help-note');
-    for (const kicker of ['Energy', 'Experience', 'Faction XP', 'Political Capital'])
+    for (const kicker of ['Energy', 'Experience', 'Party XP', 'Political Capital'])
       expect(note).toHaveTextContent(kicker);
     // The Faction XP note names the vote, the candidacy and what is left to the next Rank.
     expect(note).toHaveTextContent(
-      'the vote at Activist, a council candidacy at Organiser. 394 more to Activist.',
+      'the vote at Activist, standing for the council at Organiser. 394 more to Activist.',
     );
   });
 
@@ -191,7 +207,8 @@ describe('stat points: three stats and a reason (answers §7)', () => {
       />,
     );
     expect(screen.getByTestId('stat-lead')).toHaveTextContent(
-      'Most of the work in Duskwall uses INT: 9 of 15 actions. Your best is STR 13.',
+      // Review 2 (answers §1.2): the stat in full in a sentence; the codes stay on the buttons.
+      'Most of the work in Duskwall uses Intelligence: 9 of 15 actions. Your best is Strength 13.',
     );
     expect(screen.getByRole('button', { name: 'AGI 8 → 9' })).toBeInTheDocument();
     expect(screen.getByTestId('stat-line-str')).toHaveTextContent(
@@ -214,9 +231,11 @@ describe('the Standing card (answers §9)', () => {
     };
     render(<ResultModal result={result} open onOpenChange={() => undefined} />);
     const card = screen.getByTestId('effect-standing-card');
-    expect(card).toHaveTextContent('Local standing');
+    // Review 2 (answers §1.9): Reputation, and no percentages.
+    expect(card).toHaveTextContent('Reputation');
     expect(card).toHaveTextContent('Familiar in Duskwall');
-    expect(card).toHaveTextContent('Faces nod. Every check in Duskwall is now +3 %.');
-    expect(card).toHaveTextContent('your name will do for a council candidacy at Bailiff.');
+    expect(card).toHaveTextContent('Faces nod. Everything you do in Duskwall goes a little better now.');
+    expect(card).toHaveTextContent('your name will do to stand for the council once you are a Bailiff.');
+    expect(card).not.toHaveTextContent('%');
   });
 });

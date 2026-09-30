@@ -84,3 +84,7 @@
   background-image: radial-gradient(currentColor 1px, transparent 1.3px);
   background-size: 7px 7px;
 }
+
+/* Review 2 #3: a phone held sideways (812 × 375, 667 × 375), short and wide: the tab bar becomes a
+   rail down the left, the HUD one compact band, the city a side column beside a full-height map. */
+@custom-variant short (@media (orientation: landscape) and (max-height: 500px));

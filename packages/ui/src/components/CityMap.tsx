@@ -1,8 +1,6 @@
 import type { AssetView } from '@irongate/rules';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
-import { KeepScale, TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
-import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
+import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { cx } from '../format';
 import { Picture } from './Picture';
 
@@ -15,6 +13,14 @@ export interface MapHotspot {
   map: { x: number; y: number };
 }
 
+/** Pixels of the map box hidden by the open location panel, on each side. */
+export interface MapCover {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+}
+
 export interface CityMapProps {
   map: { day: AssetView; night: AssetView };
   /** Night art 20:00–06:00 UTC (GDD §2.2); crossfades when it flips. */
@@ -23,23 +29,34 @@ export interface CityMapProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   /**
-   * Overlays that don't pan (the city plate, the orders panel). Mark each with `data-map-overlay`
-   * (`"top"` or `"bottom"` for a band across the map) and the first view keeps every pin clear of
+   * Overlays over the map (the city plate, the orders panel). Mark each with `data-map-overlay`
+   * (`"top"` or `"bottom"` for a band across the map) and the fitted view keeps every pin clear of
    * it. Any other element marked `data-map-overlay` that lies over the map (the desktop tab dock)
    * is kept clear too.
    */
   children?: ReactNode;
   className?: string;
   /**
-   * Pixels at the bottom of the map hidden by an open sheet (phones, slice 2 §12.3): a selected pin
-   * under it is panned into the part above it, so the first landing shows pin 1 over its sheet.
+   * The part of the map the open location panel hides (review 2): the zoom puts the selected pin in
+   * the middle of the rest, e.g. above a phone's bottom sheet, right of a landscape side panel.
    */
-  coverBottom?: number;
-  /** Pixels at the right of the map hidden by an open sheet (desktop): a selected pin under it is panned clear. */
-  coverRight?: number;
+  cover?: MapCover;
+  /**
+   * Called once the zoom into the selected pin has landed (at once with reduced motion): the page
+   * opens the location panel then, so the zoom plays first (review 2 #9).
+   */
+  onArrive?: (id: string) => void;
 }
 
+/** Review 2 #9: the zoom into a pin and back, with easing. */
+export const ZOOM_MS = 500;
+const ZOOM_EASE = 'cubic-bezier(0.33, 0, 0.2, 1)';
+/** A pin's zoom: twice the fitted view, at least 1.25 × the covering size, at most 2.5 ×. */
+const ZOOM_FACTOR = 2;
+const MIN_ZOOM = 1.25;
 const MAX_SCALE = 2.5;
+/** A pointer that moves this far (px) while zoomed pans the map; less is a tap. */
+const DRAG_SLOP = 6;
 /** Room around a pin: half its 44 px target plus a margin, so no pin touches an edge. */
 const PIN_PAD = 30;
 /**
@@ -229,7 +246,7 @@ function fitBetweenBands(i: FitInput, atScale?: number): MapView {
   return { scale, ...clampPosition(box, content, scale, x, y) };
 }
 
-/** The pan limits of react-zoom-pan-pinch (`limitToBounds`, no centring), so a view never jumps. */
+/** The usual pan limits: the image covers the box (or, smaller than it, stays inside it). */
 function clampPosition(
   box: { w: number; h: number },
   content: { w: number; h: number },
@@ -268,13 +285,79 @@ function measureInsets(box: HTMLElement): MapInsets {
 
 const sameInsets = (a: MapInsets, b: MapInsets) => JSON.stringify(a) === JSON.stringify(b);
 
+type ZoomInput = {
+  box: { w: number; h: number };
+  content: { w: number; h: number };
+  /** The fitted view: the zoom is relative to it. */
+  fitted: MapView;
+  pin: { x: number; y: number };
+  cover?: MapCover;
+};
+
+/** The clear part of the box: all of it but what the panel covers (the whole box if that is nothing). */
+function clearArea(box: { w: number; h: number }, cover: MapCover = {}): MapRect {
+  const r = {
+    x0: cover.left ?? 0,
+    x1: box.w - (cover.right ?? 0),
+    y0: cover.top ?? 0,
+    y1: box.h - (cover.bottom ?? 0),
+  };
+  return r.x1 - r.x0 < 2 * PIN_PAD || r.y1 - r.y0 < 2 * PIN_PAD ? { x0: 0, x1: box.w, y0: 0, y1: box.h } : r;
+}
+
+/**
+ * The view zoomed into one pin (review 2 #9): twice the fitted scale (1.25–2.5 × the covering size),
+ * the pin in the middle of the part of the map the panel leaves clear. Inside the pan limits when
+ * that still keeps the pin in the clear part; past them otherwise (a pin near the map's edge under a
+ * phone's sheet), with dark ground beside the image rather than a pin hidden by the sheet.
+ */
+export function zoomView({ box, content, fitted, pin, cover }: ZoomInput): MapView {
+  const scale = clamp(Math.max(fitted.scale * ZOOM_FACTOR, MIN_ZOOM), fitted.scale, MAX_SCALE);
+  const a = clearArea(box, cover);
+  const ideal = {
+    scale,
+    x: (a.x0 + a.x1) / 2 - pin.x * content.w * scale,
+    y: (a.y0 + a.y1) / 2 - pin.y * content.h * scale,
+  };
+  const inLimits = { scale, ...clampPosition(box, content, scale, ideal.x, ideal.y) };
+  const px = inLimits.x + pin.x * content.w * scale;
+  const py = inLimits.y + pin.y * content.h * scale;
+  const clear = px >= a.x0 + PIN_PAD && px <= a.x1 - PIN_PAD && py >= a.y0 + PIN_PAD && py <= a.y1 - PIN_PAD;
+  return clear ? inLimits : ideal;
+}
+
+/**
+ * How far the zoomed map pans (review 2 #8): the usual limits (the image covers the box), widened
+ * to take in the zoomed view itself when it lies past them.
+ */
+export function panLimits(
+  box: { w: number; h: number },
+  content: { w: number; h: number },
+  zoomed: MapView,
+): { x: [number, number]; y: [number, number] } {
+  const dx = box.w - content.w * zoomed.scale;
+  const dy = box.h - content.h * zoomed.scale;
+  return {
+    x: [Math.min(dx, 0, zoomed.x), Math.max(dx, 0, zoomed.x)],
+    y: [Math.min(dy, 0, zoomed.y), Math.max(dy, 0, zoomed.y)],
+  };
+}
+
+const sameView = (a: MapView, b: MapView) =>
+  Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.scale - b.scale) < 1e-4;
+
 /**
  * The city's detailed map (mockups City, MobileCity) with numbered hotspots at their map fractions.
- * The first view fits every pin on screen, clear of the plate and the orders panel (QA M2); the map
- * then pans and zooms (react-zoom-pan-pinch, up to 2.5× the covering size), and a pin focused with
- * the keyboard is panned into view. A selected pin hidden by its sheet is panned just clear of it,
- * and closing the sheet leaves the map where it is (review 1 #7). Hotspots keep a 44 px touch
- * target at every zoom. Name tags show on wide screens.
+ *
+ * Review 2 #8, #9: the map is fixed. At rest it shows the fitted view, every pin on screen and clear
+ * of the plate, the orders panel and the dock (QA M2), and it does not pan, zoom, pinch or
+ * double-tap. Tapping a pin (or Enter on a focused one) zooms smoothly into it (ZOOM_MS, eased; at
+ * once with reduced motion), then `onArrive` lets the page open the location panel. While zoomed in
+ * the map pans with a drag, within limits; closing the location zooms back out to the fitted view.
+ * The view is a CSS transform on one layer, and the pins sit in a layer above it that is never
+ * scaled, so they keep their 44 px targets, move with the same transition, and are never replaced:
+ * no remount on open, close or resize, so no tap or keypress is lost (c732d64). The fitted view
+ * follows every resize. Name tags show on wide screens.
  */
 export function CityMap({
   map,
@@ -284,11 +367,10 @@ export function CityMap({
   onSelect,
   children,
   className,
-  coverBottom = 0,
-  coverRight = 0,
+  cover,
+  onArrive,
 }: CityMapProps) {
   const boxRef = useRef<HTMLDivElement>(null);
-  const zoomRef = useRef<ReactZoomPanPinchRef>(null);
   const [size, setSize] = useState<{ w: number; h: number; insets: MapInsets } | null>(null);
   // Slice 2 (first-session art budget, ADR 0015): the night art is fetched only once it is night,
   // and the day art only once it is day (a first landing at night loads one map, not two).
@@ -299,11 +381,15 @@ export function CityMap({
     else setDayMounted(true);
   }, [isNight]);
 
-  // While a pin is selected the overlays are not re-measured: the desktop plate folds under an open
-  // sheet, and the first view is the one for the unfolded plate (QA M2). Measured again on close.
+  // While a pin is selected the overlays are not re-measured: a phone hides its plate under the
+  // zoom, and the fitted view (the zoom's base, and where closing returns) is the one with it.
   const selectedRef = useRef(selectedId);
   selectedRef.current = selectedId;
   const measureRef = useRef<() => void>(() => undefined);
+  // Closed: measure the overlays again (the orders on the plate may have changed meanwhile).
+  useLayoutEffect(() => {
+    if (!selectedId) measureRef.current();
+  }, [selectedId]);
   useLayoutEffect(() => {
     const el = boxRef.current;
     if (!el) return;
@@ -323,7 +409,7 @@ export function CityMap({
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     // The box (a banner above the map shrinks it) and the overlays in it (the plate grows when the
-    // orders load or unfold): either changes the first view (QA M2).
+    // orders load): either changes the fitted view (QA M2).
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     for (const o of el.querySelectorAll('[data-map-overlay]')) ro.observe(o);
@@ -333,210 +419,179 @@ export function CityMap({
   const aspect = map.day.width / map.day.height;
   const w = size?.w ?? 0;
   const h = size?.h ?? 0;
-  const insets = size?.insets ?? { top: 0, bottom: 0 };
-  // Scale 1 covers the box; the first view may zoom out below it to show every pin.
+  const insets = size?.insets;
+  // Scale 1 covers the box; the fitted view may zoom out below it to show every pin.
   const contentW = Math.max(w, h * aspect);
   const contentH = contentW / aspect;
-  const box = { w, h };
-  const content = { w: contentW, h: contentH };
-  const pinsKey = locations.map((l) => `${l.map.x},${l.map.y}`).join(';');
-  const fitted = useMemo(
-    () =>
-      fitPinsView({
-        box: { w, h },
-        content: { w: contentW, h: contentH },
-        pins: locations.map((l) => l.map),
-        insets,
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [w, h, contentW, contentH, pinsKey, insets],
-  );
-  // The transform library keeps its initial position rounded to 2 decimals; a move to the first view
-  // in place (resetView) uses the same numbers, so it lands on exactly the view the map mounts with.
-  const initial = { scale: fitted.scale, x: Number(fitted.x.toFixed(2)), y: Number(fitted.y.toFixed(2)) };
-  const initialRef = useRef(initial);
-  initialRef.current = initial;
-  const contentKey = `${Math.round(contentW)}x${Math.round(contentH)}`;
-  const viewKey = `${initial.x}|${initial.y}|${initial.scale}`;
+  const pinsKey = locations.map((l) => `${l.id}:${l.map.x},${l.map.y}`).join(';');
+  const coverKey = `${cover?.top ?? 0},${cover?.right ?? 0},${cover?.bottom ?? 0},${cover?.left ?? 0}`;
+  const selected = locations.find((l) => l.id === selectedId) ?? null;
 
-  /**
-   * The map is at its first view: just mounted, or reset, and not moved since by the player or by a
-   * pan to a pin. Only then does a new first view (the box or an overlay changed size) move it, so
-   * the pins stay clear on a resize and when the desktop plate unfolds after the first landing.
-   */
-  const atFirstView = useRef(true);
-  /** The first view the transform shows: the one it mounted with, or the last one applied. */
-  const applied = useRef<{ content: string; view: string } | null>(null);
-  /**
-   * To the (new) first view, in place: never by remounting the transform, which would replace every
-   * pin button just as the player taps one (the lost-tap fix, c732d64). 1 ms, not 0: an animated
-   * transform first cancels any momentum still running from a flick (an instant one would set the
-   * view and let that momentum carry on over it); it lands on the next frame.
-   */
-  const verifyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(verifyTimer.current), []);
-  const resetView = () => {
-    const v = initialRef.current;
-    atFirstView.current = true;
-    applied.current = { content: contentKey, view: `${v.x}|${v.y}|${v.scale}` };
-    void zoomRef.current?.setTransform(v.x, v.y, v.scale, 1);
-    // The library aligns the view to its box when its own size observer sees the box change (a
-    // banner above the map), and that cancels an animation in flight: when it lands after this
-    // reset, the reset is lost. Once things have settled, set the first view again if it did not
-    // hold (instantly: nothing is moving by then).
-    clearTimeout(verifyTimer.current);
-    verifyTimer.current = setTimeout(() => {
-      const z = zoomRef.current;
-      const t = initialRef.current;
-      if (!z || !atFirstView.current || selectedRef.current) return;
-      const s = z.instance.state;
-      const off =
-        Math.abs(s.positionX - t.x) > 0.5 ||
-        Math.abs(s.positionY - t.y) > 0.5 ||
-        Math.abs(s.scale - t.scale) > 1e-3;
-      if (off) void z.setTransform(t.x, t.y, t.scale, 0);
-    }, 150);
-  };
-  useEffect(() => {
-    if (w === 0) return;
-    const prev = applied.current;
-    if (!prev || prev.content !== contentKey) {
-      // Mounted, or remounted for a new size: the transform starts at this first view.
-      applied.current = { content: contentKey, view: viewKey };
-      atFirstView.current = true;
+  /** Where the map should be: the fitted view, or zoomed into the selected pin. */
+  const target = useMemo((): { fitted: MapView; view: MapView } | null => {
+    if (w === 0 || h === 0 || !insets) return null;
+    const box = { w, h };
+    const content = { w: contentW, h: contentH };
+    const fitted = fitPinsView({ box, content, pins: locations.map((l) => l.map), insets });
+    const view = selected ? zoomView({ box, content, fitted, pin: selected.map, cover }) : fitted;
+    return { fitted, view };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [w, h, contentW, contentH, insets, pinsKey, coverKey, selected?.id]);
+
+  /** The view shown, and whether reaching it is animated. */
+  const [shown, setShown] = useState<{ view: MapView; animate: boolean } | null>(null);
+  const shownRef = useRef(shown);
+  shownRef.current = shown;
+  const onArriveRef = useRef(onArrive);
+  onArriveRef.current = onArrive;
+  /** The selection the view was last moved for (undefined: not placed yet). */
+  const placedFor = useRef<string | null | undefined>(undefined);
+  const arriveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const frame = useRef(0);
+  useEffect(
+    () => () => {
+      clearTimeout(arriveTimer.current);
+      cancelAnimationFrame(frame.current);
+    },
+    [],
+  );
+
+  useLayoutEffect(() => {
+    if (!target) return;
+    const sel = selected?.id ?? null;
+    const first = placedFor.current === undefined;
+    const changed = !first && placedFor.current !== sel;
+    placedFor.current = sel;
+    if (!first && !changed) {
+      // A resize, an overlay or the panel's size: follow it at once (and stop any drag's offset).
+      setShown({ view: target.view, animate: false });
       return;
     }
-    if (prev.view === viewKey || selectedId || !atFirstView.current) return;
-    resetView();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentKey, viewKey, selectedId, w]);
-
-  /**
-   * Bring a pin into the clear area of the map, moving it as little as possible (review 1 #7: the
-   * map stays where the player left it). A pin already in view is left alone. Otherwise the map pans
-   * (keeping the zoom) just far enough that the pin sits inside the clear area, with PIN_PAD around
-   * it; when the pan limits don't allow that (or an overlay block is in the way), the pin is put in
-   * the middle of the clear area, zooming in under a sheet if it must (slice 2 §12.3). For a
-   * selection the clear area excludes the open sheet. A focus pan is instant: the focused pin must
-   * be visible at once, and it needs no animation frame.
-   */
-  const panTo = (target: MapHotspot, mode: 'select' | 'focus'): boolean => {
-    const z = zoomRef.current;
-    if (!z || w === 0) return false;
-    // The ref's `state` is a snapshot from mount; the instance holds the live transform.
-    const { scale: current, positionX, positionY } = z.instance.state;
-    const now: MapView = { scale: current, x: positionX, y: positionY };
-    const at = (v: MapView) => ({
-      px: v.x + target.map.x * contentW * v.scale,
-      py: v.y + target.map.y * contentH * v.scale,
-    });
-    const bottom = mode === 'select' ? Math.max(insets.bottom, coverBottom) : insets.bottom;
-    const right = mode === 'select' ? coverRight : 0;
-    /** The whole 44 px target inside the box, clear of the overlays (and of the sheet). */
-    const visibleAt = (v: MapView) => {
-      const { px, py } = at(v);
-      const half = 22;
-      const e = 0.5; // rounding
-      return (
-        px >= half - e &&
-        px <= w - right - half + e &&
-        py >= insets.top + half - e &&
-        py <= h - bottom - half + e &&
-        (insets.blocks ?? []).every(
-          (b) => px + half <= b.x0 || px - half >= b.x1 || py + half <= b.y0 || py - half >= b.y1,
-        )
-      );
+    clearTimeout(arriveTimer.current);
+    cancelAnimationFrame(frame.current);
+    const still = prefersReducedMotion();
+    const arrive = (delay: number) => {
+      if (!sel) return;
+      arriveTimer.current = setTimeout(() => onArriveRef.current?.(sel), delay);
     };
-    if (visibleAt(now)) return false;
-
-    // The smallest pan that brings the pin inside the clear area, at the current zoom.
-    const { px, py } = at(now);
-    const tx = clamp(px, PIN_PAD, w - right - PIN_PAD);
-    const ty = clamp(py, insets.top + PIN_PAD, h - bottom - PIN_PAD);
-    let next: MapView = {
-      scale: current,
-      ...clampPosition(box, content, current, positionX + tx - px, positionY + ty - py),
-    };
-    if (!visibleAt(next)) {
-      // Fallback: the pin in the middle of the clear area. Under a sheet the clear part may be
-      // small: zoom in just enough that the pan limits let the pin reach its middle.
-      const cx = (w - right) / 2;
-      const cy = (insets.top + h - bottom) / 2;
-      let scale = current;
-      if (mode === 'select' && (coverBottom > 0 || coverRight > 0)) {
-        const { x: mx, y: my } = target.map;
-        const need = Math.max(
-          mx > 0 ? cx / (mx * contentW) : 0,
-          mx < 1 ? (w - cx) / ((1 - mx) * contentW) : 0,
-          my > 0 ? cy / (my * contentH) : 0,
-          my < 1 ? (h - cy) / ((1 - my) * contentH) : 0,
-        );
-        scale = clamp(Math.max(current, need), current, MAX_SCALE);
-      }
-      next = {
-        scale,
-        ...clampPosition(
-          box,
-          content,
-          scale,
-          cx - target.map.x * contentW * scale,
-          cy - target.map.y * contentH * scale,
-        ),
-      };
-    }
-    if (Math.abs(next.x - positionX) < 0.5 && Math.abs(next.y - positionY) < 0.5 && next.scale === current)
-      return false;
-    // Instant for a focus, and under a phone's sheet (it slides in over the map anyway).
-    const instant = mode === 'focus' || coverBottom > 0 || prefersReducedMotion();
-    atFirstView.current = false;
-    void z.setTransform(next.x, next.y, next.scale, instant ? 0 : 250);
-    return true;
-  };
-
-  // Pan to a newly selected location (also the one selected on arrival, once the box is measured),
-  // only if its sheet hides it. Review 1 #7: closing the sheet leaves the map where it is, whether
-  // the player moved it or it was panned for the sheet; it no longer goes back to the first view.
-  // One exception: the first landing, when the map opened under a sheet and was panned for it
-  // before the player ever saw it at rest. Closing that sheet shows the first view, every pin on
-  // screen and clear of the plate (QA M2), since the player has not left the map anywhere yet. The
-  // view is always moved in place (resetView), never by a remount, so a pin the player has just
-  // focused or started to tap is never detached and the tap or the Enter is not lost (c732d64).
-  const pannedForSheet = useRef(false);
-  /** The map has been shown with no sheet open. */
-  const seenAtRest = useRef(false);
-  useEffect(() => {
-    if (w === 0) return;
-    const target = locations.find((l) => l.id === selectedId);
-    // Closed: measure the overlays again (they were held while the sheet was open). If the map is
-    // still untouched at its first view, a changed first view (the desktop plate unfolding) applies.
-    if (!target) measureRef.current();
-    // The first measure remounts the transform (its key): wait a frame for the new instance.
-    const id = requestAnimationFrame(() => {
-      if (target) {
-        pannedForSheet.current = panTo(target, 'select') || pannedForSheet.current;
+    if (first) {
+      // The first landing (the welcome day opens slot A's pin): show the city fitted, then zoom in.
+      setShown({ view: target.fitted, animate: false });
+      if (!sel) return;
+      if (still) {
+        setShown({ view: target.view, animate: false });
+        arrive(0);
         return;
       }
-      if (pannedForSheet.current && !seenAtRest.current) resetView();
-      pannedForSheet.current = false;
-      seenAtRest.current = true;
-    });
-    return () => cancelAnimationFrame(id);
+      // Two frames, so the fitted view is painted before the transition starts from it.
+      frame.current = requestAnimationFrame(() => {
+        frame.current = requestAnimationFrame(() => {
+          setShown({ view: target.view, animate: true });
+          arrive(ZOOM_MS);
+        });
+      });
+      return;
+    }
+    const from = shownRef.current?.view;
+    const moves = !from || !sameView(from, target.view);
+    setShown({ view: target.view, animate: moves && !still });
+    arrive(moves && !still ? ZOOM_MS : 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, w > 0, coverBottom, coverRight]);
+  }, [target]);
 
-  // Keyboard focus on a pin that is off-screen or under an overlay pans it into view (WCAG 2.4.11).
-  // Not a tap's focus: moving the pin under the finger would lose the tap.
+  const view = shown?.view ?? target?.fitted ?? null;
+  // A zoom in flight (`data-moving`, for tests and for anyone waiting for the map to settle).
+  const [moving, setMoving] = useState(false);
+  const moveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => {
+    clearTimeout(moveTimer.current);
+    if (!shown?.animate) {
+      setMoving(false);
+      return;
+    }
+    setMoving(true);
+    moveTimer.current = setTimeout(() => setMoving(false), ZOOM_MS + 50);
+    return () => clearTimeout(moveTimer.current);
+  }, [shown]);
+  const transition = shown?.animate ? `transform ${ZOOM_MS}ms ${ZOOM_EASE}` : 'none';
+
+  // Review 2 #8: no free pan or zoom at rest. The browser's own gestures over the map (pinch, double
+  // tap, a trackpad's ctrl + wheel page zoom) are off everywhere on it; the wheel does nothing.
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const stop = (e: Event) => e.preventDefault();
+    el.addEventListener('wheel', stop, { passive: false });
+    el.addEventListener('gesturestart', stop);
+    return () => {
+      el.removeEventListener('wheel', stop);
+      el.removeEventListener('gesturestart', stop);
+    };
+  }, []);
+
+  // While zoomed in: a drag pans, within panLimits. A tap stays a tap (DRAG_SLOP), and the click
+  // that ends a drag is swallowed, so a drag that starts on a pin does not select it.
+  const drag = useRef<{ id: number; sx: number; sy: number; from: MapView; moved: boolean } | null>(null);
+  const swallowClick = useRef(false);
   const lastPointerDown = useRef(0);
-  const onPinFocus = (l: MapHotspot) => {
-    if (Date.now() - lastPointerDown.current > 1_000) panTo(l, 'focus');
+  const onPointerDown = (e: ReactPointerEvent) => {
+    lastPointerDown.current = Date.now();
+    if (!selected || !view || e.button !== 0) return;
+    drag.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, from: view, moved: false };
   };
-  /** The player moved the map: a new first view no longer moves it. */
-  const moved = () => {
-    atFirstView.current = false;
+  const onPointerMove = (e: ReactPointerEvent) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId || !target) return;
+    const dx = e.clientX - d.sx;
+    const dy = e.clientY - d.sy;
+    if (!d.moved) {
+      if (Math.hypot(dx, dy) < DRAG_SLOP) return;
+      d.moved = true;
+      boxRef.current?.setPointerCapture?.(e.pointerId);
+    }
+    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view);
+    setShown({
+      view: {
+        scale: d.from.scale,
+        x: clamp(d.from.x + dx, lim.x[0], lim.x[1]),
+        y: clamp(d.from.y + dy, lim.y[0], lim.y[1]),
+      },
+      animate: false,
+    });
+  };
+  const endDrag = (e: ReactPointerEvent) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    drag.current = null;
+    if (!d.moved) return;
+    swallowClick.current = true;
+    // If no click follows (the pointer left the pin), the next real tap still counts.
+    setTimeout(() => {
+      swallowClick.current = false;
+    }, 0);
+  };
+
+  // Keyboard focus on a pin outside the zoomed view pans it into view (WCAG 2.4.11). At rest every
+  // pin is already on screen. Not a tap's focus: moving the pin under the finger would lose the tap.
+  const onPinFocus = (l: MapHotspot) => {
+    if (!selected || !view || !target || Date.now() - lastPointerDown.current < 1_000) return;
+    const px = view.x + l.map.x * contentW * view.scale;
+    const py = view.y + l.map.y * contentH * view.scale;
+    const a = clearArea({ w, h }, cover);
+    if (px >= a.x0 + 22 && px <= a.x1 - 22 && py >= a.y0 + 22 && py <= a.y1 - 22) return;
+    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view);
+    setShown({
+      view: {
+        scale: view.scale,
+        x: clamp((a.x0 + a.x1) / 2 - l.map.x * contentW * view.scale, lim.x[0], lim.x[1]),
+        y: clamp((a.y0 + a.y1) / 2 - l.map.y * contentH * view.scale, lim.y[0], lim.y[1]),
+      },
+      animate: false,
+    });
   };
 
   // The browser also scrolls the clipped wrappers to reveal a focused element, which would shift the
-  // whole map under its pan state; the map moves by transform only, so undo any such scroll.
+  // whole map under its transform; the map moves by transform only, so undo any such scroll.
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
@@ -550,76 +605,97 @@ export function CityMap({
     return () => el.removeEventListener('scroll', unscroll, true);
   }, []);
 
+  const layer: CSSProperties = view
+    ? {
+        width: contentW,
+        height: contentH,
+        transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
+        transformOrigin: '0 0',
+        transition,
+        willChange: 'transform',
+      }
+    : { visibility: 'hidden' };
+
   return (
-    <div ref={boxRef} className={cx('relative overflow-hidden bg-ink', className)} data-testid="city-map">
+    <div
+      ref={boxRef}
+      className={cx(
+        'relative touch-none overflow-hidden bg-ink select-none',
+        selected && 'cursor-grab active:cursor-grabbing',
+        className,
+      )}
+      data-testid="city-map"
+      data-zoomed={selected ? 'true' : 'false'}
+      data-moving={moving ? 'true' : 'false'}
+      data-view={view ? `${view.x.toFixed(1)},${view.y.toFixed(1)},${view.scale.toFixed(4)}` : ''}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onClickCapture={(e) => {
+        if (!swallowClick.current) return;
+        swallowClick.current = false;
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+      onDragStart={(e) => e.preventDefault()}
+    >
       {size && w > 0 && h > 0 && (
-        <TransformWrapper
-          key={contentKey}
-          ref={zoomRef}
-          initialScale={initial.scale}
-          initialPositionX={initial.x}
-          initialPositionY={initial.y}
-          minScale={initial.scale}
-          maxScale={MAX_SCALE}
-          limitToBounds
-          doubleClick={{ disabled: true }}
-          panning={{ excluded: ['hotspot'] }}
-          onPanning={moved}
-          onPinch={moved}
-          onWheel={moved}
-        >
-          <TransformComponent
-            wrapperStyle={{ width: w, height: h }}
-            contentStyle={{ width: contentW, height: contentH }}
-          >
-            <div className="relative" style={{ width: contentW, height: contentH }}>
-              {dayMounted && (
+        <>
+          <div className="absolute top-0 left-0" style={layer} data-testid="map-layer">
+            {dayMounted && (
+              <Picture
+                asset={map.day}
+                sizes={`${Math.round(contentW)}px`}
+                loading="eager"
+                className="absolute inset-0 size-full select-none"
+              />
+            )}
+            <div
+              className="absolute inset-0 transition-opacity duration-700"
+              style={{ opacity: isNight ? 1 : 0 }}
+              aria-hidden={!isNight}
+              data-testid="map-night"
+            >
+              {nightMounted && (
                 <Picture
-                  asset={map.day}
+                  asset={map.night}
                   sizes={`${Math.round(contentW)}px`}
-                  loading="eager"
-                  className="absolute inset-0 size-full select-none"
+                  decorative={!isNight}
+                  className="size-full select-none"
                 />
               )}
-              <div
-                className="absolute inset-0 transition-opacity duration-700"
-                style={{ opacity: isNight ? 1 : 0 }}
-                aria-hidden={!isNight}
-                data-testid="map-night"
-              >
-                {nightMounted && (
-                  <Picture
-                    asset={map.night}
-                    sizes={`${Math.round(contentW)}px`}
-                    decorative={!isNight}
-                    className="size-full select-none"
-                  />
-                )}
-              </div>
-              {locations.map((l) => {
-                const selected = l.id === selectedId;
+            </div>
+          </div>
+          {/* The pins: never scaled, each moved with the same transition as the map under it (a
+              pin's place is linear in the map's translate and scale, so it tracks it exactly). */}
+          <div className="pointer-events-none absolute inset-0">
+            {view &&
+              locations.map((l) => {
+                const on = l.id === selectedId;
+                const px = view.x + l.map.x * contentW * view.scale;
+                const py = view.y + l.map.y * contentH * view.scale;
                 return (
-                  <KeepScale
+                  <div
                     key={l.id}
-                    className="absolute size-0"
-                    style={{ left: `${l.map.x * 100}%`, top: `${l.map.y * 100}%` }}
+                    className="absolute top-0 left-0 size-0"
+                    style={{ transform: `translate(${px}px, ${py}px)`, transition }}
+                    data-map-x={l.map.x}
+                    data-map-y={l.map.y}
                   >
                     <button
                       type="button"
                       onClick={() => onSelect(l.id)}
-                      onPointerDown={() => {
-                        lastPointerDown.current = Date.now();
-                      }}
                       onFocus={() => onPinFocus(l)}
-                      aria-pressed={selected}
+                      aria-pressed={on}
                       aria-label={`${l.n}. ${l.name}`}
                       data-testid="hotspot"
-                      className="hotspot absolute top-0 left-0 flex h-11 min-w-11 -translate-x-[22px] -translate-y-[22px] cursor-pointer items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+                      className="hotspot pointer-events-auto absolute top-0 left-0 flex h-11 min-w-11 -translate-x-[22px] -translate-y-[22px] cursor-pointer items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
                     >
                       <span
                         className={cx(
                           'hotspot mx-1.5 flex size-8 shrink-0 items-center justify-center rounded-full border-2 font-label text-[14px] font-semibold',
-                          selected
+                          on
                             ? 'border-ink bg-paper text-ink shadow-[0_0_0_2px_var(--color-paper),0_0_0_8px_rgb(239_230_210/0.35)]'
                             : 'border-paper bg-ink text-paper shadow-[0_0_0_2px_var(--color-ink),0_3px_8px_rgb(0_0_0/0.5)]',
                         )}
@@ -629,18 +705,17 @@ export function CityMap({
                       <span
                         className={cx(
                           'hotspot label-caps -ml-2 hidden border border-l-0 py-1 pr-2 pl-2.5 text-[11px] whitespace-nowrap lg:inline',
-                          selected ? 'border-ink bg-paper text-ink' : 'border-paper bg-ink text-paper',
+                          on ? 'border-ink bg-paper text-ink' : 'border-paper bg-ink text-paper',
                         )}
                       >
                         {l.name}
                       </span>
                     </button>
-                  </KeepScale>
+                  </div>
                 );
               })}
-            </div>
-          </TransformComponent>
-        </TransformWrapper>
+          </div>
+        </>
       )}
       {children}
     </div>

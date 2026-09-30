@@ -26,13 +26,19 @@ export default defineConfig({
   projects: [
     {
       name: 'phone',
-      testIgnore: [/council\.spec\.ts/, /qa\.slice3\.spec\.ts/, /devpanel\.spec\.ts/],
+      testIgnore: [/council\.spec\.ts/, /qa\.slice3\.spec\.ts/, /devpanel\.spec\.ts/, /landscape\.spec\.ts/],
       use: { ...devices['Pixel 7'] },
     },
     {
       name: 'small-phone',
       testMatch: /arrival\.spec\.ts/,
       use: { ...devices['Pixel 7'], viewport: { width: 360, height: 640 }, deviceScaleFactor: 2 },
+    },
+    // Review 2 #3: a phone held sideways (812 × 375 and 667 × 375, set in the spec).
+    {
+      name: 'landscape',
+      testMatch: /landscape\.spec\.ts/,
+      use: { ...devices['Pixel 7 landscape'] },
     },
     {
       name: 'desktop',
@@ -44,7 +50,7 @@ export default defineConfig({
     {
       name: 'council',
       testMatch: /council\.spec\.ts/,
-      dependencies: ['phone', 'small-phone', 'desktop'],
+      dependencies: ['phone', 'small-phone', 'landscape', 'desktop'],
       use: { ...devices['Pixel 7'] },
     },
     // QA slice 3: the ballot on a phone, after the council cycle (it moves the shared clock too).

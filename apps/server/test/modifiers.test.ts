@@ -1,7 +1,7 @@
 /**
  * The settlement v3 and modifiers in play (tech design §8.4, §8.5, §14; ADR 0021, 0022): salary
  * under a pay ordinance, Rested kept after the Rest Day Order, the Unrest crisis orders paying 40,
- * Stands Firm, Fired up parts, Ward Register, and a morale crossing in an action's modal.
+ * Stands Firm, Fired up parts, Street Register, and a morale crossing in an action's modal.
  */
 import { randomUUID } from 'node:crypto';
 import { Character, City } from '@irongate/db';
@@ -37,16 +37,16 @@ async function inForce(id: string, fromDay: number, toDay: number) {
 }
 
 describe('the settlement v3', () => {
-  it('salary: each ended day under the Ward Fund pays 216 − 54 plus seniority, and the desk says why', async () => {
+  it('salary: each ended day under the Street Fund pays 216 − 54 plus seniority, and the desk says why', async () => {
     await resetCity('coalport');
     const D2 = nextCycleDay('coalport', 2, 20950);
     const clock = testClock(at(D2));
     const p = await player(clock);
     await p.caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
-    await inForce('ord.ward-fund', D2, D2 + 5);
+    await inForce('ord.street-fund', D2, D2 + 5);
     clock.set(at(D2 + 2));
     const paper = await p.caller.paper.today();
-    // Review 1 (§9.1): the full wage per ended day; the Ward Fund's −25 % is a line on the unmodified
+    // Review 1 (§9.1): the full wage per ended day; the Street Fund's −25 % is a line on the unmodified
     // 216 (−54 a day), beside seniority's (+4, +9). There is no shift to carry a second Iron line.
     expect(paper.desk.salary).toEqual({
       jobName: 'Factory worker',
@@ -54,7 +54,7 @@ describe('the settlement v3', () => {
       perDay: 216,
       seniority: { days: 2, pct: 4, amount: 13 },
       total: 2 * 216 + 13 - 108,
-      ordinance: { label: 'Ward Fund', amount: -108 },
+      ordinance: { label: 'Street Fund', amount: -108 },
     });
   });
 
@@ -90,7 +90,7 @@ describe('the settlement v3', () => {
       'dir.restore-speech',
     ]);
     // Review 1 (§13.7): titles say what and where.
-    expect(me.orders.items[0]!.title).toBe('Restore the base: canvass anywhere in Coalport');
+    expect(me.orders.items[0]!.title).toBe('Win back Coalport: talk to voters anywhere');
     let last;
     for (let i = 0; i < 3; i++) {
       last = await p.caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 });
@@ -121,18 +121,18 @@ describe('modifiers in play', () => {
     await Character.updateOne({ _id: p.id }, { $set: { 'stats.int': 20 } });
     const r = await p.caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 3 });
     expect(r.rewards.fxp.parts?.find((x) => x.id === 'morale.fired')?.amount).toBe(r.successes);
-    expect(r.bonusTags).toContainEqual({ id: 'morale.fired', label: 'Fired up', note: '+10 % FXP' });
+    expect(r.bonusTags).toContainEqual({ id: 'morale.fired', label: 'Fired up', note: '+10 % Party XP' });
     // Review 1 (§9.1): "nothing on a shift" is gone with the shift.
     const city = await p.caller.city.get({ cityId: 'coalport' });
     expect(city.morale).toMatchObject({ state: 'fired' });
   });
 
-  it('Ward Register: every Success writes two Successes of Local Standing', async () => {
+  it('Street Register: every Success writes two Successes of Local Standing', async () => {
     await resetCity('coalport');
     const D = nextCycleDay('coalport', 3, 21030);
     const clock = testClock(at(D));
     const p = await player(clock);
-    await inForce('ord.ward-register', D, D + 5);
+    await inForce('ord.street-register', D, D + 5);
     const r = await p.caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 3 });
     expect(r.effects.standing!.after.successes).toBe(2 * r.successes);
   });

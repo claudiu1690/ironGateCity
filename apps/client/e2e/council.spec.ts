@@ -81,37 +81,61 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   expect(lift.ok()).toBe(true);
   await page.goto('/paper');
   const row = page.getByTestId('polling-day-row');
-  await expect(row).toContainText('Stand for the council · 10 PC');
+  // Review 2 (screens §2.1): the Election row; an eligible player's tap goes to stand.
+  // On the count morning after an earlier cycle (the shared test clock), the last result leads the
+  // row and its tap is the result; the city screen's card also offers Stand. Otherwise the call.
+  await expect(row).toHaveAttribute('data-state', /^(candidates|result)$/);
+  if ((await row.getAttribute('data-state')) === 'candidates') {
+    await expect(row).toContainText('Candidates are putting their names in');
+    await row.click();
+  } else {
+    await page.goto('/city/coalport');
+    await page
+      .getByTestId('election-card')
+      .filter({ visible: true })
+      .or(page.getByTestId('polling-day').filter({ visible: true }))
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/council\/count$/);
+    await page.goto('/council/slate');
+  }
 
-  // 3. The slate: three ticks, declare, the Filed modal; the candidacy card.
-  await row.click();
+  // 3. Who's standing: three ticks, stand, the "You're standing" modal with its Next line.
   await expect(page).toHaveURL(/\/council\/slate$/);
   const card = page.getByTestId('declare-card');
   await expect(card).toContainText('✓ Rank 3, Organiser');
-  await expect(card).toContainText('✓ Known in Coalport (200 Successes)');
-  await expect(card).toContainText('2 endorsements by');
-  await card.getByRole('button', { name: 'Declare · 10 PC' }).click();
-  await expect(modalOf(page).getByTestId('stamp')).toHaveText('Filed');
-  await expect(modalOf(page)).toContainText('Your name is on the slate');
-  await expect(modalOf(page).getByTestId('political-pc')).toHaveText('−10 PC · 35 left');
+  await expect(card).toContainText('✓ Known in Coalport (200 wins)');
+  await expect(card).toContainText('2 backers by');
+  await card.getByRole('button', { name: 'Stand · 10 Political Capital' }).click();
+  await expect(modalOf(page).getByTestId('stamp')).toHaveText("You're standing");
+  await expect(modalOf(page)).toContainText('Your name is on the list');
+  await expect(modalOf(page).getByTestId('political-next')).toHaveText(
+    /^Next: find backers\. Voting opens \w+day\.$/,
+  );
+  await expect(modalOf(page).getByTestId('political-pc')).toHaveText('−10 Political Capital · 35 left');
   await modalOf(page).getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByTestId('candidacy-endorsements')).toHaveText('On the slate · endorsements 0 / 2');
+  await expect(page.getByTestId('candidacy-endorsements')).toHaveText("You're standing · backers 0 of 2");
+  // Review 2 (answers §4.6.2): the city screen's Election card says so too, without a reload.
+  await page.goto('/city/coalport');
+  await expect(
+    page.getByTestId('polling-day-row').or(page.getByTestId('election-card')).first(),
+  ).toContainText("You're standing · backers 0 of 2");
+  await page.goto('/council/slate');
   await expect(page.getByTestId('candidacy-card')).toContainText('The branch will make up the number');
 
   // 4. The day's orders: the third one's modal says the branch endorses; the HQ card reads 2 / 2.
   await doTheOrders(page);
   await page.goto('/city/coalport?loc=coalport.union-hall');
-  await expect(page.getByTestId('council-card-endorsements')).toHaveText('On the slate · endorsements 2 / 2');
-  await expect(page.getByTestId('council-card')).toContainText(
-    'All orders carried out · the branch endorses you',
-  );
+  const hq = page.getByRole('dialog').getByTestId('election-card');
+  await expect(hq.getByTestId('election-line1')).toHaveText("You're standing · backers 2 of 2");
+  await expect(hq).toContainText('All orders carried out · the branch backs you');
 
   // 5. The polls (the worker's job, run by the hook): the ballot, one tap, secret.
   await advanceTo(page, 2);
   expect((await page.request.post('/api/test/city-day')).ok()).toBe(true);
   await page.goto('/');
   await expect(page).toHaveURL(/\/paper$/);
-  await expect(page.getByTestId('polling-day-row')).toContainText('Cast your ballot');
+  await expect(page.getByTestId('polling-day-row')).toContainText("You're a candidate · voting is open");
   await page.getByTestId('polling-day-row').click();
   await expect(page).toHaveURL(/\/council\/ballot$/);
   await expect(page.getByTestId('tab-dot-paper')).toBeVisible();
@@ -119,15 +143,23 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   const rows = page.getByTestId('ballot-row');
   await expect(rows).toHaveCount(9);
   await expect(rows.first()).toContainText('Mara Lenk');
-  await expect(page.getByText('ward ·', { exact: false })).toHaveCount(8);
+  await expect(page.getByText('local ·', { exact: false })).toHaveCount(8);
   await expect(page.locator('main')).not.toContainText(/total/i);
   await noSideScroll(page);
   await rows.first().click();
-  await page.getByRole('button', { name: 'Cast your ballot for Mara Lenk' }).click();
-  await expect(modalOf(page).getByTestId('stamp')).toHaveText('Ballot cast');
+  await page.getByRole('button', { name: 'Vote for Mara Lenk' }).click();
+  await expect(modalOf(page).getByTestId('stamp')).toHaveText('Vote cast');
+  await expect(modalOf(page).getByTestId('political-next')).toHaveText(
+    /^Next: the result, \w+day morning\.$/,
+  );
   await expect(modalOf(page).getByTestId('political-morale')).toContainText(/^Coalport morale \+0\.5 → /);
   await modalOf(page).getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByTestId('ballot-cast-line')).toContainText('Ballot cast · the count is in');
+  await expect(page.getByTestId('ballot-cast-line')).toContainText('Vote cast · the result is in');
+  // Review 2 (answers §4.6.1): the city screen's card reads the vote at once.
+  await page.goto('/city/coalport');
+  await expect(
+    page.getByTestId('polling-day-row').or(page.getByTestId('election-card')).first(),
+  ).toContainText('You voted for Mara Lenk');
 
   // 6. The count, lazily (no hook): the front page is hers.
   await advanceTo(page, 0);
@@ -152,16 +184,16 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   // 7. The chamber: the seats, the branch's motion; propose Open Doors, vote for it.
   await page.getByRole('button', { name: 'To the council' }).click();
   await expect(page).toHaveURL(/\/council$/);
-  await expect(page.getByTestId('council-header')).toContainText('NPC seats 6 / 7');
+  await expect(page.getByTestId('council-header')).toContainText('Local seats 6 / 7');
   // Review 1: the Collective's branch motion is the Long Service Order (was Shift Hours).
   await expect(page.getByTestId('order-paper')).toContainText('Long Service Order');
-  await expect(page.getByTestId('order-paper')).toContainText("the branch's motion");
-  await page.getByRole('button', { name: 'Propose · 20 PC' }).click();
+  await expect(page.getByTestId('order-paper')).toContainText("the party's proposal");
+  await page.getByRole('button', { name: 'Put forward a rule · 20 Political Capital' }).click();
   await page
     .getByTestId('ordinance-menu')
     .getByRole('radio', { name: /Open Doors/ })
     .click();
-  await expect(modalOf(page).getByTestId('stamp')).toHaveText('Moved');
+  await expect(modalOf(page).getByTestId('stamp')).toHaveText('Put forward');
   await modalOf(page).getByRole('button', { name: 'Continue' }).click();
   await page
     .getByTestId('order-paper')
@@ -175,15 +207,15 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   // 8. The division: Open Doors in force, and a number changes in play.
   await advanceTo(page, 2);
   await page.goto('/city/coalport');
-  await expect(page.getByTestId('city-ordinance')).toHaveText('Ordinance: Open Doors · 5 days left');
+  await expect(page.getByTestId('city-ordinance')).toHaveText('Council rule: Open Doors · 5 days left');
   await page.goto('/city/coalport?loc=coalport.mill-gate');
   const ticket = page.getByTestId('ticket-coalport.mill-gate.canvass');
-  await expect(ticket.getByTestId('ticket-tags')).toContainText('Open Doors: +4 %');
-  await expect(ticket.getByTestId('ticket-chance')).toHaveText('82 %');
+  // Review 2: the rule's effect on the odds in words (the server's breakdown still carries +4).
+  await expect(ticket.getByTestId('ticket-tags')).toContainText('Open Doors · better odds');
+  await expect(ticket.getByTestId('ticket-chance')).toHaveText('Good odds');
   await ticket.getByRole('button', { name: /, once, / }).click();
   const modal = modalOf(page);
-  await modal.getByTestId('attempt-row').first().getByRole('button').click();
-  await expect(modal.getByText('Open Doors', { exact: true })).toBeVisible();
+  await expect(modal.getByText('Open Doors · better odds')).toBeVisible();
   await modal.getByRole('button', { name: 'Continue' }).click();
   await page.goto('/paper');
   await expect(page.getByTestId('headline').filter({ hasText: 'Council Passes Open Doors' })).toHaveCount(1);

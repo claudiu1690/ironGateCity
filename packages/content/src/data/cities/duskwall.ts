@@ -44,16 +44,16 @@ export const duskwall: City = {
         {
           ...canvass,
           id: 'duskwall.garrison-gate.canvass',
-          name: 'Canvass the customs shift',
+          name: 'Talk to the customs men coming off shift',
           stats: ['str'],
           text: {
             success: {
               headline: 'They stop for one of their own',
-              body: "The customs men come off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A senior man takes ten leaflets for the office.",
+              body: "The customs men come off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A senior man takes ten flyers for the office.",
             },
             partial: {
               headline: 'Most of them go past',
-              body: "The night shift goes in and the day shift heads for the canteen without slowing. You press leaflets on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.",
+              body: "The night shift goes in and the day shift heads for the canteen without slowing. You press flyers on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.",
             },
           },
         },
@@ -75,7 +75,7 @@ export const duskwall: City = {
         },
         {
           id: 'duskwall.garrison-gate.drill',
-          name: 'Shift crates in the bonded store',
+          name: 'Lift crates in the customs store',
           tier: 1,
           type: 'training',
           trains: 'str',
@@ -100,32 +100,32 @@ export const duskwall: City = {
         {
           ...canvass,
           id: 'duskwall.quartermaster-market.canvass',
-          name: 'Canvass the ration queue',
+          name: 'Talk to people in the ration queue',
           stats: ['int'],
           text: {
             success: {
               headline: 'The queue has nowhere to go',
-              body: 'Sixty people and one tent with sugar in it. You work the line with the price list and the leaflet. By the time the clerk shouts next, half the queue knows what the movement would do about the ration.',
+              body: 'Sixty people and one tent with sugar in it. You work the line with the price list and the flyer. By the time the clerk shouts next, half the queue knows what the movement would do about the ration.',
             },
             partial: {
               headline: 'The sugar runs out early',
-              body: "Three people in, the clerk drops the flap and the queue turns into an argument. A few leaflets go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.",
+              body: "Three people in, the clerk drops the flap and the queue turns into an argument. A few flyers go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.",
             },
           },
         },
         {
           ...propaganda,
           id: 'duskwall.quartermaster-market.leaflets',
-          name: 'Hand out leaflets between the tents',
+          name: 'Hand out flyers between the tents',
           stats: ['agi'],
           text: {
             success: {
               headline: 'Quick hands, empty bag',
-              body: 'You work the tent rows at a trot, a leaflet into every basket before the owner looks up. The bag is empty in ten minutes and the market inspector never sees you.',
+              body: 'You work the tent rows at a trot, a flyer into every basket before the owner looks up. The bag is empty in ten minutes and the market inspector never sees you.',
             },
             partial: {
               headline: 'The inspector sees you',
-              body: "Half the bag is gone when the market inspector plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The leaflets you handed out are still out there.",
+              body: "Half the bag is gone when the market inspector plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The flyers you handed out are still out there.",
             },
           },
         },
@@ -157,7 +157,7 @@ export const duskwall: City = {
       actions: [
         {
           id: 'duskwall.beacon-house.committee',
-          name: 'Sit in on the district committee',
+          name: 'Go to the district meeting',
           tier: 1,
           type: 'council',
           stats: ['best'],
@@ -166,24 +166,24 @@ export const duskwall: City = {
           givesOpinion: false,
           text: {
             success: {
-              headline: 'Minutes taken, motion carried',
-              body: 'Coffee, a wall map stuck with pins, and a chairman who likes short answers. The committee wants the ward lists redone by street and you say how. Your name goes in the minutes. In this house, that counts.',
+              headline: 'Minutes taken, proposal carried',
+              body: 'Coffee, a wall map stuck with pins, and a chairman who likes short answers. The committee wants the street lists redone by street and you say how. Your name goes in the minutes. In this house, that counts.',
             },
             partial: {
               headline: 'A long meeting',
-              body: 'Two hours on the ward lists and the price of paper. You get one point in before the chairman moves on. The organiser marks you present, which is what matters this week.',
+              body: 'Two hours on the street lists and the price of paper. You get one point in before the chairman moves on. The organiser marks you present, which is what matters this week.',
             },
           },
         },
         {
           ...propaganda,
           id: 'duskwall.beacon-house.duplicator',
-          name: 'Run the duplicator',
+          name: 'Print five hundred flyers',
           stats: ['int'],
           text: {
             success: {
               headline: 'Five hundred copies, still wet',
-              body: 'The stencil holds and the drum turns. Five hundred bulletins in an hour, stacked for the morning runners. Your hands are purple to the wrist and the office smells of spirit.',
+              body: 'The stencil holds and the drum turns. Five hundred flyers in an hour, stacked for the morning runners. Your hands are purple to the wrist and the office smells of spirit.',
             },
             partial: {
               headline: 'The stencil tears',
@@ -194,7 +194,7 @@ export const duskwall: City = {
         {
           ...speech,
           id: 'duskwall.beacon-house.muster',
-          name: 'Address the evening volunteers',
+          name: 'Speak to the evening volunteers',
           stats: ['cha', 'int'],
           text: {
             success: {
@@ -233,7 +233,7 @@ export const duskwall: City = {
         {
           ...intelligence,
           id: 'duskwall.archives.registers',
-          name: 'Search the registers',
+          name: 'Look through the records',
           stats: ['int'],
           energy: 4,
           text: {
@@ -250,16 +250,16 @@ export const duskwall: City = {
         {
           ...canvass,
           id: 'duskwall.archives.clerks',
-          name: 'Canvass the clerks at closing time',
+          name: 'Talk to the clerks at closing time',
           stats: ['int'],
           text: {
             success: {
               headline: 'The steps at five',
-              body: 'The clerks come down the steps at five in a body, ink on their cuffs. You know the wage scales better than they do, so they listen. One asks for three leaflets: for the office, he says.',
+              body: 'The clerks come down the steps at five in a body, ink on their cuffs. You know the wage scales better than they do, so they listen. One asks for three flyers: for the office, he says.',
             },
             partial: {
               headline: 'Umbrellas up',
-              body: "It's raining at five and the clerks go down the steps at a run. You get leaflets to the ones waiting for the tram. One says the office already reads the Sentinel. Come back when it's dry.",
+              body: "It's raining at five and the clerks go down the steps at a run. You get flyers to the ones waiting for the tram. One says the office already reads the Sentinel. Come back when it's dry.",
             },
           },
         },
@@ -286,14 +286,14 @@ export const duskwall: City = {
             },
             partial: {
               headline: 'Bread and silence',
-              body: "The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a leaflet for later. Nobody gets up when the whistle goes, which is the loaders' way of saying maybe.",
+              body: "The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a flyer for later. Nobody gets up when the whistle goes, which is the loaders' way of saying maybe.",
             },
           },
         },
         {
           ...propaganda,
           id: 'duskwall.goods-yard.posters',
-          name: 'Paste posters on the wagons',
+          name: 'Put up posters on the wagons',
           stats: ['str'],
           text: {
             success: {
@@ -309,7 +309,7 @@ export const duskwall: City = {
         {
           ...intelligence,
           id: 'duskwall.goods-yard.manifests',
-          name: 'Note the manifests',
+          name: 'Note which wagons carry what',
           stats: ['int'],
           energy: 3,
           text: {
@@ -336,7 +336,7 @@ export const duskwall: City = {
         {
           ...canvass,
           id: 'duskwall.rampart-row.canvass',
-          name: 'Canvass door to door',
+          name: 'Knock on doors',
           stats: ['cha', 'int'],
           text: {
             success: {
@@ -345,14 +345,14 @@ export const duskwall: City = {
             },
             partial: {
               headline: 'Doors on the chain',
-              body: "It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones on the step. One man says he's heard the movement's speeches from the wall already. Come back after the shift.",
+              body: "It's tea-time and the doors stay on the chain. You get the flyer through the gap and a word with the ones on the step. One man says he's heard the movement's speeches from the wall already. Come back after the shift.",
             },
           },
         },
         {
           ...propaganda,
           id: 'duskwall.rampart-row.chalk',
-          name: 'Chalk the slogan on the gable end',
+          name: 'Chalk the slogan on the end wall',
           stats: ['agi'],
           text: {
             success: {
@@ -367,7 +367,7 @@ export const duskwall: City = {
         },
         {
           id: 'duskwall.rampart-row.run',
-          name: 'Run messages for the ward office',
+          name: 'Run messages around the streets',
           tier: 1,
           type: 'training',
           trains: 'agi',

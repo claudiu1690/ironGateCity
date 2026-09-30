@@ -78,7 +78,7 @@ describe('refusals write nothing', () => {
     const out = await ok.caller.council.withdraw({ idempotencyKey: key() });
     expect(out).toMatchObject({ act: 'withdraw', stamp: { label: 'Withdrawn', tone: 'partial' } });
     expect(out.body).toMatch(
-      /^The deposit stays with the branch\. Nominations open again on [A-Z][a-z]+day\.$/,
+      /^The 10 Political Capital stays with the branch\. Candidates can put their names in again on [A-Z][a-z]+day\.$/,
     );
     expect(
       await refusal(ok.caller.council.declare({ platformId: 'plat.c.mill', idempotencyKey: key() })),
@@ -174,7 +174,7 @@ describe('refusals write nothing', () => {
     });
     expect(await Vote.countDocuments({ voterId: V.id })).toBe(1);
     expect(
-      await refusal(A.caller.council.propose({ ordinanceId: 'ord.ward-fund', idempotencyKey: key() })),
+      await refusal(A.caller.council.propose({ ordinanceId: 'ord.street-fund', idempotencyKey: key() })),
     ).toMatchObject({
       game: { reason: 'NOT_COUNCILLOR' },
     });
@@ -182,7 +182,7 @@ describe('refusals write nothing', () => {
     clock.set(at(D0 + 5)); // A is seated
     const B = await player(clock, { fxp: 400, pc: 100 });
     expect(
-      await refusal(B.caller.council.propose({ ordinanceId: 'ord.ward-fund', idempotencyKey: key() })),
+      await refusal(B.caller.council.propose({ ordinanceId: 'ord.street-fund', idempotencyKey: key() })),
     ).toMatchObject({
       game: { reason: 'NOT_COUNCILLOR' },
     });
@@ -197,11 +197,14 @@ describe('refusals write nothing', () => {
       await refusal(A.caller.council.propose({ ordinanceId: 'ord.long-service', idempotencyKey: key() })),
     ).toMatchObject({ code: 'CONFLICT', game: { reason: 'ALREADY_ON_PAPER' } });
     const pc = await pcOf(A);
-    await A.caller.council.propose({ ordinanceId: 'ord.ward-fund', idempotencyKey: key() });
+    await A.caller.council.propose({ ordinanceId: 'ord.street-fund', idempotencyKey: key() });
     expect(await pcOf(A)).toBe(pc - 20);
     expect(
       await refusal(A.caller.council.propose({ ordinanceId: 'ord.public-works', idempotencyKey: key() })),
-    ).toMatchObject({ code: 'CONFLICT', game: { reason: 'ALREADY_PROPOSED', ordinanceId: 'ord.ward-fund' } });
+    ).toMatchObject({
+      code: 'CONFLICT',
+      game: { reason: 'ALREADY_PROPOSED', ordinanceId: 'ord.street-fund' },
+    });
     expect(
       await refusal(A.caller.council.councilVote({ choice: 'ord.rest-day', idempotencyKey: key() })),
     ).toMatchObject({
@@ -211,7 +214,7 @@ describe('refusals write nothing', () => {
     const against = await A.caller.council.councilVote({ choice: 'against', idempotencyKey: key() });
     expect(against.view.kind === 'council' && against.view.council.you.voted).toBe('against');
     expect(
-      await refusal(A.caller.council.councilVote({ choice: 'ord.ward-fund', idempotencyKey: key() })),
+      await refusal(A.caller.council.councilVote({ choice: 'ord.street-fund', idempotencyKey: key() })),
     ).toMatchObject({
       code: 'CONFLICT',
       game: { reason: 'ALREADY_COUNCIL_VOTED', choice: 'against' },

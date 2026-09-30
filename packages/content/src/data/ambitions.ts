@@ -45,7 +45,7 @@ export const ambitions: AmbitionInput[] = [
           check: {
             title: 'Three names',
             narrative:
-              "Three names in the book have two ticks: the ones who came out for him in the rain. Their street is twenty minutes' walk. You have the leaflets and his name; it's a question of how you use them.",
+              "Three names in the book have two ticks: the ones who came out for him in the rain. Their street is twenty minutes' walk. You have the flyers and his name; it's a question of how you use them.",
             approaches: [
               {
                 id: 'knock',
@@ -60,22 +60,22 @@ export const ambitions: AmbitionInput[] = [
                 stats: ['best'],
               },
             ],
-            cta: 'Walk his ward',
+            cta: 'Walk his streets',
             difficulty: 8,
             energy: 10,
           },
           result: {
             success: {
               headline: 'Two of the three remember him',
-              body: "One cries, one puts the kettle on, one shuts the door and then opens it again. All three take a leaflet. The third asks, on the step, whether you'll be standing. You say not yet.",
+              body: "One cries, one puts the kettle on, one shuts the door and then opens it again. All three take a flyer. The third asks, on the step, whether you'll be standing. You say not yet.",
             },
             partial: {
               headline: 'One door opens',
-              body: "New tenants at two of the three; the third remembers the name and not much else. She takes a leaflet for the landing. It's a start, and the book is still two hundred names long.",
+              body: "New tenants at two of the three; the third remembers the name and not much else. She takes a flyer for the landing. It's a start, and the book is still two hundred names long.",
             },
             failure: {
               headline: 'Nobody home',
-              body: 'No one answers at any of the three. You leave a leaflet with his name written on each and walk back through the ward in the rain. The book goes back in the suitcase, for now.',
+              body: 'No one answers at any of the three. You leave a flyer with his name written on each and walk back through the streets in the rain. The book goes back in the suitcase, for now.',
             },
           },
           rewards: CHAPTER_1_REWARDS,
@@ -93,7 +93,7 @@ export const ambitions: AmbitionInput[] = [
           choose: {
             title: 'His election bill',
             narrative:
-              "Folded into the back of the ward book: his election bill from '21. His name in capitals on browned paper, and the corner by {hq} where he spoke at six every evening. You've cast a ballot here now. He'd have asked what came next.",
+              "Folded into the back of the ward book: his election bill from '21. His name in capitals on browned paper, and the corner by {hq} where he spoke at six every evening. You've cast a vote here now. He'd have asked what came next.",
             choices: [
               {
                 id: 'branch',

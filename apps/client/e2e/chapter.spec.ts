@@ -6,7 +6,7 @@ import { signUp } from './helpers';
  * approach and the CTA → the modal with the keepsake and the hook → Continue → the keepsake on the
  * Me tab → after a reload the Letters row is gone.
  */
-test('Letters → choose → approach → Walk his ward → keepsake and hook → Me → the row is gone', async ({
+test('Letters → choose → approach → Walk his streets → keepsake and hook → Me → the row is gone', async ({
   page,
 }) => {
   await signUp(page, 'Lotte Kern');
@@ -24,10 +24,11 @@ test('Letters → choose → approach → Walk his ward → keepsake and hook �
   // +10 % at home on the welcome day); the CTA waits for one.
   const approaches = page.getByTestId('story-approach');
   await expect(approaches).toHaveCount(3);
-  await expect(approaches.nth(0)).toContainText('62 %'); // CHA+INT with the coat: (5 + 12) / 2
-  await expect(approaches.nth(1)).toContainText('76 %');
-  await expect(approaches.nth(2)).toContainText('76 %');
-  await expect(approaches.nth(2)).toContainText('your best, INT 12 vs 8');
+  // Review 2 (GDD §8.4): the odds as a word and the stat, never a number.
+  await expect(approaches.nth(0)).toContainText('Fair odds · Charisma and Intelligence'); // (5 + 12) / 2
+  await expect(approaches.nth(1)).toContainText('Good odds');
+  await expect(approaches.nth(2)).toContainText('Good odds · your best, Intelligence');
+  for (const a of await approaches.all()) await expect(a).not.toContainText('%');
   const cta = page.getByTestId('story-cta');
   await expect(cta).toBeDisabled();
   await approaches.nth(1).click();
@@ -42,8 +43,8 @@ test('Letters → choose → approach → Walk his ward → keepsake and hook �
   await expect(modal.getByTestId('tile-keepsake')).toContainText('His ward book');
   await expect(modal.getByTestId('effect-item')).toHaveText('Keepsake: His ward book');
   await expect(modal.getByTestId('effect-hook')).toHaveText(
-    // Slice 3 (design §17 Q21): chapter 2 opens after the first ballot.
-    /^Chapter 2, "Stand where he stood": from [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first ballot$/,
+    // Slice 3 (design §17 Q21): chapter 2 opens after the first vote.
+    /^Chapter 2, "Stand where he stood": from [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first vote$/,
   );
   await expect(modal.getByTestId('effect-energy')).toHaveText('100 → 90');
   await expect(modal.getByTestId('result-buttons').getByRole('button')).toHaveText(['Continue']);
@@ -62,7 +63,7 @@ test('Letters → choose → approach → Walk his ward → keepsake and hook �
   await page.goto('/story/ambition');
   await expect(page.getByRole('heading', { name: 'Stand where he stood' })).toBeVisible();
   await expect(page.getByTestId('chapter-waits')).toHaveText(
-    /^From [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first ballot$/,
+    /^From [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first vote$/,
   );
   await expect(page.getByTestId('story-choice')).toHaveCount(0);
   await page.getByRole('button', { name: 'Back to the paper' }).click();

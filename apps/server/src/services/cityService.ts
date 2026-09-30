@@ -104,6 +104,8 @@ export async function getCityView(
     role: city.role,
     ...(city.homeFactionId ? { homeFactionId: city.homeFactionId } : {}),
     opinion,
+    // Review 2 (screens §1a): the Election card under the plate, in the player's home city.
+    election: council,
     morale: city.homeFactionId
       ? {
           factionId: city.homeFactionId,
@@ -129,6 +131,8 @@ export async function getCityView(
       name: location.name,
       kind: location.kind,
       blurb: location.blurb,
+      // Review 2 (answers §2.4): "at the Union Hall" in a result's reason line.
+      ...(location.ref ? { ref: location.ref } : {}),
       n: index + 1,
       map: { x: location.map.x, y: location.map.y },
       actions: location.actions.map((action): ActionView => {

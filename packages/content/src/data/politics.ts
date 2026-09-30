@@ -1,43 +1,50 @@
 import type { ContentInput } from '../schemas';
 
 /**
- * The six political result modals (docs/design/slice-3-screens.md §9, as transcribed and checked in
- * docs/design/slice-3-politics.md §17.3). `{paper}` is the paper's short name with its article
- * ("the Clarion"); `{until}` and `{at}` are rendered by the client in the player's clock;
- * `{weekday}` is the next nominations day 0 after today; `{countDay}` the count's weekday; `{n}`
- * the candidate's endorsements after yours.
+ * The six political result modals (docs/design/slice-3-screens.md §9; review 2: the words of
+ * docs/design/review-2-answers.md §1.10 and the *Next* line of §4.4). `{paper}` is the paper's short
+ * name with its article ("the Clarion"); `{until}` and `{at}` are rendered by the client in the
+ * player's clock; `{weekday}` is the next nominations day 0 after today; `{countDay}` the count's
+ * weekday; `{pollsWeekday}` the weekday voting opens (cycle day 2); `{resultWeekday}` the weekday
+ * the council's vote is printed; `{n}` the candidate's endorsements after yours.
  */
 export const politics: ContentInput['politics'] = {
   results: {
     ballot: {
-      stamp: 'Ballot cast',
-      headline: 'Your ballot is in the box',
-      body: 'One vote for {name}. Nobody sees who you voted for. The count is in {paper} on {countDay} morning.',
+      stamp: 'Vote cast',
+      headline: 'Your vote is in',
+      body: 'You voted for {name}. Nobody can see who you chose. The result is in {paper} on {countDay} morning, and on the Election card.',
+      next: 'Next: the result, {countDay} morning.',
     },
     declare: {
-      stamp: 'Filed',
-      headline: 'Your name is on the slate',
-      body: "Two endorsements by {until} and your name is printed. Do today's orders and the branch backs you.",
+      stamp: "You're standing",
+      headline: 'Your name is on the list',
+      body: "You need two backers by {until} or your name comes off. Do today's Party orders and the branch backs you.",
+      next: 'Next: find backers. Voting opens {pollsWeekday}.',
     },
     endorse: {
-      stamp: 'Endorsed',
-      headline: '{name} has your name',
-      body: 'An endorsement is public and final. {name} now has {n}: two by {until} put the name on the ballot, and up to five count.',
+      stamp: 'Backed',
+      headline: '{name} has your backing',
+      body: 'Backing is public and final. {name} has {n} now; two by {until} keep the name on the list, and up to five count.',
+      next: 'Next: voting opens {pollsWeekday}.',
     },
     withdraw: {
       stamp: 'Withdrawn',
-      headline: 'Your name comes off the slate',
-      body: 'The deposit stays with the branch. Nominations open again on {weekday}.',
+      headline: 'Your name comes off the list',
+      body: 'The 10 Political Capital stays with the branch. Candidates can put their names in again on {weekday}.',
+      next: 'Next: nothing until {weekday}.',
     },
     propose: {
-      stamp: 'Moved',
-      headline: '{ordinance} is on the order paper',
-      body: '{ordinanceLine} The council divides at {at}.',
+      stamp: 'Put forward',
+      headline: '{ordinance} is up for a vote',
+      body: '{ordinanceLine} The council votes at {at}.',
+      next: 'Next: vote for a rule before {at}.',
     },
     councilVote: {
       stamp: 'Voted',
       headline: 'Your vote is recorded',
-      body: 'For {ordinance}. Public in the chamber, final. The council divides at {at}; {paper} prints the result.',
+      body: "For {ordinance}. The whole council can see it, and it's final. The council votes at {at}; {paper} prints the result.",
+      next: 'Next: the result, {resultWeekday} morning.',
     },
   },
 };

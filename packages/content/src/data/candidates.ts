@@ -79,7 +79,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 15,
-    line: 'Printer, the bulletin. "Print more, argue less."',
+    line: 'Printer, the party paper. "Print more, argue less."',
   },
   // Duskwall
   {

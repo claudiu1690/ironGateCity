@@ -66,7 +66,7 @@ export interface Settlement {
    * The wage credited for the boundaries crossed (review 1, GDD §9.1): full daily pay per boundary,
    * at most 14 days (the fortnight cap). `perDay` is the unmodified pay (with the member's fifth);
    * `seniority` sums each paid day's seniority line; `ordinance` each ended day's adjustment under the
-   * ordinance in force that day (Public Works, Ward Fund; ADR 0021 §4), present only when non-zero.
+   * ordinance in force that day (Public Works, Street Fund; ADR 0021 §4), present only when non-zero.
    */
   salary: {
     days: number;
@@ -87,7 +87,7 @@ export interface Settlement {
 
 /** What one ended City Day means for the wage: its ordinance's pay line and the seniority step. */
 export interface WageDay {
-  /** The ordinance's adjustment on the full daily pay (Public Works +22, Ward Fund −54), or 0. */
+  /** The ordinance's adjustment on the full daily pay (Public Works +22, Street Fund −54), or 0. */
   payAdjust: number;
   /** The ordinance's name when `payAdjust` is non-zero. */
   label: string | null;

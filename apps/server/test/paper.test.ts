@@ -38,7 +38,7 @@ describe('paper.today (§3.3)', () => {
       deck: 'One more pair of hands for the branch, says the Union Hall. The mill is hiring.',
     });
     // Slice 3 (ADR 0023): the live phase line (city 0) takes the morale line's (city 1) place.
-    expect(p.headlines[2]).toMatchObject({ group: 'city', headline: 'Polls Open in Coalport' });
+    expect(p.headlines[2]).toMatchObject({ group: 'city', headline: 'Voting Open in Coalport' });
     expect(p.letters).toEqual([
       {
         kind: 'chapter',
@@ -90,11 +90,11 @@ describe('paper.today (§3.3)', () => {
     expect(p.desk.daysSinceLastPaper).toBe(1);
     // Slice 3 (ADR 0023): the live phase line takes the ambient headline's place.
     expect(p.headlines.map((h) => h.group)).toEqual(['city', 'city', 'city']);
-    expect(p.headlines[0]).toMatchObject({ group: 'city', headline: 'Polls Open in Coalport' });
+    expect(p.headlines[0]).toMatchObject({ group: 'city', headline: 'Voting Open in Coalport' });
     expect(p.headlines[2]).toEqual({
       group: 'city',
       // Review 1 (§13.7): order titles say what and where.
-      headline: 'Secretary Holm Calls for Canvass door to door on Foundry Row',
+      headline: 'Secretary Holm Calls for Knock on doors in Foundry Row',
       deck: 'Sixty doors in Foundry Row. Start at the top and work down.',
     });
     expect(p.due).toBe(true);
@@ -113,12 +113,12 @@ describe('headline variants (content §13, QA fix round 1)', () => {
       expect.arrayContaining([
         {
           headline: 'Coalport Recruit Rises to Level 2',
-          deck: 'Mara Lenk of the Collective has been putting the hours in on the ward. The branch has noticed.',
+          deck: 'Mara Lenk of the Collective has been putting the hours in on the streets. The branch has noticed.',
         },
         {
           headline: 'While You Were Away',
           // Review 1 (§9.1): no half pay any more; the wage is paid whole.
-          deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
+          deck: 'No job, so no pay banked. Rested is full and the town is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
         },
       ]),
     );
@@ -137,7 +137,7 @@ describe('headline variants (content §13, QA fix round 1)', () => {
       },
       {
         headline: 'Coalport Organiser Rises to Level 4',
-        deck: 'Mara Lenk of the Collective spent 10 Energy on the ward yesterday. The branch has noticed.',
+        deck: 'Mara Lenk of the Collective spent 10 Energy on the streets yesterday. The branch has noticed.',
       },
     ]);
   });

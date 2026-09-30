@@ -1381,3 +1381,42 @@ this branch after slice 3. Where the build differs from the answers or needs the
 - **Short phones** (under 700 px tall, under 640 px wide): the orders list keeps each title to one line, the share
   bar drops its caption and the plate its first-time hint, so Coalport's pins 1 and 2 stay apart (QA M2); the chapter's approach cards are compact and
   the chosen one shows its odds as a sentence (the ledger is on the ticket and in the result).
+
+## Deviations: review 2 (30 Sep 2026, as built)
+
+- **The map is fixed** (review 2 #8, #9). `CityMap` no longer uses `react-zoom-pan-pinch`: the view is one CSS
+  transform on the map layer and the pins sit in an unscaled layer above it, each moved with the same transition, so
+  they keep their 44 px targets and are never remounted. At rest the fitted view (QA M2) takes no pan, wheel, pinch or
+  double tap (`touch-action: none`, the wheel and Safari's gesture events cancelled on the map). A pin zooms in over
+  500 ms (`cubic-bezier(0.33, 0, 0.2, 1)`; instant with reduced motion) to twice the fitted scale (1.25–2.5 × the
+  covering size), the pin in the middle of what the location panel leaves clear; past the pan limits when a pin near
+  the map's edge would otherwise sit under a phone's sheet. The panel opens when the zoom lands (`onArrive`). While
+  zoomed a drag pans within the usual limits widened to take in the zoomed view. The package is still a dependency of
+  `packages/ui` and can be dropped.
+- **Where a location opens**: a centred modal panel over the dimmed map from 768 px (tablets and desktops); a bottom
+  sheet on phones held upright; a side panel down the left on phones held sideways (`short:` variant,
+  `(orientation: landscape) and (max-height: 500px)`). On phones the sheet and the side panel are **non-modal**, so
+  the zoomed map above or beside them can be dragged and another pin tapped; Escape and *Close* still close them, and
+  a focus move to a dialog over them (the result modal, a note) does not.
+- **On a phone held upright the plate steps aside while a location is open**, so the zoomed pin shows above its sheet;
+  it comes back with the fitted view.
+- **Phones held sideways**: the tab bar is a rail down the left, the HUD one compact band (the three gauges side by
+  side, their labels and numbers over the bars, Energy's *full at* in its note), and the city screen a 260 px column
+  (plate, Election card, orders, the day) beside a full-height map with no overlay.
+- **The Party XP bar** is labelled *To {next rank}* and prints *38 / 400 Party XP* after the bar on every screen.
+- **The Election card's states** (screens §2.1) are chosen on the server (`PoliticsSummaryView.card`); the older
+  `state`, `route` and `dot` fields stay for the Paper tab's dot. On a phone the card under the plate is folded to one 44 px
+  line (*ELECTION · line 1 ›*, one tap), and on a phone under 700 px tall it gives way to the map like the ordinance
+  line (QA M2: Coalport's pins 1 and 2 would touch); the paper's row and the HQ card carry it there; the full card is on wide screens, in the
+  side column held sideways, and on the HQ sheet.
+- **The council routes keep their slice-3 paths** (`/council/slate`, `/council/ballot`, `/council/count`); only the
+  words changed.
+- **The reason line** reads where to train a stat from the city view (`LocationView.ref`, new), so it names a place on
+  the city screen and ends at *…low for this.* on a story screen. The ×3 shared reason keeps the answers' digits
+  (*2 of 3 didn't come off.*); only the per-row reason is digit-free.
+- **The ballot's secrecy knock-on line is gone** from the vote's modal (its body already says *Nobody can see who you
+  chose*); the *Next* line is the last knock-on line of every political modal.
+- **Migration 005** (`migrateReview2StreetOrdinances`) renames `ord.ward-register` / `ord.ward-fund` to
+  `ord.street-register` / `ord.street-fund` in cities and order papers; it runs at start-up after 004, and the
+  content loader also resolves the old ids. The Last result link sits on who's standing and the vote as well as the
+  council, so the names are one tap away every day of the cycle.

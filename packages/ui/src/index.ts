@@ -1,8 +1,7 @@
 export { Button } from './components/Button';
 export type { ButtonProps, ButtonVariant } from './components/Button';
-export { CheckBreakdownList } from './components/CheckBreakdownList';
-export { CityMap, fitPinsView } from './components/CityMap';
-export type { CityMapProps, MapHotspot, MapInsets, MapRect, MapView } from './components/CityMap';
+export { CityMap, ZOOM_MS, fitPinsView, panLimits, zoomView } from './components/CityMap';
+export type { CityMapProps, MapCover, MapHotspot, MapInsets, MapRect, MapView } from './components/CityMap';
 export { FACTION_STYLE, FactionCrest } from './components/FactionCrest';
 export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';
@@ -26,25 +25,24 @@ export type { ProgressBarProps } from './components/ProgressBar';
 export { ResultModal, ordinanceTagText, stampFor } from './components/ResultModal';
 export {
   CandidateRow,
-  CouncilCard,
   CountTable,
+  ElectionCard,
   FrontPage,
   OrderPaper,
   OrdinanceMenu,
   OrdinanceRow,
   PersonMark,
-  PollingDayRow,
   SeatGrid,
   Slate,
-  pollingDayLines,
+  electionLines,
 } from './components/Politics';
 export type {
   CandidateRowProps,
-  CouncilCardProps,
+  ElectionCardProps,
+  ElectionLines,
   OrderPaperProps,
   OrdinanceMenuProps,
   OrdinanceRowProps,
-  PollingDayRowProps,
   SlateProps,
 } from './components/Politics';
 export type { ResultModalProps } from './components/ResultModal';
@@ -52,6 +50,7 @@ export { BottomSheet, JobsCard, LocationSheet, OutOfEnergyCard } from './compone
 export type {
   BottomSheetProps,
   JobsCardProps,
+  LocationLayout,
   LocationSheetProps,
   OutOfEnergyCardProps,
 } from './components/Sheets';
@@ -62,7 +61,8 @@ export type { StampProps, StampTone } from './components/Stamp';
 export { TYPE_LABEL, Ticket } from './components/Ticket';
 export type { TicketProps } from './components/Ticket';
 export * from './format';
-export { ledger, oddsSentence, rollLine, statLine, ticketOdds } from './odds';
+export { bandNote, batchReasons, oddsBand, oddsTag, reasonFor, statLine, statName, ticketOdds } from './odds';
+export type { OddsBand, Reason, TrainingPlaces } from './odds';
 export {
   AvatarPicker,
   FactionCard,

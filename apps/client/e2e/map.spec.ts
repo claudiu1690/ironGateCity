@@ -19,6 +19,9 @@ const SIZES = [
   { width: 640, height: 900 },
   { width: 375, height: 812 },
   { width: 360, height: 640 },
+  // Review 2 #3: phones held sideways.
+  { width: 812, height: 375 },
+  { width: 667, height: 375 },
 ];
 
 /** Every hotspot whose centre is not the topmost element there (something covers it). */
@@ -47,7 +50,10 @@ test.describe('every pin clear at every size (QA M2)', () => {
     }) => {
       await page.setViewportSize(SIZES[1]!);
       await signUpOnly(page, 'Ilse Marr', 2);
+      // The welcome edition marked read first, so no "paper is in" banner takes the map's height.
+      const marked = page.waitForResponse((r) => r.url().includes('paper.markRead'));
       await arrive(page, { faction, answers: ANSWERS.reference });
+      await marked;
       await page.goto(`/city/${city}`);
       for (const size of SIZES) {
         await page.setViewportSize(size);
@@ -66,10 +72,12 @@ test.describe('every pin clear at every size (QA M2)', () => {
     await page.getByRole('button', { name: 'To the city' }).click();
     const sheet = page.getByRole('dialog');
     await expect(sheet).toContainText('Gazette House');
-    // With the sheet open the plate folds, so pin 1 stays in view beside it.
+    // Review 2: the map zoomed into pin 1 behind the centred panel.
+    await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'true');
     await expect(page.locator('[data-testid="hotspot"][aria-label="1. Gazette House"]')).toBeInViewport();
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await expect(page).toHaveURL(/\/city\/ashford$/);
+    await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'false');
     expect(await coveredPins(page)).toEqual([]);
     // And a pin tapped at once opens (the lost-tap fix, c732d64, still holds).
     await page.locator('[data-testid="hotspot"][aria-label="2. Assembly Rooms"]').click();

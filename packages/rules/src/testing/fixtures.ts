@@ -315,7 +315,7 @@ export const batchResultFixture: ActionResult = {
   },
   bonusTags: [
     { id: 'rested', label: 'Rested', note: '22 of 30 Energy, +37 % XP and Iron' },
-    { id: 'order', label: 'Party order', note: '+25 % FXP' },
+    { id: 'order', label: 'Party order', note: '+25 % Party XP' },
   ],
   effects: {
     ...actionResultFixture.effects,
@@ -373,7 +373,7 @@ export const trainingResultFixture: ActionResult = {
   body: 'The reading room is cold and the light is bad.',
   art: { rung: 'scene', asset: assetFixture('scene.union-hq', 2688, 1520, [640, 1280]) },
   attempts: [],
-  rows: [{ index: 1, label: 'INT 12 → 13', detail: '44 Energy · no roll' }],
+  rows: [{ index: 1, label: 'Intelligence 12 → 13', detail: '44 Energy · always works' }],
   rewards: {
     xp: { base: 99, bonus: 0, total: 99 },
     fxp: { base: 0, bonus: 0, total: 0 },
@@ -470,6 +470,7 @@ export const cityViewFixture: CityView = {
   ],
   morale: { factionId: 'collective', share: 70.05, state: 'steady' },
   ordinance: null,
+  election: null,
 };
 
 export const paperViewFixture: PaperView = {
@@ -698,11 +699,28 @@ export const politicsSummaryFixture: PoliticsSummaryView = {
   count: null,
   inForce: { ordinanceId: 'ord.shift-hours', name: 'Shift Hours Order', daysLeft: 3 },
   rank2Title: 'Activist',
+  rank3Title: 'Organiser',
+  paperShortName: 'Clarion',
   fxpToRank2: null,
   standCost: 10,
   councillor: false,
   route: '/council/ballot',
   dot: true,
+  card: {
+    state: 'voting',
+    closesAt: (DAY + 2) * MS,
+    pollsOpenAt: DAY * MS,
+    countAt: (DAY + 2) * MS,
+    fxp: 450,
+    rank2Fxp: 400,
+    canStand: false,
+    backers: null,
+    backing: null,
+    votedFor: null,
+    result: null,
+    rule: null,
+    firstTime: false,
+  },
 };
 
 const npcCandidate = (npcId: string, name: string, profile: number, line: string): CandidateView => ({

@@ -41,6 +41,19 @@ export function AppShell() {
     if (mainRef.current) mainRef.current.scrollTop = 0;
   }, [pathname]);
 
+  // Review 2 #3: the HUD's height as --hud-h, so a landscape phone's location panel starts under it.
+  const hudRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = hudRef.current;
+    if (!el) return;
+    const set = () => document.documentElement.style.setProperty('--hud-h', `${el.offsetHeight}px`);
+    set();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const active: TabId = pathname.startsWith('/paper') ? 'paper' : pathname.startsWith('/me') ? 'me' : 'map';
   const cityHref = character ? `/city/${character.cityId}` : '/';
   const items: TabItem[] = [
@@ -72,17 +85,21 @@ export function AppShell() {
   const lead = paper.data?.headlines[0];
 
   return (
-    <div className="flex h-dvh flex-col bg-ink">
-      {character ? (
-        <HudBar
-          character={character}
-          nextTickIn={nextTickIn}
-          onPlaceStat={stat.place}
-          placing={stat.placing}
-        />
-      ) : (
-        <div className="h-[76px] shrink-0 border-b border-ink-2 bg-ink" />
-      )}
+    // A phone held sideways (review 2 #3): the tab bar is a rail down the left, so the page starts
+    // right of it.
+    <div className="flex h-dvh flex-col bg-ink short:pl-[calc(64px+env(safe-area-inset-left))]">
+      <div ref={hudRef} className="shrink-0">
+        {character ? (
+          <HudBar
+            character={character}
+            nextTickIn={nextTickIn}
+            onPlaceStat={stat.place}
+            placing={stat.placing}
+          />
+        ) : (
+          <div className="h-[76px] shrink-0 border-b border-ink-2 bg-ink short:h-11" />
+        )}
+      </div>
       {paperDue && paper.data && (
         <Link
           to="/paper"
@@ -92,7 +109,7 @@ export function AppShell() {
           {copy.paperIsIn(paper.data.paper.shortName)}
         </Link>
       )}
-      <main ref={mainRef} className="relative min-h-0 flex-1 overflow-y-auto pb-16 lg:pb-0">
+      <main ref={mainRef} className="relative min-h-0 flex-1 overflow-y-auto pb-16 lg:pb-0 short:pb-0">
         <Outlet />
       </main>
       {wide && (slotA || lead) && (

@@ -74,7 +74,7 @@ export const assets: Asset[] = [
     width: 2688,
     height: 1520,
     widths: [640, 1280],
-    alt: 'The back room of the Union Hall: organisers bent over a ward map, a mimeograph and stacks of bulletins.',
+    alt: 'The back room of the Union Hall: organisers bent over a street map, a mimeograph and stacks of flyers.',
   },
   {
     id: 'scene.bar-anchor',
@@ -229,7 +229,7 @@ export const assets: Asset[] = [
   item('item.document-folder', 'document-folder.jpg', 'A folder of papers tied with string.'),
   crest('vanguard', 'Iron Vanguard crest: an iron gate beneath a lantern.'),
   crest('collective', 'Red Collective crest: a hammer raised through a gear wheel.'),
-  crest('alliance', 'Civic Alliance crest: a domed hall rising over an open ballot.'),
+  crest('alliance', 'Civic Alliance crest: a domed hall rising over a voting slot.'),
 ];
 
 /** §13.5 rung 2: the scenes there are. Other locations fall back to a crop of the city map. */

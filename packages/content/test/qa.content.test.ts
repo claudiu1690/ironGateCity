@@ -10,6 +10,7 @@ import GDD from '../../../docs/GDD.md?raw';
 import DOC from '../../../docs/design/slice-1-content.md?raw';
 import R1 from '../../../docs/design/review-1-answers.md?raw';
 import { copy, isCheckedAction, loadContent, rawContent } from '../src';
+import { R2_ORDERS, plainProse } from './review2';
 
 const content = loadContent();
 const city = content.city('coalport')!;
@@ -106,7 +107,8 @@ describe('content vs docs/design/slice-1-content.md', () => {
   });
 
   it('§2.3: every checked action has its Success and Partial text word for word; training its one text', () => {
-    const block = DOC.slice(DOC.indexOf('### 2.3 Outcome text'), DOC.indexOf('### 2.4 Training'));
+    // Review 2 (answers §1.4, §1.13): the doc's prose predates the plain-words swaps.
+    const block = plainProse(DOC.slice(DOC.indexOf('### 2.3 Outcome text'), DOC.indexOf('### 2.4 Training')));
     for (const a of actions) {
       const at = block.indexOf(`(\`${a.id}\``);
       expect(at, `text for ${a.id}`).toBeGreaterThan(-1);
@@ -171,8 +173,10 @@ describe('content vs docs/design/slice-1-content.md', () => {
       const t = content.orderTemplates.find((x) => x.id === id.match(/`([^`]+)`/)![1]);
       expect(t, id).toBeDefined();
       expect(t!.slot, id).toBe(slot.charAt(0));
-      expect(t!.title, id).toBe(title);
-      expect(t!.line, id).toBe(line);
+      // Review 2 (answers §1.7) supersedes the titles and lines it lists.
+      const r2 = R2_ORDERS.get(t!.id);
+      expect(t!.title, id).toBe(r2?.title ?? title);
+      expect(t!.line, id).toBe(r2?.line ?? line);
       expect(t!.target, id).toBe(Number(target.match(/· (\d+)/)![1]));
     }
   });
@@ -230,11 +234,11 @@ describe('content vs docs/design/slice-1-content.md', () => {
     expect(copy.yourJob(4, 8)).toBe('Your job · seniority 4 days · +8 %');
     expect(copy.jobNeeds(['Level 3', 'AGI 10'])).toBe('Needs Level 3, AGI 10');
     expect(copy.jobTaken('01:00')).toBe('Taken · paid at 01:00');
-    expect(copy.jobTakenOrder(20)).toBe('Taken · party order complete: +20 FXP');
+    expect(copy.jobTakenOrder(20)).toBe('Taken · party order complete: +20 Party XP');
     expect(copy.jobSwitched('01:00')).toBe('Switched · seniority reset · paid at 01:00');
-    expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % FXP');
+    expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % Party XP'); // review 2: Party XP
     expect(copy.orderDone).toBe('Order done');
-    expect(copy.allOrdersDone(5)).toBe('All orders carried out · +5 PC');
+    expect(copy.allOrdersDone(5)).toBe('All orders carried out · +5 Political Capital');
     expect([copy.pointsToPlace(1), copy.pointsToPlace(2)]).toEqual([
       '1 point to place · nothing is lost by choosing later',
       '2 points to place · nothing is lost by choosing later',
@@ -242,8 +246,10 @@ describe('content vs docs/design/slice-1-content.md', () => {
     expect(copy.levelPointsToPlace(4, 1)).toBe('Level 4 · 1 stat point to place');
     expect(copy.statButton('STR', 10)).toBe('STR 10 → 11');
     expect(copy.levelUpLine(3, 5, 2)).toBe('Levels 4–5 · 2 points to place');
-    expect(copy.standingUp('Coalport', 'Familiar', 3)).toBe('Coalport: Familiar · actions here +3 %');
-    expect(copy.orderComplete(20)).toBe('Party order complete: +20 FXP');
+    expect(copy.standingUp('Coalport', 'Familiar')).toBe(
+      'Coalport: Familiar · everything here goes a little better',
+    );
+    expect(copy.orderComplete(20)).toBe('Party order complete: +20 Party XP');
     // "UTC" never appears on a button, and there are no exclamation marks (§12.1).
     const all = JSON.stringify(copy) + copySamples();
     expect(all).not.toMatch(/UTC|!/);

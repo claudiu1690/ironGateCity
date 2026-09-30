@@ -38,7 +38,7 @@ export const factions: Faction[] = [
     platforms: [
       { id: 'plat.v.order', line: 'Order in the streets, bread at a fixed price.' },
       { id: 'plat.v.frontier', line: 'The frontier shut and the books balanced.' },
-      { id: 'plat.v.wards', line: 'Every ward in good order by the end of the term.' },
+      { id: 'plat.v.wards', line: 'Every street in good order by the end of the term.' },
     ],
     restoreOrders: ['dir.v.restore-canvass', 'dir.v.restore-speech'],
   },
@@ -70,7 +70,7 @@ export const factions: Faction[] = [
     platforms: [
       { id: 'plat.c.mill', line: 'The mill and the quays, before the men who own them.' },
       { id: 'plat.c.bread', line: 'Rent, bread and the tram. In that order.' },
-      { id: 'plat.c.wards', line: 'Every ward organised, every door knocked.' },
+      { id: 'plat.c.wards', line: 'Every street organised, every door knocked.' },
     ],
     restoreOrders: ['dir.restore-canvass', 'dir.restore-speech'],
   },
@@ -83,7 +83,15 @@ export const factions: Faction[] = [
     homeCityId: 'ashford',
     startingBonus: { int: 3 },
     // Rank 3 is "Agent" (GDD §5.4, slice-2 onboarding §12).
-    rankTitles: ['Volunteer', 'Canvasser', 'Agent', 'Senator', 'Representative', 'Speaker', 'Prime Minister'],
+    rankTitles: [
+      'Volunteer',
+      'Campaigner',
+      'Agent',
+      'Senator',
+      'Representative',
+      'Speaker',
+      'Prime Minister',
+    ],
     secretary: { npcId: 'grey', signature: '— T.G.', addressedAs: 'Mr Grey' },
     hqRef: 'the Rooms',
     kit: { outfit: 'outfit.worn-overcoat', card: 'doc.party-card' },

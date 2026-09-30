@@ -1,20 +1,14 @@
 import { copy } from '@irongate/content/copy';
 import { energyReadyAt } from '@irongate/rules';
 import type { ActionView } from '@irongate/rules';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { cx, formatClock } from '../format';
-import { ticketOdds } from '../odds';
-import { CheckBreakdownList } from './CheckBreakdownList';
+import { bandNote, oddsTag, statName, ticketOdds } from '../odds';
+import { HelpButton, helpMark } from './Help';
 import { ordinanceTagText } from './ResultModal';
 
-export const TYPE_LABEL: Record<string, string> = {
-  canvass: 'Canvassing',
-  speech: 'Speech',
-  propaganda: 'Propaganda',
-  intelligence: 'Intelligence',
-  council: 'Council',
-  training: 'Training',
-};
+/** Review 2 (answers §1.11): the plain type labels. */
+export const TYPE_LABEL: Record<string, string> = copy.typeLabel;
 
 export interface TicketProps {
   action: ActionView;
@@ -32,9 +26,10 @@ export interface TicketProps {
 }
 
 /**
- * An action as a printed ticket (mockups MobileMission, Mission): Energy stub, name, the odds with
- * the stat they rest on (*62 % · STR 11*, review 1; tap for the ledger) or "no roll", a tags line,
- * and ×1 / ×3 (one Train button for training). It displays the server's numbers.
+ * An action as a printed ticket (mockups MobileMission, Mission): Energy stub, name, the odds as a
+ * word with the stat they rest on (*Good odds · Intelligence*, review 2; a tap opens the band's
+ * note, never a number) or *Intelligence 12 → 13 · always works*, a tags line, and ×1 / ×3 (one
+ * Train button for training). It words the server's numbers.
  */
 export function Ticket({
   action: a,
@@ -45,8 +40,6 @@ export function Ticket({
   orderBonusPct = 25,
   highlight = false,
 }: TicketProps) {
-  const [open, setOpen] = useState(false);
-  const breakdownId = useId();
   const hintId = useId();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -55,7 +48,7 @@ export function Ticket({
 
   let blocked: string | null = null;
   if (a.locked)
-    blocked = a.locked.reason === 'LEVEL' ? `Level ${a.locked.need}` : `Standing ${a.locked.need}`;
+    blocked = a.locked.reason === 'LEVEL' ? `Level ${a.locked.need}` : copy.needsReputation(a.locked.need);
   const short1 = energy.value < a.energy;
   const short3 = a.energy3 !== null && energy.value < a.energy3;
   const readyAt = short1 ? energyReadyAt(energy, a.energy) : null;
@@ -75,8 +68,12 @@ export function Ticket({
         ? copy.orderTag(a.order.progress, a.order.target, orderBonusPct)
         : `Party order ${a.order.progress} / ${a.order.target}`
     : null;
-  // Slice 3 (screens §8): the ordinance's tags go before the Party-order tag.
-  const tags = [TYPE_LABEL[a.type] ?? a.type, ...(a.tags ?? []).map(ordinanceTagText), order]
+  // Slice 3 (screens §8): the rule's tags go before the Party-order tag; review 2: a check bonus
+  // that is not a rule's or the reputation's (First day) is a tag in words, "· better odds".
+  const bonusTags = (a.preview?.bonuses ?? [])
+    .filter((b) => b.id !== 'standing' && !(a.tags ?? []).some((t) => t.ordinanceId === b.id))
+    .map(oddsTag);
+  const tags = [TYPE_LABEL[a.type] ?? a.type, ...(a.tags ?? []).map(ordinanceTagText), ...bonusTags, order]
     .filter(Boolean)
     .join(' · ');
 
@@ -107,21 +104,21 @@ export function Ticket({
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-2.5 py-1.5">
           <span className="font-display text-[15px] leading-tight font-bold">{a.name}</span>
           {a.preview ? (
-            <button
-              type="button"
-              onClick={() => setOpen((o) => !o)}
-              aria-expanded={open}
-              aria-controls={breakdownId}
-              className="-mx-1 -my-2 inline-flex min-h-11 cursor-pointer items-center self-start px-1 text-left font-mono text-[11px] text-muted hover:text-ink"
+            <HelpButton
+              notes={[bandNote(a.preview)]}
+              label={`${ticketOdds(a.preview)}: what the odds mean`}
+              testId="ticket-odds-help"
+              className="-mx-1 -my-2 inline-flex items-center self-start px-1 font-mono text-[11px] text-muted hover:text-ink"
             >
-              <span className="underline decoration-dotted underline-offset-2" data-testid="ticket-odds">
-                <span data-testid="ticket-chance">{a.preview.chance} %</span>
-                {ticketOdds(a.preview).slice(`${a.preview.chance} %`.length)}
+              <span className={helpMark} data-testid="ticket-odds">
+                <span data-testid="ticket-chance">{copy.odds.band(a.preview.chance)}</span>
+                {ticketOdds(a.preview).slice(copy.odds.band(a.preview.chance).length)}
               </span>
-            </button>
+            </HelpButton>
           ) : (
             <span className="font-mono text-[11px] text-muted">
-              {a.trains ? `${a.trains.stat.toUpperCase()} ${a.trains.from} → ${a.trains.to} · ` : ''}no roll
+              {a.trains ? `${statName(a.trains.stat)} ${a.trains.from} → ${a.trains.to} · ` : ''}
+              {copy.odds.alwaysWorks}
             </span>
           )}
           <span
@@ -174,11 +171,6 @@ export function Ticket({
           </>
         )}
       </div>
-      {a.preview && (
-        <div hidden={!open} className="border-x border-b border-ink bg-paper px-3 py-2">
-          <CheckBreakdownList id={breakdownId} check={a.preview} />
-        </div>
-      )}
       {hint && (
         <p id={hintId} className="mt-1 font-mono text-[11px] text-muted" data-testid="ticket-hint">
           {hint}

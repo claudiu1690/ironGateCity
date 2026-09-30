@@ -21,9 +21,9 @@ import {
   formatSigned,
   renderTimeTokens,
 } from '../format';
-import { oddsSentence, rollLine } from '../odds';
+import { batchReasons, statName } from '../odds';
+import type { TrainingPlaces } from '../odds';
 import { Button } from './Button';
-import { CheckBreakdownList } from './CheckBreakdownList';
 import { FACTION_STYLE } from './FactionCrest';
 import { Picture } from './Picture';
 import { StatPointsPanel } from './Shell';
@@ -49,6 +49,8 @@ export interface ResultModalProps {
   };
   onPlaceStat?: (stat: StatPointTarget) => void;
   placing?: StatPointTarget | null;
+  /** Review 2 (answers §2.4): where to train each stat here, for the reason line ("the Union Hall"). */
+  trainingPlaces?: TrainingPlaces;
 }
 
 export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>): {
@@ -75,8 +77,10 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
 
 /**
  * The result modal (GDD §13.1a, tech design §9): art and stamp, what happened, how it went (one
- * row per attempt), four reward tiles, knock-on effects, and Again ×1 · Again ×3 · Continue. It
- * renders the server's breakdown and computes nothing. Full-screen on phones.
+ * row per attempt: Success or Partial and its XP, and one plain reason under a row that isn't a
+ * Success; review 2, never the roll or the odds), four reward tiles, knock-on effects, and
+ * Again ×1 · Again ×3 · Continue. The server sends the full breakdown; this renders the outcome and
+ * words the reason from it, and computes nothing else. Full-screen on phones.
  */
 export function ResultModal(props: ResultModalProps) {
   const { result, open, onOpenChange } = props;
@@ -165,11 +169,12 @@ function PoliticalBody({ result: r }: { result: PoliticalResult }) {
   if (k.endorsements) {
     lines.push({
       id: 'endorsements',
-      text: `${k.endorsements.name}: endorsements ${k.endorsements.n} / ${k.endorsements.needed}`,
+      text: `${k.endorsements.name}: ${copy.backersOf(k.endorsements.n, k.endorsements.needed)}`,
     });
   }
-  if (r.act === 'ballot') lines.push({ id: 'secret', text: copy.ballotSecretNote });
   const t = { until: r.until, at: r.at };
+  // Review 2 (screens §9): every act ends with what comes next.
+  if (r.next) lines.push({ id: 'next', text: renderTimeTokens(r.next, t) });
   return (
     <>
       <div className="relative shrink-0 bg-paper px-4 pt-4" data-art="masthead">
@@ -200,7 +205,10 @@ function PoliticalBody({ result: r }: { result: PoliticalResult }) {
               {lines.map((l) => (
                 <li
                   key={l.id}
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  className={cx(
+                    'border-b border-dotted border-faint py-1',
+                    l.id === 'next' ? 'font-mono text-[12px] text-petrol' : 'font-body text-[12.5px]',
+                  )}
                   data-testid={`political-${l.id}`}
                 >
                   {l.text}
@@ -224,28 +232,31 @@ function PoliticalBody({ result: r }: { result: PoliticalResult }) {
   );
 }
 
-/** A ticket tag's words (screens §8): "Rally Permits: 10 Energy", "Open Doors: +4 %". */
+/**
+ * A ticket tag's words (screens §8, review 2): "Rally Permits · 10 Energy", "Open Doors · better
+ * odds", "Street Fund · +25 % Iron". Never a percentage of chance.
+ */
 export function ordinanceTagText(t: OrdinanceTagView): string {
   const pct = `${t.value >= 0 ? '+' : '−'}${Math.abs(t.value)} %`;
   switch (t.kind) {
     case 'energy':
-      return `${t.name}: ${t.value} Energy`;
+      return `${t.name} · ${t.value} Energy`;
     case 'chance':
-      return `${t.name}: ${pct}`;
+      return `${t.name} · ${t.value >= 0 ? copy.odds.betterOdds : copy.odds.worseOdds}`;
     case 'iron':
-      return `${t.name}: ${pct} Iron`;
+      return `${t.name} · ${pct} Iron`;
     case 'fxp':
-      return `${t.name}: ${pct} FXP`;
+      return `${t.name} · ${pct} Party XP`;
     case 'swing':
-      return `${t.name}: ${pct} opinion`;
+      return `${t.name} · ${pct} opinion`;
     case 'standing':
-      return `${t.name}: Standing ×${t.value}`;
+      return `${t.name} · reputation ×${t.value}`;
   }
 }
 
 function standingLine(s: NonNullable<ActionResult['effects']['standing']>): string {
   const a: NamedStandingView = s.after;
-  if (a.level > s.before.level) return copy.standingUp(a.cityName, a.name, a.bonus);
+  if (a.level > s.before.level) return copy.standingUp(a.cityName, a.name);
   return a.next === null ? a.name : `${a.name} · ${a.successes} / ${a.next} to ${a.nextName}`;
 }
 
@@ -257,6 +268,7 @@ function ResultBody({
   statPoints,
   onPlaceStat,
   placing,
+  trainingPlaces,
 }: ResultModalProps & { result: ActionResult }) {
   const [later, setLater] = useState(false);
   const stamp = stampFor(r);
@@ -280,6 +292,7 @@ function ResultBody({
   const signed = e.orders
     .filter((o) => o.fxp > 0)
     .map((o) => copy.orderSigned[r.character.factionId](o.fxp, left));
+  const reasons = batchReasons(r.attempts, trainingPlaces);
 
   return (
     <>
@@ -302,8 +315,16 @@ function ResultBody({
             How it went
           </h3>
           {r.attempts.map((a) => (
-            <AttemptRow key={a.index} attempt={a} tier={r.action.tier} type={r.action.type} />
+            <AttemptRow key={a.index} attempt={a} reason={reasons.byRow.get(a.index) ?? null} />
           ))}
+          {reasons.shared && (
+            <p
+              className="pl-6 font-body text-[12.5px] leading-snug text-text-2"
+              data-testid="attempts-reason"
+            >
+              {reasons.shared}
+            </p>
+          )}
           {r.rows.map((row) => (
             <div
               key={row.index}
@@ -329,14 +350,19 @@ function ResultBody({
                   key={tag.id}
                   className="label-caps border border-petrol px-1.5 py-0.5 text-[10px] text-petrol"
                 >
-                  {tag.label}: {tag.note}
+                  {tag.label} · {tag.note}
                 </li>
               ))}
             </ul>
           )}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <RewardTile label="Experience" line={r.rewards.xp} />
-            <RewardTile label="Faction XP" line={r.rewards.fxp} className={factionText} />
+            <RewardTile
+              label="Party XP"
+              line={r.rewards.fxp}
+              className={factionText}
+              testId="tile-faction-xp"
+            />
             <RewardTile label="Iron" line={r.rewards.iron} />
             {item ? (
               <div
@@ -464,7 +490,7 @@ function ResultBody({
               />
             )}
             {e.standing && (
-              <Effect label="Local Standing" value={standingLine(e.standing)} testId="effect-standing" />
+              <Effect label="Reputation" value={standingLine(e.standing)} testId="effect-standing" />
             )}
             {e.orders.map((o) => (
               <Effect
@@ -478,7 +504,7 @@ function ResultBody({
             {e.stat && (
               <Effect
                 label="Trained"
-                value={`${e.stat.stat.toUpperCase()} ${e.stat.before} → ${e.stat.after}`}
+                value={`${statName(e.stat.stat)} ${e.stat.before} → ${e.stat.after}`}
                 testId="effect-stat"
               />
             )}
@@ -494,7 +520,7 @@ function ResultBody({
             )}
             {e.fxp.after !== e.fxp.before && (
               <Effect
-                label="Faction XP"
+                label="Party XP"
                 value={`${formatNumber(e.fxp.before)} → ${formatNumber(e.fxp.after)}`}
               />
             )}
@@ -583,58 +609,33 @@ function StandingCard({ up }: { up: NonNullable<ActionResult['effects']['standin
   );
 }
 
-function AttemptRow({ attempt: a, tier, type }: { attempt: ResultAttempt; tier: number; type: string }) {
-  const [open, setOpen] = useState(false);
+/**
+ * One attempt (review 2, answers §2.3): the index, the outcome in its colour and the XP; under a row
+ * that isn't a Success, one plain reason. Nothing opens on a tap: no bar, no roll, no ledger.
+ */
+function AttemptRow({ attempt: a, reason }: { attempt: ResultAttempt; reason: string | null }) {
   const success = a.outcome === 'success';
   const failure = a.outcome === 'failure';
   const label = success ? 'Success' : a.outcome === 'partial' ? 'Partial' : 'Failure';
   return (
-    <div className="flex flex-col gap-1" data-testid="attempt-row">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="grid min-h-11 cursor-pointer grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 text-left"
-      >
+    <div className="flex flex-col gap-0.5" data-testid="attempt-row" data-outcome={a.outcome}>
+      <div className="grid min-h-8 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2">
         <span className="font-label text-[12px] text-muted">{a.index}</span>
         <span
-          className="relative h-2.5 bg-track"
-          role="img"
-          aria-label={`Chance ${a.check.chance} %, rolled ${a.roll}`}
-        >
-          <span
-            className={cx(
-              'absolute inset-y-0 left-0',
-              success ? 'bg-success-fill' : failure ? 'bg-failure-fill' : 'bg-partial-fill',
-            )}
-            style={{ width: `${a.check.chance}%` }}
-          />
-          <span
-            className="absolute -top-[3px] h-4 w-[3px] -translate-x-1/2 bg-ink"
-            style={{ left: `${a.roll}%` }}
-            aria-hidden="true"
-          />
-        </span>
-        <span
           className={cx(
-            'label-caps text-[11px] tracking-[0.06em]',
+            'label-caps text-[12px] font-semibold tracking-[0.08em]',
             success ? 'text-success' : failure ? 'text-failure' : 'text-partial',
           )}
+          data-testid="attempt-outcome"
         >
-          {label} · {formatSigned(a.rewards.xp.total)} XP
+          {label}
         </span>
-      </button>
-      {/* Review 1 (§8.4): one plain sentence and the roll; the ledger behind the tap. */}
-      <span className="pl-6 font-body text-[12.5px] leading-snug text-text-2" data-testid="attempt-odds">
-        {oddsSentence(a.check)}
-      </span>
-      <span className="pl-6 font-mono text-[11px] text-muted" data-testid="attempt-roll">
-        {rollLine({ roll: a.roll, chance: a.check.chance, outcome: a.outcome, tier, type })}
-      </span>
-      {open && (
-        <div className="ml-6 border border-faint bg-paper-card px-2 py-1.5">
-          <CheckBreakdownList check={a.check} />
-        </div>
+        <span className="font-label text-[13px]">{formatSigned(a.rewards.xp.total)} XP</span>
+      </div>
+      {reason && (
+        <p className="pl-6 font-body text-[12.5px] leading-snug text-text-2" data-testid="attempt-reason">
+          {reason}
+        </p>
       )}
     </div>
   );
@@ -645,11 +646,13 @@ function RewardTile({
   line,
   className,
   note,
+  testId,
 }: {
   label: string;
   line: RewardLine;
   className?: string;
   note?: string;
+  testId?: string;
 }) {
   return (
     <Tile
@@ -664,7 +667,7 @@ function RewardTile({
             ? `${formatSigned(line.base)} and ${formatSigned(line.bonus)} bonus`
             : undefined)
       }
-      testId={`tile-${label.toLowerCase().replace(/\s+/g, '-')}`}
+      testId={testId ?? `tile-${label.toLowerCase().replace(/\s+/g, '-')}`}
     />
   );
 }

@@ -557,6 +557,8 @@ const PoliticalText = z.strictObject({
   stamp: z.string().min(1).max(20),
   headline: z.string().min(1).max(60),
   body: StoryText,
+  /** Review 2 (answers §4.4): the modal's *Next* line, "Next: the result, {countDay} morning." */
+  next: z.string().min(1).max(80),
 });
 
 /** The six political result modals (POLITICAL_ACTS in rules). */

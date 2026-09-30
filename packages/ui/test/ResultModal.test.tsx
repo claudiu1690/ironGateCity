@@ -36,14 +36,12 @@ describe('ResultModal v2', () => {
     expect(dialog).toHaveAccessibleName('The whistle goes, and they stop');
     const rows = d.getAllByTestId('attempt-row');
     expect(rows).toHaveLength(1);
-    expect(within(rows[0]!).getByRole('img', { name: 'Chance 66 %, rolled 41' })).toBeInTheDocument();
-    // Review 1 (answers §4): one plain sentence and a roll line.
-    expect(within(rows[0]!).getByTestId('attempt-odds')).toHaveTextContent(
-      'Your INT 12 is 4 above the 8 this needs: 66 %.',
-    );
-    expect(within(rows[0]!).getByTestId('attempt-roll')).toHaveTextContent(
-      'Rolled 41: Success (66 or under).',
-    );
+    // Review 2 (GDD §8.4, answers §2.3): the outcome and its XP; no chance, roll or reason on a Success.
+    expect(within(rows[0]!).getByTestId('attempt-outcome')).toHaveTextContent('Success');
+    expect(rows[0]).toHaveTextContent('+45 XP');
+    expect(within(rows[0]!).queryByTestId('attempt-reason')).toBeNull();
+    expect(rows[0]!.textContent).not.toMatch(/%|Rolled|roll/);
+    expect(within(rows[0]!).queryByRole('button')).toBeNull();
     expect(d.getByTestId('tile-experience')).toHaveTextContent('+45');
     expect(d.getByTestId('tile-faction-xp')).toHaveTextContent('+6');
     expect(d.getByTestId('tile-iron')).toHaveTextContent('+20');
@@ -66,12 +64,15 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('stamp')).toHaveTextContent('2 of 3');
     expect(d.getByText('Canvass the shift change · 3 times')).toBeInTheDocument();
     expect(d.getAllByTestId('attempt-row')).toHaveLength(3);
-    expect(d.getByText('Rested: 22 of 30 Energy, +37 % XP and Iron')).toBeInTheDocument();
-    expect(d.getByText('Party order: +25 % FXP')).toBeInTheDocument();
+    // The non-Success row carries one plain reason, no digits (answers §2.4).
+    const partial = d.getAllByTestId('attempt-row').find((r) => r.dataset.outcome !== 'success')!;
+    expect(within(partial).getByTestId('attempt-reason').textContent).not.toMatch(/\d/);
+    expect(d.getByText('Rested · 22 of 30 Energy, +37 % XP and Iron')).toBeInTheDocument();
+    expect(d.getByText('Party order · +25 % Party XP')).toBeInTheDocument();
     expect(d.getByTestId('effect-order')).toHaveTextContent('0 → 2 / 2 ✓');
     // Review 1 (answers §6): a signed line from the secretary.
     expect(d.getByTestId('effect-order-signed')).toHaveTextContent(
-      /^Done, that one · \+20 FXP\. (One|Two) to go\. — P\.H\.$/,
+      /^Done, that one · \+20 Party XP\. (One|Two) to go\. — P\.H\.$/,
     );
     expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · place your point');
     await user.click(d.getByRole('button', { name: 'STR 10 → 11' }));
@@ -82,22 +83,51 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('again-hint')).toHaveTextContent('×3 needs 30 Energy');
   });
 
-  it('opens a row to show its breakdown', async () => {
-    const user = userEvent.setup();
-    const { dialog } = renderModal(actionResultFixture);
-    await user.click(within(dialog).getAllByTestId('attempt-row')[0]!.querySelector('button')!);
-    expect(within(dialog).getByText('INT 12, 4 above the 8 needed, 4 % a point')).toBeInTheDocument();
+  it('review 2: the reason names where to train the stat; nothing opens on a tap', () => {
+    const low = {
+      ...actionResultFixture,
+      stamp: 'partial' as const,
+      attempts: [
+        {
+          ...actionResultFixture.attempts[0]!,
+          outcome: 'partial' as const,
+          roll: 60,
+          check: {
+            ...actionResultFixture.attempts[0]!.check,
+            statValues: [5],
+            statValue: 5,
+            statTerm: -12,
+            raw: 38,
+            chance: 38,
+          },
+        },
+      ],
+    };
+    render(
+      <ResultModal
+        result={low}
+        open
+        onOpenChange={() => undefined}
+        trainingPlaces={{ int: 'the Union Hall' }}
+      />,
+    );
+    const row = screen.getAllByTestId('attempt-row')[0]!;
+    expect(within(row).getByTestId('attempt-outcome')).toHaveTextContent('Partial');
+    expect(within(row).getByTestId('attempt-reason')).toHaveTextContent(
+      'Your Intelligence is low for this. Train it at the Union Hall.',
+    );
+    expect(within(row).queryByRole('button')).toBeNull();
   });
 
-  it('training: Trained, one "no roll" row, INT 12 → 13', () => {
+  it('training: Trained, one "always works" row, Intelligence 12 → 13', () => {
     const { dialog } = renderModal(trainingResultFixture, {
       value: 5,
       nextTickAt: Date.UTC(2026, 8, 29, 9, 10),
     });
     const d = within(dialog);
     expect(d.getByTestId('stamp')).toHaveTextContent('Trained');
-    expect(d.getByText('44 Energy · no roll')).toBeInTheDocument();
-    expect(d.getByTestId('effect-stat')).toHaveTextContent('INT 12 → 13');
+    expect(d.getByText('44 Energy · always works')).toBeInTheDocument();
+    expect(d.getByTestId('effect-stat')).toHaveTextContent('Intelligence 12 → 13');
     expect(d.getByTestId('tile-opinion')).toHaveTextContent('—');
     // ×1 only (§8.5, content §13.2): Again ×1 · Continue.
     expect(d.queryByRole('button', { name: 'Again ×3' })).toBeNull();
@@ -124,13 +154,15 @@ describe('ResultModal v2', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it('m5: the order that completes all three shows "All orders carried out · +5 PC"', () => {
+  it('m5: the order that completes all three shows "All orders carried out · +5 Political Capital"', () => {
     const { dialog } = renderModal({
       ...actionResultFixture,
       effects: { ...actionResultFixture.effects, ordersAllDone: { pc: 5 }, pc: { before: 0, after: 5 } },
     });
     const d = within(dialog);
-    expect(d.getByTestId('effect-all-orders')).toHaveTextContent('All orders carried out · +5 PC');
+    expect(d.getByTestId('effect-all-orders')).toHaveTextContent(
+      'All orders carried out · +5 Political Capital',
+    );
     expect(d.getByText('Political Capital')).toBeInTheDocument();
   });
 

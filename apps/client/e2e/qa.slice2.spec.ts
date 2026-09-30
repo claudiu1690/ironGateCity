@@ -251,7 +251,7 @@ test.describe('small phone 360×640', () => {
     await approaches.nth(1).click();
     const cta = page.getByTestId('story-cta');
     await expect(cta).toBeInViewport();
-    await expect(cta).toContainText('Walk his ward');
+    await expect(cta).toContainText('Walk his streets');
     await expect(cta).toContainText('10');
     for (const a of await approaches.all()) await expect(a).toBeInViewport({ ratio: 0.9 });
     await cta.click();

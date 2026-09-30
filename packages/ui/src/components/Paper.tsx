@@ -29,7 +29,7 @@ export function TodayStrip({
     [plural(today.attempts, 'attempt'), h.todayAttempts() as HelpNote],
     [plural(today.successes, 'win'), h.todayWins() as HelpNote],
     [`+${formatNumber(today.xp)} XP`, h.todayXp() as HelpNote],
-    [`+${formatNumber(today.fxp)} FXP`, h.todayFxp() as HelpNote],
+    [`+${formatNumber(today.fxp)} Party XP`, h.todayFxp() as HelpNote],
     [`${formatOpinionDelta(today.opinion)} opinion`, h.todayOpinion(help?.cityName ?? '') as HelpNote],
   ];
   if (today.iron > 0) parts.push([`+${formatNumber(today.iron)} Iron`, h.todayIron() as HelpNote]);
@@ -174,8 +174,8 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
       {paper && (
         <>
           <p className="pt-1.5 font-mono text-[11px] text-muted">
-            +{orders.rewards.matchFxpBonusPct} % FXP on matching actions · +{orders.rewards.orderDoneFxp} FXP
-            per order · +{orders.rewards.allDonePc} Political Capital for all three · new orders at{' '}
+            +{orders.rewards.matchFxpBonusPct} % Party XP on matching actions · +{orders.rewards.orderDoneFxp}{' '}
+            Party XP per order · +{orders.rewards.allDonePc} Political Capital for all three · new orders at{' '}
             {formatClock(orders.resetsAt)}
           </p>
           <p className="self-end pt-1 font-display text-[15px] italic">{orders.issuer.signature}</p>
@@ -295,7 +295,7 @@ export function DeskList({ desk }: { desk: DeskView }) {
           value={`${formatNumber(desk.level.xpToNext)} XP to Level ${desk.level.next}${desk.level.statPointsPending > 0 ? ` · ${copy.pointsToPlace(desk.level.statPointsPending)}` : ''}`}
         />
         <Row
-          label={`${desk.standing.cityName} standing`}
+          label={`Reputation in ${desk.standing.cityName}`}
           value={
             desk.standing.next === null
               ? desk.standing.name

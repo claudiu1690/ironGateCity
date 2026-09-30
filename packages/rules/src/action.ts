@@ -182,7 +182,7 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
     orders = adv.orders;
     if (adv.completed) completed.push(adv.completed.templateId);
     if (adv.allDone) allDone = true;
-    // Ward Register counts each Success twice, inside the loop so a later row sees it (ADR 0021 §6).
+    // Street Register counts each Success twice, inside the loop so a later row sees it (ADR 0021 §6).
     if (outcome === 'success') successes += perSuccess;
 
     attempts.push({

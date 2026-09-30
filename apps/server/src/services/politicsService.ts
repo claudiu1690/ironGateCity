@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
 import { turnoutOf } from '@irongate/content';
-import { Candidacy, Character, Election, OfficeTerm, OrderPaper, Vote } from '@irongate/db';
+import { Candidacy, Character, Election, OfficeTerm, OrderPaper, PaperEntry, Vote } from '@irongate/db';
 import type {
   CandidacyDoc,
   CharacterDoc,
@@ -45,6 +45,9 @@ import type {
   PoliticalPlaceholder,
   PoliticsState,
   PoliticsSummaryView,
+  ElectionCardState,
+  ElectionCardView,
+  ElectionYourLine,
 } from '@irongate/rules';
 import { selectPoliticalHeadlines } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
@@ -148,6 +151,7 @@ export async function politicsSummary(
       ? await OrderPaper.findById(councilKey(spec.id, cal.cycle), {
           votes: 1,
           status: 1,
+          items: 1,
         }).lean<OrderPaperDoc>()
       : null;
   const councillorOpen =
@@ -155,13 +159,15 @@ export async function politicsSummary(
     cal.council.voting &&
     paper?.status === 'open' &&
     !paper.votes.some((v) => v.characterId.equals(c._id));
-  const prev =
-    cal.cycleDay === 0
+  // The last count: the Polling Day state on the count morning; the Election card on days 0–1.
+  const lastCount =
+    cal.cycleDay <= 1
       ? await Election.findById(electionKey(spec.id, cal.cycle - 1), {
           result: 1,
           status: 1,
         }).lean<ElectionDoc>()
       : null;
+  const prev = cal.cycleDay === 0 ? lastCount : null;
   const successes = standingSuccesses(c, spec.id);
   const sitting = (c.offices ?? []).some(
     (o) => o.cityId === spec.id && o.fromDay <= today && today < o.toDay,
@@ -232,11 +238,136 @@ export async function politicsSummary(
         ? { ordinanceId: ord.id, name: ord.name, daysLeft: city.ordinance.toDay - today }
         : null,
     rank2Title: faction.rankTitles[1]!,
+    rank3Title: faction.rankTitles[COUNCIL.standRank - 1]!,
+    paperShortName: spec.paper?.shortName ?? 'paper',
     fxpToRank2: c.rank < COUNCIL.voteRank ? Math.max(0, RANK_FXP[1]! - c.fxp) : null,
     standCost: COUNCIL.cost.declare,
     councillor: councillorOpen,
     route,
     dot: state === 'ballot' || state === 'councilSits',
+    card: await electionCard(content, c, {
+      cal,
+      spec: { id: spec.id },
+      cand,
+      vote: vote ? { key: vote.candidateKey, name: votedFor ?? '' } : null,
+      e,
+      term: !!term,
+      paper,
+      lastCount,
+      canStand,
+      endorsements,
+      branchLine: cand?.status === 'filed' && cand.branch !== null && ordersAllDoneToday(c, today),
+      today,
+    }),
+  };
+}
+
+/**
+ * Review 2 (slice-3 screens §1a, §2.1): the Election card, one view for the city screen, the paper's
+ * row and the HQ sheet. The server picks the state; the client words it.
+ */
+async function electionCard(
+  content: GameContent,
+  c: CharacterDoc,
+  i: {
+    cal: ReturnType<typeof councilDay>;
+    spec: { id: string };
+    cand: CandidacyDoc | null;
+    vote: { key: string; name: string } | null;
+    e: ElectionDoc | null;
+    term: boolean;
+    paper: OrderPaperDoc | null;
+    lastCount: ElectionDoc | null;
+    canStand: boolean;
+    endorsements: PoliticsSummaryView['endorsements'];
+    branchLine: boolean;
+    today: DayKey;
+  },
+): Promise<ElectionCardView> {
+  const { cal, cand, vote, lastCount, today } = i;
+  const counted = lastCount?.status === 'counted' && lastCount.result ? lastCount.result : null;
+  const backingOf = (c.endorsementsGiven ?? []).find(
+    (g) => g.electionId === electionKey(i.spec.id, cal.cycle),
+  );
+  const myRuleVote = i.paper?.votes.find((v) => v.characterId.equals(c._id)) ?? null;
+  const ruleOpen = i.term && cal.council.voting && i.paper !== null;
+  let yourLine: ElectionYourLine | null = null;
+  if (counted) {
+    const rows = counted.rows as CountRow[];
+    const mine = rows.find((r) => r.key === `p:${c._id.toHexString()}`);
+    if (mine) {
+      yourLine = mine.seated
+        ? { kind: 'elected', place: mine.place }
+        : { kind: 'missed', margin: marginToSeat(mine, { rows }) };
+    } else {
+      const v = await Vote.findOne({
+        electionId: electionKey(i.spec.id, cal.cycle - 1),
+        voterId: c._id,
+      }).lean<VoteDoc>();
+      const theirs = v ? rows.find((r) => r.key === v.candidateKey) : undefined;
+      if (theirs)
+        yourLine = theirs.seated
+          ? { kind: 'voteWon', name: theirs.name }
+          : { kind: 'voteLost', name: theirs.name };
+    }
+  }
+  let state: ElectionCardState;
+  if (c.rank < COUNCIL.voteRank) state = 'belowRank';
+  else if (ruleOpen && i.paper!.status === 'open') state = myRuleVote ? 'councilVoted' : 'councilSits';
+  else if (cal.phase === 'polling')
+    state = vote ? 'voted' : cand?.status === 'standing' ? 'candidateVoting' : 'voting';
+  else if (cand?.status === 'filed') state = 'standing';
+  else if (backingOf) state = 'backing';
+  else if (counted) state = 'result';
+  else state = 'candidates';
+  const closesAt =
+    state === 'councilSits' || state === 'councilVoted'
+      ? dayStart(cal.council.divideDay)
+      : dayStart(cal.phase === 'nominations' ? cal.election.pollsFrom : cal.election.countDay);
+  // The morning the rank-up to 2 is in the paper (the hl.*rank-up-2 headline): the note, once.
+  const firstTime =
+    c.rank >= COUNCIL.voteRank &&
+    (await PaperEntry.exists({
+      characterId: c._id,
+      day: today,
+      'headlines.templateId': { $regex: /rank-up-2$/ },
+    })) !== null;
+  const ruleName = (choice: string) =>
+    choice === 'against' ? null : (content.ordinance(choice)?.name ?? choice);
+  return {
+    state,
+    closesAt,
+    pollsOpenAt: dayStart(cal.election.pollsFrom),
+    countAt: dayStart(cal.election.countDay),
+    fxp: c.fxp,
+    rank2Fxp: RANK_FXP[COUNCIL.voteRank - 1]!,
+    canStand: i.canStand,
+    backers:
+      cand?.status === 'filed' && i.endorsements
+        ? {
+            n: i.endorsements.n,
+            needed: i.endorsements.needed,
+            branchLine: i.branchLine,
+            branchWillMakeUp: i.endorsements.branchWillMakeUp,
+          }
+        : null,
+    backing: backingOf?.name ?? null,
+    votedFor: vote?.name ?? null,
+    result: counted
+      ? {
+          winner: (counted.rows as CountRow[])[0]?.name ?? '',
+          yourLine,
+          councilUntil: dayStart(cal.council.toDay),
+          namesUntil: dayStart(cal.election.pollsFrom),
+        }
+      : null,
+    rule: ruleOpen
+      ? {
+          votedFor: myRuleVote ? ruleName(myRuleVote.choice) : null,
+          divideAt: dayStart(cal.council.divideDay),
+        }
+      : null,
+    firstTime,
   };
 }
 

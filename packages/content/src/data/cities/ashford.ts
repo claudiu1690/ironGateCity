@@ -39,39 +39,39 @@ export const ashford: City = {
         {
           ...canvass,
           id: 'ashford.gazette-house.print-room',
-          name: 'Canvass the print-room shift',
+          name: 'Talk to the printers coming off shift',
           stats: ['int'],
           text: {
             success: {
               headline: 'The presses stop, and they listen',
-              body: "The print-room shift comes off at four with ink to the elbow. They read for a living, so you don't waste words: rents, the tram fare, the licensing bill. A compositor takes ten leaflets for the stone.",
+              body: "The print-room shift comes off at four with ink to the elbow. They read for a living, so you don't waste words: rents, the tram fare, the licensing bill. A compositor takes ten flyers for the stone.",
             },
             partial: {
               headline: 'Most of them head for the tram',
-              body: 'The shift comes off in a hurry and most of it makes for the tram. You press leaflets on the ones who slow down. Two stop to argue the licensing bill; one gives you his street. A start.',
+              body: 'The shift comes off in a hurry and most of it makes for the tram. You press flyers on the ones who slow down. Two stop to argue the licensing bill; one gives you his street. A start.',
             },
           },
         },
         {
           ...propaganda,
           id: 'ashford.gazette-house.evening-run',
-          name: 'Run the evening edition to the stands',
+          name: 'Slip flyers into the evening paper',
           stats: ['agi'],
           text: {
             success: {
               headline: 'Every stand by six',
-              body: 'A bundle under each arm and the Alliance leaflet folded inside every copy. Bridge Street, the station, the college gate, all before the church clock strikes six. Nobody asks whose leaflet it is.',
+              body: 'A bundle under each arm and the Alliance flyer folded inside every copy. Bridge Street, the station, the college gate, all before the church clock strikes six. Nobody asks whose flyer it is.',
             },
             partial: {
               headline: 'The bundle splits',
-              body: 'The string goes on Bridge Street and half the edition ends up in the gutter. You save what you can and get it to two stands out of four. The leaflets inside the dry ones are still out there.',
+              body: 'The string goes on Bridge Street and half the edition ends up in the gutter. You save what you can and get it to two stands out of four. The flyers inside the dry ones are still out there.',
             },
           },
         },
         {
           ...intelligence,
           id: 'ashford.gazette-house.wires',
-          name: 'Read the wires',
+          name: 'Read the news as it comes in',
           stats: ['int'],
           energy: 3,
           text: {
@@ -87,7 +87,7 @@ export const ashford: City = {
         },
         {
           id: 'ashford.gazette-house.newsprint',
-          name: 'Hump the newsprint off the lorry',
+          name: 'Unload the paper lorry',
           tier: 1,
           type: 'training',
           trains: 'str',
@@ -110,7 +110,7 @@ export const ashford: City = {
       actions: [
         {
           id: 'ashford.assembly-rooms.committee',
-          name: 'Sit in on the ward committee',
+          name: 'Go to the meeting',
           tier: 1,
           type: 'council',
           stats: ['best'],
@@ -119,24 +119,24 @@ export const ashford: City = {
           givesOpinion: false,
           text: {
             success: {
-              headline: 'Minutes taken, motion carried',
-              body: 'Tea, a ward map on the piano, and a chairman who believes in procedure. The committee wants the canvass returns redone by street and you say how. Your name goes in the minutes. In these rooms, that counts.',
+              headline: 'Minutes taken, proposal carried',
+              body: 'Tea, a street map on the piano, and a chairman who believes in procedure. The committee wants the street returns redone by street and you say how. Your name goes in the minutes. In these rooms, that counts.',
             },
             partial: {
               headline: 'A long meeting',
-              body: 'Two hours on the canvass returns and a point of order about the biscuits. You get one word in before the chairman moves on. The agent marks you present, which is what matters this week.',
+              body: 'Two hours on the street returns and a point of order about the biscuits. You get one word in before the chairman moves on. The agent marks you present, which is what matters this week.',
             },
           },
         },
         {
           ...propaganda,
           id: 'ashford.assembly-rooms.duplicator',
-          name: 'Run the duplicator',
+          name: 'Print five hundred flyers',
           stats: ['int'],
           text: {
             success: {
               headline: 'Five hundred copies, still wet',
-              body: 'The stencil holds and the drum turns. Five hundred leaflets in an hour, stacked for the morning runners. Your hands are purple to the wrist and the landing smells of spirit.',
+              body: 'The stencil holds and the drum turns. Five hundred flyers in an hour, stacked for the morning runners. Your hands are purple to the wrist and the landing smells of spirit.',
             },
             partial: {
               headline: 'The stencil tears',
@@ -147,7 +147,7 @@ export const ashford: City = {
         {
           ...canvass,
           id: 'ashford.assembly-rooms.letters',
-          name: 'Write to the lapsed members',
+          name: 'Write to old members',
           stats: ['int'],
           text: {
             success: {
@@ -173,12 +173,12 @@ export const ashford: City = {
         {
           ...canvass,
           id: 'ashford.university.students',
-          name: 'Canvass the students between lectures',
+          name: 'Talk to the students between lectures',
           stats: ['int'],
           text: {
             success: {
               headline: 'They argue, then they listen',
-              body: "The eleven o'clock crowd comes out arguing already. You give them something to argue about: the licensing bill, the franchise, rents in the old town. Half take a leaflet; a dozen take two. One asks where the Rooms are.",
+              body: "The eleven o'clock crowd comes out arguing already. You give them something to argue about: the licensing bill, the franchise, rents in the old town. Half take a flyer; a dozen take two. One asks where the Rooms are.",
             },
             partial: {
               headline: 'The coffee house wins',
@@ -189,16 +189,16 @@ export const ashford: City = {
         {
           ...speech,
           id: 'ashford.university.union-debate',
-          name: 'Speak at the Union debate',
+          name: 'Speak in the student debate',
           stats: ['cha', 'int'],
           text: {
             success: {
-              headline: 'The motion carries',
-              body: 'The Debating Union takes anyone who can hold the floor for ten minutes. You hold it for twelve: the republic, the courts, the right to be wrong in print. The house divides and the motion carries. A don asks your name.',
+              headline: 'The proposal carries',
+              body: 'The Debating Union takes anyone who can hold the floor for ten minutes. You hold it for twelve: the republic, the courts, the right to be wrong in print. The house votes and the proposal carries. A don asks your name.',
             },
             partial: {
               headline: 'Points of order',
-              body: 'You get six minutes in before the other side starts raising points of order and the chair enjoys them. The motion is lost by four votes. Two undergraduates ask for a leaflet on the way out.',
+              body: 'You get six minutes in before the other side starts raising points of order and the chair enjoys them. The proposal is lost by four votes. Two undergraduates ask for a flyer on the way out.',
             },
           },
         },
@@ -245,16 +245,16 @@ export const ashford: City = {
         {
           ...canvass,
           id: 'ashford.courts.queue',
-          name: 'Canvass the public queue',
+          name: 'Talk to people in the court queue',
           stats: ['cha', 'int'],
           text: {
             success: {
               headline: 'A captive audience',
-              body: "The queue for the gallery is bored, cold and can't leave. You work it with the leaflet and the case list. Half of them have a grievance with a landlord already; by the door, most have the Alliance's line on it too.",
+              body: "The queue for the gallery is bored, cold and can't leave. You work it with the flyer and the case list. Half of them have a grievance with a landlord already; by the door, most have the Alliance's line on it too.",
             },
             partial: {
               headline: 'The doors open early',
-              body: "The usher opens up at half past nine and the queue becomes a crowd on the stairs. A few leaflets go into coat pockets. One old man says he'll read it in the gallery, which is more than most.",
+              body: "The usher opens up at half past nine and the queue becomes a crowd on the stairs. A few flyers go into coat pockets. One old man says he'll read it in the gallery, which is more than most.",
             },
           },
         },
@@ -287,32 +287,32 @@ export const ashford: City = {
         {
           ...canvass,
           id: 'ashford.bridge-street.cafes',
-          name: 'Canvass the café tables',
+          name: 'Talk to people at the café tables',
           stats: ['cha', 'int'],
           text: {
             success: {
               headline: 'A chair at every table',
-              body: 'The pavement tables are full by ten. You work them one by one, a chair borrowed at each. Rents, the tram fare, the licensing bill. By the third café the waiters know your name, and one has taken a leaflet for the kitchen.',
+              body: 'The pavement tables are full by ten. You work them one by one, a chair borrowed at each. Rents, the tram fare, the licensing bill. By the third café the waiters know your name, and one has taken a flyer for the kitchen.',
             },
             partial: {
               headline: 'Nobody wants company',
-              body: "It's a reading morning and the tables are hidden behind the Gazette. You get a word at three of them and a leaflet under the saucer at the rest. One man lowers his paper to argue clause four. That's a start.",
+              body: "It's a reading morning and the tables are hidden behind the Gazette. You get a word at three of them and a flyer under the saucer at the rest. One man lowers his paper to argue clause four. That's a start.",
             },
           },
         },
         {
           ...propaganda,
           id: 'ashford.bridge-street.leaflets',
-          name: 'Hand out leaflets between the stalls',
+          name: 'Hand out flyers between the stalls',
           stats: ['agi'],
           text: {
             success: {
               headline: 'Quick hands, empty bag',
-              body: 'You work the stalls at a trot, a leaflet into every basket before its owner has noticed. The bag is empty in ten minutes and the market beadle never sees you.',
+              body: 'You work the stalls at a trot, a flyer into every basket before its owner has noticed. The bag is empty in ten minutes and the market beadle never sees you.',
             },
             partial: {
               headline: 'The beadle sees you',
-              body: "Half the bag is gone when the market beadle plants himself in the aisle and asks about your permit. You leave by the bookstall, slower than you'd like. The leaflets you handed out are still out there.",
+              body: "Half the bag is gone when the market beadle plants himself in the aisle and asks about your permit. You leave by the bookstall, slower than you'd like. The flyers you handed out are still out there.",
             },
           },
         },
@@ -345,7 +345,7 @@ export const ashford: City = {
         {
           ...canvass,
           id: 'ashford.weavers-row.canvass',
-          name: 'Canvass door to door',
+          name: 'Knock on doors',
           stats: ['cha', 'int'],
           text: {
             success: {
@@ -354,29 +354,29 @@ export const ashford: City = {
             },
             partial: {
               headline: 'Doors on the chain',
-              body: "It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones on the landing. One woman says her son's at the college already. Come back on Sunday.",
+              body: "It's tea-time and the doors stay on the chain. You get the flyer through the gap and a word with the ones on the landing. One woman says her son's at the college already. Come back on Sunday.",
             },
           },
         },
         {
           ...propaganda,
           id: 'ashford.weavers-row.bills',
-          name: 'Paste bills on the yard hoardings',
+          name: 'Put up posters on the yard fences',
           stats: ['str'],
           text: {
             success: {
               headline: "A yard's worth of paper",
-              body: "Bucket, brush, and the hoardings round the builder's yard. You get twelve bills up straight and high enough that nobody's tearing them down without a ladder. Every window on four floors will read them.",
+              body: "Bucket, brush, and the fences round the builder's yard. You get twelve posters up straight and high enough that nobody's tearing them down without a ladder. Every window on four floors will read them.",
             },
             partial: {
               headline: "The paste won't hold",
-              body: "The rain is against you and the paste won't take on the wet boards. Five bills stay up; the rest go into the yard. Five is five.",
+              body: "The rain is against you and the paste won't take on the wet boards. Five posters stay up; the rest go into the yard. Five is five.",
             },
           },
         },
         {
           id: 'ashford.weavers-row.run',
-          name: "Run messages for the tenants' committee",
+          name: 'Run messages up and down the stairs',
           tier: 1,
           type: 'training',
           trains: 'agi',

@@ -40,16 +40,16 @@ export const coalport: City = {
         {
           ...canvass,
           id: 'coalport.mill-gate.canvass',
-          name: 'Canvass the shift change',
+          name: 'Talk to the workers coming off shift',
           stats: ['int'],
           text: {
             success: {
               headline: 'The whistle goes, and they stop',
-              body: "You're at the gate before the shift comes off. Coal dust, tired faces, no time for speeches. But the leaflets go hand to hand, and a foreman says come back Thursday. That's how a ward is won.",
+              body: "You're at the gate before the shift comes off. Coal dust, tired faces, no time for speeches. But the flyers go hand to hand, and a foreman says come back Thursday. That's how a street is won.",
             },
             partial: {
               headline: 'Most of them walk past',
-              body: 'The shift comes off in a hurry and most of it heads straight for the tram. You press leaflets on the ones who slow down. Two stop to argue; one gives you his street. A start, not a win.',
+              body: 'The shift comes off in a hurry and most of it heads straight for the tram. You press flyers on the ones who slow down. Two stop to argue; one gives you his street. A start, not a win.',
             },
           },
         },
@@ -82,16 +82,16 @@ export const coalport: City = {
         {
           ...canvass,
           id: 'coalport.market-row.canvass',
-          name: 'Canvass the bread queue',
+          name: 'Talk to people in the bread queue',
           stats: ['int'],
           text: {
             success: {
               headline: 'The queue has time to talk',
-              body: "Forty people and one baker's window. You work the line with the price list in one hand and the leaflet in the other. By the time the shutters go up, half the queue knows what the Collective would do about the flour ration.",
+              body: "Forty people and one baker's window. You work the line with the price list in one hand and the flyer in the other. By the time the shutters go up, half the queue knows what the Collective would do about the flour ration.",
             },
             partial: {
               headline: 'The loaves come out early',
-              body: "You're three people in when the shutters go up and the queue becomes a scrum. A few leaflets go into shopping bags. One old man folds his carefully and says he'll read it after his tea.",
+              body: "You're three people in when the shutters go up and the queue becomes a scrum. A few flyers go into shopping bags. One old man folds his carefully and says he'll read it after his tea.",
             },
           },
         },
@@ -114,16 +114,16 @@ export const coalport: City = {
         {
           ...propaganda,
           id: 'coalport.market-row.leaflets',
-          name: 'Hand out leaflets between the stalls',
+          name: 'Hand out flyers between the stalls',
           stats: ['agi'],
           text: {
             success: {
               headline: 'Quick hands, empty bag',
-              body: 'You work the aisles at a trot, a leaflet into every basket before its owner has noticed. The bag is empty in ten minutes and the market inspector never sees you.',
+              body: 'You work the aisles at a trot, a flyer into every basket before its owner has noticed. The bag is empty in ten minutes and the market inspector never sees you.',
             },
             partial: {
               headline: 'The inspector sees you',
-              body: "Half the bag is gone when the market inspector plants himself in the aisle and asks about your permit. You leave by the fish stall, slower than you'd like. The leaflets you handed out are still out there.",
+              body: "Half the bag is gone when the market inspector plants himself in the aisle and asks about your permit. You leave by the fish stall, slower than you'd like. The flyers you handed out are still out there.",
             },
           },
         },
@@ -139,7 +139,7 @@ export const coalport: City = {
       actions: [
         {
           id: 'coalport.union-hall.committee',
-          name: 'Sit in on the branch committee',
+          name: 'Go to the branch meeting',
           tier: 1,
           type: 'council',
           stats: ['best'],
@@ -148,24 +148,24 @@ export const coalport: City = {
           givesOpinion: false,
           text: {
             success: {
-              headline: 'Minutes taken, motion carried',
-              body: "Smoke, coffee, and a mimeograph that never stops. The committee wants the ward lists redone by district and you're the one who says how. Your name goes in the minutes. In this hall, that counts.",
+              headline: 'Minutes taken, proposal carried',
+              body: "Smoke, coffee, and a mimeograph that never stops. The committee wants the street lists redone by district and you're the one who says how. Your name goes in the minutes. In this hall, that counts.",
             },
             partial: {
               headline: 'A long meeting',
-              body: 'Two hours on the ward lists and the price of paper. You get one point in before the chair moves on. The secretary marks you present, which is what matters this week.',
+              body: 'Two hours on the street lists and the price of paper. You get one point in before the chair moves on. The secretary marks you present, which is what matters this week.',
             },
           },
         },
         {
           ...propaganda,
           id: 'coalport.union-hall.mimeograph',
-          name: 'Run the mimeograph',
+          name: 'Print five hundred flyers',
           stats: ['int'],
           text: {
             success: {
               headline: 'Five hundred copies, still wet',
-              body: 'The stencil holds and the drum turns. Five hundred bulletins in an hour, stacked for the morning runners. Your hands are purple to the wrist and the hall smells of spirit.',
+              body: 'The stencil holds and the drum turns. Five hundred flyers in an hour, stacked for the morning runners. Your hands are purple to the wrist and the hall smells of spirit.',
             },
             partial: {
               headline: 'The stencil tears',
@@ -199,7 +199,7 @@ export const coalport: City = {
         {
           ...canvass,
           id: 'coalport.terraces.canvass',
-          name: 'Canvass door to door',
+          name: 'Knock on doors',
           stats: ['cha', 'int'],
           text: {
             success: {
@@ -208,14 +208,14 @@ export const coalport: City = {
             },
             partial: {
               headline: 'Doors on the chain',
-              body: "It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones who stand on the step. One woman says her husband's in the Union already. Come back after the shift.",
+              body: "It's tea-time and the doors stay on the chain. You get the flyer through the gap and a word with the ones who stand on the step. One woman says her husband's in the Union already. Come back after the shift.",
             },
           },
         },
         {
           ...propaganda,
           id: 'coalport.terraces.chalk',
-          name: 'Chalk the slogans',
+          name: 'Chalk the slogan on the end wall',
           stats: ['agi'],
           text: {
             success: {
@@ -230,7 +230,7 @@ export const coalport: City = {
         },
         {
           id: 'coalport.terraces.run',
-          name: 'Run messages for the street committee',
+          name: 'Run messages around the streets',
           tier: 1,
           type: 'training',
           trains: 'agi',
@@ -263,14 +263,14 @@ export const coalport: City = {
             },
             partial: {
               headline: 'Bread and silence',
-              body: "The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a leaflet for later. Nobody gets up when the whistle goes, which is the dockers' way of saying maybe.",
+              body: "The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a flyer for later. Nobody gets up when the whistle goes, which is the dockers' way of saying maybe.",
             },
           },
         },
         {
           ...propaganda,
           id: 'coalport.quays.posters',
-          name: 'Paste posters on the warehouse walls',
+          name: 'Put up posters on the warehouse walls',
           stats: ['str'],
           text: {
             success: {
@@ -285,7 +285,7 @@ export const coalport: City = {
         },
         {
           id: 'coalport.quays.haul',
-          name: 'Shift cargo with the dockers',
+          name: 'Lift cargo with the dockers',
           tier: 1,
           type: 'training',
           trains: 'str',
@@ -326,7 +326,7 @@ export const coalport: City = {
         {
           ...canvass,
           id: 'coalport.anchor.regulars',
-          name: 'Talk the regulars round',
+          name: 'Win over the regulars',
           stats: ['cha', 'int'],
           text: {
             success: {
@@ -335,7 +335,7 @@ export const coalport: City = {
             },
             partial: {
               headline: 'Talked over',
-              body: 'The table by the stove is louder than you are. You get a word in between the dominoes and a song. One docker wants a leaflet; another wants to argue about 1919. You leave the argument where you found it.',
+              body: 'The table by the stove is louder than you are. You get a word in between the dominoes and a song. One docker wants a flyer; another wants to argue about 1919. You leave the argument where you found it.',
             },
           },
         },

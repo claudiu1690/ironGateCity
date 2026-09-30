@@ -382,7 +382,7 @@ describe('QA 3 · political acts: set-once, replayable, exact on PC', () => {
     // The morning the term ends (the next count), the councillor may declare again (design §3).
     clock.set(at(D0 + 5));
     const filed = await sitting.caller.council.declare({ platformId: 'plat.c.mill', idempotencyKey: key() });
-    expect(filed.stamp.label).toBe('Filed');
+    expect(filed.stamp.label).toBe("You're standing");
   });
 
   it('endorse: one member, two candidates, two taps at once → one endorsement, −10 PC once; again next cycle; never oneself', async () => {
@@ -486,7 +486,7 @@ describe('QA 3 · political acts: set-once, replayable, exact on PC', () => {
     expect(cand).toMatchObject({ status: 'struck', deposit: 'returned' });
     const paper = await c.caller.paper.today();
     expect(paper.desk).toMatchObject({ deposits: { count: 1, pc: 10 } });
-    expect(paper.headlines.map((h) => h.headline)).toContain('Unbacked Filer Comes Off the Ballot');
+    expect(paper.headlines.map((h) => h.headline)).toContain('Unbacked Filer Comes Off the List');
     clock.set(at(D0 + 3));
     await c.caller.character.me();
     expect(await pcOf(c)).toBe(45);
@@ -503,7 +503,7 @@ describe('QA 3 · political acts: set-once, replayable, exact on PC', () => {
       await seat('coalport', D0, i + 1, p, `Councillor ${i}`);
       cs.push(p);
     }
-    const ords = ['ord.open-doors', 'ord.ward-fund', 'ord.public-works', 'ord.rest-day'];
+    const ords = ['ord.open-doors', 'ord.street-fund', 'ord.public-works', 'ord.rest-day'];
     const rs = await Promise.allSettled(
       cs
         .slice(0, 4)
@@ -516,7 +516,7 @@ describe('QA 3 · political acts: set-once, replayable, exact on PC', () => {
     expect(pcs.sort()).toEqual([25, 25, 25, 45]);
     // A fifth councillor, two ordinances at once: the paper is full either way; nothing spent.
     const [x, y] = await Promise.allSettled([
-      cs[4]!.caller.council.propose({ ordinanceId: 'ord.ward-register', idempotencyKey: key() }),
+      cs[4]!.caller.council.propose({ ordinanceId: 'ord.street-register', idempotencyKey: key() }),
       cs[4]!.caller.council.propose({ ordinanceId: 'ord.public-meetings', idempotencyKey: key() }),
     ]);
     expect([reasonOf(x), reasonOf(y)]).toEqual(['PAPER_FULL', 'PAPER_FULL']);
@@ -533,7 +533,7 @@ describe('QA 3 · political acts: set-once, replayable, exact on PC', () => {
     await seat('coalport', D0, 2, p, 'Double Mover');
     const rs = await Promise.allSettled([
       p.caller.council.propose({ ordinanceId: 'ord.open-doors', idempotencyKey: key() }),
-      p.caller.council.propose({ ordinanceId: 'ord.ward-fund', idempotencyKey: key() }),
+      p.caller.council.propose({ ordinanceId: 'ord.street-fund', idempotencyKey: key() }),
     ]);
     expect(rs.map(reasonOf).sort()).toEqual(['ALREADY_PROPOSED', 'ok']);
     expect(await pcOf(p)).toBe(25);
@@ -796,15 +796,15 @@ describe('QA 5 · the ten ordinances, applied where the GDD says and shown on th
     }
   });
 
-  it('Ward Register: every Success writes two Successes of Local Standing; Public Meetings and Ward Fund are named parts', async () => {
+  it('Street Register: every Success writes two Successes of Local Standing; Public Meetings and Street Fund are named parts', async () => {
     await resetCity('coalport');
     const D = nextCycleDay('coalport', 3, 21750);
     const clock = testClock(at(D));
     const p = await player(clock, { name: 'Ward Walker', fxp: 400, successes: 0 });
     for (const [id, check] of [
-      ['ord.ward-register', 'standing'],
+      ['ord.street-register', 'standing'],
       ['ord.public-meetings', 'fxp'],
-      ['ord.ward-fund', 'iron'],
+      ['ord.street-fund', 'iron'],
     ] as const) {
       await forceOrdinance('coalport', id, D);
       const before =
@@ -832,7 +832,7 @@ describe('QA 5 · the ten ordinances, applied where the GDD says and shown on th
   // Review 1 (§9.1, §15.3): was "the shift's Iron line names the ordinance; Shift Hours −1 Energy and
   // two streak days". The shift is gone: the ended day's ordinance is a line on the desk's wage (on the
   // unmodified pay), and the Long Service Order steps seniority by two days.
-  it('Public Works and Ward Fund: the wage’s ordinance line names the ordinance; Long Service adds two seniority days', async () => {
+  it('Public Works and Street Fund: the wage’s ordinance line names the ordinance; Long Service adds two seniority days', async () => {
     await resetCity('coalport');
     const D = nextCycleDay('coalport', 3, 21760);
     const clock = testClock(at(D));
@@ -841,7 +841,7 @@ describe('QA 5 · the ten ordinances, applied where the GDD says and shown on th
     await p.caller.job.take({ jobId: job.id, idempotencyKey: key() });
     const pay = jobPay(job, 'collective');
     let seniority = 0;
-    for (const [i, id] of (['ord.public-works', 'ord.ward-fund', 'ord.long-service'] as const).entries()) {
+    for (const [i, id] of (['ord.public-works', 'ord.street-fund', 'ord.long-service'] as const).entries()) {
       // The ordinance is in force on day D+i; the boundary into D+i+1 pays that day's wage.
       clock.set(at(D + i));
       await forceOrdinance('coalport', id, D + i);
@@ -863,7 +863,7 @@ describe('QA 5 · the ten ordinances, applied where the GDD says and shown on th
       expect((await Character.findById(p.id).lean())!.iron - ironBefore).toBe(salary.total);
       expect((await Character.findById(p.id).lean())!.job!.seniority).toBe(seniority);
     }
-    // Public Works +22, Ward Fund −54 on 216 (GDD §9.1); Long Service: 1 → 2 → 4 days.
+    // Public Works +22, Street Fund −54 on 216 (GDD §9.1); Long Service: 1 → 2 → 4 days.
     expect(seniority).toBe(4);
   });
 
@@ -910,8 +910,8 @@ describe('QA 6 · morale', () => {
     const titles = me.orders.items.map((o) => o.title);
     // Review 1 (§13.7): titles say what and where.
     expect(titles.slice(0, 2)).toEqual([
-      'Restore the base: canvass anywhere in Coalport',
-      'Restore the base: a speech anywhere in Coalport',
+      'Win back Coalport: talk to voters anywhere',
+      'Win back Coalport: a speech anywhere',
     ]);
     const city = await p.caller.city.get({ cityId: 'coalport' });
     expect(city.morale).toMatchObject({ state: 'unrest' });
@@ -1012,15 +1012,15 @@ describe('QA 7 · the paper', () => {
     await doTodaysOrders(on.caller);
     clock.set(at(D0 + 1));
     const filed = await on.caller.paper.today();
-    const fh = filed.headlines.find((h) => h.headline === 'Backed Filer Files for the Council');
+    const fh = filed.headlines.find((h) => h.headline === 'Backed Filer Stands for the Council');
     expect(fh?.deck).toContain('{until}');
     expect(fh?.until).toBe(dayStart(D0 + 2));
     clock.set(at(D0 + 2));
     const a = await on.caller.paper.today();
     const b = await off.caller.paper.today();
-    const onBallot = a.headlines.find((h) => h.headline === 'Backed Filer Is on the Ballot');
+    const onBallot = a.headlines.find((h) => h.headline === 'Backed Filer Is a Candidate');
     expect(onBallot?.until).toBe(dayStart(D0 + 5));
-    expect(b.headlines.map((h) => h.headline)).toContain('Forgotten Filer Comes Off the Ballot');
+    expect(b.headlines.map((h) => h.headline)).toContain('Forgotten Filer Comes Off the List');
     // No {weekday} or {until} left unresolved without its epoch.
     for (const h of [...a.headlines, ...b.headlines]) {
       expect(`${h.headline} ${h.deck ?? ''}`).not.toMatch(/\{(?!until\})[a-zA-Z]+\}/);
@@ -1041,7 +1041,7 @@ describe('QA 7 · the paper', () => {
       clock.set(at(D1 + 1));
       await p.caller.character.me();
       const paper = await p.caller.paper.today();
-      const moved = paper.headlines.find((h) => h.headline.startsWith('Councillor Tardy Mover Moves'));
+      const moved = paper.headlines.find((h) => h.headline.startsWith('Councillor Tardy Mover Puts Forward'));
       // Expected: no "divides at {until}" once the division has happened (until ≤ today's start).
       expect(moved === undefined || (moved.until ?? Infinity) > dayStart(D1 + 1)).toBe(true);
     },

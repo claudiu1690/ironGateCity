@@ -97,8 +97,9 @@ describe('QA · the GDD numbers the rules use', () => {
       'Reading Room Grant': /Training Energy −20 %/,
       'Rest Day Order': /Rested cap \+50/,
       'Open Doors': /Canvass actions \+4 % success chance/,
-      'Ward Register': /every Success counts two/,
-      'Ward Fund': /Iron from checked actions \+25 %; job pay −25 %/,
+      // Review 2: the Ward Register and the Ward Fund are the Street Register and the Street Fund.
+      '**Street Register** (was *Ward Register*; review 2)': /every Success counts two/,
+      '**Street Fund** (was *Ward Fund*; review 2)': /Iron from checked actions \+25 %; job pay −25 %/,
       'Public Meetings Order': /Faction XP \+25 % on actions/,
     };
     for (const [name, re] of Object.entries(rows)) {

@@ -25,15 +25,33 @@ export function useNow(intervalMs = 1_000): number {
   return now;
 }
 
-/** True on screens at least `px` wide (the desktop dock and ticker from 1024 px). */
-export function useMinWidth(px: number): boolean {
-  const query = `(min-width: ${px}px)`;
+/** True while a media query matches (re-rendering when it flips). */
+export function useMedia(query: string): boolean {
   const [match, setMatch] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches);
   useEffect(() => {
     const mq = window.matchMedia(query);
     const on = () => setMatch(mq.matches);
+    on();
     mq.addEventListener('change', on);
     return () => mq.removeEventListener('change', on);
   }, [query]);
   return match;
+}
+
+/** True on screens at least `px` wide (the desktop dock and ticker from 1024 px). */
+export function useMinWidth(px: number): boolean {
+  return useMedia(`(min-width: ${px}px)`);
+}
+
+/** A phone held sideways (the `short:` variant in tokens.css, review 2 #3). */
+export const SHORT_LANDSCAPE = '(orientation: landscape) and (max-height: 500px)';
+
+/**
+ * Where a location opens (review 2 #2, #3): a bottom sheet on a phone held upright, a side panel on
+ * a phone held sideways, a centred panel over the map from 768 px (tablets and desktops).
+ */
+export function useLocationLayout(): 'sheet' | 'side' | 'panel' {
+  const short = useMedia(SHORT_LANDSCAPE);
+  const md = useMinWidth(768);
+  return short ? 'side' : md ? 'panel' : 'sheet';
 }

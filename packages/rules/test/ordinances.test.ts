@@ -64,14 +64,14 @@ const ORD: Record<string, OrdinanceSpec> = {
     name: 'Open Doors',
     effects: [{ kind: 'chancePct', actionType: 'canvass', value: 4 }],
   },
-  wardRegister: {
-    id: 'ord.ward-register',
-    name: 'Ward Register',
+  streetRegister: {
+    id: 'ord.street-register',
+    name: 'Street Register',
     effects: [{ kind: 'standingMultiplier', value: 2 }],
   },
-  wardFund: {
-    id: 'ord.ward-fund',
-    name: 'Ward Fund',
+  streetFund: {
+    id: 'ord.street-fund',
+    name: 'Street Fund',
     effects: [
       { kind: 'ironPct', scope: 'checked', value: 25 },
       { kind: 'jobPayPct', value: -25 },
@@ -211,9 +211,9 @@ describe('every effect at the design numbers', () => {
     expect(seniorityStep(mods(ORD.publicWorks!))).toBe(1);
   });
 
-  it('Public Works 216 → 238 (+22); Ward Fund 216 → 162 (−54): lines on the unmodified pay', () => {
+  it('Public Works 216 → 238 (+22); Street Fund 216 → 162 (−54): lines on the unmodified pay', () => {
     expect(jobPayWith(216, mods(ORD.publicWorks!))).toBe(238);
-    expect(jobPayWith(216, mods(ORD.wardFund!))).toBe(162);
+    expect(jobPayWith(216, mods(ORD.streetFund!))).toBe(162);
     expect(seniorityBonus(216, 10)).toBe(43);
   });
 
@@ -252,7 +252,7 @@ describe('every effect at the design numbers', () => {
     expect(computeRewards({ ...base, swingMultiplier: 1.15 }).opinion).toBe(0.046);
   });
 
-  it('Ward Register ×2 inside a ×3 run: row 3 is Known (+6), not Familiar (+3)', () => {
+  it('Street Register ×2 inside a ×3 run: row 3 is Known (+6), not Familiar (+3)', () => {
     const run = (m?: CityModifiers) =>
       ok(
         resolveTier1Action(
@@ -267,7 +267,7 @@ describe('every effect at the design numbers', () => {
     const plain = run();
     expect(plain.standing.after).toBe(29);
     expect(plain.attempts[2]!.check.bonuses.find((b) => b.id === 'standing')?.value).toBe(3);
-    const reg = run(mods(ORD.wardRegister!));
+    const reg = run(mods(ORD.streetRegister!));
     expect(reg.standing.after).toBe(32);
     expect(reg.attempts[2]!.check.bonuses.find((b) => b.id === 'standing')?.value).toBe(6);
   });
@@ -289,10 +289,10 @@ describe('every effect at the design numbers', () => {
     });
   });
 
-  it('Ward Fund: Iron +25 % beside Rested, as two parts', () => {
+  it('Street Fund: Iron +25 % beside Rested, as two parts', () => {
     const r = ok(
       resolveTier1Action(
-        canvass({ energy: { value: 100, rested: 10, updatedAt: T0 }, modifiers: mods(ORD.wardFund!) }),
+        canvass({ energy: { value: 100, rested: 10, updatedAt: T0 }, modifiers: mods(ORD.streetFund!) }),
         fixedRng([1]),
       ),
     );
@@ -302,7 +302,7 @@ describe('every effect at the design numbers', () => {
       total: 35,
       parts: [
         { id: 'rested', label: 'Rested', amount: 10 },
-        { id: 'ord.ward-fund', label: 'Ward Fund', amount: 5 },
+        { id: 'ord.street-fund', label: 'Street Fund', amount: 5 },
       ],
     });
   });
@@ -370,7 +370,7 @@ describe('the settlement and orders under slice 3', () => {
         ended === d
           ? { payAdjust: 22, label: 'Public Works Order', seniorityStep: 1 }
           : ended === d + 1
-            ? { payAdjust: -54, label: 'Ward Fund', seniorityStep: 1 }
+            ? { payAdjust: -54, label: 'Street Fund', seniorityStep: 1 }
             : { payAdjust: 0, label: null, seniorityStep: 1 },
     })!;
     expect(s.salary).toEqual({
@@ -378,7 +378,7 @@ describe('the settlement and orders under slice 3', () => {
       perDay: 216,
       seniority: { days: 13, amount: 3 * 43 },
       total: 3 * 216 + 3 * 43 - 32,
-      ordinance: { label: 'Public Works Order · Ward Fund', amount: -32 },
+      ordinance: { label: 'Public Works Order · Street Fund', amount: -32 },
     });
   });
 

@@ -27,7 +27,7 @@ describe('Finish His Work, chapter 2', () => {
       idempotencyKey: randomUUID(),
     });
     expect(r1.effects.hooks[0]).toMatch(
-      /^Chapter 2, "Stand where he stood": from .+, after your first ballot$/,
+      /^Chapter 2, "Stand where he stood": from .+, after your first vote$/,
     );
 
     // Seven days on (a polling day), but no ballot yet: still waiting.

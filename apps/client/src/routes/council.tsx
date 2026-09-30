@@ -24,8 +24,9 @@ import { useCharacter } from '../features/game/hooks';
 import { trpcClient, trpc } from '../lib/trpc';
 
 /**
- * Slice 3's council screens (docs/design/slice-3-screens.md §3–§6): the slate, the ballot, the
- * count and the chamber, in the paper's 640 px column. Every act is one tap and one modal.
+ * Slice 3's council screens (docs/design/slice-3-screens.md §3–§6, in review 2's plain words): who's
+ * standing, the vote, the result and the council, in the paper's 640 px column. Every act is one tap
+ * and one modal that ends with what comes next. The routes keep their slice-3 paths.
  */
 
 function Page({ children }: { children: ReactNode }) {
@@ -75,6 +76,24 @@ function Notice({ error }: { error: unknown }) {
   ) : null;
 }
 
+/**
+ * Review 2 (answers §4.6.6): the last result stays one tap away all cycle, from who's standing and
+ * the vote as from the council; nothing when there has been no count yet.
+ */
+function LastResultLink() {
+  const count = useQuery(trpc.council.count.queryOptions());
+  if (!count.data) return null;
+  return (
+    <Link
+      to="/council/count"
+      className="-my-2 inline-flex min-h-11 items-center self-start font-mono text-[12px] text-muted underline underline-offset-2"
+      data-testid="last-result"
+    >
+      {copy.lastResult} · {count.data.weekday}
+    </Link>
+  );
+}
+
 // ---------------------------------------------------------------------------------------------
 // The slate (screens §3).
 // ---------------------------------------------------------------------------------------------
@@ -104,12 +123,12 @@ function DeclareCard({
       <ul className="flex flex-col gap-0.5 font-mono text-[12px]">
         <li>
           {tick(rank.met)} Rank 3, {rank.rankTitle}
-          {!rank.met && rank.fxpToGo ? ` · ${rank.fxpToGo.toLocaleString('en-GB')} FXP to go` : ''}
+          {!rank.met && rank.fxpToGo ? ` · ${rank.fxpToGo.toLocaleString('en-GB')} Party XP to go` : ''}
         </li>
         <li>
-          {tick(known.met)} Known in {e.cityName} ({known.successes} Successes)
+          {tick(known.met)} Known in {e.cityName} ({known.successes} wins)
         </li>
-        <li>2 endorsements by {formatUntil(e.nominationsCloseAt)}</li>
+        <li>2 backers by {formatUntil(e.nominationsCloseAt)}</li>
       </ul>
       {eligible && (
         <>
@@ -161,17 +180,17 @@ function CandidacyCard({
   const needed = c.endorsements?.needed ?? 2;
   return (
     <section
-      aria-label="Your candidacy"
+      aria-label="You're standing"
       className="flex flex-col gap-2 border-[1.5px] border-ink bg-paper-card p-3"
       data-testid="candidacy-card"
     >
-      <h2 className="label-caps text-[11px] font-semibold">Your candidacy</h2>
+      <h2 className="label-caps text-[11px] font-semibold">You're standing</h2>
       {c.status === 'filed' ? (
         <>
           <p className="font-body text-[15px]" data-testid="candidacy-endorsements">
             {copy.onTheSlate(n, needed)}
           </p>
-          <ProgressBar label="Endorsements" value={n} max={needed} tone="ink" />
+          <ProgressBar label="Backers" value={n} max={needed} tone="ink" />
           {c.branchLine && <p className="font-mono text-[12px] text-petrol">{copy.branchEndorsesYou}</p>}
           {c.endorsements?.branchCounts === 2 && (
             <p className="font-mono text-[12px] text-muted">{copy.branchMakesUpTheNumber}</p>
@@ -188,10 +207,10 @@ function CandidacyCard({
       ) : (
         <p className="font-body text-[15px]">
           {c.status === 'withdrawn'
-            ? 'Withdrawn · the deposit stayed with the branch'
+            ? copy.withdrawnLine
             : c.status === 'struck'
-              ? 'Struck at the close · the deposit is returned'
-              : 'On the ballot'}
+              ? copy.struckLine
+              : copy.onTheBallotLine}
         </p>
       )}
     </section>
@@ -203,14 +222,18 @@ export function SlatePage() {
   const act = usePoliticalAct();
   const [endorsedName, setEndorsedName] = useState<string | null>(null);
   if (q.isError) return <LoadError retry={() => void q.refetch()} />;
-  if (!q.data) return <Loading what="Fetching the slate…" />;
+  if (!q.data) return <Loading what="Fetching the candidates…" />;
   const e = q.data;
   if (e.phase === 'polling') {
     return (
       <Page>
-        <Plate kicker={`${e.cityName} Council · Polls open`} title="The slate">
-          <span className="font-mono text-[12px] text-dim">Nominations have closed.</span>
+        <Plate kicker={`${e.cityName} Council · Voting`} title="Who's standing">
+          <span className="font-mono text-[12px] text-dim">{copy.tooLateToStand}</span>
         </Plate>
+        <LastResultLink />
+        {/* Review 2 #6: a candidate struck at the close (or printed on the ballot) saw nothing here
+            about it; the view carries the candidacy's status, so say it. */}
+        {e.candidacy && <CandidacyCard e={e} pending={false} onWithdraw={() => undefined} />}
         <Link
           to="/council/ballot"
           className="label-caps inline-flex min-h-11 items-center justify-center bg-ink px-4 text-[13px] text-paper"
@@ -222,11 +245,15 @@ export function SlatePage() {
   }
   return (
     <Page>
-      <Plate kicker={`${e.cityName} Council · Nominations`} title="The slate">
+      <Plate kicker={`${e.cityName} Council · Candidates`} title="Who's standing">
         <span className="font-mono text-[12px] text-dim">
-          Nominations close {formatUntil(e.nominationsCloseAt)} · polls open {formatWeekday(e.pollsOpenAt)}
+          {copy.namesGoIn(formatUntil(e.nominationsCloseAt), formatWeekday(e.pollsOpenAt))}
         </span>
       </Plate>
+      <p className="font-mono text-[11.5px] text-muted" data-testid="how-decided">
+        {copy.howDecided}
+      </p>
+      <LastResultLink />
       {e.candidacy ? (
         <CandidacyCard
           e={e}
@@ -278,17 +305,29 @@ export function BallotPage() {
   const q = useQuery(trpc.council.election.queryOptions());
   const act = usePoliticalAct();
   const [selected, setSelected] = useState<string | null>(null);
+  const closed = !!q.data && (q.data.phase !== 'polling' || !q.data.ballot);
+  // Review 2 #6: a voter coming back to the ballot after the polls found no word of the result.
+  const count = useQuery({ ...trpc.council.count.queryOptions(), enabled: closed });
   if (q.isError) return <LoadError retry={() => void q.refetch()} />;
   if (!q.data) return <Loading what="Fetching the ballot…" />;
   const e = q.data;
-  if (e.phase !== 'polling' || !e.ballot) {
+  if (closed || !e.ballot) {
     return (
       <Page>
-        <Plate kicker={`${e.cityName} Council`} title="Your ballot">
+        <Plate kicker={`${e.cityName} Council`} title="Your vote">
           <span className="font-mono text-[12px] text-dim">
             {e.cityName} votes from {formatWeekday(e.pollsOpenAt)}
           </span>
         </Plate>
+        {count.data && (
+          <Link
+            to="/council/count"
+            className="label-caps inline-flex min-h-11 items-center justify-center bg-ink px-4 text-[13px] text-paper"
+            data-testid="ballot-see-count"
+          >
+            {copy.seeTheResult} · {count.data.weekday}
+          </Link>
+        )}
         <Link
           to="/council/slate"
           className="label-caps inline-flex min-h-11 items-center justify-center border-[1.5px] border-ink px-4 text-[13px]"
@@ -302,11 +341,12 @@ export function BallotPage() {
   const chosen = e.candidates.find((c) => c.key === selected);
   return (
     <Page>
-      <Plate kicker={`${e.cityName} Council · Polls open`} title="Your ballot">
+      <Plate kicker={`${e.cityName} Council · Voting`} title="Your vote">
         <span className="font-mono text-[12px] text-dim">
-          Seven seats · one vote · secret and final · polls close {formatUntil(e.countAt)}
+          Seven seats · one vote · secret and final · closes {formatUntil(e.countAt)}
         </span>
       </Plate>
+      <LastResultLink />
       <Slate
         candidates={e.candidates}
         mode="ballot"
@@ -354,14 +394,14 @@ export function CountPage() {
   const q = useQuery(trpc.council.count.queryOptions());
   const { character } = useCharacter();
   if (q.isError) return <LoadError retry={() => void q.refetch()} />;
-  if (q.isPending) return <Loading what="Fetching the count…" />;
+  if (q.isPending) return <Loading what="Fetching the result…" />;
   const c = q.data;
   if (!c) {
     return (
       <Page>
-        <Plate kicker="THE COUNT" title="No count yet">
+        <Plate kicker="THE RESULT" title="No result yet">
           <span className="font-mono text-[12px] text-dim">
-            The first count is in the paper after the polls.
+            The first result is in the paper the morning after voting closes.
           </span>
         </Plate>
       </Page>
@@ -369,7 +409,7 @@ export function CountPage() {
   }
   return (
     <Page>
-      <Plate kicker={`${c.cityName} Council · The count`} title={`${c.weekday}'s result`}>
+      <Plate kicker={`${c.cityName} Council · The result`} title={`${c.weekday}'s result`}>
         <span className="font-mono text-[12px] text-dim">
           {copy.turnout(c.turnout.voters, c.turnout.eligible)} · {copy.npcSeats(c.npcSeats, c.seats)} · final
         </span>
@@ -388,8 +428,16 @@ function CouncilHeader({ c }: { c: CouncilView }) {
     <Plate kicker={`${c.cityName} Council · Sitting`} title="The council">
       <span className="font-mono text-[12px] text-dim" data-testid="council-header">
         Term ends {formatWeekday(c.termEndsAt - 1)} · {copy.npcSeats(c.npcSeats, 7)}
-        {c.inForce ? ` · ordinance in force: ${c.inForce.name} · ${c.inForce.daysLeft} days left` : ''}
+        {c.inForce ? ` · council rule in force: ${c.inForce.name} · ${c.inForce.daysLeft} days left` : ''}
       </span>
+      {/* Review 2 (screens §6.1): the names never disappear: the last result, every day. */}
+      <Link
+        to="/council/count"
+        className="-my-2 inline-flex min-h-11 items-center self-start font-mono text-[12px] text-dim underline underline-offset-2"
+        data-testid="council-last-result"
+      >
+        {copy.lastResult}
+      </Link>
     </Plate>
   );
 }

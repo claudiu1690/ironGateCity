@@ -192,7 +192,7 @@ export const origin: OriginInput = {
     narrative:
       'You come down into the street with his suitcase. A newsboy is shouting the Herald: the government has fallen, and every party in the republic is recruiting.',
     art: 'scene.origin-street',
-    note: 'Permanent. A Faction Reset token is the only way back.',
+    note: "Permanent: you can't change party later.",
   },
   // §8.5, onboarding §2.4: library · watched · fix anything · refuse the coat · Finish His Work · Justice.
   reference: [

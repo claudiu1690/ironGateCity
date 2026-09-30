@@ -11,6 +11,7 @@ import type {
 } from '@irongate/rules';
 import { useState } from 'react';
 import { cx, formatUntil, formatWeekday } from '../format';
+import { HelpButton, helpMark } from './Help';
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { Picture } from './Picture';
 import { ProgressBar } from './ProgressBar';
@@ -57,158 +58,279 @@ export function PersonMark({
 }
 
 // ---------------------------------------------------------------------------------------------
-// The Polling Day row (screens §2.1) and the HQ council card (§7): one summary view.
+// Review 2 (screens §1a, §2.1, §7): the Election card. One component for the city screen, the
+// paper's row and the HQ sheet: the phase in plain words, what the player can do now, the countdown
+// and one button. The server picks the state (`summary.card`); this words it.
 // ---------------------------------------------------------------------------------------------
 
-/** Lines 1 and 2 of the Polling Day row for a summary. */
-export function pollingDayLines(s: PoliticsSummaryView): [string, string] {
-  const pd = copy.pd;
-  switch (s.state) {
+type ElectionRoute = NonNullable<PoliticsSummaryView['route']>;
+
+const DAY_MS = 86_400_000;
+const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
+
+/** Whole days to a boundary, rounded up (at least 1 while it is ahead). */
+const daysTo = (at: number, now: number) => Math.max(1, Math.ceil((at - now) / DAY_MS));
+
+export interface ElectionLines {
+  line1: string;
+  line2: string;
+  primary: { label: string; route: ElectionRoute } | null;
+  secondary: { label: string; route: ElectionRoute } | null;
+}
+
+/** The card's lines and buttons for a summary (screens §2.1's table). */
+export function electionLines(s: PoliticsSummaryView, now: number = Date.now()): ElectionLines {
+  const e = copy.election;
+  const k = s.card;
+  const stand = { label: copy.standForTheCouncil(s.standCost), route: '/council/slate' as const };
+  const slate = (label: string) => ({ label, route: '/council/slate' as const });
+  const lines = (pair: readonly string[] | string[]) => ({ line1: pair[0]!, line2: pair[1]! });
+  switch (k.state) {
     case 'belowRank':
-      return pd.belowRank(s.cityName, s.pollsFromWeekday, s.rank2Title, 400) as [string, string];
-    case 'ballot':
-      return pd.ballot(formatUntil(s.closesAt)) as [string, string];
-    case 'councilSits':
-      return pd.councilSits(formatUntil(s.divideAt ?? s.closesAt)) as [string, string];
-    case 'filed':
-      return pd.filed(
-        s.endorsements?.n ?? 0,
-        s.endorsements?.needed ?? 2,
-        s.branchLine
-          ? copy.branchEndorsesYou
-          : s.endorsements?.branchWillMakeUp
-            ? copy.branchMakesUpTheNumber
-            : pd.doOrders,
-      ) as [string, string];
-    case 'stand':
-      return pd.stand(s.standCost, formatUntil(s.closesAt)) as [string, string];
-    case 'count':
-      return pd.count(
-        s.count?.winner ?? '',
-        s.count?.npcSeats ?? 0,
-        s.count?.turnout.voters ?? 0,
-        s.count?.turnout.eligible ?? 0,
-      ) as [string, string];
+      return {
+        ...lines(e.belowRank(s.cityName, formatWeekday(k.countAt), s.rank2Title, k.rank2Fxp, k.fxp)),
+        primary: null,
+        secondary: slate(e.seeWhosStanding),
+      };
+    case 'candidates':
+      return {
+        ...lines(e.candidates(formatWeekday(k.pollsOpenAt), e.days(daysTo(k.closesAt, now)))),
+        primary: k.canStand ? stand : slate(e.seeWhosStanding),
+        secondary: k.canStand ? slate(e.seeWhosStanding) : null,
+      };
+    case 'standing':
+      return {
+        ...lines(e.standing(k.backers?.n ?? 0, k.backers?.needed ?? 2, formatUntil(k.closesAt))),
+        primary: slate(e.seeTheCandidates),
+        secondary: null,
+      };
+    case 'backing':
+      return {
+        ...lines(e.backing(k.backing ?? '', formatWeekday(k.pollsOpenAt), e.days(daysTo(k.closesAt, now)))),
+        primary: slate(e.seeWhosStanding),
+        secondary: null,
+      };
+    case 'voting':
+      return {
+        ...lines(e.voting(formatUntil(k.closesAt), daysTo(k.closesAt, now))),
+        primary: { label: e.voteNow, route: '/council/ballot' },
+        secondary: null,
+      };
+    case 'candidateVoting':
+      return {
+        ...lines(e.candidateVoting(formatUntil(k.closesAt))),
+        primary: { label: e.voteNow, route: '/council/ballot' },
+        secondary: null,
+      };
     case 'voted':
-      return pd.voted(s.votedFor ?? '', formatWeekday(s.countAt ?? s.closesAt)) as [string, string];
-    case 'nominations':
-      return pd.nominations(s.cityName, s.pollsFromWeekday) as [string, string];
+      return {
+        ...lines(e.voted(k.votedFor ?? '', formatWeekday(k.countAt), s.paperShortName)),
+        primary: { label: e.seeTheCandidates, route: '/council/ballot' },
+        secondary: null,
+      };
+    case 'result': {
+      const r = k.result!;
+      const y = r.yourLine;
+      const your = !y
+        ? null
+        : y.kind === 'elected'
+          ? e.yourLine.elected(ORDINALS[y.place - 1] ?? String(y.place))
+          : y.kind === 'missed'
+            ? e.yourLine.missed(y.margin)
+            : y.kind === 'voteWon'
+              ? e.yourLine.voteWon(y.name)
+              : e.yourLine.voteLost(y.name);
+      return {
+        ...lines(e.result(r.winner, your, formatWeekday(r.councilUntil - 1), formatUntil(r.namesUntil))),
+        primary: { label: e.seeTheResult, route: '/council/count' },
+        secondary: k.canStand ? stand : null,
+      };
+    }
+    case 'councilSits':
+      return {
+        ...lines(e.councilSits(formatUntil(k.closesAt), e.days(daysTo(k.closesAt, now)))),
+        primary: { label: e.voteOnTheRule, route: '/council' },
+        secondary: null,
+      };
+    case 'councilVoted':
+      return {
+        ...lines(e.councilVoted(k.rule?.votedFor ?? e.noneOfThese, formatWeekday(k.closesAt))),
+        primary: { label: e.seeTheCouncil, route: '/council' },
+        secondary: null,
+      };
   }
 }
 
-export interface PollingDayRowProps {
+export interface ElectionCardProps {
   summary: PoliticsSummaryView;
-  onOpen?: (route: NonNullable<PoliticsSummaryView['route']>) => void;
+  onOpen: (route: ElectionRoute) => void;
+  /**
+   * `card`: wide screens, the side column and the HQ sheet (kicker with its note, two lines, the
+   * rule line, one or two buttons); `row`: the paper's row (one tap to the primary route);
+   * `compact`: one 44 px line, *ELECTION · line 1 ›*, under a phone's plate (the card folded).
+   */
+  layout?: 'card' | 'row' | 'compact';
+  now?: number;
+  className?: string;
 }
 
-/** Between Party orders and Letters on every edition (screens §2.1). */
-export function PollingDayRow({ summary, onOpen }: PollingDayRowProps) {
-  const [l1, l2] = pollingDayLines(summary);
-  const strong = summary.state === 'ballot' || summary.state === 'stand' || summary.state === 'councilSits';
-  const body = (
-    <>
-      <span className="flex min-w-0 flex-col">
-        <span className={cx('font-body text-[15px] leading-snug', strong && 'font-semibold')}>{l1}</span>
-        <span className="font-mono text-[11px] text-muted">{l2}</span>
-      </span>
-      {summary.route && (
-        <span className="font-label text-[18px]" aria-hidden="true">
-          ›
+export function ElectionCard({ summary: s, onOpen, layout = 'card', now, className }: ElectionCardProps) {
+  const l = electionLines(s, now);
+  const k = s.card;
+  const strong = k.state === 'voting' || k.state === 'candidateVoting' || k.state === 'councilSits';
+  const rule = s.inForce ? copy.election.ruleLine(s.inForce.name, s.inForce.daysLeft) : null;
+  const firstTime = k.firstTime ? copy.election.firstTime(s.cityName, s.rank3Title) : null;
+  const target = l.primary ?? l.secondary;
+  if (layout !== 'card') {
+    const body = (
+      <>
+        <span className={cx('flex min-w-0', layout === 'compact' ? 'items-baseline gap-2' : 'flex-col')}>
+          {layout === 'compact' && (
+            <span className="label-caps shrink-0 text-[9.5px] font-semibold text-muted">
+              {copy.election.rowKicker}
+            </span>
+          )}
+          {layout === 'row' && firstTime && (
+            <span className="font-body text-[12px] leading-snug text-text-2 italic">{firstTime}</span>
+          )}
+          <span
+            className={cx(
+              'font-body leading-snug',
+              layout === 'compact' ? 'truncate text-[13.5px]' : 'text-[15px]',
+              strong && 'font-semibold',
+            )}
+            data-testid="election-line1"
+          >
+            {l.line1}
+          </span>
+          {layout === 'row' && (
+            <span className="font-mono text-[11px] text-muted" data-testid="election-line2">
+              {l.line2}
+            </span>
+          )}
         </span>
-      )}
-    </>
-  );
-  return (
-    <section aria-label={copy.pollingDay} className="flex flex-col" data-testid="polling-day">
-      <div className="label-caps border-t-[3px] border-b border-double border-ink py-1.5 text-[11px] font-semibold">
-        {copy.pollingDay}
-      </div>
-      {summary.route && onOpen ? (
-        <button
-          type="button"
-          onClick={() => onOpen(summary.route!)}
-          className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-3 border-b border-dotted border-faint py-2 text-left hover:bg-paper-card"
-          data-testid="polling-day-row"
-          data-state={summary.state}
-        >
-          {body}
-        </button>
-      ) : (
-        <div
-          className="flex min-h-14 items-center justify-between gap-3 border-b border-dotted border-faint py-2"
-          data-testid="polling-day-row"
-          data-state={summary.state}
-        >
-          {body}
-        </div>
-      )}
-    </section>
-  );
-}
-
-export interface CouncilCardProps {
-  summary: PoliticsSummaryView;
-  onOpen: (route: NonNullable<PoliticsSummaryView['route']>) => void;
-}
-
-/** The HQ sheet's council card, in the JobsCard style (screens §7). */
-export function CouncilCard({ summary: s, onOpen }: CouncilCardProps) {
-  const cc = copy.cc;
-  const state =
-    s.state === 'councilSits'
-      ? cc.sits(formatUntil(s.divideAt ?? s.closesAt))
-      : s.phase === 'nominations'
-        ? cc.nominations(formatUntil(s.closesAt))
-        : cc.polling(formatUntil(s.closesAt));
-  let button: { label: string; route: NonNullable<PoliticsSummaryView['route']> } | null = null;
-  if (s.state === 'councilSits') button = { label: cc.voteOnTheOrdinance, route: '/council' };
-  else if (s.state === 'stand')
-    button = { label: copy.standForTheCouncil(s.standCost), route: '/council/slate' };
-  else if (s.state === 'ballot') button = { label: cc.castYourBallot, route: '/council/ballot' };
-  else if (s.state === 'count') button = { label: cc.seeTheCount, route: '/council/count' };
-  else if (s.phase === 'nominations' && s.state !== 'belowRank')
-    button = { label: copy.seeTheSlate, route: '/council/slate' };
-  else if (s.state !== 'belowRank' && s.state !== 'voted')
-    button = { label: cc.seeTheCouncil, route: '/council' };
+        {target && (
+          <span className="font-label text-[18px]" aria-hidden="true">
+            ›
+          </span>
+        )}
+      </>
+    );
+    return (
+      <section
+        aria-label={copy.election.kicker(s.cityName)}
+        className={cx('flex flex-col', className)}
+        data-testid="polling-day"
+        data-state={k.state}
+      >
+        {layout === 'row' && (
+          <div className="label-caps border-t-[3px] border-b border-double border-ink py-1 text-[10px] font-semibold">
+            {copy.election.rowKicker}
+          </div>
+        )}
+        {target ? (
+          <button
+            type="button"
+            onClick={() => onOpen(target.route)}
+            className={cx(
+              'flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 text-left hover:bg-paper-card',
+              layout === 'row' ? 'border-b border-dotted border-faint py-1.5' : 'py-0.5',
+            )}
+            data-testid="polling-day-row"
+            data-state={k.state}
+          >
+            {body}
+          </button>
+        ) : (
+          <div
+            className="flex min-h-11 items-center justify-between gap-3 border-b border-dotted border-faint py-1.5"
+            data-testid="polling-day-row"
+            data-state={k.state}
+          >
+            {body}
+          </div>
+        )}
+      </section>
+    );
+  }
   return (
     <section
-      aria-label={`${s.cityName} Council`}
-      className="mt-1 flex flex-col gap-1.5 border-[1.5px] border-ink bg-paper-card px-3 py-2"
-      data-testid="council-card"
+      aria-label={copy.election.kicker(s.cityName)}
+      className={cx('flex flex-col gap-1 border-[1.5px] border-ink bg-paper-card px-3 py-2', className)}
+      data-testid="election-card"
+      data-state={k.state}
     >
-      <h3 className="label-caps text-[11px] font-semibold">{s.cityName} Council</h3>
-      <p className="font-body text-[14px]">{state}</p>
-      {/* Review 1 #10: below Rank 2 the card has no button, so it says why, in the hint style,
-          with the Polling Day row's line ("Stewards vote. 400 Faction XP makes a Steward.").
-          TODO(game-designer): confirm this line on the card. */}
-      {s.state === 'belowRank' && (
-        <p className="font-mono text-[12px] text-muted" data-testid="council-card-reason">
-          {pollingDayLines(s)[1]}
+      {firstTime && (
+        <p
+          className="font-body text-[12.5px] leading-snug text-text-2 italic"
+          data-testid="election-first-time"
+        >
+          {firstTime}
         </p>
       )}
-      {s.state === 'filed' && s.endorsements && (
+      <HelpButton
+        notes={[
+          copy.help.election(s.cityName, s.rank2Title, s.rank3Title),
+          ...(s.inForce ? [copy.help.rule(s.cityName)] : []),
+        ]}
+        label={`What the ${s.cityName} election means`}
+        testId="election-help"
+        className="-my-2 self-start"
+      >
+        <span className={cx('label-caps text-[10px] font-semibold', helpMark)}>
+          {copy.election.kicker(s.cityName)}
+        </span>
+      </HelpButton>
+      <p
+        className={cx('font-body text-[15px] leading-snug', strong && 'font-semibold')}
+        data-testid="election-line1"
+      >
+        {l.line1}
+      </p>
+      <p className="font-mono text-[11px] text-muted" data-testid="election-line2">
+        {l.line2}
+      </p>
+      {k.state === 'standing' && k.backers && (
         <>
-          <p className="font-mono text-[12px]" data-testid="council-card-endorsements">
-            {copy.onTheSlate(s.endorsements.n, s.endorsements.needed)}
-          </p>
-          <ProgressBar label="Endorsements" value={s.endorsements.n} max={s.endorsements.needed} tone="ink" />
+          <ProgressBar
+            label={copy.election.kicker(s.cityName)}
+            value={k.backers.n}
+            max={k.backers.needed}
+            tone="ink"
+          />
+          {k.backers.branchLine && (
+            <p className="font-mono text-[12px] text-petrol">{copy.branchEndorsesYou}</p>
+          )}
         </>
       )}
-      {s.branchLine && <p className="font-mono text-[12px] text-petrol">{copy.branchEndorsesYou}</p>}
-      {s.state === 'voted' && <p className="font-mono text-[12px] text-muted">{copy.cc.ballotCast}</p>}
-      {s.inForce && (
-        <p className="font-mono text-[11px] text-muted">
-          {copy.ordinanceInForce(s.inForce.name, s.inForce.daysLeft)}
+      {rule && (
+        <p className="font-mono text-[11px] text-muted" data-testid="election-rule">
+          {rule}
         </p>
       )}
-      {button && (
-        <button
-          type="button"
-          onClick={() => onOpen(button!.route)}
-          className="label-caps min-h-11 cursor-pointer bg-ink px-3 text-[12px] text-paper hover:bg-ink-2"
-        >
-          {button.label}
-        </button>
+      {(l.primary || l.secondary) && (
+        <div className="flex flex-col gap-1.5 pt-1 sm:flex-row">
+          {l.primary && (
+            <button
+              type="button"
+              onClick={() => onOpen(l.primary!.route)}
+              className="label-caps min-h-11 flex-1 cursor-pointer bg-ink px-3 text-[12px] text-paper hover:bg-ink-2"
+              data-testid="election-primary"
+            >
+              {l.primary.label}
+            </button>
+          )}
+          {l.secondary && (
+            <button
+              type="button"
+              onClick={() => onOpen(l.secondary!.route)}
+              className="label-caps min-h-11 flex-1 cursor-pointer border-[1.5px] border-ink px-3 text-[12px] text-ink hover:bg-ink hover:text-paper"
+              data-testid="election-secondary"
+            >
+              {l.secondary.label}
+            </button>
+          )}
+        </div>
       )}
     </section>
   );
@@ -235,7 +357,7 @@ export interface CandidateRowProps {
 function standingLine(c: CandidateView): string {
   const rank = c.rankTitle ?? copy.ward;
   const parts = [rank, `${c.standing.name} in ${c.standing.cityName}`];
-  if (c.endorsements) parts.push(`endorsements ${c.endorsements.n} / ${c.endorsements.needed}`);
+  if (c.endorsements) parts.push(copy.backersOf(c.endorsements.n, c.endorsements.needed));
   return parts.join(' · ');
 }
 
@@ -281,7 +403,7 @@ export function CandidateRow({
         >
           {main}
           {mine ? (
-            <span className="shrink-0 font-mono text-[12px] text-petrol">Your ballot</span>
+            <span className="shrink-0 font-mono text-[12px] text-petrol">{copy.youVotedFor(c.name)}</span>
           ) : (
             <span
               className={cx(
@@ -329,9 +451,9 @@ export function CandidateRow({
       {open && (
         <p className="pt-1 pl-[42px] font-mono text-[11px] text-muted">
           {e && e.names.length > 0
-            ? `Endorsed by ${e.names.join(', ')}${e.more > 0 ? ` and ${e.more} more` : ''} · `
+            ? `${copy.backedBy(`${e.names.join(', ')}${e.more > 0 ? ` and ${e.more} more` : ''}`)} · `
             : ''}
-          Ward vote {c.wardVote} · from {c.standing.successes} Successes
+          {copy.localSupport(c.wardVote)}
         </p>
       )}
     </li>
@@ -415,16 +537,18 @@ export function CountTable({
               Name
             </th>
             <th scope="col" className="py-1 pl-2 text-right font-normal">
-              Ward
+              <span className="max-[400px]:hidden">{copy.resultColumns[2]}</span>
+              <span className="min-[401px]:hidden">{copy.resultColumnsShort[2]}</span>
             </th>
             <th scope="col" className="py-1 pl-2 text-right font-normal">
-              End.
+              <span className="max-[400px]:hidden">{copy.resultColumns[3]}</span>
+              <span className="min-[401px]:hidden">{copy.resultColumnsShort[3]}</span>
             </th>
             <th scope="col" className="py-1 pl-2 text-right font-normal">
-              Votes
+              {copy.resultColumns[4]}
             </th>
             <th scope="col" className="py-1 pl-1 text-right font-normal">
-              Total
+              {copy.resultColumns[5]}
             </th>
           </tr>
         </thead>
@@ -712,7 +836,7 @@ export interface OrdinanceMenuProps {
   pending: boolean;
 }
 
-/** Propose an ordinance · 20 PC: one tap proposes (screens §6.5). */
+/** Propose an ordinance · 20 Political Capital: one tap proposes (screens §6.5). */
 export function OrdinanceMenu({
   open,
   onOpenChange,
@@ -725,7 +849,7 @@ export function OrdinanceMenu({
     <BottomSheet
       open={open}
       onOpenChange={onOpenChange}
-      title={canAfford ? 'Propose an ordinance · 20 PC' : `Propose an ordinance · ${copy.needsPc(20)}`}
+      title={canAfford ? copy.propose(20) : `${copy.propose(20).split(' · ')[0]} · ${copy.needsPc(20)}`}
     >
       <div className="flex flex-col" data-testid="ordinance-menu">
         {items.map((o) => (

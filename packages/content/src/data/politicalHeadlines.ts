@@ -19,7 +19,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'seatWon', top: false }],
     headline: '{name} Takes a Seat on Coalport Council',
-    deck: 'Elected {ordinal} of seven with {votes} votes. The council sits from this morning. Secretary Holm: "Now do something with it."',
+    deck: 'Elected {ordinal} of seven with {votes} support. The council sits from this morning. Secretary Holm: "Now do something with it."',
   },
   {
     id: 'hl.seat-top',
@@ -28,7 +28,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'seatWon', top: true }],
     headline: '{name} Tops the Poll in Coalport',
-    deck: 'First of seven with {votes} votes. The Union Hall has a new name on the door.',
+    deck: 'First of seven with {votes} support. The Union Hall has a new name on the door.',
   },
   {
     id: 'hl.seat-lost',
@@ -37,7 +37,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'seatLost', tie: false }],
     headline: '{name} Misses the Last Seat by {margin}',
-    deck: '{last} took the seventh seat. Nominations are open again today. The branch keeps the deposit.',
+    deck: '{last} took the seventh seat. Candidates can put their names in again today. The branch keeps the 10 Political Capital.',
   },
   {
     id: 'hl.seat-lost-tie',
@@ -46,7 +46,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'seatLost', tie: true }],
     headline: '{name} Loses the Last Seat on the Tie-Break',
-    deck: "Level with {last} on {votes}. The seat went on members' votes, then endorsements, then standing. Nominations are open again today.",
+    deck: 'Level with {last} on {votes}. The seat went on votes, then backers, then reputation. Candidates can put their names in again today.',
   },
   {
     id: 'hl.filed',
@@ -54,8 +54,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'filedYesterday' }],
-    headline: '{name} Files for the Council',
-    deck: 'Endorsements {endorsements} / 2 by {until}, or the name comes off the ballot.',
+    headline: '{name} Stands for the Council',
+    deck: 'Backers {endorsements} of 2 by {until}, or the name comes off the list.',
   },
   {
     id: 'hl.on-ballot',
@@ -63,8 +63,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'nominationsClosed', struck: false }],
-    headline: '{name} Is on the Ballot',
-    deck: 'On the ballot with {endorsements} endorsements. Polls open today until {until}. A candidate may vote for themselves.',
+    headline: '{name} Is a Candidate',
+    deck: 'On the list with {endorsements} backers. Voting is open today until {until}. A candidate may vote for themselves.',
   },
   {
     id: 'hl.struck',
@@ -72,8 +72,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'nominationsClosed', struck: true }],
-    headline: '{name} Comes Off the Ballot',
-    deck: 'Short of two endorsements at the close. The deposit is returned; nominations open again on {weekday}.',
+    headline: '{name} Comes Off the List',
+    deck: 'Short of two backers at the close. The 10 Political Capital is returned; candidates can put their names in again on {weekday}.',
   },
   {
     id: 'hl.voted-won',
@@ -108,8 +108,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'movedYesterday' }],
-    headline: 'Councillor {name} Moves {ordinance}',
-    deck: '{ordinanceLine} The council divides at {until}.',
+    headline: 'Councillor {name} Puts Forward {ordinance}',
+    deck: '{ordinanceLine} The council votes at {until}.',
   },
   {
     id: 'hl.seat-ended',
@@ -117,8 +117,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'termEnded' }],
-    headline: 'Councillor {name} Rises',
-    deck: 'Five days, one ordinance. The council thanks its member; nominations for the next but one open today.',
+    headline: 'Councillor {name} Steps Down',
+    deck: 'Five days, one rule. The council thanks its member; candidates for the council after next can put their names in today.',
   },
   {
     id: 'hl.council-passed',
@@ -135,8 +135,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'divided', passed: false }],
-    headline: 'Council Rises Without a Motion',
-    deck: 'No ordinance reached four votes. Coalport goes without for five days.',
+    headline: "Council Can't Agree on a Rule",
+    deck: 'No rule reached four votes. Coalport goes without for five days.',
   },
   {
     id: 'hl.count',
@@ -144,8 +144,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'countToday' }],
-    headline: 'Polls Close in Coalport: {winner} Tops the Poll',
-    deck: 'Seven seats filled, {npcSeats} of them by ward members. Turnout {turnout}.',
+    headline: 'Coalport Result: {winner} Tops the Poll',
+    deck: 'Seven seats filled, {npcSeats} of them by local candidates. Turnout {turnout}.',
   },
   {
     id: 'hl.stands-firm',
@@ -171,8 +171,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'phaseToday', phase: 'polling' }],
-    headline: 'Polls Open in Coalport',
-    deck: 'Vote from the paper or the Union Hall until {until}. The ballot is secret.',
+    headline: 'Voting Open in Coalport',
+    deck: 'Vote from the paper or the Election card until {until}. Your vote is secret.',
   },
   {
     id: 'hl.nominations',
@@ -180,8 +180,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'phaseToday', phase: 'nominations' }],
-    headline: 'Coalport Council: Nominations Open',
-    deck: 'Organisers who are Known in the wards may file at the Union Hall until {until}.',
+    headline: 'Coalport Council: Candidates Wanted',
+    deck: 'Organisers who are Known in the town can stand from the Election card until {until}.',
   },
   // duskwall
   {
@@ -191,7 +191,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'seatWon', top: false }],
     headline: '{name} Seated on Duskwall Council',
-    deck: 'Elected {ordinal} of seven with {votes} votes. Organiser Stahl: "The committee expects a full term."',
+    deck: 'Elected {ordinal} of seven with {votes} support. Organiser Stahl: "The committee expects a full term."',
   },
   {
     id: 'hl.v.seat-top',
@@ -200,7 +200,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'seatWon', top: true }],
     headline: '{name} Heads the Poll in Duskwall',
-    deck: 'First of seven with {votes} votes. Beacon House notes it in the minutes.',
+    deck: 'First of seven with {votes} support. Beacon House notes it in the minutes.',
   },
   {
     id: 'hl.v.seat-lost',
@@ -209,7 +209,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'seatLost', tie: false }],
     headline: '{name} Short of the Last Seat by {margin}',
-    deck: '{last} took the seventh seat. Nominations reopen today. The deposit stays with the district.',
+    deck: '{last} took the seventh seat. Candidates can put their names in again today. The 10 Political Capital stays with the district.',
   },
   {
     id: 'hl.v.seat-lost-tie',
@@ -218,7 +218,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'seatLost', tie: true }],
     headline: '{name} Loses the Last Seat on the Tie-Break',
-    deck: 'Level with {last} on {votes}; the rules gave them the seat. Nominations reopen today. The deposit stays with the district.',
+    deck: 'Level with {last} on {votes}; the rules gave them the seat. Candidates can put their names in again today. The 10 Political Capital stays with the district.',
   },
   {
     id: 'hl.v.filed',
@@ -226,8 +226,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'filedYesterday' }],
-    headline: '{name} Files for Duskwall Council',
-    deck: 'Endorsements {endorsements} / 2 by {until}. The committee does not extend deadlines.',
+    headline: '{name} Stands for Duskwall Council',
+    deck: 'Backers {endorsements} of 2 by {until}. The committee does not extend deadlines.',
   },
   {
     id: 'hl.v.on-ballot',
@@ -235,8 +235,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'nominationsClosed', struck: false }],
-    headline: '{name} Is on the Ballot',
-    deck: 'On the ballot with {endorsements} endorsements. Polls open today until {until}. The committee expects every member to vote.',
+    headline: '{name} Is a Candidate',
+    deck: 'On the list with {endorsements} backers. Voting is open today until {until}. The committee expects every member to vote.',
   },
   {
     id: 'hl.v.struck',
@@ -244,8 +244,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'nominationsClosed', struck: true }],
-    headline: '{name} Comes Off the Ballot',
-    deck: 'Short of two endorsements at the close. The deposit is returned. Nominations reopen on {weekday}; the committee does not extend deadlines.',
+    headline: '{name} Comes Off the List',
+    deck: 'Short of two backers at the close. The 10 Political Capital is returned. Candidates can put their names in again on {weekday}; the committee does not extend deadlines.',
   },
   {
     id: 'hl.v.voted-won',
@@ -280,8 +280,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'movedYesterday' }],
-    headline: 'Councillor {name} Moves {ordinance}',
-    deck: '{ordinanceLine} The council divides at {until}. Beacon House expects a full chamber.',
+    headline: 'Councillor {name} Puts Forward {ordinance}',
+    deck: '{ordinanceLine} The council votes at {until}. Beacon House expects a full chamber.',
   },
   {
     id: 'hl.v.seat-ended',
@@ -290,7 +290,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'termEnded' }],
     headline: 'Councillor {name} Stands Down in Good Order',
-    deck: 'Five days, one ordinance, minutes filed. Nominations for the next but one open today.',
+    deck: 'Five days, one rule, minutes filed. Candidates for the council after next can put their names in today.',
   },
   {
     id: 'hl.v.council-passed',
@@ -307,8 +307,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'divided', passed: false }],
-    headline: 'Council Rises Without a Motion',
-    deck: 'No ordinance reached four votes. Beacon House will want to know why.',
+    headline: "Council Can't Agree on a Rule",
+    deck: 'No rule reached four votes. Beacon House will want to know why.',
   },
   {
     id: 'hl.v.count',
@@ -316,8 +316,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'countToday' }],
-    headline: 'Polls Close in Duskwall: {winner} Heads the Poll',
-    deck: 'Seven seats filled, {npcSeats} by ward members. Turnout {turnout}.',
+    headline: 'Duskwall Result: {winner} Heads the Poll',
+    deck: 'Seven seats filled, {npcSeats} by local candidates. Turnout {turnout}.',
   },
   {
     id: 'hl.v.stands-firm',
@@ -343,8 +343,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'phaseToday', phase: 'polling' }],
-    headline: 'Polls Open in Duskwall',
-    deck: 'Vote from the paper or at Beacon House until {until}. The ballot is secret.',
+    headline: 'Voting Open in Duskwall',
+    deck: 'Vote from the paper or at Beacon House until {until}. Your vote is secret.',
   },
   {
     id: 'hl.v.nominations',
@@ -352,8 +352,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'phaseToday', phase: 'nominations' }],
-    headline: 'Duskwall Council: Nominations Open',
-    deck: 'Bailiffs Known in the wards may file at Beacon House until {until}.',
+    headline: 'Duskwall Council: Candidates Wanted',
+    deck: 'Bailiffs who are Known in the town can stand from the Election card until {until}.',
   },
   // ashford
   {
@@ -363,7 +363,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'seatWon', top: false }],
     headline: '{name} Elected to Ashford Council',
-    deck: '{ordinal} of seven with {votes} votes. Mr Grey: "Good. Now read the standing orders."',
+    deck: '{ordinal} of seven with {votes} support. Mr Grey: "Good. Now read the standing orders."',
   },
   {
     id: 'hl.a.seat-top',
@@ -372,7 +372,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'seatWon', top: true }],
     headline: '{name} Tops the Poll in Ashford',
-    deck: 'First of seven with {votes} votes. The Rooms are, for once, unanimous.',
+    deck: 'First of seven with {votes} support. The Rooms are, for once, unanimous.',
   },
   {
     id: 'hl.a.seat-lost',
@@ -381,7 +381,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'seatLost', tie: false }],
     headline: '{name} Misses the Last Seat by {margin}',
-    deck: '{last} took the seventh seat. Nominations reopen today. Deposits are not returned; the Gazette has asked.',
+    deck: '{last} took the seventh seat. Candidates can put their names in again today. The 10 Political Capital is not returned; the Gazette has asked.',
   },
   {
     id: 'hl.a.seat-lost-tie',
@@ -390,7 +390,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'seatLost', tie: true }],
     headline: '{name} Loses the Last Seat on the Tie-Break',
-    deck: 'Level with {last} on {votes}. The returning officer applied the rules; the Gazette has checked them. Nominations reopen today.',
+    deck: 'Level with {last} on {votes}. The returning officer applied the rules; the Gazette has checked them. Candidates can put their names in again today.',
   },
   {
     id: 'hl.a.filed',
@@ -398,8 +398,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'filedYesterday' }],
-    headline: '{name} Files for Ashford Council',
-    deck: 'Endorsements {endorsements} / 2 by {until}, says the returning officer, who means it.',
+    headline: '{name} Stands for Ashford Council',
+    deck: 'Backers {endorsements} of 2 by {until}, says the returning officer, who means it.',
   },
   {
     id: 'hl.a.on-ballot',
@@ -407,8 +407,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'nominationsClosed', struck: false }],
-    headline: '{name} Is on the Ballot',
-    deck: 'On the ballot with {endorsements} endorsements. Polls open today until {until}. The Gazette wishes every candidate luck, impartially.',
+    headline: '{name} Is a Candidate',
+    deck: 'On the list with {endorsements} backers. Voting is open today until {until}. The Gazette wishes every candidate luck, impartially.',
   },
   {
     id: 'hl.a.struck',
@@ -416,8 +416,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'nominationsClosed', struck: true }],
-    headline: '{name} Comes Off the Ballot',
-    deck: 'Short of two endorsements at the close. The deposit is returned, says the returning officer, who has counted it. Nominations reopen on {weekday}.',
+    headline: '{name} Comes Off the List',
+    deck: 'Short of two backers at the close. The 10 Political Capital is returned, says the returning officer, who has counted it. Candidates can put their names in again on {weekday}.',
   },
   {
     id: 'hl.a.voted-won',
@@ -452,8 +452,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'movedYesterday' }],
-    headline: 'Councillor {name} Moves {ordinance}',
-    deck: '{ordinanceLine} The council divides at {until}. The Gazette prints the division in full.',
+    headline: 'Councillor {name} Puts Forward {ordinance}',
+    deck: "{ordinanceLine} The council votes at {until}. The Gazette prints the council's vote in full.",
   },
   {
     id: 'hl.a.seat-ended',
@@ -462,7 +462,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'termEnded' }],
     headline: 'Councillor {name} Retires from the Chamber',
-    deck: 'Five days, one ordinance. Nominations for the next but one open today.',
+    deck: 'Five days, one rule. Candidates for the council after next can put their names in today.',
   },
   {
     id: 'hl.a.council-passed',
@@ -479,8 +479,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'divided', passed: false }],
-    headline: 'Council Rises Without a Motion',
-    deck: "No ordinance reached four votes. The Gazette's leader column is not kind.",
+    headline: "Council Can't Agree on a Rule",
+    deck: "No rule reached four votes. The Gazette's leader column is not kind.",
   },
   {
     id: 'hl.a.count',
@@ -488,8 +488,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'countToday' }],
-    headline: 'Polls Close in Ashford: {winner} Tops the Poll',
-    deck: 'Seven seats filled, {npcSeats} by ward members. Turnout {turnout}.',
+    headline: 'Ashford Result: {winner} Tops the Poll',
+    deck: 'Seven seats filled, {npcSeats} by local candidates. Turnout {turnout}.',
   },
   {
     id: 'hl.a.stands-firm',
@@ -515,8 +515,8 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'phaseToday', phase: 'polling' }],
-    headline: 'Polls Open in Ashford',
-    deck: 'Vote from the paper or at the Rooms until {until}. The ballot is secret.',
+    headline: 'Voting Open in Ashford',
+    deck: 'Vote from the paper or at the Rooms until {until}. Your vote is secret.',
   },
   {
     id: 'hl.a.nominations',
@@ -524,7 +524,7 @@ export const politicalHeadlines: HeadlineInput[] = [
     group: 'city',
     priority: 0,
     when: [{ kind: 'phaseToday', phase: 'nominations' }],
-    headline: 'Ashford Council: Nominations Open',
-    deck: 'Agents Known in the wards may file at the Rooms until {until}.',
+    headline: 'Ashford Council: Candidates Wanted',
+    deck: 'Agents who are Known in the town can stand from the Election card until {until}.',
   },
 ];

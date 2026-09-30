@@ -64,8 +64,8 @@ describe('character.me v2', () => {
     // The welcome set, not the rotation (ADR 0012). Review 1 (§13.7): slot A by the best trained
     // stat (INT 12: the Mill Gate canvass), titles that say what and where, Take a job welcome-only.
     expect(first.orders.items.map((o) => [o.id, o.title, o.target])).toEqual([
-      ['dir.shift-change', 'Canvass the shift change at the Mill Gate', 2],
-      ['dir.report', 'Sit in on the committee at the Union Hall', 1],
+      ['dir.shift-change', 'Talk to the workers at the Mill Gate', 2],
+      ['dir.report', 'Go to the branch meeting at the Union Hall', 1],
       ['dir.take-a-job', 'Take a job at the Mill Gate', 1],
     ]);
     expect(first.orders.issuer).toMatchObject({

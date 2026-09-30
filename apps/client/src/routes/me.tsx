@@ -211,7 +211,7 @@ export function MePage() {
                 c.rank.nextTitle,
               ),
             ]}
-            label="What Faction XP means"
+            label="What Party XP means"
             className="flex flex-col gap-1.5"
             testId="me-rank-help"
           >
@@ -221,11 +221,11 @@ export function MePage() {
                 {formatNumber(c.fxp)}
                 {c.rank.fxpNext !== null
                   ? ` / ${formatNumber(c.rank.fxpNext)} to ${c.rank.nextTitle ?? ''}`
-                  : ' Faction XP'}
+                  : ' Party XP'}
               </span>
             </span>
             <ProgressBar
-              label="Faction XP to the next rank"
+              label="Party XP to the next rank"
               value={c.rank.fxpNext === null ? 1 : c.fxp - c.rank.fxpFloor}
               max={c.rank.fxpNext === null ? 1 : rankSpan}
               color={FACTION_STYLE[c.factionId].color}
@@ -303,15 +303,14 @@ export function MePage() {
           )}
         </Card>
 
-        <Card title="Local Standing">
+        <Card title="Reputation">
           <span className="font-label text-[14px]">
             {c.standing.cityName}: {c.standing.name}
-            {c.standing.bonus > 0 ? ` · +${c.standing.bonus} % here` : ''}
           </span>
           {c.standing.next !== null && (
             <>
               <ProgressBar
-                label={`Successes to ${c.standing.nextName}`}
+                label={`Wins to ${c.standing.nextName}`}
                 value={c.standing.successes - c.standing.floor}
                 max={c.standing.next - c.standing.floor}
               />

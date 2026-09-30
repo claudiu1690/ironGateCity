@@ -1,147 +1,124 @@
 import { copy } from '@irongate/content/copy';
-import type { CheckBonus, CheckBreakdown, Outcome } from '@irongate/rules';
-import { formatSigned } from './format';
+import type { CheckBreakdown, Outcome } from '@irongate/rules';
 
 /**
- * Review 1 (GDD §8.4, `review-1-answers.md` §4): the odds a person can read. These word the numbers
- * the server decided (the breakdown it sent); they compute no outcome.
+ * Review 2 (GDD §8.4, `review-2-answers.md` §2): the odds a player reads are a word, and a result
+ * that isn't a Success says why in one plain line. These word the numbers the server decided (the
+ * breakdown it sent); they compute no outcome, and no string they return holds a digit.
  */
 
-const NAME = (s: string) => s.toUpperCase();
-/** A stat value as the maths used it: a two-stat average may be a half ("6.5"). */
-const num = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+type StatId = 'str' | 'int' | 'agi' | 'cha';
+/** "Intelligence". */
+export const statName = (s: string): string => copy.statNames[s as StatId] ?? s;
 
-/** "3 below" / "4 above" / "level with". */
-function rel(value: number, difficulty: number): string {
-  const d = value - difficulty;
-  if (d === 0) return 'level with';
-  return `${num(Math.abs(d))} ${d > 0 ? 'above' : 'below'}`;
+export type OddsBand = 'good' | 'fair' | 'long';
+
+/** Good odds 70 % and above, Fair odds 50–69 %, Long shot under 50 % (answers §2.2). */
+export function oddsBand(chance: number): OddsBand {
+  return chance >= 70 ? 'good' : chance >= 50 ? 'fair' : 'long';
 }
 
-/** The ticket's stat line: "STR 11", "CHA 2 + INT 11", "your best, STR 13". */
-export function statLine(check: CheckBreakdown): string {
-  if (check.best) return copy.odds.ticketBest(NAME(check.stats[0]), check.statValues[0]!);
-  return check.stats.map((s, i) => `${NAME(s)} ${check.statValues[i]}`).join(' + ');
+/** The ticket's stat words: "Intelligence", "Charisma and Intelligence", "your best, Strength". */
+export function statLine(check: Pick<CheckBreakdown, 'stats' | 'best'>): string {
+  if (check.best) return copy.odds.statBest(statName(check.stats[0]));
+  return copy.odds.statLine(check.stats.map(statName));
 }
 
-/** "62 % · STR 11" (before the tap). */
+/** "Good odds · Intelligence" (before the tap). */
 export function ticketOdds(check: CheckBreakdown): string {
-  return copy.odds.ticket(check.chance, statLine(check));
+  return copy.odds.ticket(copy.odds.band(check.chance), statLine(check));
 }
 
-/** A bonus row in running text: "being Known here", "your first day in Duskwall", "Open Doors". */
-function bonusPhrase(b: CheckBonus): string {
-  if (b.id === 'standing') return `being ${b.label.split(' in ')[0]} here`;
-  if (b.id === 'first-day') return `your ${b.label.charAt(0).toLowerCase()}${b.label.slice(1)}`;
-  return b.label;
+/** The band's two-line note behind the tap: [kicker, note]. */
+export function bandNote(check: CheckBreakdown): [string, string] {
+  const stat = check.best ? statName(check.stats[0]) : copy.odds.statLine(check.stats.map(statName));
+  return copy.odds.note[oddsBand(check.chance)](stat) as [string, string];
+}
+
+/** A check bonus as a tag's words: "First day in Duskwall · better odds". */
+export function oddsTag(b: { label: string; value: number }): string {
+  return `${b.label} · ${b.value >= 0 ? copy.odds.betterOdds : copy.odds.worseOdds}`;
+}
+
+/** Where to train each stat in the residence city ("the Union Hall"), for the reason line. */
+export type TrainingPlaces = Partial<Record<'str' | 'int' | 'agi', string>>;
+
+/** Why a check came off short, as a cause (for grouping) and the sentence (answers §2.4). */
+export interface Reason {
+  cause: string;
+  text: string;
 }
 
 /**
- * The odds as one sentence: *Your INT 5 is 3 below the 8 this needs: 38 %.*; with bonuses
- * *…: 66 %, and +6 % for being Known here: 72 %.*; clamped *…: 98 %, capped at 95 %.*
+ * The one reason under a row that isn't a Success, chosen by the largest thing that went against
+ * the player: a stat under what the job needs (with odds under 60 %), a penalty larger than that,
+ * else luck (good odds) or middling odds. A tier 2–3 Failure starts "It went badly."
  */
-export function oddsSentence(check: CheckBreakdown): string {
-  // A no-break space before "%", so a number and its sign never part at a line end.
-  return words(check).replace(/ %/g, ' %');
-}
-
-function words(check: CheckBreakdown): string {
-  const base = check.base + check.statTerm;
-  const d = check.difficulty;
-  const v = check.statValue;
-  let head: string;
-  if (check.best) {
-    head = copy.odds.best(NAME(check.stats[0]), check.statValues[0]!, d, rel(v, d), base);
-  } else if (check.stats.length === 2) {
-    const [a, b] = check.stats;
-    head = copy.odds.two(
-      NAME(a),
-      check.statValues[0]!,
-      NAME(b!),
-      check.statValues[1]!,
-      num(v),
-      d,
-      rel(v, d),
-      base,
-    );
-  } else if (v > d) {
-    head = copy.odds.above(NAME(check.stats[0]), num(v), d, num(v - d), base);
-  } else if (v < d) {
-    head = copy.odds.below(NAME(check.stats[0]), num(v), d, num(d - v), base);
+export function reasonFor(
+  check: CheckBreakdown,
+  outcome: Outcome,
+  places: TrainingPlaces = {},
+): Reason | null {
+  if (outcome === 'success') return null;
+  const place = (s: string) => places[s as keyof TrainingPlaces] ?? null;
+  let cause: string;
+  let text: string;
+  const penalties = check.bonuses.filter((b) => b.value < 0).sort((a, b) => a.value - b.value);
+  const worst = penalties[0];
+  const statDrag = Math.min(0, check.statTerm);
+  const low = check.chance < 60;
+  if (low && worst && -worst.value > -statDrag && copy.reason.penalty[worst.id]) {
+    cause = `penalty:${worst.id}`;
+    text = copy.reason.penalty[worst.id]!;
+  } else if (low && check.statValue < check.difficulty) {
+    if (check.best) {
+      cause = 'statLowBest';
+      text = copy.reason.statLowBest(statName(check.stats[0]));
+    } else if (check.stats.length === 2) {
+      const [a, b] = check.stats;
+      const weak = (check.statValues[1] ?? 0) < (check.statValues[0] ?? 0) ? b! : a;
+      cause = `statLowTwo:${weak}`;
+      text = copy.reason.statLowTwo(statName(a), statName(b!), statName(weak), place(weak));
+    } else if (check.stats[0] === 'cha') {
+      cause = 'statLowCha';
+      text = copy.reason.statLowCha;
+    } else {
+      cause = `statLow:${check.stats[0]}`;
+      text = copy.reason.statLow(statName(check.stats[0]), place(check.stats[0]));
+    }
+  } else if (check.chance >= 70) {
+    cause = 'luckGood';
+    text = copy.reason.luckGood;
   } else {
-    head = copy.odds.equal(NAME(check.stats[0]), num(v), d, base);
+    cause = 'luckFair';
+    text = copy.reason.luckFair;
   }
-  const plain = `${base} %.`;
-  if (!head.endsWith(plain)) return head;
-  let tail = plain;
-  if (check.bonuses.length === 1) {
-    const b = check.bonuses[0]!;
-    tail = copy.odds.bonusOne(base, bonusPhrase(b), b.value, check.raw);
-  } else if (check.bonuses.length > 1) {
-    tail = copy.odds.bonusMany(base, check.bonusTotal, check.raw);
-  }
-  if (check.raw !== check.chance) {
-    const end = `${check.raw} %.`;
-    tail = `${tail.slice(0, tail.length - end.length)}${copy.odds.capped(check.raw, check.chance)}`;
-  }
-  return head.slice(0, head.length - plain.length) + tail;
+  return outcome === 'failure'
+    ? { cause: `failure:${cause}`, text: copy.reason.failure(text) }
+    : { cause, text };
 }
-
-const article = (w: string) => (/^[aeiou]/i.test(w) ? 'an' : 'a');
 
 /**
- * The roll, one line: *Rolled 26: Success (38 or under).* · *Rolled 51: Partial (39 to 58).* ·
- * *Rolled 77: Partial (a canvass never fails).* · tiers 2–3: *Rolled 77: Failure (more than 20 over).*
+ * The reasons for a batch (answers §2.3): rows sharing a cause print it once under the section
+ * ("2 of 3 didn't come off. …"), a cause of its own prints under its row.
  */
-export function rollLine(i: {
-  roll: number;
-  chance: number;
-  outcome: Outcome;
-  tier: number;
-  type: string;
-}): string {
-  if (i.outcome === 'success') return copy.odds.rollSuccess(i.roll, i.chance);
-  if (i.outcome === 'failure') return copy.odds.rollFailure(i.roll);
-  if (i.roll <= i.chance + 20) return copy.odds.rollPartial(i.roll, i.chance + 1, i.chance + 20);
-  const what = i.type.toLowerCase();
-  return copy.odds.rollPartialNoFail(i.roll, what).replace(`(a ${what} `, `(${article(what)} ${what} `);
-}
-
-/** The ledger behind the tap: [label, value] rows, the total, and the fixed footnote. */
-export function ledger(check: CheckBreakdown): {
-  rows: Array<{ label: string; value: string }>;
-  total: { label: string; value: string };
-  note: string;
-} {
-  const d = check.difficulty;
-  const v = check.statValue;
-  let statRow: string;
-  if (check.best) statRow = copy.odds.ledgerBest(NAME(check.stats[0]), check.statValues[0]!, rel(v, d), d);
-  else if (check.stats.length === 2) {
-    const [a, b] = check.stats;
-    statRow = copy.odds.ledgerTwo(
-      NAME(a),
-      check.statValues[0]!,
-      NAME(b!),
-      check.statValues[1]!,
-      num(v),
-      rel(v, d),
-      d,
-    );
-  } else statRow = copy.odds.ledgerStat(NAME(check.stats[0]), num(v), rel(v, d), d);
-  return {
-    rows: [
-      { label: copy.odds.ledgerEven, value: `${check.base} %` },
-      { label: statRow, value: `${formatSigned(check.statTerm)} %` },
-      ...check.bonuses.map((b) => ({ label: b.label, value: `${formatSigned(b.value)} %` })),
-    ],
-    total: {
-      label: copy.odds.ledgerChance,
-      value:
-        check.raw !== check.chance
-          ? `${check.chance} % (${copy.odds.ledgerCapped(check.raw)})`
-          : `${check.chance} %`,
-    },
-    note: copy.odds.ledgerNote,
-  };
+export function batchReasons(
+  attempts: ReadonlyArray<{ index: number; check: CheckBreakdown; outcome: Outcome }>,
+  places: TrainingPlaces = {},
+): { byRow: Map<number, string>; shared: string | null } {
+  const reasons = attempts.map((a) => ({ index: a.index, r: reasonFor(a.check, a.outcome, places) }));
+  const counts = new Map<string, number>();
+  for (const { r } of reasons) if (r) counts.set(r.cause, (counts.get(r.cause) ?? 0) + 1);
+  let sharedCause: string | null = null;
+  for (const [cause, n] of counts) if (n >= 2 && attempts.length > 1) sharedCause = cause;
+  const byRow = new Map<number, string>();
+  let shared: string | null = null;
+  for (const { index, r } of reasons) {
+    if (!r) continue;
+    if (r.cause === sharedCause) {
+      const n = counts.get(r.cause)!;
+      shared = copy.reason.batch(String(n), String(attempts.length), r.text);
+    } else byRow.set(index, r.text);
+  }
+  return { byRow, shared };
 }

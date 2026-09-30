@@ -287,6 +287,9 @@ export const POLITICAL_PLACEHOLDERS = [
   'n',
   'weekday',
   'countDay',
+  /** Review 2 (answers §4.4): the *Next* lines' weekdays, voting opens and the council's result. */
+  'pollsWeekday',
+  'resultWeekday',
 ] as const;
 export type PoliticalPlaceholder = (typeof POLITICAL_PLACEHOLDERS)[number];
 export const TIME_TOKENS = ['until', 'at'] as const;
@@ -522,6 +525,8 @@ export interface LocationView {
   name: string;
   kind: string;
   blurb: string;
+  /** The name in running text, "the Union Hall" (review 2: a result's reason line). */
+  ref?: string;
   /** Pin number, 1-based. */
   n: number;
   /** Fractions of the map image. */
@@ -546,6 +551,8 @@ export interface CityView {
   morale: { factionId: FactionId; share: number; state: MoraleState } | null;
   /** Slice 3: the ordinance in force ("Ordinance: Shift Hours Order · 3 days left"). */
   ordinance: { ordinanceId: string; name: string; line: string; effectLine: string; daysLeft: number } | null;
+  /** Review 2: the home city's Election card (screens §1a); null elsewhere. */
+  election: PoliticsSummaryView | null;
 }
 
 export interface BonusTag {
@@ -908,6 +915,10 @@ export interface PoliticsSummaryView {
   } | null;
   inForce: { ordinanceId: string; name: string; daysLeft: number } | null;
   rank2Title: string;
+  /** Review 2: "Organisers who are Known here can stand" (the Election card's notes). */
+  rank3Title: string;
+  /** "Result Sunday morning, here and in the Clarion". */
+  paperShortName: string;
   fxpToRank2: number | null;
   standCost: number;
   /** The caller is a councillor with the ordinance vote open. */
@@ -915,6 +926,65 @@ export interface PoliticsSummaryView {
   route: '/council/slate' | '/council/ballot' | '/council/count' | '/council' | null;
   /** 'ballot' or 'councilSits'. */
   dot: boolean;
+  /** Review 2 (slice-3 screens §1a, §2.1): the Election card's state and what it prints. */
+  card: ElectionCardView;
+}
+
+/**
+ * The Election card's states (slice-3 screens §2.1, review 2), the first that applies: below Rank 2;
+ * a councillor's rule vote (open, or cast); voting (a candidate who has not voted, not voted,
+ * voted); candidates (standing, backing someone, the last result on days 0–1, else the call).
+ */
+export type ElectionCardState =
+  | 'belowRank'
+  | 'councilSits'
+  | 'councilVoted'
+  | 'candidateVoting'
+  | 'voting'
+  | 'voted'
+  | 'standing'
+  | 'backing'
+  | 'result'
+  | 'candidates';
+
+/** What the player's result line says on the morning of a count (screens §2.1 `{your line}`). */
+export type ElectionYourLine =
+  | { kind: 'elected'; place: number }
+  | { kind: 'missed'; margin: number }
+  | { kind: 'voteWon'; name: string }
+  | { kind: 'voteLost'; name: string };
+
+export interface ElectionCardView {
+  state: ElectionCardState;
+  /** The boundary closing the window the card counts down to (names in, voting, the rule vote). */
+  closesAt: number;
+  /** The boundaries of this cycle: voting opens, the result (the next count). */
+  pollsOpenAt: number;
+  countAt: number;
+  /** Below Rank 2: "400 Party XP makes an Activist · you have 120". */
+  fxp: number;
+  rank2Fxp: number;
+  /** Rank 3 and Known here, not standing and not seated: the Stand button. */
+  canStand: boolean;
+  /** Standing: backers so far. */
+  backers: { n: number; needed: number; branchLine: boolean; branchWillMakeUp: boolean } | null;
+  /** The name the player backs this cycle. */
+  backing: string | null;
+  /** Voting: the name voted for. */
+  votedFor: string | null;
+  /** Cycle days 0–1: the last count. */
+  result: {
+    winner: string;
+    yourLine: ElectionYourLine | null;
+    /** The boundary ending the new council's term. */
+    councilUntil: number;
+    /** The boundary closing the next election's names. */
+    namesUntil: number;
+  } | null;
+  /** A councillor while the rule vote is open (days 0–1). */
+  rule: { votedFor: string | null; divideAt: number } | null;
+  /** The morning the player made Rank 2: the one-line note, once. */
+  firstTime: boolean;
 }
 
 export interface EndorsementsView {
@@ -1097,6 +1167,8 @@ export interface PoliticalResult {
   place: { cityId: string; cityName: string };
   headline: string;
   body: string;
+  /** Review 2 (screens §9): "Next: the result, Sunday morning." (absent on results stored before it). */
+  next?: string;
   /** Epoch ms for `{until}` / `{at}` in the text. */
   until: number | null;
   at: number | null;

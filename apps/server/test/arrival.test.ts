@@ -154,14 +154,14 @@ describe('arrival: the face and the origin (ADR 0011)', () => {
       kicker: 'Irongate · morning',
       title: 'He dies before the first tram.',
     });
-    expect(v.street?.note).toBe('Permanent. A Faction Reset token is the only way back.');
+    expect(v.street?.note).toBe("Permanent: you can't change party later.");
     expect(v.street?.cards.map((c) => [c.factionId, c.wish, c.wishLabel, c.crest.format, c.confirm])).toEqual(
       [
         ['vanguard', false, null, 'svg', 'Join the Iron Vanguard · take the train to Duskwall'],
         [
           'collective',
           true,
-          'His wish · +50 Faction XP',
+          'His wish · +50 Party XP',
           'svg',
           'Join the Red Collective · take the train to Coalport',
         ],
@@ -220,8 +220,8 @@ describe('arrival.join (ADR 0011, 0012)', () => {
       'Mara Lenk Arrives at Duskwall Station',
       'The Duskwall Sentinel',
       [
-        'Canvass the customs shift at the Fortress Gate',
-        'Sit in on the committee at Beacon House',
+        'Talk to the customs men at the Fortress Gate',
+        'Go to the district meeting at Beacon House',
         'Take a job at the Fortress Gate',
       ],
       'Viktor Stahl',
@@ -238,8 +238,8 @@ describe('arrival.join (ADR 0011, 0012)', () => {
       'Mara Lenk Steps Off the Irongate Train',
       'The Coalport Clarion',
       [
-        'Canvass the shift change at the Mill Gate',
-        'Sit in on the committee at the Union Hall',
+        'Talk to the workers at the Mill Gate',
+        'Go to the branch meeting at the Union Hall',
         'Take a job at the Mill Gate',
       ],
       'Petra Holm',
@@ -256,8 +256,8 @@ describe('arrival.join (ADR 0011, 0012)', () => {
       'Mara Lenk Arrives on the Irongate Train',
       'The Ashford Gazette',
       [
-        'Canvass the print-room shift at Gazette House',
-        'Sit in on the committee at the Assembly Rooms',
+        'Talk to the printers at Gazette House',
+        'Go to the meeting at the Assembly Rooms',
         'Take a job at Gazette House',
       ],
       'Thomas Grey',
@@ -349,7 +349,7 @@ describe('arrival.join (ADR 0011, 0012)', () => {
     const second = await caller.action.perform({ ...canvass, idempotencyKey: randomUUID() });
     expect(second.effects.orders[0]).toMatchObject({
       // Review 1 (§13.7): titles say what and where.
-      title: 'Canvass the shift change at the Mill Gate',
+      title: 'Talk to the workers at the Mill Gate',
       after: 2,
       done: true,
       fxp: 20,

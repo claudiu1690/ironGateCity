@@ -86,7 +86,7 @@ describe('ambition.get and choose', () => {
       ['legwork', 76],
     ]);
     expect(v.screen?.approaches[2]?.check).toMatchObject({ stats: ['int'], best: true });
-    expect(v.screen?.cta).toEqual({ label: 'Walk his ward', energy: 10, readyAt: null });
+    expect(v.screen?.cta).toEqual({ label: 'Walk his streets', energy: 10, readyAt: null });
     expect((await caller.character.me()).lettersWaiting).toBe(0);
     expect((await caller.paper.today()).letters[0]?.status).toBe('midway');
   });
@@ -152,7 +152,7 @@ describe('ambition.attempt', () => {
       effects: {
         item: { itemId: 'keep.ward-book', name: 'His ward book', keepsake: true },
         // Slice 3 (design §17 Q21): chapter 2 opens after the first ballot.
-        hooks: ['Chapter 2, "Stand where he stood": from Tuesday 6 October, after your first ballot'],
+        hooks: ['Chapter 2, "Stand where he stood": from Tuesday 6 October, after your first vote'],
         opinion: null,
         standing: null,
         orders: [],
@@ -187,7 +187,7 @@ describe('ambition.attempt', () => {
       chapter: 2,
       chapterTitle: 'Stand where he stood',
       screen: null,
-      waitsUntil: 'From Tuesday 6 October, after your first ballot',
+      waitsUntil: 'From Tuesday 6 October, after your first vote',
     });
     expect(
       await refusal(

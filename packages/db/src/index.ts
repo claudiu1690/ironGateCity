@@ -4,12 +4,16 @@ export { ensureIndexes, models } from './indexes';
 export { migrateSlice1CharacterFields } from './migrations/001-slice1-character-fields';
 export { RENAMED_JOBS, migrateSlice2Arrival } from './migrations/002-slice2-arrival';
 export { migrateSlice3Politics } from './migrations/003-slice3-politics';
-// Review 1: written and tested, not yet run at start-up (see the migration's comment).
+// Review 1 and review 2: both run at start-up from ensureIndexes, after 001–003.
 export {
   RENAMED_ORDINANCES,
   RETIRED_ORDER_TEMPLATES,
   migrateReview1Wage,
 } from './migrations/004-review1-wage';
+export {
+  RENAMED_ORDINANCES_REVIEW2,
+  migrateReview2StreetOrdinances,
+} from './migrations/005-review2-street-ordinances';
 export { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
 export type {
   BallotLine,

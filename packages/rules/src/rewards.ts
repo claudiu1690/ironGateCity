@@ -60,7 +60,7 @@ export function computeRewards(i: {
   fxpRateMultiplier?: number;
   /** §15.4: +25 % of the base FXP when the attempt advances an open Party order. */
   fxpBonusShare?: number;
-  /** Slice 3: Fired up and Public Meetings on FXP, Ward Fund on Iron. */
+  /** Slice 3: Fired up and Public Meetings on FXP, Street Fund on Iron. */
   fxpShares?: readonly LineShare[];
   ironShares?: readonly LineShare[];
   /** Street Permits: × 1.15 on the opinion swing. */

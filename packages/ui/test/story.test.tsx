@@ -67,8 +67,10 @@ describe('StoryScreen (ADR 0013)', () => {
     );
     const approaches = screen.getAllByRole('radio');
     await settled();
-    expect(approaches[0]).toHaveTextContent('46 %');
-    expect(approaches[1]).toHaveTextContent('66 %');
+    // Review 2 (GDD §8.4): the odds as a word and the stat, never a percentage.
+    expect(approaches[0]).toHaveTextContent('Long shot');
+    expect(approaches[1]).toHaveTextContent('Fair odds · Intelligence');
+    for (const a of approaches) expect(a.textContent).not.toMatch(/%/);
     await user.click(approaches[1]!);
     expect(onSelect).toHaveBeenCalledWith('sort');
     expect(screen.getByTestId('story-cta')).toBeDisabled();

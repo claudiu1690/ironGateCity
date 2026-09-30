@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import POL from '../../../docs/design/slice-3-politics.md?raw';
 import { ContentError, loadContent, parseContent, rawContent } from '../src';
 import type { ContentInput } from '../src';
+import { R2_CLARION, R2_ORDERS, R2_ORDINANCES, R2_POLITICS, plainPolitical, plainProse } from './review2';
 
 const content = loadContent();
 const deepCopy = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
@@ -53,12 +54,19 @@ describe('the real content, slice 3', () => {
         'The council backs long service: every day at the job counts double towards the rate.',
       ],
     };
+    // Review 2 (answers §1.10): the plain-words lines, and the Ward Register and Ward Fund renamed.
+    const plain = (id: string, name: string, line: string) => {
+      const r2 = R2_ORDINANCES[id];
+      return [r2?.id ?? id, r2?.name ?? name, r2?.line ?? line];
+    };
     expect(content.ordinancesMenu().map((o) => [o.id, o.name, o.line])).toEqual(
-      table.map((r) => renamed[unq(r[0]!)] ?? [unq(r[0]!), r[1], r[2]]),
+      table.map((r) => renamed[unq(r[0]!)] ?? plain(unq(r[0]!), r[1]!, r[2]!)),
     );
     expect(content.ordinanceSpec('ord.long-service')?.effects).toEqual([{ kind: 'seniorityDays', value: 2 }]);
     // A city stored before the rename still resolves.
     expect(content.ordinance('ord.shift-hours')?.id).toBe('ord.long-service');
+    expect(content.ordinance('ord.ward-register')?.id).toBe('ord.street-register');
+    expect(content.ordinance('ord.ward-fund')?.id).toBe('ord.street-fund');
     expect(content.ordinanceSpec('ord.open-doors')).toEqual({
       id: 'ord.open-doors',
       name: 'Open Doors',
@@ -70,14 +78,16 @@ describe('the real content, slice 3', () => {
     const table = rows(section(POL, '### 5.2 The slates', '### 5.3'), /^\| `npc\./);
     expect(table).toHaveLength(27);
     expect(content.candidates.map((c) => [c.id, c.name, String(c.profile), c.line])).toEqual(
-      table.map((r) => [unq(r[0]!), r[1], r[2], r[3]]),
+      // Review 2 (answers §1.10): Lenz prints the party paper.
+      table.map((r) => [unq(r[0]!), r[1], r[2], plainProse(r[3]!)]),
     );
     expect(content.slateOf('coalport').map((c) => c.profile)).toEqual([44, 38, 33, 29, 25, 22, 19, 17, 15]);
     expect(content.candidate('npc.v.kessler')?.cityId).toBe('duskwall');
   });
 
   it('the platforms (design §6.4) and the branch motions (§10.2)', () => {
-    const text = section(POL, '### 6.4 Platform lines', '### 6.5');
+    // Review 2 (answers §1.10): every street, not every ward.
+    const text = plainProse(section(POL, '### 6.4 Platform lines', '### 6.5'));
     for (const f of content.factions) {
       for (const p of f.platforms) expect(text).toContain(`"${p.line}"`);
     }
@@ -94,12 +104,13 @@ describe('the real content, slice 3', () => {
   it('Restore the base word for word (design §17.4): crisis, +40, slots A and B', () => {
     const table = rows(section(POL, '### 17.4', '### 17.5'), /^\| `dir\./);
     expect(table).toHaveLength(6);
-    // Review 1 (answers §3) retitled them ("Restore the base: canvass anywhere in Coalport");
-    // the titles are checked word for word in qa.content. The lines, use and FXP stand.
+    // Review 1 (answers §3) retitled them; review 2 (answers §1.7) made them "Win back Coalport:
+    // talk to voters anywhere" and changed three lines. The titles are checked word for word in
+    // qa.content. Use and FXP stand.
     for (const [id, , , line] of table) {
       const t = content.orderTemplates.find((x) => x.id === unq(id!))!;
-      expect([t.line, t.use, t.doneFxp]).toEqual([line, 'crisis', 40]);
-      expect(t.title).toMatch(/^Restore the base: /);
+      expect([t.line, t.use, t.doneFxp]).toEqual([R2_ORDERS.get(t.id)?.line ?? line, 'crisis', 40]);
+      expect(t.title).toMatch(/^Win back (Coalport|Duskwall|Ashford): /);
     }
   });
 
@@ -112,9 +123,16 @@ describe('the real content, slice 3', () => {
     ]);
     const sentinel = rows(section(POL, '### 8.2 The Duskwall Sentinel', '### 8.3'), /^\| `hl\./);
     const gazette = rows(section(POL, '### 8.3 The Ashford Gazette', 'All decks'), /^\| `hl\./);
+    // Review 2 (answers §1.12): the Clarion's set in full from the answers; the Sentinel and the
+    // Gazette take the same swaps, their voice lines unchanged.
+    for (const [id] of clarion) expect([...R2_CLARION.keys()], id).toContain(id);
     const expected = [
-      ...clarion,
-      ...[...sentinel, ...gazette].map((r) => [unq(r[0]!), r[1], toToken(r[2]!)]),
+      ...[...R2_CLARION].map(([id, texts]) => [id, ...texts]),
+      ...[...sentinel, ...gazette].map((r) => [
+        unq(r[0]!),
+        plainPolitical(r[1]!),
+        plainPolitical(toToken(r[2]!)),
+      ]),
     ];
     for (const [id, headline, deck] of expected) {
       const t = content.headlines.find((h) => h.id === id);
@@ -136,16 +154,19 @@ describe('the real content, slice 3', () => {
   it('the six result texts word for word (design §17.3)', () => {
     const table = rows(section(POL, '**The six result texts**', '`{paper}` resolves'), /^\| `[a-zA-Z]+` \|/);
     expect(table).toHaveLength(6);
-    for (const [act, stamp, headline, body] of table) {
+    // Review 2 (answers §1.10, §4.4): the plain words and a Next line supersede the design's table.
+    expect(Object.keys(R2_POLITICS)).toEqual(table.map(([act]) => unq(act!)));
+    for (const [act] of table) {
       const t = content.politics.results[unq(act!) as keyof typeof content.politics.results];
-      expect([t.stamp, t.headline, t.body]).toEqual([stamp, headline, body]);
+      expect(t).toEqual(R2_POLITICS[unq(act!)]);
     }
   });
 });
 
 describe('Finish His Work chapter 2 (design §17.7)', () => {
   it('the script word for word, its numbers, its requirement and the chapter-3 teaser', () => {
-    const doc = section(POL, '### 17.7', 'END-OF-DOCUMENT');
+    // Review 2 (answers §1.13): "cast a vote".
+    const doc = plainProse(section(POL, '### 17.7', 'END-OF-DOCUMENT'));
     const ch = content.chapter('finish-his-work', 2)!;
     const s = ch.story!;
     expect(ch.requires).toEqual({ ballotCast: true });

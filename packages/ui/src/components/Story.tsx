@@ -3,7 +3,7 @@ import type { AssetView, FactionCardView, LetterView, StoryScreenView } from '@i
 import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import { cx } from '../format';
-import { oddsSentence, statLine } from '../odds';
+import { statLine } from '../odds';
 import { FACTION_STYLE } from './FactionCrest';
 import { Picture } from './Picture';
 
@@ -327,30 +327,15 @@ export function StoryScreen({
                           <span className="font-display text-[15px] leading-snug font-bold sm:text-[16px]">
                             {a.text}
                           </span>
-                          <span className="font-label text-[20px] font-semibold whitespace-nowrap">
-                            {a.check.chance} %
-                          </span>
                         </span>
-                        <span className="font-mono text-[11.5px] opacity-85">
-                          {/* Review 1: the stat named, "your best, STR 13" for Legwork. */}
-                          {statLine(a.check)} vs {a.check.difficulty}
-                        </span>
-                        <span className={cx('block h-1.5', on ? 'bg-ink-2' : 'bg-track')} aria-hidden="true">
-                          <span
-                            className={cx('block h-1.5', on ? 'bg-energy' : 'bg-success-fill')}
-                            style={{ width: `${a.check.chance}%` }}
-                          />
-                        </span>
-                      </button>
-                      {/* Review 1 (§8.4): the chosen approach's odds as one plain sentence. */}
-                      {on && (
-                        <p
-                          className="border-x-[1.5px] border-b-[1.5px] border-ink bg-paper-card px-3 py-1 font-body text-[12.5px] leading-snug text-text-2"
+                        {/* Review 2 (GDD §8.4): the odds as a word and the stat, never a number. */}
+                        <span
+                          className="font-mono text-[11.5px] opacity-85"
                           data-testid="story-approach-odds"
                         >
-                          {oddsSentence(a.check)}
-                        </p>
-                      )}
+                          {copy.odds.ticket(copy.odds.band(a.check.chance), statLine(a.check))}
+                        </span>
+                      </button>
                     </div>
                   );
                 })}

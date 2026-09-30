@@ -107,8 +107,8 @@ describe('the welcome set by the best trained stat (GDD §13.7)', () => {
     const { caller, me } = await welcomeRecruit('vanguard', { str: 14, int: 5, agi: 5 });
     expect(me.welcomeDay).toBe(true);
     expect(me.orders.items.map((o) => [o.id, o.title])).toEqual([
-      ['dir.v.guard-change', 'Canvass the customs shift at the Fortress Gate'],
-      ['dir.v.report', 'Sit in on the committee at Beacon House'],
+      ['dir.v.guard-change', 'Talk to the customs men at the Fortress Gate'],
+      ['dir.v.report', 'Go to the district meeting at Beacon House'],
       ['dir.v.take-a-job', 'Take a job at the Fortress Gate'],
     ]);
     expect(me.orders.items[0]!.pin?.locationId).toBe('duskwall.garrison-gate');
@@ -124,7 +124,7 @@ describe('the welcome set by the best trained stat (GDD §13.7)', () => {
     const { me } = await welcomeRecruit('vanguard', { str: 5, int: 14, agi: 5 });
     expect(me.orders.items[0]).toMatchObject({
       id: 'dir.v.w.ration-queue',
-      title: 'Canvass the ration queue at the Customs Market',
+      title: 'Talk to the queue at the Customs Market',
       target: 2,
       pin: { locationId: 'duskwall.quartermaster-market' },
     });
@@ -134,7 +134,7 @@ describe('the welcome set by the best trained stat (GDD §13.7)', () => {
     const { me } = await welcomeRecruit('vanguard', { str: 5, int: 5, agi: 14 });
     expect(me.orders.items[0]).toMatchObject({
       id: 'dir.v.w.leaflets-market',
-      title: 'Hand out leaflets at the Customs Market',
+      title: 'Hand out flyers at the Customs Market',
       pin: { locationId: 'duskwall.quartermaster-market' },
     });
   });
@@ -148,10 +148,13 @@ describe('the welcome set by the best trained stat (GDD §13.7)', () => {
     const c = await welcomeRecruit('collective', { str: 5, int: 5, agi: 14 });
     expect(c.me.orders.items[0]).toMatchObject({
       id: 'dir.w.leaflets-market-row',
-      title: 'Hand out leaflets on Market Row',
+      title: 'Hand out flyers on Market Row',
     });
     const a = await welcomeRecruit('alliance', { str: 14, int: 5, agi: 5 });
-    expect(a.me.orders.items[0]).toMatchObject({ id: 'dir.a.w.bills', title: "Paste bills on Weavers' Row" });
+    expect(a.me.orders.items[0]).toMatchObject({
+      id: 'dir.a.w.bills',
+      title: "Put up posters on Weavers' Row",
+    });
   });
 
   it('the welcome set never comes back in the rotation: the next day is the rotation, with no Take a job', async () => {
@@ -184,7 +187,11 @@ describe('First day +10 % (GDD §8.4)', () => {
     }
     const r = await caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 });
     expect(r.attempts[0]!.check).toMatchObject({ chance: 76, bonuses: [FIRST_DAY_COALPORT] });
-    expect(r.bonusTags).toContainEqual({ id: 'first-day', label: 'First day in Coalport', note: '+10 %' });
+    expect(r.bonusTags).toContainEqual({
+      id: 'first-day',
+      label: 'First day in Coalport',
+      note: 'better odds',
+    });
 
     clock.advance(DAY);
     const next = await caller.character.me();

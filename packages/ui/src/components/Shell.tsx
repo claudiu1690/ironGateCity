@@ -52,6 +52,8 @@ export function TabBar({ items, active, onNavigate }: TabBarProps) {
       className={cx(
         'fixed inset-x-0 bottom-0 z-20 flex h-16 border-t border-ink-2 bg-ink pb-[env(safe-area-inset-bottom)]',
         'lg:inset-x-auto lg:bottom-12 lg:left-[calc(50%-210px)] lg:h-auto lg:border-0 lg:shadow-[0_0_0_1px_var(--color-paper),0_10px_30px_rgb(0_0_0/0.5)]',
+        // Review 2 #3: a phone held sideways keeps its height for the map: a rail down the left.
+        'short:inset-y-0 short:right-auto short:left-0 short:h-auto short:w-[calc(64px+env(safe-area-inset-left))] short:flex-col short:border-t-0 short:border-r short:pb-0 short:pl-[env(safe-area-inset-left)]',
       )}
     >
       {items.map((t) => {
@@ -82,9 +84,9 @@ export function TabBar({ items, active, onNavigate }: TabBarProps) {
           </>
         );
         const cls = cx(
-          'label-caps flex min-h-14 flex-1 flex-col items-center justify-center gap-[3px] text-[10px] tracking-[0.12em] lg:w-[84px] lg:flex-none lg:py-2',
+          'label-caps flex min-h-14 flex-1 flex-col items-center justify-center gap-[3px] text-[10px] tracking-[0.12em] lg:w-[84px] lg:flex-none lg:py-2 short:min-h-11 short:tracking-[0.06em]',
           on
-            ? 'text-paper shadow-[inset_0_3px_0_var(--color-paper)] lg:bg-paper lg:text-ink lg:shadow-none'
+            ? 'text-paper shadow-[inset_0_3px_0_var(--color-paper)] lg:bg-paper lg:text-ink lg:shadow-none short:shadow-[inset_3px_0_0_var(--color-paper)]'
             : 'text-dim',
         );
         if (t.disabled) {
@@ -169,10 +171,10 @@ export function StatPointsPanel({
         >
           {sc.lead(
             guide.cityName,
-            guide.lead.toUpperCase(),
+            copy.statNames[guide.lead],
             guide.counts[guide.lead],
             guide.total,
-            guide.best.stat.toUpperCase(),
+            copy.statNames[guide.best.stat],
             guide.best.value,
             guide.best.stat === guide.lead,
           )}

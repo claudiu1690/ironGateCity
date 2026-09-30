@@ -176,7 +176,7 @@ describe('the count (design §4.2 worked examples)', () => {
 describe('the division (design §10.4)', () => {
   const branch = { ordinanceId: 'ord.shift-hours', branch: true, movedAt: 0 };
   const x = { ordinanceId: 'ord.open-doors', branch: false, movedAt: 10 };
-  const y = { ordinanceId: 'ord.ward-fund', branch: false, movedAt: 5 };
+  const y = { ordinanceId: 'ord.street-fund', branch: false, movedAt: 5 };
 
   it('no player votes: the branch passes 7–0, or 6–0 beside a silent councillor', () => {
     expect(divide({ items: [branch], playerVotes: [], npcSeats: 7, unrest: false })).toMatchObject({

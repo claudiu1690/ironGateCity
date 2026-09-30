@@ -32,21 +32,21 @@ test.describe.serial('QA slice 3: the ballot on a phone', () => {
     await expect(rows).toHaveCount(9);
     expect(await sideScroll(page)).toBeLessThanOrEqual(0);
     await rows.nth(2).dblclick();
-    const cta = page.getByRole('button', { name: /^Cast your ballot for / });
+    const cta = page.getByRole('button', { name: /^Vote for / });
     await expect(cta).toBeEnabled();
     let dialogs = 0;
     page.on('response', (r) => {
       if (r.url().includes('council.vote')) dialogs += 1;
     });
     await cta.dblclick();
-    await expect(modalOf(page).getByTestId('stamp')).toHaveText('Ballot cast');
+    await expect(modalOf(page).getByTestId('stamp')).toHaveText('Vote cast');
     await modalOf(page).getByRole('button', { name: 'Continue' }).click();
     await expect(modalOf(page)).toHaveCount(0);
     await expect(page.getByTestId('ballot-cast-line')).toBeVisible();
     expect(dialogs).toBe(1);
     await page.reload();
     await expect(page.getByTestId('ballot-cast-line')).toBeVisible();
-    await expect(page.getByRole('button', { name: /^Cast your ballot for / })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Vote for / })).toHaveCount(0);
   });
 
   test('the ballot by keyboard alone: Tab to a row, Space, Tab to the CTA, Enter', async ({ page }) => {
@@ -64,13 +64,11 @@ test.describe.serial('QA slice 3: the ballot on a phone', () => {
     let onCta = false;
     for (let i = 0; i < 30 && !onCta; i++) {
       await page.keyboard.press('Tab');
-      onCta = await page.evaluate(() =>
-        /Cast your ballot for/.test(document.activeElement?.textContent ?? ''),
-      );
+      onCta = await page.evaluate(() => /^Vote for /.test(document.activeElement?.textContent ?? ''));
     }
     expect(onCta).toBe(true);
     await page.keyboard.press('Enter');
-    await expect(modalOf(page).getByTestId('stamp')).toHaveText('Ballot cast');
+    await expect(modalOf(page).getByTestId('stamp')).toHaveText('Vote cast');
   });
 
   test.fail(
@@ -98,7 +96,7 @@ test.describe.serial('QA slice 3: the ballot on a phone', () => {
     await page.setViewportSize({ width: 360, height: 640 });
     await page.goto('/council/count');
     await expect(page.getByTestId('count-row')).toHaveCount(9);
-    await expect(page.locator('main')).toContainText('Total = ward vote + 3 × endorsements');
+    await expect(page.locator('main')).toContainText('Support = local support + 3 per backer + votes');
     expect(await sideScroll(page)).toBeLessThanOrEqual(0);
   });
 });

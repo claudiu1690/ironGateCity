@@ -42,35 +42,35 @@ export function noticeFor(error: unknown): string | undefined {
     case 'NOT_ENOUGH_PC':
       return copy.needsPc(Number(game.cost));
     case 'NOT_NOMINATIONS':
-      return 'Nominations are closed.';
+      return 'Too late to stand this time: names went in before voting opened.';
     case 'NOT_POLLING':
-      return 'The polls are closed.';
+      return 'Voting has closed.';
     case 'ALREADY_VOTED':
-      return `Your ballot is already in the box${game.name ? ` for ${String(game.name)}` : ''}.`;
+      return `You have already voted${game.name ? ` for ${String(game.name)}` : ''}.`;
     case 'ALREADY_ENDORSED':
-      return `You endorsed ${String(game.name ?? 'a candidate')} this cycle.`;
+      return `You're already backing ${String(game.name ?? 'a candidate')} this election.`;
     case 'ALREADY_FILED':
-      return 'You have already filed this cycle.';
+      return "You're already standing in this election.";
     case 'CANDIDACY_CLOSED':
-      return 'That candidacy is closed.';
+      return 'That name is no longer on the list.';
     case 'COUNCIL_CLOSED':
       return 'The council is not voting now.';
     case 'ALREADY_COUNCIL_VOTED':
       return 'Your vote is already recorded.';
     case 'ALREADY_PROPOSED':
-      return 'You have already moved an ordinance this term.';
+      return 'You have already put forward a rule this term.';
     case 'ALREADY_ON_PAPER':
-      return 'That ordinance is already on the order paper.';
+      return 'That rule is already up for a vote.';
     case 'PAPER_FULL':
       return copy.paperFull;
     case 'RANK_TOO_LOW':
       return `Needs Rank ${String(game.need)}.`;
     case 'NOT_KNOWN':
-      return 'Needs Known standing here (30 Successes).';
+      return 'Needs a Known reputation here (30 wins).';
     case 'SITTING_COUNCILLOR':
       return 'You hold a seat: you can stand again the day your term ends.';
     case 'ELECTION_NOT_READY':
-      return 'The count is still being taken. Try again in a moment.';
+      return 'The result is still being counted. Try again in a moment.';
     default:
       return 'That did not go through. Check your connection and tap again.';
   }

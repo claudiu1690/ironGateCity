@@ -101,18 +101,19 @@ test('the dev panel: shown with the hooks, clear of the pins and the tab bar, an
   await tap(page, '+1 hour', /^Now \w+day \d{1,2} \w{3} \d{2}:\d{2} UTC/);
   await expect(panel.getByTestId('dev-utc')).not.toHaveText(before ?? '');
 
-  // 5. Skip to nominations: the paper offers to stand (Rank 3, Known, 10 PC).
+  // 5. Skip to nominations: the paper's Election row (Rank 3, Known, 10 Political Capital).
   await skipTo(page, /^(Count day|Nominations)/);
   await page.getByTestId('dev-panel').getByRole('button', { name: 'Close' }).click();
   await page.goto('/paper');
-  await expect(page.getByTestId('polling-day-row')).toContainText('Stand for the council · 10 PC');
+  // Review 2: the Election row, candidates (or the last result on the count morning).
+  await expect(page.getByTestId('polling-day-row')).toHaveAttribute('data-state', /^(candidates|result)$/);
 
   // 6. Skip to the polls: the ballot is open, the line says so, and the paper row follows.
   await openPanel(page);
   await panel.getByRole('button', { name: 'Skip to next phase' }).click();
   await expect(panel.getByTestId('dev-line')).toHaveText(/^Now \w+day .* UTC · polls open in Coalport/);
   await expect(panel.getByTestId('dev-phase')).toHaveText(/^Polls open \(day 1 of 3\)/);
-  await expect(page.getByTestId('polling-day-row')).toContainText('Cast your ballot');
+  await expect(page.getByTestId('polling-day-row')).toContainText('Voting is open');
 
   // 7. Next day: 00:01 UTC, the next day's paper is in (the banner, or the paper itself).
   const day = Number(await panel.getByTestId('dev-city-day').textContent());

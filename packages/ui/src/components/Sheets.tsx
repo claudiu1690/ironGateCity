@@ -4,6 +4,13 @@ import type { LocationJobView } from '@irongate/rules';
 import type { ReactNode } from 'react';
 import { cx, formatClock } from '../format';
 
+/**
+ * Where the location opens (review 2 #2, #3): `sheet`, a bottom sheet on a phone held upright;
+ * `side`, a panel down the left on a phone held sideways; `panel`, a centred panel over the dimmed
+ * map on tablets and desktops.
+ */
+export type LocationLayout = 'sheet' | 'side' | 'panel';
+
 export interface LocationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -13,12 +20,19 @@ export interface LocationSheetProps {
   blurb: string;
   /** Small bonus tags ("Rested +50 % XP and Iron"). */
   tags?: string[];
+  layout?: LocationLayout;
   children: ReactNode;
 }
 
+/** A pointer-down on the city map (a drag of the zoomed map, another pin) keeps the sheet open. */
+const onTheMap = (e: Event) =>
+  e.target instanceof Element && e.target.closest('[data-testid="city-map"]') !== null;
+
 /**
- * The location sheet (mockups MobileCity, City): a bottom sheet on phones, a side panel on wide
- * screens. Radix Dialog, so focus is trapped and Escape closes it.
+ * The location (mockups MobileCity, City). Radix Dialog, so Escape closes it and focus moves in.
+ * On phones it is not modal: the zoomed map beside or above it stays live, to pan or to tap another
+ * pin (review 2 #8). On tablets and desktops it is a modal panel in the middle of the screen over the
+ * dimmed map, since the map no longer matters once a place is open (review 2 #2).
  */
 export function LocationSheet({
   open,
@@ -28,29 +42,57 @@ export function LocationSheet({
   name,
   blurb,
   tags = [],
+  layout = 'sheet',
   children,
 }: LocationSheetProps) {
+  const modal = layout === 'panel';
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-30 bg-ink/40 lg:bg-transparent" />
+        {modal && <Dialog.Overlay className="fixed inset-0 z-30 bg-ink/60" data-testid="location-backdrop" />}
         <Dialog.Content
           aria-describedby={undefined}
+          data-layout={layout}
+          onPointerDownOutside={(e) => {
+            if (!modal && onTheMap(e)) e.preventDefault();
+          }}
+          // Not modal, focus may leave it for the result modal or a note over it: that is no close.
+          onFocusOutside={(e) => {
+            if (!modal) e.preventDefault();
+          }}
           className={cx(
-            // Slice 2 (§12.3): at most 60 dvh on phones, so the map and the pin stay visible above it.
-            'fixed inset-x-0 bottom-16 z-30 flex max-h-[60dvh] flex-col overflow-y-auto bg-paper text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
-            'lg:inset-x-auto lg:top-[76px] lg:right-5 lg:bottom-auto lg:max-h-[calc(100dvh-160px)] lg:w-[380px] lg:shadow-[0_0_0_1px_var(--color-ink),0_18px_40px_rgb(0_0_0/0.5)]',
+            'fixed z-30 flex flex-col overflow-y-auto overscroll-contain bg-paper text-ink',
+            layout === 'sheet' &&
+              // Slice 2 (§12.3): at most 60 dvh on phones, so the map and the pin stay visible above it.
+              'inset-x-0 bottom-16 max-h-[60dvh] shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
+            layout === 'side' &&
+              // Right of the tab rail, under the HUD, the full height; it scrolls inside (review 2 #3).
+              'top-[var(--hud-h,44px)] bottom-0 left-[calc(64px+env(safe-area-inset-left))] w-[min(340px,50vw)] shadow-[10px_0_30px_rgb(0_0_0/0.45)]',
+            layout === 'panel' &&
+              'top-1/2 left-1/2 max-h-[min(760px,calc(100dvh-48px))] w-[min(460px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.55)]',
           )}
         >
-          <div className="flex justify-center pt-2 lg:hidden" aria-hidden="true">
-            <span className="h-1 w-10 bg-faint" />
-          </div>
-          <div className="flex items-start gap-3 border-b-2 border-ink px-4 pt-1.5 pb-2.5 lg:pt-4">
+          {layout === 'sheet' && (
+            <div className="flex justify-center pt-2" aria-hidden="true">
+              <span className="h-1 w-10 bg-faint" />
+            </div>
+          )}
+          <div
+            className={cx(
+              'flex items-start gap-3 border-b-2 border-ink px-4 pb-2.5',
+              layout === 'sheet' ? 'pt-1.5' : 'pt-3',
+            )}
+          >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="label-caps text-[10px] text-muted">
                 {n} · {kindLabel}
               </span>
-              <Dialog.Title className="font-display text-[26px] leading-[1.05] font-black">
+              <Dialog.Title
+                className={cx(
+                  'font-display leading-[1.05] font-black',
+                  layout === 'side' ? 'text-[22px]' : 'text-[26px]',
+                )}
+              >
                 {name}
               </Dialog.Title>
               <p className="font-body text-[14px] leading-snug text-text-2">{blurb}</p>

@@ -207,7 +207,7 @@ async function runAction(
               `One of Us in ${content.city(doc.homeCityId)?.name ?? doc.homeCityId} (${DEV_BOOST.successes} Successes)`,
             ]
           : []),
-        ...(set.pc !== undefined ? [`PC ${doc.pc} → ${String(set.pc)}`] : []),
+        ...(set.pc !== undefined ? [`Political Capital ${doc.pc} → ${String(set.pc)}`] : []),
       ];
       did =
         changes.length > 0

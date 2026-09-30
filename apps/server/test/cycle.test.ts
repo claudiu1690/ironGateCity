@@ -39,8 +39,8 @@ describe('a full cycle in Coalport', () => {
     expect(filed).toMatchObject({
       kind: 'political',
       act: 'declare',
-      stamp: { label: 'Filed', tone: 'success' },
-      headline: 'Your name is on the slate',
+      stamp: { label: "You're standing", tone: 'success' },
+      headline: 'Your name is on the list',
       knockOns: { pc: { before: 45, after: 35 } },
       paper: { name: 'The Coalport Clarion', shortName: 'Clarion' },
     });
@@ -52,6 +52,15 @@ describe('a full cycle in Coalport', () => {
       canWithdraw: true,
     });
     await C.caller.council.declare({ platformId: 'plat.c.bread', idempotencyKey: key() });
+    // Review 2 (answers §4.6): the Election card on the city screen, in the same state everywhere.
+    const card = async (who: typeof A) => (await who.caller.city.get({ cityId: 'coalport' })).election!.card;
+    expect(filed.next).toBe('Next: find backers. Voting opens Thursday.');
+    expect(await card(A)).toMatchObject({
+      state: 'standing',
+      backers: { n: 0, needed: 2 },
+      closesAt: at(D0 + 2, 0),
+    });
+    expect(await card(D)).toMatchObject({ state: 'candidates', canStand: false, fxp: 400 });
 
     // A colleague endorses; the branch endorses when A's three orders are done.
     const view = await B.caller.council.election();
@@ -63,10 +72,13 @@ describe('a full cycle in Coalport', () => {
     });
     expect(endorsed).toMatchObject({
       act: 'endorse',
-      headline: 'Mara Lenk has your name',
+      headline: 'Mara Lenk has your backing',
       knockOns: { pc: { before: 45, after: 35 }, endorsements: { name: 'Mara Lenk', n: 1, needed: 2 } },
     });
+    expect(endorsed.next).toBe('Next: voting opens Thursday.');
+    expect(await card(B)).toMatchObject({ state: 'backing', backing: 'Mara Lenk' });
     await doTodaysOrders(A.caller);
+    expect(await card(A)).toMatchObject({ state: 'standing', backers: { n: 2, branchLine: true } });
     const cand = await Candidacy.findOne({ characterId: A.id }).lean();
     expect(cand!.branch).not.toBeNull();
     const summary = (await A.caller.paper.today()).pollingDay!;
@@ -85,10 +97,12 @@ describe('a full cycle in Coalport', () => {
     expect(struck && (await Candidacy.findById(struck._id).lean())!.deposit).toBe('returned');
     expect(cPaper.desk.deposits).toEqual({ count: 1, pc: 10 });
     expect((await C.caller.character.me()).pc).toBe(45);
-    expect(cPaper.headlines.map((h) => h.headline)).toContain('Jan Novak Comes Off the Ballot');
+    expect(cPaper.headlines.map((h) => h.headline)).toContain('Jan Novak Comes Off the List');
     const aPaper = await A.caller.paper.today();
-    expect(aPaper.headlines.map((h) => h.headline)).toContain('Mara Lenk Is on the Ballot');
+    expect(aPaper.headlines.map((h) => h.headline)).toContain('Mara Lenk Is a Candidate');
     expect(aPaper.pollingDay).toMatchObject({ state: 'ballot', dot: true, route: '/council/ballot' });
+    expect(aPaper.pollingDay!.card).toMatchObject({ state: 'candidateVoting', closesAt: at(D0 + 5, 0) });
+    expect(await card(D)).toMatchObject({ state: 'voting' });
     expect((await A.caller.character.me()).politicsWaiting).toBe(1);
 
     // Three ballots: +1.5 morale.
@@ -97,10 +111,13 @@ describe('a full cycle in Coalport', () => {
     const cast = await A.caller.council.vote({ candidateKey: me, idempotencyKey: key() });
     expect(cast).toMatchObject({
       act: 'ballot',
-      stamp: { label: 'Ballot cast' },
-      body: 'One vote for Mara Lenk. Nobody sees who you voted for. The count is in the Clarion on Sunday morning.',
+      stamp: { label: 'Vote cast' },
+      body: 'You voted for Mara Lenk. Nobody can see who you chose. The result is in the Clarion on Sunday morning, and on the Election card.',
     });
     expect(cast.knockOns.morale).toMatchObject({ before, after: before + 0.5 });
+    expect(cast.next).toBe('Next: the result, Sunday morning.');
+    // Review 2 (§4.6.1): the card reads the vote at once.
+    expect(await card(A)).toMatchObject({ state: 'voted', votedFor: 'Mara Lenk', countAt: at(D0 + 5, 0) });
     await B.caller.council.vote({ candidateKey: me, idempotencyKey: key() });
     await D.caller.council.vote({ candidateKey: 'n:npc.c.weiss', idempotencyKey: key() });
     expect((await City.findById('coalport').lean())!.opinion.collective).toBeCloseTo(before + 1.5, 3);
@@ -129,7 +146,7 @@ describe('a full cycle in Coalport', () => {
     expect(row).toMatchObject({ place: 1, seated: true, you: true, yourVote: true });
     expect(paper.frontPage!.count.turnout).toEqual({ voters: 3, eligible: 4 });
     expect(paper.headlines.map((h) => h.headline)).not.toContain('Mara Lenk Tops the Poll in Coalport');
-    expect(paper.headlines.map((h) => h.headline)).toContain('Polls Close in Coalport: Lenk Tops the Poll');
+    expect(paper.headlines.map((h) => h.headline)).toContain('Coalport Result: Lenk Tops the Poll');
     await A.caller.paper.markRead({ day: paper.day });
     expect((await A.caller.paper.today()).frontPage).toMatchObject({ animate: false });
     const dPaper = await D.caller.paper.today();
@@ -137,6 +154,12 @@ describe('a full cycle in Coalport', () => {
     expect(dPaper.headlines.map((h) => h.headline)).toContain('Your Vote Counted: Anna Weiss Takes a Seat');
     const count = (await D.caller.council.count())!;
     expect(count.rows.find((r) => r.yourVote)?.name).toBe('Anna Weiss');
+    // Review 2 (§4.6.4): the result on the card the count morning and the next, with the voter's line.
+    expect(await card(D)).toMatchObject({
+      state: 'result',
+      result: { winner: 'Mara Lenk', yourLine: { kind: 'voteWon', name: 'Anna Weiss' } },
+    });
+    expect((await D.caller.paper.today()).pollingDay!.card.state).toBe('result');
     expect(count.npcSeats).toBe(6);
     const mine = await A.caller.character.me();
     expect(mine.office).toMatchObject({ cityId: 'coalport', cityName: 'Coalport', seat: 1 });
@@ -153,14 +176,14 @@ describe('a full cycle in Coalport', () => {
     const moved = await A.caller.council.propose({ ordinanceId: 'ord.open-doors', idempotencyKey: key() });
     expect(moved).toMatchObject({
       act: 'propose',
-      headline: 'Open Doors is on the order paper',
+      headline: 'Open Doors is up for a vote',
       // 45 − 10 + 5 (the orders) + 5: review 1 (§13.4), One of Us (200 Successes) pays 1 PC a boundary.
       knockOns: { pc: { before: 45, after: 25 } },
     });
     const voted = await A.caller.council.councilVote({ choice: 'ord.open-doors', idempotencyKey: key() });
     expect(voted).toMatchObject({ act: 'councilVote', headline: 'Your vote is recorded' });
     expect(voted.body).toBe(
-      'For Open Doors. Public in the chamber, final. The council divides at {at}; the Clarion prints the result.',
+      "For Open Doors. The whole council can see it, and it's final. The council votes at {at}; the Clarion prints the result.",
     );
 
     // The division (into cycle day 2): the NPCs follow the player; Open Doors is in force.
@@ -183,7 +206,7 @@ describe('a full cycle in Coalport', () => {
       label: 'Open Doors',
       value: 4,
     });
-    expect(r.bonusTags).toContainEqual({ id: 'ord.open-doors', label: 'Open Doors', note: '+4 %' });
+    expect(r.bonusTags).toContainEqual({ id: 'ord.open-doors', label: 'Open Doors', note: 'better odds' });
     const divided = (await OrderPaper.findOne({
       cityId: 'coalport',
       status: 'divided',
@@ -199,7 +222,7 @@ describe('a full cycle in Coalport', () => {
     expect(back.desk.stipend).toEqual({ boundaries: 3, pc: 30, fxp: 60, cityName: 'Coalport' });
     const term = await OfficeTerm.findOne({ 'holder.characterId': A.id }).lean();
     expect(term).toMatchObject({ completed: true, fromDay: D0 + 5, toDay: D0 + 10 });
-    expect(back.headlines.map((h) => h.headline)).toContain('Councillor Mara Lenk Rises');
+    expect(back.headlines.map((h) => h.headline)).toContain('Councillor Mara Lenk Steps Down');
     expect((await A.caller.character.me()).office).toBeNull();
     // The ordinance expires by the calendar at the next division: the branch's motion again.
     clock.set(at(D0 + 12));
@@ -254,8 +277,8 @@ describe.each([
     clock.set(at(D0 + 1));
     expect((await A.caller.paper.today()).headlines.map((h) => h.headline)).toContain(
       factionId === 'vanguard'
-        ? 'Ida Brandt Files for Duskwall Council'
-        : 'Ida Brandt Files for Ashford Council',
+        ? 'Ida Brandt Stands for Duskwall Council'
+        : 'Ida Brandt Stands for Ashford Council',
     );
     clock.set(at(D0 + 2));
     await A.caller.council.vote({ candidateKey: `p:${A.id}`, idempotencyKey: key() });

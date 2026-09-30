@@ -20,6 +20,7 @@ import ONB from '../../../docs/design/slice-2-onboarding.md?raw';
 import R1 from '../../../docs/design/review-1-answers.md?raw';
 import { ContentError, copy, isCheckedAction, loadContent, parseContent, rawContent } from '../src';
 import type { ContentInput } from '../src';
+import { plainHeadline, plainProse } from './review2';
 
 const content = loadContent();
 const deepCopy = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
@@ -230,7 +231,8 @@ describe.each([
   });
 
   it('outcome text word for word', () => {
-    const block = section(doc, 'Outcome text', '\n## ');
+    // Review 2 (answers §1.5, §1.6, §1.13): the doc's prose predates the plain-words swaps.
+    const block = plainProse(section(doc, 'Outcome text', '\n## '));
     for (const a of actions) {
       const at = block.indexOf(`(\`${a.id}\``);
       expect(at, a.id).toBeGreaterThan(-1);
@@ -289,10 +291,11 @@ describe.each([
       if (hid.includes('ambient')) continue;
       const h = mine.find((x) => x.id === hid);
       expect(h, hid).toBeDefined();
-      expect(h!.headline, hid).toBe(headline!.replace(' %', ' %'));
+      // Review 2 (answers §1.8): the plain-words headlines and decks.
+      expect(h!.headline, hid).toBe(plainHeadline(headline!.replace(' %', ' %')));
       // Review 1: no half pay any more (the developer's wording, marked for the designer).
       expect(h!.deck, hid).toBe(
-        deck!.replace('days of half pay', 'days of pay').replace('no half pay', 'no pay'),
+        plainHeadline(deck!.replace('days of half pay', 'days of pay').replace('no half pay', 'no pay')),
       );
       expect(h!.cityId).toBe(cityId);
     }
@@ -359,7 +362,8 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
     const street = content.origin.street;
     expect(ONB).toContain(`Kicker *${street.kicker}*`);
     expect(ONB).toContain(`**${street.title}** ${street.narrative.replace('the Herald', 'the *Herald*')}`);
-    expect(ONB).toContain(`*${street.note}*`);
+    // Review 2 (answers §1.10): the note in plain words.
+    expect(plainProse(ONB)).toContain(`*${street.note}*`);
     for (const f of content.factions) {
       const line = ONB.split('\n').find((l) => l.includes(` ${f.name}** — `))!;
       expect(line.split(' — ')[1]).toBe(f.card.blurb);
@@ -394,7 +398,8 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
       'settle-his-debts': '### 3.4',
     };
     for (const amb of content.ambitions) {
-      const doc = section(ONB, sections[amb.id as keyof typeof sections], '\n### ');
+      // Review 2 (answers §1.10, §1.13): flyers, and the streets he walked.
+      const doc = plainProse(section(ONB, sections[amb.id as keyof typeof sections], '\n### '));
       const ch = amb.chapters[0]!;
       const s = ch.story!;
       expect(doc).toContain(`Chapter 1: *${ch.title}*`);
@@ -425,7 +430,7 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
       // off the first ballot); until then the content keeps the slice-2 requirement.
       expect(doc).toContain(`Chapter 2, "${hook.title}": from {date}, `);
       // Slice 3: Finish His Work chapter 2 opens "after your first ballot".
-      expect(copy.chapterNeeds(hook.requires!)).toMatch(/^((Rank|Level) \d+|after your first ballot)$/);
+      expect(copy.chapterNeeds(hook.requires!)).toMatch(/^((Rank|Level) \d+|after your first vote)$/);
       expect(doc).toContain(copy.keepsakeLine(content.item(s.keepsake)!.name));
       expect([s.check.difficulty, s.check.energy, s.rewards]).toEqual([
         8,

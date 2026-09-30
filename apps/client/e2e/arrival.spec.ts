@@ -19,10 +19,10 @@ const CASES = [
     arrival: 'Kaspar Lind Arrives at Duskwall Station',
     secretary: '— V.S.',
     pin1: '1. Fortress Gate',
-    canvass: 'Canvass the customs shift',
-    // Review 1: STR 11 = INT 11 goes to the Vanguard's STR, the gate; +10 % on the first day.
-    odds: '72 %',
-    order: 'Canvass the customs shift at the Fortress Gate',
+    canvass: 'Talk to the customs men coming off shift',
+    // Review 1: STR 11 = INT 11 goes to the Vanguard's STR, the gate; review 2: odds as a word.
+    odds: 'Good odds',
+    order: 'Talk to the customs men at the Fortress Gate',
   },
   {
     faction: 'collective' as const,
@@ -33,9 +33,9 @@ const CASES = [
     arrival: 'Kaspar Lind Steps Off the Irongate Train',
     secretary: '— P.H.',
     pin1: '1. Mill Gate',
-    canvass: 'Canvass the shift change',
-    odds: '76 %',
-    order: 'Canvass the shift change at the Mill Gate',
+    canvass: 'Talk to the workers coming off shift',
+    odds: 'Good odds',
+    order: 'Talk to the workers at the Mill Gate',
   },
   {
     faction: 'alliance' as const,
@@ -46,9 +46,9 @@ const CASES = [
     arrival: 'Kaspar Lind Arrives on the Irongate Train',
     secretary: '— T.G.',
     pin1: '1. Gazette House',
-    canvass: 'Canvass the print-room shift',
-    odds: '84 %',
-    order: 'Canvass the print-room shift at Gazette House',
+    canvass: 'Talk to the printers coming off shift',
+    odds: 'Good odds',
+    order: 'Talk to the printers at Gazette House',
   },
 ];
 
@@ -93,7 +93,7 @@ for (const c of CASES) {
     const card = page.getByRole('radio', { name: new RegExp(c.name) });
     await expect(page.getByTestId('wish-tag')).toHaveCount(1);
     await expect(page.getByRole('radio', { name: /Red Collective/ }).getByTestId('wish-tag')).toHaveText(
-      'His wish · +50 Faction XP',
+      'His wish · +50 Party XP',
     );
     await card.click();
     await expect(card.getByTestId('faction-facts')).toBeVisible();
@@ -138,7 +138,7 @@ for (const c of CASES) {
     }
     const chanceTicket = sheet.locator('[data-testid^="ticket-"]').filter({ hasText: c.canvass }).first();
     await expect(chanceTicket.getByTestId('ticket-chance')).toHaveText(c.odds);
-    await expect(chanceTicket).toContainText('Party order 0 / 2 · +25 % FXP');
+    await expect(chanceTicket).toContainText('Party order 0 / 2 · +25 % Party XP');
     await sheet.getByRole('button', { name: `${c.canvass}, once, 10 Energy` }).click();
     const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
     await expect(modal.getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);

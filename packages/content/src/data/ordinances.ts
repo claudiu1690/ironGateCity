@@ -26,8 +26,8 @@ export const ordinances: OrdinanceInput[] = [
   {
     id: 'ord.street-permits',
     name: 'Street Permits',
-    line: 'Leaflets and posters go up without a permit for the week.',
-    effectLine: 'Propaganda opinion swing +15 %',
+    line: 'Flyers and posters go up without a permit for the week.',
+    effectLine: 'Posters and flyers: opinion +15 %',
     effects: [{ kind: 'swingPct', actionType: 'propaganda', value: 15 }],
   },
   {
@@ -47,28 +47,28 @@ export const ordinances: OrdinanceInput[] = [
   {
     id: 'ord.rest-day',
     name: 'Rest Day Order',
-    line: 'A day of rest by ordinance: the town sleeps in.',
+    line: 'A day of rest by council rule: the town sleeps in.',
     effectLine: 'Rested cap +50',
     effects: [{ kind: 'restedCapDelta', value: 50 }],
   },
   {
     id: 'ord.open-doors',
     name: 'Open Doors',
-    line: 'The council asks every household to receive canvassers.',
-    effectLine: 'Canvass +4 % success chance',
+    line: 'The council asks every household to open the door to party callers.',
+    effectLine: 'Talking to voters: better odds',
     effects: [{ kind: 'chancePct', actionType: 'canvass', value: 4 }],
   },
   {
-    id: 'ord.ward-register',
-    name: 'Ward Register',
-    line: 'The wards keep a register: a name once known stays known.',
-    effectLine: 'Local Standing: every Success counts two',
+    id: 'ord.street-register',
+    name: 'Street Register',
+    line: 'Every street keeps a register: a name once known stays known.',
+    effectLine: 'Reputation: every win counts twice',
     effects: [{ kind: 'standingMultiplier', value: 2 }],
   },
   {
-    id: 'ord.ward-fund',
-    name: 'Ward Fund',
-    line: 'A ward fund pays canvassers by the door, raised from the wage packet.',
+    id: 'ord.street-fund',
+    name: 'Street Fund',
+    line: 'A street fund pays party callers by the door, raised from the wage packet.',
     effectLine: 'Iron from actions +25 % · job pay −25 %',
     effects: [
       { kind: 'ironPct', scope: 'checked', value: 25 },
@@ -79,7 +79,7 @@ export const ordinances: OrdinanceInput[] = [
     id: 'ord.public-meetings',
     name: 'Public Meetings Order',
     line: "A week of public meetings: the party's work counts for more.",
-    effectLine: 'Faction XP +25 % on actions',
+    effectLine: 'Party XP +25 % on actions',
     effects: [{ kind: 'fxpPct', scope: 'actions', value: 25 }],
   },
 ];

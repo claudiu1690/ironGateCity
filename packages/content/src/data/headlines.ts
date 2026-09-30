@@ -50,7 +50,7 @@ export const headlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
     headline: '{name} Made Activist by the Branch',
-    deck: 'Recruits become Activists on the strength of their party work. The vote follows.',
+    deck: 'Recruits become Activists by doing party work. Activists vote: Coalport elects its council every five days, and the Election card says when.',
   },
   {
     id: 'hl.rank-up-3',
@@ -77,7 +77,7 @@ export const headlines: HeadlineInput[] = [
     priority: 3,
     when: [{ kind: 'levelRose' }, { kind: 'energyYesterday', min: 1 }],
     headline: 'Coalport {rank} Rises to Level {level}',
-    deck: '{name} of the Collective spent {energyYesterday} Energy on the ward yesterday. The branch has noticed.',
+    deck: '{name} of the Collective spent {energyYesterday} Energy on the streets yesterday. The branch has noticed.',
   },
   {
     id: 'hl.level-up-quiet',
@@ -86,7 +86,7 @@ export const headlines: HeadlineInput[] = [
     priority: 3,
     when: [{ kind: 'levelRose' }, { kind: 'energyYesterday', max: 0 }],
     headline: 'Coalport {rank} Rises to Level {level}',
-    deck: '{name} of the Collective has been putting the hours in on the ward. The branch has noticed.',
+    deck: '{name} of the Collective has been putting the hours in on the streets. The branch has noticed.',
   },
   {
     id: 'hl.standing',
@@ -95,7 +95,7 @@ export const headlines: HeadlineInput[] = [
     priority: 4,
     when: [{ kind: 'standingRose' }],
     headline: 'A {standing} Face in Coalport',
-    deck: 'Coalport knows {name} now: {standing}. Actions here get +{bonus} %.',
+    deck: 'Coalport knows {name} now: {standing}. Everything here goes a little better.',
   },
   {
     id: 'hl.orders-done',
@@ -103,7 +103,7 @@ export const headlines: HeadlineInput[] = [
     group: 'personal',
     priority: 5,
     when: [{ kind: 'ordersAllDoneYesterday' }],
-    headline: 'Branch Praises Its Canvassers',
+    headline: 'Branch Praises Its Helpers',
     deck: 'Every order carried out yesterday. Secretary Holm: "That\'s how it\'s done." +5 Political Capital banked.',
   },
   {
@@ -135,8 +135,7 @@ export const headlines: HeadlineInput[] = [
     ],
     headline: 'While You Were Away',
     // {days} is the number of days of pay credited, at most 14 (designer answer §12 Q9, review 1).
-    // TODO(game-designer): review 1 retired the half pay; wording adjusted by the developer.
-    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
+    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The town is where you left it.',
   },
   {
     id: 'hl.away-no-job',
@@ -149,7 +148,7 @@ export const headlines: HeadlineInput[] = [
       { kind: 'daysPaid', max: 0 },
     ],
     headline: 'While You Were Away',
-    deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
+    deck: 'No job, so no pay banked. Rested is full and the town is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
   },
   {
     id: 'hl.idle',
@@ -157,8 +156,8 @@ export const headlines: HeadlineInput[] = [
     group: 'personal',
     priority: 8,
     when: [{ kind: 'idleYesterday' }],
-    headline: 'Quiet Day in the Ward',
-    deck: "No leaflets went out yesterday. Today's orders are below.",
+    headline: 'Quiet Day in the Streets',
+    deck: "No flyers went out yesterday. Today's orders are below.",
   },
   // The space before "%" in the three morale headlines is a no-break space (U+00A0), so the
   // figure and its sign never split across lines.
@@ -234,7 +233,7 @@ export const headlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
     headline: '{name} Made Steward by the Vanguard',
-    deck: 'Initiates become Stewards on the strength of their work. The vote follows.',
+    deck: 'Initiates become Stewards on the strength of their work. Stewards vote: Duskwall elects its council every five days, and the Election card says when.',
   },
   {
     id: 'hl.v.rank-up-3',
@@ -261,7 +260,7 @@ export const headlines: HeadlineInput[] = [
     priority: 3,
     when: [{ kind: 'levelRose' }, { kind: 'energyYesterday', min: 1 }],
     headline: 'Duskwall {rank} Rises to Level {level}',
-    deck: '{name} of the Vanguard spent {energyYesterday} Energy on the ward yesterday. Beacon House has noticed.',
+    deck: '{name} of the Vanguard spent {energyYesterday} Energy on the streets yesterday. Beacon House has noticed.',
   },
   {
     id: 'hl.v.level-up-quiet',
@@ -270,7 +269,7 @@ export const headlines: HeadlineInput[] = [
     priority: 3,
     when: [{ kind: 'levelRose' }, { kind: 'energyYesterday', max: 0 }],
     headline: 'Duskwall {rank} Rises to Level {level}',
-    deck: '{name} of the Vanguard has been putting the hours in on the ward. Beacon House has noticed.',
+    deck: '{name} of the Vanguard has been putting the hours in on the streets. Beacon House has noticed.',
   },
   {
     id: 'hl.v.standing',
@@ -279,7 +278,7 @@ export const headlines: HeadlineInput[] = [
     priority: 4,
     when: [{ kind: 'standingRose' }],
     headline: 'A {standing} Face in Duskwall',
-    deck: 'Duskwall knows {name} now: {standing}. Actions here get +{bonus} %.',
+    deck: 'Duskwall knows {name} now: {standing}. Everything here goes a little better.',
   },
   {
     id: 'hl.v.orders-done',
@@ -287,7 +286,7 @@ export const headlines: HeadlineInput[] = [
     group: 'personal',
     priority: 5,
     when: [{ kind: 'ordersAllDoneYesterday' }],
-    headline: 'Vanguard Commends Its Canvassers',
+    headline: 'Vanguard Commends Its Volunteers',
     deck: 'Every order carried out yesterday. Organiser Stahl: "As it should be." +5 Political Capital banked.',
   },
   {
@@ -318,8 +317,7 @@ export const headlines: HeadlineInput[] = [
       { kind: 'daysPaid', min: 1 },
     ],
     headline: 'While You Were Away',
-    // TODO(game-designer): review 1 retired the half pay; wording adjusted by the developer.
-    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
+    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The town is where you left it.',
   },
   {
     id: 'hl.v.away-no-job',
@@ -331,7 +329,7 @@ export const headlines: HeadlineInput[] = [
       { kind: 'daysPaid', max: 0 },
     ],
     headline: 'While You Were Away',
-    deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The customs stores are still hiring: the Jobs card is at the Fortress Gate.',
+    deck: 'No job, so no pay banked. Rested is full and the town is where you left it. The customs stores are still hiring: the Jobs card is at the Fortress Gate.',
   },
   {
     id: 'hl.v.idle',
@@ -340,7 +338,7 @@ export const headlines: HeadlineInput[] = [
     priority: 8,
     when: [{ kind: 'idleYesterday' }],
     headline: 'Quiet Day on the Ramparts',
-    deck: "No leaflets went out yesterday. Today's orders are below.",
+    deck: "No flyers went out yesterday. Today's orders are below.",
   },
   {
     id: 'hl.v.morale-fired',
@@ -413,8 +411,8 @@ export const headlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
-    headline: '{name} Made Canvasser by the Alliance',
-    deck: 'Volunteers become Canvassers on the strength of their work. The vote follows.',
+    headline: '{name} Made Campaigner by the Alliance',
+    deck: 'Volunteers become Campaigners on the strength of their work. Campaigners vote: Ashford elects its council every five days, and the Election card says when.',
   },
   {
     id: 'hl.a.rank-up-3',
@@ -441,7 +439,7 @@ export const headlines: HeadlineInput[] = [
     priority: 3,
     when: [{ kind: 'levelRose' }, { kind: 'energyYesterday', min: 1 }],
     headline: 'Ashford {rank} Rises to Level {level}',
-    deck: '{name} of the Alliance spent {energyYesterday} Energy on the ward yesterday. The Rooms have noticed.',
+    deck: '{name} of the Alliance spent {energyYesterday} Energy on the streets yesterday. The Rooms have noticed.',
   },
   {
     id: 'hl.a.level-up-quiet',
@@ -450,7 +448,7 @@ export const headlines: HeadlineInput[] = [
     priority: 3,
     when: [{ kind: 'levelRose' }, { kind: 'energyYesterday', max: 0 }],
     headline: 'Ashford {rank} Rises to Level {level}',
-    deck: '{name} of the Alliance has been putting the hours in on the ward. The Rooms have noticed.',
+    deck: '{name} of the Alliance has been putting the hours in on the streets. The Rooms have noticed.',
   },
   {
     id: 'hl.a.standing',
@@ -459,7 +457,7 @@ export const headlines: HeadlineInput[] = [
     priority: 4,
     when: [{ kind: 'standingRose' }],
     headline: 'A {standing} Face in Ashford',
-    deck: 'Ashford knows {name} now: {standing}. Actions here get +{bonus} %.',
+    deck: 'Ashford knows {name} now: {standing}. Everything here goes a little better.',
   },
   {
     id: 'hl.a.orders-done',
@@ -498,8 +496,7 @@ export const headlines: HeadlineInput[] = [
       { kind: 'daysPaid', min: 1 },
     ],
     headline: 'While You Were Away',
-    // TODO(game-designer): review 1 retired the half pay; wording adjusted by the developer.
-    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
+    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The town is where you left it.',
   },
   {
     id: 'hl.a.away-no-job',
@@ -511,7 +508,7 @@ export const headlines: HeadlineInput[] = [
       { kind: 'daysPaid', max: 0 },
     ],
     headline: 'While You Were Away',
-    deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The Gazette is still hiring: the Jobs card is at Gazette House.',
+    deck: 'No job, so no pay banked. Rested is full and the town is where you left it. The Gazette is still hiring: the Jobs card is at Gazette House.',
   },
   {
     id: 'hl.a.idle',
@@ -519,8 +516,8 @@ export const headlines: HeadlineInput[] = [
     group: 'personal',
     priority: 8,
     when: [{ kind: 'idleYesterday' }],
-    headline: 'Quiet Day in the Wards',
-    deck: "No leaflets went out yesterday. Today's orders are below.",
+    headline: 'Quiet Day in the Town',
+    deck: "No flyers went out yesterday. Today's orders are below.",
   },
   {
     id: 'hl.a.morale-fired',

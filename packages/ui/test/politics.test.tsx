@@ -6,22 +6,21 @@ import {
   politicalResultFixture,
   politicsSummaryFixture,
 } from '@irongate/rules/testing';
-import type { PoliticalResult, PoliticsSummaryView } from '@irongate/rules';
+import type { ElectionYourLine, PoliticalResult, PoliticsSummaryView } from '@irongate/rules';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  CouncilCard,
   CountTable,
+  ElectionCard,
   FrontPage,
   OrderPaper,
-  PollingDayRow,
   ResultModal,
   Slate,
+  electionLines,
   formatAt,
   formatUntil,
   ordinanceTagText,
-  pollingDayLines,
   renderTimeTokens,
 } from '../src';
 
@@ -41,98 +40,198 @@ describe('time tokens (tech design §4.3)', () => {
   });
 });
 
-describe('PollingDayRow (screens §2.1)', () => {
-  const states: Array<[PoliticsSummaryView['state'], Partial<PoliticsSummaryView>, RegExp]> = [
-    ['ballot', {}, /^Cast your ballot/],
-    ['voted', { votedFor: 'Anna Weiss' }, /^Ballot cast for Anna Weiss/],
-    ['stand', { phase: 'nominations' }, /^Stand for the council · 10 PC/],
+describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
+  // The test runner's clock is UTC. The cycle: names in until Tuesday midnight (Wed 00:00), voting
+  // from Wednesday, the result Sunday morning (Sun 00:00); now is Monday noon.
+  const wed = Date.UTC(2026, 9, 7);
+  const sun = Date.UTC(2026, 9, 11);
+  const now = Date.UTC(2026, 9, 5, 12);
+  const card = (over: Partial<PoliticsSummaryView['card']>): PoliticsSummaryView => ({
+    ...S,
+    inForce: null,
+    card: { ...S.card, closesAt: wed, pollsOpenAt: wed, countAt: sun, ...over },
+  });
+  const result = {
+    winner: 'Anna Weiss',
+    yourLine: null,
+    councilUntil: Date.UTC(2026, 9, 10),
+    namesUntil: wed,
+  };
+  const table: Array<
+    [string, Partial<PoliticsSummaryView['card']>, string, string, string | null, string | null]
+  > = [
     [
-      'filed',
-      { endorsements: { n: 1, needed: 2, branchWillMakeUp: true } },
-      /On the slate · endorsements 1 \/ 2/,
+      'belowRank',
+      { state: 'belowRank', fxp: 120 },
+      'Coalport elects its council on Sunday',
+      'Activists vote · 400 Party XP makes an Activist · you have 120',
+      null,
+      "See who's standing",
     ],
     [
-      'count',
-      { count: { winner: 'Weiss', npcSeats: 6, seats: 7, turnout: { voters: 3, eligible: 9 } } },
-      /Weiss tops the poll/,
+      'candidates',
+      { state: 'candidates' },
+      'Candidates are putting their names in',
+      'Voting opens Wednesday · 2 days to stand or back someone',
+      "See who's standing",
+      null,
     ],
-    ['councilSits', { divideAt: Date.UTC(2026, 9, 7) }, /^The council sits · vote on the ordinance/],
-    ['nominations', { phase: 'nominations' }, /^Nominations open in Coalport/],
-    ['belowRank', { route: null }, /^Coalport votes from Thursday/],
+    [
+      'candidates, eligible',
+      { state: 'candidates', canStand: true },
+      'Candidates are putting their names in',
+      'Voting opens Wednesday · 2 days to stand or back someone',
+      'Stand for the council · 10 Political Capital',
+      "See who's standing",
+    ],
+    [
+      'standing',
+      { state: 'standing', backers: { n: 1, needed: 2, branchLine: false, branchWillMakeUp: false } },
+      "You're standing · backers 1 of 2",
+      "Two backers by Tuesday midnight or your name comes off · do today's orders and the branch backs you",
+      'See the candidates',
+      null,
+    ],
+    [
+      'backing',
+      { state: 'backing', backing: 'Anna Weiss' },
+      "You're backing Anna Weiss",
+      'Voting opens Wednesday · 2 days',
+      "See who's standing",
+      null,
+    ],
+    [
+      'voting',
+      { state: 'voting', closesAt: sun },
+      'Voting is open',
+      'Closes Saturday midnight · 6 days left · your vote is secret',
+      'Vote now',
+      null,
+    ],
+    [
+      'voted',
+      { state: 'voted', votedFor: 'Anna Weiss' },
+      'You voted for Anna Weiss',
+      'Result Sunday morning, here and in the Clarion',
+      'See the candidates',
+      null,
+    ],
+    [
+      'candidateVoting',
+      { state: 'candidateVoting', closesAt: sun },
+      "You're a candidate · voting is open",
+      'Closes Saturday midnight · you can vote for yourself',
+      'Vote now',
+      null,
+    ],
+    [
+      'result',
+      {
+        state: 'result',
+        canStand: true,
+        result: { ...result, yourLine: { kind: 'voteWon', name: 'Anna Weiss' } },
+      },
+      'Result: Anna Weiss topped the poll · your vote: Anna Weiss was elected',
+      'Seven seats · the new council sits until Friday · next election: names in until Tuesday midnight',
+      'See the result',
+      'Stand for the council · 10 Political Capital',
+    ],
+    [
+      'councilSits',
+      { state: 'councilSits', rule: { votedFor: null, divideAt: wed } },
+      "You're on the council · vote on the rule",
+      'The council votes Tuesday midnight · 2 days',
+      'Vote on the rule',
+      null,
+    ],
+    [
+      'councilVoted',
+      { state: 'councilVoted', rule: { votedFor: 'Open Doors', divideAt: wed } },
+      'You voted for Open Doors',
+      'Result Wednesday morning',
+      'See the council',
+      null,
+    ],
   ];
-  it.each(states)('%s', (state, over, text) => {
-    const onOpen = vi.fn();
-    render(<PollingDayRow summary={{ ...S, ...over, state }} onOpen={onOpen} />);
-    const row = screen.getByTestId('polling-day-row');
-    expect(row).toHaveTextContent(text);
-    expect(row.tagName).toBe(state === 'belowRank' ? 'DIV' : 'BUTTON');
+  it.each(table)('%s', (_name, over, line1, line2, primary, secondary) => {
+    render(<ElectionCard summary={card(over)} onOpen={vi.fn()} now={now} />);
+    expect(screen.getByTestId('election-line1')).toHaveTextContent(line1);
+    expect(screen.getByTestId('election-line2')).toHaveTextContent(line2);
+    if (primary) expect(screen.getByTestId('election-primary')).toHaveTextContent(primary);
+    else expect(screen.queryByTestId('election-primary')).toBeNull();
+    if (secondary) expect(screen.getByTestId('election-secondary')).toHaveTextContent(secondary);
+    else expect(screen.queryByTestId('election-secondary')).toBeNull();
   });
 
-  it('the filed row says the branch will make up the number; the below-rank line names the rank', () => {
-    expect(
-      pollingDayLines({ ...S, state: 'filed', endorsements: { n: 0, needed: 2, branchWillMakeUp: true } })[1],
-    ).toBe('The branch will make up the number');
-    expect(pollingDayLines({ ...S, state: 'belowRank' })[1]).toBe(
-      'Activists vote. 400 Faction XP makes an Activist.',
+  it('your line on the result morning: elected, missed, your vote fell short', () => {
+    const line = (yourLine: NonNullable<typeof result>['yourLine'] | ElectionYourLine) =>
+      electionLines(card({ state: 'result', result: { ...result, yourLine } }), now).line1;
+    expect(line({ kind: 'elected', place: 3 })).toBe(
+      'Result: Anna Weiss topped the poll · you: elected, 3rd of 7',
     );
-    expect(pollingDayLines({ ...S, state: 'belowRank', rank2Title: 'Steward' })[1]).toBe(
-      'Stewards vote. 400 Faction XP makes a Steward.',
+    expect(line({ kind: 'missed', margin: 3 })).toBe(
+      'Result: Anna Weiss topped the poll · you: missed the last seat by 3',
     );
+    expect(line({ kind: 'voteLost', name: 'Josef Baum' })).toBe(
+      'Result: Anna Weiss topped the poll · your vote: Josef Baum fell short',
+    );
+    expect(line(null)).toBe('Result: Anna Weiss topped the poll');
   });
 
-  it('opens the route', async () => {
+  it('the last day of voting closes tonight; the rule line; the first-time note; the buttons open routes', async () => {
     const onOpen = vi.fn();
-    render(<PollingDayRow summary={S} onOpen={onOpen} />);
-    await userEvent.setup().click(screen.getByTestId('polling-day-row'));
-    expect(onOpen).toHaveBeenCalledWith('/council/ballot');
-  });
-});
-
-describe('CouncilCard (screens §7)', () => {
-  it('mirrors the row: the state line, the ordinance in force, one button', async () => {
-    const onOpen = vi.fn();
-    render(<CouncilCard summary={S} onOpen={onOpen} />);
-    const card = screen.getByTestId('council-card');
-    expect(card).toHaveTextContent('Polls open · closes');
-    expect(card).toHaveTextContent('Ordinance in force: Shift Hours Order · 3 days left');
-    await userEvent.setup().click(within(card).getByRole('button', { name: 'Cast your ballot' }));
-    expect(onOpen).toHaveBeenCalledWith('/council/ballot');
-  });
-
-  it('review 1 #10: below Rank 2 there is no button, and the card says why', () => {
     render(
-      <CouncilCard
-        summary={{ ...S, state: 'belowRank', route: null, rank2Title: 'Steward' }}
-        onOpen={vi.fn()}
+      <ElectionCard
+        summary={{ ...card({ state: 'voting', closesAt: Date.UTC(2026, 9, 6), firstTime: true }) }}
+        onOpen={onOpen}
+        now={now}
       />,
     );
-    const card = screen.getByTestId('council-card');
-    expect(within(card).queryByRole('button')).toBeNull();
-    expect(screen.getByTestId('council-card-reason')).toHaveTextContent(
-      'Stewards vote. 400 Faction XP makes a Steward.',
+    expect(screen.getByTestId('election-line2')).toHaveTextContent(
+      'Closes tonight at midnight · your vote is secret',
     );
+    expect(screen.getByTestId('election-first-time')).toHaveTextContent(
+      'Coalport elects its council every five days. You can vote now; Organisers who are Known here can stand.',
+    );
+    await userEvent.setup().click(screen.getByTestId('election-primary'));
+    expect(onOpen).toHaveBeenCalledWith('/council/ballot');
   });
 
-  it('no reason line when the player can act', () => {
-    render(<CouncilCard summary={S} onOpen={vi.fn()} />);
-    expect(screen.queryByTestId('council-card-reason')).toBeNull();
+  it('the paper row: one tap to the primary route; the rule line on the card', async () => {
+    const onOpen = vi.fn();
+    const { rerender } = render(
+      <ElectionCard summary={card({ state: 'result', result })} onOpen={onOpen} layout="row" now={now} />,
+    );
+    await userEvent.setup().click(screen.getByTestId('polling-day-row'));
+    expect(onOpen).toHaveBeenCalledWith('/council/count');
+    rerender(
+      <ElectionCard
+        summary={{ ...S, inForce: { ordinanceId: 'ord.open-doors', name: 'Open Doors', daysLeft: 3 } }}
+        onOpen={onOpen}
+        now={now}
+      />,
+    );
+    expect(screen.getByTestId('election-rule')).toHaveTextContent('Council rule: Open Doors · 3 days left');
+    // Below Rank 2 the row is not a button (nothing to do yet, but the candidates on the card).
+    rerender(<ElectionCard summary={card({ state: 'belowRank' })} onOpen={onOpen} layout="row" now={now} />);
+    expect(screen.getByTestId('polling-day-row').tagName).toBe('BUTTON');
   });
 });
 
 describe('Slate (screens §3, §4)', () => {
-  it('nominations: players first, then the ward candidates; Endorse · 10 PC', async () => {
+  it('candidates: players first, then the local candidates; Back · 10 Political Capital', async () => {
     const onEndorse = vi.fn();
     render(<Slate candidates={electionViewFixture.candidates} mode="slate" onEndorse={onEndorse} />);
     const rows = screen.getAllByTestId('slate-row');
     expect(rows[0]).toHaveTextContent('Mara Lenk');
-    expect(rows[0]).toHaveTextContent('Organiser · One of Us in Coalport · endorsements 1 / 2');
-    expect(rows[1]).toHaveTextContent('ward · One of Us in Coalport');
-    expect(screen.getByText('Ward candidates')).toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Endorse · 10 PC' }));
+    expect(rows[0]).toHaveTextContent('Organiser · One of Us in Coalport · backers 1 of 2');
+    expect(rows[1]).toHaveTextContent('local · One of Us in Coalport');
+    expect(screen.getByText('Local candidates')).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Back · 10 Political Capital' }));
     expect(onEndorse).toHaveBeenCalledWith('66f9a0000000000000000009');
   });
 
-  it('ballot: radio rows, no totals; a cast ballot marks its row and dims the rest', async () => {
+  it('the vote: radio rows, no totals; a cast vote marks its row and dims the rest', async () => {
     const onSelect = vi.fn();
     const { rerender } = render(
       <Slate
@@ -146,13 +245,13 @@ describe('Slate (screens §3, §4)', () => {
     await userEvent.setup().click(screen.getAllByRole('radio')[1]!);
     expect(onSelect).toHaveBeenCalledWith('n:npc.c.weiss');
     rerender(<Slate candidates={electionViewFixture.candidates} mode="ballot" castKey="n:npc.c.weiss" />);
-    expect(screen.getByText('Your ballot')).toBeInTheDocument();
+    expect(screen.getByText(/^You voted for /)).toBeInTheDocument();
     expect(screen.queryByText(/total/i)).toBeNull();
   });
 });
 
 describe('CountTable (screens §5.2)', () => {
-  it('seven seats, the line, you, your vote, ward marks and the formula', () => {
+  it('seven seats, the line, you, your vote, local marks and the formula in plain words', () => {
     render(<CountTable rows={countViewFixture.rows} />);
     const rows = screen.getAllByTestId('count-row');
     expect(rows).toHaveLength(9);
@@ -161,8 +260,9 @@ describe('CountTable (screens §5.2)', () => {
     expect(rows[0]).toHaveTextContent('you');
     expect(rows[0]).toHaveTextContent('your vote');
     expect(rows[6]).toHaveTextContent('the line');
-    expect(rows[1]).toHaveTextContent('ward');
-    expect(screen.getByText(/Total = ward vote \+ 3 × endorsements/)).toBeInTheDocument();
+    expect(rows[1]).toHaveTextContent('local');
+    expect(screen.getByText(/^Support = local support \+ 3 per backer \+ votes/)).toBeInTheDocument();
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toContain('Support');
   });
 });
 
@@ -182,19 +282,19 @@ describe('FrontPage (screens §2.2)', () => {
 });
 
 describe('OrderPaper (screens §6.3, §6.4)', () => {
-  it('open: radio rows with the branch line and Against all', async () => {
+  it("open: radio rows with the party's proposal and None of these", async () => {
     const onSelect = vi.fn();
     render(
       <OrderPaper council={councilViewFixture} secretary="Petra Holm" selected={null} onSelect={onSelect} />,
     );
     expect(screen.getAllByRole('radio')).toHaveLength(3);
-    expect(screen.getByText("the branch's motion · Petra Holm")).toBeInTheDocument();
-    expect(screen.getByText('moved by you')).toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole('radio', { name: /Against all/ }));
+    expect(screen.getByText("the party's proposal · Petra Holm")).toBeInTheDocument();
+    expect(screen.getByText('put forward by you')).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('radio', { name: /None of these/ }));
     expect(onSelect).toHaveBeenCalledWith('against');
   });
 
-  it('divided: the counts and the Passed stamp; rose without a motion', () => {
+  it("after the council's vote: the counts and the Passed stamp; no agreement", () => {
     const divided = {
       ...councilViewFixture,
       window: { ...councilViewFixture.window, voting: false },
@@ -226,17 +326,17 @@ describe('OrderPaper (screens §6.3, §6.4)', () => {
         selected={null}
       />,
     );
-    expect(screen.getByText('Council rose without a motion')).toBeInTheDocument();
+    expect(screen.getByText("The council couldn't agree · no rule this term")).toBeInTheDocument();
   });
 });
 
 describe('ResultModal, kind political (screens §9)', () => {
   const stamps: Array<[PoliticalResult['act'], string, 'success' | 'partial']> = [
-    ['ballot', 'Ballot cast', 'success'],
-    ['declare', 'Filed', 'success'],
-    ['endorse', 'Endorsed', 'success'],
+    ['ballot', 'Vote cast', 'success'],
+    ['declare', "You're standing", 'success'],
+    ['endorse', 'Backed', 'success'],
     ['withdraw', 'Withdrawn', 'partial'],
-    ['propose', 'Moved', 'success'],
+    ['propose', 'Put forward', 'success'],
     ['councilVote', 'Voted', 'success'],
   ];
   it.each(stamps)('%s: the masthead strip, the stamp, the text, Continue only', (act, label, tone) => {
@@ -258,19 +358,27 @@ describe('ResultModal, kind political (screens §9)', () => {
     expect(within(dialog).queryByText('How it went')).toBeNull();
   });
 
-  it('the ballot: morale +0.5 → 84.5 %, and the secrecy note', () => {
-    render(<ResultModal result={politicalResultFixture} open onOpenChange={() => undefined} />);
+  it('the vote: morale +0.5 → 84.5 %, and the Next line last (review 2, screens §9)', () => {
+    render(
+      <ResultModal
+        result={{ ...politicalResultFixture, next: 'Next: the result, Sunday morning.' }}
+        open
+        onOpenChange={() => undefined}
+      />,
+    );
     expect(screen.getByTestId('political-morale')).toHaveTextContent('Coalport morale +0.5 → 84.5 %');
-    expect(screen.getByTestId('political-secret')).toHaveTextContent('the ballot is secret');
+    const items = screen.getAllByRole('listitem');
+    expect(items.at(-1)).toHaveTextContent('Next: the result, Sunday morning.');
+    expect(items.at(-1)).toHaveAttribute('data-testid', 'political-next');
   });
 
-  it('declare: the PC line and {until} rendered in the local clock', () => {
+  it('standing: the Political Capital line and {until} rendered in the local clock', () => {
     render(
       <ResultModal
         result={{
           ...politicalResultFixture,
           act: 'declare',
-          body: 'Two endorsements by {until} and your name is printed.',
+          body: 'You need two backers by {until} or your name comes off.',
           until: Date.UTC(2026, 9, 7),
           knockOns: { pc: { before: 45, after: 35 }, morale: null, endorsements: null },
         }}
@@ -279,22 +387,24 @@ describe('ResultModal, kind political (screens §9)', () => {
       />,
     );
     expect(
-      screen.getByText('Two endorsements by Tuesday midnight and your name is printed.'),
+      screen.getByText('You need two backers by Tuesday midnight or your name comes off.'),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('political-pc')).toHaveTextContent('−10 PC · 35 left');
+    expect(screen.getByTestId('political-pc')).toHaveTextContent('−10 Political Capital · 35 left');
   });
 });
 
-describe('ordinance ticket tags (screens §8)', () => {
-  it('words each kind', () => {
+describe('council rule ticket tags (screens §8, review 2)', () => {
+  it('words each kind; the odds as a word, never a percentage', () => {
     const t = { ordinanceId: 'x', name: 'Rally Permits' };
-    expect(ordinanceTagText({ ...t, kind: 'energy', value: 10 })).toBe('Rally Permits: 10 Energy');
-    expect(ordinanceTagText({ ...t, name: 'Open Doors', kind: 'chance', value: 4 })).toBe('Open Doors: +4 %');
-    expect(ordinanceTagText({ ...t, name: 'Ward Fund', kind: 'iron', value: -25 })).toBe(
-      'Ward Fund: −25 % Iron',
+    expect(ordinanceTagText({ ...t, kind: 'energy', value: 10 })).toBe('Rally Permits · 10 Energy');
+    expect(ordinanceTagText({ ...t, name: 'Open Doors', kind: 'chance', value: 4 })).toBe(
+      'Open Doors · better odds',
+    );
+    expect(ordinanceTagText({ ...t, name: 'Street Fund', kind: 'iron', value: -25 })).toBe(
+      'Street Fund · −25 % Iron',
     );
     expect(ordinanceTagText({ ...t, name: 'Public Meetings Order', kind: 'fxp', value: 25 })).toBe(
-      'Public Meetings Order: +25 % FXP',
+      'Public Meetings Order · +25 % Party XP',
     );
   });
 });

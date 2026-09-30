@@ -146,7 +146,7 @@ describe('the real content', () => {
     expect(copy.deskPaid(216, 'Stores hand', 4, 8)).toBe(
       'Paid: 216 Iron · Stores hand · seniority 4 days (+8 %)',
     );
-    expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % FXP');
+    expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % Party XP'); // review 2: Party XP
     // Content §13 (QA fix round 1).
     expect(copy.paperIsIn('Clarion')).toBe('The Clarion is in');
     expect(copy.meNoJob(['Mill Gate', 'Market Row', 'Harbour Quays'])).toBe(

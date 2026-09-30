@@ -223,7 +223,7 @@ describe('the origin: set-once answers, resumable after a reload at every step (
         // Justice was the wish: the Collective's card carries the tag, and only it.
         expect(reloaded.street?.cards.map((c) => [c.factionId, c.wish, c.wishLabel])).toEqual([
           ['vanguard', false, null],
-          ['collective', true, 'His wish · +50 Faction XP'],
+          ['collective', true, 'His wish · +50 Party XP'],
           ['alliance', false, null],
         ]);
       }
@@ -523,7 +523,7 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
       .chapter('finish-his-work', 1)!
       .story!.choose.choices.find((c) => c.id === choice)!.text;
     expect(amb.screen?.echo).toBe(text.replace('{secretary}', 'Secretary Holm'));
-    expect(amb.screen?.cta).toEqual({ label: 'Walk his ward', energy: 10, readyAt: null });
+    expect(amb.screen?.cta).toEqual({ label: 'Walk his streets', energy: 10, readyAt: null });
     const paper = await other.paper.today();
     expect(paper.letters).toEqual([
       {
@@ -645,7 +645,7 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
       idempotencyKey: randomUUID(),
     });
     expect(ra.effects.hooks).toEqual([
-      'Chapter 2, "Stand where he stood": from Saturday 10 October, after your first ballot',
+      'Chapter 2, "Stand where he stood": from Saturday 10 October, after your first vote',
     ]);
     const b = await chosen({ promise: 'a' });
     const rb = await b.caller.ambition.attempt({
