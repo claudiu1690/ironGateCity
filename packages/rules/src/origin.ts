@@ -1,5 +1,5 @@
 import type { AmbitionState } from './ambition';
-import { ENERGY, JOBS, STARTING } from './constants';
+import { ENERGY, STARTING } from './constants';
 import { dayKey } from './day';
 import type { DayKey } from './day';
 import type { Equipment, InventoryEntry, ItemSlot } from './items';
@@ -134,7 +134,6 @@ export interface NewCharacterState {
   pc: number;
   localStanding: Array<{ cityId: string; successes: number }>;
   job: null;
-  sickDays: { week: number; left: number };
   day: { settled: DayKey | null };
   orders: { day: DayKey; items: never[]; allDoneAt: null };
   today: DailyTally;
@@ -189,7 +188,6 @@ export function buildNewCharacter(i: {
     pc: 0,
     localStanding: [],
     job: null,
-    sickDays: { week: 0, left: JOBS.sickDaysPerWeek },
     day: { settled: null },
     orders: { day: 0, items: [], allDoneAt: null },
     today: emptyTally(null),

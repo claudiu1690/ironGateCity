@@ -1,8 +1,9 @@
 import { copy } from '@irongate/content/copy';
 import { energyReadyAt } from '@irongate/rules';
 import type { ActionView } from '@irongate/rules';
-import { useId, useState } from 'react';
-import { cx, formatClock, statLabel } from '../format';
+import { useEffect, useId, useRef, useState } from 'react';
+import { cx, formatClock } from '../format';
+import { ticketOdds } from '../odds';
 import { CheckBreakdownList } from './CheckBreakdownList';
 import { ordinanceTagText } from './ResultModal';
 
@@ -13,15 +14,12 @@ export const TYPE_LABEL: Record<string, string> = {
   intelligence: 'Intelligence',
   council: 'Council',
   training: 'Training',
-  job: 'Job shift',
 };
 
 export interface TicketProps {
   action: ActionView;
   /** Energy projected to now (value and the next tick), from the HUD. */
   energy: { value: number; nextTickAt: number | null };
-  /** Whether the character holds any job (for the shift ticket's state line). */
-  hasJob: boolean;
   onPerform: (times: 1 | 3) => void;
   /** Which button is waiting for the server. */
   pending?: 1 | 3 | null;
@@ -29,34 +27,35 @@ export interface TicketProps {
   notice?: string;
   /** +25 % FXP on matching attempts (from the orders view). */
   orderBonusPct?: number;
+  /** Review 1 (§13.7): opened from its Party order: marked, and scrolled into view. */
+  highlight?: boolean;
 }
 
 /**
- * An action as a printed ticket (mockups MobileMission, Mission): Energy stub, name, the odds (tap
- * for the breakdown) or "no roll", a tags line, and ×1 / ×3 (one Work or Train button for shifts and
- * training). It displays the server's numbers.
+ * An action as a printed ticket (mockups MobileMission, Mission): Energy stub, name, the odds with
+ * the stat they rest on (*62 % · STR 11*, review 1; tap for the ledger) or "no roll", a tags line,
+ * and ×1 / ×3 (one Train button for training). It displays the server's numbers.
  */
 export function Ticket({
   action: a,
   energy,
-  hasJob,
   onPerform,
   pending,
   notice,
   orderBonusPct = 25,
+  highlight = false,
 }: TicketProps) {
   const [open, setOpen] = useState(false);
   const breakdownId = useId();
   const hintId = useId();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (highlight) ref.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [highlight]);
 
   let blocked: string | null = null;
   if (a.locked)
     blocked = a.locked.reason === 'LEVEL' ? `Level ${a.locked.need}` : `Standing ${a.locked.need}`;
-  else if (a.kind === 'shift' && a.shift) {
-    if (!a.shift.held) blocked = hasJob ? copy.shiftNotYourJob : copy.shiftNoJob;
-    else if (a.shift.workedToday && a.shift.nextShiftAt !== null)
-      blocked = copy.shiftWorked(formatClock(a.shift.nextShiftAt));
-  }
   const short1 = energy.value < a.energy;
   const short3 = a.energy3 !== null && energy.value < a.energy3;
   const readyAt = short1 ? energyReadyAt(energy, a.energy) : null;
@@ -68,8 +67,9 @@ export function Ticket({
         ? copy.x3Needs(a.energy3)
         : null);
 
+  const orderDone = !!a.order && a.order.progress >= a.order.target;
   const order = a.order
-    ? a.order.progress >= a.order.target
+    ? orderDone
       ? copy.orderDone
       : a.givesFxp
         ? copy.orderTag(a.order.progress, a.order.target, orderBonusPct)
@@ -87,11 +87,17 @@ export function Ticket({
   );
 
   return (
-    <div className="flex flex-col" data-testid={`ticket-${a.id}`}>
+    <div
+      ref={ref}
+      className="flex flex-col"
+      data-testid={`ticket-${a.id}`}
+      data-highlight={highlight || undefined}
+    >
       <div
         className={cx(
           'flex min-h-[64px] items-stretch border bg-paper-card text-ink',
           blocked ? 'border-faint' : 'border-ink',
+          highlight && 'shadow-[0_0_0_3px_var(--color-xp)]',
         )}
       >
         <div className="flex w-[52px] shrink-0 flex-col items-center justify-center gap-px border-r-[1.5px] border-dashed border-ink bg-paper-2">
@@ -108,9 +114,9 @@ export function Ticket({
               aria-controls={breakdownId}
               className="-mx-1 -my-2 inline-flex min-h-11 cursor-pointer items-center self-start px-1 text-left font-mono text-[11px] text-muted hover:text-ink"
             >
-              <span className="underline decoration-dotted underline-offset-2">
-                <span data-testid="ticket-chance">{a.preview.chance} %</span>&nbsp;·{' '}
-                {statLabel(a.preview.stats)} check
+              <span className="underline decoration-dotted underline-offset-2" data-testid="ticket-odds">
+                <span data-testid="ticket-chance">{a.preview.chance} %</span>
+                {ticketOdds(a.preview).slice(`${a.preview.chance} %`.length)}
               </span>
             </button>
           ) : (
@@ -119,14 +125,16 @@ export function Ticket({
             </span>
           )}
           <span
-            className={cx('font-mono text-[10.5px]', order ? 'text-collective' : 'text-muted')}
+            // Review 1 #10: a done order is no longer a call to action; in the accent colour it read
+            // as a warning that the action was blocked. Muted, like any other tag line.
+            className={cx('font-mono text-[10.5px]', order && !orderDone ? 'text-collective' : 'text-muted')}
             data-testid="ticket-tags"
           >
             {tags}
           </span>
         </div>
-        {a.kind === 'shift' || a.kind === 'training' ? (
-          // Shifts and training have no batch (§8.5, §13.1): one button, the live cost on the stub.
+        {a.kind === 'training' ? (
+          // Training has no batch (§8.5, §13.1): one button, the live cost on the stub.
           <button
             type="button"
             onClick={() => onPerform(1)}
@@ -136,7 +144,7 @@ export function Ticket({
             aria-describedby={hint ? hintId : undefined}
             className={cx(button, 'w-16 bg-ink text-[12px] tracking-[0.1em] uppercase hover:bg-ink-2')}
           >
-            {pending === 1 ? '…' : a.kind === 'shift' ? 'Work' : 'Train'}
+            {pending === 1 ? '…' : 'Train'}
           </button>
         ) : (
           <>

@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
 import type { CharacterDoc, CityDoc, PaperEntryDoc } from '@irongate/db';
-import { JOBS, fillTemplate, itemSpec, selectHeadlines, standingView } from '@irongate/rules';
+import { fillTemplate, itemSpec, selectHeadlines, standingView } from '@irongate/rules';
 import type {
   DayKey,
   HeadlineTemplate,
@@ -9,7 +9,7 @@ import type {
   Placeholder,
   Settlement,
 } from '@irongate/rules';
-import { namedStanding, rankTitle, standingSuccesses } from './views';
+import { locationRef, namedStanding, rankTitle, standingSuccesses } from './views';
 
 export type NewEdition = Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
 
@@ -29,8 +29,10 @@ export function buildEdition(i: {
   /** Slice 3 (ADR 0020): the stipend and the deposits returned at this settlement. */
   stipend?: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
   deposits?: { count: number; pc: number } | null;
-  /** Slice 3: the streak days yesterday's shift added (Shift Hours: 2), for the crossing rule. */
-  streakStepYesterday?: number;
+  /** Review 1 (§13.4): the PC One of Us paid at this settlement. */
+  oneOfUsPc?: number;
+  /** Review 1: the seniority days the last boundary added (the Long Service Order's 2), else 1. */
+  seniorityStepYesterday?: number;
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
@@ -39,7 +41,6 @@ export function buildEdition(i: {
   const standingLevel = standingView(standingSuccesses(c, c.homeCityId)).level;
   const lastPlayed = s.lastPlayed;
   const playedYesterday = lastPlayed?.day === yesterday ? lastPlayed : null;
-  const workedYesterday = c.job?.lastShiftDay === yesterday;
 
   const facts: PaperFacts = {
     firstEdition: s.firstEdition,
@@ -48,11 +49,18 @@ export function buildEdition(i: {
     levelRose: prev !== null && c.level > prev.snapshot.level,
     standingRose: prev !== null && standingLevel > prev.snapshot.standingLevel,
     ordersAllDoneYesterday: c.orders.day === yesterday && c.orders.allDoneAt !== null,
-    streakHitYesterday: workedYesterday && c.job ? c.job.streak : null,
-    streakBeforeYesterday: workedYesterday && c.job ? c.job.streak - (i.streakStepYesterday ?? 1) : null,
+    // Review 1 (§9.1): the Five / Ten Days In headlines fire the morning after seniority reaches the
+    // number, so only the last boundary's step counts (a long absence does not print a crossing
+    // weeks old over *While You Were Away*).
+    seniority: s.seniority
+      ? {
+          before: Math.max(s.seniority.before, s.seniority.after - (i.seniorityStepYesterday ?? 1)),
+          after: s.seniority.after,
+        }
+      : null,
     daysSinceLastPaper: prev ? today - prev.day : null,
-    idleYesterday: playedYesterday !== null && playedYesterday.energy === 0 && !playedYesterday.shiftWorked,
-    halfPaysCredited: s.salary?.days ?? 0,
+    idleYesterday: playedYesterday !== null && playedYesterday.energy === 0,
+    daysPaid: s.salary?.days ?? 0,
     energyYesterday: playedYesterday?.energy ?? 0,
     homeShare,
   };
@@ -64,29 +72,29 @@ export function buildEdition(i: {
   const itemA = i.ordersToday.items[0];
   const slotA = itemA ? content.ordersOf(c.factionId).find((t) => t.id === itemA.templateId) : undefined;
   const orderA = itemA && slotA ? itemSpec(itemA, slotA) : undefined;
+  // Review 1 (§7.5): the welcome deck's "Spend it at {place} first." names slot A's place.
+  const firstAction = slotA?.match.actionIds?.[0];
+  const placeId = firstAction ? content.action(firstAction)?.location.id : undefined;
   const standing = namedStanding(content, c.homeCityId, standingSuccesses(c, c.homeCityId));
-  const streak = c.job?.streak ?? 0;
+  const job = s.job ? content.job(s.job.id) : undefined;
   const baseVars: Partial<Record<Placeholder, string>> = {
     name: c.name,
     level: String(c.level),
     rank: rankTitle(content, c, c.rank),
     energyYesterday: String(facts.energyYesterday),
     standing: standing.name,
-    days: String(facts.halfPaysCredited),
+    bonus: String(standing.bonus),
+    days: String(facts.daysPaid),
     iron: String(s.salary?.total ?? 0),
     share: (Math.round(homeShare * 10 + 1e-7) / 10).toFixed(1),
-    streak: String(streak),
+    // TODO(game-designer): the seniority decks read "{name} has been {job}"; {job} is the job's name.
+    job: job?.name ?? '',
+    place: placeId ? locationRef(content, placeId) : (homeCity?.locations[0]?.name ?? ''),
     ordersTitle: orderA?.title ?? '',
     ordersLine: orderA?.line ?? '',
   };
-  const varsFor = (t: HeadlineTemplate): Partial<Record<Placeholder, string>> => {
-    // {bonus} means the Standing bonus or the streak bonus, by the headline's condition.
-    const streakBonus = Math.round(JOBS.streakPerDay * 100 * Math.min(streak, JOBS.streakCapDays));
-    const bonus = t.when.some((w) => w.kind === 'streakHitYesterday') ? streakBonus : standing.bonus;
-    return { ...baseVars, bonus: String(bonus) };
-  };
+  const varsFor = (_t: HeadlineTemplate): Partial<Record<Placeholder, string>> => baseVars;
 
-  const job = s.job ? content.job(s.job.id) : undefined;
   return {
     characterId: c._id,
     day: today,
@@ -107,13 +115,14 @@ export function buildEdition(i: {
               jobName: job.name,
               days: s.salary.days,
               perDay: s.salary.perDay,
+              seniority: { days: s.salary.seniority.days, amount: s.salary.seniority.amount },
               total: s.salary.total,
               ordinance: s.salary.ordinance ?? null,
             }
           : null,
       stipend: i.stipend ?? null,
       deposits: i.deposits ?? null,
-      streak: s.streak,
+      oneOfUsPc: i.oneOfUsPc ?? 0,
       restedBanked: s.restedBanked,
       daysSinceLastPaper: facts.daysSinceLastPaper,
       yesterday: playedYesterday,

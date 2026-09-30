@@ -57,12 +57,19 @@ export const CITY_DAY = { ms: 86_400_000, utcOffsetMs: 0 } as const;
 export const DAY_NIGHT = { dayFromHour: 6, nightFromHour: 20 } as const;
 
 /** §13.4 — Local Standing: Successes needed for each level (0–4) and +3 % per level on checks there. */
-export const STANDING = { thresholds: [0, 10, 30, 70, 150], bonusPerLevel: 3 } as const;
+/** Review 1 (§13.4): One of Us (level 4) pays 1 PC a day at the boundary, per city where held. */
+export const STANDING = { thresholds: [0, 10, 30, 70, 150], bonusPerLevel: 3, oneOfUsPcPerDay: 1 } as const;
+
+/**
+ * Review 1 (§8.4, §7.5): the First day bonus, +10 % on every checked action in the home city during
+ * the welcome day (the creation day, and the next one when created at or after 22:00 UTC).
+ */
+export const FIRST_DAY = { chancePct: 10, lateFromHourUtc: 22 } as const;
 
 /** §5.4 — FXP at which Ranks 1..7 are reached (Rank 2 lowered to 400). */
 export const RANK_FXP = [0, 400, 2_000, 6_000, 15_000, 25_000, 60_000] as const;
 
-/** §5.3 — stat points granted per level gained, placed on STR or INT. */
+/** §5.3 — stat points granted per level gained, placed on STR, INT or AGI (review 1). */
 export const LEVEL_UP = { statPoints: 1 } as const;
 
 /** §6.5 — Political Capital cap; it never decays. */
@@ -76,19 +83,13 @@ export const TRAINING = { baseCost: 20, costPerPoint: 2, xpRateShare: 0.5 } as c
 
 /** §9.1 — jobs. */
 export const JOBS = {
-  salaryShare: 0.5,
-  streakPerDay: 0.02,
-  streakCapDays: 10,
-  sickDaysPerWeek: 2,
-  switchEnergy: 2,
   /**
-   * Designer answer §12 Q1 (GDD §9.1): a sick day is spent only when an ended City Day had no shift
-   * and the streak is running (> 0). The Monday refill is unconditional; the ended Sunday is judged first.
+   * Review 1 (GDD §9.1): a job is a wage. Seniority is +2 % of the daily pay for every City Day
+   * boundary the job has been held, to +20 % after ten days; it resets only on a switch.
    */
-  sickDaysOnlyWhileStreak: true,
-  /** Designer answer §12 Q2 (GDD §6.3): shifts and job switches never touch Rested. */
-  shiftUsesRested: false,
-  /** Designer answer §12 Q9 (GDD §9.1, §4.2): one settlement credits at most 14 half-pays. */
+  seniorityPerDay: 0.02,
+  seniorityCapDays: 10,
+  /** Designer answer §12 Q9 (GDD §9.1, §4.2): one settlement credits at most 14 days' pay. */
   salaryMaxDays: 14,
 } as const;
 
@@ -175,8 +176,8 @@ export const MORALE = {
 /** §15.3 (ADR 0021): each ordinance effect kind's bounds; the menu is closed, so a bound is a value. */
 export const ORDINANCE_BOUNDS = {
   jobPayPct: [-25, 10],
-  shiftEnergyDelta: [-1, 0],
-  shiftStreakDays: [1, 2],
+  /** Review 1: the Long Service Order (was Shift Hours): seniority builds two days a day. */
+  seniorityDays: [1, 2],
   swingPct: [0, 15],
   energyDelta: [-2, 0],
   trainingEnergyPct: [-20, 0],

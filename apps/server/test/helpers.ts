@@ -13,7 +13,7 @@ import {
   mongoose,
   seed,
 } from '@irongate/db';
-import { buildNewCharacter, dayKey, resolveOrigin } from '@irongate/rules';
+import { buildNewCharacter, dayKey, dayStart, resolveOrigin } from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import { Types } from 'mongoose';
 import { withDbName } from '@irongate/db/testing';
@@ -117,7 +117,7 @@ export async function resetCity(cityId: string): Promise<void> {
 
 /**
  * Slice 3: bootstrapping a home city puts the branch's motion in force, and every council passes it
- * by default (ADR 0017; Coalport: the Shift Hours Order). Slice-1/2 tests that pin shift and
+ * by default (ADR 0017; Coalport: the Long Service Order, review 1). Slice-1/2 tests that pin wage and
  * training numbers call this: the ordinance in force is cleared and, for the rest of the file, the
  * city's order papers carry no branch's motion, so the numbers stay those with no ordinance.
  */
@@ -131,11 +131,22 @@ export async function noOrdinance(cityId: string): Promise<void> {
  * rules the join uses), inserted as if settled "yesterday", so the next touch settles today with the
  * rotation's orders and slice-1 numbers hold: Iron 0 and FXP 0 unless overridden (the origin's 150
  * Iron and 50 FXP are a slice-2 one-off), no first edition.
+ *
+ * Review 1: a character settled yesterday arrived yesterday, so by default the recruit arrived at
+ * noon on the day before `now` (not on its welcome day: no welcome set, no *First day* row, GDD
+ * §8.4, §13.7). Pass `arrivedAt: now` for a recruit on its welcome day.
  */
 export async function seedRecruit(
   user: SessionUser,
   now: number,
-  overrides: { factionId?: FactionId; iron?: number; fxp?: number; avatarId?: string | null } = {},
+  overrides: {
+    factionId?: FactionId;
+    iron?: number;
+    fxp?: number;
+    avatarId?: string | null;
+    arrivedAt?: number;
+    stats?: Partial<{ str: number; int: number; agi: number }>;
+  } = {},
 ) {
   const content = getContent();
   const factionId = overrides.factionId ?? 'collective';
@@ -156,14 +167,16 @@ export async function seedRecruit(
     uid: () => new Types.ObjectId().toHexString(),
   });
   const at = new Date(now);
+  const arrived = new Date(overrides.arrivedAt ?? dayStart(dayKey(now) - 1) + 12 * 3_600_000);
   await Character.create({
     ...doc,
+    stats: { ...doc.stats, ...overrides.stats },
     iron: overrides.iron ?? 0,
     fxp: overrides.fxp ?? 0,
     energy: { value: doc.energy.value, updatedAt: at },
-    origin: { ...doc.origin, arrivedAt: at },
+    origin: { ...doc.origin, arrivedAt: arrived },
     day: { settled: dayKey(now) - 1 },
-    createdAt: at,
+    createdAt: arrived,
     updatedAt: at,
   });
 }

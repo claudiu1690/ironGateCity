@@ -44,20 +44,29 @@ describe('character.me v2', () => {
       version: 0,
       serverNow: clock.now(),
       day: { key: today, endsAt: (today + 1) * 86_400_000 },
-      rank: { value: 1, title: 'Recruit', fxpFloor: 0, fxpNext: 400 },
+      rank: {
+        value: 1,
+        title: 'Recruit',
+        fxpFloor: 0,
+        fxpNext: 400,
+        nextTitle: 'Activist',
+        ladder: ['Recruit', 'Activist', 'Organiser', 'Convenor', 'Delegate', 'Tribune', 'Chairman'],
+      },
       pc: 0,
       statPointsPending: 0,
       job: null,
-      sickDaysLeft: 2,
+      // Review 1: sick days are gone with the shift (§9.1); the join day is the welcome day (§8.4).
+      welcomeDay: true,
       standing: { cityId: 'coalport', name: 'Stranger', level: 0, successes: 0 },
       today: { day: today, energy: 0 },
       paperDue: true,
     });
-    // The welcome set, not the rotation (ADR 0012).
+    // The welcome set, not the rotation (ADR 0012). Review 1 (§13.7): slot A by the best trained
+    // stat (INT 12: the Mill Gate canvass), titles that say what and where, Take a job welcome-only.
     expect(first.orders.items.map((o) => [o.id, o.title, o.target])).toEqual([
-      ['dir.shift-change', 'Be at the gate', 2],
-      ['dir.report', 'Report to the hall', 1],
-      ['dir.work-shift', 'Take a job', 1],
+      ['dir.shift-change', 'Canvass the shift change at the Mill Gate', 2],
+      ['dir.report', 'Sit in on the committee at the Union Hall', 1],
+      ['dir.take-a-job', 'Take a job at the Mill Gate', 1],
     ]);
     expect(first.orders.issuer).toMatchObject({
       name: 'Petra Holm',

@@ -25,10 +25,11 @@ import {
   dayKey,
   dayStart,
   electionKey,
-  halfPay,
   jobPay,
   jobPayWith,
   moraleState,
+  seniorityBonus,
+  STANDING,
 } from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
@@ -208,7 +209,9 @@ describe('QA 1 · the city day runs exactly once per boundary', () => {
     const pcBefore = await pcOf(cand);
     const me = await callerFor(cand.user, late.now).character.me();
     const held = D0 + 10 - (D0 + 5); // boundaries D0+6 … D0+10 (the term ended at D0+10)
-    expect(me.pc).toBe(pcBefore + held * COUNCIL.stipend.pc);
+    // Review 1 (§13.4): One of Us (200 Successes) also pays 1 PC for each of the 11 boundaries away.
+    const oneOfUs = (D0 + 11 - D0) * STANDING.oneOfUsPcPerDay;
+    expect(me.pc).toBe(pcBefore + held * COUNCIL.stipend.pc + oneOfUs);
     // The next council divided on D0+7 and the one after on D0+12 (not yet): one ordinance in force.
     expect(city.ordinance).toMatchObject({ fromDay: D0 + 7, toDay: D0 + 12 });
   });
@@ -544,7 +547,8 @@ describe('QA 3 · political acts: set-once, replayable, exact on PC', () => {
       await refusal(p.caller.council.councilVote({ choice: 'ord.rest-day', idempotencyKey: key() })),
     ).toMatchObject({ code: 'BAD_REQUEST', game: { reason: 'NOT_ON_PAPER' } });
     const vs = await Promise.allSettled([
-      p.caller.council.councilVote({ choice: 'ord.shift-hours', idempotencyKey: key() }),
+      // Review 1: the Collective's branch motion is the Long Service Order (was ord.shift-hours).
+      p.caller.council.councilVote({ choice: 'ord.long-service', idempotencyKey: key() }),
       p.caller.council.councilVote({ choice: 'against', idempotencyKey: key() }),
     ]);
     expect(vs.map(reasonOf).sort()).toEqual(['ALREADY_COUNCIL_VOTED', 'ok']);
@@ -643,7 +647,7 @@ describe('QA 3b · acts racing the boundary that closes their window', () => {
         expect(paper.division!.passed).toBe('ord.open-doors');
       } else {
         expect(paper.votes).toHaveLength(0);
-        expect(paper.division!.passed).toBe('ord.shift-hours');
+        expect(paper.division!.passed).toBe('ord.long-service');
       }
     }
   });
@@ -702,7 +706,7 @@ describe('QA 5 · the ten ordinances, applied where the GDD says and shown on th
     await resetCity('coalport');
     const D0 = nextCycleDay('coalport', 0, 21700);
     const city = await settleCityDay(content, 'coalport', at(D0));
-    expect(city.ordinance).toMatchObject({ id: 'ord.shift-hours' });
+    expect(city.ordinance).toMatchObject({ id: 'ord.long-service' });
     for (const [c, id] of [
       ['duskwall', 'ord.rally-permits'],
       ['ashford', 'ord.reading-room'],
@@ -825,7 +829,10 @@ describe('QA 5 · the ten ordinances, applied where the GDD says and shown on th
     }
   });
 
-  it('Public Works and Ward Fund: the shift’s Iron line names the ordinance; Shift Hours −1 Energy and two streak days', async () => {
+  // Review 1 (§9.1, §15.3): was "the shift's Iron line names the ordinance; Shift Hours −1 Energy and
+  // two streak days". The shift is gone: the ended day's ordinance is a line on the desk's wage (on the
+  // unmodified pay), and the Long Service Order steps seniority by two days.
+  it('Public Works and Ward Fund: the wage’s ordinance line names the ordinance; Long Service adds two seniority days', async () => {
     await resetCity('coalport');
     const D = nextCycleDay('coalport', 3, 21760);
     const clock = testClock(at(D));
@@ -833,28 +840,31 @@ describe('QA 5 · the ten ordinances, applied where the GDD says and shown on th
     const job = content.jobsAt('coalport.mill-gate')[0]!;
     await p.caller.job.take({ jobId: job.id, idempotencyKey: key() });
     const pay = jobPay(job, 'collective');
-    for (const [i, id] of (['ord.public-works', 'ord.ward-fund', 'ord.shift-hours'] as const).entries()) {
+    let seniority = 0;
+    for (const [i, id] of (['ord.public-works', 'ord.ward-fund', 'ord.long-service'] as const).entries()) {
+      // The ordinance is in force on day D+i; the boundary into D+i+1 pays that day's wage.
       clock.set(at(D + i));
       await forceOrdinance('coalport', id, D + i);
+      const ironBefore = (await Character.findById(p.id).lean())!.iron;
+      clock.set(at(D + i + 1));
       await p.caller.character.me();
-      await Character.updateOne(
-        { _id: p.id },
-        { $set: { 'energy.value': 100, 'energy.updatedAt': new Date(clock.now()) } },
-      );
-      const t = await ticket(p, 'coalport.mill-gate', 'coalport.mill-gate.shift');
-      const before = (await Character.findById(p.id).lean())!.job!.streak;
-      const r = await perform(p, 'coalport.mill-gate', 'coalport.mill-gate.shift');
       const m = content.ordinanceSpec(id)!;
-      if (id === 'ord.shift-hours') {
-        expect(t.energy).toBe(Math.max(2, job.shiftEnergy - 1));
-        expect(r.effects.energy.before - r.effects.energy.after).toBe(t.energy);
-        expect((await Character.findById(p.id).lean())!.job!.streak - before).toBe(2);
-      } else {
-        const delta = halfPay(jobPayWith(pay, { ordinance: m, firedUp: false })) - halfPay(pay);
-        const part = r.rewards.iron.parts?.find((x) => x.label === m.name);
-        expect(part?.amount).toBe(delta);
-      }
+      const step = id === 'ord.long-service' ? 2 : 1;
+      seniority += step;
+      const delta = jobPayWith(pay, { ordinance: m, firedUp: false }) - pay;
+      const salary = (await p.caller.paper.today()).desk.salary!;
+      expect(salary).toMatchObject({
+        days: 1,
+        perDay: pay,
+        seniority: { days: seniority, amount: seniorityBonus(pay, seniority) },
+        total: pay + seniorityBonus(pay, seniority) + delta,
+        ordinance: delta === 0 ? null : { label: m.name, amount: delta },
+      });
+      expect((await Character.findById(p.id).lean())!.iron - ironBefore).toBe(salary.total);
+      expect((await Character.findById(p.id).lean())!.job!.seniority).toBe(seniority);
     }
+    // Public Works +22, Ward Fund −54 on 216 (GDD §9.1); Long Service: 1 → 2 → 4 days.
+    expect(seniority).toBe(4);
   });
 
   it('Rest Day Order: the Rested cap reads 250 while in force and the pool is never cut when it expires', async () => {
@@ -898,7 +908,11 @@ describe('QA 6 · morale', () => {
     const p = await player(clock, { name: 'Crisis Worker', fxp: 400 });
     const me = await p.caller.character.me();
     const titles = me.orders.items.map((o) => o.title);
-    expect(titles.slice(0, 2)).toEqual(['Restore the base: the doors', 'Restore the base: say it']);
+    // Review 1 (§13.7): titles say what and where.
+    expect(titles.slice(0, 2)).toEqual([
+      'Restore the base: canvass anywhere in Coalport',
+      'Restore the base: a speech anywhere in Coalport',
+    ]);
     const city = await p.caller.city.get({ cityId: 'coalport' });
     expect(city.morale).toMatchObject({ state: 'unrest' });
     const paper = await p.caller.paper.today();
@@ -1060,7 +1074,9 @@ describe('QA 8 · away for a whole cycle costs opportunity, never assets', () =>
     const e = (await Election.findOne({ cityId: 'coalport', status: 'counted' }).sort({ cycle: -1 }).lean())!;
     expect(e.result!.rows.find((r) => r.key === `p:${cand.id}`)).toMatchObject({ seated: true });
     const back = await cand.caller.character.me();
-    expect(back.pc).toBe(candPc + COUNCIL.stipend.pc); // one boundary held (D0+6)
+    // One boundary held (D0+6); review 1 (§13.4): One of Us (200 Successes) pays 1 PC for each of
+    // the six boundaries away.
+    expect(back.pc).toBe(candPc + COUNCIL.stipend.pc + 6 * STANDING.oneOfUsPcPerDay);
   });
 });
 

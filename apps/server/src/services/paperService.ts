@@ -9,6 +9,7 @@ import {
   isPaperDue,
   mergeHeadlines,
   projectEnergy,
+  seniorityPct,
   weekday,
   xpForLevel,
 } from '@irongate/rules';
@@ -21,11 +22,12 @@ import {
   ambitionStatus,
   energyState,
   jobView,
+  locationRef,
   namedStanding,
   ordersView,
-  sickDaysLeft,
   standingSuccesses,
   toCharacterView,
+  welcomeLanding,
 } from './views';
 
 /**
@@ -115,13 +117,18 @@ export async function getPaper(deps: {
             jobName: entry.desk.salary.jobName,
             days: entry.desk.salary.days,
             perDay: entry.desk.salary.perDay,
+            // Review 1: editions settled before the wage carry no seniority line.
+            seniority: {
+              days: entry.desk.salary.seniority?.days ?? 0,
+              pct: Math.round(seniorityPct(entry.desk.salary.seniority?.days ?? 0) * 100),
+              amount: entry.desk.salary.seniority?.amount ?? 0,
+            },
             total: entry.desk.salary.total,
             ordinance: entry.desk.salary.ordinance ?? null,
           }
         : null,
       stipend: entry.desk.stipend ?? null,
       deposits: entry.desk.deposits ?? null,
-      streak: entry.desk.streak,
       restedBanked: entry.desk.restedBanked,
       daysSinceLastPaper: entry.desk.daysSinceLastPaper,
       yesterday: entry.desk.yesterday,
@@ -134,14 +141,18 @@ export async function getPaper(deps: {
         next: c.level + 1,
         statPointsPending: c.statPointsPending,
       },
-      workStreak: job ? { streak: job.streak, sickDaysLeft: sickDaysLeft(c, today) } : null,
+      job: job ? { name: job.name, dailyPay: job.dailyPay, seniority: job.seniority } : null,
+      // Review 1: with no job, the home city's places with a Jobs card, in pin order.
+      oneOfUsPc: entry.desk.oneOfUsPc ?? 0,
+      jobPlaces: (job ? [] : (home?.locations ?? []))
+        .filter((l) => content.jobsAt(l.id).length > 0)
+        .map((l) => locationRef(content, l.id)),
       standing: namedStanding(content, c.cityId, standingSuccesses(c, c.cityId)),
       wearing: wearing ? { name: wearing.name, cha: wearing.cha } : null,
     },
     letters,
-    // The first edition's "To the city" opens the first pin's sheet (§7.5; designer answer §13 Q9).
-    landing:
-      entry.firstEdition && home?.locations[0] ? { cityId: home.id, locationId: home.locations[0].id } : null,
+    // The first edition's "To the city" opens slot A's pin (§7.5; review 1: by the best stat).
+    landing: entry.firstEdition && home ? welcomeLanding(content, c) : null,
     readAt,
     due: isPaperDue({
       editionReadAt: readAt,

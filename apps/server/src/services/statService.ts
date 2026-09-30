@@ -9,7 +9,7 @@ import { withRequestKey } from './requestKey';
 import { VersionConflict } from './txn';
 import { toCharacterView } from './views';
 
-/** §5.3, tech design §7.6: place one waiting stat point on STR or INT, one tap per point. */
+/** §5.3, tech design §7.6: place one waiting stat point on STR, INT or AGI (review 1), one tap per point. */
 export async function placeStatPoint(deps: {
   user: SessionUser;
   content: GameContent;

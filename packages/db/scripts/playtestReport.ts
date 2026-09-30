@@ -7,6 +7,7 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { getContent } from '@irongate/content';
+import { bestTrainedStat } from '@irongate/rules';
 import type { ActionResult } from '@irongate/rules';
 import {
   ActionLog,
@@ -40,7 +41,7 @@ await connectDb(uri, { log: console.log });
 try {
   const characters = await Character.find(
     {},
-    { name: 1, createdAt: 1, factionId: 1, job: 1, homeCityId: 1, playtest: 1 },
+    { name: 1, createdAt: 1, factionId: 1, job: 1, homeCityId: 1, playtest: 1, stats: 1 },
   ).lean();
   const arrivals = await Arrival.find({}).lean();
   const logs = await ActionLog.find(
@@ -94,9 +95,18 @@ try {
 
   // Slice 2 (tech design §14.1): the arrival funnel, overall and per faction.
   const content = getContent();
-  const welcomeAction = (factionId: string) => {
-    const f = content.factions.find((x) => x.id === factionId);
-    const t = content.orderTemplates.find((x) => x.id === f?.welcomeOrders[0]);
+  // Review 1: slot A of the welcome set is chosen by the best trained stat (ties: the faction's stat).
+  const welcomeAction = (c: { factionId: string; stats: { str: number; int: number; agi: number } }) => {
+    const f = content.factions.find((x) => x.id === c.factionId);
+    if (!f) return '';
+    const bonus = f.startingBonus;
+    const prefer = (['str', 'int', 'agi'] as const).reduce(
+      (a, s) => ((bonus[s] ?? 0) > (bonus[a] ?? 0) ? s : a),
+      'int',
+    );
+    const t = content.orderTemplates.find(
+      (x) => x.id === f.welcomeOrders.A[bestTrainedStat(c.stats, prefer)],
+    );
     return t?.match.actionIds?.[0] ?? '';
   };
   const funnels = buildArrivalFunnels(
@@ -114,7 +124,7 @@ try {
       factionId: c.factionId,
       createdAt: c.createdAt,
       jobSinceDay: c.job?.since ?? null,
-      welcomeActionId: welcomeAction(c.factionId),
+      welcomeActionId: welcomeAction(c),
     })),
     [
       ...logs.map((l) => {

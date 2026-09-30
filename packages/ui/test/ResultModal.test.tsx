@@ -1,9 +1,4 @@
-import {
-  actionResultFixture,
-  batchResultFixture,
-  shiftResultFixture,
-  trainingResultFixture,
-} from '@irongate/rules/testing';
+import { actionResultFixture, batchResultFixture, trainingResultFixture } from '@irongate/rules/testing';
 import type { ActionResult } from '@irongate/rules';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -24,7 +19,7 @@ function renderModal(result: ActionResult, energy = { value: 90, nextTickAt: nul
       statPoints={{
         pending: result.character.statPointsPending,
         level: result.character.level,
-        stats: { str: 10, int: 12 },
+        stats: { str: 10, int: 12, agi: 5 },
       }}
       onPlaceStat={onPlaceStat}
     />,
@@ -42,7 +37,13 @@ describe('ResultModal v2', () => {
     const rows = d.getAllByTestId('attempt-row');
     expect(rows).toHaveLength(1);
     expect(within(rows[0]!).getByRole('img', { name: 'Chance 66 %, rolled 41' })).toBeInTheDocument();
-    expect(within(rows[0]!).getByText(/Rolled 41 against 66 % · INT 12 vs 8/)).toBeInTheDocument();
+    // Review 1 (answers §4): one plain sentence and a roll line.
+    expect(within(rows[0]!).getByTestId('attempt-odds')).toHaveTextContent(
+      'Your INT 12 is 4 above the 8 this needs: 66 %.',
+    );
+    expect(within(rows[0]!).getByTestId('attempt-roll')).toHaveTextContent(
+      'Rolled 41: Success (66 or under).',
+    );
     expect(d.getByTestId('tile-experience')).toHaveTextContent('+45');
     expect(d.getByTestId('tile-faction-xp')).toHaveTextContent('+6');
     expect(d.getByTestId('tile-iron')).toHaveTextContent('+20');
@@ -67,7 +68,11 @@ describe('ResultModal v2', () => {
     expect(d.getAllByTestId('attempt-row')).toHaveLength(3);
     expect(d.getByText('Rested: 22 of 30 Energy, +37 % XP and Iron')).toBeInTheDocument();
     expect(d.getByText('Party order: +25 % FXP')).toBeInTheDocument();
-    expect(d.getByTestId('effect-order')).toHaveTextContent('0 → 2 / 2 ✓ · Party order complete: +20 FXP');
+    expect(d.getByTestId('effect-order')).toHaveTextContent('0 → 2 / 2 ✓');
+    // Review 1 (answers §6): a signed line from the secretary.
+    expect(d.getByTestId('effect-order-signed')).toHaveTextContent(
+      /^Done, that one · \+20 FXP\. (One|Two) to go\. — P\.H\.$/,
+    );
     expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · place your point');
     await user.click(d.getByRole('button', { name: 'STR 10 → 11' }));
     expect(onPlaceStat).toHaveBeenCalledWith('str');
@@ -81,7 +86,7 @@ describe('ResultModal v2', () => {
     const user = userEvent.setup();
     const { dialog } = renderModal(actionResultFixture);
     await user.click(within(dialog).getAllByTestId('attempt-row')[0]!.querySelector('button')!);
-    expect(within(dialog).getByText('INT 12 vs difficulty 8 (×4)')).toBeInTheDocument();
+    expect(within(dialog).getByText('INT 12, 4 above the 8 needed, 4 % a point')).toBeInTheDocument();
   });
 
   it('training: Trained, one "no roll" row, INT 12 → 13', () => {
@@ -108,18 +113,6 @@ describe('ResultModal v2', () => {
     expect(within(bar).getByRole('button', { name: 'Again ×1' })).toBeInTheDocument();
     expect(within(bar).getByRole('button', { name: 'Again ×3' })).toBeInTheDocument();
     expect(within(bar).getByRole('button', { name: 'Continue' })).toBeInTheDocument();
-  });
-
-  it('a shift: Shift worked, half pay and streak, Continue only', () => {
-    const { dialog } = renderModal(shiftResultFixture);
-    const d = within(dialog);
-    expect(d.getByTestId('stamp')).toHaveTextContent('Shift worked');
-    expect(d.getByTestId('tile-iron')).toHaveTextContent('+112+108 half pay, +4 streak');
-    expect(d.getByTestId('effect-shift')).toHaveTextContent(
-      /^1 day · 2 sick days left · next shift at \d\d:\d\d$/,
-    );
-    expect(d.queryByRole('button', { name: 'Again ×1' })).toBeNull();
-    expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
   });
 
   it('Continue closes; Again asks for another run with its count', async () => {

@@ -6,6 +6,8 @@ import { formatClock, formatCountdown, formatNumber } from '../format';
 
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { Gauge } from './Gauge';
+import { HelpButton } from './Help';
+import type { HelpNote } from './Help';
 import { Picture } from './Picture';
 import { StatPointsPanel } from './Shell';
 
@@ -14,33 +16,50 @@ export interface HudBarProps {
   character: CharacterView;
   /** Milliseconds until the next +5 Energy, or null when full. */
   nextTickIn: number | null;
-  /** Stat points: the badge opens a small panel with STR / INT. */
+  /** Stat points: the badge opens a small panel with STR / INT / AGI. */
   onPlaceStat?: (stat: StatPointTarget) => void;
   placing?: StatPointTarget | null;
 }
 
 /**
- * The top bar (HUD v2): crest, name, rank title and level, Energy (ticking) with "full at" or
- * Rested, XP, Iron, Political Capital once earned, and a badge when stat points wait.
+ * The top bar (HUD v2, review 1 #3, #4, #14; answers §5, §8): crest, name, rank title and level,
+ * Iron, Political Capital once earned, then the gauges in words: Energy (ticking) with "full at" or
+ * Rested; XP with "{xp} XP · {n} to Level {next}", the bar filling within the level; and the
+ * Faction XP bar to the next Rank in the faction's colour, labelled with that rank's title (*Rank n*
+ * on phones under 400 px), its numbers on a tap. The gauges carry one help button: a tap opens the
+ * notes for Energy, Rested, XP, Faction XP and PC. A badge shows when stat points wait.
  */
 export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBarProps) {
   const [open, setOpen] = useState(false);
   const levelFloor = xpForLevel(c.level);
-  const levelSpan = xpForLevel(c.level + 1) - levelFloor;
+  const levelNext = xpForLevel(c.level + 1);
   const next = nextTickIn === null ? 'full' : `next +5 in ${formatCountdown(nextTickIn)}`;
+  const fullAt = c.energy.fullAt !== null ? formatClock(c.energy.fullAt) : null;
   const status =
-    c.energy.fullAt !== null
-      ? copy.energyFullAt(formatClock(c.energy.fullAt))
-      : c.rested > 0
-        ? copy.energyFull(c.rested)
-        : 'Full';
+    fullAt !== null ? copy.energyFullAt(fullAt) : c.rested > 0 ? copy.energyFull(c.rested) : 'Full';
+  const { fxpFloor, fxpNext, nextTitle } = c.rank;
+  /** The next Rank, or null at the top one. */
+  const up = fxpNext !== null && nextTitle !== null ? { fxp: fxpNext, title: nextTitle } : null;
+  const toNext = formatNumber(levelNext - c.xp);
+  const notes: HelpNote[] = [
+    copy.help.energy(fullAt) as HelpNote,
+    ...(c.rested > 0 ? [copy.help.rested() as HelpNote] : []),
+    copy.help.xp(toNext, c.level + 1) as HelpNote,
+    copy.help.fxp(
+      c.rank.ladder[1] ?? '',
+      c.rank.ladder[2] ?? '',
+      up ? formatNumber(up.fxp - c.fxp) : null,
+      up?.title ?? null,
+    ) as HelpNote,
+    ...(c.pc > 0 ? [copy.help.pc() as HelpNote] : []),
+  ];
   return (
     <div
       role="region"
       aria-label="Character"
       className="relative z-20 border-b border-ink-2 bg-ink text-paper"
     >
-      <div className="mx-auto flex min-h-14 max-w-6xl items-center gap-2.5 px-3">
+      <div className="mx-auto flex min-h-14 max-w-6xl items-center gap-2.5 px-3 py-1.5">
         {/* Slice 2: the face in a ring of the faction's colour; an empty ring until one is chosen
             (migrated characters, designer answer §13 Q7), with the small crest mark beside it. */}
         <div className="relative shrink-0" data-testid="hud-avatar">
@@ -69,47 +88,75 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBa
             <span className="label-caps shrink-0 text-[9px] text-dim" data-testid="hud-rank">
               {c.rank.title} · Lv {c.level}
             </span>
-          </div>
-          <Gauge
-            label="EN"
-            name="Energy"
-            tone="energy"
-            value={c.energy.value}
-            max={c.energy.max}
-            valueText={`${c.energy.value} of ${c.energy.max}, ${next}`}
-          />
-          <Gauge
-            label="XP"
-            name="Experience to next level"
-            tone="xp"
-            value={c.xp - levelFloor}
-            max={levelSpan}
-            valueText={`${formatNumber(c.xp)} XP, ${formatNumber(levelFloor + levelSpan - c.xp)} to Level ${c.level + 1}`}
-          />
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="font-label text-[14px] font-medium" data-testid="hud-energy">
-            {c.energy.value} / {c.energy.max}
-          </span>
-          <span className="label-caps text-[9px] text-energy" data-testid="hud-next-tick">
-            {status}
-          </span>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-0.5 border-l border-ink-2 pl-2.5">
-          <span className="font-label text-[14px] font-medium" data-testid="hud-iron">
-            {formatNumber(c.iron)}
-          </span>
-          <span className="label-caps text-[9px] text-dim">Iron</span>
-        </div>
-        {/* PC on every screen size once earned, never a zero (GDD §6.5, §7.5; onboarding §14.1). */}
-        {c.pc > 0 && (
-          <div className="flex shrink-0 flex-col items-end gap-0.5 border-l border-ink-2 pl-2.5">
-            <span className="font-label text-[14px] font-medium" data-testid="hud-pc">
-              {c.pc}
+            <span className="ml-auto flex shrink-0 items-baseline gap-1">
+              <span className="font-label text-[14px] leading-none font-medium" data-testid="hud-iron">
+                {formatNumber(c.iron)}
+              </span>
+              <span className="label-caps text-[9px] text-dim">Iron</span>
             </span>
-            <span className="label-caps text-[9px] text-dim">PC</span>
+            {/* PC on every screen size once earned, never a zero (GDD §6.5, §7.5; onboarding §14.1). */}
+            {c.pc > 0 && (
+              <span className="flex shrink-0 items-baseline gap-1 border-l border-ink-2 pl-2">
+                <span className="font-label text-[14px] leading-none font-medium" data-testid="hud-pc">
+                  {c.pc}
+                </span>
+                <span className="label-caps text-[9px] text-dim">PC</span>
+              </span>
+            )}
           </div>
-        )}
+          <div className="relative grid gap-[3px] lg:grid-cols-3 lg:gap-x-6">
+            <Gauge
+              label={copy.hud.energy}
+              name="Energy"
+              tone="energy"
+              value={c.energy.value}
+              max={c.energy.max}
+              valueText={`${c.energy.value} of ${c.energy.max}, ${next}`}
+              figure={`${c.energy.value} / ${c.energy.max}`}
+              figureTestId="hud-energy"
+              note={status}
+              noteTestId="hud-next-tick"
+            />
+            <Gauge
+              label={copy.hud.xp}
+              name="Experience to next level"
+              tone="xp"
+              value={c.xp - levelFloor}
+              max={levelNext - levelFloor}
+              valueText={`${formatNumber(c.xp)} XP, ${toNext} to Level ${c.level + 1}`}
+              figure={copy.hud.xpLine(formatNumber(c.xp), toNext, c.level + 1)}
+              figureTestId="hud-xp"
+            />
+            <Gauge
+              label={
+                <>
+                  <span className="min-[400px]:hidden">
+                    {copy.hud.rankN(up ? c.rank.value + 1 : c.rank.value)}
+                  </span>
+                  <span className="max-[399px]:hidden">{up ? up.title : c.rank.title}</span>
+                </>
+              }
+              labelTestId="hud-fxp-rank"
+              name="Faction XP to next rank"
+              tone="fxp"
+              fillColor={FACTION_STYLE[c.factionId].color}
+              value={up ? c.fxp - fxpFloor : 1}
+              max={up ? up.fxp - fxpFloor : 1}
+              valueText={
+                up
+                  ? `${formatNumber(c.fxp)} of ${formatNumber(up.fxp)} Faction XP, ${formatNumber(up.fxp - c.fxp)} to ${up.title}`
+                  : `${formatNumber(c.fxp)} Faction XP, ${c.rank.title}`
+              }
+            />
+            {/* One tap target over the gauges (44 px tall): the notes behind their labels. */}
+            <HelpButton
+              notes={notes}
+              label="What Energy, XP and Faction XP mean"
+              testId="hud-help"
+              className="absolute inset-0 -my-1 h-auto w-full bg-transparent focus-visible:outline-2 focus-visible:outline-paper lg:-my-4"
+            />
+          </div>
+        </div>
       </div>
       {c.statPointsPending > 0 && onPlaceStat && (
         <div className="mx-auto max-w-6xl px-3 pb-1.5">
@@ -128,7 +175,8 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBa
                 tone="ink"
                 pending={c.statPointsPending}
                 level={c.level}
-                stats={{ str: c.stats.str, int: c.stats.int }}
+                stats={{ str: c.stats.str, int: c.stats.int, agi: c.stats.agi }}
+                guide={c.statGuide}
                 onPlace={onPlaceStat}
                 placing={placing}
                 onLater={() => setOpen(false)}

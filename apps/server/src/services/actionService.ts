@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { isCheckedAction, isShiftAction, isTrainingAction } from '@irongate/content';
+import { isCheckedAction, isTrainingAction } from '@irongate/content';
 import type { GameContent, LocatedAction } from '@irongate/content';
 import { ActionLog, Character, City } from '@irongate/db';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
@@ -9,11 +9,8 @@ import {
   applyPersuasion,
   createRng,
   dayKey,
-  dayStart,
-  jobPay,
   moraleState,
   orderRewards,
-  resolveShift,
   resolveTier1Action,
   resolveTraining,
   standingView,
@@ -32,8 +29,9 @@ import { branchEndorseIfFiled } from './councilService';
 import { DayChanged, VersionConflict } from './txn';
 import {
   energyState,
+  firstDayBonuses,
   fromOrdersState,
-  sickDaysLeft,
+  preferredStat,
   standingSuccesses,
   toOrdersState,
   wornStats,
@@ -92,10 +90,7 @@ export async function performAction(deps: {
   const { user, content, input } = deps;
   const located = locate(content, input);
   const { action } = located;
-  // §8.5, §13.1: training and job shifts have no batch.
-  if (isShiftAction(action) && input.times !== 1) {
-    throw gameError('BAD_REQUEST', 'SHIFT_IS_ONCE', { actionId: action.id });
-  }
+  // §8.5, §13.1: training has no batch.
   if (isTrainingAction(action) && input.times !== 1) {
     throw gameError('BAD_REQUEST', 'TRAINING_IS_ONCE', { actionId: action.id });
   }
@@ -162,7 +157,7 @@ async function resolveAndWrite(i: {
   const templates = content.ordersOf(c.factionId);
   const orders = toOrdersState(c.orders);
   const descriptor: ActionDescriptor = {
-    kind: isCheckedAction(action) ? 'checked' : isTrainingAction(action) ? 'training' : 'shift',
+    kind: isCheckedAction(action) ? 'checked' : 'training',
     actionId: action.id,
     type: action.type,
     locationId: location.id,
@@ -204,6 +199,9 @@ async function resolveAndWrite(i: {
         orderTemplates: templates,
         homeCityId: c.homeCityId,
         modifiers,
+        // Review 1 (§8.4): the First day row at home on the welcome day; a best-stat tie-break.
+        bonuses: firstDayBonuses(content, c, city.id, today),
+        prefer: preferredStat(content, c.factionId),
       },
       createRng(seed),
     );
@@ -270,7 +268,7 @@ async function resolveAndWrite(i: {
       orders: res.orders,
       tally,
     };
-  } else if (isTrainingAction(action)) {
+  } else {
     const r = resolveTraining({
       trains: action.trains,
       base: { str: c.stats.str, int: c.stats.int, agi: c.stats.agi },
@@ -303,60 +301,6 @@ async function resolveAndWrite(i: {
       statTrained: res.times,
     });
     result = { kind: 'training', resolution: res, energy: res.energy, gains, orders: res.orders, tally };
-  } else {
-    const job = c.job;
-    if (!job || job.id !== action.jobId) {
-      throw new GameError('NOT_YOUR_JOB', { jobId: job?.id ?? null, actionJobId: action.jobId });
-    }
-    const contentJob = content.job(job.id);
-    if (!contentJob) throw new Error(`unknown job ${job.id}`);
-    const r = resolveShift({
-      job,
-      today,
-      pay: jobPay(contentJob, c.factionId),
-      shiftEnergy: contentJob.shiftEnergy,
-      energy: energyState(c),
-      now,
-      orders,
-      orderTemplates: templates,
-      homeCityId: c.homeCityId,
-      descriptor,
-      modifiers,
-    });
-    if (!r.ok) {
-      if (r.reason === 'SHIFT_ALREADY_WORKED') {
-        throw new GameError('SHIFT_ALREADY_WORKED', { nextAt: dayStart(today + 1) });
-      }
-      throw new GameError('NOT_ENOUGH_ENERGY', {
-        energy: r.energy.value,
-        cost: r.cost,
-        times: 1,
-        nextTickAt: r.energy.nextTickAt,
-      });
-    }
-    const res = r.resolution;
-    const orderPay = orderRewards(completedTemplates(res.orders.completed), res.orders.allDone);
-    const gains = applyGains(progressOf(c), { xp: 0, fxp: orderPay.fxp, pc: orderPay.pc });
-    set.job = res.job;
-    ironGain = res.pay.total;
-    const tally = addToTally(c.today, today, {
-      energy: res.energy.cost,
-      fxp: orderPay.fxp,
-      iron: ironGain,
-      pc: orderPay.pc,
-      ordersDone: res.orders.completed.length,
-      shiftWorked: true,
-    });
-    result = {
-      kind: 'shift',
-      resolution: res,
-      sickDaysLeft: sickDaysLeft(c, today),
-      nextShiftAt: dayStart(today + 1),
-      energy: { ...res.energy, restedUsed: 0 },
-      gains,
-      orders: res.orders,
-      tally,
-    };
   }
 
   const { energy, gains, orders: ordersOut, tally } = result;

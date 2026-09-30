@@ -49,7 +49,7 @@ export async function runKeyedAction<R>(i: {
     } catch (err) {
       // A concurrent request with the same key may have committed while this one was in flight:
       // then its stored result is the answer, not a refusal computed against its state (a retry
-      // at the Energy limit, a second shift) and not another attempt (ADR 0002 step 3).
+      // at the Energy limit) and not another attempt (ADR 0002 step 3).
       if (mayHaveLostToSameKey(err)) {
         const winner = await i.stored();
         if (winner) return winner;

@@ -44,7 +44,7 @@ async function doTheOrders(page: Page): Promise<void> {
       .locator('[data-testid^="ticket-"]')
       .filter({ has: page.getByTestId('ticket-tags').filter({ hasText: /Party order \d/ }) })
       .first();
-    // ×1 on a checked ticket; the one button of a training or shift ticket.
+    // ×1 on a checked ticket; the one button of a training ticket.
     await ticket
       .getByRole('button', { name: /Energy$/ })
       .first()
@@ -52,7 +52,16 @@ async function doTheOrders(page: Page): Promise<void> {
     const modal = modalOf(page);
     await expect(modal).toBeVisible();
     lastModal = (await modal.getByTestId('effect-branch').count()) > 0;
+    const third = (await modal.getByTestId('effect-all-orders').count()) > 0;
     await modal.getByRole('button', { name: 'Continue' }).click();
+    // Review 1 (GDD §13.7): the third order's modal is followed by the secretary's note.
+    if (third) {
+      const note = page.getByTestId('orders-complete');
+      await expect(note).toContainText('All three done');
+      await expect(note.getByTestId('tile-pc')).toHaveText(/\+5/);
+      await note.getByRole('button', { name: 'Carry on' }).click();
+      await expect(note).toBeHidden();
+    }
   }
   expect(lastModal).toBe(true);
 }
@@ -144,7 +153,8 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   await page.getByRole('button', { name: 'To the council' }).click();
   await expect(page).toHaveURL(/\/council$/);
   await expect(page.getByTestId('council-header')).toContainText('NPC seats 6 / 7');
-  await expect(page.getByTestId('order-paper')).toContainText('Shift Hours Order');
+  // Review 1: the Collective's branch motion is the Long Service Order (was Shift Hours).
+  await expect(page.getByTestId('order-paper')).toContainText('Long Service Order');
   await expect(page.getByTestId('order-paper')).toContainText("the branch's motion");
   await page.getByRole('button', { name: 'Propose · 20 PC' }).click();
   await page

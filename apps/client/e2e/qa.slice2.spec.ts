@@ -116,9 +116,10 @@ test.describe('phone 375×812', () => {
     await expect(page.getByTestId('desk')).toContainText('Work jacket and cap');
     await page.getByTestId('letters-row').click();
     await page.getByRole('button', { name: /^Keep it to yourself for now/ }).click();
-    await expect(page.getByTestId('story-approach')).toHaveCount(2);
+    // Review 1 (answers §2.1): a third approach, Legwork, on the best stat.
+    await expect(page.getByTestId('story-approach')).toHaveCount(3);
     await page.reload();
-    await expect(page.getByTestId('story-approach')).toHaveCount(2);
+    await expect(page.getByTestId('story-approach')).toHaveCount(3);
     await expect(page.getByTestId('story-echo')).toHaveText('Keep it to yourself for now');
     // The Paper's Letters row now reads "waiting for you".
     await page.getByRole('link', { name: /^Paper/ }).click();
@@ -235,7 +236,7 @@ test.describe('desktop and tablet: every pin tappable with no sheet open', () =>
 test.describe('small phone 360×640', () => {
   test.use({ viewport: SMALL });
 
-  test('the chapter fits: both choices, then both approaches and the CTA, then Continue, on the first screen', async ({
+  test('the chapter fits: both choices, then the three approaches and the CTA, then Continue, on the first screen', async ({
     page,
   }) => {
     await signUpOnly(page, 'Otto Brandt', 4);
@@ -246,7 +247,7 @@ test.describe('small phone 360×640', () => {
     for (const c of await choices.all()) await expect(c).toBeInViewport();
     await choices.first().click();
     const approaches = page.getByTestId('story-approach');
-    await expect(approaches).toHaveCount(2);
+    await expect(approaches).toHaveCount(3); // review 1: Legwork
     await approaches.nth(1).click();
     const cta = page.getByTestId('story-cta');
     await expect(cta).toBeInViewport();

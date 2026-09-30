@@ -83,14 +83,12 @@ export function LocationSheet({
 
 export interface JobsCardProps {
   jobs: LocationJobView[];
-  /** The job the character holds (anywhere), for the "Your job" line. */
-  held: { streak: number; sickDaysLeft: number } | null;
+  /** The job the character holds (anywhere), for the "Your job" line: seniority days and %. */
+  held: { days: number; pct: number } | null;
   onTake: (jobId: string) => void;
   pendingJobId?: string | null;
-  /** One line under a job after taking it ("Taken · first half pay at 01:00"). */
+  /** One line under a job after taking it ("Taken · paid at 01:00"). */
   message?: { jobId: string; text: string } | null;
-  /** Energy now, to disable a switch the character can't afford. */
-  energyValue: number;
 }
 
 function needsText(j: LocationJobView): string {
@@ -99,8 +97,11 @@ function needsText(j: LocationJobView): string {
   );
 }
 
-/** §9.1 Jobs card: what is offered here, with pay and requirements; take is free, switch 2 Energy. */
-export function JobsCard({ jobs, held, onTake, pendingJobId, message, energyValue }: JobsCardProps) {
+/**
+ * §9.1 Jobs card (review 1: a job is a wage): what is offered here, with pay and requirements, and
+ * *{pay} a day · paid at midnight*. Taking and switching are free, one tap; a switch resets seniority.
+ */
+export function JobsCard({ jobs, held, onTake, pendingJobId, message }: JobsCardProps) {
   if (jobs.length === 0) return null;
   return (
     <section aria-label="Jobs" className="mt-1 flex flex-col border-[1.5px] border-ink bg-paper-card">
@@ -113,14 +114,12 @@ export function JobsCard({ jobs, held, onTake, pendingJobId, message, energyValu
         >
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-display text-[15px] font-bold">{j.name}</span>
-            <span className="font-label text-[13px]">
-              {j.pay} a day · {j.shiftEnergy} Energy
-            </span>
+            <span className="font-label text-[13px]">{copy.jobPayLine(j.pay)}</span>
           </div>
           <p className="font-body text-[13px] text-text-2">{j.blurb}</p>
           {j.held ? (
-            <p className="font-mono text-[12px] text-petrol">
-              {held ? copy.yourJob(held.streak, held.sickDaysLeft) : 'Your job'}
+            <p className="font-mono text-[12px] text-petrol" data-testid="job-held">
+              {held ? copy.yourJob(held.days, held.pct) : 'Your job'}
             </p>
           ) : j.locked ? (
             <button
@@ -131,24 +130,15 @@ export function JobsCard({ jobs, held, onTake, pendingJobId, message, energyValu
               {needsText(j)}
             </button>
           ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => onTake(j.jobId)}
-                disabled={!!pendingJobId || energyValue < j.switchCost}
-                aria-busy={pendingJobId === j.jobId || undefined}
-                className="label-caps min-h-11 cursor-pointer bg-ink px-3 text-[12px] text-paper hover:bg-ink-2 disabled:cursor-not-allowed disabled:bg-faint"
-              >
-                {pendingJobId === j.jobId
-                  ? '…'
-                  : j.switchCost > 0
-                    ? copy.switchJob(j.switchCost)
-                    : copy.takeJob}
-              </button>
-              {j.switchCost === 0 && (
-                <span className="font-mono text-[11px] text-muted">{copy.jobPayLine(j.pay)}</span>
-              )}
-            </>
+            <button
+              type="button"
+              onClick={() => onTake(j.jobId)}
+              disabled={!!pendingJobId}
+              aria-busy={pendingJobId === j.jobId || undefined}
+              className="label-caps min-h-11 cursor-pointer bg-ink px-3 text-[12px] text-paper hover:bg-ink-2 disabled:cursor-not-allowed disabled:bg-faint"
+            >
+              {pendingJobId === j.jobId ? '…' : j.isSwitch ? copy.switchJob : copy.takeJob}
+            </button>
           )}
           {message?.jobId === j.jobId && (
             <p role="status" className="font-mono text-[12px] text-collective">
@@ -163,7 +153,7 @@ export function JobsCard({ jobs, held, onTake, pendingJobId, message, energyValu
 
 export interface OutOfEnergyCardProps {
   fullAt: number | null;
-  /** Open orders and the shift, worded by the caller. */
+  /** Open orders, worded by the caller. */
   waiting: string[];
 }
 

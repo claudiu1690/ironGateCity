@@ -26,7 +26,7 @@ import { origin } from './data/origin';
 import { npcs, standingLevels } from './data/people';
 import { politicalHeadlines } from './data/politicalHeadlines';
 import { politics } from './data/politics';
-import { Content, isCheckedAction, isShiftAction } from './schemas';
+import { Content, isCheckedAction } from './schemas';
 import type {
   Action,
   Ambition,
@@ -64,10 +64,15 @@ export const rawContent: unknown = {
   politics,
 };
 
+/** Review 1: ordinance ids renamed; a stored old id resolves to the new one. */
+export const RENAMED_ORDINANCE_IDS: Readonly<Record<string, string>> = {
+  'ord.shift-hours': 'ord.long-service',
+};
+
 /** Design §10.1: the ten ordinances of the home-city menu. */
 export const DESIGN_ORDINANCE_IDS = [
   'ord.public-works',
-  'ord.shift-hours',
+  'ord.long-service',
   'ord.street-permits',
   'ord.rally-permits',
   'ord.reading-room',
@@ -232,27 +237,13 @@ export function parseContent(raw: unknown): Content {
     });
   }
 
-  // Jobs ↔ shift actions, both directions.
+  // Jobs (review 1: a wage, no shift action): each at a loaded location.
   const jobById = new Map<string, Job>();
   for (const job of content.jobs) {
     unique('job', job.id);
     jobById.set(job.id, job);
     if (!locationById.has(job.locationId))
       problems.push(`job "${job.id}": unknown location "${job.locationId}"`);
-    const shift = actionById.get(job.shiftActionId);
-    if (!shift || !isShiftAction(shift.action)) {
-      problems.push(`job "${job.id}": shiftActionId "${job.shiftActionId}" is not a job shift action`);
-    } else if (shift.location.id !== job.locationId || shift.action.jobId !== job.id) {
-      problems.push(`job "${job.id}" and its shift action "${job.shiftActionId}" must point at each other`);
-    }
-  }
-  for (const { location, action } of actionById.values()) {
-    if (!isShiftAction(action)) continue;
-    const job = jobById.get(action.jobId);
-    if (!job) problems.push(`action "${action.id}": unknown job "${action.jobId}"`);
-    else if (job.locationId !== location.id || job.shiftActionId !== action.id) {
-      problems.push(`action "${action.id}" and job "${job.id}" must point at each other`);
-    }
   }
 
   // NPCs.
@@ -304,18 +295,40 @@ export function parseContent(raw: unknown): Content {
         problems.push(`factions.${f.id} has a secretary but no order template in slot ${slot}`);
       }
     }
-    // ADR 0012: the welcome set names that faction's templates in slots A, B, C; C has a noJob variant.
-    f.welcomeOrders.forEach((id, i) => {
-      const slot = (['A', 'B', 'C'] as const)[i]!;
+    // ADR 0012, review 1: the welcome set names that faction's templates: slot A per best stat
+    // (each a checked action in the home city that checks that stat), B, and C (Take a job).
+    const welcome: Array<[string, string, 'A' | 'B' | 'C']> = [
+      ['A.str', f.welcomeOrders.A.str, 'A'],
+      ['A.int', f.welcomeOrders.A.int, 'A'],
+      ['A.agi', f.welcomeOrders.A.agi, 'A'],
+      ['B', f.welcomeOrders.B, 'B'],
+      ['C', f.welcomeOrders.C, 'C'],
+    ];
+    for (const [key, id, slot] of welcome) {
       const t = content.orderTemplates.find((x) => x.id === id);
       if (!t || t.factionId !== f.id || t.slot !== slot) {
         problems.push(
-          `factions.${f.id}.welcomeOrders[${i}] "${id}" is not a ${f.id} template in slot ${slot}`,
+          `factions.${f.id}.welcomeOrders.${key} "${id}" is not a ${f.id} template in slot ${slot}`,
         );
-      } else if (slot === 'C' && !t.noJob) {
-        problems.push(`factions.${f.id}.welcomeOrders[2] "${id}" has no noJob variant`);
+        continue;
       }
-    });
+      if (slot === 'C' && !(t.match.kinds ?? []).includes('takeJob'))
+        problems.push(`factions.${f.id}.welcomeOrders.C "${id}" must match takeJob`);
+      if (slot === 'A') {
+        const stat = key.slice(2);
+        const first = t.match.actionIds?.[0];
+        const hit = first ? actionById.get(first) : undefined;
+        if (
+          !hit ||
+          hit.city.id !== f.homeCityId ||
+          !isCheckedAction(hit.action) ||
+          hit.action.stats[0] !== stat
+        )
+          problems.push(
+            `factions.${f.id}.welcomeOrders.${key} "${id}" must name a home action that checks ${stat.toUpperCase()}`,
+          );
+      }
+    }
   }
 
   // Story texts (tech design §4.3, §4.4): 240 characters, 4 sentences, story placeholders only.
@@ -389,7 +402,7 @@ export function parseContent(raw: unknown): Content {
       const where = `ambition "${amb.id}" chapter ${ch.n}`;
       if (new Set(s.choose.choices.map((c) => c.id)).size !== 2)
         problems.push(`${where}: duplicate choice ids`);
-      if (new Set(s.check.approaches.map((a) => a.id)).size !== 2)
+      if (new Set(s.check.approaches.map((a) => a.id)).size !== s.check.approaches.length)
         problems.push(`${where}: duplicate approach ids`);
       const keep = needItem(`${where}.keepsake`, s.keepsake);
       if (keep && !keep.keepsake) problems.push(`${where}.keepsake "${keep.id}" is not a keepsake`);
@@ -419,8 +432,7 @@ export function parseContent(raw: unknown): Content {
   };
   for (const t of content.orderTemplates) {
     unique('order template', t.id);
-    for (const m of [t.match, t.noJob?.match]) {
-      if (!m) continue;
+    for (const m of [t.match]) {
       for (const id of m.actionIds ?? [])
         if (!actionById.has(id)) problems.push(`order "${t.id}": unknown action "${id}"`);
       for (const id of m.locationIds ?? [])
@@ -428,7 +440,7 @@ export function parseContent(raw: unknown): Content {
       if (m.cityId && m.cityId !== 'home' && !cityById.has(m.cityId))
         problems.push(`order "${t.id}": city "${m.cityId}" is not loaded`);
     }
-    checkText(`order "${t.id}"`, `${t.title} ${t.line} ${t.noJob?.title ?? ''} ${t.noJob?.line ?? ''}`);
+    checkText(`order "${t.id}"`, `${t.title} ${t.line}`);
   }
 
   // Headlines. Slice 3: a template uses political conditions only, or none; political ones use the
@@ -673,7 +685,8 @@ export function indexContent(content: Content): GameContent {
     ordersOf: (factionId) => content.orderTemplates.filter((t) => t.factionId === factionId),
     headlinesOf: (cityId) => content.headlines.filter((h) => h.cityId === cityId && !isPoliticalTemplate(h)),
     standingNames: content.standingLevels.map((s) => s.name),
-    ordinance: (id) => ordinancesById.get(id),
+    // Review 1: a city or order paper stored before the rename still says 'ord.shift-hours'.
+    ordinance: (id) => ordinancesById.get(RENAMED_ORDINANCE_IDS[id] ?? id),
     ordinanceSpec: (id) => {
       const o = ordinancesById.get(id);
       return o ? { id: o.id, name: o.name, effects: o.effects } : undefined;

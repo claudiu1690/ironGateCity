@@ -8,11 +8,15 @@ export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';
 export type { FieldProps } from './components/Field';
 export { Gauge } from './components/Gauge';
+export { HelpButton, helpMark } from './components/Help';
+export type { HelpButtonProps, HelpNote } from './components/Help';
 export type { GaugeProps } from './components/Gauge';
 export { HudBar } from './components/HudBar';
 export type { HudBarProps } from './components/HudBar';
 export { DeskList, Masthead, OrdersList, TodayStrip } from './components/Paper';
 export type { OrdersListProps } from './components/Paper';
+export { OrdersComplete } from './components/OrdersComplete';
+export type { OrdersCompleteProps } from './components/OrdersComplete';
 export { Picture, artUrl } from './components/Picture';
 export type { PictureProps } from './components/Picture';
 export { Plate } from './components/Plate';
@@ -58,6 +62,7 @@ export type { StampProps, StampTone } from './components/Stamp';
 export { TYPE_LABEL, Ticket } from './components/Ticket';
 export type { TicketProps } from './components/Ticket';
 export * from './format';
+export { ledger, oddsSentence, rollLine, statLine, ticketOdds } from './odds';
 export {
   AvatarPicker,
   FactionCard,

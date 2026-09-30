@@ -53,6 +53,12 @@ export const ambitions: AmbitionInput[] = [
                 stats: ['cha', 'int'],
               },
               { id: 'sort', text: 'Sort the book by street first, then knock', stats: ['int'] },
+              // Review 1 (answers §2.1): a third approach on the best trained stat.
+              {
+                id: 'legwork',
+                text: 'Legwork. Walk his three streets yourself, book in hand, and knock until the names answer.',
+                stats: ['best'],
+              },
             ],
             cta: 'Walk his ward',
             difficulty: 8,
@@ -186,6 +192,11 @@ export const ambitions: AmbitionInput[] = [
                 text: "Ask the oldest men in the market who remembers '19",
                 stats: ['cha', 'int'],
               },
+              {
+                id: 'legwork',
+                text: "Legwork. Walk the mill road at the shift change and find who was on nights in '19.",
+                stats: ['best'],
+              },
             ],
             cta: 'Start asking',
             difficulty: 8,
@@ -249,6 +260,11 @@ export const ambitions: AmbitionInput[] = [
             approaches: [
               { id: 'date', text: 'Look him in the eye and name a date', stats: ['cha', 'str'] },
               { id: 'read', text: 'Read the marker properly before you answer', stats: ['int'] },
+              {
+                id: 'legwork',
+                text: 'Legwork. Walk the riverside road first and see whose house he goes back to.',
+                stats: ['best'],
+              },
             ],
             cta: 'Answer him',
             difficulty: 8,

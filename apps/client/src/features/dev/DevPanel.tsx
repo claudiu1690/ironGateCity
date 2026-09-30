@@ -172,7 +172,7 @@ function DevPanelOn({ status }: { status: DevStatus }) {
           className={cx(
             // Between the HUD and the tab bar, left of the button, so both stay visible (phones);
             // a narrow card on the right on wide screens, clear of the dock.
-            'fixed top-16 right-[52px] left-2 z-30 flex max-h-[calc(100dvh-144px)] flex-col overflow-y-auto',
+            'fixed top-[84px] right-[52px] left-2 z-30 flex max-h-[calc(100dvh-164px)] flex-col overflow-y-auto',
             'border-2 border-dashed border-xp bg-paper text-ink shadow-[0_0_0_1px_var(--color-ink),0_12px_30px_rgb(0_0_0/0.5)] outline-none',
             'sm:left-auto sm:w-[360px] lg:top-[76px] lg:max-h-[calc(100dvh-220px)]',
           )}

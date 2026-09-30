@@ -41,7 +41,8 @@ describe('the real content', () => {
       ['coalport.quays', 'docks'],
       ['coalport.anchor', 'bar'],
     ]);
-    expect(actions).toHaveLength(21);
+    // Review 1: the three job-shift actions are gone (a job is a wage).
+    expect(actions).toHaveLength(18);
     const byType = actions.reduce<Record<string, number>>(
       (m, a) => ({ ...m, [a.type]: (m[a.type] ?? 0) + 1 }),
       {},
@@ -53,15 +54,12 @@ describe('the real content', () => {
       training: 3,
       intelligence: 2,
       council: 1,
-      job: 3,
     });
     // Slice 2: Coalport's job ids are prefixed by city (cities §3 Q1).
-    expect(
-      content.jobs.filter((j) => j.id.startsWith('coalport-')).map((j) => [j.id, j.dailyPay, j.shiftEnergy]),
-    ).toEqual([
-      ['coalport-street-vendor', 100, 3],
-      ['coalport-factory-worker', 180, 4],
-      ['coalport-driver', 200, 4],
+    expect(content.jobs.filter((j) => j.id.startsWith('coalport-')).map((j) => [j.id, j.dailyPay])).toEqual([
+      ['coalport-street-vendor', 100],
+      ['coalport-factory-worker', 180],
+      ['coalport-driver', 200],
     ]);
     expect(content.jobsAt('coalport.mill-gate').map((j) => j.id)).toEqual(['coalport-factory-worker']);
   });
@@ -75,7 +73,15 @@ describe('the real content', () => {
         computeCheck({ stats: a.stats, values, difficulty: tier1Difficulty('home') }).chance,
       );
     }
-    expect(Object.fromEntries(odds)).toEqual({ int: 66, 'cha+int': 46, agi: 38, str: 58, 'cha+str': 42 });
+    // Review 1: the committee checks the best trained stat (INT 12 for the reference recruit).
+    expect(Object.fromEntries(odds)).toEqual({
+      int: 66,
+      'cha+int': 46,
+      agi: 38,
+      str: 58,
+      'cha+str': 42,
+      best: 66,
+    });
   });
 
   it('has Holm, twelve order templates, the Clarion and its headlines', () => {
@@ -87,7 +93,8 @@ describe('the real content', () => {
     });
     expect(content.faction('collective').rankTitles[1]).toBe('Activist');
     expect(content.faction('collective').rankTitles[4]).toBe('Delegate');
-    // Slice 3 adds the two crisis templates (Restore the base), which never rotate.
+    // Slice 3 adds the two crisis templates (Restore the base), review 1 the welcome-only ones;
+    // neither rotates.
     const orders = content.ordersOf('collective').filter((o) => o.use === 'rotation');
     expect(orders).toHaveLength(12);
     expect(orders.filter((o) => o.slot === 'A')).toHaveLength(5);
@@ -132,7 +139,13 @@ describe('the real content', () => {
   it('exposes the UI copy (§12.1)', () => {
     expect(copy.needsEnergy(10, '14:20')).toBe('Needs 10 Energy · ready at 14:20');
     expect(copy.jobNeeds(['Level 3', 'AGI 10'])).toBe('Needs Level 3, AGI 10');
-    expect(copy.pointsToPlace(1)).toBe('1 point to place');
+    // Review 1 (answers §7): the waiting badge says nothing is lost by choosing later.
+    expect(copy.pointsToPlace(1)).toBe('1 point to place · nothing is lost by choosing later');
+    expect(copy.jobPayLine(216)).toBe('216 a day · paid at midnight');
+    expect(copy.switchJob).toBe('Switch · seniority resets');
+    expect(copy.deskPaid(216, 'Stores hand', 4, 8)).toBe(
+      'Paid: 216 Iron · Stores hand · seniority 4 days (+8 %)',
+    );
     expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % FXP');
     // Content §13 (QA fix round 1).
     expect(copy.paperIsIn('Clarion')).toBe('The Clarion is in');
@@ -244,13 +257,13 @@ describe('validation', () => {
     expect(() => parseContent(b)).toThrow(ContentError);
   });
 
-  it('rejects a job and shift action that do not point at each other', () => {
+  it('rejects a job at an unknown location, and a welcome slot A that does not check its stat (review 1)', () => {
     const a = clone();
-    a.jobs[0]!.shiftActionId = 'coalport.mill-gate.shift';
-    expect(() => parseContent(a)).toThrow(/must point at each other/);
+    a.jobs[0]!.locationId = 'coalport.nowhere';
+    expect(() => parseContent(a)).toThrow(/unknown location "coalport.nowhere"/);
     const b = clone();
-    (coalport(b).locations[0]!.actions[2] as { jobId: string }).jobId = 'miner';
-    expect(() => parseContent(b)).toThrow(/unknown job "miner"/);
+    b.factions.find((f) => f.id === 'collective')!.welcomeOrders.A.str = 'dir.shift-change';
+    expect(() => parseContent(b)).toThrow(/must name a home action that checks STR/);
   });
 
   it('rejects a secretary of the wrong faction or a missing slot', () => {

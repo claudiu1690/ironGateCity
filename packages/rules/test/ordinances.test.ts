@@ -16,12 +16,12 @@ import {
   ordersForDay,
   projectEnergy,
   projectEnergyThrough,
-  resolveShift,
   resolveTier1Action,
   resolveTraining,
   restedCapFor,
+  seniorityBonus,
+  seniorityStep,
   settleDays,
-  shiftEnergy,
   startOrders,
   trainingEnergy,
 } from '../src';
@@ -38,13 +38,10 @@ const ORD: Record<string, OrdinanceSpec> = {
     name: 'Public Works Order',
     effects: [{ kind: 'jobPayPct', value: 10 }],
   },
-  shiftHours: {
-    id: 'ord.shift-hours',
-    name: 'Shift Hours Order',
-    effects: [
-      { kind: 'shiftEnergyDelta', value: -1, floor: 2 },
-      { kind: 'shiftStreakDays', value: 2 },
-    ],
+  longService: {
+    id: 'ord.long-service',
+    name: 'Long Service Order',
+    effects: [{ kind: 'seniorityDays', value: 2 }],
   },
   streetPermits: {
     id: 'ord.street-permits',
@@ -147,7 +144,7 @@ describe('the DSL and its bounds (ADR 0021)', () => {
     const m = mods(null);
     expect(actionEnergy(12, 'speech', m)).toBe(12);
     expect(trainingEnergy(44, m)).toBe(44);
-    expect(shiftEnergy(4, m)).toBe(4);
+    expect(seniorityStep(m)).toBe(1);
     expect(jobPayWith(216, m)).toBe(216);
     expect(restedCapFor(m)).toBe(200);
     expect(ordinanceTags({ kind: 'checked', type: 'canvass', base: 10, m })).toEqual([]);
@@ -209,49 +206,15 @@ describe('every effect at the design numbers', () => {
     });
   });
 
-  const shift = (m: CityModifiers, streak = 0) =>
-    ok(
-      resolveShift({
-        job: { id: 'coalport-factory-worker', since: 0, streak, lastShiftDay: null },
-        today: 100,
-        pay: 216,
-        shiftEnergy: 4,
-        energy: { value: 100, rested: 0, updatedAt: T0 },
-        now: T0,
-        orders: NO_ORDERS,
-        orderTemplates: TEMPLATES,
-        homeCityId: 'coalport',
-        descriptor: { kind: 'shift', type: 'job', cityId: 'coalport' },
-        modifiers: m,
-      }),
-    );
-
-  it('Shift Hours: 4 → 3 (2 stays 2); two streak days a shift; the +20 % cap unchanged', () => {
-    const m = mods(ORD.shiftHours!);
-    expect(shiftEnergy(2, m)).toBe(2);
-    const r = shift(m, 0);
-    expect(r.energy.cost).toBe(3);
-    expect(r.streak).toEqual({ before: 0, after: 2 });
-    expect(r.pay).toEqual({ half: 108, bonus: 9, pct: 0.04, total: 117 });
-    expect(shift(m, 9).pay).toMatchObject({ bonus: 43, pct: 0.2 });
+  it('Long Service (review 1): two seniority days a boundary; the +20 % cap unchanged', () => {
+    expect(seniorityStep(mods(ORD.longService!))).toBe(2);
+    expect(seniorityStep(mods(ORD.publicWorks!))).toBe(1);
   });
 
-  it('Public Works 216 → half 119 (+11); Ward Fund half 81 (−27); the streak bonus unchanged', () => {
+  it('Public Works 216 → 238 (+22); Ward Fund 216 → 162 (−54): lines on the unmodified pay', () => {
     expect(jobPayWith(216, mods(ORD.publicWorks!))).toBe(238);
-    const pw = shift(mods(ORD.publicWorks!), 9);
-    expect(pw.pay).toEqual({
-      half: 108,
-      bonus: 43,
-      pct: 0.2,
-      total: 162,
-      ordinance: { id: 'ord.public-works', label: 'Public Works Order', amount: 11 },
-    });
-    const wf = shift(mods(ORD.wardFund!), 9);
-    expect(wf.pay.ordinance!.amount).toBe(-27);
-    expect(wf.pay.total).toBe(108 + 43 - 27);
-    expect(ordinanceTags({ kind: 'shift', type: 'job', base: 4, m: mods(ORD.wardFund!) })).toEqual([
-      { ordinanceId: 'ord.ward-fund', name: 'Ward Fund', kind: 'iron', value: -25 },
-    ]);
+    expect(jobPayWith(216, mods(ORD.wardFund!))).toBe(162);
+    expect(seniorityBonus(216, 10)).toBe(43);
   });
 
   it('Open Doors: 66 → 70 with a named line; 93 → 95 at the clamp', () => {
@@ -393,29 +356,29 @@ describe('Rested and the Rest Day Order (ADR 0021 §5)', () => {
 });
 
 describe('the settlement and orders under slice 3', () => {
-  it('each ended day pays its own ordinance’s half pay', () => {
+  it('each ended day pays its own ordinance line on the full wage (review 1)', () => {
     const d = 20_700;
     const s = settleDays({
       settled: d,
       today: d + 3,
-      job: { id: 'coalport-factory-worker', since: 0, streak: 0, lastShiftDay: null },
+      job: { id: 'coalport-factory-worker', since: 0, seniority: 10 },
       pay: 216,
-      sickDays: { week: 0, left: 2 },
       tally: emptyTally(d),
       energy: { value: 100, rested: 0, updatedAt: dayStart(d) },
       now: dayStart(d + 3),
-      halfPayOn: (ended) =>
+      wageOn: (ended) =>
         ended === d
-          ? { amount: 119, label: 'Public Works Order' }
+          ? { payAdjust: 22, label: 'Public Works Order', seniorityStep: 1 }
           : ended === d + 1
-            ? { amount: 81, label: 'Ward Fund' }
-            : { amount: 108, label: null },
+            ? { payAdjust: -54, label: 'Ward Fund', seniorityStep: 1 }
+            : { payAdjust: 0, label: null, seniorityStep: 1 },
     })!;
     expect(s.salary).toEqual({
       days: 3,
-      perDay: 108,
-      total: 308,
-      ordinance: { label: 'Public Works Order · Ward Fund', amount: -16 },
+      perDay: 216,
+      seniority: { days: 13, amount: 3 * 43 },
+      total: 3 * 216 + 3 * 43 - 32,
+      ordinance: { label: 'Public Works Order · Ward Fund', amount: -32 },
     });
   });
 
@@ -466,9 +429,9 @@ describe('the settlement and orders under slice 3', () => {
       all,
       DIRECTIVES.epochDay,
       true,
-      ['dir.shift-change', 'dir.report', 'dir.work-shift'],
+      ['dir.shift-change', 'dir.report', 'dir.take-a-job'],
       ['dir.restore-canvass', 'dir.restore-speech'],
     );
-    expect(w.items.map((i) => i.templateId)).toEqual(['dir.shift-change', 'dir.report', 'dir.work-shift']);
+    expect(w.items.map((i) => i.templateId)).toEqual(['dir.shift-change', 'dir.report', 'dir.take-a-job']);
   });
 });

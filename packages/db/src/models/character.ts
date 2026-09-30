@@ -10,11 +10,11 @@ import type {
 import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
 
+/** Review 1 (GDD §9.1): a job is a wage; `seniority` counts the boundaries held (Long Service: 2). */
 export interface StoredJob {
   id: string;
   since: DayKey;
-  streak: number;
-  lastShiftDay: DayKey | null;
+  seniority: number;
 }
 
 export interface StoredOrderItem {
@@ -57,7 +57,7 @@ export interface CharacterDoc {
   level: number;
   fxp: number;
   iron: number;
-  /** §5.3: +1 per level gained, placed on STR or INT; never expires. */
+  /** §5.3: +1 per level gained, placed on STR, INT or AGI (review 1); never expires. */
   statPointsPending: number;
   /** 1..7, denormalised from fxp (§5.4). */
   rank: number;
@@ -66,11 +66,14 @@ export interface CharacterDoc {
   /** §13.4: Successes on checked actions per city. */
   localStanding: Array<{ cityId: string; successes: number }>;
   job: StoredJob | null;
-  /** The weekly allowance (§9.1), per character so it survives a job switch. */
-  sickDays: { week: number; left: number };
   /** ADR 0005: the last City Day whose boundary has been applied; null for a new character. */
   day: { settled: DayKey | null };
   orders: StoredOrders;
+  /**
+   * Review 1 (GDD §13.7): the City Day whose orders-complete note was seen (Carry on). The note shows
+   * while today's three are done and this is not today, so it waits if the tab closes first.
+   */
+  ordersNoteSeenDay?: DayKey | null;
   /** §3.7: the current City Day's running totals. */
   today: DailyTally;
   /** Drives "the paper is due after 3 h" (§3.3). */
@@ -128,8 +131,7 @@ const jobSchema = new Schema<StoredJob>(
   {
     id: { type: String, required: true },
     since: int,
-    streak: int,
-    lastShiftDay: { type: Number, default: null },
+    seniority: { ...int, default: 0 },
   },
   { _id: false },
 );
@@ -146,7 +148,6 @@ const tallySchema = new Schema<DailyTally>(
     pc: { type: Number, default: 0 },
     opinion: { type: Number, default: 0 },
     ordersDone: { type: Number, default: 0 },
-    shiftWorked: { type: Boolean, default: false },
     statTrained: { type: Number, default: 0 },
   },
   { _id: false },
@@ -182,13 +183,13 @@ const characterSchema = new Schema<CharacterDoc>(
       default: [],
     },
     job: { type: jobSchema, default: null },
-    sickDays: { week: { type: Number, default: 0 }, left: { type: Number, default: 2 } },
     day: { settled: { type: Number, default: null } },
     orders: {
       day: { type: Number, default: 0 },
       items: { type: [orderItemSchema], default: [] },
       allDoneAt: { type: Date, default: null },
     },
+    ordersNoteSeenDay: { type: Number, default: null },
     today: { type: tallySchema, default: () => ({}) },
     lastActionAt: { type: Date, default: null },
     avatarId: { type: String, default: null },

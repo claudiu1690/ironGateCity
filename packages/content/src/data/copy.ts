@@ -51,33 +51,240 @@ export const copy = {
   needsEnergy: (cost: number, readyAt: string) => `Needs ${cost} Energy · ready at ${readyAt}`,
   energyFull: (rested: number) => `Rested ${rested}`,
   energyFullAt: (at: string) => `full at ${at}`,
+  // The HUD's gauges in words (review 1 #3, #4, #14; answers §5, §8).
+  hud: {
+    energy: 'Energy',
+    xp: 'XP',
+    /** The XP value text by default: "{xp} XP · {n} to Level {next}" (answers §5). */
+    xpLine: (xp: string, toNext: string, next: number) => `${xp} XP · ${toNext} to Level ${next}`,
+    /** The FXP bar's label on narrow phones (answers §8). */
+    rankN: (n: number) => `Rank ${n}`,
+  },
   x3Needs: (cost: number) => `×3 needs ${cost} Energy`,
-  shiftWorked: (nextAt: string) => `Shift worked · next at ${nextAt}`,
-  shiftNotYourJob: 'Not your job · see the Jobs card',
-  shiftNoJob: 'No job yet · take one below',
   /** Me tab, no job: the home city's places with a Jobs card, in pin order (content §13.7, n4). */
   meNoJob: (places: string[]) => `No job yet · take one at ${listOr(places)}`,
   takeJob: 'Take the job',
-  jobPayLine: (pay: number) => `${pay} a day · half at midnight, half for the shift`,
-  switchJob: (energy: number) => `Switch · ${energy} Energy · streak resets`,
-  yourJob: (streak: number, sickDaysLeft: number) =>
-    `Your job · streak ${streak} ${streak === 1 ? 'day' : 'days'} · ${sickDaysLeft} sick ${sickDaysLeft === 1 ? 'day' : 'days'} left`,
+  // Review 1 (answers §1.2, §10.6): a job is a wage.
+  jobPayLine: (pay: number) => `${pay} a day · paid at midnight`,
+  switchJob: 'Switch · seniority resets',
+  yourJob: (days: number, pct: number) =>
+    `Your job · seniority ${days} ${days === 1 ? 'day' : 'days'} · +${pct} %`,
+  /** The desk row: "Paid: 216 Iron · Stores hand · seniority 4 days (+8 %)". */
+  deskPaid: (iron: number, job: string, days: number, pct: number) =>
+    `Paid: ${iron} Iron · ${job} · seniority ${days} ${days === 1 ? 'day' : 'days'} (+${pct} %)`,
+  /** The desk row with no job: "No job yet · take one at the Fortress Gate, the Customs Market or the Goods Yard". */
+  deskNoJob: (places: string[]) => `No job yet · take one at ${listOr(places)}`,
+  /** A seniority line on the desk: "Seniority 4 days: +17". */
+  seniorityLine: (days: number, amount: number) =>
+    `Seniority ${days} ${days === 1 ? 'day' : 'days'}: +${amount}`,
+  /** Review 1 (§13.4): the desk row for One of Us's PC. TODO(game-designer): confirm the wording. */
+  oneOfUsPaid: (pc: number) => `One of Us · +${pc} Political Capital from the town`,
   /** "Needs Level 3, AGI 10": only the unmet requirements, level first. */
   jobNeeds: (parts: string[]) => `Needs ${parts.join(', ')}`,
-  jobTaken: (firstPayAt: string) => `Taken · first half pay at ${firstPayAt}`,
+  jobTaken: (firstPayAt: string) => `Taken · paid at ${firstPayAt}`,
   jobTakenOrder: (fxp: number) => `Taken · party order complete: +${fxp} FXP`,
-  jobSwitched: (firstPayAt: string) => `Switched · streak reset · first half pay at ${firstPayAt}`,
+  jobSwitched: (firstPayAt: string) => `Switched · seniority reset · paid at ${firstPayAt}`,
   orderTag: (progress: number, target: number, pct: number) =>
     `Party order ${progress} / ${target} · +${pct} % FXP`,
   orderDone: 'Order done',
   allOrdersDone: (pc: number) => `All orders carried out · +${pc} PC`,
-  pointsToPlace: (n: number) => `${n} ${n === 1 ? 'point' : 'points'} to place`,
+  /**
+   * Review 1 (answers §6): a single order done is a signed line in the result modal. `left` is the
+   * number still open; 0 is the third, and the orders-complete note follows.
+   */
+  orderSigned: {
+    vanguard: (fxp: number, left: number) =>
+      left === 0
+        ? `Order carried out · +${fxp} FXP. That's all three: see the note.`
+        : `Order carried out · +${fxp} FXP. ${left === 1 ? 'One remains' : 'Two remain'}. — V.S.`,
+    collective: (fxp: number, left: number) =>
+      left === 0
+        ? `Order carried out · +${fxp} FXP. That's all three: see the note.`
+        : `Done, that one · +${fxp} FXP. ${left === 1 ? 'One to go' : 'Two to go'}. — P.H.`,
+    alliance: (fxp: number, left: number) =>
+      left === 0
+        ? `Order carried out · +${fxp} FXP. That's all three: see the note.`
+        : `Ticked · +${fxp} FXP. ${left === 1 ? 'One left' : 'Two left'}. — T.G.`,
+  },
+  /** Review 1 (answers §6): the orders-complete note, in the secretary's voice. */
+  ordersComplete: {
+    vanguard: {
+      headline: 'Orders carried out',
+      body: (name: string) =>
+        `Three of three, ${name}. Entered in the day book, in order. The committee will hear of it. — V.S.`,
+    },
+    collective: {
+      headline: 'All three done',
+      body: (name: string) =>
+        `That's a day's work for the branch, ${name}. Get some tea; the wards will still be there tomorrow. — P.H.`,
+    },
+    alliance: {
+      headline: 'Three for three',
+      body: (name: string) =>
+        `Three for three, ${name}. I've written it down, which around here is praise. — T.G.`,
+    },
+    pcTile: 'Political Capital',
+    fxpTile: 'Faction XP from orders today',
+    tomorrow: "Tomorrow's orders are in the morning paper",
+    carryOn: 'Carry on',
+  },
+  /** Review 1 (answers §7): the stat-point choice screen. */
+  statChoice: {
+    lead: (city: string, stat: string, n: number, m: number, best: string, v: number, same: boolean) =>
+      same
+        ? `Most of the work in ${city} uses ${stat}: ${n} of ${m} actions, and it is your best, at ${v}.`
+        : `Most of the work in ${city} uses ${stat}: ${n} of ${m} actions. Your best is ${best} ${v}.`,
+    str: (n: number, m: number) =>
+      `Strength. Shift changes, loaders, posters, the gate steps: ${n} of ${m} actions here. Later, security work, marches and holding your own.`,
+    int: (n: number, m: number) =>
+      `Intelligence. Queues, clerks, committees, the registers: ${n} of ${m} actions here. Later, espionage, exposés and the better-paid desks.`,
+    agi: (n: number, m: number) =>
+      `Agility. Leaflets, chalk, the evening run: ${n} of ${m} actions here. Later, stealth work and getting away clean.`,
+    footer: "Charisma isn't trained. It's worn: your coat, your suit, your party outfit.",
+  },
+  /** Review 1 (answers §4, GDD §8.4): the odds as a sentence, the roll line and the ledger. */
+  odds: {
+    above: (stat: string, v: string, d: number, diff: string, pct: number) =>
+      `Your ${stat} ${v} is ${diff} above the ${d} this needs: ${pct} %.`,
+    below: (stat: string, v: string, d: number, diff: string, pct: number) =>
+      `Your ${stat} ${v} is ${diff} below the ${d} this needs: ${pct} %.`,
+    equal: (stat: string, v: string, d: number, pct: number) =>
+      `Your ${stat} ${v} matches the ${d} this needs: ${pct} %.`,
+    /** rel: "2 below" | "4 above" | "level with". */
+    two: (a: string, va: number, b: string, vb: number, avg: string, d: number, rel: string, pct: number) =>
+      `${a} ${va} and ${b} ${vb} average ${avg}, ${rel} the ${d} this needs: ${pct} %.`,
+    best: (stat: string, v: number, d: number, rel: string, pct: number) =>
+      `Your best, ${stat} ${v}, is ${rel} the ${d} this needs: ${pct} %.`,
+    /** The sentence's ending with one bonus, in place of its final ": {pct} %.". */
+    bonusOne: (pct: number, label: string, b: number, total: number) =>
+      `${pct} %, and +${b} % for ${label}: ${total} %.`,
+    bonusMany: (pct: number, b: number, total: number) =>
+      `${pct} %, and bonuses ${b >= 0 ? '+' : ''}${b} %: ${total} %.`,
+    capped: (raw: number, cap: number) => `${raw} %, capped at ${cap} %.`,
+    rollSuccess: (roll: number, chance: number) => `Rolled ${roll}: Success (${chance} or under).`,
+    rollPartial: (roll: number, lo: number, hi: number) => `Rolled ${roll}: Partial (${lo} to ${hi}).`,
+    rollPartialNoFail: (roll: number, what: string) => `Rolled ${roll}: Partial (a ${what} never fails).`,
+    rollFailure: (roll: number) => `Rolled ${roll}: Failure (more than 20 over).`,
+    ledgerEven: 'Even odds',
+    ledgerStat: (stat: string, v: string, rel: string, d: number) =>
+      `${stat} ${v}, ${rel} the ${d} needed, 4 % a point`,
+    ledgerTwo: (a: string, va: number, b: string, vb: number, avg: string, rel: string, d: number) =>
+      `${a} ${va} and ${b} ${vb}, average ${avg}: ${rel} the ${d} needed`,
+    ledgerBest: (stat: string, v: number, rel: string, d: number) =>
+      `Your best stat, ${stat} ${v}: ${rel} the ${d} needed`,
+    ledgerChance: 'Chance',
+    ledgerCapped: (raw: number) => `${raw} before the cap`,
+    ledgerNote:
+      'Every check starts at even odds and moves 4 % for each point your stat is above or below what the job needs, plus bonuses; never under 5 % or over 95 %. A roll at or under the chance is a Success.',
+    /** The ticket before the tap: "62 % · STR 11", "44 % · CHA 2 + INT 11", "70 % · your best, STR 13". */
+    ticket: (pct: number, statLine: string) => `${pct} % · ${statLine}`,
+    ticketBest: (stat: string, v: number) => `your best, ${stat} ${v}`,
+  },
+  /**
+   * Review 1 (answers §5, GDD §3.7): the notes behind the dotted-underlined labels, [kicker, note].
+   * `{n}` values are filled by the caller.
+   */
+  help: {
+    energy: (fullAt: string | null) => [
+      'Energy',
+      `Every action costs Energy. It refills by itself, five points every ten minutes, up to 100. Nothing is lost by waiting${fullAt ? `: full at ${fullAt}` : ''}.`,
+    ],
+    rested: () => [
+      'Rested',
+      'When Energy is full the refill banks here instead, up to 200. Each Rested point spent alongside an Energy point pays half again in XP and Iron.',
+    ],
+    xp: (n: string, next: number) => [
+      'Experience',
+      `Every action pays Experience. Levels open places, kit and the train, and each one gives a stat point. ${n} more to Level ${next}.`,
+    ],
+    fxp: (rank2: string, rank3: string, n: string | null, nextTitle: string | null) => [
+      'Faction XP',
+      `Your standing in the party, earned by party work and orders. Ranks give rights: the vote at ${rank2}, a council candidacy at ${rank3}.${n !== null && nextTitle ? ` ${n} more to ${nextTitle}.` : ''}`,
+    ],
+    pc: () => [
+      'Political Capital',
+      'Spent on politics: filing for the council (10), endorsing a name (10), moving an ordinance (20). Earned by carrying out all three orders (+5 a day) and by holding office.',
+    ],
+    standing: (city: string) => [
+      'Local standing',
+      `How well ${city} knows your face. Every Success here counts: Familiar at 10 gives +3 % on every check in the city, Known at 30 +6 %, Trusted at 70 +9 %, One of Us at 150 +12 % and 1 PC a day.`,
+    ],
+    share: (city: string) => [
+      `Who holds ${city}`,
+      "Each party's share of the town, and in grey the undecided: Neutral is nobody's, and every canvass draws from it first. A home city never falls below half for its own party; the rest is the fight.",
+    ],
+    shareCaption: (city: string) => `Who holds ${city}`,
+    morale: () => [
+      'Morale',
+      "The home party's share is its morale. Fired up, 80 and over: party work here pays +10 % Faction XP. Steady: nothing special. Unrest, under 60: the branch is in trouble and the orders change.",
+    ],
+    ordinance: () => [
+      'Ordinance',
+      "The council's standing order for the town, in force for five days and for everyone here whatever their party. Passed at the council by four votes of seven.",
+    ],
+    today: (at: string) => [
+      'Today',
+      `What you have done since midnight. The day turns at ${at}, and this becomes Yesterday in the morning paper.`,
+    ],
+    todayEnergy: () => ['Energy spent', "Energy spent today. A ×3 is three actions' worth."],
+    todayAttempts: () => ['Attempts', 'Actions taken today, a ×3 counting three.'],
+    todayWins: () => ['Wins', 'Successes today. Each one counts towards your standing here.'],
+    todayXp: () => ['Experience today', 'Experience earned today, Rested included.'],
+    todayFxp: () => ['Faction XP today', "Faction XP earned today, the orders' bonuses included."],
+    todayIron: () => [
+      'Iron today',
+      'Iron earned by actions today. Your wage lands at midnight and shows on the desk.',
+    ],
+    todayOpinion: (city: string) => [
+      'Opinion moved',
+      `How far your work moved ${city}'s meter today, in points of the town. A canvass is +0.05.`,
+    ],
+    todayOrders: () => [
+      'Orders',
+      'Party orders carried out today, of three. All three: +5 Political Capital.',
+    ],
+    todayTrained: () => ['Trained', 'Stat points trained today.'],
+    /** The one first-time hint, on the plate on the welcome day. */
+    firstHint: 'Anything underlined can be tapped for what it means.',
+    close: 'Close',
+  },
+  /** The waiting badge (answers §7): "1 point to place · nothing is lost by choosing later". */
+  pointsToPlace: (n: number) =>
+    `${n} ${n === 1 ? 'point' : 'points'} to place · nothing is lost by choosing later`,
   levelPointsToPlace: (level: number, n: number) =>
     `Level ${level} · ${n} stat ${n === 1 ? 'point' : 'points'} to place`,
   statButton: (stat: string, from: number) => `${stat} ${from} → ${from + 1}`,
   levelUpLine: (from: number, to: number, points: number) =>
     to - from > 1 ? `Levels ${from + 1}–${to} · ${points} points to place` : `Level ${to} · place your point`,
   standingUp: (city: string, name: string, bonus: number) => `${city}: ${name} · actions here +${bonus} %`,
+  /**
+   * Review 1 (answers §9, GDD §13.4): the Standing card in the result modal on a level crossing.
+   * [heading, what changed, what the next level brings].
+   */
+  standingCard: {
+    kicker: 'Local standing',
+    1: (city: string, rank3: string) => [
+      `Familiar in ${city}`,
+      `Faces nod. Every check in ${city} is now +3 %.`,
+      `Known at 30 Successes: +6 %, and your name will do for a council candidacy at ${rank3}.`,
+    ],
+    2: (city: string, rank3: string) => [
+      `Known in ${city}`,
+      `+6 % on every check here, and the town knows your name well enough to stand for its council once you are a ${rank3}.`,
+      'Trusted at 70: +9 %.',
+    ],
+    3: (city: string) => [
+      `Trusted in ${city}`,
+      '+9 % on every check here. Doors open before you knock.',
+      'One of Us at 150: +12 % and 1 Political Capital a day.',
+    ],
+    4: (city: string) => [
+      `One of Us in ${city}`,
+      '+12 % on every check here, the most standing gives, and 1 Political Capital a day from the town.',
+      'Nothing above this; it never decays.',
+    ],
+  } as Record<'kicker', string> &
+    Record<1 | 2 | 3 | 4, (city: string, rank3: string) => [string, string, string]>,
   orderComplete: (fxp: number) => `Party order complete: +${fxp} FXP`,
   later: 'Later',
   // Not in the §12.1 table: the out-of-Energy card and the Today strip (tech design §12.2).

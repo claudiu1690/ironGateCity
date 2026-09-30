@@ -8,7 +8,8 @@ import { describe, expect, it } from 'vitest';
 // Vite's ?raw import (see raw.d.ts): the package has no Node types, and the docs are read as text.
 import GDD from '../../../docs/GDD.md?raw';
 import DOC from '../../../docs/design/slice-1-content.md?raw';
-import { copy, isCheckedAction, isShiftAction, loadContent, rawContent } from '../src';
+import R1 from '../../../docs/design/review-1-answers.md?raw';
+import { copy, isCheckedAction, loadContent, rawContent } from '../src';
 
 const content = loadContent();
 const city = content.city('coalport')!;
@@ -64,9 +65,10 @@ describe('content vs docs/design/slice-1-content.md', () => {
   });
 
   it('§2.2: every action id, title, type, stats and Energy; checked rewards (S / P) follow from the §5.5 rates', () => {
-    const rows = tableRows('### 2.2 The list', '**Council**');
-    expect(rows).toHaveLength(21);
-    expect(actions).toHaveLength(21);
+    // Review 1 (answers §1.2): the three job shifts left the content (a job is a wage).
+    const rows = tableRows('### 2.2 The list', '**Council**').filter((r) => !/^job/.test(r[2]!));
+    expect(rows).toHaveLength(18);
+    expect(actions).toHaveLength(18);
     for (const r of rows) {
       const [id, title, type, std, e, xp, fxp, iron, opinion] = r.map(unq) as string[];
       const a = actions.find((x) => x.id === id);
@@ -74,7 +76,8 @@ describe('content vs docs/design/slice-1-content.md', () => {
       expect(a!.name, id).toBe(title);
       if (isCheckedAction(a!)) {
         expect(a.type, id).toBe(type);
-        expect(a.stats.map((s) => s.toUpperCase()).join('+'), id).toBe(std);
+        // Review 1 (answers §2): the committee checks the best trained stat.
+        expect(a.stats.map((s) => s.toUpperCase()).join('+'), id).toBe(a.type === 'council' ? 'BEST' : std);
         expect(a.energy, id).toBe(Number(e));
         const reward = (outcome: 'success' | 'partial') =>
           computeRewards({
@@ -96,16 +99,13 @@ describe('content vs docs/design/slice-1-content.md', () => {
         expect(`${s.iron.total} / ${p.iron.total}`, `${id} Iron`).toBe(iron);
         if (opinion === '—') expect(a.givesOpinion, id).toBe(false);
         else expect(`${s.opinion} / ${p.opinion}`, `${id} opinion`).toBe(opinion);
-      } else if (isShiftAction(a!)) {
-        expect(type).toMatch(/^job/);
-        expect(content.job(a.jobId)!.shiftEnergy, id).toBe(Number(e));
       } else {
         expect(type).toBe(`training (${a!.trains.toUpperCase()})`);
       }
     }
   });
 
-  it('§2.3: every checked action has its Success and Partial text word for word; shifts and training their one text', () => {
+  it('§2.3: every checked action has its Success and Partial text word for word; training its one text', () => {
     const block = DOC.slice(DOC.indexOf('### 2.3 Outcome text'), DOC.indexOf('### 2.4 Training'));
     for (const a of actions) {
       const at = block.indexOf(`(\`${a.id}\``);
@@ -125,7 +125,7 @@ describe('content vs docs/design/slice-1-content.md', () => {
         expect(second.label).toBe('Partial');
         expect(a.text.partial, a.id).toEqual({ headline: second.headline, body: second.body });
       } else {
-        expect(first.label).toBe(isShiftAction(a) ? 'Worked' : 'Trained');
+        expect(first.label).toBe('Trained');
       }
     }
   });
@@ -142,28 +142,39 @@ describe('content vs docs/design/slice-1-content.md', () => {
     }
   });
 
-  it('§3: the three jobs with pinned pay, shift Energy and unlocks', () => {
+  it('§3: the three jobs with pinned pay and unlocks (review 1: no shift Energy)', () => {
     // Slice 2: job ids are prefixed by city (slice-2 cities §3 Q1, ADR 0016); Coalport's three here.
     const coalportJobs = content.jobs.filter((j) => j.locationId.startsWith('coalport.'));
-    expect(coalportJobs.map((j) => [j.id, j.locationId, j.dailyPay, j.shiftEnergy, j.unlock])).toEqual([
-      ['coalport-street-vendor', 'coalport.market-row', 100, 3, { level: 1 }],
-      ['coalport-factory-worker', 'coalport.mill-gate', 180, 4, { level: 1, stats: { str: 5 } }],
-      ['coalport-driver', 'coalport.quays', 200, 4, { level: 3, stats: { agi: 10 } }],
+    expect(coalportJobs.map((j) => [j.id, j.locationId, j.dailyPay, j.unlock])).toEqual([
+      ['coalport-street-vendor', 'coalport.market-row', 100, { level: 1 }],
+      ['coalport-factory-worker', 'coalport.mill-gate', 180, { level: 1, stats: { str: 5 } }],
+      ['coalport-driver', 'coalport.quays', 200, { level: 3, stats: { agi: 10 } }],
     ]);
   });
 
-  it("§6.3: the twelve order templates, their slots, titles, targets and Holm's lines", () => {
-    const rows = tableRows('### 6.3 Templates', '### 6.4');
-    expect(rows).toHaveLength(12);
-    rows.forEach((r, i) => {
-      const [id, slot, title, , target, line] = r as string[];
-      const t = content.orderTemplates[i]!;
-      expect(t.id).toBe(unq(id!));
-      expect(t.slot).toBe(slot);
-      expect(t.title).toBe(title);
-      expect(t.target).toBe(Number(target!.match(/^\d+/)![0]));
-      expect(t.line).toBe(line);
-    });
+  it('review 1 §3: every order template, its slot, title, line and target, word for word', () => {
+    // The answers' tables (§3.1 to §3.3) supersede slice-1 content §6.3.
+    const from = R1.indexOf('### 3.1 The Collective');
+    const to = R1.indexOf('### 3.4 Rotation');
+    const rows = R1.slice(from, to)
+      .split('\n')
+      .filter((l) => /^\| `dir\./.test(l))
+      .map((l) =>
+        l
+          .split('|')
+          .slice(1, -1)
+          .map((c) => c.trim()),
+      );
+    expect(rows).toHaveLength(content.orderTemplates.length);
+    for (const r of rows) {
+      const [id, slot, title, line, target] = r as [string, string, string, string, string];
+      const t = content.orderTemplates.find((x) => x.id === id.match(/`([^`]+)`/)![1]);
+      expect(t, id).toBeDefined();
+      expect(t!.slot, id).toBe(slot.charAt(0));
+      expect(t!.title, id).toBe(title);
+      expect(t!.line, id).toBe(line);
+      expect(t!.target, id).toBe(Number(target.match(/· (\d+)/)![1]));
+    }
   });
 
   it('§7.4: the ambient pool, in day order', () => {
@@ -213,20 +224,21 @@ describe('content vs docs/design/slice-1-content.md', () => {
     expect(copy.needsEnergy(10, '14:20')).toBe('Needs 10 Energy · ready at 14:20');
     expect(copy.x3Needs(30)).toBe('×3 needs 30 Energy');
     expect(copy.x3Needs(138)).toBe('×3 needs 138 Energy');
-    expect(copy.shiftWorked('01:00')).toBe('Shift worked · next at 01:00');
-    expect(copy.shiftNotYourJob).toBe('Not your job · see the Jobs card');
-    expect(copy.shiftNoJob).toBe('No job yet · take one below');
-    expect(copy.jobPayLine(216)).toBe('216 a day · half at midnight, half for the shift');
-    expect(copy.switchJob(2)).toBe('Switch · 2 Energy · streak resets');
-    expect(copy.yourJob(4, 2)).toBe('Your job · streak 4 days · 2 sick days left');
+    // Review 1 (answers §1.2, §10.6): the shift strings are retired; the wage's lines replace them.
+    expect(copy.jobPayLine(216)).toBe('216 a day · paid at midnight');
+    expect(copy.switchJob).toBe('Switch · seniority resets');
+    expect(copy.yourJob(4, 8)).toBe('Your job · seniority 4 days · +8 %');
     expect(copy.jobNeeds(['Level 3', 'AGI 10'])).toBe('Needs Level 3, AGI 10');
-    expect(copy.jobTaken('01:00')).toBe('Taken · first half pay at 01:00');
+    expect(copy.jobTaken('01:00')).toBe('Taken · paid at 01:00');
     expect(copy.jobTakenOrder(20)).toBe('Taken · party order complete: +20 FXP');
-    expect(copy.jobSwitched('01:00')).toBe('Switched · streak reset · first half pay at 01:00');
+    expect(copy.jobSwitched('01:00')).toBe('Switched · seniority reset · paid at 01:00');
     expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % FXP');
     expect(copy.orderDone).toBe('Order done');
     expect(copy.allOrdersDone(5)).toBe('All orders carried out · +5 PC');
-    expect([copy.pointsToPlace(1), copy.pointsToPlace(2)]).toEqual(['1 point to place', '2 points to place']);
+    expect([copy.pointsToPlace(1), copy.pointsToPlace(2)]).toEqual([
+      '1 point to place · nothing is lost by choosing later',
+      '2 points to place · nothing is lost by choosing later',
+    ]);
     expect(copy.levelPointsToPlace(4, 1)).toBe('Level 4 · 1 stat point to place');
     expect(copy.statButton('STR', 10)).toBe('STR 10 → 11');
     expect(copy.levelUpLine(3, 5, 2)).toBe('Levels 4–5 · 2 points to place');

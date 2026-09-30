@@ -31,7 +31,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Coalport',
-    deck: "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Mill Gate first.",
+    deck: "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.",
   },
   {
     id: 'hl.arrival',
@@ -107,22 +107,22 @@ export const headlines: HeadlineInput[] = [
     deck: 'Every order carried out yesterday. Secretary Holm: "That\'s how it\'s done." +5 Political Capital banked.',
   },
   {
-    id: 'hl.streak-5',
+    id: 'hl.seniority-5',
     cityId: 'coalport',
     group: 'personal',
     priority: 6,
-    when: [{ kind: 'streakHitYesterday', values: [5] }],
-    headline: 'Five Straight Shifts and Counting',
-    deck: '{name} has not missed a shift in {streak} days. Pay is up {bonus} %.',
+    when: [{ kind: 'seniorityHitYesterday', values: [5] }],
+    headline: 'Five Days In at the {job}',
+    deck: '{name} has held the {job} for five days. Pay is up 10 %.',
   },
   {
-    id: 'hl.streak-10',
+    id: 'hl.seniority-10',
     cityId: 'coalport',
     group: 'personal',
     priority: 6,
-    when: [{ kind: 'streakHitYesterday', values: [10] }],
-    headline: 'Ten Straight Shifts and Counting',
-    deck: '{name} has not missed a shift in {streak} days. Pay is up {bonus} %.',
+    when: [{ kind: 'seniorityHitYesterday', values: [10] }],
+    headline: 'Ten Days In, Full Rate',
+    deck: '{name} has been {job} for ten days. Pay is up 20 %, the most seniority pays.',
   },
   {
     id: 'hl.away',
@@ -131,11 +131,12 @@ export const headlines: HeadlineInput[] = [
     priority: 7,
     when: [
       { kind: 'daysSinceLastPaper', min: 2 },
-      { kind: 'halfPaysCredited', min: 1 },
+      { kind: 'daysPaid', min: 1 },
     ],
     headline: 'While You Were Away',
-    // {days} is the number of half-pays credited, at most 14 (designer answer §12 Q9).
-    deck: '{days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
+    // {days} is the number of days of pay credited, at most 14 (designer answer §12 Q9, review 1).
+    // TODO(game-designer): review 1 retired the half pay; wording adjusted by the developer.
+    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
   },
   {
     id: 'hl.away-no-job',
@@ -145,10 +146,10 @@ export const headlines: HeadlineInput[] = [
     // Content §13.1: the credited count decides, not whether a job is held.
     when: [
       { kind: 'daysSinceLastPaper', min: 2 },
-      { kind: 'halfPaysCredited', max: 0 },
+      { kind: 'daysPaid', max: 0 },
     ],
     headline: 'While You Were Away',
-    deck: 'No job, so no half pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
+    deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
   },
   {
     id: 'hl.idle',
@@ -215,7 +216,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Duskwall',
-    deck: "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at the Fortress Gate first.",
+    deck: "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.",
   },
   {
     id: 'hl.v.arrival',
@@ -290,22 +291,22 @@ export const headlines: HeadlineInput[] = [
     deck: 'Every order carried out yesterday. Organiser Stahl: "As it should be." +5 Political Capital banked.',
   },
   {
-    id: 'hl.v.streak-5',
+    id: 'hl.v.seniority-5',
     cityId: 'duskwall',
     group: 'personal',
     priority: 6,
-    when: [{ kind: 'streakHitYesterday', values: [5] }],
-    headline: 'Five Straight Shifts and Counting',
-    deck: '{name} has not missed a shift in {streak} days. Pay is up {bonus} %.',
+    when: [{ kind: 'seniorityHitYesterday', values: [5] }],
+    headline: 'Five Days In at the {job}',
+    deck: '{name} has held the {job} for five days. Pay is up 10 %.',
   },
   {
-    id: 'hl.v.streak-10',
+    id: 'hl.v.seniority-10',
     cityId: 'duskwall',
     group: 'personal',
     priority: 6,
-    when: [{ kind: 'streakHitYesterday', values: [10] }],
-    headline: 'Ten Straight Shifts and Counting',
-    deck: '{name} has not missed a shift in {streak} days. Pay is up {bonus} %.',
+    when: [{ kind: 'seniorityHitYesterday', values: [10] }],
+    headline: 'Ten Days In, Full Rate',
+    deck: '{name} has been {job} for ten days. Pay is up 20 %, the most seniority pays.',
   },
   {
     id: 'hl.v.away',
@@ -314,10 +315,11 @@ export const headlines: HeadlineInput[] = [
     priority: 7,
     when: [
       { kind: 'daysSinceLastPaper', min: 2 },
-      { kind: 'halfPaysCredited', min: 1 },
+      { kind: 'daysPaid', min: 1 },
     ],
     headline: 'While You Were Away',
-    deck: '{days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
+    // TODO(game-designer): review 1 retired the half pay; wording adjusted by the developer.
+    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
   },
   {
     id: 'hl.v.away-no-job',
@@ -326,10 +328,10 @@ export const headlines: HeadlineInput[] = [
     priority: 7,
     when: [
       { kind: 'daysSinceLastPaper', min: 2 },
-      { kind: 'halfPaysCredited', max: 0 },
+      { kind: 'daysPaid', max: 0 },
     ],
     headline: 'While You Were Away',
-    deck: 'No job, so no half pay banked. Rested is full and the ward is where you left it. The customs stores are still hiring: the Jobs card is at the Fortress Gate.',
+    deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The customs stores are still hiring: the Jobs card is at the Fortress Gate.',
   },
   {
     id: 'hl.v.idle',
@@ -394,7 +396,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Ashford',
-    deck: "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at Gazette House first.",
+    deck: "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.",
   },
   {
     id: 'hl.a.arrival',
@@ -469,22 +471,22 @@ export const headlines: HeadlineInput[] = [
     deck: 'Every order carried out yesterday. Mr Grey: "That\'s the stuff." +5 Political Capital banked.',
   },
   {
-    id: 'hl.a.streak-5',
+    id: 'hl.a.seniority-5',
     cityId: 'ashford',
     group: 'personal',
     priority: 6,
-    when: [{ kind: 'streakHitYesterday', values: [5] }],
-    headline: 'Five Straight Shifts and Counting',
-    deck: '{name} has not missed a shift in {streak} days. Pay is up {bonus} %.',
+    when: [{ kind: 'seniorityHitYesterday', values: [5] }],
+    headline: 'Five Days In at the {job}',
+    deck: '{name} has held the {job} for five days. Pay is up 10 %.',
   },
   {
-    id: 'hl.a.streak-10',
+    id: 'hl.a.seniority-10',
     cityId: 'ashford',
     group: 'personal',
     priority: 6,
-    when: [{ kind: 'streakHitYesterday', values: [10] }],
-    headline: 'Ten Straight Shifts and Counting',
-    deck: '{name} has not missed a shift in {streak} days. Pay is up {bonus} %.',
+    when: [{ kind: 'seniorityHitYesterday', values: [10] }],
+    headline: 'Ten Days In, Full Rate',
+    deck: '{name} has been {job} for ten days. Pay is up 20 %, the most seniority pays.',
   },
   {
     id: 'hl.a.away',
@@ -493,10 +495,11 @@ export const headlines: HeadlineInput[] = [
     priority: 7,
     when: [
       { kind: 'daysSinceLastPaper', min: 2 },
-      { kind: 'halfPaysCredited', min: 1 },
+      { kind: 'daysPaid', min: 1 },
     ],
     headline: 'While You Were Away',
-    deck: '{days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
+    // TODO(game-designer): review 1 retired the half pay; wording adjusted by the developer.
+    deck: '{days} days of pay banked ({iron} Iron). Rested is full. The ward is where you left it.',
   },
   {
     id: 'hl.a.away-no-job',
@@ -505,10 +508,10 @@ export const headlines: HeadlineInput[] = [
     priority: 7,
     when: [
       { kind: 'daysSinceLastPaper', min: 2 },
-      { kind: 'halfPaysCredited', max: 0 },
+      { kind: 'daysPaid', max: 0 },
     ],
     headline: 'While You Were Away',
-    deck: 'No job, so no half pay banked. Rested is full and the ward is where you left it. The Gazette is still hiring: the Jobs card is at Gazette House.',
+    deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The Gazette is still hiring: the Jobs card is at Gazette House.',
   },
   {
     id: 'hl.a.idle',

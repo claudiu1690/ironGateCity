@@ -11,8 +11,7 @@ import type { CheckBonus } from './types';
  */
 export type OrdinanceEffect =
   | { kind: 'jobPayPct'; value: number }
-  | { kind: 'shiftEnergyDelta'; value: number; floor: number }
-  | { kind: 'shiftStreakDays'; value: number }
+  | { kind: 'seniorityDays'; value: number }
   | { kind: 'swingPct'; actionType: string; value: number }
   | { kind: 'energyDelta'; actionType: string; value: number }
   | { kind: 'trainingEnergyPct'; value: number }
@@ -77,15 +76,9 @@ export function trainingEnergy(baseCost: number, m?: CityModifiers): number {
   return e ? Math.max(1, roundHalfUp(baseCost * (1 + e.value / 100))) : baseCost;
 }
 
-/** Shift Hours Order: shifts −1 Energy, never below the floor (4 → 3, 2 → 2). */
-export function shiftEnergy(base: number, m?: CityModifiers): number {
-  const e = effect(m, 'shiftEnergyDelta');
-  return e ? Math.max(Math.min(e.floor, base), base + e.value) : base;
-}
-
-/** Shift Hours Order: each shift adds two days to the streak. */
-export function shiftStreakStep(m?: CityModifiers): number {
-  return effect(m, 'shiftStreakDays')?.value ?? 1;
+/** Review 1: the Long Service Order: each boundary adds two days of seniority (the cap unchanged). */
+export function seniorityStep(m?: CityModifiers): number {
+  return effect(m, 'seniorityDays')?.value ?? 1;
 }
 
 /** Public Works +10 % (216 → 238) and Ward Fund −25 % (216 → 162) on the daily pay. */
@@ -158,7 +151,7 @@ export interface OrdinanceTagView {
 
 /** The tags a ticket carries under the ordinance in force (tech design §8.5). */
 export function ordinanceTags(i: {
-  kind: 'checked' | 'training' | 'shift';
+  kind: 'checked' | 'training';
   type: string;
   base: number;
   givesFxp?: boolean;
@@ -185,12 +178,8 @@ export function ordinanceTags(i: {
     if (fxp && i.givesFxp) out.push(tag('fxp', fxp.value));
     const standing = effect(i.m, 'standingMultiplier');
     if (standing) out.push(tag('standing', standing.value));
-  } else if (i.kind === 'training') {
-    if (effect(i.m, 'trainingEnergyPct')) out.push(tag('energy', trainingEnergy(i.base, i.m)));
-  } else {
-    if (effect(i.m, 'shiftEnergyDelta')) out.push(tag('energy', shiftEnergy(i.base, i.m)));
-    const pay = effect(i.m, 'jobPayPct');
-    if (pay) out.push(tag('iron', pay.value));
+  } else if (effect(i.m, 'trainingEnergyPct')) {
+    out.push(tag('energy', trainingEnergy(i.base, i.m)));
   }
   return out;
 }

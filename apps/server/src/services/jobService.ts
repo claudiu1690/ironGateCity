@@ -2,8 +2,6 @@ import type { GameContent } from '@irongate/content';
 import { Character, City } from '@irongate/db';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
-  ENERGY,
-  JOBS,
   addToTally,
   advanceOrders,
   applyGains,
@@ -11,19 +9,15 @@ import {
   dayStart,
   jobLock,
   orderRewards,
-  projectEnergy,
-  restedCapFor,
-  spendEnergy,
 } from '@irongate/rules';
 import type { CharacterView, JobView } from '@irongate/rules';
 import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { branchEndorseIfFiled } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
-import { modifiersFor } from './modifiers';
 import { withRequestKey } from './requestKey';
 import { DayChanged, VersionConflict } from './txn';
-import { energyState, fromOrdersState, jobView, toCharacterView, toOrdersState, wornStats } from './views';
+import { fromOrdersState, jobView, toCharacterView, toOrdersState, wornStats } from './views';
 
 export interface TakeJobResult {
   character: CharacterView;
@@ -35,9 +29,9 @@ export interface TakeJobResult {
 }
 
 /**
- * §9.1, tech design §7.5: take a job (free) or switch (2 Energy without Rested, streak to 0) at the
- * job's location. Requirements are checked on taking only. The last shift day carries over, so a
- * shift already worked today is not repeated. Taking a job completes a "Take a job" order at once.
+ * §9.1 (review 1: a job is a wage), tech design §7.5: take a job or switch at the job's location,
+ * free, one tap; a switch resets seniority to 0. Requirements are checked on taking only. Taking a
+ * job completes a "Take a job" order at once. Nothing about a job costs Energy or touches Rested.
  */
 export async function takeJob(deps: {
   user: SessionUser;
@@ -74,21 +68,6 @@ export async function takeJob(deps: {
 
       const switching = c.job !== null;
       const cityState = await City.findById(c.homeCityId).session(session).lean<CityDoc>();
-      const m = modifiersFor(content, cityState, c.factionId, today);
-      const before = projectEnergy(energyState(c), now, ENERGY.max, restedCapFor(m));
-      let energy = { value: before.value, rested: before.rested, updatedAt: before.updatedAt };
-      if (switching) {
-        const spent = spendEnergy(before, JOBS.switchEnergy, { useRested: JOBS.shiftUsesRested });
-        if (!spent.ok) {
-          throw new GameError('NOT_ENOUGH_ENERGY', {
-            energy: before.value,
-            cost: JOBS.switchEnergy,
-            times: 1,
-            nextTickAt: before.nextTickAt,
-          });
-        }
-        energy = spent.state;
-      }
 
       const adv = advanceOrders(
         toOrdersState(c.orders),
@@ -114,7 +93,6 @@ export async function takeJob(deps: {
         { xp: 0, fxp: pay.fxp, pc: pay.pc },
       );
       const tally = addToTally(c.today, today, {
-        energy: switching ? JOBS.switchEnergy : 0,
         fxp: pay.fxp,
         pc: pay.pc,
         ordersDone: adv.completed ? 1 : 0,
@@ -123,10 +101,7 @@ export async function takeJob(deps: {
         { _id: c._id, version: c.version, 'day.settled': today },
         {
           $set: {
-            job: { id: job.id, since: today, streak: 0, lastShiftDay: c.job?.lastShiftDay ?? null },
-            'energy.value': energy.value,
-            'energy.updatedAt': new Date(energy.updatedAt),
-            rested: energy.rested,
+            job: { id: job.id, since: today, seniority: 0 },
             orders: fromOrdersState(adv.orders),
             today: tally,
             fxp: gains.next.fxp,

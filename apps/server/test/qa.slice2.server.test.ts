@@ -13,7 +13,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getContent } from '@irongate/content';
 import { ActionLog, Arrival, Character, PaperEntry, ensureIndexes } from '@irongate/db';
-import { computeCheck, createRng, dayKey, resolveChapterCheck, tier1Difficulty } from '@irongate/rules';
+import {
+  computeCheck,
+  createRng,
+  dayKey,
+  firstDayBonus,
+  resolveChapterCheck,
+  tier1Difficulty,
+} from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { arrive, callerFor, gameData, newUser, setupDb, teardownDb, testClock } from './helpers';
@@ -362,7 +369,8 @@ describe('the join (ADR 0011, 0012): atomic, one character per user, permanent',
     expect(doc.orders.items.map((i) => [i.templateId, i.variant, i.target, i.progress])).toEqual([
       ['dir.v.guard-change', 'main', 2, 0],
       ['dir.v.report', 'main', 1, 0],
-      ['dir.v.work-shift', 'noJob', 1, 0],
+      // Review 1 (§13.7): "Take a job at {place}" is its own welcome-only template (no noJob variant).
+      ['dir.v.take-a-job', 'main', 1, 0],
     ]);
     const paper = await PaperEntry.findOne({ characterId: doc._id }).lean();
     expect(paper).toMatchObject({ day: dayKey(T0), firstEdition: true, cityId: 'duskwall' });
@@ -454,9 +462,15 @@ describe('the kit and worn CHA (GDD §8.2, §21.4, ADR 0014)', () => {
       for (const a of loc.actions) {
         if (!('stats' in a)) continue;
         const view = city.locations.find((l) => l.id === loc.id)!.actions.find((x) => x.id === a.id)!;
-        const want = computeCheck({ stats: a.stats, values: me.stats, difficulty });
+        // Review 1 (§8.4): the join day is the welcome day: every home check has the First day row.
+        const want = computeCheck({
+          stats: a.stats,
+          values: me.stats,
+          difficulty,
+          bonuses: [firstDayBonus('Ashford')],
+        });
         expect(view.preview?.chance, a.id).toBe(want.chance);
-        if (a.stats.includes('cha')) chaChecks += 1;
+        if ((a.stats as readonly string[]).includes('cha')) chaChecks += 1; // review 1: stats may be ['best']
       }
     }
     expect(chaChecks).toBe(6); // cities doc §2.2: six CHA+INT checks in Ashford
@@ -466,15 +480,17 @@ describe('the kit and worn CHA (GDD §8.2, §21.4, ADR 0014)', () => {
       times: 1,
       idempotencyKey: randomUUID(),
     });
-    // (7 + 16) / 2 = 11.5 → 50 + 4 × 3.5 = 64 %.
-    expect(r.attempts[0]!.check.chance).toBe(64);
+    // (7 + 16) / 2 = 11.5 → 50 + 4 × 3.5 = 64 %, and +10 % on the welcome day (review 1, §8.4).
+    expect(r.attempts[0]!.check.chance).toBe(74);
     expect(JSON.stringify(r.attempts[0]!.check)).toMatch(/"cha"/);
     await caller.ambition.choose({ chapter: 1, choiceId: 'ask' });
     const amb = await caller.ambition.get();
-    // Settle His Debts: CHA+STR (7 + 5) / 2 = 6 → 42 %; INT 16 → 82 %.
+    // Settle His Debts: CHA+STR (7 + 5) / 2 = 6 → 42 %; INT 16 → 82 %. Review 1 (§8.4, §17.1): +10 %
+    // on the welcome day, and Legwork on the best stat (INT 16).
     expect(amb.screen?.approaches.map((a) => [a.id, a.check.chance])).toEqual([
-      ['date', 42],
-      ['read', 82],
+      ['date', 52],
+      ['read', 92],
+      ['legwork', 92],
     ]);
   });
 });
@@ -501,7 +517,8 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
     expect(amb.status).toBe('midway');
     expect(amb.screen?.progress).toEqual({ step: 2, of: 3 });
     expect(amb.screen?.choices).toEqual([]);
-    expect(amb.screen?.approaches).toHaveLength(2);
+    // Review 1 (§17.1): chapter 1 has a third approach, Legwork, on the best stat.
+    expect(amb.screen?.approaches).toHaveLength(3);
     const text = content
       .chapter('finish-his-work', 1)!
       .story!.choose.choices.find((c) => c.id === choice)!.text;
@@ -609,6 +626,8 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
         values: { str: 10, int: 12, agi: 5, cha: 2 },
         energy: { value: 100, rested: 0, updatedAt: T0 },
         now: T0,
+        // Review 1 (§8.4): played on the welcome day, so the First day row is part of the check.
+        bonuses: [firstDayBonus('Coalport')],
       },
       createRng(r.seed),
     );
@@ -817,17 +836,21 @@ describe('migration 002 through the API (ADR 0016)', () => {
       // CHA+INT (2 + 12) / 2 = 7 → 46 %: worn CHA replaced the old stand-in without changing the odds.
       expect(mill.actions.find((a) => a.id === 'coalport.mill-gate.speech')!.preview?.chance).toBe(46);
     }
-    // The slice-1 character's job survived the rename: its shift is live and pays.
+    // The slice-1 character's job survived the rename and pays. Review 1 (§9.1): there is no shift;
+    // the job, stored without seniority (migration 004 not run), was paid the three boundaries since
+    // its last settlement, with seniority counted from 0.
     const c1 = callerFor(u1, () => T0);
     const me1 = await c1.character.me();
     expect(me1.job).toMatchObject({ id: 'coalport-factory-worker', name: 'Factory worker' });
-    const shift = await c1.action.perform({
-      actionId: 'coalport.mill-gate.shift',
-      locationId: 'coalport.mill-gate',
-      times: 1,
-      idempotencyKey: randomUUID(),
+    const desk = (await c1.paper.today()).desk;
+    expect(desk.salary).toMatchObject({
+      jobName: 'Factory worker',
+      days: 3,
+      perDay: 216,
+      seniority: { days: me1.job!.seniority.days },
     });
-    expect(shift.stamp).toBe('worked');
+    expect([3, 4, 5, 6]).toContain(me1.job!.seniority.days); // 1 a day, 2 under Long Service
+    expect(me1.iron).toBe(400 + desk.salary!.total);
     // And it can play chapter 1 and choose a face.
     await c1.ambition.choose({ chapter: 1, choiceId: 'show' });
     const ch = await c1.ambition.attempt({ chapter: 1, approachId: 'sort', idempotencyKey: randomUUID() });

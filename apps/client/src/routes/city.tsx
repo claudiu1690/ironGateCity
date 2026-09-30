@@ -6,6 +6,7 @@ import {
   CouncilCard,
   FACTION_STYLE,
   FactionCrest,
+  HelpButton,
   JobsCard,
   LocationSheet,
   OrdersList,
@@ -16,21 +17,23 @@ import {
   cx,
   formatClock,
   formatShare,
+  helpMark,
 } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePerformAction } from '../features/action/usePerformAction';
 import type { PerformTarget } from '../features/action/usePerformAction';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
+import { setResultModalOpen } from '../lib/modalGate';
 import { isNetworkError, trpc } from '../lib/trpc';
 import { useMinWidth } from '../lib/useNow';
 
 /** The city screen (tech design §12.2): the map, the plate, the location sheet and the result modal. */
 export function CityPage() {
   const { cityId } = useParams({ from: '/app/city/$cityId' });
-  const { loc } = useSearch({ from: '/app/city/$cityId' });
+  const { loc, order: orderHl } = useSearch({ from: '/app/city/$cityId' });
   const navigate = useNavigate({ from: '/city/$cityId' });
   const queryClient = useQueryClient();
   const { character } = useCharacter();
@@ -40,6 +43,12 @@ export function CityPage() {
 
   const [result, setResult] = useState<ActionResult | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  // Review 1 (§13.7): the orders-complete note waits for this modal to close (AppShell shows it).
+  useEffect(() => {
+    setResultModalOpen(modalOpen);
+    return () => setResultModalOpen(false);
+  }, [modalOpen]);
+  const plateHelp = useRef<HTMLButtonElement>(null);
   const [last, setLast] = useState<PerformTarget | null>(null);
   const action = usePerformAction((r) => {
     setResult(r);
@@ -70,10 +79,11 @@ export function CityPage() {
     },
   });
 
-  const select = (id: string | null) => {
+  /** Open a pin's sheet; from a Party order (review 1), its matching tickets are marked. */
+  const select = (id: string | null, orderId?: string) => {
     setJobMessage(null);
     action.reset();
-    void navigate({ search: id ? { loc: id } : {}, replace: true });
+    void navigate({ search: id ? { loc: id, ...(orderId ? { order: orderId } : {}) } : {}, replace: true });
   };
 
   if (city.isError) {
@@ -105,11 +115,14 @@ export function CityPage() {
     action.perform(target, times);
   };
   const cheapest = location ? Math.min(...location.actions.filter((a) => !a.locked).map((a) => a.energy)) : 0;
-  const waiting = [
-    ...character.orders.items.filter((o) => !o.done).map((o) => `${o.title} ${o.progress} / ${o.target}`),
-    ...(character.job && !character.job.shiftWorkedToday
-      ? [`your shift at the ${character.job.locationName}`]
-      : []),
+  const waiting = character.orders.items
+    .filter((o) => !o.done)
+    .map((o) => `${o.title} ${o.progress} / ${o.target}`);
+  // Review 1 (answers §5): the plate's notes, the share first (its caption), then morale and the ordinance.
+  const plateNotes = [
+    copy.help.share(c.name),
+    ...(c.morale ? [copy.help.morale()] : []),
+    ...(c.ordinance ? [copy.help.ordinance()] : []),
   ];
 
   return (
@@ -123,6 +136,8 @@ export function CityPage() {
         onSelect={(id) => select(id)}
         // Phones: the sheet covers up to 60 dvh; keep the selected pin above it (§12.3).
         coverBottom={location && !wide ? Math.round(window.innerHeight * 0.6) : 0}
+        // Desktop: the sheet is a 380 px panel 20 px from the right edge (Sheets).
+        coverRight={location && wide ? 400 : 0}
       >
         {/* The city plate (the map's first view keeps every pin clear of it) */}
         <div
@@ -130,8 +145,28 @@ export function CityPage() {
           data-map-overlay="top"
         >
           <div className="pointer-events-auto bg-paper text-ink shadow-[0_0_0_1px_var(--color-ink),0_6px_16px_rgb(0_0_0/0.4)]">
+            {/* Review 1 (answers §5): the one first-time hint, on the welcome day only. */}
+            {character.welcomeDay && (
+              <p
+                // Not on a phone shorter than 700 px: there every line of the plate costs the map its
+                // pins (QA M2); the labels still carry their dotted mark.
+                className="border-b border-paper-2 bg-paper-2 px-3 py-0.5 font-body text-[12px] text-text-2 italic [@media(max-width:639px)_and_(max-height:700px)]:hidden"
+                data-testid="plate-hint"
+              >
+                {copy.help.firstHint}
+              </p>
+            )}
             <div className="flex items-stretch border-b-2 border-ink">
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2">
+              <div className="relative flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2">
+                {/* One tap target over the block (the heading stays a heading): the notes behind
+                    the share, the morale word and the ordinance line. */}
+                <HelpButton
+                  notes={plateNotes}
+                  label={`What the plate says about ${c.name}`}
+                  buttonRef={plateHelp}
+                  testId="plate-help"
+                  className="absolute inset-0 z-10 w-full bg-transparent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+                />
                 <div className="flex items-baseline gap-2">
                   <h1 className="font-display text-[24px] leading-none font-black">{c.name}</h1>
                   {/* Slice 3 (screens §8): the morale word beside the name, Unrest in the failure
@@ -140,6 +175,7 @@ export function CityPage() {
                     <span
                       className={cx(
                         'label-caps text-[9.5px] font-semibold',
+                        helpMark,
                         c.morale.state === 'unrest' ? 'text-failure' : 'text-ink',
                       )}
                       data-testid="city-morale"
@@ -153,40 +189,72 @@ export function CityPage() {
                   data-testid="city-plate"
                 >
                   {c.role === 'home' ? 'Home city' : 'Battleground'} ·
-                  <FactionCrest factionId={character.factionId} size={8} /> {character.factionName}{' '}
-                  {formatShare(share)} %
+                  <span className={cx('flex items-center gap-1.5', helpMark)}>
+                    <FactionCrest factionId={character.factionId} size={8} /> {character.factionName}{' '}
+                    {formatShare(share)} %
+                  </span>
                 </span>
                 {/* The ordinance in force, one line that never wraps. Only on a very short phone
                     (360 × 640) it gives way to the map; the tickets carry its tags there. */}
                 {c.ordinance && (
                   <span
-                    className="truncate font-mono text-[11px] whitespace-nowrap text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden"
+                    className={cx(
+                      'truncate font-mono text-[11px] whitespace-nowrap text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden',
+                      helpMark,
+                    )}
                     data-testid="city-ordinance"
                   >
                     {copy.ordinanceLine(c.ordinance.name, c.ordinance.daysLeft)}
                   </span>
                 )}
               </div>
-              <div className="flex flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-2">
-                <span className="label-caps text-[9px] text-muted">Standing</span>
+              <HelpButton
+                notes={[copy.help.standing(c.name)]}
+                label="What Local Standing means"
+                testId="standing-help"
+                className="flex flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-2"
+              >
+                <span className={cx('label-caps text-[9px] text-muted', helpMark)}>Standing</span>
                 <span className="font-label text-[13px]" data-testid="city-standing">
                   {c.standing.name}
                   {c.standing.next !== null ? ` · ${c.standing.successes} / ${c.standing.next}` : ''}
                 </span>
-              </div>
+              </HelpButton>
             </div>
-            <div className="flex h-1.5 gap-px" aria-hidden="true">
-              {(['vanguard', 'collective', 'alliance'] as const).map((f) => (
-                <span key={f} style={{ width: `${c.opinion[f]}%`, background: FACTION_STYLE[f].color }} />
-              ))}
-              <span style={{ width: `${c.opinion.neutral}%` }} className="bg-neutral" />
+            {/* The share bar, captioned; a tap opens the plate's notes (the button above is its
+                keyboard and screen-reader way in). */}
+            <div
+              className="flex cursor-pointer items-center gap-1.5 px-1 py-0.5 [@media(max-width:639px)_and_(max-height:700px)]:py-0"
+              aria-hidden="true"
+              onClick={() => plateHelp.current?.click()}
+              data-testid="share-bar"
+            >
+              <span
+                className={cx(
+                  'label-caps shrink-0 text-[8.5px] text-muted',
+                  // A phone shorter than 700 px keeps the bar alone (QA M2: every pin clear).
+                  '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
+                  helpMark,
+                )}
+              >
+                {copy.help.shareCaption(c.name)}
+              </span>
+              <span className="flex h-1.5 flex-1 gap-px">
+                {(['vanguard', 'collective', 'alliance'] as const).map((f) => (
+                  <span key={f} style={{ width: `${c.opinion[f]}%`, background: FACTION_STYLE[f].color }} />
+                ))}
+                <span style={{ width: `${c.opinion.neutral}%` }} className="bg-neutral" />
+              </span>
             </div>
             {/* Desktop: while a sheet is open the plate folds to its header, so a pin in the
                 map's top-left corner (Ashford's Gazette House) stays visible (slice 2 §12.3). */}
             {!(wide && location) && (
               <div className="hidden flex-col gap-1 px-3 pt-1.5 pb-2 sm:flex">
-                <OrdersList orders={character.orders} onPin={(id) => select(id)} />
-                <TodayStrip today={character.today} />
+                <OrdersList orders={character.orders} onPin={(id, orderId) => select(id, orderId)} />
+                <TodayStrip
+                  today={character.today}
+                  help={{ cityName: c.name, turnsAt: character.day.endsAt }}
+                />
               </div>
             )}
           </div>
@@ -196,12 +264,14 @@ export function CityPage() {
           className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-1 bg-paper/95 px-3 py-2 text-ink shadow-[0_0_0_1px_var(--color-ink)] sm:hidden"
           data-map-overlay="bottom"
         >
-          <OrdersList orders={character.orders} onPin={(id) => select(id)} />
-          <TodayStrip today={character.today} />
+          <OrdersList orders={character.orders} onPin={(id, orderId) => select(id, orderId)} />
+          <TodayStrip today={character.today} help={{ cityName: c.name, turnsAt: character.day.endsAt }} />
         </div>
       </CityMap>
 
-      {location && (
+      {/* Review 1 (§13.7): while the orders-complete note shows (the shell's), the sheet steps aside so
+          the note is the one dialog; Carry on brings the sheet back. */}
+      {location && !(character.orders.complete && !modalOpen) && (
         <LocationSheet
           open
           onOpenChange={(o) => {
@@ -219,7 +289,7 @@ export function CityPage() {
               key={a.id}
               action={a}
               energy={energy}
-              hasJob={character.job !== null}
+              highlight={!!orderHl && a.order?.id === orderHl}
               onPerform={(times) => perform({ actionId: a.id, locationId: location.id }, times)}
               pending={
                 action.isPending && action.variables?.actionId === a.id
@@ -235,10 +305,7 @@ export function CityPage() {
           )}
           <JobsCard
             jobs={location.jobs}
-            held={
-              character.job ? { streak: character.job.streak, sickDaysLeft: character.sickDaysLeft } : null
-            }
-            energyValue={energy.value}
+            held={character.job ? character.job.seniority : null}
             pendingJobId={take.isPending ? take.variables?.jobId : null}
             message={jobMessage}
             onTake={(jobId) => {
@@ -261,7 +328,8 @@ export function CityPage() {
         statPoints={{
           pending: character.statPointsPending,
           level: character.level,
-          stats: { str: character.stats.str, int: character.stats.int },
+          stats: { str: character.stats.str, int: character.stats.int, agi: character.stats.agi },
+          guide: character.statGuide,
         }}
         onPlaceStat={stat.place}
         placing={stat.placing}

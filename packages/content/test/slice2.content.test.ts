@@ -17,15 +17,8 @@ import type { FactionId } from '@irongate/rules';
 import { describe, expect, it } from 'vitest';
 import CITIES from '../../../docs/design/slice-2-cities.md?raw';
 import ONB from '../../../docs/design/slice-2-onboarding.md?raw';
-import {
-  ContentError,
-  copy,
-  isCheckedAction,
-  isShiftAction,
-  loadContent,
-  parseContent,
-  rawContent,
-} from '../src';
+import R1 from '../../../docs/design/review-1-answers.md?raw';
+import { ContentError, copy, isCheckedAction, loadContent, parseContent, rawContent } from '../src';
 import type { ContentInput } from '../src';
 
 const content = loadContent();
@@ -52,9 +45,10 @@ function rows(text: string, row: RegExp): string[][] {
 }
 
 describe('the real content, slice 2', () => {
-  it('has 3 cities, 64 actions, 9 jobs, 36 order templates, 3 papers, 10 items, 3 Ambitions, 6 faces', () => {
+  it('has 3 cities, 55 actions, 9 jobs, 36 order templates, 3 papers, 10 items, 3 Ambitions, 6 faces', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford']);
-    expect(content.cities.flatMap((c) => c.locations.flatMap((l) => l.actions))).toHaveLength(64);
+    // Review 1: the nine job-shift actions are gone (a job is a wage).
+    expect(content.cities.flatMap((c) => c.locations.flatMap((l) => l.actions))).toHaveLength(55);
     expect(content.jobs).toHaveLength(9);
     // Slice 3 adds six crisis templates (Restore the base, two per faction), which never rotate.
     expect(content.orderTemplates.filter((t) => t.use === 'rotation')).toHaveLength(36);
@@ -80,21 +74,40 @@ describe('the real content, slice 2', () => {
         f.welcomeOrders,
       ]),
     ).toEqual([
+      // Review 1 (answers §2): slot A by best trained stat; B the committee; C Take a job.
       [
         'vanguard',
         'stahl',
         'Organiser Stahl',
         'Beacon House',
-        ['dir.v.guard-change', 'dir.v.report', 'dir.v.work-shift'],
+        {
+          A: { str: 'dir.v.guard-change', int: 'dir.v.w.ration-queue', agi: 'dir.v.w.leaflets-market' },
+          B: 'dir.v.report',
+          C: 'dir.v.take-a-job',
+        },
       ],
       [
         'collective',
         'holm',
         'Secretary Holm',
         'the Union Hall',
-        ['dir.shift-change', 'dir.report', 'dir.work-shift'],
+        {
+          A: { str: 'dir.noon-break', int: 'dir.shift-change', agi: 'dir.w.leaflets-market-row' },
+          B: 'dir.report',
+          C: 'dir.take-a-job',
+        },
       ],
-      ['alliance', 'grey', 'Mr Grey', 'the Rooms', ['dir.a.print-room', 'dir.a.report', 'dir.a.work-shift']],
+      [
+        'alliance',
+        'grey',
+        'Mr Grey',
+        'the Rooms',
+        {
+          A: { str: 'dir.a.w.bills', int: 'dir.a.print-room', agi: 'dir.a.w.evening-run' },
+          B: 'dir.a.report',
+          C: 'dir.a.take-a-job',
+        },
+      ],
     ]);
     expect(content.factions.map((f) => f.kit.outfit)).toEqual([
       'outfit.work-jacket',
@@ -179,7 +192,10 @@ describe.each([
   });
 
   it('actions: ids, titles, types, stats, Energy, and the reward columns from the §5.5 rates', () => {
-    const r = rows(section(doc, 'Tier-1 actions', '**Count by type'), /^\| `/);
+    // Review 1: the job shifts left the content; the committee checks the best stat.
+    const r = rows(section(doc, 'Tier-1 actions', '**Count by type'), /^\| `/).filter(
+      (c) => !/^job/.test(unq(c[2]!)),
+    );
     expect(r).toHaveLength(actions.length);
     for (const [id, title, type, std, e, xp, fxp, iron, opinion] of r.map((c) => c.map(unq))) {
       const a = actions.find((x) => x.id === id);
@@ -188,7 +204,7 @@ describe.each([
       if (isCheckedAction(a!)) {
         expect([a.type, a.stats.map((s) => s.toUpperCase()).join('+'), a.energy], id).toEqual([
           type,
-          std,
+          a.type === 'council' ? 'BEST' : std,
           Number(e),
         ]);
         const reward = (outcome: 'success' | 'partial') =>
@@ -207,9 +223,6 @@ describe.each([
         expect(a.givesFxp ? `${s.fxp.total} / ${p.fxp.total}` : '—', `${id} FXP`).toBe(fxp);
         expect(`${s.iron.total} / ${p.iron.total}`, `${id} Iron`).toBe(iron);
         expect(a.givesOpinion ? `${s.opinion} / ${p.opinion}` : '—', `${id} opinion`).toBe(opinion);
-      } else if (isShiftAction(a!)) {
-        expect(type).toMatch(/^job/);
-        expect(content.job(a.jobId)!.shiftEnergy, id).toBe(Number(e));
       } else {
         expect(type).toBe(`training (${a!.trains.toUpperCase()})`);
       }
@@ -238,10 +251,9 @@ describe.each([
       /^\| \*\*/,
     );
     expect(r).toHaveLength(3);
-    for (const [name, id, , unlock, e, pay] of r) {
+    for (const [name, id, , unlock, , pay] of r) {
       const job = content.job(unq(id!))!;
       expect(job.name).toBe(unq(name!));
-      expect(job.shiftEnergy).toBe(Number(e));
       expect(job.dailyPay).toBe(Number(unq(pay!).match(/\d+/)![0]));
       const level = Number(unlock!.match(/Level (\d+)/)![1]);
       expect(job.unlock.level).toBe(level);
@@ -251,40 +263,49 @@ describe.each([
     }
   });
 
-  it('twelve order templates: slots, titles, targets and the secretary lines', () => {
+  it('the order templates: slots and targets (review 1 rewrote the titles and lines, checked word for word in qa.content)', () => {
     const r = rows(section(doc, 'Order templates (12)', '### '), /^\| `dir\./);
     const mine = content.orderTemplates.filter((t) => t.id.startsWith(dirPrefix));
     expect(r).toHaveLength(12);
     expect(mine.map((t) => t.factionId).every((f) => f === factionId)).toBe(true);
-    r.forEach(([id, slot, title, , target, line], i) => {
-      const t = mine[i]!;
-      expect([t.id, t.slot, t.line, t.target]).toEqual([
-        unq(id!),
-        slot,
-        line,
-        Number(target!.match(/\d+/)![0]),
-      ]);
-      expect(title!.startsWith(t.title), `${t.id}: ${title}`).toBe(true);
-    });
+    for (const [id, slot, , , target] of r) {
+      // Review 1: the Work your shift orders left the rotation.
+      if (unq(id!).endsWith('work-shift')) {
+        expect(mine.some((t) => t.id === unq(id!))).toBe(false);
+        continue;
+      }
+      const t = mine.find((x) => x.id === unq(id!))!;
+      expect([t.slot, t.target], t.id).toEqual([slot, Number(target!.match(/\d+/)![0])]);
+    }
   });
 
   it('the paper: headlines and decks, the morale no-break space, the ambient pool', () => {
     const r = rows(section(doc, 'headline templates', '**Ambient'), /^\| `hl\./);
     const mine = content.headlines.filter((h) => h.id.startsWith(hlPrefix));
     for (const [id, , , headline, deck] of r) {
-      const ids = id!.includes('/') ? [`${hlPrefix}streak-5`, `${hlPrefix}streak-10`] : [unq(id!)];
-      if (ids[0]!.includes('ambient')) continue;
-      for (const hid of ids) {
-        const h = mine.find((x) => x.id === hid);
-        expect(h, hid).toBeDefined();
-        const want = headline!.includes('Five / Ten')
-          ? `${hid.endsWith('5') ? 'Five' : 'Ten'} Straight Shifts and Counting`
-          : headline!.replace(' %', ' %');
-        expect(h!.headline, hid).toBe(want);
-        expect(h!.deck, hid).toBe(deck);
-        expect(h!.cityId).toBe(cityId);
-      }
+      // Review 1 (answers §1.2): the streak headlines became the seniority ones (checked below).
+      if (id!.includes('/')) continue;
+      const hid = unq(id!);
+      if (hid.includes('ambient')) continue;
+      const h = mine.find((x) => x.id === hid);
+      expect(h, hid).toBeDefined();
+      expect(h!.headline, hid).toBe(headline!.replace(' %', ' %'));
+      // Review 1: no half pay any more (the developer's wording, marked for the designer).
+      expect(h!.deck, hid).toBe(
+        deck!.replace('days of half pay', 'days of pay').replace('no half pay', 'no pay'),
+      );
+      expect(h!.cityId).toBe(cityId);
     }
+    const five = mine.find((h) => h.id === `${hlPrefix}seniority-5`)!;
+    const ten = mine.find((h) => h.id === `${hlPrefix}seniority-10`)!;
+    expect(R1).toContain(`***${five.headline}***`);
+    expect(R1).toContain(`deck *${five.deck}*`);
+    expect(R1).toContain(`***${ten.headline}***`);
+    expect(R1).toContain(`deck *${ten.deck}*`);
+    expect([five.when, ten.when]).toEqual([
+      [{ kind: 'seniorityHitYesterday', values: [5] }],
+      [{ kind: 'seniorityHitYesterday', values: [10] }],
+    ]);
     const pool = doc
       .match(/\*\*Ambient pool[^\n]*?\*\*(?: \(headline only\):)? (.+)\n/)![1]!
       .replace(/\.$/, '')
@@ -382,6 +403,12 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
       expect(doc).toContain(`CTA: **${s.check.cta} · ${s.check.energy} Energy**`);
       for (const c of s.choose.choices) expect(doc).toContain(`| ${c.text} | ${c.hint} |`);
       for (const a of s.check.approaches) {
+        // Review 1 (answers §2.1): the third approach, Legwork, is in the answers, not this doc.
+        if (a.id === 'legwork') {
+          expect(a.stats).toEqual(['best']);
+          expect(R1).toContain(`**Legwork.** *${a.text.replace(/^Legwork\. /, '')}*`);
+          continue;
+        }
         expect(doc).toContain(
           `| ${a.text} | ${a.stats.map((x) => x.toUpperCase()).join('+')} vs ${s.check.difficulty}`,
         );
@@ -418,7 +445,9 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
     for (const [cityName, id, group, headline, deck] of r) {
       const h = content.headlines.find((x) => x.id === unq(id!).split(' ')[0])!;
       expect(h.cityId).toBe(cityName!.toLowerCase());
-      expect([h.headline, h.deck]).toEqual([headline, deck]);
+      // Review 1 (answers §3.4): the welcome deck names slot A's place, which follows the best stat.
+      const want = deck!.replace(/Spend it at (.+) first\.$/, 'Spend it at {place} first.');
+      expect([h.headline, h.deck]).toEqual([headline, want]);
       expect(`${h.group} ${h.priority}`).toBe(group!.split(',')[0]);
       expect(h.when).toEqual([{ kind: 'firstEdition' }]);
     }
@@ -477,8 +506,8 @@ describe('slice-2 cross-checks (tech design §4.3): one failing fixture each', (
   });
 
   it('factions', () => {
-    fails((c) => (c.factions[0]!.welcomeOrders[0] = 'dir.v.report'), /not a vanguard template in slot A/);
-    fails((c) => (c.factions[0]!.welcomeOrders[2] = 'dir.v.sharpen-up'), /has no noJob variant/);
+    fails((c) => (c.factions[0]!.welcomeOrders.A.str = 'dir.v.report'), /not a vanguard template in slot A/);
+    fails((c) => (c.factions[0]!.welcomeOrders.C = 'dir.v.sharpen-up'), /must match takeJob/);
     fails((c) => (c.factions[0]!.crestArt = 'portrait.stahl'), /a portrait, not a vector/);
     fails((c) => (c.factions[0]!.secretary.npcId = 'holm'), /is not of that faction/);
     fails((c) => {

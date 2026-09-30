@@ -3,17 +3,19 @@ import { Candidacy, Character, City, OfficeTerm, PaperEntry, isDuplicateKeyError
 import type { CandidacyDoc, CharacterDoc, CityDoc, OfficeTermDoc, PaperEntryDoc } from '@irongate/db';
 import {
   COUNCIL,
+  JOBS,
   RESTED,
+  STANDING,
   applyGains,
   dayKey,
   dayStart,
   effect,
-  halfPay,
   jobPay,
   jobPayWith,
   projectEnergyThrough,
+  seniorityStep,
   settleDays,
-  shiftStreakStep,
+  standingView,
   startOrders,
   stipendBoundaries,
 } from '@irongate/rules';
@@ -24,14 +26,13 @@ import { buildEdition } from './edition';
 import type { NewEdition } from './edition';
 import { capOn, moraleOf, ordinanceIdOn, ordinanceModifiers } from './modifiers';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
-import { energyState, fromOrdersState } from './views';
+import { energyState, fromOrdersState, welcomeDayOf, welcomeOrderIds } from './views';
 
 /** What a settlement writes: the character's `$set` and `$inc`, the edition, the refunds. */
 export interface SettlementWrite {
   set: {
     'day.settled': number;
     job: CharacterDoc['job'];
-    sickDays: CharacterDoc['sickDays'];
     today: CharacterDoc['today'];
     orders: CharacterDoc['orders'];
     offices: CharacterDoc['offices'];
@@ -52,8 +53,9 @@ export interface SettlementWrite {
 }
 
 /**
- * The pure middle of a settlement (slice-2 tech design §7.2, slice-3 §8.4): settle the boundaries
- * crossed (each ended day's half pay under that day's ordinance), the councillor's stipend and the
+ * The pure middle of a settlement (slice-2 tech design §7.2, slice-3 §8.4, review 1): settle the
+ * boundaries crossed (each ended day's wage under that day's ordinance, seniority, One of Us PC),
+ * the councillor's stipend and the
  * deposits returned (ADR 0020), today's offices, the Energy re-base when a Rested cap changed
  * (ADR 0021), today's Party orders (the welcome set on the first City Day, the crisis pair in
  * Unrest) and today's paper. `c` need not be stored yet: the join settles a first day before
@@ -78,22 +80,22 @@ export function computeSettlement(
   const s = settleDays({
     settled: c.day.settled,
     today,
-    job: c.job,
+    // A job stored before review 1 has no seniority yet (migration 004): it starts at 0.
+    job: c.job ? { id: c.job.id, since: c.job.since, seniority: c.job.seniority ?? 0 } : null,
     pay,
-    sickDays: c.sickDays,
     tally: c.today,
     energy: energyState(c),
     now,
-    halfPayOn:
-      pay === null
-        ? undefined
-        : (ended) => {
-            const m = ordinanceModifiers(content, ordinanceIdOn(city, ended));
-            return {
-              amount: halfPay(jobPayWith(pay, m)),
-              label: effect(m, 'jobPayPct') ? (m.ordinance?.name ?? null) : null,
-            };
-          },
+    // Review 1 (§9.1): each ended day's ordinance line on the full wage, and its seniority step.
+    wageOn: (ended) => {
+      const m = ordinanceModifiers(content, ordinanceIdOn(city, ended));
+      const payAdjust = pay === null ? 0 : jobPayWith(pay, m) - pay;
+      return {
+        payAdjust,
+        label: payAdjust !== 0 && effect(m, 'jobPayPct') ? (m.ordinance?.name ?? null) : null,
+        seniorityStep: seniorityStep(m),
+      };
+    },
     capOn: caps,
   });
   if (!s) return null;
@@ -104,9 +106,15 @@ export function computeSettlement(
   const boundaries = stipendBoundaries(terms, c.day.settled, today);
   const stipend = { pc: boundaries * COUNCIL.stipend.pc, fxp: boundaries * COUNCIL.stipend.fxp };
   const refundPc = due.length * COUNCIL.cost.declare;
+  // Review 1 (§13.4): One of Us pays 1 PC a day per city where it is held, for the boundaries
+  // crossed (at most 14, like the wage). Standing only rises when acting, and a settlement comes
+  // before the day's first action, so today's level is the level each ended day had.
+  const oneOfUsCities = c.localStanding.filter((x) => standingView(x.successes).level === 4).length;
+  const paidBoundaries = s.daysSince === null ? 0 : Math.min(s.daysSince, JOBS.salaryMaxDays);
+  const oneOfUsPc = oneOfUsCities * paidBoundaries * STANDING.oneOfUsPcPerDay;
   const gains = applyGains(
     { xp: c.xp, level: c.level, fxp: c.fxp, rank: c.rank, pc: c.pc, statPointsPending: c.statPointsPending },
-    { xp: 0, fxp: stipend.fxp, pc: stipend.pc + refundPc },
+    { xp: 0, fxp: stipend.fxp, pc: stipend.pc + refundPc + oneOfUsPc },
   );
   const offices = terms
     .filter((t) => t.fromDay <= today && today < t.toDay)
@@ -127,7 +135,9 @@ export function computeSettlement(
   const rebased = rebase ? projectEnergyThrough(energyState(c), dayStart(today), caps) : null;
 
   const faction = content.faction(c.factionId);
-  const welcome = s.firstEdition ? faction.welcomeOrders : undefined;
+  // Review 1 (§13.7): the welcome set on the welcome day (the creation day, and the next when created
+  // after 22:00 UTC), slot A by the best trained stat.
+  const welcome = s.firstEdition || welcomeDayOf(c, today) ? welcomeOrderIds(content, c) : undefined;
   const homeOfFaction = content.city(c.homeCityId)?.homeFactionId === c.factionId;
   const unrest = homeOfFaction && moraleOf(content, city) === 'unrest';
   const orders = startOrders(
@@ -136,6 +146,7 @@ export function computeSettlement(
     s.job !== null,
     welcome,
     unrest ? faction.restoreOrders : undefined,
+    dayStart(today),
   );
   const edition = buildEdition({
     content,
@@ -154,13 +165,13 @@ export function computeSettlement(
           }
         : null,
     deposits: due.length > 0 ? { count: due.length, pc: refundPc } : null,
-    streakStepYesterday: shiftStreakStep(ordinanceModifiers(content, ordinanceIdOn(city, today - 1))),
+    oneOfUsPc,
+    seniorityStepYesterday: seniorityStep(ordinanceModifiers(content, ordinanceIdOn(city, today - 1))),
   });
   return {
     set: {
       'day.settled': today,
       job: s.job,
-      sickDays: s.sickDays,
       today: s.today,
       orders: fromOrdersState(orders),
       offices,
@@ -186,7 +197,7 @@ export function computeSettlement(
 
 /**
  * ADR 0005: settle every City Day boundary crossed since `day.settled`, on first touch, in one
- * transaction: salary, streak and sick days, the tally, the stipend and refunds, today's Party
+ * transaction: the wage and seniority, the tally, the stipend and refunds, today's Party
  * orders and today's paper. ADR 0017: the home city's day is settled first, so no character acts
  * on day d before its city has been settled for d. Does nothing when already settled for today.
  * Concurrent first touches are resolved by the version guard and the unique paperEntries index.

@@ -12,7 +12,7 @@ const descriptor: ActionDescriptor = {
   cityId: 'coalport',
 };
 const base = { str: 10, int: 12, agi: 5 };
-const orders = startOrders(TEMPLATES, DIRECTIVES.epochDay + 1, true); // includes Sharpen up
+const orders = startOrders(TEMPLATES, DIRECTIVES.epochDay + 6, true); // includes Sharpen up (review 1 rotation)
 
 const run = (value = 200, rested = 0) =>
   resolveTraining({

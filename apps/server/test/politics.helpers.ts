@@ -59,6 +59,9 @@ export async function player(
   );
   const caller = callerFor(user, clock.now);
   const me = await caller.character.me();
+  // Review 1 (§13.4): One of Us (150 Successes) pays 1 PC at the boundary this first read settles;
+  // the purse is set again after it, so a player starts the test with exactly `pc`.
+  if (me.pc !== (opts.pc ?? 0)) await Character.updateOne({ _id: me.id }, { $set: { pc: opts.pc ?? 0 } });
   return { user, caller, id: me.id, factionId };
 }
 
@@ -68,7 +71,7 @@ export async function doTodaysOrders(caller: ReturnType<typeof callerFor>): Prom
     const me = await caller.character.me();
     const open = me.orders.items.find((o) => !o.done);
     if (!open) return;
-    if (open.title === 'Take a job') {
+    if (open.title.startsWith('Take a job')) {
       const job = getContent().jobsAt(open.pin!.locationId)[0]!;
       await caller.job.take({ jobId: job.id, idempotencyKey: randomUUID() });
       continue;

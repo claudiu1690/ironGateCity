@@ -29,7 +29,6 @@ import type { MapRect } from '../src';
 
 const mill = cityViewFixture.locations[0]!;
 const canvass = mill.actions[0]!;
-const shift = mill.actions[1]!;
 const study = cityViewFixture.locations[1]!.actions[0]!;
 const full = { value: 100, nextTickAt: null };
 
@@ -37,7 +36,7 @@ describe('Ticket v2', () => {
   it('shows the odds, the order tag and performs ×1 and ×3', async () => {
     const user = userEvent.setup();
     const onPerform = vi.fn();
-    render(<Ticket action={canvass} energy={full} hasJob={false} onPerform={onPerform} />);
+    render(<Ticket action={canvass} energy={full} onPerform={onPerform} />);
     expect(screen.getByTestId('ticket-chance')).toHaveTextContent('66 %');
     expect(screen.getByTestId('ticket-tags')).toHaveTextContent('Canvassing · Party order 1 / 2 · +25 % FXP');
     await user.click(screen.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }));
@@ -47,12 +46,24 @@ describe('Ticket v2', () => {
     expect(onPerform.mock.calls).toEqual([[1], [3]]);
   });
 
+  it('review 1 #10: an action whose order is done stays playable, its tag muted, with no hint', () => {
+    const done = { ...canvass, order: { ...canvass.order!, progress: 2, target: 2 } };
+    render(<Ticket action={done} energy={full} onPerform={() => undefined} />);
+    const tags = screen.getByTestId('ticket-tags');
+    expect(tags).toHaveTextContent('Canvassing · Order done');
+    expect(tags).toHaveClass('text-muted');
+    expect(tags).not.toHaveClass('text-collective');
+    expect(screen.getByRole('button', { name: /once/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /three times/ })).toBeEnabled();
+    expect(screen.queryByTestId('ticket-hint')).toBeNull();
+  });
+
   it('disables ×3 below its cost with the hint, and ×1 with "Needs … ready at"', () => {
     const { rerender } = render(
       <Ticket
         action={canvass}
         energy={{ value: 25, nextTickAt: 0 }}
-        hasJob={false}
+
         onPerform={() => undefined}
       />,
     );
@@ -63,7 +74,7 @@ describe('Ticket v2', () => {
       <Ticket
         action={canvass}
         energy={{ value: 5, nextTickAt: Date.UTC(2026, 8, 29, 14, 10) }}
-        hasJob={false}
+
         onPerform={() => undefined}
       />,
     );
@@ -73,19 +84,19 @@ describe('Ticket v2', () => {
 
   it('tapping the percentage shows the breakdown', async () => {
     const user = userEvent.setup();
-    render(<Ticket action={canvass} energy={full} hasJob={false} onPerform={() => undefined} />);
+    render(<Ticket action={canvass} energy={full} onPerform={() => undefined} />);
     const toggle = screen.getByRole('button', { name: /66 %/ });
-    expect(screen.queryByText('INT 12 vs difficulty 8 (×4)')).not.toBeVisible();
+    expect(screen.queryByText('INT 12, 4 above the 8 needed, 4 % a point')).not.toBeVisible();
     await user.click(toggle);
-    expect(screen.getByText('INT 12 vs difficulty 8 (×4)')).toBeVisible();
+    expect(screen.getByText('INT 12, 4 above the 8 needed, 4 % a point')).toBeVisible();
   });
 
-  it('training shows the live cost and "INT 12 → 13 · no roll"; a shift without a job is disabled', () => {
+  it('training shows the live cost and "INT 12 → 13 · no roll"', () => {
     render(
       <Ticket
         action={study}
         energy={{ value: 150, nextTickAt: 0 }}
-        hasJob={false}
+
         onPerform={() => undefined}
       />,
     );
@@ -95,9 +106,21 @@ describe('Ticket v2', () => {
       'Train',
     );
     expect(screen.queryByRole('button', { name: /three times/ })).toBeNull();
-    render(<Ticket action={shift} energy={full} hasJob={false} onPerform={() => undefined} />);
-    expect(screen.getByRole('button', { name: 'Work your shift at the mill, 4 Energy' })).toBeDisabled();
-    expect(screen.getByText('No job yet · take one below')).toBeInTheDocument();
+  });
+
+  it('review 1: the odds name their stat before the tap; the ledger is in words with its footnote', async () => {
+    const user = userEvent.setup();
+    render(<Ticket action={canvass} energy={full} onPerform={() => undefined} />);
+    expect(screen.getByTestId('ticket-odds')).toHaveTextContent('66 % · INT 12');
+    await user.click(screen.getByRole('button', { name: /66 %/ }));
+    expect(screen.getByText('Even odds')).toBeVisible();
+    expect(screen.getByText('INT 12, 4 above the 8 needed, 4 % a point')).toBeVisible();
+    expect(screen.getByTestId('ledger-note')).toHaveTextContent(/^Every check starts at even odds/);
+  });
+
+  it('review 1: a ticket opened from its order is marked', () => {
+    render(<Ticket action={canvass} energy={full} onPerform={() => undefined} highlight />);
+    expect(screen.getByTestId('ticket-coalport.mill-gate.canvass')).toHaveAttribute('data-highlight', 'true');
   });
 });
 
@@ -154,27 +177,29 @@ describe('JobsCard', () => {
         { reason: 'STAT' as const, stat: 'agi' as const, need: 10 },
       ],
     };
-    render(<JobsCard jobs={[mill.jobs[0]!, driver]} held={null} onTake={onTake} energyValue={100} />);
+    render(<JobsCard jobs={[mill.jobs[0]!, driver]} held={null} onTake={onTake} />);
     await user.click(screen.getByRole('button', { name: 'Take the job' }));
     expect(onTake).toHaveBeenCalledWith('coalport-factory-worker');
-    expect(screen.getByText('216 a day · half at midnight, half for the shift')).toBeInTheDocument();
+    // Review 1: a wage, paid at midnight; no Energy anywhere.
+    expect(screen.getByTestId('job-coalport-factory-worker')).toHaveTextContent(
+      '216 a day · paid at midnight',
+    );
     expect(screen.getByRole('button', { name: 'Needs Level 3, AGI 10' })).toBeDisabled();
   });
 
-  it('a switch carries its warning; the held job shows streak and sick days', () => {
+  it('review 1: a switch is free and resets seniority; the held job shows its seniority', () => {
     render(
       <JobsCard
         jobs={[
-          { ...mill.jobs[0]!, switchCost: 2 },
+          { ...mill.jobs[0]!, isSwitch: true },
           { ...mill.jobs[0]!, jobId: 'x', held: true },
         ]}
-        held={{ streak: 4, sickDaysLeft: 2 }}
+        held={{ days: 4, pct: 8 }}
         onTake={() => undefined}
-        energyValue={100}
       />,
     );
-    expect(screen.getByRole('button', { name: 'Switch · 2 Energy · streak resets' })).toBeEnabled();
-    expect(screen.getByText('Your job · streak 4 days · 2 sick days left')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Switch · seniority resets' })).toBeEnabled();
+    expect(screen.getByText('Your job · seniority 4 days · +8 %')).toBeInTheDocument();
   });
 });
 
@@ -191,7 +216,10 @@ describe('Paper pieces', () => {
     expect(screen.getByTestId('dateline')).toHaveTextContent('Tuesday · 29 September · Coalport');
     expect(screen.getAllByTestId('order')).toHaveLength(3);
     expect(screen.getByText('— P.H.')).toBeInTheDocument();
-    expect(within(screen.getByTestId('desk')).getByText('no job yet')).toBeInTheDocument();
+    // Review 1: with no job, where the jobs are.
+    expect(within(screen.getByTestId('desk')).getByTestId('desk-no-job')).toHaveTextContent(
+      'No job yet · take one at the Mill Gate, Market Row or Harbour Quays',
+    );
     expect(within(screen.getByTestId('desk')).getByText('150 XP to Level 2')).toBeInTheDocument();
   });
 
@@ -253,9 +281,58 @@ describe('HudBar v2', () => {
     expect(screen.getByTestId('hud-pc')).toHaveTextContent('5');
     // m5 (onboarding §14.1): the PC column shows on phones as on desktop.
     expect(screen.getByTestId('hud-pc').parentElement).not.toHaveClass('hidden');
-    await user.click(screen.getByRole('button', { name: '1 point to place' }));
+    await user.click(
+      screen.getByRole('button', { name: '1 point to place · nothing is lost by choosing later' }),
+    );
     await user.click(screen.getByRole('button', { name: 'INT 12 → 13' }));
     expect(onPlaceStat).toHaveBeenCalledWith('int');
+  });
+
+  it('review 1 #3, #4, #14: gauges in words, XP to the next Level and Faction XP to the next Rank', () => {
+    render(
+      <HudBar character={{ ...characterViewFixture, level: 2, xp: 270, fxp: 31 }} nextTickIn={425_000} />,
+    );
+    const hud = screen.getByRole('region', { name: 'Character' });
+    // Words, not "EN".
+    expect(hud).toHaveTextContent('Energy');
+    expect(hud).not.toHaveTextContent(/\bEN\b/);
+    // XP (answers §5): "{xp} XP · {n} to Level {next}"; the bar fills within Level 2 (150–450).
+    expect(screen.getByTestId('hud-xp')).toHaveTextContent('270 XP · 180 to Level 3');
+    const xp = screen.getByRole('meter', { name: 'Experience to next level' });
+    expect(xp).toHaveAttribute('aria-valuenow', '120');
+    expect(xp).toHaveAttribute('aria-valuemax', '300');
+    expect(xp).toHaveAttribute('aria-valuetext', '270 XP, 180 to Level 3');
+    expect((xp.firstElementChild as HTMLElement).style.width).toBe('40%');
+    // Faction XP (answers §8): the bar labelled with the next rank ("Rank 2" under 400 px), the
+    // numbers in the note behind a tap.
+    expect(screen.getByTestId('hud-fxp-rank')).toHaveTextContent('Rank 2Activist');
+    expect(screen.getByRole('meter', { name: 'Faction XP to next rank' })).toHaveAttribute(
+      'aria-valuetext',
+      '31 of 400 Faction XP, 369 to Activist',
+    );
+  });
+
+  it('#14: at the top Rank the Faction XP bar is full and names the title', () => {
+    render(
+      <HudBar
+        character={{
+          ...characterViewFixture,
+          fxp: 61_000,
+          rank: {
+            ...characterViewFixture.rank,
+            value: 7,
+            title: 'Chairman',
+            fxpFloor: 60_000,
+            fxpNext: null,
+            nextTitle: null,
+          },
+        }}
+        nextTickIn={null}
+      />,
+    );
+    expect(screen.getByTestId('hud-fxp-rank')).toHaveTextContent('Rank 7Chairman');
+    const fxp = screen.getByRole('meter', { name: 'Faction XP to next rank' });
+    expect((fxp.firstElementChild as HTMLElement).style.width).toBe('100%');
   });
 
   it('m5: no PC column, and no zero, before the first PC is earned', () => {

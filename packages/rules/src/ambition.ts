@@ -9,10 +9,11 @@ import type {
   ActionAttempt,
   ChapterStatusKind,
   CheckBonus,
-  CheckStats,
+  CheckStatSpec,
   Outcome,
   Rewards,
   Stats,
+  TrainableStat,
 } from './types';
 
 /**
@@ -60,7 +61,7 @@ export interface ChapterRules {
   requires?: ChapterRequires;
   playable: boolean;
   choices: Array<{ id: string; flag: string }>;
-  approaches: Array<{ id: string; stats: CheckStats }>;
+  approaches: Array<{ id: string; stats: CheckStatSpec }>;
   difficulty: number;
   energy: number;
   rewards: Record<Outcome, ChapterReward>;
@@ -172,6 +173,8 @@ export function resolveChapterCheck(
     energy: EnergyState;
     now: number;
     bonuses?: CheckBonus[];
+    /** A best-stat approach's tie-break (review 1: *Legwork*). */
+    prefer?: TrainableStat;
   },
   rng: Rng,
 ): ChapterCheckResult {
@@ -186,6 +189,7 @@ export function resolveChapterCheck(
     values: i.values,
     difficulty: i.spec.difficulty,
     bonuses: i.bonuses ?? [],
+    ...(i.prefer ? { prefer: i.prefer } : {}),
   });
   const roll = rng.roll100();
   const outcome = outcomeForRoll(roll, check.chance, CHAPTER.tier);

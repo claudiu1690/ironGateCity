@@ -89,17 +89,15 @@ describe('tally (§3.7)', () => {
 
   it('adds a tap, starting fresh on a new day, opinion to three decimals', () => {
     let t = addToTally({ ...emptyTally(10), energy: 50 }, 11, { energy: 30, attempts: 3, opinion: 0.1 });
-    t = addToTally(t, 11, { energy: 4, shiftWorked: true, opinion: 0.025, iron: 112 });
+    t = addToTally(t, 11, { energy: 4, opinion: 0.025, iron: 112 });
     expect(t).toMatchObject({
       day: 11,
       energy: 34,
       attempts: 3,
-      shiftWorked: true,
       opinion: 0.125,
       iron: 112,
     });
     t = addToTally(t, 11, { statTrained: 1 });
-    expect(t.shiftWorked).toBe(true);
     expect(t.statTrained).toBe(1);
   });
 });

@@ -14,7 +14,6 @@ export function emptyTally(day: DayKey | null): DailyTally {
     pc: 0,
     opinion: 0,
     ordersDone: 0,
-    shiftWorked: false,
     statTrained: 0,
   };
 }
@@ -42,7 +41,6 @@ export function addToTally(
     pc: c.pc + (delta.pc ?? 0),
     opinion: roundOpinion(c.opinion + (delta.opinion ?? 0)),
     ordersDone: c.ordersDone + (delta.ordersDone ?? 0),
-    shiftWorked: c.shiftWorked || delta.shiftWorked === true,
     statTrained: c.statTrained + (delta.statTrained ?? 0),
   };
 }

@@ -18,7 +18,7 @@ const t = (
   match: OrderTemplate['match'],
   target: number,
   counts: OrderTemplate['counts'] = 'attempts',
-  noJob?: OrderTemplate['noJob'],
+  use?: OrderTemplate['use'],
 ): OrderTemplate => ({
   id,
   factionId: 'collective',
@@ -28,10 +28,10 @@ const t = (
   match,
   target,
   counts,
-  ...(noJob ? { noJob } : {}),
+  ...(use ? { use } : {}),
 });
 
-/** The Collective's twelve v1 templates (content §6.3), in file order. */
+/** The Collective's templates after review 1 (answers §3.1), in file order, without the crisis pair. */
 export const TEMPLATES: OrderTemplate[] = [
   t('dir.canvass-coalport', 'A', 'Canvass Coalport', { actionTypes: ['canvass'], cityId: 'coalport' }, 3),
   t('dir.shift-change', 'A', 'Be at the gate', { actionIds: ['coalport.mill-gate.canvass'] }, 2),
@@ -42,14 +42,10 @@ export const TEMPLATES: OrderTemplate[] = [
   t('dir.say-it', 'B', 'Get up and say it', { actionTypes: ['speech'], cityId: 'coalport' }, 1),
   t('dir.report', 'B', 'Report to the hall', { actionIds: ['coalport.union-hall.committee'] }, 1),
   t('dir.ears-open', 'B', 'Keep your ears open', { actionTypes: ['intelligence'], cityId: 'coalport' }, 2),
-  t('dir.work-shift', 'C', 'Work your shift', { kinds: ['shift'] }, 1, 'attempts', {
-    title: 'Take a job',
-    line: 'Take a job.',
-    match: { kinds: ['takeJob'] },
-    target: 1,
-  }),
   t('dir.sharpen-up', 'C', 'Sharpen up', { kinds: ['training'] }, 1),
   t('dir.full-day', 'C', 'A full day', { kinds: ['checked'], cityId: 'home' }, 6, 'successes'),
+  t('dir.five-in-the-book', 'C', 'Five attempts', { kinds: ['checked'], cityId: 'home' }, 5),
+  t('dir.take-a-job', 'C', 'Take a job', { kinds: ['takeJob'] }, 1, 'attempts', 'welcome'),
 ];
 
 export const NAMES = ['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us'] as const;

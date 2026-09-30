@@ -4,7 +4,9 @@ import {
   AvatarPicker,
   BottomSheet,
   Button,
+  FACTION_STYLE,
   FactionCrest,
+  HelpButton,
   ItemLine,
   OrdersList,
   Picture,
@@ -14,6 +16,7 @@ import {
   formatClock,
   formatNumber,
   formatWeekday,
+  helpMark,
   plural,
 } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -198,23 +201,42 @@ export function MePage() {
         </BottomSheet>
 
         <Card title="Rank">
-          <div className="flex justify-between font-label text-[14px]">
-            <span>
-              Rank {c.rank.value}: {c.rank.title}
+          {/* Review 1 (answers §8): the full row, "Iron Vanguard · Steward · 212 / 2,000 to Bailiff". */}
+          <HelpButton
+            notes={[
+              copy.help.fxp(
+                c.rank.ladder[1] ?? '',
+                c.rank.ladder[2] ?? '',
+                c.rank.fxpNext !== null ? formatNumber(c.rank.fxpNext - c.fxp) : null,
+                c.rank.nextTitle,
+              ),
+            ]}
+            label="What Faction XP means"
+            className="flex flex-col gap-1.5"
+            testId="me-rank-help"
+          >
+            <span className="font-label text-[14px]" data-testid="me-rank">
+              {c.partyCard?.factionName ?? c.factionName} · {c.rank.title} ·{' '}
+              <span className={helpMark}>
+                {formatNumber(c.fxp)}
+                {c.rank.fxpNext !== null
+                  ? ` / ${formatNumber(c.rank.fxpNext)} to ${c.rank.nextTitle ?? ''}`
+                  : ' Faction XP'}
+              </span>
             </span>
-            <span>
-              {formatNumber(c.fxp)} FXP{c.rank.fxpNext !== null ? ` / ${formatNumber(c.rank.fxpNext)}` : ''}
+            <ProgressBar
+              label="Faction XP to the next rank"
+              value={c.rank.fxpNext === null ? 1 : c.fxp - c.rank.fxpFloor}
+              max={c.rank.fxpNext === null ? 1 : rankSpan}
+              color={FACTION_STYLE[c.factionId].color}
+              className="w-full"
+            />
+          </HelpButton>
+          <HelpButton notes={[copy.help.pc()]} label="What Political Capital means" className="self-start">
+            <span className="font-mono text-[12px] text-muted" data-testid="me-pc">
+              <span className={helpMark}>{copy.pcSinks(c.pc)}</span>
             </span>
-          </div>
-          <ProgressBar
-            label="Faction XP to the next rank"
-            value={c.fxp - c.rank.fxpFloor}
-            max={rankSpan}
-            tone="collective"
-          />
-          <span className="font-mono text-[12px] text-muted" data-testid="me-pc">
-            {copy.pcSinks(c.pc)}
-          </span>
+          </HelpButton>
         </Card>
 
         <Card title="Level">
@@ -243,7 +265,8 @@ export function MePage() {
           <StatPointsPanel
             pending={c.statPointsPending}
             level={c.level}
-            stats={{ str: c.stats.str, int: c.stats.int }}
+            stats={{ str: c.stats.str, int: c.stats.int, agi: c.stats.agi }}
+            guide={c.statGuide}
             onPlace={stat.place}
             placing={stat.placing}
           />
@@ -255,11 +278,12 @@ export function MePage() {
               <span className="font-display text-[17px] font-bold">
                 {c.job.name} · {c.job.dailyPay} a day
               </span>
-              <span className="font-mono text-[12px]">{copy.yourJob(c.job.streak, c.sickDaysLeft)}</span>
+              {/* Review 1 (§9.1): a wage, paid at midnight; seniority counts the days held. */}
+              <span className="font-mono text-[12px]" data-testid="me-job">
+                {copy.yourJob(c.job.seniority.days, c.job.seniority.pct)}
+              </span>
               <span className="font-mono text-[12px] text-muted">
-                {c.job.shiftWorkedToday && c.job.nextShiftAt !== null
-                  ? copy.shiftWorked(formatClock(c.job.nextShiftAt))
-                  : `Shift waiting · ${c.job.shiftEnergy} Energy`}
+                {copy.jobPayLine(c.job.dailyPay)} · {formatClock(c.job.paidAt)}
               </span>
               <Link
                 to="/city/$cityId"
@@ -300,7 +324,7 @@ export function MePage() {
         </Card>
 
         <Card title="Today">
-          <TodayStrip today={c.today} />
+          <TodayStrip today={c.today} help={{ cityName: c.statGuide.cityName, turnsAt: c.day.endsAt }} />
         </Card>
 
         <Card title="Party orders">

@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import type { StatPointTarget } from '@irongate/rules';
+import type { CharacterView, StatPointTarget } from '@irongate/rules';
 import type { MouseEvent, ReactNode } from 'react';
 import { cx } from '../format';
 
@@ -125,7 +125,9 @@ export function TabBar({ items, active, onNavigate }: TabBarProps) {
 export interface StatPointsPanelProps {
   pending: number;
   level: number;
-  stats: { str: number; int: number };
+  stats: { str: number; int: number; agi: number };
+  /** Review 1 (§5.3): the counts behind the lead line and the stat lines; absent: buttons only. */
+  guide?: CharacterView['statGuide'];
   onPlace: (stat: StatPointTarget) => void;
   placing?: StatPointTarget | null;
   onLater?: () => void;
@@ -134,11 +136,17 @@ export interface StatPointsPanelProps {
   tone?: 'paper' | 'ink';
 }
 
-/** §5.3: one tap per point, STR or INT. Each tap is its own idempotency key (caller). */
+/**
+ * §5.3 (review 1, answers §7): one tap per point, on STR, INT or AGI. The choice explains itself:
+ * a lead line from the residence city's actions (*Most of the work in Duskwall uses INT: 9 of 15
+ * actions. Your best is STR 13.*), one line per stat, and the CHA footer. Each tap is its own
+ * idempotency key (caller).
+ */
 export function StatPointsPanel({
   pending,
   level,
   stats,
+  guide,
   onPlace,
   placing,
   onLater,
@@ -147,40 +155,68 @@ export function StatPointsPanel({
 }: StatPointsPanelProps) {
   if (pending <= 0) return null;
   const ink = tone === 'ink';
+  const sc = copy.statChoice;
+  const muted = ink ? 'text-dim' : 'text-text-2';
   return (
     <div className="flex flex-col gap-1.5" data-testid="stat-points">
       <span className={cx('font-label text-[13px]', ink ? 'text-paper' : 'text-ink')}>
         {title ?? copy.levelPointsToPlace(level, pending)}
       </span>
-      <div className="flex flex-wrap gap-2">
-        {(['str', 'int'] as const).map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => onPlace(s)}
-            disabled={!!placing}
-            aria-busy={placing === s || undefined}
-            className={cx(
-              'label-caps min-h-11 cursor-pointer px-3 text-[12px] disabled:cursor-not-allowed disabled:opacity-60',
-              ink ? 'bg-paper text-ink hover:bg-paper-2' : 'bg-ink text-paper hover:bg-ink-2',
+      {guide && (
+        <p
+          className={cx('font-body text-[13px] leading-snug', ink ? 'text-paper' : 'text-ink')}
+          data-testid="stat-lead"
+        >
+          {sc.lead(
+            guide.cityName,
+            guide.lead.toUpperCase(),
+            guide.counts[guide.lead],
+            guide.total,
+            guide.best.stat.toUpperCase(),
+            guide.best.value,
+            guide.best.stat === guide.lead,
+          )}
+        </p>
+      )}
+      <div className="flex flex-col gap-1.5">
+        {(['str', 'int', 'agi'] as const).map((s) => (
+          <div key={s} className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+            <button
+              type="button"
+              onClick={() => onPlace(s)}
+              disabled={!!placing}
+              aria-busy={placing === s || undefined}
+              className={cx(
+                'label-caps min-h-11 shrink-0 cursor-pointer self-start px-3 text-[12px] disabled:cursor-not-allowed disabled:opacity-60',
+                ink ? 'bg-paper text-ink hover:bg-paper-2' : 'bg-ink text-paper hover:bg-ink-2',
+              )}
+            >
+              {copy.statButton(s.toUpperCase(), stats[s])}
+            </button>
+            {guide && (
+              <span
+                className={cx('font-body text-[12px] leading-snug', muted)}
+                data-testid={`stat-line-${s}`}
+              >
+                {sc[s](guide.counts[s], guide.total)}
+              </span>
             )}
-          >
-            {copy.statButton(s.toUpperCase(), stats[s])}
-          </button>
+          </div>
         ))}
-        {onLater && (
-          <button
-            type="button"
-            onClick={onLater}
-            className={cx(
-              'label-caps min-h-11 cursor-pointer border-[1.5px] px-3 text-[12px]',
-              ink ? 'border-dim text-dim' : 'border-ink text-ink',
-            )}
-          >
-            {copy.later}
-          </button>
-        )}
       </div>
+      {guide && <p className={cx('font-body text-[12px] italic', muted)}>{sc.footer}</p>}
+      {onLater && (
+        <button
+          type="button"
+          onClick={onLater}
+          className={cx(
+            'label-caps min-h-11 cursor-pointer self-start border-[1.5px] px-3 text-[12px]',
+            ink ? 'border-dim text-dim' : 'border-ink text-ink',
+          )}
+        >
+          {copy.later}
+        </button>
+      )}
     </div>
   );
 }

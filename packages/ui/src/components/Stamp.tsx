@@ -5,7 +5,7 @@ export type StampTone = 'success' | 'partial' | 'failure';
 export interface StampProps {
   /** Success, Partial or Failure colour. */
   tone: StampTone;
-  /** The printed word: Success, Partial, "2 of 3", Shift worked, Trained. */
+  /** The printed word: Success, Partial, "2 of 3", Trained. */
   label: string;
   className?: string;
   /** Animate in (default); false shows it settled (the front page reopened, screens §2.2). */

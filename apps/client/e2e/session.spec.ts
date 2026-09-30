@@ -13,14 +13,14 @@ test('paper → map → ×3 canvass → modal → Today strip → reload lands o
   await expect(orders.getByTestId('order')).toHaveCount(3);
   for (const o of await orders.getByTestId('order').all()) await expect(o).toContainText(/0 \/ \d/);
   await expect(page.getByText('— P.H.')).toBeVisible();
-  await expect(page.getByTestId('desk')).toContainText('no job yet');
+  await expect(page.getByTestId('desk')).toContainText('No job yet · take one at the Mill Gate');
   await expect(page.getByTestId('desk')).toContainText('150 XP to Level 2');
 
   await toTheCity(page);
   await expect(page.getByTestId('hotspot')).toHaveCount(6);
   const sheet = await openLocation(page, '1. Mill Gate');
   const ticket = sheet.getByTestId('ticket-coalport.mill-gate.canvass');
-  await expect(ticket.getByTestId('ticket-chance')).toHaveText('66 %');
+  await expect(ticket.getByTestId('ticket-chance')).toHaveText('76 %'); // First day +10 % (review 1)
   const x3 = sheet.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' });
   await expect(x3).toBeEnabled();
   await x3.click();

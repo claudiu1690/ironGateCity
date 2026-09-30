@@ -98,6 +98,25 @@ describe('CouncilCard (screens §7)', () => {
     await userEvent.setup().click(within(card).getByRole('button', { name: 'Cast your ballot' }));
     expect(onOpen).toHaveBeenCalledWith('/council/ballot');
   });
+
+  it('review 1 #10: below Rank 2 there is no button, and the card says why', () => {
+    render(
+      <CouncilCard
+        summary={{ ...S, state: 'belowRank', route: null, rank2Title: 'Steward' }}
+        onOpen={vi.fn()}
+      />,
+    );
+    const card = screen.getByTestId('council-card');
+    expect(within(card).queryByRole('button')).toBeNull();
+    expect(screen.getByTestId('council-card-reason')).toHaveTextContent(
+      'Stewards vote. 400 Faction XP makes a Steward.',
+    );
+  });
+
+  it('no reason line when the player can act', () => {
+    render(<CouncilCard summary={S} onOpen={vi.fn()} />);
+    expect(screen.queryByTestId('council-card-reason')).toBeNull();
+  });
 });
 
 describe('Slate (screens §3, §4)', () => {

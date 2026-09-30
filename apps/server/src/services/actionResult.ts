@@ -27,7 +27,6 @@ import type {
   OrdersState,
   RewardLine,
   Rewards,
-  ShiftResolution,
   Tier1Resolution,
   TrainingResolution,
 } from '@irongate/rules';
@@ -66,7 +65,6 @@ export type ResultInput = Common &
         opinion: { applied: number; shareBefore: number; shareAfter: number } | null;
       }
     | { kind: 'training'; resolution: TrainingResolution }
-    | { kind: 'shift'; resolution: ShiftResolution; sickDaysLeft: number; nextShiftAt: number }
   );
 
 function orderEffects(content: GameContent, c: Common): OrderEffect[] {
@@ -102,8 +100,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
   const m = i.modifiers ?? NO_MODIFIERS;
   const energyAfter = projectEnergy(energy.after, i.now, ENERGY.max, restedCapFor(m));
   const bonusTags: BonusTag[] = [];
-  const restedApplies = i.kind !== 'shift';
-  if (restedApplies && energy.restedUsed > 0) {
+  if (energy.restedUsed > 0) {
     // §6.3 modal tag: "Rested: 20 of 30 Energy, +33 % XP and Iron" (training: XP only).
     const pct = Math.round((50 * energy.restedUsed) / energy.cost);
     bonusTags.push({
@@ -123,7 +120,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
   let opinion: ActionResult['effects']['opinion'] = null;
   let standing: ActionResult['effects']['standing'] = null;
   let stat: ActionResult['effects']['stat'] = null;
-  let shift: ActionResult['effects']['shift'] = null;
+  let standingUp: ActionResult['effects']['standingUp'] = null;
 
   if (i.kind === 'checked') {
     const r = i.resolution;
@@ -142,6 +139,8 @@ export function buildActionResult(i: ResultInput): ActionResult {
     const standingBonus = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === 'standing');
     if (standingBonus)
       bonusTags.push({ id: 'standing', label: standingBonus.label, note: `+${standingBonus.value} %` });
+    const firstDay = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === 'first-day');
+    if (firstDay) bonusTags.push({ id: 'first-day', label: firstDay.label, note: `+${firstDay.value} %` });
     // Slice 3 (tech design §10.2): one tag per ordinance or state that applied.
     const ord = m.ordinance;
     const ordCheck = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === ord?.id);
@@ -173,9 +172,17 @@ export function buildActionResult(i: ResultInput): ActionResult {
       before: namedStanding(content, city.id, r.standing.before),
       after: namedStanding(content, city.id, r.standing.after),
     };
+    // Review 1 (§13.4): a level crossed is a Standing card in the modal (the highest one reached).
+    if (standing.after.level > standing.before.level && standing.after.level > 0) {
+      standingUp = {
+        level: standing.after.level as 1 | 2 | 3 | 4,
+        cityName: city.name,
+        rank3Title: rankTitle(content, before, 3),
+      };
+    }
     const cost = 'energy' in action ? actionEnergy(action.energy, action.type, m) : 0;
     again = { cost1: cost, cost3: cost * 3 };
-  } else if (i.kind === 'training') {
+  } else {
     const r = i.resolution;
     stamp = 'trained';
     rewards = { xp: r.xp, fxp: { ...NONE }, iron: { ...NONE }, opinion: 0 };
@@ -189,47 +196,6 @@ export function buildActionResult(i: ResultInput): ActionResult {
     if (m.ordinance && effect(m, 'trainingEnergyPct'))
       bonusTags.push({ id: m.ordinance.id, label: m.ordinance.name, note: `${r.energy.cost} Energy` });
     again = { cost1: trainingEnergy(trainingCost(r.stat.after), m), cost3: null }; // ×1 only (§8.5)
-  } else {
-    const r = i.resolution;
-    stamp = 'worked';
-    const ordPay = r.pay.ordinance;
-    rewards = {
-      xp: { ...NONE },
-      fxp: { ...NONE },
-      iron: {
-        base: r.pay.half,
-        bonus: r.pay.total - r.pay.half,
-        total: r.pay.total,
-        // Economy §14.4: the streak and the ordinance line are each a share of the unmodified pay.
-        ...(ordPay
-          ? {
-              parts: [
-                { id: 'streak', label: 'Streak', amount: r.pay.bonus },
-                { id: ordPay.id, label: ordPay.label, amount: ordPay.amount },
-              ],
-            }
-          : {}),
-      },
-      opinion: 0,
-    };
-    if (m.ordinance && (effect(m, 'shiftEnergyDelta') || ordPay)) {
-      const notes = [
-        ...(effect(m, 'shiftEnergyDelta') ? [`${r.energy.cost} Energy`] : []),
-        ...(effect(m, 'shiftStreakDays') ? ['streak +2'] : []),
-        ...(ordPay ? [`${ordPay.amount >= 0 ? '+' : '−'}${Math.abs(ordPay.amount)} Iron`] : []),
-      ];
-      bonusTags.push({ id: m.ordinance.id, label: m.ordinance.name, note: notes.join(', ') });
-    }
-    const job = before.job ? content.job(before.job.id) : undefined;
-    rows = [{ index: 1, label: job?.name ?? 'Shift', detail: `${r.energy.cost} Energy · no roll` }];
-    shift = {
-      half: r.pay.half,
-      streakBonus: r.pay.bonus,
-      streakPct: Math.round(r.pay.pct * 100),
-      streak: r.streak,
-      sickDaysLeft: i.sickDaysLeft,
-      nextShiftAt: i.nextShiftAt,
-    };
   }
 
   const g = i.gains;
@@ -251,7 +217,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
       name: action.name,
       type: action.type,
       tier: 1,
-      times: i.kind === 'shift' ? 1 : i.resolution.times,
+      times: i.resolution.times,
     },
     stamp,
     story: null,
@@ -283,7 +249,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
       orders: orderEffects(content, i),
       ordersAllDone: i.orders.allDone ? { pc: DIRECTIVES.allDonePc } : null,
       stat,
-      shift,
+      standingUp,
       item: null,
       hooks: [],
       morale: i.morale ?? null,

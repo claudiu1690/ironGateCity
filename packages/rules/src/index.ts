@@ -24,3 +24,5 @@ export * from './calendar';
 export * from './council';
 export * from './morale';
 export * from './ordinances';
+export * from './welcome';
+export * from './statGuide';

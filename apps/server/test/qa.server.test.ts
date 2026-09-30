@@ -24,11 +24,6 @@ const DAY = 86_400_000;
 const MIN = 60_000;
 const CANVASS = { actionId: 'coalport.mill-gate.canvass', locationId: 'coalport.mill-gate' } as const;
 const STUDY = { actionId: 'coalport.union-hall.reading-room', locationId: 'coalport.union-hall' } as const;
-const MILL_SHIFT = {
-  actionId: 'coalport.mill-gate.shift',
-  locationId: 'coalport.mill-gate',
-  times: 1,
-} as const;
 const COMMITTEE = { actionId: 'coalport.union-hall.committee', locationId: 'coalport.union-hall' } as const;
 
 const settle = <T>(ps: Promise<T>[]) => Promise.allSettled(ps);
@@ -109,10 +104,11 @@ describe('permissions and input (CLAUDE.md engineering rule 1)', () => {
       .perform({ ...CANVASS, idempotencyKey: 'tap-1', times: 1 })
       .catch((e: unknown) => e);
     expect(gameData(notUuid).code).toBe('BAD_REQUEST');
+    // Review 1 (§5.3): a point goes to STR, INT or AGI; CHA is worn (§8.2), so 'cha' is refused.
     const badStat = await caller.character
-      .placeStatPoint({ stat: 'agi' as never, idempotencyKey: randomUUID() })
+      .placeStatPoint({ stat: 'cha' as never, idempotencyKey: randomUUID() })
       .catch((e: unknown) => e);
-    expect(gameData(badStat).code).toBe('BAD_REQUEST'); // §5.3: STR or INT only
+    expect(gameData(badStat).code).toBe('BAD_REQUEST');
   });
 
   it('one character cannot act on another: every write is scoped to the session user', async () => {
@@ -299,27 +295,36 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
     });
   });
 
-  it('M1: a shift — every concurrent retry with one key gets the stored result (not SHIFT_ALREADY_WORKED)', async () => {
+  // Review 1 (§9.1): was "M1: a shift"; the shift is gone, so the same retry rule is checked on a switch.
+  it('M1: a job switch — every concurrent tap with one key gets the stored result (not ALREADY_IN_JOB)', async () => {
     await everyRunIdentical(async () => {
       const { caller } = await freshCharacter();
       await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
       const key = randomUUID();
-      return settle([1, 2, 3].map(() => caller.action.perform({ ...MILL_SHIFT, idempotencyKey: key })));
+      return settle(
+        [1, 2, 3].map(() => caller.job.take({ jobId: 'coalport-street-vendor', idempotencyKey: key })),
+      );
     });
   });
 
-  it('job switches racing with different keys: every committed switch costs exactly 2 Energy', async () => {
-    const { caller } = await freshCharacter();
+  it('job switches racing with different keys: every committed switch costs nothing and seniority ends at 0', async () => {
+    const { caller, clock } = await freshCharacter();
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
+    clock.advance(2 * DAY);
+    const before = await caller.character.me();
+    expect(before.job?.seniority.days).toBeGreaterThan(0);
     const rs = await settle(
       ['coalport-street-vendor', 'coalport-factory-worker', 'coalport-street-vendor'].map((jobId) =>
         caller.job.take({ jobId, idempotencyKey: randomUUID() }),
       ),
     );
-    const ok = fulfilled(rs);
+    expect(fulfilled(rs).length).toBeGreaterThanOrEqual(1);
     const after = await caller.character.me();
-    expect(after.energy.value).toBe(100 - 2 * ok.length);
-    expect(after.job?.streak).toBe(0);
+    // Review 1 (§9.1): was "costs exactly 2 Energy"; a switch is free and resets seniority.
+    expect(after.energy.value).toBe(before.energy.value);
+    expect(after.rested).toBe(before.rested);
+    expect(after.iron).toBe(before.iron);
+    expect(after.job?.seniority).toEqual({ days: 0, pct: 0 });
     for (const e of rejected(rs)) expect(['ALREADY_IN_JOB', 'ACTION_CONFLICT']).toContain(e.game?.reason);
   });
 
@@ -346,18 +351,27 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
     for (const e of rejected(rs)) expect(['NO_STAT_POINTS', 'ACTION_CONFLICT']).toContain(e.game?.reason);
   });
 
-  it('two shifts at once with different keys: one pays, the other is SHIFT_ALREADY_WORKED', async () => {
-    const { caller } = await freshCharacter();
+  // Review 1 (§9.1): was "two shifts at once: one pays"; the wage is paid by the settlement, so the
+  // race to guard is every first touch of a new day at once, actions included: one wage, once.
+  it('the first touches of a new day at once (reads and two actions): the wage is credited once', async () => {
+    const { caller, me, clock } = await freshCharacter();
     await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
-    const rs = await settle(
-      [1, 2].map(() => caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() })),
+    clock.advance(DAY);
+    const rs = await settle<unknown>([
+      caller.character.me(),
+      caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 }),
+      caller.paper.today(),
+      caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 }),
+      caller.city.get({ cityId: 'coalport' }),
+    ]);
+    const actions = fulfilled(rs).filter(
+      (v): v is ActionResult => typeof v === 'object' && v !== null && 'logId' in v,
     );
-    expect(fulfilled(rs)).toHaveLength(1);
-    expect(rejected(rs)[0]?.game?.reason).toBe('SHIFT_ALREADY_WORKED');
+    const actionIron = actions.reduce((sum, r) => sum + r.rewards.iron.total, 0);
     const c = await caller.character.me();
-    expect(c.iron).toBe(112);
-    expect(c.energy.value).toBe(96);
+    expect(c.iron).toBe(220 + actionIron); // 216 + seniority 1 (+4), once
+    expect(await PaperEntry.countDocuments({ characterId: me.id })).toBe(2);
   });
 });
 
@@ -392,16 +406,16 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
     expect(days).toEqual(touched);
   });
 
-  it('30 days away: nothing owned is lost; salary is 14 half-pays; Energy full, Rested 200; job kept, streak 0', async () => {
+  it('30 days away: nothing owned is lost; salary is 14 days at the full rate; Energy full, Rested 200; job kept', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(Date.UTC(2026, 8, 28, 9)));
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
-    await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     await caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 3 });
     await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 });
     const before = await caller.character.me();
     clock.advance(30 * DAY);
     const after = await caller.character.me();
-    expect(after.iron).toBe(before.iron + 14 * 108);
+    // Review 1 (§9.1, §4.3): full pay, the most recent 14 boundaries, all at the capped +20 %: 259.
+    expect(after.iron).toBe(before.iron + 14 * 259);
     expect(after).toMatchObject({
       xp: before.xp,
       level: before.level,
@@ -411,15 +425,20 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
       statPointsPending: before.statPointsPending,
     });
     expect(after.standing.successes).toBe(before.standing.successes);
-    expect(after.job).toMatchObject({ id: 'coalport-factory-worker', streak: 0 });
+    // Absence never lowers a rate (§4.3 rule 2): seniority counted all 30 days (60 under Long Service).
+    expect(after.job).toMatchObject({ id: 'coalport-factory-worker', seniority: { pct: 20 } });
+    expect(after.job!.seniority.days).toBeGreaterThanOrEqual(30);
     expect(after.energy.value).toBe(100);
     expect(after.rested).toBe(200);
     const paper = await caller.paper.today();
-    expect(paper.headlines.map((h) => h.headline)).toContain('While You Were Away');
-    expect(paper.headlines.find((h) => h.headline === 'While You Were Away')?.deck).toMatch(
-      /^14 days of half pay banked \(1512 Iron\)/,
-    );
-    expect(paper.desk.salary).toMatchObject({ days: 14, perDay: 108, total: 1_512 });
+    // Review 1: the away headline is not asserted here: on this return the Five / Ten Days In headlines
+    // take both personal slots (reported to the lead as a question); the desk carries the numbers.
+    expect(paper.desk.salary).toMatchObject({
+      days: 14,
+      perDay: 216,
+      seniority: { pct: 20, amount: 14 * 43 },
+      total: 3_626,
+    });
     void me;
   });
 
@@ -444,40 +463,43 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
       clock.advance(DAY);
       ids.push((await caller.character.me()).orders.items.map((o) => o.id));
     }
+    // Review 1 (§13.7): slot C rotates Train once · Six wins · Five attempts; Take a job is
+    // welcome-only, so a player with no job past the welcome day is not sent to take one.
     expect(ids).toEqual([
-      ['dir.canvass-coalport', 'dir.report', 'dir.work-shift'], // day 270: A[0], B[2], C[0]
-      ['dir.shift-change', 'dir.ears-open', 'dir.sharpen-up'],
-      ['dir.foundry-row', 'dir.paper-the-town', 'dir.full-day'],
+      ['dir.canvass-coalport', 'dir.report', 'dir.sharpen-up'], // day 270: A[0], B[2], C[0]
+      ['dir.shift-change', 'dir.ears-open', 'dir.full-day'],
+      ['dir.foundry-row', 'dir.paper-the-town', 'dir.five-in-the-book'],
     ]);
-    expect(me.orders.items[2]!.title).toBe('Take a job');
+    expect(me.orders.items[2]!.title).toBe('Train once, anywhere in Coalport');
   });
 
-  it('the streak across a weekend and the Monday refill through the API: 3rd miss in a week breaks it; a Monday return refills', async () => {
-    // Mon 21 Sep: take the job and work Mon–Wed (streak 3); miss Thu, Fri (sick days), work Sat; miss Sun; back Mon.
+  // Review 1 (§9.1): was "the streak across a weekend and the Monday refill"; streak and sick days
+  // are gone. The nearest rule: seniority counts the days away, the job is never lost, pay resumes.
+  it('seniority across a weekend away: every boundary counts, the job is kept, the back pay is exact', async () => {
+    // Mon 21 Sep: take the job, touch Mon–Wed; away Thu–Sun; back Mon 28 Sep.
     const clock = testClock(Date.UTC(2026, 8, 21, 8));
     const user = newUser();
     await seedRecruit(user, clock.now()); // slice 2: no auto-create (ADR 0011)
-    await noOrdinance('coalport'); // slice 3: one streak day a shift, with no Shift Hours Order
+    await noOrdinance('coalport'); // slice 3: one seniority day a boundary, with no Long Service Order
     const caller = callerFor(user, clock.now);
     await caller.character.me();
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
-    const work = () => caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
-    await work();
     clock.advance(DAY);
-    await work();
+    expect((await caller.character.me()).iron).toBe(220);
     clock.advance(DAY);
-    await work();
-    clock.advance(3 * DAY); // Sat
-    let c = await caller.character.me();
-    expect(c.job?.streak).toBe(3);
-    expect(c.sickDaysLeft).toBe(0);
-    await work();
-    clock.advance(2 * DAY); // Mon 28: Sunday was the third miss of the week → streak 0, then refill
-    c = await caller.character.me();
-    expect(c.job?.streak).toBe(0);
-    expect(c.sickDaysLeft).toBe(2);
+    expect((await caller.character.me()).iron).toBe(220 + 225);
+    clock.advance(5 * DAY); // Mon 28
+    const c = await caller.character.me();
+    expect(c.job).toMatchObject({ id: 'coalport-factory-worker', seniority: { days: 7, pct: 14 } });
+    // Seniority lines for days 1–7 on 216: 4, 9, 13, 17, 22, 26, 30.
+    expect(c.iron).toBe(7 * 216 + 121);
     const paper = await caller.paper.today();
-    expect(paper.desk.streak).toMatchObject({ before: 4, after: 0, broken: true });
+    expect(paper.desk.salary).toMatchObject({
+      days: 5,
+      perDay: 216,
+      seniority: { days: 7, pct: 14, amount: 13 + 17 + 22 + 26 + 30 },
+      total: 5 * 216 + 108,
+    });
   });
 });
 
@@ -488,7 +510,8 @@ describe('Morning Paper text (§3.3, content §7.4)', () => {
     const { caller, clock } = await freshCharacter(testClock(Date.UTC(2026, 8, 28, 9)));
     clock.advance(3 * DAY);
     const decks = (await caller.paper.today()).headlines.map((h) => h.deck ?? '');
-    expect(decks.join(' ')).not.toMatch(/\b0 days of half pay|\(0 Iron\)/);
+    // Review 1: "half pay" became "pay" (§9.1).
+    expect(decks.join(' ')).not.toMatch(/\b0 days of (half )?pay|\(0 Iron\)/);
   });
 });
 

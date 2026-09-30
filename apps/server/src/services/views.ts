@@ -1,11 +1,11 @@
-import { isCheckedAction, isShiftAction } from '@irongate/content';
+import { isCheckedAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
   DIRECTIVES,
   ENERGY,
-  JOBS,
   MONTH_NAMES,
+  bestTrainedStat,
   chapterStatus,
   currentTally,
   dayKey,
@@ -14,12 +14,16 @@ import {
   isPaperDue,
   itemSpec,
   jobLocks,
+  firstDayBonus,
+  isWelcomeDay,
   jobPay,
+  orderDoneFxp,
   orderMatches,
   projectEnergy,
   rankBounds,
+  seniorityPct,
   standingView,
-  weekKey,
+  statUse,
   wornCha,
 } from '@irongate/rules';
 import { restedCapToday } from './modifiers';
@@ -28,6 +32,7 @@ import type {
   AssetView,
   ChapterStatus,
   CharacterView,
+  CheckBonus,
   DayKey,
   EnergyState,
   Equipment,
@@ -38,6 +43,7 @@ import type {
   OrdersState,
   OrdersView,
   Stats,
+  TrainableStat,
 } from '@irongate/rules';
 
 const NO_EQUIPMENT: Equipment = { clothing: null, document: null };
@@ -59,6 +65,69 @@ export function wornStats(
     agi: doc.stats.agi,
     cha: wornCha(doc.stats.chaBase, equipped),
   };
+}
+
+/** Review 1 (§8.4, §13.7): the faction's bonus stat, the tie-break of a best-stat check. */
+export function preferredStat(content: GameContent, factionId: CharacterDoc['factionId']): TrainableStat {
+  const bonus = content.faction(factionId).startingBonus;
+  let best: TrainableStat = 'int';
+  let v = -1;
+  for (const s of ['str', 'int', 'agi'] as const) {
+    if ((bonus[s] ?? 0) > v) {
+      best = s;
+      v = bonus[s] ?? 0;
+    }
+  }
+  return best;
+}
+
+/** When the character arrived (the join): the welcome day is counted from it (review 1). */
+export const arrivedAt = (doc: Pick<CharacterDoc, 'origin' | 'createdAt'>): number =>
+  (doc.origin?.arrivedAt ?? doc.createdAt).getTime();
+
+/** Review 1 (§8.4): today is the character's welcome day. */
+export function welcomeDayOf(doc: Pick<CharacterDoc, 'origin' | 'createdAt'>, today: DayKey): boolean {
+  return isWelcomeDay(arrivedAt(doc), today);
+}
+
+/** Review 1 (§8.4): the *First day in {city}* row, on checks in the home city on the welcome day. */
+export function firstDayBonuses(
+  content: GameContent,
+  doc: Pick<CharacterDoc, 'origin' | 'createdAt' | 'homeCityId'>,
+  cityId: string,
+  today: DayKey,
+): CheckBonus[] {
+  if (cityId !== doc.homeCityId || !welcomeDayOf(doc, today)) return [];
+  return [firstDayBonus(content.city(cityId)?.name ?? cityId)];
+}
+
+/** Review 1 (§13.7): the welcome set's slot A by the best trained stat, then B and C. */
+export function welcomeOrderIds(
+  content: GameContent,
+  doc: Pick<CharacterDoc, 'factionId' | 'stats'>,
+): [string, string, string] {
+  const w = content.faction(doc.factionId).welcomeOrders;
+  const best = bestTrainedStat(doc.stats, preferredStat(content, doc.factionId));
+  return [w.A[best], w.B, w.C];
+}
+
+/** A location in running text: its `ref` ("the Mill Gate"), else its name. */
+export function locationRef(content: GameContent, locationId: string): string {
+  const l = content.location(locationId)?.location;
+  return l ? (l.ref ?? l.name) : locationId;
+}
+
+/** Review 1 (§7.5): the first landing opens slot A's pin: the location of its first action. */
+export function welcomeLanding(
+  content: GameContent,
+  doc: Pick<CharacterDoc, 'factionId' | 'stats' | 'homeCityId'>,
+): { cityId: string; locationId: string } {
+  const [a] = welcomeOrderIds(content, doc);
+  const t = content.ordersOf(doc.factionId).find((x) => x.id === a);
+  const first = t?.match.actionIds?.[0];
+  const found = first ? content.action(first) : undefined;
+  const city = content.city(content.faction(doc.factionId).homeCityId)!;
+  return { cityId: city.id, locationId: found?.location.id ?? city.locations[0]!.id };
 }
 
 /** "29 September": the dateline's form, no year (§3.3). */
@@ -108,8 +177,7 @@ export function ambitionStatus(content: GameContent, doc: CharacterDoc, today: D
 
 /**
  * Slice-2 tech design §7.3: the first home-city pin where a tap would advance this order: an action
- * the frozen spec matches, the held job's shift, or, for "Take a job", the first Jobs card with a
- * job the character can take.
+ * the spec matches, or, for "Take a job", the first Jobs card with a job the character can take.
  */
 export function orderPin(
   content: GameContent,
@@ -133,9 +201,8 @@ export function orderPin(
       continue;
     }
     for (const action of location.actions) {
-      if (isShiftAction(action) && doc.job?.id !== action.jobId) continue;
       const descriptor: ActionDescriptor = {
-        kind: isCheckedAction(action) ? 'checked' : isShiftAction(action) ? 'shift' : 'training',
+        kind: isCheckedAction(action) ? 'checked' : 'training',
         actionId: action.id,
         type: action.type,
         locationId: location.id,
@@ -194,22 +261,17 @@ export function jobView(content: GameContent, doc: CharacterDoc, today: DayKey):
   if (!doc.job) return null;
   const job = content.job(doc.job.id);
   if (!job) return null;
-  const worked = doc.job.lastShiftDay === today;
+  // A job stored before review 1 has no seniority yet (migration 004): it reads as 0.
+  const days = doc.job.seniority ?? 0;
   return {
     id: job.id,
     name: job.name,
     locationId: job.locationId,
     locationName: content.location(job.locationId)?.location.name ?? job.locationId,
     dailyPay: jobPay(job, doc.factionId),
-    shiftEnergy: job.shiftEnergy,
-    streak: doc.job.streak,
-    shiftWorkedToday: worked,
-    nextShiftAt: worked ? dayStart(today + 1) : null,
+    seniority: { days, pct: Math.round(seniorityPct(days) * 100) },
+    paidAt: dayStart(today + 1),
   };
-}
-
-export function sickDaysLeft(doc: CharacterDoc, today: DayKey): number {
-  return doc.sickDays.week === weekKey(today) ? doc.sickDays.left : JOBS.sickDaysPerWeek;
 }
 
 export function ordersView(content: GameContent, doc: CharacterDoc, today: DayKey): OrdersView {
@@ -249,6 +311,19 @@ export function ordersView(content: GameContent, doc: CharacterDoc, today: DayKe
       orderDoneFxp: DIRECTIVES.orderDoneFxp,
       allDonePc: DIRECTIVES.allDonePc,
     },
+    // Review 1 (§13.7): the note waits until it is seen (Carry on), today only. The FXP tile sums
+    // today's completions; a Take a job item started done (doneAt at the day's start: a second
+    // welcome day with a job already held) paid nothing.
+    complete:
+      state.day === today && state.allDoneAt !== null && doc.ordersNoteSeenDay !== today
+        ? {
+            pc: DIRECTIVES.allDonePc,
+            fxp: items.reduce((sum, i) => {
+              const t = templates.find((x) => x.id === i.templateId);
+              return i.doneAt !== null && i.doneAt !== dayStart(today) ? sum + orderDoneFxp(t) : sum;
+            }, 0),
+          }
+        : null,
   };
 }
 
@@ -316,11 +391,12 @@ export function toCharacterView(
       title: rankTitle(content, doc, doc.rank),
       fxpFloor: bounds.floor,
       fxpNext: bounds.next,
+      nextTitle: bounds.next === null ? null : rankTitle(content, doc, doc.rank + 1),
+      ladder: [...faction.rankTitles],
     },
     pc: doc.pc,
     statPointsPending: doc.statPointsPending,
     job: jobView(content, doc, today),
-    sickDaysLeft: sickDaysLeft(doc, today),
     standing: namedStanding(content, doc.cityId, standingSuccesses(doc, doc.cityId)),
     today: currentTally(doc.today, today),
     orders: ordersView(content, doc, today),
@@ -357,5 +433,22 @@ export function toCharacterView(
     office: officeView(content, doc, today),
     politicsWaiting: ctx.politicsWaiting ?? 0,
     restedCap,
+    welcomeDay: welcomeDayOf(doc, today),
+    statGuide: statGuideOf(content, doc),
+  };
+}
+
+/** Review 1 (§5.3): the stat-point screen's counts, from the residence (home) city's checked actions. */
+export function statGuideOf(content: GameContent, doc: CharacterDoc): CharacterView['statGuide'] {
+  const city = content.city(doc.homeCityId);
+  const checked = (city?.locations ?? []).flatMap((l) => l.actions.filter(isCheckedAction));
+  const use = statUse(checked);
+  const best = bestTrainedStat(doc.stats, preferredStat(content, doc.factionId));
+  return {
+    cityName: city?.name ?? doc.homeCityId,
+    total: use.total,
+    counts: use.counts,
+    lead: use.lead,
+    best: { stat: best, value: doc.stats[best] },
   };
 }

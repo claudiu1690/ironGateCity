@@ -14,11 +14,14 @@ test('sign up → Canvass at the Mill Gate → result modal → HUD shows 90', a
   await expect(hudEnergy).toHaveText('100 / 100');
   const sheet = await openLocation(page, '1. Mill Gate');
   const ticket = sheet.getByTestId('ticket-coalport.mill-gate.canvass');
-  await expect(ticket.getByTestId('ticket-chance')).toHaveText('66 %');
+  // Review 1: the stat is named before the tap, and the welcome day adds First day +10 % (66 → 76).
+  await expect(ticket.getByTestId('ticket-chance')).toHaveText('76 %');
+  await expect(ticket.getByTestId('ticket-odds')).toHaveText('76 % · INT 12');
 
-  // Tapping the percentage shows the breakdown.
-  await ticket.getByRole('button', { name: /66 %/ }).click();
-  await expect(ticket.getByText('INT 12 vs difficulty 8 (×4)')).toBeVisible();
+  // Tapping the percentage shows the ledger, in words.
+  await ticket.getByRole('button', { name: /76 %/ }).click();
+  await expect(ticket.getByText('INT 12, 4 above the 8 needed, 4 % a point')).toBeVisible();
+  await expect(ticket.getByText('First day in Coalport')).toBeVisible();
 
   await sheet.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }).click();
   const modal = page.getByRole('dialog', { name: /./ }).filter({ has: page.getByTestId('stamp') });
@@ -29,7 +32,11 @@ test('sign up → Canvass at the Mill Gate → result modal → HUD shows 90', a
   const success = (await stamp.textContent()) === 'Success';
   const rows = modal.getByTestId('attempt-row');
   await expect(rows).toHaveCount(1);
-  await expect(rows.first()).toContainText(/Rolled \d{1,3} against 66 % · INT 12 vs 8/);
+  // Review 1 (§8.4): one plain sentence and the roll.
+  await expect(rows.first().getByTestId('attempt-odds')).toHaveText(
+    'Your INT 12 is 4 above the 8 this needs: 66 %, and +10 % for your first day in Coalport: 76 %.',
+  );
+  await expect(rows.first().getByTestId('attempt-roll')).toHaveText(/^Rolled \d{1,3}: (Success|Partial) \(/);
   await expect(modal.getByTestId('tile-experience')).toContainText(success ? '+45' : '+23');
   // +25 % FXP when the attempt advances one of today's Party orders (6 → +8, 3 → +4).
   await expect(modal.getByTestId('tile-faction-xp')).toContainText(success ? /\+(6|8)/ : /\+(3|4)/);

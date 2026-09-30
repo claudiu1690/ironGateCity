@@ -1345,3 +1345,39 @@ The smallest working change in each case; nothing here changes a GDD number.
   (`ambition.test.ts`, `qa.slice2.server.test.ts`, `qa.slice2.test.ts`, `slice2.content.test.ts`, e2e `chapter.spec.ts`).
 
 **Not verified here:** CI (no remote), Docker, deployment.
+
+## Deviations: review 1 (30 Sep 2026, as built)
+
+The review-1 changes (`docs/review/2026-09-30-review-1.md`, answers in `docs/design/review-1-answers.md`) were built on
+this branch after slice 3. Where the build differs from the answers or needs the designer's eye:
+
+- **Migration 004 (`migrateReview1Wage`) is written and tested but not run at start-up.** Wiring it into
+  `ensureIndexes` would rewrite every database the server connects to, so that is left to a decision. Until it runs,
+  the server reads a job stored without `seniority` as 0, ignores the retired `streak`, `lastShiftDay`, `sickDays` and
+  `today.shiftWorked`, and resolves a stored `ord.shift-hours` to `ord.long-service` in content.
+- **One of Us PC** is paid for the boundaries a settlement crosses, capped at 14 like the wage (the answers give the
+  rate, not the cap).
+- **Tap the label:** where labels sit too close for a 44 px target each (the HUD's gauges, the city plate's name
+  block, the Today strip), one button covers the group and its sheet lists each label's note; the labels keep the
+  dotted mark. The share bar's caption *Who holds {city}* sits beside the bar; a tap on the bar opens the plate's
+  notes. A note is a bottom sheet on phones and a small card beside the label on wide screens (Radix Dialog; no
+  popover package was added).
+- **While the orders-complete note shows, the location sheet steps aside** (one dialog at a time); *Carry on* brings
+  it back.
+- **Order titles** over the answers' 44-character phone target, as written in the answers: *Canvass the customs shift
+  at the Fortress Gate* (46), *Canvass the ration queue at the Customs Market* (46), *Canvass the print-room shift at
+  Gazette House* (45), *Sit in on the committee at the Assembly Rooms* (45) and the six *Restore the base: …* (45–47).
+  The phone's orders list sets them at 13 px.
+- **Copy the developer had to word** (marked `TODO(game-designer)`): the away decks lost *half pay* (*{days} days of
+  pay banked*, *No job, so no pay banked*); the seniority decks fill `{job}` with the job's name (*has been Stores hand
+  for ten days*); the council card below Rank 2 reuses the Polling Day row's line (*Stewards vote. 400 Faction XP makes
+  a Steward.*).
+- The HUD's XP bar is labelled *XP* (the answers' §8 suggests *L3*); the FXP bar is labelled with the next Rank's title
+  (*Rank n* under 400 px) and carries no number, as §8 asks; the number is in its note and on the Me tab.
+- **The seniority headlines** read only the last boundary's step (a crossing that happened during a long absence does
+  not print over *While You Were Away*); the answers say they fire "the morning after", which this keeps.
+- **One of Us's PC** has its own desk line (*One of Us · +N Political Capital from the town*, marked
+  `TODO(game-designer)`), so the PC is not credited silently.
+- **Short phones** (under 700 px tall, under 640 px wide): the orders list keeps each title to one line, the share
+  bar drops its caption and the plate its first-time hint, so Coalport's pins 1 and 2 stay apart (QA M2); the chapter's approach cards are compact and
+  the chosen one shows its odds as a sentence (the ledger is on the ticket and in the result).

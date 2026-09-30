@@ -114,13 +114,19 @@ const appRoute = createRoute({
 export interface CitySearch {
   /** The open location sheet, so a closed tab reopens the same sheet. */
   loc?: string;
+  /** Review 1 (§13.7): the Party order the sheet was opened from; its tickets are marked. */
+  order?: string;
 }
 
 const cityRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/city/$cityId',
-  validateSearch: (search: Record<string, unknown>): CitySearch =>
-    typeof search.loc === 'string' && search.loc ? { loc: search.loc } : {},
+  validateSearch: (search: Record<string, unknown>): CitySearch => ({
+    ...(typeof search.loc === 'string' && search.loc ? { loc: search.loc } : {}),
+    ...(typeof search.loc === 'string' && search.loc && typeof search.order === 'string' && search.order
+      ? { order: search.order }
+      : {}),
+  }),
   component: CityPage,
 });
 

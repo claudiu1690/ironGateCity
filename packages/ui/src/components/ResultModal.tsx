@@ -3,6 +3,7 @@ import { copy } from '@irongate/content/copy';
 import { energyReadyAt } from '@irongate/rules';
 import type {
   ActionResult,
+  CharacterView,
   NamedStandingView,
   OrdinanceTagView,
   PoliticalResult,
@@ -18,10 +19,9 @@ import {
   formatOpinionDelta,
   formatShare,
   formatSigned,
-  plural,
   renderTimeTokens,
-  statLabel,
 } from '../format';
+import { oddsSentence, rollLine } from '../odds';
 import { Button } from './Button';
 import { CheckBreakdownList } from './CheckBreakdownList';
 import { FACTION_STYLE } from './FactionCrest';
@@ -40,8 +40,13 @@ export interface ResultModalProps {
   againPending?: 1 | 3 | null;
   /** Live Energy (projected now), for the Again buttons. */
   energy?: { value: number; nextTickAt: number | null };
-  /** Live stat points (the stored result stays immutable). */
-  statPoints?: { pending: number; level: number; stats: { str: number; int: number } };
+  /** Live stat points (the stored result stays immutable), and what the choice screen says. */
+  statPoints?: {
+    pending: number;
+    level: number;
+    stats: { str: number; int: number; agi: number };
+    guide?: CharacterView['statGuide'];
+  };
   onPlaceStat?: (stat: StatPointTarget) => void;
   placing?: StatPointTarget | null;
 }
@@ -63,8 +68,6 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
         label: `${r.successes} of ${r.action.times}`,
         tone: r.successes * 2 > r.action.times ? 'success' : 'partial',
       };
-    case 'worked':
-      return { label: 'Shift worked', tone: 'success' };
     case 'trained':
       return { label: 'Trained', tone: 'success' };
   }
@@ -272,6 +275,11 @@ function ResultBody({
   const short1 = r.again ? energyNow < r.again.cost1 : true;
   const short3 = r.again && r.again.cost3 !== null ? energyNow < r.again.cost3 : false;
   const ready1 = r.again && short1 && energy ? energyReadyAt(energy, r.again.cost1) : null;
+  // Orders still open after this action, for the signed line ("Two remain").
+  const left = r.character.orders.items.filter((o) => !o.done).length;
+  const signed = e.orders
+    .filter((o) => o.fxp > 0)
+    .map((o) => copy.orderSigned[r.character.factionId](o.fxp, left));
 
   return (
     <>
@@ -294,7 +302,7 @@ function ResultBody({
             How it went
           </h3>
           {r.attempts.map((a) => (
-            <AttemptRow key={a.index} attempt={a} />
+            <AttemptRow key={a.index} attempt={a} tier={r.action.tier} type={r.action.type} />
           ))}
           {r.rows.map((row) => (
             <div
@@ -329,15 +337,7 @@ function ResultBody({
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <RewardTile label="Experience" line={r.rewards.xp} />
             <RewardTile label="Faction XP" line={r.rewards.fxp} className={factionText} />
-            <RewardTile
-              label="Iron"
-              line={r.rewards.iron}
-              note={
-                e.shift && !r.rewards.iron.parts
-                  ? `${formatSigned(e.shift.half)} half pay, ${formatSigned(e.shift.streakBonus)} streak`
-                  : undefined
-              }
-            />
+            <RewardTile label="Iron" line={r.rewards.iron} />
             {item ? (
               <div
                 className="flex items-center gap-2 border-[1.5px] border-ink bg-paper-card px-2.5 py-2"
@@ -383,6 +383,7 @@ function ResultBody({
                   pending={statPoints.pending}
                   level={statPoints.level}
                   stats={statPoints.stats}
+                  guide={statPoints.guide}
                   onPlace={onPlaceStat}
                   placing={placing}
                   onLater={() => setLater(true)}
@@ -391,8 +392,25 @@ function ResultBody({
               )}
             </div>
           )}
-          {(item || hooks.length > 0 || e.ordersAllDone || e.morale || e.branchEndorsement) && (
+          {/* Review 1 (§13.4, answers §9): a Standing level crossed is a card in the level-up's block. */}
+          {e.standingUp && <StandingCard up={e.standingUp} />}
+          {(item ||
+            hooks.length > 0 ||
+            e.ordersAllDone ||
+            e.morale ||
+            e.branchEndorsement ||
+            signed.length > 0) && (
             <ul className="flex flex-col">
+              {/* Review 1 (answers §6): an order done is a signed line from the secretary. */}
+              {signed.map((line) => (
+                <li
+                  key={line}
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px] text-petrol"
+                  data-testid="effect-order-signed"
+                >
+                  {line}
+                </li>
+              ))}
               {e.morale && (
                 <li
                   className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
@@ -452,7 +470,7 @@ function ResultBody({
               <Effect
                 key={o.id}
                 label={o.title}
-                value={`${o.before} → ${o.after} / ${o.target}${o.done ? ' ✓' : ''}${o.fxp > 0 ? ` · ${copy.orderComplete(o.fxp)}` : ''}`}
+                value={`${o.before} → ${o.after} / ${o.target}${o.done ? ' ✓' : ''}`}
                 testId="effect-order"
               />
             ))}
@@ -462,13 +480,6 @@ function ResultBody({
                 label="Trained"
                 value={`${e.stat.stat.toUpperCase()} ${e.stat.before} → ${e.stat.after}`}
                 testId="effect-stat"
-              />
-            )}
-            {e.shift && (
-              <Effect
-                label="Work streak"
-                value={`${plural(e.shift.streak.after, 'day')} · ${e.shift.sickDaysLeft} sick days left · next shift at ${formatClock(e.shift.nextShiftAt)}`}
-                testId="effect-shift"
               />
             )}
             <Effect label="Energy" value={`${e.energy.before} → ${e.energy.after}`} testId="effect-energy" />
@@ -556,7 +567,23 @@ function ResultBody({
   );
 }
 
-function AttemptRow({ attempt: a }: { attempt: ResultAttempt }) {
+/** Review 1 (answers §9): the new level's title, what changed, what the next level brings. */
+function StandingCard({ up }: { up: NonNullable<ActionResult['effects']['standingUp']> }) {
+  const [heading, now, next] = copy.standingCard[up.level](up.cityName, up.rank3Title);
+  return (
+    <div
+      className="mb-2 flex flex-col gap-1 border-[1.5px] border-petrol bg-paper-card p-2.5"
+      data-testid="effect-standing-card"
+    >
+      <span className="label-caps text-[10px] text-muted">{copy.standingCard.kicker}</span>
+      <span className="font-display text-[18px] leading-tight font-black text-petrol">{heading}</span>
+      <span className="font-body text-[13px]">{now}</span>
+      <span className="font-body text-[12.5px] text-text-2">{next}</span>
+    </div>
+  );
+}
+
+function AttemptRow({ attempt: a, tier, type }: { attempt: ResultAttempt; tier: number; type: string }) {
   const [open, setOpen] = useState(false);
   const success = a.outcome === 'success';
   const failure = a.outcome === 'failure';
@@ -597,10 +624,12 @@ function AttemptRow({ attempt: a }: { attempt: ResultAttempt }) {
           {label} · {formatSigned(a.rewards.xp.total)} XP
         </span>
       </button>
-      <span className="pl-6 font-mono text-[11px] text-muted">
-        Rolled {a.roll} against {a.check.chance} % · {statLabel(a.check.stats)} {a.check.statValue} vs{' '}
-        {a.check.difficulty}
-        {a.check.bonusTotal !== 0 ? ` · bonuses ${formatSigned(a.check.bonusTotal)} %` : ''}
+      {/* Review 1 (§8.4): one plain sentence and the roll; the ledger behind the tap. */}
+      <span className="pl-6 font-body text-[12.5px] leading-snug text-text-2" data-testid="attempt-odds">
+        {oddsSentence(a.check)}
+      </span>
+      <span className="pl-6 font-mono text-[11px] text-muted" data-testid="attempt-roll">
+        {rollLine({ roll: a.roll, chance: a.check.chance, outcome: a.outcome, tier, type })}
       </span>
       {open && (
         <div className="ml-6 border border-faint bg-paper-card px-2 py-1.5">

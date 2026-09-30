@@ -31,6 +31,7 @@ export const coalport: City = {
     {
       id: 'coalport.mill-gate',
       name: 'Mill Gate',
+      ref: 'the Mill Gate',
       kind: 'factory-gate',
       blurb:
         'The gates of the Coalport Steel Mill. Three shifts a day, and every one of them walks past here.',
@@ -65,19 +66,6 @@ export const coalport: City = {
             partial: {
               headline: 'The hooter drowns the end of it',
               body: 'You get through wages and the ration before the second hooter goes and the crowd breaks for the trams. A knot of lads at the back stays to argue, which is something. Next time, start earlier.',
-            },
-          },
-        },
-        {
-          id: 'coalport.mill-gate.shift',
-          name: 'Work your shift at the mill',
-          tier: 1,
-          type: 'job',
-          jobId: 'coalport-factory-worker',
-          text: {
-            success: {
-              headline: 'Eight hours on the rolling floor',
-              body: "Clock in, clock out, and the pay clerk's stamp in your book. The floor is loud enough to think in. Half your wage came at midnight; here's the other half, with the streak on top.",
             },
           },
         },
@@ -139,19 +127,6 @@ export const coalport: City = {
             },
           },
         },
-        {
-          id: 'coalport.market-row.stall',
-          name: 'Work the stall',
-          tier: 1,
-          type: 'job',
-          jobId: 'coalport-street-vendor',
-          text: {
-            success: {
-              headline: "A day's trade",
-              body: "Matches, bootlaces, yesterday's paper. You know the regulars by their shoes now. The takings won't make anyone rich, but they come in every day, and nobody asks you for a permit.",
-            },
-          },
-        },
       ],
     },
     {
@@ -167,7 +142,7 @@ export const coalport: City = {
           name: 'Sit in on the branch committee',
           tier: 1,
           type: 'council',
-          stats: ['int'],
+          stats: ['best'],
           energy: 10,
           givesFxp: true,
           givesOpinion: false,
@@ -335,19 +310,6 @@ export const coalport: City = {
             partial: {
               headline: 'Nothing much moves',
               body: 'An hour on the bollard and one lorry, which stops, gets stamped and goes. Your notebook has a name and a time. Not nothing.',
-            },
-          },
-        },
-        {
-          id: 'coalport.quays.lorry',
-          name: 'Drive the dock lorry',
-          tier: 1,
-          type: 'job',
-          jobId: 'coalport-driver',
-          text: {
-            success: {
-              headline: 'Six runs to the goods yard',
-              body: "Six runs between the quay and the goods yard, a full load each way and a ganger who wants it faster. The lorry fights you on the cobbles. The pay clerk doesn't.",
             },
           },
         },

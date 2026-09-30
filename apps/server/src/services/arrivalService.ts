@@ -17,7 +17,7 @@ import { ensureCityDay } from './cityDay';
 import { computeSettlement, loadCharacter } from './dayService';
 import { fill, sceneArt, storyVars } from './story';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
-import { assetView, toCharacterView } from './views';
+import { assetView, toCharacterView, welcomeLanding } from './views';
 
 /**
  * The arrival (ADR 0011, slice-2 tech design §7.2): the face, the origin's six answers (set-once,
@@ -39,7 +39,16 @@ function draftName(accountName: string): string {
 
 type Landing = { cityId: string; locationId: string };
 
-function landingOf(content: GameContent, factionId: FactionId): Landing {
+/**
+ * Review 1 (§7.5): the first landing opens the welcome set's slot-A pin, chosen by the best trained
+ * stat; without the stats (an arrival read on its own), the home city's first pin.
+ */
+function landingOf(
+  content: GameContent,
+  factionId: FactionId,
+  stats?: CharacterDoc['stats'] | null,
+): Landing {
+  if (stats) return welcomeLanding(content, { factionId, stats, homeCityId: '' });
   const city = content.city(content.faction(factionId).homeCityId)!;
   return { cityId: city.id, locationId: city.locations[0]!.id };
 }
@@ -142,7 +151,7 @@ function arrivalView(content: GameContent, a: ArrivalDoc | null, user: SessionUs
 async function arrivedView(
   content: GameContent,
   user: SessionUser,
-  c: Pick<CharacterDoc, 'factionId' | 'name' | 'avatarId'>,
+  c: Pick<CharacterDoc, 'factionId' | 'name' | 'avatarId' | 'stats'>,
 ): Promise<ArrivalView> {
   return {
     phase: 'arrived',
@@ -152,13 +161,13 @@ async function arrivedView(
     screen: null,
     questionId: null,
     street: null,
-    landing: landingOf(content, c.factionId),
+    landing: landingOf(content, c.factionId, c.stats),
   };
 }
 
 const findCharacter = (user: SessionUser) =>
-  Character.findOne({ userId: user.id }, { factionId: 1, name: 1, avatarId: 1 }).lean<
-    Pick<CharacterDoc, '_id' | 'factionId' | 'name' | 'avatarId'>
+  Character.findOne({ userId: user.id }, { factionId: 1, name: 1, avatarId: 1, stats: 1 }).lean<
+    Pick<CharacterDoc, '_id' | 'factionId' | 'name' | 'avatarId' | 'stats'>
   >();
 
 export async function getArrival(content: GameContent, user: SessionUser): Promise<ArrivalView> {
@@ -253,7 +262,7 @@ export async function joinArrival(
     const loaded = await loadCharacter(user, content, now());
     return {
       character: toCharacterView(loaded.doc, now(), content, loaded.editionReadAt),
-      landing: landingOf(content, factionId),
+      landing: landingOf(content, factionId, loaded.doc.stats),
     };
   };
 
@@ -310,7 +319,6 @@ export async function joinArrival(
               ...doc,
               day: { settled: w.set['day.settled'] },
               job: w.set.job,
-              sickDays: w.set.sickDays,
               today: w.set.today,
               orders: w.set.orders,
               iron: doc.iron + w.inc.iron,
@@ -328,7 +336,7 @@ export async function joinArrival(
         const created = await Character.findById(_id).session(session).lean<CharacterDoc>();
         return {
           character: toCharacterView(created!, t, content, null),
-          landing: landingOf(content, factionId),
+          landing: landingOf(content, factionId, created!.stats),
         };
       });
     } catch (err) {

@@ -28,6 +28,8 @@ export interface PaperEntryDoc {
       days: number;
       perDay: number;
       total: number;
+      /** Review 1: the seniority line (absent on editions settled before the wage). */
+      seniority?: { days: number; amount: number };
       /** Slice 3: the pay ordinances' adjustment. */
       ordinance?: { label: string; amount: number } | null;
     } | null;
@@ -35,7 +37,10 @@ export interface PaperEntryDoc {
     stipend?: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
     /** Slice 3: deposits returned for struck candidacies. */
     deposits?: { count: number; pc: number } | null;
-    streak: { before: number; after: number; sickDaysUsed: number; broken: boolean } | null;
+    /** Review 1 (§13.4): the PC One of Us paid at this settlement. */
+    oneOfUsPc?: number;
+    /** Editions settled before review 1 carry the retired work streak; it is no longer read. */
+    streak?: unknown;
     restedBanked: number;
     daysSinceLastPaper: number | null;
     yesterday: DailyTally | null;

@@ -219,11 +219,15 @@ describe('arrival.join (ADR 0011, 0012)', () => {
       'Welcome to Duskwall',
       'Mara Lenk Arrives at Duskwall Station',
       'The Duskwall Sentinel',
-      ['Be at the gate', 'Report to Beacon House', 'Take a job'],
+      [
+        'Canvass the customs shift at the Fortress Gate',
+        'Sit in on the committee at Beacon House',
+        'Take a job at the Fortress Gate',
+      ],
       'Viktor Stahl',
       'duskwall.garrison-gate',
       'Work jacket and cap',
-      62,
+      72,
     ],
     [
       'collective',
@@ -233,11 +237,15 @@ describe('arrival.join (ADR 0011, 0012)', () => {
       'Welcome to Coalport',
       'Mara Lenk Steps Off the Irongate Train',
       'The Coalport Clarion',
-      ['Be at the gate', 'Report to the hall', 'Take a job'],
+      [
+        'Canvass the shift change at the Mill Gate',
+        'Sit in on the committee at the Union Hall',
+        'Take a job at the Mill Gate',
+      ],
       'Petra Holm',
       'coalport.mill-gate',
       'Mill work coat',
-      66,
+      76,
     ],
     [
       'alliance',
@@ -247,11 +255,15 @@ describe('arrival.join (ADR 0011, 0012)', () => {
       'Welcome to Ashford',
       'Mara Lenk Arrives on the Irongate Train',
       'The Ashford Gazette',
-      ['Be at the loading bay', 'Report to the Rooms', 'Take a job'],
+      [
+        'Canvass the print-room shift at Gazette House',
+        'Sit in on the committee at the Assembly Rooms',
+        'Take a job at Gazette House',
+      ],
       'Thomas Grey',
       'ashford.gazette-house',
       'Worn wool overcoat',
-      74,
+      84,
     ],
   ] as const)(
     'per faction: %s lands in %s with its stats, kit, welcome set and welcome edition',
@@ -303,6 +315,7 @@ describe('arrival.join (ADR 0011, 0012)', () => {
       expect(paper.landing).toEqual({ cityId: home, locationId: pin1 });
       const city = await caller.city.get({ cityId: home });
       const canvass = city.locations[0]!.actions.find((a) => a.type === 'canvass')!;
+      // Review 1 (§8.4): the welcome day's First day row, +10 % on every home check (62/66/74 before).
       expect(canvass.preview?.chance).toBe(odds);
       expect(canvass.order).toMatchObject({ progress: 0, target: 2 });
       const other = content.cities.find((c) => c.id !== home)!.id;
@@ -335,7 +348,8 @@ describe('arrival.join (ADR 0011, 0012)', () => {
     await caller.action.perform({ ...canvass, idempotencyKey: randomUUID() });
     const second = await caller.action.perform({ ...canvass, idempotencyKey: randomUUID() });
     expect(second.effects.orders[0]).toMatchObject({
-      title: 'Be at the gate',
+      // Review 1 (§13.7): titles say what and where.
+      title: 'Canvass the shift change at the Mill Gate',
       after: 2,
       done: true,
       fxp: 20,

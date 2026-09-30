@@ -66,8 +66,15 @@ export const Faction = z.strictObject({
   hqRef: z.string().min(1),
   /** §21.4: the outfit worn and the party card carried from the start. */
   kit: z.strictObject({ outfit: ItemId, card: ItemId }),
-  /** §13.7, ADR 0012: the first City Day's orders, slots A, B and C. */
-  welcomeOrders: z.tuple([Id, Id, Id]),
+  /**
+   * §13.7, ADR 0012, review 1: the welcome day's orders. Slot A by the player's best trained stat
+   * (ties to the faction's bonus stat, then INT, then STR); slots B and C as they are.
+   */
+  welcomeOrders: z.strictObject({
+    A: z.strictObject({ str: Id, int: Id, agi: Id }),
+    B: Id,
+    C: Id,
+  }),
   /** §7.3: the street card. */
   card: z.strictObject({
     blurb: z.string().min(1).max(240),
@@ -105,15 +112,7 @@ export const LocationKind = z.enum([
   'ministry',
 ]);
 
-export const ActionType = z.enum([
-  'canvass',
-  'speech',
-  'propaganda',
-  'intelligence',
-  'council',
-  'training',
-  'job',
-]);
+export const ActionType = z.enum(['canvass', 'speech', 'propaganda', 'intelligence', 'council', 'training']);
 
 /** Headline plus a 2–3 line narrative paragraph (CLAUDE.md: short sessions). */
 export const OutcomeText = z.strictObject({
@@ -121,8 +120,15 @@ export const OutcomeText = z.strictObject({
   body: z.string().min(1).max(400),
 });
 
-/** A check on one stat, or the average of two (§8.4). */
-export const CheckStatsSchema = z.union([z.tuple([StatKey]), z.tuple([StatKey, StatKey])]);
+/**
+ * A check on one stat, the average of two (§8.4), or (review 1) `['best']`: the highest of STR,
+ * INT and AGI, resolved in rules (council sessions, the chapter-1 *Legwork* approach).
+ */
+export const CheckStatsSchema = z.union([
+  z.tuple([StatKey]),
+  z.tuple([StatKey, StatKey]),
+  z.tuple([z.literal('best')]),
+]);
 
 /** Canvass, speech, propaganda, intelligence, council: one roll per attempt (§8.4). */
 export const CheckedAction = z.strictObject({
@@ -155,21 +161,13 @@ export const TrainingAction = z.strictObject({
   text: z.strictObject({ success: OutcomeText }),
 });
 
-/** §9.1: a job shift; not a check; Energy and pay from the job. */
-export const ShiftAction = z.strictObject({
-  id: Id,
-  name: z.string().min(1),
-  tier: z.literal(1),
-  type: z.literal('job'),
-  jobId: JobId,
-  text: z.strictObject({ success: OutcomeText }),
-});
-
-export const Action = z.discriminatedUnion('type', [CheckedAction, TrainingAction, ShiftAction]);
+export const Action = z.discriminatedUnion('type', [CheckedAction, TrainingAction]);
 
 export const Location = z.strictObject({
   id: Id,
   name: z.string().min(1),
+  /** Review 1: the name in running text when it takes an article ("the Mill Gate"); default the name. */
+  ref: z.string().min(1).optional(),
   kind: LocationKind,
   blurb: z.string().min(1).max(200),
   /** Fractions of the city map image; the pin number is the location's index + 1. */
@@ -259,14 +257,12 @@ export const Job = z.strictObject({
   id: JobId,
   name: z.string().min(1),
   locationId: Id,
-  shiftActionId: Id,
   /** "Level 3, AGI 10": checked on taking, never again (§9.1). */
   unlock: z.strictObject({
     level: z.number().int().min(1),
     stats: z.partialRecord(StatKey, z.number().int().min(0)).optional(),
   }),
-  shiftEnergy: z.number().int().min(3).max(8),
-  /** Pinned per job (§9.2). */
+  /** Pinned per job (§9.2); paid in full at every boundary (review 1, §9.1). */
   dailyPay: z.number().int().min(1),
   /** { collective: 0.2 } → 216. */
   factionPayBonus: z.partialRecord(FactionId, z.number().min(0).max(1)).optional(),
@@ -297,16 +293,11 @@ export const OrderTemplateSchema = z.strictObject({
   match: OrderMatchSchema,
   target: z.number().int().min(1),
   counts: z.enum(['attempts', 'successes']),
-  noJob: z
-    .strictObject({
-      title: z.string().min(1).max(60),
-      line: z.string().min(1).max(140),
-      match: OrderMatchSchema,
-      target: z.number().int().min(1),
-    })
-    .optional(),
-  /** Slice 3: `crisis` templates (Restore the base) never enter the rotation. */
-  use: z.enum(['rotation', 'crisis']).default('rotation'),
+  /**
+   * Slice 3: `crisis` templates (Restore the base) never enter the rotation; review 1: nor do
+   * `welcome` ones (the welcome set's slot A by best stat, *Take a job*).
+   */
+  use: z.enum(['rotation', 'crisis', 'welcome']).default('rotation'),
   /** Slice 3: FXP when completed; default DIRECTIVES.orderDoneFxp (20). */
   doneFxp: z.number().int().min(1).optional(),
 }) satisfies z.ZodType<OrderTemplate, unknown>;
@@ -321,11 +312,11 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('levelRose') }),
   z.strictObject({ kind: z.literal('standingRose') }),
   z.strictObject({ kind: z.literal('ordersAllDoneYesterday') }),
-  z.strictObject({ kind: z.literal('streakHitYesterday'), values: z.array(z.number().int()).min(1) }),
+  z.strictObject({ kind: z.literal('seniorityHitYesterday'), values: z.array(z.number().int()).min(1) }),
   z.strictObject({ kind: z.literal('daysSinceLastPaper'), min: z.number().int().min(1) }),
   z.strictObject({ kind: z.literal('idleYesterday') }),
   z.strictObject({
-    kind: z.literal('halfPaysCredited'),
+    kind: z.literal('daysPaid'),
     min: z.number().int().min(0).optional(),
     max: z.number().int().min(0).optional(),
   }),
@@ -487,7 +478,8 @@ export const Chapter = z.strictObject({
         narrative: StoryText,
         approaches: z
           .array(z.strictObject({ id: Id, text: z.string().min(1).max(100), stats: CheckStatsSchema }))
-          .length(2),
+          .min(2)
+          .max(3),
         cta: z.string().min(1).max(40),
         difficulty: z.number().int().min(1),
         energy: z.number().int().min(1).max(30),
@@ -519,12 +511,7 @@ export const OrdinanceId = Id;
 export const OrdinanceEffectSchema = z
   .discriminatedUnion('kind', [
     z.strictObject({ kind: z.literal('jobPayPct'), value: z.number().int() }),
-    z.strictObject({
-      kind: z.literal('shiftEnergyDelta'),
-      value: z.number().int(),
-      floor: z.number().int().min(1),
-    }),
-    z.strictObject({ kind: z.literal('shiftStreakDays'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('seniorityDays'), value: z.number().int() }),
     z.strictObject({ kind: z.literal('swingPct'), actionType: ActionType, value: z.number().int() }),
     z.strictObject({ kind: z.literal('energyDelta'), actionType: ActionType, value: z.number().int() }),
     z.strictObject({ kind: z.literal('trainingEnergyPct'), value: z.number().int() }),
@@ -608,7 +595,6 @@ export type LocationKind = z.infer<typeof LocationKind>;
 export type ActionType = z.infer<typeof ActionType>;
 export type CheckedAction = z.infer<typeof CheckedAction>;
 export type TrainingAction = z.infer<typeof TrainingAction>;
-export type ShiftAction = z.infer<typeof ShiftAction>;
 export type Action = z.infer<typeof Action>;
 export type Location = z.infer<typeof Location>;
 export type City = z.infer<typeof City>;
@@ -632,6 +618,5 @@ export type ContentInput = z.input<typeof Content>;
 export type { HeadlineTemplate, OrderTemplate };
 
 /** Narrowing helpers for the action union. */
-export const isCheckedAction = (a: Action): a is CheckedAction => a.type !== 'training' && a.type !== 'job';
+export const isCheckedAction = (a: Action): a is CheckedAction => a.type !== 'training';
 export const isTrainingAction = (a: Action): a is TrainingAction => a.type === 'training';
-export const isShiftAction = (a: Action): a is ShiftAction => a.type === 'job';

@@ -178,6 +178,14 @@ export function CouncilCard({ summary: s, onOpen }: CouncilCardProps) {
     >
       <h3 className="label-caps text-[11px] font-semibold">{s.cityName} Council</h3>
       <p className="font-body text-[14px]">{state}</p>
+      {/* Review 1 #10: below Rank 2 the card has no button, so it says why, in the hint style,
+          with the Polling Day row's line ("Stewards vote. 400 Faction XP makes a Steward.").
+          TODO(game-designer): confirm this line on the card. */}
+      {s.state === 'belowRank' && (
+        <p className="font-mono text-[12px] text-muted" data-testid="council-card-reason">
+          {pollingDayLines(s)[1]}
+        </p>
+      )}
       {s.state === 'filed' && s.endorsements && (
         <>
           <p className="font-mono text-[12px]" data-testid="council-card-endorsements">

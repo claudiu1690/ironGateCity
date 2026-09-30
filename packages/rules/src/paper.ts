@@ -22,19 +22,17 @@ export interface PaperFacts {
   levelRose: boolean;
   standingRose: boolean;
   ordersAllDoneYesterday: boolean;
-  /** The streak reached yesterday (after yesterday's shift), or null without a job. */
-  streakHitYesterday: number | null;
   /**
-   * Slice 3 (design §17 Q11): the streak before yesterday's shift. A streak headline fires on
-   * crossing its value, not on equality, so Shift Hours' +2 steps (4 → 6) still print Five Straight
-   * Shifts. Absent: one below `streakHitYesterday`.
+   * Review 1 (GDD §9.1): seniority before and after the boundaries this edition settles, or null
+   * without a job. A seniority headline fires when a value lies in (before, after], so the Long
+   * Service Order's two-day steps (4 → 6) still print *Five Days In*.
    */
-  streakBeforeYesterday?: number | null;
+  seniority: { before: number; after: number } | null;
   daysSinceLastPaper: number | null;
-  /** Seen yesterday, but spent nothing and worked no shift. */
+  /** Seen yesterday, but spent nothing. */
   idleYesterday: boolean;
-  /** Half-pays credited at the boundaries crossed since the last paper (0 without a job). */
-  halfPaysCredited: number;
+  /** Days of pay credited at the boundaries crossed since the last paper (0 without a job). */
+  daysPaid: number;
   /** Energy spent on the previous City Day (0 when not seen yesterday). */
   energyYesterday: number;
   /** The home faction's share of its home city, in points. */
@@ -61,18 +59,16 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
       return f.standingRose;
     case 'ordersAllDoneYesterday':
       return f.ordersAllDoneYesterday;
-    case 'streakHitYesterday': {
-      const now = f.streakHitYesterday;
-      if (now === null) return false;
-      const before = f.streakBeforeYesterday ?? now - 1;
-      return c.values.some((v) => before < v && v <= now);
+    case 'seniorityHitYesterday': {
+      const s = f.seniority;
+      return s !== null && c.values.some((v) => s.before < v && v <= s.after);
     }
     case 'daysSinceLastPaper':
       return f.daysSinceLastPaper !== null && f.daysSinceLastPaper >= c.min;
     case 'idleYesterday':
       return f.idleYesterday;
-    case 'halfPaysCredited':
-      return within(f.halfPaysCredited, c);
+    case 'daysPaid':
+      return within(f.daysPaid, c);
     case 'energyYesterday':
       return within(f.energyYesterday, c);
     case 'noPersonal':

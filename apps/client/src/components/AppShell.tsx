@@ -1,11 +1,12 @@
 import { copy } from '@irongate/content/copy';
-import { HudBar, TabBar } from '@irongate/ui';
+import { HudBar, OrdersComplete, TabBar } from '@irongate/ui';
 import type { TabId, TabItem } from '@irongate/ui';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useLayoutEffect, useRef } from 'react';
 import { DevPanel } from '../features/dev/DevPanel';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
+import { useResultModalOpen } from '../lib/modalGate';
 import { trpc } from '../lib/trpc';
 import { useMinWidth } from '../lib/useNow';
 
@@ -22,6 +23,15 @@ export function AppShell() {
   const paperDue = !!character?.paperDue && !pathname.startsWith('/paper');
   // The ticker (wide screens) and the "paper is in" banner both need the paper's name.
   const paper = useQuery({ ...trpc.paper.today.queryOptions(), enabled: !!character && (wide || paperDue) });
+  // Review 1 (GDD §13.7): the orders-complete note, once the completing result modal is closed; it
+  // waits (server-side) until Carry on, so a closed tab shows it on the next open.
+  const queryClient = useQueryClient();
+  const resultOpen = useResultModalOpen();
+  const seen = useMutation({
+    ...trpc.character.seeOrdersNote.mutationOptions(),
+    onSuccess: (view) => queryClient.setQueryData(trpc.character.me.queryKey(), view),
+  });
+  const note = character?.orders.complete ?? null;
 
   // QA m4: one <main> scrolls every screen, so a new screen (another tab, a chapter) opens at its
   // top instead of at the last one's scroll position. A change of search only (a pin's sheet on the
@@ -71,7 +81,7 @@ export function AppShell() {
           placing={stat.placing}
         />
       ) : (
-        <div className="h-14 shrink-0 border-b border-ink-2 bg-ink" />
+        <div className="h-[76px] shrink-0 border-b border-ink-2 bg-ink" />
       )}
       {paperDue && paper.data && (
         <Link
@@ -107,6 +117,19 @@ export function AppShell() {
         </div>
       )}
       <TabBar items={items} active={active} onNavigate={(href) => void navigate({ to: href })} />
+      {character && note && (
+        <OrdersComplete
+          open={!resultOpen}
+          note={note}
+          factionId={character.factionId}
+          name={character.name}
+          issuer={character.orders.issuer}
+          pending={seen.isPending}
+          onCarryOn={() => {
+            if (!seen.isPending) seen.mutate();
+          }}
+        />
+      )}
       {/* Memory mode only: renders nothing unless the server has its test hooks on. */}
       <DevPanel />
     </div>

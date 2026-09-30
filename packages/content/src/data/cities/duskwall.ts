@@ -35,6 +35,7 @@ export const duskwall: City = {
     {
       id: 'duskwall.garrison-gate',
       name: 'Fortress Gate',
+      ref: 'the Fortress Gate',
       kind: 'ministry',
       blurb:
         'The gatehouse of the old fortress, now the frontier customs house. The shift changes at four, and the whole town sets its watch by it.',
@@ -85,24 +86,12 @@ export const duskwall: City = {
             },
           },
         },
-        {
-          id: 'duskwall.garrison-gate.stores',
-          name: 'Work your shift in the customs stores',
-          tier: 1,
-          type: 'job',
-          jobId: 'duskwall-stores-hand',
-          text: {
-            success: {
-              headline: 'Eight hours among the crates',
-              body: "Seized tobacco, bonded spirits, tinned beef, counted in and counted out under a storeman who trusts nobody. The paybook gets its stamp. Half came at midnight; here's the rest, with the streak on top.",
-            },
-          },
-        },
       ],
     },
     {
       id: 'duskwall.quartermaster-market',
       name: 'Customs Market',
+      ref: 'the Customs Market',
       kind: 'market',
       blurb:
         "Tents and trestles under the walls, where the customs auctions what it seizes at the frontier and the town buys what it can't get elsewhere.",
@@ -156,19 +145,6 @@ export const duskwall: City = {
             },
           },
         },
-        {
-          id: 'duskwall.quartermaster-market.stall',
-          name: 'Work the market stall',
-          tier: 1,
-          type: 'job',
-          jobId: 'duskwall-street-vendor',
-          text: {
-            success: {
-              headline: "A day's trade",
-              body: "Bootlaces, tobacco, yesterday's Sentinel. You know the regulars by their boots now. The takings won't make anyone rich, but they come in every day, and the inspector has stopped asking.",
-            },
-          },
-        },
       ],
     },
     {
@@ -184,7 +160,7 @@ export const duskwall: City = {
           name: 'Sit in on the district committee',
           tier: 1,
           type: 'council',
-          stats: ['int'],
+          stats: ['best'],
           energy: 10,
           givesFxp: true,
           givesOpinion: false,
@@ -292,6 +268,7 @@ export const duskwall: City = {
     {
       id: 'duskwall.goods-yard',
       name: 'Goods Yard',
+      ref: 'the Goods Yard',
       kind: 'station',
       blurb:
         'The sidings below the fortress wall, where the frontier freight is broken down and the coal comes in. The loaders eat at noon with their backs to the wagons.',
@@ -343,19 +320,6 @@ export const duskwall: City = {
             partial: {
               headline: 'Nothing much moves',
               body: 'An hour on the bollard and one wagon, which is checked, stamped and shunted. Your notebook has a firm and a time. Not nothing.',
-            },
-          },
-        },
-        {
-          id: 'duskwall.goods-yard.lorry',
-          name: 'Drive the yard lorry',
-          tier: 1,
-          type: 'job',
-          jobId: 'duskwall-driver',
-          text: {
-            success: {
-              headline: 'Six runs to the depot',
-              body: "Six runs between the sidings and the customs depot, a full load each way and a checker who wants it faster. The lorry fights you on the frost. The pay clerk doesn't.",
             },
           },
         },

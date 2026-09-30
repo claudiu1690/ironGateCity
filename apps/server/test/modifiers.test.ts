@@ -19,7 +19,6 @@ const CANVASS = {
   actionId: 'coalport.mill-gate.canvass',
   locationId: 'coalport.mill-gate',
 } as const;
-const SHIFT = { actionId: 'coalport.mill-gate.shift', locationId: 'coalport.mill-gate', times: 1 } as const;
 
 const shares = (collective: number): OpinionShares => ({
   vanguard: 9,
@@ -38,7 +37,7 @@ async function inForce(id: string, fromDay: number, toDay: number) {
 }
 
 describe('the settlement v3', () => {
-  it('salary: each ended day under the Ward Fund pays 81, and the desk says why', async () => {
+  it('salary: each ended day under the Ward Fund pays 216 − 54 plus seniority, and the desk says why', async () => {
     await resetCity('coalport');
     const D2 = nextCycleDay('coalport', 2, 20950);
     const clock = testClock(at(D2));
@@ -47,16 +46,16 @@ describe('the settlement v3', () => {
     await inForce('ord.ward-fund', D2, D2 + 5);
     clock.set(at(D2 + 2));
     const paper = await p.caller.paper.today();
+    // Review 1 (§9.1): the full wage per ended day; the Ward Fund's −25 % is a line on the unmodified
+    // 216 (−54 a day), beside seniority's (+4, +9). There is no shift to carry a second Iron line.
     expect(paper.desk.salary).toEqual({
       jobName: 'Factory worker',
       days: 2,
-      perDay: 108,
-      total: 162,
-      ordinance: { label: 'Ward Fund', amount: -54 },
+      perDay: 216,
+      seniority: { days: 2, pct: 4, amount: 13 },
+      total: 2 * 216 + 13 - 108,
+      ordinance: { label: 'Ward Fund', amount: -108 },
     });
-    const shift = await p.caller.action.perform({ ...SHIFT, idempotencyKey: randomUUID() });
-    expect(shift.rewards.iron.parts).toContainEqual({ id: 'ord.ward-fund', label: 'Ward Fund', amount: -27 });
-    expect(shift.rewards.iron.total).toBe(shift.rewards.iron.base + shift.rewards.iron.bonus);
   });
 
   it('Rested banked to 250 under the Rest Day Order stays 250 after it expires', async () => {
@@ -90,7 +89,8 @@ describe('the settlement v3', () => {
       'dir.restore-canvass',
       'dir.restore-speech',
     ]);
-    expect(me.orders.items[0]!.title).toBe('Restore the base: the doors');
+    // Review 1 (§13.7): titles say what and where.
+    expect(me.orders.items[0]!.title).toBe('Restore the base: canvass anywhere in Coalport');
     let last;
     for (let i = 0; i < 3; i++) {
       last = await p.caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 });
@@ -111,7 +111,7 @@ describe('the settlement v3', () => {
 });
 
 describe('modifiers in play', () => {
-  it('Fired up: +10 % FXP as a part on a canvass; nothing on a shift', async () => {
+  it('Fired up: +10 % FXP as a part on a canvass', async () => {
     await resetCity('coalport');
     const D = nextCycleDay('coalport', 3, 21010);
     const clock = testClock(at(D));
@@ -119,12 +119,10 @@ describe('modifiers in play', () => {
     await City.updateOne({ _id: 'coalport' }, { $set: { opinion: shares(85) } });
     // INT 20: 95 % a row, so the ×3 has a Success (a Partial's 0.3 FXP rounds to no part).
     await Character.updateOne({ _id: p.id }, { $set: { 'stats.int': 20 } });
-    await p.caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     const r = await p.caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 3 });
     expect(r.rewards.fxp.parts?.find((x) => x.id === 'morale.fired')?.amount).toBe(r.successes);
     expect(r.bonusTags).toContainEqual({ id: 'morale.fired', label: 'Fired up', note: '+10 % FXP' });
-    const s = await p.caller.action.perform({ ...SHIFT, idempotencyKey: randomUUID() });
-    expect(s.rewards.fxp).toEqual({ base: 0, bonus: 0, total: 0 });
+    // Review 1 (§9.1): "nothing on a shift" is gone with the shift.
     const city = await p.caller.city.get({ cityId: 'coalport' });
     expect(city.morale).toMatchObject({ state: 'fired' });
   });

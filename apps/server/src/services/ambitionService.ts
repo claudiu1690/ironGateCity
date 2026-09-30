@@ -35,7 +35,9 @@ import {
   assetView,
   dayMonth,
   energyState,
+  firstDayBonuses,
   itemArt,
+  preferredStat,
   toCharacterView,
   wornStats,
 } from './views';
@@ -102,7 +104,14 @@ function chapterScreen(
     approaches: s.check.approaches.map((a) => ({
       id: a.id,
       text: fill(a.text, vars),
-      check: computeCheck({ stats: a.stats, values, difficulty: s.check.difficulty }),
+      // Review 1 (§8.4, answers §2): the First day row at home on the welcome day; Legwork's tie-break.
+      check: computeCheck({
+        stats: a.stats,
+        values,
+        difficulty: s.check.difficulty,
+        bonuses: firstDayBonuses(content, c, c.homeCityId, dayKey(now)),
+        prefer: preferredStat(content, c.factionId),
+      }),
     })),
     cta: { label: s.check.cta, energy: s.check.energy, readyAt: energyReadyAt(energy, s.check.energy) },
     progress: { step: 2, of: 3 },
@@ -236,7 +245,15 @@ export async function attemptChapter(deps: {
 
       const seed = randomBytes(16).toString('hex');
       const r = resolveChapterCheck(
-        { spec, approachId: input.approachId, values: wornStats(c, content), energy: energyState(c), now },
+        {
+          spec,
+          approachId: input.approachId,
+          values: wornStats(c, content),
+          energy: energyState(c),
+          now,
+          bonuses: firstDayBonuses(content, c, c.homeCityId, today),
+          prefer: preferredStat(content, c.factionId),
+        },
         createRng(seed),
       );
       if (!r.ok) {
@@ -381,7 +398,6 @@ export async function attemptChapter(deps: {
           orders: [],
           ordersAllDone: null,
           stat: null,
-          shift: null,
           item: {
             itemId: keepsake.id,
             name: content.item(keepsake.id)!.name,

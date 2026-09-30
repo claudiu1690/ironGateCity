@@ -18,15 +18,15 @@ const TEMPLATES: HeadlineTemplate[] = [
   h('hl.level-up-quiet', 'personal', 3, [{ kind: 'levelRose' }, { kind: 'energyYesterday', max: 0 }]),
   h('hl.standing', 'personal', 4, [{ kind: 'standingRose' }]),
   h('hl.orders-done', 'personal', 5, [{ kind: 'ordersAllDoneYesterday' }]),
-  h('hl.streak-5', 'personal', 6, [{ kind: 'streakHitYesterday', values: [5] }]),
-  h('hl.streak-10', 'personal', 6, [{ kind: 'streakHitYesterday', values: [10] }]),
+  h('hl.seniority-5', 'personal', 6, [{ kind: 'seniorityHitYesterday', values: [5] }]),
+  h('hl.seniority-10', 'personal', 6, [{ kind: 'seniorityHitYesterday', values: [10] }]),
   h('hl.away', 'personal', 7, [
     { kind: 'daysSinceLastPaper', min: 2 },
-    { kind: 'halfPaysCredited', min: 1 },
+    { kind: 'daysPaid', min: 1 },
   ]),
   h('hl.away-no-job', 'personal', 7, [
     { kind: 'daysSinceLastPaper', min: 2 },
-    { kind: 'halfPaysCredited', max: 0 },
+    { kind: 'daysPaid', max: 0 },
   ]),
   h('hl.idle', 'personal', 8, [{ kind: 'idleYesterday' }]),
   h('hl.morale-fired', 'city', 1, [{ kind: 'homeShare', min: 80 }]),
@@ -43,10 +43,10 @@ const facts = (over: Partial<PaperFacts> = {}): PaperFacts => ({
   levelRose: false,
   standingRose: false,
   ordersAllDoneYesterday: false,
-  streakHitYesterday: null,
+  seniority: null,
   daysSinceLastPaper: 1,
   idleYesterday: false,
-  halfPaysCredited: 0,
+  daysPaid: 0,
   energyYesterday: 30,
   homeShare: 70,
   ...over,
@@ -78,17 +78,18 @@ describe('selectHeadlines (§3.3)', () => {
     expect(ids(facts({ homeShare: 79.999 }))[0]).toBe('hl.morale-steady');
     expect(ids(facts({ homeShare: 59.9 }))[0]).toBe('hl.morale-unrest');
     expect(ids(facts({ ordersAllDoneYesterday: true }))[0]).toBe('hl.orders-done');
-    expect(ids(facts({ streakHitYesterday: 5 }))[0]).toBe('hl.streak-5');
-    expect(ids(facts({ streakHitYesterday: 10 }))[0]).toBe('hl.streak-10');
-    expect(ids(facts({ streakHitYesterday: 6 }))[0]).toBe('hl.morale-steady');
-    expect(ids(facts({ daysSinceLastPaper: 2, halfPaysCredited: 2 }))[0]).toBe('hl.away');
+    expect(ids(facts({ seniority: { before: 4, after: 5 } }))[0]).toBe('hl.seniority-5');
+    expect(ids(facts({ seniority: { before: 4, after: 6 } }))[0]).toBe('hl.seniority-5'); // Long Service
+    expect(ids(facts({ seniority: { before: 9, after: 10 } }))[0]).toBe('hl.seniority-10');
+    expect(ids(facts({ seniority: { before: 5, after: 6 } }))[0]).toBe('hl.morale-steady');
+    expect(ids(facts({ daysSinceLastPaper: 2, daysPaid: 2 }))[0]).toBe('hl.away');
     expect(ids(facts({ daysSinceLastPaper: 2 }))[0]).toBe('hl.away-no-job');
-    expect(ids(facts({ daysSinceLastPaper: 1, halfPaysCredited: 1 }))[0]).toBe('hl.morale-steady');
+    expect(ids(facts({ daysSinceLastPaper: 1, daysPaid: 1 }))[0]).toBe('hl.morale-steady');
     expect(ids(facts({ daysSinceLastPaper: null }))[0]).toBe('hl.morale-steady');
     expect(ids(facts({ idleYesterday: true }))[0]).toBe('hl.idle');
   });
 
-  it('variants by rank, Energy yesterday and half-pays: exactly one of each family matches (content §13)', () => {
+  it('variants by rank, Energy yesterday and days paid: exactly one of each family matches (content §13)', () => {
     const rose = (rank: number) => ids(facts({ rankRose: true, rank }))[0];
     expect([rose(2), rose(3), rose(4), rose(7)]).toEqual([
       'hl.rank-up-2',
@@ -101,7 +102,7 @@ describe('selectHeadlines (§3.3)', () => {
     expect(ids(facts({ levelRose: true, energyYesterday: 0 }))[0]).toBe('hl.level-up-quiet');
     for (const f of [
       facts({ rankRose: true, rank: 2, levelRose: true, energyYesterday: 0 }),
-      facts({ daysSinceLastPaper: 5, halfPaysCredited: 0, levelRose: true }),
+      facts({ daysSinceLastPaper: 5, daysPaid: 0, levelRose: true }),
     ]) {
       const picked = ids(f).filter(
         (id) => id.startsWith('hl.rank') || id.startsWith('hl.level') || id.startsWith('hl.away'),

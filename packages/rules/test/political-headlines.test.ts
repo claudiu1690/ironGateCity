@@ -192,10 +192,10 @@ describe('political headlines (ADR 0023)', () => {
       levelRose: false,
       standingRose: false,
       ordersAllDoneYesterday: false,
-      streakHitYesterday: null,
+      seniority: null,
       daysSinceLastPaper: 1,
       idleYesterday: false,
-      halfPaysCredited: 0,
+      daysPaid: 0,
       energyYesterday: 0,
       homeShare: 70,
     };

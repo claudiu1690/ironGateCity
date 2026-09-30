@@ -16,14 +16,12 @@ export const ordinances: OrdinanceInput[] = [
     effects: [{ kind: 'jobPayPct', value: 10 }],
   },
   {
-    id: 'ord.shift-hours',
-    name: 'Shift Hours Order',
-    line: 'Shifts end an hour early, by order of the council, and count double towards the streak.',
-    effectLine: 'Job shifts −1 Energy · streak days ×2',
-    effects: [
-      { kind: 'shiftEnergyDelta', value: -1, floor: 2 },
-      { kind: 'shiftStreakDays', value: 2 },
-    ],
+    // Review 1 (answers §1.2): was the Shift Hours Order; still the Collective's motion.
+    id: 'ord.long-service',
+    name: 'Long Service Order',
+    line: 'The council backs long service: every day at the job counts double towards the rate.',
+    effectLine: 'Seniority ×2',
+    effects: [{ kind: 'seniorityDays', value: 2 }],
   },
   {
     id: 'ord.street-permits',

@@ -93,7 +93,8 @@ describe('paper.today (§3.3)', () => {
     expect(p.headlines[0]).toMatchObject({ group: 'city', headline: 'Polls Open in Coalport' });
     expect(p.headlines[2]).toEqual({
       group: 'city',
-      headline: 'Secretary Holm Calls for Knock Foundry Row',
+      // Review 1 (§13.7): order titles say what and where.
+      headline: 'Secretary Holm Calls for Canvass door to door on Foundry Row',
       deck: 'Sixty doors in Foundry Row. Start at the top and work down.',
     });
     expect(p.due).toBe(true);
@@ -116,7 +117,8 @@ describe('headline variants (content §13, QA fix round 1)', () => {
         },
         {
           headline: 'While You Were Away',
-          deck: 'No job, so no half pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
+          // Review 1 (§9.1): no half pay any more; the wage is paid whole.
+          deck: 'No job, so no pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate.',
         },
       ]),
     );

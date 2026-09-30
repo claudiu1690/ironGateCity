@@ -20,8 +20,9 @@ const CASES = [
     secretary: '— V.S.',
     pin1: '1. Fortress Gate',
     canvass: 'Canvass the customs shift',
-    odds: '62 %',
-    order: 'Be at the gate',
+    // Review 1: STR 11 = INT 11 goes to the Vanguard's STR, the gate; +10 % on the first day.
+    odds: '72 %',
+    order: 'Canvass the customs shift at the Fortress Gate',
   },
   {
     faction: 'collective' as const,
@@ -33,8 +34,8 @@ const CASES = [
     secretary: '— P.H.',
     pin1: '1. Mill Gate',
     canvass: 'Canvass the shift change',
-    odds: '66 %',
-    order: 'Be at the gate',
+    odds: '76 %',
+    order: 'Canvass the shift change at the Mill Gate',
   },
   {
     faction: 'alliance' as const,
@@ -46,8 +47,8 @@ const CASES = [
     secretary: '— T.G.',
     pin1: '1. Gazette House',
     canvass: 'Canvass the print-room shift',
-    odds: '74 %',
-    order: 'Be at the loading bay',
+    odds: '84 %',
+    order: 'Canvass the print-room shift at Gazette House',
   },
 ];
 

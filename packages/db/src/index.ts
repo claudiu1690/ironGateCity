@@ -4,6 +4,12 @@ export { ensureIndexes, models } from './indexes';
 export { migrateSlice1CharacterFields } from './migrations/001-slice1-character-fields';
 export { RENAMED_JOBS, migrateSlice2Arrival } from './migrations/002-slice2-arrival';
 export { migrateSlice3Politics } from './migrations/003-slice3-politics';
+// Review 1: written and tested, not yet run at start-up (see the migration's comment).
+export {
+  RENAMED_ORDINANCES,
+  RETIRED_ORDER_TEMPLATES,
+  migrateReview1Wage,
+} from './migrations/004-review1-wage';
 export { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
 export type {
   BallotLine,

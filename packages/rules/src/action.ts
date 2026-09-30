@@ -20,13 +20,14 @@ import type {
   ActionAttempt,
   ActionDescriptor,
   CheckBonus,
-  CheckStats,
+  CheckStatSpec,
   CityRole,
   OrderTemplate,
   OrdersState,
   Outcome,
   Rewards,
   Stats,
+  TrainableStat,
 } from './types';
 
 export interface Tier1Attempt extends ActionAttempt {
@@ -70,7 +71,7 @@ export interface Tier1ActionInput {
     locationId: string;
     cityId: string;
     energy: number;
-    stats: CheckStats;
+    stats: CheckStatSpec;
     givesFxp: boolean;
     givesOpinion: boolean;
   };
@@ -84,8 +85,10 @@ export interface Tier1ActionInput {
   orders: OrdersState;
   orderTemplates: readonly OrderTemplate[];
   homeCityId: string;
-  /** Items, weather: later slices. */
+  /** The First day row (review 1); items, weather: later slices. */
   bonuses?: CheckBonus[];
+  /** A best-stat check's tie-break: the faction's bonus stat (review 1). */
+  prefer?: TrainableStat;
   /** Slice 3 (ADR 0021): the ordinance in force and morale in the action's city. */
   modifiers?: CityModifiers;
 }
@@ -153,6 +156,7 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       values: i.values,
       difficulty,
       bonuses: [...(i.bonuses ?? []), ...(standing ? [standing] : []), ...ordinanceBonuses],
+      ...(i.prefer ? { prefer: i.prefer } : {}),
     });
     const roll = rng.roll100();
     const outcome = outcomeForRoll(roll, check.chance, 1);

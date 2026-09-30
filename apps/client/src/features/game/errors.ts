@@ -11,10 +11,6 @@ export function noticeFor(error: unknown): string | undefined {
       const at = typeof game.nextTickAt === 'number' ? game.nextTickAt : null;
       return copy.needsEnergy(Number(game.cost), at === null ? '—' : formatClock(at));
     }
-    case 'SHIFT_ALREADY_WORKED':
-      return copy.shiftWorked(typeof game.nextAt === 'number' ? formatClock(game.nextAt) : '—');
-    case 'NOT_YOUR_JOB':
-      return game.jobId ? copy.shiftNotYourJob : copy.shiftNoJob;
     case 'JOB_LOCKED':
       return copy.jobNeeds([
         game.stat ? `${String(game.stat).toUpperCase()} ${String(game.need)}` : `Level ${String(game.need)}`,

@@ -23,11 +23,12 @@ describe('the City Day (ADR 0005)', () => {
     const next = await caller.character.me();
     expect(next.day.key).toBe(dayKey(clock.now()));
     expect(next.today).toMatchObject({ energy: 0, attempts: 0 });
-    // Day index 272: Knock Foundry Row, Paper the town, A full day.
+    // Day index 272: Foundry Row, Spread the bulletin, and slot C's third habit.
+    // Review 1 (§13.7): slot C rotates Train once · Six wins · Five attempts (272 mod 3 = 2).
     expect(next.orders.items.map((o) => o.id)).toEqual([
       'dir.foundry-row',
       'dir.paper-the-town',
-      'dir.full-day',
+      'dir.five-in-the-book',
     ]);
     expect(await PaperEntry.countDocuments({ characterId: me.id })).toBe(2);
     const stored = await Character.findById(me.id).lean();
@@ -46,7 +47,9 @@ describe('the City Day (ADR 0005)', () => {
       caller.character.me(),
     ]);
     expect(await PaperEntry.countDocuments({ characterId: me.id })).toBe(2);
-    expect((await Character.findById(me.id).lean())!.iron).toBe(108);
+    // Review 1 (§9.1): the full wage once, 216 + seniority; Coalport's branch motion (the Long
+    // Service Order) makes the first boundary count two days: 216 + 9.
+    expect((await Character.findById(me.id).lean())!.iron).toBe(225);
   });
 
   it('an action straddling midnight counts on the new day, after the new day is settled', async () => {

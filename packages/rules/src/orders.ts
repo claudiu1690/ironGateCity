@@ -30,10 +30,11 @@ export function ordersForDay(templates: readonly OrderTemplate[], day: DayKey): 
 }
 
 /**
- * A fresh day's orders; the variant and target are frozen now (no job → "Take a job"). With
- * `welcome` (a character's first City Day, ADR 0012) the three items are those templates, in slot
- * order A, B, C, instead of the rotation. With `crisis` (the home city in Unrest, GDD §14.11) the
- * pair replaces slots A and B; the welcome set wins over it on a first City Day.
+ * A fresh day's orders. With `welcome` (a character's welcome day, ADR 0012 and review 1) the three
+ * items are those templates, in slot order A, B, C, instead of the rotation; a *Take a job* item
+ * (`kinds: ['takeJob']`) starts done, with no reward, when a job is already held (the second
+ * welcome day of a late sign-up). With `crisis` (the home city in Unrest, GDD §14.11) the pair
+ * replaces slots A and B; the welcome set wins over it on a welcome day.
  */
 export function startOrders(
   templates: readonly OrderTemplate[],
@@ -41,6 +42,7 @@ export function startOrders(
   hasJob: boolean,
   welcome?: readonly [string, string, string],
   crisis?: readonly [string, string],
+  now?: number,
 ): OrdersState {
   const byId = (kind: string) => (id: string) => {
     const t = templates.find((x) => x.id === id);
@@ -59,13 +61,13 @@ export function startOrders(
   return {
     day,
     items: picked.map((t) => {
-      const variant = t.noJob && !hasJob ? 'noJob' : 'main';
+      const already = hasJob && (t.match.kinds ?? []).includes('takeJob');
       return {
         templateId: t.id,
-        variant,
-        target: variant === 'noJob' ? t.noJob!.target : t.target,
-        progress: 0,
-        doneAt: null,
+        variant: 'main' as const,
+        target: t.target,
+        progress: already ? t.target : 0,
+        doneAt: already ? (now ?? 0) : null,
       };
     }),
     allDoneAt: null,
@@ -84,11 +86,13 @@ export function orderMatches(m: OrderMatch, a: ActionDescriptor, homeCityId: str
   return true;
 }
 
-/** The title, line and match rule an item is using (its frozen variant). */
-export function itemSpec(item: OrderItem, t: OrderTemplate) {
-  return item.variant === 'noJob' && t.noJob
-    ? { title: t.noJob.title, line: t.noJob.line, match: t.noJob.match, counts: 'attempts' as const }
-    : { title: t.title, line: t.line, match: t.match, counts: t.counts };
+/**
+ * The title, line and match rule an item is using. Review 1 retired the `noJob` variant: an item
+ * stored with it before then reads as its template (the template ids were removed, so such an item
+ * is only ever yesterday's, and never advances).
+ */
+export function itemSpec(_item: OrderItem, t: OrderTemplate) {
+  return { title: t.title, line: t.line, match: t.match, counts: t.counts };
 }
 
 /** The first open item this row would advance, if any (successes-only items only on Success). */

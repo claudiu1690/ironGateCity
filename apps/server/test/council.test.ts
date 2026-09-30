@@ -193,7 +193,8 @@ describe('refusals write nothing', () => {
       game: { reason: 'UNKNOWN_ORDINANCE' },
     });
     expect(
-      await refusal(A.caller.council.propose({ ordinanceId: 'ord.shift-hours', idempotencyKey: key() })),
+      // Review 1: the Collective's branch motion is the Long Service Order (was ord.shift-hours).
+      await refusal(A.caller.council.propose({ ordinanceId: 'ord.long-service', idempotencyKey: key() })),
     ).toMatchObject({ code: 'CONFLICT', game: { reason: 'ALREADY_ON_PAPER' } });
     const pc = await pcOf(A);
     await A.caller.council.propose({ ordinanceId: 'ord.ward-fund', idempotencyKey: key() });
@@ -253,7 +254,7 @@ describe('refusals write nothing', () => {
     clock.set(at(D0 + 7));
     await settleCityDay(content, 'coalport', clock.now());
     const after = (await OrderPaper.findById(paper._id).lean())!;
-    expect(after.division).toMatchObject({ passed: 'ord.shift-hours', npcChoice: 'ord.shift-hours' });
+    expect(after.division).toMatchObject({ passed: 'ord.long-service', npcChoice: 'ord.long-service' });
     expect(after.division!.tallies.find((t) => t.choice === 'against')).toMatchObject({ player: 1, npc: 0 });
     // After the division the chamber is closed.
     expect(
@@ -346,7 +347,8 @@ describe('secrecy (ADR 0019)', () => {
       await other.caller.city.get({ cityId: 'coalport' }),
       await other.caller.character.me(),
     ];
-    const text = JSON.stringify(outputs);
+    // Review 1 (§5.3): the Me view's statGuide.total counts the city's checked actions, not votes.
+    const text = JSON.stringify(outputs, (k, v: unknown) => (k === 'statGuide' ? undefined : v));
     expect(text).not.toContain('"ballots"');
     expect(text).not.toContain(voter.id);
     expect(text).not.toMatch(/"votes":\s*\d/);

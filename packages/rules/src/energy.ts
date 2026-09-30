@@ -60,7 +60,7 @@ export type SpendResult =
 /**
  * Spend `cost` Energy from a projected state (a projection, or the state left by the previous row of
  * a ×3). Each Energy point spent while Rested > 0 uses one Rested point (§6.3), so
- * `restedUsed = min(rested, cost)`; with `useRested: false` (job shifts, job switches) Rested is left alone.
+ * `restedUsed = min(rested, cost)`; with `useRested: false` Rested is left alone.
  */
 export function spendEnergy(s: EnergyState, cost: number, opts: { useRested?: boolean } = {}): SpendResult {
   if (s.value < cost) {

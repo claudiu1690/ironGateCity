@@ -98,19 +98,6 @@ export const ashford: City = {
             },
           },
         },
-        {
-          id: 'ashford.gazette-house.copy-desk',
-          name: 'Work your shift on the copy desk',
-          tier: 1,
-          type: 'job',
-          jobId: 'ashford-copy-clerk',
-          text: {
-            success: {
-              headline: "Eight hours of other people's sentences",
-              body: "Court lists, tram times, the letters page, all checked twice. The chief sub initials your book. Half your wage came at midnight; here's the other half, with the streak on top.",
-            },
-          },
-        },
       ],
     },
     {
@@ -126,7 +113,7 @@ export const ashford: City = {
           name: 'Sit in on the ward committee',
           tier: 1,
           type: 'council',
-          stats: ['int'],
+          stats: ['best'],
           energy: 10,
           givesFxp: true,
           givesOpinion: false,
@@ -342,32 +329,6 @@ export const ashford: City = {
             partial: {
               headline: 'The rain takes half of them',
               body: "You've a decent crowd until the rain comes off the river and takes most of it under the awnings. You finish for the bookseller and a constable who looks bored. The bookseller gives you a nod.",
-            },
-          },
-        },
-        {
-          id: 'ashford.bridge-street.news-stand',
-          name: 'Work the news-stand',
-          tier: 1,
-          type: 'job',
-          jobId: 'ashford-street-vendor',
-          text: {
-            success: {
-              headline: "A day's trade",
-              body: "The Gazette, the Herald, matches, bootlaces. You know the regulars by their umbrellas now. The takings won't make anyone rich, but they come in every day, and nobody asks you for a permit.",
-            },
-          },
-        },
-        {
-          id: 'ashford.bridge-street.van',
-          name: 'Drive the market van',
-          tier: 1,
-          type: 'job',
-          jobId: 'ashford-driver',
-          text: {
-            success: {
-              headline: 'Six runs to the goods shed',
-              body: "Six runs between the stalls and the station goods shed, a full load each way and a stallholder who wants it faster. The van fights you on the wet setts. The pay clerk doesn't.",
             },
           },
         },

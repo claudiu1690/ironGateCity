@@ -20,11 +20,14 @@ test('Letters → choose → approach → Walk his ward → keepsake and hook �
   await expect(screen).toContainText('Ambition · Finish His Work · Chapter 1 of 12');
   await page.getByRole('button', { name: /^Show it to Secretary Holm/ }).click();
 
-  // Step 2: two approaches with their odds; the CTA waits for one.
+  // Step 2: three approaches with their odds (review 1: Legwork on the best stat, and First day
+  // +10 % at home on the welcome day); the CTA waits for one.
   const approaches = page.getByTestId('story-approach');
-  await expect(approaches).toHaveCount(2);
-  await expect(approaches.nth(0)).toContainText('52 %'); // CHA+INT with the coat: (5 + 12) / 2
-  await expect(approaches.nth(1)).toContainText('66 %');
+  await expect(approaches).toHaveCount(3);
+  await expect(approaches.nth(0)).toContainText('62 %'); // CHA+INT with the coat: (5 + 12) / 2
+  await expect(approaches.nth(1)).toContainText('76 %');
+  await expect(approaches.nth(2)).toContainText('76 %');
+  await expect(approaches.nth(2)).toContainText('your best, INT 12 vs 8');
   const cta = page.getByTestId('story-cta');
   await expect(cta).toBeDisabled();
   await approaches.nth(1).click();

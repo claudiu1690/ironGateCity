@@ -2,8 +2,8 @@ import { copy } from '@irongate/content/copy';
 import type { AssetView, FactionCardView, LetterView, StoryScreenView } from '@irongate/rules';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
-import { cx, statLabel } from '../format';
-import { CheckBreakdownList } from './CheckBreakdownList';
+import { cx } from '../format';
+import { oddsSentence, statLine } from '../odds';
 import { FACTION_STYLE } from './FactionCrest';
 import { Picture } from './Picture';
 
@@ -318,19 +318,22 @@ export function StoryScreen({
                         }}
                         onKeyDown={onRadioArrowKey}
                         className={cx(
-                          'flex min-h-14 w-full cursor-pointer flex-col gap-1.5 border-[1.5px] border-ink px-3.5 py-2.5 text-left',
+                          'flex min-h-14 w-full cursor-pointer flex-col gap-1 border-[1.5px] border-ink px-3.5 py-2 text-left',
                           on ? 'bg-ink text-paper' : 'bg-paper-card hover:bg-paper',
                         )}
                         data-testid="story-approach"
                       >
                         <span className="flex items-baseline justify-between gap-3">
-                          <span className="font-display text-[16px] leading-snug font-bold">{a.text}</span>
+                          <span className="font-display text-[15px] leading-snug font-bold sm:text-[16px]">
+                            {a.text}
+                          </span>
                           <span className="font-label text-[20px] font-semibold whitespace-nowrap">
                             {a.check.chance} %
                           </span>
                         </span>
                         <span className="font-mono text-[11.5px] opacity-85">
-                          {statLabel(a.check.stats)} {a.check.statValue} vs {a.check.difficulty}
+                          {/* Review 1: the stat named, "your best, STR 13" for Legwork. */}
+                          {statLine(a.check)} vs {a.check.difficulty}
                         </span>
                         <span className={cx('block h-1.5', on ? 'bg-ink-2' : 'bg-track')} aria-hidden="true">
                           <span
@@ -339,10 +342,14 @@ export function StoryScreen({
                           />
                         </span>
                       </button>
+                      {/* Review 1 (§8.4): the chosen approach's odds as one plain sentence. */}
                       {on && (
-                        <div className="border-x-[1.5px] border-b-[1.5px] border-ink bg-paper-card px-3 py-1.5">
-                          <CheckBreakdownList check={a.check} />
-                        </div>
+                        <p
+                          className="border-x-[1.5px] border-b-[1.5px] border-ink bg-paper-card px-3 py-1 font-body text-[12.5px] leading-snug text-text-2"
+                          data-testid="story-approach-odds"
+                        >
+                          {oddsSentence(a.check)}
+                        </p>
                       )}
                     </div>
                   );

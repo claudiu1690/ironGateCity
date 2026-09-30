@@ -146,14 +146,16 @@ describe('a full cycle in Coalport', () => {
     const chamber = await A.caller.council.chamber();
     expect(chamber).toMatchObject({ npcSeats: 6, you: { councillor: true, canPropose: true } });
     expect(chamber.paper.items.map((i) => [i.name, i.movedBy.kind])).toEqual([
-      ['Shift Hours Order', 'branch'],
+      // Review 1: the Collective's branch motion is the Long Service Order (was ord.shift-hours).
+      ['Long Service Order', 'branch'],
     ]);
     expect(chamber.menu).toHaveLength(10);
     const moved = await A.caller.council.propose({ ordinanceId: 'ord.open-doors', idempotencyKey: key() });
     expect(moved).toMatchObject({
       act: 'propose',
       headline: 'Open Doors is on the order paper',
-      knockOns: { pc: { before: 40, after: 20 } }, // 45 − 10 + 5 (the orders)
+      // 45 − 10 + 5 (the orders) + 5: review 1 (§13.4), One of Us (200 Successes) pays 1 PC a boundary.
+      knockOns: { pc: { before: 45, after: 25 } },
     });
     const voted = await A.caller.council.councilVote({ choice: 'ord.open-doors', idempotencyKey: key() });
     expect(voted).toMatchObject({ act: 'councilVote', headline: 'Your vote is recorded' });
@@ -202,7 +204,7 @@ describe('a full cycle in Coalport', () => {
     // The ordinance expires by the calendar at the next division: the branch's motion again.
     clock.set(at(D0 + 12));
     const later = await A.caller.city.get({ cityId: 'coalport' });
-    expect(later.ordinance?.ordinanceId).toBe('ord.shift-hours');
+    expect(later.ordinance?.ordinanceId).toBe('ord.long-service');
     expect(await Election.countDocuments({ cityId: 'coalport', status: 'counted' })).toBeGreaterThanOrEqual(
       2,
     );
@@ -224,12 +226,13 @@ describe('a full cycle in Coalport', () => {
     const back = await A.caller.paper.today();
     expect(back.desk.stipend).toEqual({ boundaries: 5, pc: 50, fxp: 100, cityName: 'Coalport' });
     const me = await A.caller.character.me();
-    expect(me.pc).toBe(pc + 50);
+    // Review 1 (§13.4): One of Us (200 Successes) also pays 1 PC for each of the 11 boundaries away.
+    expect(me.pc).toBe(pc + 50 + 11);
     expect(me.fxp).toBe(fxp + 100);
     const term = (await OfficeTerm.findOne({ 'holder.characterId': A.id }).lean())!;
     expect(term.completed).toBe(true);
     const p = (await OrderPaper.findById(term.councilKey).lean())!;
-    expect(p.division).toMatchObject({ passed: 'ord.shift-hours', npcChoice: 'ord.shift-hours' });
+    expect(p.division).toMatchObject({ passed: 'ord.long-service', npcChoice: 'ord.long-service' });
     // Late front page: the term is over, so the count view and the Me tab only (design §17 Q14).
     expect(back.frontPage).toBeNull();
   });

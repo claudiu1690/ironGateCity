@@ -95,7 +95,8 @@ export function AmbitionPage() {
       statPoints={{
         pending: character.statPointsPending,
         level: character.level,
-        stats: { str: character.stats.str, int: character.stats.int },
+        stats: { str: character.stats.str, int: character.stats.int, agi: character.stats.agi },
+        guide: character.statGuide,
       }}
       onPlaceStat={stat.place}
       placing={stat.placing}

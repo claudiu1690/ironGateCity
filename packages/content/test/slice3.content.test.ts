@@ -45,9 +45,20 @@ describe('the real content, slice 3', () => {
   it('the ten ordinances word for word (design §10.1)', () => {
     const table = rows(section(POL, '### 10.1 The menu', '### 10.2'), /^\| `ord\./);
     expect(table).toHaveLength(10);
+    // Review 1 (answers §1.2): the Shift Hours Order is the Long Service Order.
+    const renamed: Record<string, [string, string, string]> = {
+      'ord.shift-hours': [
+        'ord.long-service',
+        'Long Service Order',
+        'The council backs long service: every day at the job counts double towards the rate.',
+      ],
+    };
     expect(content.ordinancesMenu().map((o) => [o.id, o.name, o.line])).toEqual(
-      table.map((r) => [unq(r[0]!), r[1], r[2]]),
+      table.map((r) => renamed[unq(r[0]!)] ?? [unq(r[0]!), r[1], r[2]]),
     );
+    expect(content.ordinanceSpec('ord.long-service')?.effects).toEqual([{ kind: 'seniorityDays', value: 2 }]);
+    // A city stored before the rename still resolves.
+    expect(content.ordinance('ord.shift-hours')?.id).toBe('ord.long-service');
     expect(content.ordinanceSpec('ord.open-doors')).toEqual({
       id: 'ord.open-doors',
       name: 'Open Doors',
@@ -72,7 +83,7 @@ describe('the real content, slice 3', () => {
     }
     expect(Object.fromEntries(content.factions.map((f) => [f.id, f.branchMotion]))).toEqual({
       vanguard: 'ord.rally-permits',
-      collective: 'ord.shift-hours',
+      collective: 'ord.long-service',
       alliance: 'ord.reading-room',
     });
     expect(content.platform('collective', 'plat.c.bread')?.line).toBe(
@@ -83,9 +94,12 @@ describe('the real content, slice 3', () => {
   it('Restore the base word for word (design §17.4): crisis, +40, slots A and B', () => {
     const table = rows(section(POL, '### 17.4', '### 17.5'), /^\| `dir\./);
     expect(table).toHaveLength(6);
-    for (const [id, , title, line] of table) {
+    // Review 1 (answers §3) retitled them ("Restore the base: canvass anywhere in Coalport");
+    // the titles are checked word for word in qa.content. The lines, use and FXP stand.
+    for (const [id, , , line] of table) {
       const t = content.orderTemplates.find((x) => x.id === unq(id!))!;
-      expect([t.title, t.line, t.use, t.doneFxp]).toEqual([title, line, 'crisis', 40]);
+      expect([t.line, t.use, t.doneFxp]).toEqual([line, 'crisis', 40]);
+      expect(t.title).toMatch(/^Restore the base: /);
     }
   });
 

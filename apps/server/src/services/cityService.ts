@@ -1,13 +1,11 @@
-import { isCheckedAction, isShiftAction } from '@irongate/content';
+import { isCheckedAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
 import { City } from '@irongate/db';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
-  JOBS,
   actionEnergy,
   computeCheck,
   dayKey,
-  dayStart,
   findAdvancingItem,
   isNight,
   itemSpec,
@@ -17,7 +15,6 @@ import {
   ordinanceCheckBonuses,
   ordinanceTags,
   orderMatches,
-  shiftEnergy,
   standingBonus,
   standingView,
   tier1Difficulty,
@@ -28,7 +25,15 @@ import type { ActionDescriptor, ActionView, CityView, OrdersState } from '@irong
 import { gameError } from '../gameError';
 import { modifiersFor, ordinanceIdOn } from './modifiers';
 import { politicsSummary } from './politicsService';
-import { assetView, namedStanding, standingSuccesses, toOrdersState, wornStats } from './views';
+import {
+  assetView,
+  firstDayBonuses,
+  namedStanding,
+  preferredStat,
+  standingSuccesses,
+  toOrdersState,
+  wornStats,
+} from './views';
 
 /** The order a tap here would advance (open first), or a done one it matched, for the ticket tag. */
 function orderTag(
@@ -81,7 +86,9 @@ export async function getCityView(
   const bonus = standingBonus(successes, `${standing.name} in ${city.name}`);
   const orders = toOrdersState(c.orders);
   const liveOrders: OrdersState = orders.day === today ? orders : { day: today, items: [], allDoneAt: null };
-  const workedToday = c.job?.lastShiftDay === today;
+  // Review 1 (§8.4): the First day row at home on the welcome day; a best-stat tie-break.
+  const firstDay = firstDayBonuses(content, c, city.id, today);
+  const prefer = preferredStat(content, c.factionId);
   const m = modifiersFor(content, state, c.factionId, today);
   const hq = city.homeFactionId === c.factionId ? content.hqOf(c.factionId).location.id : null;
   const council =
@@ -126,7 +133,7 @@ export async function getCityView(
       map: { x: location.map.x, y: location.map.y },
       actions: location.actions.map((action): ActionView => {
         const descriptor: ActionDescriptor = {
-          kind: isCheckedAction(action) ? 'checked' : isShiftAction(action) ? 'shift' : 'training',
+          kind: isCheckedAction(action) ? 'checked' : 'training',
           actionId: action.id,
           type: action.type,
           locationId: location.id,
@@ -159,7 +166,8 @@ export async function getCityView(
               stats: action.stats,
               values,
               difficulty,
-              bonuses: [...(bonus ? [bonus] : []), ...ordinanceCheckBonuses(action.type, m)],
+              bonuses: [...firstDay, ...(bonus ? [bonus] : []), ...ordinanceCheckBonuses(action.type, m)],
+              prefer,
             }),
             locked,
             tags: ordinanceTags({
@@ -169,25 +177,6 @@ export async function getCityView(
               givesFxp: action.givesFxp,
               m,
             }),
-          };
-        }
-        if (isShiftAction(action)) {
-          const job = content.job(action.jobId)!;
-          return {
-            ...base,
-            kind: 'shift',
-            givesFxp: false,
-            energy: shiftEnergy(job.shiftEnergy, m),
-            tags: ordinanceTags({ kind: 'shift', type: action.type, base: job.shiftEnergy, m }),
-            energy3: null,
-            preview: null,
-            shift: {
-              jobId: job.id,
-              held: c.job?.id === job.id,
-              workedToday,
-              nextShiftAt: workedToday ? dayStart(today + 1) : null,
-            },
-            locked: null,
           };
         }
         const from = c.stats[action.trains];
@@ -211,11 +200,10 @@ export async function getCityView(
           name: job.name,
           blurb: job.blurb,
           pay: jobPay(job, c.factionId),
-          shiftEnergy: job.shiftEnergy,
           held,
           locked: unmet[0] ?? null,
           unmet,
-          switchCost: c.job && !held ? JOBS.switchEnergy : 0,
+          isSwitch: !!c.job && !held,
         };
       }),
       council: location.id === hq ? council : null,

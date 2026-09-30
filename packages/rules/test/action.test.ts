@@ -148,7 +148,7 @@ describe('resolveTier1Action ×3 (ADR 0006)', () => {
   });
 
   it('an order at 1 / 2 gets +25 % on the completing row only', () => {
-    const base = startOrders(TEMPLATES, DIRECTIVES.epochDay + 1, true); // shift-change first
+    const base = startOrders(TEMPLATES, DIRECTIVES.epochDay + 6, true); // shift-change first, then report, sharpen-up
     const orders = { ...base, items: base.items.map((x, i) => (i === 0 ? { ...x, progress: 1 } : x)) };
     const r = ok(resolveTier1Action(input({ times: 3, orders }), fixedRng([1, 1, 90])));
     expect(r.attempts.map((a) => a.orderId)).toEqual(['dir.shift-change', null, null]);
@@ -164,7 +164,7 @@ describe('resolveTier1Action ×3 (ADR 0006)', () => {
   });
 
   it('a Partial advancing an open order gets 3 → +1', () => {
-    const orders = startOrders(TEMPLATES, DIRECTIVES.epochDay + 1, true);
+    const orders = startOrders(TEMPLATES, DIRECTIVES.epochDay + 6, true);
     const r = ok(resolveTier1Action(input({ orders }), fixedRng([99])));
     expect(r.attempts[0]!.rewards.fxp).toEqual({ base: 3, bonus: 1, total: 4 });
   });

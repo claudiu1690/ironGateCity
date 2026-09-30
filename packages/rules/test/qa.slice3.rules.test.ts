@@ -90,7 +90,8 @@ describe('QA · the GDD numbers the rules use', () => {
   it('the ordinance bounds are the §15.3 table values', () => {
     const rows = {
       'Public Works Order': /Job pay \+10 %/,
-      'Shift Hours Order': /Job shifts −1 Energy \(never below 2\); each shift adds two days/,
+      // Review 1: the Shift Hours Order is the Long Service Order (GDD §15.3).
+      '**Long Service Order** (was *Shift Hours Order*; review 1)': /Seniority builds two days a day/,
       'Street Permits': /Propaganda opinion swing \+15 %/,
       'Rally Permits': /Speech actions −2 Energy/,
       'Reading Room Grant': /Training Energy −20 %/,
@@ -106,8 +107,7 @@ describe('QA · the GDD numbers the rules use', () => {
     }
     expect(ORDINANCE_BOUNDS).toMatchObject({
       jobPayPct: [-25, 10],
-      shiftEnergyDelta: [-1, 0],
-      shiftStreakDays: [1, 2],
+      seniorityDays: [1, 2],
       swingPct: [0, 15],
       energyDelta: [-2, 0],
       trainingEnergyPct: [-20, 0],

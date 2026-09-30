@@ -17,11 +17,16 @@ export type StatKey = (typeof STAT_KEYS)[number];
 export type Stats = Record<StatKey, number>;
 /** A check uses one stat or the average of two (§8.4). */
 export type CheckStats = [StatKey] | [StatKey, StatKey];
+/**
+ * What content names for a check: a stat, two stats, or (review 1, §8.4) `['best']`, the highest of
+ * STR, INT and AGI, which `computeCheck` resolves to one stat.
+ */
+export type CheckStatSpec = CheckStats | ['best'];
 /** CHA is never trained (§8.5). */
 export const TRAINABLE_STATS = ['str', 'int', 'agi'] as const;
 export type TrainableStat = (typeof TRAINABLE_STATS)[number];
-/** Stat points from levels go to STR or INT (§5.3). */
-export const STAT_POINT_TARGETS = ['str', 'int'] as const;
+/** Stat points from levels go to STR, INT or AGI (§5.3, review 1). */
+export const STAT_POINT_TARGETS = ['str', 'int', 'agi'] as const;
 export type StatPointTarget = (typeof STAT_POINT_TARGETS)[number];
 
 export type CityRole = 'home' | 'battleground';
@@ -36,8 +41,10 @@ export interface CheckBonus {
 }
 
 export interface CheckBreakdown {
-  /** The stat(s) checked; two stats are averaged. */
+  /** The stat(s) checked; two stats are averaged. A best-stat check names the stat it took. */
   stats: CheckStats;
+  /** Review 1: a best-stat check (the committee, *Legwork*); absent on older stored results. */
+  best?: boolean;
   /** One value per stat, in the same order. */
   statValues: number[];
   /** The value the formula uses: the stat, or the average of the two. */
@@ -103,8 +110,8 @@ export interface EnergyView {
 // ---------------------------------------------------------------------------------------------
 
 /** What a performed thing was, for order matching (ADR 0009). */
-export type ActionKind = 'checked' | 'training' | 'shift' | 'takeJob';
-export const ACTION_KINDS = ['checked', 'training', 'shift', 'takeJob'] as const;
+export type ActionKind = 'checked' | 'training' | 'takeJob';
+export const ACTION_KINDS = ['checked', 'training', 'takeJob'] as const;
 
 export interface ActionDescriptor {
   kind: ActionKind;
@@ -134,16 +141,19 @@ export interface OrderTemplate {
   match: OrderMatch;
   target: number;
   counts: 'attempts' | 'successes';
-  /** The variant for a player without a job (e.g. "Take a job"). Counts attempts. */
-  noJob?: { title: string; line: string; match: OrderMatch; target: number };
-  /** Slice 3: `crisis` templates (Restore the base) never enter the rotation. Default `rotation`. */
-  use?: 'rotation' | 'crisis';
+  /**
+   * Slice 3: `crisis` templates (Restore the base) never enter the rotation. Review 1: `welcome`
+   * templates (the welcome set's slot A by best stat, *Take a job*) are only ever welcome-day
+   * orders. Default `rotation`.
+   */
+  use?: 'rotation' | 'crisis' | 'welcome';
   /** FXP for completing it; default DIRECTIVES.orderDoneFxp (20). Restore the base pays 40. */
   doneFxp?: number;
 }
 
 export interface OrderItem {
   templateId: string;
+  /** `noJob` only on items stored before review 1 (the retired *Take a job* variant). */
   variant: 'main' | 'noJob';
   target: number;
   progress: number;
@@ -167,11 +177,12 @@ export type HeadlineCondition =
   | { kind: 'levelRose' }
   | { kind: 'standingRose' }
   | { kind: 'ordersAllDoneYesterday' }
-  | { kind: 'streakHitYesterday'; values: number[] }
+  /** Review 1: seniority first reached or passed one of `values` at the boundaries settled. */
+  | { kind: 'seniorityHitYesterday'; values: number[] }
   | { kind: 'daysSinceLastPaper'; min: number }
   | { kind: 'idleYesterday' }
-  /** Half-pays credited at the boundaries since the last paper (content §13.1). */
-  | { kind: 'halfPaysCredited'; min?: number; max?: number }
+  /** Days of pay credited at the boundaries since the last paper (content §13.1, review 1). */
+  | { kind: 'daysPaid'; min?: number; max?: number }
   /** Energy spent on the previous City Day (0 when the player was not seen). */
   | { kind: 'energyYesterday'; min?: number; max?: number }
   | { kind: 'noPersonal' }
@@ -245,7 +256,9 @@ export const PLACEHOLDERS = [
   'days',
   'iron',
   'share',
-  'streak',
+  'job',
+  /** Review 1: the welcome set's slot-A place ("the Customs Market"), for the welcome deck. */
+  'place',
   'ordersTitle',
   'ordersLine',
 ] as const;
@@ -305,7 +318,6 @@ export interface DailyTally {
   /** Swing actually applied to the meter, three decimals. */
   opinion: number;
   ordersDone: number;
-  shiftWorked: boolean;
   statTrained: number;
 }
 
@@ -350,11 +362,10 @@ export interface JobView {
   locationName: string;
   /** With the faction bonus (Factory worker: 216 for the Collective). */
   dailyPay: number;
-  shiftEnergy: number;
-  streak: number;
-  shiftWorkedToday: boolean;
-  /** The next City Day boundary once today's shift is worked, else null. */
-  nextShiftAt: number | null;
+  /** Review 1 (§9.1): days held (boundaries paid) and the seniority share now (0.08 = +8 %). */
+  seniority: { days: number; pct: number };
+  /** The next boundary, when the wage is paid. */
+  paidAt: number;
 }
 
 export interface OrderView {
@@ -375,6 +386,11 @@ export interface OrdersView {
   items: OrderView[];
   allDone: boolean;
   rewards: { matchFxpBonusPct: number; orderDoneFxp: number; allDonePc: number };
+  /**
+   * Review 1 (GDD §13.7): the orders-complete note, while today's three are done and it has not
+   * been seen (*Carry on*). `fxp` sums today's completions; `pc` is the all-done PC.
+   */
+  complete: { pc: number; fxp: number } | null;
 }
 
 export interface CharacterView {
@@ -396,11 +412,21 @@ export interface CharacterView {
   /** The server clock when this view was built; the client keeps the skew (§3.1). */
   serverNow: number;
   day: { key: DayKey; endsAt: number };
-  rank: { value: number; title: string; fxpFloor: number; fxpNext: number | null };
+  /**
+   * `nextTitle`: the next Rank's title (the HUD's FXP bar), null at the top Rank; `ladder`: the
+   * faction's seven titles, Rank 1 first (the notes name the vote at Rank 2, the candidacy at 3).
+   */
+  rank: {
+    value: number;
+    title: string;
+    fxpFloor: number;
+    fxpNext: number | null;
+    nextTitle: string | null;
+    ladder: string[];
+  };
   pc: number;
   statPointsPending: number;
   job: JobView | null;
-  sickDaysLeft: number;
   /** Local Standing in the city the character is in. */
   standing: NamedStandingView;
   today: DailyTally;
@@ -436,9 +462,25 @@ export interface CharacterView {
   politicsWaiting: 0 | 1;
   /** Slice 3: today's Rested cap in the home city (Rest Day Order: 250), for the client projection. */
   restedCap: number;
+  /**
+   * Review 1 (§8.4, §7.5): today is the welcome day (the creation day, and the next when created
+   * after 22:00 UTC): the *First day* bonus and the plate's first-time hint.
+   */
+  welcomeDay: boolean;
+  /**
+   * Review 1 (§5.3): what the stat-point choice screen says, from the residence city's checked
+   * actions: how many use each stat, the most common, and the player's best.
+   */
+  statGuide: {
+    cityName: string;
+    total: number;
+    counts: Record<StatPointTarget, number>;
+    lead: StatPointTarget;
+    best: { stat: TrainableStat; value: number };
+  };
 }
 
-export type ActionViewKind = 'checked' | 'training' | 'shift';
+export type ActionViewKind = 'checked' | 'training';
 
 export interface ActionView {
   id: string;
@@ -447,14 +489,13 @@ export interface ActionView {
   kind: ActionViewKind;
   /** Whether a matching Party order's +25 % FXP means anything here. */
   givesFxp: boolean;
-  /** ×1 cost (training: the live 20 + 2 × stat; shift: the job's). */
+  /** ×1 cost (training: the live 20 + 2 × stat). */
   energy: number;
-  /** ×3 total; null for training and shifts (×1 only, §8.5, §13.1). */
+  /** ×3 total; null for training (×1 only, §8.5, §13.1). */
   energy3: number | null;
   /** Checked actions only, Standing bonus included. */
   preview: CheckBreakdown | null;
   trains?: { stat: TrainableStat; from: number; to: number };
-  shift?: { jobId: string; held: boolean; workedToday: boolean; nextShiftAt: number | null };
   /** An open Party order this action advances. */
   order: { id: string; title: string; progress: number; target: number } | null;
   locked: { reason: 'LEVEL' | 'STANDING'; need: number } | null;
@@ -467,14 +508,13 @@ export interface LocationJobView {
   name: string;
   blurb: string;
   pay: number;
-  shiftEnergy: number;
   held: boolean;
   /** The first unmet requirement, or null when it can be taken. */
   locked: { reason: 'LEVEL' | 'STAT'; stat?: StatKey; need: number } | null;
   /** Every unmet requirement, level first ("Needs Level 3, AGI 10"). */
   unmet: Array<{ reason: 'LEVEL' | 'STAT'; stat?: StatKey; need: number }>;
-  /** 0 for a first job, 2 Energy to switch. */
-  switchCost: number;
+  /** Review 1: a switch is free and resets seniority; true when another job is held. */
+  isSwitch: boolean;
 }
 
 export interface LocationView {
@@ -515,7 +555,7 @@ export interface BonusTag {
 }
 
 /** `batch` renders "n of N" (GDD §13.1); `failure` only for tier-3 checks (Ambition chapters). */
-export type ResultStamp = 'success' | 'partial' | 'failure' | 'batch' | 'worked' | 'trained';
+export type ResultStamp = 'success' | 'partial' | 'failure' | 'batch' | 'trained';
 
 /** What a result is: a tier-1 action kind, or an Ambition chapter (slice-2 tech design §9). */
 export type ActionResultKind = ActionViewKind | 'chapter';
@@ -568,7 +608,7 @@ export interface ActionResult {
   art: ResultArt;
   /** Checked actions: one row per attempt. */
   attempts: ResultAttempt[];
-  /** Training and shifts: one row per attempt, "no roll". */
+  /** Training: one row per attempt, "no roll". */
   rows: Array<{ index: number; label: string; detail: string }>;
   rewards: Rewards;
   bonusTags: BonusTag[];
@@ -590,20 +630,17 @@ export interface ActionResult {
       shareAfter: number;
     } | null;
     standing: { before: NamedStandingView; after: NamedStandingView } | null;
+    /**
+     * Review 1 (§13.4): a Standing level crossed by this action, for the Standing card; the texts
+     * are copy. `rank3Title`: the faction's Rank 3 title (the candidacy line).
+     */
+    standingUp?: { level: 1 | 2 | 3 | 4; cityName: string; rank3Title: string } | null;
     levelUp: { from: number; to: number; statPoints: number } | null;
     rankUp: { from: number; to: number; title: string } | null;
     pc: { before: number; after: number } | null;
     orders: OrderEffect[];
     ordersAllDone: { pc: number } | null;
     stat: { stat: TrainableStat; before: number; after: number } | null;
-    shift: {
-      half: number;
-      streakBonus: number;
-      streakPct: number;
-      streak: { before: number; after: number };
-      sickDaysLeft: number;
-      nextShiftAt: number;
-    } | null;
     /** A chapter's keepsake ("Keepsake: his ward book"). */
     item: { itemId: string; name: string; keepsake: boolean; art: AssetView } | null;
     /** Next-chapter hooks, already worded. */
@@ -617,18 +654,23 @@ export interface ActionResult {
   today: DailyTally;
   /**
    * Live costs for the modal's Again buttons (training rises); `cost3` is null for training (×1
-   * only, §8.5); the whole field is null for shifts.
+   * only, §8.5).
    */
   again: { cost1: number; cost3: number | null } | null;
   character: CharacterView;
 }
 
 export interface DeskView {
-  /** Frozen at settlement. `ordinance`: the pay ordinances' adjustment (slice 3). */
+  /**
+   * Frozen at settlement (review 1: the wage). `perDay` is the daily pay with the member's fifth;
+   * `seniority` the days held after the boundaries and the line's amount; `ordinance` the pay
+   * ordinances' adjustment (slice 3).
+   */
   salary: {
     jobName: string;
     days: number;
     perDay: number;
+    seniority: { days: number; pct: number; amount: number };
     total: number;
     ordinance: { label: string; amount: number } | null;
   } | null;
@@ -636,7 +678,8 @@ export interface DeskView {
   stipend: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
   /** Slice 3: deposits returned for struck candidacies. */
   deposits: { count: number; pc: number } | null;
-  streak: { before: number; after: number; sickDaysUsed: number; broken: boolean } | null;
+  /** Review 1 (§13.4): the PC One of Us paid at this settlement (0 when none). */
+  oneOfUsPc: number;
   restedBanked: number;
   daysSinceLastPaper: number | null;
   yesterday: DailyTally | null;
@@ -645,7 +688,10 @@ export interface DeskView {
   energy: { value: number; max: number; fullAt: number | null };
   rested: { value: number; cap: number };
   level: { level: number; xpToNext: number; next: number; statPointsPending: number };
-  workStreak: { streak: number; sickDaysLeft: number } | null;
+  /** Review 1: the job held now, with its seniority, for the desk's job row; null without one. */
+  job: { name: string; dailyPay: number; seniority: { days: number; pct: number } } | null;
+  /** Without a job (else []): where the home city's jobs are ("the Fortress Gate, the Customs Market or the Goods Yard"). */
+  jobPlaces: string[];
   standing: NamedStandingView;
   /** "Wearing: Your father's coat · CHA 5" (slice-2 tech design §10). */
   wearing: { name: string; cha: number } | null;
@@ -697,9 +743,6 @@ export type GameErrorReason =
   | 'UNKNOWN_JOB'
   | 'JOB_LOCKED'
   | 'ALREADY_IN_JOB'
-  | 'NOT_YOUR_JOB'
-  | 'SHIFT_ALREADY_WORKED'
-  | 'SHIFT_IS_ONCE'
   | 'TRAINING_IS_ONCE'
   // Slice 2 (tech design §7.1).
   | 'ARRIVAL_PENDING'

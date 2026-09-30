@@ -68,15 +68,16 @@ describe('the bootstrap (ADR 0017 §4, tech design §7.3)', () => {
       );
       expect(terms.every((t) => t.fromDay === D0 && t.toDay === D0 + 5 && !t.completed)).toBe(true);
       const paper = (await OrderPaper.findById('coalport:4145').lean())!;
+      // Review 1: the Collective's branch motion is the Long Service Order (was ord.shift-hours).
       expect(paper.items.map((i) => [i.ordinanceId, i.movedBy.kind, i.movedBy.name])).toEqual([
-        ['ord.shift-hours', 'branch', 'Petra Holm'],
+        ['ord.long-service', 'branch', 'Petra Holm'],
       ]);
       const e = (await Election.findById('coalport:4145').lean())!;
       expect(e.npcSlate).toHaveLength(9);
       if (cd < 2) {
         expect(paper.status).toBe('open');
         expect(city.ordinance).toEqual({
-          id: 'ord.shift-hours',
+          id: 'ord.long-service',
           fromDay: D0 - 3,
           toDay: D0 + 2,
           paperId: null,
@@ -85,9 +86,9 @@ describe('the bootstrap (ADR 0017 §4, tech design §7.3)', () => {
         expect(e.ballot).toBeNull();
       } else {
         expect(paper.status).toBe('divided');
-        expect(paper.division).toMatchObject({ passed: 'ord.shift-hours', npcChoice: 'ord.shift-hours' });
+        expect(paper.division).toMatchObject({ passed: 'ord.long-service', npcChoice: 'ord.long-service' });
         expect(city.ordinance).toEqual({
-          id: 'ord.shift-hours',
+          id: 'ord.long-service',
           fromDay: D0 + 2,
           toDay: D0 + 7,
           paperId: 'coalport:4145',
@@ -149,7 +150,8 @@ describe('the worker down (ADR 0017 §3)', () => {
     expect(city.moraleLog!.map((m) => m.day)).toEqual(Array.from({ length: 12 }, (_, i) => D0 + 1 + i));
     // Counts on D0+5 and D0+10; divisions on D0+2, D0+7, D0+12 (the branch's motion each time).
     expect(await Election.countDocuments({ cityId: 'coalport', status: 'counted' })).toBe(2);
-    expect(city.ordinance).toMatchObject({ id: 'ord.shift-hours', fromDay: D0 + 12, toDay: D0 + 17 });
+    // Review 1: the Collective's branch motion is the Long Service Order (was ord.shift-hours).
+    expect(city.ordinance).toMatchObject({ id: 'ord.long-service', fromDay: D0 + 12, toDay: D0 + 17 });
     expect(city.ordinanceHistory!.map((h) => h.fromDay)).toEqual([D0 - 3, D0 + 2, D0 + 7, D0 + 12]);
     // Two unvoted counts: 70 − 3 − 3 plus the drift back.
     expect(moraleState(city.opinion.collective)).toBe('steady');

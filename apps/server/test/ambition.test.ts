@@ -78,10 +78,14 @@ describe('ambition.get and choose', () => {
     });
     const v = views[0]!;
     expect(v.status).toBe('midway');
+    // Review 1 (§8.4, §17.1): on the welcome day the First day row adds +10 % (46 → 56, 66 → 76), and
+    // chapter 1 has a third approach, Legwork, on the best trained stat (INT 12: 66 + 10).
     expect(v.screen?.approaches.map((a) => [a.id, a.check.chance])).toEqual([
-      ['knock', 46],
-      ['sort', 66],
+      ['knock', 56],
+      ['sort', 76],
+      ['legwork', 76],
     ]);
+    expect(v.screen?.approaches[2]?.check).toMatchObject({ stats: ['int'], best: true });
     expect(v.screen?.cta).toEqual({ label: 'Walk his ward', energy: 10, readyAt: null });
     expect((await caller.character.me()).lettersWaiting).toBe(0);
     expect((await caller.paper.today()).letters[0]?.status).toBe('midway');

@@ -21,7 +21,12 @@ export const factions: Faction[] = [
     secretary: { npcId: 'stahl', signature: '— V.S.', addressedAs: 'Organiser Stahl' },
     hqRef: 'Beacon House',
     kit: { outfit: 'outfit.work-jacket', card: 'doc.party-card' },
-    welcomeOrders: ['dir.v.guard-change', 'dir.v.report', 'dir.v.work-shift'],
+    // Review 1 (answers §2): slot A by best trained stat; the committee; Take a job.
+    welcomeOrders: {
+      A: { str: 'dir.v.guard-change', int: 'dir.v.w.ration-queue', agi: 'dir.v.w.leaflets-market' },
+      B: 'dir.v.report',
+      C: 'dir.v.take-a-job',
+    },
     card: {
       // Content-policy review §3: a party, not a militia; its Campaign Event is the Grand Rally.
       blurb:
@@ -51,13 +56,17 @@ export const factions: Faction[] = [
     secretary: { npcId: 'holm', signature: '— P.H.', addressedAs: 'Secretary Holm' },
     hqRef: 'the Union Hall',
     kit: { outfit: 'outfit.mill-coat', card: 'doc.party-card' },
-    welcomeOrders: ['dir.shift-change', 'dir.report', 'dir.work-shift'],
+    welcomeOrders: {
+      A: { str: 'dir.noon-break', int: 'dir.shift-change', agi: 'dir.w.leaflets-market-row' },
+      B: 'dir.report',
+      C: 'dir.take-a-job',
+    },
     card: {
       blurb:
         'The mill and the docks against the men who own them. Strikes, solidarity, and a union hall in every town. They hold Coalport, the steel town on the river.',
       signatureEvent: 'the General Strike',
     },
-    branchMotion: 'ord.shift-hours',
+    branchMotion: 'ord.long-service',
     platforms: [
       { id: 'plat.c.mill', line: 'The mill and the quays, before the men who own them.' },
       { id: 'plat.c.bread', line: 'Rent, bread and the tram. In that order.' },
@@ -78,7 +87,11 @@ export const factions: Faction[] = [
     secretary: { npcId: 'grey', signature: '— T.G.', addressedAs: 'Mr Grey' },
     hqRef: 'the Rooms',
     kit: { outfit: 'outfit.worn-overcoat', card: 'doc.party-card' },
-    welcomeOrders: ['dir.a.print-room', 'dir.a.report', 'dir.a.work-shift'],
+    welcomeOrders: {
+      A: { str: 'dir.a.w.bills', int: 'dir.a.print-room', agi: 'dir.a.w.evening-run' },
+      B: 'dir.a.report',
+      C: 'dir.a.take-a-job',
+    },
     card: {
       blurb:
         'Elections, courts and a free press. Lawyers, students and shopkeepers who think the republic can still be argued back onto its feet. They hold Ashford, the university town.',

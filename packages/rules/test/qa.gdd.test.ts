@@ -16,7 +16,6 @@ import {
   createRng,
   dayKey,
   emptyTally,
-  halfPay,
   isNight,
   jobPay,
   levelForXp,
@@ -24,12 +23,11 @@ import {
   outcomeForRoll,
   projectEnergy,
   rankForFxp,
-  resolveShift,
   resolveTier1Action,
   resolveTraining,
   roundHalfUp,
   settleDays,
-  shiftPay,
+  seniorityBonus,
   standingView,
   startOrders,
   trainingCost,
@@ -37,7 +35,7 @@ import {
   weekday,
   xpForLevel,
 } from '../src';
-import type { EnergyState, JobState, OrdersState, SickDays, Stats, Tier1ActionInput } from '../src';
+import type { EnergyState, JobState, OrdersState, Stats, Tier1ActionInput } from '../src';
 import { NAMES, TEMPLATES, fixedRng } from './helpers';
 
 const RECRUIT: Stats = { str: 10, int: 12, agi: 5, cha: 2 };
@@ -421,73 +419,33 @@ describe('§14.2 persuasion: Neutral first, floors 5 % and 50 %, three decimals,
 // ---------------------------------------------------------------------------------------------
 // §9 jobs, pay and the lazy City Day
 // ---------------------------------------------------------------------------------------------
-describe('§9 jobs: pay, the shift and the streak', () => {
-  it('job pay (§9.2 pinned): vendor 100, factory 180 (216 Collective), driver 200; half pay 50 / 108 / 100', () => {
+describe('§9 jobs (review 1: a job is a wage): pay and seniority', () => {
+  it('job pay (§9.2 pinned): vendor 100, factory 180 (216 Collective), driver 200', () => {
     const factory = { dailyPay: 180, factionPayBonus: { collective: 0.2 } };
     expect(jobPay(factory, 'collective')).toBe(216);
     expect(jobPay(factory, 'vanguard')).toBe(180);
     expect(jobPay({ dailyPay: 100 }, 'collective')).toBe(100);
-    expect([halfPay(100), halfPay(216), halfPay(200), halfPay(180)]).toEqual([50, 108, 100, 90]);
   });
 
-  it('streak bonus = 2 % × min(streak, 10) of daily pay, for streaks 0..14 at every pinned pay', () => {
+  it('seniority = 2 % × min(days, 10) of daily pay, for 0..14 days at every pinned pay (§9.1)', () => {
     for (const pay of [100, 180, 200, 216]) {
-      for (let s = 0; s <= 14; s++) {
-        const r = shiftPay(pay, s);
-        expect(r.half).toBe(roundHalfUp(pay / 2));
-        expect(r.bonus).toBe(roundHalfUp((pay * 2 * Math.min(s, 10)) / 100));
-        expect(r.total).toBe(r.half + r.bonus);
+      for (let d = 0; d <= 14; d++) {
+        expect(seniorityBonus(pay, d)).toBe(roundHalfUp((pay * 2 * Math.min(d, 10)) / 100));
       }
     }
-    expect(shiftPay(216, 1).total).toBe(112);
-    expect(shiftPay(216, 10).total).toBe(151); // economy §5.1: "108–151 Iron"
-  });
-
-  it('a shift never touches Rested and pays no XP / FXP; one shift per day even with Rested full', () => {
-    const job: JobState = { id: 'factory-worker', since: 0, streak: 3, lastShiftDay: null };
-    const today = dayKey(T0);
-    const r = ok(
-      resolveShift({
-        job,
-        today,
-        pay: 216,
-        shiftEnergy: 4,
-        energy: { value: 100, rested: 200, updatedAt: T0 },
-        now: T0,
-        orders: NO_ORDERS,
-        orderTemplates: TEMPLATES,
-        homeCityId: 'coalport',
-        descriptor: { kind: 'shift' },
-      }),
-    ).resolution;
-    expect(r.energy.after).toMatchObject({ value: 96, rested: 200 });
-    expect(r.pay).toEqual({ half: 108, bonus: 17, pct: 0.08, total: 125 }); // streak 4: 17.28 → 17
-    const again = resolveShift({
-      job: r.job,
-      today,
-      pay: 216,
-      shiftEnergy: 4,
-      energy: r.energy.after,
-      now: T0,
-      orders: NO_ORDERS,
-      orderTemplates: TEMPLATES,
-      homeCityId: 'coalport',
-      descriptor: { kind: 'shift' },
-    });
-    expect(again).toEqual({ ok: false, reason: 'SHIFT_ALREADY_WORKED' });
+    expect(216 + seniorityBonus(216, 10)).toBe(259); // economy §16.1: 216 × 1.20
   });
 });
 
-describe('ADR 0005 settleDays: sick days, the Monday refill, the 14 half-pay cap', () => {
+describe('ADR 0005 settleDays (review 1): the full wage per boundary, the 14-day cap', () => {
   const MON = dayKey(Date.UTC(2026, 8, 28)); // Monday 28 September 2026
   const energy: EnergyState = { value: 100, rested: 0, updatedAt: Date.UTC(2026, 8, 20) };
-  const settle = (settled: number, today: number, job: JobState | null, sick: SickDays) =>
+  const settle = (settled: number, today: number, job: JobState | null, pay = 216) =>
     settleDays({
       settled,
       today,
       job,
-      pay: job ? 216 : null,
-      sickDays: sick,
+      pay: job ? pay : null,
       tally: emptyTally(settled),
       energy,
       now: today * 86_400_000 + 3_600_000,
@@ -498,57 +456,33 @@ describe('ADR 0005 settleDays: sick days, the Monday refill, the 14 half-pay cap
     expect(weekday(MON + 1)).toBe(1);
   });
 
-  it('Sunday is judged before the Monday refill: the third miss on a Sunday ends the streak even though Monday refills', () => {
-    const SAT = MON + 5;
-    const SUN = MON + 6;
-    const job: JobState = { id: 'factory-worker', since: MON - 7, streak: 4, lastShiftDay: SAT };
-    // Thursday and Friday were missed: no sick days left this week.
-    const s = settle(SAT, SUN + 1, job, { week: Math.floor((MON + 3) / 7), left: 0 });
-    expect(s.streak).toEqual({ before: 4, after: 0, sickDaysUsed: 0, broken: true });
-    expect(s.sickDays.left).toBe(2); // refilled for the new week after the judgement
+  it('a job just taken: three boundaries pay 3 × 216 plus +2 %, +4 %, +6 % (§9.1)', () => {
+    const s = settle(MON, MON + 3, { id: 'factory-worker', since: MON, seniority: 0 });
+    expect(s.salary).toEqual({
+      days: 3,
+      perDay: 216,
+      seniority: { days: 3, amount: 4 + 9 + 13 },
+      total: 674,
+    });
   });
 
-  it('with one sick day left, a missed Sunday uses it and the refill then restores 2 for Monday', () => {
-    const SUN = MON + 6;
-    const job: JobState = { id: 'factory-worker', since: MON - 7, streak: 4, lastShiftDay: SUN - 1 };
-    const s = settle(SUN - 1, SUN + 1, job, { week: Math.floor((MON + 3) / 7), left: 1 });
-    expect(s.streak).toMatchObject({ after: 4, sickDaysUsed: 1, broken: false });
-    expect(s.sickDays.left).toBe(2);
-  });
-
-  it('no sick day is spent while the streak is 0 (job just taken), whatever the weekday', () => {
-    const job: JobState = { id: 'factory-worker', since: MON, streak: 0, lastShiftDay: null };
-    const s = settle(MON, MON + 3, job, { week: Math.floor((MON + 3) / 7), left: 2 });
-    expect(s.streak).toEqual({ before: 0, after: 0, sickDaysUsed: 0, broken: false });
-    expect(s.sickDays.left).toBe(2);
-    expect(s.salary).toEqual({ days: 3, perDay: 108, total: 324 });
-  });
-
-  it('salary: vendor 50, driver 100 per boundary; capped at 14 per return; nothing without a job', () => {
-    const vendor = settleDays({
-      settled: MON,
-      today: MON + 2,
-      job: { id: 'street-vendor', since: MON, streak: 0, lastShiftDay: null },
-      pay: 100,
-      sickDays: { week: 0, left: 2 },
-      tally: emptyTally(MON),
-      energy,
-      now: 0,
-    })!;
-    expect(vendor.salary).toEqual({ days: 2, perDay: 50, total: 100 });
-    const away = settleDays({
-      settled: MON,
-      today: MON + 40,
-      job: { id: 'driver', since: MON, streak: 0, lastShiftDay: null },
-      pay: 200,
-      sickDays: { week: 0, left: 2 },
-      tally: emptyTally(MON),
-      energy,
-      now: 0,
-    })!;
-    expect(away.salary).toEqual({ days: 14, perDay: 100, total: 1_400 });
+  it('salary: vendor 100, driver 200 per boundary; capped at 14 per return; nothing without a job', () => {
+    const vendor = settle(MON, MON + 2, { id: 'street-vendor', since: MON, seniority: 0 }, 100);
+    expect(vendor.salary).toEqual({
+      days: 2,
+      perDay: 100,
+      seniority: { days: 2, amount: 2 + 4 },
+      total: 206,
+    });
+    const away = settle(MON, MON + 40, { id: 'driver', since: MON, seniority: 0 }, 200);
+    expect(away.salary).toEqual({
+      days: 14,
+      perDay: 200,
+      seniority: { days: 40, amount: 14 * 40 },
+      total: 14 * 240,
+    });
     expect(away.job?.id).toBe('driver'); // §9.1: never fired for being away
-    expect(settle(MON, MON + 5, null, { week: 0, left: 2 }).salary).toBeNull();
+    expect(settle(MON, MON + 5, null).salary).toBeNull();
     expect(JOBS.salaryMaxDays).toBe(14);
   });
 
@@ -558,13 +492,7 @@ describe('ADR 0005 settleDays: sick days, the Monday refill, the 14 half-pay cap
       const start = MON + rng.int(0, 6);
       let lazy = {
         settled: start,
-        job: {
-          id: 'factory-worker',
-          since: start,
-          streak: rng.int(0, 12),
-          lastShiftDay: start as number | null,
-        } as JobState,
-        sick: { week: Math.floor((start + 3) / 7), left: rng.int(0, 2) } as SickDays,
+        job: { id: 'factory-worker', since: start, seniority: rng.int(0, 12) } as JobState,
         iron: 0,
       };
       let eager = structuredClone(lazy);
@@ -572,33 +500,22 @@ describe('ADR 0005 settleDays: sick days, the Monday refill, the 14 half-pay cap
       for (let step = 0; step < 25; step++) {
         const gap = rng.int(1, 4); // the player comes back after 1–4 days (≤ 14: no cap involved)
         const to = day + gap;
-        const l = settle(lazy.settled, to, lazy.job, lazy.sick);
-        lazy = { settled: to, job: l.job!, sick: l.sickDays, iron: lazy.iron + l.salary!.total };
+        const l = settle(lazy.settled, to, lazy.job);
+        lazy = { settled: to, job: l.job!, iron: lazy.iron + l.salary!.total };
         for (let d = day; d < to; d++) {
-          const e = settle(eager.settled, d + 1, eager.job, eager.sick);
-          eager = { settled: d + 1, job: e.job!, sick: e.sickDays, iron: eager.iron + e.salary!.total };
+          const e = settle(eager.settled, d + 1, eager.job);
+          eager = { settled: d + 1, job: e.job!, iron: eager.iron + e.salary!.total };
         }
         expect(lazy).toEqual(eager);
-        // Sometimes work today's shift (the only day a shift can happen is a touched day).
-        if (rng.int(0, 1) === 1) {
-          lazy.job = { ...lazy.job, streak: lazy.job.streak + 1, lastShiftDay: to };
-          eager.job = { ...eager.job, streak: eager.job.streak + 1, lastShiftDay: to };
-        }
         day = to;
       }
     }
   });
 
-  it('§4.3 rule 2: a single missed day (no earlier miss that week) never breaks a running streak, on any weekday', () => {
-    for (let d = 0; d < 7; d++) {
-      const ended = MON + d;
-      const s = settle(
-        ended,
-        ended + 1,
-        { id: 'factory-worker', since: MON - 7, streak: 3, lastShiftDay: ended - 1 },
-        { week: Math.floor((MON + 3) / 7), left: 2 },
-      );
-      expect(s.streak).toMatchObject({ after: 3, broken: false, sickDaysUsed: 1 });
+  it('§4.3 rule 2: being away never lowers the rate; seniority counts absent days', () => {
+    for (let away = 1; away <= 20; away++) {
+      const s = settle(MON, MON + away, { id: 'factory-worker', since: MON - 7, seniority: 3 });
+      expect(s.seniority).toEqual({ before: 3, after: 3 + away });
     }
   });
 });
@@ -662,38 +579,35 @@ describe('§13.1 ×3 and §15.4 Party orders', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('orders rotate by City Day number from 2026-01-01 (Tue 29 Sep 2026 = day 271: Be at the gate · Keep your ears open · Sharpen up)', () => {
+  it('orders rotate by City Day number from 2026-01-01 (Tue 29 Sep 2026 = day 271; review 1 slot C: Train once · Six wins · Five attempts)', () => {
     const day = dayKey(T0);
     expect(day - DIRECTIVES.epochDay).toBe(271);
     expect(ordersForDay(TEMPLATES, day).map((t) => t.id)).toEqual([
       'dir.shift-change',
       'dir.ears-open',
-      'dir.sharpen-up',
+      'dir.full-day',
     ]);
     expect(ordersForDay(TEMPLATES, day + 1).map((t) => t.id)).toEqual([
       'dir.foundry-row',
       'dir.paper-the-town',
-      'dir.full-day',
+      'dir.five-in-the-book',
     ]);
   });
 
   it('only rows that advance an open order get +25 %; nothing after the completing row of the same ×3', () => {
-    const day = dayKey(T0);
-    const orders = startOrders(TEMPLATES, day, false); // Be at the gate (2) is slot A today
+    const day = dayKey(T0) + 5; // Canvass the shift change (2) · Spread the bulletin · Train once
+    const orders = startOrders(TEMPLATES, day, false);
     const r = ok(resolveTier1Action(tier1({ times: 3, orders }), fixedRng([1, 1, 1]))).resolution;
     expect(r.attempts.map((a) => a.rewards.fxp.bonus)).toEqual([2, 2, 0]);
     expect(r.attempts.map((a) => a.orderId)).toEqual(['dir.shift-change', 'dir.shift-change', null]);
     expect(r.orders.completed).toEqual(['dir.shift-change']);
   });
 
-  it('the Take a job variant is frozen when there is no job, and a job-holder gets Work your shift', () => {
+  it('review 1: Take a job is a welcome-day order only; it never enters the rotation', () => {
     const day = dayKey(T0);
-    expect(startOrders(TEMPLATES, day, false).items[2]!.variant).toBe('main'); // Sharpen up has no variant
-    const shiftDay = [...Array(3).keys()]
-      .map((k) => day + k)
-      .find((d) => ordersForDay(TEMPLATES, d)[2]!.id === 'dir.work-shift')!;
-    expect(startOrders(TEMPLATES, shiftDay, false).items[2]).toMatchObject({ variant: 'noJob', target: 1 });
-    expect(startOrders(TEMPLATES, shiftDay, true).items[2]).toMatchObject({ variant: 'main', target: 1 });
+    for (let d = day; d < day + 60; d++) {
+      expect(ordersForDay(TEMPLATES, d).some((t) => t.id === 'dir.take-a-job')).toBe(false);
+    }
   });
 });
 
