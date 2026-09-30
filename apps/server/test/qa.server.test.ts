@@ -13,6 +13,7 @@ import {
   freshCharacter,
   gameData,
   newUser,
+  noOrdinance,
   seedRecruit,
   setupDb,
   teardownDb,
@@ -347,6 +348,7 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
 
   it('two shifts at once with different keys: one pays, the other is SHIFT_ALREADY_WORKED', async () => {
     const { caller } = await freshCharacter();
+    await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     const rs = await settle(
       [1, 2].map(() => caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() })),
@@ -455,6 +457,7 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
     const clock = testClock(Date.UTC(2026, 8, 21, 8));
     const user = newUser();
     await seedRecruit(user, clock.now()); // slice 2: no auto-create (ADR 0011)
+    await noOrdinance('coalport'); // slice 3: one streak day a shift, with no Shift Hours Order
     const caller = callerFor(user, clock.now);
     await caller.character.me();
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });

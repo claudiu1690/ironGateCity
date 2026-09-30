@@ -1245,3 +1245,94 @@ Screens §10: full-width rows of at least 56 px; sticky CTAs padded for the safe
    The second changes what the playtest measures, so it is your call.
 3. **The secret ballot is secret from players, not from database operators** (ADR 0019). The choice is stored so the slice-9 audit can find vote-stacking, like a numbered ballot paper. Confirm this is acceptable, or ask for a box with no voter link, which gives up the audit of choices.
 4. **Nothing new for content policy.** The designer's §16 check covers the slates and headlines; the Collective crest decision is still yours (slice-2 QA P4).
+
+---
+
+## Deviations (as built)
+
+The smallest working change in each case; nothing here changes a GDD number.
+
+**Running it**
+
+- **`pnpm dev:mem` starts the worker** (the user's decision; §9 said no worker in development) and runs the API in
+  `DB_MODE=memory` against the `pnpm db:mem` replica set, so the test hooks work by hand. Memory mode now uses
+  `MONGODB_URI` only when it points at 127.0.0.1 or localhost; any other URI is ignored and an in-process replica set
+  starts, so a server with the hooks can never reach a real database. `turbo.json` passes `E2E_TEST_HOOKS` through to
+  `dev`. `pnpm dev:worker` runs the worker alone (tsx watch).
+- The e2e character hook also takes `energy` (the council spec does a whole day's orders).
+- Playwright: `council.spec.ts` runs in its own project, `council`, which depends on the three others, because it moves
+  the shared test clock by a cycle and passes an ordinance in Coalport.
+
+**Rules and server**
+
+- **The Energy re-base (§8.4 step 5) is conditional:** the settlement re-bases stored Energy only when some day since
+  the last Energy write had a Rested cap other than the base (a Rest Day Order). The projection is identical either way;
+  this keeps stored Energy untouched, and the slice-1/2 tests of it green, when no Rest Day is involved.
+- `RewardLine.parts` is present only when an ordinance or morale contributed; a line with only Rested or the Party order
+  keeps its slice-1 shape (`{ base, bonus, total }`). Shift pay: `pay.ordinance` and the salary's `ordinance` are
+  absent when no pay ordinance applied; the desk's `salary.ordinance` is `null` then. Several ordinances across an
+  absence are summed into one line, their names joined with " · ".
+- `PoliticalResult.view` is a tagged union, `{ kind: 'election', election } | { kind: 'council', council }`.
+- Views gained a few fields the screens needed: `PoliticsSummaryView.pollsFromWeekday` and `.councillor`,
+  `ElectionView.endorsed`, `CountView.weekday`, `CityView.ordinance.effectLine`.
+- **The welcome edition keeps its welcome and arrival notice:** `mergeHeadlines(stored, live, { storedFirst })` puts
+  stored headlines first on a tie on a first edition only (ADR 0023 says live first). Otherwise the phase line, and on a
+  count morning the count, pushed *{name} Steps Off the Irongate Train* out of a new player's first paper.
+- *{Ordinance} in Force* is not printed on a city's bootstrap day (the branch's motion there is synthetic, not news).
+- Resolved political headlines and decks start with a capital (the Gazette's *{ordinal} of seven…*).
+- The front page shows on the first edition a winner opens during the term (design §17 Q14) and stays on that day's
+  paper without the animation once seen; `paper.markRead` sets `frontPageSeenAt` on every term held today.
+- Eligibility (turnout, the small-branch rule, live and at the close) counts home-faction members at Rank 2+ whose
+  `lastActionAt` is within the seven days before the boundary. **At the count, turnout's eligible is that set plus
+  everyone who voted** (a member who only votes from the paper has no action to show; the walk-through printed
+  *Turnout 3 of 1*). A count with nobody eligible prints *Turnout nil* (`turnoutOf` in `copy.ts`; was *0 of 0*), text
+  for the designer to confirm.
+- A missing election at a count (data loss only) is created with the nine NPCs and counted in the same transaction.
+- The council vote's modal names *Against all* as the choice (*For Against all.*); the design has no text for it.
+- City-day transaction retries are exposed through a hook (`cityDayHooks.onRetry`), not persisted; the report's
+  contention section therefore covers actions within ten minutes of 00:00 UTC only.
+- Test seams in `cityDay.ts` (`cityDayHooks`: fixed seeds, an injected failure, and `noBranchMotion`, used by the
+  slice-1/2 tests that pin shift numbers across days).
+
+**Content and copy**
+
+- Ordinances carry an `effectLine` (the caps line), a short form of the design's bold effect: *Job pay +10 %*, *Job
+  shifts −1 Energy · streak days ×2*, and so on. Platform ids are `plat.c.mill`, `plat.c.bread`, … The Restore-the-base
+  orders match the explicit home city (`cityId: 'coalport'`), as the other orders do.
+- The city plate: the morale word sits beside the city's name (not after the share), and the ordinance line is hidden
+  on a phone shorter than 700 px (360 × 640): each extra line shrinks the map's first view until pins 1 and 2 of
+  Coalport overlap (QA M2's every-pin check). The tickets carry the ordinance's tags there.
+- Ticket tags use the ordinance's full name (*Shift Hours Order: 3 Energy*; the screens say *Shift Hours: 3 Energy*).
+- The front page's section is labelled *The seat won* for screen readers: the code's content-policy sweep refuses the
+  word "front" in strings.
+- **Chapter 2 (T19):** the Success text reads *an old woman in the front row* for the design's *at the front* (the
+  content-policy sweep allows "front" only as a row or a building); **for the designer to confirm.** Choice hints may be
+  80 characters (chapter 2's first is 66). The Letters row's title is the choose step's title, *His election bill*, as
+  the design's row reads (chapter 1's is unchanged). The first ballot is recorded on the character (`firstBallotAt`, set
+  once in the ballot's transaction) so the chapter status stays a read of the character. Chapter 3 (*The deposit*,
+  Rank 3) is listed as the teaser, so chapter 2's modal carries its hook.
+
+**Playtest tooling**
+
+- `pnpm admin:boost` also tops PC up to 10, the deposit, or a boosted tester could not file. It is idempotent, never
+  lowers anything, and marks `playtest: { boosted, boostedAt, from: { fxp, rank, successes } }` only when it changed
+  something; a tester already at Rank 3 and Known counts as natural.
+- The report reads the ballots without their choice (voter, election, day, time) for the first-vote numbers, and the NPC
+  share as an aggregate. "Rank 2 day" is the action that raised the rank, or the boost.
+
+**Tests changed because slice 3 changes behaviour**
+
+- Coalport's branch motion (the Shift Hours Order) is in force from the city's bootstrap. Server tests that pin slice-1
+  shift numbers call `noOrdinance('coalport')` (`jobs.test.ts`, `action.test.ts` city.get, two in `qa.server.test.ts`);
+  the e2e `day.spec.ts` and `qa.spec.ts` now expect the Shift Hours numbers (3 Energy; 108 + 9 at a two-day streak; the
+  stall at 2 Energy).
+- `seedRecruit` resets a city whose day is ahead of the test's clock (tests in one file share a database, not a clock).
+- The paper's headline block: the live phase line (city 0) takes the morale line's place on the welcome edition and the
+  ambient headline's the day after (`paper.test.ts`).
+- The desk's salary gains `ordinance: null` (`jobs.test.ts`).
+- Content counts: the Restore-the-base templates are `use: 'crisis'`, so the counts filter the rotation
+  (`load.test.ts`, `slice2.content.test.ts`).
+- Chapter 2's unlock: hooks read *after your first ballot*, chapter 1's end leaves the Ambition *waiting*
+  (`ambition.test.ts`, `qa.slice2.server.test.ts`, `qa.slice2.test.ts`, `slice2.content.test.ts`, e2e `chapter.spec.ts`).
+
+**Not verified here:** CI (no remote), Docker, deployment.

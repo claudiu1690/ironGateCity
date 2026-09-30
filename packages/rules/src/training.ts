@@ -1,6 +1,8 @@
 import { RESTED, TIER_RATES, TRAINING } from './constants';
 import { projectEnergy, spendEnergy } from './energy';
 import type { EnergyProjection, EnergyState } from './energy';
+import { restedCapFor, trainingEnergy } from './ordinances';
+import type { CityModifiers } from './ordinances';
 import { advanceOrders } from './orders';
 import { flatLine } from './rewards';
 import type { ActionDescriptor, OrderTemplate, OrdersState, RewardLine, TrainableStat } from './types';
@@ -49,17 +51,21 @@ export function resolveTraining(i: {
   orderTemplates: readonly OrderTemplate[];
   homeCityId: string;
   descriptor: ActionDescriptor;
+  /** Slice 3: Reading Room Grant (training Energy −20 %) and the Rested cap. */
+  modifiers?: CityModifiers;
 }): TrainingResult {
-  const before = projectEnergy(i.energy, i.now);
+  const before = projectEnergy(i.energy, i.now, undefined, restedCapFor(i.modifiers));
   const from = i.base[i.trains];
-  const cost = trainingCost(from);
+  const baseCost = trainingCost(from);
+  // A cost ordinance changes the cost only: XP stays on the unmodified cost (design §17 Q11).
+  const cost = trainingEnergy(baseCost, i.modifiers);
   const spent = spendEnergy(before, cost);
   if (!spent.ok) {
     return { ok: false, reason: 'NOT_ENOUGH_ENERGY', shortBy: cost - before.value, cost, energy: before };
   }
 
   const xpPerEnergy = TIER_RATES[1].xpPerEnergy * TRAINING.xpRateShare;
-  const xp = flatLine(xpPerEnergy * cost, RESTED.xpBonus * (spent.restedUsed / cost));
+  const xp = flatLine(xpPerEnergy * baseCost, RESTED.xpBonus * (spent.restedUsed / cost));
   const row: TrainingRow = { index: 1, from, to: from + 1, cost, restedUsed: spent.restedUsed, xp };
   const adv = advanceOrders(i.orders, i.orderTemplates, i.descriptor, 'success', i.homeCityId, i.now);
   return {

@@ -1,4 +1,6 @@
 import { ENERGY, RESTED } from './constants';
+import { dayKey, dayStart } from './day';
+import type { DayKey } from './day';
 
 /** Lazy timer state (§6.2, §6.3): stored value + timestamp, projected on read. */
 export interface EnergyState {
@@ -18,9 +20,15 @@ export interface EnergyProjection extends EnergyState {
 
 /**
  * Energy at `now`: +5 per whole 10-minute tick up to max; what would overflow a full bar goes to
- * Rested, up to its cap. Pure: never reads a clock.
+ * Rested, up to its cap. Banking never shrinks the pool (ADR 0021 §5): a pool above the cap (250
+ * banked under the Rest Day Order) keeps its value and banks nothing more. Pure: never reads a clock.
  */
-export function projectEnergy(state: EnergyState, now: number, max: number = ENERGY.max): EnergyProjection {
+export function projectEnergy(
+  state: EnergyState,
+  now: number,
+  max: number = ENERGY.max,
+  restedCap: number = RESTED.cap,
+): EnergyProjection {
   const elapsed = now - state.updatedAt;
   const ticks = elapsed > 0 ? Math.floor(elapsed / ENERGY.tickMs) : 0;
   const gain = ticks * ENERGY.regenPerTick;
@@ -35,7 +43,7 @@ export function projectEnergy(state: EnergyState, now: number, max: number = ENE
     value = Math.min(max, state.value + gain);
     overflow = state.value + gain - value;
   }
-  const rested = Math.min(RESTED.cap, state.rested + overflow);
+  const rested = state.rested >= restedCap ? state.rested : Math.min(restedCap, state.rested + overflow);
   const updatedAt = state.updatedAt + ticks * ENERGY.tickMs;
 
   const full = value >= max;
@@ -74,4 +82,25 @@ export function energyReadyAt(p: { value: number; nextTickAt: number | null }, c
   if (p.value >= cost || p.nextTickAt === null) return null;
   const ticks = Math.ceil((cost - p.value) / ENERGY.regenPerTick);
   return p.nextTickAt + (ticks - 1) * ENERGY.tickMs;
+}
+
+/**
+ * ADR 0021 §4: the projection to `until` piecewise, one segment per City Day with that day's Rested
+ * cap, ticks aligned as `projectEnergy` aligns them. With one cap throughout it equals
+ * `projectEnergy`. Used by the settlement to re-base stored Energy across days whose caps differ.
+ */
+export function projectEnergyThrough(
+  state: EnergyState,
+  until: number,
+  capOn: (day: DayKey) => number,
+  max: number = ENERGY.max,
+): EnergyProjection {
+  let s: EnergyState = { ...state };
+  let day = dayKey(s.updatedAt);
+  while (dayStart(day + 1) <= until) {
+    const p = projectEnergy(s, dayStart(day + 1), max, capOn(day));
+    s = { value: p.value, rested: p.rested, updatedAt: p.updatedAt };
+    day += 1;
+  }
+  return projectEnergy(s, until, max, capOn(day));
 }

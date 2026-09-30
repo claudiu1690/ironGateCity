@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Character, PaperEntry } from '@irongate/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { freshCharacter, gameData, setupDb, teardownDb, testClock } from './helpers';
+import { freshCharacter, gameData, noOrdinance, setupDb, teardownDb, testClock } from './helpers';
 
 const DAY = 86_400_000;
 const MONDAY = Date.UTC(2026, 8, 28, 9); // day index 270: slot C is "Work your shift" / "Take a job"
@@ -20,6 +20,7 @@ afterAll(teardownDb);
 describe('job.take (§9.1)', () => {
   it('the first job is free and completes "Take a job" (+20 FXP); a retry returns the same result', async () => {
     const { caller, me } = await freshCharacter(testClock(MONDAY));
+    await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     expect(me.orders.items[2]).toMatchObject({ id: 'dir.work-shift', title: 'Take a job', done: false });
     const key = randomUUID();
     const r = await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: key });
@@ -36,6 +37,7 @@ describe('job.take (§9.1)', () => {
 
   it('switching costs 2 Energy (Rested untouched) and resets the streak', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(MONDAY));
+    await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     clock.advance(60 * 60_000); // 96 + 30 → 100 and 26 Rested
@@ -74,6 +76,7 @@ describe('job.take (§9.1)', () => {
 describe('shifts, salary, streak and sick days', () => {
   it('shift pays 108 + 4, once a day; the next day 108 half pay, then 108 + 9', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(MONDAY));
+    await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     const noJob = await caller.action
       .perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() })
       .catch((e: unknown) => e);
@@ -114,6 +117,7 @@ describe('shifts, salary, streak and sick days', () => {
 
   it('two missed days in a week keep the streak; the third ends it; the job is kept', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(MONDAY));
+    await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() }); // Mon
     clock.advance(DAY);
@@ -131,6 +135,7 @@ describe('shifts, salary, streak and sick days', () => {
 
   it('8 days away pays 8 half-pays, streak 0, job kept', async () => {
     const { caller, me, clock } = await freshCharacter(testClock(MONDAY));
+    await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
     await caller.action.perform({ ...MILL_SHIFT, idempotencyKey: randomUUID() });
     clock.advance(8 * DAY);
@@ -138,7 +143,14 @@ describe('shifts, salary, streak and sick days', () => {
     expect(back.iron).toBe(112 + 8 * 108);
     expect(back.job).toMatchObject({ id: 'coalport-factory-worker', streak: 0 });
     const paper = await caller.paper.today();
-    expect(paper.desk.salary).toEqual({ jobName: 'Factory worker', days: 8, perDay: 108, total: 864 });
+    // Slice 3: the desk's salary gains the pay ordinances' line (null: none in force).
+    expect(paper.desk.salary).toEqual({
+      jobName: 'Factory worker',
+      days: 8,
+      perDay: 108,
+      total: 864,
+      ordinance: null,
+    });
     expect(paper.headlines[0]).toMatchObject({ headline: 'While You Were Away' });
     expect(paper.headlines[0]!.deck).toMatch(/^8 days of half pay banked \(864 Iron\)/);
     expect((await Character.findById(me.id).lean())!.job?.id).toBe('coalport-factory-worker');

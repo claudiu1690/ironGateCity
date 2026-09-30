@@ -13,6 +13,7 @@ import { gameErrorOf, trpc } from './lib/trpc';
 import { AmbitionPage } from './routes/ambition';
 import { ArrivePage } from './routes/arrive';
 import { CityPage } from './routes/city';
+import { BallotPage, CountPage, CouncilPage, SlatePage } from './routes/council';
 import { LoginPage } from './routes/login';
 import { MePage } from './routes/me';
 import { PaperPage } from './routes/paper';
@@ -143,12 +144,43 @@ const ambitionRoute = createRoute({
   component: AmbitionPage,
 });
 
+/** Slice 3: the council screens (tech design §12.1), inside the shell. */
+const councilRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/council',
+  component: CouncilPage,
+});
+const slateRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/council/slate',
+  component: SlatePage,
+});
+const ballotRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/council/ballot',
+  component: BallotPage,
+});
+const countRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/council/count',
+  component: CountPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   signupRoute,
   arriveRoute,
-  appRoute.addChildren([cityRoute, paperRoute, meRoute, ambitionRoute]),
+  appRoute.addChildren([
+    cityRoute,
+    paperRoute,
+    meRoute,
+    ambitionRoute,
+    councilRoute,
+    slateRoute,
+    ballotRoute,
+    countRoute,
+  ]),
 ]);
 
 export const router = createRouter({

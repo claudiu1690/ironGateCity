@@ -39,7 +39,8 @@ test('Letters → choose → approach → Walk his ward → keepsake and hook �
   await expect(modal.getByTestId('tile-keepsake')).toContainText('His ward book');
   await expect(modal.getByTestId('effect-item')).toHaveText('Keepsake: His ward book');
   await expect(modal.getByTestId('effect-hook')).toHaveText(
-    /^Chapter 2, "Stand where he stood": from [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, at Rank 2$/,
+    // Slice 3 (design §17 Q21): chapter 2 opens after the first ballot.
+    /^Chapter 2, "Stand where he stood": from [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first ballot$/,
   );
   await expect(modal.getByTestId('effect-energy')).toHaveText('100 → 90');
   await expect(modal.getByTestId('result-buttons').getByRole('button')).toHaveText(['Continue']);
@@ -58,7 +59,7 @@ test('Letters → choose → approach → Walk his ward → keepsake and hook �
   await page.goto('/story/ambition');
   await expect(page.getByRole('heading', { name: 'Stand where he stood' })).toBeVisible();
   await expect(page.getByTestId('chapter-waits')).toHaveText(
-    /^From [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, at Rank 2$/,
+    /^From [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first ballot$/,
   );
   await expect(page.getByTestId('story-choice')).toHaveCount(0);
   await page.getByRole('button', { name: 'Back to the paper' }).click();

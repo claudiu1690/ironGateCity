@@ -13,7 +13,8 @@
     "test": "vitest run",
     "mem": "tsx scripts/memMongo.ts",
     "seed": "tsx scripts/seed.ts",
-    "report:playtest": "tsx scripts/playtestReport.ts"
+    "report:playtest": "tsx scripts/playtestReport.ts",
+    "admin:boost": "tsx scripts/boostPlaytest.ts"
   },
   "dependencies": {
     "@irongate/content": "workspace:*",

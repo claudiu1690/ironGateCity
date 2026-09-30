@@ -4,6 +4,7 @@ import type { ActionView } from '@irongate/rules';
 import { useId, useState } from 'react';
 import { cx, formatClock, statLabel } from '../format';
 import { CheckBreakdownList } from './CheckBreakdownList';
+import { ordinanceTagText } from './ResultModal';
 
 export const TYPE_LABEL: Record<string, string> = {
   canvass: 'Canvassing',
@@ -74,7 +75,10 @@ export function Ticket({
         ? copy.orderTag(a.order.progress, a.order.target, orderBonusPct)
         : `Party order ${a.order.progress} / ${a.order.target}`
     : null;
-  const tags = [TYPE_LABEL[a.type] ?? a.type, order].filter(Boolean).join(' · ');
+  // Slice 3 (screens §8): the ordinance's tags go before the Party-order tag.
+  const tags = [TYPE_LABEL[a.type] ?? a.type, ...(a.tags ?? []).map(ordinanceTagText), order]
+    .filter(Boolean)
+    .join(' · ');
 
   const button = cx(
     'w-12 shrink-0 cursor-pointer border-l border-ink font-label text-[15px] text-paper',

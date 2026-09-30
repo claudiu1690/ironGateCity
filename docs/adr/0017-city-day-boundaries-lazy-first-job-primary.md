@@ -1,6 +1,6 @@
 # ADR 0017 — The city's day: world boundaries are settled per city, before any character settles, by an Agenda job or the first request
 
-**Status:** accepted (slice 3; extends ADR 0005) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3; extends ADR 0005) · **Date:** 2026-09-29
 
 ## Context
 

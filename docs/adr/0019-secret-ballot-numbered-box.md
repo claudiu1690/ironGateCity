@@ -1,6 +1,6 @@
 # ADR 0019 — The secret ballot: one `votes` row per voter, secret at the API, linkable only for the audit
 
-**Status:** accepted (slice 3) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3) · **Date:** 2026-09-29
 
 ## Context
 

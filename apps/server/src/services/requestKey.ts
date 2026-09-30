@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { RequestLog } from '@irongate/db';
+import { RequestLog, isDuplicateKeyError } from '@irongate/db';
 import type { RequestKind } from '@irongate/db';
 import type { ClientSession, Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
@@ -56,6 +56,9 @@ export async function withRequestKey<T>(i: {
         if (winner !== null) return winner;
       }
       if (err instanceof VersionConflict) continue;
+      // ADR 0018: a concurrent duplicate of a set-once act (a unique index) with no stored result:
+      // retry, so the domain pre-check names the refusal instead of a 500.
+      if (isDuplicateKeyError(err)) continue;
       if (err instanceof DayChanged) {
         await i.resettle();
         continue;

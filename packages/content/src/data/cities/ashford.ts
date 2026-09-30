@@ -25,6 +25,8 @@ export const ashford: City = {
     strapline: 'Fair report, free comment',
     price: '6 marks',
   },
+  // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
+  council: { offset: 1, seats: 7 },
   locations: [
     {
       id: 'ashford.gazette-house',

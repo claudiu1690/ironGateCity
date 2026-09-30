@@ -48,9 +48,16 @@ export interface ChapterReward {
 }
 
 /** What the rules need of one chapter (content builds it). A teaser chapter is not playable. */
+/** A chapter's requirement: a Rank, a Level, or (slice 3) the player's first ballot. */
+export interface ChapterRequires {
+  rank?: number;
+  level?: number;
+  ballotCast?: boolean;
+}
+
 export interface ChapterRules {
   n: number;
-  requires?: { rank?: number; level?: number };
+  requires?: ChapterRequires;
   playable: boolean;
   choices: Array<{ id: string; flag: string }>;
   approaches: Array<{ id: string; stats: CheckStats }>;
@@ -62,7 +69,7 @@ export interface ChapterRules {
 export type ChapterStatus =
   /** No playable chapter in content: the Letters row is absent. */
   | { kind: 'none' }
-  | { kind: 'waiting'; readyFrom: DayKey; needs: { rank?: number; level?: number } | null }
+  | { kind: 'waiting'; readyFrom: DayKey; needs: ChapterRequires | null }
   | { kind: 'ready' }
   /** Step 'check': the Letters row reads "waiting for you". */
   | { kind: 'midway' };
@@ -77,7 +84,7 @@ export const chapterStatusKind = (s: ChapterStatus): ChapterStatusKind => s.kind
 export function chapterStatus(
   s: AmbitionState,
   spec: ChapterRules | undefined,
-  c: { rank: number; level: number },
+  c: { rank: number; level: number; ballotCast?: boolean },
   today: DayKey,
 ): ChapterStatus {
   if (!spec || !spec.playable) return { kind: 'none' };
@@ -86,7 +93,10 @@ export function chapterStatus(
   const readyFrom = last ? last.day + AMBITION.daysBetweenChapters : today;
   const req = spec.requires;
   const met =
-    (req?.rank === undefined || c.rank >= req.rank) && (req?.level === undefined || c.level >= req.level);
+    (req?.rank === undefined || c.rank >= req.rank) &&
+    (req?.level === undefined || c.level >= req.level) &&
+    // Slice 3 (design §17 Q21): Finish His Work chapter 2 opens after the first ballot.
+    (req?.ballotCast !== true || c.ballotCast === true);
   if (today >= readyFrom && met) return { kind: 'ready' };
   return { kind: 'waiting', readyFrom, needs: req ?? null };
 }

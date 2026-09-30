@@ -20,3 +20,7 @@ export * from './items';
 export * from './origin';
 export * from './ambition';
 export * from './name';
+export * from './calendar';
+export * from './council';
+export * from './morale';
+export * from './ordinances';

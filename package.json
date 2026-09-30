@@ -8,8 +8,10 @@
   },
   "scripts": {
     "dev": "turbo run dev --filter=@irongate/server --filter=@irongate/client",
-    "dev:mem": "concurrently -k -n db,apps -c gray,cyan \"pnpm db:mem\" \"pnpm dev:mem:apps\"",
-    "dev:mem:apps": "cross-env PORT=3001 DB_MODE=uri MONGODB_URI=mongodb://127.0.0.1:27018/irongate?directConnection=true PUBLIC_ORIGIN=http://localhost:5173 BETTER_AUTH_SECRET=dev-mem-only-secret-never-use-in-production turbo run dev --filter=@irongate/server --filter=@irongate/client",
+    "dev:mem": "concurrently -k -n db,apps,worker -c gray,cyan,magenta \"pnpm db:mem\" \"pnpm dev:mem:apps\" \"pnpm dev:mem:worker\"",
+    "dev:mem:apps": "cross-env PORT=3001 DB_MODE=memory MONGODB_URI=mongodb://127.0.0.1:27018/irongate?directConnection=true PUBLIC_ORIGIN=http://localhost:5173 BETTER_AUTH_SECRET=dev-mem-only-secret-never-use-in-production E2E_TEST_HOOKS=1 turbo run dev --filter=@irongate/server --filter=@irongate/client",
+    "dev:mem:worker": "cross-env DB_MODE=memory MONGODB_URI=mongodb://127.0.0.1:27018/irongate?directConnection=true PUBLIC_ORIGIN=http://localhost:5173 BETTER_AUTH_SECRET=dev-mem-only-secret-never-use-in-production pnpm --filter @irongate/server dev:worker",
+    "dev:worker": "pnpm --filter @irongate/server dev:worker",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:mem": "pnpm --filter @irongate/db mem",
@@ -23,7 +25,8 @@
     "format:check": "prettier --check .",
     "art:build": "tsx scripts/art/build.ts",
     "art:check": "tsx scripts/art/build.ts --check",
-    "report:playtest": "pnpm --filter @irongate/db report:playtest"
+    "report:playtest": "pnpm --filter @irongate/db report:playtest",
+    "admin:boost": "pnpm --filter @irongate/db admin:boost"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

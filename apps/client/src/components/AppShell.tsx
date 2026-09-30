@@ -38,8 +38,13 @@ export function AppShell() {
       id: 'paper',
       label: 'Paper',
       href: '/paper',
-      // Also while an Ambition chapter is ready, the Letter opened or not (onboarding §14.3 n7).
-      dot: (!!character?.paperDue || (character?.lettersWaiting ?? 0) > 0) && active !== 'paper',
+      // Also while an Ambition chapter is ready, the Letter opened or not (onboarding §14.3 n7), and
+      // (slice 3) while a ballot or a councillor's ordinance vote is open and not cast.
+      dot:
+        (!!character?.paperDue ||
+          (character?.lettersWaiting ?? 0) > 0 ||
+          (character?.politicsWaiting ?? 0) > 0) &&
+        active !== 'paper',
     },
     { id: 'dossier', label: 'Dossier', href: '#', disabled: true },
     { id: 'faction', label: 'Faction', href: '#', disabled: true },

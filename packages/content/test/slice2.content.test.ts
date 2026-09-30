@@ -56,7 +56,8 @@ describe('the real content, slice 2', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford']);
     expect(content.cities.flatMap((c) => c.locations.flatMap((l) => l.actions))).toHaveLength(64);
     expect(content.jobs).toHaveLength(9);
-    expect(content.orderTemplates).toHaveLength(36);
+    // Slice 3 adds six crisis templates (Restore the base, two per faction), which never rotate.
+    expect(content.orderTemplates.filter((t) => t.use === 'rotation')).toHaveLength(36);
     expect(content.cities.map((c) => c.paper?.shortName)).toEqual(['Clarion', 'Sentinel', 'Gazette']);
     // Slice 2's nine, and chapter 2's keepsake that GDD §21.4 catalogues for slice 3.
     expect(content.items).toHaveLength(10);
@@ -396,7 +397,8 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
       // The requirement part is superseded in slice 3 (slice-3-politics.md §17 Q21: chapter 2 keys
       // off the first ballot); until then the content keeps the slice-2 requirement.
       expect(doc).toContain(`Chapter 2, "${hook.title}": from {date}, `);
-      expect(copy.chapterNeeds(hook.requires!)).toMatch(/^(Rank|Level) \d+$/);
+      // Slice 3: Finish His Work chapter 2 opens "after your first ballot".
+      expect(copy.chapterNeeds(hook.requires!)).toMatch(/^((Rank|Level) \d+|after your first ballot)$/);
       expect(doc).toContain(copy.keepsakeLine(content.item(s.keepsake)!.name));
       expect([s.check.difficulty, s.check.energy, s.rewards]).toEqual([
         8,

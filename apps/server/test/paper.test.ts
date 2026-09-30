@@ -37,7 +37,8 @@ describe('paper.today (§3.3)', () => {
       headline: 'Mara Lenk Steps Off the Irongate Train',
       deck: 'One more pair of hands for the branch, says the Union Hall. The mill is hiring.',
     });
-    expect(p.headlines[2]).toMatchObject({ group: 'city', headline: 'Collective Holds Coalport at 70.0 %' });
+    // Slice 3 (ADR 0023): the live phase line (city 0) takes the morale line's (city 1) place.
+    expect(p.headlines[2]).toMatchObject({ group: 'city', headline: 'Polls Open in Coalport' });
     expect(p.letters).toEqual([
       {
         kind: 'chapter',
@@ -87,8 +88,10 @@ describe('paper.today (§3.3)', () => {
     expect(p.firstEdition).toBe(false);
     expect(p.desk.yesterday).toMatchObject({ energy: 10, attempts: 1 });
     expect(p.desk.daysSinceLastPaper).toBe(1);
-    expect(p.headlines.map((h) => h.group)).toEqual(['city', 'city', 'ambient']);
-    expect(p.headlines[1]).toEqual({
+    // Slice 3 (ADR 0023): the live phase line takes the ambient headline's place.
+    expect(p.headlines.map((h) => h.group)).toEqual(['city', 'city', 'city']);
+    expect(p.headlines[0]).toMatchObject({ group: 'city', headline: 'Polls Open in Coalport' });
+    expect(p.headlines[2]).toEqual({
       group: 'city',
       headline: 'Secretary Holm Calls for Knock Foundry Row',
       deck: 'Sixty doors in Foundry Row. Start at the top and work down.',

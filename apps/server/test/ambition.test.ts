@@ -147,7 +147,8 @@ describe('ambition.attempt', () => {
       again: null,
       effects: {
         item: { itemId: 'keep.ward-book', name: 'His ward book', keepsake: true },
-        hooks: ['Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2'],
+        // Slice 3 (design §17 Q21): chapter 2 opens after the first ballot.
+        hooks: ['Chapter 2, "Stand where he stood": from Tuesday 6 October, after your first ballot'],
         opinion: null,
         standing: null,
         orders: [],
@@ -171,9 +172,10 @@ describe('ambition.attempt', () => {
     );
     expect(replay.ok && replay.resolution.attempt.roll).toBe(r.attempts[0]!.roll);
 
-    // The chapter is done: the Letters row is gone (no chapter 2 content), the keepsake on Me.
+    // The chapter is done: the Letters row is gone (chapter 2 waits for its day and the first
+    // ballot), the keepsake on Me.
     const me = await caller.character.me();
-    expect(me.ambition.status).toBe('none');
+    expect(me.ambition.status).toBe('waiting');
     expect(me.keepsakes.map((k) => k.name)).toEqual(['His ward book']);
     expect((await caller.paper.today()).letters).toEqual([]);
     // n13: the chapter screen now shows the hook, the same as the modal's, and no choices.
@@ -181,7 +183,7 @@ describe('ambition.attempt', () => {
       chapter: 2,
       chapterTitle: 'Stand where he stood',
       screen: null,
-      waitsUntil: 'From Tuesday 6 October, at Rank 2',
+      waitsUntil: 'From Tuesday 6 October, after your first ballot',
     });
     expect(
       await refusal(

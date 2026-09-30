@@ -239,7 +239,8 @@ describe('GDD §17.1: chapter 1 of every Ambition', () => {
       /Success \*\*150 XP \/ 40 FXP \/ 100 Iron\*\*, Partial \*\*75 \/ 20 \/ 50\*\*, Failure \*\*25 \/ 0 \/ 0\*\*/,
     );
     const titles = {
-      'finish-his-work': ['His ward book', { rank: 2 }, 'keep.ward-book'],
+      // Slice 3 (design §17 Q21): Finish His Work chapter 2 is written and opens after the first ballot.
+      'finish-his-work': ['His ward book', { ballotCast: true }, 'keep.ward-book'],
       'clear-his-name': ['The prison letter', { level: 6 }, 'keep.prison-letter'],
       'settle-his-debts': ['The marker', { level: 6 }, 'keep.marker'],
     } as const;
@@ -258,7 +259,7 @@ describe('GDD §17.1: chapter 1 of every Ambition', () => {
       });
       expect(ch1.story?.keepsake).toBe(keepsake);
       expect(amb.chapters[1]?.requires).toEqual(req);
-      expect(amb.chapters[1]?.story).toBeUndefined();
+      if (id !== 'finish-his-work') expect(amb.chapters[1]?.story).toBeUndefined();
       // §17.1: no text in the chapter says "failed" (the stamp alone reads Failure).
       const s = ch1.story!;
       const words = [

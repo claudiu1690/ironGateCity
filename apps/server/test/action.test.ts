@@ -5,7 +5,7 @@ import type { ActionResult, OpinionShares } from '@irongate/rules';
 import type { TRPCError } from '@trpc/server';
 import { Types } from 'mongoose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { callerFor, freshCharacter, gameData, setupDb, teardownDb, testClock } from './helpers';
+import { callerFor, freshCharacter, gameData, setupDb, teardownDb, testClock, noOrdinance } from './helpers';
 
 // Tuesday 29 September 2026: today's orders are Be at the gate (2), Keep your ears open (2),
 // Sharpen up (1) — content §6.2 rotation, day index 271.
@@ -24,6 +24,7 @@ afterAll(teardownDb);
 describe('city.get v2', () => {
   it('returns Coalport with 6 numbered hotspots, tickets, jobs and the day map', async () => {
     const { caller } = await freshCharacter();
+    await noOrdinance('coalport'); // slice 3: the slice-1 numbers, with no ordinance in force
     const city = await caller.city.get({ cityId: 'coalport' });
     expect(city).toMatchObject({ id: 'coalport', role: 'home', isNight: false });
     expect(city.map.day).toMatchObject({

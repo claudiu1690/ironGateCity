@@ -1,5 +1,18 @@
 import { getContent } from '@irongate/content';
-import { Character, connectDb, disconnectDb, ensureIndexes, mongoose, seed } from '@irongate/db';
+import {
+  Candidacy,
+  Character,
+  City,
+  Election,
+  OfficeTerm,
+  OrderPaper,
+  Vote,
+  connectDb,
+  disconnectDb,
+  ensureIndexes,
+  mongoose,
+  seed,
+} from '@irongate/db';
 import { buildNewCharacter, dayKey, resolveOrigin } from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import { Types } from 'mongoose';
@@ -7,6 +20,7 @@ import { withDbName } from '@irongate/db/testing';
 import { inject } from 'vitest';
 import type { Env } from '../src/env';
 import type { Context, SessionUser } from '../src/trpc/context';
+import { cityDayHooks } from '../src/services/cityDay';
 import { createCaller } from '../src/trpc/router';
 
 /** Connect to a fresh database for this test file, with indexes and the city seed in place. */
@@ -71,6 +85,48 @@ export function gameData(err: unknown): { code: string; game: Record<string, unk
 }
 
 /**
+ * Slice 3: tests in one file share a database but not a clock, so a test dated before the last
+ * one would see a city whose day (ADR 0017) is already settled in its future: an election counted,
+ * morale drifted. Time never runs back in the game; here the city's political state is reset when
+ * it is ahead of `now`, so every test starts from a city bootstrapped at its own date.
+ */
+export async function rewindCityIfAhead(cityId: string, now: number): Promise<void> {
+  const city = await City.findById(cityId).lean();
+  if (!city?.world || city.world.settledDay <= dayKey(now)) return;
+  await resetCity(cityId);
+}
+
+/** A city with no political state: the baseline meter, no world (the next touch bootstraps it). */
+export async function resetCity(cityId: string): Promise<void> {
+  const prefix = new RegExp(`^${cityId}:`);
+  await Promise.all([
+    Election.deleteMany({ cityId }),
+    Candidacy.deleteMany({ cityId }),
+    Vote.deleteMany({ electionId: prefix }),
+    OfficeTerm.deleteMany({ cityId }),
+    OrderPaper.deleteMany({ cityId }),
+  ]);
+  await City.updateOne(
+    { _id: cityId },
+    {
+      $set: { opinion: getContent().city(cityId)!.baselineOpinion },
+      $unset: { world: 1, morale: 1, moraleLog: 1, council: 1, ordinance: 1, ordinanceHistory: 1 },
+    },
+  );
+}
+
+/**
+ * Slice 3: bootstrapping a home city puts the branch's motion in force, and every council passes it
+ * by default (ADR 0017; Coalport: the Shift Hours Order). Slice-1/2 tests that pin shift and
+ * training numbers call this: the ordinance in force is cleared and, for the rest of the file, the
+ * city's order papers carry no branch's motion, so the numbers stay those with no ordinance.
+ */
+export async function noOrdinance(cityId: string): Promise<void> {
+  (cityDayHooks.noBranchMotion ??= new Set()).add(cityId);
+  await City.updateOne({ _id: cityId }, { $set: { ordinance: null, ordinanceHistory: [] } });
+}
+
+/**
  * Slice-2 tech design §14: the reference recruit (the origin's reference answers, through the same
  * rules the join uses), inserted as if settled "yesterday", so the next touch settles today with the
  * rotation's orders and slice-1 numbers hold: Iron 0 and FXP 0 unless overridden (the origin's 150
@@ -84,6 +140,7 @@ export async function seedRecruit(
   const content = getContent();
   const factionId = overrides.factionId ?? 'collective';
   const faction = content.faction(factionId);
+  await rewindCityIfAhead(faction.homeCityId, now);
   const answers = content.origin.reference;
   const r = resolveOrigin({ origin: content.originSpec, answers, faction });
   if (!r.ok) throw new Error(r.reason);

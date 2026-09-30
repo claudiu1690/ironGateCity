@@ -1,7 +1,9 @@
 import { JOBS } from './constants';
 import { weekKey } from './day';
 import type { DayKey } from './day';
-import { projectEnergy, spendEnergy } from './energy';
+import { projectEnergy, projectEnergyThrough, spendEnergy } from './energy';
+import { effect, jobPayWith, restedCapFor, shiftEnergy, shiftStreakStep } from './ordinances';
+import type { CityModifiers } from './ordinances';
 import type { EnergyProjection, EnergyState } from './energy';
 import { advanceOrders } from './orders';
 import { roundHalfUp } from './rewards';
@@ -82,8 +84,17 @@ export interface Settlement {
   firstEdition: boolean;
   /** City Days since the last settlement, or null for a new character. */
   daysSince: number | null;
-  /** Half pay credited for the boundaries crossed (capped, designer answer §12 Q9). */
-  salary: { days: number; perDay: number; total: number } | null;
+  /**
+   * Half pay credited for the boundaries crossed (capped, designer answer §12 Q9). `perDay` is the
+   * unmodified half pay; `ordinance` sums each ended day's adjustment under the ordinance in force
+   * that day (Public Works, Ward Fund; ADR 0021 §4). Present only when non-zero.
+   */
+  salary: {
+    days: number;
+    perDay: number;
+    total: number;
+    ordinance?: { label: string; amount: number };
+  } | null;
   job: JobState | null;
   sickDays: SickDays;
   streak: { before: number; after: number; sickDaysUsed: number; broken: boolean } | null;
@@ -111,9 +122,17 @@ export function settleDays(i: {
   tally: DailyTally;
   energy: EnergyState;
   now: number;
+  /**
+   * Slice 3: the half pay credited at the end of `endedDay` under that day's ordinance, and the
+   * ordinance's name; absent = `halfPay(pay)` every day.
+   */
+  halfPayOn?: (endedDay: DayKey) => { amount: number; label: string | null };
+  /** Slice 3: each day's Rested cap (Rest Day Order); absent = RESTED.cap. */
+  capOn?: (day: DayKey) => number;
 }): Settlement | null {
   if (i.settled !== null && i.settled >= i.today) return null;
-  const restedBanked = Math.max(0, projectEnergy(i.energy, i.now).rested - i.energy.rested);
+  const projected = i.capOn ? projectEnergyThrough(i.energy, i.now, i.capOn) : projectEnergy(i.energy, i.now);
+  const restedBanked = Math.max(0, projected.rested - i.energy.rested);
 
   if (i.settled === null) {
     return {
@@ -158,11 +177,32 @@ export function settleDays(i: {
 
   const perDay = job && i.pay !== null ? halfPay(i.pay) : 0;
   const paidDays = JOBS.salaryMaxDays === null ? boundaries : Math.min(boundaries, JOBS.salaryMaxDays);
+  // The most recent `paidDays` ended days are the ones paid.
+  let adjustment = 0;
+  const labels: string[] = [];
+  if (job && i.pay !== null && i.halfPayOn) {
+    for (let ended = i.today - paidDays; ended < i.today; ended++) {
+      const on = i.halfPayOn(ended);
+      if (on.amount !== perDay) {
+        adjustment += on.amount - perDay;
+        if (on.label && !labels.includes(on.label)) labels.push(on.label);
+      }
+    }
+  }
+  const salary =
+    job && i.pay !== null
+      ? {
+          days: paidDays,
+          perDay,
+          total: paidDays * perDay + adjustment,
+          ...(adjustment !== 0 ? { ordinance: { label: labels.join(' · '), amount: adjustment } } : {}),
+        }
+      : null;
   return {
     day: i.today,
     firstEdition: false,
     daysSince: i.today - i.settled,
-    salary: job && i.pay !== null ? { days: paidDays, perDay, total: paidDays * perDay } : null,
+    salary,
     job,
     sickDays: sick,
     streak: job ? { before: streakBefore, after: job.streak, sickDaysUsed, broken } : null,
@@ -175,7 +215,18 @@ export function settleDays(i: {
 export interface ShiftResolution {
   job: JobState;
   energy: { before: EnergyProjection; after: EnergyState; cost: number };
-  pay: { half: number; bonus: number; pct: number; total: number };
+  /**
+   * `half` and the streak `bonus` are on the unmodified pay; `ordinance` (present only under a pay
+   * ordinance) is halfPay(pay with the ordinance) − halfPay(pay), and may be negative. `total`
+   * includes it (economy §14.4).
+   */
+  pay: {
+    half: number;
+    bonus: number;
+    pct: number;
+    total: number;
+    ordinance?: { id: string; label: string; amount: number };
+  };
   streak: { before: number; after: number };
   orders: { before: OrdersState; after: OrdersState; completed: string[]; allDone: boolean };
 }
@@ -200,27 +251,42 @@ export function resolveShift(i: {
   orderTemplates: readonly OrderTemplate[];
   homeCityId: string;
   descriptor: ActionDescriptor;
+  /** Slice 3: Shift Hours (−1 Energy, streak +2), Public Works and Ward Fund (pay). */
+  modifiers?: CityModifiers;
 }): ShiftResult {
   if (i.job.lastShiftDay === i.today) return { ok: false, reason: 'SHIFT_ALREADY_WORKED' };
-  const before = projectEnergy(i.energy, i.now);
-  const spent = spendEnergy(before, i.shiftEnergy, { useRested: JOBS.shiftUsesRested });
+  const m = i.modifiers;
+  const before = projectEnergy(i.energy, i.now, undefined, restedCapFor(m));
+  const cost = shiftEnergy(i.shiftEnergy, m);
+  const spent = spendEnergy(before, cost, { useRested: JOBS.shiftUsesRested });
   if (!spent.ok) {
     return {
       ok: false,
       reason: 'NOT_ENOUGH_ENERGY',
       shortBy: spent.shortBy,
-      cost: i.shiftEnergy,
+      cost,
       energy: before,
     };
   }
-  const streak = i.job.streak + 1;
+  const streak = i.job.streak + shiftStreakStep(m);
+  const basePay = shiftPay(i.pay, streak);
+  const payEffect = effect(m, 'jobPayPct');
+  const ordAmount = payEffect ? halfPay(jobPayWith(i.pay, m)) - halfPay(i.pay) : 0;
+  const pay: ShiftResolution['pay'] =
+    payEffect && m?.ordinance
+      ? {
+          ...basePay,
+          total: basePay.total + ordAmount,
+          ordinance: { id: m.ordinance.id, label: m.ordinance.name, amount: ordAmount },
+        }
+      : basePay;
   const adv = advanceOrders(i.orders, i.orderTemplates, i.descriptor, 'success', i.homeCityId, i.now);
   return {
     ok: true,
     resolution: {
       job: { ...i.job, streak, lastShiftDay: i.today },
-      energy: { before, after: spent.state, cost: i.shiftEnergy },
-      pay: shiftPay(i.pay, streak),
+      energy: { before, after: spent.state, cost },
+      pay,
       streak: { before: i.job.streak, after: streak },
       orders: {
         before: i.orders,

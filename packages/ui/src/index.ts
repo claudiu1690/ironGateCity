@@ -19,7 +19,30 @@ export { Plate } from './components/Plate';
 export type { PlateProps } from './components/Plate';
 export { ProgressBar } from './components/ProgressBar';
 export type { ProgressBarProps } from './components/ProgressBar';
-export { ResultModal, stampFor } from './components/ResultModal';
+export { ResultModal, ordinanceTagText, stampFor } from './components/ResultModal';
+export {
+  CandidateRow,
+  CouncilCard,
+  CountTable,
+  FrontPage,
+  OrderPaper,
+  OrdinanceMenu,
+  OrdinanceRow,
+  PersonMark,
+  PollingDayRow,
+  SeatGrid,
+  Slate,
+  pollingDayLines,
+} from './components/Politics';
+export type {
+  CandidateRowProps,
+  CouncilCardProps,
+  OrderPaperProps,
+  OrdinanceMenuProps,
+  OrdinanceRowProps,
+  PollingDayRowProps,
+  SlateProps,
+} from './components/Politics';
 export type { ResultModalProps } from './components/ResultModal';
 export { BottomSheet, JobsCard, LocationSheet, OutOfEnergyCard } from './components/Sheets';
 export type {

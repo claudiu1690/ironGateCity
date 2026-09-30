@@ -87,7 +87,8 @@ test.describe('phone 375×812', () => {
     await expect(sheet.getByTestId('job-coalport-factory-worker')).toContainText(
       'Your job · streak 0 days · 2 sick days left',
     );
-    await sheet.getByRole('button', { name: 'Work your shift at the mill, 4 Energy' }).click();
+    // Slice 3: Coalport's branch motion, the Shift Hours Order, is in force: a shift is 3 Energy.
+    await sheet.getByRole('button', { name: 'Work your shift at the mill, 3 Energy' }).click();
     await expect(modalOf(page).getByTestId('stamp')).toHaveText('Shift worked');
     await expect(modalOf(page).getByRole('button', { name: /Again/ })).toHaveCount(0); // a shift has Continue only
     await continueModal(page);
@@ -103,7 +104,7 @@ test.describe('phone 375×812', () => {
     await modal.getByRole('button', { name: /Again ×3/ }).click();
     await expect(modal.getByTestId('stamp')).toHaveText(/^[0-3] of 3$/);
     await expect(modal.getByTestId('attempt-row')).toHaveCount(3);
-    await expect(modal.getByTestId('effect-energy')).toHaveText('86 → 56');
+    await expect(modal.getByTestId('effect-energy')).toHaveText('87 → 57');
     // Every attempt row shows its roll against the chance (§13.1a: the maths is never hidden).
     for (const row of await modal.getByTestId('attempt-row').all())
       await expect(row).toContainText(/Rolled \d+ against \d+ %/);
@@ -115,9 +116,9 @@ test.describe('phone 375×812', () => {
     }
     await continueModal(page);
     await sheet.getByRole('button', { name: /^Close/ }).click();
-    await expect(page.getByTestId('today-strip').first()).toContainText('44 Energy · 4 attempts');
+    await expect(page.getByTestId('today-strip').first()).toContainText('43 Energy · 4 attempts');
     await expect(page.getByTestId('today-strip').first()).toContainText('shift worked');
-    await expect(page.getByTestId('hud-energy')).toHaveText('56 / 100');
+    await expect(page.getByTestId('hud-energy')).toHaveText('57 / 100');
 
     // Me: rank, level, stats, job, standing, today, orders.
     await page.getByRole('link', { name: /^Me/ }).click();
@@ -139,7 +140,7 @@ test.describe('phone 375×812', () => {
     await page.getByLabel('Password').fill('e2e-password-123');
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page).toHaveURL(/\/city\/coalport$/);
-    await expect(page.getByTestId('hud-energy')).toHaveText('56 / 100');
+    await expect(page.getByTestId('hud-energy')).toHaveText('57 / 100');
   });
 
   test('out of Energy: ×1 and ×3 disabled with "Needs … · ready at", the out-of-Energy card, nothing spent', async ({
@@ -181,7 +182,8 @@ test.describe('phone 375×812', () => {
     await toTheCity(page);
     let sheet = await openAny(page, '1. Mill Gate');
     await sheet.getByRole('button', { name: 'Take the job' }).click();
-    await sheet.getByRole('button', { name: 'Work your shift at the mill, 4 Energy' }).click();
+    // Slice 3: Coalport's branch motion, the Shift Hours Order, is in force: a shift is 3 Energy.
+    await sheet.getByRole('button', { name: 'Work your shift at the mill, 3 Energy' }).click();
     await continueModal(page);
     await sheet.getByRole('button', { name: /^Close/ }).click();
 
@@ -190,8 +192,8 @@ test.describe('phone 375×812', () => {
     await expect(sheet.getByTestId('job-coalport-street-vendor')).toContainText(
       /Switched · streak reset · first half pay at \d\d:\d\d/,
     );
-    await expect(page.getByTestId('hud-energy')).toHaveText('94 / 100');
-    await expect(sheet.getByRole('button', { name: 'Work the stall, 3 Energy' })).toBeDisabled();
+    await expect(page.getByTestId('hud-energy')).toHaveText('95 / 100');
+    await expect(sheet.getByRole('button', { name: 'Work the stall, 2 Energy' })).toBeDisabled();
     await expect(sheet.getByTestId('ticket-coalport.market-row.stall')).toContainText(
       /Shift worked · next at/,
     );

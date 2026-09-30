@@ -626,7 +626,7 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
       idempotencyKey: randomUUID(),
     });
     expect(ra.effects.hooks).toEqual([
-      'Chapter 2, "Stand where he stood": from Saturday 10 October, at Rank 2',
+      'Chapter 2, "Stand where he stood": from Saturday 10 October, after your first ballot',
     ]);
     const b = await chosen({ promise: 'a' });
     const rb = await b.caller.ambition.attempt({

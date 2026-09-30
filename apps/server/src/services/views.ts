@@ -1,8 +1,9 @@
 import { isCheckedAction, isShiftAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
-import type { CharacterDoc, StoredOrders } from '@irongate/db';
+import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
   DIRECTIVES,
+  ENERGY,
   JOBS,
   MONTH_NAMES,
   chapterStatus,
@@ -21,6 +22,7 @@ import {
   weekKey,
   wornCha,
 } from '@irongate/rules';
+import { restedCapToday } from './modifiers';
 import type {
   ActionDescriptor,
   AssetView,
@@ -99,7 +101,7 @@ export function ambitionStatus(content: GameContent, doc: CharacterDoc, today: D
   return chapterStatus(
     doc.ambition,
     content.chapterRules(doc.ambition.id, doc.ambition.chapter),
-    { rank: doc.rank, level: doc.level },
+    { rank: doc.rank, level: doc.level, ballotCast: !!doc.firstBallotAt },
     today,
   );
 }
@@ -250,15 +252,33 @@ export function ordersView(content: GameContent, doc: CharacterDoc, today: DayKe
   };
 }
 
-/** The HUD view: lazy Energy and Rested projected to `now`, plus everything slice 1 shows. */
+/** Slice 3: the seat held today, from the settlement's projection (ADR 0020). */
+export function officeView(content: GameContent, doc: CharacterDoc, today: DayKey): CharacterView['office'] {
+  const o = (doc.offices ?? []).find((x) => x.fromDay <= today && today < x.toDay);
+  if (!o) return null;
+  return {
+    cityId: o.cityId,
+    cityName: content.city(o.cityId)?.name ?? o.cityId,
+    seat: o.seat,
+    termEndsAt: dayStart(o.toDay),
+  };
+}
+
+/**
+ * The HUD view: lazy Energy and Rested projected to `now` (with today's Rested cap in the home
+ * city, ADR 0021), plus everything slices 1–3 show. `politicsWaiting` needs a read, so the caller
+ * that shows the Paper tab's dot (character.me) passes it.
+ */
 export function toCharacterView(
   doc: CharacterDoc,
   now: number,
   content: GameContent,
   editionReadAt: number | null,
+  ctx: { city?: CityDoc | null; politicsWaiting?: 0 | 1 } = {},
 ): CharacterView {
   const today = dayKey(now);
-  const energy = projectEnergy(energyState(doc), now);
+  const restedCap = restedCapToday(content, ctx.city ?? null, today);
+  const energy = projectEnergy(energyState(doc), now, ENERGY.max, restedCap);
   const bounds = rankBounds(doc.rank);
   const faction = content.faction(doc.factionId);
   const inventory = doc.inventory ?? [];
@@ -334,5 +354,8 @@ export function toCharacterView(
     // The Paper tab's dot while a chapter is ready, opened or not; off when played or mid-way
     // (onboarding §14.3 n7).
     lettersWaiting: status.kind === 'ready' ? 1 : 0,
+    office: officeView(content, doc, today),
+    politicsWaiting: ctx.politicsWaiting ?? 0,
+    restedCap,
   };
 }

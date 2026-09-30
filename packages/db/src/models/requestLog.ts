@@ -1,7 +1,17 @@
 import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
 
-export const REQUEST_KINDS = ['job.take', 'stat.place'] as const;
+export const REQUEST_KINDS = [
+  'job.take',
+  'stat.place',
+  // Slice 3 (ADR 0018).
+  'council.declare',
+  'council.withdraw',
+  'council.endorse',
+  'council.vote',
+  'council.propose',
+  'council.councilVote',
+] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 
 /**

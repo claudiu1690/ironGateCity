@@ -87,6 +87,24 @@ export interface CharacterDoc {
   /** ADR 0014: owned instances; equipment points at their uids. */
   inventory: InventoryEntry[];
   equipment: Equipment;
+  /**
+   * Slice 3 (ADR 0020): a settlement projection of the seats held today, from `officeTerms`.
+   * Display only; every permission re-reads `officeTerms`.
+   */
+  offices: Array<{
+    termId: Types.ObjectId;
+    cityId: string;
+    councilKey: string;
+    seat: number;
+    fromDay: DayKey;
+    toDay: DayKey;
+  }>;
+  /** Slice 3 (ADR 0018): the one-per-cycle endorsement guard; the last four, newest last. */
+  endorsementsGiven: Array<{ electionId: string; candidacyId: Types.ObjectId; name: string; day: DayKey }>;
+  /** Slice 3: the first ballot ever cast (Finish His Work chapter 2 opens after it, design §17.7). */
+  firstBallotAt?: Date | null;
+  /** The admin boost script's mark (playtest seeding): the report separates boosted testers. */
+  playtest?: { boosted: true; boostedAt: Date; from: { fxp: number; rank: number; successes: number } };
   /** Optimistic guard, +1 per game write (ADR 0002). */
   version: number;
   createdAt: Date;
@@ -223,6 +241,44 @@ const characterSchema = new Schema<CharacterDoc>(
       clothing: { type: String, default: null },
       document: { type: String, default: null },
     },
+    offices: {
+      type: [
+        new Schema(
+          {
+            termId: { type: Schema.Types.ObjectId, required: true },
+            cityId: { type: String, required: true },
+            councilKey: { type: String, required: true },
+            seat: int,
+            fromDay: int,
+            toDay: int,
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+    endorsementsGiven: {
+      type: [
+        new Schema(
+          {
+            electionId: { type: String, required: true },
+            candidacyId: { type: Schema.Types.ObjectId, required: true },
+            name: { type: String, required: true },
+            day: int,
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+    firstBallotAt: { type: Date, default: undefined },
+    playtest: {
+      type: new Schema(
+        { boosted: Boolean, boostedAt: Date, from: { fxp: Number, rank: Number, successes: Number } },
+        { _id: false },
+      ),
+      default: undefined,
+    },
     version: { type: Number, required: true, min: 0 },
   },
   { collection: 'characters', strict: true, timestamps: true, versionKey: false, minimize: false },
@@ -230,5 +286,7 @@ const characterSchema = new Schema<CharacterDoc>(
 
 // One character per user: the join's natural key (ADR 0011).
 characterSchema.index({ userId: 1 }, { unique: true });
+// Slice 3: the eligibility counts (turnout, the small-branch rule).
+characterSchema.index({ homeCityId: 1, rank: 1, lastActionAt: -1 });
 
 export const Character = model<CharacterDoc>('Character', characterSchema);

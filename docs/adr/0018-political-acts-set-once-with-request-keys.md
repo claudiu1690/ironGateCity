@@ -1,6 +1,6 @@
 # ADR 0018 — Political acts: set-once on a natural key, replayed through a request key, and serialised with the boundary that closes their window
 
-**Status:** accepted (slice 3; applies ADR 0002 and ADR 0008) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3; applies ADR 0002 and ADR 0008) · **Date:** 2026-09-29
 
 ## Context
 

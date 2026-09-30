@@ -1,9 +1,16 @@
-import { ACTION_KINDS, FACTION_IDS, STAT_KEYS, TRAINABLE_STATS } from '@irongate/rules';
+import {
+  ACTION_KINDS,
+  FACTION_IDS,
+  STAT_KEYS,
+  TRAINABLE_STATS,
+  ordinanceBoundProblem,
+} from '@irongate/rules';
 import type {
   HeadlineCondition,
   HeadlineTemplate,
   OrderMatch,
   OrderTemplate,
+  OrdinanceEffect as OrdinanceEffectRule,
   OriginEffect as OriginEffectRule,
 } from '@irongate/rules';
 import { z } from 'zod';
@@ -27,6 +34,9 @@ export const AmbitionId = Id;
 
 const HexColour = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'a #RRGGBB colour');
 const Fraction = z.number().min(0).max(1);
+
+/** A candidate's platform line (design §6.4); printed beside the name, no effect. */
+export const Platform = z.strictObject({ id: Id, line: z.string().min(1).max(90) });
 
 export const Faction = z.strictObject({
   id: FactionId,
@@ -64,6 +74,12 @@ export const Faction = z.strictObject({
     /** With its article: "the General Strike" (onboarding §13.1). */
     signatureEvent: z.string().min(1).max(40),
   }),
+  /** Slice 3 (design §10.2): the branch's motion, item 1 on every order paper; the NPC default. */
+  branchMotion: Id,
+  /** Slice 3 (design §6.4): the three platform lines a candidate picks from. */
+  platforms: z.tuple([Platform, Platform, Platform]),
+  /** Slice 3 (design §11.3): the Unrest pair, slots A and B (`use: 'crisis'`, `doneFxp: 40`). */
+  restoreOrders: z.tuple([Id, Id]),
 });
 
 /** §13.5: the art key for the fallback ladder. Closed list; kinds may be added, never removed. */
@@ -187,6 +203,8 @@ export const City = z.strictObject({
       price: z.string().min(1),
     })
     .optional(),
+  /** Slice 3 (GDD §2, §15.3): the council cycle's offset (Irongate 0 … Clearwater 4). */
+  council: z.strictObject({ offset: z.number().int().min(0).max(4), seats: z.literal(7) }).optional(),
   locations: z.array(Location),
 });
 
@@ -287,7 +305,11 @@ export const OrderTemplateSchema = z.strictObject({
       target: z.number().int().min(1),
     })
     .optional(),
-}) satisfies z.ZodType<OrderTemplate>;
+  /** Slice 3: `crisis` templates (Restore the base) never enter the rotation. */
+  use: z.enum(['rotation', 'crisis']).default('rotation'),
+  /** Slice 3: FXP when completed; default DIRECTIVES.orderDoneFxp (20). */
+  doneFxp: z.number().int().min(1).optional(),
+}) satisfies z.ZodType<OrderTemplate, unknown>;
 
 export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('firstEdition') }),
@@ -314,6 +336,23 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({ kind: z.literal('noPersonal') }),
   z.strictObject({ kind: z.literal('homeShare'), min: z.number().optional(), max: z.number().optional() }),
+  // Slice 3 (ADR 0023): political conditions, selected live at read.
+  z.strictObject({ kind: z.literal('seatWon'), top: z.boolean().optional() }),
+  z.strictObject({ kind: z.literal('seatLost'), tie: z.boolean().optional() }),
+  z.strictObject({ kind: z.literal('votedFor'), won: z.boolean(), tie: z.boolean().optional() }),
+  z.strictObject({ kind: z.literal('filedYesterday') }),
+  z.strictObject({ kind: z.literal('nominationsClosed'), struck: z.boolean() }),
+  z.strictObject({ kind: z.literal('termEnded') }),
+  z.strictObject({ kind: z.literal('divided'), passed: z.boolean() }),
+  z.strictObject({ kind: z.literal('movedYesterday') }),
+  z.strictObject({ kind: z.literal('countToday') }),
+  z.strictObject({
+    kind: z.literal('phaseToday'),
+    phase: z.enum(['nominations', 'polling']),
+    cycleDay: z.number().int().min(0).max(4).optional(),
+  }),
+  z.strictObject({ kind: z.literal('ordinanceFromToday') }),
+  z.strictObject({ kind: z.literal('leftUnrest') }),
 ]) satisfies z.ZodType<HeadlineCondition>;
 
 export const HeadlineTemplateSchema = z.strictObject({
@@ -416,7 +455,12 @@ export const Chapter = z.strictObject({
   n: z.number().int().min(1).max(12),
   title: z.string().min(1).max(60),
   requires: z
-    .strictObject({ rank: z.number().int().min(1).optional(), level: z.number().int().min(1).optional() })
+    .strictObject({
+      rank: z.number().int().min(1).optional(),
+      level: z.number().int().min(1).optional(),
+      /** Slice 3 (design §17 Q21): opens after the player's first ballot. */
+      ballotCast: z.literal(true).optional(),
+    })
     .optional(),
   story: z
     .strictObject({
@@ -430,7 +474,8 @@ export const Chapter = z.strictObject({
             z.strictObject({
               id: Id,
               text: z.string().min(1).max(80),
-              hint: z.string().min(1).max(60),
+              // 80: chapter 2's first hint is 66 characters (design §17.7).
+              hint: z.string().min(1).max(80),
               /** Remembered for later chapters. */
               flag: Id,
             }),
@@ -464,6 +509,81 @@ export const Ambition = z.strictObject({
   chapters: z.array(Chapter).min(1),
 });
 
+// ---------------------------------------------------------------------------------------------
+// Slice 3 (docs/tech/slice-3.md §4.1): ordinances, NPC slates, the political result texts.
+// ---------------------------------------------------------------------------------------------
+
+export const OrdinanceId = Id;
+
+/** ADR 0021: the closed DSL; bounds live in rules (ORDINANCE_BOUNDS) and are enforced here. */
+export const OrdinanceEffectSchema = z
+  .discriminatedUnion('kind', [
+    z.strictObject({ kind: z.literal('jobPayPct'), value: z.number().int() }),
+    z.strictObject({
+      kind: z.literal('shiftEnergyDelta'),
+      value: z.number().int(),
+      floor: z.number().int().min(1),
+    }),
+    z.strictObject({ kind: z.literal('shiftStreakDays'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('swingPct'), actionType: ActionType, value: z.number().int() }),
+    z.strictObject({ kind: z.literal('energyDelta'), actionType: ActionType, value: z.number().int() }),
+    z.strictObject({ kind: z.literal('trainingEnergyPct'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('restedCapDelta'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('chancePct'), actionType: ActionType, value: z.number().int() }),
+    z.strictObject({ kind: z.literal('standingMultiplier'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('ironPct'), scope: z.literal('checked'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('fxpPct'), scope: z.literal('actions'), value: z.number().int() }),
+  ])
+  .superRefine((e, ctx) => {
+    const problem = ordinanceBoundProblem(e);
+    if (problem) ctx.addIssue({ code: 'custom', message: problem });
+  }) satisfies z.ZodType<OrdinanceEffectRule>;
+
+export const Ordinance = z
+  .strictObject({
+    id: OrdinanceId,
+    name: z.string().min(1).max(40),
+    /** "The council puts the town to work: every wage in the city goes up." */
+    line: z.string().min(1).max(120),
+    /** The caps line, "Job pay +10 %"; the UI adds "· 5 days". */
+    effectLine: z.string().min(1).max(60),
+    effects: z.array(OrdinanceEffectSchema).min(1),
+  })
+  .refine((o) => new Set(o.effects.map((e) => e.kind)).size === o.effects.length, {
+    message: 'at most one effect of each kind',
+  });
+
+/** Design §5.2: the NPC slate; own section, since `npcs` need a portrait and these have none. */
+export const NpcCandidate = z.strictObject({
+  id: NpcId,
+  name: z.string().min(1).max(40),
+  factionId: FactionId,
+  cityId: Id,
+  /** The ward vote before jitter. */
+  profile: z.number().int().min(1).max(60),
+  /** Printed on the ballot. */
+  line: z.string().min(1).max(90),
+});
+
+/** Screens §9, design §17.3: one political result modal's texts. */
+const PoliticalText = z.strictObject({
+  stamp: z.string().min(1).max(20),
+  headline: z.string().min(1).max(60),
+  body: StoryText,
+});
+
+/** The six political result modals (POLITICAL_ACTS in rules). */
+export const PoliticalTexts = z.strictObject({
+  results: z.strictObject({
+    ballot: PoliticalText,
+    declare: PoliticalText,
+    endorse: PoliticalText,
+    withdraw: PoliticalText,
+    propose: PoliticalText,
+    councilVote: PoliticalText,
+  }),
+});
+
 export const Content = z.strictObject({
   factions: z.array(Faction).length(FACTION_IDS.length),
   cities: z.array(City).min(1),
@@ -478,6 +598,9 @@ export const Content = z.strictObject({
   jobs: z.array(Job),
   orderTemplates: z.array(OrderTemplateSchema),
   headlines: z.array(HeadlineTemplateSchema),
+  ordinances: z.array(Ordinance),
+  candidates: z.array(NpcCandidate),
+  politics: PoliticalTexts,
 });
 
 export type Faction = z.infer<typeof Faction>;
@@ -499,6 +622,10 @@ export type Asset = z.infer<typeof Asset>;
 export type SceneBinding = z.infer<typeof SceneBinding>;
 export type Npc = z.infer<typeof Npc>;
 export type Job = z.infer<typeof Job>;
+export type Ordinance = z.infer<typeof Ordinance>;
+export type NpcCandidate = z.infer<typeof NpcCandidate>;
+export type PoliticalTexts = z.infer<typeof PoliticalTexts>;
+export type Platform = z.infer<typeof Platform>;
 export type Content = z.infer<typeof Content>;
 /** Content as authored (defaults not yet applied). */
 export type ContentInput = z.input<typeof Content>;

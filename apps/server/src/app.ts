@@ -1,5 +1,7 @@
 import type { GameContent } from '@irongate/content';
-import { isDbUp } from '@irongate/db';
+import { Character, isDbUp } from '@irongate/db';
+import type { CharacterDoc } from '@irongate/db';
+import { cycleOf, dayKey, dayStart, rankForFxp } from '@irongate/rules';
 import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
 import type { FastifyTRPCPluginOptions } from '@trpc/server/adapters/fastify';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -9,6 +11,7 @@ import pkg from '../package.json' with { type: 'json' };
 import { CLIENT_IP_HEADER } from './auth';
 import type { Auth } from './auth';
 import type { Env } from './env';
+import { runCityDay } from './services/cityDay';
 import { captureException } from './sentry';
 import type { Context } from './trpc/context';
 import { appRouter } from './trpc/router';
@@ -56,15 +59,77 @@ export async function buildApp({
   });
 
   if (env.E2E_TEST_HOOKS) {
+    // Memory mode only (env.ts refuses E2E_TEST_HOOKS otherwise). The clock moves forward only
+    // (QA n11): lazy time assumes it never runs back past a settled day.
     app.post('/api/test/clock', async (request, reply) => {
-      const body = (request.body ?? {}) as { advanceMs?: unknown };
+      const body = (request.body ?? {}) as {
+        advanceMs?: unknown;
+        advanceTo?: { cityId?: unknown; cycleDay?: unknown; hour?: unknown };
+      };
+      if (body.advanceTo !== undefined) {
+        // Slice 3 (tech design §8.6): to the next hour:00 UTC on a day with that cycle day.
+        const offset = content.city(String(body.advanceTo.cityId))?.council?.offset;
+        const cycleDay = Number(body.advanceTo.cycleDay);
+        const hour = body.advanceTo.hour === undefined ? 9 : Number(body.advanceTo.hour);
+        if (offset === undefined || !Number.isInteger(cycleDay) || cycleDay < 0 || cycleDay > 4) {
+          return reply.code(400).send({ error: 'advanceTo needs a council cityId and a cycleDay 0..4' });
+        }
+        if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+          return reply.code(400).send({ error: 'hour must be 0..23' });
+        }
+        const t0 = now();
+        for (let d = dayKey(t0); ; d++) {
+          const t = dayStart(d) + hour * 3_600_000;
+          if (t > t0 && cycleOf(d, offset).cycleDay === cycleDay) {
+            clockOffsetMs += t - t0;
+            break;
+          }
+        }
+        return { offsetMs: clockOffsetMs, now: now() };
+      }
       const advanceMs = Number(body.advanceMs);
-      // Forward only (QA n11): lazy time assumes the clock never runs back past a settled day.
       if (!Number.isFinite(advanceMs) || advanceMs < 0) {
         return reply.code(400).send({ error: 'advanceMs must be a number ≥ 0' });
       }
       clockOffsetMs += advanceMs;
       return { offsetMs: clockOffsetMs, now: now() };
+    });
+
+    // What the worker's city-day job does, at the test clock (ADR 0017 §6).
+    app.post('/api/test/city-day', async () => runCityDay(content, now()));
+
+    // The session user's character: FXP (and the Rank it gives), home Local Standing, PC.
+    app.post('/api/test/character', async (request, reply) => {
+      const session = await auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
+      if (!session) return reply.code(401).send({ error: 'sign in first' });
+      const body = (request.body ?? {}) as {
+        fxp?: unknown;
+        successes?: unknown;
+        pc?: unknown;
+        energy?: unknown;
+      };
+      const c = await Character.findOne({ userId: session.user.id }).lean<CharacterDoc>();
+      if (!c) return reply.code(404).send({ error: 'no character yet' });
+      const set: Record<string, unknown> = {};
+      if (body.fxp !== undefined) {
+        const fxp = Number(body.fxp);
+        set.fxp = fxp;
+        set.rank = Math.max(c.rank, rankForFxp(fxp));
+      }
+      if (body.successes !== undefined) {
+        set.localStanding = [
+          ...c.localStanding.filter((x) => x.cityId !== c.homeCityId),
+          { cityId: c.homeCityId, successes: Number(body.successes) },
+        ];
+      }
+      if (body.pc !== undefined) set.pc = Number(body.pc);
+      // A full bar for a long run of taps (the e2e council cycle does a day's orders).
+      if (body.energy !== undefined) {
+        set['energy.value'] = Number(body.energy);
+        set['energy.updatedAt'] = new Date(now());
+      }
+      await Character.updateOne({ _id: c._id }, { $set: set, $inc: { version: 1 } });
+      return { ok: true, ...set };
     });
   }
 

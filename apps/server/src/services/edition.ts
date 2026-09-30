@@ -26,6 +26,11 @@ export function buildEdition(i: {
   home: Pick<CityDoc, 'opinion'> | null;
   today: DayKey;
   ordersToday: OrdersState;
+  /** Slice 3 (ADR 0020): the stipend and the deposits returned at this settlement. */
+  stipend?: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
+  deposits?: { count: number; pc: number } | null;
+  /** Slice 3: the streak days yesterday's shift added (Shift Hours: 2), for the crossing rule. */
+  streakStepYesterday?: number;
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
@@ -44,6 +49,7 @@ export function buildEdition(i: {
     standingRose: prev !== null && standingLevel > prev.snapshot.standingLevel,
     ordersAllDoneYesterday: c.orders.day === yesterday && c.orders.allDoneAt !== null,
     streakHitYesterday: workedYesterday && c.job ? c.job.streak : null,
+    streakBeforeYesterday: workedYesterday && c.job ? c.job.streak - (i.streakStepYesterday ?? 1) : null,
     daysSinceLastPaper: prev ? today - prev.day : null,
     idleYesterday: playedYesterday !== null && playedYesterday.energy === 0 && !playedYesterday.shiftWorked,
     halfPaysCredited: s.salary?.days ?? 0,
@@ -89,11 +95,24 @@ export function buildEdition(i: {
     headlines: picked.map((t) => ({
       templateId: t.id,
       group: t.group,
+      priority: t.priority,
       headline: fillTemplate(t.headline, varsFor(t)),
       ...(t.deck ? { deck: fillTemplate(t.deck, varsFor(t)) } : {}),
     })),
     desk: {
-      salary: s.salary && job && s.salary.days > 0 ? { jobId: job.id, jobName: job.name, ...s.salary } : null,
+      salary:
+        s.salary && job && s.salary.days > 0
+          ? {
+              jobId: job.id,
+              jobName: job.name,
+              days: s.salary.days,
+              perDay: s.salary.perDay,
+              total: s.salary.total,
+              ordinance: s.salary.ordinance ?? null,
+            }
+          : null,
+      stipend: i.stipend ?? null,
+      deposits: i.deposits ?? null,
       streak: s.streak,
       restedBanked: s.restedBanked,
       daysSinceLastPaper: facts.daysSinceLastPaper,

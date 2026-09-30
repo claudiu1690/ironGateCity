@@ -24,7 +24,7 @@ export default defineConfig({
   },
   // Slice 2 (§12.3): every spec on a phone; the arrival also on a 360 px touch phone and a desktop.
   projects: [
-    { name: 'phone', use: { ...devices['Pixel 7'] } },
+    { name: 'phone', testIgnore: /council\.spec\.ts/, use: { ...devices['Pixel 7'] } },
     {
       name: 'small-phone',
       testMatch: /arrival\.spec\.ts/,
@@ -34,6 +34,14 @@ export default defineConfig({
       name: 'desktop',
       testMatch: /arrival\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    // Slice 3: the council cycle moves the shared test clock by a cycle and passes an ordinance in
+    // Coalport, so it runs last, after every other project.
+    {
+      name: 'council',
+      testMatch: /council\.spec\.ts/,
+      dependencies: ['phone', 'small-phone', 'desktop'],
+      use: { ...devices['Pixel 7'] },
     },
   ],
   webServer: [
@@ -53,7 +61,8 @@ export default defineConfig({
         BETTER_AUTH_SECRET: 'e2e-only-secret-e2e-only-secret-e2e-only',
         LOG_LEVEL: 'warn',
         SENTRY_DSN: '',
-        // POST /api/test/clock for day.spec (tech design §7.8); refused outside DB_MODE=memory.
+        // POST /api/test/clock, /city-day and /character (tech design §7.8, slice-3 §8.6);
+        // refused outside DB_MODE=memory.
         E2E_TEST_HOOKS: '1',
       },
     },

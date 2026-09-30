@@ -4,6 +4,8 @@ import { energyReadyAt } from '@irongate/rules';
 import type {
   ActionResult,
   NamedStandingView,
+  OrdinanceTagView,
+  PoliticalResult,
   ResultAttempt,
   RewardLine,
   StatPointTarget,
@@ -17,6 +19,7 @@ import {
   formatShare,
   formatSigned,
   plural,
+  renderTimeTokens,
   statLabel,
 } from '../format';
 import { Button } from './Button';
@@ -28,7 +31,8 @@ import { Stamp } from './Stamp';
 import type { StampTone } from './Stamp';
 
 export interface ResultModalProps {
-  result: ActionResult | null;
+  /** An action's result, or (slice 3) a political act's: `kind: 'political'`, screens §9. */
+  result: ActionResult | PoliticalResult | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Again ×1 / ×3: the caller re-runs the action with a new idempotency key. */
@@ -83,7 +87,11 @@ export function ResultModal(props: ResultModalProps) {
             'sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[92dvh] sm:w-[min(600px,calc(100vw-32px))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]',
           )}
         >
-          {result && <ResultBody {...props} result={result} />}
+          {result && result.kind === 'political' ? (
+            <PoliticalBody result={result} />
+          ) : (
+            result && <ResultBody {...props} result={result} />
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -129,6 +137,107 @@ function ArtHeader({ r }: { r: ActionResult }) {
       </span>
     </div>
   );
+}
+
+/**
+ * Slice 3 (screens §9): the political modal. The paper's masthead strip in place of the art, the
+ * stamp over its right end; the headline and text; the knock-on lines; Continue only.
+ */
+function PoliticalBody({ result: r }: { result: PoliticalResult }) {
+  const k = r.knockOns;
+  const lines: Array<{ id: string; text: string }> = [];
+  if (k.pc) lines.push({ id: 'pc', text: copy.pcLeft(k.pc.before - k.pc.after, k.pc.after) });
+  if (k.morale) {
+    lines.push({
+      id: 'morale',
+      text: copy.moraleKnockOn(
+        k.morale.cityName,
+        formatOpinionDelta(Math.round((k.morale.after - k.morale.before) * 1000) / 1000),
+        formatShare(k.morale.after),
+      ),
+    });
+    if (k.morale.stateAfter !== k.morale.stateBefore)
+      lines.push({ id: 'morale-state', text: copy.moraleCrossed(k.morale.cityName, k.morale.stateAfter) });
+  }
+  if (k.endorsements) {
+    lines.push({
+      id: 'endorsements',
+      text: `${k.endorsements.name}: endorsements ${k.endorsements.n} / ${k.endorsements.needed}`,
+    });
+  }
+  if (r.act === 'ballot') lines.push({ id: 'secret', text: copy.ballotSecretNote });
+  const t = { until: r.until, at: r.at };
+  return (
+    <>
+      <div className="relative shrink-0 bg-paper px-4 pt-4" data-art="masthead">
+        <div className="border-b-[3px] border-double border-ink pb-2">
+          <span className="font-display text-[22px] font-black">{r.paper.name}</span>
+        </div>
+        {/* On the rule's right end, in its own band, so it hides neither the paper nor the text. */}
+        <div className="-mt-3 flex justify-end pr-1">
+          <Stamp tone={r.stamp.tone} label={r.stamp.label} className="px-3 text-[18px]" />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col gap-4 px-4 pt-3.5 pb-4">
+        <section className="flex flex-col gap-1">
+          <span className="label-caps text-[10px] text-muted">{r.place.cityName}</span>
+          <Dialog.Title className="font-display text-[24px] leading-tight font-black">
+            {renderTimeTokens(r.headline, t)}
+          </Dialog.Title>
+          <Dialog.Description className="font-body text-[14px] leading-normal text-text-2">
+            {renderTimeTokens(r.body, t)}
+          </Dialog.Description>
+        </section>
+        {lines.length > 0 && (
+          <section aria-labelledby="political-effects">
+            <h3 id="political-effects" className="label-caps mb-1 text-[10px] text-muted">
+              Knock-on effects
+            </h3>
+            <ul className="flex flex-col">
+              {lines.map((l) => (
+                <li
+                  key={l.id}
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  data-testid={`political-${l.id}`}
+                >
+                  {l.text}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+      <div
+        className="sticky bottom-0 z-10 mt-auto border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
+        data-testid="result-buttons"
+      >
+        <Dialog.Close asChild>
+          <Button variant="outline" className="w-full">
+            Continue
+          </Button>
+        </Dialog.Close>
+      </div>
+    </>
+  );
+}
+
+/** A ticket tag's words (screens §8): "Rally Permits: 10 Energy", "Open Doors: +4 %". */
+export function ordinanceTagText(t: OrdinanceTagView): string {
+  const pct = `${t.value >= 0 ? '+' : '−'}${Math.abs(t.value)} %`;
+  switch (t.kind) {
+    case 'energy':
+      return `${t.name}: ${t.value} Energy`;
+    case 'chance':
+      return `${t.name}: ${pct}`;
+    case 'iron':
+      return `${t.name}: ${pct} Iron`;
+    case 'fxp':
+      return `${t.name}: ${pct} FXP`;
+    case 'swing':
+      return `${t.name}: ${pct} opinion`;
+    case 'standing':
+      return `${t.name}: Standing ×${t.value}`;
+  }
 }
 
 function standingLine(s: NonNullable<ActionResult['effects']['standing']>): string {
@@ -224,7 +333,7 @@ function ResultBody({
               label="Iron"
               line={r.rewards.iron}
               note={
-                e.shift
+                e.shift && !r.rewards.iron.parts
                   ? `${formatSigned(e.shift.half)} half pay, ${formatSigned(e.shift.streakBonus)} streak`
                   : undefined
               }
@@ -282,8 +391,24 @@ function ResultBody({
               )}
             </div>
           )}
-          {(item || hooks.length > 0 || e.ordersAllDone) && (
+          {(item || hooks.length > 0 || e.ordersAllDone || e.morale || e.branchEndorsement) && (
             <ul className="flex flex-col">
+              {e.morale && (
+                <li
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  data-testid="effect-morale"
+                >
+                  {copy.moraleCrossed(e.morale.cityName, e.morale.after)}
+                </li>
+              )}
+              {e.branchEndorsement && (
+                <li
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  data-testid="effect-branch"
+                >
+                  {copy.branchEndorsesYou} · {e.branchEndorsement.endorsements} / {e.branchEndorsement.needed}
+                </li>
+              )}
               {/* m5: where PC first appears, the same line on every device (onboarding §14.1). */}
               {e.ordersAllDone && (
                 <li
@@ -504,7 +629,11 @@ function RewardTile({
       className={className}
       note={
         note ??
-        (line.bonus > 0 ? `${formatSigned(line.base)} and ${formatSigned(line.bonus)} bonus` : undefined)
+        (line.parts && line.parts.length > 0
+          ? `${formatSigned(line.base)} · ${line.parts.map((p) => `${p.label} ${formatSigned(p.amount)}`).join(' · ')}`
+          : line.bonus > 0
+            ? `${formatSigned(line.base)} and ${formatSigned(line.bonus)} bonus`
+            : undefined)
       }
       testId={`tile-${label.toLowerCase().replace(/\s+/g, '-')}`}
     />

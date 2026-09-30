@@ -1,6 +1,16 @@
 import { computeCheck, outcomeForRoll, tier1Difficulty } from './check';
 import { DIRECTIVES, FXP_TYPE_MULTIPLIER } from './constants';
 import { projectEnergy, spendEnergy } from './energy';
+import {
+  NO_MODIFIERS,
+  actionEnergy,
+  ordinanceCheckBonuses,
+  restedCapFor,
+  rewardShares,
+  standingPerSuccess,
+  swingMultiplier,
+} from './ordinances';
+import type { CityModifiers } from './ordinances';
 import type { EnergyProjection, EnergyState } from './energy';
 import { advanceOrders, itemSpec, orderMatches } from './orders';
 import { computeRewards, sumRewards } from './rewards';
@@ -76,6 +86,8 @@ export interface Tier1ActionInput {
   homeCityId: string;
   /** Items, weather: later slices. */
   bonuses?: CheckBonus[];
+  /** Slice 3 (ADR 0021): the ordinance in force and morale in the action's city. */
+  modifiers?: CityModifiers;
 }
 
 /** Stamp for a run of checked attempts (ADR 0006, GDD §13.1): ×1 by outcome, a batch "n of N". */
@@ -97,8 +109,11 @@ export function usesSuccessText(successes: number, times: number): boolean {
  * Same seed + same input ⇒ identical resolution.
  */
 export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult {
-  const before = projectEnergy(i.energy, i.now);
-  const cost = i.action.energy * i.times;
+  const m = i.modifiers ?? NO_MODIFIERS;
+  const before = projectEnergy(i.energy, i.now, undefined, restedCapFor(m));
+  // Cost ordinances change the cost only (ADR 0021 §3): rewards stay on the content Energy.
+  const perRow = actionEnergy(i.action.energy, i.action.type, m);
+  const cost = perRow * i.times;
   if (before.value < cost) {
     return { ok: false, reason: 'NOT_ENOUGH_ENERGY', shortBy: cost - before.value, cost, energy: before };
   }
@@ -112,6 +127,10 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
     cityId: i.action.cityId,
   };
   const fxpRateMultiplier = FXP_TYPE_MULTIPLIER[i.action.type] ?? 1;
+  const shares = rewardShares({ type: i.action.type, givesFxp: i.action.givesFxp, m });
+  const ordinanceBonuses = ordinanceCheckBonuses(i.action.type, m);
+  const perSuccess = standingPerSuccess(m);
+  const swing = swingMultiplier(i.action.type, m);
 
   let state: EnergyState = { value: before.value, rested: before.rested, updatedAt: before.updatedAt };
   let successes = i.standing.successes;
@@ -122,7 +141,7 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
   const attempts: Tier1Attempt[] = [];
 
   for (let n = 1; n <= i.times; n++) {
-    const spent = spendEnergy(state, i.action.energy);
+    const spent = spendEnergy(state, perRow);
     if (!spent.ok) throw new Error('unreachable: the run cost was checked up front');
     state = spent.state;
     restedTotal += spent.restedUsed;
@@ -133,7 +152,7 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       stats: i.action.stats,
       values: i.values,
       difficulty,
-      bonuses: [...(i.bonuses ?? []), ...(standing ? [standing] : [])],
+      bonuses: [...(i.bonuses ?? []), ...(standing ? [standing] : []), ...ordinanceBonuses],
     });
     const roll = rng.roll100();
     const outcome = outcomeForRoll(roll, check.chance, 1);
@@ -149,13 +168,18 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       givesFxp: i.action.givesFxp,
       givesOpinion: i.action.givesOpinion,
       restedUsed: spent.restedUsed,
+      costPaid: perRow,
       fxpRateMultiplier,
       fxpBonusShare: bonusApplies ? DIRECTIVES.matchFxpBonus : 0,
+      fxpShares: shares.fxp,
+      ironShares: shares.iron,
+      swingMultiplier: swing,
     });
     orders = adv.orders;
     if (adv.completed) completed.push(adv.completed.templateId);
     if (adv.allDone) allDone = true;
-    if (outcome === 'success') successes += 1;
+    // Ward Register counts each Success twice, inside the loop so a later row sees it (ADR 0021 §6).
+    if (outcome === 'success') successes += perSuccess;
 
     attempts.push({
       index: n,

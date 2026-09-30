@@ -1,8 +1,18 @@
-import { FACTION_IDS, PLACEHOLDERS, STORY_PLACEHOLDERS, placeholdersIn } from '@irongate/rules';
-import type { ChapterRules, FactionId, ItemSpec, OriginSpec } from '@irongate/rules';
+import {
+  FACTION_IDS,
+  PLACEHOLDERS,
+  POLITICAL_PLACEHOLDERS,
+  STORY_PLACEHOLDERS,
+  TIME_TOKENS,
+  isPoliticalCondition,
+  isPoliticalTemplate,
+  placeholdersIn,
+} from '@irongate/rules';
+import type { ChapterRules, FactionId, ItemSpec, OrdinanceSpec, OriginSpec } from '@irongate/rules';
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
 import { assets, avatars, scenes } from './data/art';
+import { candidates } from './data/candidates';
 import { ashford } from './data/cities/ashford';
 import { coalport } from './data/cities/coalport';
 import { duskwall } from './data/cities/duskwall';
@@ -10,9 +20,12 @@ import { factions } from './data/factions';
 import { headlines } from './data/headlines';
 import { items } from './data/items';
 import { jobs } from './data/jobs';
+import { ordinances } from './data/ordinances';
 import { orderTemplates } from './data/orders';
 import { origin } from './data/origin';
 import { npcs, standingLevels } from './data/people';
+import { politicalHeadlines } from './data/politicalHeadlines';
+import { politics } from './data/politics';
 import { Content, isCheckedAction, isShiftAction } from './schemas';
 import type {
   Action,
@@ -26,7 +39,10 @@ import type {
   Job,
   Location,
   Npc,
+  NpcCandidate,
+  Ordinance,
   OrderTemplate,
+  Platform,
 } from './schemas';
 
 /** Every data file, before validation. */
@@ -42,8 +58,48 @@ export const rawContent: unknown = {
   standingLevels,
   jobs,
   orderTemplates,
-  headlines,
+  headlines: [...headlines, ...politicalHeadlines],
+  ordinances,
+  candidates,
+  politics,
 };
+
+/** Design §10.1: the ten ordinances of the home-city menu. */
+export const DESIGN_ORDINANCE_IDS = [
+  'ord.public-works',
+  'ord.shift-hours',
+  'ord.street-permits',
+  'ord.rally-permits',
+  'ord.reading-room',
+  'ord.rest-day',
+  'ord.open-doors',
+  'ord.ward-register',
+  'ord.ward-fund',
+  'ord.public-meetings',
+] as const;
+
+/** Design §8, §17: the political templates every home paper carries (by id suffix). */
+export const POLITICAL_HEADLINE_NAMES = [
+  'seat-won',
+  'seat-top',
+  'seat-lost',
+  'seat-lost-tie',
+  'filed',
+  'on-ballot',
+  'struck',
+  'voted-won',
+  'voted-lost',
+  'voted-lost-tie',
+  'moved',
+  'seat-ended',
+  'council-passed',
+  'council-failed',
+  'count',
+  'stands-firm',
+  'ordinance-city',
+  'polls-open',
+  'nominations',
+] as const;
 
 export class ContentError extends Error {
   override name = 'ContentError';
@@ -54,6 +110,8 @@ const MIN_HOTSPOT_DISTANCE = 0.03;
 const ALLOWED_PLACEHOLDERS = new Set<string>(PLACEHOLDERS);
 /** Tech design §4.4: story texts have their own, separate list. */
 const ALLOWED_STORY_PLACEHOLDERS = new Set<string>(STORY_PLACEHOLDERS);
+/** Slice-3 tech design §4.3: political texts have their own list plus the client's time tokens. */
+const ALLOWED_POLITICAL_PLACEHOLDERS = new Set<string>([...POLITICAL_PLACEHOLDERS, ...TIME_TOKENS]);
 /** GDD §1.2 pillar 7 (content §13.7, n9): an outcome text is at most 240 characters and 4 sentences. */
 const OUTCOME_TEXT_MAX_CHARS = 240;
 const OUTCOME_TEXT_MAX_SENTENCES = 4;
@@ -373,11 +431,110 @@ export function parseContent(raw: unknown): Content {
     checkText(`order "${t.id}"`, `${t.title} ${t.line} ${t.noJob?.title ?? ''} ${t.noJob?.line ?? ''}`);
   }
 
-  // Headlines.
+  // Headlines. Slice 3: a template uses political conditions only, or none; political ones use the
+  // political placeholders and the time tokens.
+  const checkPolitical = (where: string, text: string) => {
+    for (const p of placeholdersIn(text)) {
+      if (!ALLOWED_POLITICAL_PLACEHOLDERS.has(p))
+        problems.push(`${where}: unknown political placeholder {${p}}`);
+    }
+  };
   for (const h of content.headlines) {
     unique('headline', h.id);
     if (!cityById.has(h.cityId)) problems.push(`headline "${h.id}": city "${h.cityId}" is not loaded`);
-    checkText(`headline "${h.id}"`, `${h.headline} ${h.deck ?? ''}`);
+    if (isPoliticalTemplate(h)) {
+      if (!h.when.every(isPoliticalCondition))
+        problems.push(`headline "${h.id}" mixes political and slice-1 conditions`);
+      checkPolitical(`headline "${h.id}"`, `${h.headline} ${h.deck ?? ''}`);
+    } else {
+      checkText(`headline "${h.id}"`, `${h.headline} ${h.deck ?? ''}`);
+    }
+  }
+  for (const city of content.cities) {
+    if (city.role !== 'home' || !city.paper) continue;
+    const names = new Set(
+      content.headlines
+        .filter((h) => h.cityId === city.id && isPoliticalTemplate(h))
+        .map((h) => h.id.slice(h.id.lastIndexOf('.') + 1)),
+    );
+    for (const n of POLITICAL_HEADLINE_NAMES) {
+      if (!names.has(n)) problems.push(`cities.${city.id}: the paper has no political "${n}" headline`);
+    }
+  }
+
+  // Slice 3: ordinances (ADR 0021; the bounds and one-per-kind are in the schema).
+  const ordinanceIds = new Set<string>();
+  for (const o of content.ordinances) {
+    unique('ordinance', o.id);
+    ordinanceIds.add(o.id);
+  }
+  for (const id of DESIGN_ORDINANCE_IDS) {
+    if (!ordinanceIds.has(id)) problems.push(`ordinances: the design's "${id}" is missing`);
+  }
+
+  // Slice 3: NPC slates (design §5.2).
+  const secretaryNames = new Set(content.factions.map((f) => npcById.get(f.secretary.npcId)?.name));
+  for (const c of content.candidates) {
+    unique('npc candidate', c.id);
+    if (secretaryNames.has(c.name)) problems.push(`candidate "${c.id}" shares a name with a secretary`);
+  }
+  const offsets = new Map<number, string>();
+  for (const city of content.cities) {
+    if (city.role === 'home' && !city.council)
+      problems.push(`cities.${city.id} is a home city without a council`);
+    if (city.council) {
+      const other = offsets.get(city.council.offset);
+      if (other)
+        problems.push(`cities.${city.id} and ${other} share the council offset ${city.council.offset}`);
+      offsets.set(city.council.offset, city.id);
+      const slate = content.candidates.filter((c) => c.cityId === city.id);
+      if (slate.length !== 9) problems.push(`cities.${city.id} has ${slate.length} NPC candidates, not 9`);
+      for (const c of slate) {
+        if (c.factionId !== city.homeFactionId)
+          problems.push(`candidate "${c.id}" is not of ${city.id}'s home faction`);
+      }
+      slate.forEach((c, i) => {
+        const prev = slate[i - 1];
+        if (prev && c.profile >= prev.profile)
+          problems.push(`candidates of ${city.id}: profiles must strictly descend in file order (${c.id})`);
+      });
+    }
+  }
+  for (const c of content.candidates) {
+    if (!cityById.get(c.cityId)?.council) problems.push(`candidate "${c.id}": "${c.cityId}" has no council`);
+  }
+
+  // Slice 3: factions' platforms, branch motions and the Unrest pair (design §6.4, §10.2, §11.3).
+  const crisisNamed = new Set<string>();
+  for (const f of content.factions) {
+    if (new Set(f.platforms.map((p) => p.id)).size !== 3)
+      problems.push(`factions.${f.id}.platforms need three distinct ids`);
+    if (!ordinanceIds.has(f.branchMotion))
+      problems.push(`factions.${f.id}.branchMotion "${f.branchMotion}" is not an ordinance`);
+    f.restoreOrders.forEach((id, i) => {
+      const slot = (['A', 'B'] as const)[i]!;
+      crisisNamed.add(id);
+      const t = content.orderTemplates.find((x) => x.id === id);
+      if (!t || t.factionId !== f.id || t.slot !== slot || t.use !== 'crisis' || t.doneFxp !== 40) {
+        problems.push(
+          `factions.${f.id}.restoreOrders[${i}] "${id}" must be a ${f.id} crisis template in slot ${slot} paying 40`,
+        );
+      }
+    });
+  }
+  for (const t of content.orderTemplates) {
+    if (t.use === 'crisis' && !crisisNamed.has(t.id))
+      problems.push(`order "${t.id}" is a crisis template no faction names in restoreOrders`);
+  }
+
+  // Slice 3: the political result texts (screens §9): 240 characters, 4 sentences, the political
+  // placeholders and the time tokens.
+  for (const [act, t] of Object.entries(content.politics.results)) {
+    const where = `politics.results.${act}`;
+    if (t.body.length > OUTCOME_TEXT_MAX_CHARS) problems.push(`${where} is ${t.body.length} characters`);
+    const n = sentenceCount(t.body);
+    if (n > OUTCOME_TEXT_MAX_SENTENCES) problems.push(`${where} has ${n} sentences (at most 4)`);
+    checkPolitical(where, `${t.headline} ${t.body}`);
   }
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {
@@ -420,9 +577,23 @@ export interface GameContent extends Content {
   hqOf(factionId: FactionId): { city: City; location: Location };
   /** One faction's order templates, in file order. */
   ordersOf(factionId: FactionId): OrderTemplate[];
-  /** One city's headline templates. */
+  /** One city's headline templates, political ones excluded (the settlement's selector). */
   headlinesOf(cityId: string): HeadlineTemplate[];
   standingNames: string[];
+  // Slice 3.
+  ordinance(id: string): Ordinance | undefined;
+  /** What the rules need of an ordinance (ADR 0021). */
+  ordinanceSpec(id: string): OrdinanceSpec | undefined;
+  /** The ten, in menu order. */
+  ordinancesMenu(): Ordinance[];
+  /** A council city's nine NPC candidates, in profile order. */
+  slateOf(cityId: string): NpcCandidate[];
+  candidate(id: string): NpcCandidate | undefined;
+  /** Cities with a council (the three home cities in slice 3). */
+  councilCities(): City[];
+  platform(factionId: FactionId, id: string): Platform | undefined;
+  /** One city's political headline templates (ADR 0023), in file order. */
+  politicalHeadlinesOf(cityId: string): HeadlineTemplate[];
 }
 
 export function indexContent(content: Content): GameContent {
@@ -442,6 +613,8 @@ export function indexContent(content: Content): GameContent {
   const assets = new Map(content.art.assets.map((a) => [a.id, a]));
   const items = new Map(content.items.map((i) => [i.id, i]));
   const ambitionsById = new Map(content.ambitions.map((a) => [a.id, a]));
+  const ordinancesById = new Map(content.ordinances.map((o) => [o.id, o]));
+  const candidatesById = new Map(content.candidates.map((c) => [c.id, c]));
   const chapter = (ambitionId: string, n: number) =>
     ambitionsById.get(ambitionId)?.chapters.find((c) => c.n === n);
   return {
@@ -498,8 +671,20 @@ export function indexContent(content: Content): GameContent {
       return a;
     },
     ordersOf: (factionId) => content.orderTemplates.filter((t) => t.factionId === factionId),
-    headlinesOf: (cityId) => content.headlines.filter((h) => h.cityId === cityId),
+    headlinesOf: (cityId) => content.headlines.filter((h) => h.cityId === cityId && !isPoliticalTemplate(h)),
     standingNames: content.standingLevels.map((s) => s.name),
+    ordinance: (id) => ordinancesById.get(id),
+    ordinanceSpec: (id) => {
+      const o = ordinancesById.get(id);
+      return o ? { id: o.id, name: o.name, effects: o.effects } : undefined;
+    },
+    ordinancesMenu: () => [...content.ordinances],
+    slateOf: (cityId) => content.candidates.filter((c) => c.cityId === cityId),
+    candidate: (id) => candidatesById.get(id),
+    councilCities: () => content.cities.filter((c) => c.council !== undefined),
+    platform: (factionId, id) => factions.get(factionId)?.platforms.find((p) => p.id === id),
+    politicalHeadlinesOf: (cityId) =>
+      content.headlines.filter((h) => h.cityId === cityId && isPoliticalTemplate(h)),
   };
 }
 

@@ -1,7 +1,8 @@
-import { STAT_POINT_TARGETS } from '@irongate/rules';
+import { STAT_POINT_TARGETS, dayKey } from '@irongate/rules';
 import { z } from 'zod';
 import { setAvatar } from '../../services/avatarService';
 import { loadCharacter } from '../../services/dayService';
+import { politicsWaiting } from '../../services/politicsService';
 import { placeStatPoint } from '../../services/statService';
 import { toCharacterView } from '../../services/views';
 import { protectedProcedure, router } from '../trpc';
@@ -10,8 +11,9 @@ export const characterRouter = router({
   /** The caller's character (ARRIVAL_PENDING before the join), the City Day settled, timers projected. */
   me: protectedProcedure.query(async ({ ctx }) => {
     const now = ctx.now();
-    const { doc, editionReadAt } = await loadCharacter(ctx.user, ctx.content, now);
-    return toCharacterView(doc, now, ctx.content, editionReadAt);
+    const { doc, editionReadAt, city } = await loadCharacter(ctx.user, ctx.content, now);
+    const waiting = await politicsWaiting(ctx.content, doc, city, now, dayKey(now));
+    return toCharacterView(doc, now, ctx.content, editionReadAt, { city, politicsWaiting: waiting });
   }),
 
   /** §7.3: change the face, free, any time (a cosmetic value: last write wins, ADR 0008). */

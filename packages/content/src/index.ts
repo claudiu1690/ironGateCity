@@ -9,5 +9,5 @@ export {
   sentenceCount,
 } from './load';
 export type { GameContent, LocatedAction } from './load';
-export { copy } from './data/copy';
+export { copy, turnoutOf } from './data/copy';
 export type { Copy } from './data/copy';

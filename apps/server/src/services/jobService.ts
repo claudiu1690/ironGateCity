@@ -1,7 +1,8 @@
 import type { GameContent } from '@irongate/content';
-import { Character } from '@irongate/db';
-import type { CharacterDoc } from '@irongate/db';
+import { Character, City } from '@irongate/db';
+import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
+  ENERGY,
   JOBS,
   addToTally,
   advanceOrders,
@@ -11,12 +12,15 @@ import {
   jobLock,
   orderRewards,
   projectEnergy,
+  restedCapFor,
   spendEnergy,
 } from '@irongate/rules';
 import type { CharacterView, JobView } from '@irongate/rules';
 import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
+import { branchEndorseIfFiled } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
+import { modifiersFor } from './modifiers';
 import { withRequestKey } from './requestKey';
 import { DayChanged, VersionConflict } from './txn';
 import { energyState, fromOrdersState, jobView, toCharacterView, toOrdersState, wornStats } from './views';
@@ -26,6 +30,8 @@ export interface TakeJobResult {
   job: JobView;
   /** For the one line on the Jobs card (content §12.1). */
   outcome: { switched: boolean; orderCompleted: boolean; fxp: number; firstPayAt: number };
+  /** Slice 3: taking the job completed the third order and the branch endorsed the candidacy. */
+  branchEndorsement: { endorsements: number; needed: number; smallBranch: boolean } | null;
 }
 
 /**
@@ -67,7 +73,9 @@ export async function takeJob(deps: {
       if (lock) throw new GameError('JOB_LOCKED', { ...lock });
 
       const switching = c.job !== null;
-      const before = projectEnergy(energyState(c), now);
+      const cityState = await City.findById(c.homeCityId).session(session).lean<CityDoc>();
+      const m = modifiersFor(content, cityState, c.factionId, today);
+      const before = projectEnergy(energyState(c), now, ENERGY.max, restedCapFor(m));
       let energy = { value: before.value, rested: before.rested, updatedAt: before.updatedAt };
       if (switching) {
         const spent = spendEnergy(before, JOBS.switchEnergy, { useRested: JOBS.shiftUsesRested });
@@ -90,7 +98,10 @@ export async function takeJob(deps: {
         c.homeCityId,
         now,
       );
-      const pay = orderRewards(adv.completed ? 1 : 0, adv.allDone);
+      const completedT = adv.completed
+        ? content.ordersOf(c.factionId).filter((t) => t.id === adv.completed!.templateId)
+        : [];
+      const pay = orderRewards(completedT, adv.allDone);
       const gains = applyGains(
         {
           xp: c.xp,
@@ -127,8 +138,12 @@ export async function takeJob(deps: {
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
+      const branchEndorsement = adv.allDone
+        ? await branchEndorseIfFiled(content, session, updated, today, now)
+        : null;
       return {
-        character: toCharacterView(updated, now, content, loaded.editionReadAt),
+        branchEndorsement,
+        character: toCharacterView(updated, now, content, loaded.editionReadAt, { city: cityState }),
         job: jobView(content, updated, today)!,
         outcome: {
           switched: switching,

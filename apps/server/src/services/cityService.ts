@@ -1,9 +1,10 @@
 import { isCheckedAction, isShiftAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
 import { City } from '@irongate/db';
-import type { CharacterDoc } from '@irongate/db';
+import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
   JOBS,
+  actionEnergy,
   computeCheck,
   dayKey,
   dayStart,
@@ -12,14 +13,21 @@ import {
   itemSpec,
   jobLocks,
   jobPay,
+  moraleState,
+  ordinanceCheckBonuses,
+  ordinanceTags,
   orderMatches,
+  shiftEnergy,
   standingBonus,
   standingView,
   tier1Difficulty,
   trainingCost,
+  trainingEnergy,
 } from '@irongate/rules';
 import type { ActionDescriptor, ActionView, CityView, OrdersState } from '@irongate/rules';
 import { gameError } from '../gameError';
+import { modifiersFor, ordinanceIdOn } from './modifiers';
+import { politicsSummary } from './politicsService';
 import { assetView, namedStanding, standingSuccesses, toOrdersState, wornStats } from './views';
 
 /** The order a tap here would advance (open first), or a done one it matched, for the ticket tag. */
@@ -48,17 +56,23 @@ function orderTag(
   };
 }
 
-/** Content city + live state + this character's odds, costs, orders and jobs (ADR 0003). */
+/**
+ * Content city + live state + this character's odds, costs, orders and jobs (ADR 0003). Slice 3:
+ * live costs, the Open Doors bonus and the ticket tags under the ordinance in force (ADR 0021), the
+ * plate's morale and ordinance lines, and the HQ's council card.
+ */
 export async function getCityView(
   content: GameContent,
   cityId: string,
   c: CharacterDoc,
   now: number,
+  loaded?: CityDoc | null,
 ): Promise<CityView> {
   const city = content.city(cityId);
   if (!city) throw gameError('NOT_FOUND', 'UNKNOWN_CITY', { cityId });
 
-  const state = await City.findById(city.id).lean();
+  const state =
+    loaded !== undefined && loaded?._id === city.id ? loaded : await City.findById(city.id).lean<CityDoc>();
   const values = wornStats(c, content);
   const difficulty = tier1Difficulty(city.role);
   const today = dayKey(now);
@@ -68,13 +82,38 @@ export async function getCityView(
   const orders = toOrdersState(c.orders);
   const liveOrders: OrdersState = orders.day === today ? orders : { day: today, items: [], allDoneAt: null };
   const workedToday = c.job?.lastShiftDay === today;
+  const m = modifiersFor(content, state, c.factionId, today);
+  const hq = city.homeFactionId === c.factionId ? content.hqOf(c.factionId).location.id : null;
+  const council =
+    hq && city.id === c.homeCityId ? await politicsSummary(content, c, state, now, today) : null;
+  const opinion = state?.opinion ?? city.baselineOpinion;
+  const ordId = ordinanceIdOn(state, today);
+  const ord = ordId ? content.ordinance(ordId) : undefined;
+  const inForceTo = state?.ordinance?.id === ordId ? state?.ordinance?.toDay : undefined;
 
   return {
     id: city.id,
     name: city.name,
     role: city.role,
     ...(city.homeFactionId ? { homeFactionId: city.homeFactionId } : {}),
-    opinion: state?.opinion ?? city.baselineOpinion,
+    opinion,
+    morale: city.homeFactionId
+      ? {
+          factionId: city.homeFactionId,
+          share: opinion[city.homeFactionId],
+          state: moraleState(opinion[city.homeFactionId]),
+        }
+      : null,
+    ordinance:
+      ord && inForceTo !== undefined
+        ? {
+            ordinanceId: ord.id,
+            name: ord.name,
+            line: ord.line,
+            effectLine: ord.effectLine,
+            daysLeft: inForceTo - today,
+          }
+        : null,
     map: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
     isNight: isNight(now),
     standing,
@@ -109,14 +148,27 @@ export async function getCityView(
           ) {
             locked = { reason: 'STANDING', need: action.requires.standing };
           }
+          const cost = actionEnergy(action.energy, action.type, m);
           return {
             ...base,
             kind: 'checked',
             givesFxp: action.givesFxp,
-            energy: action.energy,
-            energy3: action.energy * 3,
-            preview: computeCheck({ stats: action.stats, values, difficulty, bonuses: bonus ? [bonus] : [] }),
+            energy: cost,
+            energy3: cost * 3,
+            preview: computeCheck({
+              stats: action.stats,
+              values,
+              difficulty,
+              bonuses: [...(bonus ? [bonus] : []), ...ordinanceCheckBonuses(action.type, m)],
+            }),
             locked,
+            tags: ordinanceTags({
+              kind: 'checked',
+              type: action.type,
+              base: action.energy,
+              givesFxp: action.givesFxp,
+              m,
+            }),
           };
         }
         if (isShiftAction(action)) {
@@ -125,7 +177,8 @@ export async function getCityView(
             ...base,
             kind: 'shift',
             givesFxp: false,
-            energy: job.shiftEnergy,
+            energy: shiftEnergy(job.shiftEnergy, m),
+            tags: ordinanceTags({ kind: 'shift', type: action.type, base: job.shiftEnergy, m }),
             energy3: null,
             preview: null,
             shift: {
@@ -142,7 +195,8 @@ export async function getCityView(
           ...base,
           kind: 'training',
           givesFxp: false,
-          energy: trainingCost(from),
+          energy: trainingEnergy(trainingCost(from), m),
+          tags: ordinanceTags({ kind: 'training', type: action.type, base: trainingCost(from), m }),
           energy3: null,
           preview: null,
           trains: { stat: action.trains, from, to: from + 1 },
@@ -164,6 +218,7 @@ export async function getCityView(
           switchCost: c.job && !held ? JOBS.switchEnergy : 0,
         };
       }),
+      council: location.id === hq ? council : null,
     })),
   };
 }

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts",
+    "dev:worker": "tsx watch --clear-screen=false src/worker.ts",
     "build": "tsup",
     "start": "node dist/index.js",
     "start:worker": "node dist/worker.js",

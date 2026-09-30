@@ -13,6 +13,7 @@ import {
   TodayStrip,
   formatClock,
   formatNumber,
+  formatWeekday,
   plural,
 } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -133,6 +134,20 @@ export function MePage() {
               )}
             </span>
           )}
+          {/* Slice 3 (screens §8): the office line under the party card. */}
+          {c.office ? (
+            <Link
+              to="/council"
+              className="font-mono text-[12px] text-petrol underline decoration-dotted underline-offset-2"
+              data-testid="me-office"
+            >
+              {copy.councillorLine(c.office.cityName, formatWeekday(c.office.termEndsAt - 1))}
+            </Link>
+          ) : c.rank.value >= 3 ? (
+            <span className="font-mono text-[12px] text-muted" data-testid="me-office">
+              {copy.noOffice(c.rank.title)}
+            </span>
+          ) : null}
           {c.keepsakes.length > 0 && (
             <ul className="flex flex-col gap-1.5 pt-1" aria-label="Keepsakes" data-testid="me-keepsakes">
               {c.keepsakes.map((k) => (
@@ -198,7 +213,7 @@ export function MePage() {
             tone="collective"
           />
           <span className="font-mono text-[12px] text-muted" data-testid="me-pc">
-            {copy.politicalCapital(c.pc)}
+            {copy.pcSinks(c.pc)}
           </span>
         </Card>
 

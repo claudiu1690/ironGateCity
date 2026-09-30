@@ -1,5 +1,6 @@
 import { getContent } from '@irongate/content';
 import { connectDb, disconnectDb, ensureIndexes, seed } from '@irongate/db';
+import { isLoopbackUri } from './env';
 import type { Env } from './env';
 
 export interface Database {
@@ -15,7 +16,12 @@ export async function startDb(env: Env, log: (message: string) => void): Promise
   let stopMemory: (() => Promise<void>) | undefined;
   let uri = env.MONGODB_URI;
 
-  if (env.DB_MODE === 'memory') {
+  if (env.DB_MODE === 'memory' && env.MONGODB_URI && isLoopbackUri(env.MONGODB_URI)) {
+    // Slice 3: an in-memory replica set already running on this machine (`pnpm db:mem`), shared by
+    // `pnpm dev:mem`'s API, worker and the operator scripts. Loopback only: any other URI is
+    // ignored in memory mode, so a server with the test hooks can never reach a real database.
+    log(`Using the in-memory MongoDB replica set at ${env.MONGODB_URI} (DB_MODE=memory)`);
+  } else if (env.DB_MODE === 'memory') {
     // Dev/test only: never imported in `uri` mode, so production needs no mongodb-memory-server.
     const { startMemoryReplSet, withDbName } = await import('@irongate/db/testing');
     log('Starting an in-memory MongoDB replica set (DB_MODE=memory)…');

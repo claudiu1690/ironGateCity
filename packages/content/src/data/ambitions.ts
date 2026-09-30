@@ -77,7 +77,73 @@ export const ambitions: AmbitionInput[] = [
           art: 'home-hq',
         },
       },
-      { n: 2, title: 'Stand where he stood', requires: { rank: 2 } },
+      // Slice 3 (docs/design/slice-3-politics.md §17.7): after the first ballot, seven days on.
+      {
+        n: 2,
+        title: 'Stand where he stood',
+        requires: { ballotCast: true },
+        story: {
+          letterFrom: 'From the back of the ward book',
+          choose: {
+            title: 'His election bill',
+            narrative:
+              "Folded into the back of the ward book: his election bill from '21. His name in capitals on browned paper, and the corner by {hq} where he spoke at six every evening. You've cast a ballot here now. He'd have asked what came next.",
+            choices: [
+              {
+                id: 'branch',
+                text: "Tell {secretary} you'll speak where he did",
+                hint: 'The branch can bring a crowd, and will want a say in what you tell it.',
+                flag: 'told-branch',
+              },
+              {
+                id: 'alone',
+                text: 'Go at six, alone, and see who stops',
+                hint: 'Whoever comes, comes for the name.',
+                flag: 'went-alone',
+              },
+            ],
+          },
+          check: {
+            title: "Six o'clock",
+            narrative:
+              'Same corner, same hour, twenty-five years on. People slow because a stranger is standing where somebody used to. You have his name, your own, the bill in your pocket and about five minutes before they walk on.',
+            approaches: [
+              { id: 'step', text: 'Speak from the step: his name first, then yours', stats: ['cha', 'int'] },
+              {
+                id: 'edge',
+                text: 'Work the edge of the crowd one at a time, the bill in your hand',
+                stats: ['int'],
+              },
+            ],
+            cta: 'Stand where he stood',
+            difficulty: 14,
+            energy: 15,
+          },
+          result: {
+            success: {
+              headline: 'They stopped',
+              body: "Thirty by the end, and an old woman in the front row who says he stood exactly there and lost by eleven votes. She asks if you're standing. You say: when the branch lets me. She says that's what he said.",
+            },
+            partial: {
+              headline: 'A few stopped',
+              body: 'Nine, two of them because they took it for a tram queue. One old man knew him and says so, loudly, which helps more than the speech. You get through it. The corner is yours if you want it.',
+            },
+            failure: {
+              headline: 'A corner is only a corner',
+              body: "Rain at six, and the square empties before you've said his name. A boy asks who you're talking to. You finish anyway, to nobody, and walk home with the bill under your coat. Same corner tomorrow, if the rain lets you.",
+            },
+          },
+          rewards: {
+            success: { xp: 300, fxp: 80, iron: 150 },
+            partial: { xp: 150, fxp: 40, iron: 75 },
+            failure: { xp: 50, fxp: 0, iron: 0 },
+          },
+          keepsake: 'keep.election-bill',
+          art: 'home-hq',
+        },
+      },
+      // The teaser: written with the slice that follows (design §17.7).
+      { n: 3, title: 'The deposit', requires: { rank: 3 } },
     ],
   },
   {

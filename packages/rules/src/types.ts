@@ -2,7 +2,11 @@
  * Shared vocabulary and DTOs. The server builds these; the client and `@irongate/ui` render them.
  * Kept in the rules package so every layer imports types from one place.
  */
+import type { CouncilPhase } from './calendar';
+import type { CountRow } from './council';
 import type { DayKey } from './day';
+import type { MoraleState } from './morale';
+import type { OrdinanceTagView } from './ordinances';
 
 export const FACTION_IDS = ['vanguard', 'collective', 'alliance'] as const;
 export type FactionId = (typeof FACTION_IDS)[number];
@@ -57,10 +61,24 @@ export interface ActionAttempt {
   outcome: Outcome;
 }
 
+/** A named part of a line's bonus: *Rested +5*, *Party order +2*, *Fired up +1*, *Ward Fund +5*. */
+export interface RewardPart {
+  id: string;
+  label: string;
+  /** May be negative (a shift under the Ward Fund: −27). */
+  amount: number;
+}
+
 export interface RewardLine {
   base: number;
+  /** Σ parts when `parts` is present. */
   bonus: number;
   total: number;
+  /**
+   * Slice 3 (ADR 0021): the bonus's named parts, present when an ordinance or morale contributed.
+   * Absent on stored slice 0–2 results; the UI treats absent as none.
+   */
+  parts?: RewardPart[];
 }
 
 export interface Rewards {
@@ -118,6 +136,10 @@ export interface OrderTemplate {
   counts: 'attempts' | 'successes';
   /** The variant for a player without a job (e.g. "Take a job"). Counts attempts. */
   noJob?: { title: string; line: string; match: OrderMatch; target: number };
+  /** Slice 3: `crisis` templates (Restore the base) never enter the rotation. Default `rotation`. */
+  use?: 'rotation' | 'crisis';
+  /** FXP for completing it; default DIRECTIVES.orderDoneFxp (20). Restore the base pays 40. */
+  doneFxp?: number;
 }
 
 export interface OrderItem {
@@ -153,7 +175,52 @@ export type HeadlineCondition =
   /** Energy spent on the previous City Day (0 when the player was not seen). */
   | { kind: 'energyYesterday'; min?: number; max?: number }
   | { kind: 'noPersonal' }
-  | { kind: 'homeShare'; min?: number; max?: number };
+  | { kind: 'homeShare'; min?: number; max?: number }
+  | PoliticalCondition;
+
+/**
+ * Slice 3 (ADR 0023): the political headline conditions. A template uses political kinds only, or
+ * none; political templates are selected live at read, never at settlement.
+ */
+export type PoliticalCondition =
+  /** Elected at last night's count; `top` = first of seven. */
+  | { kind: 'seatWon'; top?: boolean }
+  /** Stood at last night's count and was not elected; `tie` = lost on a tie-break (margin 0). */
+  | { kind: 'seatLost'; tie?: boolean }
+  /** The candidate the player voted for at last night's count won or lost (`tie` as above). */
+  | { kind: 'votedFor'; won: boolean; tie?: boolean }
+  /** Declared yesterday, and today is still nominations. */
+  | { kind: 'filedYesterday' }
+  /** Filed; the nominations closed last night with the name on the ballot or struck. */
+  | { kind: 'nominationsClosed'; struck: boolean }
+  /** A council term held ended at last night's count. */
+  | { kind: 'termEnded' }
+  /** A councillor; the council divided last night. */
+  | { kind: 'divided'; passed: boolean }
+  /** Moved an ordinance yesterday. */
+  | { kind: 'movedYesterday' }
+  /** The home election was counted last night. */
+  | { kind: 'countToday' }
+  | { kind: 'phaseToday'; phase: CouncilPhase; cycleDay?: number }
+  /** An ordinance took effect this morning. */
+  | { kind: 'ordinanceFromToday' }
+  /** Morale rose out of Unrest at last night's boundary. */
+  | { kind: 'leftUnrest' };
+
+export const POLITICAL_CONDITION_KINDS = [
+  'seatWon',
+  'seatLost',
+  'votedFor',
+  'filedYesterday',
+  'nominationsClosed',
+  'termEnded',
+  'divided',
+  'movedYesterday',
+  'countToday',
+  'phaseToday',
+  'ordinanceFromToday',
+  'leftUnrest',
+] as const satisfies ReadonlyArray<PoliticalCondition['kind']>;
 
 export interface HeadlineTemplate {
   id: string;
@@ -183,6 +250,33 @@ export const PLACEHOLDERS = [
   'ordersLine',
 ] as const;
 export type Placeholder = (typeof PLACEHOLDERS)[number];
+
+/**
+ * Slice 3 (tech design §4.3): the placeholders political headlines and the political result texts
+ * may use. All are resolved on the server except the time tokens `{until}` and `{at}`, which travel
+ * as epoch ms and are rendered in the player's clock.
+ */
+export const POLITICAL_PLACEHOLDERS = [
+  'name',
+  'city',
+  'paper',
+  'ordinal',
+  'votes',
+  'margin',
+  'winner',
+  'last',
+  'voted',
+  'turnout',
+  'npcSeats',
+  'ordinance',
+  'ordinanceLine',
+  'endorsements',
+  'n',
+  'weekday',
+  'countDay',
+] as const;
+export type PoliticalPlaceholder = (typeof POLITICAL_PLACEHOLDERS)[number];
+export const TIME_TOKENS = ['until', 'at'] as const;
 
 /**
  * The placeholders story texts (origin steps, the street, Ambition chapters) may use (slice-2 tech
@@ -333,6 +427,15 @@ export interface CharacterView {
    * opened; 0 once it is played or midway (onboarding §14.3 n7, which supersedes §13 Q8).
    */
   lettersWaiting: number;
+  /** Slice 3: the seat held today ("Councillor, Coalport · term ends Thursday"), or null. */
+  office: { cityId: string; cityName: string; seat: number; termEndsAt: number } | null;
+  /**
+   * Slice 3: the Paper tab's dot for politics: 1 while a ballot can be cast and has not been, or a
+   * councillor's ordinance vote is open and not cast; never for nominations.
+   */
+  politicsWaiting: 0 | 1;
+  /** Slice 3: today's Rested cap in the home city (Rest Day Order: 250), for the client projection. */
+  restedCap: number;
 }
 
 export type ActionViewKind = 'checked' | 'training' | 'shift';
@@ -355,6 +458,8 @@ export interface ActionView {
   /** An open Party order this action advances. */
   order: { id: string; title: string; progress: number; target: number } | null;
   locked: { reason: 'LEVEL' | 'STANDING'; need: number } | null;
+  /** Slice 3: the ordinance in force's tags ("Rally Permits: 10 Energy", "Open Doors: +4 %"). */
+  tags: OrdinanceTagView[];
 }
 
 export interface LocationJobView {
@@ -383,6 +488,8 @@ export interface LocationView {
   map: { x: number; y: number };
   actions: ActionView[];
   jobs: LocationJobView[];
+  /** Slice 3: the council card, on the home faction's HQ only. */
+  council: PoliticsSummaryView | null;
 }
 
 export interface CityView {
@@ -395,6 +502,10 @@ export interface CityView {
   isNight: boolean;
   standing: NamedStandingView;
   locations: LocationView[];
+  /** Slice 3: the home share as morale, for a home city (the plate's state word). */
+  morale: { factionId: FactionId; share: number; state: MoraleState } | null;
+  /** Slice 3: the ordinance in force ("Ordinance: Shift Hours Order · 3 days left"). */
+  ordinance: { ordinanceId: string; name: string; line: string; effectLine: string; daysLeft: number } | null;
 }
 
 export interface BonusTag {
@@ -497,6 +608,10 @@ export interface ActionResult {
     item: { itemId: string; name: string; keepsake: boolean; art: AssetView } | null;
     /** Next-chapter hooks, already worded. */
     hooks: string[];
+    /** Slice 3: the action moved the home city across a morale threshold. */
+    morale?: { cityId: string; cityName: string; before: MoraleState; after: MoraleState } | null;
+    /** Slice 3: completing the third order made the branch endorse the caller's candidacy. */
+    branchEndorsement?: { endorsements: number; needed: number; smallBranch: boolean } | null;
   };
   /** The Today tally after this tap. */
   today: DailyTally;
@@ -509,8 +624,18 @@ export interface ActionResult {
 }
 
 export interface DeskView {
-  /** Frozen at settlement. */
-  salary: { jobName: string; days: number; perDay: number; total: number } | null;
+  /** Frozen at settlement. `ordinance`: the pay ordinances' adjustment (slice 3). */
+  salary: {
+    jobName: string;
+    days: number;
+    perDay: number;
+    total: number;
+    ordinance: { label: string; amount: number } | null;
+  } | null;
+  /** Slice 3: the councillor's stipend credited at this settlement. */
+  stipend: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
+  /** Slice 3: deposits returned for struck candidacies. */
+  deposits: { count: number; pc: number } | null;
   streak: { before: number; after: number; sickDaysUsed: number; broken: boolean } | null;
   restedBanked: number;
   daysSinceLastPaper: number | null;
@@ -544,10 +669,15 @@ export interface PaperView {
   firstEdition: boolean;
   paper: { name: string; shortName: string; strapline: string; price: string };
   dateline: { weekday: string; date: string; city: string };
-  headlines: Array<{ group: HeadlineGroup; headline: string; deck?: string }>;
+  /** `until`: the epoch ms a `{until}` token in the text names (rendered in the player's clock). */
+  headlines: Array<{ group: HeadlineGroup; headline: string; deck?: string; until?: number }>;
   orders: OrdersView;
   desk: DeskView;
   letters: LetterView[];
+  /** Slice 3: the Polling Day row, live (ADR 0023). */
+  pollingDay: PoliticsSummaryView | null;
+  /** Slice 3: the front page, on the first edition a winner opens during the term. */
+  frontPage: FrontPageView | null;
   /** The first edition's "To the city": the first pin's sheet (slice-2 tech design §10). */
   landing: { cityId: string; locationId: string } | null;
   readAt: number | null;
@@ -584,7 +714,33 @@ export type GameErrorReason =
   | 'UNKNOWN_CHOICE'
   | 'UNKNOWN_APPROACH'
   // Slice-2 QA m3: the name rule (§7.3) at the join; `problem` is blank, short or long.
-  | 'BAD_NAME';
+  | 'BAD_NAME'
+  // Slice 3 (tech design §6.8).
+  | 'RANK_TOO_LOW'
+  | 'NOT_KNOWN'
+  | 'SITTING_COUNCILLOR'
+  | 'NOT_NOMINATIONS'
+  | 'NOT_POLLING'
+  | 'ALREADY_FILED'
+  | 'NOT_FILED'
+  | 'UNKNOWN_PLATFORM'
+  | 'NOT_ENOUGH_PC'
+  | 'UNKNOWN_CANDIDACY'
+  | 'CANDIDACY_CLOSED'
+  | 'CANNOT_ENDORSE_SELF'
+  | 'ALREADY_ENDORSED'
+  | 'UNKNOWN_CANDIDATE'
+  | 'ALREADY_VOTED'
+  | 'NOT_COUNCILLOR'
+  | 'COUNCIL_CLOSED'
+  | 'UNKNOWN_ORDINANCE'
+  | 'ALREADY_ON_PAPER'
+  | 'ALREADY_PROPOSED'
+  | 'PAPER_FULL'
+  | 'NOT_ON_PAPER'
+  | 'ALREADY_COUNCIL_VOTED'
+  | 'UNKNOWN_ELECTION'
+  | 'ELECTION_NOT_READY';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -660,7 +816,7 @@ export interface AmbitionView {
   status: ChapterStatusKind;
   /** Epoch ms of the start of the day the next chapter opens, while waiting. */
   readyFrom: number | null;
-  needs: { rank?: number; level?: number } | null;
+  needs: { rank?: number; level?: number; ballotCast?: boolean } | null;
   /** ready → the choose screen; midway → the check screen. */
   screen: StoryScreenView | null;
   letterFrom: string | null;
@@ -669,4 +825,252 @@ export interface AmbitionView {
    * 6 October, at Rank 2" (onboarding §14.3 n13), or null when no chapter follows.
    */
   waitsUntil: string | null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Slice 3 views (docs/tech/slice-3.md §8.3, §10.1): the slate, the ballot, the count, the chamber,
+// the Polling Day row and the front page. No view ever carries another voter's choice or a total
+// before the count (ADR 0019).
+// ---------------------------------------------------------------------------------------------
+
+export type PoliticsState =
+  'belowRank' | 'ballot' | 'councilSits' | 'filed' | 'stand' | 'count' | 'voted' | 'nominations';
+
+/** The Polling Day row, the HQ council card and the Paper tab dot (one builder, screens §2.1, §7). */
+export interface PoliticsSummaryView {
+  cityId: string;
+  cityName: string;
+  cycleDay: number;
+  phase: 'nominations' | 'polling';
+  /** The first that applies, in this order (design §17 Q6). */
+  state: PoliticsState;
+  /** The boundary ending today's window (nominations or polls). */
+  closesAt: number;
+  pollsOpenAt: number | null;
+  /** The next day the polls open, as a weekday ("Coalport votes from Thursday"). */
+  pollsFromWeekday: string;
+  countAt: number | null;
+  divideAt: number | null;
+  /** 'filed': counted endorsements so far. */
+  endorsements: { n: number; needed: number; branchWillMakeUp: boolean } | null;
+  /** Filed, and today's three orders are done: "All orders carried out · the branch endorses you". */
+  branchLine: boolean;
+  votedFor: string | null;
+  /** The morning after a count. */
+  count: {
+    winner: string;
+    npcSeats: number;
+    seats: number;
+    turnout: { voters: number; eligible: number };
+  } | null;
+  inForce: { ordinanceId: string; name: string; daysLeft: number } | null;
+  rank2Title: string;
+  fxpToRank2: number | null;
+  standCost: number;
+  /** The caller is a councillor with the ordinance vote open. */
+  councillor: boolean;
+  route: '/council/slate' | '/council/ballot' | '/council/count' | '/council' | null;
+  /** 'ballot' or 'councilSits'. */
+  dot: boolean;
+}
+
+export interface EndorsementsView {
+  /** Counted so far: members, plus the branch (twice in a small branch). */
+  n: number;
+  needed: number;
+  branch: boolean;
+  branchCounts: 1 | 2;
+  /** Up to five names, then `more`. */
+  names: string[];
+  more: number;
+}
+
+export type EndorseRefusal = 'SELF' | 'ALREADY' | 'RANK' | 'PC' | 'CLOSED';
+
+export interface CandidateView {
+  /** 'p:<characterId>' | 'n:<npcId>'. */
+  key: string;
+  candidacyId: string | null;
+  kind: 'player' | 'npc';
+  name: string;
+  /** NPCs: null (the ward mark in the ring). */
+  avatar: AssetView | null;
+  factionId: FactionId;
+  /** null = "ward". */
+  rankTitle: string | null;
+  standing: { name: string; cityName: string; successes: number };
+  wardVote: number;
+  platform: string;
+  endorsements: EndorsementsView | null;
+  you: boolean;
+  endorsedByYou: boolean;
+  canEndorse: { ok: true } | { ok: false; reason: EndorseRefusal } | null;
+}
+
+export interface ElectionView {
+  electionId: string;
+  cityId: string;
+  cityName: string;
+  phase: 'nominations' | 'polling';
+  nominationsCloseAt: number;
+  pollsOpenAt: number;
+  countAt: number;
+  /** Players by filing, then NPCs by profile (in nominations the provisional 9 − p). */
+  candidates: CandidateView[];
+  /** Nominations, and the caller has no candidacy this cycle. */
+  declare: {
+    requirements: Array<{
+      id: 'rank' | 'known' | 'endorsements';
+      met: boolean;
+      rankTitle?: string;
+      fxpToGo?: number;
+      successes?: number;
+      need?: number;
+    }>;
+    platforms: Array<{ id: string; line: string }>;
+    cost: number;
+    canDeclare: boolean;
+    reason: GameErrorReason | null;
+  } | null;
+  candidacy: {
+    candidacyId: string;
+    status: 'filed' | 'withdrawn' | 'struck' | 'standing';
+    endorsements: EndorsementsView | null;
+    branchLine: boolean;
+    canWithdraw: boolean;
+  } | null;
+  /** During the polls: the caller's own ballot, never anyone else's (ADR 0019). */
+  ballot: {
+    cast: { key: string; name: string } | null;
+    canVote: boolean;
+    reason: GameErrorReason | null;
+  } | null;
+  /** The caller's own endorsement this cycle, if any. */
+  endorsed: { candidacyId: string; name: string } | null;
+  pc: number;
+}
+
+export interface CountRowView extends CountRow {
+  avatar: AssetView | null;
+  you: boolean;
+  yourVote: boolean;
+}
+
+export interface CountView {
+  electionId: string;
+  cityId: string;
+  cityName: string;
+  countDay: DayKey;
+  /** The count's weekday ("Sunday's result"). */
+  weekday: string;
+  rows: CountRowView[];
+  turnout: { voters: number; eligible: number };
+  seats: number;
+  npcSeats: number;
+}
+
+export interface CouncilSeatView {
+  seat: number;
+  kind: 'player' | 'npc';
+  name: string;
+  avatar: AssetView | null;
+  rankTitle: string | null;
+  standingName: string;
+  you: boolean;
+  /** Players once cast; NPCs after the division. */
+  votedFor: string | null;
+}
+
+export interface OrderPaperItemView {
+  n: number;
+  ordinanceId: string;
+  name: string;
+  line: string;
+  effectLine: string;
+  movedBy: { kind: 'branch' | 'player'; name: string; you: boolean };
+  /** After the division. */
+  votes: number | null;
+  passed: boolean;
+}
+
+export interface OrdinanceMenuItemView {
+  ordinanceId: string;
+  name: string;
+  line: string;
+  effectLine: string;
+  onPaper: boolean;
+}
+
+export interface CouncilView {
+  councilKey: string;
+  cityId: string;
+  cityName: string;
+  termEndsAt: number;
+  npcSeats: number;
+  seats: CouncilSeatView[];
+  window: { voting: boolean; divideAt: number; opensAt: number | null };
+  paper: {
+    status: 'open' | 'divided';
+    items: OrderPaperItemView[];
+    /** After the division: the Against-all votes. */
+    against: number | null;
+    /** Divided with no motion passed. */
+    rose: boolean;
+  };
+  you: {
+    councillor: boolean;
+    voted: string | null;
+    proposed: string | null;
+    canPropose: boolean;
+    proposeReason: GameErrorReason | null;
+    pc: number;
+  };
+  /** Councillors while voting. */
+  menu: OrdinanceMenuItemView[] | null;
+  inForce: { ordinanceId: string; name: string; line: string; daysLeft: number } | null;
+}
+
+/** Screens §2.2: the morning a seat is won, the paper's front page is the winner's. */
+export interface FrontPageView {
+  avatar: AssetView | null;
+  caption: { name: string; rankTitle: string; cityName: string };
+  /** The ELECTED stamp animates once (until `paper.markRead`). */
+  animate: boolean;
+  headline: string;
+  deck: string;
+  count: CountView;
+}
+
+export type PoliticalAct = 'ballot' | 'declare' | 'endorse' | 'withdraw' | 'propose' | 'councilVote';
+export const POLITICAL_ACTS = ['ballot', 'declare', 'endorse', 'withdraw', 'propose', 'councilVote'] as const;
+
+/** The political result modal (screens §9, tech design §10.1), stored in requestLogs.result. */
+export interface PoliticalResult {
+  kind: 'political';
+  act: PoliticalAct;
+  stamp: { label: string; tone: 'success' | 'partial' };
+  /** The masthead strip in place of the art panel. */
+  paper: { name: string; shortName: string };
+  place: { cityId: string; cityName: string };
+  headline: string;
+  body: string;
+  /** Epoch ms for `{until}` / `{at}` in the text. */
+  until: number | null;
+  at: number | null;
+  knockOns: {
+    pc: { before: number; after: number } | null;
+    morale: {
+      cityName: string;
+      factionId: FactionId;
+      before: number;
+      after: number;
+      stateBefore: MoraleState;
+      stateAfter: MoraleState;
+    } | null;
+    endorsements: { name: string; n: number; needed: number } | null;
+  };
+  performedAt: string;
+  idempotencyKey: string;
+  character: CharacterView;
+  view: { kind: 'election'; election: ElectionView } | { kind: 'council'; council: CouncilView };
 }

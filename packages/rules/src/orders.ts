@@ -22,7 +22,8 @@ export function ordersForDay(templates: readonly OrderTemplate[], day: DayKey): 
   const i = cityDayIndex(day);
   const picked: OrderTemplate[] = [];
   for (const slot of SLOTS) {
-    const inSlot = templates.filter((t) => t.slot === slot);
+    // Crisis templates (Restore the base) never enter the rotation (slice-3 tech design §4.1).
+    const inSlot = templates.filter((t) => t.slot === slot && (t.use ?? 'rotation') === 'rotation');
     if (inSlot.length > 0) picked.push(inSlot[mod(i, inSlot.length)]!);
   }
   return picked;
@@ -31,21 +32,30 @@ export function ordersForDay(templates: readonly OrderTemplate[], day: DayKey): 
 /**
  * A fresh day's orders; the variant and target are frozen now (no job → "Take a job"). With
  * `welcome` (a character's first City Day, ADR 0012) the three items are those templates, in slot
- * order A, B, C, instead of the rotation.
+ * order A, B, C, instead of the rotation. With `crisis` (the home city in Unrest, GDD §14.11) the
+ * pair replaces slots A and B; the welcome set wins over it on a first City Day.
  */
 export function startOrders(
   templates: readonly OrderTemplate[],
   day: DayKey,
   hasJob: boolean,
   welcome?: readonly [string, string, string],
+  crisis?: readonly [string, string],
 ): OrdersState {
-  const picked = welcome
-    ? welcome.map((id) => {
-        const t = templates.find((x) => x.id === id);
-        if (!t) throw new Error(`welcome order "${id}" is not one of this faction's templates`);
-        return t;
-      })
-    : ordersForDay(templates, day);
+  const byId = (kind: string) => (id: string) => {
+    const t = templates.find((x) => x.id === id);
+    if (!t) throw new Error(`${kind} order "${id}" is not one of this faction's templates`);
+    return t;
+  };
+  let picked: OrderTemplate[];
+  if (welcome) picked = welcome.map(byId('welcome'));
+  else {
+    picked = ordersForDay(templates, day);
+    if (crisis) {
+      const [a, b] = crisis.map(byId('crisis'));
+      picked = [a!, b!, ...picked.filter((t) => t.slot !== 'A' && t.slot !== 'B')];
+    }
+  }
   return {
     day,
     items: picked.map((t) => {
@@ -135,7 +145,21 @@ export function advanceOrders(
   };
 }
 
-/** FXP and PC the completed orders pay (§15.4): +20 FXP each, +5 PC for all three. */
-export function orderRewards(completed: number, allDone: boolean): { fxp: number; pc: number } {
-  return { fxp: completed * DIRECTIVES.orderDoneFxp, pc: allDone ? DIRECTIVES.allDonePc : 0 };
+/** The FXP one completed order pays: its `doneFxp` (Restore the base: 40), else +20. */
+export const orderDoneFxp = (t: Pick<OrderTemplate, 'doneFxp'> | undefined): number =>
+  t?.doneFxp ?? DIRECTIVES.orderDoneFxp;
+
+/**
+ * FXP and PC the completed orders pay (§15.4): +20 FXP each (a template's `doneFxp` when given),
+ * +5 PC for all three. A number counts plain orders.
+ */
+export function orderRewards(
+  completed: number | ReadonlyArray<Pick<OrderTemplate, 'doneFxp'> | undefined>,
+  allDone: boolean,
+): { fxp: number; pc: number } {
+  const fxp =
+    typeof completed === 'number'
+      ? completed * DIRECTIVES.orderDoneFxp
+      : completed.reduce((sum, t) => sum + orderDoneFxp(t), 0);
+  return { fxp, pc: allDone ? DIRECTIVES.allDonePc : 0 };
 }

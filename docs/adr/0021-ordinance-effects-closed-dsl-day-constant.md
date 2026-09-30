@@ -1,6 +1,6 @@
 # ADR 0021 — Ordinance effects are a closed, bounded DSL owned by rules, applied as named modifiers that are constant for a City Day
 
-**Status:** accepted (slice 3) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3) · **Date:** 2026-09-29
 
 ## Context
 

@@ -17,6 +17,7 @@
         "PORT",
         "PUBLIC_ORIGIN",
         "BETTER_AUTH_SECRET",
+        "E2E_TEST_HOOKS",
         "SENTRY_DSN",
         "LOG_LEVEL",
         "VITE_*",

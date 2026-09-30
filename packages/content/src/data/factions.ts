@@ -28,6 +28,14 @@ export const factions: Faction[] = [
         'Order, discipline and a strong hand. A party of clerks, foremen and old officials who want the streets quiet, the ration fair and the frontier shut. They hold Duskwall, the frontier town in the mountains.',
       signatureEvent: 'the Grand Rally',
     },
+    // Slice 3 (design §10.2, §6.4, §17.4): the branch's motion, the platforms, the Unrest pair.
+    branchMotion: 'ord.rally-permits',
+    platforms: [
+      { id: 'plat.v.order', line: 'Order in the streets, bread at a fixed price.' },
+      { id: 'plat.v.frontier', line: 'The frontier shut and the books balanced.' },
+      { id: 'plat.v.wards', line: 'Every ward in good order by the end of the term.' },
+    ],
+    restoreOrders: ['dir.v.restore-canvass', 'dir.v.restore-speech'],
   },
   {
     id: 'collective',
@@ -49,6 +57,13 @@ export const factions: Faction[] = [
         'The mill and the docks against the men who own them. Strikes, solidarity, and a union hall in every town. They hold Coalport, the steel town on the river.',
       signatureEvent: 'the General Strike',
     },
+    branchMotion: 'ord.shift-hours',
+    platforms: [
+      { id: 'plat.c.mill', line: 'The mill and the quays, before the men who own them.' },
+      { id: 'plat.c.bread', line: 'Rent, bread and the tram. In that order.' },
+      { id: 'plat.c.wards', line: 'Every ward organised, every door knocked.' },
+    ],
+    restoreOrders: ['dir.restore-canvass', 'dir.restore-speech'],
   },
   {
     id: 'alliance',
@@ -69,5 +84,12 @@ export const factions: Faction[] = [
         'Elections, courts and a free press. Lawyers, students and shopkeepers who think the republic can still be argued back onto its feet. They hold Ashford, the university town.',
       signatureEvent: 'the Headline Story',
     },
+    branchMotion: 'ord.reading-room',
+    platforms: [
+      { id: 'plat.a.press', line: 'Fair report, free comment, and a council that reads.' },
+      { id: 'plat.a.rule', line: 'Rents by rule, licences by rule, no favours.' },
+      { id: 'plat.a.franchise', line: 'The franchise for everyone who pays the rates.' },
+    ],
+    restoreOrders: ['dir.a.restore-canvass', 'dir.a.restore-speech'],
   },
 ];

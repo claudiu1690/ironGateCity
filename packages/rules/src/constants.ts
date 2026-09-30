@@ -130,3 +130,62 @@ export const CHAPTER = { tier: 3 } as const;
  * collapsed to one. Forty: the name is printed in a day-1 headline and in the HUD.
  */
 export const NAME = { min: 2, max: 40 } as const;
+
+// ---------------------------------------------------------------------------------------------
+// Slice 3 (docs/tech/slice-3.md §6.1). Rules: docs/design/slice-3-politics.md; GDD §15.1, §15.3,
+// §6.5, §14.11.
+// ---------------------------------------------------------------------------------------------
+
+/** §15.1, §15.3, §6.5: the home council cycle, the race and its costs. */
+export const COUNCIL = {
+  cycleDays: 5,
+  seats: 7,
+  slateSize: 9,
+  passVotes: 4,
+  maxProposals: 3,
+  endorsementsNeeded: 2,
+  endorsementsCounted: 5,
+  endorsementWeight: 3,
+  wardDivisor: 5,
+  npcJitter: 2,
+  smallBranchBelow: 3,
+  activeEndorserDays: 7,
+  termDays: 5,
+  ordinanceDays: 5,
+  /** STANDING level "Known". */
+  knownLevel: 2,
+  standRank: 3,
+  voteRank: 2,
+  cost: { declare: 10, endorse: 10, propose: 20 },
+  stipend: { pc: 10, fxp: 20 },
+} as const;
+
+/** §14.11: morale states, the drift and the slice-3 inputs. */
+export const MORALE = {
+  firedFrom: 80,
+  unrestBelow: 60,
+  driftTarget: 70,
+  driftShare: 0.02,
+  ballot: 0.5,
+  seat: 2,
+  noVoterPenalty: 3,
+  firedFxpShare: 0.1,
+} as const;
+
+/** §15.3 (ADR 0021): each ordinance effect kind's bounds; the menu is closed, so a bound is a value. */
+export const ORDINANCE_BOUNDS = {
+  jobPayPct: [-25, 10],
+  shiftEnergyDelta: [-1, 0],
+  shiftStreakDays: [1, 2],
+  swingPct: [0, 15],
+  energyDelta: [-2, 0],
+  trainingEnergyPct: [-20, 0],
+  restedCapDelta: [0, 50],
+  chancePct: [0, 4],
+  standingMultiplier: [1, 2],
+  ironPct: [0, 25],
+  fxpPct: [0, 25],
+} as const;
+
+/** `{ordinal}` in the count's headlines: first … seventh. */
+export const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'] as const;

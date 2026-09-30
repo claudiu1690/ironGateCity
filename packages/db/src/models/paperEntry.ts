@@ -13,9 +13,28 @@ export interface PaperEntryDoc {
   day: DayKey;
   cityId: string;
   firstEdition: boolean;
-  headlines: Array<{ templateId: string; group: HeadlineGroup; headline: string; deck?: string }>;
+  /** `priority` from slice 3 (ADR 0023); older editions look it up by `templateId`. */
+  headlines: Array<{
+    templateId: string;
+    group: HeadlineGroup;
+    headline: string;
+    deck?: string;
+    priority?: number;
+  }>;
   desk: {
-    salary: { jobId: string; jobName: string; days: number; perDay: number; total: number } | null;
+    salary: {
+      jobId: string;
+      jobName: string;
+      days: number;
+      perDay: number;
+      total: number;
+      /** Slice 3: the pay ordinances' adjustment. */
+      ordinance?: { label: string; amount: number } | null;
+    } | null;
+    /** Slice 3: the councillor's stipend credited at this settlement (ADR 0020). */
+    stipend?: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
+    /** Slice 3: deposits returned for struck candidacies. */
+    deposits?: { count: number; pc: number } | null;
     streak: { before: number; after: number; sickDaysUsed: number; broken: boolean } | null;
     restedBanked: number;
     daysSinceLastPaper: number | null;

@@ -1,7 +1,7 @@
 import { copy } from '@irongate/content/copy';
 import type { GameContent } from '@irongate/content';
 import { Arrival, Character, City, PaperEntry, isDuplicateKeyError } from '@irongate/db';
-import type { ArrivalDoc, CharacterDoc } from '@irongate/db';
+import type { ArrivalDoc, CharacterDoc, CityDoc } from '@irongate/db';
 import { NAME, buildNewCharacter, checkName, resolveOrigin } from '@irongate/rules';
 import type {
   ArrivalView,
@@ -13,6 +13,7 @@ import type {
 import { Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
+import { ensureCityDay } from './cityDay';
 import { computeSettlement, loadCharacter } from './dayService';
 import { fill, sceneArt, storyVars } from './story';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
@@ -258,6 +259,8 @@ export async function joinArrival(
 
   const before = await existing();
   if (before) return before;
+  // ADR 0017: the home city's day before the character's first day.
+  await ensureCityDay(content, content.faction(factionId).homeCityId, now());
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
@@ -293,10 +296,12 @@ export async function joinArrival(
           energy: { value: state.energy.value, updatedAt: at },
           orders: { day: 0, items: [], allDoneAt: null },
           origin: { answers: state.origin.answers, arrivedAt: at },
+          offices: [],
+          endorsementsGiven: [],
           createdAt: at,
           updatedAt: at,
         };
-        const home = await City.findById(faction.homeCityId, { opinion: 1 }).session(session).lean();
+        const home = await City.findById(faction.homeCityId).session(session).lean<CityDoc>();
         const w = computeSettlement(content, doc, t, { previous: null, home });
         if (!w) throw new Error('a new character always has a first City Day to settle');
         await Character.create(

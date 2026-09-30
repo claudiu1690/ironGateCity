@@ -42,6 +42,39 @@ export function noticeFor(error: unknown): string | undefined {
       return 'This chapter is not open yet.';
     case 'CHOOSE_FIRST':
       return 'Make your choice first.';
+    // Slice 3: the political acts. The screen refetches and shows the settled state.
+    case 'NOT_ENOUGH_PC':
+      return copy.needsPc(Number(game.cost));
+    case 'NOT_NOMINATIONS':
+      return 'Nominations are closed.';
+    case 'NOT_POLLING':
+      return 'The polls are closed.';
+    case 'ALREADY_VOTED':
+      return `Your ballot is already in the box${game.name ? ` for ${String(game.name)}` : ''}.`;
+    case 'ALREADY_ENDORSED':
+      return `You endorsed ${String(game.name ?? 'a candidate')} this cycle.`;
+    case 'ALREADY_FILED':
+      return 'You have already filed this cycle.';
+    case 'CANDIDACY_CLOSED':
+      return 'That candidacy is closed.';
+    case 'COUNCIL_CLOSED':
+      return 'The council is not voting now.';
+    case 'ALREADY_COUNCIL_VOTED':
+      return 'Your vote is already recorded.';
+    case 'ALREADY_PROPOSED':
+      return 'You have already moved an ordinance this term.';
+    case 'ALREADY_ON_PAPER':
+      return 'That ordinance is already on the order paper.';
+    case 'PAPER_FULL':
+      return copy.paperFull;
+    case 'RANK_TOO_LOW':
+      return `Needs Rank ${String(game.need)}.`;
+    case 'NOT_KNOWN':
+      return 'Needs Known standing here (30 Successes).';
+    case 'SITTING_COUNCILLOR':
+      return 'You hold a seat: you can stand again the day your term ends.';
+    case 'ELECTION_NOT_READY':
+      return 'The count is still being taken. Try again in a moment.';
     default:
       return 'That did not go through. Check your connection and tap again.';
   }

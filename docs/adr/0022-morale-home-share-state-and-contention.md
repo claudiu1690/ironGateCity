@@ -1,6 +1,6 @@
 # ADR 0022 — Morale is the home share in `cities.opinion`, with a small state record; drift and count inputs run at the boundary; contention reassessed
 
-**Status:** accepted (slice 3; amends ADR 0010) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3; amends ADR 0010) · **Date:** 2026-09-29
 
 ## Context
 

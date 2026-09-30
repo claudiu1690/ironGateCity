@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { isCheckedAction, isShiftAction, isTrainingAction } from '@irongate/content';
 import type { GameContent, LocatedAction } from '@irongate/content';
 import { ActionLog, Character, City } from '@irongate/db';
-import type { CharacterDoc } from '@irongate/db';
+import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
   addToTally,
   applyGains,
@@ -11,13 +11,14 @@ import {
   dayKey,
   dayStart,
   jobPay,
+  moraleState,
   orderRewards,
   resolveShift,
   resolveTier1Action,
   resolveTraining,
   standingView,
 } from '@irongate/rules';
-import type { ActionDescriptor, ActionResult, GainsResult, Progress } from '@irongate/rules';
+import type { ActionDescriptor, ActionResult, GainsResult, OrderTemplate, Progress } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
@@ -26,6 +27,8 @@ import { buildActionResult } from './actionResult';
 import type { ResultInput } from './actionResult';
 import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
+import { modifiersFor } from './modifiers';
+import { branchEndorseIfFiled } from './councilService';
 import { DayChanged, VersionConflict } from './txn';
 import {
   energyState,
@@ -170,6 +173,12 @@ async function resolveAndWrite(i: {
   let ironGain = 0;
   let result: DistributiveOmit<ResultInput, keyof CommonTail>;
   let cityWrite: (() => Promise<unknown>) | null = null;
+  let morale: ActionResult['effects']['morale'] = null;
+  // Slice 3 (ADR 0021, 0022): the city's day-constant modifiers, read in the action's snapshot.
+  const cityState = await City.findById(city.id).session(session).lean<CityDoc>();
+  const modifiers = modifiersFor(content, cityState, c.factionId, today);
+  const completedTemplates = (ids: string[]): OrderTemplate[] =>
+    ids.flatMap((id) => templates.filter((t) => t.id === id));
 
   if (isCheckedAction(action)) {
     const successes = standingSuccesses(c, city.id);
@@ -194,6 +203,7 @@ async function resolveAndWrite(i: {
         orders,
         orderTemplates: templates,
         homeCityId: c.homeCityId,
+        modifiers,
       },
       createRng(seed),
     );
@@ -208,24 +218,36 @@ async function resolveAndWrite(i: {
     const res = r.resolution;
     let opinion: { applied: number; shareBefore: number; shareAfter: number } | null = null;
     if (action.givesOpinion) {
-      const state = await City.findById(city.id).session(session).lean();
-      const shares = state?.opinion ?? city.baselineOpinion;
+      const shares = cityState?.opinion ?? city.baselineOpinion;
       const op = applyPersuasion(shares, {
         factionId: c.factionId,
         swing: res.rewards.opinion,
         homeFactionId: city.homeFactionId,
       });
       opinion = { applied: op.applied, shareBefore: shares[c.factionId], shareAfter: op.shares[c.factionId] };
+      // ADR 0022: a threshold crossed by this action writes the morale record and a knock-on line.
+      const home = city.homeFactionId;
+      const before = home ? moraleState(shares[home]) : null;
+      const after = home ? moraleState(op.shares[home]) : null;
+      const record =
+        home && before !== after
+          ? { state: after, since: today, previous: cityState?.morale?.state ?? before }
+          : null;
+      if (record && before && after) morale = { cityId: city.id, cityName: city.name, before, after };
       cityWrite = () =>
-        City.updateOne({ _id: city.id }, { $set: { opinion: op.shares } }, { session, upsert: true });
+        City.updateOne(
+          { _id: city.id },
+          { $set: { opinion: op.shares, ...(record ? { morale: record } : {}) } },
+          { session, upsert: true },
+        );
     }
-    const orderPay = orderRewards(res.orders.completed.length, res.orders.allDone);
+    const orderPay = orderRewards(completedTemplates(res.orders.completed), res.orders.allDone);
     const gains = applyGains(progressOf(c), {
       xp: res.rewards.xp.total,
       fxp: res.rewards.fxp.total + orderPay.fxp,
       pc: orderPay.pc,
     });
-    const others = c.localStanding.filter((s) => s.cityId !== city.id);
+    const others = c.localStanding.filter((x) => x.cityId !== city.id);
     set.localStanding = [...others, { cityId: city.id, successes: res.standing.after }];
     ironGain = res.rewards.iron.total;
     const tally = addToTally(c.today, today, {
@@ -258,6 +280,7 @@ async function resolveAndWrite(i: {
       orderTemplates: templates,
       homeCityId: c.homeCityId,
       descriptor,
+      modifiers,
     });
     if (!r.ok) {
       throw new GameError('NOT_ENOUGH_ENERGY', {
@@ -268,7 +291,7 @@ async function resolveAndWrite(i: {
       });
     }
     const res = r.resolution;
-    const orderPay = orderRewards(res.orders.completed.length, res.orders.allDone);
+    const orderPay = orderRewards(completedTemplates(res.orders.completed), res.orders.allDone);
     const gains = applyGains(progressOf(c), { xp: res.xp.total, fxp: orderPay.fxp, pc: orderPay.pc });
     set[`stats.${res.stat.stat}`] = res.stat.after;
     const tally = addToTally(c.today, today, {
@@ -298,6 +321,7 @@ async function resolveAndWrite(i: {
       orderTemplates: templates,
       homeCityId: c.homeCityId,
       descriptor,
+      modifiers,
     });
     if (!r.ok) {
       if (r.reason === 'SHIFT_ALREADY_WORKED') {
@@ -311,7 +335,7 @@ async function resolveAndWrite(i: {
       });
     }
     const res = r.resolution;
-    const orderPay = orderRewards(res.orders.completed.length, res.orders.allDone);
+    const orderPay = orderRewards(completedTemplates(res.orders.completed), res.orders.allDone);
     const gains = applyGains(progressOf(c), { xp: 0, fxp: orderPay.fxp, pc: orderPay.pc });
     set.job = res.job;
     ironGain = res.pay.total;
@@ -354,6 +378,10 @@ async function resolveAndWrite(i: {
   );
   if (!updated) throw new VersionConflict();
   if (cityWrite) await cityWrite();
+  // Slice 3 (design §6.3): the third order done on a nominations day → the branch endorses.
+  const branchEndorsement = result.orders.allDone
+    ? await branchEndorseIfFiled(content, session, updated, today, now)
+    : null;
 
   const logId = new Types.ObjectId();
   const built = buildActionResult({
@@ -367,6 +395,10 @@ async function resolveAndWrite(i: {
     before: c,
     after: updated,
     editionReadAt: i.editionReadAt,
+    modifiers,
+    city: cityState,
+    morale,
+    branchEndorsement,
   });
   await ActionLog.create(
     [

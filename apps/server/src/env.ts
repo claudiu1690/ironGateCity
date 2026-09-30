@@ -85,6 +85,13 @@ const EnvSchema = z
 
 export type Env = z.infer<typeof EnvSchema>;
 
+/** A mongodb:// URI whose every host is 127.0.0.1 or localhost. */
+export function isLoopbackUri(uri: string): boolean {
+  const m = /^mongodb:\/\/(?:[^@/]*@)?([^/?]+)/.exec(uri);
+  if (!m) return false;
+  return m[1]!.split(',').every((h) => /^(127\.0\.0\.1|localhost)(:\d+)?$/.test(h));
+}
+
 /** Validate the environment; a bad value fails fast with the field name. */
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
   const parsed = EnvSchema.safeParse(source);

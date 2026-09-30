@@ -87,7 +87,8 @@ describe('the real content', () => {
     });
     expect(content.faction('collective').rankTitles[1]).toBe('Activist');
     expect(content.faction('collective').rankTitles[4]).toBe('Delegate');
-    const orders = content.ordersOf('collective');
+    // Slice 3 adds the two crisis templates (Restore the base), which never rotate.
+    const orders = content.ordersOf('collective').filter((o) => o.use === 'rotation');
     expect(orders).toHaveLength(12);
     expect(orders.filter((o) => o.slot === 'A')).toHaveLength(5);
     expect(orders.filter((o) => o.slot === 'B')).toHaveLength(4);

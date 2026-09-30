@@ -1,6 +1,6 @@
 # ADR 0020 — Council records live in their own collections; the character only embeds projections; world processing never writes a character
 
-**Status:** accepted (slice 3; follows plan §5 row 3) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3; follows plan §5 row 3) · **Date:** 2026-09-29
 
 ## Context
 

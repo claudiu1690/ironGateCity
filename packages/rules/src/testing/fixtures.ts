@@ -1,7 +1,15 @@
 import type {
   ActionResult,
   AssetView,
+  CandidateView,
   CharacterView,
+  CouncilView,
+  CountRowView,
+  CountView,
+  ElectionView,
+  FrontPageView,
+  PoliticalResult,
+  PoliticsSummaryView,
   CheckBreakdown,
   CityView,
   DailyTally,
@@ -146,6 +154,9 @@ export const characterViewFixture: CharacterView = {
   keepsakes: [],
   ambition: { id: 'finish-his-work', title: 'Finish His Work', chapter: 1, status: 'ready', readyFrom: null },
   lettersWaiting: 1,
+  office: null,
+  politicsWaiting: 0,
+  restedCap: 200,
 };
 
 export const checkFixture: CheckBreakdown = {
@@ -436,6 +447,7 @@ export const cityViewFixture: CityView = {
           preview: checkFixture,
           order: { id: 'dir.shift-change', title: 'Be at the gate', progress: 1, target: 2 },
           locked: null,
+          tags: [],
         },
         {
           id: 'coalport.mill-gate.shift',
@@ -449,6 +461,7 @@ export const cityViewFixture: CityView = {
           shift: { jobId: 'coalport-factory-worker', held: false, workedToday: false, nextShiftAt: null },
           order: null,
           locked: null,
+          tags: [],
         },
       ],
       jobs: [
@@ -464,6 +477,7 @@ export const cityViewFixture: CityView = {
           switchCost: 0,
         },
       ],
+      council: null,
     },
     {
       id: 'coalport.union-hall',
@@ -485,11 +499,15 @@ export const cityViewFixture: CityView = {
           trains: { stat: 'int', from: 12, to: 13 },
           order: null,
           locked: null,
+          tags: [],
         },
       ],
       jobs: [],
+      council: null,
     },
   ],
+  morale: { factionId: 'collective', share: 70.05, state: 'steady' },
+  ordinance: null,
 };
 
 export const paperViewFixture: PaperView = {
@@ -514,6 +532,8 @@ export const paperViewFixture: PaperView = {
   orders: ordersViewFixture,
   desk: {
     salary: null,
+    stipend: null,
+    deposits: null,
     streak: null,
     restedBanked: 0,
     daysSinceLastPaper: null,
@@ -539,6 +559,8 @@ export const paperViewFixture: PaperView = {
   landing: { cityId: 'coalport', locationId: 'coalport.mill-gate' },
   readAt: null,
   due: true,
+  pollingDay: null,
+  frontPage: null,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -687,4 +709,273 @@ export const chapterResultFixture: ActionResult = {
     approachId: 'sort',
     choiceText: 'Keep it to yourself for now',
   },
+};
+
+// ---------------------------------------------------------------------------------------------
+// Slice 3: the political views (tech design §14 UI fixtures).
+// ---------------------------------------------------------------------------------------------
+
+const COUNT_DAY = DAY + 5;
+const MS = 86_400_000;
+
+export const politicsSummaryFixture: PoliticsSummaryView = {
+  cityId: 'coalport',
+  cityName: 'Coalport',
+  cycleDay: 3,
+  phase: 'polling',
+  state: 'ballot',
+  closesAt: (DAY + 2) * MS,
+  pollsOpenAt: DAY * MS,
+  pollsFromWeekday: 'Thursday',
+  countAt: (DAY + 2) * MS,
+  divideAt: null,
+  endorsements: null,
+  branchLine: false,
+  votedFor: null,
+  count: null,
+  inForce: { ordinanceId: 'ord.shift-hours', name: 'Shift Hours Order', daysLeft: 3 },
+  rank2Title: 'Activist',
+  fxpToRank2: null,
+  standCost: 10,
+  councillor: false,
+  route: '/council/ballot',
+  dot: true,
+};
+
+const npcCandidate = (npcId: string, name: string, profile: number, line: string): CandidateView => ({
+  key: `n:${npcId}`,
+  candidacyId: null,
+  kind: 'npc',
+  name,
+  avatar: null,
+  factionId: 'collective',
+  rankTitle: null,
+  standing: {
+    name: profile * 5 >= 150 ? 'One of Us' : 'Trusted',
+    cityName: 'Coalport',
+    successes: profile * 5,
+  },
+  wardVote: profile,
+  platform: line,
+  endorsements: null,
+  you: false,
+  endorsedByYou: false,
+  canEndorse: null,
+});
+
+const playerCandidate: CandidateView = {
+  key: 'p:66f9a0000000000000000001',
+  candidacyId: '66f9a0000000000000000009',
+  kind: 'player',
+  name: 'Mara Lenk',
+  avatar: assetFixture('avatar.woman-30s', 760, 950, [128, 256]),
+  factionId: 'collective',
+  rankTitle: 'Organiser',
+  standing: { name: 'One of Us', cityName: 'Coalport', successes: 200 },
+  wardVote: 40,
+  platform: 'The mill and the quays, before the men who own them.',
+  endorsements: { n: 1, needed: 2, branch: false, branchCounts: 2, names: ['Anton Weiss'], more: 0 },
+  you: false,
+  endorsedByYou: false,
+  canEndorse: { ok: true },
+};
+
+export const electionViewFixture: ElectionView = {
+  electionId: 'coalport:4145',
+  cityId: 'coalport',
+  cityName: 'Coalport',
+  phase: 'nominations',
+  nominationsCloseAt: (DAY + 2) * MS,
+  pollsOpenAt: (DAY + 2) * MS,
+  countAt: COUNT_DAY * MS,
+  candidates: [
+    playerCandidate,
+    npcCandidate('npc.c.weiss', 'Anna Weiss', 44, 'Shop steward, rolling mill.'),
+    npcCandidate('npc.c.baum', 'Josef Baum', 38, 'Docker, Harbour Quays.'),
+  ],
+  declare: {
+    requirements: [
+      { id: 'rank', met: true, rankTitle: 'Organiser', fxpToGo: 0 },
+      { id: 'known', met: true, successes: 74, need: 30 },
+      { id: 'endorsements', met: false, need: 2 },
+    ],
+    platforms: [
+      { id: 'plat.c.mill', line: 'The mill and the quays, before the men who own them.' },
+      { id: 'plat.c.bread', line: 'Rent, bread and the tram. In that order.' },
+      { id: 'plat.c.wards', line: 'Every ward organised, every door knocked.' },
+    ],
+    cost: 10,
+    canDeclare: true,
+    reason: null,
+  },
+  candidacy: null,
+  ballot: null,
+  endorsed: null,
+  pc: 45,
+};
+
+const countRow = (
+  place: number,
+  name: string,
+  kind: 'player' | 'npc',
+  wardVote: number,
+  endorsements: number,
+  votes: number,
+  extra: Partial<CountRowView> = {},
+): CountRowView => ({
+  key: kind === 'player' ? 'p:66f9a0000000000000000001' : `n:npc.${place}`,
+  kind,
+  name,
+  wardVote,
+  successes: wardVote * 5,
+  endorsements,
+  order: place,
+  endorsementsCounted: Math.min(5, endorsements),
+  votes,
+  total: wardVote + 3 * Math.min(5, endorsements) + votes,
+  place,
+  seated: place <= 7,
+  avatar: null,
+  you: false,
+  yourVote: false,
+  ...extra,
+});
+
+export const countViewFixture: CountView = {
+  electionId: 'coalport:4145',
+  cityId: 'coalport',
+  cityName: 'Coalport',
+  countDay: COUNT_DAY,
+  weekday: 'Sunday',
+  rows: [
+    countRow(1, 'Mara Lenk', 'player', 40, 2, 2, { you: true, yourVote: true }),
+    countRow(2, 'Anna Weiss', 'npc', 45, 0, 1),
+    countRow(3, 'Josef Baum', 'npc', 37, 0, 0),
+    countRow(4, 'Marta Kolar', 'npc', 33, 0, 0),
+    countRow(5, 'Emil Hauser', 'npc', 29, 0, 0),
+    countRow(6, 'Lena Novak', 'npc', 26, 0, 0),
+    countRow(7, 'Karl Dressler', 'npc', 21, 0, 0),
+    countRow(8, 'Ida Pohl', 'npc', 19, 0, 0),
+    countRow(9, 'Tomas Ruzicka', 'npc', 17, 0, 0),
+  ],
+  turnout: { voters: 3, eligible: 9 },
+  seats: 7,
+  npcSeats: 6,
+};
+
+export const frontPageFixture: FrontPageView = {
+  avatar: assetFixture('avatar.woman-30s', 760, 950, [128, 256]),
+  caption: { name: 'Mara Lenk', rankTitle: 'Organiser', cityName: 'Coalport' },
+  animate: true,
+  headline: 'Mara Lenk Tops the Poll in Coalport',
+  deck: 'First of seven with 48 votes. The Union Hall has a new name on the door.',
+  count: countViewFixture,
+};
+
+const npcSeat = (seat: number, name: string) => ({
+  seat,
+  kind: 'npc' as const,
+  name,
+  avatar: null,
+  rankTitle: null,
+  standingName: 'Trusted',
+  you: false,
+  votedFor: null,
+});
+
+export const councilViewFixture: CouncilView = {
+  councilKey: 'coalport:4146',
+  cityId: 'coalport',
+  cityName: 'Coalport',
+  termEndsAt: (DAY + 5) * MS,
+  npcSeats: 6,
+  seats: [
+    {
+      seat: 1,
+      kind: 'player',
+      name: 'Mara Lenk',
+      avatar: assetFixture('avatar.woman-30s', 760, 950, [128, 256]),
+      rankTitle: 'Organiser',
+      standingName: 'One of Us',
+      you: true,
+      votedFor: null,
+    },
+    npcSeat(2, 'Anna Weiss'),
+    npcSeat(3, 'Josef Baum'),
+    npcSeat(4, 'Marta Kolar'),
+    npcSeat(5, 'Emil Hauser'),
+    npcSeat(6, 'Lena Novak'),
+    npcSeat(7, 'Karl Dressler'),
+  ],
+  window: { voting: true, divideAt: (DAY + 2) * MS, opensAt: null },
+  paper: {
+    status: 'open',
+    items: [
+      {
+        n: 1,
+        ordinanceId: 'ord.shift-hours',
+        name: 'Shift Hours Order',
+        line: 'Shifts end an hour early, by order of the council, and count double towards the streak.',
+        effectLine: 'Job shifts −1 Energy · streak days ×2',
+        movedBy: { kind: 'branch', name: 'Petra Holm', you: false },
+        votes: null,
+        passed: false,
+      },
+      {
+        n: 2,
+        ordinanceId: 'ord.open-doors',
+        name: 'Open Doors',
+        line: 'The council asks every household to receive canvassers.',
+        effectLine: 'Canvass +4 % success chance',
+        movedBy: { kind: 'player', name: 'Mara Lenk', you: true },
+        votes: null,
+        passed: false,
+      },
+    ],
+    against: null,
+    rose: false,
+  },
+  you: {
+    councillor: true,
+    voted: null,
+    proposed: 'ord.open-doors',
+    canPropose: false,
+    proposeReason: 'ALREADY_PROPOSED',
+    pc: 25,
+  },
+  menu: null,
+  inForce: {
+    ordinanceId: 'ord.shift-hours',
+    name: 'Shift Hours Order',
+    line: 'Shifts end an hour early, by order of the council, and count double towards the streak.',
+    daysLeft: 3,
+  },
+};
+
+export const politicalResultFixture: PoliticalResult = {
+  kind: 'political',
+  act: 'ballot',
+  stamp: { label: 'Ballot cast', tone: 'success' },
+  paper: { name: 'The Coalport Clarion', shortName: 'Clarion' },
+  place: { cityId: 'coalport', cityName: 'Coalport' },
+  headline: 'Your ballot is in the box',
+  body: 'One vote for Anna Weiss. Nobody sees who you voted for. The count is in the Clarion on Sunday morning.',
+  until: null,
+  at: COUNT_DAY * MS,
+  knockOns: {
+    pc: null,
+    morale: {
+      cityName: 'Coalport',
+      factionId: 'collective',
+      before: 84,
+      after: 84.5,
+      stateBefore: 'fired',
+      stateAfter: 'fired',
+    },
+    endorsements: null,
+  },
+  performedAt: new Date(T0).toISOString(),
+  idempotencyKey: '3b241101-e2bb-4255-8caf-4136c566a963',
+  character: characterViewFixture,
+  view: { kind: 'election', election: { ...electionViewFixture, phase: 'polling' } },
 };

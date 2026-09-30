@@ -59,3 +59,38 @@ export function statLabel(stats: readonly string[]): string {
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * Slice 3 (tech design §4.3): a boundary as the end of a window in the player's local clock:
+ * "Tuesday midnight" when the local time is 00:00 (the midnight that ends Tuesday), else
+ * "Wednesday 01:00" at UTC+1, "Tuesday 19:00" at UTC−5.
+ */
+export function formatUntil(ms: number): string {
+  const d = new Date(ms);
+  if (d.getHours() === 0 && d.getMinutes() === 0) {
+    return `${WEEKDAYS[new Date(ms - 1).getDay()]} midnight`;
+  }
+  return `${WEEKDAYS[d.getDay()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** A boundary as a moment in the player's clock: "00:00 on Wednesday", "01:00 on Wednesday". */
+export function formatAt(ms: number): string {
+  const d = new Date(ms);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())} on ${WEEKDAYS[d.getDay()]}`;
+}
+
+/** The local weekday of a moment ("the count is in Sunday's paper"). */
+export function formatWeekday(ms: number): string {
+  return WEEKDAYS[new Date(ms).getDay()]!;
+}
+
+/** Server text with the `{until}` / `{at}` tokens rendered in the player's clock. */
+export function renderTimeTokens(text: string, t: { until?: number | null; at?: number | null }): string {
+  let out = text;
+  if (t.until != null) out = out.replace(/\{until\}/g, formatUntil(t.until));
+  if (t.at != null) out = out.replace(/\{at\}/g, formatAt(t.at));
+  return out;
+}

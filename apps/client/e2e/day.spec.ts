@@ -16,12 +16,14 @@ test('take a job → shift → next day: the paper is due, half pay on the desk'
     'Your job · streak 0 days · 2 sick days left',
   );
 
-  await sheet.getByRole('button', { name: 'Work your shift at the mill, 4 Energy' }).click();
+  // Slice 3: Coalport's branch motion, the Shift Hours Order, is in force from the city's bootstrap:
+  // a shift is 3 Energy and adds two streak days (108 + 4 % of 216 = 108 + 9).
+  await sheet.getByRole('button', { name: 'Work your shift at the mill, 3 Energy' }).click();
   const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
   await expect(modal.getByTestId('stamp')).toHaveText('Shift worked');
-  await expect(modal.getByTestId('tile-iron')).toContainText('+112');
+  await expect(modal.getByTestId('tile-iron')).toContainText('+117');
   await modal.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByTestId('hud-iron')).toHaveText('112');
+  await expect(page.getByTestId('hud-iron')).toHaveText('117');
 
   const res = await page.request.post('/api/test/clock', { data: { advanceMs: 24 * 3_600_000 } });
   expect(res.ok()).toBe(true);
@@ -32,6 +34,6 @@ test('take a job → shift → next day: the paper is due, half pay on the desk'
   await expect(desk).toContainText('Salary, Factory worker (half pay)');
   await expect(desk).toContainText('+108 Iron');
   await expect(desk).toContainText('Work streak · sick days');
-  await expect(desk).toContainText('1 day · 2 left');
-  await expect(page.getByTestId('hud-iron')).toHaveText('220');
+  await expect(desk).toContainText('2 days · 2 left');
+  await expect(page.getByTestId('hud-iron')).toHaveText('225');
 });

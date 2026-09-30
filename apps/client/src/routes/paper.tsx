@@ -1,5 +1,14 @@
 import { copy } from '@irongate/content/copy';
-import { Button, DeskList, LettersRow, Masthead, OrdersList } from '@irongate/ui';
+import {
+  Button,
+  DeskList,
+  FrontPage,
+  LettersRow,
+  Masthead,
+  OrdersList,
+  PollingDayRow,
+  renderTimeTokens,
+} from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef } from 'react';
@@ -18,6 +27,7 @@ export function PaperPage() {
     ...trpc.paper.markRead.mutationOptions(),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: trpc.character.me.queryKey() }),
   });
+  const character = queryClient.getQueryData(trpc.character.me.queryKey());
   const marked = useRef<number | null>(null);
   const day = paper.data?.day;
   useEffect(() => {
@@ -58,12 +68,21 @@ export function PaperPage() {
     );
   }
   const p = paper.data;
-  const [lead, ...rest] = p.headlines;
+  // Slice 3 (ADR 0023): `{until}` in a political headline, in the player's clock.
+  const headlines = p.headlines.map((h) => ({
+    ...h,
+    headline: renderTimeTokens(h.headline, { until: h.until }),
+    ...(h.deck ? { deck: renderTimeTokens(h.deck, { until: h.until }) } : {}),
+  }));
+  const [lead, ...rest] = headlines;
+  const front = p.frontPage;
 
   return (
     <article className="paper-grain min-h-full text-ink">
       <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-4 pb-8 lg:pb-[132px]">
         <Masthead paper={p} />
+        {/* Slice 3 (screens §2.2): the front page the morning a seat is won. */}
+        {front && <FrontPage front={front} factionId={character?.factionId ?? 'collective'} />}
         {lead && (
           <section className="flex flex-col gap-2 border-b border-ink pb-3" data-testid="headline">
             <h2 className="text-center font-display text-[30px] leading-[1.05] font-black sm:text-[36px]">
@@ -91,6 +110,9 @@ export function PaperPage() {
           </div>
         )}
         <OrdersList orders={p.orders} variant="paper" />
+        {p.pollingDay && (
+          <PollingDayRow summary={p.pollingDay} onOpen={(route) => void navigate({ to: route })} />
+        )}
         {p.letters.map((l) => (
           <LettersRow
             key={`${l.kind}-${l.title}`}
@@ -103,9 +125,15 @@ export function PaperPage() {
             the floating tab dock (QA n1), and the page's bottom padding lets the Letters row and the
             desk scroll clear of both. */}
         <div className="sticky bottom-0 z-10 -mx-4 border-t border-track bg-paper px-4 pt-2 pb-2 lg:bottom-[124px] lg:mx-0 lg:border lg:border-ink lg:p-2 lg:shadow-[0_8px_24px_rgb(0_0_0/0.35)]">
-          <Button onClick={() => void toCity()} className="w-full">
-            {copy.toTheCity}
-          </Button>
+          {front ? (
+            <Button onClick={() => void navigate({ to: '/council' })} className="w-full">
+              {copy.toTheCouncil}
+            </Button>
+          ) : (
+            <Button onClick={() => void toCity()} className="w-full">
+              {copy.toTheCity}
+            </Button>
+          )}
         </div>
       </div>
     </article>

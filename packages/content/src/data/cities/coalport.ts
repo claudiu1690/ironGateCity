@@ -25,6 +25,8 @@ export const coalport: City = {
     strapline: 'The voice of the mill and the quays',
     price: '5 marks',
   },
+  // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
+  council: { offset: 2, seats: 7 },
   locations: [
     {
       id: 'coalport.mill-gate',

@@ -19,6 +19,7 @@ export function useCharacter() {
       { value: c.energy.value, rested: c.rested, updatedAt: c.energy.updatedAt },
       now,
       c.energy.max,
+      c.restedCap ?? undefined,
     );
     const view: CharacterView = {
       ...c,

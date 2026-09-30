@@ -3,6 +3,7 @@ import type { ActionResult, LocationView } from '@irongate/rules';
 import {
   Button,
   CityMap,
+  CouncilCard,
   FACTION_STYLE,
   FactionCrest,
   JobsCard,
@@ -12,6 +13,7 @@ import {
   ResultModal,
   Ticket,
   TodayStrip,
+  cx,
   formatClock,
   formatShare,
 } from '@irongate/ui';
@@ -129,8 +131,23 @@ export function CityPage() {
         >
           <div className="pointer-events-auto bg-paper text-ink shadow-[0_0_0_1px_var(--color-ink),0_6px_16px_rgb(0_0_0/0.4)]">
             <div className="flex items-stretch border-b-2 border-ink">
-              <div className="flex flex-1 flex-col gap-0.5 px-3 py-2">
-                <h1 className="font-display text-[24px] leading-none font-black">{c.name}</h1>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2">
+                <div className="flex items-baseline gap-2">
+                  <h1 className="font-display text-[24px] leading-none font-black">{c.name}</h1>
+                  {/* Slice 3 (screens §8): the morale word beside the name, Unrest in the failure
+                      colour; no extra line, so every pin stays clear on a small phone (QA M2). */}
+                  {c.morale && (
+                    <span
+                      className={cx(
+                        'label-caps text-[9.5px] font-semibold',
+                        c.morale.state === 'unrest' ? 'text-failure' : 'text-ink',
+                      )}
+                      data-testid="city-morale"
+                    >
+                      {copy.moraleWord[c.morale.state]}
+                    </span>
+                  )}
+                </div>
                 <span
                   className="label-caps flex items-center gap-1.5 text-[9.5px] text-muted"
                   data-testid="city-plate"
@@ -139,6 +156,16 @@ export function CityPage() {
                   <FactionCrest factionId={character.factionId} size={8} /> {character.factionName}{' '}
                   {formatShare(share)} %
                 </span>
+                {/* The ordinance in force, one line that never wraps. Only on a very short phone
+                    (360 × 640) it gives way to the map; the tickets carry its tags there. */}
+                {c.ordinance && (
+                  <span
+                    className="truncate font-mono text-[11px] whitespace-nowrap text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden"
+                    data-testid="city-ordinance"
+                  >
+                    {copy.ordinanceLine(c.ordinance.name, c.ordinance.daysLeft)}
+                  </span>
+                )}
               </div>
               <div className="flex flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-2">
                 <span className="label-caps text-[9px] text-muted">Standing</span>
@@ -203,6 +230,9 @@ export function CityPage() {
               orderBonusPct={character.orders.rewards.matchFxpBonusPct}
             />
           ))}
+          {location.council && (
+            <CouncilCard summary={location.council} onOpen={(route) => void navigate({ to: route })} />
+          )}
           <JobsCard
             jobs={location.jobs}
             held={

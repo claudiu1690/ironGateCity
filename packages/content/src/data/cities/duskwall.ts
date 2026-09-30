@@ -29,6 +29,8 @@ export const duskwall: City = {
     strapline: 'For the city and the frontier',
     price: '5 marks',
   },
+  // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
+  council: { offset: 3, seats: 7 },
   locations: [
     {
       id: 'duskwall.garrison-gate',

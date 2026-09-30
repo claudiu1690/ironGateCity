@@ -1,6 +1,6 @@
 # ADR 0023 — The paper's political sections are live at read; political headlines are merged into the stored edition by priority
 
-**Status:** accepted (slice 3; extends slice-1 tech design §10 and ADR 0005) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3; extends slice-1 tech design §10 and ADR 0005) · **Date:** 2026-09-29
 
 ## Context
 
