@@ -4,6 +4,7 @@ import type { TabId, TabItem } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useLayoutEffect, useRef } from 'react';
+import { DevPanel } from '../features/dev/DevPanel';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { trpc } from '../lib/trpc';
 import { useMinWidth } from '../lib/useNow';
@@ -106,6 +107,8 @@ export function AppShell() {
         </div>
       )}
       <TabBar items={items} active={active} onNavigate={(href) => void navigate({ to: href })} />
+      {/* Memory mode only: renders nothing unless the server has its test hooks on. */}
+      <DevPanel />
     </div>
   );
 }

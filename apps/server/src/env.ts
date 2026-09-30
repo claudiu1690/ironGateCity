@@ -85,11 +85,38 @@ const EnvSchema = z
 
 export type Env = z.infer<typeof EnvSchema>;
 
-/** A mongodb:// URI whose every host is 127.0.0.1 or localhost. */
+/**
+ * URI options that cannot send the driver to another machine (QA slice-3 m3): anything else, such as
+ * `proxyHost` (a SOCKS5 proxy, from where "127.0.0.1" is another machine), TLS, auth mechanisms or
+ * load balancing, makes the URI not loopback. Compared case-insensitively, as the driver does.
+ */
+const LOOPBACK_SAFE_OPTIONS = new Set(
+  [
+    'directConnection',
+    'replicaSet',
+    'readPreference',
+    'retryWrites',
+    'retryReads',
+    'w',
+    'journal',
+    'appName',
+    'serverSelectionTimeoutMS',
+    'connectTimeoutMS',
+    'socketTimeoutMS',
+  ].map((o) => o.toLowerCase()),
+);
+
+/**
+ * A mongodb:// URI whose every host is 127.0.0.1 or localhost and whose options are all in
+ * LOOPBACK_SAFE_OPTIONS (no proxy, QA m3), with no fragment.
+ */
 export function isLoopbackUri(uri: string): boolean {
-  const m = /^mongodb:\/\/(?:[^@/]*@)?([^/?]+)/.exec(uri);
+  const m = /^mongodb:\/\/(?:[^@/?#]*@)?([^/?#]+)(?:\/[^?#]*)?(?:\?([^#]*))?$/.exec(uri);
   if (!m) return false;
-  return m[1]!.split(',').every((h) => /^(127\.0\.0\.1|localhost)(:\d+)?$/.test(h));
+  if (!m[1]!.split(',').every((h) => /^(127\.0\.0\.1|localhost)(:\d+)?$/.test(h))) return false;
+  // The driver decodes option names (URLSearchParams); so does this check.
+  const keys = [...new URLSearchParams(m[2] ?? '').keys()];
+  return keys.every((k) => LOOPBACK_SAFE_OPTIONS.has(k.toLowerCase()));
 }
 
 /** Validate the environment; a bad value fails fast with the field name. */

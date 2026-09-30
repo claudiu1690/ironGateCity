@@ -24,7 +24,11 @@ export default defineConfig({
   },
   // Slice 2 (§12.3): every spec on a phone; the arrival also on a 360 px touch phone and a desktop.
   projects: [
-    { name: 'phone', testIgnore: /council\.spec\.ts/, use: { ...devices['Pixel 7'] } },
+    {
+      name: 'phone',
+      testIgnore: [/council\.spec\.ts/, /qa\.slice3\.spec\.ts/, /devpanel\.spec\.ts/],
+      use: { ...devices['Pixel 7'] },
+    },
     {
       name: 'small-phone',
       testMatch: /arrival\.spec\.ts/,
@@ -41,6 +45,20 @@ export default defineConfig({
       name: 'council',
       testMatch: /council\.spec\.ts/,
       dependencies: ['phone', 'small-phone', 'desktop'],
+      use: { ...devices['Pixel 7'] },
+    },
+    // QA slice 3: the ballot on a phone, after the council cycle (it moves the shared clock too).
+    {
+      name: 'qa-council',
+      testMatch: /qa\.slice3\.spec\.ts/,
+      dependencies: ['council'],
+      use: { ...devices['Pixel 7'] },
+    },
+    // The dev time-skip panel skips phases on the shared clock: after everything else.
+    {
+      name: 'dev-panel',
+      testMatch: /devpanel\.spec\.ts/,
+      dependencies: ['qa-council'],
       use: { ...devices['Pixel 7'] },
     },
   ],

@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { Character, isDbUp } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
-import { cycleOf, dayKey, dayStart, rankForFxp } from '@irongate/rules';
+import { cycleOf, dayKey, dayStart } from '@irongate/rules';
 import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
 import type { FastifyTRPCPluginOptions } from '@trpc/server/adapters/fastify';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -10,6 +10,8 @@ import type { FastifyInstance } from 'fastify';
 import pkg from '../package.json' with { type: 'json' };
 import { CLIENT_IP_HEADER } from './auth';
 import type { Auth } from './auth';
+import { applyCharacterSeed } from './dev/characterSeed';
+import { registerDevPanel } from './dev/panel';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
 import { captureException } from './sentry';
@@ -98,7 +100,7 @@ export async function buildApp({
     // What the worker's city-day job does, at the test clock (ADR 0017 §6).
     app.post('/api/test/city-day', async () => runCityDay(content, now()));
 
-    // The session user's character: FXP (and the Rank it gives), home Local Standing, PC.
+    // The session user's character: FXP (and the Rank it gives), home Local Standing, PC, Energy.
     app.post('/api/test/character', async (request, reply) => {
       const session = await auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
       if (!session) return reply.code(401).send({ error: 'sign in first' });
@@ -110,26 +112,27 @@ export async function buildApp({
       };
       const c = await Character.findOne({ userId: session.user.id }).lean<CharacterDoc>();
       if (!c) return reply.code(404).send({ error: 'no character yet' });
-      const set: Record<string, unknown> = {};
-      if (body.fxp !== undefined) {
-        const fxp = Number(body.fxp);
-        set.fxp = fxp;
-        set.rank = Math.max(c.rank, rankForFxp(fxp));
-      }
-      if (body.successes !== undefined) {
-        set.localStanding = [
-          ...c.localStanding.filter((x) => x.cityId !== c.homeCityId),
-          { cityId: c.homeCityId, successes: Number(body.successes) },
-        ];
-      }
-      if (body.pc !== undefined) set.pc = Number(body.pc);
-      // A full bar for a long run of taps (the e2e council cycle does a day's orders).
-      if (body.energy !== undefined) {
-        set['energy.value'] = Number(body.energy);
-        set['energy.updatedAt'] = new Date(now());
-      }
-      await Character.updateOne({ _id: c._id }, { $set: set, $inc: { version: 1 } });
+      const num = (v: unknown) => (v === undefined ? undefined : Number(v));
+      const set = await applyCharacterSeed(
+        c,
+        { fxp: num(body.fxp), successes: num(body.successes), pc: num(body.pc), energy: num(body.energy) },
+        now(),
+      );
       return { ok: true, ...set };
+    });
+
+    // The dev time-skip panel (README "Reviewing with the dev panel"): same guard, same clock.
+    registerDevPanel(app, {
+      auth,
+      content,
+      clock: {
+        now,
+        offsetMs: () => clockOffsetMs,
+        advance: (ms) => {
+          if (!(ms >= 0)) throw new Error('the test clock only moves forward');
+          clockOffsetMs += ms;
+        },
+      },
     });
   }
 

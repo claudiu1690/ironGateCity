@@ -66,9 +66,37 @@ Kinds: `map`, `scene`, `portrait`, `avatar`, `item` (AVIF and WebP at the catalo
 
 ### Test hooks and the playtest report
 
-- `E2E_TEST_HOOKS=1` (only with `DB_MODE=memory`; the server refuses to start otherwise) adds `POST /api/test/clock { advanceMs }` or `{ advanceTo: { cityId, cycleDay, hour? } }` (forward only, to the next `hour`:00 UTC, default 9, on a day with that council cycle day), `POST /api/test/city-day` (what the worker's job does, at the test clock) and `POST /api/test/character { fxp?, successes?, pc?, energy? }` (the signed-in player's character). Playwright and `pnpm dev:mem` turn them on. In memory mode `MONGODB_URI` is used only when it points at 127.0.0.1 or localhost (the `pnpm db:mem` replica set); anything else is ignored and an in-process replica set starts.
+- `E2E_TEST_HOOKS=1` (only with `DB_MODE=memory`; the server refuses to start otherwise) adds `POST /api/test/clock { advanceMs }` or `{ advanceTo: { cityId, cycleDay, hour? } }` (forward only, to the next `hour`:00 UTC, default 9, on a day with that council cycle day), `POST /api/test/city-day` (what the worker's job does, at the test clock) and `POST /api/test/character { fxp?, successes?, pc?, energy? }` (the signed-in player's character). Playwright and `pnpm dev:mem` turn them on. In memory mode `MONGODB_URI` is used only when it points at 127.0.0.1 or localhost (the `pnpm db:mem` replica set) and carries no option that could route the driver elsewhere (only `directConnection`, `replicaSet`, read and write concerns, timeouts and `appName`; `proxyHost` and the like are refused, QA m3); anything else is ignored and an in-process replica set starts. The same guard holds the dev panel (below).
 - `pnpm admin:boost --email <address> [--email <address> …] [--dry-run]` (slice-3 playtest, an operator script against `MONGODB_URI`, never an API route) lifts the chosen testers' characters to Rank 3 (2,000 Faction XP), Known in their home city (30 Successes) and the 10 PC deposit, so they can stand in the next nominations window. It never lowers anything, prints what it changed, is safe to run twice, and marks each boosted character `playtest.boosted` with the time and the values before. Against `pnpm dev:mem`: `MONGODB_URI="mongodb://127.0.0.1:27018/irongate?directConnection=true" pnpm admin:boost --email you@example.test`.
 - `pnpm report:playtest` prints the slice-1 playtest numbers (sessions, returns within 2–4 h, ×3 share, paper read rate, orders, shifts, levels, contended transactions) the slice-2 arrival funnel (sign-up → face → answers → joined → first action → welcome orders → job → chapter 1, with median and p75 times, overall and per faction) and the slice-3 elections section (per election and council term, the first vote, the first seat with boosted and natural testers apart, next-day returns, morale, contention around midnight) from `MONGODB_URI`, read-only. `--json` for raw output. Against `pnpm dev:mem`: `MONGODB_URI="mongodb://127.0.0.1:27018/irongate?directConnection=true" pnpm report:playtest`.
+
+### Reviewing with the dev panel
+
+A five-day council cycle in minutes, by hand. Start the game with `pnpm dev:mem`, open <http://localhost:5173>, sign up and arrive. A small **Dev** button (dashed amber border) sits on the right edge, half-way down: it opens the **DEV · test clock** sheet. It shows the game time in UTC and in your own clock, the City Day, your home city's phase and cycle day with when the next phase starts, morale and the ordinance in force, and five buttons:
+
+| Button                 | What it does                                                                                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **+1 hour**            | Moves the clock an hour                                                                                                                                                                                             |
+| **Next day**           | To 00:01 UTC of the next City Day, then runs the city day (the worker's job) and settles you: the new paper is in                                                                                                   |
+| **Skip to next phase** | Nominations → the polls → the count, in your home city: to 00:01 UTC of the next phase boundary, then as Next day                                                                                                   |
+| **Boost me**           | Rank 3, _One of Us_ at home (150 Successes, above the operator boost's _Known_ so a lone reviewer can win), at least 30 PC and a full bar. Never lowers anything, and never sets `playtest.boosted` (the playtest report's boosted / natural split is the `admin:boost` script's alone) |
+| **Refill Energy**      | A full bar                                                                                                                                                                                                          |
+
+Each action prints one line (_Now Thursday 1 Oct 00:01 UTC · polls open in Coalport_) and refreshes the HUD, the paper and the map. The clock is the server's **shared** test clock: it moves for everyone on this local server, and only forward (restart `pnpm dev:mem` to start again).
+
+The panel exists only in memory mode: its routes (`GET /api/test/dev/status`, `POST /api/test/dev/{hour,day,phase,boost,energy}`) are registered with the other test hooks, behind `E2E_TEST_HOOKS`, which the server refuses outside `DB_MODE=memory`. Anywhere else the status route is a 404 and the client renders nothing, whatever the build.
+
+**A suggested walk-through** (a Collective member in Coalport):
+
+1. **Boost me.** The HUD reads Organiser (Rank 3), PC 30.
+2. **Skip to next phase** until the sheet says _Count day_ or _Nominations_. The paper's Polling Day row offers _Stand for the council · 10 PC_.
+3. **Declare** from the slate. To stand at the close you need two endorsements: carry out the day's three Party orders while filed and the branch endorses you (Refill Energy as needed).
+4. **Your total.** A total is ward vote (Successes ÷ 5) + 3 per endorsement + ballots. Boosted to _One of Us_, a lone candidate totals 30 + 6 + 1 = 37 against about 17–21 for the seventh NPC seat, so you top the poll. (With the operator boost's _Known_ it would be 13, and you would lose; that is the real race.)
+5. **Skip to next phase**: the polls open. The row says _Cast your ballot_; cast it for yourself.
+6. **Skip to next phase**: the count. The paper's front page carries the ELECTED stamp; **To the council** opens the chamber.
+7. **Vote an ordinance** (or propose one, 20 PC) while the council votes (cycle days 0–1).
+8. **Next day** twice (or Skip to next phase once): the council divides at the boundary into the polls. The plate reads _Ordinance: … · 5 days left_ and the tickets carry its tags.
+9. **Unrest:** keep skipping phases without casting a ballot. Every count with no home ballot costs the home share 3 points, and the daily drift back toward 70 is small, so after about four unvoted counts (eight skips) Coalport falls below 60: the plate reads _Unrest_, the _Restore the base_ orders appear and the NPC councillors abstain.
 
 ### Repository layout
 

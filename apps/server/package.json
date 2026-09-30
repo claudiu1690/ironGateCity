@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./router": "./src/trpc/router.ts"
+    "./router": "./src/trpc/router.ts",
+    "./dev": "./src/dev/types.ts"
   },
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts",

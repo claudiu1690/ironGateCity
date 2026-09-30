@@ -7,6 +7,7 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import { AppShell } from './components/AppShell';
+import { devStatusQuery } from './features/dev/devApi';
 import { fetchSession } from './lib/auth';
 import { queryClient } from './lib/queryClient';
 import { gameErrorOf, trpc } from './lib/trpc';
@@ -55,7 +56,12 @@ async function fetchCharacter(qc: QueryClient, fresh = false) {
 /** Slice 2: every character screen needs a character; a user without one is sent to the arrival. */
 async function requireCharacter({ context }: { context: RouterContext }) {
   await requireSession();
-  const me = await fetchCharacter(context.queryClient);
+  // The dev panel's status (a 404 unless the server has its test hooks on) is asked alongside, so
+  // the panel's button is in place before the city map measures what it must keep pins clear of.
+  const [me] = await Promise.all([
+    fetchCharacter(context.queryClient),
+    context.queryClient.ensureQueryData(devStatusQuery),
+  ]);
   if (!me) throw redirect({ to: '/arrive' });
 }
 

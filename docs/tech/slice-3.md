@@ -1259,7 +1259,16 @@ The smallest working change in each case; nothing here changes a GDD number.
   `MONGODB_URI` only when it points at 127.0.0.1 or localhost; any other URI is ignored and an in-process replica set
   starts, so a server with the hooks can never reach a real database. `turbo.json` passes `E2E_TEST_HOOKS` through to
   `dev`. `pnpm dev:worker` runs the worker alone (tsx watch).
+  After QA m3, a loopback URI must also carry only harmless options (`directConnection`, `replicaSet`, read and write
+  concerns, timeouts, `appName`): any other option, such as `proxyHost`, makes it not loopback, so memory mode ignores
+  it (`isLoopbackUri` in `apps/server/src/env.ts`).
 - The e2e character hook also takes `energy` (the council spec does a whole day's orders).
+- **The dev time-skip panel** (README "Reviewing with the dev panel"), added after the slice for reviewing: routes
+  `GET /api/test/dev/status` and `POST /api/test/dev/{hour,day,phase,boost,energy}`, registered in the same
+  `E2E_TEST_HOOKS` block as the other hooks (so they exist only in memory mode), and a floating button in the app
+  shell that renders only when the status route answers. It moves the shared test clock and runs the existing city
+  day and settlement; Boost and Refill go through the e2e character hook (now `apps/server/src/dev/characterSeed.ts`)
+  and never set `playtest.boosted`. No game rule changed.
 - Playwright: `council.spec.ts` runs in its own project, `council`, which depends on the three others, because it moves
   the shared test clock by a cycle and passes an ordinance in Coalport.
 
