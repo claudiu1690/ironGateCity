@@ -539,3 +539,13 @@ Expected reward factors on the welcome day (`0.5 + 0.5 × chance`): reference 0.
 ### 16.4 Session shape (pillar 7)
 
 The wage removes a tap from every day (the shift) and a modal. The orders-complete modal adds one tap once a day, in place of the line it replaces. The help notes are a tap each and only when asked for. The Standing card and the signed order lines live inside modals that already exist. Nothing new is timed.
+
+## 17. Review 2: plain words, hidden rolls, the Election card
+
+Rules: GDD §0 (*Added 30 Sep 2026, review 2*), §1.5, §8.4, §13.1a, §15.3; answers in `docs/design/review-2-answers.md`. **No rate, cost, threshold or formula changes.** Three things to record:
+
+- **Words are not numbers.** Renaming *canvass* to *talk to voters*, *Local Standing* to *Reputation*, *FXP* to *Party XP* and *PC* to *Political Capital* changes nothing in this sheet; every table above keeps the design's names, as the GDD does (§1.5).
+- **The odds bands against the reference player.** *Good odds* is 70 % and above, *Fair odds* 50–69, *Long shot* under 50. The reference recruit's home canvass is 66 % on day 1 with no bonus (*Fair odds*), 76 % with the *First day* +10 % (*Good odds*), 81 % at the end of day 1 and *Good odds* from then on; the flattest build reads *Fair odds* (60 %) on day 1 and crosses to *Good odds* (72 %) about day 3 with three level points and *Familiar*; a STR 13 Vanguard reads *Good odds* on its gate canvass from the first tap. So the first session's ticket says *Good odds* for every build except the flattest, which says *Fair odds* and never *Long shot*: the band matches the §8.4 target that the first session sits inside 60–85 %. Nothing on a home ticket at difficulty 8 reads *Long shot* for a build's best stat; a *Long shot* appears only on a check against a low stat (the reference recruit's AGI 5 on a flyer action: 38 %), which is the reason line's cue to train it.
+- **Hiding the percentages hides the day-2 step** (Appendix C #33): the *First day* bonus ending at the boundary moved a ticket from 76 % to 81 % in the review-1 model, which stayed inside *Good odds*; for the flattest build 60 → 65 stays inside *Fair odds*. The taper lever is no longer needed for legibility and stays parked.
+
+Session shape (pillar 7): the Election card adds no tap (it replaces the HQ card's route and the paper's row as the place the state lives); the reason line replaces two lines of maths under a result row and opens nothing; the band note is a tap only when asked for. The count of taps per act in §14.6 is unchanged.

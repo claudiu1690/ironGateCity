@@ -1,5 +1,7 @@
 # Slice 3 — "The first vote": home-city councils, the ballot, ordinances and morale
 
+> **Vocabulary superseded (review 2, 30 Sep 2026).** Player-facing words follow `docs/design/review-2-answers.md` §1 and GDD §1.5: *canvass* → *talk to voters*, *flyers* → *flyers*, *ordinance* → *council rule*, *endorse* → *back*, *the slate* → *who's standing*, *nominations* → *candidates*, *the ballot* → *vote*, *the count* → *the result*, *Local Standing* → *Reputation*, *FXP* → *Party XP*, *PC* → *Political Capital*, *Battleground* (the state) → *close race*, *Groundswell* → *comeback*, *Polling Day* → *Election*. Action and order titles below were updated mechanically; rule prose keeps the design's terms. Odds and rolls are no longer shown to players (GDD §8.4): percentages quoted here are design maths, not screen text.
+
 Game designer, 29 Sep 2026. Companion to `docs/design/slice-3-screens.md` (the screen specs) and `docs/economy.md` §14. The architect writes the slice-3 tech design from these two documents; every rule and number here is also in the GDD (edits listed in §14).
 
 **Playtest question:** does the first vote, and the first seat, feel like a big moment?
@@ -320,7 +322,7 @@ Ten ordinances, all with effects on systems that exist in slices 1–2, all with
 |---|---|---|---|---|
 | `ord.public-works` | Public Works Order | The council puts the town to work: every wage in the city goes up. | **Job pay +10 %** (the half pay at the boundary and the shift; the streak bonus and the ordinance line are each a percentage of the unmodified daily pay, §17 Q11) | max +10 % |
 | `ord.shift-hours` | Shift Hours Order | Shifts end an hour early, by order of the council, and count double towards the streak. | **Job shifts −1 Energy** (never below 2); **each shift adds two days to the work streak** (the +20 % cap is unchanged) | −1 · ×2 |
-| `ord.street-permits` | Street Permits | Leaflets and posters go up without a permit for the week. | **Propaganda opinion swing +15 %** (0.040 → 0.046 per 8-Energy action) | max +15 % |
+| `ord.street-permits` | Street Permits | Flyers and posters go up without a permit for the week. | **Propaganda opinion swing +15 %** (0.040 → 0.046 per 8-Energy action) | max +15 % |
 | `ord.rally-permits` | Rally Permits | Speeches licensed on every corner; no one moves you on. | **Speech actions −2 Energy** (12 → 10; rewards unchanged) | −2 |
 | `ord.reading-room` | Reading Room Grant | The reading rooms open late and free. | **Training Energy −20 %** (rounded, halves up: INT 12 → 13 costs 35, not 44) | max −20 % |
 | `ord.rest-day` | Rest Day Order | A day of rest by ordinance: the town sleeps in. | **Rested cap +50** (200 → 250) | +50 |
@@ -515,7 +517,7 @@ Game designer, 29 Sep 2026. Twenty-one questions from `docs/tech/slice-3.md` §2
 | 7 | `hl.seat-lost` on the count morning | **Reworded, no `{weekday}`:** *Nominations are open again today* (Clarion) / *Nominations reopen today* (Sentinel, Gazette). Three decks in §17.1; the §8 tables carry them. | design §8 |
 | 8 | Local times in headlines | **Confirmed.** Every *{weekday} midnight* is `{until}`; every *at 01:00 on {weekday}* is `{at}`. The example is corrected: polls that close *Saturday midnight* for a UTC player close *Sunday 01:00* at UTC+1 and *Saturday 19:00* at UTC−5. `{weekday}` (server-side) is the weekday of the **next nominations day 0 strictly after today**, never today; its only uses left are the withdraw modal and `hl.struck`. §17.3 lists every string checked. | design §8; GDD §3.3 |
 | 9 | `hl.moved` for the Sentinel and the Gazette | **Written**, §17.2; the Clarion's stays as §10.2 has it. All three use `{until}`. | design §8 |
-| 10 | The *Restore the base* orders | **Written**, §17.4: two titles shared by the three factions (*Restore the base: the doors* · *Restore the base: say it*) and six secretary's lines in each voice. | GDD §14.11 |
+| 10 | The *Restore the base* orders | **Written**, §17.4: two titles shared by the three factions (*Win back the town: the doors* · *Win back the town: say it*) and six secretary's lines in each voice. | GDD §14.11 |
 | 11 | Cost ordinances and rewards; pay bonuses; streak steps | **Default stands on all three.** A cost ordinance changes the cost only (Reading Room at INT 12 costs 35 and pays 99 XP; Rally Permits explicit). Public Works and Ward Fund change the two half pays; **the streak bonus and the ordinance line are each a percentage of the unmodified daily pay**, so the tiles add up and the economy's +22 / −54 hold (§10.1 above and `economy.md` §14.4 said "streak on top", which was wrong; corrected). **Streak headlines fire on crossing, not equality:** `streakHitYesterday` is true on the day the streak first reaches or passes 5 or 10, so Shift Hours' +2 steps (4 → 6) still print *Five Straight Shifts*. | GDD §9.1, §15.3 |
 | 12 | The salary at a boundary | **Default stands:** the ordinance in force on the day that ended. | GDD §9.1 |
 | 13 | `hl.polls-open` and `hl.nominations` | **Default stands: every day of their window**, city 0. Ties inside city 0 in this order: the count · *Stands Firm* · the ordinance in force · polls open / nominations. | design §8 |
@@ -592,12 +594,12 @@ Six crisis templates (`use: 'crisis'`, `doneFxp: 40`), slot A any canvass in the
 
 | Id | Faction · slot | Title | Line |
 |---|---|---|---|
-| `dir.restore-canvass` | Collective · A | Restore the base: the doors | The wards are asking what the branch is for. Answer them at the door: three conversations, today. |
-| `dir.restore-speech` | Collective · B | Restore the base: say it | The Anchor says the party has gone quiet. Prove it wrong, out loud, from the plinth. |
-| `dir.v.restore-canvass` | Vanguard · A | Restore the base: the doors | Rampart Row has questions. Three wards, three answers, in order, on my desk tonight. |
-| `dir.v.restore-speech` | Vanguard · B | Restore the base: say it | The town doubts the committee. Address the town today and leave no doubt. |
-| `dir.a.restore-canvass` | Alliance · A | Restore the base: the doors | Ashford is muttering. Three wards, three honest conversations, and listen more than you talk. |
-| `dir.a.restore-speech` | Alliance · B | Restore the base: say it | The Rooms have gone quiet and the town has noticed. Speak today, anywhere with a crowd. |
+| `dir.restore-canvass` | Collective · A | Win back the town: the doors | The wards are asking what the branch is for. Answer them at the door: three conversations, today. |
+| `dir.restore-speech` | Collective · B | Win back the town: say it | The Anchor says the party has gone quiet. Prove it wrong, out loud, from the plinth. |
+| `dir.v.restore-canvass` | Vanguard · A | Win back the town: the doors | Rampart Row has questions. Three wards, three answers, in order, on my desk tonight. |
+| `dir.v.restore-speech` | Vanguard · B | Win back the town: say it | The town doubts the committee. Address the town today and leave no doubt. |
+| `dir.a.restore-canvass` | Alliance · A | Win back the town: the doors | Ashford is muttering. Three wards, three honest conversations, and listen more than you talk. |
+| `dir.a.restore-speech` | Alliance · B | Win back the town: say it | The Rooms have gone quiet and the town has noticed. Speak today, anywhere with a crowd. |
 
 Matches: `{ actionTypes: ['canvass'], cityId: <home> }` and `{ actionTypes: ['speech'], cityId: <home> }`, `counts: 'attempts'`. Content-policy check: no rank word, no colour, no symbol; the Vanguard's lines are an organiser wanting reports and a firm speech, nothing more.
 

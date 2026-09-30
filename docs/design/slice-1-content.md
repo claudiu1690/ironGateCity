@@ -1,5 +1,7 @@
 # Slice 1 — "The 5-minute session": Coalport content and rules
 
+> **Vocabulary superseded (review 2, 30 Sep 2026).** Player-facing words follow `docs/design/review-2-answers.md` §1 and GDD §1.5: *canvass* → *talk to voters*, *flyers* → *flyers*, *ordinance* → *council rule*, *endorse* → *back*, *the slate* → *who's standing*, *nominations* → *candidates*, *the ballot* → *vote*, *the count* → *the result*, *Local Standing* → *Reputation*, *FXP* → *Party XP*, *PC* → *Political Capital*, *Battleground* (the state) → *close race*, *Groundswell* → *comeback*, *Polling Day* → *Election*. Action and order titles below were updated mechanically; rule prose keeps the design's terms. Odds and rolls are no longer shown to players (GDD §8.4): percentages quoted here are design maths, not screen text.
+
 Game designer, 29 Sep 2026. Companion to `docs/economy.md` (the numbers) and the architect's `docs/tech/slice-1.md`. Everything here is either already in the GDD or was pinned into it in this change (list at the end). The developer turns §2–§8 into `packages/content` data; the schema changes that needs are in §10.
 
 **Playtest question:** is spending a bar of Energy fun, and do players want to come back in 3 hours?
@@ -61,25 +63,25 @@ Rewards are Success / Partial. "Std" = the stat(s) checked. E = Energy. Opinion 
 
 | Id | Title | Type | Std | E | XP | FXP | Iron | Opinion |
 |---|---|---|---|---|---|---|---|---|
-| `coalport.mill-gate.canvass` | Canvass the shift change | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `coalport.mill-gate.canvass` | Talk to the workers coming off shift | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `coalport.mill-gate.speech` | Speak from the gate steps | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
 | `coalport.mill-gate.shift` | Work your shift at the mill | job (Factory worker) | — | 4 | — | — | see §3 | — |
-| `coalport.market-row.canvass` | Canvass the bread queue | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `coalport.market-row.canvass` | Talk to people in the bread queue | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `coalport.market-row.speech` | Speak from the market cross | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
-| `coalport.market-row.leaflets` | Hand out leaflets between the stalls | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `coalport.market-row.leaflets` | Hand out flyers between the stalls | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
 | `coalport.market-row.stall` | Work the stall | job (Street vendor) | — | 3 | — | — | see §3 | — |
-| `coalport.union-hall.committee` | Sit in on the branch committee | council | INT | 10 | 45 / 23 | **9 / 5** | 20 / 10 | — |
-| `coalport.union-hall.mimeograph` | Run the mimeograph | propaganda | INT | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `coalport.union-hall.committee` | Go to the branch meeting | council | INT | 10 | 45 / 23 | **9 / 5** | 20 / 10 | — |
+| `coalport.union-hall.mimeograph` | Print five hundred flyers | propaganda | INT | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
 | `coalport.union-hall.reading-room` | Study in the reading room | training (INT) | — | 20 + 2×INT | half rate | — | — | — |
-| `coalport.terraces.canvass` | Canvass door to door | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `coalport.terraces.chalk` | Chalk the slogans | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `coalport.terraces.run` | Run messages for the street committee | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
+| `coalport.terraces.canvass` | Knock on doors | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `coalport.terraces.chalk` | Chalk the slogan on the end wall | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `coalport.terraces.run` | Run messages around the streets | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
 | `coalport.quays.noon-break` | Talk to the dockers at the noon break | canvass | STR | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `coalport.quays.posters` | Paste posters on the warehouse walls | propaganda | STR | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `coalport.quays.haul` | Shift cargo with the dockers | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
+| `coalport.quays.posters` | Put up posters on the warehouse walls | propaganda | STR | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `coalport.quays.haul` | Lift cargo with the dockers | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
 | `coalport.quays.customs` | Watch the customs shed | intelligence | INT | 4 | 18 / 9 | — | 8 / 4 | — |
 | `coalport.quays.lorry` | Drive the dock lorry | job (Driver) | — | 4 | — | — | see §3 | — |
-| `coalport.anchor.regulars` | Talk the regulars round | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `coalport.anchor.regulars` | Win over the regulars | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `coalport.anchor.listen` | Listen at the bar | intelligence | INT | 3 | 14 / 7 | — | 6 / 3 | — |
 | `coalport.anchor.songs` | Lead the singing | speech | CHA+STR | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
 
@@ -97,9 +99,9 @@ Two to three lines each: **at most 240 characters and four sentences** (GDD §1.
 
 #### Mill Gate
 
-**Canvass the shift change** (`coalport.mill-gate.canvass`)
-- Success — *The whistle goes, and they stop* — You're at the gate before the shift comes off. Coal dust, tired faces, no time for speeches. But the leaflets go hand to hand, and a foreman says come back Thursday. That's how a ward is won.
-- Partial — *Most of them walk past* — The shift comes off in a hurry and most of it heads straight for the tram. You press leaflets on the ones who slow down. Two stop to argue; one gives you his street. A start, not a win.
+**Talk to the workers coming off shift** (`coalport.mill-gate.canvass`)
+- Success — *The whistle goes, and they stop* — You're at the gate before the shift comes off. Coal dust, tired faces, no time for speeches. But the flyers go hand to hand, and a foreman says come back Thursday. That's how a ward is won.
+- Partial — *Most of them walk past* — The shift comes off in a hurry and most of it heads straight for the tram. You press flyers on the ones who slow down. Two stop to argue; one gives you his street. A start, not a win.
 
 **Speak from the gate steps** (`coalport.mill-gate.speech`)
 - Success — *Two hundred faces, and they listen* — You climb the gate steps as the hooters go. Wages, the coal ration, the foreman's book: you keep it short and you keep it theirs. When you come down, a woman from the rolling mill shakes your hand and asks when the next meeting is.
@@ -110,28 +112,28 @@ Two to three lines each: **at most 240 characters and four sentences** (GDD §1.
 
 #### Market Row
 
-**Canvass the bread queue** (`coalport.market-row.canvass`)
-- Success — *The queue has time to talk* — Forty people and one baker's window. You work the line with the price list in one hand and the leaflet in the other. By the time the shutters go up, half the queue knows what the Collective would do about the flour ration.
-- Partial — *The loaves come out early* — You're three people in when the shutters go up and the queue becomes a scrum. A few leaflets go into shopping bags. One old man folds his carefully and says he'll read it after his tea.
+**Talk to people in the bread queue** (`coalport.market-row.canvass`)
+- Success — *The queue has time to talk* — Forty people and one baker's window. You work the line with the price list in one hand and the flyer in the other. By the time the shutters go up, half the queue knows what the Collective would do about the flour ration.
+- Partial — *The loaves come out early* — You're three people in when the shutters go up and the queue becomes a scrum. A few flyers go into shopping bags. One old man folds his carefully and says he'll read it after his tea.
 
 **Speak from the market cross** (`coalport.market-row.speech`)
 - Success — *A crowd at the cross* — You get up on the plinth between the fish stall and the tram stop. Prices, rents, who pays and who doesn't. The stallholders heckle, the crowd laughs, and by the end the laughs are on your side.
 - Partial — *The tram takes half of them* — You've a decent crowd until the number 4 pulls in and takes most of it. You finish for the stallholders and a policeman who looks bored. The fishmonger gives you a nod. It's a start.
 
-**Hand out leaflets between the stalls** (`coalport.market-row.leaflets`)
-- Success — *Quick hands, empty bag* — You work the aisles at a trot, a leaflet into every basket before its owner has noticed. The bag is empty in ten minutes and the market inspector never sees you.
-- Partial — *The inspector sees you* — Half the bag is gone when the market inspector plants himself in the aisle and asks about your permit. You leave by the fish stall, slower than you'd like. The leaflets you handed out are still out there.
+**Hand out flyers between the stalls** (`coalport.market-row.leaflets`)
+- Success — *Quick hands, empty bag* — You work the aisles at a trot, a flyer into every basket before its owner has noticed. The bag is empty in ten minutes and the market inspector never sees you.
+- Partial — *The inspector sees you* — Half the bag is gone when the market inspector plants himself in the aisle and asks about your permit. You leave by the fish stall, slower than you'd like. The flyers you handed out are still out there.
 
 **Work the stall** (`coalport.market-row.stall`, Street vendor)
 - Worked — *A day's trade* — Matches, bootlaces, yesterday's paper. You know the regulars by their shoes now. The takings won't make anyone rich, but they come in every day, and nobody asks you for a permit.
 
 #### Union Hall
 
-**Sit in on the branch committee** (`coalport.union-hall.committee`)
+**Go to the branch meeting** (`coalport.union-hall.committee`)
 - Success — *Minutes taken, motion carried* — Smoke, coffee, and a mimeograph that never stops. The committee wants the ward lists redone by district and you're the one who says how. Your name goes in the minutes. In this hall, that counts.
 - Partial — *A long meeting* — Two hours on the ward lists and the price of paper. You get one point in before the chair moves on. The secretary marks you present, which is what matters this week.
 
-**Run the mimeograph** (`coalport.union-hall.mimeograph`)
+**Print five hundred flyers** (`coalport.union-hall.mimeograph`)
 - Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred bulletins in an hour, stacked for the morning runners. Your hands are purple to the wrist and the hall smells of spirit.
 - Partial — *The stencil tears* — The stencil tears at copy two hundred and the rest of the run comes out ghosted. Half a stack goes out; the other half goes in the stove. The secretary shows you how to cut the next one.
 
@@ -140,28 +142,28 @@ Two to three lines each: **at most 240 characters and four sentences** (GDD §1.
 
 #### Foundry Row
 
-**Canvass door to door** (`coalport.terraces.canvass`)
+**Knock on doors** (`coalport.terraces.canvass`)
 - Success — *The kettle goes on* — Sixty doors in the long terrace. Most open a crack; a dozen open wide, and at three of them the kettle goes on. You leave with a list of names and the name of the man who collects the rent.
-- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones who stand on the step. One woman says her husband's in the Union already. Come back after the shift.
+- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the flyer through the gap and a word with the ones who stand on the step. One woman says her husband's in the Union already. Come back after the shift.
 
-**Chalk the slogans** (`coalport.terraces.chalk`)
+**Chalk the slogan on the end wall** (`coalport.terraces.chalk`)
 - Success — *White letters on the gable end* — The gable end at the top of the terrace is the biggest wall in the district. You get the whole slogan up in fair capitals before the rent-man's boy comes round the corner, and you're away down the entry.
 - Partial — *Half a slogan* — You get as far as BREAD AND before a window goes up and someone shouts about their wall. You finish the last word small and leave by the back entry. It reads, just about.
 
-**Run messages for the street committee** (`coalport.terraces.run`, training AGI)
+**Run messages around the streets** (`coalport.terraces.run`, training AGI)
 - Trained — *Every entry in the district* — Six notes, five streets, one hour. You learn which entries connect and which end in a wall, and you learn them at a run. By the end you could do it in the dark.
 
 #### Harbour Quays
 
 **Talk to the dockers at the noon break** (`coalport.quays.noon-break`)
 - Success — *They make room on the bollard* — The dockers eat on the quay with their backs to the wind. You've the hands for the work and it shows, so they make room on the bollard. By the time the whistle goes, the gang has agreed to send two men to the hall.
-- Partial — *Bread and silence* — The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a leaflet for later. Nobody gets up when the whistle goes, which is the dockers' way of saying maybe.
+- Partial — *Bread and silence* — The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a flyer for later. Nobody gets up when the whistle goes, which is the dockers' way of saying maybe.
 
-**Paste posters on the warehouse walls** (`coalport.quays.posters`)
+**Put up posters on the warehouse walls** (`coalport.quays.posters`)
 - Success — *A hundred yards of brick* — Bucket, brush, and a long stretch of warehouse wall. You get twelve posters up straight and high enough that nobody's tearing them down without a ladder. Every barge coming up the river will read them.
 - Partial — *The paste won't hold* — The wind off the river is against you and the paste won't hold on the wet brick. Five posters stay up; the rest go into the water. Five is five.
 
-**Shift cargo with the dockers** (`coalport.quays.haul`, training STR)
+**Lift cargo with the dockers** (`coalport.quays.haul`, training STR)
 - Trained — *A shift on the hooks* — You take a hook and a place on the gang and don't ask to be paid. Sacks, crates, a crate that needs four. Your shoulders will tell you about it tomorrow; that's the point.
 
 **Watch the customs shed** (`coalport.quays.customs`)
@@ -173,9 +175,9 @@ Two to three lines each: **at most 240 characters and four sentences** (GDD §1.
 
 #### The Anchor
 
-**Talk the regulars round** (`coalport.anchor.regulars`)
+**Win over the regulars** (`coalport.anchor.regulars`)
 - Success — *A table by the stove* — The regulars have a table by the stove and, once you've listened for a while, a place at it. You talk rents and wages and let them talk longer. By closing time two of them have asked where the branch meets.
-- Partial — *Talked over* — The table by the stove is louder than you are. You get a word in between the dominoes and a song. One docker wants a leaflet; another wants to argue about 1919. You leave the argument where you found it.
+- Partial — *Talked over* — The table by the stove is louder than you are. You get a word in between the dominoes and a song. One docker wants a flyer; another wants to argue about 1919. You leave the argument where you found it.
 
 **Listen at the bar** (`coalport.anchor.listen`)
 - Success — *The barman hears everything* — You nurse a half and let the bar talk. Who's hiring at the yard, whose rent went up, which foreman is taking a cut. The barman catches your eye and adds a name.
@@ -283,7 +285,7 @@ where `day` is the number of City Days since a fixed epoch (2026-01-01), so the 
 
 | Id | Slot | Order (title) | Matches | Personal target | Holm's line |
 |---|---|---|---|---|---|
-| `dir.canvass-coalport` | A | Canvass Coalport | any `canvass` in Coalport | 3 attempts | Three wards, three conversations. Go and have them. |
+| `dir.canvass-coalport` | A | Talk to voters in Coalport | any `canvass` in Coalport | 3 attempts | Three wards, three conversations. Go and have them. |
 | `dir.shift-change` | A | Be at the gate | `coalport.mill-gate.canvass` | 2 attempts | The afternoon shift comes off at four. Be at the gate before it. |
 | `dir.foundry-row` | A | Knock Foundry Row | `coalport.terraces.canvass` | 2 attempts | Sixty doors in Foundry Row. Start at the top and work down. |
 | `dir.noon-break` | A | The quays at noon | `coalport.quays.noon-break` | 2 attempts | The dockers eat at noon. So do you, on the quay. |
@@ -346,7 +348,7 @@ Up to three per day: **at most two personal** (highest priority first), then **o
 | `hl.streak` | 6 | Streak reached 5 or 10 yesterday | {Five / Ten} Straight Shifts and Counting | {name} has not missed a shift in {n} days. Pay is up {bonus} %. |
 | `hl.away` | 7 | 2 or more City Days since last paper, and at least one half-pay credited since then | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. *({days} is the number credited, at most 14; §12, Q9)* |
 | `hl.away-no-job` | 7 | 2 or more City Days since last paper, and no half-pay credited (no job) | While You Were Away | No job, so no half pay banked. Rested is full and the ward is where you left it. The mill is still hiring: the Jobs card is at Mill Gate. |
-| `hl.idle` | 8 | Seen yesterday, no actions yesterday | Quiet Day in the Ward | No leaflets went out yesterday. Today's orders are below. |
+| `hl.idle` | 8 | Seen yesterday, no actions yesterday | Quiet Day in the Ward | No flyers went out yesterday. Today's orders are below. |
 | `hl.morale` | city | Always | Collective Holds Coalport at {share} % | Fired up (≥ 80): *The mill is singing.* · Steady (60–79): *"Steady," says the branch. Steady isn't enough.* · Unrest (< 60): *Unrest in Coalport: dockers question the party.* |
 | `hl.orders-call` | city | Always (used when no personal headline qualifies) | Secretary Holm Calls for {slot-A title} | {Holm's line for slot A} |
 | `hl.ambient` | filler | Fewer than 3 headlines | one of the pool below, by day seed | — |

@@ -1,5 +1,7 @@
 # Review 1 — design and copy answers (30 Sep 2026)
 
+> **Vocabulary superseded (review 2, 30 Sep 2026).** Player-facing words follow `docs/design/review-2-answers.md` §1 and GDD §1.5: *canvass* → *talk to voters*, *flyers* → *flyers*, *ordinance* → *council rule*, *endorse* → *back*, *the slate* → *who's standing*, *nominations* → *candidates*, *the ballot* → *vote*, *the count* → *the result*, *Local Standing* → *Reputation*, *FXP* → *Party XP*, *PC* → *Political Capital*, *Battleground* (the state) → *close race*, *Groundswell* → *comeback*, *Polling Day* → *Election*. Action and order titles below were updated mechanically; rule prose keeps the design's terms. Odds and rolls are no longer shown to players (GDD §8.4): percentages quoted here are design maths, not screen text.
+
 Answers to the design items of `docs/review/2026-09-30-review-1.md`. The user's notes are direction; every rule change here is pinned in `docs/GDD.md` (§0, *Added 30 Sep 2026 (review 1)*) and the pacing check is `docs/economy.md` §16. Pure-code items (#3, #4, #7, #10, #14's build) are the developer's; #14's design is confirmed below.
 
 Nothing here adds a step to a session: every change is one tap, one modal, two or three lines.
@@ -8,7 +10,7 @@ Nothing here adds a step to a session: every change is one tap, one modal, two o
 |---|---|---|---|
 | 12 | The job | **A job is a wage.** Full daily pay at every boundary, automatically; no shift, no Energy, no ticket. The streak and sick days go; **seniority** (+2 % a day held, to +20 %; reset only by switching) replaces them. The 14-day cap on return stays | §9, §4.2, §4.3, §15.3 |
 | 8 | Low odds on the first actions | **The first day is played on your best stat**: the welcome set routes to the player's best trained stat, committee sessions and a chapter-1 approach check the best stat, a **First day +10 %** bonus covers the flat builds, and every ticket names its stat before the tap | §7.5, §8.4, §13.7, §17.1 |
-| 6 | "Be at the gate" | Every order title is **what to do and where** (*Canvass the customs shift at the Fortress Gate*); the secretary's line keeps the voice. All 42 templates rewritten below. Tapping an order opens its pin with the ticket highlighted | §13.7 |
+| 6 | "Be at the gate" | Every order title is **what to do and where** (*Talk to the customs men at the Fortress Gate*); the secretary's line keeps the voice. All 42 templates rewritten below. Tapping an order opens its pin with the ticket highlighted | §13.7 |
 | 9 | The breakdown | Default is **one plain sentence** (*Your INT 5 is 3 below the 8 this needs: 38 %*) and a short roll line; the ledger stays behind a tap, reworded | §8.4 |
 | 1, 2, 5 | Help and labels | **Tap the label**: every dotted-underlined label opens a two-line note in the paper's voice. No "i" icons. One first-time hint on the plate | §3.7, §7.5 |
 | 11 | Orders complete | **A modal in the secretary's voice** when the third order is done, after the result modal is closed. A single order gets a signed line inside the result modal, no modal | §13.7, §15.4 |
@@ -68,9 +70,9 @@ The reference player's Iron is unchanged within 3 % (216 full pay plus up to +43
 
    | City | STR | INT | AGI |
    |---|---|---|---|
-   | Coalport | *Talk to the dockers at Harbour Quays* (`coalport.quays.noon-break`, existing `dir.noon-break`) | *Canvass the shift change at the Mill Gate* (`coalport.mill-gate.canvass`, `dir.shift-change`; the reference recruit, unchanged) | *Hand out leaflets on Market Row* (`coalport.market-row.leaflets`, new welcome template `dir.w.leaflets-market-row`, 2 attempts, 16 Energy) |
-   | Duskwall | *Canvass the customs shift at the Fortress Gate* (`duskwall.garrison-gate.canvass`, `dir.v.guard-change`) | *Canvass the ration queue at the Customs Market* (`duskwall.quartermaster-market.canvass`, new `dir.v.w.ration-queue`) | *Hand out leaflets at the Customs Market* (`duskwall.quartermaster-market.leaflets`, new `dir.v.w.leaflets-market`) |
-   | Ashford | *Paste bills on Weavers' Row* (`ashford.weavers-row.bills`, new `dir.a.w.bills`) | *Canvass the print-room shift at Gazette House* (`ashford.gazette-house.print-room`, `dir.a.print-room`) | *Run the evening edition from Gazette House* (`ashford.gazette-house.evening-run`, new `dir.a.w.evening-run`) |
+   | Coalport | *Talk to the dockers at Harbour Quays* (`coalport.quays.noon-break`, existing `dir.noon-break`) | *Talk to the workers at the Mill Gate* (`coalport.mill-gate.canvass`, `dir.shift-change`; the reference recruit, unchanged) | *Hand out flyers on Market Row* (`coalport.market-row.leaflets`, new welcome template `dir.w.leaflets-market-row`, 2 attempts, 16 Energy) |
+   | Duskwall | *Talk to the customs men at the Fortress Gate* (`duskwall.garrison-gate.canvass`, `dir.v.guard-change`) | *Talk to the queue at the Customs Market* (`duskwall.quartermaster-market.canvass`, new `dir.v.w.ration-queue`) | *Hand out flyers at the Customs Market* (`duskwall.quartermaster-market.leaflets`, new `dir.v.w.leaflets-market`) |
+   | Ashford | *Put up posters on Weavers' Row* (`ashford.weavers-row.bills`, new `dir.a.w.bills`) | *Talk to the printers at Gazette House* (`ashford.gazette-house.print-room`, `dir.a.print-room`) | *Slip flyers into the paper at Gazette House* (`ashford.gazette-house.evening-run`, new `dir.a.w.evening-run`) |
 
    Welcome-only templates carry `use: 'welcome'` and never enter the rotation. Lines for the new ones are in §3.4.
 
@@ -107,72 +109,72 @@ The outcome texts are the step's existing ones; an approach chooses a check, not
 
 ## 3. #6 — Orders that say what and where (GDD §13.7)
 
-**The title rule:** `{Do} at/on/in {Place}`, plain, no metaphor; the UI adds the count (*Canvass the customs shift at the Fortress Gate (0 / 2)*). City-wide orders say *anywhere in {city}* and the secretary's line lists the places. The secretary's line keeps the voice. Tapping an order opens its pin with the matching ticket highlighted; a city-wide order opens the first pin in pin order with a matching ticket, and every matching ticket wears the *Party order n / m* tag. Titles fit a phone list at 44 characters or fewer.
+**The title rule:** `{Do} at/on/in {Place}`, plain, no metaphor; the UI adds the count (*Talk to the customs men at the Fortress Gate (0 / 2)*). City-wide orders say *anywhere in {city}* and the secretary's line lists the places. The secretary's line keeps the voice. Tapping an order opens its pin with the matching ticket highlighted; a city-wide order opens the first pin in pin order with a matching ticket, and every matching ticket wears the *Party order n / m* tag. Titles fit a phone list at 44 characters or fewer.
 
 ### 3.1 The Collective — Secretary Holm, Coalport
 
 | Id | Slot | Title | Line | Match · target |
 |---|---|---|---|---|
-| `dir.canvass-coalport` | A | Canvass anywhere in Coalport | Three wards, three conversations. Go and have them. | canvass, coalport · 3 |
-| `dir.shift-change` | A | Canvass the shift change at the Mill Gate | The afternoon shift comes off at four. Be at the Mill Gate before it. | `coalport.mill-gate.canvass` · 2 |
-| `dir.foundry-row` | A | Canvass door to door on Foundry Row | Sixty doors in Foundry Row. Start at the top and work down. | `coalport.terraces.canvass` · 2 |
+| `dir.canvass-coalport` | A | Talk to voters anywhere in Coalport | Three wards, three conversations. Go and have them. | canvass, coalport · 3 |
+| `dir.shift-change` | A | Talk to the workers at the Mill Gate | The afternoon shift comes off at four. Be at the Mill Gate before it. | `coalport.mill-gate.canvass` · 2 |
+| `dir.foundry-row` | A | Knock on doors in Foundry Row | Sixty doors in Foundry Row. Start at the top and work down. | `coalport.terraces.canvass` · 2 |
 | `dir.noon-break` | A | Talk to the dockers at Harbour Quays | The dockers eat at noon. So do you, on the quay. | `coalport.quays.noon-break` · 2 |
-| `dir.anchor` | A | Talk the regulars round at The Anchor | Sit with the regulars, not at the bar. Listen first. | `coalport.anchor.regulars` · 2 |
-| `dir.paper-the-town` | B | Spread the bulletin anywhere in Coalport | Leaflets on Market Row, posters on the quays, chalk on Foundry Row or the mimeograph. Any three. | propaganda, coalport · 3 |
+| `dir.anchor` | A | Win over the regulars at The Anchor | Sit with the regulars, not at the bar. Listen first. | `coalport.anchor.regulars` · 2 |
+| `dir.paper-the-town` | B | Spread the word anywhere in Coalport | Flyers on Market Row, posters on the quays, chalk on Foundry Row or the mimeograph. Any three. | propaganda, coalport · 3 |
 | `dir.say-it` | B | Make a speech anywhere in Coalport | The market cross or the gate steps. Somebody has to stand up today. It's you. | speech, coalport · 1 |
-| `dir.report` | B | Sit in on the committee at the Union Hall | Committee at six. Bring the ward lists. | `coalport.union-hall.committee` · 1 |
-| `dir.ears-open` | B | Gather intelligence anywhere in Coalport | The customs shed on the quays, or the bar at the Anchor. Sit, watch, write it down. | intelligence, coalport · 2 |
+| `dir.report` | B | Go to the branch meeting at the Union Hall | Committee at six. Bring the ward lists. | `coalport.union-hall.committee` · 1 |
+| `dir.ears-open` | B | Watch and listen anywhere in Coalport | The customs shed on the quays, or the bar at the Anchor. Sit, watch, write it down. | intelligence, coalport · 2 |
 | `dir.sharpen-up` | C | Train once, anywhere in Coalport | A tired organiser is a bad one. An hour in the reading room, on the hooks, or running for the street committee. | training · 1 |
 | `dir.full-day` | C | Six wins anywhere in Coalport | Six wins before the paper goes to bed. | checked, home · 6 Successes |
 | `dir.five-in-the-book` (new) | C | Five attempts anywhere in Coalport | Five entries in the day book, win or lose. Volume is the point. | checked, home · 5 attempts |
 | `dir.take-a-job` (welcome only) | C | Take a job at the Mill Gate | The party doesn't pay wages. The mill does, and a fifth more to members. Paid at midnight, every day. | takeJob · 1 |
-| `dir.w.leaflets-market-row` (welcome, AGI) | A | Hand out leaflets on Market Row | Quick hands between the stalls. Two rounds, before the inspector wakes up. | `coalport.market-row.leaflets` · 2 |
-| `dir.restore-canvass` | A (crisis) | Restore the base: canvass anywhere in Coalport | The wards are asking what the branch is for. Answer them at the door: three conversations, today. | canvass, coalport · 3 · +40 |
-| `dir.restore-speech` | B (crisis) | Restore the base: a speech anywhere in Coalport | The Anchor says the party has gone quiet. Prove it wrong, out loud, from the plinth. | speech, coalport · 1 · +40 |
+| `dir.w.leaflets-market-row` (welcome, AGI) | A | Hand out flyers on Market Row | Quick hands between the stalls. Two rounds, before the inspector wakes up. | `coalport.market-row.leaflets` · 2 |
+| `dir.restore-canvass` | A (crisis) | Win back Coalport: talk to voters anywhere | The wards are asking what the branch is for. Answer them at the door: three conversations, today. | canvass, coalport · 3 · +40 |
+| `dir.restore-speech` | B (crisis) | Win back Coalport: a speech anywhere | The Anchor says the party has gone quiet. Prove it wrong, out loud, from the plinth. | speech, coalport · 1 · +40 |
 
 ### 3.2 The Vanguard — Organiser Stahl, Duskwall
 
 | Id | Slot | Title | Line | Match · target |
 |---|---|---|---|---|
-| `dir.v.canvass-duskwall` | A | Canvass anywhere in Duskwall | Three wards. Three reports on my desk by tonight. | canvass, duskwall · 3 |
-| `dir.v.guard-change` | A | Canvass the customs shift at the Fortress Gate | The customs shift changes at four. Be at the Fortress Gate before it. | `duskwall.garrison-gate.canvass` · 2 |
-| `dir.v.rampart-row` | A | Canvass door to door on Rampart Row | Every door on Rampart Row. Top to bottom, no gaps. | `duskwall.rampart-row.canvass` · 2 |
+| `dir.v.canvass-duskwall` | A | Talk to voters anywhere in Duskwall | Three wards. Three reports on my desk by tonight. | canvass, duskwall · 3 |
+| `dir.v.guard-change` | A | Talk to the customs men at the Fortress Gate | The customs shift changes at four. Be at the Fortress Gate before it. | `duskwall.garrison-gate.canvass` · 2 |
+| `dir.v.rampart-row` | A | Knock on doors in Rampart Row | Every door on Rampart Row. Top to bottom, no gaps. | `duskwall.rampart-row.canvass` · 2 |
 | `dir.v.loaders` | A | Talk to the loaders at the Goods Yard | The loaders stop at noon. So do you, beside them. | `duskwall.goods-yard.loaders` · 2 |
-| `dir.v.clerks` | A | Canvass the clerks at the State Archives | The clerks leave at five. Catch them on the steps. | `duskwall.archives.clerks` · 2 |
-| `dir.v.paper-the-town` | B | Spread the bulletin anywhere in Duskwall | Leaflets at the market, posters at the yard, chalk on the Row or the duplicator. Three, in order. | propaganda, duskwall · 3 |
+| `dir.v.clerks` | A | Talk to the clerks at the State Archives | The clerks leave at five. Catch them on the steps. | `duskwall.archives.clerks` · 2 |
+| `dir.v.paper-the-town` | B | Spread the word anywhere in Duskwall | Flyers at the market, posters at the yard, chalk on the Row or the duplicator. Three, in order. | propaganda, duskwall · 3 |
 | `dir.v.say-it` | B | Make a speech anywhere in Duskwall | The gate steps, the lorry bed or the yard at six. Somebody addresses the town today. You. | speech, duskwall · 1 |
-| `dir.v.report` | B | Sit in on the committee at Beacon House | Committee at six. Bring your ward lists, in order. | `duskwall.beacon-house.committee` · 1 |
-| `dir.v.eyes-open` | B | Gather intelligence anywhere in Duskwall | The registers at the Archives or the manifests at the yard. Watch, note, report. Names and times. | intelligence, duskwall · 2 |
+| `dir.v.report` | B | Go to the district meeting at Beacon House | Committee at six. Bring your ward lists, in order. | `duskwall.beacon-house.committee` · 1 |
+| `dir.v.eyes-open` | B | Watch and listen anywhere in Duskwall | The registers at the Archives or the manifests at the yard. Watch, note, report. Names and times. | intelligence, duskwall · 2 |
 | `dir.v.sharpen-up` | C | Train once, anywhere in Duskwall | A soft organiser is no use to me. The bonded store, the reading room, or the ward office's messages. | training · 1 |
 | `dir.v.full-day` | C | Six wins anywhere in Duskwall | Six wins before lights out. | checked, home · 6 Successes |
 | `dir.v.five-in-the-book` (new) | C | Five attempts anywhere in Duskwall | Five entries in the day book. I read it every night. | checked, home · 5 attempts |
 | `dir.v.take-a-job` (welcome only) | C | Take a job at the Fortress Gate | The movement does not pay wages. The customs stores do, and members draw a fifth more. Paid at midnight. | takeJob · 1 |
-| `dir.v.w.ration-queue` (welcome, INT) | A | Canvass the ration queue at the Customs Market | Sixty people in the sugar queue with nowhere to go. Twice through the line, price list in hand. | `duskwall.quartermaster-market.canvass` · 2 |
-| `dir.v.w.leaflets-market` (welcome, AGI) | A | Hand out leaflets at the Customs Market | The tent rows, at a trot. Two rounds before the inspector notices. | `duskwall.quartermaster-market.leaflets` · 2 |
-| `dir.v.restore-canvass` | A (crisis) | Restore the base: canvass anywhere in Duskwall | Rampart Row has questions. Three wards, three answers, in order, on my desk tonight. | canvass, duskwall · 3 · +40 |
-| `dir.v.restore-speech` | B (crisis) | Restore the base: a speech anywhere in Duskwall | The town doubts the committee. Address the town today and leave no doubt. | speech, duskwall · 1 · +40 |
+| `dir.v.w.ration-queue` (welcome, INT) | A | Talk to the queue at the Customs Market | Sixty people in the sugar queue with nowhere to go. Twice through the line, price list in hand. | `duskwall.quartermaster-market.canvass` · 2 |
+| `dir.v.w.leaflets-market` (welcome, AGI) | A | Hand out flyers at the Customs Market | The tent rows, at a trot. Two rounds before the inspector notices. | `duskwall.quartermaster-market.leaflets` · 2 |
+| `dir.v.restore-canvass` | A (crisis) | Win back Duskwall: talk to voters anywhere | Rampart Row has questions. Three wards, three answers, in order, on my desk tonight. | canvass, duskwall · 3 · +40 |
+| `dir.v.restore-speech` | B (crisis) | Win back Duskwall: a speech anywhere | The town doubts the committee. Address the town today and leave no doubt. | speech, duskwall · 1 · +40 |
 
 ### 3.3 The Alliance — Mr Grey, Ashford
 
 | Id | Slot | Title | Line | Match · target |
 |---|---|---|---|---|
-| `dir.a.canvass-ashford` | A | Canvass anywhere in Ashford | Three wards, three conversations. Off you go. | canvass, ashford · 3 |
-| `dir.a.print-room` | A | Canvass the print-room shift at Gazette House | The print-room shift comes off at four. Be at Gazette House with the leaflets. | `ashford.gazette-house.print-room` · 2 |
-| `dir.a.weavers-row` | A | Canvass door to door on Weavers' Row | Sixty doors on Weavers' Row. Knock them all, and be polite. | `ashford.weavers-row.canvass` · 2 |
-| `dir.a.students` | A | Canvass the students at the University Quad | The students come out at eleven. Catch them before the coffee house does. | `ashford.university.students` · 2 |
-| `dir.a.court-queue` | A | Canvass the public queue at the Courts | The public queue at the Courts is bored and can't leave. Perfect. | `ashford.courts.queue` · 2 |
-| `dir.a.paper-the-town` | B | Spread the leaflets anywhere in Ashford | The evening run, the stalls on Bridge Street, the yard hoardings, the duplicator or the letters. Any three. | propaganda, ashford · 3 |
+| `dir.a.canvass-ashford` | A | Talk to voters anywhere in Ashford | Three wards, three conversations. Off you go. | canvass, ashford · 3 |
+| `dir.a.print-room` | A | Talk to the printers at Gazette House | The print-room shift comes off at four. Be at Gazette House with the flyers. | `ashford.gazette-house.print-room` · 2 |
+| `dir.a.weavers-row` | A | Knock on doors in Weavers' Row | Sixty doors on Weavers' Row. Knock them all, and be polite. | `ashford.weavers-row.canvass` · 2 |
+| `dir.a.students` | A | Talk to the students at the University Quad | The students come out at eleven. Catch them before the coffee house does. | `ashford.university.students` · 2 |
+| `dir.a.court-queue` | A | Talk to the queue at the Courts | The public queue at the Courts is bored and can't leave. Perfect. | `ashford.courts.queue` · 2 |
+| `dir.a.paper-the-town` | B | Spread the word anywhere in Ashford | The evening run, the stalls on Bridge Street, the yard hoardings, the duplicator or the letters. Any three. | propaganda, ashford · 3 |
 | `dir.a.say-it` | B | Make a speech anywhere in Ashford | The Union debate, the court steps or the bridge. Somebody has to speak today. It's you. | speech, ashford · 1 |
-| `dir.a.report` | B | Sit in on the committee at the Assembly Rooms | Committee at six. Bring the ward returns and a pencil. | `ashford.assembly-rooms.committee` · 1 |
-| `dir.a.ears-open` | B | Gather intelligence anywhere in Ashford | The wires at Gazette House, or the public gallery at the Courts. Write it down. | intelligence, ashford · 2 |
+| `dir.a.report` | B | Go to the meeting at the Assembly Rooms | Committee at six. Bring the ward returns and a pencil. | `ashford.assembly-rooms.committee` · 1 |
+| `dir.a.ears-open` | B | Watch and listen anywhere in Ashford | The wires at Gazette House, or the public gallery at the Courts. Write it down. | intelligence, ashford · 2 |
 | `dir.a.sharpen-up` | C | Train once, anywhere in Ashford | A tired canvasser is a bad one. The college reading room, the newsprint lorry, or the tenants' messages. | training · 1 |
 | `dir.a.full-day` | C | Six wins anywhere in Ashford | Six wins before the Gazette goes to bed. | checked, home · 6 Successes |
 | `dir.a.five-in-the-book` (new) | C | Five attempts anywhere in Ashford | Five lines in the day book, and I count the lines. | checked, home · 5 attempts |
 | `dir.a.take-a-job` (welcome only) | C | Take a job at Gazette House | The Alliance doesn't pay wages. The Gazette does, and a fifth more to members. Paid at midnight. | takeJob · 1 |
-| `dir.a.w.bills` (welcome, STR) | A | Paste bills on Weavers' Row | The yard hoardings on Weavers' Row, bucket and brush. Two rounds, straight and high. | `ashford.weavers-row.bills` · 2 |
-| `dir.a.w.evening-run` (welcome, AGI) | A | Run the evening edition from Gazette House | The evening edition to the stands before the trams fill. Two runs. Don't drop any. | `ashford.gazette-house.evening-run` · 2 |
-| `dir.a.restore-canvass` | A (crisis) | Restore the base: canvass anywhere in Ashford | Ashford is muttering. Three wards, three honest conversations, and listen more than you talk. | canvass, ashford · 3 · +40 |
-| `dir.a.restore-speech` | B (crisis) | Restore the base: a speech anywhere in Ashford | The Rooms have gone quiet and the town has noticed. Speak today, anywhere with a crowd. | speech, ashford · 1 · +40 |
+| `dir.a.w.bills` (welcome, STR) | A | Put up posters on Weavers' Row | The yard hoardings on Weavers' Row, bucket and brush. Two rounds, straight and high. | `ashford.weavers-row.bills` · 2 |
+| `dir.a.w.evening-run` (welcome, AGI) | A | Slip flyers into the paper at Gazette House | The evening edition to the stands before the trams fill. Two runs. Don't drop any. | `ashford.gazette-house.evening-run` · 2 |
+| `dir.a.restore-canvass` | A (crisis) | Win back Ashford: talk to voters anywhere | Ashford is muttering. Three wards, three honest conversations, and listen more than you talk. | canvass, ashford · 3 · +40 |
+| `dir.a.restore-speech` | B (crisis) | Win back Ashford: a speech anywhere | The Rooms have gone quiet and the town has noticed. Speak today, anywhere with a crowd. | speech, ashford · 1 · +40 |
 
 ### 3.4 Rotation after the change
 
@@ -303,7 +305,7 @@ When the third completes, the knock-on block reads *Order carried out · +20 FXP
 - Lead: *Most of the work in {city} uses {STAT}: {n} of {m} actions. Your best is {BEST} {v}.* (When the best is the most common: *…and it is your best, at {v}.*)
 - STR: *Strength. Shift changes, loaders, posters, the gate steps: {n} of {m} actions here. Later, security work, marches and holding your own.*
 - INT: *Intelligence. Queues, clerks, committees, the registers: {n} of {m} actions here. Later, espionage, exposés and the better-paid desks.*
-- AGI: *Agility. Leaflets, chalk, the evening run: {n} of {m} actions here. Later, stealth work and getting away clean.*
+- AGI: *Agility. Flyers, chalk, the evening run: {n} of {m} actions here. Later, stealth work and getting away clean.*
 - Footer: *Charisma isn't trained. It's worn: your coat, your suit, your party outfit.*
 - The waiting badge: *{n} points to place · nothing is lost by choosing later* (extends `pointsToPlace`).
 

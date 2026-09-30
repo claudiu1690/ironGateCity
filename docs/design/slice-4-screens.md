@@ -1,5 +1,7 @@
 # Slice 4 — "The battleground": the screens
 
+> **Vocabulary superseded (review 2, 30 Sep 2026).** Player-facing words follow `docs/design/review-2-answers.md` §1 and GDD §1.5: *canvass* → *talk to voters*, *flyers* → *flyers*, *ordinance* → *council rule*, *endorse* → *back*, *the slate* → *who's standing*, *nominations* → *candidates*, *the ballot* → *vote*, *the count* → *the result*, *Local Standing* → *Reputation*, *FXP* → *Party XP*, *PC* → *Political Capital*, *Battleground* (the state) → *close race*, *Groundswell* → *comeback*, *Polling Day* → *Election*. Action and order titles below were updated mechanically; rule prose keeps the design's terms. Odds and rolls are no longer shown to players (GDD §8.4): percentages quoted here are design maths, not screen text.
+
 Game designer, 29 Sep 2026. The screen-by-screen spec for slice 4: the national map on phone and desktop, the journey screen, the Irongate district overview and district view, the move-residence flow, the Issues in the paper, and the ledger. Where a canvas mockup exists it is named and this document says what to keep and what changes; where none exists, this document is the mock. Rules and numbers are in `docs/design/slice-4-battleground.md` (cited as *design §n*).
 
 **Phone first** (375 wide, supported from 360), desktop as the existing mockups do it (the map full-bleed with a side sheet; the paper in a column of 640). Every screen below is one tap or one choice, resumable, and reads its numbers from the server.

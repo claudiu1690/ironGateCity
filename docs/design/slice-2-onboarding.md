@@ -1,5 +1,7 @@
 # Slice 2 — "Arrival": the onboarding script
 
+> **Vocabulary superseded (review 2, 30 Sep 2026).** Player-facing words follow `docs/design/review-2-answers.md` §1 and GDD §1.5: *canvass* → *talk to voters*, *flyers* → *flyers*, *ordinance* → *council rule*, *endorse* → *back*, *the slate* → *who's standing*, *nominations* → *candidates*, *the ballot* → *vote*, *the count* → *the result*, *Local Standing* → *Reputation*, *FXP* → *Party XP*, *PC* → *Political Capital*, *Battleground* (the state) → *close race*, *Groundswell* → *comeback*, *Polling Day* → *Election*. Action and order titles below were updated mechanically; rule prose keeps the design's terms. Odds and rolls are no longer shown to players (GDD §8.4): percentages quoted here are design maths, not screen text.
+
 Game designer, 29 Sep 2026; Vanguard strings revised the same day by the content-policy review (`docs/design/content-policy-review.md`). Companion to `docs/design/slice-2-cities.md` (Duskwall and Ashford content) and `docs/economy.md` §13. The architect writes the slice-2 tech design from these two documents; every rule and number here is also in the GDD (edits listed in §12).
 
 **Playtest question:** does a brand-new player understand what to do in the first 10 minutes, without a tutorial screen?
@@ -145,7 +147,7 @@ At the bottom of the suitcase, under the shirts: a ward book. Two hundred names 
 | B | Keep it to yourself for now | Some things you do alone first. | `keptBook` |
 
 **Step 2** · *Three names*
-Three names in the book have two ticks: the ones who came out for him in the rain. Their street is twenty minutes' walk. You have the leaflets and his name; it's a question of how you use them.
+Three names in the book have two ticks: the ones who came out for him in the rain. Their street is twenty minutes' walk. You have the flyers and his name; it's a question of how you use them.
 
 | Approach | Check | Chance for the reference recruit |
 |---|---|---|
@@ -155,9 +157,9 @@ Three names in the book have two ticks: the ones who came out for him in the rai
 CTA: **Walk his ward · 10 Energy**
 
 **Step 3** · the result
-- Success — *Two of the three remember him* — One cries, one puts the kettle on, one shuts the door and then opens it again. All three take a leaflet. The third asks, on the step, whether you'll be standing. You say not yet.
-- Partial — *One door opens* — New tenants at two of the three; the third remembers the name and not much else. She takes a leaflet for the landing. It's a start, and the book is still two hundred names long.
-- Failure — *Nobody home* — No one answers at any of the three. You leave a leaflet with his name written on each and walk back through the ward in the rain. The book goes back in the suitcase, for now.
+- Success — *Two of the three remember him* — One cries, one puts the kettle on, one shuts the door and then opens it again. All three take a flyer. The third asks, on the step, whether you'll be standing. You say not yet.
+- Partial — *One door opens* — New tenants at two of the three; the third remembers the name and not much else. She takes a flyer for the landing. It's a start, and the book is still two hundred names long.
+- Failure — *Nobody home* — No one answers at any of the three. You leave a flyer with his name written on each and walk back through the ward in the rain. The book goes back in the suitcase, for now.
 - Knock-on lines: *Keepsake: His ward book* · *Chapter 2, "Stand where he stood": from {date}, after your first ballot*, where `{date}` is the weekday and day-month seven City Days after the day the chapter was played (*Tuesday 6 October* for a chapter played on 29 September; §13 Q2). **Superseded in slice 3** (`slice-3-politics.md` §17 Q21): the requirement was *at Rank 2* when this was written; chapter 2 now keys off the first ballot, and its script is in that document's §17.7.
 
 ### 3.3 Clear His Name — Chapter 1: *The prison letter*

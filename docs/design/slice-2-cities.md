@@ -1,5 +1,7 @@
 # Slice 2 — "Arrival": Duskwall and Ashford content
 
+> **Vocabulary superseded (review 2, 30 Sep 2026).** Player-facing words follow `docs/design/review-2-answers.md` §1 and GDD §1.5: *canvass* → *talk to voters*, *flyers* → *flyers*, *ordinance* → *council rule*, *endorse* → *back*, *the slate* → *who's standing*, *nominations* → *candidates*, *the ballot* → *vote*, *the count* → *the result*, *Local Standing* → *Reputation*, *FXP* → *Party XP*, *PC* → *Political Capital*, *Battleground* (the state) → *close race*, *Groundswell* → *comeback*, *Polling Day* → *Election*. Action and order titles below were updated mechanically; rule prose keeps the design's terms. Odds and rolls are no longer shown to players (GDD §8.4): percentages quoted here are design maths, not screen text.
+
 Game designer, 29 Sep 2026; Duskwall revised the same day by the content-policy review (`docs/design/content-policy-review.md`: a customs town, not a garrison; ids unchanged). Companion to `docs/design/slice-2-onboarding.md` (the origin, the kit, the welcome edition and the day-1 order) and `docs/economy.md` §13. Follows the Coalport format (`docs/design/slice-1-content.md`) so the same content schema holds; everything Coalport has, each of these cities has: six locations with a kind and a map position, about twenty tier-1 actions with Success and Partial text, three jobs, a party secretary, twelve order templates and the paper's headline templates. The GDD edits are listed in the onboarding doc §12.
 
 **The rules every action here obeys are Coalport's** (`slice-1-content.md` §2.1): one roll per attempt, tier 1 never fails, §5.5 rates by type and Energy, two-stat checks average, ×3 on checked actions only, Standing +3 % per level, Party orders +25 % FXP, opinion 0.005 points per Energy drawn from Neutral first. Outcome texts are ≤ 240 characters and ≤ 4 sentences (GDD §1.2); the longest below is 224.
@@ -41,27 +43,27 @@ Rewards are Success / Partial at the §5.5 rates. E = Energy. Opinion in points 
 
 | Id | Title | Type | Std | E | XP | FXP | Iron | Opinion |
 |---|---|---|---|---|---|---|---|---|
-| `duskwall.garrison-gate.canvass` | Canvass the customs shift | canvass | STR | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `duskwall.garrison-gate.canvass` | Talk to the customs men coming off shift | canvass | STR | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `duskwall.garrison-gate.speech` | Speak from the gate steps | speech | CHA+STR | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
-| `duskwall.garrison-gate.drill` | Shift crates in the bonded store | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
+| `duskwall.garrison-gate.drill` | Lift crates in the customs store | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
 | `duskwall.garrison-gate.stores` | Work your shift in the customs stores | job (Stores hand) | — | 4 | — | — | see §1.3 | — |
-| `duskwall.quartermaster-market.canvass` | Canvass the ration queue | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `duskwall.quartermaster-market.leaflets` | Hand out leaflets between the tents | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `duskwall.quartermaster-market.canvass` | Talk to people in the ration queue | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `duskwall.quartermaster-market.leaflets` | Hand out flyers between the tents | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
 | `duskwall.quartermaster-market.speech` | Speak from the lorry bed | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
 | `duskwall.quartermaster-market.stall` | Work the market stall | job (Street vendor) | — | 3 | — | — | see §1.3 | — |
-| `duskwall.beacon-house.committee` | Sit in on the district committee | council | INT | 10 | 45 / 23 | **9 / 5** | 20 / 10 | — |
-| `duskwall.beacon-house.duplicator` | Run the duplicator | propaganda | INT | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `duskwall.beacon-house.muster` | Address the evening volunteers | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
+| `duskwall.beacon-house.committee` | Go to the district meeting | council | INT | 10 | 45 / 23 | **9 / 5** | 20 / 10 | — |
+| `duskwall.beacon-house.duplicator` | Print five hundred flyers | propaganda | INT | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `duskwall.beacon-house.muster` | Speak to the evening volunteers | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
 | `duskwall.archives.reading-room` | Study in the reading room | training (INT) | — | 20 + 2×INT | half rate | — | — | — |
-| `duskwall.archives.registers` | Search the registers | intelligence | INT | 4 | 18 / 9 | — | 8 / 4 | — |
-| `duskwall.archives.clerks` | Canvass the clerks at closing time | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `duskwall.archives.registers` | Look through the records | intelligence | INT | 4 | 18 / 9 | — | 8 / 4 | — |
+| `duskwall.archives.clerks` | Talk to the clerks at closing time | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `duskwall.goods-yard.loaders` | Talk to the loaders at the break | canvass | STR | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `duskwall.goods-yard.posters` | Paste posters on the wagons | propaganda | STR | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `duskwall.goods-yard.manifests` | Note the manifests | intelligence | INT | 3 | 14 / 7 | — | 6 / 3 | — |
+| `duskwall.goods-yard.posters` | Put up posters on the wagons | propaganda | STR | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `duskwall.goods-yard.manifests` | Note which wagons carry what | intelligence | INT | 3 | 14 / 7 | — | 6 / 3 | — |
 | `duskwall.goods-yard.lorry` | Drive the yard lorry | job (Driver) | — | 4 | — | — | see §1.3 | — |
-| `duskwall.rampart-row.canvass` | Canvass door to door | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `duskwall.rampart-row.chalk` | Chalk the slogan on the gable end | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `duskwall.rampart-row.run` | Run messages for the ward office | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
+| `duskwall.rampart-row.canvass` | Knock on doors | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `duskwall.rampart-row.chalk` | Chalk the slogan on the end wall | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `duskwall.rampart-row.run` | Run messages around the streets | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
 
 **Count by type:** canvass 5 · speech 3 · propaganda 4 · training 3 · intelligence 2 · council 1 · job 3 = **21**.
 
@@ -93,7 +95,7 @@ Same slots and rotation as Coalport (A[day mod 5], B[day mod 4], C[day mod 3]); 
 
 | Id | Slot | Order (title) | Matches | Target | Stahl's line |
 |---|---|---|---|---|---|
-| `dir.v.canvass-duskwall` | A | Canvass Duskwall | any `canvass` in Duskwall | 3 attempts | Three wards. Three reports on my desk by tonight. |
+| `dir.v.canvass-duskwall` | A | Talk to voters in Duskwall | any `canvass` in Duskwall | 3 attempts | Three wards. Three reports on my desk by tonight. |
 | `dir.v.guard-change` | A | Be at the gate | `duskwall.garrison-gate.canvass` | 2 attempts | The customs shift changes at four. Be at the gate before it. |
 | `dir.v.rampart-row` | A | Knock Rampart Row | `duskwall.rampart-row.canvass` | 2 attempts | Every door on Rampart Row. Top to bottom, no gaps. |
 | `dir.v.loaders` | A | The yard at the break | `duskwall.goods-yard.loaders` | 2 attempts | The loaders stop at noon. So do you, beside them. |
@@ -122,7 +124,7 @@ Same conditions, priorities and groups as the Clarion's (`slice-1-content.md` §
 | `hl.v.streak-5` / `-10` | personal 6 | streak hit 5 / 10 | Five / Ten Straight Shifts and Counting | {name} has not missed a shift in {streak} days. Pay is up {bonus} %. |
 | `hl.v.away` | personal 7 | 2+ days, half-pays ≥ 1 | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. |
 | `hl.v.away-no-job` | personal 7 | 2+ days, half-pays = 0 | While You Were Away | No job, so no half pay banked. Rested is full and the ward is where you left it. The customs stores are still hiring: the Jobs card is at the Fortress Gate. |
-| `hl.v.idle` | personal 8 | idle yesterday | Quiet Day on the Ramparts | No leaflets went out yesterday. Today's orders are below. |
+| `hl.v.idle` | personal 8 | idle yesterday | Quiet Day on the Ramparts | No flyers went out yesterday. Today's orders are below. |
 | `hl.v.morale-fired` | city 1 | share ≥ 80 | Vanguard Holds Duskwall at {share} % | The frontier town is of one mind. |
 | `hl.v.morale-steady` | city 1 | 60–79 | Vanguard Holds Duskwall at {share} % | "Steady," says Beacon House. Steady is not enough. |
 | `hl.v.morale-unrest` | city 1 | < 60 | Vanguard Holds Duskwall at {share} % | Unrest in Duskwall: the railwaymen question the movement. |
@@ -137,15 +139,15 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 
 #### Fortress Gate
 
-**Canvass the customs shift** (`duskwall.garrison-gate.canvass`)
-- Success — *They stop for one of their own* — The customs men come off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A senior man takes ten leaflets for the office.
-- Partial — *Most of them go past* — The night shift goes in and the day shift heads for the canteen without slowing. You press leaflets on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.
+**Talk to the customs men coming off shift** (`duskwall.garrison-gate.canvass`)
+- Success — *They stop for one of their own* — The customs men come off at four, boots loud on the cobbles. You've the shoulders for it, so they stop. Ration, rents, the checkpoint queues: you keep it short. A senior man takes ten flyers for the office.
+- Partial — *Most of them go past* — The night shift goes in and the day shift heads for the canteen without slowing. You press flyers on the stragglers. One asks if the movement can do anything about the pay. You say you'll ask.
 
 **Speak from the gate steps** (`duskwall.garrison-gate.speech`)
 - Success — *The square goes quiet* — You take the top step under the arch and pitch it to the back of the square. Order on the streets, bread at a fixed price, the frontier shut. Nobody heckles here. When you finish, the chief of customs nods once.
 - Partial — *The four o'clock bell cuts you off* — You get through prices and the checkpoint queues before the bell goes for the shift and the square empties at a trot. A few townsfolk stay to hear the end. The chief looks at his watch.
 
-**Shift crates in the bonded store** (`duskwall.garrison-gate.drill`, training STR)
+**Lift crates in the customs store** (`duskwall.garrison-gate.drill`, training STR)
 - Trained — *An hour in the bonded store* — The storeman doesn't ask which party you're with; he asks if you can get a crate of tinned beef onto the top rack. You can, by the end. Your shoulders will tell you about it tomorrow.
 
 **Work your shift in the customs stores** (`duskwall.garrison-gate.stores`, Stores hand)
@@ -153,13 +155,13 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 
 #### Customs Market
 
-**Canvass the ration queue** (`duskwall.quartermaster-market.canvass`)
-- Success — *The queue has nowhere to go* — Sixty people and one tent with sugar in it. You work the line with the price list and the leaflet. By the time the clerk shouts next, half the queue knows what the movement would do about the ration.
-- Partial — *The sugar runs out early* — Three people in, the clerk drops the flap and the queue turns into an argument. A few leaflets go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.
+**Talk to people in the ration queue** (`duskwall.quartermaster-market.canvass`)
+- Success — *The queue has nowhere to go* — Sixty people and one tent with sugar in it. You work the line with the price list and the flyer. By the time the clerk shouts next, half the queue knows what the movement would do about the ration.
+- Partial — *The sugar runs out early* — Three people in, the clerk drops the flap and the queue turns into an argument. A few flyers go into shopping bags. One woman folds hers small and says she'll read it when her husband's out.
 
-**Hand out leaflets between the tents** (`duskwall.quartermaster-market.leaflets`)
-- Success — *Quick hands, empty bag* — You work the tent rows at a trot, a leaflet into every basket before the owner looks up. The bag is empty in ten minutes and the market inspector never sees you.
-- Partial — *The inspector sees you* — Half the bag is gone when the market inspector plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The leaflets you handed out are still out there.
+**Hand out flyers between the tents** (`duskwall.quartermaster-market.leaflets`)
+- Success — *Quick hands, empty bag* — You work the tent rows at a trot, a flyer into every basket before the owner looks up. The bag is empty in ten minutes and the market inspector never sees you.
+- Partial — *The inspector sees you* — Half the bag is gone when the market inspector plants himself in the row and asks for your permit. You leave by the boot tent, slower than you'd like. The flyers you handed out are still out there.
 
 **Speak from the lorry bed** (`duskwall.quartermaster-market.speech`)
 - Success — *A crowd between the tents* — You climb onto the tailboard of a parked lorry and give it to them. Prices, the ration, who queues and who doesn't. The stallholders heckle, the crowd laughs, and by the end the laughs are on your side.
@@ -170,15 +172,15 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 
 #### Beacon House
 
-**Sit in on the district committee** (`duskwall.beacon-house.committee`)
+**Go to the district meeting** (`duskwall.beacon-house.committee`)
 - Success — *Minutes taken, motion carried* — Coffee, a wall map stuck with pins, and a chairman who likes short answers. The committee wants the ward lists redone by street and you say how. Your name goes in the minutes. In this house, that counts.
 - Partial — *A long meeting* — Two hours on the ward lists and the price of paper. You get one point in before the chairman moves on. The organiser marks you present, which is what matters this week.
 
-**Run the duplicator** (`duskwall.beacon-house.duplicator`)
+**Print five hundred flyers** (`duskwall.beacon-house.duplicator`)
 - Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred bulletins in an hour, stacked for the morning runners. Your hands are purple to the wrist and the office smells of spirit.
 - Partial — *The stencil tears* — The stencil tears at copy two hundred and the rest come out ghosted. Half a stack goes out; the other half goes in the stove. The organiser shows you how to cut the next one.
 
-**Address the evening volunteers** (`duskwall.beacon-house.muster`)
+**Speak to the evening volunteers** (`duskwall.beacon-house.muster`)
 - Success — *The yard listens* — Forty volunteers in the yard at six, caps off, waiting to be told. You tell them: which streets tonight, which doors, what to say at each. Nobody asks a question. That's the compliment here.
 - Partial — *Half the yard is thinking about supper* — You get the street list out before the back rows start shuffling. The front row writes it down, which is something. The organiser says: shorter, next time.
 
@@ -187,25 +189,25 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 **Study in the reading room** (`duskwall.archives.reading-room`, training INT)
 - Trained — *An evening with the registers* — The reading room is cold and the light is bad, but the shelves hold everything from the frontier acts to the grain returns of 1913. You leave knowing the argument better than the man who'll make it against you.
 
-**Search the registers** (`duskwall.archives.registers`)
+**Look through the records** (`duskwall.archives.registers`)
 - Success — *Names, dates, addresses* — You sign for a ledger and read it like a paper. Who moved into the new terrace by the fortress last spring, who sold a lease in a hurry, who's drawing two ration books. It goes in your notebook for later.
 - Partial — *The wrong volume* — The clerk brings the wrong year and takes an hour to find the right one. You get one address worth writing down before closing. Not nothing.
 
-**Canvass the clerks at closing time** (`duskwall.archives.clerks`)
-- Success — *The steps at five* — The clerks come down the steps at five in a body, ink on their cuffs. You know the wage scales better than they do, so they listen. One asks for three leaflets: for the office, he says.
-- Partial — *Umbrellas up* — It's raining at five and the clerks go down the steps at a run. You get leaflets to the ones waiting for the tram. One says the office already reads the Sentinel. Come back when it's dry.
+**Talk to the clerks at closing time** (`duskwall.archives.clerks`)
+- Success — *The steps at five* — The clerks come down the steps at five in a body, ink on their cuffs. You know the wage scales better than they do, so they listen. One asks for three flyers: for the office, he says.
+- Partial — *Umbrellas up* — It's raining at five and the clerks go down the steps at a run. You get flyers to the ones waiting for the tram. One says the office already reads the Sentinel. Come back when it's dry.
 
 #### Goods Yard
 
 **Talk to the loaders at the break** (`duskwall.goods-yard.loaders`)
 - Success — *They make room on the buffer* — The loaders eat on the buffers with their backs to the wind. You've the hands for the work and it shows, so they make room. By the time the whistle goes, the gang has agreed to send two men to Beacon House.
-- Partial — *Bread and silence* — The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a leaflet for later. Nobody gets up when the whistle goes, which is the loaders' way of saying maybe.
+- Partial — *Bread and silence* — The gang eats and lets you talk. A couple of nods, one argument about the coal ration that goes nowhere. The ganger takes a flyer for later. Nobody gets up when the whistle goes, which is the loaders' way of saying maybe.
 
-**Paste posters on the wagons** (`duskwall.goods-yard.posters`)
+**Put up posters on the wagons** (`duskwall.goods-yard.posters`)
 - Success — *A train's length of paper* — Bucket, brush, and a rake of empty wagons waiting for the morning. You get twelve posters up straight and high, one to a wagon. Every station between here and the capital will read them by noon.
 - Partial — *The paste won't hold* — The wind off the mountains is against you and the paste won't take on the frosted boards. Five posters stay up; the rest go under the wheels. Five is five.
 
-**Note the manifests** (`duskwall.goods-yard.manifests`)
+**Note which wagons carry what** (`duskwall.goods-yard.manifests`)
 - Success — *Wagons, firms, times* — You sit on a bollard with a paper and a pencil and watch the checker's hut. Three wagons for one firm, two of them sealed, one that leaves without a stamp. It goes in your notebook for later.
 - Partial — *Nothing much moves* — An hour on the bollard and one wagon, which is checked, stamped and shunted. Your notebook has a firm and a time. Not nothing.
 
@@ -214,15 +216,15 @@ The morale headlines use a no-break space before "%", as the Clarion's do.
 
 #### Rampart Row
 
-**Canvass door to door** (`duskwall.rampart-row.canvass`)
+**Knock on doors** (`duskwall.rampart-row.canvass`)
 - Success — *The kettle goes on* — Sixty doors below the wall. Most open a crack; a dozen open wide, and at three the kettle goes on. Railwaymen's wives talk about the curfew and the price of coal. You leave with a list of names.
-- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones on the step. One man says he's heard the movement's speeches from the wall already. Come back after the shift.
+- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the flyer through the gap and a word with the ones on the step. One man says he's heard the movement's speeches from the wall already. Come back after the shift.
 
-**Chalk the slogan on the gable end** (`duskwall.rampart-row.chalk`)
+**Chalk the slogan on the end wall** (`duskwall.rampart-row.chalk`)
 - Success — *White letters on the gable end* — The gable end at the bottom of the row is the biggest wall on the line. You get ORDER AND BREAD up in fair capitals, the movement's name beneath it, before the rent-man's boy comes round the corner. Then you're away down the entry.
 - Partial — *Half a slogan* — You get as far as ORDER AND before a window goes up and someone shouts about their wall. You finish the last word small and leave by the back entry. It reads, just about.
 
-**Run messages for the ward office** (`duskwall.rampart-row.run`, training AGI)
+**Run messages around the streets** (`duskwall.rampart-row.run`, training AGI)
 - Trained — *Every entry below the wall* — Six notes, five streets, one hour. You learn which entries connect and which end in a wall, and you learn them at a run. By the end you could do it in the dark, which is the point.
 
 ---
@@ -258,28 +260,28 @@ Where the pins land on the art: 1 on the lettered front of the big glass-roofed 
 
 | Id | Title | Type | Std | E | XP | FXP | Iron | Opinion |
 |---|---|---|---|---|---|---|---|---|
-| `ashford.gazette-house.print-room` | Canvass the print-room shift | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `ashford.gazette-house.evening-run` | Run the evening edition to the stands | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `ashford.gazette-house.wires` | Read the wires | intelligence | INT | 3 | 14 / 7 | — | 6 / 3 | — |
-| `ashford.gazette-house.newsprint` | Hump the newsprint off the lorry | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
+| `ashford.gazette-house.print-room` | Talk to the printers coming off shift | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `ashford.gazette-house.evening-run` | Slip flyers into the evening paper | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `ashford.gazette-house.wires` | Read the news as it comes in | intelligence | INT | 3 | 14 / 7 | — | 6 / 3 | — |
+| `ashford.gazette-house.newsprint` | Unload the paper lorry | training (STR) | — | 20 + 2×STR | half rate | — | — | — |
 | `ashford.gazette-house.copy-desk` | Work your shift on the copy desk | job (Copy clerk) | — | 4 | — | — | see §2.3 | — |
-| `ashford.assembly-rooms.committee` | Sit in on the ward committee | council | INT | 10 | 45 / 23 | **9 / 5** | 20 / 10 | — |
-| `ashford.assembly-rooms.duplicator` | Run the duplicator | propaganda | INT | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `ashford.assembly-rooms.letters` | Write to the lapsed members | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `ashford.university.students` | Canvass the students between lectures | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `ashford.university.union-debate` | Speak at the Union debate | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
+| `ashford.assembly-rooms.committee` | Go to the meeting | council | INT | 10 | 45 / 23 | **9 / 5** | 20 / 10 | — |
+| `ashford.assembly-rooms.duplicator` | Print five hundred flyers | propaganda | INT | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `ashford.assembly-rooms.letters` | Write to old members | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `ashford.university.students` | Talk to the students between lectures | canvass | INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `ashford.university.union-debate` | Speak in the student debate | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
 | `ashford.university.reading-room` | Study in the college reading room | training (INT) | — | 20 + 2×INT | half rate | — | — | — |
 | `ashford.courts.gallery` | Sit in the public gallery | intelligence | INT | 4 | 18 / 9 | — | 8 / 4 | — |
-| `ashford.courts.queue` | Canvass the public queue | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `ashford.courts.queue` | Talk to people in the court queue | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
 | `ashford.courts.steps` | Speak from the court steps | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
-| `ashford.bridge-street.cafes` | Canvass the café tables | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `ashford.bridge-street.leaflets` | Hand out leaflets between the stalls | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `ashford.bridge-street.cafes` | Talk to people at the café tables | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `ashford.bridge-street.leaflets` | Hand out flyers between the stalls | propaganda | AGI | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
 | `ashford.bridge-street.speech` | Speak from the bridge steps | speech | CHA+INT | 12 | 54 / 27 | 7 / 4 | 24 / 12 | 0.06 / 0.03 |
 | `ashford.bridge-street.news-stand` | Work the news-stand | job (Street vendor) | — | 3 | — | — | see §2.3 | — |
 | `ashford.bridge-street.van` | Drive the market van | job (Driver) | — | 4 | — | — | see §2.3 | — |
-| `ashford.weavers-row.canvass` | Canvass door to door | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
-| `ashford.weavers-row.bills` | Paste bills on the yard hoardings | propaganda | STR | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
-| `ashford.weavers-row.run` | Run messages for the tenants' committee | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
+| `ashford.weavers-row.canvass` | Knock on doors | canvass | CHA+INT | 10 | 45 / 23 | 6 / 3 | 20 / 10 | 0.05 / 0.025 |
+| `ashford.weavers-row.bills` | Put up posters on the yard fences | propaganda | STR | 8 | 36 / 18 | 5 / 2 | 16 / 8 | 0.04 / 0.02 |
+| `ashford.weavers-row.run` | Run messages up and down the stairs | training (AGI) | — | 20 + 2×AGI | half rate | — | — | — |
 
 **Count by type:** canvass 6 · speech 3 · propaganda 4 · training 3 · intelligence 2 · council 1 · job 3 = **22**.
 
@@ -311,12 +313,12 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 
 | Id | Slot | Order (title) | Matches | Target | Grey's line |
 |---|---|---|---|---|---|
-| `dir.a.canvass-ashford` | A | Canvass Ashford | any `canvass` in Ashford | 3 attempts | Three wards, three conversations. Off you go. |
-| `dir.a.print-room` | A | Be at the loading bay | `ashford.gazette-house.print-room` | 2 attempts | The print-room shift comes off at four. Be there with the leaflets. |
+| `dir.a.canvass-ashford` | A | Talk to voters in Ashford | any `canvass` in Ashford | 3 attempts | Three wards, three conversations. Off you go. |
+| `dir.a.print-room` | A | Be at the loading bay | `ashford.gazette-house.print-room` | 2 attempts | The print-room shift comes off at four. Be there with the flyers. |
 | `dir.a.weavers-row` | A | Knock Weavers' Row | `ashford.weavers-row.canvass` | 2 attempts | Sixty doors on Weavers' Row. Knock them all, and be polite. |
 | `dir.a.students` | A | The quad at eleven | `ashford.university.students` | 2 attempts | The students come out at eleven. Catch them before the coffee house does. |
 | `dir.a.court-queue` | A | The court steps | `ashford.courts.queue` | 2 attempts | The public queue at the Courts is bored and can't leave. Perfect. |
-| `dir.a.paper-the-town` | B | Paper the town | any `propaganda` in Ashford | 3 attempts | The leaflets are printed. They're no use to anyone in the Rooms. |
+| `dir.a.paper-the-town` | B | Paper the town | any `propaganda` in Ashford | 3 attempts | The flyers are printed. They're no use to anyone in the Rooms. |
 | `dir.a.say-it` | B | Get up and say it | any `speech` in Ashford | 1 attempt | Somebody has to speak today. It's you. |
 | `dir.a.report` | B | Report to the Rooms | `ashford.assembly-rooms.committee` | 1 attempt | Committee at six. Bring the ward returns and a pencil. |
 | `dir.a.ears-open` | B | Keep your ears open | any `intelligence` in Ashford | 2 attempts | The gallery, or the wire room. Write it down. |
@@ -340,7 +342,7 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 | `hl.a.streak-5` / `-10` | personal 6 | streak hit 5 / 10 | Five / Ten Straight Shifts and Counting | {name} has not missed a shift in {streak} days. Pay is up {bonus} %. |
 | `hl.a.away` | personal 7 | 2+ days, half-pays ≥ 1 | While You Were Away | {days} days of half pay banked ({iron} Iron). Rested is full. The ward is where you left it. |
 | `hl.a.away-no-job` | personal 7 | 2+ days, half-pays = 0 | While You Were Away | No job, so no half pay banked. Rested is full and the ward is where you left it. The Gazette is still hiring: the Jobs card is at Gazette House. |
-| `hl.a.idle` | personal 8 | idle yesterday | Quiet Day in the Wards | No leaflets went out yesterday. Today's orders are below. |
+| `hl.a.idle` | personal 8 | idle yesterday | Quiet Day in the Wards | No flyers went out yesterday. Today's orders are below. |
 | `hl.a.morale-fired` | city 1 | share ≥ 80 | Alliance Holds Ashford at {share} % | The whole town is reading the Gazette. |
 | `hl.a.morale-steady` | city 1 | 60–79 | Alliance Holds Ashford at {share} % | "Steady," say the Rooms. Steady doesn't win elections. |
 | `hl.a.morale-unrest` | city 1 | < 60 | Alliance Holds Ashford at {share} % | Unrest in Ashford: the market traders question the Alliance. |
@@ -353,19 +355,19 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 
 #### Gazette House
 
-**Canvass the print-room shift** (`ashford.gazette-house.print-room`)
-- Success — *The presses stop, and they listen* — The print-room shift comes off at four with ink to the elbow. They read for a living, so you don't waste words: rents, the tram fare, the licensing bill. A compositor takes ten leaflets for the stone.
-- Partial — *Most of them head for the tram* — The shift comes off in a hurry and most of it makes for the tram. You press leaflets on the ones who slow down. Two stop to argue the licensing bill; one gives you his street. A start.
+**Talk to the printers coming off shift** (`ashford.gazette-house.print-room`)
+- Success — *The presses stop, and they listen* — The print-room shift comes off at four with ink to the elbow. They read for a living, so you don't waste words: rents, the tram fare, the licensing bill. A compositor takes ten flyers for the stone.
+- Partial — *Most of them head for the tram* — The shift comes off in a hurry and most of it makes for the tram. You press flyers on the ones who slow down. Two stop to argue the licensing bill; one gives you his street. A start.
 
-**Run the evening edition to the stands** (`ashford.gazette-house.evening-run`)
-- Success — *Every stand by six* — A bundle under each arm and the Alliance leaflet folded inside every copy. Bridge Street, the station, the college gate, all before the church clock strikes six. Nobody asks whose leaflet it is.
-- Partial — *The bundle splits* — The string goes on Bridge Street and half the edition ends up in the gutter. You save what you can and get it to two stands out of four. The leaflets inside the dry ones are still out there.
+**Slip flyers into the evening paper** (`ashford.gazette-house.evening-run`)
+- Success — *Every stand by six* — A bundle under each arm and the Alliance flyer folded inside every copy. Bridge Street, the station, the college gate, all before the church clock strikes six. Nobody asks whose flyer it is.
+- Partial — *The bundle splits* — The string goes on Bridge Street and half the edition ends up in the gutter. You save what you can and get it to two stands out of four. The flyers inside the dry ones are still out there.
 
-**Read the wires** (`ashford.gazette-house.wires`)
+**Read the news as it comes in** (`ashford.gazette-house.wires`)
 - Success — *The wire room at midnight* — The night editor lets you sit by the wire machine if you keep quiet. Irongate, Clearwater, the frontier: who's meeting whom, which bill is stuck in committee. Two names go in your notebook.
 - Partial — *A slow night* — The machine chatters about grain prices and a regatta. You pick up one thing worth writing down before the night editor wants his chair back. Come back on a sitting night.
 
-**Hump the newsprint off the lorry** (`ashford.gazette-house.newsprint`, training STR)
+**Unload the paper lorry** (`ashford.gazette-house.newsprint`, training STR)
 - Trained — *Twenty rolls, one lorry* — The newsprint comes on a lorry at dawn in rolls that need two men. You take one end and don't ask to be paid. Your back will tell you about it tomorrow; that's the point.
 
 **Work your shift on the copy desk** (`ashford.gazette-house.copy-desk`, Copy clerk)
@@ -373,27 +375,27 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 
 #### Assembly Rooms
 
-**Sit in on the ward committee** (`ashford.assembly-rooms.committee`)
+**Go to the meeting** (`ashford.assembly-rooms.committee`)
 - Success — *Minutes taken, motion carried* — Tea, a ward map on the piano, and a chairman who believes in procedure. The committee wants the canvass returns redone by street and you say how. Your name goes in the minutes. In these rooms, that counts.
 - Partial — *A long meeting* — Two hours on the canvass returns and a point of order about the biscuits. You get one word in before the chairman moves on. The agent marks you present, which is what matters this week.
 
-**Run the duplicator** (`ashford.assembly-rooms.duplicator`)
-- Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred leaflets in an hour, stacked for the morning runners. Your hands are purple to the wrist and the landing smells of spirit.
+**Print five hundred flyers** (`ashford.assembly-rooms.duplicator`)
+- Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred flyers in an hour, stacked for the morning runners. Your hands are purple to the wrist and the landing smells of spirit.
 - Partial — *The stencil tears* — The stencil tears at copy two hundred and the rest come out ghosted. Half a stack goes out; the other half goes in the grate. The agent shows you how to cut the next one.
 
-**Write to the lapsed members** (`ashford.assembly-rooms.letters`)
+**Write to old members** (`ashford.assembly-rooms.letters`)
 - Success — *Forty letters, forty stamps* — The card index has three hundred names who paid a subscription once. You pick forty and write to each by hand: what the Alliance is doing about the thing they cared about. Two reply by return, with cheques.
 - Partial — *The index is out of date* — Half the addresses come back marked gone away. You write to the rest and get one reply, from a woman who says her husband died but she'll come to the meeting herself.
 
 #### University Quad
 
-**Canvass the students between lectures** (`ashford.university.students`)
-- Success — *They argue, then they listen* — The eleven o'clock crowd comes out arguing already. You give them something to argue about: the licensing bill, the franchise, rents in the old town. Half take a leaflet; a dozen take two. One asks where the Rooms are.
+**Talk to the students between lectures** (`ashford.university.students`)
+- Success — *They argue, then they listen* — The eleven o'clock crowd comes out arguing already. You give them something to argue about: the licensing bill, the franchise, rents in the old town. Half take a flyer; a dozen take two. One asks where the Rooms are.
 - Partial — *The coffee house wins* — The crowd is across the quad and into the coffee house before you've said franchise. You catch the ones who stop to light a pipe. A law student wants to argue clause four. You let him.
 
-**Speak at the Union debate** (`ashford.university.union-debate`)
+**Speak in the student debate** (`ashford.university.union-debate`)
 - Success — *The motion carries* — The Debating Union takes anyone who can hold the floor for ten minutes. You hold it for twelve: the republic, the courts, the right to be wrong in print. The house divides and the motion carries. A don asks your name.
-- Partial — *Points of order* — You get six minutes in before the other side starts raising points of order and the chair enjoys them. The motion is lost by four votes. Two undergraduates ask for a leaflet on the way out.
+- Partial — *Points of order* — You get six minutes in before the other side starts raising points of order and the chair enjoys them. The motion is lost by four votes. Two undergraduates ask for a flyer on the way out.
 
 **Study in the college reading room** (`ashford.university.reading-room`, training INT)
 - Trained — *An evening under the dome* — The reading room stays open till ten and nobody asks for a college card after six. Blue books, the debates, the electoral acts. You leave knowing the argument better than the man who'll make it against you.
@@ -404,9 +406,9 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 - Success — *Names from the dock* — Two hours in the gallery with a pencil. A brewery foreman up for short measure, a landlord for a fire escape that wasn't, a clerk who won't say who paid him. Three names go in your notebook.
 - Partial — *A dull list* — Debt, debt, a dog and a drunk. You pick up one name worth writing down before the court rises for lunch. Come back on a sessions day.
 
-**Canvass the public queue** (`ashford.courts.queue`)
-- Success — *A captive audience* — The queue for the gallery is bored, cold and can't leave. You work it with the leaflet and the case list. Half of them have a grievance with a landlord already; by the door, most have the Alliance's line on it too.
-- Partial — *The doors open early* — The usher opens up at half past nine and the queue becomes a crowd on the stairs. A few leaflets go into coat pockets. One old man says he'll read it in the gallery, which is more than most.
+**Talk to people in the court queue** (`ashford.courts.queue`)
+- Success — *A captive audience* — The queue for the gallery is bored, cold and can't leave. You work it with the flyer and the case list. Half of them have a grievance with a landlord already; by the door, most have the Alliance's line on it too.
+- Partial — *The doors open early* — The usher opens up at half past nine and the queue becomes a crowd on the stairs. A few flyers go into coat pockets. One old man says he'll read it in the gallery, which is more than most.
 
 **Speak from the court steps** (`ashford.courts.steps`)
 - Success — *The square stops* — The top step at the lunch adjournment, with the tram stop for a gallery. Fair trials, fair rents, a press that prints what it finds. A barrister heckles and you quote his own case back at him. The square laughs on your side.
@@ -414,13 +416,13 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 
 #### Bridge Street
 
-**Canvass the café tables** (`ashford.bridge-street.cafes`)
-- Success — *A chair at every table* — The pavement tables are full by ten. You work them one by one, a chair borrowed at each. Rents, the tram fare, the licensing bill. By the third café the waiters know your name, and one has taken a leaflet for the kitchen.
-- Partial — *Nobody wants company* — It's a reading morning and the tables are hidden behind the Gazette. You get a word at three of them and a leaflet under the saucer at the rest. One man lowers his paper to argue clause four. That's a start.
+**Talk to people at the café tables** (`ashford.bridge-street.cafes`)
+- Success — *A chair at every table* — The pavement tables are full by ten. You work them one by one, a chair borrowed at each. Rents, the tram fare, the licensing bill. By the third café the waiters know your name, and one has taken a flyer for the kitchen.
+- Partial — *Nobody wants company* — It's a reading morning and the tables are hidden behind the Gazette. You get a word at three of them and a flyer under the saucer at the rest. One man lowers his paper to argue clause four. That's a start.
 
-**Hand out leaflets between the stalls** (`ashford.bridge-street.leaflets`)
-- Success — *Quick hands, empty bag* — You work the stalls at a trot, a leaflet into every basket before its owner has noticed. The bag is empty in ten minutes and the market beadle never sees you.
-- Partial — *The beadle sees you* — Half the bag is gone when the market beadle plants himself in the aisle and asks about your permit. You leave by the bookstall, slower than you'd like. The leaflets you handed out are still out there.
+**Hand out flyers between the stalls** (`ashford.bridge-street.leaflets`)
+- Success — *Quick hands, empty bag* — You work the stalls at a trot, a flyer into every basket before its owner has noticed. The bag is empty in ten minutes and the market beadle never sees you.
+- Partial — *The beadle sees you* — Half the bag is gone when the market beadle plants himself in the aisle and asks about your permit. You leave by the bookstall, slower than you'd like. The flyers you handed out are still out there.
 
 **Speak from the bridge steps** (`ashford.bridge-street.speech`)
 - Success — *A crowd on the bridge* — You take the steps at the bridge end with the river behind you. Prices, rents, who votes and who can't. The fishwives heckle, the crowd laughs, and by the end the laughs are on your side.
@@ -434,15 +436,15 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 
 #### Weavers' Row
 
-**Canvass door to door** (`ashford.weavers-row.canvass`)
+**Knock on doors** (`ashford.weavers-row.canvass`)
 - Success — *The kettle goes on* — Sixty doors up four flights. Most open a crack; a dozen open wide, and at three of them the kettle goes on. The fire escape, the rent, the landlord nobody has met. You leave with a list of names and a case for the Courts.
-- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones on the landing. One woman says her son's at the college already. Come back on Sunday.
+- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the flyer through the gap and a word with the ones on the landing. One woman says her son's at the college already. Come back on Sunday.
 
-**Paste bills on the yard hoardings** (`ashford.weavers-row.bills`)
+**Put up posters on the yard fences** (`ashford.weavers-row.bills`)
 - Success — *A yard's worth of paper* — Bucket, brush, and the hoardings round the builder's yard. You get twelve bills up straight and high enough that nobody's tearing them down without a ladder. Every window on four floors will read them.
 - Partial — *The paste won't hold* — The rain is against you and the paste won't take on the wet boards. Five bills stay up; the rest go into the yard. Five is five.
 
-**Run messages for the tenants' committee** (`ashford.weavers-row.run`, training AGI)
+**Run messages up and down the stairs** (`ashford.weavers-row.run`, training AGI)
 - Trained — *Every stair in the block* — Six notes, four stairwells, one hour. You learn which landings connect and which end in a locked door, and you learn them at a run. By the end you could do it in the dark.
 
 ---

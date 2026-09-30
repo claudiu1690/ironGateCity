@@ -1,5 +1,7 @@
 # Slice 4 — "The battleground": travel, Irongate's districts, residence, the three-way count, Issues and the ledger
 
+> **Vocabulary superseded (review 2, 30 Sep 2026).** Player-facing words follow `docs/design/review-2-answers.md` §1 and GDD §1.5: *canvass* → *talk to voters*, *flyers* → *flyers*, *ordinance* → *council rule*, *endorse* → *back*, *the slate* → *who's standing*, *nominations* → *candidates*, *the ballot* → *vote*, *the count* → *the result*, *Local Standing* → *Reputation*, *FXP* → *Party XP*, *PC* → *Political Capital*, *Battleground* (the state) → *close race*, *Groundswell* → *comeback*, *Polling Day* → *Election*. Action and order titles below were updated mechanically; rule prose keeps the design's terms. Odds and rolls are no longer shown to players (GDD §8.4): percentages quoted here are design maths, not screen text.
+
 Game designer, 29 Sep 2026. Companion to `docs/design/slice-4-screens.md` (the screen specs) and `docs/economy.md` §15. The architect writes the slice-4 tech design from these two documents; every rule and number here is also in the GDD (edits listed in §16).
 
 **Playtest question:** do players choose to move to the capital, and does the three-way fight feel alive?
@@ -82,17 +84,17 @@ Every card: one setup (≤ 240 characters), two or three choices, each with a de
 
 | Choice | Detail line | Outcome |
 |---|---|---|
-| **Talk politics with him** | CHA+INT check · +6 FXP · +0.03 opinion in {destination} | Success — *He'll think about it* — By the second tunnel he has your leaflet folded in the Herald and is arguing your side with the woman by the door. "I'm not saying you're right," he says at the station. "I'm saying I'll think about it." · Partial (+3 FXP, +0.015) — *He talks you into a corner* — He knows the tram fares to the halfpenny and the names of every councillor since the war. You hold your own for a stop and a half. He takes the leaflet anyway, for the crossword on the back. |
+| **Talk politics with him** | CHA+INT check · +6 FXP · +0.03 opinion in {destination} | Success — *He'll think about it* — By the second tunnel he has your flyer folded in the Herald and is arguing your side with the woman by the door. "I'm not saying you're right," he says at the station. "I'm saying I'll think about it." · Partial (+3 FXP, +0.015) — *He talks you into a corner* — He knows the tram fares to the halfpenny and the names of every councillor since the war. You hold your own for a stop and a half. He takes the flyer anyway, for the crossword on the back. |
 | **Let him talk** | +14 XP | *Five districts, explained* — You let him run. Who holds the Hill, which paper the Quays read, why nothing ever passes in the Government Quarter. By the last bridge you know the capital better than most people who live in it. |
 | *Ignore* | Nothing happens | *You nod at the window until he gives up. You arrive as you left.* |
 
-### 3.2 Leaflets on the seats (`jev.leaflets`)
+### 3.2 Flyers on the seats (`jev.leaflets`)
 
-*Somebody has been through the carriage before you: a rival's leaflet on every seat, still warm from the press. Your own bag has forty in it and the conductor is two carriages away.*
+*Somebody has been through the carriage before you: a rival's flyer on every seat, still warm from the press. Your own bag has forty in it and the conductor is two carriages away.*
 
 | Choice | Detail line | Outcome |
 |---|---|---|
-| **Swap them for yours** | AGI check · +0.05 opinion in {destination} · +5 FXP | Success — *Forty seats, forty leaflets* — You work the carriage between stations, theirs into your bag and yours onto the seat. Nobody looks up from a newspaper. The train pulls in with a different opinion on every seat. · Partial (+0.025, +2) — *Half the carriage* — You get to the middle door before the conductor comes through and have to sit down with a lap full of somebody else's paper. Half the seats are yours. Half is half. |
+| **Swap them for yours** | AGI check · +0.05 opinion in {destination} · +5 FXP | Success — *Forty seats, forty flyers* — You work the carriage between stations, theirs into your bag and yours onto the seat. Nobody looks up from a newspaper. The train pulls in with a different opinion on every seat. · Partial (+0.025, +2) — *Half the carriage* — You get to the middle door before the conductor comes through and have to sit down with a lap full of somebody else's paper. Half the seats are yours. Half is half. |
 | **Read theirs** | +14 XP | *Know the other side* — You read it twice. It's not bad: short sentences, one promise, a name at the bottom. You'll write a better one. You leave it on the seat for the next passenger to argue with. |
 | *Ignore* | | *You leave them where they are. Paper is only paper.* |
 
@@ -128,7 +130,7 @@ Stubbed: in slice 5 the Partial on *Carry it* adds **+10 Heat** (the mockup's li
 | Choice | Detail line | Outcome |
 |---|---|---|
 | **Give her a line** | CHA+INT check · +10 momentum on {issue} · your name in the Herald | Success — *Quoted* — You give her one sentence and she writes it down whole, which almost never happens. "Tomorrow's edition, page two, if the sub doesn't cut it." He doesn't. · Partial (+5 momentum, no line) — *Paraphrased* — You give her three sentences and she keeps the weakest half of one. It's roughly what you meant. The branch's name is spelled right, which is the main thing. |
-| **Give her the leaflet** | +3 FXP | *For the file* — "No comment, but this says it better." She reads it on the spot and puts it in the satchel. Reporters keep everything. That one will turn up. |
+| **Give her the flyer** | +3 FXP | *For the file* — "No comment, but this says it better." She reads it on the spot and puts it in the satchel. Reporters keep everything. That one will turn up. |
 | *Ignore* | | *You say you're not a party person. She doesn't believe you, and moves on.* |
 
 The In Print line (Success only) is `hl.quoted` in the next edition: **{name} Quoted in the Herald on {issue}** · *"One sentence, printed whole," says the reporter. The branch has cut it out.* The reporter is the unassigned portrait `adler.png` reserved in slice 2; she is not a Dossier NPC yet.
@@ -139,7 +141,7 @@ The In Print line (Success only) is `hl.quoted` in the next edition: **{name} Qu
 
 | Choice | Detail line | Outcome |
 |---|---|---|
-| **Work the waiting room** | INT check · +0.05 opinion in {destination} · +6 FXP | Success — *A captive audience* — Thirty people, one stove and nowhere to go. You work the benches with the leaflet and the timetable. By the time the signal drops, the waiting room has an opinion it didn't have before. · Partial (+0.025, +3) — *The signal drops early* — You've done one bench when the guard shouts and the room empties for the train. A few leaflets go into coat pockets. One woman says she'll read it if the train's slow, which it is. |
+| **Work the waiting room** | INT check · +0.05 opinion in {destination} · +6 FXP | Success — *A captive audience* — Thirty people, one stove and nowhere to go. You work the benches with the flyer and the timetable. By the time the signal drops, the waiting room has an opinion it didn't have before. · Partial (+0.025, +3) — *The signal drops early* — You've done one bench when the guard shouts and the room empties for the train. A few flyers go into coat pockets. One woman says she'll read it if the train's slow, which it is. |
 | **Doze** | +10 Rested | *A quarter of an hour* — You put your hat over your eyes and let the halt happen without you. The guard wakes you when the signal drops. Fifteen minutes you didn't know you needed. |
 | *Ignore* | | *You stare at the signal until it changes. The train goes on.* |
 
@@ -264,72 +266,72 @@ Rewards are Success / Partial at the §5.5 rates by type and Energy (the table i
 |---|---|---|---|---|
 | **Government Quarter** | | | | |
 | `irongate.parliament.gallery` | Watch from the public gallery | intelligence | INT | 4 |
-| `irongate.parliament.lobby` | Canvass the lobby clerks | canvass | INT | 10 |
+| `irongate.parliament.lobby` | Talk to the lobby clerks | canvass | INT | 10 |
 | `irongate.parliament.steps` | Speak from the Parliament steps | speech | CHA+INT | 12 |
-| `irongate.forecourt.canvass` | Canvass the one o'clock crowd | canvass | CHA+INT | 10 |
-| `irongate.forecourt.leaflets` | Leaflet the tram stops on the Forecourt | propaganda | AGI | 8 |
+| `irongate.forecourt.canvass` | Talk to the one o'clock crowd | canvass | CHA+INT | 10 |
+| `irongate.forecourt.leaflets` | Hand out flyers at the tram stops on the Forecourt | propaganda | AGI | 8 |
 | `irongate.forecourt.speech` | Speak beneath the statue | speech | CHA+INT | 12 |
-| `irongate.ministries.clerks` | Canvass the clerks at five | canvass | INT | 10 |
+| `irongate.ministries.clerks` | Talk to the clerks at five | canvass | INT | 10 |
 | `irongate.ministries.notices` | Read the notice boards | intelligence | INT | 3 |
-| `irongate.supreme-court.queue` | Canvass the petitioners' queue | canvass | INT | 10 |
+| `irongate.supreme-court.queue` | Talk to people in the petitioners' queue | canvass | INT | 10 |
 | `irongate.supreme-court.law-library` | Study in the law library | training (INT) | — | 20 + 2×INT |
-| `irongate.opera.foyer` | Canvass the foyer at the interval | canvass | CHA+INT | 10 |
+| `irongate.opera.foyer` | Talk to people in the foyer at the interval | canvass | CHA+INT | 10 |
 | `irongate.opera.boxes` | Watch the boxes | intelligence | INT | 4 |
-| `irongate.chancery-row.chambers` | Canvass the chambers | canvass | INT | 10 |
-| `irongate.chancery-row.bills` | Paste bills on the chambers' railings | propaganda | STR | 8 |
+| `irongate.chancery-row.chambers` | Talk to the lawyers' clerks | canvass | INT | 10 |
+| `irongate.chancery-row.bills` | Put up posters on the lawyers' railings | propaganda | STR | 8 |
 | **Old Town** | | | | |
-| `irongate.herald-house.print-room` | Canvass the print-room shift | canvass | INT | 10 |
-| `irongate.herald-house.wires` | Read the wires | intelligence | INT | 3 |
-| `irongate.concord-house.committee` | Sit in on the capital committee · *members only* | council | INT | 10 |
-| `irongate.concord-house.duplicator` | Run the duplicator · *members only* | propaganda | INT | 8 |
-| `irongate.basilica-square.canvass` | Canvass the steps after Mass | canvass | CHA+INT | 10 |
+| `irongate.herald-house.print-room` | Talk to the printers coming off shift | canvass | INT | 10 |
+| `irongate.herald-house.wires` | Read the news as it comes in | intelligence | INT | 3 |
+| `irongate.concord-house.committee` | Go to the capital meeting · *members only* | council | INT | 10 |
+| `irongate.concord-house.duplicator` | Print five hundred flyers · *members only* | propaganda | INT | 8 |
+| `irongate.basilica-square.canvass` | Talk to people on the steps after Mass | canvass | CHA+INT | 10 |
 | `irongate.basilica-square.speech` | Speak from the basilica steps | speech | CHA+INT | 12 |
-| `irongate.st-agnes.visitors` | Canvass the visitors' queue | canvass | INT | 10 |
+| `irongate.st-agnes.visitors` | Talk to people in the visitors' queue | canvass | INT | 10 |
 | `irongate.st-agnes.porters` | Carry for the porters | training (STR) | — | 20 + 2×STR |
-| `irongate.lantern-lane.cafes` | Canvass the café tables | canvass | CHA+INT | 10 |
-| `irongate.lantern-lane.bookshops` | Leave leaflets in the bookshops | propaganda | AGI | 8 |
+| `irongate.lantern-lane.cafes` | Talk to people at the café tables | canvass | CHA+INT | 10 |
+| `irongate.lantern-lane.bookshops` | Leave flyers in the bookshops | propaganda | AGI | 8 |
 | `irongate.press-club.bar` | Listen at the club bar | intelligence | INT | 3 |
 | `irongate.press-club.debate` | Speak at the Thursday debate | speech | CHA+INT | 12 |
 | **Station & Market** | | | | |
-| `irongate.market-square.tram-queue` | Canvass the tram queue | canvass | INT | 10 |
+| `irongate.market-square.tram-queue` | Talk to people in the tram queue | canvass | INT | 10 |
 | `irongate.market-square.speech` | Speak from the market column | speech | CHA+INT | 12 |
-| `irongate.market-square.leaflets` | Leaflet between the stalls | propaganda | AGI | 8 |
+| `irongate.market-square.leaflets` | Hand out flyers between the stalls | propaganda | AGI | 8 |
 | `irongate.market-square.stall` | Work the stall | job (Street vendor) | — | 3 |
-| `irongate.tram-junction.canvass` | Canvass the platforms | canvass | CHA+INT | 10 |
-| `irongate.tram-junction.posters` | Paste posters on the tram shelters | propaganda | STR | 8 |
-| `irongate.central-station.arrivals` | Canvass the arrivals hall | canvass | INT | 10 |
+| `irongate.tram-junction.canvass` | Talk to people on the platforms | canvass | CHA+INT | 10 |
+| `irongate.tram-junction.posters` | Put up posters on the tram shelters | propaganda | STR | 8 |
+| `irongate.central-station.arrivals` | Talk to people in the arrivals hall | canvass | INT | 10 |
 | `irongate.central-station.boards` | Watch the platforms | intelligence | INT | 4 |
 | `irongate.central-station.platforms` | Run the platforms for the stationmaster | training (AGI) | — | 20 + 2×AGI |
 | `irongate.central-station.porter` | Work a shift as a porter | job (Porter) | — | 4 |
-| `irongate.grand-hotel.lobby` | Canvass the lobby | canvass | CHA+INT | 10 |
-| `irongate.bombed-blocks.crews` | Canvass the repair crews | canvass | STR | 10 |
+| `irongate.grand-hotel.lobby` | Talk to people in the lobby | canvass | CHA+INT | 10 |
+| `irongate.bombed-blocks.crews` | Talk to the repair crews | canvass | STR | 10 |
 | `irongate.bombed-blocks.hoardings` | Chalk the hoardings | propaganda | AGI | 8 |
 | `irongate.station-buffet.counter` | Listen at the buffet counter | intelligence | INT | 3 |
 | `irongate.station-buffet.tables` | Speak to the night-shift tables | speech | CHA+STR | 12 |
 | **Eastside** | | | | |
-| `irongate.union-house.committee` | Sit in on the capital committee · *members only* | council | INT | 10 |
-| `irongate.union-house.duplicator` | Run the duplicator · *members only* | propaganda | INT | 8 |
-| `irongate.riverside-quays.dockers` | Canvass the dockers at the break | canvass | STR | 10 |
+| `irongate.union-house.committee` | Go to the capital meeting · *members only* | council | INT | 10 |
+| `irongate.union-house.duplicator` | Print five hundred flyers · *members only* | propaganda | INT | 8 |
+| `irongate.riverside-quays.dockers` | Talk to the dockers at the break | canvass | STR | 10 |
 | `irongate.riverside-quays.bale` | Speak from a bale | speech | CHA+STR | 12 |
-| `irongate.riverside-quays.manifests` | Note the manifests | intelligence | INT | 3 |
+| `irongate.riverside-quays.manifests` | Note which barges carry what | intelligence | INT | 3 |
 | `irongate.riverside-quays.lorry` | Drive the quay lorry | job (Driver) | — | 4 |
-| `irongate.ironworks-gate.canvass` | Canvass the shift change | canvass | STR | 10 |
-| `irongate.ironworks-gate.posters` | Paste posters on the works wall | propaganda | STR | 8 |
+| `irongate.ironworks-gate.canvass` | Talk to the workers coming off shift | canvass | STR | 10 |
+| `irongate.ironworks-gate.posters` | Put up posters on the works wall | propaganda | STR | 8 |
 | `irongate.red-lantern.listen` | Listen at the bar | intelligence | INT | 3 |
-| `irongate.foundry-row.canvass` | Canvass door to door | canvass | CHA+INT | 10 |
-| `irongate.foundry-row.run` | Run messages for the tenants' committee | training (AGI) | — | 20 + 2×AGI |
+| `irongate.foundry-row.canvass` | Knock on doors | canvass | CHA+INT | 10 |
+| `irongate.foundry-row.run` | Run messages up and down the stairs | training (AGI) | — | 20 + 2×AGI |
 | `irongate.iron-bridge.speech` | Speak from the bridge end | speech | CHA+INT | 12 |
-| `irongate.iron-bridge.leaflets` | Leaflet the bridge at the shift change | propaganda | AGI | 8 |
+| `irongate.iron-bridge.leaflets` | Hand out flyers on the bridge at the shift change | propaganda | AGI | 8 |
 | **Garrison Hill** | | | | |
-| `irongate.vanguard-house.committee` | Sit in on the capital committee · *members only* | council | INT | 10 |
+| `irongate.vanguard-house.committee` | Go to the capital meeting · *members only* | council | INT | 10 |
 | `irongate.vanguard-house.gymnasium` | Train in the gymnasium · *members only* | training (STR) | — | 20 + 2×STR |
-| `irongate.police-hq.permits` | Canvass the permits queue | canvass | INT | 10 |
-| `irongate.police-hq.gazette` | Read the police gazette | intelligence | INT | 4 |
-| `irongate.esplanade.canvass` | Canvass the Sunday walkers | canvass | CHA+INT | 10 |
+| `irongate.police-hq.permits` | Talk to people in the permits queue | canvass | INT | 10 |
+| `irongate.police-hq.gazette` | Read the police notices | intelligence | INT | 4 |
+| `irongate.esplanade.canvass` | Talk to the Sunday walkers | canvass | CHA+INT | 10 |
 | `irongate.esplanade.bandstand` | Speak from the bandstand | speech | CHA+STR | 12 |
-| `irongate.esplanade.leaflets` | Leaflet the tram terminus | propaganda | AGI | 8 |
-| `irongate.villas.canvass` | Canvass the villas | canvass | CHA+INT | 10 |
-| `irongate.villas.bills` | Paste bills on the garden walls | propaganda | STR | 8 |
+| `irongate.esplanade.leaflets` | Hand out flyers at the tram terminus | propaganda | AGI | 8 |
+| `irongate.villas.canvass` | Knock on the villas' doors | canvass | CHA+INT | 10 |
+| `irongate.villas.bills` | Put up posters on the garden walls | propaganda | STR | 8 |
 | `irongate.gate-tavern.listen` | Listen at the tavern | intelligence | INT | 3 |
 | `irongate.gate-tavern.speech` | Speak to the tavern | speech | CHA+STR | 12 |
 
@@ -355,9 +357,9 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 - Success — *Who sat with whom* — Two hours in the gallery with a pencil. Who left before the division, who came back with whom, which minister read his notes and which read the Herald. Three names go in your notebook.
 - Partial — *A dull sitting* — Estimates, a point of order, estimates again. You get one name worth writing down before the Speaker rises for lunch. Come back on a division day.
 
-**Canvass the lobby clerks** (`irongate.parliament.lobby`)
-- Success — *They know the numbers* — The lobby clerks come out at six with the day's division lists under their arms. They read for a living, so you don't waste words. One takes ten leaflets for the messengers' room, where the real votes are counted.
-- Partial — *Most of them have a tram to catch* — The clerks come down the steps in a body and most of it heads for the Forecourt. You press leaflets on the slow ones. Two stop to correct your figures, which is a start.
+**Talk to the lobby clerks** (`irongate.parliament.lobby`)
+- Success — *They know the numbers* — The lobby clerks come out at six with the day's division lists under their arms. They read for a living, so you don't waste words. One takes ten flyers for the messengers' room, where the real votes are counted.
+- Partial — *Most of them have a tram to catch* — The clerks come down the steps in a body and most of it heads for the Forecourt. You press flyers on the slow ones. Two stop to correct your figures, which is a start.
 
 **Speak from the Parliament steps** (`irongate.parliament.steps`)
 - Success — *The Quarter stops to listen* — The top step at the lunch adjournment, with the whole Forecourt for a gallery. You keep it short and keep it about them: rents, the cuts, who decides. A deputy heckles and the crowd laughs on your side.
@@ -365,12 +367,12 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### The Forecourt
 
-**Canvass the one o'clock crowd** (`irongate.forecourt.canvass`)
-- Success — *A thousand lunches* — At one the Quarter comes out to eat on the Forecourt and has nowhere to go for an hour. You work the benches with the leaflet and the case for your party. By two, half of them know what you'd do about the cuts.
-- Partial — *It rains at a quarter past* — You've done two benches when the rain comes off the dome and the Forecourt empties under the arcades. A few leaflets go into coat pockets. One old man reads his under the statue, in the wet.
+**Talk to the one o'clock crowd** (`irongate.forecourt.canvass`)
+- Success — *A thousand lunches* — At one the Quarter comes out to eat on the Forecourt and has nowhere to go for an hour. You work the benches with the flyer and the case for your party. By two, half of them know what you'd do about the cuts.
+- Partial — *It rains at a quarter past* — You've done two benches when the rain comes off the dome and the Forecourt empties under the arcades. A few flyers go into coat pockets. One old man reads his under the statue, in the wet.
 
-**Leaflet the tram stops on the Forecourt** (`irongate.forecourt.leaflets`)
-- Success — *Six stops, empty bag* — Every tram in the Quarter stops here and every queue is bored. You work the six shelters at a trot, a leaflet into every hand before the tram comes. The bag is empty in ten minutes.
+**Hand out flyers at the tram stops on the Forecourt** (`irongate.forecourt.leaflets`)
+- Success — *Six stops, empty bag* — Every tram in the Quarter stops here and every queue is bored. You work the six shelters at a trot, a flyer into every hand before the tram comes. The bag is empty in ten minutes.
 - Partial — *The trams come early* — Three shelters done when four trams arrive together and take the queues with them. Half the bag is gone. The other half waits for the next tram, which is late.
 
 **Speak beneath the statue** (`irongate.forecourt.speech`)
@@ -379,9 +381,9 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### The Ministries
 
-**Canvass the clerks at five** (`irongate.ministries.clerks`)
-- Success — *In order of seniority* — At five the three blocks empty in order, juniors first. You catch the juniors, who have the least to lose and the most to say about the cuts. A whole room of the Board of Works takes leaflets.
-- Partial — *Seniors only* — You're late and the juniors have gone. The seniors come out slowly and take leaflets the way they take memoranda, without reading. One asks you to send it through the proper channel.
+**Talk to the clerks at five** (`irongate.ministries.clerks`)
+- Success — *In order of seniority* — At five the three blocks empty in order, juniors first. You catch the juniors, who have the least to lose and the most to say about the cuts. A whole room of the Board of Works takes flyers.
+- Partial — *Seniors only* — You're late and the juniors have gone. The seniors come out slowly and take flyers the way they take memoranda, without reading. One asks you to send it through the proper channel.
 
 **Read the notice boards** (`irongate.ministries.notices`)
 - Success — *The board says more than the minister* — Postings, retirements, a room to let, a tender for scaffolding nobody asked for. Two names and a date go in your notebook. The porter watches you copy them and says nothing.
@@ -389,18 +391,18 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### The Supreme Court
 
-**Canvass the petitioners' queue** (`irongate.supreme-court.queue`)
-- Success — *The queue can't leave* — Fifty petitioners, one door, and the law's own pace. You work the line with the leaflet and the case list. Everyone here has a grievance already; by the door most of them have your party's answer to it.
-- Partial — *The usher opens early* — The door opens at half past nine and the queue becomes a crush on the steps. A few leaflets go into coat pockets. One woman says she'll read it while she waits, which will be all day.
+**Talk to people in the petitioners' queue** (`irongate.supreme-court.queue`)
+- Success — *The queue can't leave* — Fifty petitioners, one door, and the law's own pace. You work the line with the flyer and the case list. Everyone here has a grievance already; by the door most of them have your party's answer to it.
+- Partial — *The usher opens early* — The door opens at half past nine and the queue becomes a crush on the steps. A few flyers go into coat pockets. One woman says she'll read it while she waits, which will be all day.
 
 **Study in the law library** (`irongate.supreme-court.law-library`, training INT)
 - Trained — *An evening among the reports* — The library lets anyone in who is quiet and owns a collar. Statutes, the electoral acts, judgments nobody has read since they were given. You leave knowing the argument better than the man who'll make it against you.
 
 #### The Opera
 
-**Canvass the foyer at the interval** (`irongate.opera.foyer`)
-- Success — *Twenty minutes and champagne* — The interval is twenty minutes and nobody in the foyer can leave it. You work the stairs with a coat that passes and a leaflet that doesn't. A minister's wife takes one, for the joke, and reads it in the second act.
-- Partial — *Wrong coat* — The doorman looks at your coat and then at the door. You get the foyer's edge and the pavement smokers. Two take a leaflet. One says he'd vote for anyone who shortened the second act.
+**Talk to people in the foyer at the interval** (`irongate.opera.foyer`)
+- Success — *Twenty minutes and champagne* — The interval is twenty minutes and nobody in the foyer can leave it. You work the stairs with a coat that passes and a flyer that doesn't. A minister's wife takes one, for the joke, and reads it in the second act.
+- Partial — *Wrong coat* — The doorman looks at your coat and then at the door. You get the foyer's edge and the pavement smokers. Two take a flyer. One says he'd vote for anyone who shortened the second act.
 
 **Watch the boxes** (`irongate.opera.boxes`)
 - Success — *Who sat in the second box* — From the gods you can see every box and who visits it at the interval. A minister, a man who isn't his secretary, a lawyer from Chancery Row. Three names and a time in the notebook.
@@ -408,39 +410,39 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### Chancery Row
 
-**Canvass the chambers** (`irongate.chancery-row.chambers`)
-- Success — *Brass plates, open doors* — The clerks of chambers take deliveries all day and a leaflet is a delivery. You work the row plate by plate. A junior counsel comes down to argue and stays to agree.
-- Partial — *Not without an appointment* — Half the doors want an appointment and the other half want the tradesmen's entrance. You get leaflets to the clerks who'll take them. One says his principal already votes your way, in private.
+**Talk to the lawyers' clerks** (`irongate.chancery-row.chambers`)
+- Success — *Brass plates, open doors* — The clerks of chambers take deliveries all day and a flyer is a delivery. You work the row plate by plate. A junior counsel comes down to argue and stays to agree.
+- Partial — *Not without an appointment* — Half the doors want an appointment and the other half want the tradesmen's entrance. You get flyers to the clerks who'll take them. One says his principal already votes your way, in private.
 
-**Paste bills on the chambers' railings** (`irongate.chancery-row.bills`)
+**Put up posters on the lawyers' railings** (`irongate.chancery-row.bills`)
 - Success — *A row of railings, a row of bills* — Bucket, brush and the Row's iron railings. You get twelve bills up straight, one to every set of chambers, before the first clerk arrives. The lawyers will read them on the way in, and bill someone for the time.
 - Partial — *The paste won't hold on iron* — Wet railings and paste that runs. Five bills stay up; the rest slide into the area. Five is five, and one is on the Attorney's railings.
 
 #### Herald House
 
-**Canvass the print-room shift** (`irongate.herald-house.print-room`)
-- Success — *Ink to the elbow* — The print-room shift comes off at four and reads for a living. Rents, the raids, the tram fare: you keep it short. A compositor takes ten leaflets for the stone, where tomorrow's leader is set.
-- Partial — *Most of them head for the tram* — The shift comes off in a hurry and most of it makes for the Junction. You press leaflets on the ones who slow down. Two stop to argue the raids; one gives you his street.
+**Talk to the printers coming off shift** (`irongate.herald-house.print-room`)
+- Success — *Ink to the elbow* — The print-room shift comes off at four and reads for a living. Rents, the raids, the tram fare: you keep it short. A compositor takes ten flyers for the stone, where tomorrow's leader is set.
+- Partial — *Most of them head for the tram* — The shift comes off in a hurry and most of it makes for the Junction. You press flyers on the ones who slow down. Two stop to argue the raids; one gives you his street.
 
-**Read the wires** (`irongate.herald-house.wires`)
+**Read the news as it comes in** (`irongate.herald-house.wires`)
 - Success — *The wire room at midnight* — The night editor lets you sit by the machine if you keep quiet. Coalport, Duskwall, the frontier: who's meeting whom, which bill is stuck. Two names go in your notebook.
 - Partial — *A slow night* — The machine chatters about grain prices and a regatta. One thing worth writing down before the night editor wants his chair back. Come back on a sitting night.
 
 #### Concord House (Alliance, members only)
 
-**Sit in on the capital committee** (`irongate.concord-house.committee`)
+**Go to the capital meeting** (`irongate.concord-house.committee`)
 - Success — *Minutes taken, motion carried* — Tea, a district map on the piano, and a chairman who believes in procedure. The committee wants the Old Town returns redone by street and you say how. Your name goes in the minutes. In this house, that counts.
 - Partial — *A long meeting* — Two hours on the returns and a point of order about the biscuits. You get one word in before the chairman moves on. Mr Grey's man marks you present, which is what matters this week.
 
-**Run the duplicator** (`irongate.concord-house.duplicator`)
-- Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred leaflets in an hour, stacked for the morning runners to the Junction. Your hands are purple to the wrist.
+**Print five hundred flyers** (`irongate.concord-house.duplicator`)
+- Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred flyers in an hour, stacked for the morning runners to the Junction. Your hands are purple to the wrist.
 - Partial — *The stencil tears* — The stencil tears at copy two hundred and the rest come out ghosted. Half a stack goes out; the other half goes in the grate. The agent shows you how to cut the next one.
 
 #### Basilica Square
 
-**Canvass the steps after Mass** (`irongate.basilica-square.canvass`)
-- Success — *Eleven o'clock, the whole Old Town* — Mass ends at eleven and the square fills from the steps down. You work the families with the leaflet folded small, Sunday manners and no shouting. By the fountain, half the Old Town has one in a pocket.
-- Partial — *The canon watches* — The canon stands at the top of the steps and the families move faster past you than they would. A few leaflets go into missals. One old woman says she'll pray about it, which is not a no.
+**Talk to people on the steps after Mass** (`irongate.basilica-square.canvass`)
+- Success — *Eleven o'clock, the whole Old Town* — Mass ends at eleven and the square fills from the steps down. You work the families with the flyer folded small, Sunday manners and no shouting. By the fountain, half the Old Town has one in a pocket.
+- Partial — *The canon watches* — The canon stands at the top of the steps and the families move faster past you than they would. A few flyers go into missals. One old woman says she'll pray about it, which is not a no.
 
 **Speak from the basilica steps** (`irongate.basilica-square.speech`)
 - Success — *The square listens* — The top step after Mass, the dome behind you for a sounding board. The raids, the fever, the rents in the lanes. The canon frowns, the square laughs, and by the end the laughs are on your side.
@@ -448,21 +450,21 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### St Agnes Hospital
 
-**Canvass the visitors' queue** (`irongate.st-agnes.visitors`)
-- Success — *Two o'clock, forty visitors* — Visiting is at two and the queue at the gate is anxious, patient and can't leave. You work it gently: the fever, the beds, who pays. By the time the sister opens the gate most of it has your party's line and a leaflet in a basket.
-- Partial — *The sister opens early* — The gate opens at ten to two and the queue is gone up the steps. A few leaflets go into baskets. One man says his wife is on the fever ward and takes two.
+**Talk to people in the visitors' queue** (`irongate.st-agnes.visitors`)
+- Success — *Two o'clock, forty visitors* — Visiting is at two and the queue at the gate is anxious, patient and can't leave. You work it gently: the fever, the beds, who pays. By the time the sister opens the gate most of it has your party's line and a flyer in a basket.
+- Partial — *The sister opens early* — The gate opens at ten to two and the queue is gone up the steps. A few flyers go into baskets. One man says his wife is on the fever ward and takes two.
 
 **Carry for the porters** (`irongate.st-agnes.porters`, training STR)
 - Trained — *Stretchers up four flights* — The porters don't ask which party you're with; they ask if you can take the foot end up four flights without stopping. You can, by the end. Your back will tell you about it tomorrow.
 
 #### Lantern Lane
 
-**Canvass the café tables** (`irongate.lantern-lane.cafes`)
-- Success — *A chair at every table* — The pavement tables are full by ten. You work them one by one, a chair borrowed at each. The raids, the fever, the tram fare. By the third café the waiters know your name and one has taken a leaflet for the kitchen.
-- Partial — *Nobody wants company* — It's a reading morning and the tables are hidden behind the Herald. You get a word at three of them and a leaflet under the saucer at the rest. One man lowers his paper to argue. That's a start.
+**Talk to people at the café tables** (`irongate.lantern-lane.cafes`)
+- Success — *A chair at every table* — The pavement tables are full by ten. You work them one by one, a chair borrowed at each. The raids, the fever, the tram fare. By the third café the waiters know your name and one has taken a flyer for the kitchen.
+- Partial — *Nobody wants company* — It's a reading morning and the tables are hidden behind the Herald. You get a word at three of them and a flyer under the saucer at the rest. One man lowers his paper to argue. That's a start.
 
-**Leave leaflets in the bookshops** (`irongate.lantern-lane.bookshops`)
-- Success — *Between the pages* — Six bookshops and nobody watches the back shelves. A leaflet in every second-hand novel on the political shelf, and a stack by the till where the owner will find it and, being Old Town, leave it. Someone will read them for years.
+**Leave flyers in the bookshops** (`irongate.lantern-lane.bookshops`)
+- Success — *Between the pages* — Six bookshops and nobody watches the back shelves. A flyer in every second-hand novel on the political shelf, and a stack by the till where the owner will find it and, being Old Town, leave it. Someone will read them for years.
 - Partial — *The owner finds the stack* — Three shops done when a bookseller catches you at the political shelf and asks whose paper it is. You tell him. He keeps the stack, to sell.
 
 #### The Press Club
@@ -473,40 +475,40 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 **Speak at the Thursday debate** (`irongate.press-club.debate`)
 - Success — *The house divides* — The Thursday debate takes anyone who can hold the floor for ten minutes against reporters. You hold it for twelve: the raids, the warrant, the right to print. The house divides and the motion carries. A leader-writer asks your name.
-- Partial — *Points of order* — Six minutes in, the reporters start raising points of order for the sport of it and the chair enjoys them. The motion is lost by four. Two young ones ask for a leaflet on the way out.
+- Partial — *Points of order* — Six minutes in, the reporters start raising points of order for the sport of it and the chair enjoys them. The motion is lost by four. Two young ones ask for a flyer on the way out.
 
 #### Market Square
 
-**Canvass the tram queue** (`irongate.market-square.tram-queue`)
-- Success — *The queue has time to talk* — Forty people and one tram every ten minutes. You work the line with the fare table in one hand and the leaflet in the other. By the time the tram comes, half the queue knows what your party would do about the penny.
-- Partial — *The tram comes early* — You're three people in when the tram pulls up and the queue becomes a scrum. A few leaflets go into shopping bags. One old man folds his and says he'll read it on the tram, standing.
+**Talk to people in the tram queue** (`irongate.market-square.tram-queue`)
+- Success — *The queue has time to talk* — Forty people and one tram every ten minutes. You work the line with the fare table in one hand and the flyer in the other. By the time the tram comes, half the queue knows what your party would do about the penny.
+- Partial — *The tram comes early* — You're three people in when the tram pulls up and the queue becomes a scrum. A few flyers go into shopping bags. One old man folds his and says he'll read it on the tram, standing.
 
 **Speak from the market column** (`irongate.market-square.speech`)
 - Success — *A crowd at the column* — The column's plinth between the fish stall and the tram stop. The fare, the bread queue, who pays and who doesn't. The stallholders heckle, the crowd laughs, and by the end the laughs are on your side.
 - Partial — *The tram takes half of them* — You've a decent crowd until the number 4 pulls in and takes most of it. You finish for the stallholders and a policeman who looks bored. The fishmonger gives you a nod.
 
-**Leaflet between the stalls** (`irongate.market-square.leaflets`)
-- Success — *Quick hands, empty bag* — You work the aisles at a trot, a leaflet into every basket before its owner has noticed. The bag is empty in ten minutes and the market beadle never sees you.
-- Partial — *The beadle sees you* — Half the bag is gone when the beadle plants himself in the aisle and asks about your permit. You leave by the fish stall, slower than you'd like. The leaflets you handed out are still out there.
+**Hand out flyers between the stalls** (`irongate.market-square.leaflets`)
+- Success — *Quick hands, empty bag* — You work the aisles at a trot, a flyer into every basket before its owner has noticed. The bag is empty in ten minutes and the market beadle never sees you.
+- Partial — *The beadle sees you* — Half the bag is gone when the beadle plants himself in the aisle and asks about your permit. You leave by the fish stall, slower than you'd like. The flyers you handed out are still out there.
 
 **Work the stall** (`irongate.market-square.stall`, Street vendor)
 - Worked — *A day's trade* — Matches, bootlaces, this morning's Herald. You know the regulars by their shoes now. The takings won't make anyone rich, but they come in every day, and nobody asks you for a permit.
 
 #### Tram Junction
 
-**Canvass the platforms** (`irongate.tram-junction.canvass`)
-- Success — *Five platforms, five districts* — Every line crosses here and every platform is a district waiting. You work them in turn, a different first sentence for the Hill and the Quays. By the last tram the leaflets are in five districts and so is your name.
-- Partial — *The trams keep coming* — You can't hold a platform for a minute before a tram takes it. Leaflets go into hands and away. One conductor takes a bundle for the depot, which is more than you'd planned.
+**Talk to people on the platforms** (`irongate.tram-junction.canvass`)
+- Success — *Five platforms, five districts* — Every line crosses here and every platform is a district waiting. You work them in turn, a different first sentence for the Hill and the Quays. By the last tram the flyers are in five districts and so is your name.
+- Partial — *The trams keep coming* — You can't hold a platform for a minute before a tram takes it. Flyers go into hands and away. One conductor takes a bundle for the depot, which is more than you'd planned.
 
-**Paste posters on the tram shelters** (`irongate.tram-junction.posters`)
+**Put up posters on the tram shelters** (`irongate.tram-junction.posters`)
 - Success — *A shelter on every corner* — Bucket, brush and eight shelters. You get a poster up in each, high enough that nobody's tearing it down without a ladder. Every tram queue in the capital will read them by noon.
 - Partial — *The paste won't hold* — Rain, and paste that runs off the glass. Three posters stay up; the rest go under the trams. Three is three, and one is on the Hill platform.
 
 #### Central Station
 
-**Canvass the arrivals hall** (`irongate.central-station.arrivals`)
-- Success — *Every train in the republic* — The barrier at the arrivals hall, where the whole republic comes through with a case in each hand. You work the queue for the cabs: Coalport voices, Duskwall coats, Ashford collars. Everyone takes a leaflet to read on the tram.
-- Partial — *The porters move you on* — The stationmaster's man asks for your permit and you work the cab rank instead. A few leaflets go into gloves. A woman from Ashford says she'd heard the capital was like this.
+**Talk to people in the arrivals hall** (`irongate.central-station.arrivals`)
+- Success — *Every train in the republic* — The barrier at the arrivals hall, where the whole republic comes through with a case in each hand. You work the queue for the cabs: Coalport voices, Duskwall coats, Ashford collars. Everyone takes a flyer to read on the tram.
+- Partial — *The porters move you on* — The stationmaster's man asks for your permit and you work the cab rank instead. A few flyers go into gloves. A woman from Ashford says she'd heard the capital was like this.
 
 **Watch the platforms** (`irongate.central-station.boards`)
 - Success — *Who came in on the 14:10* — A bench by the boards and a paper you don't read. Who met the Duskwall train, who got off the Coalport one with a parcel, which platform the police watched. Three names go in your notebook.
@@ -520,15 +522,15 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### The Grand Hotel
 
-**Canvass the lobby** (`irongate.grand-hotel.lobby`)
-- Success — *Waiting rooms vote too* — The lobby is full of people waiting for someone important and pretending not to. You work the armchairs with a coat that passes. A deputy's secretary takes a leaflet for her employer, and one for herself.
-- Partial — *The hall porter has a view* — The hall porter watches you cross the lobby and meets you at the third armchair. You get two leaflets out on the way to the door. One lobbyist follows you out to argue, which he does for a living.
+**Talk to people in the lobby** (`irongate.grand-hotel.lobby`)
+- Success — *Waiting rooms vote too* — The lobby is full of people waiting for someone important and pretending not to. You work the armchairs with a coat that passes. A deputy's secretary takes a flyer for her employer, and one for herself.
+- Partial — *The hall porter has a view* — The hall porter watches you cross the lobby and meets you at the third armchair. You get two flyers out on the way to the door. One lobbyist follows you out to argue, which he does for a living.
 
 #### The Bombed Blocks
 
-**Canvass the repair crews** (`irongate.bombed-blocks.crews`)
-- Success — *They stop for one who can lift* — The crews knock off at four with dust to the knees. You've the shoulders for it, so they stop. Rents, the evictions, who's rebuilding what for whom. A ganger takes ten leaflets for the yard hut.
-- Partial — *The whistle goes early* — The crews are away to the buffet before you've said rent. You press leaflets on the stragglers. One says his sister's on Foundry Row and takes two.
+**Talk to the repair crews** (`irongate.bombed-blocks.crews`)
+- Success — *They stop for one who can lift* — The crews knock off at four with dust to the knees. You've the shoulders for it, so they stop. Rents, the evictions, who's rebuilding what for whom. A ganger takes ten flyers for the yard hut.
+- Partial — *The whistle goes early* — The crews are away to the buffet before you've said rent. You press flyers on the stragglers. One says his sister's on Foundry Row and takes two.
 
 **Chalk the hoardings** (`irongate.bombed-blocks.hoardings`)
 - Success — *Letters a yard high* — The hoardings round the worst block are the biggest wall in the district. You get your party's name up in fair capitals and ROOFS BEFORE RENTS beneath it before the watchman comes round. Then you're away down the entry.
@@ -546,25 +548,25 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### Union House (Collective, members only)
 
-**Sit in on the capital committee** (`irongate.union-house.committee`)
+**Go to the capital meeting** (`irongate.union-house.committee`)
 - Success — *Minutes taken, motion carried* — Tea, a wall map of the quays stuck with pins, and a chairman who likes short answers. The committee wants the Eastside lists redone by stair and you say how. Your name goes in the minutes. In this house, that counts.
 - Partial — *A long meeting* — Two hours on the stair lists and the price of paper. You get one point in before the chairman moves on. Secretary Holm's man marks you present, which is what matters this week.
 
-**Run the duplicator** (`irongate.union-house.duplicator`)
+**Print five hundred flyers** (`irongate.union-house.duplicator`)
 - Success — *Five hundred copies, still wet* — The stencil holds and the drum turns. Five hundred bulletins in an hour, stacked for the runners to the quays. Your hands are purple to the wrist and the room smells of spirit.
 - Partial — *The stencil tears* — The stencil tears at copy two hundred and the rest come out ghosted. Half a stack goes out; the other half goes in the stove. Somebody shows you how to cut the next one.
 
 #### Riverside Quays
 
-**Canvass the dockers at the break** (`irongate.riverside-quays.dockers`)
+**Talk to the dockers at the break** (`irongate.riverside-quays.dockers`)
 - Success — *They make room on the bollard* — The dockers eat on the bollards with their backs to the river. You've the hands for the work and it shows, so they make room. By the whistle the gang has agreed to send two men to your party's office.
-- Partial — *Bread and silence* — The gang eats and lets you talk. A couple of nods, one argument about the strike that goes nowhere. The ganger takes a leaflet for later.
+- Partial — *Bread and silence* — The gang eats and lets you talk. A couple of nods, one argument about the strike that goes nowhere. The ganger takes a flyer for later.
 
 **Speak from a bale** (`irongate.riverside-quays.bale`)
 - Success — *A bale for a platform* — A cotton bale, a crane for a backdrop and two hundred dockers at the break. The strike, the rates, who owns the cranes. Nobody heckles a voice that carries over a crane. The ganger nods when you climb down.
 - Partial — *The crane starts up* — You get through the rates before the crane starts and takes the rest of it. A knot of lads at the back stays to argue. The ganger looks at his watch.
 
-**Note the manifests** (`irongate.riverside-quays.manifests`)
+**Note which barges carry what** (`irongate.riverside-quays.manifests`)
 - Success — *Barges, firms, times* — A bollard, a pencil and the checker's hut in view. Three barges for one firm, two sealed, one that unloads without a stamp. It goes in your notebook for later.
 - Partial — *Nothing much moves* — An hour on the bollard and one barge, checked, stamped and moored. A firm and a time. Not nothing.
 
@@ -573,11 +575,11 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### The Ironworks Gate
 
-**Canvass the shift change** (`irongate.ironworks-gate.canvass`)
-- Success — *The hooter goes, and they stop* — You're at the gate before the shift comes off. Soot, tired faces, no time for speeches. But the leaflets go hand to hand, and a foreman says come back Thursday. That's how a district is won.
-- Partial — *Most of them walk past* — The shift comes off in a hurry and most of it heads for the bridge. You press leaflets on the ones who slow down. Two stop to argue; one gives you his stair.
+**Talk to the workers coming off shift** (`irongate.ironworks-gate.canvass`)
+- Success — *The hooter goes, and they stop* — You're at the gate before the shift comes off. Soot, tired faces, no time for speeches. But the flyers go hand to hand, and a foreman says come back Thursday. That's how a district is won.
+- Partial — *Most of them walk past* — The shift comes off in a hurry and most of it heads for the bridge. You press flyers on the ones who slow down. Two stop to argue; one gives you his stair.
 
-**Paste posters on the works wall** (`irongate.ironworks-gate.posters`)
+**Put up posters on the works wall** (`irongate.ironworks-gate.posters`)
 - Success — *A wall's length of paper* — Bucket, brush and a hundred yards of works wall. You get twelve posters up straight and high, one to every bay. Three shifts a day will read them, and the lorries from the quays.
 - Partial — *The paste won't hold* — The wind off the river is against you and the paste won't take on the sooted brick. Five posters stay up; the rest go in the gutter. Five is five.
 
@@ -589,11 +591,11 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### Foundry Row
 
-**Canvass door to door** (`irongate.foundry-row.canvass`)
+**Knock on doors** (`irongate.foundry-row.canvass`)
 - Success — *The kettle goes on* — Sixty doors up four flights. Most open a crack; a dozen open wide, and at three the kettle goes on. The notices, the rent, the landlord nobody has met. You leave with a list of names and a stair that will turn out.
-- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the leaflet through the gap and a word with the ones on the landing. One woman says her husband's on the quays already. Come back Sunday.
+- Partial — *Doors on the chain* — It's tea-time and the doors stay on the chain. You get the flyer through the gap and a word with the ones on the landing. One woman says her husband's on the quays already. Come back Sunday.
 
-**Run messages for the tenants' committee** (`irongate.foundry-row.run`, training AGI)
+**Run messages up and down the stairs** (`irongate.foundry-row.run`, training AGI)
 - Trained — *Every stair in the Row* — Six notes, four stairwells, one hour. You learn which landings connect and which end in a locked door, and you learn them at a run. By the end you could do it in the dark.
 
 #### The Iron Bridge
@@ -602,13 +604,13 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 - Success — *Both banks hear it* — The bridge end at the shift change, the river for a sounding board and the whole east bank walking past. The strike, the evictions, the fare. Both banks slow down. A tram conductor rings his bell for you, twice.
 - Partial — *The tram takes half of them* — You've a decent crowd until the tram comes over and takes most of it. You finish for the ones on foot and a policeman who looks bored. A docker gives you a nod.
 
-**Leaflet the bridge at the shift change** (`irongate.iron-bridge.leaflets`)
-- Success — *A thousand across the river* — The shift comes over the bridge at four in a body and can't stop. You stand at the narrow end and put a leaflet into every hand that passes. The bag is empty before the crowd is.
+**Hand out flyers on the bridge at the shift change** (`irongate.iron-bridge.leaflets`)
+- Success — *A thousand across the river* — The shift comes over the bridge at four in a body and can't stop. You stand at the narrow end and put a flyer into every hand that passes. The bag is empty before the crowd is.
 - Partial — *The wind off the river* — Half the bag goes into hands and half into the river when the wind gets up. The ones that stayed dry are still out there. One docker fishes his out of the water and reads it anyway.
 
 #### Vanguard House (Vanguard, members only)
 
-**Sit in on the capital committee** (`irongate.vanguard-house.committee`)
+**Go to the capital meeting** (`irongate.vanguard-house.committee`)
 - Success — *Minutes taken, motion carried* — Coffee, a district map stuck with pins, and a chairman who likes short answers. The committee wants the Hill lists redone by street and you say how. Your name goes in the minutes. In this house, that counts.
 - Partial — *A long meeting* — Two hours on the Hill lists and the price of paper. You get one point in before the chairman moves on. Organiser Stahl's man marks you present, which is what matters this week.
 
@@ -617,35 +619,35 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 #### Police Headquarters
 
-**Canvass the permits queue** (`irongate.police-hq.permits`)
-- Success — *A queue for everything* — Permits for stalls, for meetings, for a room to let: the queue at the gatehouse is the whole Hill by nine. You work it with the leaflet and the case for fewer permits, or more, depending on the party. It listens; it has nothing else to do.
-- Partial — *The desk sergeant has a view* — The desk sergeant looks at your leaflets and then at the door. You work the end of the queue on the pavement. One clerk takes two, one for the office, and says nothing.
+**Talk to people in the permits queue** (`irongate.police-hq.permits`)
+- Success — *A queue for everything* — Permits for stalls, for meetings, for a room to let: the queue at the gatehouse is the whole Hill by nine. You work it with the flyer and the case for fewer permits, or more, depending on the party. It listens; it has nothing else to do.
+- Partial — *The desk sergeant has a view* — The desk sergeant looks at your flyers and then at the door. You work the end of the queue on the pavement. One clerk takes two, one for the office, and says nothing.
 
-**Read the police gazette** (`irongate.police-hq.gazette`)
+**Read the police notices** (`irongate.police-hq.gazette`)
 - Success — *Names on the wall* — The gazette on the gatehouse wall lists the week's warrants, permits refused and rooms searched. Two names and an address go in your notebook while the sergeant is on the telephone.
 - Partial — *Last week's sheet* — The gazette is last week's and the sergeant is watching. One name worth writing down, from the permits refused. Come back on Monday.
 
 #### The Esplanade
 
-**Canvass the Sunday walkers** (`irongate.esplanade.canvass`)
-- Success — *The whole Hill takes the air* — On Sunday the Hill walks the Esplanade in its second-best coat and can't hurry. You work the benches and the bandstand rail: the curfew, the census, who runs the Hill. By three, half the Esplanade has a leaflet in a pocket.
-- Partial — *The band starts* — The band strikes up at three and takes the Esplanade's attention with it. A few leaflets go into gloves. One retired clerk says he'll read it after the march, which is a tune.
+**Talk to the Sunday walkers** (`irongate.esplanade.canvass`)
+- Success — *The whole Hill takes the air* — On Sunday the Hill walks the Esplanade in its second-best coat and can't hurry. You work the benches and the bandstand rail: the curfew, the census, who runs the Hill. By three, half the Esplanade has a flyer in a pocket.
+- Partial — *The band starts* — The band strikes up at three and takes the Esplanade's attention with it. A few flyers go into gloves. One retired clerk says he'll read it after the march, which is a tune.
 
 **Speak from the bandstand** (`irongate.esplanade.bandstand`)
 - Success — *Between the band's numbers* — The bandstand is empty between numbers and nobody has told you not to. The curfew, the census, the rents on the Hill road. The Hill listens the way it does everything, in order. The bandmaster lets you finish before he lifts his baton.
 - Partial — *The band drowns the end of it* — You get through the curfew before the band decides it's time and plays you off. A knot of clerks at the rail stays to argue. The bandmaster looks at his watch.
 
-**Leaflet the tram terminus** (`irongate.esplanade.leaflets`)
-- Success — *Every tram down the Hill* — The terminus at the gate, a tram every six minutes and a queue that can't leave. You work it at a trot, a leaflet into every hand. The bag is empty in ten minutes and the inspector never sees you.
-- Partial — *The inspector sees you* — Half the bag is gone when the tram inspector asks for your permit, on the Hill, where they mean it. You leave by the Esplanade, slower than you'd like. The leaflets you handed out are still out there.
+**Hand out flyers at the tram terminus** (`irongate.esplanade.leaflets`)
+- Success — *Every tram down the Hill* — The terminus at the gate, a tram every six minutes and a queue that can't leave. You work it at a trot, a flyer into every hand. The bag is empty in ten minutes and the inspector never sees you.
+- Partial — *The inspector sees you* — Half the bag is gone when the tram inspector asks for your permit, on the Hill, where they mean it. You leave by the Esplanade, slower than you'd like. The flyers you handed out are still out there.
 
 #### The Villas
 
-**Canvass the villas** (`irongate.villas.canvass`)
-- Success — *The maids open the doors* — Twenty villas, twenty bells, twenty maids. You have a coat that passes and a leaflet that argues, and at six of them the mistress comes to the door herself. The Hill decides things over tea. Today one of them is your party.
-- Partial — *Tradesmen's entrance* — The maids take the leaflet at the side door and close it. One mistress reads hers on the step and says the party has some sense, for once. That's the Hill's way of saying maybe.
+**Knock on the villas' doors** (`irongate.villas.canvass`)
+- Success — *The maids open the doors* — Twenty villas, twenty bells, twenty maids. You have a coat that passes and a flyer that argues, and at six of them the mistress comes to the door herself. The Hill decides things over tea. Today one of them is your party.
+- Partial — *Tradesmen's entrance* — The maids take the flyer at the side door and close it. One mistress reads hers on the step and says the party has some sense, for once. That's the Hill's way of saying maybe.
 
-**Paste bills on the garden walls** (`irongate.villas.bills`)
+**Put up posters on the garden walls** (`irongate.villas.bills`)
 - Success — *A wall a villa* — Bucket, brush and the long garden walls of the Hill road. You get a bill on every wall, high and straight, before the first gardener is out. The Hill will read them from its carriages.
 - Partial — *A gardener with a hose* — Five bills up when a gardener comes out with a hose and a view about walls. Five stay up, wet. The rest go home in the bucket.
 
@@ -934,15 +936,15 @@ A member's daily rotation is chosen from the templates matching their **residenc
 
 | Id | Faction · slot | Title | Matches | Target | Line |
 |---|---|---|---|---|---|
-| `dir.c.capital-canvass` | Collective · A | Canvass the capital | any `canvass` in Irongate | 3 attempts | Five districts and the Clarion doesn't reach any of them. Three conversations, anywhere in the capital. |
+| `dir.c.capital-canvass` | Collective · A | Talk to voters in the capital | any `canvass` in Irongate | 3 attempts | Five districts and the Clarion doesn't reach any of them. Three conversations, anywhere in the capital. |
 | `dir.c.capital-district` | Collective · A | Knock your own district | any `canvass` in the resident's district | 2 attempts | Your district first. Two doors, two stairs, and tell them which office to come to. |
 | `dir.c.capital-issue` | Collective · B | Speak to the Issue | any Issue-tagged action in Irongate | 2 attempts | The Herald says the capital is arguing about {issue}. Argue back, twice. |
 | `dir.c.capital-report` | Collective · B | Report to Union House | `irongate.union-house.committee` | 1 attempt | Committee at Union House at six. Bring the stair lists, by district. |
-| `dir.v.capital-canvass` | Vanguard · A | Canvass the capital | any `canvass` in Irongate | 3 attempts | Three districts. Three reports on my desk by tonight, however far the tram. |
+| `dir.v.capital-canvass` | Vanguard · A | Talk to voters in the capital | any `canvass` in Irongate | 3 attempts | Three districts. Three reports on my desk by tonight, however far the tram. |
 | `dir.v.capital-district` | Vanguard · A | Knock your own district | any `canvass` in the resident's district | 2 attempts | Your own district, top to bottom, no gaps. Two doors will do to start. |
 | `dir.v.capital-issue` | Vanguard · B | Speak to the Issue | any Issue-tagged action in Irongate | 2 attempts | The capital is arguing about {issue}. The committee has a position. State it, twice. |
 | `dir.v.capital-report` | Vanguard · B | Report to Vanguard House | `irongate.vanguard-house.committee` | 1 attempt | Committee at Vanguard House at six. Bring the district lists, in order. |
-| `dir.a.capital-canvass` | Alliance · A | Canvass the capital | any `canvass` in Irongate | 3 attempts | Five districts, three conversations. Off you go, and mind the trams. |
+| `dir.a.capital-canvass` | Alliance · A | Talk to voters in the capital | any `canvass` in Irongate | 3 attempts | Five districts, three conversations. Off you go, and mind the trams. |
 | `dir.a.capital-district` | Alliance · A | Knock your own district | any `canvass` in the resident's district | 2 attempts | Your own district first. Two doors, and be polite; they vote there. |
 | `dir.a.capital-issue` | Alliance · B | Speak to the Issue | any Issue-tagged action in Irongate | 2 attempts | The Herald's leader is about {issue}. We have a better one. Twice, please. |
 | `dir.a.capital-report` | Alliance · B | Report to Concord House | `irongate.concord-house.committee` | 1 attempt | Committee at Concord House at six. Bring the returns and a pencil. |
