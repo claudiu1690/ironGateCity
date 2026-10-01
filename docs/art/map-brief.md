@@ -1,5 +1,7 @@
 # Map art brief v2: bigger cities, square canvases, every place readable at zoom
 
+> **Revised 1 Oct 2026 (quarters).** Every city is now an **overview map plus quarter maps** (`docs/design/city-quarters.md`; GDD §14.13). Sections marked **REVISED** changed for it; everything else (the style rules, the camera, the night method, the acceptance checks, the other cities' prompts) still holds. **Coalport is the test**: §0 is the new order of work and §4 is rewritten.
+
 Game designer, 1 Oct 2026. The brief that drives the regeneration of every map with the connected image-generation tool (GPT Image 2.5 or Nano Banana 2, image-to-image with the current map as a style reference). The user chose to regenerate from scratch rather than extend the current art, and approved the tool. **Coalport day and night go first, for the user's approval, before any other map is generated.**
 
 Inputs: the current maps in `E:\Projects\ironGateCity Docs\art-direction\maps-pen\` (the style to match), the design canvas (`docs/mockups/Main.dc.html`), the location lists in `docs/design/slice-1-content.md` §1.1, `slice-2-cities.md` §1.1 and §2.1, `slice-4-battleground.md` §4.1–4.3, the content policy in `docs/design/content-policy-review.md` §7, and the developer's findings on map shape (§1 below).
@@ -8,20 +10,22 @@ What this document is not: it changes no rule. The pin fractions below are **tar
 
 ---
 
-## 0. The order of work
+## 0. The order of work (REVISED 1 Oct 2026)
 
-| # | Map | Files | Gate |
+Coalport first, as before, but as **one overview and three quarters** (`docs/design/city-quarters.md` §7). Nothing else is generated until the user has approved the Coalport test.
+
+| # | Image | Files (`maps-pen-v2/coalport/`) | Gate |
 |---|---|---|---|
-| 1 | **Coalport, day** | `coalport-day.png` | **User approval** of the style, the size and the composition before anything else is generated |
-| 2 | **Coalport, night** | `coalport-night.png` | User approval of the night treatment and the day/night alignment |
-| 3–4 | Duskwall, day and night | `duskwall-day.png`, `duskwall-night.png` | Acceptance checks (§10) |
-| 5–6 | Ashford | `ashford-day.png`, `ashford-night.png` | " |
-| 7–8 | Irongate overview (the five plates) | `irongate-day.png`, `irongate-night.png` | " |
-| 9–18 | Irongate's five districts, day and night each | `irongate-government-quarter-*.png`, `irongate-old-town-*.png`, `irongate-station-market-*.png`, `irongate-eastside-*.png`, `irongate-garrison-hill-*.png` | " |
-| 19–20 | Clearwater | `clearwater-day.png`, `clearwater-night.png` | " (locked in play until slice 7; the art is made now so the set is consistent) |
-| 21–22 | The nation | `nation-day.png`, `nation-night.png` | " |
+| 1 | **Coalport overview, day** (§4.5) | `overview-day.png` | **User approval** of the town's scale and composition; checks 1, 2, 4, 5, 7, 8 and 16 |
+| 2 | **The Mill quarter, day** (§4.6), from the overview's Mill footprint | `mill-day.png` | **User approval** of the quarter's style and richness; checks 1–8, 11, 13, 14; the six pins measured |
+| 3 | **The Harbour quarter, day** (§4.7) | `harbour-day.png` | Checks 1–8, 11, 13–15; the five pins measured |
+| 4 | **Night**: overview, the Mill, the Harbour (§4.9, §5) | `overview-night.png`, `mill-night.png`, `harbour-night.png` | **User approval** of the night treatment; checks 9, 10 |
+| 5 | **The Sidings quarter**, day and night (§4.8) | `sidings-day.png`, `sidings-night.png` | As 3 and 4 |
+| 6 | *(optional)* the seamless-stitch experiment (`city-quarters.md` §6) | scratch only | Its own verdict; never blocks |
+| 7 | **The user's decision**: quarters for every city | | |
+| 8– | Duskwall (overview + 3), Ashford (overview + 3), Irongate (overview + 5 districts), Clearwater (overview + 3), the nation | per city folder | Acceptance checks (§11) |
 
-Eleven maps, twenty-two images. Masters go to `E:\Projects\ironGateCity Docs\art-direction\maps-pen-v2\`; the old folder stays as the style reference until every city is approved, then is retired (kept in git history).
+Coalport is eight images (four maps, day and night). The whole set is **23 maps, 46 images** (four home and swing cities at four maps each, the capital at six, the nation at one). Masters go to `E:\Projects\ironGateCity Docs\art-direction\maps-pen-v2\<city>\`; the old folder stays as the style reference until every city is approved, then is retired (kept in git history).
 
 ---
 
@@ -49,6 +53,8 @@ Eleven maps, twenty-two images. Masters go to `E:\Projects\ironGateCity Docs\art
 
 **Why the generation is image-to-image.** The current map of the same city is attached as the **style reference** (the linework, the wash, the camera and the palette), never as a composition to copy: every composition below is new. For the night image the **generated day map is the reference**, at the highest structure fidelity the tool offers, so the two line up (§5).
 
+**Overviews and quarters (REVISED 1 Oct 2026).** The overview and every quarter are each a **4096 × 4096 generation upscaled to 6144**, the same canvas rules as above. The overview is generated first, from the current city map as its style reference. **Each quarter is then generated from the overview's crop of its footprint** (§4.1) as the composition reference at medium structure fidelity, with the approved overview as the style reference where the tool takes two; if it takes one, use the crop and let the prompt's first sentence carry the style. The crop fixes where the water, the rail and the big structures fall, so the zoom from the overview into the quarter reads as the same town getting closer (check 14). The night image of each is generated from its own approved day image (§5).
+
 ---
 
 ## 2. Composition rules for every city map
@@ -65,6 +71,8 @@ Eleven maps, twenty-two images. Masters go to `E:\Projects\ironGateCity Docs\art
 
 **The ASCII grids** in §3–§8 are 10 × 10 (each cell 10 % of the canvas, column = x, row = y). They are a layout sketch; the pin fractions are the targets.
 
+**The overview (REVISED 1 Oct 2026).** An overview shows the whole town at small scale and carries only **quarter plates**: no place pins and no pin zoom. The plates sit inside the **central 60 %** (x and y 0.20–0.80), the nation map's rule, each on the structure its quarter is known by. Every quarter's footprint on the overview is a square region (§4.1); footprints overlap a little at their edges, which is the "edges agree" rule at work. The core-box rule above applies **per quarter map**, which holds four to six places.
+
 ---
 
 ## 3. Style rules (every map)
@@ -79,33 +87,61 @@ Eleven maps, twenty-two images. Masters go to `E:\Projects\ironGateCity Docs\art
 
 ---
 
-## 4. Coalport (map 1 and 2)
+## 4. Coalport: the overview and three quarters (REVISED 1 Oct 2026; the test)
 
-Home city of the Collective: the mill and the docks against the men who own them. Brick, soot, barges, chimneys, a river basin opening to the sea. Baseline V 9 / C 70 / A 6 / N 15. Paper: the *Clarion*.
+Home city of the Collective: the mill and the docks against the men who own them. Brick, soot, barges, chimneys, a river basin opening to the sea. Baseline V 9 / C 70 / A 6 / N 15. Paper: the *Clarion*. The design (places, unlocks, teasers, the test's acceptance) is `docs/design/city-quarters.md`; this section is what the generator needs.
 
-### 4.1 Layout in words
+| Quarter | Opens | Places |
+|---|---|---|
+| **The Mill** | Level 1 (built) | Mill Gate, Market Row, Union Hall, Foundry Row, Harbour Quays, The Anchor |
+| **The Harbour** | Level 6 (slice 5) | The Shipyard, The Infirmary, Customs House, The Far Bank, Harbour Police |
+| **The Sidings** | Level 10 (slice 4, with the train) | Coalport Station, Coal Yards, Tram Depot, St Barbara's |
 
-The **river basin** runs along the bottom of the core from the lower-left to the right edge and widens to a harbour mouth at the bottom-right, with a lighthouse mole and a collier standing off. The **steel mill** stands to the left of the core, its blast furnace and chimneys the tallest things on the map, with the coal yards and sidings beyond it to the left edge and the rail line coming in from the left. The **terraces** climb above the core toward slag heaps and allotments at the top. The **shipyard slipway** is to the right of the quays. The far bank, at the bottom, is a lower town of bonded warehouses and a fish market. A small **station** sits above the mill where the line enters town, and a church with a baroque tower stands above the union hall.
+### 4.1 The overview: layout, grid, plates and footprints
 
-### 4.2 Grid
+The whole town at small scale. The **steel mill** stands a little above the middle, its furnace and chimneys the tallest things on the map; the market, the union hall and the terraces beside and above it; the **quays** below it on the **river basin**, which runs from a swing bridge at the lower left across the lower half of the map, widening to a **harbour mouth** with a lighthouse mole at the lower right and a collier at sea. **Left of the mill:** the rail line from the left edge into a small **station**, the **coal yards and sidings** below it, a **tram depot** near the swing bridge, and **St Barbara's** tower on the hill above the station. **Right of the quays:** the **shipyard slipway**, the **gasworks** above it, the **infirmary**, and at the mole's root the **customs house**. **Across the water:** the far bank with the **fish market** under its iron roof, the **harbour police** by the ferry stage, bonded warehouses and a lower town. Slag heaps, allotments and a cemetery along the top; a football ground at the top right.
 
 ```
        0  1  2  3  4  5  6  7  8  9
-   0   ^^ ^^ ^^ ^^ ^^ ^^ .. .. ^^ ^^    slag heaps, allotments, the cemetery, a hill chapel
-   1   ^^ .. .. .. .. TT TT TT .. ..    upper terraces, the school, the public baths
-   2   .. MM MM MM St TT TT CH .. ..    mill chimneys and furnace · station (reserved) · church
-   3   == MM MM MM[ 1  4  .  3 ].. ..   Mill Gate · Foundry Row · Union Hall
-   4   == CY MM MM[ .  2  .  . ]SY ..   coal yards · Market Row · shipyard (reserved)
-   5   == CY CY ==[ 6  .  5  . ]SY ~~   The Anchor · Harbour Quays · slipway
-   6   .. CY CY ~~ ~~ ~~ ~~ ~~ ~~ ~~    the basin: steamers, barges, a swing bridge at left
-   7   .. .. .. .. ~~ ~~ ~~ ~~ ~~ ~~    far bank: bonded warehouses, the fish market, lower town
-   8   .. .. .. .. .. ~~ ~~ ~~ ~~ ~~    harbour mouth, the lighthouse mole
+   0   ^^ ^^ ^^ ^^ ^^ ^^ .. .. .. ..    slag heaps, allotments, the cemetery
+   1   .. CH .. .. TT TT TT .. FG ..    St Barbara's on the hill · terraces · football ground
+   2   == St .. MM MM TT .. .. GW ..    station · the mill and furnace · gasworks
+   3   == CY .. MM MM mk UH .. GW ..    coal yards · Market Row · Union Hall
+   4   .. CY CY .. .. QQ .. SY SY ..    the quays · the shipyard slipway
+   5   .. .. TD An ~~ ~~ ~~ IN SY ~~    tram depot · The Anchor · the basin · the infirmary
+   6   .. .. .. ~~ ~~ ~~ ~~ ~~ ~~ CU    the swing bridge · the basin · customs house
+   7   .. .. .. FM FB FB HP ~~ ~~ ML    fish market · far bank · harbour police · the mole
+   8   .. .. .. .. LT LT .. ~~ ~~ ~~    the lower town · the harbour mouth
    9   .. .. .. .. .. .. ~~ ~~ ~~ ~~    the sea, a collier standing off
 ```
 
-`[ ]` marks the core box (x 0.40–0.68, y 0.32–0.60). `~~` water · `==` rail · `^^` heaps and hills · `MM` the mill · `CY` coal yards · `SY` shipyard · `TT` terraces · `CH` church · `St` station.
+`MM` the mill · `mk` Market Row · `UH` Union Hall · `QQ` the quays · `An` The Anchor · `St` station · `CY` coal yards · `TD` tram depot · `CH` church · `SY` shipyard · `IN` infirmary · `CU` customs house · `HP` harbour police · `FM` fish market · `FB` far bank · `LT` lower town · `ML` the mole and lighthouse · `GW` gasworks · `FG` football ground · `~~` water · `==` rail · `^^` heaps.
 
-### 4.3 The six places
+**Plates and footprints** (fractions of the overview). The footprint is the part of the overview that the quarter map's central half (x and y 0.25–0.75) depicts; it is the crop used as the quarter's composition reference (§1) and the frame the zoom-in animates to. Footprints overlap at their edges on purpose.
+
+| Quarter | Plate x, y | Footprint left, top, width, height | The plate sits on |
+|---|---|---|---|
+| The Mill | 0.48, 0.38 | 0.30, 0.20, 0.36, 0.36 | Market Row, between the gate and the hall |
+| The Sidings | 0.22, 0.44 | 0.04, 0.26, 0.36, 0.36 | The station forecourt |
+| The Harbour | 0.70, 0.66 | 0.52, 0.48, 0.36, 0.36 | The ferry on the basin |
+
+### 4.2 The Mill quarter (today's six places)
+
+The core is the brief's original Coalport composition; the ring now shows the other two quarters at its edges.
+
+```
+       0  1  2  3  4  5  6  7  8  9
+   0   ^^ ^^ ^^ ^^ ^^ ^^ .. .. ^^ ^^    slag heaps, allotments, the cemetery, St Barbara's tower at top left
+   1   CH .. .. .. .. TT TT TT .. ..    upper terraces, the school, the public baths
+   2   St MM MM MM .. TT TT .. .. GW    station at the edge · mill chimneys and furnace · gasworks at the right
+   3   == MM MM MM[ 1  4  .  3 ].. GW   Mill Gate · Foundry Row · Union Hall
+   4   == CY MM MM[ .  2  .  . ]SY ..   coal yards · Market Row · the slipway at the right edge
+   5   == CY CY ==[ 6  .  5  . ]SY ~~   The Anchor · Harbour Quays
+   6   .. CY TD ~~ ~~ ~~ ~~ ~~ ~~ ~~    the basin: steamers, barges, a swing bridge at left, the tram depot
+   7   .. .. .. .. ~~ ~~ ~~ ~~ ~~ ~~    far bank: bonded warehouses, the fish market
+   8   .. .. .. .. .. ~~ ~~ ~~ ~~ ~~    the harbour mouth, the lighthouse mole far at the lower right
+   9   .. .. .. .. .. .. ~~ ~~ ~~ ~~    the sea
+```
 
 | # | Id | Pin x, y | What the generator must draw, and where the pin lands |
 |---|---|---|---|
@@ -116,50 +152,122 @@ The **river basin** runs along the bottom of the core from the lower-left to the
 | 5 | `coalport.quays` | 0.60, 0.58 | **Harbour Quays:** a stone quay with two cranes, a row of brick warehouses with hoists, a coal steamer alongside, barges, bollards, dockers eating on the quay. Pin on the quay in front of the crane. |
 | 6 | `coalport.anchor` | 0.43, 0.59 | **The Anchor:** a corner pub at the quay's left end, three storeys, a lamp over the door, barrels on the pavement, dockers at the door, the basin at its feet. Pin on the door. |
 
-### 4.4 More stuff (the ring), and the reserved spots
+**The ring:** coal yards with wagons and the station at the left and top-left (the Sidings); the slipway and the gasworks at the right, the far bank and the harbour mouth at the bottom (the Harbour); the school and the baths above the terraces, allotments and slag heaps along the top, a hill chapel and cemetery at the top-left, a swing bridge over the basin at the left, coal carts and a horse trough, a pawnbroker's corner, a chip shop queue, a street with a brass band.
 
-| Reserved (later slices) | x, y | Kind | Drawn as |
+### 4.3 The Harbour quarter
+
+```
+       0  1  2  3  4  5  6  7  8  9
+   0   TT TT .. .. .. .. .. GW GW ..    terraces' end · gasworks (reserved)
+   1   UH .. .. .. .. .. .. GW GW ..    the union hall's roof at the top left
+   2   QQ QQ .. .. .. .. .. .. .. ..    the quays' cranes at the left edge
+   3   QQ .. .. ..[ 7  .  9  . ].. ..   The Shipyard · The Infirmary
+   4   An ~~ ~~ ~~[ .  .  .  8 ]~~ ~~   The Anchor at the edge · the basin · Customs House at the mole's root
+   5   ~~ ~~ ~~ ~~[ 11 .  10 . ]ML ~~   The Far Bank (fish market) · Harbour Police · the mole
+   6   .. FB FB .. .. .. .. .. ~~ ~~    bonded warehouses · the ferry stage
+   7   .. LT LT LT LT .. .. ~~ ~~ ~~    the lower town · the harbour mouth
+   8   .. .. LT LT .. .. ~~ ~~ ~~ ~~    nets, a bathing place · the sea
+   9   .. .. .. .. .. ~~ ~~ ~~ ~~ ~~    a collier standing off, a pilot boat
+```
+
+| # | Id | Pin x, y | What the generator must draw, and where the pin lands |
 |---|---|---|---|
-| Coal yards and sidings (slice 5) | 0.26, 0.50 | `station` | Walled yards of coal heaps, loaded wagons on four sidings, a weighbridge hut, a shunting engine |
-| Shipyard slipway (slice 5) | 0.74, 0.52 | `docks` | A hull on the stocks under a gantry, a drawing-office shed, a steam crane, workers on staging |
-| Coalport station | 0.44, 0.26 | `station` | A small brick station with one platform canopy, a goods shed, the line curving in from the left edge |
-| St Barbara's (church) | 0.70, 0.28 | `square` | A baroque tower, a forecourt, a wedding party |
-| Gasworks | 0.80, 0.40 | `factory-gate` | Two gasholders, a retort house, a chimney |
-| Public baths and the school | 0.56, 0.18 | — | A tiled bath-house with a glass roof; a school with a yard and a bell |
-| Tram depot | 0.32, 0.66 | `station` | An open-fronted shed with three trams and a fan of track |
-| Football ground | 0.84, 0.16 | `square` | A pitch with one wooden stand and a Saturday crowd |
-| The far bank | 0.55, 0.78 | — | Bonded warehouses, a fish market under an iron roof, a lower town of narrow houses, a ferry stage |
-| The harbour mouth | 0.82, 0.86 | — | A lighthouse on a mole, a collier standing off, a pilot boat |
+| 7 | `coalport.shipyard` | 0.43, 0.37 | **The Shipyard:** a hull on the stocks under a gantry, a drawing-office shed, a steam crane, workers on the staging, a slipway into the basin. Pin on the yard gate at the slipway's head. |
+| 8 | `coalport.customs-house` | 0.66, 0.47 | **Customs House:** a stone customs house with a clock at the root of the mole, a bonded shed, lorries and carts being checked, inspectors with clipboards. No flag on the mast. Pin on the door under the clock. |
+| 9 | `coalport.infirmary` | 0.60, 0.34 | **The Infirmary:** a brick hospital with a glass-roofed ward wing, a walled forecourt with a gate, an ambulance, visitors at two. Pin on the gate. |
+| 10 | `coalport.harbour-police` | 0.60, 0.59 | **Harbour Police:** a small police station beside the ferry stage, a lamp over the door, a yard with black saloons and a bicycle rank, a sergeant at the door. Civic police; no uniformed crowd. Pin on the door. |
+| 11 | `coalport.far-bank` | 0.46, 0.59 | **The Far Bank:** the ferry stage and the fish market under an iron roof on the fish quay, boats, crates, a morning crowd, the lower town's narrow streets behind. Pin on the market's open front. |
 
-Also in the ring: allotments and slag heaps along the top edge, a hill chapel and a cemetery at the top-left, a swing bridge over the basin at the left, coal carts and a horse trough, a pawnbroker's corner, a chip shop queue, a street with a brass band.
+The basin crosses the core from the left edge (y about 0.45–0.52) and widens to the harbour mouth at the lower right; the ferry crosses between the slipway and the fish market, so the water inside the core box is busy (barges, the ferry, a tug), never empty. **The ring:** the quays' cranes and the Anchor at the left edge (the Mill); the gasworks with two holders at the top right (reserved for a later place); bonded warehouses, the lower town, nets drying, a bathing place, a pilot boat, gulls, the lighthouse mole and a collier at sea.
 
-### 4.5 Prompt: Coalport day (map 1)
+### 4.4 The Sidings quarter
+
+```
+       0  1  2  3  4  5  6  7  8  9
+   0   ^^ ^^ ^^ CM CM ^^ ^^ ^^ ^^ ^^    slag heaps · the cemetery and its chapel
+   1   .. .. .. .. .. BA .. .. TT TT    public baths (reserved) · the terraces' end
+   2   PH .. .. .. SC .. .. .. TT MM    pit-head far at the left · school · the mill's chimneys at the right edge
+   3   == == == ==[ .  12 .  15]MM MM   Coalport Station · St Barbara's on the hill
+   4   == == == ==[ 13 == == . ]MM MM   Coal Yards (sidings off the line)
+   5   .. CY CY ..[ .  .  14 . ].. ..   Tram Depot
+   6   .. .. .. .. .. .. .. .. SB ~~    railway cottages · the swing bridge at the lower right
+   7   .. .. .. .. .. .. .. ~~ ~~ ~~    the basin's upper reach
+   8   .. .. .. .. .. .. ~~ ~~ ~~ ~~
+   9   .. .. .. .. .. .. .. ~~ ~~ ~~
+```
+
+| # | Id | Pin x, y | What the generator must draw, and where the pin lands |
+|---|---|---|---|
+| 12 | `coalport.station` | 0.50, 0.37 | **Coalport Station:** a small brick station with one platform canopy, a goods shed, a train with steam, a forecourt with a cab and a tram stop, a porter with a barrow. Pin on the forecourt door. |
+| 13 | `coalport.coal-yards` | 0.43, 0.52 | **Coal Yards:** walled yards of coal heaps, loaded wagons on four sidings, a weighbridge hut at the gate, a shunting engine, carts queueing. Pin on the weighbridge gate. |
+| 14 | `coalport.tram-depot` | 0.62, 0.56 | **Tram Depot:** an open-fronted shed with three trams, a fan of track, a mess room with a stove-pipe, crews at the door. Pin on the shed's open front. |
+| 15 | `coalport.st-barbaras` | 0.65, 0.35 | **St Barbara's:** a church with a plain tower and a bell, a railed forecourt on the hill above the station, a wedding party on the steps. No device on the tower. Pin on the forecourt. |
+
+**The ring:** the mill's furnace and chimneys at the right edge and the swing bridge at the lower right (the Mill); the line running off the left edge toward the countryside with a pit-head winding tower far out; the public baths with a glass roof and the school with a yard (reserved for later places); railway cottages, coal carts and a horse trough, allotments, slag heaps and the cemetery with its chapel along the top.
+
+### 4.5 Prompt: Coalport overview, day
 
 Reference image: `maps-pen/coalport.png` (style only).
 
 ```prompt
-Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. Coalport, 1946, a Central European steel and coal port. Core, centre-right: a brick steel mill with a tall blast furnace and three chimneys, its arched clock gatehouse opening on a cobbled street of workers; below, a market street of striped awnings round a stone cross; to the right a columned union hall by a tram loop; above, long brick terraces with washing lines; below, a stone quay with two cranes, warehouses, a coal steamer and barges, and a corner pub at the quay's left end. Around it the whole town: coal yards and sidings with wagons at left, a small station, a shipyard slipway at right, a baroque church tower, gasworks, a tram depot, allotments and slag heaps above, the river basin widening to a harbour mouth with a lighthouse mole at lower right, warehouses on the far bank. Smoke and crowds. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
+Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. Coalport, 1946, a Central European steel and coal port, the whole town in one view. Centre, above the middle: a brick steel mill with a blast furnace, three chimneys and an arched clock gatehouse; a market street of striped awnings; a columned union hall; long brick terraces; a stone quay with two cranes and a corner pub. Left: a railway from the left edge into a small station, walled coal yards with sidings and wagons, an open tram depot, a church tower on the hill above. Right and below: a shipyard slipway with a hull on the stocks, a gasworks, the river basin widening to a harbour mouth with a stone mole, a lighthouse and a customs house, a collier at sea; across the water a far bank of warehouses, a fish market under an iron roof and a lower town, a ferry crossing. Slag heaps and allotments along the top. Smoke, trams and crowds. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
 ```
 
-### 4.6 Prompt: Coalport night (map 2)
+### 4.6 Prompt: The Mill quarter, day (generated first)
 
-Reference image: **the approved `coalport-day.png`**, at the tool's highest structure fidelity (image-to-image strength low, or the "edit, keep composition" mode).
+Reference images: the approved overview's Mill footprint crop (composition, medium fidelity) and the approved overview (style).
 
 ```prompt
-Repaint the attached map as the same drawing at night. Move nothing: every building, street, boat, tram and figure stays exactly where it is, pixel-aligned with the attached image, same linework, same camera. Wash the whole scene in deep blue-grey night ink; warm amber light in windows and doorways, lit tram windows, street lamps with soft pools of light on the cobbles, lamplight and window light reflected in the water. The blast furnace glows orange with sparks and lights the smoke above it; dock floodlights on the quay; the corner pub's windows bright; the terraces dim with a few lit windows; a lighthouse beam at the harbour mouth. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
+Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. The Mill quarter of Coalport, 1946, a Central European steel and coal port. Core, centre-right: a brick steel mill with a tall blast furnace and three chimneys, its arched clock gatehouse opening on a cobbled street of workers at shift change; below, a market street of striped awnings round a stone cross; to the right a columned union hall by a tram loop; above, long brick terraces with washing; below, a stone quay with two cranes, warehouses, a coal steamer and barges, and a corner pub at the quay's left end. Around it: walled coal yards with wagons and a small station at the left, a church tower on the hill at the top left, a shipyard slipway and a gasworks at the right, the river basin along the bottom with a swing bridge at the left and a fish market on the far bank, the harbour mouth far at the lower right. Smoke and crowds. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
 ```
+
+### 4.7 Prompt: The Harbour quarter, day (the second quarter of the test)
+
+Reference images: the overview's Harbour footprint crop (composition) and the approved overview (style).
+
+```prompt
+Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. The Harbour quarter of Coalport, 1946, a Central European coal port. A river basin enters at the left edge, runs across the middle and widens into a harbour mouth with a stone mole and a lighthouse at the lower right; a collier at sea. Core, centre-right: on the near bank a shipyard slipway with a hull on the stocks under a gantry and a steam crane; a brick infirmary with a glass-roofed ward and an ambulance at its gate; at the mole's root a stone customs house with a clock; a steam ferry crossing to the far bank, with a fish market under an iron roof on a fish quay with boats, and beside the ferry stage a small police station with a lamp over its door and saloons in its yard. Around it: quay cranes and a corner pub at the left edge, a gasworks at the top right, a lower town of narrow houses, nets drying, a pilot boat, barges. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
+```
+
+### 4.8 Prompt: The Sidings quarter, day (after the test is approved)
+
+Reference images: the overview's Sidings footprint crop (composition) and the approved overview (style).
+
+```prompt
+Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. The Sidings quarter of Coalport, 1946, a Central European coal port. A railway enters at the left edge and runs across the core toward the right. Core, centre-right: a small brick station with one platform canopy, a goods shed and a train with steam; walled coal yards of coal heaps and loaded wagons on four sidings, a weighbridge hut and a shunting engine; an open-fronted tram depot with three trams and a fan of track; above the station on the hill a church with a plain tower and a forecourt with a wedding party. Around it: the steel mill's furnace and chimneys at the right edge, a swing bridge over the river basin at the lower right, railway cottages, coal carts, a public baths with a glass roof, a school with a yard, allotments, slag heaps and a cemetery along the top, a pit-head winding tower far at the left edge. Smoke and shift crowds. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
+```
+
+### 4.9 Night: the shared prompt and Coalport's four light lines
+
+Reference image for each: **its own approved day image**, at the tool's highest structure fidelity (image-to-image strength low, or the "edit, keep composition" mode). The prompt is the shared night prompt below with `{LIGHT}` replaced by the image's light line; every assembled prompt is 800–840 characters.
+
+```prompt
+Repaint the attached map as the same drawing at night. Move nothing: every building, street, boat, tram and figure stays exactly where it is, pixel-aligned with the attached image, same linework, same camera. Wash the whole scene in deep blue-grey night ink; warm amber light in windows and doorways, lit tram windows, street lamps with soft pools of light on the cobbles, lamplight and window light reflected in the water. {LIGHT} No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
+```
+
+| Image | `{LIGHT}` |
+|---|---|
+| Overview | The blast furnace glows orange and lights its smoke; dock floodlights on the quays; the station canopy lit; a lighthouse beam at the harbour mouth; lamps across the swing bridge; the far bank dim with a few lit windows. |
+| The Mill | The blast furnace glows orange with sparks and lights the smoke above it; dock floodlights on the quay; the corner pub's windows bright; the terraces dim with a few lit windows; a lighthouse beam far at the lower right. |
+| The Harbour | Floodlights on the slipway staging; the infirmary's ward windows warm; the customs house lit at its door; the ferry's lanterns and the lighthouse beam on the water; the police station's lamp; the far bank's lower town dim with a few lit windows. |
+| The Sidings | Signal lamps along the sidings and a lit shunting engine; the station canopy and waiting room glowing; the tram depot bright inside with lit trams; the church dark but for a lamp at its door; the furnace glow at the right edge. |
+
+The other cities' night prompts (§5) are this prompt with their own light line in place of `{LIGHT}`.
 
 ---
 
 ## 5. The night variant (every map)
 
+> **REVISED 1 Oct 2026:** the method is unchanged and applies to every overview and every quarter, each from its own approved day image. Coalport's four light lines are in §4.9; the other cities' lines below are kept for their first quarters and will be split per quarter when those are designed.
+
 - **Same composition, same drawing.** The night image is generated from the approved day image as its reference, with the tool set to keep structure. Pins must land on the same spots in both: the acceptance check overlays the two at 50 % and the difference must show only colour, with every pin's building within **1 % of the width (40 px at 4096)** of its day position. If a generation drifts past that, it is regenerated at higher fidelity; if the tool cannot hold the composition, the fallback is a **graded day map** (a blue-grey multiply layer and a lights pass painted only on windows, lamps and water) made by hand from the day master.
 - **Treatment,** matching the current night maps: a deep blue-grey wash over everything (`#2B3340` to `#1E2A38`), warm amber windows (`#F4B860`) in about one window in three, lamp pools on the streets, lit trams, reflections on water, the linework still crisp. The sky is never shown, so there is no moon or stars.
 - **Each city's light:** Coalport the furnace and dock floodlights; Duskwall the searchlight on Beacon House sweeping the market and lamps along the fortress wall; Ashford lamplit avenues, the dome lit from inside, the late train; Irongate the glass station glowing, the Parliament dome floodlit, lamps on the bridges, the works' furnaces on the east bank; Clearwater the casino blazing and the terraces dim; the nation map lit cities with the furnace glow at Coalport and the searchlight at Duskwall.
-- **Shared night prompt.** Every night image uses the Coalport night prompt (§4.6) with its Coalport sentence (the one beginning "The blast furnace") replaced by the city's light line from the table below. Each stays under 1,200 characters.
+- **Shared night prompt.** Every night image uses the shared night prompt (§4.9) with `{LIGHT}` replaced by the city's light line from the table below. Each stays under 1,200 characters. Nation map: the second sentence reads "every town, train, river and field stays exactly where it is".
 
 | Map | The city's light line |
 |---|---|
+| Coalport (overview and quarters) | See §4.9 |
 | Duskwall | The searchlight on the tower by the district office throws one pale beam across the market tents; lamps along the fortress wall and in the gate arch; the archives dark but for the porter's window; the goods yard lit by a signal lamp and the station canopy. |
 | Ashford | Lamplit avenues and bridges, the college dome lit from inside, café windows bright along the river, a late train with lit carriages at the station, the courts and the newspaper's print room glowing. |
 | Irongate overview | The glass station glows, the Parliament dome is floodlit, lamps run along both banks and across the bridges, the works' furnaces glow on the east bank, the citadel on its hill dark but for the gatehouse. |
@@ -174,6 +282,8 @@ Repaint the attached map as the same drawing at night. Move nothing: every build
 ---
 
 ## 6. Duskwall (maps 3 and 4)
+
+> **Quarter plan (REVISED 1 Oct 2026; `city-quarters.md` §8.1).** Three quarters: **The Fortress** (Level 1: the six places below), **The Pass** (Level 6: the frontier checkpoint, the mountain inn, the sawmill, the customs lock-up, an infirmary) and **The Town** (Level 10: the station, the town square and church, the Signal Lamp, the brewery). The composition and prompt below stand for **The Fortress quarter**; the overview and the other two quarters are designed after the Coalport test, and the reserved spots below are their raw material.
 
 Home city of the Vanguard: a frontier customs town in the mountains (content-policy review §1.4). The old fortress now houses the frontier customs; the customs auctions what it seizes under the walls. **A party, not a militia:** no parade ground, no barracks, no soldiers, no army lorries, no flags. Baseline V 70 / C 6 / A 9 / N 15. Paper: the *Sentinel*.
 
@@ -233,11 +343,13 @@ Reference image: `maps-pen/duskwall.png` (style only; ignore its lorries, flags 
 Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. Duskwall, 1946, a frontier customs town in the mountains. Core, centre-right: an old stone fortress on a rock with round towers; inside its walls a cobbled square with a long customs house, bonded sheds, lorries being checked and a bandstand; its arched south gatehouse with a barrier opens on a market of canvas tents and crates below the wall; east of the fortress a severe stone quadrangle with a colonnaded front; south-east a tall office with a lattice searchlight tower on its roof; a railway along the core's foot with a goods yard, a freight train and railwaymen's terraces. Around it: pine forest and snowy peaks at top and right, a pass road in hairpins with a customs barrier, a sawmill on a mountain stream at left, a station and a tunnel, a town square with a baroque church and inns, a brewery, villas and farms below. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
 ```
 
-Night: §4.6 with the Duskwall light line (§5).
+Night: §4.9 with the Duskwall light line (§5).
 
 ---
 
 ## 7. Ashford (maps 5 and 6)
+
+> **Quarter plan (REVISED 1 Oct 2026; `city-quarters.md` §8.1).** Three quarters: **The College** (Level 1: the six places below), **The Wharf** (Level 6: the wharf and boat club, the brewery, the cattle market, the county infirmary, the police station by the lower bridge) and **Station Road** (Level 10: the station, the town hall, the Corn Exchange, the theatre, the park, the Press Club). The composition and prompt below stand for **The College quarter**.
 
 Home city of the Alliance: a university town on the river. The college under its dome, the county courts, the *Gazette*, cafés on the bridges, a station at the edge of the old town. Calm and respectable; the Alliance's argument happens over coffee. Baseline V 6 / C 9 / A 70 / N 15. Paper: the *Gazette*.
 
@@ -299,13 +411,15 @@ Reference image: `maps-pen/ashford.png` (style only; no lettering this time).
 Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. Ashford, 1946, a university town on a river. Core, centre-right: a college quadrangle round a lawn under a green copper dome, its gatehouse on the street; a columned courthouse with a queue on its steps to the upper right; at the core's upper left a big stone newspaper building with a glass-roofed print room and a loading bay, beside a pedimented concert hall; at the lower left a river bank of market stalls with striped awnings and café tables between two stone bridges; at the lower right old four-storey tenements round a yard with washing lines, behind a station. Around it: the river entering at left and leaving at the bottom, a town hall with a clock tower, a domed corn exchange, a park with a bandstand, villas with gardens at top right, a brewery, a cattle market, a boathouse wharf, a lock and water meadows. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
 ```
 
-Night: §4.6 with the Ashford light line (§5).
+Night: §4.9 with the Ashford light line (§5).
 
 ---
 
 ## 8. Irongate (maps 7–18)
 
 ### 8.1 The decision: five district maps and one overview, not one big map
+
+> **REVISED 1 Oct 2026:** this decision is now the general rule for every city (GDD §14.13): an overview with plates and one map per quarter. **Irongate's districts are its quarters.** A district gets no sub-quarters in the MVP; one that outgrows six places gets a second quarter map under the same district meter (Appendix C #41). Each district plate also needs a **footprint** (§4.1's rule) for the zoom-in; the footprints are set when the overview is generated.
 
 The slice-4 design (and GDD §14.9) had **one image serve both levels**: the overview whole with five plates, the district view a crop of the same image. That was right for a 5056 × 3392 painting with the pins placed on it after the fact. It is wrong for the new zoom model, for three reasons:
 
@@ -357,7 +471,7 @@ Reference image: `maps-pen/irongate-districts.png` (style only).
 Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. Irongate, 1946, the capital of a Central European republic. A river enters at the top right of centre, runs down the right third and leaves at the bottom right under three bridges. Top centre on a rise: a parliament with a green dome, a paved forecourt with a statue and pool, three stone ministries, a columned opera. Top left: an old town of lanes, a domed basilica, a spired hospital. Centre: a market square round a column, a tram junction, a grand hotel, a station with three glass arches and a fan of tracks to the bottom edge, half-standing houses with repair crews. Right bank: an ironworks with chimneys, cranes on quays, tenements. Bottom left on a hill: a star-walled citadel with a civic gatehouse, an esplanade with a bandstand, a red quadrangle round a garden, villas behind walls. Parks, gasworks, a racecourse and suburbs at the edges. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
 ```
 
-Night: §4.6 with the Irongate overview light line.
+Night: §4.9 with the Irongate overview light line.
 
 ### 8.4 Government Quarter (maps 9 and 10)
 
@@ -527,6 +641,8 @@ Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted
 
 ## 9. Clearwater (maps 19 and 20)
 
+> **Quarter plan (REVISED 1 Oct 2026; `city-quarters.md` §8.3).** Three quarters, all open to anyone who arrives (nobody reaches Clearwater below Level 10): **The Front** (the Promenade, the Casino, the Lido, the pier hotel), **The Depot** (the Tram Depot, Back Lane Market, The Rows, the tin chapel, the sanatorium) and **The Harbour** (the Harbour, the cannery, the station, the harbour police). The composition and prompt below are kept as the first draft of the overview.
+
 The swing city, locked in play until slice 7 (*No service yet*). Wealthy suburbs beside a restless working class: the society district on the slope above the water, the tram hub, the harbour, the terraces below (GDD §14.1). Baseline provisional V 20 / C 24 / A 24 / N 32. Paper, provisional: the *Courier*.
 
 **The six places below are provisional**, chosen for the art so the set is consistent; slice 7 confirms or renames them before any data is written (GDD Appendix C, to be opened as a new item, §11). They use existing kinds only.
@@ -583,13 +699,13 @@ Reference image: `maps-pen/clearwater.png` (style only).
 Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted watercolour on cream paper, buildings with windows and chimneys, tiny figures, 1940s trams; high oblique 45° view, no sky, art to all edges, square. Clearwater, 1946, a Central European lake town, rich and poor side by side. A lake fills the right and top right with a bay and a stone harbour mole. Core, centre-right: a lakeside promenade with a balustrade, lamps, a bandstand and a pier; above it a domed society casino with a columned front, terraces and a formal garden; a big open-fronted tram depot with a glass roof and a fan of tracks; a harbour with a small lighthouse, yachts, fishing boats and a fish quay; a lane of barrows under railway arches behind the depot; crowded workers' terraces with back yards and washing below. Around it: villas with gardens on the slope at top left, a bathing pavilion, a station with lines to the left edge, a fish cannery with a chimney, gasworks, a football ground, a steam ferry on the lake, a wooded point. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
 ```
 
-Night: §4.6 with the Clearwater light line (§5).
+Night: §4.9 with the Clearwater light line (§5).
 
 ---
 
-## 10. The nation (maps 21 and 22)
+## 10. The nation (maps 21 and 22) (REVISED 1 Oct 2026: more distance)
 
-The whole republic in one view, square. Five cities far apart, joined by rail lines through the capital, so a 12–25-minute journey looks like one. There is no zoom-to-pin on this map (a tap opens the city plate), so the cluster rule is looser: **all five cities inside the central 60 %** (x and y 0.20–0.80) so they clear the HUD and the tab bar at the initial fit on a 360-px phone, and the outer 20 % is landscape.
+The whole republic in one view, square. Five cities far apart, joined by rail lines through the capital, so a 12–25-minute journey looks like one. **The new scale:** each city is drawn at about **6 % of the width** (250 px at 4096), down from 10–12 %, so the gaps between cities are three to four city-widths of countryside; **three or four small halts on every line** (a village with a church tower, a station building, a water tower, a level crossing) and a junction outside the capital are scenery, with no pins and no names. Travel times stay at 12 / 15 / 25 (GDD Appendix C #8). There is no zoom-to-pin on this map (a tap opens the city overview), so the cluster rule is looser: **all five cities inside the central 60 %** (x and y 0.20–0.80) so they clear the HUD and the tab bar at the initial fit on a 360-px phone, and the outer 20 % is landscape.
 
 ### 10.1 Layout and the five pins
 
@@ -619,15 +735,15 @@ The whole republic in one view, square. Five cities far apart, joined by rail li
    9   ~~ ~~ ~~ .. .. .. .. .. ~~ ~~
 ```
 
-### 10.2 Prompt: nation day (map 21)
+### 10.2 Prompt: nation day (map 21) (REVISED 1 Oct 2026)
 
 Reference image: `maps-pen/nation-day.png` (style only).
 
 ```prompt
-Style of the reference: pen-and-ink bird's-eye map of a whole country, fine sepia lines, muted watercolour on cream paper, every town drawn building by building at small scale, tiny trains with steam; high oblique view, no sky, art to all edges, square. A small Central European republic, 1946: five cities far apart, joined by railways through the capital. Centre: the capital on a river with a green parliament dome, a glass station, three bridges, a citadel hill and chimneys on the east bank. Upper left: a college town on a river with a green dome over a quadrangle and two bridges. Upper right: a walled fortress town on a rock in snowy pine mountains, with a viaduct and a tunnel. Lower left: a steel and coal port on the sea coast with a blast furnace, smoking chimneys, cranes and a harbour mole. Lower right: a lake town with villas on a slope, a domed casino and a harbour of yachts. Between them farmland, villages with church towers, a monastery on a hill, a quarry, a dam, forests, cliffs and a lighthouse, a steamer at sea, a ferry on the lake, a train on every line. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
+Style of the reference: pen-and-ink bird's-eye map of a whole country, fine sepia lines, muted watercolour on cream paper, every town drawn building by building at small scale, tiny trains with steam; high oblique view, no sky, art to all edges, square. A small Central European republic, 1946: five small cities far apart, joined by long railways through the capital. Centre: the capital on a river with a green parliament dome, a glass station, three bridges, a citadel hill and chimneys on the east bank, the biggest by far. Upper left: a college town with a green dome and two bridges. Upper right: a walled fortress town on a rock in snowy pine mountains, a viaduct and a tunnel. Lower left: a coal port on the coast with a blast furnace, chimneys, cranes and a harbour mole. Lower right: a lake town with villas, a domed casino and yachts. On every line three or four small halts, villages with a church tower and a station; a junction outside the capital. Between them farms, a monastery, forests, a lighthouse, a ferry on the lake, a train on every line. No text or signs; no flags, emblems or insignia; no soldiers, uniforms or military vehicles; no ruins; no modern vehicles, neon or aerials; no frame, vignette or blur.
 ```
 
-Night: §4.6 with the nation light line (§5), the second sentence reading "every town, train, river and field stays exactly where it is".
+Night: §4.9 with the nation light line (§5), the second sentence reading "every town, train, river and field stays exactly where it is".
 
 ---
 
@@ -649,19 +765,23 @@ Run on the 4096 generation before the upscale, then again on the 6144 master. A 
 | 10 | **Day and night share the pins** | The content data stores one set of fractions per map; both images must satisfy check 3 at those fractions |
 | 11 | **The ring is rich** | Zoom into the edge pins (the ones nearest the box's edges) at 2.5 × the fit: the view is full of city on every side; the reserved spots in the city's table are present and recognisable |
 | 12 | **Edges agree (Irongate only)** | Each district map's four edges show what its §8 table says (the river on the correct side, the dome, the arches, the hill), and the overview's five plates sit on the structures named in §8.2 |
+| 13 | **Style holds across levels** (REVISED 1 Oct 2026) | The overview and each of its quarters side by side at the same on-screen size, and two quarters side by side: the same line weight, cream, wash, camera and light direction; the overview's furnace, slipway or mole and the quarter's are the same building drawn at two scales. A stranger says one hand drew them all |
+| 14 | **The zoom reads as one town** | Crop the overview to the quarter's footprint (§4.1) and overlay the quarter's central half (x, y 0.25–0.75) at 50 %: the water, the rail and the big structures fall within **5 % of the width** of each other, so the zoom-and-cross-fade shows the same place getting closer. Adjacent quarters' shared edges show the same structures |
+| 15 | **Quarter edges agree** | Each quarter map's edges show what its table says (the Mill's right edge shows the slipway and the gasworks; the Harbour's left edge shows the quays' cranes and the pub) |
+| 16 | **The teaser works** | On the overview at the phone fit, every plate (open or locked) is readable, sits on its named structure, and lies inside the central 60 %; the drawing under a locked plate is not dimmed or greyed, since the lock is an interface overlay |
 
 ---
 
-## 12. Knock-ons once Coalport is approved (not done in this change)
+## 12. Knock-ons once Coalport is approved (REVISED 1 Oct 2026)
+
+Done with the quarters design (1 Oct 2026): GDD §14.13 (the chain, the gates, the teaser), §14.9's "on the map" bullet, §13.5's note, the §0 row and Appendix C #38–41. Still to do after the art is approved:
 
 | Where | Edit |
 |---|---|
-| GDD §2.2 | Map assets are square masters at 6144 × 6144, day and night; the day/night rule is unchanged |
-| GDD §14.9, "On the map" | Replace: the capital is one overview image with five plates and five district images; the district view shows the district's own image; pins are fractions of the district image; `irongate-closeup.png` retired |
-| GDD §14.1 / Appendix C | New open item: Clearwater's six locations (§9.3, provisional) to be confirmed in slice 7 |
-| GDD §0 | A change row for the map regeneration |
-| `slice-1-content.md` §1.1, `slice-2-cities.md` §1.1 and §2.1, `slice-4-battleground.md` §2.1, §4.2 and §4.3 | Map sizes, pin fractions and reserved positions replaced by the measured values; §4.2's crops deleted |
-| `packages/content` | `city.map` and the new `district.map { day, night, size }`; `location.map` re-measured; nation pins re-measured. The architect decides the shape (district maps are a new asset per district) |
-| `docs/mockups/Main.dc.html` | The Duskwall alt text (already flagged in `content-policy-review.md` §8) and the new plates |
+| GDD §2.2 | Map assets are square masters at 6144 × 6144, day and night, one per overview and per quarter; the day/night rule is unchanged |
+| GDD §14.1 / Appendix C #40 | Clearwater's six locations (§9.3, provisional) confirmed or renamed in slice 7 |
+| `city-quarters.md` §4, `slice-1-content.md` §1.1, `slice-2-cities.md` §1.1 and §2.1, `slice-4-battleground.md` §2.1, §4.2 and §4.3 | Pin fractions (now of the quarter image), plate positions and footprints replaced by the measured values; slice-4 §4.2's crops deleted |
+| `packages/content` | `city.overview`, `city.quarters[]` (or `district.*` in the capital) and `location.quarterId`, as the architect decides from `city-quarters.md` §9; `location.map` re-measured per quarter; nation pins re-measured |
+| `docs/mockups/Main.dc.html` | The Duskwall alt text (already flagged in `content-policy-review.md` §8), the new plates, the quarter header and the quarter bar |
 
-Nothing here changes a rule, a number or a name. Faction naming stays parked.
+Nothing here changes a number or a name. Faction naming stays parked.
