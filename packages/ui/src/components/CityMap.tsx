@@ -43,18 +43,23 @@ export interface CityMapProps {
   cover?: MapCover;
   /**
    * Called once the zoom into the selected pin has landed (at once with reduced motion): the page
-   * opens the location panel then, so the zoom plays first (review 2 #9).
+   * opens the location panel then, so the zoom plays first (review 2 #9). `fillsMap` is false when
+   * the art stops short of the map's edge under the panel (a pin near the art's bottom under a phone's
+   * sheet, `zoomView`): the panel must then cover all of `cover`, not less, or the gap shows.
    */
-  onArrive?: (id: string) => void;
+  onArrive?: (id: string, info: { fillsMap: boolean }) => void;
 }
 
-/** Review 2 #9: the zoom into a pin and back, with easing. */
+/** Review 2 #9: the zoom into a pin and back, with easing (no overshoot: both y control points in [0, 1]). */
 export const ZOOM_MS = 500;
 const ZOOM_EASE = 'cubic-bezier(0.33, 0, 0.2, 1)';
-/** A pin's zoom: twice the fitted view, at least 1.25 × the covering size, at most 2.5 ×. */
-const ZOOM_FACTOR = 2;
-const MIN_ZOOM = 1.25;
-const MAX_SCALE = 2.5;
+/**
+ * A pin's zoom (review 2 follow-up: closer than the first 2 × / 1.25 ×): 2.5 × the fitted view, at
+ * least 1.6 × the covering size, at most 3 ×, and never past the art's native resolution.
+ */
+const ZOOM_FACTOR = 2.5;
+const MIN_ZOOM = 1.6;
+const MAX_SCALE = 3;
 /** A pointer that moves this far (px) while zoomed pans the map; less is a tap. */
 const DRAG_SLOP = 6;
 /** Room around a pin: half its 44 px target plus a margin, so no pin touches an edge. */
@@ -142,7 +147,13 @@ function clearOfBlocks(i: FitInput, v: MapView): boolean {
  * can pull the pins back under a tall plate), the view is searched for instead, from that scale
  * down: at each scale the positions that keep every pin between the bands and the image within its
  * pan limits are tried, nearest the centred one first, and the first that keeps every pin clear of
- * every block wins. The map may then show a margin of dark ground beside the image, under the plate.
+ * every block wins.
+ *
+ * Review 2 follow-up (no black past the art): scale 1 is "cover", so the first view covers the box
+ * whenever some position at that scale keeps every pin clear (centred if it can, shifted otherwise).
+ * Only where no position can (the pins are wider or taller than the covered view allows) does it
+ * zoom out below 1, the least that shows them all: a letterbox, and CityMap fills the margin with a
+ * blurred, darkened copy of the art (`data-fit="letterbox"`), never plain black.
  */
 export function fitPinsView(i: FitInput): MapView {
   const first = fitBetweenBands(i);
@@ -292,6 +303,11 @@ type ZoomInput = {
   fitted: MapView;
   pin: { x: number; y: number };
   cover?: MapCover;
+  /**
+   * The largest scale that does not upscale the largest file served (`nativeScale`); never below 1,
+   * the scale that covers the box. Without it, MAX_SCALE.
+   */
+  maxScale?: number;
 };
 
 /** The clear part of the box: all of it but what the panel covers (the whole box if that is nothing). */
@@ -306,29 +322,95 @@ function clearArea(box: { w: number; h: number }, cover: MapCover = {}): MapRect
 }
 
 /**
- * The view zoomed into one pin (review 2 #9): twice the fitted scale (1.25–2.5 × the covering size),
- * the pin in the middle of the part of the map the panel leaves clear. Inside the pan limits when
- * that still keeps the pin in the clear part; past them otherwise (a pin near the map's edge under a
- * phone's sheet), with dark ground beside the image rather than a pin hidden by the sheet.
+ * The scale at which the map shows the art at its native resolution: one pixel of the largest file
+ * served (the largest of `widths`, at most the intrinsic `width`) per CSS pixel. Never below 1:
+ * covering the box comes first (a box wider than the art upscales it rather than show past its edge).
  */
-export function zoomView({ box, content, fitted, pin, cover }: ZoomInput): MapView {
-  const scale = clamp(Math.max(fitted.scale * ZOOM_FACTOR, MIN_ZOOM), fitted.scale, MAX_SCALE);
-  const a = clearArea(box, cover);
-  const ideal = {
-    scale,
-    x: (a.x0 + a.x1) / 2 - pin.x * content.w * scale,
-    y: (a.y0 + a.y1) / 2 - pin.y * content.h * scale,
-  };
-  const inLimits = { scale, ...clampPosition(box, content, scale, ideal.x, ideal.y) };
-  const px = inLimits.x + pin.x * content.w * scale;
-  const py = inLimits.y + pin.y * content.h * scale;
-  const clear = px >= a.x0 + PIN_PAD && px <= a.x1 - PIN_PAD && py >= a.y0 + PIN_PAD && py <= a.y1 - PIN_PAD;
-  return clear ? inLimits : ideal;
+export function nativeScale(asset: Pick<AssetView, 'width' | 'widths'>, contentW: number): number {
+  const served = asset.widths.length > 0 ? Math.min(asset.width, Math.max(...asset.widths)) : asset.width;
+  return contentW > 0 ? Math.max(1, served / contentW) : 1;
+}
+
+/** A pin's zoom, before an edge pin needs more: ZOOM_FACTOR × the fitted view, within its bounds. */
+export function zoomScale(fitted: MapView, maxScale = MAX_SCALE): number {
+  const top = Math.max(1, Math.min(MAX_SCALE, maxScale));
+  return clamp(Math.max(fitted.scale * ZOOM_FACTOR, MIN_ZOOM), 1, top);
+}
+
+const overlap = (a: readonly [number, number], b: readonly [number, number]): [number, number] | null =>
+  Math.max(a[0], b[0]) <= Math.min(a[1], b[1]) ? [Math.max(a[0], b[0]), Math.min(a[1], b[1])] : null;
+
+/**
+ * One axis of a zoomed view: where the image starts (`len`: the box, [a0, a1]: its clear part,
+ * `size`: the image at this scale, `p`: the pin's offset in it). The pin goes in the middle of the
+ * clear part, moved off-centre as far as it takes for the image to cover the whole box. If no place
+ * does both (a pin near the bottom of the art under a phone's tall sheet), the pin stays clear and the
+ * image stops short of the box's edge by the least that takes, so only under the panel: the clear
+ * part is always covered. (For a pin within PIN_PAD of the art's edge even that cannot be done; the
+ * image then covers the clear part and the pin sits as near the clear part as it can.)
+ */
+function placeAxis(len: number, a0: number, a1: number, size: number, p: number): number {
+  const ideal = (a0 + a1) / 2 - p;
+  const fillsBox = [len - size, 0] as const;
+  const pinClear = [a0 + PIN_PAD - p, a1 - PIN_PAD - p] as const;
+  const both = overlap(fillsBox, pinClear);
+  if (both) return clamp(ideal, both[0], both[1]);
+  const fillsClear = [a1 - size, a0] as const;
+  const nearest = clamp(ideal, fillsBox[0], fillsBox[1]);
+  const ok = overlap(fillsClear, pinClear);
+  if (ok) return clamp(nearest, ok[0], ok[1]);
+  return clamp(clamp(nearest, pinClear[0], pinClear[1]), fillsClear[0], fillsClear[1]);
+}
+
+/** The least scale at which the image can cover the box with the pin clear, on one axis. */
+function scaleToFill(len: number, a0: number, a1: number, size1: number, f: number): number {
+  const lo = f > 0 ? (a0 + PIN_PAD) / (f * size1) : Infinity;
+  const hi = f < 1 ? (len - a1 + PIN_PAD) / ((1 - f) * size1) : Infinity;
+  return Math.max(lo, hi);
 }
 
 /**
- * How far the zoomed map pans (review 2 #8): the usual limits (the image covers the box), widened
- * to take in the zoomed view itself when it lies past them.
+ * The view zoomed into one pin (review 2 #9; review 2 follow-up: no ground past the art's edge):
+ * `zoomScale` (ZOOM_FACTOR × the fitted view, at least MIN_ZOOM × the covering size, at most
+ * MAX_SCALE, and never past the art's native resolution, `maxScale`), the pin in the middle of the
+ * part of the map the panel leaves clear. The image covers the box: near an edge the pin sits
+ * off-centre instead, and if it would then be under the panel the zoom goes closer (up to the native
+ * cap) until it is clear. Only where even that cannot do it (a pin near the bottom of the art under a
+ * phone's sheet) does the image stop short of the box's edge, by the least that keeps the pin clear,
+ * and only under the panel (`placeAxis`).
+ */
+export function zoomView({ box, content, fitted, pin, cover, maxScale = MAX_SCALE }: ZoomInput): MapView {
+  const top = Math.max(1, Math.min(MAX_SCALE, maxScale));
+  const a = clearArea(box, cover);
+  const need = Math.max(
+    scaleToFill(box.w, a.x0, a.x1, content.w, pin.x),
+    scaleToFill(box.h, a.y0, a.y1, content.h, pin.y),
+  );
+  const z = zoomScale(fitted, maxScale);
+  const scale = need <= top ? Math.max(z, need) : z;
+  return {
+    scale,
+    x: placeAxis(box.w, a.x0, a.x1, content.w * scale, pin.x * content.w * scale),
+    y: placeAxis(box.h, a.y0, a.y1, content.h * scale, pin.y * content.h * scale),
+  };
+}
+
+/** Whether the image covers the whole box at this view (no ground past its edge shows). */
+export function coversBox(
+  box: { w: number; h: number },
+  content: { w: number; h: number },
+  v: MapView,
+): boolean {
+  const e = 0.5; // rounding
+  return (
+    v.x <= e && v.y <= e && v.x + content.w * v.scale >= box.w - e && v.y + content.h * v.scale >= box.h - e
+  );
+}
+
+/**
+ * How far the zoomed map pans (review 2 #8): the image covers the box, widened only to take in the
+ * zoomed view itself when it stops short of an edge under a phone's sheet (`zoomView`), so the part
+ * the sheet leaves clear stays covered.
  */
 export function panLimits(
   box: { w: number; h: number },
@@ -416,6 +498,8 @@ export function CityMap({
     return () => ro.disconnect();
   }, []);
 
+  // Any size and shape of art: only its aspect and the largest file served matter (the pins are
+  // fractions of it).
   const aspect = map.day.width / map.day.height;
   const w = size?.w ?? 0;
   const h = size?.h ?? 0;
@@ -423,6 +507,11 @@ export function CityMap({
   // Scale 1 covers the box; the fitted view may zoom out below it to show every pin.
   const contentW = Math.max(w, h * aspect);
   const contentH = contentW / aspect;
+  // The zoom never upscales the largest file served (2560 px today).
+  const maxScale = nativeScale(map.day, contentW);
+  // The files are picked for the closest the map zooms, so a zoomed-in map is never upscaled; the
+  // blurred margin asks for the same file, so it costs no second download.
+  const sizes = `${Math.round(contentW * Math.min(MAX_SCALE, maxScale))}px`;
   const pinsKey = locations.map((l) => `${l.id}:${l.map.x},${l.map.y}`).join(';');
   const coverKey = `${cover?.top ?? 0},${cover?.right ?? 0},${cover?.bottom ?? 0},${cover?.left ?? 0}`;
   const selected = locations.find((l) => l.id === selectedId) ?? null;
@@ -433,10 +522,16 @@ export function CityMap({
     const box = { w, h };
     const content = { w: contentW, h: contentH };
     const fitted = fitPinsView({ box, content, pins: locations.map((l) => l.map), insets });
-    const view = selected ? zoomView({ box, content, fitted, pin: selected.map, cover }) : fitted;
+    const view = selected ? zoomView({ box, content, fitted, pin: selected.map, cover, maxScale }) : fitted;
     return { fitted, view };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, contentW, contentH, insets, pinsKey, coverKey, selected?.id]);
+  }, [w, h, contentW, contentH, maxScale, insets, pinsKey, coverKey, selected?.id]);
+  /** The first view covers the box, or is letterboxed onto the blurred copy (reported for tests). */
+  const fit = target
+    ? coversBox({ w, h }, { w: contentW, h: contentH }, target.fitted)
+      ? 'cover'
+      : 'letterbox'
+    : '';
 
   /** The view shown, and whether reaching it is animated. */
   const [shown, setShown] = useState<{ view: MapView; animate: boolean } | null>(null);
@@ -472,7 +567,8 @@ export function CityMap({
     const still = prefersReducedMotion();
     const arrive = (delay: number) => {
       if (!sel) return;
-      arriveTimer.current = setTimeout(() => onArriveRef.current?.(sel), delay);
+      const fillsMap = coversBox({ w, h }, { w: contentW, h: contentH }, target.view);
+      arriveTimer.current = setTimeout(() => onArriveRef.current?.(sel, { fillsMap }), delay);
     };
     if (first) {
       // The first landing (the welcome day opens slot A's pin): show the city fitted, then zoom in.
@@ -627,6 +723,7 @@ export function CityMap({
       data-testid="city-map"
       data-zoomed={selected ? 'true' : 'false'}
       data-moving={moving ? 'true' : 'false'}
+      data-fit={fit}
       data-view={view ? `${view.x.toFixed(1)},${view.y.toFixed(1)},${view.scale.toFixed(4)}` : ''}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -640,13 +737,35 @@ export function CityMap({
       }}
       onDragStart={(e) => e.preventDefault()}
     >
+      {/* Wherever the art does not reach (a letterboxed first view, the zoom on its way in, a pin
+          near the art's bottom edge under a phone's sheet): a blurred, darkened copy of it over an
+          ink-and-petrol wash, never plain black. Static, so it costs one paint. */}
+      <div
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+        style={{
+          background:
+            'radial-gradient(ellipse at 50% 45%, color-mix(in srgb, var(--color-petrol) 40%, var(--color-ink)) 0%, var(--color-ink) 75%)',
+        }}
+        aria-hidden="true"
+        data-testid="map-backdrop"
+      >
+        {size && w > 0 && h > 0 && (isNight ? nightMounted : dayMounted) && (
+          <Picture
+            asset={isNight ? map.night : map.day}
+            sizes={sizes}
+            loading="eager"
+            decorative
+            className="absolute inset-0 size-full scale-110 object-cover blur-xl brightness-[0.45] saturate-[0.7] select-none"
+          />
+        )}
+      </div>
       {size && w > 0 && h > 0 && (
         <>
           <div className="absolute top-0 left-0" style={layer} data-testid="map-layer">
             {dayMounted && (
               <Picture
                 asset={map.day}
-                sizes={`${Math.round(contentW)}px`}
+                sizes={sizes}
                 loading="eager"
                 className="absolute inset-0 size-full select-none"
               />
@@ -660,7 +779,7 @@ export function CityMap({
               {nightMounted && (
                 <Picture
                   asset={map.night}
-                  sizes={`${Math.round(contentW)}px`}
+                  sizes={sizes}
                   decorative={!isNight}
                   className="size-full select-none"
                 />

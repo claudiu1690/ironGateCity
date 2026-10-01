@@ -21,8 +21,11 @@ import {
   TodayStrip,
   artUrl,
   ZOOM_MS,
+  coversBox,
   fitPinsView,
+  nativeScale,
   panLimits,
+  zoomScale,
   zoomView,
   formatCountdown,
   formatOpinionDelta,
@@ -208,7 +211,7 @@ describe('the fixed map (review 2 #8, #9)', () => {
       expect(screen.getByTestId('map-layer').style.transition).toContain('transform 500ms');
       expect(onArrive).not.toHaveBeenCalled();
       act(() => vi.advanceTimersByTime(ZOOM_MS));
-      expect(onArrive).toHaveBeenCalledWith('coalport.union-hall');
+      expect(onArrive).toHaveBeenCalledWith('coalport.union-hall', { fillsMap: true });
       // Zoomed in, a drag pans; the pins are the same elements throughout (no remount).
       const zoomed = viewOf(box);
       fireEvent.pointerDown(box, { pointerId: 2, button: 0, clientX: 100, clientY: 100 });
@@ -240,15 +243,15 @@ describe('zoomView and panLimits (review 2 #9)', () => {
   const content = { w: box.h * ASPECT, h: box.h };
   const fitted = { scale: 0.6, x: 0, y: 0 };
 
-  it('twice the fitted scale, the pin in the middle of the part the sheet leaves clear', () => {
+  it('closer than the fitted view (follow-up: 2.5 ×, at least 1.6 ×), the pin clear of the sheet', () => {
     const cover = { bottom: 480 };
     for (const pin of [
       { x: 0.36, y: 0.44 },
-      { x: 0.15, y: 0.89 }, // The Anchor, near the bottom edge: past the limits rather than hidden
+      { x: 0.15, y: 0.89 }, // The Anchor, near the bottom edge: short of the box's edge, under the sheet
       { x: 0.6, y: 0.14 },
     ]) {
       const v = zoomView({ box, content, fitted, pin, cover });
-      expect(v.scale).toBeCloseTo(1.25);
+      expect(v.scale).toBeGreaterThanOrEqual(1.6);
       const px = v.x + pin.x * content.w * v.scale;
       const py = v.y + pin.y * content.h * v.scale;
       expect(px).toBeGreaterThanOrEqual(30);
@@ -263,13 +266,198 @@ describe('zoomView and panLimits (review 2 #9)', () => {
     }
   });
 
-  it('never above 2.5 × and never below the fitted scale', () => {
-    expect(zoomView({ box, content, fitted: { scale: 2, x: 0, y: 0 }, pin: { x: 0.5, y: 0.5 } }).scale).toBe(
-      2.5,
+  it('never above 3 ×, never past the native resolution, never below the covering scale', () => {
+    const mid = { x: 0.5, y: 0.5 };
+    expect(zoomView({ box, content, fitted: { scale: 2, x: 0, y: 0 }, pin: mid }).scale).toBe(3);
+    expect(zoomView({ box, content, fitted: { scale: 0.3, x: 0, y: 0 }, pin: mid }).scale).toBe(1.6);
+    // A 1920 px desktop: the 2560 px file allows 1.33 ×, not 2.5 ×.
+    const wide = { w: 1920, h: 994 };
+    const wideContent = { w: 1920, h: 1920 / ASPECT };
+    const cap = nativeScale({ width: 5056, widths: [1280, 2560] }, wideContent.w);
+    expect(cap).toBeCloseTo(2560 / 1920);
+    const v = zoomView({
+      box: wide,
+      content: wideContent,
+      fitted: { scale: 1, x: 0, y: 0 },
+      pin: mid,
+      maxScale: cap,
+    });
+    expect(wideContent.w * v.scale).toBeLessThanOrEqual(2560 + 1e-6);
+    // Wider than the art: it covers the box (upscaled) rather than show past its edge.
+    expect(nativeScale({ width: 5056, widths: [1280, 2560] }, 3000)).toBe(1);
+    expect(zoomScale({ scale: 1, x: 0, y: 0 }, 1)).toBe(1);
+  });
+});
+
+describe('no black past the art (review 2 follow-up)', () => {
+  // Any art shape: today's 3:2, and the squarer and taller art to come.
+  const ASPECTS = [5056 / 3392, 4 / 3, 1, 2 / 3, 16 / 9];
+  const BOXES = [
+    { w: 360, h: 520 },
+    { w: 375, h: 692 },
+    { w: 488, h: 331 },
+    { w: 768, h: 904 },
+    { w: 1280, h: 714 },
+    { w: 1920, h: 994 },
+  ];
+  const PINS = [0.03, 0.15, 0.36, 0.5, 0.64, 0.89, 0.97].flatMap((x) =>
+    [0.03, 0.14, 0.44, 0.63, 0.89, 0.97].map((y) => ({ x, y })),
+  );
+  const contentOf = (b: { w: number; h: number }, aspect: number) => {
+    const w = Math.max(b.w, b.h * aspect);
+    return { w, h: w / aspect };
+  };
+  const at = (
+    v: { scale: number; x: number; y: number },
+    c: { w: number; h: number },
+    p: { x: number; y: number },
+  ) => ({
+    x: v.x + p.x * c.w * v.scale,
+    y: v.y + p.y * c.h * v.scale,
+  });
+
+  it('with no panel (tablets, desktops) the zoom covers the box for a pin anywhere, the pin on screen', () => {
+    for (const aspect of ASPECTS)
+      for (const b of BOXES) {
+        const c = contentOf(b, aspect);
+        const maxScale = nativeScale({ width: 6000, widths: [1280, 2560] }, c.w);
+        for (const pin of PINS) {
+          const v = zoomView({ box: b, content: c, fitted: { scale: 1, x: 0, y: 0 }, pin, maxScale });
+          const label = `${aspect.toFixed(2)} ${b.w}×${b.h} pin ${pin.x},${pin.y}`;
+          expect(coversBox(b, c, v), label).toBe(true);
+          expect(v.scale, label).toBeGreaterThanOrEqual(1);
+          const p = at(v, c, pin);
+          expect(p.x, label).toBeGreaterThanOrEqual(0);
+          expect(p.x, label).toBeLessThanOrEqual(b.w);
+          expect(p.y, label).toBeGreaterThanOrEqual(0);
+          expect(p.y, label).toBeLessThanOrEqual(b.h);
+        }
+      }
+  });
+
+  it('beside a panel: the pin clear of it, the part it leaves clear always covered, the rest only if it can', () => {
+    const cases = [
+      { b: { w: 375, h: 692 }, cover: { bottom: 487 } }, // a phone's sheet
+      { b: { w: 360, h: 520 }, cover: { bottom: 384 } },
+      { b: { w: 488, h: 331 }, cover: { left: 80 } }, // a phone held sideways
+    ];
+    for (const aspect of ASPECTS)
+      for (const { b, cover } of cases) {
+        const c = contentOf(b, aspect);
+        const maxScale = nativeScale({ width: 6000, widths: [2560] }, c.w);
+        for (const pin of PINS.filter((p) => p.x > 0.1 && p.x < 0.9 && p.y > 0.1 && p.y < 0.9)) {
+          const v = zoomView({
+            box: b,
+            content: c,
+            fitted: { scale: 0.6, x: 0, y: 0 },
+            pin,
+            cover,
+            maxScale,
+          });
+          const label = `${aspect.toFixed(2)} ${b.w}×${b.h} pin ${pin.x},${pin.y}`;
+          const clear = {
+            x0: cover.left ?? 0,
+            x1: b.w,
+            y0: 0,
+            y1: b.h - (cover.bottom ?? 0),
+          };
+          // The clear part is covered by the art.
+          expect(v.x, label).toBeLessThanOrEqual(clear.x0 + 0.5);
+          expect(v.y, label).toBeLessThanOrEqual(clear.y0 + 0.5);
+          expect(v.x + c.w * v.scale, label).toBeGreaterThanOrEqual(clear.x1 - 0.5);
+          expect(v.y + c.h * v.scale, label).toBeGreaterThanOrEqual(clear.y1 - 0.5);
+          // The pin's 44 px target clear of the panel.
+          const p = at(v, c, pin);
+          expect(p.x - 22, label).toBeGreaterThanOrEqual(clear.x0);
+          expect(p.x + 22, label).toBeLessThanOrEqual(clear.x1);
+          expect(p.y - 22, label).toBeGreaterThanOrEqual(clear.y0);
+          expect(p.y + 22, label).toBeLessThanOrEqual(clear.y1);
+          // The art covers the whole box unless the pin cannot be clear then even at the native cap.
+          if (!coversBox(b, c, v)) expect(v.scale, label).toBeLessThanOrEqual(maxScale + 1e-9);
+          // Panning stays within limits that keep the clear part covered.
+          const lim = panLimits(b, c, v);
+          for (const x of lim.x) expect(x + c.w * v.scale, label).toBeGreaterThanOrEqual(clear.x1 - 0.5);
+          for (const y of lim.y) expect(y + c.h * v.scale, label).toBeGreaterThanOrEqual(clear.y1 - 0.5);
+          expect(Math.max(...lim.x), label).toBeLessThanOrEqual(clear.x0 + 0.5);
+          expect(Math.max(...lim.y), label).toBeLessThanOrEqual(clear.y0 + 0.5);
+        }
+      }
+  });
+
+  it('a pin away from the edges zooms with the art covering the whole box, even beside a panel', () => {
+    const b = { w: 375, h: 692 };
+    const c = contentOf(b, 1);
+    const v = zoomView({
+      box: b,
+      content: c,
+      fitted: { scale: 0.6, x: 0, y: 0 },
+      pin: { x: 0.5, y: 0.4 },
+      cover: { bottom: 487 },
+      maxScale: nativeScale({ width: 6000, widths: [2560] }, c.w),
+    });
+    expect(coversBox(b, c, v)).toBe(true);
+  });
+
+  it('the zoom between two covering views covers at every frame (the transition is linear in x, y, scale)', () => {
+    const b = { w: 1440, h: 814 };
+    const c = contentOf(b, 5056 / 3392);
+    const fitted = fitPinsView({
+      box: b,
+      content: c,
+      pins: [
+        { x: 0.2, y: 0.2 },
+        { x: 0.8, y: 0.8 },
+      ],
+      insets: { top: 0, bottom: 0 },
+    });
+    expect(coversBox(b, c, fitted)).toBe(true);
+    for (const pin of [
+      { x: 0.05, y: 0.05 },
+      { x: 0.95, y: 0.9 },
+      { x: 0.5, y: 0.5 },
+    ]) {
+      const z = zoomView({
+        box: b,
+        content: c,
+        fitted,
+        pin,
+        maxScale: nativeScale({ width: 5056, widths: [2560] }, c.w),
+      });
+      for (let t = 0; t <= 1; t += 0.05) {
+        const f = {
+          scale: fitted.scale + (z.scale - fitted.scale) * t,
+          x: fitted.x + (z.x - fitted.x) * t,
+          y: fitted.y + (z.y - fitted.y) * t,
+        };
+        expect(coversBox(b, c, f), `t ${t.toFixed(2)}`).toBe(true);
+      }
+    }
+  });
+
+  it('the first view covers the box when the pins allow it, and says so', () => {
+    const b = { w: 1440, h: 814 };
+    const c = contentOf(b, 5056 / 3392);
+    const pins = [
+      { x: 0.3, y: 0.2 },
+      { x: 0.7, y: 0.8 },
+    ];
+    expect(coversBox(b, c, fitPinsView({ box: b, content: c, pins, insets: { top: 0, bottom: 0 } }))).toBe(
+      true,
     );
+    // A phone upright with pins spread across a 3:2 map: letterboxed (the blurred copy fills the rest).
+    const phone = { w: 360, h: 520 };
+    const pc = contentOf(phone, 5056 / 3392);
+    const wide = [
+      { x: 0.14, y: 0.4 },
+      { x: 0.78, y: 0.6 },
+    ];
     expect(
-      zoomView({ box, content, fitted: { scale: 0.3, x: 0, y: 0 }, pin: { x: 0.5, y: 0.5 } }).scale,
-    ).toBe(1.25);
+      coversBox(
+        phone,
+        pc,
+        fitPinsView({ box: phone, content: pc, pins: wide, insets: { top: 0, bottom: 0 } }),
+      ),
+    ).toBe(false);
   });
 });
 

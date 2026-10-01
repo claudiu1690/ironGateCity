@@ -52,6 +52,8 @@ export function CityPage() {
   const side = layout === 'side';
   // The location opens once the map has zoomed into its pin (CityMap `onArrive`).
   const [arrived, setArrived] = useState<string | null>(null);
+  // The art stops short of the map's edge under the sheet (a pin near its bottom): the sheet fills 60 dvh.
+  const [fillSheet, setFillSheet] = useState(false);
   useEffect(() => {
     if (arrived !== null && arrived !== (loc ?? null)) setArrived(null);
   }, [loc, arrived]);
@@ -314,7 +316,10 @@ export function CityPage() {
         selectedId={loc ?? null}
         onSelect={(id) => select(id)}
         cover={cover}
-        onArrive={setArrived}
+        onArrive={(id, { fillsMap }) => {
+          setArrived(id);
+          setFillSheet(!fillsMap);
+        }}
       >
         {!side && (
           <>
@@ -360,6 +365,7 @@ export function CityPage() {
       {location && arrived === location.id && !(character.orders.complete && !modalOpen) && (
         <LocationSheet
           layout={layout}
+          fill={fillSheet}
           open
           onOpenChange={(o) => {
             if (!o) select(null);

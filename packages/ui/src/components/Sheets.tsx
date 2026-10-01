@@ -21,6 +21,11 @@ export interface LocationSheetProps {
   /** Small bonus tags ("Rested +50 % XP and Iron"). */
   tags?: string[];
   layout?: LocationLayout;
+  /**
+   * A bottom sheet the full 60 dvh, however little it holds: the zoomed map's art stops short of the
+   * map's edge under it (CityMap `onArrive`), and a shorter sheet would show the gap.
+   */
+  fill?: boolean;
   children: ReactNode;
 }
 
@@ -43,6 +48,7 @@ export function LocationSheet({
   blurb,
   tags = [],
   layout = 'sheet',
+  fill = false,
   children,
 }: LocationSheetProps) {
   const modal = layout === 'panel';
@@ -65,6 +71,7 @@ export function LocationSheet({
             layout === 'sheet' &&
               // Slice 2 (§12.3): at most 60 dvh on phones, so the map and the pin stay visible above it.
               'inset-x-0 bottom-16 max-h-[60dvh] shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
+            layout === 'sheet' && fill && 'h-[60dvh]',
             layout === 'side' &&
               // Right of the tab rail, under the HUD, the full height; it scrolls inside (review 2 #3).
               'top-[var(--hud-h,44px)] bottom-0 left-[calc(64px+env(safe-area-inset-left))] w-[min(340px,50vw)] shadow-[10px_0_30px_rgb(0_0_0/0.45)]',

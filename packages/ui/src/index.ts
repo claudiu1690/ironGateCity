@@ -1,6 +1,15 @@
 export { Button } from './components/Button';
 export type { ButtonProps, ButtonVariant } from './components/Button';
-export { CityMap, ZOOM_MS, fitPinsView, panLimits, zoomView } from './components/CityMap';
+export {
+  CityMap,
+  ZOOM_MS,
+  coversBox,
+  fitPinsView,
+  nativeScale,
+  panLimits,
+  zoomScale,
+  zoomView,
+} from './components/CityMap';
 export type { CityMapProps, MapCover, MapHotspot, MapInsets, MapRect, MapView } from './components/CityMap';
 export { FACTION_STYLE, FactionCrest } from './components/FactionCrest';
 export type { FactionCrestProps } from './components/FactionCrest';

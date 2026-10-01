@@ -84,3 +84,163 @@ test.describe('every pin clear at every size (QA M2)', () => {
     await expect(page.getByRole('dialog')).toContainText('Assembly Rooms');
   });
 });
+
+/**
+ * Review 2 follow-up: no black past the art, ever. At every size, at rest and zoomed into each pin
+ * of each home city, the map image covers the part of the screen the map owns: the whole map box,
+ * less what the open location's bottom sheet (upright phone) or side panel (phone sideways) lies
+ * over. Where the first view cannot cover the box with every pin clear (`data-fit="letterbox"`), the
+ * blurred copy of the art fills it instead; those sizes are listed in the test's annotations.
+ */
+
+type Rect = { left: number; top: number; right: number; bottom: number };
+
+/** The map box, the image layer, the blurred backdrop, and the part the open location leaves. */
+async function mapRects(page: Page) {
+  return page.evaluate(() => {
+    const r = (el: Element | null): Rect | null => {
+      if (!el) return null;
+      const b = el.getBoundingClientRect();
+      return { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+    };
+    const box = document.querySelector<HTMLElement>('[data-testid=city-map]')!;
+    const owned = r(box)!;
+    const panel = document.querySelector<HTMLElement>('[role=dialog][data-layout]');
+    if (panel?.dataset.layout === 'sheet')
+      owned.bottom = Math.min(owned.bottom, panel.getBoundingClientRect().top);
+    if (panel?.dataset.layout === 'side')
+      owned.left = Math.max(owned.left, panel.getBoundingClientRect().right);
+    const backdrop = document.querySelector('[data-testid=map-backdrop]');
+    return {
+      fit: box.dataset.fit ?? '',
+      box: r(box)!,
+      owned,
+      layer: r(document.querySelector('[data-testid=map-layer]')),
+      backdrop: r(backdrop),
+      backdropArt: !!backdrop?.querySelector('img'),
+    };
+  });
+}
+
+const covers = (outer: Rect | null, inner: Rect) =>
+  !!outer &&
+  outer.left <= inner.left + 1 &&
+  outer.top <= inner.top + 1 &&
+  outer.right >= inner.right - 1 &&
+  outer.bottom >= inner.bottom - 1;
+
+async function settled(page: Page, zoomed: boolean) {
+  const map = page.getByTestId('city-map');
+  await expect(map).toHaveAttribute('data-zoomed', zoomed ? 'true' : 'false');
+  await expect(map).toHaveAttribute('data-moving', 'false');
+  await expect(map).toHaveAttribute('data-fit', /^(cover|letterbox)$/);
+}
+
+test.describe('no black past the art (review 2 follow-up)', () => {
+  test.use({ isMobile: false, hasTouch: false });
+
+  for (const [faction, city] of [
+    ['vanguard', 'duskwall'],
+    ['collective', 'coalport'],
+    ['alliance', 'ashford'],
+  ] as const satisfies ReadonlyArray<readonly [FactionKey, string]>) {
+    test(`${city}: the art covers the map at rest and zoomed into every pin, at every size`, async ({
+      page,
+    }) => {
+      test.setTimeout(300_000);
+      await page.setViewportSize(SIZES[1]!);
+      await signUpOnly(page, 'Ilse Marr', 2);
+      const marked = page.waitForResponse((r) => r.url().includes('paper.markRead'));
+      await arrive(page, { faction, answers: ANSWERS.reference });
+      await marked;
+      // The zoom lands at once here; the frames between are checked below, with motion on.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto(`/city/${city}`);
+      const letterboxed: string[] = [];
+      for (const size of SIZES) {
+        const at = `${size.width}×${size.height}`;
+        await page.setViewportSize(size);
+        await page.reload();
+        await expect(page.getByTestId('hotspot')).toHaveCount(6);
+        await settled(page, false);
+        const rest = await mapRects(page);
+        if (rest.fit === 'cover') {
+          expect(covers(rest.layer, rest.box), `${at} at rest: the art covers the map`).toBe(true);
+        } else {
+          letterboxed.push(at);
+          // The margin is the blurred copy of the art, over the whole box: never plain black.
+          expect(covers(rest.backdrop, rest.box), `${at} at rest: the blurred copy fills the map`).toBe(true);
+          expect(rest.backdropArt, `${at}: the backdrop shows the art`).toBe(true);
+        }
+        const labels = await page
+          .getByTestId('hotspot')
+          .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? ''));
+        for (const label of labels) {
+          const pin = page.locator(`[data-testid="hotspot"][aria-label="${label}"]`);
+          await pin.click();
+          const sheet = page.getByRole('dialog');
+          await expect(sheet).toBeVisible();
+          await settled(page, true);
+          const z = await mapRects(page);
+          expect(covers(z.layer, z.owned), `${at} zoomed into ${label}: the art covers the map`).toBe(true);
+          await expect(pin).toBeInViewport();
+          await sheet.getByRole('button', { name: /^Close/ }).click();
+          await expect(sheet).toBeHidden();
+          await settled(page, false);
+        }
+      }
+      test.info().annotations.push({ type: 'letterboxed', description: letterboxed.join(', ') || 'none' });
+    });
+  }
+
+  test('with motion on, the art covers the map at every frame of the zoom in and out (1440 × 900)', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await signUpOnly(page, 'Ilse Marr', 2);
+    const marked = page.waitForResponse((r) => r.url().includes('paper.markRead'));
+    await arrive(page, { faction: 'collective', answers: ANSWERS.reference });
+    await marked;
+    await page.goto('/city/coalport');
+    await settled(page, false);
+    expect((await mapRects(page)).fit).toBe('cover');
+    /** Frames (of the next 45) at which the image layer does not cover the map box. */
+    const framesPastTheArt = () =>
+      page.evaluate(
+        () =>
+          new Promise<number>((resolve) => {
+            const box = document.querySelector('[data-testid=city-map]')!;
+            const layer = document.querySelector('[data-testid=map-layer]')!;
+            let bad = 0;
+            let n = 0;
+            const tick = () => {
+              const b = box.getBoundingClientRect();
+              const l = layer.getBoundingClientRect();
+              const ok =
+                l.left <= b.left + 1 &&
+                l.top <= b.top + 1 &&
+                l.right >= b.right - 1 &&
+                l.bottom >= b.bottom - 1;
+              if (!ok) bad++;
+              if (++n < 45) requestAnimationFrame(tick);
+              else resolve(bad);
+            };
+            requestAnimationFrame(tick);
+          }),
+      );
+    // Coalport's pins nearest the art's edges: 6 (The Anchor, bottom left) and 4 (Foundry Row, top).
+    for (const label of ['6. The Anchor', '4. Foundry Row']) {
+      const watching = framesPastTheArt();
+      await page.locator(`[data-testid="hotspot"][aria-label="${label}"]`).click();
+      expect(await watching, `frames past the art zooming into ${label}`).toBe(0);
+      await settled(page, true);
+      const back = framesPastTheArt();
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: /^Close/ })
+        .click();
+      expect(await back, `frames past the art zooming out of ${label}`).toBe(0);
+      await settled(page, false);
+    }
+  });
+});
