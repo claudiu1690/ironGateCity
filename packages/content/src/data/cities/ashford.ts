@@ -19,6 +19,8 @@ export const ashford: City = {
   // §14.11 baseline, pinned in slice 2 (cities §2).
   baselineOpinion: { vanguard: 6, collective: 9, alliance: 70, neutral: 15 },
   map: { day: 'map.ashford.day', night: 'map.ashford.night' },
+  // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
+  clouds: true,
   // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
   // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
   quarters: [

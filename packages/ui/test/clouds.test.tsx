@@ -197,12 +197,11 @@ describe('CityMap clouds', () => {
     CLOUDS[time].reduce((n, d) => n + d.kinds.reduce((m, k) => m + k.count, 0), 0);
   const clouds = () => screen.queryByTestId('map-clouds');
 
-  it('on Coalport only: the content switches it on for Coalport, not the other cities', () => {
-    expect(content.city('coalport')!.clouds).toBe(true);
-    for (const id of ['duskwall', 'ashford']) expect(content.city(id)!.clouds).toBeFalsy();
-    const { rerender } = render(<CityMap {...props} clouds={content.city('coalport')!.clouds} />);
+  it('the content switches it on per city: the three home cities have it', () => {
+    for (const id of ['coalport', 'duskwall', 'ashford']) expect(content.city(id)!.clouds).toBe(true);
+    const { rerender } = render(<CityMap {...props} clouds={content.city('duskwall')!.clouds} />);
     expect(clouds()).not.toBeNull();
-    rerender(<CityMap {...props} clouds={content.city('duskwall')!.clouds} />);
+    rerender(<CityMap {...props} clouds={false} />);
     expect(clouds()).toBeNull();
     rerender(<CityMap {...props} />);
     expect(clouds()).toBeNull();

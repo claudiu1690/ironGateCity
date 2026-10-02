@@ -23,6 +23,8 @@ export const duskwall: City = {
   // §14.11 baseline, pinned in slice 2 (cities §1).
   baselineOpinion: { vanguard: 70, collective: 6, alliance: 9, neutral: 15 },
   map: { day: 'map.duskwall.day', night: 'map.duskwall.night' },
+  // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
+  clouds: true,
   // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
   // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
   quarters: [
