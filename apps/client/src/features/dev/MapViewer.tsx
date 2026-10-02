@@ -1,7 +1,7 @@
 import { cloudyMaps, mapAlt, mapPins, tilePyramids } from '@irongate/content/maps';
 import type { AssetView } from '@irongate/rules';
 import { CLOUDS, CityMap, cx, pyramidFor } from '@irongate/ui';
-import type { CloudConfig, MapRect } from '@irongate/ui';
+import type { CloudConfig, CloudDepthName, MapRect } from '@irongate/ui';
 import { useMemo, useState } from 'react';
 import { env } from '../../env';
 
@@ -13,13 +13,15 @@ import { env } from '../../env';
  *
  * Map atmosphere: the clouds (day) and fog (night) show where the city's content has them on
  * (`City.clouds`); the Clouds switch tries them on any picture, and Speed and Opacity scale the
- * `CLOUDS` config live (Speed 10 × shows the drift at a glance). `?clouds=0|1&speed=&opacity=` set
- * them from the address too.
+ * `CLOUDS` config live (Speed 10 × shows the drift at a glance), and High, Middle and Low switch each
+ * depth of the sky on or off. `?clouds=0|1&speed=&opacity=&depths=high,middle,low` set them from the
+ * address too.
  */
 
 const NAMES = ['coalport', 'duskwall', 'ashford', 'clearwater', 'irongate', 'nation'] as const;
 type Name = (typeof NAMES)[number];
 const GROW = 0.06;
+const DEPTHS: CloudDepthName[] = ['high', 'middle', 'low'];
 
 function asset(name: Name, time: 'day' | 'night'): AssetView | null {
   const id = `map.${name}.${time}`;
@@ -63,8 +65,27 @@ export function MapViewer() {
   );
   const [speed, setSpeed] = useState(Number(params.get('speed') ?? 1) || 1);
   const [opacity, setOpacity] = useState(Number(params.get('opacity') ?? 1) || 1);
+  const [depths, setDepths] = useState<ReadonlySet<CloudDepthName>>(
+    () =>
+      new Set(
+        (params.get('depths')?.split(',') ?? DEPTHS).filter((d): d is CloudDepthName =>
+          DEPTHS.includes(d as CloudDepthName),
+        ),
+      ),
+  );
   const showClouds = cloudsOn ?? cloudyMaps.has(name);
-  const cloudConfig = useMemo<CloudConfig>(() => ({ ...CLOUDS, speed, opacity }), [speed, opacity]);
+  const depthsKey = [...depths].sort().join(',');
+  const cloudConfig = useMemo<CloudConfig>(
+    () => ({
+      ...CLOUDS,
+      day: CLOUDS.day.filter((d) => depths.has(d.name)),
+      night: CLOUDS.night.filter((d) => depths.has(d.name)),
+      speed,
+      opacity,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [speed, opacity, depthsKey],
+  );
   const survey = mapPins[name]?.pins ?? [];
   const quarters = [...new Set(survey.map((p) => p.quarter))].sort((a, b) => a - b);
   const shown = quarter === 0 ? survey : survey.filter((p) => p.quarter === quarter);
@@ -129,6 +150,24 @@ export function MapViewer() {
           />
           Clouds
         </label>
+        {DEPTHS.map((d) => (
+          <label key={d} className="flex h-11 items-center gap-1 capitalize">
+            <input
+              type="checkbox"
+              className="size-5"
+              checked={depths.has(d)}
+              onChange={(e) =>
+                setDepths((s) => {
+                  const n = new Set(s);
+                  if (e.target.checked) n.add(d);
+                  else n.delete(d);
+                  return n;
+                })
+              }
+            />
+            {d}
+          </label>
+        ))}
         <label className="flex items-center gap-1">
           Speed
           <select

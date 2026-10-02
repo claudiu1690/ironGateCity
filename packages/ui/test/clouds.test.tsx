@@ -2,7 +2,16 @@ import { getContent } from '@irongate/content';
 import { cityViewFixture } from '@irongate/rules/testing';
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CLOUDS, CityMap, NIGHT_FADE_MS, ZOOM_MS, cloudPaths, cloudPlane } from '../src';
+import {
+  CLOUDS,
+  CityMap,
+  NIGHT_FADE_MS,
+  ZOOM_MS,
+  cloudPass,
+  cloudPaths,
+  cloudPlane,
+  spriteCount,
+} from '../src';
 
 /**
  * Map atmosphere (clouds.ts, CloudLayer): clouds by day and fog by night over the city map, tried on
@@ -41,43 +50,120 @@ describe('the cloud plane follows the map with a little parallax', () => {
   });
 });
 
-describe('the sky', () => {
+describe('the sky: three depths', () => {
   const box = { w: 390, h: 660 };
   const opts = { margin: CLOUDS.margin, speed: 1, opacity: 1 };
+  const depth = (time: 'day' | 'night', name: string) => CLOUDS[time].find((d) => d.name === name)!;
+  const meanCross = (time: 'day' | 'night', name: string) => {
+    const ks = depth(time, name).kinds;
+    return (
+      ks.reduce((t, k) => t + ((k.cross[0] + k.cross[1]) / 2) * k.count, 0) /
+      ks.reduce((t, k) => t + k.count, 0)
+    );
+  };
 
-  it('at most ten sprites a time of day (shadows count), within the opacity ranges', () => {
-    for (const kinds of [CLOUDS.day, CLOUDS.night]) {
-      const paths = cloudPaths(kinds, box, 600, opts);
-      const sprites = paths.length + paths.filter((p) => p.shadow).length;
-      expect(sprites).toBeLessThanOrEqual(10);
-      expect(paths.length).toBeGreaterThanOrEqual(3);
-      for (const p of paths) {
-        const [lo, hi] = kinds[p.kind]!.opacity;
-        expect(p.opacity).toBeGreaterThanOrEqual(lo);
-        expect(p.opacity).toBeLessThanOrEqual(hi);
+  it('by day high, middle and low; by night low and middle; at most 14 images each (shadows count)', () => {
+    expect(CLOUDS.day.map((d) => d.name)).toEqual(['low', 'middle', 'high']);
+    expect(CLOUDS.night.map((d) => d.name)).toEqual(['low', 'middle']);
+    for (const time of ['day', 'night'] as const) {
+      expect(spriteCount(CLOUDS[time])).toBeLessThanOrEqual(14);
+      const paths = CLOUDS[time].flatMap((d) => cloudPaths(d, box, 600, opts));
+      expect(paths.length + paths.filter((p) => p.shadow).length).toBe(spriteCount(CLOUDS[time]));
+    }
+    expect(spriteCount(CLOUDS.day)).toBeGreaterThanOrEqual(12);
+  });
+
+  it('higher is faster and has more parallax; the high wisps load last; shadows in the middle only', () => {
+    for (const time of ['day', 'night'] as const) {
+      const ds = CLOUDS[time];
+      for (let i = 1; i < ds.length; i++) {
+        expect(ds[i]!.parallax).toBeGreaterThan(ds[i - 1]!.parallax);
+        expect(meanCross(time, ds[i]!.name)).toBeLessThan(meanCross(time, ds[i - 1]!.name));
       }
     }
-    // Shadows by day only.
-    expect(cloudPaths(CLOUDS.day, box, 600, opts).some((p) => p.shadow)).toBe(true);
-    expect(cloudPaths(CLOUDS.night, box, 600, opts).some((p) => p.shadow)).toBe(false);
+    expect(depth('day', 'high').delayMs).toBeGreaterThan(0);
+    expect(depth('day', 'middle').delayMs).toBe(0);
+    for (const d of [...CLOUDS.day, ...CLOUDS.night])
+      for (const k of d.kinds) expect(!!k.shadow, `${d.name}`).toBe(d === depth('day', 'middle'));
+    for (const k of depth('day', 'high').kinds) {
+      expect(k.cross[0]).toBeGreaterThanOrEqual(40);
+      expect(k.cross[1]).toBeLessThanOrEqual(80);
+    }
+  });
+
+  it('each sprite its own size, speed and heading: no two move alike; within the opacity ranges', () => {
+    for (const time of ['day', 'night'] as const) {
+      for (const d of CLOUDS[time]) {
+        const paths = cloudPaths(d, box, 600, opts);
+        const motion = paths.map(
+          (p) => `${p.w.toFixed(1)}|${p.duration.toFixed(0)}|${(p.y1 - p.y0).toFixed(1)}`,
+        );
+        expect(new Set(motion).size).toBe(paths.length);
+        for (const p of paths) {
+          const [lo, hi] = d.kinds[p.kind]!.opacity;
+          expect(p.opacity).toBeGreaterThanOrEqual(lo);
+          expect(p.opacity).toBeLessThanOrEqual(hi);
+        }
+      }
+    }
+    // Some mirrored, some not, across the day.
+    const mirrors = CLOUDS.day.flatMap((d) => cloudPaths(d, box, 600, opts)).map((p) => p.mirror);
+    expect(mirrors).toContain(true);
+    expect(mirrors).toContain(false);
   });
 
   it('every path enters and leaves off-screen, crossing the map in the configured time', () => {
-    for (const p of cloudPaths(CLOUDS.day, box, 600, opts)) {
-      expect(p.x0 + p.w).toBeLessThan(0);
-      expect(p.x1).toBeGreaterThan(box.w);
-      const [lo, hi] = CLOUDS.day[p.kind]!.cross;
-      const crossing = (p.duration / 1000) * ((box.w + p.w) / (p.x1 - p.x0));
-      expect(crossing).toBeGreaterThanOrEqual(lo - 1e-6);
-      expect(crossing).toBeLessThanOrEqual(hi + 1e-6);
-    }
+    for (const d of CLOUDS.day)
+      for (const p of cloudPaths(d, box, 600, opts)) {
+        expect(p.x0 + p.w).toBeLessThan(0);
+        expect(p.x1).toBeGreaterThan(box.w);
+        const [lo, hi] = d.kinds[p.kind]!.cross;
+        const crossing = (p.duration / 1000) * ((box.w + p.w) / (p.x1 - p.x0));
+        expect(crossing).toBeGreaterThanOrEqual(lo - 1e-6);
+        expect(crossing).toBeLessThanOrEqual(hi + 1e-6);
+      }
   });
 
   it('the same sky on every visit; the dev speed multiplier shortens the crossings', () => {
-    expect(cloudPaths(CLOUDS.day, box, 600, opts)).toEqual(cloudPaths(CLOUDS.day, box, 600, opts));
-    const fast = cloudPaths(CLOUDS.day, box, 600, { ...opts, speed: 10 });
-    const slow = cloudPaths(CLOUDS.day, box, 600, opts);
+    const mid = depth('day', 'middle');
+    expect(cloudPaths(mid, box, 600, opts)).toEqual(cloudPaths(mid, box, 600, opts));
+    const fast = cloudPaths(mid, box, 600, { ...opts, speed: 10 });
+    const slow = cloudPaths(mid, box, 600, opts);
     expect(fast[0]!.duration).toBeCloseTo(slow[0]!.duration / 10, 6);
+  });
+
+  it('each pass of a slot is another shape, size, speed and heading, from off-screen, in its lane', () => {
+    for (const d of CLOUDS.day) {
+      for (const first of cloudPaths(d, box, 600, opts)) {
+        let p = first;
+        const seen = new Set([p.src]);
+        for (let i = 0; i < 6; i++) {
+          const n = cloudPass(d, p, box, 600, opts);
+          expect(n.key).toBe(first.key);
+          expect(n.pass).toBe(p.pass + 1);
+          expect(n.lane).toBe(first.lane);
+          expect(n.phase).toBe(0);
+          expect(n.x0 + n.w).toBeLessThan(0);
+          if (d.kinds[p.kind]!.sprites.length > 1) expect(n.src).not.toBe(p.src);
+          expect(`${n.w}|${n.duration}`).not.toBe(`${p.w}|${p.duration}`);
+          // The same sequence on every visit.
+          expect(cloudPass(d, p, box, 600, opts)).toEqual(n);
+          seen.add(n.src);
+          p = n;
+        }
+        if (d.kinds[first.kind]!.sprites.length > 2) expect(seen.size).toBeGreaterThan(2);
+      }
+    }
+  });
+
+  it('the art with a fragment cut by its edge is masked', () => {
+    const masked = [...CLOUDS.day, ...CLOUDS.night]
+      .flatMap((d) => d.kinds.flatMap((k) => k.sprites))
+      .filter((s) => s.mask)
+      .map((s) => s.src);
+    expect(new Set(masked)).toEqual(
+      new Set(['/fx/bigcloud-day-1.webp', '/fx/bigcloud-day-2.webp', '/fx/mistcurl-night-4.webp']),
+    );
   });
 });
 
@@ -90,9 +176,15 @@ describe('CityMap clouds', () => {
     onSelect: () => undefined,
   };
   let animate: ReturnType<typeof vi.fn>;
+  let anims: Array<{ el: HTMLElement; onfinish: null | (() => void) }>;
   beforeEach(() => {
     vi.useFakeTimers();
-    animate = vi.fn(() => ({ currentTime: 0, cancel: vi.fn(), pause: vi.fn(), play: vi.fn() }));
+    animate = vi.fn(function (this: HTMLElement) {
+      const a = { el: this, currentTime: 0, cancel: vi.fn(), pause: vi.fn(), play: vi.fn(), onfinish: null };
+      anims.push(a);
+      return a;
+    });
+    anims = [];
     (Element.prototype as unknown as { animate: unknown }).animate = animate;
   });
   afterEach(() => {
@@ -100,7 +192,11 @@ describe('CityMap clouds', () => {
     vi.unstubAllGlobals();
     delete (Element.prototype as unknown as { animate?: unknown }).animate;
   });
+  /** The sky after its start delay, and the high depth after its own. */
   const start = () => act(() => vi.advanceTimersByTime(CLOUDS.startDelayMs + 20));
+  const all = () => act(() => vi.advanceTimersByTime(Math.max(...CLOUDS.day.map((d) => d.delayMs)) + 20));
+  const count = (time: 'day' | 'night') =>
+    CLOUDS[time].reduce((n, d) => n + d.kinds.reduce((m, k) => m + k.count, 0), 0);
   const clouds = () => screen.queryByTestId('map-clouds');
 
   it('on Coalport only: the content switches it on for Coalport, not the other cities', () => {
@@ -130,11 +226,29 @@ describe('CityMap clouds', () => {
     // The day's sprites, after the start delay (the map's tiles first), drifting by transform only.
     expect(layer).toHaveAttribute('data-time', 'day');
     expect(layer).toHaveAttribute('data-drift', 'on');
-    expect(layer.querySelectorAll('[data-cloud]').length).toBe(CLOUDS.day.reduce((n, k) => n + k.count, 0));
+    // The high wisps come last.
+    expect(layer.querySelector('[data-depth=high]')).toBeNull();
+    all();
+    expect([...layer.querySelectorAll<HTMLElement>('[data-depth]')].map((e) => e.dataset.depth)).toEqual([
+      'low',
+      'middle',
+      'high',
+    ]);
+    expect(layer.querySelectorAll('[data-cloud]').length).toBe(count('day'));
+    expect(layer.querySelectorAll('img').length).toBe(spriteCount(CLOUDS.day));
     expect(animate).toHaveBeenCalled();
     const [frames, opts] = animate.mock.calls[0]! as unknown as [Keyframe[], KeyframeAnimationOptions];
     expect(frames.every((f) => Object.keys(f).every((k) => k === 'transform'))).toBe(true);
-    expect(opts.iterations).toBe(Infinity);
+    // One crossing at a time: when it ends, the slot comes back as another shape from off-screen.
+    expect(opts.fill).toBe('forwards');
+    const anim = anims.find((a) => a.el.closest('[data-depth=middle]'))!;
+    const slot = anim.el;
+    const before = slot.dataset.cloud;
+    const calls = animate.mock.calls.length;
+    act(() => anim.onfinish!());
+    expect(animate.mock.calls.length).toBe(calls + 1);
+    expect(slot.isConnected).toBe(true);
+    expect(slot.dataset.cloud).not.toBe(before);
   });
 
   it('reduced motion: the clouds stand still (no animation), fainter', () => {
@@ -177,8 +291,8 @@ describe('CityMap clouds', () => {
     expect(screen.queryByTestId('map-clouds-day')).toBeNull();
     const night = screen.getByTestId('map-clouds-night');
     const sprites = [...night.querySelectorAll('[data-cloud]')];
-    expect(sprites.length).toBe(CLOUDS.night.reduce((n, k) => n + k.count, 0));
-    expect(sprites.every((e) => e.getAttribute('data-cloud')!.includes('fog-night'))).toBe(true);
+    expect(sprites.length).toBe(count('night'));
+    expect(sprites.every((e) => /(fog|mistcurl)-night/.test(e.getAttribute('data-cloud')!))).toBe(true);
     expect(night.querySelectorAll('[data-cloud-shadow]')).toHaveLength(0);
   });
 });
