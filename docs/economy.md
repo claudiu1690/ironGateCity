@@ -479,7 +479,7 @@ Boarding is two taps and five seconds; the journey is twelve minutes in the back
 
 | # | Flag | Risk | Lever |
 |---|---|---|---|
-| 8 | Journey times 12 / 15 / 25 | Players close the app rather than wait, and the train feels like a wall | Measure dwell; shorten the near legs to 6–8 min if dwell is under a minute and trips are rare |
+| 8 | Journey times 12 / 12 / 15 / 25 (closed 2 Oct 2026: the user kept the planned times; dwell is still measured) | Players close the app rather than wait, and the train feels like a wall | Measure dwell; put the case to the user to shorten the near legs to 6–8 min only if dwell is under a minute and trips are rare |
 | 27 | Rank 2 to move | Players move before they know their branch | A day count, not the rank |
 | 28 | No early Issue resolution | Lopsided weeks feel dead by Wednesday | A *decided* state |
 | 29 | Groundswell never fires at low population | The anti-snowball rule is untested | Seed one district above 50 for a week |
