@@ -48,6 +48,10 @@ describe('Ticket v2', () => {
     expect(screen.getByTestId('ticket-tags')).toHaveTextContent(
       'Talk to voters · Party order 1 / 2 · +25 % Party XP',
     );
+    // Review 3 (answers §4.3): *Once* and *×3* with the batch's cost under it; the names unchanged.
+    expect(screen.getByTestId('ticket-once')).toHaveTextContent(/^Once$/);
+    expect(screen.getByTestId('ticket-three')).toHaveTextContent(/^×330 Energy$/);
+    expect(screen.getByTestId('ticket-three-cost')).toHaveTextContent('30 Energy');
     await user.click(screen.getByRole('button', { name: 'Canvass the shift change, once, 10 Energy' }));
     await user.click(
       screen.getByRole('button', { name: 'Canvass the shift change, three times, 30 Energy' }),
@@ -113,9 +117,10 @@ describe('Ticket v2', () => {
       />,
     );
     expect(screen.getByText('Intelligence 12 → 13 · always works')).toBeInTheDocument();
-    // ×1 only (§8.5, content §13.2): one Train button with the live cost, no ×3.
+    // ×1 only (§8.5, content §13.2): one button with the live cost, no ×3. Review 3 (§8.5): the
+    // button is the title's verb (content), never "Train".
     expect(screen.getByRole('button', { name: 'Study in the reading room, 44 Energy' })).toHaveTextContent(
-      'Train',
+      /^Study$/,
     );
     expect(screen.queryByRole('button', { name: /three times/ })).toBeNull();
   });
@@ -200,8 +205,9 @@ describe('the fixed map (review 2 #8, #9)', () => {
   };
   const viewOf = (el: HTMLElement) => el.getAttribute('data-view')!.split(',').map(Number);
 
-  // Review 3 (2 Oct 2026): at rest the map drags (within limits, never zooms); it used to stay put.
-  it('at rest a drag moves it at the same scale; a selection zooms in, then says it has arrived', async () => {
+  // Review 3 (2 Oct 2026): at rest the map drags (within limits); it used to stay put. A drag keeps
+  // the scale (the free zoom is the wheel, a pinch, a double tap or the buttons: review3.test.tsx).
+  it('at rest a drag moves it at the same scale; a selection zooms in and arrives as the zoom starts', async () => {
     vi.useFakeTimers();
     try {
       const onArrive = vi.fn();
@@ -219,10 +225,13 @@ describe('the fixed map (review 2 #8, #9)', () => {
       rerender(<CityMap {...props} selectedId="coalport.union-hall" onArrive={onArrive} />);
       expect(box).toHaveAttribute('data-zoomed', 'true');
       expect(viewOf(box)[2]).toBeGreaterThan(Number(rest!.split(',')[2]));
-      expect(screen.getByTestId('map-layer').style.transition).toContain('transform 500ms');
-      expect(onArrive).not.toHaveBeenCalled();
-      act(() => vi.advanceTimersByTime(ZOOM_MS));
+      // Review 3 (GDD §14.13): one movement of 250–350 ms; the page opens the sheet as it starts.
+      expect(screen.getByTestId('map-layer').style.transition).toContain(`transform ${ZOOM_MS}ms`);
+      expect(ZOOM_MS).toBeGreaterThanOrEqual(250);
+      expect(ZOOM_MS).toBeLessThanOrEqual(350);
       expect(onArrive).toHaveBeenCalledWith('coalport.union-hall', { fillsMap: true });
+      act(() => vi.advanceTimersByTime(ZOOM_MS + 50));
+      expect(onArrive).toHaveBeenCalledTimes(1);
       // Zoomed in, a drag pans; the pins are the same elements throughout (no remount).
       const zoomed = viewOf(box);
       fireEvent.pointerDown(box, { pointerId: 2, button: 0, clientX: 100, clientY: 100 });
@@ -235,16 +244,6 @@ describe('the fixed map (review 2 #8, #9)', () => {
     } finally {
       vi.useRealTimers();
     }
-  });
-
-  it('the wheel does nothing on the map (no free zoom)', () => {
-    render(<CityMap {...props} selectedId={null} />);
-    const box = screen.getByTestId('city-map');
-    const rest = box.getAttribute('data-view');
-    const wheel = new WheelEvent('wheel', { deltaY: -200, cancelable: true, bubbles: true });
-    box.dispatchEvent(wheel);
-    expect(wheel.defaultPrevented).toBe(true);
-    expect(box.getAttribute('data-view')).toBe(rest);
   });
 });
 

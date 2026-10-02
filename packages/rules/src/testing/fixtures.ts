@@ -1,6 +1,7 @@
 import type {
   ActionResult,
   AssetView,
+  HallView,
   CandidateView,
   CharacterView,
   CouncilView,
@@ -407,7 +408,7 @@ export const trainingResultFixture: ActionResult = {
     standing: null,
     stat: { stat: 'int', before: 12, after: 13 },
   },
-  again: { cost1: 46, cost3: null },
+  again: { cost1: 46, cost3: null, verb: 'Study' },
 };
 
 export const cityViewFixture: CityView = {
@@ -480,6 +481,7 @@ export const cityViewFixture: CityView = {
           energy3: null,
           preview: null,
           trains: { stat: 'int', from: 12, to: 13 },
+          verb: 'Study',
           order: null,
           locked: null,
           tags: [],
@@ -782,6 +784,18 @@ const playerCandidate: CandidateView = {
   canEndorse: { ok: true },
 };
 
+/** Review 3: Coalport's council hall on its picture, with the map's two stills. */
+export const hallFixture: HallView = {
+  name: 'Town Hall',
+  ref: 'the Town Hall',
+  x: 0.525,
+  y: 0.19,
+  asset: {
+    day: mapFixture('map.coalport.day'),
+    night: mapFixture('map.coalport.night', '5e6f7a8b'),
+  },
+};
+
 export const electionViewFixture: ElectionView = {
   electionId: 'coalport:4145',
   cityId: 'coalport',
@@ -814,6 +828,7 @@ export const electionViewFixture: ElectionView = {
   ballot: null,
   endorsed: null,
   pc: 45,
+  hall: hallFixture,
 };
 
 const countRow = (
@@ -863,6 +878,7 @@ export const countViewFixture: CountView = {
   turnout: { voters: 3, eligible: 9 },
   seats: 7,
   npcSeats: 6,
+  hall: hallFixture,
 };
 
 export const frontPageFixture: FrontPageView = {
@@ -952,6 +968,7 @@ export const councilViewFixture: CouncilView = {
     line: 'Shifts end an hour early, by order of the council, and count double towards the streak.',
     daysLeft: 3,
   },
+  hall: hallFixture,
 };
 
 export const politicalResultFixture: PoliticalResult = {

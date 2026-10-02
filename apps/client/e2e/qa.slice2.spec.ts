@@ -94,8 +94,8 @@ test.describe('phone 375×812', () => {
       await signUpOnly(page, 'Otto Brandt', 1);
       await arrive(page, { faction, answers: ANSWERS.reference });
       const modal = await firstCanvass(page);
-      await expect(modal.getByTestId('tile-faction-xp')).toBeVisible();
-      const ratio = await contrastOf(page, '[data-testid="tile-faction-xp"] span:nth-child(2)');
+      await expect(modal.getByTestId('reward-fxp')).toBeVisible();
+      const ratio = await contrastOf(page, '[data-testid="reward-fxp"] [data-testid="reward-value"]');
       test.info().annotations.push({ type: 'contrast', description: `${name} ${ratio.toFixed(2)}:1` });
       expect(ratio).toBeGreaterThanOrEqual(4.5);
     });

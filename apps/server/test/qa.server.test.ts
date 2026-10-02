@@ -470,7 +470,7 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
       ['dir.shift-change', 'dir.ears-open', 'dir.full-day'],
       ['dir.foundry-row', 'dir.paper-the-town', 'dir.five-in-the-book'],
     ]);
-    expect(me.orders.items[2]!.title).toBe('Train once, anywhere in Coalport');
+    expect(me.orders.items[2]!.title).toBe('Study, lift or run once in Coalport');
   });
 
   // Review 1 (§9.1): was "the streak across a weekend and the Monday refill"; streak and sick days

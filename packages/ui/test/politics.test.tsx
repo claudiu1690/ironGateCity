@@ -225,10 +225,44 @@ describe('Slate (screens §3, §4)', () => {
     const rows = screen.getAllByTestId('slate-row');
     expect(rows[0]).toHaveTextContent('Mara Lenk');
     expect(rows[0]).toHaveTextContent('Organiser · One of Us in Coalport · backers 1 of 2');
-    expect(rows[1]).toHaveTextContent('local · One of Us in Coalport');
-    expect(screen.getByText('Local candidates')).toBeInTheDocument();
+    // Review 3 (answers §6.2): who's who in words, on every list.
+    expect(rows[1]).toHaveTextContent('Local candidate · One of Us in Coalport');
+    expect(screen.getByTestId('players-standing')).toHaveTextContent('Players standing');
+    expect(screen.getByTestId('local-candidates')).toHaveTextContent('Local candidates');
+    expect(screen.getByTestId('local-candidates-line')).toHaveTextContent(
+      'Townspeople run by the game. They fill the list so there is always an election; you can vote for them, and a player with enough support beats them.',
+    );
+    expect(screen.getByTestId('last-seat-close')).toHaveTextContent(
+      'The last seat is usually close: a few votes decide it.',
+    );
+    // Players first, under their rule; the locals after theirs.
+    const order = [
+      screen.getByTestId('players-standing'),
+      rows[0]!,
+      screen.getByTestId('local-candidates'),
+      rows[1]!,
+    ];
+    for (let i = 1; i < order.length; i++)
+      expect(
+        order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Back · 10 Political Capital' }));
     expect(onEndorse).toHaveBeenCalledWith('66f9a0000000000000000009');
+  });
+
+  it('review 3: no player standing says so, and the local candidates fill the list', () => {
+    render(
+      <Slate
+        candidates={electionViewFixture.candidates.filter((c) => c.kind === 'npc')}
+        mode="ballot"
+        selectedKey={null}
+      />,
+    );
+    expect(screen.getByTestId('no-players-standing')).toHaveTextContent(
+      'No player has put their name in yet. The local candidates below fill the list.',
+    );
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getAllByText(/^Local candidate · /)).toHaveLength(2);
   });
 
   it('the vote: radio rows, no totals; a cast vote marks its row and dims the rest', async () => {
@@ -260,8 +294,14 @@ describe('CountTable (screens §5.2)', () => {
     expect(rows[0]).toHaveTextContent('you');
     expect(rows[0]).toHaveTextContent('your vote');
     expect(rows[6]).toHaveTextContent('the line');
-    expect(rows[1]).toHaveTextContent('local');
-    expect(screen.getByText(/^Support = local support \+ 3 per backer \+ votes/)).toBeInTheDocument();
+    expect(rows[1]).toHaveTextContent('Local candidate');
+    // Review 3 (answers §6.3): how seats are decided, in words, never a formula.
+    expect(
+      screen.getByText(
+        "The seven with the most support took the seats: the town's own vote for each candidate (their reputation here), plus their backers, plus members' votes. A tie goes to votes, then backers, then reputation, then who stood first.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/=|\+ 3 per/)).toBeNull();
     expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toContain('Support');
   });
 });

@@ -33,7 +33,10 @@ export const ashford: City = {
     price: '6 marks',
   },
   // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
-  council: { offset: 1, seats: 7 },
+  // Review 3: the council sits in the clock-tower hall by the river bridge (the survey's
+  // `ashford.town-hall`, third quarter; the point is the tower and the front together). The election
+  // screens' backdrop.
+  council: { offset: 1, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.805, y: 0.275 } },
   locations: [
     {
       id: 'ashford.gazette-house',
@@ -100,6 +103,7 @@ export const ashford: City = {
           tier: 1,
           type: 'training',
           trains: 'str',
+          verb: 'Unload',
           text: {
             success: {
               headline: 'Twenty rolls, one lorry',
@@ -221,6 +225,7 @@ export const ashford: City = {
           tier: 1,
           type: 'training',
           trains: 'int',
+          verb: 'Study',
           text: {
             success: {
               headline: 'An evening under the dome',
@@ -399,6 +404,7 @@ export const ashford: City = {
           tier: 1,
           type: 'training',
           trains: 'agi',
+          verb: 'Run',
           text: {
             success: {
               headline: 'Every stair in the block',

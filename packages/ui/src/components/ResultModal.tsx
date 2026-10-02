@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
-import { energyReadyAt } from '@irongate/rules';
+import { energyReadyAt, xpForLevel } from '@irongate/rules';
 import type {
   ActionResult,
   CharacterView,
@@ -12,6 +12,7 @@ import type {
   StatPointTarget,
 } from '@irongate/rules';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   cx,
   formatClock,
@@ -25,6 +26,7 @@ import { batchReasons, statName } from '../odds';
 import type { TrainingPlaces } from '../odds';
 import { Button } from './Button';
 import { FACTION_STYLE } from './FactionCrest';
+import { MapCrop } from './HallHeader';
 import { Picture } from './Picture';
 import { StatPointsPanel } from './Shell';
 import { Stamp } from './Stamp';
@@ -35,10 +37,10 @@ export interface ResultModalProps {
   result: ActionResult | PoliticalResult | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Again ×1 / ×3: the caller re-runs the action with a new idempotency key. */
+  /** Once more / Three more: the caller re-runs the action with a new idempotency key. */
   onAgain?: (times: 1 | 3) => void;
   againPending?: 1 | 3 | null;
-  /** Live Energy (projected now), for the Again buttons. */
+  /** Live Energy (projected now), for the repeat buttons. */
   energy?: { value: number; nextTickAt: number | null };
   /** Live stat points (the stored result stays immutable), and what the choice screen says. */
   statPoints?: {
@@ -78,8 +80,8 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
 /**
  * The result modal (GDD §13.1a, tech design §9): art and stamp, what happened, how it went (one
  * row per attempt: Success or Partial and its XP, and one plain reason under a row that isn't a
- * Success; review 2, never the roll or the odds), four reward tiles, knock-on effects, and
- * Again ×1 · Again ×3 · Continue. The server sends the full breakdown; this renders the outcome and
+ * Success; review 2, never the roll or the odds), the rewards as a receipt (review 3), knock-on
+ * effects, and *Once more · 10 Energy* · *Three more · 30 Energy* · *Continue*. The server sends the full breakdown; this renders the outcome and
  * words the reason from it, and computes nothing else. Full-screen on phones.
  */
 export function ResultModal(props: ResultModalProps) {
@@ -108,9 +110,6 @@ export function ResultModal(props: ResultModalProps) {
 function ArtHeader({ r }: { r: ActionResult }) {
   const stamp = stampFor(r);
   const art = r.art;
-  // §13.5 rung 3: the map is shown at this width, centred on the location. Maps v3: the 2048 px still
-  // at its native size (never upscaled), so a place reads at about the old size on the denser art.
-  const CROP_W = 2048;
   return (
     <div className="relative h-[150px] shrink-0 overflow-hidden bg-ink" data-art={art.rung}>
       {art.rung === 'scene' ? (
@@ -121,18 +120,8 @@ function ArtHeader({ r }: { r: ActionResult }) {
           className="absolute inset-0 size-full object-cover opacity-85"
         />
       ) : (
-        <Picture
-          asset={art.asset}
-          sizes={`${CROP_W}px`}
-          decorative
-          className="absolute max-w-none opacity-80"
-          style={{
-            width: CROP_W,
-            height: (CROP_W * art.asset.height) / art.asset.width,
-            left: `calc(50% - ${art.x * CROP_W}px)`,
-            top: `calc(75px - ${(art.y * CROP_W * art.asset.height) / art.asset.width}px)`,
-          }}
-        />
+        // §13.5 rung 3: the map centred on the location (review 3: the crop shared with the hall header).
+        <MapCrop asset={art.asset} x={art.x} y={art.y} className="opacity-80" />
       )}
       <div
         className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.9)_0%,rgb(21_24_26/0)_55%)]"
@@ -276,7 +265,6 @@ function ResultBody({
   const stamp = stampFor(r);
   const toneText =
     stamp.tone === 'success' ? 'text-success' : stamp.tone === 'failure' ? 'text-failure' : 'text-partial';
-  const factionText = FACTION_STYLE[r.character.factionId].text;
   const e = r.effects;
   const kicker = r.story
     ? copy.chapterKicker(r.story.ambitionTitle, r.story.chapter, r.story.of)
@@ -289,6 +277,8 @@ function ResultBody({
   const short1 = r.again ? energyNow < r.again.cost1 : true;
   const short3 = r.again && r.again.cost3 !== null ? energyNow < r.again.cost3 : false;
   const ready1 = r.again && short1 && energy ? energyReadyAt(energy, r.again.cost1) : null;
+  const ready3 =
+    r.again && r.again.cost3 !== null && short3 && energy ? energyReadyAt(energy, r.again.cost3) : null;
   // Orders still open after this action, for the signed line ("Two remain").
   const left = r.character.orders.items.filter((o) => !o.done).length;
   const signed = e.orders
@@ -357,38 +347,7 @@ function ResultBody({
               ))}
             </ul>
           )}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <RewardTile label="Experience" line={r.rewards.xp} />
-            <RewardTile
-              label="Party XP"
-              line={r.rewards.fxp}
-              className={factionText}
-              testId="tile-faction-xp"
-            />
-            <RewardTile label="Iron" line={r.rewards.iron} />
-            {item ? (
-              <div
-                className="flex items-center gap-2 border-[1.5px] border-ink bg-paper-card px-2.5 py-2"
-                data-testid="tile-keepsake"
-              >
-                <Picture asset={item.art} sizes="40px" decorative className="size-10 shrink-0 object-cover" />
-                <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="label-caps text-[9px] text-muted">
-                    {item.keepsake ? 'Keepsake' : 'Item'}
-                  </span>
-                  <span className="font-display text-[14px] leading-tight font-bold">{item.name}</span>
-                </span>
-              </div>
-            ) : (
-              <Tile
-                label={r.place.cityName}
-                value={e.opinion ? `${formatOpinionDelta(r.rewards.opinion)} %` : '—'}
-                className={factionText}
-                note={e.opinion ? `${r.character.factionName} opinion` : 'no opinion'}
-                testId="tile-opinion"
-              />
-            )}
-          </div>
+          <Receipt r={r} />
         </section>
 
         {/* 5. Knock-on effects */}
@@ -484,13 +443,6 @@ function ResultBody({
             </ul>
           )}
           <dl className="flex flex-col">
-            {e.opinion && (
-              <Effect
-                label={`${r.character.factionName} in ${r.place.cityName}`}
-                value={`${formatShare(e.opinion.shareBefore)} → ${formatShare(e.opinion.shareAfter)} %`}
-                testId="effect-opinion"
-              />
-            )}
             {e.standing && (
               <Effect label="Reputation" value={standingLine(e.standing)} testId="effect-standing" />
             )}
@@ -514,21 +466,8 @@ function ResultBody({
             {(e.rested.before > 0 || e.rested.after > 0) && (
               <Effect label="Rested" value={`${e.rested.before} → ${e.rested.after}`} />
             )}
-            {e.xp.after !== e.xp.before && (
-              <Effect
-                label="Experience"
-                value={`${formatNumber(e.xp.before)} → ${formatNumber(e.xp.after)}`}
-              />
-            )}
-            {e.fxp.after !== e.fxp.before && (
-              <Effect
-                label="Party XP"
-                value={`${formatNumber(e.fxp.before)} → ${formatNumber(e.fxp.after)}`}
-              />
-            )}
-            {e.iron.after !== e.iron.before && (
-              <Effect label="Iron" value={`${formatNumber(e.iron.before)} → ${formatNumber(e.iron.after)}`} />
-            )}
+            {/* Review 3 (answers §3.3): the XP, Party XP, Iron and opinion before → after lines are on
+                the receipt above. */}
             {e.pc && <Effect label="Political Capital" value={`${e.pc.before} → ${e.pc.after}`} />}
           </dl>
         </section>
@@ -541,48 +480,15 @@ function ResultBody({
         data-testid="result-buttons"
       >
         {r.again && onAgain ? (
-          <>
-            <div className={cx('grid gap-2', r.again.cost3 === null ? 'grid-cols-2' : 'grid-cols-3')}>
-              <Button
-                onClick={() => onAgain(1)}
-                pending={againPending === 1}
-                disabled={short1 || !!againPending}
-              >
-                Again ×1
-                <span aria-hidden="true" className="text-energy normal-case">
-                  {' '}
-                  {r.again.cost1}
-                </span>
-              </Button>
-              {r.again.cost3 !== null && (
-                <Button
-                  variant="secondary"
-                  onClick={() => onAgain(3)}
-                  pending={againPending === 3}
-                  disabled={short3 || !!againPending}
-                  title={short3 ? copy.x3Needs(r.again.cost3) : undefined}
-                >
-                  Again ×3
-                  <span aria-hidden="true" className="text-energy-light normal-case">
-                    {' '}
-                    {r.again.cost3}
-                  </span>
-                </Button>
-              )}
-              <Dialog.Close asChild>
-                <Button variant="outline">Continue</Button>
-              </Dialog.Close>
-            </div>
-            {(short1 || short3) && (
-              <p className="font-mono text-[11px] text-muted" data-testid="again-hint">
-                {short1
-                  ? copy.needsEnergy(r.again.cost1, ready1 === null ? '—' : formatClock(ready1))
-                  : r.again.cost3 !== null
-                    ? copy.x3Needs(r.again.cost3)
-                    : null}
-              </p>
-            )}
-          </>
+          <AgainButtons
+            again={r.again}
+            onAgain={onAgain}
+            againPending={againPending ?? null}
+            short1={short1}
+            short3={short3}
+            ready1={ready1}
+            ready3={ready3}
+          />
         ) : (
           <Dialog.Close asChild>
             <Button variant="outline" className="w-full">
@@ -643,59 +549,290 @@ function AttemptRow({ attempt: a, reason }: { attempt: ResultAttempt; reason: st
   );
 }
 
-function RewardTile({
-  label,
-  line,
-  className,
-  note,
-  testId,
-}: {
-  label: string;
-  line: RewardLine;
-  className?: string;
-  note?: string;
-  testId?: string;
-}) {
+/**
+ * Review 3 (answers §3, GDD §13.1a): the rewards as a printed receipt, one line per reward in a fixed
+ * order (XP, Party XP, Iron, opinion, an item), its value set large at the right, a note under the
+ * label where there is something to say, and a thin bar under XP and Party XP (the HUD's bars in
+ * miniature, read from the character view after the gain). A zero line is not printed.
+ */
+/**
+ * Review 3 open point (answers §9.2): the thin bars under XP and Party XP. If they read as clutter in
+ * the next play-through, this goes false: the notes stay.
+ */
+const RECEIPT_BARS = true;
+
+function Receipt({ r }: { r: ActionResult }) {
+  const c = r.character;
+  const e = r.effects;
+  const item = e.item ?? null;
+  const factionStyle = FACTION_STYLE[c.factionId];
+  const floor = xpForLevel(c.level);
+  const next = xpForLevel(c.level + 1);
+  const toLevel = copy.reward.toLevel(formatNumber(next - c.xp), c.level + 1);
+  const { fxpFloor, fxpNext, nextTitle } = c.rank;
+  const up = fxpNext !== null && nextTitle !== null ? { fxp: fxpNext, title: nextTitle } : null;
+  const toRank = up
+    ? copy.reward.toRank(formatNumber(c.fxp), formatNumber(up.fxp), up.title)
+    : copy.reward.top(formatNumber(c.fxp));
+  const join = (...parts: Array<string | null>) => parts.filter(Boolean).join(' · ') || null;
+  const rows: ReactNode[] = [];
+  if (r.rewards.xp.total !== 0)
+    rows.push(
+      <ReceiptRow
+        key="xp"
+        label={copy.reward.xp}
+        value={formatSigned(r.rewards.xp.total)}
+        note={join(partsNote(r.rewards.xp), toLevel)}
+        bar={
+          RECEIPT_BARS
+            ? { label: copy.hud.xp, value: c.xp - floor, max: next - floor, className: 'bg-ink' }
+            : undefined
+        }
+        testId="reward-xp"
+      />,
+    );
+  if (r.rewards.fxp.total !== 0)
+    rows.push(
+      <ReceiptRow
+        key="fxp"
+        label={copy.reward.fxp}
+        value={formatSigned(r.rewards.fxp.total)}
+        valueClassName={factionStyle.text}
+        note={join(partsNote(r.rewards.fxp), toRank)}
+        bar={
+          RECEIPT_BARS
+            ? {
+                label: copy.hud.fxp,
+                value: up ? c.fxp - fxpFloor : 1,
+                max: up ? up.fxp - fxpFloor : 1,
+                color: factionStyle.color,
+              }
+            : undefined
+        }
+        testId="reward-fxp"
+      />,
+    );
+  if (r.rewards.iron.total !== 0)
+    rows.push(
+      <ReceiptRow
+        key="iron"
+        label={copy.reward.iron}
+        value={formatSigned(r.rewards.iron.total)}
+        note={partsNote(r.rewards.iron)}
+        testId="reward-iron"
+      />,
+    );
+  if (e.opinion && r.rewards.opinion !== 0)
+    rows.push(
+      <ReceiptRow
+        key="opinion"
+        label={copy.reward.opinion(r.place.cityName)}
+        value={`${formatOpinionDelta(r.rewards.opinion)} %`}
+        valueClassName={factionStyle.text}
+        note={copy.reward.opinionMove(
+          c.factionName,
+          formatShare(e.opinion.shareBefore),
+          formatShare(e.opinion.shareAfter),
+        )}
+        testId="reward-opinion"
+      />,
+    );
+  if (item)
+    rows.push(
+      <li
+        key="item"
+        className="flex min-h-[52px] items-center gap-2.5 border-b border-dotted border-faint py-1.5"
+        data-testid="reward-item"
+      >
+        <Picture asset={item.art} sizes="40px" decorative className="size-10 shrink-0 object-cover" />
+        <span className="font-body text-[13px]">
+          {item.keepsake ? copy.reward.keepsake : copy.reward.item} ·{' '}
+          <span className="font-display font-bold">{item.name}</span>
+        </span>
+      </li>,
+    );
+  if (rows.length === 0) return null;
   return (
-    <Tile
-      label={label}
-      value={formatSigned(line.total)}
-      className={className}
-      note={
-        note ??
-        (line.parts && line.parts.length > 0
-          ? `${formatSigned(line.base)} · ${line.parts.map((p) => `${p.label} ${formatSigned(p.amount)}`).join(' · ')}`
-          : line.bonus > 0
-            ? `${formatSigned(line.base)} and ${formatSigned(line.bonus)} bonus`
-            : undefined)
-      }
-      testId={testId ?? `tile-${label.toLowerCase().replace(/\s+/g, '-')}`}
-    />
+    <ul className="flex flex-col border-t border-dotted border-faint" data-testid="receipt">
+      {rows}
+    </ul>
   );
 }
 
-function Tile({
+/** "+40 and Rested +5" (the base and its parts), or null when the line is all base. */
+function partsNote(line: RewardLine): string | null {
+  if (line.parts && line.parts.length > 0)
+    return copy.reward.parts(
+      formatSigned(line.base),
+      line.parts.map((p) => `${p.label} ${formatSigned(p.amount)}`).join(' and '),
+    );
+  if (line.bonus > 0) return copy.reward.parts(formatSigned(line.base), `${formatSigned(line.bonus)} bonus`);
+  return null;
+}
+
+function ReceiptRow({
   label,
   value,
+  valueClassName,
   note,
-  className,
+  bar,
   testId,
 }: {
   label: string;
   value: string;
-  note?: string;
-  className?: string;
-  testId?: string;
+  valueClassName?: string;
+  note?: string | null;
+  bar?: { label: string; value: number; max: number; className?: string; color?: string };
+  testId: string;
 }) {
+  const pct = bar && bar.max > 0 ? Math.max(0, Math.min(100, (bar.value / bar.max) * 100)) : 0;
   return (
-    <div
-      className="flex flex-col gap-0.5 border-[1.5px] border-ink bg-paper-card px-2.5 py-2"
+    <li
+      className="flex min-h-8 flex-col justify-center gap-0.5 border-b border-dotted border-faint py-1.5"
       data-testid={testId}
     >
-      <span className="label-caps text-[9px] text-muted">{label}</span>
-      <span className={cx('font-label text-[22px] leading-none font-semibold', className)}>{value}</span>
-      {note && <span className="font-mono text-[10px] text-muted">{note}</span>}
-    </div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-body text-[13px]" data-testid="reward-label">
+          {label}
+        </span>
+        <span
+          className={cx('font-label text-[17px] leading-none font-semibold', valueClassName)}
+          data-testid="reward-value"
+        >
+          {value}
+        </span>
+      </div>
+      {note && (
+        <span className="font-mono text-[10.5px] leading-snug text-muted" data-testid="reward-note">
+          {note}
+        </span>
+      )}
+      {bar && (
+        <div
+          role="progressbar"
+          aria-label={bar.label}
+          aria-valuemin={0}
+          aria-valuemax={bar.max}
+          aria-valuenow={Math.min(bar.value, bar.max)}
+          className="mt-0.5 h-[3px] w-full bg-track"
+          data-testid="reward-bar"
+        >
+          <div
+            className={cx('h-[3px]', bar.className)}
+            style={{ width: `${pct}%`, ...(bar.color ? { backgroundColor: bar.color } : {}) }}
+          />
+        </div>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Review 3 (answers §4.2): the repeat buttons say what they do and what they cost, never a bare
+ * number: *Once more · 10 Energy* · *Three more · 30 Energy* · *Continue*, or after a *Trained*
+ * result *Study again · 46 Energy* · *Continue*. On a phone the repeats sit side by side with the cost
+ * on a second line and *Continue* under them; from 640 px one row, the labels on one line. Short of
+ * Energy a button is disabled and keeps its label and cost; one hint line says when (the first that
+ * is short).
+ */
+function AgainButtons({
+  again,
+  onAgain,
+  againPending,
+  short1,
+  short3,
+  ready1,
+  ready3,
+}: {
+  again: NonNullable<ActionResult['again']>;
+  onAgain: (times: 1 | 3) => void;
+  againPending: 1 | 3 | null;
+  short1: boolean;
+  short3: boolean;
+  ready1: number | null;
+  ready3: number | null;
+}) {
+  const at = (t: number | null) => (t === null ? '—' : formatClock(t));
+  // A *Trained* result: the action's verb (stored results from before review 3 have none).
+  const verb = again.cost3 === null && again.verb ? again.verb : null;
+  const once = verb
+    ? { full: copy.again.train(verb, again.cost1), label: copy.again.trainLabel(verb) }
+    : { full: copy.again.once(again.cost1), label: copy.again.onceLabel };
+  const repeat = (
+    times: 1 | 3,
+    full: string,
+    label: string,
+    cost: number,
+    short: boolean,
+    variant: 'primary' | 'secondary',
+    testId: string,
+  ) => (
+    <Button
+      variant={variant}
+      onClick={() => onAgain(times)}
+      pending={againPending === times}
+      disabled={short || !!againPending}
+      aria-label={full}
+      className="min-h-[52px] flex-col gap-0.5 px-2 sm:min-h-11 sm:flex-row sm:gap-1.5"
+      data-testid={testId}
+    >
+      {/* Phone: the label over its cost; from 640 px one line, "Once more · 10 Energy". */}
+      <span className="text-[12px] leading-tight sm:text-[13px]">{label}</span>
+      <span
+        aria-hidden="true"
+        className={cx(
+          'font-mono text-[11px] leading-tight tracking-normal normal-case sm:font-label sm:text-[13px]',
+          short
+            ? 'text-paper'
+            : variant === 'primary'
+              ? 'text-energy-light sm:text-energy'
+              : 'text-energy-light',
+        )}
+        data-testid="again-cost"
+      >
+        <span className="hidden sm:inline">· </span>
+        {copy.again.cost(cost)}
+      </span>
+    </Button>
+  );
+  const hint = short1
+    ? verb
+      ? copy.again.trainNeeds(verb, again.cost1, at(ready1))
+      : copy.again.onceNeeds(again.cost1, at(ready1))
+    : short3 && again.cost3 !== null
+      ? copy.again.threeNeeds(again.cost3, at(ready3))
+      : null;
+  return (
+    <>
+      <div
+        className={cx(
+          'grid gap-2',
+          again.cost3 === null ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3',
+        )}
+      >
+        {repeat(1, once.full, once.label, again.cost1, short1, 'primary', 'again-once')}
+        {again.cost3 !== null &&
+          repeat(
+            3,
+            copy.again.three(again.cost3),
+            copy.again.threeLabel,
+            again.cost3,
+            short3,
+            'secondary',
+            'again-three',
+          )}
+        <Dialog.Close asChild>
+          <Button variant="outline" className={cx(again.cost3 !== null && 'col-span-2 sm:col-span-1')}>
+            Continue
+          </Button>
+        </Dialog.Close>
+      </div>
+      {hint && (
+        <p className="font-mono text-[11px] text-muted" data-testid="again-hint">
+          {hint}
+        </p>
+      )}
+    </>
   );
 }
 

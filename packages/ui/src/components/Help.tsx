@@ -84,13 +84,15 @@ export function HelpButton({ notes, label, children, className, testId, buttonRe
                     {kicker}
                   </Dialog.Title>
                   <Dialog.Description className="font-body text-[15px] leading-snug">
-                    {text}
+                    <NoteLines text={text!} />
                   </Dialog.Description>
                 </div>
               ) : (
                 <div key={kicker} className="flex flex-col gap-1 border-t border-dotted border-faint pt-2.5">
                   <h3 className="label-caps text-[11px] font-semibold text-muted">{kicker}</h3>
-                  <p className="font-body text-[15px] leading-snug">{text}</p>
+                  <p className="font-body text-[15px] leading-snug">
+                    <NoteLines text={text!} />
+                  </p>
                 </div>
               ),
             )}
@@ -101,5 +103,20 @@ export function HelpButton({ notes, label, children, className, testId, buttonRe
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+/** Review 3: a note of several short lines (*How elections work*), one line each, not a run-on. */
+function NoteLines({ text }: { text: string }) {
+  const lines = text.split('\n');
+  if (lines.length === 1) return <>{text}</>;
+  return (
+    <>
+      {lines.map((l, i) => (
+        <span key={i} className={cx('block', i > 0 && 'mt-1.5')} data-testid="note-line">
+          {l}
+        </span>
+      ))}
+    </>
   );
 }

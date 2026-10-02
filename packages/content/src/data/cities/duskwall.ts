@@ -37,7 +37,9 @@ export const duskwall: City = {
     price: '5 marks',
   },
   // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
-  council: { offset: 3, seats: 7 },
+  // Review 3: the council sits in the tower hall on the Customs Market, below the fortress (no survey
+  // pin; measured on the painting). The election screens' backdrop.
+  council: { offset: 3, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.555, y: 0.55 } },
   locations: [
     {
       id: 'duskwall.garrison-gate',
@@ -88,6 +90,7 @@ export const duskwall: City = {
           tier: 1,
           type: 'training',
           trains: 'str',
+          verb: 'Lift',
           text: {
             success: {
               headline: 'An hour in the bonded store',
@@ -238,6 +241,7 @@ export const duskwall: City = {
           tier: 1,
           type: 'training',
           trains: 'int',
+          verb: 'Study',
           text: {
             success: {
               headline: 'An evening with the registers',
@@ -390,6 +394,7 @@ export const duskwall: City = {
           tier: 1,
           type: 'training',
           trains: 'agi',
+          verb: 'Run',
           text: {
             success: {
               headline: 'Every entry below the wall',

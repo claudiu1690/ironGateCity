@@ -32,8 +32,13 @@ test('paper → map → ×3 canvass → modal → Today strip → reload lands o
   await expect(modal.getByTestId('attempt-row')).toHaveCount(3);
   await expect(modal.getByTestId('effect-energy')).toHaveText('100 → 70');
   // The Coalport meter is shared by every spec in the run (one server): only its format is stable.
-  await expect(modal.getByTestId('effect-opinion')).toHaveText(/^\d+\.\d → \d+\.\d %$/);
-  const xp = ((await modal.getByTestId('tile-experience').textContent()) ?? '').match(/\+(\d+)/)?.[1];
+  // Review 3: the meter's move is the opinion line's note on the receipt.
+  await expect(modal.getByTestId('reward-opinion').getByTestId('reward-note')).toHaveText(
+    /^Collective \d+\.\d → \d+\.\d %$/,
+  );
+  const xp = ((await modal.getByTestId('reward-xp').getByTestId('reward-value').textContent()) ?? '').match(
+    /\+(\d+)/,
+  )?.[1];
   await modal.getByRole('button', { name: 'Continue' }).click();
   await expect(modal).toBeHidden();
 

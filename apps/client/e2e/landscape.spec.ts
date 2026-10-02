@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { ANSWERS, answer, pinsOutOfReach, signUpOnly } from './helpers';
+import { ANSWERS, answer, pinsOutOfReach, signUpOnly, sheetSettled } from './helpers';
 
 /**
  * Review 2 #3: a phone held sideways (812 × 375, 667 × 375) is playable. The arrival, the paper,
@@ -74,6 +74,7 @@ for (const vp of [
       const panel = page.getByRole('dialog');
       await expect(panel).toBeVisible();
       await expect(panel).toHaveAttribute('data-layout', 'side');
+      await sheetSettled(page); // review 3: it slides in from the left with the zoom
       const p = await boxOf(panel);
       expect(inside(p, vp)).toBe(true);
       expect(p.y).toBeGreaterThanOrEqual(hud.y + hud.height - 1);

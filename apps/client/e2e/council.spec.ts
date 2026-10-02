@@ -143,7 +143,10 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   const rows = page.getByTestId('ballot-row');
   await expect(rows).toHaveCount(9);
   await expect(rows.first()).toContainText('Mara Lenk');
-  await expect(page.getByText('local ·', { exact: false })).toHaveCount(8);
+  // Review 3 (GDD §15.10): a local's row says what it is, in words.
+  await expect(page.getByText('Local candidate ·', { exact: false })).toHaveCount(8);
+  await expect(page.getByTestId('players-standing')).toBeVisible();
+  await expect(page.getByTestId('local-candidates-line')).toBeVisible();
   await expect(page.locator('main')).not.toContainText(/total/i);
   await noSideScroll(page);
   await rows.first().click();

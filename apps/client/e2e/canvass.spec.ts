@@ -38,13 +38,23 @@ test('sign up → talk to voters at the Mill Gate → result modal → HUD shows
   await expect(rows.first().getByTestId('attempt-outcome')).toHaveText(/^(Success|Partial)$/);
   await expect(rows.first()).not.toContainText(/Rolled|\d+ %/);
   if (!success) await expect(rows.first().getByTestId('attempt-reason')).not.toHaveText(/\d/);
-  await expect(modal.getByTestId('tile-experience')).toContainText(success ? '+45' : '+23');
+  // Review 3 (GDD §13.1a): the rewards as a receipt, one line each, the value at the right.
+  await expect(modal.getByTestId('reward-xp').getByTestId('reward-value')).toHaveText(
+    success ? '+45' : '+23',
+  );
   // +25 % FXP when the attempt advances one of today's Party orders (6 → +8, 3 → +4).
-  await expect(modal.getByTestId('tile-faction-xp')).toContainText(success ? /\+(6|8)/ : /\+(3|4)/);
-  await expect(modal.getByTestId('tile-iron')).toContainText(success ? '+20' : '+10');
-  await expect(modal.getByTestId('tile-opinion')).toContainText(success ? '+0.05 %' : '+0.025 %');
+  await expect(modal.getByTestId('reward-fxp').getByTestId('reward-value')).toHaveText(
+    success ? /^\+(6|8)$/ : /^\+(3|4)$/,
+  );
+  await expect(modal.getByTestId('reward-iron').getByTestId('reward-value')).toHaveText(
+    success ? '+20' : '+10',
+  );
+  await expect(modal.getByTestId('reward-opinion').getByTestId('reward-value')).toHaveText(
+    success ? '+0.05 %' : '+0.025 %',
+  );
   await expect(modal.getByTestId('effect-energy')).toHaveText('100 → 90');
-  await expect(modal.getByRole('button', { name: 'Again ×3' })).toBeEnabled();
+  // Review 3 (GDD §13.1): the buttons say what they do and what they cost.
+  await expect(modal.getByRole('button', { name: 'Three more · 30 Energy' })).toBeEnabled();
 
   await modal.getByRole('button', { name: 'Continue' }).click();
   await expect(modal).toBeHidden();
@@ -56,7 +66,7 @@ test('sign up → talk to voters at the Mill Gate → result modal → HUD shows
   await expect(page.getByTestId('hud-energy')).toHaveText('90 / 100');
 });
 
-test('Again ×1 from the modal runs a second action with a new key; sign out and back in', async ({
+test('Once more from the modal runs a second action with a new key; sign out and back in', async ({
   page,
 }) => {
   const email = await signUp(page, 'Anton Weiss');
@@ -65,7 +75,7 @@ test('Again ×1 from the modal runs a second action with a new key; sign out and
   await sheet.getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' }).click();
   const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
   await expect(modal.getByTestId('effect-energy')).toHaveText('100 → 90');
-  await modal.getByRole('button', { name: 'Again ×1' }).click();
+  await modal.getByRole('button', { name: 'Once more · 10 Energy' }).click();
   await expect(modal.getByTestId('effect-energy')).toHaveText('90 → 80');
   await modal.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByTestId('hud-energy')).toHaveText('80 / 100');
@@ -82,7 +92,7 @@ test('Again ×1 from the modal runs a second action with a new key; sign out and
 test.describe('375 × 812 phone (QA fix round 1)', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
-  test('all six pins on the first view; the ×3 modal keeps Again ×1 · Again ×3 · Continue on screen', async ({
+  test('all six pins on the first view; the ×3 modal keeps Once more · Three more · Continue on screen', async ({
     page,
   }) => {
     await page.goto('/signup');
@@ -94,22 +104,26 @@ test.describe('375 × 812 phone (QA fix round 1)', () => {
     await sheet.getByRole('button', { name: 'Win over the regulars, three times, 30 Energy' }).click();
     const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
     await expect(modal.getByTestId('stamp')).toHaveText(/of 3$/);
-    for (const name of [/Again ×1/, /Again ×3/, 'Continue'])
+    for (const name of ['Once more · 10 Energy', 'Three more · 30 Energy', 'Continue'])
       await expect(modal.getByRole('button', { name })).toBeInViewport({ ratio: 1 });
     await modal.getByRole('button', { name: 'Continue' }).click();
     await expect(modal).toBeHidden();
   });
 
-  // Review 2 #8, #9: no free zoom; Tab to a pin and Enter zooms into it and opens it.
-  test('the wheel does not zoom the map; Tab to a pin and Enter zooms in and opens it', async ({ page }) => {
+  // Review 2 #8, #9: Tab to a pin and Enter zooms into it and opens it. Review 3 (GDD §14.13): the
+  // player may zoom the map at rest; the wheel zooms it, and a pin is still a Tab away.
+  test('the wheel zooms the map at rest; Tab to a pin and Enter zooms in and opens it', async ({ page }) => {
     await signUp(page);
     await toTheCity(page);
     const anchor = page.getByRole('button', { name: '6. The Anchor' });
     await expect(anchor).toBeInViewport({ ratio: 1 });
-    await page.mouse.move(330, 300);
-    for (let i = 0; i < 12; i++) await page.mouse.wheel(0, -200);
-    await expect(anchor).toBeInViewport({ ratio: 1 });
-    await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'false');
+    const map = page.getByTestId('city-map');
+    const scale = async () => Number((await map.getAttribute('data-view'))!.split(',')[2]);
+    const before = await scale();
+    await page.mouse.move(200, 400);
+    for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -200);
+    await expect.poll(scale).toBeGreaterThan(before);
+    await expect(map).toHaveAttribute('data-zoomed', 'false');
     await anchor.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'true');

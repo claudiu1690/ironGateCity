@@ -68,6 +68,56 @@ export const copy = {
     fxpTop: (fxp: string) => `${fxp} Party XP`,
   },
   x3Needs: (cost: number) => `×3 needs ${cost} Energy`,
+  /**
+   * Review 3 (answers §4, GDD §13.1): every button that spends Energy says what it does and what it
+   * costs, in words, never a bare number. On a phone the repeat buttons print the label and the cost
+   * on two lines (`…Label` over `cost`).
+   */
+  again: {
+    once: (cost: number) => `Once more · ${cost} Energy`,
+    three: (cost: number) => `Three more · ${cost} Energy`,
+    /** The *Trained* result's repeat: "Study again · 46 Energy" (the action's verb, §5). */
+    train: (verb: string, cost: number) => `${verb} again · ${cost} Energy`,
+    onceLabel: 'Once more',
+    threeLabel: 'Three more',
+    trainLabel: (verb: string) => `${verb} again`,
+    cost: (cost: number) => `${cost} Energy`,
+    onceNeeds: (cost: number, readyAt: string) => `Once more needs ${cost} Energy · ready at ${readyAt}`,
+    threeNeeds: (cost: number, readyAt: string) => `Three more needs ${cost} Energy · ready at ${readyAt}`,
+    trainNeeds: (verb: string, cost: number, readyAt: string) =>
+      `${verb} again needs ${cost} Energy · ready at ${readyAt}`,
+  },
+  /**
+   * Review 3 (answers §4.3): the ticket's buttons, *Once* and *×3* with its cost under it. (Open
+   * point §9.3: if *Once* / *×3* reads as a mismatch, the fallback is *1×* / *3×*, here.)
+   */
+  ticket: {
+    once: 'Once',
+    three: '×3',
+    threeCost: (cost: number) => `${cost} Energy`,
+  },
+  /**
+   * Review 3 (answers §3, GDD §13.1a): the result's rewards as a receipt, one line per reward. A zero
+   * line is not printed.
+   */
+  reward: {
+    xp: 'XP',
+    fxp: 'Party XP',
+    iron: 'Iron',
+    opinion: (city: string) => `Opinion in ${city}`,
+    keepsake: 'Keepsake',
+    item: 'Item',
+    /** "+40 and Rested +5" (the base and its parts). */
+    parts: (base: string, parts: string) => `${base} and ${parts}`,
+    /** "120 to Level 3" (the HUD's distance to the next Level). */
+    toLevel: (n: string, next: number) => `${n} to Level ${next}`,
+    /** "212 / 400 to Activist" (the HUD's Party XP to the next Rank). */
+    toRank: (fxp: string, next: string, title: string) => `${fxp} / ${next} to ${title}`,
+    /** At the top Rank: the total alone (the HUD's `fxpTop`). */
+    top: (fxp: string) => `${fxp} Party XP`,
+    /** "Collective 84.0 → 84.1 %" (the town's meter, moved here from the knock-on block). */
+    opinionMove: (faction: string, before: string, after: string) => `${faction} ${before} → ${after} %`,
+  },
   /** Review 2 (answers §1.11): a ticket locked on reputation, "Needs a Known reputation here". */
   needsReputation: (level: number) =>
     `Needs a ${['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us'][level] ?? 'better'} reputation here`,
@@ -178,7 +228,7 @@ export const copy = {
       fair: (stat: string) => ['Fair odds', `About one try in two comes off here. It uses your ${stat}.`],
       long: (stat: string) => [
         'Long shot',
-        `Fewer than one try in two come off here. It uses your ${stat}; training it would help.`,
+        `Fewer than one try in two come off here. It uses your ${stat}; raising it would help.`,
       ],
     },
     /** A tag's suffix: "Open Doors · better odds", "First day in Duskwall · better odds". */
@@ -188,11 +238,12 @@ export const copy = {
   /** Review 2 (answers §2.4): the one reason under a row that isn't a Success. */
   reason: {
     statLow: (stat: string, place: string | null) =>
-      `Your ${stat} is low for this.${place ? ` Train it at ${place}.` : ''}`,
+      `Your ${stat} is low for this.${place ? ` Raise it at ${place}.` : ''}`,
     statLowCha: 'Your Charisma is low for this. It comes from what you wear; a better coat helps.',
     statLowTwo: (a: string, b: string, weak: string, place: string | null) =>
-      `This needs ${a} and ${b}, and your ${weak} is the low one.${weak === 'Charisma' ? ' It comes from what you wear.' : place ? ` Train it at ${place}.` : ''}`,
-    statLowBest: (stat: string) => `Even your best, ${stat}, is low for this. Training anything would help.`,
+      `This needs ${a} and ${b}, and your ${weak} is the low one.${weak === 'Charisma' ? ' It comes from what you wear.' : place ? ` Raise it at ${place}.` : ''}`,
+    statLowBest: (stat: string) =>
+      `Even your best, ${stat}, is low for this. Raising any of them would help.`,
     penalty: {
       weather: 'The rain was against you.',
       inspector: 'The Branch Inspector was watching.',
@@ -275,9 +326,20 @@ export const copy = {
       'Seniority',
       'Every day you keep the same job adds 2 % to its pay, up to 20 % after ten days. Switching jobs starts it again from nothing.',
     ],
+    /**
+     * Review 3 (answers §6.4): *How elections work*, five short lines in one note (the lines joined
+     * by a newline and rendered as lines), opened from the Election card's kicker and from the link
+     * on every election screen.
+     */
     election: (city: string, rank2: string, rank3: string) => [
-      'Election',
-      `${city} elects its council every five days: two days for candidates to put their names in, three days of voting, the result the next morning. ${rank2}s vote; ${rank3}s who are Known here can stand.`,
+      'How elections work',
+      [
+        `${city} elects seven councillors every five days: two days for names to go in, three days of voting, the result the next morning.`,
+        'The candidates are players who stand, and local candidates: townspeople run by the game, who fill the list so there is always an election.',
+        `${rank2}s vote once, in secret. ${rank3}s who are Known in ${city} can stand; it costs 10 Political Capital and takes two backers.`,
+        "The seven with the most support win. Support is the town's own vote for you (your reputation here), plus your backers, plus the votes.",
+        "A seat is five days on the council: a vote on the town's rule, and 10 Political Capital and 20 Party XP a day.",
+      ].join('\n'),
     ],
     rule: (city: string) => [
       'Council rule',
@@ -344,6 +406,9 @@ export const copy = {
   outOfEnergyRested: "Rested banks once you're full",
   waitingForYou: 'Waiting for you',
   toTheCity: 'To the city',
+  /** Review 3: the city map's + / − buttons (desktop). */
+  mapZoomIn: 'Zoom in',
+  mapZoomOut: 'Zoom out',
   /** App shell banner: the city paper's short name ("The Clarion is in", content §13.7, n3). */
   paperIsIn: (shortName: string) => `The ${shortName} is in`,
   // Auth pages (content §13.4).
@@ -434,15 +499,32 @@ export const copy = {
   struckLine: 'Not enough backers · your 10 Political Capital is returned',
   onTheBallotLine: "You're a candidate",
   tooLateToStand: "Voting is open; it's too late to stand this time.",
+  // Review 3 (answers §6.3, §7): the system in words on the election screens, never a formula.
   howDecided:
-    'Seven seats. The seven with most support win. Support = local support (your reputation) + 3 per backer + votes.',
+    "Seven seats. The seven with the most support take them. Support is the town's own vote for a candidate (their reputation here), plus their backers, plus members' votes.",
+  seatGives:
+    "A seat is five days on the council: a vote on the town's rule, and 10 Political Capital and 20 Party XP a day.",
+  voteAnyone: 'Vote for anyone on the list, a player or a local candidate.',
+  playersStanding: 'Players standing',
+  noPlayersStanding: 'No player has put their name in yet. The local candidates below fill the list.',
+  localCandidatesLine:
+    'Townspeople run by the game. They fill the list so there is always an election; you can vote for them, and a player with enough support beats them.',
+  lastSeatClose: 'The last seat is usually close: a few votes decide it.',
+  howElectionsWork: 'How elections work',
+  /** Over the election screens' map crop: "Coalport Council · the Town Hall" (set in caps). */
+  hallKicker: (city: string, hallRef: string) => `${city} Council · ${hallRef}`,
+  councilSittingAt: (city: string, hallRef: string) => `${city} Council · sitting at ${hallRef}`,
+  /** The result's header line: "6 of the 7 seats went to local candidates · 3 of 9 members voted · final". */
+  resultHeader: (npcSeats: number, seats: number, voters: number, eligible: number) =>
+    `${npcSeats} of the ${seats} seats went to local candidates · ${turnoutOf(voters, eligible)} members voted · final`,
   namesGoIn: (until: string, weekday: string) => `Names go in until ${until} · voting opens ${weekday}`,
   seeWhosStanding: "See who's standing",
   seeTheSlate: 'See the candidates',
   seeTheResult: 'See the result',
   lastResult: 'Last result',
   wardCandidates: 'Local candidates',
-  ward: 'local',
+  /** Review 3 (§15.10): a local candidate's rank-title slot (was *local*, which could read as *from here*). */
+  ward: 'Local candidate',
   npcSeats: (n: number, of: number) => `Local seats ${n} / ${of}`,
   turnout: (n: number, m: number) => (m === 0 ? 'Turnout nil' : `Turnout ${n} of ${m} members`),
   theLine: 'the line',
@@ -482,7 +564,7 @@ export const copy = {
     `${name}, ${rank}, elected to ${city} Council`,
   elected: 'ELECTED',
   formula:
-    'Support = local support + 3 per backer + votes. Ties: votes, backers, reputation, who stood first.',
+    "The seven with the most support took the seats: the town's own vote for each candidate (their reputation here), plus their backers, plus members' votes. A tie goes to votes, then backers, then reputation, then who stood first.",
   ballotSecretNote: 'Nobody can see who you chose',
   pcLeft: (spent: number, left: number) => `−${spent} Political Capital · ${left} left`,
   moraleKnockOn: (city: string, delta: string, after: string) => `${city} morale ${delta} → ${after} %`,

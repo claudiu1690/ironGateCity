@@ -40,6 +40,7 @@ import type {
   EndorsementsView,
   FrontPageView,
   GameErrorReason,
+  HallView,
   LiveHeadline,
   PoliticalFacts,
   PoliticalPlaceholder,
@@ -76,6 +77,23 @@ export function homeSpec(content: GameContent, c: Pick<CharacterDoc, 'homeCityId
   if (!city?.council || !city.homeFactionId) throw gameError('PRECONDITION_FAILED', 'ELECTION_NOT_READY');
   const faction = content.faction(city.homeFactionId);
   return { city, offset: city.council.offset, home: city.homeFactionId, faction };
+}
+
+/**
+ * Review 3 (GDD §15.3, answers §6.1): the council's hall on the city picture and the map's two stills,
+ * for the election screens' header crop (the client picks day or night by the map's rule).
+ */
+export function hallView(content: GameContent, cityId: string): HallView | null {
+  const city = content.city(cityId);
+  const hall = city?.council?.hall;
+  if (!city || !hall) return null;
+  return {
+    name: hall.name,
+    ref: hall.ref,
+    x: hall.x,
+    y: hall.y,
+    asset: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
+  };
 }
 
 const ordersAllDoneToday = (c: CharacterDoc, today: DayKey) =>
@@ -572,6 +590,7 @@ export async function electionView(
       ? { candidacyId: endorsedNow.candidacyId.toHexString(), name: endorsedNow.name }
       : null,
     pc: c.pc,
+    hall: hallView(content, city.id),
   };
 }
 
@@ -608,6 +627,7 @@ export async function countView(
     turnout: r.turnout,
     seats: COUNCIL.seats,
     npcSeats: r.npcSeats,
+    hall: hallView(content, e.cityId),
   };
 }
 
@@ -766,6 +786,7 @@ export async function councilView(
       ord && city?.ordinance?.id === ord.id
         ? { ordinanceId: ord.id, name: ord.name, line: ord.line, daysLeft: city.ordinance.toDay - today }
         : null,
+    hall: hallView(content, spec.id),
   };
 }
 

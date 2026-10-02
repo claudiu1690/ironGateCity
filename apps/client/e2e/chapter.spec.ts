@@ -40,7 +40,7 @@ test('Letters → choose → approach → Walk his streets → keepsake and hook
   await cta.click();
   const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
   await expect(modal.getByTestId('stamp')).toHaveText(/^(Success|Partial|Failure)$/);
-  await expect(modal.getByTestId('tile-keepsake')).toContainText('His ward book');
+  await expect(modal.getByTestId('reward-item')).toContainText('Keepsake · His ward book');
   await expect(modal.getByTestId('effect-item')).toHaveText('Keepsake: His ward book');
   await expect(modal.getByTestId('effect-hook')).toHaveText(
     // Slice 3 (design §17 Q21): chapter 2 opens after the first vote.

@@ -2,9 +2,10 @@ import type { AssetView } from '@irongate/rules';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { cx } from '../format';
+import { copy } from '@irongate/content/copy';
 import { CLOUDS } from '../clouds';
 import type { CloudConfig } from '../clouds';
-import { backdropUrl } from '../tiles';
+import { TILE_MAX_DPR, backdropUrl } from '../tiles';
 import type { TilePyramid } from '../tiles';
 import { CloudLayer } from './CloudLayer';
 import { Picture } from './Picture';
@@ -72,6 +73,17 @@ export interface CityMapProps {
    * The city's content switches it on (`City.clouds`, tried on Coalport).
    */
   clouds?: boolean | CloudConfig;
+  /**
+   * Review 3: where the player's own at-rest view (dragged, zoomed) is kept for the session, e.g. the
+   * city's id; it is restored when the map mounts again. Absent: kept for this mount only.
+   */
+  memoryKey?: string;
+  /**
+   * Review 3: the + / − zoom buttons, placed and shown by these classes (they set the display, e.g.
+   * `flex` or `hidden sm:pointer-fine:flex`; absent: none). They are a block the first view keeps
+   * the pins clear of (`data-map-overlay`).
+   */
+  zoomButtons?: string;
 }
 
 /** The whole picture, as a frame. */
@@ -96,9 +108,14 @@ export function contentFor(
   return { w, h: w / aspect };
 }
 
-/** Review 2 #9: the zoom into a pin and back, with easing (no overshoot: both y control points in [0, 1]). */
-export const ZOOM_MS = 500;
-const ZOOM_EASE = 'cubic-bezier(0.33, 0, 0.2, 1)';
+/**
+ * Review 2 #9: the zoom into a pin and back, with easing (no overshoot: both y control points in
+ * [0, 1]). Review 3 (GDD §14.13): opening a place is one movement of 250–350 ms, the zoom, the dim
+ * and the sheet on this one curve; the sheet's keyframes (`tokens.css`, `--place-ms`,
+ * `--place-ease`) use the same numbers.
+ */
+export const ZOOM_MS = 300;
+export const ZOOM_EASE = 'cubic-bezier(0.33, 0, 0.2, 1)';
 /**
  * A pin's zoom (review 2 follow-up: closer than the first 2 × / 1.25 ×): 2.5 × the fitted view, at
  * least 1.6 × the covering size, at most 3 ×, and never past the art's native resolution.
@@ -644,7 +661,7 @@ export const REST_PAN_MARGIN = 0.1;
  * brings them in. Limits, on each axis: the quarter's frame grown by REST_PAN_MARGIN, widened so that
  * every pin can be brought into the clear part of the box (past the widest block, the desktop plate),
  * and always within the picture, so its edge never shows. The at-rest view itself is always allowed.
- * No free zoom: the scale is the at-rest one.
+ * At the at-rest view's scale; review 3's free zoom asks at any scale (`freePanLimits`).
  */
 export function restPanLimits(
   box: { w: number; h: number },
@@ -713,14 +730,155 @@ const sameView = (a: MapView, b: MapView) =>
   Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.scale - b.scale) < 1e-4;
 
 /**
+ * Review 3 (GDD §14.13, answers §1): the player may zoom the map at rest between two limits a player
+ * can see the reason for. **Out**: the covering scale, at which the whole picture still fills the map
+ * (never a dark band, never the blurred backdrop), and never past the at-rest view. **In**: the
+ * painting's finest detail at its real size, one pixel of the largest art served (the top tile level,
+ * or the largest still) per device pixel with the DPR capped at TILE_MAX_DPR (never blurry); never
+ * below the at-rest view, so the view the map opens on is always allowed.
+ */
+export function freeZoomLimits(i: {
+  /** The at-rest (fitted) view's scale. */
+  fitted: number;
+  /** The scale at which the whole picture covers the map. */
+  cover: number;
+  /** The width of the largest art served, in its own pixels (8,640 for a tiled city). */
+  artWidth: number;
+  /** The layer's width at scale 1 (CityMap's `contentW`). */
+  contentW: number;
+  dpr: number;
+}): { min: number; max: number } {
+  const dpr = Math.min(TILE_MAX_DPR, i.dpr > 0 ? i.dpr : 1);
+  const native = i.contentW > 0 ? i.artWidth / (i.contentW * dpr) : i.fitted;
+  return { min: Math.min(i.cover, i.fitted), max: Math.max(i.fitted, native) };
+}
+
+/** The view at `scale` that keeps the picture's point under `at` (box pixels) where it is. */
+export function zoomAt(view: MapView, scale: number, at: { x: number; y: number }): MapView {
+  const k = scale / view.scale;
+  return { scale, x: at.x - (at.x - view.x) * k, y: at.y - (at.y - view.y) * k };
+}
+
+/**
+ * Review 3: how far the map drags at rest at any zoom: `restPanLimits` at that scale (the quarter's
+ * frame grown by REST_PAN_MARGIN, widened so every pin can be brought clear, and always within the
+ * picture, so its edge never shows). The at-rest view zoomed about the box's centre to that scale is
+ * always allowed, so the limits move smoothly with the zoom and hold the view the map opens on.
+ */
+export function freePanLimits(
+  box: { w: number; h: number },
+  content: { w: number; h: number },
+  fitted: MapView,
+  scale: number,
+  frame: MapRect,
+  pins: ReadonlyArray<{ x: number; y: number }>,
+  insets: MapInsets,
+): { x: [number, number]; y: [number, number] } {
+  const pic = picLimits(box, content, scale, insets);
+  const z = zoomAt(fitted, scale, { x: box.w / 2, y: box.h / 2 });
+  const anchor = { scale, x: clamp(z.x, pic.x[0], pic.x[1]), y: clamp(z.y, pic.y[0], pic.y[1]) };
+  return restPanLimits(box, content, anchor, frame, pins, insets);
+}
+
+/** A view kept within limits (its scale unchanged). */
+const within = (v: MapView, lim: { x: [number, number]; y: [number, number] }): MapView => ({
+  scale: v.scale,
+  x: clamp(v.x, lim.x[0], lim.x[1]),
+  y: clamp(v.y, lim.y[0], lim.y[1]),
+});
+
+/**
+ * Review 3: the player's at-rest view, kept for the session (`memoryKey`): the picture's point at the
+ * map's centre (fractions) and the art's width on screen, for the map's size (`box`, "390x692"). It
+ * survives the plate's orders loading and a return to the city; a new size of map (a turn of the
+ * phone, a resized window) starts again from the view that fits it, as a drag at rest always did.
+ */
+export interface RestView {
+  fx: number;
+  fy: number;
+  artW: number;
+  box: string;
+}
+
+export function restFromView(
+  v: MapView,
+  box: { w: number; h: number },
+  content: { w: number; h: number },
+): RestView {
+  return {
+    fx: (box.w / 2 - v.x) / (content.w * v.scale),
+    fy: (box.h / 2 - v.y) / (content.h * v.scale),
+    artW: content.w * v.scale,
+    box: `${box.w}x${box.h}`,
+  };
+}
+
+export function viewFromRest(
+  r: RestView,
+  box: { w: number; h: number },
+  content: { w: number; h: number },
+  zoom: { min: number; max: number },
+): MapView {
+  const scale = clamp(r.artW / content.w, zoom.min, zoom.max);
+  return { scale, x: box.w / 2 - r.fx * content.w * scale, y: box.h / 2 - r.fy * content.h * scale };
+}
+
+/** The session's at-rest views by `memoryKey` (also in sessionStorage, so a reload keeps them). */
+const restMemory = new Map<string, RestView | null>();
+const STORAGE_PREFIX = 'irongate.map.';
+
+function recall(key: string | undefined): RestView | null {
+  if (!key) return null;
+  if (restMemory.has(key)) return restMemory.get(key) ?? null;
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_PREFIX + key);
+    const r = raw ? (JSON.parse(raw) as RestView) : null;
+    return r && [r.fx, r.fy, r.artW].every(Number.isFinite) && typeof r.box === 'string' ? r : null;
+  } catch {
+    return null;
+  }
+}
+
+function remember(key: string | undefined, r: RestView | null) {
+  if (!key) return;
+  restMemory.set(key, r);
+  try {
+    if (r) window.sessionStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(r));
+    else window.sessionStorage.removeItem(STORAGE_PREFIX + key);
+  } catch {
+    // Private mode or blocked storage: the view is kept for this mount and this page only.
+  }
+}
+
+/** Review 3: a double tap within this long and this near the first is a zoom, not two taps. */
+const DOUBLE_TAP_MS = 320;
+const DOUBLE_TAP_PX = 30;
+/** Review 3: the double tap's and the + / − buttons' step (answers §1: twice the rest view's scale). */
+export const FREE_ZOOM_STEP = 2;
+/** How far one wheel notch (100 px of delta) zooms; a trackpad's pinch (ctrl + wheel) is finer. */
+const WHEEL_RATE = 0.0015;
+const PINCH_WHEEL_RATE = 0.01;
+/** A wheel or a trackpad's gesture holds the layer as a compositor layer until it has been still this long. */
+const GESTURE_SETTLE_MS = 200;
+/** Not the map itself: a pin, a control, or an overlay (the plate, the orders): no double-tap zoom there. */
+const isOverlay = (t: EventTarget | null) =>
+  t instanceof Element && t.closest('[data-map-overlay], [data-map-control], button, a') !== null;
+/** Over an overlay (the plate, its orders) the wheel scrolls as usual; over the map and its pins it zooms. */
+const isPanel = (t: EventTarget | null) =>
+  t instanceof Element && t.closest('[data-map-overlay], [data-map-control]') !== null;
+
+/**
  * The city's detailed map (mockups City, MobileCity) with numbered hotspots at their map fractions.
  *
  * Review 2 #8, #9, review 3: at rest the map shows the fitted view, which covers the box (no dark
  * bands) with as many pins as it can clear of the plate, the orders panel and the dock (QA M2); it
- * drags within the quarter (`restPanLimits`) to bring the others in, but it does not zoom, pinch or
- * double-tap, and a drag is kept until a resize. Tapping a pin (or Enter on a focused one) zooms smoothly into it (ZOOM_MS, eased; at
- * once with reduced motion), then `onArrive` lets the page open the location panel. While zoomed in
- * the map pans with a drag, within limits; closing the location zooms back out to the fitted view.
+ * drags within the quarter (`freePanLimits`) to bring the others in. Review 3 (the user, 2 Oct 2026):
+ * the player may also zoom it, by a pinch or a double tap, the wheel or a trackpad, or the + / −
+ * buttons (`zoomButtons`), between the covering scale and the art's finest detail (`freeZoomLimits`);
+ * the view is kept for the session (`memoryKey`). Tapping a pin (or Enter on a focused one) zooms
+ * smoothly into it (ZOOM_MS, eased; at once with reduced motion) and `onArrive` lets the page open the
+ * location panel at the same moment, so the zoom, the dim and the sheet are one movement; closing
+ * zooms back out to the player's own view. While zoomed in the map pans with a drag, within limits.
  * The view is a CSS transform on one layer, and the pins sit in a layer above it that is never
  * scaled, so they keep their 44 px targets, move with the same transition, and are never replaced:
  * no remount on open, close or resize, so no tap or keypress is lost (c732d64). The fitted view
@@ -739,6 +897,8 @@ export function CityMap({
   tiles,
   frame = WHOLE,
   clouds,
+  memoryKey,
+  zoomButtons,
 }: CityMapProps) {
   const cloudConfig = clouds === true ? CLOUDS : clouds || null;
   const boxRef = useRef<HTMLDivElement>(null);
@@ -814,10 +974,14 @@ export function CityMap({
   const maxScale = pyramids
     ? nativeScale({ width: pyramids.day.width, widths: [pyramids.day.width] }, contentW)
     : nativeScale(map.day, contentW);
+  /** The largest art served, in its own pixels: the free zoom's finest detail (review 3). */
+  const artWidth = pyramids
+    ? pyramids.day.width
+    : map.day.widths.length > 0
+      ? Math.min(map.day.width, Math.max(...map.day.widths))
+      : map.day.width;
+  const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   const frameKey = `${frame.x0},${frame.y0},${frame.x1},${frame.y1}`;
-  // The files are picked for the closest the map zooms, so a zoomed-in map is never upscaled; the
-  // blurred margin asks for the same file, so it costs no second download.
-  const sizes = `${Math.round(contentW * Math.min(MAX_SCALE, maxScale))}px`;
   const pinsKey = locations.map((l) => `${l.id}:${l.map.x},${l.map.y}`).join(';');
   const coverKey = `${cover?.top ?? 0},${cover?.right ?? 0},${cover?.bottom ?? 0},${cover?.left ?? 0}`;
   const selected = locations.find((l) => l.id === selectedId) ?? null;
@@ -828,46 +992,74 @@ export function CityMap({
   const shownH = h - (insets?.hideTop ?? 0) - (insets?.hideBottom ?? 0);
   const coverScale =
     contentW > 0 && contentH > 0 ? Math.min(1, Math.max(w / contentW, shownH / contentH)) : 1;
-  /** What the at-rest view is for: a drag at rest is kept while this holds (not across a resize). */
-  const restKey = `${w}x${h}|${contentW}|${frameKey}|${pinsKey}|${insets ? JSON.stringify(insets) : ''}`;
-  /** Review 3: where the player dragged the map at rest (kept when a place closes). */
-  const [restAt, setRestAt] = useState<{ key: string; x: number; y: number } | null>(null);
-  const restAtKey = restAt?.key === restKey ? `${restAt.x},${restAt.y}` : '';
 
-  /**
-   * Where the map should be: at rest (the fitted view, or where the player dragged it), or zoomed into
-   * the selected pin. `fitted` is the default at-rest view; the zoom's scale is relative to it.
-   */
-  const target = useMemo((): { fitted: MapView; view: MapView } | null => {
+  /** Review 3: where the player left the map at rest (dragged or zoomed), kept for the session. */
+  const [restAt, setRestAtState] = useState<RestView | null>(() => recall(memoryKey));
+  const setRestAt = (r: RestView | null) => {
+    remember(memoryKey, r);
+    setRestAtState(r);
+  };
+  // A view kept for another size of map does not apply to this one (see RestView).
+  const mine = restAt && restAt.box === `${w}x${h}` ? restAt : null;
+  const restAtKey = mine ? `${mine.fx},${mine.fy},${mine.artW}` : '';
+
+  /** The default at-rest view (QA M2, review 3): the zoom's base and the free zoom's limits hang on it. */
+  const fitted = useMemo((): MapView | null => {
     if (w === 0 || h === 0 || !insets) return null;
     const box = { w, h };
     const content = { w: contentW, h: contentH };
-    const pins = locations.map((l) => l.map);
-    const fitted = fitPinsView({ box, content, pins, insets, minScale: coverScale, frame });
+    return fitPinsView({
+      box,
+      content,
+      pins: locations.map((l) => l.map),
+      insets,
+      minScale: coverScale,
+      frame,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [w, h, contentW, contentH, insets, pinsKey, frameKey, coverScale]);
+  const zoom = fitted
+    ? freeZoomLimits({ fitted: fitted.scale, cover: coverScale, artWidth, contentW, dpr })
+    : { min: 1, max: 1 };
+  const pinsList = () => locations.map((l) => l.map);
+  /** How far the map drags at rest at this scale (review 3: any zoom). */
+  const restLimits = (scale: number) =>
+    fitted && insets
+      ? freePanLimits({ w, h }, { w: contentW, h: contentH }, fitted, scale, frame, pinsList(), insets)
+      : null;
+
+  /**
+   * Where the map should be: at rest (the fitted view, or where the player dragged and zoomed it), or
+   * zoomed into the selected pin. `fitted` is the default at-rest view; the pin's zoom is relative to it.
+   */
+  const target = useMemo((): { fitted: MapView; view: MapView } | null => {
+    if (!fitted || !insets) return null;
+    const box = { w, h };
+    const content = { w: contentW, h: contentH };
     let rest = fitted;
-    if (restAt && restAt.key === restKey) {
-      const lim = restPanLimits(box, content, fitted, frame, pins, insets);
-      rest = {
-        scale: fitted.scale,
-        x: clamp(restAt.x, lim.x[0], lim.x[1]),
-        y: clamp(restAt.y, lim.y[0], lim.y[1]),
-      };
+    if (mine) {
+      const v = viewFromRest(mine, box, content, zoom);
+      const lim = restLimits(v.scale);
+      if (lim) rest = within(v, lim);
     }
     // A pin's zoom keeps review 2's numbers: 2.5 × the view that would show every pin (the old first
     // view, which zoomed out past the picture's edge), not × the covered one, which is closer already.
-    const zoomBase = selected ? fitPinsView({ box, content, pins, insets }) : fitted;
+    const zoomBase = selected ? fitPinsView({ box, content, pins: pinsList(), insets }) : fitted;
     const view = selected
       ? zoomView({ box, content, fitted: zoomBase, pin: selected.map, cover, maxScale })
       : rest;
     return { fitted, view };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, contentW, contentH, maxScale, insets, pinsKey, coverKey, selected?.id, frameKey, restAtKey]);
+  }, [fitted, maxScale, zoom.min, zoom.max, coverKey, selected?.id, restAtKey]);
   /** The first view covers the box, or is letterboxed onto the blurred copy (reported for tests). */
   const fit = target
     ? coversBox({ w, h }, { w: contentW, h: contentH }, target.fitted, insets)
       ? 'cover'
       : 'letterbox'
     : '';
+  // The files are picked for the closest the map zooms, so a zoomed-in map is never upscaled; the
+  // blurred margin asks for the same file, so it costs no second download.
+  const sizes = `${Math.round(contentW * Math.max(Math.min(MAX_SCALE, maxScale), zoom.max))}px`;
 
   /** The view shown, and whether reaching it is animated. */
   const [shown, setShown] = useState<{ view: MapView; animate: boolean } | null>(null);
@@ -879,15 +1071,14 @@ export function CityMap({
   const placedFor = useRef<string | null | undefined>(undefined);
   /** The view was dragged away from the target (the tiles then follow the view, not the target). */
   const panned = useRef(false);
-  const arriveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  /** Review 3: the next move to the target is animated (a double tap, the + / − buttons). */
+  const animateNext = useRef(false);
   const raf = useRef(0);
-  useEffect(
-    () => () => {
-      clearTimeout(arriveTimer.current);
-      cancelAnimationFrame(raf.current);
-    },
-    [],
-  );
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  /** The first landing's zoom is waiting for its frames (see below). */
+  const landing = useRef(false);
+  const targetRef = useRef(target);
+  targetRef.current = target;
 
   useLayoutEffect(() => {
     if (!target) return;
@@ -896,33 +1087,52 @@ export function CityMap({
     const changed = !first && placedFor.current !== sel;
     placedFor.current = sel;
     panned.current = false;
-    if (!first && !changed) {
-      // A resize, an overlay or the panel's size: follow it at once (and stop any drag's offset).
-      setShown({ view: target.view, animate: false });
+    const still = prefersReducedMotion();
+    if (!first && !changed && landing.current) {
+      // The first landing's zoom has not started yet (the plate's orders loaded meanwhile): stay at
+      // rest; the zoom starts from the latest view in a frame, with the sheet.
+      setShown({ view: target.fitted, animate: false });
       return;
     }
-    clearTimeout(arriveTimer.current);
+    if (!first && !changed) {
+      // A resize, an overlay, the panel's size, or the player's own zoom: follow it (at once, but for
+      // a double tap or a button, which ease like a pin's zoom).
+      const from = shownRef.current?.view;
+      const moves = !from || !sameView(from, target.view);
+      setShown({ view: target.view, animate: animateNext.current && moves && !still });
+      animateNext.current = false;
+      return;
+    }
+    animateNext.current = false;
     cancelAnimationFrame(raf.current);
-    const still = prefersReducedMotion();
-    const arrive = (delay: number) => {
+    landing.current = false;
+    // Review 3 (GDD §14.13): opening a place is one movement. The page opens the panel as the zoom
+    // starts (not when it lands), so the zoom, the dim and the sheet ease in together.
+    const arrive = (t = target) => {
       if (!sel) return;
-      const fillsMap = coversBox({ w, h }, { w: contentW, h: contentH }, target.view);
-      arriveTimer.current = setTimeout(() => onArriveRef.current?.(sel, { fillsMap }), delay);
+      const fillsMap = coversBox({ w, h }, { w: contentW, h: contentH }, t.view);
+      onArriveRef.current?.(sel, { fillsMap });
     };
     if (first) {
-      // The first landing (the welcome day opens slot A's pin): show the city fitted, then zoom in.
-      setShown({ view: target.fitted, animate: false });
+      // The first landing (the welcome day opens slot A's pin, a deep link `?loc=`): show the city
+      // at rest, then zoom in.
+      const rest = sel ? target.fitted : target.view;
+      setShown({ view: rest, animate: false });
       if (!sel) return;
       if (still) {
         setShown({ view: target.view, animate: false });
-        arrive(0);
+        arrive();
         return;
       }
-      // Two frames, so the fitted view is painted before the transition starts from it.
+      // Two frames, so the view at rest is painted before the transition starts from it (to the
+      // latest target: the box may have changed meanwhile).
+      landing.current = true;
       raf.current = requestAnimationFrame(() => {
         raf.current = requestAnimationFrame(() => {
-          setShown({ view: target.view, animate: true });
-          arrive(ZOOM_MS);
+          landing.current = false;
+          const t = targetRef.current ?? target;
+          setShown({ view: t.view, animate: true });
+          arrive(t);
         });
       });
       return;
@@ -930,11 +1140,11 @@ export function CityMap({
     const from = shownRef.current?.view;
     const moves = !from || !sameView(from, target.view);
     setShown({ view: target.view, animate: moves && !still });
-    arrive(moves && !still ? ZOOM_MS : 0);
+    arrive();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
-  const view = shown?.view ?? target?.fitted ?? null;
+  const view = shown?.view ?? target?.view ?? null;
   // A zoom in flight (`data-moving`, for tests and for anyone waiting for the map to settle).
   const [moving, setMoving] = useState(false);
   const moveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -953,44 +1163,100 @@ export function CityMap({
     return () => clearTimeout(moveTimer.current);
   }, [shown]);
   const transition = shown?.animate ? `transform ${ZOOM_MS}ms ${ZOOM_EASE}` : 'none';
-  /** A drag in progress (the layer then stays a compositor layer, see `willChange`). */
+  /** A drag, a pinch, or a wheel or trackpad zoom in progress (the layer stays a compositor layer). */
   const [dragging, setDragging] = useState(false);
+  const [wheeling, setWheeling] = useState(false);
+  const wheelTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(wheelTimer.current), []);
   // The tiles follow where the map is going (the target), so a zoom fetches its destination from its
-  // first frame; only a drag, which moves the view away from the target, makes them follow the view.
+  // first frame; only a drag or a pinch, which moves the view away from the target, makes them follow
+  // the view.
   const tileView = panned.current ? view : (target?.view ?? view);
   const onTilesUnavailable = () => setTilesFailed(true);
   // Maps v3 §6: a quick cross-fade (day and night differ by up to half a building); none with
   // reduced motion.
   const fade = prefersReducedMotion() ? 'none' : `opacity ${NIGHT_FADE_MS}ms ease`;
 
-  // Review 2 #8, review 3: no free zoom. The browser's own gestures over the map (pinch, double
-  // tap, a trackpad's ctrl + wheel page zoom) are off everywhere on it; the wheel does nothing.
+  /** The view the player's next zoom starts from: where the map is, or (mid-ease) where it is going. */
+  const current = (): MapView | null => shownRef.current?.view ?? target?.view ?? null;
+  /** Review 3: zoom the map at rest to `scale` about a point of the box, within the limits. */
+  const zoomTo = (scale: number, at: { x: number; y: number }, animate = false) => {
+    const from = current();
+    if (!from || !target || selectedRef.current) return;
+    const s = clamp(scale, zoom.min, zoom.max);
+    const lim = restLimits(s);
+    if (!lim) return;
+    const v = within(zoomAt(from, s, at), lim);
+    animateNext.current = animate;
+    setRestAt(restFromView(v, { w, h }, { w: contentW, h: contentH }));
+  };
+  const zoomRef = useRef(zoomTo);
+  zoomRef.current = zoomTo;
+  const currentRef = useRef(current);
+  currentRef.current = current;
+  const gestureHold = () => {
+    setWheeling(true);
+    clearTimeout(wheelTimer.current);
+    wheelTimer.current = setTimeout(() => setWheeling(false), GESTURE_SETTLE_MS);
+  };
+  const gestureHoldRef = useRef(gestureHold);
+  gestureHoldRef.current = gestureHold;
+  /** Touch pointers on the map now: a pinch is theirs, not Safari's gesture events. */
+  const touches = useRef(0);
+
+  // Review 3: the wheel and a trackpad's pinch (ctrl + wheel in Chromium and Firefox; Safari's
+  // gesture events) zoom the map at rest about the pointer. The browser's own page zoom over the map
+  // is off everywhere on it. Over an overlay (the plate, its orders) the wheel scrolls as usual.
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const stop = (e: Event) => e.preventDefault();
-    el.addEventListener('wheel', stop, { passive: false });
-    el.addEventListener('gesturestart', stop);
+    const onWheel = (e: WheelEvent) => {
+      if (isPanel(e.target)) {
+        if (e.ctrlKey) e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      const from = currentRef.current();
+      if (!from) return;
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1;
+      const k = Math.exp(-e.deltaY * unit * (e.ctrlKey ? PINCH_WHEEL_RATE : WHEEL_RATE));
+      const b = el.getBoundingClientRect();
+      gestureHoldRef.current();
+      zoomRef.current(from.scale * clamp(k, 0.5, 2), { x: e.clientX - b.left, y: e.clientY - b.top });
+    };
+    let gesture: { scale: number } | null = null;
+    type Gesture = Event & { scale: number; clientX: number; clientY: number };
+    const onGestureStart = (e: Event) => {
+      e.preventDefault();
+      gesture = touches.current > 0 ? null : { scale: currentRef.current()?.scale ?? 1 };
+    };
+    const onGestureChange = (e: Event) => {
+      e.preventDefault();
+      if (!gesture || touches.current > 0) return;
+      const g = e as Gesture;
+      const b = el.getBoundingClientRect();
+      gestureHoldRef.current();
+      zoomRef.current(gesture.scale * g.scale, { x: g.clientX - b.left, y: g.clientY - b.top });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('gesturestart', onGestureStart);
+    el.addEventListener('gesturechange', onGestureChange);
     return () => {
-      el.removeEventListener('wheel', stop);
-      el.removeEventListener('gesturestart', stop);
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('gesturestart', onGestureStart);
+      el.removeEventListener('gesturechange', onGestureChange);
     };
   }, []);
 
-  /** How far the map drags now: zoomed in, near the frame (panLimits); at rest, restPanLimits. */
-  const dragLimits = () => {
+  /** How far the map drags now: zoomed into a place, near the frame (panLimits); at rest, freePanLimits. */
+  const dragLimits = (scale: number) => {
     if (!target || !insets) return null;
     const box = { w, h };
     const content = { w: contentW, h: contentH };
     if (selected) return panLimits(box, content, target.view, frame);
-    const lim = restPanLimits(
-      box,
-      content,
-      target.fitted,
-      frame,
-      locations.map((l) => l.map),
-      insets,
-    );
+    const lim = restLimits(scale);
+    if (!lim) return null;
+    if (Math.abs(target.view.scale - scale) > 1e-6) return lim;
     // The player's own at-rest view (after a resize it may sit outside) is always allowed.
     return {
       x: [Math.min(lim.x[0], target.view.x), Math.max(lim.x[1], target.view.x)] as [number, number],
@@ -998,9 +1264,11 @@ export function CityMap({
     };
   };
 
-  // A drag pans: zoomed in, within panLimits; at rest (review 3), within restPanLimits, at the same
-  // scale (no free zoom). A tap stays a tap (DRAG_SLOP), and the click that ends a drag is swallowed,
-  // so a drag that starts on a pin does not select it.
+  // A drag pans: zoomed into a place, within panLimits; at rest, within freePanLimits at the scale
+  // the player chose. Two fingers pinch (review 3): the picture's point between them stays between
+  // them, at rest only. A tap stays a tap (DRAG_SLOP), and the click that ends a drag or a pinch is
+  // swallowed, so a drag that starts on a pin does not select it. Two taps close together on the map
+  // (not on a pin or a control) zoom in to twice the rest view's scale, or back out to it.
   const drag = useRef<{
     id: number;
     sx: number;
@@ -1009,14 +1277,84 @@ export function CityMap({
     moved: boolean;
     last: MapView;
   } | null>(null);
+  const pointers = useRef(new Map<number, { x: number; y: number; touch: boolean }>());
+  const pinch = useRef<{ d0: number; m0: { x: number; y: number }; from: MapView; last: MapView } | null>(
+    null,
+  );
+  const lastTap = useRef<{ t: number; x: number; y: number } | null>(null);
   const swallowClick = useRef(false);
   const lastPointerDown = useRef(0);
+  const local = (e: { clientX: number; clientY: number }) => {
+    const b = boxRef.current!.getBoundingClientRect();
+    return { x: e.clientX - b.left, y: e.clientY - b.top };
+  };
+  const swallow = () => {
+    swallowClick.current = true;
+    // If no click follows (the pointer left the pin), the next real tap still counts.
+    setTimeout(() => {
+      swallowClick.current = false;
+    }, 0);
+  };
+  const commitRest = (v: MapView) => {
+    if (!selectedRef.current) setRestAt(restFromView(v, { w, h }, { w: contentW, h: contentH }));
+  };
+  const pinchView = () => {
+    const p = pinch.current;
+    const pts = [...pointers.current.values()];
+    if (!p || pts.length < 2 || !boxRef.current) return null;
+    const b = boxRef.current.getBoundingClientRect();
+    const a = pts[0]!;
+    const c = pts[1]!;
+    const d = Math.hypot(a.x - c.x, a.y - c.y);
+    const m = { x: (a.x + c.x) / 2 - b.left, y: (a.y + c.y) / 2 - b.top };
+    const s = clamp((p.from.scale * d) / Math.max(1, p.d0), zoom.min, zoom.max);
+    // The picture's point under the first midpoint goes under the current one (pinch and pan).
+    const z = zoomAt(p.from, s, p.m0);
+    const lim = dragLimits(s);
+    return lim ? within({ scale: s, x: z.x + m.x - p.m0.x, y: z.y + m.y - p.m0.y }, lim) : null;
+  };
   const onPointerDown = (e: ReactPointerEvent) => {
     lastPointerDown.current = Date.now();
-    if (!view || e.button !== 0) return;
+    const touch = e.pointerType === 'touch';
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, touch });
+    if (touch) touches.current++;
+    if (!view) return;
+    if (pointers.current.size === 2 && !selected) {
+      // A second finger: the drag becomes a pinch.
+      const pts = [...pointers.current.values()];
+      const b = boxRef.current!.getBoundingClientRect();
+      const a = pts[0]!;
+      const c = pts[1]!;
+      pinch.current = {
+        d0: Math.hypot(a.x - c.x, a.y - c.y),
+        m0: { x: (a.x + c.x) / 2 - b.left, y: (a.y + c.y) / 2 - b.top },
+        from: view,
+        last: view,
+      };
+      drag.current = null;
+      lastTap.current = null;
+      panned.current = true;
+      setDragging(true);
+      boxRef.current?.setPointerCapture?.(e.pointerId);
+      return;
+    }
+    if (e.button !== 0 || pointers.current.size > 2) return;
     drag.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, from: view, moved: false, last: view };
   };
   const onPointerMove = (e: ReactPointerEvent) => {
+    const pt = pointers.current.get(e.pointerId);
+    if (pt) {
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+    }
+    if (pinch.current) {
+      const v = pinchView();
+      if (v) {
+        pinch.current.last = v;
+        setShown({ view: v, animate: false });
+      }
+      return;
+    }
     const d = drag.current;
     if (!d || d.id !== e.pointerId || !target) return;
     const dx = e.clientX - d.sx;
@@ -1028,28 +1366,66 @@ export function CityMap({
       setDragging(true);
       boxRef.current?.setPointerCapture?.(e.pointerId);
     }
-    const lim = dragLimits();
+    const lim = dragLimits(d.from.scale);
     if (!lim) return;
-    d.last = {
-      scale: d.from.scale,
-      x: clamp(d.from.x + dx, lim.x[0], lim.x[1]),
-      y: clamp(d.from.y + dy, lim.y[0], lim.y[1]),
-    };
+    d.last = within({ scale: d.from.scale, x: d.from.x + dx, y: d.from.y + dy }, lim);
     setShown({ view: d.last, animate: false });
   };
   const endDrag = (e: ReactPointerEvent) => {
+    const pt = pointers.current.get(e.pointerId);
+    pointers.current.delete(e.pointerId);
+    if (pt?.touch) touches.current = Math.max(0, touches.current - 1);
+    if (pinch.current) {
+      if (pointers.current.size >= 2) return;
+      const last = pinch.current.last;
+      pinch.current = null;
+      setDragging(false);
+      commitRest(last);
+      swallow();
+      // The finger left on the map drags on from here.
+      const [rest] = [...pointers.current.entries()];
+      if (rest) {
+        const [id, p] = rest;
+        drag.current = { id, sx: p.x, sy: p.y, from: last, moved: true, last };
+        setDragging(true);
+      }
+      return;
+    }
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
     drag.current = null;
-    if (!d.moved) return;
+    if (!d.moved) {
+      // Review 3: a double tap on the map (not a pin, a control or an overlay) zooms.
+      if (e.type !== 'pointerup' || isOverlay(e.target) || selected) return;
+      const at = local(e);
+      const t = Date.now();
+      const prev = lastTap.current;
+      if (prev && t - prev.t < DOUBLE_TAP_MS && Math.hypot(at.x - prev.x, at.y - prev.y) < DOUBLE_TAP_PX) {
+        lastTap.current = null;
+        toggleZoom(at);
+      } else lastTap.current = { t, ...at };
+      return;
+    }
     setDragging(false);
-    // At rest, the player's view is kept: closing a place comes back to it (not across a resize).
-    if (!selected) setRestAt({ key: restKey, x: d.last.x, y: d.last.y });
-    swallowClick.current = true;
-    // If no click follows (the pointer left the pin), the next real tap still counts.
-    setTimeout(() => {
-      swallowClick.current = false;
-    }, 0);
+    // At rest, the player's view is kept: closing a place comes back to it.
+    commitRest(d.last);
+    swallow();
+  };
+  /** Review 3: the double tap toggles between the rest view and twice its scale. */
+  const toggleZoom = (at: { x: number; y: number }) => {
+    const v = current();
+    if (!v || !target) return;
+    if (v.scale > target.fitted.scale * 1.05) {
+      animateNext.current = true;
+      setRestAt(null);
+    } else zoomTo(target.fitted.scale * FREE_ZOOM_STEP, at, true);
+  };
+  /** The + / − buttons: a step about the middle of the part of the map on show. */
+  const stepZoom = (k: number) => {
+    const v = current();
+    if (!v || !insets) return;
+    const at = { x: w / 2, y: (insets.top + h - insets.bottom) / 2 };
+    zoomTo(v.scale * k, at, true);
   };
 
   // Keyboard focus on a pin outside the view (zoomed in, or at rest where it may be off screen or
@@ -1067,15 +1443,18 @@ export function CityMap({
       (b) => px + 22 > b.x0 && px - 22 < b.x1 && py + 22 > b.y0 && py - 22 < b.y1,
     );
     if (inside && (selected || !blocked)) return;
-    const lim = dragLimits();
+    const lim = dragLimits(view.scale);
     if (!lim) return;
-    const next = {
-      scale: view.scale,
-      x: clamp((a.x0 + a.x1) / 2 - l.map.x * contentW * view.scale, lim.x[0], lim.x[1]),
-      y: clamp((a.y0 + a.y1) / 2 - l.map.y * contentH * view.scale, lim.y[0], lim.y[1]),
-    };
+    const next = within(
+      {
+        scale: view.scale,
+        x: (a.x0 + a.x1) / 2 - l.map.x * contentW * view.scale,
+        y: (a.y0 + a.y1) / 2 - l.map.y * contentH * view.scale,
+      },
+      lim,
+    );
     if (selected) setShown({ view: next, animate: false });
-    else setRestAt({ key: restKey, x: next.x, y: next.y });
+    else commitRest(next);
   };
 
   // The browser also scrolls the clipped wrappers to reveal a focused element, which would shift the
@@ -1105,9 +1484,11 @@ export function CityMap({
         // so the zoomed view was a stretched bitmap of an earlier, smaller raster, whatever tile level
         // was drawn (measured at 390 × 844, DPR 3: about 30 % less edge detail). Once the move has
         // landed the layer is painted again at its own scale, from the detail tiles.
-        willChange: shown?.animate || dragging ? 'transform' : 'auto',
+        willChange: shown?.animate || dragging || wheeling ? 'transform' : 'auto',
       }
     : { visibility: 'hidden' };
+  const atMin = !view || view.scale <= zoom.min + 1e-6;
+  const atMax = !view || view.scale >= zoom.max - 1e-6;
 
   return (
     <div
@@ -1122,6 +1503,9 @@ export function CityMap({
       data-fit={fit}
       data-art={pyramids ? 'tiles' : 'still'}
       data-view={view ? `${view.x.toFixed(1)},${view.y.toFixed(1)},${view.scale.toFixed(4)}` : ''}
+      data-zoom-limits={
+        fitted ? `${zoom.min.toFixed(4)},${zoom.max.toFixed(4)},${fitted.scale.toFixed(4)}` : ''
+      }
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
@@ -1285,6 +1669,40 @@ export function CityMap({
                 );
               })}
           </div>
+          {/* Review 3: + / − beside the Places button on a desktop (the caller places them); the
+              wheel, a pinch and a double tap do the same. They step aside while a place is open. */}
+          {zoomButtons !== undefined && (
+            <div
+              className={cx(
+                'pointer-events-auto absolute z-10 flex-col shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)]',
+                selected && 'invisible',
+                zoomButtons,
+              )}
+              data-map-overlay="zoom"
+              data-map-control=""
+              data-testid="map-zoom"
+            >
+              {(
+                [
+                  ['+', copy.mapZoomIn, FREE_ZOOM_STEP, atMax, 'map-zoom-in'],
+                  ['−', copy.mapZoomOut, 1 / FREE_ZOOM_STEP, atMin, 'map-zoom-out'],
+                ] as const
+              ).map(([sign, label, k, off, testId]) => (
+                <button
+                  key={testId}
+                  type="button"
+                  aria-label={label}
+                  title={label}
+                  disabled={off}
+                  onClick={() => stepZoom(k)}
+                  data-testid={testId}
+                  className="flex size-11 cursor-pointer items-center justify-center bg-paper font-label text-[20px] leading-none text-ink not-first:border-t not-first:border-faint hover:bg-paper-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:text-faint disabled:hover:bg-paper"
+                >
+                  <span aria-hidden="true">{sign}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </>
       )}
       {children}

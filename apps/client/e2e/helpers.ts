@@ -92,11 +92,23 @@ export async function toTheCity(page: Page): Promise<void> {
   await mapAtRest(page);
 }
 
-/** Review 2: the map back at its fitted view, the zoom out finished. */
+/**
+ * Review 2: the map back at its fitted view, the zoom out finished. Review 3: and the place's sheet
+ * gone (it slides out with the zoom, so it is still in the page for its 300 ms).
+ */
 export async function mapAtRest(page: Page): Promise<void> {
   const map = page.getByTestId('city-map');
   await expect(map).toHaveAttribute('data-zoomed', 'false');
   await expect(map).toHaveAttribute('data-moving', 'false');
+  await expect(page.locator('[role=dialog][data-layout]')).toHaveCount(0);
+}
+
+/** Review 3: the open place's sheet has finished easing in (measure it only then). */
+export async function sheetSettled(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const d = document.querySelector('[role=dialog][data-layout]');
+    return !!d && d.getAnimations().every((a) => a.playState !== 'running');
+  });
 }
 
 /**
@@ -107,6 +119,7 @@ export async function openLocation(page: Page, label: string) {
   await openPlace(page, label);
   const sheet = page.getByRole('dialog');
   await expect(sheet).toBeVisible();
+  await sheetSettled(page);
   return sheet;
 }
 

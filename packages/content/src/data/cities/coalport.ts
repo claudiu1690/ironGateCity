@@ -31,7 +31,9 @@ export const coalport: City = {
     price: '5 marks',
   },
   // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
-  council: { offset: 2, seats: 7 },
+  // Review 3: the council sits in the domed hall on the river between the Union Hall and the Mill
+  // Gate (no survey pin; measured on the painting). The election screens' backdrop.
+  council: { offset: 2, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.525, y: 0.19 } },
   locations: [
     {
       id: 'coalport.mill-gate',
@@ -190,6 +192,7 @@ export const coalport: City = {
           tier: 1,
           type: 'training',
           trains: 'int',
+          verb: 'Study',
           text: {
             success: {
               headline: 'An evening with the pamphlets',
@@ -247,6 +250,7 @@ export const coalport: City = {
           tier: 1,
           type: 'training',
           trains: 'agi',
+          verb: 'Run',
           text: {
             success: {
               headline: 'Every entry in the district',
@@ -304,6 +308,7 @@ export const coalport: City = {
           tier: 1,
           type: 'training',
           trains: 'str',
+          verb: 'Lift',
           text: {
             success: {
               headline: 'A shift on the hooks',

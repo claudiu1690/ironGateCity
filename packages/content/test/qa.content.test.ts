@@ -12,6 +12,7 @@ import R1 from '../../../docs/design/review-1-answers.md?raw';
 import { copy, isCheckedAction, loadContent, rawContent } from '../src';
 import { mapPins } from '../src/data/mapPins';
 import { R2_ORDERS, plainProse } from './review2';
+import { R3_ORDER_TITLES, R3_VERBS } from './review3';
 
 const content = loadContent();
 const city = content.city('coalport')!;
@@ -176,12 +177,37 @@ describe('content vs docs/design/slice-1-content.md', () => {
       const t = content.orderTemplates.find((x) => x.id === id.match(/`([^`]+)`/)![1]);
       expect(t, id).toBeDefined();
       expect(t!.slot, id).toBe(slot.charAt(0));
-      // Review 2 (answers §1.7) supersedes the titles and lines it lists.
+      // Review 2 (answers §1.7) supersedes the titles and lines it lists; review 3 (answers §5.4,
+      // §7) the training orders' titles.
       const r2 = R2_ORDERS.get(t!.id);
-      expect(t!.title, id).toBe(r2?.title ?? title);
+      expect(t!.title, id).toBe(R3_ORDER_TITLES.get(t!.id) ?? r2?.title ?? title);
       expect(t!.line, id).toBe(r2?.line ?? line);
       expect(t!.target, id).toBe(Number(target.match(/· (\d+)/)![1]));
     }
+  });
+
+  it('review 3 §5.4, §7: the training orders name the verbs', () => {
+    expect([...R3_ORDER_TITLES]).toEqual([
+      ['dir.sharpen-up', 'Study, lift or run once in Coalport'],
+      ['dir.v.sharpen-up', 'Study, lift or run once in Duskwall'],
+      ['dir.a.sharpen-up', 'Study, unload or run once in Ashford'],
+    ]);
+    for (const [id, title] of R3_ORDER_TITLES)
+      expect(content.orderTemplates.find((t) => t.id === id)?.title, id).toBe(title);
+  });
+
+  it('review 3 §5.3: every training action carries the verb of the answers table, word for word', () => {
+    expect(R3_VERBS).toHaveLength(9);
+    for (const [id, title, verb] of R3_VERBS) {
+      const a = content.cities.flatMap((c) => c.locations.flatMap((l) => l.actions)).find((x) => x.id === id);
+      expect(a, id).toBeDefined();
+      expect(a!.name, id).toBe(title);
+      expect(a?.type === 'training' && a.verb, id).toBe(verb);
+    }
+    const all = content.cities
+      .flatMap((c) => c.locations.flatMap((l) => l.actions))
+      .filter((a) => a.type === 'training');
+    expect(all).toHaveLength(9);
   });
 
   it('§7.4: the ambient pool, in day order', () => {

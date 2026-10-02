@@ -90,13 +90,17 @@ test.describe.serial('QA slice 3: the ballot on a phone', () => {
     },
   );
 
-  test('the count at 360 px: six columns, the formula line, no side scroll', async ({ page }) => {
+  test('the count at 360 px: six columns, the line in words, no side scroll', async ({ page }) => {
     await advanceTo(page, 0);
     await signUp(page, 'Count Reader');
     await page.setViewportSize({ width: 360, height: 640 });
     await page.goto('/council/count');
     await expect(page.getByTestId('count-row')).toHaveCount(9);
-    await expect(page.locator('main')).toContainText('Support = local support + 3 per backer + votes');
+    // Review 3 (answers §6.3): how seats are decided, in words, never a formula.
+    await expect(page.locator('main')).toContainText(
+      "The seven with the most support took the seats: the town's own vote for each candidate",
+    );
+    await expect(page.locator('main')).not.toContainText('Support =');
     expect(await sideScroll(page)).toBeLessThanOrEqual(0);
   });
 });

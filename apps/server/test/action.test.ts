@@ -305,7 +305,8 @@ describe('training (§8.5)', () => {
     expect(r.rows).toEqual([{ index: 1, label: 'Intelligence 12 → 13', detail: '44 Energy · always works' }]);
     expect(r.effects.stat).toEqual({ stat: 'int', before: 12, after: 13 });
     expect(r.effects.orders[0]).toMatchObject({ id: 'dir.sharpen-up', done: true, fxp: 20 });
-    expect(r.again).toEqual({ cost1: 46, cost3: null });
+    // Review 3 (GDD §8.5): the repeat names the verb ("Study again · 46 Energy").
+    expect(r.again).toEqual({ cost1: 46, cost3: null, verb: 'Study' });
     expect(r.art.rung).toBe('scene');
     expect(r.character.stats.int).toBe(13);
     expect(r.today.statTrained).toBe(1);

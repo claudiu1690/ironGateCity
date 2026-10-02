@@ -199,7 +199,12 @@ export function buildActionResult(i: ResultInput): ActionResult {
     stat = r.stat;
     if (m.ordinance && effect(m, 'trainingEnergyPct'))
       bonusTags.push({ id: m.ordinance.id, label: m.ordinance.name, note: `${r.energy.cost} Energy` });
-    again = { cost1: trainingEnergy(trainingCost(r.stat.after), m), cost3: null }; // ×1 only (§8.5)
+    // ×1 only (§8.5); review 3: the repeat button names the action's verb ("Study again · 46 Energy").
+    again = {
+      cost1: trainingEnergy(trainingCost(r.stat.after), m),
+      cost3: null,
+      ...('verb' in action ? { verb: action.verb } : {}),
+    };
   }
 
   const g = i.gains;

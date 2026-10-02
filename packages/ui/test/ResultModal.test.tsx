@@ -42,15 +42,38 @@ describe('ResultModal v2', () => {
     expect(within(rows[0]!).queryByTestId('attempt-reason')).toBeNull();
     expect(rows[0]!.textContent).not.toMatch(/%|Rolled|roll/);
     expect(within(rows[0]!).queryByRole('button')).toBeNull();
-    expect(d.getByTestId('tile-experience')).toHaveTextContent('+45');
-    expect(d.getByTestId('tile-faction-xp')).toHaveTextContent('+6');
-    expect(d.getByTestId('tile-iron')).toHaveTextContent('+20');
-    expect(d.getByTestId('tile-opinion')).toHaveTextContent('Coalport+0.05 %Collective opinion');
-    expect(d.getByTestId('effect-opinion')).toHaveTextContent('70.0 → 70.1 %');
+    // Review 3 (answers §3): the receipt, one line per reward in a fixed order, the value at the right.
+    const lines = within(d.getByTestId('receipt')).getAllByRole('listitem');
+    expect(lines.map((l) => l.dataset.testid)).toEqual([
+      'reward-xp',
+      'reward-fxp',
+      'reward-iron',
+      'reward-opinion',
+    ]);
+    const xp = within(d.getByTestId('reward-xp'));
+    expect(xp.getByTestId('reward-label')).toHaveTextContent(/^XP$/);
+    expect(xp.getByTestId('reward-value')).toHaveTextContent(/^\+45$/);
+    // The HUD's own distance to the next Level, and its bar in miniature.
+    expect(xp.getByTestId('reward-note')).toHaveTextContent(/^105 to Level 2$/);
+    expect(xp.getByRole('progressbar', { name: 'XP' })).toHaveAttribute('aria-valuenow', '45');
+    const fxp = within(d.getByTestId('reward-fxp'));
+    expect(fxp.getByTestId('reward-value')).toHaveTextContent('+6');
+    expect(fxp.getByTestId('reward-note')).toHaveTextContent(/^6 \/ 400 to Activist$/);
+    expect(fxp.getByRole('progressbar', { name: 'Party XP' })).toBeInTheDocument();
+    expect(d.getByTestId('reward-iron')).toHaveTextContent(/^Iron\+20$/);
+    // No bar on Iron or opinion.
+    expect(within(d.getByTestId('reward-iron')).queryByRole('progressbar')).toBeNull();
+    expect(d.getByTestId('reward-opinion')).toHaveTextContent(
+      'Opinion in Coalport+0.05 %Collective 70.0 → 70.1 %',
+    );
+    // The knock-on block keeps Energy and Reputation; the before → after lines moved to the receipt.
+    expect(d.queryByTestId('effect-opinion')).toBeNull();
     expect(d.getByTestId('effect-standing')).toHaveTextContent('Stranger · 1 / 10 to Familiar');
     expect(d.getByTestId('effect-energy')).toHaveTextContent('100 → 90');
-    expect(d.getByRole('button', { name: 'Again ×1' })).toBeEnabled();
-    expect(d.getByRole('button', { name: 'Again ×3' })).toBeEnabled();
+    expect(d.queryByText('Experience')).toBeNull();
+    // Review 3 (answers §4): the buttons say what they do and what they cost.
+    expect(d.getByRole('button', { name: 'Once more · 10 Energy' })).toBeEnabled();
+    expect(d.getByRole('button', { name: 'Three more · 30 Energy' })).toBeEnabled();
     expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
   });
 
@@ -77,10 +100,15 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · place your point');
     await user.click(d.getByRole('button', { name: 'STR 10 → 11' }));
     expect(onPlaceStat).toHaveBeenCalledWith('str');
-    // 25 Energy: ×1 is fine, ×3 needs 30.
-    expect(d.getByRole('button', { name: 'Again ×1' })).toBeEnabled();
-    expect(d.getByRole('button', { name: 'Again ×3' })).toBeDisabled();
-    expect(d.getByTestId('again-hint')).toHaveTextContent('×3 needs 30 Energy');
+    // 25 Energy: once is fine, three need 30; the disabled button keeps its label and cost.
+    expect(d.getByRole('button', { name: 'Once more · 10 Energy' })).toBeEnabled();
+    expect(d.getByRole('button', { name: 'Three more · 30 Energy' })).toBeDisabled();
+    expect(d.getByTestId('again-three')).toHaveTextContent('30 Energy');
+    expect(d.getByTestId('again-hint')).toHaveTextContent(
+      /^Three more needs 30 Energy · ready at \d\d:\d\d$/,
+    );
+    // The parts of a reward, worded ("+40 and Rested +5").
+    expect(within(d.getByTestId('reward-xp')).getByTestId('reward-note').textContent).toMatch(/^\+\d+ and /);
   });
 
   it('review 2: the reason names where to train the stat; nothing opens on a tap', () => {
@@ -114,7 +142,7 @@ describe('ResultModal v2', () => {
     const row = screen.getAllByTestId('attempt-row')[0]!;
     expect(within(row).getByTestId('attempt-outcome')).toHaveTextContent('Partial');
     expect(within(row).getByTestId('attempt-reason')).toHaveTextContent(
-      'Your Intelligence is low for this. Train it at the Union Hall.',
+      'Your Intelligence is low for this. Raise it at the Union Hall.',
     );
     expect(within(row).queryByRole('button')).toBeNull();
   });
@@ -128,27 +156,40 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('stamp')).toHaveTextContent('Trained');
     expect(d.getByText('44 Energy · always works')).toBeInTheDocument();
     expect(d.getByTestId('effect-stat')).toHaveTextContent('Intelligence 12 → 13');
-    expect(d.getByTestId('tile-opinion')).toHaveTextContent('—');
-    // ×1 only (§8.5, content §13.2): Again ×1 · Continue.
-    expect(d.queryByRole('button', { name: 'Again ×3' })).toBeNull();
+    // Review 3 (answers §3.2): a zero line is not printed; a training result is one line, XP.
+    const lines = within(d.getByTestId('receipt')).getAllByRole('listitem');
+    expect(lines.map((l) => l.dataset.testid)).toEqual(['reward-xp']);
+    expect(d.queryByTestId('reward-fxp')).toBeNull();
+    expect(d.queryByTestId('reward-iron')).toBeNull();
+    expect(d.queryByTestId('reward-opinion')).toBeNull();
+    // ×1 only (§8.5): the verb's repeat (review 3: "Study again · 46 Energy") · Continue.
+    expect(d.queryByRole('button', { name: /Three more/ })).toBeNull();
     expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
-    expect(d.getByRole('button', { name: 'Again ×1' })).toBeDisabled();
-    expect(d.getByTestId('again-hint')).toHaveTextContent(/^Needs 46 Energy · ready at \d\d:\d\d$/);
+    expect(d.getByRole('button', { name: 'Study again · 46 Energy' })).toBeDisabled();
+    expect(d.getByTestId('again-hint')).toHaveTextContent(
+      /^Study again needs 46 Energy · ready at \d\d:\d\d$/,
+    );
   });
 
   it('keeps Again and Continue in a sticky bar at the bottom of the modal (m2)', () => {
     const { dialog } = renderModal(actionResultFixture);
     const bar = within(dialog).getByTestId('result-buttons');
     expect(bar).toHaveClass('sticky', 'bottom-0');
-    expect(within(bar).getByRole('button', { name: 'Again ×1' })).toBeInTheDocument();
-    expect(within(bar).getByRole('button', { name: 'Again ×3' })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Once more · 10 Energy' })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Three more · 30 Energy' })).toBeInTheDocument();
+    // Review 3 (answers §8.5): no button's text ends in a bare number; a cost is always "n Energy".
+    for (const b of within(bar).getAllByRole('button')) {
+      const text = b.textContent!.replace(/\s+/g, ' ').trim();
+      if (/\d$/.test(text)) throw new Error(`a bare number: ${text}`);
+      if (/\d/.test(text)) expect(text).toMatch(/\d+ Energy$/);
+    }
     expect(within(bar).getByRole('button', { name: 'Continue' })).toBeInTheDocument();
   });
 
   it('Continue closes; Again asks for another run with its count', async () => {
     const user = userEvent.setup();
     const { onOpenChange, onAgain } = renderModal(actionResultFixture);
-    await user.click(screen.getByRole('button', { name: 'Again ×3' }));
+    await user.click(screen.getByRole('button', { name: 'Three more · 30 Energy' }));
     expect(onAgain).toHaveBeenCalledWith(3);
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -176,11 +217,35 @@ describe('ResultModal v2', () => {
         ...actionResultFixture,
         character: { ...actionResultFixture.character, factionId },
       });
-      const value = within(dialog).getByTestId('tile-faction-xp').querySelector(`.${cls}`);
+      const value = within(dialog).getByTestId('reward-fxp').querySelector(`.${cls}`);
       expect(value, factionId).not.toBeNull();
-      expect(within(dialog).getByTestId('tile-opinion').querySelector(`.${cls}`), factionId).not.toBeNull();
+      expect(within(dialog).getByTestId('reward-opinion').querySelector(`.${cls}`), factionId).not.toBeNull();
       cleanup();
     }
+  });
+
+  it('review 3: a result with no Party XP prints no Party XP line (zero lines are not printed)', () => {
+    const { dialog } = renderModal({
+      ...actionResultFixture,
+      rewards: { ...actionResultFixture.rewards, fxp: { base: 0, bonus: 0, total: 0 } },
+    });
+    expect(within(dialog).queryByTestId('reward-fxp')).toBeNull();
+    expect(within(dialog).getByTestId('reward-xp')).toBeInTheDocument();
+  });
+
+  it('review 3: at the top Rank the Party XP bar is full and the note reads the total', () => {
+    const { dialog } = renderModal({
+      ...actionResultFixture,
+      character: {
+        ...actionResultFixture.character,
+        fxp: 25_000,
+        rank: { ...actionResultFixture.character.rank, fxpNext: null, nextTitle: null },
+      },
+    });
+    const fxp = within(within(dialog).getByTestId('reward-fxp'));
+    expect(fxp.getByTestId('reward-note')).toHaveTextContent(/^25,000 Party XP$/);
+    const bar = fxp.getByRole('progressbar');
+    expect(bar).toHaveAttribute('aria-valuenow', bar.getAttribute('aria-valuemax')!);
   });
 
   it('renders nothing without a result', () => {

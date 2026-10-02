@@ -38,6 +38,10 @@ const onTheMap = (e: Event) =>
  * On phones it is not modal: the zoomed map beside or above it stays live, to pan or to tap another
  * pin (review 2 #8). On tablets and desktops it is a modal panel in the middle of the screen over the
  * dimmed map, since the map no longer matters once a place is open (review 2 #2).
+ *
+ * Review 3 (GDD §14.13): it eases in as the map zooms to the place, on the same curve and over the same
+ * 300 ms, and out in reverse when it closes: the caller keeps it mounted with `open={false}` (and the
+ * last place's content) so the closing movement plays.
  */
 export function LocationSheet({
   open,
@@ -55,7 +59,12 @@ export function LocationSheet({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <Dialog.Portal>
-        {modal && <Dialog.Overlay className="fixed inset-0 z-30 bg-ink/60" data-testid="location-backdrop" />}
+        {modal && (
+          <Dialog.Overlay
+            className="place-dim fixed inset-0 z-30 bg-ink/60"
+            data-testid="location-backdrop"
+          />
+        )}
         <Dialog.Content
           aria-describedby={undefined}
           data-layout={layout}
@@ -68,6 +77,8 @@ export function LocationSheet({
           }}
           className={cx(
             'fixed z-30 flex flex-col overflow-y-auto overscroll-contain bg-paper text-ink',
+            // Review 3 (GDD §14.13): eases in with the map's zoom and the dim, out in reverse (tokens.css).
+            layout === 'sheet' ? 'place-sheet' : layout === 'side' ? 'place-side' : 'place-panel',
             layout === 'sheet' &&
               // Slice 2 (§12.3): at most 60 dvh on phones, so the map and the pin stay visible above it.
               'inset-x-0 bottom-16 max-h-[60dvh] shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',

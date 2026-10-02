@@ -526,6 +526,11 @@ export interface ActionView {
   /** Checked actions only, Standing bonus included. */
   preview: CheckBreakdown | null;
   trains?: { stat: TrainableStat; from: number; to: number };
+  /**
+   * Review 3 (GDD §8.5): a training action's button, the title's verb (*Study*, *Lift*, *Run*,
+   * *Unload*); content `TrainingAction.verb`. Absent for checked actions.
+   */
+  verb?: string;
   /** An open Party order this action advances. */
   order: { id: string; title: string; progress: number; target: number } | null;
   locked: { reason: 'LEVEL' | 'STANDING'; need: number } | null;
@@ -694,7 +699,12 @@ export interface ActionResult {
    * Live costs for the modal's Again buttons (training rises); `cost3` is null for training (×1
    * only, §8.5).
    */
-  again: { cost1: number; cost3: number | null } | null;
+  again: {
+    cost1: number;
+    cost3: number | null;
+    /** Review 3: a *Trained* result's repeat button, "{verb} again · {cost} Energy" (absent before it). */
+    verb?: string;
+  } | null;
   character: CharacterView;
 }
 
@@ -1051,6 +1061,20 @@ export interface CandidateView {
   canEndorse: { ok: true } | { ok: false; reason: EndorseRefusal } | null;
 }
 
+/**
+ * Review 3 (GDD §15.3, answers §6.1): the building the council sits in, a point on the city picture
+ * (fractions, like a pin), and the city's map stills, for the election screens' header crop. The
+ * client picks day or night by the map's rule (`isNight` on the server's clock).
+ */
+export interface HallView {
+  name: string;
+  /** In a sentence: "the Town Hall". */
+  ref: string;
+  x: number;
+  y: number;
+  asset: { day: AssetView; night: AssetView };
+}
+
 export interface ElectionView {
   electionId: string;
   cityId: string;
@@ -1092,6 +1116,8 @@ export interface ElectionView {
   /** The caller's own endorsement this cycle, if any. */
   endorsed: { candidacyId: string; name: string } | null;
   pc: number;
+  /** Review 3: the council's hall, for the header crop; null for a city without one. */
+  hall: HallView | null;
 }
 
 export interface CountRowView extends CountRow {
@@ -1111,6 +1137,8 @@ export interface CountView {
   turnout: { voters: number; eligible: number };
   seats: number;
   npcSeats: number;
+  /** Review 3: the council's hall, for the header crop. */
+  hall: HallView | null;
 }
 
 export interface CouncilSeatView {
@@ -1172,6 +1200,8 @@ export interface CouncilView {
   /** Councillors while voting. */
   menu: OrdinanceMenuItemView[] | null;
   inForce: { ordinanceId: string; name: string; line: string; daysLeft: number } | null;
+  /** Review 3: the council's hall, for the header crop. */
+  hall: HallView | null;
 }
 
 /** Screens §2.2: the morning a seat is won, the paper's front page is the winner's. */

@@ -195,6 +195,8 @@ export async function getCityView(
           energy3: null,
           preview: null,
           trains: { stat: action.trains, from, to: from + 1 },
+          // Review 3 (GDD §8.5): the button is the title's verb, from content.
+          verb: action.verb,
           locked: null,
         };
       }),

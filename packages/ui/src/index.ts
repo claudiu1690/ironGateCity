@@ -3,6 +3,7 @@ export type { ButtonProps, ButtonVariant } from './components/Button';
 export {
   CityMap,
   FRAME_PAN_MARGIN,
+  FREE_ZOOM_STEP,
   NIGHT_FADE_MS,
   PIN_GAP,
   REST_PAN_MARGIN,
@@ -10,13 +11,26 @@ export {
   contentFor,
   coversBox,
   fitPinsView,
+  freePanLimits,
+  freeZoomLimits,
   nativeScale,
   panLimits,
   restPanLimits,
+  restFromView,
+  viewFromRest,
+  zoomAt,
   zoomScale,
   zoomView,
 } from './components/CityMap';
-export type { CityMapProps, MapCover, MapHotspot, MapInsets, MapRect, MapView } from './components/CityMap';
+export type {
+  CityMapProps,
+  MapCover,
+  MapHotspot,
+  MapInsets,
+  MapRect,
+  MapView,
+  RestView,
+} from './components/CityMap';
 export { TileLayer } from './components/TileLayer';
 export { CloudLayer } from './components/CloudLayer';
 export type { CloudLayerProps } from './components/CloudLayer';
@@ -42,6 +56,8 @@ export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';
 export type { FieldProps } from './components/Field';
 export { Gauge } from './components/Gauge';
+export { HallHeader, MAP_CROP_W, MapCrop } from './components/HallHeader';
+export type { HallHeaderProps, MapCropProps } from './components/HallHeader';
 export { HelpButton, helpMark } from './components/Help';
 export type { HelpButtonProps, HelpNote } from './components/Help';
 export type { GaugeProps } from './components/Gauge';
@@ -65,6 +81,7 @@ export {
   CountTable,
   ElectionCard,
   FrontPage,
+  HowElectionsWork,
   OrderPaper,
   OrdinanceMenu,
   OrdinanceRow,
@@ -77,6 +94,7 @@ export type {
   CandidateRowProps,
   ElectionCardProps,
   ElectionLines,
+  HowElectionsWorkProps,
   OrderPaperProps,
   OrdinanceMenuProps,
   OrdinanceRowProps,

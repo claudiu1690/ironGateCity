@@ -549,3 +549,9 @@ Rules: GDD §0 (*Added 30 Sep 2026, review 2*), §1.5, §8.4, §13.1a, §15.3; a
 - **Hiding the percentages hides the day-2 step** (Appendix C #33): the *First day* bonus ending at the boundary moved a ticket from 76 % to 81 % in the review-1 model, which stayed inside *Good odds*; for the flattest build 60 → 65 stays inside *Fair odds*. The taper lever is no longer needed for legibility and stays parked.
 
 Session shape (pillar 7): the Election card adds no tap (it replaces the HQ card's route and the paper's row as the place the state lives); the reason line replaces two lines of maths under a result row and opens nothing; the band note is a tap only when asked for. The count of taps per act in §14.6 is unchanged.
+
+## 18. Review 3: the receipt, the buttons, the verb, the hall
+
+Rules: GDD §0 (*Added 2 Oct 2026, review 3*), §8.5, §13.1, §13.1a, §14.13, §15.3, §15.10; answers in `docs/design/review-3-answers.md`. **No rate, cost, threshold or formula changes.** The reward receipt prints the same four numbers the tiles did (and hides a zero instead of printing it); the repeat buttons spend the same Energy with the cost written in words; a training action's button changes its word, not its price (20 + 2 × stat) or its half-rate XP; the council's hall is a backdrop. The one open lever is Appendix C #44 (the NPC fill at low population: nine names, or eight when fewer than two players stand), which changes no reward and waits for the user.
+
+Session shape (pillar 7): no tap is added. The receipt is shorter than the tiles for every result but a full canvass, where it is about 30 px taller and still above the sticky buttons on a 667 px phone; the *How elections work* note is a tap only when asked for; free zoom is a gesture with no rule effect.

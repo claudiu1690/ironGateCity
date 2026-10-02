@@ -262,7 +262,11 @@ describe('slice-3 cross-checks (tech design §4.2): one failing fixture each', (
 
   it('cities', () => {
     fails((c) => delete (c.cities[0] as { council?: unknown }).council, /home city without a council/);
-    fails((c) => (c.cities[1]!.council = { offset: 2, seats: 7 }), /share the council offset 2/);
+    // Review 3: a council also names its hall; keep it so the offset is what fails.
+    fails(
+      (c) => (c.cities[1]!.council = { ...c.cities[1]!.council!, offset: 2 }),
+      /share the council offset 2/,
+    );
   });
 
   it('political headlines and texts', () => {

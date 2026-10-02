@@ -47,7 +47,7 @@ describe('the odds as a word, the reason in plain words (review 2 §2)', () => {
     const places = { int: 'the Union Hall', str: 'the Mill Gate' };
     const low = check({ statValues: [5], statValue: 5, statTerm: -12, raw: 38, chance: 38 });
     expect(reasonFor(low, 'partial', places)?.text).toBe(
-      'Your Intelligence is low for this. Train it at the Union Hall.',
+      'Your Intelligence is low for this. Raise it at the Union Hall.',
     );
     expect(reasonFor(low, 'partial')?.text).toBe('Your Intelligence is low for this.');
     expect(reasonFor(low, 'success', places)).toBeNull();
@@ -74,7 +74,7 @@ describe('the odds as a word, the reason in plain words (review 2 §2)', () => {
       chance: 38,
     });
     expect(reasonFor(best, 'partial')?.text).toBe(
-      'Even your best, Strength, is low for this. Training anything would help.',
+      'Even your best, Strength, is low for this. Raising any of them would help.',
     );
     const rain = check({
       statValues: [7],
@@ -91,7 +91,7 @@ describe('the odds as a word, the reason in plain words (review 2 §2)', () => {
       'The odds were only fair. Every win here builds your reputation, and reputation lifts the odds.',
     );
     expect(reasonFor(low, 'failure', places)?.text).toBe(
-      'It went badly. Your Intelligence is low for this. Train it at the Union Hall.',
+      'It went badly. Your Intelligence is low for this. Raise it at the Union Hall.',
     );
     for (const c of [low, two, cha, best, rain, check({ chance: 76 }), check({ chance: 62 })])
       for (const o of ['partial', 'failure'] as const)
@@ -109,7 +109,7 @@ describe('the odds as a word, the reason in plain words (review 2 §2)', () => {
       { int: 'the Union Hall' },
     );
     expect(r.shared).toBe(
-      "2 of 3 didn't come off. Your Intelligence is low for this. Train it at the Union Hall.",
+      "2 of 3 didn't come off. Your Intelligence is low for this. Raise it at the Union Hall.",
     );
     expect(r.byRow.size).toBe(0);
     const one = batchReasons([{ index: 1, check: check({ chance: 76 }), outcome: 'partial' }]);

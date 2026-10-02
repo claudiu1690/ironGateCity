@@ -495,22 +495,70 @@ export function Slate({
       busy={!!endorsingId}
     />
   );
+  // Review 3 (GDD §15.10, answers §6.2): who's who is said on every list, in words. Players first
+  // under their own rule, then the local candidates with the line that says what they are.
+  const kicker = 'label-caps border-t-[3px] border-b border-double border-ink py-1 text-[10px] font-semibold';
   return (
     <div
-      className="flex flex-col"
+      className="flex flex-col gap-1"
       role={mode === 'ballot' ? 'radiogroup' : undefined}
       aria-label="Candidates"
     >
-      {players.length > 0 && <ul className="flex flex-col">{players.map(row)}</ul>}
+      <h2 className={kicker} data-testid="players-standing">
+        {copy.playersStanding}
+      </h2>
+      {players.length > 0 ? (
+        <ul className="flex flex-col">{players.map(row)}</ul>
+      ) : (
+        <p className="pb-1 font-mono text-[11.5px] text-muted" data-testid="no-players-standing">
+          {copy.noPlayersStanding}
+        </p>
+      )}
       {npcs.length > 0 && (
         <>
-          <div className="label-caps border-t border-ink pt-1.5 text-[10px] text-muted">
+          <h2 className={cx(kicker, 'mt-2')} data-testid="local-candidates">
             {copy.wardCandidates}
-          </div>
+          </h2>
+          <p className="font-mono text-[11.5px] leading-snug text-muted" data-testid="local-candidates-line">
+            {copy.localCandidatesLine}
+          </p>
+          <p className="font-mono text-[11.5px] leading-snug text-muted" data-testid="last-seat-close">
+            {copy.lastSeatClose}
+          </p>
           <ul className="flex flex-col">{npcs.map(row)}</ul>
         </>
       )}
     </div>
+  );
+}
+
+export interface HowElectionsWorkProps {
+  cityName: string;
+  /** The faction's Rank 2 and Rank 3 titles (who votes, who stands). */
+  rank2: string;
+  rank3: string;
+  className?: string;
+}
+
+/**
+ * Review 3 (answers §6.4): the visible Courier link *How elections work* (dotted underline) under the
+ * title on who's standing, the vote and the result; it opens the five-line note the Election card's
+ * kicker opens.
+ */
+export function HowElectionsWork({ cityName, rank2, rank3, className }: HowElectionsWorkProps) {
+  return (
+    <HelpButton
+      notes={[copy.help.election(cityName, rank2, rank3)]}
+      label={copy.howElectionsWork}
+      testId="how-elections-work"
+      className={cx(
+        '-my-2 inline-flex items-center self-start font-mono text-[12px] text-ink',
+        helpMark,
+        className,
+      )}
+    >
+      {copy.howElectionsWork}
+    </HelpButton>
   );
 }
 

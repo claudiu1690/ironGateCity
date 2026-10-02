@@ -28,8 +28,10 @@ export interface TicketProps {
 /**
  * An action as a printed ticket (mockups MobileMission, Mission): Energy stub, name, the odds as a
  * word with the stat they rest on (*Good odds · Intelligence*, review 2; a tap opens the band's
- * note, never a number) or *Intelligence 12 → 13 · always works*, a tags line, and ×1 / ×3 (one
- * Train button for training). It words the server's numbers.
+ * note, never a number) or *Intelligence 12 → 13 · always works*, a tags line, and *Once* / *×3* with
+ * the batch's cost under it (review 3: every button that spends Energy says what it costs); training
+ * has one button, the title's verb (*Study*, *Lift*: content), with the live cost on the stub. It
+ * words the server's numbers.
  */
 export function Ticket({
   action: a,
@@ -78,7 +80,8 @@ export function Ticket({
     .join(' · ');
 
   const button = cx(
-    'w-12 shrink-0 cursor-pointer border-l border-ink font-label text-[15px] text-paper',
+    // Review 3 (answers §4.3): both buttons the stub's 52 px, so the ticket reads 52 · text · 52 · 52.
+    'w-[52px] shrink-0 cursor-pointer border-l border-ink font-label text-paper',
     'focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-paper',
     'disabled:cursor-not-allowed disabled:bg-faint',
   );
@@ -140,8 +143,10 @@ export function Ticket({
             aria-label={`${a.name}, ${a.energy} Energy`}
             aria-describedby={hint ? hintId : undefined}
             className={cx(button, 'w-16 bg-ink text-[12px] tracking-[0.1em] uppercase hover:bg-ink-2')}
+            data-testid="ticket-verb"
           >
-            {pending === 1 ? '…' : 'Train'}
+            {/* Review 3 (GDD §8.5): the title's verb, never "Train" (content `verb`). */}
+            {pending === 1 ? '…' : (a.verb ?? copy.typeLabel.training)}
           </button>
         ) : (
           <>
@@ -152,9 +157,10 @@ export function Ticket({
               aria-busy={pending === 1 || undefined}
               aria-label={`${a.name}, once, ${a.energy} Energy`}
               aria-describedby={hint ? hintId : undefined}
-              className={cx(button, 'bg-ink hover:bg-ink-2')}
+              className={cx(button, 'bg-ink text-[12px] tracking-[0.08em] uppercase hover:bg-ink-2')}
+              data-testid="ticket-once"
             >
-              {pending === 1 ? '…' : '×1'}
+              {pending === 1 ? '…' : copy.ticket.once}
             </button>
             <button
               type="button"
@@ -164,9 +170,27 @@ export function Ticket({
               aria-label={`${a.name}, three times, ${a.energy3 ?? a.energy * 3} Energy`}
               title={short3 && a.energy3 !== null ? copy.x3Needs(a.energy3) : undefined}
               aria-describedby={hint ? hintId : undefined}
-              className={cx(button, 'bg-ink-2 hover:bg-ink')}
+              className={cx(
+                button,
+                'group flex flex-col items-center justify-center gap-0.5 bg-ink-2 hover:bg-ink',
+              )}
+              data-testid="ticket-three"
             >
-              {pending === 3 ? '…' : '×3'}
+              {pending === 3 ? (
+                '…'
+              ) : (
+                <>
+                  <span className="text-[15px] leading-none">{copy.ticket.three}</span>
+                  {/* The one cost the stub does not state, on the button that spends it. */}
+                  <span
+                    className="label-caps text-[8px] leading-none text-energy-light group-disabled:text-paper"
+                    aria-hidden="true"
+                    data-testid="ticket-three-cost"
+                  >
+                    {copy.ticket.threeCost(a.energy3 ?? a.energy * 3)}
+                  </span>
+                </>
+              )}
             </button>
           </>
         )}

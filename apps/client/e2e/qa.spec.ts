@@ -4,9 +4,10 @@
  * and a few production-only checks (the auth origin check runs here because the server is built
  * with NODE_ENV=production). Known bugs are `test.fail` with the bug title from docs/qa/slices-0-1.md.
  */
+import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { mapAtRest, signUp, toTheCity } from './helpers';
+import { mapAtRest, signUp, toTheCity, sheetSettled } from './helpers';
 
 const PHONE = { width: 375, height: 812 };
 const DESKTOP = { width: 1440, height: 900 };
@@ -78,7 +79,7 @@ async function smallTargets(page: Page): Promise<string[]> {
 test.describe('phone 375×812', () => {
   test.use({ viewport: PHONE });
 
-  test('the 5-minute loop: paper → job → ×1 → Again ×3 → one modal each → Today → level-up point → Me → reload → sign out and in', async ({
+  test('the 5-minute loop: paper → job → ×1 → Three more → one modal each → Today → level-up point → Me → reload → sign out and in', async ({
     page,
   }) => {
     const email = await signUp(page, 'Ida Brandt');
@@ -94,14 +95,14 @@ test.describe('phone 375×812', () => {
     await expect(sheet.getByTestId('job-held')).toHaveText('Your job · seniority 0 days · +0 %');
     await expect(page.getByTestId('hud-energy')).toHaveText('100 / 100');
 
-    // One tap = one modal (pillar 7): ×1, then Again ×3 from the modal itself.
+    // One tap = one modal (pillar 7): once, then Three more from the modal itself.
     await sheet
       .getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' })
       .click();
     const modal = modalOf(page);
     await expect(modal.getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);
     await expect(page.getByTestId('stamp')).toHaveCount(1); // one result modal, no second screen
-    await modal.getByRole('button', { name: /Again ×3/ }).click();
+    await modal.getByRole('button', { name: 'Three more · 30 Energy' }).click();
     await expect(modal.getByTestId('stamp')).toHaveText(/^[0-3] of 3$/);
     await expect(modal.getByTestId('attempt-row')).toHaveCount(3);
     await expect(modal.getByTestId('effect-energy')).toHaveText('90 → 60');
@@ -186,9 +187,10 @@ test.describe('phone 375×812', () => {
       .getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' })
       .click();
     await expect(modalOf(page).getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);
-    await expect(modalOf(page).getByRole('button', { name: /Again ×1/ })).toBeDisabled();
+    // Review 3: a disabled repeat keeps its label and cost; the hint names it.
+    await expect(modalOf(page).getByRole('button', { name: 'Once more · 10 Energy' })).toBeDisabled();
     await expect(modalOf(page).getByTestId('again-hint')).toHaveText(
-      /^Needs 10 Energy · ready at \d\d:\d\d$/,
+      /^Once more needs 10 Energy · ready at \d\d:\d\d$/,
     );
     await continueModal(page);
     await expect(
@@ -227,12 +229,18 @@ test.describe('phone 375×812', () => {
     await expect(sheet.getByRole('button', { name: /Study in the reading room, three times/ })).toHaveCount(
       0,
     );
+    // Review 3 (GDD §8.5): the training button is the title's verb.
+    await expect(sheet.getByRole('button', { name: 'Study in the reading room, 44 Energy' })).toHaveText(
+      'Study',
+    );
     await sheet.getByRole('button', { name: 'Study in the reading room, 44 Energy' }).click();
     const modal = modalOf(page);
     await expect(modal.getByTestId('stamp')).toHaveText('Trained');
-    await expect(modal.getByTestId('tile-experience')).toContainText('+99');
-    await expect(modal.getByRole('button', { name: /Again ×1/ })).toBeVisible();
-    await expect(modal.getByRole('button', { name: /Again ×3/ })).toHaveCount(0);
+    // Review 3: one receipt line (no Party XP, Iron or opinion line), and the verb's repeat.
+    await expect(modal.getByTestId('reward-xp').getByTestId('reward-value')).toHaveText('+99');
+    await expect(modal.getByTestId('receipt').getByRole('listitem')).toHaveCount(1);
+    await expect(modal.getByRole('button', { name: 'Study again · 46 Energy' })).toBeVisible();
+    await expect(modal.getByRole('button', { name: /Three more/ })).toHaveCount(0);
     await continueModal(page);
     await expect(study).toContainText('Intelligence 13 → 14 · always works');
     await expect(study).toContainText('46');
@@ -389,7 +397,9 @@ test.describe('desktop 1440×900', () => {
     await expect(page.getByText('The Coalport Clarion').last()).toBeVisible(); // the ticker
     await expect(page.getByText(/Party order: .+ \(0 of \d\)/)).toBeVisible();
     const sheet = await openAny(page, '3. Union Hall');
-    // Review 2 #2: a panel in the middle of the screen over the dimmed map, not a side sheet.
+    // Review 2 #2: a panel in the middle of the screen over the dimmed map, not a side sheet (review
+    // 3: once it has risen into place).
+    await sheetSettled(page);
     const box = (await sheet.boundingBox())!;
     expect(Math.abs(box.x + box.width / 2 - DESKTOP.width / 2)).toBeLessThanOrEqual(2);
     expect(Math.abs(box.y + box.height / 2 - DESKTOP.height / 2)).toBeLessThanOrEqual(2);
@@ -397,44 +407,55 @@ test.describe('desktop 1440×900', () => {
     await sheet.getByRole('button', { name: 'Go to the branch meeting, three times, 30 Energy' }).click();
     const modal = modalOf(page);
     await expect(modal.getByTestId('stamp')).toHaveText(/^[0-3] of 3$/);
-    await expect(modal.getByTestId('tile-opinion')).toHaveCount(1);
-    await expect(modal.getByTestId('effect-opinion')).toHaveCount(0); // council moves no opinion
+    // Council moves no opinion: review 3, a zero line is not printed.
+    await expect(modal.getByTestId('reward-opinion')).toHaveCount(0);
+    await expect(modal.getByTestId('reward-xp')).toHaveCount(1);
     await continueModal(page);
     await expect(page.getByTestId('hud-energy')).toHaveText('70 / 100');
   });
 
-  // Review 2 #8, #9 (replaces review 1 #7): no free zoom; a pin zooms smoothly into it and its panel
-  // opens; closing zooms back out. Review 3 (the user, 2 Oct 2026): at rest the map now drags within
-  // the quarter (same scale), and closing a place comes back to where it was dragged.
-  test('review 2 and 3: no free zoom; a drag at rest pans; a pin zooms in, then its panel opens; closing zooms back out', async ({
+  // Review 2 #8, #9 (replaces review 1 #7): a pin zooms smoothly into it and its panel opens; closing
+  // zooms back out. Review 3 (the user, 2 Oct 2026): at rest the map drags within the quarter and
+  // zooms (the wheel, + / −) between its limits, and closing a place comes back to the player's view.
+  test('review 3: the wheel zooms; a drag at rest pans; a pin zooms in with its panel; closing returns to the player', async ({
     page,
   }) => {
+    // The e2e build's stills cap the zoom at the view this desktop (DPR 2.6) opens on (never blurry);
+    // the tiles' finest level is what a zoom goes to: serve them (tiles.spec.ts).
+    await page.route('**/e2e-tiles/**', (route) =>
+      route.fulfill({
+        path: fileURLToPath(new URL('./fixtures/tile.avif', import.meta.url)),
+        contentType: 'image/avif',
+      }),
+    );
     await signUp(page);
     await toTheCity(page);
     await page.goto('/city/coalport');
     await mapReady(page);
     const fitted = await transformOf(page);
-    // No free zoom at rest.
+    // The wheel zooms the map at rest.
     await page.mouse.move(700, 500);
-    for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -200);
+    for (let i = 0; i < 2; i++) await page.mouse.wheel(0, -200);
+    await expect
+      .poll(async () => Number((await transformOf(page)).split(',')[2]))
+      .toBeGreaterThan(Number(fitted.split(',')[2]));
     await page.waitForTimeout(300);
-    expect(await transformOf(page)).toBe(fitted);
-    // A drag at rest pans the map, at the same scale (down: Coalport's picture just spans the width).
+    const wheeled = await transformOf(page);
+    // A drag at rest pans the map, at the scale the player chose.
     await page.mouse.down();
-    await page.mouse.move(700, 560, { steps: 5 });
+    await page.mouse.move(640, 560, { steps: 5 });
     await page.mouse.up();
     await page.waitForTimeout(300);
     const dragged = await transformOf(page);
-    expect(dragged).not.toBe(fitted);
-    expect(dragged.split(',')[2]).toBe(fitted.split(',')[2]);
-    // A pin: the zoom plays first (no panel mid-zoom), then the centred panel opens.
-    await page.getByRole('button', { name: '4. Foundry Row' }).click();
+    expect(dragged).not.toBe(wheeled);
+    expect(dragged.split(',')[2]).toBe(wheeled.split(',')[2]);
+    // A pin (or its row in the Places list, if the zoom took it off screen): the zoom, the dim and
+    // the panel together, 300 ms.
+    await openAny(page, '4. Foundry Row');
     await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'true');
-    await expect(page.getByTestId('map-layer')).toHaveCSS('transition-duration', '0.5s');
+    await expect(page.getByTestId('map-layer')).toHaveCSS('transition-duration', '0.3s');
     const sheet = page.getByRole('dialog');
     await expect(sheet).toContainText('Foundry Row');
-    const zoomed = await transformOf(page);
-    expect(Number(zoomed.split(',')[2])).toBeGreaterThan(Number(fitted.split(',')[2]));
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await expect(sheet).toBeHidden();
     await expect.poll(() => transformOf(page)).toBe(dragged);

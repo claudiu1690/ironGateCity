@@ -158,6 +158,12 @@ export const TrainingAction = z.strictObject({
   tier: z.literal(1),
   type: z.literal('training'),
   trains: z.enum(TRAINABLE_STATS),
+  /**
+   * Review 3 (GDD §8.5, `docs/design/review-3-answers.md` §5): the ticket's button is the title's
+   * verb (*Study*, *Lift*, *Run*, *Unload*), never "Train"; the result's repeat button reads
+   * "{verb} again · {cost} Energy". One capitalised word of 2–6 letters, so it fits the 64 px button.
+   */
+  verb: z.string().regex(/^[A-Z][a-z]{1,5}$/, 'one capitalised word of 2–6 letters'),
   text: z.strictObject({ success: OutcomeText }),
 });
 
@@ -230,8 +236,25 @@ export const City = z.strictObject({
       price: z.string().min(1),
     })
     .optional(),
-  /** Slice 3 (GDD §2, §15.3): the council cycle's offset (Irongate 0 … Clearwater 4). */
-  council: z.strictObject({ offset: z.number().int().min(0).max(4), seats: z.literal(7) }).optional(),
+  /**
+   * Slice 3 (GDD §2, §15.3): the council cycle's offset (Irongate 0 … Clearwater 4). Review 3
+   * (`docs/design/review-3-answers.md` §6a): `hall` is the building the council sits in, a point on
+   * the city picture in fractions like a pin; the election screens show a crop of the map there, by
+   * day or night. It is a backdrop and a name, not a location: no pin, no actions.
+   */
+  council: z
+    .strictObject({
+      offset: z.number().int().min(0).max(4),
+      seats: z.literal(7),
+      hall: z.strictObject({
+        name: z.string().min(1),
+        /** For sentences: "the Town Hall". */
+        ref: z.string().min(1),
+        x: Fraction,
+        y: Fraction,
+      }),
+    })
+    .optional(),
   locations: z.array(Location),
 });
 

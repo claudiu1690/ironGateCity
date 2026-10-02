@@ -38,8 +38,9 @@ const SIDE_W = 260;
 
 /**
  * The city screen (tech design §12.2): the map, the plate, the location sheet and the result modal.
- * Review 2: the map is fixed; a pin zooms the map into it, then its location opens (a bottom sheet
- * upright, a side panel sideways, a centred panel from 768 px); closing zooms back out.
+ * Review 2: a pin zooms the map into it and its location opens (a bottom sheet upright, a side panel
+ * sideways, a centred panel from 768 px); closing zooms back out. Review 3: the player may zoom the
+ * map at rest, and opening a place is one movement (the zoom, the dim and the sheet together).
  */
 export function CityPage() {
   const { cityId } = useParams({ from: '/app/city/$cityId' });
@@ -53,13 +54,17 @@ export function CityPage() {
   // The Election card's countdown, on the server's clock (a wrong phone clock never miscounts).
   const now = useNow(60_000);
   const side = layout === 'side';
-  // The location opens once the map has zoomed into its pin (CityMap `onArrive`).
+  // Review 3 (GDD §14.13): the location opens as the map starts its zoom into the pin (CityMap
+  // `onArrive`), so the zoom, the dim and the sheet are one movement. `arrived`: a place is open (a
+  // tap on another pin while one is open swaps the sheet's content, it does not close it);
+  // `lastPlace`: the place the sheet shows, kept after closing so the closing movement plays.
   const [arrived, setArrived] = useState<string | null>(null);
+  const [lastPlace, setLastPlace] = useState<string | null>(null);
   // The art stops short of the map's edge under the sheet (a pin near its bottom): the sheet fills 60 dvh.
   const [fillSheet, setFillSheet] = useState(false);
   useEffect(() => {
-    if (arrived !== null && arrived !== (loc ?? null)) setArrived(null);
-  }, [loc, arrived]);
+    if (!loc) setArrived(null);
+  }, [loc]);
 
   // Review 3: the list of the places on the map (the Places button).
   const [placesOpen, setPlacesOpen] = useState(false);
@@ -130,6 +135,9 @@ export function CityPage() {
 
   const c = city.data;
   const location: LocationView | undefined = c.locations.find((l) => l.id === loc);
+  /** What the sheet shows: the open place, or (closing) the last one. */
+  const sheetPlace: LocationView | undefined = location ?? c.locations.find((l) => l.id === lastPlace);
+  const sheetOpen = !!location && arrived !== null && !(character.orders.complete && !modalOpen);
   // ADR 0024: the map as tiles where a tile origin is set (dev: the local cache), else the stills.
   const dayTiles = pyramidFor(c.map.day, env.tilesOrigin);
   const nightTiles = pyramidFor(c.map.night, env.tilesOrigin);
@@ -140,7 +148,9 @@ export function CityPage() {
     setLast(target);
     action.perform(target, times);
   };
-  const cheapest = location ? Math.min(...location.actions.filter((a) => !a.locked).map((a) => a.energy)) : 0;
+  const cheapest = sheetPlace
+    ? Math.min(...sheetPlace.actions.filter((a) => !a.locked).map((a) => a.energy))
+    : 0;
   const waiting = character.orders.items
     .filter((o) => !o.done)
     .map((o) => `${o.title} ${o.progress} / ${o.target}`);
@@ -380,8 +390,13 @@ export function CityPage() {
         cover={cover}
         onArrive={(id, { fillsMap }) => {
           setArrived(id);
+          setLastPlace(id);
           setFillSheet(!fillsMap);
         }}
+        // Review 3: the player's zoom and drag are kept for the session, per city.
+        memoryKey={c.id}
+        // Review 3: + / − under the Places button, on a desktop (a phone pinches and double-taps).
+        zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex'}
       >
         {/* Sideways and from 640 px: the Places button in the map's top right corner (the plate is
             beside the map or in the top left one; the dock is at the bottom). */}
@@ -397,7 +412,9 @@ export function CityPage() {
                 'pointer-events-none absolute top-0 right-0 left-0 flex flex-col gap-0 sm:top-2.5 sm:right-auto sm:left-2.5 sm:w-[420px]',
                 // Upright phones: zoomed into a pin, the plate steps aside so the pin shows above its
                 // sheet (review 2); it comes back with the fitted view.
-                layout === 'sheet' && loc && 'invisible',
+                // Review 3: it fades with the sheet's movement rather than popping.
+                'transition-[opacity,visibility] duration-300 ease-[cubic-bezier(0.33,0,0.2,1)] motion-reduce:duration-[120ms]',
+                layout === 'sheet' && loc && 'invisible opacity-0',
               )}
               data-map-overlay="top"
               data-map-opaque=""
@@ -434,28 +451,28 @@ export function CityPage() {
 
       {/* Review 1 (§13.7): while the orders-complete note shows (the shell's), the sheet steps aside so
           the note is the one dialog; Carry on brings the sheet back. */}
-      {location && arrived === location.id && !(character.orders.complete && !modalOpen) && (
+      {sheetPlace && (
         <LocationSheet
           layout={layout}
           fill={fillSheet}
-          open
+          open={sheetOpen}
           onOpenChange={(o) => {
             if (!o) select(null);
           }}
-          n={location.n}
-          kindLabel={copy.kindLabel(location.kind)}
-          name={location.name}
-          blurb={location.blurb}
+          n={sheetPlace.n}
+          kindLabel={copy.kindLabel(sheetPlace.kind)}
+          name={sheetPlace.name}
+          blurb={sheetPlace.blurb}
           tags={character.rested > 0 ? [`Rested ${character.rested} · +50 % XP and Iron`] : []}
         >
           {energy.value < cheapest && <OutOfEnergyCard fullAt={character.energy.fullAt} waiting={waiting} />}
-          {location.actions.map((a) => (
+          {sheetPlace.actions.map((a) => (
             <Ticket
               key={a.id}
               action={a}
               energy={energy}
               highlight={!!orderHl && a.order?.id === orderHl}
-              onPerform={(times) => perform({ actionId: a.id, locationId: location.id }, times)}
+              onPerform={(times) => perform({ actionId: a.id, locationId: sheetPlace.id }, times)}
               pending={
                 action.isPending && action.variables?.actionId === a.id
                   ? (action.variables.times as 1 | 3)
@@ -465,15 +482,15 @@ export function CityPage() {
               orderBonusPct={character.orders.rewards.matchFxpBonusPct}
             />
           ))}
-          {location.council && (
+          {sheetPlace.council && (
             <ElectionCard
-              summary={location.council}
+              summary={sheetPlace.council}
               onOpen={(route) => void navigate({ to: route })}
               now={now}
             />
           )}
           <JobsCard
-            jobs={location.jobs}
+            jobs={sheetPlace.jobs}
             held={character.job ? character.job.seniority : null}
             pendingJobId={take.isPending ? take.variables?.jobId : null}
             message={jobMessage}

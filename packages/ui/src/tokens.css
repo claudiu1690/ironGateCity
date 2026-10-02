@@ -88,3 +88,101 @@
 /* Review 2 #3: a phone held sideways (812 × 375, 667 × 375), short and wide: the tab bar becomes a
    rail down the left, the HUD one compact band, the city a side column beside a full-height map. */
 @custom-variant short (@media (orientation: landscape) and (max-height: 500px));
+
+/*
+ * Review 3 (GDD §14.13, answers §2): opening a place is one movement. The map's zoom (CityMap
+ * ZOOM_MS, ZOOM_EASE: the same numbers), the dim over the map and the place's sheet start together and
+ * arrive together; closing runs the same movement in reverse (Radix keeps the sheet until its closing
+ * animation ends). Phones held upright: the sheet slides up from the bottom; held sideways: the panel
+ * slides in from the left; tablets and desktops: the panel rises 12 px while it fades in, over the dim.
+ * Transform and opacity only, so nothing inside the sheet reflows while it moves. With reduce motion
+ * the sheet and the dim cross-fade in 120 ms with no movement (the map cuts to the place).
+ */
+:root {
+  --place-ms: 300ms;
+  --place-ease: cubic-bezier(0.33, 0, 0.2, 1);
+  --place-fade-ms: 120ms;
+}
+
+@keyframes place-sheet-in {
+  from {
+    transform: translateY(calc(100% + 4rem));
+  }
+}
+@keyframes place-sheet-out {
+  to {
+    transform: translateY(calc(100% + 4rem));
+  }
+}
+@keyframes place-side-in {
+  from {
+    transform: translateX(calc(-100% - 64px));
+  }
+}
+@keyframes place-side-out {
+  to {
+    transform: translateX(calc(-100% - 64px));
+  }
+}
+@keyframes place-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes place-rise-out {
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes place-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes place-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.place-sheet[data-state='open'] {
+  animation: place-sheet-in var(--place-ms) var(--place-ease) both;
+}
+.place-sheet[data-state='closed'] {
+  animation: place-sheet-out var(--place-ms) var(--place-ease) both;
+}
+.place-side[data-state='open'] {
+  animation: place-side-in var(--place-ms) var(--place-ease) both;
+}
+.place-side[data-state='closed'] {
+  animation: place-side-out var(--place-ms) var(--place-ease) both;
+}
+.place-panel[data-state='open'] {
+  animation: place-rise-in var(--place-ms) var(--place-ease) both;
+}
+.place-panel[data-state='closed'] {
+  animation: place-rise-out var(--place-ms) var(--place-ease) both;
+}
+.place-dim[data-state='open'] {
+  animation: place-fade-in var(--place-ms) var(--place-ease) both;
+}
+.place-dim[data-state='closed'] {
+  animation: place-fade-out var(--place-ms) var(--place-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .place-sheet[data-state='open'],
+  .place-side[data-state='open'],
+  .place-panel[data-state='open'],
+  .place-dim[data-state='open'] {
+    animation: place-fade-in var(--place-fade-ms) ease both;
+  }
+  .place-sheet[data-state='closed'],
+  .place-side[data-state='closed'],
+  .place-panel[data-state='closed'],
+  .place-dim[data-state='closed'] {
+    animation: place-fade-out var(--place-fade-ms) ease both;
+  }
+}

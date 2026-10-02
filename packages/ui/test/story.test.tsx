@@ -290,8 +290,9 @@ describe('ResultModal, a chapter (§9.1)', () => {
     render(<ResultModal result={chapterResultFixture} open onOpenChange={() => undefined} />);
     expect(screen.getByTestId('stamp')).toHaveTextContent('Failure');
     expect(screen.getByText('Ambition · Finish His Work · Chapter 1 of 12')).toBeInTheDocument();
-    expect(screen.getByTestId('tile-keepsake')).toHaveTextContent('His ward book');
-    expect(screen.queryByTestId('tile-opinion')).toBeNull();
+    // Review 3: the keepsake is a receipt line with its picture; no opinion line on a chapter.
+    expect(screen.getByTestId('reward-item')).toHaveTextContent('Keepsake · His ward book');
+    expect(screen.queryByTestId('reward-opinion')).toBeNull();
     expect(screen.getByTestId('effect-item')).toHaveTextContent('Keepsake: His ward book');
     expect(screen.getByTestId('effect-hook')).toHaveTextContent(
       'Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2',
