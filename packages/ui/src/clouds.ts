@@ -98,14 +98,8 @@ const s = (name: string, w: number, h: number, mask?: string): CloudSprite => ({
 
 /** The day's three original clouds, seen from above. */
 const CLOUD = [s('cloud-day-1', 1024, 538), s('cloud-day-2', 1024, 614), s('cloud-day-3', 1024, 456)];
-/**
- * The two large billowing clouds. Each file has a stray fragment of another cloud cut by its edge
- * (day-1 bottom right, day-2 top left): masked off along the diagonal.
- */
-const BIG = [
-  s('bigcloud-day-1', 1100, 659, 'linear-gradient(to bottom right, #000 57%, transparent 63%)'),
-  s('bigcloud-day-2', 1100, 841, 'linear-gradient(to bottom right, transparent 12%, #000 20%)'),
-];
+/** The two large billowing clouds. */
+const BIG = [s('bigcloud-day-1', 1100, 659), s('bigcloud-day-2', 1100, 841)];
 const PUFF = [1, 2, 3, 4, 5, 6].map((n) => s(`puff-day-${n}`, 640, [291, 449, 375, 357, 375, 363][n - 1]!));
 const WISP = [
   s('wisp-day-1', 1200, 541),
@@ -115,12 +109,12 @@ const WISP = [
 ];
 const MIST = [s('mist-day-1', 1600, 571)];
 const FOG = [282, 410, 343, 345, 313, 361].map((h, i) => s(`fog-night-${i + 1}`, 1200, h));
-/** Night mist curls; day-4 has a fragment cut by its top right corner: masked off. */
+/** Night mist curls. */
 const CURL = [
   s('mistcurl-night-1', 800, 519),
   s('mistcurl-night-2', 800, 303),
   s('mistcurl-night-3', 768, 848),
-  s('mistcurl-night-4', 800, 417, 'linear-gradient(to bottom left, transparent 12%, #000 20%)'),
+  s('mistcurl-night-4', 800, 417),
   s('mistcurl-night-5', 800, 489),
 ];
 

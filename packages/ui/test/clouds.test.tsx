@@ -156,14 +156,12 @@ describe('the sky: three depths', () => {
     }
   });
 
-  it('the art with a fragment cut by its edge is masked', () => {
+  it('the art is clean: no sprite needs a mask', () => {
     const masked = [...CLOUDS.day, ...CLOUDS.night]
       .flatMap((d) => d.kinds.flatMap((k) => k.sprites))
       .filter((s) => s.mask)
       .map((s) => s.src);
-    expect(new Set(masked)).toEqual(
-      new Set(['/fx/bigcloud-day-1.webp', '/fx/bigcloud-day-2.webp', '/fx/mistcurl-night-4.webp']),
-    );
+    expect(masked).toEqual([]);
   });
 });
 
