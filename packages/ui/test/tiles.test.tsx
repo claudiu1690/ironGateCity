@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DETAIL_SETTLE_MS, TileLayer } from '../src/components/TileLayer';
 import {
   backdropUrl,
+  detailLevelFor,
   levelFor,
   levelGrid,
   levelSize,
@@ -67,6 +68,56 @@ describe('tile pyramid levels', () => {
   it('names tiles the DZI way; the backdrop is the underlay tile', () => {
     expect(tileUrl(city, 12, 3, 1)).toBe('/tiles/map.coalport.day/1a2b3c4d/webp_files/12/3_1.webp');
     expect(backdropUrl(city)).toBe('/tiles/map.coalport.day/1a2b3c4d/webp_files/9/0_0.webp');
+  });
+});
+
+describe('the detail level for a view (review 3: no blurry zoom on an upright phone)', () => {
+  // The zoomed views measured on the dev server (layer width at scale 1 × the zoom's 1.6): Duskwall,
+  // whose frame covers a tall box, upright at 390 × 844 and held sideways at 844 × 390.
+  const upright = 777.5 * 1.6; // 1,244 CSS px of art across
+  const sideways = 896 * 1.6; // 1,434
+
+  it('asks for every device pixel the art takes on screen, the DPR capped at 2', () => {
+    // 1,244 px × 2 = 2,488 device pixels: level 12 (2,160) is short of them, level 13 (4,320) is not.
+    expect(detailLevelFor(city, upright, 3)).toBe(13);
+    expect(detailLevelFor(city, upright, 2)).toBe(13);
+    expect(levelSize(city, detailLevelFor(city, upright, 3)).w).toBeGreaterThanOrEqual(upright * 2);
+    // Upright and sideways now get the same level for the same zoom.
+    expect(detailLevelFor(city, upright, 3)).toBe(detailLevelFor(city, sideways, 3));
+  });
+
+  it('caps the DPR at TILE_MAX_DPR and never asks past the full size', () => {
+    expect(detailLevelFor(city, 1000, 3)).toBe(detailLevelFor(city, 1000, 2));
+    expect(detailLevelFor(city, 1000, 1)).toBe(11); // 1,080 px
+    expect(detailLevelFor(city, 1080, 1)).toBe(11);
+    expect(detailLevelFor(city, 1081, 1)).toBe(12);
+    expect(detailLevelFor(city, 9000, 2)).toBe(city.maxLevel);
+  });
+
+  it('in the layer: a zoomed upright view draws the level its pixels need', () => {
+    vi.useFakeTimers();
+    const dpr = window.devicePixelRatio;
+    Object.defineProperty(window, 'devicePixelRatio', { value: 3, configurable: true });
+    try {
+      const { container } = render(
+        <TileLayer
+          pyramid={city}
+          content={{ w: 777.5, h: 777.5 }}
+          box={{ w: 390, h: 661 }}
+          view={{ scale: 1.6, x: -400, y: -300 }}
+        />,
+      );
+      act(() => vi.advanceTimersByTime(DETAIL_SETTLE_MS));
+      const levels = new Set(
+        [...container.querySelectorAll<HTMLImageElement>('img[data-tile]')].map(
+          (i) => i.dataset.tile!.split('/')[0],
+        ),
+      );
+      expect([...levels].sort()).toEqual(['13', '9']);
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', { value: dpr, configurable: true });
+      vi.useRealTimers();
+    }
   });
 });
 

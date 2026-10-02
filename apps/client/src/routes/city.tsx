@@ -11,6 +11,7 @@ import {
   LocationSheet,
   OrdersList,
   OutOfEnergyCard,
+  PlacesList,
   ResultModal,
   Ticket,
   TodayStrip,
@@ -60,6 +61,8 @@ export function CityPage() {
     if (arrived !== null && arrived !== (loc ?? null)) setArrived(null);
   }, [loc, arrived]);
 
+  // Review 3: the list of the places on the map (the Places button).
+  const [placesOpen, setPlacesOpen] = useState(false);
   const [result, setResult] = useState<ActionResult | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   // Review 1 (§13.7): the orders-complete note waits for this modal to close (AppShell shows it).
@@ -147,6 +150,54 @@ export function CityPage() {
     ...(c.morale ? [copy.help.morale()] : []),
     ...(c.ordinance ? [copy.help.ordinance()] : []),
   ];
+
+  // Review 3: the Places list, in pin order, with a tag where an open Party order points (the same
+  // pins the orders list links to).
+  const orderAt = new Set(
+    character.orders.items.flatMap((o) => (!o.done && o.pin ? [o.pin.locationId] : [])),
+  );
+  const places = c.locations.map((l) => ({
+    id: l.id,
+    n: l.n,
+    name: l.name,
+    blurb: l.blurb,
+    order: orderAt.has(l.id),
+  }));
+  /**
+   * The Places button: a small pill in a corner of the map, clear of the plate and the dock, marked
+   * as an overlay so the map's first view keeps the pins clear of it. It steps aside while a place is
+   * open.
+   */
+  const placesButton = (className: string) =>
+    loc ? null : (
+      <button
+        type="button"
+        data-map-overlay="places"
+        data-testid="places-button"
+        aria-haspopup="dialog"
+        onClick={() => setPlacesOpen(true)}
+        className={cx(
+          'label-caps pointer-events-auto absolute z-10 flex min-h-11 min-w-11 cursor-pointer items-center gap-1.5 bg-paper px-3 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)] hover:bg-paper-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
+          className,
+        )}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          aria-hidden="true"
+        >
+          <path d="M8 6h13M8 12h13M8 18h13" />
+          <circle cx="3.5" cy="6" r="1.2" fill="currentColor" />
+          <circle cx="3.5" cy="12" r="1.2" fill="currentColor" />
+          <circle cx="3.5" cy="18" r="1.2" fill="currentColor" />
+        </svg>
+        Places
+      </button>
+    );
 
   // The part of the map the open location hides: the zoom centres its pin in the rest.
   const cover =
@@ -330,17 +381,24 @@ export function CityPage() {
           setFillSheet(!fillsMap);
         }}
       >
+        {/* Sideways and from 640 px: the Places button in the map's top right corner (the plate is
+            beside the map or in the top left one; the dock is at the bottom). */}
+        {placesButton(side ? 'top-2.5 right-2.5' : 'top-2.5 right-2.5 hidden sm:flex')}
         {!side && (
           <>
             {/* The city plate (the map's fitted view keeps every pin clear of it) */}
             <div
               className={cx(
-                'pointer-events-none absolute top-2.5 right-2.5 left-2.5 flex flex-col gap-0 sm:right-auto sm:w-[420px]',
+                // Review 3: on a phone the plate runs edge to edge from the map's top (opaque), so the map's
+                // art may stop short under it and a pin near the art's top edge comes out below it;
+                // from 640 px it is a card in the top left corner.
+                'pointer-events-none absolute top-0 right-0 left-0 flex flex-col gap-0 sm:top-2.5 sm:right-auto sm:left-2.5 sm:w-[420px]',
                 // Upright phones: zoomed into a pin, the plate steps aside so the pin shows above its
                 // sheet (review 2); it comes back with the fitted view.
                 layout === 'sheet' && loc && 'invisible',
               )}
               data-map-overlay="top"
+              data-map-opaque=""
             >
               <div className="pointer-events-auto bg-paper text-ink shadow-[0_0_0_1px_var(--color-ink),0_6px_16px_rgb(0_0_0/0.4)]">
                 {plate}
@@ -358,11 +416,14 @@ export function CityPage() {
                 </div>
               </div>
             </div>
-            {/* Phones: orders and today at the bottom of the map */}
+            {/* Phones: orders and today at the bottom of the map, edge to edge and opaque (review 3) */}
             <div
-              className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-1 bg-paper/95 px-3 py-2 text-ink shadow-[0_0_0_1px_var(--color-ink)] sm:hidden"
+              className="absolute inset-x-0 bottom-0 flex flex-col gap-1 border-t-2 border-ink bg-paper px-3 py-2 text-ink sm:hidden"
               data-map-overlay="bottom"
+              data-map-opaque=""
             >
+              {/* Phones held upright: the Places button just above the orders, at the right. */}
+              {placesButton('right-0 bottom-full mb-2')}
               {orders}
             </div>
           </>
@@ -423,6 +484,21 @@ export function CityPage() {
           />
         </LocationSheet>
       )}
+
+      <PlacesList
+        open={placesOpen}
+        onOpenChange={setPlacesOpen}
+        cityName={c.name}
+        places={places}
+        // Exactly a tap on the pin: the map zooms to it, then its sheet opens (and `?loc=` is set).
+        onPick={(id) => select(id)}
+        // The Places button on show (there is one per layout; the others are hidden).
+        returnFocusTo={() =>
+          [...document.querySelectorAll<HTMLElement>('[data-testid="places-button"]')].find(
+            (b) => b.offsetParent !== null,
+          ) ?? null
+        }
+      />
 
       <ResultModal
         result={result}

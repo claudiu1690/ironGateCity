@@ -99,10 +99,99 @@ export async function mapAtRest(page: Page): Promise<void> {
   await expect(map).toHaveAttribute('data-moving', 'false');
 }
 
-/** Open a location's sheet by tapping its numbered hotspot. */
+/**
+ * Open a location's sheet by tapping its numbered hotspot (review 3: or, where the covered map has it
+ * off screen or under an overlay, its row in the Places list).
+ */
 export async function openLocation(page: Page, label: string) {
-  await page.getByRole('button', { name: label }).click();
+  await openPlace(page, label);
   const sheet = page.getByRole('dialog');
   await expect(sheet).toBeVisible();
   return sheet;
+}
+
+/** Every hotspot whose centre is not the topmost element there (covered, or off the map). */
+export async function unclearPins(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const map = document.querySelector('[data-testid=city-map]')!.getBoundingClientRect();
+    return [...document.querySelectorAll('[data-testid=hotspot]')].flatMap((el) => {
+      const r = el.getBoundingClientRect();
+      const x = r.left + Math.min(22, r.width / 2);
+      const y = r.top + r.height / 2;
+      const onMap = x >= map.left && x <= map.right && y >= map.top && y <= map.bottom;
+      const top = onMap ? document.elementFromPoint(x, y) : null;
+      return top && (top === el || el.contains(top)) ? [] : [el.getAttribute('aria-label') ?? '?'];
+    });
+  });
+}
+
+/**
+ * Review 3: the map at rest covers the screen, so a pin may start off it or under an overlay; a drag
+ * brings it in. For each pin not clear at rest, drag the map so as to bring the pin to the middle of
+ * the map, then if need be to each point of a 3 × 3 grid over it (the drag stops at the map's limits),
+ * checking after each drag whether the pin is clear. Returns the pins no drag brings clear.
+ */
+export async function pinsOutOfReach(page: Page): Promise<string[]> {
+  const out: string[] = [];
+  /** A drag by (dx, dy) as strokes from the map's middle that stay inside the map (and the screen). */
+  const drag = async (
+    map: { x: number; y: number; width: number; height: number },
+    dx: number,
+    dy: number,
+  ) => {
+    const sx = map.x + map.width / 2;
+    const sy = map.y + map.height / 2;
+    const mx = map.width / 2 - 12;
+    const my = map.height / 2 - 12;
+    for (let i = 0; i < 6 && (Math.abs(dx) > 1 || Math.abs(dy) > 1); i++) {
+      const ex = Math.max(-mx, Math.min(mx, dx));
+      const ey = Math.max(-my, Math.min(my, dy));
+      await page.mouse.move(sx, sy);
+      await page.mouse.down();
+      await page.mouse.move(sx + ex / 2, sy + ey / 2, { steps: 4 });
+      await page.mouse.move(sx + ex, sy + ey, { steps: 4 });
+      await page.mouse.up();
+      await page.waitForTimeout(60);
+      dx -= ex;
+      dy -= ey;
+    }
+    await page.waitForTimeout(60);
+  };
+  for (const label of await unclearPins(page)) {
+    const map = (await page.getByTestId('city-map').boundingBox())!;
+    const pinAt = async () => {
+      const b = (await page.locator(`[data-testid="hotspot"][aria-label="${label}"]`).boundingBox())!;
+      return { x: b.x + 22, y: b.y + b.height / 2 };
+    };
+    // Try to bring the pin to the middle of the map, then to each of a 3 × 3 grid of points in it.
+    const targets: Array<[number, number]> = [[0.5, 0.5]];
+    for (const fy of [0.15, 0.5, 0.85]) for (const fx of [0.1, 0.5, 0.9]) targets.push([fx, fy]);
+    let clear = false;
+    for (const [fx, fy] of targets) {
+      const p = await pinAt();
+      await drag(map, map.x + map.width * fx - p.x, map.y + map.height * fy - p.y);
+      if (!(await unclearPins(page)).includes(label)) {
+        clear = true;
+        break;
+      }
+    }
+    if (!clear) out.push(label);
+  }
+  return out;
+}
+
+/**
+ * Open a place's sheet as a player would: tap its pin when it is clear, otherwise through the Places
+ * list (review 3), which does exactly what the pin does.
+ */
+export async function openPlace(page: Page, label: string) {
+  if ((await unclearPins(page)).includes(label)) {
+    await page.getByTestId('places-button').filter({ visible: true }).click();
+    await page
+      .getByRole('dialog', { name: /^Places in / })
+      .getByRole('button', { name: new RegExp(`^${escape(label)}`) })
+      .click();
+  } else {
+    await page.locator(`[data-testid="hotspot"][aria-label="${label}"]`).click();
+  }
 }

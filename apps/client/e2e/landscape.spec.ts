@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { ANSWERS, answer, signUpOnly } from './helpers';
+import { ANSWERS, answer, pinsOutOfReach, signUpOnly } from './helpers';
 
 /**
  * Review 2 #3: a phone held sideways (812 × 375, 667 × 375) is playable. The arrival, the paper,
@@ -31,17 +31,6 @@ async function noPageScroll(page: Page) {
   expect(r.doc).toBeLessThanOrEqual(0);
   expect(r.main).toBeLessThanOrEqual(0);
 }
-/** Every hotspot whose centre is not the topmost element there. */
-async function coveredPins(page: Page): Promise<string[]> {
-  return page.evaluate(() =>
-    [...document.querySelectorAll('[data-testid=hotspot]')].flatMap((el) => {
-      const r = el.getBoundingClientRect();
-      const top = document.elementFromPoint(r.left + Math.min(22, r.width / 2), r.top + r.height / 2);
-      return top && (top === el || el.contains(top)) ? [] : [el.getAttribute('aria-label') ?? '?'];
-    }),
-  );
-}
-
 for (const vp of [
   { width: 812, height: 375 },
   { width: 667, height: 375 },
@@ -111,7 +100,8 @@ for (const vp of [
       await panel.getByRole('button', { name: /^Close/ }).click();
       await expect(panel).toBeHidden();
 
-      // The map at rest: the full height beside the city column, every pin clear, no page scroll.
+      // The map at rest: the full height beside the city column, no page scroll; every pin clear, or
+      // (review 3: the map at rest covers its box, so a pin may start off it) a drag away.
       await expect(page).toHaveURL(/\/city\/coalport$/);
       await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'false');
       await page.waitForTimeout(700);
@@ -120,14 +110,7 @@ for (const vp of [
       expect(atRest.height).toBeGreaterThanOrEqual(vp.height - hud.height - 2);
       expect(atRest.x).toBeGreaterThanOrEqual(side.x + side.width - 1);
       await expect(page.getByTestId('hotspot')).toHaveCount(6);
-      for (const pin of await page.getByTestId('hotspot').all()) {
-        const b = await boxOf(pin);
-        expect(b.x).toBeGreaterThanOrEqual(atRest.x);
-        expect(b.x + b.width).toBeLessThanOrEqual(atRest.x + atRest.width);
-        expect(b.y).toBeGreaterThanOrEqual(atRest.y);
-        expect(b.y + b.height).toBeLessThanOrEqual(atRest.y + atRest.height);
-      }
-      expect(await coveredPins(page)).toEqual([]);
+      expect(await pinsOutOfReach(page)).toEqual([]);
       await noPageScroll(page);
       await noSideScroll(page);
 

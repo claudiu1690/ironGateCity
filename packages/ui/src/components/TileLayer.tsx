@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { TILE_MAX_DPR, baseLevelOf, levelFor, levelSize, tilesFor } from '../tiles';
+import { baseLevelOf, detailLevelFor, levelSize, tilesFor } from '../tiles';
 import type { Tile, TilePyramid } from '../tiles';
 
 /** The view, as CityMap keeps it: the layer's translate and scale, over a box of this size. */
@@ -9,8 +9,6 @@ interface TileView {
   y: number;
 }
 
-/** A level is good enough while it has at least this share of the device pixels it is shown at. */
-const MIN_PIXEL_RATIO = 0.85;
 /** Tiles kept around the view, as a share of a tile: a short drag finds them ready. */
 const MARGIN_TILES = 0.25;
 /**
@@ -54,9 +52,9 @@ export interface TileLayerProps {
  * pins, so the zoom stays a compositor animation.
  */
 export function TileLayer({ pyramid: p, content, box, view, onPending, onUnavailable }: TileLayerProps) {
-  const dpr = Math.min(TILE_MAX_DPR, typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1);
+  const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   const baseLevel = baseLevelOf(p);
-  const detailLevel = Math.max(baseLevel, levelFor(p, content.w * view.scale * dpr * MIN_PIXEL_RATIO));
+  const detailLevel = Math.max(baseLevel, detailLevelFor(p, content.w * view.scale, dpr));
   const m = (MARGIN_TILES * p.tileSize * content.w) / levelSize(p, detailLevel).w;
   const rect = {
     x0: Math.max(0, -view.x / view.scale - m),

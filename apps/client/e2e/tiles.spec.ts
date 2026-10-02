@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { mapAtRest, signUp, toTheCity } from './helpers';
+import { mapAtRest, openPlace, signUp, toTheCity } from './helpers';
 
 /**
  * Maps v3 (docs/design/maps-v3-integration.md §7): the map drawn from Deep Zoom tiles. The e2e build
@@ -58,7 +58,17 @@ const marked = (page: Page) => page.locator('[data-testid=hotspot][data-mark]');
 const artCoversMap = (page: Page) =>
   page.evaluate(() => {
     const r = (el: Element | null) => el?.getBoundingClientRect() ?? null;
-    const box = r(document.querySelector('[data-testid=city-map]'))!;
+    const b = r(document.querySelector('[data-testid=city-map]'))!;
+    // Review 3: a phone's plate and orders panel run edge to edge and are opaque; the art may stop
+    // short under them, so what must be covered is the box between them.
+    const box = { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+    for (const el of document.querySelectorAll<HTMLElement>('[data-map-opaque]')) {
+      const o = el.getBoundingClientRect();
+      if (o.width === 0 || o.left > box.left + 1 || o.right < box.right - 1) continue;
+      if (getComputedStyle(el).visibility === 'hidden') continue;
+      if (o.top <= box.top + 1 && o.bottom > box.top) box.top = o.bottom;
+      else if (o.bottom >= box.bottom - 1 && o.top < box.bottom) box.bottom = o.top;
+    }
     const fit = document.querySelector<HTMLElement>('[data-testid=city-map]')!.dataset.fit;
     const backdrop = document.querySelector('[data-testid=map-backdrop]');
     const over =
@@ -87,7 +97,9 @@ test.describe('the map from tiles', () => {
     await expect(map).toHaveAttribute('data-art', 'tiles');
     await expect.poll(() => loadedTiles(page)).toBeGreaterThan(1);
     expect(await page.getByTestId('map-layer').locator('picture').count()).toBe(0);
-    // The levels drawn at rest (the welcome landing's zoom, before, also fetched closer tiles).
+    // The levels drawn at rest (the welcome landing's zoom, before, also fetched closer tiles; they
+    // stay drawn until the at-rest detail, fetched once the view has held for 150 ms, is in).
+    await page.waitForTimeout(400);
     await expect.poll(() => tileState(page)).toMatchObject({ pending: 0 });
     const rest = await tileState(page);
     const before = seen.length;
@@ -117,6 +129,47 @@ test.describe('the map from tiles', () => {
     await mapAtRest(page);
     await expect.poll(() => artCoversMap(page)).toBe(true);
   });
+
+  // Review 3: zoomed into a place on a phone held upright the map was blurry. The detail level now
+  // matches the art's on-screen pixels (DPR capped at 2) as it does sideways, and once the zoom has
+  // landed the layer drops `will-change` so the browser paints it again at its new scale.
+  for (const phone of [
+    { width: 390, height: 844, dpr: 3 },
+    { width: 360, height: 640, dpr: 2 },
+  ]) {
+    test.describe(`upright ${phone.width} × ${phone.height} at DPR ${phone.dpr}`, () => {
+      test.use({ viewport: { width: phone.width, height: phone.height }, deviceScaleFactor: phone.dpr });
+
+      test('a zoom into a place draws the level its on-screen pixels need', async ({ page }) => {
+        await serveTiles(page);
+        await signUp(page);
+        await toTheCity(page);
+        const map = page.getByTestId('city-map');
+        await expect(map).toHaveAttribute('data-art', 'tiles');
+        await openPlace(page, '3. Union Hall');
+        await expect(map).toHaveAttribute('data-zoomed', 'true');
+        await expect(map).toHaveAttribute('data-moving', 'false');
+        await expect(page.getByRole('dialog')).toContainText('Union Hall');
+        // The level the zoomed view needs: the art's width on screen in device pixels (DPR capped
+        // at 2); the 8,640 px pyramid halves per level from level 14.
+        const need = await page.evaluate(() => {
+          const scale = Number(
+            document.querySelector<HTMLElement>('[data-testid=city-map]')!.dataset.view!.split(',')[2],
+          );
+          const layerW = parseFloat(
+            document.querySelector<HTMLElement>('[data-testid=map-layer]')!.style.width,
+          );
+          const px = Math.round(layerW * scale * Math.min(2, window.devicePixelRatio));
+          let level = 0;
+          while (level < 14 && Math.ceil(8640 / 2 ** (14 - level)) < px) level++;
+          return level;
+        });
+        await expect.poll(() => tileState(page)).toEqual({ top: need, pending: 0 });
+        // Landed: the layer is no longer held as a moving layer at its old raster scale.
+        await expect(page.getByTestId('map-layer')).toHaveCSS('will-change', 'auto');
+      });
+    });
+  }
 
   test.describe('a phone held sideways', () => {
     test.use({ viewport: { width: 812, height: 375 } });

@@ -135,6 +135,14 @@ export interface MapInsets {
   bottom: number;
   /** Overlays that are not bands across the map: no pin may sit under one (QA M2). */
   blocks?: MapRect[];
+  /**
+   * Review 3: how deep the bands that run edge to edge from the map's top (and bottom) edge are (a
+   * phone's plate and orders panel). They are opaque, so the art may stop short of the box under them:
+   * at rest the art covers the rest of the box, which lets a pin near the art's edge come out from
+   * under the plate. 0 or absent: the art covers the whole box.
+   */
+  hideTop?: number;
+  hideBottom?: number;
 }
 
 export interface MapView {
@@ -143,12 +151,50 @@ export interface MapView {
   y: number;
 }
 
+/**
+ * Where the image may sit at this scale (its top-left corner): covering the box, less what the
+ * edge-to-edge bands hide (review 3), or inside it if it is smaller.
+ */
+function picLimits(
+  box: { w: number; h: number },
+  content: { w: number; h: number },
+  scale: number,
+  insets?: MapInsets,
+): { x: [number, number]; y: [number, number] } {
+  const ht = insets?.hideTop ?? 0;
+  const hb = insets?.hideBottom ?? 0;
+  const dx = box.w - content.w * scale;
+  const dy = box.h - hb - content.h * scale;
+  return { x: [Math.min(dx, 0), Math.max(dx, 0)], y: [Math.min(dy, ht), Math.max(dy, ht)] };
+}
+
 type FitInput = {
   box: { w: number; h: number };
   content: { w: number; h: number };
   pins: ReadonlyArray<{ x: number; y: number }>;
   insets: MapInsets;
 };
+
+/** Maps v3: the least distance between two pins' centres on screen, so their 44 px targets never overlap. */
+export const PIN_GAP = 46;
+
+/** The least distance between two pins at scale 1, in the layer's pixels (Infinity for one pin). */
+function closestPins(
+  pins: ReadonlyArray<{ x: number; y: number }>,
+  content: { w: number; h: number },
+): number {
+  let d = Infinity;
+  for (let a = 0; a < pins.length; a++)
+    for (let b = a + 1; b < pins.length; b++)
+      d = Math.min(
+        d,
+        Math.hypot((pins[a]!.x - pins[b]!.x) * content.w, (pins[a]!.y - pins[b]!.y) * content.h),
+      );
+  return d;
+}
+
+/** Review 3: the closest the at-rest view may zoom, to bring a pin out from under an overlay (below a pin's MIN_ZOOM). */
+const REST_MAX_SCALE = 1.5;
 
 /** Every pin, with PIN_PAD around it, inside the box and between the bands at this view. */
 function betweenBands(i: FitInput, v: MapView): boolean {
@@ -195,27 +241,38 @@ function clearOfBlocks(i: FitInput, v: MapView): boolean {
  * Only where no position can (the pins are wider or taller than the covered view allows) does it
  * zoom out below 1, the least that shows them all: a letterbox, and CityMap fills the margin with a
  * blurred, darkened copy of the art (`data-fit="letterbox"`), never plain black.
+ *
+ * Review 3 (the user, 2 Oct 2026: no dark bands): CityMap passes `minScale`, the scale at which the
+ * whole picture covers the box (less what a phone's opaque edge-to-edge bands hide), so the first
+ * view never zooms out past the art's edge; nor so far that two pins' targets overlap (PIN_GAP). If
+ * no view at or above that floor keeps every pin clear, the covered view with the most pins clear
+ * wins (`mostPinsClear`); the others are a drag away (`restPanLimits`) or in the Places list.
  */
-export function fitPinsView(i: FitInput): MapView {
-  const first = fitBetweenBands(i);
+export function fitPinsView(i: FitInput & { minScale?: number; frame?: MapRect }): MapView {
+  // Review 3: with a `minScale` (the covering scale), never so far out that two pins' 44 px targets
+  // overlap (PIN_GAP between centres); the rest are a drag away. This replaces `spreadPins`, which
+  // moved pins off their buildings on small phones.
+  const gapScale = i.minScale !== undefined ? PIN_GAP / closestPins(i.pins, i.content) : 0;
+  const floor = clamp(Math.max(i.minScale ?? MIN_FIT_SCALE, gapScale), MIN_FIT_SCALE, 1);
+  const first = fitBetweenBands(i, undefined, floor);
   if (i.pins.length === 0 || (betweenBands(i, first) && clearOfBlocks(i, first))) return first;
   const { box, content, pins, insets } = i;
   const xs = pins.map((p) => p.x);
   const ys = pins.map((p) => p.y);
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  for (let scale = first.scale; scale >= MIN_FIT_SCALE; scale *= FIT_STEP) {
+  for (
+    let scale = first.scale;
+    scale >= floor - 1e-9;
+    scale = scale > floor ? Math.max(floor, scale * FIT_STEP) : -1
+  ) {
     const cw = content.w * scale;
     const ch = content.h * scale;
-    const dx = box.w - cw;
-    const dy = box.h - ch;
+    const pic = picLimits(box, content, scale, insets);
     // Every pin inside the box (between the bands), and the image within its pan limits.
-    const xr = [
-      Math.max(PIN_PAD - x0 * cw, Math.min(dx, 0)),
-      Math.min(box.w - PIN_PAD - x1 * cw, Math.max(dx, 0)),
-    ];
+    const xr = [Math.max(PIN_PAD - x0 * cw, pic.x[0]), Math.min(box.w - PIN_PAD - x1 * cw, pic.x[1])];
     const yr = [
-      Math.max(insets.top + PIN_PAD - y0 * ch, Math.min(dy, 0)),
-      Math.min(box.h - insets.bottom - PIN_PAD - y1 * ch, Math.max(dy, 0)),
+      Math.max(insets.top + PIN_PAD - y0 * ch, pic.y[0]),
+      Math.min(box.h - insets.bottom - PIN_PAD - y1 * ch, pic.y[1]),
     ];
     if (xr[0]! > xr[1]! || yr[0]! > yr[1]!) continue;
     const centred = fitBetweenBands({ ...i, box }, scale);
@@ -234,13 +291,89 @@ export function fitPinsView(i: FitInput): MapView {
     }
     if (best) return best;
   }
-  return first;
+  // Review 3: no view at or above the floor keeps every pin clear (the pins spread wider than the
+  // covered view): at the floor, the position that keeps the most pins clear, nearest the centred one.
+  return i.minScale !== undefined ? mostPinsClear(i, floor, i.frame ?? WHOLE) : first;
 }
 
-/** The pins' box centred between the bands at the largest scale that fits it (or at `atScale`). */
-function fitBetweenBands(i: FitInput, atScale?: number): MapView {
+/**
+ * Review 3: the covered view with the most pins clear, when none keeps them all clear. Scales from
+ * `floor` (the picture just covers the box) up to 1, positions within the picture's own limits. First
+ * the scale at which a drag (restPanLimits) can bring the most pins clear (a pin under the desktop's
+ * corner plate at the art's edge can only come out from under it a little closer in), then the view
+ * with the most pins clear, then the lower scale (more of the quarter shows), then the position
+ * nearest the centred one.
+ */
+function mostPinsClear(i: FitInput, floor: number, frame: MapRect): MapView {
+  const { box, content } = i;
+  let best: MapView | null = null;
+  let bestN = -1;
+  let bestR = -1;
+  let bestD = 0;
+  // Up to REST_MAX_SCALE: past 1 only when a pin can be brought clear no other way (a small tablet,
+  // where the corner plate takes two thirds of the map's width), since reach comes first.
+  for (
+    let scale = floor;
+    scale <= REST_MAX_SCALE + 1e-9;
+    scale = scale < REST_MAX_SCALE ? Math.min(REST_MAX_SCALE, scale / FIT_STEP) : 9
+  ) {
+    const centred = fitBetweenBands(i, scale);
+    const reach = reachablePins(i, centred, frame);
+    const { x: xr, y: yr } = picLimits(box, content, scale, i.insets);
+    for (let a = -1; a <= FIT_GRID; a++) {
+      for (let b = -1; b <= FIT_GRID; b++) {
+        // a = b = -1: the centred position itself.
+        const x = a < 0 ? centred.x : xr[0] + ((xr[1] - xr[0]) * a) / FIT_GRID;
+        const y = b < 0 ? centred.y : yr[0] + ((yr[1] - yr[0]) * b) / FIT_GRID;
+        if (a < 0 !== b < 0) continue;
+        const v = { scale, x, y };
+        const n = clearPins(i, v);
+        const d = (x - centred.x) ** 2 + (y - centred.y) ** 2;
+        const better =
+          reach > bestR ||
+          (reach === bestR && n > bestN) ||
+          (reach === bestR && n === bestN && scale === best!.scale && d < bestD);
+        if (better) [best, bestN, bestR, bestD] = [v, n, reach, d];
+      }
+    }
+  }
+  return best!;
+}
+
+/** How many pins a drag at rest (within restPanLimits, at this view's scale) can bring clear. */
+function reachablePins(i: FitInput, rest: MapView, frame: MapRect): number {
+  const lim = restPanLimits(i.box, i.content, rest, frame, i.pins, i.insets);
+  const N = 12;
+  return i.pins.filter((p) => {
+    const one = { ...i, pins: [p] };
+    for (let a = 0; a <= N; a++)
+      for (let b = 0; b <= N; b++) {
+        const v = {
+          scale: rest.scale,
+          x: lim.x[0] + ((lim.x[1] - lim.x[0]) * a) / N,
+          y: lim.y[0] + ((lim.y[1] - lim.y[0]) * b) / N,
+        };
+        if (betweenBands(one, v) && clearOfBlocks(one, v)) return true;
+      }
+    return false;
+  }).length;
+}
+
+/** How many pins are inside the box between the bands and clear of every block at this view. */
+function clearPins(i: FitInput, v: MapView): number {
+  return i.pins.filter((p) => {
+    const one = { ...i, pins: [p] };
+    return betweenBands(one, v) && clearOfBlocks(one, v);
+  }).length;
+}
+
+/**
+ * The pins' box centred between the bands at the largest scale that fits it (or at `atScale`), never
+ * below `floor` (review 3: the scale at which the picture covers the box).
+ */
+function fitBetweenBands(i: FitInput, atScale?: number, floor = MIN_FIT_SCALE): MapView {
   const { box, content, pins, insets } = i;
-  if (pins.length === 0) return { scale: 1, ...clampPosition(box, content, 1, 0, 0) };
+  if (pins.length === 0) return { scale: 1, ...clampPosition(box, content, 1, 0, 0, insets) };
   const xs = pins.map((p) => p.x);
   const ys = pins.map((p) => p.y);
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
@@ -259,7 +392,7 @@ function fitBetweenBands(i: FitInput, atScale?: number): MapView {
         fits(y1 - y0, safe.bottom - safe.top, content.h),
         1,
       ),
-      0.2,
+      floor,
       1,
     );
   const cw = content.w * scale;
@@ -295,7 +428,7 @@ function fitBetweenBands(i: FitInput, atScale?: number): MapView {
     safe.top - y0 * ch,
     safe.bottom - y1 * ch,
   );
-  return { scale, ...clampPosition(box, content, scale, x, y) };
+  return { scale, ...clampPosition(box, content, scale, x, y, insets) };
 }
 
 /** The usual pan limits: the image covers the box (or, smaller than it, stays inside it). */
@@ -305,10 +438,10 @@ function clampPosition(
   scale: number,
   x: number,
   y: number,
+  insets?: MapInsets,
 ) {
-  const dx = box.w - content.w * scale;
-  const dy = box.h - content.h * scale;
-  return { x: clamp(x, Math.min(dx, 0), Math.max(dx, 0)), y: clamp(y, Math.min(dy, 0), Math.max(dy, 0)) };
+  const lim = picLimits(box, content, scale, insets);
+  return { x: clamp(x, lim.x[0], lim.x[1]), y: clamp(y, lim.y[0], lim.y[1]) };
 }
 
 /**
@@ -327,10 +460,17 @@ function measureInsets(box: HTMLElement): MapInsets {
     const y1 = Math.round(Math.min(r.bottom, b.bottom) - b.top);
     if (x1 <= x0 || y1 <= y0) continue; // hidden, or not over the map
     const band = r.width >= b.width * OVERLAY_BAND_WIDTH_SHARE;
-    if (band && el.dataset.mapOverlay === 'top') insets.top = Math.max(insets.top, y1);
-    else if (band && el.dataset.mapOverlay === 'bottom')
+    // Review 3: an opaque band (`data-map-opaque`) from edge to edge, touching the map's top or bottom
+    // edge, hides the art under it, so at rest the art need only reach it.
+    const edgeToEdge = 'mapOpaque' in el.dataset && x0 <= 1 && x1 >= Math.round(b.width) - 1;
+    if (band && el.dataset.mapOverlay === 'top') {
+      insets.top = Math.max(insets.top, y1);
+      if (edgeToEdge && y0 <= 1) insets.hideTop = Math.max(insets.hideTop ?? 0, y1);
+    } else if (band && el.dataset.mapOverlay === 'bottom') {
       insets.bottom = Math.max(insets.bottom, Math.round(b.height) - y0);
-    else insets.blocks!.push({ x0, y0, x1, y1 });
+      if (edgeToEdge && y1 >= Math.round(b.height) - 1)
+        insets.hideBottom = Math.max(insets.hideBottom ?? 0, Math.round(b.height) - y0);
+    } else insets.blocks!.push({ x0, y0, x1, y1 });
   }
   return insets;
 }
@@ -441,10 +581,17 @@ export function coversBox(
   box: { w: number; h: number },
   content: { w: number; h: number },
   v: MapView,
+  insets?: Pick<MapInsets, 'hideTop' | 'hideBottom'>,
 ): boolean {
   const e = 0.5; // rounding
+  // Review 3: less what the opaque edge-to-edge bands hide (the art may stop short under them).
+  const top = insets?.hideTop ?? 0;
+  const bottom = box.h - (insets?.hideBottom ?? 0);
   return (
-    v.x <= e && v.y <= e && v.x + content.w * v.scale >= box.w - e && v.y + content.h * v.scale >= box.h - e
+    v.x <= e &&
+    v.y <= top + e &&
+    v.x + content.w * v.scale >= box.w - e &&
+    v.y + content.h * v.scale >= bottom - e
   );
 }
 
@@ -479,56 +626,78 @@ export function panLimits(
   };
 }
 
-/** Maps v3: the least distance between two pins' centres on screen, so their 44 px targets never overlap. */
-export const PIN_GAP = 46;
+/** Review 3: at rest the map drags within the frame grown by this share of its size on each side. */
+export const REST_PAN_MARGIN = 0.1;
 
 /**
- * Maps v3 (a deviation from the design, see maps-v3-integration.md §9): on a small screen the fitted
- * view of a dense quarter can bring two pins closer than their 44 px targets (Duskwall's Customs
- * Market and Beacon House, 0.1 of the picture apart, while its pins span 0.73 of its height), so one
- * covers the other and cannot be tapped. Where that happens the pins are spread apart on screen by
- * the least that clears them (a few relaxation passes), kept inside `area`. Pins already clear (every
- * zoomed view, every larger screen) do not move. Returns the offsets, in px, in input order.
+ * Review 3 (the user, 2 Oct 2026: no dark bands): how far the map drags at rest. The at-rest view
+ * covers the box, so on a wide or tall screen some pins may sit off it or under an overlay; a drag
+ * brings them in. Limits, on each axis: the quarter's frame grown by REST_PAN_MARGIN, widened so that
+ * every pin can be brought into the clear part of the box (past the widest block, the desktop plate),
+ * and always within the picture, so its edge never shows. The at-rest view itself is always allowed.
+ * No free zoom: the scale is the at-rest one.
  */
-export function spreadPins(
-  points: ReadonlyArray<{ x: number; y: number }>,
-  area: MapRect,
-  gap = PIN_GAP,
-): Array<{ x: number; y: number }> {
-  const p = points.map((q) => ({ x: q.x, y: q.y }));
-  const pad = 22;
-  const keep = (q: { x: number; y: number }) => {
-    if (area.x1 - area.x0 > 2 * pad) q.x = clamp(q.x, area.x0 + pad, area.x1 - pad);
-    if (area.y1 - area.y0 > 2 * pad) q.y = clamp(q.y, area.y0 + pad, area.y1 - pad);
+export function restPanLimits(
+  box: { w: number; h: number },
+  content: { w: number; h: number },
+  rest: MapView,
+  frame: MapRect,
+  pins: ReadonlyArray<{ x: number; y: number }>,
+  insets: MapInsets,
+): { x: [number, number]; y: [number, number] } {
+  const blocks = insets.blocks ?? [];
+  const axis = (
+    pic: [number, number],
+    len: number,
+    size: number,
+    f0: number,
+    f1: number,
+    ps: number[],
+    a0: number,
+    a1: number,
+    ext: number,
+    at: number,
+  ): [number, number] => {
+    const m = REST_PAN_MARGIN * (f1 - f0);
+    const fa = len - Math.min(1, f1 + m) * size;
+    const fb = -Math.max(0, f0 - m) * size;
+    let lo = Math.min(fa, fb, at);
+    let hi = Math.max(fa, fb, at);
+    if (ps.length > 0) {
+      lo = Math.min(lo, a1 - PIN_PAD - Math.max(...ps) * size - ext);
+      hi = Math.max(hi, a0 + PIN_PAD - Math.min(...ps) * size + ext);
+    }
+    return [Math.min(at, clamp(lo, pic[0], pic[1])), Math.max(at, clamp(hi, pic[0], pic[1]))];
   };
-  // Only pins on screen take part (a zoomed view leaves others off screen, where they stay).
-  const shown = points.map((q) => q.x >= area.x0 && q.x <= area.x1 && q.y >= area.y0 && q.y <= area.y1);
-  for (let pass = 0; pass < 24; pass++) {
-    let moved = false;
-    for (let i = 0; i < p.length; i++)
-      for (let j = i + 1; j < p.length; j++) {
-        if (!shown[i] || !shown[j]) continue;
-        const a = p[i]!;
-        const b = p[j]!;
-        let dx = b.x - a.x;
-        let dy = b.y - a.y;
-        const d = Math.hypot(dx, dy);
-        if (d >= gap - 0.5) continue;
-        if (d < 1e-6) [dx, dy] = [0, 1];
-        const k = (gap - d) / 2 / Math.max(d, 1e-6);
-        const ux = d < 1e-6 ? 0 : dx * k;
-        const uy = d < 1e-6 ? (gap - d) / 2 : dy * k;
-        a.x -= ux;
-        a.y -= uy;
-        b.x += ux;
-        b.y += uy;
-        keep(a);
-        keep(b);
-        moved = true;
-      }
-    if (!moved) break;
-  }
-  return p.map((q, i) => ({ x: q.x - points[i]!.x, y: q.y - points[i]!.y }));
+  const picAt = picLimits(box, content, rest.scale, insets);
+  const bw = Math.max(0, ...blocks.map((b) => b.x1 - b.x0));
+  const bh = Math.max(0, ...blocks.map((b) => b.y1 - b.y0));
+  return {
+    x: axis(
+      picAt.x,
+      box.w,
+      content.w * rest.scale,
+      frame.x0,
+      frame.x1,
+      pins.map((p) => p.x),
+      0,
+      box.w,
+      bw,
+      rest.x,
+    ),
+    y: axis(
+      picAt.y,
+      box.h,
+      content.h * rest.scale,
+      frame.y0,
+      frame.y1,
+      pins.map((p) => p.y),
+      insets.top,
+      box.h - insets.bottom,
+      bh,
+      rest.y,
+    ),
+  };
 }
 
 const sameView = (a: MapView, b: MapView) =>
@@ -537,9 +706,10 @@ const sameView = (a: MapView, b: MapView) =>
 /**
  * The city's detailed map (mockups City, MobileCity) with numbered hotspots at their map fractions.
  *
- * Review 2 #8, #9: the map is fixed. At rest it shows the fitted view, every pin on screen and clear
- * of the plate, the orders panel and the dock (QA M2), and it does not pan, zoom, pinch or
- * double-tap. Tapping a pin (or Enter on a focused one) zooms smoothly into it (ZOOM_MS, eased; at
+ * Review 2 #8, #9, review 3: at rest the map shows the fitted view, which covers the box (no dark
+ * bands) with as many pins as it can clear of the plate, the orders panel and the dock (QA M2); it
+ * drags within the quarter (`restPanLimits`) to bring the others in, but it does not zoom, pinch or
+ * double-tap, and a drag is kept until a resize. Tapping a pin (or Enter on a focused one) zooms smoothly into it (ZOOM_MS, eased; at
  * once with reduced motion), then `onArrive` lets the page open the location panel. While zoomed in
  * the map pans with a drag, within limits; closing the location zooms back out to the fitted view.
  * The view is a CSS transform on one layer, and the pins sit in a layer above it that is never
@@ -641,19 +811,49 @@ export function CityMap({
   const coverKey = `${cover?.top ?? 0},${cover?.right ?? 0},${cover?.bottom ?? 0},${cover?.left ?? 0}`;
   const selected = locations.find((l) => l.id === selectedId) ?? null;
 
-  /** Where the map should be: the fitted view, or zoomed into the selected pin. */
+  // Review 3: the scale at which the whole picture covers the box. The at-rest view never zooms out
+  // past it, so the art always fills the map (no blurred bands); 1 for the default frame.
+  // (Less what a phone's opaque plate and orders panel hide: the art may stop short under them.)
+  const shownH = h - (insets?.hideTop ?? 0) - (insets?.hideBottom ?? 0);
+  const coverScale =
+    contentW > 0 && contentH > 0 ? Math.min(1, Math.max(w / contentW, shownH / contentH)) : 1;
+  /** What the at-rest view is for: a drag at rest is kept while this holds (not across a resize). */
+  const restKey = `${w}x${h}|${contentW}|${frameKey}|${pinsKey}|${insets ? JSON.stringify(insets) : ''}`;
+  /** Review 3: where the player dragged the map at rest (kept when a place closes). */
+  const [restAt, setRestAt] = useState<{ key: string; x: number; y: number } | null>(null);
+  const restAtKey = restAt?.key === restKey ? `${restAt.x},${restAt.y}` : '';
+
+  /**
+   * Where the map should be: at rest (the fitted view, or where the player dragged it), or zoomed into
+   * the selected pin. `fitted` is the default at-rest view; the zoom's scale is relative to it.
+   */
   const target = useMemo((): { fitted: MapView; view: MapView } | null => {
     if (w === 0 || h === 0 || !insets) return null;
     const box = { w, h };
     const content = { w: contentW, h: contentH };
-    const fitted = fitPinsView({ box, content, pins: locations.map((l) => l.map), insets });
-    const view = selected ? zoomView({ box, content, fitted, pin: selected.map, cover, maxScale }) : fitted;
+    const pins = locations.map((l) => l.map);
+    const fitted = fitPinsView({ box, content, pins, insets, minScale: coverScale, frame });
+    let rest = fitted;
+    if (restAt && restAt.key === restKey) {
+      const lim = restPanLimits(box, content, fitted, frame, pins, insets);
+      rest = {
+        scale: fitted.scale,
+        x: clamp(restAt.x, lim.x[0], lim.x[1]),
+        y: clamp(restAt.y, lim.y[0], lim.y[1]),
+      };
+    }
+    // A pin's zoom keeps review 2's numbers: 2.5 × the view that would show every pin (the old first
+    // view, which zoomed out past the picture's edge), not × the covered one, which is closer already.
+    const zoomBase = selected ? fitPinsView({ box, content, pins, insets }) : fitted;
+    const view = selected
+      ? zoomView({ box, content, fitted: zoomBase, pin: selected.map, cover, maxScale })
+      : rest;
     return { fitted, view };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, contentW, contentH, maxScale, insets, pinsKey, coverKey, selected?.id, frameKey]);
+  }, [w, h, contentW, contentH, maxScale, insets, pinsKey, coverKey, selected?.id, frameKey, restAtKey]);
   /** The first view covers the box, or is letterboxed onto the blurred copy (reported for tests). */
   const fit = target
-    ? coversBox({ w, h }, { w: contentW, h: contentH }, target.fitted)
+    ? coversBox({ w, h }, { w: contentW, h: contentH }, target.fitted, insets)
       ? 'cover'
       : 'letterbox'
     : '';
@@ -734,29 +934,25 @@ export function CityMap({
       return;
     }
     setMoving(true);
-    moveTimer.current = setTimeout(() => setMoving(false), ZOOM_MS + 50);
+    // Landed: the view stays, without its transition (so `willChange` lets go, see `layer`).
+    moveTimer.current = setTimeout(
+      () => setShown((s) => (s?.animate ? { view: s.view, animate: false } : s)),
+      ZOOM_MS + 50,
+    );
     return () => clearTimeout(moveTimer.current);
   }, [shown]);
   const transition = shown?.animate ? `transform ${ZOOM_MS}ms ${ZOOM_EASE}` : 'none';
+  /** A drag in progress (the layer then stays a compositor layer, see `willChange`). */
+  const [dragging, setDragging] = useState(false);
   // The tiles follow where the map is going (the target), so a zoom fetches its destination from its
   // first frame; only a drag, which moves the view away from the target, makes them follow the view.
   const tileView = panned.current ? view : (target?.view ?? view);
   const onTilesUnavailable = () => setTilesFailed(true);
-  // Pins too close to tap apart on this screen are spread apart (see spreadPins), between the bands.
-  const spread = view
-    ? spreadPins(
-        locations.map((l) => ({
-          x: view.x + l.map.x * contentW * view.scale,
-          y: view.y + l.map.y * contentH * view.scale,
-        })),
-        { x0: 0, x1: w, y0: insets?.top ?? 0, y1: h - (insets?.bottom ?? 0) },
-      )
-    : [];
   // Maps v3 §6: a quick cross-fade (day and night differ by up to half a building); none with
   // reduced motion.
   const fade = prefersReducedMotion() ? 'none' : `opacity ${NIGHT_FADE_MS}ms ease`;
 
-  // Review 2 #8: no free pan or zoom at rest. The browser's own gestures over the map (pinch, double
+  // Review 2 #8, review 3: no free zoom. The browser's own gestures over the map (pinch, double
   // tap, a trackpad's ctrl + wheel page zoom) are off everywhere on it; the wheel does nothing.
   useEffect(() => {
     const el = boxRef.current;
@@ -770,15 +966,44 @@ export function CityMap({
     };
   }, []);
 
-  // While zoomed in: a drag pans, within panLimits. A tap stays a tap (DRAG_SLOP), and the click
-  // that ends a drag is swallowed, so a drag that starts on a pin does not select it.
-  const drag = useRef<{ id: number; sx: number; sy: number; from: MapView; moved: boolean } | null>(null);
+  /** How far the map drags now: zoomed in, near the frame (panLimits); at rest, restPanLimits. */
+  const dragLimits = () => {
+    if (!target || !insets) return null;
+    const box = { w, h };
+    const content = { w: contentW, h: contentH };
+    if (selected) return panLimits(box, content, target.view, frame);
+    const lim = restPanLimits(
+      box,
+      content,
+      target.fitted,
+      frame,
+      locations.map((l) => l.map),
+      insets,
+    );
+    // The player's own at-rest view (after a resize it may sit outside) is always allowed.
+    return {
+      x: [Math.min(lim.x[0], target.view.x), Math.max(lim.x[1], target.view.x)] as [number, number],
+      y: [Math.min(lim.y[0], target.view.y), Math.max(lim.y[1], target.view.y)] as [number, number],
+    };
+  };
+
+  // A drag pans: zoomed in, within panLimits; at rest (review 3), within restPanLimits, at the same
+  // scale (no free zoom). A tap stays a tap (DRAG_SLOP), and the click that ends a drag is swallowed,
+  // so a drag that starts on a pin does not select it.
+  const drag = useRef<{
+    id: number;
+    sx: number;
+    sy: number;
+    from: MapView;
+    moved: boolean;
+    last: MapView;
+  } | null>(null);
   const swallowClick = useRef(false);
   const lastPointerDown = useRef(0);
   const onPointerDown = (e: ReactPointerEvent) => {
     lastPointerDown.current = Date.now();
-    if (!selected || !view || e.button !== 0) return;
-    drag.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, from: view, moved: false };
+    if (!view || e.button !== 0) return;
+    drag.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, from: view, moved: false, last: view };
   };
   const onPointerMove = (e: ReactPointerEvent) => {
     const d = drag.current;
@@ -789,23 +1014,26 @@ export function CityMap({
       if (Math.hypot(dx, dy) < DRAG_SLOP) return;
       d.moved = true;
       panned.current = true;
+      setDragging(true);
       boxRef.current?.setPointerCapture?.(e.pointerId);
     }
-    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view, frame);
-    setShown({
-      view: {
-        scale: d.from.scale,
-        x: clamp(d.from.x + dx, lim.x[0], lim.x[1]),
-        y: clamp(d.from.y + dy, lim.y[0], lim.y[1]),
-      },
-      animate: false,
-    });
+    const lim = dragLimits();
+    if (!lim) return;
+    d.last = {
+      scale: d.from.scale,
+      x: clamp(d.from.x + dx, lim.x[0], lim.x[1]),
+      y: clamp(d.from.y + dy, lim.y[0], lim.y[1]),
+    };
+    setShown({ view: d.last, animate: false });
   };
   const endDrag = (e: ReactPointerEvent) => {
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
     drag.current = null;
     if (!d.moved) return;
+    setDragging(false);
+    // At rest, the player's view is kept: closing a place comes back to it (not across a resize).
+    if (!selected) setRestAt({ key: restKey, x: d.last.x, y: d.last.y });
     swallowClick.current = true;
     // If no click follows (the pointer left the pin), the next real tap still counts.
     setTimeout(() => {
@@ -813,23 +1041,30 @@ export function CityMap({
     }, 0);
   };
 
-  // Keyboard focus on a pin outside the zoomed view pans it into view (WCAG 2.4.11). At rest every
-  // pin is already on screen. Not a tap's focus: moving the pin under the finger would lose the tap.
+  // Keyboard focus on a pin outside the view (zoomed in, or at rest where it may be off screen or
+  // under an overlay since review 3) pans it into view (WCAG 2.4.11). Not a tap's focus: moving the
+  // pin under the finger would lose the tap.
   const onPinFocus = (l: MapHotspot) => {
-    if (!selected || !view || !target || Date.now() - lastPointerDown.current < 1_000) return;
+    if (!view || !target || Date.now() - lastPointerDown.current < 1_000) return;
     const px = view.x + l.map.x * contentW * view.scale;
     const py = view.y + l.map.y * contentH * view.scale;
-    const a = clearArea({ w, h }, cover);
-    if (px >= a.x0 + 22 && px <= a.x1 - 22 && py >= a.y0 + 22 && py <= a.y1 - 22) return;
-    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view, frame);
-    setShown({
-      view: {
-        scale: view.scale,
-        x: clamp((a.x0 + a.x1) / 2 - l.map.x * contentW * view.scale, lim.x[0], lim.x[1]),
-        y: clamp((a.y0 + a.y1) / 2 - l.map.y * contentH * view.scale, lim.y[0], lim.y[1]),
-      },
-      animate: false,
-    });
+    const a = selected
+      ? clearArea({ w, h }, cover)
+      : { x0: 0, x1: w, y0: insets?.top ?? 0, y1: h - (insets?.bottom ?? 0) };
+    const inside = px >= a.x0 + 22 && px <= a.x1 - 22 && py >= a.y0 + 22 && py <= a.y1 - 22;
+    const blocked = (insets?.blocks ?? []).some(
+      (b) => px + 22 > b.x0 && px - 22 < b.x1 && py + 22 > b.y0 && py - 22 < b.y1,
+    );
+    if (inside && (selected || !blocked)) return;
+    const lim = dragLimits();
+    if (!lim) return;
+    const next = {
+      scale: view.scale,
+      x: clamp((a.x0 + a.x1) / 2 - l.map.x * contentW * view.scale, lim.x[0], lim.x[1]),
+      y: clamp((a.y0 + a.y1) / 2 - l.map.y * contentH * view.scale, lim.y[0], lim.y[1]),
+    };
+    if (selected) setShown({ view: next, animate: false });
+    else setRestAt({ key: restKey, x: next.x, y: next.y });
   };
 
   // The browser also scrolls the clipped wrappers to reveal a focused element, which would shift the
@@ -854,7 +1089,12 @@ export function CityMap({
         transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
         transformOrigin: '0 0',
         transition,
-        willChange: 'transform',
+        // Review 3 (blurry zoom on phones): only while the map moves or is dragged. Chromium keeps a
+        // `will-change: transform` layer at the raster scale it already has when its scale changes,
+        // so the zoomed view was a stretched bitmap of an earlier, smaller raster, whatever tile level
+        // was drawn (measured at 390 × 844, DPR 3: about 30 % less edge detail). Once the move has
+        // landed the layer is painted again at its own scale, from the detail tiles.
+        willChange: shown?.animate || dragging ? 'transform' : 'auto',
       }
     : { visibility: 'hidden' };
 
@@ -862,8 +1102,7 @@ export function CityMap({
     <div
       ref={boxRef}
       className={cx(
-        'relative touch-none overflow-hidden bg-ink select-none',
-        selected && 'cursor-grab active:cursor-grabbing',
+        'relative cursor-grab touch-none overflow-hidden bg-ink select-none active:cursor-grabbing',
         className,
       )}
       data-testid="city-map"
@@ -973,10 +1212,10 @@ export function CityMap({
               pin's place is linear in the map's translate and scale, so it tracks it exactly). */}
           <div className="pointer-events-none absolute inset-0">
             {view &&
-              locations.map((l, i) => {
+              locations.map((l) => {
                 const on = l.id === selectedId;
-                const px = view.x + l.map.x * contentW * view.scale + (spread[i]?.x ?? 0);
-                const py = view.y + l.map.y * contentH * view.scale + (spread[i]?.y ?? 0);
+                const px = view.x + l.map.x * contentW * view.scale;
+                const py = view.y + l.map.y * contentH * view.scale;
                 return (
                   <div
                     key={l.id}

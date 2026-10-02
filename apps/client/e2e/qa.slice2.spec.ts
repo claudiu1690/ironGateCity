@@ -8,7 +8,7 @@
  */
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { ANSWERS, answer, arrive, signUpOnly } from './helpers';
+import { ANSWERS, answer, arrive, pinsOutOfReach, signUpOnly } from './helpers';
 
 const SMALL = { width: 360, height: 640 };
 const PHONE = { width: 375, height: 812 };
@@ -158,17 +158,15 @@ test.describe('phone 375×812', () => {
   });
 });
 
-/** Every hotspot whose centre is not the topmost element (something covers it). */
+/**
+ * Every hotspot that is not the topmost element at its centre (something covers it, or it is off the
+ * map) even after a drag of the map towards it. Review 3 (the user, 2 Oct 2026): the map at rest now
+ * covers the screen, so a pin may start off it or under an overlay; a drag at rest brings it clear.
+ */
 async function coveredPins(page: Page): Promise<string[]> {
   await expect(page.getByTestId('hotspot')).toHaveCount(6);
   await page.waitForTimeout(800); // the first view is applied after the map measures itself
-  return page.evaluate(() =>
-    [...document.querySelectorAll('[data-testid=hotspot]')].flatMap((el) => {
-      const r = el.getBoundingClientRect();
-      const top = document.elementFromPoint(r.left + Math.min(22, r.width / 2), r.top + r.height / 2);
-      return top && (top === el || el.contains(top)) ? [] : [el.getAttribute('aria-label') ?? '?'];
-    }),
-  );
+  return pinsOutOfReach(page);
 }
 
 test.describe('phone 375×812, tabs', () => {

@@ -5,13 +5,14 @@ export {
   FRAME_PAN_MARGIN,
   NIGHT_FADE_MS,
   PIN_GAP,
+  REST_PAN_MARGIN,
   ZOOM_MS,
   contentFor,
   coversBox,
   fitPinsView,
   nativeScale,
   panLimits,
-  spreadPins,
+  restPanLimits,
   zoomScale,
   zoomView,
 } from './components/CityMap';
@@ -21,6 +22,7 @@ export type { TileLayerProps } from './components/TileLayer';
 export {
   TILE_MAX_DPR,
   backdropUrl,
+  detailLevelFor,
   levelFor,
   levelGrid,
   levelSize,
@@ -47,6 +49,8 @@ export { OrdersComplete } from './components/OrdersComplete';
 export type { OrdersCompleteProps } from './components/OrdersComplete';
 export { Picture, artUrl } from './components/Picture';
 export type { PictureProps } from './components/Picture';
+export { PlacesList } from './components/Places';
+export type { PlaceRow, PlacesListProps } from './components/Places';
 export { Plate } from './components/Plate';
 export type { PlateProps } from './components/Plate';
 export { ProgressBar } from './components/ProgressBar';

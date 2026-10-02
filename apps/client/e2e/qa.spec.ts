@@ -403,9 +403,10 @@ test.describe('desktop 1440×900', () => {
     await expect(page.getByTestId('hud-energy')).toHaveText('70 / 100');
   });
 
-  // Review 2 #8, #9 (replaces review 1 #7): the map is fixed at rest (no wheel zoom, no drag); a pin
-  // zooms smoothly into it and its panel opens; closing zooms back to the fitted view.
-  test('review 2: a fixed map; a pin zooms in, then its panel opens; closing zooms back out', async ({
+  // Review 2 #8, #9 (replaces review 1 #7): no free zoom; a pin zooms smoothly into it and its panel
+  // opens; closing zooms back out. Review 3 (the user, 2 Oct 2026): at rest the map now drags within
+  // the quarter (same scale), and closing a place comes back to where it was dragged.
+  test('review 2 and 3: no free zoom; a drag at rest pans; a pin zooms in, then its panel opens; closing zooms back out', async ({
     page,
   }) => {
     await signUp(page);
@@ -413,14 +414,19 @@ test.describe('desktop 1440×900', () => {
     await page.goto('/city/coalport');
     await mapReady(page);
     const fitted = await transformOf(page);
-    // No free zoom or pan at rest.
+    // No free zoom at rest.
     await page.mouse.move(700, 500);
     for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -200);
-    await page.mouse.down();
-    await page.mouse.move(600, 440, { steps: 5 });
-    await page.mouse.up();
     await page.waitForTimeout(300);
     expect(await transformOf(page)).toBe(fitted);
+    // A drag at rest pans the map, at the same scale (down: Coalport's picture just spans the width).
+    await page.mouse.down();
+    await page.mouse.move(700, 560, { steps: 5 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    const dragged = await transformOf(page);
+    expect(dragged).not.toBe(fitted);
+    expect(dragged.split(',')[2]).toBe(fitted.split(',')[2]);
     // A pin: the zoom plays first (no panel mid-zoom), then the centred panel opens.
     await page.getByRole('button', { name: '4. Foundry Row' }).click();
     await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'true');
@@ -431,7 +437,7 @@ test.describe('desktop 1440×900', () => {
     expect(Number(zoomed.split(',')[2])).toBeGreaterThan(Number(fitted.split(',')[2]));
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await expect(sheet).toBeHidden();
-    await expect.poll(() => transformOf(page)).toBe(fitted);
+    await expect.poll(() => transformOf(page)).toBe(dragged);
   });
 
   test('review 2: with reduced motion the zoom is instant', async ({ page }) => {

@@ -9,11 +9,12 @@ import {
   NIGHT_FADE_MS,
   ZOOM_MS,
   contentFor,
+  coversBox,
   fitPinsView,
-  PIN_GAP,
   panLimits,
+  PIN_GAP,
   pyramidFor,
-  spreadPins,
+  restPanLimits,
   zoomView,
 } from '../src';
 import type { MapInsets, MapRect, TilePyramid } from '../src';
@@ -55,50 +56,173 @@ describe('the frame covers the box at scale 1 (§2)', () => {
   });
 });
 
-describe('every v3 pin clear in the first view (QA M2 fixtures)', () => {
-  const PIN_CLEAR = 22; // half the 44 px target
-  // The overlays the city page puts over the map at these sizes (measured on the slice-2 screens):
-  // a phone's plate and orders as bands; a desktop's plate in its corner and the tab dock as blocks; a
-  // phone held sideways has its plate beside the map, not over it.
-  const CASES: Array<{ box: { w: number; h: number }; insets: MapInsets }> = [
-    { box: { w: 390, h: 600 }, insets: { top: 118, bottom: 92, blocks: [] } },
+describe('review 3: at rest the art covers the map, and a drag brings the other pins in', () => {
+  const PIN_CLEAR = 30; // PIN_PAD: half the 44 px target plus a margin
+  // The map box and the overlays the city page puts over it at the tested screens (measured on the
+  // dev server): a phone's plate and orders as bands; a tablet's and a desktop's plate in its corner,
+  // the tab dock and the Places button as blocks; a phone held sideways has its plate beside the map.
+  const desktopBlocks = (w: number, h: number) => [
+    { x0: 10, y0: 10, x1: 430, y1: 560 },
+    { x0: w / 2 - 210, y0: h - 72, x1: w / 2 + 210, y1: h - 8 },
+    { x0: w - 110, y0: 10, x1: w - 10, y1: 54 },
+  ];
+  const CASES: Array<{ at: string; box: { w: number; h: number }; insets: MapInsets }> = [
     {
-      box: { w: 1440, h: 814 },
+      at: '360×640',
+      box: { w: 360, h: 457 },
       insets: {
-        top: 0,
-        bottom: 0,
-        blocks: [
-          { x0: 10, y0: 10, x1: 430, y1: 330 },
-          { x0: 560, y0: 742, x1: 880, y1: 804 },
-        ],
+        top: 120,
+        bottom: 190,
+        hideTop: 120,
+        hideBottom: 190,
+        blocks: [{ x0: 260, y0: 220, x1: 360, y1: 264 }],
       },
     },
-    { box: { w: 812, h: 375 }, insets: { top: 0, bottom: 0, blocks: [] } },
+    {
+      at: '390×844',
+      box: { w: 390, h: 661 },
+      insets: {
+        top: 165,
+        bottom: 190,
+        hideTop: 165,
+        hideBottom: 190,
+        blocks: [{ x0: 290, y0: 415, x1: 390, y1: 459 }],
+      },
+    },
+    { at: '844×390', box: { w: 520, h: 299 }, insets: { top: 0, bottom: 0, blocks: [] } },
+    {
+      at: '640×900',
+      box: { w: 640, h: 815 },
+      insets: { top: 0, bottom: 0, blocks: desktopBlocks(640, 815).filter((_, i) => i !== 1) },
+    },
+    {
+      at: '768×1024',
+      box: { w: 768, h: 880 },
+      insets: { top: 0, bottom: 0, blocks: desktopBlocks(768, 880) },
+    },
+    {
+      at: '1440×900',
+      box: { w: 1440, h: 814 },
+      insets: { top: 0, bottom: 0, blocks: desktopBlocks(1440, 814) },
+    },
+    {
+      at: '1920×1080',
+      box: { w: 1920, h: 994 },
+      insets: { top: 0, bottom: 0, blocks: desktopBlocks(1920, 994) },
+    },
   ];
+  type View = { scale: number; x: number; y: number };
+  const restOf = (id: (typeof cities)[number], box: { w: number; h: number }, insets: MapInsets) => {
+    const frame = frameOf(id);
+    const c = contentFor(box, 1, frame);
+    const shownH = box.h - (insets.hideTop ?? 0) - (insets.hideBottom ?? 0);
+    const coverScale = Math.min(1, Math.max(box.w / c.w, shownH / c.h));
+    const v = fitPinsView({ box, content: c, pins: pinsOf(id), insets, minScale: coverScale, frame });
+    return { frame, c, coverScale, v };
+  };
+  const at = (v: View, c: { w: number; h: number }, p: { x: number; y: number }) => ({
+    x: v.x + p.x * c.w * v.scale,
+    y: v.y + p.y * c.h * v.scale,
+  });
+  const clearAt = (box: { w: number; h: number }, insets: MapInsets, q: { x: number; y: number }) =>
+    q.x >= PIN_CLEAR - 0.5 &&
+    q.x <= box.w - PIN_CLEAR + 0.5 &&
+    q.y >= insets.top + PIN_CLEAR - 0.5 &&
+    q.y <= box.h - insets.bottom - PIN_CLEAR + 0.5 &&
+    (insets.blocks ?? []).every(
+      (b) =>
+        q.x + PIN_CLEAR <= b.x0 ||
+        q.x - PIN_CLEAR >= b.x1 ||
+        q.y + PIN_CLEAR <= b.y0 ||
+        q.y - PIN_CLEAR >= b.y1,
+    );
 
-  it('no pin off screen, under a band or under a block, for the three home cities', () => {
+  it('the at-rest view covers the box (never the blurred bands), and pins stay 44 px targets apart', () => {
     for (const id of cities)
-      for (const { box, insets } of CASES) {
-        const c = contentFor(box, 1, frameOf(id));
-        const v = fitPinsView({ box, content: c, pins: pinsOf(id), insets });
-        for (const p of pinsOf(id)) {
-          const x = v.x + p.x * c.w * v.scale;
-          const y = v.y + p.y * c.h * v.scale;
-          const label = `${id} ${box.w}×${box.h} pin ${p.x},${p.y}`;
-          expect(x - PIN_CLEAR, label).toBeGreaterThanOrEqual(0);
-          expect(x + PIN_CLEAR, label).toBeLessThanOrEqual(box.w);
-          expect(y - PIN_CLEAR, label).toBeGreaterThanOrEqual(insets.top);
-          expect(y + PIN_CLEAR, label).toBeLessThanOrEqual(box.h - insets.bottom);
-          for (const b of insets.blocks ?? [])
-            expect(
-              x + PIN_CLEAR <= b.x0 ||
-                x - PIN_CLEAR >= b.x1 ||
-                y + PIN_CLEAR <= b.y0 ||
-                y - PIN_CLEAR >= b.y1,
-              `${label} under a block`,
-            ).toBe(true);
+      for (const { at: size, box, insets } of CASES) {
+        const { c, coverScale, v } = restOf(id, box, insets);
+        const label = `${id} ${size}`;
+        expect(coversBox(box, c, v, insets), label).toBe(true);
+        expect(v.scale, label).toBeGreaterThanOrEqual(Math.min(1, coverScale) - 1e-9);
+        expect(v.scale, label).toBeLessThanOrEqual(1.5); // past 1 only to bring a pin out from under the plate
+        const pts = pinsOf(id).map((p) => at(v, c, p));
+        for (let i = 0; i < pts.length; i++)
+          for (let j = i + 1; j < pts.length; j++)
+            // Two 44 px targets never overlap (review 3: the at-rest view zooms in for it; spreadPins is gone).
+            expect(Math.hypot(pts[i]!.x - pts[j]!.x, pts[i]!.y - pts[j]!.y), label).toBeGreaterThanOrEqual(
+              PIN_GAP - 0.01,
+            );
+      }
+  });
+
+  it('every pin is clear at rest or a drag away (the art may stop short under a phone’s opaque bands)', () => {
+    for (const id of cities)
+      for (const { at: size, box, insets } of CASES) {
+        const { frame, c, v } = restOf(id, box, insets);
+        const lim = restPanLimits(box, c, v, frame, pinsOf(id), insets);
+        for (const l of content.city(id)!.locations) {
+          let reach = false;
+          for (let a = 0; a <= 40 && !reach; a++)
+            for (let b = 0; b <= 40 && !reach; b++) {
+              const w = {
+                scale: v.scale,
+                x: lim.x[0] + ((lim.x[1] - lim.x[0]) * a) / 40,
+                y: lim.y[0] + ((lim.y[1] - lim.y[0]) * b) / 40,
+              };
+              reach = clearAt(box, insets, at(w, c, l.map));
+            }
+          expect(reach, `${id} ${size} ${l.id}`).toBe(true);
         }
       }
+  });
+
+  it('a drag at rest never shows past the picture and never zooms; the at-rest view is inside its limits', () => {
+    for (const id of cities)
+      for (const { at: size, box, insets } of CASES) {
+        const { frame, c, v } = restOf(id, box, insets);
+        const lim = restPanLimits(box, c, v, frame, pinsOf(id), insets);
+        const label = `${id} ${size}`;
+        for (const x of lim.x)
+          for (const y of lim.y)
+            expect(coversBox(box, c, { scale: v.scale, x, y }, insets), label).toBe(true);
+        expect(v.x, label).toBeGreaterThanOrEqual(lim.x[0]);
+        expect(v.x, label).toBeLessThanOrEqual(lim.x[1]);
+        expect(v.y, label).toBeGreaterThanOrEqual(lim.y[0]);
+        expect(v.y, label).toBeLessThanOrEqual(lim.y[1]);
+      }
+  });
+
+  it('in the map: a long drag at rest stops at the picture edge, and closing a place comes back to it', () => {
+    vi.useFakeTimers();
+    try {
+      const f = frameOf('coalport');
+      const props = {
+        map: cityViewFixture.map,
+        isNight: false,
+        locations: cityViewFixture.locations,
+        onSelect: () => undefined,
+        frame: f,
+      };
+      const { rerender } = render(<CityMap {...props} selectedId={null} />);
+      const map = screen.getByTestId('city-map');
+      expect(map).toHaveAttribute('data-fit', 'cover');
+      const [x0, y0, scale0] = map.getAttribute('data-view')!.split(',').map(Number);
+      fireEvent.pointerDown(map, { pointerId: 1, button: 0, clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(map, { pointerId: 1, clientX: 5100, clientY: 5100 });
+      fireEvent.pointerUp(map, { pointerId: 1 });
+      const dragged = map.getAttribute('data-view')!;
+      const [x, y, scale] = dragged.split(',').map(Number);
+      expect(scale).toBe(scale0); // no zoom
+      expect(x! > x0! || y! > y0!).toBe(true); // it moved
+      expect(x).toBeLessThanOrEqual(0.05); // the picture's left and top edges at most at the box's
+      expect(y).toBeLessThanOrEqual(0.05);
+      rerender(<CityMap {...props} selectedId="coalport.union-hall" />);
+      act(() => vi.advanceTimersByTime(ZOOM_MS + 60));
+      rerender(<CityMap {...props} selectedId={null} />);
+      expect(map.getAttribute('data-view')).toBe(dragged);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -285,44 +409,5 @@ describe('day and night (§6)', () => {
     }));
     render(<CityMap {...props} isNight={false} />);
     expect(screen.getByTestId('map-night').style.transition).toBe('none');
-  });
-});
-
-describe('pins too close to tap apart are spread (small screens)', () => {
-  const area = { x0: 0, y0: 100, x1: 360, y1: 400 };
-
-  it('two pins 17 px apart end at least PIN_GAP apart, inside the area; clear pins stay put', () => {
-    const pts = [
-      { x: 150, y: 200 },
-      { x: 160, y: 214 },
-      { x: 300, y: 350 },
-    ];
-    const off = spreadPins(pts, area);
-    const at = pts.map((p, i) => ({ x: p.x + off[i]!.x, y: p.y + off[i]!.y }));
-    expect(Math.hypot(at[0]!.x - at[1]!.x, at[0]!.y - at[1]!.y)).toBeGreaterThanOrEqual(PIN_GAP - 0.5);
-    expect(off[2]).toEqual({ x: 0, y: 0 });
-    // The least move: each by about half the shortfall.
-    expect(Math.hypot(off[0]!.x, off[0]!.y)).toBeLessThan(PIN_GAP / 2);
-  });
-
-  it('a cluster of four is cleared, within the area, and pins off screen are left alone', () => {
-    const pts = [
-      { x: 30, y: 110 },
-      { x: 40, y: 120 },
-      { x: 35, y: 130 },
-      { x: 45, y: 105 },
-      { x: 500, y: 200 },
-      { x: 505, y: 205 },
-    ];
-    const off = spreadPins(pts, area);
-    const at = pts.map((p, i) => ({ x: p.x + off[i]!.x, y: p.y + off[i]!.y }));
-    for (let i = 0; i < 4; i++) {
-      expect(at[i]!.x).toBeGreaterThanOrEqual(22);
-      expect(at[i]!.y).toBeGreaterThanOrEqual(122);
-      for (let j = i + 1; j < 4; j++)
-        expect(Math.hypot(at[i]!.x - at[j]!.x, at[i]!.y - at[j]!.y)).toBeGreaterThanOrEqual(PIN_GAP - 1);
-    }
-    expect(off[4]).toEqual({ x: 0, y: 0 });
-    expect(off[5]).toEqual({ x: 0, y: 0 });
   });
 });

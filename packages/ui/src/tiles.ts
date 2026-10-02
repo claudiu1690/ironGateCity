@@ -73,6 +73,25 @@ export function levelFor(p: Pick<TilePyramid, 'width' | 'height' | 'maxLevel'>, 
   return p.maxLevel;
 }
 
+/**
+ * The detail level for a view (review 3 fix): the lowest level with at least as many pixels across as
+ * the art takes on screen, in device pixels with the DPR capped at TILE_MAX_DPR. `shownW` is the art's
+ * width on screen in CSS pixels (the layer's width at scale 1 times the view's scale).
+ *
+ * Before review 3 a level with 85 % of those pixels was taken as good enough. On an upright phone the
+ * quarter's frame covers a tall box, so the art is laid out larger and a zoom lands right past a
+ * level's edge (Duskwall at 390 × 844: 1,244 px wide on screen, level 12's 2,160 px taken for the
+ * 2,488 device pixels capped, 0.58 of the phone's real ones), while held sideways the same zoom took
+ * level 13. Now the full capped count is asked for, as on every other screen.
+ */
+export function detailLevelFor(
+  p: Pick<TilePyramid, 'width' | 'height' | 'maxLevel'>,
+  shownW: number,
+  dpr: number,
+): number {
+  return levelFor(p, Math.round(shownW * Math.min(TILE_MAX_DPR, dpr || 1)));
+}
+
 export function tileUrl(p: TilePyramid, level: number, col: number, row: number): string {
   return `${p.base}/${p.format}_files/${level}/${col}_${row}.${p.format}`;
 }

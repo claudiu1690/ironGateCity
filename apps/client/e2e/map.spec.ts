@@ -1,13 +1,15 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { ANSWERS, arrive, signUpOnly } from './helpers';
+import { ANSWERS, arrive, openPlace, pinsOutOfReach, signUpOnly } from './helpers';
 import type { FactionKey } from './helpers';
 
 /**
- * Slice-2 QA M2: every pin of every home city whole and tappable in the map's first view, at every
- * supported size: not under the plate with its orders list (a corner block from 640 px), the
- * desktop tab dock, or the phone's orders panel. Also after the first landing's sheet closes on a
- * desktop, when the plate unfolds again.
+ * Slice-2 QA M2: every pin of every home city whole and tappable, at every supported size: not under
+ * the plate with its orders list (a corner block from 640 px), the desktop tab dock, or the phone's
+ * orders panel. Also after the first landing's sheet closes on a desktop, when the plate unfolds again.
+ *
+ * Review 3 (the user, 2 Oct 2026): the map at rest now covers the screen (no dark bands), so on a wide
+ * or tall screen a pin may start off it or under an overlay: then a drag of the map brings it clear.
  */
 
 const SIZES = [
@@ -24,17 +26,11 @@ const SIZES = [
   { width: 667, height: 375 },
 ];
 
-/** Every hotspot whose centre is not the topmost element there (something covers it). */
-async function coveredPins(page: Page): Promise<string[]> {
+/** Every pin clear at rest or after a drag of the map towards it (review 3). */
+async function unreachablePins(page: Page): Promise<string[]> {
   await expect(page.getByTestId('hotspot')).toHaveCount(6);
   await page.waitForTimeout(600); // the first view is applied once the map has measured itself
-  return page.evaluate(() =>
-    [...document.querySelectorAll('[data-testid=hotspot]')].flatMap((el) => {
-      const r = el.getBoundingClientRect();
-      const top = document.elementFromPoint(r.left + Math.min(22, r.width / 2), r.top + r.height / 2);
-      return top && (top === el || el.contains(top)) ? [] : [el.getAttribute('aria-label') ?? '?'];
-    }),
-  );
+  return pinsOutOfReach(page);
 }
 
 test.describe('every pin clear at every size (QA M2)', () => {
@@ -45,9 +41,10 @@ test.describe('every pin clear at every size (QA M2)', () => {
     ['collective', 'coalport'],
     ['alliance', 'ashford'],
   ] as const satisfies ReadonlyArray<readonly [FactionKey, string]>) {
-    test(`${city}: no pin under the plate, the orders or the dock, from 1920 × 1080 to 360 × 640`, async ({
+    test(`${city}: every pin clear at rest or a drag away, from 1920 × 1080 to 360 × 640`, async ({
       page,
     }) => {
+      test.setTimeout(120_000);
       await page.setViewportSize(SIZES[1]!);
       await signUpOnly(page, 'Ilse Marr', 2);
       // The welcome edition marked read first, so no "paper is in" banner takes the map's height.
@@ -58,7 +55,7 @@ test.describe('every pin clear at every size (QA M2)', () => {
       for (const size of SIZES) {
         await page.setViewportSize(size);
         await page.reload();
-        expect(await coveredPins(page), `${size.width}×${size.height}`).toEqual([]);
+        expect(await unreachablePins(page), `${size.width}×${size.height}`).toEqual([]);
       }
     });
   }
@@ -78,7 +75,7 @@ test.describe('every pin clear at every size (QA M2)', () => {
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await expect(page).toHaveURL(/\/city\/ashford$/);
     await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'false');
-    expect(await coveredPins(page)).toEqual([]);
+    expect(await unreachablePins(page)).toEqual([]);
     // And a pin tapped at once opens (the lost-tap fix, c732d64, still holds).
     await page.locator('[data-testid="hotspot"][aria-label="2. Assembly Rooms"]').click();
     await expect(page.getByRole('dialog')).toContainText('Assembly Rooms');
@@ -89,8 +86,11 @@ test.describe('every pin clear at every size (QA M2)', () => {
  * Review 2 follow-up: no black past the art, ever. At every size, at rest and zoomed into each pin
  * of each home city, the map image covers the part of the screen the map owns: the whole map box,
  * less what the open location's bottom sheet (upright phone) or side panel (phone sideways) lies
- * over. Where the first view cannot cover the box with every pin clear (`data-fit="letterbox"`), the
- * blurred copy of the art fills it instead; those sizes are listed in the test's annotations.
+ * over.
+ *
+ * Review 3 (the user, 2 Oct 2026: no dark bands): at rest the art itself covers the map at every size
+ * (`data-fit="cover"`, never the blurred copy), less only what a phone's opaque edge-to-edge plate and
+ * orders panel hide. A pin off screen or under an overlay at rest is opened from the Places list.
  */
 
 type Rect = { left: number; top: number; right: number; bottom: number };
@@ -111,9 +111,20 @@ async function mapRects(page: Page) {
     if (panel?.dataset.layout === 'side')
       owned.left = Math.max(owned.left, panel.getBoundingClientRect().right);
     const backdrop = document.querySelector('[data-testid=map-backdrop]');
+    // Review 3: a phone's plate and orders panel run edge to edge and are opaque; the art may stop
+    // short under them, so the part of the map on show is the box between them.
+    const shown = r(box)!;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-map-opaque]')) {
+      const o = el.getBoundingClientRect();
+      if (o.width === 0 || o.left > shown.left + 1 || o.right < shown.right - 1) continue;
+      if (getComputedStyle(el).visibility === 'hidden') continue;
+      if (o.top <= shown.top + 1 && o.bottom > shown.top) shown.top = o.bottom;
+      else if (o.bottom >= shown.bottom - 1 && o.top < shown.bottom) shown.bottom = o.top;
+    }
     return {
       fit: box.dataset.fit ?? '',
       box: r(box)!,
+      shown,
       owned,
       layer: r(document.querySelector('[data-testid=map-layer]')),
       backdrop: r(backdrop),
@@ -156,7 +167,6 @@ test.describe('no black past the art (review 2 follow-up)', () => {
       // The zoom lands at once here; the frames between are checked below, with motion on.
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.goto(`/city/${city}`);
-      const letterboxed: string[] = [];
       for (const size of SIZES) {
         const at = `${size.width}×${size.height}`;
         await page.setViewportSize(size);
@@ -164,20 +174,14 @@ test.describe('no black past the art (review 2 follow-up)', () => {
         await expect(page.getByTestId('hotspot')).toHaveCount(6);
         await settled(page, false);
         const rest = await mapRects(page);
-        if (rest.fit === 'cover') {
-          expect(covers(rest.layer, rest.box), `${at} at rest: the art covers the map`).toBe(true);
-        } else {
-          letterboxed.push(at);
-          // The margin is the blurred copy of the art, over the whole box: never plain black.
-          expect(covers(rest.backdrop, rest.box), `${at} at rest: the blurred copy fills the map`).toBe(true);
-          expect(rest.backdropArt, `${at}: the backdrop shows the art`).toBe(true);
-        }
+        expect(rest.fit, `${at} at rest: no bands`).toBe('cover');
+        expect(covers(rest.layer, rest.shown), `${at} at rest: the art covers the map`).toBe(true);
         const labels = await page
           .getByTestId('hotspot')
           .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? ''));
         for (const label of labels) {
           const pin = page.locator(`[data-testid="hotspot"][aria-label="${label}"]`);
-          await pin.click();
+          await openPlace(page, label);
           const sheet = page.getByRole('dialog');
           await expect(sheet).toBeVisible();
           await settled(page, true);
@@ -189,7 +193,6 @@ test.describe('no black past the art (review 2 follow-up)', () => {
           await settled(page, false);
         }
       }
-      test.info().annotations.push({ type: 'letterboxed', description: letterboxed.join(', ') || 'none' });
     });
   }
 

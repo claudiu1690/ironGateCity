@@ -200,18 +200,21 @@ describe('the fixed map (review 2 #8, #9)', () => {
   };
   const viewOf = (el: HTMLElement) => el.getAttribute('data-view')!.split(',').map(Number);
 
-  it('at rest a drag does not move it; a selection zooms in, then says it has arrived', async () => {
+  // Review 3 (2 Oct 2026): at rest the map drags (within limits, never zooms); it used to stay put.
+  it('at rest a drag moves it at the same scale; a selection zooms in, then says it has arrived', async () => {
     vi.useFakeTimers();
     try {
       const onArrive = vi.fn();
       const { rerender } = render(<CityMap {...props} selectedId={null} onArrive={onArrive} />);
       const box = screen.getByTestId('city-map');
-      const rest = box.getAttribute('data-view');
+      const fitted = viewOf(box);
       expect(box).toHaveAttribute('data-zoomed', 'false');
       fireEvent.pointerDown(box, { pointerId: 1, button: 0, clientX: 100, clientY: 100 });
-      fireEvent.pointerMove(box, { pointerId: 1, clientX: 180, clientY: 160 });
+      fireEvent.pointerMove(box, { pointerId: 1, clientX: 40, clientY: 40 });
       fireEvent.pointerUp(box, { pointerId: 1 });
-      expect(box.getAttribute('data-view')).toBe(rest);
+      const rest = box.getAttribute('data-view');
+      expect(viewOf(box)[2]).toBe(fitted[2]); // no zoom
+      expect(viewOf(box)[0] !== fitted[0] || viewOf(box)[1] !== fitted[1]).toBe(true);
       const pins = screen.getAllByTestId('hotspot');
       rerender(<CityMap {...props} selectedId="coalport.union-hall" onArrive={onArrive} />);
       expect(box).toHaveAttribute('data-zoomed', 'true');
