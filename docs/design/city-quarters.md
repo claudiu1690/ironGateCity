@@ -334,7 +334,7 @@ Clearwater's first-quarter question (which quarter a visitor lands in) is the st
 
 ### 8.4 The nation map: more distance
 
-- **Smaller cities, longer lines.** Each city is drawn at about **6 % of the width** (250 px at 4096) instead of the current 10–12 %, so the gaps between them are three to four city-widths of countryside. The five pins keep the brief's §10.1 fractions; the route overlay follows the painted track as today.
+- **Smaller cities, longer lines.** Each city is drawn at about **6 % of the width** (250 px at 4096) instead of the current 10–12 %, so the gaps between them are three to four city-widths of countryside. *(As painted, 2 Oct 2026: the five cities are at `mapPins.nation` on the 9,216 px picture, the railways are painted and no overlay is drawn; the nation screen's rules are in `slice-4-battleground.md` §2.1.)*
 - **Halts as scenery.** Three or four small halts on every line (a village with a church tower, a station building, a water tower, a level crossing), a junction outside the capital, farms in strips, a monastery, a quarry, a dam, forests, cliffs and a lighthouse on the coast. No pins, no names on the art.
 - **Travel times stay** at 12 / 15 / 25 minutes (Appendix C #8 is unchanged). Optional, for a later slice and no rule: the journey screen's progress marker could name the halts it passes (*Passing Weir Halt*), from a per-line list of three or four invented names; nothing in slice 4 needs it.
 - The revised nation prompt is in the brief's §10.2.

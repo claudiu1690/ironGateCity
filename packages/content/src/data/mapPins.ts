@@ -93,7 +93,8 @@ export const mapPins: MapPins = {
       { id: 'irongate.tram-junction', name: 'Tram Junction', x: 0.43, y: 0.68, quarter: 3 },
       { id: 'irongate.central-station', name: 'Central Station', x: 0.35, y: 0.555, quarter: 3 },
       { id: 'irongate.grand-hotel', name: 'The Grand Hotel', x: 0.45, y: 0.62, quarter: 3 },
-      { id: 'irongate.bombed-blocks', name: 'The Bombed Blocks', x: 0.56, y: 0.645, quarter: 3 },
+      // Moved 2 Oct 2026 from 0.56, 0.645 (the block's lower edge) onto the painted gutted shells.
+      { id: 'irongate.bombed-blocks', name: 'The Bombed Blocks', x: 0.555, y: 0.62, quarter: 3 },
       { id: 'irongate.station-buffet', name: 'The Station Buffet', x: 0.4, y: 0.585, quarter: 3 },
       { id: 'irongate.union-house', name: 'Union House', x: 0.56, y: 0.66, quarter: 4 },
       { id: 'irongate.riverside-quays', name: 'Riverside Quays', x: 0.68, y: 0.58, quarter: 4 },

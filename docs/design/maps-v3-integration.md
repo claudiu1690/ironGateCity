@@ -156,7 +156,7 @@ The 9,216 px pair is tiled and viewable in the dev viewer only; there is no nati
 4. **Zoom numbers:** review 2's 2.5× / 1.6× / 3× now apply to the frame. The user should check them in the dev viewer before the playtest; the frame + 25 % drag limit should be confirmed as "no free pan".
 5. **Game designer, docs:**
    - GDD §14.13, §14.9 and Appendix C #39: the user chose the stitched model (one picture per city; quarters and districts are frames; the overview is the whole picture zoomed out);
-   - city-quarters.md §4 and slice-4-battleground.md §2.1 and §4.2: their pins and crops are superseded by pins.json;
+   - city-quarters.md §4 and slice-4-battleground.md §2.1 and §4.2: their pins and crops are superseded by pins.json; *(done 2 Oct: slice-4-battleground.md §2.1 is the painted nation with `mapPins.nation`, §4.2 is the five district frames from the survey pins + 0.06, §4.3 the survey pins; slice-4-screens.md rewritten for review 3's rules)*
    - later quarters are spread out on the new art (Coalport's Harbour pins run x 0.17–0.93), so decide whether quarter 2's frame is its own or "all open places";
    - the map alt texts for the painted art.
 6. **Coalport's red cross** (Infirmary, 0.17, 0.50) will be painted out later; no code impact. *(Done 2 Oct: §9.2 says what was chosen for the stills.)* When the repaint lands: re-run `art:tiles`, which gives a new rev and so new tile URLs. The **stills keep their URLs** under the year-long immutable `/art/` cache, so the repaint must ship with a new still asset id (for example `map.coalport.day-2`) or players keep the old still.
