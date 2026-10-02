@@ -1,52 +1,4 @@
 {
-  "map.coalport.day-1280.avif": {
-    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
-    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 169656
-  },
-  "map.coalport.day-1280.webp": {
-    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
-    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 241980
-  },
-  "map.coalport.day-2560.avif": {
-    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
-    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 442232
-  },
-  "map.coalport.day-2560.webp": {
-    "sourceHash": "12bfd241b2a6f7c26404a432c9c231cf1860d5e487e5f41a438bb8a92bbb3a58",
-    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":\"#EFE6D2\",\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 668840
-  },
-  "map.coalport.night-1280.avif": {
-    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
-    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 133841
-  },
-  "map.coalport.night-1280.webp": {
-    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
-    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 175990
-  },
-  "map.coalport.night-2560.avif": {
-    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
-    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 360612
-  },
-  "map.coalport.night-2560.webp": {
-    "sourceHash": "7d658508656c7e5b5c803a61d3a7df55d02b40694dd6e579a3de80e47f29ea12",
-    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 483816
-  },
   "portrait.holm-256.avif": {
     "sourceHash": "f1033a33c81386422e12f9277bba0c54bf37767ba4292e3badb5f6094e4de6e2",
     "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
@@ -118,102 +70,6 @@
     "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
     "bytes": 140942
-  },
-  "map.duskwall.day-1280.avif": {
-    "sourceHash": "8f9caff7a78cf32e7b2edf3959d019231282bc46cbf76d2a63797f4a16f2d87b",
-    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 179136
-  },
-  "map.duskwall.day-1280.webp": {
-    "sourceHash": "8f9caff7a78cf32e7b2edf3959d019231282bc46cbf76d2a63797f4a16f2d87b",
-    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 254768
-  },
-  "map.duskwall.day-2560.avif": {
-    "sourceHash": "8f9caff7a78cf32e7b2edf3959d019231282bc46cbf76d2a63797f4a16f2d87b",
-    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 474649
-  },
-  "map.duskwall.day-2560.webp": {
-    "sourceHash": "8f9caff7a78cf32e7b2edf3959d019231282bc46cbf76d2a63797f4a16f2d87b",
-    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 695674
-  },
-  "map.duskwall.night-1280.avif": {
-    "sourceHash": "40b85ba5b8bb2df12a5de94bb4dc37662322db83cc3563c9d7f11d2874fbd701",
-    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 147896
-  },
-  "map.duskwall.night-1280.webp": {
-    "sourceHash": "40b85ba5b8bb2df12a5de94bb4dc37662322db83cc3563c9d7f11d2874fbd701",
-    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 203006
-  },
-  "map.duskwall.night-2560.avif": {
-    "sourceHash": "40b85ba5b8bb2df12a5de94bb4dc37662322db83cc3563c9d7f11d2874fbd701",
-    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 381721
-  },
-  "map.duskwall.night-2560.webp": {
-    "sourceHash": "40b85ba5b8bb2df12a5de94bb4dc37662322db83cc3563c9d7f11d2874fbd701",
-    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 523620
-  },
-  "map.ashford.day-1280.avif": {
-    "sourceHash": "22c3c4e22857beece0590c2cb6f546920bf69f03f6c2e61a2d5d28d32f91f738",
-    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 203151
-  },
-  "map.ashford.day-1280.webp": {
-    "sourceHash": "22c3c4e22857beece0590c2cb6f546920bf69f03f6c2e61a2d5d28d32f91f738",
-    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 294022
-  },
-  "map.ashford.day-2560.avif": {
-    "sourceHash": "22c3c4e22857beece0590c2cb6f546920bf69f03f6c2e61a2d5d28d32f91f738",
-    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 537843
-  },
-  "map.ashford.day-2560.webp": {
-    "sourceHash": "22c3c4e22857beece0590c2cb6f546920bf69f03f6c2e61a2d5d28d32f91f738",
-    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 832898
-  },
-  "map.ashford.night-1280.avif": {
-    "sourceHash": "a3de9f576b22439b1a6a0b8b4f8de64f195523a4ba41549f0ed285eacc628636",
-    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 166689
-  },
-  "map.ashford.night-1280.webp": {
-    "sourceHash": "a3de9f576b22439b1a6a0b8b4f8de64f195523a4ba41549f0ed285eacc628636",
-    "settings": "{\"width\":1280,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 235218
-  },
-  "map.ashford.night-2560.avif": {
-    "sourceHash": "a3de9f576b22439b1a6a0b8b4f8de64f195523a4ba41549f0ed285eacc628636",
-    "settings": "{\"width\":2560,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
-    "quality": 55,
-    "bytes": 440337
-  },
-  "map.ashford.night-2560.webp": {
-    "sourceHash": "a3de9f576b22439b1a6a0b8b4f8de64f195523a4ba41549f0ed285eacc628636",
-    "settings": "{\"width\":2560,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
-    "quality": 72,
-    "bytes": 641946
   },
   "scene.origin-deathbed-640.avif": {
     "sourceHash": "6479d88cb3db4d6e26882f926314cd6f162699296b87e1a2832b60675f09a3c0",
@@ -664,5 +520,113 @@
     "settings": "copy",
     "quality": 0,
     "bytes": 1119
+  },
+  "map.coalport.day-1024.avif": {
+    "sourceHash": "dc8fa29f946794ac60caae7f1cdc1a5101610e9f12ff96695a849e551efdea48",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 50,
+    "bytes": 222719
+  },
+  "map.coalport.night-1024.avif": {
+    "sourceHash": "30a3a1839a59fc77f40ed89df05d002065c02e48067d48f1faf93170d218cf75",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 50,
+    "bytes": 189652
+  },
+  "map.coalport.night-1024.webp": {
+    "sourceHash": "30a3a1839a59fc77f40ed89df05d002065c02e48067d48f1faf93170d218cf75",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 68,
+    "bytes": 326886
+  },
+  "map.coalport.night-2048.avif": {
+    "sourceHash": "30a3a1839a59fc77f40ed89df05d002065c02e48067d48f1faf93170d218cf75",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 40,
+    "bytes": 520222
+  },
+  "map.duskwall.day-1024.avif": {
+    "sourceHash": "3f2a795043cc5e07084d063f6fdabc02e2a483e1f64e6dbe4f99a8a1b89cbb49",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 45,
+    "bytes": 197959
+  },
+  "map.duskwall.night-1024.avif": {
+    "sourceHash": "aa648f286b57eb8ed80ac920ca7ca5c514273f82fd7ce1fdba45bbf5cc363c36",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 50,
+    "bytes": 197562
+  },
+  "map.duskwall.night-1024.webp": {
+    "sourceHash": "aa648f286b57eb8ed80ac920ca7ca5c514273f82fd7ce1fdba45bbf5cc363c36",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 60,
+    "bytes": 319484
+  },
+  "map.duskwall.night-2048.avif": {
+    "sourceHash": "aa648f286b57eb8ed80ac920ca7ca5c514273f82fd7ce1fdba45bbf5cc363c36",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 40,
+    "bytes": 541859
+  },
+  "map.ashford.day-1024.avif": {
+    "sourceHash": "1d74ef3fdd0b5b24a6109b7bbeae2db93aa6cfdda981b6e99833c109da9dff74",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 45,
+    "bytes": 196226
+  },
+  "map.ashford.night-1024.avif": {
+    "sourceHash": "544706d735737253aca8ce6dcfe8f3f28bf4a47caf749c88603e0fbb0e8b9c43",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 50,
+    "bytes": 196227
+  },
+  "map.ashford.night-1024.webp": {
+    "sourceHash": "544706d735737253aca8ce6dcfe8f3f28bf4a47caf749c88603e0fbb0e8b9c43",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 60,
+    "bytes": 318802
+  },
+  "map.ashford.night-2048.avif": {
+    "sourceHash": "544706d735737253aca8ce6dcfe8f3f28bf4a47caf749c88603e0fbb0e8b9c43",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 40,
+    "bytes": 535414
+  },
+  "map.coalport.day-1024.webp": {
+    "sourceHash": "dc8fa29f946794ac60caae7f1cdc1a5101610e9f12ff96695a849e551efdea48",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 52,
+    "bytes": 320546
+  },
+  "map.coalport.day-2048.avif": {
+    "sourceHash": "dc8fa29f946794ac60caae7f1cdc1a5101610e9f12ff96695a849e551efdea48",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 35,
+    "bytes": 519510
+  },
+  "map.duskwall.day-1024.webp": {
+    "sourceHash": "3f2a795043cc5e07084d063f6fdabc02e2a483e1f64e6dbe4f99a8a1b89cbb49",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 44,
+    "bytes": 322182
+  },
+  "map.duskwall.day-2048.avif": {
+    "sourceHash": "3f2a795043cc5e07084d063f6fdabc02e2a483e1f64e6dbe4f99a8a1b89cbb49",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 35,
+    "bytes": 546458
+  },
+  "map.ashford.day-1024.webp": {
+    "sourceHash": "1d74ef3fdd0b5b24a6109b7bbeae2db93aa6cfdda981b6e99833c109da9dff74",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 48,
+    "bytes": 327014
+  },
+  "map.ashford.day-2048.avif": {
+    "sourceHash": "1d74ef3fdd0b5b24a6109b7bbeae2db93aa6cfdda981b6e99833c109da9dff74",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 35,
+    "bytes": 548753
   }
 }

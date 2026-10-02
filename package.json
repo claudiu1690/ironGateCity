@@ -25,6 +25,7 @@
     "format:check": "prettier --check .",
     "art:build": "tsx scripts/art/build.ts",
     "art:check": "tsx scripts/art/build.ts --check",
+    "art:tiles": "tsx scripts/art/tiles.ts",
     "report:playtest": "pnpm --filter @irongate/db report:playtest",
     "admin:boost": "pnpm --filter @irongate/db admin:boost"
   },

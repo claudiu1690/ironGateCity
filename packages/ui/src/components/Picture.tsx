@@ -41,9 +41,14 @@ export function Picture({
       />
     );
   }
+  // Maps v3: a map's WebP fallback is written at fewer widths (`webpWidths`) than its AVIF.
+  const widthsOf = (format: 'avif' | 'webp') =>
+    format === 'webp' && asset.webpWidths ? asset.webpWidths : asset.widths;
   const srcSet = (format: 'avif' | 'webp') =>
-    asset.widths.map((w) => `${artUrl(asset.id, w, format)} ${w}w`).join(', ');
-  const smallest = Math.min(...asset.widths);
+    widthsOf(format)
+      .map((w) => `${artUrl(asset.id, w, format)} ${w}w`)
+      .join(', ');
+  const smallest = Math.min(...widthsOf('webp'));
   // `display: contents`: the <img> is the layout box, so size and flex classes apply to it.
   return (
     <picture className="contents [&>source]:hidden">

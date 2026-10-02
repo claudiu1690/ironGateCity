@@ -108,7 +108,9 @@ export function ResultModal(props: ResultModalProps) {
 function ArtHeader({ r }: { r: ActionResult }) {
   const stamp = stampFor(r);
   const art = r.art;
-  const CROP_W = 1400; // the map is shown at this width, centred on the location (§13.5 rung 3)
+  // §13.5 rung 3: the map is shown at this width, centred on the location. Maps v3: the 2048 px still
+  // at its native size (never upscaled), so a place reads at about the old size on the denser art.
+  const CROP_W = 2048;
   return (
     <div className="relative h-[150px] shrink-0 overflow-hidden bg-ink" data-art={art.rung}>
       {art.rung === 'scene' ? (

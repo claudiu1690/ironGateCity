@@ -1,0 +1,134 @@
+{
+  "map.ashford.day": {
+    "rev": "da40b222",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 26076164
+  },
+  "map.ashford.night": {
+    "rev": "cba86b59",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 21947040
+  },
+  "map.clearwater.day": {
+    "rev": "cfbc92d6",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 24553580
+  },
+  "map.clearwater.night": {
+    "rev": "c944bf02",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 21386558
+  },
+  "map.coalport.day": {
+    "rev": "1768038a",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 24594520
+  },
+  "map.coalport.night": {
+    "rev": "f6e2a10d",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 21305086
+  },
+  "map.duskwall.day": {
+    "rev": "85658d61",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 26264678
+  },
+  "map.duskwall.night": {
+    "rev": "34e9cd14",
+    "width": 8640,
+    "height": 8640,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 418,
+    "bytes": 22074128
+  },
+  "map.irongate.day": {
+    "rev": "f752e26f",
+    "width": 11520,
+    "height": 11520,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 732,
+    "bytes": 49422610
+  },
+  "map.irongate.night": {
+    "rev": "b215bfb1",
+    "width": 11520,
+    "height": 11520,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 732,
+    "bytes": 44249060
+  },
+  "map.nation.day": {
+    "rev": "53a5d343",
+    "width": 9216,
+    "height": 9216,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 453,
+    "bytes": 32100232
+  },
+  "map.nation.night": {
+    "rev": "dadaef19",
+    "width": 9216,
+    "height": 9216,
+    "tileSize": 512,
+    "overlap": 1,
+    "maxLevel": 14,
+    "format": "webp",
+    "tiles": 453,
+    "bytes": 25849128
+  }
+}

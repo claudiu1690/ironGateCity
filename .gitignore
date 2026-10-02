@@ -13,3 +13,6 @@ playwright-report/
 blob-report/
 .vercel/
 *.tsbuildinfo
+
+# Map tile pyramids (ADR 0024, pnpm art:tiles): generated, hundreds of MB, never committed
+.art-cache/

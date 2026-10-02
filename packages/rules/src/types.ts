@@ -344,6 +344,29 @@ export interface NamedStandingView extends StandingView {
   nextName: string | null;
 }
 
+/**
+ * ADR 0024 (maps v3): a map's Deep Zoom pyramid, without its host. The client puts it under its tile
+ * origin: `${origin}/${path}/webp_files/<level>/<col>_<row>.webp`.
+ */
+export interface TileSource {
+  /** `<assetId>/<rev>`; a re-exported master gets a new rev, so a new path. */
+  path: string;
+  width: number;
+  height: number;
+  tileSize: number;
+  overlap: number;
+  maxLevel: number;
+  format: 'webp';
+}
+
+/** A rectangle of a picture in fractions of it (maps v3: a quarter's frame). */
+export interface Frame {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
 export interface AssetView {
   id: string;
   /** `svg`: one file at /art/<id>.svg (the faction crests, ADR 0015); `raster`: AVIF/WebP widths. */
@@ -353,9 +376,13 @@ export interface AssetView {
   height: number;
   /** Generated widths; files are /art/<id>-<width>.avif|webp (ADR 0007). Empty for `svg`. */
   widths: number[];
+  /** The WebP fallback's widths when fewer than `widths` (maps v3: 1024 only); absent: `widths`. */
+  webpWidths?: number[];
   alt: string;
   /** Where a cropping panel should centre the image (fractions, ADR 0015), or null for the centre. */
   focus: { x: number; y: number } | null;
+  /** ADR 0024: the map's tile pyramid; null for every other asset (and a map not tiled). */
+  tiles: TileSource | null;
 }
 
 export interface JobView {
@@ -544,6 +571,8 @@ export interface CityView {
   homeFactionId?: FactionId;
   opinion: OpinionShares;
   map: { day: AssetView; night: AssetView };
+  /** Maps v3: the city's quarters, frames on its picture; the city view opens on the first. */
+  quarters: Array<{ id: string; name: string; frame: Frame }>;
   isNight: boolean;
   standing: NamedStandingView;
   locations: LocationView[];

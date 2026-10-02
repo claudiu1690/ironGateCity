@@ -19,6 +19,9 @@ export const coalport: City = {
   // §14.11 baseline, pinned for Coalport.
   baselineOpinion: { vanguard: 9, collective: 70, alliance: 6, neutral: 15 },
   map: { day: 'map.coalport.day', night: 'map.coalport.night' },
+  // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
+  // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
+  quarters: [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
   paper: {
     name: 'The Coalport Clarion',
     shortName: 'Clarion',
@@ -35,7 +38,9 @@ export const coalport: City = {
       kind: 'factory-gate',
       blurb:
         'The gates of the Coalport Steel Mill. Three shifts a day, and every one of them walks past here.',
-      map: { x: 0.36, y: 0.44 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.75, y: 0.2 },
+      quarterId: 'coalport.mill',
       actions: [
         {
           ...canvass,
@@ -77,7 +82,9 @@ export const coalport: City = {
       kind: 'market',
       blurb:
         'Striped awnings between the mill and the quay. Bread, fish, bootlaces, and every opinion in Coalport, out loud.',
-      map: { x: 0.43, y: 0.5 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.4, y: 0.44 },
+      quarterId: 'coalport.mill',
       actions: [
         {
           ...canvass,
@@ -135,7 +142,9 @@ export const coalport: City = {
       kind: 'faction-hq',
       blurb:
         "The Collective's hall: columns out front, smoke and a mimeograph inside. The branch committee sits in the back room.",
-      map: { x: 0.66, y: 0.3 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.42, y: 0.35 },
+      quarterId: 'coalport.mill',
       actions: [
         {
           id: 'coalport.union-hall.committee',
@@ -194,7 +203,9 @@ export const coalport: City = {
       kind: 'street',
       blurb:
         'Row on row of brick terraces above the mill. Washing lines, children, and doors that open for the right accent.',
-      map: { x: 0.6, y: 0.14 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.65, y: 0.08 },
+      quarterId: 'coalport.mill',
       actions: [
         {
           ...canvass,
@@ -249,7 +260,9 @@ export const coalport: City = {
       kind: 'docks',
       blurb:
         'Warehouses, cranes and the coal barges. The dockers eat on the quay with their backs to the wind.',
-      map: { x: 0.5, y: 0.63 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.71, y: 0.43 },
+      quarterId: 'coalport.mill',
       actions: [
         {
           ...canvass,
@@ -321,7 +334,9 @@ export const coalport: City = {
       kind: 'bar',
       blurb:
         "Dockers' bar at the bottom of the town. The barman hears everything and sells about half of it.",
-      map: { x: 0.15, y: 0.89 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.62, y: 0.56 },
+      quarterId: 'coalport.mill',
       actions: [
         {
           ...canvass,

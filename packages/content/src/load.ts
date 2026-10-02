@@ -26,6 +26,7 @@ import { origin } from './data/origin';
 import { npcs, standingLevels } from './data/people';
 import { politicalHeadlines } from './data/politicalHeadlines';
 import { politics } from './data/politics';
+import tiles from './data/tiles.json';
 import { Content, isCheckedAction } from './schemas';
 import type {
   Action,
@@ -43,6 +44,7 @@ import type {
   Ordinance,
   OrderTemplate,
   Platform,
+  TilesEntry,
 } from './schemas';
 
 /** Every data file, before validation. */
@@ -50,6 +52,7 @@ export const rawContent: unknown = {
   factions,
   cities: [coalport, duskwall, ashford],
   art: { assets, scenes },
+  tilePyramids: tiles,
   avatars,
   items,
   origin,
@@ -117,6 +120,8 @@ export class ContentError extends Error {
 
 /** §4.3 of the slice-1 tech design: two hotspots closer than this are too close to tap. */
 const MIN_HOTSPOT_DISTANCE = 0.03;
+/** Maps v3 §2: a pin lies at least this far inside its quarter's frame. */
+const FRAME_MARGIN = 0.02;
 const ALLOWED_PLACEHOLDERS = new Set<string>(PLACEHOLDERS);
 /** Tech design §4.4: story texts have their own, separate list. */
 const ALLOWED_STORY_PLACEHOLDERS = new Set<string>(STORY_PLACEHOLDERS);
@@ -168,6 +173,8 @@ export function parseContent(raw: unknown): Content {
     } else if (a.widths.length === 0) {
       problems.push(`asset "${a.id}": needs at least one width`);
     }
+    if (a.webpWidths?.some((w) => !a.widths.includes(w)))
+      problems.push(`asset "${a.id}": webpWidths must be some of its widths`);
   }
   const needAsset = (where: string, id: string, kind: Asset['kind'] | Array<Asset['kind']>) => {
     const kinds = Array.isArray(kind) ? kind : [kind];
@@ -177,6 +184,14 @@ export function parseContent(raw: unknown): Content {
       problems.push(`${where} references "${id}", a ${a.kind}, not a ${kinds.join(' or ')}`);
   };
   for (const s of content.art.scenes) needAsset(`scene for ${s.locationKind}`, s.assetId, 'scene');
+  // ADR 0024 (maps v3): every catalogue map has its tile pyramid, at the catalogue's size.
+  for (const a of content.art.assets) {
+    if (a.kind !== 'map') continue;
+    const t = content.tilePyramids[a.id];
+    if (!t) problems.push(`map "${a.id}" has no entry in tiles.json (run pnpm art:tiles)`);
+    else if (t.width !== a.width || t.height !== a.height)
+      problems.push(`map "${a.id}" is ${a.width} × ${a.height} but its tiles are ${t.width} × ${t.height}`);
+  }
 
   for (const f of content.factions) unique('faction', f.id);
   const cityById = new Map(content.cities.map((c) => [c.id, c]));
@@ -206,8 +221,34 @@ export function parseContent(raw: unknown): Content {
     } else if (city.homeFactionId) {
       problems.push(`cities.${city.id} is a battleground but has a homeFactionId`);
     }
+    // Maps v3 §2: quarters are frames on the city's picture; every pin inside its own, with margin.
+    const quarterById = new Map(city.quarters.map((q) => [q.id, q]));
+    for (const q of city.quarters) {
+      unique('quarter', q.id);
+      if (!q.id.startsWith(`${city.id}.`))
+        problems.push(`quarter "${q.id}" must be dotted under its city "${city.id}"`);
+    }
     city.locations.forEach((location, i) => {
       unique('location', location.id);
+      const quarter = quarterById.get(location.quarterId);
+      if (!quarter) {
+        problems.push(
+          `location "${location.id}": quarterId "${location.quarterId}" is not a quarter of ${city.id}`,
+        );
+      } else {
+        const { x0, y0, x1, y1 } = quarter.frame;
+        const { x, y } = location.map;
+        const e = 1e-9;
+        if (
+          x < x0 + FRAME_MARGIN - e ||
+          x > x1 - FRAME_MARGIN + e ||
+          y < y0 + FRAME_MARGIN - e ||
+          y > y1 - FRAME_MARGIN + e
+        )
+          problems.push(
+            `location "${location.id}": its pin (${x}, ${y}) is not ${FRAME_MARGIN} inside ${quarter.id}'s frame`,
+          );
+      }
       locationById.set(location.id, { city, location });
       if (!location.id.startsWith(`${city.id}.`)) {
         problems.push(`location "${location.id}" must be dotted under its city "${city.id}"`);
@@ -581,6 +622,8 @@ export interface GameContent extends Content {
   jobsAt(locationId: string): Job[];
   npc(id: string): Npc | undefined;
   asset(id: string): Asset;
+  /** ADR 0024: a map's tile pyramid, or undefined (not tiled). */
+  tiles(id: string): TilesEntry | undefined;
   item(id: string): Item | undefined;
   /** What the rules need of an item (worn CHA, keepsakes). */
   itemSpec(id: string): ItemSpec | undefined;
@@ -687,6 +730,7 @@ export function indexContent(content: Content): GameContent {
       if (!a) throw new ContentError(`unknown asset "${id}"`);
       return a;
     },
+    tiles: (id) => content.tilePyramids[id],
     ordersOf: (factionId) => content.orderTemplates.filter((t) => t.factionId === factionId),
     headlinesOf: (cityId) => content.headlines.filter((h) => h.cityId === cityId && !isPoliticalTemplate(h)),
     standingNames: content.standingLevels.map((s) => s.name),

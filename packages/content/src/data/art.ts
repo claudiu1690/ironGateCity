@@ -36,26 +36,37 @@ function crest(faction: string, alt: string): Asset {
   };
 }
 
+/**
+ * Maps v3 (ADR 0024 revised): one painted 8,640 px picture per city, day and night. The stills (1024
+ * and 2048 px) are the first paint, the fallback and the production path until the tiles are hosted;
+ * the tiles (`pnpm art:tiles`, data/tiles.json) are cut from the same master. A repainted master
+ * needs a new id here: the stills keep their URLs under the year-long immutable /art/ cache. The
+ * WebP fallback is 1024 px only (a 2048 px WebP of the painted art is over 1 MB; scripts/art/build.ts).
+ */
+function cityMap(city: string, time: 'day' | 'night', alt: string): Asset {
+  return {
+    id: `map.${city}.${time}`,
+    kind: 'map',
+    source: `maps-v3/${city}-${time}-8640.png`,
+    width: 8640,
+    height: 8640,
+    widths: [1024, 2048],
+    webpWidths: [1024],
+    alt,
+  };
+}
+
 export const assets: Asset[] = [
-  {
-    id: 'map.coalport.day',
-    kind: 'map',
-    source: 'maps-pen/coalport.png',
-    width: 5056,
-    height: 3392,
-    widths: [1280, 2560],
-    alt: "Illustrated map of Coalport by day: the steel mill, Market Row, the Union Hall, Foundry Row's terraces, the quays and the river.",
-    flatten: '#EFE6D2',
-  },
-  {
-    id: 'map.coalport.night',
-    kind: 'map',
-    source: 'maps-pen/coalport-night.png',
-    width: 5056,
-    height: 3392,
-    widths: [1280, 2560],
-    alt: 'Illustrated map of Coalport at night: lit windows along the mill, the market and the quays.',
-  },
+  cityMap(
+    'coalport',
+    'day',
+    "Painted map of Coalport by day: the steel mill, Market Row, the Union Hall, Foundry Row's terraces, the quays and the river.",
+  ),
+  cityMap(
+    'coalport',
+    'night',
+    'Painted map of Coalport at night: lit windows along the mill, the market and the quays.',
+  ),
   {
     id: 'portrait.holm',
     kind: 'portrait',
@@ -85,43 +96,27 @@ export const assets: Asset[] = [
     widths: [640, 1280],
     alt: 'Inside The Anchor: the barman at the counter, dockers at the tables, cranes and a lit ship beyond the window.',
   },
-  // Slice 2 (ADR 0015, docs/tech/slice-2.md §13). Duskwall and Ashford maps are RGB: no flatten.
-  {
-    id: 'map.duskwall.day',
-    kind: 'map',
-    source: 'maps-pen/duskwall.png',
-    width: 5056,
-    height: 3392,
-    widths: [1280, 2560],
-    alt: 'Illustrated map of Duskwall by day: the fortress and its gate, the market tents, Beacon House and its searchlight, the Archives, the goods yard.',
-  },
-  {
-    id: 'map.duskwall.night',
-    kind: 'map',
-    source: 'maps-pen/duskwall-night.png',
-    width: 5056,
-    height: 3392,
-    widths: [1280, 2560],
-    alt: 'Illustrated map of Duskwall at night: the searchlight over Beacon House, lit windows in the fortress and along the line.',
-  },
-  {
-    id: 'map.ashford.day',
-    kind: 'map',
-    source: 'maps-pen/ashford.png',
-    width: 5056,
-    height: 3392,
-    widths: [1280, 2560],
-    alt: "Illustrated map of Ashford by day: Gazette House, the Assembly Rooms, the college dome, the courts, the bridges and the weavers' tenements.",
-  },
-  {
-    id: 'map.ashford.night',
-    kind: 'map',
-    source: 'maps-pen/ashford-night.png',
-    width: 5056,
-    height: 3392,
-    widths: [1280, 2560],
-    alt: 'Illustrated map of Ashford at night: lamps on the bridges, the lit dome of the college and the print room still working.',
-  },
+  // Slice 2 (ADR 0015, docs/tech/slice-2.md §13).
+  cityMap(
+    'duskwall',
+    'day',
+    'Painted map of Duskwall by day: the fortress and its gate, the market tents, Beacon House and its searchlight, the Archives, the goods yard.',
+  ),
+  cityMap(
+    'duskwall',
+    'night',
+    'Painted map of Duskwall at night: the searchlight over Beacon House, lit windows in the fortress and along the line.',
+  ),
+  cityMap(
+    'ashford',
+    'day',
+    "Painted map of Ashford by day: Gazette House, the Assembly Rooms, the college dome, the courts, the bridges and the weavers' tenements.",
+  ),
+  cityMap(
+    'ashford',
+    'night',
+    'Painted map of Ashford at night: lamps on the bridges, the lit dome of the college and the print room still working.',
+  ),
   {
     id: 'scene.origin-deathbed',
     kind: 'scene',

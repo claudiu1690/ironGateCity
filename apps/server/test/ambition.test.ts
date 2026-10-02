@@ -44,7 +44,7 @@ describe('ambition.get and choose', () => {
     expect(v.screen).toMatchObject({
       kicker: 'Ambition · Finish His Work · Chapter 1 of 12',
       title: 'His ward book',
-      art: { kind: 'map-crop', x: 0.66, y: 0.3 },
+      art: { kind: 'map-crop', x: 0.42, y: 0.35 },
       progress: { step: 1, of: 3 },
     });
     expect(v.screen?.choices.map((c) => c.text)).toEqual([

@@ -158,13 +158,21 @@ describe('CityMap', () => {
     );
     const pins = screen.getAllByTestId('hotspot');
     expect(pins.map((p) => p.getAttribute('aria-label'))).toEqual(['1. Mill Gate', '3. Union Hall']);
-    expect(pins[0]!.parentElement).toHaveAttribute('data-map-x', '0.36');
-    expect(pins[0]!.parentElement).toHaveAttribute('data-map-y', '0.44');
+    expect(pins[0]!.parentElement).toHaveAttribute('data-map-x', '0.75');
+    expect(pins[0]!.parentElement).toHaveAttribute('data-map-y', '0.2');
     expect(pins[0]).toHaveAttribute('aria-pressed', 'true');
     await user.click(pins[1]!);
     expect(onSelect).toHaveBeenCalledWith('coalport.union-hall');
     expect(screen.getByTestId('map-night')).toHaveStyle({ opacity: '0' });
-    expect(artUrl('map.coalport.day', 1280, 'avif')).toBe('/art/map.coalport.day-1280.avif');
+    expect(artUrl('map.coalport.day', 1024, 'avif')).toBe('/art/map.coalport.day-1024.avif');
+    // Maps v3: no tiles given, so the stills; the WebP fallback at 1024 only.
+    expect(screen.getByTestId('city-map')).toHaveAttribute('data-art', 'still');
+    const webp = document.querySelector('[data-testid=map-layer] source[type="image/webp"]')!;
+    expect(webp.getAttribute('srcset')).toBe('/art/map.coalport.day-1024.webp 1024w');
+    const avif = document.querySelector('[data-testid=map-layer] source[type="image/avif"]')!;
+    expect(avif.getAttribute('srcset')).toBe(
+      '/art/map.coalport.day-1024.avif 1024w, /art/map.coalport.day-2048.avif 2048w',
+    );
   });
 
   it('a landing at night loads the night map only; the day map comes when day does (art budget)', () => {
@@ -238,7 +246,7 @@ describe('the fixed map (review 2 #8, #9)', () => {
 });
 
 describe('zoomView and panLimits (review 2 #9)', () => {
-  const ASPECT = 5056 / 3392;
+  const ASPECT = 1; // maps v3: square pictures
   const box = { w: 390, h: 692 };
   const content = { w: box.h * ASPECT, h: box.h };
   const fitted = { scale: 0.6, x: 0, y: 0 };
@@ -246,9 +254,9 @@ describe('zoomView and panLimits (review 2 #9)', () => {
   it('closer than the fitted view (follow-up: 2.5 ×, at least 1.6 ×), the pin clear of the sheet', () => {
     const cover = { bottom: 480 };
     for (const pin of [
-      { x: 0.36, y: 0.44 },
-      { x: 0.15, y: 0.89 }, // The Anchor, near the bottom edge: short of the box's edge, under the sheet
-      { x: 0.6, y: 0.14 },
+      { x: 0.75, y: 0.2 },
+      { x: 0.15, y: 0.89 }, // near the bottom edge: short of the box's edge, under the sheet
+      { x: 0.65, y: 0.08 },
     ]) {
       const v = zoomView({ box, content, fitted, pin, cover });
       expect(v.scale).toBeGreaterThanOrEqual(1.6);
@@ -270,11 +278,11 @@ describe('zoomView and panLimits (review 2 #9)', () => {
     const mid = { x: 0.5, y: 0.5 };
     expect(zoomView({ box, content, fitted: { scale: 2, x: 0, y: 0 }, pin: mid }).scale).toBe(3);
     expect(zoomView({ box, content, fitted: { scale: 0.3, x: 0, y: 0 }, pin: mid }).scale).toBe(1.6);
-    // A 1920 px desktop: the 2560 px file allows 1.33 ×, not 2.5 ×.
+    // A 1920 px desktop on the stills: the 2048 px file allows 1.07 ×, not 2.5 ×.
     const wide = { w: 1920, h: 994 };
     const wideContent = { w: 1920, h: 1920 / ASPECT };
-    const cap = nativeScale({ width: 5056, widths: [1280, 2560] }, wideContent.w);
-    expect(cap).toBeCloseTo(2560 / 1920);
+    const cap = nativeScale({ width: 8640, widths: [1024, 2048] }, wideContent.w);
+    expect(cap).toBeCloseTo(2048 / 1920);
     const v = zoomView({
       box: wide,
       content: wideContent,
@@ -282,9 +290,11 @@ describe('zoomView and panLimits (review 2 #9)', () => {
       pin: mid,
       maxScale: cap,
     });
-    expect(wideContent.w * v.scale).toBeLessThanOrEqual(2560 + 1e-6);
+    expect(wideContent.w * v.scale).toBeLessThanOrEqual(2048 + 1e-6);
     // Wider than the art: it covers the box (upscaled) rather than show past its edge.
-    expect(nativeScale({ width: 5056, widths: [1280, 2560] }, 3000)).toBe(1);
+    expect(nativeScale({ width: 8640, widths: [1024, 2048] }, 3000)).toBe(1);
+    // The tiles serve the full 8,640 px: 3 × is reached.
+    expect(nativeScale({ width: 8640, widths: [8640] }, 1920)).toBeCloseTo(4.5);
     expect(zoomScale({ scale: 1, x: 0, y: 0 }, 1)).toBe(1);
   });
 });

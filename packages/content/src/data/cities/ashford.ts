@@ -19,6 +19,11 @@ export const ashford: City = {
   // §14.11 baseline, pinned in slice 2 (cities §2).
   baselineOpinion: { vanguard: 6, collective: 9, alliance: 70, neutral: 15 },
   map: { day: 'map.ashford.day', night: 'map.ashford.night' },
+  // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
+  // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
+  quarters: [
+    { id: 'ashford.college', name: 'The College', frame: { x0: 0.24, y0: 0.19, x1: 0.76, y1: 0.68 } },
+  ],
   paper: {
     name: 'The Ashford Gazette',
     shortName: 'Gazette',
@@ -34,7 +39,9 @@ export const ashford: City = {
       kind: 'press',
       blurb:
         "The Ashford Gazette's offices and print room, the biggest building in the old town. The presses run at four, and the evening edition is on the streets by six.",
-      map: { x: 0.18, y: 0.16 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.53, y: 0.47 },
+      quarterId: 'ashford.college',
       actions: [
         {
           ...canvass,
@@ -106,7 +113,9 @@ export const ashford: City = {
       kind: 'faction-hq',
       blurb:
         "The Alliance's rooms above the old concert hall. Committee on the first floor, the duplicator on the landing, the founders of the republic on the stairs.",
-      map: { x: 0.33, y: 0.11 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.69, y: 0.27 },
+      quarterId: 'ashford.college',
       actions: [
         {
           id: 'ashford.assembly-rooms.committee',
@@ -168,7 +177,9 @@ export const ashford: City = {
       kind: 'university',
       blurb:
         "The college quadrangle under the dome. Lectures end at eleven and three, and the whole town's argument spills across the grass with the students.",
-      map: { x: 0.59, y: 0.3 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.49, y: 0.25 },
+      quarterId: 'ashford.college',
       actions: [
         {
           ...canvass,
@@ -223,7 +234,9 @@ export const ashford: City = {
       kind: 'court',
       blurb:
         'The county courts on the square. The public queue starts at eight, the gallery fills by ten, and a speech from the steps carries to the tram stop.',
-      map: { x: 0.78, y: 0.2 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.7, y: 0.37 },
+      quarterId: 'ashford.college',
       actions: [
         {
           ...intelligence,
@@ -282,7 +295,9 @@ export const ashford: City = {
       kind: 'market',
       blurb:
         'Stalls and cafés along the river between the two bridges. Bread, fish, secondhand books, and every opinion in Ashford, out loud and over coffee.',
-      map: { x: 0.2, y: 0.45 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.4, y: 0.55 },
+      quarterId: 'ashford.college',
       actions: [
         {
           ...canvass,
@@ -340,7 +355,9 @@ export const ashford: City = {
       kind: 'street',
       blurb:
         "The old weavers' tenements behind the station, four floors round a yard. Washing lines, children, and landlords who never come themselves.",
-      map: { x: 0.69, y: 0.69 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.3, y: 0.62 },
+      quarterId: 'ashford.college',
       actions: [
         {
           ...canvass,

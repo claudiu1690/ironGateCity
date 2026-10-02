@@ -4,6 +4,7 @@ import {
   createRootRouteWithContext,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   redirect,
 } from '@tanstack/react-router';
 import { AppShell } from './components/AppShell';
@@ -178,7 +179,22 @@ const countRoute = createRoute({
   component: CountPage,
 });
 
+/**
+ * Maps v3 §6: the dev map viewer, every tiled picture with every surveyed pin. Dev builds only (the
+ * branch is dropped from a production build, with its chunk), outside the sign-in guard.
+ */
+const devRoutes = import.meta.env.DEV
+  ? [
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/dev/maps',
+        component: lazyRouteComponent(() => import('./features/dev/MapViewer'), 'MapViewer'),
+      }),
+    ]
+  : [];
+
 const routeTree = rootRoute.addChildren([
+  ...devRoutes,
   indexRoute,
   loginRoute,
   signupRoute,

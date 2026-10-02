@@ -16,6 +16,7 @@ Architect, 1 Oct 2026. Puts the approved maps-v3 art (one big painted picture pe
 | Stills (two widths, committed) as first paint, fallback and production path until R2 | Cloudflare R2, `art:publish`, the CDN switch flipped on (needs the user's account) |
 | A dev-only map viewer for all 12 pictures with every surveyed pin | The zoom-through nation → city and between pictures (spike `focus`/`enterFrom`/`exitTo`): no second picture to go through until slice 4 |
 | Day/night quick fade (250 ms) | AVIF tiles (§4, only if the measured bytes demand it) |
+| | Nation-map city positions on the new picture (§5.5, §8 Q1): slice 4; `mapPins.nation` is empty with a TODO |
 
 **How the spike comes over: re-implement, don't cherry-pick.** Its two commits carry OpenSeadragon, the lab, 4,000 lines of measurement JSON and the zoom-through props. Take **file contents** only: `git show spike/big-maps:packages/ui/src/components/TileLayer.tsx` and `.../test/tiles.test.tsx`, plus the `tiles` part of the `CityMap` diff (aspect and native size from the pyramid, the tile backdrop, the two tile layers, `tileView` following the target or a drag). Leave out `focus`, `enterFrom`, `hold`, `holdTilesAtFit`, `exitTo`, `onSettle`, `layerChildren`, `focusView`, `placeOn`, `regionOnBox`. Copy ADR 0024 (done with this design). No new dependency (sharp is already a root devDependency).
 
@@ -168,6 +169,49 @@ The 9,216 px pair is tiled and viewable in the dev viewer only; there is no nati
 - **R5 Disk:** the cache is 150–260 MB per working copy; it lives outside git and is rebuilt by `art:tiles`.
 
 ---
+
+### 9.1 Measured (developer, 1 Oct 2026)
+
+**Tiles (T2, `pnpm art:tiles`, sharp 0.35 / libvips dzsave, 28 cores).** All 12 masters cut in about 33 s (2–5 s each, hashing included); a second run skips all 12 in about 4 s; the self-check passes on every pyramid.
+
+| Pyramid | Tiles | MB |
+|---|---|---|
+| Coalport day / night | 418 / 418 | 23.5 / 20.3 |
+| Duskwall day / night | 418 / 418 | 25.0 / 21.1 |
+| Ashford day / night | 418 / 418 | 24.9 / 20.9 |
+| Clearwater day / night | 418 / 418 | 23.4 / 20.4 |
+| Irongate day / night | 732 / 732 | 47.1 / 42.2 |
+| Nation day / night | 453 / 453 | 30.6 / 24.7 |
+| **All 12** | **5,714** (+ 12 `.dzi`) | **324 MB** (337 MB on disk) |
+
+The painted art costs about 300 KB per megapixel in WebP q75, above the §4 estimate (150–260 MB in all). A level-13 tile averages about 90 KB (WebP q75); the same tile is about 89 KB at q70, 82 KB at q60, 56 KB as AVIF q50 and 48 KB as AVIF q45.
+
+**Stills (T5).** The committed set is **8.59 MB** (≤ 12 MB). The designed budgets could not all be met with the painted art: a 2048 px WebP is 1.0–1.5 MB even at q30–60 (budget 850 KB), and six of them would take the set to about 17 MB. So (deviation) a map's **WebP fallback is written at 1024 px only** (`Asset.webpWidths`, `AssetView.webpWidths`, used by `Picture`), and maps may step down to AVIF q35 / WebP q44 to meet the unchanged budgets. Every supported browser takes the AVIF (1024 and 2048).
+
+| Still | KB (quality) |
+|---|---|
+| 2048 AVIF, day / night | 507–536 (q35) / 508–529 (q40) |
+| 1024 AVIF | 185–217 (q45–50) |
+| 1024 WebP | 311–319 (q44–68) |
+
+**R1, bytes per view with tiles (T13).** Dev server (`/tiles` from the cache), Chromium, a fresh context and an empty cache per run; tile bytes as transferred, tiles in brackets. Pixel 7 profile (412 × 915, DPR 2.625, capped at 2) and a 1440 × 900 desktop at DPR 1.
+
+| City | Pixel 7: first view | Pixel 7: zoom to pin 1 | Desktop: first view | Desktop: zoom to pin 1 |
+|---|---|---|---|---|
+| Coalport | 480 KB (10, levels 9 + 11) | 1,051 KB (12, level 13) | 460 KB (7) | 1,041 KB (12) |
+| Duskwall | 502 KB (10) | 924 KB (9, level 12) | 502 KB (10) | 1,060 KB (12) |
+| Ashford | 501 KB (10) | 1,029 KB (12) | 1,280 KB (13, level 12; first view covers) | 711 KB (8) |
+
+**R1 is missed:** a phone's first city view is 480–500 KB against the 450 KB target, and a zoom into a place about 1 MB. (Before a fix in `TileLayer` the first view was up to 2.2 MB: the map box changes size once more a few ms after the first view (700 → 656 px tall on Pixel 7, as the page above it settles), and the detail level of that first, discarded view was fetched as well; the detail is now fetched once the view has held for 150 ms, `DETAIL_SETTLE_MS`.) Per §9 R1 the options are AVIF tiles (about 60 % of the bytes at q50), WebP q70 (about 4 % less), or DPR 1.5 for the first view: an architect's call.
+
+**R2, the still path's first session** (arrival spec, sign-up to the first result modal, `/art/` bytes): phone 628–883 KB, 360 px phone 737–883 KB, desktop 592–660 KB; Ashford is the largest. Under the 1 MB budget.
+
+**R3 and the small screens.** With the approved pins, the first view is letterboxed (the blurred copy at the sides) for Coalport and Duskwall on every desktop size from 1024 to 1920 px and on phones; Ashford covers on desktops. Two more consequences, both handled in `CityMap` (deviations):
+- at 640 × 900 the 420 px corner plate was 66 % of the map's width, so it counted as a band and left the pins about 200 px of height; `OVERLAY_BAND_WIDTH_SHARE` is now 0.7, so the corner plate is always a block;
+- on small screens (640 × 900, 375 × 812, 360 × 640, phones held sideways) the fitted view brings some pins closer than their 44 px targets (Duskwall's Customs Market and Beacon House are 0.1 apart while its pins span 0.73 of the height: 17 px apart at 360 × 640), so one covered the other. Pins closer than 46 px on screen are now spread apart by the least that clears them (`spreadPins`), at rest only in practice; zoomed views are never affected. A pin can then sit up to about 15 px off its building on a small phone until it is tapped. Moving the Goods Yard out of the first quarter (§8 Q3) would remove most of this for Duskwall.
+- `map.spec`'s motion check ("the art covers the map at every frame of the zoom", 1440 × 900) moved from Coalport, whose first view is now letterboxed there, to Ashford.
+
+**R4, pin spot-check (T12).** In `/dev/maps` all 12 pictures open, day and night. The 18 existing pins sit on their buildings at the first view and zoomed (Union Hall on the columned hall, Mill Gate at the mill, the Fortress Gate on the gatehouse, Gazette House on the brick print works with its chimney); none is off by more than half a building.
 
 ## 10. Tasks (in order; each ends green: `pnpm lint typecheck test`)
 

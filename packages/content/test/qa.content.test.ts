@@ -10,6 +10,7 @@ import GDD from '../../../docs/GDD.md?raw';
 import DOC from '../../../docs/design/slice-1-content.md?raw';
 import R1 from '../../../docs/design/review-1-answers.md?raw';
 import { copy, isCheckedAction, loadContent, rawContent } from '../src';
+import { mapPins } from '../src/data/mapPins';
 import { R2_ORDERS, plainProse } from './review2';
 
 const content = loadContent();
@@ -49,18 +50,20 @@ function copySamples(): string {
 const unq = (s: string) => s.replace(/`/g, '').replace(/\*\*/g, '');
 
 describe('content vs docs/design/slice-1-content.md', () => {
+  // Maps v3 (design §5.3): the positions in the doc were measured on the retired pen-and-ink map; a
+  // location now sits at its approved pin in the survey (pins.json), checked here against that.
   it('§1.1 locations: ids, names, kinds, map positions and blurbs, in pin order', () => {
     const rows = tableRows('### 1.1 Locations', '**Reserved');
     expect(rows).toHaveLength(6);
     rows.forEach((r, i) => {
-      const [n, id, name, kind, xy, blurb] = r as [string, string, string, string, string, string];
+      const [n, id, name, kind, , blurb] = r as [string, string, string, string, string, string];
       const loc = city.locations[i]!;
       expect(Number(n)).toBe(i + 1);
       expect(loc.id).toBe(unq(id));
       expect(loc.name).toBe(name);
       expect(loc.kind).toBe(unq(kind));
-      const [x, y] = xy.split(',').map((v) => Number(v.trim()));
-      expect(loc.map).toEqual({ x, y });
+      const pin = mapPins.coalport!.pins.find((p) => p.id === loc.id)!;
+      expect(loc.map).toEqual({ x: pin.x, y: pin.y });
       expect(loc.blurb).toBe(blurb);
     });
   });

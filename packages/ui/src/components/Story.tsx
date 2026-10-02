@@ -25,8 +25,9 @@ function StoryArt({ view }: { view: StoryScreenView }) {
       />
     );
   }
-  // §13.5 rung 3: the home map, shown wide and centred on the place.
-  const W = 1400;
+  // §13.5 rung 3: the home map, shown wide and centred on the place (maps v3: the 2048 px still at
+  // its native size).
+  const W = 2048;
   const h = (W * art.asset.height) / art.asset.width;
   return (
     <Picture

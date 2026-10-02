@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { getContent } from '@irongate/content';
 import { ActionLog, Character, City } from '@irongate/db';
 import { createRng } from '@irongate/rules';
 import type { ActionResult, OpinionShares } from '@irongate/rules';
@@ -32,10 +33,26 @@ describe('city.get v2', () => {
     expect(city).toMatchObject({ id: 'coalport', role: 'home', isNight: false });
     expect(city.map.day).toMatchObject({
       id: 'map.coalport.day',
-      width: 5056,
-      height: 3392,
-      widths: [1280, 2560],
+      width: 8640,
+      height: 8640,
+      widths: [1024, 2048],
+      webpWidths: [1024],
     });
+    // Maps v3: the tile pyramid (no host: the client adds its tile origin) and the first quarter.
+    const rev = getContent().tiles('map.coalport.day')!.rev;
+    expect(city.map.day.tiles).toEqual({
+      path: `map.coalport.day/${rev}`,
+      width: 8640,
+      height: 8640,
+      tileSize: 512,
+      overlap: 1,
+      maxLevel: 14,
+      format: 'webp',
+    });
+    expect(city.map.night.tiles?.path).toMatch(/^map\.coalport\.night\/[0-9a-f]{8}$/);
+    expect(city.quarters).toEqual([
+      { id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } },
+    ]);
     expect(city.standing).toMatchObject({ level: 0, name: 'Stranger', nextName: 'Familiar', next: 10 });
     expect(city.locations.map((l) => [l.n, l.name])).toEqual([
       [1, 'Mill Gate'],
@@ -46,7 +63,7 @@ describe('city.get v2', () => {
       [6, 'The Anchor'],
     ]);
     const mill = city.locations[0]!;
-    expect(mill.map).toEqual({ x: 0.36, y: 0.44 });
+    expect(mill.map).toEqual({ x: 0.75, y: 0.2 });
     expect(mill.actions[0]).toMatchObject({
       id: CANVASS.actionId,
       kind: 'checked',
@@ -111,9 +128,9 @@ describe('action.perform ×1', () => {
     expect(result.performedAt).toBe(new Date(clock.now()).toISOString());
     expect(result.art).toMatchObject({
       rung: 'map-crop',
-      asset: { id: 'map.coalport.day' },
-      x: 0.36,
-      y: 0.44,
+      asset: { id: 'map.coalport.day', tiles: { width: 8640 } },
+      x: 0.75,
+      y: 0.2,
     });
     const success = result.stamp === 'success';
     expect(result.successes).toBe(success ? 1 : 0);

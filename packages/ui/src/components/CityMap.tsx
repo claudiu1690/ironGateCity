@@ -2,7 +2,10 @@ import type { AssetView } from '@irongate/rules';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { cx } from '../format';
+import { backdropUrl } from '../tiles';
+import type { TilePyramid } from '../tiles';
 import { Picture } from './Picture';
+import { TileLayer } from './TileLayer';
 
 export interface MapHotspot {
   id: string;
@@ -48,6 +51,40 @@ export interface CityMapProps {
    * sheet, `zoomView`): the panel must then cover all of `cover`, not less, or the gap shows.
    */
   onArrive?: (id: string, info: { fillsMap: boolean }) => void;
+  /**
+   * Maps v3 (ADR 0024): the art as Deep Zoom tile pyramids, drawn instead of `map`'s stills. `map`
+   * still gives the alt text, and its stills take over for the rest of the mount if the tiles turn
+   * out to be unavailable (an underlay tile fails: design §5.2). Null or absent: the stills.
+   */
+  tiles?: { day: TilePyramid; night: TilePyramid } | null;
+  /**
+   * Maps v3: the part of the picture this view is about (a quarter's frame, fractions of the art).
+   * Scale 1 is "the frame covers the box", and a zoomed drag stays within the frame grown by
+   * FRAME_PAN_MARGIN. Outside the frame is the rest of the picture, real art. Default: all of it.
+   */
+  frame?: MapRect;
+}
+
+/** The whole picture, as a frame. */
+const WHOLE: MapRect = { x0: 0, y0: 0, x1: 1, y1: 1 };
+/** Maps v3 §2: while zoomed, the frame grown by this share of its size on each side covers the box. */
+export const FRAME_PAN_MARGIN = 0.25;
+/** Maps v3 §6: day and night differ by up to half a building, so they cross-fade quickly. */
+export const NIGHT_FADE_MS = 250;
+/** With tiles, the layer that faded out is unmounted this long after the flip (one set of tiles). */
+const HIDDEN_TILES_UNMOUNT_MS = 300;
+
+/**
+ * Maps v3 §2: the layer's size at scale 1, the whole picture laid out so that `frame` covers the box.
+ * With the default frame this is today's "the picture covers the box".
+ */
+export function contentFor(
+  box: { w: number; h: number },
+  aspect: number,
+  frame: MapRect = WHOLE,
+): { w: number; h: number } {
+  const w = Math.max(box.w / (frame.x1 - frame.x0), (box.h * aspect) / (frame.y1 - frame.y0));
+  return { w, h: w / aspect };
 }
 
 /** Review 2 #9: the zoom into a pin and back, with easing (no overshoot: both y control points in [0, 1]). */
@@ -68,8 +105,12 @@ const PIN_PAD = 30;
  * An overlay at least this share of the map wide is a band across it (the phone plate, the phone
  * orders panel): the pins go between the bands. A narrower one (the desktop plate in its corner, the
  * tab dock) is a block the pins must stay out of (slice-2 QA M2).
+ *
+ * Maps v3: 0.7, so the 420 px corner plate from 640 px up is always a block (at 640 px it is 66 % of
+ * the map and was a band, which left the square art's pins about 250 px of height under a tall plate
+ * and pressed them onto each other); beside and below it there is room for them.
  */
-const OVERLAY_BAND_WIDTH_SHARE = 0.6;
+const OVERLAY_BAND_WIDTH_SHARE = 0.7;
 /** Each step of the search for a first view clear of the blocks zooms out by this factor. */
 const FIT_STEP = 0.97;
 /** Positions tried per axis at each scale of that search. */
@@ -411,18 +452,83 @@ export function coversBox(
  * How far the zoomed map pans (review 2 #8): the image covers the box, widened only to take in the
  * zoomed view itself when it stops short of an edge under a phone's sheet (`zoomView`), so the part
  * the sheet leaves clear stays covered.
+ *
+ * Maps v3 §2 (no free pan on a picture much larger than the screen): with a `frame`, it is the frame
+ * grown by FRAME_PAN_MARGIN of its width and height on each side (clamped to the picture) that must
+ * cover the box, so a drag stays near the quarter; the zoomed view itself is always allowed.
  */
 export function panLimits(
   box: { w: number; h: number },
   content: { w: number; h: number },
   zoomed: MapView,
+  frame: MapRect = WHOLE,
 ): { x: [number, number]; y: [number, number] } {
-  const dx = box.w - content.w * zoomed.scale;
-  const dy = box.h - content.h * zoomed.scale;
-  return {
-    x: [Math.min(dx, 0, zoomed.x), Math.max(dx, 0, zoomed.x)],
-    y: [Math.min(dy, 0, zoomed.y), Math.max(dy, 0, zoomed.y)],
+  const axis = (len: number, size: number, f0: number, f1: number, at: number): [number, number] => {
+    const m = FRAME_PAN_MARGIN * (f1 - f0);
+    const g0 = Math.max(0, f0 - m);
+    const g1 = Math.min(1, f1 + m);
+    let lo = len - g1 * size;
+    let hi = -g0 * size;
+    // The grown frame narrower than the box (not reached at a zoom's scale): the picture's limits.
+    if (lo > hi) [lo, hi] = [Math.min(len - size, 0), Math.max(len - size, 0)];
+    return [Math.min(lo, at), Math.max(hi, at)];
   };
+  return {
+    x: axis(box.w, content.w * zoomed.scale, frame.x0, frame.x1, zoomed.x),
+    y: axis(box.h, content.h * zoomed.scale, frame.y0, frame.y1, zoomed.y),
+  };
+}
+
+/** Maps v3: the least distance between two pins' centres on screen, so their 44 px targets never overlap. */
+export const PIN_GAP = 46;
+
+/**
+ * Maps v3 (a deviation from the design, see maps-v3-integration.md §9): on a small screen the fitted
+ * view of a dense quarter can bring two pins closer than their 44 px targets (Duskwall's Customs
+ * Market and Beacon House, 0.1 of the picture apart, while its pins span 0.73 of its height), so one
+ * covers the other and cannot be tapped. Where that happens the pins are spread apart on screen by
+ * the least that clears them (a few relaxation passes), kept inside `area`. Pins already clear (every
+ * zoomed view, every larger screen) do not move. Returns the offsets, in px, in input order.
+ */
+export function spreadPins(
+  points: ReadonlyArray<{ x: number; y: number }>,
+  area: MapRect,
+  gap = PIN_GAP,
+): Array<{ x: number; y: number }> {
+  const p = points.map((q) => ({ x: q.x, y: q.y }));
+  const pad = 22;
+  const keep = (q: { x: number; y: number }) => {
+    if (area.x1 - area.x0 > 2 * pad) q.x = clamp(q.x, area.x0 + pad, area.x1 - pad);
+    if (area.y1 - area.y0 > 2 * pad) q.y = clamp(q.y, area.y0 + pad, area.y1 - pad);
+  };
+  // Only pins on screen take part (a zoomed view leaves others off screen, where they stay).
+  const shown = points.map((q) => q.x >= area.x0 && q.x <= area.x1 && q.y >= area.y0 && q.y <= area.y1);
+  for (let pass = 0; pass < 24; pass++) {
+    let moved = false;
+    for (let i = 0; i < p.length; i++)
+      for (let j = i + 1; j < p.length; j++) {
+        if (!shown[i] || !shown[j]) continue;
+        const a = p[i]!;
+        const b = p[j]!;
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        const d = Math.hypot(dx, dy);
+        if (d >= gap - 0.5) continue;
+        if (d < 1e-6) [dx, dy] = [0, 1];
+        const k = (gap - d) / 2 / Math.max(d, 1e-6);
+        const ux = d < 1e-6 ? 0 : dx * k;
+        const uy = d < 1e-6 ? (gap - d) / 2 : dy * k;
+        a.x -= ux;
+        a.y -= uy;
+        b.x += ux;
+        b.y += uy;
+        keep(a);
+        keep(b);
+        moved = true;
+      }
+    if (!moved) break;
+  }
+  return p.map((q, i) => ({ x: q.x - points[i]!.x, y: q.y - points[i]!.y }));
 }
 
 const sameView = (a: MapView, b: MapView) =>
@@ -451,8 +557,13 @@ export function CityMap({
   className,
   cover,
   onArrive,
+  tiles,
+  frame = WHOLE,
 }: CityMapProps) {
   const boxRef = useRef<HTMLDivElement>(null);
+  // Maps v3 §5.2: once an underlay tile fails, the stills draw the art for the rest of the mount.
+  const [tilesFailed, setTilesFailed] = useState(false);
+  const pyramids = tiles && !tilesFailed ? tiles : null;
   const [size, setSize] = useState<{ w: number; h: number; insets: MapInsets } | null>(null);
   // Slice 2 (first-session art budget, ADR 0015): the night art is fetched only once it is night,
   // and the day art only once it is day (a first landing at night loads one map, not two).
@@ -462,6 +573,17 @@ export function CityMap({
     if (isNight) setNightMounted(true);
     else setDayMounted(true);
   }, [isNight]);
+  // Maps v3 §6: with tiles, the layer that faded out goes once the fade is over, so a later zoom
+  // fetches one set of tiles, not two. (The stills stay: they are one file each, already loaded.)
+  const tiled = !!pyramids;
+  useEffect(() => {
+    if (!tiled) return;
+    const t = setTimeout(
+      () => (isNight ? setDayMounted(false) : setNightMounted(false)),
+      HIDDEN_TILES_UNMOUNT_MS,
+    );
+    return () => clearTimeout(t);
+  }, [isNight, tiled]);
 
   // While a pin is selected the overlays are not re-measured: a phone hides its plate under the
   // zoom, and the fitted view (the zoom's base, and where closing returns) is the one with it.
@@ -499,16 +621,19 @@ export function CityMap({
   }, []);
 
   // Any size and shape of art: only its aspect and the largest file served matter (the pins are
-  // fractions of it).
-  const aspect = map.day.width / map.day.height;
+  // fractions of it). With tiles they come from the pyramid (design §5.2: whichever source is active).
+  const aspect = pyramids ? pyramids.day.width / pyramids.day.height : map.day.width / map.day.height;
   const w = size?.w ?? 0;
   const h = size?.h ?? 0;
   const insets = size?.insets;
-  // Scale 1 covers the box; the fitted view may zoom out below it to show every pin.
-  const contentW = Math.max(w, h * aspect);
-  const contentH = contentW / aspect;
-  // The zoom never upscales the largest file served (2560 px today).
-  const maxScale = nativeScale(map.day, contentW);
+  // Scale 1: the frame covers the box (maps v3 §2); the fitted view may zoom out below it to show
+  // every pin. Outside the frame is the rest of the picture.
+  const { w: contentW, h: contentH } = contentFor({ w, h }, aspect, frame);
+  // The zoom never upscales the largest file served (the 2048 px still, or the full-size tiles).
+  const maxScale = pyramids
+    ? nativeScale({ width: pyramids.day.width, widths: [pyramids.day.width] }, contentW)
+    : nativeScale(map.day, contentW);
+  const frameKey = `${frame.x0},${frame.y0},${frame.x1},${frame.y1}`;
   // The files are picked for the closest the map zooms, so a zoomed-in map is never upscaled; the
   // blurred margin asks for the same file, so it costs no second download.
   const sizes = `${Math.round(contentW * Math.min(MAX_SCALE, maxScale))}px`;
@@ -525,7 +650,7 @@ export function CityMap({
     const view = selected ? zoomView({ box, content, fitted, pin: selected.map, cover, maxScale }) : fitted;
     return { fitted, view };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, contentW, contentH, maxScale, insets, pinsKey, coverKey, selected?.id]);
+  }, [w, h, contentW, contentH, maxScale, insets, pinsKey, coverKey, selected?.id, frameKey]);
   /** The first view covers the box, or is letterboxed onto the blurred copy (reported for tests). */
   const fit = target
     ? coversBox({ w, h }, { w: contentW, h: contentH }, target.fitted)
@@ -541,12 +666,14 @@ export function CityMap({
   onArriveRef.current = onArrive;
   /** The selection the view was last moved for (undefined: not placed yet). */
   const placedFor = useRef<string | null | undefined>(undefined);
+  /** The view was dragged away from the target (the tiles then follow the view, not the target). */
+  const panned = useRef(false);
   const arriveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const frame = useRef(0);
+  const raf = useRef(0);
   useEffect(
     () => () => {
       clearTimeout(arriveTimer.current);
-      cancelAnimationFrame(frame.current);
+      cancelAnimationFrame(raf.current);
     },
     [],
   );
@@ -557,13 +684,14 @@ export function CityMap({
     const first = placedFor.current === undefined;
     const changed = !first && placedFor.current !== sel;
     placedFor.current = sel;
+    panned.current = false;
     if (!first && !changed) {
       // A resize, an overlay or the panel's size: follow it at once (and stop any drag's offset).
       setShown({ view: target.view, animate: false });
       return;
     }
     clearTimeout(arriveTimer.current);
-    cancelAnimationFrame(frame.current);
+    cancelAnimationFrame(raf.current);
     const still = prefersReducedMotion();
     const arrive = (delay: number) => {
       if (!sel) return;
@@ -580,8 +708,8 @@ export function CityMap({
         return;
       }
       // Two frames, so the fitted view is painted before the transition starts from it.
-      frame.current = requestAnimationFrame(() => {
-        frame.current = requestAnimationFrame(() => {
+      raf.current = requestAnimationFrame(() => {
+        raf.current = requestAnimationFrame(() => {
           setShown({ view: target.view, animate: true });
           arrive(ZOOM_MS);
         });
@@ -610,6 +738,23 @@ export function CityMap({
     return () => clearTimeout(moveTimer.current);
   }, [shown]);
   const transition = shown?.animate ? `transform ${ZOOM_MS}ms ${ZOOM_EASE}` : 'none';
+  // The tiles follow where the map is going (the target), so a zoom fetches its destination from its
+  // first frame; only a drag, which moves the view away from the target, makes them follow the view.
+  const tileView = panned.current ? view : (target?.view ?? view);
+  const onTilesUnavailable = () => setTilesFailed(true);
+  // Pins too close to tap apart on this screen are spread apart (see spreadPins), between the bands.
+  const spread = view
+    ? spreadPins(
+        locations.map((l) => ({
+          x: view.x + l.map.x * contentW * view.scale,
+          y: view.y + l.map.y * contentH * view.scale,
+        })),
+        { x0: 0, x1: w, y0: insets?.top ?? 0, y1: h - (insets?.bottom ?? 0) },
+      )
+    : [];
+  // Maps v3 §6: a quick cross-fade (day and night differ by up to half a building); none with
+  // reduced motion.
+  const fade = prefersReducedMotion() ? 'none' : `opacity ${NIGHT_FADE_MS}ms ease`;
 
   // Review 2 #8: no free pan or zoom at rest. The browser's own gestures over the map (pinch, double
   // tap, a trackpad's ctrl + wheel page zoom) are off everywhere on it; the wheel does nothing.
@@ -643,9 +788,10 @@ export function CityMap({
     if (!d.moved) {
       if (Math.hypot(dx, dy) < DRAG_SLOP) return;
       d.moved = true;
+      panned.current = true;
       boxRef.current?.setPointerCapture?.(e.pointerId);
     }
-    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view);
+    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view, frame);
     setShown({
       view: {
         scale: d.from.scale,
@@ -675,7 +821,7 @@ export function CityMap({
     const py = view.y + l.map.y * contentH * view.scale;
     const a = clearArea({ w, h }, cover);
     if (px >= a.x0 + 22 && px <= a.x1 - 22 && py >= a.y0 + 22 && py <= a.y1 - 22) return;
-    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view);
+    const lim = panLimits({ w, h }, { w: contentW, h: contentH }, target.view, frame);
     setShown({
       view: {
         scale: view.scale,
@@ -724,6 +870,7 @@ export function CityMap({
       data-zoomed={selected ? 'true' : 'false'}
       data-moving={moving ? 'true' : 'false'}
       data-fit={fit}
+      data-art={pyramids ? 'tiles' : 'still'}
       data-view={view ? `${view.x.toFixed(1)},${view.y.toFixed(1)},${view.scale.toFixed(4)}` : ''}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -749,7 +896,16 @@ export function CityMap({
         aria-hidden="true"
         data-testid="map-backdrop"
       >
-        {size && w > 0 && h > 0 && (isNight ? nightMounted : dayMounted) && (
+        {size && w > 0 && h > 0 && (isNight ? nightMounted : dayMounted) && pyramids && (
+          // With tiles: the underlay's one small tile, the same file the tile layer draws first.
+          <img
+            src={backdropUrl(isNight ? pyramids.night : pyramids.day)}
+            alt=""
+            draggable={false}
+            className="absolute inset-0 size-full scale-110 object-cover blur-xl brightness-[0.45] saturate-[0.7] select-none"
+          />
+        )}
+        {size && w > 0 && h > 0 && (isNight ? nightMounted : dayMounted) && !pyramids && (
           <Picture
             asset={isNight ? map.night : map.day}
             sizes={sizes}
@@ -762,7 +918,18 @@ export function CityMap({
       {size && w > 0 && h > 0 && (
         <>
           <div className="absolute top-0 left-0" style={layer} data-testid="map-layer">
-            {dayMounted && (
+            {dayMounted && pyramids && tileView && (
+              <div className="absolute inset-0" role="img" aria-label={map.day.alt} aria-hidden={isNight}>
+                <TileLayer
+                  pyramid={pyramids.day}
+                  content={{ w: contentW, h: contentH }}
+                  box={{ w, h }}
+                  view={tileView}
+                  onUnavailable={onTilesUnavailable}
+                />
+              </div>
+            )}
+            {dayMounted && !pyramids && (
               <Picture
                 asset={map.day}
                 sizes={sizes}
@@ -771,12 +938,28 @@ export function CityMap({
               />
             )}
             <div
-              className="absolute inset-0 transition-opacity duration-700"
-              style={{ opacity: isNight ? 1 : 0 }}
+              className="absolute inset-0"
+              style={{ opacity: isNight ? 1 : 0, transition: fade }}
               aria-hidden={!isNight}
               data-testid="map-night"
             >
-              {nightMounted && (
+              {nightMounted && pyramids && tileView && (
+                <div
+                  className="absolute inset-0"
+                  role="img"
+                  aria-label={map.night.alt}
+                  aria-hidden={!isNight}
+                >
+                  <TileLayer
+                    pyramid={pyramids.night}
+                    content={{ w: contentW, h: contentH }}
+                    box={{ w, h }}
+                    view={tileView}
+                    onUnavailable={onTilesUnavailable}
+                  />
+                </div>
+              )}
+              {nightMounted && !pyramids && (
                 <Picture
                   asset={map.night}
                   sizes={sizes}
@@ -790,10 +973,10 @@ export function CityMap({
               pin's place is linear in the map's translate and scale, so it tracks it exactly). */}
           <div className="pointer-events-none absolute inset-0">
             {view &&
-              locations.map((l) => {
+              locations.map((l, i) => {
                 const on = l.id === selectedId;
-                const px = view.x + l.map.x * contentW * view.scale;
-                const py = view.y + l.map.y * contentH * view.scale;
+                const px = view.x + l.map.x * contentW * view.scale + (spread[i]?.x ?? 0);
+                const py = view.y + l.map.y * contentH * view.scale + (spread[i]?.y ?? 0);
                 return (
                   <div
                     key={l.id}

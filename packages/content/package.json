@@ -6,7 +6,8 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./copy": "./src/data/copy.ts"
+    "./copy": "./src/data/copy.ts",
+    "./maps": "./src/maps.ts"
   },
   "scripts": {
     "lint": "eslint .",

@@ -124,6 +124,7 @@ export async function getCityView(
           }
         : null,
     map: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
+    quarters: city.quarters.map((q) => ({ id: q.id, name: q.name, frame: { ...q.frame } })),
     isNight: isNight(now),
     standing,
     locations: city.locations.map((location, index) => ({

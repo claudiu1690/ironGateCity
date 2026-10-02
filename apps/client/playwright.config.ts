@@ -95,7 +95,14 @@ export default defineConfig({
       url: WEB_URL,
       timeout: 240_000,
       reuseExistingServer: false,
-      env: { ...process.env, API_PROXY_TARGET: `http://127.0.0.1:${API_PORT}`, VITE_SENTRY_DSN: '' },
+      // Maps v3 (§7): a tile origin nothing serves, so every spec runs the stills (the fallback) unless
+      // it routes the tiles itself (tiles.spec.ts).
+      env: {
+        ...process.env,
+        API_PROXY_TARGET: `http://127.0.0.1:${API_PORT}`,
+        VITE_SENTRY_DSN: '',
+        VITE_TILES_ORIGIN: '/e2e-tiles',
+      },
     },
   ],
 });

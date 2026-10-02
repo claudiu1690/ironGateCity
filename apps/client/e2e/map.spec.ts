@@ -193,15 +193,18 @@ test.describe('no black past the art (review 2 follow-up)', () => {
     });
   }
 
+  // Maps v3: Ashford, whose first view covers a 1440 × 900 desktop. (Coalport's and Duskwall's
+  // approved pins span about half and three quarters of the square picture's height, so there the
+  // first view is letterboxed onto the blurred copy, checked above.)
   test('with motion on, the art covers the map at every frame of the zoom in and out (1440 × 900)', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await signUpOnly(page, 'Ilse Marr', 2);
     const marked = page.waitForResponse((r) => r.url().includes('paper.markRead'));
-    await arrive(page, { faction: 'collective', answers: ANSWERS.reference });
+    await arrive(page, { faction: 'alliance', answers: ANSWERS.reference });
     await marked;
-    await page.goto('/city/coalport');
+    await page.goto('/city/ashford');
     await settled(page, false);
     expect((await mapRects(page)).fit).toBe('cover');
     /** Frames (of the next 45) at which the image layer does not cover the map box. */
@@ -228,8 +231,8 @@ test.describe('no black past the art (review 2 follow-up)', () => {
             requestAnimationFrame(tick);
           }),
       );
-    // Coalport's pins nearest the art's edges: 6 (The Anchor, bottom left) and 4 (Foundry Row, top).
-    for (const label of ['6. The Anchor', '4. Foundry Row']) {
+    // Ashford's pins nearest the view's edges: 6 (Weavers' Row, bottom left) and 3 (University Quad, top).
+    for (const label of ["6. Weavers' Row", '3. University Quad']) {
       const watching = framesPastTheArt();
       await page.locator(`[data-testid="hotspot"][aria-label="${label}"]`).click();
       expect(await watching, `frames past the art zooming into ${label}`).toBe(0);

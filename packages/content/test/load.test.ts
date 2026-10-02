@@ -221,6 +221,7 @@ describe('validation', () => {
       homeFactionId: 'alliance',
       baselineOpinion: { vanguard: 25, collective: 25, alliance: 25, neutral: 25 },
       map: { day: 'map.coalport.day', night: 'map.coalport.night' },
+      quarters: [{ id: 'clearwater.lido', name: 'The Lido', frame: { x0: 0, y0: 0, x1: 1, y1: 1 } }],
       locations: [],
     });
     expect(() => parseContent(c)).toThrow(/battleground but has a homeFactionId/);
@@ -250,7 +251,7 @@ describe('validation', () => {
 
   it('rejects a dotted city id and hotspots off the map or too close', () => {
     const a = clone();
-    coalport(a).locations[1]!.map = { x: 0.37, y: 0.45 };
+    coalport(a).locations[1]!.map = { x: 0.42, y: 0.37 }; // 0.02 from the Union Hall
     expect(() => parseContent(a)).toThrow(/too close/);
     const b = clone();
     coalport(b).locations[1]!.map = { x: 1.2, y: 0.5 };

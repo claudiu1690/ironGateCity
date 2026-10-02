@@ -18,10 +18,12 @@ import {
   formatClock,
   formatShare,
   helpMark,
+  pyramidFor,
 } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
+import { env } from '../env';
 import { usePerformAction } from '../features/action/usePerformAction';
 import type { PerformTarget } from '../features/action/usePerformAction';
 import { noticeFor } from '../features/game/errors';
@@ -125,6 +127,10 @@ export function CityPage() {
 
   const c = city.data;
   const location: LocationView | undefined = c.locations.find((l) => l.id === loc);
+  // ADR 0024: the map as tiles where a tile origin is set (dev: the local cache), else the stills.
+  const dayTiles = pyramidFor(c.map.day, env.tilesOrigin);
+  const nightTiles = pyramidFor(c.map.night, env.tilesOrigin);
+  const tiles = dayTiles && nightTiles ? { day: dayTiles, night: nightTiles } : null;
   const energy = { value: character.energy.value, nextTickAt: character.energy.nextTickAt };
   const share = c.homeFactionId ? c.opinion[c.homeFactionId] : c.opinion[character.factionId];
   const perform = (target: PerformTarget, times: 1 | 3) => {
@@ -311,6 +317,9 @@ export function CityPage() {
       <CityMap
         className="h-full min-w-0 flex-1"
         map={c.map}
+        tiles={tiles}
+        // Maps v3: the city opens on its first quarter, a frame on its one picture.
+        frame={c.quarters[0]?.frame}
         isNight={c.isNight}
         locations={c.locations}
         selectedId={loc ?? null}

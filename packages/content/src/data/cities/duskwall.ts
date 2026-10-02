@@ -23,6 +23,11 @@ export const duskwall: City = {
   // §14.11 baseline, pinned in slice 2 (cities §1).
   baselineOpinion: { vanguard: 70, collective: 6, alliance: 9, neutral: 15 },
   map: { day: 'map.duskwall.day', night: 'map.duskwall.night' },
+  // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
+  // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
+  quarters: [
+    { id: 'duskwall.fortress', name: 'The Fortress', frame: { x0: 0.07, y0: 0.06, x1: 0.65, y1: 0.91 } },
+  ],
   paper: {
     name: 'The Duskwall Sentinel',
     shortName: 'Sentinel',
@@ -39,7 +44,9 @@ export const duskwall: City = {
       kind: 'ministry',
       blurb:
         'The gatehouse of the old fortress, now the frontier customs house. The shift changes at four, and the whole town sets its watch by it.',
-      map: { x: 0.47, y: 0.44 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.59, y: 0.37 },
+      quarterId: 'duskwall.fortress',
       actions: [
         {
           ...canvass,
@@ -95,7 +102,9 @@ export const duskwall: City = {
       kind: 'market',
       blurb:
         "Tents and trestles under the walls, where the customs auctions what it seizes at the frontier and the town buys what it can't get elsewhere.",
-      map: { x: 0.5, y: 0.65 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.44, y: 0.53 },
+      quarterId: 'duskwall.fortress',
       actions: [
         {
           ...canvass,
@@ -153,7 +162,9 @@ export const duskwall: City = {
       kind: 'faction-hq',
       blurb:
         "The movement's district office, named for the searchlight on its roof. The committee sits upstairs; the volunteers gather in the yard at six.",
-      map: { x: 0.64, y: 0.78 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.38, y: 0.45 },
+      quarterId: 'duskwall.fortress',
       actions: [
         {
           id: 'duskwall.beacon-house.committee',
@@ -215,7 +226,9 @@ export const duskwall: City = {
       kind: 'library',
       blurb:
         "The republic's records, kept in a stone quadrangle the movement now holds the keys to. Every ration book, lease and conviction in the district is in here somewhere.",
-      map: { x: 0.77, y: 0.36 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.58, y: 0.12 },
+      quarterId: 'duskwall.fortress',
       actions: [
         {
           id: 'duskwall.archives.reading-room',
@@ -272,7 +285,9 @@ export const duskwall: City = {
       kind: 'station',
       blurb:
         'The sidings below the fortress wall, where the frontier freight is broken down and the coal comes in. The loaders eat at noon with their backs to the wagons.',
-      map: { x: 0.18, y: 0.64 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.13, y: 0.85 },
+      quarterId: 'duskwall.fortress',
       actions: [
         {
           ...canvass,
@@ -331,7 +346,9 @@ export const duskwall: City = {
       kind: 'street',
       blurb:
         "Railwaymen's terraces along the line below the walls. Washing across the street, children on the steps, and doors that open for the right accent.",
-      map: { x: 0.14, y: 0.84 },
+      // Maps v3: the approved pin (pins.json).
+      map: { x: 0.22, y: 0.38 },
+      quarterId: 'duskwall.fortress',
       actions: [
         {
           ...canvass,

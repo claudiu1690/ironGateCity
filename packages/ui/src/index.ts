@@ -2,15 +2,35 @@ export { Button } from './components/Button';
 export type { ButtonProps, ButtonVariant } from './components/Button';
 export {
   CityMap,
+  FRAME_PAN_MARGIN,
+  NIGHT_FADE_MS,
+  PIN_GAP,
   ZOOM_MS,
+  contentFor,
   coversBox,
   fitPinsView,
   nativeScale,
   panLimits,
+  spreadPins,
   zoomScale,
   zoomView,
 } from './components/CityMap';
 export type { CityMapProps, MapCover, MapHotspot, MapInsets, MapRect, MapView } from './components/CityMap';
+export { TileLayer } from './components/TileLayer';
+export type { TileLayerProps } from './components/TileLayer';
+export {
+  TILE_MAX_DPR,
+  backdropUrl,
+  levelFor,
+  levelGrid,
+  levelSize,
+  maxLevelFor,
+  pyramidFor,
+  tileCount,
+  tileUrl,
+  tilesFor,
+} from './tiles';
+export type { Tile, TilePyramid, TileSourceLike } from './tiles';
 export { FACTION_STYLE, FactionCrest } from './components/FactionCrest';
 export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';

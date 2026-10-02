@@ -37,6 +37,25 @@ export const assetFixture = (id: string, width: number, height: number, widths: 
   widths,
   alt: `Art ${id}`,
   focus: null,
+  tiles: null,
+});
+
+/**
+ * Maps v3: a city's painted 8,640 px picture, as the server sends it: stills at 1024 and 2048 (the
+ * WebP fallback at 1024 only) and its tile pyramid.
+ */
+export const mapFixture = (id: string, rev = '1a2b3c4d'): AssetView => ({
+  ...assetFixture(id, 8640, 8640, [1024, 2048]),
+  webpWidths: [1024],
+  tiles: {
+    path: `${id}/${rev}`,
+    width: 8640,
+    height: 8640,
+    tileSize: 512,
+    overlap: 1,
+    maxLevel: 14,
+    format: 'webp',
+  },
 });
 
 /** A vector asset (the faction crests, ADR 0015). */
@@ -48,6 +67,7 @@ export const svgFixture = (id: string): AssetView => ({
   widths: [],
   alt: `Art ${id}`,
   focus: null,
+  tiles: null,
 });
 
 const holmPortrait = assetFixture('portrait.holm', 880, 1100, [256, 512]);
@@ -186,7 +206,7 @@ export const checkFixture: CheckBreakdown = {
   chance: 66,
 };
 
-const mapDay = assetFixture('map.coalport.day', 5056, 3392, [1280, 2560]);
+const mapDay = mapFixture('map.coalport.day');
 
 export const actionResultFixture: ActionResult = {
   logId: '66f9a0000000000000000002',
@@ -212,7 +232,7 @@ export const actionResultFixture: ActionResult = {
   successes: 1,
   headline: 'The whistle goes, and they stop',
   body: "You're at the gate before the shift comes off. Coal dust, tired faces, no time for speeches.",
-  art: { rung: 'map-crop', asset: mapDay, x: 0.36, y: 0.44 },
+  art: { rung: 'map-crop', asset: mapDay, x: 0.75, y: 0.2 },
   attempts: [
     {
       index: 1,
@@ -396,7 +416,8 @@ export const cityViewFixture: CityView = {
   role: 'home',
   homeFactionId: 'collective',
   opinion: { vanguard: 9, collective: 70.05, alliance: 6, neutral: 14.95 },
-  map: { day: mapDay, night: assetFixture('map.coalport.night', 5056, 3392, [1280, 2560]) },
+  map: { day: mapDay, night: mapFixture('map.coalport.night', '5e6f7a8b') },
+  quarters: [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
   isNight: false,
   standing: standingFixture,
   locations: [
@@ -406,7 +427,7 @@ export const cityViewFixture: CityView = {
       kind: 'factory-gate',
       blurb: 'The gates of the Coalport Steel Mill.',
       n: 1,
-      map: { x: 0.36, y: 0.44 },
+      map: { x: 0.75, y: 0.2 },
       actions: [
         {
           id: 'coalport.mill-gate.canvass',
@@ -447,7 +468,7 @@ export const cityViewFixture: CityView = {
       kind: 'faction-hq',
       blurb: "The Collective's hall.",
       n: 3,
-      map: { x: 0.66, y: 0.3 },
+      map: { x: 0.42, y: 0.35 },
       actions: [
         {
           id: 'coalport.union-hall.reading-room',
@@ -562,7 +583,7 @@ export const chapterCheckScreenFixture: StoryScreenView = {
   title: 'Three names',
   narrative:
     "Three names in the book have two ticks: the ones who came out for him in the rain. Their street is twenty minutes' walk.",
-  art: { kind: 'map-crop', asset: mapDay, x: 0.66, y: 0.3 },
+  art: { kind: 'map-crop', asset: mapDay, x: 0.42, y: 0.35 },
   portrait: null,
   echo: null,
   prompt: null,
@@ -626,7 +647,7 @@ export const chapterResultFixture: ActionResult = {
   successes: 0,
   headline: 'Nobody home',
   body: 'No one answers at any of the three.',
-  art: { rung: 'map-crop', asset: mapDay, x: 0.66, y: 0.3 },
+  art: { rung: 'map-crop', asset: mapDay, x: 0.42, y: 0.35 },
   attempts: [
     {
       index: 1,

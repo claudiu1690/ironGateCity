@@ -20,6 +20,7 @@ import ONB from '../../../docs/design/slice-2-onboarding.md?raw';
 import R1 from '../../../docs/design/review-1-answers.md?raw';
 import { ContentError, copy, isCheckedAction, loadContent, parseContent, rawContent } from '../src';
 import type { ContentInput } from '../src';
+import { mapPins } from '../src/data/mapPins';
 import { plainHeadline, plainProse } from './review2';
 
 const content = loadContent();
@@ -180,15 +181,17 @@ describe.each([
   const city = content.city(cityId)!;
   const actions = city.locations.flatMap((l) => l.actions);
 
+  // Maps v3 (design §5.3): the doc's positions were measured on the retired pen-and-ink map; a
+  // location now sits at its approved pin in the survey (pins.json).
   it('locations: ids, names, kinds, map positions and blurbs, in pin order', () => {
     const r = rows(section(doc, 'Locations (6)', '**Reserved'), /^\| \d+ \| `/);
     expect(r).toHaveLength(6);
-    r.forEach(([n, id, name, kind, xy, blurb], i) => {
+    r.forEach(([n, id, name, kind, , blurb], i) => {
       const loc = city.locations[i]!;
       expect(Number(n)).toBe(i + 1);
       expect([loc.id, loc.name, loc.kind, loc.blurb]).toEqual([unq(id!), name, unq(kind!), blurb]);
-      const [x, y] = xy!.split(',').map((v) => Number(v.trim()));
-      expect(loc.map).toEqual({ x, y });
+      const pin = mapPins[cityId]!.pins.find((p) => p.id === loc.id)!;
+      expect(loc.map).toEqual({ x: pin.x, y: pin.y });
     });
   });
 

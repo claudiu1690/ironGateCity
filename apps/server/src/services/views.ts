@@ -43,6 +43,7 @@ import type {
   OrdersState,
   OrdersView,
   Stats,
+  TileSource,
   TrainableStat,
 } from '@irongate/rules';
 
@@ -148,8 +149,26 @@ export function assetView(content: GameContent, id: string): AssetView {
     width: a.width,
     height: a.height,
     widths: [...a.widths],
+    ...(a.webpWidths ? { webpWidths: [...a.webpWidths] } : {}),
     alt: a.alt,
     focus: a.focus ? { ...a.focus } : null,
+    tiles: tileSource(content, a),
+  };
+}
+
+/** ADR 0024: a map's pyramid from the tiles manifest (every catalogue map has one, checked at load). */
+function tileSource(content: GameContent, a: { id: string; kind: string }): TileSource | null {
+  if (a.kind !== 'map') return null;
+  const t = content.tiles(a.id);
+  if (!t) return null;
+  return {
+    path: `${a.id}/${t.rev}`,
+    width: t.width,
+    height: t.height,
+    tileSize: t.tileSize,
+    overlap: t.overlap,
+    maxLevel: t.maxLevel,
+    format: t.format,
   };
 }
 

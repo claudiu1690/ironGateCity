@@ -27,11 +27,21 @@ const QUALITY: Record<Format, { start: number; floor: number; step: number }> = 
   avif: { start: 55, floor: 40, step: 5 },
   webp: { start: 72, floor: 60, step: 4 },
 };
+/**
+ * Maps v3: the painted maps are far denser than the pen-and-ink ones, so a map may step further down
+ * to meet the same budgets (AVIF 35, WebP 44). Browsers take the AVIF; WebP is only the fallback, and
+ * a map's WebP is written at its `webpWidths` alone (1024 px: a 2048 px WebP of the painted art is
+ * 1–1.5 MB even at q30, and six of them would take the committed set past its 12 MB cap).
+ */
+const MAP_FLOOR: Record<Format, number> = { avif: 35, webp: 44 };
+const qualityFor = (a: Asset, format: Format) =>
+  a.kind === 'map' ? { ...QUALITY[format], floor: MAP_FLOOR[format] } : QUALITY[format];
 const KB = 1024;
 type RasterKind = Exclude<Asset['kind'], 'vector'>;
 /** Per-file budgets in bytes by kind and width (ADR 0007, 0015); unlisted widths scale with the area. */
 const BUDGETS: Record<RasterKind, Record<number, Record<Format, number>>> = {
-  map: { 2560: { avif: 600 * KB, webp: 850 * KB }, 1280: { avif: 220 * KB, webp: 320 * KB } },
+  // Maps v3: square 2048 and 1024 px stills, the same pixel counts as the old 2560 × 1717 and 1280 × 859.
+  map: { 2048: { avif: 600 * KB, webp: 850 * KB }, 1024: { avif: 220 * KB, webp: 320 * KB } },
   scene: { 1280: { avif: 150 * KB, webp: 200 * KB }, 640: { avif: 60 * KB, webp: 80 * KB } },
   portrait: { 512: { avif: 45 * KB, webp: 60 * KB }, 256: { avif: 20 * KB, webp: 25 * KB } },
   avatar: { 256: { avif: 20 * KB, webp: 25 * KB }, 128: { avif: 6 * KB, webp: 8 * KB } },
@@ -51,6 +61,8 @@ interface ManifestEntry {
 type Manifest = Record<string, ManifestEntry>;
 
 const fileName = (id: string, width: number, format: Format) => `${id}-${width}.${format}`;
+/** The widths written in a format: all of them, but a WebP fallback limited by `webpWidths`. */
+const widthsOf = (a: Asset, format: Format) => (format === 'webp' && a.webpWidths ? a.webpWidths : a.widths);
 const svgName = (id: string) => `${id}.svg`;
 
 /**
@@ -124,15 +136,15 @@ async function build(): Promise<void> {
       console.log(`copied ${name} (${Buffer.byteLength(svg)} bytes)`);
       continue;
     }
-    for (const width of a.widths) {
-      for (const format of FORMATS) {
+    for (const format of FORMATS) {
+      for (const width of widthsOf(a, format)) {
         const name = fileName(a.id, width, format);
         const settings = JSON.stringify({
           width,
           format,
           crop: a.crop ?? null,
           flatten: a.flatten ?? null,
-          q: QUALITY[format],
+          q: qualityFor(a, format),
         });
         const prev = manifest[name];
         if (
@@ -145,7 +157,7 @@ async function build(): Promise<void> {
           continue;
         }
         const limit = budget(a, width, format);
-        const q = QUALITY[format];
+        const q = qualityFor(a, format);
         let quality = q.start;
         let out = await encode(a, width, format, quality);
         while (out.length > limit && quality - q.step >= q.floor) {
@@ -170,6 +182,33 @@ async function build(): Promise<void> {
 }
 
 /** Every catalogue file present and within budget, every SVG safe; the whole set under 12 MB. */
+/**
+ * ADR 0024 (maps v3): `tiles.json` parses and every catalogue map has its pyramid, at its size. (The
+ * content loader validates each entry with Zod; the pyramids themselves are not in git:
+ * `pnpm art:tiles --check` looks for them in the local cache.)
+ */
+function tilesProblems(): string[] {
+  const path = join(ROOT, 'packages/content/src/data/tiles.json');
+  let manifest: Record<string, { rev?: unknown; width?: unknown; height?: unknown; format?: unknown }>;
+  try {
+    manifest = JSON.parse(readFileSync(path, 'utf8')) as typeof manifest;
+  } catch (err) {
+    return [`tiles.json does not parse: ${(err as Error).message}`];
+  }
+  const out: string[] = [];
+  for (const [id, e] of Object.entries(manifest)) {
+    if (typeof e.rev !== 'string' || !/^[0-9a-f]{8}$/.test(e.rev)) out.push(`tiles.json ${id}: bad rev`);
+    if (e.format !== 'webp') out.push(`tiles.json ${id}: format is not webp`);
+  }
+  for (const a of assets.filter((x) => x.kind === 'map')) {
+    const e = manifest[a.id];
+    if (!e) out.push(`map ${a.id} has no tiles.json entry (run pnpm art:tiles)`);
+    else if (e.width !== a.width || e.height !== a.height)
+      out.push(`map ${a.id} is ${a.width} × ${a.height}, its tiles ${String(e.width)} × ${String(e.height)}`);
+  }
+  return out;
+}
+
 function check(): boolean {
   const problems: string[] = [];
   let total = 0;
@@ -187,8 +226,8 @@ function check(): boolean {
       for (const p of svgProblems(readFileSync(path, 'utf8'))) problems.push(`${name} ${p}`);
       continue;
     }
-    for (const width of a.widths) {
-      for (const format of FORMATS) {
+    for (const format of FORMATS) {
+      for (const width of widthsOf(a, format)) {
         const name = fileName(a.id, width, format);
         const path = join(OUT, name);
         if (!existsSync(path)) {
@@ -202,6 +241,7 @@ function check(): boolean {
       }
     }
   }
+  problems.push(...tilesProblems());
   if (total > TOTAL_BUDGET)
     problems.push(`the art set is ${(total / KB / KB).toFixed(2)} MB, over ${TOTAL_BUDGET / KB / KB} MB`);
   if (problems.length > 0) {
