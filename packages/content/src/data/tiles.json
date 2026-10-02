@@ -1,134 +1,134 @@
 {
   "map.ashford.day": {
-    "rev": "da40b222",
+    "rev": "0d23788c",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 26076164
+    "bytes": 17414220
   },
   "map.ashford.night": {
-    "rev": "cba86b59",
+    "rev": "58290f55",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 21947040
+    "bytes": 15013861
   },
   "map.clearwater.day": {
-    "rev": "cfbc92d6",
+    "rev": "53126529",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 24553580
+    "bytes": 16617200
   },
   "map.clearwater.night": {
-    "rev": "c944bf02",
+    "rev": "f756a9c1",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 21386558
+    "bytes": 14799313
   },
   "map.coalport.day": {
-    "rev": "1768038a",
+    "rev": "0141bc9d",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 24594520
+    "bytes": 16694585
   },
   "map.coalport.night": {
-    "rev": "f6e2a10d",
+    "rev": "a8c3a552",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 21305086
+    "bytes": 14724679
   },
   "map.duskwall.day": {
-    "rev": "85658d61",
+    "rev": "bfa79f2c",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 26264678
+    "bytes": 17412736
   },
   "map.duskwall.night": {
-    "rev": "34e9cd14",
+    "rev": "73f38af5",
     "width": 8640,
     "height": 8640,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 418,
-    "bytes": 22074128
+    "bytes": 15101595
   },
   "map.irongate.day": {
-    "rev": "f752e26f",
+    "rev": "ee1aaada",
     "width": 11520,
     "height": 11520,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 732,
-    "bytes": 49422610
+    "bytes": 33218152
   },
   "map.irongate.night": {
-    "rev": "b215bfb1",
+    "rev": "21c7242f",
     "width": 11520,
     "height": 11520,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 732,
-    "bytes": 44249060
+    "bytes": 30078042
   },
   "map.nation.day": {
-    "rev": "53a5d343",
+    "rev": "3203d1cb",
     "width": 9216,
     "height": 9216,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 453,
-    "bytes": 32100232
+    "bytes": 21261464
   },
   "map.nation.night": {
-    "rev": "dadaef19",
+    "rev": "e2fc2ccb",
     "width": 9216,
     "height": 9216,
     "tileSize": 512,
     "overlap": 1,
     "maxLevel": 14,
-    "format": "webp",
+    "format": "avif",
     "tiles": 453,
-    "bytes": 25849128
+    "bytes": 17758068
   }
 }

@@ -198,7 +198,7 @@ function tilesProblems(): string[] {
   const out: string[] = [];
   for (const [id, e] of Object.entries(manifest)) {
     if (typeof e.rev !== 'string' || !/^[0-9a-f]{8}$/.test(e.rev)) out.push(`tiles.json ${id}: bad rev`);
-    if (e.format !== 'webp') out.push(`tiles.json ${id}: format is not webp`);
+    if (e.format !== 'avif' && e.format !== 'webp') out.push(`tiles.json ${id}: format is not avif or webp`);
   }
   for (const a of assets.filter((x) => x.kind === 'map')) {
     const e = manifest[a.id];

@@ -28,7 +28,7 @@ function surveyMismatches(cities: ContentInput['cities'], survey: MapPinsType): 
 }
 
 describe('the survey of the art (pins.json)', () => {
-  it('validates: 89 places over the five cities, none on the nation yet', () => {
+  it('validates: 89 places over the five cities, and the five cities on the nation', () => {
     const parsed = MapPins.parse(mapPins);
     expect(Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, v.pins.length]))).toEqual({
       coalport: 15,
@@ -36,10 +36,29 @@ describe('the survey of the art (pins.json)', () => {
       ashford: 17,
       irongate: 29,
       clearwater: 13,
-      nation: 0,
+      nation: 5,
     });
     const ids = Object.values(parsed).flatMap((m) => m.pins.map((p) => p.id));
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('the nation pins are the five surveyed cities, the content cities under their own names', () => {
+    const nation = mapPins.nation!.pins;
+    const cityKeys = Object.keys(mapPins).filter((k) => k !== 'nation');
+    expect(nation.map((p) => p.id).sort()).toEqual([...cityKeys].sort());
+    // The user-approved positions on nation-day-9216.png (design §5.5).
+    expect(Object.fromEntries(nation.map((p) => [p.id, [p.x, p.y]]))).toEqual({
+      irongate: [0.52, 0.53],
+      ashford: [0.12, 0.17],
+      duskwall: [0.88, 0.25],
+      coalport: [0.18, 0.8],
+      clearwater: [0.88, 0.85],
+    });
+    const content = loadContent();
+    for (const p of nation) {
+      const c = content.city(p.id);
+      if (c) expect(p.name).toBe(c.name);
+    }
   });
 
   it('every location sits on its surveyed pin', () => {
@@ -148,7 +167,7 @@ describe('the tiles manifest (§3)', () => {
       'map.duskwall.night',
     ]);
     for (const a of maps) {
-      expect(content.tiles(a.id)).toMatchObject({ width: a.width, height: a.height, format: 'webp' });
+      expect(content.tiles(a.id)).toMatchObject({ width: a.width, height: a.height, format: 'avif' });
     }
     expect(Object.keys(content.tilePyramids).sort()).toEqual(
       ['ashford', 'clearwater', 'coalport', 'duskwall', 'irongate', 'nation']

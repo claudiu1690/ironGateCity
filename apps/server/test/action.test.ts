@@ -47,7 +47,7 @@ describe('city.get v2', () => {
       tileSize: 512,
       overlap: 1,
       maxLevel: 14,
-      format: 'webp',
+      format: 'avif',
     });
     expect(city.map.night.tiles?.path).toMatch(/^map\.coalport\.night\/[0-9a-f]{8}$/);
     expect(city.quarters).toEqual([

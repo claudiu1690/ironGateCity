@@ -32,7 +32,7 @@ export {
   tileUrl,
   tilesFor,
 } from './tiles';
-export type { Tile, TilePyramid, TileSourceLike } from './tiles';
+export type { Tile, TileFormat, TilePyramid, TileSourceLike } from './tiles';
 export { FACTION_STYLE, FactionCrest } from './components/FactionCrest';
 export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';

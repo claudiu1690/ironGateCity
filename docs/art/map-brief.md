@@ -2,6 +2,8 @@
 
 > **Revised 1 Oct 2026 (quarters).** Every city is now an **overview map plus quarter maps** (`docs/design/city-quarters.md`; GDD §14.13). Sections marked **REVISED** changed for it; everything else (the style rules, the camera, the night method, the acceptance checks, the other cities' prompts) still holds. **Coalport is the test**: §0 is the new order of work and §4 is rewritten.
 
+> **Superseded 2 Oct 2026 (maps v3).** The maps were made another way: **one big painted bird's-eye picture per city** (8,640 px; the capital 11,520; the nation 9,216), day and night, in `art-direction/maps-v3/`, served as Deep Zoom tiles with a quarter as a frame on the picture (`docs/design/maps-v3-integration.md`). The grids, plates, footprints, pin targets and prompts below are the retired pen-and-ink plan and no longer describe the art; the pins that count are the survey `maps-v3/pins/pins.json`, transcribed in `packages/content/src/data/mapPins.ts`. Two named places changed with the painting: **St Barbara's** (Coalport) is the old town's Gothic church by the canal, not a plain-towered church on the hill above the station; Clearwater's **tin chapel** is a stone church with a green copper spire and is now **St Martin's**. The content-policy checks (§11: no text, no flags, no devices, civic police) still apply to any repaint.
+
 Game designer, 1 Oct 2026. The brief that drives the regeneration of every map with the connected image-generation tool (GPT Image 2.5 or Nano Banana 2, image-to-image with the current map as a style reference). The user chose to regenerate from scratch rather than extend the current art, and approved the tool. **Coalport day and night go first, for the user's approval, before any other map is generated.**
 
 Inputs: the current maps in `E:\Projects\ironGateCity Docs\art-direction\maps-pen\` (the style to match), the design canvas (`docs/mockups/Main.dc.html`), the location lists in `docs/design/slice-1-content.md` §1.1, `slice-2-cities.md` §1.1 and §2.1, `slice-4-battleground.md` §4.1–4.3, the content policy in `docs/design/content-policy-review.md` §7, and the developer's findings on map shape (§1 below).
@@ -641,7 +643,7 @@ Style of the reference: pen-and-ink bird's-eye city map, fine sepia lines, muted
 
 ## 9. Clearwater (maps 19 and 20)
 
-> **Quarter plan (REVISED 1 Oct 2026; `city-quarters.md` §8.3).** Three quarters, all open to anyone who arrives (nobody reaches Clearwater below Level 10): **The Front** (the Promenade, the Casino, the Lido, the pier hotel), **The Depot** (the Tram Depot, Back Lane Market, The Rows, the tin chapel, the sanatorium) and **The Harbour** (the Harbour, the cannery, the station, the harbour police). The composition and prompt below are kept as the first draft of the overview.
+> **Quarter plan (REVISED 1 Oct 2026; `city-quarters.md` §8.3).** Three quarters, all open to anyone who arrives (nobody reaches Clearwater below Level 10): **The Front** (the Promenade, the Casino, the Lido, the pier hotel), **The Depot** (the Tram Depot, Back Lane Market, The Rows, St Martin's (was "the tin chapel"; painted as a stone church with a green spire), the sanatorium) and **The Harbour** (the Harbour, the cannery, the station, the harbour police). The composition and prompt below are kept as the first draft of the overview.
 
 The swing city, locked in play until slice 7 (*No service yet*). Wealthy suburbs beside a restless working class: the society district on the slope above the water, the tram hub, the harbour, the terraces below (GDD §14.1). Baseline provisional V 20 / C 24 / A 24 / N 32. Paper, provisional: the *Courier*.
 
@@ -687,7 +689,7 @@ A **lake** fills the right and top-right of the canvas, with a bay and a stone *
 | Clearwater station (slice 7) | 0.26, 0.64 | `station` | A station with a canopy, lines to the left and bottom edges |
 | The Cannery | 0.74, 0.66 | `factory-gate` | A fish cannery on the harbour's south side with a chimney |
 | The gasworks and the football ground | 0.40, 0.76 / 0.70, 0.84 | — | Two holders; a pitch with a stand |
-| A hospital and a chapel | 0.14, 0.44 / 0.56, 0.80 | `hospital` / — | A lakeside sanatorium; a tin chapel in the terraces |
+| A hospital and a church | 0.14, 0.44 / 0.56, 0.80 | `hospital` / `square` | A lakeside sanatorium; a church in the terraces (painted as a stone church with a green copper spire above the tram sheds: St Martin's, `clearwater.st-martins`, at 0.55, 0.22 of the v3 picture) |
 
 Also in the ring: a lakeshore road with a boat-hire stage, a hotel with a terrace by the pier, a steam ferry on the lake, a wooded point at the top-right, a cemetery, a tram line climbing the slope.
 

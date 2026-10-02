@@ -7,7 +7,9 @@ import type { MapPins } from '../schemas';
  * Its two users are the content test (every location's `map` equals its pin here) and the dev map
  * viewer. A later slice makes a place playable by copying its pin into a new location.
  *
- * TODO(slice 4): the nation map's five city positions on nation-day-9216.png (design §5.5, §8 Q1).
+ * The nation's pins are the five cities (id = the city id; quarter 1, the picture has none), on
+ * nation-day-9216.png, approved by the user on 2 Oct 2026 (design §5.5, §8 Q1). Slice 4 reads them
+ * for the nation screen.
  */
 export const mapPins: MapPins = {
   coalport: {
@@ -116,7 +118,8 @@ export const mapPins: MapPins = {
       { id: 'clearwater.tram-depot', name: 'Tram Depot', x: 0.38, y: 0.32, quarter: 2 },
       { id: 'clearwater.back-lane-market', name: 'Back Lane Market', x: 0.45, y: 0.4, quarter: 2 },
       { id: 'clearwater.rows', name: 'The Rows', x: 0.52, y: 0.47, quarter: 2 },
-      { id: 'clearwater.tin-chapel', name: 'The Tin Chapel', x: 0.55, y: 0.22, quarter: 2 },
+      // Renamed from "The Tin Chapel" (2 Oct 2026): the painted church is stone with a green spire.
+      { id: 'clearwater.st-martins', name: "St Martin's", x: 0.55, y: 0.22, quarter: 2 },
       { id: 'clearwater.sanatorium', name: 'The Sanatorium', x: 0.71, y: 0.12, quarter: 2 },
       { id: 'clearwater.harbour', name: 'The Harbour', x: 0.72, y: 0.62, quarter: 3 },
       { id: 'clearwater.cannery', name: 'The Cannery', x: 0.92, y: 0.47, quarter: 3 },
@@ -124,5 +127,14 @@ export const mapPins: MapPins = {
       { id: 'clearwater.harbour-police', name: 'Harbour Police', x: 0.8, y: 0.76, quarter: 3 },
     ],
   },
-  nation: { pins: [] },
+  nation: {
+    // Measured on nation-day-9216.png (pins/nation-pins.jpg).
+    pins: [
+      { id: 'irongate', name: 'Irongate', x: 0.52, y: 0.53, quarter: 1 },
+      { id: 'ashford', name: 'Ashford', x: 0.12, y: 0.17, quarter: 1 },
+      { id: 'duskwall', name: 'Duskwall', x: 0.88, y: 0.25, quarter: 1 },
+      { id: 'coalport', name: 'Coalport', x: 0.18, y: 0.8, quarter: 1 },
+      { id: 'clearwater', name: 'Clearwater', x: 0.88, y: 0.85, quarter: 1 },
+    ],
+  },
 };

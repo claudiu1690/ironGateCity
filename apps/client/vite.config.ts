@@ -20,7 +20,11 @@ const proxy = { '/api': { target: apiTarget, changeOrigin: false, xfwd: true } }
  * gets them from VITE_TILES_ORIGIN once R2 exists; until then it shows the stills.
  */
 const TILES = resolve(dirname(fileURLToPath(import.meta.url)), '../../.art-cache/tiles');
-const TYPES: Record<string, string> = { '.webp': 'image/webp', '.dzi': 'application/xml' };
+const TYPES: Record<string, string> = {
+  '.avif': 'image/avif',
+  '.webp': 'image/webp',
+  '.dzi': 'application/xml',
+};
 const serveTiles: Connect.NextHandleFunction = (req, res, next) => {
   const url = (req.url ?? '').split('?')[0]!;
   if (!url.startsWith('/tiles/')) return next();

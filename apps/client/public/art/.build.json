@@ -522,28 +522,28 @@
     "bytes": 1119
   },
   "map.coalport.day-1024.avif": {
-    "sourceHash": "dc8fa29f946794ac60caae7f1cdc1a5101610e9f12ff96695a849e551efdea48",
+    "sourceHash": "404b2bb07f13dadc47d081adddc64087d028351732af5a9a9b07d7650c66b6ec",
     "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
     "quality": 50,
-    "bytes": 222719
+    "bytes": 222748
   },
   "map.coalport.night-1024.avif": {
-    "sourceHash": "30a3a1839a59fc77f40ed89df05d002065c02e48067d48f1faf93170d218cf75",
+    "sourceHash": "e65fd0a5295f1d6d7249e1122f323121c463d220309c37a3200f9b314d6c5792",
     "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
     "quality": 50,
-    "bytes": 189652
+    "bytes": 189664
   },
   "map.coalport.night-1024.webp": {
-    "sourceHash": "30a3a1839a59fc77f40ed89df05d002065c02e48067d48f1faf93170d218cf75",
+    "sourceHash": "e65fd0a5295f1d6d7249e1122f323121c463d220309c37a3200f9b314d6c5792",
     "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
     "quality": 68,
-    "bytes": 326886
+    "bytes": 326908
   },
   "map.coalport.night-2048.avif": {
-    "sourceHash": "30a3a1839a59fc77f40ed89df05d002065c02e48067d48f1faf93170d218cf75",
+    "sourceHash": "e65fd0a5295f1d6d7249e1122f323121c463d220309c37a3200f9b314d6c5792",
     "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
     "quality": 40,
-    "bytes": 520222
+    "bytes": 520059
   },
   "map.duskwall.day-1024.avif": {
     "sourceHash": "3f2a795043cc5e07084d063f6fdabc02e2a483e1f64e6dbe4f99a8a1b89cbb49",
@@ -594,16 +594,16 @@
     "bytes": 535414
   },
   "map.coalport.day-1024.webp": {
-    "sourceHash": "dc8fa29f946794ac60caae7f1cdc1a5101610e9f12ff96695a849e551efdea48",
+    "sourceHash": "404b2bb07f13dadc47d081adddc64087d028351732af5a9a9b07d7650c66b6ec",
     "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
     "quality": 52,
-    "bytes": 320546
+    "bytes": 320564
   },
   "map.coalport.day-2048.avif": {
-    "sourceHash": "dc8fa29f946794ac60caae7f1cdc1a5101610e9f12ff96695a849e551efdea48",
+    "sourceHash": "404b2bb07f13dadc47d081adddc64087d028351732af5a9a9b07d7650c66b6ec",
     "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
     "quality": 35,
-    "bytes": 519510
+    "bytes": 519293
   },
   "map.duskwall.day-1024.webp": {
     "sourceHash": "3f2a795043cc5e07084d063f6fdabc02e2a483e1f64e6dbe4f99a8a1b89cbb49",

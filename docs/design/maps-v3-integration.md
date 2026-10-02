@@ -15,8 +15,8 @@ Architect, 1 Oct 2026. Puts the approved maps-v3 art (one big painted picture pe
 | A quarter = a frame on the city picture (content, first quarter only) | Irongate districts in play, Clearwater, the nation screen (slices 4 and 7) |
 | Stills (two widths, committed) as first paint, fallback and production path until R2 | Cloudflare R2, `art:publish`, the CDN switch flipped on (needs the user's account) |
 | A dev-only map viewer for all 12 pictures with every surveyed pin | The zoom-through nation → city and between pictures (spike `focus`/`enterFrom`/`exitTo`): no second picture to go through until slice 4 |
-| Day/night quick fade (250 ms) | AVIF tiles (§4, only if the measured bytes demand it) |
-| | Nation-map city positions on the new picture (§5.5, §8 Q1): slice 4; `mapPins.nation` is empty with a TODO |
+| Day/night quick fade (250 ms) | AVIF tiles (§4, only if the measured bytes demand it; **done 2 Oct, §9.2**) |
+| | Nation-map city positions on the new picture (§5.5, §8 Q1): slice 4 uses them; **supplied 2 Oct**, in `mapPins.nation` (§9.2) |
 
 **How the spike comes over: re-implement, don't cherry-pick.** Its two commits carry OpenSeadragon, the lab, 4,000 lines of measurement JSON and the zoom-through props. Take **file contents** only: `git show spike/big-maps:packages/ui/src/components/TileLayer.tsx` and `.../test/tiles.test.tsx`, plus the `tiles` part of the `CityMap` diff (aspect and native size from the pyramid, the tile backdrop, the two tile layers, `tileView` following the target or a drag). Leave out `focus`, `enterFrom`, `hold`, `holdTilesAtFit`, `exitTo`, `onSettle`, `layerChildren`, `focusView`, `placeOn`, `regionOnBox`. Copy ADR 0024 (done with this design). No new dependency (sharp is already a root devDependency).
 
@@ -72,6 +72,7 @@ A quarter (and, from slice 4, a capital district) is a **frame**: a rectangle of
 
 - **Input:** `--src <folder>` (default `$IRONGATE_ART_SRC/maps-v3`). Every file matching `^(nation|coalport|duskwall|ashford|clearwater|irongate)-(day|night)-(\d+)\.png$` becomes asset id `map.<name>.<day|night>`. The script refuses a file whose real size differs from the size in its name. `--only <name>` and `--force` as in the spike.
 - **Cutting:** sharp's native Deep Zoom writer (libvips `dzsave`, streaming, so a 390 MB master needs no raw buffer): `sharp(src, { limitInputPixels: false }).flatten({ background: '#EFE6D2' }).webp({ quality: 75, effort: 4 }).tile({ size: 512, overlap: 1, layout: 'dz', depth: 'onepixel' }).toFile(<dir>/webp.dz)`, which writes `webp.dzi` and `webp_files/<level>/<col>_<row>.webp`, the layout `TileLayer` already reads.
+- **Superseded 2 Oct 2026 (§9.2): the tiles are AVIF q55**, cut in two passes (dzsave to PNG tiles, then each tile to AVIF), because R1 was missed. The paragraph below is the first pyramid's reasoning.
 - **Why WebP only (revises ADR 0024's AVIF + WebP):** one format halves the files and the build time; sharp writes it natively (AVIF needs the spike's hand tiler, which holds the whole master in memory); every supported browser decodes WebP; tiles are plain `<img>`s with no `<picture>` fallback. Cost: about 1.5× AVIF's bytes per view. Revisit only if T13's measurement misses its target.
 - **Levels:** every level down to 1 px; `maxLevel = ceil(log2(max(w, h)))` (14 for all 12 masters). The client draws a one-tile underlay (the smallest level ≥ 256 px) plus the detail level for the destination view, **DPR capped at 2** (`TILE_MAX_DPR`, the phone cap), as in the spike.
 - **Versioned output (git-ignored):** `.art-cache/tiles/<assetId>/<rev>/`, with `rev` = the first 8 hex of sha256(master bytes + settings). A re-export (for example Coalport repainted) gets a new path, so the immutable cache never goes stale. Idempotent: an existing `<rev>/webp.dzi` is skipped.
@@ -138,7 +139,7 @@ The 9,216 px pair is tiled and viewable in the dev viewer only; there is no nati
 
 **E2E (Playwright):**
 - The e2e client build sets `VITE_TILES_ORIGIN=/e2e-tiles`, which nothing serves, so **every existing spec runs the fallback path**. `map.spec` (every pin clear at every size; no black at rest or zoomed), `landscape.spec` and the arrival's first-session budget (≤ 1 MB of `/art/`) must pass as they are.
-- New `tiles.spec.ts` routes `**/e2e-tiles/**` to a committed fixture tile (`e2e/fixtures/tile.webp`, 512², a few hundred bytes):
+- New `tiles.spec.ts` routes `**/e2e-tiles/**` to a committed fixture tile (`e2e/fixtures/tile.avif` since §9.2, 512², a few hundred bytes):
   1. `data-art="tiles"` and some loaded `[data-tile]` images;
   2. a pin tap zooms in (`data-zoomed=true`, then `data-moving=false`), tiles of a higher level are requested, and the pin buttons are the same nodes as before (mark them with `evaluate`);
   3. routing the tiles to 404 gives `data-art="still"` within 2 s, with the still visible and no black (the map.spec sampler);
@@ -158,7 +159,7 @@ The 9,216 px pair is tiled and viewable in the dev viewer only; there is no nati
    - city-quarters.md §4 and slice-4-battleground.md §2.1 and §4.2: their pins and crops are superseded by pins.json;
    - later quarters are spread out on the new art (Coalport's Harbour pins run x 0.17–0.93), so decide whether quarter 2's frame is its own or "all open places";
    - the map alt texts for the painted art.
-6. **Coalport's red cross** (Infirmary, 0.17, 0.50) will be painted out later; no code impact. When the repaint lands: re-run `art:tiles`, which gives a new rev and so new tile URLs. The **stills keep their URLs** under the year-long immutable `/art/` cache, so the repaint must ship with a new still asset id (for example `map.coalport.day-2`) or players keep the old still.
+6. **Coalport's red cross** (Infirmary, 0.17, 0.50) will be painted out later; no code impact. *(Done 2 Oct: §9.2 says what was chosen for the stills.)* When the repaint lands: re-run `art:tiles`, which gives a new rev and so new tile URLs. The **stills keep their URLs** under the year-long immutable `/art/` cache, so the repaint must ship with a new still asset id (for example `map.coalport.day-2`) or players keep the old still.
 
 ## 9. Risks and measurements to record
 
@@ -212,6 +213,49 @@ The painted art costs about 300 KB per megapixel in WebP q75, above the §4 esti
 - `map.spec`'s motion check ("the art covers the map at every frame of the zoom", 1440 × 900) moved from Coalport, whose first view is now letterboxed there, to Ashford.
 
 **R4, pin spot-check (T12).** In `/dev/maps` all 12 pictures open, day and night. The 18 existing pins sit on their buildings at the first view and zoomed (Union Hall on the columned hall, Mill Gate at the mill, the Fortress Gate on the gatehouse, Gazette House on the brick print works with its chimney); none is off by more than half a building.
+
+### 9.2 AVIF tiles, the Coalport repaint, the nation pins (developer, 2 Oct 2026)
+
+**Coalport repainted** (the red cross on the Infirmary painted out; `coalport-day/night-8640.png` of 2 Oct). The tiles were re-cut (new revs, so new tile URLs) and the six Coalport stills rebuilt (`pnpm art:build`: 1024 AVIF 218 / 185 KB, 2048 AVIF 507 / 508 KB, 1024 WebP 313 / 319 KB; the committed set is still 8.59 MB). **The still asset ids are kept** (`map.coalport.day`, `map.coalport.night`). §8 Q6's new id exists so that a browser holding the old still under the year-long immutable `/art/` cache gets the new one; nothing has been deployed since the v3 stills went in (the project runs locally until the end), and only `vercel.json` sends that header (`vite dev` and `vite preview` do not), so no browser holds the old still that way. The rule stands from the first deploy on: a master repainted after its stills have shipped needs a new id (or a versioned file name).
+
+**Tiles are AVIF q55** (`scripts/art/tiles.ts`): `format: "avif"` in `tiles.json`; `TileSource.format` and `TilePyramid.format` are `'avif' | 'webp'`; the URL is `<path>/avif_files/<level>/<col>_<row>.avif`; the Vite `/tiles` server sends `image/avif`. sharp's Deep Zoom writer cannot write AVIF tiles, so a pyramid is cut in two passes: dzsave writes lossless PNG tiles (the same geometry, so the self-check is unchanged), then every tile is encoded to AVIF (effort 4, all cores) and its PNG removed. About 20 s per 8,640 px master (about 60 s for Irongate); all 12 in 5.4 min; a second run skips all 12. WebP stays a one-line setting.
+
+*Quality.* Five full-size tiles and three level-13 tiles (Union Hall, the mill, the quays at night, the Fortress, Gazette House by day and night) were compared at 3 × magnification with the master and WebP q75: q45 smears the foliage and the roof texture; q50 softens them a little; **q55 is close to WebP q75** there; lines and windows stay sharp at all three. 4:2:0 chroma saves only 3 %, so sharp's default 4:4:4 is kept.
+
+| Per tile (KB) | WebP q75 | AVIF q45 | AVIF q50 | AVIF q55 |
+|---|---|---|---|---|
+| Level 14 (full size), 5 tiles | 50–60 | 26–31 | 30–35 | 34–40 |
+| Level 13, 3 tiles | 82–89 | 41–47 | 48–54 | 56–62 |
+
+*Pyramids.* Each 8,640 px picture 14.0–16.6 MB (WebP 20.3–25.0), Irongate 31.7 / 28.7 MB (WebP 47.1 / 42.2), the nation 20.3 / 16.9 MB (WebP 30.6 / 24.7). **All 12: 5,714 files, 219 MB** (WebP 324 MB). The old WebP revs are still in `.art-cache/tiles` (git-ignored; deleting them frees about 340 MB).
+
+**R1 re-measured.** A production build behind `vite preview` with `/tiles` from the cache, an API in `DB_MODE=memory`; Chromium, a fresh context and an empty cache per run, a new account whose home is the city. First view = `/city/<id>` until no tile is pending; zoom = pin 1 opened as a player would, until it lands and no tile is pending. KB as transferred, tiles in brackets. "WebP" is the size of the same tiles in the previous WebP q75 pyramid (file bytes), so both columns are the same view.
+
+| Phone 390 × 844, DPR 3 (capped 2) | First view, AVIF | First view, WebP | Zoom to pin 1, AVIF | Zoom, WebP |
+|---|---|---|---|---|
+| Coalport, map box 661 px tall | **324** (10: levels 9 + 11) | 486 | 749 (12, level 13) | about 1,070 |
+| Coalport, map box 705 px tall | 1,266 (26: levels 9 + 12) | 1,788 | 926 (15, level 13) | 1,300 |
+| Duskwall | **339** (10: levels 9 + 11) | 502 | 1,415 (24, level 13) | 2,052 |
+| Ashford | 1,241 (21: levels 9 + 12) | 1,776 | 719 (12, level 13) | 1,029 |
+| **Desktop 1440 × 900, DPR 1** | | | | |
+| Coalport | 938 (16: levels 9 + 12) | 1,331 | 1,331 (35, level 14) | 1,991 |
+| Duskwall | 943 (16: levels 9 + 12) | 1,358 | 727 (12, level 13) | 1,060 |
+| Ashford | 891 (13: levels 9 + 12) | 1,280 | 922 (24, level 14) | 1,397 |
+
+AVIF is **0.67–0.70 × WebP's bytes** for every view. **R1 is met only where the phone's first view lands on level 11** (Duskwall, and Coalport at times: 324–339 KB). It is missed by far where it lands on level 12 (Ashford, and Coalport at times: 1.24–1.27 MB). That comes from review 3, not the format: the at-rest view now covers the box (§11.2), so an upright phone shows most of the picture with the art 520–675 CSS px wide, and the detail level asks for the full capped device pixels (§11.1). Level 11 is 1,080 px across, enough for art up to 540 CSS px wide at DPR 2. Coalport sits on that edge: a 44 px taller map box (the header's election and hint lines come and go) takes the art from 519 to 610 px wide and the first view from 10 tiles to 26. §9.1's 480–500 KB were measured before review 3.
+
+*To meet R1 everywhere* (an architect's and the user's call; not done here): draw the **at-rest** view with the DPR capped at 1.5 (level 11 up to 720 CSS px of art: about 320–350 KB of AVIF for all three cities, at 1.5–1.6 device pixels per CSS pixel at rest), and keep 2 for every zoom, which is where review 3's blur was seen. The other levers are weaker: AVIF q50 saves another 12 % at a visible cost in texture, and a lower cap for zooms brings the blur back.
+
+**Frames and decoding: no AVIF stalls.** The spike's rAF recorder over the zoom to pin 1 (main-thread frames; a gap over 25 ms counts as dropped frames). "Throttled" = 4G and CPU 4 × slower.
+
+| | Unthrottled | Throttled |
+|---|---|---|
+| WebP q75 | 60 fps, 0 dropped, worst 17 ms | 57–60 fps, 0–11 dropped, worst 17–117 ms, up to 2 long frames |
+| AVIF q55 | 57–60 fps, 0–3 dropped, worst 17–33 ms | 55–60 fps, 0–10 dropped, worst 17–100 ms, up to 3 long frames |
+
+The same within noise. Decoding the zoom's tiles with `createImageBitmap`, one at a time: **AVIF 2.6–3.8 ms a tile, WebP 3.5–5.5 ms** (CPU 4 × slower: AVIF 4.2–6.7 ms, WebP 6.1–11.4 ms). Chromium's AV1 decoder is not slower on these 512 px tiles, and `TileLayer`'s `decoding="async"` keeps decoding off the main thread anyway. Every supported browser decodes AVIF (the stills are AVIF already), so the client needed no change beyond the format type.
+
+**Nation pins.** The five cities on `nation-day-9216.png` (user-approved): Irongate 0.52, 0.53 · Ashford 0.12, 0.17 · Duskwall 0.88, 0.25 · Coalport 0.18, 0.80 · Clearwater 0.88, 0.85, in `mapPins.nation` (`id` = the city id, `quarter` 1, as pins.json has them), checked by the content test; the dev viewer shows them on the nation picture.
 
 ## 10. Tasks (in order; each ends green: `pnpm lint typecheck test`)
 

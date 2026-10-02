@@ -9,15 +9,15 @@ import { mapAtRest, openPlace, signUp, toTheCity } from './helpers';
  * (the fallback). Here the tiles are routed to one small fixture tile.
  */
 
-const TILE = fileURLToPath(new URL('./fixtures/tile.webp', import.meta.url));
-const levelOf = (url: string) => Number(/webp_files\/(\d+)\//.exec(url)?.[1] ?? -1);
+const TILE = fileURLToPath(new URL('./fixtures/tile.avif', import.meta.url));
+const levelOf = (url: string) => Number(/avif_files\/(\d+)\//.exec(url)?.[1] ?? -1);
 
 /** Serve every tile from the fixture; returns the tile URLs requested so far. */
 async function serveTiles(page: Page): Promise<string[]> {
   const seen: string[] = [];
   await page.route('**/e2e-tiles/**', async (route) => {
     seen.push(route.request().url());
-    await route.fulfill({ path: TILE, contentType: 'image/webp' });
+    await route.fulfill({ path: TILE, contentType: 'image/avif' });
   });
   return seen;
 }

@@ -6,6 +6,9 @@
  * Level `maxLevel` is the full size; each level below halves it (rounding up), down to 1 px at 0.
  */
 
+/** The tiles' image format: AVIF since maps v3 §9.2 (WebP was the first pyramid's). */
+export type TileFormat = 'avif' | 'webp';
+
 /** What the server says of a map's pyramid (`AssetView.tiles`): everything but where it is hosted. */
 export interface TileSourceLike {
   /** `<assetId>/<rev>`: the pyramid's folder under the tile origin. */
@@ -15,7 +18,7 @@ export interface TileSourceLike {
   tileSize: number;
   overlap: number;
   maxLevel: number;
-  format: 'webp';
+  format: TileFormat;
 }
 
 export interface TilePyramid {
@@ -26,7 +29,7 @@ export interface TilePyramid {
   tileSize: number;
   overlap: number;
   maxLevel: number;
-  format: 'webp';
+  format: TileFormat;
 }
 
 /** Device pixels per CSS pixel the tiles are picked for: a phone's 3 × costs 2.25 × the bytes of 2 ×. */

@@ -54,7 +54,7 @@ export const mapFixture = (id: string, rev = '1a2b3c4d'): AssetView => ({
     tileSize: 512,
     overlap: 1,
     maxLevel: 14,
-    format: 'webp',
+    format: 'avif',
   },
 });
 

@@ -43,7 +43,7 @@ function crest(faction: string, alt: string): Asset {
  * needs a new id here: the stills keep their URLs under the year-long immutable /art/ cache. The
  * WebP fallback is 1024 px only (a 2048 px WebP of the painted art is over 1 MB; scripts/art/build.ts).
  */
-function cityMap(city: string, time: 'day' | 'night', alt: string): Asset {
+function cityMap(city: MapName, time: 'day' | 'night'): Asset {
   return {
     id: `map.${city}.${time}`,
     kind: 'map',
@@ -52,21 +52,48 @@ function cityMap(city: string, time: 'day' | 'night', alt: string): Asset {
     height: 8640,
     widths: [1024, 2048],
     webpWidths: [1024],
-    alt,
+    alt: mapAlt[`${city}.${time}`],
   };
 }
 
+type MapName = 'coalport' | 'duskwall' | 'ashford' | 'irongate' | 'clearwater' | 'nation';
+
+/**
+ * Alt texts for the twelve painted maps (game designer, 2 Oct 2026): what a sighted player sees of
+ * the real layout, in plain words, within the schema's 160 characters. The night ones say it is
+ * night. Irongate, Clearwater and the nation are not catalogued yet (their slices add the stills
+ * with a measured budget, ADR 0015); their texts wait here so the slice copies nothing by hand.
+ */
+export const mapAlt: Record<`${MapName}.${'day' | 'night'}`, string> = {
+  'coalport.day':
+    "Painted map of Coalport by day: the steelworks' furnaces top right, a canal and a domed hall in the middle, the harbour's cranes and the glass station below.",
+  'coalport.night':
+    'Coalport at night: windows lit across the town, lamps along the canal and the quays, the furnaces glowing top right, the lighthouse at the harbour mouth.',
+  'duskwall.day':
+    'Painted map of Duskwall by day: a walled fortress on a crag under snowy peaks, the market square below it, a river down the right, the station at the bottom.',
+  'duskwall.night':
+    'Duskwall at night: lamps along the fortress wall, the market square and the bridges lit, windows glowing down to the station, the river dark under the viaduct.',
+  'ashford.day':
+    "Painted map of Ashford by day: the college's green dome at the top, the brick print works and a stone bridge in the middle, the river down the right side.",
+  'ashford.night':
+    "Ashford at night: the college dome and the bridge lit, lamps along the river, the print works' windows glowing, the station bright at the top right.",
+  'irongate.day':
+    'Painted map of Irongate by day: a wide river with an island and many bridges across the middle, the domed Parliament above it, the station and ironworks below.',
+  'irongate.night':
+    'Irongate at night: lamps on every bridge over the dark river, the Parliament dome and the station lit, windows glowing across the whole city.',
+  'clearwater.day':
+    'Painted map of Clearwater by day: a lake at the left with a promenade and pier, the domed casino above, tram sheds in the middle, the harbour at the right.',
+  'clearwater.night':
+    "Clearwater at night: lamps along the promenade and the pier, steamers lit on the dark lake, the casino's windows glowing, the harbour bright at the right.",
+  'nation.day':
+    'Painted map of the republic by day: Coalport on the coast at the left, Ashford top left, Irongate in the centre, Duskwall in the mountains, Clearwater on its lake.',
+  'nation.night':
+    'The republic at night: the five towns lit, lamps along the railway lines between them, trains with lit windows, the furnaces glowing on the coast.',
+};
+
 export const assets: Asset[] = [
-  cityMap(
-    'coalport',
-    'day',
-    "Painted map of Coalport by day: the steel mill, Market Row, the Union Hall, Foundry Row's terraces, the quays and the river.",
-  ),
-  cityMap(
-    'coalport',
-    'night',
-    'Painted map of Coalport at night: lit windows along the mill, the market and the quays.',
-  ),
+  cityMap('coalport', 'day'),
+  cityMap('coalport', 'night'),
   {
     id: 'portrait.holm',
     kind: 'portrait',
@@ -97,26 +124,10 @@ export const assets: Asset[] = [
     alt: 'Inside The Anchor: the barman at the counter, dockers at the tables, cranes and a lit ship beyond the window.',
   },
   // Slice 2 (ADR 0015, docs/tech/slice-2.md §13).
-  cityMap(
-    'duskwall',
-    'day',
-    'Painted map of Duskwall by day: the fortress and its gate, the market tents, Beacon House and its searchlight, the Archives, the goods yard.',
-  ),
-  cityMap(
-    'duskwall',
-    'night',
-    'Painted map of Duskwall at night: the searchlight over Beacon House, lit windows in the fortress and along the line.',
-  ),
-  cityMap(
-    'ashford',
-    'day',
-    "Painted map of Ashford by day: Gazette House, the Assembly Rooms, the college dome, the courts, the bridges and the weavers' tenements.",
-  ),
-  cityMap(
-    'ashford',
-    'night',
-    'Painted map of Ashford at night: lamps on the bridges, the lit dome of the college and the print room still working.',
-  ),
+  cityMap('duskwall', 'day'),
+  cityMap('duskwall', 'night'),
+  cityMap('ashford', 'day'),
+  cityMap('ashford', 'night'),
   {
     id: 'scene.origin-deathbed',
     kind: 'scene',

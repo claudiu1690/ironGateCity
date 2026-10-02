@@ -274,7 +274,8 @@ export const TilesEntry = z.strictObject({
   tileSize: z.number().int().min(1),
   overlap: z.number().int().min(0),
   maxLevel: z.number().int().min(0),
-  format: z.literal('webp'),
+  /** The tiles' image format (maps v3 §9.2: AVIF; WebP was the first pyramid). */
+  format: z.enum(['avif', 'webp']),
   /** Files and bytes of the whole pyramid (for the storage figures). */
   tiles: z.number().int().min(1),
   bytes: z.number().int().min(1),

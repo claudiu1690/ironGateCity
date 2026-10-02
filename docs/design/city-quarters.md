@@ -69,7 +69,7 @@ Where the basin opens to the sea: the slipway, the customs house at the mole, th
 
 ### 2.3 The Sidings (Level 10; enters play in slice 4 with the train)
 
-The way in and out of town: the station where the line comes in, the coal yards where the town's coal is weighed, the tram sheds, and the church on the hill above the station. **Places (four):** Coalport Station, Coal Yards, Tram Depot, St Barbara's. **Teaser line (locked):** *Opens at Level 10 · The station, the coal yards and the tram sheds.* **Reserved spots:** the Public Baths (a later `gym` place for STR training; Coalport has no boxing club) and the School.
+The way in and out of town: the station where the line comes in, the coal yards where the town's coal is weighed, the tram sheds, and, up in the old town, St Barbara's church by the canal (on the painted art it stands among the old town's roofs west of the canal, not above the station; pin 0.24, 0.27 of the city picture). **Places (four):** Coalport Station, Coal Yards, Tram Depot, St Barbara's. **Teaser line (locked):** *Opens at Level 10 · The station, the coal yards and the tram sheds.* **Reserved spots:** the Public Baths (a later `gym` place for STR training; Coalport has no boxing club) and the School.
 
 **What a locked plate shows on the overview.** The quarter is drawn in full (the overview is faction-neutral art and the lock is an interface overlay, as district states are): the plate carries the name, the teaser line and *Opens at Level 6*; tapping it opens a short sheet with the quarter's three-line blurb and the same line; there is no Enter button (the slice-4 locked-plate pattern: the button is absent, not disabled). The plate is not dimmed and the art is not greyed: a teaser shows what you will get. Below the slice that builds it, the line reads *Opens with a later edition*.
 
@@ -95,7 +95,7 @@ Kinds are from the §13.5 list; **no new kind is needed**. Blurbs are at most 20
 | 12 | `coalport.station` | Coalport Station | `station` | The Sidings | One platform, one canopy, and every train to the capital. The porter knows who left town and who came back. | **Board the train** from a pin (slice 4, §14.10: *Board the train to Irongate · 20 Iron · 12 min*); the arrival pin for visitors; a Porter job; selling Dossier entries (§10.4, slice 8) | Level 10 · slice 4 |
 | 13 | `coalport.coal-yards` | Coal Yards | `station` | The Sidings | Walled yards of coal and four sidings of wagons. The weighbridge decides what the town pays for its winter. | Tier-1 canvass at the weighbridge and flyers on the wagons (slice 4); tier-2 missions (slice 5): the weighbridge fiddle for an exposé, a picket; the *Coal Ration* Issue line; a Weighbridge clerk job (later) | Level 10 · slice 4 |
 | 14 | `coalport.tram-depot` | Tram Depot | `station` | The Sidings | Three trams under an open roof and a fan of track. The crews' meeting is in the mess room at six. | Tier-1 canvass and a speech to the crews (slice 4); the *Tram Subsidy* ordinance and the *Tram Fare Hike* Issue get a place; a tier-2 mission (slice 5); a Conductor job (later) | Level 10 · slice 4 |
-| 15 | `coalport.st-barbaras` | St Barbara's | `square` | The Sidings | The church on the hill above the station: a plain tower, a forecourt, weddings on Saturday and the whole hill on Sunday. | Tier-1 speech at the church door after the service (slice 4); social missions with CHA (slice 8); the one place in Coalport where the Alliance's voice is heard without a heckle | Level 10 · slice 4 |
+| 15 | `coalport.st-barbaras` | St Barbara's | `square` | The Sidings | The old town's church by the canal: a tall stone spire over the roofs, a railed close of lime trees, weddings on Saturday and the whole parish on Sunday. | Tier-1 speech at the church door after the service (slice 4); social missions with CHA (slice 8); the one place in Coalport where the Alliance's voice is heard without a heckle | Level 10 · slice 4 |
 
 **Notes on the choices.**
 - Three `station` kinds in one quarter (the station, the yards, the depot) is accepted: the kind is an art key, and the §13.5 scene for `station` (*rail stations, the tram junction*) fits a goods yard as it fits Duskwall's Goods Yard, which is `station` already. A separate `goods-yard` kind would add a scene to the art budget for no gain.
@@ -109,6 +109,8 @@ Kinds are from the §13.5 list; **no new kind is needed**. Blurbs are at most 20
 ---
 
 ## 4. Pins and plates
+
+> **Superseded (2 Oct 2026, maps v3).** The maps were painted as **one picture per city** (`docs/design/maps-v3-integration.md`; a quarter is a frame on that picture, not an image of its own), so the overview, the quarter grids, the plates, the footprints and the pin targets in §4 and the prompts in §5 are the retired pen-and-ink plan, kept as the record of what was asked for. The pins that count are the survey of the painted art: `art-direction/maps-v3/pins/pins.json`, transcribed in `packages/content/src/data/mapPins.ts` (fractions of the city picture, with the quarter each place is painted in). Where the painted art and this plan disagree, the art wins; the places whose position changed are noted in their rows (St Barbara's, §4.4).
 
 ### 4.1 The overview (Coalport whole)
 
@@ -203,6 +205,8 @@ The basin crosses the core from the left edge (y about 0.45–0.52) and widens t
 | 13 | `coalport.coal-yards` | 0.43, 0.52 | **Coal Yards:** walled yards of coal heaps, loaded wagons on four sidings, a weighbridge hut at the gate, a shunting engine, carts queueing. Pin on the weighbridge gate. |
 | 14 | `coalport.tram-depot` | 0.62, 0.56 | **Tram Depot:** an open-fronted shed with three trams, a fan of track, a mess room with a stove-pipe, crews at the door. Pin on the shed's open front. |
 | 15 | `coalport.st-barbaras` | 0.65, 0.35 | **St Barbara's:** a church with a plain tower and a bell, a railed forecourt on the hill above the station, a wedding party on the steps. No device on the tower. Pin on the forecourt. |
+
+*As painted (maps v3):* St Barbara's is not on the hill above the station. It is the old town's big Gothic church with a tall stone spire, west of the canal among trees, at **0.24, 0.27** of the city picture, well clear of the station (0.46, 0.62), the coal yards (0.44, 0.84) and the tram depot (0.29, 0.59). Its role is unchanged (the speech after the service, the CHA social missions, the Alliance's one unheckled pulpit in Coalport); its blurb in §3 now describes the drawn church.
 
 Edges: the mill's furnace and chimneys at the right edge, the swing bridge and the basin at the lower right (the Mill); the line running off the left edge to the countryside with a pit-head winding tower far out (the nation map's coast line); the baths, the school, the cemetery and the heaps above.
 
@@ -321,10 +325,12 @@ The capital overview carries five district plates (brief §8.2); each district h
 | Quarter | Places (provisional ids from the brief §9.3) |
 |---|---|
 | **The Front** | The Promenade, the Casino, the Lido (`square`), the pier hotel (`hotel`) — the society slope and the water |
-| **The Depot** | Tram Depot, Back Lane Market, The Rows, the tin chapel (`square`), the sanatorium (`hospital`) — the working town |
+| **The Depot** | Tram Depot, Back Lane Market, The Rows, St Martin's (`square`; survey id `clearwater.st-martins`), the sanatorium (`hospital`) — the working town |
 | **The Harbour** | The Harbour, the cannery (`factory-gate`), Clearwater station (`station`), the harbour police (`jail`) |
 
 Clearwater's first-quarter question (which quarter a visitor lands in) is the station's, as everywhere: The Harbour.
+
+**St Martin's** (renamed 2 Oct 2026 from "the tin chapel": the painted church is stone, with a green copper spire, above the tram sheds at 0.55, 0.22 of the city picture). Blurb for its slice: *The working town's church: a stone nave and a green copper spire above the tram sheds. The bell goes at six for the early shift and at noon for the market.* Kind `square`; its role is the same as St Barbara's in Coalport: a speech at the church door after the service, CHA social missions, the one pulpit in the working town the Alliance can speak from.
 
 ### 8.4 The nation map: more distance
 
@@ -356,5 +362,6 @@ Content, not rules; the architect decides the final shape in the slice-4 tech de
 | GDD §13.5 | A line: Coalport's long-run list uses existing kinds only |
 | GDD Appendix C | #38 the quarter gates (6 / 10) · #39 the stitched giant map · #40 Clearwater's six provisional places · #41 districts beyond six places |
 | `docs/art/map-brief.md` | §0 order of work, §1, §2, §4 (rewritten for the overview and three quarters), §5 (quarter light lines), §6–§9 (quarter-plan notes), §10 (the nation's scale and prompt), §11 (checks 13–16), §12 (knock-ons) |
+| 2 Oct 2026 (maps v3) | §4 marked superseded by the painted art and `pins.json`; St Barbara's blurb and position rewritten for the drawn church (§2.3, §3, §4.4); Clearwater's tin chapel renamed St Martin's with a blurb (§8.3); the map alt texts redrafted in `packages/content/src/data/art.ts` (`mapAlt`) |
 
 Nothing in `docs/economy.md` moves: a quarter opening pays nothing and costs nothing. The plain-words rule and the content policy were applied to every name and blurb in §3. Faction naming stays parked.

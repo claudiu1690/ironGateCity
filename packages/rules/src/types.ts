@@ -346,7 +346,7 @@ export interface NamedStandingView extends StandingView {
 
 /**
  * ADR 0024 (maps v3): a map's Deep Zoom pyramid, without its host. The client puts it under its tile
- * origin: `${origin}/${path}/webp_files/<level>/<col>_<row>.webp`.
+ * origin: `${origin}/${path}/<format>_files/<level>/<col>_<row>.<format>` (maps v3 §9.2: AVIF).
  */
 export interface TileSource {
   /** `<assetId>/<rev>`; a re-exported master gets a new rev, so a new path. */
@@ -356,7 +356,7 @@ export interface TileSource {
   tileSize: number;
   overlap: number;
   maxLevel: number;
-  format: 'webp';
+  format: 'avif' | 'webp';
 }
 
 /** A rectangle of a picture in fractions of it (maps v3: a quarter's frame). */

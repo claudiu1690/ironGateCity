@@ -316,10 +316,10 @@ describe('CityMap with tiles (§5.2)', () => {
     expect(layer().querySelectorAll('picture')).toHaveLength(0);
     const srcs = [...layer().querySelectorAll('img[data-tile]')].map((i) => i.getAttribute('src')!);
     expect(srcs.length).toBeGreaterThan(1);
-    expect(srcs.every((s) => s.startsWith('/tiles/map.coalport.day/1a2b3c4d/webp_files/'))).toBe(true);
-    expect(srcs).toContain('/tiles/map.coalport.day/1a2b3c4d/webp_files/9/0_0.webp');
+    expect(srcs.every((s) => s.startsWith('/tiles/map.coalport.day/1a2b3c4d/avif_files/'))).toBe(true);
+    expect(srcs).toContain('/tiles/map.coalport.day/1a2b3c4d/avif_files/9/0_0.avif');
     expect(screen.getByTestId('map-backdrop').querySelector('img')!.getAttribute('src')).toBe(
-      '/tiles/map.coalport.day/1a2b3c4d/webp_files/9/0_0.webp',
+      '/tiles/map.coalport.day/1a2b3c4d/avif_files/9/0_0.avif',
     );
     expect(screen.getAllByTestId('hotspot')).toHaveLength(2);
   });

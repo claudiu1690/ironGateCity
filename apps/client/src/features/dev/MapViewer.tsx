@@ -1,4 +1,4 @@
-import { mapPins, tilePyramids } from '@irongate/content/maps';
+import { mapAlt, mapPins, tilePyramids } from '@irongate/content/maps';
 import type { AssetView } from '@irongate/rules';
 import { CityMap, cx, pyramidFor } from '@irongate/ui';
 import type { MapRect } from '@irongate/ui';
@@ -28,7 +28,7 @@ function asset(name: Name, time: 'day' | 'night'): AssetView | null {
     height: t.height,
     widths: [1024, 2048],
     webpWidths: [1024],
-    alt: `${name}, ${time}`,
+    alt: mapAlt[`${name}.${time}`],
     focus: null,
     tiles: { ...rest, path: `${id}/${rev}` },
   };

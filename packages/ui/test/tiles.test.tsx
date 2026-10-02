@@ -24,7 +24,7 @@ const city: TilePyramid = {
   tileSize: 512,
   overlap: 1,
   maxLevel: 14,
-  format: 'webp',
+  format: 'avif',
 };
 const capital: TilePyramid = {
   ...city,
@@ -66,8 +66,8 @@ describe('tile pyramid levels', () => {
   });
 
   it('names tiles the DZI way; the backdrop is the underlay tile', () => {
-    expect(tileUrl(city, 12, 3, 1)).toBe('/tiles/map.coalport.day/1a2b3c4d/webp_files/12/3_1.webp');
-    expect(backdropUrl(city)).toBe('/tiles/map.coalport.day/1a2b3c4d/webp_files/9/0_0.webp');
+    expect(tileUrl(city, 12, 3, 1)).toBe('/tiles/map.coalport.day/1a2b3c4d/avif_files/12/3_1.avif');
+    expect(backdropUrl(city)).toBe('/tiles/map.coalport.day/1a2b3c4d/avif_files/9/0_0.avif');
   });
 });
 
@@ -129,7 +129,7 @@ describe('pyramidFor', () => {
     tileSize: 512,
     overlap: 1,
     maxLevel: 14,
-    format: 'webp' as const,
+    format: 'avif' as const,
   };
 
   it('is null without an origin or without tiles', () => {
@@ -145,7 +145,7 @@ describe('pyramidFor', () => {
       tileSize: 512,
       overlap: 1,
       maxLevel: 14,
-      format: 'webp',
+      format: 'avif',
     });
     expect(pyramidFor({ tiles }, 'https://tiles.example.org/')!.base).toBe(
       'https://tiles.example.org/map.coalport.day/1a2b3c4d',
