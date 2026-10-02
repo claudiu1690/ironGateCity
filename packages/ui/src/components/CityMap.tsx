@@ -2,8 +2,11 @@ import type { AssetView } from '@irongate/rules';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { cx } from '../format';
+import { CLOUDS } from '../clouds';
+import type { CloudConfig } from '../clouds';
 import { backdropUrl } from '../tiles';
 import type { TilePyramid } from '../tiles';
+import { CloudLayer } from './CloudLayer';
 import { Picture } from './Picture';
 import { TileLayer } from './TileLayer';
 
@@ -63,6 +66,12 @@ export interface CityMapProps {
    * FRAME_PAN_MARGIN. Outside the frame is the rest of the picture, real art. Default: all of it.
    */
   frame?: MapRect;
+  /**
+   * Map atmosphere (`clouds.ts`): clouds by day and fog by night drift over the art, under the pins.
+   * `true` for the standard look (`CLOUDS`), a config to tune it (the dev viewer); off by default.
+   * The city's content switches it on (`City.clouds`, tried on Coalport).
+   */
+  clouds?: boolean | CloudConfig;
 }
 
 /** The whole picture, as a frame. */
@@ -729,7 +738,9 @@ export function CityMap({
   onArrive,
   tiles,
   frame = WHOLE,
+  clouds,
 }: CityMapProps) {
+  const cloudConfig = clouds === true ? CLOUDS : clouds || null;
   const boxRef = useRef<HTMLDivElement>(null);
   // Maps v3 §5.2: once an underlay tile fails, the stills draw the art for the rest of the mount.
   const [tilesFailed, setTilesFailed] = useState(false);
@@ -1208,6 +1219,24 @@ export function CityMap({
               )}
             </div>
           </div>
+          {/* Map atmosphere: above the art, below the pins and overlays; taps go through it. */}
+          {cloudConfig && view && target && (
+            <CloudLayer
+              config={cloudConfig}
+              isNight={isNight}
+              box={{ w, h }}
+              pictureW={contentW * target.fitted.scale}
+              view={view}
+              rest={target.fitted}
+              transition={transition}
+              moving={!!shown?.animate || dragging}
+              zoomed={!!selected}
+              fade={fade}
+              fadeMs={NIGHT_FADE_MS}
+              zoomMs={ZOOM_MS}
+              reducedMotion={prefersReducedMotion()}
+            />
+          )}
           {/* The pins: never scaled, each moved with the same transition as the map under it (a
               pin's place is linear in the map's translate and scale, so it tracks it exactly). */}
           <div className="pointer-events-none absolute inset-0">

@@ -21,6 +21,8 @@ export const coalport: City = {
   map: { day: 'map.coalport.day', night: 'map.coalport.night' },
   // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
   // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
+  // Map atmosphere: clouds by day, fog by night over the map (the trial city for the look).
+  clouds: true,
   quarters: [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
   paper: {
     name: 'The Coalport Clarion',

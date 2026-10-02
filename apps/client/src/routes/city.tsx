@@ -371,6 +371,8 @@ export function CityPage() {
         tiles={tiles}
         // Maps v3: the city opens on its first quarter, a frame on its one picture.
         frame={c.quarters[0]?.frame}
+        // Map atmosphere (clouds by day, fog by night), where the city's content switches it on.
+        clouds={c.clouds}
         isNight={c.isNight}
         locations={c.locations}
         selectedId={loc ?? null}

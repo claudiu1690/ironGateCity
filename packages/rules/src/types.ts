@@ -573,6 +573,8 @@ export interface CityView {
   map: { day: AssetView; night: AssetView };
   /** Maps v3: the city's quarters, frames on its picture; the city view opens on the first. */
   quarters: Array<{ id: string; name: string; frame: Frame }>;
+  /** Map atmosphere: clouds by day and fog by night drift over the map (content `City.clouds`). */
+  clouds?: boolean;
   isNight: boolean;
   standing: NamedStandingView;
   locations: LocationView[];

@@ -18,6 +18,10 @@ export {
 } from './components/CityMap';
 export type { CityMapProps, MapCover, MapHotspot, MapInsets, MapRect, MapView } from './components/CityMap';
 export { TileLayer } from './components/TileLayer';
+export { CloudLayer } from './components/CloudLayer';
+export type { CloudLayerProps } from './components/CloudLayer';
+export { CLOUDS, cloudPaths, cloudPlane } from './clouds';
+export type { CloudConfig, CloudKind, CloudPath, CloudSprite } from './clouds';
 export type { TileLayerProps } from './components/TileLayer';
 export {
   TILE_MAX_DPR,

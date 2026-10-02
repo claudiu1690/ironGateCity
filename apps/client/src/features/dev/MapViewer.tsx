@@ -1,7 +1,7 @@
-import { mapAlt, mapPins, tilePyramids } from '@irongate/content/maps';
+import { cloudyMaps, mapAlt, mapPins, tilePyramids } from '@irongate/content/maps';
 import type { AssetView } from '@irongate/rules';
-import { CityMap, cx, pyramidFor } from '@irongate/ui';
-import type { MapRect } from '@irongate/ui';
+import { CLOUDS, CityMap, cx, pyramidFor } from '@irongate/ui';
+import type { CloudConfig, MapRect } from '@irongate/ui';
 import { useMemo, useState } from 'react';
 import { env } from '../../env';
 
@@ -10,6 +10,11 @@ import { env } from '../../env';
  * the user and the game designer can check the art, the pins and the quarter frames before their
  * slices. A quarter's frame here is its pins' box grown by 0.06 (the rule the content frames follow).
  * Not a game screen: no server, no auth.
+ *
+ * Map atmosphere: the clouds (day) and fog (night) show where the city's content has them on
+ * (`City.clouds`); the Clouds switch tries them on any picture, and Speed and Opacity scale the
+ * `CLOUDS` config live (Speed 10 × shows the drift at a glance). `?clouds=0|1&speed=&opacity=` set
+ * them from the address too.
  */
 
 const NAMES = ['coalport', 'duskwall', 'ashford', 'clearwater', 'irongate', 'nation'] as const;
@@ -52,6 +57,14 @@ export function MapViewer() {
   const [night, setNight] = useState(false);
   const [quarter, setQuarter] = useState(1); // 0: the whole picture
   const [selected, setSelected] = useState<string | null>(null);
+  const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const [cloudsOn, setCloudsOn] = useState<boolean | null>(
+    params.has('clouds') ? params.get('clouds') !== '0' : null,
+  );
+  const [speed, setSpeed] = useState(Number(params.get('speed') ?? 1) || 1);
+  const [opacity, setOpacity] = useState(Number(params.get('opacity') ?? 1) || 1);
+  const showClouds = cloudsOn ?? cloudyMaps.has(name);
+  const cloudConfig = useMemo<CloudConfig>(() => ({ ...CLOUDS, speed, opacity }), [speed, opacity]);
   const survey = mapPins[name]?.pins ?? [];
   const quarters = [...new Set(survey.map((p) => p.quarter))].sort((a, b) => a - b);
   const shown = quarter === 0 ? survey : survey.filter((p) => p.quarter === quarter);
@@ -107,6 +120,43 @@ export function MapViewer() {
         <button type="button" className="h-11 border border-paper px-3" onClick={() => setNight((v) => !v)}>
           {night ? 'Night' : 'Day'}
         </button>
+        <label className="flex h-11 items-center gap-1">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={showClouds}
+            onChange={(e) => setCloudsOn(e.target.checked)}
+          />
+          Clouds
+        </label>
+        <label className="flex items-center gap-1">
+          Speed
+          <select
+            className="h-11 bg-paper px-2 text-ink"
+            value={speed}
+            onChange={(e) => setSpeed(Number(e.target.value))}
+          >
+            {[0.5, 1, 2, 5, 10, 30].map((v) => (
+              <option key={v} value={v}>
+                {v} ×
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-1">
+          Opacity
+          <select
+            className="h-11 bg-paper px-2 text-ink"
+            value={opacity}
+            onChange={(e) => setOpacity(Number(e.target.value))}
+          >
+            {[0.5, 0.75, 1, 1.25, 1.5].map((v) => (
+              <option key={v} value={v}>
+                {v} ×
+              </option>
+            ))}
+          </select>
+        </label>
         {selected && (
           <button type="button" className="h-11 border border-paper px-3" onClick={() => setSelected(null)}>
             Back out
@@ -124,6 +174,7 @@ export function MapViewer() {
           tiles={{ day, night: nightTiles }}
           frame={frame}
           isNight={night}
+          clouds={showClouds ? cloudConfig : false}
           locations={shown.map((p, i) => ({ id: p.id, n: i + 1, name: p.name, map: { x: p.x, y: p.y } }))}
           selectedId={selected}
           onSelect={(id) => setSelected((s) => (s === id ? null : id))}

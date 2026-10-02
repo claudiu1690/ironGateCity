@@ -53,6 +53,8 @@ describe('city.get v2', () => {
     expect(city.quarters).toEqual([
       { id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } },
     ]);
+    // Map atmosphere: Coalport is the trial city for the clouds.
+    expect(city.clouds).toBe(true);
     expect(city.standing).toMatchObject({ level: 0, name: 'Stranger', nextName: 'Familiar', next: 10 });
     expect(city.locations.map((l) => [l.n, l.name])).toEqual([
       [1, 'Mill Gate'],

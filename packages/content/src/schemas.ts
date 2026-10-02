@@ -214,6 +214,12 @@ export const City = z.strictObject({
    * the first quarter of each home city exists until quarter 2 is built.
    */
   quarters: z.array(Quarter).min(1),
+  /**
+   * Map atmosphere (clouds design note, 2 Oct 2026): clouds drift over the city map by day and fog
+   * by night, a client-side overlay (`CityMap`'s `clouds`). Tried on Coalport first; switched on
+   * per city once the user approves the look. Absent: off.
+   */
+  clouds: z.boolean().optional(),
   /** §3.3: the home city's paper ("The Coalport Clarion"). */
   paper: z
     .strictObject({
