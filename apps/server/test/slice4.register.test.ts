@@ -193,7 +193,7 @@ describe('registering (residence.register)', () => {
 });
 
 describe('the room and the Rested cap (design §7.4, ADR 0030 §5)', () => {
-  it('100 Iron for seven days, the cap +50 wherever; renewal restarts the seven; NOT_IN_CITY at home', async () => {
+  it('100 Iron for seven days, the cap +50 wherever; a renewal adds seven nights (slice-4 fixes §6); NOT_IN_CITY at home', async () => {
     const clock = testClock(at(DAY));
     const p = await traveller(clock, { name: 'Dora Fink', cityId: 'irongate' });
     const r = await p.caller.residence.room({ idempotencyKey: key() });
@@ -202,12 +202,22 @@ describe('the room and the Rested cap (design §7.4, ADR 0030 §5)', () => {
     expect(r.knockOns.iron).toEqual({ before: 1000, after: 900 });
     expect(r.character.restedCap).toBe(250);
     expect(r.character.room).toEqual({ untilDay: DAY + 7 });
+    // Slice-4 fixes §6 (QA m5): a renewal adds seven nights to the end, never restarts the room;
+    // with more than seven nights paid it is refused, so at most fourteen are ever paid for.
     clock.set(at(DAY + 2));
-    await p.caller.residence.room({ idempotencyKey: key() });
+    const renewed = await p.caller.residence.room({ idempotencyKey: key() });
+    expect(renewed).toMatchObject({ act: 'renew', stamp: { label: 'Renewed' }, headline: 'A room in Irongate' });
+    expect(renewed.knockOns.iron).toEqual({ before: 900, after: 800 });
     expect((await Character.findById(p.id).lean<CharacterDoc>())!.room).toMatchObject({
-      fromDay: DAY + 2,
-      untilDay: DAY + 9,
+      fromDay: DAY,
+      untilDay: DAY + 14,
     });
+    expect((await refusal(p.caller.residence.room({ idempotencyKey: key() }))).game).toEqual({
+      reason: 'ROOM_PAID_AHEAD',
+      renewFromDay: DAY + 7,
+      renewFromAt: expect.any(Number),
+    });
+    expect((await Character.findById(p.id).lean<CharacterDoc>())!.iron).toBe(800);
     // At home the room still raises the cap; it cannot be taken there.
     await Character.updateOne({ _id: p.id }, { $set: { cityId: 'coalport' } });
     expect((await p.caller.character.me()).restedCap).toBe(250);

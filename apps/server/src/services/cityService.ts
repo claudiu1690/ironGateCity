@@ -66,6 +66,8 @@ import {
   assetView,
   firstDayBonuses,
   namedStanding,
+  orderText,
+  orderVars,
   preferredStat,
   standingSuccesses,
   toOrdersState,
@@ -92,7 +94,8 @@ function orderTag(
   const t = templates.find((x) => x.id === item.templateId)!;
   return {
     id: item.templateId,
-    title: itemSpec(item, t).title,
+    // Slice-4 fixes §2 (QA m1): `{city}` and `{verbs}` for the reader.
+    title: orderText(itemSpec(item, t).title, orderVars(content, c, null)),
     progress: Math.min(item.progress, item.target),
     target: item.target,
   };

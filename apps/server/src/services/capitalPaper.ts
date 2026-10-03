@@ -157,7 +157,12 @@ export async function capitalFacts(
     if (c.firstCapitalArrivalAt && dayKey(c.firstCapitalArrivalAt.getTime()) === today - 1) {
       facts.firstCapitalArrivalYesterday = true;
       const j = await Journey.findOne({ characterId: c._id, to: capital }).sort({ n: 1 }).lean<JourneyDoc>();
-      varsByKind.firstCapitalArrivalYesterday = { origin: content.city(j?.from ?? '')?.name ?? 'home' };
+      // Slice-4 fixes §5 (QA m4): the deck counts today's close races (the nation card's count).
+      const close = await District.countDocuments({ cityId: capital, 'state.battleground': true });
+      varsByKind.firstCapitalArrivalYesterday = {
+        origin: content.city(j?.from ?? '')?.name ?? 'home',
+        closeRaces: copy.capital.closeRacesOfFive(close),
+      };
     }
     const awards = await Award.find({ characterId: c._id, day: today }).lean<AwardDoc[]>();
     const hero = awards.find((a) => a.kind === 'hero');

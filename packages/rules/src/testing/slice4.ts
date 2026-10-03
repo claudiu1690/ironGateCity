@@ -320,6 +320,16 @@ export const residenceCardFixtures: Record<ResidenceCardView['state'], Residence
     room: null,
   },
   atHome: { state: 'atHome', livesIn: 'Coalport', cost: 500, button: null, sheet: null, room: null },
+  // Slice-4 fixes §1 (QA M2): a candidate on the Coalport ballot; the count day is the move day.
+  onBallot: {
+    state: 'onBallot',
+    livesIn: 'Coalport',
+    canMoveFromDay: DAY + 3,
+    cost: 500,
+    button: null,
+    sheet: null,
+    room,
+  },
 };
 
 const district = (

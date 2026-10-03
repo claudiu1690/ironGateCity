@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { formatClock } from '@irongate/ui';
+import { formatClock, weekdayOf } from '@irongate/ui';
 import { gameErrorOf } from '../../lib/trpc';
 
 /** A refused request, worded for the player. The server's reason decides; the client only words it. */
@@ -92,6 +92,11 @@ export function noticeFor(error: unknown): string | undefined {
       return copy.errors.moveCooldown;
     case 'ALREADY_RESIDENT':
       return copy.errors.alreadyResident;
+    // Slice-4 fixes §1, §6 (QA M2, m5).
+    case 'ON_BALLOT':
+      return copy.errors.onBallot;
+    case 'ROOM_PAID_AHEAD':
+      return copy.errors.roomPaidAhead(weekdayOf(Number(game.renewFromDay)));
     case 'MEMBERS_ONLY':
       return copy.capital.membersOnly;
     case 'NOT_YET_VOTER':

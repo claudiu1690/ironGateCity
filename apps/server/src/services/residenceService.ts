@@ -16,6 +16,7 @@ import {
   projectEnergy,
   registerRefusal,
   roomPrice,
+  roomTap,
 } from '@irongate/rules';
 import type {
   CapitalPlaceholder,
@@ -53,18 +54,31 @@ export function placeName(content: GameContent, cityId: string, districtId: stri
     : (content.city(cityId)?.name ?? cityId);
 }
 
-/** The old place's open candidacy (filed) and the seat held there today, if any. */
+/**
+ * The old place's open candidacy (filed), the seat held there today, and (slice-4 fixes §1, QA M2)
+ * whether the member's name is on its ballot (standing while the polls are open), with the count
+ * day, when they may move.
+ */
 async function oldPlaceStakes(
   content: GameContent,
   c: CharacterDoc,
   today: DayKey,
   session: ClientSession | null,
-): Promise<{ candidacy: CandidacyDoc | null; term: OfficeTermDoc | null }> {
+): Promise<{
+  candidacy: CandidacyDoc | null;
+  term: OfficeTermDoc | null;
+  onBallot: { countDay: DayKey } | null;
+}> {
   const r = residenceOf(c);
   const offset = content.city(r.cityId)?.council?.offset;
-  if (offset === undefined) return { candidacy: null, term: null };
-  const key = electionKey(r.districtId ?? r.cityId, councilDay(today, offset).cycle);
-  const cq = Candidacy.findOne({ electionId: key, characterId: c._id, status: 'filed' });
+  if (offset === undefined) return { candidacy: null, term: null, onBallot: null };
+  const cd = councilDay(today, offset);
+  const key = electionKey(r.districtId ?? r.cityId, cd.cycle);
+  const cq = Candidacy.findOne({
+    electionId: key,
+    characterId: c._id,
+    status: { $in: cd.phase === 'polling' ? ['filed', 'standing'] : ['filed'] },
+  });
   const tq = OfficeTerm.findOne({
     cityId: r.cityId,
     'holder.kind': 'player',
@@ -74,11 +88,16 @@ async function oldPlaceStakes(
     vacatedDay: null,
     ...(r.districtId ? { districtId: r.districtId } : {}),
   });
-  const [candidacy, term] = await Promise.all([
+  const [found, term] = await Promise.all([
     (session ? cq.session(session) : cq).lean<CandidacyDoc>(),
     (session ? tq.session(session) : tq).lean<OfficeTermDoc>(),
   ]);
-  return { candidacy, term };
+  const standing = found?.status === 'standing';
+  return {
+    candidacy: standing ? null : found,
+    term,
+    onBallot: standing ? { countDay: cd.election.countDay } : null,
+  };
 }
 
 /**
@@ -101,10 +120,13 @@ export async function residenceCardView(
       ? (() => {
           const price = roomPrice(dayModifiers(content, docs.capital, today));
           const running = !!c.room && c.room.fromDay <= today && today < c.room.untilDay;
+          const tap = roomTap(c.room, today);
           return {
             state: running ? ('running' as const) : ('none' as const),
             price: { total: price.total, lines: price.lines },
             ...(running ? { untilDay: c.room!.untilDay } : {}),
+            // Slice-4 fixes §6 (QA m5): more than seven nights paid, no Renew until this day.
+            ...(tap.kind === 'paidAhead' ? { renewFromDay: tap.renewFromDay } : {}),
             cap: restedCapToday(content, docs.residence, today, {
               cityId: ROOM.cityId,
               fromDay: today,
@@ -129,9 +151,13 @@ export async function residenceCardView(
   if (today < r.canMoveFromDay) {
     return { ...base, state: 'cooldown', canMoveFromDay: r.canMoveFromDay, button: null, sheet: null };
   }
+  const stakes = await oldPlaceStakes(content, c, today, null);
+  // Slice-4 fixes §1 (QA M2): a candidate on the ballot where they live stays until the result.
+  if (stakes.onBallot) {
+    return { ...base, state: 'onBallot', canMoveFromDay: stakes.onBallot.countDay, button: null, sheet: null };
+  }
   const offset = content.city(target.cityId)?.council?.offset ?? 0;
   const w = moveWindows(today, offset);
-  const stakes = await oldPlaceStakes(content, c, today, null);
   const target_ = placeName(content, target.cityId, target.districtId);
   const lines = [
     { text: copy.residence.sheet.vote(target_, weekdayName(w.votesFromDay)), warn: false },
@@ -248,7 +274,7 @@ async function vacateSeat(
 function residenceResult(
   content: GameContent,
   i: {
-    act: 'register' | 'room';
+    act: 'register' | 'room' | 'renew';
     cityId: string;
     c: CharacterDoc;
     now: number;
@@ -317,6 +343,7 @@ export async function register(deps: {
       if (c.day.settled !== today) throw new DayChanged();
       const r = residenceOf(c);
       const target = { cityId: input.cityId, districtId: input.districtId };
+      const stakes = await oldPlaceStakes(content, c, today, session);
       const refusal = registerRefusal({
         rank: c.rank,
         iron: c.iron,
@@ -330,6 +357,7 @@ export async function register(deps: {
         homeCityId: c.homeCityId,
         capitalId: capital,
         inTransit: c.journey?.status === 'onTheWay',
+        onBallot: !!stakes.onBallot,
       });
       if (refusal) {
         const data: Record<string, unknown> =
@@ -341,11 +369,12 @@ export async function register(deps: {
                 ? { iron: c.iron, cost: RESIDENCE.cost }
                 : refusal === 'IN_TRANSIT'
                   ? { arrivesAt: c.journey ? new Date(c.journey.arrivesAt).getTime() : null }
-                  : {};
+                  : refusal === 'ON_BALLOT' && stakes.onBallot
+                    ? { canMoveFromAt: dayStart(stakes.onBallot.countDay), canMoveFromDay: stakes.onBallot.countDay }
+                    : {};
         throw new GameError(refusal, data, CODES[refusal] ?? 'PRECONDITION_FAILED');
       }
       const oldCity = await City.findById(r.cityId).session(session).lean<CityDoc>();
-      const stakes = await oldPlaceStakes(content, c, today, session);
       const windows = moveWindows(today, targetCity.council!.offset);
       const residence = { cityId: target.cityId, districtId: target.districtId, sinceDay: today, ...windows };
       const updated = await Character.findOneAndUpdate(
@@ -412,7 +441,11 @@ export async function register(deps: {
   });
 }
 
-/** residence.room: a room in Irongate for seven days (renewal restarts the seven; no stacking). */
+/**
+ * residence.room: a room in Irongate for seven days; on a room running with seven or fewer nights
+ * left, seven more nights at its end (slice-4 fixes §6, QA m5); more than seven left, refused
+ * (ROOM_PAID_AHEAD), so at most fourteen nights are ever paid for.
+ */
 export async function takeRoom(deps: {
   user: SessionUser;
   content: GameContent;
@@ -448,7 +481,14 @@ export async function takeRoom(deps: {
         r.cityId === ROOM.cityId
           ? capitalDoc
           : await City.findById(r.cityId).session(session).lean<CityDoc>();
-      const room = { cityId: ROOM.cityId, fromDay: today, untilDay: today + ROOM.days };
+      const tap = roomTap(c.room, today);
+      if (tap.kind === 'paidAhead') {
+        throw new GameError('ROOM_PAID_AHEAD', {
+          renewFromDay: tap.renewFromDay,
+          renewFromAt: dayStart(tap.renewFromDay),
+        });
+      }
+      const room = { cityId: ROOM.cityId, fromDay: tap.fromDay, untilDay: tap.untilDay };
       const updated = await Character.findOneAndUpdate(
         { _id: c._id, version: c.version, 'day.settled': today, iron: { $gte: price.total } },
         {
@@ -460,7 +500,7 @@ export async function takeRoom(deps: {
       if (!updated) throw new VersionConflict();
       const district = r.cityId === ROOM.cityId && r.districtId ? r.districtId : stationDistrict(content);
       return residenceResult(content, {
-        act: 'room',
+        act: tap.kind === 'renew' ? 'renew' : 'room',
         cityId: ROOM.cityId,
         c: updated,
         now,

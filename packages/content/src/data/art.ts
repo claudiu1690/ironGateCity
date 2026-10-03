@@ -19,6 +19,28 @@ function avatar(key: string, top: number, alt: string): Asset {
   };
 }
 
+/**
+ * A location scene (§13.5 rung 2), 2688 × 1520 like the slice-1 scenes. `focus`: where a phone's crop of
+ * the 16:9 picture centres (docs/design/art-wiring-oct.md §1).
+ *
+ * The October scenes are painted denser than slice 1's: six of the fourteen 1280 px WebPs stay over
+ * their 200 KB budget at the q60 floor (207–255 KB). As for the maps (maps v3), the WebP fallback is
+ * written at 640 px only; every supported browser takes the AVIF, at both widths and within budget.
+ */
+function scene(key: string, alt: string, focus?: { x: number; y: number }): Asset {
+  return {
+    id: `scene.${key}`,
+    kind: 'scene',
+    source: `mvp/scenes/${key}.png`,
+    width: 2688,
+    height: 1520,
+    widths: [640, 1280],
+    webpWidths: [640],
+    ...(focus ? { focus } : {}),
+    alt,
+  };
+}
+
 function item(id: string, file: string, alt: string): Asset {
   return { id, kind: 'item', source: `mvp/items/${file}`, width: 512, height: 512, widths: [128, 256], alt };
 }
@@ -235,6 +257,127 @@ export const assets: Asset[] = [
     40,
     'A woman in her forties, dark hair going grey and pinned back, in a plain dark jacket.',
   ),
+  // October 2026 (docs/design/art-wiring-oct.md §2): twelve more faces, eighteen at sign-up.
+  avatar(
+    'man-20s-b',
+    40,
+    'A young man with cropped fair hair and freckles, in a cable-knit jumper, holding his flat cap.',
+  ),
+  avatar(
+    'man-20s-c',
+    40,
+    'A young man with dark curls and round spectacles, in a knitted waistcoat and a red tie, a book under his arm.',
+  ),
+  avatar(
+    'man-30s-b',
+    40,
+    'A man in his thirties with a shaved head and a moustache, in shirt sleeves and a dark waistcoat.',
+  ),
+  avatar(
+    'man-30s-c',
+    40,
+    'A man in his thirties with close-cropped hair, in a double-breasted suit with a red tie and a pocket handkerchief.',
+  ),
+  avatar(
+    'man-40s-b',
+    20,
+    'A man in his forties in a flat cap, unshaven, in a heavy worn coat with the collar up and a scarf.',
+  ),
+  avatar(
+    'man-50s',
+    20,
+    'A man in his fifties with silver hair and a short beard, a red knitted scarf over a tweed coat.',
+  ),
+  avatar(
+    'woman-20s-b',
+    20,
+    'A young woman in a red beret over dark curls, in a striped blouse under a dark jacket.',
+  ),
+  avatar(
+    'woman-20s-c',
+    40,
+    'A young woman with long dark curls and a pencil behind her ear, in a white shirt with the sleeves rolled, and braces.',
+  ),
+  avatar(
+    'woman-30s-b',
+    20,
+    'A woman in her thirties with red hair in a plait and a smudge on her cheek, in a red neckerchief and dungarees.',
+  ),
+  avatar(
+    'woman-30s-c',
+    40,
+    'A woman in her thirties with fair waved hair and a string of pearls, in a dark tailored jacket.',
+  ),
+  avatar(
+    'woman-40s-b',
+    20,
+    'A woman in her forties in a small dark red hat and pearl earrings, in a tailored suit.',
+  ),
+  avatar(
+    'woman-50s',
+    40,
+    'A woman in her fifties with grey hair pinned up and spectacles on a chain, in a dark cardigan with a brooch.',
+  ),
+  // October 2026 (docs/design/art-wiring-oct.md §1): fourteen location scenes.
+  scene(
+    'factory-gate',
+    'A works gate at the shift change: men in caps streaming out under the clock, a tram waiting, a man handing a flyer to a woman in a red coat.',
+    { x: 0.6, y: 0.55 },
+  ),
+  scene(
+    'docks',
+    "Dockers eating on the bollards at the water's edge, sacks and a crane behind them, a steamer and a tug on the harbour.",
+  ),
+  scene(
+    'market',
+    'A market under striped awnings round a stone column: a fish stall, bread and bootlaces, shoppers with baskets, a tram passing behind.',
+  ),
+  scene(
+    'station',
+    'Inside a glass-roofed station: the departure board and clock, porters with trunks on trolleys, passengers in coats, a locomotive letting off steam.',
+    { x: 0.45, y: 0.6 },
+  ),
+  scene(
+    'street',
+    'A terraced street of brick houses: a woman with a flyer at a doorstep, washing on the lines, children playing football on the cobbles.',
+  ),
+  scene(
+    'square',
+    'A speaker on a box on the steps of a church, a crowd in hats listening, a bandstand and trees behind them.',
+  ),
+  scene(
+    'hotel',
+    'A grand hotel lobby: marble columns and a chandelier, a man reading a paper in an armchair, two men talking over a low table, the desk clerk beyond.',
+  ),
+  scene(
+    'court',
+    'A courtroom: three judges on the bench, counsel in gowns at the tables, a witness in the box, the public benches full.',
+  ),
+  scene(
+    'university',
+    'Students with books crossing a college quad in autumn, a green dome and a cloister behind the trees.',
+  ),
+  scene(
+    'library',
+    'A reading room: a man writing under a green lamp, shelves of bound files to the ceiling, a clerk with a trolley, a woman on a ladder.',
+    { x: 0.35, y: 0.6 },
+  ),
+  scene(
+    'ministry',
+    'A ministry counter: clerks stamping papers under hanging lamps, a queue of people in coats with cases, filing cabinets and a clock.',
+  ),
+  scene(
+    'alliance-hq',
+    'A committee round a long table with a map and tea cups, bookshelves, a window over the river and a domed roof.',
+  ),
+  scene(
+    'gym',
+    'A boxing gym: two men sparring in the ring, others skipping and at the punchbags, tall windows over the town.',
+  ),
+  scene(
+    'theatre',
+    'An opera foyer at the interval: evening dress and champagne, a marble staircase under chandeliers, an usher at a box door.',
+  ),
   item('item.work-jacket', 'work-jacket-cap.jpg', 'A work jacket and a flat cap.'),
   item('item.mill-coat', 'collective-work-coat.jpg', 'A heavy mill work coat.'),
   item('item.worn-overcoat', 'wool-overcoat.jpg', 'A worn wool overcoat.'),
@@ -245,20 +388,53 @@ export const assets: Asset[] = [
   crest('alliance', 'Civic Alliance crest: a domed hall rising over a voting slot.'),
 ];
 
-/** §13.5 rung 2: the scenes there are. Other locations fall back to a crop of the city map. */
+/**
+ * §13.5 rung 2: the scenes there are. Other locations fall back to a crop of the city map. October
+ * 2026 (art-wiring-oct.md §1): every kind has one but `jail` and `hospital` (slice 5), `parliament`
+ * (held until an action is set in the chamber) and `barracks`.
+ */
 export const scenes: SceneBinding[] = [
   { locationKind: 'faction-hq', factionId: 'collective', assetId: 'scene.union-hq' },
   { locationKind: 'faction-hq', factionId: 'vanguard', assetId: 'scene.vanguard-office' },
+  { locationKind: 'faction-hq', factionId: 'alliance', assetId: 'scene.alliance-hq' },
   { locationKind: 'bar', assetId: 'scene.bar-anchor' },
   { locationKind: 'press', assetId: 'scene.newsroom' },
+  { locationKind: 'factory-gate', assetId: 'scene.factory-gate' },
+  { locationKind: 'docks', assetId: 'scene.docks' },
+  { locationKind: 'market', assetId: 'scene.market' },
+  { locationKind: 'station', assetId: 'scene.station' },
+  { locationKind: 'street', assetId: 'scene.street' },
+  { locationKind: 'square', assetId: 'scene.square' },
+  { locationKind: 'hotel', assetId: 'scene.hotel' },
+  { locationKind: 'court', assetId: 'scene.court' },
+  { locationKind: 'university', assetId: 'scene.university' },
+  { locationKind: 'library', assetId: 'scene.library' },
+  { locationKind: 'ministry', assetId: 'scene.ministry' },
+  { locationKind: 'gym', assetId: 'scene.gym' },
+  { locationKind: 'theatre', assetId: 'scene.theatre' },
 ];
 
-/** The six faces offered at sign-up (§7.3), in the order shown. */
+/**
+ * The faces offered at sign-up (§7.3), in the order shown: eighteen since October 2026, mixed so the
+ * first row is varied however the grid wraps (art-wiring-oct.md §2.1).
+ */
 export const avatars: string[] = [
+  'avatar.woman-20s-c',
+  'avatar.man-40s-b',
+  'avatar.woman-50s',
   'avatar.man-20s',
-  'avatar.man-30s',
-  'avatar.man-40s',
+  'avatar.woman-30s-c',
+  'avatar.man-30s-c',
   'avatar.woman-20s',
-  'avatar.woman-30s',
+  'avatar.man-50s',
+  'avatar.woman-40s-b',
+  'avatar.man-20s-c',
+  'avatar.woman-30s-b',
+  'avatar.man-40s',
   'avatar.woman-40s',
+  'avatar.man-30s-b',
+  'avatar.woman-20s-b',
+  'avatar.man-30s',
+  'avatar.woman-30s',
+  'avatar.man-20s-b',
 ];

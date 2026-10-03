@@ -122,7 +122,7 @@ The titles stay: each already names a place-fitting thing to do, and the content
 ### 5.4 The word *train* elsewhere
 
 - **The reason line** (review 2 §2.4) said *Train it at the Union Hall*. Now: ***Raise it at the Union Hall***, *Raise it at Harbour Quays*; the best-stat line *Raising any of them would help*; the *Long shot* note *…raising it would help*. *Raise* is plain, fits any place, and matches *Intelligence 12 → 13*.
-- **The training order** (`dir.sharpen-up`, `dir.v.sharpen-up`, `dir.a.sharpen-up`) was *Train once, anywhere in {city}*. Now it names the verbs: ***Study, lift or run once in Coalport*** · ***Study, lift or run once in Duskwall*** · ***Study, unload or run once in Ashford*** (35–36 characters; the secretaries' lines are unchanged). The developer applies it in `orders.ts` and the two design tables the tests read (`slice-1-content.md` §6, `slice-2-cities.md` §1.5 and §2.5).
+- **The training order** (`dir.sharpen-up`, `dir.v.sharpen-up`, `dir.a.sharpen-up`) was *Train once, anywhere in {city}*. Now it names the verbs: ***Study, lift or run once in Coalport*** · ***Study, lift or run once in Duskwall*** · ***Study, unload or run once in Ashford*** (35–36 characters; the secretaries' lines are unchanged). The developer applies it in `orders.ts` and the two design tables the tests read (`slice-1-content.md` §6, `slice-2-cities.md` §1.5 and §2.5). (3 Oct 2026, QA m1: the title is now `{verbs} once in {city}`, resolved at read to the residence city, so a capital resident reads *Study, carry or run once in Irongate*.)
 - Unchanged: the type label *Training*, the stamp *Trained*, the tally's *Trained*, the help notes.
 
 ---
@@ -212,7 +212,7 @@ reason.statLow:     (stat, place) => `Your ${stat} is low for this.${place ? ` R
 reason.statLowTwo:  (a, b, weak, place) => `This needs ${a} and ${b}, and your ${weak} is the low one.${weak === 'Charisma' ? ' It comes from what you wear.' : place ? ` Raise it at ${place}.` : ''}`
 reason.statLowBest: (stat) => `Even your best, ${stat}, is low for this. Raising any of them would help.`
 odds.note.long:     (stat) => ['Long shot', `Fewer than one try in two come off here. It uses your ${stat}; raising it would help.`]
-orders: dir.sharpen-up 'Study, lift or run once in Coalport' · dir.v.sharpen-up 'Study, lift or run once in Duskwall' · dir.a.sharpen-up 'Study, unload or run once in Ashford'
+orders: dir.sharpen-up '{verbs} once in {city}' · dir.v.sharpen-up '{verbs} once in {city}' · dir.a.sharpen-up '{verbs} once in {city}'
 
 // §6: the election screens
 hall.kicker:        (city, hallRef) => `${city} Council · ${hallRef}`        // "Coalport Council · the Town Hall" (caps)

@@ -700,5 +700,545 @@
     "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
     "quality": 72,
     "bytes": 298108
+  },
+  "avatar.man-20s-b-128.avif": {
+    "sourceHash": "be99cecfeb0395b636eca9a8e542657360bf6e9aee36297a2b047ce1c0813d77",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3319
+  },
+  "avatar.man-20s-b-256.avif": {
+    "sourceHash": "be99cecfeb0395b636eca9a8e542657360bf6e9aee36297a2b047ce1c0813d77",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 11703
+  },
+  "avatar.man-20s-b-128.webp": {
+    "sourceHash": "be99cecfeb0395b636eca9a8e542657360bf6e9aee36297a2b047ce1c0813d77",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3908
+  },
+  "avatar.man-20s-b-256.webp": {
+    "sourceHash": "be99cecfeb0395b636eca9a8e542657360bf6e9aee36297a2b047ce1c0813d77",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 15188
+  },
+  "avatar.man-20s-c-128.avif": {
+    "sourceHash": "2d5daa691d6394022c38ee930f37222bd612368b8c54eb4733fda2d578c778c0",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3805
+  },
+  "avatar.man-20s-c-256.avif": {
+    "sourceHash": "2d5daa691d6394022c38ee930f37222bd612368b8c54eb4733fda2d578c778c0",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 12711
+  },
+  "avatar.man-20s-c-128.webp": {
+    "sourceHash": "2d5daa691d6394022c38ee930f37222bd612368b8c54eb4733fda2d578c778c0",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4718
+  },
+  "avatar.man-20s-c-256.webp": {
+    "sourceHash": "2d5daa691d6394022c38ee930f37222bd612368b8c54eb4733fda2d578c778c0",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 16476
+  },
+  "avatar.man-30s-b-128.avif": {
+    "sourceHash": "05b529a0284ef13c908fc0ef70e62e02c30d61d2469f308cf1989afb7af3a954",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3179
+  },
+  "avatar.man-30s-b-256.avif": {
+    "sourceHash": "05b529a0284ef13c908fc0ef70e62e02c30d61d2469f308cf1989afb7af3a954",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 11635
+  },
+  "avatar.man-30s-b-128.webp": {
+    "sourceHash": "05b529a0284ef13c908fc0ef70e62e02c30d61d2469f308cf1989afb7af3a954",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3900
+  },
+  "avatar.man-30s-b-256.webp": {
+    "sourceHash": "05b529a0284ef13c908fc0ef70e62e02c30d61d2469f308cf1989afb7af3a954",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 15106
+  },
+  "avatar.man-30s-c-128.avif": {
+    "sourceHash": "81ae31781021c8f70bc1533b74d26e6a438f6b861c75d2e29b590a0626434ca1",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3003
+  },
+  "avatar.man-30s-c-256.avif": {
+    "sourceHash": "81ae31781021c8f70bc1533b74d26e6a438f6b861c75d2e29b590a0626434ca1",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 10760
+  },
+  "avatar.man-30s-c-128.webp": {
+    "sourceHash": "81ae31781021c8f70bc1533b74d26e6a438f6b861c75d2e29b590a0626434ca1",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3580
+  },
+  "avatar.man-30s-c-256.webp": {
+    "sourceHash": "81ae31781021c8f70bc1533b74d26e6a438f6b861c75d2e29b590a0626434ca1",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 14190
+  },
+  "avatar.man-40s-b-128.avif": {
+    "sourceHash": "603f7fead31e298a1227c10cd5b3ae55a4daec5c913fbbab5e2d0ec7d1c0492d",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3600
+  },
+  "avatar.man-40s-b-256.avif": {
+    "sourceHash": "603f7fead31e298a1227c10cd5b3ae55a4daec5c913fbbab5e2d0ec7d1c0492d",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 12543
+  },
+  "avatar.man-40s-b-128.webp": {
+    "sourceHash": "603f7fead31e298a1227c10cd5b3ae55a4daec5c913fbbab5e2d0ec7d1c0492d",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4570
+  },
+  "avatar.man-40s-b-256.webp": {
+    "sourceHash": "603f7fead31e298a1227c10cd5b3ae55a4daec5c913fbbab5e2d0ec7d1c0492d",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 16180
+  },
+  "avatar.man-50s-128.avif": {
+    "sourceHash": "8ddc68824de293f675628c2731329b4335d89316468e3a89f922f9f374792a5a",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3708
+  },
+  "avatar.man-50s-256.avif": {
+    "sourceHash": "8ddc68824de293f675628c2731329b4335d89316468e3a89f922f9f374792a5a",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 14257
+  },
+  "avatar.man-50s-128.webp": {
+    "sourceHash": "8ddc68824de293f675628c2731329b4335d89316468e3a89f922f9f374792a5a",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4680
+  },
+  "avatar.man-50s-256.webp": {
+    "sourceHash": "8ddc68824de293f675628c2731329b4335d89316468e3a89f922f9f374792a5a",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 18182
+  },
+  "avatar.woman-20s-b-128.avif": {
+    "sourceHash": "fcb026a41bda16b1af470ac80dd1c4b6fac8413074333ef12db3de97cdc0b4d9",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3498
+  },
+  "avatar.woman-20s-b-256.avif": {
+    "sourceHash": "fcb026a41bda16b1af470ac80dd1c4b6fac8413074333ef12db3de97cdc0b4d9",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 12255
+  },
+  "avatar.woman-20s-b-128.webp": {
+    "sourceHash": "fcb026a41bda16b1af470ac80dd1c4b6fac8413074333ef12db3de97cdc0b4d9",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4200
+  },
+  "avatar.woman-20s-b-256.webp": {
+    "sourceHash": "fcb026a41bda16b1af470ac80dd1c4b6fac8413074333ef12db3de97cdc0b4d9",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 15456
+  },
+  "avatar.woman-20s-c-128.avif": {
+    "sourceHash": "e542b1660b73dd38d1e6bc2b156615924c5069813131fefcf01713c93efbdbee",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 4211
+  },
+  "avatar.woman-20s-c-256.avif": {
+    "sourceHash": "e542b1660b73dd38d1e6bc2b156615924c5069813131fefcf01713c93efbdbee",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 14115
+  },
+  "avatar.woman-20s-c-128.webp": {
+    "sourceHash": "e542b1660b73dd38d1e6bc2b156615924c5069813131fefcf01713c93efbdbee",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 5282
+  },
+  "avatar.woman-20s-c-256.webp": {
+    "sourceHash": "e542b1660b73dd38d1e6bc2b156615924c5069813131fefcf01713c93efbdbee",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 18040
+  },
+  "avatar.woman-30s-b-128.avif": {
+    "sourceHash": "9d2faa62a296a4e626ef573fa1aa65820edd8e5f896a547c4543b079738789f2",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3639
+  },
+  "avatar.woman-30s-b-256.avif": {
+    "sourceHash": "9d2faa62a296a4e626ef573fa1aa65820edd8e5f896a547c4543b079738789f2",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 12233
+  },
+  "avatar.woman-30s-b-128.webp": {
+    "sourceHash": "9d2faa62a296a4e626ef573fa1aa65820edd8e5f896a547c4543b079738789f2",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4490
+  },
+  "avatar.woman-30s-b-256.webp": {
+    "sourceHash": "9d2faa62a296a4e626ef573fa1aa65820edd8e5f896a547c4543b079738789f2",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 15974
+  },
+  "avatar.woman-30s-c-128.avif": {
+    "sourceHash": "101a2aabcb9e0c0e2244951ff38d5c052a5558964f1eaadc5b071907ed20a72b",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3490
+  },
+  "avatar.woman-30s-c-256.avif": {
+    "sourceHash": "101a2aabcb9e0c0e2244951ff38d5c052a5558964f1eaadc5b071907ed20a72b",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 12377
+  },
+  "avatar.woman-30s-c-128.webp": {
+    "sourceHash": "101a2aabcb9e0c0e2244951ff38d5c052a5558964f1eaadc5b071907ed20a72b",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4322
+  },
+  "avatar.woman-30s-c-256.webp": {
+    "sourceHash": "101a2aabcb9e0c0e2244951ff38d5c052a5558964f1eaadc5b071907ed20a72b",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 16616
+  },
+  "avatar.woman-40s-b-128.avif": {
+    "sourceHash": "fd7bfc614e0a81c773910fc06ce6ef09665788d23134181a6e2342d3970c8f0e",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3017
+  },
+  "avatar.woman-40s-b-256.avif": {
+    "sourceHash": "fd7bfc614e0a81c773910fc06ce6ef09665788d23134181a6e2342d3970c8f0e",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 10847
+  },
+  "avatar.woman-40s-b-128.webp": {
+    "sourceHash": "fd7bfc614e0a81c773910fc06ce6ef09665788d23134181a6e2342d3970c8f0e",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3726
+  },
+  "avatar.woman-40s-b-256.webp": {
+    "sourceHash": "fd7bfc614e0a81c773910fc06ce6ef09665788d23134181a6e2342d3970c8f0e",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 13754
+  },
+  "avatar.woman-50s-128.avif": {
+    "sourceHash": "66e317325ed3a4fbca2af0bdf770adf40d24c0d0951ef1f5ed673f03459c1d64",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3637
+  },
+  "avatar.woman-50s-256.avif": {
+    "sourceHash": "66e317325ed3a4fbca2af0bdf770adf40d24c0d0951ef1f5ed673f03459c1d64",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 13485
+  },
+  "avatar.woman-50s-128.webp": {
+    "sourceHash": "66e317325ed3a4fbca2af0bdf770adf40d24c0d0951ef1f5ed673f03459c1d64",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4558
+  },
+  "avatar.woman-50s-256.webp": {
+    "sourceHash": "66e317325ed3a4fbca2af0bdf770adf40d24c0d0951ef1f5ed673f03459c1d64",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 17036
+  },
+  "scene.factory-gate-640.avif": {
+    "sourceHash": "fd7eac1d11e4549e8d894d939014a44c71350fe6257bc6ca0ffa0e1c8a79e0bd",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 43691
+  },
+  "scene.factory-gate-1280.avif": {
+    "sourceHash": "fd7eac1d11e4549e8d894d939014a44c71350fe6257bc6ca0ffa0e1c8a79e0bd",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 50,
+    "bytes": 135015
+  },
+  "scene.factory-gate-640.webp": {
+    "sourceHash": "fd7eac1d11e4549e8d894d939014a44c71350fe6257bc6ca0ffa0e1c8a79e0bd",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 62652
+  },
+  "scene.docks-640.avif": {
+    "sourceHash": "9f9ae73f8ae08477b9b9da588f07eaa7e0e9dd3bb2271452288e62bb278b3f00",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 46448
+  },
+  "scene.docks-1280.avif": {
+    "sourceHash": "9f9ae73f8ae08477b9b9da588f07eaa7e0e9dd3bb2271452288e62bb278b3f00",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 50,
+    "bytes": 141698
+  },
+  "scene.docks-640.webp": {
+    "sourceHash": "9f9ae73f8ae08477b9b9da588f07eaa7e0e9dd3bb2271452288e62bb278b3f00",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 66486
+  },
+  "scene.market-640.avif": {
+    "sourceHash": "5057d03f0d94211faa7728879e30da230d483c26982e5f5727c828ef8bb032a4",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 52636
+  },
+  "scene.market-1280.avif": {
+    "sourceHash": "5057d03f0d94211faa7728879e30da230d483c26982e5f5727c828ef8bb032a4",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 45,
+    "bytes": 143134
+  },
+  "scene.market-640.webp": {
+    "sourceHash": "5057d03f0d94211faa7728879e30da230d483c26982e5f5727c828ef8bb032a4",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 77770
+  },
+  "scene.station-640.avif": {
+    "sourceHash": "985bc3751a0d95be2d271dc7265f60d28e7f0f86db590996bab11070574cd400",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 48743
+  },
+  "scene.station-1280.avif": {
+    "sourceHash": "985bc3751a0d95be2d271dc7265f60d28e7f0f86db590996bab11070574cd400",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 50,
+    "bytes": 152230
+  },
+  "scene.station-640.webp": {
+    "sourceHash": "985bc3751a0d95be2d271dc7265f60d28e7f0f86db590996bab11070574cd400",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 71560
+  },
+  "scene.street-640.avif": {
+    "sourceHash": "11701faf758df14c79c58e840db776c7ba7370feeb4c0e10e432de6d1c0e46b3",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 45699
+  },
+  "scene.street-1280.avif": {
+    "sourceHash": "11701faf758df14c79c58e840db776c7ba7370feeb4c0e10e432de6d1c0e46b3",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 50,
+    "bytes": 147630
+  },
+  "scene.street-640.webp": {
+    "sourceHash": "11701faf758df14c79c58e840db776c7ba7370feeb4c0e10e432de6d1c0e46b3",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 68470
+  },
+  "scene.square-640.avif": {
+    "sourceHash": "2ad742156d2f0d4abba513d9f93e2c100e8462e659f6c1e6f5db1a6b8e3f5975",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 49758
+  },
+  "scene.square-1280.avif": {
+    "sourceHash": "2ad742156d2f0d4abba513d9f93e2c100e8462e659f6c1e6f5db1a6b8e3f5975",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 45,
+    "bytes": 137951
+  },
+  "scene.square-640.webp": {
+    "sourceHash": "2ad742156d2f0d4abba513d9f93e2c100e8462e659f6c1e6f5db1a6b8e3f5975",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 73970
+  },
+  "scene.hotel-640.avif": {
+    "sourceHash": "58c36a7c2e9adb34835a13d2e1feaa9e7139f5173f718c1f0be26e994c667c48",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 40362
+  },
+  "scene.hotel-1280.avif": {
+    "sourceHash": "58c36a7c2e9adb34835a13d2e1feaa9e7139f5173f718c1f0be26e994c667c48",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 148589
+  },
+  "scene.hotel-640.webp": {
+    "sourceHash": "58c36a7c2e9adb34835a13d2e1feaa9e7139f5173f718c1f0be26e994c667c48",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 59222
+  },
+  "scene.court-640.avif": {
+    "sourceHash": "42acdde74db76f82702d6ae7436ff9fd2d84b36e4e82eed76b08d2c9fffaf0cc",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 36974
+  },
+  "scene.court-1280.avif": {
+    "sourceHash": "42acdde74db76f82702d6ae7436ff9fd2d84b36e4e82eed76b08d2c9fffaf0cc",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 131945
+  },
+  "scene.court-640.webp": {
+    "sourceHash": "42acdde74db76f82702d6ae7436ff9fd2d84b36e4e82eed76b08d2c9fffaf0cc",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 54828
+  },
+  "scene.university-640.avif": {
+    "sourceHash": "a96b64a4f8617bb1db4e979a586d6929b7883ee331ee4a0361065721b85debab",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 51350
+  },
+  "scene.university-1280.avif": {
+    "sourceHash": "a96b64a4f8617bb1db4e979a586d6929b7883ee331ee4a0361065721b85debab",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 45,
+    "bytes": 141442
+  },
+  "scene.university-640.webp": {
+    "sourceHash": "a96b64a4f8617bb1db4e979a586d6929b7883ee331ee4a0361065721b85debab",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 78136
+  },
+  "scene.library-640.avif": {
+    "sourceHash": "88ff39f02a93bfa9e6c3b8c453ec8e28dbf6af71a0726cdc09fe44f1bb51d1eb",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 35925
+  },
+  "scene.library-1280.avif": {
+    "sourceHash": "88ff39f02a93bfa9e6c3b8c453ec8e28dbf6af71a0726cdc09fe44f1bb51d1eb",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 124031
+  },
+  "scene.library-640.webp": {
+    "sourceHash": "88ff39f02a93bfa9e6c3b8c453ec8e28dbf6af71a0726cdc09fe44f1bb51d1eb",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 52862
+  },
+  "scene.ministry-640.avif": {
+    "sourceHash": "f69defb4f342768b7e4eb0d90aa49e40e5cdc827db0c66f7438d5727e6e8ea11",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 31805
+  },
+  "scene.ministry-1280.avif": {
+    "sourceHash": "f69defb4f342768b7e4eb0d90aa49e40e5cdc827db0c66f7438d5727e6e8ea11",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 118454
+  },
+  "scene.ministry-640.webp": {
+    "sourceHash": "f69defb4f342768b7e4eb0d90aa49e40e5cdc827db0c66f7438d5727e6e8ea11",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 46094
+  },
+  "scene.alliance-hq-640.avif": {
+    "sourceHash": "73dfb3d168a0829e7f5d47fef53c84eaddcd80ac2832126a3531dcc2d6c6a943",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 37115
+  },
+  "scene.alliance-hq-1280.avif": {
+    "sourceHash": "73dfb3d168a0829e7f5d47fef53c84eaddcd80ac2832126a3531dcc2d6c6a943",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 136179
+  },
+  "scene.alliance-hq-640.webp": {
+    "sourceHash": "73dfb3d168a0829e7f5d47fef53c84eaddcd80ac2832126a3531dcc2d6c6a943",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 53810
+  },
+  "scene.gym-640.avif": {
+    "sourceHash": "7ade8eeae2ee35a3ce536dd89ba51c0726834a3495c7741b265ab76388d6349c",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 38485
+  },
+  "scene.gym-1280.avif": {
+    "sourceHash": "7ade8eeae2ee35a3ce536dd89ba51c0726834a3495c7741b265ab76388d6349c",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 138890
+  },
+  "scene.gym-640.webp": {
+    "sourceHash": "7ade8eeae2ee35a3ce536dd89ba51c0726834a3495c7741b265ab76388d6349c",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 56634
+  },
+  "scene.theatre-640.avif": {
+    "sourceHash": "3c959ab908a005347ac2a3b392dbd2ba88b3140e10bdcefffd36bd6adf17d448",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 37675
+  },
+  "scene.theatre-1280.avif": {
+    "sourceHash": "3c959ab908a005347ac2a3b392dbd2ba88b3140e10bdcefffd36bd6adf17d448",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 133304
+  },
+  "scene.theatre-640.webp": {
+    "sourceHash": "3c959ab908a005347ac2a3b392dbd2ba88b3140e10bdcefffd36bd6adf17d448",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 55546
   }
 }

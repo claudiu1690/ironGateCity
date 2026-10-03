@@ -292,17 +292,25 @@ export interface TramBarProps {
   current: string | null;
   onGo: (id: string) => void;
   className?: string;
+  /** QA slice 4 M3: two rows of two in a narrow column (the side panel of a phone held sideways). */
+  columns?: 2 | 4;
 }
 
 /**
  * Screens §5.2: four chips at the bottom of the map, the other districts, one tap each (instant, free,
  * no modal); Oswald caps on ink, 44 px high. It replaces the mockup's *Tram to Eastside* ticket.
+ * QA slice 4 M3: a label that does not fit its chip wraps to a second line (*Station & / Market*),
+ * never runs into the next; in the side panel the chips are two rows of two.
  */
-export function TramBar({ districts, current, onGo, className }: TramBarProps) {
+export function TramBar({ districts, current, onGo, className, columns = 4 }: TramBarProps) {
   return (
     <nav
       aria-label={copy.capital.tram}
-      className={cx('flex min-h-11 items-stretch gap-px overflow-x-auto bg-ink-2', className)}
+      className={cx(
+        'grid min-h-11 items-stretch gap-px bg-ink-2',
+        columns === 2 ? 'grid-cols-2' : 'grid-cols-4',
+        className,
+      )}
       data-testid="tram-bar"
     >
       {districts
@@ -312,7 +320,7 @@ export function TramBar({ districts, current, onGo, className }: TramBarProps) {
             key={d.id}
             type="button"
             onClick={() => onGo(d.id)}
-            className="label-caps flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center bg-ink px-2 text-[11px] whitespace-nowrap text-paper hover:bg-ink-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper"
+            className="label-caps flex min-h-11 min-w-0 cursor-pointer items-center justify-center bg-ink px-1.5 py-1 text-center text-[11px] leading-[1.15] break-words text-paper hover:bg-ink-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper"
             data-testid="tram-chip"
             aria-label={`${copy.capital.tram}: ${d.name}`}
           >
@@ -480,6 +488,9 @@ export function residenceLines(
       };
     case 'atHome':
       return { line1: live, line2: '', button: null };
+    // Slice-4 fixes §1 (QA M2): a candidate on the ballot where they live moves after the result.
+    case 'onBallot':
+      return { line1: live, line2: r.onBallotLine(card.livesIn, weekdayOf(card.canMoveFromDay ?? 0)), button: null };
   }
 }
 
@@ -540,14 +551,19 @@ export function ResidenceCard({
           <span className="font-display text-[14px] font-bold">{copy.residence.room}</span>
           <span className="font-mono text-[11px] text-muted" data-testid="room-line">
             {room.state === 'running'
-              ? copy.residence.roomUntil(weekdayOf(room.untilDay ?? 0), room.cap)
+              ? room.renewFromDay !== undefined
+                ? copy.residence.roomPaidAhead(weekdayOf(room.untilDay ?? 0), room.cap, weekdayOf(room.renewFromDay))
+                : copy.residence.roomUntil(weekdayOf(room.untilDay ?? 0), room.cap)
               : priceLine
                 ? `${room.price.total} Iron · ${priceLine.label}`
                 : copy.residence.roomLine(room.price.total, 7, 50)}
           </span>
-          <Button variant="outline" className="w-full" pending={roomPending} onClick={onRoom} data-testid="room-take">
-            {room.state === 'running' ? copy.residence.renew(room.price.total) : copy.residence.takeARoom(room.price.total)}
-          </Button>
+          {/* Slice-4 fixes §6 (QA m5): Renew adds seven nights, offered while seven or fewer remain. */}
+          {room.renewFromDay === undefined && (
+            <Button variant="outline" className="w-full" pending={roomPending} onClick={onRoom} data-testid="room-take">
+              {room.state === 'running' ? copy.residence.renew(room.price.total) : copy.residence.takeARoom(room.price.total)}
+            </Button>
+          )}
         </div>
       )}
     </section>

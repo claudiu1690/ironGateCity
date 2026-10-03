@@ -12,6 +12,7 @@ import R1 from '../../../docs/design/review-1-answers.md?raw';
 import { copy, isCheckedAction, loadContent, rawContent } from '../src';
 import { mapPins } from '../src/data/mapPins';
 import { R2_ORDERS, plainProse } from './review2';
+import { FIX4_ORDERS } from './fixes4';
 import { R3_ORDER_TITLES, R3_VERBS } from './review3';
 
 const content = loadContent();
@@ -179,20 +180,24 @@ describe('content vs docs/design/slice-1-content.md', () => {
       expect(t, id).toBeDefined();
       expect(t!.slot, id).toBe(slot.charAt(0));
       // Review 2 (answers §1.7) supersedes the titles and lines it lists; review 3 (answers §5.4,
-      // §7) the training orders' titles.
+      // §7) the training orders' titles; the slice-4 fix round (slice-4-fixes.md §2) slot C's.
       const r2 = R2_ORDERS.get(t!.id);
-      expect(t!.title, id).toBe(R3_ORDER_TITLES.get(t!.id) ?? r2?.title ?? title);
-      expect(t!.line, id).toBe(r2?.line ?? line);
+      const f4 = FIX4_ORDERS.get(t!.id);
+      expect(t!.title, id).toBe(f4?.title ?? R3_ORDER_TITLES.get(t!.id) ?? r2?.title ?? title);
+      expect(t!.line, id).toBe(f4?.line ?? r2?.line ?? line);
       expect(t!.target, id).toBe(Number(target.match(/· (\d+)/)![1]));
     }
   });
 
   it('review 3 §5.4, §7: the training orders name the verbs', () => {
+    // Slice-4 fixes §2 (QA m1): the title names the reader's residence and its verbs, resolved at
+    // read (*Study, lift or run once in Coalport*, *Study, carry or run once in Irongate*).
     expect([...R3_ORDER_TITLES]).toEqual([
-      ['dir.sharpen-up', 'Study, lift or run once in Coalport'],
-      ['dir.v.sharpen-up', 'Study, lift or run once in Duskwall'],
-      ['dir.a.sharpen-up', 'Study, unload or run once in Ashford'],
+      ['dir.sharpen-up', '{verbs} once in {city}'],
+      ['dir.v.sharpen-up', '{verbs} once in {city}'],
+      ['dir.a.sharpen-up', '{verbs} once in {city}'],
     ]);
+    expect(FIX4_ORDERS.size).toBe(9);
     for (const [id, title] of R3_ORDER_TITLES)
       expect(content.orderTemplates.find((t) => t.id === id)?.title, id).toBe(title);
   });

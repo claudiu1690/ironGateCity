@@ -44,6 +44,11 @@ export function registerRefusal(i: {
   homeCityId: string;
   capitalId: string;
   inTransit: boolean;
+  /**
+   * Slice-4 fixes §1 (QA M2): the member's name is on a ballot (polls open) where they live; they
+   * can move after the result. After the cooldown, before the Iron.
+   */
+  onBallot?: boolean;
 }): GameErrorReason | null {
   if (i.inTransit) return 'IN_TRANSIT';
   if (i.target.cityId !== i.capitalId && i.target.cityId !== i.homeCityId) return 'DESTINATION_LOCKED';
@@ -52,6 +57,7 @@ export function registerRefusal(i: {
   if (i.today < i.canMoveFromDay) return 'MOVE_COOLDOWN';
   if (i.residence.cityId === i.target.cityId && i.residence.districtId === i.target.districtId)
     return 'ALREADY_RESIDENT';
+  if (i.onBallot) return 'ON_BALLOT';
   if (i.iron < i.cost) return 'NOT_ENOUGH_IRON';
   return null;
 }
@@ -60,4 +66,22 @@ export function registerRefusal(i: {
 export function roomPrice(m?: Modifiers): { base: number; lines: PriceLine[]; total: number } {
   const lines = priceLines(m, 'roomPct');
   return { base: ROOM.cost, lines, total: priceWith(ROOM.cost, lines) };
+}
+
+/**
+ * Slice-4 fixes §6 (QA m5): what a tap on the room buys. No room running: seven nights from today.
+ * A room running with seven or fewer nights left: seven more nights at its end (it never restarts).
+ * More than seven left: nothing (`paidAhead`, renew from the day seven remain), so at most fourteen
+ * nights are ever paid for.
+ */
+export function roomTap(
+  room: { fromDay: DayKey; untilDay: DayKey } | null | undefined,
+  today: DayKey,
+):
+  | { kind: 'take' | 'renew'; fromDay: DayKey; untilDay: DayKey }
+  | { kind: 'paidAhead'; renewFromDay: DayKey } {
+  const running = !!room && room.fromDay <= today && today < room.untilDay;
+  if (!running) return { kind: 'take', fromDay: today, untilDay: today + ROOM.days };
+  if (room.untilDay - today > ROOM.days) return { kind: 'paidAhead', renewFromDay: room.untilDay - ROOM.days };
+  return { kind: 'renew', fromDay: room.fromDay, untilDay: room.untilDay + ROOM.days };
 }

@@ -16,6 +16,7 @@ import {
   dayStart,
   equippedItems,
   isPaperDue,
+  issueTags,
   itemSpec,
   jobLocks,
   firstDayBonus,
@@ -28,10 +29,12 @@ import {
   seniorityPct,
   standingView,
   statUse,
+  verbsPhrase,
   weekOf,
   wornCha,
 } from '@irongate/rules';
-import { restedCapToday } from './modifiers';
+import { liveIssuesOf, restedCapToday } from './modifiers';
+import type { LiveIssue } from '@irongate/rules';
 import type {
   ActionDescriptor,
   AssetView,
@@ -207,21 +210,47 @@ export function ambitionStatus(content: GameContent, doc: CharacterDoc, today: D
 /**
  * Slice-2 tech design §7.3: the first home-city pin where a tap would advance this order: an action
  * the spec matches, or, for "Take a job", the first Jobs card with a job the character can take.
+ *
+ * Slice-4 fixes §3 (QA m2): `live`, the residence city's Issues this week in their order (first,
+ * second), tag the actions as the tickets show them, so an `issueTagged` order points at the first
+ * place, in pin order, with an action its first Issue tags (else its second's). A place the member
+ * may not act at (another party's headquarters in the capital) is never the pin.
  */
 export function orderPin(
   content: GameContent,
   doc: CharacterDoc,
   item: OrderItem,
   t: OrderTemplate,
+  live: readonly LiveIssue[] = [],
 ): { locationId: string; n: number } | null {
   // Slice 4 (ADR 0026): the pins of the residence city, where its orders point.
   const city = content.city(residenceCityId(doc));
   if (!city) return null;
-  const ctx = residenceCtx(doc);
   const spec = itemSpec(item, t);
+  if (spec.match.issueTagged) {
+    for (const issue of live) {
+      const pin = firstPin(content, doc, city, spec.match, [issue]);
+      if (pin) return pin;
+    }
+    return null;
+  }
+  return firstPin(content, doc, city, spec.match, live);
+}
+
+/** The first pin of the city, in pin order, where an action (or a job) matches the order's rule. */
+function firstPin(
+  content: GameContent,
+  doc: CharacterDoc,
+  city: NonNullable<ReturnType<GameContent['city']>>,
+  match: OrderTemplate['match'],
+  live: readonly LiveIssue[],
+): { locationId: string; n: number } | null {
+  const ctx = residenceCtx(doc);
+  const spec = { match };
   const values = wornStats(doc, content);
   for (const [i, location] of city.locations.entries()) {
     const pin = { locationId: location.id, n: i + 1 };
+    if (location.factionId && location.factionId !== doc.factionId) continue;
     if (spec.match.kinds?.includes('takeJob')) {
       const takeable = content
         .jobsAt(location.id)
@@ -241,7 +270,8 @@ export function orderPin(
         districtId: location.quarterId,
         locationKind: location.kind,
       };
-      if (orderMatches(spec.match, descriptor, ctx)) return pin;
+      const tagged = isCheckedAction(action) ? issueTags(live, descriptor).map((x) => x.issueId) : [];
+      if (orderMatches(spec.match, { ...descriptor, issueIds: tagged }, ctx)) return pin;
     }
   }
   return null;
@@ -307,6 +337,43 @@ export function jobView(content: GameContent, doc: CharacterDoc, today: DayKey):
   };
 }
 
+/**
+ * Slice-4 fixes §2 (QA m1): an order's placeholders, resolved at read for its reader: `{issue}` the
+ * residence city's first Issue this week, `{city}` the residence city's name, `{verbs}` the verbs of
+ * its training actions the member may take (another party's headquarters excluded), *Study, carry or
+ * run* in Irongate.
+ */
+export function orderVars(
+  content: GameContent,
+  doc: Pick<CharacterDoc, 'factionId' | 'residence' | 'homeCityId'>,
+  issueShort: string | null,
+): { issue: string; city: string; verbs: string } {
+  const city = content.city(residenceCityId(doc as CharacterDoc));
+  const verbs: string[] = [];
+  for (const l of city?.locations ?? []) {
+    if (l.factionId && l.factionId !== doc.factionId) continue;
+    for (const a of l.actions) if (!isCheckedAction(a)) verbs.push(a.verb);
+  }
+  return { issue: issueShort ?? 'the week', city: city?.name ?? '', verbs: verbsPhrase(verbs) };
+}
+
+/** An order's title or line for its reader (`orderVars`). */
+export const orderText = (text: string, vars: { issue: string; city: string; verbs: string }): string =>
+  fillTemplate(text, vars);
+
+/** The residence city's Issues this week in their order (first, second), for the orders' pins. */
+export function liveIssuesInOrder(
+  content: GameContent,
+  doc: CharacterDoc,
+  city: Pick<CityDoc, 'issues'> | null | undefined,
+  today: DayKey,
+): LiveIssue[] {
+  const order = new Map((city?.issues?.live ?? []).map((l) => [l.docId, l.order]));
+  return liveIssuesOf(content, residenceCityId(doc), city ?? null, today).sort(
+    (a, b) => (order.get(a.docId) ?? 0) - (order.get(b.docId) ?? 0),
+  );
+}
+
 /** The residence city's first Issue this week, by its phrase (capital orders' `{issue}`). */
 export function firstIssueShort(
   content: GameContent,
@@ -323,7 +390,11 @@ export function ordersView(
   doc: CharacterDoc,
   today: DayKey,
   issueShort: string | null = null,
+  /** The residence city's document (its Issues tag the Issue order's pin: slice-4 fixes §3). */
+  residenceCity: Pick<CityDoc, 'issues'> | null = null,
 ): OrdersView {
+  const vars = orderVars(content, doc, issueShort);
+  const live = liveIssuesInOrder(content, doc, residenceCity, today);
   const faction = content.faction(doc.factionId);
   const npc = content.npc(faction.secretary.npcId)!;
   const templates = content.ordersOf(doc.factionId);
@@ -345,13 +416,13 @@ export function ordersView(
       return [
         {
           id: item.templateId,
-          title: spec.title,
-          // Slice 4 (design §10): `{issue}` is the residence city's first Issue, resolved at read.
-          line: fillTemplate(spec.line, { issue: issueShort ?? 'the week' }),
+          // Slice 4 (design §10), slice-4 fixes §2: `{issue}`, `{city}`, `{verbs}`, resolved at read.
+          title: orderText(spec.title, vars),
+          line: orderText(spec.line, vars),
           progress: Math.min(item.progress, item.target),
           target: item.target,
           done: item.doneAt !== null,
-          pin: item.doneAt === null ? orderPin(content, doc, item, t) : null,
+          pin: item.doneAt === null ? orderPin(content, doc, item, t, live) : null,
         },
       ];
     }),
@@ -454,7 +525,7 @@ export function toCharacterView(
     job: jobView(content, doc, today),
     standing: namedStanding(content, doc.cityId, standingSuccesses(doc, doc.cityId)),
     today: currentTally(doc.today, today),
-    orders: ordersView(content, doc, today, firstIssueShort(content, ctx.city, today)),
+    orders: ordersView(content, doc, today, firstIssueShort(content, ctx.city, today), ctx.city ?? null),
     paperDue: isPaperDue({
       editionReadAt,
       lastActionAt: doc.lastActionAt ? doc.lastActionAt.getTime() : null,

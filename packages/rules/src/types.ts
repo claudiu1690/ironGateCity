@@ -449,6 +449,8 @@ export const CAPITAL_PLACEHOLDERS = [
   'swing',
   'bracket',
   'origin',
+  /** Slice-4 fixes §5 (QA m4): the first-arrival deck's live count of close races. */
+  'closeRaces',
   'rank3',
   'weekday',
   /** The register and room results: the faction's capital HQ, the Rested cap with the room. */
@@ -1092,7 +1094,10 @@ export type GameErrorReason =
   | 'NOT_RESIDENT'
   | 'NOT_YET_VOTER'
   | 'NOT_YET_CANDIDATE'
-  | 'WRONG_FACTION';
+  | 'WRONG_FACTION'
+  // Slice-4 fixes (docs/design/slice-4-fixes.md §1, §6).
+  | 'ON_BALLOT'
+  | 'ROOM_PAID_AHEAD';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -1511,7 +1516,9 @@ export type PoliticalAct =
   | 'councilVote'
   // Slice 4 (tech design §10.4).
   | 'register'
-  | 'room';
+  | 'room'
+  // Slice-4 fixes §6: seven more nights on a room running.
+  | 'renew';
 export const POLITICAL_ACTS = [
   'ballot',
   'declare',
@@ -1521,6 +1528,7 @@ export const POLITICAL_ACTS = [
   'councilVote',
   'register',
   'room',
+  'renew',
 ] as const;
 
 /** The political result modal (screens §9, tech design §10.1), stored in requestLogs.result. */
@@ -1743,7 +1751,16 @@ export type PlaceTagView =
 
 /** Screens §6.1: the residence card's state, chosen on the server per district. */
 export interface ResidenceCardView {
-  state: 'visitingMay' | 'belowRank' | 'cooldown' | 'noIron' | 'resident' | 'homeElsewhere' | 'atHome';
+  state:
+    | 'visitingMay'
+    | 'belowRank'
+    | 'cooldown'
+    | 'noIron'
+    | 'resident'
+    | 'homeElsewhere'
+    | 'atHome'
+    // Slice-4 fixes §1 (QA M2): on a ballot where you live; `canMoveFromDay` is the count day.
+    | 'onBallot';
   livesIn: string;
   registeredDay?: DayKey;
   votesFromDay?: DayKey;
@@ -1755,6 +1772,8 @@ export interface ResidenceCardView {
     state: 'none' | 'running';
     price: { total: number; lines: PriceLineView[] };
     untilDay?: DayKey;
+    /** Slice-4 fixes §6: more than seven nights paid; Renew comes back on this day. */
+    renewFromDay?: DayKey;
     cap: number;
   } | null;
 }

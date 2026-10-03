@@ -31,6 +31,11 @@ export interface MapHotspot {
     style?: 'number' | 'label' | 'district' | 'name';
     /** The label beside the pin (default: the name). */
     label?: string;
+    /**
+     * QA slice 4 M1: a shorter label for a `name` pin on a narrow map (under NARROW_NAMES px), drawn
+     * smaller, so five names fit a phone (*Gov. Quarter*). The accessible name stays the full label.
+     */
+    short?: string;
     /** A second, smaller line under the label (*you are here*, *rival ground*). */
     sub?: string;
     marks?: ReadonlyArray<'here' | 'muted' | 'residence' | 'issue'>;
@@ -406,6 +411,156 @@ function mostPinsClear(i: FitInput, floor: number, frame: MapRect): MapView {
   }
   return best!;
 }
+
+/**
+ * QA slice 4 M1 (the capital's overview): the first view is the whole picture at the covering scale,
+ * centred on the pins' box (the five district names), never zoomed in. The outlines are the tap
+ * targets, so the "every pin clear of every block" search does not apply; the names find their own
+ * clear spot instead (`placeNames`).
+ */
+export function coverRestView(i: FitInput & { minScale: number }): MapView {
+  return fitBetweenBands(i, clamp(i.minScale, MIN_FIT_SCALE, 1));
+}
+
+/** A district name on the overview: its point and outline in the box's pixels, its label's half width. */
+export interface NameSpot {
+  id: string;
+  x: number;
+  y: number;
+  half: number;
+  outline?: ReadonlyArray<readonly [number, number]>;
+}
+
+/** Where a name sits, as an offset from its point; `clear`: it found a clear spot (else it only slid along the edge). */
+export interface NamePlace {
+  dx: number;
+  dy: number;
+  clear: boolean;
+}
+
+/**
+ * QA slice 4 M1: the overview's first view, from the covered view centred on the names: moved up or
+ * down (within the picture's limits) to the nearest position where every name finds a clear spot (a
+ * phone held sideways, where the map's controls take the top of a short map), else the one where
+ * the most do.
+ */
+export function namesRestView(
+  base: MapView,
+  yRange: readonly [number, number],
+  place: (v: MapView) => Map<string, NamePlace>,
+): MapView {
+  const clearAt = (v: MapView) => [...place(v).values()].filter((n) => n.clear).length;
+  let best = base;
+  let bestN = clearAt(base);
+  const all = place(base).size;
+  for (let k = 1; k <= NAME_SHIFTS && bestN < all; k++)
+    for (const sign of [-1, 1]) {
+      const y = base.y + sign * k * NAME_SHIFT;
+      if (y < yRange[0] - 0.5 || y > yRange[1] + 0.5) continue;
+      const v = { ...base, y };
+      const n = clearAt(v);
+      if (n > bestN) [best, bestN] = [v, n];
+      if (bestN === all) break;
+    }
+  return best;
+}
+/** The first view's shifts up and down in search of clear names: NAME_SHIFTS steps of NAME_SHIFT px. */
+const NAME_SHIFT = 12;
+const NAME_SHIFTS = 8;
+
+/** A name label's height (its 44 px target), the least gap around it, and the search's grid and reach. */
+const NAME_H = 44;
+const NAME_GAP = 4;
+const NAME_STEP = 4;
+const NAME_REACH = 420;
+let nameSteps: Array<readonly [number, number]> | null = null;
+/** Every offset within NAME_REACH on the NAME_STEP grid, nearest first (built once). */
+function stepsByDistance(): Array<readonly [number, number]> {
+  if (nameSteps) return nameSteps;
+  const n = Math.floor(NAME_REACH / NAME_STEP);
+  const out: Array<[number, number, number]> = [];
+  for (let a = -n; a <= n; a++)
+    for (let b = -n; b <= n; b++) if (a * a + b * b <= n * n) out.push([a * NAME_STEP, b * NAME_STEP, a * a + b * b]);
+  out.sort((p, q) => p[2] - q[2] || Math.abs(p[1]) - Math.abs(q[1]));
+  nameSteps = out.map(([x, y]) => [x, y] as const);
+  return nameSteps;
+}
+
+/** Ray casting: the point inside the polygon (box pixels). */
+function insidePolygon(x: number, y: number, poly: ReadonlyArray<readonly [number, number]>): boolean {
+  let inside = false;
+  for (let a = 0, b = poly.length - 1; a < poly.length; b = a++) {
+    const [xa, ya] = poly[a]!;
+    const [xb, yb] = poly[b]!;
+    if (ya > y !== yb > y && x < ((xb - xa) * (y - ya)) / (yb - ya) + xa) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * QA slice 4 M1: where each district name sits on the overview, as an offset from its point. A name
+ * stays where it is if it is clear; otherwise it slides to the nearest spot that is inside the box
+ * between the bands, clear of every block (the desktop's corner plate, the *Districts* button) and of
+ * the names already placed, with its centre inside its own outline. Names that are clear where they
+ * are go first, so a name in the open never makes way for one that has to move. Nowhere clear within
+ * reach (zoomed far in): it only slides along the box's edge, as before.
+ */
+export function placeNames(
+  spots: ReadonlyArray<NameSpot>,
+  box: { w: number; h: number },
+  insets: MapInsets,
+): Map<string, NamePlace> {
+  const blocks = insets.blocks ?? [];
+  const placed: MapRect[] = [];
+  const rectAt = (s: NameSpot, cx: number, cy: number): MapRect => ({
+    x0: cx - s.half,
+    x1: cx + s.half,
+    y0: cy - NAME_H / 2,
+    y1: cy + NAME_H / 2,
+  });
+  const hits = (r: MapRect, b: MapRect) =>
+    r.x0 < b.x1 + NAME_GAP && b.x0 < r.x1 + NAME_GAP && r.y0 < b.y1 + NAME_GAP && b.y0 < r.y1 + NAME_GAP;
+  const free = (s: NameSpot, cx: number, cy: number) => {
+    const r = rectAt(s, cx, cy);
+    return (
+      r.x0 >= NAME_GAP &&
+      r.x1 <= box.w - NAME_GAP &&
+      r.y0 >= insets.top + NAME_GAP &&
+      r.y1 <= box.h - insets.bottom - NAME_GAP &&
+      !blocks.some((b) => hits(r, b)) &&
+      !placed.some((p) => hits(r, p)) &&
+      (!s.outline || s.outline.length < 3 || insidePolygon(cx, cy, s.outline))
+    );
+  };
+  const order = [...spots].sort((a, b) => Number(free(b, b.x, b.y)) - Number(free(a, a.x, a.y)));
+  const out = new Map<string, NamePlace>();
+  for (const s of order) {
+    let spot: NamePlace | null = null;
+    for (const [dx, dy] of stepsByDistance())
+      if (free(s, s.x + dx, s.y + dy)) {
+        spot = { dx, dy, clear: true };
+        break;
+      }
+    spot ??= {
+      dx: clamp(s.x, s.half + NAME_GAP, Math.max(s.half + NAME_GAP, box.w - s.half - NAME_GAP)) - s.x,
+      dy: 0,
+      clear: false,
+    };
+    placed.push(rectAt(s, s.x + spot.dx, s.y + spot.dy));
+    out.set(s.id, spot);
+  }
+  return out;
+}
+
+/** A name label's width on the map, estimated from its letters (Oswald caps at 12 px), with its marks. */
+export const nameHalfWidth = (label: string, marks: ReadonlyArray<string> = [], compact = false) =>
+  ((compact ? label.length * 7.4 + 24 : label.length * 8.8 + 30) + (marks.includes('residence') ? 18 : 0)) / 2;
+
+/** QA slice 4 M1: a map narrower than this draws the district names compact (their short label, smaller). */
+export const NARROW_NAMES = 560;
+/** The text a name pin shows on a map this wide. */
+const nameText = (l: MapHotspot, w: number) =>
+  w < NARROW_NAMES && l.pin?.short ? l.pin.short : (l.pin?.label ?? l.name);
 
 /** How many pins a drag at rest (within restPanLimits, at this view's scale) can bring clear. */
 function reachablePins(i: FitInput, rest: MapView, frame: MapRect): number {
@@ -1053,6 +1208,7 @@ export function CityMap({
   // Slice 4: the pins the at-rest view is about (the nation: your city and the capital).
   const focusPins = restFocus?.length ? locations.filter((l) => restFocus.includes(l.id)) : locations;
   const focusKey = restFocus?.join(',') ?? '';
+  const hasOutlines = (outlines?.length ?? 0) > 0;
   const coverKey = `${cover?.top ?? 0},${cover?.right ?? 0},${cover?.bottom ?? 0},${cover?.left ?? 0}`;
   const selected = locations.find((l) => l.id === selectedId) ?? null;
   // Slice 4: one mounted map shows the capital's overview and its districts; a new frame or set of pins
@@ -1091,21 +1247,40 @@ export function CityMap({
   const mine = restAt && restAt.box === `${w}x${h}` ? restAt : null;
   const restAtKey = mine ? `${mine.fx},${mine.fy},${mine.artW}` : '';
 
+  /** QA slice 4 M1: the district names on the overview at a view, for `placeNames`. */
+  const nameSpotsAt = (v: MapView): NameSpot[] => {
+    const at = (fx: number, fy: number) => [v.x + fx * contentW * v.scale, v.y + fy * contentH * v.scale] as const;
+    return locations
+      .filter((l) => l.pin?.style === 'name')
+      .map((l) => {
+        const [x, y] = at(l.map.x, l.map.y);
+        const shape = outlines?.find((o) => o.id === l.id)?.points;
+        return {
+          id: l.id,
+          x,
+          y,
+          half: nameHalfWidth(nameText(l, w), l.pin?.marks ?? [], w < NARROW_NAMES),
+          outline: shape?.map(([fx, fy]) => at(fx, fy)),
+        };
+      });
+  };
+
   /** The default at-rest view (QA M2, review 3): the zoom's base and the free zoom's limits hang on it. */
   const fitted = useMemo((): MapView | null => {
     if (w === 0 || h === 0 || !insets) return null;
     const box = { w, h };
     const content = { w: contentW, h: contentH };
-    return fitPinsView({
-      box,
-      content,
-      pins: (focusPins.length > 0 ? focusPins : locations).map((l) => l.map),
-      insets,
-      minScale: coverScale,
-      frame,
-    });
+    const pins = (focusPins.length > 0 ? focusPins : locations).map((l) => l.map);
+    // QA slice 4 M1: the overview (outlines to tap) rests on the whole picture, centred on its names.
+    if (hasOutlines) {
+      const base = coverRestView({ box, content, pins, insets, minScale: coverScale });
+      return namesRestView(base, picLimits(box, content, base.scale, insets).y, (v) =>
+        placeNames(nameSpotsAt(v), box, insets),
+      );
+    }
+    return fitPinsView({ box, content, pins, insets, minScale: coverScale, frame });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, contentW, contentH, insets, pinsKey, frameKey, coverScale, focusKey]);
+  }, [w, h, contentW, contentH, insets, pinsKey, frameKey, coverScale, focusKey, hasOutlines]);
   const free = fitted
     ? freeZoomLimits({ fitted: fitted.scale, cover: coverScale, artWidth, contentW, dpr })
     : { min: 1, max: 1 };
@@ -1269,6 +1444,17 @@ export function CityMap({
   }, [target]);
 
   const view = shown?.view ?? target?.view ?? null;
+  // QA slice 4 M1: where each district name sits (`placeNames`), worked out for the view the map rests
+  // at or is going to. A drag carries the names with the map; they settle again when it stops.
+  const restView = target?.view ?? null;
+  const restKey = restView ? `${restView.x.toFixed(1)},${restView.y.toFixed(1)},${restView.scale.toFixed(4)}` : '';
+  const outlinesKey = outlines?.map((o) => o.id).join(',') ?? '';
+  const nameAt = useMemo(() => {
+    if (!restView || !insets) return null;
+    const spots = nameSpotsAt(restView);
+    return spots.length > 0 ? placeNames(spots, { w, h }, insets) : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restKey, w, h, insets, pinsKey, contentW, contentH, outlinesKey]);
   // A zoom in flight (`data-moving`, for tests and for anyone waiting for the map to settle).
   const [moving, setMoving] = useState(false);
   const moveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -1833,9 +2019,9 @@ export function CityMap({
                 // the map (the nation's capital on a phone held upright).
                 const flip = style === 'label' && px > w - 170;
                 // The user's district lock: a district's name is centred on its point, but kept on the
-                // map: near an edge it slides along (its width estimated from its letters).
-                const half = style === 'name' ? (label.length * 8.8 + 30) / 2 : 0;
-                const slide = style === 'name' ? clamp(px, half + 4, Math.max(half + 4, w - half - 4)) - px : 0;
+                // map and clear (QA slice 4 M1): it slides out from under an overlay or another name,
+                // staying inside its own outline (`placeNames`).
+                const slide = style === 'name' ? (nameAt?.get(l.id) ?? { dx: 0, dy: 0 }) : null;
                 return (
                   <div
                     key={l.id}
@@ -1853,9 +2039,11 @@ export function CityMap({
                         data-testid="hotspot"
                         data-pin={style}
                         data-marks={marks.join(' ') || undefined}
-                        style={slide ? { marginLeft: slide } : undefined}
+                        style={slide && (slide.dx || slide.dy) ? { marginLeft: slide.dx, marginTop: slide.dy } : undefined}
+                        data-slide={slide && (slide.dx || slide.dy) ? `${slide.dx},${slide.dy}` : undefined}
                         className={cx(
-                          'hotspot label-caps pointer-events-auto absolute top-0 left-0 flex min-h-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1.5 border-[1.5px] px-2.5 text-[12px] font-semibold whitespace-nowrap shadow-[0_3px_10px_rgb(0_0_0/0.5)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
+                          'hotspot label-caps pointer-events-auto absolute top-0 left-0 flex min-h-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1.5 border-[1.5px] font-semibold whitespace-nowrap shadow-[0_3px_10px_rgb(0_0_0/0.5)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
+                          w < NARROW_NAMES ? 'px-2 text-[10.5px]' : 'px-2.5 text-[12px]',
                           on ? 'border-ink bg-paper text-ink' : 'border-paper bg-ink text-paper',
                         )}
                       >
@@ -1864,7 +2052,7 @@ export function CityMap({
                             <path d="M6 1 11 5.5V11H1V5.5z" fill="currentColor" />
                           </svg>
                         )}
-                        <span>{label}</span>
+                        <span>{nameText(l, w)}</span>
                         {l.pin?.sub && (
                           <span className="font-mono text-[10px] tracking-normal normal-case opacity-85">{l.pin.sub}</span>
                         )}

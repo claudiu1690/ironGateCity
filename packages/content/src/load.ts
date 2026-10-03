@@ -597,7 +597,8 @@ export function parseContent(raw: unknown): Content {
       if (m.cityId && m.cityId !== 'home' && !cityById.has(m.cityId))
         problems.push(`order "${t.id}": city "${m.cityId}" is not loaded`);
     }
-    checkText(`order "${t.id}"`, `${t.title} ${t.line}`);
+    // Slice-4 fixes §2: an order's placeholders are its own set (`{issue}`, `{city}`, `{verbs}`),
+    // checked with the capital rules below.
   }
 
   // Headlines. Slice 3: a template uses political conditions only, or none; political ones use the
@@ -980,9 +981,14 @@ function slice4Problems(
     }
   }
   for (const t of content.orderTemplates) {
-    const usesIssue = placeholdersIn(`${t.title} ${t.line}`).includes('issue');
-    if (usesIssue && !t.match.issueTagged)
+    const used = placeholdersIn(`${t.title} ${t.line}`);
+    if (used.includes('issue') && !t.match.issueTagged)
       problems.push(`order "${t.id}": {issue} only on an issue-tagged order`);
+    // Slice-4 fixes §2 (QA m1): `{city}` and `{verbs}` resolved at read; `{verbs}` names training.
+    if (used.includes('verbs') && !(t.match.kinds?.length === 1 && t.match.kinds[0] === 'training'))
+      problems.push(`order "${t.id}": {verbs} only on a training order`);
+    for (const ph of used)
+      if (!['issue', 'city', 'verbs'].includes(ph)) problems.push(`order "${t.id}": unknown placeholder {${ph}}`);
     if (t.slot === 'C' && t.use === 'rotation' && t.residence !== 'any')
       problems.push(`order "${t.id}": a slot C rotation order serves every residence`);
     if (t.slot !== 'C' && t.residence === 'any')

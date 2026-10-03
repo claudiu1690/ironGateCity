@@ -6,9 +6,16 @@ import { useEffect, useState } from 'react';
  * night or countdown.
  */
 let skewMs = 0;
+/** The `useNow` hooks mounted: told at once when the skew jumps (QA slice 4 n5). */
+const listeners = new Set<() => void>();
 
 export function noteServerNow(serverNow: number): void {
-  skewMs = serverNow - Date.now();
+  const next = serverNow - Date.now();
+  const jumped = Math.abs(next - skewMs) > 1_000;
+  skewMs = next;
+  // A first reading, a wrong phone clock or a dev-panel skip: every countdown on screen moves now,
+  // not at its next tick (up to a minute later).
+  if (jumped) for (const l of listeners) l();
 }
 
 export function serverNow(): number {
@@ -19,8 +26,13 @@ export function serverNow(): number {
 export function useNow(intervalMs = 1_000): number {
   const [now, setNow] = useState(serverNow);
   useEffect(() => {
-    const id = window.setInterval(() => setNow(serverNow()), intervalMs);
-    return () => window.clearInterval(id);
+    const tick = () => setNow(serverNow());
+    listeners.add(tick);
+    const id = window.setInterval(tick, intervalMs);
+    return () => {
+      listeners.delete(tick);
+      window.clearInterval(id);
+    };
   }, [intervalMs]);
   return now;
 }

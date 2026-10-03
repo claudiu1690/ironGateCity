@@ -574,7 +574,8 @@ describe('the result modal payload (§13.1a, tech design §9)', () => {
     expect(r.today).toMatchObject({ energy: 30, attempts: 3, successes: wins, ordersDone: 1 });
     // Section 6: Again costs.
     expect(r.again).toEqual({ cost1: 10, cost3: 30 });
-    expect(r.art).toMatchObject({ rung: 'map-crop', x: 0.75, y: 0.2 });
+    // The October art (art-wiring-oct.md) gave the factory gate its scene (§13.5 rung 2).
+    expect(r.art).toMatchObject({ rung: 'scene', asset: { id: 'scene.factory-gate' } });
   });
 
   it('council at the Union Hall: FXP ×1.5, no opinion effect, the Collective hall scene', async () => {

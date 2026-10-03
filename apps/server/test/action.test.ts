@@ -139,12 +139,9 @@ describe('action.perform ×1', () => {
 
     expect(result).toMatchObject({ kind: 'checked', action: { times: 1 }, idempotencyKey: key });
     expect(result.performedAt).toBe(new Date(clock.now()).toISOString());
-    expect(result.art).toMatchObject({
-      rung: 'map-crop',
-      asset: { id: 'map.coalport.day', tiles: { width: 8640 } },
-      x: 0.75,
-      y: 0.2,
-    });
+    // §13.5 rung 2: the Mill Gate's kind has its scene since the October art (art-wiring-oct.md); the
+    // map crop (rung 3) is tested where no scene is bound (slice4.fixes.test.ts).
+    expect(result.art).toMatchObject({ rung: 'scene', asset: { id: 'scene.factory-gate', widths: [640, 1280] } });
     const success = result.stamp === 'success';
     expect(result.successes).toBe(success ? 1 : 0);
     expect(result.headline).toBe(success ? 'The whistle goes, and they stop' : 'Most of them walk past');

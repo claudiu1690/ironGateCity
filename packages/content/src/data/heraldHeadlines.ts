@@ -37,7 +37,8 @@ export const heraldHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstCapitalArrivalYesterday' }],
     headline: '{name} Arrives in the Capital',
-    deck: 'Off the {origin} train into Station & Market. Five districts, two of them close races today. The tram is free.',
+    // Slice-4 fixes §5 (QA m4): `{closeRaces}` counts today's close races at the edition.
+    deck: 'Off the {origin} train into Station & Market. Five districts, {closeRaces}. The tram is free.',
   },
   // Stored (every paper): the level reached 10 since the last paper.
   {
@@ -56,7 +57,7 @@ export const heraldHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 0,
     when: [{ kind: 'seatWon', top: false }],
-    headline: '{name} Takes a {district} Seat for the {faction}',
+    headline: '{name} Takes a Seat in {district} for the {faction}',
     deck: 'Elected {ordinal} of two with {votes} support. The {faction} holds {seatsFaction} of ten on the council. The council sits from this morning.',
   },
   {
@@ -74,7 +75,7 @@ export const heraldHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 1,
     when: [{ kind: 'seatLost', tie: false, bloc: false }],
-    headline: '{name} Misses a {district} Seat by {margin}',
+    headline: '{name} Misses a Seat in {district} by {margin}',
     deck: '{last} took the second seat. Candidates can put their names in again today; the 10 Political Capital stays with the branch.',
   },
   {
@@ -129,7 +130,7 @@ export const heraldHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'votedFor', won: true }],
-    headline: 'Your Vote Counted: {voted} Takes a {district} Seat',
+    headline: 'Your Vote Counted: {voted} Takes a Seat in {district}',
     deck: '{voted} finished {ordinal} of two in {district}. Turnout {turnout}.',
   },
   {
@@ -375,7 +376,7 @@ export const heraldHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'districtBattleground' }],
     headline: '{district} Is a Close Race Today',
-    deck: 'Three parties within ten points. Party work here pays +25 % Party XP and moves opinion +25 %.',
+    deck: 'The two leading parties are within ten points of each other. Party work here pays +25 % Party XP and moves opinion +25 %.',
   },
   {
     id: 'hl.ig.battleground-new',

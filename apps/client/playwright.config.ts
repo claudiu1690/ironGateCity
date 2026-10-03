@@ -4,8 +4,10 @@ import { defineConfig, devices } from '@playwright/test';
  * E2E: the built server in DB_MODE=memory (ADR 0004, no Docker) behind `vite preview` with the
  * same /api proxy as dev and production (ADR 0001). Mobile-first, so the default project is a phone.
  */
-const API_PORT = 3101;
-const WEB_URL = 'http://localhost:4173';
+// The ports, overridable when another program holds one (E2E_API_PORT, E2E_WEB_PORT).
+const API_PORT = Number(process.env.E2E_API_PORT ?? 3101);
+const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 4173);
+const WEB_URL = `http://localhost:${WEB_PORT}`;
 const CI = !!process.env.CI;
 
 export default defineConfig({
@@ -33,6 +35,7 @@ export default defineConfig({
         /landscape\.spec\.ts/,
         /travel\.spec\.ts/,
         /capital\.spec\.ts/,
+        /qa\.slice4\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -88,6 +91,14 @@ export default defineConfig({
       dependencies: ['travel'],
       use: { ...devices['Pixel 7'] },
     },
+    // QA slice 4: the capital's overview, the tram bar, double taps, the keyboard and the capital's
+    // ballot on a short phone; last, since it moves the shared clock to the capital's polls.
+    {
+      name: 'qa-capital',
+      testMatch: /qa\.slice4\.spec\.ts/,
+      dependencies: ['capital'],
+      use: { ...devices['Pixel 7'] },
+    },
   ],
   webServer: [
     {
@@ -112,7 +123,7 @@ export default defineConfig({
       },
     },
     {
-      command: 'pnpm build && pnpm preview',
+      command: `pnpm build && pnpm preview --port ${WEB_PORT} --strictPort`,
       url: WEB_URL,
       timeout: 240_000,
       reuseExistingServer: false,

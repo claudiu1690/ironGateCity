@@ -160,6 +160,11 @@ export const copy = {
     `Party order ${progress} / ${target} · +${pct} % Party XP`,
   orderDone: 'Order done',
   allOrdersDone: (pc: number) => `All orders carried out · +${pc} Political Capital`,
+  /** QA slice 4 m7: the capital's orders folded to one line on a short phone (a tap opens them). */
+  ordersFold: {
+    title: 'Party orders',
+    progress: (done: number, of: number) => `${done} of ${of} done`,
+  },
   /**
    * Review 1 (answers §6): a single order done is a signed line in the result modal. `left` is the
    * number still open; 0 is the third, and the orders-complete note follows.
@@ -345,17 +350,18 @@ export const copy = {
       ].join('\n'),
     ],
     /**
-     * Slice 4: the note in the capital (restating design §8: two seats a district, every party on
-     * every list, the score's mix, six votes of ten). Text for the designer to confirm.
+     * Slice 4: the note in the capital, five lines in the home note's tone (GDD §15.3: two seats a
+     * district, players and local candidates, who votes and from when, who stands and what it takes,
+     * the score in words, what a seat gives). Final text: docs/design/slice-4-fixes.md §7.
      */
     capitalElection: (rank2: string, rank3: string) => [
       'How elections work',
       [
         'Irongate elects ten councillors every five days, two in each of its five districts: two days for names to go in, three days of voting, the result the next morning.',
-        "Every party is on every district's list: players who stand, and local candidates run by the game.",
-        `${rank2}s who live in the district vote once, in secret, for any name on its list. ${rank3}s who are Known in Irongate can stand there.`,
-        "Each party's score mixes its share of the votes with its share of opinion; the top score takes the first seat, and a party takes both only with more than twice the next.",
-        "The ten sit for five days and vote on the city's rule: six votes of ten pass it.",
+        "The candidates are players who stand, and local candidates: townspeople run by the game, who fill every party's list so there is always a choice.",
+        `${rank2}s vote once, in secret, for any name on their district's list, from the first election that opens after they registered. ${rank3}s who are Known in Irongate can stand in their district; it costs 10 Political Capital and takes two backers of their party who live in the capital.`,
+        "Each party's score mixes its share of the votes with its share of opinion in the district. The top score takes the first seat; a party takes both only with more than twice the next.",
+        "A seat is five days on the council: a vote on the city's rule, which needs six votes of ten, and 10 Political Capital and 20 Party XP a day.",
       ].join('\n'),
     ],
     rule: (city: string) => [
@@ -694,6 +700,8 @@ export const copy = {
     arrived: 'Arrived',
     inTheCapital: "You're in the capital",
     nothingHappened: 'The train was on time. Nothing happened, which is rare.',
+    /** Slice-4 fixes §8 (QA n2): the arrival's body above a card still to answer. */
+    cardBelow: "The train was on time. One thing happened on the way: it's below, and you can still answer it.",
     boardTheTrainTo: (city: string, fare: number, min: number) =>
       `Board the train to ${city} · ${fare} Iron · ${min} min`,
     seeTheNationMap: 'See the nation map',
@@ -735,6 +743,11 @@ export const copy = {
     notYetVoter: 'You vote here from the next election that opens.',
     notYetCandidate: 'You can stand here from the next election that opens.',
     wrongFaction: 'Members back their own party’s candidates.',
+    /** Slice-4 fixes §1, §6 (QA M2, m5). */
+    // The design's "on the ballot" reworded: ballot is a system word (review 2 §1.13).
+    onBallot: "You're a candidate where you live until the result. You can move after it.",
+    roomPaidAhead: (weekday: string) =>
+      `The room is paid for a week ahead already. You can renew from ${weekday}.`,
   },
   /**
    * The ground sash (slice-4 screens, 3 Oct 2026): whose ground a place is, on the big scene art.
@@ -753,6 +766,15 @@ export const copy = {
     districtOf: (n: number, of: number) => `District · ${n} of ${of}`,
     districts: 'Districts',
     closeRace: 'Close race',
+    /** Slice-4 fixes §5 (QA m4): the first-arrival deck's `{closeRaces}`, of the five districts. */
+    closeRacesOfFive: (n: number) =>
+      n <= 0
+        ? 'none of them a close race today'
+        : n === 1
+          ? 'one of them a close race today'
+          : n >= 5
+            ? 'all five close races today'
+            : `${['two', 'three', 'four'][n - 2]} of them close races today`,
     leans: (faction: string) => `Leans ${faction}`,
     heldBy: (faction: string, share: string) => `Held by the ${faction} ${share}`,
     comeback: (faction: string, pct: number) => `Comeback · ${faction} +${pct} %`,
@@ -798,7 +820,7 @@ export const copy = {
       ],
       closeRace: () => [
         'Close race',
-        'Three parties within ten points of each other here today. Party work in a close race pays +25 % Party XP, moves opinion +25 % and has better odds.',
+        'The two parties in front are within ten points of each other here today. Party work in a close race pays +25 % Party XP, moves opinion +25 % and has better odds.',
       ],
       comeback: () => [
         'Comeback',
@@ -817,6 +839,9 @@ export const copy = {
     /** The not-enough-Iron state's line 2 (screens §6.1). */
     registerHereShort: (district: string) => `Register here to vote and stand in ${district}`,
     canMoveAgainFrom: (weekday: string) => `You can move again from ${weekday}`,
+    /** Slice-4 fixes §1 (QA M2): a candidate on the ballot where they live stays until the result. */
+    onBallotLine: (place: string, weekday: string) =>
+      `You're a candidate in ${place} until the result · you can move from ${weekday}`,
     /** "Registered Monday · you vote from Thursday · move again from Monday". */
     registeredLine: (weekday: string, votesFrom: string, moveFrom: string) =>
       `Registered ${weekday} · you vote from ${votesFrom} · move again from ${moveFrom}`,
@@ -833,8 +858,12 @@ export const copy = {
     room: 'A room in Irongate',
     roomLine: (iron: number, days: number, cap: number) => `${iron} Iron · ${days} days · Rested cap +${cap}`,
     takeARoom: (iron: number) => `Take a room · ${iron} Iron`,
-    renew: (iron: number) => `Renew · ${iron} Iron`,
+    /** Slice-4 fixes §6 (QA m5): a renewal adds seven nights to the end of the room. */
+    renew: (iron: number) => `Renew · ${iron} Iron · 7 more nights`,
     roomUntil: (weekday: string, cap: number) => `Room until ${weekday} · Rested cap ${cap}`,
+    /** More than seven nights paid: no button, the day it comes back. */
+    roomPaidAhead: (weekday: string, cap: number, renewFrom: string) =>
+      `Room until ${weekday} · Rested cap ${cap} · renew from ${renewFrom}`,
     /** The room's stamp. */
     taken: 'Taken',
     /** The Me tab: "You live in Eastside, Irongate · move again from Monday". */

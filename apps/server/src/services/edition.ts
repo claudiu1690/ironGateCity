@@ -10,7 +10,7 @@ import type {
   Placeholder,
   Settlement,
 } from '@irongate/rules';
-import { locationRef, namedStanding, rankTitle, standingSuccesses } from './views';
+import { locationRef, namedStanding, orderText, orderVars, rankTitle, standingSuccesses } from './views';
 
 export type NewEdition = Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
 
@@ -97,8 +97,9 @@ export function buildEdition(i: {
     // TODO(game-designer): the seniority decks read "{name} has been {job}"; {job} is the job's name.
     job: job?.name ?? '',
     place: placeId ? locationRef(content, placeId) : (homeCity?.locations[0]?.name ?? ''),
-    ordersTitle: orderA?.title ?? '',
-    ordersLine: orderA?.line ?? '',
+    // Slice-4 fixes §2 (QA m1): an order's `{city}` / `{verbs}` resolved for the reader.
+    ordersTitle: orderA ? orderText(orderA.title, orderVars(content, c, null)) : '',
+    ordersLine: orderA ? orderText(orderA.line, orderVars(content, c, null)) : '',
     // Slice 4: the Herald's stored lines name the faction and the residence.
     faction: content.faction(c.factionId).shortName,
     district: residencePlaceName(content, c),

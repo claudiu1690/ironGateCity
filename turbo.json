@@ -35,7 +35,7 @@
     },
     "e2e": {
       "cache": false,
-      "passThroughEnv": ["MONGOMS_*", "CI", "PLAYWRIGHT_*"]
+      "passThroughEnv": ["MONGOMS_*", "CI", "PLAYWRIGHT_*", "E2E_*", "QA_SHOW_BUGS"]
     }
   }
 }

@@ -3,6 +3,7 @@ import { isNight } from '@irongate/rules';
 import type { CapitalCountView, CouncilView, ElectionView, FactionId, HallView } from '@irongate/rules';
 import {
   Button,
+  cx,
   CountTable,
   DistrictResultTable,
   DistrictSwitcher,
@@ -58,9 +59,12 @@ function kickerOf(cityName: string, what?: string): string {
 function Page({
   children,
   hall,
+  shortHall = false,
 }: {
   children: ReactNode;
   hall?: { hall: HallView | null; cityName: string };
+  /** QA slice 4 m6: the ballot keeps the hall to a thin band on a short screen, so a name shows above the CTA. */
+  shortHall?: boolean;
 }) {
   const now = useNow(60_000);
   return (
@@ -71,7 +75,11 @@ function Page({
             hall={hall.hall}
             cityName={placeOf(hall.cityName).city}
             night={isNight(now)}
-            className="-mx-4 -mt-4 -mb-3 sm:mx-0 sm:mt-0"
+            className={cx(
+              '-mx-4 -mt-4 -mb-3 sm:mx-0 sm:mt-0',
+              shortHall &&
+                '[@media(max-height:700px)]:h-[64px] [@media(max-height:660px)]:hidden [@media(max-height:960px)]:sm:h-[96px]',
+            )}
           />
         )}
         {children}
@@ -406,20 +414,21 @@ export function BallotPage() {
   const cast = e.ballot.cast;
   const chosen = e.candidates.find((c) => c.key === selected);
   return (
-    <Page hall={{ hall: e.hall, cityName: e.cityName }}>
+    <Page hall={{ hall: e.hall, cityName: e.cityName }} shortHall>
       <Plate kicker={kickerOf(e.cityName, 'Voting')} title="Your vote">
         <span className="font-mono text-[12px] text-dim" data-testid="ballot-line">
           {placeOf(e.cityName).district
             ? copy.capitalElection.ballotLine(formatUntil(e.countAt))
             : `Seven seats · one vote · secret and final · closes ${formatUntil(e.countAt)}`}
         </span>
-        {/* Review 3 (answers §6.3): who can be voted for, in words. */}
-        <span className="font-mono text-[12px] text-dim" data-testid="vote-anyone">
+        {/* Review 3 (answers §6.3): who can be voted for, in words (on a short phone, under the names:
+            QA slice 4 m6). */}
+        <span className="font-mono text-[12px] text-dim [@media(max-height:700px)]:hidden" data-testid="vote-anyone">
           {copy.voteAnyone}
         </span>
       </Plate>
-      <ElectionsLink cityName={e.cityName} />
-      <LastResultLink />
+      {/* QA slice 4 m6: the names come straight after the plate, so the first shows above the CTA on
+          a short phone; the help and the last result follow them. */}
       <Slate
         candidates={e.candidates}
         mode="ballot"
@@ -428,6 +437,9 @@ export function BallotPage() {
         onSelect={setSelected}
       />
       <Notice error={act.error} />
+      <p className="hidden font-mono text-[12px] text-muted [@media(max-height:700px)]:block">{copy.voteAnyone}</p>
+      <ElectionsLink cityName={e.cityName} />
+      <LastResultLink />
       <Sticky>
         {cast ? (
           <p className="py-2 text-center font-mono text-[12px]" data-testid="ballot-cast-line">

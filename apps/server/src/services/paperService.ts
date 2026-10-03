@@ -156,7 +156,7 @@ export async function getPaper(deps: {
       ...(/.hero$/.test(h.templateId) ? { medal: true } : {}),
     })),
     issues: await paperIssues(content, c, today),
-    orders: ordersView(content, c, today, firstIssueShort(content, homeState, today)),
+    orders: ordersView(content, c, today, firstIssueShort(content, homeState, today), homeState),
     desk: {
       salary: entry.desk.salary
         ? {

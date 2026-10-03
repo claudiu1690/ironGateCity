@@ -83,7 +83,11 @@ function namesOf(c: { factionId: FactionId; factionName: string; factionNames?: 
  * the largest share; in the capital the party leading the place's district, *Contested* in a close
  * race; a party's headquarters its own party.
  */
-export function groundFor(c: CityView, l: LocationView | undefined, names: Partial<Record<FactionId, string>>): Ground | null {
+export function groundFor(
+  c: CityView,
+  l: LocationView | undefined,
+  names: Partial<Record<FactionId, string>>,
+): Ground | null {
   if (!l) return null;
   const hq = l.kind === 'faction-hq' ? (l.factionId ?? c.homeFactionId ?? null) : null;
   if (c.districts && c.districts.length > 0) {
@@ -132,6 +136,8 @@ export function CityPage() {
   // Review 3: the list of the places on the map (the Places button); slice 4: *Show places*, *Where to act*.
   const [placesOpen, setPlacesOpen] = useState(!!placesSearch);
   const [districtsOpen, setDistrictsOpen] = useState(false);
+  // QA slice 4 m7: on a short phone the capital folds the orders to one line; a tap opens them.
+  const [ordersOpen, setOrdersOpen] = useState(false);
   const [result, setResult] = useState<ActionResult | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   // Review 1 (§13.7): the orders-complete note waits for this modal to close (AppShell shows it).
@@ -203,6 +209,17 @@ export function CityPage() {
   const select = (id: string | null, orderId?: string) => {
     setJobMessage(null);
     action.reset();
+    // The capital shows one district's places (the user's lock): an order's pin for a place in another
+    // district, or on the overview, opens that district, then the place (slice-4 fixes §3).
+    const into = districts && id ? c0?.locations.find((l) => l.id === id)?.quarterId : undefined;
+    if (into && into !== district?.id) {
+      void navigate({
+        to: '/city/$cityId/$quarterId',
+        params: { cityId, quarterId: into },
+        search: { loc: id!, ...(orderId ? { order: orderId } : {}) },
+      });
+      return;
+    }
     void navigate({
       to: '.',
       search: id ? { loc: id, ...(orderId ? { order: orderId } : {}) } : {},
@@ -247,7 +264,11 @@ export function CityPage() {
   const names = namesOf(character);
   const overview = !!districts && !district;
   // The pins on show: a home city's, a district's own (the user's lock: only its), none on the overview.
-  const shownLocations = district ? c.locations.filter((l) => l.quarterId === district.id) : overview ? [] : c.locations;
+  const shownLocations = district
+    ? c.locations.filter((l) => l.quarterId === district.id)
+    : overview
+      ? []
+      : c.locations;
   const location: LocationView | undefined = shownLocations.find((l) => l.id === loc);
   /** What the sheet shows: the open place, or (closing) the last one. */
   const sheetPlace: LocationView | undefined = location ?? shownLocations.find((l) => l.id === lastPlace);
@@ -374,10 +395,13 @@ export function CityPage() {
   const rank2 = character.rank.ladder[1] ?? '';
   const register = () =>
     void act.run('register', (k) =>
-      trpcClient.residence.register.mutate({ cityId: c.id, districtId: district?.id ?? null, idempotencyKey: k }),
+      trpcClient.residence.register.mutate({
+        cityId: c.id,
+        districtId: district?.id ?? null,
+        idempotencyKey: k,
+      }),
     );
-  const takeRoom = () =>
-    void act.run('room', (k) => trpcClient.residence.room.mutate({ idempotencyKey: k }));
+  const takeRoom = () => void act.run('room', (k) => trpcClient.residence.room.mutate({ idempotencyKey: k }));
   const residenceFull = (className?: string) =>
     residenceCard ? (
       <ResidenceCard
@@ -398,7 +422,9 @@ export function CityPage() {
       className="flex min-h-11 w-full cursor-pointer items-baseline gap-2 border-t border-paper-2 px-3 text-left hover:bg-paper-2"
       data-testid="residence-row"
     >
-      <span className="label-caps shrink-0 text-[9.5px] font-semibold text-muted">{copy.residence.whereYouLive}</span>
+      <span className="label-caps shrink-0 text-[9.5px] font-semibold text-muted">
+        {copy.residence.whereYouLive}
+      </span>
       <span className="min-w-0 flex-1 truncate font-body text-[13.5px]">
         {residenceLines(residenceCard, residencePlace, rank2).line1}
       </span>
@@ -414,13 +440,14 @@ export function CityPage() {
       <TodayStrip today={character.today} help={{ cityName: c.name, turnsAt: character.day.endsAt }} />
     </>
   );
-  const tramBar = (className?: string) =>
+  const tramBar = (className?: string, columns?: 2 | 4) =>
     district && districts ? (
       <TramBar
         districts={districts.map((d) => ({ id: d.id, name: d.name }))}
         current={district.id}
         onGo={(id) => goDistrict(id)}
         className={className}
+        columns={columns}
       />
     ) : null;
 
@@ -525,7 +552,10 @@ export function CityPage() {
             <ScoreboardLine
               line={c.scoreboard.mine}
               factionName={character.factionName}
-              className={cx('text-text-2', !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden')}
+              className={cx(
+                'text-text-2',
+                !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
+              )}
             />
           )}
         </div>
@@ -539,7 +569,7 @@ export function CityPage() {
   const overviewPlate = (
     <div className="flex items-stretch border-b-2 border-ink">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2">
-        <div className="flex items-baseline gap-2">
+        <div className="flex flex-wrap items-baseline gap-x-2">
           <h1 className="font-display text-[24px] leading-none font-black">{c.name}</h1>
           <span className="label-caps text-[9.5px] text-muted">{copy.capital.districts}</span>
         </div>
@@ -556,66 +586,99 @@ export function CityPage() {
     </div>
   );
 
+  /** The district plate's way back to the overview. */
+  const districtBack = (
+    <button
+      type="button"
+      onClick={() => goDistrict(null)}
+      className={cx(
+        'label-caps flex min-h-11 shrink-0 cursor-pointer items-center gap-1 border-paper-2 px-2.5 text-[11px] font-semibold hover:bg-paper-2',
+        side ? 'flex-1' : 'border-r',
+      )}
+      data-testid="district-back"
+      aria-label={`Back to ${c.name}`}
+    >
+      <span aria-hidden="true" className="font-label text-[16px] leading-none">
+        ‹
+      </span>
+      {c.name}
+    </button>
+  );
+  /** The plate's name block: *Visiting*, the district's name and its state (a tap opens the notes). */
+  const districtTitle = district ? (
+    <div
+      className={cx(
+        'relative flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-1.5',
+        side && 'border-b-2 border-ink',
+      )}
+    >
+      <HelpButton
+        notes={plateNotes}
+        label={`What the plate says about ${district.name}`}
+        buttonRef={plateHelp}
+        testId="plate-help"
+        className="absolute inset-0 z-10 w-full bg-transparent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+      />
+      <span className="label-caps text-[9px] text-muted" data-testid="district-kicker">
+        {district.you.resident ? copy.capital.youLiveHere : copy.capital.visiting}
+      </span>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <h1 className="font-display text-[21px] leading-none font-black" data-testid="district-name">
+          {district.name}
+        </h1>
+        <span className={cx('label-caps text-[9.5px] font-semibold', helpMark)} data-testid="district-state">
+          {districtStateWord(district, names)}
+        </span>
+      </div>
+    </div>
+  ) : null;
+
   /** Slice 4 (screens §5.2): a district's plate: back to the overview, the name, who holds it. */
   const districtPlate = district ? (
     <>
-      <div className="flex items-stretch border-b-2 border-ink">
-        <button
-          type="button"
-          onClick={() => goDistrict(null)}
-          className="label-caps flex min-h-11 shrink-0 cursor-pointer items-center gap-1 border-r border-paper-2 px-2.5 text-[11px] font-semibold hover:bg-paper-2"
-          data-testid="district-back"
-          aria-label={`Back to ${c.name}`}
-        >
-          <span aria-hidden="true" className="font-label text-[16px] leading-none">
-            ‹
-          </span>
-          {c.name}
-        </button>
-        <div className="relative flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-1.5">
-          <HelpButton
-            notes={plateNotes}
-            label={`What the plate says about ${district.name}`}
-            buttonRef={plateHelp}
-            testId="plate-help"
-            className="absolute inset-0 z-10 w-full bg-transparent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
-          />
-          <span className="label-caps text-[9px] text-muted" data-testid="district-kicker">
-            {district.you.resident ? copy.capital.youLiveHere : copy.capital.visiting}
-          </span>
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <h1 className="font-display text-[21px] leading-none font-black" data-testid="district-name">
-              {district.name}
-            </h1>
-            <span className={cx('label-caps text-[9.5px] font-semibold', helpMark)} data-testid="district-state">
-              {districtStateWord(district, names)}
-            </span>
-          </div>
-        </div>
-        {/* A phone: where you live in the plate's corner (a tap opens the card); wider: reputation. */}
-        {residenceCard && !side ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setResidenceOpen(true)}
-              className="flex min-h-11 max-w-[42%] shrink-0 cursor-pointer flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-1.5 text-right hover:bg-paper-2 sm:hidden"
-              data-testid="residence-row"
-            >
-              <span className={cx('label-caps text-[9px] text-muted', helpMark)}>{copy.residence.whereYouLive}</span>
-              <span className="truncate font-label text-[13px]" data-testid="residence-corner">
-                {residenceCard.livesIn} ›
-              </span>
-            </button>
-            <span className="hidden sm:flex">
-              <ReputationBlock city={c} />
-            </span>
-          </>
-        ) : (
+      {/* QA slice 4 M3: in the narrow side column (a phone held sideways) the way back and Reputation
+          share the first row and the name takes the full width of the second, so nothing wraps into
+          the next column. */}
+      {side && (
+        <div className="flex items-stretch border-b border-paper-2">
+          {districtBack}
           <ReputationBlock city={c} />
-        )}
-      </div>
+        </div>
+      )}
+      {side && districtTitle}
+      {!side && (
+        <div className="flex items-stretch border-b-2 border-ink">
+          {districtBack}
+          {districtTitle}
+          {/* A phone: where you live in the plate's corner (a tap opens the card); wider: reputation. */}
+          {residenceCard ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setResidenceOpen(true)}
+                className="flex min-h-11 max-w-[42%] shrink-0 cursor-pointer flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-1.5 text-right hover:bg-paper-2 sm:hidden"
+                data-testid="residence-row"
+              >
+                <span className={cx('label-caps text-[9px] text-muted', helpMark)}>
+                  {copy.residence.whereYouLive}
+                </span>
+                <span className="truncate font-label text-[13px]" data-testid="residence-corner">
+                  {residenceCard.livesIn} ›
+                </span>
+              </button>
+              <span className="hidden sm:flex">
+                <ReputationBlock city={c} />
+              </span>
+            </>
+          ) : (
+            <ReputationBlock city={c} />
+          )}
+        </div>
+      )}
       <div className="flex flex-col gap-0.5 px-3 pt-1 pb-1.5">
-        <span className={cx('label-caps text-[8.5px] text-muted', helpMark)}>{copy.capital.whoHolds(district.name)}</span>
+        <span className={cx('label-caps text-[8.5px] text-muted', helpMark)}>
+          {copy.capital.whoHolds(district.name)}
+        </span>
         <OpinionBars values={district.opinion} names={names} />
         {(comebackLine(district, names) || c.ordinance || district.issues[0] || district.scoreboard.mine) && (
           <div className="flex flex-col font-mono text-[11px] text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden">
@@ -653,6 +716,8 @@ export function CityPage() {
         map: d.anchor,
         pin: {
           style: 'name' as const,
+          // QA slice 4 M1: a narrow map draws the names compact (*Gov. Quarter*).
+          short: copy.capital.tramShort[d.name],
           marks: [
             ...(d.you.resident ? (['residence'] as const) : []),
             ...(lastDistrict(c.id) === d.id ? (['here'] as const) : []),
@@ -668,7 +733,10 @@ export function CityPage() {
   const resultLocation = result ? c.locations.find((l) => l.id === result.place.locationId) : undefined;
 
   return (
-    <div className={cx('relative flex h-full', !side && 'min-h-[420px]')} data-capital={districts ? (district ? 'district' : 'overview') : undefined}>
+    <div
+      className={cx('relative flex h-full', !side && 'min-h-[420px]')}
+      data-capital={districts ? (district ? 'district' : 'overview') : undefined}
+    >
       {/* Sideways (review 2 #3): the plate, the orders and the day in a column beside the map, which
           keeps the full height and no overlay. */}
       {side && (
@@ -679,7 +747,7 @@ export function CityPage() {
         >
           {plate}
           <div className="flex flex-col gap-1 px-3 pt-1.5 pb-2">
-            {tramBar()}
+            {tramBar(undefined, 2)}
             {election('card')}
             {residenceFull()}
             {orders}
@@ -699,7 +767,9 @@ export function CityPage() {
         locations={hotspots}
         selectedId={overview ? null : (loc ?? null)}
         onSelect={(id) => (overview ? goDistrict(id) : select(id))}
-        outlines={overview ? districts!.map((d) => ({ id: d.id, points: d.outline, label: d.name })) : undefined}
+        outlines={
+          overview ? districts!.map((d) => ({ id: d.id, points: d.outline, label: d.name })) : undefined
+        }
         onOutline={(id) => goDistrict(id)}
         focusOutline={district?.outline}
         lockToFrame={!!district}
@@ -768,7 +838,34 @@ export function CityPage() {
               {placesButton('right-0 bottom-full mb-2')}
               {mapSwitch('left-0 bottom-full mb-2')}
               {tramBar('-mx-3 -mt-2 mb-1')}
-              {district ? <OrdersList orders={character.orders} onPin={(id, orderId) => select(id, orderId)} /> : orders}
+              {/* QA slice 4 m7 (and M1 on a small phone): in the capital, a phone under 700 px tall
+                  folds the orders to one line, so the map keeps a usable band between the plate and
+                  the tram; a tap opens them in a sheet. */}
+              <div className={cx('flex flex-col gap-1', districts && '[@media(max-height:700px)]:hidden')}>
+                {district ? (
+                  <OrdersList orders={character.orders} onPin={(id, orderId) => select(id, orderId)} />
+                ) : (
+                  orders
+                )}
+              </div>
+              {districts && (
+                <button
+                  type="button"
+                  onClick={() => setOrdersOpen(true)}
+                  className="-my-1 hidden min-h-11 w-full cursor-pointer items-center justify-between gap-2 text-left hover:bg-paper-2 [@media(max-height:700px)]:flex"
+                  data-testid="orders-row"
+                  aria-haspopup="dialog"
+                >
+                  <span className="label-caps text-[11px] font-semibold">{copy.ordersFold.title}</span>
+                  <span className="font-label text-[13px]">
+                    {copy.ordersFold.progress(
+                      character.orders.items.filter((o) => o.done).length,
+                      character.orders.items.length,
+                    )}{' '}
+                    <span aria-hidden="true">›</span>
+                  </span>
+                </button>
+              )}
             </div>
           </>
         )}
@@ -870,6 +967,19 @@ export function CityPage() {
         />
       )}
 
+      {districts && (
+        <BottomSheet open={ordersOpen} onOpenChange={setOrdersOpen} title={copy.ordersFold.title}>
+          <OrdersList
+            orders={character.orders}
+            onPin={(id, orderId) => {
+              setOrdersOpen(false);
+              select(id, orderId);
+            }}
+          />
+          <TodayStrip today={character.today} help={{ cityName: c.name, turnsAt: character.day.endsAt }} />
+        </BottomSheet>
+      )}
+
       {/* Slice 4 (screens §6): where you live on a phone, the sheet before Register, the result. */}
       {residenceCard && (
         <BottomSheet open={residenceOpen} onOpenChange={setResidenceOpen} title={copy.residence.whereYouLive}>
@@ -917,7 +1027,12 @@ export function CityPage() {
 function issueLine(i: DistrictView['issues'][number], names: Partial<Record<FactionId, string>>): string {
   const sorted = (Object.entries(i.momentum) as Array<[FactionId, number]>).sort((a, b) => b[1] - a[1]);
   if (!i.leader) return `${copy.capital.thisWeek(i.name)} · ${copy.issues.open}`;
-  return copy.capital.issueLeads(i.name, names[i.leader] ?? i.leader, sorted[0]?.[1] ?? 0, sorted[1]?.[1] ?? 0);
+  return copy.capital.issueLeads(
+    i.name,
+    names[i.leader] ?? i.leader,
+    sorted[0]?.[1] ?? 0,
+    sorted[1]?.[1] ?? 0,
+  );
 }
 
 /** The plate's Reputation block (a tap opens its note). */

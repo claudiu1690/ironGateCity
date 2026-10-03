@@ -567,13 +567,16 @@ export function Slate({
           <h2 className={cx(kicker, 'mt-2')} data-testid="local-candidates">
             {copy.wardCandidates}
           </h2>
+          {/* QA slice 4 m6: on the ballot the names come first and the two lines that say what local
+              candidates are follow them, so a name shows above the vote button on a short phone. */}
+          {mode === 'ballot' && <ul className="flex flex-col">{npcs.map(row)}</ul>}
           <p className="font-mono text-[11.5px] leading-snug text-muted" data-testid="local-candidates-line">
             {copy.localCandidatesLine}
           </p>
           <p className="font-mono text-[11.5px] leading-snug text-muted" data-testid="last-seat-close">
             {copy.lastSeatClose}
           </p>
-          <ul className="flex flex-col">{npcs.map(row)}</ul>
+          {mode !== 'ballot' && <ul className="flex flex-col">{npcs.map(row)}</ul>}
         </>
       )}
     </div>

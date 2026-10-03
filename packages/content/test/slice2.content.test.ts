@@ -60,14 +60,15 @@ describe('the real content, slice 2', () => {
       content.orderTemplates.filter((t) => t.use === 'rotation' && t.residence !== 'capital'),
     ).toHaveLength(36);
     expect(home.map((c) => c.paper?.shortName)).toEqual(['Clarion', 'Sentinel', 'Gazette']);
-    // Slice 2's nine, and chapter 2's keepsake that GDD §21.4 catalogues for slice 3.
-    expect(content.items).toHaveLength(10);
+    // Slice 2's nine, and the chapter-2 keepsakes GDD §21.4 catalogues for slices 3 and 5.
+    expect(content.items).toHaveLength(11);
     expect(content.ambitions.map((a) => [a.id, a.chaptersPlanned])).toEqual([
       ['finish-his-work', 12],
       ['clear-his-name', 12],
       ['settle-his-debts', 12],
     ]);
-    expect(content.avatars).toHaveLength(6);
+    // Six in slice 2; eighteen since the October art (art-wiring-oct.md §2, art-oct.test.ts).
+    expect(content.avatars).toHaveLength(18);
     expect(content.faction('alliance').rankTitles[2]).toBe('Agent');
   });
 
@@ -385,8 +386,8 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
 
   it('§4.2: the nine items with slot, tier, CHA and keepsake flag', () => {
     const r = rows(section(ONB, '### 4.2', '§21.2'), /^\| `/);
-    // The slice-3 keepsake (GDD §21.4) is not in the slice-2 design's list.
-    const slice2 = content.items.filter((i) => i.id !== 'keep.election-bill');
+    // The slice-3 and slice-5 keepsakes (GDD §21.4) are not in the slice-2 design's list.
+    const slice2 = content.items.filter((i) => !['keep.election-bill', 'keep.ledger-page'].includes(i.id));
     expect(r.map((x) => unq(x[0]!))).toEqual(slice2.map((i) => i.id));
     for (const [id, name, slot, , effects, flags] of r) {
       const item = content.item(unq(id!))!;
@@ -477,7 +478,8 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
 
   it('§13.2: the six avatar alt texts', () => {
     const r = rows(section(ONB, '### 13.2', '### 13.3'), /^\| `avatar\./);
-    expect(r.map((x) => unq(x[0]!))).toEqual(content.avatars);
+    // Still offered, among the eighteen of the October art (the order: art-oct.test.ts).
+    expect(content.avatars).toEqual(expect.arrayContaining(r.map((x) => unq(x[0]!))));
     for (const [id, alt] of r) expect(content.asset(unq(id!)).alt).toBe(alt);
   });
 });

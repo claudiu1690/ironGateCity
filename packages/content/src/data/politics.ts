@@ -60,7 +60,15 @@ export const politics: ContentInput['politics'] = {
       headline: 'A room in Irongate',
       body: 'Seven nights, a window on the tram line. Rested banks to {cap} until {weekday}.',
       // The Next line (screens §6.3, written 3 Oct 2026).
-      next: 'Next: rest up. Renew the room on {weekday} if you want to keep it.',
+      // Slice-4 fixes §6 (QA m5): a renewal adds seven nights.
+      next: 'Next: rest up. Renew any day to add seven nights.',
+    },
+    // Slice-4 fixes §6: seven more nights on a room running; `{weekday}` the room's new last day.
+    renew: {
+      stamp: 'Renewed',
+      headline: 'A room in Irongate',
+      body: 'Seven more nights on the tram line. Rested banks to {cap} until {weekday}.',
+      next: 'Next: rest up. The room runs to {weekday}.',
     },
   },
 };

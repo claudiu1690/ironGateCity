@@ -148,7 +148,7 @@ export function MePage() {
           {c.office ? (
             <Link
               to="/council"
-              className="font-mono text-[12px] text-petrol underline decoration-dotted underline-offset-2"
+              className="flex min-h-11 items-center font-mono text-[12px] text-petrol underline decoration-dotted underline-offset-2"
               data-testid="me-office"
             >
               {copy.councillorLine(c.office.cityName, formatWeekday(c.office.termEndsAt - 1))}
@@ -168,7 +168,8 @@ export function MePage() {
                   : { cityId: c.residence.cityId }
               }
               disabled={c.cityId !== c.residence.cityId || !!c.journey}
-              className="font-mono text-[12px] text-petrol underline decoration-dotted underline-offset-2"
+              // QA slice 4 m8: a 44 px target, like every other control.
+              className="flex min-h-11 items-center font-mono text-[12px] text-petrol underline decoration-dotted underline-offset-2"
               data-testid="me-residence"
             >
               {c.residence.districtName

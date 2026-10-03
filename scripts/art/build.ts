@@ -52,9 +52,10 @@ const VECTOR_BUDGET = 8 * KB;
 /**
  * ADR 0015: the committed set, raised per slice with a measured figure, never removed. Slice 2:
  * 12 MB. Slice 4 (tech design §13): the capital's and the nation's stills (four maps, 4.05 MB)
- * take the measured set to 12.64 MB, so 13 MB.
+ * take the measured set to 12.64 MB, so 13 MB. The October art (art-wiring-oct.md: fourteen scenes,
+ * their WebP at 640 px only, and twelve faces) takes it to 16.31 MB: the measured figure plus 0.5 MB.
  */
-const TOTAL_BUDGET = 13 * KB * KB;
+const TOTAL_BUDGET = 16.8 * KB * KB;
 
 interface ManifestEntry {
   sourceHash: string;

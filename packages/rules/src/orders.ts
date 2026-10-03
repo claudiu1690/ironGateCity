@@ -126,6 +126,27 @@ export function itemSpec(_item: OrderItem, t: OrderTemplate) {
   return { title: t.title, line: t.line, match: t.match, counts: t.counts };
 }
 
+/** Slice-4 fixes §2 (QA m1): the training verbs' fixed order in an order's `{verbs}`. */
+export const TRAINING_VERB_ORDER = ['Study', 'Lift', 'Unload', 'Carry', 'Run'] as const;
+
+/**
+ * Slice-4 fixes §2 (QA m1): `{verbs}`, the training verbs a member may use where they live, distinct,
+ * in TRAINING_VERB_ORDER (others after, as found), at most three, the first capitalised and the rest
+ * lower-case, joined "a, b or c": *Study, lift or run*.
+ */
+export function verbsPhrase(verbs: Iterable<string>): string {
+  const found = [...new Set(verbs)];
+  const rank = (v: string) => {
+    const i = (TRAINING_VERB_ORDER as readonly string[]).indexOf(v);
+    return i < 0 ? TRAINING_VERB_ORDER.length + found.indexOf(v) : i;
+  };
+  const words = found
+    .sort((a, b) => rank(a) - rank(b))
+    .slice(0, 3)
+    .map((v, i) => (i === 0 ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() : v.toLowerCase()));
+  return words.length <= 1 ? (words[0] ?? '') : `${words.slice(0, -1).join(', ')} or ${words.at(-1)!}`;
+}
+
 /** The first open item this row would advance, if any (successes-only items only on Success). */
 export function findAdvancingItem(
   o: OrdersState,

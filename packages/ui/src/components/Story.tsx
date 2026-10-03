@@ -452,7 +452,10 @@ export interface AvatarPickerProps {
   name?: string;
 }
 
-/** §7.3: the six faces as a radio group (3 × 2 on phones, 6 in a row from 640 px). */
+/**
+ * §7.3: the faces as a radio group. Eighteen since the October art (art-wiring-oct.md §2): four to a
+ * row on a phone (five rows, not six of three, so the form's button stays near), six from 640 px.
+ */
 export function AvatarPicker({
   faces,
   value,
@@ -465,14 +468,14 @@ export function AvatarPicker({
   return (
     <fieldset className="flex flex-col gap-1.5" aria-describedby={error ? errorId : undefined}>
       <legend className="label-caps pb-1.5 text-[11px] font-semibold text-muted">{legend}</legend>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
         {faces.map((f) => {
           const on = value === f.id;
           return (
             <label
               key={f.id}
               className={cx(
-                'relative block min-h-24 cursor-pointer overflow-hidden border-2 bg-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-petrol',
+                'relative block min-h-11 cursor-pointer overflow-hidden border-2 bg-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-petrol',
                 on ? 'border-petrol' : 'border-transparent',
               )}
               data-testid="avatar-tile"
@@ -488,7 +491,7 @@ export function AvatarPicker({
               />
               <Picture
                 asset={f}
-                sizes="(min-width: 640px) 64px, 30vw"
+                sizes="(min-width: 640px) 64px, 23vw"
                 decorative
                 className="aspect-[4/5] w-full object-cover"
               />

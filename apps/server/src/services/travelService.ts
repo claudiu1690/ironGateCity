@@ -510,7 +510,12 @@ export async function journeyView(
                   j.to === c.homeCityId
                   ? 'Home'
                   : city!.name,
-            body: j.choice ? choiceLine(j.choice.result) : copy.travel.nothingHappened,
+            // Slice-4 fixes §8 (QA n2): never "Nothing happened" above a card still to answer.
+            body: j.choice
+              ? choiceLine(j.choice.result)
+              : ev
+                ? copy.travel.cardBelow
+                : copy.travel.nothingHappened,
             cardLine: j.choice ? choiceLine(j.choice.result) : null,
             knockOns: {
               ticket: j.fare.total,
@@ -820,11 +825,20 @@ export async function close(deps: {
   if (j.status === 'onTheWay')
     throw gameError('PRECONDITION_FAILED', 'IN_TRANSIT', { arrivesAt: j.arrivesAt.getTime() });
   await inTransaction(async (session) => {
-    await Journey.updateOne(
-      { _id: j._id, status: 'arrived' },
-      { $set: { status: 'closed', closedAt: new Date(now), sleptThrough: !!j.card && !j.choice } },
+    // Slept through is decided on the document as it is closed, not on the read above: an answer
+    // committed between that read and this write is an answer (QA slice 4 n1). A card still
+    // unanswered closes first; anything else (no card, or a choice) closes as not slept through.
+    const slept = await Journey.updateOne(
+      { _id: j._id, status: 'arrived', card: { $ne: null }, choice: null },
+      { $set: { status: 'closed', closedAt: new Date(now), sleptThrough: true } },
       { session },
     );
+    if (slept.matchedCount === 0)
+      await Journey.updateOne(
+        { _id: j._id, status: 'arrived' },
+        { $set: { status: 'closed', closedAt: new Date(now), sleptThrough: false } },
+        { session },
+      );
     await Character.updateOne(
       { _id: c._id, 'journey.id': j._id },
       { $set: { journey: null }, $inc: { version: 1 } },

@@ -6,7 +6,7 @@ import { protectedProcedure, publicProcedure, router } from '../trpc';
 
 /** The arrival (slice-2 tech design §7.1, ADR 0011): the face, the origin, the street. */
 export const arrivalRouter = router({
-  /** The six faces, for the sign-up form (before any session exists). */
+  /** The faces (eighteen), for the sign-up form (before any session exists). */
   faces: publicProcedure.query(({ ctx }) => ctx.content.avatars.map((id) => assetView(ctx.content, id))),
 
   get: protectedProcedure.query(({ ctx }) => getArrival(ctx.content, ctx.user)),

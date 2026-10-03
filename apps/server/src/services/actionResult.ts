@@ -34,7 +34,7 @@ import type {
   TrainingResolution,
 } from '@irongate/rules';
 import { pickArt } from './art';
-import { namedStanding, rankTitle, toCharacterView } from './views';
+import { namedStanding, orderText, orderVars, rankTitle, toCharacterView } from './views';
 
 const NONE: RewardLine = { base: 0, bonus: 0, total: 0 };
 
@@ -80,6 +80,8 @@ export type ResultInput = Common &
 
 function orderEffects(content: GameContent, c: Common): OrderEffect[] {
   const templates = content.ordersOf(c.before.factionId);
+  // Slice-4 fixes §2 (QA m1): `{city}` and `{verbs}` for the reader (titles carry no `{issue}`).
+  const vars = orderVars(content, c.before, null);
   return c.orders.after.items.flatMap((item) => {
     const prev = c.orders.before.items.find((x) => x.templateId === item.templateId);
     if (!prev || prev.progress === item.progress) return [];
@@ -89,7 +91,7 @@ function orderEffects(content: GameContent, c: Common): OrderEffect[] {
     return [
       {
         id: item.templateId,
-        title: itemSpec(item, t).title,
+        title: orderText(itemSpec(item, t).title, vars),
         before: prev.progress,
         after: item.progress,
         target: item.target,
