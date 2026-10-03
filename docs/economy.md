@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). Grows one slice ahead of the build |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). **Slice 5** ("Risk"): tier-2 rates and the difficulty ladder, Heat's budget, run-ins by build, the caught check and the record, the cells and the infirmary, rival ground, the new PC sink (§19). Grows one slice ahead of the build |
 | **Sources** | GDD §5.2–5.5, §6.2–6.3, §6.5, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §14.11, §15.1–15.3, §15.4, §15.10, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md`, `slice-3-politics.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
+| **Updated** | 3 Oct 2026 (slice 5, §19 added); 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -558,3 +558,104 @@ Session shape (pillar 7): the Election card adds no tap (it replaces the HQ card
 Rules: GDD §0 (*Added 2 Oct 2026, review 3*), §8.5, §13.1, §13.1a, §14.13, §15.3, §15.10; answers in `docs/design/review-3-answers.md`. **No rate, cost, threshold or formula changes.** The reward receipt prints the same four numbers the tiles did (and hides a zero instead of printing it); the repeat buttons spend the same Energy with the cost written in words; a training action's button changes its word, not its price (20 + 2 × stat) or its half-rate XP; the council's hall is a backdrop. The one open lever is Appendix C #44 (the NPC fill at low population: nine names, or eight when fewer than two players stand), which changes no reward and waits for the user.
 
 Session shape (pillar 7): no tap is added. The receipt is shorter than the tiles for every result but a full canvass, where it is about 30 px taller and still above the sticky buttons on a 667 px phone; the *How elections work* note is a tap only when asked for; free zoom is a gesture with no rule effect.
+
+---
+
+## 19. Slice 5: missions, Heat, run-ins, the record, the cells, the infirmary and rival ground
+
+Rules: `docs/design/slice-5-risk.md`; GDD §6.1, §6.4, §8.4, §8.5, §11, §13.1, §13.3, §14.11, §14.12, §19, §20. Slice 5 adds the **tier-2 rates** to the model (they were in §5.5 and never spent), a **difficulty ladder** against the stat the model already grows, and the first things that take Iron because of risk: paying off a run-in, bail, the infirmary. **Two GDD numbers were changed in this slice** and both are here: the §8.5 best-stat targets (raised to the model, Appendix C #15) and the caught check's trigger (Partial and Failure only, Appendix C #56); everything else is a pin.
+
+### 19.1 The rates (tier 2)
+
+| Per Energy | XP | FXP | Iron | Opinion |
+|---|---|---|---|---|
+| Tier 2 (§5.5, §14.2) | 5 | 0.8 (speech, vandalism, disruption, sabotage, theft; surveillance none) | 4 (theft **8**: no opinion, the branch buys the roll) | 0.01 (speech, from Neutral); **0.02** (the illegal types, from the target faction); none (surveillance, theft) |
+| Partial | half, per line | | | half |
+| Failure | **XP ÷ 5**, nothing else | | | |
+| Against tier 1 | +11 % | +33 % | ×2 | ×2 / ×4 |
+
+A Success on a mission is a win for Reputation; Rested applies to XP and Iron as on any checked action; the *close race*, Issue and *comeback* lines apply to the political types. Per mission at the §4.2 Energies: speech 15 E 75 / 12 / 60 / 0.15 · surveillance 12 E 60 / — / 48 / — · vandalism 10 E 50 / 8 / 40 / 0.20 · disruption 15 E 75 / 12 / 60 / 0.30 · sabotage 20 E 100 / 16 / 80 / 0.40 · theft 15 E 75 / 12 / 120 / —.
+
+### 19.2 The ladder against the modelled stat (Appendix C #15 closed)
+
+The model puts every level point and about one trained point a day into the best stat (§6): the reference recruit's INT is **12 + the level points + the trained points**.
+
+| Day | Level | Best stat (model) | Mission Level · difficulty | Odds (no Standing) | Odds at *Trusted* (+9) |
+|---|---|---|---|---|---|
+| 2 | 6 | ~19 | 6 · 14 | 70 % | — |
+| 3 | 8 | ~22 | 8 · 16 | 74 % | — |
+| 5 | 10 | ~25 | 10 · 18 | 78 % | 87 % |
+| 7 | 12 | ~28 | 12 · 20 | 82 % | 91 % |
+| 13 | 16 | ~34 | (tier 3 from 22) | 95 % on any tier-2 | — |
+| 30 | 23 | ~50 | | | |
+
+**Verdict:** new content at its Level reads *Good odds* for the stacked build and *Fair odds* for a spread one (a Vanguard STR 11 at Level 6 has STR 16–17: 58–62 % on a 14), and the clamp arrives a few days after each rung, which is §8.4's shape. The old targets (15 / 30 / 60) are under the model by half; the GDD now states the model's numbers (12 / 28 / 50 / 85). Nothing in the rate tables changes; the difficulty ladder is the only new constant and it is a content number per mission.
+
+### 19.3 A reference day with missions (from day 2)
+
+The model spends **40 % of political Energy on legal missions** from Level 6 (a speech and a watch per session, about 100 Energy a day) and, from Rank 3 (day 9–10), **two illegal missions a session** on top (about 90 Energy of disruptions and vandalism a day).
+
+| | Slice-4 sheet (day 7, home) | With legal missions (day 7) | With two illegal a session (day 10+) |
+|---|---|---|---|
+| XP / day | ~1,780 | ~1,860 (+4 %) | ~1,900 |
+| FXP / day | ~205 | ~218 (+6 %: speeches at 0.8 on 60 E) | ~245 (+20 %: 6 × 12 at ~0.8 expected, minus the lost orders' Energy) |
+| Iron from actions (with Rested) | ~720 | **~1,020** (+40 %: 100 E at 4 instead of 2, with Rested) | ~1,150, **less run-ins and the record** (§19.5, §19.7): net ~950–1,050 |
+| Opinion / day | +1.15 | +1.45 (+0.30 from two speeches) | **+2.3** (six illegal missions at ~0.2 expected against a rival: half of each swing is the actor's) |
+| Heat at the end of a session | 0 | 10 (two watches; Cool by the next session) | **~26–32** (*Noticed*; Cool again in six hours) |
+
+**Milestones:** Level 10 stays day 5 (+4 % XP is hours), Level 16 day 12 (was 12–13), Rank 3 about **day 9** (was 9.5), Rank 4 about day 27 (was 30). Iron is the number that moves: tier 2 pays double per Energy, which the GDD set so that risk has a price a player can pay; §18.2's week-1 band (1,000–2,000 a day) now has the reference player in its middle rather than at its floor, and the sinks of §19.5 and §19.7 take some of it back. **No §5.2 milestone moves by more than a day.**
+
+### 19.4 The Heat budget and the record
+
+**Heat.** One session's illegal work: three disruptions = +24 (*Cool*; the fourth's check reads *Noticed*); six = +48; the first sabotage on top is *Hot*. Cooling is 5 an hour, **120 a day**: two or three illegal missions a session, three sessions a day, keeps a player under *Noticed*'s edge at every session's end and *Cool* at its start. **The budget is about nine illegal missions a day, or four or five in one sitting** before *Hot*; more is a choice to be *Hot*, which the HUD says.
+
+**The caught check** (base + Heat ÷ 2 + the state − AGI ÷ 2, on a Partial or a Failure): for the reference recruit (AGI 5) at the start of a session a disruption is 10 + 0 − 2 = **8 %**, the third 10 + 8 − 2 = **16 %**, the sixth (Noticed) 10 + 20 + 5 − 2 = **33 %**. At 70–78 % odds about **30 % of missions** are not clean, so a mark comes every **15–25 illegal missions when Cool** and every **8–10 when Noticed**: a daily illegal player (nine a day) earns a mark every two or three days, is *On file* by day 3 of that life, a *Repeat offender* in about ten days if they never pause, and *Notorious* after a month. A week of legal play clears the minor marks (the 14-day fade from the last offence); theft's and sabotage's marks (2 and 3) do not fade in slice 5 and are the 30 PC sink's reason. **With the GDD's first rule (a check on every outcome)** the same player drew a mark every five missions and was *Notorious* on day 4 with no way back but 30 PC a mark, which is why §11.2 was changed (Appendix C #56).
+
+**The record's cost:** *On file* is −10 % of mission Iron (about −40 a day for the model's mix), *Repeat offender* −20 % and +5 % on every run-in and caught check, *Notorious* −30 %, doubled bail and three kinds of place barred. Small against ~1,000 Iron a day; the +5 % on run-ins is the line that bites.
+
+### 19.5 Run-ins by build
+
+Run-in chances for the model's mix: speech 5 %, watch 10 %, vandalism 15 %, disruption 30 % at *Cool* (+5 at *Noticed*). About **1.5 run-ins a day** for the day-10 reference player; **0.3** for a player who stays legal.
+
+| Build (day 10) | Fight | Run | Talk | Pay | What they do |
+|---|---|---|---|---|---|
+| Reference recruit (STR 10, AGI 5, CHA 5 with the coat): power 17 | vs enforcer 24 (×1.1): **29 %**; vs constable 33: 5 % | 30 % (enforcer) · 25 % (constable) | 30 % · 14 % | 90 % at 60 · 300 | Pays the enforcer; vs the police, pays or takes the cells one time in three |
+| STR Vanguard (STR 20): power 32 | **74 %** vs enforcer · **47 %** vs constable | 30 % | 30 % | 90 % | Fights |
+| AGI build (AGI 15 by day 10) | 29 % | **90 %** vs enforcer · 75 % constable | 30 % | 90 % | Runs (and forfeits the mission: Appendix C #47) |
+| With a Tier II coat (slice 8, armour 8, CHA 15) | +2 power; **Talk 70 %** | | | | Talks |
+
+**Expected cost of a disruption at *Cool*** (30 % run-in, enforcer): **the payer** loses 0.3 × 60 = **18 Iron** and keeps everything; **the fighter** (STR 20) loses 0.3 × 0.26 × (20 minutes and the mission's rewards) ≈ 5 minutes and ~5 Iron of rewards a mission; **the auto-resolver** (the reference recruit, Fight at 29 %) loses 0.3 × 0.71 × (20 minutes + ~55 Iron of rewards + 60 XP + 10 FXP) ≈ **4 minutes, 12 Iron, 13 XP and 2 FXP a mission**, plus the infirmary's 100 if they pay to leave. So the illegal road costs the new player about **10–20 % of its own rewards** in expectation, and the price of never paying is twenty minutes now and then. The constable is the sharp edge (300 to pay, 5 % to fight for a new player): at *Noticed* half of run-ins are constables, so a *Noticed* reference recruit expects ~0.15 × 300 = **45 Iron a disruption** to stay out of the cells, which is the number that makes Heat matter before *Hot* does.
+
+### 19.6 Rival ground
+
+A Collective reference player on day 5 (INT 25) in Duskwall: tier-1 difficulty 12 gives 95 % (the +4 does not bite the best stat yet; it bites the second stat: STR 10 at 12 is 42 %). **A tier-1-only day** (30 taps ×1): FXP 30 × 6 × 0.97 × 1.5 ≈ **263** against a home day's 205 + 60 (orders, which cannot be done there) = 265: **even**, with 4.5 run-ins a day (15 % × 30) costing ~270 Iron in pay-offs (60 each) or a few infirmary stays. **A mixed day with six rival-ground disruptions** (two a session; Heat +16 each, 96 a day, inside the 120 cooling): FXP 6 × 18 + 24 × 8.8 ≈ **320 (+45 %)**, run-ins 6 × 60 % + 24 × 15 % ≈ **7 a day** (~420 Iron in pay-offs, or two or three infirmary stays), marks 6 × 0.3 × 26 % ≈ 0.5 a day, opinion 6 × 0.3 × 0.75 + 24 × 0.05 ≈ **2.5 against the Vanguard**, capped at 2 (§14.11). Rank 3 for the specialist about **day 7–8** (reference 9), Rank 4 about **day 22** (reference 27): inside the heavy player's +35 % (§6), for real Iron and the cells. **The cells there:** a *Hot* visitor's sentence is 10 + 29 = 39 × 1.5 = 58 minutes, bail 200–300 × 2 = 400–600, then the train home and a day's bar. **Verdict:** "pays the best" holds for the specialist and costs what it costs; flagged (Appendix C #53).
+
+### 19.7 The cells and the infirmary, in time and Iron
+
+Twenty minutes is **10 Energy of regen**, worth about 45–68 XP and 20–30 Iron to the model; nothing else stops. **Bail** (100 at *Clean*, 200 at two marks) is two to six times the time's value, so the model waits and closes the app, as pillar 7 expects; a player mid-session pays. **The infirmary's** 100 Iron to walk out well is the same sum for the same twenty minutes plus full Health; discharge at half Health is free and leaves a player able to work (Health is only spent in fights). Expected spend for the day-10 reference player on the illegal road: **~50–100 Iron a day** across pay-offs, bail and the ward, against ~1,000 a day of income. **Nothing here is mandatory**, and a legal player spends nothing.
+
+### 19.8 Political Capital: the new sink
+
+**30 PC a mark**, the oldest first. A daily player earns 5 (orders) to 15 (a seat) PC a day, so a mark a week is affordable and a mark a day is not, which is the record's point: it is lived with, not bought off. The §14.2 and §15.5 budgets are unchanged; a player who never earns a mark never sees the button.
+
+### 19.9 The Issues' new effects
+
+*Customs Strike*'s `heatCoolPct +50` makes cooling 7.5 an hour (180 a day), which raises the Heat budget from nine illegal missions a day to about fourteen for a Coalport week: a real prize for the illegal road and nothing for the legal one, which is a good week for the branch to argue about. *The Cells Are Full*'s `bailPct −50` halves bail in the capital for a week. The other three are existing kinds at their existing sizes.
+
+### 19.10 Session shape (pillar 7)
+
+A mission is two taps the first time and one after; a run-in is one or none; the cells and the infirmary are one tap or a wait in the background; a rival-ground trip is the slice-4 journey with a card that is always there. Nothing needs the player at a set time.
+
+### 19.11 Flags (GDD Appendix C)
+
+| # | Flag | Risk | Lever |
+|---|---|---|---|
+| 47 | The run-in decides the held result | A Run reads as a trap | Let a Run keep Partial |
+| 48 | ×1 only on rival ground | Ten taps a bar reads as tedious | A ×3 that stops at the first run-in |
+| 49 | The record taxes missions only | Weightless for a tier-1 player | Extend to tier 1 at half the rate |
+| 50 | Bail 100 + 50 a mark | Nobody pays, or everybody does | The base, or the sentence |
+| 52 | The 2-point cap on rival pressure | Morale never moves at scale, or a branch of one cannot hold | 5, or 1, or per rival |
+| 53 | +50 % FXP on rival ground | Branches living in rival towns | The run-in base, not the bonus |
+| 54 | The police half the pool from *Noticed* | *Noticed* reads as a wall | A third from *Noticed*, half from *Hot* |
+| 56 | The caught check on Partial and Failure only | Marks too rare | The base rates |
+| — | Tier-2 Iron at ×2 lifts the reference day by ~40 % | Iron inflates before the Wardrobe (slice 8) has prices | Keep: it is the GDD's rate and the slice-5 sinks take 5–10 % back; price the Wardrobe against §19.3 |
