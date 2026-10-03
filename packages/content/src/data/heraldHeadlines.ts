@@ -420,7 +420,9 @@ export const heraldHeadlines: HeadlineInput[] = [
     id: 'hl.ig.issues-drawn',
     cityId: 'irongate',
     group: 'city',
-    priority: 0,
+    // Monday with a resolution too: the result (priority 0) first (3 Oct 2026); the new two are in
+    // the Issues section with *New this week*.
+    priority: 1,
     when: [{ kind: 'issuesDrawnToday' }],
     headline: 'This Week in Irongate: {issue1} and {issue2}',
     // One blurb only: two of the longest would pass 200 characters.

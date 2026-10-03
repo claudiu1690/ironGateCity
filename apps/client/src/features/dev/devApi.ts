@@ -28,12 +28,16 @@ export const devStatusQuery = queryOptions({
   refetchOnWindowFocus: (q) => q.state.data !== null,
 });
 
-export async function postDevAction(action: DevAction): Promise<DevActionResult> {
+/** A dev action, with its target for *Live in…* (a capital district id, or `home`). */
+export async function postDevAction(
+  input: DevAction | { action: DevAction; target?: string },
+): Promise<DevActionResult> {
+  const { action, target } = typeof input === 'string' ? { action: input, target: undefined } : input;
   const res = await fetch(`${env.apiBase}/test/dev/${action}`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'content-type': 'application/json' },
-    body: '{}',
+    body: JSON.stringify(target === undefined ? {} : { target }),
   });
   const body = (await res.json().catch(() => null)) as (DevActionResult & { error?: string }) | null;
   if (!res.ok || !body) throw new Error(body?.error ?? `The dev action failed (${res.status})`);

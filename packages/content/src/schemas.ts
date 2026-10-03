@@ -207,6 +207,14 @@ export const Quarter = z.strictObject({
       n: z.number().int().min(1).max(9),
       baselineOpinion: Shares,
       anchor: z.strictObject({ x: Fraction, y: Fraction }),
+      /**
+       * The user's district lock (3 Oct 2026): the district's shape on the capital's picture, a
+       * polygon in fractions following the river, the main streets and the drawn blocks. The overview
+       * draws it with the name; a district view dims the picture outside it. Every pin of the district
+       * lies inside it and no two districts overlap (the loader checks both); the frame stays the zoom
+       * target.
+       */
+      outline: z.array(z.tuple([Fraction, Fraction])).min(6).max(24),
     })
     .optional(),
 });

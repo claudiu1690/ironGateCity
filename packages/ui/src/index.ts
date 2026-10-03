@@ -56,8 +56,8 @@ export type { FactionCrestProps } from './components/FactionCrest';
 export { Field } from './components/Field';
 export type { FieldProps } from './components/Field';
 export { Gauge } from './components/Gauge';
-export { HallHeader, MAP_CROP_W, MapCrop } from './components/HallHeader';
-export type { HallHeaderProps, MapCropProps } from './components/HallHeader';
+export { ArtPanel, HallHeader, MAP_CROP_W, MapCrop } from './components/HallHeader';
+export type { ArtPanelProps, HallHeaderProps, MapCropProps } from './components/HallHeader';
 export { HelpButton, helpMark } from './components/Help';
 export type { HelpButtonProps, HelpNote } from './components/Help';
 export type { GaugeProps } from './components/Gauge';
@@ -100,7 +100,7 @@ export type {
   OrdinanceRowProps,
   SlateProps,
 } from './components/Politics';
-export type { ResultModalProps } from './components/ResultModal';
+export type { JourneyArrivalResult, ResultModalProps } from './components/ResultModal';
 export { BottomSheet, JobsCard, LocationSheet, OutOfEnergyCard } from './components/Sheets';
 export type {
   BottomSheetProps,
@@ -113,7 +113,62 @@ export { StatPointsPanel, TabBar } from './components/Shell';
 export type { StatPointsPanelProps, TabBarProps, TabId, TabItem } from './components/Shell';
 export { Stamp } from './components/Stamp';
 export type { StampProps, StampTone } from './components/Stamp';
-export { TYPE_LABEL, Ticket } from './components/Ticket';
+export { TYPE_LABEL, Ticket, placeTagText } from './components/Ticket';
+export { GroundSash, groundOf } from './components/GroundSash';
+export type { Ground, GroundSashProps } from './components/GroundSash';
+export {
+  DistrictCard,
+  DistrictResultTable,
+  DistrictSwitcher,
+  DistrictsList,
+  IssueRow,
+  IssuesSection,
+  OpinionBars,
+  RegisterSheet,
+  ResidenceCard,
+  Rosette,
+  ScoreboardLine,
+  ScoreboardTable,
+  TramBar,
+  comebackLine,
+  districtStateWord,
+  districtSubtitle,
+  formatSwing,
+  ordinal,
+  residenceLines,
+  scoreboardText,
+  weekdayOf,
+} from './components/Capital';
+export type {
+  DistrictCardProps,
+  DistrictSwitcherProps,
+  DistrictsListProps,
+  FactionNames,
+  IssueRowProps,
+  IssuesSectionProps,
+  OpinionBarsProps,
+  RegisterSheetProps,
+  ResidenceCardProps,
+  TramBarProps,
+} from './components/Capital';
+export {
+  CitiesList,
+  CityCard,
+  JourneyCard,
+  JourneyProgress,
+  TrainsCard,
+  boardButton,
+  choiceLine,
+  cityCardNote,
+  cityRowLine,
+} from './components/Travel';
+export type {
+  CitiesListProps,
+  CityCardProps,
+  JourneyCardProps,
+  JourneyProgressProps,
+  TrainsCardProps,
+} from './components/Travel';
 export type { TicketProps } from './components/Ticket';
 export * from './format';
 export { bandNote, batchReasons, oddsBand, oddsTag, reasonFor, statLine, statName, ticketOdds } from './odds';

@@ -1,6 +1,6 @@
 # ADR 0030 — Modifier sources: ordinances and Issue effects as named lines; the opinion swing as named factors
 
-**Status:** proposed (slice 4; amends ADR 0021) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 4 (amends ADR 0021) · **Date:** 2026-10-03
 
 ## Context
 

@@ -5,6 +5,7 @@ import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
   DIRECTIVES,
   ENERGY,
+  FACTION_IDS,
   TRAVEL,
   fillTemplate,
   MONTH_NAMES,
@@ -40,6 +41,7 @@ import type {
   DayKey,
   EnergyState,
   Equipment,
+  FactionId,
   JobView,
   NamedStandingView,
   OrderItem,
@@ -416,6 +418,10 @@ export function toCharacterView(
     name: doc.name,
     factionId: doc.factionId,
     factionName: content.faction(doc.factionId).shortName,
+    // Slice 4: every party's short name (the capital's tables, the ground sash, Issue rows).
+    factionNames: Object.fromEntries(
+      FACTION_IDS.map((f) => [f, content.faction(f).shortName]),
+    ) as Record<FactionId, string>,
     // eslint-disable-next-line no-restricted-properties -- the faction's home, as the view says
     homeCityId: doc.homeCityId,
     cityId: doc.cityId,

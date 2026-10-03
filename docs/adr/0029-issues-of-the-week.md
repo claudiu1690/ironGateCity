@@ -1,6 +1,6 @@
 # ADR 0029 — Issues of the Week: a document per Issue per week, momentum in the action's transaction, the Monday step of the city day
 
-**Status:** proposed (slice 4) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 4 · **Date:** 2026-10-03
 
 ## Context
 

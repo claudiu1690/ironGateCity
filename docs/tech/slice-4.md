@@ -1229,3 +1229,73 @@ Run on `pnpm dev:mem` with the dev panel; two or three testers in different fact
 8. **Journey arrival as a job.** The plan (§2 rule 2) names journeys arriving as a scheduled event; design §2.4 says none is needed. Both are honoured (ADR 0025).
 9. **The result route.** Screens §8 names `/council/result`; slice 3's Deviations kept `/council/count`. This design keeps `/council/count` with a district switcher.
 10. **The Rested cap with a room** (§7.4) and **the cap's city** after travel are not stated (§22.1 Q1).
+
+
+---
+
+## Deviations (as built)
+
+The smallest working change in each case; no GDD number changed. Phases A (T1–T12) and B (T13–T20) are summarised from their notes; phase C (T21–T27) in full.
+
+**Running it**
+
+- Playwright: `travel.spec.ts` and `capital.spec.ts` run in their own projects, `travel` and `capital`, after `dev-panel` (the capital moves the shared clock by cycles and to a Monday). `travel.spec.ts` holds the first trip, the user's district lock, the nation map at five sizes, the capital's maps (overview and five districts) at four sizes and the journey's fold on 375 × 667.
+- The e2e does not read *The Train Is Open* (stored at the settlement that crosses Level 10, which a hook-set level does not cross) or *{faction} Owns {issue}* (it needs Issue points; the server's Issues tests cover it): `capital.spec.ts` checks Monday's Issues section with *New this week* instead.
+- The dev panel's *Live in…* lists the districts the status sends (no district names in the client), plus *Home*. New README sections: the slice-4 hooks, the panel's buttons, a walk-through of the first trip and a move, and the battleground report.
+- `pnpm report:playtest` gains the battleground section (`packages/db/src/battleground.ts`, a pure builder with fixture tests). Moves and rooms come from request logs (seven-day TTL: run it within a week); the first Level 10 and Rank 2 times from action logs; "before slice 4" for contention is the first journey's boarding.
+
+**The user's district lock (3 Oct 2026; `slice-4-screens.md`, last section; GDD §14.9, §14.13 row added)**
+
+- The capital's overview shows the five districts as **outlines with their names** and no place pins; a tap (outline, name or the *Districts* list) goes straight into the district. Screens §5.1's district pin with its card (*Go to … · tram · instant*) is gone from the overview; `DistrictCard` is built and tested but unused.
+- Inside a district the outline is drawn, the picture outside it is dimmed (ink 50 %), only its pins show, and the view is held: no zooming out past the district's at-rest view (`CityMap lockToFrame`: the free zoom's minimum is the fitted scale) and a drag, at rest or zoomed into a place, stops at the frame plus `REST_PAN_MARGIN` (10 %).
+- Content: `Quarter.district.outline` (11–19 points per district, read off the capital's survey image and the stills). The loader checks the anchor and every pin inside their district's outline and no two outlines overlapping (a 200 × 200 grid and every vertex); failing fixtures for both. The bottom band and the rail yards west of the station are outside all five.
+- `CityMap` gains `outlines`, `onOutline`, `focusOutline`, `lockToFrame` and the pin style `name`; the SVG of outlines and mask sits in the art layer above the tiles (their z-index is their level).
+
+**One mounted map, one movement**
+
+- The overview and the districts are one mounted `CityPage` (the district route `/city/$cityId/$quarterId` is a child whose component renders nothing) and one `CityMap`. A frame change (in, out, or by tram) restates the view on show in the new frame's layer, then eases to the new view on the zoom's curve (`ZOOM_MS`), instead of the 180 ms cross-fade §12.3 allowed; reduced motion cuts. `memoryKey` changes with the district and each keeps its own memory; overlays that appear with a new frame are observed and measured again.
+
+**The ground sash (slice-4 screens, 3 Oct 2026)**
+
+- The place sheet had no header art, so the sash needed one: `LocationView.art` (the server's `pickArt`, the result's own ladder: a scene for the kind, else the map crop at the pin) and a 104 px (128 px from 640 px) art band at the top of `LocationSheet`, in every city, with the sheet's handle over it. The sheet's tickets start 104 px lower.
+- `pickArt` now takes a headquarters' scene from the location's own party (`location.factionId`), so the capital's Union House and Vanguard House show their party's scene (§13); unchanged at home.
+- The sash is client-drawn (`GroundSash`, `groundOf`): the leading party of the place's shares (the district's in the capital, the city's at home), *Contested* (grey, no crest) on a close race or a tie at the top, a headquarters always its own party. Ink text on the ochre and the grey, paper on the oxblood and the slate. It is on the place sheet, the result modal (the stamp moves left) and the arrival modal (the arrival's district, from a `city.get` of the destination once arrived).
+
+**Screens**
+
+- **City | Nation** floats on the map (a phone: bottom left above the orders, mirroring the Places pill; from 640 px: top right beside it) rather than in a top bar, so the map keeps its height; the nation map's "top bar subtitle" is a caption card, *Cities of the republic · Coalport · home* / *On the train to Irongate*.
+- A label pin near the right edge carries its label on its left (Irongate on an upright phone); a district's name slides along the edge to stay on the map.
+- **A phone's district plate** is one band: *‹ Irongate* · the district · *Where you live* in the corner (a tap opens the residence card in a sheet, whose Register opens the §6.2 sheet: one tap more than §6.1 on a phone). From 640 px the corner keeps Reputation and the card sits in the corner panel with the tram bar, the Election card and the orders. On a phone the district view drops the Today strip under the tram bar (it stays on the Me tab and from 640 px). The tram bar is in the corner panel on wide screens, not the side sheet's header.
+- At home the residence card shows only when the player lives elsewhere (the way back); living at home there is nothing to do.
+- The Places list's *Issue* mark is visual only: the rows' accessible names are unchanged (the slice-3 specs name them).
+- The journey screen is the client route (`routes/journey.tsx`) from `JourneyProgress` and `JourneyCard`; on desktop it is the 640 px column on ink, without the dimmed nation map behind. A journey card's content `detail` already names the stat, so a row prints the odds word, then the detail (the stat only when the detail lacks it).
+- The arrival modal is `ResultModal` kind `journey` with `onContinue` / `continuePending`; Escape is Continue. A card answered on the way is the modal's body line; answered in the modal, its outcome stays there. `travel.close` lands on `/city/irongate/irongate.station-market?loc=irongate.central-station`.
+- Screens §5.2's plate in the capital and §8's grouped candidates are built in the client route and in `DistrictResultTable`; `Plate` and `CountTable` are unchanged.
+- *Where to act* goes to the Issue's district (or city) with the Places list open when the player stands there, else to the nation map at that city's card (`/nation?city=`).
+- The capital's result uses `council.capitalCount` (phase B's procedure) for a capital resident; `CapitalCountView.hall` was added for the City Hall header.
+
+**Views and server (phase C)**
+
+- New view fields: `CharacterView.factionNames` (every party's short name, from content: the three-way tables, the sash and the Issue lines), `LocationView.art`, `DistrictView.outline`, `IssueRowView.blurb` and `stances` (the opened row), `CouncilSeatView.districtName` (the seat grid's captions), `PaperView.headlines[].medal` (the hero's rosette), `ElectionCardView.result.district` (*Eastside went Collective, Vanguard* and the capital's ten by party, with the district's turnout), `CapitalCountView.hall`.
+- **The Election card's *Registered* state** also covers a registration made before this cycle's polls open (today < `votesFromDay`), not only one whose first polls are next cycle's: the e2e found a day-0 registrant reading *Candidates are putting their names in*. Its second line takes the summary's `pollsFromWeekday` (this cycle's or the next's).
+- **Monday's paper:** `issue-resolved` and `issue-lapsed` (city 0) outrank `issues-drawn` (now city 1) in the Herald and the home papers (the main session's decision); `slice-4-battleground.md` §9.6 records it and the content test reads it.
+- The capital's branch proposals on the order paper read *the {faction}'s proposal · {secretary}*.
+- *How elections work* in the capital is a note of its own (`copy.help.capitalElection`: ten seats, two a district, every party on every list, the score's mix in words, six of ten), restating design §8; text for the designer to confirm.
+- The Me tab reads `character.me` fresh before it renders (an action's character view carries no hero, heroes or scoreboard, so the cached view lacked the scoreboard line until a reload; the slice-1 *reload shows the same Me* check caught it).
+- The parties' table prints the opinion share among the three parties in points (the count stores it as a fraction).
+
+**For the game designer**
+
+- The slot C orders shared by both residences (`residence: 'any'`) name the home city in their titles (*Five attempts anywhere in Coalport*) while their match (`cityId: 'home'`) now means the residence city, so a capital resident reads Coalport for work counted in Irongate. A `{city}` placeholder (resolved at read like `{issue}`) or residence-neutral titles would fix it; not changed here (player text).
+
+**Clouds**
+
+- The nation and Irongate keep `clouds: true` (content had both on). Frame check (§13, the method of maps v3 §12: a Pixel 7 profile at 390 × 844, CPU 4 × slower, the 14 day sprites loaded): the nation map 60 fps at rest and 60 fps during a drag, Irongate's overview the same, no frame over 25 ms in either (241 / 181 and 240 / 180 frames). Both stay on.
+
+**Phases A and B (from their notes)**
+
+- Art: the capital's and the nation's stills raised the whole set's cap from 12 to 13 MB (ADR 0015's budget, recorded in phase A).
+- Vocabulary: the allowances were cut to one, *fever ward* (St Agnes); the Hill's *ward*, Parliament's *division*, the committees' *motion* and the Opera's *by ballot* were reworded instead.
+- `council.capitalCount` is its own procedure (§8.1 said `council.count` with a cycle key).
+- A journey card's result (`JourneyCardResult.journey`) carries its journey with `card.chosen = null`; the client folds the result back in.
+- Placeholders with digits and `{faction}` / `{district}` in stored Herald lines were fixed in phase B.

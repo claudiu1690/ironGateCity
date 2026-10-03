@@ -1,11 +1,28 @@
 import { copy } from '@irongate/content/copy';
 import { energyReadyAt } from '@irongate/rules';
-import type { ActionView } from '@irongate/rules';
+import type { ActionView, PlaceTagView } from '@irongate/rules';
 import { useEffect, useId, useRef } from 'react';
 import { cx, formatClock } from '../format';
 import { bandNote, oddsTag, statName, ticketOdds } from '../odds';
 import { HelpButton, helpMark } from './Help';
 import { ordinanceTagText } from './ResultModal';
+
+/**
+ * Slice 4 (screens §5.2): a place tag's words on a ticket: *Issue: Tram Fare Hike · opinion +50 %*,
+ * *Close race · +25 % Party XP · better odds*, *Comeback · +15 %*, *Members only*.
+ */
+export function placeTagText(t: PlaceTagView): string {
+  switch (t.kind) {
+    case 'issue':
+      return copy.capital.issueTag(t.name, t.pct);
+    case 'closeRace':
+      return copy.capital.closeRaceTag;
+    case 'comeback':
+      return copy.capital.comebackTag(t.pct);
+    case 'membersOnly':
+      return copy.capital.membersOnly;
+  }
+}
 
 /** Review 2 (answers §1.11): the plain type labels. */
 export const TYPE_LABEL: Record<string, string> = copy.typeLabel;
@@ -48,9 +65,17 @@ export function Ticket({
     if (highlight) ref.current?.scrollIntoView?.({ block: 'nearest' });
   }, [highlight]);
 
+  // Slice 4 (screens §5.2): another party's headquarters in the capital. The whole ticket is dimmed
+  // and has no buttons; the server refuses it too (MEMBERS_ONLY).
+  const membersOnly = a.locked?.reason === 'MEMBERS_ONLY';
   let blocked: string | null = null;
   if (a.locked)
-    blocked = a.locked.reason === 'LEVEL' ? `Level ${a.locked.need}` : copy.needsReputation(a.locked.need);
+    blocked =
+      a.locked.reason === 'LEVEL'
+        ? `Level ${a.locked.need}`
+        : a.locked.reason === 'MEMBERS_ONLY'
+          ? copy.capital.membersOnly
+          : copy.needsReputation(a.locked.need);
   const short1 = energy.value < a.energy;
   const short3 = a.energy3 !== null && energy.value < a.energy3;
   const readyAt = short1 ? energyReadyAt(energy, a.energy) : null;
@@ -72,10 +97,26 @@ export function Ticket({
     : null;
   // Slice 3 (screens §8): the rule's tags go before the Party-order tag; review 2: a check bonus
   // that is not a rule's or the reputation's (First day) is a tag in words, "· better odds".
+  // Slice 4 (screens §5.2): the order is cost change · Issue · Close race · Comeback · council rule ·
+  // Party order; the close race's better odds are its own tag's words, not a second one.
+  const placeTags = a.placeTags ?? [];
+  const placeBonus = new Set(placeTags.some((t) => t.kind === 'closeRace') ? ['battleground'] : []);
   const bonusTags = (a.preview?.bonuses ?? [])
-    .filter((b) => b.id !== 'standing' && !(a.tags ?? []).some((t) => t.ordinanceId === b.id))
+    .filter(
+      (b) =>
+        b.id !== 'standing' && !placeBonus.has(b.id) && !(a.tags ?? []).some((t) => t.ordinanceId === b.id),
+    )
     .map(oddsTag);
-  const tags = [TYPE_LABEL[a.type] ?? a.type, ...(a.tags ?? []).map(ordinanceTagText), ...bonusTags, order]
+  const costTags = (a.tags ?? []).filter((t) => t.kind === 'energy').map(ordinanceTagText);
+  const ruleTags = (a.tags ?? []).filter((t) => t.kind !== 'energy').map(ordinanceTagText);
+  const tags = [
+    TYPE_LABEL[a.type] ?? a.type,
+    ...costTags,
+    ...placeTags.filter((t) => t.kind !== 'membersOnly').map(placeTagText),
+    ...ruleTags,
+    ...bonusTags,
+    membersOnly ? null : order,
+  ]
     .filter(Boolean)
     .join(' · ');
 
@@ -97,8 +138,10 @@ export function Ticket({
         className={cx(
           'flex min-h-[64px] items-stretch border bg-paper-card text-ink',
           blocked ? 'border-faint' : 'border-ink',
+          membersOnly && 'opacity-55',
           highlight && 'shadow-[0_0_0_3px_var(--color-xp)]',
         )}
+        data-members-only={membersOnly || undefined}
       >
         <div className="flex w-[52px] shrink-0 flex-col items-center justify-center gap-px border-r-[1.5px] border-dashed border-ink bg-paper-2">
           <span className="font-label text-[19px] leading-none font-semibold">{a.energy}</span>
@@ -133,7 +176,15 @@ export function Ticket({
             {tags}
           </span>
         </div>
-        {a.kind === 'training' ? (
+        {membersOnly ? (
+          // No buttons: the party's own members act here (the server refuses anyone else).
+          <span
+            className="label-caps flex w-[104px] shrink-0 items-center justify-center border-l border-faint px-1 text-center text-[10px] leading-tight text-muted"
+            data-testid="ticket-members-only"
+          >
+            {copy.capital.membersOnly}
+          </span>
+        ) : a.kind === 'training' ? (
           // Training has no batch (§8.5, §13.1): one button, the live cost on the stub.
           <button
             type="button"
@@ -195,7 +246,7 @@ export function Ticket({
           </>
         )}
       </div>
-      {hint && (
+      {hint && !membersOnly && (
         <p id={hintId} className="mt-1 font-mono text-[11px] text-muted" data-testid="ticket-hint">
           {hint}
         </p>

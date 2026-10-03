@@ -374,7 +374,9 @@ async function electionCard(
   let state: ElectionCardState;
   if (c.rank < COUNCIL.voteRank) state = 'belowRank';
   else if (ruleOpen && i.paper!.status === 'open') state = myRuleVote ? 'councilVoted' : 'councilSits';
-  else if (i.notYetVoter && !cand) state = 'registered';
+  // Slice 4 (screens §7.2): registered, the first vote not yet open: a late registrant whose first
+  // polls are the next cycle's, or one registered before this cycle's polls open (days 0–1).
+  else if ((i.notYetVoter || today < residenceOf(c).votesFromDay) && !cand) state = 'registered';
   else if (cal.phase === 'polling')
     state = vote ? 'voted' : cand?.status === 'standing' ? 'candidateVoting' : 'voting';
   else if (cand?.status === 'filed') state = 'standing';
@@ -401,6 +403,23 @@ async function electionCard(
   const winner = counted
     ? ((counted.rows as CountRow[]).find((r) => r.key === counted.topKey) ?? (counted.rows as CountRow[])[0])
     : undefined;
+  // Slice 4 (screens §7.2): in a district, the two seats' parties and the capital's ten by party.
+  let district: NonNullable<ElectionCardView['result']>['district'] = null;
+  if (counted && isDistrict(i.spec)) {
+    const seatsOf = (rows: CountRow[]) =>
+      (rows as Array<CountRow & { factionId?: FactionId }>)
+        .filter((r) => r.seated && r.factionId)
+        .sort((a, b) => a.place - b.place)
+        .map((r) => r.factionId!);
+    const ids = content.districtsOf(i.spec.city.id).map((d) => electionKey(d.id, cal.cycle - 1));
+    const all = await s(
+      Election.find({ _id: { $in: ids }, status: 'counted' }, { result: 1 }),
+      i.session,
+    ).lean<ElectionDoc[]>();
+    const capital: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
+    for (const e of all) for (const f of seatsOf((e.result?.rows ?? []) as CountRow[])) capital[f] += 1;
+    district = { seats: seatsOf(counted.rows as CountRow[]), capital, turnout: counted.turnout };
+  }
   return {
     state,
     closesAt,
@@ -426,6 +445,7 @@ async function electionCard(
           yourLine,
           councilUntil: dayStart(cal.council.toDay),
           namesUntil: dayStart(cal.election.pollsFrom),
+          district,
         }
       : null,
     rule: ruleOpen
@@ -783,6 +803,7 @@ export async function capitalCountView(
     .sort((a, b) => Number(b.districtId === mineFirst) - Number(a.districtId === mineFirst));
   return {
     kind: 'capital',
+    hall: hallView(content, cityId),
     councilKey: councilKey(cityId, cycle + 1),
     cycle,
     countDay: es[0]!.countDay,
@@ -906,7 +927,13 @@ export async function councilView(
     termEndsAt: dayStart(cal.council.toDay),
     npcSeats: terms.filter((t) => t.holder.kind === 'npc').length,
     seats: terms.map((t) => {
-      const where = capital ? { factionId: t.factionId, districtId: t.districtId ?? null } : {};
+      const where = capital
+        ? {
+            factionId: t.factionId,
+            districtId: t.districtId ?? null,
+            districtName: t.districtId ? (content.district(t.districtId)?.quarter.name ?? null) : null,
+          }
+        : {};
       if (t.holder.kind === 'npc') {
         const npc = content.candidate(t.holder.npcId);
         const st = standingView((npc?.profile ?? 0) * 5);

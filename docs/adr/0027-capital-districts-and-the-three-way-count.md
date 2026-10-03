@@ -1,6 +1,6 @@
 # ADR 0027 — The capital: district documents, state at the boundary, an election per district, one council
 
-**Status:** proposed (slice 4) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 4 · **Date:** 2026-10-03
 
 ## Context
 

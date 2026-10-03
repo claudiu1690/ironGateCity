@@ -86,6 +86,7 @@ export async function issueRowsOf(
         leader: leaderOf(d.momentum),
         momentum: { ...d.momentum },
         effectLine: issue?.effectLine ?? '',
+        ...(issue ? { blurb: issue.blurb, stances: { ...issue.stances } } : {}),
       };
     });
 }

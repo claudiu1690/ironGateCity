@@ -7,7 +7,7 @@
 import { councilDay, dayKey, isMonday } from '@irongate/rules';
 import { describe, expect, it } from 'vitest';
 import DESIGN from '../../../docs/design/slice-4-battleground.md?raw';
-import { loadContent, parseContent, rawContent } from '../src';
+import { inPolygon, loadContent, parseContent, rawContent } from '../src';
 import type { ContentInput } from '../src';
 import { mapPins } from '../src/data/mapPins';
 
@@ -240,6 +240,41 @@ describe('every §4.2 check has a failing fixture', () => {
     fails((c) => {
       irongate(c).quarters[0]!.district!.anchor = { x: 0.1, y: 0.1 };
     }, /anchor is outside its frame/);
+  });
+
+  it("the user's district lock (3 Oct 2026): a pin outside its outline, two outlines overlapping", () => {
+    // Every pin lies inside its district's outline in the real data, and the anchors too.
+    for (const q of content.districtsOf('irongate')) {
+      const pins = content.city('irongate')!.locations.filter((l) => l.quarterId === q.id);
+      expect(pins.length).toBeGreaterThan(0);
+      for (const l of pins) expect(inPolygon(l.map, q.district!.outline), l.id).toBe(true);
+      expect(inPolygon(q.district!.anchor, q.district!.outline), q.id).toBe(true);
+    }
+    // The unassigned band at the bottom of the picture lies outside all five.
+    for (const x of [0.1, 0.3, 0.5, 0.7, 0.9])
+      expect(content.districtsOf('irongate').some((q) => inPolygon({ x, y: 0.9 }, q.district!.outline))).toBe(false);
+    fails((c) => {
+      // Eastside drawn without the Union House's corner.
+      irongate(c).quarters[3]!.district!.outline = [
+        [0.6, 0.48],
+        [0.98, 0.56],
+        [0.97, 0.73],
+        [0.64, 0.76],
+        [0.6, 0.65],
+        [0.61, 0.55],
+      ];
+    }, /irongate.union-house": its pin is outside irongate.eastside's outline/);
+    fails((c) => {
+      // Old Town grown over the Ministries' street.
+      irongate(c).quarters[1]!.district!.outline = [
+        [0.04, 0.06],
+        [0.43, 0.08],
+        [0.5, 0.2],
+        [0.42, 0.355],
+        [0.03, 0.32],
+        [0.02, 0.2],
+      ];
+    }, /irongate.government-quarter and irongate.old-town: their outlines overlap/);
   });
 
   it('HQs: a faction-hq without its faction, two of one faction, a members-only street', () => {

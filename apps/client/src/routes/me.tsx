@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { xpForLevel } from '@irongate/rules';
+import { HERO, ISSUES, xpForLevel } from '@irongate/rules';
 import {
   AvatarPicker,
   BottomSheet,
@@ -11,7 +11,10 @@ import {
   OrdersList,
   Picture,
   ProgressBar,
+  Rosette,
+  ScoreboardLine,
   StatPointsPanel,
+  weekdayOf,
   TodayStrip,
   formatClock,
   formatNumber,
@@ -50,6 +53,9 @@ export function MePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { character: c } = useCharacter();
+  // Slice 4: the hero, the heroes and the scoreboard come only from `character.me` (an action's
+  // character view carries none), so the Me tab reads it fresh before it renders.
+  const fresh = useQuery({ ...trpc.character.me.queryOptions(), refetchOnMount: 'always' });
   const stat = usePlaceStat();
   const [faceOpen, setFaceOpen] = useState(false);
   const faces = useQuery({ ...trpc.arrival.faces.queryOptions(), staleTime: Infinity, enabled: faceOpen });
@@ -61,10 +67,11 @@ export function MePage() {
       setFaceOpen(false);
     },
   });
-  // Without a job, the card names the home city's places that have a Jobs card, in pin order.
+  // Without a job, the card names the home city's places that have a Jobs card, in pin order (when
+  // standing at home: the city view is only for the city you are in).
   const home = useQuery({
     ...trpc.city.get.queryOptions({ cityId: c?.homeCityId ?? '' }),
-    enabled: !!c && c.job === null,
+    enabled: !!c && c.job === null && c.cityId === c.homeCityId && !c.journey,
   });
   const jobPlaces = (home.data?.locations ?? [])
     .filter((l) => l.jobs.length > 0)
@@ -77,7 +84,7 @@ export function MePage() {
     await navigate({ to: '/login' });
   }
 
-  if (!c) {
+  if (!c || !(fresh.isFetchedAfterMount || fresh.isError)) {
     return (
       <p className="label-caps py-10 text-center text-[12px] text-dim" role="status">
         Loading…
@@ -151,6 +158,38 @@ export function MePage() {
               {copy.noOffice(c.rank.title)}
             </span>
           ) : null}
+          {/* Slice 4 (screens §9.3): where you live, this election's scoreboard, the hero's title. */}
+          {c.residence && (
+            <Link
+              to={c.residence.districtId ? '/city/$cityId/$quarterId' : '/city/$cityId'}
+              params={
+                c.residence.districtId
+                  ? { cityId: c.residence.cityId, quarterId: c.residence.districtId }
+                  : { cityId: c.residence.cityId }
+              }
+              disabled={c.cityId !== c.residence.cityId || !!c.journey}
+              className="font-mono text-[12px] text-petrol underline decoration-dotted underline-offset-2"
+              data-testid="me-residence"
+            >
+              {c.residence.districtName
+                ? copy.residence.meLine(c.residence.districtName, weekdayOf(c.residence.canMoveFromDay))
+                : copy.residence.youLiveIn(c.residence.cityName)}
+            </Link>
+          )}
+          {(c.scoreboard ?? []).map((line) => (
+            <ScoreboardLine key={line.placeId} line={line} factionName={c.factionName} />
+          ))}
+          {c.hero && (
+            <span className="flex items-center gap-1.5 font-mono text-[12px]" data-testid="me-hero">
+              <Rosette size={14} />
+              {c.hero.title} · this election
+            </span>
+          )}
+          {(c.heroes ?? []).map((h) => (
+            <span key={h.placeName} className="font-mono text-[12px] text-muted" data-testid="me-heroes">
+              {copy.scoreboard.heroes(h.placeName, h.n)}
+            </span>
+          ))}
           {c.keepsakes.length > 0 && (
             <ul className="flex flex-col gap-1.5 pt-1" aria-label="Keepsakes" data-testid="me-keepsakes">
               {c.keepsakes.map((k) => (
@@ -237,6 +276,10 @@ export function MePage() {
               <span className={helpMark}>{copy.pcSinks(c.pc)}</span>
             </span>
           </HelpButton>
+          {/* Slice 4 (screens §9.3): the Political Capital line's new sources. */}
+          <span className="font-mono text-[11.5px] text-muted" data-testid="me-pc-sources">
+            {copy.scoreboard.pcSources(HERO.pc, ISSUES.topPc)}
+          </span>
         </Card>
 
         <Card title="Level">

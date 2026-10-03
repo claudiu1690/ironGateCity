@@ -942,7 +942,7 @@ Headline templates (the three home papers get the same conditions with their own
 
 | Id | Group · priority | Condition | Headline | Deck |
 |---|---|---|---|---|
-| `hl.ig.issues-drawn` | city 0 | Monday, new Issues | This Week in Irongate: {issue1} and {issue2} | {issue1Blurb} And in {district2}: {issue2}. Both settle Sunday night. |
+| `hl.ig.issues-drawn` | city 1 | Monday, new Issues | This Week in Irongate: {issue1} and {issue2} | {issue1Blurb} And in {district2}: {issue2}. Both settle Sunday night. |
 | `hl.ig.issue-leading` | city 2 | any other day, a faction leads an Issue | {faction} Leads on {issue1Short} | {faction} {m1} · {second} {m2} · {third} {m3}. Work on it in {district} moves opinion half again. |
 | `hl.ig.issue-open` | city 2 | any other day, nobody has momentum | Nobody Has Spoken on {issue1Short} Yet | No party has moved on it. Work on it in {district} moves opinion half again. |
 | `hl.ig.issue-resolved` | city 0 | Monday, an Issue resolved last night | {faction} Owns {issueShort} | {stance} {effectLine} for the week. |
@@ -950,6 +950,8 @@ Headline templates (the three home papers get the same conditions with their own
 | `hl.ig.issue-pc` | personal 2 | the player was in the top five | Your Work on {issueShort} Counted | Among the five who moved it most for the {faction}. +4 Political Capital. |
 
 The paper's **Issues section** itself (§3.3) is live at read: the resident's city first, then the capital, then the other cities folded (`slice-4-screens.md` §7).
+
+**Monday, both at once (decided 3 Oct 2026, the main session):** when a Monday edition has both a resolution and the new draw, `issue-resolved` / `issue-lapsed` (city 0) outrank `issues-drawn` (now city 1): the results first, since the new Issues show in the paper's Issues section anyway (with *New this week*). The same for the three home papers' `hl.*.issues-drawn`.
 
 ---
 

@@ -39,7 +39,8 @@ const homeAdditions = (cityId: HomeCityId, prefix: Prefix, t: HomeTexts): Headli
     h('hero', 'personal', 0, [{ kind: 'heroYesterday', place: 'city' }], t.hero),
     h('quoted', 'personal', 2, [{ kind: 'quotedYesterday' }], t.quoted),
     h('issue-pc', 'personal', 2, [{ kind: 'issuePcYesterday' }], t.issuePc),
-    h('issues-drawn', 'city', 0, [{ kind: 'issuesDrawnToday' }], t.issuesDrawn),
+    // Monday with a resolution too: the result first (3 Oct 2026), the new Issues are in the section.
+    h('issues-drawn', 'city', 1, [{ kind: 'issuesDrawnToday' }], t.issuesDrawn),
     h('issue-leading', 'city', 2, [{ kind: 'issueLeading' }], t.issueLeading),
     h('issue-open', 'city', 2, [{ kind: 'issueOpen' }], t.issueOpen),
     h('issue-resolved', 'city', 0, [{ kind: 'issueResolvedToday', owned: true }], t.issueResolved),

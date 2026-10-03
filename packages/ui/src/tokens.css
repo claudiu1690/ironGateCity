@@ -186,3 +186,71 @@
     animation: place-fade-out var(--place-fade-ms) ease both;
   }
 }
+
+/*
+ * The ground sash (slice-4 screens, 3 Oct 2026): whose ground a place is, a printed band across the
+ * top-right corner of the big scene art. The corner box is about 26 % of the art's width (a little less
+ * from 640 px) and square; the band runs from about a third of the way along its top edge to about two
+ * thirds of the way down its right edge, with a thin ink edge and the paper's dot grain over its colour.
+ * It slides in from the corner with the art (150 ms); with reduce motion it simply stands there.
+ */
+.ground-sash {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 5;
+  width: 26%;
+  min-width: 88px;
+  max-width: 156px;
+  aspect-ratio: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+@media (min-width: 640px) {
+  .ground-sash {
+    width: 22%;
+  }
+}
+.ground-sash:focus-visible {
+  outline: 2px solid var(--color-paper);
+  outline-offset: -4px;
+}
+.ground-sash-band {
+  position: absolute;
+  left: -4%;
+  top: calc(34% - 11px);
+  width: 140%;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  white-space: nowrap;
+  transform: rotate(45deg);
+  border-top: 1px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-ink);
+  background-image: radial-gradient(rgb(21 24 26 / 0.12) 0.8px, transparent 1px);
+  background-size: 4px 4px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+@keyframes sash-in {
+  from {
+    transform: translate(40%, -40%);
+    opacity: 0;
+  }
+}
+.ground-sash-band {
+  animation: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ground-sash {
+    animation: sash-in 150ms ease-out both;
+  }
+}

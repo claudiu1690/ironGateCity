@@ -17,10 +17,13 @@ export interface FactionCrestProps {
   label?: string;
   size?: number;
   className?: string;
+  /** Slice 4 (the ground sash): the shape in another colour, e.g. paper on the party's own band. */
+  color?: string;
 }
 
-export function FactionCrest({ factionId, label, size = 12, className }: FactionCrestProps) {
-  const { shape, color } = FACTION_STYLE[factionId];
+export function FactionCrest({ factionId, label, size = 12, className, color: tint }: FactionCrestProps) {
+  const { shape } = FACTION_STYLE[factionId];
+  const color = tint ?? FACTION_STYLE[factionId].color;
   return (
     <svg
       width={size}

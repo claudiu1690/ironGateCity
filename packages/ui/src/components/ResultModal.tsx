@@ -4,6 +4,8 @@ import { energyReadyAt, xpForLevel } from '@irongate/rules';
 import type {
   ActionResult,
   CharacterView,
+  FactionId,
+  JourneyView,
   NamedStandingView,
   OrdinanceTagView,
   PoliticalResult,
@@ -25,16 +27,31 @@ import {
 import { batchReasons, statName } from '../odds';
 import type { TrainingPlaces } from '../odds';
 import { Button } from './Button';
+import { formatSwing, ordinal } from './Capital';
 import { FACTION_STYLE } from './FactionCrest';
-import { MapCrop } from './HallHeader';
+import { GroundSash } from './GroundSash';
+import type { Ground } from './GroundSash';
+import { ArtPanel } from './HallHeader';
 import { Picture } from './Picture';
 import { StatPointsPanel } from './Shell';
 import { Stamp } from './Stamp';
 import type { StampTone } from './Stamp';
 
+/**
+ * Slice 4 (screens §4, tech design §10.2): the arrival modal, `ResultModal kind="journey"`: the
+ * journey view with its `arrival` (the destination's picture at the station, the stamp *Arrived*).
+ */
+export interface JourneyArrivalResult {
+  kind: 'journey';
+  journey: JourneyView;
+}
+
 export interface ResultModalProps {
-  /** An action's result, or (slice 3) a political act's: `kind: 'political'`, screens §9. */
-  result: ActionResult | PoliticalResult | null;
+  /**
+   * An action's result, or (slice 3) a political act's: `kind: 'political'`, screens §9; or (slice 4)
+   * the arrival, `kind: 'journey'`.
+   */
+  result: ActionResult | PoliticalResult | JourneyArrivalResult | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Once more / Three more: the caller re-runs the action with a new idempotency key. */
@@ -53,6 +70,15 @@ export interface ResultModalProps {
   placing?: StatPointTarget | null;
   /** Review 2 (answers §2.4): where to train each stat here, for the reason line ("the Union Hall"). */
   trainingPlaces?: TrainingPlaces;
+  /** Slice 4: the ground sash on the picture (whose ground the place is), from the page's view. */
+  ground?: Ground | null;
+  /** Slice 4: every party's short name, for the Issue knock-on ("Vanguard leads 130 to 85"). */
+  factionNames?: Partial<Record<FactionId, string>>;
+  /** Slice 4, the arrival: Continue (`travel.close`), disabled from the tap until it answers. */
+  onContinue?: () => void;
+  continuePending?: boolean;
+  /** Slice 4, the arrival: the unanswered journey card, compact, above Continue. */
+  journeyCard?: ReactNode;
 }
 
 export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>): {
@@ -98,6 +124,8 @@ export function ResultModal(props: ResultModalProps) {
         >
           {result && result.kind === 'political' ? (
             <PoliticalBody result={result} />
+          ) : result && result.kind === 'journey' ? (
+            <JourneyBody {...props} result={result} />
           ) : (
             result && <ResultBody {...props} result={result} />
           )}
@@ -107,33 +135,40 @@ export function ResultModal(props: ResultModalProps) {
   );
 }
 
-function ArtHeader({ r }: { r: ActionResult }) {
-  const stamp = stampFor(r);
-  const art = r.art;
+/**
+ * The result's picture (§13.5: a scene, or rung 3, the map centred on the location; review 3: the crop
+ * shared with the hall header), the stamp, the place line and (slice 4) the ground sash on its corner;
+ * with a sash the stamp moves left, so the band never covers it.
+ */
+function ArtHeader({
+  art,
+  stamp,
+  caption,
+  ground,
+}: {
+  art: ActionResult['art'];
+  stamp: { label: string; tone: StampTone };
+  caption: string;
+  ground?: Ground | null;
+}) {
   return (
-    <div className="relative h-[150px] shrink-0 overflow-hidden bg-ink" data-art={art.rung}>
-      {art.rung === 'scene' ? (
-        <Picture
-          asset={art.asset}
-          sizes="600px"
-          decorative
-          className="absolute inset-0 size-full object-cover opacity-85"
-        />
-      ) : (
-        // §13.5 rung 3: the map centred on the location (review 3: the crop shared with the hall header).
-        <MapCrop asset={art.asset} x={art.x} y={art.y} className="opacity-80" />
-      )}
+    <ArtPanel art={art} className="h-[150px]">
       <div
         className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.9)_0%,rgb(21_24_26/0)_55%)]"
         aria-hidden="true"
       />
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div
+        className={cx(
+          'absolute inset-0 flex items-center',
+          ground ? 'justify-start pl-[7%] sm:justify-center sm:pr-[18%] sm:pl-0' : 'justify-center',
+        )}
+        data-testid="result-stamp"
+      >
         <Stamp tone={stamp.tone} label={stamp.label} />
       </div>
-      <span className="label-caps absolute bottom-2 left-3 text-[10px] text-dim">
-        {r.place.cityName} · {r.place.locationName} · {formatClock(Date.parse(r.performedAt))}
-      </span>
-    </div>
+      <span className="label-caps absolute bottom-2 left-3 text-[10px] text-dim">{caption}</span>
+      {ground && <GroundSash ground={ground} />}
+    </ArtPanel>
   );
 }
 
@@ -163,6 +198,10 @@ function PoliticalBody({ result: r }: { result: PoliticalResult }) {
       text: `${k.endorsements.name}: ${copy.backersOf(k.endorsements.n, k.endorsements.needed)}`,
     });
   }
+  // Slice 4 (screens §6.3): a move or a room: the Iron, a home seat given up, a candidacy withdrawn.
+  if (k.iron) lines.push({ id: 'iron', text: copy.ironLeft(k.iron.before - k.iron.after, formatNumber(k.iron.after)) });
+  if (k.seatGivenUp) lines.push({ id: 'seat', text: copy.residence.seatGivenUp(k.seatGivenUp.cityName) });
+  if (k.candidacyWithdrawn) lines.push({ id: 'candidacy', text: copy.residence.candidacyWithdrawn });
   const t = { until: r.until, at: r.at };
   // Review 2 (screens §9): every act ends with what comes next.
   if (r.next) lines.push({ id: 'next', text: renderTimeTokens(r.next, t) });
@@ -224,6 +263,68 @@ function PoliticalBody({ result: r }: { result: PoliticalResult }) {
 }
 
 /**
+ * Slice 4 (screens §4): the arrival. The destination's picture at its station with the stamp
+ * *Arrived* and the place line; the headline and the card's line (or the train was on time); the
+ * ticket and, for a visitor, the Herald; the unanswered card inside, answerable until *Continue*.
+ */
+function JourneyBody({
+  result,
+  ground,
+  onContinue,
+  continuePending,
+  journeyCard,
+}: ResultModalProps & { result: JourneyArrivalResult }) {
+  const a = result.journey.arrival;
+  if (!a) return null;
+  return (
+    <>
+      <ArtHeader art={a.art} stamp={{ label: a.stamp, tone: 'success' }} caption={a.place} ground={ground} />
+      <div className="flex flex-1 flex-col gap-4 px-4 pt-3.5 pb-4">
+        <section className="flex flex-col gap-1">
+          <span className="label-caps text-[10px] text-success">{copy.travel.arrived}</span>
+          <Dialog.Title className="font-display text-[24px] leading-tight font-black" data-testid="arrival-headline">
+            {a.headline}
+          </Dialog.Title>
+          <Dialog.Description className="font-body text-[14px] leading-normal text-text-2" data-testid="arrival-body">
+            {a.body}
+          </Dialog.Description>
+        </section>
+        <section aria-labelledby="arrival-effects">
+          <h3 id="arrival-effects" className="label-caps mb-1 text-[10px] text-muted">
+            Knock-on effects
+          </h3>
+          <ul className="flex flex-col">
+            <li className="border-b border-dotted border-faint py-1 font-body text-[12.5px]" data-testid="arrival-ticket">
+              {copy.travel.ticket(a.knockOns.ticket)}
+            </li>
+            {a.knockOns.heraldVisitor && (
+              <li className="border-b border-dotted border-faint py-1 font-body text-[12.5px]" data-testid="arrival-herald">
+                {copy.travel.heraldYours}
+              </li>
+            )}
+          </ul>
+        </section>
+        {journeyCard}
+      </div>
+      <div
+        className="sticky bottom-0 z-10 mt-auto border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
+        data-testid="result-buttons"
+      >
+        <Button
+          variant="primary"
+          className="w-full"
+          onClick={onContinue}
+          pending={continuePending}
+          data-testid="arrival-continue"
+        >
+          {copy.travel.continue}
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/**
  * A ticket tag's words (screens §8, review 2): "Rally Permits · 10 Energy", "Open Doors · better
  * odds", "Street Fund · +25 % Iron". Never a percentage of chance.
  */
@@ -260,6 +361,8 @@ function ResultBody({
   onPlaceStat,
   placing,
   trainingPlaces,
+  ground,
+  factionNames,
 }: ResultModalProps & { result: ActionResult }) {
   const [later, setLater] = useState(false);
   const stamp = stampFor(r);
@@ -286,9 +389,40 @@ function ResultBody({
     .map((o) => copy.orderSigned[r.character.factionId](o.fxp, left));
   const reasons = batchReasons(r.attempts, trainingPlaces);
 
+  // Slice 4 (tech design §10.1): the points this work added to an Issue, and the scoreboard line.
+  const names = factionNames ?? {};
+  const fname = (f: FactionId) => names[f] ?? (f === r.character.factionId ? r.character.factionName : f);
+  const issueLines = (e.issues ?? []).map((x) => {
+    const sorted = Object.values(x.totals).sort((a, b) => b - a);
+    const who = x.leader === null ? null : x.leader === x.factionId ? '' : fname(x.leader);
+    return {
+      id: x.issueId,
+      text: copy.capital.issuePoints(
+        x.name,
+        fname(x.factionId),
+        x.added,
+        copy.capital.leadsBy(who, sorted[0] ?? 0, sorted[1] ?? 0),
+      ),
+    };
+  });
+  const scoreLine = e.scoreboard
+    ? copy.scoreboard.line(
+        e.scoreboard.placeName,
+        formatSwing(e.scoreboard.swing),
+        r.character.factionName,
+        ordinal(e.scoreboard.rank),
+        e.scoreboard.of,
+      )
+    : null;
+
   return (
     <>
-      <ArtHeader r={r} />
+      <ArtHeader
+        art={r.art}
+        stamp={stamp}
+        caption={`${r.place.cityName} · ${r.place.locationName} · ${formatClock(Date.parse(r.performedAt))}`}
+        ground={ground}
+      />
       <div className="flex flex-1 flex-col gap-4 px-4 pt-3.5 pb-4">
         {/* 2. What happened */}
         <section className="flex flex-col gap-1">
@@ -386,8 +520,28 @@ function ResultBody({
             e.ordersAllDone ||
             e.morale ||
             e.branchEndorsement ||
+            issueLines.length > 0 ||
+            scoreLine ||
             signed.length > 0) && (
             <ul className="flex flex-col">
+              {/* Slice 4: the Issue's points and the scoreboard (tech design §10.1). */}
+              {issueLines.map((l) => (
+                <li
+                  key={l.id}
+                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                  data-testid="effect-issue"
+                >
+                  {l.text}
+                </li>
+              ))}
+              {scoreLine && (
+                <li
+                  className="border-b border-dotted border-faint py-1 font-mono text-[12px] text-petrol"
+                  data-testid="effect-scoreboard"
+                >
+                  {scoreLine}
+                </li>
+              )}
               {/* Review 1 (answers §6): an order done is a signed line from the secretary. */}
               {signed.map((line) => (
                 <li
@@ -626,13 +780,19 @@ function Receipt({ r }: { r: ActionResult }) {
     rows.push(
       <ReceiptRow
         key="opinion"
-        label={copy.reward.opinion(r.place.cityName)}
+        // Slice 4: the district whose meter moved ("Opinion in Station & Market").
+        label={copy.reward.opinion(e.opinion.placeName ?? r.place.cityName)}
         value={`${formatOpinionDelta(r.rewards.opinion)} %`}
         valueClassName={factionStyle.text}
-        note={copy.reward.opinionMove(
-          c.factionName,
-          formatShare(e.opinion.shareBefore),
-          formatShare(e.opinion.shareAfter),
+        // Slice 4 (ADR 0030 §4): the named factors first (*Close race +25 % · Issue: Tram Fare Hike
+        // +50 %*), then the meter's move.
+        note={join(
+          ...(r.rewards.opinionFactors ?? []).map((f) => copy.reward.factor(f.label, f.pct)),
+          copy.reward.opinionMove(
+            c.factionName,
+            formatShare(e.opinion.shareBefore),
+            formatShare(e.opinion.shareAfter),
+          ),
         )}
         testId="reward-opinion"
       />,

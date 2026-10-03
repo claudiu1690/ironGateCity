@@ -71,6 +71,35 @@ export function noticeFor(error: unknown): string | undefined {
       return 'You hold a seat: you can stand again the day your term ends.';
     case 'ELECTION_NOT_READY':
       return 'The result is still being counted. Try again in a moment.';
+    // Slice 4: travel, where you live, the capital.
+    case 'LEVEL_TOO_LOW':
+      return copy.travel.fromLevel(Number(game.need ?? 10));
+    case 'IN_TRANSIT':
+      return copy.errors.inTransit;
+    case 'ALREADY_THERE':
+      return copy.errors.alreadyThere;
+    case 'DESTINATION_LOCKED':
+      return game.lock === 'later' ? copy.travel.noServiceYetCard : copy.travel.rivalGroundLater;
+    case 'NOT_ENOUGH_IRON':
+      return copy.residence.needsIron(Number(game.cost));
+    case 'CARD_CLOSED':
+      return copy.errors.cardClosed;
+    case 'ALREADY_CHOSEN':
+      return copy.errors.alreadyChosen;
+    case 'NOT_IN_CITY':
+      return copy.errors.notInCity;
+    case 'MOVE_COOLDOWN':
+      return copy.errors.moveCooldown;
+    case 'ALREADY_RESIDENT':
+      return copy.errors.alreadyResident;
+    case 'MEMBERS_ONLY':
+      return copy.capital.membersOnly;
+    case 'NOT_YET_VOTER':
+      return copy.errors.notYetVoter;
+    case 'NOT_YET_CANDIDATE':
+      return copy.errors.notYetCandidate;
+    case 'WRONG_FACTION':
+      return copy.errors.wrongFaction;
     default:
       return 'That did not go through. Check your connection and tap again.';
   }

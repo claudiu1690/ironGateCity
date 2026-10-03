@@ -52,7 +52,13 @@ const BUTTONS: Array<{ action: DevAction; label: string; needsCharacter: boolean
   { action: 'phase', label: 'Skip to next phase', needsCharacter: true },
   { action: 'boost', label: 'Boost me', needsCharacter: true },
   { action: 'energy', label: 'Refill Energy', needsCharacter: true },
+  // Slice 4 (tech design §8.7).
+  { action: 'monday', label: 'Next Monday', needsCharacter: false },
+  { action: 'level10', label: 'Level 10', needsCharacter: true },
+  { action: 'irongate', label: 'Take me to Irongate', needsCharacter: true },
 ];
+
+
 
 function DevPanelOn({ status }: { status: DevStatus }) {
   const queryClient = useQueryClient();
@@ -69,6 +75,12 @@ function DevPanelOn({ status }: { status: DevStatus }) {
   // The clock only moves forward: right after a skip the status is ahead of the last tick.
   const now = Math.max(useNow(15_000), status.now);
 
+  // *Live in…*: the capital's districts the status lists (the server checks the ids), and home.
+  const liveTargets = [
+    ...(status.capital ?? []).map((d) => ({ target: d.id, label: d.name })),
+    { target: 'home', label: 'Home' },
+  ];
+  const [liveIn, setLiveIn] = useState(liveTargets[0]!.target);
   const act = useMutation({
     mutationFn: postDevAction,
     onSuccess: async (r) => {
@@ -103,6 +115,35 @@ function DevPanelOn({ status }: { status: DevStatus }) {
     ['Your clock', localLine(now), 'dev-local'],
     ['City Day', String(status.cityDay), 'dev-city-day'],
   ];
+  // Slice 4 (tech design §8.7): where the character is, where they live, the capital and the Issues.
+  const where = status.where;
+  const onTrain = !!where && 'train' in where;
+  if (where)
+    rows.push([
+      'Where',
+      'train' in where
+        ? `On the train to ${where.train.toName} · ${where.train.minutesLeft} min left`
+        : where.cityName,
+      'dev-where',
+    ]);
+  if (status.residence)
+    rows.push([
+      'Lives in',
+      `${status.residence.districtName ? `${status.residence.districtName}, ` : ''}${status.residence.cityName} · votes from ${status.residence.votesFrom} · stands from ${status.residence.standsFrom} · moves from ${status.residence.canMoveFrom}`,
+      'dev-residence',
+    ]);
+  for (const d of status.capital ?? [])
+    rows.push([
+      d.name,
+      `V ${formatShare(d.shares.vanguard)} · C ${formatShare(d.shares.collective)} · A ${formatShare(d.shares.alliance)}${d.closeRace ? ' · close race' : ''}${d.comeback ? ` · comeback ${d.comeback}` : ''}`,
+      `dev-district-${d.id}`,
+    ]);
+  for (const i of status.issues ?? [])
+    rows.push([
+      'Issue',
+      `${i.name} (${i.placeName}) · V ${i.momentum.vanguard} · C ${i.momentum.collective} · A ${i.momentum.alliance}`,
+      `dev-issue-${i.name}`,
+    ]);
   if (home) {
     if (council) {
       rows.push([home.cityName, `${council.phaseLabel} · cycle day ${council.cycleDay}`, 'dev-phase']);
@@ -215,6 +256,18 @@ function DevPanelOn({ status }: { status: DevStatus }) {
           )}
 
           <div className="grid grid-cols-2 gap-1.5 border-t border-paper-2 px-3 pt-2.5 pb-2">
+            {/* Slice 4: on a train, Arrive now first. */}
+            {onTrain && (
+              <Button
+                className="col-span-2 px-2 text-[12px]"
+                disabled={act.isPending}
+                pending={act.isPending && act.variables === 'arrive'}
+                onClick={() => act.mutate('arrive')}
+                data-testid="dev-arrive"
+              >
+                Arrive now
+              </Button>
+            )}
             {BUTTONS.map((b) => (
               <Button
                 key={b.action}
@@ -223,10 +276,36 @@ function DevPanelOn({ status }: { status: DevStatus }) {
                 disabled={act.isPending || (b.needsCharacter && !status.character)}
                 pending={act.isPending && act.variables === b.action}
                 onClick={() => act.mutate(b.action)}
+                data-testid={`dev-btn-${b.action}`}
               >
                 {b.label}
               </Button>
             ))}
+            <label className="col-span-2 flex items-center gap-2">
+              <span className="label-caps shrink-0 text-[10px] text-muted">Live in</span>
+              <select
+                value={liveIn}
+                onChange={(e) => setLiveIn(e.target.value)}
+                className="min-h-11 min-w-0 flex-1 border-[1.5px] border-ink bg-paper px-2 font-body text-[13px]"
+                data-testid="dev-live-target"
+              >
+                {liveTargets.map((o) => (
+                  <option key={o.target} value={o.target}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                className="px-3 text-[12px]"
+                disabled={act.isPending || !status.character}
+                pending={act.isPending && typeof act.variables === 'object' && act.variables.action === 'live'}
+                onClick={() => act.mutate({ action: 'live', target: liveIn })}
+                data-testid="dev-live"
+              >
+                Live there
+              </Button>
+            </label>
           </div>
 
           <p

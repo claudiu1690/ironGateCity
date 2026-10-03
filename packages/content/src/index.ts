@@ -5,6 +5,7 @@ export {
   indexContent,
   loadContent,
   parseContent,
+  inPolygon,
   rawContent,
   sentenceCount,
 } from './load';

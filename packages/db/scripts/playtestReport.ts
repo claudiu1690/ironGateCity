@@ -12,10 +12,16 @@ import type { ActionResult } from '@irongate/rules';
 import {
   ActionLog,
   Arrival,
+  Award,
   Candidacy,
   Character,
   City,
+  Contribution,
+  District,
   Election,
+  InfluenceLedger,
+  IssueModel,
+  Journey,
   OfficeTerm,
   OrderPaper,
   PaperEntry,
@@ -24,6 +30,8 @@ import {
   connectDb,
   disconnectDb,
 } from '../src';
+import { buildBattlegroundReport } from '../src/battleground';
+import type { Faction } from '../src/battleground';
 import { buildElectionsReport } from '../src/elections';
 import { buildArrivalFunnels, formatShare, jobTakeRows } from '../src/funnel';
 import type { Funnel } from '../src/funnel';
@@ -41,7 +49,7 @@ await connectDb(uri, { log: console.log });
 try {
   const characters = await Character.find(
     {},
-    { name: 1, createdAt: 1, factionId: 1, job: 1, homeCityId: 1, playtest: 1, stats: 1 },
+    { name: 1, createdAt: 1, factionId: 1, job: 1, homeCityId: 1, playtest: 1, stats: 1, residence: 1 },
   ).lean();
   const arrivals = await Arrival.find({}).lean();
   const logs = await ActionLog.find(
@@ -59,6 +67,7 @@ try {
       'result.effects.rankUp': 1,
       actionId: 1,
       cityId: 1,
+      'result.effects.opinion.placeId': 1,
     },
   ).lean();
   const papers = await PaperEntry.find({}, { characterId: 1, day: 1, readAt: 1 }).lean();
@@ -247,8 +256,149 @@ try {
     })),
   });
 
+  // Slice 4 (tech design §15.2): the battleground. Moves and rooms come from request logs (seven days).
+  const capitalId = content.nation.capitalId;
+  const byChar = (id: string) =>
+    logs.filter((l) => l.characterId.toHexString() === id).sort((a, b) => +a.createdAt - +b.createdAt);
+  const firstAt = (id: string, ok: (e: Partial<ActionResult>['effects']) => boolean) =>
+    byChar(id).find((l) => ok((l.result as Partial<ActionResult> | undefined)?.effects))?.createdAt ?? null;
+  const factionOf = new Map(characters.map((c) => [c._id.toHexString(), c.factionId as Faction]));
+  const regs = await RequestLog.find(
+    { kind: { $in: ['residence.register', 'residence.room'] } },
+    { characterId: 1, createdAt: 1, kind: 1, 'result.character.residence': 1 },
+  ).lean();
+  const battleground = buildBattlegroundReport({
+    capitalId,
+    districts: content.districtsOf(capitalId).map((q) => ({ id: q.id, name: q.name })),
+    characters: characters.map((c) => {
+      const id = c._id.toHexString();
+      return {
+        id,
+        name: c.name,
+        homeCityId: c.homeCityId,
+        createdAt: c.createdAt,
+        level10At: firstAt(id, (e) => (e?.level ?? 0) >= 10),
+        rank2At: firstAt(id, (e) => (e?.rankUp?.to ?? 0) >= 2),
+        residence: {
+          cityId: c.residence?.cityId ?? c.homeCityId,
+          districtId: c.residence?.districtId ?? null,
+        },
+        boosted: c.playtest?.boosted === true,
+      };
+    }),
+    journeys: (await Journey.find({}).lean()).map((j) => ({
+      characterId: j.characterId.toHexString(),
+      from: j.from,
+      to: j.to,
+      boardedAt: j.boardedAt,
+      arrivesAt: j.arrivesAt,
+      closedAt: j.closedAt,
+      card: j.card !== null,
+      choiceAt: j.choice?.at ?? null,
+      sleptThrough: j.sleptThrough,
+    })),
+    moves: regs
+      .filter((r) => r.kind === 'residence.register')
+      .map((r) => {
+        // The register's stored result carries the character after the move.
+        const to =
+          (r.result as { character?: { residence?: { cityId: string; districtId: string | null } } } | null)
+            ?.character?.residence ?? null;
+        return {
+          characterId: r.characterId.toHexString(),
+          at: r.createdAt,
+          cityId: to?.cityId ?? '',
+          districtId: to?.districtId ?? null,
+        };
+      }),
+    rooms: regs
+      .filter((r) => r.kind === 'residence.room')
+      .map((r) => ({ characterId: r.characterId.toHexString(), at: r.createdAt })),
+    elections: (await Election.find({ kind: 'district', status: 'counted' }).lean()).map((e) => {
+      const r = e.result as unknown as {
+        w?: number;
+        ballots?: number;
+        tie?: 'draw' | null;
+        turnout: { voters: number; eligible: number };
+        rows: Array<{ seated: boolean; kind: 'player' | 'npc'; factionId?: Faction }>;
+      };
+      return {
+        districtId: e.placeId ?? e.cityId,
+        cycle: e.cycle,
+        ballots: r.ballots ?? 0,
+        w: r.w ?? 0,
+        turnout: r.turnout,
+        seats: r.rows
+          .filter((x) => x.seated && x.factionId)
+          .map((x) => ({ factionId: x.factionId!, kind: x.kind })),
+        tie: r.tie ?? null,
+      };
+    }),
+    councils: (await OrderPaper.find({ cityId: capitalId }).lean()).map((p) => {
+      const passed = p.division?.passed ?? null;
+      const npc =
+        (p.division as unknown as { npcChoices?: Partial<Record<Faction, string>> } | null)?.npcChoices ?? {};
+      return {
+        councilKey: p._id,
+        passed,
+        coalition: passed
+          ? [
+              ...p.votes
+                .filter((v) => v.choice === passed)
+                .flatMap((v) => {
+                  const f = factionOf.get(v.characterId.toHexString());
+                  return f ? [f] : [];
+                }),
+              ...(Object.entries(npc) as Array<[Faction, string]>)
+                .filter(([, c]) => c === passed)
+                .map(([f]) => f),
+            ]
+          : [],
+      };
+    }),
+    districtLogs: (await District.find({ cityId: capitalId }, { stateLog: 1 }).lean()).map((d) => ({
+      districtId: d._id,
+      log: (d.stateLog ?? []).map((x) => ({
+        day: x.day,
+        battleground: x.battleground,
+        controlledBy: x.controlledBy,
+      })),
+    })),
+    issues: (await IssueModel.find({}).lean()).map((x) => ({
+      cityId: x.cityId,
+      weekDay: x.weekDay,
+      issueId: x.issueId,
+      status: x.status,
+      momentum: x.momentum,
+      ownerId: x.result?.ownerId ?? null,
+      top: x.result?.top.length ?? 0,
+      effect: !!x.result?.effect,
+    })),
+    ledger: (
+      await InfluenceLedger.find({ cityId: capitalId }, { placeId: 1, cycleKey: 1, kind: 1, swing: 1 }).lean()
+    ).map((r) => ({ placeId: r.placeId, cycleKey: r.cycleKey, kind: r.kind, swing: r.swing })),
+    contributions: (await Contribution.find({ cityId: capitalId }, { placeId: 1, ref: 1, kind: 1 }).lean()).map(
+      (c) => ({ placeId: c.placeId, ref: c.ref, kind: c.kind }),
+    ),
+    heroes: (await Award.find({ kind: 'hero' }, { placeId: 1, ref: 1, bracket: 1 }).lean()).map((a) => ({
+      placeId: a.placeId,
+      ref: a.ref,
+      bracket: a.bracket,
+    })),
+    actions: logs.map((l) => {
+      const placeId = (l.result as Partial<ActionResult> | undefined)?.effects?.opinion?.placeId;
+      return {
+        cityId: l.cityId,
+        districtId: l.cityId === capitalId && placeId ? placeId : null,
+        txAttempts: l.txAttempts ?? 1,
+        createdAt: l.createdAt,
+      };
+    }),
+    slice4From: (await Journey.findOne({}).sort({ boardedAt: 1 }).lean())?.boardedAt ?? null,
+  });
+
   if (process.argv.includes('--json')) {
-    console.log(JSON.stringify({ ...report, arrival: funnels, elections }, null, 2));
+    console.log(JSON.stringify({ ...report, arrival: funnels, elections, battleground }, null, 2));
   } else {
     console.log('\nIs spending a bar of Energy fun, and do players want to come back in 3 hours?\n');
     console.table(
@@ -320,6 +470,56 @@ try {
     );
     console.log('Contention around 00:00 UTC');
     console.table(elections.contention);
+
+    const b = battleground;
+    console.log('\nDo players choose to move to the capital, and does the three-way fight feel alive?\n');
+    console.log('Travel');
+    console.table({
+      journeys: b.travel.journeys,
+      travellers: b.travel.travellers,
+      'journeys per traveller-day': b.travel.journeysPerTravellerDay,
+      'cards drawn': b.travel.cards.drawn,
+      'answered on the way': b.travel.cards.answeredOnTheWay,
+      'answered on arrival': b.travel.cards.answeredOnArrival,
+      'slept through': b.travel.cards.sleptThrough,
+      'waited for the arrival (closed within 2 min)': formatShare(b.travel.dwell.waitedShare),
+      'cards answered before arrival': formatShare(b.travel.answeredBeforeArrival),
+      'first trip, days after Level 10 (median)': b.travel.firstTripDaysAfterLevel10.median,
+    });
+    console.table(b.travel.legs);
+    console.log('Residence');
+    console.table({
+      movers: b.residence.movers,
+      'first move, days after sign-up (median)': b.residence.firstMoveDay.median,
+      'after Level 10': b.residence.firstMoveDay.afterLevel10,
+      'after Rank 2': b.residence.firstMoveDay.afterRank2,
+      'moves back home': b.residence.movesBackHome,
+      rooms: b.residence.rooms,
+    });
+    console.table(b.residence.residents);
+    console.log("The capital's counts");
+    console.table(b.counts);
+    console.log("The capital's councils");
+    console.table(b.councils);
+    console.log('District states');
+    console.table(b.states);
+    console.log('Issues of the Week');
+    console.table(b.issues);
+    console.log('The ledger');
+    console.table(b.ledger.contributors);
+    console.table(b.ledger.heroes);
+    console.table({
+      actions: formatShare(b.ledger.movedBy.actions),
+      cards: formatShare(b.ledger.movedBy.cards),
+      issues: formatShare(b.ledger.movedBy.issues),
+      drift: formatShare(b.ledger.movedBy.drift),
+    });
+    console.log('Contention (transactions run more than once)');
+    console.table(b.contention.capital.map((x) => ({ ...x, contended: formatShare(x.contended) })));
+    console.table({
+      'home, before slice 4': formatShare(b.contention.home.before),
+      'home, after': formatShare(b.contention.home.after),
+    });
   }
 } finally {
   await disconnectDb();

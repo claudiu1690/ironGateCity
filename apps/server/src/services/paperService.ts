@@ -152,6 +152,8 @@ export async function getPaper(deps: {
       ...(h.until !== undefined ? { until: h.until } : {}),
       // Screens §7.3: the hero and the reporter's quote carry the In Print kicker.
       ...(/.(hero|quoted)$/.test(h.templateId) ? { inPrint: true } : {}),
+      // The hero's headline carries the rosette (screens §7.3).
+      ...(/.hero$/.test(h.templateId) ? { medal: true } : {}),
     })),
     issues: await paperIssues(content, c, today),
     orders: ordersView(content, c, today, firstIssueShort(content, homeState, today)),

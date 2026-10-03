@@ -1,9 +1,12 @@
 import { copy } from '@irongate/content/copy';
 import { isNight } from '@irongate/rules';
-import type { CouncilView, ElectionView, HallView } from '@irongate/rules';
+import type { CapitalCountView, CouncilView, ElectionView, FactionId, HallView } from '@irongate/rules';
 import {
   Button,
   CountTable,
+  DistrictResultTable,
+  DistrictSwitcher,
+  weekdayOf,
   HallHeader,
   HowElectionsWork,
   OrderPaper,
@@ -18,7 +21,7 @@ import {
   formatWeekday,
 } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
@@ -26,6 +29,21 @@ import { noticeFor } from '../features/game/errors';
 import { useCharacter } from '../features/game/hooks';
 import { trpcClient, trpc } from '../lib/trpc';
 import { useNow } from '../lib/useNow';
+
+/**
+ * Slice 4: the capital's election views name the district after the city ("Irongate · Eastside"):
+ * the council is the city's, the place is the district.
+ */
+function placeOf(cityName: string): { city: string; district: string | null } {
+  const [city, district] = cityName.split(' · ');
+  return { city: city ?? cityName, district: district ?? null };
+}
+
+/** "Irongate Council · Eastside · Voting", "Coalport Council · Voting". */
+function kickerOf(cityName: string, what?: string): string {
+  const { city, district } = placeOf(cityName);
+  return [`${city} Council`, ...(district ? [district] : []), ...(what ? [what] : [])].join(' · ');
+}
 
 /**
  * Slice 3's council screens (docs/design/slice-3-screens.md §3–§6, in review 2's plain words): who's
@@ -51,7 +69,7 @@ function Page({
         {hall?.hall && (
           <HallHeader
             hall={hall.hall}
-            cityName={hall.cityName}
+            cityName={placeOf(hall.cityName).city}
             night={isNight(now)}
             className="-mx-4 -mt-4 -mb-3 sm:mx-0 sm:mt-0"
           />
@@ -66,7 +84,14 @@ function Page({
 function ElectionsLink({ cityName }: { cityName: string }) {
   const { character } = useCharacter();
   const ladder = character?.rank.ladder ?? [];
-  return <HowElectionsWork cityName={cityName} rank2={ladder[1] ?? ''} rank3={ladder[2] ?? ''} />;
+  return (
+    <HowElectionsWork
+      cityName={placeOf(cityName).city}
+      rank2={ladder[1] ?? ''}
+      rank3={ladder[2] ?? ''}
+      capital={!!character?.residence?.districtId}
+    />
+  );
 }
 
 function Sticky({ children }: { children: ReactNode }) {
@@ -263,7 +288,7 @@ export function SlatePage() {
   if (e.phase === 'polling') {
     return (
       <Page hall={{ hall: e.hall, cityName: e.cityName }}>
-        <Plate kicker={`${e.cityName} Council · Voting`} title="Who's standing">
+        <Plate kicker={kickerOf(e.cityName, 'Voting')} title="Who's standing">
           <span className="font-mono text-[12px] text-dim">{copy.tooLateToStand}</span>
         </Plate>
         <p className="font-mono text-[11.5px] text-muted" data-testid="how-decided">
@@ -285,13 +310,13 @@ export function SlatePage() {
   }
   return (
     <Page hall={{ hall: e.hall, cityName: e.cityName }}>
-      <Plate kicker={`${e.cityName} Council · Candidates`} title="Who's standing">
+      <Plate kicker={kickerOf(e.cityName, 'Candidates')} title="Who's standing">
         <span className="font-mono text-[12px] text-dim">
           {copy.namesGoIn(formatUntil(e.nominationsCloseAt), formatWeekday(e.pollsOpenAt))}
         </span>
       </Plate>
       <p className="font-mono text-[11.5px] text-muted" data-testid="how-decided">
-        {copy.howDecided}
+        {placeOf(e.cityName).district ? copy.capitalElection.howSeatsAreWon : copy.howDecided}
       </p>
       <ElectionsLink cityName={e.cityName} />
       <LastResultLink />
@@ -355,7 +380,7 @@ export function BallotPage() {
   if (closed || !e.ballot) {
     return (
       <Page hall={{ hall: e.hall, cityName: e.cityName }}>
-        <Plate kicker={`${e.cityName} Council`} title="Your vote">
+        <Plate kicker={kickerOf(e.cityName)} title="Your vote">
           <span className="font-mono text-[12px] text-dim">
             {e.cityName} votes from {formatWeekday(e.pollsOpenAt)}
           </span>
@@ -382,9 +407,11 @@ export function BallotPage() {
   const chosen = e.candidates.find((c) => c.key === selected);
   return (
     <Page hall={{ hall: e.hall, cityName: e.cityName }}>
-      <Plate kicker={`${e.cityName} Council · Voting`} title="Your vote">
-        <span className="font-mono text-[12px] text-dim">
-          Seven seats · one vote · secret and final · closes {formatUntil(e.countAt)}
+      <Plate kicker={kickerOf(e.cityName, 'Voting')} title="Your vote">
+        <span className="font-mono text-[12px] text-dim" data-testid="ballot-line">
+          {placeOf(e.cityName).district
+            ? copy.capitalElection.ballotLine(formatUntil(e.countAt))
+            : `Seven seats · one vote · secret and final · closes ${formatUntil(e.countAt)}`}
         </span>
         {/* Review 3 (answers §6.3): who can be voted for, in words. */}
         <span className="font-mono text-[12px] text-dim" data-testid="vote-anyone">
@@ -437,8 +464,12 @@ export function BallotPage() {
 // ---------------------------------------------------------------------------------------------
 
 export function CountPage() {
-  const q = useQuery(trpc.council.count.queryOptions());
   const { character } = useCharacter();
+  // Slice 4 (screens §8): a capital resident's result is the capital's five districts.
+  const capital = !!character?.residence?.districtId;
+  const q = useQuery({ ...trpc.council.count.queryOptions(), enabled: !!character && !capital });
+  const cq = useQuery({ ...trpc.council.capitalCount.queryOptions(), enabled: capital });
+  if (capital) return cq.isError ? <LoadError retry={() => void cq.refetch()} /> : <CapitalCount view={cq.data} pending={cq.isPending} />;
   if (q.isError) return <LoadError retry={() => void q.refetch()} />;
   if (q.isPending) return <Loading what="Fetching the result…" />;
   const c = q.data;
@@ -466,6 +497,50 @@ export function CountPage() {
   );
 }
 
+/**
+ * Slice 4 (screens §8): the capital's result at `/council/count?d=`: the plate with the ten seats by
+ * party, the district switcher (your district first), and the selected district's two tables.
+ */
+function CapitalCount({ view, pending }: { view: CapitalCountView | null | undefined; pending: boolean }) {
+  const { d } = useSearch({ from: '/app/council/count' });
+  const navigate = useNavigate();
+  const { character } = useCharacter();
+  if (pending) return <Loading what="Fetching the result…" />;
+  if (!view) {
+    return (
+      <Page>
+        <Plate kicker="THE RESULT" title="No result yet">
+          <span className="font-mono text-[12px] text-dim">
+            The first result is in the paper the morning after voting closes.
+          </span>
+        </Plate>
+      </Page>
+    );
+  }
+  const names: Partial<Record<FactionId, string>> =
+    character?.factionNames ?? (character ? { [character.factionId]: character.factionName } : {});
+  const selected = view.districts.find((x) => x.districtId === d) ?? view.districts[0]!;
+  const parts = (Object.entries(view.seatsByFaction) as Array<[FactionId, number]>)
+    .sort((a, b) => b[1] - a[1])
+    .map(([f, n]) => `${names[f] ?? f} ${n}`);
+  return (
+    <Page hall={{ hall: view.hall ?? null, cityName: 'Irongate' }}>
+      <Plate kicker={copy.capitalElection.resultKicker} title={copy.capitalElection.resultSundays(weekdayOf(view.countDay))}>
+        <span className="font-mono text-[12px] text-dim" data-testid="capital-count-header">
+          {copy.capitalElection.resultLine(parts, view.npcSeats)}
+        </span>
+      </Plate>
+      <DistrictSwitcher
+        districts={view.districts.map((x) => ({ districtId: x.districtId, name: x.name }))}
+        selected={selected.districtId}
+        onSelect={(id) => void navigate({ to: '/council/count', search: { d: id }, replace: true })}
+      />
+      <DistrictResultTable district={selected} names={names} />
+      <ElectionsLink cityName="Irongate" />
+    </Page>
+  );
+}
+
 // ---------------------------------------------------------------------------------------------
 // The chamber (screens §6).
 // ---------------------------------------------------------------------------------------------
@@ -477,7 +552,7 @@ function CouncilHeader({ c }: { c: CouncilView }) {
       title="The council"
     >
       <span className="font-mono text-[12px] text-dim" data-testid="council-header">
-        Term ends {formatWeekday(c.termEndsAt - 1)} · {copy.npcSeats(c.npcSeats, 7)}
+        Term ends {formatWeekday(c.termEndsAt - 1)} · {copy.npcSeats(c.npcSeats, c.seatCount ?? 7)}
         {c.inForce ? ` · council rule in force: ${c.inForce.name} · ${c.inForce.daysLeft} days left` : ''}
       </span>
       {/* Review 2 (screens §6.1): the names never disappear: the last result, every day. */}
@@ -490,6 +565,15 @@ function CouncilHeader({ c }: { c: CouncilView }) {
       </Link>
     </Plate>
   );
+}
+
+/** The capital's seats in district pairs, in seat order (seats 1–2 the first district …). */
+function districtGroups(c: CouncilView): Array<{ id: string; name: string }> {
+  const out: Array<{ id: string; name: string }> = [];
+  for (const x of c.seats)
+    if (x.districtId && !out.some((g) => g.id === x.districtId))
+      out.push({ id: x.districtId, name: x.districtName ?? x.districtId });
+  return out;
 }
 
 export function CouncilPage() {
@@ -513,9 +597,20 @@ export function CouncilPage() {
   return (
     <Page hall={{ hall: c.hall, cityName: c.cityName }}>
       <CouncilHeader c={c} />
-      <SeatGrid seats={c.seats} factionId={character.factionId} />
+      {/* Slice 4 (screens §8): ten seats in five pairs, captioned by district. */}
+      <SeatGrid
+        seats={c.seats}
+        factionId={character.factionId}
+        groups={c.seats.some((x) => x.districtId) ? districtGroups(c) : undefined}
+      />
+      {c.passVotes === 6 && (
+        <p className="font-mono text-[12px] text-muted" data-testid="six-of-ten">
+          {copy.capitalElection.sixVotes(formatAt(c.window.divideAt))}
+        </p>
+      )}
       <OrderPaper
         council={c}
+        factionNames={character.factionNames}
         secretary={secretary}
         selected={selected}
         onSelect={voting ? setSelected : undefined}

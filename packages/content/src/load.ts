@@ -742,6 +742,30 @@ export function parseContent(raw: unknown): Content {
   return content;
 }
 
+/**
+ * Whether a point lies inside a polygon (even-odd ray casting); `strict` leaves out the points on (or
+ * within 1e-6 of) an edge, so two outlines that share an edge do not count as overlapping.
+ */
+export function inPolygon(
+  p: { x: number; y: number },
+  poly: ReadonlyArray<readonly [number, number]>,
+  strict = false,
+): boolean {
+  const eps = 1e-6;
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i]!;
+    const [xj, yj] = poly[j]!;
+    // On the edge?
+    const cross = (p.x - xi) * (yj - yi) - (p.y - yi) * (xj - xi);
+    const within =
+      p.x >= Math.min(xi, xj) - eps && p.x <= Math.max(xi, xj) + eps && p.y >= Math.min(yi, yj) - eps && p.y <= Math.max(yi, yj) + eps;
+    if (within && Math.abs(cross) <= eps * Math.hypot(xj - xi, yj - yi)) return !strict;
+    if (yi > p.y !== yj > p.y && p.x < ((xj - xi) * (p.y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
 /** A city with districts (the capital): its quarters carry `district` (ADR 0027). */
 const isDistricted = (city: City): boolean => city.quarters.some((q) => q.district !== undefined);
 
@@ -781,7 +805,26 @@ function slice4Problems(
         problems.push(`${q.id}.baselineOpinion sums to ${sumShares(d.baselineOpinion)}, not 100`);
       if (!inside(d.anchor, q.frame)) problems.push(`${q.id}: its anchor is outside its frame`);
       if (!q.blurb) problems.push(`${q.id}: a district needs a blurb`);
+      // The user's district lock (3 Oct 2026): the anchor and every pin inside the district's outline.
+      if (!inPolygon(d.anchor, d.outline)) problems.push(`${q.id}: its anchor is outside its outline`);
+      for (const l of city.locations)
+        if (l.quarterId === q.id && !inPolygon(l.map, d.outline))
+          problems.push(`location "${l.id}": its pin is outside ${q.id}'s outline`);
     });
+    // No two districts overlap: no point of a fine grid lies in two outlines, and no vertex of one lies
+    // inside another.
+    for (let a = 0; a < districts.length; a++)
+      for (let b = a + 1; b < districts.length; b++) {
+        const A = districts[a]!.district!.outline;
+        const B = districts[b]!.district!.outline;
+        let overlap = A.some(([x, y]) => inPolygon({ x, y }, B, true)) || B.some(([x, y]) => inPolygon({ x, y }, A, true));
+        for (let i = 1; i < 200 && !overlap; i++)
+          for (let j = 1; j < 200 && !overlap; j++) {
+            const p = { x: i / 200, y: j / 200 };
+            overlap = inPolygon(p, A, true) && inPolygon(p, B, true);
+          }
+        if (overlap) problems.push(`${districts[a]!.id} and ${districts[b]!.id}: their outlines overlap`);
+      }
     for (const f of [...FACTION_IDS, 'neutral'] as const) {
       const avg = districts.reduce((sum, q) => sum + q.district!.baselineOpinion[f], 0) / districts.length;
       if (Math.abs(avg - city.baselineOpinion[f]) > 0.0005)

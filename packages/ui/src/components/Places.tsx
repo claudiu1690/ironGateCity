@@ -12,6 +12,8 @@ export interface PlaceRow {
   blurb: string;
   /** An open Party order points here (the orders list's pin link): a small tag. */
   order?: boolean;
+  /** Slice 4 (screens §7.1): work here is tagged with a live Issue: the small Issue mark. */
+  issue?: boolean;
 }
 
 export interface PlacesListProps {
@@ -108,6 +110,15 @@ export function PlacesList({ open, onOpenChange, cityName, places, onPick, retur
                           data-testid="place-order"
                         >
                           Party order
+                        </span>
+                      )}
+                      {p.issue && (
+                        <span
+                          className="label-caps flex items-center gap-1 border border-ink px-1.5 py-px text-[9.5px]"
+                          data-testid="place-issue"
+                        >
+                          <span className="size-2 rounded-full bg-petrol" aria-hidden="true" />
+                          Issue
                         </span>
                       )}
                     </span>

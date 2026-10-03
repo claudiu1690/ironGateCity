@@ -1,4 +1,5 @@
 import { copy } from '@irongate/content/copy';
+import { WEEKDAY_NAMES, weekday } from '@irongate/rules';
 import type { DailyTally, DeskView, OrdersView, PaperView } from '@irongate/rules';
 import type { ReactNode } from 'react';
 import { cx, formatClock, formatNumber, formatOpinionDelta, plural } from '../format';
@@ -274,6 +275,17 @@ export function DeskList({ desk }: { desk: DeskView }) {
           <Line testId="desk-no-job">{copy.deskNoJob(desk.jobPlaces)}</Line>
         )}
         {desk.oneOfUsPc > 0 && <Line testId="desk-one-of-us">{copy.oneOfUsPaid(desk.oneOfUsPc)}</Line>}
+        {/* Slice 4 (ADR 0028, screens §9.3): hero and Issue Political Capital credited, and the room. */}
+        {(desk.awards ?? []).map((a) => (
+          <Line key={`${a.kind}:${a.label}`} testId="desk-award">
+            {copy.deskAward(a.label, a.pc)}
+          </Line>
+        ))}
+        {desk.room && (
+          <Line testId="desk-room" small>
+            {copy.residence.roomUntil(WEEKDAY_NAMES[weekday(desk.room.untilDay)], desk.room.cap)}
+          </Line>
+        )}
         <div className="flex items-baseline justify-between gap-2.5 border-b border-dotted border-faint text-[14px]">
           <HelpButton
             notes={[copy.help.rested() as HelpNote]}

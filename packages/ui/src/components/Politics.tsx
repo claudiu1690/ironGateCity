@@ -1,5 +1,6 @@
 import { copy } from '@irongate/content/copy';
 import type {
+  FactionId,
   CandidateView,
   CountRowView,
   CouncilSeatView,
@@ -78,8 +79,14 @@ export interface ElectionLines {
   secondary: { label: string; route: ElectionRoute } | null;
 }
 
-/** The card's lines and buttons for a summary (screens §2.1's table). */
-export function electionLines(s: PoliticsSummaryView, now: number = Date.now()): ElectionLines {
+/** The card's lines and buttons for a summary (screens §2.1's table; slice 4 §7.2 in the capital). */
+export function electionLines(
+  s: PoliticsSummaryView,
+  now: number = Date.now(),
+  names: Partial<Record<FactionId, string>> = {},
+): ElectionLines {
+  const capital = s.seats === 2;
+  const place = s.placeName ?? s.cityName;
   const e = copy.election;
   const k = s.card;
   const stand = { label: copy.standForTheCouncil(s.standCost), route: '/council/slate' as const };
@@ -111,6 +118,14 @@ export function electionLines(s: PoliticsSummaryView, now: number = Date.now()):
         secondary: null,
       };
     case 'voting':
+      if (capital)
+        // Slice 4 (screens §7.2): *Voting is open in Eastside* · *Two seats · any name · …*.
+        return {
+          line1: copy.capitalElection.votingIsOpenIn(place),
+          line2: copy.capitalElection.twoSeats(formatUntil(k.closesAt)),
+          primary: { label: e.voteNow, route: '/council/ballot' },
+          secondary: null,
+        };
       return {
         ...lines(e.voting(formatUntil(k.closesAt), daysTo(k.closesAt, now))),
         primary: { label: e.voteNow, route: '/council/ballot' },
@@ -140,6 +155,20 @@ export function electionLines(s: PoliticsSummaryView, now: number = Date.now()):
             : y.kind === 'voteWon'
               ? e.yourLine.voteWon(y.name)
               : e.yourLine.voteLost(y.name);
+      const d = r.district;
+      if (capital && d) {
+        // Slice 4 (screens §7.2): *Eastside went Collective, Vanguard · …* and the capital's ten.
+        const fname = (f: FactionId) => names[f] ?? f;
+        const parts = (Object.entries(d.capital) as Array<[FactionId, number]>)
+          .sort((a, b) => b[1] - a[1])
+          .map(([f, n]) => `${n} ${fname(f)}`);
+        return {
+          line1: copy.capitalElection.went(place, d.seats.map(fname), your),
+          line2: copy.capitalElection.capitalSeats(parts, `${d.turnout.voters} of ${d.turnout.eligible}`, place),
+          primary: { label: e.seeTheResult, route: '/council/count' },
+          secondary: k.canStand ? stand : null,
+        };
+      }
       return {
         ...lines(e.result(r.winner, your, formatWeekday(r.councilUntil - 1), formatUntil(r.namesUntil))),
         primary: { label: e.seeTheResult, route: '/council/count' },
@@ -161,7 +190,8 @@ export function electionLines(s: PoliticsSummaryView, now: number = Date.now()):
     case 'registered':
       // Slice 4 (screens §7.2): registered in a district, the first vote not yet open.
       return {
-        ...lines(e.registered(s.placeName ?? s.cityName, formatWeekday(k.pollsOpenAt))),
+        // The first polls this player votes in (the server's weekday: this cycle's or the next's).
+        ...lines(e.registered(s.placeName ?? s.cityName, s.pollsFromWeekday)),
         primary: slate(e.seeWhosStanding),
         secondary: null,
       };
@@ -170,6 +200,8 @@ export function electionLines(s: PoliticsSummaryView, now: number = Date.now()):
 
 export interface ElectionCardProps {
   summary: PoliticsSummaryView;
+  /** Slice 4: every party's short name (the capital's result line). */
+  factionNames?: Partial<Record<FactionId, string>>;
   onOpen: (route: ElectionRoute) => void;
   /**
    * `card`: wide screens, the side column and the HQ sheet (kicker with its note, two lines, the
@@ -181,8 +213,17 @@ export interface ElectionCardProps {
   className?: string;
 }
 
-export function ElectionCard({ summary: s, onOpen, layout = 'card', now, className }: ElectionCardProps) {
-  const l = electionLines(s, now);
+export function ElectionCard({
+  summary: s,
+  onOpen,
+  layout = 'card',
+  now,
+  className,
+  factionNames,
+}: ElectionCardProps) {
+  const l = electionLines(s, now, factionNames);
+  // Slice 4 (screens §7.2): in the capital the kicker names the district.
+  const kicker = s.seats === 2 ? copy.capitalElection.kicker(s.placeName ?? s.cityName) : copy.election.kicker(s.cityName);
   const k = s.card;
   const strong = k.state === 'voting' || k.state === 'candidateVoting' || k.state === 'councilSits';
   const rule = s.inForce ? copy.election.ruleLine(s.inForce.name, s.inForce.daysLeft) : null;
@@ -225,7 +266,7 @@ export function ElectionCard({ summary: s, onOpen, layout = 'card', now, classNa
     );
     return (
       <section
-        aria-label={copy.election.kicker(s.cityName)}
+        aria-label={kicker}
         className={cx('flex flex-col', className)}
         data-testid="polling-day"
         data-state={k.state}
@@ -262,7 +303,7 @@ export function ElectionCard({ summary: s, onOpen, layout = 'card', now, classNa
   }
   return (
     <section
-      aria-label={copy.election.kicker(s.cityName)}
+      aria-label={kicker}
       className={cx('flex flex-col gap-1 border-[1.5px] border-ink bg-paper-card px-3 py-2', className)}
       data-testid="election-card"
       data-state={k.state}
@@ -277,16 +318,16 @@ export function ElectionCard({ summary: s, onOpen, layout = 'card', now, classNa
       )}
       <HelpButton
         notes={[
-          copy.help.election(s.cityName, s.rank2Title, s.rank3Title),
+          s.seats === 2
+            ? copy.help.capitalElection(s.rank2Title, s.rank3Title)
+            : copy.help.election(s.cityName, s.rank2Title, s.rank3Title),
           ...(s.inForce ? [copy.help.rule(s.cityName)] : []),
         ]}
         label={`What the ${s.cityName} election means`}
         testId="election-help"
         className="-my-2 self-start"
       >
-        <span className={cx('label-caps text-[10px] font-semibold', helpMark)}>
-          {copy.election.kicker(s.cityName)}
-        </span>
+        <span className={cx('label-caps text-[10px] font-semibold', helpMark)}>{kicker}</span>
       </HelpButton>
       <p
         className={cx('font-body text-[15px] leading-snug', strong && 'font-semibold')}
@@ -545,6 +586,8 @@ export interface HowElectionsWorkProps {
   rank2: string;
   rank3: string;
   className?: string;
+  /** Slice 4: the capital's note (two seats a district, three parties). */
+  capital?: boolean;
 }
 
 /**
@@ -552,10 +595,10 @@ export interface HowElectionsWorkProps {
  * title on who's standing, the vote and the result; it opens the five-line note the Election card's
  * kicker opens.
  */
-export function HowElectionsWork({ cityName, rank2, rank3, className }: HowElectionsWorkProps) {
+export function HowElectionsWork({ cityName, rank2, rank3, className, capital }: HowElectionsWorkProps) {
   return (
     <HelpButton
-      notes={[copy.help.election(cityName, rank2, rank3)]}
+      notes={[capital ? copy.help.capitalElection(rank2, rank3) : copy.help.election(cityName, rank2, rank3)]}
       label={copy.howElectionsWork}
       testId="how-elections-work"
       className={cx(
@@ -712,13 +755,61 @@ export function FrontPage({
 export function SeatGrid({
   seats,
   factionId,
+  groups,
 }: {
   seats: CouncilSeatView[];
   factionId: CandidateView['factionId'];
+  /** Slice 4 (screens §8): the capital's ten seats in five pairs, captioned by district. */
+  groups?: Array<{ id: string; name: string }>;
 }) {
   const [open, setOpen] = useState<number | null>(null);
+  if (groups) {
+    return (
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-5" aria-label="Seats" data-testid="seat-grid">
+        {groups.map((g) => (
+          <section key={g.id} aria-label={g.name} className="flex flex-col gap-1" data-testid="seat-group">
+            <h3 className="label-caps truncate border-b border-ink text-[9.5px] font-semibold">{g.name}</h3>
+            <SeatList
+              seats={seats.filter((x) => x.districtId === g.id)}
+              factionId={factionId}
+              open={open}
+              setOpen={setOpen}
+              className="grid grid-cols-2 gap-1"
+            />
+          </section>
+        ))}
+      </div>
+    );
+  }
   return (
-    <ul className="grid grid-cols-4 gap-2 sm:grid-cols-7" aria-label="Seats" data-testid="seat-grid">
+    <SeatList
+      seats={seats}
+      factionId={factionId}
+      open={open}
+      setOpen={setOpen}
+      className="grid grid-cols-4 gap-2 sm:grid-cols-7"
+      label="Seats"
+    />
+  );
+}
+
+function SeatList({
+  seats,
+  factionId,
+  open,
+  setOpen,
+  className,
+  label,
+}: {
+  seats: CouncilSeatView[];
+  factionId: CandidateView['factionId'];
+  open: number | null;
+  setOpen: (f: (o: number | null) => number | null) => void;
+  className: string;
+  label?: string;
+}) {
+  return (
+    <ul className={className} aria-label={label} data-testid={label ? 'seat-grid' : undefined}>
       {seats.map((s) => (
         <li key={s.seat} className="relative">
           <button
@@ -732,7 +823,7 @@ export function SeatGrid({
             data-testid="seat"
             data-kind={s.kind}
           >
-            <PersonMark avatar={s.avatar} factionId={factionId} size={36} />
+            <PersonMark avatar={s.avatar} factionId={s.factionId ?? factionId} size={36} />
             <span className="label-caps max-w-full truncate text-[9px]">{s.name}</span>
             <span className="font-mono text-[9px] text-muted">{s.seat}</span>
           </button>
@@ -832,6 +923,8 @@ export function OrdinanceRow({
 }
 
 export interface OrderPaperProps {
+  /** Slice 4: every party's short name (the capital's *the Collective's proposal · Petra Holm*). */
+  factionNames?: Partial<Record<FactionId, string>>;
   council: CouncilView;
   secretary: string;
   selected: string | null;
@@ -840,7 +933,14 @@ export interface OrderPaperProps {
 }
 
 /** The order paper (screens §6.3, §6.4): items, Against all, the division's counts after it. */
-export function OrderPaper({ council: c, secretary, selected, onSelect, disabled }: OrderPaperProps) {
+export function OrderPaper({
+  council: c,
+  secretary,
+  selected,
+  onSelect,
+  disabled,
+  factionNames,
+}: OrderPaperProps) {
   const choosing = c.window.voting && c.you.councillor && c.you.voted === null && !!onSelect;
   const right = (id: string, votes: number | null): OrdinanceRowProps['right'] =>
     c.paper.status === 'divided' ? votes : choosing ? 'radio' : c.you.voted === id ? 'mine' : null;
@@ -859,7 +959,10 @@ export function OrderPaper({ council: c, secretary, selected, onSelect, disabled
             effectLine={it.effectLine}
             note={
               it.movedBy.kind === 'branch'
-                ? copy.branchMotionBy(secretary || it.movedBy.name)
+                ? // Slice 4 (screens §8): in the capital each party's branch moves its own proposal.
+                  it.branchOf
+                  ? copy.capitalElection.factionProposal(factionNames?.[it.branchOf] ?? it.branchOf, it.movedBy.name)
+                  : copy.branchMotionBy(secretary || it.movedBy.name)
                 : copy.movedBy(it.movedBy.you ? 'you' : it.movedBy.name)
             }
             right={right(it.ordinanceId, it.votes)}

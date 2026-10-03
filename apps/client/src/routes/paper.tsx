@@ -1,12 +1,16 @@
 import { copy } from '@irongate/content/copy';
+import type { FactionId, IssueRowView } from '@irongate/rules';
 import {
   Button,
   DeskList,
   FrontPage,
+  IssuesSection,
   LettersRow,
   Masthead,
   OrdersList,
   ElectionCard,
+  Rosette,
+  formatUntil,
   renderTimeTokens,
 } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -78,6 +82,25 @@ export function PaperPage() {
   }));
   const [lead, ...rest] = headlines;
   const front = p.frontPage;
+  const names: Partial<Record<FactionId, string>> =
+    character?.factionNames ?? (character ? { [character.factionId]: character.factionName } : {});
+  /**
+   * Slice 4 (screens §7.1): *Where to act*: the Issue's district (or city) with its places listed and
+   * marked, when you stand there; else the nation map at that city's card.
+   */
+  const whereToAct = (row: IssueRowView) => {
+    if (!character || character.cityId !== row.cityId) {
+      void navigate({ to: '/nation', search: { city: row.cityId } });
+      return;
+    }
+    if (row.districtId)
+      void navigate({
+        to: '/city/$cityId/$quarterId',
+        params: { cityId: row.cityId, quarterId: row.districtId },
+        search: { places: true },
+      });
+    else void navigate({ to: '/city/$cityId', params: { cityId: row.cityId }, search: { places: true } });
+  };
 
   return (
     <article className="paper-grain min-h-full text-ink">
@@ -104,12 +127,35 @@ export function PaperPage() {
                 key={h.headline}
                 className="flex flex-col gap-1 border-b border-dotted border-faint pb-2"
                 data-testid="headline"
+                data-in-print={h.inPrint || undefined}
               >
-                <h3 className="font-display text-[19px] leading-tight font-bold">{h.headline}</h3>
+                {/* Slice 4 (screens §7.3): the hero and the reporter's quote are In Print. */}
+                {h.inPrint && (
+                  <span className="label-caps text-[10px] font-semibold text-muted" data-testid="in-print">
+                    {copy.scoreboard.inPrint}
+                  </span>
+                )}
+                <h3 className="flex items-start gap-1.5 font-display text-[19px] leading-tight font-bold">
+                  {h.medal && (
+                    <span className="mt-1 shrink-0">
+                      <Rosette size={16} />
+                    </span>
+                  )}
+                  <span>{h.headline}</span>
+                </h3>
                 {h.deck && <p className="font-body text-[14px] leading-snug text-text-2">{h.deck}</p>}
               </section>
             ))}
           </div>
+        )}
+        {/* Slice 4 (screens §7.1): the Issues, between the headlines and the Election row. */}
+        {p.issues && (
+          <IssuesSection
+            issues={p.issues}
+            names={names}
+            settles={formatUntil(p.issues.settlesAt)}
+            onWhereToAct={whereToAct}
+          />
         )}
         <OrdersList orders={p.orders} variant="paper" />
         {p.pollingDay && (
@@ -117,6 +163,7 @@ export function PaperPage() {
             summary={p.pollingDay}
             layout="row"
             now={now}
+            factionNames={names}
             onOpen={(route) => void navigate({ to: route })}
           />
         )}

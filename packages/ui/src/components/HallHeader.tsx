@@ -1,5 +1,6 @@
 import { copy } from '@irongate/content/copy';
-import type { AssetView, HallView } from '@irongate/rules';
+import type { AssetView, HallView, ResultArt } from '@irongate/rules';
+import type { ReactNode } from 'react';
 import { cx } from '../format';
 import { Picture } from './Picture';
 
@@ -76,6 +77,36 @@ export function HallHeader({ hall, cityName, night, className }: HallHeaderProps
       <span className="label-caps absolute bottom-2 left-3 text-[10px] text-dim" data-testid="hall-kicker">
         {copy.hallKicker(cityName, hall.ref)}
       </span>
+    </div>
+  );
+}
+
+export interface ArtPanelProps {
+  /** A scene for the place's kind, or the map crop at its pin (the result's ladder, §13.5). */
+  art: ResultArt;
+  className?: string;
+  /** Over the art: the gradient's caption, a stamp, the ground sash. */
+  children?: ReactNode;
+}
+
+/**
+ * The big scene art of a place (the result modal's header, slice 4's place sheet and arrival): the
+ * scene cropped to cover the box, or the map crop centred on the pin; the caller sizes the box.
+ */
+export function ArtPanel({ art, className, children }: ArtPanelProps) {
+  return (
+    <div className={cx('relative shrink-0 overflow-hidden bg-ink', className)} data-art={art.rung}>
+      {art.rung === 'scene' ? (
+        <Picture
+          asset={art.asset}
+          sizes="600px"
+          decorative
+          className="absolute inset-0 size-full object-cover opacity-85"
+        />
+      ) : (
+        <MapCrop asset={art.asset} x={art.x} y={art.y} className="opacity-80" />
+      )}
+      {children}
     </div>
   );
 }

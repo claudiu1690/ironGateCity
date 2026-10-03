@@ -596,6 +596,8 @@ export interface CharacterView {
   factionId: FactionId;
   /** Display name from content (faction naming is parked, so the client never hard-codes it). */
   factionName: string;
+  /** Slice 4: every party's short name, from content (the capital's three-way tables, the sash). */
+  factionNames?: Record<FactionId, string>;
   homeCityId: string;
   cityId: string;
   stats: Stats;
@@ -748,6 +750,11 @@ export interface LocationView {
   jobs: LocationJobView[];
   /** Slice 3: the council card, on the home faction's HQ only. */
   council: PoliticsSummaryView | null;
+  /**
+   * Slice 4 (the ground sash, slice-4 screens): the place's picture for the sheet's header, the same
+   * ladder as a result's (a scene for its kind, else the map crop at its pin).
+   */
+  art?: ResultArt;
   /** Slice 4: the quarter (a capital district), members only, the live Issues tagging it, trains. */
   quarterId?: string;
   factionId?: FactionId;
@@ -991,6 +998,8 @@ export interface PaperView {
     deck?: string;
     until?: number;
     inPrint?: boolean;
+    /** The hero's In Print headline: the small rosette before the name. */
+    medal?: boolean;
   }>;
   /**
    * Slice 4 (screens §7.1): the Issues section, live: the residence city's two, then the capital's
@@ -1279,6 +1288,15 @@ export interface ElectionCardView {
     councilUntil: number;
     /** The boundary closing the next election's names. */
     namesUntil: number;
+    /**
+     * Slice 4 (screens §7.2): a district's result line, *Eastside went Collective, Vanguard* and
+     * *Irongate: 4 Vanguard · 3 Collective · 3 Alliance · turnout 3 of 5 in Eastside*.
+     */
+    district?: {
+      seats: FactionId[];
+      capital: Record<FactionId, number>;
+      turnout: { voters: number; eligible: number };
+    } | null;
   } | null;
   /** A councillor while the rule vote is open (days 0–1). */
   rule: { votedFor: string | null; divideAt: number } | null;
@@ -1413,6 +1431,8 @@ export interface CouncilSeatView {
   /** Slice 4 (the capital): the seat's party and district. */
   factionId?: FactionId;
   districtId?: string | null;
+  /** The district's name, for the seat grid's captions. */
+  districtName?: string | null;
 }
 
 export interface OrderPaperItemView {
@@ -1755,6 +1775,8 @@ export interface DistrictView {
   blurb: string;
   frame: Frame;
   anchor: { x: number; y: number };
+  /** The user's district lock (3 Oct 2026): the district's shape on the picture, fractions. */
+  outline: Array<[number, number]>;
   opinion: OpinionShares;
   state: DistrictStateView;
   issues: Array<{
@@ -1779,6 +1801,9 @@ export interface IssueRowView {
   leader: FactionId | null;
   momentum: Record<FactionId, number>;
   effectLine: string;
+  /** Screens §7.1 (the row opened): the Issue's blurb and each party's stance, from content. */
+  blurb?: string;
+  stances?: Record<FactionId, string>;
 }
 
 /** A named source in force (an ordinance or an Issue effect) with its days left. */
@@ -1805,6 +1830,8 @@ export interface ResidenceView {
 /** Tech design §10.5: the capital's count, five districts. */
 export interface CapitalCountView {
   kind: 'capital';
+  /** Review 3: the capital council's hall (the City Hall), for the header crop. */
+  hall?: HallView | null;
   councilKey: string;
   cycle: number;
   countDay: DayKey;

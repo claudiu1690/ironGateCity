@@ -14,7 +14,9 @@ import { queryClient } from './lib/queryClient';
 import { gameErrorOf, trpc } from './lib/trpc';
 import { AmbitionPage } from './routes/ambition';
 import { ArrivePage } from './routes/arrive';
-import { CityPage } from './routes/city';
+import { CityPage, lastDistrict } from './routes/city';
+import { JourneyPage } from './routes/journey';
+import { NationPage } from './routes/nation';
 import { BallotPage, CountPage, CouncilPage, SlatePage } from './routes/council';
 import { LoginPage } from './routes/login';
 import { MePage } from './routes/me';
@@ -77,7 +79,13 @@ const indexRoute = createRoute({
     await requireSession();
     const me = await fetchCharacter(context.queryClient, true);
     if (!me) throw redirect({ to: '/arrive' });
+    // Slice 4 (tech design §12.1): on a train (or arrived, the modal not yet closed), the journey.
+    if (me.journey) throw redirect({ to: '/journey' });
     if (me.paperDue) throw redirect({ to: '/paper' });
+    // The capital opens on the last district viewed in this session.
+    const district = lastDistrict(me.cityId);
+    if (district)
+      throw redirect({ to: '/city/$cityId/$quarterId', params: { cityId: me.cityId, quarterId: district } });
     throw redirect({ to: '/city/$cityId', params: { cityId: me.cityId } });
   },
 });
@@ -113,10 +121,12 @@ const appRoute = createRoute({
 });
 
 export interface CitySearch {
-  /** The open location sheet, so a closed tab reopens the same sheet. */
+  /** The open location sheet, so a closed tab reopens the same sheet (the overview: a district's card). */
   loc?: string;
   /** Review 1 (§13.7): the Party order the sheet was opened from; its tickets are marked. */
   order?: string;
+  /** Slice 4: open the Places list on arrival (*Show places*, *Where to act*). */
+  places?: boolean;
 }
 
 const cityRoute = createRoute({
@@ -127,9 +137,42 @@ const cityRoute = createRoute({
     ...(typeof search.loc === 'string' && search.loc && typeof search.order === 'string' && search.order
       ? { order: search.order }
       : {}),
+    ...(search.places === true || search.places === 'true' || search.places === '1' ? { places: true } : {}),
   }),
   component: CityPage,
 });
+
+/**
+ * Slice 4 (tech design §12.1, §12.3): a district of the capital. The city page stays mounted (its
+ * child renders nothing), so a district opens over the same map, which changes its frame and pins.
+ */
+const quarterRoute = createRoute({
+  getParentRoute: () => cityRoute,
+  path: '$quarterId',
+  component: () => null,
+});
+
+/** Slice 4: the nation map (the Map tab's *Nation*). */
+const nationRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/nation',
+  // A city's card open on arrival (the paper's *Where to act* for another city's Issue).
+  validateSearch: (search: Record<string, unknown>): { city?: string } =>
+    typeof search.city === 'string' && /^[a-z]+$/.test(search.city) ? { city: search.city } : {},
+  component: NationPage,
+});
+
+/** Slice 4: the journey screen, and the arrival modal over it. */
+const journeyRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/journey',
+  component: JourneyPage,
+});
+
+export interface CountSearch {
+  /** Slice 4 (screens §8): the capital's district shown on the result. */
+  d?: string;
+}
 
 const paperRoute = createRoute({
   getParentRoute: () => appRoute,
@@ -176,6 +219,8 @@ const ballotRoute = createRoute({
 const countRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/council/count',
+  validateSearch: (search: Record<string, unknown>): CountSearch =>
+    typeof search.d === 'string' && /^[a-z]+\.[a-z-]+$/.test(search.d) ? { d: search.d } : {},
   component: CountPage,
 });
 
@@ -200,7 +245,9 @@ const routeTree = rootRoute.addChildren([
   signupRoute,
   arriveRoute,
   appRoute.addChildren([
-    cityRoute,
+    cityRoute.addChildren([quarterRoute]),
+    nationRoute,
+    journeyRoute,
     paperRoute,
     meRoute,
     ambitionRoute,

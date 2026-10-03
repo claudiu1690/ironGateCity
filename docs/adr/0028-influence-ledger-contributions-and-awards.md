@@ -1,6 +1,6 @@
 # ADR 0028 — The influence ledger: rows in the transaction, per-character contributions, awards credited by the settlement
 
-**Status:** proposed (slice 4; amends ADR 0010's remedy) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 4 (amends ADR 0010's remedy) · **Date:** 2026-10-03
 
 ## Context
 

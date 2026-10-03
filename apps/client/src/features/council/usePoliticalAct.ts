@@ -43,6 +43,13 @@ export function usePoliticalAct() {
           queryClient.setQueryData(trpc.council.chamber.queryKey(), r.view.council);
         void queryClient.invalidateQueries({ queryKey: trpc.paper.today.queryKey() });
         void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
+        // Slice 4: a move or a room changes the nation's cards and the election screens too.
+        void queryClient.invalidateQueries({ queryKey: trpc.travel.nation.queryKey() });
+        if (r.view.kind === 'residence') {
+          void queryClient.invalidateQueries({ queryKey: trpc.council.election.queryKey() });
+          void queryClient.invalidateQueries({ queryKey: trpc.council.chamber.queryKey() });
+          void queryClient.invalidateQueries({ queryKey: trpc.council.count.queryKey() });
+        }
         setResult(r);
         setOpen(true);
       } catch (e) {

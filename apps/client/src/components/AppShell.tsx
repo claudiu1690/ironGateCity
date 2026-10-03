@@ -8,6 +8,7 @@ import { DevPanel } from '../features/dev/DevPanel';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { useResultModalOpen } from '../lib/modalGate';
 import { trpc } from '../lib/trpc';
+import { lastDistrict } from '../routes/city';
 import { useMinWidth } from '../lib/useNow';
 
 /**
@@ -55,7 +56,16 @@ export function AppShell() {
   }, []);
 
   const active: TabId = pathname.startsWith('/paper') ? 'paper' : pathname.startsWith('/me') ? 'me' : 'map';
-  const cityHref = character ? `/city/${character.cityId}` : '/';
+  // Slice 4 (tech design §12.1): on a train the Map tab lands on the journey; in the capital, on the
+  // last district viewed.
+  const district = character ? lastDistrict(character.cityId) : null;
+  const cityHref = !character
+    ? '/'
+    : character.journey
+      ? '/journey'
+      : district
+        ? `/city/${character.cityId}/${district}`
+        : `/city/${character.cityId}`;
   const items: TabItem[] = [
     { id: 'map', label: 'Map', href: cityHref },
     {

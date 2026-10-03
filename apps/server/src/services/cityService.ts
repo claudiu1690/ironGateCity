@@ -57,6 +57,7 @@ import { gameError } from '../gameError';
 import { leaderOf } from './actionService';
 import { cycleKeyOf } from './ledger';
 import { issueEffectsOn, modifiersFor, ordinanceIdOn } from './modifiers';
+import { pickArt } from './art';
 import { politicsSummary } from './politicsService';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import { residenceCardView } from './residenceService';
@@ -235,6 +236,7 @@ export async function getCityView(
         leader: leaderOf(d.momentum),
         momentum: { ...d.momentum },
         effectLine: issue?.effectLine ?? '',
+        ...(issue ? { blurb: issue.blurb, stances: { ...issue.stances } } : {}),
       };
     });
   // ADR 0030: the named sources in force, with their days left.
@@ -283,6 +285,7 @@ export async function getCityView(
         blurb: q.blurb ?? '',
         frame: { ...q.frame },
         anchor: { ...q.district!.anchor },
+        outline: q.district!.outline.map(([x, y]) => [x, y] as [number, number]),
         opinion: d.opinion,
         state: districtWord(d, m.place?.groundswell ?? null),
         issues: issueRows
@@ -455,6 +458,8 @@ export async function getCityView(
         ...(location.ref ? { ref: location.ref } : {}),
         n: index + 1,
         map: { x: location.map.x, y: location.map.y },
+        // Slice 4: the sheet's header art (the result's ladder), which carries the ground sash.
+        art: pickArt(content, city, location, now),
         ...(location.quarterId ? { quarterId: location.quarterId } : {}),
         ...(location.factionId ? { factionId: location.factionId } : {}),
         issueIds: [...tagged],

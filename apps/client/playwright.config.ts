@@ -26,7 +26,14 @@ export default defineConfig({
   projects: [
     {
       name: 'phone',
-      testIgnore: [/council\.spec\.ts/, /qa\.slice3\.spec\.ts/, /devpanel\.spec\.ts/, /landscape\.spec\.ts/],
+      testIgnore: [
+        /council\.spec\.ts/,
+        /qa\.slice3\.spec\.ts/,
+        /devpanel\.spec\.ts/,
+        /landscape\.spec\.ts/,
+        /travel\.spec\.ts/,
+        /capital\.spec\.ts/,
+      ],
       use: { ...devices['Pixel 7'] },
     },
     {
@@ -65,6 +72,20 @@ export default defineConfig({
       name: 'dev-panel',
       testMatch: /devpanel\.spec\.ts/,
       dependencies: ['qa-council'],
+      use: { ...devices['Pixel 7'] },
+    },
+    // Slice 4 (tech design §15.1): the first trip and the capital, each in its own project after the
+    // existing ones (the capital moves the shared clock by cycles and to a Monday).
+    {
+      name: 'travel',
+      testMatch: /travel\.spec\.ts/,
+      dependencies: ['dev-panel'],
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'capital',
+      testMatch: /capital\.spec\.ts/,
+      dependencies: ['travel'],
       use: { ...devices['Pixel 7'] },
     },
   ],

@@ -1,8 +1,11 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
-import type { LocationJobView } from '@irongate/rules';
+import type { LocationJobView, ResultArt } from '@irongate/rules';
 import type { ReactNode } from 'react';
 import { cx, formatClock } from '../format';
+import { GroundSash } from './GroundSash';
+import type { Ground } from './GroundSash';
+import { ArtPanel } from './HallHeader';
 
 /**
  * Where the location opens (review 2 #2, #3): `sheet`, a bottom sheet on a phone held upright;
@@ -26,6 +29,16 @@ export interface LocationSheetProps {
    * map's edge under it (CityMap `onArrive`), and a shorter sheet would show the gap.
    */
   fill?: boolean;
+  /**
+   * Slice 4: the place's big scene art over the header (a scene, or the map crop at its pin), and on
+   * it the ground sash (whose ground this is). Absent: no art band (the slice 1–3 sheet).
+   */
+  art?: ResultArt;
+  ground?: Ground | null;
+  /** Slice 4: a kicker other than "{n} · {kind}" (a district card: "District · 3 of 5"). */
+  kicker?: string;
+  /** Slice 4: the sheet's accessible name when it is not the place's (the district card). */
+  testId?: string;
   children: ReactNode;
 }
 
@@ -53,6 +66,10 @@ export function LocationSheet({
   tags = [],
   layout = 'sheet',
   fill = false,
+  art,
+  ground,
+  kicker,
+  testId,
   children,
 }: LocationSheetProps) {
   const modal = layout === 'panel';
@@ -68,6 +85,7 @@ export function LocationSheet({
         <Dialog.Content
           aria-describedby={undefined}
           data-layout={layout}
+          data-testid={testId}
           onPointerDownOutside={(e) => {
             if (!modal && onTheMap(e)) e.preventDefault();
           }}
@@ -90,21 +108,35 @@ export function LocationSheet({
               'top-1/2 left-1/2 max-h-[min(760px,calc(100dvh-48px))] w-[min(460px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.55)]',
           )}
         >
-          {layout === 'sheet' && (
-            <div className="flex justify-center pt-2" aria-hidden="true">
-              <span className="h-1 w-10 bg-faint" />
-            </div>
+          {art ? (
+            // Slice 4: the place's big scene art, the sheet's handle over it, the ground sash on its corner.
+            <ArtPanel art={art} className="h-[104px] sm:h-[128px]">
+              <div
+                className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.55)_0%,rgb(21_24_26/0)_60%)]"
+                aria-hidden="true"
+              />
+              {layout === 'sheet' && (
+                <div className="absolute inset-x-0 top-0 flex justify-center pt-2" aria-hidden="true">
+                  <span className="h-1 w-10 bg-paper/80" />
+                </div>
+              )}
+              {ground && <GroundSash ground={ground} />}
+            </ArtPanel>
+          ) : (
+            layout === 'sheet' && (
+              <div className="flex justify-center pt-2" aria-hidden="true">
+                <span className="h-1 w-10 bg-faint" />
+              </div>
+            )
           )}
           <div
             className={cx(
               'flex items-start gap-3 border-b-2 border-ink px-4 pb-2.5',
-              layout === 'sheet' ? 'pt-1.5' : 'pt-3',
+              layout === 'sheet' && !art ? 'pt-1.5' : 'pt-3',
             )}
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="label-caps text-[10px] text-muted">
-                {n} · {kindLabel}
-              </span>
+              <span className="label-caps text-[10px] text-muted">{kicker ?? `${n} · ${kindLabel}`}</span>
               <Dialog.Title
                 className={cx(
                   'font-display leading-[1.05] font-black',
@@ -113,7 +145,7 @@ export function LocationSheet({
               >
                 {name}
               </Dialog.Title>
-              <p className="font-body text-[14px] leading-snug text-text-2">{blurb}</p>
+              {blurb && <p className="font-body text-[14px] leading-snug text-text-2">{blurb}</p>}
               {tags.length > 0 && (
                 <ul className="flex flex-wrap gap-1.5 pt-1">
                   {tags.map((t) => (

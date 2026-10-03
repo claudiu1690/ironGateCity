@@ -18,6 +18,23 @@ export interface MapHotspot {
   name: string;
   /** Fractions of the map image. */
   map: { x: number; y: number };
+  /**
+   * Slice 4 (tech design §12.3): how the pin is drawn. `number` (default): the 32 px ink disc with the
+   * number, the name beside it on wide screens; `label`: a small mark with its label always beside it
+   * (the nation: *Coalport · home · 12 min*); `district`: the disc with the district's number and its
+   * name always beside it (the capital's overview). Marks only, no rule: `here` inverts the pin (*you
+   * are here*), `muted` draws it at 60 % (a locked city), `residence` adds the house mark, `issue` the
+   * small Issue dot. `name` (the user's district lock): the name alone, centred on its point (a
+   * district's label on the capital's overview).
+   */
+  pin?: {
+    style?: 'number' | 'label' | 'district' | 'name';
+    /** The label beside the pin (default: the name). */
+    label?: string;
+    /** A second, smaller line under the label (*you are here*, *rival ground*). */
+    sub?: string;
+    marks?: ReadonlyArray<'here' | 'muted' | 'residence' | 'issue'>;
+  };
 }
 
 /** Pixels of the map box hidden by the open location panel, on each side. */
@@ -84,6 +101,30 @@ export interface CityMapProps {
    * the pins clear of (`data-map-overlay`).
    */
   zoomButtons?: string;
+  /**
+   * Slice 4 (tech design §12.3): the pins the at-rest view is about (the nation: your city and the
+   * capital; on a train the two ends of the line). The at-rest view is the covering view centred on
+   * these pins' box; the others are a drag, a zoom or a list tap away. Absent: every pin.
+   */
+  restFocus?: readonly string[];
+  /** Slice 4: the pin zoom's factor on the view that shows every pin (default 2.5; the overview 1.6). */
+  zoomOnSelect?: number;
+  /**
+   * The user's district lock (3 Oct 2026): shapes drawn on the picture, in fractions of it (the
+   * capital's five districts on the overview), each a tap target (`onOutline`) under its name.
+   */
+  outlines?: ReadonlyArray<{ id: string; points: ReadonlyArray<readonly [number, number]>; label: string }>;
+  onOutline?: (id: string) => void;
+  /**
+   * The user's district lock: a district view's shape. Its edge is drawn and the picture outside it is
+   * dimmed, so the player reads the district as the place they are in.
+   */
+  focusOutline?: ReadonlyArray<readonly [number, number]>;
+  /**
+   * The user's district lock: the view stays within the frame. No zooming out past the at-rest view;
+   * a drag (at rest or zoomed into a place) stops at the frame grown by REST_PAN_MARGIN.
+   */
+  lockToFrame?: boolean;
 }
 
 /** The whole picture, as a frame. */
@@ -515,6 +556,8 @@ type ZoomInput = {
    * the scale that covers the box. Without it, MAX_SCALE.
    */
   maxScale?: number;
+  /** Slice 4: the factor on `fitted` (default ZOOM_FACTOR). */
+  factor?: number;
 };
 
 /** The clear part of the box: all of it but what the panel covers (the whole box if that is nothing). */
@@ -539,9 +582,9 @@ export function nativeScale(asset: Pick<AssetView, 'width' | 'widths'>, contentW
 }
 
 /** A pin's zoom, before an edge pin needs more: ZOOM_FACTOR × the fitted view, within its bounds. */
-export function zoomScale(fitted: MapView, maxScale = MAX_SCALE): number {
+export function zoomScale(fitted: MapView, maxScale = MAX_SCALE, factor = ZOOM_FACTOR): number {
   const top = Math.max(1, Math.min(MAX_SCALE, maxScale));
-  return clamp(Math.max(fitted.scale * ZOOM_FACTOR, MIN_ZOOM), 1, top);
+  return clamp(Math.max(fitted.scale * factor, MIN_ZOOM), 1, top);
 }
 
 const overlap = (a: readonly [number, number], b: readonly [number, number]): [number, number] | null =>
@@ -586,14 +629,22 @@ function scaleToFill(len: number, a0: number, a1: number, size1: number, f: numb
  * phone's sheet) does the image stop short of the box's edge, by the least that keeps the pin clear,
  * and only under the panel (`placeAxis`).
  */
-export function zoomView({ box, content, fitted, pin, cover, maxScale = MAX_SCALE }: ZoomInput): MapView {
+export function zoomView({
+  box,
+  content,
+  fitted,
+  pin,
+  cover,
+  maxScale = MAX_SCALE,
+  factor = ZOOM_FACTOR,
+}: ZoomInput): MapView {
   const top = Math.max(1, Math.min(MAX_SCALE, maxScale));
   const a = clearArea(box, cover);
   const need = Math.max(
     scaleToFill(box.w, a.x0, a.x1, content.w, pin.x),
     scaleToFill(box.h, a.y0, a.y1, content.h, pin.y),
   );
-  const z = zoomScale(fitted, maxScale);
+  const z = zoomScale(fitted, maxScale, factor);
   const scale = need <= top ? Math.max(z, need) : z;
   return {
     scale,
@@ -635,9 +686,10 @@ export function panLimits(
   content: { w: number; h: number },
   zoomed: MapView,
   frame: MapRect = WHOLE,
+  margin = FRAME_PAN_MARGIN,
 ): { x: [number, number]; y: [number, number] } {
   const axis = (len: number, size: number, f0: number, f1: number, at: number): [number, number] => {
-    const m = FRAME_PAN_MARGIN * (f1 - f0);
+    const m = margin * (f1 - f0);
     const g0 = Math.max(0, f0 - m);
     const g1 = Math.min(1, f1 + m);
     let lo = len - g1 * size;
@@ -725,6 +777,10 @@ export function restPanLimits(
     ),
   };
 }
+
+/** An SVG path of a polygon in fractions of the picture (the layer's 0..1 view box). */
+const polyPath = (pts: ReadonlyArray<readonly [number, number]>) =>
+  `M${pts.map(([x, y]) => `${x} ${y}`).join('L')}Z`;
 
 const sameView = (a: MapView, b: MapView) =>
   Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.scale - b.scale) < 1e-4;
@@ -899,6 +955,12 @@ export function CityMap({
   clouds,
   memoryKey,
   zoomButtons,
+  restFocus,
+  zoomOnSelect,
+  outlines,
+  onOutline,
+  focusOutline,
+  lockToFrame = false,
 }: CityMapProps) {
   const cloudConfig = clouds === true ? CLOUDS : clouds || null;
   const boxRef = useRef<HTMLDivElement>(null);
@@ -958,8 +1020,13 @@ export function CityMap({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     for (const o of el.querySelectorAll('[data-map-overlay]')) ro.observe(o);
-    return () => ro.disconnect();
+    roRef.current = ro;
+    return () => {
+      ro.disconnect();
+      roRef.current = null;
+    };
   }, []);
+  const roRef = useRef<ResizeObserver | null>(null);
 
   // Any size and shape of art: only its aspect and the largest file served matter (the pins are
   // fractions of it). With tiles they come from the pyramid (design §5.2: whichever source is active).
@@ -983,8 +1050,21 @@ export function CityMap({
   const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   const frameKey = `${frame.x0},${frame.y0},${frame.x1},${frame.y1}`;
   const pinsKey = locations.map((l) => `${l.id}:${l.map.x},${l.map.y}`).join(';');
+  // Slice 4: the pins the at-rest view is about (the nation: your city and the capital).
+  const focusPins = restFocus?.length ? locations.filter((l) => restFocus.includes(l.id)) : locations;
+  const focusKey = restFocus?.join(',') ?? '';
   const coverKey = `${cover?.top ?? 0},${cover?.right ?? 0},${cover?.bottom ?? 0},${cover?.left ?? 0}`;
   const selected = locations.find((l) => l.id === selectedId) ?? null;
+  // Slice 4: one mounted map shows the capital's overview and its districts; a new frame or set of pins
+  // comes with new overlays (a district's plate, the tram bar): observe them and measure again.
+  const overlaysFor = useRef(`${frameKey}|${pinsKey}`);
+  useLayoutEffect(() => {
+    if (overlaysFor.current === `${frameKey}|${pinsKey}`) return;
+    overlaysFor.current = `${frameKey}|${pinsKey}`;
+    const el = boxRef.current;
+    if (el && roRef.current) for (const o of el.querySelectorAll('[data-map-overlay]')) roRef.current.observe(o);
+    measureRef.current();
+  });
 
   // Review 3: the scale at which the whole picture covers the box. The at-rest view never zooms out
   // past it, so the art always fills the map (no blurred bands); 1 for the default frame.
@@ -993,11 +1073,19 @@ export function CityMap({
   const coverScale =
     contentW > 0 && contentH > 0 ? Math.min(1, Math.max(w / contentW, shownH / contentH)) : 1;
 
-  /** Review 3: where the player left the map at rest (dragged or zoomed), kept for the session. */
-  const [restAt, setRestAtState] = useState<RestView | null>(() => recall(memoryKey));
+  /**
+   * Review 3: where the player left the map at rest (dragged or zoomed), kept for the session. Slice 4:
+   * the same mounted map shows the capital's overview and each district (`memoryKey` changes with the
+   * frame), so the state is kept with its key and a new key reads its own memory at once.
+   */
+  const [restState, setRestState] = useState<{ key: string | undefined; r: RestView | null }>(() => ({
+    key: memoryKey,
+    r: recall(memoryKey),
+  }));
+  const restAt = restState.key === memoryKey ? restState.r : recall(memoryKey);
   const setRestAt = (r: RestView | null) => {
     remember(memoryKey, r);
-    setRestAtState(r);
+    setRestState({ key: memoryKey, r });
   };
   // A view kept for another size of map does not apply to this one (see RestView).
   const mine = restAt && restAt.box === `${w}x${h}` ? restAt : null;
@@ -1011,16 +1099,18 @@ export function CityMap({
     return fitPinsView({
       box,
       content,
-      pins: locations.map((l) => l.map),
+      pins: (focusPins.length > 0 ? focusPins : locations).map((l) => l.map),
       insets,
       minScale: coverScale,
       frame,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, contentW, contentH, insets, pinsKey, frameKey, coverScale]);
-  const zoom = fitted
+  }, [w, h, contentW, contentH, insets, pinsKey, frameKey, coverScale, focusKey]);
+  const free = fitted
     ? freeZoomLimits({ fitted: fitted.scale, cover: coverScale, artWidth, contentW, dpr })
     : { min: 1, max: 1 };
+  // The user's district lock: never zoomed out past the district's own view.
+  const zoom = fitted && lockToFrame ? { min: fitted.scale, max: Math.max(fitted.scale, free.max) } : free;
   const pinsList = () => locations.map((l) => l.map);
   /** How far the map drags at rest at this scale (review 3: any zoom). */
   const restLimits = (scale: number) =>
@@ -1046,7 +1136,7 @@ export function CityMap({
     // view, which zoomed out past the picture's edge), not × the covered one, which is closer already.
     const zoomBase = selected ? fitPinsView({ box, content, pins: pinsList(), insets }) : fitted;
     const view = selected
-      ? zoomView({ box, content, fitted: zoomBase, pin: selected.map, cover, maxScale })
+      ? zoomView({ box, content, fitted: zoomBase, pin: selected.map, cover, maxScale, factor: zoomOnSelect })
       : rest;
     return { fitted, view };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1079,15 +1169,49 @@ export function CityMap({
   const landing = useRef(false);
   const targetRef = useRef(target);
   targetRef.current = target;
+  /**
+   * Slice 4 (the user's district lock): the frame the view was last placed in, and the layer's width
+   * then. A new frame (the overview to a district, a district to the next by tram, back to the
+   * overview) is one movement: the view on show is restated in the new frame's layer, then eases to
+   * the new view, the review-3 zoom.
+   */
+  const framePlaced = useRef<{ key: string; w: number } | null>(null);
+  const reframing = useRef(false);
 
   useLayoutEffect(() => {
     if (!target) return;
     const sel = selected?.id ?? null;
     const first = placedFor.current === undefined;
     const changed = !first && placedFor.current !== sel;
+    const still = prefersReducedMotion();
+    const was = framePlaced.current;
+    framePlaced.current = { key: frameKey, w: contentW };
+    const onShow = shownRef.current?.view;
+    if (!first && was && was.key !== frameKey && onShow && !still) {
+      placedFor.current = sel;
+      panned.current = false;
+      animateNext.current = false;
+      landing.current = false;
+      cancelAnimationFrame(raf.current);
+      // The same picture on screen, in the new layer's units (its width changed with the frame).
+      setShown({ view: { scale: (onShow.scale * was.w) / contentW, x: onShow.x, y: onShow.y }, animate: false });
+      reframing.current = true;
+      raf.current = requestAnimationFrame(() => {
+        raf.current = requestAnimationFrame(() => {
+          reframing.current = false;
+          const t = targetRef.current ?? target;
+          setShown({ view: t.view, animate: true });
+          if (sel) {
+            const fillsMap = coversBox({ w, h }, { w: contentW, h: contentH }, t.view);
+            onArriveRef.current?.(sel, { fillsMap });
+          }
+        });
+      });
+      return;
+    }
     placedFor.current = sel;
     panned.current = false;
-    const still = prefersReducedMotion();
+    if (!first && !changed && reframing.current) return;
     if (!first && !changed && landing.current) {
       // The first landing's zoom has not started yet (the plate's orders loaded meanwhile): stay at
       // rest; the zoom starts from the latest view in a frame, with the sheet.
@@ -1253,7 +1377,7 @@ export function CityMap({
     if (!target || !insets) return null;
     const box = { w, h };
     const content = { w: contentW, h: contentH };
-    if (selected) return panLimits(box, content, target.view, frame);
+    if (selected) return panLimits(box, content, target.view, frame, lockToFrame ? REST_PAN_MARGIN : FRAME_PAN_MARGIN);
     const lim = restLimits(scale);
     if (!lim) return null;
     if (Math.abs(target.view.scale - scale) > 1e-6) return lim;
@@ -1602,6 +1726,78 @@ export function CityMap({
                 />
               )}
             </div>
+            {/* The user's district lock (3 Oct 2026): the districts' shapes on the overview, and in a
+                district its edge with the picture dimmed outside it. In the layer, so they move with the
+                art; the stroke keeps about 2 px on screen at any zoom. */}
+            {(focusOutline || outlines) && view && (
+              <svg
+                // Above the tiles, whose z-index is their level (TileLayer).
+                className="absolute inset-0 z-50 size-full overflow-visible"
+                viewBox="0 0 1 1"
+                preserveAspectRatio="none"
+                data-testid="map-outlines"
+              >
+                {focusOutline && (
+                  <>
+                    <path
+                      d={`M0 0H1V1H0Z ${polyPath(focusOutline)}`}
+                      fillRule="evenodd"
+                      fill="rgb(21 24 26 / 0.5)"
+                      pointerEvents="none"
+                      data-testid="district-mask"
+                    />
+                    <path
+                      d={polyPath(focusOutline)}
+                      fill="none"
+                      style={{ stroke: 'var(--color-ink)' }}
+                      strokeWidth={4 / view.scale}
+                      vectorEffect="non-scaling-stroke"
+                      strokeLinejoin="round"
+                      pointerEvents="none"
+                    />
+                    <path
+                      d={polyPath(focusOutline)}
+                      fill="none"
+                      style={{ stroke: 'var(--color-paper)' }}
+                      strokeWidth={2 / view.scale}
+                      vectorEffect="non-scaling-stroke"
+                      strokeLinejoin="round"
+                      pointerEvents="none"
+                      data-testid="district-edge"
+                    />
+                  </>
+                )}
+                {/* An ink edge under a paper line, so a shared border reads as one printed line. */}
+                {outlines?.map((o) => (
+                  <path
+                    key={`${o.id}:ink`}
+                    d={polyPath(o.points)}
+                    fill="none"
+                    style={{ stroke: 'rgb(21 24 26 / 0.7)' }}
+                    strokeWidth={4 / view.scale}
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinejoin="round"
+                    pointerEvents="none"
+                  />
+                ))}
+                {outlines?.map((o) => (
+                  <path
+                    key={o.id}
+                    d={polyPath(o.points)}
+                    className="cursor-pointer fill-paper/0 hover:fill-paper/15"
+                    style={{ stroke: 'var(--color-paper)' }}
+                    strokeWidth={1.75 / view.scale}
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinejoin="round"
+                    onClick={() => onOutline?.(o.id)}
+                    data-testid="district-outline"
+                    data-district={o.id}
+                    aria-label={o.label}
+                    role="button"
+                  />
+                ))}
+              </svg>
+            )}
           </div>
           {/* Map atmosphere: above the art, below the pins and overlays; taps go through it. */}
           {cloudConfig && view && target && (
@@ -1626,9 +1822,20 @@ export function CityMap({
           <div className="pointer-events-none absolute inset-0">
             {view &&
               locations.map((l) => {
-                const on = l.id === selectedId;
+                const marks = l.pin?.marks ?? [];
+                // `here` (slice 4: you are here) draws the pin as a selected one does: paper on ink.
+                const on = l.id === selectedId || marks.includes('here');
+                const style = l.pin?.style ?? 'number';
                 const px = view.x + l.map.x * contentW * view.scale;
                 const py = view.y + l.map.y * contentH * view.scale;
+                const label = l.pin?.label ?? l.name;
+                // Slice 4: a label pin near the right edge carries its label on its left, so it stays on
+                // the map (the nation's capital on a phone held upright).
+                const flip = style === 'label' && px > w - 170;
+                // The user's district lock: a district's name is centred on its point, but kept on the
+                // map: near an edge it slides along (its width estimated from its letters).
+                const half = style === 'name' ? (label.length * 8.8 + 30) / 2 : 0;
+                const slide = style === 'name' ? clamp(px, half + 4, Math.max(half + 4, w - half - 4)) - px : 0;
                 return (
                   <div
                     key={l.id}
@@ -1637,34 +1844,100 @@ export function CityMap({
                     data-map-x={l.map.x}
                     data-map-y={l.map.y}
                   >
+                    {style === 'name' ? (
+                      <button
+                        type="button"
+                        onClick={() => onSelect(l.id)}
+                        onFocus={() => onPinFocus(l)}
+                        aria-label={label}
+                        data-testid="hotspot"
+                        data-pin={style}
+                        data-marks={marks.join(' ') || undefined}
+                        style={slide ? { marginLeft: slide } : undefined}
+                        className={cx(
+                          'hotspot label-caps pointer-events-auto absolute top-0 left-0 flex min-h-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1.5 border-[1.5px] px-2.5 text-[12px] font-semibold whitespace-nowrap shadow-[0_3px_10px_rgb(0_0_0/0.5)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
+                          on ? 'border-ink bg-paper text-ink' : 'border-paper bg-ink text-paper',
+                        )}
+                      >
+                        {marks.includes('residence') && (
+                          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" data-testid="pin-residence">
+                            <path d="M6 1 11 5.5V11H1V5.5z" fill="currentColor" />
+                          </svg>
+                        )}
+                        <span>{label}</span>
+                        {l.pin?.sub && (
+                          <span className="font-mono text-[10px] tracking-normal normal-case opacity-85">{l.pin.sub}</span>
+                        )}
+                      </button>
+                    ) : (
                     <button
                       type="button"
                       onClick={() => onSelect(l.id)}
                       onFocus={() => onPinFocus(l)}
-                      aria-pressed={on}
-                      aria-label={`${l.n}. ${l.name}`}
+                      aria-pressed={l.id === selectedId}
+                      aria-label={
+                        style === 'label'
+                          ? [label, l.pin?.sub].filter(Boolean).join(', ')
+                          : `${l.n}. ${l.name}`
+                      }
                       data-testid="hotspot"
-                      className="hotspot pointer-events-auto absolute top-0 left-0 flex h-11 min-w-11 -translate-x-[22px] -translate-y-[22px] cursor-pointer items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+                      data-pin={style}
+                      data-marks={marks.join(' ') || undefined}
+                      data-flip={flip || undefined}
+                      className={cx(
+                        'hotspot pointer-events-auto absolute top-0 flex h-11 min-w-11 -translate-y-[22px] cursor-pointer items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
+                        flip ? 'right-0 translate-x-[22px] flex-row-reverse' : 'left-0 -translate-x-[22px]',
+                        marks.includes('muted') && 'opacity-60',
+                      )}
                     >
                       <span
                         className={cx(
-                          'hotspot mx-1.5 flex size-8 shrink-0 items-center justify-center rounded-full border-2 font-label text-[14px] font-semibold',
+                          'hotspot relative mx-1.5 flex shrink-0 items-center justify-center border-2 font-label font-semibold',
+                          style === 'label' ? 'size-3.5 rotate-45 mx-[15px]' : 'size-8 rounded-full text-[14px]',
                           on
                             ? 'border-ink bg-paper text-ink shadow-[0_0_0_2px_var(--color-paper),0_0_0_8px_rgb(239_230_210/0.35)]'
                             : 'border-paper bg-ink text-paper shadow-[0_0_0_2px_var(--color-ink),0_3px_8px_rgb(0_0_0/0.5)]',
                         )}
                       >
-                        {l.n}
+                        {style !== 'label' && l.n}
+                        {marks.includes('residence') && (
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            className="absolute -top-2 -right-2"
+                            aria-hidden="true"
+                            data-testid="pin-residence"
+                          >
+                            <path d="M6 1 11 5.5V11H1V5.5z" style={{ fill: 'var(--color-paper)', stroke: 'var(--color-ink)' }} strokeWidth="1.2" />
+                          </svg>
+                        )}
+                        {marks.includes('issue') && (
+                          <span
+                            className="absolute -right-1 -bottom-1 size-2.5 rounded-full border border-paper bg-petrol"
+                            aria-hidden="true"
+                            data-testid="pin-issue"
+                          />
+                        )}
                       </span>
                       <span
                         className={cx(
-                          'hotspot label-caps -ml-2 hidden border border-l-0 py-1 pr-2 pl-2.5 text-[11px] whitespace-nowrap lg:inline',
+                          'hotspot label-caps flex-col border py-1 pr-2 pl-2.5 text-[11px] leading-tight whitespace-nowrap',
+                          style === 'number' ? '-ml-2 hidden border-l-0 lg:inline-flex' : 'inline-flex',
+                          style === 'label' ? (flip ? '-mr-1 items-end' : '-ml-1') : style === 'district' ? '-ml-2 border-l-0' : '',
                           on ? 'border-ink bg-paper text-ink' : 'border-paper bg-ink text-paper',
                         )}
+                        data-testid="pin-label"
                       >
-                        {l.name}
+                        <span>{label}</span>
+                        {l.pin?.sub && (
+                          <span className="font-mono text-[9.5px] tracking-normal normal-case opacity-85">
+                            {l.pin.sub}
+                          </span>
+                        )}
                       </span>
                     </button>
+                    )}
                   </div>
                 );
               })}

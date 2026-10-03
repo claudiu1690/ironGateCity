@@ -1,6 +1,6 @@
 # ADR 0025 — Journeys: their own collection, a pointer on the character, lazy arrival plus a tidy job
 
-**Status:** proposed (slice 4) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 4 · **Date:** 2026-10-03
 
 ## Context
 
