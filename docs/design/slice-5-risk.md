@@ -18,7 +18,7 @@ At **Level 6** (the reference player's day 2) each home city opens its **second 
 
 ### 2.1 The rule, applied (GDD §14.13)
 
-Quarters open **by Level, per character: 1 / 6 / 10**. Slice 5 builds the **second quarter of each home city**; the third (the station's) stays a teaser (*Opens with a later edition*) whatever the player's Level, since it is a later content addendum (the user decided, 2 Oct 2026). A quarter also opens the moment the game sends the character to a place in it (admitted to the infirmary, held in the cells), whatever their Level; in practice moot, since Heat and encounters need Level 6, but the rule is kept so a service never lands on a locked view.
+Quarters open **by Level, per character: 1 / 6 / 10**. Slice 5 builds the **second quarter of each home city**; the third (the station's) stays a teaser (*Opens with a later edition*) whatever the player's Level, since it is a later content addendum (the user decided, 2 Oct 2026). A quarter also opens the moment the game sends the character to a place in it (admitted to the infirmary, held in the cells), whatever their Level: a view rule with nothing stored, which cannot fire in slice 5 (missions need Level 6, rival ground Level 10) and is kept so a service never lands on a locked view (§23.6 #9).
 
 **Opening is a reveal, not a reward.** On the morning after Level 6 the paper carries *The Harbour Opens to {name}* (§14) and the quarter bar gains a second chip. Nothing is paid, nothing is gated inside beyond the usual (Rank 3 for illegal missions, members only at an HQ). A quarter never closes again.
 
@@ -49,20 +49,20 @@ Kinds from the closed §13.5 list; no new kind. Blurbs ≤ 200 characters, plain
 | 7 | `coalport.shipyard` | The Shipyard | `docks` | 0.86, 0.46 | A hull on the stocks and two hundred men on the staging. When the yard stops, the town hears it. |
 | 8 | `coalport.customs-house` | Customs House | `ministry` | 0.66, 0.66 | The republic's clock on the mole, and its inspectors in the sheds. Every crate in Coalport passes their stamp, or doesn't. |
 | 9 | `coalport.infirmary` | The Infirmary | `hospital` | 0.17, 0.50 | Glass roof, iron beds, a matron who has seen every kind of accident the mill makes. Visiting hour is two o'clock. |
-| 10 | `coalport.harbour-police` | Harbour Police | `jail` | 0.56, 0.83 | The harbour police station by the ferry stage: two cells, a stove, and a sergeant who writes everything down. |
+| 10 | `coalport.harbour-police` | Harbour Police | `jail` | 0.56, 0.83 | The harbour police station by the ferry stage: two cells, a stove, and a duty officer who writes everything down. |
 | 11 | `coalport.far-bank` | The Far Bank | `market` | 0.93, 0.62 | Across the water by ferry: the fish market under its iron roof, the bonded warehouses, and a lower town that makes up its mind late. |
 | **Duskwall · The Pass** | | | | | |
 | 7 | `duskwall.checkpoint` | Frontier Checkpoint | `ministry` | 0.80, 0.10 | The barrier on the mountain road where the republic ends. Lorries queue from dawn; the customs men decide what crosses and what comes back down. |
 | 8 | `duskwall.mountain-inn` | Mountain Inn | `bar` | 0.87, 0.04 | The last inn before the pass: a long table, a stove, carters and customs men on the same bench. Talk goes quiet when the door opens. |
 | 9 | `duskwall.sawmill` | Sawmill | `factory-gate` | 0.88, 0.68 | The mill on the river bend where the mountain's timber comes down. The saws run two shifts and the yard is stacked to the roof. |
-| 10 | `duskwall.lock-up` | Lock-up | `jail` | 0.76, 0.13 | The stone lock-up beside the checkpoint: three cells, a hatch, and a sergeant who has heard every story the road brings down. |
+| 10 | `duskwall.lock-up` | Lock-up | `jail` | 0.76, 0.13 | The stone lock-up beside the checkpoint: three cells, a hatch, and a duty officer who has heard every story the road brings down. |
 | 11 | `duskwall.infirmary` | Infirmary | `hospital` | 0.88, 0.40 | The town's infirmary under the church spire, run by sisters who ask no questions. Visiting is at two; the sawmill keeps the beds full. |
 | **Ashford · The Wharf** | | | | | |
 | 7 | `ashford.wharf` | The Wharf | `docks` | 0.79, 0.77 | The river wharf below the bridge: barges at the lock, the boat club's verandah, and the towpath where the lower town walks on Sundays. |
 | 8 | `ashford.brewery` | Brewery | `factory-gate` | 0.92, 0.82 | The brick brewery with its two chimneys at the river's bend. Draymen at the gate from six, and the whole lower town smells of malt. |
 | 9 | `ashford.cattle-market` | Cattle Market | `market` | 0.25, 0.77 | Pens and auction sheds on the edge of the lower town. Market day brings the county in, with money in its pockets and opinions to match. |
 | 10 | `ashford.infirmary` | County Infirmary | `hospital` | 0.20, 0.47 | The county hospital in its walled garden: long wards, a porter's lodge, and a queue of visitors at two with flowers from the market. |
-| 11 | `ashford.police` | Police Station | `jail` | 0.72, 0.52 | The police station by the Corn Exchange: a lamp over the door, a desk sergeant, and a book in which the whole town's name eventually appears. |
+| 11 | `ashford.police` | Police Station | `jail` | 0.72, 0.52 | The police station by the Corn Exchange: a lamp over the door, a duty officer at the desk, and a book in which the whole town's name eventually appears. |
 
 The pin numbers continue each city's list (7–11), so the first quarter's numbers are unchanged. **Teaser lines** for the locked plates: Coalport *Opens at Level 6 · The slipway, the customs house, and the far bank across the water.* · Duskwall *Opens at Level 6 · The road up to the frontier: the checkpoint, the inn and the sawmill.* · Ashford *Opens at Level 6 · The lower town across the river: the wharf, the brewery and the cattle pens.* The third quarters: *Opens with a later edition · The station, the coal yards and the tram sheds.* · *Opens with a later edition · The station, the square and the brewery.* · *Opens with a later edition · The station, the town hall and the Corn Exchange.*
 
@@ -155,12 +155,12 @@ Rewards at the §5.5 tier-1 rates by type and Energy (the `slice-2-cities.md` §
 #### Coalport · Harbour Police
 
 **Read the notices at the station door** (`coalport.harbour-police.notices`)
-- Success — *Names on the board* — The board by the door lists the week's lost property, licences refused and the men wanted for questioning. Two names and a street go in your notebook while the sergeant is on the telephone.
-- Partial — *Last week's sheet* — The board is last week's and the sergeant is watching through the glass. One name worth writing down, from the licences refused. Come back on Monday.
+- Success — *Names on the board* — The board by the door lists the week's lost property, licences refused and the men wanted for questioning. Two names and a street go in your notebook while the duty officer is on the telephone.
+- Partial — *Last week's sheet* — The board is last week's and the duty officer is watching through the glass. One name worth writing down, from the licences refused. Come back on Monday.
 
 **Talk to people waiting at the desk** (`coalport.harbour-police.desk`)
-- Success — *Everyone here has a grievance* — Lost bicycles, a licence, a son. The bench by the desk is the most patient audience in Coalport. You keep your voice down and your flyers folded small. By the time the sergeant calls next, half the bench has one.
-- Partial — *The sergeant has a view* — The sergeant looks up from his book and then at the door. You get two flyers out on the way to it. One woman follows you onto the step to ask about the rent tribunal.
+- Success — *Everyone here has a grievance* — Lost bicycles, a licence, a son. The bench by the desk is the most patient audience in Coalport. You keep your voice down and your flyers folded small. By the time the duty officer calls next, half the bench has one.
+- Partial — *The duty officer has a view* — The duty officer looks up from his book and then at the door. You get two flyers out on the way to it. One woman follows you onto the step to ask about the rent tribunal.
 
 #### Coalport · The Far Bank
 
@@ -216,12 +216,12 @@ Rewards at the §5.5 tier-1 rates by type and Energy (the `slice-2-cities.md` §
 #### Duskwall · Lock-up
 
 **Read the notices at the lock-up door** (`duskwall.lock-up.notices`)
-- Success — *Names on the board* — The board by the hatch lists the week's permits refused, loads seized and the men wanted at the checkpoint. Two names and a plate go in your notebook while the sergeant is at the stove.
-- Partial — *Last week's sheet* — The board is last week's and the sergeant is watching through the hatch. One name worth writing down, from the loads seized. Come back on Monday.
+- Success — *Names on the board* — The board by the hatch lists the week's permits refused, loads seized and the men wanted at the checkpoint. Two names and a plate go in your notebook while the duty officer is at the stove.
+- Partial — *Last week's sheet* — The board is last week's and the duty officer is watching through the hatch. One name worth writing down, from the loads seized. Come back on Monday.
 
 **Talk to people waiting at the hatch** (`duskwall.lock-up.hatch`)
 - Success — *A bench with time to talk* — A driver whose load is in the shed, a woman whose son is in the cells, a carter waiting for a chit. The bench by the hatch has nothing to do but listen. You keep it low and the flyers folded. By the time the hatch opens, most of the bench has one.
-- Partial — *The sergeant has a view* — The sergeant looks through the hatch and then at the door. You get two flyers out on the way to it. One driver follows you onto the road to ask about the timber rates.
+- Partial — *The duty officer has a view* — The duty officer looks through the hatch and then at the door. You get two flyers out on the way to it. One driver follows you onto the road to ask about the timber rates.
 
 #### Duskwall · Infirmary
 
@@ -282,12 +282,12 @@ Rewards at the §5.5 tier-1 rates by type and Energy (the `slice-2-cities.md` §
 #### Ashford · Police Station
 
 **Read the notices at the station door** (`ashford.police.notices`)
-- Success — *Names on the board* — The board by the door lists the week's lost property, licences refused and the men wanted for questioning. Two names and a street go in your notebook while the sergeant is on the telephone.
-- Partial — *Last week's sheet* — The board is last week's and the sergeant is watching through the glass. One name worth writing down, from the licences refused. Come back on Monday.
+- Success — *Names on the board* — The board by the door lists the week's lost property, licences refused and the men wanted for questioning. Two names and a street go in your notebook while the duty officer is on the telephone.
+- Partial — *Last week's sheet* — The board is last week's and the duty officer is watching through the glass. One name worth writing down, from the licences refused. Come back on Monday.
 
 **Talk to people waiting at the desk** (`ashford.police.desk`)
-- Success — *Everyone here has a grievance* — A lost dog, a licence, a son. The bench by the desk is the most patient audience in Ashford. You keep your voice down and your flyers folded small. By the time the sergeant calls next, half the bench has one.
-- Partial — *The sergeant has a view* — The sergeant looks up from his book and then at the door. You get two flyers out on the way to it. One man follows you onto the step to ask about the court queue.
+- Success — *Everyone here has a grievance* — A lost dog, a licence, a son. The bench by the desk is the most patient audience in Ashford. You keep your voice down and your flyers folded small. By the time the duty officer calls next, half the bench has one.
+- Partial — *The duty officer has a view* — The duty officer looks up from his book and then at the door. You get two flyers out on the way to it. One man follows you onto the step to ask about the court queue.
 
 ---
 ## 4. Missions (tier 2): the rules
@@ -303,7 +303,7 @@ A mission is a ticket like any other on a place's sheet, under its own kicker (*
 | **Standing** | Some home-city missions need *Known* there (§13.4); none on rival ground, where a visitor rarely is |
 | **Audience** | A legal mission is for everyone (an HQ's *members only* covers its tier-1 tickets; §4.5). An illegal mission names a **target** faction and is for everyone **but** that faction. In the capital a target may be `leader`: the faction leading the district at the boundary, or the runner-up when that is the actor's own |
 | **Energy** | 10–20 by type (§4.2); paid on the choice; refused short of Energy (*Needs 15 Energy*) |
-| **Odds** | The §8.4 formula with the mission's difficulty; the approach's stat (one, two averaged, or *best*); Standing in the city +3 %/level; *close race* +5 % on political missions in a battleground district; **rival ground +4 difficulty** |
+| **Odds** | The §8.4 formula with the mission's difficulty; the approach's stat (one, two averaged, or *best*); Standing in the city +3 %/level; *close race* +5 % on speech missions in a close-race district (the political type; the illegal types get no close-race or comeback line, §23.1 #6); **rival ground +4 difficulty** |
 | **Outcomes** | One roll: at or below the chance **Success**; up to 20 above **Partial** (half rewards, per line); more than 20 above **Failure**: XP ÷ 5, nothing else. The stamp reads *Success* / *Partial* / *Failure*; the reason line as review 2 (§2.4: *It went badly.* then the cause) |
 | **Rewards** | T2 rates (§5.5): **5 XP · 0.8 Party XP · 4 Iron per Energy**; **opinion 0.01 per Energy, ×2 for illegal missions** (§14.2), drawn Neutral-first for persuasion (a speech), **from the target faction** for an action against a rival (half to the actor, half to Neutral); Rested, Issue tags (+50 % opinion, momentum = Energy, half on Partial, none on Failure), *close race* and *comeback* lines as tier 1; **a Success is a win** for Reputation |
 | **Heat, run-ins, the caught check** | By type (§4.2), after the check (§4.6) |
@@ -369,7 +369,7 @@ One tap, one server transaction, one result; the encounter is the only thing tha
 3. **The caught check** (§7.1; illegal missions only, **on a Partial or a Failure**, and not after a loss, which has already cost enough): base + half your Heat − Agility. Caught while *Cool* or *Noticed*: **your name is taken** (the type's marks). Caught while *Hot* or *Wanted*: **the cells** (§8). *Wanted* and a Failure: the cells without a roll (§6.4).
 4. **The result modal** (§13.1a, the receipt), with the encounter's line, the Heat line (*Heat +8 → 32 · Noticed*), the record line if any, and the knock-on lines; when the player was sent to the cells or the infirmary, the modal's one button reads *To the cells* / *To the infirmary* and leads to the service screen (§8, §9).
 
-An encounter left unanswered (the tab closed) is **auto-resolved** on the next read with the best free odds (§10.4), and the result modal waits for the player as the orders-complete modal does. Nothing about a mission needs the player at a time.
+An encounter left unanswered (the tab closed) is **auto-resolved** on the first read after five minutes, or at the day's end, with the best free odds (§10.4), and the result modal waits for the player as the orders-complete modal does. Nothing about a mission needs the player at a time.
 
 ### 4.7 What the ticket says before the tap (GDD §13.1: odds and risks before you commit)
 
@@ -422,7 +422,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 | Way | Stat | Hint | Risk |
 |---|---|---|---|
 | Before the market, in the dark | AGI | Nobody about, nobody to see. One pillar at a time. | the mission's (15 %) |
-| At the busiest, in plain sight | STR | Rip them down in front of the quay and let them watch you do it. | run-in **25 %**, opinion the same |
+| At the busiest, in plain sight | STR | Rip them down with the quay watching and let them see you do it. | run-in **25 %**, opinion the same |
 
 - Success — *Bare pillars by eight* — Every pillar under the roof is bare by the time the beadle makes his round, and the gutting tables have a view of nothing but the ferry. The Vanguard's man comes at nine with a bucket and finds he's the news.
 - Partial — *Half the roof* — You get the pillars on the ferry side before the beadle's lamp comes round the ice store and you leave by the fish quay steps. Half the roof is bare. The other half is talking about who did it.
@@ -491,7 +491,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 
 - Success — *What goes up at eleven* — At eleven the barrier lifts for a lorry with no lights and a man in the hut doesn't write anything down. Two plates, a name said twice, and the time. The notebook has a page the customs would pay for.
 - Partial — *The lamp goes out* — The lamp on the hut dies at ten and the road becomes engine noise and shapes. One plate before the dark. Something went up tonight without a stamp; you'll need another night to say whose.
-- Failure — *Nothing goes up* — Four hours on the rock and the barrier stays down. A customs man walks the ditch twice with a torch and finds your flask the second time. You go home with a cold and an empty page, and the hut has your face.
+- Failure — *Nothing goes up* — Four hours on the rock and the barrier stays down. A customs man walks the ditch twice with a lamp and finds your flask the second time. You go home with a cold and an empty page, and the hut has your face.
 
 **Tear down the Alliance's posters on the inn wall** (`duskwall.mountain-inn.posters`) · vandalism · 10 E · Level 6 · difficulty 14 · Rank 3 · target `alliance` · pool `party-thug`, `city-police`
 *The Alliance has papered the inn's long wall overnight, where every carter on the pass reads while he waits for the barrier. The landlord doesn't care who papers his wall; the customs men on the bench do. Whatever's on the wall when the first lorry comes down is what the pass reads today.*
@@ -499,7 +499,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 | Way | Stat | Hint | Risk |
 |---|---|---|---|
 | Before first light, from the yard | AGI | Nobody about but the dog. One sheet at a time. | the mission's (15 %) |
-| At the long table's dinner, in front of them | STR | Rip them down with the bench watching and let them say so. | run-in **25 %**, opinion the same |
+| At the long table's dinner, before the whole bench | STR | Rip them down with the bench watching and let them say so. | run-in **25 %**, opinion the same |
 
 - Success — *A bare wall by the first lorry* — The long wall is bare by the time the first lorry comes down the pass and the carters have nothing to read but the price of beer. The Alliance's man comes at nine with a bucket and finds he's the morning's story.
 - Partial — *The yard end* — You get the yard end before the dog starts and the landlord's lamp comes on upstairs. Half the wall is bare. The other half is being argued over at the long table.
@@ -576,7 +576,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 | Way | Stat | Hint | Risk |
 |---|---|---|---|
 | Before the draymen, in the dark | AGI | Nobody about, nobody to see. One bay at a time. | the mission's (15 %) |
-| At the gate, with the draymen watching | STR | Rip them down in front of the yard and let them say so. | run-in **25 %**, opinion the same |
+| At the gate, with the draymen watching | STR | Rip them down with the yard watching and let them say so. | run-in **25 %**, opinion the same |
 
 - Success — *A hundred yards of bare brick* — The wall is bare from the gate to the bend by the time the draymen come out, and the towpath has nothing to read but the brewery's name. The Collective's man comes at nine with a bucket and finds he's the morning's story.
 - Partial — *The gate end* — You get the gate end before the yard lamp comes on and you leave by the towpath. Half the wall is bare. The other half is being argued over at the lock.
@@ -622,7 +622,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 
 ### 5.4 Irongate
 
-**Speak to the lunch-hour rally on the Forecourt** (`irongate.forecourt.rally`) · speech · 15 E · Level 10 · difficulty 18 (the ladder for Level 10 is 18; the capital's +2 is already in it: the mission is written for the capital) · everyone · pool `street-enforcer`, `strike-picket`, `party-thug`
+**Speak to the lunch-hour rally on the Forecourt** (`irongate.forecourt.rally`) · speech · 15 E · Level 10 · difficulty 20 (the ladder's 18 for Level 10, +2 in the capital, §4.3; every Irongate mission is 20) · everyone · pool `street-enforcer`, `strike-picket`, `party-thug`
 *At one the whole Quarter eats on the Forecourt, and on Thursdays somebody always has the plinth. Today it's yours if you want it: a thousand clerks, the Parliament steps for a backdrop, a policeman who looks bored, and a rival crew at the back who have come for the heckling.*
 
 | Way | Stat | Hint |
@@ -635,7 +635,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Partial — *The bell cuts you off* — You get through the cuts before the bell for the vote goes and the steps empty of everyone who matters. A few hundred clerks stay to hear the end. One asks which party. You tell him.
 - Failure — *Rain off the dome* — The rain comes off the dome at ten past one and the Forecourt goes under the arcades without you. You finish for the statue and the rival crew, who enjoy it. Same plinth next Thursday, if it's dry.
 
-**Watch the Grand Hotel's lobby after midnight** (`irongate.grand-hotel.lobby-watch`) · surveillance · 12 E · Level 10 · difficulty 18 · everyone · pool `city-police`
+**Watch the Grand Hotel's lobby after midnight** (`irongate.grand-hotel.lobby-watch`) · surveillance · 12 E · Level 10 · difficulty 20 · everyone · pool `city-police`
 *The Grand's lobby is where deputies dine and lobbyists wait, and after midnight it is where the ones who don't want to be seen together are seen together. There's an armchair behind the palms with a view of the lift, and a hall porter who knows every face in the capital and remembers the ones he doesn't.*
 
 | Way | Stat | Hint |
@@ -647,19 +647,19 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Partial — *The porter's eye* — The hall porter looks at your coat at half past twelve and keeps looking. You get one name off the lift before it's wiser to leave by the dining room. Something was arranged tonight; you'll need another night to say what.
 - Failure — *A quiet night at the Grand* — Two hours behind the palms and the lift brings down nobody but a drunk deputy and his hat. The night manager asks if sir is a guest. Sir is not. You leave with an empty page and the porter's memory of your face.
 
-**Tear down the rivals' posters on the tram shelters** (`irongate.tram-junction.shelters`) · vandalism · 10 E · Level 10 · difficulty 18 · Rank 3 · target `leader` · pool `street-enforcer`, `strike-picket`, `party-thug`, `city-police`
-*Somebody papered every shelter at the Junction overnight and every tram queue in the capital is reading them. Eight shelters, a bucket and a brush are all it took them; a knife and ten minutes is all it takes you. The inspectors' hut has a window on the platforms and the first tram is at five.*
+**Tear down the rivals' posters on the tram shelters** (`irongate.tram-junction.shelters`) · vandalism · 10 E · Level 10 · difficulty 20 · Rank 3 · target `leader` · pool `street-enforcer`, `strike-picket`, `party-thug`, `city-police`
+*Somebody papered every shelter at the Junction overnight and every tram queue in the capital is reading them. Eight shelters, a bucket and a brush are all it took them; a scraper and ten minutes is all it takes you. The inspectors' hut has a window on the platforms and the first tram is at five.*
 
 | Way | Stat | Hint | Risk |
 |---|---|---|---|
 | Before the first tram, platform by platform | AGI | Nobody about, nobody to see. One shelter at a time. | the mission's (15 %) |
-| In the morning rush, in front of the queues | STR | Rip them down with the queues watching and let them say so. | run-in **25 %**, opinion the same |
+| In the morning rush, before the queues | STR | Rip them down with the queues watching and let them say so. | run-in **25 %**, opinion the same |
 
 - Success — *Eight bare shelters* — Every shelter at the Junction is bare glass by the time the first tram comes through, and every queue in the capital reads the timetable instead. Their man comes at nine with a bucket and finds he's the morning's story.
 - Partial — *Five platforms* — You get the five near platforms before the inspectors' hut lights up and you leave by the Market Square side. Five shelters are bare. The other three are being argued over in the queues.
 - Failure — *The paste is good* — Wet night, good paste, and posters that come off the glass in strips the size of your hand. You get one shelter done before the inspector's lamp comes down the platform. The posters stay, and the Junction has your face.
 
-**Break up the rival meeting at the Station Buffet** (`irongate.station-buffet.meeting`) · disruption · 15 E · Level 10 · difficulty 18 · Rank 3 · target `leader` · pool `street-enforcer`, `strike-picket`, `party-thug`, `city-police`
+**Break up the rival meeting at the Station Buffet** (`irongate.station-buffet.meeting`) · disruption · 15 E · Level 10 · difficulty 20 · Rank 3 · target `leader` · pool `street-enforcer`, `strike-picket`, `party-thug`, `city-police`
 *The party that leads this district holds its night-shift meeting in the Buffet's back room at midnight: thirty porters and tram crews round the tables, a committee man on a chair with the lists, the counterman keeping out of it. The fuse box is behind the counter, the yard door is on the latch, and the question nobody on the chair can answer is about the fare.*
 
 | Way | Stat | Hint |
@@ -683,7 +683,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 |---|---|
 | **Range** | 0–100, a whole number |
 | **Rises with** | Missions by type (§4.2: surveillance +5, vandalism +6, disruption +8, theft +10, sabotage +12), on every outcome; **×2 on rival ground** (§11); the parcel card's Partial +10 (slice 4's stub, now live); a failed *Pay them off* +10 (§10.3); a checkpoint's *They write your name down* +10 (§11.4) |
-| **Cools** | **5 an hour**, continuously, lazily (stored value and timestamp, computed on read); from 100 to 0 in 20 hours; never below 0. The *Customs Strike* Issue effect raises cooling by half (§12.1) |
+| **Cools** | **5 an hour**, continuously, lazily (stored value and timestamp, computed on read); from 100 to 0 in 20 hours; never below 0. The *Customs Strike* Issue effect raises cooling by half (§12.1); the rate is the **residence city's**, wherever the player stands (the Rested cap's rule, §23.1 #8) |
 | **Never** | Heat never costs Iron, XP, Party XP or an item; it is attention, not a debt. It never changes the odds of a check (§8.4): it changes the run-in chance and the caught check |
 
 ### 6.2 The four states and what they do
@@ -751,7 +751,7 @@ Deferred with their systems: *some venues need +5 CHA* and *clothing +15 %* (the
 
 ### 8.1 Getting there
 
-A player is **taken in** by: a caught check that lands while *Hot* or *Wanted* (§7.2); a Failure while *Wanted*; a run-in with the police lost (§10.3). Never by a tier-1 action at home, never by a legal mission, never by anything a player did not choose to risk.
+A player is **taken in** by: a caught check that lands while *Hot* or *Wanted* (§7.2); a Failure while *Wanted*; a run-in with the police lost (§10.3). Never by a tier-1 action at home, never by a legal mission unless you lose a run-in with the police (a watch's pool is the police, and the police join every pool from *Noticed*; such an arrest carries the type's marks, none for a speech, a watch or a rival-ground tap, and an arrest with no marks never escalates a later one), never by anything a player did not choose to risk. A loss to the police sets Health to 30, as an admission does (§23.1 #3–#4).
 
 The cells are **the police station of the city the player is in**: Harbour Police (Coalport), the Lock-up (Duskwall), the Police Station (Ashford), Police Headquarters (Irongate; its kind stays `ministry`, and the cells screen's art is the `jail` scene by screen, not by kind). The place's quarter opens for the character if it wasn't (§2.1).
 
@@ -769,7 +769,7 @@ The cells never take anything a player owns, never stop a timer that pays, and n
 
 ### 8.3 The cells' voice
 
-The sergeant is a civic policeman of the republic, not a party's man (policy §7.3); he is bored, exact and not unkind. The screen's lines are in `slice-5-screens.md` §6.
+The duty officer is a civic policeman of the republic, not a party's man (policy §7.3); he is bored, exact and not unkind. The screen's lines are in `slice-5-screens.md` §6.
 
 ---
 
@@ -812,7 +812,7 @@ The infirmary's voice is its matron (the portrait `nurse.png`, catalogued as `po
 
 A **run-in** is rolled once after a mission's check (§4.6) and once per tap on rival ground's tier-1 actions (§11.2). Its chance:
 
-> **run-in % = the type's base (§4.2; rival-ground tier 1: 15) × 2 on rival ground + the Heat state's bonus (Noticed +5, Hot +15, Wanted +15) + 5 for a Repeat offender or worse + 10 if *Watched* today − 10 if *Warned* today**, kept between 0 and 90.
+> **run-in % = the type's base (§4.2), ×2 on rival ground for a mission (a tier-1 tap on rival ground is 15 flat, never doubled; §23.1 #2) + the Heat state's bonus (Noticed +5, Hot +15, Wanted +15) + 5 for a Repeat offender or worse + 10 if *Watched* today − 10 if *Warned* today**, kept between 0 and 90.
 
 So a Cool player at home sees 5 % on a speech, 10 % on a watch, 15–30 % on the illegal types; the same player *Hot* on rival ground sees 75 % on a disruption. The ticket's risk word (§4.7) is this number's band.
 
@@ -837,7 +837,7 @@ The encounter modal (`slice-5-screens.md` §5) shows the opponent's portrait, th
 
 | Row | The player reads | Odds (§20.1) | If it works | If it fails |
 |---|---|---|---|---|
-| **Fight** | *Fight · Fair odds · Strength* | **50 % + 3 % × (your power − their power)**, 5–95. Your power = **STR × 1.5 + armour ÷ 2** (slice 5: every clothing item's armour is its tier's §20.3 value, Tier I = 4, so +2; weapons and bodyguards are later) | You win: the held result is paid; **+20 XP**; **if you were at full Health, +10 % on the mission's XP and Party XP** (*Won at full strength*); you lose **their power × 0.8 (±20 %) − 4** Health, at least 0 | **Loss**: Health 0, the infirmary (§9); **against the police, the cells** (§8), with the mission's marks |
+| **Fight** | *Fight · Fair odds · Strength* | **50 % + 3 % × (your power − their power)**, 5–95. Your power = **STR × 1.5 + armour ÷ 2** (slice 5: every clothing item's armour is its tier's §20.3 value, Tier I = 4, so +2; weapons and bodyguards are later) | You win: the held result is paid; **+20 XP**; **if you were at full Health, +10 % on the mission's XP and Party XP** (*Won at full strength*); you lose **their power × 0.8 (±20 %) − 4** Health, at least 0, and never below 1 Health (a win never admits you, §23.1 #5) | **Loss**: Health 0, the infirmary (§9); **against the police, the cells** (§8), with the mission's marks |
 | **Run** | *Run · Long shot · Agility* | **(your AGI ÷ their AGI) × 60 %**, at most 95 | You get away: **+10 XP**; the held result drops to Failure's small XP ("you dropped it"); Heat as normal; no caught check | **Extra damage** (half a win's loss) and the fight goes ahead at **−10 %**, resolved at once |
 | **Talk your way out** | *Talk your way out · Long shot · Charisma* | The §8.4 formula: **50 % + 4 % × (worn CHA − their Wits)**, 5–95 | They let you go: **+10 XP**; the held result is paid | They get angrier: the fight goes ahead at **−10 %**, resolved at once |
 | **Pay them off** | *Pay them off · 60 Iron · nearly always works* | **90 %** when they can be bought; the row reads *Won't be bought* and is disabled for the branch inspector | They look away: the held result is paid; **Heat unchanged**; the Iron is gone | The Iron is gone, **+10 Heat**, and the fight goes ahead at the full odds, resolved at once |
@@ -846,11 +846,11 @@ One tap is the whole encounter: a failed Run, Talk or Pay rolls the fight in the
 
 ### 10.4 Leave it to luck (auto-resolve)
 
-A fifth, text-only row, **Leave it to luck**, picks **the free row with the best odds** (Fight, Run or Talk; never Pay) and resolves it: the GDD's one button. **The same choice is made for a player who closes the tab**: an encounter is stored `pending` on the character; the next read of any kind resolves it with that rule and the result modal waits (the orders-complete pattern). So a run-in never holds a player hostage to a popup, and a player who prefers never to choose can always let it play.
+A fifth, text-only row, **Leave it to luck**, picks **the free row with the best odds** (Fight, Run or Talk; never Pay) and resolves it: the GDD's one button. **The same choice is made for a player who closes the tab**: an encounter is stored `pending` on the character; **the first read after five minutes, or the day's end if sooner**, resolves it with that rule as of that time, and the result modal waits (the orders-complete pattern); the player's own choice wins while it is pending (ADR 0032, §23.1 #17). So a run-in never holds a player hostage to a popup, and a player who prefers never to choose can always let it play.
 
 ### 10.5 On rival ground's tier-1 actions
 
-The same modal, the same four rows. **Fight won, Talk or Pay: the row's result stands. Run or a loss: the row drops to Partial** (a tier-1 action never fails, §13.1); a loss still means the infirmary (or the cells). Rival-ground tier-1 is **×1 only** (§11.2), so a run-in is always about one tap.
+The same modal, the same four rows. **Fight won, Talk or Pay: the row's result stands. Run or a loss: the row drops to Partial** (a tier-1 action never fails, §13.1); a loss still means the infirmary (or the cells). Rival-ground tier-1 is **×1 only** (§11.2), so a run-in is always about one tap. The opponent comes from the city's `runInPool` (Duskwall: the street enforcer and the doorman; Coalport: the strike picket and the branch inspector; Ashford: the party heavy), with the police rule on top; a loss to the police there is the cells with no marks. **Training and the held taps never roll a run-in** (§23.1 #10–#11).
 
 ### 10.6 The texts
 
@@ -946,7 +946,7 @@ Drawn **at boarding for a rival home city, always one** (§14.10 "always an even
 
 ### 11.5 Deportation
 
-Released from the cells on rival ground, the player is **put on the train home**: a journey starts (no fare, no card, the usual time) and the city is **barred to them for 24 hours** (the nation card: *Barred · until Thursday 14:20*, no Board button). The modal: stamp **Put on the train**, headline *Escorted to the station*, body in §13. Heat is 25 as after any release. Nothing else: the GDD's deportation is a door closing for a day, not a loss.
+Released from the cells on rival ground, the player is **put on the train home**, to the residence city (Irongate for a capital resident, §23.1 #16): a journey starts (no fare, no card, the usual time) and the city is **barred to them for 24 hours** (the nation card: *Barred · until Thursday 14:20*, no Board button). The modal: stamp **Put on the train**, headline *Escorted to the station*, body in §13. Heat is 25 as after any release. Nothing else: the GDD's deportation is a door closing for a day, not a loss.
 
 ### 11.6 What is not in slice 5
 
@@ -983,11 +983,11 @@ Content-policy check: the Vanguard's lines are order, timetables, registers and 
 
 | Id | Faction · slot | Title | Matches | Target | Line |
 |---|---|---|---|---|---|
-| `dir.mission` | Collective · B | Take on a mission anywhere in Coalport | any tier-2 mission in the residence city (`cityId: 'home'`, `tier: 2`) | 1 attempt | The branch has a job that wants more than a flyer. Any mission, anywhere in town; the rest is your business. |
-| `dir.v.mission` | Vanguard · B | Take on a mission anywhere in Duskwall | the same | 1 attempt | Flyers are for Initiates. One mission today, any mission, and a report on my desk by tonight. |
-| `dir.a.mission` | Alliance · B | Take on a mission anywhere in Ashford | the same | 1 attempt | Something with a bit more to it today. Any mission in town; use your judgement, and mind the police. |
+| `dir.mission` | Collective · B | Take on a mission anywhere in {city} | any tier-2 mission in the residence city (`cityId: 'home'`, `kinds: ['mission']`) | 1 attempt | The branch has a job that wants more than a flyer. Any mission, anywhere in town; the rest is your business. |
+| `dir.v.mission` | Vanguard · B | Take on a mission anywhere in {city} | the same | 1 attempt | Flyers are for Initiates. One mission today, any mission, and a report on my desk by tonight. |
+| `dir.a.mission` | Alliance · B | Take on a mission anywhere in {city} | the same | 1 attempt | Something with a bit more to it today. Any mission in town; use your judgement, and mind the police. |
 
-`residence: 'any'` (the capital resident's title reads *…anywhere in Irongate* through `cityId: 'home'`). It enters slot B's rotation from the day the character is **Level 6** (an order a player cannot do is worse than none; the rotation skips it below Level 6). A new match field, `tier: 2`. Counts attempts: any outcome.
+`residence: 'any'`; the title's `{city}` resolves at read to the residence city (the slice-4 fixes' m1 rule, `slice-4-fixes.md` §2), so a capital resident reads *…anywhere in Irongate*. It enters slot B's rotation from the day the character is **Level 6** (`minLevel: 6`: an order a player cannot do is worse than none; orders are faction-wide among members who can do them, GDD §13.7). The match is `kinds: ['mission']` (ADR 0031; no `tier` field). Counts attempts: any outcome.
 
 ---
 
@@ -1026,7 +1026,7 @@ Every text is under 240 characters and four sentences. Chapter 3 (*The collector
 
 ## 14. Headlines
 
-The home papers gain **ten templates each**; the Herald the same ten for capital residents and visitors. The Clarion's set in full; the Sentinel's and the Gazette's with their own decks where the voice changes (the Sentinel clipped and orderly; the Gazette civic and dry); the Herald's metropolitan and dry. Ids `hl.`, `hl.v.`, `hl.a.`, `hl.ig.`. Every deck ≤ 200 characters with the longest tokens. New conditions: `levelCrossed 6` (stored), `missionFirstYesterday`, `heatState: hot | wanted` (live at the edition), `arrestedYesterday`, `releasedYesterday`, `admittedYesterday`, `recordRose`, `rivalGroundYesterday`, `deportedYesterday`, `moraleLostToRivalsYesterday ≥ 1`.
+The home papers gain **ten templates each**; the Herald **eight** (no `quarter-open`, since the capital has no second quarter, and no `rival-pressure`, since it has no home faction) for capital residents and visitors. The Clarion's set in full; the Sentinel's and the Gazette's with their own decks where the voice changes (the Sentinel clipped and orderly; the Gazette civic and dry); the Herald's metropolitan and dry. Ids `hl.`, `hl.v.`, `hl.a.`, `hl.ig.`. Every deck ≤ 200 characters with the longest tokens. New conditions: `levelCrossed 6` (stored), `missionFirstYesterday`, `heatState: hot | wanted` (live at the edition), `arrestedYesterday`, `releasedYesterday`, `admittedYesterday`, `recordRose`, `rivalGroundYesterday`, `deportedYesterday`, `moraleLostToRivalsYesterday ≥ 1`.
 
 **The Coalport Clarion** (`hl.`):
 
@@ -1036,7 +1036,7 @@ The home papers gain **ten templates each**; the Herald the same ten for capital
 | `hl.mission-first` | personal 3 | first mission yesterday | {name} Takes On the Harder Work | A first mission yesterday: {missionTitle}. The branch notes it. Missions remember how you did them; the second time is one tap. |
 | `hl.seen` | personal 1 (In Print) | Heat is Hot or Wanted at the edition | {name} Seen Where They Shouldn't Be | The Clarion hears the harbour police have a name and a face. Heat cools five an hour; a quiet day would do it. |
 | `hl.name-taken` | personal 2 | a mark yesterday | Police Take {name}'s Name | A mark on the record after {missionTitle}. One mark fades in a fortnight if there's no second; the branch can have it struck off for 30 Political Capital. |
-| `hl.cells` | personal 0 (In Print) | arrested yesterday | {name} Spent {minutes} Minutes in the Cells | Taken in after {missionTitle}; {how} The sergeant has written it down. Heat is back to 25 and the branch is pretending not to have read this. |
+| `hl.cells` | personal 0 (In Print) | arrested yesterday | {name} Spent {minutes} Minutes in the Cells | Taken in after {missionTitle}; {how} The duty officer has written it down. Heat is back to 25 and the branch is pretending not to have read this. |
 | `hl.infirmary` | personal 1 (In Print) | admitted yesterday | {name} Carried into the Infirmary | After a run-in with {opponent}. Twenty minutes on the ward, the matron's opinion of politics, and out. The branch sent grapes. |
 | `hl.record-up` | personal 2 | the record's level rose | {name} Is {recordLevel} with the Harbour Police | {marks} marks. Iron from missions is down by {pct} % until they fade. The branch suggests a fortnight of flyers. |
 | `hl.rival-trip` | personal 3 | on rival ground yesterday | {name} Spent Yesterday in {rivalCity} | Party work on rival ground pays half again, and the Clarion hears it was done. The Sentinel, naturally, hears nothing. |
@@ -1075,7 +1075,7 @@ About six taps and a minute; the first *Failure* stamp a player ever sees comes 
 
 ### 15.3 Getting Hot, and the cells (whenever)
 
-Three disruptions in a session: Heat 24. A fourth makes it 32, *Noticed* (the card in the modal says what it means); a fifth 40, a sixth 48, a seventh 56, *Hot*. The seventh comes off Partial and its caught check (10 + 28 + 15 − 2 = 51 %) lands: stamp **Taken in**, *To the cells*: the sergeant, *38 minutes · until 15:12*, *Pay bail · 150 Iron*, *Listen to the cells · 3 Energy*, the paper, the Election row. Pay, or close the app and come back. The morning's Clarion: *{name} Spent 38 Minutes in the Cells*.
+Three disruptions in a session: Heat 24. A fourth makes it 32, *Noticed* (the card in the modal says what it means); a fifth 40, a sixth 48, a seventh 56, *Hot*. The seventh comes off Partial and its caught check (10 + 28 + 15 − 2 = 51 %) lands: stamp **Taken in**, *To the cells*: the duty officer, *38 minutes · until 15:12*, *Pay bail · 150 Iron*, *Listen to the cells · 3 Energy*, the paper, the Election row. Pay, or close the app and come back. The morning's Clarion: *{name} Spent 38 Minutes in the Cells*.
 
 ### 15.4 Rival ground (Level 10, day 5 or later)
 
@@ -1091,7 +1091,7 @@ Three disruptions in a session: Heat 24. A fourth makes it 32, *Noticed* (the ca
 
 | Act | Taps | Time |
 |---|---|---|
-| A mission, first time | 2 (ticket, way) + Continue | 20 s |
+| A mission, first time | 3 (ticket, way, confirm) + Continue | 20 s |
 | A mission, repeated | 1 + Continue | 5 s |
 | A run-in | 1 (or 0: leave it to luck) | 10 s |
 | The cells: pay bail | 1 | 5 s; or 10–60 minutes in the background |
@@ -1155,13 +1155,13 @@ Each with a default so the build does not wait.
 9. **Ambition**: `Chapter.story.check.approaches[].heat?` for *The riverside house*; nothing else changes in the chapter engine.
 10. **Playtest report:** missions per type per day, the share of players who took one, run-ins and their choices (and how many were *luck* by default), the loss rate, the cells and the infirmary (count and minutes waited vs paid), Heat's distribution at mission time, marks per player, rival-ground trips and their Party XP, and bail paid. The question is *exciting rather than punishing*: the numbers to watch are the loss rate on auto-resolve and how often a player who was taken in comes back the next day.
 11. **Test hooks:** shorten the cells and the infirmary (`until` to now), set Heat and Health, force a run-in and its opponent, force the caught check; the e2e needs a run through mission → run-in → infirmary → discharge and mission → cells → bail, and a rival-ground arrival with the checkpoint card.
-12. **The QA vocabulary test:** *Fight* and *Run* are allowed verbs; the regex's `weapon|gun|rifle` holds (no string here uses them); *constable* and *sergeant* are civic police words and need an allowance as *the duty officer* did; *enforcer*, *doorman*, *picket*, *inspector* and *heavy* are the opponent labels; *rival ground* and *run-in* are §1.5 words.
+12. **The QA vocabulary test:** *Fight* and *Run* are allowed verbs; the regex's `weapon|gun|rifle` holds (no string here uses them); *constable* needs nothing (it is in neither regex) and *sergeant* is gone: the civic police's desk is *the duty officer*, slice 4's word (§23.1 #22); *enforcer*, *doorman*, *picket*, *inspector* and *heavy* are the opponent labels; *rival ground* and *run-in* are §1.5 words.
 
 ---
 
 ## 20. Content-policy check
 
-Every string above was read against `content-policy-review.md` §7. The police everywhere are the republic's (a constable, a sergeant, the harbour police, police headquarters), never a party's; the Vanguard's muscle is a man in a good coat and a club's doorman, its places a checkpoint the customs run, an inn and a sawmill; its stances are timetables, registers, fixed rates and a magistrate; no line says it is right (the Sentinel's *noted* and *in order* are its manner). The Collective's people are riveters, pickets with armbands and a man with a book; its stances strikes and a free crossing. *Fight* is a verb of the §20 hazard, used once per encounter and never as a frame for the contest; *run-in*, *a rival crew*, *the cells*, *rival ground* are the words. No weapon, uniform, rank, drill, patrol, mark or slogan appears; the one slogan in the slice is the Vanguard's reviewed *ORDER AND BREAD* on a poster being torn down. Nothing is a front, a war, an uprising or an enemy. The checkpoint card's customs men are the frontier's, and *Papers, please* is the republic's border, not a party's. **For QA:** the war regex's `front` matches *the front door* in the Union Hall sabotage briefing (§5.1), a door in its everyday sense like the reviewed *the front room*, and needs the same allowance; *Garrison Hill* appears once (the Issue's district) under its existing allowance; *constable* and *sergeant* are civic police words (§19 Q12); no other string in either document matches the war or the vocabulary regex.
+Every string above was read against `content-policy-review.md` §7. The police everywhere are the republic's (a constable, the duty officer, the harbour police, police headquarters), never a party's; the Vanguard's muscle is a man in a good coat and a club's doorman, its places a checkpoint the customs run, an inn and a sawmill; its stances are timetables, registers, fixed rates and a magistrate; no line says it is right (the Sentinel's *noted* and *in order* are its manner). The Collective's people are riveters, pickets with armbands and a man with a book; its stances strikes and a free crossing. *Fight* is a verb of the §20 hazard, used once per encounter and never as a frame for the contest; *run-in*, *a rival crew*, *the cells*, *rival ground* are the words. No weapon, uniform, rank, drill, patrol, mark or slogan appears; the one slogan in the slice is the Vanguard's reviewed *ORDER AND BREAD* on a poster being torn down. Nothing is a front, a war, an uprising or an enemy. The checkpoint card's customs men are the frontier's, and *Papers, please* is the republic's border, not a party's. **For QA:** the war regex's `front` matches *the front door* in the Union Hall sabotage briefing (§5.1), a door in its everyday sense like the reviewed *the front room*, and needs the same allowance; *Garrison Hill* appears once (the Issue's district) under its existing allowance; *constable* is a civic police word in neither regex and *the duty officer* carries no rank (§23.1 #22); *in front of* and *torch* are gone from every string (§23.6 #14); no other string in either document matches the war or the vocabulary regex.
 
 ---
 
@@ -1173,7 +1173,7 @@ Already in the folder and used by this slice: `hospital.png` (the infirmary scre
 |---|---|---|---|
 | 1 | `scene.mission-speech` | A big-crowd speech: a figure on a timber stack or a platform above a sea of caps at a yard gate, the band, the gantry | scene 2688 × 1520 |
 | 2 | `scene.mission-watch` | A night's watching: a figure on a bollard on a mole, a flask, a shed door with a lamp, a lorry with no lights | scene |
-| 3 | `scene.mission-posters` | Posters half torn from a pillar under an iron market roof, a knife, strips on wet stone, dawn | scene |
+| 3 | `scene.mission-posters` | Posters half torn from a pillar under an iron market roof, a scraper, strips on wet stone, dawn | scene |
 | 4 | `scene.mission-sabotage` | A back room with a duplicator, ink on the floor, a bent drum, a yard window open to the night | scene |
 | 5 | `scene.mission-theft` | A clerk's desk with a ledger open, a pencil, an open window with the river beyond; a coat sleeve at the edge | scene |
 | 6 | `portrait.street-enforcer` | A man in a good overcoat and a soft hat, heavy-shouldered, a Vanguard badge the size of a coin, under a street lamp. No uniform, no symbol | portrait 4:5 |
@@ -1181,7 +1181,9 @@ Already in the folder and used by this slice: `hospital.png` (the infirmary scre
 | 8 | `portrait.strike-picket` | A docker in a cap with a plain armband and a brazier's glow, a yard gate behind. No hammer, no sickle, no star | portrait |
 | 9 | `portrait.branch-inspector` | A small neat man in a mackintosh with a notebook and a pencil, spectacles, a doorway | portrait |
 | 10 | `portrait.party-thug` | A big quiet man in a tweed jacket with a lapel badge, a yard wall behind, a hat in his hand | portrait |
-| 11 | `portrait.sergeant` | A desk sergeant of the civic police: a ledger, a stove, a lamp, a 1940s Central European police tunic without insignia beyond a number | portrait |
+| 11 | `portrait.duty-officer` (source `sergeant.png`) | The duty officer of the civic police: a ledger, a stove, a lamp, a 1940s Central European police tunic without insignia beyond a number | portrait |
+
+**Done 3 Oct 2026:** all eleven are generated in the noir style and saved as `mvp/scenes/mission-{speech,watch,posters,sabotage,theft}.png` (2688 × 1520) and `mvp/portraits/{street-enforcer,vanguard-doorman,strike-picket,branch-inspector,party-thug,sergeant}.png` (880 × 1168). Checked: no symbol on any badge or armband (the duty officer's cap badge is a blank shield). Alt texts, written against the pictures: §23.5.
 
 Nothing else: the hostile cards use the journey screen's text; the Heat and Health rows use no icon; the quarters are painted already; the keepsake uses `document-folder.jpg`. Eleven pieces, five of them the rung-4 mission cards that every later mission of the type will reuse. (The missing rung-4 card for `disruption` is `news-strike.png`, existing.) The crest rule holds for every portrait: no symbol on a badge or armband, a plain shape only.
 
@@ -1195,3 +1197,120 @@ Nothing else: the hostile cards use the journey screen's text; the Heat and Heal
 4. **The record's level name *Known* becomes *On file*** (§7.3). Default: **On file** (the clash with the Reputation ladder's *Known* is on one Me tab). The alternative is a note under the label.
 5. **The second quarters open the home-city overview with the capital's outline pattern** (§2.1), which is new client work the plan did not list for slice 5. Default: **build it** (two open quarters and a teaser need a way between them that is not only the bar). The alternative is the quarter bar alone and no overview until the station quarters.
 6. **The caught check fires only when a mission does not come off clean** (§7.1: on a Partial or a Failure, never on a Success), a change to GDD §11.2's "every illegal action". Default: **Partial and Failure only** (with a roll on every outcome the modelled daily illegal player was Notorious inside four days and, since marks fade only after fourteen quiet days, could never come back; with the softer rule it takes a fortnight of daily illegal work, and a week of flyers clears the minor marks). The alternative is the GDD as written, with the base rates halved to the same effect.
+
+---
+
+## 23. Settled for the build (3 Oct 2026; answers to `docs/tech/slice-5.md` §22.1 and §23)
+
+The architect's defaults are accepted unless a line below says otherwise. Every change to this document's earlier sections was applied in the same change (the lines are named), so the content tests that read the tables stay in step. **Numbers that moved:** none in the economy; the Irongate missions' difficulty is 20 (a slip corrected), the run-in decide window is five minutes (new, recorded in the GDD), and a police loss on legal work is the cells (the accepted §22 point 3, now stated in §8.1).
+
+### 23.1 The twenty-two questions
+
+| # | Decision | Where it now lives |
+|---|---|---|
+| 1 | **Irongate's missions are difficulty 20**: the ladder's 18 for Level 10 plus the capital's +2 (GDD §8.4, §4.3). §5.4's "already in it" was a slip; the loader holds content to `missionDifficulty(level, role)`. At 20 the day-7 reference player (best stat ~28) sees 82 % and a day-5 one (~25) 70 %, inside the band | §5.4 (four rows) |
+| 2 | **The tier-1 run-in on rival ground is 15 flat.** The ×2 is for missions. §10.1's formula is reworded | §10.1, §11.2, `economy.md` §19.6 |
+| 3 | **A loss to the police is the cells on any mission and on a rival-ground tap**, with the type's marks (none for a speech, a watch or a tap). An arrest with no marks does **not** count toward the seven-day escalation. §8.1 reads *never by a legal mission, unless you lose a run-in with the police* | §8.1, §7.2 |
+| 4 | **Health is 30 after a police loss**, as at an admission: nobody sits in a cell at 0 | §8.2, GDD §20 |
+| 5 | **A won fight never takes Health below 1.** A win never admits you | §10.3, GDD §20 |
+| 6 | **The close race and the comeback apply to speech missions only** (the political type); vandalism, disruption, sabotage and theft get neither line. §4.1's "political missions" means that | §4.1 |
+| 7 | **An action against a rival counts the actor's leg** (half the swing) for heroes and the scoreboard; the ledger records both legs | §4.1, ADR 0034 |
+| 8 | **Heat cools at the residence city's rate** wherever the player stands (`heatCoolPct` follows the Rested cap's rule: the timers follow where you live) | §6.1, GDD §6.4 |
+| 9 | ***Cool by {time}*** is the time Heat drops under 25, shown only while *Noticed* or above; once *Cool* the line shows no time (*Heat 12 · Cool*). No *gone by* | §6.3, screens §12 |
+| 10 | **A visitor's tier-1 run-in draws from the city's `runInPool`**, the police rule on top: Duskwall `street-enforcer`, `vanguard-doorman`; Coalport `strike-picket`, `branch-inspector`; Ashford `party-thug` | §10.5 |
+| 11 | **Training and the held taps never roll a run-in**, on rival ground or anywhere | §10.5 |
+| 12 | **The first trip to rival ground always draws *Papers, please***, Heat notwithstanding; *Your name is on a list* replaces the draw on later trips at Heat 50 or more and is outside the three-card rotation | §11.4 |
+| 13 | **The hostile cards' Partial rewards** are written in §23.2 | §11.4 → §23.2 |
+| 14 | **The missing texts** are written: the held taps (§23.3), the four quarter blurbs (§23.4), the thirteen alt texts (§23.5) | — |
+| 15 | **Type-keyed council rules and Issue effects apply to missions by the type they are seen as**: *Rally Permits* takes a speech mission from 15 to 13 Energy (rewards on the content Energy, the slice-3 rule); *Open Doors* and *Street Permits* touch no mission | §4.1 |
+| 16 | **Deportation's train goes to the residence city** (Irongate for a capital resident) | §11.5, GDD §14.12 |
+| 17 | **The run-in decide window is five minutes.** Luck takes an unanswered run-in on the first read after five minutes, or at the day's end if sooner, as of that time; the player's own choice wins while it is pending. Recorded in GDD §13.1 and §20 | §4.6, §10.4, GDD §13.1, §20 |
+| 18 | **Notorious bars every player from the Alliance's HQs, Alliance members included** (§11.3 as written) | §7.3 |
+| 19 | **After a Run the stamp and text are the check's outcome**; the run-in block says you ran; the row reads *Success · dropped: you ran*; the receipt carries only the small XP. A loss stamps *Taken in* or *Taken to the infirmary* | §4.6, screens §4.3 |
+| 20 | ***Six wins* and *Five attempts* do not count missions** (`kinds: ['checked']`); the mission order and the type-matching speech and intelligence orders do | §4.1, §12.2 |
+| 21 | **The briefing keeps its confirm**: a row selects, the button spends, so a brush on a row costs nothing. A first mission is **three taps** (ticket, way, confirm); the second time two (*Again*, Continue) | §16 (table), screens §4.2 |
+| 22 | **No rank for the civic police: *the duty officer*** replaces *sergeant* everywhere, as slice 4 did for Police Headquarters, so the QA guard keeps its one rule (*no rank is allowed*) and gains no allowance. *Constable* stays (not in either regex). **The asset is `portrait.duty-officer`** (source `mvp/portraits/sergeant.png`; the file keeps its name). Duskwall's watch Failure reads *with a lamp*. The four way hints and one way title that read *in front of* are reworded (*with the quay watching*, *with the bench watching*, *with the yard watching*, *with the queues watching*), so no allowance; ***front door*** (the Union Hall briefing) keeps `qa.content`'s existing allowance and joins `qa.slice2`'s list. The slice-6 texts (`slice-6-together.md`, `slice-6-screens.md`) take the same word in the same change | §2.3, §3.1, §5.1–§5.4, §8.3, §14, §19 Q12, §20, §21; screens §6, §11, §12 |
+
+### 23.2 The hostile cards: every outcome's rewards (§22.1 Q13)
+
+A Partial pays half the Success's XP and Party XP, rounded half up, plus the stated Heat or flag. Unchecked rows pay their one line. Nothing costs Energy; Iron only where the row says.
+
+| Card · choice | Check | Success | Partial |
+|---|---|---|---|
+| Papers, please · Show your papers | unchecked, `gate: coolAndClean` | *Waved on*: nothing | *They write your name down*: Heat +10, *Watched* |
+| Papers, please · Talk your way through | CHA, 14 | +6 Party XP | +3 Party XP, *Watched* |
+| Papers, please · Pay the lamp | unchecked, 30 Iron | *The lamp moves on*: nothing more | — |
+| Papers, please · slept through | — | — | `ignoreEffects`: Heat +10, *Watched* |
+| The informer · Lose him at the barrier | AGI, 14 | +14 XP | +7 XP, *Watched* |
+| The informer · Feed him a story | INT, 14 | +6 Party XP | +3 Party XP, *Watched* |
+| The informer · slept through | — | — | `ignoreEffects`: *Watched* |
+| Your name is on a list · Get off at the halt | AGI, 14 | Heat −10, +14 XP | Heat −5, +7 XP |
+| Your name is on a list · Brazen it out | CHA, 14 | +6 Party XP | +3 Party XP, Heat +10, *Watched* |
+| Your name is on a list · slept through | — | — | `ignoreEffects`: *Watched* |
+| A friendly conductor · Take the warning | unchecked | *Warned* | — |
+| A friendly conductor · Buy him a drink | unchecked, 10 Iron | +6 Party XP, Heat −5 | — |
+| A friendly conductor · slept through | — | — | nothing (the line only) |
+
+### 23.3 The held taps (§8.2, §9.2): texts
+
+Both intelligence, 3 Energy, **Intelligence**, 14 / 7 XP, 6 / 3 Iron, a win for Reputation on a Success.
+
+**Listen to the cells** (`held.cells`)
+- Success — *Two cells, three stories* — The man in the next cell talks to the wall and the wall is you. A name, a yard, a night that went wrong. The duty officer's boots stop outside and the talking stops with them. You have enough.
+- Partial — *The hatch stays open* — The hatch stays open and so does the duty officer's ear, so the next cell says nothing worth having. You get a street and a grudge. Tomorrow's paper may say the rest.
+
+**Talk to the ward** (`held.ward`)
+- Success — *The bed by the window* — The man in the bed by the window broke his arm at the mill and his patience with the foreman long before. Names, shifts, who signs what. The matron lets him talk; it keeps him still.
+- Partial — *Visiting hour* — The ward fills at two and every bed is a family, so you get half a story from the bed opposite before his wife arrives. A name and a street. The matron's look ends it.
+
+### 23.4 The four quarter blurbs (`Quarter.blurb`, ≤ 200; Coalport's are in `city-quarters.md` §2)
+
+| Quarter | Blurb |
+|---|---|
+| Duskwall · The Pass | The road up to the frontier: the checkpoint's barrier under the peaks, the lock-up beside it, the last inn before the pass, the infirmary under the spire and the sawmill on the river bend below. |
+| Duskwall · The Town | The town below the fortress, west of the market: the brewery's chimneys, the Signal Lamp, the station under its glass roof, and the square with the domed church where the town meets on Sundays. |
+| Ashford · The Wharf | The lower town across the river: the County Infirmary in its garden, the cattle pens and auction sheds, the police station by the Corn Exchange, the wharf below the bridge and the brewery's chimneys. |
+| Ashford · Station Road | The respectable town north of the river: the station's glass roof, the Town Hall clock, the theatre, the Corn Exchange, the park with its bandstand and the Press Club by the bridge. |
+
+The teaser lines of §2.3 are unchanged.
+
+### 23.5 Alt texts (≤ 160), written against the pictures (§21)
+
+| Asset id | Alt text |
+|---|---|
+| `scene.mission-speech` | A speaker in shirtsleeves on a timber platform with a loudspeaker horn, arm out over a crowd of flat caps at a shipyard; a hull on the stocks and cranes behind. |
+| `scene.mission-watch` | A man in a hat at a café window with a newspaper, a coffee and a notebook, watching two men in coats at a lit hotel doorway across a wet street at dusk. |
+| `scene.mission-posters` | A woman with a paste brush at a half-stripped poster on a brick wall at night, a man with rolled sheets looking back down the street; a bucket on the kerb. |
+| `scene.mission-sabotage` | A man in a flat cap crouched at a printing press in a dark print room, a hand lamp in one hand and the other on the drive wheel; stacks of paper, the door open. |
+| `scene.mission-theft` | A man in a dark overcoat lifting papers from an open filing cabinet in a dim office, eyes on a frosted door where a hatted shadow stands; a desk lamp, files. |
+| `portrait.street-enforcer` | A Vanguard street enforcer: a heavy-shouldered man in a flat cap and a rough dark jacket over an open collar, stubble, a bruised cheekbone, fists clenched. |
+| `portrait.vanguard-doorman` | The doorman at Beacon House: a big man in a dark double-breasted coat with the collar up, close-cropped hair, arms folded in leather gloves. |
+| `portrait.strike-picket` | A Collective strike picket: a young man in a knitted cap and a red scarf over a work jacket, his breath in the cold, a gloved hand on a blank placard's pole. |
+| `portrait.branch-inspector` | A Collective branch inspector: a neat man with round spectacles, a moustache and a pencil behind his ear, a grey suit and waistcoat, a notebook under his arm. |
+| `portrait.party-thug` | An Alliance party heavy: a man with slicked dark hair, a scar through one eyebrow and a toothpick in his teeth, a dark leather coat over a maroon roll-neck. |
+| `portrait.duty-officer` | The duty officer of the civic police: a grey-moustached man in a dark tunic and a peaked cap with a plain shield badge, a pen in his hand. |
+| `portrait.matron` (`nurse.png`) | The matron: a woman in a white nurse's cap, dark hair pinned back, a dark cape over a white collar and apron, looking straight at you. |
+| `portrait.kessler` (the constable) | A constable of the city police in plain clothes: a man in a fedora and a belted trench coat with the collar up, a grey moustache, a cigarette in his mouth. |
+
+The posters scene shows a crew with paste and a brush and **no knife** (the brief's knife was never drawn); the tram-shelter briefing now says *a scraper and ten minutes*. (Slice 6's Poster Night has its own scene, `event-poster-night.png`, already drawn.)
+
+### 23.6 The fourteen notes (`docs/tech/slice-5.md` §23)
+
+1. **Irongate's difficulty**: 20 (§23.1 #1).
+2. **The run-in formula**: 15 flat on tier 1 (§23.1 #2).
+3. **A police loss on legal work**: the cells (§23.1 #3).
+4. **Missions as `Location.missions[]`**, not a member of `Action` (ADR 0031): accepted. §19 Q1's suggestion is superseded; a mission is an `ActionDescriptor` of kind `mission`, seen as `speech` or `intelligence` by orders and Issues, or as its own illegal type.
+5. **Order titles carry `{city}`**, resolved at read to the residence city (the slice-4 fixes' m1 rule, `slice-4-fixes.md` §2): the slot-B mission order's title is ***Take on a mission anywhere in {city}***; `{city}` is allowed on any template and `{verbs}` only on a training one. §12.2 is reworded.
+6. **The Herald gets eight templates**, not ten: no `quarter-open` (no second quarter) and no `rival-pressure` (no home faction). §14 is reworded.
+7. **No knife.** The tram-shelter briefing reads *a scraper and ten minutes is all it takes you*; the posters brief in §21 reads *a scraper*; the picture has neither.
+8. **The mission order enters a member's rotation at Level 6** (`minLevel: 6`): orders are faction-wide *among members who can do them*. GDD §13.7 now says so.
+9. **"A quarter opens when the game sends you there"** is a view rule with nothing stored, and cannot fire in slice 5 (missions need Level 6, rival ground Level 10). §2.1 says so.
+10. **The data model**: the plan's slice-5 row (`encounters`; `jail` and `hospital` embedded) is built as the `encounters` and `stays` collections with pointers on the character (ADR 0032, 0033). Noted here; the plan's table is the architect's to amend.
+11. **No caught check after a Run** (nor after a loss): confirmed. *Wanted* + a Failure + a successful Run is not an arrest: you got away, and dropped it.
+12. **The unwritten content** is written (§23.2–§23.5).
+13. **Three taps the first time** (§23.1 #21).
+14. **Vocabulary** (§23.1 #22): *the duty officer*; *a lamp*; *in front of* reworded; *front door* allowed; the slice-6 texts brought into line.
+
+### 23.7 For QA
+
+The guards' allowances after this change: `qa.content`'s `front` list is unchanged (*front door* is already on it); `qa.slice2`'s list gains **front door** only. Nothing in slices 5 or 6 now uses *sergeant*, *torch* or *in front of*. Slice 6 will need **front page** (the Headline Story's Triumph) on both lists when it lands.

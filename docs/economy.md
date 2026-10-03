@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). **Slice 5** ("Risk"): tier-2 rates and the difficulty ladder, Heat's budget, run-ins by build, the caught check and the record, the cells and the infirmary, rival ground, the new PC sink (§19). Grows one slice ahead of the build |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). **Slice 5** ("Risk"): tier-2 rates and the difficulty ladder, Heat's budget, run-ins by build, the caught check and the record, the cells and the infirmary, rival ground, the new PC sink (§19). **Slice 6** ("Together"): Campaign Event roles against the tier rates, the fixture's floor on a city's opinion, Political Capital from events, favours as sinks (§20). Grows one slice ahead of the build |
 | **Sources** | GDD §5.2–5.5, §6.2–6.3, §6.5, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §14.11, §15.1–15.3, §15.4, §15.10, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md`, `slice-3-politics.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 3 Oct 2026 (slice 5, §19 added); 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
+| **Updated** | 3 Oct 2026 (slice 6, §20 added: events, the fixture, favours); 3 Oct 2026 (slice 5, §19 added); 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -404,7 +404,7 @@ Slice 4 adds no tier-1 rate. It adds the **first Iron sinks** (tickets, the move
 |---|---|---|---|
 | A third-class ticket | 20 (10 under the Tram Subsidy or the Tram Fare Hike; floor 5) | 2 %; a round trip 4 % | The visitor: about three round trips a week in the model, **~120 a week** |
 | Registering a residence | 500, both ways | About half a day's income; **11 % of the ~4,500 a reference player holds on day 5**, 4 % of the ~12,000 held on day 14 | Once; a second time if they go home |
-| A room in Irongate | 100 for 7 days (50 under the Evictions effect) | 1.5 % of a week's income | Optional; the once-a-day player is the one it pays (below) |
+| A room in Irongate | 100 for 7 days (50 under the Evictions effect); a renewal adds seven nights at the same price, at most fourteen paid ahead (QA m5) | 1.5 % of a week's income | Optional; the once-a-day player is the one it pays (below) |
 | The card school's stake | 20, returned on Partial | — | Optional, on one journey in seven |
 
 **Verdict:** the sinks are small next to income, on purpose (§18.1: Iron sinks are acceleration, and the balance has had nothing to buy for three slices). The move is the only one that is felt, and only on the day it is paid. The Iron balance keeps growing at about 90 % of its slice-3 rate; the wardrobe and the flat (slice 8) remain the sinks that matter. Nothing here is mandatory: a player who never travels pays nothing new.
@@ -563,7 +563,7 @@ Session shape (pillar 7): no tap is added. The receipt is shorter than the tiles
 
 ## 19. Slice 5: missions, Heat, run-ins, the record, the cells, the infirmary and rival ground
 
-Rules: `docs/design/slice-5-risk.md`; GDD §6.1, §6.4, §8.4, §8.5, §11, §13.1, §13.3, §14.11, §14.12, §19, §20. Slice 5 adds the **tier-2 rates** to the model (they were in §5.5 and never spent), a **difficulty ladder** against the stat the model already grows, and the first things that take Iron because of risk: paying off a run-in, bail, the infirmary. **Two GDD numbers were changed in this slice** and both are here: the §8.5 best-stat targets (raised to the model, Appendix C #15) and the caught check's trigger (Partial and Failure only, Appendix C #56); everything else is a pin.
+Rules: `docs/design/slice-5-risk.md`; GDD §6.1, §6.4, §8.4, §8.5, §11, §13.1, §13.3, §14.11, §14.12, §19, §20. Slice 5 adds the **tier-2 rates** to the model (they were in §5.5 and never spent), a **difficulty ladder** against the stat the model already grows, and the first things that take Iron because of risk: paying off a run-in, bail, the infirmary. **Two GDD numbers were changed in this slice** and both are here: the §8.5 best-stat targets (raised to the model, Appendix C #15) and the caught check's trigger (Partial and Failure only, Appendix C #56); everything else is a pin. **Settled with the architect (3 Oct 2026, `slice-5-risk.md` §23): no number in this section moves.** The Irongate missions are difficulty 20 (the +2 §19.2's ladder already assumed), a tier-1 tap on rival ground stays 15 % (§19.6's figure), and the five-minute decide window, a police loss on legal work being the cells and Health 30 in the cells change no rate.
 
 ### 19.1 The rates (tier 2)
 
@@ -659,3 +659,83 @@ A mission is two taps the first time and one after; a run-in is one or none; the
 | 54 | The police half the pool from *Noticed* | *Noticed* reads as a wall | A third from *Noticed*, half from *Hot* |
 | 56 | The caught check on Partial and Failure only | Marks too rare | The base rates |
 | — | Tier-2 Iron at ×2 lifts the reference day by ~40 % | Iron inflates before the Wardrobe (slice 8) has prices | Keep: it is the GDD's rate and the slice-5 sinks take 5–10 % back; price the Wardrobe against §19.3 |
+
+---
+
+## 20. Slice 6: Campaign Events, the fixture, favours and chat
+
+Rules: `docs/design/slice-6-together.md`; GDD §16.3, §16.2, §14.2, §6.5, §14.11, §19.1, §19.2. Slice 6 adds **one new kind of spend** (an event role: Energy spent at sign-up, paid at the start on a group result), **one new Political Capital source** (events, 3–15), **no Iron** (events pay none; bail posted is the prisoner's figure moved to nobody) and **no new rate on solo play**. Chat and presence have no numbers. **One GDD number was pinned against its first draft:** Political Capital from events halves after the first of the day (§20.4).
+
+### 20.1 What a role pays (per participant)
+
+| Role · Energy | Own roll | XP | Party XP by the outcome (Triumph / Success / Mixed / Fiasco) | Political Capital (first of the day) |
+|---|---|---|---|---|
+| Named · 15 | Success | 75 (+37 Rested) | 18 / 12 / 6 / 3 | 15 / 10 / 6 / 3 |
+| Named · 15 | Partial | 38 | the same (Party XP is the outcome's) | the same |
+| Named · 15 | Failure | 15 | the same | the same |
+| Named · 10 | Success | 50 | 12 / 8 / 4 / 2 | the same |
+| Hand · 5 | — (by the outcome) | 25 / 25 / 13 / 5 | 6 / 4 / 2 / 1 | the same |
+
+Per Energy a role pays the tier-2 XP rate (5) and, on a Success, the tier-2 Party XP rate (0.8); a Triumph lifts Party XP to 1.2 per Energy, the best rate in the game for 15 Energy, which is the co-op premium. A Fiasco still pays a fifth of the XP, a quarter of the Party XP and 3 Political Capital: committed Energy is never spent for nothing (§4.3).
+
+### 20.2 A reference day with events (300 Energy, day 7, home)
+
+| | Slice-5 sheet (§19.3) | One event a day (a 15-Energy role) | Three events a day (45 Energy of roles) |
+|---|---|---|---|
+| XP / day | ~1,860 | ~1,930 (**+4 %**) | ~2,080 (**+12 %**) |
+| Party XP / day | ~218 | ~233 (**+7 %**; a Success at *Fired up* and with the order's +25 % on one) | ~262 (**+20 %**) |
+| Political Capital / day | 5 (orders) + 1 (*One of Us*) | **+10** (16) | **+20** (26: 10 + 5 + 5) |
+| Opinion attributed / day | +1.45 | +1.45 − 0.07 (15 Energy off solo) + **~0.4** (a Rally's 1.5 × Success ÷ 4) ≈ **+1.8** | ≈ **+2.4** |
+| Iron / day | ~1,020 | ~990 (15 Energy off tier-1 Iron) | ~930 |
+
+**Milestones:** Level 10 stays day 5, Level 16 day 12; Rank 3 about **day 8.5** (was 9) with one event a day, **day 8** with three; Rank 4 about day 25 (was 27). **No §5.2 milestone moves by more than a day.** Iron falls a little (Energy moved off tier-1 taps pays no Iron at a rally), which is the right direction (§19.11).
+
+**Events against §5.5's "about 25 % of Party XP from outside missions":** orders ~30 % of the day (unchanged), events 6–17 % on top; the share from outside missions rises to 35–45 % for a member who joins an event a day. Accepted: the GDD's 25 % was written for a solo day, and the events' Party XP is what "come back for the group's events" is paid in. The lever, if rank pacing runs fast at scale, is the outcome multipliers (1.5 → 1.25 on Triumph), never the base.
+
+### 20.3 Opinion: events against solo play, and the branch of one
+
+| Case | Swing | Per member-Energy | Against a canvass (0.005 / E) |
+|---|---|---|---|
+| A lone member on the branch's canvass drive (10 Energy; Success with three volunteers) | 1.0 × 1 × 0.25 = **+0.25** | 0.025 | ×5 |
+| A full Rally, Success (45 Energy, four members) | **+1.5** | 0.033 | ×6.7 |
+| A full Rally, Triumph, in a close race on a tagged Issue | 1.5 × 1.5 × 1.25 × 1.5 = **+4.2** | 0.094 | ×19 |
+| A full Grand Rally, Triumph, four hands, close race, Issue | 2.0 × 1.5 × 1.25 × 1.25 × 1.5 = **+7.0** | 0.093 (75 Energy) | ×19 |
+
+So a co-op Energy point is worth five to twenty solo ones, and a member who joins three events a day about **doubles their opinion contribution for 15 % of their Energy** (§20.2). That is the intended shape (the group is where opinion is won; Torn's principle, not its system). It is bounded by **three starts a city a day** and **three open sign-ups a member**: a faction's event swing in one district is at most about 5 points a day under ordinary conditions and about 15 at the very best (three Triumphs with every bonus), against a 1 %-of-the-distance drift; rivals have the same tools. Flag (Appendix C #58): if events dominate at low population, lower the base swings; if the board is always full at scale, raise the starts.
+
+**The fixture's floor.** Two fixtures a faction a day (home and the capital) give any faction with one active member about +0.25 a day in each place for 10 Energy, and a branch of four about +1.0 to +1.5. At home that is morale (pinned near the cap anyway, §14.5); in the capital it is the difference between a district that drifts and one that moves. The fixture is where the capital's three-way race gets its daily pulse at low population.
+
+### 20.4 Political Capital
+
+| Source | Before slice 6 | With one event a day | With three |
+|---|---|---|---|
+| Orders · *One of Us* · seat | 5 + 1 + (10 seated) | the same | the same |
+| Events | — | **+10** (a Success) | **+20** (10 + 5 + 5) |
+| **A day, unseated** | 6 | **16** | **26** |
+| **A month** | ~180 | ~480 | ~780 |
+
+At the GDD's first draft (3–15 per event, no halving) three Successes a day paid 30 and three Triumphs 45: a month of **900–1,350**, past the 1,000 cap, which would make Political Capital meaningless as a price. With the halving a heavy event-goer reaches ~780 a month against sinks that grow with the slices (the Chair candidacy 25, petitions 10, patron favours 15–40, striking a mark 30, a proposal 20). Accepted; flagged (Appendix C #59) with the lever (two events a day, not a lower first rate).
+
+### 20.5 Favours
+
+| Favour | Cost | What it buys | Net to the economy |
+|---|---|---|---|
+| Bail posted | the prisoner's figure (100–1,600), paid by a mate | the prisoner's remaining minutes (10–60) and the payer +10 Party XP | an Iron sink of the same size as self-paid bail; **nothing moves between accounts**, so no transfer economy and nothing to farm |
+| A visit | 3 Energy | +10 Health and 5 minutes for the patient; +10 Party XP for the visitor | 3 Energy for 10 Party XP is **3.3 per Energy**, four times a canvass's 0.6; bounded by once per visitor per stay and three per stay, and by there being a patient. At low population a few a week; harmless at scale since every visit needs a stay |
+| A nudge | nothing | a chat line | — |
+
+### 20.6 Session shape (pillar 7)
+
+Joining is two taps; calling three; a result one on the next read; a favour two; chat is optional. The fixture settles at the boundary with the orders; a member's event settles 1–12 hours after it was called, with nobody present; sign-ups spend the Energy at the tap and never hold it; withdrawal is one tap until the hour before. Nothing in slice 6 requires the player at a set time, and the one clock a member reads (a countdown) asks nothing of them.
+
+### 20.7 Flags (GDD Appendix C)
+
+| # | Flag | Risk | Lever |
+|---|---|---|---|
+| 57 | Hands at Rank 1 | Four alts on every event | Count hands at half Energy in the share |
+| 58 | Three starts a city a day | Events dominate at low population, or the board is always full at scale | Base swings down, or starts up to five |
+| 59 | Political Capital halves after the first event | The cap still floods | Two events a day |
+| 60 | The fixture at the boundary | Members want an evening event | A second fixture at the Chair's hour (slice 7) |
+| 61 | Visits from anywhere | Reads as nothing | +5 from another city, +10 from the same |
+| 62 | Volunteers at 0.5 give a lone member a Success | Reads as a participation prize | Volunteers 0.4 |
+| — | Events' Party XP lifts the share from outside missions to 35–45 % | Rank pacing fast at scale | Triumph ×1.25 |

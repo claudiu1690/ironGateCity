@@ -225,7 +225,7 @@ Ministers · bodyguards · first class, cars and the night train · townhouses a
 | 2 | `items` (catalogue) | `origin`, `ambition {id, chapter}`, `inventory[]`, `equipment {slot: itemId}`, `homeCityId` |
 | 3 | `elections`, `candidacies`, `votes`, `officeTerms`, `ordinances` | `offices[]` (current), `endorsementsGiven[]` |
 | 4 | `influenceLedger`, `journeys`, `issues` | `residence {cityId, districtId}`, `currentCityId`, `journeyId` |
-| 5 | `encounters` | `heat {value, updatedAt}`, `record {points, history[]}`, `approachMemory {missionId: approach}`, `jail`, `hospital` |
+| 5 | `encounters`, `stays` | `heat {value, at}`, `health {damage, at}`, `record` (marks), `ways[]` (the remembered way), `held` and `runIn` pointers (ADR 0032, 0033) |
 | 6 | `campaignEvents` (roles embedded), `chatMessages` | `presence {locationId, seenAt}` |
 | 7 | `laws`, `nationalElections`, `recallPetitions` | — |
 | 8 | `dossierEntries`, `caseFiles`, `seasons` | `patrons {patronId: favour}`, `home`, `legacy[]` |
