@@ -220,3 +220,17 @@ Under the party card: *You live in Eastside, Irongate · move again from Monday*
 Help notes (tap the label, review 1 §5): *Where you live* (§6.1), *The Issues* (§7.1), *Who holds {place}* (the share note of review 2 §1.9 with *a home city never falls below half* replaced, in the capital, by *nobody holds a district until a party passes half*), *Close race* (*Three parties within ten points of each other here today. Party work in a close race pays +25 % Party XP, moves opinion +25 % and has better odds.*), *Comeback* (*A party that has just lost a district gets +5 % opinion a day on its work there, up to +30 %, until it wins it back or two weeks pass.*).
 
 British English, no exclamation marks, no percentages for odds, times in the player's local clock.
+
+## Added 3 Oct 2026 — the ground sash (the user asked for it)
+
+The user asked for a band in the faction's colour that cuts the corner of the scene art. Decided with the user: it says **whose ground this is**, not the player's own faction.
+
+- **Where:** a diagonal sash across the top-right corner of the big scene art only — the place sheet's header art and the result modal's picture (and the story/arrival art where it shows a place). Not on tickets, cards, lists or maps.
+- **What it shows:**
+  - In a home city: the faction that holds the city (its share is the largest).
+  - In Irongate: the faction leading **that district**.
+  - **Contested** (grey sash, the word *Contested*) when the place counts as a close race (§6 close race) or no faction leads.
+  - A party's **headquarters** always wears its own party's colour (members only act there).
+- **Look:** a printed band in the faction's colour token, the faction's small crest (the existing SVG) and its short name in the condensed caps face, a thin ink edge and a slight paper grain so it reads as part of the lithograph; about 26 % of the art's width along each edge on a phone, a little less on desktop; it never covers the result stamp (the stamp moves left if needed). Reduced motion: no animation; otherwise it slides in with the art (150 ms).
+- **Tap:** a one-line help note, e.g. *Collective ground: the Collective holds 70 % here.* / *Contested: no party is clearly ahead here.* (percentages of **opinion** are fine — they are not odds).
+- **Data:** the server already sends the city share / district state; the sash is drawn by the client from the faction colour tokens and crests. No new art.
