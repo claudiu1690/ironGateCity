@@ -118,7 +118,8 @@ export function selectHeadlines(
   return picked;
 }
 
-const PLACEHOLDER_RE = /\{([a-zA-Z]+)\}/g;
+// Slice 4: names may carry digits ({issue1Short}, {m1}).
+const PLACEHOLDER_RE = /\{([a-zA-Z][a-zA-Z0-9]*)\}/g;
 
 /** The `{…}` names used in a text. */
 export function placeholdersIn(text: string): string[] {

@@ -1,15 +1,30 @@
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
-import { BOOST, Character } from '@irongate/db';
-import type { CharacterDoc, CityDoc } from '@irongate/db';
-import { ENERGY, STANDING, cycleOf, dayKey, projectEnergy } from '@irongate/rules';
+import { BOOST, Character, District, IssueModel, Journey } from '@irongate/db';
+import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc } from '@irongate/db';
+import {
+  ENERGY,
+  RANK_FXP,
+  RESIDENCE,
+  STANDING,
+  TRAVEL,
+  WEEKDAY_NAMES,
+  cycleOf,
+  dayKey,
+  dayStart,
+  isMonday,
+  projectEnergy,
+  weekOf,
+  weekday,
+} from '@irongate/rules';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Auth } from '../auth';
 import { ensureCityDay, runCityDay } from '../services/cityDay';
 import { loadCharacter } from '../services/dayService';
 import { moraleOf, ordinanceIdOn, restedCapToday } from '../services/modifiers';
-import { residenceCityId } from '../services/residence';
+import { residenceCityId, residenceOf } from '../services/residence';
+import { groundswellOn } from '../services/modifiers';
 import { energyState } from '../services/views';
 import type { SessionUser } from '../trpc/context';
 import { applyCharacterSeed } from './characterSeed';
@@ -38,7 +53,19 @@ export interface DevPanelDeps {
   clock: DevClock;
 }
 
-const DEV_ACTIONS: readonly DevAction[] = ['hour', 'day', 'phase', 'boost', 'energy'];
+const DEV_ACTIONS: readonly DevAction[] = [
+  'hour',
+  'day',
+  'phase',
+  'boost',
+  'energy',
+  'arrive',
+  'monday',
+  'level10',
+  'irongate',
+  'live',
+];
+const weekdayOf = (day: number) => WEEKDAY_NAMES[weekday(day)];
 /**
  * Boost me: Rank 3 and One of Us at home, and PC for a declare and more. Higher Standing than the
  * operator `admin:boost` (Known) so a lone reviewer can top the poll: ward 150 ÷ 5 = 30 + 2 branch
@@ -99,11 +126,63 @@ async function statusFor(
   // Slice 4 (ADR 0026): the residence city, whose council and paper are the character's.
   const city = c ? await ensureCityDay(content, residenceCityId(c), now) : null;
   const energy = c
-    ? projectEnergy(energyState(c), now, ENERGY.max, restedCapToday(content, city, dayKey(now)))
+    ? projectEnergy(energyState(c), now, ENERGY.max, restedCapToday(content, city, dayKey(now), c.room))
     : null;
+  // Slice 4 (tech design §8.7): where, where you live, the capital's districts, the Issues.
+  const capitalId = content.nation.capitalId;
+  const districts = await District.find({ cityId: capitalId }).sort({ _id: 1 }).lean<DistrictDoc[]>();
+  const today = dayKey(now);
+  const r = c ? residenceOf(c) : null;
+  const resCity = r ? city : null;
+  const live = resCity?.issues?.weekDay === weekOf(today) ? resCity.issues.live : [];
+  const issueDocs = live.length
+    ? await IssueModel.find({ _id: { $in: live.map((l) => l.docId) } })
+        .sort({ order: 1 })
+        .lean<IssueDoc[]>()
+    : [];
+  const where: DevStatus['where'] = !c
+    ? null
+    : c.journey?.status === 'onTheWay'
+      ? {
+          train: {
+            to: c.journey.to,
+            toName: content.city(c.journey.to)?.name ?? c.journey.to,
+            minutesLeft: Math.max(0, Math.ceil((new Date(c.journey.arrivesAt).getTime() - now) / 60_000)),
+          },
+        }
+      : { cityId: c.cityId, cityName: content.city(c.cityId)?.name ?? c.cityId };
   return {
     character: c,
     status: {
+      where,
+      residence: r
+        ? {
+            cityName: content.city(r.cityId)?.name ?? r.cityId,
+            districtName: r.districtId
+              ? (content.district(r.districtId)?.quarter.name ?? r.districtId)
+              : null,
+            votesFrom: weekdayOf(r.votesFromDay),
+            standsFrom: weekdayOf(r.standsFromDay),
+            canMoveFrom: weekdayOf(r.canMoveFromDay),
+          }
+        : null,
+      capital: districts.map((d) => {
+        const g = groundswellOn(d, today);
+        return {
+          id: d._id,
+          name: content.district(d._id)?.quarter.name ?? d._id,
+          shares: d.opinion,
+          closeRace: d.state.battleground,
+          comeback: g ? `${content.faction(g.factionId).shortName} +${g.pct} %` : null,
+        };
+      }),
+      issues: issueDocs.map((d) => ({
+        name: content.issue(d.issueId)?.name ?? d.issueId,
+        placeName: d.districtId
+          ? (content.district(d.districtId)?.quarter.name ?? d.districtId)
+          : (content.city(d.cityId)?.name ?? d.cityId),
+        momentum: d.momentum,
+      })),
       hooks: true,
       now,
       utc: formatUtc(now),
@@ -156,6 +235,7 @@ async function runAction(
   deps: DevPanelDeps,
   action: DevAction,
   user: SessionUser | null,
+  body: { target?: unknown } = {},
 ): Promise<DevActionResult> {
   const { content, clock } = deps;
   const { status: before, character: c } = await statusFor(deps, user);
@@ -221,6 +301,72 @@ async function runAction(
           : `Already boosted · Energy ${ENERGY.max}`;
       break;
     }
+    case 'arrive': {
+      // On a train: the journey arrives now (the next read settles it, as the e2e hook).
+      const { home } = needCharacter();
+      if (home.journey?.status !== 'onTheWay') throw new DevRefusal(409, 'not on a train');
+      const at = new Date(clock.now());
+      await Journey.updateOne({ _id: home.journey.id, status: 'onTheWay' }, { $set: { arrivesAt: at } });
+      await Character.updateOne(
+        { _id: home._id, 'journey.id': home.journey.id },
+        { $set: { 'journey.arrivesAt': at } },
+      );
+      await loadCharacter(needCharacter().me, content, clock.now());
+      did = `Arrived in ${content.city(home.journey.to)?.name ?? home.journey.to}`;
+      break;
+    }
+    case 'monday': {
+      // Forward to the next Monday 00:01: last week's Issues resolve and two new are drawn.
+      const t0 = clock.now();
+      let d = dayKey(t0) + 1;
+      while (!isMonday(d)) d += 1;
+      clock.advance(dayStart(d) + 60_000 - t0);
+      moved = true;
+      break;
+    }
+    case 'level10': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const set = await applyCharacterSeed(
+        doc,
+        {
+          ...(doc.level < TRAVEL.level ? { level: TRAVEL.level } : {}),
+          ...(doc.rank < RESIDENCE.rank ? { fxp: RANK_FXP[RESIDENCE.rank - 1]! } : {}),
+        },
+        clock.now(),
+      );
+      did =
+        Object.keys(set).length > 0
+          ? `Level ${TRAVEL.level}, Rank ${Math.max(doc.rank, RESIDENCE.rank)}`
+          : 'Already Level 10';
+      break;
+    }
+    case 'irongate': {
+      // No ticket, no card: the character simply stands in the capital.
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      await applyCharacterSeed(doc, { cityId: content.nation.capitalId }, clock.now());
+      did = `Now in ${content.capitalCity().name}`;
+      break;
+    }
+    case 'live': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const target = String(body.target ?? '');
+      const capital = content.nation.capitalId;
+      // eslint-disable-next-line no-restricted-properties -- 'home' is the faction's home
+      const home = doc.homeCityId;
+      const residence =
+        target === 'home'
+          ? { cityId: home, districtId: null }
+          : content.district(target)?.city.id === capital
+            ? { cityId: capital, districtId: target }
+            : null;
+      if (!residence) throw new DevRefusal(400, 'target is a capital district id or "home"');
+      await applyCharacterSeed(doc, { residence }, clock.now());
+      did = `Lives in ${residence.districtId ? content.district(residence.districtId)!.quarter.name : content.city(residence.cityId)!.name}`;
+      break;
+    }
     case 'energy': {
       const { me } = needCharacter();
       const { doc } = await loadCharacter(me, content, clock.now());
@@ -254,7 +400,12 @@ export function registerDevPanel(app: FastifyInstance, deps: DevPanelDeps): void
         return reply.code(404).send({ error: `no dev action "${request.params.action}"` });
       }
       try {
-        return await runAction(deps, action, await sessionUser(deps.auth, request));
+        return await runAction(
+          deps,
+          action,
+          await sessionUser(deps.auth, request),
+          (request.body ?? {}) as { target?: unknown },
+        );
       } catch (err) {
         if (err instanceof DevRefusal) return reply.code(err.statusCode).send({ error: err.message });
         throw err;

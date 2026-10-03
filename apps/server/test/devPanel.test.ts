@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { getContent } from '@irongate/content';
 import { Character, City, PaperEntry, mongoose, nativeDb } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
@@ -17,7 +18,18 @@ import { arriveOverHttp, resetCity, setupDb, teardownDb, testEnv } from './helpe
  */
 
 const ORIGIN = 'http://localhost:5173';
-const ACTIONS = ['hour', 'day', 'phase', 'boost', 'energy'] as const;
+const ACTIONS = [
+  'hour',
+  'day',
+  'phase',
+  'boost',
+  'energy',
+  'arrive',
+  'monday',
+  'level10',
+  'irongate',
+  'live',
+] as const;
 /** Tuesday 29 September 2026, 09:00 UTC: Coalport cycle day 3 (the polls, day 2 of 3). */
 const BASE = Date.UTC(2026, 8, 29, 9);
 
@@ -67,6 +79,13 @@ describe('dev panel refused when the test hooks are off', () => {
     const after = (await app.inject({ method: 'GET', url: '/api/trpc/health.ping' })).json().result.data.now;
     // The real clock only: nowhere near a day on.
     expect(after - before).toBeLessThan(60_000);
+  });
+
+  it('the slice-4 hooks do not exist either', async () => {
+    for (const url of ['/api/test/journey', '/api/test/character', '/api/test/clock', '/api/test/issues']) {
+      const res = await app.inject({ method: 'POST', url, payload: { arriveNow: true } });
+      expect(res.statusCode, url).toBe(404);
+    }
   });
 
   it('nothing dev-only is in the tRPC router', () => {
@@ -237,5 +256,135 @@ describe('dev panel with the test hooks on', () => {
   it('the clock is the one every procedure reads', async () => {
     const ping = await app.inject({ method: 'GET', url: '/api/trpc/health.ping' });
     expect(ping.json().result.data.now).toBe(Date.UTC(2026, 9, 4, 1, 1));
+  });
+});
+
+describe('dev panel, slice 4 (tech design §8.6–§8.7)', () => {
+  let app: FastifyInstance;
+  let cookie = '';
+  const post = (url: string, payload: Record<string, unknown> = {}) =>
+    app.inject({ method: 'POST', url, headers: { 'content-type': 'application/json', cookie }, payload });
+  const status = () =>
+    app
+      .inject({ method: 'GET', url: '/api/test/dev/status', headers: { cookie } })
+      .then((r) => r.json() as DevStatus);
+  const ok = async (action: string, payload: Record<string, unknown> = {}) => {
+    const res = await post(`/api/test/dev/${action}`, payload);
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json() as DevActionResult;
+  };
+  const character = () => Character.findOne({ name: 'Slice Four' }).lean<CharacterDoc>();
+
+  beforeAll(async () => {
+    const env = { ...testEnv(uri), E2E_TEST_HOOKS: true };
+    app = await buildApp({
+      env,
+      auth: createAuth(env, nativeDb(), mongoose.connection.getClient()),
+      content: getContent(),
+      now: () => BASE,
+    });
+    await app.ready();
+    const signUp = await app.inject({
+      method: 'POST',
+      url: '/api/auth/sign-up/email',
+      headers: { 'content-type': 'application/json', origin: ORIGIN },
+      payload: {
+        name: 'Slice Four',
+        email: `four-${Date.now()}@example.test`,
+        password: 'correct-horse-battery',
+      },
+    });
+    cookie = cookieOf(signUp.headers['set-cookie']);
+    await arriveOverHttp(app, cookie);
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('Level 10 (and Rank 2); the status says where you are and where you live', async () => {
+    const r = await ok('level10');
+    expect(r.line).toBe('Level 10, Rank 2');
+    const c = (await character())!;
+    expect([c.level, c.rank]).toEqual([10, 2]);
+    expect(r.status.where).toEqual({ cityId: 'coalport', cityName: 'Coalport' });
+    expect(r.status.residence).toMatchObject({ cityName: 'Coalport', districtName: null });
+    expect(r.status.issues.length).toBeGreaterThan(0);
+  });
+
+  it('on a train: the status counts the minutes; Arrive now (the e2e hook and the button)', async () => {
+    const board = await post('/api/trpc/travel.board', { to: 'irongate', idempotencyKey: randomUUID() });
+    expect(board.statusCode, board.body).toBe(200);
+    expect((await status()).where).toEqual({
+      train: { to: 'irongate', toName: 'Irongate', minutesLeft: 12 },
+    });
+    const hook = await post('/api/test/journey', { arriveNow: true });
+    expect(hook.statusCode).toBe(200);
+    const r = await ok('arrive').catch(() => null);
+    // The hook already made it due; the button settles it (or finds it arrived).
+    expect(r?.status.where ?? (await status()).where).toEqual({ cityId: 'irongate', cityName: 'Irongate' });
+    expect((await post('/api/test/journey', { arriveNow: true })).statusCode).toBe(409);
+    expect((await status()).capital).toHaveLength(5);
+  });
+
+  it('Live in… a district, then home; Take me to Irongate', async () => {
+    const r = await ok('live', { target: 'irongate.eastside' });
+    expect(r.line).toBe('Lives in Eastside');
+    expect(r.status.residence).toMatchObject({ cityName: 'Irongate', districtName: 'Eastside' });
+    expect((await post('/api/test/dev/live', { target: 'atlantis' })).statusCode).toBe(400);
+    expect((await ok('live', { target: 'home' })).status.residence?.districtName).toBeNull();
+    await Character.updateOne({ name: 'Slice Four' }, { $set: { cityId: 'coalport' } });
+    expect((await ok('irongate')).status.where).toEqual({ cityId: 'irongate', cityName: 'Irongate' });
+  });
+
+  it('Next Monday: the clock to Monday 00:01, the Issues drawn; the e2e clock hook to Monday 09:00', async () => {
+    const r = await ok('monday');
+    expect(r.status.utc).toMatch(/^Monday \d+ Oct 00:01 UTC$/);
+    expect(r.status.issues).toHaveLength(2);
+    const c = await post('/api/test/clock', { advanceTo: { weekday: 'monday' } });
+    expect(c.statusCode).toBe(200);
+    const now = c.json().now as number;
+    expect(new Date(now).getUTCDay()).toBe(1);
+    expect(new Date(now).getUTCHours()).toBe(9);
+    // The first Monday 09:00 after now: the same Monday, as the cycle-day hook does.
+    expect(now - r.status.now).toBe(9 * 3_600_000 - 60_000);
+  });
+
+  it('the Issues hook: the live Issues of a city this week, set or cleared', async () => {
+    const set = await post('/api/test/issues', {
+      cityId: 'coalport',
+      issueIds: ['issue.mill-strike', 'issue.harbour-rates'],
+    });
+    expect(set.statusCode, set.body).toBe(200);
+    expect(set.json().live).toEqual(['issue.mill-strike', 'issue.harbour-rates']);
+    const cleared = await post('/api/test/issues', { cityId: 'coalport', issueIds: [] });
+    expect(cleared.json().live).toEqual([]);
+    expect(
+      (await post('/api/test/issues', { cityId: 'coalport', issueIds: ['issue.tram-fares'] })).statusCode,
+    ).toBe(400);
+    expect((await post('/api/test/issues', { cityId: 'clearwater', issueIds: [] })).statusCode).toBe(400);
+  });
+
+  it('the character hook: level, cityId, a residence with every window open', async () => {
+    const res = await post('/api/test/character', {
+      level: 12,
+      cityId: 'irongate',
+      residence: { cityId: 'irongate', districtId: 'irongate.old-town' },
+      irongateSuccesses: 30,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const c = (await character())!;
+    expect([c.level, c.cityId, c.journey]).toEqual([12, 'irongate', null]);
+    expect(c.residence).toEqual({
+      cityId: 'irongate',
+      districtId: 'irongate.old-town',
+      sinceDay: 0,
+      votesFromDay: 0,
+      standsFromDay: 0,
+      canMoveFromDay: 0,
+    });
+    expect(c.localStanding.find((s) => s.cityId === 'irongate')?.successes).toBe(30);
+    expect(
+      (await post('/api/test/character', { residence: { cityId: 'irongate', districtId: null } })).statusCode,
+    ).toBe(400);
   });
 });

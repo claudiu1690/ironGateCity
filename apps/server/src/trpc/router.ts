@@ -7,6 +7,8 @@ import { councilRouter } from './routers/council';
 import { healthRouter } from './routers/health';
 import { jobRouter } from './routers/job';
 import { paperRouter } from './routers/paper';
+import { residenceRouter } from './routers/residence';
+import { travelRouter } from './routers/travel';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -19,6 +21,9 @@ export const appRouter = router({
   paper: paperRouter,
   ambition: ambitionRouter,
   council: councilRouter,
+  // Slice 4.
+  travel: travelRouter,
+  residence: residenceRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { residenceCtx } from './residence';
-import { Character, City } from '@irongate/db';
-import type { CharacterDoc, CityDoc } from '@irongate/db';
+import { Character } from '@irongate/db';
+import type { CharacterDoc } from '@irongate/db';
 import {
   addToTally,
   advanceOrders,
@@ -61,6 +61,9 @@ export async function takeJob(deps: {
       const c = await Character.findById(loaded.doc._id).session(session).lean<CharacterDoc>();
       if (!c) throw new Error('character disappeared');
       if (c.day.settled !== today) throw new DayChanged();
+      // Slice 4 (tech design §8.2): not on a train; at the job's location.
+      if (c.journey?.status === 'onTheWay')
+        throw new GameError('IN_TRANSIT', { arrivesAt: new Date(c.journey.arrivesAt).getTime() });
       if (c.cityId !== jobCity)
         throw new GameError('WRONG_CITY', { cityId: c.cityId, jobCityId: jobCity }, 'BAD_REQUEST');
       if (c.job?.id === job.id) throw new GameError('ALREADY_IN_JOB', { jobId: job.id }, 'BAD_REQUEST');
@@ -68,9 +71,6 @@ export async function takeJob(deps: {
       if (lock) throw new GameError('JOB_LOCKED', { ...lock });
 
       const switching = c.job !== null;
-      // Slice 4 (tech design §8.2): the job's city (the one the character stands in).
-      const cityState = await City.findById(jobCity).session(session).lean<CityDoc>();
-
       const adv = advanceOrders(
         toOrdersState(c.orders),
         content.ordersOf(c.factionId),
@@ -120,7 +120,8 @@ export async function takeJob(deps: {
         : null;
       return {
         branchEndorsement,
-        character: toCharacterView(updated, now, content, loaded.editionReadAt, { city: cityState }),
+        // The HUD's Rested cap is the residence city's (ADR 0030 §5).
+        character: toCharacterView(updated, now, content, loaded.editionReadAt, { city: loaded.city }),
         job: jobView(content, updated, today)!,
         outcome: {
           switched: switching,

@@ -1,6 +1,8 @@
 /**
  * The scheduled-jobs process (a second Railway/Fly service from the same image).
  *
+ * Slice 4: the `journey-arrive` job (ADR 0025), the tidy arrival of a journey nobody came back to.
+ *
  * Slice 3: the `city-day` job (ADR 0017) counts elections, closes nominations, divides councils and
  * applies the morale drift at 00:01 UTC, and once at start. The game stays correct without this
  * process: every request settles its home city's day first (the lazy path); the job spares the
@@ -17,6 +19,7 @@ import { APP_VERSION } from './app';
 import { startDb } from './db';
 import { loadDotEnv, loadEnv } from './env';
 import { scheduleCityDay } from './jobs/cityDay';
+import { defineJourneyArrive } from './jobs/journeyArrive';
 import { flushSentry, initSentry } from './sentry';
 
 loadDotEnv();
@@ -30,6 +33,8 @@ const agenda = new Agenda({
   backend: new MongoBackend({ mongo: nativeDb() }),
   processEvery: '30 seconds',
 });
+// Slice 4 (ADR 0025): defined before start so a due arrival is picked up at once.
+defineJourneyArrive(agenda, getContent(), log);
 await agenda.start();
 await scheduleCityDay(agenda, getContent(), log);
 log(`started (version ${APP_VERSION}), polling every 30 seconds`);

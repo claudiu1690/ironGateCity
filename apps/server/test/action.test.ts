@@ -6,7 +6,16 @@ import type { ActionResult, OpinionShares } from '@irongate/rules';
 import type { TRPCError } from '@trpc/server';
 import { Types } from 'mongoose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { callerFor, freshCharacter, gameData, setupDb, teardownDb, testClock, noOrdinance } from './helpers';
+import {
+  callerFor,
+  freshCharacter,
+  gameData,
+  noIssues,
+  setupDb,
+  teardownDb,
+  testClock,
+  noOrdinance,
+} from './helpers';
 
 // Review 1 (§13.7): slot C now rotates Train once · Six wins · Five attempts (day mod 3), so day 271
 // (29 Sep) has Six wins, which any Success advances. These tests run on Monday 19 October 2026, day
@@ -22,6 +31,8 @@ const collective = async () => (await City.findById('coalport').lean())!.opinion
 
 beforeAll(async () => {
   await setupDb('action-test');
+  // Slice 4: these numbers predate the Issues of the Week.
+  await noIssues();
 });
 afterAll(teardownDb);
 

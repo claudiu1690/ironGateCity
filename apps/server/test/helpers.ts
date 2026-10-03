@@ -1,9 +1,14 @@
 import { getContent } from '@irongate/content';
 import {
+  Award,
   Candidacy,
   Character,
   City,
+  Contribution,
+  District,
   Election,
+  InfluenceLedger,
+  IssueModel,
   OfficeTerm,
   OrderPaper,
   Vote,
@@ -96,21 +101,50 @@ export async function rewindCityIfAhead(cityId: string, now: number): Promise<vo
   await resetCity(cityId);
 }
 
+/**
+ * Slice 4: the capital joins every city-day run (runCityDay). Test files jump hundreds of days
+ * between tests, and a capital settled far behind would catch up boundary by boundary (each a
+ * transaction), so a capital ahead of `now` or more than 30 days behind it starts again.
+ */
+export async function keepCapitalNear(now: number, cityId = 'irongate'): Promise<void> {
+  const city = await City.findById(cityId).lean();
+  const today = dayKey(now);
+  if (!city?.world) return;
+  if (city.world.settledDay > today || city.world.settledDay < today - 30) await resetCity(cityId);
+}
+
 /** A city with no political state: the baseline meter, no world (the next touch bootstraps it). */
 export async function resetCity(cityId: string): Promise<void> {
-  const prefix = new RegExp(`^${cityId}:`);
+  // Slice 4: a capital district's elections are "irongate.eastside:4146".
+  const prefix = new RegExp(`^${cityId}[.:]`);
   await Promise.all([
     Election.deleteMany({ cityId }),
     Candidacy.deleteMany({ cityId }),
     Vote.deleteMany({ electionId: prefix }),
     OfficeTerm.deleteMany({ cityId }),
     OrderPaper.deleteMany({ cityId }),
+    // Slice 4: the Issues, the ledger, the totals, the awards and the capital's districts.
+    IssueModel.deleteMany({ cityId }),
+    InfluenceLedger.deleteMany({ cityId }),
+    Contribution.deleteMany({ cityId }),
+    Award.deleteMany({ cityId }),
+    District.deleteMany({ cityId }),
   ]);
+  const districted = getContent().isDistricted(cityId);
   await City.updateOne(
     { _id: cityId },
     {
-      $set: { opinion: getContent().city(cityId)!.baselineOpinion },
-      $unset: { world: 1, morale: 1, moraleLog: 1, council: 1, ordinance: 1, ordinanceHistory: 1 },
+      ...(districted ? {} : { $set: { opinion: getContent().city(cityId)!.baselineOpinion } }),
+      $unset: {
+        world: 1,
+        morale: 1,
+        moraleLog: 1,
+        council: 1,
+        ordinance: 1,
+        ordinanceHistory: 1,
+        issues: 1,
+        ...(districted ? { opinion: 1 } : {}),
+      },
     },
   );
 }
@@ -152,6 +186,7 @@ export async function seedRecruit(
   const factionId = overrides.factionId ?? 'collective';
   const faction = content.faction(factionId);
   await rewindCityIfAhead(faction.homeCityId, now);
+  await keepCapitalNear(now);
   const answers = content.origin.reference;
   const r = resolveOrigin({ origin: content.originSpec, answers, faction });
   if (!r.ok) throw new Error(r.reason);
@@ -236,4 +271,19 @@ export async function arriveOverHttp(
   await post('arrival.start', { avatarId: 'avatar.man-30s' });
   for (const a of getContent().origin.reference) await post('arrival.answer', a);
   await post('arrival.join', { factionId });
+}
+
+/**
+ * Slice 4: slice 1–3 tests that pin opinion, reward and ticket numbers in the home cities predate
+ * the Issues of the Week (+50 % opinion when tagged, an effect for the week). For the rest of the
+ * file the cities draw none, and any already drawn are cleared.
+ */
+export async function noIssues(...cityIds: string[]): Promise<void> {
+  const ids = cityIds.length > 0 ? cityIds : ['coalport', 'duskwall', 'ashford'];
+  for (const id of ids) (cityDayHooks.noIssues ??= new Set()).add(id);
+  await IssueModel.deleteMany({ cityId: { $in: ids } });
+  await City.updateMany(
+    { _id: { $in: ids }, issues: { $exists: true } },
+    { $set: { 'issues.live': [], 'issues.effects': [] } },
+  );
 }

@@ -4,14 +4,16 @@ import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
   DIRECTIVES,
   ENERGY,
+  CLOSE_RACE,
+  COMEBACK,
   FIRED_UP,
   NO_MODIFIERS,
   actionEnergy,
-  effect,
   itemSpec,
   orderDoneFxp,
   projectEnergy,
   restedCapFor,
+  sourcesOf,
   trainingCost,
   trainingEnergy,
   usesSuccessText,
@@ -19,11 +21,11 @@ import {
 import type {
   ActionResult,
   BonusTag,
-  CityModifiers,
   DailyTally,
   EnergyProjection,
   EnergyState,
   GainsResult,
+  Modifiers,
   OrderEffect,
   OrdersState,
   RewardLine,
@@ -52,8 +54,16 @@ interface Common {
   orders: { before: OrdersState; after: OrdersState; completed: string[]; allDone: boolean };
   tally: DailyTally;
   /** Slice 3: the modifiers the action ran under, the city, a morale crossing, the branch's endorsement. */
-  modifiers?: CityModifiers;
+  modifiers?: Modifiers;
+  /** The residence city (the HUD's Rested cap). */
   city?: CityDoc | null;
+  /** Slice 4 (ADR 0030 §5): the Rested cap of the residence and the room. */
+  restedCap?: number;
+  /** Slice 4: the meter the action moved (a district, or the city). */
+  place?: { placeId: string; placeName: string };
+  /** Slice 4: the Issues' momentum this action added; the scoreboard line after it. */
+  issues?: NonNullable<ActionResult['effects']['issues']>;
+  scoreboard?: ActionResult['effects']['scoreboard'];
   morale?: ActionResult['effects']['morale'];
   branchEndorsement?: ActionResult['effects']['branchEndorsement'];
 }
@@ -99,7 +109,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
   const { content, located, before, after, energy } = i;
   const { city, location, action } = located;
   const m = i.modifiers ?? NO_MODIFIERS;
-  const energyAfter = projectEnergy(energy.after, i.now, ENERGY.max, restedCapFor(m));
+  const energyAfter = projectEnergy(energy.after, i.now, ENERGY.max, i.restedCap ?? restedCapFor(m));
   const bonusTags: BonusTag[] = [];
   if (energy.restedUsed > 0) {
     // §6.3 modal tag: "Rested: 20 of 30 Energy, +33 % XP and Iron" (training: XP only).
@@ -144,32 +154,40 @@ export function buildActionResult(i: ResultInput): ActionResult {
       bonusTags.push({ id: 'standing', label: standingBonus.label, note: odds(standingBonus.value) });
     const firstDay = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === 'first-day');
     if (firstDay) bonusTags.push({ id: 'first-day', label: firstDay.label, note: odds(firstDay.value) });
-    // Slice 3 (tech design §10.2): one tag per ordinance or state that applied.
-    const ord = m.ordinance;
-    const ordCheck = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === ord?.id);
-    if (ord && ordCheck) bonusTags.push({ id: ord.id, label: ord.name, note: odds(ordCheck.value) });
-    if (ord && effect(m, 'energyDelta', action.type) && 'energy' in action)
-      bonusTags.push({
-        id: ord.id,
-        label: ord.name,
-        note: `${actionEnergy(action.energy, action.type, m)} Energy`,
-      });
-    if (ord && r.rewards.iron.parts?.some((p) => p.id === ord.id))
-      bonusTags.push({ id: ord.id, label: ord.name, note: `+${effect(m, 'ironPct')!.value} % Iron` });
-    if (ord && r.rewards.fxp.parts?.some((p) => p.id === ord.id))
-      bonusTags.push({ id: ord.id, label: ord.name, note: `+${effect(m, 'fxpPct')!.value} % Party XP` });
-    if (ord && effect(m, 'standingMultiplier') && r.standing.after > r.standing.before)
-      bonusTags.push({ id: ord.id, label: ord.name, note: 'reputation ×2' });
-    if (ord && effect(m, 'swingPct', action.type))
-      bonusTags.push({
-        id: ord.id,
-        label: ord.name,
-        note: `+${effect(m, 'swingPct', action.type)!.value} % opinion`,
-      });
+    // Slice 4 (ADR 0030, tech design §10.1): the place's tags first (Issue, Close race, Comeback).
+    for (const t of r.issues ?? [])
+      bonusTags.push({ id: `issue:${t.issueId}`, label: `Issue: ${t.name}`, note: 'opinion +50 %' });
+    const closeRace = r.attempts.at(-1)?.check.bonuses.some((b) => b.id === CLOSE_RACE.id);
+    if (closeRace)
+      bonusTags.push({ id: CLOSE_RACE.id, label: CLOSE_RACE.label, note: '+25 % Party XP · better odds' });
+    const comeback = r.opinionFactors?.find((f) => f.id === COMEBACK.id);
+    if (comeback) bonusTags.push({ id: COMEBACK.id, label: COMEBACK.label, note: `+${comeback.pct} %` });
+    // Slice 3 (tech design §10.2): one tag per source (an ordinance, an Issue effect) that applied.
+    for (const src of sourcesOf(m)) {
+      const own = <K extends string>(kind: K, actionType?: string) =>
+        src.effects.find((e) => e.kind === kind && (!('actionType' in e) || e.actionType === actionType)) as
+          { value: number } | undefined;
+      const tag = (note: string) => bonusTags.push({ id: src.id, label: src.name, note });
+      const check = r.attempts.at(-1)?.check.bonuses.find((b) => b.id === src.id);
+      if (check) tag(odds(check.value));
+      if (own('energyDelta', action.type) && 'energy' in action)
+        tag(`${actionEnergy(action.energy, action.type, m)} Energy`);
+      if (r.rewards.iron.parts?.some((p) => p.id === src.id)) tag(`+${own('ironPct')!.value} % Iron`);
+      if (r.rewards.fxp.parts?.some((p) => p.id === src.id)) tag(`+${own('fxpPct')!.value} % Party XP`);
+      if (own('standingMultiplier') && r.standing.after > r.standing.before) tag('reputation ×2');
+      const swing = own('swingPct', action.type);
+      if (swing) tag(`+${swing.value} % opinion`);
+    }
     if (r.rewards.fxp.parts?.some((p) => p.id === FIRED_UP.id))
       bonusTags.push({ id: FIRED_UP.id, label: FIRED_UP.label, note: '+10 % Party XP' });
     if (i.opinion) {
-      opinion = { cityId: city.id, factionId: before.factionId, delta: r.rewards.opinion, ...i.opinion };
+      opinion = {
+        cityId: city.id,
+        ...(i.place ? { placeId: i.place.placeId, placeName: i.place.placeName } : {}),
+        factionId: before.factionId,
+        delta: r.rewards.opinion,
+        ...i.opinion,
+      };
     }
     standing = {
       before: namedStanding(content, city.id, r.standing.before),
@@ -197,8 +215,9 @@ export function buildActionResult(i: ResultInput): ActionResult {
       detail: `${row.cost} Energy · always works`,
     }));
     stat = r.stat;
-    if (m.ordinance && effect(m, 'trainingEnergyPct'))
-      bonusTags.push({ id: m.ordinance.id, label: m.ordinance.name, note: `${r.energy.cost} Energy` });
+    for (const src of sourcesOf(m))
+      if (src.effects.some((e) => e.kind === 'trainingEnergyPct'))
+        bonusTags.push({ id: src.id, label: src.name, note: `${r.energy.cost} Energy` });
     // ×1 only (§8.5); review 3: the repeat button names the action's verb ("Study again · 46 Energy").
     again = {
       cost1: trainingEnergy(trainingCost(r.stat.after), m),
@@ -263,6 +282,8 @@ export function buildActionResult(i: ResultInput): ActionResult {
       hooks: [],
       morale: i.morale ?? null,
       branchEndorsement: i.branchEndorsement ?? null,
+      ...(i.issues && i.issues.length > 0 ? { issues: i.issues } : {}),
+      ...(i.scoreboard ? { scoreboard: i.scoreboard } : {}),
     },
     today: i.tally,
     again,

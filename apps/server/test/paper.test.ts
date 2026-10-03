@@ -1,13 +1,24 @@
 import { randomUUID } from 'node:crypto';
 import { Character } from '@irongate/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { arrive, callerFor, freshCharacter, newUser, setupDb, teardownDb, testClock } from './helpers';
+import {
+  arrive,
+  callerFor,
+  freshCharacter,
+  newUser,
+  noIssues,
+  setupDb,
+  teardownDb,
+  testClock,
+} from './helpers';
 
 const H = 3_600_000;
 const CANVASS = { actionId: 'coalport.mill-gate.canvass', locationId: 'coalport.mill-gate' } as const;
 
 beforeAll(async () => {
   await setupDb('paper-test');
+  // Slice 4: these editions predate the Issues of the Week.
+  await noIssues();
 });
 afterAll(teardownDb);
 

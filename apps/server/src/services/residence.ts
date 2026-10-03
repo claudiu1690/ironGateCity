@@ -42,21 +42,38 @@ export const residenceCityId = (c: ResidenceSource): string => residenceOf(c).ci
 export interface ResidenceSpec {
   city: NonNullable<ReturnType<GameContent['city']>>;
   offset: number;
-  /** The home faction of the residence city (its council's branch). */
-  home: FactionId;
+  /**
+   * The home faction of the residence city (its council's branch); null in the capital, where every
+   * faction stands (ADR 0027).
+   */
+  home: FactionId | null;
+  /** The branch the character belongs to there: the home faction at home, their own in the capital. */
   faction: ReturnType<GameContent['faction']>;
-  /** Where the character votes: the home city, or (slice 4, T17) a capital district. */
+  /** Where the character votes: the home city, or a capital district. */
   place: { id: string; name: string; kind: 'home' | 'district' };
 }
 
 /**
- * The residence's council: the city, its cycle offset, its home faction and the place voted in.
- * Slices 1–3: the residence is the home city. The capital's politics (a district place, no home
- * faction) come with T17; until then a capital residence has no election to show.
+ * The residence's council: the city, its cycle offset, its home faction and the place voted in: the
+ * home city, or in the capital the district registered in (ADR 0026, 0027).
  */
-export function residenceSpec(content: GameContent, c: ResidenceSource): ResidenceSpec {
+export function residenceSpec(
+  content: GameContent,
+  c: ResidenceSource & Partial<Pick<CharacterDoc, 'factionId'>>,
+): ResidenceSpec {
   const r = residenceOf(c);
   const city = content.city(r.cityId);
+  if (city?.council && content.isDistricted(city.id) && r.districtId && c.factionId) {
+    const district = content.district(r.districtId);
+    if (!district) throw gameError('PRECONDITION_FAILED', 'ELECTION_NOT_READY');
+    return {
+      city,
+      offset: city.council.offset,
+      home: null,
+      faction: content.faction(c.factionId),
+      place: { id: r.districtId, name: district.quarter.name, kind: 'district' },
+    };
+  }
   if (!city?.council || !city.homeFactionId) throw gameError('PRECONDITION_FAILED', 'ELECTION_NOT_READY');
   const faction = content.faction(city.homeFactionId);
   return {
@@ -76,11 +93,17 @@ export function jobCityOf(content: GameContent, c: Pick<CharacterDoc, 'job'>): s
 }
 
 /**
- * Tech design §11.1: whose paper the edition is. Until the Herald exists for visitors (T15), the
- * residence city's.
+ * Tech design §11.1 (design §19 Q6): whose paper the edition is: the Herald when it is printed with
+ * the character in the capital or on a train to it; otherwise the residence city's.
  */
-export function paperCityFor(c: ResidenceSource, _today: DayKey): string {
-  return residenceCityId(c);
+export function paperCityFor(
+  content: GameContent,
+  c: ResidenceSource & Partial<Pick<CharacterDoc, 'cityId' | 'journey'>>,
+  _today: DayKey,
+): string {
+  const capital = content.nation.capitalId;
+  const there = c.journey?.status === 'onTheWay' ? c.journey.to : c.cityId;
+  return there === capital ? capital : residenceCityId(c);
 }
 
 /**

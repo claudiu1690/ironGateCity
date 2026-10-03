@@ -7,13 +7,15 @@ import { randomUUID } from 'node:crypto';
 import { getContent } from '@irongate/content';
 import { Candidacy, City, Election, OfficeTerm, OrderPaper } from '@irongate/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { resetCity, setupDb, teardownDb, testClock } from './helpers';
+import { resetCity, noIssues, setupDb, teardownDb, testClock } from './helpers';
 import { at, doTodaysOrders, key, nextCycleDay, player } from './politics.helpers';
 
 const content = getContent();
 
 beforeAll(async () => {
   await setupDb('cycle-test');
+  // Slice 4: these numbers predate the Issues of the Week.
+  await noIssues();
 });
 afterAll(teardownDb);
 

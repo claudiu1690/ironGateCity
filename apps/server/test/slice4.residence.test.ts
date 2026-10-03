@@ -44,7 +44,11 @@ describe('the seam (pure)', () => {
     expect(residenceCtx({ homeCityId: 'coalport' })).toEqual({ cityId: 'coalport', districtId: null });
     const eastside = { ...home, cityId: 'irongate', districtId: 'irongate.eastside', sinceDay: 20_731 };
     expect(residenceOf({ homeCityId: 'coalport', residence: eastside })).toBe(eastside);
-    expect(paperCityFor({ homeCityId: 'coalport', residence: eastside }, 20_732)).toBe('irongate');
+    expect(paperCityFor(content, { homeCityId: 'coalport', residence: eastside }, 20_732)).toBe('irongate');
+    // A Coalport resident visiting the capital, or on the train to it, reads the Herald.
+    const visitor = { homeCityId: 'coalport', residence: home, cityId: 'irongate' };
+    expect(paperCityFor(content, visitor, 20_732)).toBe('irongate');
+    expect(paperCityFor(content, { ...visitor, cityId: 'coalport' }, 20_732)).toBe('coalport');
   });
 
   it("the residence's council: the home city's for a home resident; the capital's comes with T17", () => {
@@ -91,7 +95,7 @@ describe('the seam (pure)', () => {
 });
 
 describe('the eligibility counts by residence (tech design §5.7)', () => {
-  it('counts residents, and a document stored before migration 006 at home', async () => {
+  it('counts residents through the residence index (migration 006 gives every document one)', async () => {
     const clock = testClock();
     const today = dayKey(clock.now());
     const a = await player(clock, { name: 'Ada Kern', fxp: 400 });
@@ -105,9 +109,10 @@ describe('the eligibility counts by residence (tech design §5.7)', () => {
     );
     expect(await count()).toBe(1);
     expect(await Character.countDocuments(activeMembersFilter('irongate', 'collective', today))).toBe(1);
-    // A document without a residence (before migration 006) still lives at home.
-    await Character.updateOne({ _id: a.id }, { $unset: { residence: '' } }, { strict: false });
-    expect(await count()).toBe(1);
+    // T13: the filter is the residence index's own fields (no  on homeCityId), so the index serves it.
+    const plan = await Character.find(activeMembersFilter('coalport', 'collective', today)).explain();
+    expect(JSON.stringify(plan)).toContain('residence.cityId_1');
+    expect(a.id).toBeTruthy();
   });
 
   it('ensurePlaces settles the residence city for a home resident (one city, as before)', async () => {

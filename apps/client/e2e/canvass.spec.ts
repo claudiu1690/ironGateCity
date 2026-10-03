@@ -8,6 +8,11 @@ test('sign up → talk to voters at the Mill Gate → result modal → HUD shows
   await page.getByRole('link', { name: 'Sign up' }).click();
   await expect(page).toHaveURL(/\/signup$/);
   await signUp(page);
+  // Slice 4: the week's Issues are a draw by the calendar (+50 % opinion when tagged); this spec
+  // pins slice-1 numbers, so Coalport has none this week.
+  expect(
+    (await page.request.post('/api/test/issues', { data: { cityId: 'coalport', issueIds: [] } })).ok(),
+  ).toBe(true);
   await toTheCity(page);
 
   const hudEnergy = page.getByTestId('hud-energy');

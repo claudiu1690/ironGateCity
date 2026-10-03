@@ -1,10 +1,12 @@
 import { isCheckedAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
-import { residenceCityId, residenceCtx } from './residence';
+import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
   DIRECTIVES,
   ENERGY,
+  TRAVEL,
+  fillTemplate,
   MONTH_NAMES,
   bestTrainedStat,
   chapterStatus,
@@ -25,6 +27,7 @@ import {
   seniorityPct,
   standingView,
   statUse,
+  weekOf,
   wornCha,
 } from '@irongate/rules';
 import { restedCapToday } from './modifiers';
@@ -302,7 +305,23 @@ export function jobView(content: GameContent, doc: CharacterDoc, today: DayKey):
   };
 }
 
-export function ordersView(content: GameContent, doc: CharacterDoc, today: DayKey): OrdersView {
+/** The residence city's first Issue this week, by its phrase (capital orders' `{issue}`). */
+export function firstIssueShort(
+  content: GameContent,
+  city: Pick<CityDoc, 'issues'> | null | undefined,
+  today: DayKey,
+): string | null {
+  const first =
+    city?.issues?.weekDay === weekOf(today) ? city.issues.live.find((l) => l.order === 1) : undefined;
+  return first ? (content.issue(first.issueId)?.short ?? null) : null;
+}
+
+export function ordersView(
+  content: GameContent,
+  doc: CharacterDoc,
+  today: DayKey,
+  issueShort: string | null = null,
+): OrdersView {
   const faction = content.faction(doc.factionId);
   const npc = content.npc(faction.secretary.npcId)!;
   const templates = content.ordersOf(doc.factionId);
@@ -325,7 +344,8 @@ export function ordersView(content: GameContent, doc: CharacterDoc, today: DayKe
         {
           id: item.templateId,
           title: spec.title,
-          line: spec.line,
+          // Slice 4 (design §10): `{issue}` is the residence city's first Issue, resolved at read.
+          line: fillTemplate(spec.line, { issue: issueShort ?? 'the week' }),
           progress: Math.min(item.progress, item.target),
           target: item.target,
           done: item.doneAt !== null,
@@ -380,7 +400,7 @@ export function toCharacterView(
   ctx: { city?: CityDoc | null; politicsWaiting?: 0 | 1 } = {},
 ): CharacterView {
   const today = dayKey(now);
-  const restedCap = restedCapToday(content, ctx.city ?? null, today);
+  const restedCap = restedCapToday(content, ctx.city ?? null, today, doc.room);
   const energy = projectEnergy(energyState(doc), now, ENERGY.max, restedCap);
   const bounds = rankBounds(doc.rank);
   const faction = content.faction(doc.factionId);
@@ -428,7 +448,7 @@ export function toCharacterView(
     job: jobView(content, doc, today),
     standing: namedStanding(content, doc.cityId, standingSuccesses(doc, doc.cityId)),
     today: currentTally(doc.today, today),
-    orders: ordersView(content, doc, today),
+    orders: ordersView(content, doc, today, firstIssueShort(content, ctx.city, today)),
     paperDue: isPaperDue({
       editionReadAt,
       lastActionAt: doc.lastActionAt ? doc.lastActionAt.getTime() : null,
@@ -462,6 +482,22 @@ export function toCharacterView(
     office: officeView(content, doc, today),
     politicsWaiting: ctx.politicsWaiting ?? 0,
     restedCap,
+    // Slice 4 (tech design §8.3): the journey, where you live, the room, the train.
+    journey: doc.journey
+      ? {
+          id: doc.journey.id.toHexString(),
+          from: doc.journey.from,
+          to: doc.journey.to,
+          arrivesAt: new Date(doc.journey.arrivesAt).getTime(),
+          status: doc.journey.status,
+        }
+      : null,
+    residence: residenceView(content, doc),
+    room:
+      doc.room && doc.room.fromDay <= today && today < doc.room.untilDay
+        ? { untilDay: doc.room.untilDay }
+        : null,
+    trainOpen: doc.level >= TRAVEL.level,
     welcomeDay: welcomeDayOf(doc, today),
     statGuide: statGuideOf(content, doc),
   };
@@ -479,5 +515,23 @@ export function statGuideOf(content: GameContent, doc: CharacterDoc): CharacterV
     counts: use.counts,
     lead: use.lead,
     best: { stat: best, value: doc.stats[best] },
+  };
+}
+
+/** ADR 0026: where the character lives, for the Me tab and the plate. */
+export function residenceView(
+  content: GameContent,
+  doc: CharacterDoc,
+): NonNullable<CharacterView['residence']> {
+  const r = residenceOf(doc);
+  return {
+    cityId: r.cityId,
+    cityName: content.city(r.cityId)?.name ?? r.cityId,
+    districtId: r.districtId,
+    districtName: r.districtId ? (content.district(r.districtId)?.quarter.name ?? r.districtId) : null,
+    sinceDay: r.sinceDay,
+    votesFromDay: r.votesFromDay,
+    standsFromDay: r.standsFromDay,
+    canMoveFromDay: r.canMoveFromDay,
   };
 }

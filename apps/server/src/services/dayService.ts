@@ -1,6 +1,13 @@
 import type { GameContent } from '@irongate/content';
-import { Candidacy, Character, City, OfficeTerm, PaperEntry, isDuplicateKeyError } from '@irongate/db';
-import type { CandidacyDoc, CharacterDoc, CityDoc, OfficeTermDoc, PaperEntryDoc } from '@irongate/db';
+import { Award, Candidacy, Character, City, OfficeTerm, PaperEntry, isDuplicateKeyError } from '@irongate/db';
+import type {
+  AwardDoc,
+  CandidacyDoc,
+  CharacterDoc,
+  CityDoc,
+  OfficeTermDoc,
+  PaperEntryDoc,
+} from '@irongate/db';
 import {
   COUNCIL,
   JOBS,
@@ -9,7 +16,7 @@ import {
   applyGains,
   dayKey,
   dayStart,
-  effect,
+  effects,
   jobPay,
   jobPayWith,
   projectEnergyThrough,
@@ -24,8 +31,9 @@ import type { SessionUser } from '../trpc/context';
 import { ensurePlaces } from './cityDay';
 import { jobCityOf, residenceCityId } from './residence';
 import { buildEdition } from './edition';
+import { ensureArrived } from './journeyArrival';
 import type { NewEdition } from './edition';
-import { capOn, moraleOf, ordinanceIdOn, ordinanceModifiers } from './modifiers';
+import { capOn, dayModifiers, moraleOf } from './modifiers';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import { energyState, fromOrdersState, welcomeDayOf, welcomeOrderIds } from './views';
 
@@ -51,6 +59,8 @@ export interface SettlementWrite {
   edition: NewEdition;
   /** Candidacies whose deposit this settlement returns (`due` → `returned`). */
   refunds: CandidacyDoc['_id'][];
+  /** Slice 4 (ADR 0028): the awards this settlement credits (`creditedAt` set once). */
+  awards: AwardDoc['_id'][];
 }
 
 /**
@@ -74,6 +84,8 @@ export function computeSettlement(
     jobCity?: CityDoc | null;
     terms?: OfficeTermDoc[];
     due?: CandidacyDoc[];
+    /** Slice 4 (ADR 0028): hero and Issue awards not yet credited. */
+    awards?: AwardDoc[];
   },
 ): SettlementWrite | null {
   const today = dayKey(now);
@@ -81,7 +93,8 @@ export function computeSettlement(
   const wageCity = read.jobCity !== undefined ? read.jobCity : city;
   const contentJob = c.job ? content.job(c.job.id) : undefined;
   const pay = contentJob ? jobPay(contentJob, c.factionId) : null;
-  const caps = capOn(content, city);
+  // ADR 0030 §5: the residence city's sources and the room, wherever the character is.
+  const caps = capOn(content, city, c.room);
   const s = settleDays({
     settled: c.day.settled,
     today,
@@ -93,11 +106,13 @@ export function computeSettlement(
     now,
     // Review 1 (§9.1): each ended day's ordinance line on the full wage, and its seniority step.
     wageOn: (ended) => {
-      const m = ordinanceModifiers(content, ordinanceIdOn(wageCity, ended));
+      // ADR 0030 §6: the job's city's sources of that day (an ordinance, an Issue effect).
+      const m = dayModifiers(content, wageCity, ended);
       const payAdjust = pay === null ? 0 : jobPayWith(pay, m) - pay;
+      const names = effects(m, 'jobPayPct').map((x) => x.source.name);
       return {
         payAdjust,
-        label: payAdjust !== 0 && effect(m, 'jobPayPct') ? (m.ordinance?.name ?? null) : null,
+        label: payAdjust !== 0 && names.length > 0 ? names.join(' · ') : null,
         seniorityStep: seniorityStep(m),
       };
     },
@@ -108,7 +123,23 @@ export function computeSettlement(
   // ADR 0020: the stipend for each boundary held since the last settlement, and refunds.
   const terms = read.terms ?? [];
   const due = read.due ?? [];
-  const boundaries = stipendBoundaries(terms, c.day.settled, today);
+  // Slice 4 (ADR 0026): a seat vacated at a move stops paying at the move.
+  const boundaries = stipendBoundaries(
+    terms.map((t) => ({ fromDay: t.fromDay, toDay: t.vacatedDay ?? t.toDay })),
+    c.day.settled,
+    today,
+  );
+  // Slice 4 (ADR 0028): the awards the city days wrote since the last settlement.
+  const awards = read.awards ?? [];
+  const awardsPc = awards.reduce((sum, a) => sum + a.pc, 0);
+  const awardLines = awards.map((a) => ({
+    kind: a.kind,
+    label:
+      a.kind === 'hero'
+        ? (a.title?.label ?? 'Hero')
+        : `Your work on ${content.issue(a.ref.split(':').slice(2).join(':'))?.short ?? 'the Issue'}`,
+    pc: a.pc,
+  }));
   const stipend = { pc: boundaries * COUNCIL.stipend.pc, fxp: boundaries * COUNCIL.stipend.fxp };
   const refundPc = due.length * COUNCIL.cost.declare;
   // Review 1 (§13.4): One of Us pays 1 PC a day per city where it is held, for the boundaries
@@ -119,10 +150,10 @@ export function computeSettlement(
   const oneOfUsPc = oneOfUsCities * paidBoundaries * STANDING.oneOfUsPcPerDay;
   const gains = applyGains(
     { xp: c.xp, level: c.level, fxp: c.fxp, rank: c.rank, pc: c.pc, statPointsPending: c.statPointsPending },
-    { xp: 0, fxp: stipend.fxp, pc: stipend.pc + refundPc + oneOfUsPc },
+    { xp: 0, fxp: stipend.fxp, pc: stipend.pc + refundPc + oneOfUsPc + awardsPc },
   );
   const offices = terms
-    .filter((t) => t.fromDay <= today && today < t.toDay)
+    .filter((t) => t.fromDay <= today && today < t.toDay && (t.vacatedDay ?? null) === null)
     .map((t) => ({
       termId: t._id,
       cityId: t.cityId,
@@ -146,6 +177,8 @@ export function computeSettlement(
   // The crisis pair only for a member living in the faction's home city (design §10).
   const homeOfFaction = content.city(residenceCityId(c))?.homeFactionId === c.factionId;
   const unrest = homeOfFaction && moraleOf(content, city) === 'unrest';
+  // Slice 4 (design §10): a capital resident takes the capital rotation from the day after the move.
+  const residenceKind = content.isDistricted(residenceCityId(c)) ? 'capital' : 'home';
   const orders = startOrders(
     content.ordersOf(c.factionId),
     today,
@@ -153,6 +186,7 @@ export function computeSettlement(
     welcome,
     unrest ? faction.restoreOrders : undefined,
     dayStart(today),
+    residenceKind,
   );
   const edition = buildEdition({
     content,
@@ -172,7 +206,8 @@ export function computeSettlement(
         : null,
     deposits: due.length > 0 ? { count: due.length, pc: refundPc } : null,
     oneOfUsPc,
-    seniorityStepYesterday: seniorityStep(ordinanceModifiers(content, ordinanceIdOn(wageCity, today - 1))),
+    awards: awardLines,
+    seniorityStepYesterday: seniorityStep(dayModifiers(content, wageCity, today - 1)),
   });
   return {
     set: {
@@ -198,6 +233,7 @@ export function computeSettlement(
     inc: { iron: s.salary?.total ?? 0 },
     edition,
     refunds: due.map((d) => d._id),
+    awards: awards.map((a) => a._id),
   };
 }
 
@@ -253,12 +289,16 @@ export async function ensureSettled(
         const due = await Candidacy.find({ characterId: c._id, deposit: 'due' })
           .session(session)
           .lean<CandidacyDoc[]>();
+        const awards = await Award.find({ characterId: c._id, creditedAt: null })
+          .session(session)
+          .lean<AwardDoc[]>();
         const w = computeSettlement(content, c, now, {
           previous,
           home,
           ...(jobCity !== undefined ? { jobCity } : {}),
           terms,
           due,
+          awards,
         });
         if (!w) return c;
 
@@ -274,6 +314,14 @@ export async function ensureSettled(
             { $set: { deposit: 'returned' } },
             { session },
           );
+        }
+        if (w.awards.length > 0) {
+          const credited = await Award.updateMany(
+            { _id: { $in: w.awards }, creditedAt: null },
+            { $set: { creditedAt: new Date(now) } },
+            { session },
+          );
+          if (credited.modifiedCount !== w.awards.length) throw new VersionConflict();
         }
         await PaperEntry.create([w.edition], { session });
         return updated;
@@ -316,7 +364,9 @@ export async function loadCharacter(
   if (!found) throw gameError('PRECONDITION_FAILED', 'ARRIVAL_PENDING');
   const places = await ensurePlaces(content, found, now);
   const city = places.get(residenceCityId(found)) ?? null;
-  const doc = await ensureSettled(content, found, now, city);
+  const settled = await ensureSettled(content, found, now, city);
+  // Slice 4 (ADR 0025 §4): a due journey arrives (lazily) once the day is settled.
+  const doc = await ensureArrived(content, settled, now);
   return { doc, editionReadAt: await editionReadAt(doc, now), city, places };
 }
 

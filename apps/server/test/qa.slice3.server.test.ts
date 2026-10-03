@@ -35,7 +35,7 @@ import type { FactionId } from '@irongate/rules';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { isLoopbackUri, loadEnv } from '../src/env';
 import { cityDayHooks, runCityDay, settleCityDay } from '../src/services/cityDay';
-import { callerFor, gameData, resetCity, setupDb, teardownDb, testClock } from './helpers';
+import { callerFor, gameData, resetCity, noIssues, setupDb, teardownDb, testClock } from './helpers';
 import { at, doTodaysOrders, key, nextCycleDay, player } from './politics.helpers';
 import type { Player } from './politics.helpers';
 
@@ -45,6 +45,8 @@ const offsetOf = (cityId: string) => content.city(cityId)!.council!.offset;
 
 beforeAll(async () => {
   await setupDb('qa-slice3');
+  // Slice 4: these numbers predate the Issues of the Week.
+  await noIssues();
 });
 afterAll(teardownDb);
 afterEach(() => {

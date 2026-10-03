@@ -1,5 +1,5 @@
 import type { GameContent } from '@irongate/content';
-import { paperCityFor } from './residence';
+import { paperCityFor, residenceOf } from './residence';
 import type { CharacterDoc, CityDoc, PaperEntryDoc } from '@irongate/db';
 import { fillTemplate, itemSpec, selectHeadlines, standingView } from '@irongate/rules';
 import type {
@@ -32,13 +32,15 @@ export function buildEdition(i: {
   deposits?: { count: number; pc: number } | null;
   /** Review 1 (§13.4): the PC One of Us paid at this settlement. */
   oneOfUsPc?: number;
+  /** Slice 4 (ADR 0028): hero and Issue awards credited at this settlement. */
+  awards?: Array<{ kind: 'hero' | 'issue'; label: string; pc: number }>;
   /** Review 1: the seniority days the last boundary added (the Long Service Order's 2), else 1. */
   seniorityStepYesterday?: number;
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
-  // Slice 4 (tech design §11.1): the edition's paper; until T15, the residence city's.
-  const paperCityId = paperCityFor(c, today);
+  // Slice 4 (tech design §11.1): the edition's paper (the Herald for a visitor to the capital).
+  const paperCityId = paperCityFor(content, c, today);
   const homeCity = content.city(paperCityId);
   const homeShare = (i.home?.opinion ?? homeCity?.baselineOpinion)?.[c.factionId] ?? 0;
   const standingLevel = standingView(standingSuccesses(c, paperCityId)).level;
@@ -66,6 +68,8 @@ export function buildEdition(i: {
     daysPaid: s.salary?.days ?? 0,
     energyYesterday: playedYesterday?.energy ?? 0,
     homeShare,
+    // Slice 4: `hl.*.train-open` the morning after the Level reached 10.
+    ...(prev !== null ? { level: { before: prev.snapshot.level, after: c.level } } : {}),
   };
 
   const templates = content.headlinesOf(paperCityId);
@@ -95,6 +99,9 @@ export function buildEdition(i: {
     place: placeId ? locationRef(content, placeId) : (homeCity?.locations[0]?.name ?? ''),
     ordersTitle: orderA?.title ?? '',
     ordersLine: orderA?.line ?? '',
+    // Slice 4: the Herald's stored lines name the faction and the residence.
+    faction: content.faction(c.factionId).shortName,
+    district: residencePlaceName(content, c),
   };
   const varsFor = (_t: HeadlineTemplate): Partial<Record<Placeholder, string>> => baseVars;
 
@@ -126,10 +133,19 @@ export function buildEdition(i: {
       stipend: i.stipend ?? null,
       deposits: i.deposits ?? null,
       oneOfUsPc: i.oneOfUsPc ?? 0,
+      awards: i.awards && i.awards.length > 0 ? i.awards : null,
       restedBanked: s.restedBanked,
       daysSinceLastPaper: facts.daysSinceLastPaper,
       yesterday: playedYesterday,
     },
     snapshot: { level: c.level, rank: c.rank, standingLevel },
   };
+}
+
+/** The residence's place in a sentence: the district, or the city. */
+function residencePlaceName(content: GameContent, c: CharacterDoc): string {
+  const r = residenceOf(c);
+  return r.districtId
+    ? (content.district(r.districtId)?.quarter.name ?? r.districtId)
+    : (content.city(r.cityId)?.name ?? r.cityId);
 }

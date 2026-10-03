@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import type { GameContent } from '@irongate/content';
 import {
   Candidacy,
@@ -7,7 +6,6 @@ import {
   Election,
   OfficeTerm,
   OrderPaper,
-  Vote,
   isDuplicateKeyError,
 } from '@irongate/db';
 import type {
@@ -31,66 +29,45 @@ import {
   countElection,
   createRng,
   dayKey,
-  dayStart,
   divide,
   drawNpcSlate,
   electionKey,
+  isMonday,
   moraleState,
   moraleTransition,
-  wardVote,
+  weekOf,
 } from '@irongate/rules';
-import type { CountLine, DayKey, FactionId, NpcSlateEntry } from '@irongate/rules';
+import type { DayKey, NpcSlateEntry, OpinionShares } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { captureException } from '../sentry';
+import { bootstrapCapital, processCapitalBoundary } from './capitalDay';
+import {
+  AlreadySettled,
+  activeMembersFilter,
+  cityDayHooks,
+  countLines,
+  newSeed,
+  tally,
+  turnoutOf,
+} from './cityDayCore';
+import { bootstrapIssues, drawWeek, heroesStep, issuesStep } from './issuesDay';
+import { writeLedger } from './ledger';
+import type { LedgerRowInput } from './ledger';
 import { placesOf } from './residence';
 import { inTransaction } from './txn';
+
+export { AlreadySettled, activeMembersFilter, cityDayHooks } from './cityDayCore';
 
 /**
  * The city's day (ADR 0017, tech design §7): every world boundary of a council city, settled once,
  * boundary by boundary, by the Agenda job or by the first request that needs the city. Each
  * boundary is one transaction guarded by `world.settledDay: d − 1`; every derived document has a
  * natural unique key, so a second runner can never duplicate one. The decisions are pure functions
- * in `@irongate/rules`; this file reads and writes.
+ * in `@irongate/rules`; this file reads and writes. Slice 4: the capital's day is capitalDay.ts;
+ * every city runs the Issues step on Mondays and names its heroes at a count (issuesDay.ts).
  */
-
-/** Another runner settled (or bootstrapped) this boundary first: re-read and carry on. */
-export class AlreadySettled extends Error {
-  override name = 'AlreadySettled';
-}
-
-const DAY_MS = 86_400_000;
-
-/** Test seams (server tests only): fixed seeds for replayable runs, and an injected failure. */
-export const cityDayHooks: {
-  seed?: (cityId: string, cycle: number) => string;
-  beforeBoundary?: (cityId: string, day: DayKey) => void;
-  /** Called after every transaction attempt that lost to another runner (the report counts them). */
-  onRetry?: (cityId: string, day: DayKey) => void;
-  /**
-   * Cities whose order papers carry no branch's motion, so no ordinance is ever in force unless a
-   * player moves one: slice-1/2 tests that pin shift and training numbers across days.
-   */
-  noBranchMotion?: Set<string>;
-} = {};
 
 const withBranch = (cityId: string) => !cityDayHooks.noBranchMotion?.has(cityId);
-
-const newSeed = (cityId: string, cycle: number) =>
-  cityDayHooks.seed?.(cityId, cycle) ?? randomBytes(16).toString('hex');
-
-/**
- * Resident Rank 2+ members of the faction active in the seven days before `day` (design §17 Q17).
- * Slice 4 (ADR 0026): residents of the city (`residence.cityId`); a document stored before
- * migration 006 has no residence and lives at home.
- */
-export function activeMembersFilter(cityId: string, factionId: FactionId, day: DayKey) {
-  return {
-    $or: [{ 'residence.cityId': cityId }, { residence: { $exists: false }, homeCityId: cityId }],
-    factionId,
-    rank: { $gte: COUNCIL.voteRank },
-    lastActionAt: { $gte: new Date(dayStart(day) - COUNCIL.activeEndorserDays * DAY_MS) },
-  };
-}
 
 function councilSpec(content: GameContent, cityId: string) {
   const city = content.city(cityId);
@@ -102,7 +79,12 @@ function councilSpec(content: GameContent, cityId: string) {
 
 const branchItem = (spec: ReturnType<typeof councilSpec>, day: DayKey, at: Date) => ({
   ordinanceId: spec.faction.branchMotion,
-  movedBy: { kind: 'branch' as const, npcId: spec.secretary.id, name: spec.secretary.name },
+  movedBy: {
+    kind: 'branch' as const,
+    npcId: spec.secretary.id,
+    name: spec.secretary.name,
+    factionId: spec.home,
+  },
   at,
   day,
 });
@@ -113,11 +95,13 @@ function npcBallot(
   slate: readonly NpcSlateEntry[],
   first: number,
   n: number,
+  factionId: string,
 ): BallotLine[] {
   return slate.slice(0, n).map((s, i) => {
     const c = content.candidate(s.npcId);
     return {
       key: `n:${s.npcId}`,
+      factionId: factionId as BallotLine['factionId'],
       kind: 'npc',
       npcId: s.npcId,
       name: c?.name ?? s.npcId,
@@ -129,8 +113,8 @@ function npcBallot(
 
 /**
  * §7.3: a city with no `world` gets, in one transaction, a sitting NPC council (the top seven of
- * the slate), its order paper with the branch's motion, the branch's motion in force, and the
- * current election in the phase of the day.
+ * the slate), its order paper with the branch's motion, the branch's motion in force, the current
+ * election in the phase of the day, and (slice 4) the week's Issues.
  */
 async function bootstrap(content: GameContent, cityId: string, now: number, session: ClientSession) {
   const spec = councilSpec(content, cityId);
@@ -150,6 +134,9 @@ async function bootstrap(content: GameContent, cityId: string, now: number, sess
       councilKey: councilKey(cityId, k),
       electionId: electionKey(cityId, k - 1),
       seat: i + 1,
+      factionId: spec.home,
+      districtId: null,
+      vacatedDay: null,
       fromDay: c0,
       toDay: c0 + COUNCIL.termDays,
       holder: { kind: 'npc', npcId: s.id, name: s.name },
@@ -204,6 +191,8 @@ async function bootstrap(content: GameContent, cityId: string, now: number, sess
       {
         _id: electionKey(cityId, k),
         cityId,
+        kind: 'home',
+        placeId: cityId,
         factionId: spec.home,
         cycle: k,
         nominationsFrom: cal.election.nominationsFrom,
@@ -215,7 +204,8 @@ async function bootstrap(content: GameContent, cityId: string, now: number, sess
         filed: 0,
         // A polling day: no player could have filed, so the ballot is the nine NPCs.
         smallBranch: null,
-        ballot: cal.phase === 'polling' ? npcBallot(content, npcSlate, 0, COUNCIL.slateSize) : null,
+        ballot:
+          cal.phase === 'polling' ? npcBallot(content, npcSlate, 0, COUNCIL.slateSize, spec.home) : null,
         ballots: 0,
         result: null,
         closedAt: cal.phase === 'polling' ? at : null,
@@ -225,6 +215,8 @@ async function bootstrap(content: GameContent, cityId: string, now: number, sess
     { session },
   );
 
+  // Slice 4 (ADR 0029 §4): a new city draws the week it is in.
+  const live = await drawWeek(content, cityId, weekOf(today), [], session);
   const share = opinion[spec.home];
   const done = await City.updateOne(
     { _id: cityId, world: { $exists: false } },
@@ -243,6 +235,7 @@ async function bootstrap(content: GameContent, cityId: string, now: number, sess
         ordinanceHistory: withBranch(cityId)
           ? [{ id: inForce.id, fromDay: inForce.fromDay, toDay: inForce.toDay }]
           : [],
+        issues: { weekDay: weekOf(today), live, effects: [] },
       },
       $setOnInsert: { opinion },
     },
@@ -251,65 +244,11 @@ async function bootstrap(content: GameContent, cityId: string, now: number, sess
   if (done.matchedCount === 0 && done.upsertedCount === 0) throw new AlreadySettled();
 }
 
-/** Every vote of an election, grouped by candidate (the count's `$group`, ADR 0019). */
-async function tally(electionId: string, session: ClientSession): Promise<Record<string, number>> {
-  const rows = await Vote.aggregate<{ _id: string; n: number }>([
-    { $match: { electionId } },
-    { $group: { _id: '$candidateKey', n: { $sum: 1 } } },
-  ]).session(session);
-  return Object.fromEntries(rows.map((r) => [r._id, r.n]));
-}
-
-/** The count lines of a frozen ballot: the player ward vote from Local Standing now (design §17 Q1). */
-async function countLines(
-  e: Pick<ElectionDoc, '_id' | 'ballot' | 'npcSlate'>,
-  cityId: string,
-  session: ClientSession,
-): Promise<CountLine[]> {
-  const ballot = e.ballot ?? [];
-  const playerIds = ballot.flatMap((b) => (b.characterId ? [b.characterId] : []));
-  const chars = await Character.find({ _id: { $in: playerIds } }, { localStanding: 1, name: 1 })
-    .session(session)
-    .lean();
-  const cands = await Candidacy.find(
-    { electionId: e._id, characterId: { $in: playerIds } },
-    { characterId: 1, effective: 1 },
-  )
-    .session(session)
-    .lean();
-  return ballot.map((b): CountLine => {
-    if (b.kind === 'player' && b.characterId) {
-      const c = chars.find((x) => x._id.equals(b.characterId!));
-      const successes = c?.localStanding.find((s) => s.cityId === cityId)?.successes ?? 0;
-      const cand = cands.find((x) => x.characterId.equals(b.characterId!));
-      return {
-        key: b.key,
-        kind: 'player',
-        name: c?.name ?? b.name,
-        wardVote: wardVote(successes),
-        successes,
-        endorsements: cand?.effective ?? 0,
-        order: b.order,
-      };
-    }
-    const npc = e.npcSlate.find((s) => s.npcId === b.npcId);
-    return {
-      key: b.key,
-      kind: 'npc',
-      name: b.name,
-      wardVote: npc?.wardVote ?? 0,
-      // Design §17 Q5: an NPC's Standing Successes for the tie-break are profile × 5, before jitter.
-      successes: (npc?.profile ?? 0) * 5,
-      endorsements: 0,
-      order: b.order,
-    };
-  });
-}
-
 /**
- * One boundary `d` of one city (§7.2): the drift; into cycle day 0 the count, the seating, the next
- * election and order paper; into day 2 the close and the division; the morale record; and
- * `world.settledDay = d`. Throws AlreadySettled when another runner got there first.
+ * One boundary `d` of one city (§7.2): the drift; on Mondays the Issues (slice 4); into cycle day 0
+ * the count, the City Heroes (slice 4), the seating, the next election and order paper; into day 2
+ * the close and the division; the morale record; and `world.settledDay = d`. Throws AlreadySettled
+ * when another runner got there first.
  */
 async function processBoundary(
   content: GameContent,
@@ -326,10 +265,39 @@ async function processBoundary(
   const work = boundaryWork(d, spec.offset);
   const cal = councilDay(d, spec.offset);
   const at = new Date(now);
+  const ledger: LedgerRowInput[] = [];
+  const row = (kind: LedgerRowInput['kind'], swing: number): LedgerRowInput => ({
+    cityId,
+    placeId: cityId,
+    factionId: home,
+    swing,
+    kind,
+    ref: `d:${d}`,
+    day: d,
+    at,
+  });
 
-  let shares = applyDrift(city.opinion!, home).shares;
+  const drift = applyDrift(city.opinion!, home);
+  let shares: OpinionShares = drift.shares;
+  ledger.push(row('drift', drift.delta));
   const set: Record<string, unknown> = {};
   const push: Record<string, unknown> = {};
+
+  // Slice 4 (§3.2): the Issues step after the drift, on Mondays.
+  if (isMonday(d)) {
+    const byPlace = new Map([[cityId, shares]]);
+    set.issues = await issuesStep({
+      content,
+      cityId,
+      d,
+      city,
+      shares: byPlace,
+      homeFactionId: home,
+      at,
+      session,
+    });
+    shares = byPlace.get(cityId)!;
+  }
 
   if (work.count) {
     // Election k − 1 → council k.
@@ -348,6 +316,8 @@ async function processBoundary(
           {
             _id: prevKey,
             cityId,
+            kind: 'home',
+            placeId: cityId,
             factionId: home,
             cycle: cal.cycle - 1,
             nominationsFrom: prev.election.nominationsFrom,
@@ -356,7 +326,7 @@ async function processBoundary(
             status: 'polling',
             seed,
             npcSlate,
-            ballot: npcBallot(content, npcSlate, 0, COUNCIL.slateSize),
+            ballot: npcBallot(content, npcSlate, 0, COUNCIL.slateSize, home),
             closedAt: at,
           },
         ],
@@ -367,15 +337,16 @@ async function processBoundary(
     if (!e || e.status !== 'polling') throw new AlreadySettled();
     const votes = await tally(e._id, session);
     const r = countElection(await countLines(e, cityId, session), votes);
-    const voters = Object.values(votes).reduce((a, b) => a + b, 0);
-    // Design §17 Q17: the active branch. A member who cast a ballot in this election was active,
-    // whatever their last action, so the voters are always part of it.
-    const active = await Character.find(activeMembersFilter(cityId, home, d), { _id: 1 })
-      .session(session)
-      .lean();
-    const voterIds = await Vote.distinct('voterId', { electionId: e._id }).session(session);
-    const eligible = new Set([...active.map((x) => x._id.toHexString()), ...voterIds.map((v) => String(v))])
-      .size;
+    const turnout = await turnoutOf(e._id, activeMembersFilter(cityId, home, d), votes, session);
+    // Slice 4 (§7.5): the City Hero of the election just counted, and its scoreboard table.
+    const scoreboards = await heroesStep({
+      cityId,
+      places: [{ placeId: cityId, name: spec.city.name, kind: 'city' }],
+      cycle: cal.cycle - 1,
+      d,
+      untilDay: d + COUNCIL.termDays,
+      session,
+    });
     const counted = await Election.updateOne(
       { _id: e._id, status: 'polling' },
       {
@@ -383,10 +354,11 @@ async function processBoundary(
           status: 'counted',
           result: {
             rows: r.rows,
-            turnout: { voters, eligible },
+            turnout,
             npcSeats: r.npcSeats,
             topKey: r.topKey,
             lastSeatKey: r.lastSeatKey,
+            scoreboard: scoreboards.get(cityId) ?? [],
           },
           countedAt: at,
         },
@@ -410,8 +382,9 @@ async function processBoundary(
         { session },
       );
     }
+    // A seat vacated at a move is not a completed term (ADR 0026).
     await OfficeTerm.updateMany(
-      { councilKey: councilKey(cityId, cal.cycle - 1) },
+      { councilKey: councilKey(cityId, cal.cycle - 1), vacatedDay: null },
       { $set: { completed: true } },
       { session },
     );
@@ -423,6 +396,9 @@ async function processBoundary(
           councilKey: councilKey(cityId, cal.cycle),
           electionId: e._id,
           seat: i + 1,
+          factionId: home,
+          districtId: null,
+          vacatedDay: null,
           fromDay: d,
           toDay: d + COUNCIL.termDays,
           holder:
@@ -439,13 +415,19 @@ async function processBoundary(
     // ADR 0022: +2 per player seat; −3 when no player voted.
     const playerSeats = r.seated.filter((x) => x.kind === 'player').length;
     if (playerSeats > 0) {
-      shares = applyPersuasion(shares, {
+      const op = applyPersuasion(shares, {
         factionId: home,
         swing: MORALE.seat * playerSeats,
         homeFactionId: home,
-      }).shares;
+      });
+      shares = op.shares;
+      ledger.push(row('seat', op.applied));
     }
-    if (voters === 0) shares = applyMoraleLoss(shares, home, MORALE.noVoterPenalty).shares;
+    if (turnout.voters === 0) {
+      const loss = applyMoraleLoss(shares, home, MORALE.noVoterPenalty);
+      shares = loss.shares;
+      ledger.push(row('noVoter', -loss.applied));
+    }
 
     // Open election k and order paper k.
     const seed = newSeed(cityId, cal.cycle);
@@ -454,6 +436,8 @@ async function processBoundary(
         {
           _id: electionKey(cityId, cal.cycle),
           cityId,
+          kind: 'home',
+          placeId: cityId,
           factionId: home,
           cycle: cal.cycle,
           nominationsFrom: cal.election.nominationsFrom,
@@ -521,6 +505,7 @@ async function processBoundary(
         const c = byId.get(id)!;
         return {
           key: `p:${c.characterId.toHexString()}`,
+          factionId: home,
           kind: 'player',
           characterId: c.characterId,
           candidacyId: c._id,
@@ -529,7 +514,10 @@ async function processBoundary(
           order: i,
         };
       });
-      const ballot = [...players, ...npcBallot(content, e.npcSlate, players.length, close.ballotNpcs.length)];
+      const ballot = [
+        ...players,
+        ...npcBallot(content, e.npcSlate, players.length, close.ballotNpcs.length, home),
+      ];
       if (cands.length > 0) {
         await Candidacy.bulkWrite(
           cands.map((c) => {
@@ -565,9 +553,11 @@ async function processBoundary(
     const paperId = councilKey(cityId, cal.cycle);
     const p = await OrderPaper.findById(paperId).session(session).lean<OrderPaperDoc>();
     if (p && p.status === 'open') {
-      const npcSeats = await OfficeTerm.countDocuments({ councilKey: paperId, 'holder.kind': 'npc' }).session(
-        session,
-      );
+      const npcSeats = await OfficeTerm.countDocuments({
+        councilKey: paperId,
+        'holder.kind': 'npc',
+        vacatedDay: null,
+      }).session(session);
       const unrest = moraleState(shares[home]) === 'unrest';
       const v = divide({
         items: p.items.map((it) => ({
@@ -598,6 +588,7 @@ async function processBoundary(
     }
   }
 
+  await writeLedger(content, ledger, session);
   const share = shares[home];
   const m = moraleTransition(city.morale ?? null, share, d);
   const done = await City.updateOne(
@@ -625,20 +616,30 @@ const isConflict = (err: unknown) =>
 
 /**
  * ADR 0017 §1: settle every boundary of `cityId` up to `dayKey(now)`, oldest first, one
- * transaction each (bootstrapping first if the city has none). Idempotent and safe to race.
+ * transaction each (bootstrapping first if the city has none). Idempotent and safe to race. Slice 4:
+ * the capital takes its own boundary (ADR 0027); a city settled before slice 4 first draws the week
+ * it is in (ADR 0029 §4).
  */
 export async function settleCityDay(content: GameContent, cityId: string, now: number): Promise<CityDoc> {
   const today = dayKey(now);
+  const capital = content.isDistricted(cityId);
   for (let guard = 0; guard < 1_000; guard++) {
     const city = await City.findById(cityId).lean<CityDoc>();
-    if (city?.world && city.world.settledDay >= today) return city;
+    const needsIssues = !!city?.world && !city.issues;
+    if (!needsIssues && city?.world && city.world.settledDay >= today) return city;
     const d = city?.world ? city.world.settledDay + 1 : today;
     try {
-      await inTransaction((session) =>
-        city?.world
-          ? processBoundary(content, cityId, d, now, session)
-          : bootstrap(content, cityId, now, session),
-      );
+      await inTransaction((session) => {
+        if (needsIssues) return bootstrapIssues(content, cityId, weekOf(city.world!.settledDay), session);
+        if (!city?.world) {
+          return capital
+            ? bootstrapCapital(content, cityId, now, session)
+            : bootstrap(content, cityId, now, session);
+        }
+        return capital
+          ? processCapitalBoundary(content, cityId, d, now, session)
+          : processBoundary(content, cityId, d, now, session);
+      });
     } catch (err) {
       if (!isConflict(err)) throw err;
       cityDayHooks.onRetry?.(cityId, d);
@@ -658,8 +659,7 @@ export async function ensureCityDay(
   now: number,
 ): Promise<CityDoc | null> {
   const spec = content.city(cityId);
-  // T13 (slice-4 phase B) builds the capital's city day; until then its document is only read.
-  if (!spec?.council || content.isDistricted(cityId)) return City.findById(cityId).lean<CityDoc>();
+  if (!spec?.council) return City.findById(cityId).lean<CityDoc>();
   try {
     return await settleCityDay(content, cityId, now);
   } catch (err) {
@@ -685,8 +685,8 @@ export async function ensurePlaces(
 }
 
 /**
- * The worker's job and the e2e hook: every council city. A failure in one city does not stop the
- * others; the run then fails so Agenda records it.
+ * The worker's job and the e2e hook: every council city, the capital first (its count is the
+ * biggest). A failure in one city does not stop the others; the run then fails so Agenda records it.
  */
 export async function runCityDay(
   content: GameContent,
@@ -695,8 +695,10 @@ export async function runCityDay(
   const settled: Array<{ cityId: string; settledDay: DayKey | null }> = [];
   const failed: string[] = [];
   const errors: unknown[] = [];
-  // T13 (slice-4 phase B): the capital joins the loop, first (its count is the biggest).
-  for (const city of content.councilCities().filter((c) => !content.isDistricted(c.id))) {
+  const cities = [...content.councilCities()].sort(
+    (a, b) => Number(content.isDistricted(b.id)) - Number(content.isDistricted(a.id)),
+  );
+  for (const city of cities) {
     try {
       const doc = await settleCityDay(content, city.id, now);
       settled.push({ cityId: city.id, settledDay: doc.world?.settledDay ?? null });

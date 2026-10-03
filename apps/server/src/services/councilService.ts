@@ -29,14 +29,15 @@ import {
   nextPollsFrom,
   standingView,
 } from '@irongate/rules';
-import type { DayKey, PoliticalAct, PoliticalPlaceholder, PoliticalResult } from '@irongate/rules';
+import type { DayKey, FactionId, PoliticalAct, PoliticalPlaceholder, PoliticalResult } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { GameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
-import { activeMembersFilter } from './cityDay';
+import { activeMembersFilter } from './cityDayCore';
+import { writeLedger } from './ledger';
 import { ensureSettled, loadCharacter } from './dayService';
-import { councilView, electionView, endorsementsOf, weekdayName } from './politicsService';
-import { residenceCityId, residenceSpec } from './residence';
+import { councilView, electionView, endorsementsOf, givenThisCycle, weekdayName } from './politicsService';
+import { residenceOf, residenceSpec } from './residence';
 import { withRequestKey } from './requestKey';
 import { DayChanged, VersionConflict } from './txn';
 import { toCharacterView } from './views';
@@ -67,6 +68,12 @@ interface ActDeps<I> {
 
 const ordersAllDone = (c: CharacterDoc, today: DayKey) =>
   c.orders.day === today && c.orders.allDoneAt !== null;
+
+/** Slice 4: in the capital a member belongs to their own faction's branch; at home to the home one. */
+const branchOf = (x: Pick<ActCtx, 'spec' | 'c'>): FactionId => x.spec.home ?? x.c.factionId;
+const isDistrict = (x: Pick<ActCtx, 'spec'>) => x.spec.place.kind === 'district';
+/** The election voted and stood in: the home city's, or the district's (ADR 0027). */
+const electionOf = (x: Pick<ActCtx, 'spec' | 'cal'>) => electionKey(x.spec.place.id, x.cal.cycle);
 
 async function runAct<I extends object>(
   deps: ActDeps<I>,
@@ -157,7 +164,7 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
   return runAct(deps, 'council.declare', async (x) => {
     const { c, spec, cal, today, session } = x;
     if (cal.phase !== 'nominations') throw notNominations(x);
-    if (!content.platform(spec.home, deps.input.platformId)) {
+    if (!content.platform(branchOf(x), deps.input.platformId)) {
       throw new GameError('UNKNOWN_PLATFORM', { platformId: deps.input.platformId }, 'BAD_REQUEST');
     }
     if (c.rank < COUNCIL.standRank) {
@@ -165,6 +172,11 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
         need: COUNCIL.standRank,
         fxpToGo: Math.max(0, RANK_FXP[COUNCIL.standRank - 1]! - c.fxp),
       });
+    }
+    // ADR 0026 §3: a new resident stands from the next nominations.
+    const standsFromDay = residenceOf(c).standsFromDay;
+    if (standsFromDay > today) {
+      throw new GameError('NOT_YET_CANDIDATE', { standsFromAt: dayStart(standsFromDay) });
     }
     const successes = c.localStanding.find((s) => s.cityId === spec.city.id)?.successes ?? 0;
     if (standingView(successes).level < COUNCIL.knownLevel)
@@ -179,7 +191,7 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
       .session(session)
       .lean<OfficeTermDoc>();
     if (sitting) throw new GameError('SITTING_COUNCILLOR', { termEndsAt: dayStart(sitting.toDay) });
-    const key = electionKey(spec.city.id, cal.cycle);
+    const key = electionOf(x);
     const e = await Election.findById(key).session(session).lean<ElectionDoc>();
     if (!e) throw new GameError('ELECTION_NOT_READY', {}, 'CONFLICT');
     const existing = await Candidacy.findOne({ electionId: key, characterId: c._id })
@@ -200,6 +212,8 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
         {
           electionId: key,
           cityId: spec.city.id,
+          factionId: branchOf(x),
+          placeId: spec.place.id,
           cycle: cal.cycle,
           characterId: c._id,
           name: c.name,
@@ -236,7 +250,7 @@ export function withdraw(deps: ActDeps<object>): Promise<PoliticalResult> {
   return runAct(deps, 'council.withdraw', async (x) => {
     const { c, spec, cal, today, session } = x;
     if (cal.phase !== 'nominations') throw notNominations(x);
-    const key = electionKey(spec.city.id, cal.cycle);
+    const key = electionOf(x);
     const done = await Candidacy.findOneAndUpdate(
       { electionId: key, characterId: c._id, status: 'filed' },
       { $set: { status: 'withdrawn', deposit: 'kept' } },
@@ -263,14 +277,20 @@ export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<Politic
     const { c, spec, cal, today, session } = x;
     if (cal.phase !== 'nominations') throw notNominations(x);
     if (c.rank < COUNCIL.voteRank) throw new GameError('RANK_TOO_LOW', { need: COUNCIL.voteRank });
-    const key = electionKey(spec.city.id, cal.cycle);
+    const key = electionOf(x);
     const cand = await Candidacy.findById(deps.input.candidacyId).session(session).lean<CandidacyDoc>();
-    if (!cand || cand.electionId !== key) {
+    // In the capital any district's candidate of this cycle (ADR 0027 §4); at home this election's.
+    const sameRace = isDistrict(x)
+      ? cand?.cityId === spec.city.id && cand.cycle === cal.cycle
+      : cand?.electionId === key;
+    if (!cand || !sameRace) {
       throw new GameError('UNKNOWN_CANDIDACY', { candidacyId: deps.input.candidacyId }, 'BAD_REQUEST');
     }
     if (cand.characterId.equals(c._id)) throw new GameError('CANNOT_ENDORSE_SELF', {}, 'BAD_REQUEST');
     if (cand.status !== 'filed') throw new GameError('CANDIDACY_CLOSED', { status: cand.status });
-    const given = (c.endorsementsGiven ?? []).find((g) => g.electionId === key);
+    const candFaction = cand.factionId ?? branchOf(x);
+    if (candFaction !== c.factionId) throw new GameError('WRONG_FACTION', { factionId: candFaction });
+    const given = givenThisCycle(c, spec, cal.cycle);
     if (given) {
       throw new GameError(
         'ALREADY_ENDORSED',
@@ -295,19 +315,29 @@ export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<Politic
         'CONFLICT',
       );
     }
-    const entry = { electionId: key, candidacyId: cand._id, name: cand.name, day: today };
+    // The one-per-cycle guard: the election at home, the city's cycle in the capital.
+    const cityCycle = isDistrict(x) ? councilKey(spec.city.id, cal.cycle) : key;
+    const entry = {
+      electionId: cand.electionId,
+      candidacyId: cand._id,
+      name: cand.name,
+      day: today,
+      cityCycle,
+    };
     const updated = await spendPc(
       x,
       COUNCIL.cost.endorse,
       { endorsementsGiven: [...(c.endorsementsGiven ?? []), entry].slice(-4) },
-      { 'endorsementsGiven.electionId': { $ne: key } },
+      isDistrict(x)
+        ? { 'endorsementsGiven.cityCycle': { $ne: cityCycle } }
+        : { 'endorsementsGiven.electionId': { $ne: key } },
     );
     const after = await Candidacy.findById(cand._id).session(session).lean<CandidacyDoc>();
     const others = await Character.countDocuments({
-      ...activeMembersFilter(spec.city.id, spec.home, today),
+      ...activeMembersFilter(spec.city.id, candFaction, today),
       _id: { $ne: cand.characterId },
     }).session(session);
-    const secretary = content.npc(spec.faction.secretary.npcId)?.name ?? '';
+    const secretary = content.npc(content.faction(candFaction).secretary.npcId)?.name ?? '';
     const n = endorsementsOf(content, after!, isSmallBranch(others), secretary).n;
     return buildPoliticalResult(
       content,
@@ -344,13 +374,18 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
         fxpToGo: Math.max(0, RANK_FXP[COUNCIL.voteRank - 1]! - c.fxp),
       });
     }
-    const key = electionKey(spec.city.id, cal.cycle);
-    const e = await Election.findById(key, { ballot: 1, status: 1, countDay: 1 })
+    const key = electionOf(x);
+    const e = await Election.findById(key, { ballot: 1, status: 1, countDay: 1, pollsFrom: 1 })
       .session(session)
       .lean<ElectionDoc>();
     if (!e || e.status === 'nominations') throw new GameError('ELECTION_NOT_READY', {}, 'CONFLICT');
     if (e.status !== 'polling') {
       throw new GameError('NOT_POLLING', { opensAt: dayStart(nextPollsFrom(today + 1, spec.offset)) });
+    }
+    // ADR 0026 §3: a new resident votes from the first polls opening after the move.
+    const votesFromDay = residenceOf(c).votesFromDay;
+    if (votesFromDay > e.pollsFrom) {
+      throw new GameError('NOT_YET_VOTER', { votesFromAt: dayStart(votesFromDay) });
     }
     const line = (e.ballot ?? []).find((b) => b.key === deps.input.candidateKey);
     if (!line)
@@ -373,8 +408,18 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
       { $set: { firstBallotAt: new Date(x.now) } },
       { session },
     );
-    // ADR 0022: +0.5 morale per ballot, in the ballot's transaction.
+    // Design §8.6: a capital ballot never moves a district's opinion (and there is no morale).
     const home = spec.home;
+    if (!home) {
+      return buildPoliticalResult(content, x, {
+        act: 'ballot',
+        idempotencyKey: deps.input.idempotencyKey,
+        vars: { name: line.name, countDay: weekdayName(e.countDay) },
+        at: dayStart(e.countDay),
+        view: { kind: 'election', election: await electionView(content, c, today, session) },
+      });
+    }
+    // ADR 0022: +0.5 morale per ballot, in the ballot's transaction; a ledger row, not a contribution.
     const shares = x.city?.opinion ?? spec.city.baselineOpinion;
     const op = applyPersuasion(shares, { factionId: home, swing: MORALE.ballot, homeFactionId: home });
     const m = moraleTransition(x.city?.morale ?? null, op.shares[home], today);
@@ -382,6 +427,23 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
       { _id: spec.city.id },
       { $set: { opinion: op.shares, ...(m ? { morale: m } : {}) } },
       { session },
+    );
+    await writeLedger(
+      content,
+      [
+        {
+          cityId: spec.city.id,
+          placeId: spec.city.id,
+          factionId: home,
+          swing: op.applied,
+          kind: 'ballot',
+          characterId: c._id,
+          ref: key,
+          day: today,
+          at: new Date(x.now),
+        },
+      ],
+      session,
     );
     const city = x.city ? { ...x.city, opinion: op.shares } : x.city;
     return buildPoliticalResult(
@@ -417,6 +479,7 @@ async function councillorTerm(x: ActCtx): Promise<OfficeTermDoc> {
     councilKey: councilKey(x.spec.city.id, x.cal.cycle),
     'holder.kind': 'player',
     'holder.characterId': x.c._id,
+    vacatedDay: null,
   })
     .session(x.session)
     .lean<OfficeTermDoc>();
@@ -441,19 +504,22 @@ export function propose(deps: ActDeps<{ ordinanceId: string }>): Promise<Politic
       throw new GameError('NOT_ENOUGH_PC', { pc: c.pc, cost: COUNCIL.cost.propose });
     const key = councilKey(spec.city.id, cal.cycle);
     const at = new Date(x.now);
+    // Up to three proposals after the branch motions (one at home, up to three in the capital).
+    const current = await OrderPaper.findById(key, { items: 1 }).session(session).lean<OrderPaperDoc>();
+    const branchItems = (current?.items ?? []).filter((i) => i.movedBy.kind === 'branch').length;
     const pushed = await OrderPaper.updateOne(
       {
         _id: key,
         status: 'open',
         'items.ordinanceId': { $ne: o.id },
         'items.movedBy.characterId': { $ne: c._id },
-        [`items.${COUNCIL.maxProposals}`]: { $exists: false },
+        [`items.${Math.max(1, branchItems) + COUNCIL.maxProposals - 1}`]: { $exists: false },
       },
       {
         $push: {
           items: {
             ordinanceId: o.id,
-            movedBy: { kind: 'player', characterId: c._id, name: c.name },
+            movedBy: { kind: 'player', characterId: c._id, name: c.name, factionId: c.factionId },
             at,
             day: today,
           },
@@ -543,11 +609,17 @@ export async function branchEndorseIfFiled(
   today: DayKey,
   now: number,
 ): Promise<{ endorsements: number; needed: number; smallBranch: boolean } | null> {
-  const spec = content.city(residenceCityId(c));
-  if (!spec?.council || spec.homeFactionId !== c.factionId) return null;
-  const cal = councilDay(today, spec.council.offset);
+  let spec: ReturnType<typeof residenceSpec>;
+  try {
+    spec = residenceSpec(content, c);
+  } catch {
+    return null;
+  }
+  if (spec.home !== null && spec.home !== c.factionId) return null;
+  const branch = spec.home ?? c.factionId;
+  const cal = councilDay(today, spec.offset);
   if (cal.phase !== 'nominations') return null;
-  const key = electionKey(spec.id, cal.cycle);
+  const key = electionKey(spec.place.id, cal.cycle);
   const cand = await Candidacy.findOneAndUpdate(
     { electionId: key, characterId: c._id, status: 'filed', branch: null },
     { $set: { branch: { day: today, at: new Date(now) } } },
@@ -555,11 +627,11 @@ export async function branchEndorseIfFiled(
   );
   if (!cand) return null;
   const others = await Character.countDocuments({
-    ...activeMembersFilter(spec.id, spec.homeFactionId, today),
+    ...activeMembersFilter(spec.city.id, branch, today),
     _id: { $ne: c._id },
   }).session(session);
   const small = isSmallBranch(others);
-  const faction = content.faction(spec.homeFactionId);
+  const faction = content.faction(branch);
   const n = endorsementsOf(
     content,
     cand as CandidacyDoc,

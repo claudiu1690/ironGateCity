@@ -2,7 +2,7 @@ import { dayKey } from '@irongate/rules';
 import { z } from 'zod';
 import { councilVote, declare, endorse, propose, vote, withdraw } from '../../services/councilService';
 import { loadCharacter } from '../../services/dayService';
-import { councilView, electionView, getCount } from '../../services/politicsService';
+import { councilView, electionView, getCapitalCount, getCount } from '../../services/politicsService';
 import { protectedProcedure, router } from '../trpc';
 
 /**
@@ -22,7 +22,25 @@ export const councilRouter = router({
     .input(
       z
         .object({
+          // Slice 4: a district's election too ('irongate.eastside:4146').
           electionId: z
+            .string()
+            .regex(/^[a-z]+(\.[a-z-]+)?:\d+$/)
+            .optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const { doc } = await loadCharacter(ctx.user, ctx.content, ctx.now());
+      return getCount(ctx.content, doc, input?.electionId);
+    }),
+
+  /** Slice 4 (tech design §8.1, §10.5): the capital's count, five districts, by its council key. */
+  capitalCount: protectedProcedure
+    .input(
+      z
+        .object({
+          cycleKey: z
             .string()
             .regex(/^[a-z]+:\d+$/)
             .optional(),
@@ -31,7 +49,7 @@ export const councilRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { doc } = await loadCharacter(ctx.user, ctx.content, ctx.now());
-      return getCount(ctx.content, doc, input?.electionId);
+      return getCapitalCount(ctx.content, doc, input?.cycleKey);
     }),
 
   /** The sitting council: seats, the order paper, the vote. */

@@ -750,6 +750,22 @@ export const copy = {
     /** The room's stamp. */
     taken: 'Taken',
     /** The Me tab: "You live in Eastside, Irongate · move again from Monday". */
+    /** The home city's card when living elsewhere (screens §6.1, last row). */
+    registerBackHome: (city: string, iron: number) =>
+      `Register in ${city} to vote at home again · ${iron} Iron`,
+    /** The sheet's five lines (screens §6.2), built on the server with the player's places. */
+    sheet: {
+      vote: (place: string, weekday: string) =>
+        `You vote and stand in ${place} from the next election that opens (${weekday}).`,
+      giveUp: (old: string) =>
+        `You stop being a ${old} candidate; your ${old} seat, if any, passes to the branch.`,
+      orders: (capital: boolean) =>
+        capital
+          ? 'Party orders come from the capital from tomorrow. The Herald is your paper.'
+          : 'Party orders come from home from tomorrow. The home paper is yours again.',
+      untouched: 'Your job, reputation, Iron and rank are untouched.',
+      moveAgain: (weekday: string) => `Moving again: from ${weekday}.`,
+    },
     meLine: (district: string, weekday: string) =>
       `You live in ${district}, Irongate · move again from ${weekday}`,
     help: {

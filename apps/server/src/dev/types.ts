@@ -5,7 +5,13 @@ import type { MoraleState } from '@irongate/rules';
  * types (`@irongate/server/dev`); the routes exist only when the server has the test hooks on.
  */
 
-export type DevAction = 'hour' | 'day' | 'phase' | 'boost' | 'energy';
+/**
+ * Slice 4 (tech design §8.7): `arrive` (Arrive now, on a train), `monday` (Next Monday), `level10`
+ * (Level 10, and Rank 2 if below), `irongate` (Take me to Irongate: no ticket, no card), `live`
+ * (Live in… a capital district or `home`; the body's `target`).
+ */
+export type DevAction =
+  'hour' | 'day' | 'phase' | 'boost' | 'energy' | 'arrive' | 'monday' | 'level10' | 'irongate' | 'live';
 
 export interface DevHomeCity {
   cityId: string;
@@ -44,6 +50,33 @@ export interface DevStatus {
   /** The signed-in player's character, or null (signed out, or still arriving). */
   character: { name: string; rank: number; pc: number; energy: number; energyMax: number } | null;
   home: DevHomeCity | null;
+  /** Slice 4: where the character is (a city, or a train with the minutes left). */
+  where:
+    | { cityId: string; cityName: string }
+    | { train: { to: string; toName: string; minutesLeft: number } }
+    | null;
+  /** Slice 4: where the character lives, and the windows (weekday names). */
+  residence: {
+    cityName: string;
+    districtName: string | null;
+    votesFrom: string;
+    standsFrom: string;
+    canMoveFrom: string;
+  } | null;
+  /** Slice 4: the capital's five districts (shares, close race, comeback). */
+  capital: Array<{
+    id: string;
+    name: string;
+    shares: { vanguard: number; collective: number; alliance: number; neutral: number };
+    closeRace: boolean;
+    comeback: string | null;
+  }>;
+  /** Slice 4: the residence city's Issues this week with their points. */
+  issues: Array<{
+    name: string;
+    placeName: string;
+    momentum: { vanguard: number; collective: number; alliance: number };
+  }>;
 }
 
 export interface DevActionResult {

@@ -1,20 +1,24 @@
 import type { GameContent } from '@irongate/content';
 import { residenceCityId } from './residence';
-import { OfficeTerm, PaperEntry } from '@irongate/db';
+import { City, OfficeTerm, PaperEntry } from '@irongate/db';
+import type { CityDoc } from '@irongate/db';
 import {
   ENERGY,
   MONTH_NAMES,
   WEEKDAY_NAMES,
+  councilDay,
   dayKey,
   dayStart,
   isPaperDue,
   mergeHeadlines,
   projectEnergy,
+  selectPoliticalHeadlines,
   seniorityPct,
   weekday,
   xpForLevel,
 } from '@irongate/rules';
-import type { LetterView, LiveHeadline, PaperView } from '@irongate/rules';
+import type { LetterView, LiveHeadline, PaperView, PoliticalFacts } from '@irongate/rules';
+import { capitalFacts, paperIssues, visitorFacts } from './capitalPaper';
 import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
 import { restedCapToday } from './modifiers';
@@ -25,6 +29,7 @@ import {
   jobView,
   locationRef,
   namedStanding,
+  firstIssueShort,
   ordersView,
   standingSuccesses,
   toCharacterView,
@@ -47,13 +52,47 @@ export async function getPaper(deps: {
   if (!entry) throw new Error(`no edition for day ${today}: settlement should have printed it`);
   const city = content.city(entry.cityId);
   const date = new Date(dayStart(today));
-  const cap = restedCapToday(content, homeState, today);
+  const cap = restedCapToday(content, homeState, today, c.room);
   const energy = projectEnergy(energyState(c), now, ENERGY.max, cap);
   // ADR 0023: the political sections are live at read; the front page on a winner's first paper
   // of the term; political headlines merged into the stored edition by priority.
   const term = await frontPageTerm(c, today);
   const frontPage = term ? await frontPageView(content, c, term) : null;
-  const live = (await politicalHeadlines(content, c, homeState, today)).filter(
+  // Slice 4 (tech design §11.2): the residence's live lines (its election, Issues, the moves, heroes
+  // and quotes), and for a visitor reading the Herald the capital's own city lines.
+  const residenceId = residenceCityId(c);
+  const res = await capitalFacts(content, c, residenceId, today, { personal: true, district: true });
+  const capital = content.nation.capitalId;
+  const visitor: LiveHeadline[] = [];
+  if (entry.cityId === capital && residenceId !== capital) {
+    const cf = await capitalFacts(content, c, capital, today, { personal: false, district: false });
+    cf.facts.firstCapitalArrivalYesterday = res.facts.firstCapitalArrivalYesterday;
+    const capDoc = await City.findById(capital).lean<CityDoc>();
+    const cal = councilDay(today, content.city(capital)!.council!.offset);
+    const facts: PoliticalFacts = {
+      ...visitorFacts({ cycleDay: cal.cycleDay, phase: cal.phase }, cf.facts),
+      ordinanceFromToday: capDoc?.ordinance?.fromDay === today && capDoc.world?.bootstrappedDay !== today,
+      vars: { ...cf.vars, name: c.name, city: content.city(capital)!.name },
+      varsByKind: {
+        ...cf.varsByKind,
+        ...(res.varsByKind.firstCapitalArrivalYesterday
+          ? { firstCapitalArrivalYesterday: res.varsByKind.firstCapitalArrivalYesterday }
+          : {}),
+      },
+      until: {
+        nominations: dayStart(cal.election.pollsFrom),
+        polls: dayStart(cal.election.countDay),
+        divide: dayStart(cal.council.divideDay),
+      },
+    };
+    visitor.push(...selectPoliticalHeadlines(content.politicalHeadlinesOf(capital), facts));
+  }
+  const residenceLines = await politicalHeadlines(content, c, homeState, today, {
+    capital: res.facts,
+    vars: res.vars,
+    varsByKind: res.varsByKind,
+  });
+  const live = [...residenceLines, ...visitor].filter(
     (h) =>
       !(
         frontPage &&
@@ -111,8 +150,11 @@ export async function getPaper(deps: {
       headline: h.headline,
       ...(h.deck ? { deck: h.deck } : {}),
       ...(h.until !== undefined ? { until: h.until } : {}),
+      // Screens §7.3: the hero and the reporter's quote carry the In Print kicker.
+      ...(/.(hero|quoted)$/.test(h.templateId) ? { inPrint: true } : {}),
     })),
-    orders: ordersView(content, c, today),
+    issues: await paperIssues(content, c, today),
+    orders: ordersView(content, c, today, firstIssueShort(content, homeState, today)),
     desk: {
       salary: entry.desk.salary
         ? {
@@ -146,6 +188,11 @@ export async function getPaper(deps: {
       job: job ? { name: job.name, dailyPay: job.dailyPay, seniority: job.seniority } : null,
       // Review 1: with no job, the home city's places with a Jobs card, in pin order.
       oneOfUsPc: entry.desk.oneOfUsPc ?? 0,
+      awards: entry.desk.awards ?? null,
+      room:
+        c.room && c.room.fromDay <= today && today < c.room.untilDay
+          ? { untilDay: c.room.untilDay, cap }
+          : null,
       jobPlaces: (job ? [] : (home?.locations ?? []))
         .filter((l) => content.jobsAt(l.id).length > 0)
         .map((l) => locationRef(content, l.id)),

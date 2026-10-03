@@ -708,7 +708,11 @@ export interface ActionView {
   verb?: string;
   /** An open Party order this action advances. */
   order: { id: string; title: string; progress: number; target: number } | null;
-  locked: { reason: 'LEVEL' | 'STANDING'; need: number } | null;
+  /**
+   * Slice 4 (tech design §8.3): `MEMBERS_ONLY` at another faction's capital HQ, with its
+   * `factionId` (`need` is 0 then): the ticket is dimmed and has no buttons.
+   */
+  locked: { reason: 'LEVEL' | 'STANDING' | 'MEMBERS_ONLY'; need: number; factionId?: FactionId } | null;
   /** Slice 3: the ordinance in force's tags ("Rally Permits: 10 Energy", "Open Doors: +4 %"). */
   tags: OrdinanceTagView[];
   /** Slice 4: the place's tags (an Issue, the close race, a comeback, members only). */
@@ -785,6 +789,8 @@ export interface CityView {
   scoreboard?: { mine: ScoreboardLineView | null } | null;
   issues?: IssueRowView[];
   effects?: ModifierSourceView[];
+  /** Slice 4 (screens §6.1): a home city's residence card (the way back, or *you live here*). */
+  residence?: ResidenceCardView | null;
 }
 
 export interface BonusTag {
@@ -941,6 +947,10 @@ export interface DeskView {
   restedBanked: number;
   daysSinceLastPaper: number | null;
   yesterday: DailyTally | null;
+  /** Slice 4 (ADR 0028): the hero and Issue Political Capital credited at this settlement. */
+  awards?: Array<{ kind: 'hero' | 'issue'; label: string; pc: number }> | null;
+  /** Slice 4: the room in Irongate while it runs (live at read). */
+  room?: { untilDay: DayKey; cap: number } | null;
   /** Live at read. */
   jobName: string | null;
   energy: { value: number; max: number; fullAt: number | null };
@@ -974,7 +984,19 @@ export interface PaperView {
   paper: { name: string; shortName: string; strapline: string; price: string };
   dateline: { weekday: string; date: string; city: string };
   /** `until`: the epoch ms a `{until}` token in the text names (rendered in the player's clock). */
-  headlines: Array<{ group: HeadlineGroup; headline: string; deck?: string; until?: number }>;
+  /** Slice 4 (screens §7.3): `inPrint` for the hero and the reporter's quote (the In Print kicker). */
+  headlines: Array<{
+    group: HeadlineGroup;
+    headline: string;
+    deck?: string;
+    until?: number;
+    inPrint?: boolean;
+  }>;
+  /**
+   * Slice 4 (screens §7.1): the Issues section, live: the residence city's two, then the capital's
+   * (when the residence is elsewhere); `more` the other cities' (folded). `settlesAt` the next Monday.
+   */
+  issues?: { newThisWeek: boolean; settlesAt: number; rows: IssueRowView[]; more: IssueRowView[] };
   orders: OrdersView;
   desk: DeskView;
   letters: LetterView[];
@@ -1275,7 +1297,8 @@ export interface EndorsementsView {
   more: number;
 }
 
-export type EndorseRefusal = 'SELF' | 'ALREADY' | 'RANK' | 'PC' | 'CLOSED';
+/** Slice 4: `FACTION`, a capital candidate of another party (members back their own faction's). */
+export type EndorseRefusal = 'SELF' | 'ALREADY' | 'RANK' | 'PC' | 'CLOSED' | 'FACTION';
 
 export interface CandidateView {
   /** 'p:<characterId>' | 'n:<npcId>'. */
@@ -1387,6 +1410,9 @@ export interface CouncilSeatView {
   you: boolean;
   /** Players once cast; NPCs after the division. */
   votedFor: string | null;
+  /** Slice 4 (the capital): the seat's party and district. */
+  factionId?: FactionId;
+  districtId?: string | null;
 }
 
 export interface OrderPaperItemView {
@@ -1396,6 +1422,8 @@ export interface OrderPaperItemView {
   line: string;
   effectLine: string;
   movedBy: { kind: 'branch' | 'player'; name: string; you: boolean };
+  /** Slice 4 (the capital): the party whose branch motion it is (null for a proposal). */
+  branchOf?: FactionId | null;
   /** After the division. */
   votes: number | null;
   passed: boolean;
@@ -1438,6 +1466,9 @@ export interface CouncilView {
   inForce: { ordinanceId: string; name: string; line: string; daysLeft: number } | null;
   /** Review 3: the council's hall, for the header crop. */
   hall: HallView | null;
+  /** Slice 4: the votes that pass a rule (4 of 7 at home, 6 of 10 in the capital) and the seat count. */
+  passVotes?: number;
+  seatCount?: number;
 }
 
 /** Screens §2.2: the morning a seat is won, the paper's front page is the winner's. */

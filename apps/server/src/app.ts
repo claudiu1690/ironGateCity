@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
-import { Character, isDbUp } from '@irongate/db';
+import { Character, Journey, isDbUp } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
-import { cycleOf, dayKey, dayStart } from '@irongate/rules';
+import { cycleOf, dayKey, dayStart, isMonday } from '@irongate/rules';
 import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
 import type { FastifyTRPCPluginOptions } from '@trpc/server/adapters/fastify';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -11,6 +11,7 @@ import pkg from '../package.json' with { type: 'json' };
 import { CLIENT_IP_HEADER } from './auth';
 import type { Auth } from './auth';
 import { applyCharacterSeed } from './dev/characterSeed';
+import { setWeekIssues } from './dev/issues';
 import { registerDevPanel } from './dev/panel';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
@@ -66,8 +67,26 @@ export async function buildApp({
     app.post('/api/test/clock', async (request, reply) => {
       const body = (request.body ?? {}) as {
         advanceMs?: unknown;
-        advanceTo?: { cityId?: unknown; cycleDay?: unknown; hour?: unknown };
+        advanceTo?: { cityId?: unknown; cycleDay?: unknown; hour?: unknown; weekday?: unknown };
       };
+      if (body.advanceTo !== undefined && body.advanceTo.weekday !== undefined) {
+        // Slice 4 (tech design §8.6): forward to the next Monday at hour:00 UTC (the Issues' week).
+        const hour = body.advanceTo.hour === undefined ? 9 : Number(body.advanceTo.hour);
+        if (body.advanceTo.weekday !== 'monday')
+          return reply.code(400).send({ error: "weekday must be 'monday'" });
+        if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+          return reply.code(400).send({ error: 'hour must be 0..23' });
+        }
+        const t0 = now();
+        for (let d = dayKey(t0); ; d++) {
+          const t = dayStart(d) + hour * 3_600_000;
+          if (t > t0 && isMonday(d)) {
+            clockOffsetMs += t - t0;
+            break;
+          }
+        }
+        return { offsetMs: clockOffsetMs, now: now() };
+      }
       if (body.advanceTo !== undefined) {
         // Slice 3 (tech design §8.6): to the next hour:00 UTC on a day with that cycle day.
         const offset = content.city(String(body.advanceTo.cityId))?.council?.offset;
@@ -109,16 +128,86 @@ export async function buildApp({
         successes?: unknown;
         pc?: unknown;
         energy?: unknown;
+        // Slice 4 (tech design §8.6).
+        level?: unknown;
+        xp?: unknown;
+        iron?: unknown;
+        cityId?: unknown;
+        residence?: { cityId?: unknown; districtId?: unknown };
+        irongateSuccesses?: unknown;
       };
       const c = await Character.findOne({ userId: session.user.id }).lean<CharacterDoc>();
       if (!c) return reply.code(404).send({ error: 'no character yet' });
       const num = (v: unknown) => (v === undefined ? undefined : Number(v));
+      const cityId = body.cityId === undefined ? undefined : String(body.cityId);
+      if (cityId !== undefined && !content.city(cityId))
+        return reply.code(400).send({ error: 'unknown cityId' });
+      const residence =
+        body.residence === undefined
+          ? undefined
+          : {
+              cityId: String(body.residence.cityId),
+              districtId: body.residence.districtId == null ? null : String(body.residence.districtId),
+            };
+      if (
+        residence &&
+        (!content.city(residence.cityId)?.council ||
+          (residence.districtId !== null &&
+            content.district(residence.districtId)?.city.id !== residence.cityId) ||
+          (residence.districtId === null && content.isDistricted(residence.cityId)))
+      ) {
+        return reply.code(400).send({ error: 'unknown residence' });
+      }
       const set = await applyCharacterSeed(
         c,
-        { fxp: num(body.fxp), successes: num(body.successes), pc: num(body.pc), energy: num(body.energy) },
+        {
+          fxp: num(body.fxp),
+          successes: num(body.successes),
+          pc: num(body.pc),
+          energy: num(body.energy),
+          level: num(body.level),
+          xp: num(body.xp),
+          iron: num(body.iron),
+          irongateSuccesses: num(body.irongateSuccesses),
+          ...(cityId !== undefined ? { cityId } : {}),
+          ...(residence ? { residence } : {}),
+        },
         now(),
       );
       return { ok: true, ...set };
+    });
+
+    // Slice 4 (tech design §8.6): the caller's open journey arrives now (nothing else changes; the
+    // next request settles the arrival lazily).
+    app.post('/api/test/journey', async (request, reply) => {
+      const session = await auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
+      if (!session) return reply.code(401).send({ error: 'sign in first' });
+      const body = (request.body ?? {}) as { arriveNow?: unknown };
+      if (body.arriveNow !== true)
+        return reply.code(400).send({ error: 'arriveNow: true is the only option' });
+      const c = await Character.findOne({ userId: session.user.id }).lean<CharacterDoc>();
+      if (!c?.journey || c.journey.status !== 'onTheWay')
+        return reply.code(409).send({ error: 'not on a train' });
+      const at = new Date(now());
+      await Journey.updateOne({ _id: c.journey.id, status: 'onTheWay' }, { $set: { arrivesAt: at } });
+      await Character.updateOne(
+        { _id: c._id, 'journey.id': c.journey.id },
+        { $set: { 'journey.arrivesAt': at } },
+      );
+      return { ok: true, arrivesAt: at.getTime() };
+    });
+
+    // Slice 4: this week's live Issues of a city (none clears them), for specs that pin numbers.
+    app.post('/api/test/issues', async (request, reply) => {
+      const body = (request.body ?? {}) as { cityId?: unknown; issueIds?: unknown };
+      const cityId = String(body.cityId ?? '');
+      const ids = Array.isArray(body.issueIds) ? body.issueIds.map(String) : [];
+      if (!content.city(cityId)?.council) return reply.code(400).send({ error: 'a council cityId' });
+      try {
+        return await setWeekIssues(content, cityId, ids, now());
+      } catch (err) {
+        return reply.code(400).send({ error: (err as Error).message });
+      }
     });
 
     // The dev time-skip panel (README "Reviewing with the dev panel"): same guard, same clock.

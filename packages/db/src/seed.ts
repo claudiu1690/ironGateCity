@@ -11,7 +11,14 @@ export async function seed(content: Pick<Content, 'cities'>): Promise<{ inserted
     content.cities.map((c) => ({
       updateOne: {
         filter: { _id: c.id },
-        update: { $setOnInsert: { opinion: c.baselineOpinion, createdAt: now, updatedAt: now } },
+        // ADR 0027: a city with districts keeps its meters on its district documents.
+        update: {
+          $setOnInsert: {
+            ...(c.quarters.some((q) => q.district) ? {} : { opinion: c.baselineOpinion }),
+            createdAt: now,
+            updatedAt: now,
+          },
+        },
         upsert: true,
         timestamps: false,
       },
