@@ -486,10 +486,13 @@ Boarding is two taps and five seconds; the journey is twelve minutes in the back
 | 30 | Cross-faction ballots | Tactical griefing of a bloc | Own faction plus NPCs only |
 | — | The capital's +13 % FXP is district-shaped | Leaning districts empty; or every district is a battleground and the bonus is permanent | The ten-point band |
 | — | District Hero is nearly automatic at low population | 25 PC a cycle for turning up | The +0.5 minimum → +1.0 |
+| 46 | The parcel pays 100 Iron (3 Oct 2026) | Players ride for parcels | The second fifty becomes half a stake; never the draw rate |
 
----
+### 15.9 Settled with the architect, 3 Oct 2026 (`slice-4-battleground.md` §19)
 
-## 16. Review 1: the job as a wage, the first day on your best stat
+Sixteen small rules were pinned and ten inconsistencies fixed. **One number moved:** the journey cards' Iron bound is **100 per outcome** (the parcel's 50 + 50; the "40" in the design was a slip for a 10-Energy action's 20), every other card still at most 40. Its weight: the parcel is one of seven cards drawn without replacement at one journey in three, so it comes about **once in 21 journeys** after the first; at the reference player's AGI odds (about 30 %) its expected value is **≈ 65 Iron**, against a 20 Iron ticket each way and a ~950 Iron day: under 1 % of a week's income, and §15.6's "a card is flavour with a number on it" stands. The §15.1 sinks table is unchanged.
+
+**The Rested cap's city** (GDD §6.3): 200 + the residence city's rule and Issue effects + 50 for a room, wherever the player is. For the reference player this moves nothing: at home and in the capital the cap is 200 unless a Rest Day Order, *Fever at St Agnes*, *The Price of Coal* or a room says +50, and those add (at most 300 with a room under one of them). A visitor to Irongate gets no cap bonus from the capital's Issues, which keeps the once-a-day visitor's day the §15.3 day. Momentum rounding (half up on a Partial of odd Energy) adds at most one point per intelligence Partial and does not change the §15.5 sizes. Nothing else here is a number.
 
 Rules: GDD §0 (*Added 30 Sep 2026, review 1*), §9, §8.4, §13.3, §13.7; answers in `docs/design/review-1-answers.md`. Nothing here adds a rate; two numbers move a little and one bar is spent differently.
 

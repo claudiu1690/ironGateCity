@@ -28,7 +28,7 @@ The Map tab has two levels from Level 10: **Nation** and **City**. Below Level 1
 
 | City | x, y | On the card (the line under the name) |
 |---|---|---|
-| Irongate | 0.52, 0.53 | *Capital · 5 districts · contested* |
+| Irongate | 0.52, 0.53 | *Capital · 5 districts* (content), with a live tail from the server: *· two close races today* / *· one close race today* / *· contested* (§19 Q14) |
 | Ashford | 0.12, 0.17 | *Home city of the Alliance* |
 | Duskwall | 0.88, 0.25 | *Home city of the Vanguard* |
 | Coalport | 0.18, 0.80 | *Home city of the Collective* |
@@ -37,7 +37,7 @@ The Map tab has two levels from Level 10: **Nation** and **City**. Below Level 1
 **What the player sees and does** (the review-3 rules of `maps-v3-integration.md` §11, applied to the nation):
 
 - **The map fills the screen** (decided 2 Oct 2026, the user decided: the nation map behaves like the city maps on a phone; Appendix C #42 closed). The picture is never zoomed out past the point where it covers the map box (no bands). So on an upright phone the at-rest view shows about three-quarters of the republic's width; on a wide desktop about half its height. **At rest the view is centred so that your city and the capital are both on screen** (the farthest pair, Ashford–Irongate, spans 0.40 of the width and 0.36 of the height, which always fits); the other cities are **a drag away**. In transit the view centres on the line being travelled.
-- **Drag, no free zoom.** The player can drag the map anywhere within the picture (its edge never shows); there is no pinch, wheel or double-tap zoom. The dragged view is kept while the screen is open.
+- **Drag and free zoom** (review 3, aligned 3 Oct 2026; supersedes the "no free zoom" of 2 Oct). The player can drag the map anywhere within the picture (its edge never shows) and zoom it freely between the two review-3 limits (§14.13): no further in than the painting's finest detail, no further out than the scale that still fills the screen. Pinch and double-tap on a phone; the wheel, a trackpad or + / − on a desktop. The dragged and zoomed view is kept for the session.
 - **A city is a pin:** an ink disc with the city's name beside it in Oswald caps (*Coalport · 12 min*; the capital *Irongate*; a locked city at 60 % opacity with its lock word, *rival ground* or *no service yet*). The city you are in is inverted (paper on ink) and carries *you are here*. Pins are far apart (0.43–0.54 of the picture between any city and the capital), so nothing ever overlaps.
 - **Tap a city** (the pin, or a row in the **Cities** list): the map **zooms onto the town** with the same zoom a place gets in a city (2.5 × the view that shows every city, between 1.6 × and 3 ×, never past native), and the **city card** opens as the sheet (§2.4's *Board* button lives there). Closing the card returns to the view the player had dragged to. On desktop the card is the side sheet and the zoom is the same.
 - **The Cities list** is the Places pattern (`maps-v3-integration.md` §11.3): a pill at the top right (above the tab bar on an upright phone), *Cities*, opening a list of the five in a fixed order (the capital, then your home city, then the other three), each row the name, its line and its time and fare (*12 min · 20 Iron*), locked rows with their lock word. A row does what the pin does. It exists so that a city a drag away is always one tap away.
@@ -75,7 +75,7 @@ A locked city's pin is tappable and its card shows the line, who holds it and th
 ### 2.4 Boarding, the journey and arrival
 
 - **Board** is one tap on the destination's card on the nation map (*Board · 20 Iron · 12 min*) or on the station pin's Trains card in the city (Central Station in Irongate: *Board the train to Coalport · 20 Iron · 12 min*). In slice 4 those are the only two doors: the home cities' station quarters (Coalport's Sidings first) are a later content addendum, not slice 4 (the user decided, 2 Oct 2026; §14.13), so at home a player boards from the nation map. The train **leaves when you tap**: there is no departure time to wait for and nothing to cancel. Not enough Iron: *Needs 20 Iron*, disabled, the slice-1 pattern.
-- The character gets a **journey** `{ from, to, boardedAt, arrivesAt, event? }` and `currentCityId` becomes `null` (in transit) until arrival. Arrival is **lazy**: any read at or after `arrivesAt` settles the journey (sets `currentCityId`, clears the journey, records the arrival for the paper). No scheduled job is needed for a journey, because nothing happens at arrival that a player is not present for; the architect may add one for tidiness (§17 Q2).
+- The character gets a **journey** `{ from, to, boardedAt, arrivesAt, event? }`. **In transit is `cityId` plus the journey's status** (ADR 0025; settled 3 Oct 2026): `cityId` keeps meaning the city you stand in and stays the city you left until arrival, and `journey.status = 'onTheWay'` is what "on the train" means to every rule (no Energy actions, no training, no city view). Arrival is **lazy, and lazy is the guarantee**: any read at or after `arrivesAt` settles the journey (`cityId` becomes the destination, the journey is marked arrived, the arrival is recorded for the paper). A tidy **`journey-arrive` job** runs at `arrivesAt` as well (the plan names a journey arriving as a real event), best effort and idempotent, so the database says where absent players are; correctness never depends on it.
 - **You can close the game.** The journey screen says so in one line (mockup `MobileJourney.dc.html`): *You can close the game. You'll arrive either way, and Energy keeps refilling on the way.*
 - **Where you can act.** Energy actions and training are available **only in the city you are in**; in transit none of them is. **Political acts** (the vote, backing, standing, withdrawing, putting forward a rule, the council's vote) belong to your residence and work from **anywhere**, in transit included, since they are cast from the paper and the Election card. The paper, the Me tab and the nation map are always readable. So a Coalport resident visiting Irongate still votes in Coalport from the Clarion, and a capital resident on the train home still votes in Eastside.
 - **Your job while away:** a job is a wage (§9, review 1): the full daily pay lands at every boundary wherever you are, seniority keeps counting, and there is no shift to miss. Travel costs a ticket and nothing else.
@@ -90,7 +90,7 @@ Slice 6. The mockup's *Fellow travellers* and carriage chat are left out; if a c
 
 ## 3. The seven journey events
 
-Every card: one setup (≤ 240 characters), two or three choices, each with a detail line that names its rewards, one outcome text per result (≤ 240), and the ignore line. Checks use the §8.4 formula at **difficulty 10** with the stat named and the player's Standing in the *destination* city; a card **never fails**: Success or Partial, like tier 1. **What the row shows (review 2):** the client prefixes the detail line with the odds **word** from the server's chance (*Good odds · Agility · opinion +0.05 in Coalport · +5 Party XP*); no percentage, roll or check appears, and a Partial row gets the one-line reason of `review-2-answers.md` §2.4. The detail lines below are the content strings; the stat names are written in full. A card pays at most what a 10-Energy action pays (45 XP / 6 Party XP / 40 Iron / 0.05 opinion) and costs no Energy. Opinion from a card goes to the **destination**: the city meter for a home city, the **Station & Market** district for Irongate (the train comes in there). *The destination's first Issue* is the first of the two drawn there this week. Nothing here uses Heat, the Dossier, items or encounters; where the GDD's version does, the slice that builds it is named. Ids `jev.*`; a `journeyEvents[]` section in content.
+Every card: one setup (≤ 240 characters), two or three choices, each with a detail line that names its rewards, one outcome text per result (≤ 240), and the ignore line. Checks use the §8.4 formula at **difficulty 10** with the stat named and the player's Standing in the *destination* city; a card **never fails**: Success or Partial, like tier 1. **What the row shows (review 2):** the client prefixes the detail line with the odds **word** from the server's chance (*Good odds · Agility · opinion +0.05 in Coalport · +5 Party XP*); no percentage, roll or check appears, and a Partial row gets the one-line reason of `review-2-answers.md` §2.4. The detail lines below are the content strings; the stat names are written in full. **What a card may pay (settled 3 Oct 2026):** at most what a 10-Energy action pays in XP, Party XP, opinion and momentum (**45 XP / 6 Party XP / 0.05 opinion / 10 points**), **10 Rested**, and costs no Energy. **Iron is the one exception:** a card may pay **at most 100 Iron**, and only the parcel does (50 + 50): it is the card that will carry Heat in slice 5, so its money has to be worth the risk; every other card pays at most 40 (the card school's 40 on a 20 stake). The earlier "40 Iron" was a slip (a 10-Energy action pays 20); the loader bounds Iron at 100 per outcome. Opinion from a card goes to the **destination**: the city meter for a home city, the **Station & Market** district for Irongate (the train comes in there). *The destination's first Issue* is the first of the two drawn there this week. Nothing here uses Heat, the Dossier, items or encounters; where the GDD's version does, the slice that builds it is named. Ids `jev.*`; a `journeyEvents[]` section in content.
 
 ### 3.1 A talkative passenger (`jev.passenger`) — the first journey always draws this one
 
@@ -182,10 +182,11 @@ The halt is fiction: the journey's `arrivesAt` never changes. Rested from a card
 | City | `irongate`, `role: 'battleground'`, no home faction. Five districts (§4.2), each with its own opinion meter; the city's opinion for the plate and, from slice 7, National Control is the **equal average of the five** (Appendix C #9 closed: equal weights for the MVP) |
 | Character (§14.1) | The political heart: Parliament and the ministries on the hill, the old town under the basilica, the station and the market in the middle, the river with its cranes on the east bank, the citadel and the villas to the south-west; every faction's capital office is here |
 | Map | **One painted picture** (maps v3, §14.13): `map.irongate.day` / `.night`, `maps-v3/irongate-day-11520.png`, **11,520 × 11,520**, tiled (in `tiles.json`; the stills catalogued by this slice, alt texts in `art.ts`). **The picture serves both levels**: the district overview is the whole picture zoomed out with five district pins and no place pins; a district view is the same picture through the district's **frame** (§4.2), with the district's place pins. Every pin is a fraction of the capital's picture, from `mapPins.irongate` (§4.3). The pen-and-ink `irongate-districts.png` and `irongate-closeup.png` are retired |
-| Paper | ***The Irongate Herald*** · short name *Herald* · strapline *All the republic, every morning* · 6 marks (§3.3). The paper of every capital resident and of every visitor while in the city. Voice: the paper of record, dry, metropolitan, faintly amused by all three parties |
+| Paper | ***The Irongate Herald*** · short name *Herald* · strapline *All the republic, every morning* · 6 marks (§3.3). The paper of every capital resident and of every visitor while in the city: **an edition is the Herald when it is printed with the player in Irongate or on a train to it** (settled 3 Oct 2026); on the train home it is the home paper. Voice: the paper of record, dry, metropolitan, faintly amused by all three parties |
 | Difficulty | **10** on every tier-1 check (§8.4), **+5 %** on political checks in a battleground district (§6.3) |
 | Secretaries | The three faction secretaries (Holm, Stahl, Grey) set the capital rotation of Party orders (§12); there is no fourth NPC |
-| Council | Ten seats, two per district, cycle offset 0 (§9) |
+| Council | Ten seats, two per district, cycle offset 0 (§8) |
+| Council hall (review 3 §6.1; settled 3 Oct 2026) | **The City Hall**, `council.hall { name: 'City Hall', ref: 'the City Hall', x: 0.57, y: 0.345 }`: the baroque hall with the clock tower and the copper-domed turret between Parliament and the Opera, facing the formal gardens above the river (unpinned on the survey; the tower tops at about 0.566, 0.326 and the front runs along y 0.36, so the point holds the tower above the front at the header's 55 %). Not the Parliament dome: Parliament is the republic's, the City Hall is the council's. The election screens' caps line reads *IRONGATE COUNCIL · THE CITY HALL*. A backdrop and a name, not a location |
 | Jobs | Three (§4.5): Porter at Central Station (180), Street vendor at Market Square (100), Driver at Riverside Quays (200). No faction pays a fifth more here: the +20 % is a home-city perk. A job is a wage (§9): there are no shift actions |
 
 ### 4.1 The districts and their baselines (§14.9, §14.11 pinned)
@@ -212,7 +213,7 @@ A district is a **frame** on the capital's picture, `{ x0, y0, x1, y1 }` in frac
 | Eastside (`irongate.eastside`) | 0.56–0.92, 0.50–0.72 | **0.50, 0.44, 0.98, 0.78** | The Iron Bridge at the top, the quays' cranes and barges, the ironworks' chimneys, the tenements of Foundry Row, the Red Lantern at the water's edge at the far right |
 | Garrison Hill (`irongate.garrison-hill`) | 0.78–0.91, 0.07–0.27 | **0.72, 0.01, 0.97, 0.33** | The wooded hill at the top right: the long citadel building (police headquarters) on its crag, the Esplanade below the walls, the villas among the trees, Vanguard House's quadrangle at the summit |
 
-**How the frame behaves** (review 3): at rest the district view covers the map box (never a dark band), the player may **drag within the frame** (the frame plus 10 %, always inside the picture), there is no free zoom, a tap on a pin zooms into the place (2.5 × the fitted view, between 1.6 × and 3 ×), and the **Places** list names the district's places in pin order. On an upright phone the frame's height sets the scale, so a wide frame (Eastside 0.48 wide, Old Town 0.37) shows its middle at rest and its ends a drag or a Places tap away; that is the intended behaviour, not a defect.
+**How the frame behaves** (review 3; aligned 3 Oct 2026): at rest the district view covers the map box (never a dark band), the player may **drag within the frame** (the frame plus 10 %, always inside the picture) and **zoom freely** between the review-3 limits (never past the painting's finest detail, never out past covering the box; §14.13), the same on the overview and the nation map, a tap on a pin zooms into the place (2.5 × the fitted view, between 1.6 × and 3 ×), and the **Places** list names the district's places in pin order. On an upright phone the frame's height sets the scale, so a wide frame (Eastside 0.48 wide, Old Town 0.37) shows its middle at rest and its ends a drag or a Places tap away; that is the intended behaviour, not a defect.
 
 **Crowding check (the station district).** Pins must stay **44 px apart** at the frame's scale on a **360 px-wide phone**. The scale at rest is at least `360 ÷ frame width` CSS px of picture, more when the box is taller than the frame's shape (every upright phone). Closest pairs per district, at that floor and on an upright 360 × 640 phone (map box about 480 px tall):
 
@@ -230,7 +231,7 @@ So no district needs the Places list to separate its pins; it is there for pins 
 
 ### 4.3 Locations (29), with pins checked on the art
 
-Kinds are from the §13.5 list plus **one new kind, `theatre`** (the opera; no scene yet, the map crop stands in). HQ locations carry `factionId`: their tickets are **members only** (a rival sees the pin, the blurb and *Members only* on each ticket; the `faction-hq` scene shows for members). **Every pin below is its survey pin from `mapPins.irongate`** (fractions of the capital's painted picture, measured on `irongate-C-big.png`, user-approved; the preview is `art-direction/maps-v3/pins/irongate-pins.jpg`); the content test keeps a location's `map` equal to its survey pin, and `quarterId` is the district id. The pin numbers (1–29) are the location order below and are unchanged.
+Kinds are from the §13.5 list plus **one new kind, `theatre`** (the opera; a scene now exists and is mapped in `docs/design/art-wiring-oct.md`, wired after slice 4; until then the map crop stands in). HQ locations carry `factionId`: their tickets are **members only** (a rival sees the pin, the blurb and *Members only* on each ticket; the `faction-hq` scene shows for members). **Every pin below is its survey pin from `mapPins.irongate`** (fractions of the capital's painted picture, measured on `irongate-C-big.png`, user-approved; the preview is `art-direction/maps-v3/pins/irongate-pins.jpg`); the content test keeps a location's `map` equal to its survey pin, and `quarterId` is the district id. The pin numbers (1–29) are the location order below and are unchanged.
 
 **Government Quarter**
 
@@ -685,7 +686,7 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 
 ## 5. Moving within Irongate
 
-Trams between districts are **instant and free**: a tram bar on every district view lists the other four districts, one tap each (mockup `MobileCity.dc.html`: *Tram to Eastside · Between districts · instant, free*), and the district overview's district pins and Districts list do the same. Trams are navigation, not actions: no Energy, no modal, no log line. The player's `districtId` (where they are) changes; residence does not.
+Trams between districts are **instant and free**: a tram bar on every district view lists the other four districts, one tap each (mockup `MobileCity.dc.html`: *Tram to Eastside · Between districts · instant, free*), and the district overview's district pins and Districts list do the same. Trams are navigation, not actions: no Energy, no modal, no log line. **Which district you are in is client memory, never a server fact** (§14.13; settled 3 Oct 2026): the server knows the city you stand in, and any capital action or registration names its district in the request; the client remembers the open district for the session and opens the station district on arrival. Residence does not change with a tram.
 
 ---
 
@@ -710,7 +711,7 @@ At every City Day boundary each faction's share in a district moves **1 % of its
 
 - When a faction **loses control** of a district (its share was above 50 at one boundary and is 50 or below at the next), it gains a **Groundswell** there: **+5 % opinion swing per day, stacking to +30 %** (day 6 onward), on its own political actions in that district, until it retakes control (share above 50 at a boundary) or **14 boundaries** pass.
 - Only the faction that lost. Multiplies with the Battleground and Issue lines, each shown as its own line. Ticket tag for members: *Comeback · +15 %*. The Herald prints *Comeback in Eastside* on the morning it starts.
-- At the baselines nobody controls anything, so Groundswell cannot fire until a faction has first crossed 50; in a small playtest it may never appear, which is recorded (Appendix C #29). It is cheap and it is the GDD's own anti-snowball rule, so it is built now.
+- At the baselines nobody controls anything, so Groundswell cannot fire until a faction has first crossed 50; in a small playtest it may never appear, which is recorded (Appendix C #29). It is cheap and it is the GDD's own anti-snowball rule, so it is built now. **Districts only in slice 4** (settled 3 Oct 2026): a home faction never falls below its floor and the morale states cover neglect at home, so a home city's Groundswell has nothing to fire on; it is built for home cities when one can be lost (slice 7).
 
 ### 6.5 Multipliers on one line
 
@@ -754,11 +755,13 @@ On the nation map, locked (*No service yet*), with its baseline shown on its car
 | **Local Standing** | Every city's Standing is kept for ever; Irongate's starts where it was (0 for a first visit) |
 | **Everything else** | Iron, XP, Level, Party XP, Rank, Political Capital, items, the Ambition, endorsements given: untouched |
 
-Moving back home is the same act in reverse (500 Iron, the cooldown, the home paper and orders, the home ballot from the next poll whose window opens after the move).
+Moving back home is the same act in reverse (500 Iron, the cooldown, the home paper and orders, the home ballot from the next poll whose window opens after the move). **Moving between two districts** (settled 3 Oct 2026) is a move like any other: 500 Iron, the seven days, the vote in the new district from the next poll that opens; a candidacy filed in the old district is withdrawn and a seat held there is vacated to the faction's next local candidate, exactly as a home seat is.
 
 ### 7.4 A room (the optional sink)
 
-Residence has **no rent** (§18.1: no mandatory upkeep). A **room in Irongate** is optional lodging on the same card, for anyone in the city: **100 Iron for 7 City Days**, **Rested cap +50** while it runs (the pool keeps its value when it lapses, as Rest Day Order does), one room at a time, renewable any day (the seven days start from the tap; no stacking). It is prepaid, like a bodyguard contract: being away never costs it anything but the nights not slept in it. The Evictions Issue effect halves it for the week.
+Residence has **no rent** (§18.1: no mandatory upkeep). A **room in Irongate** is optional lodging on the same card, for anyone in the city: **100 Iron for 7 City Days**, **Rested cap +50** while it runs (the pool keeps its value when it lapses, as Rest Day Order does), one room at a time, renewable any day (the seven days start from the tap; no stacking). It is prepaid, like a bodyguard contract: being away never costs it anything but the nights not slept in it. The Evictions Issue effect halves it for the week (`roomPct −50`, §9.5).
+
+**Whose Rested cap (settled 3 Oct 2026, ADR 0030 §5).** The cap is **200 + the residence city's council rule and Issue effects of the day + 50 for a room while it runs**, wherever the player stands or rides. One rule says where every effect applies: *a council rule or an Issue effect applies where its thing happens: actions where you act, the wage where the job is, your Rested cap where you live.* So *Fever at St Agnes* and a Rest Day Order raise the cap for Irongate residents and not for visitors, a Coalport resident's Rest Day Order follows them onto the train, and a room helps on every night of its seven wherever the player is. Cap deltas add (a room under *Fever*: 300). Registering and taking a room re-base Energy at the tap, so the piecewise projection never mixes two caps; the pool keeps its value when a cap lapses.
 
 ---
 
@@ -865,7 +868,7 @@ Each Issue has a `feeds` match in the shape of a Party-order match (`actionTypes
 
 ### 9.3 Momentum
 
-- A tagged action on Success adds **its Energy** to the actor's faction's momentum on that Issue (a 10-Energy canvass: +10), **half on Partial** (+5), each row of a ×3 on its own; council actions add their Energy too (they are tagged where the HQ is in the feeds). Journey cards add what they say (+5, +10). Momentum is an integer per Issue per faction, and per contributor for the ranking.
+- A tagged action on Success adds **its Energy** to the actor's faction's momentum on that Issue (a 10-Energy canvass: +10), **half on Partial** (+5), each row of a ×3 on its own; council actions add their Energy too (they are tagged where the HQ is in the feeds). Journey cards add what they say (+5, +10). Momentum is an integer per Issue per faction, and per contributor for the ranking. **Pinned 3 Oct 2026:** the Energy is the **content** Energy, not a reduced cost (a 10-Energy speech under Rally Permits still adds 12; the same rule as rewards, ADR 0021); a Partial on an odd Energy rounds **half up** (3 → 2); a card's points and opinion are **fixed amounts**, untouched by *close race*, Issue or *comeback* factors.
 - Tagged actions also get **+50 % on the opinion swing** (§14.2), a line of its own.
 - **Momentum is public**: the paper's Issues section shows every faction's total (*Collective 120 · Vanguard 85 · Alliance 40*) and who leads. An Issue is an argument in public; unlike the ballot there is nothing to keep secret.
 
@@ -881,7 +884,7 @@ At the **Monday boundary**, before the new draw:
 
 ### 9.5 The deck (19)
 
-`short` is the phrase used inside sentences (*on the tram fares*). Effects use the ordinance DSL (ADR 0021) plus one new modifier, `ticketPct`, and one new location match, `locationKinds`. Every effect is a bounded modifier on a system that exists in slice 4.
+`short` is the phrase used inside sentences (*on the tram fares*). Effects use the ordinance DSL (ADR 0021) plus **two new modifiers, `ticketPct` and `roomPct`** (both bounded −50…0; `roomPct` added 3 Oct 2026 for *Eviction Notices*), and one new location match, `locationKinds`. Every effect is a bounded modifier on a system that exists in slice 4. **Two sources of one kind** (an ordinance and an Issue effect, or two Issues; ADR 0030 §2, settled 3 Oct 2026): Energy deltas, chance bonuses and Rested cap deltas **add**; pay, Iron and Party XP percentages are **each their own line on the base**; opinion, ticket and room percentages **multiply** (a ticket never below 5 Iron); *every win counts twice* and seniority ×2 take **the larger**, never ×4. Every source is a named line on the ticket and in the receipt.
 
 | Id | Issue | short | Where | Feeds (tagged actions) | Effect for the week |
 |---|---|---|---|---|---|
@@ -987,7 +990,7 @@ Every opinion change is a **ledger row**: `{ cityId, districtId?, factionId, cha
 
 ### 11.3 District Hero
 
-- At every Irongate count (cycle day 0), per district and per **level bracket** (1–15, 16–30, 31+), the character with the largest positive sum this cycle is **District Hero** of that district, provided the sum is at least **+0.5 points** (a single canvass does not make a hero). Ties: the earlier to reach the total. Up to fifteen heroes per cycle in the capital; the same rule names a **City Hero** in each home city at its count.
+- At every Irongate count (cycle day 0), per district and per **level bracket** (1–15, 16–30, 31+), the character with the largest positive sum this cycle is **District Hero** of that district, provided the sum is at least **+0.5 points** (a single canvass does not make a hero). Ties: the earlier to reach the total. **Pinned 3 Oct 2026:** the bracket is the character's Level at their **last contribution** of the election (no read of characters at the count); **any contributor** can be the hero, resident or visitor (a visitor who moved Eastside most is Eastside's hero: the title is for the work, not the address); the home ballot's +0.5 (§14.11) is a ledger row but **not a contribution**, so a ballot never makes a hero. Up to fifteen heroes per cycle in the capital; the same rule names a **City Hero** in each home city at its count.
 - **Reward:** the title for the next cycle (*District Hero, Eastside* on the Me tab and beside the name on political lists until the next count), **25 Political Capital**, a line **In Print** in the Herald and the faction's home paper (`hl.ig.hero`: **{name} Named District Hero of {district}** · *Moved {district} {swing} for the {faction} this election, more than anyone at Level {bracket}. 25 Political Capital.*), and from slice 8 a Legacy entry and the profile medal. Being away costs nothing: the title and the Political Capital are given at the count, present or not.
 - Every district's top three of the cycle are printed on the result page (the scoreboard table, *Who moved {district} · this election*, `slice-4-screens.md` §9), which is the "faction ledger" of §14.5 in its slice-4 form; the faction screen's version is slice 6.
 
@@ -1118,6 +1121,21 @@ Companion edit: `docs/economy.md` §15.
 2. **The nation map on a phone:** fill the screen like the city maps; your city and the capital in view at rest, the others a drag or a Cities-list tap away (§2.1; Appendix C #42 closed).
 3. **Home-city station quarters:** later, not slice 4. Slice 4 boards from the nation map and Irongate's Central Station only; the station quarters (Coalport's Sidings first) become a later content addendum (§2.4; GDD §14.13; `city-quarters.md` §2.3).
 
+**Revision of 3 Oct 2026 (settled with the architect, §19):**
+
+| Section | Edit |
+|---|---|
+| §0 | "Added 3 Oct 2026 (slice 4 settled with the architect)" change table |
+| §6.3 | The Rested cap's sources: 200 + the residence city's rules and Issue effects + a room; the one-line rule for where an effect applies |
+| §14.4 | Groundswell built for districts only in slice 4 |
+| §14.5 | The hero's bracket is the Level at the last contribution; any contributor; the home ballot is not a contribution |
+| §14.6 | `roomPct`; the combination rules for two sources of one kind; points use the content Energy, Partial rounds half up; a card's points are fixed |
+| §14.9 | The City Hall as the council's hall (0.57, 0.345) |
+| §14.10 | Free zoom on the nation map; in transit = `cityId` + the journey's status; arrival lazy plus a tidy job; what a card may pay (Iron at most 100, the parcel); the Herald for visitors |
+| §14.11 | Moving between two districts; the Rested cap follows the residence |
+| §14.13 | Free zoom on the capital's overview and district views (already the rule; the capital named) |
+| Appendix C | New #46 (the parcel's 100 Iron) |
+
 ---
 
 ## 17. Questions for the architect
@@ -1145,3 +1163,32 @@ Companion edit: `docs/economy.md` §15.
 ## 18. Content-policy check
 
 Every string above was read against `docs/design/content-policy-review.md` §7. Garrison Hill is a place name; its locations are police headquarters (the state's), an esplanade, villas, a tavern and the party's club; no barracks, drill, muster, parade, patrol or uniform anywhere; the Vanguard's committee, gymnasium, clerks, inspector, timekeeper, landlady and schoolmistress ask for order, timetables, permits and quiet streets, and no line says they are right (the Villas' *"the party has some sense, for once"* is the Hill's condescension, not the paper's praise). The Collective's people are a cleaner, a compositor, a porter, a stallholder, a crane driver and a tenants' committee; its stances are strikes and boycotts in union words; no Soviet title. Combat, Heat and the Dossier are absent. The words *battleground* and *groundswell* are the GDD's campaign vocabulary; *front*, *war*, *enemy*, *uprising*, *troops* and *militia* do not appear except in this sentence. "The war" appears four times (the Bombed Blocks, the Ministries' scaffolding, the passenger's councillors, the station clock), always as the historical war of 1939–45 that is the setting, never as the game's contest; "the front room" (the Gate Tavern) and "the frontier" are rooms and borders, on the same footing as the reviewed *front row*. **For QA:** the recommended war regex (`content-policy-review.md` §8) bans `garrison`; the district name *Garrison Hill* was judged acceptable as a place name (§6 of the review) and needs an allowance in the test, as *ex-soldiers* once had.
+
+---
+
+## 19. Settled with the architect, 3 Oct 2026
+
+The architect's slice-4 technical design (`docs/tech/slice-4.md` §21–§23, ADRs 0025–0030) answered §17 and asked sixteen questions back, each with a default so the build would not wait. The user asked us to decide small points ourselves. Every answer below is also in the GDD (the 3 Oct rows of §16) and, where a number is involved, in `docs/economy.md` §15.9. **Changed from the architect's default:** Q2 (an Iron bound of 100 rather than none) and Q7 (the City Hall, not the Parliament dome). Everything else is accepted as proposed.
+
+| # | Question | Decision | Where |
+|---|---|---|---|
+| 1 | The Rested cap: whose city? | **Accepted.** 200 + the **residence** city's rule and Issue effects + a room while it runs, wherever the player is. One rule for where any effect applies: actions where you act, the wage where the job is, the Rested cap where you live | §7.4; GDD §6.3, §14.11 |
+| 2 | The parcel's 100 Iron against the "40 Iron" cap | **Changed: build the parcel at 50 + 50 and bound Iron at 100 per outcome.** XP, Party XP, opinion, points and Rested keep the 10-Energy caps (45 / 6 / 0.05 / 10 / 10); "40 Iron" was a slip for 20. The parcel is the one card that pays real money because it is the one that will carry Heat (slice 5); the loader needs a bound, so it is 100, not "none" | §3; GDD §14.10, Appendix C #46 |
+| 3 | `roomPct` | **Accepted** (bound −50…0) | §9.5; GDD §14.6 |
+| 4 | Two sources of one kind | **Accepted** (ADR 0030 §2): Energy, chance and Rested cap deltas add; pay, Iron and Party XP shares each their own line on the base; opinion, ticket and room percentages multiply (tickets never below 5); *every win counts twice* and seniority ×2 take the larger | §9.5; GDD §14.6 |
+| 5 | The hero's level bracket | **Accepted:** the Level at the contributor's last contribution of the election | §11.3; GDD §14.5 |
+| 6 | The visitor's paper | **Accepted:** the Herald when the edition is printed with the player in Irongate or on a train to it | §4; GDD §14.10 |
+| 7 | Irongate's council hall | **Changed: the City Hall at 0.57, 0.345**, the clock-tower hall between Parliament and the Opera; Parliament is the republic's | §4; GDD §14.9; `slice-4-screens.md` §8 |
+| 8 | The home ballot's +0.5 | **Accepted:** a ledger row, not a contribution; it never makes a hero | §11.3; GDD §14.5 |
+| 9 | Points on a Partial with an odd Energy | **Accepted:** half up (3 → 2) | §9.3; GDD §14.6 |
+| 10 | Points use the content Energy | **Accepted** (the rewards rule, ADR 0021) | §9.3; GDD §14.6 |
+| 11 | Cards and the capital's factors | **Accepted:** a card's opinion and points are fixed amounts | §9.3; GDD §14.6 |
+| 12 | Moving between two districts | **Accepted:** 500 Iron, seven days, the old district's candidacy withdrawn and a seat there vacated, as at home | §7.3; GDD §14.11 |
+| 13 | A hero who does not live there | **Accepted:** any contributor | §11.3; GDD §14.5 |
+| 14 | The Irongate card's line | **Accepted: live.** Content *Capital · 5 districts*; the server appends *two close races today* / *one close race today* / *contested* | §2.1 |
+| 15 | Groundswell in home cities | **Accepted:** districts only in slice 4 | §6.4; GDD §14.4 |
+| 16 | Herald stand-ins for the home papers | **Accepted** for the build, marked `TODO(game-designer)`; the Clarion's, the Gazette's and the Courier's own Issue, hero, quoted and moved-away texts are a content addendum after T8, before QA's run | §12 |
+
+**The §23 inconsistencies, fixed in this revision:** (1) free zoom on the nation map, the overview and the district views (§2.1, §4.2; screens §2.1, §5; GDD §14.10, §14.13); (2) `roomPct` (§9.5); (3) the card's Iron (§3); (4) the district is client memory (§5); (5) in transit is `cityId` + the journey's status (§2.4); (6) the council is §8 (§4); (7) the City Hall (§4); (8) arrival is lazy plus a tidy job (§2.4); (9) the result route is `/council/count?d=` with the district switcher (screens §8); (10) the Rested cap with a room and after travel (§7.4).
+
+**Economy check (`docs/economy.md` §15.9):** the parcel is the only number that moved (an expected 65 Iron once in about 21 journeys after the first: under 1 % of a week's income); the Rested cap rule moves nothing for the reference player (a resident's cap is 200 at home and in the capital alike unless a rule or a room says otherwise). No §5.2 milestone moves.
