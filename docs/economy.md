@@ -664,13 +664,13 @@ A mission is two taps the first time and one after; a run-in is one or none; the
 
 ## 20. Slice 6: Campaign Events, the fixture, favours and chat
 
-Rules: `docs/design/slice-6-together.md`; GDD §16.3, §16.2, §14.2, §6.5, §14.11, §19.1, §19.2. Slice 6 adds **one new kind of spend** (an event role: Energy spent at sign-up, paid at the start on a group result), **one new Political Capital source** (events, 3–15), **no Iron** (events pay none; bail posted is the prisoner's figure moved to nobody) and **no new rate on solo play**. Chat and presence have no numbers. **One GDD number was pinned against its first draft:** Political Capital from events halves after the first of the day (§20.4).
+Rules: `docs/design/slice-6-together.md`; GDD §16.3, §16.2, §14.2, §6.5, §14.11, §19.1, §19.2. Slice 6 adds **one new kind of spend** (an event role: Energy spent at sign-up, paid at the start on a group result), **one new Political Capital source** (events, 3–15), **no Iron** (events pay none; bail posted is the prisoner's figure moved to nobody) and **no new rate on solo play**. Chat and presence have no numbers. **One GDD number was pinned against its first draft:** Political Capital from events halves after the first of the day (§20.4). **Settled with the architect (3 Oct 2026, `slice-6-together.md` §20): no number moves**; a visit draws no Rested, the Rested part on a 15-Energy role is +38 (halves up), and a withdrawal above a full bar banks the excess as Rested.
 
 ### 20.1 What a role pays (per participant)
 
 | Role · Energy | Own roll | XP | Party XP by the outcome (Triumph / Success / Mixed / Fiasco) | Political Capital (first of the day) |
 |---|---|---|---|---|
-| Named · 15 | Success | 75 (+37 Rested) | 18 / 12 / 6 / 3 | 15 / 10 / 6 / 3 |
+| Named · 15 | Success | 75 (+38 Rested) | 18 / 12 / 6 / 3 | 15 / 10 / 6 / 3 |
 | Named · 15 | Partial | 38 | the same (Party XP is the outcome's) | the same |
 | Named · 15 | Failure | 15 | the same | the same |
 | Named · 10 | Success | 50 | 12 / 8 / 4 / 2 | the same |

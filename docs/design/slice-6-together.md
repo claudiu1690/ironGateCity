@@ -34,7 +34,7 @@ A **Campaign Event** is a ticket with several names on it. A Rank 3 member (or, 
 
 - **Callers:** members of **Rank 3 and above** (the faction's title at run time: *Organisers and above*), standing in an open city (home or the capital), not held, not in transit. **The branch secretary** calls one fixture a day per faction in its home city and in the capital (§4). A Faction Chair's faction-wide events are slice 7.
 - **Cost of calling:** none beyond taking the first role (the caller's sign-up is the call; §2.4). No Political Capital, no Iron.
-- **The venue** is fixed per event type per city (per district in the capital) in content (§3.7): the caller chooses the event, not the place. The venue's sheet carries the event as a ticket while it is open.
+- **The venue** is fixed per event type per city (per district in the capital) in content (§3.7): the caller chooses the event, not the place. In the capital **the call names its district** as a capital action does (GDD §14.13: which district you stand in is client memory): the sheet lists the open district's events, *go there to call it* means switching district on the map, and the server checks only that the caller is in Irongate and that the venue is in the named district. The venue's sheet carries the event as a ticket while it is open.
 - **When:** the start is chosen from four chips, **in 1 hour · in 3 hours · in 6 hours · in 12 hours**, printed with the local clock (*at 19:40*). A start past the City Day boundary resolves on the next City Day and counts against that day's limits. No clock time is ever required of anyone: the chips are for the caller's convenience, and the result waits.
 - **Limits per faction per city** (the scale lever; Appendix C #58): **one upcoming member-called event at a time**, **at most two member-called starts a City Day**, plus the branch's fixture: **three starts a day** at most. A fourth attempt reads *The branch has its hands full in Coalport today*. In the capital the limit is per district.
 - **Limits per member:** at most **three open sign-ups** at once (the GDD's "3 events per City Day", re-expressed so that it needs no day counter: starts are 1–12 hours ahead).
@@ -52,9 +52,9 @@ A **Campaign Event** is a ticket with several names on it. A Rank 3 member (or, 
 | **Gates** | Rank 2 for a named role (any Rank for a hand); standing **in the event's city** at the tap (the capital: anywhere in Irongate; the district is the venue's); not held, not in transit, not on rival ground; Energy at or above the role's; not already on this event; fewer than three open sign-ups |
 | **What it spends** | The role's **Energy, at the tap**, as any action: Rested is drawn per Energy point (§6.3) and its bonus applies to the role's XP at resolution (*Rested: 15 of 15 Energy, +50 % XP*). Nothing else is locked |
 | **What it needs afterwards** | **Nothing.** Where the member is at the start, whether they are online, in the cells, on the ward, on a train, in another city or on rival ground, changes nothing: the role resolves on their stats as they stand at the start and pays them. The fiction is that they did their part before the start; the held screens say so (*You were in the cells when it started; the branch counted you anyway.*) |
-| **Withdrawing** | One tap, **until an hour before the start**: the Energy (and Rested) is returned in full and the role opens. **In the last hour the roster is committed** and the button is gone (*Committed from 18:40*). The branch's fixture: until an hour before the boundary |
+| **Withdrawing** | One tap, **until an hour before the start**: the Energy (and Rested) is returned in full (above a full bar the regen's overflow rule applies: the excess banks as Rested, capped) and the role opens; an event order the sign-up completed **stays carried out** (orders never go backwards). **In the last hour the roster is committed** and the button is gone (*Committed from 18:40*). The branch's fixture: until an hour before the boundary |
 | **The caller withdraws** | The event stands; it is the branch's now |
-| **Nobody at the start** | An event with no member on it at the start is **called off**: no result, no volunteers, a line on the board and in the caller's paper. Nothing was spent by anyone, so nothing is lost |
+| **Nobody at the start** | An event with no member on it at the start is **called off**: no result, no volunteers, a line on the board and in the caller's paper. Nothing was spent by anyone, so nothing is lost. A fixture nobody joined is called off quietly: not under *Results*, no paper line (it has no caller) |
 | **Orders** | A sign-up in the residence city counts for the slot-B order *Take part in the branch's event today* at the tap (§5), like *Take a job* |
 
 Pillar 7, rule 4: Energy committed to an event is never lost. If the member stays, it pays on the outcome; if they withdraw in time, it comes back; the one case where it is spent for nothing (a Fiasco) still pays a fifth of the XP, a quarter of the Party XP and 3 Political Capital.
@@ -76,7 +76,7 @@ participants:  Array<{ characterId, roleId | 'hand', energy, stats { str, int, a
                        level, restedCovered, orderOpen (the event order), heatState }>
 volunteerScore: 0.5 | 0.75          (0.75 only at home while Fired up)
 factors:       { issuePct: 0 | 50, battleground: boolean, groundswellPct, ordinanceSwingPct (for actionType), firedUp: boolean }
-seed:          the event id
+seed:          a secret seed stored on the event (ADR 0036), one named stream per role
 ```
 
 **Per named role held by a member:** one §8.4 check, `chance = 50 + 4 × (stat − difficulty) + 3 × standingLevel + (battleground ? 5 : 0)`, 5–95, difficulty **by the event type, +2 in the capital** (§3; the tier-1 pattern of 8 → 10). One roll per role from the seed: at or below the chance **Success (1)**, up to 20 above **Partial (0.5)**, more than 20 above **Failure (0)**. A role on *best* takes the holder's highest of STR, INT and AGI (the Canvass Drive's canvassers: the coordinator gives you the doors you are fit for). CHA roles use worn CHA.
@@ -127,7 +127,7 @@ Rounding as §5.5: each line to the nearest whole, halves up, base and bonus sep
 
 ### 2.9 Timers and the clock
 
-Resolution is a **scheduled job** (`campaign-event-resolve` at `startsAt`; the plan names events as real events) **and** lazy: any read of the event at or after its start resolves it first, so correctness never depends on the worker (ADR 0025's pattern). Rolls are seeded by the event id, so the worker and the lazy path agree. Stats are read at resolution. The branch's fixture is resolved by the City Day job with the orders.
+Resolution is a **scheduled job** (`campaign-event-resolve` at `startsAt`; the plan names events as real events) **and** lazy: any read of the event at or after its start resolves it first, so correctness never depends on the worker (ADR 0025's pattern). Rolls are seeded per event by a **secret seed stored on it** (the id is public in the route and would let a member compute their roll before choosing a role; ADR 0036), one named stream per role, so the worker and the lazy path agree and filling another role never moves yours. Stats are read at resolution, which is "at the start" because a participant's read resolves their due events before any act of theirs. The branch's fixture is resolved by the city's boundary, before the drift, the count and Monday's Issues (ADR 0037); its result is in the same morning's paper with the orders. Event gains land in the tally of the City Day they are credited (the participant's next read); the headline is the event's day.
 
 ---
 
@@ -171,7 +171,7 @@ Venue kinds `street` · **base swing 1.0** · difficulty **10 · 12** · `canvas
 
 ### 3.3 Poster Night (every faction) · `event.poster-night`
 
-Venue kinds `street`, `station`, `docks`, `press`, `ministry` · **base swing 0.8** · difficulty **10 · 12** · `propaganda` · 30 Energy. Three roles: the event for a branch of three, and the first with **Agility** roles.
+Venue kinds `street`, `station`, `docks`, `press`, `ministry`, `university`, `square`, `bar` · **base swing 0.8** · difficulty **10 · 12** · `propaganda` · 30 Energy. Three roles: the event for a branch of three, and the first with **Agility** roles.
 
 *A run of posters, two crews with paste and a printer who counts the sheets. The town reads it at breakfast and never sees who put it there.*
 
@@ -190,19 +190,19 @@ Venue kinds `street`, `station`, `docks`, `press`, `ministry` · **base swing 0.
 
 Venue kinds `square`, `market` (the main square) · **base swing 2.0** · difficulty **14 · 16** · `speech` · 55 Energy. **Special:** +5 Heat for every member participant when the district is held by a rival (§2.7). Written cold (content policy §7.4): the texts show the movement's manner and never say it is right.
 
-*The movement fills the main square by the thousand: a stand, a speaker, stewards and a lookout. A show of numbers, and the biggest swing a rally gives.*
+*The movement fills the main square by the thousand: a stand, a speaker, ushers and a lookout. A show of numbers, and the biggest swing a rally gives.*
 
 | Role | Stat · Energy | Hint |
 |---|---|---|
 | Speaker | CHA+INT · 15 | The square has to hear you to the far wall. |
 | Stand-builder | STR · 10 | The stand goes up at noon and must hold until the end. |
-| Steward (×2) | STR · 10 | The edges of the square, quiet and tidy. |
+| Usher (×2) | STR · 10 | The edges of the square, quiet and tidy. |
 | Lookout | AGI · 10 | The side streets and the police. Know first. |
 
-- **Triumph** — *The square, by the thousand* — The stand went up at noon and the square was full by seven, row on row in the lamplight, quiet until the speaker spoke. Nobody heckled; the stewards saw to that. The town will talk about the numbers for a week.
-- **Success** — *A full square* — A full square, a stand that held and a speech that ended on time. The stewards kept the edges tidy and the lookout kept the police informed. The movement counts the crowd twice and prints the larger number.
+- **Triumph** — *The square, by the thousand* — The stand went up at noon and the square was full by seven, row on row in the lamplight, quiet until the speaker spoke. Nobody heckled; the ushers saw to that. The town will talk about the numbers for a week.
+- **Success** — *A full square* — A full square, a stand that held and a speech that ended on time. The ushers kept the edges tidy and the lookout kept the police informed. The movement counts the crowd twice and prints the larger number.
 - **Mixed** — *Half a crowd and a cold wind* — The stand went up late and the crowd came early and left in the same order. The speaker shouted into a wind that took every third word. The movement's paper calls it a success; the square knew better.
-- **Fiasco** — *The stand came down* — A plank gave, the stand went over and the speaker went with it. The crowd laughed, which is the one thing a show of discipline cannot survive. The stewards blamed the stand-builder and the stand-builder blamed the wood.
+- **Fiasco** — *The stand came down* — A plank gave, the stand went over and the speaker went with it. The crowd laughed, which is the one thing a show of discipline cannot survive. The ushers blamed the stand-builder and the stand-builder blamed the wood.
 
 ### 3.5 General Strike (Collective) · `event.general-strike`
 
@@ -224,7 +224,7 @@ Venue kinds `factory-gate`, `docks` · **base swing 2.0** · difficulty **14 · 
 
 ### 3.6 Headline Story (Alliance) · `event.headline-story`
 
-Venue kinds `press` · **base swing 2.0 against the target** · difficulty **14 · 16** · `propaganda` · 45 Energy. **Target:** the rival faction leading the city (the district in the capital) at the last boundary; the swing is drawn from it, half to the Alliance and half to Neutral. **No Case File in slice 6** (Case Files are slice 8; from slice 8 a Case File on an NPC of the target faction adds +50 % to the swing and names them in the headline).
+Venue kinds `press` · **base swing 2.0 against the target** · difficulty **14 · 16** · `propaganda` · 45 Energy. **Target:** fixed at the call (the page says *against the {faction}* and that is what happens): in the capital the district's leader at the last boundary (the runner-up when that is the Alliance); in Ashford the rival with the larger share at the call. The swing is drawn from it, half to the Alliance and half to Neutral. **No Case File in slice 6** (Case Files are slice 8; from slice 8 a Case File on an NPC of the target faction adds +50 % to the swing and names them in the headline).
 
 *A reporter, an editor, a source handled with care and a lawyer who reads every line. The story that moves a town against a rival in one morning.*
 
@@ -264,10 +264,10 @@ The second quarters (slice 5) are not venues in slice 6 (an event's venue should
 Until a Faction Chair exists (slice 7) and whenever no member has called one, **the secretary calls one event a day**, so that a branch of one has an event to join on day 1 and the board is never empty:
 
 - **Where:** for each faction, **its home city** and **Irongate** (the capital branch; signed by the same secretary). Two fixtures a day per faction.
-- **Which:** by the day key, `(dayKey + factionIndex) mod 3` over **Canvass Drive · Rally · Poster Night** (the signature events are the members'); in the capital the district is `dayKey mod 5` over the five, at that district's venue.
+- **Which:** by the day key, `(dayKey + factionIndex) mod 3` over **Canvass Drive · Rally · Poster Night** (the signature events are the members'); in the capital the district is `dayKey mod 5` over the five, at that district's venue; **all three factions' capital fixtures share the day's district** (meant: the three branches meet on the same ground, which is the fight; a faction offset is the lever if it reads as a stalemate).
 - **When:** posted at the **City Day boundary** and **resolved at the next boundary** by the city-day job, so the fixture needs no clock time, is open all day, and its result is in the morning paper with the orders. Withdrawal until 23:00 UTC (an hour before).
 - **Who calls:** the secretary (*called by Secretary Holm*); a member may still call their own events alongside it (§2.2's limits).
-- **It is one of the day's three starts** in that city.
+- **It is one of the day's three starts** in that city, and counts as its posting day's event: for *first event today* (§2.7) it is that day's **last**, since it starts at midnight; *first* is by start time among a member's committed sign-ups of the day.
 - **The welcome day:** the Events row of the welcome edition points a new member at it (*Today: the branch's canvass drive on Foundry Row · join as a hand · 5 Energy*), which is the §5.2 "first Campaign Event on day 1".
 
 ---
@@ -306,7 +306,7 @@ The faction's members. **Visible to members only.** Per member: avatar, name, ra
 
 ### 6.4 Scoreboard (the faction's contribution ledger; GDD §14.5 "the faction screen's ranking by cycle and season is slice 6")
 
-Two periods: **This week** (Monday to Monday, the Issues' week; council cycles differ by city, so a faction-wide ranking by cycle would be five rankings) and **All time** (*This season* from slice 8, when seasons exist and roll it over). Rows: name, Level bracket (1–15 / 16–30 / 31+), **Moved** (the sum of the member's positive ledger swings across every city, one decimal), **Events** (joined in the period), heroes in the period. The top three of each bracket carry the rosette; the member's own row is highlighted. A city filter (*All cities* · chips). Nothing here is secret: it is the §14.5 ledger, folded by faction.
+Two periods: **This week** (Monday to Monday, the Issues' week; council cycles differ by city, so a faction-wide ranking by cycle would be five rankings) and **All time** (*This season* from slice 8, when seasons exist and roll it over). Rows: name, Level bracket (1–15 / 16–30 / 31+), **Moved** (the sum of the member's positive ledger swings across every city, one decimal), **Events** (joined in the period), heroes in the period. The top ten of each bracket, the top three with the rosette; the member's own row is highlighted, and shown below the ten when outside them. A city filter (*All cities* · chips). Nothing here is secret: it is the §14.5 ledger, folded by faction.
 
 ### 6.5 Chat
 
@@ -316,7 +316,7 @@ Two periods: **This week** (Monday to Monday, the Issues' week; council cycles d
 
 ## 7. Presence ("who's here"; GDD §16.2)
 
-- **What is stored:** `presence { cityId, locationId | null, seenAt }` on the character: `seenAt` on any authenticated request (throttled to once a minute), `locationId` on every action at a place and when a place's sheet is opened (one light mutation), cleared on boarding a train, set to the service's place when held.
+- **What is stored:** `presence { locationId | null, seenAt }` on the character (the character's `cityId` is the city): `seenAt` touched by the read path at most once a minute, never bumping the version, `locationId` on every action at a place and when a place's sheet is opened (one light mutation), cleared on boarding a train, set to the service's place when held.
 - **Here now** = `seenAt` within **ten minutes**.
 - **On a place's sheet** (under the blurb, one line): *Here now: you, {two own-faction names}{ and n more} · {k} from other parties*; when nobody: *Nobody else here just now.* Own-faction names are tappable (the profile sheet); other parties are **a count only**. The GDD's *strangers* are the other two factions summed: there are no neutral players.
 - **Privacy on rival ground:** a visitor to a rival home city is **not counted and not named for anyone but their own faction** there (§14.12: a new player walks through Duskwall unnoticed; recognition by fame is later). A member on rival ground shows to their own faction's Members list as *in Duskwall · rival ground*.
@@ -334,12 +334,12 @@ Avatar, name, faction and rank title, Level, where they live, member since, hero
 
 | | |
 |---|---|
-| **Channels** | **Party** (faction-wide) and **{City} branch** (one per faction per open city: *Coalport branch*, *Irongate branch*; the member reads the channel of the city they are in and may switch to any open city's). Officers (Rank 4+) is slice 7 with the Chair |
+| **Channels** | **Party** (faction-wide) and **{City} branch**, one for the faction's home city and one for the capital (*Coalport branch*, *Irongate branch*): **three channels per faction**; the member reads the branch of the city they stand in, or their residence city's elsewhere (rival ground), and may switch. Officers (Rank 4+) is slice 7 with the Chair |
 | **Who** | Every member from **Rank 1** (GDD §5.4). Read and post |
 | **A message** | Plain text, **at most 280 characters**, no links rendered (a URL is printed as text), no images, no formatting. Author: avatar, name, rank title; the time in the local clock |
 | **History** | The last **200 messages or 7 days per channel**, whichever is less, kept; **50 loaded at a time**, older on scroll |
 | **Rate limits** | One message every **3 seconds**; **30 in ten minutes**; an identical repeat within a minute is refused (*Said that already*) |
-| **System lines** | In the city channel, from the server, in the paper's voice: an event called (*{name} has called a rally at Market Row for 19:40 · 1 of 4 roles*), the result (*The branch's canvass drive on Foundry Row: Success · opinion +0.95*), a mate taken in (*{name} has been taken in at Harbour Police · bail 150 Iron* with **Post bail**), admitted (*{name} is in the infirmary · 18 minutes* with **Visit · 3 Energy**), a seat won, a hero named, a nudge (§9.3). System lines carry the buttons; nothing else in chat is tappable but names |
+| **System lines** | In the branch channel of the place (the residence city's branch when the place has no branch of the faction, as on rival ground), from the server, in the paper's voice: an event called (*{name} has called a rally at Market Row for 19:40 · 1 of 4 roles*), the result (*The branch's canvass drive on Foundry Row: Success · opinion +0.95*), a mate taken in (*{name} has been taken in at Harbour Police · bail 150 Iron* with **Post bail**), admitted (*{name} is in the infirmary · 18 minutes* with **Visit · 3 Energy**), a seat won, a hero named, a nudge (§9.3). System lines carry the buttons; nothing else in chat is tappable but names |
 | **Transport** | WebSockets (the plan): live lines while the tab is open; otherwise the history on open. **Nothing depends on being connected** (a result lands in the modal and the paper whether or not the chat was open) |
 | **Moderation now** | **Mute** a member (one tap on the profile sheet; stored on the character; hides their lines for you); **Report** a message (one tap; writes a `chatReports` document with the message and the twenty lines around it; nothing automatic); the sign-up name rule; the length and rate limits above. The chat's one promise to the user is that it can be switched off: *Chat* can be hidden from the Me tab |
 | **Slice 9** | Moderator roles and tools, timeouts and bans, word filters, the audit of reports, appeals, the chat-moderation policy itself (Appendix C #7, still open) |
@@ -367,14 +367,14 @@ The chat is **optional**: no rule, reward or event needs it. It exists so a bran
 |---|---|
 | **From** | The Members list row of a mate on the ward, the chat line, the profile sheet |
 | **Who** | Any member of the patient's faction, **from anywhere but rival ground, while not held and not in transit** (3 Energy is an Energy action: the branch's runner takes the grapes) |
-| **Cost** | **3 Energy** |
+| **Cost** | **3 Energy**; no Rested drawn (a visit pays no XP), as *Walk out well* |
 | **Effect** | The patient **+10 Health** and **five minutes off** the stay (lazily: `until` moves; a read at or after it discharges). **Once per visitor per stay; at most three visits count per stay** (a stay never falls below five minutes), later ones are grapes only |
 | **Rewards** | The visitor **+10 Party XP**; the patient sees *Visited by {name}: Health +10, five minutes off* on the held screen and in the morning's paper |
 | **Guards** | The patient must be on the ward at the tap (*Already out*); not for a rival |
 
 ### 9.3 The nudge (GDD §16.2's "give them a spot in your Campaign Event")
 
-One tap on a member's row or profile while the member has an open event with an empty role: **Ask {name} to join {event}** posts a system line in the city channel addressed to them (*{caller} asks {name} to take the Press at the rally · 19:40*) with the event's button. No reservation, no state beyond *once per caller per member per event*. It is the cheapest social tap in the game and the one that fills rosters.
+One tap on a member's row or profile while **you are signed up to an open event with a free place and the mate is not on it**: **Ask {name} to join {event}** posts a system line in the branch channel addressed to them, naming the first open named role they may take (*{caller} asks {name} to take the Press at the rally · 19:40*) or a pair of hands when only a hand's place suits them (*{caller} asks {name} for a pair of hands at the rally · 19:40*), with the event's button. No reservation, no state beyond *once per pair per event*. It is the cheapest social tap in the game and the one that fills rosters.
 
 ---
 
@@ -497,10 +497,10 @@ Companion edit: `docs/economy.md` §20.
 
 Each with a default so the build does not wait.
 
-1. **Events in content.** Suggested: `campaignEventTypes[]` (`{ id, name, factionId?, venueKinds[], roles[] { id, name, stats, energy, hint }, hands: 4, baseSwing, difficulty { home, capital }, actionType, special?: 'heatInRivalHeld' | 'doubleMomentum' | 'againstLeader', blurb, text { triumph, success, mixed, fiasco } }`) and `eventVenues[]` (`{ eventId, cityId, districtId?, locationId }`, §3.7), validated by the loader (venue kind in the type's list; one venue per event per city or district); rates, bands, the volunteer scores and the limits in `packages/rules` (`EVENTS`); `resolveCampaignEvent` pure, seeded by the event id.
+1. **Events in content.** Suggested: `campaignEventTypes[]` (`{ id, name, factionId?, venueKinds[], roles[] { id, name, stats, energy, hint }, hands: 4, baseSwing, difficulty { home, capital }, actionType, special?: 'heatInRivalHeld' | 'doubleMomentum' | 'againstLeader', blurb, text { triumph, success, mixed, fiasco } }`) and `eventVenues[]` (`{ eventId, cityId, districtId?, locationId }`, §3.7), validated by the loader (venue kind in the type's list; one venue per event per city or district); rates, bands, the volunteer scores and the limits in `packages/rules` (`EVENTS`); `resolveCampaignEvent` pure, seeded per event by a secret seed stored on it (settled, §20).
 2. **The collection** `campaignEvents` (`{ typeId, factionId, cityId, districtId, venueId, calledBy: characterId | 'secretary', startsAt, status: 'open' | 'resolved' | 'calledOff', roles[] { roleId, characterId | null, energy, restedCovered, signedAt }, hands[], result? }`); sign-up as one transaction (the character's Energy and Rested with guards, the role's slot with a guard that it is empty, the three-sign-up count, the sign-up counted for the order); withdrawal the reverse with the hour-before guard; the per-city per-day counters on the city document like `rivalPressure`.
 3. **Resolution:** the Agenda job at `startsAt` plus the lazy path on any read of the event; one transaction writes the result, the ledger rows, the momentum, the rewards to every participant and a `pendingEventResults[]` entry on each character, shown by `loadCharacter` as the orders-complete modal is. The fixture is created and resolved by the city-day job.
-4. **Presence:** `presence { cityId, locationId, seenAt }` on the character; `seenAt` touched by the auth middleware at most once a minute; `presence.at({ locationId })` as a light procedure the sheet calls; the place query counts and names from an index `{ 'presence.locationId': 1, 'presence.seenAt': -1 }`.
+4. **Presence:** `presence { locationId, seenAt }` on the character (settled: no `cityId`); `seenAt` touched by the auth middleware at most once a minute; `presence.at({ locationId })` as a light procedure the sheet calls; the place query counts and names from an index `{ 'presence.locationId': 1, 'presence.seenAt': -1 }`.
 5. **Chat:** `chatMessages` (`{ channel: 'party:collective' | 'city:collective:coalport', characterId, text, at }`, TTL 7 days, a `$slice` or a count cap at 200 per channel on the tidy job), `chatReports`, `mutes[]` on the character; Socket.IO rooms per channel; the system lines are messages with `system: { kind, payload }`; ADR 0001's same-origin proxy and WebSockets to be tested.
 6. **Favours:** `favours.postBail({ characterId })` and `favours.visit({ characterId })`, each one transaction across the two characters (ADR 0002's idempotency keys); the release path is the cells' own with `bailPostedBy`; the visit moves `held.until` by five minutes and `health` by 10, guarded by the visit list.
 7. **The Faction tab:** views `factionHq.orders`, `factionHq.events`, `factionHq.members` (paged), `factionHq.scoreboard({ period, cityId? })` folding the ledger by character; the profile `characters.profile({ id })` with the public fields only.
@@ -513,7 +513,7 @@ Each with a default so the build does not wait.
 
 ## 17. Content-policy check
 
-Every string above was read against `content-policy-review.md` §7. The Grand Rally is a party's show of numbers written cold: a stand, stewards, a lookout, a paper that prints the larger number; nothing praises it and the Fiasco laughs at it. Its stewards are the reviewed event roles; no uniform, drill, torch, salute, mark or slogan appears, and the one slogan in slice 6 is none. The General Strike is a picket, a bulletin and a runner; its people are shop stewards and pickets; no Soviet title. The Headline Story is a newsroom. *Security* is the reviewed all-faction role. The police in the texts are the republic's and appear as something a rally ends after or a lookout watches. No *march*, *front*, *uprising*, *enemy*, *troops* or *war*; rivals are rivals. The volunteers are *townspeople run by the game*, the local-candidate rule. The chat's system lines are in the paper's voice. **For QA:** the war regex's `front` matches *front page* in the Headline Story's Triumph (a newspaper's front page, like the reviewed *front door*) and needs the same allowance; *stand* (a platform) and *the Rooms* are existing words; *steward* is on the allowed list.
+Every string above was read against `content-policy-review.md` §7. The Grand Rally is a party's show of numbers written cold: a stand, ushers, a lookout, a paper that prints the larger number; nothing praises it and the Fiasco laughs at it. Its ushers (the roles were *Stewards* until that clashed with the Vanguard's Rank 2 title, §20) keep order at a meeting, a civic job; no uniform, drill, torch, salute, mark or slogan appears, and the one slogan in slice 6 is none. The General Strike is a picket, a bulletin and a runner; its people are shop stewards and pickets; no Soviet title. The Headline Story is a newsroom. *Security* is the reviewed all-faction role. The police in the texts are the republic's and appear as something a rally ends after or a lookout watches. No *march*, *front*, *uprising*, *enemy*, *troops* or *war*; rivals are rivals. The volunteers are *townspeople run by the game*, the local-candidate rule. The chat's system lines are in the paper's voice. **For QA:** the war regex's `front` matches *front page* in the Headline Story's Triumph (a newspaper's front page, like the reviewed *front door*) and needs the same allowance; *stand* (a platform) and *the Rooms* are existing words; *steward* is on the allowed list.
 
 ---
 
@@ -541,3 +541,42 @@ Nothing else: the Faction tab is paper and type; presence and chat use the avata
 5. **A visit is 3 Energy from anywhere but rival ground** (§9.2), not only from the same city. Default: **anywhere**; at low population a same-city rule would mean no visit ever happens. The alternative keeps the fiction stricter.
 6. **The Headline Story runs without a Case File in slice 6** and gains +50 % with one from slice 8 (§3.6). Default: **yes**; the Alliance needs its signature event in the slice that answers "do players feel part of a team".
 7. **Chat ships with mute and report only; the moderation policy and tools are slice 9** (§8). Default: **yes**, and chat can be hidden from the Me tab. The alternative is to hold chat to slice 9, which loses the slice's question.
+
+---
+
+## 20. Settled for the build (3 Oct 2026; answers to `docs/tech/slice-6.md` §22.1 and §23)
+
+The architect's defaults are accepted except two (Q6, Q17); Q13 is confirmed as written. Every change to this document's earlier sections was applied in the same change, so the content tests that read the tables stay in step. **Numbers that moved:** none; a Rested example was corrected (+38), a visit draws no Rested, and the Grand Rally's two *Steward* roles are **Ushers**.
+
+### 20.1 The eighteen questions
+
+| # | Decision | Where it now lives |
+|---|---|---|
+| 1 | **Poster Night's venue kinds gain `university`, `square` and `bar`** (the college boards, the tram shelters, the tavern wall): the venues of §3.7 were chosen per place and stand | §3.3 |
+| 2 | **Rested on a 15-Energy role is +38** (37.5, halves up); the examples are corrected | screens §5, `economy.md` §20.1 |
+| 3 | **An event order completed by a sign-up stays carried out after a withdrawal.** Orders never go backwards anywhere in the game; the report counts it | §2.4 |
+| 4 | **Withdrawal above a full bar follows the regen's overflow rule**: Energy to the bar, the excess to Rested, Rested capped | §2.4 |
+| 5 | **A fixture nobody joined is called off quietly**: not under *Results*, no paper line (it has no caller). A member-called event called off is listed and gets the caller's line | §2.8, §4, §10 |
+| 6 | **Not the default. The capital's district is client memory** (GDD §14.13), as for every capital action: **the call names its district in the request**; the sheet lists the open district's events, and *go there to call it* means switching district on the map; the server checks only that the caller is in Irongate and that the venue is in the named district. Nothing stored holds a member to a district | §2.2 |
+| 7 | **The Headline Story's target is fixed at the call**: in the capital the district's leader at the last boundary (the runner-up when that is the Alliance); in Ashford the rival with the larger share at the call. The page says *against the {faction}* and that is what happens | §3.6 |
+| 8 | **Events take every line an action of the event's `actionType` at the venue would**: Standing, the close race, `chancePct`, `fxpPct`, `swingPct`, the comeback, the Issue. **Cost effects do not change a role's Energy** (the members' share is counted in it; *Rally Permits* leaves a Speaker at 15) | §2.6 |
+| 9 | **Who may nudge:** any member **signed up to an open event with a free place** may ask a mate who is not on it, once per pair per event; the line names the first open named role the mate may take, or **a pair of hands** when only a hand's place suits them. New copy: *{caller} asks {name} for a pair of hands at the {event} · {time}* | §9.3, screens §2.3, §3.1 |
+| 10 | **A visit draws no Rested** (it pays no XP), like *Walk out well* | §9.2 |
+| 11 | **Three channels per faction:** *Party*, the home city's branch and the Irongate branch. A member reads the branch of the city they stand in; elsewhere (rival ground) their residence city's | §8 |
+| 12 | **A system line from a place with no branch of the faction** (taken in on rival ground) goes to the **residence city's branch** | §8 |
+| 13 | **Confirmed as written: all three factions' capital fixtures share the day's district** (`dayKey mod 5`). The three branches meet on the same ground, which is the three-way fight the fixture exists for; the paper can say so. The lever, if a shared district reads as a stalemate at low population, is a faction offset | §4 |
+| 14 | **The fixture counts as its posting day's event** and, starting at midnight, is that day's **last** for *first event today*; *first* is by start time among a member's committed sign-ups of the day | §2.7, §4 |
+| 15 | **The scoreboard shows the top ten of each bracket**, the rosette on three, the member's own row below the ten when outside them | §6.4, screens §2.4 |
+| 16 | **Event gains land in the tally of the City Day they are credited** (the participant's next read), like a hero's Political Capital; the headline is the event's day | §2.8 |
+| 17 | **Not the default. The Grand Rally's two *Steward* roles are renamed *Usher*** (ids `usher-1`, `usher-2`), so a row never reads *Steward · {name} · Steward* against the Vanguard's Rank 2 title. *Usher* is a civic word for the person who keeps order at a meeting and is in neither QA regex; the party's own description (*volunteers and stewards*, GDD §16.1) and the Collective's *Shop Steward* are unchanged | §3.4, §17, GDD §16.3 |
+| 18 | **Modal order on a read:** a run-in, then the held release, then event results oldest first, then the orders-complete note | screens §12 |
+
+**The seed.** Rolls are **seeded per event by a secret seed stored on it** (16 random bytes), one named stream per role, never sent before resolution; the event id is public in the route and would let a member compute their roll before choosing a role (ADR 0036). §2.6, §2.9, §16 Q1 and GDD §16.3 are reworded.
+
+### 20.2 The sixteen notes (`docs/tech/slice-6.md` §23)
+
+1. The seed: above. 2. Poster Night's kinds: #1. 3. Rested +38: #2. 4. **The swing's inputs** are every factor an action of the type at the venue gets (ADR 0030's named factors); §2.6's list is read as that. 5. **`presence.cityId` is dropped**: the character's `cityId` is the city (§7). 6. "Stats at the start" holds because a participant's read resolves their due events before any act of theirs. 7. **The fixture is resolved by the city's boundary**, before the drift, the count and Monday's Issues (ADR 0017, 0037), not by the character's settlement; its result is in the same morning's paper (§2.9, §4 reworded). 8. The nudge: #9. 9. Withdrawal and the order: #3. 10. Rewards and a long absence: #16. 11. The scoreboard's length: #15. 12. The Headline Story's target: #7. 13. **The data model**: the plan's slice-6 row becomes `campaignEvents` (roster embedded), `eventSignups`, `chatMessages`, `chatReports`, `chatLimits`, faction-scoped `contributions`, and on the character `presence { locationId, seenAt }`, `events`, `chat`, `mutes`, `nameWords` (ADR 0036–0042); the plan's table is the architect's to amend. 14. **Vocabulary:** *front page* needs the allowance; *sergeant* is settled by slice 5 (*the duty officer*, `portrait.duty-officer`; `slice-5-risk.md` §23.1 #22) and no slice-6 string uses it. 15. **GDD §19.1's first paragraph now says *once per visitor per stay***. 16. No SSE: Socket.IO carries chat only; everything else refetches on focus.
+
+### 20.3 For QA
+
+`front page` joins both guards' `front` allow-lists. *Usher* and *ushers* are in neither regex. No slice-6 string uses *sergeant*, *march*, *front* in a political sense, *torch* or *in front of*.
