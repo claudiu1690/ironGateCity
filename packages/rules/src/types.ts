@@ -94,6 +94,11 @@ export interface Rewards {
   iron: RewardLine;
   /** Percentage points toward the actor's faction; 0 when the action gives none. Three decimals. */
   opinion: number;
+  /**
+   * Slice 4 (ADR 0030 §4): the swing's named factors (*Close race +25 %*, *Issue: Tram Fare Hike
+   * +50 %*, *Comeback +15 %*, an ordinance's *+15 %*), present when any applied.
+   */
+  opinionFactors?: Array<{ id: string; label: string; pct: number }>;
 }
 
 export interface EnergyView {
@@ -119,15 +124,45 @@ export interface ActionDescriptor {
   type?: string;
   locationId?: string;
   cityId?: string;
+  /** Slice 4: the location's quarter (a capital district), its kind, and the live Issues tagging it. */
+  districtId?: string;
+  locationKind?: string;
+  issueIds?: string[];
 }
 
-/** AND of the fields present. `cityId: 'home'` means the actor's home city. */
+/**
+ * AND of the fields present. `cityId: 'home'` means the actor's residence city (slice 4, ADR 0026;
+ * the home city for everyone who never moved); `districtId: 'home'` the residence district.
+ */
 export interface OrderMatch {
   actionTypes?: string[];
   actionIds?: string[];
   locationIds?: string[];
   cityId?: string;
   kinds?: ActionKind[];
+  /** Slice 4: a district id, or 'home' for the residence district. */
+  districtId?: string;
+  /** Slice 4: any action tagged with a live Issue. */
+  issueTagged?: boolean;
+  /** Slice 4: location kinds (`street`, `market`). */
+  locationKinds?: string[];
+}
+
+/**
+ * Slice 4 (ADR 0029): what tags an action with an Issue: the order-match fields that describe a
+ * place and a type (AND of those present). The city is the Issue's own (`where[].cityId`).
+ */
+export interface IssueMatch {
+  actionTypes?: string[];
+  locationIds?: string[];
+  locationKinds?: string[];
+  districtId?: string;
+}
+
+/** Where a character lives (ADR 0026): the order matches' `'home'`. */
+export interface ResidenceCtx {
+  cityId: string;
+  districtId: string | null;
 }
 
 export type OrderSlot = 'A' | 'B' | 'C';
@@ -149,6 +184,11 @@ export interface OrderTemplate {
   use?: 'rotation' | 'crisis' | 'welcome';
   /** FXP for completing it; default DIRECTIVES.orderDoneFxp (20). Restore the base pays 40. */
   doneFxp?: number;
+  /**
+   * Slice 4 (design §10): which residents' rotation it belongs to. `home` (default): the home
+   * set; `capital`: an Irongate resident's slots A and B; `any`: both (slot C).
+   */
+  residence?: 'home' | 'capital' | 'any';
 }
 
 export interface OrderItem {
@@ -187,6 +227,8 @@ export type HeadlineCondition =
   | { kind: 'energyYesterday'; min?: number; max?: number }
   | { kind: 'noPersonal' }
   | { kind: 'homeShare'; min?: number; max?: number }
+  /** Slice 4 (stored): the level reached `level` (or passed it) since the last paper (`train-open`). */
+  | { kind: 'levelCrossed'; level: number }
   | PoliticalCondition;
 
 /**
@@ -196,8 +238,11 @@ export type HeadlineCondition =
 export type PoliticalCondition =
   /** Elected at last night's count; `top` = first of seven. */
   | { kind: 'seatWon'; top?: boolean }
-  /** Stood at last night's count and was not elected; `tie` = lost on a tie-break (margin 0). */
-  | { kind: 'seatLost'; tie?: boolean }
+  /**
+   * Stood at last night's count and was not elected; `tie` = lost on a tie-break (margin 0). Slice 4:
+   * `bloc` = in a capital district, the caller's party won no seat there.
+   */
+  | { kind: 'seatLost'; tie?: boolean; bloc?: boolean }
   /** The candidate the player voted for at last night's count won or lost (`tie` as above). */
   | { kind: 'votedFor'; won: boolean; tie?: boolean }
   /** Declared yesterday, and today is still nominations. */
@@ -216,7 +261,43 @@ export type PoliticalCondition =
   /** An ordinance took effect this morning. */
   | { kind: 'ordinanceFromToday' }
   /** Morale rose out of Unrest at last night's boundary. */
-  | { kind: 'leftUnrest' };
+  | { kind: 'leftUnrest' }
+  | CapitalCondition;
+
+/**
+ * Slice 4 (tech design §11.3): live conditions of the capital, the Issues and travel. Like the
+ * political ones they are selected at read, never at settlement, and a template uses live kinds
+ * only.
+ */
+export type CapitalCondition =
+  /** Registered a residence yesterday (`welcome-resident`, the home papers' `moved-away`). */
+  | { kind: 'registeredYesterday' }
+  /** Arrived in the capital for the first time yesterday. */
+  | { kind: 'firstCapitalArrivalYesterday' }
+  /** Named District Hero (`district`) or City Hero (`city`) at last night's count. */
+  | { kind: 'heroYesterday'; place: 'district' | 'city' }
+  /** Among the top five of an Issue resolved last night. */
+  | { kind: 'issuePcYesterday' }
+  /** Quoted by the reporter yesterday (the journey card). */
+  | { kind: 'quotedYesterday' }
+  /** Monday: this week's Issues were drawn last night. */
+  | { kind: 'issuesDrawnToday' }
+  /** Not Monday: a faction leads the paper city's first Issue. */
+  | { kind: 'issueLeading' }
+  /** Not Monday: nobody has points on the paper city's first Issue. */
+  | { kind: 'issueOpen' }
+  /** Monday: an Issue resolved last night, owned or lapsed. */
+  | { kind: 'issueResolvedToday'; owned: boolean }
+  /** The residence district is a close race today. */
+  | { kind: 'districtBattleground' }
+  /** The residence district became a close race at the boundary. */
+  | { kind: 'districtBecameBattleground' }
+  /** The residence district stopped being one. */
+  | { kind: 'districtLeftBattleground' }
+  /** A comeback began in the residence district last night. */
+  | { kind: 'groundswellStarted' }
+  /** The residence district's line (the fallback city line). */
+  | { kind: 'districtLine' };
 
 export const POLITICAL_CONDITION_KINDS = [
   'seatWon',
@@ -231,7 +312,40 @@ export const POLITICAL_CONDITION_KINDS = [
   'phaseToday',
   'ordinanceFromToday',
   'leftUnrest',
+  // Slice 4: live, like the political ones.
+  'registeredYesterday',
+  'firstCapitalArrivalYesterday',
+  'heroYesterday',
+  'issuePcYesterday',
+  'quotedYesterday',
+  'issuesDrawnToday',
+  'issueLeading',
+  'issueOpen',
+  'issueResolvedToday',
+  'districtBattleground',
+  'districtBecameBattleground',
+  'districtLeftBattleground',
+  'groundswellStarted',
+  'districtLine',
 ] as const satisfies ReadonlyArray<PoliticalCondition['kind']>;
+
+/** Slice 4: the live conditions of the capital, the Issues and travel (a subset of the above). */
+export const CAPITAL_CONDITION_KINDS = [
+  'registeredYesterday',
+  'firstCapitalArrivalYesterday',
+  'heroYesterday',
+  'issuePcYesterday',
+  'quotedYesterday',
+  'issuesDrawnToday',
+  'issueLeading',
+  'issueOpen',
+  'issueResolvedToday',
+  'districtBattleground',
+  'districtBecameBattleground',
+  'districtLeftBattleground',
+  'groundswellStarted',
+  'districtLine',
+] as const satisfies ReadonlyArray<CapitalCondition['kind']>;
 
 export interface HeadlineTemplate {
   id: string;
@@ -261,6 +375,10 @@ export const PLACEHOLDERS = [
   'place',
   'ordersTitle',
   'ordersLine',
+  /** Slice 4: the residence district, the faction's name (the Herald's stored lines), the Issue. */
+  'district',
+  'faction',
+  'issue',
 ] as const;
 export type Placeholder = (typeof PLACEHOLDERS)[number];
 
@@ -292,6 +410,55 @@ export const POLITICAL_PLACEHOLDERS = [
   'resultWeekday',
 ] as const;
 export type PoliticalPlaceholder = (typeof POLITICAL_PLACEHOLDERS)[number];
+
+/**
+ * Slice 4 (tech design §4.3): the placeholders the capital and Issue headlines may use besides the
+ * political ones, all resolved on the server.
+ */
+export const CAPITAL_PLACEHOLDERS = [
+  'district',
+  'districtShort',
+  'winners',
+  'seatsV',
+  'seatsC',
+  'seatsA',
+  'seatsFaction',
+  'leader',
+  'second',
+  'third',
+  'leaderShare',
+  'secondShare',
+  'thirdShare',
+  'state',
+  'yourSwing',
+  'yourRank',
+  'contributors',
+  'issue1',
+  'issue2',
+  'issue1Short',
+  'issueShort',
+  'issue1Blurb',
+  'issue2Blurb',
+  'district2',
+  'faction',
+  'm1',
+  'm2',
+  'm3',
+  'stance',
+  'effectLine',
+  'swing',
+  'bracket',
+  'origin',
+  'rank3',
+  'weekday',
+  /** The register and room results: the faction's capital HQ, the Rested cap with the room. */
+  'hq',
+  'cap',
+] as const;
+export type CapitalPlaceholder = (typeof CAPITAL_PLACEHOLDERS)[number];
+
+/** Slice 4 (tech design §4.3): what a journey card's detail and texts may name. */
+export const JOURNEY_PLACEHOLDERS = ['destination', 'issue'] as const;
 export const TIME_TOKENS = ['until', 'at'] as const;
 
 /**
@@ -492,6 +659,14 @@ export interface CharacterView {
   politicsWaiting: 0 | 1;
   /** Slice 3: today's Rested cap in the home city (Rest Day Order: 250), for the client projection. */
   restedCap: number;
+  /** Slice 4 (tech design §8.3): the journey, residence, room, train, heroes and scoreboard. */
+  journey?: CharacterViewV5['journey'];
+  residence?: CharacterViewV5['residence'];
+  room?: CharacterViewV5['room'];
+  trainOpen?: boolean;
+  hero?: CharacterViewV5['hero'];
+  heroes?: CharacterViewV5['heroes'];
+  scoreboard?: CharacterViewV5['scoreboard'];
   /**
    * Review 1 (§8.4, §7.5): today is the welcome day (the creation day, and the next when created
    * after 22:00 UTC): the *First day* bonus and the plate's first-time hint.
@@ -536,6 +711,8 @@ export interface ActionView {
   locked: { reason: 'LEVEL' | 'STANDING'; need: number } | null;
   /** Slice 3: the ordinance in force's tags ("Rally Permits: 10 Energy", "Open Doors: +4 %"). */
   tags: OrdinanceTagView[];
+  /** Slice 4: the place's tags (an Issue, the close race, a comeback, members only). */
+  placeTags?: PlaceTagView[];
 }
 
 export interface LocationJobView {
@@ -567,6 +744,19 @@ export interface LocationView {
   jobs: LocationJobView[];
   /** Slice 3: the council card, on the home faction's HQ only. */
   council: PoliticsSummaryView | null;
+  /** Slice 4: the quarter (a capital district), members only, the live Issues tagging it, trains. */
+  quarterId?: string;
+  factionId?: FactionId;
+  issueIds?: string[];
+  trains?: {
+    destinations: Array<{
+      cityId: string;
+      name: string;
+      minutes: number;
+      fare: PriceView;
+      canBoard: boolean;
+    }>;
+  } | null;
 }
 
 export interface CityView {
@@ -589,6 +779,12 @@ export interface CityView {
   ordinance: { ordinanceId: string; name: string; line: string; effectLine: string; daysLeft: number } | null;
   /** Review 2: the home city's Election card (screens §1a); null elsewhere. */
   election: PoliticsSummaryView | null;
+  /** Slice 4: the capital's districts; the city share (the capital: the average); the Issues. */
+  districts?: DistrictView[] | null;
+  cityOpinion?: OpinionShares;
+  scoreboard?: { mine: ScoreboardLineView | null } | null;
+  issues?: IssueRowView[];
+  effects?: ModifierSourceView[];
 }
 
 export interface BonusTag {
@@ -664,6 +860,9 @@ export interface ActionResult {
     level: number;
     opinion: {
       cityId: string;
+      /** Slice 4: the district (or the city) whose meter moved. */
+      placeId?: string;
+      placeName?: string;
       factionId: FactionId;
       /** The requested swing. */
       delta: number;
@@ -692,6 +891,17 @@ export interface ActionResult {
     morale?: { cityId: string; cityName: string; before: MoraleState; after: MoraleState } | null;
     /** Slice 3: completing the third order made the branch endorse the caller's candidacy. */
     branchEndorsement?: { endorsements: number; needed: number; smallBranch: boolean } | null;
+    /** Slice 4: the points this action added to each tagged Issue. */
+    issues?: Array<{
+      issueId: string;
+      name: string;
+      factionId: FactionId;
+      added: number;
+      totals: Record<FactionId, number>;
+      leader: FactionId | null;
+    }>;
+    /** Slice 4: the scoreboard line after this action. */
+    scoreboard?: { placeName: string; swing: number; rank: number; of: number } | null;
   };
   /** The Today tally after this tap. */
   today: DailyTally;
@@ -831,7 +1041,27 @@ export type GameErrorReason =
   | 'NOT_ON_PAPER'
   | 'ALREADY_COUNCIL_VOTED'
   | 'UNKNOWN_ELECTION'
-  | 'ELECTION_NOT_READY';
+  | 'ELECTION_NOT_READY'
+  // Slice 4 (tech design §6.9).
+  | 'LEVEL_TOO_LOW'
+  | 'IN_TRANSIT'
+  | 'ALREADY_THERE'
+  | 'DESTINATION_LOCKED'
+  | 'UNKNOWN_DESTINATION'
+  | 'NOT_ENOUGH_IRON'
+  | 'NO_JOURNEY'
+  | 'NO_CARD'
+  | 'CARD_CLOSED'
+  | 'ALREADY_CHOSEN'
+  | 'NOT_IN_CITY'
+  | 'MOVE_COOLDOWN'
+  | 'ALREADY_RESIDENT'
+  | 'UNKNOWN_DISTRICT'
+  | 'MEMBERS_ONLY'
+  | 'NOT_RESIDENT'
+  | 'NOT_YET_VOTER'
+  | 'NOT_YET_CANDIDATE'
+  | 'WRONG_FACTION';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -969,6 +1199,10 @@ export interface PoliticsSummaryView {
   dot: boolean;
   /** Review 2 (slice-3 screens §1a, §2.1): the Election card's state and what it prints. */
   card: ElectionCardView;
+  /** Slice 4: the place voted in (a district or the home city) and its seats (2 or 7). */
+  placeId?: string;
+  placeName?: string;
+  seats?: 7 | 2;
 }
 
 /**
@@ -986,7 +1220,9 @@ export type ElectionCardState =
   | 'standing'
   | 'backing'
   | 'result'
-  | 'candidates';
+  | 'candidates'
+  /** Slice 4 (screens §7.2): registered in a district, the first vote not yet open. */
+  | 'registered';
 
 /** What the player's result line says on the morning of a count (screens §2.1 `{your line}`). */
 export type ElectionYourLine =
@@ -1215,8 +1451,26 @@ export interface FrontPageView {
   count: CountView;
 }
 
-export type PoliticalAct = 'ballot' | 'declare' | 'endorse' | 'withdraw' | 'propose' | 'councilVote';
-export const POLITICAL_ACTS = ['ballot', 'declare', 'endorse', 'withdraw', 'propose', 'councilVote'] as const;
+export type PoliticalAct =
+  | 'ballot'
+  | 'declare'
+  | 'endorse'
+  | 'withdraw'
+  | 'propose'
+  | 'councilVote'
+  // Slice 4 (tech design §10.4).
+  | 'register'
+  | 'room';
+export const POLITICAL_ACTS = [
+  'ballot',
+  'declare',
+  'endorse',
+  'withdraw',
+  'propose',
+  'councilVote',
+  'register',
+  'room',
+] as const;
 
 /** The political result modal (screens §9, tech design §10.1), stored in requestLogs.result. */
 export interface PoliticalResult {
@@ -1244,9 +1498,320 @@ export interface PoliticalResult {
       stateAfter: MoraleState;
     } | null;
     endorsements: { name: string; n: number; needed: number } | null;
+    /** Slice 4: a move or a room. */
+    iron?: { before: number; after: number } | null;
+    seatGivenUp?: { cityName: string } | null;
+    candidacyWithdrawn?: boolean;
   };
   performedAt: string;
   idempotencyKey: string;
   character: CharacterView;
-  view: { kind: 'election'; election: ElectionView } | { kind: 'council'; council: CouncilView };
+  view:
+    | { kind: 'election'; election: ElectionView }
+    | { kind: 'council'; council: CouncilView }
+    | { kind: 'residence'; residence: ResidenceCardView; election: PoliticsSummaryView | null };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Slice 4 views and results (docs/tech/slice-4.md §8.3, §10). Built by the server; no view carries a
+// ballot or a total before the count (ADR 0019). Fields added to the slice 1–3 views are optional
+// until the slice-4 server fills them.
+// ---------------------------------------------------------------------------------------------
+
+/** Where Continue on the arrival modal lands (the capital: Station & Market, Central Station). */
+export interface Landing {
+  cityId: string;
+  quarterId?: string;
+  locationId?: string;
+}
+
+/** A priced line: a ticket's or a room's source and its percentage (ADR 0030). */
+export interface PriceLineView {
+  id: string;
+  label: string;
+  pct: number;
+}
+
+export interface PriceView {
+  base: number;
+  lines: PriceLineView[];
+  total: number;
+}
+
+/** Design §2.3: why a city card has a Board button or not. */
+export type DestinationStateView = 'here' | 'open' | 'rival' | 'later' | 'level';
+
+export interface NationCityView {
+  cityId: string;
+  name: string;
+  x: number;
+  y: number;
+  /** Fixed list order: the capital, your home, the other three. */
+  n: number;
+  /** "Capital · 5 districts · two close races today" (live) / "Home city of the Alliance". */
+  line: string;
+  state: DestinationStateView;
+  lockWord: 'rival ground' | 'no service yet' | null;
+  minutes: number | null;
+  fare: PriceView | null;
+  /** The capital: the average of its districts; Clearwater: its baseline. */
+  whoHolds: OpinionShares;
+  /** This week's two (none for Clearwater). */
+  issues: Array<{ issueId: string; name: string }>;
+  election: { line: 'votesIn' | 'votingOpen' | null; days?: number; until?: number } | null;
+  canBoard: { ok: true } | { ok: false; reason: GameErrorReason };
+  /** In the capital: the card's *See the districts*. */
+  seeDistricts: boolean;
+}
+
+export interface NationView {
+  map: { day: AssetView; night: AssetView };
+  tiles: true;
+  frame: Frame;
+  clouds: boolean;
+  isNight: boolean;
+  here: { cityId: string } | { journey: { from: string; to: string } };
+  /** Level 10 or more. */
+  trainOpen: boolean;
+  cities: NationCityView[];
+}
+
+/** One choice row of a journey card; the client prints the odds word, never the number. */
+export interface JourneyChoiceView {
+  id: string;
+  title: string;
+  detail: string;
+  stat: { stats: CheckStats } | null;
+  chance: number | null;
+  cost: number | null;
+  affordable: boolean;
+}
+
+export interface JourneyCardView {
+  eventId: string;
+  title: string;
+  setup: string;
+  ignore: string;
+  choices: JourneyChoiceView[];
+  chosen: JourneyCardResult | null;
+}
+
+export interface JourneyView {
+  id: string;
+  from: { cityId: string; name: string };
+  to: { cityId: string; name: string };
+  boardedAt: number;
+  arrivesAt: number;
+  serverNow: number;
+  status: 'onTheWay' | 'arrived';
+  firstJourney: boolean;
+  /** Other journeys on this leg boarded within ten minutes. */
+  others: number;
+  card: JourneyCardView | null;
+  arrival: {
+    stamp: 'Arrived';
+    place: string;
+    headline: string;
+    body: string;
+    cardLine: string | null;
+    knockOns: { ticket: number; heraldVisitor: boolean };
+    art: ResultArt;
+    landing: Landing;
+  } | null;
+  whileYouRide: { paperUnread: number; election: PoliticsSummaryView | null };
+}
+
+/** Tech design §10.3: a journey card's outcome, stored on the journey and in requestLogs. */
+export interface JourneyCardResult {
+  kind: 'journeyCard';
+  journeyId: string;
+  eventId: string;
+  choiceId: string;
+  /** null for an unchecked choice. */
+  stamp: 'success' | 'partial' | null;
+  headline: string;
+  body: string;
+  /** A Partial's one-line reason (review 2 §2.4). */
+  reason: string | null;
+  /** Receipt rows, zeros omitted. */
+  rewards: Array<{
+    id: 'xp' | 'fxp' | 'iron' | 'opinion' | 'points' | 'rested';
+    amount: number;
+    note?: string;
+  }>;
+  opinion: { placeName: string; factionId: FactionId; before: number; after: number } | null;
+  points: {
+    issueName: string;
+    added: number;
+    totals: Record<FactionId, number>;
+    leader: FactionId | null;
+  } | null;
+  quoted: boolean;
+  performedAt: string;
+  idempotencyKey: string;
+  character: CharacterView;
+  journey: JourneyView;
+}
+
+export interface BoardResult {
+  journey: JourneyView;
+  character: CharacterView;
+}
+
+/** The scoreboard line (screens §9.1): "This election you've moved Eastside +1.3 … (2nd of 7)". */
+export interface ScoreboardLineView {
+  placeId: string;
+  placeName: string;
+  /** Points, three decimals. */
+  swing: number;
+  factionId: FactionId;
+  rank: number;
+  of: number;
+}
+
+/** The scoreboard table (screens §9.2): the top three per level bracket. */
+export interface ScoreboardTableView {
+  bracket: 1 | 2 | 3;
+  rows: Array<{
+    characterId: string;
+    name: string;
+    factionId: FactionId;
+    level: number;
+    swing: number;
+    you: boolean;
+    hero: boolean;
+  }>;
+}
+
+/** A ticket's place tags, in the screens' order (cost change · Issue · Close race · Comeback). */
+export type PlaceTagView =
+  | { kind: 'issue'; issueId: string; name: string; pct: 50 }
+  | { kind: 'closeRace'; fxpPct: 25 }
+  | { kind: 'comeback'; factionId: FactionId; pct: number }
+  | { kind: 'membersOnly'; factionId: FactionId };
+
+/** Screens §6.1: the residence card's state, chosen on the server per district. */
+export interface ResidenceCardView {
+  state: 'visitingMay' | 'belowRank' | 'cooldown' | 'noIron' | 'resident' | 'homeElsewhere' | 'atHome';
+  livesIn: string;
+  registeredDay?: DayKey;
+  votesFromDay?: DayKey;
+  canMoveFromDay?: DayKey;
+  cost: 500;
+  button: { enabled: boolean } | null;
+  sheet: { lines: Array<{ text: string; warn: boolean }> } | null;
+  room: {
+    state: 'none' | 'running';
+    price: { total: number; lines: PriceLineView[] };
+    untilDay?: DayKey;
+    cap: number;
+  } | null;
+}
+
+export interface DistrictStateView {
+  battleground: boolean;
+  controlledBy: FactionId | null;
+  groundswell: { factionId: FactionId; pct: number } | null;
+  word: 'closeRace' | 'leans' | 'held' | 'contested';
+  leans: FactionId | null;
+}
+
+/** CityView.districts[] (screens §5). */
+export interface DistrictView {
+  id: string;
+  n: number;
+  name: string;
+  blurb: string;
+  frame: Frame;
+  anchor: { x: number; y: number };
+  opinion: OpinionShares;
+  state: DistrictStateView;
+  issues: Array<{
+    issueId: string;
+    name: string;
+    leader: FactionId | null;
+    momentum: Record<FactionId, number>;
+  }>;
+  seats: Array<{ name: string; factionId: FactionId; local: boolean }>;
+  scoreboard: { mine: { swing: number; rank: number; of: number } | null; table: ScoreboardTableView[] };
+  residence: ResidenceCardView;
+  you: { resident: boolean };
+}
+
+/** The paper's and the city's Issue rows (screens §7.1). */
+export interface IssueRowView {
+  issueId: string;
+  name: string;
+  cityId: string;
+  districtId: string | null;
+  placeName: string;
+  leader: FactionId | null;
+  momentum: Record<FactionId, number>;
+  effectLine: string;
+}
+
+/** A named source in force (an ordinance or an Issue effect) with its days left. */
+export interface ModifierSourceView {
+  sourceId: string;
+  name: string;
+  kind: 'ordinance' | 'issue';
+  effectLine: string;
+  daysLeft: number;
+}
+
+/** The character's residence on the Me tab and the plate (ADR 0026). */
+export interface ResidenceView {
+  cityId: string;
+  cityName: string;
+  districtId: string | null;
+  districtName: string | null;
+  sinceDay: DayKey;
+  votesFromDay: DayKey;
+  standsFromDay: DayKey;
+  canMoveFromDay: DayKey;
+}
+
+/** Tech design §10.5: the capital's count, five districts. */
+export interface CapitalCountView {
+  kind: 'capital';
+  councilKey: string;
+  cycle: number;
+  countDay: DayKey;
+  seatsByFaction: Record<FactionId, number>;
+  npcSeats: number;
+  districts: Array<{
+    districtId: string;
+    name: string;
+    factions: Array<{
+      factionId: FactionId;
+      ballots: number;
+      ballotShare: number;
+      opinionShare: number;
+      score: number;
+      seats: number;
+    }>;
+    w: number;
+    ballots: number;
+    rows: Array<CountRowView & { factionId: FactionId; local: boolean }>;
+    seats: Array<{ factionId: FactionId; name: string }>;
+    turnout: { voters: number; eligible: number };
+    scoreboard: ScoreboardTableView[];
+  }>;
+}
+
+/** Slice 4 additions to the character view (optional on it until the slice-4 server fills them). */
+export interface CharacterViewV5 {
+  journey: {
+    id: string;
+    from: string;
+    to: string;
+    arrivesAt: number;
+    status: 'onTheWay' | 'arrived';
+  } | null;
+  residence: ResidenceView;
+  room: { untilDay: DayKey } | null;
+  trainOpen: boolean;
+  hero: { title: string; untilDay: DayKey } | null;
+  heroes: Array<{ placeName: string; n: number }>;
+  scoreboard: ScoreboardLineView[];
 }

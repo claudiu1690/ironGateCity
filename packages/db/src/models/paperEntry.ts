@@ -44,6 +44,8 @@ export interface PaperEntryDoc {
     restedBanked: number;
     daysSinceLastPaper: number | null;
     yesterday: DailyTally | null;
+    /** Slice 4 (ADR 0028): hero and Issue PC credited at this settlement. */
+    awards?: Array<{ kind: 'hero' | 'issue'; label: string; pc: number }> | null;
   };
   snapshot: { level: number; rank: number; standingLevel: number };
   readAt: Date | null;

@@ -43,13 +43,13 @@ function crest(faction: string, alt: string): Asset {
  * needs a new id here: the stills keep their URLs under the year-long immutable /art/ cache. The
  * WebP fallback is 1024 px only (a 2048 px WebP of the painted art is over 1 MB; scripts/art/build.ts).
  */
-function cityMap(city: MapName, time: 'day' | 'night'): Asset {
+function cityMap(city: MapName, time: 'day' | 'night', size = 8640): Asset {
   return {
     id: `map.${city}.${time}`,
     kind: 'map',
-    source: `maps-v3/${city}-${time}-8640.png`,
-    width: 8640,
-    height: 8640,
+    source: `maps-v3/${city}-${time}-${size}.png`,
+    width: size,
+    height: size,
     widths: [1024, 2048],
     webpWidths: [1024],
     alt: mapAlt[`${city}.${time}`],
@@ -61,8 +61,8 @@ type MapName = 'coalport' | 'duskwall' | 'ashford' | 'irongate' | 'clearwater' |
 /**
  * Alt texts for the twelve painted maps (game designer, 2 Oct 2026): what a sighted player sees of
  * the real layout, in plain words, within the schema's 160 characters. The night ones say it is
- * night. Irongate, Clearwater and the nation are not catalogued yet (their slices add the stills
- * with a measured budget, ADR 0015); their texts wait here so the slice copies nothing by hand.
+ * night. Clearwater is not catalogued yet (its slice adds the stills with a measured budget, ADR
+ * 0015); its texts wait here so the slice copies nothing by hand. Irongate and the nation: slice 4.
  */
 export const mapAlt: Record<`${MapName}.${'day' | 'night'}`, string> = {
   'coalport.day':
@@ -86,7 +86,8 @@ export const mapAlt: Record<`${MapName}.${'day' | 'night'}`, string> = {
   'clearwater.night':
     "Clearwater at night: lamps along the promenade and the pier, steamers lit on the dark lake, the casino's windows glowing, the harbour bright at the right.",
   'nation.day':
-    'Painted map of the republic by day: Coalport on the coast at the left, Ashford top left, Irongate in the centre, Duskwall in the mountains, Clearwater on its lake.',
+    // Slice 4: 163 characters as written; "Painted" dropped to fit the 160 of the schema (for the designer).
+    'Map of the republic by day: Coalport on the coast at the left, Ashford top left, Irongate in the centre, Duskwall in the mountains, Clearwater on its lake.',
   'nation.night':
     'The republic at night: the five towns lit, lamps along the railway lines between them, trains with lit windows, the furnaces glowing on the coast.',
 };
@@ -128,6 +129,12 @@ export const assets: Asset[] = [
   cityMap('duskwall', 'night'),
   cityMap('ashford', 'day'),
   cityMap('ashford', 'night'),
+  // Slice 4 (tech design §13): the capital (11,520 px) and the nation (9,216 px). Tiles are their
+  // first view; the stills are the first paint, the fallback and the result's map crops.
+  cityMap('irongate', 'day', 11_520),
+  cityMap('irongate', 'night', 11_520),
+  cityMap('nation', 'day', 9_216),
+  cityMap('nation', 'night', 9_216),
   {
     id: 'scene.origin-deathbed',
     kind: 'scene',

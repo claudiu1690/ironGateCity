@@ -21,7 +21,8 @@ import {
 } from '@irongate/rules';
 import { gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
-import { ensureCityDay } from './cityDay';
+import { ensurePlaces } from './cityDay';
+import { jobCityOf, residenceCityId } from './residence';
 import { buildEdition } from './edition';
 import type { NewEdition } from './edition';
 import { capOn, moraleOf, ordinanceIdOn, ordinanceModifiers } from './modifiers';
@@ -67,13 +68,17 @@ export function computeSettlement(
   now: number,
   read: {
     previous: Pick<PaperEntryDoc, 'day' | 'snapshot'> | null;
+    /** The residence city (orders, crisis, paper, Rested cap; ADR 0026, 0030). */
     home: CityDoc | Pick<CityDoc, 'opinion'> | null;
+    /** Slice 4 (ADR 0030 §6): the job's city, for each ended day's wage; default `home`. */
+    jobCity?: CityDoc | null;
     terms?: OfficeTermDoc[];
     due?: CandidacyDoc[];
   },
 ): SettlementWrite | null {
   const today = dayKey(now);
   const city = read.home && '_id' in read.home ? (read.home as CityDoc) : null;
+  const wageCity = read.jobCity !== undefined ? read.jobCity : city;
   const contentJob = c.job ? content.job(c.job.id) : undefined;
   const pay = contentJob ? jobPay(contentJob, c.factionId) : null;
   const caps = capOn(content, city);
@@ -88,7 +93,7 @@ export function computeSettlement(
     now,
     // Review 1 (§9.1): each ended day's ordinance line on the full wage, and its seniority step.
     wageOn: (ended) => {
-      const m = ordinanceModifiers(content, ordinanceIdOn(city, ended));
+      const m = ordinanceModifiers(content, ordinanceIdOn(wageCity, ended));
       const payAdjust = pay === null ? 0 : jobPayWith(pay, m) - pay;
       return {
         payAdjust,
@@ -138,7 +143,8 @@ export function computeSettlement(
   // Review 1 (§13.7): the welcome set on the welcome day (the creation day, and the next when created
   // after 22:00 UTC), slot A by the best trained stat.
   const welcome = s.firstEdition || welcomeDayOf(c, today) ? welcomeOrderIds(content, c) : undefined;
-  const homeOfFaction = content.city(c.homeCityId)?.homeFactionId === c.factionId;
+  // The crisis pair only for a member living in the faction's home city (design §10).
+  const homeOfFaction = content.city(residenceCityId(c))?.homeFactionId === c.factionId;
   const unrest = homeOfFaction && moraleOf(content, city) === 'unrest';
   const orders = startOrders(
     content.ordersOf(c.factionId),
@@ -161,12 +167,12 @@ export function computeSettlement(
         ? {
             boundaries,
             ...stipend,
-            cityName: content.city(terms[0]?.cityId ?? c.homeCityId)?.name ?? '',
+            cityName: content.city(terms[0]?.cityId ?? residenceCityId(c))?.name ?? '',
           }
         : null,
     deposits: due.length > 0 ? { count: due.length, pc: refundPc } : null,
     oneOfUsPc,
-    seniorityStepYesterday: seniorityStep(ordinanceModifiers(content, ordinanceIdOn(city, today - 1))),
+    seniorityStepYesterday: seniorityStep(ordinanceModifiers(content, ordinanceIdOn(wageCity, today - 1))),
   });
   return {
     set: {
@@ -210,7 +216,7 @@ export async function ensureSettled(
 ): Promise<CharacterDoc> {
   const today = dayKey(now);
   if (c0.day.settled === today) return c0;
-  if (city === undefined) await ensureCityDay(content, c0.homeCityId, now);
+  if (city === undefined) await ensurePlaces(content, c0, now);
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
@@ -226,7 +232,14 @@ export async function ensureSettled(
           .sort({ day: -1 })
           .session(session)
           .lean();
-        const home = await City.findById(c.homeCityId).session(session).lean<CityDoc>();
+        // ADR 0026, 0030 §6: the residence city, and the job's city when it is another.
+        const homeId = residenceCityId(c);
+        const home = await City.findById(homeId).session(session).lean<CityDoc>();
+        const jobCityId = jobCityOf(content, c);
+        const jobCity =
+          jobCityId === null || jobCityId === homeId
+            ? undefined
+            : await City.findById(jobCityId).session(session).lean<CityDoc>();
         const terms =
           c.day.settled === null
             ? []
@@ -240,7 +253,13 @@ export async function ensureSettled(
         const due = await Candidacy.find({ characterId: c._id, deposit: 'due' })
           .session(session)
           .lean<CandidacyDoc[]>();
-        const w = computeSettlement(content, c, now, { previous, home, terms, due });
+        const w = computeSettlement(content, c, now, {
+          previous,
+          home,
+          ...(jobCity !== undefined ? { jobCity } : {}),
+          terms,
+          due,
+        });
         if (!w) return c;
 
         const updated = await Character.findOneAndUpdate(
@@ -274,8 +293,13 @@ export interface LoadedCharacter {
   doc: CharacterDoc;
   /** Today's edition `readAt` (null while unread), for `paperDue`. */
   editionReadAt: number | null;
-  /** The home city after its day was settled (ADR 0017): the ordinance, morale, the council. */
+  /**
+   * The residence city after its day was settled (ADR 0017, 0026): the ordinance, morale, the
+   * council. Slices 1–3: the home city.
+   */
   city: CityDoc | null;
+  /** Slice 4 (tech design §7.6): every city the request depends on, settled for today. */
+  places: Map<string, CityDoc | null>;
 }
 
 /**
@@ -290,9 +314,10 @@ export async function loadCharacter(
 ): Promise<LoadedCharacter> {
   const found = await Character.findOne({ userId: user.id }).lean<CharacterDoc>();
   if (!found) throw gameError('PRECONDITION_FAILED', 'ARRIVAL_PENDING');
-  const city = await ensureCityDay(content, found.homeCityId, now);
+  const places = await ensurePlaces(content, found, now);
+  const city = places.get(residenceCityId(found)) ?? null;
   const doc = await ensureSettled(content, found, now, city);
-  return { doc, editionReadAt: await editionReadAt(doc, now), city };
+  return { doc, editionReadAt: await editionReadAt(doc, now), city, places };
 }
 
 export async function editionReadAt(doc: CharacterDoc, now: number): Promise<number | null> {

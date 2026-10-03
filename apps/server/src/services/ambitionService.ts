@@ -109,6 +109,7 @@ function chapterScreen(
         stats: a.stats,
         values,
         difficulty: s.check.difficulty,
+        // eslint-disable-next-line no-restricted-properties -- the faction's home (the First day)
         bonuses: firstDayBonuses(content, c, c.homeCityId, dayKey(now)),
         prefer: preferredStat(content, c.factionId),
       }),
@@ -251,6 +252,7 @@ export async function attemptChapter(deps: {
           values: wornStats(c, content),
           energy: energyState(c),
           now,
+          // eslint-disable-next-line no-restricted-properties -- the faction's home (the First day)
           bonuses: firstDayBonuses(content, c, c.homeCityId, today),
           prefer: preferredStat(content, c.factionId),
         },

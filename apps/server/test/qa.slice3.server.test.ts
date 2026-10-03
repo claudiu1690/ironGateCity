@@ -894,7 +894,7 @@ describe('QA 6 · morale', () => {
     await City.updateOne({ _id: 'coalport' }, { $set: { 'opinion.collective': 55, 'opinion.neutral': 30 } });
     const city = await settleCityDay(content, 'coalport', at(D1 + 1));
     const paper = (await OrderPaper.findById(councilKey('coalport', councilDay(D1, 2).cycle)).lean())!;
-    expect(moraleState(city.opinion.collective)).toBe('unrest');
+    expect(moraleState(city.opinion!.collective)).toBe('unrest');
     expect(paper.division).toMatchObject({ npcAbstained: true, npcChoice: null, passed: null });
     expect(city.ordinance).toBeNull();
   });

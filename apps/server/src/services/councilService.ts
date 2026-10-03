@@ -35,7 +35,8 @@ import { GameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { activeMembersFilter } from './cityDay';
 import { ensureSettled, loadCharacter } from './dayService';
-import { councilView, electionView, endorsementsOf, homeSpec, weekdayName } from './politicsService';
+import { councilView, electionView, endorsementsOf, weekdayName } from './politicsService';
+import { residenceCityId, residenceSpec } from './residence';
 import { withRequestKey } from './requestKey';
 import { DayChanged, VersionConflict } from './txn';
 import { toCharacterView } from './views';
@@ -53,7 +54,7 @@ interface ActCtx {
   city: CityDoc | null;
   now: number;
   today: DayKey;
-  spec: ReturnType<typeof homeSpec>;
+  spec: ReturnType<typeof residenceSpec>;
   cal: ReturnType<typeof councilDay>;
 }
 
@@ -90,7 +91,7 @@ async function runAct<I extends object>(
       const c = await Character.findById(loaded.doc._id).session(session).lean<CharacterDoc>();
       if (!c) throw new Error('character disappeared');
       if (c.day.settled !== today) throw new DayChanged();
-      const spec = homeSpec(content, c);
+      const spec = residenceSpec(content, c);
       const city = await City.findById(spec.city.id).session(session).lean<CityDoc>();
       return fn({ session, c, city, now, today, spec, cal: councilDay(today, spec.offset) });
     },
@@ -542,7 +543,7 @@ export async function branchEndorseIfFiled(
   today: DayKey,
   now: number,
 ): Promise<{ endorsements: number; needed: number; smallBranch: boolean } | null> {
-  const spec = content.city(c.homeCityId);
+  const spec = content.city(residenceCityId(c));
   if (!spec?.council || spec.homeFactionId !== c.factionId) return null;
   const cal = councilDay(today, spec.council.offset);
   if (cal.phase !== 'nominations') return null;

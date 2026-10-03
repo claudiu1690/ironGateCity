@@ -144,6 +144,8 @@ export const coalport: City = {
       id: 'coalport.union-hall',
       name: 'Union Hall',
       kind: 'faction-hq',
+      // Slice 4 (design §4.3): an HQ's tickets are for its own faction's members.
+      factionId: 'collective',
       blurb:
         "The Collective's hall: columns out front, smoke and a mimeograph inside. The branch committee sits in the back room.",
       // Maps v3: the approved pin (pins.json).

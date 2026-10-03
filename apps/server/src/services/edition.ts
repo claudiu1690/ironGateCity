@@ -1,4 +1,5 @@
 import type { GameContent } from '@irongate/content';
+import { paperCityFor } from './residence';
 import type { CharacterDoc, CityDoc, PaperEntryDoc } from '@irongate/db';
 import { fillTemplate, itemSpec, selectHeadlines, standingView } from '@irongate/rules';
 import type {
@@ -36,9 +37,11 @@ export function buildEdition(i: {
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
-  const homeCity = content.city(c.homeCityId);
+  // Slice 4 (tech design §11.1): the edition's paper; until T15, the residence city's.
+  const paperCityId = paperCityFor(c, today);
+  const homeCity = content.city(paperCityId);
   const homeShare = (i.home?.opinion ?? homeCity?.baselineOpinion)?.[c.factionId] ?? 0;
-  const standingLevel = standingView(standingSuccesses(c, c.homeCityId)).level;
+  const standingLevel = standingView(standingSuccesses(c, paperCityId)).level;
   const lastPlayed = s.lastPlayed;
   const playedYesterday = lastPlayed?.day === yesterday ? lastPlayed : null;
 
@@ -65,7 +68,7 @@ export function buildEdition(i: {
     homeShare,
   };
 
-  const templates = content.headlinesOf(c.homeCityId);
+  const templates = content.headlinesOf(paperCityId);
   const picked = templates.length > 0 ? selectHeadlines(templates, facts, today) : [];
 
   // Today's slot A as frozen (the rotation, or the welcome set on a first City Day, ADR 0012).
@@ -75,7 +78,7 @@ export function buildEdition(i: {
   // Review 1 (§7.5): the welcome deck's "Spend it at {place} first." names slot A's place.
   const firstAction = slotA?.match.actionIds?.[0];
   const placeId = firstAction ? content.action(firstAction)?.location.id : undefined;
-  const standing = namedStanding(content, c.homeCityId, standingSuccesses(c, c.homeCityId));
+  const standing = namedStanding(content, paperCityId, standingSuccesses(c, paperCityId));
   const job = s.job ? content.job(s.job.id) : undefined;
   const baseVars: Partial<Record<Placeholder, string>> = {
     name: c.name,
@@ -98,7 +101,7 @@ export function buildEdition(i: {
   return {
     characterId: c._id,
     day: today,
-    cityId: c.homeCityId,
+    cityId: paperCityId,
     firstEdition: s.firstEdition,
     headlines: picked.map((t) => ({
       templateId: t.id,

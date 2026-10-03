@@ -110,6 +110,8 @@ export const LocationKind = z.enum([
   'barracks',
   'parliament',
   'ministry',
+  /** Slice 4 (design §4.3): the Opera. No scene yet; the map crop stands in. */
+  'theatre',
 ]);
 
 export const ActionType = z.enum(['canvass', 'speech', 'propaganda', 'intelligence', 'council', 'training']);
@@ -178,11 +180,35 @@ export const Frame = z
   .refine((f) => f.x0 < f.x1 && f.y0 < f.y1, 'a frame needs x0 < x1 and y0 < y1');
 
 /** GDD §14.13 (maps-v3 integration §2): a part of a city, framed on its picture. */
+const Share = z.number().min(0).max(100);
+
+/** §14.2 / §14.11: three faction shares plus Neutral, summing to 100 (checked by the loader). */
+export const Shares = z.strictObject({
+  vanguard: Share,
+  collective: Share,
+  alliance: Share,
+  neutral: Share,
+});
+
 export const Quarter = z.strictObject({
   /** Dotted under its city ("coalport.mill"). */
   id: Id,
   name: z.string().min(1),
   frame: Frame,
+  /** Slice 4 (tech design §4.1): a district's card text (screens §5.1). */
+  blurb: z.string().min(1).max(200).optional(),
+  /**
+   * Slice 4 (ADR 0027): present on every quarter of a city with districts (the capital). `n` is the
+   * overview pin's number (1–5), `baselineOpinion` the district's baseline (design §4.1), `anchor`
+   * the overview pin (screens §5.1).
+   */
+  district: z
+    .strictObject({
+      n: z.number().int().min(1).max(9),
+      baselineOpinion: Shares,
+      anchor: z.strictObject({ x: Fraction, y: Fraction }),
+    })
+    .optional(),
 });
 
 export const Location = z.strictObject({
@@ -196,23 +222,21 @@ export const Location = z.strictObject({
   map: z.strictObject({ x: Fraction, y: Fraction }),
   /** The quarter of its city it is in; its pin lies inside that quarter's frame (maps v3). */
   quarterId: Id,
+  /** Slice 4 (design §4.3): members only; required on every `faction-hq` (the faction whose HQ it is). */
+  factionId: FactionId.optional(),
   actions: z.array(Action).min(1),
 });
-
-const Share = z.number().min(0).max(100);
 
 export const City = z.strictObject({
   id: Id,
   name: z.string().min(1),
   role: z.enum(['home', 'battleground']),
   homeFactionId: FactionId.optional(),
-  /** §14.2 / §14.11: three faction shares plus Neutral, summing to 100. */
-  baselineOpinion: z.strictObject({
-    vanguard: Share,
-    collective: Share,
-    alliance: Share,
-    neutral: Share,
-  }),
+  /**
+   * §14.2 / §14.11: three faction shares plus Neutral, summing to 100. A city with districts: the
+   * equal average of its districts' baselines (checked by the loader).
+   */
+  baselineOpinion: Shares,
   /** The detailed map by day and by night (asset ids). */
   map: z.strictObject({ day: AssetId, night: AssetId }),
   /**
@@ -245,7 +269,8 @@ export const City = z.strictObject({
   council: z
     .strictObject({
       offset: z.number().int().min(0).max(4),
-      seats: z.literal(7),
+      /** Seven at home; ten in the capital (two per district, GDD §15.3). */
+      seats: z.union([z.literal(7), z.literal(10)]),
       hall: z.strictObject({
         name: z.string().min(1),
         /** For sentences: "the Town Hall". */
@@ -368,6 +393,12 @@ export const OrderMatchSchema = z
     locationIds: z.array(Id).min(1).optional(),
     cityId: z.union([z.literal('home'), Id]).optional(),
     kinds: z.array(z.enum(ACTION_KINDS)).min(1).optional(),
+    /** Slice 4 (design §10): a district id, or 'home' for the residence district. */
+    districtId: z.union([z.literal('home'), Id]).optional(),
+    /** Slice 4: any action tagged with a live Issue. */
+    issueTagged: z.literal(true).optional(),
+    /** Slice 4: location kinds. */
+    locationKinds: z.array(LocationKind).min(1).optional(),
   })
   .refine(
     (m) => Object.keys(m).length > 0,
@@ -392,6 +423,11 @@ export const OrderTemplateSchema = z.strictObject({
   use: z.enum(['rotation', 'crisis', 'welcome']).default('rotation'),
   /** Slice 3: FXP when completed; default DIRECTIVES.orderDoneFxp (20). */
   doneFxp: z.number().int().min(1).optional(),
+  /**
+   * Slice 4 (design §10): whose rotation: home residents (default), capital residents (slots A and
+   * B), or both (slot C).
+   */
+  residence: z.enum(['home', 'capital', 'any']).default('home'),
 }) satisfies z.ZodType<OrderTemplate, unknown>;
 
 export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
@@ -421,7 +457,7 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('homeShare'), min: z.number().optional(), max: z.number().optional() }),
   // Slice 3 (ADR 0023): political conditions, selected live at read.
   z.strictObject({ kind: z.literal('seatWon'), top: z.boolean().optional() }),
-  z.strictObject({ kind: z.literal('seatLost'), tie: z.boolean().optional() }),
+  z.strictObject({ kind: z.literal('seatLost'), tie: z.boolean().optional(), bloc: z.boolean().optional() }),
   z.strictObject({ kind: z.literal('votedFor'), won: z.boolean(), tie: z.boolean().optional() }),
   z.strictObject({ kind: z.literal('filedYesterday') }),
   z.strictObject({ kind: z.literal('nominationsClosed'), struck: z.boolean() }),
@@ -436,6 +472,23 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({ kind: z.literal('ordinanceFromToday') }),
   z.strictObject({ kind: z.literal('leftUnrest') }),
+  // Slice 4 (tech design §11.3): stored, the train opens at Level 10.
+  z.strictObject({ kind: z.literal('levelCrossed'), level: z.number().int().min(2) }),
+  // Slice 4: live conditions of the capital, the Issues and travel (selected at read).
+  z.strictObject({ kind: z.literal('registeredYesterday') }),
+  z.strictObject({ kind: z.literal('firstCapitalArrivalYesterday') }),
+  z.strictObject({ kind: z.literal('heroYesterday'), place: z.enum(['district', 'city']) }),
+  z.strictObject({ kind: z.literal('issuePcYesterday') }),
+  z.strictObject({ kind: z.literal('quotedYesterday') }),
+  z.strictObject({ kind: z.literal('issuesDrawnToday') }),
+  z.strictObject({ kind: z.literal('issueLeading') }),
+  z.strictObject({ kind: z.literal('issueOpen') }),
+  z.strictObject({ kind: z.literal('issueResolvedToday'), owned: z.boolean() }),
+  z.strictObject({ kind: z.literal('districtBattleground') }),
+  z.strictObject({ kind: z.literal('districtBecameBattleground') }),
+  z.strictObject({ kind: z.literal('districtLeftBattleground') }),
+  z.strictObject({ kind: z.literal('groundswellStarted') }),
+  z.strictObject({ kind: z.literal('districtLine') }),
 ]) satisfies z.ZodType<HeadlineCondition>;
 
 export const HeadlineTemplateSchema = z.strictObject({
@@ -446,7 +499,11 @@ export const HeadlineTemplateSchema = z.strictObject({
   priority: z.number().int().default(0),
   /** AND; [] = always. */
   when: z.array(HeadlineConditionSchema).default([]),
-  headline: z.string().min(1).max(80),
+  /**
+   * 80 printed; a template may run to 90 before its placeholders are filled (slice 4: the Herald's
+   * district line is 86 as written and at most 78 once filled, design §12).
+   */
+  headline: z.string().min(1).max(90),
   deck: z.string().min(1).max(200).optional(),
 }) satisfies z.ZodType<HeadlineTemplate, unknown>;
 
@@ -612,6 +669,9 @@ export const OrdinanceEffectSchema = z
     z.strictObject({ kind: z.literal('standingMultiplier'), value: z.number().int() }),
     z.strictObject({ kind: z.literal('ironPct'), scope: z.literal('checked'), value: z.number().int() }),
     z.strictObject({ kind: z.literal('fxpPct'), scope: z.literal('actions'), value: z.number().int() }),
+    // Slice 4 (ADR 0030): tickets from the city, a room in it.
+    z.strictObject({ kind: z.literal('ticketPct'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('roomPct'), value: z.number().int() }),
   ])
   .superRefine((e, ctx) => {
     const problem = ordinanceBoundProblem(e);
@@ -642,6 +702,8 @@ export const NpcCandidate = z.strictObject({
   profile: z.number().int().min(1).max(60),
   /** Printed on the ballot. */
   line: z.string().min(1).max(90),
+  /** Slice 4 (design §8.3): the district of a capital candidate (required for a city with districts). */
+  districtId: Id.optional(),
 });
 
 /** Screens §9, design §17.3: one political result modal's texts. */
@@ -662,7 +724,116 @@ export const PoliticalTexts = z.strictObject({
     withdraw: PoliticalText,
     propose: PoliticalText,
     councilVote: PoliticalText,
+    // Slice 4 (screens §6.3): the residence's register and the room.
+    register: PoliticalText,
+    room: PoliticalText,
   }),
+});
+
+// ---------------------------------------------------------------------------------------------
+// Slice 4 (docs/tech/slice-4.md §4.1): the nation, the journey cards and the Issues of the Week.
+// ---------------------------------------------------------------------------------------------
+
+/** Design §2.1–§2.3: the nation map, the five cities, journey times and the station points. */
+export const Nation = z.strictObject({
+  map: z.strictObject({ day: AssetId, night: AssetId }),
+  capitalId: Id,
+  /** The five pins' box grown by 0.06. */
+  frame: Frame,
+  clouds: z.boolean().optional(),
+  cities: z
+    .array(
+      z.strictObject({
+        cityId: Id,
+        name: z.string().min(1),
+        /** Equal to `mapPins.nation` (content test). */
+        x: Fraction,
+        y: Fraction,
+        /** Third class from the capital; the capital 0. */
+        minutes: z.number().int().min(0),
+        service: z.enum(['open', 'later']),
+        /** "Home city of the Alliance"; the capital's tail is live (design §19 Q14). */
+        line: z.string().min(1).max(60),
+        /** The station point on the city's picture (its survey station pin). */
+        arrival: z.strictObject({ x: Fraction, y: Fraction }),
+        /** Only for a city with no content entry (Clearwater). */
+        baselineOpinion: Shares.optional(),
+      }),
+    )
+    .length(5),
+});
+
+const NonNeg = z.number().min(0);
+
+/** Design §3: what one outcome of a card pays (fixed amounts, untouched by the capital's factors). */
+export const JourneyRewards = z.strictObject({
+  xp: NonNeg.optional(),
+  fxp: NonNeg.optional(),
+  iron: NonNeg.optional(),
+  opinion: NonNeg.optional(),
+  momentum: NonNeg.optional(),
+  rested: NonNeg.optional(),
+  quoted: z.literal(true).optional(),
+});
+
+export const JourneyChoice = z.strictObject({
+  id: Id,
+  title: z.string().min(1).max(40),
+  /** "{destination}" and "{issue}" placeholders; the client prefixes the odds word. */
+  detail: z.string().min(1).max(90),
+  /** Absent: unchecked (no odds word, no roll). */
+  stats: CheckStatsSchema.optional(),
+  /** The stake (*Sit in* 20) or the price (*Pay his fare* 10). */
+  cost: z.strictObject({ iron: z.number().int().min(1) }).optional(),
+  success: z.strictObject({ rewards: JourneyRewards, text: OutcomeText }),
+  /** Required when `stats` (a checked choice never fails). */
+  partial: z.strictObject({ rewards: JourneyRewards, text: OutcomeText }).optional(),
+});
+
+export const JourneyEvent = z.strictObject({
+  id: Id,
+  title: z.string().min(1).max(40),
+  setup: StoryText,
+  choices: z.array(JourneyChoice).min(2).max(3),
+  /** What happens when the card is left unanswered ("slept through"). */
+  ignore: StoryText,
+  /** The first journey always draws this card (the passenger). */
+  first: z.literal(true).optional(),
+});
+
+/** ADR 0029: what tags an action with an Issue (AND of the fields; at least one). */
+export const IssueMatchSchema = z
+  .strictObject({
+    actionTypes: z.array(ActionType).min(1).optional(),
+    locationIds: z.array(Id).min(1).optional(),
+    locationKinds: z.array(LocationKind).min(1).optional(),
+    districtId: Id.optional(),
+  })
+  .refine((m) => Object.keys(m).length > 0, 'a feed needs at least one field');
+
+const Stance = z.string().min(1).max(90);
+
+/** Design §9.5: an Issue of the Week. */
+export const Issue = z.strictObject({
+  id: Id,
+  name: z.string().min(1).max(40),
+  /** Inside sentences: "the tram fares". */
+  short: z.string().min(1).max(30),
+  blurb: z.string().min(1).max(160),
+  /** Each city it is eligible in (in a city with districts, its district), with the feeds there. */
+  where: z
+    .array(
+      z.strictObject({
+        cityId: Id,
+        districtId: Id.optional(),
+        feeds: z.array(IssueMatchSchema).min(1),
+      }),
+    )
+    .min(1),
+  effects: z.array(OrdinanceEffectSchema).min(1),
+  /** The player-facing effect line ("Tickets from Irongate: half price"). */
+  effectLine: z.string().min(1).max(60),
+  stances: z.strictObject({ vanguard: Stance, collective: Stance, alliance: Stance }),
 });
 
 export const Content = z.strictObject({
@@ -684,6 +855,10 @@ export const Content = z.strictObject({
   ordinances: z.array(Ordinance),
   candidates: z.array(NpcCandidate),
   politics: PoliticalTexts,
+  // Slice 4.
+  nation: Nation,
+  journeyEvents: z.array(JourneyEvent).length(7),
+  issues: z.array(Issue),
 });
 
 export type Faction = z.infer<typeof Faction>;
@@ -714,6 +889,11 @@ export type Ordinance = z.infer<typeof Ordinance>;
 export type NpcCandidate = z.infer<typeof NpcCandidate>;
 export type PoliticalTexts = z.infer<typeof PoliticalTexts>;
 export type Platform = z.infer<typeof Platform>;
+export type Nation = z.infer<typeof Nation>;
+export type JourneyEvent = z.infer<typeof JourneyEvent>;
+export type JourneyChoice = z.infer<typeof JourneyChoice>;
+export type Issue = z.infer<typeof Issue>;
+export type IssueMatch = z.infer<typeof IssueMatchSchema>;
 export type Content = z.infer<typeof Content>;
 /** Content as authored (defaults not yet applied). */
 export type ContentInput = z.input<typeof Content>;

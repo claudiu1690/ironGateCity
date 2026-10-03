@@ -5,10 +5,15 @@ import { migrateSlice2Arrival } from './migrations/002-slice2-arrival';
 import { migrateSlice3Politics } from './migrations/003-slice3-politics';
 import { migrateReview1Wage } from './migrations/004-review1-wage';
 import { migrateReview2StreetOrdinances } from './migrations/005-review2-street-ordinances';
+import { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
 import { City } from './models/city';
+import { District } from './models/district';
+import { IssueModel } from './models/issue';
+import { Journey } from './models/journey';
+import { Award, Contribution, InfluenceLedger } from './models/ledger';
 import { PaperEntry } from './models/paperEntry';
 import { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
 import { RequestLog } from './models/requestLog';
@@ -26,6 +31,13 @@ export const models = [
   Vote,
   OfficeTerm,
   OrderPaper,
+  // Slice 4 (tech design §5): the six new collections.
+  Journey,
+  District,
+  InfluenceLedger,
+  Contribution,
+  IssueModel,
+  Award,
 ] as const;
 
 /**
@@ -34,7 +46,7 @@ export const models = [
  * first transaction touches them, and the unique indexes are what make writes idempotent.
  */
 export async function ensureIndexes(
-  content: Pick<Content, 'origin' | 'factions'> = getContent(),
+  content: Pick<Content, 'origin' | 'factions' | 'cities'> = getContent(),
 ): Promise<void> {
   for (const m of models) {
     await m.createCollection();
@@ -49,4 +61,6 @@ export async function ensureIndexes(
   await migrateReview1Wage();
   // Review 2: the Ward Register and the Ward Fund become the Street Register and the Street Fund.
   await migrateReview2StreetOrdinances();
+  // Slice 4: residence, journeys, the place of elections and terms; after 005.
+  await migrateSlice4TravelResidence(content);
 }

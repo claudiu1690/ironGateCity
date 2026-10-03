@@ -158,6 +158,13 @@ export function electionLines(s: PoliticsSummaryView, now: number = Date.now()):
         primary: { label: e.seeTheCouncil, route: '/council' },
         secondary: null,
       };
+    case 'registered':
+      // Slice 4 (screens §7.2): registered in a district, the first vote not yet open.
+      return {
+        ...lines(e.registered(s.placeName ?? s.cityName, formatWeekday(k.pollsOpenAt))),
+        primary: slate(e.seeWhosStanding),
+        secondary: null,
+      };
   }
 }
 

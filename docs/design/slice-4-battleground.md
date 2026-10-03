@@ -147,7 +147,7 @@ Stubbed: in slice 5 the Partial on *Carry it* adds **+10 Heat** (the mockup's li
 | **Give her the flyer** | +3 Party XP | *For the file* — "No comment, but this says it better." She reads it on the spot and puts it in the satchel. Reporters keep everything. That one will turn up. |
 | *Ignore* | | *You say you're not a party person. She doesn't believe you, and moves on.* |
 
-The In Print line (Success only) is `hl.quoted` in the next edition: **{name} Quoted in the Herald on {issue}** · *"One sentence, printed whole," says the reporter. The branch has cut it out.* The reporter is the unassigned portrait `adler.png` reserved in slice 2; she is not a Dossier NPC yet.
+The In Print line (Success only) is `hl.ig.quoted` in the next edition (§12; the home papers' `hl.*.quoted` in their own voices, §12.1): **{name} Quoted in the Herald on {issueShort}** · *"One sentence, printed whole," says the reporter. The branch has cut it out.* The reporter is the unassigned portrait `adler.png` reserved in slice 2; she is not a Dossier NPC yet.
 
 ### 3.6 The signal stop (`jev.signal`)
 
@@ -289,7 +289,7 @@ Kinds are from the §13.5 list plus **one new kind, `theatre`** (the opera; a sc
 
 **Content-policy note.** The GDD's "old barracks" and "parade ground" (§14.9) are gone from the location list: the compound on the art is the **old citadel, now police headquarters** (the state's, not the party's), the open ground is **the Esplanade** (a civic walk), and no action is set in a barracks. *Garrison Hill* stays as the district's name, which the review judged acceptable as a place name.
 
-### 4.4 Tier-1 actions (59; was 62 before the job became a wage)
+### 4.4 Tier-1 actions (62)
 
 Rewards are Success / Partial at the §5.5 rates by type and Energy (the table in `slice-2-cities.md` §1.2 applies unchanged: canvass 10 E 45 / 23 XP · 6 / 3 Party XP · 20 / 10 Iron · 0.05 / 0.025 opinion; speech 12 E 54 / 27 · 7 / 4 · 24 / 12 · 0.06 / 0.03; propaganda 8 E 36 / 18 · 5 / 2 · 16 / 8 · 0.04 / 0.02; council 10 E 45 / 23 · 9 / 5 · 20 / 10 · no opinion; intelligence 3 E 14 / 7 · — · 6 / 3 and 4 E 18 / 9 · — · 8 / 4). Opinion goes to the **district's** meter. In a battleground district political actions carry **+25 % opinion, +25 % Party XP and +5 % chance** (§6.3); Issue-tagged actions **+50 % opinion and momentum** (§10.3); the two multiply on the opinion line and each shows as its own line. **Members only** marks actions at a faction's HQ.
 
@@ -313,7 +313,7 @@ Rewards are Success / Partial at the §5.5 rates by type and Energy (the table i
 | **Old Town** | | | | |
 | `irongate.herald-house.print-room` | Talk to the printers coming off shift | canvass | INT | 10 |
 | `irongate.herald-house.wires` | Read the news as it comes in | intelligence | INT | 3 |
-| `irongate.concord-house.committee` | Go to the capital meeting · *members only* | council | INT | 10 |
+| `irongate.concord-house.committee` | Go to the capital meeting · *members only* | council | best (§8.4) | 10 |
 | `irongate.concord-house.duplicator` | Print five hundred flyers · *members only* | propaganda | INT | 8 |
 | `irongate.basilica-square.canvass` | Talk to people on the steps after Mass | canvass | CHA+INT | 10 |
 | `irongate.basilica-square.speech` | Speak from the basilica steps | speech | CHA+INT | 12 |
@@ -338,7 +338,7 @@ Rewards are Success / Partial at the §5.5 rates by type and Energy (the table i
 | `irongate.station-buffet.counter` | Listen at the buffet counter | intelligence | INT | 3 |
 | `irongate.station-buffet.tables` | Speak to the night-shift tables | speech | CHA+STR | 12 |
 | **Eastside** | | | | |
-| `irongate.union-house.committee` | Go to the capital meeting · *members only* | council | INT | 10 |
+| `irongate.union-house.committee` | Go to the capital meeting · *members only* | council | best (§8.4) | 10 |
 | `irongate.union-house.duplicator` | Print five hundred flyers · *members only* | propaganda | INT | 8 |
 | `irongate.riverside-quays.dockers` | Talk to the dockers at the break | canvass | STR | 10 |
 | `irongate.riverside-quays.bale` | Speak from a bale | speech | CHA+STR | 12 |
@@ -351,7 +351,7 @@ Rewards are Success / Partial at the §5.5 rates by type and Energy (the table i
 | `irongate.iron-bridge.speech` | Speak from the bridge end | speech | CHA+INT | 12 |
 | `irongate.iron-bridge.leaflets` | Hand out flyers on the bridge at the shift change | propaganda | AGI | 8 |
 | **Garrison Hill** | | | | |
-| `irongate.vanguard-house.committee` | Go to the capital meeting · *members only* | council | INT | 10 |
+| `irongate.vanguard-house.committee` | Go to the capital meeting · *members only* | council | best (§8.4) | 10 |
 | `irongate.vanguard-house.gymnasium` | Train in the gymnasium · *members only* | training (STR) | — | 20 + 2×STR |
 | `irongate.police-hq.permits` | Talk to people in the permits queue | canvass | INT | 10 |
 | `irongate.police-hq.gazette` | Read the police notices | intelligence | INT | 4 |
@@ -363,7 +363,7 @@ Rewards are Success / Partial at the §5.5 rates by type and Energy (the table i
 | `irongate.gate-tavern.listen` | Listen at the tavern | intelligence | INT | 3 |
 | `irongate.gate-tavern.speech` | Speak to the tavern | speech | CHA+STR | 12 |
 
-**Count by type:** canvass 21 · speech 10 · propaganda 11 · intelligence 9 · council 3 · training 5 = **59** (the three shift actions, *Work the stall*, *Work a shift as a porter* and *Drive the quay lorry*, left with the shift, §9; the jobs stay on their Jobs cards, §4.5). Titles follow §1.5 (the type labels a player reads are *Talk to voters*, *Speech*, *Spread the word*, *Watch and listen*, *Party meeting*, *Training*). Checked actions: 54, of which CHA+INT 17, INT 22, STR 7, CHA+STR 4, AGI 4 (propaganda). Every faction's recruit has ground: INT at the ministries, the court, the Herald and the station; STR on the quays and at the works; CHA in the Old Town and on the Hill.
+**Count by type:** canvass 21 · speech 10 · propaganda 12 · intelligence 11 · council 3 · training 5 = **62** (the three shift actions, *Work the stall*, *Work a shift as a porter* and *Drive the quay lorry*, left with the shift, §9; the jobs stay on their Jobs cards, §4.5). **Decided 3 Oct 2026:** the table is the count; the line under it read 59 (propaganda 11, intelligence 9) until the build counted the rows, a slip, and the three rows are kept: more to do in the capital. Titles follow §1.5 (the type labels a player reads are *Talk to voters*, *Speech*, *Spread the word*, *Watch and listen*, *Party meeting*, *Training*). Checked actions: 57, of which INT 22, CHA+INT 15, STR 7, CHA+STR 4, AGI 6 (propaganda), and the three committee sessions at the **best stat** (GDD §8.4, §13.3: a committee session checks the highest of STR, INT and AGI in every city; the table's INT was a slip, corrected 3 Oct 2026). Every faction's recruit has ground: INT at the ministries, the court, the Herald and the station; STR on the quays and at the works; CHA in the Old Town and on the Hill.
 
 ### 4.5 Jobs (§9)
 
@@ -384,16 +384,16 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 #### Parliament
 
 **Watch from the public gallery** (`irongate.parliament.gallery`)
-- Success — *Who sat with whom* — Two hours in the gallery with a pencil. Who left before the division, who came back with whom, which minister read his notes and which read the Herald. Three names go in your notebook.
-- Partial — *A dull sitting* — Estimates, a point of order, estimates again. You get one name worth writing down before the Speaker rises for lunch. Come back on a division day.
+- Success — *Who sat with whom* — Two hours in the gallery with a pencil. Who left before the vote, who came back with whom, which minister read his notes and which read the Herald. Three names go in your notebook.
+- Partial — *A dull sitting* — Estimates, a point of order, estimates again. You get one name worth writing down before the Speaker rises for lunch. Come back on a voting day.
 
 **Talk to the lobby clerks** (`irongate.parliament.lobby`)
-- Success — *They know the numbers* — The lobby clerks come out at six with the day's division lists under their arms. They read for a living, so you don't waste words. One takes ten flyers for the messengers' room, where the real votes are counted.
+- Success — *They know the numbers* — The lobby clerks come out at six with the day's voting lists under their arms. They read for a living, so you don't waste words. One takes ten flyers for the messengers' room, where the real votes are counted.
 - Partial — *Most of them have a tram to catch* — The clerks come down the steps in a body and most of it heads for the Forecourt. You press flyers on the slow ones. Two stop to correct your figures, which is a start.
 
 **Speak from the Parliament steps** (`irongate.parliament.steps`)
 - Success — *The Quarter stops to listen* — The top step at the lunch adjournment, with the whole Forecourt for a gallery. You keep it short and keep it about them: rents, the cuts, who decides. A deputy heckles and the crowd laughs on your side.
-- Partial — *The bell cuts you off* — You get through the cuts before the division bell goes and the steps empty of everyone who matters. A few clerks stay to hear the end. One asks which party. You tell him.
+- Partial — *The bell cuts you off* — You get through the cuts before the bell for the vote goes and the steps empty of everyone who matters. A few clerks stay to hear the end. One asks which party. You tell him.
 
 #### The Forecourt
 
@@ -461,7 +461,7 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 #### Concord House (Alliance, members only)
 
 **Go to the capital meeting** (`irongate.concord-house.committee`)
-- Success — *Minutes taken, motion carried* — Tea, a district map on the piano, and a chairman who believes in procedure. The committee wants the Old Town returns redone by street and you say how. Your name goes in the minutes. In this house, that counts.
+- Success — *Minutes taken, proposal carried* — Tea, a district map on the piano, and a chairman who believes in procedure. The committee wants the Old Town returns redone by street and you say how. Your name goes in the minutes. In this house, that counts.
 - Partial — *A long meeting* — Two hours on the returns and a point of order about the biscuits. You get one word in before the chairman moves on. Mr Grey's man marks you present, which is what matters this week.
 
 **Print five hundred flyers** (`irongate.concord-house.duplicator`)
@@ -504,8 +504,8 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 - Partial — *A quiet night* — Two reporters and a crossword. One thing worth writing down, about a raid that hasn't happened yet. Come back on press night.
 
 **Speak at the Thursday debate** (`irongate.press-club.debate`)
-- Success — *The house divides* — The Thursday debate takes anyone who can hold the floor for ten minutes against reporters. You hold it for twelve: the raids, the warrant, the right to print. The house divides and the motion carries. A leader-writer asks your name.
-- Partial — *Points of order* — Six minutes in, the reporters start raising points of order for the sport of it and the chair enjoys them. The motion is lost by four. Two young ones ask for a flyer on the way out.
+- Success — *The house votes* — The Thursday debate takes anyone who can hold the floor for ten minutes against reporters. You hold it for twelve: the raids, the warrant, the right to print. The house votes and the proposal carries. A leader-writer asks your name.
+- Partial — *Points of order* — Six minutes in, the reporters start raising points of order for the sport of it and the chair enjoys them. The proposal is lost by four. Two young ones ask for a flyer on the way out.
 
 #### Market Square
 
@@ -573,7 +573,7 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 #### Union House (Collective, members only)
 
 **Go to the capital meeting** (`irongate.union-house.committee`)
-- Success — *Minutes taken, motion carried* — Tea, a wall map of the quays stuck with pins, and a chairman who likes short answers. The committee wants the Eastside lists redone by stair and you say how. Your name goes in the minutes. In this house, that counts.
+- Success — *Minutes taken, proposal carried* — Tea, a wall map of the quays stuck with pins, and a chairman who likes short answers. The committee wants the Eastside lists redone by stair and you say how. Your name goes in the minutes. In this house, that counts.
 - Partial — *A long meeting* — Two hours on the stair lists and the price of paper. You get one point in before the chairman moves on. Secretary Holm's man marks you present, which is what matters this week.
 
 **Print five hundred flyers** (`irongate.union-house.duplicator`)
@@ -632,21 +632,21 @@ Rules as Coalport's: Success and Partial for checked actions, one text for train
 #### Vanguard House (Vanguard, members only)
 
 **Go to the capital meeting** (`irongate.vanguard-house.committee`)
-- Success — *Minutes taken, motion carried* — Coffee, a district map stuck with pins, and a chairman who likes short answers. The committee wants the Hill lists redone by street and you say how. Your name goes in the minutes. In this house, that counts.
+- Success — *Minutes taken, proposal carried* — Coffee, a district map stuck with pins, and a chairman who likes short answers. The committee wants the Hill lists redone by street and you say how. Your name goes in the minutes. In this house, that counts.
 - Partial — *A long meeting* — Two hours on the Hill lists and the price of paper. You get one point in before the chairman moves on. Organiser Stahl's man marks you present, which is what matters this week.
 
 **Train in the gymnasium** (`irongate.vanguard-house.gymnasium`, training STR)
-- Trained — *An hour in the wing* — The club's gymnasium is ropes, bars and a man who counts out loud. He doesn't ask about the ward; he asks for ten more. You give him ten more. Your shoulders will tell you about it tomorrow.
+- Trained — *An hour in the wing* — The club's gymnasium is ropes, bars and a man who counts out loud. He doesn't ask about the district; he asks for ten more. You give him ten more. Your shoulders will tell you about it tomorrow.
 
 #### Police Headquarters
 
 **Talk to people in the permits queue** (`irongate.police-hq.permits`)
 - Success — *A queue for everything* — Permits for stalls, for meetings, for a room to let: the queue at the gatehouse is the whole Hill by nine. You work it with the flyer and the case for fewer permits, or more, depending on the party. It listens; it has nothing else to do.
-- Partial — *The desk sergeant has a view* — The desk sergeant looks at your flyers and then at the door. You work the end of the queue on the pavement. One clerk takes two, one for the office, and says nothing.
+- Partial — *The duty officer has a view* — The duty officer looks at your flyers and then at the door. You work the end of the queue on the pavement. One clerk takes two, one for the office, and says nothing.
 
 **Read the police notices** (`irongate.police-hq.gazette`)
-- Success — *Names on the wall* — The gazette on the gatehouse wall lists the week's warrants, permits refused and rooms searched. Two names and an address go in your notebook while the sergeant is on the telephone.
-- Partial — *Last week's sheet* — The gazette is last week's and the sergeant is watching. One name worth writing down, from the permits refused. Come back on Monday.
+- Success — *Names on the wall* — The gazette on the gatehouse wall lists the week's warrants, permits refused and rooms searched. Two names and an address go in your notebook while the duty officer is on the telephone.
+- Partial — *Last week's sheet* — The gazette is last week's and the duty officer is watching. One name worth writing down, from the permits refused. Come back on Monday.
 
 #### The Esplanade
 
@@ -806,7 +806,7 @@ Each faction has an Irongate slate of **ten named NPC candidates, two per distri
 | `npc.v.ig.sommer` | Greta Sommer | Garrison Hill | 20 | Schoolmistress, the Hill road. "The Esplanade quiet by ten. The children need it." |
 | **Collective** | | | | |
 | `npc.c.ig.horvath` | Mila Horvath | Government Quarter | 28 | Ministry cleaner, night shift. "Not one clerk out while a minister keeps a car." |
-| `npc.c.ig.beran` | Jan Beran | Government Quarter | 20 | Messenger, Parliament. "The gallery open to the wards, not just the collars." |
+| `npc.c.ig.beran` | Jan Beran | Government Quarter | 20 | Messenger, Parliament. "The gallery open to the public, not just the collars." |
 | `npc.c.ig.kalina` | Vera Kalina | Old Town | 28 | Compositor, the Herald. "Print the raid. Print the warrant. Print who signed it." |
 | `npc.c.ig.schwarz` | Otto Schwarz | Old Town | 20 | Porter, St Agnes. "Forty beds is thirty short. Say so." |
 | `npc.c.ig.varga` | Judit Varga | Station & Market | 28 | Market stallholder. "Bread at a price a porter's wage can pay." |
@@ -844,9 +844,9 @@ The ten of §15.3 plus one that now has a system to touch:
 
 | Id | Name | Line (≤ 120) | Effect in Irongate (5 days) | Bound |
 |---|---|---|---|---|
-| `ord.tram-subsidy` | Tram Subsidy | The council pays half of every fare out of the capital: trains from Irongate at half price. | **Tickets from Irongate −50 %** (never below 5 Iron; stacks with the Tram Fare Hike effect to the same floor) | −50 % |
+| `ord.tram-subsidy` | Tram Subsidy | The council pays half of every fare out of town: trains from this city at half price. | **Tickets from this city −50 %** (never below 5 Iron; stacks with the Tram Fare Hike effect to the same floor) | −50 % |
 
-The Tram Subsidy is available in the home-city menus too (tickets from those cities exist from slice 4); the slice-3 branch motions are unchanged.
+The Tram Subsidy is available in the home-city menus too (tickets from those cities exist from slice 4), so its line and its effect line name no city: the line *The council pays half of every fare out of town: trains from this city at half price.*, the effect line *Train tickets from this city: half price* (written 3 Oct 2026); the slice-3 branch motions are unchanged.
 
 ### 8.6 What the count writes and prints
 
@@ -921,14 +921,14 @@ Each home city has five eligible Issues and Irongate has thirteen, so no city re
 | Curfew on the Hill | Police headquarters wants the Esplanade cleared by ten. The Hill likes its Sundays late. | Quiet streets by ten. The Hill sets the example for the town. | The Esplanade belongs to the people who walk on it, at any hour. | No curfew without a council vote, and the council has not voted. |
 | Bread Queues at the Market | Flour is short, the Market Square queue starts at six, and the bakers say it is not their doing. | The speculators named and the queue in good order. Both by Monday. | Bread at a fixed price and the flour books opened. | A subsidy on the loaf until the harvest, paid from the ministries' cars. |
 | Strike at the Quays | The cranes on the Quays have stood since Thursday. The barges are backing up to the lower bridge. | The cranes turn by Monday. The company and the men can argue afterwards. | The Quays hold. Every member on the picket line, in shifts. | A mediator on the Quays by Wednesday and both sides at his table. |
-| The Opera Gala | The season opens Saturday and every minister has a box. The rest of the town has the pavement. | A gala for the town, with the boxes open to the wards that earned them. | Every box a workers' box for one night. The rest of the season can follow. | Half the boxes by ballot. The Opera takes public money and can say so. |
-| Fever at St Agnes | St Agnes has forty fever cases and thirty beds. The sisters are asking the parties, since nobody else answers. | The wards quarantined and the tenements inspected, street by street. | Free clinics on every stair, staffed by the branch until the ministry wakes. | A public health board, sitting this week, with the sisters on it. |
+| The Opera Gala | The season opens Saturday and every minister has a box. The rest of the town has the pavement. | A gala for the town, with the boxes open to the streets that earned them. | Every box a workers' box for one night. The rest of the season can follow. | Half the boxes by public draw. The Opera takes public money and can say so. |
+| Fever at St Agnes | St Agnes has forty fever cases and thirty beds. The sisters are asking the parties, since nobody else answers. | The fever ward quarantined and the tenements inspected, street by street. | Free clinics on every stair, staffed by the branch until the ministry wakes. | A public health board, sitting this week, with the sisters on it. |
 | The Census on the Hill | Police headquarters is counting every household on the Hill, door by door. The Hill wants to know why. | Every household on the register. A town that is counted is a town in order. | Count the villas first. The tenements have been counted enough. | A census by the council, published, or no census at all. |
 | Strike at the Mill | The rolling mill has been out since Monday over the foreman's book. The gate is quiet and the town is not. | The mill runs. The book can be argued in an office, after the shift. | The gate holds until the book is burned. Every member on the picket. | A mediator at the gate by Wednesday, and the book on his table. |
 | Harbour Rates | The harbour board wants a shilling more on every ton across the quay. The barges say they'll go to Clearwater. | Rates fixed for a year and the board's accounts on the notice board. | Not a penny more until the board opens its books to the men who load the tons. | An inquiry into the board, in public, before any rate changes. |
 | The Frontier Shut | The pass has been closed since Tuesday and the goods yard is empty. The town is counting what's left in the stores. | The frontier shut until the district is in order, and the stores rationed by the book. | Open the pass. A shut frontier feeds nobody but the customs. | Talks at the frontier post this week, and the pass open for food by Sunday. |
 | Ration Books | The new issue of ration books is late and the Customs Market is selling coupons. Everybody knows who. | One book, one household, no exceptions, and the coupon sellers named. | Books for everyone by Friday or the market sets its own ration. | The books issued by the council, in public, from the Archives counter. |
-| Protests at the College | The students have occupied the quad over the franchise. The dons are divided and the town is amused. | The quad cleared and the term resumed. Students are for lectures. | The branch joins the students. The franchise is the workers' too. | Open debate in the Union, and a vote on the motion, not on the students. |
+| Protests at the College | The students have occupied the quad over the franchise. The dons are divided and the town is amused. | The quad cleared and the term resumed. Students are for lectures. | The branch joins the students. The franchise is the workers' too. | Open debate in the Union, and a vote on the question, not on the students. |
 | The Court Backlog | The county courts are six months behind and the public queue starts before dawn. The clerks blame the judge. | A second sitting every day and the queue in numbered order. | Rent cases first. A landlord can wait; a family cannot. | Two more clerks, paid for, and the list published every Monday. |
 | Men at the Labour Exchange | The exchange queue is round the block and the board has no cards. The town counts them on the way to work. | Public works under discipline, and a card for every man who turns up on time. | Workers' co-operatives on the empty sites, and the exchange run by the union. | A retraining scheme at the college, and the exchange's books opened. |
 | The Price of Coal | Coal is up a third since the frost and the merchants say it's the railway. The railway says otherwise. | The merchants' prices fixed and their yards inspected, this week. | Coal at the pithead price for every household with a ration book. | An inquiry into the merchants and the railway, and the findings printed. |
@@ -938,11 +938,11 @@ Content-policy check: the Vanguard's stances are permits, timetables, registers,
 
 ### 9.6 The Herald and the home papers: Issue lines
 
-Headline templates (the three home papers get the same conditions with their own texts; their strings are in §13 with the Herald's):
+Headline templates (the three home papers get the same conditions with their own texts; their strings are in §12.1 with the Herald's):
 
 | Id | Group · priority | Condition | Headline | Deck |
 |---|---|---|---|---|
-| `hl.ig.issues-drawn` | city 0 | Monday, new Issues | This Week in Irongate: {issue1} and {issue2} | {issue1Blurb} And in {district2}: {issue2Blurb} |
+| `hl.ig.issues-drawn` | city 0 | Monday, new Issues | This Week in Irongate: {issue1} and {issue2} | {issue1Blurb} And in {district2}: {issue2}. Both settle Sunday night. |
 | `hl.ig.issue-leading` | city 2 | any other day, a faction leads an Issue | {faction} Leads on {issue1Short} | {faction} {m1} · {second} {m2} · {third} {m3}. Work on it in {district} moves opinion half again. |
 | `hl.ig.issue-open` | city 2 | any other day, nobody has momentum | Nobody Has Spoken on {issue1Short} Yet | No party has moved on it. Work on it in {district} moves opinion half again. |
 | `hl.ig.issue-resolved` | city 0 | Monday, an Issue resolved last night | {faction} Owns {issueShort} | {stance} {effectLine} for the week. |
@@ -1004,13 +1004,22 @@ Conditions are the slice-1 and slice-3 kinds; `{rank}` is the player's faction t
 |---|---|---|---|---|
 | `hl.ig.welcome-resident` | personal 0 | first edition after registering | {name} Takes Up Residence in {district} | The {faction}'s newest voter in the capital. {district} votes from {weekday}; the Herald will say when. Party orders now come from the capital branch. |
 | `hl.ig.first-arrival` | personal 1 | first edition after a first arrival in Irongate | {name} Arrives in the Capital | Off the {origin} train into Station & Market. Five districts, two of them close races today. The tram is free. |
-| `hl.ig.train-open` | personal 2 | level rose to 10 (every paper) | The Train Is Open to {name} | Level 10. The nation map is on the Map tab: Irongate in twelve minutes, third class, twenty marks. |
+| `hl.ig.train-open` | personal 2 | level rose to 10 (every paper) | The Train Is Open to {name} | Level 10. The nation map is on the Map tab: Irongate in twelve minutes, third class, 20 Iron. |
 | `hl.ig.seat-won` | personal 0 | elected last night | {name} Takes a {district} Seat for the {faction} | Elected {ordinal} of two with {votes} support. The {faction} holds {seatsFaction} of ten on the council. The council sits from this morning. |
 | `hl.ig.seat-top` | personal 0 | elected first in the district | {name} Tops the Poll in {district} | First of two with {votes} support. The {faction} holds {seatsFaction} of ten. |
 | `hl.ig.seat-lost` | personal 1 | stood, not elected | {name} Misses a {district} Seat by {margin} | {last} took the second seat. Candidates can put their names in again today; the 10 Political Capital stays with the branch. |
 | `hl.ig.seat-lost-bloc` | personal 1 | stood; the faction won no seat there | No {faction} Seat in {district} This Cycle | {name} led the {faction}'s list, but the party's score fell short: {winners} took the two seats. Candidates can put their names in again today. |
 | `hl.ig.seat-lost-tie` | personal 1 | lost on a tie-break | {name} Loses the {district} Seat on the Tie-Break | Level with {last}. The rules gave them the seat; the Herald has checked them. Candidates can put their names in again today. |
-| `hl.ig.filed` · `on-ballot` · `struck` · `voted-won` · `voted-lost` · `voted-lost-tie` · `moved` · `seat-ended` · `council-passed` · `council-failed` | personal 2 | as slice 3 | The Clarion's texts with *{district}*, *of two*, *the capital* and *Irongate Council* substituted | `hl.ig.council-failed` deck: *No rule reached six votes of ten. Three parties, no deal, and the capital goes without for five days.* |
+| `hl.ig.filed` | personal 2 | as slice 3: filed yesterday | {name} Stands for the Council in {district} | Backers {endorsements} of 2 by {until}, or the name comes off the {district} list. |
+| `hl.ig.on-ballot` | personal 2 | as slice 3: on the list at the close | {name} Is a Candidate in {district} | On the {district} list with {endorsements} backers. Voting is open today until {until}: two seats, any name on the list. A candidate may vote for themselves. |
+| `hl.ig.struck` | personal 2 | as slice 3: struck at the close | {name} Comes Off the {district} List | Short of two backers at the close. The 10 Political Capital is returned; the capital's candidates can put their names in again on {weekday}. |
+| `hl.ig.voted-won` | personal 2 | as slice 3: voted for a winner | Your Vote Counted: {voted} Takes a {district} Seat | {voted} finished {ordinal} of two in {district}. Turnout {turnout}. |
+| `hl.ig.voted-lost` | personal 2 | as slice 3: voted for a loser | Your Vote Counted: {voted} Falls Short in {district} | Short by {margin}. The second {district} seat went to {last}. Turnout {turnout}. |
+| `hl.ig.voted-lost-tie` | personal 2 | as slice 3: voted for a loser on the tie-break | Your Vote Counted: {voted} Falls Short in {district} | {voted} finished level with {last} on {votes} and lost the tie-break. The Herald has checked the rules. Turnout {turnout}. |
+| `hl.ig.moved` | personal 2 | as slice 3: proposed yesterday | Councillor {name} Puts {ordinance} to Irongate Council | {ordinanceLine} Ten councillors, three parties; six votes carry it. The council votes at {until}. |
+| `hl.ig.seat-ended` | personal 2 | as slice 3: the term ended | Councillor {name} Steps Down in {district} | Five days, one rule, three parties. The council thanks its member; candidates for the council after next can put their names in today. |
+| `hl.ig.council-passed` | personal 2 | as slice 3: the council passed a rule | Irongate Council Passes {ordinance} | In force from this morning for five days, in every district. {ordinanceLine} |
+| `hl.ig.council-failed` | personal 2 | as slice 3: the council passed nothing | Irongate Council Can't Agree on a Rule | No rule reached six votes of ten. Three parties, no deal, and the capital goes without for five days. |
 | `hl.ig.count` | city 0 | the count was last night | Irongate Result: {seatsV} Vanguard, {seatsC} Collective, {seatsA} Alliance | {district} went {winners}. Turnout {turnout} in your district; {npcSeats} of ten seats to local candidates. |
 | `hl.ig.polls-open` | city 0 | polls open today | Voting Open Across the Capital | Two seats a district, any name on the list, until {until}. Your vote is secret. |
 | `hl.ig.nominations` | city 0 | nominations open today | Irongate Council: Candidates Wanted | {rank3}s who are Known in the capital can stand in their district from the Election card until {until}. |
@@ -1022,12 +1031,70 @@ Conditions are the slice-1 and slice-3 kinds; `{rank}` is the player's faction t
 | `hl.ig.district-line` | city 2 | every day, no other city line | {district}: {leader} {leaderShare} %, {second} {secondShare} %, {third} {thirdShare} % | {state}. You've moved it {yourSwing} this election ({yourRank} of {contributors}). |
 | `hl.ig.hero` | personal 0 (In Print) | named District Hero last night | {name} Named District Hero of {district} | Moved {district} {swing} for the {faction} this election, more than anyone at Level {bracket}. 25 Political Capital. |
 | `hl.ig.quoted` | personal 2 (In Print) | quoted by the reporter yesterday | {name} Quoted in the Herald on {issueShort} | "One sentence, printed whole," says the reporter. The branch has cut it out. |
-| `hl.ig.rank-up-2` / `-3` / `rank-up` / `level-up` / `level-up-quiet` / `standing` / `orders-done` / `seniority-5` / `-10` (the review-1 *Five Days In* and *Ten Days In, Full Rate*) / `away` / `away-no-job` / `idle` | as slice 1 (review 1 for the seniority pair) | as slice 1 | The Clarion's conditions; the Herald's voice: *{name} Made {rank} by the {faction}* · *A {standing} Face in the Capital* · *{faction} Commends Its Capital Branch* · *Quiet Day in {district}* | Decks as the Clarion's with *the capital* for *Coalport* and *the branch* for the party's office; `hl.ig.away-no-job` ends *The stationmaster is still hiring: the Jobs card is at Central Station.* |
+| `hl.ig.rank-up-2` | personal 2 | as slice 1: Rank 2 reached | {name} Made {rank} by the {faction} | Party work made a {rank} of {name}. {rank}s vote, at home or, once registered, in the capital; the Election card says when. |
+| `hl.ig.rank-up-3` | personal 2 | as slice 1: Rank 3 reached | {name} Made {rank} by the {faction} | {rank}s can stand for the council, at home or in their district of the capital. The branch: "Now the real work starts." |
+| `hl.ig.rank-up` | personal 2 | as slice 1: Rank 4 or above | {name} Made {rank} by the {faction} | Made {rank} on the strength of party work. The branch takes note, and so does the Herald. |
+| `hl.ig.level-up` | personal 3 | as slice 1: the Level rose, Energy spent yesterday | {faction} {rank} Rises to Level {level} | {name} of the {faction} spent {energyYesterday} Energy on the streets yesterday. The capital has noticed. |
+| `hl.ig.level-up-quiet` | personal 3 | as slice 1: the Level rose, no Energy yesterday | {faction} {rank} Rises to Level {level} | {name} of the {faction} has been putting the hours in. The capital has noticed. |
+| `hl.ig.standing` | personal 4 | as slice 1: Standing rose | A {standing} Face in the Capital | Irongate knows {name} now: {standing}. Everything in the capital goes a little better. |
+| `hl.ig.orders-done` | personal 5 | as slice 1: every order done yesterday | {faction} Commends {name} | Every order carried out yesterday. The branch: "That's how it's done." +5 Political Capital banked. |
+| `hl.ig.seniority-5` | personal 6 | review 1: seniority 5 | Five Days In at the {job} | {name} has held the {job} for five days. Pay is up 10 %. |
+| `hl.ig.seniority-10` | personal 6 | review 1: seniority 10 | Ten Days In, Full Rate | {name} has been {job} for ten days. Pay is up 20 %, the most seniority pays. |
+| `hl.ig.away` | personal 7 | as slice 1: away two days or more, paid | While You Were Away | {days} days of pay banked ({iron} Iron). Rested is full. The town is where you left it. |
+| `hl.ig.away-no-job` | personal 7 | as slice 1: away two days or more, no job | While You Were Away | No job, so no pay banked. Rested is full and the town is where you left it. The stationmaster is still hiring: the Jobs card is at Central Station. |
+| `hl.ig.idle` | personal 8 | as slice 1: seen yesterday, nothing done (a visitor has no district, so the capital) | Quiet Day in the Capital | No flyers went out yesterday. Today's orders are below. |
 | `hl.ig.ambient-0..9` | ambient | fewer than 3 | Herald Prints Twenty Thousand for the First Time · Tram Fares: Company and Council to Meet Thursday · Gala Season Opens Saturday at the Opera · Barges Queue at the Lower Bridge · Ministry Scaffolding to Come Down "This Year" · Band to Play Sunday on the Esplanade · Fever Ward at St Agnes Full, Say Sisters · Court List Six Months Behind, Says Clerk · Station Clock Right for the First Time Since the War · Market Column to Be Cleaned by Public Subscription | — |
 
-The Issue templates are in §9.6. The home papers gain `hl.*.train-open`, `hl.*.issues-drawn`, `hl.*.issue-leading`, `hl.*.issue-open`, `hl.*.issue-resolved`, `hl.*.issue-lapsed`, `hl.*.issue-pc`, `hl.*.hero` (City Hero) and `hl.*.moved-away` (**{name} Takes Up Residence in the Capital** · *The branch keeps a chair for them. Orders now come from the capital; they vote in {district}.*), in their own voices; the Herald's texts stand in until they are written (the same rule as slice 3's Q9).
+The Issue templates are in §9.6. Every deck ≤ 200 characters with the longest tokens (`hl.*.issues-drawn` names the second Issue rather than printing its blurb: two blurbs do not fit); `{until}` and `{weekday}` as slice 3 §17.3. `hl.ig.count` and `hl.ig.district-line` assume a residence district and are for residents; a visitor's Herald prints the other city lines.
 
-Every deck ≤ 200 characters with the longest tokens; `{until}` and `{weekday}` as slice 3 §17.3.
+### 12.1 The home papers' additions (written 3 Oct 2026)
+
+The home papers gain ten templates each with the Herald's conditions, groups and priorities (`hl.*.moved-away` takes `hl.ig.welcome-resident`'s): the train, the Issues, the City Hero, the move to the capital and the reporter's quote. Each in its paper's voice: the Clarion plain and warm (a works town, Secretary Holm's branch), the Sentinel clipped and orderly (Beacon House), the Gazette civic and dry (the Rooms, Mr Grey). `hl.*.moved-away` is the same text in all three. Journey times are §2.2's (Coalport and Ashford twelve minutes, Duskwall fifteen).
+
+**The Coalport Clarion** (`hl.`):
+
+| Id | Headline | Deck |
+|---|---|---|
+| `hl.train-open` | The Train Is Open to {name} | Level 10. The nation map is on the Map tab: Irongate in twelve minutes, third class, 20 Iron. The branch says go and look; the capital has five districts and not enough Coalport in any of them. |
+| `hl.moved-away` | {name} Takes Up Residence in the Capital | The branch keeps a chair for them. Orders now come from the capital; they vote in {district}. |
+| `hl.hero` | {name} Named City Hero of Coalport | Moved Coalport {swing} for the {faction} this election, more than anyone at Level {bracket}. 25 Political Capital, and a line in the Clarion for keeps. |
+| `hl.quoted` | {name} Quoted in the Herald on {issueShort} | One sentence, printed whole, in the capital's paper. The Clarion reprints it with pleasure; the branch has cut it out. |
+| `hl.issue-pc` | Your Work on {issueShort} Counted | Among the five who moved it most for the {faction}. +4 Political Capital, and the branch knows your name. |
+| `hl.issues-drawn` | This Week in Coalport: {issue1} and {issue2} | {issue1Blurb} Also on the table: {issue2}. Both settle Sunday night. |
+| `hl.issue-leading` | {faction} Leads on {issue1Short} | {faction} {m1} · {second} {m2} · {third} {m3}. Work on it in Coalport moves opinion half again. |
+| `hl.issue-open` | Nobody Has Spoken on {issue1Short} Yet | Not a word from any party. Work on it in Coalport moves opinion half again; somebody should. |
+| `hl.issue-resolved` | {faction} Owns {issueShort} | {stance} {effectLine} for the week. |
+| `hl.issue-lapsed` | Nobody Spoke for {issueShort} | A week and not a word from any party. The Clarion notes it, and so will the town. |
+
+**The Duskwall Sentinel** (`hl.v.`):
+
+| Id | Headline | Deck |
+|---|---|---|
+| `hl.v.train-open` | The Train Is Open to {name} | Level 10. The nation map is on the Map tab: Irongate in fifteen minutes, third class, 20 Iron. Beacon House expects a report on your return. |
+| `hl.v.moved-away` | {name} Takes Up Residence in the Capital | The branch keeps a chair for them. Orders now come from the capital; they vote in {district}. |
+| `hl.v.hero` | {name} Named City Hero of Duskwall | Moved Duskwall {swing} for the {faction} this election, more than anyone at Level {bracket}. 25 Political Capital. Noted. |
+| `hl.v.quoted` | {name} Quoted in the Herald on {issueShort} | One sentence, printed whole, in the capital's paper. The Sentinel records it; Beacon House has the cutting. |
+| `hl.v.issue-pc` | Your Work on {issueShort} Counted | Among the five who moved it most for the {faction}. +4 Political Capital. Beacon House has the list. |
+| `hl.v.issues-drawn` | This Week in Duskwall: {issue1} and {issue2} | {issue1Blurb} Second on the list: {issue2}. Both settle Sunday night. |
+| `hl.v.issue-leading` | {faction} Leads on {issue1Short} | {faction} {m1} · {second} {m2} · {third} {m3}. Work on it in Duskwall moves opinion half again. |
+| `hl.v.issue-open` | Nobody Has Spoken on {issue1Short} Yet | No party has moved on it. Work on it in Duskwall moves opinion half again. The Sentinel expects better. |
+| `hl.v.issue-resolved` | {faction} Owns {issueShort} | {stance} {effectLine} for the week. Settled. |
+| `hl.v.issue-lapsed` | Nobody Spoke for {issueShort} | A week and not a word from any party. The Sentinel records it. |
+
+**The Ashford Gazette** (`hl.a.`):
+
+| Id | Headline | Deck |
+|---|---|---|
+| `hl.a.train-open` | The Train Is Open to {name} | Level 10. The nation map is on the Map tab: Irongate in twelve minutes, third class, 20 Iron. The Rooms suggest a return ticket and an open mind. |
+| `hl.a.moved-away` | {name} Takes Up Residence in the Capital | The branch keeps a chair for them. Orders now come from the capital; they vote in {district}. |
+| `hl.a.hero` | {name} Named City Hero of Ashford | Moved Ashford {swing} for the {faction} this election, more than anyone at Level {bracket}. 25 Political Capital. The Gazette offers its congratulations. |
+| `hl.a.quoted` | {name} Quoted in the Herald on {issueShort} | One sentence, printed whole, in the capital's paper. The Gazette is pleased to reprint it; the Rooms have framed it. |
+| `hl.a.issue-pc` | Your Work on {issueShort} Counted | Among the five who moved it most for the {faction}. +4 Political Capital. Mr Grey: "Good. Keep at it." |
+| `hl.a.issues-drawn` | This Week in Ashford: {issue1} and {issue2} | {issue1Blurb} The other matter: {issue2}. Both settle Sunday night. |
+| `hl.a.issue-leading` | {faction} Leads on {issue1Short} | {faction} {m1} · {second} {m2} · {third} {m3}. Work on it in Ashford moves opinion half again. |
+| `hl.a.issue-open` | Nobody Has Spoken on {issue1Short} Yet | No party has moved on it. Work on it in Ashford moves opinion half again. The Gazette would welcome a view. |
+| `hl.a.issue-resolved` | {faction} Owns {issueShort} | {stance} {effectLine} for the week. |
+| `hl.a.issue-lapsed` | Nobody Spoke for {issueShort} | A week and not a word from any party. The Gazette notes it, more in sorrow than in anger. |
 
 ---
 
@@ -1110,7 +1177,7 @@ Companion edit: `docs/economy.md` §15.
 |---|---|
 | §0 | "Added 2 Oct 2026 (slice 4 brought up to date)" change table |
 | §1.5 | Slice-4 words added to the vocabulary: *journey event* → *on the way*, *the ledger* → *the scoreboard*, *this cycle* → *this election*, *District Hero* kept, *residence* → *where you live* / *registered in* |
-| §14.9 | The "On the map" bullet carries the **five district frames** and the rule that a district view draws only its own pins; 59 actions (the three shift actions gone with §9); *Close race* and *Comeback* as the plate words |
+| §14.9 | The "On the map" bullet carries the **five district frames** and the rule that a district view draws only its own pins; 62 actions (the three shift actions gone with §9; the count read 59 until 3 Oct 2026); *Close race* and *Comeback* as the plate words |
 | §14.10 | The nation map paragraph: the painted 9,216 px picture, the five survey positions, the cover-and-drag rules, the Cities list; the slice-4 paragraph drops the shift |
 | §14.11 | Residence: "the job with its rules" now reads the wage |
 | Appendix C | #8 extended with the art check (Ashford drawn farthest, Clearwater no farther than Duskwall; the southern Coalport–Clearwater line is scenery) and the fairness point; new **#42** (the nation map at rest shows your city and the capital, never all five on a phone: covered map by review 3) and **#43** (the Bombed Blocks' pin moved onto the painted gutted block; closed the same day) |
@@ -1162,7 +1229,7 @@ Companion edit: `docs/economy.md` §15.
 
 ## 18. Content-policy check
 
-Every string above was read against `docs/design/content-policy-review.md` §7. Garrison Hill is a place name; its locations are police headquarters (the state's), an esplanade, villas, a tavern and the party's club; no barracks, drill, muster, parade, patrol or uniform anywhere; the Vanguard's committee, gymnasium, clerks, inspector, timekeeper, landlady and schoolmistress ask for order, timetables, permits and quiet streets, and no line says they are right (the Villas' *"the party has some sense, for once"* is the Hill's condescension, not the paper's praise). The Collective's people are a cleaner, a compositor, a porter, a stallholder, a crane driver and a tenants' committee; its stances are strikes and boycotts in union words; no Soviet title. Combat, Heat and the Dossier are absent. The words *battleground* and *groundswell* are the GDD's campaign vocabulary; *front*, *war*, *enemy*, *uprising*, *troops* and *militia* do not appear except in this sentence. "The war" appears four times (the Bombed Blocks, the Ministries' scaffolding, the passenger's councillors, the station clock), always as the historical war of 1939–45 that is the setting, never as the game's contest; "the front room" (the Gate Tavern) and "the frontier" are rooms and borders, on the same footing as the reviewed *front row*. **For QA:** the recommended war regex (`content-policy-review.md` §8) bans `garrison`; the district name *Garrison Hill* was judged acceptable as a place name (§6 of the review) and needs an allowance in the test, as *ex-soldiers* once had.
+Every string above was read against `docs/design/content-policy-review.md` §7. Garrison Hill is a place name; its locations are police headquarters (the state's), an esplanade, villas, a tavern and the party's club; no barracks, drill, muster, parade, patrol or uniform anywhere; the Vanguard's committee, gymnasium, clerks, inspector, timekeeper, landlady and schoolmistress ask for order, timetables, permits and quiet streets, and no line says they are right (the Villas' *"the party has some sense, for once"* is the Hill's condescension, not the paper's praise). The Collective's people are a cleaner, a compositor, a porter, a stallholder, a crane driver and a tenants' committee; its stances are strikes and boycotts in union words; no Soviet title. Combat, Heat and the Dossier are absent. The words *battleground* and *groundswell* are the GDD's campaign vocabulary; *front*, *war*, *enemy*, *uprising*, *troops* and *militia* do not appear except in this sentence. "The war" appears four times (the Bombed Blocks, the Ministries' scaffolding, the passenger's councillors, the station clock), always as the historical war of 1939–45 that is the setting, never as the game's contest; "the front room" (the Gate Tavern) and "the frontier" are rooms and borders, on the same footing as the reviewed *front row*. **For QA:** the recommended war regex (`content-policy-review.md` §8) bans `garrison`; the district name *Garrison Hill* was judged acceptable as a place name (§6 of the review) and needs an allowance in the test, as *ex-soldiers* once had. **Reviewed 3 Oct 2026 with phase A's allowances:** *Garrison Hill*, *the war* (four historical uses), *the front room* and *close race* stay; *the desk sergeant* at Police Headquarters became *the duty officer* (a police rank is still a rank on the checklist); Parliament's *division* became *the vote* (*before the vote*, *a voting day*, *the day's voting lists*, *the bell for the vote*), the committees' and the Press Club's *motion* became *proposal* (the review-2 words), the Hill's *ward* in the electoral sense became *district*, *street* or *public*, and the Opera's *by ballot* became *by public draw*; the only system word left in its everyday sense is the hospital's *fever ward* (the St Agnes text, the fever stance and one ambient headline), allowed as such.
 
 ---
 
@@ -1187,7 +1254,7 @@ The architect's slice-4 technical design (`docs/tech/slice-4.md` §21–§23, AD
 | 13 | A hero who does not live there | **Accepted:** any contributor | §11.3; GDD §14.5 |
 | 14 | The Irongate card's line | **Accepted: live.** Content *Capital · 5 districts*; the server appends *two close races today* / *one close race today* / *contested* | §2.1 |
 | 15 | Groundswell in home cities | **Accepted:** districts only in slice 4 | §6.4; GDD §14.4 |
-| 16 | Herald stand-ins for the home papers | **Accepted** for the build, marked `TODO(game-designer)`; the Clarion's, the Gazette's and the Courier's own Issue, hero, quoted and moved-away texts are a content addendum after T8, before QA's run | §12 |
+| 16 | Herald stand-ins for the home papers | **Accepted** for the build, marked `TODO(game-designer)`; the Clarion's, the Sentinel's and the Gazette's own Issue, hero, quoted and train texts, and the Herald's own slice-1 and slice-3 texts, were written on 3 Oct 2026 after T8 (§12, §12.1); no stand-in remains | §12, §12.1 |
 
 **The §23 inconsistencies, fixed in this revision:** (1) free zoom on the nation map, the overview and the district views (§2.1, §4.2; screens §2.1, §5; GDD §14.10, §14.13); (2) `roomPct` (§9.5); (3) the card's Iron (§3); (4) the district is client memory (§5); (5) in transit is `cityId` + the journey's status (§2.4); (6) the council is §8 (§4); (7) the City Hall (§4); (8) arrival is lazy plus a tidy job (§2.4); (9) the result route is `/council/count?d=` with the district switcher (screens §8); (10) the Rested cap with a room and after travel (§7.4).
 

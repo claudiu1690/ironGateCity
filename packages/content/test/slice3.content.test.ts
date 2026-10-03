@@ -3,7 +3,7 @@
  * political headlines of three papers, the result texts and the Restore-the-base orders, word for
  * word against docs/design/slice-3-politics.md; the offsets; one failing fixture per §4.2 check.
  */
-import { councilDay, dayKey } from '@irongate/rules';
+import { CAPITAL_CONDITION_KINDS, councilDay, dayKey } from '@irongate/rules';
 import { describe, expect, it } from 'vitest';
 import POL from '../../../docs/design/slice-3-politics.md?raw';
 import { ContentError, loadContent, parseContent, rawContent } from '../src';
@@ -36,7 +36,8 @@ function rows(text: string, row: RegExp): string[][] {
 describe('the real content, slice 3', () => {
   it('pins the council offsets (GDD §2) and the §3.1 example dates', () => {
     const offsets = Object.fromEntries(content.councilCities().map((c) => [c.id, c.council!.offset]));
-    expect(offsets).toEqual({ coalport: 2, duskwall: 3, ashford: 1 });
+    // Slice 4: the capital's council (offset 0).
+    expect(offsets).toEqual({ coalport: 2, duskwall: 3, ashford: 1, irongate: 0 });
     const coalport = content.city('coalport')!.council!.offset;
     expect(councilDay(dayKey(Date.UTC(2026, 9, 1)), coalport)).toMatchObject({ cycle: 4145, cycleDay: 0 });
     expect(councilDay(dayKey(Date.UTC(2026, 9, 6)), coalport)).toMatchObject({ cycle: 4146, cycleDay: 0 });
@@ -59,9 +60,13 @@ describe('the real content, slice 3', () => {
       const r2 = R2_ORDINANCES[id];
       return [r2?.id ?? id, r2?.name ?? name, r2?.line ?? line];
     };
-    expect(content.ordinancesMenu().map((o) => [o.id, o.name, o.line])).toEqual(
-      table.map((r) => renamed[unq(r[0]!)] ?? plain(unq(r[0]!), r[1]!, r[2]!)),
-    );
+    // Slice 4 adds the Tram Subsidy to every menu (slice4.content.test.ts).
+    expect(
+      content
+        .ordinancesMenu()
+        .filter((o) => o.id !== 'ord.tram-subsidy')
+        .map((o) => [o.id, o.name, o.line]),
+    ).toEqual(table.map((r) => renamed[unq(r[0]!)] ?? plain(unq(r[0]!), r[1]!, r[2]!)));
     expect(content.ordinanceSpec('ord.long-service')?.effects).toEqual([{ kind: 'seniorityDays', value: 2 }]);
     // A city stored before the rename still resolves.
     expect(content.ordinance('ord.shift-hours')?.id).toBe('ord.long-service');
@@ -77,7 +82,12 @@ describe('the real content, slice 3', () => {
   it('the three slates word for word (design §5.2), in profile order', () => {
     const table = rows(section(POL, '### 5.2 The slates', '### 5.3'), /^\| `npc\./);
     expect(table).toHaveLength(27);
-    expect(content.candidates.map((c) => [c.id, c.name, String(c.profile), c.line])).toEqual(
+    // Slice 4 adds the Irongate slates (slice4.content.test.ts).
+    expect(
+      content.candidates
+        .filter((c) => c.cityId !== 'irongate')
+        .map((c) => [c.id, c.name, String(c.profile), c.line]),
+    ).toEqual(
       // Review 2 (answers §1.10): Lenz prints the party paper.
       table.map((r) => [unq(r[0]!), r[1], r[2], plainProse(r[3]!)]),
     );
@@ -144,7 +154,14 @@ describe('the real content, slice 3', () => {
       deck: 'Morale back above sixty. The branch thanks everyone who knocked a door.',
     });
     for (const city of ['coalport', 'duskwall', 'ashford']) {
-      expect(content.politicalHeadlinesOf(city)).toHaveLength(19);
+      // Slice 4's live templates (the Issues, the hero, moved-away) are selected the same way.
+      expect(
+        content
+          .politicalHeadlinesOf(city)
+          .filter(
+            (h) => !h.when.some((c) => (CAPITAL_CONDITION_KINDS as readonly string[]).includes(c.kind)),
+          ),
+      ).toHaveLength(19);
       expect(content.headlinesOf(city).some((h) => content.politicalHeadlinesOf(city).includes(h))).toBe(
         false,
       );

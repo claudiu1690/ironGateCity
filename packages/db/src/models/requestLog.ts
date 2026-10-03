@@ -11,6 +11,11 @@ export const REQUEST_KINDS = [
   'council.vote',
   'council.propose',
   'council.councilVote',
+  // Slice 4 (tech design §5.8).
+  'travel.board',
+  'travel.choose',
+  'residence.register',
+  'residence.room',
 ] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 

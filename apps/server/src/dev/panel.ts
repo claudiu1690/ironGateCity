@@ -9,6 +9,7 @@ import type { Auth } from '../auth';
 import { ensureCityDay, runCityDay } from '../services/cityDay';
 import { loadCharacter } from '../services/dayService';
 import { moraleOf, ordinanceIdOn, restedCapToday } from '../services/modifiers';
+import { residenceCityId } from '../services/residence';
 import { energyState } from '../services/views';
 import type { SessionUser } from '../trpc/context';
 import { applyCharacterSeed } from './characterSeed';
@@ -75,7 +76,7 @@ function homeView(content: GameContent, cityId: string, city: CityDoc | null, no
     council,
     morale:
       state && city && home
-        ? { state, word: copy.moraleWord[state] ?? state, share: city.opinion[home] }
+        ? { state, word: copy.moraleWord[state] ?? state, share: city.opinion![home] }
         : null,
     ordinance: ord
       ? {
@@ -95,7 +96,8 @@ async function statusFor(
   const now = clock.now();
   const c = user ? await Character.findOne({ userId: user.id }).lean<CharacterDoc>() : null;
   // The same lazy settle every city read does (ADR 0017), so the phase and morale are today's.
-  const city = c ? await ensureCityDay(content, c.homeCityId, now) : null;
+  // Slice 4 (ADR 0026): the residence city, whose council and paper are the character's.
+  const city = c ? await ensureCityDay(content, residenceCityId(c), now) : null;
   const energy = c
     ? projectEnergy(energyState(c), now, ENERGY.max, restedCapToday(content, city, dayKey(now)))
     : null;
@@ -111,7 +113,7 @@ async function statusFor(
         c && energy
           ? { name: c.name, rank: c.rank, pc: c.pc, energy: energy.value, energyMax: energy.max }
           : null,
-      home: c ? homeView(content, c.homeCityId, city, now) : null,
+      home: c ? homeView(content, residenceCityId(c), city, now) : null,
     },
   };
 }
@@ -176,8 +178,9 @@ async function runAction(
       break;
     case 'phase': {
       const { home } = needCharacter();
-      const offset = content.city(home.homeCityId)?.council?.offset;
-      if (offset === undefined) throw new DevRefusal(409, `${home.homeCityId} has no council`);
+      const residence = residenceCityId(home);
+      const offset = content.city(residence)?.council?.offset;
+      if (offset === undefined) throw new DevRefusal(409, `${residence} has no council`);
       clock.advance(nextPhaseAt(clock.now(), offset).landAt - clock.now());
       moved = true;
       break;
@@ -186,6 +189,8 @@ async function runAction(
       const { me } = needCharacter();
       // Settle first (the lazy path), then lift what is below the mark; nothing is ever lowered.
       const { doc } = await loadCharacter(me, content, clock.now());
+      // The boost's One of Us is in the faction's home city (characterSeed).
+      // eslint-disable-next-line no-restricted-properties -- the faction's home
       const successes = doc.localStanding.find((s) => s.cityId === doc.homeCityId)?.successes ?? 0;
       const set = await applyCharacterSeed(
         doc,
@@ -204,6 +209,7 @@ async function runAction(
         ...(set.fxp !== undefined ? [`FXP ${doc.fxp} → ${String(set.fxp)}`] : []),
         ...(set.localStanding !== undefined
           ? [
+              // eslint-disable-next-line no-restricted-properties -- the faction's home
               `One of Us in ${content.city(doc.homeCityId)?.name ?? doc.homeCityId} (${DEV_BOOST.successes} Successes)`,
             ]
           : []),

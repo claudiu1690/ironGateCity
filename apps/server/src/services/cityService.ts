@@ -1,5 +1,6 @@
 import { isCheckedAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
+import { residenceCityId, residenceCtx } from './residence';
 import { City } from '@irongate/db';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
@@ -43,11 +44,11 @@ function orderTag(
   a: ActionDescriptor,
 ): ActionView['order'] {
   const templates = content.ordersOf(c.factionId);
-  let idx = findAdvancingItem(orders, templates, a, 'success', c.homeCityId);
+  let idx = findAdvancingItem(orders, templates, a, 'success', residenceCtx(c));
   if (idx < 0) {
     idx = orders.items.findIndex((item) => {
       const t = templates.find((x) => x.id === item.templateId);
-      return t ? item.doneAt !== null && orderMatches(itemSpec(item, t).match, a, c.homeCityId) : false;
+      return t ? item.doneAt !== null && orderMatches(itemSpec(item, t).match, a, residenceCtx(c)) : false;
     });
   }
   if (idx < 0) return null;
@@ -92,7 +93,7 @@ export async function getCityView(
   const m = modifiersFor(content, state, c.factionId, today);
   const hq = city.homeFactionId === c.factionId ? content.hqOf(c.factionId).location.id : null;
   const council =
-    hq && city.id === c.homeCityId ? await politicsSummary(content, c, state, now, today) : null;
+    hq && city.id === residenceCityId(c) ? await politicsSummary(content, c, state, now, today) : null;
   const opinion = state?.opinion ?? city.baselineOpinion;
   const ordId = ordinanceIdOn(state, today);
   const ord = ordId ? content.ordinance(ordId) : undefined;

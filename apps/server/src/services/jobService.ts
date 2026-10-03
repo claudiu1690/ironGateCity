@@ -1,4 +1,5 @@
 import type { GameContent } from '@irongate/content';
+import { residenceCtx } from './residence';
 import { Character, City } from '@irongate/db';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
@@ -67,14 +68,15 @@ export async function takeJob(deps: {
       if (lock) throw new GameError('JOB_LOCKED', { ...lock });
 
       const switching = c.job !== null;
-      const cityState = await City.findById(c.homeCityId).session(session).lean<CityDoc>();
+      // Slice 4 (tech design §8.2): the job's city (the one the character stands in).
+      const cityState = await City.findById(jobCity).session(session).lean<CityDoc>();
 
       const adv = advanceOrders(
         toOrdersState(c.orders),
         content.ordersOf(c.factionId),
         { kind: 'takeJob' },
         'success',
-        c.homeCityId,
+        residenceCtx(c),
         now,
       );
       const completedT = adv.completed

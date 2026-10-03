@@ -171,7 +171,8 @@ describe('content vs docs/design/slice-1-content.md', () => {
           .slice(1, -1)
           .map((c) => c.trim()),
       );
-    expect(rows).toHaveLength(content.orderTemplates.length);
+    // Slice 4's capital rotation is checked word for word in slice4.content.test.ts.
+    expect(rows).toHaveLength(content.orderTemplates.filter((t) => t.residence !== 'capital').length);
     for (const r of rows) {
       const [id, slot, title, line, target] = r as [string, string, string, string, string];
       const t = content.orderTemplates.find((x) => x.id === id.match(/`([^`]+)`/)![1]);
@@ -204,7 +205,9 @@ describe('content vs docs/design/slice-1-content.md', () => {
       expect(a!.name, id).toBe(title);
       expect(a?.type === 'training' && a.verb, id).toBe(verb);
     }
+    // The home cities' nine; the capital's five are in slice4.irongate.test.ts.
     const all = content.cities
+      .filter((c) => c.role === 'home')
       .flatMap((c) => c.locations.flatMap((l) => l.actions))
       .filter((a) => a.type === 'training');
     expect(all).toHaveLength(9);
@@ -229,14 +232,22 @@ describe('content vs docs/design/slice-1-content.md', () => {
     // Every kind the schema accepts is in the GDD list, and vice versa.
     const bad = {
       ...(JSON.parse(JSON.stringify(rawContent)) as {
-        cities: Array<{ locations: Array<{ kind: string }> }>;
+        cities: Array<{ locations: Array<{ kind: string; factionId?: string }> }>;
       }),
     };
     for (const kind of kinds) {
       bad.cities[0]!.locations[0]!.kind = kind!;
       // Slice 2: a home city has exactly one faction-hq (tech design §4.3), so the Union Hall
-      // steps aside while the Mill Gate tries that kind.
+      // steps aside while the Mill Gate tries that kind. Slice 4: the HQ carries its faction.
       bad.cities[0]!.locations[2]!.kind = kind === 'faction-hq' ? 'square' : 'faction-hq';
+      const [gate, hall] = [bad.cities[0]!.locations[0]!, bad.cities[0]!.locations[2]!];
+      if (kind === 'faction-hq') {
+        gate.factionId = 'collective';
+        delete hall.factionId;
+      } else {
+        delete gate.factionId;
+        hall.factionId = 'collective';
+      }
       expect(() => loadContent(bad), kind).not.toThrow();
     }
     bad.cities[0]!.locations[0]!.kind = 'barricade';
@@ -290,7 +301,9 @@ describe('CLAUDE.md design rules 2 and 6: vocabulary across all player-facing co
   // Allowed, by exact JSON string value only (so the same word in any display text still fails):
   // the Duskwall ids that keep their original words. Content-policy review §1 ("Ids: no id
   // changes"): ids are never shown, and characters' jobs, order progress and logs reference them.
-  const legacyIds = /"duskwall\.(garrison-gate(\.(canvass|speech|drill|stores))?|beacon-house\.muster)"/g;
+  // Slice 4: the capital's district id `irongate.garrison-hill` (its name is a place name, §12.5).
+  const legacyIds =
+    /"duskwall\.(garrison-gate(\.(canvass|speech|drill|stores))?|beacon-house\.muster)"|"irongate\.garrison-hill"/g;
   const withoutLegacyIds = (s: string) => s.replace(legacyIds, '"[legacy id]"');
 
   it('uses campaign vocabulary: no war framing', () => {
@@ -298,7 +311,14 @@ describe('CLAUDE.md design rules 2 and 6: vocabulary across all player-facing co
     // banned alongside the war words, so a later slice cannot bring them back.
     const war =
       /\b(war|wars|warfare|battle|battles|battlefield|uprising|insurrection|revolt|troops|soldiers?|army|armies|militia|invade|invasion|attack|assault|siege|combat|enemy|enemies|weapon|guns?|rifles?|bomb|kill|killed|garrisons?|barracks|drill(s|ed|ing)?|musters?|mustered|marshals?|footsoldiers?|sergeants?|uniforms?|purges?|purged|conscription|paramilitar(y|ies))\b/gi;
-    const text = withoutLegacyIds(allText);
+    // Slice 4 (tech design §12.5, design §18): two allowances: *Garrison Hill*, a place name, and
+    // *the war*, the historical war of 1939–45 (the Bombed Blocks, the Ministries' scaffolding, the
+    // passenger's councillors, the station clock). Both kept by the designer on 3 Oct 2026; the
+    // Police Headquarters' *desk sergeant* became *the duty officer*, so no rank is allowed.
+    const text = withoutLegacyIds(allText)
+      .replace(/\bGarrison Hill\b/g, '[place]')
+      .replace(/\b(since|by) the war\b/gi, '[history]')
+      .replace(/\bthe war gutted\b/gi, '[history]');
     expect([...text.matchAll(war)].map((m) => m[0])).toEqual([]);
     // "front" only as a building's front ("columns out front") or a row of seats ("the front row"),
     // never as a political front.
@@ -318,8 +338,9 @@ describe('CLAUDE.md design rules 2 and 6: vocabulary across all player-facing co
   });
 
   it('carries no real-world extremist symbols, slogans or names', () => {
+    // "88" as a number only: not the decimals of a map position (slice 4: a pin at x 0.88).
     const extremist =
-      /\b(swastika|hakenkreuz|sieg|heil|reich|f(ü|ue)hrer|duce|nazis?|fascis(t|m)|ss|sa|gestapo|blackshirts?|brownshirts?|hammer and sickle|sickle|stalin|lenin|trotsky|mussolini|hitler|franco|bolshevik|soviet|kkk|88|1488|14 words|totenkopf|sonnenrad|black sun|fasces|iron cross|wolfsangel)\b/i;
+      /\b(swastika|hakenkreuz|sieg|heil|reich|f(ü|ue)hrer|duce|nazis?|fascis(t|m)|ss|sa|gestapo|blackshirts?|brownshirts?|hammer and sickle|sickle|stalin|lenin|trotsky|mussolini|hitler|franco|bolshevik|soviet|kkk|(?<![.\d])88|1488|14 words|totenkopf|sonnenrad|black sun|fasces|iron cross|wolfsangel)\b/i;
     expect(allText.match(extremist)?.[0] ?? null).toBeNull();
   });
 

@@ -29,6 +29,7 @@ const KIND_LABELS: Record<LocationKind, string> = {
   barracks: 'Landmark',
   parliament: 'Parliament',
   ministry: 'Public office',
+  theatre: 'Theatre',
 };
 
 /** "Mill Gate, Market Row or Harbour Quays": commas, then a final "or". */
@@ -146,7 +147,7 @@ export const copy = {
   /** A seniority line on the desk: "Seniority 4 days: +17". */
   seniorityLine: (days: number, amount: number) =>
     `Seniority ${days} ${days === 1 ? 'day' : 'days'}: +${amount}`,
-  /** Review 1 (§13.4): the desk row for One of Us's PC. TODO(game-designer): confirm the wording. */
+  /** Review 1 (§13.4): the desk row for One of Us's PC (wording confirmed 3 Oct 2026). */
   oneOfUsPaid: (pc: number) => `One of Us · +${pc} Political Capital from the town`,
   /** "Needs Level 3, AGI 10": only the unmet requirements, level first. */
   jobNeeds: (parts: string[]) => `Needs ${parts.join(', ')}`,
@@ -597,6 +598,11 @@ export const copy = {
       `You're backing ${name}`,
       `Voting opens ${pollsWeekday} · ${days}`,
     ],
+    /** Slice 4 (screens §7.2): registered in a district, the first vote not yet open. */
+    registered: (place: string, votesWeekday: string) => [
+      `Registered in ${place}`,
+      `You vote from ${votesWeekday} · the result every fifth morning`,
+    ],
     /** "{n} days left" to the closing boundary, rounded up; the last day "closes tonight at midnight". */
     voting: (until: string, days: number) => [
       'Voting is open',
@@ -634,6 +640,166 @@ export const copy = {
     voteNow: 'Vote now',
     voteOnTheRule: 'Vote on the rule',
     noneOfThese: 'None of these',
+  },
+  // Slice 4, "the battleground" (docs/design/slice-4-screens.md §11 and its help notes). Times are
+  // rendered by the caller in the player's clock (`until`: "Saturday midnight"; `time`: "14:32";
+  // `weekday`: "Thursday"); amounts come from the rules' constants.
+  /** The nation map, boarding, the journey and arrival (screens §2–§4). */
+  travel: {
+    nation: 'Nation',
+    city: 'City',
+    fromLevel: (level: number) => `From Level ${level}`,
+    youAreHere: 'you are here',
+    home: 'home',
+    rivalGround: 'rival ground',
+    noServiceYet: 'no service yet',
+    cities: 'Cities',
+    citiesOfTheRepublic: 'Cities of the republic',
+    board: (fare: number, min: number) => `Board · ${fare} Iron · ${min} min`,
+    needsFare: (fare: number) => `Needs ${fare} Iron`,
+    seeTheFiveDistricts: 'See the five districts',
+    rivalGroundLater: 'Rival ground · from a later edition',
+    noServiceYetCard: 'No service yet',
+    votesIn: (n: number) => `Votes in ${n} ${n === 1 ? 'day' : 'days'}`,
+    votingOpenUntil: (until: string) => `Voting open until ${until}`,
+    onTheTrainTo: (city: string) => `On the train to ${city}`,
+    /** The journey's header: "The 14:20 to Irongate". */
+    theTrainAt: (time: string, city: string) => `The ${time} to ${city}`,
+    minToGo: (n: number, time: string) => `${n} min to go · arrives ${time}`,
+    youCanClose: "You can close the game. You'll arrive either way, and Energy keeps refilling on the way.",
+    onTheWay: 'On the way',
+    optional: 'Optional',
+    oneChoice: 'one choice',
+    ignoreIt: 'Ignore it and you sleep through it. Nothing happens.',
+    arrived: 'Arrived',
+    inTheCapital: "You're in the capital",
+    nothingHappened: 'The train was on time. Nothing happened, which is rare.',
+    boardTheTrainTo: (city: string, fare: number, min: number) =>
+      `Board the train to ${city} · ${fare} Iron · ${min} min`,
+    seeTheNationMap: 'See the nation map',
+  },
+  /** Irongate: the overview, the district card and the district view (screens §5). */
+  capital: {
+    irongate: 'Irongate',
+    districtOf: (n: number, of: number) => `District · ${n} of ${of}`,
+    districts: 'Districts',
+    closeRace: 'Close race',
+    leans: (faction: string) => `Leans ${faction}`,
+    heldBy: (faction: string, share: string) => `Held by the ${faction} ${share}`,
+    comeback: (faction: string, pct: number) => `Comeback · ${faction} +${pct} %`,
+    notACloseRace: 'Not a close race today',
+    closeRaceToday: 'Close race today · +25 % Party XP · better odds',
+    thisWeek: (issue: string) => `This week: ${issue}`,
+    noIssue: 'No Issue this week',
+    councilSeats: (a: string, b: string) => `Council seats: ${a} · ${b}`,
+    goTo: (district: string) => `Go to ${district} · tram · instant`,
+    showPlaces: 'Show places',
+    heldLegend: 'Held (over 50) · Contested',
+    youLiveHere: 'District · you live here',
+    visiting: 'District · visiting',
+    districtCloseRace: (district: string) => `${district} · close race today`,
+    districtLeans: (district: string, faction: string) => `${district} · leans ${faction}`,
+    membersOnly: 'Members only',
+    councilRule: (rule: string, n: number) => `Council rule: ${rule} · ${n} ${n === 1 ? 'day' : 'days'} left`,
+    issueLeads: (issue: string, faction: string, a: number, b: number) =>
+      `Issue: ${issue} · ${faction} leads ${a} to ${b}`,
+    /** The share bar's caption and kicker in the capital: "Who holds Eastside". */
+    whoHolds: (place: string) => `Who holds ${place}`,
+    help: {
+      /** Review 2's share note (§1.9) with the home-city floor replaced, in the capital. */
+      whoHolds: (place: string) => [
+        `Who holds ${place}`,
+        "Each party's share of the town, and in grey the undecided. Everything you do to win voters draws from the undecided first. Nobody holds a district until a party passes half; the rest is the fight.",
+      ],
+      closeRace: () => [
+        'Close race',
+        'Three parties within ten points of each other here today. Party work in a close race pays +25 % Party XP, moves opinion +25 % and has better odds.',
+      ],
+      comeback: () => [
+        'Comeback',
+        'A party that has just lost a district gets +5 % opinion a day on its work there, up to +30 %, until it wins it back or two weeks pass.',
+      ],
+    },
+  },
+  /** Where you live: the residence card, the sheet, the result and the room (screens §6). */
+  residence: {
+    whereYouLive: 'Where you live',
+    youLiveIn: (place: string) => `You live in ${place}`,
+    registerIn: (district: string, iron: number) => `Register in ${district} · ${iron} Iron`,
+    needsIron: (iron: number) => `Needs ${iron} Iron`,
+    registerHere: (district: string) =>
+      `Register here to vote and stand in ${district} · 7 days between moves`,
+    canMoveAgainFrom: (weekday: string) => `You can move again from ${weekday}`,
+    /** "Registered Monday · you vote from Thursday · move again from Monday". */
+    registeredLine: (weekday: string, votesFrom: string, moveFrom: string) =>
+      `Registered ${weekday} · you vote from ${votesFrom} · move again from ${moveFrom}`,
+    belowRank: (rank2: string, fxp: number) =>
+      `${rank2}s can register in the capital. ${fxp} Party XP makes ${/^[aeiou]/i.test(rank2) ? 'an' : 'a'} ${rank2}.`,
+    register: (iron: number) => `Register · ${iron} Iron`,
+    /** The result's stamp. */
+    registered: 'Registered',
+    newVoter: (district: string) => `${district} has a new voter`,
+    /** A knock-on line: "Coalport seat given up". */
+    seatGivenUp: (city: string) => `${city} seat given up`,
+    nextVote: (district: string, weekday: string) => `Next: vote in ${district} from ${weekday}.`,
+    room: 'A room in Irongate',
+    roomLine: (iron: number, days: number, cap: number) => `${iron} Iron · ${days} days · Rested cap +${cap}`,
+    takeARoom: (iron: number) => `Take a room · ${iron} Iron`,
+    renew: (iron: number) => `Renew · ${iron} Iron`,
+    roomUntil: (weekday: string, cap: number) => `Room until ${weekday} · Rested cap ${cap}`,
+    /** The room's stamp. */
+    taken: 'Taken',
+    /** The Me tab: "You live in Eastside, Irongate · move again from Monday". */
+    meLine: (district: string, weekday: string) =>
+      `You live in ${district}, Irongate · move again from ${weekday}`,
+    help: {
+      whereYouLive: () => [
+        'Where you live',
+        'Where you live is where you vote and stand for the council, whose paper you read first and whose Party orders you get. Moving costs 500 Iron and seven days between moves.',
+      ],
+    },
+  },
+  /** The Issues section of the paper (screens §7.1). */
+  issues: {
+    theIssues: 'The Issues',
+    leads: 'leads',
+    open: 'open',
+    /** Under the points bar: "settles Sunday midnight". */
+    settles: (until: string) => `settles ${until}`,
+    newThisWeek: 'New this week',
+    ifSettled: (effect: string) => `If settled: ${effect}`,
+    whereToAct: 'Where to act',
+    help: {
+      theIssues: () => [
+        'The Issues',
+        'Two things the town is arguing about this week. Work on them moves opinion half again and scores points for your party; on Sunday night the party with most points owns the Issue, and that changes a number for everyone for a week.',
+      ],
+    },
+  },
+  /** The Election card in the capital and the result (screens §7.2, §8); `election.registered` is line 1 and 2 of its first state. */
+  capitalElection: {
+    votingIsOpenIn: (district: string) => `Voting is open in ${district}`,
+    twoSeats: (until: string) => `Two seats · any name · your vote is secret · until ${until}`,
+    votesCast: (n: number, pct: number, pct2: number) =>
+      `${n} votes cast · votes count ${pct} % of the score, opinion ${pct2} % (votes count in full from 10 cast)`,
+    howSeatsAreWon:
+      "Each party's score mixes its share of the votes with its share of opinion. The top score takes the first seat; a party takes both only with more than twice the next. Ties: votes, then opinion, then the returning officer's draw.",
+    factionProposal: (faction: string, secretary: string) => `the ${faction}'s proposal · ${secretary}`,
+    sixVotes: (at: string) => `Six votes of ten to pass. The council votes at ${at}.`,
+  },
+  /** The scoreboard, the player's word for the ledger (screens §9), and In Print (§7.3). */
+  scoreboard: {
+    line: (place: string, swing: string, faction: string, rank: string, n: number) =>
+      `This election you've moved ${place} ${swing} for the ${faction} (${rank} of ${n})`,
+    noOneElse: '(no one else yet)',
+    whoMoved: (district: string) => `Who moved ${district} · this election`,
+    /** The three level brackets, 1–15, 16–30, 31 and up. */
+    brackets: ['Levels 1–15', 'Levels 16–30', 'Level 31 and up'] as const,
+    heroNote:
+      'District Hero: the top of each bracket at the result, at +0.5 or more. 25 Political Capital and your name in the Herald.',
+    heroTitle: (district: string) => `District Hero, ${district} · this election`,
+    heroes: (district: string, n: number) => `Heroes: ${district} ×${n}`,
+    inPrint: 'In Print',
   },
 } as const;
 

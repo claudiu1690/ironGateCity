@@ -63,8 +63,13 @@ export function computeRewards(i: {
   /** Slice 3: Fired up and Public Meetings on FXP, Street Fund on Iron. */
   fxpShares?: readonly LineShare[];
   ironShares?: readonly LineShare[];
-  /** Street Permits: × 1.15 on the opinion swing. */
+  /** Street Permits: × 1.15 on the opinion swing (slice 3's form of a single factor). */
   swingMultiplier?: number;
+  /**
+   * Slice 4 (ADR 0030 §4): the swing's named factors; the swing is the base × Π(1 + pct / 100) in
+   * full precision, rounded once. Used in place of `swingMultiplier` when given.
+   */
+  opinionFactors?: ReadonlyArray<{ id: string; label: string; pct: number }>;
 }): Rewards {
   const rates = TIER_RATES[i.tier];
   const paid = i.costPaid ?? i.energy;
@@ -90,13 +95,16 @@ export function computeRewards(i: {
     [{ ...RESTED_PART, share: RESTED.ironBonus * restedShare }, ...(i.ironShares ?? [])],
     i.outcome,
   );
+  const factors = i.opinionFactors ?? [];
+  const multiplier =
+    factors.length > 0 ? factors.reduce((x, f) => x * (1 + f.pct / 100), 1) : (i.swingMultiplier ?? 1);
   const opinion = i.givesOpinion
-    ? roundOpinion(
-        OPINION_PER_ENERGY[i.tier] * i.energy * OUTCOME_FACTOR[i.outcome] * (i.swingMultiplier ?? 1),
-      )
+    ? roundOpinion(OPINION_PER_ENERGY[i.tier] * i.energy * OUTCOME_FACTOR[i.outcome] * multiplier)
     : 0;
 
-  return { xp, fxp, iron, opinion };
+  const out: Rewards = { xp, fxp, iron, opinion };
+  if (i.givesOpinion && factors.length > 0) out.opinionFactors = factors.map((f) => ({ ...f }));
+  return out;
 }
 
 /** Line-by-line sum of several attempts' rewards (the modal's tiles; opinion to three decimals). */
@@ -107,12 +115,18 @@ export function sumRewards(list: Rewards[]): Rewards {
     return out;
   };
   return list.reduce<Rewards>(
-    (acc, r) => ({
-      xp: add(acc.xp, r.xp),
-      fxp: add(acc.fxp, r.fxp),
-      iron: add(acc.iron, r.iron),
-      opinion: roundOpinion(acc.opinion + r.opinion),
-    }),
+    (acc, r) => {
+      const out: Rewards = {
+        xp: add(acc.xp, r.xp),
+        fxp: add(acc.fxp, r.fxp),
+        iron: add(acc.iron, r.iron),
+        opinion: roundOpinion(acc.opinion + r.opinion),
+      };
+      // The factors are the same on every row of a run (constant for the day): keep the first.
+      const factors = acc.opinionFactors ?? r.opinionFactors;
+      if (factors) out.opinionFactors = factors;
+      return out;
+    },
     { xp: { ...NOTHING }, fxp: { ...NOTHING }, iron: { ...NOTHING }, opinion: 0 },
   );
 }

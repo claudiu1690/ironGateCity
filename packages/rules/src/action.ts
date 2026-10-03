@@ -1,18 +1,23 @@
 import { computeCheck, outcomeForRoll, tier1Difficulty } from './check';
 import { DIRECTIVES, FXP_TYPE_MULTIPLIER } from './constants';
 import { projectEnergy, spendEnergy } from './energy';
+import { pointsFor, issueTags } from './issues';
 import {
   NO_MODIFIERS,
   actionEnergy,
   ordinanceCheckBonuses,
+  placeCheckBonuses,
+  placeOf,
   restedCapFor,
   rewardShares,
   standingPerSuccess,
+  swingFactors,
   swingMultiplier,
 } from './ordinances';
-import type { CityModifiers } from './ordinances';
+import type { Modifiers, SwingFactor } from './ordinances';
 import type { EnergyProjection, EnergyState } from './energy';
 import { advanceOrders, itemSpec, orderMatches } from './orders';
+import type { MatchCtx } from './orders';
 import { computeRewards, sumRewards } from './rewards';
 import type { Rng } from './rng';
 import { standingBonus, standingView } from './standing';
@@ -22,6 +27,7 @@ import type {
   CheckBonus,
   CheckStatSpec,
   CityRole,
+  FactionId,
   OrderTemplate,
   OrdersState,
   Outcome,
@@ -35,6 +41,8 @@ export interface Tier1Attempt extends ActionAttempt {
   restedUsed: number;
   /** The Party order this row advanced (it got the +25 % FXP). */
   orderId: string | null;
+  /** Slice 4 (ADR 0029): the momentum this row adds to each tagged Issue (0 untagged); at a place only. */
+  points?: number;
 }
 
 export interface Tier1Resolution {
@@ -51,6 +59,12 @@ export interface Tier1Resolution {
   standing: { before: number; after: number };
   /** `completed` lists the order ids this run completed; `allDone` if it completed the third. */
   orders: { before: OrdersState; after: OrdersState; completed: string[]; allDone: boolean };
+  /**
+   * Slice 4 (ADR 0029, 0030): the live Issues tagging this action, the run's momentum for each (the
+   * sum of the rows' points) and the swing's named factors (empty outside a place).
+   */
+  issues?: Array<{ docId: string; issueId: string; name: string; points: number }>;
+  opinionFactors?: SwingFactor[];
 }
 
 export type ResolveResult =
@@ -74,6 +88,9 @@ export interface Tier1ActionInput {
     stats: CheckStatSpec;
     givesFxp: boolean;
     givesOpinion: boolean;
+    /** Slice 4: the location's quarter (a capital district) and kind, for Issue feeds and orders. */
+    districtId?: string;
+    locationKind?: string;
   };
   cityRole: CityRole;
   values: Stats;
@@ -84,13 +101,23 @@ export interface Tier1ActionInput {
   standing: { successes: number; names: readonly string[]; cityName: string };
   orders: OrdersState;
   orderTemplates: readonly OrderTemplate[];
+  /** Slice 1–3: the home city, where `cityId: 'home'` orders point. */
   homeCityId: string;
+  /** Slice 4 (ADR 0026): the residence, where `'home'` orders point; wins over `homeCityId`. */
+  residence?: MatchCtx;
+  /** Slice 4: the actor's faction (a comeback is only its own). */
+  factionId?: FactionId;
   /** The First day row (review 1); items, weather: later slices. */
   bonuses?: CheckBonus[];
   /** A best-stat check's tie-break: the faction's bonus stat (review 1). */
   prefer?: TrainableStat;
-  /** Slice 3 (ADR 0021): the ordinance in force and morale in the action's city. */
-  modifiers?: CityModifiers;
+  /**
+   * Slice 3 (ADR 0021): the ordinance in force and morale in the action's city. Slice 4 (ADR 0030):
+   * the place's sources, close race, comeback and live Issues.
+   */
+  modifiers?: Modifiers;
+  /** Slice 4 (ADR 0030 §5): the Rested cap of the residence and the room; default from `modifiers`. */
+  restedCap?: number;
 }
 
 /** Stamp for a run of checked attempts (ADR 0006, GDD §13.1): ×1 by outcome, a batch "n of N". */
@@ -113,7 +140,7 @@ export function usesSuccessText(successes: number, times: number): boolean {
  */
 export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult {
   const m = i.modifiers ?? NO_MODIFIERS;
-  const before = projectEnergy(i.energy, i.now, undefined, restedCapFor(m));
+  const before = projectEnergy(i.energy, i.now, undefined, i.restedCap ?? restedCapFor(m));
   // Cost ordinances change the cost only (ADR 0021 §3): rewards stay on the content Energy.
   const perRow = actionEnergy(i.action.energy, i.action.type, m);
   const cost = perRow * i.times;
@@ -122,18 +149,32 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
   }
 
   const difficulty = tier1Difficulty(i.cityRole);
-  const descriptor: ActionDescriptor = {
+  const ctx: MatchCtx = i.residence ?? i.homeCityId;
+  const place = placeOf(m);
+  const untagged: ActionDescriptor = {
     kind: 'checked',
     actionId: i.action.id,
     type: i.action.type,
     locationId: i.action.locationId,
     cityId: i.action.cityId,
+    ...(i.action.districtId !== undefined ? { districtId: i.action.districtId } : {}),
+    ...(i.action.locationKind !== undefined ? { locationKind: i.action.locationKind } : {}),
   };
+  // ADR 0029: the live Issues whose feeds this action matches (the city's own Issues).
+  const tagged = place ? issueTags(place.issues, untagged) : [];
+  const descriptor: ActionDescriptor =
+    tagged.length > 0 ? { ...untagged, issueIds: tagged.map((t) => t.issueId) } : untagged;
   const fxpRateMultiplier = FXP_TYPE_MULTIPLIER[i.action.type] ?? 1;
   const shares = rewardShares({ type: i.action.type, givesFxp: i.action.givesFxp, m });
-  const ordinanceBonuses = ordinanceCheckBonuses(i.action.type, m);
+  const ordinanceBonuses = [
+    ...ordinanceCheckBonuses(i.action.type, m),
+    ...placeCheckBonuses(i.action.type, m),
+  ];
   const perSuccess = standingPerSuccess(m);
-  const swing = swingMultiplier(i.action.type, m);
+  // Slice 3's callers (no place) keep the single multiplier and their stored shape; a place names
+  // every factor (ADR 0030 §4).
+  const factors = place ? swingFactors(i.action.type, i.factionId ?? null, m, tagged) : [];
+  const swing = place ? 1 : swingMultiplier(i.action.type, m);
 
   let state: EnergyState = { value: before.value, rested: before.rested, updatedAt: before.updatedAt };
   let successes = i.standing.successes;
@@ -161,10 +202,10 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
     const roll = rng.roll100();
     const outcome = outcomeForRoll(roll, check.chance, 1);
 
-    const adv = advanceOrders(orders, i.orderTemplates, descriptor, outcome, i.homeCityId, i.now);
+    const adv = advanceOrders(orders, i.orderTemplates, descriptor, outcome, ctx, i.now);
     const bonusApplies =
       adv.advanced !== null ||
-      (!DIRECTIVES.bonusOnlyWhileOpen && matchesAnyOrder(orders, i.orderTemplates, descriptor, i.homeCityId));
+      (!DIRECTIVES.bonusOnlyWhileOpen && matchesAnyOrder(orders, i.orderTemplates, descriptor, ctx));
     const rewards = computeRewards({
       tier: 1,
       energy: i.action.energy,
@@ -178,6 +219,7 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       fxpShares: shares.fxp,
       ironShares: shares.iron,
       swingMultiplier: swing,
+      ...(factors.length > 0 ? { opinionFactors: factors } : {}),
     });
     orders = adv.orders;
     if (adv.completed) completed.push(adv.completed.templateId);
@@ -193,8 +235,11 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       rewards,
       restedUsed: spent.restedUsed,
       orderId: adv.advanced?.templateId ?? null,
+      // §14.6: the content Energy, half up on a Partial (design §19 Q9, Q10).
+      ...(place ? { points: tagged.length > 0 ? pointsFor(i.action.energy, outcome) : 0 } : {}),
     });
   }
+  const runPoints = attempts.reduce((sum, a) => sum + (a.points ?? 0), 0);
 
   return {
     ok: true,
@@ -207,6 +252,17 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       rewards: sumRewards(attempts.map((a) => a.rewards)),
       standing: { before: i.standing.successes, after: successes },
       orders: { before: i.orders, after: orders, completed, allDone },
+      ...(place
+        ? {
+            issues: tagged.map((t) => ({
+              docId: t.docId,
+              issueId: t.issueId,
+              name: t.name,
+              points: runPoints,
+            })),
+            opinionFactors: factors,
+          }
+        : {}),
     },
   };
 }
@@ -215,10 +271,10 @@ function matchesAnyOrder(
   o: OrdersState,
   templates: readonly OrderTemplate[],
   a: ActionDescriptor,
-  homeCityId: string,
+  ctx: MatchCtx,
 ): boolean {
   return o.items.some((item) => {
     const t = templates.find((x) => x.id === item.templateId);
-    return t ? orderMatches(itemSpec(item, t).match, a, homeCityId) : false;
+    return t ? orderMatches(itemSpec(item, t).match, a, ctx) : false;
   });
 }

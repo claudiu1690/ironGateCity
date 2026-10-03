@@ -165,6 +165,8 @@ export const duskwall: City = {
       id: 'duskwall.beacon-house',
       name: 'Beacon House',
       kind: 'faction-hq',
+      // Slice 4 (design §4.3): an HQ's tickets are for its own faction's members.
+      factionId: 'vanguard',
       blurb:
         "The movement's district office, named for the searchlight on its roof. The committee sits upstairs; the volunteers gather in the yard at six.",
       // Maps v3: the approved pin (pins.json).

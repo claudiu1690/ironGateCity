@@ -39,7 +39,8 @@ export function usePoliticalAct() {
         queryClient.setQueryData(trpc.character.me.queryKey(), r.character);
         if (r.view.kind === 'election')
           queryClient.setQueryData(trpc.council.election.queryKey(), r.view.election);
-        else queryClient.setQueryData(trpc.council.chamber.queryKey(), r.view.council);
+        else if (r.view.kind === 'council')
+          queryClient.setQueryData(trpc.council.chamber.queryKey(), r.view.council);
         void queryClient.invalidateQueries({ queryKey: trpc.paper.today.queryKey() });
         void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
         setResult(r);

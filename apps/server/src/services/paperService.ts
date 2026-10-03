@@ -1,4 +1,5 @@
 import type { GameContent } from '@irongate/content';
+import { residenceCityId } from './residence';
 import { OfficeTerm, PaperEntry } from '@irongate/db';
 import {
   ENERGY,
@@ -88,7 +89,8 @@ export async function getPaper(deps: {
           },
         ]
       : [];
-  const home = content.city(c.homeCityId);
+  // The residence city's places with a Jobs card; the welcome landing (slice 4, ADR 0026).
+  const home = content.city(residenceCityId(c));
 
   return {
     day: today,

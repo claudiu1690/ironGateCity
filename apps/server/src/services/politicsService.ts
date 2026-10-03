@@ -54,6 +54,7 @@ import { selectPoliticalHeadlines } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
 import { activeMembersFilter } from './cityDay';
+import { residenceCityId, residenceSpec } from './residence';
 import { ordinanceIdOn } from './modifiers';
 import { assetView, namedStanding, rankTitle, standingSuccesses } from './views';
 
@@ -71,13 +72,6 @@ const s = <T extends { session: (x: ClientSession | null) => T }>(q: T, session:
 export const weekdayName = (day: DayKey): string => WEEKDAY_NAMES[weekday(day)];
 /** "Weiss": the name the count's headline and the Polling Day row use. */
 export const surname = (name: string): string => name.trim().split(/\s+/).at(-1) ?? name;
-
-export function homeSpec(content: GameContent, c: Pick<CharacterDoc, 'homeCityId'>) {
-  const city = content.city(c.homeCityId);
-  if (!city?.council || !city.homeFactionId) throw gameError('PRECONDITION_FAILED', 'ELECTION_NOT_READY');
-  const faction = content.faction(city.homeFactionId);
-  return { city, offset: city.council.offset, home: city.homeFactionId, faction };
-}
 
 /**
  * Review 3 (GDD §15.3, answers §6.1): the council's hall on the city picture and the map's two stills,
@@ -150,9 +144,9 @@ export async function politicsSummary(
   now: number,
   today: DayKey,
 ): Promise<PoliticsSummaryView | null> {
-  const spec = content.city(c.homeCityId);
+  const spec = content.city(residenceCityId(c));
   if (!spec?.council || !spec.homeFactionId || spec.homeFactionId !== c.factionId) return null;
-  const { offset, home, faction } = homeSpec(content, c);
+  const { offset, home, faction } = residenceSpec(content, c);
   const cal = councilDay(today, offset);
   const e = await Election.findById(electionKey(spec.id, cal.cycle)).lean<ElectionDoc>();
   const cand = await Candidacy.findOne({
@@ -397,7 +391,7 @@ export async function politicsWaiting(
   now: number,
   today: DayKey,
 ): Promise<0 | 1> {
-  const spec = content.city(c.homeCityId);
+  const spec = content.city(residenceCityId(c));
   if (!spec?.council || c.rank < COUNCIL.voteRank) return 0;
   const cal = councilDay(today, spec.council.offset);
   const term = (c.offices ?? []).some((o) => o.councilKey === councilKey(spec.id, cal.cycle));
@@ -416,7 +410,7 @@ export async function electionView(
   today: DayKey,
   session: Session = null,
 ): Promise<ElectionView> {
-  const { city, offset, home, faction } = homeSpec(content, c);
+  const { city, offset, home, faction } = residenceSpec(content, c);
   const cal = councilDay(today, offset);
   const id = electionKey(city.id, cal.cycle);
   const e = await s(Election.findById(id), session).lean<ElectionDoc>();
@@ -637,7 +631,7 @@ export async function getCount(
   c: CharacterDoc,
   electionId: string | undefined,
 ): Promise<CountView | null> {
-  const home = c.homeCityId;
+  const home = residenceCityId(c);
   if (electionId !== undefined) {
     const cityId = electionId.slice(0, electionId.lastIndexOf(':'));
     if (cityId !== home) throw gameError('BAD_REQUEST', 'WRONG_CITY', { cityId: home, requested: cityId });
@@ -662,7 +656,7 @@ export async function councilView(
   today: DayKey,
   session: Session = null,
 ): Promise<CouncilView> {
-  const { city: spec, offset, faction } = homeSpec(content, c);
+  const { city: spec, offset, faction } = residenceSpec(content, c);
   const cal = councilDay(today, offset);
   const key = councilKey(spec.id, cal.cycle);
   const terms = await s(OfficeTerm.find({ councilKey: key }).sort({ seat: 1 }), session).lean<
@@ -820,7 +814,7 @@ export async function frontPageView(
   const me = `p:${c._id.toHexString()}`;
   const row = e.result.rows.find((r) => r.key === me);
   const top = row?.place === 1;
-  const templates = content.politicalHeadlinesOf(c.homeCityId);
+  const templates = content.politicalHeadlinesOf(residenceCityId(c));
   const t = templates.find((h) => h.when.some((w) => w.kind === 'seatWon' && w.top === top));
   const vars: Partial<Record<PoliticalPlaceholder, string>> = {
     name: c.name,
@@ -836,7 +830,7 @@ export async function frontPageView(
     caption: {
       name: c.name,
       rankTitle: rankTitle(content, c, c.rank),
-      cityName: content.city(c.homeCityId)?.name ?? c.homeCityId,
+      cityName: content.city(residenceCityId(c))?.name ?? residenceCityId(c),
     },
     animate: term.frontPageSeenAt === null,
     headline: t ? fill(t.headline) : c.name,
@@ -852,7 +846,7 @@ export async function politicalHeadlines(
   city: CityDoc | null,
   today: DayKey,
 ): Promise<LiveHeadline[]> {
-  const spec = content.city(c.homeCityId);
+  const spec = content.city(residenceCityId(c));
   if (!spec?.council || !spec.homeFactionId || spec.homeFactionId !== c.factionId) return [];
   const cal = councilDay(today, spec.council.offset);
   const curId = electionKey(spec.id, cal.cycle);

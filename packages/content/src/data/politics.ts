@@ -46,5 +46,21 @@ export const politics: ContentInput['politics'] = {
       body: "For {ordinance}. The whole council can see it, and it's final. The council votes at {at}; {paper} prints the result.",
       next: 'Next: the result, {resultWeekday} morning.',
     },
+    // Slice 4 (docs/design/slice-4-screens.md §6.3): `{district}` the new residence, `{weekday}` the
+    // weekday its vote opens (register) or the room ends (room), `{hq}` the faction's capital HQ,
+    // `{cap}` the Rested cap with the room.
+    register: {
+      stamp: 'Registered',
+      headline: '{district} has a new voter',
+      body: 'The Herald is your paper from tomorrow. {district} votes from {weekday}. {hq} expects you at six.',
+      next: 'Next: vote in {district} from {weekday}.',
+    },
+    room: {
+      stamp: 'Taken',
+      headline: 'A room in Irongate',
+      body: 'Seven nights, a window on the tram line. Rested banks to {cap} until {weekday}.',
+      // The Next line (screens §6.3, written 3 Oct 2026).
+      next: 'Next: rest up. Renew the room on {weekday} if you want to keep it.',
+    },
   },
 };

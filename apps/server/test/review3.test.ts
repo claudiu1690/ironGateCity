@@ -79,8 +79,15 @@ describe("the election screens stand on the council's hall (GDD §15.3)", () => 
       expect(hall.asset.night.id).toBe(city.map.night);
       expect(hall.asset.day.width).toBeGreaterThan(0);
     }
-    // A city without a council has no hall.
-    expect(hallView(content, 'irongate')).toBeNull();
+    // Slice 4 (design §19 Q7): the capital's council sits in the City Hall.
+    expect(hallView(content, 'irongate')).toMatchObject({
+      name: 'City Hall',
+      ref: 'the City Hall',
+      x: 0.57,
+      y: 0.345,
+    });
+    // A city without a council (Clearwater has no content yet) has no hall.
+    expect(hallView(content, 'clearwater')).toBeNull();
   });
 
   it("who's standing carries the hall", async () => {

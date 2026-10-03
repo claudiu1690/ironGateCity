@@ -49,8 +49,12 @@ const BUDGETS: Record<RasterKind, Record<number, Record<Format, number>>> = {
 };
 /** ADR 0015: a vector is copied, at most 8 KB. */
 const VECTOR_BUDGET = 8 * KB;
-/** ADR 0015: the committed set after slice 2 (raised per slice with a measured figure, never removed). */
-const TOTAL_BUDGET = 12 * KB * KB;
+/**
+ * ADR 0015: the committed set, raised per slice with a measured figure, never removed. Slice 2:
+ * 12 MB. Slice 4 (tech design §13): the capital's and the nation's stills (four maps, 4.05 MB)
+ * take the measured set to 12.64 MB, so 13 MB.
+ */
+const TOTAL_BUDGET = 13 * KB * KB;
 
 interface ManifestEntry {
   sourceHash: string;

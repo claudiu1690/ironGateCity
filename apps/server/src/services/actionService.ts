@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { isCheckedAction, isTrainingAction } from '@irongate/content';
 import type { GameContent, LocatedAction } from '@irongate/content';
+import { residenceCityId, residenceCtx } from './residence';
 import { ActionLog, Character, City } from '@irongate/db';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
@@ -197,7 +198,8 @@ async function resolveAndWrite(i: {
         standing: { successes, names: content.standingNames, cityName: city.name },
         orders,
         orderTemplates: templates,
-        homeCityId: c.homeCityId,
+        homeCityId: residenceCityId(c),
+        residence: residenceCtx(c),
         modifiers,
         // Review 1 (§8.4): the First day row at home on the welcome day; a best-stat tie-break.
         bonuses: firstDayBonuses(content, c, city.id, today),
@@ -276,7 +278,8 @@ async function resolveAndWrite(i: {
       now,
       orders,
       orderTemplates: templates,
-      homeCityId: c.homeCityId,
+      homeCityId: residenceCityId(c),
+      residence: residenceCtx(c),
       descriptor,
       modifiers,
     });

@@ -107,13 +107,15 @@ describe('the survey of the art (pins.json)', () => {
 describe('quarters are frames (§2)', () => {
   it('each home city has its first quarter, framed on its pins + 0.06', () => {
     const content = loadContent();
-    expect(content.cities.map((c) => c.quarters)).toEqual([
+    // Slice 4: the capital's quarters are its five districts (slice4.irongate.test.ts).
+    expect(content.cities.filter((c) => c.role === 'home').map((c) => c.quarters)).toEqual([
       [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
       [{ id: 'duskwall.fortress', name: 'The Fortress', frame: { x0: 0.07, y0: 0.06, x1: 0.65, y1: 0.91 } }],
       [{ id: 'ashford.college', name: 'The College', frame: { x0: 0.24, y0: 0.19, x1: 0.76, y1: 0.68 } }],
     ]);
-    // The frame is the pins' box grown by 0.06 on every side, clamped to the picture.
-    for (const c of content.cities) {
+    // The frame is the pins' box grown by 0.06 on every side, clamped to the picture (the capital's
+    // five district frames are the design's, slice4.irongate.test.ts).
+    for (const c of content.cities.filter((x) => x.role === 'home')) {
       const xs = c.locations.map((l) => l.map.x);
       const ys = c.locations.map((l) => l.map.y);
       const r = (v: number) => Math.round(v * 100) / 100;
@@ -165,6 +167,11 @@ describe('the tiles manifest (§3)', () => {
       'map.coalport.night',
       'map.duskwall.day',
       'map.duskwall.night',
+      // Slice 4 (tech design §13): the capital and the nation.
+      'map.irongate.day',
+      'map.irongate.night',
+      'map.nation.day',
+      'map.nation.night',
     ]);
     for (const a of maps) {
       expect(content.tiles(a.id)).toMatchObject({ width: a.width, height: a.height, format: 'avif' });

@@ -19,6 +19,8 @@ const opts = { strict: true, versionKey: false, minimize: false } as const;
 export interface BallotLine {
   /** 'p:<characterId>' | 'n:<npcId>'. */
   key: string;
+  /** Slice 4: the candidate's faction (a capital ballot names three parties). */
+  factionId?: FactionId;
   kind: 'player' | 'npc';
   characterId?: Types.ObjectId;
   npcId?: string;
@@ -42,7 +44,13 @@ export type ElectionStatus = 'nominations' | 'polling' | 'counted';
 export interface ElectionDoc {
   _id: string;
   cityId: string;
-  factionId: FactionId;
+  /**
+   * Slice 4 (ADR 0027): `home` (absent = home) or a capital `district`; `placeId` the city or the
+   * district. A district election has no single faction.
+   */
+  kind?: 'home' | 'district';
+  placeId?: string;
+  factionId?: FactionId;
   cycle: number;
   nominationsFrom: DayKey;
   pollsFrom: DayKey;
@@ -50,8 +58,8 @@ export interface ElectionDoc {
   status: ElectionStatus;
   /** Random at open: the NPC jitter's seed, stored for replay. */
   seed: string;
-  /** All nine, drawn at open, profile order. */
-  npcSlate: NpcSlateEntry[];
+  /** All nine, drawn at open, profile order. Slice 4: a district's six carry their faction. */
+  npcSlate: Array<NpcSlateEntry & { factionId?: FactionId }>;
   /** `$inc` by declare: serialises a filing with the close (ADR 0018). */
   filed: number;
   /** Decided at the close. */
@@ -71,7 +79,9 @@ const electionSchema = new Schema<ElectionDoc>(
   {
     _id: { type: String, required: true },
     cityId: { type: String, required: true },
-    factionId: { type: String, enum: FACTION_IDS, required: true },
+    kind: { type: String, enum: ['home', 'district'] },
+    placeId: { type: String },
+    factionId: { type: String, enum: FACTION_IDS },
     cycle: int,
     nominationsFrom: int,
     pollsFrom: int,
@@ -89,7 +99,9 @@ const electionSchema = new Schema<ElectionDoc>(
   },
   { ...opts, collection: 'elections', timestamps: true },
 );
-electionSchema.index({ cityId: 1, cycle: -1 }, { unique: true });
+// Slice 4: not unique any more (five district elections share the capital's city and cycle); the
+// `_id` is the place's election key, which is.
+electionSchema.index({ cityId: 1, cycle: -1 });
 
 export const Election = model<ElectionDoc>('Election', electionSchema);
 
@@ -104,6 +116,9 @@ export interface CandidacyDoc {
   _id: Types.ObjectId;
   electionId: string;
   cityId: string;
+  /** Slice 4: the candidate's faction and the place (the city or the district). */
+  factionId?: FactionId;
+  placeId?: string;
   cycle: number;
   characterId: Types.ObjectId;
   name: string;
@@ -129,6 +144,8 @@ const candidacySchema = new Schema<CandidacyDoc>(
   {
     electionId: { type: String, required: true },
     cityId: { type: String, required: true },
+    factionId: { type: String, enum: FACTION_IDS },
+    placeId: { type: String },
     cycle: int,
     characterId: { type: Schema.Types.ObjectId, required: true },
     name: { type: String, required: true },
@@ -211,8 +228,13 @@ export interface OfficeTermDoc {
   cityId: string;
   councilKey: string;
   electionId: string;
-  /** 1..7. */
+  /** 1..7 at home; 1..10 in the capital (2 × (district n − 1) + 1 | 2). */
   seat: number;
+  /** Slice 4: the seat's faction and district (null at home). */
+  factionId?: FactionId;
+  districtId?: string | null;
+  /** Slice 4 (ADR 0026): the day a move vacated the seat (the stipend stops; not completed). */
+  vacatedDay?: DayKey | null;
   /** Sits fromDay..toDay − 1; ends at the count at toDay. */
   fromDay: DayKey;
   toDay: DayKey;
@@ -232,6 +254,9 @@ const officeTermSchema = new Schema<OfficeTermDoc>(
     councilKey: { type: String, required: true },
     electionId: { type: String, required: true },
     seat: int,
+    factionId: { type: String, enum: FACTION_IDS },
+    districtId: { type: String, default: null },
+    vacatedDay: { type: Number, default: null },
     fromDay: int,
     toDay: int,
     holder: {
@@ -253,7 +278,8 @@ const officeTermSchema = new Schema<OfficeTermDoc>(
   },
   { ...opts, collection: 'officeTerms', timestamps: { createdAt: true, updatedAt: false } },
 );
-officeTermSchema.index({ councilKey: 1, seat: 1 }, { unique: true });
+// Slice 4 (ADR 0026): a seat vacated at a move is re-filled from the move's day.
+officeTermSchema.index({ councilKey: 1, seat: 1, fromDay: 1 }, { unique: true });
 officeTermSchema.index(
   { 'holder.characterId': 1, toDay: -1 },
   { partialFilterExpression: { 'holder.kind': 'player' } },
@@ -266,8 +292,8 @@ export const OfficeTerm = model<OfficeTermDoc>('OfficeTerm', officeTermSchema);
 // ---------------------------------------------------------------------------------------------
 
 export type MovedBy =
-  | { kind: 'branch'; npcId: string; name: string; characterId?: undefined }
-  | { kind: 'player'; characterId: Types.ObjectId; name: string; npcId?: undefined };
+  | { kind: 'branch'; npcId: string; name: string; characterId?: undefined; factionId?: FactionId }
+  | { kind: 'player'; characterId: Types.ObjectId; name: string; npcId?: undefined; factionId?: FactionId };
 
 export interface OrderPaperItem {
   ordinanceId: string;
@@ -300,7 +326,7 @@ export interface OrderPaperDoc {
   fromDay: DayKey;
   divideDay: DayKey;
   status: 'open' | 'divided';
-  /** Item 1 is the branch's motion; at most four. */
+  /** Item 1 is the branch's motion; at most four (the capital: three branch motions, six). */
   items: OrderPaperItem[];
   /** Public inside the council. */
   votes: CouncilVote[];
@@ -326,6 +352,7 @@ const orderPaperSchema = new Schema<OrderPaperDoc>(
               type: new Schema(
                 {
                   kind: { type: String, enum: ['branch', 'player'], required: true },
+                  factionId: { type: String, enum: FACTION_IDS },
                   npcId: { type: String },
                   characterId: { type: Schema.Types.ObjectId },
                   name: { type: String, required: true },

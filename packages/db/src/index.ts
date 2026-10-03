@@ -14,7 +14,25 @@ export {
   RENAMED_ORDINANCES_REVIEW2,
   migrateReview2StreetOrdinances,
 } from './migrations/005-review2-street-ordinances';
+export { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
 export { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
+// Slice 4 (tech design §5).
+export { Journey } from './models/journey';
+export type { JourneyDoc, JourneyStatus } from './models/journey';
+export { District } from './models/district';
+export type { DistrictDoc, DistrictStateDoc } from './models/district';
+export { Award, Contribution, InfluenceLedger, LEDGER_KINDS, contributionId } from './models/ledger';
+export type {
+  AwardDoc,
+  AwardKind,
+  ContributionDoc,
+  ContributionKind,
+  InfluenceLedgerDoc,
+  LedgerKind,
+  LedgerSource,
+} from './models/ledger';
+export { IssueModel, issueDocId } from './models/issue';
+export type { IssueDoc, IssueResultDoc, IssueStatus } from './models/issue';
 export type {
   BallotLine,
   CandidacyDoc,
@@ -35,9 +53,16 @@ export type {
 export { Arrival } from './models/arrival';
 export type { ArrivalDoc } from './models/arrival';
 export { Character } from './models/character';
-export type { CharacterDoc, StoredJob, StoredOrderItem, StoredOrders } from './models/character';
-export { City } from './models/city';
-export type { CityDoc, MoraleRecordDoc } from './models/city';
+export type {
+  CharacterDoc,
+  StoredJob,
+  StoredJourney,
+  StoredOrderItem,
+  StoredOrders,
+  StoredResidence,
+} from './models/character';
+export { City, cityOpinion } from './models/city';
+export type { CityDoc, HomeCityDoc, MoraleRecordDoc } from './models/city';
 export { ActionLog } from './models/actionLog';
 export type { ActionLogDoc } from './models/actionLog';
 export { PaperEntry } from './models/paperEntry';

@@ -141,7 +141,7 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
 
   it('five different-key ×3 at once from 100 Energy: exactly three commit, Energy 10, and the books balance', async () => {
     const { caller, me } = await freshCharacter();
-    const beforeCity = (await City.findById('coalport').lean())!.opinion.collective;
+    const beforeCity = (await City.findById('coalport').lean())!.opinion!.collective;
     const rs = await settle(
       [1, 2, 3, 4, 5].map(() =>
         caller.action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 3 }),
@@ -166,7 +166,7 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
     });
     // Each run saw the Energy the previous one left (100 → 70 → 40 → 10 in some order).
     expect(ok.map((r) => r.effects.energy.before).sort((x, y) => x - y)).toEqual([40, 70, 100]);
-    const afterCity = (await City.findById('coalport').lean())!.opinion.collective;
+    const afterCity = (await City.findById('coalport').lean())!.opinion!.collective;
     const applied = ok.reduce((s, r) => s + (r.effects.opinion?.applied ?? 0), 0);
     expect(Math.round((afterCity - beforeCity) * 1000)).toBe(Math.round(applied * 1000)); // ADR 0010: the meter moved by exactly the applied swings
   });

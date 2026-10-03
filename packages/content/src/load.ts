@@ -1,5 +1,7 @@
 import {
+  CAPITAL_PLACEHOLDERS,
   FACTION_IDS,
+  JOURNEY_PLACEHOLDERS,
   PLACEHOLDERS,
   POLITICAL_PLACEHOLDERS,
   STORY_PLACEHOLDERS,
@@ -8,18 +10,32 @@ import {
   isPoliticalTemplate,
   placeholdersIn,
 } from '@irongate/rules';
-import type { ChapterRules, FactionId, ItemSpec, OrdinanceSpec, OriginSpec } from '@irongate/rules';
+import type {
+  ChapterRules,
+  FactionId,
+  IssueMatch,
+  ItemSpec,
+  OrdinanceSpec,
+  OriginSpec,
+} from '@irongate/rules';
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
 import { assets, avatars, scenes } from './data/art';
-import { candidates } from './data/candidates';
+import { candidates, irongateCandidates } from './data/candidates';
+import { capitalHomeHeadlines } from './data/capitalHomeHeadlines';
 import { ashford } from './data/cities/ashford';
 import { coalport } from './data/cities/coalport';
 import { duskwall } from './data/cities/duskwall';
+import { irongate } from './data/cities/irongate';
 import { factions } from './data/factions';
 import { headlines } from './data/headlines';
+import { heraldHeadlines } from './data/heraldHeadlines';
+import { issues } from './data/issues';
 import { items } from './data/items';
-import { jobs } from './data/jobs';
+import { irongateJobs, jobs } from './data/jobs';
+import { journeyEvents } from './data/journeyEvents';
+import { mapPins } from './data/mapPins';
+import { nation } from './data/nation';
 import { ordinances } from './data/ordinances';
 import { orderTemplates } from './data/orders';
 import { origin } from './data/origin';
@@ -36,21 +52,25 @@ import type {
   City,
   Faction,
   HeadlineTemplate,
+  Issue,
   Item,
   Job,
+  JourneyEvent,
   Location,
+  Nation,
   Npc,
   NpcCandidate,
   Ordinance,
   OrderTemplate,
   Platform,
+  Quarter,
   TilesEntry,
 } from './schemas';
 
 /** Every data file, before validation. */
 export const rawContent: unknown = {
   factions,
-  cities: [coalport, duskwall, ashford],
+  cities: [coalport, duskwall, ashford, irongate],
   art: { assets, scenes },
   tilePyramids: tiles,
   avatars,
@@ -59,12 +79,15 @@ export const rawContent: unknown = {
   ambitions,
   npcs,
   standingLevels,
-  jobs,
+  jobs: [...jobs, ...irongateJobs],
   orderTemplates,
-  headlines: [...headlines, ...politicalHeadlines],
+  headlines: [...headlines, ...politicalHeadlines, ...capitalHomeHeadlines, ...heraldHeadlines],
   ordinances,
-  candidates,
+  candidates: [...candidates, ...irongateCandidates],
   politics,
+  nation,
+  journeyEvents,
+  issues,
 };
 
 /**
@@ -90,6 +113,85 @@ export const DESIGN_ORDINANCE_IDS = [
   'ord.street-fund',
   'ord.public-meetings',
 ] as const;
+
+/** Slice 4 (design §8.5): the eleventh rule, on every menu (the capital's is the ten plus it). */
+export const TRAM_SUBSIDY_ID = 'ord.tram-subsidy';
+
+/** Slice 4 (design §12, tech design §4.2): the slice-4 templates every home paper carries. */
+export const CAPITAL_HOME_HEADLINE_NAMES = [
+  'train-open',
+  'issues-drawn',
+  'issue-leading',
+  'issue-open',
+  'issue-resolved',
+  'issue-lapsed',
+  'issue-pc',
+  'hero',
+  'moved-away',
+  'quoted',
+] as const;
+
+/** Slice 4 (design §9.6, §12): the Herald's templates, by id suffix (`hl.ig.<name>`). */
+export const HERALD_HEADLINE_NAMES = [
+  'welcome-resident',
+  'first-arrival',
+  'train-open',
+  'seat-won',
+  'seat-top',
+  'seat-lost',
+  'seat-lost-bloc',
+  'seat-lost-tie',
+  'filed',
+  'on-ballot',
+  'struck',
+  'voted-won',
+  'voted-lost',
+  'voted-lost-tie',
+  'moved',
+  'seat-ended',
+  'council-passed',
+  'council-failed',
+  'count',
+  'polls-open',
+  'nominations',
+  'ordinance-city',
+  'battleground',
+  'battleground-new',
+  'battleground-over',
+  'groundswell',
+  'district-line',
+  'hero',
+  'quoted',
+  'issues-drawn',
+  'issue-leading',
+  'issue-open',
+  'issue-resolved',
+  'issue-lapsed',
+  'issue-pc',
+  // The slice-1 kinds, in the Herald's voice (design §12's stand-in row).
+  'rank-up-2',
+  'rank-up-3',
+  'rank-up',
+  'level-up',
+  'level-up-quiet',
+  'standing',
+  'orders-done',
+  'seniority-5',
+  'seniority-10',
+  'away',
+  'away-no-job',
+  'idle',
+] as const;
+
+/** Design §3, §19 Q2: what one outcome of a journey card may pay at most. */
+export const JOURNEY_REWARD_CAPS = {
+  xp: 45,
+  fxp: 6,
+  opinion: 0.05,
+  momentum: 10,
+  rested: 10,
+  iron: 100,
+} as const;
 
 /** Design §8, §17: the political templates every home paper carries (by id suffix). */
 export const POLITICAL_HEADLINE_NAMES = [
@@ -126,7 +228,16 @@ const ALLOWED_PLACEHOLDERS = new Set<string>(PLACEHOLDERS);
 /** Tech design §4.4: story texts have their own, separate list. */
 const ALLOWED_STORY_PLACEHOLDERS = new Set<string>(STORY_PLACEHOLDERS);
 /** Slice-3 tech design §4.3: political texts have their own list plus the client's time tokens. */
-const ALLOWED_POLITICAL_PLACEHOLDERS = new Set<string>([...POLITICAL_PLACEHOLDERS, ...TIME_TOKENS]);
+const ALLOWED_POLITICAL_PLACEHOLDERS = new Set<string>([
+  ...POLITICAL_PLACEHOLDERS,
+  ...TIME_TOKENS,
+  // Slice 4 (tech design §4.3): the capital's and the Issues' live lines.
+  ...CAPITAL_PLACEHOLDERS,
+]);
+/** Slice 4: a journey card's detail and texts. */
+const ALLOWED_JOURNEY_PLACEHOLDERS = new Set<string>(JOURNEY_PLACEHOLDERS);
+/** Slice 4 (design §4.2): the nation map's frame holds every city pin at least this far inside. */
+const NATION_FRAME_MARGIN = 0.06;
 /** GDD §1.2 pillar 7 (content §13.7, n9): an outcome text is at most 240 characters and 4 sentences. */
 const OUTCOME_TEXT_MAX_CHARS = 240;
 const OUTCOME_TEXT_MAX_SENTENCES = 4;
@@ -526,7 +637,7 @@ export function parseContent(raw: unknown): Content {
     unique('ordinance', o.id);
     ordinanceIds.add(o.id);
   }
-  for (const id of DESIGN_ORDINANCE_IDS) {
+  for (const id of [...DESIGN_ORDINANCE_IDS, TRAM_SUBSIDY_ID]) {
     if (!ordinanceIds.has(id)) problems.push(`ordinances: the design's "${id}" is missing`);
   }
 
@@ -546,20 +657,43 @@ export function parseContent(raw: unknown): Content {
         problems.push(`cities.${city.id} and ${other} share the council offset ${city.council.offset}`);
       offsets.set(city.council.offset, city.id);
       const slate = content.candidates.filter((c) => c.cityId === city.id);
-      if (slate.length !== 9) problems.push(`cities.${city.id} has ${slate.length} NPC candidates, not 9`);
-      for (const c of slate) {
-        if (c.factionId !== city.homeFactionId)
-          problems.push(`candidate "${c.id}" is not of ${city.id}'s home faction`);
+      if (isDistricted(city)) {
+        if (city.council.seats !== 10)
+          problems.push(`cities.${city.id}: a council with districts has 10 seats`);
+        // Slice 4 (design §8.3): two per faction per district, profile order in file order.
+        for (const q of city.quarters) {
+          for (const f of FACTION_IDS) {
+            const two = slate.filter((c) => c.districtId === q.id && c.factionId === f);
+            if (two.length !== 2) problems.push(`${q.id} has ${two.length} ${f} NPC candidates, not 2`);
+            if (two.length === 2 && two[0]!.profile <= two[1]!.profile)
+              problems.push(`candidates of ${q.id} (${f}): profiles must strictly descend in file order`);
+          }
+        }
+        for (const c of slate) {
+          if (!c.districtId || !city.quarters.some((q) => q.id === c.districtId))
+            problems.push(`candidate "${c.id}" needs a districtId of ${city.id}`);
+        }
+      } else {
+        if (city.council.seats !== 7) problems.push(`cities.${city.id}: a home council has 7 seats`);
+        if (slate.length !== 9) problems.push(`cities.${city.id} has ${slate.length} NPC candidates, not 9`);
+        for (const c of slate) {
+          if (c.factionId !== city.homeFactionId)
+            problems.push(`candidate "${c.id}" is not of ${city.id}'s home faction`);
+          if (c.districtId !== undefined) problems.push(`candidate "${c.id}": ${city.id} has no districts`);
+        }
+        slate.forEach((c, i) => {
+          const prev = slate[i - 1];
+          if (prev && c.profile >= prev.profile)
+            problems.push(`candidates of ${city.id}: profiles must strictly descend in file order (${c.id})`);
+        });
       }
-      slate.forEach((c, i) => {
-        const prev = slate[i - 1];
-        if (prev && c.profile >= prev.profile)
-          problems.push(`candidates of ${city.id}: profiles must strictly descend in file order (${c.id})`);
-      });
     }
   }
+  const candidateNames = new Set<string>();
   for (const c of content.candidates) {
     if (!cityById.get(c.cityId)?.council) problems.push(`candidate "${c.id}": "${c.cityId}" has no council`);
+    if (candidateNames.has(c.name)) problems.push(`candidate "${c.id}" shares the name "${c.name}"`);
+    candidateNames.add(c.name);
   }
 
   // Slice 3: factions' platforms, branch motions and the Unrest pair (design §6.4, §10.2, §11.3).
@@ -594,6 +728,8 @@ export function parseContent(raw: unknown): Content {
     if (n > OUTCOME_TEXT_MAX_SENTENCES) problems.push(`${where} has ${n} sentences (at most 4)`);
     checkPolitical(where, `${t.headline} ${t.body} ${t.next}`);
   }
+
+  problems.push(...slice4Problems(content, { cityById, locationById, actionById, ordinanceIds }));
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {
       problems.push(`cities.${city.id} has a paper but no ambient headline`);
@@ -604,6 +740,231 @@ export function parseContent(raw: unknown): Content {
     throw new ContentError(`Invalid content:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
   }
   return content;
+}
+
+/** A city with districts (the capital): its quarters carry `district` (ADR 0027). */
+const isDistricted = (city: City): boolean => city.quarters.some((q) => q.district !== undefined);
+
+const sumShares = (s: { vanguard: number; collective: number; alliance: number; neutral: number }) =>
+  s.vanguard + s.collective + s.alliance + s.neutral;
+
+/** Slice 4 (tech design §4.2): the districts, HQs, the nation, the cards, the Issues, orders, papers. */
+function slice4Problems(
+  content: Content,
+  idx: {
+    cityById: Map<string, City>;
+    locationById: Map<string, { city: City; location: Location }>;
+    actionById: Map<string, { city: City; location: Location; action: Action }>;
+    ordinanceIds: Set<string>;
+  },
+): string[] {
+  const problems: string[] = [];
+  const e = 1e-9;
+  const inside = (
+    p: { x: number; y: number },
+    f: { x0: number; y0: number; x1: number; y1: number },
+    m = 0,
+  ) => p.x >= f.x0 + m - e && p.x <= f.x1 - m + e && p.y >= f.y0 + m - e && p.y <= f.y1 - m + e;
+
+  // Districts (ADR 0027).
+  for (const city of content.cities) {
+    const districts = city.quarters.filter((q) => q.district);
+    if (districts.length === 0) continue;
+    if (districts.length !== city.quarters.length)
+      problems.push(`cities.${city.id}: every quarter of a city with districts needs a district`);
+    if (city.role !== 'battleground')
+      problems.push(`cities.${city.id}: a city with districts is a battleground`);
+    districts.forEach((q, i) => {
+      const d = q.district!;
+      if (d.n !== i + 1) problems.push(`${q.id}: district n must run 1…k in order (found ${d.n})`);
+      if (Math.abs(sumShares(d.baselineOpinion) - 100) > 1e-9)
+        problems.push(`${q.id}.baselineOpinion sums to ${sumShares(d.baselineOpinion)}, not 100`);
+      if (!inside(d.anchor, q.frame)) problems.push(`${q.id}: its anchor is outside its frame`);
+      if (!q.blurb) problems.push(`${q.id}: a district needs a blurb`);
+    });
+    for (const f of [...FACTION_IDS, 'neutral'] as const) {
+      const avg = districts.reduce((sum, q) => sum + q.district!.baselineOpinion[f], 0) / districts.length;
+      if (Math.abs(avg - city.baselineOpinion[f]) > 0.0005)
+        problems.push(`cities.${city.id}.baselineOpinion.${f} is not the average of its districts (${avg})`);
+    }
+  }
+
+  // Locations: HQs carry their faction (members only), one per faction per city; pins = the survey.
+  for (const city of content.cities) {
+    const seenHq = new Set<string>();
+    for (const l of city.locations) {
+      if (l.kind === 'faction-hq') {
+        if (!l.factionId) problems.push(`location "${l.id}": a faction-hq needs a factionId`);
+        else {
+          if (seenHq.has(l.factionId)) problems.push(`cities.${city.id} has two ${l.factionId} HQs`);
+          seenHq.add(l.factionId);
+          if (city.role === 'home' && l.factionId !== city.homeFactionId)
+            problems.push(`location "${l.id}": a home city's HQ is its home faction's`);
+        }
+      } else if (l.factionId) {
+        problems.push(`location "${l.id}": only a faction-hq is members only`);
+      }
+    }
+    if (isDistricted(city)) {
+      const survey = new Map((mapPins[city.id]?.pins ?? []).map((p) => [p.id, p]));
+      for (const l of city.locations) {
+        const pin = survey.get(l.id);
+        if (!pin || pin.x !== l.map.x || pin.y !== l.map.y)
+          problems.push(`location "${l.id}": its pin is not its survey pin`);
+      }
+    }
+  }
+
+  // The nation (design §2).
+  const n = content.nation;
+  const survey = mapPins.nation?.pins ?? [];
+  if (n.cities.map((c) => c.cityId).join() !== survey.map((p) => p.id).join())
+    problems.push('nation.cities must be mapPins.nation, in order');
+  for (const c of n.cities) {
+    const pin = survey.find((p) => p.id === c.cityId);
+    if (pin && (pin.x !== c.x || pin.y !== c.y)) problems.push(`nation.${c.cityId}: not at its survey pin`);
+    if (!inside(c, n.frame, NATION_FRAME_MARGIN))
+      problems.push(`nation.${c.cityId}: not ${NATION_FRAME_MARGIN} inside the nation frame`);
+    const city = idx.cityById.get(c.cityId);
+    if (c.service === 'open' && !city) problems.push(`nation.${c.cityId}: an open city must be content`);
+    if (!city && !c.baselineOpinion)
+      problems.push(`nation.${c.cityId}: a city with no content needs its baseline`);
+    if (c.cityId === n.capitalId && c.minutes !== 0) problems.push('nation: the capital is 0 minutes away');
+    if (c.cityId !== n.capitalId && c.minutes <= 0) problems.push(`nation.${c.cityId}: needs a journey time`);
+    // The arrival point is the city's station pin on its own picture.
+    const station = (mapPins[c.cityId]?.pins ?? []).find(
+      (p) => p.id === `${c.cityId}.station` || p.id === `${c.cityId}.central-station`,
+    );
+    if (!station || station.x !== c.arrival.x || station.y !== c.arrival.y)
+      problems.push(`nation.${c.cityId}: arrival must be the city's station pin`);
+  }
+  const capital = idx.cityById.get(n.capitalId);
+  if (!capital || !isDistricted(capital))
+    problems.push(`nation.capitalId "${n.capitalId}" must be a city with districts`);
+
+  // The journey cards (design §3, §19 Q2).
+  const firsts = content.journeyEvents.filter((j) => j.first);
+  if (firsts.length !== 1) problems.push('journeyEvents: exactly one card is drawn first');
+  const story = (where: string, text: string) => {
+    if (text.length > 240) problems.push(`${where} is ${text.length} characters (at most 240)`);
+    // A card's quoted speech counts as part of its sentence (the setups are dialogue; 240 is the bound).
+    if (sentenceCount(text.replace(/"[^"]*"/g, 'Q')) > 4) problems.push(`${where} has more than 4 sentences`);
+    for (const p of placeholdersIn(text))
+      if (!ALLOWED_JOURNEY_PLACEHOLDERS.has(p)) problems.push(`${where}: unknown placeholder {${p}}`);
+  };
+  const jevIds = new Set<string>();
+  for (const j of content.journeyEvents) {
+    if (!j.id.startsWith('jev.')) problems.push(`journey event "${j.id}" must be jev.*`);
+    if (jevIds.has(j.id)) problems.push(`duplicate journey event "${j.id}"`);
+    jevIds.add(j.id);
+    story(`${j.id}.setup`, j.setup);
+    story(`${j.id}.ignore`, j.ignore);
+    if (new Set(j.choices.map((c) => c.id)).size !== j.choices.length)
+      problems.push(`${j.id}: duplicate choice ids`);
+    for (const c of j.choices) {
+      const where = `${j.id}.${c.id}`;
+      for (const p of placeholdersIn(c.detail))
+        if (!ALLOWED_JOURNEY_PLACEHOLDERS.has(p))
+          problems.push(`${where}.detail: unknown placeholder {${p}}`);
+      if (c.stats && !c.partial) problems.push(`${where}: a checked choice needs a partial`);
+      if (!c.stats && c.partial) problems.push(`${where}: an unchecked choice has no partial`);
+      for (const [o, out] of [
+        ['success', c.success],
+        ['partial', c.partial],
+      ] as const) {
+        if (!out) continue;
+        story(`${where}.${o}`, out.text.body);
+        for (const [k, cap] of Object.entries(JOURNEY_REWARD_CAPS)) {
+          const v = (out.rewards as Record<string, number | undefined>)[k] ?? 0;
+          if (v > cap) problems.push(`${where}.${o}: ${k} ${v} is over the card cap ${cap}`);
+        }
+      }
+      if (c.cost && (c.partial?.rewards.iron ?? 0) > c.cost.iron)
+        problems.push(`${where}: a partial returns at most the stake`);
+    }
+  }
+
+  // The Issues (design §9.5, ADR 0029).
+  const issueIds = new Set<string>();
+  const eligible = new Map<string, Array<{ id: string; districtId: string | null }>>();
+  for (const iss of content.issues) {
+    if (!iss.id.startsWith('issue.')) problems.push(`issue "${iss.id}" must be issue.*`);
+    if (issueIds.has(iss.id)) problems.push(`duplicate issue "${iss.id}"`);
+    issueIds.add(iss.id);
+    for (const w of iss.where) {
+      const city = idx.cityById.get(w.cityId);
+      if (!city?.council) {
+        problems.push(`issue "${iss.id}": "${w.cityId}" is not a council city`);
+        continue;
+      }
+      if (isDistricted(city)) {
+        if (!w.districtId || !city.quarters.some((q) => q.id === w.districtId))
+          problems.push(`issue "${iss.id}" in ${city.id} needs one of its districts`);
+      } else if (w.districtId) problems.push(`issue "${iss.id}": ${city.id} has no districts`);
+      const list = eligible.get(city.id) ?? [];
+      list.push({ id: iss.id, districtId: w.districtId ?? null });
+      eligible.set(city.id, list);
+      for (const f of w.feeds) {
+        if (f.districtId !== undefined && f.districtId !== w.districtId)
+          problems.push(`issue "${iss.id}": a feed's district must be the Issue's`);
+        for (const id of f.locationIds ?? []) {
+          const hit = idx.locationById.get(id);
+          if (!hit || hit.city.id !== city.id)
+            problems.push(`issue "${iss.id}": "${id}" is not a place in ${city.id}`);
+          else if (w.districtId && hit.location.quarterId !== w.districtId)
+            problems.push(`issue "${iss.id}": "${id}" is not in ${w.districtId}`);
+        }
+      }
+    }
+  }
+  if (content.issues.length !== 19) problems.push(`issues: the deck has ${content.issues.length}, not 19`);
+  for (const city of content.cities) {
+    if (!city.council) continue;
+    const list = eligible.get(city.id) ?? [];
+    if (list.length < 4) problems.push(`cities.${city.id} has ${list.length} eligible Issues (at least 4)`);
+    if (isDistricted(city) && new Set(list.map((x) => x.districtId)).size < 2)
+      problems.push(`cities.${city.id}: Issues in at least two districts`);
+  }
+
+  // Party orders (design §10): two capital templates in A and in B per faction; `{issue}` only on
+  // issue-tagged orders; slot C rotation templates serve everyone.
+  for (const f of FACTION_IDS) {
+    for (const slot of ['A', 'B'] as const) {
+      const n2 = content.orderTemplates.filter(
+        (t) => t.factionId === f && t.slot === slot && t.residence === 'capital',
+      ).length;
+      if (n2 !== 2) problems.push(`factions.${f} has ${n2} capital orders in slot ${slot}, not 2`);
+    }
+  }
+  for (const t of content.orderTemplates) {
+    const usesIssue = placeholdersIn(`${t.title} ${t.line}`).includes('issue');
+    if (usesIssue && !t.match.issueTagged)
+      problems.push(`order "${t.id}": {issue} only on an issue-tagged order`);
+    if (t.slot === 'C' && t.use === 'rotation' && t.residence !== 'any')
+      problems.push(`order "${t.id}": a slot C rotation order serves every residence`);
+    if (t.slot !== 'C' && t.residence === 'any')
+      problems.push(`order "${t.id}": only slot C is for any residence`);
+    const d = t.match.districtId;
+    if (
+      d !== undefined &&
+      d !== 'home' &&
+      !content.cities.some((c) => c.quarters.some((q) => q.id === d && q.district))
+    )
+      problems.push(`order "${t.id}": "${d}" is not a district`);
+  }
+
+  // The papers (design §9.6, §12).
+  for (const city of content.cities) {
+    if (!city.paper) continue;
+    const names = new Set(
+      content.headlines.filter((h) => h.cityId === city.id).map((h) => h.id.slice(h.id.lastIndexOf('.') + 1)),
+    );
+    const want = isDistricted(city) ? HERALD_HEADLINE_NAMES : CAPITAL_HOME_HEADLINE_NAMES;
+    for (const name of want)
+      if (!names.has(name)) problems.push(`cities.${city.id}: the paper has no "${name}" headline`);
+  }
+  if (!idx.ordinanceIds.has(TRAM_SUBSIDY_ID)) problems.push(`ordinances: "${TRAM_SUBSIDY_ID}" is missing`);
+  return problems;
 }
 
 export interface LocatedAction {
@@ -633,8 +994,11 @@ export interface GameContent extends Content {
   chapterRules(ambitionId: string, n: number): ChapterRules | undefined;
   /** The origin's questions in order, for `resolveOrigin`. */
   originSpec: OriginSpec;
-  /** The faction's HQ location in its home city (exactly one, checked at load). */
-  hqOf(factionId: FactionId): { city: City; location: Location };
+  /**
+   * The faction's HQ location in `cityId` (default: its home city, where there is exactly one,
+   * checked at load), or undefined when that city has none of the faction's.
+   */
+  hqOf(factionId: FactionId, cityId?: string): { city: City; location: Location };
   /** One faction's order templates, in file order. */
   ordersOf(factionId: FactionId): OrderTemplate[];
   /** One city's headline templates, political ones excluded (the settlement's selector). */
@@ -646,14 +1010,33 @@ export interface GameContent extends Content {
   ordinanceSpec(id: string): OrdinanceSpec | undefined;
   /** The ten, in menu order. */
   ordinancesMenu(): Ordinance[];
-  /** A council city's nine NPC candidates, in profile order. */
-  slateOf(cityId: string): NpcCandidate[];
   candidate(id: string): NpcCandidate | undefined;
   /** Cities with a council (the three home cities in slice 3). */
   councilCities(): City[];
   platform(factionId: FactionId, id: string): Platform | undefined;
   /** One city's political headline templates (ADR 0023), in file order. */
   politicalHeadlinesOf(cityId: string): HeadlineTemplate[];
+  // Slice 4 (tech design §4.1).
+  nationCity(cityId: string): Nation['cities'][number] | undefined;
+  journeyEvent(id: string): JourneyEvent | undefined;
+  /** The card ids in file order (the first-journey card is one of them). */
+  journeyDeck(): string[];
+  issue(id: string): Issue | undefined;
+  /** The Issues a city can draw, with its district there and the feeds there, in file order. */
+  issuesFor(cityId: string): Array<{ issue: Issue; districtId: string | null; feeds: IssueMatch[] }>;
+  /** A capital district (a quarter with `district`) and its city. */
+  district(id: string): { city: City; quarter: Quarter } | undefined;
+  /** A city's districts in pin order ([] for a city without). */
+  districtsOf(cityId: string): Quarter[];
+  isDistricted(cityId: string): boolean;
+  /**
+   * NPC candidates of a place: a home city's nine (profile order), or a district's six (with
+   * `factionId`, that faction's two).
+   */
+  slateOf(placeId: string, factionId?: FactionId): NpcCandidate[];
+  /** The capital's menu: the ten plus the Tram Subsidy (every menu has it, design §8.5). */
+  irongateMenu(): Ordinance[];
+  capitalCity(): City;
 }
 
 export function indexContent(content: Content): GameContent {
@@ -675,6 +1058,9 @@ export function indexContent(content: Content): GameContent {
   const ambitionsById = new Map(content.ambitions.map((a) => [a.id, a]));
   const ordinancesById = new Map(content.ordinances.map((o) => [o.id, o]));
   const candidatesById = new Map(content.candidates.map((c) => [c.id, c]));
+  const districts = new Map<string, { city: City; quarter: Quarter }>();
+  for (const city of content.cities)
+    for (const quarter of city.quarters) if (quarter.district) districts.set(quarter.id, { city, quarter });
   const chapter = (ambitionId: string, n: number) =>
     ambitionsById.get(ambitionId)?.chapters.find((c) => c.n === n);
   return {
@@ -710,9 +1096,12 @@ export function indexContent(content: Content): GameContent {
         })),
       ),
     },
-    hqOf: (factionId) => {
-      const city = cities.get(factions.get(factionId)!.homeCityId)!;
-      return { city, location: city.locations.find((l) => l.kind === 'faction-hq')! };
+    hqOf: (factionId, cityId) => {
+      const city = cities.get(cityId ?? factions.get(factionId)!.homeCityId)!;
+      const hq =
+        city.locations.find((l) => l.kind === 'faction-hq' && l.factionId === factionId) ??
+        city.locations.find((l) => l.kind === 'faction-hq' && l.factionId === undefined);
+      return { city, location: hq! };
     },
     faction: (id) => {
       const f = factions.get(id);
@@ -741,12 +1130,35 @@ export function indexContent(content: Content): GameContent {
       return o ? { id: o.id, name: o.name, effects: o.effects } : undefined;
     },
     ordinancesMenu: () => [...content.ordinances],
-    slateOf: (cityId) => content.candidates.filter((c) => c.cityId === cityId),
+    slateOf: (placeId, factionId) =>
+      content.candidates.filter(
+        (c) =>
+          (c.districtId === placeId || (c.cityId === placeId && c.districtId === undefined)) &&
+          (factionId === undefined || c.factionId === factionId),
+      ),
     candidate: (id) => candidatesById.get(id),
     councilCities: () => content.cities.filter((c) => c.council !== undefined),
     platform: (factionId, id) => factions.get(factionId)?.platforms.find((p) => p.id === id),
     politicalHeadlinesOf: (cityId) =>
       content.headlines.filter((h) => h.cityId === cityId && isPoliticalTemplate(h)),
+    nationCity: (cityId) => content.nation.cities.find((c) => c.cityId === cityId),
+    journeyEvent: (id) => content.journeyEvents.find((j) => j.id === id),
+    journeyDeck: () => content.journeyEvents.map((j) => j.id),
+    issue: (id) => content.issues.find((i) => i.id === id),
+    issuesFor: (cityId) =>
+      content.issues.flatMap((issue) =>
+        issue.where
+          .filter((w) => w.cityId === cityId)
+          .map((w) => ({ issue, districtId: w.districtId ?? null, feeds: w.feeds })),
+      ),
+    district: (id) => districts.get(id),
+    districtsOf: (cityId) => cities.get(cityId)?.quarters.filter((q) => q.district !== undefined) ?? [],
+    isDistricted: (cityId) => {
+      const c = cities.get(cityId);
+      return c !== undefined && isDistricted(c);
+    },
+    irongateMenu: () => [...content.ordinances],
+    capitalCity: () => cities.get(content.nation.capitalId)!,
   };
 }
 

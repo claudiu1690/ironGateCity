@@ -2,8 +2,10 @@ import { PAPER } from './constants';
 import { cityDayIndex, mod } from './day';
 import type { DayKey } from './day';
 import type { CouncilPhase } from './calendar';
-import { POLITICAL_CONDITION_KINDS } from './types';
+import { CAPITAL_CONDITION_KINDS, POLITICAL_CONDITION_KINDS } from './types';
 import type {
+  CapitalCondition,
+  CapitalPlaceholder,
   HeadlineCondition,
   HeadlineGroup,
   HeadlineTemplate,
@@ -37,6 +39,8 @@ export interface PaperFacts {
   energyYesterday: number;
   /** The home faction's share of its home city, in points. */
   homeShare: number;
+  /** Slice 4: the level before and after the boundaries this edition settles (`levelCrossed`). */
+  level?: { before: number; after: number };
 }
 
 /** Inclusive bounds; an absent bound is open. */
@@ -76,6 +80,8 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
     case 'homeShare':
       // min inclusive, max exclusive: bands ≥ 80, 60–79.999, < 60.
       return (c.min === undefined || f.homeShare >= c.min) && (c.max === undefined || f.homeShare < c.max);
+    case 'levelCrossed':
+      return f.level !== undefined && f.level.before < c.level && c.level <= f.level.after;
     default:
       // Political conditions are selected live at read (ADR 0023), never at settlement.
       return false;
@@ -125,7 +131,7 @@ export function placeholdersIn(text: string): string[] {
  */
 export function fillTemplate(
   text: string,
-  vars: Partial<Record<Placeholder | StoryPlaceholder | PoliticalPlaceholder, string>>,
+  vars: Partial<Record<Placeholder | StoryPlaceholder | PoliticalPlaceholder | CapitalPlaceholder, string>>,
 ): string {
   return text.replace(
     PLACEHOLDER_RE,
@@ -164,7 +170,7 @@ export const isPoliticalTemplate = (t: Pick<HeadlineTemplate, 'when'>): boolean 
 /** What the live paper knows about the caller's politics this morning. */
 export interface PoliticalFacts {
   /** The caller stood at last night's count. */
-  seat: { won: boolean; top: boolean; tie: boolean } | null;
+  seat: { won: boolean; top: boolean; tie: boolean; bloc?: boolean } | null;
   /** The caller voted at last night's count. */
   voted: { won: boolean; tie: boolean } | null;
   filedYesterday: boolean;
@@ -179,23 +185,89 @@ export interface PoliticalFacts {
   cycleDay: number;
   ordinanceFromToday: boolean;
   leftUnrest: boolean;
+  /** Slice 4: the capital's, the Issues' and travel's live facts; absent = none holds. */
+  capital?: CapitalFacts;
   /** Placeholder values, resolved on the server. */
-  vars: Partial<Record<PoliticalPlaceholder, string>>;
+  vars: Partial<Record<PoliticalPlaceholder | CapitalPlaceholder, string>>;
   /**
    * Values that depend on the template: `{votes}` is the caller's total in a seat headline and
    * their candidate's in a vote headline. Keyed by the template's first condition kind.
    */
-  varsByKind?: Partial<Record<PoliticalCondition['kind'], Partial<Record<PoliticalPlaceholder, string>>>>;
+  varsByKind?: Partial<
+    Record<PoliticalCondition['kind'], Partial<Record<PoliticalPlaceholder | CapitalPlaceholder, string>>>
+  >;
   /** Epoch ms of the boundaries `{until}` may name. */
   until: { nominations: number; polls: number; divide: number };
 }
 
+/** Slice 4 (tech design §11.3): what the live paper knows of the capital, the Issues and travel. */
+export interface CapitalFacts {
+  registeredYesterday: boolean;
+  firstCapitalArrivalYesterday: boolean;
+  hero: 'district' | 'city' | null;
+  issuePcYesterday: boolean;
+  quotedYesterday: boolean;
+  issuesDrawnToday: boolean;
+  issueLeading: boolean;
+  issueOpen: boolean;
+  /** Monday: Issues resolved last night, owned or lapsed. */
+  issueResolved: { owned: boolean; lapsed: boolean } | null;
+  districtBattleground: boolean;
+  districtBecameBattleground: boolean;
+  districtLeftBattleground: boolean;
+  groundswellStarted: boolean;
+  /** The residence is a district (its line is the fallback city line). */
+  districtLine: boolean;
+}
+
+function capitalHolds(c: CapitalCondition, f: CapitalFacts | undefined): boolean {
+  if (!f) return false;
+  switch (c.kind) {
+    case 'registeredYesterday':
+      return f.registeredYesterday;
+    case 'firstCapitalArrivalYesterday':
+      return f.firstCapitalArrivalYesterday;
+    case 'heroYesterday':
+      return f.hero === c.place;
+    case 'issuePcYesterday':
+      return f.issuePcYesterday;
+    case 'quotedYesterday':
+      return f.quotedYesterday;
+    case 'issuesDrawnToday':
+      return f.issuesDrawnToday;
+    case 'issueLeading':
+      return f.issueLeading;
+    case 'issueOpen':
+      return f.issueOpen;
+    case 'issueResolvedToday':
+      return f.issueResolved !== null && (c.owned ? f.issueResolved.owned : f.issueResolved.lapsed);
+    case 'districtBattleground':
+      return f.districtBattleground;
+    case 'districtBecameBattleground':
+      return f.districtBecameBattleground;
+    case 'districtLeftBattleground':
+      return f.districtLeftBattleground;
+    case 'groundswellStarted':
+      return f.groundswellStarted;
+    case 'districtLine':
+      return f.districtLine;
+  }
+}
+
+const CAPITAL_KINDS = new Set<string>(CAPITAL_CONDITION_KINDS);
+
 function politicalHolds(c: PoliticalCondition, f: PoliticalFacts): boolean {
+  if (CAPITAL_KINDS.has(c.kind)) return capitalHolds(c as CapitalCondition, f.capital);
   switch (c.kind) {
     case 'seatWon':
       return f.seat !== null && f.seat.won && (c.top === undefined || c.top === f.seat.top);
     case 'seatLost':
-      return f.seat !== null && !f.seat.won && (c.tie === undefined || c.tie === f.seat.tie);
+      return (
+        f.seat !== null &&
+        !f.seat.won &&
+        (c.tie === undefined || c.tie === f.seat.tie) &&
+        (c.bloc === undefined || c.bloc === (f.seat.bloc ?? false))
+      );
     case 'votedFor':
       return f.voted !== null && f.voted.won === c.won && (c.tie === undefined || c.tie === f.voted.tie);
     case 'filedYesterday':
@@ -216,6 +288,8 @@ function politicalHolds(c: PoliticalCondition, f: PoliticalFacts): boolean {
       return f.ordinanceFromToday;
     case 'leftUnrest':
       return f.leftUnrest;
+    default:
+      return false;
   }
 }
 

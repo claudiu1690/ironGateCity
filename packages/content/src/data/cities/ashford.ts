@@ -117,6 +117,8 @@ export const ashford: City = {
       id: 'ashford.assembly-rooms',
       name: 'Assembly Rooms',
       kind: 'faction-hq',
+      // Slice 4 (design §4.3): an HQ's tickets are for its own faction's members.
+      factionId: 'alliance',
       blurb:
         "The Alliance's rooms above the old concert hall. Committee on the first floor, the duplicator on the landing, the founders of the republic on the stairs.",
       // Maps v3: the approved pin (pins.json).

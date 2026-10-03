@@ -10,7 +10,14 @@ import {
   Vote,
   isDuplicateKeyError,
 } from '@irongate/db';
-import type { BallotLine, CandidacyDoc, CityDoc, ElectionDoc, OrderPaperDoc } from '@irongate/db';
+import type {
+  BallotLine,
+  CandidacyDoc,
+  CharacterDoc,
+  CityDoc,
+  ElectionDoc,
+  OrderPaperDoc,
+} from '@irongate/db';
 import {
   COUNCIL,
   MORALE,
@@ -35,6 +42,7 @@ import {
 import type { CountLine, DayKey, FactionId, NpcSlateEntry } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { captureException } from '../sentry';
+import { placesOf } from './residence';
 import { inTransaction } from './txn';
 
 /**
@@ -70,10 +78,14 @@ const withBranch = (cityId: string) => !cityDayHooks.noBranchMotion?.has(cityId)
 const newSeed = (cityId: string, cycle: number) =>
   cityDayHooks.seed?.(cityId, cycle) ?? randomBytes(16).toString('hex');
 
-/** Resident Rank 2+ members of the home faction active in the seven days before `day` (design §17 Q17). */
+/**
+ * Resident Rank 2+ members of the faction active in the seven days before `day` (design §17 Q17).
+ * Slice 4 (ADR 0026): residents of the city (`residence.cityId`); a document stored before
+ * migration 006 has no residence and lives at home.
+ */
 export function activeMembersFilter(cityId: string, factionId: FactionId, day: DayKey) {
   return {
-    homeCityId: cityId,
+    $or: [{ 'residence.cityId': cityId }, { residence: { $exists: false }, homeCityId: cityId }],
     factionId,
     rank: { $gte: COUNCIL.voteRank },
     lastActionAt: { $gte: new Date(dayStart(day) - COUNCIL.activeEndorserDays * DAY_MS) },
@@ -315,7 +327,7 @@ async function processBoundary(
   const cal = councilDay(d, spec.offset);
   const at = new Date(now);
 
-  let shares = applyDrift(city.opinion, home).shares;
+  let shares = applyDrift(city.opinion!, home).shares;
   const set: Record<string, unknown> = {};
   const push: Record<string, unknown> = {};
 
@@ -646,7 +658,8 @@ export async function ensureCityDay(
   now: number,
 ): Promise<CityDoc | null> {
   const spec = content.city(cityId);
-  if (!spec?.council) return City.findById(cityId).lean<CityDoc>();
+  // T13 (slice-4 phase B) builds the capital's city day; until then its document is only read.
+  if (!spec?.council || content.isDistricted(cityId)) return City.findById(cityId).lean<CityDoc>();
   try {
     return await settleCityDay(content, cityId, now);
   } catch (err) {
@@ -654,6 +667,21 @@ export async function ensureCityDay(
     console.error(`[city-day] ${cityId}: ${(err as Error).message}`);
     return City.findById(cityId).lean<CityDoc>();
   }
+}
+
+/**
+ * Slice 4 (tech design §7.6, ADR 0017's invariant generalised): settle the day of every city the
+ * character's request depends on (where it stands or is travelling to, the residence, the job's
+ * city) before the character's own settlement. Each is one read once settled.
+ */
+export async function ensurePlaces(
+  content: GameContent,
+  c: Pick<CharacterDoc, 'homeCityId' | 'residence' | 'cityId' | 'journey' | 'job'>,
+  now: number,
+): Promise<Map<string, CityDoc | null>> {
+  const places = new Map<string, CityDoc | null>();
+  for (const id of placesOf(content, c)) places.set(id, await ensureCityDay(content, id, now));
+  return places;
 }
 
 /**
@@ -667,7 +695,8 @@ export async function runCityDay(
   const settled: Array<{ cityId: string; settledDay: DayKey | null }> = [];
   const failed: string[] = [];
   const errors: unknown[] = [];
-  for (const city of content.councilCities()) {
+  // T13 (slice-4 phase B): the capital joins the loop, first (its count is the biggest).
+  for (const city of content.councilCities().filter((c) => !content.isDistricted(c.id))) {
     try {
       const doc = await settleCityDay(content, city.id, now);
       settled.push({ cityId: city.id, settledDay: doc.world?.settledDay ?? null });

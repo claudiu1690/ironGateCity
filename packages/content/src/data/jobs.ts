@@ -91,3 +91,38 @@ export const jobs: Job[] = [
       'The market van between Bridge Street and the station goods shed, a full load each way. Needs a quick hand on the wet setts.',
   },
 ];
+
+/**
+ * Slice 4: the three Irongate jobs (docs/design/slice-4-battleground.md §4.5). No faction draws a
+ * fifth more here: the +20 % is a home-city perk. Kept apart from `jobs` until Irongate is wired into
+ * the content (a job at an unknown location fails validation); merged then.
+ */
+export const irongateJobs: Job[] = [
+  {
+    id: 'irongate-porter',
+    name: 'Porter',
+    locationId: 'irongate.central-station',
+    unlock: { level: 1, stats: { str: 5 } },
+    dailyPay: 180,
+    blurb:
+      "Eight hours of trunks and hatboxes under the glass arches. The stationmaster pays by the day and asks nobody's party.",
+  },
+  {
+    id: 'irongate-street-vendor',
+    name: 'Street vendor',
+    locationId: 'irongate.market-square',
+    unlock: { level: 1 },
+    dailyPay: 100,
+    blurb:
+      "Matches, bootlaces and this morning's Herald from a stall under the column. The market beadle has stopped asking.",
+  },
+  {
+    id: 'irongate-driver',
+    name: 'Driver',
+    locationId: 'irongate.riverside-quays',
+    unlock: { level: 3, stats: { agi: 10 } },
+    dailyPay: 200,
+    blurb:
+      'The quay lorry between the cranes and the works, a full load each way. Needs a quick hand on the setts by the bridge.',
+  },
+];

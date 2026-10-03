@@ -25,9 +25,17 @@ export const STANDING_METER = /(?<![.\-_\w])Standing\b/g;
  * The allowed exceptions (§1.13), each an exact phrase removed before the scan:
  * - *His ward book*: the Ambition chapter's title and his keepsake; the book keeps its name in the
  *   chapter texts ("a ward book", "the back of the ward book"), since it is his book (§1.10);
- * - *Stand(ing) for the council*.
+ * - *Stand(ing) for the council*;
+ * - *fever ward*: St Agnes Hospital's (slice 4, design §18, reviewed 3 Oct 2026): the one system
+ *   word kept in its everyday sense. Parliament's *division*, the committees' *motion*, the Hill's
+ *   *ward* and the Opera's *by ballot* were reworded instead (*the vote*, *proposal*, *district*,
+ *   *public draw*).
  */
-export const ALLOWED_PHRASES: readonly RegExp[] = [/\bward book\b/gi, /\bStand(?:ing)? for the council\b/gi];
+export const ALLOWED_PHRASES: readonly RegExp[] = [
+  /\bward book\b/gi,
+  /\bStand(?:ing)? for the council\b/gi,
+  /\bfever wards?\b/gi,
+];
 
 /**
  * §1.2: the duplicator machine's name "stays in the body text" (only titles lose it). Allowed in a

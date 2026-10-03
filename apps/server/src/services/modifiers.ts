@@ -26,7 +26,7 @@ export function moraleOf(
 ): MoraleState | null {
   if (!city) return null;
   const home = content.city(city._id)?.homeFactionId;
-  return home ? moraleState(city.opinion[home]) : null;
+  return home ? moraleState(city.opinion![home]) : null;
 }
 
 export function modifiersFor(

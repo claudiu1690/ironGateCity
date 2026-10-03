@@ -276,13 +276,13 @@ describe('concurrency (ADR 0018)', () => {
     const voters = [];
     for (let i = 0; i < 10; i++) voters.push(await player(clock, { fxp: 400, name: `Voter ${i}` }));
     const e = (await Election.findOne({ cityId: 'coalport', status: 'polling' }).lean())!;
-    const before = (await City.findById('coalport').lean())!.opinion.collective;
+    const before = (await City.findById('coalport').lean())!.opinion!.collective;
     await Promise.all(
       voters.map((v) => v.caller.council.vote({ candidateKey: 'n:npc.c.weiss', idempotencyKey: key() })),
     );
     expect(await Vote.countDocuments({ electionId: e._id })).toBe(10);
     expect((await Election.findById(e._id).lean())!.ballots).toBe(10);
-    expect((await City.findById('coalport').lean())!.opinion.collective).toBeCloseTo(
+    expect((await City.findById('coalport').lean())!.opinion!.collective).toBeCloseTo(
       before + 10 * MORALE.ballot,
       3,
     );

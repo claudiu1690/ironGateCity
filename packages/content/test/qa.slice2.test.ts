@@ -330,7 +330,16 @@ describe('Content policy (CLAUDE.md rules 2 and 6; content-policy review §7 che
     );
     // Allowed by the review (§6) and slice 1: "the General Strike" (a union event), "the front row"
     // (seats) and "columns out front" (a building).
-    const allowed = hits.filter((h) => !/General Strike|front row|out front/.test(h));
+    // Slice 4 (tech design §12.5): *Garrison Hill* (a place name) and *the war* (the historical war);
+    // design §18: *the front room* (a room); GDD §1.5: *close race* (the plain word for a
+    // battleground). All four kept by the designer on 3 Oct 2026 (design §18); the Police
+    // Headquarters' *desk sergeant* became *the duty officer*, so no rank is allowed.
+    const allowed = hits.filter(
+      (h) =>
+        !/General Strike|front row|out front|front room|Garrison Hill|(since|by) the war|the war gutted|close ?race/i.test(
+          h,
+        ),
+    );
     expect(allowed).toEqual([]);
   });
 

@@ -20,7 +20,7 @@ Every number below is a GDD or content number. Where the design leaves a point o
 - **The nation map** (Map tab, *City | Nation*): the painted 9,216 px republic in `CityMap`, five city pins at the survey positions, a city card per pin, a *Cities* list, free zoom and drag within the review-3 limits, clouds.
 - **Travel:** third class only, 20 Iron, the train leaves at the tap, 12 / 12 / 15 / 25 minutes (Clearwater locked), fares halved by the Tram Subsidy ordinance and the Tram Fare Hike Issue (floor 5); boarding from the nation map and Irongate's Central Station; lazy arrival plus a tidy Agenda job (ADR 0025); the journey screen; the arrival modal.
 - **Seven journey cards**, drawn at boarding (the first journey always, then one in three, without replacement), answered during the journey or on the arrival modal.
-- **Irongate:** 29 locations, 59 tier-1 actions at difficulty 10, three jobs as wages, members-only HQ tickets, five districts (frames, anchors, baselines), the district overview and the district view, the tram bar, clouds.
+- **Irongate:** 29 locations, 62 tier-1 actions at difficulty 10, three jobs as wages, members-only HQ tickets, five districts (frames, anchors, baselines), the district overview and the district view, the tram bar, clouds.
 - **District opinion:** five meters in their own documents (ADR 0027); the 1 % drift to baseline; *close race* (Battleground) and *comeback* (Groundswell) set at the boundary; the city share as the equal average, computed on read.
 - **Residence:** register in a district or at home (Rank 2, 500 Iron, seven days); the windows for voting and standing; a home seat vacated and a candidacy withdrawn at the move; the optional room (100 Iron, seven days, Rested cap +50).
 - **The Irongate council:** elections per district per cycle (cycle offset 0), cross-faction ballots, NPC fill to two per faction, the turnout-weighted score, D'Hondt for two seats, ten `officeTerms`, the three-branch order paper, NPCs following their own faction's players, six of ten to pass, the Irongate menu with *Tram Subsidy*.
@@ -214,7 +214,7 @@ Content += { nation: Nation, journeyEvents: z.array(JourneyEvent).length(7), iss
 
 | File | Contents | Source |
 |---|---|---|
-| `data/cities/irongate.ts` | the city, five quarters with `district`, 29 locations (pins = survey), 59 actions with Success/Partial texts (training: one text and a `verb`), `clouds: true`, `council { offset 0, seats 10, hall }`, the Herald | design §4.1–§4.6 |
+| `data/cities/irongate.ts` | the city, five quarters with `district`, 29 locations (pins = survey), 62 actions with Success/Partial texts (training: one text and a `verb`), `clouds: true`, `council { offset 0, seats 10, hall }`, the Herald | design §4.1–§4.6 |
 | `data/jobs.ts` | Porter (Central Station, STR 5, 180), Street vendor (Market Square, 100), Driver (Riverside Quays, Level 3 AGI 10, 200); no faction bonus | design §4.5 |
 | `data/nation.ts` | the nation section | design §2.1–§2.3, mapPins |
 | `data/journeyEvents.ts` | seven cards | design §3 |
@@ -1061,7 +1061,7 @@ Run on `pnpm dev:mem` with the dev panel; two or three testers in different fact
 | Hot documents in the capital | Districts spread the writes five ways (ADR 0027); the ledger is append-only; contributions are per character; Issue docs carry the same population as their district; `txAttempts` in the report |
 | Monday and a count on the same boundary | The order is fixed (§3.2) and tested on such a day: **Mon 19 Oct 2026** (20745) is a Monday and Irongate's cycle day 0 |
 | The design documents disagree on zoom and a few rules (§23) | This document takes a side for each, lists it for the designer, and the content tests hold the transcription to the design so a later change is one place |
-| Transcription volume: 59 actions (118 texts), 30 NPCs, 19 Issues, 7 cards, ~60 Herald templates, 12 orders | Word-for-word comparison tests against the design documents (the slices 1–3 method) |
+| Transcription volume: 62 actions (124 texts), 30 NPCs, 19 Issues, 7 cards, ~60 Herald templates, 12 orders | Word-for-word comparison tests against the design documents (the slices 1–3 method) |
 | Art bytes: the capital's 11,520 px stills at 2048 px | Tiles are the first view; the stills are budgeted and measured (ADR 0015); the result's map crops use the 2048 px still once cached |
 | `CityMap` is 1,700 lines | Props are additive; the nation and the overview are new configurations of the same behaviour, each with its own e2e size matrix |
 | Players never see Groundswell or a hero at playtest scale | Expected (Appendix C #29); the dev panel can stage it; the report records it |
@@ -1124,7 +1124,7 @@ Run on `pnpm dev:mem` with the dev panel; two or three testers in different fact
 
 **T7. Content: schemas and cross-checks.** §4.1–§4.2, `GameContent` accessors, failing fixtures. *Done when:* every §4.2 check has a failing fixture and the existing content validates.
 
-**T8. Content: Irongate.** The city, districts, 29 locations, 59 actions and texts, three jobs, clouds, the Herald masthead; comparison tests against design §4. *Done when:* the Irongate content tests (pins = survey, frames, ≥ 0.02 inside, 59 actions by type 21 / 10 / 11 / 9 / 3 / 5, texts word for word) pass.
+**T8. Content: Irongate.** The city, districts, 29 locations, 62 actions and texts, three jobs, clouds, the Herald masthead; comparison tests against design §4. *Done when:* the Irongate content tests (pins = survey, frames, ≥ 0.02 inside, 62 actions by type 21 / 10 / 12 / 11 / 3 / 5, texts word for word) pass.
 
 **T9. Content: the nation, cards, Issues, orders, candidates, headlines, copy.** §4.4's remaining rows; `TODO(game-designer)` stand-ins where a home paper's text is not written. *Done when:* every comparison test passes and the vocabulary test passes with the two allowances.
 

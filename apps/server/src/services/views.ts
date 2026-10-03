@@ -1,5 +1,6 @@
 import { isCheckedAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
+import { residenceCityId, residenceCtx } from './residence';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
   DIRECTIVES,
@@ -98,6 +99,8 @@ export function firstDayBonuses(
   cityId: string,
   today: DayKey,
 ): CheckBonus[] {
+  // The First day is in the faction's home city (review 1), wherever the residence.
+  // eslint-disable-next-line no-restricted-properties -- the faction's home
   if (cityId !== doc.homeCityId || !welcomeDayOf(doc, today)) return [];
   return [firstDayBonus(content.city(cityId)?.name ?? cityId)];
 }
@@ -127,6 +130,8 @@ export function welcomeLanding(
   const t = content.ordersOf(doc.factionId).find((x) => x.id === a);
   const first = t?.match.actionIds?.[0];
   const found = first ? content.action(first) : undefined;
+  // The welcome landing is in the faction's home city.
+  // eslint-disable-next-line no-restricted-properties -- the faction's home
   const city = content.city(content.faction(doc.factionId).homeCityId)!;
   return { cityId: city.id, locationId: found?.location.id ?? city.locations[0]!.id };
 }
@@ -204,8 +209,10 @@ export function orderPin(
   item: OrderItem,
   t: OrderTemplate,
 ): { locationId: string; n: number } | null {
-  const city = content.city(doc.homeCityId);
+  // Slice 4 (ADR 0026): the pins of the residence city, where its orders point.
+  const city = content.city(residenceCityId(doc));
   if (!city) return null;
+  const ctx = residenceCtx(doc);
   const spec = itemSpec(item, t);
   const values = wornStats(doc, content);
   for (const [i, location] of city.locations.entries()) {
@@ -216,7 +223,7 @@ export function orderPin(
         .some(
           (j) => doc.job?.id !== j.id && jobLocks(j.unlock, { level: doc.level, stats: values }).length === 0,
         );
-      if (takeable && orderMatches(spec.match, { kind: 'takeJob' }, doc.homeCityId)) return pin;
+      if (takeable && orderMatches(spec.match, { kind: 'takeJob' }, ctx)) return pin;
       continue;
     }
     for (const action of location.actions) {
@@ -226,8 +233,10 @@ export function orderPin(
         type: action.type,
         locationId: location.id,
         cityId: city.id,
+        districtId: location.quarterId,
+        locationKind: location.kind,
       };
-      if (orderMatches(spec.match, descriptor, doc.homeCityId)) return pin;
+      if (orderMatches(spec.match, descriptor, ctx)) return pin;
     }
   }
   return null;
@@ -387,6 +396,7 @@ export function toCharacterView(
     name: doc.name,
     factionId: doc.factionId,
     factionName: content.faction(doc.factionId).shortName,
+    // eslint-disable-next-line no-restricted-properties -- the faction's home, as the view says
     homeCityId: doc.homeCityId,
     cityId: doc.cityId,
     stats: wornStats(doc, content),
@@ -459,12 +469,12 @@ export function toCharacterView(
 
 /** Review 1 (§5.3): the stat-point screen's counts, from the residence (home) city's checked actions. */
 export function statGuideOf(content: GameContent, doc: CharacterDoc): CharacterView['statGuide'] {
-  const city = content.city(doc.homeCityId);
+  const city = content.city(residenceCityId(doc));
   const checked = (city?.locations ?? []).flatMap((l) => l.actions.filter(isCheckedAction));
   const use = statUse(checked);
   const best = bestTrainedStat(doc.stats, preferredStat(content, doc.factionId));
   return {
-    cityName: city?.name ?? doc.homeCityId,
+    cityName: city?.name ?? residenceCityId(doc),
     total: use.total,
     counts: use.counts,
     lead: use.lead,

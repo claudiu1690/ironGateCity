@@ -186,7 +186,78 @@ export const ORDINANCE_BOUNDS = {
   standingMultiplier: [1, 2],
   ironPct: [0, 25],
   fxpPct: [0, 25],
+  /** Slice 4 (ADR 0030): Tram Subsidy and the Tram Fare Hike halve tickets (never below 5 Iron). */
+  ticketPct: [-50, 0],
+  /** Slice 4 (tech design §23 #2): Eviction Notices halve the room. */
+  roomPct: [-50, 0],
 } as const;
 
 /** `{ordinal}` in the count's headlines: first … seventh. */
 export const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'] as const;
+
+// ---------------------------------------------------------------------------------------------
+// Slice 4 (docs/tech/slice-4.md §6.1). Rules: docs/design/slice-4-battleground.md; GDD §14.2–§14.6,
+// §14.9–§14.11, §15.3, §18.3.
+// ---------------------------------------------------------------------------------------------
+
+/** §14.10, §18.3: the train from Level 10, a 20-Iron ticket (never below 5), a card one trip in three. */
+export const TRAVEL = { level: 10, fare: 20, fareFloor: 5, cardOneIn: 3 } as const;
+
+/** §14.11: registering a residence: Rank 2, 500 Iron, seven City Days between moves. */
+export const RESIDENCE = { rank: 2, cost: 500, cooldownDays: 7 } as const;
+
+/** §14.11: a room in Irongate, 100 Iron for seven City Days, Rested cap +50 while it runs. */
+export const ROOM = { cost: 100, days: 7, restedBonus: 50, cityId: 'irongate' } as const;
+
+/** §14.2, §14.4: a district's drift, close race, control and comeback (Groundswell). */
+export const DISTRICT = {
+  driftShare: 0.01,
+  battlegroundWithin: 10,
+  controlAbove: 50,
+  groundswellPerDay: 5,
+  groundswellMax: 30,
+  groundswellDays: 14,
+} as const;
+
+/** §14.4: a close race gives political actions +25 % swing, +25 % Party XP and +5 chance. */
+export const BATTLEGROUND = {
+  swingPct: 25,
+  fxpShare: 0.25,
+  chancePct: 5,
+  types: ['canvass', 'speech', 'propaganda', 'council'],
+} as const;
+
+/** §14.6: two Issues a city a week; +50 % swing when tagged; the owner +3; 4 PC to the top five. */
+export const ISSUES = {
+  perCity: 2,
+  swingPct: 50,
+  ownerSwing: 3,
+  topFive: 5,
+  topPc: 4,
+  effectDays: 7,
+} as const;
+
+/** §15.3: the capital's council: ten seats, two a district, six to pass, the turnout weight. */
+export const CAPITAL_COUNCIL = {
+  seats: 10,
+  perDistrict: 2,
+  passVotes: 6,
+  maxProposals: 3,
+  fullTurnout: 10,
+  ballotWeightMax: 50,
+  npcPerFaction: 2,
+} as const;
+
+/** §14.5: District / City Hero: at least +0.5, 25 PC, by level bracket. */
+export const HERO = {
+  minSwing: 0.5,
+  pc: 25,
+  brackets: [
+    [1, 15],
+    [16, 30],
+    [31, Infinity],
+  ],
+} as const;
+
+/** dayKey(2026-01-05), a Monday: the week starts on Monday (Issues of the Week). */
+export const WEEK = { mondayEpoch: 20_458 } as const;

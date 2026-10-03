@@ -42,21 +42,25 @@ const key = async (m: { collection: { indexes: () => Promise<Array<{ key: object
 
 describe('slice-3 collections (ADR 0019, 0020)', () => {
   it('the natural keys are unique indexes', async () => {
-    expect(await key(Election)).toContainEqual({ key: { cityId: 1, cycle: -1 }, unique: true });
+    // Slice 4 (tech design §5.8): the election's natural key is its `_id` (the place's key), the
+    // city index is no longer unique, a term's key adds `fromDay`, eligibility counts residents.
+    expect(await key(Election)).toContainEqual({ key: { cityId: 1, cycle: -1 }, unique: false });
     expect(await key(Candidacy)).toContainEqual({ key: { electionId: 1, characterId: 1 }, unique: true });
     expect(await key(Vote)).toContainEqual({ key: { electionId: 1, voterId: 1 }, unique: true });
-    expect(await key(OfficeTerm)).toContainEqual({ key: { councilKey: 1, seat: 1 }, unique: true });
+    expect(await key(OfficeTerm)).toContainEqual({
+      key: { councilKey: 1, seat: 1, fromDay: 1 },
+      unique: true,
+    });
     expect(await key(Character)).toContainEqual({
-      key: { homeCityId: 1, rank: 1, lastActionAt: -1 },
+      key: { 'residence.cityId': 1, 'residence.districtId': 1, factionId: 1, rank: 1, lastActionAt: -1 },
       unique: false,
     });
   });
 
   it('a second election for the same city and cycle, a second ballot, a second seat are refused', async () => {
     await Election.create(election(4145));
-    await expect(Election.create({ ...election(4145), _id: 'coalport:x' })).rejects.toSatisfy(
-      isDuplicateKeyError,
-    );
+    // Slice 4: the `_id` (the place's election key) is the natural key.
+    await expect(Election.create(election(4145))).rejects.toSatisfy(isDuplicateKeyError);
     const voterId = new Types.ObjectId();
     await Vote.create({ electionId: 'coalport:4145', voterId, candidateKey: 'n:npc.c.weiss', day: 1 });
     await expect(

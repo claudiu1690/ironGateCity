@@ -82,4 +82,14 @@ export const ordinances: OrdinanceInput[] = [
     effectLine: 'Party XP +25 % on actions',
     effects: [{ kind: 'fxpPct', scope: 'actions', value: 25 }],
   },
+  {
+    // Slice 4 (docs/design/slice-4-battleground.md §8.5): the eleventh rule, on every menu, the
+    // capital's included (tickets from every city exist from slice 4). Never below 5 Iron.
+    id: 'ord.tram-subsidy',
+    name: 'Tram Subsidy',
+    // On every city's menu, so the line and the effect line name no city (design §8.5, 3 Oct 2026).
+    line: 'The council pays half of every fare out of town: trains from this city at half price.',
+    effectLine: 'Train tickets from this city: half price',
+    effects: [{ kind: 'ticketPct', value: -50 }],
+  },
 ];

@@ -2,8 +2,9 @@ import { RESTED, TIER_RATES, TRAINING } from './constants';
 import { projectEnergy, spendEnergy } from './energy';
 import type { EnergyProjection, EnergyState } from './energy';
 import { restedCapFor, trainingEnergy } from './ordinances';
-import type { CityModifiers } from './ordinances';
+import type { Modifiers } from './ordinances';
 import { advanceOrders } from './orders';
+import type { MatchCtx } from './orders';
 import { flatLine } from './rewards';
 import type { ActionDescriptor, OrderTemplate, OrdersState, RewardLine, TrainableStat } from './types';
 
@@ -50,11 +51,15 @@ export function resolveTraining(i: {
   orders: OrdersState;
   orderTemplates: readonly OrderTemplate[];
   homeCityId: string;
+  /** Slice 4 (ADR 0026): the residence, where `'home'` orders point; wins over `homeCityId`. */
+  residence?: MatchCtx;
   descriptor: ActionDescriptor;
   /** Slice 3: Reading Room Grant (training Energy −20 %) and the Rested cap. */
-  modifiers?: CityModifiers;
+  modifiers?: Modifiers;
+  /** Slice 4 (ADR 0030 §5): the Rested cap of the residence and the room; default from `modifiers`. */
+  restedCap?: number;
 }): TrainingResult {
-  const before = projectEnergy(i.energy, i.now, undefined, restedCapFor(i.modifiers));
+  const before = projectEnergy(i.energy, i.now, undefined, i.restedCap ?? restedCapFor(i.modifiers));
   const from = i.base[i.trains];
   const baseCost = trainingCost(from);
   // A cost ordinance changes the cost only: XP stays on the unmodified cost (design §17 Q11).
@@ -67,7 +72,14 @@ export function resolveTraining(i: {
   const xpPerEnergy = TIER_RATES[1].xpPerEnergy * TRAINING.xpRateShare;
   const xp = flatLine(xpPerEnergy * baseCost, RESTED.xpBonus * (spent.restedUsed / cost));
   const row: TrainingRow = { index: 1, from, to: from + 1, cost, restedUsed: spent.restedUsed, xp };
-  const adv = advanceOrders(i.orders, i.orderTemplates, i.descriptor, 'success', i.homeCityId, i.now);
+  const adv = advanceOrders(
+    i.orders,
+    i.orderTemplates,
+    i.descriptor,
+    'success',
+    i.residence ?? i.homeCityId,
+    i.now,
+  );
   return {
     ok: true,
     resolution: {

@@ -122,7 +122,7 @@ describe('the count boundary, raced (ADR 0017 §1)', () => {
     expect(await OfficeTerm.countDocuments({ councilKey: 'coalport:4145', completed: true })).toBe(7);
     expect(await OrderPaper.countDocuments({ cityId: 'coalport' })).toBe(2);
     const city = (await City.findById('coalport').lean())!;
-    const expected = applyMoraleLoss(applyDrift(before, 'collective').shares, 'collective', 3).shares;
+    const expected = applyMoraleLoss(applyDrift(before!, 'collective').shares, 'collective', 3).shares;
     expect(city.opinion).toEqual(expected);
     expect(city.moraleLog!.map((m) => m.day)).toEqual([D0 + 5]);
     expect(city.world!.settledDay).toBe(D0 + 5);
@@ -154,8 +154,8 @@ describe('the worker down (ADR 0017 §3)', () => {
     expect(city.ordinance).toMatchObject({ id: 'ord.long-service', fromDay: D0 + 12, toDay: D0 + 17 });
     expect(city.ordinanceHistory!.map((h) => h.fromDay)).toEqual([D0 - 3, D0 + 2, D0 + 7, D0 + 12]);
     // Two unvoted counts: 70 − 3 − 3 plus the drift back.
-    expect(moraleState(city.opinion.collective)).toBe('steady');
-    expect(city.opinion.collective).toBeLessThan(65);
+    expect(moraleState(city.opinion!.collective)).toBe('steady');
+    expect(city.opinion!.collective).toBeLessThan(65);
   });
 });
 

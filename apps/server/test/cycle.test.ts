@@ -106,7 +106,7 @@ describe('a full cycle in Coalport', () => {
     expect((await A.caller.character.me()).politicsWaiting).toBe(1);
 
     // Three ballots: +1.5 morale.
-    const before = (await City.findById('coalport').lean())!.opinion.collective;
+    const before = (await City.findById('coalport').lean())!.opinion!.collective;
     const me = `p:${A.id}`;
     const cast = await A.caller.council.vote({ candidateKey: me, idempotencyKey: key() });
     expect(cast).toMatchObject({
@@ -120,7 +120,7 @@ describe('a full cycle in Coalport', () => {
     expect(await card(A)).toMatchObject({ state: 'voted', votedFor: 'Mara Lenk', countAt: at(D0 + 5, 0) });
     await B.caller.council.vote({ candidateKey: me, idempotencyKey: key() });
     await D.caller.council.vote({ candidateKey: 'n:npc.c.weiss', idempotencyKey: key() });
-    expect((await City.findById('coalport').lean())!.opinion.collective).toBeCloseTo(before + 1.5, 3);
+    expect((await City.findById('coalport').lean())!.opinion!.collective).toBeCloseTo(before + 1.5, 3);
     expect((await A.caller.character.me()).politicsWaiting).toBe(0);
     expect(
       await A.caller.council.count({ electionId: `coalport:${ballot.electionId.split(':')[1]}` }),
@@ -172,7 +172,8 @@ describe('a full cycle in Coalport', () => {
       // Review 1: the Collective's branch motion is the Long Service Order (was ord.shift-hours).
       ['Long Service Order', 'branch'],
     ]);
-    expect(chamber.menu).toHaveLength(10);
+    // Slice 4 (design §8.5): the Tram Subsidy is on every menu.
+    expect(chamber.menu).toHaveLength(11);
     const moved = await A.caller.council.propose({ ordinanceId: 'ord.open-doors', idempotencyKey: key() });
     expect(moved).toMatchObject({
       act: 'propose',

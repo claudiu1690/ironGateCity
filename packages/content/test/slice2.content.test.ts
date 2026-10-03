@@ -48,13 +48,18 @@ function rows(text: string, row: RegExp): string[][] {
 
 describe('the real content, slice 2', () => {
   it('has 3 cities, 55 actions, 9 jobs, 36 order templates, 3 papers, 10 items, 3 Ambitions, 6 faces', () => {
-    expect(content.cities.map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford']);
+    // Slice 4 adds the capital (its city, jobs, papers and orders: slice4.*.test.ts); the slice-2
+    // numbers are the home cities'.
+    const home = content.cities.filter((c) => c.role === 'home');
+    expect(home.map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford']);
     // Review 1: the nine job-shift actions are gone (a job is a wage).
-    expect(content.cities.flatMap((c) => c.locations.flatMap((l) => l.actions))).toHaveLength(55);
-    expect(content.jobs).toHaveLength(9);
+    expect(home.flatMap((c) => c.locations.flatMap((l) => l.actions))).toHaveLength(55);
+    expect(content.jobs.filter((j) => !j.id.startsWith('irongate'))).toHaveLength(9);
     // Slice 3 adds six crisis templates (Restore the base, two per faction), which never rotate.
-    expect(content.orderTemplates.filter((t) => t.use === 'rotation')).toHaveLength(36);
-    expect(content.cities.map((c) => c.paper?.shortName)).toEqual(['Clarion', 'Sentinel', 'Gazette']);
+    expect(
+      content.orderTemplates.filter((t) => t.use === 'rotation' && t.residence !== 'capital'),
+    ).toHaveLength(36);
+    expect(home.map((c) => c.paper?.shortName)).toEqual(['Clarion', 'Sentinel', 'Gazette']);
     // Slice 2's nine, and chapter 2's keepsake that GDD §21.4 catalogues for slice 3.
     expect(content.items).toHaveLength(10);
     expect(content.ambitions.map((a) => [a.id, a.chaptersPlanned])).toEqual([

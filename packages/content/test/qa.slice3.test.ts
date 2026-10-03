@@ -3,7 +3,7 @@
  * derives (design §17 Q4), chapter 2's numbers against the GDD text (§17.1), and a slice-3 sweep
  * for war framing and real-world echoes beyond the slice-2 checklist (CLAUDE.md rules 2 and 6).
  */
-import { isPoliticalTemplate, standingView } from '@irongate/rules';
+import { CAPITAL_PLACEHOLDERS, isPoliticalTemplate, standingView } from '@irongate/rules';
 import { describe, expect, it } from 'vitest';
 import GDD from '../../../docs/GDD.md?raw';
 import { copy, loadContent } from '../src';
@@ -54,7 +54,8 @@ describe('QA · political copy at its longest (design §8, §17.3)', () => {
   });
 
   it('no text leaves a placeholder the server does not know', () => {
-    const known = new Set([...Object.keys(LONGEST), 'ordinanceLine']);
+    // Slice 4: the capital's and the Issues' live lines, resolved on the server (tech design §4.3).
+    const known = new Set([...Object.keys(LONGEST), 'ordinanceLine', ...CAPITAL_PLACEHOLDERS]);
     const texts = [
       ...content.headlines.filter(isPoliticalTemplate).map((h) => [h.id, `${h.headline} ${h.deck ?? ''}`]),
       ...Object.entries(content.politics.results).map(([a, t]) => [a, `${t.headline} ${t.body}`]),
@@ -68,7 +69,8 @@ describe('QA · political copy at its longest (design §8, §17.3)', () => {
 
 describe('QA · NPC marking (GDD §15.10, design §17 Q4)', () => {
   it('the top three of every slate read One of Us, the other six Trusted', () => {
-    for (const city of content.councilCities()) {
+    // The home councils; the capital's slates are two a faction a district (slice4.content.test.ts).
+    for (const city of content.councilCities().filter((c) => c.role === 'home')) {
       const labels = content
         .slateOf(city.id)
         .map((c) => content.standingNames[standingView(c.profile * 5).level]);

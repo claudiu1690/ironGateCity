@@ -18,7 +18,7 @@ const LISTEN = { actionId: 'coalport.anchor.listen', locationId: 'coalport.ancho
 const STUDY = { actionId: 'coalport.union-hall.reading-room', locationId: 'coalport.union-hall' } as const;
 
 const sumK = (s: OpinionShares) => Math.round((s.vanguard + s.collective + s.alliance + s.neutral) * 1000);
-const collective = async () => (await City.findById('coalport').lean())!.opinion.collective;
+const collective = async () => (await City.findById('coalport').lean())!.opinion!.collective;
 
 beforeAll(async () => {
   await setupDb('action-test');
@@ -221,8 +221,8 @@ describe('action.perform ×3 (ADR 0006)', () => {
     expect(r.action.times).toBe(3);
     expect(await ActionLog.countDocuments({ idempotencyKey: key })).toBe(1);
     const city = (await City.findById('coalport').lean())!;
-    expect(city.opinion.collective).toBeCloseTo(before + r.effects.opinion!.applied, 6);
-    expect(sumK(city.opinion)).toBe(100_000);
+    expect(city.opinion!.collective).toBeCloseTo(before + r.effects.opinion!.applied, 6);
+    expect(sumK(city.opinion!)).toBe(100_000);
     // Rows 1–2 advance the Mill Gate canvass order (+25 %); it completes on row 2 (+20 FXP); row 3 gets nothing.
     expect(r.attempts.map((a) => a.orderId)).toEqual(['dir.shift-change', 'dir.shift-change', null]);
     expect(r.attempts[2]!.rewards.fxp.bonus).toBe(0);
@@ -293,7 +293,7 @@ describe('action.perform ×3 (ADR 0006)', () => {
     );
     const applied = results.reduce((s, r) => s + r.effects.opinion!.applied, 0);
     expect(await collective()).toBeCloseTo(before + applied, 6);
-    expect(sumK((await City.findById('coalport').lean())!.opinion)).toBe(100_000);
+    expect(sumK((await City.findById('coalport').lean())!.opinion!)).toBe(100_000);
   });
 });
 

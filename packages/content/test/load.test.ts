@@ -95,7 +95,10 @@ describe('the real content', () => {
     expect(content.faction('collective').rankTitles[4]).toBe('Delegate');
     // Slice 3 adds the two crisis templates (Restore the base), review 1 the welcome-only ones;
     // neither rotates.
-    const orders = content.ordersOf('collective').filter((o) => o.use === 'rotation');
+    // Slice 4 adds the capital rotation (design §10), for Irongate residents only.
+    const orders = content
+      .ordersOf('collective')
+      .filter((o) => o.use === 'rotation' && o.residence !== 'capital');
     expect(orders).toHaveLength(12);
     expect(orders.filter((o) => o.slot === 'A')).toHaveLength(5);
     expect(orders.filter((o) => o.slot === 'B')).toHaveLength(4);
@@ -103,7 +106,8 @@ describe('the real content', () => {
     expect(city.paper?.name).toBe('The Coalport Clarion');
     const hl = content.headlinesOf('coalport');
     expect(hl.filter((h) => h.group === 'ambient')).toHaveLength(10);
-    expect(hl.filter((h) => h.group === 'personal')).toHaveLength(13);
+    // Slice 4 adds the stored *The Train Is Open* (hl.train-open, Level 10).
+    expect(hl.filter((h) => h.group === 'personal')).toHaveLength(14);
     // Slice 2: hl.first-day became hl.welcome (onboarding §7.2).
     expect(hl.find((h) => h.id === 'hl.welcome')?.priority).toBe(1);
     expect(content.standingNames).toEqual(['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us']);

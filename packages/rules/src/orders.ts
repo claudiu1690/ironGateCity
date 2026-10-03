@@ -9,6 +9,7 @@ import type {
   OrderTemplate,
   OrdersState,
   Outcome,
+  ResidenceCtx,
 } from './types';
 
 const SLOTS: OrderSlot[] = ['A', 'B', 'C'];
@@ -18,12 +19,22 @@ const SLOTS: OrderSlot[] = ['A', 'B', 'C'];
  * `A[i mod |A|]`, B `B[i mod |B|]`, C `C[i mod |C|]` with i = City Days since 2026-01-01.
  * `templates` are one faction's, in file order.
  */
-export function ordersForDay(templates: readonly OrderTemplate[], day: DayKey): OrderTemplate[] {
+export function ordersForDay(
+  templates: readonly OrderTemplate[],
+  day: DayKey,
+  residence: 'home' | 'capital' = 'home',
+): OrderTemplate[] {
   const i = cityDayIndex(day);
   const picked: OrderTemplate[] = [];
   for (const slot of SLOTS) {
     // Crisis templates (Restore the base) never enter the rotation (slice-3 tech design §4.1).
-    const inSlot = templates.filter((t) => t.slot === slot && (t.use ?? 'rotation') === 'rotation');
+    // Slice 4 (design §10): a template serves the residents it names (`any`: both).
+    const inSlot = templates.filter(
+      (t) =>
+        t.slot === slot &&
+        (t.use ?? 'rotation') === 'rotation' &&
+        ((t.residence ?? 'home') === residence || t.residence === 'any'),
+    );
     if (inSlot.length > 0) picked.push(inSlot[mod(i, inSlot.length)]!);
   }
   return picked;
@@ -34,7 +45,8 @@ export function ordersForDay(templates: readonly OrderTemplate[], day: DayKey): 
  * items are those templates, in slot order A, B, C, instead of the rotation; a *Take a job* item
  * (`kinds: ['takeJob']`) starts done, with no reward, when a job is already held (the second
  * welcome day of a late sign-up). With `crisis` (the home city in Unrest, GDD §14.11) the pair
- * replaces slots A and B; the welcome set wins over it on a welcome day.
+ * replaces slots A and B; the welcome set wins over it on a welcome day. Slice 4: `residence`
+ * picks the home or the capital rotation; the crisis pair is only ever for home residents.
  */
 export function startOrders(
   templates: readonly OrderTemplate[],
@@ -43,6 +55,7 @@ export function startOrders(
   welcome?: readonly [string, string, string],
   crisis?: readonly [string, string],
   now?: number,
+  residence: 'home' | 'capital' = 'home',
 ): OrdersState {
   const byId = (kind: string) => (id: string) => {
     const t = templates.find((x) => x.id === id);
@@ -52,8 +65,8 @@ export function startOrders(
   let picked: OrderTemplate[];
   if (welcome) picked = welcome.map(byId('welcome'));
   else {
-    picked = ordersForDay(templates, day);
-    if (crisis) {
+    picked = ordersForDay(templates, day, residence);
+    if (crisis && residence === 'home') {
       const [a, b] = crisis.map(byId('crisis'));
       picked = [a!, b!, ...picked.filter((t) => t.slot !== 'A' && t.slot !== 'B')];
     }
@@ -74,15 +87,33 @@ export function startOrders(
   };
 }
 
-export function orderMatches(m: OrderMatch, a: ActionDescriptor, homeCityId: string): boolean {
+/** Where `'home'` points: a residence, or (slice 1–3 callers) a city id with no district. */
+export type MatchCtx = ResidenceCtx | string;
+
+const ctxOf = (ctx: MatchCtx): ResidenceCtx =>
+  typeof ctx === 'string' ? { cityId: ctx, districtId: null } : ctx;
+
+/**
+ * ADR 0009, slice 4 (ADR 0026): AND of the match's fields. `cityId: 'home'` is the residence city,
+ * `districtId: 'home'` the residence district (never matches without one).
+ */
+export function orderMatches(m: OrderMatch, a: ActionDescriptor, ctx: MatchCtx): boolean {
+  const r = ctxOf(ctx);
   if (m.kinds && !m.kinds.includes(a.kind)) return false;
   if (m.actionTypes && (a.type === undefined || !m.actionTypes.includes(a.type))) return false;
   if (m.actionIds && (a.actionId === undefined || !m.actionIds.includes(a.actionId))) return false;
   if (m.locationIds && (a.locationId === undefined || !m.locationIds.includes(a.locationId))) return false;
+  if (m.locationKinds && (a.locationKind === undefined || !m.locationKinds.includes(a.locationKind)))
+    return false;
   if (m.cityId !== undefined) {
-    const city = m.cityId === 'home' ? homeCityId : m.cityId;
+    const city = m.cityId === 'home' ? r.cityId : m.cityId;
     if (a.cityId !== city) return false;
   }
+  if (m.districtId !== undefined) {
+    const district = m.districtId === 'home' ? r.districtId : m.districtId;
+    if (district === null || a.districtId !== district) return false;
+  }
+  if (m.issueTagged && (a.issueIds ?? []).length === 0) return false;
   return true;
 }
 
@@ -101,7 +132,7 @@ export function findAdvancingItem(
   templates: readonly OrderTemplate[],
   a: ActionDescriptor,
   outcome: Outcome,
-  homeCityId: string,
+  ctx: MatchCtx,
 ): number {
   return o.items.findIndex((item) => {
     if (item.doneAt !== null) return false;
@@ -109,7 +140,7 @@ export function findAdvancingItem(
     if (!t) return false;
     const spec = itemSpec(item, t);
     if (spec.counts === 'successes' && outcome !== 'success') return false;
-    return orderMatches(spec.match, a, homeCityId);
+    return orderMatches(spec.match, a, ctx);
   });
 }
 
@@ -129,10 +160,10 @@ export function advanceOrders(
   templates: readonly OrderTemplate[],
   a: ActionDescriptor,
   outcome: Outcome,
-  homeCityId: string,
+  ctx: MatchCtx,
   now: number,
 ): AdvanceResult {
-  const idx = findAdvancingItem(o, templates, a, outcome, homeCityId);
+  const idx = findAdvancingItem(o, templates, a, outcome, ctx);
   if (idx < 0) return { orders: o, advanced: null, completed: null, allDone: false };
   const items = o.items.map((x) => ({ ...x }));
   const item = items[idx]!;

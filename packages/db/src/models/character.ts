@@ -32,6 +32,29 @@ export interface StoredOrders {
 }
 
 /**
+ * Slice 4 (ADR 0026): where the character votes, stands, reads and takes orders. Migration 006
+ * sets it to the home city with every window at 0.
+ */
+export interface StoredResidence {
+  cityId: string;
+  districtId: string | null;
+  sinceDay: DayKey;
+  votesFromDay: DayKey;
+  standsFromDay: DayKey;
+  canMoveFromDay: DayKey;
+}
+
+/** Slice 4 (ADR 0025): the pointer to the open journey, until the arrival modal is closed. */
+export interface StoredJourney {
+  id: Types.ObjectId;
+  from: string;
+  to: string;
+  boardedAt: Date;
+  arrivesAt: Date;
+  status: 'onTheWay' | 'arrived';
+}
+
+/**
  * One per user; everything a session reads is embedded (plan §2 rule 6). Energy and Rested are
  * lazy timers: stored value + timestamp, projected with `@irongate/rules` on read. The City Day is
  * settled lazily on first touch (ADR 0005); Party-order progress is embedded (ADR 0009).
@@ -43,7 +66,10 @@ export interface CharacterDoc {
   name: string;
   factionId: FactionId;
   homeCityId: string;
-  /** Where the character is now; equals homeCityId until travel (slice 4). */
+  /**
+   * Where the character stands. Slice 4 (ADR 0025): the city left until a journey arrives; being on
+   * a train is `journey.status = 'onTheWay'`.
+   */
   cityId: string;
   /** The face chosen at sign-up; null only for characters migrated from slices 0–1 (ADR 0016). */
   avatarId: string | null;
@@ -102,10 +128,30 @@ export interface CharacterDoc {
     fromDay: DayKey;
     toDay: DayKey;
   }>;
-  /** Slice 3 (ADR 0018): the one-per-cycle endorsement guard; the last four, newest last. */
-  endorsementsGiven: Array<{ electionId: string; candidacyId: Types.ObjectId; name: string; day: DayKey }>;
+  /**
+   * Slice 3 (ADR 0018): the one-per-cycle endorsement guard; the last four, newest last. Slice 4:
+   * `cityCycle` keys the guard per city and cycle ('irongate:4146'; at home the election id).
+   */
+  endorsementsGiven: Array<{
+    electionId: string;
+    candidacyId: Types.ObjectId;
+    name: string;
+    day: DayKey;
+    cityCycle?: string;
+  }>;
   /** Slice 3: the first ballot ever cast (Finish His Work chapter 2 opens after it, design §17.7). */
   firstBallotAt?: Date | null;
+  // Slice 4 (tech design §5.7). Optional at the type level until every reader takes the residence
+  // seam; the schema's defaults and migration 006 set them on every document.
+  residence?: StoredResidence;
+  journey?: StoredJourney | null;
+  journeysMade?: number;
+  /** The journey cards drawn this round (reset after seven). */
+  journeyDeck?: { seen: string[] };
+  room?: { cityId: string; fromDay: DayKey; untilDay: DayKey } | null;
+  firstCapitalArrivalAt?: Date | null;
+  /** The reporter's quote (`hl.*.quoted` in the next edition). */
+  lastQuoted?: { day: DayKey; issueId: string } | null;
   /** The admin boost script's mark (playtest seeding): the report separates boosted testers. */
   playtest?: { boosted: true; boostedAt: Date; from: { fxp: number; rank: number; successes: number } };
   /** Optimistic guard, +1 per game write (ADR 0002). */
@@ -266,6 +312,7 @@ const characterSchema = new Schema<CharacterDoc>(
             candidacyId: { type: Schema.Types.ObjectId, required: true },
             name: { type: String, required: true },
             day: int,
+            cityCycle: { type: String },
           },
           { _id: false },
         ),
@@ -273,6 +320,61 @@ const characterSchema = new Schema<CharacterDoc>(
       default: [],
     },
     firstBallotAt: { type: Date, default: undefined },
+    // Slice 4 (ADR 0025, 0026).
+    residence: {
+      type: new Schema(
+        {
+          cityId: { type: String, required: true },
+          districtId: { type: String, default: null },
+          sinceDay: int,
+          votesFromDay: int,
+          standsFromDay: int,
+          canMoveFromDay: int,
+        },
+        { _id: false },
+      ),
+      // A new character lives at home, every window open (the same as migration 006).
+      default: function (this: { homeCityId?: string }) {
+        return this.homeCityId
+          ? {
+              cityId: this.homeCityId,
+              districtId: null,
+              sinceDay: 0,
+              votesFromDay: 0,
+              standsFromDay: 0,
+              canMoveFromDay: 0,
+            }
+          : undefined;
+      },
+    },
+    journey: {
+      type: new Schema(
+        {
+          id: { type: Schema.Types.ObjectId, required: true },
+          from: { type: String, required: true },
+          to: { type: String, required: true },
+          boardedAt: { type: Date, required: true },
+          arrivesAt: { type: Date, required: true },
+          status: { type: String, enum: ['onTheWay', 'arrived'], required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
+    journeysMade: { type: Number, default: 0 },
+    journeyDeck: {
+      type: new Schema({ seen: { type: [String], default: [] } }, { _id: false }),
+      default: () => ({ seen: [] }),
+    },
+    room: {
+      type: new Schema({ cityId: String, fromDay: Number, untilDay: Number }, { _id: false }),
+      default: null,
+    },
+    firstCapitalArrivalAt: { type: Date, default: null },
+    lastQuoted: {
+      type: new Schema({ day: Number, issueId: String }, { _id: false }),
+      default: null,
+    },
     playtest: {
       type: new Schema(
         { boosted: Boolean, boostedAt: Date, from: { fxp: Number, rank: Number, successes: Number } },
@@ -287,7 +389,15 @@ const characterSchema = new Schema<CharacterDoc>(
 
 // One character per user: the join's natural key (ADR 0011).
 characterSchema.index({ userId: 1 }, { unique: true });
-// Slice 3: the eligibility counts (turnout, the small-branch rule).
-characterSchema.index({ homeCityId: 1, rank: 1, lastActionAt: -1 });
+// Slice 4 (tech design §5.7): the eligibility counts (turnout, the small branch) count residents.
+characterSchema.index({
+  'residence.cityId': 1,
+  'residence.districtId': 1,
+  factionId: 1,
+  rank: 1,
+  lastActionAt: -1,
+});
+// Slice 4 (ADR 0025): the tidy job and the report find characters on a train.
+characterSchema.index({ 'journey.status': 1 }, { partialFilterExpression: { 'journey.status': 'onTheWay' } });
 
 export const Character = model<CharacterDoc>('Character', characterSchema);
