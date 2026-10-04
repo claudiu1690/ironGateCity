@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). **Slice 5** ("Risk"): tier-2 rates and the difficulty ladder, Heat's budget, run-ins by build, the caught check and the record, the cells and the infirmary, rival ground, the new PC sink (§19). **Slice 6** ("Together"): Campaign Event roles against the tier rates, the fixture's floor on a city's opinion, Political Capital from events, favours as sinks (§20). Grows one slice ahead of the build |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). **Slice 5** ("Risk"): tier-2 rates and the difficulty ladder, Heat's budget, run-ins by build, the caught check and the record, the cells and the infirmary, rival ground, the new PC sink (§19). **Slice 6** ("Together"): Campaign Event roles against the tier rates, the fixture's floor on a city's opinion, Political Capital from events, favours as sinks (§20). **Slice 7** ("The nation"): stipends, the top's Political Capital, the laws' worth, Clearwater (§21). **Slice 8** ("A life in the city"): the Wardrobe's prices against income, the Dossier's arithmetic, Favour's pace, the flat, Legacy, the season score (§22). Grows one slice ahead of the build |
 | **Sources** | GDD §5.2–5.5, §6.2–6.3, §6.5, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §14.11, §15.1–15.3, §15.4, §15.10, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md`, `slice-3-politics.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 3 Oct 2026 (slice 6, §20 added: events, the fixture, favours); 3 Oct 2026 (slice 5, §19 added); 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
+| **Updated** | 4 Oct 2026 (slice 8, §22 added: the Wardrobe's prices against income, Dossier sales, Favour's pace, the flat, Legacy, the season score); 3 Oct 2026 (slice 6, §20 added: events, the fixture, favours); 3 Oct 2026 (slice 5, §19 added); 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -815,3 +815,93 @@ Every national act is one or two taps; the Chair's whole term is five taps once 
 | 70 | Clearwater's baseline evened | The lake wants a lean | Issues, never the meter |
 | 72 | The list by backers | One name takes every backing | A second backing for the list |
 | 73 | The push at Level 10 | Reads as a forced trip | Half the push's Party XP at home |
+
+
+---
+
+## 22. Slice 8: the Wardrobe, the Dossier, patrons, the flat, Legacy and the season
+
+Rules: `docs/design/slice-8-life.md`; GDD §8.2, §10, §13.6, §14.12, §17.1–§17.4, §18.3, §20.3, §21, §22. Slice 8 adds **one tier-2 type** (the society call, at the tier-2 rate), **one tier-3 story** (the exposé) and the game's first **big Iron sinks**. **Two GDD numbers were changed** and both are here: the season score's election bonus (10 → **100**, Appendix C #81) and the social missions' v3.0 rewards (replaced by the tier-2 rate); everything else is a pin.
+
+### 22.1 Income the sinks are priced against
+
+From §19.3: the reference player earns about **1,000 Iron a day in week 1** (tier 1 with Rested, the job's 216, the first missions), **1,500–2,000 by week 3** (missions at ×2, seniority at +20 %, the capital's rooms and tickets taken off), and **2,500–3,500 in month 2** (the §18.2 band). Dossier sales add 100–300 a day for a player who sells (two entries a day at 50 and a file a week at 200) and nothing for one who exposes.
+
+### 22.2 The Wardrobe's prices against the days
+
+| Item | Price | Needs | Days of income at the time (reference player) | When bought in the model |
+|---|---|---|---|---|
+| A standard coat | 200 | — | 0.2 | day 1 for a coat-refuser (it is the father's coat's figure) |
+| The party's coat (II) | 800 | Level 6 (day 2) | 0.8 | **day 6–7** (after the first week's sinks: the ticket, the room) |
+| The party badge · paste and brush | 150 · 300 | members | 0.5 together | day 3–4 |
+| A good hat | 400 | Level 6 | 0.4 | day 8 |
+| The press pass · the camera | 500 · 1,200 | Level 6 | 1.5 together | **day 10** for a Dossier player |
+| Forged papers · wire cutters | 600 · 400 | Rank 3 (day 9) | 1 | day 11 for the illegal road |
+| The flat | 2,500 + 150 a week | Level 10 (day 5), a residence | 2 | **day 15** |
+| The dress greatcoat · evening dress | 4,500 · 5,000 | Level 16 (day 12–13) | 3 | **day 20–22** (a week's Iron after the flat) |
+| The wristwatch | 2,500 | Level 16 | 1.5 | day 25 |
+| The correspondent's suit | 5,500 | Level 16, Alliance | 3 | day 22 (instead of the greatcoat) |
+| The three-piece suit | 20,000 | Level 31 (week 6) | 7 | **month 2** (two weeks' surplus) |
+
+**Worn Charisma by day** for the model (the mill coat's 2, CHA base 0): day 1 **2** (5 with the father's coat) · day 7 **12** (the party's coat) · day 8 **18** (+ the hat) · day 15 **20** (+ the flat's 2 at home) · day 22 **30** (the greatcoat + the hat + the flat) · day 25 **34** (the watch) · month 2 **50** (the three-piece suit, the watch, the flat). The society calls' doors (10 / 12 / 15 / 20) open in order: the Promenade at day 7, the Opera and the Pier Hotel at day 8, the Grand Hotel and the Casino at day 15; the clamp on a call's check (a 20 against Charisma 34) arrives about day 25, which is §8.4's shape for a stat that is bought rather than trained. **Recognition** (§14.12) turns on at Charisma 20 (day 15) and doubles at 30 (day 22): exactly when the model's player has begun visiting rival ground with an office, which is the trade-off the slice wants.
+
+**The buy-back at a tenth** means a wardrobe is a sink, not a store: 10,000 Iron of coats sells for 1,000. No item pays Iron back; the two +5 % Party XP items are worth about +12 FXP a day each to the model (inside the heavy player's +35 % envelope; the pair together move Rank 4 by about a day).
+
+### 22.3 A reference day with the slice (day 20, home, 300 Energy)
+
+| | Slice-7 sheet (day 20) | With slice 8 |
+|---|---|---|
+| XP / day | ~1,900 | ~1,920 (+1 %: a society call a day at the tier-2 rate on 15 Energy of tier-1's) |
+| FXP / day | ~245 | **~265** (+8 %: the party's coat and the badge on everything; a call pays none) |
+| Iron from actions (with Rested) | ~1,050 | ~1,100 + **100–300 Dossier sales** (or 0 and an exposé's 100 once a week) |
+| Opinion / day | +2.3 | +2.45 (a call's 0.15), **plus an exposé's −1.0 against a rival in one town about once a week** (three fresh entries at 10 % per intelligence tap is twenty taps, about a week of the model's intelligence Energy; the pass and the camera halve that) |
+| Favour / day (both patrons, from the capital) | — | ~5 each for a devoted player; ~3 for the model, who does the Requests and the Monday call: **Associate about day 20, Confidant day 30, Protégé day 42** |
+| Rested / day | 360 banked | 385 (the flat's 25 at the boundary); the cap 250 at home |
+| Iron out, a week | tickets 60, a room 100, pay-offs ~100 | + **the flat's 150, a gift 200 × 7, a coat every fortnight or so** (about 1,500–2,500 a week of sinks against ~10,000 of income) |
+
+**Milestones:** no §5.2 milestone moves by more than a day (the +8 % FXP is for a member who buys and wears the party's coat; Rank 4 day 27 → 26). **Iron is the number that moves**, by design: the week-1 surplus flagged in §19.11 now has prices, and a player who buys everything at its Level spends about **60 % of income in weeks 2–4** and keeps the rest for bail, pay-offs and gifts.
+
+### 22.4 The Dossier's arithmetic
+
+At 10 % per intelligence Success (the model's eight intelligence taps a day, mostly 3–4 Energy, at ~90 %): **0.7 entries a day**, 1.6 with the press pass and the camera, plus a surveillance mission's one. The names of a home city number 27 (nine a party) and the capital's 45 (nine a district), so entries land on the same name about one time in nine at home: **a Case File by chance is three weeks; a Case File by watching one name** (the surveillance missions' `dossier.subject`, the informer card, a patron's gossip on a chosen town) **is about a week**, which is what the clock card asks for. Capacity (10 at INT 1–10, 15 at 11–20, 25 at 21–35; the model's INT passes 20 on day 3 and 35 about day 12) is never the binding limit for a player who sells or binds; a hoarder fills 25 slots in a month and reads *went begging*, which is the rule working.
+
+**The exposé** at 20 Energy for 150 XP and 100 Iron is the tier-2 rate on its Energy (7.5 XP and 5 Iron per Energy; the story's Partial and Failure halve or void it) plus the swing, −1.0 in one town, worth about **a day of the model's tier-1 opinion against a rival** or three disruptions: a week's Dossier work for a day's swing, once a week, is a prize and not an income. Difficulty 18 / 16 / 14 by the file's weight: the model's INT (34 at day 13) sees 95 % on any of them and the clamp is the design (a file is the hard part; the writing is the reward); a spread build at INT 20 sees 58 / 66 / 74 %, which is why the camera's +10 exists.
+
+### 22.5 Favour's pace (Appendix C #77)
+
+| Player | Request every 2 days (+6) | Gift a day (+2) | A call a day (+2) | A day | Acquaintance (10) | Associate (30) | Confidant (60) | Protégé (90) |
+|---|---|---|---|---|---|---|---|---|
+| Devoted (lives in the patron's town) | 3 | 2 | 2 | 7 | day 2 | day 5 | day 9 | day 13 |
+| The model (visits twice a week, does the Requests) | 3 | 0.6 | 0.6 | ~4 | day 3 | day 8 | day 15 | day 23 |
+| Casual (the Requests only) | 3 | 0 | 0 | 3 | day 4 | day 10 | day 20 | day 30 |
+
+From the first visit (Level 10, day 5 for the model, and a ticket), so the model is Associate about **day 13–20** (the §3.6 "first patron at Associate in weeks 3–4" holds for a less devoted player), Confidant in month 1 and Protégé by day 30–45. The gift sink is **200 a day per patron** for the devoted, about a fifth of income: the price of the fastest road.
+
+### 22.6 The flat and the room
+
+The flat's 2,500 is two days' Iron at day 15 and the rent 150 a week is 1 % of weekly income: the flat is affordable to anyone who wants it and its value is Rested (**+25 a night is +175 a week, about 260 XP and 120 Iron of bonus**, so the rent pays for itself in Iron alone), the cap +50 (the capital room's figure without the room), the *Evening* outfit and +2 Charisma at home. The room (+10 a night) is a small reward arriving for everyone. A player who never buys a flat loses nothing but a comfort.
+
+### 22.7 Legacy
+
+The model's record at day 30: three council terms (9), one District Hero (2), two Issues in the top five (4) = **15**, about one perk. At day 84: six terms (18), a Governor's term (5), three heroes (6), six Issues (12), an exposé or two (4), Champion or an award (5) = **about 50**: three or four perks. The largest perk (+5 % FXP, 15) is worth about +12 FXP a day: a reward for a season, not a rate.
+
+### 22.8 The season score (Appendix C #81)
+
+A party's control share is ~33.3 a day in a level republic, so a season's daily sum is about **2,800 per party**. A four-point lead held for 84 days is +336; at the GDD's 10 per election three wins were +30 (a tenth of the lead), so the Champion was the daily sum alone. At **100 per election** three wins are +300, about the lead's worth: the Champion is the party that held the republic *and* won it, which is what a season's prize should say.
+
+### 22.9 Session shape (pillar 7)
+
+Dressing is one tap; a shop is one tap on a place the player is at; a Case File is one tap and an exposé three; a Request is read in the paper and done by ordinary play; the flat is two taps and the rent one; a perk one; the season asks nothing. Nothing in slice 8 needs the player at a set hour.
+
+### 22.10 Flags (GDD Appendix C #74–#81)
+
+| # | Flag | Risk | Lever |
+|---|---|---|---|
+| 74 | No weapons as items | Fight unreachable for non-STR builds | The armour values |
+| 75 | Recognition +5/+10 (×2 at night), the office +5/10/15 | Office-holders stop visiting rival ground, or nobody changes clothes | Halve the office part; raise the Charisma part |
+| 76 | The exposé's −1.0 / −0.5 | Exposés dominate a town at scale | The burn (28 days) or a daily cap per town |
+| 77 | Favour's pace | Protégé in a fortnight, or Acquaintance in a week | The gift's +2 |
+| 79 | The flat waits | Reads as free | A re-entry fee after a month unpaid |
+| 80 | No track, no twist | The clocks are not enough | Build the free track |
+| 81 | +100 per election | The Champion is always the party with the most Presidents | 50; or 200 if elections never move it |
+| — | Dossier sales as income (100–300 a day) | Iron inflates for a seller who never exposes | Halve the entry price (25 / 12); never the file's |

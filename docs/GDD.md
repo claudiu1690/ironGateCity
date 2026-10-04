@@ -6,7 +6,7 @@
 |---|---|
 | **Version** | 3.1 (draft) |
 | **Supersedes** | v3.0 (`Irongate_City_GDD_v3.docx`, 13 Mar 2026) |
-| **Last updated** | 3 Oct 2026 |
+| **Last updated** | 4 Oct 2026 |
 | **Status** | For internal development use |
 
 ---
@@ -265,6 +265,19 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 | Chapter 3 of *Finish His Work* was due since slice 3 | ***The deposit*** (Rank 3, difficulty 16, 15 Energy, 350 / 90 / 200, keepsake *His deposit receipt*) | §17.1, §21.4 |
 | Settled with the architect (4 Oct 2026, `docs/tech/slice-7.md` §22.1; answers in `slice-7-nation.md` §23): the automatic removal "below 25 % of National Control" would fire every term (every party starts at 23.5); Unrest's "lost half goes to nobody" could not sum to 100; the Governor's rule "in place of" the party's item would erase cast votes; the pick's ties by backers before backing opens | **25 % of the control share**; **Unrest halves the city's weight for every party and Neutral** (the shares sum to 95); the Governor's rule **added as item 1 ahead of** the party's item; the Chair's rule from the next order paper; an unset line falls to the secretary's and *Free vote* abstains; a tie among player deputies is no majority; divisions at tabling day + 4, tabling closed after day 23, one bill per member per term; the pick's ties by completed terms then filing; councillors cannot sign the petition on their own council; order **families** for the Chair's menu, push and Clearwater templates, twenty-four local deputies, the Town Hall's venues (kinds gain `library`, `faction-hq`; no signature event in Clearwater), five modals and the alt texts written | §13.7, §14.8, §15.3–§15.6, §15.8–§15.10, §16.2, §16.3 |
 
+**Added 4 Oct 2026 (slice-8 design, `docs/design/slice-8-life.md`, `slice-8-screens.md` and `inventory-research.md`):**
+
+| Problem | Change | Section |
+|---|---|---|
+| Equipment had five slots including a weapon, tiers as Roman numerals, no prices, no shop and no way to dress for a situation; "plain clothes" and "fame is dangerous" were sentences | **The Wardrobe:** four slots in plain words (**Coat · On you · Papers · Tools**; **no weapon slot**: a run-in is Strength and a coat with some weight to it); **two outfits, *Town* and *Plain clothes*** (a flat adds *Evening*), one tap to change, saved explicitly; **shops are cards on places** (the clothes stall, the party store, the tailor, the press, the back room); a catalogue of eighteen priced items (150–20,000 Iron) with three bounded effect kinds; **recognition** on rival ground pinned (Charisma 20+ +5, 30+ +10, doubled at night; the highest office +5/+10/+15; +1 per 10 Legacy; plain clothes under Charisma 10 remove the first and halve the second); forged papers and the press pass read at checkpoints | §8.2, §8.4, §14.12, §16.2, §20.3, §21, §18.3, §11.3, §11.4, §19.3, Appendix C #74, #75 |
+| The Dossier had capacities and a use table and nothing a build could roll | **Pinned:** names (every NPC with a party and a town), entries by category from a line pool, a **10 % entry on an intelligence Success** plus the worn items' chance, a surveillance Success one entry, the cells and the ward one in four; fresh seven days then half; **Case Files at Level 16**; three uses (**the exposé**: three steps at a newspaper, difficulty by the file's weight, −1.0 / −0.5 against the name's party in their town, the front page with your name, Legacy +2, a Failure keeps the file; **sell** at a station, 200 / 50 / 25; **an informant** with a patron's help); Blackmail and Denounce deferred | §10, §13.1, §17.3, Appendix C #76, #78 |
+| Patrons were five with perks in words | **Two in the MVP, Edith Crane and Julius Marr**, both neutral, in the capital and Clearwater; Favour from Requests (+6, one every two days, two held, four days to expire), gifts (200 Iron, +2, daily), society calls (+2) and chapters (+5); the four tiers' perks pinned (gossip, an introduction and informants, a weekly favour for Political Capital, an endorsement and a wearable piece) | §17.2, §3.3, Appendix C #77 |
+| Social missions used v3.0's reward figures and had no door rule | **Society calls** at the tier-2 rate: difficulty = the Charisma requirement, barred ten under it; six calls at the Opera, the Grand Hotel and Clearwater's Front, which opens (Appendix C #71 closed); +2 Favour with the town's patron | §13.3, §13.6, §14.1 |
+| Homes were a table with no rules for lapse or moving | **The flat:** 2,500 Iron and 150 a week prepaid; +25 Rested a night, Rested cap +50 (the larger of a room and a flat), a third outfit, +2 Charisma in its town; **the rent that runs out makes the flat wait, never taken**; the rented room +10 a night; one flat in the MVP; townhouse and villa after | §17.4, §6.3, §6.7, Appendix C #79 |
+| Legacy had a table and no rows for the slice-7 offices, no perk prices | New rows (Governor 5, deputy 5, an exposé 2, Protégé 5, an award 5); perks priced 5–15 from a spend balance beside the permanent total | §17.3 |
+| *Finish His Work* stopped at chapter 3; the two other Ambitions' due chapters were unwritten | **Chapters 4–12** (requirements up the ladder to a seat in Parliament; difficulty 18–26; Legacy 30 and *His rosette* at the end); *The night foreman* and *The collector* | §17.1, §21.4 |
+| The Season had a score with an election bonus too small to matter, awards in words, and a track and twists nobody could build in the MVP | **Three terms from the term epoch; the Season Election is the third term's count; the score is the daily control share summed +100 per election won**; the Champion and four awards (Legacy +5 and titles); the Hall of Fame; the rollover table pinned (opinion halfway back, laws and rules end, Heat 0, the deck reshuffled; everything owned stays); **no track and no twist in season 1** | §22, Appendix C #80, #81 |
+
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes, Quarters.
 
 ---
@@ -338,7 +351,9 @@ We share genre conventions with other persistent browser RPGs: an energy bar, jo
 
 | The Legislature · a deputy · a bill · to table · the division · repeal · the whip · the branch's motion (the Chair's) · NPC deputies · Directives (the Chair's) · the push order · the group target · National Control · the national score · head of state · the primary · the stand-in · the list · recall petition · no-confidence · the Chair's confidence vote · veto · override · provisional (slice 7) | **Parliament** · **deputy** · **a law up for a vote** · **put {law} to Parliament** · **Parliament votes** · **strike out** · **the party line** · **the party's rule** · **local deputies: townspeople run by the game** · **Party orders · set by the Chair, {name}** · **the Chair's push** · **the party's target today** · **who holds the republic** · **the party's score** · **the President** · **the party's pick** (*the Acclamation* / *the Congress* / *the Convention*) · **the party's own candidate · run by the game** · **the party's list** · **a petition to dissolve the council** · **a vote to remove the President** · **a vote on the Chair** · **veto** (kept) · **vote it through anyway** · **to be confirmed tomorrow** |
 
-**Kept, with a help note on the label** (§3.7): Energy, Rested, XP, Party XP, Political Capital, Reputation, Morale (Fired up / Steady / Unrest), Seniority, Party orders, Election, Council rule, Backers, Local support, Issue; from slice 7 Parliament, President, Chair, Governor, deputy, term, veto, the party line, the law book, who holds the republic. Stats are written in full in sentences and on tickets (*Intelligence*, *your best, Strength*); the three-letter codes stay only on the Me tab's stat table and the level-up buttons. The full old → new tables, by content file: `docs/design/review-2-answers.md` §1.
+| Equipment · inventory · a slot · tier I–V · armour · utility · accessory · document · outfit / loadout · equip · CHA · high-society venue · social mission · the Black Market · Dossier entry · subject · stale · Case File · exposé · informant · patron tier · Legacy points · perk · Season Score · rollover (slice 8) | **the Wardrobe** · **everything you own** · **Coat / On you / Papers / Tools** · **work clothes / a good coat / a tailor's suit / a society wardrobe** · **holds up in a run-in** · **tools** · **on you** · **papers** · **outfit** (*Town*, *Plain clothes*, *Evening*) · **wear** · **Charisma** · **the money side of town** · **a society call** · **the back room** · **an entry** · **a name** · **stale** · **a Case File** (kept) · **an exposé** (kept; *Take it to the paper*) · **an informant** · **Acquaintance / Associate / Confidant / Protégé** · **Legacy** · **a lasting perk** · **the season's score** · **the new season** |
+
+**Kept, with a help note on the label** (§3.7): Energy, Rested, XP, Party XP, Political Capital, Reputation, Morale (Fired up / Steady / Unrest), Seniority, Party orders, Election, Council rule, Backers, Local support, Issue; from slice 7 Parliament, President, Chair, Governor, deputy, term, veto, the party line, the law book, who holds the republic; from slice 8 Charisma, the Wardrobe, the Dossier, a Case File, Favour, Legacy, the season, where you sleep. Stats are written in full in sentences and on tickets (*Intelligence*, *your best, Strength*); the three-letter codes stay only on the Me tab's stat table and the level-up buttons. The full old → new tables, by content file: `docs/design/review-2-answers.md` §1.
 
 ---
 
@@ -431,6 +446,8 @@ The first screen after the City Day changes, and after any absence of 3 hours or
 **Slice 6 (v6): Events and the branch.** An **Events** section under Party orders, live at read: one row per open Campaign Event of the member's faction in the residence city (*Today: the branch's canvass drive on Foundry Row · settles at midnight · 2 of 4 roles · you're the Coordinator* / *Join*), a tap opening the event; the welcome edition's row points a new member at the branch's fixture (*join as a hand · 5 Energy*, §16.3). *In Print* gains the event results (*{name} and the Branch Carry {venue}* on a Triumph, with the rosette; the Success, Mixed and Fiasco lines), *{payer} Posts Bail for {name}* and *Visitors for {name} on the Ward*; the desk a *Signed up* row. Every paper gains ten templates (`docs/design/slice-6-together.md` §10).
 
 **Slice 7 (v7): the republic.** A section ***From the capital*** (the Herald: *The republic*) under the headlines, live at read: at most two national lines a day in one set of words printed in every paper (the President's oath, a law in force, a veto, who leads the republic, a council dissolved, a Chair elected…), and a Courier line with the one tap when a window is open (*The republic votes until {until} · Vote now*). The **Election** row carries up to two rows when the council's and a national window are open. **The front page** (the photograph, the stamp **ELECTED**) also serves a Governor, a Chair, a deputy and the President, the caption naming the office. **Your desk** gains a line per office held and *Law: {name} {effect}* lines beside the council rule's; **Party orders** reads *Set by the Chair, {name}* with the push's target bar. ***The Clearwater Courier*** ("Lake, town and harbour, every morning", 6 marks) is confirmed: residents read it, visitors while in the city. Templates: `docs/design/slice-7-nation.md` §11.
+
+**Slice 8 (v8): a life in the city.** **Letters** carries, after the chapters, **patron Requests** (*From Edith Crane: two entries for my files from Garrison Hill · by Thursday · Favour +6*), an **informant's** report every second morning, and a patron's Monday **gossip** (a free Dossier entry). **Your desk** gains **Dossier** (*{n} entries · {m} go stale tomorrow*), **Patrons** (*Crane: Associate 41 · Marr: Acquaintance 12*), **Where you sleep** (*A flat in Coalport · paid until Thursday*) and **Ahead**: up to three clocks (*Chapter 5 from Tuesday · Crane: Confidant at 60 · the Season Election in 12 days*), which is how the paper answers "what am I working toward this month". ***In Print*** gains **the exposé's front page** (the player's name under the headline, the name exposed, the swing), the page-three line and the spiked note, *A New Coat on {name}*, the flat, every Legacy entry and *{name} Recognised in {city}*. ***From the capital*** carries *A Week to the Season Election* on season day 77 and the countdown in the last week; the **season front page** on the new season's day 0 names the Champion, the awards and the player's own Legacy line. Templates: `docs/design/slice-8-life.md` §10.
 
 ### 3.4 Agendas: what to spend Energy on
 
@@ -536,7 +553,7 @@ All of these are **positive**: something to look forward to.
 | Rank 2: **vote** | Day 2 (the right); **the first ballot by day 4** | A taste of politics from day 2. The home city's polls are open three days in five (§15.3), so 60 % of new players vote the day they make Rank 2 and the rest within two days; the paper says when |
 | Level 10: **train travel** | ~Day 5 | The map opens once the home city is familiar |
 | Rank 3: **stand for council**, lead events, illegal missions | ~Day 10 | The first real political step, in week 2 |
-| Level 16: full map, Case Files | ~Week 2 | |
+| Level 16: full map, Case Files | ~Week 2 | Slice 8: the first Case File about day 13; the first exposé the same week. **Patrons and the flat open at Level 10** with the train (both patrons live in battlegrounds): the first Request about day 7, Associate about day 12–20 |
 | Moving to a battleground | Weeks 3–4 (allowed from Rank 2 and Level 10, about day 5; slice 4 measures when it happens) | A player's own choice, not a gate |
 | Rank 4: Faction Chair candidacy | ~Week 4 | |
 | Level 31 | ~Week 6 | |
@@ -652,6 +669,8 @@ While Energy is full, regen overflows into a **Rested** pool.
 
 A player who logs in once a day spends 100 Energy with a +50 % bonus on all of it. A player who logs in three times spends about 400. Neither gets punished; the frequent player simply does more.
 
+**Where you sleep (slice 8, §17.4).** At every boundary the home adds to the pool: **+10 for the rented room, +25 for a paid flat**, banked up to the cap. A paid flat also lifts the cap by **+50** in its city; a room and a flat never stack (the larger applies).
+
 **Rested is spent per Energy point, not per action.** If an action costs more Energy than the Rested left, only the covered points get the bonus: 3 Rested on a 10-Energy action uses all 3 and gives **+15 %** XP and Iron (50 % × 3⁄10). The result modal's Rested tag shows it as *"Rested: 3 of 10 Energy, +15 % XP and Iron"*. Nothing is held back or wasted, so a player never needs to plan around the last few points.
 
 ### 6.4 Heat (new)
@@ -718,6 +737,8 @@ v3.0's hunger, fatigue and exposure mechanics are **removed**. Food, lodging and
 | **Weatherproof** | Seasonal outerwear | Ignore weather penalties on outdoor missions | While equipped |
 
 Only one Well-Fed buff is active at a time; the strongest applies.
+
+**Slice 8:** *Lodged* and *Weatherproof* are not built; the home (§17.4) is the lodging and the Rested comes from it at the boundary (§6.3). The Well-Fed buffs and *In Good Spirits* wait for a later slice.
 
 ---
 
@@ -789,21 +810,21 @@ Full script and timeline: `docs/design/slice-2-onboarding.md` §8.
 
 ### 8.2 Charisma is worn
 
-Unchanged from v3.0. Your CHA is the total of your equipped clothing and accessories plus the origin's **CHA base** (0–4, §7.2), so players keep different outfits for different jobs.
+Your CHA is the total of your equipped coat and what is on you, plus the origin's **CHA base** (0–4, §7.2), plus **+2 while in the city of a paid flat** (§17.4, slice 8), so players keep different outfits for different jobs. The player reads it as **Charisma**, always in full. Slice 8's catalogue (§21.4; the full table with prices, effects and shops in `docs/design/slice-8-life.md` §3.9):
 
-| Item | CHA | Notes |
-|---|---|---|
-| Work jacket and cap / Mill work coat / Worn wool overcoat (Tier I) | 2 | The starting outfit of the Vanguard / Collective / Alliance (§21.4); the *plain clothes* of §14.12 |
-| Your father's coat (Tier I) | 5 | The origin's coat (§7.2); worn from the start if accepted |
-| Standard coat (Tier I) | 5 | |
-| Party outfit (Tier II) | 12 | FXP bonus on faction missions |
-| Officer's suit (Tier III) | 22 | Opera and university events |
-| Press correspondent outfit (Alliance T III) | 25 | INT bonus on political missions |
-| Vanguard dress suit (T IV) | 35 | Risky in rival-held cities |
-| Tailored three-piece suit (T IV, neutral) | 38 | |
-| Full regalia (T V Legendary) | 50 | Senior leadership |
+| Item | Tier · said as | CHA | Notes |
+|---|---|---|---|
+| Work jacket and cap / Mill work coat / Worn wool overcoat | I · work clothes | 2 | The starting outfit of the Vanguard / Collective / Alliance (§21.4); the *plain clothes* of §14.12 |
+| Your father's coat · A standard coat | I · work clothes | 5 | The origin's coat (§7.2); the standard coat is the clothes stall's, 200 Iron |
+| Steward's jacket / Convenor's coat / Campaign suit | II · a good coat | 12 | The party store's, 800 Iron, Level 6, members; **+5 % Party XP** |
+| Dress greatcoat · Evening dress | III · a tailor's suit | 22 · 24 | The tailor's (a `hotel` place), 4,500 / 5,000 Iron, Level 16; the opera and the Casino |
+| Correspondent's suit | III (Alliance) | 25 | Gazette House, 5,500 Iron, Level 16; better odds watching and listening |
+| Tailored three-piece suit | IV · a society wardrobe | 38 | The Grand Hotel's tailor, 20,000 Iron, Level 31 |
+| Party badge · A good hat · Gold wristwatch | on you | 2 · 6 · 10 | The badge +5 % Party XP (150); the hat 400 (Level 6); the watch 2,500 (Level 16) |
+| A patron's piece (Crane's pen, Marr's case) · His rosette | on you, keepsake | 8 · 5 | Protégé (§17.2); *Finish His Work* chapter 12 (§17.1) |
+| Regalia (T V) | — | 42–50 | Post-MVP |
 
-**CHA cuts both ways.** High CHA unlocks the opera, lectures, society dinners and diplomatic missions, and it helps in elections: every 10 CHA gives +1 % to your personal vote appeal. It also draws attention. With CHA 30+ in a rival-held city at night, encounter chance rises. Some stealth missions require *low* CHA, because a sharp suit makes you memorable.
+**CHA cuts both ways.** High Charisma opens the money side of town (**society calls**, §13.6: the door is ten under the requirement) and helps in elections (every 10 CHA gives +1 % to your personal vote appeal; slice 7's national score reads it from slice 9's audit work). It also draws attention: on rival ground every run-in roll adds **recognition** (§14.12: Charisma 20–29 +5, 30 and over +10, **doubled at night**; the highest office held +5 / +10 / +15; +1 per 10 Legacy, at most +5). **Plain clothes are worn Charisma under 10:** they remove the Charisma part and halve the office part. A sharp suit makes you memorable; a work coat does not.
 
 ### 8.3 Agility milestones
 
@@ -848,7 +869,7 @@ Missions unlock by Level, so the odds on a player's own tier sit mostly between 
 |---|---|
 | Local Standing (§13.4) | +3 % per level, up to +12 % |
 | **First day** (review 1) | **+10 %** on every checked action in the home city during the **welcome day**: the City Day of creation, and the next one too when the character was created after 22:00 UTC (Appendix C #18, closed). A ticket tag, *First day in Duskwall · better odds*. It ends at the boundary, by which time the day's level points and *Familiar* have replaced it, so no build's odds are lower on day 2 than on day 1 |
-| The right item (§21) | +5 % to +10 % (forged papers on checkpoints, a propaganda kit on posters, a press pass on interviews) |
+| The right item (§21) | +5 % to +10 % (slice 8, pinned: paste and brush on posters +10; the press pass watching and listening +10; the camera on a watch +5 and at the paper +10; wire cutters on sabotage and vandalism +10; forged papers at a checkpoint and talking your way out of the police +10; the correspondent's suit watching and listening +5; Marr's case talking your way out +10). An item's `chancePct` is bounded 5–10 and names one kind of work; a ticket tag reads *{Item} · better odds* |
 | Weather (§14.7) | −10 % to +10 % on outdoor checks |
 | Battleground bonus (§14.4) | +5 % on political checks in a battleground city or district |
 | The Branch Inspector or similar opponent effects | −10 % |
@@ -951,7 +972,7 @@ Unchanged from v3.0 apart from the pay rules; "per shift" effects are now per da
 
 ## 10. The Dossier
 
-The Dossier is the player's private intelligence journal. In MVP it covers NPCs only; in v1.5 it extends to players.
+The Dossier is the player's private intelligence journal. In MVP it covers NPCs only; in v1.5 it extends to players. **Slice 8 builds it** (`docs/design/slice-8-life.md` §4): the **Dossier tab**, entries on **names** (every NPC with a party and a town: the slates, the local deputies, the parties' figures, the secretaries, the Ambitions' named figures), the sources and chances below, Case Files at Level 16, and three uses (the exposé, the sale, the informant).
 
 ### 10.1 Capacity
 
@@ -962,6 +983,8 @@ The Dossier is the player's private intelligence journal. In MVP it covers NPCs 
 | 21–35 | 25 |
 | 36–50 | 40 |
 | 51+ | 60 |
+
+Plus **+1 per Legacy perk** *A bigger Dossier* (twice, §17.3). Entries and Case Files each take a slot. A full Dossier **refuses** a new entry (*Dossier full · an entry went begging*): opportunity, never loss.
 
 ### 10.2 Gathering intelligence
 
@@ -975,9 +998,24 @@ The Dossier is the player's private intelligence journal. In MVP it covers NPCs 
 | Secret police file (Vanguard) | 5 | None in Vanguard-held cities | Official records, the most detailed |
 | Hospital or jail conversations | 0 | None | Storylet entries (§19) |
 
+**Slice 8 (pinned).** An entry is `{ name, category, line, day, source }`; its line is drawn seeded from the category's pool of twenty (`docs/design/slice-8-life.md` §16.4). Where entries come from, and the chance:
+
+| Source | Chance | Category | Whose name |
+|---|---|---|---|
+| A tier-1 **intelligence** Success | **10 %** + the worn items' `dossierChance` (the press pass 10, the camera 15, Crane's pen 10) | by the place's kind (press, HQ, Parliament, ministry → political · jail, court → criminal · station, bar, street, docks → pattern · hotel, market, theatre → asset · else neutral) | a random name of the city, a rival party's two times in three |
+| A **surveillance** mission | Success: one; Partial: one time in two | the mission's, default pattern | the mission's named figure, or a random name of the target party |
+| A **theft** mission | Success: one | political | a random name of the target party |
+| *The informer* journey card: *feed him false information* | on its Success | political | a name of the rival home city |
+| *Listen to the cells* · *Talk to the ward* (§19) | 25 % on a Success | criminal · neutral | a name of the city |
+| A **society call** (§13.6) | 25 % on a Success | asset | a named figure of the place's city |
+| A patron's **gossip** (Acquaintance, §17.2) | every Monday's paper | political (Crane) · asset (Marr) | a name of the patron's city |
+| An **informant** (§10.4) | one entry every second day for 14 days | pattern and political, alternating | the informant's name |
+
+The journalist contact, the underground network and the secret police file of the table above are expressed through the press pass, the surveillance missions and the theft missions; they are not separate actions. The reporter job's daily entry waits for the job to be placed.
+
 ### 10.3 Categories
 
-Political affiliation, criminal activity, location pattern, asset/wealth, and neutral, as in v3.0.
+Political affiliation, criminal activity, location pattern, asset/wealth, and neutral, as in v3.0. The player reads them as **political · criminal · pattern · asset · the small stuff**.
 
 ### 10.4 Case Files (new)
 
@@ -991,9 +1029,13 @@ Collect **3 or more fresh entries on the same NPC** and they combine into a **Ca
 | **Recruit Informant** | Location pattern + 30 Favour with a patron | A passive entry every 2 days |
 | **Sell** | Any entry | 50–200 IM at tram stations |
 
+**Slice 8 (pinned; from Level 16).** **Three entries' worth on one name** (fresh 1, stale ½) bind into a Case File with one tap; the entries are consumed, the file keeps their lines and kinds and **never goes stale**; one file per name at a time. The MVP's uses: **the exposé** (below), **sell** at a `station` place (*the man by the left-luggage*: **a file 200 Iron, a fresh entry 50, a stale one 25**; one tap and a confirm; the paper prints nothing) and **an informant** (a file with a pattern line, in a town whose patron the player is **Associate** with or better: the file is spent and for **14 City Days** the paper's Letters carry an entry every second morning on a name of that town; **two informants at most**). **Blackmail and Denounce are deferred** (Appendix C #78); Recruit Informant is the informant above.
+
+**The exposé** (three steps at a `press` place; one a day; 20 Energy; resumable). **Step 1:** the file and the angle, *The facts, plainly* (the swing goes wholly to Neutral) or *The story, with a headline* (half to your party, half to Neutral, §14.2's rule for an action against a rival; a point harder). **Step 2:** the check, **difficulty 18 with three lines' worth, 16 with four, 14 with five or more** (+1 for the headline; +2 in the capital's or Clearwater's paper; the camera's +10), three ways (Intelligence · Charisma and Intelligence · *Legwork*, best), no run-in, no Heat. **Step 3:** Success: **opinion −1.0 against the name's party in the name's town** (its district in the capital), XP 150, Party XP 40, Iron 100, **+5 Political Capital**, **Legacy +2**, the file spent, **the front page with your name** next morning, the name burned for 14 days; Partial: **−0.5**, 75 / 20 / 50, the file spent, page three; **Failure: nothing moves, XP 30, the file is kept** (spiked). Rested applies; an Issue tag applies to the swing (`feeds` may name `expose`); the *Free Press Spring* twist's +50 % is a multiplier when it exists. On rival ground the swing draws from morale under §14.11's daily cap.
+
 ### 10.5 Freshness
 
-Entries older than 7 days are flagged **stale**. Stale entries still count toward Case Files at half weight, and they sell for half price. Being away makes intel less valuable; it never deletes it.
+Entries older than 7 days are flagged **stale**. Stale entries still count toward Case Files at half weight, and they sell for half price. Being away makes intel less valuable; it never deletes it. **Slice 8:** the desk's row *{n} entries go stale tomorrow* and the entry's own line (*goes stale on Thursday* → *stale*); a Case File is exempt.
 
 ---
 
@@ -1027,8 +1069,8 @@ Being caught while **Hot or Wanted** means **arrest and jail** (§19.2).
 |---|---|---|
 | Clean | 0 | None |
 | **On file** (was *Known*; renamed 3 Oct 2026, slice 5: *Known* is the Reputation ladder's third rung and the two share the Me tab) | 1–2 | −10 % Iron from missions; some venues need +5 CHA |
-| Repeat Offender | 3–5 | −20 % Iron; clothing +15 %; police encounters +5 % |
-| Notorious | 6+ | −30 % Iron; barred from courts, universities and Alliance civic buildings; bail doubled; **−5 % personal vote appeal** |
+| Repeat Offender | 3–5 | −20 % Iron; **shops +15 %** (slice 8: every shop's prices, a line on the card); police encounters +5 % |
+| Notorious | 6+ | −30 % Iron; **shops +30 %** (slice 8); barred from courts, universities and Alliance civic buildings; bail doubled; **−5 % personal vote appeal** |
 
 **Slice 5 (pinned).** The player reads it as **your record**, counted in **marks**. "Iron from missions" is **tier 2 and up**: tier-1 actions are untouched, so a record is a tax on the road that earned it. *Repeat offender*'s "police encounters +5 %" applies to the run-in chance and the caught check both. *Notorious* bars every ticket at a `court` or `university` place and at the Alliance's HQs (*Not with your record*). The CHA venues, the clothing surcharge and the vote appeal wait for the Wardrobe (slice 8) and the national vote (slice 7). The record is private in the MVP: the Me tab, the desk and the mission ticket's Iron tag show it, nothing else.
 
@@ -1040,7 +1082,7 @@ Being caught while **Hot or Wanted** means **arrest and jail** (§19.2).
 - **Political Protection (Rank 4+):** once a month, your faction expunges one moderate point.
 - **Laws:** the Rehabilitation Act lowers every record by one level while it's in force.
 
-**Slice 5 builds** the fading of minor marks (one-point marks, from vandalism and disruption, expire **14 City Days after the last offence**; moderate and serious marks, from theft and sabotage, wait for the bribe) and the connections route (**30 Political Capital strikes any mark**, the oldest first, one tap on the Me tab's record row, stamp *Struck off*). Bribes are a Black Market service (slice 8); Political Protection is Rank 4's; the Act is slice 7's.
+**Slice 5 builds** the fading of minor marks (one-point marks, from vandalism and disruption, expire **14 City Days after the last offence**; moderate and serious marks, from theft and sabotage, wait for the bribe) and the connections route (**30 Political Capital strikes any mark**, the oldest first, one tap on the Me tab's record row, stamp *Struck off*). Political Protection is Rank 4's; the Act is slice 7's. **Slice 8 builds the bribe** as a row in **the back room** of a bar (§19.3; from Rank 3): *Have a mark struck off · {price} Iron*, **500 a mark at *On file*, 1,000 at *Repeat offender*, 2,000 at *Notorious*** (the level at the tap), the oldest mark first, one a day, the stamp *Struck off*; Julius Marr's Confidant favour halves it for a week (§17.2). "Depends on who controls the city" is not built.
 
 ---
 
@@ -1116,7 +1158,7 @@ Every action and mission ends in a **result modal that covers the map**. It neve
 | **Speech** | 1 (street) / 2 (big crowd) | Yes | Yes | Yes | — / 5 % | Speak at the market. A big crowd is a tier-2 mission with approaches |
 | **Propaganda** | 1 | Yes | Yes | Yes | — | Paste posters at the docks |
 | **Intelligence** | 1 (safe) / 2 (extended) | Mostly | No | No | — / 10 % | Safe surveillance is one tap; extended surveillance is a mission |
-| **Social** | 2 | Yes | No | Small | 0 % | Opera, lecture, senator's dinner (CHA-gated) |
+| **Social** (slice 8: *Mission · Society*, a **society call**) | 2 | Yes | No | Small (0.01 a point per Energy, from Neutral) | 0 % | The Opera's boxes, the Grand Hotel's dance, the Front's promenade, hotel, lido and casino; difficulty = the Charisma requirement, the door ten under it; +2 Favour with the town's patron; a Dossier entry one time in four (§13.6) |
 | **Disruption** | 2 | **No** | Yes | Yes (against rivals) | 30 % | Break up a rival meeting |
 | **Sabotage** | 2 | **No** | Yes | Yes | 25 % | Wreck a rival printing press |
 | **Vandalism** (slice 5) | 2 | **No** | Yes | Yes | 15 % | Tear down a rival's posters |
@@ -1186,15 +1228,18 @@ Nineteen kinds, which fits the "about 25" scenes budgeted above (`faction-hq` ne
 
 ### 13.6 Social missions
 
-| Mission | Requires | Energy | Rewards | Notes |
-|---|---|---|---|---|
-| Attend the opera | CHA 15 | 6 | +200 XP, INT XP, Dossier entry on a named figure | Weekly |
-| University lecture | CHA 12 | 5 | +150 XP, INT XP, unlocks a mission chain | |
-| Dinner with a senator | CHA 25, Rank 3 | 8 | +400 XP, +150 FXP, +500 IM, legislation intel, Favour | Weekly per senator |
-| Black-tie fundraiser | CHA 30, Rank 4 | 10 | +600 XP, +300 FXP, 10 PC, chance of a unique item | Once per term |
-| Diplomatic reception | CHA 35, Rank 5 | 12 | +1,000 XP, +500 FXP, cross-faction intel | Neutral ground |
+**Slice 8 (pinned; `docs/design/slice-8-life.md` §3.7).** A social mission is a **society call**: a tier-2 mission of type `social`, legal, **15 Energy**, **difficulty = its Charisma requirement**, three ways (Charisma · Charisma and Intelligence · *Legwork* on the best stat: the tradesmen's entrance), no run-in, no Heat; it pays the tier-2 rate (**XP 75 / 38 / 15, Iron 60 / 30 / 0, opinion 0.15 / 0.075 from Neutral**), **a Dossier entry on a Success one time in four** and **+2 Favour** (+1 on a Partial) with the patron of the town; once a day per place. **The door:** a call is barred below the requirement minus 10 (*Not dressed for it · needs Charisma 10 at the door*); a long shot from there. The v3.0 table (the opera at +200 XP, a senator's dinner at +400) was written against v3.0's rates and is replaced.
 
-Contextual dress checks still apply: meeting the threshold with accessories while wearing work clothes fails a formal event.
+| Place | Call | Needs Charisma |
+|---|---|---|
+| The Opera (Irongate) | *The interval in the boxes* | 15 |
+| The Grand Hotel (Irongate) | *The Thursday dance* | 20 |
+| The Promenade (Clearwater, The Front) | *The four o'clock promenade* | 10 |
+| The Pier Hotel (Clearwater) | *Tea on the terrace* | 15 |
+| The Lido (Clearwater) | *The lido's Sunday* | 12 |
+| The Casino (Clearwater) | *The tables after midnight* | 20 |
+
+The black-tie fundraiser (CHA 30, a unique item) and the diplomatic reception (CHA 35, cross-faction intel) wait for Tier IV content after the MVP. There is no separate dress check: the worn Charisma is the dress.
 
 ### 13.7 Party Directives (new)
 
@@ -1555,6 +1600,8 @@ You can't live or stand for office in a rival home city.
 
 **Slice 5 (the player reads it as *rival ground*; `docs/design/slice-5-risk.md` §11).** Rival home cities are **open from Level 10** with the train, with no further gate; the nation card says *Rival ground* and what it means, and the plate's kicker says it again. What differs there, every item a ticket tag before the tap: **+4 difficulty** on every check; **×1 only** (no ×3: every tap is its own risk); **a 15 % run-in on every tier-1 tap** (a Run or a loss drops the row to Partial); mission run-ins **×2**; Heat **×2**; the caught base **×2**; **Faction XP +50 %** on every action and mission (**+75 % while the city is in Unrest**), a line of its own; opinion drawn **from the home faction** (§14.2's rule for actions against a rival) and **capped at 2 points a day per city** (§14.11); no residence, no standing, no backing; **the orders cannot be done there**; **the home paper** is delivered, with a desk line; jobs are there and pointless. **The journey in always carries a card from the hostile deck**: *Papers, please* (a character's first time, always; *Show your papers* passes a Cool player with a clean record and writes down everyone else), *The informer*, *Your name is on a list* (whenever Heat is 50 or more at boarding) and *A friendly conductor*, at difficulty 14, never failing, with four new effects (Heat ±, the day flags **Watched** +10 % and **Warned** −10 % on run-ins in that city until the boundary, Party XP, XP); the way out is an ordinary journey. **The cells there**: the sentence ×1.5, bail ×2, and release is **deportation**: put on the train to the residence city (no fare, no card; Irongate for a capital resident) and **barred from that city for 24 hours**. The infirmary is as anywhere. **Not in slice 5:** plain clothes, forged papers, safehouses, bodyguards, night travel, recognition by fame and office, the Secret Police, and the opportunity encounters (the disillusioned local, the leaked document), which arrive with the Wardrobe, the Dossier and later slices.
 
+**Slice 8 (pinned; `docs/design/slice-8-life.md` §3.6).** **Recognition** is added to every run-in roll on rival ground: worn **Charisma 20–29 +5, 30 and over +10, doubled at night** (20:00–06:00 UTC); **the highest office held: councillor +5, Governor or Chair +10, deputy or President +15**; **+1 per 10 Legacy** (at most +5). **Plain clothes (worn Charisma under 10) remove the Charisma part and halve the office part**; nothing removes the Legacy part. The plate's kicker reads *Recognised here* and every ticket carries the tag; the journey screen to rival ground offers *Change into plain clothes*, one tap, in force at the station. **Papers:** *Show your papers* at a checkpoint and *Talk your way out* against the city police read the Papers slot: the party card as slice 5; **forged papers** +10 % on both, and a Failure with them in hand writes the name down with +10 Heat (nothing is confiscated); **a press pass** passes a checkpoint as the party card does. A **recognised** visitor (recognition above 0) is counted for the home faction as *1 from another party*, never named (§16.2; Appendix C #63). Safehouses, bodyguards, night travel, the Secret Police and the opportunity encounters stay later.
+
 ### 14.13 Quarters: how a city is laid out on the map (new, 1 Oct 2026)
 
 A city has to grow with the player and feel bigger than six pins. **The stitched model (the user's choice, 1 Oct 2026):** every city is **one big painted bird's-eye picture** (8,640 px; the capital 11,520; the nation 9,216), day and night, served as zoomable tiles, and a quarter is a **frame** on that picture (a rectangle in fractions of it), not an image of its own. Design: `docs/design/city-quarters.md` (the rule) and `docs/design/maps-v3-integration.md` (the pictures, the frames, the pins); the art brief `docs/art/map-brief.md` is the retired pen-and-ink plan.
@@ -1760,7 +1807,7 @@ The factions are fictional and stylised. They're game constructs, not endorsemen
 **Slice 6 (pinned; `docs/design/slice-6-together.md` §6–§9; the screens in `slice-6-screens.md`).** The **Faction tab** is the HQ: Orders (today's three and the fixture), Events (the board), Members, Scoreboard (§14.5) and Chat.
 
 - **Chat:** two channels in the MVP, ***Party*** (faction-wide) and ***{City} branch***, one for the faction's home city and one for the capital (three channels per faction; the member reads the branch of the city they stand in, or their residence city's on rival ground, and may switch; settled 3 Oct 2026); the officers' channel arrives with the Chair (**slice 7: *Officers***, a chip for Rank 4 and above, the Chair's room, the same rules; and a ***Clearwater branch*** chip, since Clearwater is a branch for every faction with a daily fixture: five chips at most). Every member from **Rank 1**. A message is plain text of **at most 280 characters**, no links rendered, no images; **the last 200 messages or 7 days** per channel are kept, fifty loaded at a time; **one message every 3 seconds, thirty in ten minutes**, an identical repeat within a minute refused. **System lines** in the city channel carry the branch's news with a button where one applies: an event called, its result, a mate taken in (*Post bail*), admitted (*Visit*), a seat won, a hero named, a nudge. Over WebSockets while the tab is open; nothing in the game depends on being connected. **Moderation in slice 6:** mute a member (from their profile; hides their lines for you), report a line (a record with twenty lines of context; nothing automatic), the sign-up name rule, the limits above; chat can be hidden from the Me tab. **Slice 9:** moderators, timeouts and bans, word filters, the audit, the policy itself (Appendix C #7).
-- **Presence:** `presence { locationId, seenAt }` (the character's `cityId` is the city); *here now* is **seen within ten minutes**. A place's sheet reads *Here now: you, {two names} and n more · k from other parties*: **your own faction by name** (tap for the public profile: name, faction and rank, Level, residence, member since, heroes, Reputation where you both stand; never the record, Heat, Health, Iron or stats), **the other two factions as one count** (the GDD's *strangers*: there are no neutral players). **On rival ground a visitor is invisible to everyone but their own faction** (§14.12: a new player walks through Duskwall unnoticed; recognition by fame is later). The Members list shows faction mates' city and state (*in the cells at Harbour Police · 24 min*, *in the infirmary*, *on the train to Irongate*, *in Duskwall · rival ground*). A journey shows *You and n others on this train* when the count is cheap.
+- **Presence:** `presence { locationId, seenAt }` (the character's `cityId` is the city); *here now* is **seen within ten minutes**. A place's sheet reads *Here now: you, {two names} and n more · k from other parties*: **your own faction by name** (tap for the public profile: name, faction and rank, Level, residence, member since, heroes, Reputation where you both stand; never the record, Heat, Health, Iron or stats), **the other two factions as one count** (the GDD's *strangers*: there are no neutral players). **On rival ground a visitor is invisible to everyone but their own faction** (§14.12: a new player walks through Duskwall unnoticed); **from slice 8 a recognised visitor** (recognition above 0, §14.12: a good coat, an office or a Legacy) **is counted as *1 from another party*, never named**. The Members list shows faction mates' city and state (*in the cells at Harbour Police · 24 min*, *in the infirmary*, *on the train to Irongate*, *in Duskwall · rival ground*). A journey shows *You and n others on this train* when the count is cheap.
 - **Favours:** **posting bail** (§19.2): any member of the prisoner's faction, from anywhere, pays **the prisoner's own bail figure**; release at once; the payer +10 FXP and a line in the paper; once per sentence; nothing transfers between accounts. **A visit** (§19.1): **3 Energy** from anywhere but rival ground (not held, not in transit), **+10 Health and five minutes off** for the patient, **once per visitor per stay, three count**; the visitor +10 FXP. **The nudge:** one tap, by any member signed up to an open event with a free place, asks a mate not on it to take its first open role they may hold, or a pair of hands (a system line addressed to them; once per pair per event); no reservation.
 
 ### 16.3 Campaign Events (new)
@@ -1779,7 +1826,7 @@ This is co-op politics: short, scheduled events that faction members fill togeth
 | **Poster Night** (slice 6) | Printer INT 10 · Paster AGI 10 · Paster STR 10 | 0.8 | 10 · 12 | propaganda | Three roles; the event for a branch of three, and Agility's first |
 | **Grand Rally** (Vanguard) | Speaker CHA+INT 15 · Stand-builder STR 10 · 2 Ushers STR 10 (*Stewards* until 3 Oct 2026: the role clashed with the Vanguard's Rank 2 title) · Lookout AGI 10 | 2.0 | 14 · 16 | speech | The movement fills the main square by the thousand: a show of numbers and discipline. **+5 Heat** for every member participant when the district is held by a rival |
 | **General Strike** (Collective) | Shop Steward CHA+INT 15 · Picket Captain STR 15 · Printer INT 10 · Runner AGI 10 | 2.0 | 14 · 16 | speech | **Double Issue momentum** (the "suspends factory jobs" of the first draft went with the shift, §9) |
-| **Headline Story** (Alliance) | Reporter INT 15 · Editor INT 10 · Source-handler AGI 10 · Lawyer INT 10 | 2.0, **against the leading rival, fixed at the call** (drawn from it, half to the Alliance and half to Neutral) | 14 · 16 | propaganda | **No Case File in slice 6**; from slice 8 a Case File on an NPC of the target adds +50 % and names them |
+| **Headline Story** (Alliance) | Reporter INT 15 · Editor INT 10 · Source-handler AGI 10 · Lawyer INT 10 | 2.0, **against the leading rival, fixed at the call** (drawn from it, half to the Alliance and half to Neutral) | 14 · 16 | propaganda | **No Case File in slice 6**; from slice 8 the caller may **attach a Case File** on a name of the target party (spent at the call; the name burned for 14 days as an exposé's would be): **+50 % on the swing** and the name in the result's headline (`docs/design/slice-8-life.md` §4.3) |
 | **Town Hall** (slice 7, pinned; `docs/design/slice-7-nation.md` §10.4) | Moderator INT 10 · 2 Speakers CHA+INT 15 · Press INT 10 | 1.2 | 12 · 14 | speech | Venue kinds `square`, `university`, `court`, `theatre`, `hotel`, `library`, `faction-hq` (the venues per place: `slice-7-nation.md` §23.6; no signature event in Clearwater in slice 7). When a petition to dissolve the council is open in the city at the start it adds townspeople's **signatures: Triumph 3 · Success 2 · Mixed 1**; otherwise an ordinary event |
 
 - Each player can sign up for **3 events per City Day**.
@@ -1826,6 +1873,22 @@ The father's last request (§7.2) sets a **personal storyline that runs for mont
 
 **Chapter 2 of *Settle His Debts* (slice 5): *The riverside house*.** Requirement: **Level 6**, plus the seven days (about day 8 for the reference recruit). **Difficulty 14, 15 Energy**; Success **300 XP / 80 FXP / 150 Iron**, Partial **150 / 40 / 75**, Failure **50 / 0 / 0**; keepsake *A page of his ledger* (`keep.ledger-page`) on every outcome; the Letters row reads *From the marker's other side*. The choice (promise him Friday, or shut the door) is a flag; the check has three ways, and **the quiet way (Agility) adds +6 Heat on any outcome**, so a chapter's `approaches[]` may carry `heat`: for most players the first Heat they ever see, in a story that says what it is. No encounter (the chapter is at home). Script: `docs/design/slice-5-risk.md` §13. Chapter 3, *The collector*, requires Rank 3 and is written with the slice that follows.
 
+**Chapters 4–12 of *Finish His Work* (slice 8; the Ambition is complete).** Each needs its rung of the ladder plus the seven days; difficulties climb the tier-3 band; every chapter's third outcome is a setback and the chapter completes; chapters set in the capital carry no run-in either. Scripts: `docs/design/slice-8-life.md` §16.1.
+
+| Ch | Title | Requirement | Difficulty · Energy | Success / Partial / Failure (XP / FXP / Iron) | Keepsake |
+|---|---|---|---|---|---|
+| 4 | *The count* | a completed council term | 18 · 20 | 400 / 100 / 250 · 200 / 50 / 125 · 60 / 0 / 0 | *His count sheet* |
+| 5 | *His seat* | Rank 4 | 18 · 20 | 400 / 100 / 250 · half · 60 / 0 / 0 | *The minute book* |
+| 6 | *The hall* | voted in a Chair election | 20 · 20 | 450 / 120 / 300 · half · 70 / 0 / 0 | *His ballot stub* |
+| 7 | *The cutting* | a Case File made | 20 · 20 | 450 / 120 / 300 · half · 70 / 0 / 0; Favour +5 with Crane | *The cutting* |
+| 8 | *The rule* | a Governor's term, or three council terms | 22 · 25 | 500 / 140 / 350 · half · 80 / 0 / 0 | *His rule, in draft* |
+| 9 | *The list* | Rank 5 | 22 · 25 | 500 / 140 / 350 · half · 80 / 0 / 0 | *The letter from the list* |
+| 10 | *The republic votes* | voted in a national election | 24 · 25 | 600 / 160 / 400 · half · 90 / 0 / 0 | *His polling card* |
+| 11 | *Twenty-five marks* | on the party's list for Parliament | 24 · 25 | 600 / 160 / 400 · half · 90 / 0 / 0 | *The list's receipt* |
+| 12 | *Under his name* | a term as a deputy begun | 26 · 30 | 1,000 / 300 / 1,000 · 500 / 150 / 500 · 150 / 0 / 0 | ***His rosette*** (wearable, CHA 5); **the Ambition completed: Legacy 30** |
+
+**Chapter 2 of *Clear His Name* (slice 8): *The night foreman*** (Level 6; difficulty 14, 15 Energy; 300 / 80 / 150; keepsake *The foreman's name*; the Agility way carries Heat +6; it hands the player a Dossier entry on Konrad Brandauer, a name with no party in Coalport; chapter 3, *The archive*, needs a Case File). **Chapter 3 of *Settle His Debts* (slice 8): *The collector*** (Rank 3; difficulty 16, 15 Energy; 350 / 90 / 200; keepsake *The collector's card*; one choice costs 100 Iron; chapter 4, *The parcel*, needs Level 16). Scripts: `docs/design/slice-8-life.md` §16.2.
+
 **Chapter 3 of *Finish His Work* (slice 7): *The deposit*.** Requirement: **Rank 3**, plus the seven days (about day 15 for the reference recruit, around the first candidacy). **Difficulty 16, 15 Energy**; Success **350 XP / 90 FXP / 200 Iron**, Partial **175 / 45 / 100**, Failure **60 / 0 / 0**; keepsake *His deposit receipt* (`keep.deposit-receipt`) on every outcome; the Letters row reads *From the tin on the shelf*. The choice (his ten marks or your own) is a flag; three ways (CHA+INT, INT, best); no encounter. Script: `docs/design/slice-7-nation.md` §13. Chapter 4, *The count*, requires a completed council term and is written with slice 8.
 
 ### 17.2 Patronage (new)
@@ -1851,6 +1914,8 @@ Each city has a powerful NPC patron who can be cultivated **over real days**. Th
 
 You can court a patron who leans toward a rival faction. It's slower (Favour gains halved), but it opens cross-faction intel and missions.
 
+**Slice 8 (pinned; `docs/design/slice-8-life.md` §5). Two patrons in the MVP: Edith Crane** (Herald House, Irongate) **and Julius Marr** (the Pier Hotel, Clearwater), both neutral and both in a battleground, so every faction courts them on the same terms (the halved gains are not exercised; Voss, Draganov and Reinholt follow after the MVP, §25). **Favour:** a **Request done +6** (a letter in the paper's Letters row, an order-shaped matcher; one arrives every second boundary after the first visit, two may be held, each expires at its fourth boundary; six per patron in rotation), **a gift +2** (200 Iron at the patron's place, one a day), **a society call in the patron's town +2** (+1 on a Partial), **a chapter that names the patron +5**; a Legacy perk makes every gain ×1.1. A devoted player gains 5–7 a day: Acquaintance in two or three days of attention, Associate in about a week, Confidant in two, Protégé in three. **The perks, pinned:** Acquaintance: **gossip**, a free Dossier entry in every Monday's paper; Associate: **an introduction** (Crane: the mission *The morgue file* at Herald House; Marr: the call *The late table* at the Casino) and **informants** in the patron's town (§10.4); Confidant: **a favour once a week** (Crane, 25 PC: *a headline planted*, +50 momentum for your party on one Issue of one city; Marr, 20 PC: *the bank's discretion*, Heat to 0 now and the back room's bribe at half price for 7 days); Protégé: **an endorsement** (+2 to your total in every home-council count and +1 point of score in a battleground count while Protégé; the "+1 % national" waits) and **the patron's piece** (Crane's pen: CHA 8, a Dossier entry now and then; Marr's cigarette case: CHA 8, better odds talking your way out), Legacy +5. Away: Favour stands, Requests expire, informants keep reporting.
+
 ### 17.3 Legacy (new)
 
 **Legacy** is your permanent public political record, shown on your profile. It replaces a generic achievement system.
@@ -1863,19 +1928,29 @@ You can court a patron who leans toward a rival faction. It's slower (Favour gai
 | Pledged law passed (§15.5) | 10 |
 | Term as Minister / Speaker / Chair | 10 |
 | Term as President (slice 7: one office at the top; the Chancellor row is gone) | 40 |
+| Term as Governor or Mayor (slice 8) | 5 |
+| Term as a deputy (slice 8) | 5 |
 | Ambition completed | 30 |
 | Survived a no-confidence vote | 10 |
+| An exposé printed (slice 8) | 2 |
+| Protégé of a patron (slice 8) | 5 |
 | Season Champion faction (member) | 5 |
+| A season award (slice 8) | 5 |
 
-**Legacy perks** are bought with Legacy points. They're permanent and deliberately small:
-- +5 % FXP
-- +1 Dossier slot, twice
-- Rested cap +50
-- −1 Energy on Canvassing
-- +1 % personal vote appeal, up to 3
-- An extra day's pay once a week
-- Patron Favour +10 %
-- Heat cools +10 %
+**Legacy perks** are bought with Legacy points. They're permanent and deliberately small. **Slice 8 (pinned):** the record's total is permanent and public (the profile's *Legacy 23*); perks spend a **balance kept beside it** (*23 · 8 to spend*), one tap each on the Me tab. The player reads them as *lasting perks*:
+
+| Perk | Cost | Effect |
+|---|---|---|
+| A fifth more from the party | 15 | +5 % FXP on every action and mission |
+| A bigger Dossier (twice) | 5 each | +1 Dossier slot |
+| A better night's sleep | 10 | Rested cap +50 |
+| A shorter walk | 15 | −1 Energy on canvassing |
+| A name they know (three times) | 10 each | +1 % personal vote appeal (pinned as +1 to the ward vote per level in a home count) |
+| A bonus at the end of the week | 10 | an extra day's pay at the Monday boundary |
+| A friend of friends | 10 | Favour gains ×1.1 |
+| A quiet word at the station | 10 | Heat cools +10 % |
+
+The reference player has about 15 Legacy by day 30: one perk, chosen. Legacy is never spent on anything else and cannot be bought.
 
 ### 17.4 A home of your own (new)
 
@@ -1891,6 +1966,8 @@ Where you sleep is a long-term goal, a status symbol and an Iron sink. It gives 
 - The weekly cost is prepaid, like bodyguard contracts (§12.1). If it runs out you drop back to a rented room; **nothing is taken away**, and your home waits for you to pay again.
 - A home belongs to one city. Moving city means renting again, so moving is a real decision.
 - The map shows your home as a small marker, so you can see where your faction mates live.
+
+**Slice 8 (pinned; `docs/design/slice-8-life.md` §6).** **The rented room** gives **+10 Rested at every boundary** (banked up to the cap). **The flat:** bought from the residence card in the residence city from **Level 10**, **2,500 Iron** with the first week paid, then **150 a week prepaid** (*Pay a week · 150* / *Pay four weeks · 600*); it gives **+25 Rested at every boundary**, **Rested cap +50** while paid (the larger of a flat and a room, never both), **a third outfit, *Evening*** (§21.1), and **+2 worn Charisma while in its city**. **When the rent runs out the flat waits:** the bonuses stop, the room's +10 resumes, the *Evening* set is remembered (its items still wearable one by one), and a week's rent restores everything; no arrears are ever owed, however long the absence. **Moving residence leaves the flat where it is**, waiting (*the Rested cap where you live*). **One flat per player in the MVP**; the townhouse, the villa, a second flat and the map marker follow after the MVP (§25).
 
 ---
 
@@ -1915,18 +1992,19 @@ Where you sleep is a long-term goal, a status symbol and an Iron sink. It gives 
 | Sink | Cost | Kind |
 |---|---|---|
 | Meals and lodging (buffs) | 50–1,500 | Acceleration |
-| Clothing and wardrobe (CHA) | 200–50,000 | Access and status |
-| Equipment and crafting | Varies by tier | Power |
+| Clothing and wardrobe (CHA) | 200–50,000 (slice 8, pinned: the standard coat 200, a good coat 800, a tailor's suit 4,500–5,500, the three-piece suit 20,000; a hat 400, the badge 150, the watch 2,500; **shops buy back at a tenth**; +15 % / +30 % for a *Repeat offender* / *Notorious* record) | Access and status |
+| Equipment and crafting | Varies by tier (slice 8: paste and brush 300, the press pass 500, the camera 1,200, wire cutters 400, forged papers 600; **crafting is post-MVP**) | Power |
 | Bodyguard contracts | 350–5,600 per week | Safety |
 | Bail (slice 5: **100 IM + 50 a mark**, ×2 Notorious, ×2 on rival ground, ×½ for Alliance members) and the infirmary's *walk out well* (**100 IM**) | 100–1,600 | Recovery |
 | Bail posted for a faction mate (slice 6: the prisoner's own figure, paid by the payer from anywhere; +10 FXP; nothing transfers) | 100–1,600 | A favour |
 | Paying off a run-in (slice 5: 50–300 IM by opponent, §20.2) | 50–300 | Recovery |
-| Bribes to clear a record (slice 8, the Black Market) | 500–2,000 per point | Recovery |
+| Bribes to clear a record (slice 8, **the back room** of a bar, from Rank 3) | **500 / 1,000 / 2,000 a mark** by the record's level; half price for a week on Marr's favour | Recovery |
 | Train and car tickets, a car of your own | 20–150 IM per journey (third class **20**, slice 4; never below 5 under the Tram Subsidy or the Tram Fare Hike); 5,000 IM for a car | Mobility |
 | Moving residence (to a battleground district, or home again) | **500 IM**, seven days between moves; residence itself has no rent | Mobility |
 | A room in Irongate (slice 4) or in Clearwater (slice 7) | **100 IM for 7 days**, Rested cap +50; half price under the Evictions Issue or *Rents in the Rows* | Acceleration |
-| A home (§17.4): flat, townhouse, villa | 2,500–150,000 IM, plus a weekly cost | Status and comfort |
-| Patron gifts | 100–5,000 | Relationship |
+| A home (§17.4): flat, townhouse, villa | 2,500–150,000 IM, plus a weekly cost (slice 8: **the flat, 2,500 + 150 a week**; the rest post-MVP) | Status and comfort |
+| Patron gifts | 100–5,000 (slice 8: **200 Iron, +2 Favour, one a day per patron**) | Relationship |
+| Dossier sales (income, not a sink; §18.2's *Other*) | a file 200, a fresh entry 50, a stale one 25 | — |
 | Faction store and Black Market | Varies | Power and access |
 
 ### 18.4 Later (v1.2)
@@ -1973,7 +2051,7 @@ You're arrested when caught while Hot or Wanted, or on an escalated record.
 |---|---|---|---|
 | Buy a Round | 2 | In Good Spirits: +10 % XP on the next 3 missions | 3 a day |
 | Bribe the Barman | 4 | City report: influence, battlegrounds, rival events scheduled | 1 a day |
-| Black Market Contact | 6 | 1 random Tier II–III item | 1 a day |
+| Black Market Contact (slice 8: **the back room**, a shop card on bars that have one, from Rank 3: forged papers, wire cutters, the bribe that clears a mark, §11.4; no random item) | — | — | — |
 | Faction Recruitment | 5 | Recruit an NPC to your faction (FXP, a tiny influence gain) | Rank 2+ |
 | Overhear Conversation | 3 | Hints on the week's Issues; 10 % chance of a free Dossier entry | 1 a day |
 | Stimulant | 0 | +10 HP. Taking 4+ in 24 h is an overdose: −20 % XP for 2 h. 6+ puts you in hospital | 3 safe a day |
@@ -2031,6 +2109,8 @@ Combat is a **hazard**, not the core of the game. It triggers from encounters an
 
 Armour is also clothing, so its CHA (§8.2) counts too. The best armour for a fight is rarely the best outfit for a dinner.
 
+**Slice 8 (pinned): no weapons as items.** This is a political contest: **there is no weapon slot and no weapon in the catalogue** (Appendix C #74); the weapon column above is not built, and the two weapon pictures in the art folder are not catalogued. Power is **STR × 1.5 + the worn coat's armour ÷ 2** (Tier I 4 · II 8 · III 12 · IV 16 · V 20: +2 / +4 / +6 / +8 / +10), and Health lost on a win is reduced by the coat's armour value. A Tier II coat lifts the reference recruit's Fight against an enforcer from 29 % to 41 %: a coat with some weight to it, as the §8.4 reason line says.
+
 **Example:** a player with STR 14, a truncheon (+4) and a Tier I coat (armour 4) has power 21 + 4 + 2 = **27**. Against City Police (30) that's 50 − 9 = **41 %** to fight, or with AGI 17 against 12, **85 %** to flee. Auto-resolve would pick Flee.
 
 **Slice 5 (pinned; the player reads an encounter as *a run-in*; `docs/design/slice-5-risk.md` §10).** **When:** rolled once after a mission's check and once per tier-1 tap on rival ground: *run-in % = the type's base × 2 on rival ground + the Heat state's bonus (Noticed +5, Hot +15, Wanted +15) + 5 for a Repeat offender + 10 if Watched today − 10 if Warned*, 0–90. **Who:** from the mission's pool, own-faction opponents dropped, **the city police added from *Noticed* and picked half the time**; power **×1.1 on a tier-2 mission, +4 on rival ground**. **The order:** the check's result is **held**; the run-in decides whether it is paid: **Fight won, Talk your way out or Pay them off pay it as rolled; Run keeps only Failure's XP** (you got away; you dropped it); **a loss is the infirmary** (§19.1) with Failure's XP, **or the cells against the police** (§19.2). On rival ground's tier-1 taps a Run or a loss drops the row to Partial. **The rows in plain words:** *Fight · {odds word} · Strength* · *Run · Agility* · *Talk your way out · Charisma* · *Pay them off · 60 Iron · nearly always works* (*Won't be bought*, disabled, for the branch inspector), and a text row ***Leave it to luck*** that takes the best free odds; **a run-in left unanswered (the tab closed) is resolved by luck on the first read after five minutes, or at the day's end if sooner, as of that time** (the player's own choice wins while it is pending; ADR 0032) and the result modal waits. A failed Run (extra damage, half a win's), Talk or Pay (Iron gone, +10 Heat) rolls the fight at once in the same transaction. **XP:** +20 for a win, +10 for getting away, 0 for paying; **a win at full Health adds +10 % to the mission's XP and Party XP** (*Won at full strength*). **Power** in slice 5 is STR × 1.5 + armour ÷ 2, every clothing item's armour being its tier's value (**Tier I = 4**, so +2); weapons, utility items and bodyguards are later. Health lost on a win is their power × 0.8 (±20 %) − 4, at least 0, and never takes Health below 1 (a win never admits you); a loss to the police sets Health to 30, as an admission does, so nobody sits in a cell at 0 (settled 3 Oct 2026, `slice-5-risk.md` §23). Each opponent has six content lines (appears, won, lost, ran, talked, paid); the Secret Police and named inspectors are later. The reason line for a fight lost is §8.4's `power` line.
@@ -2041,27 +2121,32 @@ Armour is also clothing, so its CHA (§8.2) counts too. The best armour for a fi
 
 ### 21.1 Slots
 
-| Slot | Mechanical bonus | CHA |
-|---|---|---|
-| Weapon | STR or flat damage | 0–3 (concealed weapons are 0) |
-| Armour / clothing | Damage reduction | 5–50 (the main CHA source) |
-| Utility | Mission success | 0–8 |
-| Accessory | FXP gain or Energy discount | 2–15 |
-| Document | INT; special dialogue | 0–5 |
+**Four slots from slice 8** (`docs/design/slice-8-life.md` §3; the research behind the screen in `docs/design/inventory-research.md`). **No weapon slot** (§20.3; Appendix C #74). The player reads the Wardrobe's words.
+
+| Slot | The player reads | Mechanical bonus | CHA |
+|---|---|---|---|
+| Clothing | **Coat** | armour by tier (§20.3); a party coat +5 % FXP | 2–50 (the main CHA source) |
+| Accessory | **On you** | FXP (the badge); a patron's piece's effect | 2–10 |
+| Document | **Papers** | what *Show your papers* shows; +10 % at a checkpoint (forged) or watching and listening (the press pass) | 0 |
+| Utility | **Tools** | +5 to +10 % on one kind of work (§8.4) | 0 |
+
+**Effects** are a closed list of three bounded kinds (`chancePct` 5–10 on one action or mission type, a checkpoint, a bluff or the exposé; `fxpPct` 5; `dossierChance` 5–15); no item touches Energy, Iron, Rested or opinion. **Outfits:** two named sets from the start, ***Town*** and ***Plain clothes***, and ***Evening*** with a paid flat (§17.4); **one tap changes the whole set**; saving is explicit (*Keep this as Town*); never locked except in the cells, the infirmary and on a train (the journey to rival ground offers *Change into plain clothes*, in force at the station). **Shops are cards on places** (the clothes stall at a `market`, the party store at an HQ, the tailor at a `hotel`, the press, the back room of a `bar` from Rank 3), one tap to buy (a confirm over 1,000 Iron); shops buy back at a tenth after a confirm; **keepsakes and the kit are never sold**. Worn CHA includes the paid flat's +2 in its city (§8.2). Dressing shows no modal: the card reads *Wearing* and the Charisma figure changes.
 
 ### 21.2 Tiers
 
-| Tier | Name | Unlock | Armour CHA | Examples (Vanguard / Collective / Alliance) |
-|---|---|---|---|---|
-| I | Improvised | Level 1 | 2–5 | Work jacket / mill coat / worn overcoat (§21.4) |
-| II | Standard | Level 6 | 8–15 | Steward's jacket / convenor's coat / campaign suit |
-| III | Quality | Level 16 | 18–28 | Prefect's overcoat / delegate's greatcoat / barrister's vest |
-| IV | Elite | Level 31 | 30–40 | Intendant's dress suit / Congress regalia / senator's suit |
-| V | Legendary | Level 51, Rank 6 | 42–50 | Keeper's regalia / Chairman's regalia / Prime Minister's frock coat |
+The tier is said as what it is (**work clothes · a good coat · a tailor's suit · a society wardrobe**); the Roman numeral is the design's.
+
+| Tier | Said as | Unlock | Coat's CHA | Armour | Slice-8 examples (Vanguard / Collective / Alliance / neutral) |
+|---|---|---|---|---|---|
+| I | work clothes | Level 1 | 2–5 | 4 | Work jacket / mill coat / worn overcoat (§21.4); the standard coat |
+| II | a good coat | Level 6 | 10–15 | 8 | Steward's jacket / convenor's coat / campaign suit |
+| III | a tailor's suit | Level 16 | 20–28 | 12 | — / — / correspondent's suit / the dress greatcoat, evening dress |
+| IV | a society wardrobe | Level 31 | 30–40 | 16 | the tailored three-piece suit |
+| V | — | Level 51, Rank 6 | 42–50 | 20 | post-MVP: Keeper's regalia / Chairman's regalia / the frock coat |
 
 ### 21.3 Where equipment comes from
 
-Mission drops, faction stores, clothing shops, the Black Market (with a record check), crafting (combine two items of the same type for a 40 % chance of the next tier), Ambition and patron rewards, and the Tier V quest chains.
+Faction stores, clothing shops, the press, the back room (the record raises its prices, §11.3), Ambition and patron rewards (keepsakes, some wearable). **Post-MVP:** mission drops, crafting (combine two items of the same type for a 40 % chance of the next tier), the Tier V quest chains, player trading (§18.4).
 
 ### 21.4 The starting catalogue (slice 2)
 
@@ -2082,6 +2167,8 @@ Slice 2 uses two slots, **clothing** and **document**; the others open with the 
 
 Art and per-faction kit: `docs/design/slice-2-onboarding.md` §4.
 
+**Slice 8 adds eighteen items** (the full table with prices, effects, shops and art: `docs/design/slice-8-life.md` §3.9): the standard coat (I, 5); the three party coats (II, 12, +5 % FXP); the dress greatcoat (III, 22), evening dress (III, 24) and the correspondent's suit (III, 25, Alliance); the three-piece suit (IV, 38); the party badge (2, +5 % FXP), a good hat (6), the gold wristwatch (10); Edith Crane's pen and Julius Marr's cigarette case (8 each, Protégé keepsakes, wearable); *His rosette* (5, chapter 12); forged papers and the press pass (Papers); paste and brush, the press camera and wire cutters (Tools). **And eleven keepsakes** (no slot, `item.document-folder`): *His count sheet*, *The minute book*, *His ballot stub*, *The cutting*, *His rule, in draft*, *The letter from the list*, *His polling card*, *The list's receipt* (chapters 4–11), *The foreman's name* (*Clear His Name* 2), *The collector's card* (*Settle His Debts* 3). **Not catalogued:** the revolver and the truncheon (§20.3).
+
 ---
 
 ## 22. Political Seasons (new)
@@ -2094,6 +2181,8 @@ A **Political Season** is one in-game year: 12 weeks, ending in the Season Elect
 - **Awards:** top ledger contributors per bracket, most City Hero titles, the best orator (event outcomes), the spymaster (Case Files used).
 - **The Hall of Fame** records every President, Champion faction and major award.
 
+**Slice 8 (pinned; `docs/design/slice-8-life.md` §9).** **A season is three terms** from the term epoch (`seasonDay = (dayKey − TERM_EPOCH) mod 84`); **the Season Election is the third term's national election** (the count into season day 83, confirmed into the new season's day 0); no new phase, no clock time. **The season's score** per faction = the sum over the season's boundaries of **the party's control share** (its National Control ÷ the three parties', §14.8) **+ 100 per national election won** (the 10 above is raised: at 10 an election was a third of one day's lead; at 100 a win is worth about a month of a four-point lead; Appendix C #81). **The Champion** is the top score at the confirmation; every member in the faction for 14 days gets **Legacy +5** and the title *Champion of Season n* (the cosmetic). **Four awards**, Legacy +5 and a title each: *Top of the ledger* (the most opinion moved, one per Level bracket), *Most titles* (Hero titles), *Best orator* (Triumphs as a Speaker or Organiser), *The spymaster* (Case Files used); ties to the earlier. **The Hall of Fame** is a `seasons` document per season (the Champion, the scores, the three Presidents, the four award holders) with a page off Parliament and the republic sheet. The republic sheet carries a season card (the day of 84, the scores, the election's date); the paper gives a week's notice and a front page on day 0.
+
 ### 22.2 Rollover (the first day of the new season)
 
 | Resets | Stays |
@@ -2103,6 +2192,8 @@ A **Political Season** is one in-game year: 12 weeks, ending in the Season Elect
 | Heat drops to 0 | Criminal Record (minor points keep expiring on their own) |
 | Season Standing and the season track | Ambition progress |
 | The Issue deck is refreshed | Offices won at the Season Election (they take office normally) |
+
+**Slice 8 (pinned):** the rollover is the new season's day-0 boundary job after the national seating: every city's and district's opinion moves 50 % of the way to its baseline with Neutral the counterparty (a home city never below 50); **every law and council rule in force ends** (the councils' next order papers start the rules again); Heat to 0; the deck reshuffled for the Monday's draw; the season's counters cleared. **Stays, in full:** Level, Rank, stats, items, Iron, the home and its rent, Political Capital, Favour, Legacy, the Dossier, the record, Ambition progress, seniority, residence, offices won. The player reads *the map settled halfway; your coat, your flat and your Dossier are where you left them*.
 
 ### 22.3 Season Twists
 
@@ -2114,11 +2205,15 @@ Each season adds **one rule change** to the setting, announced a week in advance
 - *The Great Exhibition*: social missions and CHA matter twice as much; a new patron arrives.
 - *The Upset*: for this season only, one home city loses its 50 % floor and can genuinely be contested (§14.11). Rare, and never the same city twice in a row.
 
+**Slice 8: no twist in season 1** (the paper says *No twist this season* once; Appendix C #80). The *Free Press Spring* multiplier on exposés is wired as the swing's multiplier so that the twist is content when it comes.
+
 ### 22.4 Season track
 
 **Season Standing** points come from Directives, events, votes cast, Issues and offices held.
 - **Free track** (30 tiers): Iron, outfits, patron introductions, Rested refills, a season title.
 - **Premium track:** **cosmetic only** (outfit styles, profile frames, headline typefaces).
+
+**Slice 8: the track is not built** (Appendix C #80); season 1 has the election, the Champion, the awards and the rollover.
 
 ---
 
@@ -2206,17 +2301,19 @@ See §3.6 for the timeline. In more detail:
 | Hostile ground (rival home cities) | ✔ (4 journey events, 3 encounters) | Full decks, missions only possible there | |
 | The office ladder | ✔ | | |
 | Mission tiers, Local Standing, result modal | ✔ | | |
-| Homes | Rented room and flat | Townhouse, villa | |
+| Homes | Rented room and flat (slice 8; the rent that waits) | Townhouse, villa, a second flat, the map marker | |
+| The Wardrobe (slice 8) | ✔ (four slots, no weapon; two outfits and *Evening*; eighteen items, Tiers I–IV; five shop kinds) | Tier V, crafting | Player trading (v1.2) |
 | Timed travel + journey events | ✔ (train, night train; 5 events) | Car, first class, full event deck | |
 | National elections, Parliament, the President (slice 7) | ✔ | | |
 | Ministers | | ✔ | Treasury (v1.2) |
 | NPC fill | ✔ | | |
 | Faction chat and presence | ✔ | | Forums (v1.1) |
 | Campaign Events | ✔ (Rally, Canvass Drive, Poster Night, the three signature events, the secretary's daily fixture; **the Town Hall and the Chair's events, slice 7**) | | Counter-Demonstrations (v1.1) |
-| Patronage | ✔ (2 patrons) | All 5 | New patrons each season |
-| Legacy | ✔ (record only) | Perks | |
+| Patronage | ✔ (2 patrons: Crane and Marr; Requests, gifts, the four tiers' perks) | All 5 | New patrons each season |
+| Legacy | ✔ (the record **and the eight perks**, slice 8) | | |
+| Dossier uses | ✔ (the exposé, the sale, the informant) | Blackmail, Denounce | |
 | Hospital and jail storylets | ✔ | | |
-| Political Seasons | Season 1 (free track) | Premium cosmetic track | Twists each season |
+| Political Seasons | Season 1: the Season Election, the Champion, four awards, the Hall of Fame, the rollover (slice 8; **no track, no twist**) | The free track; the premium cosmetic track | Twists each season |
 | Bodyguards (Protect) | ✔ | | Eliminate (v1.5) |
 | Player trading, faction treasury | | | v1.2 |
 | Second region | | | v1.3 |
@@ -2308,6 +2405,15 @@ These are the design's names. What a player reads for each is in §1.5 (*Reputat
 | **The party line** | How a party's local deputies vote: the player deputies' majority, else the Chair's, else the secretary's |
 | **The party's own figure** | The NPC who carries a party for President when no player does, and holds the office when nobody wins it |
 | **The law book** | The laws in force, at most five, with their days left |
+| **The Wardrobe** | The four slots (Coat, On you, Papers, Tools), the outfits and everything owned (slice 8) |
+| **Outfit** | A named set of the four slots: *Town*, *Plain clothes*, *Evening* (with a flat) |
+| **Recognition** | What a good coat, an office or a Legacy add to a run-in on rival ground; plain clothes reduce it |
+| **Exposé** | A Case File taken to a newspaper: three steps, a swing against the name's party, the front page |
+| **Request** | A patron's letter in the paper: an order-shaped task worth +6 Favour |
+| **Informant** | A Case File turned with a patron's help: an entry every second morning for fourteen days |
+| **The back room** | A bar's shop from Rank 3: forged papers, wire cutters, the bribe that clears a mark |
+| **The season's score** | The daily control share summed over the season, +100 per national election won |
+| **Champion** | The faction with the top season's score at the Season Election |
 
 ---
 
@@ -2408,7 +2514,15 @@ The API (`apps/api`) was built against v3.0. Main changes:
 68. **A petition dissolves the council; no snap election** (§15.9; slice 7). With five-day terms a snap election would land on the ordinary one and break the pure calendar; the things worth taking from a council are its rule, its Governor and its rung. The quarter-of-residents threshold (min three) means a lone player never dissolves a battleground council alone. If petitions never succeed, the lever is a fifth; if they are a weekly weapon, two days' notice.
 69. **The Chair's standing orders repeat until changed** (§13.7; slice 7), so a Chair who opens the game weekly still sets every morning. The risk is a stale push to a district the fight has left; the paper's push line names the place, and the Chair's desk shows the target bar. If a stale push reads as neglect, the lever is to drop the push (not the orders) after seven days unchanged.
 70. **Clearwater's baseline evened to 22 / 22 / 22 / 34** (§14.11; slice 7; the provisional 20 / 24 / 24 / 32 put the Vanguard 1.2 behind on National Control). Chosen so that §14.8's "no faction starts ahead" is true to the decimal. If the lake wants a lean for its character, give it in the Issues' effects, never the meter.
-71. **The Front is a teaser in slice 7** (§14.1): the promenade, the casino and the lido open with the Wardrobe and the villa (slice 8). Chosen because its places are society places with nothing social to do yet. The council's hall is a crop of the Casino regardless.
+71. **The Front is a teaser in slice 7: closed (4 Oct 2026, slice 8).** ~~The promenade, the casino and the lido open with the Wardrobe and the villa (slice 8). Chosen because its places are society places with nothing social to do yet.~~ **Opened in slice 8** with the Wardrobe: four places, eight tier-1 actions, four society calls, the tailor at the Pier Hotel, the back room at the Casino, Marr's card (§13.6, §14.1). The council's hall is a crop of the Casino regardless.
 72. **The party's list is ordered by backers** (§15.5; slice 7), re-expressing the GDD's "preference votes" through the backing every member already knows, so the list needs no ballot of its own. If backers cluster on one name and the rest of the list is the filing order, the lever is a second backing per member for the list only.
 73. **The push resolves to the residence below Level 10** (§13.7; slice 7), so a Chair's order never names a city a recruit cannot reach. If Level 10+ members read the push as a forced trip, the lever is to pay the push's Party XP at home as well at half, never to drop the push.
+74. **No weapon slot and no weapons as items** (§20.3, §21.1; slice 8): a run-in is Strength and a coat with some weight to it. Chosen because a political game that sells pistols looks armed, and §20.3's weapon tiers added nothing a coat's armour does not. If the playtest shows Fight unreachable for every build but Strength's (the reference recruit is at 41 % with a good coat), the lever is the armour values, never a weapon.
+75. **Recognition's sizes** (§14.12; slice 8): +5 / +10 for Charisma, doubled at night, +5 / +10 / +15 for the office, +1 per 10 Legacy. Set so that a new player adds 0, a councillor in a good coat +10 by day, and a Governor in a greatcoat at night +30, which turns a 15 % tier-1 run-in into 45 %: a real reason to change into plain clothes. If office-holders stop visiting rival ground at all, halve the office part; if nobody changes clothes, raise the Charisma part before the office's.
+76. **The exposé's swing is −1.0 / −0.5** (§10.4; slice 8), the §14.2 tier-3 band's floor, against a file that took a week of entries, with a Failure that keeps the file. Chosen so that an exposé is worth about a day of tier-1 work against a rival in that town and cannot be farmed (one a day, the name burned for 14 days, the file spent). If exposés dominate a town's meter at scale, the lever is the burn (28 days) or the daily cap per town, never the swing; if nobody writes them, lower the file's weight to two.
+77. **Favour's pace** (§17.2; slice 8): +6 a Request every second day, +2 a gift, +2 a call, so a devoted player reaches Associate in about a week of attention and Protégé in three. Chosen so that the first patron perk lands in week 2–3 (§3.6) and the piece at the end of month 1. If Protégé arrives in a fortnight for most, halve the gift; if Acquaintance takes a week, double it.
+78. **Blackmail and Denounce are deferred** (§10.4; slice 8): the Dossier's uses are the exposé, the sale and the informant. Chosen because Blackmail's "a favour" has no favour economy without players as names (v1.5) and Denounce removes a name from a city, which needs the control rules to read as fair. Build them with player Dossiers.
+79. **The flat waits** (§17.4; slice 8): rent that runs out stops the bonuses and owes nothing; a week's rent restores everything. Chosen for §4.3 (nothing owned is destroyed by absence). If the flat reads as free (players pay a week a month and lose nothing), the lever is a re-entry fee after a month unpaid (a week's rent), never repossession.
+80. **No season track and no twist in season 1** (§22.3, §22.4; slice 8). Chosen because the slice's question is whether players have month-long goals, and the Dossier, the patrons, the flat and the Ambition are those goals; a track would answer it with a progress bar. Build the free track when telemetry shows the clocks are not enough.
+81. **The season score's election bonus is 100, not 10** (§22.1; slice 8): at 10 an election was worth a third of one day's four-point lead, so the Champion was the daily sum alone. Chosen so that a national election is worth about a month of a four-point lead. If the Champion is always the party with the most Presidents, lower it to 50; if elections never move it, raise it to 200.
 

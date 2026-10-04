@@ -228,7 +228,7 @@ Ministers · bodyguards · first class, cars and the night train · townhouses a
 | 5 | `encounters`, `stays` | `heat {value, at}`, `health {damage, at}`, `record` (marks), `ways[]` (the remembered way), `held` and `runIn` pointers (ADR 0032, 0033) |
 | 6 | `campaignEvents` (roster embedded), `eventSignups`, `chatMessages`, `chatReports`, chat rate documents, faction scoreboard totals | `presence` (unversioned, ADR 0040), open sign-up pointers (ADR 0036) |
 | 7 | `nation` (the term, the republic's shares, the President), `factions` (the Chair, standing orders, the push, lines, rules, fixtures), `factionElections`, `nationalElections`, `bills`, `laws`, `petitions`; changed: `officeTerms` (office kinds), `candidacies` (kinds), `votes` (new keys), `cities` (Clearwater's meter, the Governor, dissolved), `ordinances`, `contributions` (push scope) (ADR 0043–0050) | `termBackings[]`, the office kind on `offices[]`, the push on order items |
-| 8 | `dossierEntries`, `caseFiles`, `seasons` | `patrons {patronId: favour}`, `home`, `legacy[]` |
+| 8 | `dossierEntries` (entries, Case Files and informants), `seasons` (the Hall of Fame); changed: `cities` (the Front's places and shops), `items` (four slots, effects, prices) | `equipment` grows to four slots, `outfits {town, plain, evening}`, `patrons {patronId: {favour, requests[]}}`, `home {kind, cityId, paidUntilDay}`, `legacy {entries[], spent, perks[]}` (design `docs/design/slice-8-life.md` §18) |
 
 City and district opinion (including home-city morale) live inside the `cities` documents, as `influence {faction: share}` per city or district.
 
