@@ -178,8 +178,8 @@ Each slice lists what's built, the content it needs, and the **question its play
 ### Slice 7 — The nation
 
 **Build:**
-- The rest of the ladder: **Governor/Mayor**, **Faction Chair** (who sets real Directives), **Legislature**, **national elections**, President or Chancellor
-- **Laws** with fixed bounds, the 5-law cap, factional laws at 60 %
+- The rest of the ladder: **Governor/Mayor**, **Faction Chair** (who sets real Directives), **Parliament** (the Legislature), **national elections**, **the President** (one office at the top; design `docs/design/slice-7-nation.md`)
+- **Laws** with fixed bounds, the 5-law cap, factional laws at 60 % (36 of 60)
 - **Clearwater** as the second battleground; **national control** weights (40/30/10/10/10)
 - Recall petitions, no-confidence votes
 
@@ -227,7 +227,7 @@ Ministers · bodyguards · first class, cars and the night train · townhouses a
 | 4 | `influenceLedger`, `journeys`, `issues` | `residence {cityId, districtId}`, `currentCityId`, `journeyId` |
 | 5 | `encounters`, `stays` | `heat {value, at}`, `health {damage, at}`, `record` (marks), `ways[]` (the remembered way), `held` and `runIn` pointers (ADR 0032, 0033) |
 | 6 | `campaignEvents` (roster embedded), `eventSignups`, `chatMessages`, `chatReports`, chat rate documents, faction scoreboard totals | `presence` (unversioned, ADR 0040), open sign-up pointers (ADR 0036) |
-| 7 | `laws`, `nationalElections`, `recallPetitions` | — |
+| 7 | `nation` (the term, the republic's shares, the President), `factions` (the Chair, standing orders, the push, lines, rules, fixtures), `factionElections`, `nationalElections`, `bills`, `laws`, `petitions`; changed: `officeTerms` (office kinds), `candidacies` (kinds), `votes` (new keys), `cities` (Clearwater's meter, the Governor, dissolved), `ordinances`, `contributions` (push scope) (ADR 0043–0050) | `termBackings[]`, the office kind on `offices[]`, the push on order items |
 | 8 | `dossierEntries`, `caseFiles`, `seasons` | `patrons {patronId: favour}`, `home`, `legacy[]` |
 
 City and district opinion (including home-city morale) live inside the `cities` documents, as `influence {faction: share}` per city or district.

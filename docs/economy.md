@@ -742,7 +742,7 @@ Joining is two taps; calling three; a result one on the next read; a favour two;
 
 ## 21. Slice 7: the offices above the council, Parliament and its laws, the national election, Clearwater
 
-Rules: `docs/design/slice-7-nation.md`; GDD §2, §6.5, §13.7, §14.8, §14.11, §15.1, §15.4–§15.10, §16.3, §17.1. Slice 7 adds **no tier-1 or tier-2 rate**. It adds Clearwater (the capital's difficulty and sinks), **four office stipends**, **seven Political Capital sinks**, **thirteen bounded laws** and the Chair's push bonus. **Two GDD numbers were changed:** Clearwater's baseline (20 / 24 / 24 / 32 → 22 / 22 / 22 / 34) and the automatic removal's trigger (35 % → 25 % of National Control); the rest are pins. The 55 % Chancellor line is gone.
+Rules: `docs/design/slice-7-nation.md`; GDD §2, §6.5, §13.7, §14.8, §14.11, §15.1, §15.4–§15.10, §16.3, §17.1. Slice 7 adds **no tier-1 or tier-2 rate**. It adds Clearwater (the capital's difficulty and sinks), **four office stipends**, **seven Political Capital sinks**, **thirteen bounded laws** and the Chair's push bonus. **Two GDD numbers were changed:** Clearwater's baseline (20 / 24 / 24 / 32 → 22 / 22 / 22 / 34) and the automatic removal's trigger (35 % of National Control → **25 % of the control share**, the party's National Control ÷ the three parties', settled 4 Oct 2026: raw National Control is 23.5 for everyone at the baselines); the rest are pins. Unrest halves a home city's weight for every party and Neutral (the shares sum to 95), which moves no rate. The 55 % Chancellor line is gone.
 
 ### 21.1 The stipends (per boundary held, present or not)
 
@@ -809,7 +809,7 @@ Every national act is one or two taps; the Chair's whole term is five taps once 
 | 64 | One office at the top | A President with a tiny score reads as too strong | The veto needs a bloc of 20 |
 | 65 | Several offices at once | One player holds four at scale | Forfeit the lower seat on taking a higher |
 | 66 | The secretaries' bills | The book reads as the game's | Stop them once a player sits |
-| 67 | The automatic removal at 25 % | Never fires | 20 % |
+| 67 | The automatic removal at 25 % of the control share | Never fires | 20 % |
 | 68 | A petition dissolves, no snap election | Never succeeds, or a weekly weapon | A fifth, or two days' notice |
 | 69 | Standing orders repeat | A stale push | Drop the push after seven days |
 | 70 | Clearwater's baseline evened | The lake wants a lean | Issues, never the meter |

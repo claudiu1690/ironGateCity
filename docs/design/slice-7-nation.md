@@ -70,7 +70,7 @@ Not in slice 7: **ministers** and **the Speaker** (GDD §15.7, §25: launch + 60
 ### 3.1 The Governor and the Mayor, pinned
 
 - **Chosen at the count**, in the same transaction, from the seated **player** councillors: at home, the highest total (ward vote + 3 × backers + members' votes) among those with a completed council term anywhere (any city, any faction tenure); in Irongate and Clearwater, first the largest bloc (most seats; ties by total ballots, then opinion share, then the cycle's seeded draw, as §15.3), then the highest total among that bloc's player councillors who qualify. If nobody qualifies the office goes to the bloc's **top local councillor** (at home, the top local), marked *Local* on every list, drawing no pay and setting no rule (the Chair's rule stands). So a first-term councillor is never Governor, and a two-term player in a branch of one is Governor from their second seat on: the ladder as written.
-- **The Governor's rule.** During cycle days 0–1 the Governor may choose, once, any rule from the city's menu (the eleven of §15.3); it becomes **item 1** of the order paper at no cost, in place of the party's rule. **Local councillors who have no player lead vote for the Governor's rule** (the chain: the faction's player councillors' leading item → the Governor's rule, if the Governor is of their faction → their Chair's rule for the city, §4.3 → the secretary's). In the capital and Clearwater the Mayor's or Governor's rule is item 1 and the other blocs' rules follow in seat order; the locals of other blocs follow their own chain. A Governor who sets nothing leaves item 1 as the Chair's rule. So a lone Governor with six locals passes any rule on the menu: that is the office. The Governor's own councillor vote is cast as before.
+- **The Governor's rule.** During cycle days 0–1 the Governor may choose, once, any rule from the city's menu (the eleven of §15.3); it is **added as item 1** of the order paper at no cost, ahead of the party's rule, which stays (settled 4 Oct 2026: a vote already cast for the party's item is never lost). **Local councillors who have no player lead vote for the Governor's rule** (the chain: the faction's player councillors' leading item → the Governor's rule, if the Governor is of their faction → their Chair's rule for the city, §4.3 → the secretary's). In the capital and Clearwater the Mayor's or Governor's rule is item 1 and the other blocs' rules follow in seat order; the locals of other blocs follow their own chain. A Governor who sets nothing leaves item 1 as the Chair's rule. So a lone Governor with six locals passes any rule on the menu: that is the office. The Governor's own councillor vote is cast as before.
 - **The Address.** Once per term, one tap on the office page, no Energy: **+50 points of momentum** for the Governor's faction on one of the city's two Issues, attributed to the Governor as a contribution (it counts toward the top five and the 4 PC). A headline the next morning (§11.2). The player reads it as *the Address*: *The Governor speaks on {Issue}*.
 - **Shown:** *Governor of Coalport* on the Me tab, the city plate (*Governor: {name}*), every political list and the profile; the paper's masthead line *Governor {name}*. The office ends with the council; no separate term line.
 
@@ -98,8 +98,8 @@ Until a Chair exists the secretary's rotation sets the orders (§13.7). A Chair 
 
 ### 4.3 The party line
 
-- **In Parliament:** on every bill the Chair may set the party line, one tap: **For · Against · Free vote** (default *free vote*). The faction's **local deputies** vote: (1) with the majority of the faction's **player deputies** who voted; (2) else the Chair's line; (3) else the **secretary's line** on that law (content, §7.3; a secretary's *free* is an abstention). A player Chair's line therefore carries the whole local bloc when no player deputy votes, which is the Chair's national power at low population; with player deputies, they lead.
-- **In the councils:** the Chair sets **the party's rule** per city (home, the capital, Clearwater), one pick each from the menu, default the secretary's (Vanguard *Rally Permits*, Collective *Long Service Order*, Alliance *Reading Room Grant*). It is the party's item on every order paper and what the locals vote for when neither a player councillor nor a Governor of their faction leads (§3.1).
+- **In Parliament:** on every bill the Chair may set the party line, one tap: **For · Against · Free vote**. The faction's **local deputies** vote: (1) with the majority of the faction's **player deputies** who voted (a tie is no majority); (2) else the Chair's line (an **unset** line falls through; an explicit *Free vote* makes the locals abstain); (3) else the **secretary's line** on that law (content, §7.3; a secretary's *free* is an abstention). The desk shows *the secretary's line: For* until the Chair sets one (settled 4 Oct 2026). A player Chair's line therefore carries the whole local bloc when no player deputy votes, which is the Chair's national power at low population; with player deputies, they lead.
+- **In the councils:** the Chair sets **the party's rule** per city (home, the capital, Clearwater), one pick each from the menu, default the secretary's (Vanguard *Rally Permits*, Collective *Long Service Order*, Alliance *Reading Room Grant*), **applying from the next order paper** (never mid-paper). It is the party's item on every order paper and what the locals vote for when neither a player councillor nor a Governor of their faction leads (§3.1).
 - **Appendix C #26, closed:** local councillors **abstain** when **four or more player councillors** of a home council vote *None of these* (a real majority of seven), so the council rises without a rule; below four the party's rule passes as before (one seat cannot leave a city without a rule out of spite). In the capital and Clearwater the bloc rule already lets players block, and nothing changes.
 - **Unrest** (GDD §14.11): while the faction's home city is in Unrest, **its local deputies abstain on every bill** (the "defection"): the bloc goes quiet until the branch wins the town back. The Chair's line still binds nothing then; the player deputies vote as they like.
 
@@ -133,7 +133,7 @@ Until a Chair exists the secretary's rotation sets the orders (§13.7). A Chair 
 
 - **The order paper holds at most three bills, plus the President's.** A bill is one law from the catalogue (§7), or **a bill to strike out** a law in force, or **a vote to remove the President** (§10.2). A bill names its law, its duration, whether it treats the parties differently (and so needs 36), and, when five laws are in force, **the law it replaces**.
 - **Who tables:** the **President**, once a week (Monday to Sunday), free, in **a slot of its own** (never waits); a **deputy**, once a term, **50 PC**; a **Chair**, once a term, 50 PC (the party's national voice when it has no deputy); **the secretary** of a party that has **no player Chair and no player deputy**, at a Monday boundary when the paper holds fewer than two bills, the largest such bloc first, at most one secretary's bill a week, from its party's preferred laws in order (§7.3). So Parliament has business from day one and a player's bill always has room.
-- **The vote:** from the boundary after tabling, **three full City Days**; every deputy one tap, **For** or **Against**, public in the chamber, final; not voting is abstaining. **Parliament votes at the boundary after the third day.** Local deputies vote by §4.3's chain. **Passes with 31 or more For; a factional law with 36 or more.** Abstentions count for nothing.
+- **The vote:** open from the tabling to **the boundary into tabling day + 4** (three full City Days and the rest of the tabling day; settled 4 Oct 2026); every deputy one tap, **For** or **Against**, public in the chamber, final; not voting is abstaining. **Parliament votes at that boundary.** Tabling closes after term day 23, so nothing divides on day 27; one bill per member per term, whichever office tables it; at the cap with no live named law, the law ending soonest (ties: the oldest) ends when the new one starts. Local deputies vote by §4.3's chain. **Passes with 31 or more For; a factional law with 36 or more.** Abstentions count for nothing.
 - **In force** from the boundary into the day after the division (one day *awaiting the President's signature*, the veto's day, §5.5), for the law's duration, in every city, as a bounded line like a council rule's; the player reads *{Law} in force · 12 days left* in the law book and on the affected tickets (*Public Assembly Act: 10 Energy*). A failed bill cannot be tabled again for **seven days**. The old term's open bills **lapse** at term day 0 (the new Parliament starts clean).
 - **Striking out:** a bill *to strike out {law}* passes with 31 (the law's own threshold does not apply); the law ends at the boundary after the division, with no signature day. **The cap:** at most **five laws in force**; a bill tabled while five are in force must name the law it replaces, which ends when the new one starts (if the named law has expired by then, nothing is replaced).
 
@@ -161,7 +161,7 @@ Once per term the President may **veto** a bill Parliament has passed, on its si
 
 ### 6.2 The party's pick (days 21–22)
 
-Each faction's Rank 2+ members (tenure 7 days) choose the party's candidate for President: **one tap, secret, final**, from the faction's declared candidates **and the party's own figure** (§6.5), who is always on the ballot (*run by the game*: a player must carry the party to carry its name). Most votes wins; ties by backers received so far, then completed terms, then filing. No declared candidate: the party's own figure stands, with no vote. The kicker names the faction's word: ***the Acclamation*** (Vanguard), ***the Congress*** (Collective), ***the Convention*** (Alliance). The result is printed on the morning of day 23 with the national ballot's opening.
+Each faction's Rank 2+ members (tenure 7 days) choose the party's candidate for President: **one tap, secret, final**, from the faction's declared candidates **and the party's own figure** (§6.5), who is always on the ballot (*run by the game*: a player must carry the party to carry its name). Most votes wins; ties by completed terms (a Governor term two), then filing (backing opens after the pick; settled 4 Oct 2026). No declared candidate: the party's own figure stands, with no vote. The kicker names the faction's word: ***the Acclamation*** (Vanguard), ***the Congress*** (Collective), ***the Convention*** (Alliance). The result is printed on the morning of day 23 with the national ballot's opening.
 
 ### 6.3 Voting and the count (days 23–26; the count into day 27)
 
@@ -228,7 +228,7 @@ Vanguard: Public Assembly · Curfew · Emergency Permits · Special Powers. Coll
 
 ## 8. National Control: who holds the republic
 
-- **The formula** (GDD §14.8, pinned): for each party, `NC = 0.40 × Irongate (the equal average of the five districts) + 0.30 × Clearwater + 0.10 × Coalport + 0.10 × Duskwall + 0.10 × Ashford`, each a share of that city's meter; **a home city in Unrest counts half** (0.05; the lost half goes to nobody, GDD §14.11). Computed on read at the boundary, stored with the day's battleground flags, shown to one decimal. The three parties' figures and the weighted Neutral sum to 100. **Clearwater's baseline is evened to 22 / 22 / 22 / 34** (was 20 / 24 / 24 / 32, provisional): at the baselines every party holds 23.5 and nobody starts ahead, which §14.8 promises; Clearwater's character lives in its places and Issues, not its meter.
+- **The formula** (GDD §14.8, pinned): for each party, `NC = 0.40 × Irongate (the equal average of the five districts) + 0.30 × Clearwater + 0.10 × Coalport + 0.10 × Duskwall + 0.10 × Ashford`, each a share of that city's meter; **a home city in Unrest counts half for every party and Neutral** (its weight 0.05, GDD §14.11; the shares then sum to 95 and the bar shows them as they are; settled 4 Oct 2026). Computed on read at the boundary, stored with the day's battleground flags, shown to one decimal. **Clearwater's baseline is evened to 22 / 22 / 22 / 34** (was 20 / 24 / 24 / 32, provisional): at the baselines every party holds 23.5 and nobody starts ahead, which §14.8 promises; Clearwater's character lives in its places and Issues, not its meter.
 - **What it does:** half of every party's national score (§6.3) and so the President and Parliament's sixty seats; the Season Score (slice 8); the nation map's layer and the paper's line. **It gives no multiplier** (GDD §14.3).
 - ***Leads the republic.*** The party with the highest National Control at a boundary *leads the republic* for the day: the nation map's bar names it, every paper's national section carries the line, and a change of leader is a headline. Nothing else: it is the scoreboard, not a prize.
 - **Control of Clearwater** (above 50 at a boundary; dominance above 70) is a district's (GDD §14.3, §14.9): access, never multipliers. Pinned for slice 7 for Clearwater **and the capital's districts**: the controlling party's posters on the plate (text), its name on the card, and **rivals of the controlling party gain Heat 25 % faster there** (`heatGainPct` +25 for them; the police answer to the council majority). Groundswell applies to Clearwater as to a district (lost control → +5 % a day to +30 %, fourteen boundaries). Home cities cannot be lost (the floor), so Groundswell stays off them (GDD §14.4, confirmed).
@@ -243,7 +243,7 @@ Vanguard: Public Assembly · Curfew · Emergency Permits · Special Powers. Coll
 |---|---|
 | Role | **Battleground**, single meter, the second of two (30 % of the nation) |
 | Baseline | **22 / 22 / 22 / 34** (§8) |
-| Rules | A capital district's: drift 1 % of the distance to the baseline a day; a *close race* when the top two are within ten (+25 % opinion, +25 % Party XP, +5 % chance on political actions); *comeback*; control and dominance; difficulty **10** on tier 1, **20** on missions (the ladder's 18 at Level 10, +2 as the capital); residence from Rank 2 (500 Iron, seven days between moves, the ballot rule); a **room** (100 Iron, seven nights, Rested cap +50; half price under *Rents in the Rows*); the capital rotation of Party orders with `{city}` = Clearwater and no HQ order (slot B: *Speak to the Issue* ×2, *Watch and listen in Clearwater* ×2); two Issues a week from its own deck (§9.6); heroes per bracket |
+| Rules | A capital district's: drift 1 % of the distance to the baseline a day; a *close race* when the top two are within ten (+25 % opinion, +25 % Party XP, +5 % chance on political actions); *comeback*; control and dominance; difficulty **10** on tier 1, **20** on missions (the ladder's 18 at Level 10, +2 as the capital); residence from Rank 2 (500 Iron, seven days between moves, the ballot rule); a **room** (100 Iron, seven nights, Rested cap +50; half price under *Rents in the Rows*); its own rotation of Party orders (§23.4: slot A *Talk to voters anywhere in Clearwater* ×3; slot B *Speak on this week's Issue* ×2 and *Watch and listen anywhere in Clearwater* ×2, with the shared mission and event orders; no HQ order); a branch for every faction with a daily fixture and a *Clearwater branch* chat chip; two Issues a week from its own deck (§9.6); heroes per bracket |
 | Council | **Seven seats, three-way**, cycle offset **4**; the count by the battleground formula with **seven seats by D'Hondt** on the three scores (`w = 50 × min(1, ballots ÷ 10)` as a district), each party's seats to its candidates by the home total, local candidates filling each party's list to **three names** (§9.5); **passes with four of seven**; the order paper as the capital's (the Governor's rule, then each seated bloc's party rule, then three proposals); the Governor as §3.1 (the largest bloc) |
 | The hall | **The Casino** (`council.hall`: *the Casino*, 0.33, 0.62 on the city picture): the town council sits in the committee room the casino company lends it; the election screens' crop and the kicker *CLEARWATER COUNCIL · THE CASINO*. A backdrop and a name, not a location |
 | Paper | ***The Clearwater Courier*** ("Lake, town and harbour, every morning", 6 marks). Residents read it; a visitor reads it while in the city (the Herald's rule) |
@@ -509,7 +509,7 @@ The capital is 40 % and has five districts, three of which lean; Clearwater is 3
 
 ### 10.1 A petition to dissolve the council (the GDD's recall)
 
-- **Who:** any Rank 3+ **resident** of the city (resident since before the current polls opened: no move-and-sign) opens it (**10 PC**, the first signature); residents of any party, Rank 2+, sign (10 PC each, public, final, one each).
+- **Who:** any Rank 3+ **resident** of the city (resident since before the current polls opened: no move-and-sign) opens it (**10 PC**, the first signature); residents of any party, Rank 2+, sign (10 PC each, public, final, one each); **sitting councillors of that council cannot sign** (settled 4 Oct 2026).
 - **When:** opened on **cycle days 0–2** only; it **closes at the second boundary after opening** (opened day 0 → closes with the division into day 2; day 1 → into day 3; day 2 → into day 4), always before the next count. **One per city every seven days** (from the last close).
 - **How many:** at the close, signatures of **the greater of three and a quarter of the city's eligible residents** (Rank 2+ residents active in the last seven days, the turnout roll). A Town Hall event (§10.4) adds townspeople's signatures.
 - **What it does:** the council is **dissolved** at the close: the rule in force (or the one just passed) is **struck**, the Governor's office passes to the bloc's top local, every councillor's term ends **not completed** (no ladder rung, no more stipend), and the seats are held by local candidates until the next scheduled result (no snap election: the calendar is pure and an election is never more than five days away). Headlines in the city's paper and the national section. **Losses belong to competition** (GDD §4.3): the councillors had the council; the residents took it back.
@@ -517,7 +517,7 @@ The capital is 40 % and has five districts, three of which lean; Clearwater is 3
 
 ### 10.2 A vote to remove the President (no confidence)
 
-- **Who tables:** a deputy (**50 PC**) or a Chair (50 PC), of any party; or **automatically** at a boundary when the President's party's National Control is **below 25 %** (once a term; tabled in the clerk's name). It takes a slot on the order paper like a bill.
+- **Who tables:** a deputy (**50 PC**) or a Chair (50 PC), of any party; or **automatically** at a boundary when the President's party's **control share** (its National Control ÷ the three parties'; 33.3 at the baselines) is **below 25 %** (once a term; tabled in the clerk's name, in a slot of its own). A player's motion takes a regular slot like a bill. (Settled 4 Oct 2026: raw National Control is 23.5 for everyone at the baselines, so the share is the measure.)
 - **Guards:** not on term days 0–4 or 24–27; seven days between motions; a member tables one a term.
 - **The vote:** three full City Days, every deputy, For / Against; passes with **40 of 60** (two thirds). Local deputies by §4.3's chain; the secretaries' line on a removal is **Against** for the President's own party and **free** for the others (so a removal needs player votes or player Chairs: the game never removes a President by itself, except that the automatic motion's trigger is the game's).
 - **On passing:** the President is removed at the division; **the runner-up of the election** (the candidate with the next score) takes office for the rest of the term, with the President's powers; the removed President keeps nothing of the office and loses nothing else. The paper prints both. **Survived:** a headline (Legacy 10, slice 8). A removal cannot be vetoed.
@@ -528,7 +528,7 @@ The capital is 40 % and has five districts, three of which lean; Clearwater is 3
 
 ### 10.4 The Town Hall (Campaign Event, GDD §16.3's seventh)
 
-`event.town-hall` · every faction · venue kinds `square`, `university`, `court`, `theatre`, `hotel` (a hall) · roles **Moderator INT 10 · Speaker CHA+INT 15 · Speaker CHA+INT 15 · Press INT 10** (50 Energy) · base swing **1.2** · difficulty **12 · 14** · `speech` · four hands. **Special:** when a petition to dissolve the council is open in the city at the start, the Town Hall adds **signatures** from townspeople: **Triumph 3 · Success 2 · Mixed 1 · Fiasco 0**. Otherwise an ordinary event.
+`event.town-hall` · every faction · venue kinds `square`, `university`, `court`, `theatre`, `hotel`, `library`, `faction-hq` (a hall; the venues per place in §23.6) · roles **Moderator INT 10 · Speaker CHA+INT 15 · Speaker CHA+INT 15 · Press INT 10** (50 Energy) · base swing **1.2** · difficulty **12 · 14** · `speech` · four hands. **Special:** when a petition to dissolve the council is open in the city at the start, the Town Hall adds **signatures** from townspeople: **Triumph 3 · Success 2 · Mixed 1 · Fiasco 0**. Otherwise an ordinary event.
 
 *A hall, a platform with three chairs and a jug of water, and a town with questions. Two speakers, someone to keep order and someone to write it up. The event that turns a grievance into a petition.*
 
@@ -893,3 +893,168 @@ Six pieces. The three national figures are the only new faces; the twenty-four l
 | Ambition chapter 3, *The deposit*, and `keep.deposit-receipt` | 1 | §13 |
 | Help notes (Parliament, President, Chair, Governor, deputy, term, veto, the party line, the law book, who holds the republic, a petition, the party's pick, the party's own candidate) | 13 | screens §12 |
 | Copy strings | ~180 | screens §11 |
+
+---
+
+## 23. Settled for the build (4 Oct 2026; answers to `docs/tech/slice-7.md` §22.1 and §23)
+
+The architect's defaults are accepted except Q5 (venue kinds widened; no signature events in Clearwater) and Q23's tie order, which gains the secretary's rule; every missing text is written below. **Numbers that moved:** the automatic removal's trigger is **25 % of the control share** (the party's National Control ÷ the three parties'), not of raw National Control; **Unrest halves a home city's weight for every party and Neutral** (the shares then sum to 95). Both are in the GDD (§14.8, §15.9) and `docs/economy.md` §21. The sections above that said otherwise were corrected in the same change (§3.1, §4.3, §5.2, §6.2, §8, §10.1, §10.2, §10.4).
+
+### 23.1 The thirty questions
+
+| # | Decision | Where it now lives |
+|---|---|---|
+| 1 | **Families.** Every rotation template carries a `family`; the Chair picks a family per slot and a member reads **their residence's template of that family, else their residence's rotation for the slot**. The families and their twins: §23.2 | §4.2, §23.2; GDD §13.7 |
+| 2 | **Two push templates per faction** (`use: 'push'`, slots A and B), written in §23.3. **What counts:** every matching attempt (a ×3 counts three) **at the pushed place by any member**, whether or not their own order is still open; a member who reads the order at home (below Level 10) counts only if they are at the place | §4.2, §23.3 |
+| 3 | **Clearwater's rotation:** per faction slot A one and slot B two, written in §23.4 | §9.1, §23.4 |
+| 4 | **The twenty-four local deputies:** §23.5 | §5.1, §23.5; GDD §15.10 |
+| 5 | **Venues.** The Town Hall's venue kinds gain **`library` and `faction-hq`** (a hall is a hall; the home cities' first quarters have no square, court, theatre or hotel); the venues are set per place in §23.6, not by content order. Clearwater's common events: the Rally at **the Cannery**, the Canvass Drive at **the Rows**, Poster Night at **the Tram Depot** (Back Lane Market is a `market`, not in Poster Night's kinds). **No signature event in Clearwater in slice 7**: the Headline Story needs a press and the lake has none, and the three parties should meet there on the same terms | §10.4, §23.6; GDD §16.3 |
+| 6 | **Clearwater is a branch for all three factions**, like the capital: a daily fixture each (the secretary's, or the Chair's pick) and a ***Clearwater branch*** chat chip; five chips at most (Party, the home branch, the Irongate branch, the Clearwater branch, Officers) | §4.4; GDD §15.4, §16.2; screens §5.3 |
+| 7 | **The Governor's rule is added as item 1, ahead of the party's item, which stays**; locals with no player lead vote for the Governor's rule, so no cast vote disappears | §3.1; GDD §15.3 |
+| 8 | **The Chair's rule for a city applies from the next order paper**, never mid-paper; the modal says *from {weekday}'s council* | §4.3, §12; GDD §15.4 |
+| 9 | **An unset line falls to the secretary's line; an explicit *Free vote* makes the locals abstain.** The desk shows *the secretary's line: For* until the Chair sets one | §4.3; GDD §15.6; screens §5.2 |
+| 10 | **A tie among a bloc's player deputies is no majority**: the chain falls to the Chair's line, then the secretary's | §4.3; GDD §15.6 |
+| 11 | **The automatic removal fires below 25 % of the control share** (33.3 at the baselines), once a term | §10.2; GDD §15.9; economy §21.7 |
+| 12 | **Unrest halves the city's weight for every party and Neutral**; the shares sum to 95 and the bar shows them as they are | §8; GDD §14.8 |
+| 13 | **The runner-up taking office:** their deputy seat passes to the next unseated name on the list (else a local) and the deputy term is vacated; the presidency counts for *two in a row* when held to the term's end; a second removal seats the next-highest score that has not held the office this term | §10.2 |
+| 14 | **Timing:** votes open at the tabling; the division is at the boundary into **tabling day + 4**; **tabling closes after term day 23**, so nothing divides on day 27; an override that cannot divide by day 27 is not tabled and the veto is final (the modal says so) | §5.2; GDD §15.6 |
+| 15 | **At the cap with no live named law**, the law in force that ends soonest (ties: the oldest) ends when the new one starts; the paper says which | §5.2; GDD §15.6 |
+| 16 | **One bill per member per term**, whichever office tables it | §5.2; GDD §15.6 |
+| 17 | **The clerk's motion takes a slot of its own**, like the override; a player's removal motion needs a regular slot | §10.2; GDD §15.9 |
+| 18 | **Bootstrap mid-term:** every window that opens on or after the bootstrap day runs; windows already open are skipped and the acting holders continue | §2 |
+| 19 | **The five missing modal texts:** §23.7 | §12, §23.7 |
+| 20 | **The Governor's Address is once per Governor's term** (the five-day council term); the President's once per national term | §3.1 |
+| 21 | **The Curfew doubles the final run-in chance before the 90 cap**, for missions and the rival-ground tier-1 tap alike, while it is night at the act | §7.2 |
+| 22 | **A change of Chair clears the standing orders, the party's rules and the fixtures**; a new Chair starts from the secretary's | §4.2; GDD §15.4 |
+| 23 | **The party's pick's ties go to completed terms (a Governor term two), then filing**; backing opens after the pick, so "backers so far" is struck. The Chair's ballot keeps votes, backers, terms, filing | §6.2; GDD §15.5 |
+| 24 | **The Chair's route is `/faction?tab=chair`**; `/office/chair` redirects to it | screens §5, §16 |
+| 25 | **Sitting councillors of that council cannot sign the petition** to dissolve it (the screens' rule); every other resident of Rank 2+ can | §10.1; GDD §15.9; screens §9.1 |
+| 26 | **A Governor who moves residence mid-term** passes the office to the bloc's top local; the Governor's term is vacated | §3.1 |
+| 27 | **A member may back the party's candidate whoever it is**, the party's own figure included (+1 to the score) | §6.3 |
+| 28 | **A figure that loses the presidency takes no seat**; the party's list starts with its players | §6.4 |
+| 29 | **At least three *No confidence* votes**, as well as two thirds of the votes cast | §4.5; GDD §15.4 |
+| 30 | **Smaller points, all accepted:** a quarter rounds up, `max(3, ceil(n ÷ 4))`; a list candidacy cannot be withdrawn and its 25 PC stays; pledges are any two distinct laws; tenure counts from joining; the plate word is one rule (above 50 *held by*, the top two within ten *close race*, else *contested*; the capital on its averaged shares) | §6.1, §10.1; screens §2 |
+
+### 23.2 Q1: the families
+
+A family is a menu entry on the Chair's desk; its label is the home template's title with *{city}* for the home city's name. A member reads their residence's twin; a residence with no twin for the family reads its own rotation for that slot (the Chair's pick is then the rotation's day key for that member).
+
+| Slot | Family · label | Coalport · Duskwall · Ashford (home) | Capital twin | Clearwater twin (§23.4) |
+|---|---|---|---|---|
+| A | `canvass-anywhere` · *Talk to voters anywhere in {city}* | `dir.canvass-coalport` · `dir.v.canvass-duskwall` · `dir.a.canvass-ashford` | `dir.c.capital-canvass` · `dir.v.capital-canvass` · `dir.a.capital-canvass` | `dir.c.lake-canvass` · `dir.v.lake-canvass` · `dir.a.lake-canvass` |
+| A | `canvass-doors` · *Knock on doors in {street}* | `dir.foundry-row` · `dir.v.rampart-row` · `dir.a.weavers-row` | `dir.c.capital-district` · `dir.v.capital-district` · `dir.a.capital-district` | — (the rotation) |
+| A | `canvass-shift` · *Talk to the {shift} at {gate}* | `dir.shift-change` · `dir.v.guard-change` · `dir.a.print-room` | — | — |
+| A | `canvass-crowd` · *Talk to the {crowd} at {place}* | `dir.noon-break` · `dir.v.loaders` · `dir.a.students` | — | — |
+| A | `canvass-regulars` · *Win over the {regulars} at {place}* | `dir.anchor` · `dir.v.clerks` · `dir.a.court-queue` | — | — |
+| B | `propaganda-anywhere` · *Spread the word anywhere in {city}* | `dir.paper-the-town` · `dir.v.paper-the-town` · `dir.a.paper-the-town` | — | — |
+| B | `speech-anywhere` · *Make a speech anywhere in {city}* | `dir.say-it` · `dir.v.say-it` · `dir.a.say-it` | — | — |
+| B | `committee` · *Go to the meeting at {HQ}* | `dir.report` · `dir.v.report` · `dir.a.report` | `dir.c.capital-report` · `dir.v.capital-report` · `dir.a.capital-report` | — |
+| B | `intelligence-anywhere` · *Watch and listen anywhere in {city}* | `dir.ears-open` · `dir.v.eyes-open` · `dir.a.ears-open` | — | `dir.c.lake-ears` · `dir.v.lake-eyes` · `dir.a.lake-ears` |
+| B | `issue` · *Speak on this week's Issue* | — | `dir.c.capital-issue` · `dir.v.capital-issue` · `dir.a.capital-issue` | `dir.c.lake-issue` · `dir.v.lake-issue` · `dir.a.lake-issue` |
+| B | `mission` · *Take on a mission anywhere in {city}* | `dir.mission` · `dir.v.mission` · `dir.a.mission` (`residence: 'any'`) | the same | the same |
+| B | `event` · *Take part in the branch's event today* | `dir.event` · `dir.v.event` · `dir.a.event` (`residence: 'any'`) | the same | the same |
+| C | `train` · `six-wins` · `five-attempts` | `dir.sharpen-up` · `dir.full-day` · `dir.five-in-the-book` and the `v.` / `a.` twins (`residence: 'any'`) | the same | the same |
+
+The welcome, crisis and push templates carry no family. The menu lists a slot's families in this order; the desk marks a family with no twin in a residence with *{residence}: the rotation* under its row.
+
+### 23.3 Q2: the push templates (`use: 'push'`; `match.cityId: 'push'`, `districtId: 'push'` where the push is a district; `{place}` is the district's name or *Clearwater*)
+
+| Id | Slot | Title | Line |
+|---|---|---|---|
+| `dir.push-canvass` | A | Talk to voters in {place} · 3 | The Chair wants {place} and so does the branch. Three conversations there today; the tram is free and the train is cheap. |
+| `dir.push-posters` | B | Spread the word in {place} · 3 | Three lots of paper up in {place} before the lamps come on. The Chair has counted the fences. |
+| `dir.v.push-canvass` | A | Talk to voters in {place} · 3 | The Chair has named {place}. Three reports from there on my desk by tonight, whatever the fare. |
+| `dir.v.push-posters` | B | Spread the word in {place} · 3 | {place}, three runs of paper, straight and high. The Chair will walk it in the morning. |
+| `dir.a.push-canvass` | A | Talk to voters in {place} · 3 | The Chair has chosen {place} this week, so {place} it is. Three conversations there, and be polite; they vote. |
+| `dir.a.push-posters` | B | Spread the word in {place} · 3 | {place}, three rounds of posters, and spell the party's name right. The Chair reads the fences. |
+
+Match `{ actionTypes: ['canvass'], cityId: 'push', districtId: 'push' }` and `{ actionTypes: ['propaganda'], cityId: 'push', districtId: 'push' }`, `counts: 'attempts'`, `target: 3`; the panel renders the secretary's signature as on every order.
+
+### 23.4 Q3: the Clearwater rotation (`residence: 'clearwater'`)
+
+| Id | Slot | Title | Line |
+|---|---|---|---|
+| `dir.c.lake-canvass` | A | Talk to voters anywhere in Clearwater | The Rows, the quay, the cannery gate: three conversations on the lake before the last tram. |
+| `dir.c.lake-issue` | B | Speak on this week's Issue | The Courier says the lake is arguing about {issue}. Argue back, twice, from the Rows up. |
+| `dir.c.lake-ears` | B | Watch and listen anywhere in Clearwater | The shed office, the café hatch under the arches, the mole after dark. Sit, watch, write it down. |
+| `dir.v.lake-canvass` | A | Talk to voters anywhere in Clearwater | Three streets of the working town. Three reports on my desk by tonight, lake or no lake. |
+| `dir.v.lake-issue` | B | Speak on this week's Issue | The lake is arguing about {issue}. The committee has a position. State it, twice, in order. |
+| `dir.v.lake-eyes` | B | Watch and listen anywhere in Clearwater | The shed office's sheets, the night boats, the station barrier. Watch, note, report. Names and times. |
+| `dir.a.lake-canvass` | A | Talk to voters anywhere in Clearwater | Three conversations on the lake, and listen more than you talk; the Rows have heard promises before. |
+| `dir.a.lake-issue` | B | Speak on this week's Issue | The Courier's leader is about {issue}. We have a better one. Twice, please, and mind the sisters. |
+| `dir.a.lake-ears` | B | Watch and listen anywhere in Clearwater | The station barrier, the café hatch, the shed office. Write it down and spell the names right. |
+
+Matches: canvass `{ actionTypes: ['canvass'], cityId: 'clearwater' }` target 3; the Issue `{ issueTagged: true, cityId: 'clearwater' }` target 2; intelligence `{ actionTypes: ['intelligence'], cityId: 'clearwater' }` target 2. Slot C is the shared `{city}` set; slot B rotates over these two and the shared `mission` and `event` templates (`B[day mod 4]`), as the capital's does.
+
+### 23.5 Q4: the twenty-four local deputies (`factions[].localDeputies`, `who` ≤ 60; the crest mark, no portraits)
+
+**Vanguard** (`npc.v.dep.*`): Dr Ulrich Hennig, *retired schools inspector, Duskwall* · Margit Zoller, *director of the ration office, Irongate* · Theodor Brauer, *customs comptroller, retired, Duskwall* · Ernst Pfeiffer, *director of the tram company, Clearwater* · Luise Kaltenbach, *secretary of the landlords' association, Garrison Hill* · Walter Kranich, *stationmaster, retired, Central Station* · Dorothea Mühl, *archivist, the State Archives* · Heinrich Vollmer, *permits commissioner, retired, Duskwall*.
+
+**Collective** (`npc.c.dep.*`): Stefan Dvorak, *crane driver, Harbour Quays* · Marie Tichy, *nurse, the Infirmary, Coalport* · Jakub Sedlak, *compositor, the Clarion* · Eva Prochazka, *shop steward, the cannery, Clearwater* · Milan Kratochvil, *docker, Coalport* · Irena Horak, *seamstress, Foundry Row, Coalport* · Bohumil Vlk, *tram driver, the Hill line, Irongate* · Zuzana Rybar, *tenants' committee, Eastside*.
+
+**Alliance** (`npc.a.dep.*`): Dr Ingrid Sauer, *barrister, Chancery Row* · Benedikt Lorenz, *bookseller, Bridge Street, Ashford* · Dr Hedda Winter, *lecturer in history, Ashford* · Oskar Brandl, *magistrate's clerk, the Courts* · Therese Amann, *café owner, Old Town* · Konstantin Reiss, *solicitor, tenants' cases, Ashford* · Johanna Steindl, *leader-writer, the Gazette* · Paul Wendt, *schoolmaster, St Martin's, Clearwater*.
+
+Ids `npc.v.dep.hennig`, `npc.c.dep.dvorak`, `npc.a.dep.sauer` … by surname, in list order; the chamber shows *Local deputy · {who}*. Checked against the slates of slices 3, 4 and 7 (no duplicate surnames) and against real party and state figures of the period; the Vanguard's eight are retired officials, clerks and a company director, written cold.
+
+### 23.6 Q5: event venues
+
+| Place | Town Hall (kinds `square`, `university`, `court`, `theatre`, `hotel`, `library`, `faction-hq`) | Rally | Canvass Drive | Poster Night | Signature |
+|---|---|---|---|---|---|
+| Coalport | `coalport.union-hall` (the hall upstairs) | slice 6 | slice 6 | slice 6 | slice 6 |
+| Duskwall | `duskwall.archives` (the Archives' lecture room) | slice 6 | slice 6 | slice 6 | slice 6 |
+| Ashford | `ashford.university` (the Quad's lecture hall) | slice 6 | slice 6 | slice 6 | slice 6 |
+| Irongate · Government Quarter | `irongate.opera` (the foyer) | slice 6 | slice 6 | slice 6 | — |
+| Irongate · Old Town | `irongate.basilica-square` (the parish hall) | slice 6 | slice 6 | slice 6 | slice 6 |
+| Irongate · Station & Market | `irongate.grand-hotel` (the ballroom) | slice 6 | slice 6 | slice 6 | — |
+| Irongate · Eastside | `irongate.iron-bridge` (the bridge hall) | slice 6 | slice 6 | slice 6 | slice 6 |
+| Irongate · Garrison Hill | `irongate.esplanade` (the bandstand pavilion) | slice 6 | slice 6 | slice 6 | slice 6 |
+| **Clearwater** | `clearwater.st-martins` (the church hall) | `clearwater.cannery` | `clearwater.rows` | `clearwater.tram-depot` | none in slice 7 |
+
+The Town Hall's art is `scene.event-town-hall`; its row in the call sheet reads *at {venue}'s hall*.
+
+### 23.7 Q19: the five missing modal texts (`politics.results`)
+
+| Act | Stamp | Headline | Body | Next |
+|---|---|---|---|---|
+| `chairBack` | Backed | {name} has your backing | Backing is public and final, one a Chair election. {name} has {n} now; two by {until} keep the name on the ballot beside the secretary's, and up to five count. | Next: voting for Chair opens {pollsWeekday}. |
+| `fixture` | Set | Tomorrow's event in {city} | The branch's event tomorrow is {event} at {venue}: posted at midnight, settled at the next. Members join it from the Faction tab; roles still empty at the start go to volunteers. | Next: it's on the board from midnight. |
+| `presidentWithdraw` | Withdrawn | Your name is off the list for President | The 100 Political Capital is back in your pocket, and your place at the top of the party's list goes with the candidacy. The party picks on {weekday} without you. | Next: nothing until the next term's names in. |
+| `chairPetitionOpen` | Opened | A vote on the Chair | Your name is the first of {needed}. Members of Rank 3 and above sign until {until}, 10 Political Capital each; if the names come in, every member votes for two days. | Next: the count of names, {resultWeekday} morning. |
+| `chairPetitionSign` | Signed | Your name is on the petition | {signatures} of {needed} by {until}. Signing is public and final, and the Chair can see who signed. | Next: the count of names, {resultWeekday} morning. |
+
+The `partyRule` modal (§12) gains the day: body *The party's item on every {city} order paper from {weekday}'s council, and what local councillors vote for when no player leads them.* The `veto` modal's *Next* reads *Next: the veto is final; Parliament cannot vote it through before the term ends.* when the override cannot divide by day 27 (Q14).
+
+### 23.8 Alt texts (≤ 160), checked against the pictures
+
+| Asset id | Alt text |
+|---|---|
+| `portrait.albrecht` | Dr Konrad Albrecht: a lean grey-haired man past sixty with a judge's severity, a dark overcoat with a velvet collar, a dark red tie, gloves in his hand; columns behind. |
+| `portrait.brod` | Hanna Brod: a woman of fifty with short grey hair, a red scarf over a dark coat, a tram conductor's cap held in both hands; a doorway behind her. |
+| `portrait.faber` | Professor Emil Faber: a round-faced man of sixty with spectacles pushed up, a red bow tie, a tweed waistcoat, a gown on his shoulders and papers under his arm. |
+| `scene.election-night` | Market Square at night: a crowd in hats under a newspaper's lit windows, a man on a ladder chalking figures on a results board, a tram, a newsboy with papers. |
+| `scene.event-town-hall` | A packed hall: a woman on her feet answering at a long table on a platform, two men seated, a jug and glasses, a man in a cap standing to ask, a reporter writing. |
+| `scene.presidents-study` | A study at sunset: a tall window over the city's domes, a desk with stacks of papers and a pen under a green lamp, a wall map with five cities, a clerk at the door. |
+| `scene.parliament` | The chamber under the dome: deputies on curved benches with their hands raised, galleries above, the chair and two clerks' desks below a clock. |
+
+The architect's drafts were right in substance; four details are corrected from the pictures (Albrecht holds his gloves and wears a dark red tie, no wing collar; Faber's bow tie is red and the gown is on his shoulders; the results board shows figures only; the study's lamp is green and the window shows sunset). Content policy: nothing on any coat, cap, wall, board or drape.
+
+### 23.9 §23 #18: the personal lines in the other four voices
+
+Every §11.2 headline is shared by the five papers. **The factual lines print the Herald's deck in every paper** (`governor-local`, `address`, `chair-filed`, `list-missed`, `pick-won`, `pick-lost`, `bill-tabled`, `bill-passed`, `bill-failed`, `pledge-kept`, `petition-opened`, `petition-failed`, `pushed`): they are counts and dates and the voice adds nothing. **Eight carry a voice**; their decks per paper:
+
+| Id | Clarion | Sentinel | Gazette | Courier |
+|---|---|---|---|---|
+| `governor` | Top of the poll with a council term behind them. Secretary Holm: "The rule's yours. Pick one the quays can feel." The Address is yours once this term. | Top of the poll, a term served, the committee's confidence recorded. The Governor's rule goes to the vote first; the Address once this term. | Top of the poll with a council term behind them, which the Gazette has checked. The Governor's rule goes first; the Address is yours once. | Top of the poll on the lake, a term behind them. The Governor's rule goes to the vote first at the Casino; the Address once this term. |
+| `chair-front` | {votes} votes, and the secretary's own. Every member's morning orders, the party line in Parliament and the branch's event are yours for twenty-eight days. Holm: "Don't waste them." | {votes} votes. The orders, the party line and the fixture are the Chair's for twenty-eight days; the committee expects them set by tomorrow. | {votes} votes, counted twice. The orders, the party line and the Rooms' event are yours for twenty-eight days. Mr Grey has left you the pencil. | {votes} votes, lake and capital counted together. The orders, the party line and every branch's event are yours for twenty-eight days. |
+| `chair-lost` | {winner} took it with {votes} to your {yourVotes}. Holm: "The orders still want doing." Twenty-eight days to the next. | {winner} took it with {votes} to your {yourVotes}. The committee records the result and expects the orders done. Twenty-eight days to the next. | {winner} took it with {votes} to your {yourVotes}; the Gazette prints the count in full. Twenty-eight days to the next. | {winner} took it with {votes} to your {yourVotes}. The lake voted too. Twenty-eight days to the next. |
+| `deputy-front` | {ordinal} on the list, sworn under the dome. One law a term is yours to put; every bill is yours to vote on. The Union Hall has the train times. | {ordinal} on the list, sworn in order. One law a term; every bill a vote. Beacon House expects the division lists. | {ordinal} on the list, sworn under the dome, which the Gazette's man watched from the gallery. One law a term; every bill a vote. | {ordinal} on the list, sworn under the dome, twenty-five minutes from the lake. One law a term; every bill a vote. |
+| `president-front` | The republic's, for twenty-eight days. A law a week, the veto once, the Address once, and the Clarion watching with the rest. | The republic's, for twenty-eight days. A law a week, the veto once, the Address once. The committee has sent its congratulations and its list. | The republic's, for twenty-eight days. A law a week, the veto once, the Address once, and the Gazette's leader column every morning. | The republic's, for twenty-eight days, and the lake's for a term. A law a week, the veto once, the Address once. |
+| `president-lost` | {winner} scored {score} to your {yourScore}. First on the list: a deputy's seat is yours, and Holm says that's where the work is. | {winner} scored {score} to your {yourScore}. First on the list: a deputy's seat, and the committee's expectation of a full term. | {winner} scored {score} to your {yourScore}; the Gazette has checked the arithmetic. First on the list: a deputy's seat is yours. | {winner} scored {score} to your {yourScore}. First on the list: a deputy's seat, and the lake line to it. |
+| `dissolved-councillor` | {signatures} residents signed. Your seat ends today, the term uncompleted. Holm: "Then win it back." Names in on {weekday}. | {signatures} residents signed. Your seat ends today, the term uncompleted; the committee will want to know why. Names in on {weekday}. | {signatures} residents signed, which the Gazette has counted. Your seat ends today, the term uncompleted. Names in on {weekday}. | {signatures} residents signed, from the Front to the Rows. Your seat ends today, the term uncompleted. Names in on {weekday}. |
+| `chair-vote` | {reason}. Confidence or no confidence, until {until}; two thirds remove. Holm is saying nothing, loudly. | {reason}. Confidence or no confidence, until {until}; two thirds remove. The committee votes in order. | {reason}. Confidence or no confidence, until {until}; two thirds remove. The Gazette is impartial, and curious. | {reason}. Confidence or no confidence, until {until}; two thirds remove. The lake has a view. |
+
+Every deck ≤ 200 characters with the longest tokens. The Courier's non-political set (the slice-1, 5 and 6 lines) is transcribed by the designer in the content change with the Courier, as §11.3 says; its voice is above.
+
+### 23.10 The twenty notes (`docs/tech/slice-7.md` §23)
+
+1. The plan's row: rewritten (`docs/IMPLEMENTATION_PLAN.md` §5; the build line reads *the President* and *36 of 60*). 2. `TERM_EPOCH` as a code constant: accepted. 3. Families: §23.2. 4. The trigger: §23.1 #11. 5. Unrest: #12. 6. The Governor's rule ahead: #7, #8. 7. The unset line: #9. 8. The pick's ties: #23. 9. Timing: #14. 10. Deputies and venues: §23.5, §23.6. 11. Modals: §23.7. 12. The route and the councillors: #24, #25. 13. `scene.parliament` catalogued, not bound to the kind: accepted. 14. `nation.ts`: the developer's (T7). 15. The deputy's 14 days: confirmed (§3's table says so). 16. GDD §15.1's prose now says *Parliament* and *the Presidency*. 17. **Wording confirmed:** laws never touch Party XP or the odds of a §8.4 check; the caught check is a risk roll and `caughtDelta` moves it (§5.4, GDD §15.8). 18. The four voices: §23.9. 19. The quarter order: accepted. 20. Stacked stipends: accepted, counted by the report (Appendix C #65).
