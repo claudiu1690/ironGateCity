@@ -289,7 +289,72 @@ export const ambitions: AmbitionInput[] = [
           art: 'home-hq',
         },
       },
-      { n: 2, title: 'The riverside house', requires: { level: 6 } },
+      // Slice 5 (docs/design/slice-5-risk.md §13): Level 6, seven days on. The quiet way adds Heat
+      // on any outcome: for most players the first Heat they see, in a story that explains it.
+      {
+        n: 2,
+        title: 'The riverside house',
+        requires: { level: 6 },
+        story: {
+          letterFrom: "From the marker's other side",
+          choose: {
+            title: 'The riverside house',
+            narrative:
+              'The man in the good coat is at the door this time, with a figure on a card and no hurry. The marker has an address on its other side you never noticed: a house on the river road, in his hand, and three words. What they want.',
+            choices: [
+              {
+                id: 'friday',
+                text: "Tell him you'll have it by Friday",
+                hint: "A week bought with a lie. He'll be back on Friday, and so will you, with whatever's in that house.",
+                flag: 'promised-friday',
+              },
+              {
+                id: 'shut',
+                text: 'Shut the door on him',
+                hint: 'He takes it well, which is worse. The street has seen him now.',
+                flag: 'shut-the-door',
+              },
+            ],
+          },
+          check: {
+            title: 'The riverside house',
+            narrative:
+              'A boarded house on the river road, his name still on the bell. The yard gate is loose, the housekeeper next door has a key and a memory, and the whole street has seen the man in the good coat go by twice.',
+            approaches: [
+              // "The quiet way is the police's business if anyone saw you": Heat +6, whatever happens.
+              { id: 'yard', text: 'In by the yard, quietly', stats: ['agi'], heat: 6 },
+              { id: 'key', text: 'Ask the housekeeper for the key', stats: ['cha', 'int'] },
+              { id: 'neighbours', text: 'The neighbours first, then the door', stats: ['best'] },
+            ],
+            cta: 'Open the house',
+            difficulty: 14,
+            energy: 15,
+          },
+          result: {
+            success: {
+              headline: 'A page of his ledger',
+              body: "Under the floor of the back room, a biscuit tin: a ledger with the pages torn out but one, and on that one, in his hand, what he owed, to whom, and what he'd paid. More than they say. You put the tin back and the page in your coat.",
+            },
+            partial: {
+              headline: 'A tin, and a page torn in half',
+              body: 'The tin is where the marker said, and empty but for half a page: the sum, no names. Somebody has been here first, or he tore it himself. Half a page is half an argument. You take it.',
+            },
+            failure: {
+              headline: 'A boarded house is a boarded house',
+              body: "The back room has been stripped to the boards and the boards to the joists. Whatever was here went before you came. You stand in the dust with the marker until the housekeeper's light goes on next door. You take the marker home.",
+            },
+          },
+          rewards: {
+            success: { xp: 300, fxp: 80, iron: 150 },
+            partial: { xp: 150, fxp: 40, iron: 75 },
+            failure: { xp: 50, fxp: 0, iron: 0 },
+          },
+          keepsake: 'keep.ledger-page',
+          art: 'home-hq',
+        },
+      },
+      // The teaser: the man in the good coat comes for the page (written with the slice that follows).
+      { n: 3, title: 'The collector', requires: { rank: 3 } },
     ],
   },
 ];

@@ -90,8 +90,10 @@ describe('the real content, slice 4', () => {
       'jev.signal',
       'jev.boy',
     ]);
-    expect(content.journeyEvents.filter((j) => j.first).map((j) => j.id)).toEqual(['jev.passenger']);
-    for (const j of content.journeyEvents) {
+    // Slice 5 adds the hostile deck (slice5.content.test.ts); slice 4's seven are the ordinary deck.
+    const ordinary = content.journeyEvents.filter((j) => j.deck === 'ordinary');
+    expect(ordinary.filter((j) => j.first).map((j) => j.id)).toEqual(['jev.passenger']);
+    for (const j of ordinary) {
       expect(text, j.id).toContain(`${j.title} (${j.id})`);
       expect(text, j.id).toContain(j.setup);
       expect(text, j.id).toContain(j.ignore);
@@ -117,29 +119,33 @@ describe('the real content, slice 4', () => {
   it('the nineteen Issues word for word (§9.5): names, phrases, blurbs, stances, effect lines', () => {
     const deck = section('### 9.5 The deck', '### 9.6');
     const table = rows(deck, /^\| issue\./);
-    expect(table.map((r) => [r[0], r[1], r[2]])).toEqual(content.issues.map((i) => [i.id, i.name, i.short]));
+    // Slice 5 appends five Issues (design §12.1, slice5.content.test.ts); slice 4's nineteen come first.
+    const nineteen = content.issues.slice(0, 19);
+    const ids19 = new Set(nineteen.map((i) => i.id));
+    expect(table.map((r) => [r[0], r[1], r[2]])).toEqual(nineteen.map((i) => [i.id, i.name, i.short]));
     const stances = rows(deck, /^\| [A-Z][^|]+ \| [^|]+ \| [^|]+ \| [^|]+ \| [^|]+ \|$/).filter(
       (r) => r[0] !== 'Issue',
     );
-    for (const i of content.issues) {
+    for (const i of nineteen) {
       const r = stances.find((x) => x[0] === i.name)!;
       expect(r, i.id).toBeDefined();
       expect([i.blurb, i.stances.vanguard, i.stances.collective, i.stances.alliance]).toEqual(r.slice(1));
       // The player's effect lines are listed in §9.5's paragraph, in the pattern of review 2.
       expect(deck, i.id).toContain(i.effectLine);
     }
-    expect(content.issuesFor('coalport').map((x) => x.issue.id)).toEqual([
+    const issuesFor = (c: string) => content.issuesFor(c).filter((x) => ids19.has(x.issue.id));
+    expect(issuesFor('coalport').map((x) => x.issue.id)).toEqual([
       'issue.mill-strike',
       'issue.harbour-rates',
       'issue.labour-exchange',
       'issue.price-of-coal',
       'issue.lights-out',
     ]);
-    const ig = content.issuesFor('irongate');
+    const ig = issuesFor('irongate');
     expect(ig).toHaveLength(13);
     expect(new Set(ig.map((x) => x.districtId)).size).toBe(5);
-    expect(content.issuesFor('duskwall')).toHaveLength(5);
-    expect(content.issuesFor('ashford')).toHaveLength(5);
+    expect(issuesFor('duskwall')).toHaveLength(5);
+    expect(issuesFor('ashford')).toHaveLength(5);
     expect(content.issue('issue.tram-fares')?.effects).toEqual([{ kind: 'ticketPct', value: -50 }]);
     expect(content.issue('issue.evictions')?.effects).toEqual([{ kind: 'roomPct', value: -50 }]);
   });
@@ -247,15 +253,15 @@ describe('every §4.2 check has a failing fixture', () => {
     for (const q of content.districtsOf('irongate')) {
       const pins = content.city('irongate')!.locations.filter((l) => l.quarterId === q.id);
       expect(pins.length).toBeGreaterThan(0);
-      for (const l of pins) expect(inPolygon(l.map, q.district!.outline), l.id).toBe(true);
-      expect(inPolygon(q.district!.anchor, q.district!.outline), q.id).toBe(true);
+      for (const l of pins) expect(inPolygon(l.map, q.outline!), l.id).toBe(true);
+      expect(inPolygon(q.district!.anchor, q.outline!), q.id).toBe(true);
     }
     // The unassigned band at the bottom of the picture lies outside all five.
     for (const x of [0.1, 0.3, 0.5, 0.7, 0.9])
-      expect(content.districtsOf('irongate').some((q) => inPolygon({ x, y: 0.9 }, q.district!.outline))).toBe(false);
+      expect(content.districtsOf('irongate').some((q) => inPolygon({ x, y: 0.9 }, q.outline!))).toBe(false);
     fails((c) => {
       // Eastside drawn without the Union House's corner.
-      irongate(c).quarters[3]!.district!.outline = [
+      irongate(c).quarters[3]!.outline = [
         [0.6, 0.48],
         [0.98, 0.56],
         [0.97, 0.73],
@@ -266,7 +272,7 @@ describe('every §4.2 check has a failing fixture', () => {
     }, /irongate.union-house": its pin is outside irongate.eastside's outline/);
     fails((c) => {
       // Old Town grown over the Ministries' street.
-      irongate(c).quarters[1]!.district!.outline = [
+      irongate(c).quarters[1]!.outline = [
         [0.04, 0.06],
         [0.43, 0.08],
         [0.5, 0.2],
@@ -322,7 +328,7 @@ describe('every §4.2 check has a failing fixture', () => {
     }, /a partial returns at most the stake/);
     fails((c) => {
       c.journeyEvents[1]!.first = true;
-    }, /exactly one card is drawn first/);
+    }, /exactly one ordinary card is drawn first/);
     fails((c) => {
       c.journeyEvents[1]!.choices[0]!.detail = 'Agility · {district}';
     }, /unknown placeholder \{district\}/);
@@ -339,7 +345,10 @@ describe('every §4.2 check has a failing fixture', () => {
       c.issues[0]!.where[0]!.feeds[0]!.locationIds = ['irongate.foundry-row'];
     }, /"irongate.foundry-row" is not in irongate.station-market/);
     fails((c) => {
-      c.issues = c.issues.filter((i) => !['issue.mill-strike', 'issue.harbour-rates'].includes(i.id));
+      // Slice 5 gave Coalport two more (the customs strike, the ferry fares).
+      c.issues = c.issues.filter(
+        (i) => !['issue.mill-strike', 'issue.harbour-rates', 'issue.customs-strike', 'issue.ferry-fares'].includes(i.id),
+      );
     }, /cities.coalport has 3 eligible Issues/);
     fails((c) => {
       c.issues[0]!.effects = [{ kind: 'ticketPct', value: -60 }];

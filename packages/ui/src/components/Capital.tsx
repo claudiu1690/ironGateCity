@@ -491,6 +491,9 @@ export function residenceLines(
     // Slice-4 fixes §1 (QA M2): a candidate on the ballot where they live moves after the result.
     case 'onBallot':
       return { line1: live, line2: r.onBallotLine(card.livesIn, weekdayOf(card.canMoveFromDay ?? 0)), button: null };
+    // Slice 5 (screens §8.3): a visitor on rival ground; the card's one line (phase C styles it).
+    case 'rivalGround':
+      return { line1: copy.risk.cantLiveHere, line2: '', button: null };
   }
 }
 

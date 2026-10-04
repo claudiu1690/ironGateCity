@@ -318,7 +318,8 @@ describe('training verbs, ticket buttons and the election screens (answers ยง4โ€
     const training = cities.flatMap((id) =>
       content.city(id)!.locations.flatMap((l) => l.actions.filter((a) => a.type === 'training')),
     );
-    expect(training).toHaveLength(9);
+    // Slice 5's second quarters add four (Carry, Stack, Run, Roll).
+    expect(training).toHaveLength(9 + 4);
     for (const a of training) {
       const verb = 'verb' in a ? a.verb : '';
       const { unmount } = render(

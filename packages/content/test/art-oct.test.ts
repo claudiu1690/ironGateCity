@@ -5,7 +5,8 @@ import { LocationKind, loadContent } from '../src';
 /**
  * The October art (docs/design/art-wiring-oct.md), wired in the slice-4 fix round: the fourteen scenes
  * (asset, binding, alt text, focus) and the twelve new faces (crop, alt text) read from the note's
- * tables, the sign-up order of all eighteen, and every location kind but four with a scene.
+ * tables, the sign-up order of all eighteen, and every location kind but two with a scene (slice 5
+ * bound `hospital` and `jail`).
  */
 const content = loadContent();
 const unq = (s: string) => s.replace(/`/g, '').replace(/\*\*/g, '').replace(/\*/g, '').trim();
@@ -54,10 +55,10 @@ describe('the October art (art-wiring-oct.md)', () => {
     for (const [, id, x, y] of focus) expect(content.asset(id!).focus).toEqual({ x: Number(x), y: Number(y) });
   });
 
-  it('every location kind has a scene but jail, hospital, parliament and barracks', () => {
+  it('every location kind has a scene but parliament and barracks (jail and hospital: slice 5)', () => {
     const bound = new Set(content.art.scenes.map((s) => s.locationKind));
     const without = LocationKind.options.filter((k) => !bound.has(k));
-    expect(without.sort()).toEqual(['barracks', 'hospital', 'jail', 'parliament']);
+    expect(without.sort()).toEqual(['barracks', 'parliament']);
   });
 
   it('§2: twelve new faces with the note’s crop and alt text', () => {

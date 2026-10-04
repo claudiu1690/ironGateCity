@@ -16,6 +16,12 @@ export const REQUEST_KINDS = [
   'travel.choose',
   'residence.register',
   'residence.room',
+  // Slice 5 (tech design §5.4, ADR 0032, 0033).
+  'encounter.choose',
+  'held.bail',
+  'held.walkOut',
+  'held.discharge',
+  'record.strike',
 ] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 

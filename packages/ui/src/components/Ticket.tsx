@@ -21,6 +21,14 @@ export function placeTagText(t: PlaceTagView): string {
       return copy.capital.comebackTag(t.pct);
     case 'membersOnly':
       return copy.capital.membersOnly;
+    // Slice 5 (screens §4.1, §8.3): the server sends these from phase B; the record tag's words wait
+    // for the designer (phase C), so it prints the receipt's part form for now.
+    case 'rivalGround':
+      return copy.risk.rivalGroundTag;
+    case 'record':
+      return copy.risk.yourRecordPart(Math.abs(t.ironPct));
+    case 'pressureCapped':
+      return copy.risk.pressureCapped;
   }
 }
 

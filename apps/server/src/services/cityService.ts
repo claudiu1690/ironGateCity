@@ -11,6 +11,7 @@ import type {
 } from '@irongate/db';
 import {
   FACTION_IDS,
+  quarterOpen,
   actionEnergy,
   averageShares,
   computeCheck,
@@ -288,7 +289,7 @@ export async function getCityView(
         blurb: q.blurb ?? '',
         frame: { ...q.frame },
         anchor: { ...q.district!.anchor },
-        outline: q.district!.outline.map(([x, y]) => [x, y] as [number, number]),
+        outline: q.outline!.map(([x, y]) => [x, y] as [number, number]),
         opinion: d.opinion,
         state: districtWord(d, m.place?.groundswell ?? null),
         issues: issueRows
@@ -341,7 +342,11 @@ export async function getCityView(
           }
         : null,
     map: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
-    quarters: city.quarters.map((q) => ({ id: q.id, name: q.name, frame: { ...q.frame } })),
+    // Slice 5: the quarters open to the character (T12 adds the locked ones with their locks and
+    // teasers, and the outlines).
+    quarters: city.quarters
+      .filter((q) => quarterOpen(q, c.level).open)
+      .map((q) => ({ id: q.id, name: q.name, frame: { ...q.frame } })),
     ...(city.clouds ? { clouds: true } : {}),
     isNight: isNight(now),
     standing,
@@ -484,7 +489,13 @@ export async function getCityView(
         }),
         council: location.id === ownHq?.id ? council : null,
       };
-    }),
+    })
+      // Slice 5 (ADR 0035, GDD §14.13): a locked quarter's places are not offered (their pin numbers
+      // keep their content order). The quarter views and their locks are T12's.
+      .filter((_, index) => {
+        const q = city.quarters.find((x) => x.id === city.locations[index]!.quarterId);
+        return quarterOpen(q ?? {}, c.level).open;
+      }),
   };
 }
 

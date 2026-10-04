@@ -1,4 +1,6 @@
 import type { City } from '../../schemas';
+import { withMissions } from '../missions/attach';
+import { ashfordMissions } from '../missions/ashford';
 
 /**
  * Ashford, home city of the Alliance (GDD §14.1, §14.11). Locations, actions and text:
@@ -21,10 +23,39 @@ export const ashford: City = {
   map: { day: 'map.ashford.day', night: 'map.ashford.night' },
   // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
   clouds: true,
-  // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
-  // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
+  // Slice 5 (design §2, ADR 0035): three quarters, frames on the one picture; the second opens at
+  // Level 6, the third is a teaser (a later edition). Outlines and labels drawn for the overview:
+  // every pin (the survey's too) inside its own outline, no two overlapping, labels 0.25 apart.
   quarters: [
-    { id: 'ashford.college', name: 'The College', frame: { x0: 0.24, y0: 0.19, x1: 0.76, y1: 0.68 } },
+    {
+      id: 'ashford.college',
+      name: 'The College',
+      frame: { x0: 0.24, y0: 0.19, x1: 0.76, y1: 0.68 },
+      outline: [[0.26, 0.18], [0.74, 0.18], [0.74, 0.43], [0.6, 0.43], [0.58, 0.53], [0.45, 0.53], [0.45, 0.61], [0.4, 0.66], [0.26, 0.66]],
+      label: { x: 0.5, y: 0.34 },
+    },
+    {
+      id: 'ashford.wharf',
+      name: 'The Wharf',
+      frame: { x0: 0.14, y0: 0.41, x1: 0.98, y1: 0.88 },
+      opens: { level: 6 },
+      blurb:
+        "The lower town across the river: the County Infirmary in its garden, the cattle pens and auction sheds, the police station by the Corn Exchange, the wharf below the bridge and the brewery's chimneys.",
+      teaser: 'The lower town across the river: the wharf, the brewery and the cattle pens.',
+      outline: [[0.0, 0.18], [0.26, 0.18], [0.26, 0.66], [0.4, 0.66], [0.45, 0.61], [0.6, 0.61], [0.66, 0.51], [1, 0.51], [1, 1], [0.0, 1]],
+      label: { x: 0.55, y: 0.82 },
+    },
+    {
+      id: 'ashford.station-road',
+      name: 'Station Road',
+      frame: { x0: 0.15, y0: 0.02, x1: 0.88, y1: 0.63 },
+      opens: { edition: 'later' },
+      blurb:
+        "The respectable town north of the river: the station's glass roof, the Town Hall clock, the theatre, the Corn Exchange, the park with its bandstand and the Press Club by the bridge.",
+      teaser: 'The station, the town hall and the Corn Exchange.',
+      outline: [[0.0, 0.0], [1, 0.0], [1, 0.51], [0.66, 0.51], [0.6, 0.61], [0.45, 0.61], [0.45, 0.53], [0.58, 0.53], [0.6, 0.43], [0.74, 0.43], [0.74, 0.18], [0.0, 0.18]],
+      label: { x: 0.45, y: 0.07 },
+    },
   ],
   paper: {
     name: 'The Ashford Gazette',
@@ -37,7 +68,7 @@ export const ashford: City = {
   // `ashford.town-hall`, third quarter; the point is the tower and the front together). The election
   // screens' backdrop.
   council: { offset: 1, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.805, y: 0.275 } },
-  locations: [
+  locations: withMissions([
     {
       id: 'ashford.gazette-house',
       name: 'Gazette House',
@@ -416,5 +447,191 @@ export const ashford: City = {
         },
       ],
     },
-  ],
+    // Slice 5 (design §2.3, §3): the second quarter's five places, pins 7–11.
+    {
+      id: 'ashford.wharf',
+      name: 'The Wharf',
+      ref: 'the Wharf',
+      kind: 'docks',
+      blurb: "The river wharf below the bridge: barges at the lock, the boat club's verandah, and the towpath where the lower town walks on Sundays.",
+      // The survey pin (mapPins.ts), pin 7.
+      map: { x: 0.79, y: 0.77 },
+      quarterId: 'ashford.wharf',
+      actions: [
+        {
+          ...canvass,
+          id: 'ashford.wharf.bargemen',
+          name: 'Talk to the bargemen at the lock',
+          stats: ['str'],
+          text: {
+            success: { headline: 'They make room on the lock beam', body: "The bargemen wait on the lock beam while the water comes up and have nothing to do but talk. You've the hands for the ropes and it shows. By the time the gates open, the beam has agreed to send two men to the Rooms." },
+            partial: { headline: "The lock fills faster than you'd like", body: "You get through the tolls before the gates open and the barges move off. A couple of nods, one argument about the brewery's wharf that goes nowhere. The lock-keeper takes a flyer for later." },
+          },
+        },
+        {
+          ...speech,
+          id: 'ashford.wharf.speech',
+          name: 'Speak from the boat club steps',
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: 'The towpath stops to listen', body: 'The club steps on a Sunday, the river for a sounding board and the lower town walking past. The tolls, the rents below the bridge, who sits on the wharf board. Both banks slow down. A barge rings its bell for you.' },
+            partial: { headline: 'The rowing eight takes half of them', body: "You've a decent crowd until the college eight comes through the bridge and takes it to the rail. You finish for the ones who stayed and a policeman who looks bored. The lock-keeper gives you a nod." },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'ashford.wharf.towpath',
+          name: 'Hand out flyers along the towpath',
+          stats: ['agi'],
+          text: {
+            success: { headline: 'A mile of towpath, empty bag', body: "The whole lower town walks the towpath on a Sunday and can't hurry. You work it at a trot, a flyer into every hand from the lock to the brewery. The bag is empty before the brewery wall." },
+            partial: { headline: 'The wind off the river', body: 'Half the bag goes into hands and half into the river when the wind gets up at the bend. The ones that stayed dry are still out there. A boy fishes one out with a net and reads it anyway.' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'ashford.brewery',
+      name: 'Brewery',
+      ref: 'the brewery',
+      kind: 'factory-gate',
+      blurb: "The brick brewery with its two chimneys at the river's bend. Draymen at the gate from six, and the whole lower town smells of malt.",
+      // The survey pin (mapPins.ts), pin 8.
+      map: { x: 0.92, y: 0.82 },
+      quarterId: 'ashford.wharf',
+      actions: [
+        {
+          ...canvass,
+          id: 'ashford.brewery.draymen',
+          name: 'Talk to the draymen at the gate',
+          stats: ['str'],
+          text: {
+            success: { headline: 'They stop for one who can lift a cask', body: "The draymen load at six and come off at two with the horses. You've the shoulders for it, so they stop. Rates, the tolls, who owns the wharf. A head drayman takes ten flyers for the stables." },
+            partial: { headline: 'Most of them go with the drays', body: "The drays go out in a line and most of the men go with them. You press flyers on the yard hands. Two stop to argue the tolls; one says his father's a member and takes two." },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'ashford.brewery.wall',
+          name: 'Put up posters on the brewery wall',
+          stats: ['str'],
+          text: {
+            success: { headline: "A wall's length of paper", body: 'Bucket, brush and a hundred yards of brewery wall along the towpath. You get twelve posters up straight and high, one to every bay. The draymen will read them at six, and the whole lower town after.' },
+            partial: { headline: "The paste won't hold on sooted brick", body: "The wind off the river is against you and the paste won't take on the chimneys' soot. Five posters stay up; the rest go in the river. Five is five." },
+          },
+        },
+        {
+          id: 'ashford.brewery.barrels',
+          name: 'Roll barrels in the yard',
+          tier: 1,
+          type: 'training',
+          trains: 'str',
+          verb: 'Roll',
+          text: { success: { headline: 'An hour on the casks', body: "The yard foreman doesn't ask which party you're with; he asks if you can get a full cask up the ramp onto the dray alone. You can, by the end. Your back will tell you about it tomorrow." } },
+        },
+      ],
+    },
+    {
+      id: 'ashford.cattle-market',
+      name: 'Cattle Market',
+      ref: 'the Cattle Market',
+      kind: 'market',
+      blurb: 'Pens and auction sheds on the edge of the lower town. Market day brings the county in, with money in its pockets and opinions to match.',
+      // The survey pin (mapPins.ts), pin 9.
+      map: { x: 0.25, y: 0.77 },
+      quarterId: 'ashford.wharf',
+      actions: [
+        {
+          ...canvass,
+          id: 'ashford.cattle-market.pens',
+          name: 'Talk to the farmers at the pens',
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: 'The county has time to talk', body: "Market day, the pens full, and a county that won't be hurried. You work the rails with the flyer and the tolls sheet, and you take your hat off at every pen. By the auction bell, half the county has one in a waistcoat pocket." },
+            partial: { headline: 'The auction starts early', body: "You've done three pens when the bell goes and the county goes to the sheds in a body. A few flyers go into waistcoats. One old farmer says he'll read it after the sale, if his beasts make a price." },
+          },
+        },
+        {
+          ...speech,
+          id: 'ashford.cattle-market.speech',
+          name: "Speak from the auctioneer's box",
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: 'The box is yours between lots', body: "The auctioneer's box between lots, the sheds for a sounding board and the county on the benches. The tolls, the railway rates, who sits on the market board. Nobody heckles a man in the box. The auctioneer lets you finish before the gavel." },
+            partial: { headline: 'The next lot comes in', body: "You get through the tolls before the next lot comes through the gate and takes the sheds' attention with it. A knot of young farmers at the rail stays to argue. The auctioneer looks at his watch." },
+          },
+        },
+      ],
+    },
+    {
+      id: 'ashford.infirmary',
+      name: 'County Infirmary',
+      ref: 'the County Infirmary',
+      kind: 'hospital',
+      blurb: "The county hospital in its walled garden: long wards, a porter's lodge, and a queue of visitors at two with flowers from the market.",
+      // The survey pin (mapPins.ts), pin 10.
+      map: { x: 0.2, y: 0.47 },
+      quarterId: 'ashford.wharf',
+      actions: [
+        {
+          ...canvass,
+          id: 'ashford.infirmary.visitors',
+          name: 'Talk to people at visiting hour',
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: "Two o'clock in the garden", body: "Visiting is at two and the queue at the lodge is anxious, patient and can't leave. You work it gently: the beds, the fever, who pays. By the time the porter opens the gate most of it has a flyer among the flowers." },
+            partial: { headline: 'The porter opens early', body: "The gate opens at ten to two and the queue is gone up the drive. A few flyers go into baskets. One woman says her husband's on the men's ward and takes two." },
+          },
+        },
+        {
+          ...intelligence,
+          energy: 4,
+          id: 'ashford.infirmary.ambulance',
+          name: 'Watch who the ambulance brings',
+          stats: ['int'],
+          text: {
+            success: { headline: 'The ambulance keeps a list', body: "A bench by the lodge and a paper you don't read. Who comes in from the brewery, who from the cattle market, which case the porter signs for without a name. Two names and a time go in your notebook." },
+            partial: { headline: 'A quiet afternoon at the lodge', body: 'One ambulance, one broken arm from the wharf. The porter smokes by the gate and says nothing. One name worth writing down. Come back on market day.' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'ashford.police',
+      name: 'Police Station',
+      ref: 'the police station',
+      kind: 'jail',
+      blurb: "The police station by the Corn Exchange: a lamp over the door, a duty officer at the desk, and a book in which the whole town's name eventually appears.",
+      // The survey pin (mapPins.ts), pin 11.
+      map: { x: 0.72, y: 0.52 },
+      quarterId: 'ashford.wharf',
+      actions: [
+        {
+          ...intelligence,
+          energy: 3,
+          id: 'ashford.police.notices',
+          name: 'Read the notices at the station door',
+          stats: ['int'],
+          text: {
+            success: { headline: 'Names on the board', body: "The board by the door lists the week's lost property, licences refused and the men wanted for questioning. Two names and a street go in your notebook while the duty officer is on the telephone." },
+            partial: { headline: "Last week's sheet", body: "The board is last week's and the duty officer is watching through the glass. One name worth writing down, from the licences refused. Come back on Monday." },
+          },
+        },
+        {
+          ...canvass,
+          id: 'ashford.police.desk',
+          name: 'Talk to people waiting at the desk',
+          stats: ['int'],
+          text: {
+            success: { headline: 'Everyone here has a grievance', body: 'A lost dog, a licence, a son. The bench by the desk is the most patient audience in Ashford. You keep your voice down and your flyers folded small. By the time the duty officer calls next, half the bench has one.' },
+            partial: { headline: 'The duty officer has a view', body: 'The duty officer looks up from his book and then at the door. You get two flyers out on the way to it. One man follows you onto the step to ask about the court queue.' },
+          },
+        },
+      ],
+    },
+  ], ashfordMissions),
+  // Slice 5 (design §8.1, §9.2): where the game sends a player in this city.
+  services: { cells: 'ashford.police', infirmary: 'ashford.infirmary' },
+  // Slice 5 (design §10.5, §23.1 #10): whom a visitor's tier-1 tap meets here (the police on top).
+  runInPool: ['party-thug'],
 };

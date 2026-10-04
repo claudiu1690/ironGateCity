@@ -15,10 +15,22 @@ export {
   migrateReview2StreetOrdinances,
 } from './migrations/005-review2-street-ordinances';
 export { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
+export { migrateSlice5Risk } from './migrations/007-slice5-risk';
 export { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
 // Slice 4 (tech design §5).
 export { Journey } from './models/journey';
-export type { JourneyDoc, JourneyStatus } from './models/journey';
+export type { JourneyDoc, JourneyKind, JourneyStatus } from './models/journey';
+// Slice 5 (tech design §5.2, §5.3).
+export { Encounter, ENCOUNTER_CHOICES } from './models/encounter';
+export type {
+  EncounterDoc,
+  EncounterState,
+  EncounterBy,
+  EncounterChoice,
+  EncounterOutcome,
+} from './models/encounter';
+export { Stay } from './models/stay';
+export type { StayDoc, StayHow, StayKind, StayReason, StoredBail } from './models/stay';
 export { District } from './models/district';
 export type { DistrictDoc, DistrictStateDoc } from './models/district';
 export { Award, Contribution, InfluenceLedger, LEDGER_KINDS, contributionId } from './models/ledger';
@@ -55,16 +67,24 @@ export type { ArrivalDoc } from './models/arrival';
 export { Character } from './models/character';
 export type {
   CharacterDoc,
+  StoredBar,
+  StoredFirsts,
+  StoredFlag,
+  StoredHeld,
   StoredJob,
   StoredJourney,
+  StoredMark,
   StoredOrderItem,
   StoredOrders,
+  StoredRecord,
   StoredResidence,
+  StoredRunIn,
+  StoredTally,
 } from './models/character';
 export { City, cityOpinion } from './models/city';
-export type { CityDoc, HomeCityDoc, MoraleRecordDoc } from './models/city';
-export { ActionLog } from './models/actionLog';
-export type { ActionLogDoc } from './models/actionLog';
+export type { CityDoc, HomeCityDoc, MoraleRecordDoc, RivalPressureDoc } from './models/city';
+export { ACTION_LOG_KINDS, ACTION_LOG_OUTCOMES, ActionLog } from './models/actionLog';
+export type { ActionLogDoc, ActionLogKind, ActionLogOutcome } from './models/actionLog';
 export { PaperEntry } from './models/paperEntry';
 export type { PaperEntryDoc } from './models/paperEntry';
 export { REQUEST_KINDS, REQUEST_LOG_TTL_SECONDS, RequestLog } from './models/requestLog';

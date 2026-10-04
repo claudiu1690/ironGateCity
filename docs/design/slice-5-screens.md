@@ -65,7 +65,7 @@ The whole picture zoomed out, covering the box, free drag and zoom within the re
 
 ### 3.3 The teaser sheet
 
-`BottomSheet`, kicker *QUARTER · OPENS AT LEVEL 6* (or *· A LATER EDITION*), the name in Playfair 20 px, the three-line blurb from content (*The Harbour: where the basin opens to the sea: the slipway, the customs house at the mole, the infirmary, the police, and across the water by ferry the far bank with its fish market and its lower town that votes late.*), and one Courier line: *Level 6 opens it; you are Level {n}.* No button but Close.
+`BottomSheet`, kicker *QUARTER · OPENS AT LEVEL 6* (or *· A LATER EDITION*), the name in Playfair 20 px, the three-line blurb from content (*The Harbour: where the basin opens to the sea: the slipway, the customs house, the infirmary, the police, and across the water by ferry the far bank with its fish market and its lower town that votes late.*), and one Courier line: *Level 6 opens it; you are Level {n}.* No button but Close.
 
 ### 3.4 The quarter view
 

@@ -17,7 +17,8 @@ import { R3_ORDER_TITLES, R3_VERBS } from './review3';
 
 const content = loadContent();
 const city = content.city('coalport')!;
-const actions = city.locations.flatMap((l) => l.actions);
+// Slice 5 adds the Harbour's places (slice5.cities.test.ts); slice 1's are the Mill's.
+const actions = city.locations.filter((l) => l.quarterId === city.quarters[0]!.id).flatMap((l) => l.actions);
 
 /** Markdown table rows of a section (the lines starting with "| `"). */
 function tableRows(sectionStart: string, sectionEnd: string, row = /^\| (`|\d+ \| `)/): string[][] {
@@ -173,7 +174,10 @@ describe('content vs docs/design/slice-1-content.md', () => {
           .map((c) => c.trim()),
       );
     // Slice 4's capital rotation is checked word for word in slice4.content.test.ts.
-    expect(rows).toHaveLength(content.orderTemplates.filter((t) => t.residence !== 'capital').length);
+    // Slice 5's slot-B mission orders (minLevel 6) are design §12.2's (slice5.content.test.ts).
+    expect(rows).toHaveLength(
+      content.orderTemplates.filter((t) => t.residence !== 'capital' && t.minLevel === undefined).length,
+    );
     for (const r of rows) {
       const [id, slot, title, line, target] = r as [string, string, string, string, string];
       const t = content.orderTemplates.find((x) => x.id === id.match(/`([^`]+)`/)![1]);
@@ -213,7 +217,7 @@ describe('content vs docs/design/slice-1-content.md', () => {
     // The home cities' nine; the capital's five are in slice4.irongate.test.ts.
     const all = content.cities
       .filter((c) => c.role === 'home')
-      .flatMap((c) => c.locations.flatMap((l) => l.actions))
+      .flatMap((c) => c.locations.filter((l) => l.quarterId === c.quarters[0]!.id).flatMap((l) => l.actions))
       .filter((a) => a.type === 'training');
     expect(all).toHaveLength(9);
   });
@@ -307,8 +311,10 @@ describe('CLAUDE.md design rules 2 and 6: vocabulary across all player-facing co
   // the Duskwall ids that keep their original words. Content-policy review §1 ("Ids: no id
   // changes"): ids are never shown, and characters' jobs, order progress and logs reference them.
   // Slice 4: the capital's district id `irongate.garrison-hill` (its name is a place name, §12.5).
+  // Slice 5 (design §23.1 #22): the duty officer's art source keeps its file name; nothing a player
+  // reads says it.
   const legacyIds =
-    /"duskwall\.(garrison-gate(\.(canvass|speech|drill|stores))?|beacon-house\.muster)"|"irongate\.garrison-hill"/g;
+    /"duskwall\.(garrison-gate(\.(canvass|speech|drill|stores))?|beacon-house\.muster)"|"irongate\.garrison-hill"|"mvp\/portraits\/sergeant\.png"/g;
   const withoutLegacyIds = (s: string) => s.replace(legacyIds, '"[legacy id]"');
 
   it('uses campaign vocabulary: no war framing', () => {

@@ -7,7 +7,8 @@
 export interface ReportAction {
   characterId: string;
   createdAt: Date;
-  kind: 'checked' | 'training' | 'shift' | 'chapter';
+  /** Slice 5: `mission` rows (tech design §5.4). */
+  kind: 'checked' | 'training' | 'shift' | 'chapter' | 'mission';
   times: number;
   txAttempts: number;
   /** Energy spent by the row (before − after). */

@@ -39,9 +39,12 @@ export function drawIssues(i: {
   return out;
 }
 
-/** One feed (AND of its fields); the city is the Issue's own. */
+/**
+ * One feed (AND of its fields); the city is the Issue's own. Slice 5 (design §12.1): a mission is
+ * tagged by the same feeds as the type it is seen as (the illegal types are kept out by the caller).
+ */
 export function feedMatches(m: IssueMatch, a: ActionDescriptor): boolean {
-  if (a.kind !== 'checked') return false;
+  if (a.kind !== 'checked' && a.kind !== 'mission') return false;
   if (m.actionTypes && (a.type === undefined || !m.actionTypes.includes(a.type))) return false;
   if (m.locationIds && (a.locationId === undefined || !m.locationIds.includes(a.locationId))) return false;
   if (m.locationKinds && (a.locationKind === undefined || !m.locationKinds.includes(a.locationKind)))

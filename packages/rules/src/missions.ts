@@ -1,0 +1,684 @@
+import { computeCheck, outcomeForRoll } from './check';
+import { DIRECTIVES, HEALTH, MISSION_LADDER, MISSION_TYPES, RIVAL_GROUND } from './constants';
+import type { MissionType } from './constants';
+import type { DayKey } from './day';
+import { projectEnergy, spendEnergy } from './energy';
+import type { EnergyProjection, EnergyState } from './energy';
+import { admit, arrest, bailFor, policeLossHealth } from './held';
+import type { HeldSpec } from './held';
+import { healthMax, healthNow } from './health';
+import type { HealthTimer } from './health';
+import { addHeat, heatState } from './heat';
+import type { HeatChange, HeatTimer } from './heat';
+import { issueTags, pointsFor } from './issues';
+import {
+  NO_MODIFIERS,
+  actionEnergy,
+  ordinanceCheckBonuses,
+  placeCheckBonuses,
+  placeOf,
+  restedCapFor,
+  rewardShares,
+  rivalGroundIn,
+  standingPerSuccess,
+  swingFactors,
+} from './ordinances';
+import type { Modifiers, PriceLine, SwingFactor } from './ordinances';
+import { advanceOrders } from './orders';
+import type { MatchCtx } from './orders';
+import { barredByRecord, liveMarks, marksFor, recordArrest, recordLevel } from './record';
+import type { Mark, RecordLevel } from './record';
+import { computeRewards, roundHalfUp } from './rewards';
+import type { LineShare } from './rewards';
+import { createRng } from './rng';
+import type { Rng } from './rng';
+import { pickOpponent, runInChance } from './runIn';
+import type { CaughtResult, DayFlags, RunInOutcome } from './runIn';
+import { standingBonus, standingView } from './standing';
+import { FACTION_IDS } from './types';
+import type {
+  ActionAttempt,
+  ActionDescriptor,
+  CheckBonus,
+  CheckBreakdown,
+  CheckStatSpec,
+  CityRole,
+  FactionId,
+  OpinionShares,
+  OrderTemplate,
+  OrdersState,
+  Outcome,
+  RewardLine,
+  RewardPart,
+  Rewards,
+  Stats,
+  TrainableStat,
+} from './types';
+
+/**
+ * Missions (tier 2; GDD §13.1–§13.3, design §4–§5, ADR 0031): the ladder, the target, the gates, the
+ * risk line and one pure resolver. `resolveMission` spends the Energy, makes the check, adds the
+ * Heat and rolls the run-in; `finishMission` applies the street (the run-in, the caught check, the
+ * record, the cells or the infirmary). Both deterministic per seed.
+ */
+
+export type MissionLevel = 6 | 8 | 10 | 12;
+
+/** §8.4 (design §4.3, §23.1 #1): 14 / 16 / 18 / 20 by the mission's Level, +2 in the capital. */
+export function missionDifficulty(level: MissionLevel, role: CityRole): number {
+  return MISSION_LADDER[level] + (role === 'battleground' ? MISSION_LADDER.battlegroundStep : 0);
+}
+
+/**
+ * Design §4.1: the faction a mission is against. `leader` (the capital) is the district's leader at
+ * the boundary, or, when that is the actor's own, the next faction by share (ties in FACTION_IDS
+ * order). A named faction is itself; a legal mission has none.
+ */
+export function missionTarget(
+  target: FactionId | 'leader' | undefined,
+  actor: FactionId,
+  district: { leader: FactionId | null; shares: OpinionShares } | null,
+): FactionId | null {
+  if (target === undefined) return null;
+  if (target !== 'leader') return target;
+  if (!district) return null;
+  const byShare = [...FACTION_IDS].sort(
+    (a, b) => Math.round(district.shares[b] * 1_000) - Math.round(district.shares[a] * 1_000),
+  );
+  const leader = district.leader ?? byShare[0]!;
+  return leader !== actor ? leader : byShare.find((f) => f !== actor)!;
+}
+
+/** Design §4.1: a mission against a faction is hidden from that faction's members. */
+export const offeredTo = (target: FactionId | null, actor: FactionId): boolean => target !== actor;
+
+export interface MissionGateInput {
+  level: number;
+  rank: number;
+  standingLevel: number;
+  record: RecordLevel;
+  mission: { level: number; requires?: { rank?: number; standing?: number } };
+  place: { kind: string; factionId?: FactionId };
+}
+
+/**
+ * Design §4.1, §4.7: the first unmet gate (*From Level 8* · *Organisers and above* · *Needs a Known
+ * reputation here* · *Not with your record*), or null.
+ */
+export function missionGate(
+  i: MissionGateInput,
+): { reason: 'LEVEL' | 'RANK' | 'STANDING' | 'RECORD'; need: number } | null {
+  if (i.level < i.mission.level) return { reason: 'LEVEL', need: i.mission.level };
+  const rank = i.mission.requires?.rank;
+  if (rank !== undefined && i.rank < rank) return { reason: 'RANK', need: rank };
+  const standing = i.mission.requires?.standing;
+  if (standing !== undefined && i.standingLevel < standing) return { reason: 'STANDING', need: standing };
+  if (barredByRecord(i.record, i.place)) return { reason: 'RECORD', need: 0 };
+  return null;
+}
+
+/** A way to do a mission (content `Way`): its stat, and a louder way's own Heat or run-in base. */
+export interface WaySpec {
+  id: string;
+  stats: CheckStatSpec;
+  heat?: number;
+  runIn?: number;
+}
+
+/** §8.4 at the mission's difficulty with the place's rows (Standing, close race on speech, rival ground). */
+export function wayCheck(i: {
+  way: Pick<WaySpec, 'stats'>;
+  values: Stats;
+  difficulty: number;
+  bonuses: CheckBonus[];
+  prefer?: TrainableStat;
+}): CheckBreakdown {
+  return computeCheck({
+    stats: i.way.stats,
+    values: i.values,
+    difficulty: i.difficulty,
+    bonuses: i.bonuses,
+    ...(i.prefer ? { prefer: i.prefer } : {}),
+  });
+}
+
+/** Design §4.7: the way with the best chance for this player; ties go to content order. */
+export function suggestedWay(
+  ways: ReadonlyArray<{ id: string }>,
+  checks: ReadonlyArray<{ chance: number }>,
+): string {
+  let best = 0;
+  checks.forEach((c, i) => {
+    if (c.chance > checks[best]!.chance) best = i;
+  });
+  return ways[best]!.id;
+}
+
+/** A way's Agility row: a single-stat AGI check (design §4.1: *Agility +¼* on a Success). */
+export const isAgilityWay = (w: Pick<WaySpec, 'stats'>): boolean => w.stats.length === 1 && w.stats[0] === 'agi';
+
+/**
+ * Design §4.7: the ticket's risk line for this player, here, today: the Heat the attempt adds (×2 on
+ * rival ground), the run-in chance after that gain, and the marks if caught.
+ */
+export function missionRisk(i: {
+  type: MissionType;
+  way: Pick<WaySpec, 'heat' | 'runIn'>;
+  rivalGround: boolean;
+  heat: number;
+  record: RecordLevel;
+  flags: DayFlags;
+}): { heat: number; runInChance: number; marks: 0 | 1 | 2 | 3 } {
+  const spec = MISSION_TYPES[i.type];
+  const heat = (i.way.heat ?? spec.heat) * (i.rivalGround ? RIVAL_GROUND.heatFactor : 1);
+  const runIn = runInChance({
+    base: i.way.runIn ?? spec.runIn,
+    tier: 2,
+    rivalGround: i.rivalGround,
+    heatState: heatState(Math.min(100, i.heat + heat)),
+    record: i.record,
+    flags: i.flags,
+  });
+  return { heat, runInChance: runIn, marks: spec.marks };
+}
+
+export type RiskBand = 'safe' | 'littleRisk' | 'risky' | 'dangerous';
+
+/** Design §4.7: *Safe* 0 % · *A little risk* 1–10 · *Risky* 11–24 · *Dangerous* 25 and over. */
+export function riskBand(chance: number): RiskBand {
+  if (chance <= 0) return 'safe';
+  if (chance <= 10) return 'littleRisk';
+  if (chance <= 24) return 'risky';
+  return 'dangerous';
+}
+
+/** The record's Iron line on a mission (design §7.3): *your record −6*. */
+export const RECORD_PART = { id: 'record', label: 'Your record' } as const;
+
+/**
+ * Design §4.2 (GDD §5.5 tier 2): 5 XP, 0.8 Party XP and 4 Iron per Energy; Partial half per line;
+ * Failure a fifth of the XP only (Rested still on that XP). Theft's Iron ×2 and no opinion; the
+ * illegal types' opinion ×2. The record's penalty is a negative Iron share.
+ */
+export function tier2Rewards(i: {
+  type: MissionType;
+  energy: number;
+  outcome: Outcome;
+  restedUsed: number;
+  costPaid?: number;
+  fxpBonusShare?: number;
+  fxpShares?: readonly LineShare[];
+  ironShares?: readonly LineShare[];
+  opinionFactors?: readonly SwingFactor[];
+  /** The record's Iron penalty, −10 / −20 / −30 (0: none). */
+  recordIronPct?: number;
+}): Rewards {
+  const spec = MISSION_TYPES[i.type];
+  const ironShares = [
+    ...(i.ironShares ?? []),
+    ...(i.recordIronPct ? [{ ...RECORD_PART, share: i.recordIronPct / 100 }] : []),
+  ];
+  return withAllParts(
+    computeRewards({
+      tier: 2,
+      energy: i.energy,
+      outcome: i.outcome,
+      givesFxp: spec.givesFxp,
+      givesOpinion: spec.opinion !== null,
+      restedUsed: i.restedUsed,
+      ...(i.costPaid !== undefined ? { costPaid: i.costPaid } : {}),
+      fxpBonusShare: i.fxpBonusShare ?? 0,
+      fxpShares: i.fxpShares ?? [],
+      ironShares,
+      ...(i.opinionFactors && i.opinionFactors.length > 0 ? { opinionFactors: i.opinionFactors } : {}),
+      ironMultiplier: spec.ironMult,
+      opinionMultiplier: spec.opinionMult || 1,
+    }),
+  );
+}
+
+/**
+ * Tier-2 results always name their parts (there is no slice-1 shape to keep): Rested and the Party
+ * order are made explicit where computeRewards folded them into `bonus`.
+ */
+function withAllParts(r: Rewards): Rewards {
+  const fill = (line: RewardLine, classic: RewardPart[]): RewardLine => {
+    if (line.parts || line.bonus === 0) return { ...line, ...(line.parts ? { parts: [...line.parts] } : {}) };
+    const named = classic.filter((p) => p.amount !== 0);
+    return { ...line, parts: named.length > 0 ? named : [{ id: 'rested', label: 'Rested', amount: line.bonus }] };
+  };
+  const one = (id: string, label: string, amount: number): RewardPart[] => [{ id, label, amount }];
+  return {
+    ...r,
+    xp: fill(r.xp, one('rested', 'Rested', r.xp.bonus)),
+    fxp: fill(r.fxp, one('order', 'Party order', r.fxp.bonus)),
+    iron: fill(r.iron, one('rested', 'Rested', r.iron.bonus)),
+  };
+}
+
+export interface OrdersAdvance {
+  after: OrdersState;
+  /** The template this attempt advanced (it got the +25 % FXP), or null. */
+  advanced: string | null;
+  completed: string[];
+  allDone: boolean;
+}
+
+/** The mission as the rules need it (content `Mission` at its place). */
+export interface MissionSpec {
+  id: string;
+  type: MissionType;
+  /** The content Energy (the type's): rewards are computed on it. */
+  energy: number;
+  difficulty: number;
+  locationId: string;
+  cityId: string;
+  /** The location's quarter (a capital district) and kind, for Issue feeds and orders. */
+  districtId?: string;
+  locationKind?: string;
+  pool: readonly string[];
+}
+
+export interface MissionInput {
+  mission: MissionSpec;
+  way: WaySpec;
+  values: Stats;
+  prefer?: TrainableStat;
+  energy: EnergyState;
+  now: number;
+  restedCap?: number;
+  /** Successes so far in this city; label "Known in Coalport". */
+  standing: { successes: number; names: readonly string[]; cityName: string };
+  orders: OrdersState;
+  orderTemplates: readonly OrderTemplate[];
+  homeCityId: string;
+  residence?: MatchCtx;
+  factionId: FactionId;
+  modifiers?: Modifiers;
+  bonuses?: CheckBonus[];
+  /** The resolved target (`missionTarget`) of an `against` type; null otherwise. */
+  target: FactionId | null;
+  heat: HeatTimer;
+  /** The residence city's cooling rate of a day (design §23.1 #8). */
+  rateOn: (day: DayKey) => number;
+  record: RecordLevel;
+  flags: DayFlags;
+  opponents: { sideOf: (id: string) => FactionId | 'police'; policeId: string };
+  /** Test hooks (tech design §8.5): the check's roll, the run-in, the opponent. */
+  force?: { checkRoll?: number; runIn?: 'next' | 'never'; opponentId?: string };
+}
+
+/** The pure start of a mission, stored in the encounter while a run-in is pending (ADR 0032). */
+export interface MissionStart {
+  seed: string;
+  missionId: string;
+  wayId: string;
+  tier: 2;
+  type: MissionType;
+  rivalGround: boolean;
+  energy: { before: EnergyProjection; after: EnergyState; cost: number; restedUsed: number };
+  attempt: ActionAttempt;
+  /** As rolled, and the dropped twin (Failure's XP only: a Run or a loss). */
+  rewards: { rolled: Rewards; dropped: Rewards };
+  /** Issue momentum as rolled (0 on a Failure); none for the illegal types. */
+  points: number;
+  issues: Array<{ docId: string; issueId: string; name: string; points: number }>;
+  descriptor: ActionDescriptor;
+  orders: { before: OrdersState; rolled: OrdersAdvance; dropped: OrdersAdvance };
+  standing: { before: number; rolled: number; dropped: number };
+  heat: HeatChange;
+  opinion: {
+    mode: 'persuade' | 'against' | null;
+    target: FactionId | null;
+    swing: { rolled: number; dropped: 0 };
+    factors: SwingFactor[];
+    /** On rival ground against the home faction: the points it can still lose today. */
+    cap: number | null;
+  };
+  runIn: { chance: number; roll: number; fires: boolean; opponentId: string | null };
+  /** A single-stat AGI way (*Agility +¼* on a paid Success). */
+  agility: boolean;
+}
+
+export type MissionStartResult =
+  | { ok: true; start: MissionStart }
+  | { ok: false; reason: 'NOT_ENOUGH_ENERGY'; cost: number; energy: EnergyProjection };
+
+const advance = (
+  orders: OrdersState,
+  templates: readonly OrderTemplate[],
+  a: ActionDescriptor,
+  outcome: Outcome,
+  ctx: MatchCtx,
+  now: number,
+): OrdersAdvance => {
+  const r = advanceOrders(orders, templates, a, outcome, ctx, now);
+  return {
+    after: r.orders,
+    advanced: r.advanced?.templateId ?? null,
+    completed: r.completed ? [r.completed.templateId] : [],
+    allDone: r.allDone,
+  };
+};
+
+/**
+ * Design §4.6 steps 1–2 (ADR 0031 §3): spend the Energy, make the check (one roll), hold the rewards
+ * as rolled and their dropped twin, add the Heat (paid whatever happens; ×2 on rival ground), roll
+ * the run-in after the gain and pick the opponent. The run-in uses the `:runIn` stream of the seed.
+ */
+export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
+  const m = i.modifiers ?? NO_MODIFIERS;
+  const spec = MISSION_TYPES[i.mission.type];
+  const seenAs = spec.seenAs;
+  const rival = rivalGroundIn(m);
+  const before = projectEnergy(i.energy, i.now, undefined, i.restedCap ?? restedCapFor(m));
+  // Design §23.1 #15: type-keyed rules apply by the type a mission is seen as (Rally Permits 15 → 13).
+  const cost = actionEnergy(i.mission.energy, seenAs, m);
+  const spent = spendEnergy(before, cost);
+  if (!spent.ok) return { ok: false, reason: 'NOT_ENOUGH_ENERGY', cost, energy: before };
+
+  const home = i.residence ?? i.homeCityId;
+  const ctx: MatchCtx = rival
+    ? { ...(typeof home === 'string' ? { cityId: home, districtId: null } : home), rivalGround: true }
+    : home;
+  const place = placeOf(m);
+  const untagged: ActionDescriptor = {
+    kind: 'mission',
+    actionId: i.mission.id,
+    type: seenAs,
+    locationId: i.mission.locationId,
+    cityId: i.mission.cityId,
+    ...(i.mission.districtId !== undefined ? { districtId: i.mission.districtId } : {}),
+    ...(i.mission.locationKind !== undefined ? { locationKind: i.mission.locationKind } : {}),
+  };
+  // Design §12.1: a mission is tagged by the same feeds as its type; the illegal types by none.
+  const tagged = place && !spec.illegal ? issueTags(place.issues, untagged) : [];
+  const descriptor: ActionDescriptor =
+    tagged.length > 0 ? { ...untagged, issueIds: tagged.map((t) => t.issueId) } : untagged;
+
+  const label = `${i.standing.names[standingView(i.standing.successes).level] ?? 'Known'} in ${i.standing.cityName}`;
+  const standing = standingBonus(i.standing.successes, label);
+  const check = wayCheck({
+    way: i.way,
+    values: i.values,
+    difficulty: i.mission.difficulty,
+    bonuses: [
+      ...(i.bonuses ?? []),
+      ...(standing ? [standing] : []),
+      ...ordinanceCheckBonuses(seenAs, m),
+      ...placeCheckBonuses(seenAs, m),
+    ],
+    ...(i.prefer ? { prefer: i.prefer } : {}),
+  });
+  const drawn = rng.roll100();
+  const roll = i.force?.checkRoll ?? drawn;
+  const outcome = outcomeForRoll(roll, check.chance, 2);
+
+  const rolledOrders = advance(i.orders, i.orderTemplates, descriptor, outcome, ctx, i.now);
+  const droppedOrders = advance(i.orders, i.orderTemplates, descriptor, 'failure', ctx, i.now);
+  const shares = rewardShares({ type: seenAs, givesFxp: spec.givesFxp, m });
+  const factors = place && spec.opinion !== null ? swingFactors(seenAs, i.factionId, m, tagged) : [];
+  const recordIronPct = { clean: 0, onFile: -10, repeat: -20, notorious: -30 }[i.record];
+  const common = {
+    type: i.mission.type,
+    energy: i.mission.energy,
+    restedUsed: spent.restedUsed,
+    costPaid: cost,
+    fxpShares: shares.fxp,
+    ironShares: shares.iron,
+    opinionFactors: factors,
+    recordIronPct,
+  };
+  const bonusFor = (a: OrdersAdvance) =>
+    a.advanced !== null || !DIRECTIVES.bonusOnlyWhileOpen ? DIRECTIVES.matchFxpBonus : 0;
+  const rolled = tier2Rewards({ ...common, outcome, fxpBonusShare: bonusFor(rolledOrders) });
+  const dropped = tier2Rewards({ ...common, outcome: 'failure', fxpBonusShare: 0 });
+
+  // Heat: the type's (or the way's), ×2 on rival ground, on every outcome (design §4.2).
+  const gain = (i.way.heat ?? spec.heat) * (rival ? RIVAL_GROUND.heatFactor : 1);
+  const heat = addHeat(i.heat, i.now, i.rateOn, gain);
+
+  // Opinion (design §4.1, §11.2): persuasion, or against the target; on rival ground a speech too
+  // draws from the home faction, under the day's cap.
+  let mode = spec.opinion;
+  let target: FactionId | null = mode === 'against' ? i.target : null;
+  if (rival && mode === 'persuade') {
+    mode = 'against';
+    target = rival.homeFactionId;
+  }
+  const cap = rival && target === rival.homeFactionId ? rival.pressureLeft : null;
+
+  // The run-in, after the gain (design §4.6 step 2).
+  const street = createRng(`${rng.seed}:runIn`);
+  const chance = runInChance({
+    base: i.way.runIn ?? spec.runIn,
+    tier: 2,
+    rivalGround: rival !== null,
+    heatState: heat.stateAfter,
+    record: i.record,
+    flags: i.flags,
+  });
+  const runRoll = street.roll100();
+  const fires = i.force?.runIn === 'next' ? true : i.force?.runIn === 'never' ? false : runRoll <= chance;
+  const opponentId = fires
+    ? (i.force?.opponentId ??
+      pickOpponent({
+        pool: i.mission.pool,
+        actor: i.factionId,
+        heatState: heat.stateAfter,
+        sideOf: i.opponents.sideOf,
+        policeId: i.opponents.policeId,
+        rng: street,
+      }))
+    : null;
+
+  const perSuccess = standingPerSuccess(m);
+  const points = tagged.length > 0 ? pointsFor(i.mission.energy, outcome) : 0;
+  return {
+    ok: true,
+    start: {
+      seed: rng.seed,
+      missionId: i.mission.id,
+      wayId: i.way.id,
+      tier: 2,
+      type: i.mission.type,
+      rivalGround: rival !== null,
+      energy: { before, after: spent.state, cost, restedUsed: spent.restedUsed },
+      attempt: { index: 1, check, roll, outcome },
+      rewards: { rolled, dropped },
+      points,
+      issues: tagged.map((t) => ({ docId: t.docId, issueId: t.issueId, name: t.name, points })),
+      descriptor,
+      orders: { before: i.orders, rolled: rolledOrders, dropped: droppedOrders },
+      standing: {
+        before: i.standing.successes,
+        rolled: i.standing.successes + (outcome === 'success' ? perSuccess : 0),
+        dropped: i.standing.successes,
+      },
+      heat,
+      opinion: { mode, target, swing: { rolled: rolled.opinion, dropped: 0 }, factors, cap },
+      runIn: { chance, roll: runRoll, fires, opponentId },
+      agility: isAgilityWay(i.way),
+    },
+  };
+}
+
+export type MissionStamp = 'success' | 'partial' | 'failure' | 'takenIn' | 'carriedOff';
+
+/** Why a player was sent to the cells or the infirmary (`stays.reason`). */
+export type HeldReason = 'caught' | 'wanted' | 'policeLoss' | 'runInLost';
+
+export interface MissionFinal {
+  /** The check's outcome (design §23.1 #19: the stamp is it, after a Run too). */
+  outcome: Outcome;
+  stamp: MissionStamp;
+  /** The held result paid as rolled, or its dropped twin after a Run or a loss. */
+  paid: 'rolled' | 'dropped';
+  dropped: 'ran' | 'lost' | null;
+  /** What is paid, with the run-in's parts (*the run-in +20*, *won at full strength*, *paid off −60*). */
+  rewards: Rewards;
+  orders: OrdersAdvance;
+  /** Standing successes in the city after. */
+  standing: number;
+  points: number;
+  /** The swing to apply (0 when dropped). */
+  swing: number;
+  heat: HeatChange;
+  health: { before: number; after: number; max: number; timer: HealthTimer } | null;
+  record: {
+    added: Mark[];
+    escalated: boolean;
+    before: RecordLevel;
+    after: RecordLevel;
+    /** The stored marks after (faded ones pruned). */
+    marks: Mark[];
+    arrests: DayKey[];
+    /** Caught while *Cool* or *Noticed*: the police took the name. */
+    nameTaken: boolean;
+  };
+  sentTo: { kind: 'cells' | 'infirmary'; reason: HeldReason; held: HeldSpec } | null;
+  agility: { quarters: number; gained: boolean; statUp: boolean } | null;
+}
+
+export const RUN_IN_PART = { id: 'runIn', label: 'The run-in' } as const;
+export const FULL_STRENGTH_PART = { id: 'fullStrength', label: 'Won at full strength' } as const;
+export const PAID_OFF_PART = { id: 'paidOff', label: 'Paid off' } as const;
+
+const addPart = (line: RewardLine, part: RewardPart): RewardLine => {
+  if (part.amount === 0) return line;
+  const parts = [...(line.parts ?? []), part];
+  const bonus = line.bonus + part.amount;
+  return { ...line, bonus, total: line.base + bonus, parts };
+};
+
+/**
+ * Design §4.6 steps 2–4 (ADR 0031 §3): apply the street to the held start. Fight won, Talk or Pay
+ * pay it as rolled; a Run or a loss pays the dropped twin. The run-in's XP; *won at full strength*
+ * +10 % on the mission's XP and Party XP; *paid off*. The record (the caught check's marks, or a
+ * police loss's), the cells (caught while Hot or Wanted, Wanted and a Failure, a police loss) or the
+ * infirmary (any other loss), and *Agility +¼* on a paid Success of an Agility way.
+ */
+export function finishMission(i: {
+  start: MissionStart;
+  runIn: RunInOutcome | null;
+  /** The opponent's side (a loss to the police is the cells). */
+  opponentSide: FactionId | 'police' | null;
+  caught: CaughtResult | null;
+  marks: readonly Mark[];
+  arrests: readonly DayKey[];
+  agiQuarters: number;
+  /** The Health timer before the run-in. */
+  health: HealthTimer;
+  level: number;
+  /** The resolution's time (the run-in's decide time when luck took it). */
+  at: number;
+  today: DayKey;
+  rateOn: (day: DayKey) => number;
+  logId: string | null;
+  bail: { alliance: boolean; sources: readonly PriceLine[] };
+}): MissionFinal {
+  const s = i.start;
+  const r = i.runIn;
+  const dropped: MissionFinal['dropped'] = r?.outcome === 'ran' ? 'ran' : r?.outcome === 'lost' ? 'lost' : null;
+  const paid = dropped ? 'dropped' : 'rolled';
+  let rewards = paid === 'rolled' ? s.rewards.rolled : s.rewards.dropped;
+  if (r) {
+    rewards = { ...rewards, xp: addPart(rewards.xp, { ...RUN_IN_PART, amount: r.xp }) };
+    if (r.fullStrength) {
+      rewards = {
+        ...rewards,
+        xp: addPart(rewards.xp, { ...FULL_STRENGTH_PART, amount: roundHalfUp(rewards.xp.base * 0.1) }),
+        fxp: addPart(rewards.fxp, { ...FULL_STRENGTH_PART, amount: roundHalfUp(rewards.fxp.base * 0.1) }),
+      };
+    }
+    if (r.ironPaid > 0) rewards = { ...rewards, iron: addPart(rewards.iron, { ...PAID_OFF_PART, amount: -r.ironPaid }) };
+  }
+  if (paid === 'dropped') rewards = { ...rewards, opinion: 0 };
+
+  // Heat: the start's, plus a failed Pay's +10 at the resolution.
+  const heat: HeatChange = r?.heatAdded
+    ? (() => {
+        const more = addHeat(s.heat.timer, i.at, i.rateOn, r.heatAdded);
+        return { ...more, before: s.heat.before, stateBefore: s.heat.stateBefore };
+      })()
+    : s.heat;
+
+  // Health.
+  const max = healthMax(i.level);
+  let health: MissionFinal['health'] = null;
+  if (r) {
+    const before = healthNow(i.health, i.at, i.level);
+    const timer: HealthTimer =
+      r.healthAfter >= max ? { damage: 0, at: i.at } : { damage: max - r.healthAfter, at: i.at };
+    health = { before, after: r.healthAfter, max, timer };
+  }
+
+  // The record and where the player is sent.
+  const today = i.today;
+  const liveBefore = liveMarks(i.marks, today);
+  const levelBefore = recordLevel(liveBefore.length);
+  const policeLoss = r?.outcome === 'lost' && i.opponentSide === 'police';
+  const caught = i.caught?.caught === true;
+  const arrested = policeLoss || (caught && i.caught!.arrest);
+  const nameTaken = caught && !i.caught!.arrest;
+  const marks = policeLoss || caught ? marksFor({ type: s.type, arrested, arrests: i.arrests, today, logId: i.logId }) : { add: [], escalated: false };
+  const after = [...liveBefore, ...marks.add];
+  const arrests = arrested && marks.add.length > 0 ? recordArrest(i.arrests, today) : [...i.arrests];
+
+  let sentTo: MissionFinal['sentTo'] = null;
+  if (arrested) {
+    const heatAtArrest = heat.after;
+    const bail = bailFor({
+      marks: after.length,
+      notorious: recordLevel(after.length) === 'notorious',
+      rivalGround: s.rivalGround,
+      alliance: i.bail.alliance,
+      sources: i.bail.sources,
+    });
+    const reason: HeldReason = policeLoss ? 'policeLoss' : i.caught!.withoutRoll ? 'wanted' : 'caught';
+    sentTo = { kind: 'cells', reason, held: arrest({ at: i.at, heat: heatAtArrest, rivalGround: s.rivalGround, bail }) };
+    if (policeLoss && health) health = { ...health, after: HEALTH.admitted, timer: policeLossHealth(i.level, i.at) };
+  } else if (r?.outcome === 'lost') {
+    const a = admit({ at: i.at, level: i.level, rivalGround: s.rivalGround });
+    sentTo = { kind: 'infirmary', reason: 'runInLost', held: a.held };
+    if (health) health = { ...health, after: HEALTH.admitted, timer: a.health };
+  }
+
+  // Agility +¼ on a paid Success of an Agility way (design §4.1).
+  let agility: MissionFinal['agility'] = null;
+  if (s.agility) {
+    const gained = paid === 'rolled' && s.attempt.outcome === 'success';
+    const q = i.agiQuarters + (gained ? 1 : 0);
+    agility = { quarters: q % 4, gained, statUp: gained && q >= 4 };
+  }
+
+  const stamp: MissionStamp = sentTo
+    ? sentTo.kind === 'cells'
+      ? 'takenIn'
+      : 'carriedOff'
+    : s.attempt.outcome;
+  return {
+    outcome: s.attempt.outcome,
+    stamp,
+    paid,
+    dropped,
+    rewards,
+    orders: paid === 'rolled' ? s.orders.rolled : s.orders.dropped,
+    standing: paid === 'rolled' ? s.standing.rolled : s.standing.dropped,
+    points: paid === 'rolled' ? s.points : 0,
+    swing: paid === 'rolled' ? s.opinion.swing.rolled : 0,
+    heat,
+    health,
+    record: {
+      added: marks.add,
+      escalated: marks.escalated,
+      before: levelBefore,
+      after: recordLevel(after.length),
+      marks: after,
+      arrests,
+      nameTaken,
+    },
+    sentTo,
+    agility,
+  };
+}

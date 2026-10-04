@@ -9,6 +9,17 @@ export interface MoraleRecordDoc {
 }
 
 /**
+ * Slice 5 (ADR 0034, tech design §5.4): the share lost to rivals on a City Day, in thousandths of a
+ * point. `prev` keeps the day before (yesterday's edition and *Rival Callers* read it).
+ */
+export interface RivalPressureDoc {
+  day: DayKey;
+  /** Thousandths of a point. */
+  lost: number;
+  prev: { day: DayKey; lost: number } | null;
+}
+
+/**
  * Live state of a city only (ADR 0003): its name, locations and actions stay in
  * `@irongate/content`, addressed by the same id. `opinion` is written by action transactions
  * (ADR 0010), ballots and the city day (ADR 0022). Slice 3 adds the city day's state (ADR 0017),
@@ -53,6 +64,12 @@ export interface CityDoc {
     live: Array<{ docId: string; issueId: string; districtId: string | null; order: 1 | 2 }>;
     effects: Array<{ issueId: string; docId: string; ownerId: FactionId; fromDay: DayKey; toDay: DayKey }>;
   };
+  /**
+   * Slice 5 (ADR 0034): on a home city, the home faction's share lost to visitors' party work on
+   * rival ground, by day (the 2-point cap); written with the opinion in the act's transaction.
+   * Absent or null until the first such act.
+   */
+  rivalPressure?: RivalPressureDoc | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -86,6 +103,8 @@ const citySchema = new Schema<CityDoc>(
     ordinance: { type: Schema.Types.Mixed, default: undefined },
     ordinanceHistory: { type: Schema.Types.Mixed, default: undefined },
     issues: { type: Schema.Types.Mixed, default: undefined },
+    // Slice 5: home cities only, written on the first visitor's act against the home faction.
+    rivalPressure: { type: Schema.Types.Mixed, default: undefined },
   },
   { collection: 'cities', strict: true, timestamps: true, versionKey: false },
 );

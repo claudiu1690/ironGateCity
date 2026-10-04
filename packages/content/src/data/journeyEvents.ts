@@ -5,6 +5,11 @@ import type { ContentInput } from '../schemas';
  * Iron). Checks are §8.4 at difficulty 10 and never fail; opinion goes to the destination (Station &
  * Market for the capital); points go to the destination's first Issue. `{destination}` and `{issue}`
  * are resolved on the server. The first journey always draws `jev.passenger`.
+ *
+ * Slice 5 (docs/design/slice-5-risk.md §11.4, rewards §23.2): the hostile deck, drawn on every
+ * journey to a rival home city (`deck: 'hostile'`): the checkpoint on the first such journey, the
+ * list at Heat 50 or more (outside the rotation), otherwise the checkpoint, the informer and the
+ * conductor in rotation. Checks at difficulty 14; a card never fails; Iron only where a row says.
  */
 export const journeyEvents: ContentInput['journeyEvents'] = [
   {
@@ -109,7 +114,8 @@ export const journeyEvents: ContentInput['journeyEvents'] = [
           },
         },
         partial: {
-          rewards: { iron: 50 },
+          // Slice 5 (design §6.1): the stub is live; the inspector has the name.
+          rewards: { iron: 50, heat: 10 },
           text: {
             headline: 'The inspector has a good eye',
             body: "The station inspector at the barrier asks what's under your coat, and it's easier to give it up than to explain. Fifty marks for carrying a parcel to a barrier. The man in the grey coat is nowhere.",
@@ -316,5 +322,212 @@ export const journeyEvents: ContentInput['journeyEvents'] = [
       },
     ],
     ignore: 'You read your paper. The inspector does his job.',
+  },
+  // Slice 5: the hostile deck (design §11.4, §23.2).
+  {
+    id: 'jev.checkpoint',
+    title: 'Papers, please',
+    deck: 'hostile',
+    first: true,
+    setup:
+      'The train stops at the halt before the town and two customs men come down the carriage with a lamp. "Papers." The man opposite has his ready. Yours are a party card with the wrong crest on it.',
+    choices: [
+      {
+        id: 'papers',
+        title: 'Show your papers',
+        detail: 'Your party card · it depends on your Heat and your record',
+        // Unchecked: Cool and Clean pays `success`, otherwise `partial` (§23.2).
+        gate: 'coolAndClean',
+        success: {
+          rewards: {},
+          text: {
+            headline: 'Waved on',
+            body: 'He reads the card, reads your face, and hands it back. "Visiting?" You say visiting. He moves to the next seat. The crest meant nothing to him, or he\'s a good actor.',
+          },
+        },
+        partial: {
+          rewards: { heat: 10, flag: 'watched' },
+          text: {
+            headline: 'They write your name down',
+            body: 'He reads the card twice and writes something in a book, slowly, so you can see him do it. "Enjoy the town." The carriage has heard.',
+          },
+        },
+      },
+      {
+        id: 'talk',
+        title: 'Talk your way through',
+        detail: 'Charisma · +6 Party XP',
+        stats: ['cha'],
+        success: {
+          rewards: { fxp: 6 },
+          text: {
+            headline: 'A commercial traveller',
+            body: "You're in bootlaces, and you've a sample case to prove it, which you don't open. He laughs and moves on. The man opposite says you're good.",
+          },
+        },
+        partial: {
+          rewards: { fxp: 3, flag: 'watched' },
+          text: {
+            headline: 'He half believes you',
+            body: 'He takes the bootlaces and the case and the accent, and writes your name down anyway, to be safe. "Enjoy the town."',
+          },
+        },
+      },
+      {
+        id: 'lamp',
+        title: 'Pay the lamp',
+        detail: '30 Iron',
+        cost: { iron: 30 },
+        success: {
+          rewards: {},
+          text: {
+            headline: 'The lamp moves on',
+            body: 'Thirty marks folded under the card, and the card comes back without the marks and without a word. The man opposite looks at the window. It is the oldest toll on the line.',
+          },
+        },
+      },
+    ],
+    ignore: 'You keep your eyes shut. They write your name down anyway.',
+    ignoreEffects: { heat: 10, flag: 'watched' },
+  },
+  {
+    id: 'jev.informer',
+    title: 'The informer',
+    deck: 'hostile',
+    setup:
+      "The man who joins you at the halt talks about the weather for one stop and about parties for two. He knows which paper you're reading. He gets off where you get off, and he isn't in a hurry.",
+    choices: [
+      {
+        id: 'lose',
+        title: 'Lose him at the barrier',
+        detail: 'Agility · +14 XP',
+        stats: ['agi'],
+        success: {
+          rewards: { xp: 14 },
+          text: {
+            headline: 'The luggage van',
+            body: "You get off from the luggage van end and through the barrier in a crowd of carters. He's on the platform looking at the wrong door.",
+          },
+        },
+        partial: {
+          rewards: { xp: 7, flag: 'watched' },
+          text: {
+            headline: "He's quicker than he looks",
+            body: 'You take the long way round the barrier and he takes the short one. He touches his hat at the gate. He has your face and your direction.',
+          },
+        },
+      },
+      {
+        id: 'story',
+        title: 'Feed him a story',
+        detail: 'Intelligence · +6 Party XP',
+        stats: ['int'],
+        success: {
+          rewards: { fxp: 6 },
+          text: {
+            headline: 'A wild goose',
+            body: "You give him a name, a street and a meeting at eight that doesn't exist. He gets off a stop early to be there. Somebody will wait a long time tonight.",
+          },
+        },
+        partial: {
+          rewards: { fxp: 3, flag: 'watched' },
+          text: {
+            headline: 'He writes it down anyway',
+            body: "He takes the story and writes it down, and writes you down beside it. He'll check. It will take him a day.",
+          },
+        },
+      },
+    ],
+    ignore: 'You read your paper. He reads you. He gets off where you do.',
+    ignoreEffects: { flag: 'watched' },
+  },
+  {
+    id: 'jev.listed',
+    title: 'Your name is on a list',
+    deck: 'hostile',
+    // Replaces the draw at Heat 50 or more; outside the rotation, never the first (§23.1 #12).
+    heatAtLeast: 50,
+    setup:
+      'The guard comes through with a list and a pencil and stops at your seat a second too long. The next stop is the halt outside the town, a mile short of the station, where nobody checks anything.',
+    choices: [
+      {
+        id: 'halt',
+        title: 'Get off at the halt and walk in',
+        detail: 'Agility · Heat −10 · +14 XP',
+        stats: ['agi'],
+        success: {
+          rewards: { heat: -10, xp: 14 },
+          text: {
+            headline: 'A mile in the dark',
+            body: 'Off the wrong side at the halt, over the fence and a mile of lane into the town by the back way. Nobody at the station is waiting for a man who walks.',
+          },
+        },
+        partial: {
+          rewards: { heat: -5, xp: 7 },
+          text: {
+            headline: 'A long mile',
+            body: "You're over the fence and into the lane before the guard has the door shut. The walk takes an hour and the lane has dogs. You arrive muddy and unlisted.",
+          },
+        },
+      },
+      {
+        id: 'brazen',
+        title: 'Brazen it out at the barrier',
+        detail: 'Charisma · +6 Party XP',
+        stats: ['cha'],
+        success: {
+          rewards: { fxp: 6 },
+          text: {
+            headline: 'Not the man on the list',
+            body: 'You walk past the barrier with the carters, the right accent and no hurry, and the man with the list looks at the next passenger.',
+          },
+        },
+        partial: {
+          rewards: { fxp: 3, heat: 10, flag: 'watched' },
+          text: {
+            headline: 'They look twice',
+            body: "The man at the barrier looks at the list and at you, and lets you through because he can't be sure. He's sure enough to follow.",
+          },
+        },
+      },
+    ],
+    ignore: 'You stay in your seat. At the station a man with a list watches you off the train.',
+    ignoreEffects: { flag: 'watched' },
+  },
+  {
+    id: 'jev.conductor',
+    title: 'A friendly conductor',
+    deck: 'hostile',
+    setup:
+      "The conductor clips your ticket and says, quietly, that the platform by the barrier is watched on Thursdays and the one by the goods shed never is. He has a nephew in your party. He doesn't want anything. Probably.",
+    choices: [
+      {
+        id: 'warning',
+        title: 'Take the warning',
+        detail: 'Warned today',
+        success: {
+          rewards: { flag: 'warned' },
+          text: {
+            headline: 'The goods shed platform',
+            body: 'You get off at the goods shed end with the parcels and walk into the town like a man collecting a crate. Nobody by the barrier sees a thing. A quiet day, if you keep it quiet.',
+          },
+        },
+      },
+      {
+        id: 'drink',
+        title: 'Buy him a drink',
+        detail: '10 Iron · +6 Party XP · Heat −5',
+        cost: { iron: 10 },
+        success: {
+          rewards: { fxp: 6, heat: -5 },
+          text: {
+            headline: 'A nephew in the party',
+            body: "Ten marks for his nephew's subscription, he says, and tells you which inn the customs men don't use. You'll know the conductor again. So will the branch.",
+          },
+        },
+      },
+    ],
+    // Slept through: the line only, nothing happens (§23.2).
+    ignore: 'You nod and forget it. The platform by the barrier is watched.',
   },
 ];

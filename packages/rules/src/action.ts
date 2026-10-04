@@ -9,6 +9,7 @@ import {
   placeCheckBonuses,
   placeOf,
   restedCapFor,
+  rivalGroundIn,
   rewardShares,
   standingPerSuccess,
   swingFactors,
@@ -65,13 +66,19 @@ export interface Tier1Resolution {
    */
   issues?: Array<{ docId: string; issueId: string; name: string; points: number }>;
   opinionFactors?: SwingFactor[];
+  /**
+   * Slice 5 (ADR 0034): on rival ground the swing is taken **against** the home faction, under the
+   * day's cap (`cap`: the points it can still lose today); absent elsewhere (persuasion).
+   */
+  opinion?: { mode: 'against'; target: FactionId; cap: number };
 }
 
 export type ResolveResult =
   | { ok: true; resolution: Tier1Resolution }
   | {
       ok: false;
-      reason: 'NOT_ENOUGH_ENERGY';
+      /** Slice 5 (design §11.2): ×1 only on rival ground. */
+      reason: 'NOT_ENOUGH_ENERGY' | 'ONCE_ON_RIVAL_GROUND';
       shortBy: number;
       /** The run's total cost. */
       cost: number;
@@ -118,6 +125,13 @@ export interface Tier1ActionInput {
   modifiers?: Modifiers;
   /** Slice 4 (ADR 0030 §5): the Rested cap of the residence and the room; default from `modifiers`. */
   restedCap?: number;
+  /**
+   * Slice 5 (ADR 0032 §1): every row's outcome forced to Partial, rolling the same rolls: the
+   * *dropped twin* of a rival-ground tap that a Run or a loss drops to Partial.
+   */
+  forceOutcome?: 'partial';
+  /** Slice 5 (test hooks, tech design §8.5): the first row's roll. */
+  forceRoll?: number;
 }
 
 /** Stamp for a run of checked attempts (ADR 0006, GDD §13.1): ×1 by outcome, a batch "n of N". */
@@ -144,12 +158,20 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
   // Cost ordinances change the cost only (ADR 0021 §3): rewards stay on the content Energy.
   const perRow = actionEnergy(i.action.energy, i.action.type, m);
   const cost = perRow * i.times;
+  const rival = rivalGroundIn(m);
+  if (rival && i.times > 1) {
+    return { ok: false, reason: 'ONCE_ON_RIVAL_GROUND', shortBy: 0, cost, energy: before };
+  }
   if (before.value < cost) {
     return { ok: false, reason: 'NOT_ENOUGH_ENERGY', shortBy: cost - before.value, cost, energy: before };
   }
 
   const difficulty = tier1Difficulty(i.cityRole);
-  const ctx: MatchCtx = i.residence ?? i.homeCityId;
+  const home = i.residence ?? i.homeCityId;
+  // ADR 0034 §3: the orders cannot be done on rival ground.
+  const ctx: MatchCtx = rival
+    ? { ...(typeof home === 'string' ? { cityId: home, districtId: null } : home), rivalGround: true }
+    : home;
   const place = placeOf(m);
   const untagged: ActionDescriptor = {
     kind: 'checked',
@@ -199,8 +221,9 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       bonuses: [...(i.bonuses ?? []), ...(standing ? [standing] : []), ...ordinanceBonuses],
       ...(i.prefer ? { prefer: i.prefer } : {}),
     });
-    const roll = rng.roll100();
-    const outcome = outcomeForRoll(roll, check.chance, 1);
+    const drawn = rng.roll100();
+    const roll = n === 1 && i.forceRoll !== undefined ? i.forceRoll : drawn;
+    const outcome = i.forceOutcome ?? outcomeForRoll(roll, check.chance, 1);
 
     const adv = advanceOrders(orders, i.orderTemplates, descriptor, outcome, ctx, i.now);
     const bonusApplies =
@@ -263,6 +286,7 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
             opinionFactors: factors,
           }
         : {}),
+      ...(rival ? { opinion: { mode: 'against' as const, target: rival.homeFactionId, cap: rival.pressureLeft } } : {}),
     },
   };
 }

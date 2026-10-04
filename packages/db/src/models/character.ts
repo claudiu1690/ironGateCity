@@ -9,6 +9,8 @@ import type {
 } from '@irongate/rules';
 import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
+import { bailSchema } from './stay';
+import type { StayKind, StoredBail } from './stay';
 
 /** Review 1 (GDD §9.1): a job is a wage; `seniority` counts the boundaries held (Long Service: 2). */
 export interface StoredJob {
@@ -54,6 +56,73 @@ export interface StoredJourney {
   status: 'onTheWay' | 'arrived';
 }
 
+/** Slice 5: the day's tally gains the missions and the rival city acted in today (tech design §5.1). */
+export type StoredTally = DailyTally & {
+  missions?: number;
+  rivalCityId?: string | null;
+};
+
+/** Slice 5 (ADR 0033): one unit on the record; the level and the fading are computed on read. */
+export interface StoredMark {
+  day: DayKey;
+  kind: 'minor' | 'moderate' | 'serious';
+  /** The `actionLogs` id (hex) of the offence, or null. */
+  logId: string | null;
+}
+
+/** Slice 5 (ADR 0033): the record. Marks oldest first; `arrests` the last three (the escalation). */
+export interface StoredRecord {
+  marks: StoredMark[];
+  arrests: DayKey[];
+}
+
+/**
+ * Slice 5 (ADR 0033): the pointer to the stay in the cells or the infirmary. `out`: released, the
+ * release modal not yet closed (`held.close`).
+ */
+export interface StoredHeld {
+  stayId: Types.ObjectId;
+  kind: StayKind;
+  cityId: string;
+  locationId: string;
+  since: Date;
+  until: Date;
+  bail: StoredBail | null;
+  rivalGround: boolean;
+  state: 'in' | 'out';
+}
+
+/** Slice 5 (ADR 0032): the pointer to the run-in, until its result modal is closed. */
+export interface StoredRunIn {
+  encounterId: Types.ObjectId;
+  state: 'pending' | 'resolved';
+  day: DayKey;
+  decideBy: Date;
+  cityId: string;
+}
+
+/** Slice 5: a hostile card's day flag on a city (pruned to today at every write). */
+export interface StoredFlag {
+  cityId: string;
+  day: DayKey;
+  flag: 'watched' | 'warned';
+}
+
+/** Slice 5: a city the character is barred from after a deportation (pruned at every write). */
+export interface StoredBar {
+  cityId: string;
+  until: Date;
+}
+
+/** Slice 5: when each one-time card was shown (`hl.*.mission-first` and the like). */
+export interface StoredFirsts {
+  mission?: Date;
+  noticed?: Date;
+  hot?: Date;
+  wanted?: Date;
+  mark?: Date;
+}
+
 /**
  * One per user; everything a session reads is embedded (plan §2 rule 6). Energy and Rested are
  * lazy timers: stored value + timestamp, projected with `@irongate/rules` on read. The City Day is
@@ -73,8 +142,11 @@ export interface CharacterDoc {
   cityId: string;
   /** The face chosen at sign-up; null only for characters migrated from slices 0–1 (ADR 0016). */
   avatarId: string | null;
-  /** Worn CHA = chaBase (the origin's base, 0–4) + what is equipped (§8.2, ADR 0014). */
-  stats: { str: number; int: number; agi: number; chaBase: number };
+  /**
+   * Worn CHA = chaBase (the origin's base, 0–4) + what is equipped (§8.2, ADR 0014). Slice 5:
+   * `agiQuarters` 0–3, a quarter point of Agility per Agility Success (design §4.1).
+   */
+  stats: { str: number; int: number; agi: number; chaBase: number; agiQuarters?: number };
   /** `updatedAt` only advances by whole 10-minute ticks, never to "now". */
   energy: { value: number; updatedAt: Date };
   /** Shares energy.updatedAt: it only changes when Energy is projected and written. */
@@ -100,8 +172,8 @@ export interface CharacterDoc {
    * while today's three are done and this is not today, so it waits if the tab closes first.
    */
   ordersNoteSeenDay?: DayKey | null;
-  /** §3.7: the current City Day's running totals. */
-  today: DailyTally;
+  /** §3.7: the current City Day's running totals (slice 5: `missions`, `rivalCityId`). */
+  today: StoredTally;
   /** Drives "the paper is due after 3 h" (§3.3). */
   lastActionAt: Date | null;
   /** The origin, frozen at join (ADR 0011); later chapters read it. */
@@ -146,14 +218,34 @@ export interface CharacterDoc {
   residence?: StoredResidence;
   journey?: StoredJourney | null;
   journeysMade?: number;
-  /** The journey cards drawn this round (reset after seven). */
-  journeyDeck?: { seen: string[] };
+  /**
+   * The journey cards drawn this round (reset after seven). Slice 5: `firstDone`, the passenger card
+   * shown (the first journey that is not to rival ground).
+   */
+  journeyDeck?: { seen: string[]; firstDone?: boolean };
   room?: { cityId: string; fromDay: DayKey; untilDay: DayKey } | null;
   firstCapitalArrivalAt?: Date | null;
   /** The reporter's quote (`hl.*.quoted` in the next edition). */
   lastQuoted?: { day: DayKey; issueId: string } | null;
   /** The admin boost script's mark (playtest seeding): the report separates boosted testers. */
   playtest?: { boosted: true; boostedAt: Date; from: { fxp: number; rank: number; successes: number } };
+  // Slice 5 (tech design §5.1, ADR 0032, 0033). Optional at the type level while slice 4's writers
+  // build characters without them; the schema's defaults and migration 007 set them on every document.
+  /** 0–100 at `at`, whole points; cools lazily (ADR 0033). */
+  heat?: { value: number; at: Date };
+  /** Health = max − damage at `at`, max = 100 + 5 × level; regenerates lazily (ADR 0033). */
+  health?: { damage: number; at: Date };
+  record?: StoredRecord;
+  held?: StoredHeld | null;
+  runIn?: StoredRunIn | null;
+  /** The way remembered per mission: the second time is one tap. */
+  ways?: Array<{ missionId: string; wayId: string }>;
+  flags?: StoredFlag[];
+  barred?: StoredBar[];
+  /** The hostile deck's rotation (reset when all seen). */
+  hostileDeck?: { seen: string[] };
+  rivalTrips?: number;
+  firsts?: StoredFirsts;
   /** Optimistic guard, +1 per game write (ADR 0002). */
   version: number;
   createdAt: Date;
@@ -182,7 +274,7 @@ const jobSchema = new Schema<StoredJob>(
   { _id: false },
 );
 
-const tallySchema = new Schema<DailyTally>(
+const tallySchema = new Schema<StoredTally>(
   {
     day: { type: Number, default: null },
     energy: { type: Number, default: 0 },
@@ -195,8 +287,80 @@ const tallySchema = new Schema<DailyTally>(
     opinion: { type: Number, default: 0 },
     ordersDone: { type: Number, default: 0 },
     statTrained: { type: Number, default: 0 },
+    // Slice 5 (tech design §5.1).
+    missions: { type: Number, default: 0 },
+    rivalCityId: { type: String, default: null },
   },
   { _id: false },
+);
+
+// Slice 5 (tech design §5.1, ADR 0032, 0033): the embedded risk state.
+const markSchema = new Schema<StoredMark>(
+  {
+    day: int,
+    kind: { type: String, enum: ['minor', 'moderate', 'serious'], required: true },
+    logId: { type: String, default: null },
+  },
+  { _id: false },
+);
+
+const recordSchema = new Schema<StoredRecord>(
+  {
+    marks: { type: [markSchema], default: [] },
+    arrests: { type: [Number], default: [] },
+  },
+  { _id: false },
+);
+
+const heldSchema = new Schema<StoredHeld>(
+  {
+    stayId: { type: Schema.Types.ObjectId, required: true },
+    kind: { type: String, enum: ['cells', 'infirmary'], required: true },
+    cityId: { type: String, required: true },
+    locationId: { type: String, required: true },
+    since: { type: Date, required: true },
+    until: { type: Date, required: true },
+    bail: { type: bailSchema, default: null },
+    rivalGround: { type: Boolean, required: true },
+    state: { type: String, enum: ['in', 'out'], required: true },
+  },
+  { _id: false },
+);
+
+const runInSchema = new Schema<StoredRunIn>(
+  {
+    encounterId: { type: Schema.Types.ObjectId, required: true },
+    state: { type: String, enum: ['pending', 'resolved'], required: true },
+    day: int,
+    decideBy: { type: Date, required: true },
+    cityId: { type: String, required: true },
+  },
+  { _id: false },
+);
+
+const waySchema = new Schema(
+  { missionId: { type: String, required: true }, wayId: { type: String, required: true } },
+  { _id: false },
+);
+
+const flagSchema = new Schema<StoredFlag>(
+  {
+    cityId: { type: String, required: true },
+    day: int,
+    flag: { type: String, enum: ['watched', 'warned'], required: true },
+  },
+  { _id: false },
+);
+
+const barSchema = new Schema<StoredBar>(
+  { cityId: { type: String, required: true }, until: { type: Date, required: true } },
+  { _id: false },
+);
+
+// `minimize: false`: an empty `{}` is stored, the same as migration 007 writes.
+const firstsSchema = new Schema<StoredFirsts>(
+  { mission: Date, noticed: Date, hot: Date, wanted: Date, mark: Date },
+  { _id: false, minimize: false },
 );
 
 const characterSchema = new Schema<CharacterDoc>(
@@ -211,6 +375,8 @@ const characterSchema = new Schema<CharacterDoc>(
       int: int,
       agi: int,
       chaBase: int,
+      // Slice 5: a quarter point per Agility Success; four make a point of Agility.
+      agiQuarters: { type: Number, default: 0, min: 0, max: 3, validate: Number.isInteger },
     },
     energy: {
       value: { type: Number, required: true, min: 0 },
@@ -363,8 +529,15 @@ const characterSchema = new Schema<CharacterDoc>(
     },
     journeysMade: { type: Number, default: 0 },
     journeyDeck: {
-      type: new Schema({ seen: { type: [String], default: [] } }, { _id: false }),
-      default: () => ({ seen: [] }),
+      type: new Schema(
+        {
+          seen: { type: [String], default: [] },
+          // Slice 5: migration 007 sets it from `journeysMade > 0`.
+          firstDone: { type: Boolean, default: false },
+        },
+        { _id: false },
+      ),
+      default: () => ({ seen: [], firstDone: false }),
     },
     room: {
       type: new Schema({ cityId: String, fromDay: Number, untilDay: Number }, { _id: false }),
@@ -382,6 +555,34 @@ const characterSchema = new Schema<CharacterDoc>(
       ),
       default: undefined,
     },
+    // Slice 5 (tech design §5.1): a new character starts cool, unhurt, with a clean record (the same
+    // as migration 007).
+    heat: {
+      type: new Schema(
+        { value: { type: Number, required: true, min: 0, max: 100 }, at: { type: Date, required: true } },
+        { _id: false },
+      ),
+      default: () => ({ value: 0, at: new Date() }),
+    },
+    health: {
+      type: new Schema(
+        { damage: { type: Number, required: true, min: 0 }, at: { type: Date, required: true } },
+        { _id: false },
+      ),
+      default: () => ({ damage: 0, at: new Date() }),
+    },
+    record: { type: recordSchema, default: () => ({ marks: [], arrests: [] }) },
+    held: { type: heldSchema, default: null },
+    runIn: { type: runInSchema, default: null },
+    ways: { type: [waySchema], default: [] },
+    flags: { type: [flagSchema], default: [] },
+    barred: { type: [barSchema], default: [] },
+    hostileDeck: {
+      type: new Schema({ seen: { type: [String], default: [] } }, { _id: false }),
+      default: () => ({ seen: [] }),
+    },
+    rivalTrips: { type: Number, default: 0, min: 0 },
+    firsts: { type: firstsSchema, default: () => ({}) },
     version: { type: Number, required: true, min: 0 },
   },
   { collection: 'characters', strict: true, timestamps: true, versionKey: false, minimize: false },

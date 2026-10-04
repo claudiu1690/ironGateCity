@@ -72,3 +72,44 @@ export function applyPersuasion(
     applied: fromK(applied),
   };
 }
+
+/**
+ * Slice 5 (GDD §14.2, ADR 0034 §1): an action **against** a rival. The swing is taken from the
+ * target's share, down to its floor (50 for a home faction in its home city) and to the remaining
+ * cap (rival pressure on rival ground, 2 points a City Day); half of it (rounded down to the
+ * thousandth) goes to the actor's faction and the rest to Neutral. Integer thousandths, so the shares
+ * still sum to exactly 100.000.
+ */
+export function applyAgainst(
+  shares: OpinionShares,
+  i: { actor: FactionId; target: FactionId; swing: number; homeFactionId?: FactionId; cap?: number | null },
+): { shares: OpinionShares; taken: number; toActor: number; toNeutral: number } {
+  const s: Record<FactionId | 'neutral', number> = {
+    vanguard: toK(shares.vanguard),
+    collective: toK(shares.collective),
+    alliance: toK(shares.alliance),
+    neutral: toK(shares.neutral),
+  };
+  const floor = i.target === i.homeFactionId ? OPINION_FLOORS.homeFaction * K : 0;
+  const cap = i.cap === undefined || i.cap === null ? Infinity : Math.max(0, toK(i.cap));
+  const taken = Math.max(0, Math.min(toK(i.swing), s[i.target] - floor, cap));
+  const toActor = Math.floor(taken / 2);
+  const toNeutral = taken - toActor;
+  if (i.target !== i.actor) {
+    s[i.target] -= taken;
+    s[i.actor] += toActor;
+    s.neutral += toNeutral;
+  }
+  const done = i.target !== i.actor ? taken : 0;
+  return {
+    shares: {
+      vanguard: fromK(s.vanguard),
+      collective: fromK(s.collective),
+      alliance: fromK(s.alliance),
+      neutral: fromK(s.neutral),
+    },
+    taken: fromK(done),
+    toActor: fromK(done ? toActor : 0),
+    toNeutral: fromK(done ? toNeutral : 0),
+  };
+}

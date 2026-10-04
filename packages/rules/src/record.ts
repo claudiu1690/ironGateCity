@@ -1,0 +1,133 @@
+import { MISSION_TYPES, RECORD } from './constants';
+import type { MarkKind, MissionType } from './constants';
+import type { DayKey } from './day';
+import type { FactionId } from './types';
+
+/**
+ * Your record (GDD §11.3–§11.4, design §7.3, ADR 0033): marks, one unit each, with their kind and
+ * day. The level, the fading of minor marks and the penalties are computed on read. Pure.
+ */
+
+export type RecordLevel = 'clean' | 'onFile' | 'repeat' | 'notorious';
+
+export interface Mark {
+  day: DayKey;
+  kind: MarkKind;
+  /** The action log that earned it (null for a test hook). */
+  logId: string | null;
+}
+
+/**
+ * The marks still on the record today: minor marks are gone once today ≥ the latest mark's day (of
+ * any kind) + 14; moderate and serious marks never fade in slice 5 (a theft mark on day 10 keeps
+ * day-1 minor marks until day 24).
+ */
+export function liveMarks(marks: readonly Mark[], today: DayKey): Mark[] {
+  if (marks.length === 0) return [];
+  const latest = Math.max(...marks.map((m) => m.day));
+  const faded = today >= latest + RECORD.minorFadeDays;
+  return marks.filter((m) => !(faded && m.kind === 'minor')).map((m) => ({ ...m }));
+}
+
+/** 0 Clean · 1–2 On file · 3–5 Repeat offender · 6+ Notorious. */
+export function recordLevel(n: number): RecordLevel {
+  if (n >= RECORD.levels.notorious) return 'notorious';
+  if (n >= RECORD.levels.repeat) return 'repeat';
+  if (n >= RECORD.levels.onFile) return 'onFile';
+  return 'clean';
+}
+
+export interface RecordView {
+  level: RecordLevel;
+  marks: number;
+  /** The day the live minor marks fade (if no other mark comes first), or null. */
+  fadesOn: DayKey | null;
+  /** How many marks fade then. */
+  fading: number;
+  /** On missions' Iron: 0, −10, −20, −30. */
+  ironPct: 0 | -10 | -20 | -30;
+  /** Repeat offender or worse: +5 on run-ins and the caught check. */
+  repeatBonus: 0 | 5;
+  /** Notorious: bail doubled. */
+  bailNotorious: boolean;
+  /** Notorious: barred from courts, universities and the Alliance's HQs. */
+  barred: boolean;
+}
+
+export function recordView(marks: readonly Mark[], today: DayKey): RecordView {
+  const live = liveMarks(marks, today);
+  const level = recordLevel(live.length);
+  const minor = live.filter((m) => m.kind === 'minor');
+  const latest = live.length > 0 ? Math.max(...live.map((m) => m.day)) : null;
+  const notorious = level === 'notorious';
+  return {
+    level,
+    marks: live.length,
+    fadesOn: minor.length > 0 && latest !== null ? latest + RECORD.minorFadeDays : null,
+    fading: minor.length,
+    ironPct: RECORD.ironPct[level],
+    repeatBonus: level === 'repeat' || notorious ? RECORD.repeatBonus : 0,
+    bailNotorious: notorious,
+    barred: notorious,
+  };
+}
+
+/** The +5 of a Repeat offender or worse (run-ins and the caught check). */
+export const recordBonus = (level: RecordLevel): number =>
+  level === 'repeat' || level === 'notorious' ? RECORD.repeatBonus : 0;
+
+/**
+ * The marks a mission adds (design §7.2): the type's, one unit each; an arrest that carries marks
+ * within seven City Days of an earlier one becomes three serious marks (day 0 and day 6 escalate,
+ * day 0 and day 7 do not). `arrests` are the days of earlier arrests that carried marks (design
+ * §23.1 #3: an arrest with no marks never escalates a later one). A legal type (or a tier-1 tap,
+ * `type: null`) adds none.
+ */
+export function marksFor(i: {
+  type: MissionType | null;
+  arrested: boolean;
+  arrests: readonly DayKey[];
+  today: DayKey;
+  logId: string | null;
+}): { add: Mark[]; escalated: boolean } {
+  const spec = i.type ? MISSION_TYPES[i.type] : null;
+  if (!spec || spec.marks === 0 || spec.markKind === null) return { add: [], escalated: false };
+  const escalated =
+    i.arrested && i.arrests.some((d) => i.today - d >= 0 && i.today - d < RECORD.escalateWithinDays);
+  const n = escalated ? RECORD.escalatedMarks : spec.marks;
+  const kind: MarkKind = escalated ? 'serious' : spec.markKind;
+  return {
+    add: Array.from({ length: n }, () => ({ day: i.today, kind, logId: i.logId })),
+    escalated,
+  };
+}
+
+/** Arrests kept for the seven-day escalation: the last three that carried marks. */
+export function recordArrest(arrests: readonly DayKey[], day: DayKey): DayKey[] {
+  return [...arrests, day].slice(-3);
+}
+
+/**
+ * *Have a mark struck off* (30 Political Capital): the oldest live mark goes; the stored array
+ * comes back as the live marks without it (faded ones pruned). Null when there is none.
+ */
+export function strikeOldest(
+  marks: readonly Mark[],
+  today: DayKey,
+): { marks: Mark[]; struck: Mark } | null {
+  const live = liveMarks(marks, today);
+  if (live.length === 0) return null;
+  let oldest = 0;
+  live.forEach((m, i) => {
+    if (m.day < live[oldest]!.day) oldest = i;
+  });
+  const struck = live[oldest]!;
+  return { marks: live.filter((_, i) => i !== oldest), struck };
+}
+
+/** Notorious (design §7.3, §23.1 #18): barred from `court`, `university` and any Alliance HQ. */
+export function barredByRecord(level: RecordLevel, place: { kind: string; factionId?: FactionId }): boolean {
+  if (level !== 'notorious') return false;
+  if ((RECORD.notoriousBars.kinds as readonly string[]).includes(place.kind)) return true;
+  return place.kind === 'faction-hq' && place.factionId === RECORD.notoriousBars.hqOf;
+}

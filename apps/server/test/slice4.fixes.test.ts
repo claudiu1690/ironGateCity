@@ -51,7 +51,8 @@ describe('slot C names the residence and its verbs (slice-4 fixes §2, QA m1)', 
     clock.set(at(homeDay));
     const home = await traveller(clock, { name: 'Ole Verb' });
     const mine = (await home.caller.character.me()).orders.items.find((o) => o.id === 'dir.sharpen-up')!;
-    expect(mine.title).toBe('Study, lift or run once in Coalport');
+    // Slice 5: a Level-10 traveller has the Harbour, whose porters' *Carry* comes before *Run*.
+    expect(mine.title).toBe('Study, lift or carry once in Coalport');
   });
 
   it('a Vanguard member in Irongate also lifts (the gymnasium is theirs)', async () => {
@@ -140,8 +141,10 @@ describe('the arrival’s body (slice-4 fixes §8, QA n2)', () => {
 });
 
 describe('the art ladder (the October art)', () => {
-  it('a kind with no scene (St Agnes, a hospital) still shows the map crop at its pin', () => {
-    const located = content.location('irongate.st-agnes')!;
+  // Slice 5 bound `hospital` (St Agnes, the first example here) to a scene; Parliament's is held.
+  it('a kind with no scene (Parliament) still shows the map crop at its pin', () => {
+    const located = content.location('irongate.parliament')!;
+    expect(located.location.kind).toBe('parliament');
     const art = pickArt(content, located.city, located.location, at(DAY));
     expect(art).toMatchObject({ rung: 'map-crop', x: located.location.map.x, y: located.location.map.y });
     const gate = content.location('coalport.mill-gate')!;

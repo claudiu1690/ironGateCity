@@ -1570,3 +1570,75 @@ None blocking. Two points for awareness, no decision needed:
 12. **The hostile cards' Partial rewards, the held taps' texts and four quarters' blurbs** are not written (§22.1 Q13–Q14).
 13. **The first-time taps** (screens §4.2's confirm against §16's count): §22.1 Q21.
 14. **The vocabulary note** (§19 Q12, §20) says *constable* and *sergeant* need allowances, but only *sergeant* is banned, and slice 4 removed it on purpose (*no rank is allowed*). The note also misses *in front of* (four way hints) and *torch* (Duskwall's watch). See §22.1 Q22.
+
+---
+
+## Deviations (as built)
+
+### Phase A (T1–T10)
+
+The smallest working change in each case. No economy number changed.
+
+**Rules (T1–T5)**
+
+- **Health's maximum is 100 + 5 for every Level after the first** (Level 1: 100; Level 6: 125; Level 10: 145). The design (§9.1) and the GDD (§6.1) pin 125 at Level 6 and 145 at Level 10, which "100 + 5 × Level" (§6.3, §6.13's "105, 125, 145") does not give. The rules follow the pinned figures; the test reads 100, 125, 145.
+- **`districtState` is unchanged.** The leader is `districtLeader(shares)` (with `districtRunnerUp`) in `district.ts`. Adding `leader` to `districtState`'s return broke a slice-4 test's `toEqual`, and every slice 1–4 rules test must pass unchanged. Migration 007 uses `districtLeader`; T12 calls it at the boundary.
+- **Heat is counted in integer cooling units** (a point is 7.2 × 10⁹ units; 5 an hour is 10,000 a millisecond), so a write never loses a part-point. Where a point straddles a day with a different rate, the stored `at` is rounded down to the millisecond, so cooling is never lost (at worst it gains under a millisecond). The 1,000-random-writes test runs at a constant rate and at alternating rates.
+- **`resolveTier1Action`'s `ONCE_ON_RIVAL_GROUND` refusal carries `cost` and `energy`** like `NOT_ENOUGH_ENERGY`, so the slice-4 server's `!r.ok` branch compiles unchanged until T13 switches on `reason`. It also gains `forceRoll` (the first row's roll), for the test hooks.
+- **`resolveMission` takes `force: { checkRoll, runIn, opponentId }`** and `caughtCheck` takes `force: 'always' | 'never'`. These are the §8.5 hooks' seams, kept in rules so the resolver stays pure and testable.
+- **Way ids are the way's stat** (`str`, `agi`, `int`, `cha-int`, `best`). The design names no way ids, and every mission's ways are on different stats.
+- **The tier-2 results always name their reward parts** (Rested and the Party order included). There is no slice-1 shape to keep, and the run-in's parts (*the run-in +20*, *won at full strength*, *paid off −60*) are added to them.
+- **`PoliticalAct` gains the six risk acts.** Their texts are copy, not `politics.results`, so the server's council result builder takes `CouncilAct` (`PoliticalAct` without them). This is a type-only change in `councilService.ts`.
+- **`ordersForDay(…, level = 1)` and `startOrders(…, level = 1)`.** A caller that passes no Level keeps the slice-4 rotation, so the slot-B mission order reaches no one until T18 passes the Level.
+- **The view types are additive and optional.** New fields on `CharacterView`, `CityView`, `LocationView`, `DeskView`, `OrdersView`, `NationCityView` and the journey views are optional until phase B fills them (the slice-4 pattern). `CityView.quarters` is `QuarterView[]`, whose slice-5 fields are optional.
+- **Compile-only UI cases.** Three exhaustive switches in `packages/ui` meet the widened unions: the stamps *Taken in* and *Taken to the infirmary* (failure tone), the residence card's `rivalGround` (*You can't live or stand here*), and the place tags `rivalGround`, `pressureCapped` and `record`. **The record tag's words are not in the design**; it prints the receipt's form (*your record −10*) until phase C asks the designer. Each case renders only when the phase-B server sends the new value.
+
+**Content (T6–T8)**
+
+- **A briefing is held to 380 characters and four sentences.** The design's 22 briefings run 259–362 characters against §4.4's "≤ 240". The designer ruled (design §23.8, 4 Oct 2026) to raise the cap and keep the briefings. Outcome texts keep 240: the designer trimmed the four that were over (`duskwall.checkpoint.drivers`, `duskwall.lock-up.hatch`, `ashford.cattle-market.speech`, `irongate.forecourt.rally`) and Coalport's Harbour blurb (204 → 192, city-quarters.md §2.2).
+- **`Quarter.opens` is optional, and absent means Level 1.** `quarterOpen` reads it that way. A Zod default would make every quarter in the typed data files state it.
+- **Quarters have their own id space.** The design names Ashford's second quarter and its wharf both `ashford.wharf` (§2.2, §2.3). A quarter id is a route segment and a place id is a `?loc=`, so both ids are kept and the loader checks them in separate sets.
+- **Dropped: "a pool is not made only of the target's side"** (§4.2). The catalogue's Foundry Row and Rampart Row meetings draw only from the target's own people, which is the fiction (the Collective's men at the Collective's meeting). The rules drop the actor's side and fall back to the police, so a pool can never empty.
+- **Dropped: "`{city}` appears only in titles"** (§4.2). The slice-4 fix round's *Sharpen up* orders put `{city}` in their lines.
+- **Labels.** The capital's districts are labelled at their anchors. The 0.25 rule applies to home cities (screens §10).
+- **The outlines** were drawn from the survey pins and the frames' notes (design §2.2), not in the dev viewer. Every pin, including the teaser quarters' survey pins, lies inside its own outline; no two outlines overlap; the labels sit at screens §10's hearts (Coalport) or at each quarter's middle. The designer may reshape them in the viewer; the loader holds the rules.
+- **Survey pins** are now checked for every city with two or more quarters (they were checked for the capital only). The first quarters' pins already matched.
+- **Missions sit in `data/missions/<city>.ts`** and are attached to their places with `withMissions`, so the city files keep their slice-1 shape.
+- **`city.get` lists only the places and quarters open to the character** (`quarterOpen` at their Level). This is T12's rule, brought forward. Without it the slice-4 client would draw the Harbour's five pins for a Level-1 player. T12 adds the locked quarters back, with their locks, teasers and outlines. Slot C's `{verbs}` likewise reads only the open quarters' training, so a Level-6 Coalport member reads *Study, lift or carry* (the porters' *Carry* comes before *Run*).
+- **A few slice 1–4 server and UI tests now scope to what they cover:**
+  - the Ashford CHA sweep reads the places `city.get` offers;
+  - the map-fit tests use the first quarter's pins;
+  - the training-verb sweep counts thirteen;
+  - the 30-days-away test asserts that Political Capital never falls. The larger Issue deck can tag the Mill Gate canvass, and its top-five PC is a gain while away.
+- **Text the designer settled during the build** (design §23.8, 4 Oct 2026). Four outcome texts over 240 were trimmed, and so was the Harbour blurb. Duskwall's roll Failure says *which branch*, not the electoral *which ward*. The checkpoint watch's man *isn't in uniform* became *in a plain coat*. The vocabulary guard now allows the infirmary's *ward* in its hospital sense (*the ward*, *on the ward*, *the men's / women's ward*, *county's ward*, *long wards*, *four wards*).
+- **Two counts in the documents are off; the tables govern.** Design §3's count line says speech 5 and propaganda 6, which with the others sums to 37; its table has 4 and 5 (35). The 22 missions sit at 19 places, not tech §4.2's 21: the three HQs carry two each.
+- **A chapter choice's hint is held to 100** (was 80): *The riverside house*'s first hint is 97 characters as written.
+- **The slot-B mission order is the last home slot-B template of each faction.** The loader compares its match key by key.
+- **The hostile cards' detail lines** drop the design table's *unchecked* notes (the client prints no odds word for an unchecked row): *Pay the lamp* reads *30 Iron*.
+- **The risk headlines live in `headlines.ts`**, because the slice-4 tests pin the other headline files' id sets. Three decks run over 200 characters once filled with the longest mission title and `{how}`: `hl.cells` 215, `hl.a.name-taken` 203, `hl.a.cells` 205. The raw templates are within 200. This is for the designer; the server should check it when it fills them (T18).
+- **The run-in's *did* sentences** (`copy.risk.did`) are the developer's drafts in the design's voice, for the designer. They use *they*, as *Pay them off* does.
+- **Older tests now scope to what they cover.** The slice 1–4 content tests that swept every place, action, card, Issue or order now read their own (first quarters, the ordinary deck, the first nineteen Issues, templates without `minLevel`). They are unchanged otherwise.
+- **The slice-7 design commit (`1f8172a`) changed two GDD rows that older tests read.** §21.4 lists a slice-7 keepsake, `keep.deposit-receipt`, so `qa.slice2` now ignores later-slice rows. §6.5's stipend row now reads *Councillor **10 and 20 FXP***, so `qa.slice3.rules` accepts both wordings. These are test-only changes.
+- **The art lane:** see T9 below.
+
+**Art (T9)**
+
+- Five mission scenes, the hospital, jail-cell and news-strike scenes, and eight portraits are catalogued. `portrait.duty-officer` is built from `sergeant.png` (the file keeps its name). The `hospital` and `jail` kinds now have scenes, so the slice-4 map-crop test uses Parliament.
+- **The set measures 18.77 MB; the cap is raised to 19.27 MB** (ADR 0015's per-slice rule: the measured figure plus 0.5 MB; `scripts/art/build.ts`).
+- **`scene.news-strike` is a 2048 × 1360 print**, not 2688 × 1520. It is cropped to the scenes' ratio (2048 × 1158). Its 640 px WebP needs a quality floor of 56 (a one-asset `PRINT_FLOOR` in the build script); the byte budgets are unchanged.
+- **Three alt texts are the developer's drafts** for the designer to confirm: `scene.news-strike`, `scene.hospital`, `scene.jail-cell`. The other thirteen are design §23.5's.
+- **The two QA vocabulary guards allow the exact source path `mvp/portraits/sergeant.png`.** No string a player reads says *sergeant*.
+- **No gallery in the dev viewer.** `/dev/maps` shows maps only, so "the dev viewer shows every new picture" is met by `art:check` and by viewing the built files. A gallery is client work for phase C if wanted.
+- **For the designer (content policy):** `scene.mission-speech` shows raised fists among the raised caps, and the speaker reaches out over the crowd with an open palm. It reads as an orator's gesture, but at thumbnail size it could be taken for a salute. `scene.news-strike`'s police wear British-style helmets with a star plate. Both are wired as specified; both need a ruling.
+
+**DB (T10)**
+
+- **The new character fields are optional in `CharacterDoc`**, with Mongoose defaults and migration 007. The slice-4 server builds typed character documents without them. The same holds for `DistrictStateDoc.leader` and the journeys' `kind`, `rivalGround` and `stayId`. Readers use `?? default` until phase B's writers fill them.
+- **Some slice-4 writes rewrite a whole sub-document** (the capital's district `state`, `stats`, `today`) and drop the new values until phase B replaces them: T11–T12 must write `state.leader`, `stats.agiQuarters` and `today.missions` / `today.rivalCityId`.
+- `encounters` and `stays` carry `updatedAt` as well. `StoredMark`, `StoredBail` and `RivalPressureDoc` mirror the rules' `Mark`, `Bail` and `RivalPressure` field for field.
+
+**Left for phase B**
+
+- **In Print** is decided by id in `paperService.ts` (`/.(hero|quoted)$/`); T18 adds `seen|cells|infirmary|deported`.
+- The server passes the Level to `startOrders` (the slot-B mission order), the residence city's `heatCoolPct` rate, and `RIVAL_ROW` by setting `PlaceState.rivalGround` (T11–T13, T18).
+- The three exhaustive UI cases above get their designed form in phase C (T21).

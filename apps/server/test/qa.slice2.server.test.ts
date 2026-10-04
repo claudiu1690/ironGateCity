@@ -458,7 +458,8 @@ describe('the kit and worn CHA (GDD §8.2, §21.4, ADR 0014)', () => {
     const city = await caller.city.get({ cityId: 'ashford' });
     const difficulty = tier1Difficulty('home');
     let chaChecks = 0;
-    for (const loc of content.city('ashford')!.locations) {
+    // Slice 5: the places of the quarters open at this Level (the Wharf opens at 6).
+    for (const loc of content.city('ashford')!.locations.filter((l) => city.locations.some((v) => v.id === l.id))) {
       for (const a of loc.actions) {
         if (!('stats' in a)) continue;
         const view = city.locations.find((l) => l.id === loc.id)!.actions.find((x) => x.id === a.id)!;

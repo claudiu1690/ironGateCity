@@ -23,6 +23,12 @@ export function ordersForDay(
   templates: readonly OrderTemplate[],
   day: DayKey,
   residence: 'home' | 'capital' = 'home',
+  /**
+   * Slice 5 (design §12.2): a template with `minLevel` enters a member's rotation from that Level
+   * (orders are faction-wide among members who can do them). Absent: Level 1, so a caller that does
+   * not pass it keeps the slice-4 rotation.
+   */
+  level = 1,
 ): OrderTemplate[] {
   const i = cityDayIndex(day);
   const picked: OrderTemplate[] = [];
@@ -33,7 +39,8 @@ export function ordersForDay(
       (t) =>
         t.slot === slot &&
         (t.use ?? 'rotation') === 'rotation' &&
-        ((t.residence ?? 'home') === residence || t.residence === 'any'),
+        ((t.residence ?? 'home') === residence || t.residence === 'any') &&
+        (t.minLevel ?? 1) <= level,
     );
     if (inSlot.length > 0) picked.push(inSlot[mod(i, inSlot.length)]!);
   }
@@ -56,6 +63,8 @@ export function startOrders(
   crisis?: readonly [string, string],
   now?: number,
   residence: 'home' | 'capital' = 'home',
+  /** Slice 5: the member's Level, for `minLevel` templates (default 1). */
+  level = 1,
 ): OrdersState {
   const byId = (kind: string) => (id: string) => {
     const t = templates.find((x) => x.id === id);
@@ -65,7 +74,7 @@ export function startOrders(
   let picked: OrderTemplate[];
   if (welcome) picked = welcome.map(byId('welcome'));
   else {
-    picked = ordersForDay(templates, day, residence);
+    picked = ordersForDay(templates, day, residence, level);
     if (crisis && residence === 'home') {
       const [a, b] = crisis.map(byId('crisis'));
       picked = [a!, b!, ...picked.filter((t) => t.slot !== 'A' && t.slot !== 'B')];
@@ -99,6 +108,8 @@ const ctxOf = (ctx: MatchCtx): ResidenceCtx =>
  */
 export function orderMatches(m: OrderMatch, a: ActionDescriptor, ctx: MatchCtx): boolean {
   const r = ctxOf(ctx);
+  // Slice 5 (ADR 0034 §3): the orders are home's or the capital's; nothing on rival ground counts.
+  if (r.rivalGround) return false;
   if (m.kinds && !m.kinds.includes(a.kind)) return false;
   if (m.actionTypes && (a.type === undefined || !m.actionTypes.includes(a.type))) return false;
   if (m.actionIds && (a.actionId === undefined || !m.actionIds.includes(a.actionId))) return false;

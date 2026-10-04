@@ -29,7 +29,7 @@ import {
   nextPollsFrom,
   standingView,
 } from '@irongate/rules';
-import type { DayKey, FactionId, PoliticalAct, PoliticalPlaceholder, PoliticalResult } from '@irongate/rules';
+import type { CouncilAct, DayKey, FactionId, PoliticalPlaceholder, PoliticalResult } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { GameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
@@ -120,7 +120,7 @@ function buildPoliticalResult(
   content: GameContent,
   x: Pick<ActCtx, 'now' | 'spec'> & { c: CharacterDoc; city: CityDoc | null },
   r: {
-    act: PoliticalAct;
+    act: CouncilAct;
     idempotencyKey: string;
     vars: Partial<Record<PoliticalPlaceholder, string>>;
     until?: number | null;

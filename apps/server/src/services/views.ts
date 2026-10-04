@@ -30,6 +30,7 @@ import {
   standingView,
   statUse,
   verbsPhrase,
+  quarterOpen,
   weekOf,
   wornCha,
 } from '@irongate/rules';
@@ -345,13 +346,16 @@ export function jobView(content: GameContent, doc: CharacterDoc, today: DayKey):
  */
 export function orderVars(
   content: GameContent,
-  doc: Pick<CharacterDoc, 'factionId' | 'residence' | 'homeCityId'>,
+  doc: Pick<CharacterDoc, 'factionId' | 'residence' | 'homeCityId'> & { level?: number },
   issueShort: string | null,
 ): { issue: string; city: string; verbs: string } {
   const city = content.city(residenceCityId(doc as CharacterDoc));
   const verbs: string[] = [];
   for (const l of city?.locations ?? []) {
     if (l.factionId && l.factionId !== doc.factionId) continue;
+    // Slice 5 (GDD §14.13): only the quarters open to the member (the Harbour's *Carry* from Level 6).
+    const q = city?.quarters.find((x) => x.id === l.quarterId);
+    if (!quarterOpen(q ?? {}, doc.level ?? 1).open) continue;
     for (const a of l.actions) if (!isCheckedAction(a)) verbs.push(a.verb);
   }
   return { issue: issueShort ?? 'the week', city: city?.name ?? '', verbs: verbsPhrase(verbs) };

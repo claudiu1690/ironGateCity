@@ -33,3 +33,12 @@ export * from './capitalCount';
 export * from './issues';
 export * from './ledger';
 export * from './residence';
+// Slice 5 (docs/tech/slice-5.md §6).
+export * from './heat';
+export * from './health';
+export * from './record';
+export * from './rivalGround';
+export * from './runIn';
+export * from './held';
+export * from './missions';
+export * from './quarters';

@@ -179,11 +179,11 @@ Rewards at the §5.5 tier-1 rates by type and Energy (the `slice-2-cities.md` §
 #### Duskwall · Frontier Checkpoint
 
 **Talk to the lorry drivers in the queue** (`duskwall.checkpoint.drivers`)
-- Success — *Forty lorries and nowhere to go* — The queue at the barrier starts at dawn and moves when the customs say so. You work the cabs with the flyer and the rates: the frontier, the timber, who signs the chits. By the time the barrier lifts, half the drivers have one on the dashboard.
+- Success — *Forty lorries and nowhere to go* — The queue at the barrier starts at dawn and moves when the customs say so. You work the cabs with the flyer and the rates: the frontier, the timber, who signs the chits. When the barrier lifts, half the drivers have one on the dashboard.
 - Partial — *The barrier lifts early* — You've done six cabs when the barrier goes up and the queue moves off in a cloud. A few flyers go through windows. One driver says he'll read it at the sawmill, waiting to unload.
 
 **Note which lorries are turned back** (`duskwall.checkpoint.turned-back`)
-- Success — *Who comes back down* — A rock above the barrier and a flask. Three lorries go through stamped, two are turned back, one is waved through without a stamp by a man who isn't in uniform. Two plates and a name go in your notebook.
+- Success — *Who comes back down* — A rock above the barrier and a flask. Three lorries go through stamped, two are turned back, one is waved through without a stamp by a man in a plain coat. Two plates and a name go in your notebook.
 - Partial — *A slow morning on the road* — One lorry, checked, stamped and through. A customs man who smokes by the barrier and looks at the peaks. One plate worth writing down. Come back on market day.
 
 #### Duskwall · Mountain Inn
@@ -220,7 +220,7 @@ Rewards at the §5.5 tier-1 rates by type and Energy (the `slice-2-cities.md` §
 - Partial — *Last week's sheet* — The board is last week's and the duty officer is watching through the hatch. One name worth writing down, from the loads seized. Come back on Monday.
 
 **Talk to people waiting at the hatch** (`duskwall.lock-up.hatch`)
-- Success — *A bench with time to talk* — A driver whose load is in the shed, a woman whose son is in the cells, a carter waiting for a chit. The bench by the hatch has nothing to do but listen. You keep it low and the flyers folded. By the time the hatch opens, most of the bench has one.
+- Success — *A bench with time to talk* — A driver whose load is in the shed, a woman whose son is in the cells, a carter waiting for a chit. The bench has nothing to do but listen. You keep it low and the flyers folded. By the time the hatch opens, most of the bench has one.
 - Partial — *The duty officer has a view* — The duty officer looks through the hatch and then at the door. You get two flyers out on the way to it. One driver follows you onto the road to ask about the timber rates.
 
 #### Duskwall · Infirmary
@@ -266,7 +266,7 @@ Rewards at the §5.5 tier-1 rates by type and Energy (the `slice-2-cities.md` §
 - Partial — *The auction starts early* — You've done three pens when the bell goes and the county goes to the sheds in a body. A few flyers go into waistcoats. One old farmer says he'll read it after the sale, if his beasts make a price.
 
 **Speak from the auctioneer's box** (`ashford.cattle-market.speech`)
-- Success — *The box is yours between lots* — The auctioneer's box between lots, the sheds for a sounding board and the county on the benches. The tolls, the railway rates, who sits on the market board. Nobody heckles a man in the box. The auctioneer lets you finish before he lifts his gavel.
+- Success — *The box is yours between lots* — The auctioneer's box between lots, the sheds for a sounding board and the county on the benches. The tolls, the railway rates, who sits on the market board. Nobody heckles a man in the box. The auctioneer lets you finish before the gavel.
 - Partial — *The next lot comes in* — You get through the tolls before the next lot comes through the gate and takes the sheds' attention with it. A knot of young farmers at the rail stays to argue. The auctioneer looks at his watch.
 
 #### Ashford · County Infirmary
@@ -351,7 +351,7 @@ Tier-2 difficulties are 14–20, **set by the mission's Level** against the mode
 
 ### 4.4 The briefing and the ways
 
-- **The briefing** is one `StoryText` (≤ 240): where you are, what the job is, what could go wrong. No numbers in the prose; the numbers are on the rows.
+- **The briefing** is one `StoryText` (≤ 380 characters, ≤ 4 sentences; §23.8): where you are, what the job is, what could go wrong. No numbers in the prose; the numbers are on the rows.
 - **A way** is `{ id, title ≤ 60, stats, hint ≤ 90 }` and, where it differs from the mission's type, its own `heat` and `runIn` (a loud way draws more attention than a quiet one). Two or three ways; at most one may be *best* (the §8.4 best-stat check); content mixes the stats so that STR, INT and AGI builds each find a way on their stat somewhere in every city, and the CHA ways wait for the Wardrobe.
 - **The row** shows: the title; under it the odds word and the stat (*Fair odds · Agility*); under that, when the way's risk differs from the mission's, its risk line (§4.7). The remembered way carries *Last time* and sits first.
 - **One result text per outcome** for the mission, not per way: the ways are the stat and the hint; the texts are written to read true for any of them.
@@ -541,7 +541,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 
 - Success — *Four hundred names, in order* — Four hundred names, streets and dues, copied in twelve minutes in a hand you can read. The register goes back on the desk a quarter-inch from where it was. Your branch pays on sight and asks no questions.
 - Partial — *Half the register* — You get to M before the clerk's step is on the stair and the window has to be the way out. Two hundred names is two hundred names. The branch pays half and asks about the rest.
-- Failure — *Dinner is early today* — The clerk eats at his desk today. You stand in the corridor with a pencil and a story about dues until he asks which ward, and then it's time to leave. The register stays on the desk.
+- Failure — *Dinner is early today* — The clerk eats at his desk today. You stand in the corridor with a pencil and a story about dues until he asks which branch, and then it's time to leave. The register stays on the desk.
 
 ### 5.3 Ashford
 
@@ -631,7 +631,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 | From the Parliament steps, over their heads | STR | Climb them, hold the rail, and shout over the trams. |
 | The messengers' room first, then the plinth | best | Find out what the Quarter is angry about before you tell it what you'd do. |
 
-- Success — *A thousand lunches, one voice* — The Forecourt stops eating. The cuts, the estimates, who decides. A deputy heckles from the steps and the crowd laughs on your side; the rival crew at the back give it up and go for a sandwich. By two, the Quarter has an opinion it didn't bring to lunch.
+- Success — *A thousand lunches, one voice* — The Forecourt stops eating. The cuts, the estimates, who decides. A deputy heckles from the steps and the crowd laughs on your side; the rival crew at the back go for a sandwich. By two, the Quarter has an opinion it didn't bring to lunch.
 - Partial — *The bell cuts you off* — You get through the cuts before the bell for the vote goes and the steps empty of everyone who matters. A few hundred clerks stay to hear the end. One asks which party. You tell him.
 - Failure — *Rain off the dome* — The rain comes off the dome at ten past one and the Forecourt goes under the arcades without you. You finish for the statue and the rival crew, who enjoy it. Same plinth next Thursday, if it's dry.
 
@@ -1314,3 +1314,11 @@ The posters scene shows a crew with paste and a brush and **no knife** (the brie
 ### 23.7 For QA
 
 The guards' allowances after this change: `qa.content`'s `front` list is unchanged (*front door* is already on it); `qa.slice2`'s list gains **front door** only. Nothing in slices 5 or 6 now uses *sergeant*, *torch* or *in front of*. Slice 6 will need **front page** (the Headline Story's Triumph) on both lists when it lands.
+
+### 23.8 Text lengths (4 Oct 2026)
+
+- **Outcome texts stay at ≤ 240 characters and ≤ 4 sentences** (GDD §1.2 pillar 7, the slice-1 rule n9), for actions and missions alike. Four of this document's texts were over and are trimmed in place, each by one clause, nothing else changed: `irongate.forecourt.rally` Success (§5.4, now 239), `duskwall.checkpoint.drivers` Success (§3.1, 237), `duskwall.lock-up.hatch` Success (§3.1, 234), `ashford.cattle-market.speech` Success (§3.1, 238).
+- **A mission briefing is ≤ 380 characters and ≤ 4 sentences.** §4.4's "≤ 240" was wrong against its own catalogue (the 22 briefings run 259–362) and is corrected. The briefing is not an outcome text: it is read once, before a choice, and the Repeat button skips it from the second time (§4.1); it has to set the place, the job and the risk in one go, which 240 cannot do without dropping one of the three. The pillar-7 measure that matters for it is the screen one, which §10 already pins: title, briefing and the first two way rows above the sticky button on 375 × 667. The loader checks 380 and 4 sentences on `briefing`; the 240 check stays on every `text` body. The 22 briefings are unchanged. GDD §12's "a short briefing" needs no number; the cap lives here.
+- **Quarter blurbs stay at ≤ 200** (§23.4). Coalport's Harbour blurb (`city-quarters.md` §2.2, quoted in `slice-5-screens.md` §3.3) was 204 and loses *at the mole* (now 192); the teaser line already names the customs house without it. The Mill (179) and the Sidings (191) fit as they are.
+- ***Ward* in its hospital sense is allowed.** The vocabulary guard (`packages/content/test/vocabulary.ts`, review 2 §1.13) bans *ward(s)* as the retired electoral word; slice 4 allowed *fever ward*. Slice 5's infirmaries are built of wards and there is no other English word for the room, so the hospital phrases join the allowance: *the ward*, *on the ward*, *the men's ward*, *the women's ward*, *long wards*, *four wards*, *county's ward* (and *fever ward* as before). The electoral sense stays banned: the game's units are the district, the quarter, the street and the branch, never the ward. One use in this document was electoral and is reworded: `duskwall.beacon-house.roll` Failure now reads *until he asks which branch*, in line with Coalport's *which branch* and Ashford's *which street*.
+- ***Uniform* stays banned** (war framing; `qa.content` and `qa.slice2`). The one player-facing use, `duskwall.checkpoint.turned-back` Success (§3.1), now reads *by a man in a plain coat* (198 characters, 3 sentences). The word's other appearances in this document are design notes and art briefs (§10, §11, §20, §21), not loaded content.

@@ -9,6 +9,7 @@ import type { Types } from 'mongoose';
  * closed.
  */
 export type JourneyStatus = 'onTheWay' | 'arrived' | 'closed';
+export type JourneyKind = 'ticket' | 'deported';
 
 export interface JourneyDoc {
   _id: Types.ObjectId;
@@ -23,7 +24,17 @@ export interface JourneyDoc {
   fare: { base: number; lines: Array<{ id: string; label: string; pct: number }>; total: number };
   /** 32 hex: the card draw and the card's roll. */
   seed: string;
-  card: { eventId: string } | null;
+  /** Slice 5: `deck` is the card's deck (absent on cards drawn before slice 5: ordinary). */
+  card: { eventId: string; deck?: 'ordinary' | 'hostile' } | null;
+  /**
+   * Slice 5 (ADR 0033): a deportation is a fareless, cardless train home on release from the cells
+   * on rival ground. Absent means a ticket.
+   */
+  kind?: JourneyKind;
+  /** Slice 5: a journey to rival ground (absent on journeys before slice 5: false). */
+  rivalGround?: boolean;
+  /** Slice 5: the stay a deportation ends. */
+  stayId?: Types.ObjectId | null;
   /** Stored verbatim: the arrival modal's line. */
   choice: {
     choiceId: string;
@@ -63,6 +74,10 @@ const journeySchema = new Schema<JourneyDoc>(
     closedAt: { type: Date, default: null },
     sleptThrough: { type: Boolean, default: false },
     firstToCapital: { type: Boolean, default: false },
+    // Slice 5 (tech design §5.4). `kind` has no default: absent means a ticket.
+    kind: { type: String, enum: ['ticket', 'deported'] },
+    rivalGround: { type: Boolean, default: false },
+    stayId: { type: Schema.Types.ObjectId },
   },
   { collection: 'journeys', strict: true, timestamps: true, versionKey: false, minimize: false },
 );

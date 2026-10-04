@@ -956,6 +956,314 @@ export const copy = {
     heroes: (district: string, n: number) => `Heroes: ${district} ×${n}`,
     inPrint: 'In Print',
   },
+  // Slice 5, "risk" (docs/design/slice-5-screens.md §11 and its help notes §2.3, the duty officer's
+  // and the matron's lines §6.2 and §7.2; design §23). Times are formatted by the caller in the
+  // player's clock (`time`: "15:12"; `weekday`: "Thursday"); amounts come from the rules' constants.
+  // The odds are words (copy.odds); no string here prints a chance.
+  risk: {
+    takenIn: 'Taken in',
+    carriedOff: 'Taken to the infirmary',
+    rivalGroundTag: 'Rival ground · +50 % Party XP · worse odds',
+    pressureCapped: 'The town has had enough today · no opinion',
+    cantLiveHere: "You can't live or stand here",
+    yourRecordPart: (n: number) => `your record −${n}`,
+
+    // The mission ticket and the briefing (screens §4.1, §4.2).
+    missions: 'Missions',
+    /** The ticket's type label (`MissionView.label`). */
+    label: {
+      speech: 'Mission · Speech',
+      watch: 'Mission · Watch and listen',
+      against: (faction: string) => `Mission · Against the ${faction}`,
+    },
+    chooseAWay: 'Choose a way',
+    again: 'Again',
+    chooseAnotherWay: 'Choose another way',
+    lastTime: 'Last time',
+    /** The briefing's sticky button and *Again*'s cost line: "From the mole, with a flask · 12 Energy". */
+    wayCost: (way: string, n: number) => `${way} · ${n} Energy`,
+    needsEnergy: (n: number) => `Needs ${n} Energy`,
+    /** A locked mission ticket's one reason (`MissionView.locked`). */
+    locked: {
+      level: (n: number) => `From Level ${n}`,
+      /** "Organisers and above" (the faction's Rank 3 title). */
+      rank: (rank3: string) => `${rank3}s and above`,
+      record: 'Not with your record',
+    },
+    /** The risk line: "Heat +8 · Risky · if caught, a mark on your record". */
+    heatPlus: (n: number) => `Heat +${n}`,
+    /** By `riskBand` (rules); *Safe* never shows on a mission. */
+    riskWord: {
+      safe: 'Safe',
+      littleRisk: 'A little risk',
+      risky: 'Risky',
+      dangerous: 'Dangerous',
+    } as Record<'safe' | 'littleRisk' | 'risky' | 'dangerous', string>,
+    ifCaught: (marks: number) =>
+      `if caught, ${marks === 1 ? 'a mark' : `${['two', 'three'][marks - 2] ?? marks} marks`} on your record`,
+    /** A way whose risk differs from the ticket's: "run-in: Dangerous". */
+    runInWord: (word: string) => `run-in: ${word}`,
+
+    // The result (screens §4.3).
+    outcome: { success: 'Success', partial: 'Partial', failure: 'Failure' } as Record<
+      'success' | 'partial' | 'failure',
+      string
+    >,
+    dropped: { ran: 'dropped: you ran', lost: 'dropped: you lost' },
+    /** A run-in's reason line when a fight was lost on power (`cause: 'power'`). */
+    outmatched:
+      'You were outmatched. Strength is what counts in a fight; a coat with some weight to it helps.',
+    remembered: 'Missions remember: next time, one tap',
+    agility: (n: number) => `Agility +¼ · ${n} more for a point`,
+    /** "Heat +8 → 32 · Noticed · cools by 20:40"; no time while Cool ("Heat +6 → 6 · Cool"). */
+    heatMove: (gain: string, after: number | string, state: string, time: string | null) =>
+      `Heat ${gain} → ${after} · ${state}${time ? ` · cools by ${time}` : ''}`,
+    heatLine: (n: number | string, state: string) => `Heat ${n} · ${state}`,
+    heatState: { cool: 'Cool', noticed: 'Noticed', hot: 'Hot', wanted: 'Wanted' } as Record<
+      'cool' | 'noticed' | 'hot' | 'wanted',
+      string
+    >,
+    /** The one-line card on the first crossing into a state. */
+    heatCard: {
+      noticed:
+        'NOTICED · The police have started to take an interest. Run-ins are likelier and a mark on your record is easier to earn. Heat cools five an hour.',
+      hot: 'HOT · The police know your face. Your name taken now means the cells. A quiet day cools it.',
+      wanted: 'WANTED · Any mission that goes wrong is the cells. Stay in, or stay legal, until it cools.',
+    } as Record<'noticed' | 'hot' | 'wanted', string>,
+    /** Design §13: the chapter's quiet way, the Heat line's tail the first time ("Heat +6 → 6 · Cool · …"). */
+    heatFirstCool: 'the first mark of attention: it cools five an hour',
+    /** "The police took your name · 1 mark · On file". */
+    nameTaken: (n: number, level: string) =>
+      `The police took your name · ${n} ${n === 1 ? 'mark' : 'marks'} · ${level}`,
+    secondTime: 'Second time this week: three marks',
+    recordCard:
+      "ON FILE · One mark. It fades in a fortnight if there's no second; Iron from missions is down a tenth until then.",
+
+    // The record (screens §2.4, the Me tab and the desk).
+    yourRecord: 'Your record',
+    recordLevel: {
+      clean: 'Clean',
+      onFile: 'On file',
+      repeat: 'Repeat offender',
+      notorious: 'Notorious',
+    } as Record<'clean' | 'onFile' | 'repeat' | 'notorious', string>,
+    /** "On file · 2 marks". */
+    recordLine: (level: string, n: number) => `${level} · ${n} ${n === 1 ? 'mark' : 'marks'}`,
+    fadesOn: (weekday: string) => `one fades on ${weekday}`,
+    bailDoubled: 'bail doubled',
+    strikeOff: (pc: number) => `Have a mark struck off · ${pc} Political Capital`,
+    /** The strike-off's result (`ResultModal kind="political"`, tech design §10.3). */
+    struck: {
+      stamp: 'Struck off',
+      headline: 'One mark fewer',
+      body: (n: number) =>
+        `The oldest mark on your record is gone. ${n} left. The branch's friend at the station says nothing.`,
+    },
+
+    // Health (screens §2.2) and the run-in (screens §5).
+    health: 'Health',
+    healthValue: (hp: number, max: number) => `${hp} / ${max}`,
+    healthMove: (a: number, b: number, time: string) => `Health ${a} → ${b} · full again by ${time}`,
+    /** The run-in modal's kicker: "A run-in · The Far Bank". */
+    runInKicker: (place: string) => `A run-in · ${place}`,
+    /** Your line under the opponent: "Health 125 / 125 · Heat 14 · Cool". */
+    you: (hp: number, max: number, heat: number, state: string) =>
+      `Health ${hp} / ${max} · Heat ${heat} · ${state}`,
+    rows: {
+      fight: 'Fight',
+      run: 'Run',
+      talk: 'Talk your way out',
+      pay: (n: number) => `Pay them off · ${n} Iron`,
+    },
+    nearlyAlways: 'nearly always works',
+    wontBeBought: "Won't be bought",
+    needsIron: (n: number) => `Needs ${n} Iron`,
+    bestFreeOdds: 'best free odds',
+    leaveItToLuck: 'Leave it to luck',
+    oneChoice: "One choice. If you close the game, it's left to luck.",
+    /**
+     * The run-in block's *did* line (tech design §10.1), worded from the steps in order: "You tried to
+     * run; they were faster. You fought. You lost." DRAFT for the designer (the design gives only the
+     * example); pronoun-free (*they*, as the row's *Pay them off*), since a picket is three men.
+     */
+    did: {
+      fight: 'You fought.',
+      won: 'You won.',
+      lost: 'You lost.',
+      ran: 'You ran.',
+      runFailed: 'You tried to run; they were faster.',
+      talked: 'You talked your way out.',
+      talkFailed: "You tried to talk your way out; they weren't having it.",
+      paid: 'You paid them off.',
+      payFailed: 'You paid; they took it and came on anyway.',
+      luck: 'You left it to luck.',
+      auto: 'You left it, so luck chose.',
+    },
+    /** The did line from `StreetView.runIn`'s `by` and `steps` (a failed row is followed by the fight). */
+    didLine: (
+      by: 'player' | 'luck' | 'auto',
+      steps: ReadonlyArray<{ row: 'fight' | 'run' | 'talk' | 'pay'; ok: boolean }>,
+    ): string => {
+      const d = copy.risk.did;
+      const parts: string[] = by === 'luck' ? [d.luck] : by === 'auto' ? [d.auto] : [];
+      for (const s of steps) {
+        if (s.row === 'fight') parts.push(d.fight, s.ok ? d.won : d.lost);
+        else if (s.row === 'run') parts.push(s.ok ? d.ran : d.runFailed);
+        else if (s.row === 'talk') parts.push(s.ok ? d.talked : d.talkFailed);
+        else parts.push(s.ok ? d.paid : d.payFailed);
+      }
+      return parts.join(' ');
+    },
+    /** The receipt's parts (screens §4.3). */
+    parts: {
+      fullStrength: (n: number) => `won at full strength +${n}`,
+      paidOff: (n: number) => `paid off −${n}`,
+      rivalGround: (n: number) => `rival ground +${n}`,
+    },
+    /** "Opinion against the Vanguard in Coalport" (the receipt's opinion row on a mission against). */
+    opinionAgainst: (faction: string, city: string) => `Opinion against the ${faction} in ${city}`,
+
+    // The cells (screens §6).
+    cells: {
+      kicker: (place: string) => `The cells · ${place}`,
+      outAt: (time: string) => `out at ${time} · or pay bail`,
+      youCanClose: (time: string) =>
+        `You can close the game. The door opens at ${time} either way, and Energy keeps refilling in here.`,
+      payBail: (n: number) => `Pay bail · ${n} Iron`,
+      bailDouble: 'Bail is double on rival ground',
+      legalAid: 'Legal Aid: half price',
+      tap: 'Listen to the cells',
+    },
+    minutes: (n: number) => `${n} ${n === 1 ? 'minute' : 'minutes'}`,
+    /** The duty officer's one line, by case (screens §6.2). */
+    dutyOfficer: {
+      home: '"Name." He has it already. "Address." He has that too. He writes slowly, because he can.',
+      rival: '"Visiting, were we." He writes it down. The train home leaves when we say.',
+      again: '"You again." The book is already open at your page.',
+    },
+    released: {
+      stamp: 'Released',
+      headline: "Out, with the duty officer's regards",
+      body: 'Heat is down to 25 and the duty officer has your page. He says mind how you go.',
+    },
+    bailPaid: (n: number) => `−${n} Iron · bail`,
+    deported: {
+      stamp: 'Put on the train',
+      headline: 'Escorted to the station',
+      body: (city: string) =>
+        `Two constables, one platform, and a ticket you didn't buy. ${city} is barred to you until tomorrow. The train home leaves when they say, which is now.`,
+    },
+    barredFrom: (city: string, time: string) => `Barred from ${city} until ${time}`,
+
+    // The infirmary (screens §7).
+    infirmary: {
+      kicker: 'The infirmary · the ward',
+      outAt: (time: string, hp: number, max: number) => `out at ${time} · Health ${hp} / ${max}, rising`,
+      youCanClose: (time: string) =>
+        `You can close the game. You're discharged at ${time} either way, and Health comes back ten every ten minutes.`,
+      walkOut: (energy: number, iron: number) => `Walk out well · ${energy} Energy · ${iron} Iron`,
+      discharge: (energy: number) => `Discharge yourself · ${energy} Energy`,
+      tap: 'Talk to the ward',
+    },
+    /** The matron's one line (screens §7.2): the first stay, then after. */
+    matron: {
+      first:
+        '"Politics," says the matron, and puts the thermometer in before you can answer. Twenty minutes. She has seen worse from the rolling mill.',
+      again: '"You again," says the matron. The same bed.',
+    },
+    discharged: {
+      stamp: 'Discharged',
+      headline: 'Out, on your own feet',
+      headlineWell: 'Out, well',
+      body: (hp: number, max: number) =>
+        `The matron signs you off without looking up. Health ${hp} / ${max}. Mind the step.`,
+    },
+    wardPaid: (n: number) => `−${n} Iron · the ward`,
+
+    // The desk (screens §2.5).
+    desk: {
+      cells: (place: string, n: number, iron: number) =>
+        `In the cells at ${place} · ${n} minutes to go · bail ${iron} Iron`,
+      infirmary: (place: string, n: number) => `In the infirmary at ${place} · ${n} minutes to go`,
+      whereYouAre: 'Where you are',
+      rivalGround: (city: string) => `Rival ground · ${city} · everything is harder here`,
+    },
+
+    // Rival ground (screens §8).
+    rival: {
+      cardLine: (faction: string) => `Rival ground · Home city of the ${faction}`,
+      cardNote:
+        'Everything is harder here. Heat doubles, every tap can bring a run-in, and party work pays half again. Nothing you own is at risk.',
+      barred: (time: string) => `Barred · until ${time}`,
+      placeLine: (city: string) => `${city} · rival ground`,
+      ordersIn: (city: string) => `Your orders are in ${city} today`,
+      drawsFrom: (faction: string, left: string) =>
+        `Your work here draws from the ${faction}'s morale · ${left} of 2.0 points left today`,
+      arrivalWarning:
+        'Rival ground: Heat doubles here, every tap can bring a run-in, and nothing you own is at risk.',
+    },
+    /** A card's day flag on arrival. */
+    flags: {
+      watched: (city: string) => `Watched today: run-ins likelier in ${city} until midnight`,
+      warned: (city: string) => `Warned: run-ins less likely in ${city} until midnight`,
+    },
+    /** The checkpoint card's rows as the journey screen prints them (screens §8.2). */
+    cards: {
+      papersDetail: 'your party card · it depends on your Heat and your record',
+      payTheLamp: (n: number) => `Pay the lamp · ${n} Iron`,
+    },
+
+    // The quarters (screens §3).
+    quarters: {
+      title: 'Quarters',
+      opensAt: (level: number) => `Opens at Level ${level}`,
+      later: 'Opens with a later edition',
+      kicker: (level: number) => `Quarter · opens at Level ${level}`,
+      kickerLater: 'Quarter · a later edition',
+      levelOpens: (level: number, n: number) => `Level ${level} opens it; you are Level ${n}.`,
+      /** The plate's subtitle: "Coalport · The Harbour". */
+      subtitle: (city: string, quarter: string) => `${city} · ${quarter}`,
+    },
+
+    // The chapter (screens §9): the AGI way's row.
+    chapterHeat: (n: number) => `Heat +${n}, whatever happens`,
+
+    /** Help notes (screens §2.3; the review-1 pattern: [kicker, note]). */
+    help: {
+      heat: () => [
+        'Heat',
+        'How much notice the police are taking of you. It rises with the harder work and cools five an hour on its own. From 25 the police start to turn up; from 50 a mark on your record can mean the cells.',
+      ],
+      health: () => [
+        'Health',
+        'What a run-in costs you. It comes back on its own, ten every ten minutes. At nothing you wake in the infirmary; twenty minutes, or pay to walk out.',
+      ],
+      record: () => [
+        'Your record',
+        'What the police have on you: a mark each time your name is taken. On file at one, a repeat offender at three, notorious at six. Marks fade in a fortnight if you stay quiet; 30 Political Capital strikes one off.',
+      ],
+      risk: () => [
+        'Risk',
+        'The chance of a run-in on the way out: someone at the door who wants a word. Heat, your record and rival ground all raise it. A run-in is one choice: fight, run, talk, or pay.',
+      ],
+      mission: () => [
+        'Missions',
+        'The harder work: a briefing, two or three ways to do it, one tap. It can fail, which pays a little XP. The game remembers your way, so the second time is one tap.',
+      ],
+      rivalGround: () => [
+        'Rival ground',
+        "The other side's home town. Everything is harder, Heat doubles, every tap can bring a run-in, and party work pays half again. Nothing you own is at risk; the worst is a night in the cells and the train home.",
+      ],
+      cells: () => [
+        'The cells',
+        'A sentence of ten to sixty minutes, by your Heat. Pay bail or wait; either way you walk out with Heat at 25. Energy, the wage and the vote carry on without you.',
+      ],
+      infirmary: () => [
+        'The infirmary',
+        'Twenty minutes on the ward after a run-in lost. Walk out well for 100 Iron, or discharge yourself at half strength. Energy, the wage and the vote carry on without you.',
+      ],
+    },
+  },
 } as const;
 
 export type Copy = typeof copy;

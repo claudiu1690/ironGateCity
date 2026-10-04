@@ -53,11 +53,15 @@ describe('the real content, slice 2', () => {
     const home = content.cities.filter((c) => c.role === 'home');
     expect(home.map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford']);
     // Review 1: the nine job-shift actions are gone (a job is a wage).
-    expect(home.flatMap((c) => c.locations.flatMap((l) => l.actions))).toHaveLength(55);
+    // Slice 5's second quarters add 35 (slice5.cities.test.ts); slice 2's are the first quarters'.
+    const first = (c: (typeof home)[number]) => c.locations.filter((l) => l.quarterId === c.quarters[0]!.id);
+    expect(home.flatMap((c) => first(c).flatMap((l) => l.actions))).toHaveLength(55);
     expect(content.jobs.filter((j) => !j.id.startsWith('irongate'))).toHaveLength(9);
     // Slice 3 adds six crisis templates (Restore the base, two per faction), which never rotate.
     expect(
-      content.orderTemplates.filter((t) => t.use === 'rotation' && t.residence !== 'capital'),
+      content.orderTemplates.filter(
+        (t) => t.use === 'rotation' && t.residence !== 'capital' && t.minLevel === undefined,
+      ),
     ).toHaveLength(36);
     expect(home.map((c) => c.paper?.shortName)).toEqual(['Clarion', 'Sentinel', 'Gazette']);
     // Slice 2's nine, and the chapter-2 keepsakes GDD §21.4 catalogues for slices 3 and 5.
@@ -185,7 +189,7 @@ describe.each([
 ] as const)('%s vs docs/design/slice-2-cities.md', (cityId, factionId, start, end, dirPrefix, hlPrefix) => {
   const doc = section(CITIES, start, end);
   const city = content.city(cityId)!;
-  const actions = city.locations.flatMap((l) => l.actions);
+  const actions = city.locations.filter((l) => l.quarterId === city.quarters[0]!.id).flatMap((l) => l.actions);
 
   // Maps v3 (design §5.3): the doc's positions were measured on the retired pen-and-ink map; a
   // location now sits at its approved pin in the survey (pins.json).

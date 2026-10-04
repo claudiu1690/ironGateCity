@@ -27,7 +27,10 @@ import type { MapInsets, MapRect, TilePyramid } from '../src';
 const content = getContent();
 const cities = ['coalport', 'duskwall', 'ashford'] as const;
 const frameOf = (id: string) => content.city(id)!.quarters[0]!.frame;
-const pinsOf = (id: string) => content.city(id)!.locations.map((l) => l.map);
+/** The first quarter's places (slice 5's second quarters have their own frames). */
+const placesOf = (id: string) =>
+  content.city(id)!.locations.filter((l) => l.quarterId === content.city(id)!.quarters[0]!.id);
+const pinsOf = (id: string) => placesOf(id).map((l) => l.map);
 
 describe('the frame covers the box at scale 1 (§2)', () => {
   const BOXES = [
@@ -160,7 +163,7 @@ describe('review 3: at rest the art covers the map, and a drag brings the other 
       for (const { at: size, box, insets } of CASES) {
         const { frame, c, v } = restOf(id, box, insets);
         const lim = restPanLimits(box, c, v, frame, pinsOf(id), insets);
-        for (const l of content.city(id)!.locations) {
+        for (const l of placesOf(id)) {
           let reach = false;
           for (let a = 0; a <= 40 && !reach; a++)
             for (let b = 0; b <= 40 && !reach; b++) {

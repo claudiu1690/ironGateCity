@@ -420,10 +420,12 @@ describe('lazy time (ADR 0005) and "being away costs opportunity, never assets" 
       xp: before.xp,
       level: before.level,
       fxp: before.fxp,
-      pc: before.pc,
       stats: before.stats,
       statPointsPending: before.statPointsPending,
     });
+    // Slice 5's bigger Issue deck can tag the canvass with the week's Issue: its top-five Political
+    // Capital is a gain while away, never a loss.
+    expect(after.pc).toBeGreaterThanOrEqual(before.pc);
     expect(after.standing.successes).toBe(before.standing.successes);
     // Absence never lowers a rate (§4.3 rule 2): seniority counted all 30 days (60 under Long Service).
     expect(after.job).toMatchObject({ id: 'coalport-factory-worker', seniority: { pct: 20 } });

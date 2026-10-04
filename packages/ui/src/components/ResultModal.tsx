@@ -100,6 +100,11 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
       };
     case 'trained':
       return { label: 'Trained', tone: 'success' };
+    // Slice 5 (screens §4.3): sent to the cells or the infirmary, in the failure colour.
+    case 'takenIn':
+      return { label: copy.risk.takenIn, tone: 'failure' };
+    case 'carriedOff':
+      return { label: copy.risk.carriedOff, tone: 'failure' };
   }
 }
 

@@ -206,8 +206,10 @@ describe('GDD §7.3, §8.5, §21.4: bonuses, the reference recruits and the kit'
       const names = r[1]!.split(' · ');
       return ids.map((id, i) => ({ id, name: names[i] ?? names[0]!, slot: r[2]!, cha: r[4]!, notes: r[5]! }));
     });
-    expect(rows.map((r) => r.id).sort()).toEqual(content.items.map((i) => i.id).sort());
-    for (const r of rows) {
+    // Keepsakes of later slices (the GDD's table runs ahead: *(slice 7)*) are not content yet.
+    const now = rows.filter((r) => !/\(slice ([6-9]|\d\d)\)/.test(r.notes));
+    expect(now.map((r) => r.id).sort()).toEqual(content.items.map((i) => i.id).sort());
+    for (const r of now) {
       const item = content.item(r.id)!;
       expect(item.name, r.id).toBe(r.name);
       expect(item.slot ?? 'none', r.id).toBe(r.slot);
@@ -259,7 +261,8 @@ describe('GDD §17.1: chapter 1 of every Ambition', () => {
       });
       expect(ch1.story?.keepsake).toBe(keepsake);
       expect(amb.chapters[1]?.requires).toEqual(req);
-      if (id !== 'finish-his-work') expect(amb.chapters[1]?.story).toBeUndefined();
+      // Slice 5 (design §13): *Settle His Debts* chapter 2 is written too.
+      if (id !== 'finish-his-work' && id !== 'settle-his-debts') expect(amb.chapters[1]?.story).toBeUndefined();
       // §17.1: no text in the chapter says "failed" (the stamp alone reads Failure).
       const s = ch1.story!;
       const words = [
@@ -317,10 +320,11 @@ describe('Content policy (CLAUDE.md rules 2 and 6; content-policy review §7 che
     .join(' ');
   // Ids are never shown (review §1, "Ids: no id changes"): drop every JSON value that is an id.
   // Every JSON string with no space and a dot or hyphen in it is an id or a file name.
-  const text = (JSON.stringify(rawContent) + JSON.stringify(copy) + samples).replace(
-    /"[a-z0-9_]+([.-][a-z0-9_]+)+(\.(png|jpg|svg))?"/gi,
-    '"[id]"',
-  );
+  // Slice 5 (design §23.1 #22): the duty officer's art source keeps its file name (`sergeant.png`);
+  // nothing a player reads says it.
+  const text = (JSON.stringify(rawContent) + JSON.stringify(copy) + samples)
+    .replace(/"[a-z0-9_]+([.-][a-z0-9_]+)+(\.(png|jpg|svg))?"/gi, '"[id]"')
+    .replace(/"mvp\/portraits\/sergeant\.png"/g, '"[id]"');
 
   it('uses none of the checklist’s militia, real-world or war words in any display string or alt text', () => {
     const banned =
@@ -333,10 +337,11 @@ describe('Content policy (CLAUDE.md rules 2 and 6; content-policy review §7 che
     // Slice 4 (tech design §12.5): *Garrison Hill* (a place name) and *the war* (the historical war);
     // design §18: *the front room* (a room); GDD §1.5: *close race* (the plain word for a
     // battleground). All four kept by the designer on 3 Oct 2026 (design §18); the Police
-    // Headquarters' *desk sergeant* became *the duty officer*, so no rank is allowed.
+    // Headquarters' *desk sergeant* became *the duty officer*, so no rank is allowed. Slice 5 (design
+    // §23.7): *the front door* (the Union Hall briefing), a door in its everyday sense.
     const allowed = hits.filter(
       (h) =>
-        !/General Strike|front row|out front|front room|Garrison Hill|(since|by) the war|the war gutted|close ?race/i.test(
+        !/General Strike|front row|out front|front room|front door|Garrison Hill|(since|by) the war|the war gutted|close ?race/i.test(
           h,
         ),
     );

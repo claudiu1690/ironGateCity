@@ -1,6 +1,7 @@
 import {
   ACTION_KINDS,
   FACTION_IDS,
+  MISSION_TYPE_IDS,
   STAT_KEYS,
   TRAINABLE_STATS,
   ordinanceBoundProblem,
@@ -207,16 +208,76 @@ export const Quarter = z.strictObject({
       n: z.number().int().min(1).max(9),
       baselineOpinion: Shares,
       anchor: z.strictObject({ x: Fraction, y: Fraction }),
-      /**
-       * The user's district lock (3 Oct 2026): the district's shape on the capital's picture, a
-       * polygon in fractions following the river, the main streets and the drawn blocks. The overview
-       * draws it with the name; a district view dims the picture outside it. Every pin of the district
-       * lies inside it and no two districts overlap (the loader checks both); the frame stays the zoom
-       * target.
-       */
-      outline: z.array(z.tuple([Fraction, Fraction])).min(6).max(24),
     })
     .optional(),
+  /**
+   * The user's district lock (3 Oct 2026), slice 5 (ADR 0035): the quarter's shape on the city's
+   * picture, a polygon in fractions following the water, the main streets and the drawn blocks
+   * (moved here from `district.outline`). The overview draws it with the name; a quarter view dims
+   * the picture outside it. Every pin of the quarter lies inside it and no two outlines of a city
+   * overlap (the loader checks both); the frame stays the zoom target.
+   */
+  outline: z.array(z.tuple([Fraction, Fraction])).min(6).max(24).optional(),
+  /** Slice 5 (screens §10): where the quarter's name sits on the overview. */
+  label: z.strictObject({ x: Fraction, y: Fraction }).optional(),
+  /**
+   * Slice 5 (GDD §14.13): the Level that opens it per character, or a later edition (a teaser).
+   * Absent: Level 1 (`quarterOpen` reads it so).
+   */
+  opens: z
+    .union([
+      z.strictObject({ level: z.union([z.literal(1), z.literal(6), z.literal(10)]) }),
+      z.strictObject({ edition: z.literal('later') }),
+    ])
+    .optional(),
+  /** Slice 5 (design §2.3): the line after the lock word on a locked quarter. */
+  teaser: z.string().min(1).max(90).optional(),
+});
+
+/** Slice 5 (design §4.2, ADR 0031): the six mission types; their numbers live in rules. */
+export const MissionType = z.enum(MISSION_TYPE_IDS);
+
+/** Design §4.4: a way to do a mission. A louder way carries its own Heat or run-in base. */
+export const Way = z.strictObject({
+  id: Id,
+  title: z.string().min(1).max(60),
+  stats: CheckStatsSchema,
+  hint: z.string().min(1).max(90),
+  heat: z.number().int().min(0).max(30).optional(),
+  runIn: z.number().int().min(0).max(90).optional(),
+});
+
+/** Design §4–§5 (ADR 0031): a tier-2 mission at a place, after its tickets. */
+export const Mission = z.strictObject({
+  id: Id,
+  name: z.string().min(1).max(80),
+  tier: z.literal(2),
+  type: MissionType,
+  /** = MISSION_TYPES[type].energy (the loader holds it). */
+  energy: z.number().int().min(1),
+  level: z.union([z.literal(6), z.literal(8), z.literal(10), z.literal(12)]),
+  /** = missionDifficulty(level, city.role) (the loader holds it; design §23.1 #1). */
+  difficulty: z.number().int().min(14).max(22),
+  requires: z
+    .strictObject({
+      rank: z.literal(3).optional(),
+      standing: z.number().int().min(0).max(4).optional(),
+    })
+    .optional(),
+  /** An illegal type's target: a faction, or (the capital) the district's leader. */
+  target: z.union([FactionId, z.literal('leader')]).optional(),
+  /** The opponents a run-in draws from (design §10.2). */
+  pool: z.array(Id).min(1).max(4),
+  /**
+   * Design §4.4: where you are, the job, what could go wrong. The design's 22 briefings run to 362
+   * characters (two or three sentences), so a briefing is held to 380 and four sentences; outcome
+   * texts keep 240 (tech design Deviations; the designer's ruling in design §23).
+   */
+  briefing: z.string().min(1).max(380),
+  ways: z.array(Way).min(2).max(3),
+  text: z.strictObject({ success: OutcomeText, partial: OutcomeText, failure: OutcomeText }),
+  /** Overrides the type's mission card (§13.5 rung 4); a `scene`. */
+  card: AssetId.optional(),
 });
 
 export const Location = z.strictObject({
@@ -233,6 +294,8 @@ export const Location = z.strictObject({
   /** Slice 4 (design §4.3): members only; required on every `faction-hq` (the faction whose HQ it is). */
   factionId: FactionId.optional(),
   actions: z.array(Action).min(1),
+  /** Slice 5 (ADR 0031): the place's missions, listed after its tickets. */
+  missions: z.array(Mission).optional(),
 });
 
 export const City = z.strictObject({
@@ -289,6 +352,14 @@ export const City = z.strictObject({
     })
     .optional(),
   locations: z.array(Location),
+  /**
+   * Slice 5 (design §8.1, §9.2): where the game sends a player in this city: the cells (a `jail`
+   * place; Irongate's Police Headquarters, a `ministry`) and the infirmary (a `hospital`). Required on
+   * every council city (the loader).
+   */
+  services: z.strictObject({ cells: Id, infirmary: Id }).optional(),
+  /** Slice 5 (design §10.5): a home city's opponents for a visitor's tier-1 run-in. */
+  runInPool: z.array(Id).min(1).optional(),
 });
 
 export const AssetKind = z.enum(['map', 'scene', 'portrait', 'avatar', 'item', 'vector']);
@@ -436,6 +507,8 @@ export const OrderTemplateSchema = z.strictObject({
    * B), or both (slot C).
    */
   residence: z.enum(['home', 'capital', 'any']).default('home'),
+  /** Slice 5 (design §12.2): enters a member's rotation from this Level. */
+  minLevel: z.number().int().min(1).optional(),
 }) satisfies z.ZodType<OrderTemplate, unknown>;
 
 export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
@@ -497,6 +570,16 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('districtLeftBattleground') }),
   z.strictObject({ kind: z.literal('groundswellStarted') }),
   z.strictObject({ kind: z.literal('districtLine') }),
+  // Slice 5 (tech design §11.2): the risk conditions (stored) and the rival pressure (live).
+  z.strictObject({ kind: z.literal('missionFirstYesterday') }),
+  z.strictObject({ kind: z.literal('heatState'), min: z.enum(['hot', 'wanted']) }),
+  z.strictObject({ kind: z.literal('markYesterday') }),
+  z.strictObject({ kind: z.literal('arrestedYesterday') }),
+  z.strictObject({ kind: z.literal('admittedYesterday') }),
+  z.strictObject({ kind: z.literal('recordRose') }),
+  z.strictObject({ kind: z.literal('rivalGroundYesterday') }),
+  z.strictObject({ kind: z.literal('deportedYesterday') }),
+  z.strictObject({ kind: z.literal('moraleLostToRivals'), min: z.number().min(0) }),
 ]) satisfies z.ZodType<HeadlineCondition>;
 
 export const HeadlineTemplateSchema = z.strictObject({
@@ -622,8 +705,9 @@ export const Chapter = z.strictObject({
             z.strictObject({
               id: Id,
               text: z.string().min(1).max(80),
-              // 80: chapter 2's first hint is 66 characters (design §17.7).
-              hint: z.string().min(1).max(80),
+              // 80: chapter 2's first hint is 66 characters (design §17.7). Slice 5: 100, as the
+              // approaches (Settle His Debts chapter 2's first hint is 97, design §13).
+              hint: z.string().min(1).max(100),
               /** Remembered for later chapters. */
               flag: Id,
             }),
@@ -634,7 +718,15 @@ export const Chapter = z.strictObject({
         title: z.string().min(1).max(40),
         narrative: StoryText,
         approaches: z
-          .array(z.strictObject({ id: Id, text: z.string().min(1).max(100), stats: CheckStatsSchema }))
+          .array(
+            z.strictObject({
+              id: Id,
+              text: z.string().min(1).max(100),
+              stats: CheckStatsSchema,
+              /** Slice 5 (design §13): Heat added on any outcome (the quiet way +6). */
+              heat: z.number().int().min(0).max(30).optional(),
+            }),
+          )
           .min(2)
           .max(3),
         cta: z.string().min(1).max(40),
@@ -680,6 +772,9 @@ export const OrdinanceEffectSchema = z
     // Slice 4 (ADR 0030): tickets from the city, a room in it.
     z.strictObject({ kind: z.literal('ticketPct'), value: z.number().int() }),
     z.strictObject({ kind: z.literal('roomPct'), value: z.number().int() }),
+    // Slice 5 (design §12.1): Heat cools faster; bail cheaper.
+    z.strictObject({ kind: z.literal('heatCoolPct'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('bailPct'), value: z.number().int() }),
   ])
   .superRefine((e, ctx) => {
     const problem = ordinanceBoundProblem(e);
@@ -784,6 +879,9 @@ export const JourneyRewards = z.strictObject({
   momentum: NonNeg.optional(),
   rested: NonNeg.optional(),
   quoted: z.literal(true).optional(),
+  /** Slice 5 (design §11.4): Heat ±n and a day flag in the destination. */
+  heat: z.number().int().min(-20).max(20).optional(),
+  flag: z.enum(['watched', 'warned']).optional(),
 });
 
 export const JourneyChoice = z.strictObject({
@@ -798,6 +896,11 @@ export const JourneyChoice = z.strictObject({
   success: z.strictObject({ rewards: JourneyRewards, text: OutcomeText }),
   /** Required when `stats` (a checked choice never fails). */
   partial: z.strictObject({ rewards: JourneyRewards, text: OutcomeText }).optional(),
+  /**
+   * Slice 5 (design §23.2): an unchecked choice that pays `success` when the gate holds (Cool and
+   * Clean) and `partial` otherwise.
+   */
+  gate: z.literal('coolAndClean').optional(),
 });
 
 export const JourneyEvent = z.strictObject({
@@ -807,8 +910,54 @@ export const JourneyEvent = z.strictObject({
   choices: z.array(JourneyChoice).min(2).max(3),
   /** What happens when the card is left unanswered ("slept through"). */
   ignore: StoryText,
-  /** The first journey always draws this card (the passenger). */
+  /** The first journey always draws this card (first in its own deck: the passenger, the checkpoint). */
   first: z.literal(true).optional(),
+  /** Slice 5 (design §11.4): the ordinary deck, or the hostile one drawn on the way to rival ground. */
+  deck: z.enum(['ordinary', 'hostile']).default('ordinary'),
+  /** Slice 5: *Your name is on a list* replaces the hostile draw from this Heat. */
+  heatAtLeast: z.number().int().min(1).max(100).optional(),
+  /** Slice 5: what an unanswered card does when its window ends (*slept through*). */
+  ignoreEffects: z
+    .strictObject({
+      heat: z.number().int().min(0).max(20).optional(),
+      flag: z.enum(['watched', 'warned']).optional(),
+    })
+    .optional(),
+});
+
+/** Slice 5 (design §10.2, §10.6): an opponent in a run-in, and its six lines. */
+const OpponentLine = z.string().min(1).max(120);
+export const Opponent = z.strictObject({
+  id: Id,
+  /** *A Vanguard street enforcer*. */
+  label: z.string().min(1).max(40),
+  side: z.union([FactionId, z.literal('police')]),
+  power: z.number().int().min(1),
+  agi: z.number().int().min(1),
+  wits: z.number().int().min(0),
+  /** Iron to pay them off; null: won't be bought. */
+  payOff: z.number().int().min(1).nullable(),
+  /** The branch inspector: −10 on your Fight odds. */
+  fightPct: z.number().int().min(-20).max(0).optional(),
+  portrait: AssetId,
+  lines: z.strictObject({
+    appears: OpponentLine,
+    won: OpponentLine,
+    lost: OpponentLine,
+    ran: OpponentLine,
+    talked: OpponentLine,
+    paid: OpponentLine.optional(),
+  }),
+});
+
+/** Slice 5 (design §8.2, §9.2, §23.3): the one tap in the cells and on the ward. */
+export const HeldAction = z.strictObject({
+  id: z.enum(['held.cells', 'held.ward']),
+  name: z.string().min(1),
+  type: z.literal('intelligence'),
+  stats: CheckStatsSchema,
+  energy: z.literal(3),
+  text: z.strictObject({ success: OutcomeText, partial: OutcomeText }),
 });
 
 /** ADR 0029: what tags an action with an Issue (AND of the fields; at least one). */
@@ -849,7 +998,12 @@ export const Issue = z.strictObject({
 export const Content = z.strictObject({
   factions: z.array(Faction).length(FACTION_IDS.length),
   cities: z.array(City).min(1),
-  art: z.strictObject({ assets: z.array(Asset), scenes: z.array(SceneBinding) }),
+  art: z.strictObject({
+    assets: z.array(Asset),
+    scenes: z.array(SceneBinding),
+    /** Slice 5 (GDD §13.5 rung 4): the mission card of each type, a scene. */
+    missionCards: z.array(z.strictObject({ missionType: MissionType, assetId: AssetId })),
+  }),
   /** ADR 0024: the map tile pyramids (`data/tiles.json`, generated by `pnpm art:tiles`). */
   tilePyramids: TilesManifest,
   /** §7.3: the faces offered at sign-up (six in slice 2, eighteen since art-wiring-oct.md). */
@@ -867,8 +1021,12 @@ export const Content = z.strictObject({
   politics: PoliticalTexts,
   // Slice 4.
   nation: Nation,
-  journeyEvents: z.array(JourneyEvent).length(7),
+  /** Slice 4: seven ordinary cards; slice 5: four hostile ones (the loader counts each deck). */
+  journeyEvents: z.array(JourneyEvent).length(11),
   issues: z.array(Issue),
+  // Slice 5.
+  opponents: z.array(Opponent).length(6),
+  held: z.strictObject({ cells: HeldAction, infirmary: HeldAction }),
 });
 
 export type Faction = z.infer<typeof Faction>;
@@ -904,6 +1062,10 @@ export type JourneyEvent = z.infer<typeof JourneyEvent>;
 export type JourneyChoice = z.infer<typeof JourneyChoice>;
 export type Issue = z.infer<typeof Issue>;
 export type IssueMatch = z.infer<typeof IssueMatchSchema>;
+export type Mission = z.infer<typeof Mission>;
+export type Way = z.infer<typeof Way>;
+export type Opponent = z.infer<typeof Opponent>;
+export type HeldAction = z.infer<typeof HeldAction>;
 export type Content = z.infer<typeof Content>;
 /** Content as authored (defaults not yet applied). */
 export type ContentInput = z.input<typeof Content>;

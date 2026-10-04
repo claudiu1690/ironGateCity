@@ -1,4 +1,6 @@
 import type { City } from '../../schemas';
+import { withMissions } from '../missions/attach';
+import { coalportMissions } from '../missions/coalport';
 
 /**
  * Coalport, home city of the Collective (GDD §14.1, §14.11). Locations, actions and text:
@@ -19,11 +21,44 @@ export const coalport: City = {
   // §14.11 baseline, pinned for Coalport.
   baselineOpinion: { vanguard: 9, collective: 70, alliance: 6, neutral: 15 },
   map: { day: 'map.coalport.day', night: 'map.coalport.night' },
-  // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
-  // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
   // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
   clouds: true,
-  quarters: [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
+  // Slice 5 (design §2, ADR 0035): three quarters, frames on the one picture; the second opens at
+  // Level 6, the third is a teaser (a later edition). Outlines and labels drawn for the overview:
+  // every pin (the survey's too) inside its own outline, no two overlapping, labels 0.25 apart.
+  quarters: [
+    {
+      id: 'coalport.mill',
+      name: 'The Mill',
+      frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 },
+      blurb:
+        'The mill and the men who work it, the market below the gate, the union hall, the terraces above and the quay at the bottom of the town. Brick, soot, the hooter three times a day.',
+      outline: [[0.33, 0.0], [0.83, 0.0], [0.83, 0.4], [0.78, 0.52], [0.74, 0.6], [0.53, 0.6], [0.53, 0.52], [0.33, 0.52]],
+      label: { x: 0.55, y: 0.35 },
+    },
+    {
+      id: 'coalport.harbour',
+      name: 'The Harbour',
+      frame: { x0: 0.11, y0: 0.4, x1: 0.99, y1: 0.89 },
+      opens: { level: 6 },
+      blurb:
+        'Where the basin opens to the sea: the slipway, the customs house, the infirmary, the police, and across the water by ferry the far bank with its fish market and its lower town that votes late.',
+      teaser: 'The slipway, the customs house, and the far bank across the water.',
+      outline: [[0.08, 0.38], [0.22, 0.38], [0.22, 0.7], [0.36, 0.78], [0.36, 0.93], [0.53, 0.93], [0.53, 0.6], [0.74, 0.6], [0.78, 0.52], [0.83, 0.4], [0.99, 0.4], [0.99, 0.96], [0.08, 0.96]],
+      label: { x: 0.7, y: 0.66 },
+    },
+    {
+      id: 'coalport.sidings',
+      name: 'The Sidings',
+      frame: { x0: 0.18, y0: 0.21, x1: 0.52, y1: 0.9 },
+      opens: { edition: 'later' },
+      blurb:
+        "The way in and out of town: the station where the line comes in, the coal yards where the town's coal is weighed, the tram sheds, and, up in the old town, St Barbara's church by the canal.",
+      teaser: 'The station, the coal yards and the tram sheds.',
+      outline: [[0.22, 0.2], [0.33, 0.2], [0.33, 0.52], [0.53, 0.52], [0.53, 0.93], [0.36, 0.93], [0.36, 0.78], [0.22, 0.7]],
+      label: { x: 0.38, y: 0.62 },
+    },
+  ],
   paper: {
     name: 'The Coalport Clarion',
     shortName: 'Clarion',
@@ -34,7 +69,7 @@ export const coalport: City = {
   // Review 3: the council sits in the domed hall on the river between the Union Hall and the Mill
   // Gate (no survey pin; measured on the painting). The election screens' backdrop.
   council: { offset: 2, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.525, y: 0.19 } },
-  locations: [
+  locations: withMissions([
     {
       id: 'coalport.mill-gate',
       name: 'Mill Gate',
@@ -398,5 +433,181 @@ export const coalport: City = {
         },
       ],
     },
-  ],
+    // Slice 5 (design §2.3, §3): the second quarter's five places, pins 7–11.
+    {
+      id: 'coalport.shipyard',
+      name: 'The Shipyard',
+      ref: 'the Shipyard',
+      kind: 'docks',
+      blurb: 'A hull on the stocks and two hundred men on the staging. When the yard stops, the town hears it.',
+      // The survey pin (mapPins.ts), pin 7.
+      map: { x: 0.86, y: 0.46 },
+      quarterId: 'coalport.harbour',
+      actions: [
+        {
+          ...canvass,
+          id: 'coalport.shipyard.riveters',
+          name: 'Talk to the riveters at the yard gate',
+          stats: ['str'],
+          text: {
+            success: { headline: 'They stop for one who can swing a hammer', body: "The riveters come off the staging at five with their ears still ringing. You've the shoulders for it, so they stop. Rates, the launch, who owns the slipway. A chargehand takes ten flyers for the staging hut." },
+            partial: { headline: 'Most of them head for the ferry', body: "The shift comes off in a body and most of it makes for the ferry stage. You press flyers on the stragglers. Two stop to argue the rates; one says his brother's a member and takes two." },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'coalport.shipyard.fence',
+          name: 'Put up posters on the slipway fence',
+          stats: ['str'],
+          text: {
+            success: { headline: 'A hundred yards of fence', body: 'Bucket, brush and the long fence along the slipway. Twelve posters up straight and high, one to every gap in the boards. Two hundred men will read them at five, and the ferry queue after.' },
+            partial: { headline: "The paste won't take on wet boards", body: 'Spray off the basin and paste that runs. Five posters stay up; the rest slide into the mud. Five is five, and one is on the yard gate.' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'coalport.customs-house',
+      name: 'Customs House',
+      ref: 'the Customs House',
+      kind: 'ministry',
+      blurb: "The republic's clock on the mole, and its inspectors in the sheds. Every crate in Coalport passes their stamp, or doesn't.",
+      // The survey pin (mapPins.ts), pin 8.
+      map: { x: 0.66, y: 0.66 },
+      quarterId: 'coalport.harbour',
+      actions: [
+        {
+          ...canvass,
+          id: 'coalport.customs-house.permits',
+          name: 'Talk to people in the permits queue',
+          stats: ['int'],
+          text: {
+            success: { headline: "A queue that can't leave", body: "Forty people, one hatch, and the republic's clock above them taking its time. You work the line with the flyer and the rates sheet. By the time the hatch opens, half the queue knows what your party would do about the shilling." },
+            partial: { headline: 'The hatch opens early', body: "You're three people in when the hatch goes up and the queue becomes a crush at the counter. A few flyers go into coat pockets. A carter folds his and says he'll read it on the mole, waiting." },
+          },
+        },
+        {
+          ...intelligence,
+          energy: 4,
+          id: 'coalport.customs-house.sheds',
+          name: 'Watch who comes out of the sheds',
+          stats: ['int'],
+          text: {
+            success: { headline: 'The sheds keep hours of their own', body: "A bollard, a paper you don't read, and the shed doors in view. Who comes out with a stamp, who comes out without one, which lorry leaves by the back. Two names and a plate go in your notebook." },
+            partial: { headline: 'A quiet afternoon on the mole', body: 'One lorry, stamped and gone. A clerk who smokes by the door and says nothing to anyone. One name worth writing down. Come back when a ship is in.' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'coalport.infirmary',
+      name: 'The Infirmary',
+      ref: 'the Infirmary',
+      kind: 'hospital',
+      blurb: "Glass roof, iron beds, a matron who has seen every kind of accident the mill makes. Visiting hour is two o'clock.",
+      // The survey pin (mapPins.ts), pin 9.
+      map: { x: 0.17, y: 0.5 },
+      quarterId: 'coalport.harbour',
+      actions: [
+        {
+          ...canvass,
+          id: 'coalport.infirmary.visitors',
+          name: 'Talk to people at visiting hour',
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: "Two o'clock, forty visitors", body: "Visiting is at two and the queue at the gate is anxious, patient and can't leave. You work it gently: the beds, the mill's accidents, who pays. By the time the porter opens the gate most of it has a flyer in a basket." },
+            partial: { headline: 'The porter opens early', body: "The gate opens at ten to two and the queue is gone up the steps. A few flyers go into baskets. One man says his wife's on the women's ward and takes two." },
+          },
+        },
+        {
+          id: 'coalport.infirmary.porters',
+          name: 'Carry for the porters',
+          tier: 1,
+          type: 'training',
+          trains: 'str',
+          verb: 'Carry',
+          text: { success: { headline: 'Stretchers up three flights', body: "The porters don't ask which party you're with; they ask if you can take the foot end up three flights without stopping. You can, by the end. The matron watches you go up and says nothing, which is approval." } },
+        },
+      ],
+    },
+    {
+      id: 'coalport.harbour-police',
+      name: 'Harbour Police',
+      ref: 'the harbour police station',
+      kind: 'jail',
+      blurb: 'The harbour police station by the ferry stage: two cells, a stove, and a duty officer who writes everything down.',
+      // The survey pin (mapPins.ts), pin 10.
+      map: { x: 0.56, y: 0.83 },
+      quarterId: 'coalport.harbour',
+      actions: [
+        {
+          ...intelligence,
+          energy: 3,
+          id: 'coalport.harbour-police.notices',
+          name: 'Read the notices at the station door',
+          stats: ['int'],
+          text: {
+            success: { headline: 'Names on the board', body: "The board by the door lists the week's lost property, licences refused and the men wanted for questioning. Two names and a street go in your notebook while the duty officer is on the telephone." },
+            partial: { headline: "Last week's sheet", body: "The board is last week's and the duty officer is watching through the glass. One name worth writing down, from the licences refused. Come back on Monday." },
+          },
+        },
+        {
+          ...canvass,
+          id: 'coalport.harbour-police.desk',
+          name: 'Talk to people waiting at the desk',
+          stats: ['int'],
+          text: {
+            success: { headline: 'Everyone here has a grievance', body: 'Lost bicycles, a licence, a son. The bench by the desk is the most patient audience in Coalport. You keep your voice down and your flyers folded small. By the time the duty officer calls next, half the bench has one.' },
+            partial: { headline: 'The duty officer has a view', body: 'The duty officer looks up from his book and then at the door. You get two flyers out on the way to it. One woman follows you onto the step to ask about the rent tribunal.' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'coalport.far-bank',
+      name: 'The Far Bank',
+      ref: 'the Far Bank',
+      kind: 'market',
+      blurb: 'Across the water by ferry: the fish market under its iron roof, the bonded warehouses, and a lower town that makes up its mind late.',
+      // The survey pin (mapPins.ts), pin 11.
+      map: { x: 0.93, y: 0.62 },
+      quarterId: 'coalport.harbour',
+      actions: [
+        {
+          ...canvass,
+          id: 'coalport.far-bank.ferry',
+          name: 'Talk to people in the ferry queue',
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: 'Ten minutes to the next boat', body: "The ferry queue has ten minutes and nowhere to go. You work the stage with the flyer and the fare table: the harbour rates, the ferry penny, who decides. By the time the boat comes, the queue has an opinion it didn't have." },
+            partial: { headline: 'The boat comes early', body: "You're four people in when the ferry noses in and the queue becomes a scrum for the gangway. A few flyers go into shopping bags. One old woman says she'll read it on the crossing, which is three minutes." },
+          },
+        },
+        {
+          ...speech,
+          id: 'coalport.far-bank.speech',
+          name: 'Speak from the fish quay steps',
+          stats: ['cha', 'str'],
+          text: {
+            success: { headline: 'The fish quay stops gutting', body: 'The quay steps at the morning sale, the iron roof for a sounding board. The rates, the ferry penny, who owns the ice. The fishwives heckle, the quay laughs, and by the end the laughs are on your side.' },
+            partial: { headline: 'The auctioneer starts up', body: "You get through the rates before the auctioneer's bell goes and takes the quay with it. A knot of boys at the back stays to argue. A fishwife gives you a herring, which is not a no." },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'coalport.far-bank.leaflets',
+          name: 'Hand out flyers under the iron roof',
+          stats: ['agi'],
+          text: {
+            success: { headline: 'Quick hands, wet floor', body: 'You work the fish market aisles at a trot, a flyer into every basket before its owner looks up from the scales. The bag is empty in ten minutes and the market beadle never sees you.' },
+            partial: { headline: 'The beadle sees you', body: "Half the bag is gone when the beadle plants himself in the aisle and asks about your permit. You leave by the ice store, slower than you'd like. The flyers you handed out are still out there, damp." },
+          },
+        },
+      ],
+    },
+  ], coalportMissions),
+  // Slice 5 (design §8.1, §9.2): where the game sends a player in this city.
+  services: { cells: 'coalport.harbour-police', infirmary: 'coalport.infirmary' },
+  // Slice 5 (design §10.5, §23.1 #10): whom a visitor's tier-1 tap meets here (the police on top).
+  runInPool: ['strike-picket', 'branch-inspector'],
 };

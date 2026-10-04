@@ -75,9 +75,9 @@ describe('the survey of the art (pins.json)', () => {
     ]);
   });
 
-  it('the pin numbers are unchanged (location order)', () => {
+  it('the pin numbers are unchanged (location order; slice 5 continues them, 7–11)', () => {
     const content = loadContent();
-    expect(content.city('coalport')!.locations.map((l) => l.id.split('.')[1])).toEqual([
+    expect(content.city('coalport')!.locations.slice(0, 6).map((l) => l.id.split('.')[1])).toEqual([
       'mill-gate',
       'market-row',
       'union-hall',
@@ -85,7 +85,7 @@ describe('the survey of the art (pins.json)', () => {
       'quays',
       'anchor',
     ]);
-    expect(content.city('duskwall')!.locations.map((l) => l.id.split('.')[1])).toEqual([
+    expect(content.city('duskwall')!.locations.slice(0, 6).map((l) => l.id.split('.')[1])).toEqual([
       'garrison-gate',
       'quartermaster-market',
       'beacon-house',
@@ -93,7 +93,7 @@ describe('the survey of the art (pins.json)', () => {
       'goods-yard',
       'rampart-row',
     ]);
-    expect(content.city('ashford')!.locations.map((l) => l.id.split('.')[1])).toEqual([
+    expect(content.city('ashford')!.locations.slice(0, 6).map((l) => l.id.split('.')[1])).toEqual([
       'gazette-house',
       'assembly-rooms',
       'university',
@@ -108,7 +108,12 @@ describe('quarters are frames (§2)', () => {
   it('each home city has its first quarter, framed on its pins + 0.06', () => {
     const content = loadContent();
     // Slice 4: the capital's quarters are its five districts (slice4.irongate.test.ts).
-    expect(content.cities.filter((c) => c.role === 'home').map((c) => c.quarters)).toEqual([
+    // Slice 5 adds the second and third quarters (slice5.cities.test.ts); the first are unchanged.
+    expect(
+      content.cities
+        .filter((c) => c.role === 'home')
+        .map((c) => c.quarters.slice(0, 1).map((q) => ({ id: q.id, name: q.name, frame: q.frame }))),
+    ).toEqual([
       [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
       [{ id: 'duskwall.fortress', name: 'The Fortress', frame: { x0: 0.07, y0: 0.06, x1: 0.65, y1: 0.91 } }],
       [{ id: 'ashford.college', name: 'The College', frame: { x0: 0.24, y0: 0.19, x1: 0.76, y1: 0.68 } }],
@@ -116,8 +121,11 @@ describe('quarters are frames (§2)', () => {
     // The frame is the pins' box grown by 0.06 on every side, clamped to the picture (the capital's
     // five district frames are the design's, slice4.irongate.test.ts).
     for (const c of content.cities.filter((x) => x.role === 'home')) {
-      const xs = c.locations.map((l) => l.map.x);
-      const ys = c.locations.map((l) => l.map.y);
+      // Slice 5: each quarter frames its own pins (the second quarters' frames are design §2.2's).
+      const first = c.locations.filter((l) => l.quarterId === c.quarters[0]!.id);
+      expect(first).toHaveLength(6);
+      const xs = first.map((l) => l.map.x);
+      const ys = first.map((l) => l.map.y);
       const r = (v: number) => Math.round(v * 100) / 100;
       expect(c.quarters[0]!.frame).toEqual({
         x0: r(Math.max(0, Math.min(...xs) - 0.06)),
@@ -125,7 +133,7 @@ describe('quarters are frames (§2)', () => {
         x1: r(Math.min(1, Math.max(...xs) + 0.06)),
         y1: r(Math.min(1, Math.max(...ys) + 0.06)),
       });
-      for (const l of c.locations) expect(l.quarterId).toBe(c.quarters[0]!.id);
+      for (const l of c.locations.slice(6)) expect(l.quarterId).toBe(c.quarters[1]!.id);
     }
   });
 
@@ -142,8 +150,8 @@ describe('quarters are frames (§2)', () => {
 
   it('rejects an unknown quarter, a quarter of another city, and an empty frame', () => {
     const c = clone();
-    city(c, 'coalport').locations[0]!.quarterId = 'coalport.harbour';
-    expect(() => parseContent(c)).toThrow(/quarterId "coalport.harbour" is not a quarter of coalport/);
+    city(c, 'coalport').locations[0]!.quarterId = 'coalport.docks';
+    expect(() => parseContent(c)).toThrow(/quarterId "coalport.docks" is not a quarter of coalport/);
     const d = clone();
     city(d, 'coalport').locations[0]!.quarterId = 'duskwall.fortress';
     expect(() => parseContent(d)).toThrow(/quarterId "duskwall.fortress" is not a quarter of coalport/);

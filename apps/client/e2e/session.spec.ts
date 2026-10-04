@@ -33,8 +33,10 @@ test('paper → map → ×3 canvass → modal → Today strip → reload lands o
   await expect(modal.getByTestId('effect-energy')).toHaveText('100 → 70');
   // The Coalport meter is shared by every spec in the run (one server): only its format is stable.
   // Review 3: the meter's move is the opinion line's note on the receipt.
+  // Slice 4's factors (*Issue: … +50 %*) lead the note when the week's Issue tags the canvass; slice
+  // 5's larger deck changes which Issues a week draws.
   await expect(modal.getByTestId('reward-opinion').getByTestId('reward-note')).toHaveText(
-    /^Collective \d+\.\d → \d+\.\d %$/,
+    /^(?:.+ · )?Collective \d+\.\d → \d+\.\d %$/,
   );
   const xp = ((await modal.getByTestId('reward-xp').getByTestId('reward-value').textContent()) ?? '').match(
     /\+(\d+)/,

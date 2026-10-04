@@ -6,17 +6,20 @@ import { migrateSlice3Politics } from './migrations/003-slice3-politics';
 import { migrateReview1Wage } from './migrations/004-review1-wage';
 import { migrateReview2StreetOrdinances } from './migrations/005-review2-street-ordinances';
 import { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
+import { migrateSlice5Risk } from './migrations/007-slice5-risk';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
 import { City } from './models/city';
 import { District } from './models/district';
+import { Encounter } from './models/encounter';
 import { IssueModel } from './models/issue';
 import { Journey } from './models/journey';
 import { Award, Contribution, InfluenceLedger } from './models/ledger';
 import { PaperEntry } from './models/paperEntry';
 import { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
 import { RequestLog } from './models/requestLog';
+import { Stay } from './models/stay';
 
 export const models = [
   Character,
@@ -38,6 +41,9 @@ export const models = [
   Contribution,
   IssueModel,
   Award,
+  // Slice 5 (tech design §5.2, §5.3): run-ins and stays.
+  Encounter,
+  Stay,
 ] as const;
 
 /**
@@ -63,4 +69,6 @@ export async function ensureIndexes(
   await migrateReview2StreetOrdinances();
   // Slice 4: residence, journeys, the place of elections and terms; after 005.
   await migrateSlice4TravelResidence(content);
+  // Slice 5: Heat, Health, the record and the run-in state; the districts' leader; after 006.
+  await migrateSlice5Risk();
 }

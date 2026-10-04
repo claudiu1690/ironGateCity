@@ -6,6 +6,7 @@ import type { ContentInput } from '../schemas';
  * feeds that tag an action there (an OR of matches; each match an AND). The effect runs in the
  * whole city for the week after it is owned; the stance is flavour, printed as the winner's deck.
  * `effectLine` is the player's line in the pattern of the council rules (review 2 §1.10).
+ * Slice 5 adds five (docs/design/slice-5-risk.md §12.1) and extends three Issues' feeds.
  */
 export const issues: ContentInput['issues'] = [
   {
@@ -419,6 +420,11 @@ export const issues: ContentInput['issues'] = [
             actionTypes: ['propaganda'],
             locationIds: ['coalport.market-row'],
           },
+          // Slice 5 (design §12.1): the new places take part.
+          {
+            actionTypes: ['canvass', 'speech'],
+            locationIds: ['coalport.customs-house', 'coalport.far-bank'],
+          },
         ],
       },
     ],
@@ -453,6 +459,15 @@ export const issues: ContentInput['issues'] = [
           {
             actionTypes: ['canvass', 'intelligence'],
             locationIds: ['duskwall.goods-yard'],
+          },
+          // Slice 5 (design §12.1): the new places take part.
+          {
+            actionTypes: ['canvass', 'speech'],
+            locationIds: ['duskwall.checkpoint'],
+          },
+          {
+            actionTypes: ['intelligence'],
+            locationIds: ['duskwall.mountain-inn'],
           },
         ],
       },
@@ -555,6 +570,11 @@ export const issues: ContentInput['issues'] = [
           {
             actionTypes: ['canvass'],
             locationIds: ['ashford.bridge-street'],
+          },
+          // Slice 5 (design §12.1): the new places take part.
+          {
+            actionTypes: ['canvass'],
+            locationIds: ['ashford.police'],
           },
         ],
       },
@@ -771,6 +791,185 @@ export const issues: ContentInput['issues'] = [
       vanguard: "The lamps lit by order and the company's books audited by the council.",
       collective: 'The lamps lit, the company taken over, the bill sent to the shareholders.',
       alliance: "The company's contract published, and the lamps lit while the lawyers read it.",
+    },
+  },
+  // Slice 5 (docs/design/slice-5-risk.md §12.1): five Issues for the new places; the deck is 24. A
+  // mission is tagged by the same feeds, seen as `speech` or `intelligence` (a watch is
+  // intelligence); the illegal types match no Issue.
+  {
+    id: 'issue.customs-strike',
+    name: 'Customs Strike',
+    short: 'the customs strike',
+    blurb:
+      "The customs inspectors have downed stamps over their pay. Nothing crosses the mole, and the sheds are filling with other people's crates.",
+    where: [
+      {
+        cityId: 'coalport',
+        feeds: [
+          {
+            actionTypes: ['canvass', 'speech'],
+            locationIds: ['coalport.customs-house', 'coalport.quays'],
+          },
+          {
+            actionTypes: ['intelligence'],
+            locationIds: ['coalport.customs-house'],
+          },
+        ],
+      },
+    ],
+    effects: [
+      {
+        kind: 'heatCoolPct',
+        value: 50,
+      },
+    ],
+    effectLine: 'Heat cools half again as fast',
+    stances: {
+      vanguard: 'The inspectors back at the sheds by Monday, and the ringleaders named.',
+      collective: "The inspectors' pay met. A stamp is work like any other.",
+      alliance: 'An arbitrator on the mole by Wednesday, and both sides at his table.',
+    },
+  },
+  {
+    id: 'issue.ferry-fares',
+    name: 'Ferry Fares',
+    short: 'the ferry penny',
+    blurb:
+      'The ferry company wants a penny on the crossing. The Far Bank crosses twice a day and has done its sums.',
+    where: [
+      {
+        cityId: 'coalport',
+        feeds: [
+          {
+            actionTypes: ['canvass', 'speech', 'propaganda'],
+            locationIds: ['coalport.far-bank'],
+          },
+          {
+            actionTypes: ['canvass'],
+            locationIds: ['coalport.harbour-police'],
+          },
+        ],
+      },
+    ],
+    effects: [
+      {
+        kind: 'ticketPct',
+        value: -50,
+      },
+    ],
+    effectLine: 'Train tickets from Coalport: half price',
+    stances: {
+      vanguard: 'The ferry to time, to the timetable, and no penny until it runs to either.',
+      collective: 'Nobody pays the penny. A free crossing, or the men row themselves.',
+      alliance: "The company's books open at the Town Hall before any penny changes hands.",
+    },
+  },
+  {
+    id: 'issue.timber-rates',
+    name: 'Timber Rates',
+    short: 'the timber rates',
+    blurb:
+      "The sawmill has cut the rate for a cord of mountain timber. The carters say they'll leave it on the hill.",
+    where: [
+      {
+        cityId: 'duskwall',
+        feeds: [
+          {
+            actionTypes: ['canvass', 'speech'],
+            locationIds: ['duskwall.sawmill', 'duskwall.checkpoint'],
+          },
+          {
+            actionTypes: ['intelligence'],
+            locationIds: ['duskwall.mountain-inn'],
+          },
+        ],
+      },
+    ],
+    effects: [
+      {
+        kind: 'ironPct',
+        scope: 'checked',
+        value: 15,
+      },
+    ],
+    effectLine: 'Iron from actions +15 %',
+    stances: {
+      vanguard: "The rate fixed by the district for the season, and the carters' loads in order.",
+      collective: 'Not a cord down the pass until the rate goes back up. The yard can wait.',
+      alliance: "A fair rate set by the council, published, with the mill's accounts beside it.",
+    },
+  },
+  {
+    id: 'issue.market-tolls',
+    name: 'Market Tolls',
+    short: 'the market tolls',
+    blurb:
+      'The market board has doubled the toll on every beast through the gate. The county is talking about Clearwater.',
+    where: [
+      {
+        cityId: 'ashford',
+        feeds: [
+          {
+            actionTypes: ['canvass', 'speech'],
+            locationIds: ['ashford.cattle-market', 'ashford.wharf'],
+          },
+          {
+            actionTypes: ['propaganda'],
+            locationIds: ['ashford.brewery'],
+          },
+        ],
+      },
+    ],
+    effects: [
+      {
+        kind: 'jobPayPct',
+        value: 10,
+      },
+    ],
+    effectLine: 'Job pay +10 %',
+    stances: {
+      vanguard: "Tolls fixed for a year and the board's accounts on the auction-shed wall.",
+      collective: 'No toll on a beast a family raised. The board can tax the dealers.',
+      alliance: 'An inquiry into the board, in public, before any toll changes.',
+    },
+  },
+  {
+    id: 'issue.cells-full',
+    name: 'The Cells Are Full',
+    short: 'the cells',
+    blurb:
+      'Police headquarters has more people in the cells than cells, and the magistrate is away. The Hill has noticed the queue at the gate.',
+    where: [
+      {
+        cityId: 'irongate',
+        districtId: 'irongate.garrison-hill',
+        feeds: [
+          {
+            actionTypes: ['canvass', 'intelligence'],
+            locationIds: ['irongate.police-hq'],
+          },
+          {
+            actionTypes: ['speech'],
+            locationIds: ['irongate.gate-tavern'],
+          },
+          {
+            actionTypes: ['canvass'],
+            locationIds: ['irongate.villas'],
+          },
+        ],
+      },
+    ],
+    effects: [
+      {
+        kind: 'bailPct',
+        value: -50,
+      },
+    ],
+    effectLine: 'Bail in Irongate: half price',
+    stances: {
+      vanguard: 'A second magistrate sitting daily, and the cells cleared in order.',
+      collective: 'Bail at a wage a porter can pay, or no bail at all.',
+      alliance: 'Every case before a magistrate within a day, by law, and the Herald told the names.',
     },
   },
 ];

@@ -65,7 +65,7 @@ The mill and the men who work it, the market below the gate, the union hall, the
 
 ### 2.2 The Harbour (Level 6; enters play in slice 5)
 
-Where the basin opens to the sea: the slipway, the customs house at the mole, the infirmary, the police, and across the water by ferry the far bank with its fish market and its lower town that votes late. Slice 5's risk lives here: Heat, the cells, the hospital, the first tier-2 missions. **Places (five):** The Shipyard, Customs House, The Infirmary, Harbour Police, The Far Bank. **Teaser line (locked):** *Opens at Level 6 · The slipway, the customs house, and the far bank across the water.* **Reserved spot:** the Gasworks (top right of the quarter; a later `factory-gate` place for a gas strike or a sabotage mission).
+Where the basin opens to the sea: the slipway, the customs house, the infirmary, the police, and across the water by ferry the far bank with its fish market and its lower town that votes late. Slice 5's risk lives here: Heat, the cells, the hospital, the first tier-2 missions. **Places (five):** The Shipyard, Customs House, The Infirmary, Harbour Police, The Far Bank. **Teaser line (locked):** *Opens at Level 6 · The slipway, the customs house, and the far bank across the water.* **Reserved spot:** the Gasworks (top right of the quarter; a later `factory-gate` place for a gas strike or a sabotage mission).
 
 ### 2.3 The Sidings (Level 10; a later content addendum after slice 4, the user decided 2 Oct 2026)
 

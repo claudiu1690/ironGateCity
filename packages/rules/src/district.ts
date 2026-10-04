@@ -87,6 +87,19 @@ function ranked(s: OpinionShares): Array<{ f: FactionId; k: number }> {
   return FACTION_IDS.map((f) => ({ f, k: toK(s[f]) })).sort((a, b) => b.k - a.k);
 }
 
+/**
+ * Slice 5 (ADR 0034 §5): the faction leading a district, the top faction share; a tie goes to the
+ * first in FACTION_IDS order. A mission against `leader` aims here (or at the runner-up).
+ */
+export function districtLeader(s: OpinionShares): FactionId {
+  return ranked(s)[0]!.f;
+}
+
+/** Slice 5: the runner-up (second faction share; ties in FACTION_IDS order). */
+export function districtRunnerUp(s: OpinionShares): FactionId {
+  return ranked(s)[1]!.f;
+}
+
 /** §14.4: a close race when the top two faction shares are within 10 points (inclusive). */
 export function isBattleground(s: OpinionShares): boolean {
   const [a, b] = ranked(s);

@@ -2,6 +2,8 @@ import { BATTLEGROUND, MORALE, ORDINANCE_BOUNDS, RESTED, ROOM } from './constant
 import type { DayKey } from './day';
 import type { MoraleState } from './morale';
 import { roundHalfUp } from './rewards';
+import { RIVAL_ROW, rivalFxpShare } from './rivalGround';
+import type { RivalGroundState } from './rivalGround';
 import type { CheckBonus, FactionId, IssueMatch } from './types';
 
 /**
@@ -22,7 +24,11 @@ export type OrdinanceEffect =
   | { kind: 'ironPct'; scope: 'checked'; value: number }
   | { kind: 'fxpPct'; scope: 'actions'; value: number }
   | { kind: 'ticketPct'; value: number }
-  | { kind: 'roomPct'; value: number };
+  | { kind: 'roomPct'; value: number }
+  /** Slice 5 (design §12.1): Heat cools faster in the residence city (sources multiply). */
+  | { kind: 'heatCoolPct'; value: number }
+  /** Slice 5 (design §12.1): bail in the city, a priced line like a ticket's. */
+  | { kind: 'bailPct'; value: number };
 
 export type OrdinanceEffectKind = OrdinanceEffect['kind'];
 
@@ -66,6 +72,11 @@ export interface PlaceState {
   battleground: boolean;
   groundswell: { factionId: FactionId; pct: number } | null;
   issues: readonly LiveIssue[];
+  /**
+   * Slice 5 (ADR 0034 §3): another faction's home city. The +4 difficulty row, the Party XP share,
+   * opinion against the home faction under the day's cap; absent or null elsewhere.
+   */
+  rivalGround?: RivalGroundState | null;
 }
 
 /** The modifiers in force for one actor at one place on one City Day (ADR 0030). */
@@ -132,6 +143,10 @@ export function sourcesOf(m: Modifiers | undefined): readonly ModifierSource[] {
 export const placeOf = (m: Modifiers | undefined): PlaceState | null =>
   m && 'sources' in m ? (m.place ?? null) : null;
 
+/** Slice 5: the rival ground of the place, or null (home, the capital, a battleground, slice 3). */
+export const rivalGroundIn = (m: Modifiers | undefined): RivalGroundState | null =>
+  placeOf(m)?.rivalGround ?? null;
+
 const matchesKind = (e: OrdinanceEffect, kind: OrdinanceEffectKind, actionType?: string) =>
   e.kind === kind && (!('actionType' in e) || e.actionType === actionType);
 
@@ -176,6 +191,9 @@ export function actionEnergy(base: number, type: string, m?: Modifiers): number 
 function multiplied(base: number, pcts: readonly number[]): number {
   return roundHalfUp(pcts.reduce((x, p) => x * (1 + p / 100), base));
 }
+
+/** Slice 5 (design §12.1): the `heatCoolPct` values in force (the Customs Strike's +50). */
+export const heatCoolPcts = (m?: Modifiers): number[] => effects(m, 'heatCoolPct').map((x) => x.effect.value);
 
 /** Reading Room Grant: training Energy −20 %, halves up (44 → 35). Several sources multiply. */
 export function trainingEnergy(baseCost: number, m?: Modifiers): number {
@@ -246,6 +264,8 @@ export interface BonusShare {
 }
 
 export const FIRED_UP = { id: 'morale.fired', label: 'Fired up' } as const;
+/** Slice 5 (design §11.2): the Party XP line's part on rival ground, *Rival ground +6*. */
+export const RIVAL_GROUND_PART = { id: 'rivalGround', label: 'Rival ground' } as const;
 /** Slice 4 (GDD §14.4): the close race's names in the breakdown. */
 export const CLOSE_RACE = { id: 'battleground', label: 'Close race' } as const;
 export const COMEBACK = { id: 'groundswell', label: 'Comeback' } as const;
@@ -270,6 +290,8 @@ export function rewardShares(i: { type: string; givesFxp: boolean; m?: Modifiers
   if (i.givesFxp && place?.battleground && isPoliticalType(i.type))
     fxp.push({ ...CLOSE_RACE, share: BATTLEGROUND.fxpShare });
   if (i.givesFxp && i.m?.firedUp) fxp.push({ ...FIRED_UP, share: MORALE.firedFxpShare });
+  const rival = place?.rivalGround;
+  if (i.givesFxp && rival) fxp.push({ ...RIVAL_GROUND_PART, share: rivalFxpShare(rival) });
   if (i.givesFxp) {
     for (const x of effects(i.m, 'fxpPct'))
       fxp.push({ id: x.source.id, label: x.source.name, share: x.effect.value / 100 });
@@ -314,12 +336,17 @@ export function swingFactors(
 export const factorProduct = (f: readonly SwingFactor[]): number =>
   f.reduce((x, s) => x * (1 + s.pct / 100), 1);
 
-/** §14.4: the close race's +5 on political checks, a named bonus row. */
+/**
+ * §14.4: the close race's +5 on political checks, a named bonus row. Slice 5 (ADR 0034 §3): on rival
+ * ground every check carries the *Rival ground* row (−16, i.e. +4 difficulty). A mission passes the
+ * type it is seen as, so a speech mission gets the close race and the illegal types do not.
+ */
 export function placeCheckBonuses(type: string, m?: Modifiers): CheckBonus[] {
   const place = placeOf(m);
-  return place?.battleground && isPoliticalType(type)
-    ? [{ ...CLOSE_RACE, value: BATTLEGROUND.chancePct }]
-    : [];
+  const out: CheckBonus[] = [];
+  if (place?.battleground && isPoliticalType(type)) out.push({ ...CLOSE_RACE, value: BATTLEGROUND.chancePct });
+  if (place?.rivalGround) out.push({ ...RIVAL_ROW });
+  return out;
 }
 
 /** A priced line: a ticket or a room, with each source's percentage (ADR 0030). */
@@ -329,8 +356,8 @@ export interface PriceLine {
   pct: number;
 }
 
-/** Each source's line of `kind` (tickets, rooms). */
-export function priceLines(m: Modifiers | undefined, kind: 'ticketPct' | 'roomPct'): PriceLine[] {
+/** Each source's line of `kind` (tickets, rooms; slice 5: bail). */
+export function priceLines(m: Modifiers | undefined, kind: 'ticketPct' | 'roomPct' | 'bailPct'): PriceLine[] {
   return effects(m, kind).map((x) => ({ id: x.source.id, label: x.source.name, pct: x.effect.value }));
 }
 

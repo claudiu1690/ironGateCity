@@ -99,6 +99,20 @@ export const orderTemplates: OrderTemplate[] = [
     target: 2,
     counts: 'attempts',
   },
+  // Slice 5 (docs/design/slice-5-risk.md §12.2): slot B gains the mission, for every residence,
+  // from Level 6; `{city}` is the residence city, resolved at read.
+  {
+    id: 'dir.mission',
+    factionId: 'collective',
+    slot: 'B',
+    title: 'Take on a mission anywhere in {city}',
+    line: 'The branch has a job that wants more than a flyer. Any mission, anywhere in town; the rest is your business.',
+    match: { kinds: ['mission'], cityId: 'home' },
+    target: 1,
+    counts: 'attempts',
+    residence: 'any',
+    minLevel: 6,
+  },
   {
     id: 'dir.sharpen-up',
     factionId: 'collective',
@@ -244,6 +258,20 @@ export const orderTemplates: OrderTemplate[] = [
     match: { actionTypes: ['intelligence'], cityId: 'duskwall' },
     target: 2,
     counts: 'attempts',
+  },
+  // Slice 5 (docs/design/slice-5-risk.md §12.2): slot B gains the mission, for every residence,
+  // from Level 6; `{city}` is the residence city, resolved at read.
+  {
+    id: 'dir.v.mission',
+    factionId: 'vanguard',
+    slot: 'B',
+    title: 'Take on a mission anywhere in {city}',
+    line: 'Flyers are for Initiates. One mission today, any mission, and a report on my desk by tonight.',
+    match: { kinds: ['mission'], cityId: 'home' },
+    target: 1,
+    counts: 'attempts',
+    residence: 'any',
+    minLevel: 6,
   },
   {
     id: 'dir.v.sharpen-up',
@@ -401,6 +429,20 @@ export const orderTemplates: OrderTemplate[] = [
     match: { actionTypes: ['intelligence'], cityId: 'ashford' },
     target: 2,
     counts: 'attempts',
+  },
+  // Slice 5 (docs/design/slice-5-risk.md §12.2): slot B gains the mission, for every residence,
+  // from Level 6; `{city}` is the residence city, resolved at read.
+  {
+    id: 'dir.a.mission',
+    factionId: 'alliance',
+    slot: 'B',
+    title: 'Take on a mission anywhere in {city}',
+    line: 'Something with a bit more to it today. Any mission in town; use your judgement, and mind the police.',
+    match: { kinds: ['mission'], cityId: 'home' },
+    target: 1,
+    counts: 'attempts',
+    residence: 'any',
+    minLevel: 6,
   },
   {
     id: 'dir.a.sharpen-up',

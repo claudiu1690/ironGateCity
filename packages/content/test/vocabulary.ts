@@ -35,6 +35,9 @@ export const ALLOWED_PHRASES: readonly RegExp[] = [
   /\bward book\b/gi,
   /\bStand(?:ing)? for the council\b/gi,
   /\bfever wards?\b/gi,
+  // Slice 5 (design §23.8, 4 Oct 2026): the infirmary's ward, in its hospital sense. The electoral
+  // sense stays banned (the units are the district, the quarter, the street and the branch).
+  /\b(?:the|on the|men's|women's|county's|long|four) wards?\b/gi,
 ];
 
 /**

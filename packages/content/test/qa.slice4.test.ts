@@ -36,11 +36,14 @@ describe('QA · the journey cards against GDD §14.10', () => {
   });
 
   it('seven cards, the passenger first; every card has an ignore line; a checked choice has its Partial', () => {
-    expect(content.journeyEvents).toHaveLength(7);
-    expect(content.journeyEvents.filter((e) => e.first).map((e) => e.id)).toEqual(['jev.passenger']);
+    // Slice 5: the ordinary deck (the hostile deck has its own first card, the checkpoint).
+    const ordinary = content.journeyEvents.filter((e) => e.deck === 'ordinary');
+    expect(ordinary).toHaveLength(7);
+    expect(ordinary.filter((e) => e.first).map((e) => e.id)).toEqual(['jev.passenger']);
     for (const ev of content.journeyEvents) {
       expect(ev.ignore.length, ev.id).toBeGreaterThan(0);
-      for (const ch of ev.choices) expect(!!ch.partial, `${ev.id}/${ch.id}`).toBe(!!ch.stats);
+      // Slice 5: the checkpoint's gated row (unchecked, a Partial for "stopped") is the one exception.
+      for (const ch of ev.choices) expect(!!ch.partial, `${ev.id}/${ch.id}`).toBe(!!ch.stats || !!ch.gate);
     }
   });
 });

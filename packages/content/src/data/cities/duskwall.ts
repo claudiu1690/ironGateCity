@@ -1,4 +1,6 @@
 import type { City } from '../../schemas';
+import { withMissions } from '../missions/attach';
+import { duskwallMissions } from '../missions/duskwall';
 
 /**
  * Duskwall, home city of the Vanguard (GDD §14.1, §14.11). Locations, actions and text:
@@ -25,10 +27,39 @@ export const duskwall: City = {
   map: { day: 'map.duskwall.day', night: 'map.duskwall.night' },
   // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
   clouds: true,
-  // Maps v3 §2: a quarter is a frame on the city's one picture (its pins' box + 0.06, clamped). Only
-  // the first quarter until quarter 2 is built (city-quarters.md §8.1 names).
+  // Slice 5 (design §2, ADR 0035): three quarters, frames on the one picture; the second opens at
+  // Level 6, the third is a teaser (a later edition). Outlines and labels drawn for the overview:
+  // every pin (the survey's too) inside its own outline, no two overlapping, labels 0.25 apart.
   quarters: [
-    { id: 'duskwall.fortress', name: 'The Fortress', frame: { x0: 0.07, y0: 0.06, x1: 0.65, y1: 0.91 } },
+    {
+      id: 'duskwall.fortress',
+      name: 'The Fortress',
+      frame: { x0: 0.07, y0: 0.06, x1: 0.65, y1: 0.91 },
+      outline: [[0.16, 0.0], [0.68, 0.0], [0.68, 0.2], [0.72, 0.3], [0.74, 0.55], [0.8, 0.76], [0.8, 0.97], [0.05, 0.97], [0.05, 0.82], [0.55, 0.82], [0.55, 0.58], [0.16, 0.58]],
+      label: { x: 0.42, y: 0.25 },
+    },
+    {
+      id: 'duskwall.pass',
+      name: 'The Pass',
+      frame: { x0: 0.7, y0: 0, x1: 0.94, y1: 0.74 },
+      opens: { level: 6 },
+      blurb:
+        "The road up to the frontier: the checkpoint's barrier under the peaks, the lock-up beside it, the last inn before the pass, the infirmary under the spire and the sawmill on the river bend below.",
+      teaser: 'The road up to the frontier: the checkpoint, the inn and the sawmill.',
+      outline: [[0.68, 0.0], [1, 0.0], [1, 0.76], [0.8, 0.76], [0.74, 0.55], [0.72, 0.3], [0.68, 0.2]],
+      label: { x: 0.86, y: 0.25 },
+    },
+    {
+      id: 'duskwall.town',
+      name: 'The Town',
+      frame: { x0: 0.04, y0: 0.12, x1: 0.54, y1: 0.79 },
+      opens: { edition: 'later' },
+      blurb:
+        "The town below the fortress, west of the market: the brewery's chimneys, the Signal Lamp, the station under its glass roof, and the square with the domed church where the town meets on Sundays.",
+      teaser: 'The station, the square and the brewery.',
+      outline: [[0.0, 0.05], [0.16, 0.05], [0.16, 0.58], [0.55, 0.58], [0.55, 0.82], [0.0, 0.82]],
+      label: { x: 0.3, y: 0.7 },
+    },
   ],
   paper: {
     name: 'The Duskwall Sentinel',
@@ -40,7 +71,7 @@ export const duskwall: City = {
   // Review 3: the council sits in the tower hall on the Customs Market, below the fortress (no survey
   // pin; measured on the painting). The election screens' backdrop.
   council: { offset: 3, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.555, y: 0.55 } },
-  locations: [
+  locations: withMissions([
     {
       id: 'duskwall.garrison-gate',
       name: 'Fortress Gate',
@@ -406,5 +437,191 @@ export const duskwall: City = {
         },
       ],
     },
-  ],
+    // Slice 5 (design §2.3, §3): the second quarter's five places, pins 7–11.
+    {
+      id: 'duskwall.checkpoint',
+      name: 'Frontier Checkpoint',
+      ref: 'the checkpoint',
+      kind: 'ministry',
+      blurb: 'The barrier on the mountain road where the republic ends. Lorries queue from dawn; the customs men decide what crosses and what comes back down.',
+      // The survey pin (mapPins.ts), pin 7.
+      map: { x: 0.8, y: 0.1 },
+      quarterId: 'duskwall.pass',
+      actions: [
+        {
+          ...canvass,
+          id: 'duskwall.checkpoint.drivers',
+          name: 'Talk to the lorry drivers in the queue',
+          stats: ['int'],
+          text: {
+            success: { headline: 'Forty lorries and nowhere to go', body: 'The queue at the barrier starts at dawn and moves when the customs say so. You work the cabs with the flyer and the rates: the frontier, the timber, who signs the chits. When the barrier lifts, half the drivers have one on the dashboard.' },
+            partial: { headline: 'The barrier lifts early', body: "You've done six cabs when the barrier goes up and the queue moves off in a cloud. A few flyers go through windows. One driver says he'll read it at the sawmill, waiting to unload." },
+          },
+        },
+        {
+          ...intelligence,
+          energy: 4,
+          id: 'duskwall.checkpoint.turned-back',
+          name: 'Note which lorries are turned back',
+          stats: ['int'],
+          text: {
+            success: { headline: 'Who comes back down', body: "A rock above the barrier and a flask. Three lorries go through stamped, two are turned back, one is waved through without a stamp by a man in a plain coat. Two plates and a name go in your notebook." },
+            partial: { headline: 'A slow morning on the road', body: 'One lorry, checked, stamped and through. A customs man who smokes by the barrier and looks at the peaks. One plate worth writing down. Come back on market day.' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.mountain-inn',
+      name: 'Mountain Inn',
+      ref: 'the Mountain Inn',
+      kind: 'bar',
+      blurb: 'The last inn before the pass: a long table, a stove, carters and customs men on the same bench. Talk goes quiet when the door opens.',
+      // The survey pin (mapPins.ts), pin 8.
+      map: { x: 0.87, y: 0.04 },
+      quarterId: 'duskwall.pass',
+      actions: [
+        {
+          ...intelligence,
+          energy: 3,
+          id: 'duskwall.mountain-inn.listen',
+          name: 'Listen in the taproom',
+          stats: ['int'],
+          text: {
+            success: { headline: 'The road talks', body: "You buy one drink and listen to the pass. Which lorry was turned back and why, which customs man takes a drink, who's leaving for the capital. Two names and a rumour go in your notebook." },
+            partial: { headline: 'A quiet night at the inn', body: "Two carters and a dog. One thing worth writing down, about a load that went up the pass at night. Come back when the frontier's shut." },
+          },
+        },
+        {
+          ...speech,
+          id: 'duskwall.mountain-inn.carters',
+          name: 'Speak to the carters at the long table',
+          stats: ['cha', 'str'],
+          text: {
+            success: { headline: 'They put their mugs down', body: "The long table at supper, twenty carters who've earned the right not to listen. You keep it to the rates, the frontier and the timber price. They put their mugs down. That's the compliment on the pass." },
+            partial: { headline: 'The landlord objects', body: "You get through the rates before the landlord says the table's for eating. Half the bench heard you. One carter says come back tomorrow, same bench, and bring the flyer with the numbers." },
+          },
+        },
+        {
+          ...canvass,
+          id: 'duskwall.mountain-inn.regulars',
+          name: "Win over the inn's regulars",
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: 'The stove end comes round', body: 'The regulars by the stove have views on everything and nobody to tell them to. You buy one round and argue three: the frontier, the ration, who runs the checkpoint. By closing, the stove end is yours.' },
+            partial: { headline: 'The stove end has heard it before', body: "They've heard every party's man and they tell you so. You get one of them nodding and another saying maybe. The landlord takes a flyer for the bar, which is more than he did last time." },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.sawmill',
+      name: 'Sawmill',
+      ref: 'the sawmill',
+      kind: 'factory-gate',
+      blurb: "The mill on the river bend where the mountain's timber comes down. The saws run two shifts and the yard is stacked to the roof.",
+      // The survey pin (mapPins.ts), pin 9.
+      map: { x: 0.88, y: 0.68 },
+      quarterId: 'duskwall.pass',
+      actions: [
+        {
+          ...canvass,
+          id: 'duskwall.sawmill.sawyers',
+          name: 'Talk to the sawyers coming off shift',
+          stats: ['str'],
+          text: {
+            success: { headline: 'The saws stop, and they stop', body: "You're at the yard gate when the second shift comes off, sawdust to the knees. You've the shoulders for it, so they stop. Rates, the timber price, who owns the river. A foreman takes ten flyers for the mess hut." },
+            partial: { headline: 'Most of them head for the inn', body: 'The shift comes off and most of it makes for the inn without slowing. You press flyers on the stragglers. Two stop to argue the rates; one gives you his street.' },
+          },
+        },
+        {
+          ...propaganda,
+          id: 'duskwall.sawmill.stacks',
+          name: 'Put up posters on the timber stacks',
+          stats: ['str'],
+          text: {
+            success: { headline: 'A poster on every stack', body: "Bucket, brush and a yard stacked to the roof. You get twelve posters up on the stacks' ends, high and straight, before the night watchman comes round. Two shifts a day will read them, and the lorries from the pass." },
+            partial: { headline: "The resin won't take paste", body: 'Fresh-cut pine and paste that beads and runs. Five posters stay up; the rest peel by morning. Five is five, and one is on the yard gate.' },
+          },
+        },
+        {
+          id: 'duskwall.sawmill.stack',
+          name: 'Stack timber in the yard',
+          tier: 1,
+          type: 'training',
+          trains: 'str',
+          verb: 'Stack',
+          text: { success: { headline: 'An hour on the stacks', body: "The yard foreman doesn't ask which party you're with; he asks if you can get a twelve-foot plank onto the top of the stack alone. You can, by the end. Your shoulders will tell you about it tomorrow." } },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.lock-up',
+      name: 'Lock-up',
+      ref: 'the lock-up',
+      kind: 'jail',
+      blurb: 'The stone lock-up beside the checkpoint: three cells, a hatch, and a duty officer who has heard every story the road brings down.',
+      // The survey pin (mapPins.ts), pin 10.
+      map: { x: 0.76, y: 0.13 },
+      quarterId: 'duskwall.pass',
+      actions: [
+        {
+          ...intelligence,
+          energy: 3,
+          id: 'duskwall.lock-up.notices',
+          name: 'Read the notices at the lock-up door',
+          stats: ['int'],
+          text: {
+            success: { headline: 'Names on the board', body: "The board by the hatch lists the week's permits refused, loads seized and the men wanted at the checkpoint. Two names and a plate go in your notebook while the duty officer is at the stove." },
+            partial: { headline: "Last week's sheet", body: "The board is last week's and the duty officer is watching through the hatch. One name worth writing down, from the loads seized. Come back on Monday." },
+          },
+        },
+        {
+          ...canvass,
+          id: 'duskwall.lock-up.hatch',
+          name: 'Talk to people waiting at the hatch',
+          stats: ['int'],
+          text: {
+            success: { headline: 'A bench with time to talk', body: 'A driver whose load is in the shed, a woman whose son is in the cells, a carter waiting for a chit. The bench has nothing to do but listen. You keep it low and the flyers folded. By the time the hatch opens, most of the bench has one.' },
+            partial: { headline: 'The duty officer has a view', body: 'The duty officer looks through the hatch and then at the door. You get two flyers out on the way to it. One driver follows you onto the road to ask about the timber rates.' },
+          },
+        },
+      ],
+    },
+    {
+      id: 'duskwall.infirmary',
+      name: 'Infirmary',
+      ref: 'the infirmary',
+      kind: 'hospital',
+      blurb: "The town's infirmary under the church spire, run by sisters who ask no questions. Visiting is at two; the sawmill keeps the beds full.",
+      // The survey pin (mapPins.ts), pin 11.
+      map: { x: 0.88, y: 0.4 },
+      quarterId: 'duskwall.pass',
+      actions: [
+        {
+          ...canvass,
+          id: 'duskwall.infirmary.visitors',
+          name: 'Talk to people at visiting hour',
+          stats: ['cha', 'int'],
+          text: {
+            success: { headline: "Two o'clock under the spire", body: "Visiting is at two and the queue at the infirmary door is anxious, patient and can't leave. You work it gently: the beds, the sawmill's accidents, who pays. By the time the sister opens the door most of it has a flyer in a basket." },
+            partial: { headline: 'The sister opens early', body: 'The door opens at ten to two and the queue is gone up the stairs. A few flyers go into baskets. One man says his brother lost two fingers at the mill and takes two.' },
+          },
+        },
+        {
+          id: 'duskwall.infirmary.errands',
+          name: 'Run errands for the sisters',
+          tier: 1,
+          type: 'training',
+          trains: 'agi',
+          verb: 'Run',
+          text: { success: { headline: 'Every stair under the spire', body: 'Six notes, four wards, one hour, and the sisters want them yesterday. You learn the back stairs, the short cut through the laundry and the door that sticks, and you learn them at a run. By the end you could do it in the dark.' } },
+        },
+      ],
+    },
+  ], duskwallMissions),
+  // Slice 5 (design §8.1, §9.2): where the game sends a player in this city.
+  services: { cells: 'duskwall.lock-up', infirmary: 'duskwall.infirmary' },
+  // Slice 5 (design §10.5, §23.1 #10): whom a visitor's tier-1 tap meets here (the police on top).
+  runInPool: ['street-enforcer', 'vanguard-doorman'],
 };

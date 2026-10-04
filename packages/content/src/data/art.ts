@@ -1,4 +1,4 @@
-import type { Asset, SceneBinding } from '../schemas';
+import type { Asset, Content, SceneBinding } from '../schemas';
 
 /**
  * The art catalogue (ADR 0007). Sources live outside the repository in the art folder
@@ -37,6 +37,24 @@ function scene(key: string, alt: string, focus?: { x: number; y: number }): Asse
     widths: [640, 1280],
     webpWidths: [640],
     ...(focus ? { focus } : {}),
+    alt,
+  };
+}
+
+/**
+ * Slice 5 (tech design §13): a 4:5 head-and-shoulders portrait from an 880 × 1168 source, cropped
+ * like the faces. `top` as for the faces (art-wiring-oct.md §2): 20 where a hat or the hair reaches
+ * the top of the picture, 40 otherwise. `file`: the source's name when it is not the id's.
+ */
+function portrait(key: string, top: number, alt: string, file = key): Asset {
+  return {
+    id: `portrait.${key}`,
+    kind: 'portrait',
+    source: `mvp/portraits/${file}.png`,
+    width: 760,
+    height: 950,
+    crop: { left: 60, top, width: 760, height: 950 },
+    widths: [256, 512],
     alt,
   };
 }
@@ -378,6 +396,92 @@ export const assets: Asset[] = [
     'theatre',
     'An opera foyer at the interval: evening dress and champagne, a marble staircase under chandeliers, an usher at a box door.',
   ),
+  // Slice 5 (tech design §13; slice-5-risk.md §21, alt texts §23.5): the five mission cards (rung 4),
+  // the strike card, the infirmary and the cells.
+  scene(
+    'mission-speech',
+    'A speaker in shirtsleeves on a timber platform with a loudspeaker horn, arm out over a crowd of flat caps at a shipyard; a hull on the stocks and cranes behind.',
+  ),
+  scene(
+    'mission-watch',
+    'A man in a hat at a café window with a newspaper, a coffee and a notebook, watching two men in coats at a lit hotel doorway across a wet street at dusk.',
+  ),
+  scene(
+    'mission-posters',
+    'A woman with a paste brush at a half-stripped poster on a brick wall at night, a man with rolled sheets looking back down the street; a bucket on the kerb.',
+  ),
+  scene(
+    'mission-sabotage',
+    'A man in a flat cap crouched at a printing press in a dark print room, a hand lamp in one hand and the other on the drive wheel; stacks of paper, the door open.',
+  ),
+  scene(
+    'mission-theft',
+    'A man in a dark overcoat lifting papers from an open filing cabinet in a dim office, eyes on a frosted door where a hatted shadow stands; a desk lamp, files.',
+  ),
+  {
+    // The disruption card: a halftone news print at 2048 × 1360 (3:2), cropped to the other scenes'
+    // ratio (2688 × 1520) below the chimney tops; its WebP may step one further (scripts/art/build.ts).
+    // The alt texts of this one, the infirmary and the cells are drafts for the designer to confirm.
+    ...scene(
+      'news-strike',
+      'A woman in a belted coat speaking from a box at a works gate, strikers in caps holding up blank placards, a line of police in helmets by the railings.',
+    ),
+    width: 2048,
+    height: 1158,
+    crop: { left: 0, top: 40, width: 2048, height: 1158 },
+  },
+  scene(
+    'hospital',
+    'An infirmary: men asleep in iron beds under tall arched windows, a nurse with a tray walking down the aisle, a doctor in a white coat reading a chart.',
+  ),
+  scene(
+    'jail-cell',
+    'A cell through its bars: a bench with a blanket and a tin mug, tally marks on the wall, moonlight from a high window, a man in a peaked cap in the lit corridor.',
+  ),
+  // Slice 5: the run-in opponents, the cells' duty officer (the file keeps its old name), the
+  // constable and the matron.
+  portrait(
+    'street-enforcer',
+    40,
+    'A Vanguard street enforcer: a heavy-shouldered man in a flat cap and a rough dark jacket over an open collar, stubble, a bruised cheekbone, fists clenched.',
+  ),
+  portrait(
+    'vanguard-doorman',
+    40,
+    'The doorman at Beacon House: a big man in a dark double-breasted coat with the collar up, close-cropped hair, arms folded in leather gloves.',
+  ),
+  portrait(
+    'strike-picket',
+    40,
+    "A Collective strike picket: a young man in a knitted cap and a red scarf over a work jacket, his breath in the cold, a gloved hand on a blank placard's pole.",
+  ),
+  portrait(
+    'branch-inspector',
+    20,
+    'A Collective branch inspector: a neat man with round spectacles, a moustache and a pencil behind his ear, a grey suit and waistcoat, a notebook under his arm.',
+  ),
+  portrait(
+    'party-thug',
+    40,
+    'An Alliance party heavy: a man with slicked dark hair, a scar through one eyebrow and a toothpick in his teeth, a dark leather coat over a maroon roll-neck.',
+  ),
+  portrait(
+    'duty-officer',
+    20,
+    'The duty officer of the civic police: a grey-moustached man in a dark tunic and a peaked cap with a plain shield badge, a pen in his hand.',
+    'sergeant',
+  ),
+  portrait(
+    'kessler',
+    20,
+    'A constable of the city police in plain clothes: a man in a fedora and a belted trench coat with the collar up, a grey moustache, a cigarette in his mouth.',
+  ),
+  portrait(
+    'matron',
+    40,
+    "The matron: a woman in a white nurse's cap, dark hair pinned back, a dark cape over a white collar and apron, looking straight at you.",
+    'nurse',
+  ),
   item('item.work-jacket', 'work-jacket-cap.jpg', 'A work jacket and a flat cap.'),
   item('item.mill-coat', 'collective-work-coat.jpg', 'A heavy mill work coat.'),
   item('item.worn-overcoat', 'wool-overcoat.jpg', 'A worn wool overcoat.'),
@@ -390,9 +494,22 @@ export const assets: Asset[] = [
 
 /**
  * §13.5 rung 2: the scenes there are. Other locations fall back to a crop of the city map. October
- * 2026 (art-wiring-oct.md §1): every kind has one but `jail` and `hospital` (slice 5), `parliament`
- * (held until an action is set in the chamber) and `barracks`.
+ * 2026 (art-wiring-oct.md §1) and slice 5 (tech design §13: `hospital`, `jail`): every kind has one
+ * but `parliament` (held until an action is set in the chamber) and `barracks`.
  */
+/**
+ * Slice 5 (GDD §13.5 rung 4, design §21): the mission card of each type, shown on a mission's result
+ * before the place's kind scene. Disruption's is the existing strike picture.
+ */
+export const missionCards: Content['art']['missionCards'] = [
+  { missionType: 'speech', assetId: 'scene.mission-speech' },
+  { missionType: 'surveillance', assetId: 'scene.mission-watch' },
+  { missionType: 'vandalism', assetId: 'scene.mission-posters' },
+  { missionType: 'disruption', assetId: 'scene.news-strike' },
+  { missionType: 'sabotage', assetId: 'scene.mission-sabotage' },
+  { missionType: 'theft', assetId: 'scene.mission-theft' },
+];
+
 export const scenes: SceneBinding[] = [
   { locationKind: 'faction-hq', factionId: 'collective', assetId: 'scene.union-hq' },
   { locationKind: 'faction-hq', factionId: 'vanguard', assetId: 'scene.vanguard-office' },
@@ -412,6 +529,8 @@ export const scenes: SceneBinding[] = [
   { locationKind: 'ministry', assetId: 'scene.ministry' },
   { locationKind: 'gym', assetId: 'scene.gym' },
   { locationKind: 'theatre', assetId: 'scene.theatre' },
+  { locationKind: 'hospital', assetId: 'scene.hospital' },
+  { locationKind: 'jail', assetId: 'scene.jail-cell' },
 ];
 
 /**

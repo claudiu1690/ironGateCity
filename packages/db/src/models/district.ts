@@ -11,6 +11,12 @@ export interface DistrictStateDoc {
   day: DayKey;
   battleground: boolean;
   controlledBy: FactionId | null;
+  /**
+   * Slice 5 (ADR 0034 §5): the leading faction at the boundary (top faction share; ties in
+   * FACTION_IDS order). Migration 007 sets it from the current opinion on every district. Optional at
+   * the type level while slice 4's boundary writes the state without it (`state` is Mixed: no default).
+   */
+  leader?: FactionId | null;
   previous: { battleground: boolean; controlledBy: FactionId | null };
 }
 

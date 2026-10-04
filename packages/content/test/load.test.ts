@@ -19,7 +19,9 @@ const coalport = (c: ContentInput) => c.cities[0]!;
 describe('the real content', () => {
   const content = loadContent();
   const city = content.city('coalport')!;
-  const actions = city.locations.flatMap((l) => l.actions);
+  // Slice 5 adds the Harbour (design §2.3); the slice-1 counts are the Mill's.
+  const mill = city.locations.filter((l) => l.quarterId === 'coalport.mill');
+  const actions = mill.flatMap((l) => l.actions);
 
   it('validates and indexes', () => {
     expect(content.factions.map((f) => f.id)).toEqual(['vanguard', 'collective', 'alliance']);
@@ -33,7 +35,7 @@ describe('the real content', () => {
   });
 
   it("has Coalport's 6 locations, 21 actions, 3 jobs (content §1–§3)", () => {
-    expect(city.locations.map((l) => [l.id, l.kind])).toEqual([
+    expect(mill.map((l) => [l.id, l.kind])).toEqual([
       ['coalport.mill-gate', 'factory-gate'],
       ['coalport.market-row', 'market'],
       ['coalport.union-hall', 'faction-hq'],
@@ -98,7 +100,8 @@ describe('the real content', () => {
     // Slice 4 adds the capital rotation (design §10), for Irongate residents only.
     const orders = content
       .ordersOf('collective')
-      .filter((o) => o.use === 'rotation' && o.residence !== 'capital');
+      // Slice 5's slot-B mission order (minLevel 6) is counted by slice5.content.test.ts.
+      .filter((o) => o.use === 'rotation' && o.residence !== 'capital' && o.minLevel === undefined);
     expect(orders).toHaveLength(12);
     expect(orders.filter((o) => o.slot === 'A')).toHaveLength(5);
     expect(orders.filter((o) => o.slot === 'B')).toHaveLength(4);
@@ -107,7 +110,8 @@ describe('the real content', () => {
     const hl = content.headlinesOf('coalport');
     expect(hl.filter((h) => h.group === 'ambient')).toHaveLength(10);
     // Slice 4 adds the stored *The Train Is Open* (hl.train-open, Level 10).
-    expect(hl.filter((h) => h.group === 'personal')).toHaveLength(14);
+    // Slice 5 adds the nine stored risk templates (design §14; rival-pressure is live).
+    expect(hl.filter((h) => h.group === 'personal')).toHaveLength(14 + 9);
     // Slice 2: hl.first-day became hl.welcome (onboarding §7.2).
     expect(hl.find((h) => h.id === 'hl.welcome')?.priority).toBe(1);
     expect(content.standingNames).toEqual(['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us']);

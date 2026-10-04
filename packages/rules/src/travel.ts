@@ -1,5 +1,5 @@
 import { computeCheck, outcomeForRoll } from './check';
-import { TIER1_DIFFICULTY, TRAVEL } from './constants';
+import { HEAT, RIVAL_GROUND, TIER1_DIFFICULTY, TRAVEL } from './constants';
 import { priceLines, priceWith } from './ordinances';
 import type { Modifiers, PriceLine } from './ordinances';
 import type { Rng } from './rng';
@@ -10,8 +10,11 @@ import type { CheckBonus, CheckBreakdown, CheckStatSpec, FactionId, Stats } from
  * the journey card's draw and its one choice. Pure: the server stores the seed and the result.
  */
 
-/** Why a destination's card has a Board button or not (design §2.3). */
-export type DestinationState = 'here' | 'open' | 'rival' | 'later' | 'level';
+/**
+ * Why a destination's card has a Board button or not (design §2.3). Slice 5 (design §11.1): `rival`
+ * is boardable from Level 10; `barred` for 24 hours after a deportation from it.
+ */
+export type DestinationState = 'here' | 'open' | 'rival' | 'barred' | 'later' | 'level';
 
 /**
  * §14.10: every route runs through the capital. The capital ↔ X is `minutes[X]`; an outer city to
@@ -47,14 +50,55 @@ export function destinationState(i: {
   factionHomeOf: (cityId: string) => FactionId | null;
   playerFaction: FactionId;
   capitalId: string;
+  /** Slice 5 (design §11.5): the bar on `to` after a deportation, until then (null: none). */
+  barredUntil?: number | null;
+  now?: number;
 }): DestinationState {
   if (i.level < TRAVEL.level) return 'level';
   if (i.to === i.here) return 'here';
   if (i.service === 'later') return 'later';
   const home = i.factionHomeOf(i.to);
-  if (home !== null && home !== i.playerFaction) return 'rival';
+  if (home !== null && home !== i.playerFaction) {
+    const barred = i.barredUntil !== undefined && i.barredUntil !== null && (i.now ?? 0) < i.barredUntil;
+    return barred ? 'barred' : 'rival';
+  }
   return 'open';
 }
+
+/**
+ * Design §11.4 (§23.1 #12): the hostile deck, drawn at boarding for a rival home city, always one
+ * card. The first trip to rival ground draws the checkpoint (added to `seen`); later, Heat 50 or more
+ * draws *Your name is on a list* (outside the rotation, `seen` unchanged); otherwise one of the
+ * rotation's three, without replacement until all three were seen. Deterministic per seed.
+ */
+export function drawHostileCard(i: {
+  firstRival: boolean;
+  heat: number;
+  seen: readonly string[];
+  rotation: readonly string[];
+  firstId: string;
+  listed: { id: string; heatAtLeast: number };
+  rng: Rng;
+}): { eventId: string; seen: string[] } {
+  if (i.firstRival) return { eventId: i.firstId, seen: [...new Set([...i.seen, i.firstId])] };
+  if (i.heat >= i.listed.heatAtLeast) return { eventId: i.listed.id, seen: [...i.seen] };
+  let seen = i.seen.filter((id) => i.rotation.includes(id));
+  let left = i.rotation.filter((id) => !seen.includes(id));
+  if (left.length === 0) {
+    seen = [];
+    left = [...i.rotation];
+  }
+  const eventId = left[i.rng.int(0, left.length - 1)]!;
+  return { eventId, seen: [...seen, eventId] };
+}
+
+/** The checkpoint's gate (design §23.2): *Cool and Clean* is Heat 0–24 and no live mark. */
+export const coolAndClean = (heat: number, liveMarks: number): boolean =>
+  heat < HEAT.states.noticed && liveMarks === 0;
+
+/** A card's check difficulty: 10 (slice 4's deck), 14 on the hostile deck (the rival city's +4). */
+export const cardDifficulty = (deck: 'ordinary' | 'hostile'): 10 | 14 =>
+  deck === 'hostile' ? RIVAL_GROUND.cardDifficulty : TIER1_DIFFICULTY.battleground;
 
 export interface Fare {
   base: number;
@@ -113,6 +157,10 @@ export interface JourneyRewardsSpec {
   rested?: number;
   /** The reporter: the name in the Herald (`hl.*.quoted`). */
   quoted?: true;
+  /** Slice 5 (design §11.4): Heat ±n, added through `addHeat`. */
+  heat?: number;
+  /** Slice 5: a day flag in the destination until the boundary. */
+  flag?: 'watched' | 'warned';
 }
 
 /** A card's choice as the rules need it (content `JourneyChoice`). */
@@ -124,6 +172,8 @@ export interface JourneyChoiceSpec {
   cost?: { iron: number };
   success: { rewards: JourneyRewardsSpec };
   partial?: { rewards: JourneyRewardsSpec };
+  /** Slice 5 (design §23.2): an unchecked choice that pays `success` when the gate holds, else `partial`. */
+  gate?: 'coolAndClean';
 }
 
 export interface JourneyChoiceResolution {
@@ -133,6 +183,8 @@ export interface JourneyChoiceResolution {
   rewards: JourneyRewardsSpec;
   /** The Iron the choice takes before it pays (the stake). */
   cost: number;
+  /** Slice 5: a gated choice's branch (the checkpoint's *Waved on* or *They write your name down*). */
+  branch?: 'pass' | 'stopped';
 }
 
 /** The chance a checked choice shows as an odds word (difficulty 10, the Standing bonus there). */
@@ -140,11 +192,13 @@ export function journeyChoiceCheck(i: {
   stats: CheckStatSpec;
   values: Stats;
   standingBonus: CheckBonus | null;
+  /** Slice 5: 14 on the hostile deck; default 10. */
+  difficulty?: 10 | 14;
 }): CheckBreakdown {
   return computeCheck({
     stats: i.stats,
     values: i.values,
-    difficulty: TIER1_DIFFICULTY.battleground,
+    difficulty: i.difficulty ?? TIER1_DIFFICULTY.battleground,
     bonuses: i.standingBonus ? [i.standingBonus] : [],
   });
 }
@@ -159,15 +213,25 @@ export function resolveJourneyChoice(i: {
   values: Stats;
   standingBonus: CheckBonus | null;
   rng: Rng;
+  /** Slice 5: 14 on the hostile deck. */
+  difficulty?: 10 | 14;
+  /** Slice 5: whether a gated choice's gate holds (the checkpoint: Cool and Clean). */
+  gateHolds?: boolean;
 }): JourneyChoiceResolution {
   const cost = i.choice.cost?.iron ?? 0;
   if (!i.choice.stats) {
+    if (i.choice.gate) {
+      const pass = i.gateHolds === true;
+      const rewards = pass ? i.choice.success.rewards : (i.choice.partial?.rewards ?? {});
+      return { outcome: 'chosen', check: null, roll: null, rewards: { ...rewards }, cost, branch: pass ? 'pass' : 'stopped' };
+    }
     return { outcome: 'chosen', check: null, roll: null, rewards: { ...i.choice.success.rewards }, cost };
   }
   const check = journeyChoiceCheck({
     stats: i.choice.stats,
     values: i.values,
     standingBonus: i.standingBonus,
+    ...(i.difficulty ? { difficulty: i.difficulty } : {}),
   });
   const roll = i.rng.roll100();
   const outcome = outcomeForRoll(roll, check.chance, 1) === 'success' ? 'success' : 'partial';

@@ -34,8 +34,17 @@ const QUALITY: Record<Format, { start: number; floor: number; step: number }> = 
  * 1–1.5 MB even at q30, and six of them would take the committed set past its 12 MB cap).
  */
 const MAP_FLOOR: Record<Format, number> = { avif: 35, webp: 44 };
-const qualityFor = (a: Asset, format: Format) =>
-  a.kind === 'map' ? { ...QUALITY[format], floor: MAP_FLOOR[format] } : QUALITY[format];
+/**
+ * Slice 5 (tech design §13): `scene.news-strike` is a halftone news print, whose dots are noise to a
+ * codec. Even cropped to the scenes' ratio its 640 px WebP is 81 KB at q60 (budget 80 KB), so that
+ * one fallback may step once more, to q56 (78 KB). Its AVIF keeps the floor (146 KB at q40, 1280 px).
+ */
+const PRINT_FLOOR: Record<string, Partial<Record<Format, number>>> = { 'scene.news-strike': { webp: 56 } };
+const qualityFor = (a: Asset, format: Format) => {
+  if (a.kind === 'map') return { ...QUALITY[format], floor: MAP_FLOOR[format] };
+  const floor = PRINT_FLOOR[a.id]?.[format];
+  return floor === undefined ? QUALITY[format] : { ...QUALITY[format], floor };
+};
 const KB = 1024;
 type RasterKind = Exclude<Asset['kind'], 'vector'>;
 /** Per-file budgets in bytes by kind and width (ADR 0007, 0015); unlisted widths scale with the area. */
@@ -54,8 +63,11 @@ const VECTOR_BUDGET = 8 * KB;
  * 12 MB. Slice 4 (tech design §13): the capital's and the nation's stills (four maps, 4.05 MB)
  * take the measured set to 12.64 MB, so 13 MB. The October art (art-wiring-oct.md: fourteen scenes,
  * their WebP at 640 px only, and twelve faces) takes it to 16.31 MB: the measured figure plus 0.5 MB.
+ * Slice 5 (tech design §13): eight scenes (the five mission cards, the strike card, the infirmary and
+ * the cells) and eight portraits (the opponents, the duty officer, the constable and the matron) take
+ * the measured set to 18.77 MB, so 19.27 MB.
  */
-const TOTAL_BUDGET = 16.8 * KB * KB;
+const TOTAL_BUDGET = 19.27 * KB * KB;
 
 interface ManifestEntry {
   sourceHash: string;

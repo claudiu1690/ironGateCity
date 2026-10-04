@@ -48,7 +48,9 @@ describe('review 2 §1.13: the QA vocabulary test', () => {
       'the yard hoardings',
       'the manifests at the yard',
       'Groundswell',
-      'in the wards',
+      // Slice 5 allows the infirmary's ward (design §23.8); the electoral ward is still caught.
+      'the new wards',
+      'which ward',
     ])
       expect(hit(bad), bad).toBeGreaterThan(0);
     expect(hit('Standing 12')).toBeGreaterThan(0);

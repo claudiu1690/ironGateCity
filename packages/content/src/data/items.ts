@@ -104,8 +104,7 @@ export const items: Item[] = [
     art: 'item.document-folder',
   },
   // GDD §21.4: Settle His Debts chapter 2's keepsake (*The riverside house*, slice 5,
-  // docs/design/slice-5-risk.md §13). Its chapter is slice 5; the item is catalogued now because
-  // the GDD's table lists it.
+  // docs/design/slice-5-risk.md §13: no slot, the document folder's art), on every outcome.
   {
     id: 'keep.ledger-page',
     name: 'A page of his ledger',

@@ -330,6 +330,8 @@ export const residenceCardFixtures: Record<ResidenceCardView['state'], Residence
     sheet: null,
     room,
   },
+  // Slice 5 (screens §8.3): a visitor on rival ground can neither live nor stand there.
+  rivalGround: { state: 'rivalGround', livesIn: 'Coalport', cost: 500, button: null, sheet: null, room: null },
 };
 
 const district = (

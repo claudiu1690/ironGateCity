@@ -7,6 +7,10 @@ import type { CountRow } from './council';
 import type { DayKey } from './day';
 import type { MoraleState } from './morale';
 import type { OrdinanceTagView } from './ordinances';
+import type { HeatState } from './heat';
+import type { MissionType } from './constants';
+import type { RecordLevel } from './record';
+import type { QuarterLock } from './quarters';
 
 export const FACTION_IDS = ['vanguard', 'collective', 'alliance'] as const;
 export type FactionId = (typeof FACTION_IDS)[number];
@@ -114,9 +118,9 @@ export interface EnergyView {
 // Rules-owned DSLs that content is validated against (Party orders, headlines).
 // ---------------------------------------------------------------------------------------------
 
-/** What a performed thing was, for order matching (ADR 0009). */
-export type ActionKind = 'checked' | 'training' | 'takeJob';
-export const ACTION_KINDS = ['checked', 'training', 'takeJob'] as const;
+/** What a performed thing was, for order matching (ADR 0009). Slice 5 (ADR 0031 §4): `mission`. */
+export type ActionKind = 'checked' | 'training' | 'takeJob' | 'mission';
+export const ACTION_KINDS = ['checked', 'training', 'takeJob', 'mission'] as const;
 
 export interface ActionDescriptor {
   kind: ActionKind;
@@ -163,6 +167,8 @@ export interface IssueMatch {
 export interface ResidenceCtx {
   cityId: string;
   districtId: string | null;
+  /** Slice 5 (ADR 0034 §3): the act is on rival ground, where no order matches. */
+  rivalGround?: boolean;
 }
 
 export type OrderSlot = 'A' | 'B' | 'C';
@@ -189,6 +195,11 @@ export interface OrderTemplate {
    * set; `capital`: an Irongate resident's slots A and B; `any`: both (slot C).
    */
   residence?: 'home' | 'capital' | 'any';
+  /**
+   * Slice 5 (design §12.2): enters a member's rotation from this Level (the slot-B mission order:
+   * 6). Absent: every Level.
+   */
+  minLevel?: number;
 }
 
 export interface OrderItem {
@@ -229,7 +240,41 @@ export type HeadlineCondition =
   | { kind: 'homeShare'; min?: number; max?: number }
   /** Slice 4 (stored): the level reached `level` (or passed it) since the last paper (`train-open`). */
   | { kind: 'levelCrossed'; level: number }
+  | RiskCondition
   | PoliticalCondition;
+
+/**
+ * Slice 5 (tech design §11.2, design §14): the risk headlines' stored conditions, from the
+ * settlement's facts (`PaperFacts.risk`).
+ */
+export type RiskCondition =
+  /** The first mission ever, yesterday (`mission-first`, `{missionTitle}`). */
+  | { kind: 'missionFirstYesterday' }
+  /** Heat at the edition is Hot or more (`min: 'hot'`), or Wanted (`seen`, In Print). */
+  | { kind: 'heatState'; min: 'hot' | 'wanted' }
+  /** A mark yesterday (`name-taken`). */
+  | { kind: 'markYesterday' }
+  /** Taken in yesterday (`cells`, `{minutes}`, `{how}`, In Print). */
+  | { kind: 'arrestedYesterday' }
+  /** Admitted to the infirmary yesterday (`infirmary`, `{opponent}`, In Print). */
+  | { kind: 'admittedYesterday' }
+  /** The record's level rose yesterday (`record-up`, `{recordLevel}`, `{marks}`, `{pct}`). */
+  | { kind: 'recordRose' }
+  /** On rival ground yesterday (`rival-trip`, `{rivalCity}`). */
+  | { kind: 'rivalGroundYesterday' }
+  /** Put on the train home yesterday (`deported`, `{rivalCity}`, In Print). */
+  | { kind: 'deportedYesterday' };
+
+export const RISK_CONDITION_KINDS = [
+  'missionFirstYesterday',
+  'heatState',
+  'markYesterday',
+  'arrestedYesterday',
+  'admittedYesterday',
+  'recordRose',
+  'rivalGroundYesterday',
+  'deportedYesterday',
+] as const satisfies ReadonlyArray<RiskCondition['kind']>;
 
 /**
  * Slice 3 (ADR 0023): the political headline conditions. A template uses political kinds only, or
@@ -297,7 +342,12 @@ export type CapitalCondition =
   /** A comeback began in the residence district last night. */
   | { kind: 'groundswellStarted' }
   /** The residence district's line (the fallback city line). */
-  | { kind: 'districtLine' };
+  | { kind: 'districtLine' }
+  /**
+   * Slice 5 (tech design §11.2, live): the home city lost at least `min` points of opinion to
+   * rivals yesterday (`rival-pressure`, `{lost}`).
+   */
+  | { kind: 'moraleLostToRivals'; min: number };
 
 export const POLITICAL_CONDITION_KINDS = [
   'seatWon',
@@ -327,6 +377,8 @@ export const POLITICAL_CONDITION_KINDS = [
   'districtLeftBattleground',
   'groundswellStarted',
   'districtLine',
+  // Slice 5: live.
+  'moraleLostToRivals',
 ] as const satisfies ReadonlyArray<PoliticalCondition['kind']>;
 
 /** Slice 4: the live conditions of the capital, the Issues and travel (a subset of the above). */
@@ -345,6 +397,7 @@ export const CAPITAL_CONDITION_KINDS = [
   'districtLeftBattleground',
   'groundswellStarted',
   'districtLine',
+  'moraleLostToRivals',
 ] as const satisfies ReadonlyArray<CapitalCondition['kind']>;
 
 export interface HeadlineTemplate {
@@ -458,6 +511,23 @@ export const CAPITAL_PLACEHOLDERS = [
   'cap',
 ] as const;
 export type CapitalPlaceholder = (typeof CAPITAL_PLACEHOLDERS)[number];
+
+/**
+ * Slice 5 (tech design §4.3): the risk headlines' placeholders (stored, and `{lost}` on the live
+ * *Rival Callers*), resolved on the server from the settlement's facts.
+ */
+export const RISK_PLACEHOLDERS = [
+  'missionTitle',
+  'minutes',
+  'how',
+  'opponent',
+  'recordLevel',
+  'marks',
+  'pct',
+  'rivalCity',
+  'lost',
+] as const;
+export type RiskPlaceholder = (typeof RISK_PLACEHOLDERS)[number];
 
 /** Slice 4 (tech design §4.3): what a journey card's detail and texts may name. */
 export const JOURNEY_PLACEHOLDERS = ['destination', 'issue'] as const;
@@ -590,6 +660,8 @@ export interface OrdersView {
    * been seen (*Carry on*). `fxp` sums today's completions; `pc` is the all-done PC.
    */
   complete: { pc: number; fxp: number } | null;
+  /** Slice 5 (screens §8.3): on rival ground, *Your orders are in {city} today*. */
+  elsewhere?: { cityName: string } | null;
 }
 
 export interface CharacterView {
@@ -671,6 +743,15 @@ export interface CharacterView {
   hero?: CharacterViewV5['hero'];
   heroes?: CharacterViewV5['heroes'];
   scoreboard?: CharacterViewV5['scoreboard'];
+  /** Slice 5 (tech design §8.3): Heat, Health, the record, held, the run-in, where you stand. */
+  heat?: CharacterViewV6['heat'];
+  health?: CharacterViewV6['health'];
+  record?: CharacterViewV6['record'];
+  held?: CharacterViewV6['held'];
+  runIn?: CharacterViewV6['runIn'];
+  agiQuarters?: number;
+  here?: CharacterViewV6['here'];
+  barred?: CharacterViewV6['barred'];
   /**
    * Review 1 (§8.4, §7.5): today is the welcome day (the creation day, and the next when created
    * after 22:00 UTC): the *First day* bonus and the plate's first-time hint.
@@ -716,7 +797,12 @@ export interface ActionView {
    * Slice 4 (tech design §8.3): `MEMBERS_ONLY` at another faction's capital HQ, with its
    * `factionId` (`need` is 0 then): the ticket is dimmed and has no buttons.
    */
-  locked: { reason: 'LEVEL' | 'STANDING' | 'MEMBERS_ONLY'; need: number; factionId?: FactionId } | null;
+  locked: {
+    /** Slice 5 (design §7.3): `RECORD`, *Not with your record* (Notorious at a court, a university, an Alliance HQ). */
+    reason: 'LEVEL' | 'STANDING' | 'MEMBERS_ONLY' | 'RECORD';
+    need: number;
+    factionId?: FactionId;
+  } | null;
   /** Slice 3: the ordinance in force's tags ("Rally Permits: 10 Energy", "Open Doors: +4 %"). */
   tags: OrdinanceTagView[];
   /** Slice 4: the place's tags (an Issue, the close race, a comeback, members only). */
@@ -757,6 +843,8 @@ export interface LocationView {
    * ladder as a result's (a scene for its kind, else the map crop at its pin).
    */
   art?: ResultArt;
+  /** Slice 5 (tech design §8.3): the place's missions, after the tickets (absent before phase B). */
+  missions?: MissionView[];
   /** Slice 4: the quarter (a capital district), members only, the live Issues tagging it, trains. */
   quarterId?: string;
   factionId?: FactionId;
@@ -780,7 +868,12 @@ export interface CityView {
   opinion: OpinionShares;
   map: { day: AssetView; night: AssetView };
   /** Maps v3: the city's quarters, frames on its picture; the city view opens on the first. */
-  quarters: Array<{ id: string; name: string; frame: Frame }>;
+  /**
+   * Maps v3: the city's quarters, frames on its picture. Slice 5 (ADR 0035): every city's quarters
+   * with outlines, labels, locks, blurbs and teasers (`QuarterView`; the new fields optional until
+   * the slice-5 server fills them).
+   */
+  quarters: QuarterView[];
   /** Map atmosphere: clouds by day and fog by night drift over the map (content `City.clouds`). */
   clouds?: boolean;
   isNight: boolean;
@@ -800,6 +893,15 @@ export interface CityView {
   effects?: ModifierSourceView[];
   /** Slice 4 (screens §6.1): a home city's residence card (the way back, or *you live here*). */
   residence?: ResidenceCardView | null;
+  /**
+   * Slice 5 (tech design §8.3): on rival ground, the home faction, Unrest and the day's pressure
+   * (*1.3 of 2.0 points left today*); null elsewhere.
+   */
+  rivalGround?: {
+    homeFactionId: FactionId;
+    unrest: boolean;
+    pressure: { lost: number; cap: 2; left: number };
+  } | null;
 }
 
 export interface BonusTag {
@@ -809,10 +911,18 @@ export interface BonusTag {
 }
 
 /** `batch` renders "n of N" (GDD §13.1); `failure` only for tier-3 checks (Ambition chapters). */
-export type ResultStamp = 'success' | 'partial' | 'failure' | 'batch' | 'trained';
+export type ResultStamp =
+  | 'success'
+  | 'partial'
+  | 'failure'
+  | 'batch'
+  | 'trained'
+  // Slice 5 (design §7.2, §9.2): sent to the cells or the infirmary by a mission or a run-in.
+  | 'takenIn'
+  | 'carriedOff';
 
 /** What a result is: a tier-1 action kind, or an Ambition chapter (slice-2 tech design §9). */
-export type ActionResultKind = ActionViewKind | 'chapter';
+export type ActionResultKind = ActionViewKind | 'chapter' | 'mission';
 
 export interface ResultAttempt extends ActionAttempt {
   rewards: Rewards;
@@ -844,7 +954,7 @@ export interface ActionResult {
   seed: string;
   place: { cityId: string; cityName: string; locationId: string; locationName: string; kind: string };
   kind: ActionResultKind;
-  action: { id: string; name: string; type: string; tier: 1 | 3; times: number };
+  action: { id: string; name: string; type: string; tier: 1 | 2 | 3; times: number };
   stamp: ResultStamp;
   /** Ambition chapters only: what the modal's kicker needs. */
   story: {
@@ -929,7 +1039,13 @@ export interface ActionResult {
     cost3: number | null;
     /** Review 3: a *Trained* result's repeat button, "{verb} again · {cost} Energy" (absent before it). */
     verb?: string;
+    /** Slice 5: a mission's *Again* repeats the remembered way. */
+    way?: { id: string; title: string };
   } | null;
+  /** Slice 5 (tech design §10.1): a mission's kicker and way. */
+  mission?: MissionResultView;
+  /** Slice 5 (tech design §10.1–§10.2): the street's block (a run-in, Heat, the record, where you went). */
+  street?: StreetView;
   character: CharacterView;
 }
 
@@ -960,6 +1076,11 @@ export interface DeskView {
   awards?: Array<{ kind: 'hero' | 'issue'; label: string; pc: number }> | null;
   /** Slice 4: the room in Irongate while it runs (live at read). */
   room?: { untilDay: DayKey; cap: number } | null;
+  /** Slice 5 (tech design §11.3): the held line, *Where you are*, Heat and the record. */
+  held?: DeskViewV5['held'];
+  heat?: DeskViewV5['heat'];
+  record?: DeskViewV5['record'];
+  where?: DeskViewV5['where'];
   /** Live at read. */
   jobName: string | null;
   energy: { value: number; max: number; fullAt: number | null };
@@ -1097,7 +1218,23 @@ export type GameErrorReason =
   | 'WRONG_FACTION'
   // Slice-4 fixes (docs/design/slice-4-fixes.md §1, §6).
   | 'ON_BALLOT'
-  | 'ROOM_PAID_AHEAD';
+  | 'ROOM_PAID_AHEAD'
+  // Slice 5 (tech design §6.12).
+  | 'HELD'
+  | 'RUN_IN_PENDING'
+  | 'NO_RUN_IN'
+  | 'UNKNOWN_MISSION'
+  | 'UNKNOWN_WAY'
+  | 'MISSION_LOCKED'
+  | 'OWN_FACTION_TARGET'
+  | 'RECORD_BARRED'
+  | 'ONCE_ON_RIVAL_GROUND'
+  | 'BARRED'
+  | 'NOT_HELD'
+  | 'NOT_IN_CELLS'
+  | 'NOT_IN_INFIRMARY'
+  | 'NO_MARKS'
+  | 'CANNOT_PAY';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -1518,7 +1655,14 @@ export type PoliticalAct =
   | 'register'
   | 'room'
   // Slice-4 fixes §6: seven more nights on a room running.
-  | 'renew';
+  | 'renew'
+  // Slice 5 (tech design §10.3): the cells, the infirmary and the record.
+  | 'bail'
+  | 'released'
+  | 'deported'
+  | 'walkOut'
+  | 'discharged'
+  | 'strike';
 export const POLITICAL_ACTS = [
   'ballot',
   'declare',
@@ -1529,7 +1673,18 @@ export const POLITICAL_ACTS = [
   'register',
   'room',
   'renew',
+  'bail',
+  'released',
+  'deported',
+  'walkOut',
+  'discharged',
+  'strike',
 ] as const;
+
+/** Slice 5: the cells', the infirmary's and the record's acts (their texts are copy, not `politics`). */
+export type RiskAct = 'bail' | 'released' | 'deported' | 'walkOut' | 'discharged' | 'strike';
+/** The acts whose texts live in content's `politics.results` (slices 3–4). */
+export type CouncilAct = Exclude<PoliticalAct, RiskAct>;
 
 /** The political result modal (screens §9, tech design §10.1), stored in requestLogs.result. */
 export interface PoliticalResult {
@@ -1598,7 +1753,7 @@ export interface PriceView {
 }
 
 /** Design §2.3: why a city card has a Board button or not. */
-export type DestinationStateView = 'here' | 'open' | 'rival' | 'later' | 'level';
+export type DestinationStateView = 'here' | 'open' | 'rival' | 'barred' | 'later' | 'level';
 
 export interface NationCityView {
   cityId: string;
@@ -1610,7 +1765,11 @@ export interface NationCityView {
   /** "Capital · 5 districts · two close races today" (live) / "Home city of the Alliance". */
   line: string;
   state: DestinationStateView;
-  lockWord: 'rival ground' | 'no service yet' | null;
+  lockWord: 'rival ground' | 'no service yet' | 'barred' | null;
+  /** Slice 5 (design §11.5): barred after a deportation, until then. */
+  barredUntil?: number;
+  /** Slice 5 (screens §8.1): *Rival ground · Home city of the {faction}*. */
+  rival?: { homeFactionId: FactionId };
   minutes: number | null;
   fare: PriceView | null;
   /** The capital: the average of its districts; Clearwater: its baseline. */
@@ -1644,6 +1803,8 @@ export interface JourneyChoiceView {
   chance: number | null;
   cost: number | null;
   affordable: boolean;
+  /** Slice 5 (design §23.2): an unchecked row that depends on Heat and the record (no odds word). */
+  gated?: boolean;
 }
 
 export interface JourneyCardView {
@@ -1653,6 +1814,8 @@ export interface JourneyCardView {
   ignore: string;
   choices: JourneyChoiceView[];
   chosen: JourneyCardResult | null;
+  /** Slice 5: the hostile deck's card (no opinion or points on it). */
+  deck?: 'ordinary' | 'hostile';
 }
 
 export interface JourneyView {
@@ -1673,7 +1836,14 @@ export interface JourneyView {
     headline: string;
     body: string;
     cardLine: string | null;
-    knockOns: { ticket: number; heraldVisitor: boolean };
+    knockOns: {
+      ticket: number;
+      heraldVisitor: boolean;
+      /** Slice 5 (screens §8.2): on rival ground (the warning once), the day flags, an unanswered card's Heat. */
+      rivalGround?: boolean;
+      flags?: Array<'watched' | 'warned'>;
+      heat?: { before: number; after: number };
+    };
     art: ResultArt;
     landing: Landing;
   } | null;
@@ -1694,7 +1864,7 @@ export interface JourneyCardResult {
   reason: string | null;
   /** Receipt rows, zeros omitted. */
   rewards: Array<{
-    id: 'xp' | 'fxp' | 'iron' | 'opinion' | 'points' | 'rested';
+    id: 'xp' | 'fxp' | 'iron' | 'opinion' | 'points' | 'rested' | 'heat';
     amount: number;
     note?: string;
   }>;
@@ -1747,7 +1917,11 @@ export type PlaceTagView =
   | { kind: 'issue'; issueId: string; name: string; pct: 50 }
   | { kind: 'closeRace'; fxpPct: 25 }
   | { kind: 'comeback'; factionId: FactionId; pct: number }
-  | { kind: 'membersOnly'; factionId: FactionId };
+  | { kind: 'membersOnly'; factionId: FactionId }
+  // Slice 5 (tech design §8.3).
+  | { kind: 'rivalGround'; fxpPct: 50 | 75 }
+  | { kind: 'record'; ironPct: number }
+  | { kind: 'pressureCapped' };
 
 /** Screens §6.1: the residence card's state, chosen on the server per district. */
 export interface ResidenceCardView {
@@ -1760,7 +1934,9 @@ export interface ResidenceCardView {
     | 'homeElsewhere'
     | 'atHome'
     // Slice-4 fixes §1 (QA M2): on a ballot where you live; `canMoveFromDay` is the count day.
-    | 'onBallot';
+    | 'onBallot'
+    // Slice 5 (screens §8.3): *You can't live or stand here*.
+    | 'rivalGround';
   livesIn: string;
   registeredDay?: DayKey;
   votesFromDay?: DayKey;
@@ -1891,4 +2067,225 @@ export interface CharacterViewV5 {
   hero: { title: string; untilDay: DayKey } | null;
   heroes: Array<{ placeName: string; n: number }>;
   scoreboard: ScoreboardLineView[];
+}
+
+// ---------------------------------------------------------------------------------------------
+// Slice 5 views and results (docs/tech/slice-5.md §8.3, §10). Fields added to the slice 1–4 views
+// are optional until the slice-5 server fills them (phase B).
+// ---------------------------------------------------------------------------------------------
+
+/** CityView.quarters[] (ADR 0035): a quarter on the city's picture. */
+export interface QuarterView {
+  id: string;
+  name: string;
+  frame: Frame;
+  outline?: Array<[number, number]>;
+  /** Where the name sits on the overview (screens §10). */
+  label?: { x: number; y: number } | null;
+  open?: boolean;
+  lock?: QuarterLock | null;
+  blurb?: string | null;
+  /** The line after the lock word (*The slipway, the customs house, and the far bank across the water.*). */
+  teaser?: string | null;
+  /** How many places it has (0 for a teaser). */
+  places?: number;
+}
+
+/** Design §4.7: the ticket's risk line (the client words the band; no digit of odds reaches the screen). */
+export interface MissionRiskView {
+  heat: number;
+  runInChance: number;
+  marks: 0 | 1 | 2 | 3;
+}
+
+/** LocationView.missions[] (tech design §8.3), after the tickets. */
+export interface MissionView {
+  id: string;
+  name: string;
+  type: MissionType;
+  /** *Mission · Speech* / *Mission · Watch and listen* / *Mission · Against the {faction}*. */
+  label: 'speech' | 'watch' | 'against';
+  targetFactionId: FactionId | null;
+  energy: number;
+  briefing: string;
+  ways: Array<{
+    id: string;
+    title: string;
+    hint: string;
+    preview: CheckBreakdown;
+    agility: boolean;
+    /** Only when it differs from the ticket's. */
+    risk: { heat: number; runInChance: number } | null;
+  }>;
+  remembered: string | null;
+  suggested: string;
+  /** Of the remembered (else the suggested) way. */
+  risk: MissionRiskView;
+  tags: OrdinanceTagView[];
+  placeTags: PlaceTagView[];
+  order: { id: string; title: string; progress: number; target: number } | null;
+  locked: { reason: 'LEVEL' | 'RANK' | 'STANDING' | 'RECORD'; need: number; rankTitle?: string } | null;
+  art: ResultArt;
+}
+
+/** The run-in modal's state (ADR 0032): one choice. The client prints odds words, never numbers. */
+export interface RunInPending {
+  kind: 'runIn';
+  encounterId: string;
+  decideBy: number;
+  serverNow: number;
+  place: { cityId: string; locationId: string; locationName: string };
+  what: { kind: 'mission' | 'action'; id: string; name: string };
+  opponent: {
+    id: string;
+    label: string;
+    appears: string;
+    portrait: AssetView;
+    bribable: boolean;
+    payOff: number | null;
+  };
+  you: { health: number; healthMax: number; heat: number; heatState: HeatState };
+  rows: {
+    fight: { chance: number };
+    run: { chance: number };
+    talk: { chance: number };
+    /** null: the opponent cannot be bought. */
+    pay: { chance: number; price: number; affordable: boolean } | null;
+  };
+  /** The *best free odds* tag. */
+  luck: 'fight' | 'run' | 'talk';
+  character: CharacterView;
+}
+
+/** ActionResult.mission (tech design §10.1): *Mission · Against the Vanguard*. */
+export interface MissionResultView {
+  id: string;
+  type: MissionType;
+  label: 'speech' | 'watch' | 'against';
+  targetFactionId: FactionId | null;
+  way: { id: string; title: string; stats: CheckStatSpec; agility: boolean };
+  firstTime: boolean;
+}
+
+/** ActionResult.street (tech design §10.1–§10.2). */
+export interface StreetView {
+  runIn: {
+    opponent: { id: string; label: string; portrait: AssetView };
+    choice: 'fight' | 'run' | 'talk' | 'pay';
+    by: 'player' | 'luck' | 'auto';
+    /** `chance` and `roll` for dev and QA only. */
+    steps: Array<{ row: 'fight' | 'run' | 'talk' | 'pay'; ok: boolean; chance?: number; roll?: number }>;
+    outcome: 'won' | 'lost' | 'ran' | 'talked' | 'paid';
+    /** The opponent's line for the outcome. */
+    line: string;
+    cause: 'power' | 'agi' | 'cha' | 'luck' | null;
+    health: { before: number; after: number; max: number; fullAt: number | null } | null;
+    ironPaid: number;
+    heatAdded: number;
+    xp: number;
+  } | null;
+  heat: {
+    before: number;
+    gain: number;
+    after: number;
+    state: HeatState;
+    stateBefore: HeatState;
+    coolsAt: number | null;
+    /** The first crossing into this state (the one-line card). */
+    first: boolean;
+  } | null;
+  caught: { caught: boolean; withoutRoll: boolean; chance?: number; roll?: number } | null;
+  record: {
+    added: number;
+    escalated: boolean;
+    before: RecordLevel;
+    after: RecordLevel;
+    marks: number;
+    /** The first mark ever (the record's card). */
+    first: boolean;
+  } | null;
+  sentTo: {
+    kind: 'cells' | 'infirmary';
+    stayId: string;
+    placeName: string;
+    until: number;
+    bail: number | null;
+    landing: Landing;
+  } | null;
+  agility: { quarters: number; gained: boolean } | null;
+  /** *Missions remember: next time, one tap* (the first time). */
+  remembered: boolean;
+  /** A tier-1 tap on rival ground or a mission dropped by a Run or a loss. */
+  dropped?: 'ran' | 'lost' | null;
+}
+
+/** The cells or the infirmary (`/held`, tech design §8.3). */
+export interface HeldView {
+  stayId: string;
+  kind: 'cells' | 'infirmary';
+  state: 'in' | 'out';
+  cityId: string;
+  cityName: string;
+  locationId: string;
+  placeName: string;
+  since: number;
+  until: number;
+  serverNow: number;
+  rivalGround: boolean;
+  /** *You again*: a second arrest in seven days, or a second stay. */
+  again: boolean;
+  bail: { total: number; lines: PriceLineView[]; affordable: boolean; legalAid: boolean } | null;
+  walkOut: { energy: 5; iron: 100; affordable: boolean } | null;
+  discharge: { energy: 5; healthTo: number; affordable: boolean } | null;
+  health: { value: number; max: number; fullAt: number | null };
+  /** *Listen to the cells* / *Talk to the ward*. */
+  tap: ActionView;
+  /** State `out`: the stored release modal. */
+  release: PoliticalResult | null;
+  election: PoliticsSummaryView | null;
+  paperUnread: number;
+}
+
+/** Slice 5 additions to the character view (tech design §8.3; optional on it until phase B). */
+export interface CharacterViewV6 {
+  heat: {
+    value: number;
+    state: HeatState;
+    at: number;
+    /** Milliseconds a point (the client projects between reads). */
+    stepMs: number;
+    /** When it drops under 25 (*Cool by*); null while Cool (design §23.1 #9). */
+    coolsAt: number | null;
+    zeroAt: number | null;
+  };
+  health: { value: number; max: number; full: boolean; at: number; fullAt: number | null };
+  record: {
+    level: RecordLevel;
+    marks: number;
+    fadesOn: DayKey | null;
+    fading: number;
+    bailDoubled: boolean;
+    ironPct: number;
+    strike: { cost: 30; affordable: boolean } | null;
+  };
+  held: {
+    stayId: string;
+    kind: 'cells' | 'infirmary';
+    state: 'in' | 'out';
+    until: number;
+    placeName: string;
+    cityId: string;
+  } | null;
+  runIn: { encounterId: string; state: 'pending' | 'resolved'; decideBy: number } | null;
+  agiQuarters: number;
+  here: { rivalGround: boolean; flags: Array<'watched' | 'warned'> };
+  barred: Array<{ cityId: string; cityName: string; until: number }>;
+}
+
+/** Slice 5 desk rows (tech design §11.3), live at read. */
+export interface DeskViewV5 {
+  held: { kind: 'cells' | 'infirmary'; placeName: string; minutesLeft: number; bail: number | null } | null;
+  heat: { value: number; state: HeatState; coolsAt: number | null } | null;
+  record: { level: RecordLevel; marks: number } | null;
+  where: { rivalGround: { cityName: string } } | null;
 }

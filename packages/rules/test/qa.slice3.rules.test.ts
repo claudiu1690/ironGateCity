@@ -72,7 +72,8 @@ describe('QA · the GDD numbers the rules use', () => {
     expect(COUNCIL.passVotes).toBe(4);
     expect(S153).toMatch(/up to \*\*three proposals\*\*/);
     expect(COUNCIL.maxProposals).toBe(3);
-    expect(S65).toMatch(/Councillor \*\*10\/day and 20 FXP\/day\*\*/);
+    // The slice-7 design (1f8172a) rewrote §6.5's stipend row: "Councillor **10 and 20 FXP**".
+    expect(S65).toMatch(/Councillor \*\*10(?:\/day)? and 20 FXP(?:\/day)?\*\*/);
     expect(COUNCIL.stipend).toEqual({ pc: 10, fxp: 20 });
     expect(S1411).toMatch(/drift of 2 % of the distance to 70/);
     expect([MORALE.driftShare, MORALE.driftTarget]).toEqual([0.02, 70]);

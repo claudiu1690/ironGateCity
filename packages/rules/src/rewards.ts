@@ -1,4 +1,4 @@
-import { OPINION_DECIMALS, OPINION_PER_ENERGY, OUTCOME_FACTOR, RESTED, TIER_RATES } from './constants';
+import { OPINION_DECIMALS, OPINION_PER_ENERGY, OUTCOME_FACTOR, RESTED, TIER2, TIER_RATES } from './constants';
 import type { Outcome, RewardLine, RewardPart, Rewards } from './types';
 
 /** Nearest whole number, halves up (§5.5). The epsilon absorbs float noise such as 22.499999999. */
@@ -26,14 +26,21 @@ const CLASSIC_PARTS = new Set(['rested', 'order']);
  * One reward line (§5.5): worked out in full precision, then base and each bonus part rounded
  * separately so the tiles add up (ADR 0021: each part halves up on its own). A line that pays on a
  * Success pays at least 1 on a Partial. `parts` is set only when a slice-3 modifier contributed, so
- * results with only Rested or the Party order keep their slice-1 shape.
+ * results with only Rested or the Party order keep their slice-1 shape. Slice 5: `factor` is the
+ * outcome's share of the Success (a tier-2 Failure's XP is a fifth), and a share may be negative
+ * (*your record −6* on a mission's Iron).
  */
-function line(successBase: number, shares: readonly LineShare[], outcome: Outcome): RewardLine {
-  const full = successBase * OUTCOME_FACTOR[outcome];
+function line(
+  successBase: number,
+  shares: readonly LineShare[],
+  outcome: Outcome,
+  factor: number = OUTCOME_FACTOR[outcome],
+): RewardLine {
+  const full = successBase * factor;
   let base = roundHalfUp(full);
   if (outcome === 'partial' && successBase > 0) base = Math.max(1, base);
   const parts = shares
-    .filter((s) => s.share > 0)
+    .filter((s) => s.share !== 0)
     .map((s) => ({ id: s.id, label: s.label, amount: roundHalfUp(full * s.share) }));
   const bonus = parts.reduce((sum, p) => sum + p.amount, 0);
   const out: RewardLine = { base, bonus, total: base + bonus };
@@ -47,7 +54,8 @@ export const RESTED_PART = { id: 'rested', label: 'Rested' } as const;
 export const ORDER_PART = { id: 'order', label: 'Party order' } as const;
 
 export function computeRewards(i: {
-  tier: 1;
+  /** Slice 5: tier 2 (missions) pays the TIER2 rates; its Failure pays a fifth of the XP only. */
+  tier: 1 | 2;
   /** The content Energy: rewards are computed on it, never on a modified cost (ADR 0021 §3). */
   energy: number;
   outcome: Outcome;
@@ -70,8 +78,15 @@ export function computeRewards(i: {
    * full precision, rounded once. Used in place of `swingMultiplier` when given.
    */
   opinionFactors?: ReadonlyArray<{ id: string; label: string; pct: number }>;
+  /** Slice 5 (design §4.2): theft pays its Iron ×2. */
+  ironMultiplier?: number;
+  /** Slice 5 (design §4.2): the illegal types move opinion ×2 (0.02 per Energy). */
+  opinionMultiplier?: number;
 }): Rewards {
   const rates = TIER_RATES[i.tier];
+  // §8.4 (design §4.1): a tier-2 Failure pays XP ÷ 5 and nothing else (Rested still on that XP).
+  const xpFactor =
+    i.tier === 2 && i.outcome === 'failure' ? TIER2.failureXpShare : OUTCOME_FACTOR[i.outcome];
   const paid = i.costPaid ?? i.energy;
   // §6.3: Rested is spent per Energy point, so its bonus is proportional to the share of the cost
   // paid it covered (a fully covered 10-Energy speech under Rally Permits gets the full +50 %).
@@ -81,6 +96,7 @@ export function computeRewards(i: {
     rates.xpPerEnergy * i.energy,
     [{ ...RESTED_PART, share: RESTED.xpBonus * restedShare }],
     i.outcome,
+    xpFactor,
   );
   // FXP and influence never get the Rested bonus (§6.3); FXP gets the Party-order bonus instead.
   const fxp = i.givesFxp
@@ -91,7 +107,7 @@ export function computeRewards(i: {
       )
     : { ...NOTHING };
   const iron = line(
-    rates.ironPerEnergy * i.energy,
+    rates.ironPerEnergy * i.energy * (i.ironMultiplier ?? 1),
     [{ ...RESTED_PART, share: RESTED.ironBonus * restedShare }, ...(i.ironShares ?? [])],
     i.outcome,
   );
@@ -99,7 +115,9 @@ export function computeRewards(i: {
   const multiplier =
     factors.length > 0 ? factors.reduce((x, f) => x * (1 + f.pct / 100), 1) : (i.swingMultiplier ?? 1);
   const opinion = i.givesOpinion
-    ? roundOpinion(OPINION_PER_ENERGY[i.tier] * i.energy * OUTCOME_FACTOR[i.outcome] * multiplier)
+    ? roundOpinion(
+        OPINION_PER_ENERGY[i.tier] * i.energy * OUTCOME_FACTOR[i.outcome] * multiplier * (i.opinionMultiplier ?? 1),
+      )
     : 0;
 
   const out: Rewards = { xp, fxp, iron, opinion };

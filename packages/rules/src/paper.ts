@@ -2,6 +2,7 @@ import { PAPER } from './constants';
 import { cityDayIndex, mod } from './day';
 import type { DayKey } from './day';
 import type { CouncilPhase } from './calendar';
+import type { HeatState } from './heat';
 import { CAPITAL_CONDITION_KINDS, POLITICAL_CONDITION_KINDS } from './types';
 import type {
   CapitalCondition,
@@ -12,6 +13,7 @@ import type {
   Placeholder,
   PoliticalCondition,
   PoliticalPlaceholder,
+  RiskPlaceholder,
   StoryPlaceholder,
 } from './types';
 
@@ -41,6 +43,21 @@ export interface PaperFacts {
   homeShare: number;
   /** Slice 4: the level before and after the boundaries this edition settles (`levelCrossed`). */
   level?: { before: number; after: number };
+  /** Slice 5 (tech design §11.2): the risk facts of the settlement; absent = none holds. */
+  risk?: RiskFacts;
+}
+
+/** Slice 5: what the settlement knows of yesterday's risks (design §14). */
+export interface RiskFacts {
+  missionFirstYesterday: boolean;
+  /** The projected Heat's state at the settlement. */
+  heat: HeatState;
+  markYesterday: boolean;
+  arrestedYesterday: boolean;
+  admittedYesterday: boolean;
+  recordRose: boolean;
+  rivalGroundYesterday: boolean;
+  deportedYesterday: boolean;
 }
 
 /** Inclusive bounds; an absent bound is open. */
@@ -82,6 +99,23 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
       return (c.min === undefined || f.homeShare >= c.min) && (c.max === undefined || f.homeShare < c.max);
     case 'levelCrossed':
       return f.level !== undefined && f.level.before < c.level && c.level <= f.level.after;
+    // Slice 5 (tech design §11.2): the risk facts.
+    case 'missionFirstYesterday':
+      return f.risk?.missionFirstYesterday === true;
+    case 'heatState':
+      return f.risk !== undefined && (f.risk.heat === 'wanted' || (c.min === 'hot' && f.risk.heat === 'hot'));
+    case 'markYesterday':
+      return f.risk?.markYesterday === true;
+    case 'arrestedYesterday':
+      return f.risk?.arrestedYesterday === true;
+    case 'admittedYesterday':
+      return f.risk?.admittedYesterday === true;
+    case 'recordRose':
+      return f.risk?.recordRose === true;
+    case 'rivalGroundYesterday':
+      return f.risk?.rivalGroundYesterday === true;
+    case 'deportedYesterday':
+      return f.risk?.deportedYesterday === true;
     default:
       // Political conditions are selected live at read (ADR 0023), never at settlement.
       return false;
@@ -132,7 +166,9 @@ export function placeholdersIn(text: string): string[] {
  */
 export function fillTemplate(
   text: string,
-  vars: Partial<Record<Placeholder | StoryPlaceholder | PoliticalPlaceholder | CapitalPlaceholder, string>>,
+  vars: Partial<
+    Record<Placeholder | StoryPlaceholder | PoliticalPlaceholder | CapitalPlaceholder | RiskPlaceholder, string>
+  >,
 ): string {
   return text.replace(
     PLACEHOLDER_RE,
@@ -189,7 +225,7 @@ export interface PoliticalFacts {
   /** Slice 4: the capital's, the Issues' and travel's live facts; absent = none holds. */
   capital?: CapitalFacts;
   /** Placeholder values, resolved on the server. */
-  vars: Partial<Record<PoliticalPlaceholder | CapitalPlaceholder, string>>;
+  vars: Partial<Record<PoliticalPlaceholder | CapitalPlaceholder | RiskPlaceholder, string>>;
   /**
    * Values that depend on the template: `{votes}` is the caller's total in a seat headline and
    * their candidate's in a vote headline. Keyed by the template's first condition kind.
@@ -219,6 +255,8 @@ export interface CapitalFacts {
   groundswellStarted: boolean;
   /** The residence is a district (its line is the fallback city line). */
   districtLine: boolean;
+  /** Slice 5: points the residence city's home faction lost to rivals yesterday (`{lost}`). */
+  moraleLostToRivals?: number;
 }
 
 function capitalHolds(c: CapitalCondition, f: CapitalFacts | undefined): boolean {
@@ -252,6 +290,8 @@ function capitalHolds(c: CapitalCondition, f: CapitalFacts | undefined): boolean
       return f.groundswellStarted;
     case 'districtLine':
       return f.districtLine;
+    case 'moraleLostToRivals':
+      return (f.moraleLostToRivals ?? 0) >= c.min;
   }
 }
 

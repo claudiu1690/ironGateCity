@@ -15,13 +15,14 @@ export const CHECK = { base: 50, perPoint: 4, min: 5, max: 95, partialWindow: 20
 /** §8.4 — difficulty of a tier-1 action by city role. */
 export const TIER1_DIFFICULTY = { home: 8, battleground: 10 } as const;
 
-/** §5.5 — reward rates per Energy, by tier. */
+/** §5.5 — reward rates per Energy, by tier (slice 5: tier 2, the missions). */
 export const TIER_RATES = {
   1: { xpPerEnergy: 4.5, fxpPerEnergy: 0.6, ironPerEnergy: 2 },
+  2: { xpPerEnergy: 5, fxpPerEnergy: 0.8, ironPerEnergy: 4 },
 } as const;
 
 /** §14.2 — opinion swing in percentage points per Energy, by tier (halved on a Partial like every reward). */
-export const OPINION_PER_ENERGY = { 1: 0.005 } as const;
+export const OPINION_PER_ENERGY = { 1: 0.005, 2: 0.01 } as const;
 
 /** §14.2 — opinion keeps three decimals (shown to one). */
 export const OPINION_DECIMALS = 3;
@@ -190,6 +191,10 @@ export const ORDINANCE_BOUNDS = {
   ticketPct: [-50, 0],
   /** Slice 4 (tech design §23 #2): Eviction Notices halve the room. */
   roomPct: [-50, 0],
+  /** Slice 5 (design §12.1): the Customs Strike, Heat cools half again as fast. */
+  heatCoolPct: [0, 100],
+  /** Slice 5 (design §12.1): The Cells Are Full halves bail. */
+  bailPct: [-50, 0],
 } as const;
 
 /** `{ordinal}` in the count's headlines: first … seventh. */
@@ -261,3 +266,156 @@ export const HERO = {
 
 /** dayKey(2026-01-05), a Monday: the week starts on Monday (Issues of the Week). */
 export const WEEK = { mondayEpoch: 20_458 } as const;
+
+// ---------------------------------------------------------------------------------------------
+// Slice 5 (docs/tech/slice-5.md §6.1). Rules: docs/design/slice-5-risk.md (§23 settles the points
+// of the tech design's §22.1); GDD §6.1, §6.4, §8.4, §11, §13.1–§13.3, §14.11–§14.13, §19, §20.
+// ---------------------------------------------------------------------------------------------
+
+/** §5.5, §8.4, §14.2: tier 2 (missions) from Level 6; a Failure pays a fifth of the XP. */
+export const TIER2 = {
+  rates: TIER_RATES[2],
+  opinionPerEnergy: OPINION_PER_ENERGY[2],
+  failureXpShare: 0.2,
+  fromLevel: 6,
+} as const;
+
+/** §8.4 (design §4.3): difficulty by the mission's Level; +2 in the capital (a battleground). */
+export const MISSION_LADDER = { 6: 14, 8: 16, 10: 18, 12: 20, battlegroundStep: 2 } as const;
+
+/** Design §4.2: the six mission types (GDD §13.3, §6.4, §11.2 pinned for slice 5). */
+export const MISSION_TYPE_IDS = [
+  'speech',
+  'surveillance',
+  'vandalism',
+  'disruption',
+  'sabotage',
+  'theft',
+] as const;
+export type MissionType = (typeof MISSION_TYPE_IDS)[number];
+
+export type MarkKind = 'minor' | 'moderate' | 'serious';
+
+export interface MissionTypeSpec {
+  energy: number;
+  /** Heat added on every outcome (×2 on rival ground). */
+  heat: number;
+  /** The run-in base, % (×2 on rival ground). */
+  runIn: number;
+  /** The caught check's base, %, or null (legal types: no check). */
+  caught: number | null;
+  marks: 0 | 1 | 2 | 3;
+  markKind: MarkKind | null;
+  givesFxp: boolean;
+  /** Persuasion from Neutral, against the target faction, or none. */
+  opinion: 'persuade' | 'against' | null;
+  opinionMult: number;
+  ironMult: number;
+  /** The action type orders and Issues see (ADR 0031 §4). */
+  seenAs: string;
+  illegal: boolean;
+}
+
+// prettier-ignore
+export const MISSION_TYPES: Readonly<Record<MissionType, MissionTypeSpec>> = {
+  speech: { energy: 15, heat: 0, runIn: 5, caught: null, marks: 0, markKind: null, givesFxp: true, opinion: 'persuade', opinionMult: 1, ironMult: 1, seenAs: 'speech', illegal: false },
+  surveillance: { energy: 12, heat: 5, runIn: 10, caught: null, marks: 0, markKind: null, givesFxp: false, opinion: null, opinionMult: 0, ironMult: 1, seenAs: 'intelligence', illegal: false },
+  vandalism: { energy: 10, heat: 6, runIn: 15, caught: 8, marks: 1, markKind: 'minor', givesFxp: true, opinion: 'against', opinionMult: 2, ironMult: 1, seenAs: 'vandalism', illegal: true },
+  disruption: { energy: 15, heat: 8, runIn: 30, caught: 10, marks: 1, markKind: 'minor', givesFxp: true, opinion: 'against', opinionMult: 2, ironMult: 1, seenAs: 'disruption', illegal: true },
+  sabotage: { energy: 20, heat: 12, runIn: 25, caught: 20, marks: 3, markKind: 'serious', givesFxp: true, opinion: 'against', opinionMult: 2, ironMult: 1, seenAs: 'sabotage', illegal: true },
+  theft: { energy: 15, heat: 10, runIn: 25, caught: 15, marks: 2, markKind: 'moderate', givesFxp: true, opinion: null, opinionMult: 0, ironMult: 2, seenAs: 'theft', illegal: true },
+};
+
+/** §6.4 (design §6): Heat 0–100, cooling 5 an hour; the four states; 25 after a release. */
+export const HEAT = {
+  max: 100,
+  coolPerHour: 5,
+  states: { noticed: 25, hot: 50, wanted: 75 },
+  /** The state's bonus on the run-in chance and the caught check. */
+  bonus: { cool: 0, noticed: 5, hot: 15, wanted: 15 },
+  afterRelease: 25,
+  /** A failed *Pay them off* (design §10.3). */
+  failedPayOff: 10,
+} as const;
+
+/** §11.2 (design §7.1): base + Heat ÷ 2 + the state's bonus − AGI ÷ 2, kept 2–95. */
+export const CAUGHT = { min: 2, max: 95, agiDivisor: 2, heatDivisor: 2 } as const;
+
+/** §11.3–§11.4 (design §7.3): the record's levels, penalties, fade and strike-off. */
+export const RECORD = {
+  levels: { onFile: 1, repeat: 3, notorious: 6 },
+  ironPct: { clean: 0, onFile: -10, repeat: -20, notorious: -30 },
+  repeatBonus: 5,
+  minorFadeDays: 14,
+  strikePc: 30,
+  escalateWithinDays: 7,
+  escalatedMarks: 3,
+  notoriousBars: { kinds: ['court', 'university'], hqOf: 'alliance' },
+} as const;
+
+/** §6.1, §19.1 (design §9): Health, the infirmary's stay and its two ways out. */
+export const HEALTH = {
+  base: 100,
+  perLevel: 5,
+  regen: 10,
+  tickMs: 600_000,
+  admitted: 30,
+  stayMinutes: 20,
+  walkOut: { energy: 5, iron: 100 },
+  discharge: { energy: 5, share: 0.5 },
+} as const;
+
+/** §19.2 (design §8.2): the sentence and bail. */
+export const CELLS = {
+  baseMinutes: 10,
+  heatDivisor: 2,
+  maxMinutes: 60,
+  rivalFactor: 1.5,
+  bail: { base: 100, perMark: 50, notoriousPct: 100, rivalPct: 100, legalAidPct: -50, roundTo: 10 },
+} as const;
+
+/** §20 (design §10): run-ins. */
+export const RUN_IN = {
+  /** ADR 0032: luck takes an unanswered run-in after five minutes (or at the day's end). */
+  decideMs: 5 * 60_000,
+  max: 90,
+  watched: 10,
+  warned: -10,
+  repeatBonus: 5,
+  /** Design §23.1 #2: a tier-1 tap on rival ground, 15 flat. */
+  rivalTier1: 15,
+  rivalFactor: 2,
+  policeShare: 0.5,
+  tier2PowerFactor: 1.1,
+  rivalPowerAdd: 4,
+  fight: { base: 50, perPower: 3 },
+  run: { factor: 60 },
+  talk: { base: 50, perPoint: 4 },
+  pay: { chance: 90 },
+  /** A failed Run or Talk: the fight at −10. */
+  followUpPct: -10,
+  xp: { won: 20, away: 10 },
+  /** *Won at full strength*: +10 % on the mission's XP and Party XP. */
+  fullStrengthShare: 0.1,
+  damage: { factor: 0.8, spreadPct: 20 },
+  clamp: [5, 95],
+} as const;
+
+/** §20.3: armour by clothing tier (Tier I = 4); your power adds half of it. */
+export const ARMOUR_BY_TIER = [4, 8, 12, 16, 20] as const;
+
+/** §14.11–§14.12 (design §11.2): rival ground. The +4 difficulty is a check row of −16. */
+export const RIVAL_GROUND = {
+  checkRow: -16,
+  fxpShare: 0.5,
+  fxpShareUnrest: 0.75,
+  heatFactor: 2,
+  caughtFactor: 2,
+  /** Points of opinion a home faction loses to rivals per City Day, at most. */
+  pressureCapPerDay: 2,
+  barredMs: 24 * 3_600_000,
+  cardDifficulty: 14,
+} as const;
+
+/** §14.13: quarters open by Level, per character. */
+export const QUARTERS = { levels: [1, 6, 10] } as const;

@@ -4,6 +4,7 @@ import {
   JOURNEY_PLACEHOLDERS,
   PLACEHOLDERS,
   POLITICAL_PLACEHOLDERS,
+  RISK_PLACEHOLDERS,
   STORY_PLACEHOLDERS,
   TIME_TOKENS,
   isPoliticalCondition,
@@ -20,7 +21,7 @@ import type {
 } from '@irongate/rules';
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
-import { assets, avatars, scenes } from './data/art';
+import { assets, avatars, missionCards, scenes } from './data/art';
 import { candidates, irongateCandidates } from './data/candidates';
 import { capitalHomeHeadlines } from './data/capitalHomeHeadlines';
 import { ashford } from './data/cities/ashford';
@@ -29,6 +30,7 @@ import { duskwall } from './data/cities/duskwall';
 import { irongate } from './data/cities/irongate';
 import { factions } from './data/factions';
 import { headlines } from './data/headlines';
+import { held } from './data/held';
 import { heraldHeadlines } from './data/heraldHeadlines';
 import { issues } from './data/issues';
 import { items } from './data/items';
@@ -36,6 +38,7 @@ import { irongateJobs, jobs } from './data/jobs';
 import { journeyEvents } from './data/journeyEvents';
 import { mapPins } from './data/mapPins';
 import { nation } from './data/nation';
+import { opponents } from './data/opponents';
 import { ordinances } from './data/ordinances';
 import { orderTemplates } from './data/orders';
 import { origin } from './data/origin';
@@ -43,6 +46,8 @@ import { npcs, standingLevels } from './data/people';
 import { politicalHeadlines } from './data/politicalHeadlines';
 import { politics } from './data/politics';
 import tiles from './data/tiles.json';
+import { inPolygon } from './geometry';
+import { slice5Problems } from './slice5';
 import { Content, isCheckedAction } from './schemas';
 import type {
   Action,
@@ -52,26 +57,30 @@ import type {
   City,
   Faction,
   HeadlineTemplate,
+  HeldAction,
   Issue,
   Item,
   Job,
   JourneyEvent,
   Location,
+  Mission,
   Nation,
   Npc,
   NpcCandidate,
+  Opponent,
   Ordinance,
   OrderTemplate,
   Platform,
   Quarter,
   TilesEntry,
 } from './schemas';
+import type { MissionType } from '@irongate/rules';
 
 /** Every data file, before validation. */
 export const rawContent: unknown = {
   factions,
   cities: [coalport, duskwall, ashford, irongate],
-  art: { assets, scenes },
+  art: { assets, scenes, missionCards },
   tilePyramids: tiles,
   avatars,
   items,
@@ -88,6 +97,8 @@ export const rawContent: unknown = {
   nation,
   journeyEvents,
   issues,
+  opponents,
+  held,
 };
 
 /**
@@ -224,7 +235,8 @@ export class ContentError extends Error {
 const MIN_HOTSPOT_DISTANCE = 0.03;
 /** Maps v3 §2: a pin lies at least this far inside its quarter's frame. */
 const FRAME_MARGIN = 0.02;
-const ALLOWED_PLACEHOLDERS = new Set<string>(PLACEHOLDERS);
+/** Slice 5 (tech design §4.3): the risk headlines' placeholders join the stored and the live sets. */
+const ALLOWED_PLACEHOLDERS = new Set<string>([...PLACEHOLDERS, ...RISK_PLACEHOLDERS]);
 /** Tech design §4.4: story texts have their own, separate list. */
 const ALLOWED_STORY_PLACEHOLDERS = new Set<string>(STORY_PLACEHOLDERS);
 /** Slice-3 tech design §4.3: political texts have their own list plus the client's time tokens. */
@@ -233,6 +245,8 @@ const ALLOWED_POLITICAL_PLACEHOLDERS = new Set<string>([
   ...TIME_TOKENS,
   // Slice 4 (tech design §4.3): the capital's and the Issues' live lines.
   ...CAPITAL_PLACEHOLDERS,
+  // Slice 5: *Rival Callers*' {lost}.
+  ...RISK_PLACEHOLDERS,
 ]);
 /** Slice 4: a journey card's detail and texts. */
 const ALLOWED_JOURNEY_PLACEHOLDERS = new Set<string>(JOURNEY_PLACEHOLDERS);
@@ -309,6 +323,7 @@ export function parseContent(raw: unknown): Content {
   const locationById = new Map<string, { city: City; location: Location }>();
   const actionById = new Map<string, { city: City; location: Location; action: Action }>();
 
+  const quarterIds = new Set<string>();
   for (const city of content.cities) {
     unique('city', city.id);
     if (city.id.includes('.')) problems.push(`city id "${city.id}" must not contain a dot`);
@@ -334,8 +349,11 @@ export function parseContent(raw: unknown): Content {
     }
     // Maps v3 §2: quarters are frames on the city's picture; every pin inside its own, with margin.
     const quarterById = new Map(city.quarters.map((q) => [q.id, q]));
+    // Slice 5: quarters have their own id space (the design names Ashford's second quarter and its
+    // wharf both `ashford.wharf`; a quarter is a route segment, a place a `?loc=`).
     for (const q of city.quarters) {
-      unique('quarter', q.id);
+      if (quarterIds.has(q.id)) problems.push(`duplicate quarter id "${q.id}"`);
+      quarterIds.add(q.id);
       if (!q.id.startsWith(`${city.id}.`))
         problems.push(`quarter "${q.id}" must be dotted under its city "${city.id}"`);
     }
@@ -389,6 +407,24 @@ export function parseContent(raw: unknown): Content {
         actionById.set(action.id, { city, location, action });
         if (!action.id.startsWith(`${location.id}.`)) {
           problems.push(`action "${action.id}" must be dotted under its location "${location.id}"`);
+        }
+      }
+      // Slice 5 (ADR 0031): missions share the id space and the text rules.
+      for (const mission of location.missions ?? []) {
+        unique('mission', mission.id);
+        if (!mission.id.startsWith(`${location.id}.`))
+          problems.push(`mission "${mission.id}" must be dotted under its location "${location.id}"`);
+        if (sentenceCount(mission.briefing) > OUTCOME_TEXT_MAX_SENTENCES)
+          problems.push(`mission "${mission.id}" briefing has more than 4 sentences`);
+        const texts: Array<[string, string]> = Object.entries(mission.text).map(
+          ([o, t]) => [`${o} text`, t.body] as [string, string],
+        );
+        for (const [what, body] of texts) {
+          if (body.length > OUTCOME_TEXT_MAX_CHARS)
+            problems.push(`mission "${mission.id}" ${what} is ${body.length} characters (at most 240)`);
+          const n = sentenceCount(body);
+          if (n > OUTCOME_TEXT_MAX_SENTENCES)
+            problems.push(`mission "${mission.id}" ${what} has ${n} sentences (at most 4)`);
         }
       }
     });
@@ -731,6 +767,7 @@ export function parseContent(raw: unknown): Content {
   }
 
   problems.push(...slice4Problems(content, { cityById, locationById, actionById, ordinanceIds }));
+  problems.push(...slice5Problems(content, { cityById, locationById, assetById, mapPins }));
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {
       problems.push(`cities.${city.id} has a paper but no ambient headline`);
@@ -743,29 +780,7 @@ export function parseContent(raw: unknown): Content {
   return content;
 }
 
-/**
- * Whether a point lies inside a polygon (even-odd ray casting); `strict` leaves out the points on (or
- * within 1e-6 of) an edge, so two outlines that share an edge do not count as overlapping.
- */
-export function inPolygon(
-  p: { x: number; y: number },
-  poly: ReadonlyArray<readonly [number, number]>,
-  strict = false,
-): boolean {
-  const eps = 1e-6;
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i]!;
-    const [xj, yj] = poly[j]!;
-    // On the edge?
-    const cross = (p.x - xi) * (yj - yi) - (p.y - yi) * (xj - xi);
-    const within =
-      p.x >= Math.min(xi, xj) - eps && p.x <= Math.max(xi, xj) + eps && p.y >= Math.min(yi, yj) - eps && p.y <= Math.max(yi, yj) + eps;
-    if (within && Math.abs(cross) <= eps * Math.hypot(xj - xi, yj - yi)) return !strict;
-    if (yi > p.y !== yj > p.y && p.x < ((xj - xi) * (p.y - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
+export { inPolygon } from './geometry';
 
 /** A city with districts (the capital): its quarters carry `district` (ADR 0027). */
 const isDistricted = (city: City): boolean => city.quarters.some((q) => q.district !== undefined);
@@ -806,26 +821,11 @@ function slice4Problems(
         problems.push(`${q.id}.baselineOpinion sums to ${sumShares(d.baselineOpinion)}, not 100`);
       if (!inside(d.anchor, q.frame)) problems.push(`${q.id}: its anchor is outside its frame`);
       if (!q.blurb) problems.push(`${q.id}: a district needs a blurb`);
-      // The user's district lock (3 Oct 2026): the anchor and every pin inside the district's outline.
-      if (!inPolygon(d.anchor, d.outline)) problems.push(`${q.id}: its anchor is outside its outline`);
-      for (const l of city.locations)
-        if (l.quarterId === q.id && !inPolygon(l.map, d.outline))
-          problems.push(`location "${l.id}": its pin is outside ${q.id}'s outline`);
+      // The user's district lock (3 Oct 2026): the anchor inside the district's outline (slice 5:
+      // the outline is the quarter's; pins and overlaps are checked for every city, slice5.ts).
+      if (!q.outline) problems.push(`${q.id}: a district needs an outline`);
+      else if (!inPolygon(d.anchor, q.outline)) problems.push(`${q.id}: its anchor is outside its outline`);
     });
-    // No two districts overlap: no point of a fine grid lies in two outlines, and no vertex of one lies
-    // inside another.
-    for (let a = 0; a < districts.length; a++)
-      for (let b = a + 1; b < districts.length; b++) {
-        const A = districts[a]!.district!.outline;
-        const B = districts[b]!.district!.outline;
-        let overlap = A.some(([x, y]) => inPolygon({ x, y }, B, true)) || B.some(([x, y]) => inPolygon({ x, y }, A, true));
-        for (let i = 1; i < 200 && !overlap; i++)
-          for (let j = 1; j < 200 && !overlap; j++) {
-            const p = { x: i / 200, y: j / 200 };
-            overlap = inPolygon(p, A, true) && inPolygon(p, B, true);
-          }
-        if (overlap) problems.push(`${districts[a]!.id} and ${districts[b]!.id}: their outlines overlap`);
-      }
     for (const f of [...FACTION_IDS, 'neutral'] as const) {
       const avg = districts.reduce((sum, q) => sum + q.district!.baselineOpinion[f], 0) / districts.length;
       if (Math.abs(avg - city.baselineOpinion[f]) > 0.0005)
@@ -849,7 +849,7 @@ function slice4Problems(
         problems.push(`location "${l.id}": only a faction-hq is members only`);
       }
     }
-    if (isDistricted(city)) {
+    if (isDistricted(city) || city.quarters.length > 1) {
       const survey = new Map((mapPins[city.id]?.pins ?? []).map((p) => [p.id, p]));
       for (const l of city.locations) {
         const pin = survey.get(l.id);
@@ -887,8 +887,11 @@ function slice4Problems(
     problems.push(`nation.capitalId "${n.capitalId}" must be a city with districts`);
 
   // The journey cards (design §3, §19 Q2).
-  const firsts = content.journeyEvents.filter((j) => j.first);
-  if (firsts.length !== 1) problems.push('journeyEvents: exactly one card is drawn first');
+  // Slice 5: each deck has exactly one card drawn first (the passenger, the checkpoint).
+  for (const deck of ['ordinary', 'hostile'] as const) {
+    const firsts = content.journeyEvents.filter((j) => j.deck === deck && j.first);
+    if (firsts.length !== 1) problems.push(`journeyEvents: exactly one ${deck} card is drawn first`);
+  }
   const story = (where: string, text: string) => {
     if (text.length > 240) problems.push(`${where} is ${text.length} characters (at most 240)`);
     // A card's quoted speech counts as part of its sentence (the setups are dialogue; 240 is the bound).
@@ -911,7 +914,9 @@ function slice4Problems(
         if (!ALLOWED_JOURNEY_PLACEHOLDERS.has(p))
           problems.push(`${where}.detail: unknown placeholder {${p}}`);
       if (c.stats && !c.partial) problems.push(`${where}: a checked choice needs a partial`);
-      if (!c.stats && c.partial) problems.push(`${where}: an unchecked choice has no partial`);
+      if (!c.stats && c.partial && !c.gate) problems.push(`${where}: an unchecked choice has no partial`);
+      if (c.gate && (c.stats || !c.partial))
+        problems.push(`${where}: a gate is on an unchecked choice with a success and a partial`);
       for (const [o, out] of [
         ['success', c.success],
         ['partial', c.partial],
@@ -961,7 +966,8 @@ function slice4Problems(
       }
     }
   }
-  if (content.issues.length !== 19) problems.push(`issues: the deck has ${content.issues.length}, not 19`);
+  // Slice 5 (design §12.1): the deck grows to 24.
+  if (content.issues.length !== 24) problems.push(`issues: the deck has ${content.issues.length}, not 24`);
   for (const city of content.cities) {
     if (!city.council) continue;
     const list = eligible.get(city.id) ?? [];
@@ -991,8 +997,9 @@ function slice4Problems(
       if (!['issue', 'city', 'verbs'].includes(ph)) problems.push(`order "${t.id}": unknown placeholder {${ph}}`);
     if (t.slot === 'C' && t.use === 'rotation' && t.residence !== 'any')
       problems.push(`order "${t.id}": a slot C rotation order serves every residence`);
-    if (t.slot !== 'C' && t.residence === 'any')
-      problems.push(`order "${t.id}": only slot C is for any residence`);
+    // Slice 5 (design §12.2): the slot-B mission order serves every residence too.
+    if (t.slot !== 'C' && t.residence === 'any' && !(t.slot === 'B' && t.minLevel !== undefined))
+      problems.push(`order "${t.id}": only slot C (and slot B's mission order) is for any residence`);
     const d = t.match.districtId;
     if (
       d !== undefined &&
@@ -1086,6 +1093,32 @@ export interface GameContent extends Content {
   /** The capital's menu: the ten plus the Tram Subsidy (every menu has it, design §8.5). */
   irongateMenu(): Ordinance[];
   capitalCity(): City;
+  // Slice 5 (tech design §4.1).
+  mission(id: string): LocatedMission | undefined;
+  /** A place's missions, in content order ([] for none). */
+  missionsAt(locationId: string): Mission[];
+  opponent(id: string): Opponent | undefined;
+  /** A home city's opponents for a visitor's tier-1 run-in ([] elsewhere). */
+  runInPoolOf(cityId: string): string[];
+  /** The cells and the infirmary of a city, located (undefined for a city without). */
+  servicesOf(cityId: string): { cells: { city: City; location: Location }; infirmary: { city: City; location: Location } } | undefined;
+  heldAction(kind: 'cells' | 'infirmary'): HeldAction;
+  quartersOf(cityId: string): Quarter[];
+  quarterOf(locationId: string): Quarter | undefined;
+  /** The hostile deck's rotation (the checkpoint, the informer, the conductor), file order. */
+  hostileRotation(): string[];
+  /** The first rival trip's card (the checkpoint). */
+  hostileFirst(): string;
+  /** *Your name is on a list* and its Heat (outside the rotation). */
+  listedCard(): { id: string; heatAtLeast: number };
+  /** The rung-4 mission card of a type (an asset id). */
+  missionCard(type: MissionType): string;
+}
+
+export interface LocatedMission {
+  city: City;
+  location: Location;
+  mission: Mission;
 }
 
 export function indexContent(content: Content): GameContent {
@@ -1093,11 +1126,13 @@ export function indexContent(content: Content): GameContent {
   const cities = new Map<string, City>();
   const locations = new Map<string, { city: City; location: Location }>();
   const actions = new Map<string, LocatedAction>();
+  const missions = new Map<string, LocatedMission>();
   for (const city of content.cities) {
     cities.set(city.id, city);
     for (const location of city.locations) {
       locations.set(location.id, { city, location });
       for (const action of location.actions) actions.set(action.id, { city, location, action });
+      for (const mission of location.missions ?? []) missions.set(mission.id, { city, location, mission });
     }
   }
   const jobs = new Map(content.jobs.map((j) => [j.id, j]));
@@ -1192,7 +1227,8 @@ export function indexContent(content: Content): GameContent {
       content.headlines.filter((h) => h.cityId === cityId && isPoliticalTemplate(h)),
     nationCity: (cityId) => content.nation.cities.find((c) => c.cityId === cityId),
     journeyEvent: (id) => content.journeyEvents.find((j) => j.id === id),
-    journeyDeck: () => content.journeyEvents.map((j) => j.id),
+    // Slice 5: the ordinary deck only (the hostile cards are drawn on the way to rival ground).
+    journeyDeck: () => content.journeyEvents.filter((j) => j.deck === 'ordinary').map((j) => j.id),
     issue: (id) => content.issues.find((i) => i.id === id),
     issuesFor: (cityId) =>
       content.issues.flatMap((issue) =>
@@ -1208,6 +1244,30 @@ export function indexContent(content: Content): GameContent {
     },
     irongateMenu: () => [...content.ordinances],
     capitalCity: () => cities.get(content.nation.capitalId)!,
+    mission: (id) => missions.get(id),
+    missionsAt: (locationId) => locations.get(locationId)?.location.missions ?? [],
+    opponent: (id) => content.opponents.find((o) => o.id === id),
+    runInPoolOf: (cityId) => [...(cities.get(cityId)?.runInPool ?? [])],
+    servicesOf: (cityId) => {
+      const s = cities.get(cityId)?.services;
+      const cells = s ? locations.get(s.cells) : undefined;
+      const infirmary = s ? locations.get(s.infirmary) : undefined;
+      return cells && infirmary ? { cells, infirmary } : undefined;
+    },
+    heldAction: (kind) => content.held[kind],
+    quartersOf: (cityId) => [...(cities.get(cityId)?.quarters ?? [])],
+    quarterOf: (locationId) => {
+      const hit = locations.get(locationId);
+      return hit?.city.quarters.find((q) => q.id === hit.location.quarterId);
+    },
+    hostileRotation: () =>
+      content.journeyEvents.filter((j) => j.deck === 'hostile' && j.heatAtLeast === undefined).map((j) => j.id),
+    hostileFirst: () => content.journeyEvents.find((j) => j.deck === 'hostile' && j.first)!.id,
+    listedCard: () => {
+      const j = content.journeyEvents.find((x) => x.deck === 'hostile' && x.heatAtLeast !== undefined)!;
+      return { id: j.id, heatAtLeast: j.heatAtLeast! };
+    },
+    missionCard: (type) => content.art.missionCards.find((m) => m.missionType === type)!.assetId,
   };
 }
 
