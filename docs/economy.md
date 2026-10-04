@@ -736,7 +736,7 @@ Joining is two taps; calling three; a result one on the next read; a favour two;
 | 58 | Three starts a city a day | Events dominate at low population, or the board is always full at scale | Base swings down, or starts up to five |
 | 59 | Political Capital halves after the first event | The cap still floods | Two events a day |
 | 60 | The fixture at the boundary | Members want an evening event | A second fixture at the Chair's hour (slice 7) |
-| 61 | Visits from anywhere | Reads as nothing | +5 from another city, +10 from the same |
+| 89 (was a second #61) | Visits from anywhere | Reads as nothing | +5 from another city, +10 from the same |
 | 62 | Volunteers at 0.5 give a lone member a Success | Reads as a participation prize | Volunteers 0.4 |
 | — | Events' Party XP lifts the share from outside missions to 35–45 % | Rank pacing fast at scale | Triumph ×1.25 |
 
@@ -952,3 +952,21 @@ Nothing in slice 9 adds a tap to play or a number to a screen; the damping shows
 | 86 | A suspension touches nothing owned | Reads as too soft for vote-buying | Closure on the first evasion; never assets |
 | 87 | Classic retention on small cohorts | ±15 points on a cohort of forty | Read rolling for the trend, classic for the gate |
 | 88 | The closed beta's D7 gate at 30 | Under §27's 38 | The user may hold 38 for both gates |
+
+### 23.7 The model rows (`data/model.ts`; settled 4 Oct 2026, `slice-9-launch.md` §17.1 #22)
+
+The dashboards' *modelled* row per profile bucket (sessions per day: 1–2 casual, 3 reference, 4 regular, 5+ heavy), transcribed from §5.1, §6 and §7 of this sheet (the tier-1 model with slice 2's day-1 one-offs; no sinks on the Iron line). The 48-run matrix (§23.1) replaces these rows when it runs; until then they are the reference the first local playtest is read against.
+
+| Day | Casual XP (Level) · FXP (Rank) · Iron held | Reference | Regular | Heavy |
+|---|---|---|---|---|
+| 1 | 840 (3) · 150 · ~470 | 1,440 (4) · ~270 · ~985 | 1,840 (5) · 240 · ~880 | 2,840 (6) · 330 · ~1,290 |
+| 2 | 1,970 (5) · 310 · ~1,220 | 3,040 (6) · ~475 (2) · ~1,970 | 4,080 (7) · 500 (2) · ~2,070 | 5,600 (8) · 700 (2) · ~2,670 |
+| 3 | 3,140 (6) · 470 (2) · ~1,970 | 4,830 (8) · 600 · ~2,950 | 6,370 (9) · 770 · ~3,260 | 8,350 (10) · 1,070 · ~4,050 |
+| 5 | 5,560 (8) · 800 · ~3,470 | 8,400 (10) · 1,020 · ~4,910 | 10,950 (12) · 1,300 · ~5,640 | 13,830 (13) · 1,810 · ~6,810 |
+| 7 | 7,960 (10) · 1,120 · ~4,970 | 11,940 (12) · 1,430 · ~6,870 | 15,490 (14) · 1,830 · ~8,020 | 19,280 (15) · 2,540 (3) · ~9,570 |
+| 10 | 11,540 (12) · 1,610 · ~7,220 | 17,210 (14) · 2,030 (3) · ~9,810 | 22,270 (16) · 2,610 (3) · ~11,590 | 27,400 (18) · 3,620 · ~13,710 |
+| 14 | 16,270 (14) · 2,240 (3) · ~10,220 | 24,140 (17) · 2,820 · ~13,730 | 31,230 (19) · 3,640 · ~16,350 | 38,130 (21) · 5,030 · ~19,230 |
+| 21 | 24,430 (17) · 3,330 · ~15,470 | 36,030 (20) · 4,170 · ~20,590 | 46,660 (23) · 5,390 · ~24,680 | 56,630 (24) · 7,440 (4) · ~28,890 |
+| 30 | 34,680 (20) · 4,690 · ~22,220 | 50,850 (23) · 5,810 · ~29,410 | 66,080 (26) · 7,550 (4) · ~35,390 | 79,890 (28) · 10,410 · ~41,310 |
+
+Milestone days the Pacing dashboard prints beside the measured medians: **Level 6 / 10 / 16** casual 3 / 7 / 18 · reference 2 / 5 / 12 · regular 2 / 4 / 10 · heavy 1 / 3 / 8; **Rank 2 / 3 / 4** casual 3 / 14 / after 30 · reference 2 / 10 / ~27 (with slices 5–6's FXP, §19.3, §20.2) · regular 2 / 8 / ~22 · heavy 2 / 7 / ~21. Iron held is day 1's figure plus the steady daily income of §5.1 (casual 750, reference 980, regular 1,190, heavy 1,380) with nothing bought; the Economy dashboard's red flag (§23.4) compares the measured median with this row ×3 and ×0.5. Opinion moved a day: casual ~0.8, reference 1.15, regular 1.6, heavy 2.5 (§8).

@@ -487,7 +487,7 @@ The chat: *Jan Sorel has been taken in at Harbour Police · bail 150 Iron · **P
 | §19.1 | Visits pinned: 3 Energy, from anywhere but rival ground, +10 Health and five minutes off, once per visitor per stay, three count, +10 Party XP |
 | §19.2 | Bail posted pinned: the prisoner's figure, from anywhere, once, +10 Party XP, release at once |
 | §25 | Campaign Events at launch: Rally, Canvass Drive, Poster Night and the three signature events; Town Hall at +60 days |
-| Appendix C | New **#57** (hands at Rank 1), **#58** (three starts a city a day as the scale lever), **#59** (Political Capital halving after the first event), **#60** (the fixture at the boundary, not a clock time), **#61** (visits from anywhere), **#62** (volunteers at half strength make a lone member's fixture a Success), **#63** (presence invisible on rival ground); **#7** stays open for the chat-moderation policy (slice 9) |
+| Appendix C | New **#57** (hands at Rank 1), **#58** (three starts a city a day as the scale lever), **#59** (Political Capital halving after the first event), **#60** (the fixture at the boundary, not a clock time), **#89** (visits from anywhere; renumbered 4 Oct 2026 from a duplicate #61), **#62** (volunteers at half strength make a lone member's fixture a Success), **#63** (presence invisible on rival ground); **#7** stays open for the chat-moderation policy (slice 9) |
 
 Companion edit: `docs/economy.md` §20.
 

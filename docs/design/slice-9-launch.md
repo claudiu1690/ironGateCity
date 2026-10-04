@@ -51,8 +51,8 @@ Kept with a help note on the label: the audit, Settings' five labels.
 | Collection | One document per | Kept | Who reads it |
 |---|---|---|---|
 | `telemetry` | event (§2.2): `{ kind, at, dayKey, userId, characterId, sessionId, props }` | 180 days (TTL) | `pnpm report:metrics`, the dev panel's Metrics page, the console's Metrics page |
-| `playerDays` | character × City Day: `{ characterId, dayKey, sessions, firstAt, lastAt, requests, energySpent, taps, wins }` | for good (small: one row per player-day) | retention and sessions-per-day |
-| `cohorts` | sign-up City Day × faction: `{ dayKey, factionId, signups, d1, d7, d30, d1Rolling, d7Rolling, d30Rolling }`, written by the day job | for good | the dashboard's first table |
+| `playerDays` | account × City Day: `{ userId, day, spans[] }` (activity spans at minute precision, a new span after a 30-minute gap; touched at most once a minute); Energy, taps and wins are summed from `telemetry` (settled, §17.1 #23) | for good (small: one row per player-day) | retention and sessions-per-day |
+| *(cohorts)* | **not stored** (settled, §17.6 #1): the report computes retention from `playerDays` and the account's creation day, so exclusions apply retroactively | — | the dashboard's first table |
 
 **Definitions (pinned; GDD §27):**
 - **A player-day** is a City Day (UTC, §2.2) with at least one authenticated request from the account.
@@ -70,7 +70,7 @@ Every event carries `at`, `dayKey`, the account, the character, the session and 
 | `signup.form` | the sign-up form is submitted | `ok`, `reason` (`name`, `email`, `password`, `filter`, `cap`) | the funnel |
 | `origin.step` | each origin answer | `step`, `question`, `answer` | the funnel; build spread |
 | `faction.joined` | the faction confirmed | `factionId`, `wishMatched` | faction balance |
-| `paper.opened` | an edition is opened | `edition` (`welcome`, `daily`, `away`), `daysAway`, `rows` | sessions; the digest's use |
+| `paper.opened` | an edition is opened | `edition` (`welcome`, `daily`), `daysAway` (the away row is a row of the daily edition, not an edition; settled), `rows` | sessions; the digest's use |
 | `screen.view` | a route or sheet opens | `screen`, `from` | *what do I do here?*; dwell |
 | `action.tap` | a tier-1 or training tap | `actionType`, `count` (1 or 3), `energy`, `outcome` tally, `oddsBand`, `rested` | Energy per day; odds bands; ×3 share |
 | `mission.run` | a mission result | `missionId`, `type`, `way`, `outcome`, `remembered`, `runIn`, `caught` | risk; the remembered way |
@@ -81,7 +81,7 @@ Every event carries `at`, `dayKey`, the account, the character, the session and 
 | `stat.placed` | a level point placed | `stat`, `waited` (minutes) | builds |
 | `standing.level` | a Reputation rung | `cityId`, `level` | pacing |
 | `job.taken`, `job.switched` | | `jobId` | income |
-| `vote.cast` | any ballot | `electionKind`, `cityId`, `ownFaction` (bool), `npcChoice` (bool) | voted in the last 5 days; cross-faction ballots |
+| `vote.cast` | any ballot | `electionKind`, `cityId` (nothing of the choice: ADR 0019; the cross-faction share is an aggregate the report computes from `votes`; settled §17.1 #1) | voted in the last 5 days; cross-faction ballots |
 | `candidacy.filed` / `struck` / `seated` | | `office`, `cityId`, `dayInGame` | first seat median; offices held by players |
 | `endorsement.given` | | `cityId` | small-branch rule |
 | `council.vote`, `parliament.vote` | | `item` | engagement with office |
@@ -225,7 +225,7 @@ The GDD's promises: one account per person; accounts on the same network cannot 
 - **One character per account** (built since slice 0) and **one account per person** (the terms). Prevention at sign-up: the email is **normalised** (lower case; for `gmail.com` and `googlemail.com` the dots and any `+tag` in the local part are dropped; `+tags` dropped for every domain) and refused if the normalised form exists: *There's already an account for this email. Sign in instead.*
 - **A device id**: a random 128-bit value in an HttpOnly cookie set on the first visit (one year), recorded on every sign-in. **At most two accounts may ever be created from one device** (a sibling's phone is real); the third is refused: *This phone already has accounts. Sign in instead.*
 - **Sign-up caps per network**: **three accounts per IPv4 /24 (IPv6 /48) per City Day**; the fourth reads *Too many new accounts from here today. Try tomorrow.* The cap and the device rule are the only refusals anyone sees, and neither says why beyond the line.
-- **Rate limits**: Better Auth's on sign-in and sign-up; **60 game mutations a minute per account and 600 a minute per IP**; chat as slice 6; reports and feedback as §5; a miss reads *Slow down a moment.* and the tap is not spent.
+- **Rate limits**: Better Auth's on sign-in and sign-up; **60 game mutations a minute per account and 600 a minute per IP** (per API process; several instances multiply the ceiling, ADR 0069); chat as slice 6; reports and feedback as §5; a miss reads *Slow down a moment.* and the tap is not spent.
 
 ### 4.2 Network data (the audit's inputs)
 
@@ -239,7 +239,7 @@ Two accounts are **linked** when any of:
 - **L2** the same hashed IP on **three or more City Days in the last fourteen**, and **interleaving** on at least three occasions (one account's session ends and the other's begins on that IP within ten minutes), with **no overlap** (no minute in which both were active) on any of those days;
 - **L3** both created on the same device or /24 within 48 hours of each other **and** both voting the same candidate in their first three ballots (a weaker signal: L3 alone is *noted*, never set aside without a moderator).
 
-**A household is not a link:** two accounts on one IP whose sessions **overlap** for ten minutes or more on three days are two people, and L2 never fires for them (L1 can, when they share a phone; then one of them keeps the ballot, which is the rule's price and the reason L1 refuses nothing at the tap). Links are computed **once a day by the day job** and at every count; a link expires when its evidence falls out of the 30-day window and nothing stronger replaced it; a moderator can **unlink** with a note.
+**A household is not a link:** two accounts on one IP whose sessions **overlap** for ten minutes or more on three days are two people, and L2 never fires for them (L1 can, when they share a phone; then one of them keeps the ballot, which is the rule's price and the reason L1 refuses nothing at the tap). **A shared network is not a link either:** an IP-day with more than fifty accounts (a campus, a café chain) gives no L2 evidence (settled, §17.1 #16). Links are computed **once a day by the day job** and at every count; a link expires when its evidence falls out of the 30-day window and nothing stronger replaced it; bursts and L3 consider only accounts created in the last 30 days (#15); a moderator can **unlink** with a note, and **the unlinking is sticky for the kinds unlinked**: only a new kind of evidence re-activates the pair (#9).
 
 A **linked set** is the connected component of links.
 
@@ -251,7 +251,7 @@ A **linked set** is the connected component of links.
 | **Backings** (endorsements, the Chair's and the list's) | A linked set's backings of one name count once; the Political Capital spent stays spent |
 | **Petition signatures** | count once per set |
 | **Hands at an event** | a linked set's hands count once in the members' share (Appendix C #57's lever, applied to links only); the XP is paid as usual |
-| **Posting bail** | pays no Party XP when the payer and the prisoner are linked; otherwise **at most three bails a day pay Party XP** per payer (a cap for everyone) |
+| **Posting bail** | pays no Party XP when the payer and the prisoner are linked; otherwise **at most three bails a day pay Party XP** per payer (a cap for everyone, said on the *Post bail* sheet: *Posting bail pays +10 Party XP, up to three times a day.*); a bail that pays none reads *Party XP · none today* on its receipt in both cases (settled, §17.1 #18) |
 | **Visits** | a linked visitor's visit heals and pays nothing, and does not count among the three |
 | **The Issue's top five, District Hero, the scoreboard** | a linked set's contributions are summed under the set's earliest account for the ranking; the ledger rows stay where they are |
 | **Standing for office** | no rule: a link never bars a candidacy, and a seat won on a count that was later recounted follows the recount (§4.5) |
@@ -261,9 +261,9 @@ Nothing else changes: Energy, Iron, XP, orders, missions, Favour and the Dossier
 ### 4.5 The 24-hour audit (GDD §15.2; the national count of term day 27 → day 0)
 
 1. **At the count** the audit runs automatically: links are recomputed; linked sets' ballots are set aside; **bursts** are noted (five or more accounts created on one /24 within 48 hours that all voted one party), **backing rings** are noted (a set of accounts whose backings go only to each other), and new accounts under the 14-day tenure are already excluded by §15.2. The provisional result is printed (*to be confirmed tomorrow*, slice 7) **with the automatic set-asides already applied**.
-2. **During the 24 hours** the console's Audit page (screens §9.3) shows the count, the set-asides and the notes. A moderator may **confirm now**, **set aside** a noted set (with a reason), **unlink** (with a reason), or **order a recount** of a council counted in the last 24 hours (the audit found a link after that count). Every action is logged.
+2. **During the 24 hours** the console's Audit page (screens §9.3) shows the count, the set-asides and the notes. A moderator may **confirm now**, **set aside** a noted set (with a reason), **unlink** (with a reason), or **order a recount** of a council, district or Clearwater count **made at today's boundary** (the calendar's reading of "the last 24 hours"; settled §17.1 #10). Every action is logged.
 3. **At day 0, if nobody acted, the count confirms itself** with the automatic set-asides (§15.1's rule: nothing an absent person must do blocks anyone). The paper's day-0 line: *The count is confirmed* / *The count is confirmed; {n} votes were set aside after the audit.*
-4. **A recount** of a council is the same count with the set-asides applied; a seat that changes hands passes at once (the loser's term is not completed, the winner's begins and is marked *after a recount* in the count view); the ordinance already in force stands. Council results stay **final at the count** for everyone else (§15.2).
+4. **A recount** of a council is the same count with the set-asides applied; a seat that changes hands passes at once (the loser's term is not completed, the winner's begins and is marked *after a recount* in the count view); **the Governor is recomputed and changes at once** when the seat that changes was the Governor's (#12); the ordinance already in force stands. Council results stay **final at the count** for everyone else (§15.2).
 
 ### 4.6 What a flagged account sees
 
@@ -288,7 +288,7 @@ Not allowed in chat, in names or in a feedback note: harassment of a player; rea
 
 ### 5.2 Reports
 
-- **From a chat line** (long press, or the row's **Report this**) and **from a profile** (the sheet's text button **Report this name**). One sheet: four reasons as rows (***Abuse or harassment*** · ***Real-world politics or hate*** · ***Spam or selling*** · ***Something else***, with a line of at most 200 characters for the last), one tap sends. The reporter reads ***Thanks. Someone will read it.*** A report writes `chatReports` (slice 6: the line and twenty lines around it, no TTL) or `nameReports`.
+- **From a chat line** (long press, or the row's **Report this**) and **from a profile** (the sheet's text button **Report this name**). One sheet: four reasons as rows (***Abuse or harassment*** · ***Real-world politics or hate*** · ***Spam or selling*** · ***Something else***, with a line of at most 200 characters for the last), one tap sends. The reporter reads ***Thanks. Someone will read it.*** A report writes one `reports` queue (slice 6's `chatReports` generalised, ADR 0065): the line with **up to twenty lines before it and the lines after it that exist at the time of the report, at most forty** (settled, §17.1 #11), or the name; **kept 365 days after resolution, unresolved for good** (#24). A muted player may report; a suspended one cannot; a suspended player's lines can still be reported (#13).
 - **At most ten reports a day** per account; the eleventh reads *That's enough for today. Thank you.* An account whose reports are found baseless three times in a week goes to the bottom of the queue (no visible state).
 - When a report leads to an action the reporter's next paper carries one Letters row: ***A line you reported was dealt with.*** Nothing more.
 
@@ -299,7 +299,7 @@ Not allowed in chat, in names or in a feedback note: harassment of a player; rea
 | **A note from the editor** | a Letters row in the paper naming the rule, in the paper's voice (screens §7) | a moderator | — |
 | **Muted** | cannot post in chat or send feedback; reading and everything political untouched | a moderator | 24 hours, then 7 days |
 | **Suspended** | cannot sign in to play; nothing owned is touched (Energy fills, Rested banks, the wage lands, rent runs, a flat waits); an office's duties fall to the §15.1 defaults; a name on a ballot stays on it | a moderator | 3 days, then 14 |
-| **Closed** | cannot sign in; the character is **retired**: offices vacated as by a move, candidacies withdrawn, chat lines kept for 7 days as any line, old editions unchanged; after 30 days the name becomes *A former member* on every list and the email is erased | an admin, or two moderators | for good |
+| **Closed** | cannot sign in; the character is **retired**: offices vacated by kind (a council seat as by a move; the Governor to the bloc's top local; the Chair as a change of Chair, the secretary's orders and lines until the next election; a deputy's seat to the next unseated name on the party's list, else a local; the President to the runner-up, as a removal; settled §17.1 #2), candidacies withdrawn, open sign-ups withdrawn with the Energy spent, chat lines kept for 7 days as any line; after 30 days the name becomes *A former member* on every list **and in printed editions** (#3) and the email is erased | an admin, or two moderators | for good |
 
 The ladder is the ordinary path; **real-world hate or extremist content goes straight to 14 days, and a second time to closure**; vote-buying to 3 days; evading a suspension to closure. A rung's reason is one of the policy's lines, never free text to the player.
 
@@ -310,7 +310,7 @@ The ladder is the ordinary path; **real-world hate or extremist content goes str
 - **At sign-up and on every rename** the name is checked against the lists (§5.6) after folding: lower case, diacritics removed, leet folded (`0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a, $→s, |→l`), repeated letters collapsed, spaces and punctuation removed for the match. Refused with ***That name can't be used. Try another.*** The 2–40 rule (§7.3) stands.
 - **Impersonation**: the names of every NPC in content (the secretaries, patrons, local candidates, deputies), *moderator*, *admin*, *editor*, the mastheads and the paper names are refused as a whole word or as the whole name.
 - **Change your name** (the Me tab, screens §4): **once every 30 days**, free; the HUD, lists, the count and the ledger show the new name at once; **editions already printed keep the old one** (a newspaper is a record). A player who was renamed by a moderator may still use their own change.
-- **A forced rename**: a moderator marks the account; the next sign-in shows the rename sheet before anything else with the reason (*It breaks the rule on real-world politics* / *It matches a name the game uses* / *It's abusive*); until it is done the name shows as *A Newcomer* (§7.3's fallback) everywhere. Accounts made before this slice are checked once by a migration and marked if they fail.
+- **A forced rename**: a moderator marks the account; the next sign-in shows the rename sheet before anything else with the reason (*It breaks the rule on real-world politics* / *It matches a name the game uses* / *It's abusive*); until it is done the name shows as *A Newcomer* (§7.3's fallback) everywhere, **printed editions and national lines included** (a forced rename and an erasure scrub print; one's own change does not; settled §17.1 #3). Accounts made before this slice are checked once by a migration and marked if they fail.
 
 ### 5.5 Closing an account (the player's own)
 
@@ -327,7 +327,7 @@ Names use the refuse list and the impersonation list. The filter is a pure funct
 
 ### 5.7 The console (screens §9)
 
-Route `/mod`, for users with `role: 'moderator' | 'admin'` (server-checked on every procedure; the role lives on the user, set by an admin in the console or by the seed for the first admin). Four pages: **Queue** (reports: *New · In review · Dealt with · No action*; the line, its context, the reporter's reason, the account's rung history; the ladder's buttons), **Audit** (§4.5), **Accounts** (search by name or email; the page: the character's public profile, the rung history, notes, links as *same device* / *same network*, the buttons: note, mute, suspend, close, rename, unlink, and *leave a note for other moderators*), **Log** (every action with who and why; exportable). Moderators may play; their characters are left out of every report and figure; **a moderator never acts on a report about their own faction's member alone**: such an item needs a second moderator or an admin (at two moderators this means the admin). The gate: **the queue's median time to first action under 24 hours** through the closed beta (§9.4).
+Route `/mod`, for users with `role: 'moderator' | 'admin'` (server-checked on every procedure; the role lives on the user, set by an admin in the console or by the seed for the first admin). Four pages: **Queue** (reports: *New · In review · Dealt with · No action*; the line, its context, the reporter's reason, the account's rung history; the ladder's buttons), **Audit** (§4.5), **Accounts** (search by name or email; the page: the character's public profile, the rung history, notes, links as *same device* / *same network*, the buttons: note, mute, suspend, close, rename, unlink, and *leave a note for other moderators*), **Log** (every action with who and why; exportable). Moderators may play; their characters are left out of the telemetry figures (their ballots, backings and contributions count as anyone's; settled §17.1 #14); **a moderator never acts on a report about their own faction's member alone**: such an item needs a second moderator or an admin (at two moderators this means the admin). The gate: **the queue's median time to first action under 24 hours** through the closed beta (§9.4).
 
 ---
 
@@ -371,7 +371,7 @@ There is no tutorial screen and this slice adds none (§7.5). The audit plays th
 
 ### 6.6 *While you were away* (GDD §3.3, §4.2; deferred since slice 3)
 
-Built now. After **two or more City Days** away the paper opens with a **While you were away** row above the headlines: *{n} days. {The republic's one line}. {Your city's one line: an election counted, a rule in force, the morale word}. {Your branch's one line: events, a seat won}. {Yours: the wage banked ({iron} Iron), Rested {n}, letters waiting}.* Four lines at most, each from the existing paper templates; a tap opens the full digest (the editions missed, folded by day). After **30 or more days** Rested is **filled to the cap** at the first read (the §4.2 promise; the returning chapter stays post-MVP) and the row's first line reads *Welcome back.* Being away costs opportunity, never assets; the row shows what was banked, not what was missed.
+Built now. After **two or more City Days** away the paper opens with a **While you were away** row above the headlines: *{n} days. {The republic's one line}. {Your city's one line}. {Your branch's one line}. {Yours: the wage banked ({iron} Iron), Rested {n}, letters waiting}.* Four lines at most, each from the existing paper templates, by priority (settled, §17.1 #17): the republic: a President seated, a law in force, a national count, a season; the city: the council count with a seat for the branch, a rule in force, the morale word's change, an Issue resolved; the branch: seats won by members, then events by outcome. A tap opens the full digest, **built at read from the world's own records by day** (counts, laws, rules, Issues, events, seats, the republic's lines): a character away has no editions for the missed days, since an edition is printed only at a settlement (ADR 0071). After **30 or more days** Rested is **filled to the cap** at the first read (the §4.2 promise; the returning chapter stays post-MVP) and the row's first line reads *Welcome back.* Being away costs opportunity, never assets; the row shows what was banked, not what was missed.
 
 ### 6.7 Small fixes from the reviews that are still open
 
@@ -404,7 +404,7 @@ A CI job runs **axe** over every route and sheet on the matrix (360 × 640, 375 
 
 ## 8. Performance budgets
 
-Measured on a Pixel 7 profile at 4G (165 ms RTT, 8.1 Mbit/s) with a 4× CPU slowdown, and on a 1440 × 900 desktop, as ADR 0024 measured the maps; recorded by a `pnpm report:perf` run in CI (Lighthouse CI with budgets, plus the Playwright byte counters already in `arrival.spec`). Each budget has a floor the slice meets and a target for launch.
+Measured on a Pixel 7 profile at 4G (165 ms RTT, 8.1 Mbit/s) with a 4× CPU slowdown, and on a 1440 × 900 desktop, as ADR 0024 measured the maps; recorded by a `pnpm report:perf` run in CI (**Playwright with CDP throttling** for LCP, an INP proxy, bytes and image memory, plus a bundle script for gzip per chunk; no Lighthouse CI, settled §17.6 #7; the byte counters already in `arrival.spec` stay). Each budget has a floor the slice meets and a target for launch.
 
 | Budget | Must (closed beta) | Target (launch) | How |
 |---|---|---|---|
@@ -496,11 +496,11 @@ Everything earlier tech designs and ADRs deferred, in the order it is done. The 
 
 | # | Item | Owner | Source |
 |---|---|---|---|
-| 1 | **GitHub remote** with Actions on; CI green on main (`lint`, `typecheck`, `test`, `e2e`, `art:check`, `report:perf`, axe) | user, developer | `docs/tech/slice-0.md` §18 |
+| 1 | **GitHub remote** with Actions on; CI green on main (`lint`, `typecheck`, `test`, `e2e`, `art:check`, `report:perf` through Playwright, the `a11y` axe project) | user, developer | `docs/tech/slice-0.md` §18 |
 | 2 | **A domain**: `play.<domain>` (client), `api.<domain>` (API, same site), `tiles.<domain>` (R2); this is ADR 0001's **option B**, now required because the chat socket cannot pass a Vercel rewrite | user | ADR 0001, ADR 0038, `slice-6.md` §8.5 |
 | 3 | **MongoDB Atlas**: the cluster (M0 to start; **verify change streams on the tier**, or go to M10), a database user, the network allow list for the API's egress, backups on, `MONGODB_URI` with `retryWrites=true&w=majority`; the term epoch is a code constant and needs nothing (ADR 0043) | user, architect | `slice-0.md` §12, §18; ADR 0038; `slice-7.md` §21 #1 |
 | 4 | **The API and the worker** on Railway or Fly: two services from `apps/server/Dockerfile` (`node dist/index.js` with `/healthz`; `node dist/worker.js`), env from `env.ts` (`NODE_ENV=production`, `DB_MODE=mongo`, `BETTER_AUTH_SECRET`, `PUBLIC_ORIGIN=https://play.<domain>`, `SENTRY_DSN`, the moderation salt, the first admin's email), `trustProxy`, the health check path; **the worker is a real second process** (quiet cities are only counted by it) | user, developer | `slice-0.md` §12, §18; `slice-3.md` §20 |
-| 5 | **The client on Vercel**: root `apps/client`, Vite; `vercel.json` with the `/api` rewrite **removed** under option B (the client calls `api.<domain>` directly; Better Auth's cookie on `Domain=.<domain>`, `SameSite=Lax`, `Secure`); the SPA fallback; the `/art/` immutable cache header; preview deploys on branches with `trustedOrigins` for `*.vercel.app` or previews pointed at a staging API | user, developer | ADR 0001, ADR 0007, `slice-1.md` §12 |
+| 5 | **The client on Vercel**: root `apps/client`, Vite; `vercel.json` with the `/api` rewrite **removed** under option B (the client calls `api.<domain>` directly; Better Auth's cookie on `Domain=.<domain>`, `SameSite=Lax`, `Secure`; the direct-origin mode is built and tested locally in lane C, so this is a configuration switch, ADR 0072); the SPA fallback; the `/art/` immutable cache header; preview deploys on branches with `trustedOrigins` for `*.vercel.app` or previews pointed at a staging API | user, developer | ADR 0001, ADR 0007, `slice-1.md` §12 |
 | 6 | **The socket**: Socket.IO on the API origin, `transports: ['websocket']` (no sticky sessions); one change stream per API instance; tested from the hosted client | developer | ADR 0038 |
 | 7 | **Tiles on R2**: the bucket, `tiles.<domain>` on Cloudflare, `pnpm art:publish` (S3 API, credentials from the environment), `VITE_TILES_ORIGIN` set, the stills as the fallback; the repaint rule (a repainted master gets a new asset id or file name) | user, developer | ADR 0024; `maps-v3-integration.md` §8 Q2, §9.2 |
 | 8 | **Email**: a transactional provider (password reset, the appeal's answer, the closure notice); Better Auth's reset flow pointed at it; a sender address on the domain | user, developer | new (Better Auth's email/password needs it in production) |
@@ -553,9 +553,9 @@ Nothing in this slice adds a tap to play. A report is two taps; a rename three (
 7. **The filter.** Default: a new `packages/moderation` (pure; `check(text): 'ok' | 'refuse' | 'flag'`, `foldName(name)`, the lists as JSON outside content), used by `chat.post`, sign-up, rename, the report's free line and the feedback form; the QA vocabulary guards do not read its lists.
 8. **Renames.** Default: `characters.name` updated with `renamedAtDay`; `paperEntries` are not rewritten (editions are a record); every live view reads the character's name; the forced rename is `users.moderation.renameRequired` checked by the client's root route.
 9. **Damping.** Default: `cities.active7` (and per district) written by the day job from the ledger's distinct contributors over seven days; `swingFactor(active)` in `packages/rules`; applied in the opinion write of ADR 0022 and recorded on the ledger row as `damped`.
-10. **The digest.** Default: `While you were away` is built at read from the missed editions' entries (`paperEntries` by day) and the live political rows, folded by the templates' priority; nothing stored; the 30-day Rested fill is a flag on the character's settlement (`awayFilledDay`).
+10. **The digest.** Default: `While you were away` is built at read from the world's records by day (counts, laws, rules, Issues, events, seats, the republic's lines; a character away has no editions for the missed days, settled §17.6 #6) and the live political rows, folded by the templates' priority; nothing stored; the 30-day Rested fill happens once by the settlement's own day guard.
 11. **Settings.** Default: `characters.settings { motion, textSize, mapNight, clouds, chatHidden }` (chat's hidden flag moves here from `chat.hidden`), unversioned like mutes; applied by the client as data attributes on the root; the server reads none of them.
-12. **Performance and accessibility in CI.** Default: Lighthouse CI on the paper, the city and the sign-up form with the §8 budgets; axe through Playwright on every route in the matrix; `report:perf` prints both; a budget over its *must* fails CI, over its target warns.
+12. **Performance and accessibility in CI.** Default: Playwright with CDP throttling on the paper, the city and the sign-up form against the §8 budgets (no Lighthouse CI; settled §17.6 #7); axe through Playwright on every route in the matrix; `report:perf` prints both; a budget over its *must* fails CI, over its target warns.
 13. **Account closure.** Default: `auth.closeAccount` (typed `CLOSE`), `users.closingDay`; the erasure job after 30 days replaces the name on the character with `A former member`, drops the email and the sightings, keeps the character document (retired) for the world's integrity (ledger rows, old counts).
 14. **The beta's seeded testers.** Default: the slice-3 admin boost script, run by hand against Atlas, flags the six as `boosted` so the report leaves them out of retention and pacing but keeps them in the political rows.
 
@@ -592,3 +592,85 @@ Optional, if the user wants the audit to have a face: `scene.count-room` (a town
 10. **Settings has five lines** (§7): Motion, Text size, Map at night, Clouds, Chat. Default: **five**, no more; a high-contrast theme is a later option if the contrast pass finds a need.
 11. **The gates** (§9.4): D7 ≥ 30 % in the closed beta to open; D7 ≥ 35 % and D30 ≥ 20 % to launch. Default: **as written**, a little under §27's 38 / 22 for an unpolished beta; the user may hold the line at 38 / 22.
 12. **The optional count-room scene** (§15). Default: **not drawn**; the audit's pages use type and the court scene.
+
+---
+
+## 17. Settled for the build (4 Oct 2026; answers to `docs/tech/slice-9.md` §22.1 and §23)
+
+The architect's defaults are accepted except Q2 (the deputy's seat follows slice 7's list rule), Q18 (one public line makes the cap honest) and Q22 (the model rows are written now, not later). Every change to this document's earlier sections was applied in the same change (the lines are named). **Numbers that moved:** none. **Rules that moved:** a forced rename and an erasure scrub printed editions (one's own change still does not); the national audit's "last 24 hours" is read as *counted at today's boundary*; a shared network over fifty accounts gives no link evidence.
+
+### 17.1 The twenty-four questions
+
+| # | Decision | Where it now lives |
+|---|---|---|
+| 1 | **`vote.cast` carries `electionKind` and `cityId` only.** The cross-faction share is an aggregate the report computes from `votes` by faction pair, never per voter (ADR 0019 keeps the choice in `votes` alone) | §2.2 |
+| 2 | **Vacating at closure, by office:** a council seat as by a move (the branch's next local); **the Governor** to the bloc's top local (dissolution's rule); **the Chair** is a change of Chair (no player Chair until the next election; the standing orders, the party's rules and the fixtures revert to the secretary's, slice 7 §23.1 #22); **a deputy's seat** to the next unseated name on the party's list, else a local deputy (slice 7 §23.1 #13's rule; the architect's "to the local deputies" is its fallback); **the President** to the runner-up, as a removal. A suspension vacates nothing | §5.3, §5.5; GDD §16.2 |
+| 3 | **A forced rename and an erasure scrub printed editions and national lines**; one's own change keeps them. A newspaper is a record of what was done, not of a name that broke the rules or a person who asked to be forgotten | §5.4, §5.5; GDD §7.3 |
+| 4 | **Five suspension reasons**, the player's lines in full in §17.2 (the fifth: *Something you wrote was spam or selling.*); the three rename reasons beside them | §17.2; screens §6.1, §7 |
+| 5 | **The invitation code**: strings in §17.3 | §17.3; screens §16 |
+| 6 | **Password reset**: strings in §17.4; built with the console mail sink, the provider at lane D | §17.4; screens §16 |
+| 7 | **The terms line** under the sign-up button: ***By signing up you accept the rules and say you're 16 or older.*** with *the rules* and *privacy* as links; no checkbox; the version stored | §17.3; GDD §7.3 |
+| 8 | **Damping is never named to a player**: the applied swing shows as today; the factor is a dev-only row of the breakdown | §3.3 |
+| 9 | **Unlinking is sticky for the kinds unlinked**; a new kind of evidence re-activates the pair | §4.3 |
+| 10 | **A council recount is allowed for a count made at today's boundary** (the design's "last 24 hours" in the calendar's own words); the national audit's day 27 can recount the councils counted at the same boundary | §4.5 |
+| 11 | **A report's context is up to twenty lines before it plus the lines after it that exist at the time of the report, at most forty** (screens §9.1 said "above and below"; the lines below may not exist yet) | §5.2; screens §9.1 |
+| 12 | **A recount that changes the Governor changes the Governor at once**, like the seat | §4.5 |
+| 13 | **A muted player may report; a suspended one cannot** (no play procedure); a suspended player's lines can still be reported | §5.2, §5.3 |
+| 14 | **Moderators' characters are left out of telemetry figures only**; their ballots, backings and contributions count as anyone's (§5.7 reworded) | §5.7 |
+| 15 | **Bursts and L3 consider only accounts whose sign-up row is still kept** (the last 30 days) | §4.3, §4.5 |
+| 16 | **An IP-day with more than fifty accounts is a shared network and gives no L2 evidence.** The sign-up cap (three a day per /24) still applies there; Appendix C #84's lever (raise to five) is the answer if a campus is refused | §4.3 |
+| 17 | **The away row's priority per scope, confirmed:** republic: a President seated, a law in force, a national count, a season; city: the council count with a seat for the branch, a rule in force, the morale word's change, an Issue resolved; branch: seats won by members, then events by outcome; yours: the wage, Rested, letters. Each uses its existing template | §6.6 |
+| 18 | **Not the default alone.** The receipt line when bail pays no Party XP is ***Party XP · none today*** for both cases, as the architect proposed; **and** the *Post bail* sheet's Courier line says the cap for everyone: ***Posting bail pays +10 Party XP, up to three times a day.*** So the fourth bail's *none today* is explained by a public rule and a linked pair's by the same line, with no message about links | §4.4; slice-6 screens' *Post bail* sheet (one Courier line added) |
+| 19 | **Event hands in a linked set: the earliest sign-up counts in the members' share; all are paid** | §4.4 |
+| 20 | **The feedback week is the player's own**, `floor((today − join day) ÷ 7)`, which is what the day-7 / 14 / 21 / 28 prompts already assumed | §9.3 |
+| 21 | **A purpose line's first act**, confirmed as the architect's list: the map a pin; a place a ticket; the paper any tap; the Me tab any row; the Faction tab the tab's first control; the council and Parliament a vote or a name; Settings a chip; the other screens their main button | §6.2 |
+| 22 | **Not the default's timing.** The model rows are content (`data/model.ts`) as the architect says, **and the rows for days 1–30 are written now** in `docs/economy.md` §23.7 from the sheet's existing tables (XP and Level, FXP and Rank, Iron held, per profile), so the dashboards show *modelled* from the first local playtest; the 48-run matrix refines them when it runs | `economy.md` §23.7 |
+| 23 | **`playerDays` holds activity spans and active minutes only**; Energy, taps and wins are summed from telemetry | §2.1 |
+| 24 | **Reports are kept 365 days after resolution; unresolved reports are kept** | §5.2 |
+
+### 17.2 The reasons (`copy.moderation.reasons`; the player reads these on the suspended screen, in the editor's note and on the rename sheet)
+
+| Id | The player reads | Where |
+|---|---|---|
+| `realWorld` | *A line you wrote broke the rule on real-world politics.* | suspended, note |
+| `abuse` | *Something you wrote went after another player.* | suspended, note |
+| `voteBuying` | *Something was offered for a vote.* | suspended, note |
+| `evasion` | *Another account was used to get round a mute.* | suspended |
+| `spam` | *Something you wrote was spam or selling.* | suspended, note |
+| `name.realWorld` | *It breaks the rule on real-world politics.* | the rename sheet |
+| `name.impersonation` | *It matches a name the game uses.* | the rename sheet |
+| `name.abusive` | *It's abusive.* | the rename sheet |
+
+The editor's note (screens §7) carries the rule's line, not the reason's: *Real-world politics, parties and slogans stay outside the game's. The factions here are the game's own.* · *Keep it about the game: no going after other players.* · *Nothing is offered for a vote here, not Iron, not favours.* · *Links and selling stay out of the room.*
+
+### 17.3 Sign-up: the invitation code and the terms line
+
+- **Label:** *Invitation code* · **help line** (Courier, under the field): *The game is by invitation for now. Paste the code from your invitation.*
+- **Refused:** *That code isn't right, or it's been used.* · **blank:** *You need an invitation code for now.*
+- **The terms line** under the button, Courier 12 px: *By signing up you accept **the rules** and say you're 16 or older. **Privacy.*** (*the rules* → `/terms`; *Privacy* → `/privacy`). No checkbox. The version accepted is stored on the user.
+
+### 17.4 Password reset
+
+| Step | Strings |
+|---|---|
+| The login form | a text link under the button: ***Forgot your password?*** |
+| The request sheet | title *A new password* · field *Your email* · button **Send the link** · after sending, whatever the email: *If there's an account for that email, a link is on its way. It's good for an hour.* |
+| The email | subject *Irongate City: a new password* · body: *Someone asked for a new password for this account. If it was you, follow the link below within the hour. If it wasn't, ignore this and nothing changes.* · the link · *— The editor* |
+| The link's page | title *Choose a new password* · field *New password* with the rule under it (*At least 8 characters.*) · button **Save and sign in** · the error lines: *Your password needs at least 8 characters.* · *That link has expired. Ask for another.* (with the link *Forgot your password?*) |
+| Done | signed in; a toast *Password changed.* |
+
+### 17.5 The not-found page (tech §23 #13)
+
+Route-level, the paper's look, no HUD: Playfair ***Nothing printed here.*** · body *The page you asked for isn't in this edition.* · a button **To the city** (or **Sign in** when signed out). A typed `/mod` by a player lands here.
+
+### 17.6 The twenty-one notes (`docs/tech/slice-9.md` §23)
+
+1. `cohorts` is computed, not stored: §2.1 corrected. 2. `playerDays` spans only: §2.1 corrected (Q23). 3. `vote.cast`: Q1. 4. **`paper.opened` carries `edition: 'daily'` with `daysAway`**; *While you were away* is a row, not an edition: §2.2 corrected. 5. The device cookie by an `onRequest` hook: accepted. 6. **A character away has no editions for the missed days**; the digest reads the world's records by day: §6.6 and §13 Q10 corrected. 7. **No Lighthouse CI**: `report:perf` through Playwright with CDP throttling and the axe project; §8, §10 #1 and §13 Q12 corrected. 8. The one-minute touch: accepted. 9. Slice 8's T16 line: noted; slice 9 builds the row and the season line is one of its republic facts. 10. **Damping's *active* counts characters with solo, mission or event ledger rows**: GDD §14.2 says so. 11. **GDD §15.2's first sentence** now states the link rule and the household exception. 12. The per-IP limit is per API process: §4.1 says so. 13. The not-found line: §17.5. 14. The context: Q11. 15. The reasons: Q4. 16. Backings' Political Capital stays spent: confirmed. 17. The p95 from in-process histograms: accepted. 18. The production refusal of test hooks in T8: accepted. 19. **The plan's slice-9 row** is written as the architect lists it (`docs/IMPLEMENTATION_PLAN.md` §5). 20. `report:perf` and axe in place of Lighthouse: corrected. 21. The direct-origin mode built locally, lane D switching configuration: accepted; §10 #5 says so.
+
+### 17.7 For the user (tech §22.2; defaults taken by the designer until the user says otherwise)
+
+No opt-out switch for usage figures (first-party, no free text; the privacy note says so) · `@axe-core/playwright` as the one new dev dependency · retention periods as listed (telemetry 180 days, network data 30, feedback and editor notes 90, reports 365 after resolution, the log for good with names erased) · Atlas M10 at lane D (or sampling `screen.view` on the free tier) · any mail provider with an HTTP API · a person's data on request by an admin, by hand · email verification off for the closed beta, on for the open · who holds database access is the user's operational control · clearing cookies resets the device count, accepted.
+
+### 17.8 For QA
+
+No new vocabulary allowance. The eight reason lines, the invitation and reset strings and the not-found line contain no system term; *audit*, *moderators*, *editor*, *suspended*, *closed*, *muted* are allowed as §1.1 lists them. The *Post bail* sheet's new Courier line names a number (three) and no rule by its system name.

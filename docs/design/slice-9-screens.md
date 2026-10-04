@@ -79,7 +79,7 @@ Both replace the app after sign-in; the HUD is not shown; nothing else is reacha
 `ArtHeader` with `court.png` (the court's stone steps, no symbol) cropped to 180 px; the stamp **SUSPENDED** in the ink tone across its lower edge; then on paper:
 
 - Playfair 22 px: ***Suspended until {weekday} {d Month}***
-- Body 15 px: *{Reason}.* (one of the policy's lines: *A line you wrote broke the rule on real-world politics.* / *Something you wrote went after another player.* / *Something was offered for a vote.* / *Another account was used to get round a mute.*)
+- Body 15 px: *{Reason}.* (one of the policy's lines: *A line you wrote broke the rule on real-world politics.* / *Something you wrote went after another player.* / *Something was offered for a vote.* / *Another account was used to get round a mute.* / *Something you wrote was spam or selling.*; design §17.2)
 - Courier 12 px, three lines: *Nothing of yours is touched. Your Energy fills, Rested banks, your wage lands, your rent runs. Any office you hold falls to its usual stand-in until you're back.*
 - Buttons: **Reply to the moderators** (§6.2) · text **The rules** · text **Sign out**.
 
@@ -126,7 +126,7 @@ Route `/mod`, for `role: moderator | admin` only; a player who types it sees the
 
 The list: one row per report, 64 px: the reason as a kicker (**ABUSE** · **REAL-WORLD** · **SPAM** · **OTHER** · **FILTER** for a flagged line · **VOTE-BUYING** for the pattern), the first 60 characters of the line, the reported name, the reporter's name, the age (*2 h*), and the state as a small word at the right: ***New*** (ink) · ***In review*** (the Alliance blue) · ***Dealt with*** · ***No action*** (both paper-3). Filters along the top: state, reason, faction, *older than a day*. Sort: oldest first. A row with a second-pair-of-eyes need (a report about the moderator's own faction's member) carries a Courier line *Needs another moderator*.
 
-The card: the line in a paper-2 box with its **twenty lines of context** above and below (the reported one marked), the channel and the time; the reporter's reason and free line; the reported account's **rung history** (*Note · 2 Oct · real-world* …) and its **notes** (a link found, a burst); the reporter's standing (*3 reports this week · 1 baseless*). Buttons in a row, 44 px: **Take it** (→ *In review*, your name on it) · **No action** · **Note** · **Mute 24 h** · **Mute 7 d** · **Suspend 3 d** · **Suspend 14 d** · **Close** (admin, or a second moderator's confirm) · **Rename**. Every sanction opens a one-line confirm with the **reason picker** (the policy's lines, one tap; the player reads this line) and an optional note for the log. *Dealt with* is set by any sanction; the reporter's paper line is queued.
+The card: the line in a paper-2 box with its context (**up to twenty lines before it and the lines after it that existed when it was reported, at most forty**; the reported one marked), the channel and the time; the reporter's reason and free line; the reported account's **rung history** (*Note · 2 Oct · real-world* …) and its **notes** (a link found, a burst); the reporter's standing (*3 reports this week · 1 baseless*). Buttons in a row, 44 px: **Take it** (→ *In review*, your name on it) · **No action** · **Note** · **Mute 24 h** · **Mute 7 d** · **Suspend 3 d** · **Suspend 14 d** · **Close** (admin, or a second moderator's confirm) · **Rename**. Every sanction opens a one-line confirm with the **reason picker** (the policy's lines, one tap; the player reads this line) and an optional note for the log. *Dealt with* is set by any sanction; the reporter's paper line is queued.
 
 ### 9.2 Accounts (`AccountPage`)
 
@@ -220,3 +220,15 @@ On 375 × 667: Settings shows the title and four rows above the fold (the fifth 
 Every string above goes to `copy.ts` under `settings`, `report`, `rename`, `moderation` (the player-facing rungs and reasons), `feedback`, `away`, `maintenance`, `closeAccount`, `purpose`, `empty`, `audit`; the console's strings under `mod`. The policy's twenty lines are a content file (`policy.ts`) rendered at `/policy` and in the sheet. The reasons a moderator can pick are the same `copy.moderation.reasons` the player reads, so no free text ever reaches a player.
 
 Alt texts (≤ 160; existing pictures, written against them): `court.png` on the suspended screen: *The stone steps and columned doorway of a courthouse at dusk, the doors shut, a lamp lit above them.* · `station.png` on the closed and maintenance screens: *A railway platform at night under a glass roof, the last train standing with its lamps lit and nobody boarding.* · `newsroom.png` on the editor's note and the form: *A newspaper office at night: desks under hanging lamps, a typewriter, galley proofs pinned to a board.* · `ministry.png` behind the console's band: *A ministry's grey façade with tall windows and a flag-less pole, seen from the street in rain.*
+
+---
+
+## 16. Settled for the build (4 Oct 2026; `docs/design/slice-9-launch.md` §17)
+
+- **§6.1's reasons are five**: the four written plus *Something you wrote was spam or selling.*; the full table, with the three rename reasons, is design §17.2.
+- **§9.1's context** reads *up to twenty lines before it and the lines after it that existed when it was reported, at most forty*.
+- **The sign-up form** gains, while invite mode is on, an *Invitation code* field above the button with its help line, and under the button the terms line; **the login form** gains *Forgot your password?* and its two sheets (design §17.3, §17.4). Layout: on 375 × 667 the fields and the button stay above the fold with the keyboard down; the terms line may sit under the fold.
+- **The not-found page** (design §17.5): the paper's look, no HUD, one button.
+- **The *Post bail* sheet** (slice 6 screens §2.3) gains one Courier line: *Posting bail pays +10 Party XP, up to three times a day.*; a bail that pays none shows *Party XP · none today* on its receipt.
+- **The suspended screen's office line**, when the player holds any office: *Your {office} is kept for you; its duties fall to the usual stand-in until you're back.* (a suspension vacates nothing).
+- **The closed screen** for a moderator's closure adds nothing; a self-closure's variant is as written in §6.3.
