@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). **Slice 5** ("Risk"): tier-2 rates and the difficulty ladder, Heat's budget, run-ins by build, the caught check and the record, the cells and the infirmary, rival ground, the new PC sink (§19). **Slice 6** ("Together"): Campaign Event roles against the tier rates, the fixture's floor on a city's opinion, Political Capital from events, favours as sinks (§20). **Slice 7** ("The nation"): stipends, the top's Political Capital, the laws' worth, Clearwater (§21). **Slice 8** ("A life in the city"): the Wardrobe's prices against income, the Dossier's arithmetic, Favour's pace, the flat, Legacy, the season score (§22). Grows one slice ahead of the build |
+| **Scope** | Slice 1 ("The 5-minute session"): tier-1 actions, jobs, Rested, Directives, levels, Standing. Slice 2 ("Arrival"): the origin's stats, the FXP seed, the coat, Ambition chapter 1 and the welcome set (§13). Slice 3 ("The first vote"): the election calendar against the day-2 target, the first PC sinks, councillors' FXP, the ordinance effects on income, and morale (§14). Slice 4 ("The battleground"): tickets, the move and the room as the first Iron sinks, the capital resident's day (difficulty 10, the Battleground bonus, Standing restarted, the job without its fifth), Issue and hero PC (§15). **Review 1** (30 Sep 2026): the job as a wage with seniority, the *First day* bonus, best-stat checks, the new slot-C order, *One of Us* PC (§16). **Slice 5** ("Risk"): tier-2 rates and the difficulty ladder, Heat's budget, run-ins by build, the caught check and the record, the cells and the infirmary, rival ground, the new PC sink (§19). **Slice 6** ("Together"): Campaign Event roles against the tier rates, the fixture's floor on a city's opinion, Political Capital from events, favours as sinks (§20). **Slice 7** ("The nation"): stipends, the top's Political Capital, the laws' worth, Clearwater (§21). **Slice 8** ("A life in the city"): the Wardrobe's prices against income, the Dossier's arithmetic, Favour's pace, the flat, Legacy, the season score (§22). **Slice 9** ("Launch readiness"): the balance pass (the 48-run matrix across days 1–30, the comparison rule, the opinion damping factor, the levers and their bounds; §23). Grows one slice ahead of the build |
 | **Sources** | GDD §5.2–5.5, §6.2–6.3, §6.5, §7.2–7.5, §8.4–8.5, §9, §13.3–13.4, §13.7, §14.2, §14.11, §15.1–15.3, §15.4, §15.10, §17.1, §18, §21.4; content in `docs/design/slice-1-content.md`, `slice-2-onboarding.md`, `slice-2-cities.md`, `slice-3-politics.md` |
 | **Method** | A day-by-day model of four player profiles (script in the game designer's scratch space; the tables below are its output, rounded). Re-run whenever a rate changes |
-| **Updated** | 4 Oct 2026 (slice 8, §22 added: the Wardrobe's prices against income, Dossier sales, Favour's pace, the flat, Legacy, the season score); 3 Oct 2026 (slice 6, §20 added: events, the fixture, favours); 3 Oct 2026 (slice 5, §19 added); 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
+| **Updated** | 4 Oct 2026 (slice 9, §23 added: the balance pass, the damping factor, the levers); 4 Oct 2026 (slice 8, §22 added: the Wardrobe's prices against income, Dossier sales, Favour's pace, the flat, Legacy, the season score); 3 Oct 2026 (slice 6, §20 added: events, the fixture, favours); 3 Oct 2026 (slice 5, §19 added); 30 Sep 2026 (review 1, §16 added; §1, §4, §5.1, §11, §14.4 and §15.3 carry a note where the shift was) |
 
 Every number the model uses is a GDD number. Where the GDD left a number open it was pinned in this change and is marked **pinned**.
 
@@ -905,3 +905,50 @@ Dressing is one tap; a shop is one tap on a place the player is at; a Case File 
 | 80 | No track, no twist | The clocks are not enough | Build the free track |
 | 81 | +100 per election | The Champion is always the party with the most Presidents | 50; or 200 if elections never move it |
 | — | Dossier sales as income (100–300 a day) | Iron inflates for a seller who never exposes | Halve the entry price (25 / 12); never the file's |
+
+---
+
+## 23. Slice 9: the balance pass
+
+Rules: `docs/design/slice-9-launch.md` §3; GDD §5.2, §14.2, §27. Slice 9 adds **no rate, no price and no political right**. It adds **one rule** to the economy, the opinion damping factor at scale, and **the method** by which every number in this sheet is checked against play: a model row beside every measured row, a comparison rule, and a lever table with bounds. The run itself happens when the local playtest and the closed beta have figures; its output tables are added below this section then.
+
+### 23.1 The matrix
+
+The §3–§22 model is run as **48 profiles** (casual · reference · regular · heavy × three factions and starts × legal / illegal-from-Rank-3 / rival-ground-specialist roads × home / a capital district from day 5–7 / Clearwater from day 7 × buys-everything / buys-nothing, pruned to the combinations that differ), each for days 1–30, each row the sheet's existing outputs: XP and Level, FXP and Rank, the best stat, Iron in and out, Political Capital in and out, Heat at session ends, marks and the record's level, Favour, Legacy, worn Charisma, opinion moved. The dashboards of the design's §2.3 print the matching profile's model row (by sessions per day: 1–2 casual, 3 reference, 4 regular, 5+ heavy) beside the measured median.
+
+### 23.2 The comparison rule
+
+**Inside ±25 % of the model is in balance; 25–50 % is a flag for the pass; beyond 50 % the lever moves inside its bound before the open beta.** Retention is never a lever's trigger on its own. The levers, their bounds and their triggers are the design's §3.2 table; the pillars (regen, the bar, Rested's +50 %, the §8.4 formula and the 95 clamp) are not levers.
+
+### 23.3 The damping factor (GDD §14.2; Appendix C #13 closed)
+
+Every swing from an action or an event in a city or district is multiplied by **`clamp(20 ÷ active, 0.25, 1)`**, *active* the seven-day mean of distinct daily contributors there. What it does to this sheet: **nothing**, at every population the sheet has modelled. A branch of one to twenty moves the meter as §8, §14.5, §15.3 and §20.3 say. At scale:
+
+| Active contributors a day in one city | Factor | A reference day's +1.15 becomes | A full Rally's +1.5 becomes | The city's raw daily swing (all contributors, reference-shaped) | Damped |
+|---|---|---|---|---|---|
+| 5 | 1 | +1.15 | +1.5 | ~6 | ~6 |
+| 20 | 1 | +1.15 | +1.5 | ~23 | ~23 |
+| 50 | 0.4 | +0.46 | +0.6 | ~58 | ~23 |
+| 100 | 0.25 (floor) | +0.29 | +0.38 | ~115 | ~29 |
+| 500 | 0.25 (floor) | +0.29 | +0.38 | ~575 | ~144 |
+
+The raw column is why the rule exists: at a hundred contributors a district would move a hundred points a day against a drift of 1 % of the distance. Damped, the factions' *net* movement is what matters (three parties pulling against each other and the three-starts-a-day bound on events), and the scale simulation of the design's §3.1 checks that a level three-way city of a hundred moves under ten points a day. The floor keeps a big branch's taps from becoming worthless (a tap is never below a quarter of its home value); if a city of a hundred still runs away, the floor goes to 0.15 before the 20 moves (Appendix C #13). An individual's ledger row records the applied swing, so District Hero and the scoreboard rank by what actually moved.
+
+### 23.4 What the pass watches first (the red flags, by the number most likely to be off)
+
+From the design's §3.4, in the order this sheet's own flags suggest: **Iron held at day 30** (tier-2 Iron at ×2 and Dossier sales are the two inflators this sheet has flagged twice, §19.11 and §22.10; the model's reference figure is about 26,000 held at day 30 with everything bought that is modelled, about 60,000 with nothing bought); **Level 10's median day** (the heavy-player share, Appendix C #14: the model says day 5 for three sessions, day 3 for six); **Rank 2's median day** (day 2 with the welcome edition's FXP); **Political Capital at the cap** (events and stacked stipends, §20.4 and §21.2); **the share of ×3 taps** (the sheet assumes most tier-1 Energy goes in threes); **marks per illegal player-week** (§19.4 says 0.5–2); **the loss rate on *Leave it to luck*** (§19.5: the reference recruit loses about 70 % of auto-resolved fights with an enforcer, which is the figure the design's §9.2 line tests against).
+
+### 23.5 Session shape (pillar 7)
+
+Nothing in slice 9 adds a tap to play or a number to a screen; the damping shows on the modal as the applied swing it already prints. The audit, the links and the caps are server rules; Settings is one tap per line and remembered.
+
+### 23.6 Flags (GDD Appendix C #82–#88)
+
+| # | Flag | Risk | Lever |
+|---|---|---|---|
+| 13 | The damping's 20 and 0.25 | A city of a hundred still runs away; or a big branch's taps feel worthless | The floor to 0.15 first; the 20 never below 10 |
+| 82 | Linked ballots count once, silently | The link rule too eager (over 5 % set aside) | L2's interleaving count 3 → 5 |
+| 84 | Two a device, three a network a day | An office or a school refused | The network cap 3 → 5; never the device cap |
+| 86 | A suspension touches nothing owned | Reads as too soft for vote-buying | Closure on the first evasion; never assets |
+| 87 | Classic retention on small cohorts | ±15 points on a cohort of forty | Read rolling for the trend, classic for the gate |
+| 88 | The closed beta's D7 gate at 30 | Under §27's 38 | The user may hold 38 for both gates |
