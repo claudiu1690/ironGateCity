@@ -739,3 +739,79 @@ Joining is two taps; calling three; a result one on the next read; a favour two;
 | 61 | Visits from anywhere | Reads as nothing | +5 from another city, +10 from the same |
 | 62 | Volunteers at 0.5 give a lone member a Success | Reads as a participation prize | Volunteers 0.4 |
 | — | Events' Party XP lifts the share from outside missions to 35–45 % | Rank pacing fast at scale | Triumph ×1.25 |
+
+## 21. Slice 7: the offices above the council, Parliament and its laws, the national election, Clearwater
+
+Rules: `docs/design/slice-7-nation.md`; GDD §2, §6.5, §13.7, §14.8, §14.11, §15.1, §15.4–§15.10, §16.3, §17.1. Slice 7 adds **no tier-1 or tier-2 rate**. It adds Clearwater (the capital's difficulty and sinks), **four office stipends**, **seven Political Capital sinks**, **thirteen bounded laws** and the Chair's push bonus. **Two GDD numbers were changed:** Clearwater's baseline (20 / 24 / 24 / 32 → 22 / 22 / 22 / 34) and the automatic removal's trigger (35 % → 25 % of National Control); the rest are pins. The 55 % Chancellor line is gone.
+
+### 21.1 The stipends (per boundary held, present or not)
+
+| Office | Political Capital | Party XP | Against the reference day (~240 FXP, 6 PC) |
+|---|---|---|---|
+| Councillor (slice 3) | 10 | 20 | +8 % FXP |
+| Governor or Mayor (on top of the seat) | 20 | 30 | +21 % FXP with the seat; 36 PC a day |
+| Chair | 20 | 40 | +17 % FXP; 26 PC a day |
+| Deputy | 5 | 30 | +13 % FXP |
+| President | 50 | 60 | +25 % FXP; 56 PC a day |
+
+An office is a reward for an election won, not a rate: a Chair's +40 a day over a 28-day term is about 1,100 FXP, a fifth of the way from Rank 4 to Rank 5, which keeps Rank 5 (15,000) at about week 8 for a reference player who holds the Chair for a term; the milestone moves by about four days for a holder and not at all for anyone else. **No §5.2 milestone moves by more than a day for the reference player** (who holds a council seat half the time and nothing above it in season 1).
+
+### 21.2 Political Capital: the budget at the top
+
+| Sink | PC | Who, when |
+|---|---|---|
+| Stand for Chair (deposit) | 25 | Rank 4, term days 9–10 |
+| Stand for the party's list | 25 | Rank 5, term days 19–20 |
+| Stand for President | 100 | Rank 6, term days 19–20 |
+| Back (Chair, the party's candidate or the list) | 10 | one per Chair election; one per term nationally |
+| Put a law to Parliament (a deputy or a Chair) | 50 | once a term |
+| Open or sign a petition (the council, or on the Chair) | 10 | — |
+| Table a vote to remove the President | 50 | once a term |
+
+A reference player at day 30 has banked about 250 (5 a day from the orders, 1 from *One of Us*, 10 a day for the council seats held, 10–20 a day from events) and has spent 40–60 on deposits, backing and a proposal: the Chair's 25 is affordable the first time Rank 4 allows it. A Chair earns 20 a day and spends at most 85 a term (the deposit, a bill, a backing); a President 50 a day against the same: **office-holders reach the 1,000 cap in a season and the cap is the limit**, which is what §23.3 wants (Political Capital is a price for standing, never a store of power). Flag: if the cap reads as meaningless at the top, the lever is the President's 50 (to 30), never the sinks.
+
+### 21.3 The laws: what each is worth (reference player, per day, while in force)
+
+| Law | Effect | Worth a day | Envelope |
+|---|---|---|---|
+| People's Education Act | mission XP +15 % | ~+60 XP (+3 % of the day's XP on the model's 100 E of missions) | under the council rules' +5 % (Rally Permits) |
+| Eight-Hour Day Act | pay +10 %, seniority ×2 | +22 Iron, plus +108 over ten days for a new job | the Public Works and Long Service Orders together |
+| Universal Care Act | *Walk out well* −50 % | 50 Iron per admission; a few a week at most | a sink halved |
+| Workers' Charter (factional) | pay +15 % for members | +32 Iron a day for Collective members | the largest pay lever; 36 of 60 |
+| Free Market Charter | Iron from actions and missions +10 % | **+100 Iron** (+10 %) for 28 days | under the Street Fund's +25 % |
+| Open Borders Act | journeys −25 % | 12 → 9 minutes, 25 → 19 | time only |
+| Press Licensing Act | propaganda opinion −25 % | −0.05 a day on the model's ~100 propaganda Energy | the Street Permits' mirror |
+| Rehabilitation Act | marks fade in 7 days; bail −25 % | a daily illegal player clears minor marks a week sooner; 25–400 Iron per bail | a sink softened |
+| Civic Education Act (factional) | training −20 % for members | ~9 Energy a day for an Alliance trainer | the Reading Room Grant for one party |
+| Emergency Permits Act (factional) | missions +2 Energy for non-members | **−10 % mission efficiency** for two parties (a 15-Energy speech costs 17, pays on 15) | the one law that costs a player anything; 36 of 60 |
+| Curfew Order | run-ins ×2 at night | the model's 1.5 run-ins a day become ~2.2 for a night player | a risk doubled, not a reward touched |
+| Special Powers Act (factional) | Heat cools +50 % for members; caught +10 against them | a Vanguard illegal player's budget rises from nine to about thirteen missions a day; a rival's caught check 8 → 18 % | 36 of 60, seven days |
+| Public Assembly Act | speech −2 Energy | +20 % on speech Energy, about +5 % of the day's XP for a speech-heavy build | Rally Permits nationwide |
+
+No law touches Party XP or the odds of a check, so **rank pacing and the §8.4 band are untouched by Parliament**. The largest stack of one kind across a law, a council rule and an Issue is pay +35 % (Eight-Hour Day + Public Works + *The Cannery Wage*) or Iron +50 % (Free Market + Street Fund + *The Casino's Licence*) for a few days at a time in one city: optional acceleration, never a milestone. With no player, the secretaries' lines pass People's Education, Universal Care, Rehabilitation and Public Assembly: a republic that is a little kinder and a little louder, which costs nothing and sets the stage.
+
+### 21.4 The Chair's push and the party's target
+
+The push changes no rate: the order's +25 % match and +20 completion are the rotation's. The party's target pays **+10 FXP to every contributor** when reached (25 / 50 / 100 faction-wide attempts): at low population a target of 25 is one member's ×3 day; at scale a hundred is a branch's morning. Worth at most +10 a day per member (+4 %): a bounded co-op nudge, not an income.
+
+### 21.5 Clearwater
+
+As the capital (§15.3 of this sheet): difficulty 10 (odds a point or two under home until Reputation rebuilds), the same Iron sinks (the move 500, a room 100, tickets 20 for a 25-minute ride), the Clearwater rotation of orders, +13 % Party XP in a close race, Reputation restarted. Three jobs for a player with none (100 / 180 / 200; no party's fifth, by design: the cannery pays everyone the same). Four missions at difficulty 20–22 for Level 10–12. A Clearwater resident's day is the capital resident's within a per cent.
+
+### 21.6 Session shape (pillar 7)
+
+Every national act is one or two taps; the Chair's whole term is five taps once and one tap per bill; a deputy's a tap a few times a week; a President's a tap a week. Every window is two to four full City Days and closes at a boundary; the count, the divisions and the party's target settle without anyone present; an absent holder's duties fall to defaults. Nothing in slice 7 needs the player at a set time.
+
+### 21.7 Flags (GDD Appendix C #64–#73)
+
+| # | Flag | Risk | Lever |
+|---|---|---|---|
+| 64 | One office at the top | A President with a tiny score reads as too strong | The veto needs a bloc of 20 |
+| 65 | Several offices at once | One player holds four at scale | Forfeit the lower seat on taking a higher |
+| 66 | The secretaries' bills | The book reads as the game's | Stop them once a player sits |
+| 67 | The automatic removal at 25 % | Never fires | 20 % |
+| 68 | A petition dissolves, no snap election | Never succeeds, or a weekly weapon | A fifth, or two days' notice |
+| 69 | Standing orders repeat | A stale push | Drop the push after seven days |
+| 70 | Clearwater's baseline evened | The lake wants a lean | Issues, never the meter |
+| 72 | The list by backers | One name takes every backing | A second backing for the list |
+| 73 | The push at Level 10 | Reads as a forced trip | Half the push's Party XP at home |
