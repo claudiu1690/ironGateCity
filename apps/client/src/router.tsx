@@ -21,6 +21,7 @@ import { BallotPage, CountPage, CouncilPage, SlatePage } from './routes/council'
 import { LoginPage } from './routes/login';
 import { MePage } from './routes/me';
 import { PaperPage } from './routes/paper';
+import { HeldPage } from './routes/held';
 import { SignupPage } from './routes/signup';
 
 interface RouterContext {
@@ -81,6 +82,8 @@ const indexRoute = createRoute({
     if (!me) throw redirect({ to: '/arrive' });
     // Slice 4 (tech design §12.1): on a train (or arrived, the modal not yet closed), the journey.
     if (me.journey) throw redirect({ to: '/journey' });
+    // Slice 5 (tech design §12.1): in the cells or on the ward (or the release not yet seen), there.
+    if (me.held) throw redirect({ to: '/held' });
     if (me.paperDue) throw redirect({ to: '/paper' });
     // The capital opens on the last district viewed in this session.
     const district = lastDistrict(me.cityId);
@@ -174,6 +177,13 @@ export interface CountSearch {
   d?: string;
 }
 
+/** Slice 5 (tech design §12.1): the cells or the infirmary, and the release modal. */
+const heldRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/held',
+  component: HeldPage,
+});
+
 const paperRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/paper',
@@ -248,6 +258,7 @@ const routeTree = rootRoute.addChildren([
     cityRoute.addChildren([quarterRoute]),
     nationRoute,
     journeyRoute,
+    heldRoute,
     paperRoute,
     meRoute,
     ambitionRoute,

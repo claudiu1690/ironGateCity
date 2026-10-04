@@ -1,5 +1,13 @@
 import { copy } from '@irongate/content/copy';
-import type { ActionResult, CityView, DistrictView, FactionId, LocationView } from '@irongate/rules';
+import type {
+  ActionResult,
+  CityView,
+  DistrictView,
+  FactionId,
+  LocationView,
+  MissionView,
+  QuarterView,
+} from '@irongate/rules';
 import {
   BottomSheet,
   Button,
@@ -11,10 +19,14 @@ import {
   HelpButton,
   JobsCard,
   LocationSheet,
+  MissionBriefing,
+  MissionTicket,
   OpinionBars,
   OrdersList,
   OutOfEnergyCard,
   PlacesList,
+  QuarterTeaserSheet,
+  QuartersList,
   RegisterSheet,
   ResidenceCard,
   ResultModal,
@@ -29,8 +41,11 @@ import {
   formatClock,
   formatShare,
   groundOf,
+  heatNow,
+  heatWord,
   helpMark,
   pyramidFor,
+  quarterLockLine,
   residenceLines,
 } from '@irongate/ui';
 import type { Ground } from '@irongate/ui';
@@ -45,6 +60,7 @@ import type { PerformTarget } from '../features/action/usePerformAction';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
+import { useMissionStart } from '../features/street/useMissionStart';
 import { useBoard } from '../features/travel/useBoard';
 import { setResultModalOpen } from '../lib/modalGate';
 import { gameErrorOf, isNetworkError, trpc, trpcClient } from '../lib/trpc';
@@ -72,6 +88,30 @@ function rememberDistrict(cityId: string, districtId: string | null) {
     // Private mode: the capital opens on its overview.
   }
 }
+
+/**
+ * Slice 5 (tech design §12.3, ADR 0035): a home city lands on the quarter of `?loc`, else the last
+ * viewed this session, else its first (the capital keeps its own district memory above).
+ */
+const QUARTER_KEY = 'irongate.lastQuarter.';
+
+export function lastQuarter(cityId: string): string | null {
+  try {
+    return window.sessionStorage.getItem(QUARTER_KEY + cityId);
+  } catch {
+    return null;
+  }
+}
+
+function rememberQuarter(cityId: string, quarterId: string) {
+  try {
+    window.sessionStorage.setItem(QUARTER_KEY + cityId, quarterId);
+  } catch {
+    // Private mode: the city opens on its first quarter.
+  }
+}
+
+const isOpen = (q: QuarterView) => q.open !== false;
 
 /** Every party's short name (content through the character view; faction naming is parked). */
 function namesOf(c: { factionId: FactionId; factionName: string; factionNames?: Record<FactionId, string> }) {
@@ -114,7 +154,7 @@ export function CityPage() {
   const { loc, order: orderHl, places: placesSearch } = useSearch({ from: '/app/city/$cityId' });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { character } = useCharacter();
+  const { character, now: tick } = useCharacter();
   const city = useQuery(trpc.city.get.queryOptions({ cityId }));
   const stat = usePlaceStat();
   const layout = useLocationLayout();
@@ -162,6 +202,30 @@ export function CityPage() {
     }
   }, [act.open]);
   const travel = useBoard();
+  // Slice 5 (screens §4): a mission's briefing, its start, and a locked quarter's teaser.
+  const [briefing, setBriefing] = useState<{ mission: MissionView; locationId: string; placeName: string } | null>(
+    null,
+  );
+  const [briefingOpen, setBriefingOpen] = useState(false);
+  const missionStart = useMissionStart((r) => {
+    setBriefingOpen(false);
+    setResult(r);
+    setModalOpen(true);
+  });
+  // A run-in answer closes the briefing too (the run-in modal takes over).
+  const runInPending = character?.runIn?.state === 'pending';
+  useEffect(() => {
+    if (runInPending) setBriefingOpen(false);
+  }, [runInPending]);
+  const [teaser, setTeaser] = useState<string | null>(null);
+  const [quartersOpen, setQuartersOpen] = useState(false);
+  // Slice 5 (screens §6): held (the release modal not yet closed), the map gives way to the held
+  // screen, once this screen's result modal (*To the cells*) and the run-in's are out of the way.
+  const heldNow = !!character?.held;
+  const runInNow = !!character?.runIn;
+  useEffect(() => {
+    if (heldNow && !runInNow && !modalOpen) void navigate({ to: '/held', replace: true });
+  }, [heldNow, runInNow, modalOpen, navigate]);
 
   const [jobMessage, setJobMessage] = useState<{ jobId: string; text: string } | null>(null);
   const takeBusy = useRef(false);
@@ -197,6 +261,35 @@ export function CityPage() {
     if (district) rememberDistrict(cityId, district.id);
   }, [cityId, district]);
 
+  // Slice 5 (ADR 0035): a home city with more than one quarter has the capital's overview and quarter
+  // views: `/city/{id}/overview`, `/city/{id}/{quarter}`, and `/city/{id}` the landing quarter in place.
+  const homeQuarters = !districts && c0 && c0.quarters.length > 1 ? c0.quarters : null;
+  const homeOverview = !!homeQuarters && params.quarterId === 'overview';
+  const homeQuarter: QuarterView | null = (() => {
+    if (!homeQuarters || homeOverview || !c0) return null;
+    const byParam = params.quarterId
+      ? homeQuarters.find((q) => q.id === params.quarterId && isOpen(q))
+      : undefined;
+    if (byParam) return byParam;
+    const locQuarter = loc ? c0.locations.find((l) => l.id === loc)?.quarterId : undefined;
+    const byLoc = locQuarter ? homeQuarters.find((q) => q.id === locQuarter && isOpen(q)) : undefined;
+    if (byLoc) return byLoc;
+    const last = lastQuarter(cityId);
+    const byLast = last ? homeQuarters.find((q) => q.id === last && isOpen(q)) : undefined;
+    return byLast ?? homeQuarters.find(isOpen) ?? homeQuarters[0] ?? null;
+  })();
+  const homeQuarterId = homeQuarter?.id ?? null;
+  useEffect(() => {
+    if (homeQuarterId) rememberQuarter(cityId, homeQuarterId);
+  }, [cityId, homeQuarterId]);
+  const currentQuarterId = district?.id ?? homeQuarterId;
+  // The district lock (the picture dimmed outside the quarter, the view held in its frame) once there
+  // is somewhere else to go: with one quarter open (Levels 1–5) the map is slice 4's (tech design
+  // Deviations, phase C).
+  const lockQuarter = !!homeQuarter && (homeQuarters?.filter(isOpen).length ?? 0) > 1;
+  /** A quarter view proper (its plate, the bar, the lock): two quarters or more open. */
+  const qv = lockQuarter ? homeQuarter : null;
+
   // On a train no city is open (IN_TRANSIT): the journey; standing elsewhere: the city you are in.
   const refusal = city.isError ? gameErrorOf(city.error)?.reason : undefined;
   useEffect(() => {
@@ -210,9 +303,10 @@ export function CityPage() {
     setJobMessage(null);
     action.reset();
     // The capital shows one district's places (the user's lock): an order's pin for a place in another
-    // district, or on the overview, opens that district, then the place (slice-4 fixes §3).
-    const into = districts && id ? c0?.locations.find((l) => l.id === id)?.quarterId : undefined;
-    if (into && into !== district?.id) {
+    // district, or on the overview, opens that district, then the place (slice-4 fixes §3). Slice 5: a
+    // home city's quarters likewise.
+    const into = (districts || homeQuarters) && id ? c0?.locations.find((l) => l.id === id)?.quarterId : undefined;
+    if (into && into !== currentQuarterId) {
       void navigate({
         to: '/city/$cityId/$quarterId',
         params: { cityId, quarterId: into },
@@ -225,6 +319,19 @@ export function CityPage() {
       search: id ? { loc: id, ...(orderId ? { order: orderId } : {}) } : {},
       replace: true,
     });
+  };
+  /** Slice 5: into a home city's quarter, or (null) its overview. */
+  const goQuarter = (id: string | null) => {
+    setJobMessage(null);
+    action.reset();
+    if (id) void navigate({ to: '/city/$cityId/$quarterId', params: { cityId, quarterId: id } });
+    else void navigate({ to: '/city/$cityId/$quarterId', params: { cityId, quarterId: 'overview' } });
+  };
+  /** A quarter on the overview, the bar or the list: an open one goes in, a locked one shows its teaser. */
+  const pickQuarter = (id: string) => {
+    const q = homeQuarters?.find((x) => x.id === id);
+    if (q && !isOpen(q)) setTeaser(id);
+    else goQuarter(id);
   };
   /** Slice 4: into a district (the overview's outline or name, the Districts list, the tram bar). */
   const goDistrict = (id: string | null) => {
@@ -263,12 +370,17 @@ export function CityPage() {
   const c = city.data;
   const names = namesOf(character);
   const overview = !!districts && !district;
-  // The pins on show: a home city's, a district's own (the user's lock: only its), none on the overview.
+  // The pins on show: a district's or a quarter's own (the user's lock: only its), none on an overview.
   const shownLocations = district
     ? c.locations.filter((l) => l.quarterId === district.id)
-    : overview
-      ? []
-      : c.locations;
+    : homeQuarter
+      ? c.locations.filter((l) => l.quarterId === homeQuarter.id)
+      : overview || homeOverview
+        ? []
+        : c.locations;
+  // Slice 5 (screens §8.3): rival ground, the home faction whose morale your work draws from.
+  const rival = c.rivalGround ?? null;
+  const heat = heatNow(character.heat, tick);
   const location: LocationView | undefined = shownLocations.find((l) => l.id === loc);
   /** What the sheet shows: the open place, or (closing) the last one. */
   const sheetPlace: LocationView | undefined = location ?? shownLocations.find((l) => l.id === lastPlace);
@@ -279,13 +391,20 @@ export function CityPage() {
   const tiles = dayTiles && nightTiles ? { day: dayTiles, night: nightTiles } : null;
   const energy = { value: character.energy.value, nextTickAt: character.energy.nextTickAt };
   const share = c.homeFactionId ? c.opinion[c.homeFactionId] : c.opinion[character.factionId];
+  // The plate's party: your own at home, the home party on rival ground (its morale).
+  const plateFaction: FactionId = rival ? rival.homeFactionId : character.factionId;
   const perform = (target: PerformTarget, times: 1 | 3) => {
     setLast(target);
     action.perform(target, times);
   };
-  const cheapest = sheetPlace
-    ? Math.min(...sheetPlace.actions.filter((a) => !a.locked).map((a) => a.energy))
-    : 0;
+  // The cheapest thing to do here (its tickets and, slice 5, its missions); nothing open: no card.
+  const costs = sheetPlace
+    ? [
+        ...sheetPlace.actions.filter((a) => !a.locked).map((a) => a.energy),
+        ...(sheetPlace.missions ?? []).filter((m) => !m.locked).map((m) => m.energy),
+      ]
+    : [];
+  const cheapest = costs.length > 0 ? Math.min(...costs) : 0;
   const waiting = character.orders.items
     .filter((o) => !o.done)
     .map((o) => `${o.title} ${o.progress} / ${o.target}`);
@@ -328,7 +447,9 @@ export function CityPage() {
         data-map-overlay="places"
         data-testid="places-button"
         aria-haspopup="dialog"
-        onClick={() => (overview ? setDistrictsOpen(true) : setPlacesOpen(true))}
+        onClick={() =>
+          overview ? setDistrictsOpen(true) : homeOverview ? setQuartersOpen(true) : setPlacesOpen(true)
+        }
         className={cx(
           'label-caps pointer-events-auto absolute z-10 flex min-h-11 min-w-11 cursor-pointer items-center gap-1.5 bg-paper px-3 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)] hover:bg-paper-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
           className,
@@ -348,7 +469,7 @@ export function CityPage() {
           <circle cx="3.5" cy="12" r="1.2" fill="currentColor" />
           <circle cx="3.5" cy="18" r="1.2" fill="currentColor" />
         </svg>
-        {overview ? copy.capital.districts : 'Places'}
+        {overview ? copy.capital.districts : homeOverview ? copy.risk.quarters.title : 'Places'}
       </button>
     );
   // Slice 4: *City | Nation* (the Map tab's control); City is where you stand (here).
@@ -441,7 +562,17 @@ export function CityPage() {
     </>
   );
   const tramBar = (className?: string, columns?: 2 | 4) =>
-    district && districts ? (
+    qv && homeQuarters ? (
+      // Slice 5 (screens §3.1): the quarter bar, every quarter, the current one inverted.
+      <TramBar
+        districts={homeQuarters.map((q) => ({ id: q.id, name: q.name, locked: !isOpen(q) }))}
+        current={qv.id}
+        onGo={(id) => goQuarter(id)}
+        quarters={{ onLocked: (id) => setTeaser(id) }}
+        className={className}
+        columns={columns === 2 ? 2 : 3}
+      />
+    ) : district && districts ? (
       <TramBar
         districts={districts.map((d) => ({ id: d.id, name: d.name }))}
         current={district.id}
@@ -496,18 +627,78 @@ export function CityPage() {
         </p>
       )}
       <div className="flex items-stretch border-b-2 border-ink">
+        {/* Slice 5 (screens §3.2): a quarter's way back to the city's overview. */}
+        {qv && (
+          <button
+            type="button"
+            onClick={() => goQuarter(null)}
+            className="label-caps flex min-h-11 shrink-0 cursor-pointer items-center gap-1 border-r border-paper-2 px-2.5 text-[11px] font-semibold hover:bg-paper-2"
+            data-testid="quarter-back"
+            aria-label={`Back to ${c.name}`}
+          >
+            <span aria-hidden="true" className="font-label text-[16px] leading-none">
+              ‹
+            </span>
+            {c.name}
+          </button>
+        )}
         <div className="relative flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2">
           {/* One tap target over the block (the heading stays a heading): the notes behind
               the share, the morale word and the ordinance line. */}
           <HelpButton
-            notes={plateNotes}
+            notes={rival ? [copy.risk.help.rivalGround(), ...plateNotes] : plateNotes}
             label={`What the plate says about ${c.name}`}
             buttonRef={plateHelp}
             testId="plate-help"
             className="absolute inset-0 z-10 w-full bg-transparent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
           />
+          {/* Slice 5: the kicker. On rival ground *Duskwall · rival ground* (screens §8.3); in a
+              quarter *Coalport · The Harbour* (screens §3.4). */}
+          {(rival || qv) && (
+            <span
+              className={cx(
+                'label-caps text-[9px]',
+                rival
+                  ? cx('font-semibold text-failure', helpMark)
+                  : // A phone keeps the plate short: *‹ Coalport* and the heading say it already.
+                    'hidden text-muted sm:block',
+              )}
+              data-testid={rival ? 'plate-rival' : 'quarter-subtitle'}
+            >
+              {rival
+                ? copy.risk.rival.placeLine(c.name)
+                : copy.risk.quarters.subtitle(c.name, qv!.name)}
+            </span>
+          )}
           <div className="flex items-baseline gap-2">
-            <h1 className="font-display text-[24px] leading-none font-black">{c.name}</h1>
+            <h1
+              className={cx(
+                'font-display leading-none font-black',
+                qv ? 'text-[21px]' : 'text-[24px]',
+              )}
+              data-testid="plate-name"
+            >
+              {qv ? (
+                qv.name
+              ) : homeQuarter ? (
+                // One quarter open (Levels 1–5): the city's name is the way to its overview, where the
+                // other quarters' teasers are (above the plate's notes, which cover the block).
+                <button
+                  type="button"
+                  onClick={() => goQuarter(null)}
+                  className="relative z-20 -my-[10px] inline-flex min-h-11 cursor-pointer items-center gap-1 hover:underline"
+                  data-testid="plate-overview"
+                  aria-label={`${c.name}: its quarters`}
+                >
+                  {c.name}
+                  <span aria-hidden="true" className="font-label text-[18px] font-normal">
+                    ›
+                  </span>
+                </button>
+              ) : (
+                c.name
+              )}
+            </h1>
             {/* Slice 3 (screens §8): the morale word beside the name, Unrest in the failure
                 colour; no extra line, so every pin stays clear on a small phone (QA M2). */}
             {c.morale && (
@@ -529,10 +720,30 @@ export function CityPage() {
           >
             {c.role === 'home' ? 'Home city' : 'Close race'} ·
             <span className={cx('flex items-center gap-1.5', helpMark)}>
-              <FactionCrest factionId={character.factionId} size={8} /> {character.factionName}{' '}
-              {formatShare(share)} %
+              <FactionCrest factionId={plateFaction} size={8} />{' '}
+              {rival ? (names[plateFaction] ?? plateFaction) : character.factionName} {formatShare(share)} %
             </span>
           </span>
+          {/* Slice 5 (screens §8.3): what your work here draws from, and Heat. */}
+          {rival && (
+            <span
+              className={cx(
+                'font-mono text-[11px] text-text-2',
+                !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
+              )}
+              data-testid="plate-pressure"
+            >
+              {copy.risk.rival.drawsFrom(
+                names[rival.homeFactionId] ?? rival.homeFactionId,
+                rival.pressure.left.toFixed(1),
+              )}
+            </span>
+          )}
+          {rival && (
+            <span className="font-mono text-[11px] text-text-2" data-testid="plate-heat">
+              {copy.risk.heatLine(heat, heatWord(character.heat?.state ?? 'cool'))}
+            </span>
+          )}
           {/* The ordinance in force, one line that never wraps. Only on a very short phone
               (360 × 640) it gives way to the map; the tickets carry its tags there. */}
           {c.ordinance && (
@@ -707,8 +918,23 @@ export function CityPage() {
 
   const plate = district ? districtPlate : overview ? overviewPlate : homePlate;
 
+  /** Slice 5 (screens §3.2): a home city's overview names, each with its lock line. */
+  const quarterHotspots = (homeQuarters ?? []).map((q, i) => ({
+    id: q.id,
+    n: i + 1,
+    name: q.name,
+    map: q.label ?? { x: (q.frame.x0 + q.frame.x1) / 2, y: (q.frame.y0 + q.frame.y1) / 2 },
+    pin: {
+      style: 'name' as const,
+      ...(isOpen(q) ? {} : { sub: quarterLockLine(q) ?? undefined }),
+      marks: lastQuarter(c.id) === q.id && isOpen(q) ? (['here'] as const) : ([] as const),
+    },
+  }));
+
   // The map's pins: the overview's five district names; a district's or a home city's places.
-  const hotspots = overview
+  const hotspots = homeOverview
+    ? quarterHotspots
+    : overview
     ? districts!.map((d) => ({
         id: d.id,
         n: d.n,
@@ -736,6 +962,8 @@ export function CityPage() {
     <div
       className={cx('relative flex h-full', !side && 'min-h-[420px]')}
       data-capital={districts ? (district ? 'district' : 'overview') : undefined}
+      data-quarters={homeQuarters ? (homeOverview ? 'overview' : 'quarter') : undefined}
+      data-quarter={homeQuarter?.id}
     >
       {/* Sideways (review 2 #3): the plate, the orders and the day in a column beside the map, which
           keeps the full height and no overlay. */}
@@ -760,19 +988,31 @@ export function CityPage() {
         tiles={tiles}
         // Maps v3: the city opens on its first quarter, a frame on its one picture; the capital's
         // overview is the whole picture, a district its own frame (the user's lock: held inside it).
-        frame={district ? district.frame : overview ? undefined : c.quarters[0]?.frame}
+        frame={
+          district
+            ? district.frame
+            : overview || homeOverview
+              ? undefined
+              : (homeQuarter?.frame ?? c.quarters[0]?.frame)
+        }
         // Map atmosphere (clouds by day, fog by night), where the city's content switches it on.
         clouds={c.clouds}
         isNight={c.isNight}
         locations={hotspots}
-        selectedId={overview ? null : (loc ?? null)}
-        onSelect={(id) => (overview ? goDistrict(id) : select(id))}
+        selectedId={overview || homeOverview ? null : (loc ?? null)}
+        onSelect={(id) => (overview ? goDistrict(id) : homeOverview ? pickQuarter(id) : select(id))}
         outlines={
-          overview ? districts!.map((d) => ({ id: d.id, points: d.outline, label: d.name })) : undefined
+          overview
+            ? districts!.map((d) => ({ id: d.id, points: d.outline, label: d.name }))
+            : homeOverview
+              ? homeQuarters!.map((q) => ({ id: q.id, points: q.outline ?? [], label: q.name }))
+              : undefined
         }
-        onOutline={(id) => goDistrict(id)}
-        focusOutline={district?.outline}
-        lockToFrame={!!district}
+        onOutline={(id) => (homeOverview ? pickQuarter(id) : goDistrict(id))}
+        focusOutline={
+          district?.outline ?? (lockQuarter && homeQuarter?.outline?.length ? homeQuarter.outline : undefined)
+        }
+        lockToFrame={!!district || lockQuarter}
         cover={cover}
         onArrive={(id, { fillsMap }) => {
           setArrived(id);
@@ -780,7 +1020,7 @@ export function CityPage() {
           setFillSheet(!fillsMap);
         }}
         // Review 3: the player's zoom and drag are kept for the session, per city (per district).
-        memoryKey={district ? district.id : c.id}
+        memoryKey={district ? district.id : homeOverview ? `${c.id}:overview` : (qv?.id ?? c.id)}
         // Review 3: + / − under the Places button, on a desktop (a phone pinches and double-taps).
         zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex'}
       >
@@ -817,7 +1057,9 @@ export function CityPage() {
                   </div>
                 )}
                 {/* Slice 4: where you live, folded on a phone (a tap opens the card). */}
-                {residenceRow && !district && <div className="sm:hidden">{residenceRow}</div>}
+                {/* Slice 5: on rival ground the phone keeps the map's room (the card says only that
+                    you can't live there; it shows from 640 px). */}
+                {residenceRow && !district && !rival && <div className="sm:hidden">{residenceRow}</div>}
                 <div className="hidden flex-col gap-1 px-3 pt-1.5 pb-2 sm:flex">
                   {tramBar()}
                   {election('card')}
@@ -841,14 +1083,19 @@ export function CityPage() {
               {/* QA slice 4 m7 (and M1 on a small phone): in the capital, a phone under 700 px tall
                   folds the orders to one line, so the map keeps a usable band between the plate and
                   the tram; a tap opens them in a sheet. */}
-              <div className={cx('flex flex-col gap-1', districts && '[@media(max-height:700px)]:hidden')}>
-                {district ? (
+              <div
+                className={cx(
+                  'flex flex-col gap-1',
+                  (districts || qv) && '[@media(max-height:700px)]:hidden',
+                )}
+              >
+                {district || qv ? (
                   <OrdersList orders={character.orders} onPin={(id, orderId) => select(id, orderId)} />
                 ) : (
                   orders
                 )}
               </div>
-              {districts && (
+              {(districts || qv) && (
                 <button
                   type="button"
                   onClick={() => setOrdersOpen(true)}
@@ -906,6 +1153,43 @@ export function CityPage() {
               orderBonusPct={character.orders.rewards.matchFxpBonusPct}
             />
           ))}
+          {/* Slice 5 (screens §4.1): the place's missions after its tickets, under a kicker. */}
+          {(sheetPlace.missions?.length ?? 0) > 0 && (
+            <section aria-label={copy.risk.missions} className="flex flex-col gap-2" data-testid="missions">
+              <HelpButton
+                notes={[copy.risk.help.mission()]}
+                label={`${copy.risk.missions}: what they are`}
+                className="-mb-1 w-full border-t-[3px] border-double border-ink pt-1"
+              >
+                <span className={cx('label-caps text-[11px] font-semibold', helpMark)}>{copy.risk.missions}</span>
+              </HelpButton>
+              {sheetPlace.missions!.map((m) => (
+                <MissionTicket
+                  key={m.id}
+                  mission={m}
+                  energy={energy}
+                  names={names}
+                  highlight={!!orderHl && m.order?.id === orderHl}
+                  onChoose={() => {
+                    missionStart.reset();
+                    setBriefing({ mission: m, locationId: sheetPlace.id, placeName: sheetPlace.name });
+                    setBriefingOpen(true);
+                  }}
+                  onAgain={() =>
+                    m.remembered &&
+                    missionStart.start({ locationId: sheetPlace.id, missionId: m.id, wayId: m.remembered })
+                  }
+                  pending={missionStart.isPending && missionStart.variables?.missionId === m.id}
+                  notice={
+                    missionStart.variables?.missionId === m.id && !modalOpen && !briefingOpen
+                      ? noticeFor(missionStart.error)
+                      : undefined
+                  }
+                  orderBonusPct={character.orders.rewards.matchFxpBonusPct}
+                />
+              ))}
+            </section>
+          )}
           {sheetPlace.council && (
             <ElectionCard
               summary={sheetPlace.council}
@@ -944,9 +1228,9 @@ export function CityPage() {
       )}
 
       <PlacesList
-        open={placesOpen && !overview}
+        open={placesOpen && !overview && !homeOverview}
         onOpenChange={setPlacesOpen}
-        cityName={district?.name ?? c.name}
+        cityName={district?.name ?? (qv ? copy.risk.quarters.subtitle(c.name, qv.name) : c.name)}
         places={places}
         // Exactly a tap on the pin: the map zooms to it, then its sheet opens (and `?loc=` is set).
         onPick={(id) => select(id)}
@@ -956,6 +1240,43 @@ export function CityPage() {
             (b) => b.offsetParent !== null,
           ) ?? null
         }
+      />
+      {/* Slice 5 (screens §3.2, §3.3): a home city's Quarters list and a locked quarter's teaser. */}
+      {homeQuarters && (
+        <QuartersList
+          open={quartersOpen && homeOverview}
+          onOpenChange={setQuartersOpen}
+          cityName={c.name}
+          quarters={homeQuarters}
+          onPick={(id) => pickQuarter(id)}
+          returnFocusTo={() =>
+            [...document.querySelectorAll<HTMLElement>('[data-testid="places-button"]')].find(
+              (b) => b.offsetParent !== null,
+            ) ?? null
+          }
+        />
+      )}
+      {homeQuarters && (
+        <QuarterTeaserSheet
+          quarter={homeQuarters.find((q) => q.id === teaser) ?? null}
+          open={teaser !== null}
+          onOpenChange={(o) => {
+            if (!o) setTeaser(null);
+          }}
+          level={character.level}
+        />
+      )}
+      <MissionBriefing
+        open={briefingOpen && !!briefing}
+        onOpenChange={setBriefingOpen}
+        mission={briefing ? (c.locations.find((l) => l.id === briefing.locationId)?.missions?.find((m) => m.id === briefing.mission.id) ?? briefing.mission) : null}
+        placeName={briefing?.placeName ?? ''}
+        energy={energy}
+        onConfirm={(wayId) =>
+          briefing && missionStart.start({ locationId: briefing.locationId, missionId: briefing.mission.id, wayId })
+        }
+        pending={missionStart.isPending}
+        notice={briefingOpen && missionStart.error ? noticeFor(missionStart.error) : undefined}
       />
       {districts && (
         <DistrictsList
@@ -967,7 +1288,7 @@ export function CityPage() {
         />
       )}
 
-      {districts && (
+      {(districts || qv) && (
         <BottomSheet open={ordersOpen} onOpenChange={setOrdersOpen} title={copy.ordersFold.title}>
           <OrdersList
             orders={character.orders}
@@ -1004,8 +1325,29 @@ export function CityPage() {
         result={result}
         open={modalOpen}
         onOpenChange={setModalOpen}
-        onAgain={last ? (times) => perform(last, times) : undefined}
-        againPending={action.isPending ? ((action.variables?.times as 1 | 3 | undefined) ?? null) : null}
+        onAgain={
+          result?.kind === 'mission' && result.again?.way
+            ? () =>
+                missionStart.start({
+                  locationId: result.place.locationId,
+                  missionId: result.action.id,
+                  wayId: result.again!.way!.id,
+                })
+            : last
+              ? (times) => perform(last, times)
+              : undefined
+        }
+        againPending={
+          missionStart.isPending
+            ? 1
+            : action.isPending
+              ? ((action.variables?.times as 1 | 3 | undefined) ?? null)
+              : null
+        }
+        onSentTo={() => {
+          setModalOpen(false);
+          void navigate({ to: '/held' });
+        }}
         energy={energy}
         statPoints={{
           pending: character.statPointsPending,

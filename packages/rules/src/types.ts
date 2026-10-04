@@ -2271,6 +2271,12 @@ export interface HeldView {
   health: { value: number; max: number; fullAt: number | null };
   /** *Listen to the cells* / *Talk to the ward*. */
   tap: ActionView;
+  /**
+   * Phase C (screens §6, §7): the held place's picture (the `jail` or `hospital` binding, the result's
+   * ladder) and the voice's portrait (the duty officer, the matron). Optional: stays read before it.
+   */
+  art?: ResultArt;
+  voice?: AssetView;
   /** State `out`: the stored release modal. */
   release: PoliticalResult | null;
   election: PoliticsSummaryView | null;

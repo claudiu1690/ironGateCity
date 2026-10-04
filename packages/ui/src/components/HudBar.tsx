@@ -10,10 +10,17 @@ import { HelpButton } from './Help';
 import type { HelpNote } from './Help';
 import { Picture } from './Picture';
 import { StatPointsPanel } from './Shell';
+import { HealthBar, HeatRow } from './Street';
 
 export interface HudBarProps {
   /** Energy and Rested already projected to now by the caller. */
   character: CharacterView;
+  /**
+   * Slice 5 (screens §2.1, §2.2): Heat and Health projected to now by the caller (the HUD shows the
+   * Heat line only above 0 and the Health bar only below full). Absent: the view's own values.
+   */
+  heat?: number;
+  health?: { value: number; max: number };
   /** Milliseconds until the next +5 Energy, or null when full. */
   nextTickIn: number | null;
   /** Stat points: the badge opens a small panel with STR / INT / AGI. */
@@ -30,7 +37,9 @@ export interface HudBarProps {
  * help button: a tap opens the notes for Energy, Rested, XP, Faction XP and Political Capital. A
  * badge shows when stat points wait.
  */
-export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBarProps) {
+export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, health }: HudBarProps) {
+  const heatValue = heat ?? c.heat?.value ?? 0;
+  const hp = health ?? (c.health ? { value: c.health.value, max: c.health.max } : null);
   const [open, setOpen] = useState(false);
   const levelFloor = xpForLevel(c.level);
   const levelNext = xpForLevel(c.level + 1);
@@ -113,6 +122,12 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBa
               </span>
             )}
           </div>
+          {/* Slice 5 (screens §2.1): Heat under the Political Capital line, only above 0. */}
+          {heatValue > 0 && (
+            <div className="flex justify-end">
+              <HeatRow value={heatValue} />
+            </div>
+          )}
           <div className="relative grid gap-[3px] lg:grid-cols-3 lg:gap-x-6 short:grid-cols-3 short:gap-x-4">
             <Gauge
               label={copy.hud.energy}
@@ -168,6 +183,12 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing }: HudBa
               }
               figureTestId="hud-fxp"
             />
+            {/* Slice 5 (screens §2.2): Health under Party XP while below full (its own note). */}
+            {hp && hp.value < hp.max && (
+              <div className="relative z-10 lg:col-span-3 short:col-span-3">
+                <HealthBar value={hp.value} max={hp.max} />
+              </div>
+            )}
             {/* One tap target over the gauges (44 px tall): the notes behind their labels. */}
             <HelpButton
               notes={notes}

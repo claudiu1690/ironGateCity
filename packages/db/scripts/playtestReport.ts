@@ -1,8 +1,9 @@
 /**
  * `pnpm report:playtest`: the playtest report, read-only, against MONGODB_URI (reads
  * apps/server/.env when it is not set). Prints a table per player and the overall numbers, the
- * arrival funnel (slice 2) and the elections section (slice 3, tech design §14.1), boosted testers
- * apart. Add `--json` for machine-readable output.
+ * arrival funnel (slice 2), the elections section (slice 3, tech design §14.1), the battleground (slice
+ * 4) and risk (slice 5, tech design §15.2), boosted testers apart where a section says so. Add
+ * `--json` for machine-readable output.
  */
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +20,7 @@ import {
   Contribution,
   District,
   Election,
+  Encounter,
   InfluenceLedger,
   IssueModel,
   Journey,
@@ -26,6 +28,7 @@ import {
   OrderPaper,
   PaperEntry,
   RequestLog,
+  Stay,
   Vote,
   connectDb,
   disconnectDb,
@@ -36,6 +39,8 @@ import { buildElectionsReport } from '../src/elections';
 import { buildArrivalFunnels, formatShare, jobTakeRows } from '../src/funnel';
 import type { Funnel } from '../src/funnel';
 import { buildPlaytestReport } from '../src/report';
+import { buildRiskReport, riskTables } from '../src/risk';
+import type { RiskResult } from '../src/risk';
 
 const serverEnv = fileURLToPath(new URL('../../../apps/server/.env', import.meta.url));
 if (!process.env.MONGODB_URI && existsSync(serverEnv)) process.loadEnvFile(serverEnv);
@@ -397,8 +402,105 @@ try {
     slice4From: (await Journey.findOne({}).sort({ boardedAt: 1 }).lean())?.boardedAt ?? null,
   });
 
+  // Slice 5 (tech design §15.2): risk, from actionLogs, encounters, stays, journeys and characters only.
+  const riskLogs = await ActionLog.find(
+    {},
+    {
+      characterId: 1,
+      createdAt: 1,
+      kind: 1,
+      actionId: 1,
+      cityId: 1,
+      times: 1,
+      outcome: 1,
+      encounterId: 1,
+      'result.action.type': 1,
+      'result.mission': 1,
+      'result.attempts.outcome': 1,
+      'result.attempts.dropped': 1,
+      'result.street': 1,
+      'result.effects.fxp': 1,
+      'result.effects.opinion': 1,
+      'result.effects.heat': 1,
+    },
+  ).lean();
+  const risk = buildRiskReport({
+    now: new Date(),
+    homeCities: content.factions.map((f) => ({ cityId: f.homeCityId, factionId: f.id })),
+    characters: (
+      await Character.find({}, { name: 1, factionId: 1, homeCityId: 1, 'record.marks': 1 }).lean()
+    ).map((c) => ({
+      id: c._id.toHexString(),
+      name: c.name,
+      factionId: c.factionId,
+      homeCityId: c.homeCityId,
+      marks: c.record?.marks ?? [],
+    })),
+    actionLogs: riskLogs.map((l) => ({
+      characterId: l.characterId.toHexString(),
+      createdAt: l.createdAt,
+      kind: l.kind ?? 'checked',
+      actionId: l.actionId,
+      cityId: l.cityId,
+      times: l.times ?? 1,
+      outcome: l.outcome,
+      encounterId: l.encounterId ? l.encounterId.toHexString() : null,
+      result: (l.result as RiskResult | undefined) ?? null,
+    })),
+    encounters: (await Encounter.find({}, { held: 0, you: 0, chances: 0 }).lean()).map((e) => ({
+      id: e._id.toHexString(),
+      characterId: e.characterId.toHexString(),
+      kind: e.kind,
+      refId: e.refId,
+      cityId: e.cityId,
+      day: e.day,
+      rivalGround: e.rivalGround,
+      state: e.state,
+      choice: e.choice,
+      by: e.by,
+      outcome: e.outcome,
+      payOff: e.opponent?.payOff ?? null,
+      createdAt: e.createdAt,
+    })),
+    stays: (await Stay.find({}, { result: 0, bail: 0 }).lean()).map((s) => ({
+      characterId: s.characterId.toHexString(),
+      kind: s.kind,
+      cityId: s.cityId,
+      rivalGround: s.rivalGround,
+      since: s.since,
+      releasedAt: s.releasedAt,
+      how: s.how,
+      ironPaid: s.ironPaid ?? 0,
+      heatAtArrest: s.heatAtArrest,
+      heatAfter: s.heatAfter,
+    })),
+    journeys: (await Journey.find({}, { fare: 0 }).lean()).map((j) => {
+      // T17: a card's Heat is stored beside the choice (`choice.heat`, the field is Mixed).
+      const choice = j.choice as
+        | (NonNullable<typeof j.choice> & { heat?: { before: number; after: number } })
+        | null;
+      return {
+        characterId: j.characterId.toHexString(),
+        to: j.to,
+        boardedAt: j.boardedAt,
+        kind: j.kind ?? 'ticket',
+        rivalGround: j.rivalGround === true,
+        card: j.card ? { eventId: j.card.eventId, deck: j.card.deck ?? 'ordinary' } : null,
+        choice: choice
+          ? {
+              choiceId: choice.choiceId,
+              at: choice.at,
+              flag: choice.result?.flag?.flag ?? null,
+              heat: choice.heat ?? null,
+            }
+          : null,
+        sleptThrough: j.sleptThrough,
+      };
+    }),
+  });
+
   if (process.argv.includes('--json')) {
-    console.log(JSON.stringify({ ...report, arrival: funnels, elections, battleground }, null, 2));
+    console.log(JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk }, null, 2));
   } else {
     console.log('\nIs spending a bar of Energy fun, and do players want to come back in 3 hours?\n');
     console.table(
@@ -520,6 +622,13 @@ try {
       'home, before slice 4': formatShare(b.contention.home.before),
       'home, after': formatShare(b.contention.home.after),
     });
+
+    console.log('\nIs risk exciting rather than punishing? (all testers, boosted included)\n');
+    for (const t of riskTables(risk)) {
+      console.log(t.title);
+      if (t.rows.length > 0) console.table(t.rows);
+      else console.log('  none');
+    }
   }
 } finally {
   await disconnectDb();

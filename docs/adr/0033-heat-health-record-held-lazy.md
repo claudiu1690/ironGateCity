@@ -1,6 +1,6 @@
 # ADR 0033 — Heat, Health, the record, the cells and the infirmary: lazy state on the character, `stays` as history, release on read
 
-**Status:** proposed (slice 5) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 5 · **Date:** 2026-10-03
 
 ## Context
 

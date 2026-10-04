@@ -1,6 +1,6 @@
 # ADR 0032 — Run-ins: a pending step in `encounters`, a pointer on the character, luck after a decide window and before the day turns
 
-**Status:** proposed (slice 5) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 5 · **Date:** 2026-10-03
 
 ## Context
 

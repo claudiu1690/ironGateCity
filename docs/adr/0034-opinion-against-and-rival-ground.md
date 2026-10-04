@@ -1,6 +1,6 @@
 # ADR 0034 — Opinion against a faction, and rival ground as a place state
 
-**Status:** proposed (slice 5; extends ADR 0010, 0028, 0030) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 5 (extends ADR 0010, 0028, 0030) · **Date:** 2026-10-03
 
 ## Context
 

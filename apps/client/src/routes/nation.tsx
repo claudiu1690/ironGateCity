@@ -21,7 +21,9 @@ const SIDE_W = 260;
 function pinOf(c: NationCityView, homeCityId: string): MapHotspot['pin'] {
   const tags = [
     ...(c.cityId === homeCityId ? [copy.travel.home] : []),
-    ...(c.minutes !== null && c.state === 'open' ? [copy.travel.min(c.minutes)] : []),
+    // Slice 5 (screens §8.1): *Duskwall · rival ground · 15 min* from Level 10.
+    ...(c.state === 'rival' ? [copy.risk.rival.word] : []),
+    ...(c.minutes !== null && (c.state === 'open' || c.state === 'rival') ? [copy.travel.min(c.minutes)] : []),
   ];
   return {
     style: 'label',

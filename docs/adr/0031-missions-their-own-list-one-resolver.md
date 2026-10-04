@@ -1,6 +1,6 @@
 # ADR 0031 — Missions: their own list on a location, one pure resolver, the way remembered on the character
 
-**Status:** proposed (slice 5) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 5 · **Date:** 2026-10-03
 
 ## Context
 

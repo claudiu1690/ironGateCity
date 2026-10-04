@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
-import { energyReadyAt, xpForLevel } from '@irongate/rules';
+import { energyReadyAt, heatState, xpForLevel } from '@irongate/rules';
 import type {
   ActionResult,
   CharacterView,
@@ -22,6 +22,7 @@ import {
   formatOpinionDelta,
   formatShare,
   formatSigned,
+  formatWeekday,
   renderTimeTokens,
 } from '../format';
 import { batchReasons, statName } from '../odds';
@@ -36,6 +37,7 @@ import { Picture } from './Picture';
 import { StatPointsPanel } from './Shell';
 import { Stamp } from './Stamp';
 import type { StampTone } from './Stamp';
+import { RunInBlock, heatWord, recordWord } from './Street';
 
 /**
  * Slice 4 (screens §4, tech design §10.2): the arrival modal, `ResultModal kind="journey"`: the
@@ -79,6 +81,12 @@ export interface ResultModalProps {
   continuePending?: boolean;
   /** Slice 4, the arrival: the unanswered journey card, compact, above Continue. */
   journeyCard?: ReactNode;
+  /**
+   * Slice 5 (screens §4.3): a result that sent you to the cells or the infirmary has one button, *To the
+   * cells* / *To the infirmary*: the caller goes there (and closes the run-in when there was one).
+   */
+  onSentTo?: () => void;
+  sentToPending?: boolean;
 }
 
 export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>): {
@@ -115,20 +123,27 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
  * effects, and *Once more · 10 Energy* · *Three more · 30 Energy* · *Continue*. The server sends the full breakdown; this renders the outcome and
  * words the reason from it, and computes nothing else. Full-screen on phones.
  */
+/** Slice 5: the cells', the infirmary's and the record's results: a card, not a half-empty screen. */
+const CARD_ACTS = new Set(['bail', 'released', 'deported', 'walkOut', 'discharged', 'strike']);
+
 export function ResultModal(props: ResultModalProps) {
   const { result, open, onOpenChange } = props;
+  const card = result?.kind === 'political' && CARD_ACTS.has(result.act);
   return (
     <Dialog.Root open={open && result !== null} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/75" />
+        <Dialog.Overlay className="ease-dim fixed inset-0 z-40 bg-ink/75" />
         <Dialog.Content
           className={cx(
-            'fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper text-ink',
+            // Slice 5 (review 3: never pop): it rises in over the dim and back out.
+            card
+              ? 'ease-sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col overflow-y-auto bg-paper text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)]'
+              : 'ease-card fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper text-ink',
             'sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[92dvh] sm:w-[min(600px,calc(100vw-32px))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]',
           )}
         >
           {result && result.kind === 'political' ? (
-            <PoliticalBody result={result} />
+            <PoliticalBody result={result} onContinue={props.onContinue} continuePending={props.continuePending} />
           ) : result && result.kind === 'journey' ? (
             <JourneyBody {...props} result={result} />
           ) : (
@@ -181,9 +196,28 @@ function ArtHeader({
  * Slice 3 (screens §9): the political modal. The paper's masthead strip in place of the art, the
  * stamp over its right end; the headline and text; the knock-on lines; Continue only.
  */
-function PoliticalBody({ result: r }: { result: PoliticalResult }) {
+function PoliticalBody({
+  result: r,
+  onContinue,
+  continuePending,
+}: {
+  result: PoliticalResult;
+  onContinue?: () => void;
+  continuePending?: boolean;
+}) {
   const k = r.knockOns;
   const lines: Array<{ id: string; text: string }> = [];
+  // Slice 5 (tech design §10.3): out of the cells or the infirmary, the record struck.
+  if (k.heat)
+    lines.push({ id: 'heat', text: copy.risk.heatKnock(k.heat.before, k.heat.after, heatWord(heatState(k.heat.after))) });
+  if (k.health) lines.push({ id: 'health', text: copy.risk.healthKnock(k.health.before, k.health.after) });
+  if (k.record)
+    lines.push({ id: 'record', text: copy.risk.recordKnock(recordWord(k.record.after.level), k.record.after.marks) });
+  if (k.barred)
+    lines.push({
+      id: 'barred',
+      text: copy.risk.barredFrom(k.barred.cityName, `${formatWeekday(k.barred.until)} ${formatClock(k.barred.until)}`),
+    });
   if (k.pc) lines.push({ id: 'pc', text: copy.pcLeft(k.pc.before - k.pc.after, k.pc.after) });
   if (k.morale) {
     lines.push({
@@ -204,7 +238,19 @@ function PoliticalBody({ result: r }: { result: PoliticalResult }) {
     });
   }
   // Slice 4 (screens §6.3): a move or a room: the Iron, a home seat given up, a candidacy withdrawn.
-  if (k.iron) lines.push({ id: 'iron', text: copy.ironLeft(k.iron.before - k.iron.after, formatNumber(k.iron.after)) });
+  if (k.iron) {
+    const spent = k.iron.before - k.iron.after;
+    lines.push({
+      id: 'iron',
+      text:
+        r.act === 'bail'
+          ? copy.risk.bailPaid(spent)
+          : r.act === 'walkOut'
+            ? copy.risk.wardPaid(spent)
+            : copy.ironLeft(spent, formatNumber(k.iron.after)),
+    });
+  }
+  if (k.energy) lines.push({ id: 'energy', text: copy.risk.energyKnock(k.energy.before - k.energy.after) });
   if (k.seatGivenUp) lines.push({ id: 'seat', text: copy.residence.seatGivenUp(k.seatGivenUp.cityName) });
   if (k.candidacyWithdrawn) lines.push({ id: 'candidacy', text: copy.residence.candidacyWithdrawn });
   const t = { until: r.until, at: r.at };
@@ -257,11 +303,23 @@ function PoliticalBody({ result: r }: { result: PoliticalResult }) {
         className="sticky bottom-0 z-10 mt-auto border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
         data-testid="result-buttons"
       >
-        <Dialog.Close asChild>
-          <Button variant="outline" className="w-full">
+        {onContinue ? (
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={onContinue}
+            pending={continuePending}
+            data-testid="political-continue"
+          >
             Continue
           </Button>
-        </Dialog.Close>
+        ) : (
+          <Dialog.Close asChild>
+            <Button variant="outline" className="w-full">
+              Continue
+            </Button>
+          </Dialog.Close>
+        )}
       </div>
     </>
   );
@@ -307,6 +365,30 @@ function JourneyBody({
                 {copy.travel.heraldYours}
               </li>
             )}
+            {/* Slice 5 (screens §8.2): rival ground's warning (the first trip), the day's flags, Heat. */}
+            {a.knockOns.rivalGround && (
+              <li className="border-b border-dotted border-faint py-1 font-body text-[12.5px]" data-testid="arrival-rival">
+                {copy.risk.rival.arrivalWarning}
+              </li>
+            )}
+            {a.knockOns.heat && a.knockOns.heat.after !== a.knockOns.heat.before && (
+              <li className="border-b border-dotted border-faint py-1 font-body text-[12.5px]" data-testid="arrival-heat">
+                {copy.risk.heatKnock(
+                  a.knockOns.heat.before,
+                  a.knockOns.heat.after,
+                  heatWord(heatState(a.knockOns.heat.after)),
+                )}
+              </li>
+            )}
+            {(a.knockOns.flags ?? []).map((f) => (
+              <li
+                key={f}
+                className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
+                data-testid="arrival-flag"
+              >
+                {copy.risk.flags[f](result.journey.to.name)}
+              </li>
+            ))}
           </ul>
         </section>
         {journeyCard}
@@ -368,15 +450,31 @@ function ResultBody({
   trainingPlaces,
   ground,
   factionNames,
+  onSentTo,
+  sentToPending,
 }: ResultModalProps & { result: ActionResult }) {
   const [later, setLater] = useState(false);
   const stamp = stampFor(r);
+  const street = r.street ?? null;
   const toneText =
     stamp.tone === 'success' ? 'text-success' : stamp.tone === 'failure' ? 'text-failure' : 'text-partial';
   const e = r.effects;
+  const names0 = factionNames ?? {};
+  // Slice 5 (tech design §10.1): *Mission · Against the Vanguard* before the mission's name.
+  const missionKicker = r.mission
+    ? r.mission.label === 'speech'
+      ? copy.risk.label.speech
+      : r.mission.label === 'watch'
+        ? copy.risk.label.watch
+        : copy.risk.label.against(
+            r.mission.targetFactionId ? (names0[r.mission.targetFactionId] ?? r.mission.targetFactionId) : '',
+          )
+    : null;
   const kicker = r.story
     ? copy.chapterKicker(r.story.ambitionTitle, r.story.chapter, r.story.of)
-    : r.action.times > 1
+    : missionKicker
+      ? `${missionKicker} · ${r.action.name}`
+      : r.action.times > 1
       ? `${r.action.name} · ${r.action.times} times`
       : r.action.name;
   const item = e.item ?? null;
@@ -429,9 +527,13 @@ function ResultBody({
         ground={ground}
       />
       <div className="flex flex-1 flex-col gap-4 px-4 pt-3.5 pb-4">
+        {/* Slice 5 (screens §4.3): the run-in first, when there was one. */}
+        {street?.runIn && <RunInBlock runIn={street.runIn} places={trainingPlaces} />}
         {/* 2. What happened */}
         <section className="flex flex-col gap-1">
-          <span className={cx('label-caps text-[10px]', toneText)}>{kicker}</span>
+          <span className={cx('label-caps text-[10px]', toneText)} data-testid="result-kicker">
+            {kicker}
+          </span>
           <Dialog.Title className="font-display text-[24px] leading-tight font-black">
             {r.headline}
           </Dialog.Title>
@@ -446,7 +548,12 @@ function ResultBody({
             How it went
           </h3>
           {r.attempts.map((a) => (
-            <AttemptRow key={a.index} attempt={a} reason={reasons.byRow.get(a.index) ?? null} />
+            <AttemptRow
+              key={a.index}
+              attempt={a}
+              reason={reasons.byRow.get(a.index) ?? null}
+              dropped={a.index === 1 ? (street?.dropped ?? null) : null}
+            />
           ))}
           {reasons.shared && (
             <p
@@ -486,7 +593,7 @@ function ResultBody({
               ))}
             </ul>
           )}
-          <Receipt r={r} />
+          <Receipt r={r} names={names0} />
         </section>
 
         {/* 5. Knock-on effects */}
@@ -520,6 +627,7 @@ function ResultBody({
           )}
           {/* Review 1 (§13.4, answers §9): a Standing level crossed is a card in the level-up's block. */}
           {e.standingUp && <StandingCard up={e.standingUp} />}
+          <StreetLines street={street} heat={e.heat ?? null} stat={e.stat} />
           {(item ||
             hooks.length > 0 ||
             e.ordersAllDone ||
@@ -638,8 +746,20 @@ function ResultBody({
         className="sticky bottom-0 z-10 mt-auto flex flex-col gap-1.5 border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
         data-testid="result-buttons"
       >
-        {r.again && onAgain ? (
+        {street?.sentTo ? (
+          // Slice 5 (screens §4.3): taken in or carried off: one button, there.
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={onSentTo}
+            pending={sentToPending}
+            data-testid="result-sent-to"
+          >
+            {street.sentTo.kind === 'cells' ? copy.risk.toCells : copy.risk.toInfirmary}
+          </Button>
+        ) : r.again && onAgain ? (
           <AgainButtons
+            mission={r.kind === 'mission'}
             again={r.again}
             onAgain={onAgain}
             againPending={againPending ?? null}
@@ -680,7 +800,16 @@ function StandingCard({ up }: { up: NonNullable<ActionResult['effects']['standin
  * One attempt (review 2, answers §2.3): the index, the outcome in its colour and the XP; under a row
  * that isn't a Success, one plain reason. Nothing opens on a tap: no bar, no roll, no ledger.
  */
-function AttemptRow({ attempt: a, reason }: { attempt: ResultAttempt; reason: string | null }) {
+function AttemptRow({
+  attempt: a,
+  reason,
+  dropped = null,
+}: {
+  attempt: ResultAttempt;
+  reason: string | null;
+  /** Slice 5 (screens §4.3): after a Run or a loss, the check's outcome with *dropped: you ran*. */
+  dropped?: 'ran' | 'lost' | null;
+}) {
   const success = a.outcome === 'success';
   const failure = a.outcome === 'failure';
   const label = success ? 'Success' : a.outcome === 'partial' ? 'Partial' : 'Failure';
@@ -696,6 +825,14 @@ function AttemptRow({ attempt: a, reason }: { attempt: ResultAttempt; reason: st
           data-testid="attempt-outcome"
         >
           {label}
+          {dropped && (
+            <span
+              className="ml-2 font-mono text-[11px] font-normal tracking-normal text-muted normal-case"
+              data-testid="attempt-dropped"
+            >
+              {copy.risk.dropped[dropped]}
+            </span>
+          )}
         </span>
         <span className="font-label text-[13px]">{formatSigned(a.rewards.xp.total)} XP</span>
       </div>
@@ -720,7 +857,7 @@ function AttemptRow({ attempt: a, reason }: { attempt: ResultAttempt; reason: st
  */
 const RECEIPT_BARS = true;
 
-function Receipt({ r }: { r: ActionResult }) {
+function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<FactionId, string>> }) {
   const c = r.character;
   const e = r.effects;
   const item = e.item ?? null;
@@ -781,7 +918,21 @@ function Receipt({ r }: { r: ActionResult }) {
         testId="reward-iron"
       />,
     );
-  if (e.opinion && r.rewards.opinion !== 0)
+  const against = e.opinion?.mode === 'against' ? e.opinion : null;
+  if (against && against.applied !== 0) {
+    // Slice 5 (screens §4.3): *Opinion against the Vanguard in Coalport · −0.20 · Vanguard 9.0 → 8.8 %*.
+    const target = against.targetFactionId ?? against.factionId;
+    const tname = names[target] ?? c.factionNames?.[target] ?? target;
+    rows.push(
+      <ReceiptRow
+        key="opinion"
+        label={copy.risk.opinionAgainst(tname, against.placeName ?? r.place.cityName)}
+        value={`${formatOpinionDelta(-Math.abs(against.applied))} %`}
+        note={copy.reward.opinionMove(tname, formatShare(against.shareBefore), formatShare(against.shareAfter))}
+        testId="reward-opinion"
+      />,
+    );
+  } else if (e.opinion && r.rewards.opinion !== 0)
     rows.push(
       <ReceiptRow
         key="opinion"
@@ -901,6 +1052,7 @@ function ReceiptRow({
  * is short).
  */
 function AgainButtons({
+  mission = false,
   again,
   onAgain,
   againPending,
@@ -909,6 +1061,8 @@ function AgainButtons({
   ready1,
   ready3,
 }: {
+  /** Slice 5 (screens §4.3): a mission's one repeat, *Again · 15 Energy* (the remembered way). */
+  mission?: boolean;
   again: NonNullable<ActionResult['again']>;
   onAgain: (times: 1 | 3) => void;
   againPending: 1 | 3 | null;
@@ -920,9 +1074,11 @@ function AgainButtons({
   const at = (t: number | null) => (t === null ? '—' : formatClock(t));
   // A *Trained* result: the action's verb (stored results from before review 3 have none).
   const verb = again.cost3 === null && again.verb ? again.verb : null;
-  const once = verb
-    ? { full: copy.again.train(verb, again.cost1), label: copy.again.trainLabel(verb) }
-    : { full: copy.again.once(again.cost1), label: copy.again.onceLabel };
+  const once = mission
+    ? { full: copy.risk.wayCost(copy.risk.again, again.cost1), label: copy.risk.again }
+    : verb
+      ? { full: copy.again.train(verb, again.cost1), label: copy.again.trainLabel(verb) }
+      : { full: copy.again.once(again.cost1), label: copy.again.onceLabel };
   const repeat = (
     times: 1 | 3,
     full: string,
@@ -1009,5 +1165,70 @@ function Effect({ label, value, testId }: { label: string; value: string; testId
         {value}
       </dd>
     </div>
+  );
+}
+
+/**
+ * Slice 5 (screens §4.3): the street's knock-on lines, in order: Heat (and the first crossing's card),
+ * the record (and the first mark's card), *Agility +¼*, *Missions remember*. Also a chapter's Heat.
+ */
+function StreetLines({
+  street,
+  heat: chapterHeat,
+  stat,
+}: {
+  street: NonNullable<ActionResult['street']> | null;
+  heat: NonNullable<ActionResult['effects']['heat']> | null;
+  stat: ActionResult['effects']['stat'];
+}) {
+  const heat = street?.heat ?? chapterHeat;
+  const lines: Array<{ id: string; text: string; card?: boolean; tone?: string }> = [];
+  if (heat && heat.after !== heat.before) {
+    lines.push({
+      id: 'heat',
+      text: copy.risk.heatMove(
+        formatSigned(heat.after - heat.before),
+        heat.after,
+        heatWord(heat.state),
+        heat.state !== 'cool' && heat.coolsAt !== null ? formatClock(heat.coolsAt) : null,
+      ),
+      tone: heat.state === 'hot' || heat.state === 'wanted' ? 'text-failure' : undefined,
+    });
+    if (heat.first && heat.state !== 'cool')
+      lines.push({ id: 'heat-card', text: copy.risk.heatCard[heat.state], card: true });
+  }
+  const rec = street?.record ?? null;
+  if (rec && rec.added > 0) {
+    lines.push({ id: 'record', text: copy.risk.nameTaken(rec.marks, recordWord(rec.after)) });
+    if (rec.escalated) lines.push({ id: 'record-escalated', text: copy.risk.secondTime, tone: 'text-failure' });
+    if (rec.first) lines.push({ id: 'record-card', text: copy.risk.recordCard, card: true });
+  }
+  const agi = street?.agility ?? null;
+  if (agi && agi.quarters > 0 && !(stat && stat.stat === 'agi'))
+    lines.push({ id: 'agility', text: copy.risk.agility(4 - agi.quarters) });
+  if (street?.remembered) lines.push({ id: 'remembered', text: copy.risk.remembered });
+  if (lines.length === 0) return null;
+  return (
+    <ul className="mb-1 flex flex-col" data-testid="effect-street">
+      {lines.map((l) =>
+        l.card ? (
+          <li
+            key={l.id}
+            className="my-1 border-[1.5px] border-ink bg-paper-card px-2.5 py-1.5 font-body text-[12.5px] leading-snug"
+            data-testid={`effect-${l.id}`}
+          >
+            {l.text}
+          </li>
+        ) : (
+          <li
+            key={l.id}
+            className={cx('border-b border-dotted border-faint py-1 font-body text-[12.5px]', l.tone)}
+            data-testid={`effect-${l.id}`}
+          >
+            {l.text}
+          </li>
+        ),
+      )}
+    </ul>
   );
 }

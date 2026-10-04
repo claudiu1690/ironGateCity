@@ -1,6 +1,6 @@
 # ADR 0035 — Home-city quarters: outlines and opening on `Quarter`, one overview path for every city
 
-**Status:** proposed (slice 5; extends ADR 0024's revision and the slice-4 district lock) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 5 (extends ADR 0024's revision and the slice-4 district lock) · **Date:** 2026-10-03
 
 ## Context
 

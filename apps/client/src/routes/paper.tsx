@@ -174,7 +174,7 @@ export function PaperPage() {
             onOpen={() => void navigate({ to: '/story/ambition', search: { from: '/paper' } })}
           />
         ))}
-        <DeskList desk={p.desk} />
+        <DeskList desk={p.desk} onHeld={() => void navigate({ to: '/held' })} />
         {/* Sticky, so "To the city" is on the first screen (§12.3). On wide screens it rides above
             the floating tab dock (QA n1), and the page's bottom padding lets the Letters row and the
             desk scroll clear of both. */}

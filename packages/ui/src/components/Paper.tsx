@@ -102,7 +102,13 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
           </div>
         </div>
       )}
-      <ul className="flex flex-col">
+      {/* Slice 5 (screens §8.3): on rival ground the orders wait at home. */}
+      {orders.elsewhere && (
+        <p className="py-1 font-mono text-[12px] text-text-2" data-testid="orders-elsewhere">
+          {copy.risk.rival.ordersIn(orders.elsewhere.cityName)}
+        </p>
+      )}
+      <ul className={cx('flex flex-col', orders.elsewhere && !paper && 'hidden')}>
         {orders.items.map((o) => (
           <li
             key={o.id}
@@ -208,11 +214,13 @@ export function Masthead({ paper }: { paper: Pick<PaperView, 'paper' | 'dateline
   );
 }
 
-function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
+function Row({ label, value, tone, testId }: { label: string; value: string; tone?: string; testId?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-2.5 border-b border-dotted border-faint py-1.5 text-[14px]">
       <dt className="font-body">{label}</dt>
-      <dd className={cx('text-right font-label', tone)}>{value}</dd>
+      <dd className={cx('text-right font-label', tone)} data-testid={testId}>
+        {value}
+      </dd>
     </div>
   );
 }
@@ -233,8 +241,15 @@ function Line({ children, testId, small }: { children: ReactNode; testId?: strin
 }
 
 /** Your desk (§3.3, tech design §10.3): frozen settlement rows plus live rows. */
-export function DeskList({ desk }: { desk: DeskView }) {
+export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void }) {
   const y = desk.yesterday;
+  // Slice 5 (screens §2.5): the held line first while held (a tap goes to the cells or the ward).
+  const held = desk.held ?? null;
+  const heldLine = held
+    ? held.kind === 'cells'
+      ? copy.risk.desk.cells(held.placeName, held.minutesLeft, held.bail ?? 0)
+      : copy.risk.desk.infirmary(held.placeName, held.minutesLeft)
+    : null;
   return (
     <section aria-label="Your desk" className="flex flex-col">
       <div className="label-caps flex justify-between border-t-[3px] border-b border-double border-ink py-1.5 text-[11px] font-semibold">
@@ -242,6 +257,22 @@ export function DeskList({ desk }: { desk: DeskView }) {
         <span className="font-normal">since your last paper</span>
       </div>
       <dl data-testid="desk">
+        {heldLine &&
+          (onHeld ? (
+            <button
+              type="button"
+              onClick={onHeld}
+              className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 border-b border-dotted border-faint text-left font-body text-[14px] text-failure hover:bg-paper-card"
+              data-testid="desk-held"
+            >
+              <span>{heldLine}</span>
+              <span aria-hidden="true" className="font-label text-[18px]">
+                ›
+              </span>
+            </button>
+          ) : (
+            <Line testId="desk-held">{heldLine}</Line>
+          ))}
         {/* Review 1 (§9.1): the wage row, with its seniority and ordinance lines. */}
         {desk.salary ? (
           <>
@@ -298,6 +329,33 @@ export function DeskList({ desk }: { desk: DeskView }) {
             +{desk.restedBanked} · {desk.rested.value} / {desk.rested.cap}
           </span>
         </div>
+        {/* Slice 5 (screens §2.5): where you are on rival ground, then Heat and the record. */}
+        {desk.where?.rivalGround && (
+          <Row
+            label={copy.risk.desk.whereYouAre}
+            value={copy.risk.desk.rivalGround(desk.where.rivalGround.cityName)}
+            testId="desk-where"
+          />
+        )}
+        {desk.heat && desk.heat.value > 0 && (
+          <Row
+            label="Heat"
+            value={copy.risk.heatDesk(
+              copy.risk.heatState[desk.heat.state],
+              desk.heat.value,
+              desk.heat.coolsAt !== null ? formatClock(desk.heat.coolsAt) : null,
+            )}
+            tone={desk.heat.state === 'hot' || desk.heat.state === 'wanted' ? 'text-failure' : undefined}
+            testId="desk-heat"
+          />
+        )}
+        {desk.record && desk.record.level !== 'clean' && (
+          <Row
+            label={copy.risk.yourRecord}
+            value={copy.risk.recordLine(copy.risk.recordLevel[desk.record.level], desk.record.marks)}
+            testId="desk-record"
+          />
+        )}
         <Row
           label="Energy"
           value={`${desk.energy.value} / ${desk.energy.max}${desk.energy.fullAt ? ` · full at ${formatClock(desk.energy.fullAt)}` : ''}`}

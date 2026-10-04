@@ -119,6 +119,37 @@ export type {
 export { StatPointsPanel, TabBar } from './components/Shell';
 export type { StatPointsPanelProps, TabBarProps, TabId, TabItem } from './components/Shell';
 export { Stamp } from './components/Stamp';
+// Slice 5 (tech design §12.2).
+export {
+  MissionBriefing,
+  MissionTicket,
+  RiskLine,
+  WayRow,
+  missionLabel,
+  missionLockText,
+  missionRiskWord,
+  riskLineText,
+  ticketWay,
+} from './components/Missions';
+export type { MissionBriefingProps, MissionTicketProps, RiskLineProps, WayRowProps } from './components/Missions';
+export {
+  EncounterModal,
+  EncounterRow,
+  HealthBar,
+  HeatRow,
+  RiskRows,
+  RunInBlock,
+  fadesOnLine,
+  healthNow,
+  heatNow,
+  heatWord,
+  recordText,
+  recordWord,
+  runInReason,
+} from './components/Street';
+export type { EncounterModalProps, EncounterRowProps, RiskRowsProps, RunInChoice } from './components/Street';
+export { HeldScreen, heldVoiceLine, minutesLeft } from './components/Held';
+export type { HeldPending, HeldScreenProps } from './components/Held';
 export type { StampProps, StampTone } from './components/Stamp';
 export { TYPE_LABEL, Ticket, placeTagText } from './components/Ticket';
 export { GroundSash, groundOf } from './components/GroundSash';
@@ -130,7 +161,11 @@ export {
   DistrictsList,
   IssueRow,
   IssuesSection,
+  LockMark,
   OpinionBars,
+  QuarterTeaserSheet,
+  QuartersList,
+  quarterLockLine,
   RegisterSheet,
   ResidenceCard,
   Rosette,
@@ -154,6 +189,8 @@ export type {
   IssueRowProps,
   IssuesSectionProps,
   OpinionBarsProps,
+  QuarterTeaserSheetProps,
+  QuartersListProps,
   RegisterSheetProps,
   ResidenceCardProps,
   TramBarProps,

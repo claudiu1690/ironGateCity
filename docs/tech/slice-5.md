@@ -1742,3 +1742,62 @@ The smallest working change in each case. No economy number changed.
 - **`OrdersView.elsewhere`** is set in `ordersView` whenever the character stands on rival ground, naming the residence city (which `{city}` names too). A visitor on rival ground reads the residence paper (§11.1, unchanged; tested).
 - **The settlement's `today`** is written with `missions: 0` and `rivalCityId: null` (the rules' empty tally has neither), and **`record.marks`** is set to the live marks only when one has faded.
 - **In Print** is matched by id with an escaped dot: `/\.(hero|quoted|seen|cells|infirmary|deported)$/`.
+
+### Phase C (T21–T27)
+
+The smallest working change in each case. No economy number changed; the GDD needs no edit.
+
+**T21 (the UI package)**
+
+- **The new components** are in `Missions.tsx` (`MissionTicket`, `RiskLine`, `WayRow`, `MissionBriefing`), `Street.tsx` (`EncounterModal`, `EncounterRow`, `RunInBlock`, `HeatRow`, `HealthBar`, `RiskRows`, and the client's lazy ticks `heatNow` / `healthNow`) and `Held.tsx` (`HeldScreen`); the quarters' `QuarterTeaserSheet`, `QuartersList` and `LockMark` are in `Capital.tsx`, and `TramBar` gains a `quarters` mode (every quarter, the current one inverted, a locked one's tap opens its teaser). The Me tab's three rows are one component, `RiskRows`, rather than separate `RecordRow` and `HeatRow` (§12.2).
+- **Smooth motion everywhere** (the user's review-3 preference): `tokens.css` gains `ease-dim`, `ease-card` and `ease-sheet` (the place sheet's curve and 300 ms; a fade under reduced motion). The new modals and sheets use them, and so do the existing `BottomSheet` and `ResultModal`, which popped before.
+- **No half-empty screens** (the user's review-3 preference): on a phone the run-in and the cells', the infirmary's and the record's release modals are cards at the bottom over the dimmed screen, not full-screen pages (screens §5 says "a `ResultModal`-sized card"). From 640 px they are centred cards as designed.
+- **The risk line is its own row across the bottom of the mission ticket**, under the stub, the text and the button. Screens §10 says the longest line (*Heat +24 · Dangerous · if caught, three marks on your record*, 56 characters) never wraps at 360 px in 11 px Courier, but Courier's advance is 0.6 em, so it needs about 370 px. It is tracked in a little (−0.03 em) and wraps below about 390 px. **For the designer.**
+- **Phase A's three placeholder UI cases:** the stamps print the design's *Taken in* and *Taken to the infirmary*; a stamp longer than twelve characters is set smaller so it stays on the picture. The residence card's `rivalGround` state prints *You can't live or stand here* (the wide layout's card; a phone drops the folded row on rival ground to keep the map's room). **The record tag's words are not in the design:** it reads ***Your record · −10 % Iron*** (`copy.risk.recordTag`), the house form of a ticket's Iron tag (*Street Fund · +25 % Iron*). **For the designer.**
+- **A rival-ground ticket's *worse odds*** are its tag's words only: the check's `rivalGround` row no longer prints a second *Rival ground · worse odds* tag. A checked ticket with `energy3: null` (rival ground, the held taps) has one wider *Once* button. The ticket's `RECORD` lock reads *Not with your record*.
+- **The rival reason line was never printed:** `RIVAL_ROW`'s id is `rivalGround`, but `copy.reason.penalty` had only `rival-ground`. Both keys now hold the line (*This is rival ground; everything is harder here.*).
+- **Copy added to `copy.risk`** (all in the vocabulary tests' reach): `recordTag`, `toCells`, `toInfirmary`, `whileYouWait`, `heatMe`, `heatDesk`, `needsPc`, the political knock-ons (`heatKnock`, `healthKnock`, `energyKnock`, `recordKnock`), `quarterLocked`, `quartersIn`, `healthLine`, `heatReward`, `briefingKicker`, `payNone`, `rival.word` and `errors.*` (the refusals' words). The run-in's *did* sentences stay the developer's drafts.
+- **Fixtures** for the UI tests are in `@irongate/rules/testing` (`slice5.ts`), read from a dev run; `packages/ui/test/slice5.test.tsx` covers every new component and state of §15's UI row and runs both vocabulary guards (with the screens' banned list and the war words) over what the slice-5 components print.
+
+**T22 (the home overview and quarters)**
+
+- **`/city/$cityId/overview` is any home city's overview** (a quarter route segment; no quarter has that id). The capital keeps `/city/irongate` as its overview. `/city/coalport` is the landing quarter in place: the quarter of `?loc`, else the last viewed this session (`sessionStorage`, `irongate.lastQuarter.<city>`, apart from the capital's district memory so the index route and the Map tab keep `/city/<home>`), else the first open one.
+- **A quarter's plate** is the home plate with the capital's way back (*‹ Coalport*), the kicker *Coalport · The Harbour* (from 640 px; a phone keeps the plate short, since the way back and the heading say it) and the quarter's name as the heading (21 px, as a district's). The overview's plate is the home plate.
+- **With one quarter open (Levels 1–5) a home city keeps slice 4's view**: no bar, no dim outside the quarter, no hold to its frame, the slice-4 plate, whose city name (*Coalport ›*) is the way to the overview and its teasers (quarters.spec step 2: "the name to the overview"). Screens §3.1 puts the bar on every quarter view, but with the bar and the lock the slice 1–4 layout specs failed (a Duskwall pin out of reach at 640 × 900 under the taller plate card; a Mill pin a hair past the viewport at 375 × 812), and every existing `/city/<home>` spec must pass unchanged (T22).
+- **The quarter view proper (its plate with *‹ Coalport*, the quarter bar, the lock) starts when two quarters are open** (Level 6). In the bar a locked quarter's chip carries the lock mark and opens its teaser. On a phone under 700 px tall the orders fold to one line under the bar, as in the capital, so the pins keep their room.
+- **The overview's names carry their lock lines:** `CityMap`'s `name` pins now set `sub` under the name (Courier 10 px), and the name placement counts its width, so the Sidings' *Opens with a later edition* no longer overlaps the Harbour at 360 px.
+- **The Places list is titled *Places in Coalport · The Harbour*** in a quarter, and *Quarters of Coalport* lists the three on the overview.
+- **The out-of-Energy card** is computed from the unlocked tickets and missions; with nothing open it does not show. Before, a place with only members-only tickets (a rival HQ, and slice 4's capital HQs of another party) took the minimum of nothing and showed *Out of Energy* at a full bar.
+
+**T23 (missions and run-ins)**
+
+- **The run-in gate** (`features/street/RunInGate.tsx`) sits in the shell above every screen. It shows the run-in modal while the run-in is pending, then the result (with its run-in block) until Continue or *To the cells* closes it (`encounter.close`). *Again* from that result closes the run-in first, then starts the same mission's remembered way (or the same tap on rival ground) under a new key, and shows its result in the gate. At `decideBy` + 1.5 s it reads again, so luck's result replaces the modal on a screen left open.
+- **A `RunInPending` answer** (from `mission.start` or `action.perform`) seeds `encounter.current`'s cache, so the modal opens without a second request.
+- **The briefing is at most 72 dvh** (screens §4.2: 70), with its rows' gaps and the sticky button (48 px) a little tighter, so the Far Bank's 360-character briefing keeps its first two ways above the button on 375 × 667 (screens §10).
+- **A mission result's repeat** is one button, *Again · 15 Energy* (the remembered way); a result that sent you to the cells or the infirmary has only *To the cells* / *To the infirmary*.
+
+**T24 (the held screens, Me, HUD, desk)**
+
+- **`HeldView` gains optional `art` and `voice`** (rules types, additive; `getHeld` fills them: the held place's picture by the result's ladder, and `portrait.duty-officer` or `portrait.matron`). The client has no asset catalogue to build them from. This is the one server change in phase C.
+- **On a desktop the held screen is the 640 px column over the held place's own picture, dimmed**, not over the dimmed city map (the map is not mounted on `/held`), which also meets the user's preference for scene art behind the important screens.
+- **Being held** sends the index route and the Map tab to `/held`; the city screen goes there too once its result modal and any run-in are closed. `/held` with nothing held goes back to the city.
+- **The Me tab's rows** sit in the *Wearing and papers* card, under the party card line. The strike-off is a political act (`usePoliticalAct`) with its modal.
+- **The HUD's Heat line** (a 14 px line under a 44 px tap target) sits on its own line above the gauges, at the right under Political Capital; the Health bar spans the gauges' grid under Party XP. Both tick on the client (`heatNow`: a point every `stepMs`; `healthNow`: counted back from `fullAt`).
+- **The desk's held row** is a button to the held screen; the *Where you are*, Heat and record rows follow *Rested*.
+
+**T25 (rival ground)**
+
+- **The nation card:** `state: 'rival'` is now an open rival home (Level 10): the line *Rival ground · Home city of the Vanguard*, the note, and *Board*. `barred` reads *Barred · until {weekday} {time}*, no button. The pin reads *Duskwall · rival ground · 27 min*. The slice-4 UI test that rendered `rival` as *Rival ground · from a later edition* now renders the no-service card (test-only).
+- **The journey card:** a gated row prints its detail only (no odds word); a hostile card's Heat prints as *Heat +10* and its flag line under the outcome. The arrival modal's knock-ons add the warning (first trip), the Heat moved and the day's flags.
+- **The plate on rival ground** shows the home party's crest and share (it printed the player's party label beside the home share), the pressure line with `left` to one decimal, and the Heat line.
+- **The orders panel** on rival ground gives the compact list's place to *Your orders are in Coalport today*; the paper's list keeps both.
+
+**T26 (e2e, vocabulary, report)**
+
+- **The three Playwright projects** run after `qa-capital` in the order `quarters` → `missions` → `rival`. **`rival`'s match is anchored to the file name** (`/(^|[\\/])rival\.spec\.ts$/`): `/rival\.spec\.ts/` also matches `arrival.spec.ts`, and in the phone project's ignore list it would have dropped the arrival spec.
+- **`quarters.spec.ts`** runs the walk-through on the phone and the overview and a quarter at 360 × 640, 375 × 667, 812 × 375 and 1440 × 900 (no overlapping names, 44 px chips, no sideways scroll). **`missions.spec.ts`** adds the 375 × 667 layout check (§12.4: the HUD at most two lines taller, the briefing's first two rows above its button, the run-in without a scroll, the cells above the fold). Step 8 forces a Failure (roll 99) rather than a Partial: the caught check runs on either.
+- **The risk section** of `pnpm report:playtest` is `packages/db/src/risk.ts` (a pure builder, 11 fixture tests). From the five collections it cannot read **strike-offs** and **record levels going down** (both only in `requestLogs`): it prints *not recorded*. **Fades** are an estimate (the missions' marks faded with `liveMarks`, as if nothing was struck off), **time Hot** an approximation (5 an hour from each stored Heat reading), **flags** only from answered cards (a card slept through stores none), **pressure** rebuilt from the opinion lines, and **repeats with *Again*** inferred (the same mission and way started within 10 minutes of the last result). A run against a dev database after the walk-throughs printed every risk table.
+
+**T27 (docs)**
+
+- The README's test hooks, the report's risk section and three walk-throughs (*A first mission*, *A night in the cells*, *A rival trip*); ADRs 0031–0035 accepted.

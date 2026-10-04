@@ -53,7 +53,8 @@ import { withRequestKey } from './requestKey';
 import { barsLive, healthDoc, healthTimerOf, heatDoc, heatRateOn, heatTimerOf, marksOf } from './risk';
 import { legMinutesBetween } from './travelService';
 import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
-import { energyState, toCharacterView, wornStats } from './views';
+import { pickArt } from './art';
+import { assetView, energyState, toCharacterView, wornStats } from './views';
 
 /**
  * Slice 5 (ADR 0033, tech design §8.2): the cells and the infirmary. A stay is written inside the
@@ -572,6 +573,9 @@ export async function getHeld(deps: { user: SessionUser; content: GameContent; n
         },
     health: { value: hp, max, fullAt: hp >= max ? null : healthFullAt(healthTimerOf(c), now) },
     tap: heldTapView(content, c),
+    // Phase C: the screen's picture and the voice beside its one line (screens §6, §7).
+    ...(place && city ? { art: pickArt(content, city, place.location, now) } : {}),
+    voice: assetView(content, cells ? 'portrait.duty-officer' : 'portrait.matron'),
     release: h.state === 'out' ? ((stay?.result as PoliticalResult | null) ?? null) : null,
     election: null,
     paperUnread: loaded.editionReadAt === null ? 1 : 0,

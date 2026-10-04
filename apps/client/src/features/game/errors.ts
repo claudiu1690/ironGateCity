@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { formatClock, weekdayOf } from '@irongate/ui';
+import { formatClock, formatWeekday, weekdayOf } from '@irongate/ui';
 import { gameErrorOf } from '../../lib/trpc';
 
 /** A refused request, worded for the player. The server's reason decides; the client only words it. */
@@ -105,6 +105,40 @@ export function noticeFor(error: unknown): string | undefined {
       return copy.errors.notYetCandidate;
     case 'WRONG_FACTION':
       return copy.errors.wrongFaction;
+    // Slice 5: missions, run-ins, the cells and the infirmary, the record, rival ground.
+    case 'HELD':
+      return game.kind === 'infirmary' ? copy.risk.errors.heldWard : copy.risk.errors.heldCells;
+    case 'RUN_IN_PENDING':
+      return copy.risk.errors.runInPending;
+    case 'NO_RUN_IN':
+      return copy.risk.errors.noRunIn;
+    case 'MISSION_LOCKED':
+      return game.lock === 'LEVEL'
+        ? copy.risk.locked.level(Number(game.need))
+        : game.lock === 'RANK'
+          ? `Needs Rank ${String(game.need)}.`
+          : copy.needsReputation(Number(game.need));
+    case 'RECORD_BARRED':
+      return copy.risk.locked.record;
+    case 'ONCE_ON_RIVAL_GROUND':
+      return copy.risk.errors.onceOnRivalGround;
+    case 'OWN_FACTION_TARGET':
+      return copy.risk.errors.ownFaction;
+    case 'UNKNOWN_MISSION':
+    case 'UNKNOWN_WAY':
+      return copy.risk.errors.moved;
+    case 'BARRED':
+      return copy.risk.rival.barred(
+        typeof game.until === 'number' ? `${formatWeekday(game.until)} ${formatClock(game.until)}` : '',
+      );
+    case 'NOT_HELD':
+    case 'NOT_IN_CELLS':
+    case 'NOT_IN_INFIRMARY':
+      return copy.risk.errors.notHeld;
+    case 'NO_MARKS':
+      return copy.risk.errors.noMarks;
+    case 'CANNOT_PAY':
+      return game.why === 'NOT_BRIBABLE' ? copy.risk.wontBeBought : copy.risk.needsIron(Number(game.cost ?? 0));
     default:
       return 'That did not go through. Check your connection and tap again.';
   }

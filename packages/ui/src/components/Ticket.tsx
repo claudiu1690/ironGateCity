@@ -21,12 +21,14 @@ export function placeTagText(t: PlaceTagView): string {
       return copy.capital.comebackTag(t.pct);
     case 'membersOnly':
       return copy.capital.membersOnly;
-    // Slice 5 (screens §4.1, §8.3): the server sends these from phase B; the record tag's words wait
-    // for the designer (phase C), so it prints the receipt's part form for now.
+    // Slice 5 (screens §4.1, §8.3). The record tag's words are not in the design: the house form of
+    // a ticket's Iron tag (*Your record · −10 % Iron*, tech design Deviations, phase C).
     case 'rivalGround':
-      return copy.risk.rivalGroundTag;
+      return t.fxpPct === 50
+        ? copy.risk.rivalGroundTag
+        : copy.risk.rivalGroundTag.replace('+50 %', `+${t.fxpPct} %`);
     case 'record':
-      return copy.risk.yourRecordPart(Math.abs(t.ironPct));
+      return copy.risk.recordTag(Math.abs(t.ironPct));
     case 'pressureCapped':
       return copy.risk.pressureCapped;
   }
@@ -83,9 +85,14 @@ export function Ticket({
         ? `Level ${a.locked.need}`
         : a.locked.reason === 'MEMBERS_ONLY'
           ? copy.capital.membersOnly
-          : copy.needsReputation(a.locked.need);
+          : a.locked.reason === 'RECORD'
+            ? copy.risk.locked.record
+            : copy.needsReputation(a.locked.need);
   const short1 = energy.value < a.energy;
   const short3 = a.energy3 !== null && energy.value < a.energy3;
+  // Slice 5 (screens §8.3): on rival ground, and the cell's and the ward's one tap, a checked ticket
+  // has one button, *Once* (no ×3: `energy3` is null).
+  const onceOnly = a.kind !== 'training' && a.energy3 === null;
   const readyAt = short1 ? energyReadyAt(energy, a.energy) : null;
   const hint =
     blocked ??
@@ -108,7 +115,11 @@ export function Ticket({
   // Slice 4 (screens §5.2): the order is cost change · Issue · Close race · Comeback · council rule ·
   // Party order; the close race's better odds are its own tag's words, not a second one.
   const placeTags = a.placeTags ?? [];
-  const placeBonus = new Set(placeTags.some((t) => t.kind === 'closeRace') ? ['battleground'] : []);
+  const placeBonus = new Set([
+    ...(placeTags.some((t) => t.kind === 'closeRace') ? ['battleground'] : []),
+    // Slice 5 (screens §8.3): rival ground's worse odds are its own tag's words.
+    ...(placeTags.some((t) => t.kind === 'rivalGround') ? ['rivalGround'] : []),
+  ]);
   const bonusTags = (a.preview?.bonuses ?? [])
     .filter(
       (b) =>
@@ -206,6 +217,19 @@ export function Ticket({
           >
             {/* Review 3 (GDD §8.5): the title's verb, never "Train" (content `verb`). */}
             {pending === 1 ? '…' : (a.verb ?? copy.typeLabel.training)}
+          </button>
+        ) : onceOnly ? (
+          <button
+            type="button"
+            onClick={() => onPerform(1)}
+            disabled={blocked !== null || short1 || !!pending}
+            aria-busy={pending === 1 || undefined}
+            aria-label={`${a.name}, once, ${a.energy} Energy`}
+            aria-describedby={hint ? hintId : undefined}
+            className={cx(button, 'w-16 bg-ink text-[12px] tracking-[0.08em] uppercase hover:bg-ink-2')}
+            data-testid="ticket-once"
+          >
+            {pending === 1 ? '…' : copy.ticket.once}
           </button>
         ) : (
           <>

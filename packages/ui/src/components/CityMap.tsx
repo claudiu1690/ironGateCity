@@ -1259,7 +1259,11 @@ export function CityMap({
           id: l.id,
           x,
           y,
-          half: nameHalfWidth(nameText(l, w), l.pin?.marks ?? [], w < NARROW_NAMES),
+          // Slice 5: a locked quarter's lock line under its name may be the wider of the two.
+          half: Math.max(
+            nameHalfWidth(nameText(l, w), l.pin?.marks ?? [], w < NARROW_NAMES),
+            l.pin?.sub ? (l.pin.sub.length * 6 + 24) / 2 : 0,
+          ),
           outline: shape?.map(([fx, fy]) => at(fx, fy)),
         };
       });
@@ -2035,7 +2039,6 @@ export function CityMap({
                         type="button"
                         onClick={() => onSelect(l.id)}
                         onFocus={() => onPinFocus(l)}
-                        aria-label={label}
                         data-testid="hotspot"
                         data-pin={style}
                         data-marks={marks.join(' ') || undefined}
@@ -2045,7 +2048,10 @@ export function CityMap({
                           'hotspot label-caps pointer-events-auto absolute top-0 left-0 flex min-h-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1.5 border-[1.5px] font-semibold whitespace-nowrap shadow-[0_3px_10px_rgb(0_0_0/0.5)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
                           w < NARROW_NAMES ? 'px-2 text-[10.5px]' : 'px-2.5 text-[12px]',
                           on ? 'border-ink bg-paper text-ink' : 'border-paper bg-ink text-paper',
+                          // Slice 5 (screens §3.2): a locked quarter's lock line under its name.
+                          l.pin?.sub && 'flex-col justify-center gap-0 py-0.5 leading-tight',
                         )}
+                        aria-label={l.pin?.sub ? `${label}, ${l.pin.sub}` : label}
                       >
                         {marks.includes('residence') && (
                           <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" data-testid="pin-residence">
@@ -2054,7 +2060,9 @@ export function CityMap({
                         )}
                         <span>{nameText(l, w)}</span>
                         {l.pin?.sub && (
-                          <span className="font-mono text-[10px] tracking-normal normal-case opacity-85">{l.pin.sub}</span>
+                          <span className="font-mono text-[10px] tracking-normal normal-case opacity-85" data-testid="pin-sub">
+                            {l.pin.sub}
+                          </span>
                         )}
                       </button>
                     ) : (

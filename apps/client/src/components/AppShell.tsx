@@ -1,10 +1,11 @@
 import { copy } from '@irongate/content/copy';
-import { HudBar, OrdersComplete, TabBar } from '@irongate/ui';
+import { HudBar, OrdersComplete, TabBar, healthNow, heatNow } from '@irongate/ui';
 import type { TabId, TabItem } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useLayoutEffect, useRef } from 'react';
 import { DevPanel } from '../features/dev/DevPanel';
+import { RunInGate } from '../features/street/RunInGate';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { useResultModalOpen } from '../lib/modalGate';
 import { trpc } from '../lib/trpc';
@@ -18,7 +19,7 @@ import { useMinWidth } from '../lib/useNow';
 export function AppShell() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { character, nextTickIn } = useCharacter();
+  const { character, nextTickIn, now } = useCharacter();
   const stat = usePlaceStat();
   const wide = useMinWidth(1024);
   const paperDue = !!character?.paperDue && !pathname.startsWith('/paper');
@@ -59,10 +60,14 @@ export function AppShell() {
   // Slice 4 (tech design §12.1): on a train the Map tab lands on the journey; in the capital, on the
   // last district viewed.
   const district = character ? lastDistrict(character.cityId) : null;
+  // Slice 5 (screens §6): in the cells or on the ward (and until the release modal is closed), the
+  // Map tab lands on the held screen.
   const cityHref = !character
     ? '/'
-    : character.journey
-      ? '/journey'
+    : character.held
+      ? '/held'
+      : character.journey
+        ? '/journey'
       : district
         ? `/city/${character.cityId}/${district}`
         : `/city/${character.cityId}`;
@@ -103,6 +108,12 @@ export function AppShell() {
           <HudBar
             character={character}
             nextTickIn={nextTickIn}
+            heat={heatNow(character.heat, now)}
+            health={
+              character.health
+                ? { value: healthNow(character.health, now), max: character.health.max }
+                : undefined
+            }
             onPlaceStat={stat.place}
             placing={stat.placing}
           />
@@ -157,6 +168,8 @@ export function AppShell() {
           }}
         />
       )}
+      {/* Slice 5 (tech design §12.1): the run-in modal and its result, above every screen. */}
+      {character && <RunInGate />}
       {/* Memory mode only: renders nothing unless the server has its test hooks on. */}
       <DevPanel />
     </div>

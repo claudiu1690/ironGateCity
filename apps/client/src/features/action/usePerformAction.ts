@@ -25,8 +25,12 @@ export function usePerformAction(onResult: (result: ActionResult) => void) {
       noteServerNow(result.character.serverNow);
       queryClient.setQueryData(trpc.character.me.queryKey(), result.character);
       void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
-      // Slice 5: a tap on rival ground may start a run-in; its modal is the run-in gate's (phase C).
-      if (result.kind === 'runIn') return;
+      // Slice 5: a tap on rival ground may start a run-in; its modal is the run-in gate's (the shell).
+      if (result.kind === 'runIn') {
+        queryClient.setQueryData(trpc.encounter.current.queryKey(), { pending: result } as never);
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: trpc.held.get.queryKey() });
       onResult(result);
     },
     onSettled: () => {

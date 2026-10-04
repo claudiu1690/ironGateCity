@@ -308,9 +308,13 @@ describe('the nation (screens §2)', () => {
     expect(screen.getByTestId('city-board')).toHaveTextContent('Board · 20 Iron · 12 min');
   });
 
-  it('rival ground and no service: the lock line and no button; below Level 10: From Level 10', () => {
-    const { unmount } = render(<CityCard city={city('ashford')} names={NAMES} onBoard={noop} />);
-    expect(screen.getByTestId('city-lock')).toHaveTextContent('Rival ground · from a later edition');
+  it('no service: the lock line and no button; below Level 10: From Level 10', () => {
+    // Slice 5 (screens §8.1): rival ground opens at Level 10, so `rival` is an open card now (the
+    // slice-5 tests cover it); a city with no service keeps its lock line and no button.
+    const { unmount } = render(
+      <CityCard city={{ ...city('ashford'), state: 'later', lockWord: 'no service yet' }} names={NAMES} onBoard={noop} />,
+    );
+    expect(screen.getByTestId('city-lock')).toHaveTextContent('No service yet');
     expect(screen.queryByTestId('city-board')).toBeNull();
     unmount();
     render(<CityCard city={{ ...city('irongate'), state: 'level' }} names={NAMES} onBoard={noop} />);

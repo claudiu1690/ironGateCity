@@ -11,6 +11,8 @@ import {
   OrdersList,
   Picture,
   ProgressBar,
+  ResultModal,
+  RiskRows,
   Rosette,
   ScoreboardLine,
   StatPointsPanel,
@@ -19,17 +21,21 @@ import {
   formatClock,
   formatNumber,
   formatWeekday,
+  healthNow,
+  heatNow,
   helpMark,
   plural,
 } from '@irongate/ui';
+import { heatState } from '@irongate/rules';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { authClient, resetSession } from '../lib/auth';
-import { isNetworkError, trpc } from '../lib/trpc';
+import { isNetworkError, trpc, trpcClient } from '../lib/trpc';
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -52,7 +58,9 @@ const dayMonth = (ms: number) =>
 export function MePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { character: c } = useCharacter();
+  const { character: c, now } = useCharacter();
+  // Slice 5 (screens §2.4): *Have a mark struck off*, one tap, the political modal.
+  const strike = usePoliticalAct();
   // Slice 4: the hero, the heroes and the scoreboard come only from `character.me` (an action's
   // character view carries none), so the Me tab reads it fresh before it renders.
   const fresh = useQuery({ ...trpc.character.me.queryOptions(), refetchOnMount: 'always' });
@@ -144,6 +152,22 @@ export function MePage() {
               )}
             </span>
           )}
+          {/* Slice 5 (screens §2.4): Health, Heat and the record, under the party card. */}
+          {c.record && c.health && (
+            <RiskRows
+              heat={heatNow(c.heat, now)}
+              heatState={heatState(heatNow(c.heat, now))}
+              coolsAt={c.heat?.coolsAt ?? null}
+              health={{ value: healthNow(c.health, now), max: c.health.max }}
+              record={c.record}
+              pc={c.pc}
+              onStrike={() =>
+                void strike.run('strike', (k) => trpcClient.record.strike.mutate({ idempotencyKey: k }))
+              }
+              strikePending={strike.pending === 'strike'}
+              notice={strike.error ? noticeFor(strike.error) : null}
+            />
+          )}
           {/* Slice 3 (screens §8): the office line under the party card. */}
           {c.office ? (
             <Link
@@ -224,6 +248,8 @@ export function MePage() {
             )}
           </Card>
         )}
+
+        <ResultModal result={strike.result} open={strike.open} onOpenChange={strike.setOpen} />
 
         <BottomSheet open={faceOpen} onOpenChange={setFaceOpen} title={copy.chooseYourFace}>
           {faces.data ? (

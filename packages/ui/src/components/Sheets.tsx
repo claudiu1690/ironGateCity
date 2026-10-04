@@ -283,10 +283,11 @@ export function BottomSheet({ open, onOpenChange, title, children }: BottomSheet
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/60" />
+        <Dialog.Overlay className="ease-dim fixed inset-0 z-40 bg-ink/60" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col gap-3 overflow-y-auto bg-paper p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-ink sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2"
+          // Slice 5 (review 3: never pop): it slides up on a phone and rises in from 640 px.
+          className="ease-sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col gap-3 overflow-y-auto bg-paper p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-ink sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2"
         >
           <Dialog.Title className="font-display text-[22px] font-bold">{title}</Dialog.Title>
           {children}

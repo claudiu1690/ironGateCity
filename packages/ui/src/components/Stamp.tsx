@@ -26,6 +26,8 @@ export function Stamp({ tone, label, className, animate = true }: StampProps) {
       className={cx(
         'label-caps inline-block -rotate-8 border-4 border-double bg-paper/95 px-4 py-1 text-[26px] font-semibold tracking-[0.14em] whitespace-nowrap',
         animate && 'motion-safe:animate-stamp',
+        // Slice 5: a long stamp (*Taken to the infirmary*) is set smaller, so it stays on the picture.
+        label.length > 12 && 'px-3! text-[17px]! tracking-[0.1em]! sm:text-[22px]!',
         t,
         className,
       )}

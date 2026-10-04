@@ -172,7 +172,50 @@
   animation: place-fade-out var(--place-ms) var(--place-ease) both;
 }
 
+/*
+ * Slice 5 (the user's review 3: overlays and sheets ease in, never pop): the modals and bottom sheets
+ * on the same curve. `ease-sheet` slides up on a phone and rises over the dim from 640 px (the
+ * briefing, the bottom sheets); `ease-card` rises (the result modal from 640 px, the run-in card);
+ * `ease-dim` fades the overlay. Transform and opacity only.
+ */
+.ease-dim[data-state='open'] {
+  animation: place-fade-in var(--place-ms) var(--place-ease) both;
+}
+.ease-dim[data-state='closed'] {
+  animation: place-fade-out var(--place-ms) var(--place-ease) both;
+}
+.ease-card[data-state='open'] {
+  animation: place-rise-in var(--place-ms) var(--place-ease) both;
+}
+.ease-card[data-state='closed'] {
+  animation: place-rise-out var(--place-ms) var(--place-ease) both;
+}
+.ease-sheet[data-state='open'] {
+  animation: place-sheet-in var(--place-ms) var(--place-ease) both;
+}
+.ease-sheet[data-state='closed'] {
+  animation: place-sheet-out var(--place-ms) var(--place-ease) both;
+}
+@media (min-width: 640px) {
+  .ease-sheet[data-state='open'] {
+    animation: place-rise-in var(--place-ms) var(--place-ease) both;
+  }
+  .ease-sheet[data-state='closed'] {
+    animation: place-rise-out var(--place-ms) var(--place-ease) both;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .ease-dim[data-state='open'],
+  .ease-card[data-state='open'],
+  .ease-sheet[data-state='open'] {
+    animation: place-fade-in var(--place-fade-ms) ease both;
+  }
+  .ease-dim[data-state='closed'],
+  .ease-card[data-state='closed'],
+  .ease-sheet[data-state='closed'] {
+    animation: place-fade-out var(--place-fade-ms) ease both;
+  }
   .place-sheet[data-state='open'],
   .place-side[data-state='open'],
   .place-panel[data-state='open'],

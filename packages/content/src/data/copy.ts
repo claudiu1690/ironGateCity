@@ -256,6 +256,8 @@ export const copy = {
       weather: 'The rain was against you.',
       inspector: 'The Branch Inspector was watching.',
       'rival-ground': 'This is rival ground; everything is harder here.',
+      // Slice 5: the rules' row id (`RIVAL_ROW`), tech design §10.2.
+      rivalGround: 'This is rival ground; everything is harder here.',
     } as Record<string, string>,
     luckGood: "Bad luck. The odds were good; it just didn't come off. Try again.",
     luckFair:
@@ -967,6 +969,52 @@ export const copy = {
     pressureCapped: 'The town has had enough today · no opinion',
     cantLiveHere: "You can't live or stand here",
     yourRecordPart: (n: number) => `your record −${n}`,
+    /**
+     * A ticket's record tag (`PlaceTagView` `record`): the design names none (phase A's placeholder,
+     * tech design Deviations); the house form of a ticket's Iron tag, *Street Fund · +25 % Iron*.
+     */
+    recordTag: (pct: number) => `Your record · −${pct} % Iron`,
+    /** The result's one button after the cells or the infirmary (screens §4.3). */
+    toCells: 'To the cells',
+    toInfirmary: 'To the infirmary',
+    /** The held screens' *While you wait* rows (screens §6.5, §7.5). */
+    whileYouWait: 'While you wait',
+    /** Me tab (screens §2.4): "32 · Noticed · cool by 20:40" (no time while Cool). */
+    heatMe: (n: number, state: string, time: string | null) =>
+      `${n} · ${state}${time ? ` · cool by ${time}` : ''}`,
+    /** The desk (screens §2.5): "Noticed (32), cooling · Cool by 20:40". */
+    heatDesk: (state: string, n: number, time: string | null) =>
+      `${state} (${n}), cooling${time ? ` · Cool by ${time}` : ''}`,
+    needsPc: (n: number) => `Needs ${n} Political Capital`,
+    /** The political modal's knock-ons (tech design §10.3). */
+    heatKnock: (a: number, b: number, state: string) => `Heat ${a} → ${b} · ${state}`,
+    healthKnock: (a: number, b: number) => `Health ${a} → ${b}`,
+    energyKnock: (n: number) => `−${n} Energy`,
+    recordKnock: (level: string, n: number) => `Your record · ${level} · ${n} ${n === 1 ? 'mark' : 'marks'}`,
+    /** The quarter bar's lock mark, read aloud. */
+    quarterLocked: (name: string) => `${name}, not open yet`,
+    /** The Places pill and list on a home city's overview (screens §3.2). */
+    quartersIn: (city: string) => `Quarters of ${city}`,
+    /** The run-in block's Health line (screens §4.3): "Health 125 → 109". */
+    healthLine: (a: number, b: number) => `Health ${a} → ${b}`,
+    /** Refusals, worded (the server decides; phase C). */
+    errors: {
+      heldCells: "You're in the cells: the door opens when the time is up, or pay bail.",
+      heldWard: "You're on the ward: out when the time is up, or walk out.",
+      runInPending: 'Answer the run-in first.',
+      noRunIn: 'That run-in is over.',
+      onceOnRivalGround: 'Once at a time on rival ground.',
+      ownFaction: "That's your own side.",
+      moved: 'This moved on in another window. Reload to carry on.',
+      notHeld: "You're out already.",
+      noMarks: 'Your record is clean.',
+    },
+    /** The briefing's kicker (screens §4.2): "Mission · The Shipyard". */
+    briefingKicker: (place: string) => `Mission · ${place}`,
+    /** The pay row of an opponent who won't be bought (no price to print). */
+    payNone: 'Pay them off',
+    /** A hostile card's Heat on the card's receipt and the arrival (screens §8.2). */
+    heatReward: (n: number) => `Heat ${n >= 0 ? '+' : '−'}${Math.abs(n)}`,
 
     // The mission ticket and the briefing (screens §4.1, §4.2).
     missions: 'Missions',
@@ -1212,6 +1260,8 @@ export const copy = {
 
     // Rival ground (screens §8).
     rival: {
+      /** The nation pin's tag: *Duskwall · rival ground · 15 min* (screens §8.1). */
+      word: 'rival ground',
       cardLine: (faction: string) => `Rival ground · Home city of the ${faction}`,
       cardNote:
         'Everything is harder here. Heat doubles, every tap can bring a run-in, and party work pays half again. Nothing you own is at risk.',

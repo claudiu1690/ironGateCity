@@ -2,7 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
 import type { JourneyCardResult, JourneyCardView, NationCityView, LocationView } from '@irongate/rules';
 import { useRef } from 'react';
-import { cx, formatClock, formatOpinionDelta, formatUntil } from '../format';
+import { cx, formatClock, formatOpinionDelta, formatUntil, formatWeekday } from '../format';
 import { statName } from '../odds';
 import { Button } from './Button';
 import { OpinionBars } from './Capital';
@@ -22,7 +22,12 @@ import { Stamp } from './Stamp';
 
 /** Why a city has no Board button, in the card's words (or null when it has one). */
 export function cityCardNote(c: NationCityView): string | null {
-  if (c.state === 'rival') return copy.travel.rivalGroundLater;
+  // Slice 5 (screens §8.1): rival ground is open from Level 10; the card says what it means.
+  if (c.state === 'rival') return copy.risk.rival.cardNote;
+  if (c.state === 'barred')
+    return copy.risk.rival.barred(
+      c.barredUntil ? `${formatWeekday(c.barredUntil)} ${formatClock(c.barredUntil)}` : '',
+    );
   if (c.state === 'later') return copy.travel.noServiceYetCard;
   return null;
 }
@@ -30,7 +35,7 @@ export function cityCardNote(c: NationCityView): string | null {
 /** The Board button's label and whether it can be tapped. */
 export function boardButton(c: NationCityView): { label: string; enabled: boolean } | null {
   if (c.state === 'level') return { label: copy.travel.fromLevel(10), enabled: false };
-  if (c.state !== 'open' || !c.fare || c.minutes === null) return null;
+  if ((c.state !== 'open' && c.state !== 'rival') || !c.fare || c.minutes === null) return null;
   if (c.canBoard.ok) return { label: copy.travel.board(c.fare.total, c.minutes), enabled: true };
   if (c.canBoard.reason === 'NOT_ENOUGH_IRON') return { label: copy.travel.needsFare(c.fare.total), enabled: false };
   return null;
@@ -81,6 +86,12 @@ export function CityCard({ city: c, names, onBoard, boardPending, onSeeDistricts
       {election && (
         <p className="font-mono text-[11.5px] text-text-2" data-testid="city-election">
           {election}
+        </p>
+      )}
+      {/* Slice 5 (screens §8.1): *Rival ground · Home city of the Vanguard* (open or barred). */}
+      {c.rival && (c.state === 'rival' || c.state === 'barred') && (
+        <p className="label-caps text-[10px] font-semibold text-failure" data-testid="city-rival">
+          {copy.risk.rival.cardLine(names[c.rival.homeFactionId] ?? c.rival.homeFactionId)}
         </p>
       )}
       {note && (
@@ -250,7 +261,8 @@ export function JourneyProgress({ from, to, boardedAt, arrivesAt, now }: Journey
  * the detail does not name the stat, it is added after the odds word. An unchecked choice: the detail.
  */
 export function choiceLine(c: JourneyCardView['choices'][number]): string {
-  if (!c.stat || c.chance === null) return c.detail;
+  // Slice 5 (screens §8.2): a gated row prints no odds word; its detail says what it depends on.
+  if (c.gated || !c.stat || c.chance === null) return c.detail;
   const stat = copy.odds.statLine(c.stat.stats.map(statName));
   return [copy.odds.band(c.chance), ...(c.detail.includes(stat) ? [] : [stat]), c.detail].join(' · ');
 }
@@ -334,6 +346,11 @@ export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = 
               {chosen.reason}
             </p>
           )}
+          {chosen.flag && (
+            <p className="font-mono text-[11.5px] text-failure" data-testid="journey-flag">
+              {chosen.flag.line}
+            </p>
+          )}
           {chosen.rewards.length > 0 && (
             <p className="font-mono text-[11.5px]" data-testid="journey-rewards">
               {chosen.rewards
@@ -342,7 +359,9 @@ export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = 
                     ? `${copy.reward.opinion(x.note ?? '')} ${formatOpinionDelta(x.amount)} %`
                     : x.id === 'points'
                       ? `+${x.amount} points${x.note ? ` · ${x.note}` : ''}`
-                      : `${x.amount > 0 ? '+' : '−'}${Math.abs(x.amount)} ${x.id === 'xp' ? copy.reward.xp : x.id === 'fxp' ? copy.reward.fxp : x.id === 'iron' ? copy.reward.iron : 'Rested'}`,
+                      : x.id === 'heat'
+                        ? copy.risk.heatReward(x.amount)
+                        : `${x.amount > 0 ? '+' : '−'}${Math.abs(x.amount)} ${x.id === 'xp' ? copy.reward.xp : x.id === 'fxp' ? copy.reward.fxp : x.id === 'iron' ? copy.reward.iron : 'Rested'}`,
                 )
                 .join(' · ')}
             </p>
