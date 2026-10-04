@@ -879,7 +879,7 @@ From the first visit (Level 10, day 5 for the model, and a ticket), so the model
 
 ### 22.6 The flat and the room
 
-The flat's 2,500 is two days' Iron at day 15 and the rent 150 a week is 1 % of weekly income: the flat is affordable to anyone who wants it and its value is Rested (**+25 a night is +175 a week, about 260 XP and 120 Iron of bonus**, so the rent pays for itself in Iron alone), the cap +50 (the capital room's figure without the room), the *Evening* outfit and +2 Charisma at home. The room (+10 a night) is a small reward arriving for everyone. A player who never buys a flat loses nothing but a comfort.
+The flat's 2,500 is two days' Iron at day 15 and the rent 150 a week is 1 % of weekly income: the flat is affordable to anyone who wants it and its value is Rested (**+25 a night is +175 a week, about 260 XP and 120 Iron of bonus**, so the rent pays for itself in Iron alone), the cap +50 (the capital room's figure without the room), the *Evening* outfit and +2 Charisma at home. The room (+10 a night) is a small reward arriving for everyone. A player who never buys a flat loses nothing but a comfort. **Settled 4 Oct 2026:** rent can be paid at most eight weeks ahead (1,200 Iron parked at most), which changes no sum here.
 
 ### 22.7 Legacy
 

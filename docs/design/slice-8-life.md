@@ -98,14 +98,14 @@ Nothing else: no Energy, Iron, Rested or opinion effect on any item in the MVP. 
 
 ### 3.5 Shops: a card on a place (no shop screen)
 
-A place's sheet may carry a **`shop`** (content on the location, like `jobs`): a kicker (*FOR SALE · THE CLOTHES STALL*), the items it sells with prices, what it buys. One tap buys (a confirm sheet when the price is over 1,000 Iron: *Buy the greatcoat for 4,500 Iron?*); a modal `bought`. Buying needs the item's Level and, where set, Rank or membership. A shop **buys back** at a tenth of its own prices (never keepsakes, never the kit): *Sell something* opens the sellable items as rows, each with a confirm sheet (selling is the one act that takes a thing away by the player's own hand, so it is never one tap).
+A place's sheet may carry a **`shop`** (content on the location, like `jobs`): a kicker (*FOR SALE · THE CLOTHES STALL*), the items it sells with prices, what it buys. One tap buys (a confirm sheet when the price is over 1,000 Iron: *Buy the greatcoat for 4,500 Iron?*); a modal `bought`. Buying needs the item's Level and, where set, Rank or membership. **The clothes stall buys anything sellable at a tenth of its catalogue price** (so a party coat *sells for 80 Iron at a market*); every other shop buys only what it sells, at the same tenth; never keepsakes, never the kit, never a worn item (settled 4 Oct 2026, §21 Q1). *Sell something* opens the sellable items as rows, each with a confirm sheet (selling is the one act that takes a thing away by the player's own hand, so it is never one tap).
 
 | Shop | Place kind | Where in the MVP | Sells |
 |---|---|---|---|
 | **The clothes stall** | `market` | Market Row (Coalport), the Customs Market (Duskwall), Bridge Street (Ashford), Market Square (Irongate), Back Lane Market (Clearwater) | the standard coat, a good hat |
-| **The party store** | `faction-hq` (members only) | every HQ, the capital houses | the party's coat (II), the party badge, paste and brush |
-| **The tailor** | `hotel` | the Grand Hotel (Irongate), the Pier Hotel (Clearwater), the Mountain Inn (Duskwall) | the greatcoat, evening dress, the wristwatch (III); the three-piece suit (IV, the Grand Hotel only) |
-| **The press** | `press` | Herald House, Gazette House, the Clarion, the Sentinel | the press pass, the press camera; the correspondent's suit (Gazette House, Alliance members, III) |
+| **The party store** | `faction-hq` (members only) | every HQ, the capital houses | the party's coat (II), the party badge, paste and brush, **the press pass and the press camera** (settled 4 Oct 2026, §21 Q33: the branch has a tame reporter, so a Level-6 item is not behind the Level-10 train for Coalport and Duskwall) |
+| **The tailor** | `hotel`, or the Mountain Inn (a `bar` with rooms; §21 note 6) | the Grand Hotel (Irongate), the Pier Hotel (Clearwater), the Mountain Inn (Duskwall) | the greatcoat, evening dress, the wristwatch (III); the three-piece suit (IV, the Grand Hotel only) |
+| **The press** | `press` | **Herald House and Gazette House** (the Clarion and the Sentinel are mastheads, not places; §21 Q33) | the press pass, the press camera; the correspondent's suit (Gazette House, Alliance members, III) |
 | **The back room** | `bar` (Rank 3+) | The Anchor (Coalport), the Gate Tavern (Irongate), the Red Lantern (Irongate), the Mountain Inn's taproom, the Casino | forged papers, wire cutters; **the bribe that clears a mark** (§3.8) |
 
 The **record's surcharge** (§11.3: *Repeat offender*: clothing +15 %; pinned here: +15 % at every shop from *Repeat offender*, **+30 % at *Notorious***) is a price line on the card (*Your record: +15 %*). The *Timber Rates* Issue's and the *Free Market Charter*'s `ironPct` do not touch prices (they are income effects).
@@ -137,7 +137,7 @@ At a `bar` with a back room, from Rank 3, one row: **Have a mark struck off · {
 
 ### 3.9 The catalogue (GDD §21.4, the slice-8 additions)
 
-Eleven items exist (slice 2, 3, 5, 7). The slice adds **eighteen** wearable or usable items and **eleven keepsakes** (the chapters, §8). Art ids in `packages/content/src/data/art.ts`; files in `mvp/items`; *new* = §19.
+Eleven items exist (slice 2, 3, 5, 7). The slice adds **nineteen** wearable or usable items (the rosette, the pen and the case among them: wearable keepsakes) and **ten slotless keepsakes** (the chapters, §8). Art ids in `packages/content/src/data/art.ts`; files in `mvp/items`; *new* = §19.
 
 | Id | Name | Slot | Tier · said as | Charisma | Armour | Effects | Price (Iron) | Where | Needs | Art |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -192,7 +192,7 @@ The player's private intelligence journal, the **Dossier tab** (the tab bar's fo
 | *Listen to the cells* / *Talk to the ward* (slice 5) | **25 %** on a Success | criminal / neutral | a random name of the city |
 | A **society call** (§3.7) | 25 % on a Success | asset | a named figure of the place's city |
 | A patron's **gossip** (Acquaintance, §5.3) | every Monday's paper | the patron's choice (Crane: political; Marr: asset) | a name of the patron's city |
-| An **informant** (§4.4) | one entry every 2 days for 14 days | pattern or political | the informant's name |
+| An **informant** (§4.4) | one entry every 2 days for 14 days (seven reports) | pattern and political, alternating | a name of the informant's town (§4.4; settled 4 Oct 2026, §21 Q20) |
 
 Every entry is a knock-on line on the result modal (*Dossier: an entry on Josef Baum · political · goes stale on Thursday*) with the small book mark the tab's dot uses.
 
@@ -205,7 +205,7 @@ Every entry is a knock-on line on the result modal (*Dossier: an entry on Josef 
 | Use | Needs | What happens | Where |
 |---|---|---|---|
 | **An exposé** (§4.5) | a political or criminal line in the file | a three-step story; a swing against the name's party; a headline with your name; the file is spent on a Success or a Partial | a `press` place |
-| **Sell** | any file or entry | **a file 200 Iron; a fresh entry 50, a stale one 25**; one tap, a confirm sheet; the paper does not print it | a `station` place (*the man by the left-luggage*) |
+| **Sell** | any file or entry | **a file 200 Iron; a fresh entry 50, a stale one 25**; one tap, a confirm sheet; the paper does not print it | a `station` place (*the man by the left-luggage*): **Central Station, the Goods Yard (Duskwall) and Clearwater Station** in the MVP (Coalport's and Ashford's stations sit in teaser quarters; §21 Q33) |
 | **An informant** (§4.4) | a pattern line, and **Associate** with the patron of the name's city | the file becomes an informant for 14 days | the Dossier tab |
 
 | **The Headline Story** (slice 6's Alliance event, GDD §16.3) | a file on a name of the event's target party | the caller may attach it at the call (one tap on the call sheet's new row *Attach a Case File*); the file is spent, the name burned for 14 days, the event's swing +50 % and the name in the result's headline | the call sheet |
@@ -218,13 +218,13 @@ A Case File with a pattern line, in a city where the player is **Associate** or 
 
 ### 4.5 The exposé (three steps; the slice's story)
 
-At a `press` place (the Clarion, the Sentinel, Gazette House, Herald House; the Courier's office is not a place), the sheet carries a ticket **Take a Case File to the paper · 20 Energy** when the player holds a file with a political or criminal line, dimmed with the reason otherwise (*No Case File with something to print*). **One exposé a day** per player (the editor prints one story). Tier-3 shape (§13.1): a choice, a check, the result; resumable.
+At a `press` place (**Herald House or Gazette House**; the Clarion, the Sentinel and the Courier are mastheads, not places: a Coalport or Duskwall player prints in the capital or in Ashford; §21 Q33), the sheet carries a ticket **Take a Case File to the paper · 20 Energy** when the player holds a file with a political or criminal line, dimmed with the reason otherwise (*No Case File with something to print*). **One exposé a day** per player (the editor prints one story). Tier-3 shape (§13.1): a choice, a check, the result; resumable.
 
-**Step 1 · the file and the angle.** The files that qualify as rows (the name, the party, the lines, *3 lines* / *5 lines*); then two choices (a flag): ***The facts, plainly*** (*Every line checked. It runs on page three.*) or ***The story, with a headline*** (*Page one, if the editor bites.*). The flag chooses the texts and the split of the swing: *plainly* takes the swing from the party to **Neutral** entirely; *the headline* splits it **half to your party, half to Neutral** (§14.2's rule for an action against a rival), and is **a point of difficulty harder**.
+**Step 1 · the file and the angle.** The files that qualify as rows (the name, the party, the lines, *3 lines* / *5 lines*); then two choices (a flag): ***The facts, plainly*** (*Every line checked. It runs on page three. Nothing to your party's name.*) or ***The story, with a headline*** (*Page one, if the editor bites. A point harder.*). The flag chooses the texts and the split of the swing: *plainly* takes the swing from the party to **Neutral** entirely; *the headline* splits it **half to your party, half to Neutral** (§14.2's rule for an action against a rival), and is **a point of difficulty harder**.
 
 **Step 2 · the check.** Difficulty by the file's weight: **18 with three lines' worth, 16 with four, 14 with five or more** (+1 for *the headline*; +2 in the capital's and Clearwater's papers, the ladder's rule; the camera's `chancePct expose 10` applies). Three ways: ***Write it straight*** (Intelligence) · ***Talk the editor into it*** (Charisma and Intelligence) · ***Legwork: check every line twice*** (best). No run-in, no Heat (an exposé is legal). CTA **Take it to the editor · 20 Energy**.
 
-**Step 3 · the result.** Success: **opinion −1.0 against the name's party in the name's city** (split by the flag), **XP 150, Party XP 40, Iron 100** (the paper pays), **+5 Political Capital**, the file spent, a **front-page line with your name** in every paper the next morning (§10.2), Legacy **+2** (*An exposé printed*, §7.1), the name **burned for 14 days** (no second exposé on it). Partial: **−0.5**, 75 / 20 / 50, no PC, the file spent, the line on page three (a headline without the front page). Failure: **nothing moves**, XP 30, the file **kept** (*spiked*; the editor wants more), no Legacy. Rested applies to XP and Iron. Issue tags apply to the swing when the name's city has a tagged Issue the file matches (the Issue's `feeds` include `expose` from this slice); the *Free Press Spring* twist's +50 % is the swing multiplier when it exists. In the capital the swing lands in the name's district (`candidates` carry one); for a deputy or a party figure, in the capital's Government Quarter.
+**Step 3 · the result.** Success: **opinion −1.0 against the name's party in the name's city** (split by the flag), **XP 150, Party XP 40, Iron 100** (the paper pays), **+5 Political Capital**, the file spent, a **front-page line with your name** in every paper the next morning (§10.1), Legacy **+2** (*An exposé printed*, §7.1), the name **burned for 14 days** (no second exposé on it). Partial: **−0.5**, 75 / 20 / 50, no PC, the file spent, the line on page three (a headline without the front page). Failure: **nothing moves**, XP 30, the file **kept** (*spiked*; the editor wants more), no Legacy. Rested applies to XP and Iron. Issue tags apply to the swing when the name's city has a tagged Issue the file matches (the Issue's `feeds` include `expose` from this slice); the *Free Press Spring* twist's +50 % is the swing multiplier when it exists. In the capital the swing lands in the name's district (`candidates` carry one); for a deputy or a party figure, in the capital's Government Quarter.
 
 **On rival ground**, an exposé against the home party is allowed (its swing draws from morale under §14.11's 2-point cap) and its result counts as an action there (recognition, run-ins: a legal mission's 5 %).
 
@@ -269,7 +269,7 @@ A Request is **an order from a patron**: a line in the paper's Letters row (*Fro
 | Tier | Favour | Crane | Marr |
 |---|---|---|---|
 | **Acquaintance** | 10 | **Gossip:** a free Dossier entry (political, a capital name) in every Monday's paper | **Gossip:** a free entry (asset, a Clearwater name) every Monday |
-| **Associate** | 30 | **An introduction:** the mission *The morgue file* at Herald House (surveillance, 12 Energy, difficulty 20, Level 10; pays an entry on a name of the player's choosing among the capital's, and Iron 60) · **informants** in Irongate (§4.4) | **An introduction:** the call *The late table* at the Casino (Charisma 25; pays Favour +3 and an asset entry) · informants in Clearwater |
+| **Associate** | 30 | **An introduction:** the mission *The morgue file* at Herald House (surveillance, 12 Energy, difficulty 20, Level 10; pays an entry on a name of the player's choosing among the capital's, and Iron 48, the tier-2 rate) · **informants** in Irongate (§4.4) | **An introduction:** the call *The late table* at the Casino (Charisma 25; pays Favour +3 and an asset entry) · informants in Clearwater |
 | **Confidant** | 60 | **A headline planted · 25 Political Capital, once a week:** +50 momentum for your party on one Issue of one city (the Governor's Address's figure; attributed to you) | **The bank's discretion · 20 Political Capital, once a week:** Heat to 0 now, and the back room's bribe at half price for 7 days |
 | **Protégé** | 90 | **Endorsement:** +2 to your total in every home-council count and +1 point of score in a battleground count while Protégé · **Edith Crane's pen** (§3.9) · Legacy +5 (*Protégé of Edith Crane*) | **Endorsement** (the same) · **Julius Marr's cigarette case** · Legacy +5 |
 
@@ -533,7 +533,7 @@ Every string was read against `content-policy-review.md` §7. The Vanguard's coa
 
 **Chapter 7 · *The cutting*** · art `scene.newsroom`
 *Step 1.* The Herald's morgue has a cutting from March '21: *Councillor Loses Seat; Questions on Baths Fund*. Edith Crane has it on her desk when you come in. "Your father. I was the junior who wrote it. Do you want to know who gave me the story?"
-- A · *Yes* (hint: *A name for the Dossier, and a debt to Crane.* `asked-crane`) · B · *No. Let him stay a councillor who lost* (hint: *Some files stay shut.* `let-it-lie`)
+- A · *Yes* (hint: *The truth, and a debt to Crane.* `asked-crane`) · B · *No. Let him stay a councillor who lost* (hint: *Some files stay shut.* `let-it-lie`)
 *Step 2 · The second source.* The story was true and the fund was his own money, which the cutting left out. Crane will print a correction twenty-five years late, if you can bring her a second source.
 - *Find the clerk who kept the fund's book* (Intelligence) · *Ask Crane to run it on your name alone* (Charisma and Intelligence) · *Legwork. Walk the Rows for anyone who used the baths* (best)
 *Step 3.* Success — *Corrected* — Page five, a paragraph: the fund was the councillor's own, and the baths were built. Crane signs it. Favour +5. A cutting goes in the suitcase next to the old one. · Partial — *A letter* — A letter to the editor, under your name, printed on Thursday. Crane says it's what she can do with one source. Favour +5. · Failure — *Held* — The clerk is dead and the Rows don't read page five. Crane keeps the cutting on her desk, which she says is a kind of printing.
@@ -706,7 +706,9 @@ Outcome texts (Success / Partial):
 | Appendix A | Wardrobe, outfit, Case File, exposé, Favour, Request, Legacy, the season, the back room |
 | Appendix C | #71 closed; new #74 (no weapon slot), #75 (recognition sizes), #76 (the exposé's swing), #77 (Favour pace), #78 (Blackmail and Denounce deferred), #79 (the flat waits), #80 (no track or twist in season 1), #81 (the season score's +100) |
 
-Companion edit: `docs/economy.md` §22.
+| §0, §6.4, §10.4, §11.3, §14.12, §17.4, §18.3, §21.1 (settled, 4 Oct 2026) | *Wanted* bars society calls; the *On file* +5 dropped; the press places and stations named; the exposé's refusals; forged papers as a check at 14; the flat's row corrected and the rent's eight-week cap; *Lodgings in {city}*; the party store's press pass and camera; the stall's buy-back rule |
+
+Companion edit: `docs/economy.md` §22 (and §22.6's note on the rent cap).
 
 ---
 
@@ -747,6 +749,8 @@ Companion edit: `docs/economy.md` §22.
 | 11 | `scene.lido` | The Lido on a Sunday: the pavilion, deckchairs to the water, the bandstand with a brass band, the lake behind | scene |
 | 12 | `scene.front-page` (optional) | A newspaper front page coming off the press, the headline band blank (text is never drawn), a pressman's hands; the exposé's result art, else `newsroom.png` | scene |
 
+**Done 4 Oct 2026:** all twelve generated in the noir style and saved: `mvp/items/{stewards-jacket,convenors-coat,correspondents-suit,good-hat,press-pass,fountain-pen,cigarette-case,rosette}.jpg` (512 × 512, like the existing items) and `mvp/scenes/{flat,casino,lido,front-page}.png` (2688 × 1520). Checked: the steward's jacket has a plain collar (no tabs), the rosette is cream and ink with a blank centre, the press pass says only PRESS, the front page's headline band is blank; no symbol anywhere.
+
 Twelve pieces (eleven with the optional). The crest rule holds: nothing on any coat, cap, hat, badge, rosette or wall.
 
 ---
@@ -761,3 +765,138 @@ Twelve pieces (eleven with the optional). The crest rule holds: nothing on any c
 6. **The season score's election bonus is 100, not the GDD's 10** (§9.2). Default: **100**, so a national election is worth about a month of a four-point lead. The alternative keeps 10, at which the elections cannot change the Champion.
 7. **No season track and no Season Twist in season 1** (§9.3). Default: **neither**; the skeleton is the election, the Champion, the awards and the rollover. The alternative builds the thirty-tier free track now.
 8. **Blackmail and Denounce are deferred** (§4.3); the Dossier's uses are the exposé, the sale and the informant. Default: **deferred** (they need a favour economy with players and a removal rule that reads as fair). The alternative builds Denounce for controlled cities now.
+
+---
+
+## 21. Settled for the build (4 Oct 2026; answers to `docs/tech/slice-8.md` §22.1 and §23)
+
+The architect's default stands wherever the answer below says **default**; the rest are the deviations, with the reason. Every number that moved is also in the GDD (§17's table gains the rows marked *settled*).
+
+### 21.1 The fifty questions
+
+**The Wardrobe and shops**
+
+1. **Who buys what: default.** The clothes stall buys anything sellable at a tenth of the *catalogue* price (`buys: 'any'`); every other shop buys only what it sells (`'own'`). §3.5 now says "the catalogue price", which is what screens §3's *Sells for 80 Iron at a market* assumed.
+2. **Selling an item saved in an outfit: default** (allowed; it leaves the outfit; a coat falls back to the faction's work clothes). The strings: the confirm sheet's second line, Courier, ***It's in your {outfit} outfit; selling takes it out.*** (two outfits: *It's in your Town and Evening outfits; selling takes it out of both.*); the `sold` modal's knock-on line ***Taken out of your {outfit} outfit*** (*Taken out of your Town and Evening outfits*). A worn item is never sellable (*Take it off first*, unchanged).
+3. **Rounding: default** (whole Iron, half up: 800 → 920, 150 → 173).
+4. **Prepaying rent: deviation.** **At most eight weeks ahead** (`paidThroughDay ≤ today + 55`): the buttons dim with the Courier line *Paid eight weeks ahead*. Reason: the rent waits anyway, so prepaying is never urgent, and *paid until next spring* on the desk reads as a bug. Eight weeks covers a season's absence with a week to spare.
+5. **Buying the flat: default** (standing in the residence city; the rent from anywhere).
+6. **A flat elsewhere: default** (every bonus needs its city to be the residence; the +2 also needs standing there).
+7. **The *Evening* set at purchase: default** (what is worn at the purchase).
+8. **Forged papers at the checkpoint: default**, written out: with forged papers in the Papers slot, *Show your papers* on *Papers, please* becomes **a Charisma check at the card's difficulty 14 with the papers' +10** in place of the Cool-and-Clean gate; its Partial is the party card's (*They write your name down*: +10 Heat, *Watched*; the papers kept); the `checkpoint` bonus applies to *Talk your way through* as well; the press pass passes as the party card does (the gate, unchecked). The design's "a Failure with them in hand" (§3.6) is read as the card's Partial, since cards never fail.
+
+**Society calls**
+
+9. **Party XP: none** (default; economy §22.3 stands). A call pays Favour where a mission pays Party XP; the ticket's tags say *no Party XP · +2 Favour with {patron}*.
+10. **Level 10** for every call (default).
+11. **The record and Heat at society venues: pinned.** ***Wanted* bars every society call** (the ticket dimmed: *Not while you're Wanted · the doorman has the list*), which is GDD §6.4's line built; **the *On file* "+5 Charisma at some venues" is dropped** from §11.3 (the record already taxes the Wardrobe through the shop surcharge, and a second rule on the same door is bookkeeping). Not built: anything else.
+12. **The morgue file: default** (a name picker on the briefing from the capital's names; Iron 48, the tier-2 rate on 12 Energy; no existing surveillance mission names a figure: each lands on a random name of its target party). Design §5.4's "Iron 60" was the 15-Energy figure by mistake.
+13. **The late table: default** (Favour +3 on a Success, +1 on a Partial; the asset entry on a Success).
+
+**Recognition**
+
+14. **The night doubles the Charisma and office parts together; the Legacy part is not doubled** (default; the worked figure 30 = (5 + 10) × 2). §3.6's sentence is read so.
+15. **Offices held now** (default).
+
+**The Dossier**
+
+16. **The third that is not a rival's is the actor's own party's; Brandauer and any `drawn: false` name are never drawn** (default).
+17. **Own party and no party: refused** (default). The strings: the exposé ticket's state and its Courier reason, and the file card's text button replaced by the same words: ***Not against your own party*** · *The {paper} prints nothing against the {party}'s own. Sell the file at a station, or turn it.*; ***Nobody to print it against*** · *{name} belongs to no party. Sell the file at a station, or turn it.* Such files sell and turn as any other.
+18. **The burn is per player** (default): your own exposé or Headline Story; another player's file on the name is untouched. The alternative (a republic-wide scoop) would let one player lock a name for everyone, which at low population is one player locking the town.
+19. **A burned name still gathers entries** (default); *nothing new for {n} days* means no exposé.
+20. **An informant reports a name of its town** (§4.4; default). §4.2's row is corrected.
+21. **Seven reports** (days +2 … +14; default).
+22. **Binding takes every held entry on the name, fresh and stale** (default): waiting for five lines' worth buys the easier check, which is the clock's reward.
+23. **Entries from any source count toward a Request, the patron's own gossip included** (default).
+
+**The exposé**
+
+24. **No run-in anywhere** (default): an exposé is legal and the paper is indoors; the press place's rival-ground rows apply to its own tickets; the 2-point cap applies when the name's town is its party's home.
+25. **The swing lands in the name's town (its district in the capital), wherever the paper is** (default).
+26. **Printed: Legacy +2 on a Success only; *Something I can print* on a Success or a Partial; a Failure uses the day's one exposé** (default).
+27. **The plain angle credits nothing to the actor's ledger** (default, ADR 0034): all of the swing goes to Neutral, so there is nothing of the actor's party to attribute; the headline angle is the hero's road. Said on the step-1 choice's hint from now: *The facts, plainly* · *Every line checked. It runs on page three. Nothing to your party's name.*
+28. **The front page: the author's stored front page, and one live line in every reader's paper the next morning** (default).
+29. **Issues that feed exposés: two**, `issue.casino-licence` (Clearwater) and `issue.cells-full` (Irongate, Garrison Hill): an exposé on a name of the Issue's city (and district, where the Issue has one) is tagged while the Issue runs (+50 % on the swing, §14.6). The rest of the deck feeds none until a later slice.
+
+**Chapters**
+
+30. **Chapter 7's choice A lands no entry** (default); its hint is rewritten so it promises none: *The truth, and a debt to Crane.* (§16.1).
+31. **Chapter 7's Favour +5 on every outcome** (default; the knock-on lists it on all three).
+32. **Keepsake texts behind *Read*: written** (§21.3), for every keepsake from slice 2 on; `Item.read` is filled in the same content change, and *Read* shows on each.
+
+**Places and art**
+
+33. **The Clarion and the Sentinel are not places: default, with one addition.** The exposé and the press shop are at **Herald House and Gazette House**; Dossier sales at **Central Station, the Goods Yard and Clearwater Station**; no place is added. **The addition: the party store also sells the press pass and the camera** (both Level 6, both reachable before the Level-10 train for every faction; the branch has a tame reporter), so the Level gates read true in every home city. Design §3.5 and §4.5 are corrected.
+34. **The party badge: redrawn by the user** as a neutral cream-and-ink enamel disc (`mvp/items/lapel-badge.jpg`, the same file name, centred: no crop). Alt text: ***A plain round enamel lapel badge, cream with a dark ink rim, on a pin.*** The art build's review list records "no party colour, no device".
+
+**Patrons**
+
+35. **Request timing: default** (arrivals at the boundaries into first visit + 2, + 4 …; skipped while two are open; open four days, *by* the third day after arrival; paid at the boundary after it is done; expired at the fourth).
+36. **"Once a week": seven City Days from the last call** (default).
+37. **The first visit is the first time the patron's card is shown at the place, from Level 10** (default).
+38. **The Protégé's +1 point of score goes to the party once, when at least one of its standing candidates in that count is a Protégé** (default), never one per Protégé.
+39. **Favour earned before the first visit counts** (default).
+40. ***Something I can print* below Level 16 is skipped for the next in rotation** (default).
+
+**Legacy and the season**
+
+41. **Migration 010 backfills** past terms and Hero and Issue entries with their days (default).
+42. **"In the faction for 14 days" is the character's age at the confirmation** until switching exists (default).
+43. **The Champion's ties: more national elections won in the season, then the higher control share at the last boundary, then the seeded draw** (default).
+44. ***A name they know* in home counts only** (default).
+45. **Season 1 is the season in progress when the nation bootstraps, partial, played out with its finale** (default; §22.2's point for the user stands).
+46. **Laws and council rules in force on season day 83 end; one that the old season's last vote brings into force at day 0 stands** (default).
+47. **"A national election won" is the party of the President it seats** (default).
+48. **The halfway move: all four shares halfway to the baseline, then the home floor; ledger rows of kind `season`; morale and Groundswell recomputed at the next boundary** (default).
+
+**Other**
+
+49. **The call is a type of its own for the place's rules** (`seenAs: 'social'`; no close race, no council rule keyed by type; default).
+50. **Item and perk Party XP apply to tier-1 actions and missions, society calls included; not to chapters, event roles or the exposé's fixed rewards** (default).
+
+### 21.2 The twenty-one notes
+
+1. Q33. 2. Q1; §3.5 corrected. 3. Q20; §4.2 corrected. 4. The citation corrected (§10.1). 5. The plan's row rewritten as the architect lists it (`docs/IMPLEMENTATION_PLAN.md` §5). 6. **The Mountain Inn keeps its `bar` kind and carries both the tailor and the back room** (an inn has rooms upstairs and a taproom below); §3.5's table says so; the loader's allowance (a tailor on a `bar`) is the rule. 7. Armour derived from the tier: accepted. 8. The settlement, not a day job: accepted. 9. `legacyEntries`: accepted. 10. Noted; the GDD's sentence stands for the next patron batch. 11. **GDD §17.4's table row corrected** to *+2 Charisma in its city*. 12. Q11. 13. The loader's relaxed floor for `social`: accepted. 14. Q14. 15. Keyed by the mission's own type: accepted (the press pass counts once on a watch). 16. Brandauer as an `extraNames` row: accepted. 17. Nineteen and ten; §3.9's sentence corrected. 18. **The two rooms read apart from this slice: slice 4's paid room in the capital and Clearwater is renamed *lodgings*** in copy (`copy.room` → *Lodgings in {city}*; *Take lodgings · 100 Iron*; *Renew · 100 Iron · 7 more nights*; the help note's first words *A week's lodgings…*), made in slice 8's copy change, not now (the slice-5 developer is in the tree); *a rented room* is only ever the free home. GDD §14.11's and §18.3's rows gain the word in brackets. 19. Q34. 20. **The four voices for the personal lines: §21.4.** 21. Q9.
+
+### 21.3 The keepsakes' *Read* texts (`Item.read`, ≤ 240 characters, four sentences at most; outcome-neutral, since a keepsake is granted on every outcome)
+
+| Id | Text |
+|---|---|
+| `keep.ward-book` | Two hundred names in his hand, a tick or a cross against each. The last page is dated the week he lost his seat. Three names have two ticks. |
+| `keep.prison-letter` | Eleven lines from the prison at Ashford, 1920. He says he didn't set it, and that the night book would show it. Somebody has pencilled a name in the margin. |
+| `keep.marker` | A card with four hundred written on it and a Clearwater address on the back. The syndicate's hand. It has been folded and unfolded a great many times. |
+| `keep.election-bill` | His election bill of '21: the name, the ward, three promises in big type. Somebody wrote *liar* across it and somebody else rubbed it out. |
+| `keep.ledger-page` | A page torn from his ledger: the debt, the dates, the interest in a neater hand than his. The last entry is the week he died. |
+| `keep.deposit-receipt` | Ten marks, received, for the council deposit of '21. Stamped RETURNED in red. The clerk's signature is the same as on yours. |
+| `keep.count-sheet` | The returning officer's sheet from the night you were counted. Two figures: yours, and under it, in chalk, his from '21. One of them was enough. |
+| `keep.minute-book` | The branch's minute book. His pages stop in March '21 at a motion for a public baths, crossed through. The next entry is in your hand. |
+| `keep.ballot-stub` | His ballot stub from the '21 election for Chair, never cast. On the back, in pencil, a question about the orders. It has been asked now. |
+| `keep.cutting` | *Councillor Loses Seat; Questions on Baths Fund.* March '21, the Herald, by a junior named E. Crane. A second cutting, twenty-five years later, is pinned to it. |
+| `keep.rule-draft` | A public baths for the Rows, costed in his hand to the last mark, with a line he never got to move. Under it, in yours, a date and a word. |
+| `keep.list-letter` | The list committee's letter of '20, inviting his name for Parliament. On the back, in his hand: *no. The ward first.* Under it, in yours, a second word. |
+| `keep.polling-card` | His polling card for the republic's vote of '21, unused. The ward book says *didn't go*. You have carried it to the Forecourt since. |
+| `keep.list-receipt` | The clerk's receipt for twenty-five Political Capital and a name on the party's list. The same form as the one in the tin, filled in this time. |
+| `acc.his-rosette` | The rosette the clerk hands new deputies. Cream and dark ribbon, nothing on the centre. You wore it the day your name went on the roll. |
+| `keep.foremans-name` | *Brandauer, nights.* Pencil, another hand, in the margin of the prison letter. The board at the mill gate says the same, '18 to '20. The proof is in the capital. |
+| `keep.collectors-card` | A small man's card: a Clearwater address, *Friday* underlined twice. He drinks at the Anchor on Thursdays and keeps a big ledger. |
+| `acc.cranes-pen` | Edith Crane's own pen, given at Herald House. The nib is worn to her hand. "Write what you can prove," she said, "and sign it." |
+| `acc.marrs-case` | Julius Marr's cigarette case, engine-turned, the band inside it. "The bank's regards," he said. "It opens doors. So does money, but this is quieter." |
+
+`doc.party-card` has no *Read* (it is a line on the Me tab, slice 2).
+
+### 21.4 The personal lines in the four other voices (`docs/tech/slice-8.md` §23 #20; the slice-7 pattern)
+
+**Factual lines print the Herald's deck in every paper:** `expose-front`, `expose-p3`, `expose-spiked`, `case-file`, `dossier-stale`, `patron-letter`, `patron-thanks`, `patron-tier`, `informant`, `flat-due`, `legacy-entry`, `season-week`, `season-front`. **Four carry a voice**; their decks (≤ 200 with the longest tokens):
+
+| Id | Clarion | Sentinel | Gazette | Courier |
+|---|---|---|---|---|
+| `wardrobe-first` | {item}, {charisma} Charisma, seen on {street} yesterday. Holm: "Mind it on the picket line." | {item}, {charisma} Charisma, seen on {street} yesterday. The committee approves of a tidy coat. | {item}, {charisma} Charisma, seen on {street} yesterday. Mr Grey asks who the tailor is. | {item}, {charisma} Charisma, seen on {street} yesterday. The Front has noticed; the Rows have not. |
+| `flat-bought` | {restedLine}. Rent 150 a week, paid until {until}. The branch knows the landlady. | {restedLine}. Rent 150 a week, paid until {until}. The committee notes the address. | {restedLine}. Rent 150 a week, paid until {until}. The Rooms will call, with a book. | {restedLine}. Rent 150 a week, paid until {until}. The lake air, the Courier adds, is included. |
+| `flat-waiting` | The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do. Holm says the landlady is patient. | The rent ran out at midnight. A rented room until you pay a week; the flat waits. The committee expects the matter settled. | The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do. No arrears, the Gazette confirms. | The rent ran out at midnight. A rented room until you pay a week; the flat waits, lake view and all. |
+| `recognised` | A {office} in a {coat} does not pass for a stranger in {city}. Holm: "Wear the mill coat next time." | A {office} in a {coat} does not pass for a stranger in {city}. Plain clothes, the committee notes, were available. | A {office} in a {coat} does not pass for a stranger in {city}. Mr Grey suggests the worn overcoat, and a quiet night. | A {office} in a {coat} does not pass for a stranger in {city}. The lake dresses down for a reason. |
+
+`{office}` for a player with none reads *visitor*; `{coat}` is the coat's name in lower case (*a dress greatcoat*).
+
+### 21.5 For QA
+
+The seven slice-5 risk headline decks changed on 4 Oct 2026 (`hl.cells`, `hl.a.cells`, `hl.a.name-taken` shortened; the four `*.record-up` decks on `{marksLine}`) are in `packages/content/src/data/headlines.ts` and `slice-5-risk.md` §14 together; the fills `{marksLine}` (*One mark* / *{n} marks*), `{how}`'s fallback (*no reason was given.*), `{missionTitle}`'s fallback (*a word with the police*) and `{recordLevel}`'s *On File* are the slice-5 developer's in `copy.ts`.
