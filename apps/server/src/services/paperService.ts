@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { residenceCityId } from './residence';
 import { City, OfficeTerm, PaperEntry } from '@irongate/db';
-import type { CityDoc } from '@irongate/db';
+import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
   ENERGY,
   MONTH_NAMES,
@@ -17,11 +17,12 @@ import {
   weekday,
   xpForLevel,
 } from '@irongate/rules';
-import type { LetterView, LiveHeadline, PaperView, PoliticalFacts } from '@irongate/rules';
+import type { DeskView, LetterView, LiveHeadline, PaperView, PoliticalFacts } from '@irongate/rules';
 import { capitalFacts, paperIssues, visitorFacts } from './capitalPaper';
 import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
 import { restedCapToday } from './modifiers';
+import { isRivalGround, riskView } from './risk';
 import { frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
 import {
   ambitionStatus,
@@ -150,8 +151,9 @@ export async function getPaper(deps: {
       headline: h.headline,
       ...(h.deck ? { deck: h.deck } : {}),
       ...(h.until !== undefined ? { until: h.until } : {}),
-      // Screens §7.3: the hero and the reporter's quote carry the In Print kicker.
-      ...(/.(hero|quoted)$/.test(h.templateId) ? { inPrint: true } : {}),
+      // Screens §7.3: the hero and the reporter's quote carry the In Print kicker; slice 5 (tech
+      // design §11.3) adds the risk headlines Seen, the cells, the infirmary and the train home.
+      ...(IN_PRINT.test(h.templateId) ? { inPrint: true } : {}),
       // The hero's headline carries the rosette (screens §7.3).
       ...(/.hero$/.test(h.templateId) ? { medal: true } : {}),
     })),
@@ -200,6 +202,7 @@ export async function getPaper(deps: {
         .map((l) => locationRef(content, l.id)),
       standing: namedStanding(content, c.cityId, standingSuccesses(c, c.cityId)),
       wearing: wearing ? { name: wearing.name, cha: wearing.cha } : null,
+      ...deskRisk(content, c, now, homeState),
     },
     letters,
     // The first edition's "To the city" opens slot A's pin (§7.5; review 1: by the best stat).
@@ -212,6 +215,39 @@ export async function getPaper(deps: {
     }),
     pollingDay: await politicsSummary(content, c, homeState, now, today),
     frontPage,
+  };
+}
+
+/** The In Print headlines, by id (slice 4: the hero, the quote; slice 5: the risk four). */
+const IN_PRINT = /\.(hero|quoted|seen|cells|infirmary|deported)$/;
+
+/**
+ * Slice 5 (tech design §11.3, screens §2.5): the desk's live rows. The held line while in the cells
+ * or on the ward; *Where you are* on rival ground; Heat above 0 (with *Cool by* while Noticed or
+ * above) and the record above Clean, after *Rested*.
+ */
+export function deskRisk(
+  content: GameContent,
+  c: CharacterDoc,
+  now: number,
+  residenceCity: CityDoc | null,
+): Required<Pick<DeskView, 'held' | 'heat' | 'record' | 'where'>> {
+  const r = riskView(content, c, now, residenceCity);
+  const h = c.held && c.held.state === 'in' ? c.held : null;
+  return {
+    held: h
+      ? {
+          kind: h.kind,
+          placeName: content.location(h.locationId)?.location.name ?? h.locationId,
+          minutesLeft: Math.max(0, Math.ceil((new Date(h.until).getTime() - now) / 60_000)),
+          bail: h.kind === 'cells' ? (h.bail?.total ?? null) : null,
+        }
+      : null,
+    where: isRivalGround(content, c, c.cityId)
+      ? { rivalGround: { cityName: content.city(c.cityId)?.name ?? c.cityId } }
+      : null,
+    heat: r.heat.value > 0 ? { value: r.heat.value, state: r.heat.state, coolsAt: r.heat.coolsAt } : null,
+    record: r.record.level !== 'clean' ? { level: r.record.level, marks: r.record.marks } : null,
   };
 }
 

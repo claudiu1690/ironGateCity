@@ -4,6 +4,7 @@ import { Character, PaperEntry } from '@irongate/db';
 import { dayKey } from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Context } from '../src/trpc/context';
+import type { ActionResult } from '@irongate/rules';
 import { createCaller } from '../src/trpc/router';
 import { freshCharacter, newUser, seedRecruit, setupDb, teardownDb, testClock } from './helpers';
 
@@ -60,7 +61,8 @@ describe('the City Day (ADR 0005)', () => {
     let calls = 0;
     const straddling = () => (calls++ === 0 ? clock.now() : clock.now() + 200);
     const ctx: Context = { user, content: getContent(), now: straddling };
-    const r = await createCaller(ctx).action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 });
+    // At home a tap is never a run-in (slice 5): the result is an ActionResult.
+    const r = (await createCaller(ctx).action.perform({ ...CANVASS, idempotencyKey: randomUUID(), times: 1 })) as ActionResult;
     const newDay = dayKey(clock.now() + 200);
     expect(r.today).toMatchObject({ day: newDay, energy: 10 });
     expect(r.character.day.key).toBe(newDay);

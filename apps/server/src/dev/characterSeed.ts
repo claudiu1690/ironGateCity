@@ -1,6 +1,17 @@
 import { Character } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
-import { levelForXp, rankForFxp, xpForLevel } from '@irongate/rules';
+import {
+  RANK_FXP,
+  dayKey,
+  healthAt,
+  healthMax,
+  levelForXp,
+  rankForFxp,
+  setHeat,
+  xpForLevel,
+} from '@irongate/rules';
+import type { MarkKind } from '@irongate/rules';
+import { healthDoc, heatDoc } from '../services/risk';
 
 /**
  * The e2e character hook (`POST /api/test/character`, slice-3 tech design §8.6, slice-4 §8.6) as a
@@ -28,6 +39,18 @@ export interface CharacterSeed {
   irongateSuccesses?: number;
   /** Slice 4: Iron. */
   iron?: number;
+  /** Slice 5 (tech design §8.5): Heat 0–100, from `now`. */
+  heat?: number;
+  /** Slice 5: Health, a value (kept 0..max at the Level after this seed), from `now`. */
+  health?: number;
+  /** Slice 5: the record's marks, replacing it (and its arrests): each `daysAgo` City Days back. */
+  marks?: Array<{ kind: MarkKind; daysAgo: number }>;
+  /** Slice 5: Agility, Strength, and CHA's base (worn CHA = the base + what is equipped). */
+  agi?: number;
+  str?: number;
+  cha?: number;
+  /** Slice 5: the Rank, with FXP at its floor (it may lower both: a test hook). */
+  rank?: number;
 }
 
 /** The `$set` for a seed; only the fields given. */
@@ -73,6 +96,26 @@ export function characterSeedSet(
       standsFromDay: 0,
       canMoveFromDay: 0,
     };
+  }
+  // Slice 5 (tech design §8.5): the lazy states start at `now`.
+  if (seed.heat !== undefined) set.heat = heatDoc(setHeat(seed.heat, now));
+  if (seed.health !== undefined) {
+    const level = (set.level as number | undefined) ?? c.level;
+    set.health = healthDoc(healthAt(Math.min(healthMax(level), seed.health), level, now));
+  }
+  if (seed.marks !== undefined) {
+    const today = dayKey(now);
+    const marks = seed.marks
+      .map((m) => ({ day: today - m.daysAgo, kind: m.kind, logId: null }))
+      .sort((a, b) => a.day - b.day);
+    set.record = { marks, arrests: [] };
+  }
+  if (seed.agi !== undefined) set['stats.agi'] = seed.agi;
+  if (seed.str !== undefined) set['stats.str'] = seed.str;
+  if (seed.cha !== undefined) set['stats.chaBase'] = seed.cha;
+  if (seed.rank !== undefined) {
+    set.rank = seed.rank;
+    set.fxp = RANK_FXP[seed.rank - 1]!;
   }
   return set;
 }

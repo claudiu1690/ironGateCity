@@ -19,7 +19,7 @@ import {
   seed,
 } from '@irongate/db';
 import { buildNewCharacter, dayKey, dayStart, resolveOrigin } from '@irongate/rules';
-import type { FactionId } from '@irongate/rules';
+import type { ActionResult, FactionId } from '@irongate/rules';
 import { Types } from 'mongoose';
 import { withDbName } from '@irongate/db/testing';
 import { inject } from 'vitest';
@@ -78,9 +78,31 @@ export function newUser(name = 'Mara Lenk'): SessionUser {
   return { id: `user-${process.pid}-${Date.now()}-${userCounter}`, name };
 }
 
-export function callerFor(user: SessionUser | null, now: () => number = Date.now) {
+type RouterCaller = ReturnType<typeof createCaller>;
+type PerformInput = Parameters<RouterCaller['action']['perform']>[0];
+
+/**
+ * A caller for the tests. Slice 5: `action.perform` may answer a rival tap with a pending run-in
+ * (`RunInPending`); every older test acts at home, where it never does, so `perform` is typed as the
+ * slice 1–4 `ActionResult` and `performAny` keeps the procedure's full answer.
+ */
+export type TestCaller = Omit<RouterCaller, 'action'> & {
+  action: {
+    perform(input: PerformInput): Promise<ActionResult>;
+    performAny(input: PerformInput): ReturnType<RouterCaller['action']['perform']>;
+  };
+};
+
+export function callerFor(user: SessionUser | null, now: () => number = Date.now): TestCaller {
   const ctx: Context = { user, content: getContent(), now };
-  return createCaller(ctx);
+  const caller = createCaller(ctx);
+  const perform = (input: PerformInput) => caller.action.perform(input);
+  return new Proxy(caller, {
+    get(target, prop, receiver) {
+      if (prop === 'action') return { perform, performAny: perform };
+      return Reflect.get(target, prop, receiver) as unknown;
+    },
+  }) as unknown as TestCaller;
 }
 
 /** `error.cause.toData()` of a refused call, with its tRPC code. */

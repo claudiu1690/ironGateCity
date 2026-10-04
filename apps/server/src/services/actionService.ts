@@ -1,29 +1,33 @@
 import { randomBytes } from 'node:crypto';
 import { isCheckedAction, isTrainingAction } from '@irongate/content';
-import type { GameContent, LocatedAction } from '@irongate/content';
+import type { CheckedAction, GameContent, LocatedAction } from '@irongate/content';
 import { residenceCityId, residenceCtx } from './residence';
-import { ActionLog, Character, City, Contribution, District, IssueModel, contributionId } from '@irongate/db';
-import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc } from '@irongate/db';
+import { ActionLog, Character, Encounter } from '@irongate/db';
+import type { CharacterDoc, EncounterDoc } from '@irongate/db';
 import {
   addToTally,
   applyGains,
-  applyPersuasion,
+  barredByRecord,
   createRng,
   dayKey,
-  moraleState,
+  heatState,
   orderRewards,
+  pickOpponent,
+  projectHeat,
   resolveTier1Action,
+  runInChance,
   resolveTraining,
   standingView,
 } from '@irongate/rules';
-import { FACTION_IDS } from '@irongate/rules';
 import type {
   ActionDescriptor,
   ActionResult,
-  FactionId,
   GainsResult,
   OrderTemplate,
   Progress,
+  ResolveResult,
+  RunInPending,
+  StreetView,
   Tier1Resolution,
 } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
@@ -34,9 +38,16 @@ import { buildActionResult } from './actionResult';
 import type { ResultInput } from './actionResult';
 import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
-import { addInfluence, addPoints, cycleKeyOf, writeLedger } from './ledger';
-import { modifiersFor, restedCapToday } from './modifiers';
 import { branchEndorseIfFiled } from './councilService';
+import { moveOpinion, placeWrites, readPlace } from './place';
+import type { OpinionMove, PlaceCtx } from './place';
+import { policeIdOf } from './missionService';
+import { assertFree, flagsToday, heatRateOn, heatTimerOf, isRivalGround, notFree, recordLevelOf } from './risk';
+import { pendingView, startRunInInTx, storedEncounterResult } from './streetService';
+import type { HeldAction } from './streetService';
+import { streetHooks } from './streetHooks';
+import type { StreetForce } from './streetHooks';
+import { closeArrivalInTx } from './travelService';
 import { DayChanged, VersionConflict } from './txn';
 import {
   energyState,
@@ -47,6 +58,8 @@ import {
   toOrdersState,
   wornStats,
 } from './views';
+
+export { leaderOf } from './place';
 
 export interface PerformInput {
   actionId: string;
@@ -88,16 +101,25 @@ export const progressSet = (g: GainsResult) => ({
 });
 
 /**
+ * Slice 5 (tech design §8.2): an arrived journey in this city is closed by the first act there (its
+ * unanswered card's ignore effects apply, ADR 0034), inside the act's transaction.
+ */
+export const closeArrivalHere = (content: GameContent, session: ClientSession, c: CharacterDoc, now: number) =>
+  closeArrivalInTx(content, session, c, now);
+
+/**
  * Perform a tier-1 action ×1 or ×3 (ADR 0002, 0006): one transaction, one unique idempotency key,
  * one version guard, one seed. Checked actions also write the city's opinion (ADR 0010). A retried
- * key returns the stored result byte for byte; a new key is a new action.
+ * key returns the stored result byte for byte; a new key is a new action. Slice 5: refused while
+ * held or with a run-in waiting, ×1 only on rival ground, and barred to a Notorious record at a court,
+ * a university or an Alliance HQ.
  */
 export async function performAction(deps: {
   user: SessionUser;
   content: GameContent;
   now: () => number;
   input: PerformInput;
-}): Promise<ActionResult> {
+}): Promise<ActionResult | RunInPending> {
   const { user, content, input } = deps;
   const located = locate(content, input);
   const { action } = located;
@@ -107,6 +129,29 @@ export async function performAction(deps: {
   }
   const loaded = await loadCharacter(user, content, deps.now());
   const c0 = loaded.doc;
+  // A retry or a double tap with the same key returns the stored result (slice 5: or the run-in it
+  // started, pending or resolved).
+  const stored = async (): Promise<ActionResult | RunInPending | null> => {
+    const log = await storedResult<ActionResult>(
+      c0._id,
+      input.idempotencyKey,
+      (l) => l.actionId === input.actionId && l.times === input.times,
+    );
+    if (log) return log;
+    const enc = await Encounter.findOne({ characterId: c0._id, idempotencyKey: input.idempotencyKey }).lean<EncounterDoc>();
+    if (!enc) return null;
+    if (enc.refId !== input.actionId) throw gameError('CONFLICT', 'KEY_REUSED', { idempotencyKey: input.idempotencyKey });
+    if (enc.state === 'resolved') return storedEncounterResult(enc);
+    const fresh = await Character.findById(c0._id).lean<CharacterDoc>();
+    return fresh ? pendingView(content, enc, fresh, deps.now(), loaded.city) : null;
+  };
+  // Slice 5 (tech design §7.2): not in the cells, on the ward or with a run-in waiting; a retry of
+  // the tap that led there still gets its stored result.
+  if (notFree(c0)) {
+    const prior = await stored();
+    if (prior) return prior;
+    assertFree(c0);
+  }
   // Slice 4 (ADR 0025): on a train you act nowhere.
   if (c0.journey?.status === 'onTheWay') {
     throw gameError('PRECONDITION_FAILED', 'IN_TRANSIT', { arrivesAt: c0.journey.arrivesAt.getTime() });
@@ -127,15 +172,15 @@ export async function performAction(deps: {
       throw gameError('PRECONDITION_FAILED', 'ACTION_LOCKED', { reason: 'STANDING', need: standing });
     }
   }
+  const refusal = slice5Refusal(content, c0, located, input.times, deps.now());
+  if (refusal) throw refusal.toTRPC();
+  // Slice 5 (tech design §8.5): the test hooks' forced rolls for the next act on rival ground.
+  const force = isCheckedAction(action) && isRivalGround(content, c0, located.city.id)
+    ? streetHooks.take(c0._id.toHexString(), input.idempotencyKey)
+    : null;
 
-  return runKeyedAction<ActionResult>({
-    // A retry or a double tap with the same key returns the stored result.
-    stored: () =>
-      storedResult(
-        c0._id,
-        input.idempotencyKey,
-        (log) => log.actionId === input.actionId && log.times === input.times,
-      ),
+  return runKeyedAction<ActionResult | RunInPending>({
+    stored,
     write: (session, txAttempts) =>
       resolveAndWrite({
         content,
@@ -146,6 +191,7 @@ export async function performAction(deps: {
         session,
         editionReadAt: loaded.editionReadAt,
         txAttempts,
+        force,
       }),
     resettle: async () => {
       const fresh = await Character.findById(c0._id).lean<CharacterDoc>();
@@ -153,6 +199,30 @@ export async function performAction(deps: {
       loaded.editionReadAt = null;
     },
   });
+}
+
+/** Slice 5 (tech design §7.2): `RECORD_BARRED` and `ONCE_ON_RIVAL_GROUND`, before the key and in the transaction. */
+function slice5Refusal(
+  content: GameContent,
+  c: CharacterDoc,
+  located: LocatedAction,
+  times: number,
+  now: number,
+): GameError | null {
+  const { location, city } = located;
+  // Design §7.3 (T12's ticket rule): every ticket at a barred place, training included.
+  if (
+    barredByRecord(recordLevelOf(c, dayKey(now)), {
+      kind: location.kind,
+      ...(location.factionId ? { factionId: location.factionId } : {}),
+    })
+  ) {
+    return new GameError('RECORD_BARRED', { locationId: location.id });
+  }
+  if (times > 1 && isRivalGround(content, c, city.id)) {
+    return new GameError('ONCE_ON_RIVAL_GROUND', { cityId: city.id });
+  }
+  return null;
 }
 
 async function resolveAndWrite(i: {
@@ -164,13 +234,16 @@ async function resolveAndWrite(i: {
   session: ClientSession;
   editionReadAt: number | null;
   txAttempts: () => number;
-}): Promise<ActionResult> {
+  force: StreetForce | null;
+}): Promise<ActionResult | RunInPending> {
   const { content, located, input, now, session } = i;
-  const { city, location, action } = located;
-  const c = await Character.findById(i.characterId).session(session).lean<CharacterDoc>();
+  const { city, action } = located;
+  let c = await Character.findById(i.characterId).session(session).lean<CharacterDoc>();
   if (!c) throw new Error(`character ${i.characterId.toHexString()} disappeared`);
   const today = dayKey(now);
   if (c.day.settled !== today) throw new DayChanged();
+  const blocked = notFree(c);
+  if (blocked) throw blocked;
   // Slice 4: a board or an arrival may have committed since the request's checks.
   if (c.journey?.status === 'onTheWay') {
     throw new GameError('IN_TRANSIT', { arrivesAt: new Date(c.journey.arrivesAt).getTime() });
@@ -178,12 +251,402 @@ async function resolveAndWrite(i: {
   if (c.cityId !== city.id) {
     throw new GameError('WRONG_CITY', { cityId: c.cityId, actionCityId: city.id }, 'BAD_REQUEST');
   }
+  const refusal = slice5Refusal(content, c, located, input.times, now);
+  if (refusal) throw refusal;
+  // Slice 5 (tech design §8.2): the first act in a city closes its arrived journey.
+  c = await closeArrivalHere(content, session, c, now);
 
   const seed = randomBytes(16).toString('hex');
+  // Slice 3–5: the place's modifiers, read in the action's snapshot (rival ground among them).
+  const ctx = await readPlace(content, session, c, located, today);
+
+  if (isCheckedAction(action)) {
+    const r = computeTier1({
+      content,
+      c,
+      located,
+      action,
+      ctx,
+      times: input.times,
+      now,
+      seed,
+      ...(i.force?.checkRoll !== undefined ? { forceRoll: i.force.checkRoll } : {}),
+    });
+    if (!r.ok) {
+      if (r.reason === 'ONCE_ON_RIVAL_GROUND') throw new GameError('ONCE_ON_RIVAL_GROUND', { cityId: city.id });
+      throw new GameError('NOT_ENOUGH_ENERGY', {
+        energy: r.energy.value,
+        cost: r.cost,
+        times: input.times,
+        nextTickAt: r.energy.nextTickAt,
+      });
+    }
+    // Slice 5 (design §10.5, §23.1 #2, #10, #11): on rival ground every checked tap can bring a run-in
+    // (15 flat, the city's pool, the police from Noticed); training never does.
+    if (ctx.rival) {
+      const pending = await rivalRunIn({ content, session, c, located, action, ctx, now, seed, input, res: r.resolution, force: i.force });
+      if (pending) return pending;
+    }
+    return writeTier1({
+      content,
+      session,
+      located,
+      c,
+      ctx,
+      resolution: r.resolution,
+      seed,
+      now,
+      idempotencyKey: input.idempotencyKey,
+      editionReadAt: i.editionReadAt,
+      txAttempts: i.txAttempts,
+    });
+  }
+  return writeTraining({ ...i, c, ctx, seed });
+}
+
+/**
+ * Slice 5 (design §10.5): roll a rival tap's run-in (the `:runIn` stream). When it fires, hold the
+ * resolution and its Partial twin (the same rolls) in a pending encounter, write the Energy, and
+ * return the modal's state; null when the street stays quiet.
+ */
+async function rivalRunIn(i: {
+  content: GameContent;
+  session: ClientSession;
+  c: CharacterDoc;
+  located: LocatedAction;
+  action: CheckedAction;
+  ctx: PlaceCtx;
+  now: number;
+  seed: string;
+  input: PerformInput;
+  res: Tier1Resolution;
+  force: StreetForce | null;
+}): Promise<RunInPending | null> {
+  const { content, c, ctx, now } = i;
+  const today = ctx.today;
+  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity));
+  const state = heatState(heat.value);
+  const chance = runInChance({
+    base: 0,
+    tier: 1,
+    rivalGround: true,
+    heatState: state,
+    record: recordLevelOf(c, today),
+    flags: flagsToday(c, ctx.city.id, today),
+  });
+  const street = createRng(`${i.seed}:runIn`);
+  const roll = street.roll100();
+  const fires = i.force?.runIn === 'next' ? true : i.force?.runIn === 'never' ? false : roll <= chance;
+  if (!fires) return null;
+  const opponentId =
+    i.force?.opponentId ??
+    pickOpponent({
+      pool: content.runInPoolOf(ctx.city.id),
+      actor: c.factionId,
+      heatState: state,
+      sideOf: (id) => content.opponent(id)?.side ?? 'police',
+      policeId: policeIdOf(content),
+      rng: street,
+    });
+  const twin = computeTier1({
+    content,
+    c,
+    located: i.located,
+    action: i.action,
+    ctx,
+    times: 1,
+    now,
+    seed: i.seed,
+    forceOutcome: 'partial',
+    ...(i.force?.checkRoll !== undefined ? { forceRoll: i.force.checkRoll } : {}),
+  });
+  if (!twin.ok) throw new Error('the dropped twin cannot fail where the tap did not');
+  const held: HeldAction = {
+    kind: 'action',
+    actionId: i.action.id,
+    rolled: i.res,
+    dropped: twin.resolution,
+    force: i.force?.choiceRoll !== undefined ? { choiceRoll: i.force.choiceRoll } : null,
+  };
+  return startRunInInTx(content, i.session, {
+    c,
+    ctx,
+    kind: 'action',
+    refId: i.action.id,
+    refName: i.action.name,
+    idempotencyKey: i.input.idempotencyKey,
+    seed: i.seed,
+    opponentId,
+    tier: 1,
+    held,
+    now,
+    set: {
+      'energy.value': i.res.energy.after.value,
+      'energy.updatedAt': new Date(i.res.energy.after.updatedAt),
+      rested: i.res.energy.after.rested,
+    },
+  });
+}
+
+/** The pure half of a tier-1 checked action (T13 split): the resolution against the place. */
+export function computeTier1(i: {
+  content: GameContent;
+  c: CharacterDoc;
+  located: LocatedAction;
+  action: CheckedAction;
+  ctx: PlaceCtx;
+  times: 1 | 3;
+  now: number;
+  seed: string;
+  /** Slice 5: the dropped twin of a rival tap (ADR 0032 §1); a test hook's first roll. */
+  forceOutcome?: 'partial';
+  forceRoll?: number;
+}): ResolveResult {
+  const { content, c, located, action, ctx } = i;
+  const { city, location } = located;
+  return resolveTier1Action(
+    {
+      action: {
+        id: action.id,
+        type: action.type,
+        locationId: location.id,
+        cityId: city.id,
+        energy: action.energy,
+        stats: action.stats,
+        givesFxp: action.givesFxp,
+        givesOpinion: action.givesOpinion,
+        ...(location.quarterId ? { districtId: location.quarterId } : {}),
+        locationKind: location.kind,
+      },
+      cityRole: city.role,
+      values: wornStats(c, content),
+      energy: energyState(c),
+      now: i.now,
+      times: i.times,
+      standing: { successes: standingSuccesses(c, city.id), names: content.standingNames, cityName: city.name },
+      orders: toOrdersState(c.orders),
+      orderTemplates: content.ordersOf(c.factionId),
+      homeCityId: residenceCityId(c),
+      residence: residenceCtx(c),
+      factionId: c.factionId,
+      modifiers: ctx.modifiers,
+      restedCap: ctx.restedCap,
+      // Review 1 (§8.4): the First day row at home on the welcome day; a best-stat tie-break.
+      bonuses: firstDayBonuses(content, c, city.id, ctx.today),
+      prefer: preferredStat(content, c.factionId),
+      ...(i.forceOutcome ? { forceOutcome: i.forceOutcome } : {}),
+      ...(i.forceRoll !== undefined ? { forceRoll: i.forceRoll } : {}),
+    },
+    createRng(i.seed),
+  );
+}
+
+/**
+ * The writing half of a tier-1 checked action (T13 split), inside the caller's transaction: the
+ * character (version guard, `day.settled`), the meter (persuasion, or against the home faction on
+ * rival ground under the day's cap), the ledger legs, the Issues, the `actionLogs` row. Slice 5's
+ * run-in resolution calls it with the held resolution (rolled or dropped), its street block and the
+ * character fields the run-in changed (`extraSet`).
+ */
+export async function writeTier1(i: {
+  content: GameContent;
+  session: ClientSession;
+  located: LocatedAction;
+  c: CharacterDoc;
+  ctx: PlaceCtx;
+  resolution: Tier1Resolution;
+  seed: string;
+  now: number;
+  idempotencyKey: string;
+  editionReadAt: number | null;
+  txAttempts: () => number;
+  street?: StreetView;
+  extraSet?: Record<string, unknown>;
+  /** Iron the run-in took (paid off). */
+  ironDelta?: number;
+  /** Extra XP from the run-in, on top of the resolution's. */
+  xpDelta?: number;
+  encounterId?: Types.ObjectId;
+  /** The log's id when the caller needed it first (a stay written by the run-in's resolution). */
+  logId?: Types.ObjectId;
+  /** A day already settled past the run-in's: no order progress (tech design §7.1). */
+  frozenOrders?: boolean;
+}): Promise<ActionResult> {
+  const { content, session, located, c, ctx, now } = i;
+  const { city, action } = located;
+  if (!isCheckedAction(action)) throw new Error(`${action.id} is not a checked action`);
+  const today = ctx.today;
+  const res: Tier1Resolution = i.frozenOrders
+    ? {
+        ...i.resolution,
+        orders: { before: toOrdersState(c.orders), after: toOrdersState(c.orders), completed: [], allDone: false },
+      }
+    : i.resolution;
   const templates = content.ordersOf(c.factionId);
-  const orders = toOrdersState(c.orders);
+  const completedTemplates = (ids: string[]): OrderTemplate[] =>
+    ids.flatMap((id) => templates.filter((t) => t.id === id));
+
+  // ADR 0034: on rival ground the swing is taken against the home faction, under the day's cap.
+  const move: OpinionMove | null = action.givesOpinion
+    ? moveOpinion(ctx, session, {
+        actor: c.factionId,
+        swing: res.rewards.opinion,
+        mode: res.opinion?.mode === 'against' ? 'against' : 'persuade',
+        target: res.opinion?.target ?? null,
+      })
+    : null;
+  const opinion = move?.effect ?? null;
+  const orderPay = orderRewards(completedTemplates(res.orders.completed), res.orders.allDone);
+  const xp = res.rewards.xp.total + (i.xpDelta ?? 0);
+  const gains = applyGains(progressOf(c), {
+    xp,
+    fxp: res.rewards.fxp.total + orderPay.fxp,
+    pc: orderPay.pc,
+  });
+  const others = c.localStanding.filter((x) => x.cityId !== city.id);
+  const ironGain = res.rewards.iron.total + (i.ironDelta ?? 0);
+  const tally = {
+    ...addToTally(c.today, today, {
+      energy: res.energy.cost,
+      attempts: res.times,
+      successes: res.summary.successes,
+      xp,
+      fxp: res.rewards.fxp.total + orderPay.fxp,
+      iron: ironGain,
+      pc: orderPay.pc,
+      opinion: opinion?.mode === 'against' ? (opinion.toActor ?? 0) : (opinion?.applied ?? 0),
+      ordersDone: res.orders.completed.length,
+    }),
+    // Slice 5 (tech design §11.2): the paper's *rival trip* reads the closed tally.
+    ...(ctx.rival ? { rivalCityId: city.id } : {}),
+  };
+  const result: ResultInput = {
+    kind: 'checked',
+    resolution: res,
+    opinion: opinion ? { ...opinion } : null,
+    energy: res.energy,
+    gains,
+    orders: res.orders,
+    tally,
+    content,
+    logId: '',
+    idempotencyKey: i.idempotencyKey,
+    seed: i.seed,
+    now,
+    located,
+    before: c,
+    after: c,
+    editionReadAt: i.editionReadAt,
+  };
+
+  const updated = await Character.findOneAndUpdate(
+    { _id: c._id, version: c.version, 'day.settled': c.day.settled },
+    {
+      $set: {
+        lastActionAt: new Date(now),
+        localStanding: [...others, { cityId: city.id, successes: res.standing.after }],
+        ...progressSet(gains),
+        'energy.value': res.energy.after.value,
+        'energy.updatedAt': new Date(res.energy.after.updatedAt),
+        rested: res.energy.after.rested,
+        orders: fromOrdersState(res.orders.after),
+        today: tally,
+        ...(i.extraSet ?? {}),
+      },
+      $inc: { iron: ironGain, version: 1 },
+    },
+    { session, returnDocument: 'after', lean: true },
+  );
+  if (!updated) throw new VersionConflict();
+  if (move?.write) await move.write();
+  const logId = i.logId ?? new Types.ObjectId();
+  // Slice 4 (ADR 0028, 0029): the ledger rows, the influence total, the Issues' momentum.
+  const placeEffects = await placeWrites(content, session, {
+    c: updated,
+    cityId: city.id,
+    placeId: ctx.placeId,
+    placeName: ctx.placeName,
+    move,
+    givesOpinion: action.givesOpinion,
+    issues: res.issues ?? [],
+    logId: logId.toHexString(),
+    today,
+    at: new Date(now),
+    lenientIssues: i.frozenOrders === true,
+  });
+  // Slice 3 (design §6.3): the third order done on a nominations day → the branch endorses.
+  const branchEndorsement = res.orders.allDone
+    ? await branchEndorseIfFiled(content, session, updated, today, now)
+    : null;
+
+  const built = buildActionResult({
+    ...result,
+    logId: logId.toHexString(),
+    after: updated,
+    modifiers: ctx.modifiers,
+    city: ctx.residenceCity,
+    restedCap: ctx.restedCap,
+    place: { placeId: ctx.placeId, placeName: ctx.placeName },
+    morale: move?.morale ?? null,
+    branchEndorsement,
+    issues: placeEffects.issues,
+    scoreboard: placeEffects.scoreboard,
+    ...(i.street ? { street: i.street } : ctx.rival ? { street: QUIET_STREET } : {}),
+  });
+  await ActionLog.create(
+    [
+      {
+        _id: logId,
+        characterId: c._id,
+        idempotencyKey: i.idempotencyKey,
+        actionId: action.id,
+        locationId: located.location.id,
+        cityId: city.id,
+        kind: built.kind,
+        times: res.times,
+        txAttempts: i.txAttempts(),
+        seed: i.seed,
+        outcome: built.stamp,
+        result: built,
+        ...(i.encounterId ? { encounterId: i.encounterId } : {}),
+      },
+    ],
+    { session },
+  );
+  return built;
+}
+
+/** A rival tap with no run-in: the street block says nothing happened. */
+const QUIET_STREET: StreetView = {
+  runIn: null,
+  heat: null,
+  caught: null,
+  record: null,
+  sentTo: null,
+  agility: null,
+  remembered: false,
+  dropped: null,
+};
+
+async function writeTraining(i: {
+  content: GameContent;
+  located: LocatedAction;
+  input: PerformInput;
+  c: CharacterDoc;
+  ctx: PlaceCtx;
+  seed: string;
+  now: number;
+  session: ClientSession;
+  editionReadAt: number | null;
+  txAttempts: () => number;
+}): Promise<ActionResult> {
+  const { content, located, input, c, ctx, now, session } = i;
+  const { city, location, action } = located;
+  if (!isTrainingAction(action)) throw new Error(`${action.id} is not a training action`);
+  const today = ctx.today;
+  const templates = content.ordersOf(c.factionId);
   const descriptor: ActionDescriptor = {
-    kind: isCheckedAction(action) ? 'checked' : 'training',
+    kind: 'training',
     actionId: action.id,
     type: action.type,
     locationId: location.id,
@@ -191,232 +654,87 @@ async function resolveAndWrite(i: {
     ...(location.quarterId ? { districtId: location.quarterId } : {}),
     locationKind: location.kind,
   };
-
-  const set: Record<string, unknown> = { lastActionAt: new Date(now) };
-  let ironGain = 0;
-  let result: DistributiveOmit<ResultInput, keyof CommonTail>;
-  let cityWrite: (() => Promise<unknown>) | null = null;
-  let morale: ActionResult['effects']['morale'] = null;
-  // Slice 3 (ADR 0021, 0022): the city's day-constant modifiers, read in the action's snapshot.
-  // Slice 4 (ADR 0027, 0030): in the capital the district's meter, close race and comeback too.
-  const cityState = await City.findById(city.id).session(session).lean<CityDoc>();
-  const districtId = content.isDistricted(city.id) ? (location.quarterId ?? null) : null;
-  const district = districtId
-    ? await District.findById(districtId).session(session).lean<DistrictDoc>()
-    : null;
-  const modifiers = modifiersFor(content, cityState, c.factionId, today, { cityId: city.id, district });
-  // ADR 0030 §5: the Rested cap is the residence city's (and the room's), wherever the action is.
-  const residenceId = residenceCityId(c);
-  const residenceCity =
-    residenceId === city.id ? cityState : await City.findById(residenceId).session(session).lean<CityDoc>();
-  const restedCap = restedCapToday(content, residenceCity, today, c.room);
-  const placeId = districtId ?? city.id;
-  const placeName = districtId ? (content.district(districtId)?.quarter.name ?? districtId) : city.name;
-  const completedTemplates = (ids: string[]): OrderTemplate[] =>
-    ids.flatMap((id) => templates.filter((t) => t.id === id));
-
-  if (isCheckedAction(action)) {
-    const successes = standingSuccesses(c, city.id);
-    const r = resolveTier1Action(
-      {
-        action: {
-          id: action.id,
-          type: action.type,
-          locationId: location.id,
-          cityId: city.id,
-          energy: action.energy,
-          stats: action.stats,
-          givesFxp: action.givesFxp,
-          givesOpinion: action.givesOpinion,
-          ...(location.quarterId ? { districtId: location.quarterId } : {}),
-          locationKind: location.kind,
-        },
-        cityRole: city.role,
-        values: wornStats(c, content),
-        energy: energyState(c),
-        now,
-        times: input.times,
-        standing: { successes, names: content.standingNames, cityName: city.name },
-        orders,
-        orderTemplates: templates,
-        homeCityId: residenceCityId(c),
-        residence: residenceCtx(c),
-        factionId: c.factionId,
-        modifiers,
-        restedCap,
-        // Review 1 (§8.4): the First day row at home on the welcome day; a best-stat tie-break.
-        bonuses: firstDayBonuses(content, c, city.id, today),
-        prefer: preferredStat(content, c.factionId),
-      },
-      createRng(seed),
-    );
-    if (!r.ok) {
-      throw new GameError('NOT_ENOUGH_ENERGY', {
-        energy: r.energy.value,
-        cost: r.cost,
-        times: input.times,
-        nextTickAt: r.energy.nextTickAt,
-      });
-    }
-    const res = r.resolution;
-    let opinion: { applied: number; shareBefore: number; shareAfter: number } | null = null;
-    if (action.givesOpinion && district) {
-      // ADR 0027: the district's meter (no home floor in a battleground; no morale).
-      const shares = district.opinion;
-      const op = applyPersuasion(shares, { factionId: c.factionId, swing: res.rewards.opinion });
-      opinion = { applied: op.applied, shareBefore: shares[c.factionId], shareAfter: op.shares[c.factionId] };
-      cityWrite = () =>
-        District.updateOne({ _id: district._id }, { $set: { opinion: op.shares } }, { session });
-    } else if (action.givesOpinion) {
-      const shares = cityState?.opinion ?? city.baselineOpinion;
-      const op = applyPersuasion(shares, {
-        factionId: c.factionId,
-        swing: res.rewards.opinion,
-        homeFactionId: city.homeFactionId,
-      });
-      opinion = { applied: op.applied, shareBefore: shares[c.factionId], shareAfter: op.shares[c.factionId] };
-      // ADR 0022: a threshold crossed by this action writes the morale record and a knock-on line.
-      const home = city.homeFactionId;
-      const before = home ? moraleState(shares[home]) : null;
-      const after = home ? moraleState(op.shares[home]) : null;
-      const record =
-        home && before !== after
-          ? { state: after, since: today, previous: cityState?.morale?.state ?? before }
-          : null;
-      if (record && before && after) morale = { cityId: city.id, cityName: city.name, before, after };
-      cityWrite = () =>
-        City.updateOne(
-          { _id: city.id },
-          { $set: { opinion: op.shares, ...(record ? { morale: record } : {}) } },
-          { session, upsert: true },
-        );
-    }
-    const orderPay = orderRewards(completedTemplates(res.orders.completed), res.orders.allDone);
-    const gains = applyGains(progressOf(c), {
-      xp: res.rewards.xp.total,
-      fxp: res.rewards.fxp.total + orderPay.fxp,
-      pc: orderPay.pc,
+  const r = resolveTraining({
+    trains: action.trains,
+    base: { str: c.stats.str, int: c.stats.int, agi: c.stats.agi },
+    energy: energyState(c),
+    now,
+    orders: toOrdersState(c.orders),
+    orderTemplates: templates,
+    homeCityId: residenceCityId(c),
+    residence: residenceCtx(c),
+    descriptor,
+    modifiers: ctx.modifiers,
+    restedCap: ctx.restedCap,
+  });
+  if (!r.ok) {
+    throw new GameError('NOT_ENOUGH_ENERGY', {
+      energy: r.energy.value,
+      cost: r.cost,
+      times: 1,
+      nextTickAt: r.energy.nextTickAt,
     });
-    const others = c.localStanding.filter((x) => x.cityId !== city.id);
-    set.localStanding = [...others, { cityId: city.id, successes: res.standing.after }];
-    ironGain = res.rewards.iron.total;
-    const tally = addToTally(c.today, today, {
-      energy: res.energy.cost,
-      attempts: res.times,
-      successes: res.summary.successes,
-      xp: res.rewards.xp.total,
-      fxp: res.rewards.fxp.total + orderPay.fxp,
-      iron: ironGain,
-      pc: orderPay.pc,
-      opinion: opinion?.applied ?? 0,
-      ordersDone: res.orders.completed.length,
-    });
-    result = {
-      kind: 'checked',
-      resolution: res,
-      opinion,
-      energy: res.energy,
-      gains,
-      orders: res.orders,
-      tally,
-    };
-  } else {
-    const r = resolveTraining({
-      trains: action.trains,
-      base: { str: c.stats.str, int: c.stats.int, agi: c.stats.agi },
-      energy: energyState(c),
-      now,
-      orders,
-      orderTemplates: templates,
-      homeCityId: residenceCityId(c),
-      residence: residenceCtx(c),
-      descriptor,
-      modifiers,
-      restedCap,
-    });
-    if (!r.ok) {
-      throw new GameError('NOT_ENOUGH_ENERGY', {
-        energy: r.energy.value,
-        cost: r.cost,
-        times: 1,
-        nextTickAt: r.energy.nextTickAt,
-      });
-    }
-    const res = r.resolution;
-    const orderPay = orderRewards(completedTemplates(res.orders.completed), res.orders.allDone);
-    const gains = applyGains(progressOf(c), { xp: res.xp.total, fxp: orderPay.fxp, pc: orderPay.pc });
-    set[`stats.${res.stat.stat}`] = res.stat.after;
-    const tally = addToTally(c.today, today, {
-      energy: res.energy.cost,
-      xp: res.xp.total,
-      fxp: orderPay.fxp,
-      pc: orderPay.pc,
-      ordersDone: res.orders.completed.length,
-      statTrained: res.times,
-    });
-    result = { kind: 'training', resolution: res, energy: res.energy, gains, orders: res.orders, tally };
   }
-
-  const { energy, gains, orders: ordersOut, tally } = result;
+  const res = r.resolution;
+  const orderPay = orderRewards(
+    res.orders.completed.flatMap((id) => templates.filter((t) => t.id === id)),
+    res.orders.allDone,
+  );
+  const gains = applyGains(progressOf(c), { xp: res.xp.total, fxp: orderPay.fxp, pc: orderPay.pc });
+  const tally = addToTally(c.today, today, {
+    energy: res.energy.cost,
+    xp: res.xp.total,
+    fxp: orderPay.fxp,
+    pc: orderPay.pc,
+    ordersDone: res.orders.completed.length,
+    statTrained: res.times,
+  });
   const updated = await Character.findOneAndUpdate(
     { _id: c._id, version: c.version, 'day.settled': today },
     {
       $set: {
-        ...set,
+        lastActionAt: new Date(now),
+        [`stats.${res.stat.stat}`]: res.stat.after,
         ...progressSet(gains),
-        'energy.value': energy.after.value,
-        'energy.updatedAt': new Date(energy.after.updatedAt),
-        rested: energy.after.rested,
-        orders: fromOrdersState(ordersOut.after),
+        'energy.value': res.energy.after.value,
+        'energy.updatedAt': new Date(res.energy.after.updatedAt),
+        rested: res.energy.after.rested,
+        orders: fromOrdersState(res.orders.after),
         today: tally,
       },
-      $inc: { iron: ironGain, version: 1 },
+      $inc: { version: 1 },
     },
     { session, returnDocument: 'after', lean: true },
   );
   if (!updated) throw new VersionConflict();
-  if (cityWrite) await cityWrite();
   const logId = new Types.ObjectId();
-  // Slice 4 (ADR 0028, 0029): the ledger row, the influence total, the Issues' momentum.
-  const placeEffects =
-    result.kind === 'checked'
-      ? await placeWrites(content, session, {
-          c: updated,
-          cityId: city.id,
-          placeId,
-          placeName,
-          opinion: result.opinion,
-          givesOpinion: isCheckedAction(action) && action.givesOpinion,
-          resolution: result.resolution,
-          logId: logId.toHexString(),
-          today,
-          at: new Date(now),
-        })
-      : null;
-  // Slice 3 (design §6.3): the third order done on a nominations day → the branch endorses.
-  const branchEndorsement = result.orders.allDone
+  const branchEndorsement = res.orders.allDone
     ? await branchEndorseIfFiled(content, session, updated, today, now)
     : null;
-
   const built = buildActionResult({
-    ...result,
+    kind: 'training',
+    resolution: res,
+    energy: res.energy,
+    gains,
+    orders: res.orders,
+    tally,
     content,
     logId: logId.toHexString(),
     idempotencyKey: input.idempotencyKey,
-    seed,
+    seed: i.seed,
     now,
     located,
     before: c,
     after: updated,
     editionReadAt: i.editionReadAt,
-    modifiers,
-    city: residenceCity,
-    restedCap,
-    place: { placeId, placeName },
-    morale,
+    modifiers: ctx.modifiers,
+    city: ctx.residenceCity,
+    restedCap: ctx.restedCap,
+    place: { placeId: ctx.placeId, placeName: ctx.placeName },
+    morale: null,
     branchEndorsement,
-    issues: placeEffects?.issues ?? [],
-    scoreboard: placeEffects?.scoreboard ?? null,
+    issues: [],
+    scoreboard: null,
   });
   await ActionLog.create(
     [
@@ -430,7 +748,7 @@ async function resolveAndWrite(i: {
         kind: built.kind,
         times: input.times,
         txAttempts: i.txAttempts(),
-        seed,
+        seed: i.seed,
         outcome: built.stamp,
         result: built,
       },
@@ -438,117 +756,4 @@ async function resolveAndWrite(i: {
     { session },
   );
   return built;
-}
-
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
-
-type CommonTail = Pick<
-  ResultInput,
-  'content' | 'logId' | 'idempotencyKey' | 'seed' | 'now' | 'located' | 'before' | 'after' | 'editionReadAt'
->;
-
-/** The faction with the most momentum (null on a tie at the top or with none), for the knock-on line. */
-export function leaderOf(m: Record<FactionId, number>): FactionId | null {
-  const best = Math.max(...FACTION_IDS.map((f) => m[f] ?? 0));
-  if (best <= 0) return null;
-  const top = FACTION_IDS.filter((f) => (m[f] ?? 0) === best);
-  return top.length === 1 ? top[0]! : null;
-}
-
-/**
- * Slice 4: what an opinion-moving or Issue-tagged action writes besides the character and the
- * meter, in the same transaction: the ledger row and the influence total (ADR 0028), and each tagged
- * Issue's momentum with the points total (ADR 0029). The momentum `$inc` is guarded by
- * `status: 'live'`: a miss means the week resolved under the action, which retries on the new day.
- */
-async function placeWrites(
-  content: GameContent,
-  session: ClientSession,
-  i: {
-    c: CharacterDoc;
-    cityId: string;
-    placeId: string;
-    placeName: string;
-    opinion: { applied: number } | null;
-    givesOpinion: boolean;
-    resolution: Tier1Resolution;
-    logId: string;
-    today: number;
-    at: Date;
-  },
-): Promise<{
-  issues: NonNullable<ActionResult['effects']['issues']>;
-  scoreboard: ActionResult['effects']['scoreboard'];
-}> {
-  const who = { _id: i.c._id, name: i.c.name, factionId: i.c.factionId, level: i.c.level };
-  if (i.opinion && i.opinion.applied > 0) {
-    await writeLedger(
-      content,
-      [
-        {
-          cityId: i.cityId,
-          placeId: i.placeId,
-          factionId: i.c.factionId,
-          swing: i.opinion.applied,
-          kind: 'action',
-          characterId: i.c._id,
-          ref: i.logId,
-          day: i.today,
-          at: i.at,
-        },
-      ],
-      session,
-    );
-    await addInfluence(content, session, {
-      c: who,
-      cityId: i.cityId,
-      placeId: i.placeId,
-      points: i.opinion.applied,
-      day: i.today,
-      at: i.at,
-    });
-  }
-  const issues: NonNullable<ActionResult['effects']['issues']> = [];
-  const f = i.c.factionId;
-  for (const t of i.resolution.issues ?? []) {
-    const doc =
-      t.points > 0
-        ? await IssueModel.findOneAndUpdate(
-            { _id: t.docId, status: 'live' },
-            { $inc: { [`momentum.${f}`]: t.points } },
-            { session, returnDocument: 'after', lean: true },
-          )
-        : await IssueModel.findOne({ _id: t.docId, status: 'live' }).session(session).lean<IssueDoc>();
-    if (!doc) throw new DayChanged();
-    await addPoints(session, {
-      c: who,
-      cityId: i.cityId,
-      placeId: doc.districtId ?? i.cityId,
-      docId: t.docId,
-      points: t.points,
-      at: i.at,
-    });
-    issues.push({
-      issueId: t.issueId,
-      name: t.name,
-      factionId: f,
-      added: t.points,
-      totals: { ...doc.momentum },
-      leader: leaderOf(doc.momentum),
-    });
-  }
-  let scoreboard: ActionResult['effects']['scoreboard'] = null;
-  if (i.givesOpinion) {
-    const scope = `influence|${cycleKeyOf(content, i.cityId, i.placeId, i.today)}`;
-    const mine = await Contribution.findById(contributionId(scope, i.c._id)).session(session).lean();
-    if (mine && mine.amount > 0) {
-      const higher = await Contribution.countDocuments({
-        scope,
-        $or: [{ amount: { $gt: mine.amount } }, { amount: mine.amount, lastAt: { $lt: mine.lastAt } }],
-      }).session(session);
-      const of = await Contribution.countDocuments({ scope }).session(session);
-      scoreboard = { placeName: i.placeName, swing: mine.amount / 1_000, rank: higher + 1, of };
-    }
-  }
-  return { issues, scoreboard };
 }

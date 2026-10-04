@@ -31,6 +31,8 @@ export function addToTally(
 ): DailyTally {
   const c = currentTally(t, today);
   return {
+    // Slice 5: fields the tally carries beyond DailyTally (`missions`, `rivalCityId`) are kept.
+    ...c,
     day: today,
     energy: c.energy + (delta.energy ?? 0),
     attempts: c.attempts + (delta.attempts ?? 0),

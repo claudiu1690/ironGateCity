@@ -1242,22 +1242,22 @@
     "bytes": 55546
   },
   "scene.mission-speech-640.avif": {
-    "sourceHash": "4ce59c4b7a4c547bbb84ee3b3a694f5c7ea8bf835d22f96ae3be0923376644a2",
+    "sourceHash": "1cf009960abbb654a2c4ba35251447e4312274136e5cb0d7a4b0bd6830b20556",
     "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
     "quality": 55,
-    "bytes": 47118
+    "bytes": 45228
   },
   "scene.mission-speech-1280.avif": {
-    "sourceHash": "4ce59c4b7a4c547bbb84ee3b3a694f5c7ea8bf835d22f96ae3be0923376644a2",
+    "sourceHash": "1cf009960abbb654a2c4ba35251447e4312274136e5cb0d7a4b0bd6830b20556",
     "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
     "quality": 50,
-    "bytes": 147741
+    "bytes": 141196
   },
   "scene.mission-speech-640.webp": {
-    "sourceHash": "4ce59c4b7a4c547bbb84ee3b3a694f5c7ea8bf835d22f96ae3be0923376644a2",
+    "sourceHash": "1cf009960abbb654a2c4ba35251447e4312274136e5cb0d7a4b0bd6830b20556",
     "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
-    "bytes": 66160
+    "bytes": 63730
   },
   "scene.mission-watch-640.avif": {
     "sourceHash": "26ba1ba85afd9ef739433e721983afc43714609504ac8eb28203a2b46500db94",

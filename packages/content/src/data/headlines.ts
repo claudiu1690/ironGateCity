@@ -69,7 +69,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
     headline: '{name} Spent {minutes} Minutes in the Cells',
-    deck: 'Taken in after {missionTitle}; {how} The duty officer has written it down. Heat is back to 25 and the branch is pretending not to have read this.',
+    deck: 'Taken in after {missionTitle}; {how} The duty officer wrote it down. Heat is back to 25; the branch says nothing.',
   },
   {
     id: 'hl.infirmary',
@@ -87,7 +87,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'recordRose' }],
     headline: '{name} Is {recordLevel} with the Harbour Police',
-    deck: '{marks} marks. Iron from missions is down by {pct} % until they fade. The branch suggests a fortnight of flyers.',
+    deck: '{marksLine}. Iron from missions is down by {pct} % until they fade. The branch suggests a fortnight of flyers.',
   },
   {
     id: 'hl.rival-trip',
@@ -177,7 +177,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'recordRose' }],
     headline: '{name} Is {recordLevel} with the Lock-up',
-    deck: "{marks} marks. Iron from missions down by {pct} % until they fade. The committee's view: a fortnight of flyers, in order.",
+    deck: "{marksLine}. Iron from missions down by {pct} % until they fade. The committee's view: a fortnight of flyers, in order.",
   },
   {
     id: 'hl.v.rival-trip',
@@ -240,7 +240,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'markYesterday' }],
     headline: "Police Take {name}'s Name",
-    deck: "A mark on the record after {missionTitle}. It fades in a fortnight; the Rooms can have it struck off for 30 Political Capital, and would rather you didn't need it.",
+    deck: 'A mark on the record after {missionTitle}. It fades in a fortnight; the Rooms can strike it off for 30 Political Capital, and would rather not need to.',
   },
   {
     id: 'hl.a.cells',
@@ -249,7 +249,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
     headline: '{name} Spent {minutes} Minutes in the Cells',
-    deck: 'Taken in after {missionTitle}; {how} Legal Aid halves the bail, which the Rooms would prefer not to have mentioned. Heat is back to 25.',
+    deck: 'Taken in after {missionTitle}; {how} Legal Aid halved the bail; the Rooms would rather not mention it. Heat is back to 25.',
   },
   {
     id: 'hl.a.infirmary',
@@ -267,7 +267,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'recordRose' }],
     headline: '{name} Is {recordLevel} with the Police Station',
-    deck: '{marks} marks. Iron from missions down by {pct} % until they fade. Mr Grey: "Flyers. A fortnight of them."',
+    deck: '{marksLine}. Iron from missions down by {pct} % until they fade. Mr Grey: "Flyers. A fortnight of them."',
   },
   {
     id: 'hl.a.rival-trip',
@@ -348,7 +348,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'recordRose' }],
     headline: '{name} Is {recordLevel} with Police Headquarters',
-    deck: "{marks} marks with the capital's police. Iron from missions down by {pct} % until they fade.",
+    deck: "{marksLine} with the capital's police. Iron from missions down by {pct} % until they fade.",
   },
   {
     id: 'hl.ig.rival-trip',

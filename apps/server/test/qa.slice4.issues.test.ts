@@ -149,7 +149,8 @@ describe("a capital resident's orders (design §10, GDD §13.7)", () => {
     // Find a day whose capital rotation carries the Issue order in slot B.
     const templates = content.ordersOf('collective');
     let day = DAY;
-    while (!ordersForDay(templates, day, 'capital').some((t) => t.id === 'dir.c.capital-issue')) day++;
+    // Slice 5: a Level-10 traveller's rotation carries the mission order from Level 6.
+    while (!ordersForDay(templates, day, 'capital', 10).some((t) => t.id === 'dir.c.capital-issue')) day++;
     const clock = testClock(at(day - 1));
     const p = await traveller(clock, {
       cityId: 'irongate',

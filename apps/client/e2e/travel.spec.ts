@@ -66,7 +66,10 @@ test('the first trip: nation → board → the journey card → arrival → the 
   const unclear = await unclearPins(page);
   expect(unclear).not.toContain('Coalport, you are here');
   expect(unclear).not.toContain('Irongate · 12 min');
-  await expect(page.locator('[data-testid=hotspot][aria-label="Ashford, rival ground"]')).toHaveClass(/opacity-60/);
+  // Slice 5 (design §11.1): rival ground opens at Level 10, so Ashford is a destination, not muted.
+  const ashford = page.locator('[data-testid=hotspot][aria-label^="Ashford"]');
+  await expect(ashford).toHaveCount(1);
+  await expect(ashford).not.toHaveClass(/opacity-60/);
   // The Cities list reaches every city.
   await page.getByTestId('cities-button').click();
   const cities = page.getByRole('dialog', { name: 'Cities of the republic' });
@@ -185,7 +188,8 @@ test('the first trip: nation → board → the journey card → arrival → the 
   await page.getByRole('dialog', { name: /^Places in / }).getByRole('button', { name: /^15\. Central Station/ }).click();
   const station = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Central Station' }) });
   await expect(station).toBeVisible();
-  await station.getByTestId('trains-board').click();
+  // Slice 5: the Trains card also lists the rival homes (open at Level 10); home is Coalport.
+  await station.getByTestId('trains-board').filter({ hasText: /to Coalport/ }).click();
   await expect(page).toHaveURL(/\/journey$/);
   await expect(page.getByTestId('journey-title')).toHaveText(/to Coalport$/);
   expect((await page.request.post('/api/test/journey', { data: { arriveNow: true } })).ok()).toBe(true);

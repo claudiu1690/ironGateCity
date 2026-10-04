@@ -1,4 +1,4 @@
-import type { MoraleState } from '@irongate/rules';
+import type { HeatState, MoraleState, RecordLevel } from '@irongate/rules';
 
 /**
  * The dev panel's wire types (memory mode only, behind E2E_TEST_HOOKS). The client imports them as
@@ -11,7 +11,79 @@ import type { MoraleState } from '@irongate/rules';
  * (Live in… a capital district or `home`; the body's `target`).
  */
 export type DevAction =
-  'hour' | 'day' | 'phase' | 'boost' | 'energy' | 'arrive' | 'monday' | 'level10' | 'irongate' | 'live';
+  | 'hour'
+  | 'day'
+  | 'phase'
+  | 'boost'
+  | 'energy'
+  | 'arrive'
+  | 'monday'
+  | 'level10'
+  | 'irongate'
+  | 'live'
+  // Slice 5 (tech design §8.6). `heat` (target 0..100), `health` (`full`, `half` or a value),
+  // `record` (a number of marks, today's minor ones; 0 is clean), `runIn` (`off`, `random` or an
+  // opponent id), `caught` (the next act is caught), `cells` / `infirmary` (sent now), `release`
+  // (while held), `decide` (while a run-in is pending), `level6`, `rank3`, `goto` (target: a rival
+  // home city; no ticket, no card), `unbar` (Lift the bar).
+  | 'heat'
+  | 'health'
+  | 'record'
+  | 'runIn'
+  | 'caught'
+  | 'cells'
+  | 'infirmary'
+  | 'release'
+  | 'decide'
+  | 'level6'
+  | 'rank3'
+  | 'goto'
+  | 'unbar';
+
+/** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
+export interface DevStreetForce {
+  runIn?: 'next' | 'never';
+  opponentId?: string;
+  checkRoll?: number;
+  choiceRoll?: number;
+  caught?: 'always' | 'never';
+}
+
+/** Slice 5 (tech design §8.6): the status's risk block, read from the stored character. */
+export interface DevRisk {
+  level: number;
+  /** `coolBy`: when Heat is under 25 again (null while Cool). */
+  heat: { value: number; state: HeatState; coolBy: number | null; coolByUtc: string | null };
+  health: { value: number; max: number };
+  /** `fadesOn`: the City Day the live minor marks fade, or null. */
+  record: { level: RecordLevel; marks: number; fadesOn: number | null; fadesOnUtc: string | null };
+  /** `bail`: the bail asked (Iron), null on the ward. */
+  held: {
+    kind: 'cells' | 'infirmary';
+    state: 'in' | 'out';
+    placeName: string;
+    minutesLeft: number;
+    bail: number | null;
+  } | null;
+  runIn: { state: 'pending' | 'resolved'; opponent: string; decidesAt: number; decidesAtUtc: string } | null;
+  /** Today's flags in the city the character is in. */
+  flags: Array<'watched' | 'warned'>;
+  barred: Array<{ cityId: string; cityName: string; until: number; untilUtc: string }>;
+  /** The rival pressure of the city the character is in (points lost to rivals today, of the cap); null outside a home city. */
+  pressure: {
+    cityName: string;
+    homeFaction: string;
+    rivalGround: boolean;
+    lostToday: number;
+    cap: number;
+  } | null;
+  /** What the next act is forced to, or null. */
+  street: DevStreetForce | null;
+  /** The two rival home cities (*Take me to…*). */
+  rivalHomes: Array<{ cityId: string; cityName: string }>;
+  /** The six opponents (*Next run-in*). */
+  opponents: Array<{ id: string; label: string }>;
+}
 
 export interface DevHomeCity {
   cityId: string;
@@ -63,6 +135,8 @@ export interface DevStatus {
     standsFrom: string;
     canMoveFrom: string;
   } | null;
+  /** Slice 5: Heat, Health, the record, held, the run-in, flags, bars, the rival pressure. */
+  risk: DevRisk | null;
   /** Slice 4: the capital's five districts (shares, close race, comeback). */
   capital: Array<{
     id: string;

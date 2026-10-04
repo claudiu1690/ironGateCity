@@ -6,22 +6,28 @@ import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc, JourneyDoc } from '@
 import {
   ENERGY,
   TRAVEL,
+  addHeat,
   addToTally,
   applyGains,
   applyPersuasion,
   averageShares,
+  cardDifficulty,
+  coolAndClean,
   councilDay,
   createRng,
   dayKey,
   dayStart,
   destinationState,
+  drawHostileCard,
   drawJourneyCard,
   fare,
   fillTemplate,
   isNight,
   journeyChoiceCheck,
   legMinutes,
+  liveMarks,
   projectEnergy,
+  projectHeat,
   resolveJourneyChoice,
   standingBonus,
   weekOf,
@@ -52,13 +58,25 @@ import type { SessionUser } from '../trpc/context';
 import { leaderOf, progressOf } from './actionService';
 import { ensureCityDay } from './cityDay';
 import { ensureSettled, loadCharacter } from './dayService';
+import {
+  assertFree,
+  barredUntil,
+  flagsPruned,
+  flagsToday,
+  heatDoc,
+  heatRateOn,
+  heatTimerOf,
+  isRivalGround,
+  marksOf,
+  notFree,
+} from './risk';
 import type { LoadedCharacter } from './dayService';
 import { addInfluence, addPoints, writeLedger } from './ledger';
 import { dayModifiers, restedCapToday } from './modifiers';
 import { politicsSummary } from './politicsService';
 import { withRequestKey } from './requestKey';
 import { residenceCityId } from './residence';
-import { DayChanged, VersionConflict, inTransaction } from './txn';
+import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import {
   assetView,
   energyState,
@@ -85,8 +103,15 @@ export function capitalStation(content: GameContent) {
   return capital.locations.find((l) => l.kind === 'station')!;
 }
 
-/** Where Continue on the arrival modal lands: the station district in the capital, else the city. */
-export function landingOf(content: GameContent, cityId: string): Landing {
+/**
+ * Where Continue on the arrival modal lands: the station district in the capital, else the city.
+ * Slice 5 (tech design §8.2): on rival ground, the city's first quarter.
+ */
+export function landingOf(content: GameContent, cityId: string, rivalGround = false): Landing {
+  if (rivalGround) {
+    const q = content.quartersOf(cityId)[0];
+    return q ? { cityId, quarterId: q.id } : { cityId };
+  }
   if (cityId !== capitalOf(content)) return { cityId };
   const station = capitalStation(content);
   return { cityId, ...(station.quarterId ? { quarterId: station.quarterId } : {}), locationId: station.id };
@@ -103,17 +128,26 @@ function destinationName(content: GameContent, cityId: string): string {
 const minutesMap = (content: GameContent): Record<string, number> =>
   Object.fromEntries(content.nation.cities.map((c) => [c.cityId, c.minutes]));
 
+/** Slice 5 (design §11.5): the usual time between two cities (a deportation's train home). */
+export const legMinutesBetween = (content: GameContent, from: string, to: string): number =>
+  legMinutes(from, to, minutesMap(content), capitalOf(content));
+
 /** ADR 0030: the ticket from a city: its ticket sources of the day (Tram Subsidy, the Fare Hike). */
 export function fareFrom(content: GameContent, origin: CityDoc | null, day: number): Fare {
   return fare(dayModifiers(content, origin, day));
 }
 
-/** Design §2.3: the destination's state for this character standing in `here`. */
+/**
+ * Design §2.3: the destination's state for this character standing in `here`. Slice 5 (design
+ * §11.1, §11.5): a rival home is open from Level 10 (`rival`), or `barred` until a deportation's bar
+ * ends. Without `now` the bar is not read (the board refuses it anyway).
+ */
 export function destinationOf(
   content: GameContent,
-  c: Pick<CharacterDoc, 'level' | 'factionId'>,
+  c: Pick<CharacterDoc, 'level' | 'factionId' | 'barred'>,
   here: string,
   to: string,
+  now?: number,
 ): DestinationState {
   const nc = content.nationCity(to)!;
   return destinationState({
@@ -124,45 +158,51 @@ export function destinationOf(
     factionHomeOf: (id) => content.city(id)?.homeFactionId ?? null,
     playerFaction: c.factionId,
     capitalId: capitalOf(content),
+    ...(now !== undefined ? { barredUntil: barredUntil(c, to, now), now } : {}),
   });
 }
 
 /** Why a board is refused (in this order), or null. */
 export function boardRefusal(
   content: GameContent,
-  c: Pick<CharacterDoc, 'level' | 'factionId' | 'iron' | 'cityId' | 'journey'>,
+  c: Pick<CharacterDoc, 'level' | 'factionId' | 'iron' | 'cityId' | 'journey' | 'barred'>,
   to: string,
   total: number,
+  now?: number,
 ): { reason: GameErrorReason; data: Record<string, unknown> } | null {
   if (c.level < TRAVEL.level) return { reason: 'LEVEL_TOO_LOW', data: { need: TRAVEL.level } };
   if (c.journey?.status === 'onTheWay')
     return { reason: 'IN_TRANSIT', data: { arrivesAt: new Date(c.journey.arrivesAt).getTime() } };
-  const state = destinationOf(content, c, c.cityId, to);
+  const state = destinationOf(content, c, c.cityId, to, now);
   if (state === 'here') return { reason: 'ALREADY_THERE', data: {} };
-  if (state === 'rival' || state === 'later') return { reason: 'DESTINATION_LOCKED', data: { lock: state } };
+  if (state === 'barred') return { reason: 'BARRED', data: { cityId: to, until: barredUntil(c, to, now!) } };
+  if (state === 'later') return { reason: 'DESTINATION_LOCKED', data: { lock: state } };
   if (c.iron < total) return { reason: 'NOT_ENOUGH_IRON', data: { iron: c.iron, cost: total } };
   return null;
 }
 
-/** The Trains card at the capital's station: the open destinations, their minutes and fares. */
+/**
+ * The Trains card at the capital's station: the destinations with a service, their minutes and
+ * fares. Slice 5: rival homes are listed (boardable from Level 10, not while barred).
+ */
 export function trainsFrom(
   content: GameContent,
   c: CharacterDoc,
   origin: CityDoc | null,
   day: number,
+  now?: number,
 ): NonNullable<LocationView['trains']> {
   const here = c.cityId;
   const f = fareFrom(content, origin, day);
   return {
     destinations: content.nation.cities
       .filter((n) => n.cityId !== here && destinationOf(content, c, here, n.cityId) !== 'later')
-      .filter((n) => destinationOf(content, c, here, n.cityId) !== 'rival')
       .map((n) => ({
         cityId: n.cityId,
         name: n.name,
         minutes: legMinutes(here, n.cityId, minutesMap(content), capitalOf(content)),
         fare: { base: f.base, lines: f.lines, total: f.total },
-        canBoard: boardRefusal(content, c, n.cityId, f.total) === null,
+        canBoard: boardRefusal(content, c, n.cityId, f.total, now) === null,
       })),
   };
 }
@@ -195,14 +235,12 @@ export async function nationView(content: GameContent, c: CharacterDoc, now: num
     const doc = docs.get(n.cityId) ?? null;
     const spec = content.city(n.cityId);
     const state: DestinationState = here
-      ? destinationOf(content, c, here, n.cityId)
+      ? destinationOf(content, c, here, n.cityId, now)
       : c.level < TRAVEL.level
         ? 'level'
         : n.service === 'later'
           ? 'later'
-          : destinationOf(content, c, c.journey!.to, n.cityId) === 'here'
-            ? 'here'
-            : destinationOf(content, c, c.journey!.to, n.cityId);
+          : destinationOf(content, c, c.journey!.to, n.cityId, now);
     let line = n.line;
     let whoHolds: OpinionShares = n.baselineOpinion ??
       spec?.baselineOpinion ?? {
@@ -228,9 +266,12 @@ export async function nationView(content: GameContent, c: CharacterDoc, now: num
           : { line: 'votesIn', days: cal.election.pollsFrom - today };
     }
     const refusal = here
-      ? boardRefusal(content, c, n.cityId, f.total)
+      ? boardRefusal(content, c, n.cityId, f.total, now)
       : { reason: 'IN_TRANSIT' as const, data: {} };
-    const locked = state === 'rival' || state === 'later';
+    // Slice 5 (design §11.1): rival ground is open from Level 10; a bar locks it for 24 hours.
+    const locked = state === 'barred' || state === 'later';
+    const until = state === 'barred' ? barredUntil(c, n.cityId, now) : null;
+    const rivalHome = spec?.homeFactionId && spec.homeFactionId !== c.factionId ? spec.homeFactionId : null;
     return {
       cityId: n.cityId,
       name: n.name,
@@ -239,7 +280,9 @@ export async function nationView(content: GameContent, c: CharacterDoc, now: num
       n: idx + 1,
       line,
       state,
-      lockWord: state === 'rival' ? 'rival ground' : state === 'later' ? 'no service yet' : null,
+      lockWord: state === 'barred' ? 'barred' : state === 'later' ? 'no service yet' : null,
+      ...(until !== null ? { barredUntil: until } : {}),
+      ...(rivalHome ? { rival: { homeFactionId: rivalHome } } : {}),
       minutes:
         here && n.cityId !== here && n.service === 'open'
           ? legMinutes(here, n.cityId, minutesMap(content), capital)
@@ -285,6 +328,8 @@ export async function board(deps: {
     throw gameError('BAD_REQUEST', 'UNKNOWN_DESTINATION', { to: input.to });
   }
   const loaded = await loadCharacter(deps.user, content, deps.now());
+  // Slice 5 (tech design §7.2): not from the cells, the ward or a run-in.
+  assertFree(loaded.doc);
   let fresh = false;
   const result = await withRequestKey<BoardResult>({
     characterId: loaded.doc._id,
@@ -298,34 +343,55 @@ export async function board(deps: {
     fn: async (session) => {
       const now = deps.now();
       const today = dayKey(now);
-      const c = await Character.findById(loaded.doc._id).session(session).lean<CharacterDoc>();
+      let c = await Character.findById(loaded.doc._id).session(session).lean<CharacterDoc>();
       if (!c) throw new Error('character disappeared');
       if (c.day.settled !== today) throw new DayChanged();
+      const blocked = notFree(c);
+      if (blocked) throw blocked;
       const origin = await City.findById(c.cityId).session(session).lean<CityDoc>();
       const f = fareFrom(content, origin, today);
-      const refusal = boardRefusal(content, c, input.to, f.total);
+      const refusal = boardRefusal(content, c, input.to, f.total, now);
       if (refusal) throw new GameError(refusal.reason, refusal.data);
 
-      // An arrived journey whose modal was never closed is closed now (slept through if unanswered).
+      // An arrived journey whose modal was never closed is closed now (slept through if unanswered;
+      // an unanswered hostile card's ignore effects apply, once).
       if (c.journey?.status === 'arrived') {
-        const prev = await Journey.findById(c.journey.id).session(session).lean<JourneyDoc>();
-        await Journey.updateOne(
-          { _id: c.journey.id, status: 'arrived' },
-          { $set: { status: 'closed', closedAt: new Date(now), sleptThrough: !!prev?.card && !prev.choice } },
-          { session },
-        );
+        c = await closeJourneyInTx(content, session, c, c.journey.id, now, loaded.city);
       }
       const seed = randomBytes(16).toString('hex');
-      const deck = content.journeyDeck();
-      const firstId = content.journeyEvents.find((e) => e.first)!.id;
       const made = c.journeysMade ?? 0;
-      const card = drawJourneyCard({
-        first: made === 0,
-        seen: c.journeyDeck?.seen ?? [],
-        deck,
-        firstId,
-        rng: createRng(seed),
-      });
+      // Slice 5 (tech design §8.2): rival ground always draws from the hostile deck; elsewhere the
+      // ordinary deck, the passenger first on the first journey that is neither (`firstDone`).
+      const rival = isRivalGround(content, c, input.to);
+      const set: Record<string, unknown> = {};
+      const inc: Record<string, number> = { iron: -f.total, version: 1, journeysMade: 1 };
+      let card: { eventId: string; deck: 'ordinary' | 'hostile' } | null;
+      if (rival) {
+        const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, loaded.city)).value;
+        const drawn = drawHostileCard({
+          firstRival: (c.rivalTrips ?? 0) === 0,
+          heat,
+          seen: c.hostileDeck?.seen ?? [],
+          rotation: content.hostileRotation(),
+          firstId: content.hostileFirst(),
+          listed: content.listedCard(),
+          rng: createRng(seed),
+        });
+        card = { eventId: drawn.eventId, deck: 'hostile' };
+        set.hostileDeck = { seen: drawn.seen };
+        inc.rivalTrips = 1;
+      } else {
+        const firstDone = c.journeyDeck?.firstDone ?? made > 0;
+        const drawn = drawJourneyCard({
+          first: !firstDone,
+          seen: c.journeyDeck?.seen ?? [],
+          deck: content.journeyDeck(),
+          firstId: content.journeyEvents.find((e) => e.first && e.deck === 'ordinary')!.id,
+          rng: createRng(seed),
+        });
+        card = drawn.eventId ? { eventId: drawn.eventId, deck: 'ordinary' } : null;
+        set.journeyDeck = { seen: drawn.seen, firstDone: true };
+      }
       const minutes = legMinutes(c.cityId, input.to, minutesMap(content), capitalOf(content));
       const id = new Types.ObjectId();
       const boardedAt = new Date(now);
@@ -343,7 +409,9 @@ export async function board(deps: {
             minutes,
             fare: f,
             seed,
-            card: card.eventId ? { eventId: card.eventId } : null,
+            card,
+            kind: 'ticket',
+            rivalGround: rival,
             choice: null,
             status: 'onTheWay',
             arrivedAt: null,
@@ -363,10 +431,7 @@ export async function board(deps: {
           iron: { $gte: f.total },
           $or: [{ journey: null }, { 'journey.status': 'arrived' }],
         },
-        {
-          $inc: { iron: -f.total, version: 1, journeysMade: 1 },
-          $set: { journey: pointer, journeyDeck: { seen: card.seen } },
-        },
+        { $inc: inc, $set: { ...set, journey: pointer } },
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
@@ -415,7 +480,13 @@ export async function journeyView(
   c: CharacterDoc,
   j: JourneyDoc,
   now: number,
-  opts: { city: CityDoc | null; session?: ClientSession | null; chosenless?: boolean } = { city: null },
+  opts: {
+    city: CityDoc | null;
+    session?: ClientSession | null;
+    /** Inside `choose`: the card is being answered now (`heat`: what the answer moved). */
+    chosenless?: boolean;
+    heat?: { before: number; after: number } | null;
+  } = { city: null },
 ): Promise<JourneyView> {
   const session = opts.session ?? null;
   const today = dayKey(now);
@@ -457,15 +528,56 @@ export async function journeyView(
       }
     : null;
   const choiceLine = (r: JourneyCardResult) =>
-    `${ev?.title ?? ''}: ${r.rewards
-      .map((x) =>
-        x.id === 'opinion'
-          ? `opinion +${x.amount} in ${x.note ?? vars.destination}`
-          : x.id === 'points'
-            ? `+${x.amount} points on ${x.note ?? vars.issue}`
-            : `${x.amount > 0 ? '+' : ''}${x.amount} ${x.id === 'xp' ? 'XP' : x.id === 'fxp' ? 'Party XP' : x.id === 'iron' ? 'Iron' : 'Rested'}`,
-      )
-      .join(', ')}`;
+    `${ev?.title ?? ''}: ${
+      r.rewards.length === 0
+        ? r.headline
+        : r.rewards
+            .map((x) =>
+              x.id === 'opinion'
+                ? `opinion +${x.amount} in ${x.note ?? vars.destination}`
+                : x.id === 'points'
+                  ? `+${x.amount} points on ${x.note ?? vars.issue}`
+                  : x.id === 'heat'
+                    ? `Heat ${x.amount > 0 ? '+' : '−'}${Math.abs(x.amount)}`
+                    : `${x.amount > 0 ? '+' : ''}${x.amount} ${x.id === 'xp' ? 'XP' : x.id === 'fxp' ? 'Party XP' : x.id === 'iron' ? 'Iron' : 'Rested'}`,
+            )
+            .join(', ')
+    }`;
+  // Slice 5 (tech design §8.2, §10.4): rival ground's place line, the warning once, the day flags,
+  // and the Heat a card moved (answered) or will move when slept through (unanswered).
+  const hostile = ev?.deck === 'hostile';
+  const difficulty = cardDifficulty(hostile ? 'hostile' : 'ordinary');
+  const rivalTrip = !!j.rivalGround;
+  const unanswered = !!ev && !j.choice && !opts.chosenless;
+  let knockOns: NonNullable<JourneyView['arrival']>['knockOns'] | null = null;
+  if (status === 'arrived') {
+    // The warning once: no earlier journey of this character went to rival ground.
+    let firstRival = false;
+    if (rivalTrip) {
+      const q = Journey.countDocuments({ characterId: c._id, rivalGround: true, n: { $lt: j.n } });
+      firstRival = (await (session ? q.session(session) : q)) === 0;
+    }
+    const flags = flagsToday(c, j.to, today);
+    const ignore = unanswered ? ev.ignoreEffects : undefined;
+    if (ignore?.flag) flags[ignore.flag] = true;
+    const stored = (j.choice as { heat?: { before: number; after: number } } | null)?.heat;
+    let heat: { before: number; after: number } | undefined = stored ?? opts.heat ?? undefined;
+    if (ignore?.heat) {
+      const change = addHeat(heatTimerOf(c), now, heatRateOn(content, opts.city), ignore.heat);
+      heat = { before: change.before, after: change.after };
+    }
+    knockOns = {
+      ticket: j.fare?.total ?? 0,
+      heraldVisitor: j.to === capital && residenceCityId(c) !== capital,
+      rivalGround: firstRival,
+      flags: [
+        ...(flags.watched ? (['watched'] as const) : []),
+        ...(flags.warned ? (['warned'] as const) : []),
+      ],
+      ...(heat ? { heat } : {}),
+    };
+  }
+  const firstQuarter = rivalTrip ? content.quartersOf(j.to)[0] : undefined;
   return {
     id: j._id.toHexString(),
     from: { cityId: j.from, name: content.city(j.from)?.name ?? j.from },
@@ -488,19 +600,29 @@ export async function journeyView(
             detail: fillCard(content, ch.detail, vars),
             stat: ch.stats && ch.stats[0] !== 'best' ? { stats: ch.stats as CheckStats } : null,
             chance: ch.stats
-              ? journeyChoiceCheck({ stats: ch.stats, values, standingBonus: bonus }).chance
+              ? journeyChoiceCheck({ stats: ch.stats, values, standingBonus: bonus, difficulty }).chance
               : null,
             cost: ch.cost?.iron ?? null,
             affordable: c.iron >= (ch.cost?.iron ?? 0),
+            // Design §23.2: the checkpoint's papers depend on Heat and the record (no odds word).
+            gated: !!ch.gate,
           })),
           chosen,
+          deck: hostile ? 'hostile' : 'ordinary',
         }
       : null,
     arrival:
-      status === 'arrived' && art
+      status === 'arrived' && art && knockOns
         ? {
             stamp: 'Arrived',
-            place: j.to === capital ? `${city!.name} · ${vars.destination}` : city!.name,
+            place:
+              j.to === capital
+                ? `${city!.name} · ${vars.destination}`
+                : rivalTrip
+                  ? copy.risk.rival.placeLine(
+                      firstQuarter ? `${city!.name} · ${firstQuarter.name}` : city!.name,
+                    )
+                  : city!.name,
             headline:
               j.to === capital
                 ? j.firstToCapital
@@ -517,12 +639,9 @@ export async function journeyView(
                 ? copy.travel.cardBelow
                 : copy.travel.nothingHappened,
             cardLine: j.choice ? choiceLine(j.choice.result) : null,
-            knockOns: {
-              ticket: j.fare.total,
-              heraldVisitor: j.to === capital && residenceCityId(c) !== capital,
-            },
+            knockOns,
             art,
-            landing: landingOf(content, j.to),
+            landing: landingOf(content, j.to, rivalTrip),
           }
         : null,
     whileYouRide: {
@@ -611,20 +730,28 @@ export async function choose(deps: {
       const successes = standingSuccesses(c, j.to);
       const named = namedStanding(content, j.to, successes);
       const bonus = standingBonus(successes, `${named.name} in ${content.city(j.to)?.name ?? j.to}`);
+      // Slice 5 (tech design §8.2): the hostile deck checks at 14; the checkpoint's gate is Cool and
+      // Clean (Heat 0–24, no live mark); Heat at the residence city's rate.
+      const hostile = ev.deck === 'hostile';
+      const rateOn = heatRateOn(content, loaded.city);
+      const heatNow = projectHeat(heatTimerOf(c), now, rateOn).value;
       const spec: JourneyChoiceSpec = {
         id: ch.id,
         ...(ch.stats ? { stats: ch.stats } : {}),
         ...(ch.cost ? { cost: ch.cost } : {}),
         success: { rewards: ch.success.rewards },
         ...(ch.partial ? { partial: { rewards: ch.partial.rewards } } : {}),
+        ...(ch.gate ? { gate: ch.gate } : {}),
       };
       const r = resolveJourneyChoice({
         choice: spec,
         values,
         standingBonus: bonus,
         rng: createRng(`${j.seed}:card`),
+        difficulty: cardDifficulty(hostile ? 'hostile' : 'ordinary'),
+        ...(ch.gate ? { gateHolds: coolAndClean(heatNow, liveMarks(marksOf(c), today).length) } : {}),
       });
-      const text = r.outcome === 'partial' ? ch.partial!.text : ch.success.text;
+      const text = r.branch === 'stopped' || r.outcome === 'partial' ? ch.partial!.text : ch.success.text;
       const capital = capitalOf(content);
       const destCity = await City.findById(j.to).session(session).lean<CityDoc>();
       const vars = {
@@ -639,7 +766,8 @@ export async function choose(deps: {
       let opinion: JourneyCardResult['opinion'] = null;
       const who = { _id: c._id, name: c.name, factionId: c.factionId, level: c.level };
       const placeId = j.to === capital ? (capitalStation(content).quarterId ?? j.to) : j.to;
-      if ((rw.opinion ?? 0) > 0) {
+      // No opinion or Issue points on a hostile card (design §11.4).
+      if (!hostile && (rw.opinion ?? 0) > 0) {
         let before: OpinionShares;
         let after: OpinionShares;
         let applied: number;
@@ -695,7 +823,7 @@ export async function choose(deps: {
 
       // Points on the destination's first live Issue.
       let points: JourneyCardResult['points'] = null;
-      if ((rw.momentum ?? 0) > 0 && issue) {
+      if (!hostile && (rw.momentum ?? 0) > 0 && issue) {
         const doc = await IssueModel.findOneAndUpdate(
           { _id: issue._id, status: 'live' },
           { $inc: { [`momentum.${c.factionId}`]: rw.momentum! } },
@@ -730,6 +858,11 @@ export async function choose(deps: {
         iron,
         opinion: opinion ? Math.max(0, opinion.after - opinion.before) : 0,
       });
+      // Slice 5: the card's Heat (through `addHeat`) and its day flag in the destination today.
+      const heatChange = rw.heat ? addHeat(heatTimerOf(c), now, rateOn, rw.heat) : null;
+      const risk: Record<string, unknown> = {};
+      if (heatChange) risk.heat = heatDoc(heatChange.timer);
+      if (rw.flag) risk.flags = withFlag(c, j.to, today, rw.flag);
       const updated = await Character.findOneAndUpdate(
         { _id: c._id, version: c.version, 'day.settled': today, iron: { $gte: cost } },
         {
@@ -745,6 +878,7 @@ export async function choose(deps: {
             rested,
             today: tally,
             ...(rw.quoted ? { lastQuoted: { day: today, issueId: issue?.issueId ?? '' } } : {}),
+            ...risk,
           },
           $inc: { iron, version: 1 },
         },
@@ -759,6 +893,8 @@ export async function choose(deps: {
       if (opinion && rw.opinion) rewards.push({ id: 'opinion', amount: rw.opinion, note: vars.destination });
       if (points) rewards.push({ id: 'points', amount: points.added, note: points.issueName });
       if (rw.rested) rewards.push({ id: 'rested', amount: rested - energy.rested });
+      if (heatChange && heatChange.after !== heatChange.before)
+        rewards.push({ id: 'heat', amount: heatChange.after - heatChange.before });
       const statsUsed = ch.stats && ch.stats[0] !== 'best' ? (ch.stats as StatKey[]) : [];
       const resultBase = {
         kind: 'journeyCard' as const,
@@ -776,6 +912,14 @@ export async function choose(deps: {
         opinion,
         points,
         quoted: !!rw.quoted,
+        ...(rw.flag
+          ? {
+              flag: {
+                flag: rw.flag,
+                line: copy.risk.flags[rw.flag](content.city(j.to)?.name ?? j.to),
+              },
+            }
+          : {}),
         performedAt: at.toISOString(),
         idempotencyKey: input.idempotencyKey,
         character: toCharacterView(updated, now, content, loaded.editionReadAt, { city: loaded.city }),
@@ -784,13 +928,21 @@ export async function choose(deps: {
         city: loaded.city,
         session,
         chosenless: true,
+        heat: heatChange ? { before: heatChange.before, after: heatChange.after } : null,
       });
       const result: JourneyCardResult = { ...resultBase, journey: jView };
       const stored = await Journey.updateOne(
         { _id: j._id, choice: null, status: { $ne: 'closed' } },
         {
           $set: {
-            choice: { choiceId: ch.id, outcome: r.outcome, at, result: { ...result, journey: jView } },
+            choice: {
+              choiceId: ch.id,
+              outcome: r.outcome,
+              at,
+              result: { ...result, journey: jView },
+              // The arrival's Heat knock-on (`journeys.choice` is Mixed).
+              ...(heatChange ? { heat: { before: heatChange.before, after: heatChange.after } } : {}),
+            },
           },
         },
         { session },
@@ -809,6 +961,92 @@ export async function choose(deps: {
 // Continue on the arrival modal (travel.close): idempotent.
 // ---------------------------------------------------------------------------------------------
 
+/** `flags[]` pruned to today, with `flag` in `cityId` today (once). */
+function withFlag(
+  c: Pick<CharacterDoc, 'flags'>,
+  cityId: string,
+  today: number,
+  flag: 'watched' | 'warned',
+): Array<{ cityId: string; day: number; flag: 'watched' | 'warned' }> {
+  const kept = flagsPruned(c, today).filter((f) => !(f.cityId === cityId && f.flag === flag));
+  return [...kept, { cityId, day: today, flag }];
+}
+
+/**
+ * Close an arrived journey inside the caller's transaction (tech design §8.2). The journey's
+ * `status: 'arrived' → 'closed'` transition is the guard, so an unanswered card's ignore effects
+ * (Heat at the residence city's rate, a day flag in the destination) apply exactly once, whoever
+ * closes it: Continue, a new boarding, or the first act in the destination. The character's pointer
+ * is cleared when it names this journey. Returns the character as written, or `c` unchanged when
+ * there was nothing to write; a version miss throws `VersionConflict`.
+ */
+async function closeJourneyInTx(
+  content: GameContent,
+  session: ClientSession,
+  c: CharacterDoc,
+  journeyId: Types.ObjectId,
+  now: number,
+  residenceCity?: CityDoc | null,
+): Promise<CharacterDoc> {
+  const at = new Date(now);
+  // Slept through is decided on the document as it is closed, not on an earlier read: an answer
+  // committed before this write is an answer (QA slice 4 n1). A card still unanswered closes first;
+  // anything else (no card, or a choice) closes as not slept through.
+  const slept = await Journey.findOneAndUpdate(
+    { _id: journeyId, status: 'arrived', card: { $ne: null }, choice: null },
+    { $set: { status: 'closed', closedAt: at, sleptThrough: true } },
+    { session, returnDocument: 'after', lean: true },
+  );
+  if (!slept) {
+    await Journey.updateOne(
+      { _id: journeyId, status: 'arrived' },
+      { $set: { status: 'closed', closedAt: at, sleptThrough: false } },
+      { session },
+    );
+  }
+  const set: Record<string, unknown> = {};
+  const fx = slept?.card ? content.journeyEvent(slept.card.eventId)?.ignoreEffects : undefined;
+  if (slept && fx) {
+    const today = dayKey(now);
+    if (fx.heat) {
+      const city =
+        residenceCity !== undefined
+          ? residenceCity
+          : await City.findById(residenceCityId(c)).session(session).lean<CityDoc>();
+      set.heat = heatDoc(addHeat(heatTimerOf(c), now, heatRateOn(content, city), fx.heat).timer);
+    }
+    if (fx.flag) set.flags = withFlag(c, slept.to, today, fx.flag);
+  }
+  if (c.journey && new Types.ObjectId(c.journey.id).equals(journeyId)) set.journey = null;
+  if (Object.keys(set).length === 0) return c;
+  const updated = await Character.findOneAndUpdate(
+    { _id: c._id, version: c.version },
+    { $set: set, $inc: { version: 1 } },
+    { session, returnDocument: 'after', lean: true },
+  );
+  if (!updated) throw new VersionConflict();
+  return updated;
+}
+
+/**
+ * Close an arrived journey whose destination is the character's city (its unanswered card's ignore
+ * effects apply), inside the caller's transaction. Returns the character as written (version + 1)
+ * or `c` unchanged when nothing was closed.
+ *
+ * For `action.perform` and `mission.start` (tech design §8.2 step 2.2), right after the character
+ * is re-read in the transaction: the street's rolls then see the card's Heat and flag. A version
+ * miss throws `VersionConflict` (the caller's retry re-reads).
+ */
+export async function closeArrivalInTx(
+  content: GameContent,
+  session: ClientSession,
+  c: CharacterDoc,
+  now: number,
+): Promise<CharacterDoc> {
+  if (c.journey?.status !== 'arrived' || c.journey.to !== c.cityId) return c;
+  return closeJourneyInTx(content, session, c, new Types.ObjectId(c.journey.id), now);
+}
+
 export async function close(deps: {
   user: SessionUser;
   content: GameContent;
@@ -824,30 +1062,22 @@ export async function close(deps: {
   if (!j || !j.characterId.equals(c._id)) throw gameError('NOT_FOUND', 'NO_JOURNEY');
   if (j.status === 'onTheWay')
     throw gameError('PRECONDITION_FAILED', 'IN_TRANSIT', { arrivesAt: j.arrivesAt.getTime() });
-  await inTransaction(async (session) => {
-    // Slept through is decided on the document as it is closed, not on the read above: an answer
-    // committed between that read and this write is an answer (QA slice 4 n1). A card still
-    // unanswered closes first; anything else (no card, or a choice) closes as not slept through.
-    const slept = await Journey.updateOne(
-      { _id: j._id, status: 'arrived', card: { $ne: null }, choice: null },
-      { $set: { status: 'closed', closedAt: new Date(now), sleptThrough: true } },
-      { session },
-    );
-    if (slept.matchedCount === 0)
-      await Journey.updateOne(
-        { _id: j._id, status: 'arrived' },
-        { $set: { status: 'closed', closedAt: new Date(now), sleptThrough: false } },
-        { session },
-      );
-    await Character.updateOne(
-      { _id: c._id, 'journey.id': j._id },
-      { $set: { journey: null }, $inc: { version: 1 } },
-      { session },
-    );
-  });
-  const fresh = (await Character.findById(c._id).lean<CharacterDoc>())!;
+  let fresh: CharacterDoc | null = null;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      fresh = await inTransaction(async (session) => {
+        const cur = await Character.findById(c._id).session(session).lean<CharacterDoc>();
+        if (!cur) throw new Error('character disappeared');
+        return closeJourneyInTx(content, session, cur, j._id, now, loaded.city);
+      });
+      break;
+    } catch (err) {
+      if (err instanceof VersionConflict && attempt < MAX_ATTEMPTS) continue;
+      throw err;
+    }
+  }
   return {
-    landing: landingOf(content, j.to),
+    landing: landingOf(content, j.to, !!j.rivalGround),
     character: toCharacterView(fresh, now, content, loaded.editionReadAt, { city: loaded.city }),
   };
 }

@@ -8,6 +8,7 @@ import {
   ordinanceSource,
   placeModifiers,
   restedCapFor,
+  rivalGroundOf,
   weekOf,
 } from '@irongate/rules';
 import type {
@@ -18,6 +19,7 @@ import type {
   MoraleState,
   PlaceModifiers,
   PlaceState,
+  RivalGroundState,
 } from '@irongate/rules';
 
 /**
@@ -97,15 +99,43 @@ export function groundswellOn(
   return { factionId: g.factionId, pct: groundswellPct(g, day) };
 }
 
+/** ADR 0034: another faction's home city is rival ground (the cap from the city's `rivalPressure`). */
+export function rivalGroundAt(
+  content: GameContent,
+  factionId: FactionId,
+  cityId: string,
+  city: Pick<CityDoc, 'opinion' | 'rivalPressure'> | null,
+  today: DayKey,
+): RivalGroundState | null {
+  const home = content.city(cityId)?.homeFactionId ?? null;
+  if (!home || home === factionId) return null;
+  const share = city?.opinion?.[home];
+  return rivalGroundOf({
+    homeFactionId: home,
+    actor: factionId,
+    morale: share === undefined ? null : moraleState(share),
+    pressure: city?.rivalPressure ?? null,
+    today,
+  });
+}
+
 /** The place's state for an action (a district in the capital; a home city has no close race). */
 export function placeStateOf(
   content: GameContent,
-  i: { cityId: string; city: CityDoc | null; district?: DistrictDoc | null; day: DayKey },
+  i: {
+    cityId: string;
+    city: CityDoc | null;
+    district?: DistrictDoc | null;
+    day: DayKey;
+    /** Slice 5: the actor, for rival ground (ADR 0034). */
+    factionId?: FactionId;
+  },
 ): PlaceState {
   return {
     battleground: i.district?.state.battleground ?? false,
     groundswell: groundswellOn(i.district, i.day),
     issues: liveIssuesOf(content, i.cityId, i.city, i.day),
+    rivalGround: i.factionId ? rivalGroundAt(content, i.factionId, i.cityId, i.city, i.day) : null,
   };
 }
 
@@ -125,7 +155,7 @@ export function modifiersFor(
     sources: sourcesOn(content, city, day),
     moraleState: moraleOf(content, city),
     actorIsHomeFaction: !!cityId && content.city(cityId)?.homeFactionId === factionId,
-    place: placeStateOf(content, { cityId, city, district: i.district ?? null, day }),
+    place: placeStateOf(content, { cityId, city, district: i.district ?? null, day, factionId }),
   });
 }
 

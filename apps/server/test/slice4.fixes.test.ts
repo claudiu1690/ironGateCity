@@ -23,10 +23,16 @@ beforeAll(async () => {
 afterAll(teardownDb);
 
 /** The first day from `from` whose rotation for `residence` carries the template. */
-function dayWith(factionId: 'collective' | 'vanguard' | 'alliance', id: string, residence: 'home' | 'capital') {
+function dayWith(
+  factionId: 'collective' | 'vanguard' | 'alliance',
+  id: string,
+  residence: 'home' | 'capital',
+  /** Slice 5: the slot-B mission order joins the rotation at Level 6 (a traveller is Level 10). */
+  level = 1,
+) {
   const templates = content.ordersOf(factionId);
   let day = DAY;
-  while (!ordersForDay(templates, day, residence).some((t) => t.id === id)) day++;
+  while (!ordersForDay(templates, day, residence, level).some((t) => t.id === id)) day++;
   return day;
 }
 
@@ -76,7 +82,7 @@ describe('the Issue order’s pin (slice-4 fixes §3, QA m2)', () => {
     ['issue.press-raids', 7, 'Herald House'],
   ] as const) {
     it(`${first} first: pin ${n}, ${name}`, async () => {
-      const day = dayWith('collective', 'dir.c.capital-issue', 'capital');
+      const day = dayWith('collective', 'dir.c.capital-issue', 'capital', 10);
       const clock = testClock(at(day - 1));
       const p = await traveller(clock, {
         cityId: 'irongate',

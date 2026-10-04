@@ -13,6 +13,7 @@ import {
   orderDoneFxp,
   projectEnergy,
   restedCapFor,
+  rivalGroundIn,
   sourcesOf,
   trainingCost,
   trainingEnergy,
@@ -30,6 +31,7 @@ import type {
   OrdersState,
   RewardLine,
   Rewards,
+  StreetView,
   Tier1Resolution,
   TrainingResolution,
 } from '@irongate/rules';
@@ -66,6 +68,8 @@ interface Common {
   scoreboard?: ActionResult['effects']['scoreboard'];
   morale?: ActionResult['effects']['morale'];
   branchEndorsement?: ActionResult['effects']['branchEndorsement'];
+  /** Slice 5 (tech design §10.2): a rival-ground tap's street block. */
+  street?: StreetView;
 }
 
 export type ResultInput = Common &
@@ -73,7 +77,8 @@ export type ResultInput = Common &
     | {
         kind: 'checked';
         resolution: Tier1Resolution;
-        opinion: { applied: number; shareBefore: number; shareAfter: number } | null;
+        /** The meter's move; slice 5: `against` a faction (ADR 0034). */
+        opinion: Omit<NonNullable<ActionResult['effects']['opinion']>, 'cityId' | 'factionId' | 'delta'> | null;
       }
     | { kind: 'training'; resolution: TrainingResolution }
   );
@@ -159,6 +164,16 @@ export function buildActionResult(i: ResultInput): ActionResult {
     // Slice 4 (ADR 0030, tech design §10.1): the place's tags first (Issue, Close race, Comeback).
     for (const t of r.issues ?? [])
       bonusTags.push({ id: `issue:${t.issueId}`, label: `Issue: ${t.name}`, note: 'opinion +50 %' });
+    // Slice 5 (tech design §10.2): rival ground, its Party XP share and the worse odds.
+    const rivalPart = r.rewards.fxp.parts?.find((p) => p.id === 'rivalGround');
+    if (r.attempts.at(-1)?.check.bonuses.some((b) => b.id === 'rivalGround')) {
+      const pct = rivalGroundIn(m)?.unrest ? 75 : 50;
+      bonusTags.push({
+        id: 'rivalGround',
+        label: 'Rival ground',
+        note: rivalPart ? `+${pct} % Party XP · worse odds` : 'worse odds',
+      });
+    }
     const closeRace = r.attempts.at(-1)?.check.bonuses.some((b) => b.id === CLOSE_RACE.id);
     if (closeRace)
       bonusTags.push({ id: CLOSE_RACE.id, label: CLOSE_RACE.label, note: '+25 % Party XP · better odds' });
@@ -204,7 +219,8 @@ export function buildActionResult(i: ResultInput): ActionResult {
       };
     }
     const cost = 'energy' in action ? actionEnergy(action.energy, action.type, m) : 0;
-    again = { cost1: cost, cost3: cost * 3 };
+    // Slice 5 (design §11.2): ×1 only on rival ground.
+    again = { cost1: cost, cost3: i.street ? null : cost * 3 };
   } else {
     const r = i.resolution;
     stamp = 'trained';
@@ -289,6 +305,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
     },
     today: i.tally,
     again,
+    ...(i.street ? { street: i.street } : {}),
     character: toCharacterView(after, i.now, content, i.editionReadAt, { city: i.city ?? null }),
   };
 }

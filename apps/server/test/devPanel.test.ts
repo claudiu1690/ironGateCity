@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { getContent } from '@irongate/content';
-import { Character, City, PaperEntry, mongoose, nativeDb } from '@irongate/db';
+import { Character, City, Encounter, PaperEntry, mongoose, nativeDb } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
-import { cycleOf, dayKey, dayStart } from '@irongate/rules';
+import { RANK_FXP, cycleOf, dayKey, dayStart, healthMax } from '@irongate/rules';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app';
 import { createAuth } from '../src/auth';
 import type { DevActionResult, DevStatus } from '../src/dev/types';
+import { streetHooks } from '../src/services/streetHooks';
 import { appRouter } from '../src/trpc/router';
 import { arriveOverHttp, resetCity, setupDb, teardownDb, testEnv } from './helpers';
 
@@ -29,6 +30,20 @@ const ACTIONS = [
   'level10',
   'irongate',
   'live',
+  // Slice 5 (tech design §8.6).
+  'heat',
+  'health',
+  'record',
+  'runIn',
+  'caught',
+  'cells',
+  'infirmary',
+  'release',
+  'decide',
+  'level6',
+  'rank3',
+  'goto',
+  'unbar',
 ] as const;
 /** Tuesday 29 September 2026, 09:00 UTC: Coalport cycle day 3 (the polls, day 2 of 3). */
 const BASE = Date.UTC(2026, 8, 29, 9);
@@ -86,6 +101,18 @@ describe('dev panel refused when the test hooks are off', () => {
       const res = await app.inject({ method: 'POST', url, payload: { arriveNow: true } });
       expect(res.statusCode, url).toBe(404);
     }
+  });
+
+  it('nor the slice-5 hooks; the street hooks stay off', async () => {
+    for (const url of ['/api/test/street', '/api/test/held', '/api/test/run-in']) {
+      const res = await app.inject({
+        method: 'POST',
+        url,
+        payload: { runIn: 'next', send: 'cells', decideNow: true },
+      });
+      expect(res.statusCode, url).toBe(404);
+    }
+    expect(streetHooks.enabled).toBe(false);
   });
 
   it('nothing dev-only is in the tRPC router', () => {
@@ -386,5 +413,256 @@ describe('dev panel, slice 4 (tech design §8.6–§8.7)', () => {
     expect(
       (await post('/api/test/character', { residence: { cityId: 'irongate', districtId: null } })).statusCode,
     ).toBe(400);
+  });
+});
+
+describe('dev panel, slice 5 (tech design §8.6)', () => {
+  let app: FastifyInstance;
+  let cookie = '';
+  const content = getContent();
+  const post = (url: string, payload: Record<string, unknown> = {}) =>
+    app.inject({ method: 'POST', url, headers: { 'content-type': 'application/json', cookie }, payload });
+  const status = () =>
+    app
+      .inject({ method: 'GET', url: '/api/test/dev/status', headers: { cookie } })
+      .then((r) => r.json() as DevStatus);
+  const ok = async (action: string, target?: string) => {
+    const res = await post(`/api/test/dev/${action}`, target === undefined ? {} : { target });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json() as DevActionResult;
+  };
+  const refused = async (action: string, target?: string) =>
+    (await post(`/api/test/dev/${action}`, target === undefined ? {} : { target })).statusCode;
+  const character = () => Character.findOne({ name: 'Slice Five' }).lean<CharacterDoc>();
+  const today = dayKey(BASE);
+
+  beforeAll(async () => {
+    await resetCity('coalport');
+    const env = { ...testEnv(uri), E2E_TEST_HOOKS: true };
+    app = await buildApp({
+      env,
+      auth: createAuth(env, nativeDb(), mongoose.connection.getClient()),
+      content,
+      now: () => BASE,
+    });
+    await app.ready();
+    const signUp = await app.inject({
+      method: 'POST',
+      url: '/api/auth/sign-up/email',
+      headers: { 'content-type': 'application/json', origin: ORIGIN },
+      payload: {
+        name: 'Slice Five',
+        email: `five-${Date.now()}@example.test`,
+        password: 'correct-horse-battery',
+      },
+    });
+    cookie = cookieOf(signUp.headers['set-cookie']);
+    expect((await status()).risk).toBeNull(); // no character yet
+    expect(await refused('heat', '30')).toBe(409);
+    await arriveOverHttp(app, cookie);
+  });
+  afterAll(async () => {
+    streetHooks.clear();
+    await app.close();
+  });
+
+  it('the status: Heat, Health, the record, held, the run-in, flags, bars, the pressure, the rival homes', async () => {
+    const s = await status();
+    expect(s.character).toMatchObject({ name: 'Slice Five' });
+    expect(s.risk).toEqual({
+      level: 1,
+      heat: { value: 0, state: 'cool', coolBy: null, coolByUtc: null },
+      health: { value: 100, max: 100 },
+      record: { level: 'clean', marks: 0, fadesOn: null, fadesOnUtc: null },
+      held: null,
+      runIn: null,
+      flags: [],
+      barred: [],
+      pressure: { cityName: 'Coalport', homeFaction: 'Collective', rivalGround: false, lostToday: 0, cap: 2 },
+      street: null,
+      rivalHomes: expect.arrayContaining([
+        { cityId: 'duskwall', cityName: 'Duskwall' },
+        { cityId: 'ashford', cityName: 'Ashford' },
+      ]),
+      opponents: content.opponents.map((o) => ({ id: o.id, label: o.label })),
+    });
+    expect(s.risk!.rivalHomes).toHaveLength(2);
+  });
+
+  it('Heat 0 / 30 / 60 / 80: the value, the state and the cool-by time', async () => {
+    for (const [v, state] of [
+      [30, 'noticed'],
+      [60, 'hot'],
+      [80, 'wanted'],
+      [0, 'cool'],
+    ] as const) {
+      const r = await ok('heat', String(v));
+      expect(r.line).toBe(`Heat ${v} · ${state}`);
+      expect(r.status.risk!.heat).toMatchObject({ value: v, state });
+      if (v === 0) expect(r.status.risk!.heat.coolBy).toBeNull();
+      else {
+        expect(r.status.risk!.heat.coolBy).toBeGreaterThan(BASE);
+        expect(r.status.risk!.heat.coolByUtc).toMatch(/ UTC$/);
+      }
+    }
+    expect(await refused('heat', '101')).toBe(400);
+    expect(await refused('heat', 'hot')).toBe(400);
+  });
+
+  it('Health full / half / 10', async () => {
+    expect((await ok('health', '10')).status.risk!.health).toEqual({ value: 10, max: 100 });
+    expect((await ok('health', 'half')).status.risk!.health).toEqual({ value: 50, max: 100 });
+    const full = await ok('health', 'full');
+    expect(full.line).toBe('Health 100 / 100');
+    expect(full.status.risk!.health).toEqual({ value: 100, max: 100 });
+    expect(await refused('health', 'lots')).toBe(400);
+  });
+
+  it('Record clean / 2 / 4 / 7 marks: the level, the count and the fade day', async () => {
+    for (const [n, level] of [
+      [2, 'onFile'],
+      [4, 'repeat'],
+      [7, 'notorious'],
+    ] as const) {
+      const r = await ok('record', String(n));
+      expect(r.status.risk!.record).toEqual({
+        level,
+        marks: n,
+        fadesOn: today + 14,
+        fadesOnUtc: expect.stringMatching(/ 00:00 UTC$/),
+      });
+    }
+    const clean = await ok('record', '0');
+    expect(clean.line).toBe('Record clean');
+    expect(clean.status.risk!.record).toMatchObject({ level: 'clean', marks: 0, fadesOn: null });
+    expect((await character())!.record).toEqual({ marks: [], arrests: [] });
+  });
+
+  it('Next run-in: off, random, each of the six opponents; Next caught', async () => {
+    const off = await ok('runIn', 'off');
+    expect(off.line).toBe('Next act: no run-in');
+    expect(off.status.risk!.street).toEqual({ runIn: 'never' });
+    expect(content.opponents).toHaveLength(6);
+    for (const o of content.opponents) {
+      const r = await ok('runIn', o.id);
+      expect(r.line).toBe(`Next act: a run-in with ${o.label}`);
+      expect(r.status.risk!.street).toEqual({ runIn: 'next', opponentId: o.id });
+    }
+    const random = await ok('runIn', 'random');
+    expect(random.status.risk!.street).toEqual({ runIn: 'next' });
+    const caught = await ok('caught');
+    expect(caught.line).toBe('Next act: caught');
+    expect(caught.status.risk!.street).toEqual({ runIn: 'next', caught: 'always' });
+    // *Next run-in* keeps the caught check.
+    expect((await ok('runIn', 'off')).status.risk!.street).toEqual({ runIn: 'never', caught: 'always' });
+    expect(await refused('runIn', 'the-butler')).toBe(400);
+    streetHooks.clear();
+    expect((await status()).risk!.street).toBeNull();
+  });
+
+  it('Level 6 and Rank 3 (once each)', async () => {
+    const l = await ok('level6');
+    expect(l.line).toBe('Level 6');
+    expect(l.status.risk!.level).toBe(6);
+    expect(l.status.risk!.health.max).toBe(healthMax(6));
+    expect((await ok('level6')).line).toBe('Already Level 6');
+    const r = await ok('rank3');
+    expect(r.line).toBe(`Rank 3 (FXP ${RANK_FXP[2]})`);
+    expect(r.status.character?.rank).toBe(3);
+    expect((await character())!.fxp).toBe(RANK_FXP[2]);
+    expect((await ok('rank3')).line).toBe('Already Rank 3');
+  });
+
+  it('Decide now (while a run-in is pending): luck decides on the settle', async () => {
+    expect(await refused('decide')).toBe(409);
+    await ok('energy');
+    await post('/api/test/street', { runIn: 'next', opponentId: 'city-police', checkRoll: 1, choiceRoll: 1 });
+    const start = await post('/api/trpc/mission.start', {
+      locationId: 'coalport.far-bank',
+      missionId: 'coalport.far-bank.posters',
+      wayId: 'agi',
+      idempotencyKey: randomUUID(),
+    });
+    expect(start.statusCode, start.body).toBe(200);
+    const s = await status();
+    expect(s.risk!.runIn).toMatchObject({
+      state: 'pending',
+      opponent: content.opponent('city-police')!.label,
+      decidesAt: expect.any(Number),
+      decidesAtUtc: expect.stringMatching(/ UTC$/),
+    });
+    expect(s.risk!.runIn!.decidesAt).toBeGreaterThan(BASE);
+    const d = await ok('decide');
+    expect(d.line).toBe('The run-in is decided by luck (the result modal waits)');
+    expect(d.status.risk!.runIn).toMatchObject({ state: 'resolved', decidesAt: BASE });
+    const enc = (await Encounter.findById((await character())!.runIn!.encounterId).lean())!;
+    expect([enc.state, enc.by]).toEqual(['resolved', 'auto']);
+    expect(await refused('decide')).toBe(409);
+  });
+
+  it('Cells now: held with the minutes and the bail; Release now; Infirmary now (no bail)', async () => {
+    // Whatever the luck did, start free.
+    if ((await character())!.held?.state === 'in') await ok('release');
+    expect(await refused('release')).toBe(409);
+    const cells = await ok('cells');
+    expect(cells.line).toBe('Taken in: the cells');
+    expect(cells.status.risk!.held).toMatchObject({
+      kind: 'cells',
+      state: 'in',
+      placeName: expect.any(String),
+    });
+    expect(cells.status.risk!.held!.minutesLeft).toBeGreaterThan(0);
+    expect(cells.status.risk!.held!.bail).toBeGreaterThan(0);
+    expect(await refused('cells')).toBe(409);
+    expect(await refused('goto', 'duskwall')).toBe(409);
+    const rel = await ok('release');
+    expect(rel.status.risk!.held).toMatchObject({ kind: 'cells', state: 'out', minutesLeft: 0 });
+    const inf = await ok('infirmary');
+    expect(inf.line).toBe('Taken to the infirmary');
+    expect(inf.status.risk!.held).toMatchObject({ kind: 'infirmary', state: 'in', bail: null });
+    expect(inf.status.risk!.health.value).toBeLessThan(inf.status.risk!.health.max);
+    expect((await ok('release')).status.risk!.held).toMatchObject({ kind: 'infirmary', state: 'out' });
+  });
+
+  it('Take me to… a rival home (no ticket, no card): the rival pressure there, and the flags today', async () => {
+    expect(await refused('goto', 'irongate')).toBe(400);
+    expect(await refused('goto', 'coalport')).toBe(400);
+    const r = await ok('goto', 'duskwall');
+    expect(r.line).toBe('Now in Duskwall (rival ground)');
+    expect(r.status.where).toEqual({ cityId: 'duskwall', cityName: 'Duskwall' });
+    expect(r.status.risk!.pressure).toMatchObject({
+      cityName: 'Duskwall',
+      homeFaction: 'Vanguard',
+      rivalGround: true,
+      cap: 2,
+    });
+    expect((await character())!.journey).toBeNull();
+    await Character.updateOne(
+      { name: 'Slice Five' },
+      {
+        $set: {
+          flags: [
+            { cityId: 'duskwall', day: today, flag: 'watched' },
+            { cityId: 'duskwall', day: today - 1, flag: 'warned' },
+          ],
+        },
+      },
+    );
+    expect((await status()).risk!.flags).toEqual(['watched']);
+  });
+
+  it('Lift the bar: the barred cities listed, then cleared', async () => {
+    const until = BASE + 3_600_000;
+    await Character.updateOne(
+      { name: 'Slice Five' },
+      { $set: { barred: [{ cityId: 'ashford', until: new Date(until) }] } },
+    );
+    expect((await status()).risk!.barred).toEqual([
+      { cityId: 'ashford', cityName: 'Ashford', until, untilUtc: 'Tuesday 29 Sep 10:00 UTC' },
+    ]);
+    const r = await ok('unbar');
+    expect(r.line).toBe('The bar is lifted');
+    expect(r.status.risk!.barred).toEqual([]);
+    expect((await ok('unbar')).line).toBe('No bar to lift');
   });
 });

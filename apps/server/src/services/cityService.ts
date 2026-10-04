@@ -11,9 +11,14 @@ import type {
 } from '@irongate/db';
 import {
   FACTION_IDS,
-  quarterOpen,
+  RIVAL_GROUND,
   actionEnergy,
   averageShares,
+  barredByRecord,
+  placeOf,
+  pressureLostToday,
+  rivalGroundIn,
+  suggestedWay,
   computeCheck,
   councilDay,
   dayKey,
@@ -47,6 +52,8 @@ import type {
   DistrictView,
   FactionId,
   IssueRowView,
+  MissionType,
+  MissionView,
   ModifierSourceView,
   OpinionShares,
   OrdersState,
@@ -57,11 +64,14 @@ import type {
 import { gameError } from '../gameError';
 import { leaderOf } from './actionService';
 import { cycleKeyOf } from './ledger';
+import { agilityWay, missionCtx, rememberedWay, wayPreview, wayRisk } from './missionCtx';
+import type { MissionCtx } from './missionCtx';
 import { issueEffectsOn, modifiersFor, ordinanceIdOn } from './modifiers';
 import { pickArt } from './art';
 import { politicsSummary } from './politicsService';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import { residenceCardView } from './residenceService';
+import { recordLevelOf } from './risk';
 import { trainsFrom } from './travelService';
 import {
   assetView,
@@ -70,24 +80,32 @@ import {
   orderText,
   orderVars,
   preferredStat,
+  quarterOpenFor,
+  quarterViews,
+  rankTitle,
   standingSuccesses,
   toOrdersState,
   wornStats,
 } from './views';
 
-/** The order a tap here would advance (open first), or a done one it matched, for the ticket tag. */
+/**
+ * The order a tap here would advance (open first), or a done one it matched, for the ticket tag.
+ * Slice 5 (ADR 0034 §3): nothing on rival ground counts for the orders, so no tag there.
+ */
 function orderTag(
   content: GameContent,
   c: CharacterDoc,
   orders: OrdersState,
   a: ActionDescriptor,
+  rivalGround = false,
 ): ActionView['order'] {
   const templates = content.ordersOf(c.factionId);
-  let idx = findAdvancingItem(orders, templates, a, 'success', residenceCtx(c));
+  const ctx = rivalGround ? { ...residenceCtx(c), rivalGround: true } : residenceCtx(c);
+  let idx = findAdvancingItem(orders, templates, a, 'success', ctx);
   if (idx < 0) {
     idx = orders.items.findIndex((item) => {
       const t = templates.find((x) => x.id === item.templateId);
-      return t ? item.doneAt !== null && orderMatches(itemSpec(item, t).match, a, residenceCtx(c)) : false;
+      return t ? item.doneAt !== null && orderMatches(itemSpec(item, t).match, a, ctx) : false;
     });
   }
   if (idx < 0) return null;
@@ -99,6 +117,104 @@ function orderTag(
     title: orderText(itemSpec(item, t).title, orderVars(content, c, null)),
     progress: Math.min(item.progress, item.target),
     target: item.target,
+  };
+}
+
+/** Screens §4.1: the ticket's type label (*Mission · Speech* / *Watch and listen* / *Against the …*). */
+const MISSION_LABEL: Record<MissionType, MissionView['label']> = {
+  speech: 'speech',
+  surveillance: 'watch',
+  vandalism: 'against',
+  disruption: 'against',
+  sabotage: 'against',
+  theft: 'against',
+};
+
+/**
+ * Tech design §8.3, design §4.7 (screens §4.1–§4.2): a mission's ticket and briefing for this player,
+ * here, today, from the shared context (`missionCtx`), so the preview rows are `resolveMission`'s.
+ * The ticket's risk is the remembered way's, else the suggested (best-odds) way's; a way carries its
+ * own risk line only when it differs from the ticket's.
+ */
+export function missionView(
+  content: GameContent,
+  c: CharacterDoc,
+  ctx: MissionCtx,
+  orders: OrdersState,
+): MissionView {
+  const { mission, typeSpec, rivalGround: rival } = ctx;
+  const previews = mission.ways.map((w) => wayPreview(ctx, w));
+  const risks = mission.ways.map((w) => wayRisk(ctx, w));
+  const remembered = rememberedWay(ctx, c);
+  const suggested = suggestedWay(mission.ways, previews);
+  const ticketIdx = Math.max(
+    0,
+    mission.ways.findIndex((w) => w.id === (remembered ?? suggested)),
+  );
+  const risk = risks[ticketIdx]!;
+
+  // Screens §4.1: Issue · Close race · Comeback (speech only, design §23.1 #6) · Rival ground ·
+  // the record's Iron · the town has had enough.
+  const place = placeOf(ctx.modifiers);
+  const placeTags: PlaceTagView[] = [];
+  for (const id of ctx.descriptor.issueIds ?? []) {
+    const issue = place?.issues.find((x) => x.issueId === id);
+    placeTags.push({ kind: 'issue', issueId: id, name: issue?.name ?? id, pct: 50 });
+  }
+  const political = isPoliticalType(ctx.seenAs);
+  if (place?.battleground && political) placeTags.push({ kind: 'closeRace', fxpPct: 25 });
+  const g = place?.groundswell;
+  if (g && political && g.factionId === c.factionId)
+    placeTags.push({ kind: 'comeback', factionId: g.factionId, pct: g.pct });
+  if (rival) placeTags.push({ kind: 'rivalGround', fxpPct: rival.unrest ? 75 : 50 });
+  if (ctx.recordIronPct < 0) placeTags.push({ kind: 'record', ironPct: ctx.recordIronPct });
+  // On rival ground a speech too draws from the home faction (design §11.2); a mission against
+  // another visitor's party is not under the home faction's cap.
+  const drawsFrom =
+    typeSpec.opinion === 'persuade' ? rival?.homeFactionId : typeSpec.opinion === 'against' ? ctx.target : null;
+  if (rival && drawsFrom === rival.homeFactionId && rival.pressureLeft <= 0)
+    placeTags.push({ kind: 'pressureCapped' });
+
+  return {
+    id: mission.id,
+    name: mission.name,
+    type: mission.type,
+    label: MISSION_LABEL[mission.type],
+    targetFactionId: ctx.target,
+    energy: ctx.energy,
+    briefing: mission.briefing,
+    ways: mission.ways.map((w, i) => {
+      const own = risks[i]!;
+      const differs = own.heat !== risk.heat || own.runInChance !== risk.runInChance;
+      return {
+        id: w.id,
+        title: w.title,
+        hint: w.hint,
+        preview: previews[i]!,
+        agility: agilityWay(w),
+        risk: differs ? { heat: own.heat, runInChance: own.runInChance } : null,
+      };
+    }),
+    remembered,
+    suggested,
+    risk,
+    tags: ordinanceTags({
+      kind: 'checked',
+      type: ctx.seenAs,
+      base: mission.energy,
+      givesFxp: typeSpec.givesFxp,
+      m: ctx.modifiers,
+    }),
+    placeTags,
+    order: orderTag(content, c, orders, ctx.descriptor, rival !== null),
+    locked: ctx.gate
+      ? {
+          reason: ctx.gate.reason,
+          need: ctx.gate.need,
+          ...(ctx.gate.reason === 'RANK' ? { rankTitle: rankTitle(content, c, ctx.gate.need) } : {}),
+        }
+      : null,
+    art: { rung: 'scene', asset: assetView(content, mission.card ?? content.missionCard(mission.type)) },
   };
 }
 
@@ -208,6 +324,9 @@ export async function getCityView(
           district: districtDocs.get(quarterId) ?? null,
         })
       : cityMods;
+  // Slice 5 (ADR 0034, screens §8.3): rival ground is the city's place state for this actor.
+  const rival = rivalGroundIn(cityMods);
+  const record = recordLevelOf(c, today);
   const isResidence = city.id === residenceCityId(c);
   const ownHq = city.locations.find(
     (l) => l.kind === 'faction-hq' && (l.factionId ?? city.homeFactionId) === c.factionId,
@@ -313,7 +432,7 @@ export async function getCityView(
   const atHome = !districted && city.id === c.homeCityId;
   const trains = (location: { kind: string }) =>
     city.id === capitalId && location.kind === 'station' && c.cityId === city.id
-      ? trainsFrom(content, c, state, today)
+      ? trainsFrom(content, c, state, today, now)
       : null;
 
   return {
@@ -342,11 +461,8 @@ export async function getCityView(
           }
         : null,
     map: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
-    // Slice 5: the quarters open to the character (T12 adds the locked ones with their locks and
-    // teasers, and the outlines).
-    quarters: city.quarters
-      .filter((q) => quarterOpen(q, c.level).open)
-      .map((q) => ({ id: q.id, name: q.name, frame: { ...q.frame } })),
+    // Slice 5 (ADR 0035): every quarter, open or locked, with its outline, label, lock and teaser.
+    quarters: quarterViews(content, city, c),
     ...(city.clouds ? { clouds: true } : {}),
     isNight: isNight(now),
     standing,
@@ -360,17 +476,36 @@ export async function getCityView(
       : null,
     issues: issueRows,
     effects,
-    residence: atHome
-      ? await residenceCardView(content, c, { cityId: city.id, districtId: null }, today, {
-          capital: capitalDoc,
-          residence: residenceDoc,
-        })
+    // Slice 5 (screens §8.3): on rival ground the card's one line, *You can't live or stand here*.
+    residence:
+      atHome || rival
+        ? await residenceCardView(content, c, { cityId: city.id, districtId: null }, today, {
+            capital: capitalDoc,
+            residence: residenceDoc,
+          })
+        : null,
+    // Slice 5 (screens §8.3): the plate's *1.3 of 2.0 points left today*.
+    rivalGround: rival
+      ? {
+          homeFactionId: rival.homeFactionId,
+          unrest: rival.unrest,
+          pressure: {
+            lost: Math.min(RIVAL_GROUND.pressureCapPerDay, pressureLostToday(state?.rivalPressure, today) / 1_000),
+            cap: RIVAL_GROUND.pressureCapPerDay,
+            left: rival.pressureLeft,
+          },
+        }
       : null,
     locations: city.locations.map((location, index) => {
       const m = modsAt(location.quarterId);
       const place = m.place;
       const membersOnly =
         location.factionId && location.factionId !== c.factionId ? location.factionId : null;
+      // Design §7.3, §23.1 #18: Notorious is barred from courts, universities and the Alliance's HQs
+      // (every ticket there reads *Not with your record*).
+      const hqFaction = location.factionId ?? (location.kind === 'faction-hq' ? city.homeFactionId : undefined);
+      const barred = barredByRecord(record, { kind: location.kind, ...(hqFaction ? { factionId: hqFaction } : {}) });
+      const recordLock = { reason: 'RECORD' as const, need: 0 };
       const tagged = new Set<string>();
       const actions = location.actions.map((action): ActionView => {
         const descriptor: ActionDescriptor = {
@@ -386,11 +521,12 @@ export async function getCityView(
           id: action.id,
           name: action.name,
           type: action.type,
-          order: orderTag(content, c, liveOrders, descriptor),
+          order: orderTag(content, c, liveOrders, descriptor, rival !== null),
         };
         if (isCheckedAction(action)) {
           let locked: ActionView['locked'] = null;
           if (membersOnly) locked = { reason: 'MEMBERS_ONLY', need: 0, factionId: membersOnly };
+          else if (barred) locked = recordLock;
           else if (action.requires?.level !== undefined && c.level < action.requires.level) {
             locked = { reason: 'LEVEL', need: action.requires.level };
           } else if (
@@ -412,12 +548,17 @@ export async function getCityView(
           if (g && political && g.factionId === c.factionId)
             placeTags.push({ kind: 'comeback', factionId: g.factionId, pct: g.pct });
           if (membersOnly) placeTags.push({ kind: 'membersOnly', factionId: membersOnly as FactionId });
+          // Slice 5 (screens §8.3): *Rival ground · +50 % Party XP · worse odds*, and once the day's
+          // cap is reached *The town has had enough today · no opinion* on what moves opinion.
+          if (rival) placeTags.push({ kind: 'rivalGround', fxpPct: rival.unrest ? 75 : 50 });
+          if (rival && action.givesOpinion && rival.pressureLeft <= 0) placeTags.push({ kind: 'pressureCapped' });
           return {
             ...base,
             kind: 'checked',
             givesFxp: action.givesFxp,
             energy: cost,
-            energy3: cost * 3,
+            // Design §11.2: ×1 only on rival ground.
+            energy3: rival ? null : cost * 3,
             preview: computeCheck({
               stats: action.stats,
               values,
@@ -453,9 +594,30 @@ export async function getCityView(
           trains: { stat: action.trains, from, to: from + 1 },
           // Review 3 (GDD §8.5): the button is the title's verb, from content.
           verb: action.verb,
-          locked: membersOnly ? { reason: 'MEMBERS_ONLY', need: 0, factionId: membersOnly } : null,
+          locked: membersOnly
+            ? { reason: 'MEMBERS_ONLY', need: 0, factionId: membersOnly }
+            : barred
+              ? recordLock
+              : null,
           placeTags: membersOnly ? [{ kind: 'membersOnly', factionId: membersOnly }] : [],
         };
+      });
+      // Slice 5 (tech design §8.3, design §4.5): the place's missions after the tickets, hidden from
+      // the target faction's own members.
+      const missions = content.missionsAt(location.id).flatMap((mission) => {
+        const ctx = missionCtx(
+          content,
+          c,
+          mission.id,
+          {
+            city: state,
+            district: location.quarterId ? (districtDocs.get(location.quarterId) ?? null) : null,
+            residence: residenceDoc,
+          },
+          now,
+          m,
+        );
+        return ctx && ctx.offered ? [missionView(content, c, ctx, liveOrders)] : [];
       });
       return {
         id: location.id,
@@ -488,13 +650,14 @@ export async function getCityView(
           };
         }),
         council: location.id === ownHq?.id ? council : null,
+        missions,
       };
     })
       // Slice 5 (ADR 0035, GDD §14.13): a locked quarter's places are not offered (their pin numbers
-      // keep their content order). The quarter views and their locks are T12's.
+      // keep their content order); the locked quarter itself is in `quarters` with its lock.
       .filter((_, index) => {
         const q = city.quarters.find((x) => x.id === city.locations[index]!.quarterId);
-        return quarterOpen(q ?? {}, c.level).open;
+        return q ? quarterOpenFor(content, c, q).open : true;
       }),
   };
 }

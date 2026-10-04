@@ -1188,6 +1188,27 @@ export const copy = {
       whereYouAre: 'Where you are',
       rivalGround: (city: string) => `Rival ground · ${city} · everything is harder here`,
     },
+    /**
+     * The risk headlines' fills (docs/design/slice-5-risk.md §14): `{how}` by the stay's reason, and
+     * `{recordLevel}` as the headline names it (*{name} Is a Repeat Offender with the Harbour Police*).
+     */
+    paper: {
+      how: {
+        caught: 'the police took the name while Hot.',
+        wanted: 'a Failure while Wanted.',
+        policeLoss: 'a run-in with the police lost.',
+      } as Record<'caught' | 'wanted' | 'policeLoss', string>,
+      /** Design §14 (4 Oct 2026): a stay with no act behind it (the dev panel's *Cells now*). */
+      noAct: { how: 'no reason was given.', missionTitle: 'a word with the police' },
+      /** `{marksLine}`: *One mark*, else *{n} marks* (was `{marks} marks`, which printed *1 marks*). */
+      marksLine: (n: number) => (n === 1 ? 'One mark' : `${n} marks`),
+      /** Title case inside a title-case headline: *{name} Is On File with the Harbour Police*. */
+      recordLevel: {
+        onFile: 'On File',
+        repeat: 'a Repeat Offender',
+        notorious: 'Notorious',
+      } as Record<'onFile' | 'repeat' | 'notorious', string>,
+    },
 
     // Rival ground (screens §8).
     rival: {

@@ -42,7 +42,7 @@ describe('the timetable (GDD §14.10, design §2.2: 12 / 12 / 15 / 25)', () => {
     ['alliance', 'ashford', 12],
     ['vanguard', 'duskwall', 15],
   ] as Array<[FactionId, string, number]>)(
-    'the %s: home → the capital and back, %s, %i minutes each way, 20 Iron each; rival homes and Clearwater locked',
+    'the %s: home → the capital and back, %s, %i minutes each way, 20 Iron each; Clearwater locked, rival homes open (slice 5)',
     async (factionId, home, minutes) => {
       const clock = testClock(at(DAY));
       const p = await traveller(clock, { factionId, name: `T ${factionId}` });
@@ -51,10 +51,16 @@ describe('the timetable (GDD §14.10, design §2.2: 12 / 12 / 15 / 25)', () => {
         const expected =
           c.cityId === home ? 'here' : c.cityId === 'irongate' ? 'open' : c.cityId === 'clearwater' ? 'later' : 'rival';
         expect(c.state, c.cityId).toBe(expected);
-        if (expected === 'rival' || expected === 'later') {
+        if (expected === 'later') {
           expect(c.canBoard).toEqual({ ok: false, reason: 'DESTINATION_LOCKED' });
-          expect(c.lockWord).toBe(expected === 'rival' ? 'rival ground' : 'no service yet');
+          expect(c.lockWord).toBe('no service yet');
           expect(c.fare).toBeNull();
+        }
+        // Slice 5 (design §11.1): a rival home is open from Level 10, its lock word gone.
+        if (expected === 'rival') {
+          expect(c.canBoard).toEqual({ ok: true });
+          expect(c.lockWord).toBeNull();
+          expect(c.fare).not.toBeNull();
         }
       }
       expect(nation.cities.find((c) => c.cityId === 'irongate')!.minutes).toBe(minutes);

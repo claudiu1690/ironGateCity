@@ -1,5 +1,5 @@
 import type { GameContent } from '@irongate/content';
-import { Award, Candidacy, Character, City, OfficeTerm, PaperEntry, isDuplicateKeyError } from '@irongate/db';
+import { ActionLog, Award, Candidacy, Character, City, Encounter, OfficeTerm, PaperEntry, Stay, isDuplicateKeyError } from '@irongate/db';
 import type {
   AwardDoc,
   CandidacyDoc,
@@ -7,6 +7,8 @@ import type {
   CityDoc,
   OfficeTermDoc,
   PaperEntryDoc,
+  StayDoc,
+  StoredMark,
 } from '@irongate/db';
 import {
   COUNCIL,
@@ -19,20 +21,28 @@ import {
   effects,
   jobPay,
   jobPayWith,
+  liveMarks,
   projectEnergyThrough,
+  projectHeat,
   seniorityStep,
   settleDays,
   standingView,
   startOrders,
   stipendBoundaries,
 } from '@irongate/rules';
+import type { DayKey, RivalGroundState } from '@irongate/rules';
+import { Types } from 'mongoose';
+import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
+import { ensureReleased } from './heldService';
+import { heatRateOn, heatTimerOf, isRivalGround, marksOf, rivalGroundAt } from './risk';
+import { ensureRunInSettled } from './streetService';
 import type { SessionUser } from '../trpc/context';
 import { ensurePlaces } from './cityDay';
 import { jobCityOf, residenceCityId } from './residence';
-import { buildEdition } from './edition';
+import { buildEdition, riskEdition } from './edition';
 import { ensureArrived } from './journeyArrival';
-import type { NewEdition } from './edition';
+import type { NewEdition, RiskRead } from './edition';
 import { capOn, dayModifiers, moraleOf } from './modifiers';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import { energyState, fromOrdersState, welcomeDayOf, welcomeOrderIds } from './views';
@@ -54,6 +64,8 @@ export interface SettlementWrite {
     'energy.value'?: number;
     'energy.updatedAt'?: Date;
     rested?: number;
+    /** Slice 5 (tech design §8.4): the record with its faded marks dropped (only when one faded). */
+    'record.marks'?: StoredMark[];
   };
   inc: { iron: number };
   edition: NewEdition;
@@ -86,6 +98,8 @@ export function computeSettlement(
     due?: CandidacyDoc[];
     /** Slice 4 (ADR 0028): hero and Issue awards not yet credited. */
     awards?: AwardDoc[];
+    /** Slice 5 (tech design §8.4): yesterday's stays and the titles the risk headlines name. */
+    risk?: RiskRead | null;
   },
 ): SettlementWrite | null {
   const today = dayKey(now);
@@ -187,6 +201,8 @@ export function computeSettlement(
     unrest ? faction.restoreOrders : undefined,
     dayStart(today),
     residenceKind,
+    // Slice 5 (design §12.2): the slot-B mission order enters the rotation at Level 6.
+    gains.next.level,
   );
   const edition = buildEdition({
     content,
@@ -208,12 +224,19 @@ export function computeSettlement(
     oneOfUsPc,
     awards: awardLines,
     seniorityStepYesterday: seniorityStep(dayModifiers(content, wageCity, today - 1)),
+    // Slice 5 (tech design §11.2): the risk facts, with the Heat projected at the settlement.
+    risk: riskEdition(content, c, today, projectHeat(heatTimerOf(c), now, heatRateOn(content, city)).value, read.risk ?? null),
   });
+  // Slice 5 (tech design §8.4): the marks that have faded are dropped from the stored record.
+  const stored = marksOf(c);
+  const live = liveMarks(stored, today);
   return {
     set: {
       'day.settled': today,
       job: s.job,
-      today: s.today,
+      // The new day's tally starts at zero, slice 5's fields with it (no mission, no rival city).
+      today: { ...s.today, missions: 0, rivalCityId: null },
+      ...(live.length < stored.length ? { 'record.marks': live } : {}),
       orders: fromOrdersState(orders),
       offices,
       xp: gains.next.xp,
@@ -292,6 +315,8 @@ export async function ensureSettled(
         const awards = await Award.find({ characterId: c._id, creditedAt: null })
           .session(session)
           .lean<AwardDoc[]>();
+        // Slice 5 (tech design §8.4): yesterday's stays and what they and the marks were for.
+        const risk = await readRisk(c, today, session);
         const w = computeSettlement(content, c, now, {
           previous,
           home,
@@ -299,6 +324,7 @@ export async function ensureSettled(
           terms,
           due,
           awards,
+          risk,
         });
         if (!w) return c;
 
@@ -337,6 +363,57 @@ export async function ensureSettled(
   throw gameError('CONFLICT', 'ACTION_CONFLICT', { attempts: MAX_ATTEMPTS });
 }
 
+/**
+ * Slice 5 (tech design §8.4): the settlement's risk reads, in its session: the stays that started or
+ * ended yesterday (or since), the action logs and encounters that name what each was for, and the
+ * first mission when it was yesterday.
+ */
+async function readRisk(c: CharacterDoc, today: DayKey, session: ClientSession): Promise<RiskRead> {
+  const from = new Date(dayStart(today - 1));
+  const stays = await Stay.find({
+    characterId: c._id,
+    $or: [{ since: { $gte: from } }, { releasedAt: { $gte: from } }],
+  })
+    .session(session)
+    .lean<StayDoc[]>();
+  const first = c.firsts?.mission ? dayKey(new Date(c.firsts.mission).getTime()) === today - 1 : false;
+  const logIds = new Set<string>();
+  for (const s of stays) if (s.logId) logIds.add(s.logId.toHexString());
+  for (const m of c.record?.marks ?? []) if (m.day === today - 1 && m.logId) logIds.add(m.logId);
+  const ids = [...logIds].filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
+  const logs = ids.length
+    ? await ActionLog.find({ _id: { $in: ids } }, { kind: 1, actionId: 1 }).session(session).lean()
+    : [];
+  const encIds = stays.flatMap((s) => (s.encounterId ? [s.encounterId] : []));
+  const encs = encIds.length
+    ? await Encounter.find({ _id: { $in: encIds } }, { kind: 1, refId: 1, 'opponent.id': 1 })
+        .session(session)
+        .lean()
+    : [];
+  // The first mission's row (or its run-in, should no row name it).
+  const firstLog = first
+    ? await ActionLog.findOne({ characterId: c._id, kind: 'mission' }, { actionId: 1 })
+        .sort({ createdAt: 1 })
+        .session(session)
+        .lean()
+    : null;
+  const firstEnc =
+    first && !firstLog
+      ? await Encounter.findOne({ characterId: c._id, kind: 'mission' }, { refId: 1 })
+          .sort({ createdAt: 1 })
+          .session(session)
+          .lean()
+      : null;
+  return {
+    stays,
+    acts: new Map(logs.map((l) => [l._id.toHexString(), { kind: l.kind, actionId: l.actionId }])),
+    encounters: new Map(
+      encs.map((e) => [e._id.toHexString(), { kind: e.kind, refId: e.refId, opponentId: e.opponent.id }]),
+    ),
+    firstMissionId: firstLog?.actionId ?? firstEnc?.refId ?? null,
+  };
+}
+
 export interface LoadedCharacter {
   doc: CharacterDoc;
   /** Today's edition `readAt` (null while unread), for `paperDue`. */
@@ -348,26 +425,51 @@ export interface LoadedCharacter {
   city: CityDoc | null;
   /** Slice 4 (tech design §7.6): every city the request depends on, settled for today. */
   places: Map<string, CityDoc | null>;
+  /** Slice 5 (ADR 0034): the place state of the city the character is in (null off rival ground). */
+  rivalGround: RivalGroundState | null;
+  /** Slice 5 (ADR 0033): in the cells or on the ward right now, or null. */
+  heldNow: 'cells' | 'infirmary' | null;
 }
 
 /**
- * Every character-scoped procedure starts here: find the character, settle the home city's day,
- * then the character's (ADR 0017's ordering). No auto-create (ADR 0011): a user without a
- * character is still arriving.
+ * Every character-scoped procedure starts here (slice-5 tech design §3.3, the read order): find the
+ * character, settle the city days (ADR 0017), resolve a run-in by luck when its window has passed or
+ * its day has ended (ADR 0032), release a stay that is over (ADR 0033), settle the character's day,
+ * then a due journey's arrival. No auto-create (ADR 0011): a user without a character is still
+ * arriving. `opts.keepRunIn` is `encounter.choose`'s own run-in, which luck leaves alone unless it is
+ * from an earlier day.
  */
 export async function loadCharacter(
   user: SessionUser,
   content: GameContent,
   now: number,
+  opts: { keepRunIn?: Types.ObjectId | null } = {},
 ): Promise<LoadedCharacter> {
   const found = await Character.findOne({ userId: user.id }).lean<CharacterDoc>();
   if (!found) throw gameError('PRECONDITION_FAILED', 'ARRIVAL_PENDING');
   const places = await ensurePlaces(content, found, now);
   const city = places.get(residenceCityId(found)) ?? null;
-  const settled = await ensureSettled(content, found, now, city);
+  const lucky = await ensureRunInSettled(content, found, now, opts.keepRunIn ?? null);
+  const released = await ensureReleased(content, lucky, now);
+  const settled = await ensureSettled(content, released, now, city);
   // Slice 4 (ADR 0025 §4): a due journey arrives (lazily) once the day is settled.
   const doc = await ensureArrived(content, settled, now);
-  return { doc, editionReadAt: await editionReadAt(doc, now), city, places };
+  // The city the character is in (an arrival may have moved them since `ensurePlaces`).
+  const rival = isRivalGround(content, doc, doc.cityId);
+  const here = !rival
+    ? null
+    : places.has(doc.cityId)
+      ? (places.get(doc.cityId) ?? null)
+      : await City.findById(doc.cityId).lean<CityDoc>();
+  const held = doc.held && doc.held.state === 'in' ? doc.held.kind : null;
+  return {
+    doc,
+    editionReadAt: await editionReadAt(doc, now),
+    city,
+    places,
+    rivalGround: rival ? rivalGroundAt(content, doc.factionId, doc.cityId, here, dayKey(now)) : null,
+    heldNow: held,
+  };
 }
 
 export async function editionReadAt(doc: CharacterDoc, now: number): Promise<number | null> {

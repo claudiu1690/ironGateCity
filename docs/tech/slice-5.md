@@ -1629,7 +1629,7 @@ The smallest working change in each case. No economy number changed.
 - **Three alt texts are the developer's drafts** for the designer to confirm: `scene.news-strike`, `scene.hospital`, `scene.jail-cell`. The other thirteen are design §23.5's.
 - **The two QA vocabulary guards allow the exact source path `mvp/portraits/sergeant.png`.** No string a player reads says *sergeant*.
 - **No gallery in the dev viewer.** `/dev/maps` shows maps only, so "the dev viewer shows every new picture" is met by `art:check` and by viewing the built files. A gallery is client work for phase C if wanted.
-- **For the designer (content policy):** `scene.mission-speech` shows raised fists among the raised caps, and the speaker reaches out over the crowd with an open palm. It reads as an orator's gesture, but at thumbnail size it could be taken for a salute. `scene.news-strike`'s police wear British-style helmets with a star plate. Both are wired as specified; both need a ruling.
+- **Content policy, settled (4 Oct 2026, phase B):** `scene.mission-speech` was redrawn (same asset id): the speaker leans on the rail and points down, and the crowd waves caps and claps, with no fists and no outstretched arm. Its alt text (here and in design §23.5) now describes the new picture; the asset was rebuilt (`art:check`: 76 assets, 18.76 MB). `scene.news-strike` was checked and kept as it is.
 
 **DB (T10)**
 
@@ -1642,3 +1642,103 @@ The smallest working change in each case. No economy number changed.
 - **In Print** is decided by id in `paperService.ts` (`/.(hero|quoted)$/`); T18 adds `seen|cells|infirmary|deported`.
 - The server passes the Level to `startOrders` (the slot-B mission order), the residence city's `heatCoolPct` rate, and `RIVAL_ROW` by setting `PlaceState.rivalGround` (T11–T13, T18).
 - The three exhaustive UI cases above get their designed form in phase C (T21).
+
+### Phase B (T11–T20)
+
+**T11 (the read path, the guards)**
+
+- **The lazy state lives in `apps/server/src/services/risk.ts`**: every reader goes through `heatTimerOf`, `healthTimerOf`, `marksOf`, `recordLevelOf`, `flagsToday`, `barsLive`, so a character migrated without a field reads Cool, unhurt and clean. `riskView` fills the `CharacterView` v6 fields. Views built without the residence city (a few slice-1–4 callers of `toCharacterView`) project Heat at the base rate; `character.me` passes it.
+- **`HELD` is any `held.state: 'in'`**, also past `until` inside a transaction (the read path releases it first; a race keeps the stricter answer). A stay whose modal is still open (`out`) refuses nothing. Only a **pending** run-in refuses (`RUN_IN_PENDING`); a resolved one waiting for its Continue does not.
+- **A retry of the tap that led to the cells or a run-in still gets its stored answer**: `action.perform` and `mission.start` look the key up before the `HELD` / `RUN_IN_PENDING` refusal.
+- **`PlaceState.rivalGround` is filled in `modifiersFor`** (it now knows the actor), so every reader of the place's modifiers sees rival ground, and `rivalGroundAt` lives in `modifiers.ts` (re-exported by `risk.ts`).
+- **The settlement passes the Level to `startOrders`** (the gains' Level after the boundary). Two slice-4 tests that searched a day's rotation for a Level-10 traveller now pass Level 10 to `ordersForDay` (`slice4.fixes`, `qa.slice4.issues`); test-only.
+- **`addToTally` keeps fields beyond `DailyTally`** (`...c` first), so a same-day write no longer drops `today.missions` and `today.rivalCityId`; a new day's tally starts without them (read as 0 / null). No rules test changed.
+- **`districts.state.leader`** is written at the capital's creation (from the baseline) and at every boundary (from the new opinion), with `districtLeader`.
+
+**T13 (rival ground for tier-1 actions)**
+
+- **The split**: `readPlace` (`place.ts`) reads the city, the district, the modifiers, the residence city and the Rested cap once; `computeTier1` is the rules call; `writeTier1` is every write. `moveOpinion` and `placeWrites` (`place.ts`) are shared with missions and the run-in's resolution. `leaderOf` moved to `place.ts` (still exported by `actionService`).
+- **The opinion effect line gained optional fields** (rules types, additive): `mode: 'against'`, `targetFactionId`, `toActor`, `capped`. For an `against`, `shareBefore` / `shareAfter` are the target's and `applied` its loss. `capped` is true when the day's cap, not the swing, bounded it.
+- **The tally's `opinion` counts the actor's leg** for an `against` (design §23.1 #7).
+- **The rival-ground bonus tag** in the result reads *+50 % Party XP · worse odds* (75 in Unrest; *worse odds* alone where no Party XP is paid), and `again.cost3` is null on rival ground.
+- **`RECORD_BARRED` applies to every ticket at a barred place, training included** (T12's ticket rule); `MEMBERS_ONLY` is checked first.
+- **`action.perform` now returns `ActionResult | RunInPending`.** The client's `usePerformAction` skips the result modal for a `runIn` answer (the run-in gate is phase C, T23). The server tests' `callerFor` types `action.perform` as the slice 1–4 `ActionResult` and adds `action.performAny` with the full answer (a typed proxy in `test/helpers.ts`; test-only).
+
+**T14–T15 (missions, run-ins)**
+
+- **`mission.start` reads its inputs through T12's `missionCtx` / `missionInput`**, so the preview and the start are one computation; the refusals (`missionRefusal`) repeat the gate in the transaction against the snapshot.
+- **The result of a mission is built in `missionResult.ts`**; its bonus tags follow tier 1's (Rested, Party order, Standing, Rival ground, Issue, Close race, Comeback, sources, Fired up) plus *Your record* (the Iron line). The result's `attempts[0].dropped` is set after a Run or a loss; `effects.stat` reports an Agility point when four quarters make one.
+- **`firsts`**: `mission` is set at the first mission; `noticed` / `hot` / `wanted` at the first crossing into each (the result's `street.heat.first`); `mark` at the first mark (`street.record.first`).
+- **Error data that would collide with `reason`** (the `GameErrorData` key) uses another key: `MISSION_LOCKED { lock: 'LEVEL' | 'RANK' | 'STANDING', need }` and `CANNOT_PAY { why: 'NOT_BRIBABLE' | 'NOT_ENOUGH_IRON' }`. (Slice 4's `ACTION_LOCKED { reason }` has the same collision; unchanged.)
+- **The test hooks' forced rolls** (`streetHooks.ts`, consumed before the transaction so a retry keeps them) are carried in the encounter's held start (`held.force`) for the later choice and caught rolls. With the hooks on, results show the dev rolls (`steps[].chance/roll`, `caught.chance/roll`); off, they never do.
+- **A rival tap's run-in** rolls on the `:runIn` stream after the resolution; its Partial twin is `computeTier1` with `forceOutcome: 'partial'` and the same seed. Training, the held taps and taps at home never roll one.
+- **A run-in resolved after its day was settled by a concurrent request** pays the held result into today's tally with no order progress (`frozenOrders`), and an Issue no longer live is skipped (`lenientIssues`) rather than retried.
+- **Health after a tier-1 run-in** is written as a timer at the resolution time (a win's damage), or 30 at the admission or the arrest.
+- **The street hooks are keyed by tap** (character + idempotency key): every concurrent or retried copy of one tap takes the same force. Before, the first copy consumed the hooks and its twin rolled freely, so under load a same-key pair could commit the twin's start (a pending run-in, no `logId`) and both copies returned that. With the hooks off the copies always agreed (both return the winner's stored answer); the race was the hooks' alone.
+- **`encounter.close`** returns `landing: Landing | null` (the cells' or the infirmary's place when the result sent you there).
+
+**T16 (the cells, the infirmary, the record)**
+
+- **`PoliticalResult` gained** (rules types, additive) the knock-ons `heat`, `health`, `energy`, `barred`, `record` and the views `{ kind: 'held'; landing }` and `{ kind: 'record'; record }`. The release modal's texts are `copy.risk` (*Released*, *Put on the train*, *Discharged*, *Struck off*). A lazy release stores its modal with an empty `idempotencyKey`.
+- **The held tap** runs through `computeTier1` / `writeTier1` on a synthetic located action (the held place and `content.heldAction(kind)`), ×1, no run-in, under `actionLogs`; `held.act` refuses `NOT_HELD` (and `RUN_IN_PENDING`).
+- **`held.get`'s `paperUnread`** is 1 while today's edition is unread, else 0; `election` is null in slice 5.
+- **`sendToHeld` and `releaseHeldNow`** (`heldService.ts`) are the `/api/test/held` hooks' seams and are used by the server tests.
+
+**T19 (integration)**
+
+- **Edition assertions** in the risky week: the morning after the cells prints *cells* and not *seen*; the next, *infirmary*; after the rival arrest and the train home, *deported*, *cells* or *rival-trip*. The suite (with `slice5.missions`) passed ten runs in a row.
+- **The slice-4 e2e `travel.spec.ts` follows rival ground opening at Level 10**: Ashford is a destination on the nation map, no longer muted, and the Trains card lists the rival homes, so the spec boards the Coalport button by its text. Test-only.
+- **`packages/content/vitest.config.ts`** (new) sets a 30 s test timeout: two design-document comparisons ran past Vitest's 5 s default under the full Turborepo gate.
+
+- **The risky week** runs for one player per faction (`slice5.integration.test.ts`): posters to *Hot*, taken in and bailed, a party loss and the lazy discharge, rival ground with ×2 Heat, an escalated second arrest (three serious marks), the train home and the bar, a strike-off, two weeks on (the serious marks stay). The minor-mark fade has its own test (day 13 on file, day 14 clean).
+- **The Monday race** is a mission straddling midnight into a new Issue week, which lands on the new day; it carries no Issue tag (wiring a tagged speech into a forced week was more than the race needs; the slice-4 action suite covers a tagged tap at a week's turn).
+
+**T12**
+
+- **One check computation in rules.** `missionCheck(i)` (additive, in `missions.ts`) builds a way's check with `resolveMission`'s rows in its order (the caller's *First day* row, Standing, the sources' `chancePct` and the place's rows by the seen-as type); `resolveMission` now calls it. The rules tests pass unchanged. The server's shared context is `apps/server/src/services/missionCtx.ts` (`missionCtx`, `wayPreview`, `wayRisk`, `rememberedWay`, `missionInput`), used by `city.get` and meant for `mission.start`.
+- **Every ticket at a barred place reads `RECORD`**, training included (design §7.3: *every ticket there reads Not with your record*). `MEMBERS_ONLY` wins over it, and it wins over `LEVEL` and `STANDING` on a ticket. `action.perform`'s `RECORD_BARRED` should match (training at a university too). A mission's gates keep `missionGate`'s order (Level, Rank, Standing, record).
+- **The rival-ground tag is on every checked ticket and every mission** (screens §8.3), with `fxpPct` 75 in Unrest; intelligence tickets carry it too (their *worse odds* holds). `pressureCapped` is on tickets that move opinion (`givesOpinion`) and on missions whose opinion draws from the home faction (a speech, or a target that is the home faction), once the day's 2 points are taken. The order tag is null on rival ground.
+- **The record tag** is `{ kind: 'record', ironPct }` with the negative percentage (−10 / −20 / −30), on every mission while the record has an Iron penalty.
+- **"A quarter opens when the game sends you there"** (design §2.1) is read from `character.held`: the quarter of the held place is open while the pointer exists (in or out, until `held.close`), so the landing after a stay never meets a locked view.
+- **A Level-8 or Level-10 meeting at a home city is against its home party**, so its members never see it; only visitors see the `LEVEL` lock on them.
+- **`action.test.ts`'s slice-1 quarters assertion** now reads the open quarters (every quarter comes back since T12). Test-only.
+
+**T17**
+
+- **The arrival's Heat knock-on** (`knockOns.heat`) is what the card moved when it was answered, stored as `journeys.choice.heat { before, after }` (the field is Mixed, so no schema change), or, while the card is still unanswered, what sleeping through will cost (its `ignoreEffects` projected now). Likewise `knockOns.flags` lists today's flags in the destination plus an unanswered card's ignore flag. The modal is shown before Continue, so it says what Continue will do.
+- **The warning once** is read from the journeys (`rivalGround: true` and a lower `n`), not stored: `knockOns.rivalGround` is true only on the character's first journey to rival ground.
+- **`JourneyCardResult.flag?: { flag, line }`** (additive, rules types) carries a hostile card's day flag with its line (*Watched today: run-ins likelier in Duskwall until midnight*). The Heat receipt row is the Heat actually moved (after − before), so *Heat −5* at Heat 3 reads *−3*, and at 0 it is omitted like any zero.
+- **`ActionResult.effects.heat?`** (additive, rules types) has `StreetView['heat']`'s shape. **`first`** (the first Heat ever) has no stored marker, so it is read as: Heat 0 projected and stored, no rival trip, no mission, no mark and no `firsts.noticed`. A Heat set only by the dev panel would read as first once more.
+- **`destinationOf`, `boardRefusal` and `trainsFrom` take an optional `now`**; without it the bar is not read. `cityService` (T12) calls `trainsFrom` without it, so a barred rival home shows *Board* on the capital's Trains card until it passes `now`; `travel.board` refuses `BARRED` either way. **For T12:** pass `now` as the fifth argument.
+- **`BARRED { cityId, until }`**; `DESTINATION_LOCKED` now means Clearwater only (`lock: 'later'`).
+- **The nation card** of a rival home carries `rival: { homeFactionId }` in every state (below Level 10 too); `lockWord` is null for an open rival home, `'barred'` with `barredUntil` when barred.
+- **Closing an arrival in an act**: `closeArrivalInTx(content, session, c, now)` closes any arrived journey whose destination is the character's city, card or none, and clears the pointer (Continue's effect), so the act's own update must use the returned character's `version`. The board and Continue use the same inner function; Continue retries a version miss up to `MAX_ATTEMPTS`.
+- **Three slice-4 tests now expect rival ground open** (test-only): `slice4.travel` (*every refusal*: a Level-10 traveller with 19 Iron is refused Duskwall for the fare), `slice4.actions` (the Trains card lists Ashford and Duskwall), and `qa.slice4.travel` (the timetable's rival homes are open with a fare and no lock word).
+
+**T20 (the dev panel and the test hooks)**
+
+- **The panel's buttons are dev actions, not calls to the e2e routes.** Each is `POST /api/test/dev/{heat,health,record,runIn,caught,cells,infirmary,release,decide,level6,rank3,goto,unbar}` with a `target` where it takes one (as *Live in…* does). Both the routes and the buttons call the same functions in `apps/server/src/dev/risk.ts` (`sendHeld`, `releaseNow`, `decideNow`, `setStreet`) and `applyCharacterSeed`. After *Cells now*, *Infirmary now*, *Release now* and *Decide now* the panel runs `loadCharacter`, which settles the release or the luck.
+- **The routes' answers.** A bad body gets a 400 (Zod). No session gets a 401 and no character a 404, matching the character hook. A state refusal gets a 409: sending someone already held, or on a train; *Release now* while not held; *Decide now* with no run-in pending.
+- **The character hook's `marks` replace the arrests too** (`record = { marks, arrests: [] }`, `logId: null`), so a clean record starts with no escalation. `health` is capped at the max for the Level after the seed. `heat` takes integers 0–100. **`rank` sets the Rank exactly** and puts FXP at its floor. It can lower both, unlike `fxp`, which never lowers the Rank. The panel's *Level 6* and *Rank 3* never lower anything (*Already Level 6*).
+- **The *Record* buttons write today's minor marks**, so they fade together 14 days on and the status shows the fade day.
+- ***Next run-in: Off* is `runIn: 'never'`**: the next act has no run-in. There is no "back to chance" button, because the force is used up by the next act anyway. *Next run-in* replaces only the run-in and the opponent; the rolls and *Next caught* stay set.
+- **The status reports the stored character without settling it**, like the rest of the status. A run-in past its window shows *pending* until something reads it. Beyond §8.6's list, the risk block adds `level`, `street` (what the next act is forced to), `rivalHomes` and `opponents` (the panel's choices). `pressure` is the home faction's points lost to rivals today, out of the 2-point cap, in any home city, with `rivalGround` saying whether it is yours. It is null in the capital.
+- ***Take me to…*** is the slice-4 *Take me to Irongate* write (`cityId`, with the journey dropped). It writes no `today.rivalCityId`, shows no arrival modal and gives no first-trip warning. It refuses a city that is not a rival home, and refuses while held.
+- **`streetHooks.enabled` is a module flag.** `registerRiskHooks` sets it to true inside the `E2E_TEST_HOOKS` guard. `buildApp` never sets it back to false, because the slice-5 service tests set it by hand. So a test file that builds both apps must build the hooks-off one first (`devPanel.test.ts`, `slice5.hooks.test.ts`).
+- **`POST /api/test/held { send }` while a release modal is still open** (`held.state: 'out'`) replaces the pointer, as `sendToHeld` does.
+
+**T18 (the settlement and the paper v5)**
+
+- **The risk facts are built by `riskEdition` in `edition.ts`** (pure) from the character before the boundary, the settlement's reads (`readRisk` in `dayService.ts`, in its session: the stays that started or ended yesterday, the action logs and encounters that name what each was for, the first mission's row) and the Heat projected at the settlement. `computeSettlement` takes them as `read.risk` (optional: the join's first-day settlement passes none).
+- **Each risk headline has its own fills** (`varsByKind`, by its condition): `{missionTitle}` in *mission-first*, *name-taken* and *cells* can name three different missions on one morning, and `{rivalCity}` in *rival-trip* and *deported* two cities.
+- **A headline whose fill cannot be named is not printed** (its fact reads false), so no edition carries an unfilled `{…}`. **Settled by the designer (design §14, 4 Oct 2026):** a stay with no act behind it (the test hooks' `dev` stays, the dev panel's *Cells now*) now prints *cells* with `{missionTitle}` *a word with the police* and `{how}` *no reason was given.* (`copy.risk.paper.noAct`). A dev stay in the infirmary still prints no *infirmary* (no opponent to name), and the hooks' marks (logId null) no *name-taken*; *record-up*, *seen* and *deported* need no title and print.
+- **Held in the cells at the settlement** (arrested late, settled before the door opens), the edition reads the Heat the release sets (25, *Noticed*), so a night in the cells is *cells* and never *seen*, whichever side of `until` the morning read falls. Otherwise *seen* reads the Heat projected at the settlement (Hot or Wanted).
+- **`{minutes}` is the minutes spent**: `releasedAt − since`, rounded, at least 1, once released (bail after 7 minutes reads *Spent 7 Minutes*); the sentence (`stay.minutes`) while still in.
+- **`{how}` and the paper's `{recordLevel}` are content** (`copy.risk.paper`, additive): `caught` / `wanted` / `policeLoss` → design §14's three phrases; `{recordLevel}` *On file* / *a Repeat Offender* / *Notorious*. `{opponent}` is the opponent's label with its first letter lowered (*After a run-in with a Vanguard street enforcer.*). `{pct}` is the Iron penalty without its sign (10, 20, 30).
+- **`recordRose`** compares the level from the marks dated before yesterday with the level from those dated through yesterday, both as live on yesterday; a strike-off is already gone from the stored array. **Settled (design §14, 4 Oct 2026):** *record-up*'s decks use `{marksLine}` (*One mark* / *{n} marks*, `copy.risk.paper.marksLine`, a new risk placeholder in rules), and `{recordLevel}` is title case in headlines (*On File*).
+- **Risk decks are held to 200 once filled** (`fitDeck`, rules `paper.ts`, additive; applied only to templates with a risk condition, so slice 1–4 decks print exactly as before): whole sentences are dropped from the end, the first always kept; a first sentence still over is cut at a word with an ellipsis. **Settled (design §14, 4 Oct 2026):** the three decks that ran over (`hl.cells`, `hl.a.cells`, `hl.a.name-taken`) were shortened and now fit whole; `fitDeck` stays as a guard. The content test that listed them now expects none over.
+- **`rival-pressure`** is live through the slice-4 capital facts: `capitalFacts` sets `moraleLostToRivals` from the residence city's `rivalPressure` (yesterday, by `day` or `prev`, in points) and `{lost}` to one decimal. Like every live city line it is merged by priority, so a morning with an ordinance or a polling line at priority ≤ 1 can outrank it; the test reads the live lines before the merge.
+- **The desk's rows** (`deskRisk` in `paperService.ts`) are live at read and always present (null when they don't apply): `held` while in (minutes left rounded up; `bail` the stored total in the cells, null on the ward), `where` on rival ground, `heat` above 0 (`coolsAt` from `riskView`, null while Cool), `record` above Clean. The rows' order on the page is the client's (screens §2.5).
+- **`OrdersView.elsewhere`** is set in `ordersView` whenever the character stands on rival ground, naming the residence city (which `{city}` names too). A visitor on rival ground reads the residence paper (§11.1, unchanged; tested).
+- **The settlement's `today`** is written with `missions: 0` and `rivalCityId: null` (the rules' empty tally has neither), and **`record.marks`** is set to the live marks only when one has faded.
+- **In Print** is matched by id with an escaped dot: `/\.(hero|quoted|seen|cells|infirmary|deported)$/`.

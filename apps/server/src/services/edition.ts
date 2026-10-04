@@ -1,18 +1,41 @@
 import type { GameContent } from '@irongate/content';
+import { copy } from '@irongate/content/copy';
 import { paperCityFor, residenceOf } from './residence';
-import type { CharacterDoc, CityDoc, PaperEntryDoc } from '@irongate/db';
-import { fillTemplate, itemSpec, selectHeadlines, standingView } from '@irongate/rules';
+import type { CharacterDoc, CityDoc, PaperEntryDoc, StayDoc } from '@irongate/db';
+import {
+  HEAT,
+  RISK_CONDITION_KINDS,
+  dayKey,
+  dayStart,
+  fillTemplate,
+  fitDeck,
+  heatState,
+  itemSpec,
+  liveMarks,
+  recordLevel,
+  recordView,
+  selectHeadlines,
+  standingView,
+} from '@irongate/rules';
 import type {
   DayKey,
   HeadlineTemplate,
+  Mark,
   OrdersState,
   PaperFacts,
   Placeholder,
+  RiskCondition,
+  RiskFacts,
+  RiskPlaceholder,
   Settlement,
 } from '@irongate/rules';
 import { locationRef, namedStanding, orderText, orderVars, rankTitle, standingSuccesses } from './views';
 
-export type NewEdition = Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
+const RISK_KINDS = new Set<string>(RISK_CONDITION_KINDS);
+/** A slice-5 risk headline (its deck is held to 200 once filled). */
+const isRisk = (t: HeadlineTemplate) => t.when.some((w) => RISK_KINDS.has(w.kind));
+
+export type NewEdition =Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
 
 /**
  * Today's Morning Paper (§3.3), set at settlement from the character as it was before the
@@ -36,6 +59,8 @@ export function buildEdition(i: {
   awards?: Array<{ kind: 'hero' | 'issue'; label: string; pc: number }>;
   /** Review 1: the seniority days the last boundary added (the Long Service Order's 2), else 1. */
   seniorityStepYesterday?: number;
+  /** Slice 5 (tech design §11.2): the risk facts and their placeholders (`riskEdition`). */
+  risk?: RiskEdition | null;
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
@@ -70,6 +95,7 @@ export function buildEdition(i: {
     homeShare,
     // Slice 4: `hl.*.train-open` the morning after the Level reached 10.
     ...(prev !== null ? { level: { before: prev.snapshot.level, after: c.level } } : {}),
+    ...(i.risk ? { risk: i.risk.facts } : {}),
   };
 
   const templates = content.headlinesOf(paperCityId);
@@ -104,7 +130,9 @@ export function buildEdition(i: {
     faction: content.faction(c.factionId).shortName,
     district: residencePlaceName(content, c),
   };
-  const varsFor = (_t: HeadlineTemplate): Partial<Record<Placeholder, string>> => baseVars;
+  // Slice 5: each risk headline's own fills (its `{missionTitle}` is the one its fact names).
+  const varsFor = (t: HeadlineTemplate): Partial<Record<Placeholder | RiskPlaceholder, string>> =>
+    Object.assign({}, baseVars, ...t.when.map((w) => i.risk?.varsByKind[w.kind as RiskCondition['kind']] ?? {}));
 
   return {
     characterId: c._id,
@@ -116,7 +144,11 @@ export function buildEdition(i: {
       group: t.group,
       priority: t.priority,
       headline: fillTemplate(t.headline, varsFor(t)),
-      ...(t.deck ? { deck: fillTemplate(t.deck, varsFor(t)) } : {}),
+      // Slice 5 (T18): a risk deck held to 200 once filled (a long mission title and `{how}`);
+      // the slice 1–4 decks are printed as they always were.
+      ...(t.deck
+        ? { deck: isRisk(t) ? fitDeck(fillTemplate(t.deck, varsFor(t))) : fillTemplate(t.deck, varsFor(t)) }
+        : {}),
     })),
     desk: {
       salary:
@@ -149,4 +181,139 @@ function residencePlaceName(content: GameContent, c: CharacterDoc): string {
   return r.districtId
     ? (content.district(r.districtId)?.quarter.name ?? r.districtId)
     : (content.city(r.cityId)?.name ?? r.cityId);
+}
+
+/** Slice 5 (tech design §8.4): what the settlement reads for the risk headlines. */
+export interface RiskRead {
+  /** The stays that started or ended yesterday (or since). */
+  stays: StayDoc[];
+  /** `actionLogs` rows by id (hex): the mission or action each names (titles). */
+  acts: Map<string, { kind: string; actionId: string }>;
+  /** Encounters by id (hex): what was being done and the opponent. */
+  encounters: Map<string, { kind: 'mission' | 'action'; refId: string; opponentId: string }>;
+  /** The first mission's id, when `firsts.mission` is yesterday. */
+  firstMissionId: string | null;
+}
+
+type RiskVars = Partial<Record<RiskPlaceholder, string>>;
+
+/** The risk facts of an edition and each headline's fills, by its condition (titles differ). */
+export interface RiskEdition {
+  facts: RiskFacts;
+  varsByKind: Partial<Record<RiskCondition['kind'], RiskVars>>;
+}
+
+const LEVEL_ORDER = { clean: 0, onFile: 1, repeat: 2, notorious: 3 } as const;
+/** A label in the middle of a sentence: "After a run-in with a Vanguard street enforcer." */
+const inSentence = (label: string) => label.charAt(0).toLowerCase() + label.slice(1);
+
+/**
+ * Slice 5 (tech design §11.2, design §14): yesterday's risk facts from the character before the
+ * boundary, the stays read, and the Heat projected at the settlement. Pure. A headline whose fill
+ * cannot be named (a stay or a mark with no act behind it: the test hooks) is not printed, so no
+ * edition carries an unfilled `{…}`. Held in the cells at the settlement, the edition reads the
+ * Heat the release sets (25): the cells' night is `cells`, never `seen`.
+ */
+export function riskEdition(
+  content: GameContent,
+  c: CharacterDoc,
+  today: DayKey,
+  heatNow: number,
+  read: RiskRead | null,
+): RiskEdition {
+  const y = today - 1;
+  const from = dayStart(y);
+  const to = dayStart(today);
+  const yesterday = (d: Date | null | undefined) =>
+    !!d && new Date(d).getTime() >= from && new Date(d).getTime() < to;
+  const r: RiskRead = read ?? { stays: [], acts: new Map(), encounters: new Map(), firstMissionId: null };
+  const nameOf = (kind: string, id: string): string | null =>
+    (kind === 'mission' ? content.mission(id)?.mission.name : content.action(id)?.action.name) ?? null;
+  const titleOfLog = (logId: string | null | undefined): string | null => {
+    const a = logId ? r.acts.get(logId) : undefined;
+    return a ? nameOf(a.kind, a.actionId) : null;
+  };
+  const titleOfStay = (s: StayDoc): string | null => {
+    const byLog = titleOfLog(s.logId ? s.logId.toHexString() : null);
+    if (byLog) return byLog;
+    const e = s.encounterId ? r.encounters.get(s.encounterId.toHexString()) : undefined;
+    return e ? nameOf(e.kind, e.refId) : null;
+  };
+  const varsByKind: RiskEdition['varsByKind'] = {};
+  const latest = (xs: StayDoc[]) =>
+    [...xs].sort((a, b) => new Date(b.since).getTime() - new Date(a.since).getTime())[0];
+
+  // The first mission ever, yesterday.
+  const firstTitle =
+    c.firsts?.mission && dayKey(new Date(c.firsts.mission).getTime()) === y && r.firstMissionId
+      ? nameOf('mission', r.firstMissionId)
+      : null;
+  if (firstTitle) varsByKind.missionFirstYesterday = { missionTitle: firstTitle };
+
+  // A mark yesterday (the latest one's mission), and the record's level at yesterday's start and end.
+  const marks: Mark[] = (c.record?.marks ?? []).map((m) => ({ day: m.day, kind: m.kind, logId: m.logId ?? null }));
+  const marked = liveMarks(marks, today).filter((m) => m.day === y);
+  const markTitle = [...marked].reverse().map((m) => titleOfLog(m.logId)).find((t) => t !== null) ?? null;
+  if (markTitle) varsByKind.markYesterday = { missionTitle: markTitle };
+  const levelOn = (ms: Mark[]) => recordLevel(liveMarks(ms, y).length);
+  const before = levelOn(marks.filter((m) => m.day < y));
+  const after = levelOn(marks.filter((m) => m.day <= y));
+  const recordRose = LEVEL_ORDER[after] > LEVEL_ORDER[before];
+  if (recordRose) {
+    const rec = recordView(marks, today);
+    varsByKind.recordRose = {
+      recordLevel: rec.level === 'clean' ? '' : copy.risk.paper.recordLevel[rec.level],
+      marks: String(rec.marks),
+      marksLine: copy.risk.paper.marksLine(rec.marks),
+      pct: String(-rec.ironPct),
+    };
+  }
+
+  // Taken in yesterday (the latest), with its minutes and how.
+  const stays = r.stays;
+  const cells = latest(stays.filter((s) => s.kind === 'cells' && yesterday(s.since)));
+  // Design §14 (4 Oct 2026): a stay with no act behind it (a dev stay) prints a fallback.
+  const noAct = copy.risk.paper.noAct;
+  const cellsTitle = cells ? (titleOfStay(cells) ?? noAct.missionTitle) : null;
+  const how = cells
+    ? cells.reason in copy.risk.paper.how
+      ? copy.risk.paper.how[cells.reason as 'caught']
+      : noAct.how
+    : null;
+  if (cells && cellsTitle && how) {
+    const spent = cells.releasedAt
+      ? Math.max(1, Math.round((new Date(cells.releasedAt).getTime() - new Date(cells.since).getTime()) / 60_000))
+      : cells.minutes;
+    varsByKind.arrestedYesterday = { missionTitle: cellsTitle, how, minutes: String(spent) };
+  }
+
+  // Admitted yesterday: the opponent of its run-in.
+  const ward = latest(stays.filter((s) => s.kind === 'infirmary' && yesterday(s.since)));
+  const enc = ward?.encounterId ? r.encounters.get(ward.encounterId.toHexString()) : undefined;
+  const opponent = enc ? content.opponent(enc.opponentId)?.label : undefined;
+  if (opponent) varsByKind.admittedYesterday = { opponent: inSentence(opponent) };
+
+  // On rival ground yesterday (the closed tally), and put on the train home yesterday.
+  const tally = c.today as CharacterDoc['today'] & { rivalCityId?: string | null };
+  const rivalId = tally.day === y ? (tally.rivalCityId ?? null) : null;
+  if (rivalId) varsByKind.rivalGroundYesterday = { rivalCity: content.city(rivalId)?.name ?? rivalId };
+  const deported = [...stays]
+    .filter((s) => s.deportJourneyId && yesterday(s.releasedAt))
+    .sort((a, b) => new Date(b.releasedAt!).getTime() - new Date(a.releasedAt!).getTime())[0];
+  if (deported) varsByKind.deportedYesterday = { rivalCity: content.city(deported.cityId)?.name ?? deported.cityId };
+
+  const inCells = c.held?.state === 'in' && c.held.kind === 'cells';
+  return {
+    facts: {
+      missionFirstYesterday: firstTitle !== null,
+      heat: heatState(inCells ? HEAT.afterRelease : heatNow),
+      markYesterday: markTitle !== null,
+      arrestedYesterday: varsByKind.arrestedYesterday !== undefined,
+      admittedYesterday: varsByKind.admittedYesterday !== undefined,
+      recordRose,
+      rivalGroundYesterday: rivalId !== null,
+      deportedYesterday: deported !== undefined,
+    },
+    varsByKind,
+  };
 }

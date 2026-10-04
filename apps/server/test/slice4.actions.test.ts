@@ -175,7 +175,10 @@ describe('city.get v4 in the capital (tech design §8.3)', () => {
     const station = city.locations.find((l) => l.id === 'irongate.central-station')!;
     expect(station.quarterId).toBe(SM);
     expect(station.issueIds).toEqual(['issue.tram-fares']);
+    // Slice 5 (design §11.1): the rival homes are listed and boardable from Level 10.
     expect(station.trains!.destinations.map((d) => [d.cityId, d.minutes, d.fare.total, d.canBoard])).toEqual([
+      ['ashford', 12, 20, true],
+      ['duskwall', 15, 20, true],
       ['coalport', 12, 20, true],
     ]);
     const canvass = station.actions.find((a) => a.id === ARRIVALS.actionId)!;

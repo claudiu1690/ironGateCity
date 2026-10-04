@@ -523,6 +523,8 @@ export const RISK_PLACEHOLDERS = [
   'opponent',
   'recordLevel',
   'marks',
+  /** *One mark* / *{n} marks* (design §14, 4 Oct 2026). */
+  'marksLine',
   'pct',
   'rivalCity',
   'lost',
@@ -995,6 +997,16 @@ export interface ActionResult {
       applied: number;
       shareBefore: number;
       shareAfter: number;
+      /**
+       * Slice 5 (ADR 0034, tech design §10.1): `against` a faction — `shareBefore` / `shareAfter` are
+       * the target's and `applied` is its loss; absent: persuasion.
+       */
+      mode?: 'persuade' | 'against';
+      targetFactionId?: FactionId;
+      /** The actor's half of an `against` swing (what counts as the contribution). */
+      toActor?: number;
+      /** Rival ground: the home faction's day cap cut the swing. */
+      capped?: boolean;
     } | null;
     standing: { before: NamedStandingView; after: NamedStandingView } | null;
     /**
@@ -1027,6 +1039,11 @@ export interface ActionResult {
     }>;
     /** Slice 4: the scoreboard line after this action. */
     scoreboard?: { placeName: string; swing: number; rank: number; of: number } | null;
+    /**
+     * Slice 5 (tech design §8.2): a chapter approach's Heat (*The riverside house*'s quiet way),
+     * `first` when it is the character's first Heat ever.
+     */
+    heat?: StreetView['heat'];
   };
   /** The Today tally after this tap. */
   today: DailyTally;
@@ -1716,6 +1733,12 @@ export interface PoliticalResult {
     iron?: { before: number; after: number } | null;
     seatGivenUp?: { cityName: string } | null;
     candidacyWithdrawn?: boolean;
+    /** Slice 5 (tech design §10.3): the cells, the infirmary and the record. */
+    heat?: { before: number; after: number } | null;
+    health?: { before: number; after: number; max: number } | null;
+    energy?: { before: number; after: number } | null;
+    barred?: { cityId: string; cityName: string; until: number } | null;
+    record?: { before: { level: RecordLevel; marks: number }; after: { level: RecordLevel; marks: number } } | null;
   };
   performedAt: string;
   idempotencyKey: string;
@@ -1723,7 +1746,10 @@ export interface PoliticalResult {
   view:
     | { kind: 'election'; election: ElectionView }
     | { kind: 'council'; council: CouncilView }
-    | { kind: 'residence'; residence: ResidenceCardView; election: PoliticsSummaryView | null };
+    | { kind: 'residence'; residence: ResidenceCardView; election: PoliticsSummaryView | null }
+    // Slice 5 (tech design §10.3): out of the cells or the infirmary (where Continue lands), the record.
+    | { kind: 'held'; landing: Landing | { journey: true } | null }
+    | { kind: 'record'; record: CharacterViewV6['record'] };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1876,6 +1902,11 @@ export interface JourneyCardResult {
     leader: FactionId | null;
   } | null;
   quoted: boolean;
+  /**
+   * Slice 5 (tech design §10.4): a hostile card's day flag in the destination, worded (*Watched
+   * today: run-ins likelier in Duskwall until midnight*). Absent when the card set none.
+   */
+  flag?: { flag: 'watched' | 'warned'; line: string };
   performedAt: string;
   idempotencyKey: string;
   character: CharacterView;

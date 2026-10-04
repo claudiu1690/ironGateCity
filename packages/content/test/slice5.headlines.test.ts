@@ -194,7 +194,7 @@ describe('the risk headlines (design §14)', () => {
     );
     expect(missionNames).toHaveLength(22);
     const longest = (xs: string[]) => xs.reduce((a, b) => (b.length > a.length ? b : a), '');
-    const how = /`\{how\}` is one of \*(.+?)\* \/ \*(.+?)\* \/ \*(.+?)\*;/.exec(DESIGN)!.slice(1);
+    const how = /`\{how\}` is one of \*(.+?)\* \/ \*(.+?)\* \/ \*(.+?)\*[,;]/.exec(DESIGN)!.slice(1);
     const LONGEST: Record<string, string> = {
       name: 'N'.repeat(40),
       missionTitle: longest(missionNames),
@@ -203,6 +203,7 @@ describe('the risk headlines (design §14)', () => {
       opponent: longest(opponents.map((o) => o.label)),
       recordLevel: 'a Repeat Offender',
       marks: '99',
+      marksLine: '99 marks',
       pct: '30',
       rivalCity: 'Coalport',
       lost: '2.0',
@@ -214,11 +215,10 @@ describe('the risk headlines (design §14)', () => {
       const n = fill(h.deck!).length;
       if (n > 200) over.push(`${h.id}: ${n}`);
     }
-    // DESIGN, recorded for the designer: three decks run over 200 once filled with the longest
-    // mission title (*Tear down the Collective's posters on the brewery wall*, 54) and the longest
-    // {how} (35). Transcribed word for word; the raw templates are within 200 (the schema's bound).
+    // Design §14 (4 Oct 2026): the three decks that ran over 200 once filled with the longest
+    // mission title and the longest {how} were shortened; every deck now fits whole.
     expect(LONGEST.missionTitle).toBe("Tear down the Collective's posters on the brewery wall");
-    expect(over).toEqual(['hl.cells: 215', 'hl.a.name-taken: 203', 'hl.a.cells: 205']);
+    expect(over).toEqual([]);
   });
 });
 

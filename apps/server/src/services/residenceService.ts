@@ -31,6 +31,7 @@ import type { ClientSession } from 'mongoose';
 import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { ensureSettled, loadCharacter } from './dayService';
+import { assertFree, notFree } from './risk';
 import { dayModifiers, restedCapToday } from './modifiers';
 import { politicsSummary, weekdayName } from './politicsService';
 import { withRequestKey } from './requestKey';
@@ -136,6 +137,12 @@ export async function residenceCardView(
         })()
       : null;
   const base = { livesIn, cost: RESIDENCE.cost as 500, room };
+  // Slice 5 (screens §8.3, GDD §14.12): another faction's home city is rival ground, where nobody
+  // may live or stand: *You can't live or stand here*.
+  const homeFaction = content.city(target.cityId)?.homeFactionId;
+  if (homeFaction && homeFaction !== c.factionId) {
+    return { ...base, state: 'rivalGround', button: null, sheet: null };
+  }
   if (here) {
     return {
       ...base,
@@ -326,6 +333,8 @@ export async function register(deps: {
     throw gameError('BAD_REQUEST', 'UNKNOWN_DISTRICT', { districtId: input.districtId });
   }
   const loaded = await loadCharacter(deps.user, content, deps.now());
+  // Slice 5 (tech design §7.2): not from the cells, the ward or a run-in.
+  assertFree(loaded.doc);
   return withRequestKey<PoliticalResult>({
     characterId: loaded.doc._id,
     idempotencyKey: input.idempotencyKey,
@@ -341,6 +350,8 @@ export async function register(deps: {
       const c = await Character.findById(loaded.doc._id).session(session).lean<CharacterDoc>();
       if (!c) throw new Error('character disappeared');
       if (c.day.settled !== today) throw new DayChanged();
+      const blocked = notFree(c);
+      if (blocked) throw blocked;
       const r = residenceOf(c);
       const target = { cityId: input.cityId, districtId: input.districtId };
       const stakes = await oldPlaceStakes(content, c, today, session);
@@ -454,6 +465,8 @@ export async function takeRoom(deps: {
 }): Promise<PoliticalResult> {
   const { content, input } = deps;
   const loaded = await loadCharacter(deps.user, content, deps.now());
+  // Slice 5 (tech design §7.2): not from the cells, the ward or a run-in.
+  assertFree(loaded.doc);
   return withRequestKey<PoliticalResult>({
     characterId: loaded.doc._id,
     idempotencyKey: input.idempotencyKey,
@@ -469,6 +482,8 @@ export async function takeRoom(deps: {
       const c = await Character.findById(loaded.doc._id).session(session).lean<CharacterDoc>();
       if (!c) throw new Error('character disappeared');
       if (c.day.settled !== today) throw new DayChanged();
+      const blocked = notFree(c);
+      if (blocked) throw blocked;
       if (c.journey?.status === 'onTheWay') {
         throw new GameError('IN_TRANSIT', { arrivesAt: new Date(c.journey.arrivesAt).getTime() });
       }

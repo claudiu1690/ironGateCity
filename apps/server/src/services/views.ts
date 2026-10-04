@@ -1,5 +1,5 @@
 import { isCheckedAction } from '@irongate/content';
-import type { GameContent } from '@irongate/content';
+import type { City, GameContent, Quarter } from '@irongate/content';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
@@ -35,6 +35,7 @@ import {
   wornCha,
 } from '@irongate/rules';
 import { liveIssuesOf, restedCapToday } from './modifiers';
+import { isRivalGround, riskView } from './risk';
 import type { LiveIssue } from '@irongate/rules';
 import type {
   ActionDescriptor,
@@ -52,6 +53,7 @@ import type {
   OrderTemplate,
   OrdersState,
   OrdersView,
+  QuarterView,
   Stats,
   TileSource,
   TrainableStat,
@@ -449,7 +451,52 @@ export function ordersView(
             }, 0),
           }
         : null,
+    // Slice 5 (screens §8.3): on rival ground the orders stand, but they are done at home:
+    // *Your orders are in Coalport today* (the residence city, which `{city}` names too).
+    elsewhere: isRivalGround(content, doc, doc.cityId)
+      ? { cityName: content.city(residenceCityId(doc))?.name ?? residenceCityId(doc) }
+      : null,
   };
+}
+
+/**
+ * GDD §14.13, design §2.1 (ADR 0035): whether a quarter is open to the character, by Level, or
+ * because the game has sent them to a place in it (the cells or the infirmary, until the stay is
+ * closed: a view rule, nothing stored), so a service never lands on a locked view.
+ */
+export function quarterOpenFor(
+  content: GameContent,
+  doc: Pick<CharacterDoc, 'level' | 'held'>,
+  q: Pick<Quarter, 'id' | 'opens'>,
+): ReturnType<typeof quarterOpen> {
+  const heldHere = !!doc.held && content.quarterOf(doc.held.locationId)?.id === q.id;
+  return quarterOpen(q, doc.level, heldHere);
+}
+
+/**
+ * Tech design §8.3 (ADR 0035): a city's quarters, every one, open or locked: the frame, the outline
+ * and the label for the overview, the lock and its teaser line, the blurb, and how many places it has.
+ */
+export function quarterViews(
+  content: GameContent,
+  city: City,
+  doc: Pick<CharacterDoc, 'level' | 'held'>,
+): QuarterView[] {
+  return city.quarters.map((q) => {
+    const o = quarterOpenFor(content, doc, q);
+    return {
+      id: q.id,
+      name: q.name,
+      frame: { ...q.frame },
+      outline: (q.outline ?? []).map(([x, y]) => [x, y] as [number, number]),
+      label: q.label ? { ...q.label } : null,
+      open: o.open,
+      lock: o.lock,
+      blurb: q.blurb ?? null,
+      teaser: q.teaser ?? null,
+      places: city.locations.filter((l) => l.quarterId === q.id).length,
+    };
+  });
 }
 
 /** Slice 3: the seat held today, from the settlement's projection (ADR 0020). */
@@ -581,6 +628,8 @@ export function toCharacterView(
     trainOpen: doc.level >= TRAVEL.level,
     welcomeDay: welcomeDayOf(doc, today),
     statGuide: statGuideOf(content, doc),
+    // Slice 5 (tech design §8.3): Heat, Health, the record, held, the run-in, where you stand.
+    ...riskView(content, doc, now, ctx.city ?? null),
   };
 }
 

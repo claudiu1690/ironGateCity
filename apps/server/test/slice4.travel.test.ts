@@ -104,8 +104,9 @@ describe('boarding (travel.board)', () => {
     expect(
       (await refusal(p.caller.travel.board({ to: 'coalport', idempotencyKey: key() }))).game?.reason,
     ).toBe('ALREADY_THERE');
+    // Slice 5 (design §11.1): rival ground is boardable from Level 10, so only the fare refuses it.
     expect(await refusal(p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() }))).toMatchObject({
-      game: { reason: 'DESTINATION_LOCKED', lock: 'rival' },
+      game: { reason: 'NOT_ENOUGH_IRON', iron: 19, cost: 20 },
     });
     expect(await refusal(p.caller.travel.board({ to: 'clearwater', idempotencyKey: key() }))).toMatchObject({
       game: { reason: 'DESTINATION_LOCKED', lock: 'later' },

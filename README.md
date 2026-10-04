@@ -72,7 +72,7 @@ Kinds: `map`, `scene`, `portrait`, `avatar`, `item` (AVIF and WebP at the catalo
 
 ### Reviewing with the dev panel
 
-A five-day council cycle in minutes, by hand. Start the game with `pnpm dev:mem`, open <http://localhost:5173>, sign up and arrive. A small **Dev** button (dashed amber border) sits on the right edge, half-way down: it opens the **DEV · test clock** sheet. It shows the game time in UTC and in your own clock, the City Day, your home city's phase and cycle day with when the next phase starts, morale and the ordinance in force, and (slice 4) where you are (a city, or the train and its minutes left), where you live with your windows, the capital's five districts (shares, close race, comeback) and your residence city's Issues with their points. The buttons:
+A five-day council cycle in minutes, by hand. Start the game with `pnpm dev:mem`, open <http://localhost:5173>, sign up and arrive. A small **Dev** button (dashed amber border) sits on the right edge, half-way down: it opens the **DEV · test clock** sheet. It shows the game time in UTC and in your own clock, the City Day, your home city's phase and cycle day with when the next phase starts, morale and the ordinance in force, and (slice 4) where you are (a city, or the train and its minutes left), where you live with your windows, the capital's five districts (shares, close race, comeback) and your residence city's Issues with their points, and (slice 5) Heat with its cool-by time, Health, the record and its fade day, a stay (minutes left, bail), a run-in (who, decides at), today's flags, bars, the rival pressure of the city you are in and what your next act is forced to. The buttons:
 
 | Button                 | What it does                                                                                                                                                                                                        |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,10 +86,15 @@ A five-day council cycle in minutes, by hand. Start the game with `pnpm dev:mem`
 | **Level 10**           | Level 10 (the train is open) and Rank 2 if below (you can register in the capital) |
 | **Take me to Irongate** | You stand in Irongate at once: no ticket, no card (the map opens on the capital) |
 | **Live in… / Live there** | Registers you in the chosen capital district, or back home, with every window open (you vote and stand at once) |
+| **Risk: Heat / Health / Record** | (Slice 5) Heat 0, 30, 60 or 80; Health full, half or 10; a clean record or 2, 4 or 7 of today's minor marks |
+| **Next run-in / Set** | (Slice 5) Your next mission or rival tap: no run-in (_Off_), a run-in with the place's opponent (_Random_), or with one of the six. **Next caught: on**: that act is caught |
+| **Cells now / Infirmary now** | (Slice 5) Taken to the cells or the infirmary of the city you are in, with the real sentence and bail. While held: **Release now**. While a run-in waits: **Decide now** (luck decides) |
+| **Level 6 / Rank 3** | (Slice 5) The Harbour and the missions open |
+| **Take me to… / Go** | (Slice 5) You stand in a rival home city at once: no ticket, no card. **Lift the bar** clears a deportation's bar |
 
 Each action prints one line (_Now Thursday 1 Oct 00:01 UTC · polls open in Coalport_) and refreshes the HUD, the paper and the map. The clock is the server's **shared** test clock: it moves for everyone on this local server, and only forward (restart `pnpm dev:mem` to start again).
 
-The panel exists only in memory mode: its routes (`GET /api/test/dev/status`, `POST /api/test/dev/{hour,day,phase,boost,energy,arrive,monday,level10,irongate,live}`) are registered with the other test hooks, behind `E2E_TEST_HOOKS`, which the server refuses outside `DB_MODE=memory`. Anywhere else the status route is a 404 and the client renders nothing, whatever the build.
+The panel exists only in memory mode: its routes (`GET /api/test/dev/status`, `POST /api/test/dev/{hour,day,phase,boost,energy,arrive,monday,level10,irongate,live}` and slice 5's `{heat,health,record,runIn,caught,cells,infirmary,release,decide,level6,rank3,goto,unbar}`) are registered with the other test hooks, behind `E2E_TEST_HOOKS`, which the server refuses outside `DB_MODE=memory`. Anywhere else the status route is a 404 and the client renders nothing, whatever the build.
 
 **A suggested walk-through** (a Collective member in Coalport):
 

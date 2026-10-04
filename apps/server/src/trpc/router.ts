@@ -4,8 +4,11 @@ import { arrivalRouter } from './routers/arrival';
 import { characterRouter } from './routers/character';
 import { cityRouter } from './routers/city';
 import { councilRouter } from './routers/council';
+import { encounterRouter } from './routers/encounter';
 import { healthRouter } from './routers/health';
+import { heldRouter, recordRouter } from './routers/held';
 import { jobRouter } from './routers/job';
+import { missionRouter } from './routers/mission';
 import { paperRouter } from './routers/paper';
 import { residenceRouter } from './routers/residence';
 import { travelRouter } from './routers/travel';
@@ -24,6 +27,11 @@ export const appRouter = router({
   // Slice 4.
   travel: travelRouter,
   residence: residenceRouter,
+  // Slice 5.
+  mission: missionRouter,
+  encounter: encounterRouter,
+  held: heldRouter,
+  record: recordRouter,
 });
 
 export type AppRouter = typeof appRouter;

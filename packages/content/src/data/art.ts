@@ -400,7 +400,7 @@ export const assets: Asset[] = [
   // the strike card, the infirmary and the cells.
   scene(
     'mission-speech',
-    'A speaker in shirtsleeves on a timber platform with a loudspeaker horn, arm out over a crowd of flat caps at a shipyard; a hull on the stocks and cranes behind.',
+    'A speaker in shirtsleeves leans on a platform rail under a loudspeaker horn, pointing down at a shipyard crowd who wave caps and clap; a hull and cranes behind.',
   ),
   scene(
     'mission-watch',

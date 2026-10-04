@@ -176,6 +176,26 @@ export function fillTemplate(
   );
 }
 
+/** The longest deck the content allows (`Headline.deck`, ≤ 200 characters). */
+export const DECK_MAX = 200;
+
+/**
+ * Slice 5 (T18): a filled deck held to `max` characters. Placeholders can push a deck within the
+ * cap as written past it (a long mission title and `{how}`), so whole sentences are dropped from
+ * the end (the first is always kept); a first sentence still over is cut at a word boundary with an
+ * ellipsis. A deck within the cap is returned unchanged.
+ */
+export function fitDeck(text: string, max: number = DECK_MAX): string {
+  if (text.length <= max) return text;
+  const sentences = text.split(/(?<=[.!?]['"’”]?)\s+(?=[A-Z0-9'"‘“])/);
+  while (sentences.length > 1 && sentences.join(' ').length > max) sentences.pop();
+  const kept = sentences.join(' ');
+  if (kept.length <= max) return kept;
+  const cut = kept.slice(0, max - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > 0 ? cut.slice(0, space) : cut).replace(/[\s,;:]+$/, '')}…`;
+}
+
 /**
  * §3.3: the paper is due when today's edition is unread, or 3 hours or more have passed since the
  * later of the last read and the last action.

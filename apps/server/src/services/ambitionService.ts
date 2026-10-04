@@ -5,7 +5,9 @@ import { ActionLog, Character } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
 import {
   AMBITION,
+  HEAT,
   WEEKDAY_NAMES,
+  addHeat,
   addToTally,
   applyGains,
   chooseInChapter,
@@ -16,6 +18,7 @@ import {
   dayStart,
   energyReadyAt,
   grantItem,
+  heatEta,
   isNight,
   projectEnergy,
   resolveChapterCheck,
@@ -27,6 +30,7 @@ import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { progressOf, progressSet } from './actionService';
 import { ensureSettled, loadCharacter } from './dayService';
+import { assertFree, heatDoc, heatRateOn, heatTimerOf, notFree } from './risk';
 import { runKeyedAction, storedResult } from './keyedAction';
 import { fill, storyVars } from './story';
 import { DayChanged, VersionConflict } from './txn';
@@ -213,6 +217,8 @@ export async function attemptChapter(deps: {
   const { content, input } = deps;
   const loaded = await loadCharacter(deps.user, content, deps.now());
   const c0 = loaded.doc;
+  // Slice 5 (tech design §7.2): not from the cells, the ward or a run-in.
+  assertFree(c0);
   const actionId = `${c0.ambition.id}.${input.chapter}`;
   return runKeyedAction<ActionResult>({
     stored: () =>
@@ -232,6 +238,8 @@ export async function attemptChapter(deps: {
       const c = await Character.findById(c0._id).session(session).lean<CharacterDoc>();
       if (!c) throw new Error('character disappeared');
       if (c.day.settled !== today) throw new DayChanged();
+      const blocked = notFree(c);
+      if (blocked) throw blocked;
       const n = input.chapter;
       const status = ambitionStatus(content, c, today);
       const chapter = content.chapter(c.ambition.id, n);
@@ -270,6 +278,21 @@ export async function attemptChapter(deps: {
         });
       }
       const res = r.resolution;
+      // Slice 5 (tech design §8.2): an approach's Heat (the quiet way's +6) on any outcome, lazily at
+      // the residence city's rate. `first`: no Heat was ever had (no mission, no mark, no rival trip,
+      // nothing stored); `firsts.noticed` is the Noticed card's and is left alone below 25.
+      const approachHeat = chapter.story.check.approaches.find((a) => a.id === input.approachId)?.heat ?? 0;
+      const rateOn = heatRateOn(content, loaded.city);
+      const heat = approachHeat > 0 ? addHeat(heatTimerOf(c), now, rateOn, approachHeat) : null;
+      const firstHeat =
+        !!heat &&
+        heat.before === 0 &&
+        (c.heat?.value ?? 0) === 0 &&
+        (c.rivalTrips ?? 0) === 0 &&
+        !c.firsts?.mission &&
+        !c.firsts?.noticed &&
+        !c.firsts?.mark &&
+        (c.record?.marks.length ?? 0) === 0;
       const gains = applyGains(progressOf(c), {
         xp: res.rewards.xp.total,
         fxp: res.rewards.fxp.total,
@@ -313,6 +336,7 @@ export async function attemptChapter(deps: {
             ambition,
             today: tally,
             lastActionAt: new Date(now),
+            ...(heat ? { heat: heatDoc(heat.timer) } : {}),
           },
           $inc: { iron: res.rewards.iron.total, version: 1 },
         },
@@ -406,6 +430,20 @@ export async function attemptChapter(deps: {
             keepsake: keepsake.keepsake,
             art: itemArt(content, c, keepsake.id),
           },
+          ...(heat
+            ? {
+                heat: {
+                  before: heat.before,
+                  gain: approachHeat,
+                  after: heat.after,
+                  state: heat.stateAfter,
+                  stateBefore: heat.stateBefore,
+                  coolsAt:
+                    heat.stateAfter === 'cool' ? null : heatEta(heat.timer, now, rateOn, HEAT.states.noticed),
+                  first: firstHeat,
+                },
+              }
+            : {}),
           hooks: next
             ? [
                 copy.chapterHook(

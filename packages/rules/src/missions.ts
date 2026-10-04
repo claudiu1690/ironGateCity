@@ -142,6 +142,41 @@ export function wayCheck(i: {
   });
 }
 
+/**
+ * The check of a way exactly as `resolveMission` makes it, so the ticket's preview and the start
+ * share one computation (tech design §8.3): the caller's rows (the *First day* row), Local Standing
+ * (*Known in Coalport*), then the sources' `chancePct` rows and the place's rows (the close race on a
+ * speech mission, *Rival ground*), all by the type the mission is seen as (design §23.1 #6, #15).
+ */
+export function missionCheck(i: {
+  type: MissionType;
+  difficulty: number;
+  way: Pick<WaySpec, 'stats'>;
+  values: Stats;
+  prefer?: TrainableStat;
+  /** Successes so far in this city; label "Known in Coalport". */
+  standing: { successes: number; names: readonly string[]; cityName: string };
+  bonuses?: readonly CheckBonus[];
+  modifiers?: Modifiers;
+}): CheckBreakdown {
+  const m = i.modifiers ?? NO_MODIFIERS;
+  const seenAs = MISSION_TYPES[i.type].seenAs;
+  const label = `${i.standing.names[standingView(i.standing.successes).level] ?? 'Known'} in ${i.standing.cityName}`;
+  const standing = standingBonus(i.standing.successes, label);
+  return wayCheck({
+    way: i.way,
+    values: i.values,
+    difficulty: i.difficulty,
+    bonuses: [
+      ...(i.bonuses ?? []),
+      ...(standing ? [standing] : []),
+      ...ordinanceCheckBonuses(seenAs, m),
+      ...placeCheckBonuses(seenAs, m),
+    ],
+    ...(i.prefer ? { prefer: i.prefer } : {}),
+  });
+}
+
 /** Design §4.7: the way with the best chance for this player; ties go to content order. */
 export function suggestedWay(
   ways: ReadonlyArray<{ id: string }>,
@@ -396,18 +431,14 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
   const descriptor: ActionDescriptor =
     tagged.length > 0 ? { ...untagged, issueIds: tagged.map((t) => t.issueId) } : untagged;
 
-  const label = `${i.standing.names[standingView(i.standing.successes).level] ?? 'Known'} in ${i.standing.cityName}`;
-  const standing = standingBonus(i.standing.successes, label);
-  const check = wayCheck({
+  const check = missionCheck({
+    type: i.mission.type,
+    difficulty: i.mission.difficulty,
     way: i.way,
     values: i.values,
-    difficulty: i.mission.difficulty,
-    bonuses: [
-      ...(i.bonuses ?? []),
-      ...(standing ? [standing] : []),
-      ...ordinanceCheckBonuses(seenAs, m),
-      ...placeCheckBonuses(seenAs, m),
-    ],
+    standing: i.standing,
+    modifiers: m,
+    ...(i.bonuses ? { bonuses: i.bonuses } : {}),
     ...(i.prefer ? { prefer: i.prefer } : {}),
   });
   const drawn = rng.roll100();

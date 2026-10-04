@@ -5,6 +5,7 @@ import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc } from '@irongate/db'
 import {
   ENERGY,
   RANK_FXP,
+  RECORD,
   RESIDENCE,
   STANDING,
   TRAVEL,
@@ -12,6 +13,8 @@ import {
   cycleOf,
   dayKey,
   dayStart,
+  healthMax,
+  heatState,
   isMonday,
   projectEnergy,
   weekOf,
@@ -29,6 +32,16 @@ import { energyState } from '../services/views';
 import type { SessionUser } from '../trpc/context';
 import { applyCharacterSeed } from './characterSeed';
 import { HOUR_MS, formatUtc, nextDayAt, nextPhaseAt, phaseLabel, phaseOf } from './clock';
+import {
+  DevRefusal,
+  decideNow,
+  releaseNow,
+  rivalHomes,
+  riskStatus,
+  sendHeld,
+  setNextRunIn,
+  setStreet,
+} from './risk';
 import type { DevAction, DevActionResult, DevHomeCity, DevStatus } from './types';
 
 /**
@@ -64,7 +77,24 @@ const DEV_ACTIONS: readonly DevAction[] = [
   'level10',
   'irongate',
   'live',
+  // Slice 5 (tech design §8.6).
+  'heat',
+  'health',
+  'record',
+  'runIn',
+  'caught',
+  'cells',
+  'infirmary',
+  'release',
+  'decide',
+  'level6',
+  'rank3',
+  'goto',
+  'unbar',
 ];
+/** Slice 5 (tech design §8.6): the panel's *Level 6* and *Rank 3*. */
+const DEV_LEVEL = 6;
+const DEV_RANK = 3;
 const weekdayOf = (day: number) => WEEKDAY_NAMES[weekday(day)];
 /**
  * Boost me: Rank 3 and One of Us at home, and PC for a declare and more. Higher Standing than the
@@ -193,6 +223,7 @@ async function statusFor(
           ? { name: c.name, rank: c.rank, pc: c.pc, energy: energy.value, energyMax: energy.max }
           : null,
       home: c ? homeView(content, residenceCityId(c), city, now) : null,
+      risk: c ? await riskStatus(content, c, city, now) : null,
     },
   };
 }
@@ -222,15 +253,6 @@ function cityChanges(before: DevStatus, after: DevStatus): string[] {
   return out;
 }
 
-class DevRefusal extends Error {
-  constructor(
-    readonly statusCode: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
 async function runAction(
   deps: DevPanelDeps,
   action: DevAction,
@@ -247,6 +269,8 @@ async function runAction(
 
   let moved = false;
   let did = '';
+  /** Slice 5: the read path settles what the hook made due (a release, a run-in decided). */
+  let settle = false;
   switch (action) {
     case 'hour':
       clock.advance(HOUR_MS);
@@ -374,12 +398,138 @@ async function runAction(
       did = `Energy ${ENERGY.max} / ${ENERGY.max}`;
       break;
     }
+    // Slice 5 (tech design §8.6): each is a test hook's write, then the read path's settle.
+    case 'heat': {
+      const { me } = needCharacter();
+      const value = Number(body.target);
+      if (!Number.isInteger(value) || value < 0 || value > 100)
+        throw new DevRefusal(400, 'target is Heat 0..100');
+      const { doc } = await loadCharacter(me, content, clock.now());
+      await applyCharacterSeed(doc, { heat: value }, clock.now());
+      did = `Heat ${value} · ${heatState(value)}`;
+      break;
+    }
+    case 'health': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const max = healthMax(doc.level);
+      const value =
+        body.target === 'full' ? max : body.target === 'half' ? Math.floor(max / 2) : Number(body.target);
+      if (!Number.isInteger(value) || value < 0) throw new DevRefusal(400, 'target is full, half or a value');
+      await applyCharacterSeed(doc, { health: value }, clock.now());
+      did = `Health ${Math.min(value, max)} / ${max}`;
+      break;
+    }
+    case 'record': {
+      const { me } = needCharacter();
+      const n = Number(body.target);
+      if (!Number.isInteger(n) || n < 0 || n > 20)
+        throw new DevRefusal(400, 'target is a number of marks 0..20');
+      const { doc } = await loadCharacter(me, content, clock.now());
+      // Today's minor marks: they fade together, 14 days on.
+      await applyCharacterSeed(
+        doc,
+        { marks: Array.from({ length: n }, () => ({ kind: 'minor' as const, daysAgo: 0 })) },
+        clock.now(),
+      );
+      did =
+        n === 0
+          ? 'Record clean'
+          : `Record: ${n} mark${n === 1 ? '' : 's'} (fade in ${RECORD.minorFadeDays} days)`;
+      break;
+    }
+    case 'runIn': {
+      const { home } = needCharacter();
+      const target = String(body.target ?? '');
+      const f = setNextRunIn(content, home, target);
+      did =
+        f.runIn === 'never'
+          ? 'Next act: no run-in'
+          : f.opponentId
+            ? `Next act: a run-in with ${content.opponent(f.opponentId)?.label ?? f.opponentId}`
+            : 'Next act: a run-in (the place draws the opponent)';
+      break;
+    }
+    case 'caught': {
+      const { home } = needCharacter();
+      setStreet(content, home, { caught: 'always' });
+      did = 'Next act: caught';
+      break;
+    }
+    case 'cells':
+    case 'infirmary': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      await sendHeld(content, doc, action, clock.now());
+      did = action === 'cells' ? 'Taken in: the cells' : 'Taken to the infirmary';
+      settle = true;
+      break;
+    }
+    case 'release': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      await releaseNow(doc, clock.now());
+      did = 'Released now (the release modal waits)';
+      settle = true;
+      break;
+    }
+    case 'decide': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      await decideNow(doc, clock.now());
+      did = 'The run-in is decided by luck (the result modal waits)';
+      settle = true;
+      break;
+    }
+    case 'level6': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      if (doc.level >= DEV_LEVEL) {
+        did = `Already Level ${DEV_LEVEL}`;
+        break;
+      }
+      await applyCharacterSeed(doc, { level: DEV_LEVEL }, clock.now());
+      did = `Level ${DEV_LEVEL}`;
+      break;
+    }
+    case 'rank3': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      if (doc.rank >= DEV_RANK) {
+        did = `Already Rank ${DEV_RANK}`;
+        break;
+      }
+      await applyCharacterSeed(doc, { rank: DEV_RANK }, clock.now());
+      did = `Rank ${DEV_RANK} (FXP ${RANK_FXP[DEV_RANK - 1]!})`;
+      break;
+    }
+    case 'goto': {
+      // No ticket, no card: the character simply stands in a rival home city.
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const target = rivalHomes(content, doc).find((x) => x.cityId === String(body.target ?? ''));
+      if (!target) throw new DevRefusal(400, 'target is a rival home city id');
+      if (doc.held?.state === 'in') throw new DevRefusal(409, `in the ${doc.held.kind}`);
+      await applyCharacterSeed(doc, { cityId: target.cityId }, clock.now());
+      did = `Now in ${target.cityName} (rival ground)`;
+      break;
+    }
+    case 'unbar': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const n = (doc.barred ?? []).length;
+      if (n > 0) await Character.updateOne({ _id: doc._id }, { $set: { barred: [] }, $inc: { version: 1 } });
+      did = n > 0 ? 'The bar is lifted' : 'No bar to lift';
+      break;
+    }
   }
 
   if (moved) {
     // What the worker's job does at 00:01, then the player's own settlement (today's paper).
     await runCityDay(content, clock.now());
     if (user && c) await loadCharacter(user, content, clock.now());
+  } else if (settle && user) {
+    await loadCharacter(user, content, clock.now());
   }
   const { status: after } = await statusFor(deps, user);
   const line = moved ? [`Now ${after.utc}`, ...cityChanges(before, after)].join(' · ') : did;

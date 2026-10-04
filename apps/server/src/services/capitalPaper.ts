@@ -27,6 +27,7 @@ import {
   electionKey,
   isMonday,
   nextMonday,
+  pressureOn,
   weekOf,
 } from '@irongate/rules';
 import type {
@@ -39,6 +40,7 @@ import type {
   PaperView,
   PoliticalFacts,
   PoliticalPlaceholder,
+  RiskPlaceholder,
 } from '@irongate/rules';
 import { leaderOf } from './actionService';
 import { districtWord } from './cityService';
@@ -53,7 +55,7 @@ import { residenceOf } from './residence';
  * write is needed. Also the paper's Issues section (screens §7.1).
  */
 
-type Vars = Partial<Record<PoliticalPlaceholder | CapitalPlaceholder, string>>;
+type Vars = Partial<Record<PoliticalPlaceholder | CapitalPlaceholder | RiskPlaceholder, string>>;
 type VarsByKind = NonNullable<PoliticalFacts['varsByKind']>;
 
 const fname = (content: GameContent, f: FactionId) => content.faction(f).shortName;
@@ -143,7 +145,10 @@ export async function capitalFacts(
     districtLeftBattleground: false,
     groundswellStarted: false,
     districtLine: false,
+    // Slice 5 (tech design §11.2): what the city's home faction lost to rivals yesterday, `{lost}`.
+    moraleLostToRivals: pressureOn(city?.rivalPressure, today - 1) / 1_000,
   };
+  vars.lost = (facts.moraleLostToRivals ?? 0).toFixed(1);
 
   if (opts.personal) {
     if (r.sinceDay === today - 1 && r.cityId === capital && r.districtId) {

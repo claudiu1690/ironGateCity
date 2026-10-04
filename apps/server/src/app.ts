@@ -13,6 +13,8 @@ import type { Auth } from './auth';
 import { applyCharacterSeed } from './dev/characterSeed';
 import { setWeekIssues } from './dev/issues';
 import { registerDevPanel } from './dev/panel';
+import { CharacterRiskBody, zodLine } from './dev/risk';
+import { registerRiskHooks } from './dev/riskRoutes';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
 import { captureException } from './sentry';
@@ -136,6 +138,10 @@ export async function buildApp({
         residence?: { cityId?: unknown; districtId?: unknown };
         irongateSuccesses?: unknown;
       };
+      // Slice 5 (tech design §8.5): Heat, Health, the record's marks, AGI, STR, CHA's base, the Rank.
+      // (Unknown keys, the slice 3–4 fields, are stripped from this parse and read below.)
+      const risk = CharacterRiskBody.safeParse(body);
+      if (!risk.success) return reply.code(400).send({ error: zodLine(risk.error) });
       const c = await Character.findOne({ userId: session.user.id }).lean<CharacterDoc>();
       if (!c) return reply.code(404).send({ error: 'no character yet' });
       const num = (v: unknown) => (v === undefined ? undefined : Number(v));
@@ -171,6 +177,7 @@ export async function buildApp({
           irongateSuccesses: num(body.irongateSuccesses),
           ...(cityId !== undefined ? { cityId } : {}),
           ...(residence ? { residence } : {}),
+          ...risk.data,
         },
         now(),
       );
@@ -209,6 +216,9 @@ export async function buildApp({
         return reply.code(400).send({ error: (err as Error).message });
       }
     });
+
+    // Slice 5 (tech design §8.5): the street, held and run-in hooks; turns the street hooks on.
+    registerRiskHooks(app, { auth, content, now });
 
     // The dev time-skip panel (README "Reviewing with the dev panel"): same guard, same clock.
     registerDevPanel(app, {
