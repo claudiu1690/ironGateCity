@@ -39,6 +39,7 @@ export default defineConfig({
         /quarters\.spec\.ts/,
         /missions\.spec\.ts/,
         /(^|[\\/])rival\.spec\.ts$/,
+        /qa\.slice5\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -121,6 +122,14 @@ export default defineConfig({
       // Not `arrival.spec.ts`.
       testMatch: /(^|[\\/])rival\.spec\.ts$/,
       dependencies: ['missions'],
+      use: { ...devices['Pixel 7'] },
+    },
+    // QA slice 5: the new screens' targets and layout, double taps, the keyboard, plain words and the
+    // overviews; after rival ground (it sets no clock of its own).
+    {
+      name: 'qa-risk',
+      testMatch: /qa\.slice5\.spec\.ts/,
+      dependencies: ['rival'],
       use: { ...devices['Pixel 7'] },
     },
   ],

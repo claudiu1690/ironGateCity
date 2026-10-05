@@ -125,7 +125,7 @@ export const illegalMissionFixture: MissionView = {
   remembered: 'agi',
   suggested: 'agi',
   risk: { heat: 6, runInChance: 12, marks: 1 },
-  placeTags: [{ kind: 'record', ironPct: -10 }],
+  placeTags: [{ kind: 'record', ironPct: -10, level: 'onFile' }],
   art: { rung: 'scene', asset: scene('scene.mission-posters') },
 };
 
@@ -219,6 +219,7 @@ export const missionResultFixture: ActionResult = {
         id: 'street-enforcer',
         label: 'A Vanguard street enforcer',
         portrait: portrait('portrait.street-enforcer'),
+        pronoun: 'he',
       },
       choice: 'pay',
       by: 'player',
@@ -255,6 +256,7 @@ export const takenInResultFixture: ActionResult = {
         id: 'constable',
         label: 'A constable of the city police',
         portrait: portrait('portrait.kessler'),
+        pronoun: 'he',
       },
       choice: 'run',
       steps: [
@@ -275,7 +277,7 @@ export const takenInResultFixture: ActionResult = {
       coolsAt: T0 + 400 * MIN,
       first: false,
     },
-    record: { added: 1, escalated: false, before: 'clean', after: 'onFile', marks: 1, first: true },
+    record: { added: 1, escalated: false, before: 'clean', after: 'onFile', marks: 1, first: true, allMinor: true },
     sentTo: {
       kind: 'cells',
       stayId: '6ac2a5643d2b4ff7628ee841',

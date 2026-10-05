@@ -156,7 +156,7 @@ export function RiskRows({
           <HelpButton
             notes={[copy.risk.help.health()]}
             label="What Health means"
-            className="font-body text-[14px]"
+            className="min-w-11 font-body text-[14px]"
           >
             <span className={helpMark}>{copy.risk.health}</span>
           </HelpButton>
@@ -170,7 +170,8 @@ export function RiskRows({
           <HelpButton
             notes={[copy.risk.help.heat()]}
             label="What Heat means"
-            className="font-body text-[14px]"
+            // QA m9: "Heat" alone is 31 px wide; the target is at least 44 × 44.
+            className="min-w-11 font-body text-[14px]"
           >
             <span className={helpMark}>Heat</span>
           </HelpButton>
@@ -192,7 +193,7 @@ export function RiskRows({
             <HelpButton
               notes={[copy.risk.help.record()]}
               label="What your record means"
-              className="font-body text-[14px]"
+              className="min-w-11 font-body text-[14px]"
             >
               <span className={helpMark}>{copy.risk.yourRecord}</span>
             </HelpButton>
@@ -414,10 +415,17 @@ export function EncounterModal({ pending: p, open, onChoose, choosing, notice }:
 // The run-in block of the mission result (screens §4.3), above the headline.
 // ---------------------------------------------------------------------------------------------
 
-/** The reason line when the choice did not come off (screens §4.3). */
+/**
+ * The reason line when the choice did not come off (screens §4.3). QA fixes n12: by the band of the
+ * row that didn't come off: *Good odds* is bad luck, *Fair odds* only fair, a *Long shot* names the
+ * stat (and where it trains, m4). Never *Try again*.
+ */
 export function runInReason(r: NonNullable<StreetView['runIn']>, places: TrainingPlaces = {}): string | null {
   const failed = r.steps.some((s) => !s.ok) || r.outcome === 'lost';
   if (!failed) return null;
+  const band = r.steps.find((s) => !s.ok)?.band;
+  if (band === 'good') return copy.reason.runIn.luckGood;
+  if (band === 'fair') return copy.reason.runIn.luckFair;
   switch (r.cause) {
     case 'power':
       return copy.risk.outmatched;
@@ -426,7 +434,7 @@ export function runInReason(r: NonNullable<StreetView['runIn']>, places: Trainin
     case 'cha':
       return copy.reason.statLowCha;
     case 'luck':
-      return copy.reason.luckGood;
+      return copy.reason.runIn.luckGood;
     default:
       return null;
   }
@@ -459,7 +467,7 @@ export function RunInBlock({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="label-caps text-[10px] font-semibold">{r.opponent.label}</span>
         <p className="font-body text-[13.5px] leading-snug" data-testid="run-in-did">
-          {copy.risk.didLine(r.by, r.steps)} <span className="text-text-2">{r.line}</span>
+          {copy.risk.didLine(r.by, r.steps, r.opponent.pronoun)} <span className="text-text-2">{r.line}</span>
         </p>
         {hp && (
           <p className="font-mono text-[11.5px]" data-testid="run-in-health">

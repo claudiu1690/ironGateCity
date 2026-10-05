@@ -112,7 +112,7 @@ export const coalportMissions: MissionsByPlace = {
       requires: { rank: 3 },
       target: 'collective',
       pool: ['branch-inspector', 'city-police'],
-      briefing: "The Collective's duplicator runs in the back room of the Union Hall every night and five hundred flyers come out of it by morning. The yard wall is low, the caretaker's round is at eleven, and a tradesman with a box of parts gets through the front door without a word. One bent drum and the branch is quiet for a week.",
+      briefing: "The Collective's duplicator runs in the back room of the Union Hall at night, and five hundred flyers come out of it by morning. The yard wall is low, the caretaker's round is at eleven, and a tradesman with a box of parts walks in at the front door. One bent drum and the branch is quiet for a week.",
       ways: [
         { id: 'agi', title: 'Over the yard wall at night', stats: ['agi'], hint: 'The back window, the dark room, the drum. In and out before the round.' },
         { id: 'cha-int', title: 'Walk in as a tradesman', stats: ['cha', 'int'], hint: 'A box, a cap, a grievance about the stencils. Nobody questions a man with a box.' },

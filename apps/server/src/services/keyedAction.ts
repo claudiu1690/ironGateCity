@@ -2,7 +2,8 @@ import { ActionLog } from '@irongate/db';
 import type { ActionLogDoc } from '@irongate/db';
 import type { ClientSession, Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
-import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction, mayHaveLostToSameKey } from './txn';
+import { assertKeyFree } from './keyGuard';
+import { DayChanged, KeyTaken, MAX_ATTEMPTS, VersionConflict, inTransaction, mayHaveLostToSameKey } from './txn';
 
 /**
  * The stored result for a key (ADR 0002), or null. `sameInput` decides whether a stored row is this
@@ -27,8 +28,15 @@ export async function storedResult<R>(
  * retry, then one transaction per try; after a version miss, a day change, E11000 or a refusal,
  * the winner's stored result for the same key if there is one (QA M1); bounded retries; one last
  * lookup before ACTION_CONFLICT. `write` resolves and writes inside the session.
+ *
+ * Slice 5 fix round (QA M1): every run of the transaction first looks the key up in every keyed
+ * collection in its own snapshot (`assertKeyFree`). The driver re-runs the callback after a write
+ * conflict, and the copy that lost then sees the winner's row and answers with it, whichever
+ * collection the winner wrote to.
  */
 export async function runKeyedAction<R>(i: {
+  /** The request's key: looked up in every keyed collection before each transaction writes. */
+  key: { characterId: Types.ObjectId; idempotencyKey: string };
   stored: () => Promise<R | null>;
   write: (session: ClientSession, txAttempts: () => number) => Promise<R>;
   /** Called when the City Day changed mid-request; settles it before the retry. */
@@ -41,7 +49,10 @@ export async function runKeyedAction<R>(i: {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       return await inTransaction(
-        (session) => i.write(session, () => txAttempts),
+        async (session) => {
+          await assertKeyFree(session, i.key.characterId, i.key.idempotencyKey);
+          return i.write(session, () => txAttempts);
+        },
         () => {
           txAttempts += 1;
         },
@@ -53,6 +64,8 @@ export async function runKeyedAction<R>(i: {
       if (mayHaveLostToSameKey(err)) {
         const winner = await i.stored();
         if (winner) return winner;
+        // The key is taken by a different act (another collection's row): not this request's.
+        if (err instanceof KeyTaken) throw gameError('CONFLICT', 'KEY_REUSED', { idempotencyKey: i.key.idempotencyKey });
       }
       if (err instanceof VersionConflict) continue;
       if (err instanceof DayChanged) {

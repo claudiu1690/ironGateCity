@@ -20,8 +20,9 @@ const KIND_LABELS: Record<LocationKind, string> = {
   hotel: 'Hotel',
   press: 'Press',
   'faction-hq': 'Party hall',
-  hospital: 'Hospital',
-  jail: 'Jail',
+  // QA slice 5 m1: the player reads *the infirmary* and *the police*, never *hospital* or *jail*.
+  hospital: 'Infirmary',
+  jail: 'Police',
   court: 'Courts',
   university: 'University',
   library: 'Library',
@@ -262,6 +263,11 @@ export const copy = {
     luckGood: "Bad luck. The odds were good; it just didn't come off. Try again.",
     luckFair:
       'The odds were only fair. Every win here builds your reputation, and reputation lifts the odds.',
+    /** A run-in row that didn't come off, by its band (design/slice-5-fixes.md §8 n12). */
+    runIn: {
+      luckGood: "Bad luck. The odds were good; it just didn't come off.",
+      luckFair: 'The odds were only fair.',
+    },
     failure: (cause: string) => `It went badly. ${cause}`,
     /** ×3 with a shared cause: "2 of 3 didn't come off. …" (the counts are the attempt rows'). */
     batch: (n: string, of: string, cause: string) => `${n} of ${of} didn't come off. ${cause}`,
@@ -703,7 +709,8 @@ export const copy = {
     inTheCapital: "You're in the capital",
     nothingHappened: 'The train was on time. Nothing happened, which is rare.',
     /** Slice-4 fixes §8 (QA n2): the arrival's body above a card still to answer. */
-    cardBelow: "The train was on time. One thing happened on the way: it's below, and you can still answer it.",
+    cardBelow:
+      "The train was on time. One thing happened on the way: it's below, and you can still answer it.",
     boardTheTrainTo: (city: string, fare: number, min: number) =>
       `Board the train to ${city} · ${fare} Iron · ${min} min`,
     seeTheNationMap: 'See the nation map',
@@ -969,11 +976,8 @@ export const copy = {
     pressureCapped: 'The town has had enough today · no opinion',
     cantLiveHere: "You can't live or stand here",
     yourRecordPart: (n: number) => `your record −${n}`,
-    /**
-     * A ticket's record tag (`PlaceTagView` `record`): the design names none (phase A's placeholder,
-     * tech design Deviations); the house form of a ticket's Iron tag, *Street Fund · +25 % Iron*.
-     */
-    recordTag: (pct: number) => `Your record · −${pct} % Iron`,
+    /** A ticket's record tag (design/slice-5-fixes.md §7.1): *On file · −10 % Iron*, the level word. */
+    recordTag: (level: string, pct: number) => `${level} · −${pct} % Iron`,
     /** The result's one button after the cells or the infirmary (screens §4.3). */
     toCells: 'To the cells',
     toInfirmary: 'To the infirmary',
@@ -1084,8 +1088,44 @@ export const copy = {
     nameTaken: (n: number, level: string) =>
       `The police took your name · ${n} ${n === 1 ? 'mark' : 'marks'} · ${level}`,
     secondTime: 'Second time this week: three marks',
-    recordCard:
-      "ON FILE · One mark. It fades in a fortnight if there's no second; Iron from missions is down a tenth until then.",
+    /** *One mark*, *Two marks* … in words for the record cards (design/slice-5-fixes.md §4). */
+    marksWords: (n: number) => {
+      const w = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'][n - 1];
+      return `${w ?? n} ${n === 1 ? 'mark' : 'marks'}`;
+    },
+    /** The record cards as the design writes them (screens §11; design/slice-5-fixes.md §4). */
+    recordCards: {
+      onFileMinor:
+        "ON FILE · {marksLine}. {It fades|They fade} in a fortnight if there's no more; Iron from missions is down a tenth until then.",
+      onFile:
+        "ON FILE · {marksLine}, and they don't fade. Iron from missions is down a tenth; 30 Political Capital strikes one off.",
+      repeatMinor:
+        "REPEAT OFFENDER · {marksLine}. Iron from missions is down a fifth and the police look harder at you. They fade in a fortnight if there's no more.",
+      repeat:
+        "REPEAT OFFENDER · {marksLine}. Iron from missions is down a fifth and the police look harder at you. These don't fade; 30 Political Capital strikes one off.",
+      notorious:
+        "NOTORIOUS · {marksLine}. Iron from missions is down a third, bail is doubled, and the courts, the colleges and the Alliance's halls are shut to you. 30 Political Capital strikes one off.",
+    },
+    /**
+     * The card on the first crossing into a record level (QA m5): the fade clause only when every
+     * live mark is minor.
+     */
+    recordCard: (level: 'onFile' | 'repeat' | 'notorious', marks: number, allMinor: boolean): string => {
+      const c = copy.risk.recordCards;
+      const t =
+        level === 'notorious'
+          ? c.notorious
+          : level === 'repeat'
+            ? allMinor
+              ? c.repeatMinor
+              : c.repeat
+            : allMinor
+              ? c.onFileMinor
+              : c.onFile;
+      return t
+        .replace('{marksLine}', copy.risk.marksWords(marks))
+        .replace('{It fades|They fade}', marks === 1 ? 'It fades' : 'They fade');
+    },
 
     // The record (screens §2.4, the Me tab and the desk).
     yourRecord: 'Your record',
@@ -1130,37 +1170,75 @@ export const copy = {
     leaveItToLuck: 'Leave it to luck',
     oneChoice: "One choice. If you close the game, it's left to luck.",
     /**
-     * The run-in block's *did* line (tech design §10.1), worded from the steps in order: "You tried to
-     * run; they were faster. You fought. You lost." DRAFT for the designer (the design gives only the
-     * example); pronoun-free (*they*, as the row's *Pay them off*), since a picket is three men.
+     * The run-in block's *did* line (design/slice-5-fixes.md §7.3; screens §11), as the design writes
+     * it: `{he}` *he* / *they* (the opponent's pronoun, content) with its verbs, `{won|lost}` the fight.
+     * One sentence for a straight row, two for a failed row and its fight, one merged sentence when luck
+     * chose; an unanswered run-in prefixes *You didn't answer, so* to luck's line. Luck never pays.
      */
     did: {
-      fight: 'You fought.',
-      won: 'You won.',
-      lost: 'You lost.',
+      fightWon: 'You fought and won.',
+      fightLost: 'You fought and lost.',
       ran: 'You ran.',
-      runFailed: 'You tried to run; they were faster.',
+      runFailed: 'You tried to run; {he} {was} faster.',
       talked: 'You talked your way out.',
-      talkFailed: "You tried to talk your way out; they weren't having it.",
-      paid: 'You paid them off.',
-      payFailed: 'You paid; they took it and came on anyway.',
-      luck: 'You left it to luck.',
-      auto: 'You left it, so luck chose.',
+      talkFailed: "You tried to talk; {he} {wasn't} having it.",
+      paid: 'You paid {him} off.',
+      payFailed: 'You paid; {he} pocketed it and came at you anyway.',
+      luckFight: 'Luck chose to fight, and you {won|lost}.',
+      luckRan: 'Luck chose to run, and you got away.',
+      luckRunFailed: 'Luck chose to run; {he} {was} faster, and you {won|lost} the fight.',
+      luckTalked: 'Luck chose to talk, and {he} let you go.',
+      luckTalkFailed: "Luck chose to talk; {he} {wasn't} having it, and you {won|lost} the fight.",
+      auto: "You didn't answer, so luck chose …",
     },
-    /** The did line from `StreetView.runIn`'s `by` and `steps` (a failed row is followed by the fight). */
+    /** The did line from `StreetView.runIn`'s `by` and `steps` and the opponent's pronoun. */
     didLine: (
       by: 'player' | 'luck' | 'auto',
       steps: ReadonlyArray<{ row: 'fight' | 'run' | 'talk' | 'pay'; ok: boolean }>,
+      pronoun: 'he' | 'they' = 'he',
     ): string => {
       const d = copy.risk.did;
-      const parts: string[] = by === 'luck' ? [d.luck] : by === 'auto' ? [d.auto] : [];
-      for (const s of steps) {
-        if (s.row === 'fight') parts.push(d.fight, s.ok ? d.won : d.lost);
-        else if (s.row === 'run') parts.push(s.ok ? d.ran : d.runFailed);
-        else if (s.row === 'talk') parts.push(s.ok ? d.talked : d.talkFailed);
-        else parts.push(s.ok ? d.paid : d.payFailed);
+      const first = steps[0];
+      if (!first) return '';
+      const fight = first.row === 'fight' ? first : steps.find((s, i) => i > 0 && s.row === 'fight');
+      const they = pronoun === 'they';
+      const fill = (t: string) =>
+        t
+          .replaceAll('{he}', they ? 'they' : 'he')
+          .replaceAll('{him}', they ? 'them' : 'him')
+          .replaceAll('{was}', they ? 'were' : 'was')
+          .replaceAll("{wasn't}", they ? "weren't" : "wasn't")
+          .replaceAll('{won|lost}', fight?.ok ? 'won' : 'lost');
+      const fought = fight?.ok ? d.fightWon : d.fightLost;
+      if (by === 'player' || first.row === 'pay') {
+        const row =
+          first.row === 'fight'
+            ? null
+            : first.row === 'run'
+              ? first.ok
+                ? d.ran
+                : d.runFailed
+              : first.row === 'talk'
+                ? first.ok
+                  ? d.talked
+                  : d.talkFailed
+                : first.ok
+                  ? d.paid
+                  : d.payFailed;
+        return fill(row === null ? fought : first.ok ? row : `${row} ${fought}`);
       }
-      return parts.join(' ');
+      const luck =
+        first.row === 'fight'
+          ? d.luckFight
+          : first.row === 'run'
+            ? first.ok
+              ? d.luckRan
+              : d.luckRunFailed
+            : first.ok
+              ? d.luckTalked
+              : d.luckTalkFailed;
+      const line = fill(luck);
+      return by === 'auto' ? d.auto.replace('luck chose …', `l${line.slice(1)}`) : line;
     },
     /** The receipt's parts (screens §4.3). */
     parts: {
@@ -1192,7 +1270,7 @@ export const copy = {
     released: {
       stamp: 'Released',
       headline: "Out, with the duty officer's regards",
-      body: 'Heat is down to 25 and the duty officer has your page. He says mind how you go.',
+      body: 'Heat is 25 and the duty officer has your page. He says mind how you go.',
     },
     bailPaid: (n: number) => `−${n} Iron · bail`,
     deported: {

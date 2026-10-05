@@ -7,6 +7,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
+import { trainingPlacesOf } from '../features/game/trainingPlaces';
 import { landingRoute } from '../features/street/RunInGate';
 import { setResultModalOpen } from '../lib/modalGate';
 import { isNetworkError, trpc, trpcClient } from '../lib/trpc';
@@ -222,6 +223,7 @@ export function HeldPage() {
         onPlaceStat={stat.place}
         placing={stat.placing}
         factionNames={names}
+        trainingPlaces={trainingPlacesOf(city.data)}
       />
     </>
   );

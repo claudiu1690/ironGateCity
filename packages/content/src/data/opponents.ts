@@ -16,8 +16,9 @@ export const opponents: Opponent[] = [
     wits: 10,
     payOff: 60,
     portrait: 'portrait.street-enforcer',
+    pronoun: 'he',
     lines: {
-      appears: "A man in a good coat steps off the kerb and asks what party you're with. He knows.",
+      appears: "A man in a flat cap steps off the kerb and asks what party you're with. He knows.",
       won: 'He goes down on the setts and stays there, swearing. You walk on, not fast.',
       lost: 'The setts come up to meet you. The last thing you see is his boots.',
       ran: "You're round the corner before he's off the kerb. He shouts your party's name after you.",
@@ -34,6 +35,7 @@ export const opponents: Opponent[] = [
     wits: 12,
     payOff: 150,
     portrait: 'portrait.vanguard-doorman',
+    pronoun: 'he',
     lines: {
       appears: 'The doorman fills the doorway. He has your face and he has all evening.',
       won: "He sits down in the doorway, surprised, and lets you past. He'll remember.",
@@ -52,12 +54,13 @@ export const opponents: Opponent[] = [
     wits: 11,
     payOff: 80,
     portrait: 'portrait.strike-picket',
+    pronoun: 'they',
     lines: {
-      appears: 'Three men with armbands come off the gate. "You\'re not from the branch."',
+      appears: 'Three men come off the gate, one with a placard. "You\'re not from the branch."',
       won: 'The big one goes down and the other two decide the gate matters more. You walk.',
       lost: 'They put you in the gutter by the gate and go back to their brazier.',
       ran: "You're through the gate and gone before the third one has his cap on.",
-      talked: '"I\'m from the capital," you say, with the right accent, and the armbands let you through.',
+      talked: '"I\'m from the capital," you say, with the right accent, and the picket lets you through.',
       paid: 'The big one pockets it. "For the strike fund." They turn back to the brazier.',
     },
   },
@@ -71,6 +74,7 @@ export const opponents: Opponent[] = [
     payOff: null,
     fightPct: -10,
     portrait: 'portrait.branch-inspector',
+    pronoun: 'he',
     lines: {
       appears: "A small man with a book steps out of a doorway. He's written your face down already.",
       won: "The book goes in the gutter and so does he. He'll write that down too.",
@@ -89,6 +93,7 @@ export const opponents: Opponent[] = [
     wits: 10,
     payOff: 50,
     portrait: 'portrait.party-thug',
+    pronoun: 'he',
     lines: {
       appears: 'A big man with a party badge and a quiet voice asks you to step into the yard.',
       won: 'He goes down on the cobbles, surprised, and asks you to leave, which you do.',
@@ -107,13 +112,14 @@ export const opponents: Opponent[] = [
     wits: 14,
     payOff: 300,
     portrait: 'portrait.kessler',
+    pronoun: 'he',
     lines: {
       appears: 'A constable steps under the lamp and asks for your name. He has a notebook and a whistle.',
       won: "He goes down and the whistle goes with him. You've a minute before the rest come.",
       lost: 'The whistle goes before you do, and so do you. The cells.',
       ran: "You're two streets away before the whistle. He has your coat, not your face.",
       talked: '"On my way home, constable," and the right accent, and he lets you go with a look.',
-      paid: 'The notebook closes. "Mind how you go." Three hundred marks is the going rate.',
+      paid: 'The notebook closes. "Mind how you go." Three hundred Iron is the going rate.',
     },
   },
 ];

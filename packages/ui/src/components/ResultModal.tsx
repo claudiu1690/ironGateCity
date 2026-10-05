@@ -927,7 +927,8 @@ function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<Fa
       <ReceiptRow
         key="opinion"
         label={copy.risk.opinionAgainst(tname, against.placeName ?? r.place.cityName)}
-        value={`${formatOpinionDelta(-Math.abs(against.applied))} %`}
+        // QA fixes n4: points, never a `%` (the share's move carries the %).
+        value={formatOpinionDelta(-Math.abs(against.applied))}
         note={copy.reward.opinionMove(tname, formatShare(against.shareBefore), formatShare(against.shareAfter))}
         testId="reward-opinion"
       />,
@@ -976,12 +977,23 @@ function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<Fa
 }
 
 /** "+40 and Rested +5" (the base and its parts), or null when the line is all base. */
+/** Slice 5's receipt parts in the screens' words (screens §4.3; QA fixes n4): lower case, joined by *·*. */
+const RISK_PARTS: Record<string, (n: number) => string> = {
+  rivalGround: (n) => copy.risk.parts.rivalGround(Math.abs(n)),
+  fullStrength: (n) => copy.risk.parts.fullStrength(Math.abs(n)),
+  paidOff: (n) => copy.risk.parts.paidOff(Math.abs(n)),
+  record: (n) => copy.risk.yourRecordPart(Math.abs(n)),
+};
+
 function partsNote(line: RewardLine): string | null {
-  if (line.parts && line.parts.length > 0)
-    return copy.reward.parts(
-      formatSigned(line.base),
-      line.parts.map((p) => `${p.label} ${formatSigned(p.amount)}`).join(' and '),
+  if (line.parts && line.parts.length > 0) {
+    const risk = line.parts.some((p) => RISK_PARTS[p.id ?? '']);
+    const words = line.parts.map((p) =>
+      RISK_PARTS[p.id ?? ''] ? RISK_PARTS[p.id!]!(p.amount) : `${p.label} ${formatSigned(p.amount)}`,
     );
+    if (risk) return [formatSigned(line.base), ...words].join(' · ');
+    return copy.reward.parts(formatSigned(line.base), words.join(' and '));
+  }
   if (line.bonus > 0) return copy.reward.parts(formatSigned(line.base), `${formatSigned(line.bonus)} bonus`);
   return null;
 }
@@ -1201,7 +1213,14 @@ function StreetLines({
   if (rec && rec.added > 0) {
     lines.push({ id: 'record', text: copy.risk.nameTaken(rec.marks, recordWord(rec.after)) });
     if (rec.escalated) lines.push({ id: 'record-escalated', text: copy.risk.secondTime, tone: 'text-failure' });
-    if (rec.first) lines.push({ id: 'record-card', text: copy.risk.recordCard, card: true });
+    // QA m5: the card of the level reached, on its first crossing; the fade clause only when every
+    // live mark is minor (a result stored before the fix has no `allMinor`: minor unless escalated).
+    if (rec.first && rec.after !== 'clean')
+      lines.push({
+        id: 'record-card',
+        text: copy.risk.recordCard(rec.after, rec.marks, rec.allMinor ?? !rec.escalated),
+        card: true,
+      });
   }
   const agi = street?.agility ?? null;
   if (agi && agi.quarters > 0 && !(stat && stat.stat === 'agi'))

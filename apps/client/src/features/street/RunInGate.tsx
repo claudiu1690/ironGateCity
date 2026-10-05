@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePerformAction } from '../action/usePerformAction';
 import { noticeFor } from '../game/errors';
 import { useCharacter, usePlaceStat } from '../game/hooks';
+import { trainingPlacesOf } from '../game/trainingPlaces';
 import { setResultModalOpen } from '../../lib/modalGate';
 import { isNetworkError, trpc, trpcClient } from '../../lib/trpc';
 import { noteServerNow, serverNow } from '../../lib/useNow';
@@ -144,6 +145,12 @@ export function RunInGate() {
 
   const encounterOpen = !!pending && runIn?.state === 'pending';
   const resultOpen = !encounterOpen && !!shown;
+  // QA m4: the result's reason line names where the stat trains, in the city the run-in was in.
+  const resultCityId = shown?.place.cityId ?? character?.cityId ?? '';
+  const city = useQuery({
+    ...trpc.city.get.queryOptions({ cityId: resultCityId }),
+    enabled: resultOpen && !!resultCityId,
+  });
   useEffect(() => {
     setResultModalOpen(resultOpen || encounterOpen);
   }, [resultOpen, encounterOpen]);
@@ -179,6 +186,7 @@ export function RunInGate() {
         onPlaceStat={stat.place}
         placing={stat.placing}
         factionNames={names}
+        trainingPlaces={trainingPlacesOf(city.data)}
         onSentTo={() => void onContinue(true)}
         sentToPending={closing}
       />

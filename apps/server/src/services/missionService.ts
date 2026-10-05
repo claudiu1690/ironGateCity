@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import type { GameContent, LocatedMission } from '@irongate/content';
 import { ActionLog, Character, Encounter } from '@irongate/db';
 import type { CharacterDoc, EncounterDoc } from '@irongate/db';
@@ -25,6 +24,7 @@ import type {
   MissionFinal,
   MissionStart,
   OrdersState,
+  RecordLevel,
   RunInOutcome,
   RunInPending,
 } from '@irongate/rules';
@@ -37,6 +37,7 @@ import { branchEndorseIfFiled } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { createStayInTx, heldPlace } from './heldService';
 import { runKeyedAction } from './keyedAction';
+import { keySeed } from './keyGuard';
 import { missionCtx, missionInput } from './missionCtx';
 import { buildMissionResult } from './missionResult';
 import type { RunInBlock } from './missionResult';
@@ -166,6 +167,7 @@ export async function startMission(deps: {
   const force = streetHooks.take(c0._id.toHexString(), input.idempotencyKey);
 
   return runKeyedAction<ActionResult | RunInPending>({
+    key: { characterId: c0._id, idempotencyKey: input.idempotencyKey },
     stored,
     resettle: async () => {
       const fresh = await Character.findById(c0._id).lean<CharacterDoc>();
@@ -184,7 +186,8 @@ export async function startMission(deps: {
       const refused = missionRefusal(content, c, located, ctx.district, now);
       if (refused) throw refused;
 
-      const seed = randomBytes(16).toString('hex');
+      // QA M1: one seed per key, so a re-run of this transaction draws the same rolls.
+      const seed = keySeed(c._id, input.idempotencyKey);
       // The same inputs the city view's preview reads (T12's `missionCtx`), in this snapshot.
       const docs = { city: ctx.cityState, district: ctx.district, residence: ctx.residenceCity };
       const mctx = missionCtx(content, c, located.mission.id, docs, now, ctx.modifiers);
@@ -281,14 +284,18 @@ async function storedStart(
   return c ? pendingView(content, enc, c, now) : null;
 }
 
-/** The first crossing into a Heat state (its one-line card), or of the first mark. */
+/**
+ * The first crossing into a Heat state (its one-line card), and the first crossing into a record
+ * level (QA m5: *On file*, *Repeat offender*, *Notorious*, each its card once). A character who had
+ * the first-mark card before the fix round (`firsts.mark`) has seen *On file*'s.
+ */
 function firstsAfter(
   c: Pick<CharacterDoc, 'firsts'>,
   stateAfter: HeatState,
   stateBefore: HeatState,
-  marksAdded: number,
+  record: { added: number; before: RecordLevel; after: RecordLevel },
   at: Date,
-): { set: Record<string, Date>; heatFirst: boolean; markFirst: boolean } {
+): { set: Record<string, Date>; heatFirst: boolean; recordFirst: boolean } {
   const f = c.firsts ?? {};
   const set: Record<string, Date> = {};
   let heatFirst = false;
@@ -296,9 +303,17 @@ function firstsAfter(
     set[`firsts.${stateAfter}`] = at;
     heatFirst = true;
   }
-  const markFirst = marksAdded > 0 && !f.mark;
-  if (markFirst) set['firsts.mark'] = at;
-  return { set, heatFirst, markFirst };
+  let recordFirst = false;
+  if (record.added > 0) {
+    if (!f.mark) set['firsts.mark'] = at;
+    const level = record.after;
+    const seen = level === 'onFile' ? (f.onFile ?? f.mark) : level === 'clean' ? true : f[level];
+    if (level !== record.before && !seen) {
+      set[`firsts.${level}`] = at;
+      recordFirst = true;
+    }
+  }
+  return { set, heatFirst, recordFirst };
 }
 
 /**
@@ -425,7 +440,13 @@ export async function writeMissionFinal(i: {
   }
 
   const firstMission = !c.firsts?.mission;
-  const firsts = firstsAfter(c, final.heat.stateAfter, final.heat.stateBefore, final.record.added.length, new Date(i.at));
+  const firsts = firstsAfter(
+    c,
+    final.heat.stateAfter,
+    final.heat.stateBefore,
+    { added: final.record.added.length, before: final.record.before, after: final.record.after },
+    new Date(i.at),
+  );
   const remembered = !(c.ways ?? []).some((w) => w.missionId === mission.id);
   const others = c.localStanding.filter((x) => x.cityId !== city.id);
   const agiSet: Record<string, unknown> = final.agility
@@ -508,7 +529,7 @@ export async function writeMissionFinal(i: {
     rateOn,
     firstMission,
     firstHeatState: firsts.heatFirst,
-    firstMark: firsts.markFirst,
+    firstMark: firsts.recordFirst,
     remembered,
     showRolls: i.showRolls,
   });

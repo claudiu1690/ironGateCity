@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { copy } from '@irongate/content/copy';
 import type { Chapter, GameContent } from '@irongate/content';
 import { ActionLog, Character } from '@irongate/db';
@@ -32,6 +31,7 @@ import { progressOf, progressSet } from './actionService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { assertFree, heatDoc, heatRateOn, heatTimerOf, notFree } from './risk';
 import { runKeyedAction, storedResult } from './keyedAction';
+import { keySeed } from './keyGuard';
 import { fill, storyVars } from './story';
 import { DayChanged, VersionConflict } from './txn';
 import {
@@ -221,6 +221,7 @@ export async function attemptChapter(deps: {
   assertFree(c0);
   const actionId = `${c0.ambition.id}.${input.chapter}`;
   return runKeyedAction<ActionResult>({
+    key: { characterId: c0._id, idempotencyKey: input.idempotencyKey },
     stored: () =>
       storedResult(
         c0._id,
@@ -252,7 +253,7 @@ export async function attemptChapter(deps: {
       }
       if (status.kind !== 'midway') throw new GameError('CHAPTER_NOT_READY', { chapter: n });
 
-      const seed = randomBytes(16).toString('hex');
+      const seed = keySeed(c._id, input.idempotencyKey);
       const r = resolveChapterCheck(
         {
           spec,

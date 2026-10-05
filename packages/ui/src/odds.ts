@@ -1,4 +1,5 @@
 import { copy } from '@irongate/content/copy';
+import { oddsBand } from '@irongate/rules';
 import type { CheckBreakdown, Outcome } from '@irongate/rules';
 
 /**
@@ -11,12 +12,9 @@ type StatId = 'str' | 'int' | 'agi' | 'cha';
 /** "Intelligence". */
 export const statName = (s: string): string => copy.statNames[s as StatId] ?? s;
 
-export type OddsBand = 'good' | 'fair' | 'long';
-
-/** Good odds 70 % and above, Fair odds 50–69 %, Long shot under 50 % (answers §2.2). */
-export function oddsBand(chance: number): OddsBand {
-  return chance >= 70 ? 'good' : chance >= 50 ? 'fair' : 'long';
-}
+// The bands live in the rules (the server words a run-in row's band too, QA fixes n12).
+export { oddsBand };
+export type { OddsBand } from '@irongate/rules';
 
 /** The ticket's stat words: "Intelligence", "Charisma and Intelligence", "your best, Strength". */
 export function statLine(check: Pick<CheckBreakdown, 'stats' | 'best'>): string {

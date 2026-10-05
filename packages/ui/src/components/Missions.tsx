@@ -2,7 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
 import { energyReadyAt, riskBand } from '@irongate/rules';
 import type { FactionId, MissionRiskView, MissionView } from '@irongate/rules';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { cx, formatClock } from '../format';
 import { oddsTag, ticketOdds } from '../odds';
 import { HelpButton, helpMark } from './Help';
@@ -56,8 +56,15 @@ export function RiskLine({ risk, className }: RiskLineProps) {
       )}
     >
       <span data-testid="risk-line" data-dangerous={dangerous || undefined}>
-        {copy.risk.heatPlus(risk.heat)} · <span className={helpMark}>{word}</span>
-        {risk.marks > 0 ? ` · ${copy.risk.ifCaught(risk.marks)}` : ''}
+        {/* QA fixes §7.2: each segment is whole; the line breaks only at the dots. */}
+        <span className="whitespace-nowrap">{copy.risk.heatPlus(risk.heat)}</span> ·{' '}
+        <span className={cx(helpMark, 'whitespace-nowrap')}>{word}</span>
+        {risk.marks > 0 && (
+          <>
+            {' '}
+            · <span className="whitespace-nowrap">{copy.risk.ifCaught(risk.marks)}</span>
+          </>
+        )}
       </span>
     </HelpButton>
   );
@@ -159,17 +166,17 @@ export function MissionTicket({
         !(m.tags ?? []).some((t) => t.ordinanceId === b.id),
     )
     .map(oddsTag);
-  const tags = [
-    missionLabel(m, names),
-    ...(lock || !way ? [] : [ticketOdds(way.preview)]),
+  // QA fixes §2 (m3): the tags line is the type label and the odds word only; every other tag is a
+  // chip on a second line that exists only when there is one; the cap line is its own row (n12).
+  const tags = [missionLabel(m, names), ...(lock || !way ? [] : [ticketOdds(way.preview)])].join(' · ');
+  const chips: Array<{ text: string; order?: boolean }> = [
     ...(m.tags ?? []).filter((t) => t.kind === 'energy').map(ordinanceTagText),
-    ...placeTags.filter((t) => t.kind !== 'membersOnly').map(placeTagText),
+    ...placeTags.filter((t) => t.kind !== 'membersOnly' && t.kind !== 'pressureCapped').map(placeTagText),
     ...(m.tags ?? []).filter((t) => t.kind !== 'energy').map(ordinanceTagText),
     ...bonusTags,
-    order,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  ].map((text) => ({ text }));
+  if (order) chips.push({ text: order, order: !orderDone });
+  const capped = !lock && placeTags.some((t) => t.kind === 'pressureCapped');
   const first = m.remembered === null;
   const button = cx(
     'shrink-0 cursor-pointer border-l border-ink font-label text-paper',
@@ -206,15 +213,6 @@ export function MissionTicket({
                 {lock}
               </span>
             )}
-            <span
-              className={cx(
-                'font-mono text-[10.5px]',
-                order && !orderDone ? 'text-collective' : 'text-muted',
-              )}
-              data-testid="mission-tags"
-            >
-              {tags}
-            </span>
           </div>
           {!lock &&
             (first ? (
@@ -264,9 +262,43 @@ export function MissionTicket({
               </button>
             ))}
         </div>
+        {/* The type and the odds, one line across the ticket (Oswald caps 10 px; m3). */}
+        <p
+          className="px-2 pt-0.5 pb-1 font-label text-[10px] leading-[14px] tracking-[0.03em] text-muted uppercase"
+          data-testid="mission-tags"
+        >
+          {tags}
+        </p>
+        {chips.length > 0 && (
+          <ul
+            className="flex flex-wrap gap-x-1 gap-y-0.5 border-t border-dotted border-ink px-2 py-1"
+            aria-label="Tags"
+            data-testid="mission-chips"
+          >
+            {chips.map((c) => (
+              <li
+                key={c.text}
+                className={cx(
+                  'border px-1 font-label text-[10px] leading-[15px]',
+                  c.order ? 'border-collective text-collective' : 'border-faint text-text-2',
+                )}
+              >
+                {c.text}
+              </li>
+            ))}
+          </ul>
+        )}
+        {capped && (
+          <p
+            className="border-t border-dotted border-ink px-2 py-1 font-mono text-[11px] text-muted"
+            data-testid="mission-capped"
+          >
+            {copy.risk.pressureCapped}
+          </p>
+        )}
         {/* The risk line, its own row across the ticket (screens §4.1). */}
         {!lock && (
-          <div className="flex min-h-7 items-center border-t border-dotted border-ink px-2">
+          <div className="flex min-h-7 items-center border-t border-dotted border-ink px-2 py-0.5">
             <RiskLine risk={m.risk} />
           </div>
         )}
@@ -359,7 +391,7 @@ export interface MissionBriefingProps {
 }
 
 /**
- * Screens §4.2: the briefing, a bottom sheet (at most 70 dvh; a 480 px card on desktop): the kicker,
+ * Screens §4.2: the briefing, a bottom sheet (at most 72 dvh, 80 on phones under 700 px tall, QA m2; a 480 px card on desktop): the kicker,
  * the title, the briefing, the ways (the remembered one first, *Last time*). A row selects; the sticky
  * button *{Way} · 15 Energy* spends (one more tap, so a brush on a row is no spend). Escape and Close
  * close it with nothing spent.
@@ -380,6 +412,15 @@ export function MissionBriefing({
   useEffect(() => {
     if (open) setSelected(null);
   }, [open, missionId]);
+  // QA m8: the briefing opens from a ticket's button, not a Radix trigger, so Radix has nothing to give
+  // focus back to and it fell to <body>. The opener is taken before the focus moves into the sheet
+  // (a layout effect runs before the focus scope's mount effect) and focused again on close.
+  const opener = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const active = typeof document === 'undefined' ? null : document.activeElement;
+    opener.current = active instanceof HTMLElement && active !== document.body ? active : null;
+  }, [open]);
   if (!m) return null;
   const ways = [...m.ways].sort(
     (a, b) => (a.id === m.remembered ? -1 : 0) - (b.id === m.remembered ? -1 : 0),
@@ -397,8 +438,15 @@ export function MissionBriefing({
         <Dialog.Overlay className="ease-dim fixed inset-0 z-40 bg-ink/60" />
         <Dialog.Content
           aria-describedby={undefined}
+          onCloseAutoFocus={(e) => {
+            const el = opener.current;
+            if (el?.isConnected) {
+              e.preventDefault();
+              el.focus();
+            }
+          }}
           className={cx(
-            'ease-sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[72dvh] flex-col bg-paper text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
+            'ease-sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[72dvh] flex-col [@media(max-width:639px)_and_(max-height:700px)]:max-h-[80dvh] bg-paper text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
             'sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[min(720px,calc(100dvh-48px))] sm:w-[480px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]',
           )}
           data-testid="briefing"

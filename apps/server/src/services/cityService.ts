@@ -167,7 +167,7 @@ export function missionView(
   if (g && political && g.factionId === c.factionId)
     placeTags.push({ kind: 'comeback', factionId: g.factionId, pct: g.pct });
   if (rival) placeTags.push({ kind: 'rivalGround', fxpPct: rival.unrest ? 75 : 50 });
-  if (ctx.recordIronPct < 0) placeTags.push({ kind: 'record', ironPct: ctx.recordIronPct });
+  if (ctx.recordIronPct < 0) placeTags.push({ kind: 'record', ironPct: ctx.recordIronPct, level: ctx.record });
   // On rival ground a speech too draws from the home faction (design §11.2); a mission against
   // another visitor's party is not under the home faction's cap.
   const drawsFrom =

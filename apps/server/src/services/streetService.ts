@@ -20,6 +20,7 @@ import {
   healthNow,
   heatState,
   luckChoice,
+  oddsBand,
   policeLossHealth,
   priceLines,
   projectHeat,
@@ -441,10 +442,15 @@ async function resolveTier1InTx(
   const afterHealth = o.outcome === 'lost' ? HEALTH.admitted : o.healthAfter;
   const street: StreetView = {
     runIn: {
-      opponent: { id: spec.id, label: spec.label, portrait: assetView(content, spec.portrait) },
+      opponent: { id: spec.id, label: spec.label, portrait: assetView(content, spec.portrait), pronoun: spec.pronoun },
       choice: o.choice,
       by: i.by,
-      steps: o.steps.map((x) => ({ row: x.row, ok: x.ok, ...(i.showRolls ? { chance: x.chance, roll: x.roll } : {}) })),
+      steps: o.steps.map((x) => ({
+        row: x.row,
+        ok: x.ok,
+        band: oddsBand(x.chance),
+        ...(i.showRolls ? { chance: x.chance, roll: x.roll } : {}),
+      })),
       outcome: o.outcome,
       line: spec.lines[o.outcome] ?? spec.lines.won,
       cause: o.cause,

@@ -47,6 +47,7 @@ import type { SessionUser } from '../trpc/context';
 import { computeTier1, writeTier1 } from './actionService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
+import { keySeed } from './keyGuard';
 import { readPlace } from './place';
 import { residenceCityId } from './residence';
 import { withRequestKey } from './requestKey';
@@ -482,6 +483,7 @@ export async function heldAct(deps: {
   const c0 = loaded.doc;
   const stored = () => storedResult<ActionResult>(c0._id, input.idempotencyKey, (log) => log.actionId.startsWith('held.'));
   return runKeyedAction<ActionResult>({
+    key: { characterId: c0._id, idempotencyKey: input.idempotencyKey },
     stored,
     resettle: async () => {
       const fresh = await Character.findById(c0._id).lean<CharacterDoc>();
@@ -498,7 +500,7 @@ export async function heldAct(deps: {
       if (c.runIn?.state === 'pending') throw new GameError('RUN_IN_PENDING');
       const located = heldLocated(content, c);
       const ctx = await readPlace(content, session, c, located, today);
-      const seed = randomBytes(16).toString('hex');
+      const seed = keySeed(c._id, input.idempotencyKey);
       const r = computeTier1({ content, c, located, action: located.action as CheckedAction, ctx, times: 1, now, seed });
       if (!r.ok) {
         throw new GameError('NOT_ENOUGH_ENERGY', { energy: r.energy.value, cost: r.cost, times: 1, nextTickAt: r.energy.nextTickAt });

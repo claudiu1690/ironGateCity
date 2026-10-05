@@ -269,11 +269,11 @@ export const Mission = z.strictObject({
   /** The opponents a run-in draws from (design §10.2). */
   pool: z.array(Id).min(1).max(4),
   /**
-   * Design §4.4: where you are, the job, what could go wrong. The design's 22 briefings run to 362
-   * characters (two or three sentences), so a briefing is held to 380 and four sentences; outcome
-   * texts keep 240 (tech design Deviations; the designer's ruling in design §23).
+   * Design §4.4: where you are, the job, what could go wrong. Held to 300 characters and four
+   * sentences (design/slice-5-fixes.md §2, QA m2: the title, the text and two ways above the button
+   * on a short phone); outcome texts keep 240.
    */
-  briefing: z.string().min(1).max(380),
+  briefing: z.string().min(1).max(300),
   ways: z.array(Way).min(2).max(3),
   text: z.strictObject({ success: OutcomeText, partial: OutcomeText, failure: OutcomeText }),
   /** Overrides the type's mission card (§13.5 rung 4); a `scene`. */
@@ -940,6 +940,8 @@ export const Opponent = z.strictObject({
   /** The branch inspector: −10 on your Fight odds. */
   fightPct: z.number().int().min(-20).max(0).optional(),
   portrait: AssetId,
+  /** The run-in's *did* line speaks of them as *he* or *they* (design/slice-5-fixes.md §7.3). */
+  pronoun: z.enum(['he', 'they']),
   lines: z.strictObject({
     appears: OpponentLine,
     won: OpponentLine,

@@ -382,7 +382,7 @@ export const journeyEvents: ContentInput['journeyEvents'] = [
           rewards: {},
           text: {
             headline: 'The lamp moves on',
-            body: 'Thirty marks folded under the card, and the card comes back without the marks and without a word. The man opposite looks at the window. It is the oldest toll on the line.',
+            body: 'Thirty Iron folded under the card, and the card comes back without the Iron and without a word. The man opposite looks at the window. It is the oldest toll on the line.',
           },
         },
       },

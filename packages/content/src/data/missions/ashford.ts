@@ -39,7 +39,7 @@ export const ashfordMissions: MissionsByPlace = {
       level: 6,
       difficulty: 14,
       pool: ['city-police'],
-      briefing: "The wharf closes at six and the lock-keeper goes home at eight. Between eight and midnight the barges that tie up below the bridge are nobody's business, and what comes off them goes up the towpath without a toll. There's the boat club verandah with a view of the lock, and the towpath, which is closer and has the police on it twice a night.",
+      briefing: "The wharf closes at six and the lock-keeper at eight. After that the barges below the bridge are nobody's business, and what comes off them goes up the towpath without a toll. There's the boat club verandah with a view of the lock, and the towpath, closer, with the police on it twice a night.",
       ways: [
         { id: 'int', title: 'From the boat club verandah', stats: ['int'], hint: 'Sit still, count the barges, write down the names. Only the cold is against you.' },
         { id: 'agi', title: 'Along the towpath to the lock', stats: ['agi'], hint: 'Close enough to read the barge names. Close enough to be read.' },
@@ -112,7 +112,7 @@ export const ashfordMissions: MissionsByPlace = {
       requires: { rank: 3 },
       target: 'alliance',
       pool: ['party-thug', 'city-police'],
-      briefing: "The Alliance's duplicator runs in the committee room at the Assembly Rooms every night and five hundred sheets come out of it by morning. The area railings are low, the porter's round is at eleven, and a tradesman with a box of parts gets through the side door without a word. One bent drum and the Rooms are quiet for a week.",
+      briefing: "The Alliance's duplicator runs in the committee room at the Assembly Rooms at night, and five hundred sheets are out by morning. The railings are low, the porter's round is at eleven, and a tradesman with a box of parts walks in at the side door. One bent drum and the Rooms are quiet for a week.",
       ways: [
         { id: 'agi', title: 'Over the area railings at night', stats: ['agi'], hint: 'The area window, the dark room, the drum. In and out before the round.' },
         { id: 'cha-int', title: 'Walk in as a tradesman', stats: ['cha', 'int'], hint: 'A box, a cap, a grievance about the stencils. Nobody questions a man with a box.' },

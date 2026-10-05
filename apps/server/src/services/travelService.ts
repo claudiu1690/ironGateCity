@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
 import { Character, City, District, IssueModel, Journey, PaperEntry } from '@irongate/db';
@@ -74,6 +73,7 @@ import type { LoadedCharacter } from './dayService';
 import { addInfluence, addPoints, writeLedger } from './ledger';
 import { dayModifiers, restedCapToday } from './modifiers';
 import { politicsSummary } from './politicsService';
+import { keySeed } from './keyGuard';
 import { withRequestKey } from './requestKey';
 import { residenceCityId } from './residence';
 import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
@@ -358,7 +358,8 @@ export async function board(deps: {
       if (c.journey?.status === 'arrived') {
         c = await closeJourneyInTx(content, session, c, c.journey.id, now, loaded.city);
       }
-      const seed = randomBytes(16).toString('hex');
+      // QA M1: one seed per key, so a re-run of this transaction draws the same card.
+      const seed = keySeed(c._id, input.idempotencyKey);
       const made = c.journeysMade ?? 0;
       // Slice 5 (tech design §8.2): rival ground always draws from the hostile deck; elsewhere the
       // ordinary deck, the passenger first on the first journey that is neither (`firstDone`).

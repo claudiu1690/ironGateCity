@@ -227,6 +227,13 @@ export function riskBand(chance: number): RiskBand {
   return 'dangerous';
 }
 
+export type OddsBand = 'good' | 'fair' | 'long';
+
+/** Good odds 70 % and above, Fair odds 50–69 %, Long shot under 50 % (answers §2.2). */
+export function oddsBand(chance: number): OddsBand {
+  return chance >= 70 ? 'good' : chance >= 50 ? 'fair' : 'long';
+}
+
 /** The record's Iron line on a mission (design §7.3): *your record −6*. */
 export const RECORD_PART = { id: 'record', label: 'Your record' } as const;
 

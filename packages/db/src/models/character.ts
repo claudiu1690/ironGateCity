@@ -121,6 +121,10 @@ export interface StoredFirsts {
   hot?: Date;
   wanted?: Date;
   mark?: Date;
+  /** QA m5: the first crossing into each record level (its card). `mark` stands for `onFile` before. */
+  onFile?: Date;
+  repeat?: Date;
+  notorious?: Date;
 }
 
 /**
@@ -359,7 +363,7 @@ const barSchema = new Schema<StoredBar>(
 
 // `minimize: false`: an empty `{}` is stored, the same as migration 007 writes.
 const firstsSchema = new Schema<StoredFirsts>(
-  { mission: Date, noticed: Date, hot: Date, wanted: Date, mark: Date },
+  { mission: Date, noticed: Date, hot: Date, wanted: Date, mark: Date, onFile: Date, repeat: Date, notorious: Date },
   { _id: false, minimize: false },
 );
 

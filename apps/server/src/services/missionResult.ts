@@ -10,6 +10,7 @@ import {
   healthFullAt,
   isAgilityWay,
   itemSpec,
+  oddsBand,
   orderDoneFxp,
   projectEnergy,
   rivalGroundIn,
@@ -171,12 +172,13 @@ export function buildMissionResult(i: {
     runIn:
       i.runIn && r && opp
         ? {
-            opponent: { id: opp.id, label: opp.label, portrait: assetView(content, opp.portrait) },
+            opponent: { id: opp.id, label: opp.label, portrait: assetView(content, opp.portrait), pronoun: opp.pronoun },
             choice: r.choice,
             by: i.runIn.by,
             steps: r.steps.map((x) => ({
               row: x.row,
               ok: x.ok,
+              band: oddsBand(x.chance),
               ...(i.showRolls ? { chance: x.chance, roll: x.roll } : {}),
             })),
             outcome: r.outcome,
@@ -221,6 +223,7 @@ export function buildMissionResult(i: {
             after: f.record.after,
             marks: f.record.marks.length,
             first: i.firstMark,
+            allMinor: f.record.marks.every((m) => m.kind === 'minor'),
           }
         : null,
     sentTo:

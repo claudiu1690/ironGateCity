@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { isCheckedAction, isTrainingAction } from '@irongate/content';
 import type { CheckedAction, GameContent, LocatedAction } from '@irongate/content';
 import { residenceCityId, residenceCtx } from './residence';
@@ -38,6 +37,7 @@ import { buildActionResult } from './actionResult';
 import type { ResultInput } from './actionResult';
 import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
+import { keySeed } from './keyGuard';
 import { branchEndorseIfFiled } from './councilService';
 import { moveOpinion, placeWrites, readPlace } from './place';
 import type { OpinionMove, PlaceCtx } from './place';
@@ -180,6 +180,7 @@ export async function performAction(deps: {
     : null;
 
   return runKeyedAction<ActionResult | RunInPending>({
+    key: { characterId: c0._id, idempotencyKey: input.idempotencyKey },
     stored,
     write: (session, txAttempts) =>
       resolveAndWrite({
@@ -256,7 +257,8 @@ async function resolveAndWrite(i: {
   // Slice 5 (tech design §8.2): the first act in a city closes its arrived journey.
   c = await closeArrivalHere(content, session, c, now);
 
-  const seed = randomBytes(16).toString('hex');
+  // QA M1: one seed per key, so a re-run of this transaction draws the same rolls.
+  const seed = keySeed(c._id, input.idempotencyKey);
   // Slice 3–5: the place's modifiers, read in the action's snapshot (rival ground among them).
   const ctx = await readPlace(content, session, c, located, today);
 

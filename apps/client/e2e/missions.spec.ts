@@ -103,7 +103,7 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
   await expect(runIn).toBeVisible();
   await runIn.getByTestId('run-in-pay').click();
   const paid = resultModal(page);
-  await expect(paid.getByTestId('result-run-in')).toContainText('You paid them off.');
+  await expect(paid.getByTestId('result-run-in')).toContainText('You paid him off.');
   await expect(paid.getByTestId('effect-heat')).toHaveText('Heat +6 → 6 · Cool');
   await paid.getByRole('button', { name: 'Continue' }).click();
   await expect(paid).toHaveCount(0);
@@ -164,7 +164,7 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
   expect((await page.request.post('/api/test/run-in', { data: { decideNow: true } })).ok()).toBe(true);
   await page.reload();
   const byLuck = resultModal(page);
-  await expect(byLuck.getByTestId('run-in-did')).toContainText('You left it, so luck chose.');
+  await expect(byLuck.getByTestId('run-in-did')).toContainText("You didn't answer, so luck chose to ");
   await byLuck.getByRole('button', { name: 'Continue' }).click();
   await expect(byLuck).toHaveCount(0);
 

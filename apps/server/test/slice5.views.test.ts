@@ -248,7 +248,7 @@ describe('missions on the place sheet (tech design §8.3, design §4)', () => {
     v = await cityOf(p, 'coalport');
     posters = missionAt(v, 'coalport.far-bank', 'coalport.far-bank.posters');
     expect(posters.risk).toEqual({ heat: 6, runInChance: 25 + 5 + 5 + 10, marks: 1 });
-    expect(posters.placeTags).toContainEqual({ kind: 'record', ironPct: -20 });
+    expect(posters.placeTags).toContainEqual({ kind: 'record', ironPct: -20, level: 'repeat' });
     // A Watched day in another city changes nothing here.
     await setRisk(p.id, clock.now(), { flags: [{ cityId: 'duskwall', day: DAY, flag: 'watched' }] });
     v = await cityOf(p, 'coalport');

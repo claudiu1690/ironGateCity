@@ -121,7 +121,7 @@ A tier-1 tap on rival ground takes the same path through `action.perform`. The h
 | State | Stored | Read | Ends |
 |---|---|---|---|
 | Heat | `heat { value, at }` | `projectHeat`, piecewise by City Day at the residence city's rate (5 an hour × the `heatCoolPct` sources) | at 0; set to 25 at a release |
-| Health | `health { damage, at }` | `projectHealth`: −10 damage per whole 10 minutes. Max = 100 + 5 × Level | at full |
+| Health | `health { damage, at }` | `projectHealth`: −10 damage per whole 10 minutes. Max = 100 + 5 × (Level − 1) (QA n10) | at full |
 | The record | `record.marks[]` | `liveMarks`: minor marks gone 14 City Days after the last mark of any kind | by fading or striking |
 | A pending run-in | `runIn` + `encounters` | luck on any read at or after `decideBy`, and before the day's settlement if it is from an earlier day | resolved as of `min(decideBy, its day's end)` |
 | The cells, the infirmary | `held` + `stays` | `heldNow`: in while `now < until` | released or discharged as of `until`, on the first read after it |
@@ -348,7 +348,7 @@ Two new collections, each for a reason (plan rule 6: embed what is read together
   ...slice 4,
   stats: { str, int, agi, chaBase, agiQuarters: number },   // 0–3 (design §4.1: a quarter point per Agility Success)
   heat: { value: number, at: Date },                        // 0–100 at `at`, whole points (ADR 0033)
-  health: { damage: number, at: Date },                     // max − damage at `at`; max = 100 + 5 × level
+  health: { damage: number, at: Date },                     // max − damage at `at`; max = 100 + 5 × (level − 1) (QA n10)
   record: {
     marks: Array<{ day: DayKey, kind: 'minor' | 'moderate' | 'serious', logId: string | null }>,   // one unit each, oldest first
     arrests: DayKey[],                                      // the last three (the seven-day escalation)
@@ -517,7 +517,7 @@ export function heatEta(t: HeatTimer, now: number, rateOn, below: number): numbe
 ### 6.3 `health.ts`
 
 ```ts
-export const healthMax = (level: number) => 100 + 5 * level;
+export const healthMax = (level: number) => 100 + 5 * (level - 1); // QA n10: as built (125 at 6, 145 at 10)
 export interface HealthTimer { damage: number; at: number }
 export function projectHealth(t: HealthTimer, now: number): HealthTimer;   // −10 damage per whole 10 minutes; `at` by whole ticks
 export const healthNow = (t: HealthTimer, now: number, level: number): number;   // max − damage, ≥ 0
@@ -1801,3 +1801,24 @@ The smallest working change in each case. No economy number changed; the GDD nee
 **T27 (docs)**
 
 - The README's test hooks, the report's risk section and three walk-throughs (*A first mission*, *A night in the cells*, *A rival trip*); ADRs 0031–0035 accepted.
+
+### Fix round (QA report `docs/qa/slice-5-report.md`)
+
+**M1 (one key, two starts)**
+
+- **Cause:** §18's `mission.start` row and ADR 0032 relied on the version guard to stop a second start from one key. The MongoDB driver re-runs a transaction's callback after a write conflict (`TransientTransactionError`) on a fresh snapshot. The losing copy re-read the new version, passed the guard, drew a fresh seed and could take the other branch: a final result in `actionLogs` beside a pending run-in in `encounters`, under one key. Neither unique index sees the other collection. A tier-1 tap on rival ground had the same two branches.
+- **Fix:** `runKeyedAction` and `withRequestKey` now call `assertKeyFree` (`apps/server/src/services/keyGuard.ts`) at the top of every run of the transaction, before any write. It looks the key up in `actionLogs`, `encounters` and `requestLogs` with the session. On a hit it throws `KeyTaken`, the transaction aborts, and the stored result answers. A key found only in another act's collection is `KEY_REUSED`. ADR 0032's consequence is corrected.
+- **Seeds:** every keyed act that rolls draws its seed from `keySeed(characterId, key)`, an HMAC with a secret drawn once per process: `mission.start`, `action.perform` (rival run-ins included), `held.act`, the ambition check and `travel.board`'s card. A re-run draws the same rolls. The seed can't be predicted from outside the server; the in-transaction lookup is what stops the duplicate.
+- **Audit:** every keyed path goes through one of the two wrappers: actions, missions, rival taps, held taps, the ambition check, encounters (`encounter.choose`), travel (board, choose), residence, jobs, stats, council and the held release, bail and strike-off. The `withRequestKey` paths were already safe from this bug, because every branch writes the same `requestLogs` row. They get the same lookup anyway, for one rule everywhere.
+
+**The rest of the fix round (design/slice-5-fixes.md)**
+
+- **m5, the record cards:** `firsts` gains `onFile`, `repeat` and `notorious` (no migration: absent reads as not yet seen, and `firsts.mark` stands for `onFile`). `StreetView.record.first` is now the first crossing into the level reached, and `allMinor` picks the card's fade clause. The cards are `copy.risk.recordCards` templates, filled by `recordCard(level, marks, allMinor)`.
+- **§7.3, n12, the run-in view:** `StreetView.runIn.opponent.pronoun` comes from content (`opponents[].pronoun`, now required), and every step carries its odds `band`. `oddsBand` moved from `packages/ui` to `packages/rules`, and the UI re-exports it. The reason line follows the failed row's band. A result stored before this has neither field: the did line reads *he*, and the reason falls back to the cause.
+- **m3, the ticket:** the type and the odds sit on one line **across the ticket** under the stub row. In the middle column they wrapped at 360 and 390 px, and *Mission · Watch and listen · Fair odds · your best, Intelligence* is 269 px in Oswald caps 10 px. The other tags are chips (Oswald 10 px) on a line of their own, the cap line is its own Courier row, and the risk line's segments are each `white-space: nowrap`. At 360 px the risk line still wraps at a dot when it carries a marks phrase (54 characters need 339 px; the row has 318). Screens §10's "never wraps" was measured on a wider column. The row grows, as §7.2 allows.
+- **m7:** on rival ground under 700 px tall, the plate folds its morale line (`city-plate`) and its Heat line. The pressure line shows at every size.
+- **n4:** the receipt prints slice 5's parts (rival ground, won at full strength, paid off, your record) lower case and joined with *·*. Other parts keep *and*. The opinion-against row shows points, with no `%`.
+- **§9, the later-edition teaser:** the teaser sheet's line is *Opens with a later edition · {teaser}*. The map's pin and the Quarters list keep the lock alone, so the overview's names stay clear.
+- **n2, n3 (dev panel):** while a run-in is pending, the toggle and the panel sit above the modal (`z-[60]`, `pointer-events-auto`), so *Decide now* is reachable. *Take me to…* now navigates to the city.
+- **m8:** the briefing records its opener in a layout effect, before Radix's focus scope moves focus, and gives focus back on close. Radix returns focus only to a `Dialog.Trigger`, and the briefing has none. While the briefing is open, the place sheet's `onOpenChange(false)` closes the briefing instead of the sheet. In the production build, the panel-layout sheet's Escape layer sometimes ranked above the briefing's, and an Escape closed the sheet under the briefing (the e2e test failed 8 times in 10).
+- **The chapter test** forces its roll through `keySeed` instead of `randomBytes`.

@@ -1951,7 +1951,7 @@ export type PlaceTagView =
   | { kind: 'membersOnly'; factionId: FactionId }
   // Slice 5 (tech design §8.3).
   | { kind: 'rivalGround'; fxpPct: 50 | 75 }
-  | { kind: 'record'; ironPct: number }
+  | { kind: 'record'; ironPct: number; level: RecordLevel }
   | { kind: 'pressureCapped' };
 
 /** Screens §6.1: the residence card's state, chosen on the server per district. */
@@ -2201,11 +2201,21 @@ export interface MissionResultView {
 /** ActionResult.street (tech design §10.1–§10.2). */
 export interface StreetView {
   runIn: {
-    opponent: { id: string; label: string; portrait: AssetView };
+    /** `pronoun`: the did line's *he* / *they* (QA fixes §7.3); absent on results stored before it (*he*). */
+    opponent: { id: string; label: string; portrait: AssetView; pronoun?: 'he' | 'they' };
     choice: 'fight' | 'run' | 'talk' | 'pay';
     by: 'player' | 'luck' | 'auto';
-    /** `chance` and `roll` for dev and QA only. */
-    steps: Array<{ row: 'fight' | 'run' | 'talk' | 'pay'; ok: boolean; chance?: number; roll?: number }>;
+    /**
+     * `band`: the row's odds word (QA fixes n12: a row that didn't come off gives its reason by band);
+     * `chance` and `roll` for dev and QA only.
+     */
+    steps: Array<{
+      row: 'fight' | 'run' | 'talk' | 'pay';
+      ok: boolean;
+      band?: 'good' | 'fair' | 'long';
+      chance?: number;
+      roll?: number;
+    }>;
     outcome: 'won' | 'lost' | 'ran' | 'talked' | 'paid';
     /** The opponent's line for the outcome. */
     line: string;
@@ -2232,8 +2242,10 @@ export interface StreetView {
     before: RecordLevel;
     after: RecordLevel;
     marks: number;
-    /** The first mark ever (the record's card). */
+    /** The first crossing into the level reached (`after`): its card (QA m5). */
     first: boolean;
+    /** Every live mark is minor: the card's fade clause (QA m5). Absent on older results. */
+    allMinor?: boolean;
   } | null;
   sentTo: {
     kind: 'cells' | 'infirmary';

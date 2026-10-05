@@ -7,7 +7,7 @@
 Plan rule 2: timers are lazy. `docs/design/slice-5-risk.md` §6–§9 add four pieces of personal state:
 
 - **Heat**: 0–100, cools 5 an hour. A *Customs Strike* week cools it half again as fast.
-- **Health**: max 100 + 5 a Level, +10 every ten minutes. Lost only in fights.
+- **Health**: max 100 at Level 1 and +5 for every Level gained (125 at 6, 145 at 10; QA n10), +10 every ten minutes. Lost only in fights.
 - **The record**: marks with levels. Minor marks fade 14 City Days after the last offence. Any mark can be struck off for 30 Political Capital. A second arrest within seven days escalates.
 - **The cells and the infirmary**: timers of 10–60 and 20 minutes, left by bail, by walking out or by discharging yourself. Release from the cells on rival ground is a deportation: a train home, and the city barred for 24 hours.
 

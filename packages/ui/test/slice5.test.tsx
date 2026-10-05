@@ -88,9 +88,10 @@ describe('the mission ticket (screens §4.1)', () => {
         onAgain={onAgain}
       />,
     );
+    // QA fixes §2 (m3): the type and the odds on the tags line; the record tag a chip (§7.1).
     const tags = screen.getByTestId('mission-tags');
-    expect(tags).toHaveTextContent('Mission · Against the Vanguard · Fair odds · Agility');
-    expect(tags).toHaveTextContent('Your record · −10 % Iron');
+    expect(tags).toHaveTextContent(/^Mission · Against the Vanguard · Fair odds · Agility$/);
+    expect(screen.getByTestId('mission-chips')).toHaveTextContent('On file · −10 % Iron');
     expect(screen.getByTestId('risk-line')).toHaveTextContent(
       'Heat +6 · Risky · if caught, a mark on your record',
     );
@@ -278,7 +279,7 @@ describe('the mission result (screens §4.3)', () => {
       />,
     );
     expect(screen.getByTestId('run-in-did')).toHaveTextContent(
-      'You paid them off. He takes the notes without counting',
+      'You paid him off. He takes the notes without counting',
     );
     expect(screen.getByTestId('result-kicker')).toHaveTextContent(
       'Mission · Against the Vanguard · Tear down',
@@ -312,7 +313,7 @@ describe('the mission result (screens §4.3)', () => {
     );
     expect(screen.getByTestId('stamp')).toHaveTextContent('Taken in');
     expect(screen.getByTestId('run-in-did')).toHaveTextContent(
-      'You tried to run; they were faster. You fought. You lost.',
+      'You tried to run; he was faster. You fought and lost.',
     );
     expect(screen.getByTestId('run-in-health')).toHaveTextContent('Health 125 → 30');
     expect(screen.getByTestId('run-in-reason')).toHaveTextContent('You were outmatched.');

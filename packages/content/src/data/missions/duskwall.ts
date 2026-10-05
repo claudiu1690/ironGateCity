@@ -87,7 +87,7 @@ export const duskwallMissions: MissionsByPlace = {
       requires: { rank: 3 },
       target: 'vanguard',
       pool: ['street-enforcer', 'vanguard-doorman'],
-      briefing: "The Vanguard holds its street meeting on Rampart Row at seven: fifty people in the road, a steward at each end and the organiser's man on a chair with the lists. The lamp on the corner is the only light, the back entries are open, and the one question the man on the chair can't answer is about the ration.",
+      briefing: "The Vanguard holds its street meeting on Rampart Row at seven: fifty people in the road, a steward at each end and the organiser's man on a chair with the lists. The corner lamp is the only light, the back entries are open, and the one question the man on the chair can't answer is about the ration.",
       ways: [
         { id: 'str', title: 'Shoulder through the stewards', stats: ['str'], hint: 'Two stewards, fifty people, and a chair to take. They will notice.' },
         { id: 'agi', title: 'Put the corner lamp out', stats: ['agi'], hint: 'A dark street, a crowd that scatters, and nobody to say who did it.' },
@@ -112,7 +112,7 @@ export const duskwallMissions: MissionsByPlace = {
       requires: { rank: 3 },
       target: 'vanguard',
       pool: ['vanguard-doorman', 'city-police'],
-      briefing: "The Vanguard's duplicator runs in the basement of Beacon House every night and five hundred sheets come out of it by morning. The yard wall is high, the doorman's round is at eleven, and a tradesman with a box of parts gets through the side door without a word. One bent drum and the district is quiet for a week.",
+      briefing: "The Vanguard's duplicator runs in the basement of Beacon House every night, and five hundred sheets come out of it by morning. The yard wall is high, the doorman's round is at eleven, and a tradesman with a box of parts walks in at the side door. One bent drum and the district is quiet for a week.",
       ways: [
         { id: 'agi', title: 'Over the yard wall at night', stats: ['agi'], hint: 'The coal chute, the dark basement, the drum. In and out before the round.' },
         { id: 'cha-int', title: 'Walk in as a tradesman', stats: ['cha', 'int'], hint: 'A box, a cap, a grievance about the stencils. Nobody questions a man with a box.' },

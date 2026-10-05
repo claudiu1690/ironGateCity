@@ -60,6 +60,7 @@ import type { PerformTarget } from '../features/action/usePerformAction';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
+import { trainingPlacesOf } from '../features/game/trainingPlaces';
 import { useMissionStart } from '../features/street/useMissionStart';
 import { useBoard } from '../features/travel/useBoard';
 import { setResultModalOpen } from '../lib/modalGate';
@@ -503,10 +504,7 @@ export function CityPage() {
       />
     ) : null;
   // Review 2 (answers §2.4): where each stat trains here, for a result's reason line.
-  const trainingPlaces: Partial<Record<'str' | 'int' | 'agi', string>> = {};
-  for (const l of c.locations)
-    for (const a of l.actions)
-      if (a.trains && !trainingPlaces[a.trains.stat]) trainingPlaces[a.trains.stat] = l.ref ?? l.name;
+  const trainingPlaces = trainingPlacesOf(c);
 
   // Slice 4 (screens §6): where you live, on the district view and at home.
   // At home, living at home (the usual case), there is nothing to do: no card (the map keeps its room).
@@ -715,7 +713,12 @@ export function CityPage() {
             )}
           </div>
           <span
-            className="label-caps flex flex-wrap items-center gap-1.5 text-[9.5px] text-muted"
+            className={cx(
+              'label-caps flex flex-wrap items-center gap-1.5 text-[9.5px] text-muted',
+              // QA m7 (QA fixes §6): on rival ground under 700 px tall the morale line folds, not the
+              // pressure line.
+              rival && !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
+            )}
             data-testid="city-plate"
           >
             {c.role === 'home' ? 'Home city' : 'Close race'} ·
@@ -724,15 +727,10 @@ export function CityPage() {
               {rival ? (names[plateFaction] ?? plateFaction) : character.factionName} {formatShare(share)} %
             </span>
           </span>
-          {/* Slice 5 (screens §8.3): what your work here draws from, and Heat. */}
+          {/* Slice 5 (screens §8.3): what your work here draws from (at every size, QA m7), and Heat
+              (folded under 700 px tall: the HUD shows it). */}
           {rival && (
-            <span
-              className={cx(
-                'font-mono text-[11px] text-text-2',
-                !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
-              )}
-              data-testid="plate-pressure"
-            >
+            <span className="font-mono text-[11px] text-text-2" data-testid="plate-pressure">
               {copy.risk.rival.drawsFrom(
                 names[rival.homeFactionId] ?? rival.homeFactionId,
                 rival.pressure.left.toFixed(1),
@@ -740,7 +738,13 @@ export function CityPage() {
             </span>
           )}
           {rival && (
-            <span className="font-mono text-[11px] text-text-2" data-testid="plate-heat">
+            <span
+              className={cx(
+                'font-mono text-[11px] text-text-2',
+                !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
+              )}
+              data-testid="plate-heat"
+            >
               {copy.risk.heatLine(heat, heatWord(character.heat?.state ?? 'cool'))}
             </span>
           )}
@@ -1126,6 +1130,13 @@ export function CityPage() {
           fill={fillSheet}
           open={sheetOpen}
           onOpenChange={(o) => {
+            // QA m8: with the briefing open over the sheet, an Escape (or an outside tap) that reaches
+            // the sheet closes the briefing, never the sheet under it. Two Radix layers race for the
+            // Escape in the production build when the sheet's layer registers after the briefing's.
+            if (!o && briefingOpen) {
+              setBriefingOpen(false);
+              return;
+            }
             if (!o) select(null);
           }}
           n={sheetPlace.n}

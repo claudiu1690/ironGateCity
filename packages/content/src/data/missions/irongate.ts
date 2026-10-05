@@ -16,7 +16,7 @@ export const irongateMissions: MissionsByPlace = {
       level: 10,
       difficulty: 20,
       pool: ['street-enforcer', 'strike-picket', 'party-thug'],
-      briefing: "At one the whole Quarter eats on the Forecourt, and on Thursdays somebody always has the plinth. Today it's yours if you want it: a thousand clerks, the Parliament steps for a backdrop, a policeman who looks bored, and a rival crew at the back who have come for the heckling.",
+      briefing: "At one the whole Quarter eats on the Forecourt, and on Thursdays somebody always has the plinth. Today it's yours if you want it: a thousand clerks, the Parliament steps for a backdrop, a constable who looks bored, and a rival crew at the back who have come for the heckling.",
       ways: [
         { id: 'cha-int', title: 'From the plinth, to the whole Forecourt', stats: ['cha', 'int'], hint: 'The ministries will not like it. A thousand clerks will.' },
         { id: 'str', title: 'From the Parliament steps, over their heads', stats: ['str'], hint: 'Climb them, hold the rail, and shout over the trams.' },
@@ -39,7 +39,7 @@ export const irongateMissions: MissionsByPlace = {
       level: 10,
       difficulty: 20,
       pool: ['city-police'],
-      briefing: "The Grand's lobby is where deputies dine and lobbyists wait, and after midnight it is where the ones who don't want to be seen together are seen together. There's an armchair behind the palms with a view of the lift, and a hall porter who knows every face in the capital and remembers the ones he doesn't.",
+      briefing: "The Grand's lobby is where deputies dine and lobbyists wait, and after midnight it is where the ones who don't want to be seen together are seen together. There's an armchair behind the palms with a view of the lift, and a hall porter who knows every face in the capital.",
       ways: [
         { id: 'int', title: 'The armchair behind the palms', stats: ['int'], hint: "A paper, a coffee you don't drink, and the lift in view. The hall porter is against you." },
         { id: 'agi', title: 'The service stairs', stats: ['agi'], hint: 'Closer, quieter, and no explanation if the night manager finds you there.' },
@@ -87,7 +87,7 @@ export const irongateMissions: MissionsByPlace = {
       requires: { rank: 3 },
       target: 'leader',
       pool: ['street-enforcer', 'strike-picket', 'party-thug', 'city-police'],
-      briefing: "The party that leads this district holds its night-shift meeting in the Buffet's back room at midnight: thirty porters and tram crews round the tables, a committee man on a chair with the lists, the counterman keeping out of it. The fuse box is behind the counter, the yard door is on the latch, and the question nobody on the chair can answer is about the fare.",
+      briefing: "The party leading this district holds its night meeting in the Buffet's back room at midnight: thirty porters and tram crews, a committee man on a chair with the lists. The fuse box is behind the counter, the yard door is on the latch, and the question the chair can't answer is about the fare.",
       ways: [
         { id: 'str', title: 'Shoulder through the back-room door', stats: ['str'], hint: 'Thirty men with their cups down. They will notice.' },
         { id: 'agi', title: 'Pull the fuse behind the counter', stats: ['agi'], hint: 'A dark room, a crowd that scatters, and nobody to say who did it.' },

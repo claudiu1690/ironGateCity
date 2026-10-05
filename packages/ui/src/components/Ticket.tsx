@@ -21,14 +21,14 @@ export function placeTagText(t: PlaceTagView): string {
       return copy.capital.comebackTag(t.pct);
     case 'membersOnly':
       return copy.capital.membersOnly;
-    // Slice 5 (screens §4.1, §8.3). The record tag's words are not in the design: the house form of
-    // a ticket's Iron tag (*Your record · −10 % Iron*, tech design Deviations, phase C).
+    // Slice 5 (screens §4.1, §8.3). The record tag reads the level word (QA fixes §7.1):
+    // *On file · −10 % Iron*.
     case 'rivalGround':
       return t.fxpPct === 50
         ? copy.risk.rivalGroundTag
         : copy.risk.rivalGroundTag.replace('+50 %', `+${t.fxpPct} %`);
     case 'record':
-      return copy.risk.recordTag(Math.abs(t.ironPct));
+      return copy.risk.recordTag(copy.risk.recordLevel[t.level === 'clean' ? 'onFile' : t.level], Math.abs(t.ironPct));
     case 'pressureCapped':
       return copy.risk.pressureCapped;
   }

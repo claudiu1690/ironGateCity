@@ -2,7 +2,9 @@ import { MONTH_NAMES, WEEKDAY_NAMES, dayKey, weekday } from '@irongate/rules';
 import type { DevAction, DevRisk, DevStatus } from '@irongate/server/dev';
 import { Button, cx, formatShare } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useId, useRef, useState } from 'react';
+import { useCharacter } from '../game/hooks';
 import { noteServerNow, useNow } from '../../lib/useNow';
 import { devStatusQuery, postDevAction } from './devApi';
 
@@ -60,6 +62,11 @@ const BUTTONS: Array<{ action: DevAction; label: string; needsCharacter: boolean
 
 function DevPanelOn({ status }: { status: DevStatus }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  // QA n2: a pending run-in's modal covers the page (and Radix makes it inert); the toggle and the
+  // panel sit above it then, so *Decide now* can be reached.
+  const { character } = useCharacter();
+  const aboveModal = character?.runIn?.state === 'pending' && 'pointer-events-auto z-[60]';
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState<{ text: string; error: boolean } | null>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -84,12 +91,15 @@ function DevPanelOn({ status }: { status: DevStatus }) {
   const [gotoTarget, setGotoTarget] = useState('');
   const act = useMutation({
     mutationFn: postDevAction,
-    onSuccess: async (r) => {
+    onSuccess: async (r, v) => {
       setLine({ text: r.line, error: false });
       noteServerNow(r.status.now);
       queryClient.setQueryData(devStatusQuery.queryKey, r.status);
       // Everything the clock moved: the HUD, the paper, the plate, the council screens.
       await queryClient.invalidateQueries();
+      // QA n3: *Take me to…* shows the city it took you to.
+      if (typeof v === 'object' && v.action === 'goto' && v.target)
+        void navigate({ to: '/city/$cityId', params: { cityId: v.target } });
     },
     onError: (e) => setLine({ text: e.message, error: true }),
   });
@@ -248,6 +258,7 @@ function DevPanelOn({ status }: { status: DevStatus }) {
           'border-2 border-r-0 border-dashed border-xp bg-ink px-1.5 text-xp shadow-[0_6px_16px_rgb(0_0_0/0.45)]',
           'hover:bg-ink-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-xp',
           open && 'bg-ink-2',
+          aboveModal,
         )}
       >
         <svg
@@ -280,6 +291,7 @@ function DevPanelOn({ status }: { status: DevStatus }) {
             'fixed top-[84px] right-[52px] left-2 z-30 flex max-h-[calc(100dvh-164px)] flex-col overflow-y-auto',
             'border-2 border-dashed border-xp bg-paper text-ink shadow-[0_0_0_1px_var(--color-ink),0_12px_30px_rgb(0_0_0/0.5)] outline-none',
             'sm:left-auto sm:w-[360px] lg:top-[76px] lg:max-h-[calc(100dvh-220px)]',
+            aboveModal,
           )}
         >
           <div className="flex items-start gap-2 border-b-2 border-ink bg-ink px-3 py-2 text-paper">

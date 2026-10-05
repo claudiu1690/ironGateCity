@@ -277,7 +277,19 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     r.heatCard.wanted,
     r.nameTaken(P('n'), P('level')),
     r.secondTime,
-    r.recordCard,
+    // QA fixes §4 (m5): the five record cards; §7.1: the record tag by level.
+    r.recordCards.onFileMinor,
+    r.recordCards.onFile,
+    r.recordCards.repeatMinor,
+    r.recordCards.repeat,
+    r.recordCards.notorious,
+    r.recordTag(r.recordLevel.onFile, 10),
+    r.recordTag(r.recordLevel.repeat, 20),
+    r.recordTag(r.recordLevel.notorious, 30),
+    // QA fixes §7.3: the did lines; §8 n12: a run-in row's luck reasons.
+    ...Object.values(r.did),
+    copy.reason.runIn.luckGood,
+    copy.reason.runIn.luckFair,
     r.yourRecord,
     r.recordLevel.clean,
     r.recordLevel.onFile,
@@ -432,20 +444,58 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     );
   });
 
-  it("the run-in's did line (drafts for the designer) in the order of the steps", () => {
-    expect(r.didLine('player', [{ row: 'pay', ok: true }])).toBe('You paid them off.');
+  it("the run-in's did line (QA fixes §7.3): the opponent's pronoun, one sentence a row", () => {
+    const failedRun = [
+      { row: 'run', ok: false },
+      { row: 'fight', ok: false },
+    ] as const;
+    expect(r.didLine('player', [{ row: 'pay', ok: true }])).toBe('You paid him off.');
+    expect(r.didLine('player', [{ row: 'pay', ok: true }], 'they')).toBe('You paid them off.');
+    expect(r.didLine('player', [{ row: 'fight', ok: true }])).toBe('You fought and won.');
+    expect(r.didLine('player', failedRun)).toBe('You tried to run; he was faster. You fought and lost.');
+    expect(r.didLine('player', failedRun, 'they')).toBe('You tried to run; they were faster. You fought and lost.');
     expect(
       r.didLine('player', [
-        { row: 'run', ok: false },
+        { row: 'talk', ok: false },
+        { row: 'fight', ok: true },
+      ]),
+    ).toBe("You tried to talk; he wasn't having it. You fought and won.");
+    expect(
+      r.didLine('player', [
+        { row: 'pay', ok: false },
         { row: 'fight', ok: false },
       ]),
-    ).toBe('You tried to run; they were faster. You fought. You lost.');
-    expect(r.didLine('luck', [{ row: 'talk', ok: true }])).toBe(
-      'You left it to luck. You talked your way out.',
+    ).toBe('You paid; he pocketed it and came at you anyway. You fought and lost.');
+    expect(r.didLine('luck', [{ row: 'talk', ok: true }])).toBe('Luck chose to talk, and he let you go.');
+    expect(r.didLine('luck', [{ row: 'fight', ok: false }])).toBe('Luck chose to fight, and you lost.');
+    expect(r.didLine('luck', [{ row: 'run', ok: true }])).toBe('Luck chose to run, and you got away.');
+    expect(r.didLine('auto', failedRun)).toBe(
+      "You didn't answer, so luck chose to run; he was faster, and you lost the fight.",
     );
-    expect(r.didLine('auto', [{ row: 'fight', ok: true }])).toBe(
-      'You left it, so luck chose. You fought. You won.',
+    expect(
+      r.didLine(
+        'auto',
+        [
+          { row: 'talk', ok: false },
+          { row: 'fight', ok: true },
+        ],
+        'they',
+      ),
+    ).toBe("You didn't answer, so luck chose to talk; they weren't having it, and you won the fight.");
+  });
+
+  it('the record cards (QA fixes §4): the level reached, the fade clause only when all are minor', () => {
+    expect(r.recordCard('onFile', 1, true)).toBe(
+      "ON FILE · One mark. It fades in a fortnight if there's no more; Iron from missions is down a tenth until then.",
     );
+    expect(r.recordCard('onFile', 2, false)).toBe(
+      "ON FILE · Two marks, and they don't fade. Iron from missions is down a tenth; 30 Political Capital strikes one off.",
+    );
+    expect(r.recordCard('repeat', 3, false)).toContain("REPEAT OFFENDER · Three marks. Iron from missions is down a fifth");
+    expect(r.recordCard('repeat', 3, false)).toContain("These don't fade");
+    expect(r.recordCard('repeat', 4, true)).toContain('They fade in a fortnight');
+    expect(r.recordCard('notorious', 6, false)).toMatch(/^NOTORIOUS · Six marks\. /);
+    expect(r.recordTag(r.recordLevel.repeat, 20)).toBe('Repeat offender · −20 % Iron');
   });
 });
 

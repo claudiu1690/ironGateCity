@@ -61,7 +61,7 @@ Kinds from the closed §13.5 list; no new kind. Blurbs ≤ 200 characters, plain
 | 7 | `ashford.wharf` | The Wharf | `docks` | 0.79, 0.77 | The river wharf below the bridge: barges at the lock, the boat club's verandah, and the towpath where the lower town walks on Sundays. |
 | 8 | `ashford.brewery` | Brewery | `factory-gate` | 0.92, 0.82 | The brick brewery with its two chimneys at the river's bend. Draymen at the gate from six, and the whole lower town smells of malt. |
 | 9 | `ashford.cattle-market` | Cattle Market | `market` | 0.25, 0.77 | Pens and auction sheds on the edge of the lower town. Market day brings the county in, with money in its pockets and opinions to match. |
-| 10 | `ashford.infirmary` | County Infirmary | `hospital` | 0.20, 0.47 | The county hospital in its walled garden: long wards, a porter's lodge, and a queue of visitors at two with flowers from the market. |
+| 10 | `ashford.infirmary` | County Infirmary | `hospital` | 0.20, 0.47 | The county infirmary in its walled garden: long wards, a porter's lodge, and a queue of visitors at two with flowers from the market. |
 | 11 | `ashford.police` | Police Station | `jail` | 0.72, 0.52 | The police station by the Corn Exchange: a lamp over the door, a duty officer at the desk, and a book in which the whole town's name eventually appears. |
 
 The pin numbers continue each city's list (7–11), so the first quarter's numbers are unchanged. **Teaser lines** for the locked plates: Coalport *Opens at Level 6 · The slipway, the customs house, and the far bank across the water.* · Duskwall *Opens at Level 6 · The road up to the frontier: the checkpoint, the inn and the sawmill.* · Ashford *Opens at Level 6 · The lower town across the river: the wharf, the brewery and the cattle pens.* The third quarters: *Opens with a later edition · The station, the coal yards and the tram sheds.* · *Opens with a later edition · The station, the square and the brewery.* · *Opens with a later edition · The station, the town hall and the Corn Exchange.*
@@ -442,7 +442,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Failure — *They close ranks* — The inspector saw you on the pavement before you were on the stair. The meeting goes quiet, moves up a floor, and finishes with the door shut. You stand on the landing with your question and nobody to ask it.
 
 **Spike the duplicator at the Union Hall** (`coalport.union-hall.spike`) · sabotage · 20 E · Level 10 · difficulty 18 · Rank 3 · target `collective` · pool `branch-inspector`, `city-police`
-*The Collective's duplicator runs in the back room of the Union Hall every night and five hundred flyers come out of it by morning. The yard wall is low, the caretaker's round is at eleven, and a tradesman with a box of parts gets through the front door without a word. One bent drum and the branch is quiet for a week.*
+*The Collective's duplicator runs in the back room of the Union Hall at night, and five hundred flyers come out of it by morning. The yard wall is low, the caretaker's round is at eleven, and a tradesman with a box of parts walks in at the front door. One bent drum and the branch is quiet for a week.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -506,7 +506,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Failure — *Good paste, cold night* — Frost and paste that's set like glass. Two sheets come off in strips the size of your hand before the dog has the whole yard up. The posters stay, and so does the story of who tried.
 
 **Break up the street meeting on Rampart Row** (`duskwall.rampart-row.street-meeting`) · disruption · 15 E · Level 8 · difficulty 16 · Rank 3 · target `vanguard` · pool `street-enforcer`, `vanguard-doorman`
-*The Vanguard holds its street meeting on Rampart Row at seven: fifty people in the road, a steward at each end and the organiser's man on a chair with the lists. The lamp on the corner is the only light, the back entries are open, and the one question the man on the chair can't answer is about the ration.*
+*The Vanguard holds its street meeting on Rampart Row at seven: fifty people in the road, a steward at each end and the organiser's man on a chair with the lists. The corner lamp is the only light, the back entries are open, and the one question the man on the chair can't answer is about the ration.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -519,7 +519,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Failure — *The stewards close up* — A steward saw you on the corner before you were in the road. The meeting goes quiet, moves under the lamp, and finishes with the stewards facing out. You stand in the entry with your question and nobody to ask it.
 
 **Spike the duplicator at Beacon House** (`duskwall.beacon-house.spike`) · sabotage · 20 E · Level 10 · difficulty 18 · Rank 3 · target `vanguard` · pool `vanguard-doorman`, `city-police`
-*The Vanguard's duplicator runs in the basement of Beacon House every night and five hundred sheets come out of it by morning. The yard wall is high, the doorman's round is at eleven, and a tradesman with a box of parts gets through the side door without a word. One bent drum and the district is quiet for a week.*
+*The Vanguard's duplicator runs in the basement of Beacon House every night, and five hundred sheets come out of it by morning. The yard wall is high, the doorman's round is at eleven, and a tradesman with a box of parts walks in at the side door. One bent drum and the district is quiet for a week.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -559,7 +559,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Failure — *A beast is a beast* — A bull gets loose between lots and five hundred farmers watch it, not you. By the time it's penned you're one more voice under the roof. The auctioneer looks at you once and lifts his gavel. You walk out past the pens with the flyers.
 
 **Watch the wharf after dark** (`ashford.wharf.watch`) · surveillance · 12 E · Level 6 · difficulty 14 · everyone · pool `city-police`
-*The wharf closes at six and the lock-keeper goes home at eight. Between eight and midnight the barges that tie up below the bridge are nobody's business, and what comes off them goes up the towpath without a toll. There's the boat club verandah with a view of the lock, and the towpath, which is closer and has the police on it twice a night.*
+*The wharf closes at six and the lock-keeper at eight. After that the barges below the bridge are nobody's business, and what comes off them goes up the towpath without a toll. There's the boat club verandah with a view of the lock, and the towpath, closer, with the police on it twice a night.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -596,7 +596,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Failure — *The gate shuts* — Mr Grey's man saw you on the Row before you were at the gate. The meeting goes quiet, moves to the far steps, and finishes with the gate shut. You stand in the entry with your question and nobody to ask it.
 
 **Spike the duplicator at the Rooms** (`ashford.assembly-rooms.spike`) · sabotage · 20 E · Level 10 · difficulty 18 · Rank 3 · target `alliance` · pool `party-thug`, `city-police`
-*The Alliance's duplicator runs in the committee room at the Assembly Rooms every night and five hundred sheets come out of it by morning. The area railings are low, the porter's round is at eleven, and a tradesman with a box of parts gets through the side door without a word. One bent drum and the Rooms are quiet for a week.*
+*The Alliance's duplicator runs in the committee room at the Assembly Rooms at night, and five hundred sheets are out by morning. The railings are low, the porter's round is at eleven, and a tradesman with a box of parts walks in at the side door. One bent drum and the Rooms are quiet for a week.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -623,7 +623,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 ### 5.4 Irongate
 
 **Speak to the lunch-hour rally on the Forecourt** (`irongate.forecourt.rally`) · speech · 15 E · Level 10 · difficulty 20 (the ladder's 18 for Level 10, +2 in the capital, §4.3; every Irongate mission is 20) · everyone · pool `street-enforcer`, `strike-picket`, `party-thug`
-*At one the whole Quarter eats on the Forecourt, and on Thursdays somebody always has the plinth. Today it's yours if you want it: a thousand clerks, the Parliament steps for a backdrop, a policeman who looks bored, and a rival crew at the back who have come for the heckling.*
+*At one the whole Quarter eats on the Forecourt, and on Thursdays somebody always has the plinth. Today it's yours if you want it: a thousand clerks, the Parliament steps for a backdrop, a constable who looks bored, and a rival crew at the back who have come for the heckling.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -636,7 +636,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Failure — *Rain off the dome* — The rain comes off the dome at ten past one and the Forecourt goes under the arcades without you. You finish for the statue and the rival crew, who enjoy it. Same plinth next Thursday, if it's dry.
 
 **Watch the Grand Hotel's lobby after midnight** (`irongate.grand-hotel.lobby-watch`) · surveillance · 12 E · Level 10 · difficulty 20 · everyone · pool `city-police`
-*The Grand's lobby is where deputies dine and lobbyists wait, and after midnight it is where the ones who don't want to be seen together are seen together. There's an armchair behind the palms with a view of the lift, and a hall porter who knows every face in the capital and remembers the ones he doesn't.*
+*The Grand's lobby is where deputies dine and lobbyists wait, and after midnight it is where the ones who don't want to be seen together are seen together. There's an armchair behind the palms with a view of the lift, and a hall porter who knows every face in the capital.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -660,7 +660,7 @@ Each mission: its row of numbers, the briefing, the ways and the three texts. `p
 - Failure — *The paste is good* — Wet night, good paste, and posters that come off the glass in strips the size of your hand. You get one shelter done before the inspector's lamp comes down the platform. The posters stay, and the Junction has your face.
 
 **Break up the rival meeting at the Station Buffet** (`irongate.station-buffet.meeting`) · disruption · 15 E · Level 10 · difficulty 20 · Rank 3 · target `leader` · pool `street-enforcer`, `strike-picket`, `party-thug`, `city-police`
-*The party that leads this district holds its night-shift meeting in the Buffet's back room at midnight: thirty porters and tram crews round the tables, a committee man on a chair with the lists, the counterman keeping out of it. The fuse box is behind the counter, the yard door is on the latch, and the question nobody on the chair can answer is about the fare.*
+*The party leading this district holds its night meeting in the Buffet's back room at midnight: thirty porters and tram crews, a committee man on a chair with the lists. The fuse box is behind the counter, the yard door is on the latch, and the question the chair can't answer is about the fare.*
 
 | Way | Stat | Hint |
 |---|---|---|
@@ -714,7 +714,7 @@ Rolled once on every **illegal** mission (vandalism, disruption, sabotage, theft
 
 > **Caught chance = base by type + Heat ÷ 2 + the state's bonus − Agility ÷ 2**, whole numbers rounded down, kept between **2 %** and **95 %**.
 
-The base is §4.2's (vandalism 8, disruption 10, theft 15, sabotage 20); Heat is the value after the mission's own gain; the state's bonus is *Noticed* +5 / *Hot* +15 / *Wanted* +15 (§6.2); the Agility term is the §11.2 "AGI modifiers", pinned as **one point per two Agility** (AGI 5: −2; AGI 20: −10; AGI 30: −15, which is the §8.3 milestone's figure arrived at by the same road). A *Repeat offender* adds **+5** (§11.3's "police encounters +5 %" applied here and to the run-in both). On rival ground the base is **doubled** with the Heat (§11.1).
+The base is §4.2's (vandalism 8, disruption 10, theft 15, sabotage 20); Heat is the value after the mission's own gain (and after a failed *Pay them off*'s +10, which came first: the attention you just drew counts); the state's bonus is *Noticed* +5 / *Hot* +15 / *Wanted* +15 (§6.2); the Agility term is the §11.2 "AGI modifiers", pinned as **one point per two Agility** (AGI 5: −2; AGI 20: −10; AGI 30: −15, which is the §8.3 milestone's figure arrived at by the same road). A *Repeat offender* adds **+5** (§11.3's "police encounters +5 %" applied here and to the run-in both). On rival ground the base is **doubled** with the Heat (§11.1).
 
 The roll is never shown. The ticket's risk line says *if caught, a mark on your record*; the result says *Your name was taken* or nothing.
 
@@ -779,7 +779,7 @@ The duty officer is a civic policeman of the republic, not a party's man (policy
 
 | | |
 |---|---|
-| **Max** | 100 + 5 per Level (Level 6: 125; Level 10: 145) |
+| **Max** | 100 at Level 1 and +5 for every level gained, 100 + 5 × (Level − 1) (Level 6: 125; Level 10: 145) |
 | **Regen** | **10 HP per 10 minutes**, lazy, from the moment it falls |
 | **Lost through** | Winning a fight (§10.3: their power × 0.8 ± 20 %, less your armour), and nothing else in slice 5 |
 | **At 0** | Admitted to the infirmary |
@@ -837,7 +837,7 @@ The encounter modal (`slice-5-screens.md` §5) shows the opponent's portrait, th
 
 | Row | The player reads | Odds (§20.1) | If it works | If it fails |
 |---|---|---|---|---|
-| **Fight** | *Fight · Fair odds · Strength* | **50 % + 3 % × (your power − their power)**, 5–95. Your power = **STR × 1.5 + armour ÷ 2** (slice 5: every clothing item's armour is its tier's §20.3 value, Tier I = 4, so +2; weapons and bodyguards are later) | You win: the held result is paid; **+20 XP**; **if you were at full Health, +10 % on the mission's XP and Party XP** (*Won at full strength*); you lose **their power × 0.8 (±20 %) − 4** Health, at least 0, and never below 1 Health (a win never admits you, §23.1 #5) | **Loss**: Health 0, the infirmary (§9); **against the police, the cells** (§8), with the mission's marks |
+| **Fight** | *Fight · Fair odds · Strength* | **50 % + 3 % × (your power − their power)**, 5–95. Your power = **STR × 1.5 + armour ÷ 2** (slice 5: every clothing item's armour is its tier's §20.3 value, Tier I = 4, so +2; weapons and bodyguards are later) | You win: the held result is paid; **+20 XP**; **if you were at full Health when the run-in began** (before any row; a failed Run's damage does not lose it), **+10 % on the mission's XP and Party XP** (*Won at full strength*); you lose **their power × 0.8 (±20 %) − 4** Health, at least 0, and never below 1 Health (a win never admits you, §23.1 #5) | **Loss**: Health 0, the infirmary (§9); **against the police, the cells** (§8), with the mission's marks |
 | **Run** | *Run · Long shot · Agility* | **(your AGI ÷ their AGI) × 60 %**, at most 95 | You get away: **+10 XP**; the held result drops to Failure's small XP ("you dropped it"); Heat as normal; no caught check | **Extra damage** (half a win's loss) and the fight goes ahead at **−10 %**, resolved at once |
 | **Talk your way out** | *Talk your way out · Long shot · Charisma* | The §8.4 formula: **50 % + 4 % × (worn CHA − their Wits)**, 5–95 | They let you go: **+10 XP**; the held result is paid | They get angrier: the fight goes ahead at **−10 %**, resolved at once |
 | **Pay them off** | *Pay them off · 60 Iron · nearly always works* | **90 %** when they can be bought; the row reads *Won't be bought* and is disabled for the branch inspector | They look away: the held result is paid; **Heat unchanged**; the Iron is gone | The Iron is gone, **+10 Heat**, and the fight goes ahead at the full odds, resolved at once |
@@ -858,14 +858,14 @@ Each opponent has six short lines in content (≤ 120 characters each), used by 
 
 | Opponent | appears | you won | you lost | you ran | you talked | you paid |
 |---|---|---|---|---|---|---|
-| Street enforcer | A man in a good coat steps off the kerb and asks what party you're with. He knows. | He goes down on the setts and stays there, swearing. You walk on, not fast. | The setts come up to meet you. The last thing you see is his boots. | You're round the corner before he's off the kerb. He shouts your party's name after you. | "Wrong man," you say, and mean it, and he almost believes you. He lets you go, slowly. | He takes the notes without counting and steps back onto the kerb. "Didn't see you." |
+| Street enforcer | A man in a flat cap steps off the kerb and asks what party you're with. He knows. | He goes down on the setts and stays there, swearing. You walk on, not fast. | The setts come up to meet you. The last thing you see is his boots. | You're round the corner before he's off the kerb. He shouts your party's name after you. | "Wrong man," you say, and mean it, and he almost believes you. He lets you go, slowly. | He takes the notes without counting and steps back onto the kerb. "Didn't see you." |
 | The doorman at Beacon House | The doorman fills the doorway. He has your face and he has all evening. | He sits down in the doorway, surprised, and lets you past. He'll remember. | He puts you down on the step without effort and goes back to his door. | You take the yard wall he's too big for. He doesn't bother to follow. | You say a name from the committee and he thinks about it long enough for you to leave. | He takes the notes and opens the door for you, which is worse than if he hadn't. |
-| Strike picket | Three men with armbands come off the gate. "You're not from the branch." | The big one goes down and the other two decide the gate matters more. You walk. | They put you in the gutter by the gate and go back to their brazier. | You're through the gate and gone before the third one has his cap on. | "I'm from the capital," you say, with the right accent, and the armbands let you through. | The big one pockets it. "For the strike fund." They turn back to the brazier. |
+| Strike picket | Three men come off the gate, one with a placard. "You're not from the branch." | The big one goes down and the other two decide the gate matters more. You walk. | They put you in the gutter by the gate and go back to their brazier. | You're through the gate and gone before the third one has his cap on. | "I'm from the capital," you say, with the right accent, and the picket lets you through. | The big one pockets it. "For the strike fund." They turn back to the brazier. |
 | Branch inspector | A small man with a book steps out of a doorway. He's written your face down already. | The book goes in the gutter and so does he. He'll write that down too. | He doesn't hit hard, but he hits where it counts, and he had the book ready. | You leave him with his book open and the pencil still moving. | You give him a name from his own branch and watch him look for it. By the time he can't find it, you're gone. | *won't be bought* |
 | Alliance party heavy | A big man with a party badge and a quiet voice asks you to step into the yard. | He goes down on the cobbles, surprised, and asks you to leave, which you do. | He's quiet about it, and thorough. You wake on the cobbles. | You're over the yard wall before he's finished his sentence. | "I'm looking for Mr Grey's man," you say, and he points you out of the yard. | He takes it with a nod and a word about not making a habit of it. |
-| A constable | A constable steps under the lamp and asks for your name. He has a notebook and a whistle. | He goes down and the whistle goes with him. You've a minute before the rest come. | The whistle goes before you do, and so do you. The cells. | You're two streets away before the whistle. He has your coat, not your face. | "On my way home, constable," and the right accent, and he lets you go with a look. | The notebook closes. "Mind how you go." Three hundred marks is the going rate. |
+| A constable | A constable steps under the lamp and asks for your name. He has a notebook and a whistle. | He goes down and the whistle goes with him. You've a minute before the rest come. | The whistle goes before you do, and so do you. The cells. | You're two streets away before the whistle. He has your coat, not your face. | "On my way home, constable," and the right accent, and he lets you go with a look. | The notebook closes. "Mind how you go." Three hundred Iron is the going rate. |
 
-Content-policy check: the Vanguard's muscle is a man in a good coat and a club's doorman; the Collective's are men with armbands at a gate and a man with a book; the Alliance's is a big man with a badge; the police are the republic's. No uniforms as a crowd, no militia, no ranks beyond *constable*, no weapon anywhere in the slice (the §20.3 weapon slot waits for slice 8, and the QA regex's ban on *weapon*, *gun* and *rifle* holds).
+Content-policy check: the Vanguard's muscle is a man in a flat cap and a club's doorman; the Collective's are men at a gate with a placard and a man with a book; each opponent carries its pronoun in content (`pronoun: 'he' | 'they'`, the picket *they*) for the run-in's *did* line (`slice-5-fixes.md` §7.3); the Alliance's is a big man with a badge; the police are the republic's. No uniforms as a crowd, no militia, no ranks beyond *constable*, no weapon anywhere in the slice (the §20.3 weapon slot waits for slice 8, and the QA regex's ban on *weapon*, *gun* and *rifle* holds).
 
 ---
 
@@ -886,7 +886,7 @@ From **Level 10**, the nation map's rival home cities are **open**: the card rea
 | **Heat** | the type's | **×2** |
 | **The caught check** | base + Heat ÷ 2 | **base ×2** + Heat ÷ 2 (§7.1) |
 | **Party XP** | the base | **+50 % on every action and mission**, a line of its own (*Rival ground +6*); **+75 % while the city is in Unrest** (§14.11's "rival spy missions there pay more") |
-| **Opinion** | persuasion from Neutral | **against the home faction** (§14.2: the swing comes from its share, half to you, half to Neutral), so your work lowers its morale; the floor at 50 holds; **capped at 2 points a day per city** across all rivals (§14.11's "rival pressure is capped per day"), after which actions pay their XP, Party XP and Iron and move nothing (the ticket reads *The town has had enough today · no opinion*) |
+| **Opinion** | persuasion from Neutral | **against the home faction** (§14.2: the swing comes from its share, half to you, half to Neutral), so your work lowers its morale; the floor at 50 holds; **capped at 2 points a day per city** across all rivals (§14.11's "rival pressure is capped per day"), after which actions pay their XP, Party XP and Iron and move nothing (the ticket reads *The town has had enough today · no opinion*). **A mission keeps its named target wherever it is played** (`slice-5-fixes.md` §10): a target that is the home faction draws from it under the cap; a target that is the third party there (an Alliance visitor tearing down the Vanguard's posters in Coalport) draws from that party, uncapped, the §14.2 floors holding |
 | **Reputation** | your Standing there | the same ladder; a visitor usually stands at *Stranger* |
 | **Orders** | the day's orders | the orders are home's or the capital's and cannot be done here; the orders panel says *Your orders are in Coalport today* |
 | **Residence, standing for office, backing** | — | **never** (§14.12); the Election card shows the home residence's as from anywhere |
@@ -914,7 +914,7 @@ Drawn **at boarding for a rival home city, always one** (§14.10 "always an even
 |---|---|---|
 | **Show your papers** | *Your party card · it depends on your Heat and your record* (unchecked) | **Cool and Clean** — *Waved on* — He reads the card, reads your face, and hands it back. "Visiting?" You say visiting. He moves to the next seat. The crest meant nothing to him, or he's a good actor. · **Otherwise** (+10 Heat, *Watched*) — *They write your name down* — He reads the card twice and writes something in a book, slowly, so you can see him do it. "Enjoy the town." The carriage has heard. |
 | **Talk your way through** | Charisma · +6 Party XP | Success — *A commercial traveller* — You're in bootlaces, and you've a sample case to prove it, which you don't open. He laughs and moves on. The man opposite says you're good. · Partial (*Watched*) — *He half believes you* — He takes the bootlaces and the case and the accent, and writes your name down anyway, to be safe. "Enjoy the town." |
-| **Pay the lamp** | 30 Iron · unchecked | *The lamp moves on* — Thirty marks folded under the card, and the card comes back without the marks and without a word. The man opposite looks at the window. It is the oldest toll on the line. |
+| **Pay the lamp** | 30 Iron · unchecked | *The lamp moves on* — Thirty Iron folded under the card, and the card comes back without the Iron and without a word. The man opposite looks at the window. It is the oldest toll on the line. |
 | *Ignore* (slept through) | | *You keep your eyes shut. They write your name down anyway.* (+10 Heat, *Watched*) |
 
 **The informer** (`jev.informer`)
@@ -1161,7 +1161,7 @@ Each with a default so the build does not wait.
 
 ## 20. Content-policy check
 
-Every string above was read against `content-policy-review.md` §7. The police everywhere are the republic's (a constable, the duty officer, the harbour police, police headquarters), never a party's; the Vanguard's muscle is a man in a good coat and a club's doorman, its places a checkpoint the customs run, an inn and a sawmill; its stances are timetables, registers, fixed rates and a magistrate; no line says it is right (the Sentinel's *noted* and *in order* are its manner). The Collective's people are riveters, pickets with armbands and a man with a book; its stances strikes and a free crossing. *Fight* is a verb of the §20 hazard, used once per encounter and never as a frame for the contest; *run-in*, *a rival crew*, *the cells*, *rival ground* are the words. No weapon, uniform, rank, drill, patrol, mark or slogan appears; the one slogan in the slice is the Vanguard's reviewed *ORDER AND BREAD* on a poster being torn down. Nothing is a front, a war, an uprising or an enemy. The checkpoint card's customs men are the frontier's, and *Papers, please* is the republic's border, not a party's. **For QA:** the war regex's `front` matches *the front door* in the Union Hall sabotage briefing (§5.1), a door in its everyday sense like the reviewed *the front room*, and needs the same allowance; *Garrison Hill* appears once (the Issue's district) under its existing allowance; *constable* is a civic police word in neither regex and *the duty officer* carries no rank (§23.1 #22); *in front of* and *torch* are gone from every string (§23.6 #14); no other string in either document matches the war or the vocabulary regex.
+Every string above was read against `content-policy-review.md` §7. The police everywhere are the republic's (a constable, the duty officer, the harbour police, police headquarters), never a party's; the Vanguard's muscle is a man in a flat cap and a club's doorman, its places a checkpoint the customs run, an inn and a sawmill; its stances are timetables, registers, fixed rates and a magistrate; no line says it is right (the Sentinel's *noted* and *in order* are its manner). The Collective's people are riveters, pickets with a placard and a man with a book; its stances strikes and a free crossing. *Fight* is a verb of the §20 hazard, used once per encounter and never as a frame for the contest; *run-in*, *a rival crew*, *the cells*, *rival ground* are the words. No weapon, uniform, rank, drill, patrol, mark or slogan appears; the one slogan in the slice is the Vanguard's reviewed *ORDER AND BREAD* on a poster being torn down. Nothing is a front, a war, an uprising or an enemy. The checkpoint card's customs men are the frontier's, and *Papers, please* is the republic's border, not a party's. **For QA:** the war regex's `front` matches *the front door* in the Union Hall sabotage briefing (§5.1), a door in its everyday sense like the reviewed *the front room*, and needs the same allowance; *Garrison Hill* appears once (the Issue's district) under its existing allowance; *constable* is a civic police word in neither regex and *the duty officer* carries no rank (§23.1 #22); *in front of* and *torch* are gone from every string (§23.6 #14); no other string in either document matches the war or the vocabulary regex.
 
 ---
 

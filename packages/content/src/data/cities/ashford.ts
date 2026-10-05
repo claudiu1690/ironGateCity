@@ -568,7 +568,7 @@ export const ashford: City = {
       name: 'County Infirmary',
       ref: 'the County Infirmary',
       kind: 'hospital',
-      blurb: "The county hospital in its walled garden: long wards, a porter's lodge, and a queue of visitors at two with flowers from the market.",
+      blurb: "The county infirmary in its walled garden: long wards, a porter's lodge, and a queue of visitors at two with flowers from the market.",
       // The survey pin (mapPins.ts), pin 10.
       map: { x: 0.2, y: 0.47 },
       quarterId: 'ashford.wharf',

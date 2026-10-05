@@ -3,7 +3,8 @@ import { RequestLog, isDuplicateKeyError } from '@irongate/db';
 import type { RequestKind } from '@irongate/db';
 import type { ClientSession, Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
-import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction, mayHaveLostToSameKey } from './txn';
+import { assertKeyFree } from './keyGuard';
+import { DayChanged, KeyTaken, MAX_ATTEMPTS, VersionConflict, inTransaction, mayHaveLostToSameKey } from './txn';
 
 const hashInput = (input: unknown) => createHash('sha256').update(JSON.stringify(input)).digest('hex');
 
@@ -41,6 +42,8 @@ export async function withRequestKey<T>(i: {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       return await inTransaction(async (session) => {
+        // Slice 5 fix round (QA M1): a re-run after a write conflict sees the winner's row first.
+        await assertKeyFree(session, i.characterId, i.idempotencyKey);
         const result = await i.fn(session);
         await RequestLog.create(
           [{ characterId: i.characterId, idempotencyKey: i.idempotencyKey, kind: i.kind, inputHash, result }],
@@ -54,6 +57,7 @@ export async function withRequestKey<T>(i: {
       if (mayHaveLostToSameKey(err)) {
         const winner = await stored();
         if (winner !== null) return winner;
+        if (err instanceof KeyTaken) throw gameError('CONFLICT', 'KEY_REUSED', { idempotencyKey: i.idempotencyKey });
       }
       if (err instanceof VersionConflict) continue;
       // ADR 0018: a concurrent duplicate of a set-once act (a unique index) with no stored result:

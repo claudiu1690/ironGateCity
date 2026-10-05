@@ -397,9 +397,15 @@ export function LockMark({ className }: { className?: string }) {
 // ---------------------------------------------------------------------------------------------
 
 /** A locked quarter's lock line: *Opens at Level 6* / *Opens with a later edition*. */
-export function quarterLockLine(q: Pick<QuarterView, 'lock'>): string | null {
+export function quarterLockLine(
+  q: Pick<QuarterView, 'lock' | 'teaser'>,
+  opts: { teaser?: boolean } = {},
+): string | null {
   if (!q.lock) return null;
-  return q.lock.kind === 'level' ? copy.risk.quarters.opensAt(q.lock.level) : copy.risk.quarters.later;
+  if (q.lock.kind === 'level') return copy.risk.quarters.opensAt(q.lock.level);
+  // QA fixes §9: the teaser sheet's line is the lock and its teaser (*Opens with a later edition · The
+  // station, …*); the map's pin and the list keep the lock alone.
+  return opts.teaser && q.teaser ? `${copy.risk.quarters.later} · ${q.teaser}` : copy.risk.quarters.later;
 }
 
 export interface QuarterTeaserSheetProps {
@@ -436,9 +442,9 @@ export function QuarterTeaserSheet({ quarter: q, open, onOpenChange, level }: Qu
                   {copy.risk.quarters.levelOpens(q.lock.level, level)}
                 </p>
               )}
-              {q.lock?.kind !== 'level' && q.teaser && (
+              {q.lock && q.lock.kind !== 'level' && (
                 <p className="font-mono text-[12px] text-muted" data-testid="teaser-line">
-                  {q.teaser}
+                  {quarterLockLine(q, { teaser: true })}
                 </p>
               )}
               <Dialog.Close className="label-caps mt-1 min-h-11 cursor-pointer border-[1.5px] border-ink px-4 text-[13px] hover:bg-ink hover:text-paper">

@@ -2,22 +2,23 @@
  * Slice 5, T17 (tech design §8.2 "ambitionService.attempt", §15 "Server — chapter"; design §13):
  * Settle His Debts, chapter 2, *The riverside house*. The quiet way adds Heat +6 on every outcome,
  * lazily and in the attempt's transaction; the result carries it, `first` on the first Heat ever.
- * The roll is forced through the attempt's seed (`randomBytes`), so each outcome is played once.
+ * The roll is forced through the attempt's seed (`keySeed`, the key's seed since the fix round's
+ * M1), so each outcome is played once.
  */
-import type * as Crypto from 'node:crypto';
 import { Character } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
 import { CHECK, createRng } from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type * as KeyGuard from '../src/services/keyGuard';
 import { setupDb, teardownDb, testClock } from './helpers';
 import { at, key, member } from './slice5.helpers';
 
 const forced = vi.hoisted(() => ({ seed: null as string | null }));
-vi.mock('node:crypto', async (importOriginal) => {
-  const real = await importOriginal<typeof Crypto>();
+vi.mock('../src/services/keyGuard', async (importOriginal) => {
+  const real = await importOriginal<typeof KeyGuard>();
   return {
     ...real,
-    randomBytes: (n: number) => (forced.seed ? Buffer.from(forced.seed, 'hex') : real.randomBytes(n)),
+    keySeed: (...a: Parameters<typeof real.keySeed>) => forced.seed ?? real.keySeed(...a),
   };
 });
 
