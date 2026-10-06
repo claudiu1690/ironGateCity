@@ -1,3 +1,5 @@
+> **Review 4 (6 Oct 2026):** the overview, the quarter frames, the outlines, the quarter bar and the teaser sheet described here are now **the capital's districts only**. A home city (and Clearwater) is one map with every surveyed place a pin and locked places greyed with a lock and a note; a quarter is the Level gate of a group of places on the Places list. GDD §14.13; `docs/design/review-4-answers.md` §21.
+
 # City quarters: more city to play in, one quarter at a time
 
 Game designer, 1 Oct 2026. The design for the user's "more city to play in": cities that grow with more places for later levels, and a greater sense of distance between them. The reliable way to do it with generated art is **quarters**: each city becomes an overview map plus a few quarter maps, each quarter a normal-size square image that today's generators handle. **Coalport is the test.** This document is the full design for Coalport and a plan for the other cities and the nation. The art brief that generates it is `docs/art/map-brief.md` (revised the same day; the prompts in §5 here are the same text as the brief's §4, and the brief is the copy to paste into the tool).

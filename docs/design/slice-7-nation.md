@@ -1058,3 +1058,12 @@ Every deck ≤ 200 characters with the longest tokens. The Courier's non-politic
 ### 23.10 The twenty notes (`docs/tech/slice-7.md` §23)
 
 1. The plan's row: rewritten (`docs/IMPLEMENTATION_PLAN.md` §5; the build line reads *the President* and *36 of 60*). 2. `TERM_EPOCH` as a code constant: accepted. 3. Families: §23.2. 4. The trigger: §23.1 #11. 5. Unrest: #12. 6. The Governor's rule ahead: #7, #8. 7. The unset line: #9. 8. The pick's ties: #23. 9. Timing: #14. 10. Deputies and venues: §23.5, §23.6. 11. Modals: §23.7. 12. The route and the councillors: #24, #25. 13. `scene.parliament` catalogued, not bound to the kind: accepted. 14. `nation.ts`: the developer's (T7). 15. The deputy's 14 days: confirmed (§3's table says so). 16. GDD §15.1's prose now says *Parliament* and *the Presidency*. 17. **Wording confirmed:** laws never touch Party XP or the odds of a §8.4 check; the caught check is a risk roll and `caughtDelta` moves it (§5.4, GDD §15.8). 18. The four voices: §23.9. 19. The quarter order: accepted. 20. Stacked stipends: accepted, counted by the report (Appendix C #65).
+
+---
+
+## 24. Review 4 addendum (6 Oct 2026)
+
+- **§9.1, the city:** Clearwater is **one map** like a home city (GDD §14.13, review 4): no quarter outlines, bar or overview; the Front's four places are greyed pins with *Opens with a later edition* until slice 8; the Places list is grouped by quarter.
+- **§9.2, the Casino:** its sheet carries **the council's blocks** (the desk for a councillor, the rule in force with its effect, the seven seats as rows, the order paper, the week's Issues, the Election card; GDD §15.3) under its own tickets; the kind stays `bar`. **§9.4, the room:** a ***Lodgings*** card at **the Rows** (*A bed in the Rows · 7 nights · 100 Iron · Rested banks to 250*), not on the residence card; half price under *Rents in the Rows*.
+- **§11.3, the Courier:** the **lake resident's** paper; a visitor reads their own paper in its *Clearwater edition* (GDD §3.3). The Courier's city-group templates serve as the neutral local line in other papers' Clearwater editions; its ambient set is the edition's.
+- **§3.1, the Governor:** the *What now* card's third line for a Governor reads the office's pay; the Governor's rule is item 1 on the Town Hall's *Up for a vote* block as on `/council`.

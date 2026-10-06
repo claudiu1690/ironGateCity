@@ -230,3 +230,10 @@ British English, no exclamation marks, no percentages for odds, times in the pla
 - **Chapter 7's choice A** hint: *The truth, and a debt to Crane.* (no entry lands); Favour +5 on every outcome.
 - **Issues feeding exposés:** *The Casino's Licence* and *The Cells Are Full*.
 - New copy for §17: *It's in your {outfit} outfit; selling takes it out.* · *It's in your {a} and {b} outfits; selling takes it out of both.* · *Taken out of your {outfit} outfit* · *Taken out of your {a} and {b} outfits* · *Not against your own party* · *The {paper} prints nothing against the {party}'s own. Sell the file at a station, or turn it.* · *Nobody to print it against* · *{name} belongs to no party. Sell the file at a station, or turn it.* · *Nothing to your party's name.* · *no Party XP · +2 Favour with {patron}* · *Not while you're Wanted · the doorman has the list* · *Paid eight weeks ahead* · *Lodgings in {city}* · *Take lodgings · 100 Iron* · *visitor* · *at Herald House, Old Town* · *At a newspaper: Herald House in the capital, or Gazette House in Ashford* · *Show your papers · forged papers*.
+
+---
+
+## 19. Review 4 addendum (6 Oct 2026)
+
+- **§9.1, the residence card:** the first line and button are *Live here · 500 Iron* (slice 4 §6.1 as revised by review 4); the second line is *Where you sleep* with the free room / the flat; **no paid room row** (the Lodgings card is at Tram Junction / the Rows).
+- **§13, the journey:** the nation map in journey mode; *Change into plain clothes* is a chip on the journey plate.

@@ -251,3 +251,12 @@ The user's third play-through (`docs/review/2026-10-02-review-3.md` #6) found th
 - **The council (§6):** kicker *COALPORT COUNCIL · SITTING AT THE TOWN HALL*; the seat tiles' popover says *Local candidate* for a local.
 - **The Election card (§1a, §2.1, §7):** unchanged; its kicker opens the new five-line note.
 - **Tickets and the result modal (§8):** the training button is the title's verb (*Study*), the repeat buttons say their cost (*Once more · 10 Energy*), and the reward tiles are a receipt (answers §3–§5).
+
+---
+
+## 13. Review 4 addendum (6 Oct 2026): the sheet on a desk, the Town Hall, the plate line, *What now*
+
+- **§1, the look:** on viewports from **960 px** every paper-ground page (the paper, the council, the held screens) is a **720 px sheet** centred on a desk ground (ink-2 `#1c1a17` with a soft vignette; a 1 px ink line, a 3 px paper-2 edge, a `0 24px 48px rgba(0,0,0,.45)` shadow). Under 960 px nothing changes. `review-4-answers.md` §3.
+- **§6, the council:** the council's blocks now live on **the Town Hall's place sheet** in every city (kind `town-hall`, a pin like any other; answers §11.2): the ticket *Sit in the public gallery* · **Your desk** for a councillor (§6.3's `UpForAVote`, the `RuleMenu`, and a *Next* line by cycle day) · **The rule in force** with its plain effect and days left · **The council** as rows (`Player · Organiser` / `Local candidate · townspeople run by the game`), not the `SeatGrid` tiles · **Up for a vote** read-only (§6.3–6.4's rows) · **This week's Issues** · the Election card. `/council` opens the same blocks on the paper ground. The §12 hall header stands on the election screens.
+- **§8, the plate:** the council-rule line reads **the effect**: *Council rule: Reading Room Grant · studying costs a fifth less · 3 days left*; tap → the Town Hall's sheet. The eleven `effectLine`s: GDD §15.3.
+- **§2.2, the front page:** under the headline, once per term, the ***What now · your five days*** card (three numbered lines and *To your desk at the Town Hall*; answers §10.1); the same card on the first hall visit of the term.

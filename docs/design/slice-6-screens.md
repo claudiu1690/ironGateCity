@@ -188,3 +188,11 @@ The button (**Post bail · 150 Iron** / **Visit · 3 Energy**) opens a `BottomSh
 Help notes (tap the label; the review-1 pattern): **Campaign event** · *An event the branch does together: a few roles, each on someone's stats, and one result for all of you. Sign up ahead; you need not be there when it starts.* · **Volunteers** · *Townspeople run by the game. They fill any role still empty at the start, at half strength, so an event always happens; a member in the role does better.* · **Here now** (§6.1) · **Hands** · *A place on any event for anyone, 5 Energy, no check. Your Energy counts toward how far the event moves opinion, and you're paid like everyone else.* · **Scoreboard** · *Opinion won in every city, added up, for this week or for good. The top three of each Level bracket are marked.* · **Chat** · *The branch's room. Party is everyone; the city branch is who's here. Mute anyone from their profile; report a line with a long press. Hide chat from the Me tab if you'd rather.*
 
 British English, no exclamation marks, no percentages for odds, times in the player's local clock.
+
+---
+
+## 13. Review 4 addendum (6 Oct 2026)
+
+- **§2.3, `MemberStatus`:** *in the cells at Harbour Police · out in 24 min* · *in the infirmary · out in 12 min* · *on the train to Irongate · arrives in 8 min* (GDD §2.2's countdown style).
+- **§7.1, `FavourSheet`:** also opened from the police station's ***In the cells now*** card (slice 5 §13 addendum), on a faction mate's row; the Legal Aid guard reads *Legal Aid · the Alliance pays half your bail*.
+- **§7.2, the held screens:** the sentence lines are the review-4 ones (no *You can close the game*); under *Pay bail* the Courier line stands.

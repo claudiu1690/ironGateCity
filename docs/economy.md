@@ -970,3 +970,42 @@ The dashboards' *modelled* row per profile bucket (sessions per day: 1–2 casua
 | 30 | 34,680 (20) · 4,690 · ~22,220 | 50,850 (23) · 5,810 · ~29,410 | 66,080 (26) · 7,550 (4) · ~35,390 | 79,890 (28) · 10,410 · ~41,310 |
 
 Milestone days the Pacing dashboard prints beside the measured medians: **Level 6 / 10 / 16** casual 3 / 7 / 18 · reference 2 / 5 / 12 · regular 2 / 4 / 10 · heavy 1 / 3 / 8; **Rank 2 / 3 / 4** casual 3 / 14 / after 30 · reference 2 / 10 / ~27 (with slices 5–6's FXP, §19.3, §20.2) · regular 2 / 8 / ~22 · heavy 2 / 7 / ~21. Iron held is day 1's figure plus the steady daily income of §5.1 (casual 750, reference 980, regular 1,190, heavy 1,380) with nothing bought; the Economy dashboard's red flag (§23.4) compares the measured median with this row ×3 and ×0.5. Opinion moved a day: casual ~0.8, reference 1.15, regular 1.6, heavy 2.5 (§8).
+
+## 24. Review 4: the prologue, the cells' new costs, the Town Hall and lodgings
+
+Rules: GDD §0 (*Added 6 Oct 2026, review 4*), §7.1, §8.5, §11.2, §13.7, §14.11, §15.3, §19.2; answers in `docs/design/review-4-answers.md`. **No rate, cost, threshold or reward table changes.** Four things touch numbers: the new recruit's stats, the favour that replaces the committee session, the cells' three costs, and the lodgings card's move. Nothing else here moves a figure.
+
+### 24.1 The reference recruit after *The Last Train In*
+
+| | Until review 4 | Now | What moves |
+|---|---|---|---|
+| Stats | STR 10 / INT 12 / AGI 5 / CHA 2 | **STR 8 / INT 12 / AGI 5 / CHA 5** | INT and every Intelligence figure in this sheet: nothing. STR −2: the second stat's home check 50 → 42 % (the STR actions, two or three of fifteen at home); the Fight power 17 → 15 (§19.5: 29 → 25 % against the enforcer; the recruit pays or takes luck either way). CHA +3: Talk 30 → 42 % against the enforcer, 14 → 22 % against the constable |
+| Iron at start | 150 (coat refused) | 0 | The reference day's income is ~1,000; 150 is a seventh of day 1 and nothing after. Level 2 lands on the same tap |
+| Party XP at start | 50 (the wish) | 0, and the favour pays 15 / 8 on Success / Partial at 1.5× council rate on 10 Energy (the committee session's own figures) | Rank 2 (400) moves from early day 2 to later on day 2 for the reference player: the day-1 FXP of §13.3 was ~190 with the seed and the committee; it is ~155 now, and day 2's ~205 crosses 400 either way. **The first ballot is still by day 4** (§14.1) |
+| Taps to the first result | 11 | **8** | §11's session shape improves |
+
+The tuning characters for Duskwall and Ashford move the same way (STR 14 / INT 6 / AGI 5 and STR 6 / INT 14 / AGI 5): the Vanguard's best-stat day-1 check rises from 54 to 66 % (STR 11 → 14 under the STR actions), the Alliance's is unchanged (INT 14). **The flattest build** is now *light* in any party (AGI 11): 54 % everywhere on the AGI actions and 42–46 % elsewhere on day 1 with the +10 % First day bonus on top; the first level-up point lands inside the first bar as before. §13.1's table is superseded by this one; §13.2–13.3's day-1 totals hold within 10 % (the committee session's Energy and rewards are the favour's).
+
+### 24.2 The Town Hall's ticket
+
+*Sit in the public gallery*: tier-1 intelligence at 6 Energy (14 / 7 XP, 12 / 6 Iron at the tier-1 rates with the intelligence Iron factor; no Party XP, no opinion), one per city. It is one more intelligence ticket in a city that has two or three; the model's intelligence share (about 15 % of Energy) is unchanged, so nothing in §4 moves. A wins-counting tap for Reputation like any other.
+
+### 24.3 The cells: what the three costs are worth
+
+For the day-10 reference player on the illegal road (§19.3–19.5; about one arrest a week while *Hot*):
+
+| Cost | Worth | Note |
+|---|---|---|
+| The sentence's base 10 → 20 min | 5 Energy of regen, ~25 XP and ~10 Iron | Still a wait most players close the app for; §19.7's "bail is two to six times the time's value" becomes one and a half to four times, so a few more pay |
+| The day's orders off | 0–60 Party XP and 0–5 Political Capital, by the hour of the arrest; **~30 Party XP and ~2 PC on average** | About a sixth of a day's Party XP, once a week: **2–3 % of the week's Party XP**. Rank 3 (day 9) and Rank 4 (day 27) move by less than half a day |
+| An arrest is at least one mark | On legal work (a watch's police run-in lost): −10 % mission Iron for a fortnight, **~40 Iron a day**, where there was nothing | On illegal work the type's marks already applied; nothing changes there |
+
+**Verdict:** the cells now cost about **a hundred Iron, thirty Party XP and twenty minutes** per visit for the player who waits, and the record remembers it; nothing owned is taken, no rate is lowered for good. §19.7's sentence "the model waits and closes the app" stands; §19.11's #50 lever is reworded in the GDD (the base back to 10 before anything else). No §5.2 milestone moves.
+
+### 24.4 Lodgings
+
+The paid room is a *Lodgings* card at Tram Junction (the Rows in Clearwater): 100 Iron, seven nights, cap +50, renewable, half price under the two rents Issues. The sink is unchanged in size and timing (§15.1); only its place and words change. The free room's +10 and the flat (§22.6) are untouched; the cap takes the larger of a flat and lodgings.
+
+### 24.5 Session shape (pillar 7)
+
+The prologue is three taps shorter. The Town Hall is one pin; its sheet reads top to bottom with the ticket first. The journey on the map is the same wait with a better picture; the card fires once, at a point the player cannot predict, and is answered on return if missed. The clock and the countdown style are read, not tapped. The local edition changes which lines a paper prints, not how many. Nothing here needs the player at a set time.

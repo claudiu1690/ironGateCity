@@ -210,3 +210,17 @@ British English, no exclamation marks, no percentages for odds, times in the pla
 - **The Heat line** reads *Heat 32 · Noticed · cools by 20:40* only while *Noticed* or above (the time is when it drops under 25); at *Cool* it reads *Heat 12 · Cool* with no time.
 - **After a Run** the stamp is the check's outcome and the row reads *Success · dropped: you ran* (design §23.1 #19).
 - **The result's one button** after a police loss on a legal mission reads *To the cells* (design §23.1 #3); the cells screen shows Health 30 / max.
+
+---
+
+## 13. Review 4 addendum (6 Oct 2026)
+
+- **§2.1, Heat on the HUD:** a **body line of its own under Energy**, 13 px, *Heat 60 · Hot*, the state in the failure colour from *Hot*; the note is by state (`review-4-answers.md` §12). Each HUD label opens its own note (the Political Capital label opened Heat's: a bug).
+- **§2.2, Health:** **always shown**, a third thin bar under Party XP.
+- **§2.3, the notes:** `heat` and `cells` rewritten (answers §12, §20.3); new `clock`, `issue`, `legalAid`, `residence`, `lodgings`, `edition`; `standing` gains *three times in a hundred more … you are {n} steps up*; `fxp` points at the rank ladder (`RankLadderSheet`, answers §25).
+- **§3, the second quarter and the home overview: withdrawn.** A home city is **one `CityMap` on the whole picture** with 15–17 pins; locked pins greyed with a lock glyph, no zoom on tap, a short sheet (*{QUARTER} · OPENS AT LEVEL 6*, the name, the blurb, *Level 6 opens it; you are Level {n}.*); the **Places list grouped by quarter** with the group's lock line; no `TramBar`, no overview route, no teaser sheet, no outline. The plate's subtitle is *Coalport · Home city*. Arrival by train selects the Town Hall's pin. Irongate is unchanged (§14.9).
+- **§6, the cells:** the sentence line ***The door opens at {time} either way, and Energy keeps refilling in here.*** plus ***The branch has taken today's orders off the board.***; the Alliance line ***Legal Aid · the Alliance pays half your bail*** (dotted, the note); the header's Courier *out in 38 min · or pay bail*; a card ***IN THE CELLS NOW*** on the police station's sheet (any party: avatar, name, mark, *out in n min*; empty: *Nobody. The duty officer is reading.*); the release modal's knock-on lines gain *Your record: taken in · 1 mark · On file* and *Orders off until the day turns*.
+- **§7, the infirmary:** the sentence ***You're discharged at {time} either way, and Health comes back ten every ten minutes.***
+- **§8.3, rival ground:** the orders panel is one collapsed line, *Your orders are in Coalport · 1 of 3 done*, not tappable; the paper is *The Coalport Clarion · Duskwall edition*.
+- **Every countdown** in §6–§8 uses the one style (*in n min* under an hour, *at hh:mm* today; GDD §2.2).
+- **A clock** in the top bar (answers §4.1).

@@ -900,3 +900,12 @@ The architect's default stands wherever the answer below says **default**; the r
 ### 21.5 For QA
 
 The seven slice-5 risk headline decks changed on 4 Oct 2026 (`hl.cells`, `hl.a.cells`, `hl.a.name-taken` shortened; the four `*.record-up` decks on `{marksLine}`) are in `packages/content/src/data/headlines.ts` and `slice-5-risk.md` §14 together; the fills `{marksLine}` (*One mark* / *{n} marks*), `{how}`'s fallback (*no reason was given.*), `{missionTitle}`'s fallback (*a word with the police*) and `{recordLevel}`'s *On File* are the slice-5 developer's in `copy.ts`.
+
+---
+
+## 22. Review 4 addendum (6 Oct 2026)
+
+- **§6, a home:** the paid room (slice 4) is now a ***Lodgings*** card at a place (Tram Junction; the Rows), said as *a bed* (GDD §14.11). *Where you sleep* keeps the free room (+10) and the flat; the Rested cap takes **the larger of the flat and lodgings**, as §6 already says. The residence card carries **no paid room**: its second line is *Where you sleep: a rented room · +10 Rested a night* and the flat's button only (`slice-8-screens.md` §9.1).
+- **§3.6, recognition:** unchanged; the journey screen it names is the nation map in journey mode (GDD §14.10), where *Change into plain clothes* is a chip on the plate.
+- **§10, the paper:** the patron's Request, the informant's report and the clocks follow the player (the paper's own parts, GDD §3.3); the city's lines are the edition's.
+- **The reference recruit** for every price check is STR 8 / INT 12 / AGI 5 / CHA 5 (`docs/economy.md` §24.1); §22.2's Wardrobe prices against the days do not move (they are Iron against income).

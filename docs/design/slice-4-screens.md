@@ -247,3 +247,13 @@ The user changed the capital map (T23). Where this differs from §5 above, this 
 - **On a phone** the district's plate is one band: *‹ Irongate* · the district (kicker *District · visiting* / *you live here*, the name, the state word) · *Where you live* in the corner (a tap opens the residence card; from 640 px the corner keeps *Reputation* and the card sits in the corner panel). Under it the three bars and the plate's lines, then the Election row. The tram bar sits above the orders at the bottom.
 - The district card of §5.1 (*Go to … · tram · instant*) is no longer the overview's tap: going in is the tap. Its contents (who holds it, the close race, the Issue, the council seats) are on the district's plate and in the Districts list.
 - Tested in `apps/client/e2e/travel.spec.ts`: the overview has no place pins (five outlines, five names); a district shows its own pins and no other district's; the map cannot be dragged or zoomed out into a neighbour; back to the overview works.
+
+---
+
+## Added 6 Oct 2026 — review 4
+
+- **§3, the journey screen → the nation map in journey mode** (`review-4-answers.md` §7.3): the map zoomed to the two cities, the route traced, the train on it, a *Follow the train* chip after a drag; the plate (*THIRD CLASS · CAR 4*, *The 14:10 to Coalport*, *arrives in 7 min · 14:22*, the track); the sentence ***You'll arrive either way, and Energy keeps refilling on the way.***; the card as a sheet from `card.at`; the two rows in the plate's foot. §4's arrival modal is unchanged.
+- **§5 and the district lock:** the overview's five outlines now meet edge to edge (GDD §14.9); inside a district the drag limit is **the outline's bounding box**, not the frame plus 10 %; the zoom-out limit stays the district's own view.
+- **§6.1, the residence card:** the table is `review-4-answers.md` §9.2 (*Live here · 500 Iron*; *You live in Coalport.* / *Live in Eastside instead: vote and stand here, and your orders come from here. A week between moves.*); the help note is the §9.2 one; **the room row is removed**. §6.2's sheet is titled *Live in Eastside · 500 Iron* with the button *Live here · 500 Iron*; §6.3's stamp is **Moved in**.
+- **New, the Lodgings card** (`LodgingsCard`, the `JobsCard` pattern) on **Tram Junction's** sheet: kicker *LODGINGS*, *A bed on the tram line · 7 nights · 100 Iron*, Courier *Rested banks higher while you have it: up to 250 instead of 200.*, button **Take a bed · 100 Iron**; running: *Your bed until Sunday · Rested banks to 250* with **Seven more nights · 100 Iron** or *renew from Monday*; the modal's stamp *Taken*, headline *A bed in Irongate*, body as the room's.
+- **The Issue chip** on the Places list and a place's sheet reads *Issue · {name}* and opens `help.issue`.

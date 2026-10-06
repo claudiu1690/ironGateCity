@@ -1,3 +1,5 @@
+> **Review 4 (6 Oct 2026):** the overview, the quarter frames, the outlines, the quarter bar and the teaser sheet described here are now **the capital's districts only**. A home city (and Clearwater) is one map with every surveyed place a pin and locked places greyed with a lock and a note; a quarter is the Level gate of a group of places on the Places list. GDD §14.13; `docs/design/review-4-answers.md` §21.
+
 # Mini-slice "new maps": the v3 painted maps in the game
 
 Architect, 1 Oct 2026. Puts the approved maps-v3 art (one big painted picture per city, the nation at 9,216 px) into the game with Deep Zoom tiles, moves every existing place to its approved pin, and turns a quarter into a **frame** on the one picture. ADR 0024 is revised to match (its "Revision (maps v3)" section). No rule, number or economy value changes.

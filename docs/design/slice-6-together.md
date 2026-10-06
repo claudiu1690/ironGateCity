@@ -580,3 +580,12 @@ The architect's defaults are accepted except two (Q6, Q17); Q13 is confirmed as 
 ### 20.3 For QA
 
 `front page` joins both guards' `front` allow-lists. *Usher* and *ushers* are in neither regex. No slice-6 string uses *sergeant*, *march*, *front* in a political sense, *torch* or *in front of*.
+
+---
+
+## 21. Review 4 addendum (6 Oct 2026)
+
+- **§9.1, posting bail:** a fourth place to post it: **the police station's *In the cells now* card** (slice 5's screen, review 4), on a faction mate's row (*Post bail · 150 Iron*, the same `FavourSheet`). The list shows every party's prisoners; the button only on one's own. The Members list's status reads *in the cells at Harbour Police · out in 24 min* (GDD §2.2's style).
+- **§6.1, Orders:** when the member is in the cells the orders block reads *Orders off today · the branch heard about the cells* (GDD §13.7, §19.2).
+- **§10, the paper:** the Events section lists the faction's events **in the city the member is in** first, which is also how the local edition reads (GDD §3.3); nothing else changes.
+- **The sentence** on the held screens no longer invites closing the game; §12.4's walkthrough reads accordingly.
