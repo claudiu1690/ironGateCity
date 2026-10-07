@@ -146,12 +146,13 @@ test('the first trip: nation → board → the journey card → arrival → the 
   await expect(page.getByTestId('district-mask')).toHaveCount(1);
   await dragBy(page, 300, 300);
   await dragBy(page, -600, -600);
-  // Station & Market's frame (0.29–0.62 × 0.49–0.74) and its 10 % margin.
+  // Review 4 (answers §8.3, ADR 0076): the drag stops at Station & Market's outline's bounding box
+  // (0–0.605 × 0.37–1), wider than its frame (0.29–0.62 × 0.49–0.74).
   let c = await centreOnPicture(page);
-  expect(c.x).toBeGreaterThan(0.29 - 0.04);
-  expect(c.x).toBeLessThan(0.62 + 0.04);
-  expect(c.y).toBeGreaterThan(0.49 - 0.03);
-  expect(c.y).toBeLessThan(0.74 + 0.03);
+  expect(c.x).toBeGreaterThanOrEqual(0);
+  expect(c.x).toBeLessThanOrEqual(0.605 + 0.005);
+  expect(c.y).toBeGreaterThanOrEqual(0.37 - 0.005);
+  expect(c.y).toBeLessThanOrEqual(1);
   // No zooming out past the district's own view.
   const b = (await map(page).boundingBox())!;
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
@@ -197,7 +198,9 @@ test('the first trip: nation → board → the journey card → arrival → the 
   const home = page.getByRole('dialog').filter({ has: page.getByTestId('arrival-continue') });
   await expect(home.getByTestId('arrival-headline')).toHaveText('Home');
   await home.getByTestId('arrival-continue').click();
-  await expect(page).toHaveURL(/\/city\/coalport$/);
+  // Review 4 (answers §21.3): a train into a home city selects the Town Hall's pin (its sheet opens).
+  await expect(page).toHaveURL(/\/city\/coalport\?loc=coalport\.town-hall$/);
+  await expect(page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Town Hall' }) })).toBeVisible();
 });
 
 test('the nation map covers the screen at every size, your city and the capital clear at rest', async ({ page }) => {

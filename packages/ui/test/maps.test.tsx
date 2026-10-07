@@ -6,11 +6,14 @@ import { DETAIL_SETTLE_MS } from '../src/components/TileLayer';
 import {
   CityMap,
   FRAME_PAN_MARGIN,
+  FREE_ZOOM_STEP,
   NIGHT_FADE_MS,
   ZOOM_MS,
   contentFor,
   coversBox,
+  bboxOf,
   fitPinsView,
+  freePanLimits,
   panLimits,
   PIN_GAP,
   pyramidFor,
@@ -25,11 +28,18 @@ import type { MapInsets, MapRect, TilePyramid } from '../src';
  */
 
 const content = getContent();
-const cities = ['coalport', 'duskwall', 'ashford'] as const;
-const frameOf = (id: string) => content.city(id)!.quarters[0]!.frame;
-/** The first quarter's places (slice 5's second quarters have their own frames). */
-const placesOf = (id: string) =>
-  content.city(id)!.locations.filter((l) => l.quarterId === content.city(id)!.quarters[0]!.id);
+/**
+ * Review 4 (ADR 0076): frames are the capital's districts' only (a home city is one map), so the frame
+ * checks run over the five districts. The map's behaviour tests keep the Mill's old frame as a plain
+ * rectangle around the fixture's Coalport pins.
+ */
+const cities = content.districtsOf('irongate').map((q) => q.id);
+const MILL: MapRect = { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 };
+const frameOf = (id: string): MapRect => (id === 'coalport' ? MILL : content.district(id)!.quarter.frame!);
+/** Review 4 (ADR 0076): a district's drag limit, its outline's bounding box. */
+const limitOf = (id: string): MapRect => bboxOf(content.district(id)!.quarter.outline!);
+/** A district's places. */
+const placesOf = (id: string) => content.capitalCity().locations.filter((l) => l.quarterId === id);
 const pinsOf = (id: string) => placesOf(id).map((l) => l.map);
 
 describe('the frame covers the box at scale 1 (§2)', () => {
@@ -115,7 +125,7 @@ describe('review 3: at rest the art covers the map, and a drag brings the other 
     },
   ];
   type View = { scale: number; x: number; y: number };
-  const restOf = (id: (typeof cities)[number], box: { w: number; h: number }, insets: MapInsets) => {
+  const restOf = (id: string, box: { w: number; h: number }, insets: MapInsets) => {
     const frame = frameOf(id);
     const c = contentFor(box, 1, frame);
     const shownH = box.h - (insets.hideTop ?? 0) - (insets.hideBottom ?? 0);
@@ -158,32 +168,49 @@ describe('review 3: at rest the art covers the map, and a drag brings the other 
       }
   });
 
-  it('every pin is clear at rest or a drag away (the art may stop short under a phone’s opaque bands)', () => {
+  it('every pin is clear at rest or a drag away, or one zoom step and a drag (the art may stop short under a phone’s opaque bands)', () => {
+    const zoomOnly: string[] = [];
     for (const id of cities)
       for (const { at: size, box, insets } of CASES) {
-        const { frame, c, v } = restOf(id, box, insets);
-        const lim = restPanLimits(box, c, v, frame, pinsOf(id), insets);
-        for (const l of placesOf(id)) {
-          let reach = false;
-          for (let a = 0; a <= 40 && !reach; a++)
-            for (let b = 0; b <= 40 && !reach; b++) {
+        const { c, v } = restOf(id, box, insets);
+        // Review 4 (ADR 0076): inside a district the drag limit is its outline's bounding box (no
+        // margin). Moving this test from the home cities' old frames to the capital's districts found
+        // three pins that only a zoom brings clear (not new: the capital was never in this test): on a
+        // portrait tablet a district opens zoomed out to fit its pins, and a pin at the picture's
+        // top-left edge sits under the desktop plate; the + button (or a pinch) and a drag bring it out.
+        const reachAt = (scale: number, p: { x: number; y: number }) => {
+          const lim = freePanLimits(box, c, v, scale, limitOf(id), pinsOf(id), insets, 0);
+          for (let a = 0; a <= 40; a++)
+            for (let b = 0; b <= 40; b++) {
               const w = {
-                scale: v.scale,
+                scale,
                 x: lim.x[0] + ((lim.x[1] - lim.x[0]) * a) / 40,
                 y: lim.y[0] + ((lim.y[1] - lim.y[0]) * b) / 40,
               };
-              reach = clearAt(box, insets, at(w, c, l.map));
+              if (clearAt(box, insets, at(w, c, p))) return true;
             }
-          expect(reach, `${id} ${size} ${l.id}`).toBe(true);
+          return false;
+        };
+        for (const l of placesOf(id)) {
+          const rest = reachAt(v.scale, l.map);
+          const zoomed = rest || reachAt(v.scale * FREE_ZOOM_STEP, l.map);
+          expect(zoomed, `${id} ${size} ${l.id}`).toBe(true);
+          if (!rest) zoomOnly.push(`${id} ${size} ${l.id}`);
         }
       }
+    // Pinned: the three a zoom brings out (portrait tablets, the plate over the picture's top-left edge).
+    expect(zoomOnly).toEqual([
+      'irongate.government-quarter 640×900 irongate.ministries',
+      'irongate.old-town 640×900 irongate.concord-house',
+      'irongate.old-town 768×1024 irongate.concord-house',
+    ]);
   });
 
   it('a drag at rest never shows past the picture and never zooms; the at-rest view is inside its limits', () => {
     for (const id of cities)
       for (const { at: size, box, insets } of CASES) {
-        const { frame, c, v } = restOf(id, box, insets);
-        const lim = restPanLimits(box, c, v, frame, pinsOf(id), insets);
+        const { c, v } = restOf(id, box, insets);
+        const lim = restPanLimits(box, c, v, limitOf(id), pinsOf(id), insets, 0);
         const label = `${id} ${size}`;
         for (const x of lim.x)
           for (const y of lim.y)
@@ -229,13 +256,40 @@ describe('review 3: at rest the art covers the map, and a drag brings the other 
   });
 });
 
+describe('review 4 (answers §8.3, ADR 0076): inside a district the drag reaches its whole outline', () => {
+  const box = { w: 390, h: 600 };
+  const insets: MapInsets = { top: 0, bottom: 0 };
+  it("Station & Market's far corner (0.02, 0.98) is reachable at rest and zoomed, never past the picture", () => {
+    const id = 'irongate.station-market';
+    const frame = frameOf(id);
+    const lim0 = limitOf(id);
+    expect(lim0).toEqual({ x0: 0, y0: 0.37, x1: 0.605, y1: 1 });
+    const c = contentFor(box, 1, frame);
+    const cover = Math.min(1, Math.max(box.w / c.w, box.h / c.h));
+    const fitted = fitPinsView({ box, content: c, pins: pinsOf(id), insets, minScale: cover, frame });
+    for (const scale of [fitted.scale, fitted.scale * 2, fitted.scale * 4]) {
+      const lim = freePanLimits(box, c, fitted, scale, lim0, pinsOf(id), insets, 0);
+      // The corner can be brought on screen: the view whose left and bottom edges are the picture's.
+      const corner = { x: 0.02 * c.w * scale, y: 0.98 * c.h * scale };
+      const best = { x: lim.x[1], y: lim.y[0] };
+      expect(best.x + corner.x, `x at ${scale}`).toBeLessThanOrEqual(box.w);
+      expect(best.y + corner.y, `y at ${scale}`).toBeLessThanOrEqual(box.h);
+      expect(best.y + corner.y, `y at ${scale}`).toBeGreaterThanOrEqual(0);
+      for (const x of lim.x) for (const y of lim.y) expect(coversBox(box, c, { scale, x, y })).toBe(true);
+    }
+    // The old limit (the frame grown by 10 %) did not reach it.
+    const old = restPanLimits(box, c, fitted, frame, pinsOf(id), insets);
+    expect(old.y[0] + 0.98 * c.h * fitted.scale).toBeGreaterThan(box.h);
+  });
+});
+
 describe('a zoomed drag stays near the frame (§2: no free pan)', () => {
   const box = { w: 390, h: 600 };
   const f = frameOf('coalport');
   const c = contentFor(box, 1, f);
 
   it('the frame grown by 25 % covers the box at both limits; the whole picture would allow more', () => {
-    const fitted = fitPinsView({ box, content: c, pins: pinsOf('coalport'), insets: { top: 0, bottom: 0 } });
+    const fitted = fitPinsView({ box, content: c, pins: content.city('coalport')!.locations.slice(0, 6).map((l) => l.map), insets: { top: 0, bottom: 0 } });
     const z = zoomView({ box, content: c, fitted, pin: { x: 0.42, y: 0.35 }, maxScale: 3 });
     const lim = panLimits(box, c, z, f);
     const cw = c.w * z.scale;

@@ -8,6 +8,7 @@ import type { CloudConfig } from '../clouds';
 import { TILE_MAX_DPR, backdropUrl } from '../tiles';
 import type { TilePyramid } from '../tiles';
 import { CloudLayer } from './CloudLayer';
+import { LockMark } from './LockMark';
 import { Picture } from './Picture';
 import { TileLayer } from './TileLayer';
 
@@ -38,7 +39,12 @@ export interface MapHotspot {
     short?: string;
     /** A second, smaller line under the label (*you are here*, *rival ground*). */
     sub?: string;
-    marks?: ReadonlyArray<'here' | 'muted' | 'residence' | 'issue'>;
+    /**
+     * Review 4 (answers §21.4, ADR 0076): `locked` draws a home city's greyed pin, the ink disc at 50 %
+     * with the lock in place of the number (`sub` carries its note, *Opens at Level 6*); the page
+     * opens its short sheet on a tap, with no zoom.
+     */
+    marks?: ReadonlyArray<'here' | 'muted' | 'residence' | 'issue' | 'locked'>;
   };
 }
 
@@ -130,6 +136,20 @@ export interface CityMapProps {
    * a drag (at rest or zoomed into a place) stops at the frame grown by REST_PAN_MARGIN.
    */
   lockToFrame?: boolean;
+  /**
+   * Review 4 (answers §8.3, ADR 0076): how far the map drags inside a district: its outline's
+   * bounding box (no margin), at rest and zoomed into a place, instead of the frame grown by
+   * REST_PAN_MARGIN or FRAME_PAN_MARGIN. Still widened so every pin can be brought clear of the
+   * blocks. The zoom-out limit is unchanged (the frame's at-rest view).
+   */
+  panLimit?: MapRect;
+}
+
+/** Review 4 (ADR 0076): a polygon's bounding box, in fractions of the picture (a district's drag limit). */
+export function bboxOf(points: ReadonlyArray<readonly [number, number]>): MapRect {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }
 
 /** The whole picture, as a frame. */
@@ -320,11 +340,21 @@ function clearOfBlocks(i: FitInput, v: MapView): boolean {
  * no view at or above that floor keeps every pin clear, the covered view with the most pins clear
  * wins (`mostPinsClear`); the others are a drag away (`restPanLimits`) or in the Places list.
  */
-export function fitPinsView(i: FitInput & { minScale?: number; frame?: MapRect }): MapView {
+export function fitPinsView(
+  i: FitInput & {
+    minScale?: number;
+    frame?: MapRect;
+    /**
+     * Review 4: the pins kept apart (default: `pins`). A home city fits its first quarter's places
+     * but keeps every pin on the map apart, the greyed ones included.
+     */
+    gapPins?: ReadonlyArray<{ x: number; y: number }>;
+  },
+): MapView {
   // Review 3: with a `minScale` (the covering scale), never so far out that two pins' 44 px targets
   // overlap (PIN_GAP between centres); the rest are a drag away. This replaces `spreadPins`, which
   // moved pins off their buildings on small phones.
-  const gapScale = i.minScale !== undefined ? PIN_GAP / closestPins(i.pins, i.content) : 0;
+  const gapScale = i.minScale !== undefined ? PIN_GAP / closestPins(i.gapPins ?? i.pins, i.content) : 0;
   const floor = clamp(Math.max(i.minScale ?? MIN_FIT_SCALE, gapScale), MIN_FIT_SCALE, 1);
   const first = fitBetweenBands(i, undefined, floor);
   if (i.pins.length === 0 || (betweenBands(i, first) && clearOfBlocks(i, first))) return first;
@@ -877,6 +907,7 @@ export function restPanLimits(
   frame: MapRect,
   pins: ReadonlyArray<{ x: number; y: number }>,
   insets: MapInsets,
+  margin = REST_PAN_MARGIN,
 ): { x: [number, number]; y: [number, number] } {
   const blocks = insets.blocks ?? [];
   const axis = (
@@ -891,7 +922,7 @@ export function restPanLimits(
     ext: number,
     at: number,
   ): [number, number] => {
-    const m = REST_PAN_MARGIN * (f1 - f0);
+    const m = margin * (f1 - f0);
     const fa = len - Math.min(1, f1 + m) * size;
     const fb = -Math.max(0, f0 - m) * size;
     let lo = Math.min(fa, fb, at);
@@ -984,11 +1015,12 @@ export function freePanLimits(
   frame: MapRect,
   pins: ReadonlyArray<{ x: number; y: number }>,
   insets: MapInsets,
+  margin = REST_PAN_MARGIN,
 ): { x: [number, number]; y: [number, number] } {
   const pic = picLimits(box, content, scale, insets);
   const z = zoomAt(fitted, scale, { x: box.w / 2, y: box.h / 2 });
   const anchor = { scale, x: clamp(z.x, pic.x[0], pic.x[1]), y: clamp(z.y, pic.y[0], pic.y[1]) };
-  return restPanLimits(box, content, anchor, frame, pins, insets);
+  return restPanLimits(box, content, anchor, frame, pins, insets, margin);
 }
 
 /** A view kept within limits (its scale unchanged). */
@@ -1116,6 +1148,7 @@ export function CityMap({
   onOutline,
   focusOutline,
   lockToFrame = false,
+  panLimit,
 }: CityMapProps) {
   const cloudConfig = clouds === true ? CLOUDS : clouds || null;
   const boxRef = useRef<HTMLDivElement>(null);
@@ -1282,7 +1315,7 @@ export function CityMap({
         placeNames(nameSpotsAt(v), box, insets),
       );
     }
-    return fitPinsView({ box, content, pins, insets, minScale: coverScale, frame });
+    return fitPinsView({ box, content, pins, insets, minScale: coverScale, frame, gapPins: locations.map((l) => l.map) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [w, h, contentW, contentH, insets, pinsKey, frameKey, coverScale, focusKey, hasOutlines]);
   const free = fitted
@@ -1294,7 +1327,9 @@ export function CityMap({
   /** How far the map drags at rest at this scale (review 3: any zoom). */
   const restLimits = (scale: number) =>
     fitted && insets
-      ? freePanLimits({ w, h }, { w: contentW, h: contentH }, fitted, scale, frame, pinsList(), insets)
+      ? panLimit
+        ? freePanLimits({ w, h }, { w: contentW, h: contentH }, fitted, scale, panLimit, pinsList(), insets, 0)
+        : freePanLimits({ w, h }, { w: contentW, h: contentH }, fitted, scale, frame, pinsList(), insets)
       : null;
 
   /**
@@ -1567,7 +1602,10 @@ export function CityMap({
     if (!target || !insets) return null;
     const box = { w, h };
     const content = { w: contentW, h: contentH };
-    if (selected) return panLimits(box, content, target.view, frame, lockToFrame ? REST_PAN_MARGIN : FRAME_PAN_MARGIN);
+    if (selected)
+      return panLimit
+        ? panLimits(box, content, target.view, panLimit, 0)
+        : panLimits(box, content, target.view, frame, lockToFrame ? REST_PAN_MARGIN : FRAME_PAN_MARGIN);
     const lim = restLimits(scale);
     if (!lim) return null;
     if (Math.abs(target.view.scale - scale) > 1e-6) return lim;
@@ -2074,9 +2112,11 @@ export function CityMap({
                       aria-label={
                         style === 'label'
                           ? [label, l.pin?.sub].filter(Boolean).join(', ')
-                          : `${l.n}. ${l.name}`
+                          : marks.includes('locked') && l.pin?.sub
+                            ? copy.map.lockedPinLabel(l.name, l.pin.sub)
+                            : `${l.n}. ${l.name}`
                       }
-                      data-testid="hotspot"
+                      data-testid={marks.includes('locked') ? 'locked-pin' : 'hotspot'}
                       data-pin={style}
                       data-marks={marks.join(' ') || undefined}
                       data-flip={flip || undefined}
@@ -2090,12 +2130,13 @@ export function CityMap({
                         className={cx(
                           'hotspot relative mx-1.5 flex shrink-0 items-center justify-center border-2 font-label font-semibold',
                           style === 'label' ? 'size-3.5 rotate-45 mx-[15px]' : 'size-8 rounded-full text-[14px]',
+                          marks.includes('locked') && 'opacity-50',
                           on
                             ? 'border-ink bg-paper text-ink shadow-[0_0_0_2px_var(--color-paper),0_0_0_8px_rgb(239_230_210/0.35)]'
                             : 'border-paper bg-ink text-paper shadow-[0_0_0_2px_var(--color-ink),0_3px_8px_rgb(0_0_0/0.5)]',
                         )}
                       >
-                        {style !== 'label' && l.n}
+                        {style !== 'label' && (marks.includes('locked') ? <LockMark /> : l.n)}
                         {marks.includes('residence') && (
                           <svg
                             width="12"

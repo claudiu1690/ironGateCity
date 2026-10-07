@@ -113,6 +113,8 @@ export const LocationKind = z.enum([
   'ministry',
   /** Slice 4 (design §4.3): the Opera (its scene since art-wiring-oct.md). */
   'theatre',
+  /** Review 4 (GDD §13.5, ADR 0077): the council's hall in every city; open at every Level. */
+  'town-hall',
 ]);
 
 export const ActionType = z.enum(['canvass', 'speech', 'propaganda', 'intelligence', 'council', 'training']);
@@ -180,7 +182,6 @@ export const Frame = z
   .strictObject({ x0: Fraction, y0: Fraction, x1: Fraction, y1: Fraction })
   .refine((f) => f.x0 < f.x1 && f.y0 < f.y1, 'a frame needs x0 < x1 and y0 < y1');
 
-/** GDD §14.13 (maps-v3 integration §2): a part of a city, framed on its picture. */
 const Share = z.number().min(0).max(100);
 
 /** §14.2 / §14.11: three faction shares plus Neutral, summing to 100 (checked by the loader). */
@@ -191,11 +192,18 @@ export const Shares = z.strictObject({
   neutral: Share,
 });
 
+/**
+ * GDD §14.13 (review 4, ADR 0076): a part of a city. In a home city it is the Level gate of a group of
+ * places (`opens`, `name`, `blurb`), read on the Places list; only the capital's districts are
+ * framed and outlined on the picture (`frame`, `outline`, `label`, `district`: the loader requires
+ * them there and refuses them anywhere else).
+ */
 export const Quarter = z.strictObject({
   /** Dotted under its city ("coalport.mill"). */
   id: Id,
   name: z.string().min(1),
-  frame: Frame,
+  /** A district's zoom target at rest (the capital only). */
+  frame: Frame.optional(),
   /** Slice 4 (tech design §4.1): a district's card text (screens §5.1). */
   blurb: z.string().min(1).max(200).optional(),
   /**
@@ -230,8 +238,6 @@ export const Quarter = z.strictObject({
       z.strictObject({ edition: z.literal('later') }),
     ])
     .optional(),
-  /** Slice 5 (design §2.3): the line after the lock word on a locked quarter. */
-  teaser: z.string().min(1).max(90).optional(),
 });
 
 /** Slice 5 (design §4.2, ADR 0031): the six mission types; their numbers live in rules. */
@@ -339,22 +345,17 @@ export const City = z.strictObject({
     .optional(),
   /**
    * Slice 3 (GDD §2, §15.3): the council cycle's offset (Irongate 0 … Clearwater 4). Review 3
-   * (`docs/design/review-3-answers.md` §6a): `hall` is the building the council sits in, a point on
-   * the city picture in fractions like a pin; the election screens show a crop of the map there, by
-   * day or night. It is a backdrop and a name, not a location: no pin, no actions.
+   * (`docs/design/review-3-answers.md` §6a): `hall` is the building the council sits in; the election
+   * screens show a crop of the map there, by day or night. Review 4 (ADR 0077): the hall is a location
+   * of the city (kind `town-hall`, or Clearwater's Casino), and its name, `ref` and point are read
+   * from it.
    */
   council: z
     .strictObject({
       offset: z.number().int().min(0).max(4),
       /** Seven at home; ten in the capital (two per district, GDD §15.3). */
       seats: z.union([z.literal(7), z.literal(10)]),
-      hall: z.strictObject({
-        name: z.string().min(1),
-        /** For sentences: "the Town Hall". */
-        ref: z.string().min(1),
-        x: Fraction,
-        y: Fraction,
-      }),
+      hall: z.strictObject({ locationId: Id }),
     })
     .optional(),
   locations: z.array(Location),
@@ -795,6 +796,11 @@ export const Ordinance = z
     line: z.string().min(1).max(120),
     /** The caps line, "Job pay +10 %"; the UI adds "· 5 days". */
     effectLine: z.string().min(1).max(60),
+    /**
+     * Review 4 (answers §11.3, §29 Q1; ADR 0077): the effect in plain words, lower case, for the city
+     * plate's rule line and the Town Hall's *rule in force* ("jobs pay a tenth more").
+     */
+    plainLine: z.string().min(1).max(60),
     effects: z.array(OrdinanceEffectSchema).min(1),
   })
   .refine((o) => new Set(o.effects.map((e) => e.kind)).size === o.effects.length, {

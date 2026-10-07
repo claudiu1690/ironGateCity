@@ -1,5 +1,6 @@
 import type { City } from '../../schemas';
 import { withMissions } from '../missions/attach';
+import { townHall } from './townHall';
 import { ashfordMissions } from '../missions/ashford';
 
 /**
@@ -23,38 +24,27 @@ export const ashford: City = {
   map: { day: 'map.ashford.day', night: 'map.ashford.night' },
   // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
   clouds: true,
-  // Slice 5 (design §2, ADR 0035): three quarters, frames on the one picture; the second opens at
-  // Level 6, the third is a teaser (a later edition). Outlines and labels drawn for the overview:
-  // every pin (the survey's too) inside its own outline, no two overlapping, labels 0.25 apart.
+  // Slice 5 (design §2), review 4 (ADR 0076): three quarters, the Level gates of groups of places
+  // (Level 1, Level 6, a later edition), read on the Places list. A home city is one map: no frames,
+  // outlines or labels (the capital's only).
   quarters: [
     {
       id: 'ashford.college',
       name: 'The College',
-      frame: { x0: 0.24, y0: 0.19, x1: 0.76, y1: 0.68 },
-      outline: [[0.26, 0.18], [0.74, 0.18], [0.74, 0.43], [0.6, 0.43], [0.58, 0.53], [0.45, 0.53], [0.45, 0.61], [0.4, 0.66], [0.26, 0.66]],
-      label: { x: 0.5, y: 0.34 },
     },
     {
       id: 'ashford.wharf',
       name: 'The Wharf',
-      frame: { x0: 0.14, y0: 0.41, x1: 0.98, y1: 0.88 },
       opens: { level: 6 },
       blurb:
         "The lower town across the river: the County Infirmary in its garden, the cattle pens and auction sheds, the police station by the Corn Exchange, the wharf below the bridge and the brewery's chimneys.",
-      teaser: 'The lower town across the river: the wharf, the brewery and the cattle pens.',
-      outline: [[0.0, 0.18], [0.26, 0.18], [0.26, 0.66], [0.4, 0.66], [0.45, 0.61], [0.6, 0.61], [0.66, 0.51], [1, 0.51], [1, 1], [0.0, 1]],
-      label: { x: 0.55, y: 0.82 },
     },
     {
       id: 'ashford.station-road',
       name: 'Station Road',
-      frame: { x0: 0.15, y0: 0.02, x1: 0.88, y1: 0.63 },
       opens: { edition: 'later' },
       blurb:
         "The respectable town north of the river: the station's glass roof, the Town Hall clock, the theatre, the Corn Exchange, the park with its bandstand and the Press Club by the bridge.",
-      teaser: 'The station, the town hall and the Corn Exchange.',
-      outline: [[0.0, 0.0], [1, 0.0], [1, 0.51], [0.66, 0.51], [0.6, 0.61], [0.45, 0.61], [0.45, 0.53], [0.58, 0.53], [0.6, 0.43], [0.74, 0.43], [0.74, 0.18], [0.0, 0.18]],
-      label: { x: 0.45, y: 0.07 },
     },
   ],
   paper: {
@@ -66,8 +56,8 @@ export const ashford: City = {
   // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
   // Review 3: the council sits in the clock-tower hall by the river bridge (the survey's
   // `ashford.town-hall`, third quarter; the point is the tower and the front together). The election
-  // screens' backdrop.
-  council: { offset: 1, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.805, y: 0.275 } },
+  // screens' backdrop. Review 4 (ADR 0077): the hall is a location (read from its pin).
+  council: { offset: 1, seats: 7, hall: { locationId: 'ashford.town-hall' } },
   locations: withMissions([
     {
       id: 'ashford.gazette-house',
@@ -629,6 +619,17 @@ export const ashford: City = {
         },
       ],
     },
+    // Review 4 (answers §11.1, ADR 0077): the council's hall, a place open at every Level; appended
+    // last so no pin renumbers (answers §29 Q10). Its pin is the survey's.
+    townHall({
+      id: 'ashford.town-hall',
+      name: 'Town Hall',
+      ref: 'the Town Hall',
+      blurb:
+        "The clock-tower hall by the bridge, where the county has argued for two hundred years. The council's rule is printed and posted; the public gallery is free.",
+      map: { x: 0.805, y: 0.275 },
+      quarterId: 'ashford.station-road',
+    }),
   ], ashfordMissions),
   // Slice 5 (design §8.1, §9.2): where the game sends a player in this city.
   services: { cells: 'ashford.police', infirmary: 'ashford.infirmary' },

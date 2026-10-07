@@ -17,3 +17,22 @@ export function quarterOpen(
   if (heldHere || level >= opens.level) return { open: true, lock: null };
   return { open: false, lock: { kind: 'level', level: opens.level } };
 }
+
+/** Review 4 (ADR 0077): the place kinds open at every Level, whatever their quarter (the Town Halls). */
+export const ALWAYS_OPEN_KINDS = ['town-hall'] as const;
+
+/**
+ * Review 4 (ADR 0076–0077): whether a place is open to a character: its kind always open (the Town
+ * Hall), or the game holding the character there, or its quarter open by Level (`quarterOpen`). A
+ * place outside any quarter is open. Pure.
+ */
+export function placeOpen(i: {
+  quarter?: { opens?: QuarterOpens } | null;
+  kind: string;
+  level: number;
+  heldHere?: boolean;
+}): { open: boolean; lock: QuarterLock | null } {
+  if ((ALWAYS_OPEN_KINDS as readonly string[]).includes(i.kind)) return { open: true, lock: null };
+  if (!i.quarter) return { open: true, lock: null };
+  return quarterOpen(i.quarter, i.level, i.heldHere ?? false);
+}

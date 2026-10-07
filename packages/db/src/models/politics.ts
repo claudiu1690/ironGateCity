@@ -245,6 +245,11 @@ export interface OfficeTermDoc {
   completed: boolean;
   /** Players: the front page's stamp animates until this is set (ADR 0023). */
   frontPageSeenAt: Date | null;
+  /**
+   * Review 4 (answers §10.1, ADR 0077): the *What now* card was shown at the hall (absent or null:
+   * unseen). Set once by `council.whatNowSeen`, a conditional `$set`.
+   */
+  whatNowSeenAt?: Date | null;
   createdAt: Date;
 }
 
@@ -275,6 +280,7 @@ const officeTermSchema = new Schema<OfficeTermDoc>(
     total: int,
     completed: { type: Boolean, default: false },
     frontPageSeenAt: { type: Date, default: null },
+    whatNowSeenAt: { type: Date, default: null },
   },
   { ...opts, collection: 'officeTerms', timestamps: { createdAt: true, updatedAt: false } },
 );

@@ -164,7 +164,7 @@ test.describe('phone 375×812', () => {
  * covers the screen, so a pin may start off it or under an overlay; a drag at rest brings it clear.
  */
 async function coveredPins(page: Page): Promise<string[]> {
-  await expect(page.getByTestId('hotspot')).toHaveCount(6);
+  await expect(page.getByTestId('hotspot')).toHaveCount(7); // review 4: the six and the Town Hall
   await page.waitForTimeout(800); // the first view is applied after the map measures itself
   return pinsOutOfReach(page);
 }

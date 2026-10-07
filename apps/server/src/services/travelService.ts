@@ -104,15 +104,15 @@ export function capitalStation(content: GameContent) {
 }
 
 /**
- * Where Continue on the arrival modal lands: the station district in the capital, else the city.
- * Slice 5 (tech design §8.2): on rival ground, the city's first quarter.
+ * Where Continue on the arrival modal lands: the station district in the capital. Review 4 (answers
+ * §21.3, ADR 0076): a home city is one map, and a train lands on its Town Hall's pin (the civic
+ * centre, open at every Level), rival ground included.
  */
-export function landingOf(content: GameContent, cityId: string, rivalGround = false): Landing {
-  if (rivalGround) {
-    const q = content.quartersOf(cityId)[0];
-    return q ? { cityId, quarterId: q.id } : { cityId };
+export function landingOf(content: GameContent, cityId: string, _rivalGround = false): Landing {
+  if (cityId !== capitalOf(content)) {
+    const hall = content.hallOf(cityId)?.location;
+    return hall ? { cityId, locationId: hall.id } : { cityId };
   }
-  if (cityId !== capitalOf(content)) return { cityId };
   const station = capitalStation(content);
   return { cityId, ...(station.quarterId ? { quarterId: station.quarterId } : {}), locationId: station.id };
 }
@@ -578,7 +578,6 @@ export async function journeyView(
       ...(heat ? { heat } : {}),
     };
   }
-  const firstQuarter = rivalTrip ? content.quartersOf(j.to)[0] : undefined;
   return {
     id: j._id.toHexString(),
     from: { cityId: j.from, name: content.city(j.from)?.name ?? j.from },
@@ -620,9 +619,8 @@ export async function journeyView(
               j.to === capital
                 ? `${city!.name} · ${vars.destination}`
                 : rivalTrip
-                  ? copy.risk.rival.placeLine(
-                      firstQuarter ? `${city!.name} · ${firstQuarter.name}` : city!.name,
-                    )
+                  ? // Review 4 (ADR 0076): a home city is one map; the line names the city alone.
+                    copy.risk.rival.placeLine(city!.name)
                   : city!.name,
             headline:
               j.to === capital

@@ -8,6 +8,7 @@ export {
   PIN_GAP,
   REST_PAN_MARGIN,
   ZOOM_MS,
+  bboxOf,
   NARROW_NAMES,
   contentFor,
   coverRestView,
@@ -167,9 +168,7 @@ export {
   LockMark,
   LodgingsCard,
   OpinionBars,
-  QuarterTeaserSheet,
-  QuartersList,
-  quarterLockLine,
+  LockedPinSheet,
   RegisterSheet,
   ResidenceCard,
   Rosette,
@@ -194,8 +193,7 @@ export type {
   IssuesSectionProps,
   LodgingsCardProps,
   OpinionBarsProps,
-  QuarterTeaserSheetProps,
-  QuartersListProps,
+  LockedPinSheetProps,
   RegisterSheetProps,
   ResidenceCardProps,
   TramBarProps,
@@ -231,3 +229,5 @@ export {
   StoryScreen,
 } from './components/Story';
 export type { AvatarPickerProps, FactionCardProps, StoryScreenProps } from './components/Story';
+export { TownHallBlocks, WhatNowCard, deskNextLine } from './components/TownHall';
+export type { DeskActs, TownHallBlocksProps, WhatNowCardProps } from './components/TownHall';

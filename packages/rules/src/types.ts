@@ -3,7 +3,7 @@
  * Kept in the rules package so every layer imports types from one place.
  */
 import type { CouncilPhase } from './calendar';
-import type { CountRow } from './council';
+import type { CountRow, DeskNext } from './council';
 import type { DayKey } from './day';
 import type { MoraleState } from './morale';
 import type { OrdinanceTagView } from './ordinances';
@@ -893,6 +893,21 @@ export interface LocationView {
   cellsHere?: boolean;
   /** Review 4 #9 (answers §9.3): the Lodgings card (Tram Junction); absent or null elsewhere. */
   lodgings?: LodgingsView | null;
+  /** Review 4 (ADR 0077): the city's council hall: its sheet carries the council's blocks (`council.hall`). */
+  hall?: boolean;
+}
+
+/**
+ * Review 4 (ADR 0076): a home city's place the character cannot open yet, a greyed pin with a lock: a
+ * place of a locked quarter (`lock.kind: 'level'`), or a survey pin a later edition builds
+ * (`'edition'`). No tickets, missions or jobs.
+ */
+export interface LockedPinView {
+  id: string;
+  name: string;
+  quarterId: string;
+  map: { x: number; y: number };
+  lock: QuarterLock;
 }
 
 export interface CityView {
@@ -902,13 +917,17 @@ export interface CityView {
   homeFactionId?: FactionId;
   opinion: OpinionShares;
   map: { day: AssetView; night: AssetView };
-  /** Maps v3: the city's quarters, frames on its picture; the city view opens on the first. */
   /**
-   * Maps v3: the city's quarters, frames on its picture. Slice 5 (ADR 0035): every city's quarters
-   * with outlines, labels, locks, blurbs and teasers (`QuarterView`; the new fields optional until
-   * the slice-5 server fills them).
+   * Maps v3, slice 5 (ADR 0035), review 4 (ADR 0076): every quarter of the city. The capital's
+   * districts with their frames, outlines and labels; a home city's as the Places list's groups
+   * (name, blurb, lock), with no shape on the picture.
    */
   quarters: QuarterView[];
+  /**
+   * Review 4 (ADR 0076): a home city's places the character cannot open yet (a locked quarter's), then
+   * the survey's later places, in pin order; [] in the capital.
+   */
+  lockedPins?: LockedPinView[];
   /** Map atmosphere: clouds by day and fog by night drift over the map (content `City.clouds`). */
   clouds?: boolean;
   isNight: boolean;
@@ -917,7 +936,15 @@ export interface CityView {
   /** Slice 3: the home share as morale, for a home city (the plate's state word). */
   morale: { factionId: FactionId; share: number; state: MoraleState } | null;
   /** Slice 3: the ordinance in force ("Ordinance: Shift Hours Order · 3 days left"). */
-  ordinance: { ordinanceId: string; name: string; line: string; effectLine: string; daysLeft: number } | null;
+  ordinance: {
+    ordinanceId: string;
+    name: string;
+    line: string;
+    effectLine: string;
+    /** Review 4 (answers §11.3): the plate's plain words ("studying costs a fifth less"). */
+    plainLine?: string;
+    daysLeft: number;
+  } | null;
   /** Review 2: the home city's Election card (screens §1a); null elsewhere. */
   election: PoliticsSummaryView | null;
   /** Slice 4: the capital's districts; the city share (the capital: the average); the Issues. */
@@ -1705,6 +1732,76 @@ export interface FrontPageView {
   headline: string;
   deck: string;
   count: CountView;
+  /** Review 4 (answers §10.1): the *What now* card under the headline, the morning of the win. */
+  whatNow?: WhatNowView | null;
+}
+
+/**
+ * Review 4 (answers §10.1, ADR 0077): the *What now* card, once per term (`officeTerms.whatNowSeenAt`):
+ * put a rule forward, vote before the council votes at `divideAt`, draw the pay.
+ */
+export interface WhatNowView {
+  termId: string;
+  cityId: string;
+  /** The hall's place (`?loc=` for *To your desk at the Town Hall*) and its name. */
+  hall: { locationId: string; name: string };
+  seatCount: 7 | 10;
+  passVotes: 4 | 6;
+  divideAt: number;
+}
+
+/**
+ * Review 4 (answers §11.2, ADR 0077): the Town Hall's sheet, the council's public face for any city
+ * with a council: the rule in force, the seats as rows, the order paper read-only, the week's Issues,
+ * the Election card; `desk` only for a councillor of this council.
+ */
+export interface TownHallView {
+  cityId: string;
+  cityName: string;
+  hall: HallView;
+  seatCount: 7 | 10;
+  passVotes: 4 | 6;
+  termEndsAt: number;
+  inForce: { ordinanceId: string; name: string; plainLine: string; daysLeft: number } | null;
+  /** No rule in force: the council couldn't agree, or it votes at `at`. */
+  noRule: { why: 'divided' | 'beforeVote'; at: number | null } | null;
+  seats: Array<{
+    seat: number;
+    kind: 'player' | 'npc';
+    name: string;
+    avatar: AssetView | null;
+    rankTitle: string | null;
+    you: boolean;
+    votedFor: string | null;
+    factionId?: FactionId;
+    districtName?: string | null;
+  }>;
+  paper: {
+    status: 'open' | 'divided';
+    items: Array<{
+      n: number;
+      ordinanceId: string;
+      name: string;
+      plainLine: string;
+      effectLine: string;
+      movedBy: { kind: 'branch' | 'player'; name: string; you: boolean };
+      votes: number | null;
+      passed: boolean;
+    }>;
+    against: number | null;
+    rose: boolean;
+  };
+  /** The council's division (its vote), this term. */
+  divideAt: number;
+  /** The council's vote while the paper is open (null after it). */
+  nextVoteAt: number | null;
+  issues: IssueRowView[];
+  /** When this week's Issues settle (the next Monday's turn), for the rows' line. */
+  issuesSettleAt: number;
+  election: PoliticsSummaryView | null;
+  desk: (CouncilView & { next: DeskNext }) | null;
+  whatNow: WhatNowView | null;
+  serverNow: number;
 }
 
 export type PoliticalAct =
@@ -2171,20 +2268,21 @@ export interface CharacterViewV5 {
 // are optional until the slice-5 server fills them (phase B).
 // ---------------------------------------------------------------------------------------------
 
-/** CityView.quarters[] (ADR 0035): a quarter on the city's picture. */
+/**
+ * CityView.quarters[] (ADR 0035, 0076): a quarter of the city. The capital's districts carry their
+ * frame, outline and label; a home quarter is a group of places with a Level gate (no shape).
+ */
 export interface QuarterView {
   id: string;
   name: string;
-  frame: Frame;
+  frame?: Frame;
   outline?: Array<[number, number]>;
   /** Where the name sits on the overview (screens §10). */
   label?: { x: number; y: number } | null;
   open?: boolean;
   lock?: QuarterLock | null;
   blurb?: string | null;
-  /** The line after the lock word (*The slipway, the customs house, and the far bank across the water.*). */
-  teaser?: string | null;
-  /** How many places it has (0 for a teaser). */
+  /** How many places it has (its own content places). */
   places?: number;
 }
 

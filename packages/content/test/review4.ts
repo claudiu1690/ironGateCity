@@ -66,6 +66,8 @@ export const REVIEW4_REWORDED: Readonly<Record<string, string>> = {
   'Room until {weekday} · Rested cap {cap}': 'Your bed until {weekday} · Rested banks to {cap}',
   'Room until {weekday} · Rested cap {cap} · renew from {renewFrom}':
     'Your bed until {weekday} · Rested banks to {cap} · renew from {renewFrom}',
+  // Review 4 phases 3–4 (the small extra): the capital Election card's first line, as *Live here*.
+  'Registered in {district}': 'You live in {district}',
   // The screens' worked examples.
   'In the cells at Harbour Police · 24 minutes to go · bail 150 Iron':
     'In the cells at Harbour Police · out in 24 min · bail 150 Iron',

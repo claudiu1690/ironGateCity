@@ -43,6 +43,8 @@ export function usePoliticalAct() {
           queryClient.setQueryData(trpc.council.chamber.queryKey(), r.view.council);
         void queryClient.invalidateQueries({ queryKey: trpc.paper.today.queryKey() });
         void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
+        // Review 4 (ADR 0077): the Town Hall's sheet shows the same council.
+        void queryClient.invalidateQueries({ queryKey: trpc.council.hall.queryKey() });
         // Slice 4: a move or a room changes the nation's cards and the election screens too.
         void queryClient.invalidateQueries({ queryKey: trpc.travel.nation.queryKey() });
         if (r.view.kind === 'residence') {
@@ -57,6 +59,7 @@ export function usePoliticalAct() {
         // The refusal carries the settled state: refetch the screen so it shows it.
         void queryClient.invalidateQueries({ queryKey: trpc.council.election.queryKey() });
         void queryClient.invalidateQueries({ queryKey: trpc.council.chamber.queryKey() });
+        void queryClient.invalidateQueries({ queryKey: trpc.council.hall.queryKey() });
       } finally {
         busy.current = false;
         setPending(null);

@@ -62,11 +62,10 @@ describe('city.get v2', () => {
     });
     expect(city.map.night.tiles?.path).toMatch(/^map\.coalport\.night\/[0-9a-f]{8}$/);
     // Slice 5 (T12, ADR 0035): every quarter comes back; at this Level only the first is open.
+    // Review 4 (ADR 0076): a home quarter has no frame (one map).
     expect(
       city.quarters.filter((q) => q.open).map((q) => ({ id: q.id, name: q.name, frame: q.frame })),
-    ).toEqual([
-      { id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } },
-    ]);
+    ).toEqual([{ id: 'coalport.mill', name: 'The Mill', frame: undefined }]);
     // Map atmosphere: Coalport is the trial city for the clouds.
     expect(city.clouds).toBe(true);
     expect(city.standing).toMatchObject({ level: 0, name: 'Stranger', nextName: 'Familiar', next: 10 });
@@ -77,6 +76,8 @@ describe('city.get v2', () => {
       [4, 'Foundry Row'],
       [5, 'Harbour Quays'],
       [6, 'The Anchor'],
+      // Review 4 (ADR 0077): the Town Hall, appended last (pin 12), open at every Level.
+      [12, 'Town Hall'],
     ]);
     const mill = city.locations[0]!;
     expect(mill.map).toEqual({ x: 0.75, y: 0.2 });

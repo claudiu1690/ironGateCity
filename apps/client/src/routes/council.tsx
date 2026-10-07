@@ -1,6 +1,6 @@
 import { copy } from '@irongate/content/copy';
 import { isNight } from '@irongate/rules';
-import type { CapitalCountView, CouncilView, ElectionView, FactionId, HallView } from '@irongate/rules';
+import type { CapitalCountView, ElectionView, FactionId, HallView } from '@irongate/rules';
 import {
   Button,
   CountTable,
@@ -8,13 +8,10 @@ import {
   DistrictSwitcher,
   HallHeader,
   HowElectionsWork,
-  OrderPaper,
-  OrdinanceMenu,
   PaperSheet,
   Plate,
   ProgressBar,
   ResultModal,
-  SeatGrid,
   Slate,
   cx,
   formatAt,
@@ -24,11 +21,12 @@ import {
 } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter } from '../features/game/hooks';
+import { TownHall } from '../features/council/TownHall';
 import { trpcClient, trpc } from '../lib/trpc';
 import { useNow } from '../lib/useNow';
 
@@ -560,132 +558,45 @@ function CapitalCount({ view, pending }: { view: CapitalCountView | null | undef
 // The chamber (screens §6).
 // ---------------------------------------------------------------------------------------------
 
-function CouncilHeader({ c }: { c: CouncilView }) {
-  return (
-    <Plate
-      kicker={c.hall ? copy.councilSittingAt(c.cityName, c.hall.ref) : `${c.cityName} Council · Sitting`}
-      title="The council"
-    >
-      <span className="font-mono text-[12px] text-dim" data-testid="council-header">
-        Term ends {formatWeekday(c.termEndsAt - 1)} · {copy.npcSeats(c.npcSeats, c.seatCount ?? 7)}
-        {c.inForce ? ` · council rule in force: ${c.inForce.name} · ${c.inForce.daysLeft} days left` : ''}
-      </span>
-      {/* Review 2 (screens §6.1): the names never disappear: the last result, every day. */}
-      <Link
-        to="/council/count"
-        className="-my-2 inline-flex min-h-11 items-center self-start font-mono text-[12px] text-dim underline underline-offset-2"
-        data-testid="council-last-result"
-      >
-        {copy.lastResult}
-      </Link>
-    </Plate>
-  );
-}
-
-/** The capital's seats in district pairs, in seat order (seats 1–2 the first district …). */
-function districtGroups(c: CouncilView): Array<{ id: string; name: string }> {
-  const out: Array<{ id: string; name: string }> = [];
-  for (const x of c.seats)
-    if (x.districtId && !out.some((g) => g.id === x.districtId))
-      out.push({ id: x.districtId, name: x.districtName ?? x.districtId });
-  return out;
-}
-
+/**
+ * Review 4 (answers §11.2, ADR 0077): `/council` opens the Town Hall's blocks for the residence's city
+ * on the paper ground, the same state as the hall's place sheet: *What now* once, the desk for a
+ * councillor (the vote, *Put forward a rule*, the Next line), the rule in force, the seats as rows,
+ * the order paper, the week's Issues and the Election card.
+ */
 export function CouncilPage() {
-  const q = useQuery(trpc.council.chamber.queryOptions());
   const { character } = useCharacter();
-  const act = usePoliticalAct();
-  const [selected, setSelected] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  useEffect(() => {
-    if (act.open) setMenuOpen(false);
-  }, [act.open]);
+  const navigate = useNavigate();
+  const cityId = character?.residence?.cityId ?? character?.homeCityId ?? '';
+  const q = useQuery({ ...trpc.council.hall.queryOptions({ cityId }), enabled: !!cityId });
   if (q.isError) return <LoadError retry={() => void q.refetch()} />;
   if (!q.data || !character) return <Loading what="Opening the chamber…" />;
-  const c = q.data;
-  const secretary = c.paper.items.find((i) => i.movedBy.kind === 'branch')?.movedBy.name ?? '';
-  const voting = c.window.voting && c.you.councillor;
-  const chosen =
-    selected === 'against' ? copy.againstAll : c.paper.items.find((i) => i.ordinanceId === selected)?.name;
-  const proposed = c.you.proposed ? c.paper.items.find((i) => i.ordinanceId === c.you.proposed)?.name : null;
-  const full = c.paper.items.filter((i) => i.movedBy.kind === 'player').length >= 3;
+  const h = q.data;
+  const names: Partial<Record<FactionId, string>> =
+    character.factionNames ?? { [character.factionId]: character.factionName };
+  const npcSeats = h.seats.filter((s) => s.kind === 'npc').length;
   return (
-    <Page hall={{ hall: c.hall, cityName: c.cityName }}>
-      <CouncilHeader c={c} />
-      {/* Slice 4 (screens §8): ten seats in five pairs, captioned by district. */}
-      <SeatGrid
-        seats={c.seats}
+    <Page hall={{ hall: h.hall, cityName: h.cityName }}>
+      <Plate kicker={copy.councilSittingAt(h.cityName, h.hall.ref)} title="The council">
+        <span className="font-mono text-[12px] text-dim" data-testid="council-header">
+          {copy.npcSeats(npcSeats, h.seatCount)}
+          {h.passVotes === 6 ? ` · ${copy.capitalElection.sixVotes(formatAt(h.divideAt))}` : ''}
+        </span>
+        {/* Review 2 (screens §6.1): the names never disappear: the last result, every day. */}
+        <Link
+          to="/council/count"
+          className="-my-2 inline-flex min-h-11 items-center self-start font-mono text-[12px] text-dim underline underline-offset-2"
+          data-testid="council-last-result"
+        >
+          {copy.lastResult}
+        </Link>
+      </Plate>
+      <TownHall
+        cityId={cityId}
+        names={names}
         factionId={character.factionId}
-        groups={c.seats.some((x) => x.districtId) ? districtGroups(c) : undefined}
+        onWhereToAct={() => void navigate({ to: '/city/$cityId', params: { cityId }, search: { places: true } })}
       />
-      {c.passVotes === 6 && (
-        <p className="font-mono text-[12px] text-muted" data-testid="six-of-ten">
-          {copy.capitalElection.sixVotes(formatAt(c.window.divideAt))}
-        </p>
-      )}
-      <OrderPaper
-        council={c}
-        factionNames={character.factionNames}
-        secretary={secretary}
-        selected={selected}
-        onSelect={voting ? setSelected : undefined}
-        disabled={!!act.pending}
-      />
-      {voting && c.menu && (
-        <div className="flex flex-col gap-1">
-          {c.you.proposed ? (
-            <p className="font-mono text-[12px] text-muted">{copy.youMoved(proposed ?? '')}</p>
-          ) : full ? (
-            <p className="font-mono text-[12px] text-muted">{copy.paperFull}</p>
-          ) : (
-            <Button variant="outline" className="w-full" onClick={() => setMenuOpen(true)}>
-              {copy.propose(20)}
-            </Button>
-          )}
-          <OrdinanceMenu
-            open={menuOpen}
-            onOpenChange={setMenuOpen}
-            items={c.menu}
-            canAfford={c.you.pc >= 20}
-            pending={act.pending === 'propose'}
-            onPropose={(ordinanceId) =>
-              void act.run('propose', (k) =>
-                trpcClient.council.propose.mutate({ ordinanceId, idempotencyKey: k }),
-              )
-            }
-          />
-        </div>
-      )}
-      <Notice error={act.error} />
-      {c.you.councillor && (
-        <Sticky>
-          {c.you.voted !== null ? (
-            <p className="py-2 text-center font-mono text-[12px]" data-testid="council-voted-line">
-              {copy.voteRecorded(formatWeekday(c.window.divideAt))}
-            </p>
-          ) : voting ? (
-            <>
-              <Button
-                className="w-full"
-                disabled={!selected}
-                pending={act.pending === 'councilVote'}
-                onClick={() =>
-                  selected &&
-                  void act.run('councilVote', (k) =>
-                    trpcClient.council.councilVote.mutate({ choice: selected, idempotencyKey: k }),
-                  )
-                }
-              >
-                {chosen ? copy.voteFor(chosen) : copy.chooseAMotion}
-              </Button>
-              <p className="text-center font-mono text-[11px] text-muted">
-                {copy.councilCaption(formatAt(c.window.divideAt))}
-              </p>
-            </>
-          ) : null}
-        </Sticky>
-      )}
-      <ResultModal result={act.result} open={act.open} onOpenChange={act.setOpen} />
     </Page>
   );
 }

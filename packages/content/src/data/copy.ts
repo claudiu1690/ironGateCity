@@ -31,6 +31,8 @@ const KIND_LABELS: Record<LocationKind, string> = {
   parliament: 'Parliament',
   ministry: 'Public office',
   theatre: 'Theatre',
+  // Review 4 (answers §11.2): the hall's sheet kicker, *{n} · Town Hall*.
+  'town-hall': 'Town Hall',
 };
 
 /** "Mill Gate, Market Row or Harbour Quays": commas, then a final "or". */
@@ -469,7 +471,7 @@ export const copy = {
     ],
     ordinance: () => [
       'Council rule',
-      "The council's rule for the town, in force for five days and for everyone here whatever their party. Passed by four councillors of seven.",
+      "The council's rule for the town, in force for five days and for everyone here whatever their party. Passed by four councillors of seven. The rule in force is on the city plate and at the Town Hall.",
     ],
     today: (at: string) => [
       'Today',
@@ -822,9 +824,9 @@ export const copy = {
       `You're backing ${name}`,
       `Voting opens ${pollsWeekday} · ${days}`,
     ],
-    /** Slice 4 (screens §7.2): registered in a district, the first vote not yet open. */
+    /** Slice 4 (screens §7.2): living in a district, the first vote not yet open (review 4: *You live in*, as *Live here*). */
     registered: (place: string, votesWeekday: string) => [
-      `Registered in ${place}`,
+      `You live in ${place}`,
       `You vote from ${votesWeekday} · the result every fifth morning`,
     ],
     /** "{n} days left" to the closing boundary, rounded up; `until` always prints its time (§23 Q6). */
@@ -864,6 +866,77 @@ export const copy = {
     voteNow: 'Vote now',
     voteOnTheRule: 'Vote on the rule',
     noneOfThese: 'None of these',
+  },
+  // Review 4 (answers §8, §10–§11, §21; tech design §8.1, §9.1): one map for each home city, the
+  // Town Hall's sheet, the councillor's desk, *What now*, and the plate's rule line.
+  /** A home city's greyed pins and their short sheet (answers §21.4). */
+  map: {
+    lockedPlace: (lock: { kind: 'level'; level: number } | { kind: 'edition' }) =>
+      lock.kind === 'level' ? `Opens at Level ${lock.level}` : 'Opens with a later edition',
+    lockedKicker: (quarter: string, lock: { kind: 'level'; level: number } | { kind: 'edition' }) =>
+      lock.kind === 'level' ? `${quarter} · opens at Level ${lock.level}` : `${quarter} · a later edition`,
+    lockedSheet: (need: number, level: number) => `Level ${need} opens it; you are Level ${level}.`,
+    /** The pin's accessible name: "Coal Yards, opens with a later edition". */
+    lockedPinLabel: (name: string, line: string) => `${name}, ${line.charAt(0).toLowerCase()}${line.slice(1)}`,
+  },
+  /** The Places list grouped by quarter (answers §21.2). */
+  places: {
+    group: (quarter: string, lock: { kind: 'level'; level: number } | { kind: 'edition' } | null) =>
+      lock === null
+        ? quarter
+        : lock.kind === 'level'
+          ? `${quarter} · opens at Level ${lock.level}`
+          : `${quarter} · a later edition`,
+  },
+  plate: {
+    /** Answers §11.3: "Council rule: Reading Room Grant · studying costs a fifth less · 3 days left". */
+    rule: (name: string, plainLine: string, days: number) =>
+      `Council rule: ${name} · ${plainLine} · ${days} ${days === 1 ? 'day' : 'days'} left`,
+  },
+  /** The Town Hall's sheet (answers §11.2). */
+  hall: {
+    yourDesk: 'Your desk',
+    ruleInForce: 'The rule in force',
+    council: 'The council',
+    upForAVote: 'Up for a vote',
+    issues: "This week's Issues",
+    /** "Studying costs a fifth less · 3 days left". */
+    ruleLine: (plainLine: string, days: number) =>
+      `${plainLine.charAt(0).toUpperCase()}${plainLine.slice(1)} · ${days} ${days === 1 ? 'day' : 'days'} left`,
+    noRuleDivided: "No rule in force · the council couldn't agree",
+    /** `when`: a `when` phrase with the time ("tomorrow 01:00"). */
+    noRuleVotes: (when: string) => `No rule in force · the council votes ${when}`,
+    player: (rank: string) => `Player · ${rank}`,
+    local: 'Local candidate · townspeople run by the game',
+    votedFor: (rule: string) => `voted for ${rule}`,
+    termEnds: (weekday: string) => `Term ends ${weekday}`,
+    nextVote: (when: string) => `The council votes ${when}`,
+    voted: (weekday: string, rule: string, votes: number, seats: number) =>
+      `Voted ${weekday}: ${rule}, ${votes} of ${seats}`,
+    votedNothing: (weekday: string) => `Voted ${weekday}: the council couldn't agree`,
+  },
+  council: {
+    /** Answers §10.1: once per term, on the front page and the first hall visit. */
+    whatNow: {
+      kicker: 'What now · your five days',
+      lines: (when: string, seats: 7 | 10, passVotes: 4 | 6): Array<[string, string]> => [
+        ['Put a rule forward', 'today or tomorrow, 20 Political Capital. Or back one already on the paper.'],
+        [
+          'Vote on the rule',
+          `one vote, before the council votes ${when}. The rule with ${passVotes === 6 ? 'six' : 'four'} of ${seats === 10 ? 'ten' : 'seven'} passes and runs for five days.`,
+        ],
+        ['Draw your pay', '10 Political Capital and 20 Party XP every morning you hold the seat, present or not.'],
+      ],
+      button: (hall: string) => `To your desk at the ${hall}`,
+    },
+    /** Answers §10.2: the desk's *Next* line by cycle day. */
+    deskNext: {
+      votes: (when: string) => `Next: the council votes ${when}.`,
+      voted: (rule: string) => `Your vote is in: ${rule}. The result is in tomorrow's paper.`,
+      runs: (rule: string, untilWeekday: string, namesWeekday: string) =>
+        `Next: ${rule} runs until ${untilWeekday}; candidates put their names in from ${namesWeekday}.`,
+      rose: (namesWeekday: string) => `Next: no rule this term; candidates put their names in from ${namesWeekday}.`,
+    },
   },
   // Slice 4, "the battleground" (docs/design/slice-4-screens.md §11 and its help notes). Times are
   // rendered by the caller in the player's clock (`until`: "Saturday midnight"; `time`: "14:32";

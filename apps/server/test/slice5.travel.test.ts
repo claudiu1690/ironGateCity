@@ -334,7 +334,7 @@ describe('an unanswered card: its ignore effects once (tech design §8.2)', () =
     // Shown before it applies: what sleeping through will cost.
     expect(j.arrival!.knockOns).toMatchObject({ heat: { before: 0, after: 10 }, flags: ['watched'] });
     const closed = await p.caller.travel.close({ journeyId: j.id });
-    expect(closed.landing).toEqual({ cityId: 'duskwall', quarterId: 'duskwall.fortress' });
+    expect(closed.landing).toEqual({ cityId: 'duskwall', locationId: 'duskwall.town-hall' });
     await p.caller.travel.close({ journeyId: j.id });
     const c = await doc(p.id);
     expect([c.heat?.value, c.flags, c.journey]).toEqual([
@@ -405,15 +405,16 @@ describe('an unanswered card: its ignore effects once (tech design §8.2)', () =
 });
 
 describe('the arrival on rival ground (screens §8.2)', () => {
-  it('the place line, the warning on the first trip only, the first quarter as the landing', async () => {
+  it('the place line, the warning on the first trip only, the Town Hall as the landing (review 4)', async () => {
     const p = await fresh({ name: 'Ria Arrives' });
     const { j } = await ride(p, 'duskwall');
     expect(j.arrival).toMatchObject({
       stamp: 'Arrived',
-      place: 'Duskwall · The Fortress · rival ground',
+      place: 'Duskwall · rival ground', // Review 4 (ADR 0076): one map, no quarter.
       headline: 'Duskwall',
       knockOns: { ticket: 20, heraldVisitor: false, rivalGround: true },
-      landing: { cityId: 'duskwall', quarterId: 'duskwall.fortress' },
+      // Review 4 (answers §21.3, ADR 0076): a train lands on the Town Hall's pin.
+      landing: { cityId: 'duskwall', locationId: 'duskwall.town-hall' },
     });
     await ride(p, 'coalport');
     const home = (await p.caller.travel.journey())!;
@@ -421,7 +422,7 @@ describe('the arrival on rival ground (screens §8.2)', () => {
     expect(home.arrival!.place).toBe('Coalport');
     const { j: second } = await ride(p, 'ashford');
     expect(second.arrival!.knockOns.rivalGround).toBe(false);
-    expect(second.arrival!.place).toMatch(/^Ashford · .+ · rival ground$/);
+    expect(second.arrival!.place).toBe('Ashford · rival ground');
   });
 });
 

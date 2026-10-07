@@ -110,7 +110,7 @@ test.describe('the map from tiles', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect.poll(async () => (await tileState(page)).top).toBeGreaterThan(rest.top);
     expect(seen.slice(before).some((u) => levelOf(u) > rest.top)).toBe(true);
-    await expect(marked(page)).toHaveCount(6);
+    await expect(marked(page)).toHaveCount(7); // review 4: the six and the Town Hall
     await expect(map).toHaveAttribute('data-art', 'tiles');
   });
 

@@ -59,6 +59,7 @@ import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { DayChanged, VersionConflict } from './txn';
 import {
+  placeOpenFor,
   fromOrdersState,
   standingSuccesses,
   toOrdersState,
@@ -120,6 +121,14 @@ function missionRefusal(
   }
   if (located.city.id !== c.cityId) {
     return new GameError('WRONG_CITY', { cityId: c.cityId, actionCityId: located.city.id }, 'BAD_REQUEST');
+  }
+  // Review 4 (tech design §3.2, ADR 0076): a place the character cannot open is refused.
+  const open = placeOpenFor(content, c, located.location);
+  if (!open.open && open.lock) {
+    return new GameError(
+      'MISSION_LOCKED',
+      open.lock.kind === 'level' ? { lock: 'QUARTER', need: open.lock.level } : { lock: 'EDITION', need: 0 },
+    );
   }
   if (district !== undefined) {
     const target = targetOf(located, c.factionId, district);

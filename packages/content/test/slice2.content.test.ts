@@ -54,7 +54,9 @@ describe('the real content, slice 2', () => {
     expect(home.map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford']);
     // Review 1: the nine job-shift actions are gone (a job is a wage).
     // Slice 5's second quarters add 35 (slice5.cities.test.ts); slice 2's are the first quarters'.
-    const first = (c: (typeof home)[number]) => c.locations.filter((l) => l.quarterId === c.quarters[0]!.id);
+    // Review 4's Town Halls (ADR 0077) are in review4.hall.test.ts.
+    const first = (c: (typeof home)[number]) =>
+      c.locations.filter((l) => l.quarterId === c.quarters[0]!.id && l.kind !== 'town-hall');
     expect(home.flatMap((c) => first(c).flatMap((l) => l.actions))).toHaveLength(55);
     expect(content.jobs.filter((j) => !j.id.startsWith('irongate'))).toHaveLength(9);
     // Slice 3 adds six crisis templates (Restore the base, two per faction), which never rotate.
@@ -189,7 +191,10 @@ describe.each([
 ] as const)('%s vs docs/design/slice-2-cities.md', (cityId, factionId, start, end, dirPrefix, hlPrefix) => {
   const doc = section(CITIES, start, end);
   const city = content.city(cityId)!;
-  const actions = city.locations.filter((l) => l.quarterId === city.quarters[0]!.id).flatMap((l) => l.actions);
+  // Review 4's Town Halls (ADR 0077) are in review4.hall.test.ts.
+  const actions = city.locations
+    .filter((l) => l.quarterId === city.quarters[0]!.id && l.kind !== 'town-hall')
+    .flatMap((l) => l.actions);
 
   // Maps v3 (design §5.3): the doc's positions were measured on the retired pen-and-ink map; a
   // location now sits at its approved pin in the survey (pins.json).

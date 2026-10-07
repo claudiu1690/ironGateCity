@@ -396,6 +396,11 @@ export const assets: Asset[] = [
     'theatre',
     'An opera foyer at the interval: evening dress and champagne, a marble staircase under chandeliers, an usher at a box door.',
   ),
+  // Review 4 (answers §28 art 1, ADR 0077): the council chamber for the `town-hall` kind.
+  scene(
+    'town-hall',
+    'A council chamber: a horseshoe of desks, the chair under an arched window, a clerk with the minute book, and the public at the gallery rail.',
+  ),
   // Slice 5 (tech design §13; slice-5-risk.md §21, alt texts §23.5): the five mission cards (rung 4),
   // the strike card, the infirmary and the cells.
   scene(
@@ -531,6 +536,8 @@ export const scenes: SceneBinding[] = [
   { locationKind: 'theatre', assetId: 'scene.theatre' },
   { locationKind: 'hospital', assetId: 'scene.hospital' },
   { locationKind: 'jail', assetId: 'scene.jail-cell' },
+  // Review 4 (answers §28 art 1): the Town Halls.
+  { locationKind: 'town-hall', assetId: 'scene.town-hall' },
 ];
 
 /**

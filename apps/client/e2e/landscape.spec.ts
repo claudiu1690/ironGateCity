@@ -110,7 +110,7 @@ for (const vp of [
       const atRest = await boxOf(page.getByTestId('city-map'));
       expect(atRest.height).toBeGreaterThanOrEqual(vp.height - hud.height - 2);
       expect(atRest.x).toBeGreaterThanOrEqual(side.x + side.width - 1);
-      await expect(page.getByTestId('hotspot')).toHaveCount(6);
+      await expect(page.getByTestId('hotspot')).toHaveCount(7); // review 4: the six and the Town Hall
       expect(await pinsOutOfReach(page)).toEqual([]);
       await noPageScroll(page);
       await noSideScroll(page);

@@ -234,7 +234,7 @@ export class ContentError extends Error {
 
 /** §4.3 of the slice-1 tech design: two hotspots closer than this are too close to tap. */
 const MIN_HOTSPOT_DISTANCE = 0.03;
-/** Maps v3 §2: a pin lies at least this far inside its quarter's frame. */
+/** Maps v3 §2: a pin lies at least this far inside its district's frame (the capital's only). */
 const FRAME_MARGIN = 0.02;
 /** Slice 5 (tech design §4.3): the risk headlines' placeholders join the stored and the live sets. */
 const ALLOWED_PLACEHOLDERS = new Set<string>([...PLACEHOLDERS, ...RISK_PLACEHOLDERS]);
@@ -357,6 +357,15 @@ export function parseContent(raw: unknown): Content {
       quarterIds.add(q.id);
       if (!q.id.startsWith(`${city.id}.`))
         problems.push(`quarter "${q.id}" must be dotted under its city "${city.id}"`);
+      // Review 4 (ADR 0076): shapes on the picture are the capital's districts' only; a home city is
+      // one map, its quarters the Level gates of groups of places.
+      const shapes = (['frame', 'outline', 'label', 'district'] as const).filter((k) => q[k] !== undefined);
+      if (isDistricted(city)) {
+        for (const k of ['frame', 'outline', 'label', 'district'] as const)
+          if (q[k] === undefined) problems.push(`${q.id}: a district needs its ${k}`);
+      } else if (shapes.length > 0) {
+        problems.push(`${q.id}: only the capital's districts have ${shapes.join(', ')} (a home city is one map)`);
+      }
     }
     // Review 4 #9 (tech design §10.1): at most one Lodgings card a city, and only where the room's
     // rule holds (`ROOM.cityId`; slice 7 widens it to the battleground cities).
@@ -372,7 +381,7 @@ export function parseContent(raw: unknown): Content {
         problems.push(
           `location "${location.id}": quarterId "${location.quarterId}" is not a quarter of ${city.id}`,
         );
-      } else {
+      } else if (quarter.frame) {
         const { x0, y0, x1, y1 } = quarter.frame;
         const { x, y } = location.map;
         const e = 1e-9;
@@ -701,6 +710,14 @@ export function parseContent(raw: unknown): Content {
       if (other)
         problems.push(`cities.${city.id} and ${other} share the council offset ${city.council.offset}`);
       offsets.set(city.council.offset, city.id);
+      // Review 4 (ADR 0077): the hall is a place of the city, a `town-hall` (Clearwater's Casino in
+      // slice 7 keeps `bar`).
+      const hall = city.locations.find((l) => l.id === city.council!.hall.locationId);
+      if (!hall) problems.push(`cities.${city.id}.council.hall: "${city.council.hall.locationId}" is not a place of ${city.id}`);
+      else if (hall.kind !== 'town-hall' && hall.kind !== 'bar')
+        problems.push(`cities.${city.id}.council.hall: "${hall.id}" is a ${hall.kind}, not a town-hall`);
+    }
+    if (city.council) {
       const slate = content.candidates.filter((c) => c.cityId === city.id);
       if (isDistricted(city)) {
         if (city.council.seats !== 10)
@@ -827,12 +844,12 @@ function slice4Problems(
       if (d.n !== i + 1) problems.push(`${q.id}: district n must run 1…k in order (found ${d.n})`);
       if (Math.abs(sumShares(d.baselineOpinion) - 100) > 1e-9)
         problems.push(`${q.id}.baselineOpinion sums to ${sumShares(d.baselineOpinion)}, not 100`);
-      if (!inside(d.anchor, q.frame)) problems.push(`${q.id}: its anchor is outside its frame`);
+      if (q.frame && !inside(d.anchor, q.frame)) problems.push(`${q.id}: its anchor is outside its frame`);
       if (!q.blurb) problems.push(`${q.id}: a district needs a blurb`);
       // The user's district lock (3 Oct 2026): the anchor inside the district's outline (slice 5:
       // the outline is the quarter's; pins and overlaps are checked for every city, slice5.ts).
       if (!q.outline) problems.push(`${q.id}: a district needs an outline`);
-      else if (!inPolygon(d.anchor, q.outline)) problems.push(`${q.id}: its anchor is outside its outline`);
+      else if (!inPolygon(d.anchor, q.outline, true)) problems.push(`${q.id}: its anchor is outside its outline`);
     });
     for (const f of [...FACTION_IDS, 'neutral'] as const) {
       const avg = districts.reduce((sum, q) => sum + q.district!.baselineOpinion[f], 0) / districts.length;
@@ -1115,6 +1132,14 @@ export interface GameContent extends Content {
   lodgingsOf(cityId: string): { city: City; location: Location } | undefined;
   quartersOf(cityId: string): Quarter[];
   quarterOf(locationId: string): Quarter | undefined;
+  /**
+   * Review 4 (ADR 0076): a city without districts' survey pins that are not places yet, in pin order,
+   * each in its painted quarter (`quarters[pin.quarter − 1]`): the greyed *Opens with a later
+   * edition* pins. [] for the capital.
+   */
+  laterPins(cityId: string): LaterPin[];
+  /** Review 4 (ADR 0077): the city's council hall, located (undefined for a city without a council). */
+  hallOf(cityId: string): { city: City; location: Location } | undefined;
   /** The hostile deck's rotation (the checkpoint, the informer, the conductor), file order. */
   hostileRotation(): string[];
   /** The first rival trip's card (the checkpoint). */
@@ -1123,6 +1148,14 @@ export interface GameContent extends Content {
   listedCard(): { id: string; heatAtLeast: number };
   /** The rung-4 mission card of a type (an asset id). */
   missionCard(type: MissionType): string;
+}
+
+/** Review 4 (ADR 0076): a surveyed place a later edition builds. */
+export interface LaterPin {
+  id: string;
+  name: string;
+  map: { x: number; y: number };
+  quarterId: string;
 }
 
 export interface LocatedMission {
@@ -1144,6 +1177,19 @@ export function indexContent(content: Content): GameContent {
       for (const action of location.actions) actions.set(action.id, { city, location, action });
       for (const mission of location.missions ?? []) missions.set(mission.id, { city, location, mission });
     }
+  }
+  const laterPins = new Map<string, LaterPin[]>();
+  for (const city of content.cities) {
+    if (isDistricted(city)) continue;
+    laterPins.set(
+      city.id,
+      (mapPins[city.id]?.pins ?? []).flatMap((pin) => {
+        const q = city.quarters[pin.quarter - 1];
+        return locations.has(pin.id) || !q
+          ? []
+          : [{ id: pin.id, name: pin.name, map: { x: pin.x, y: pin.y }, quarterId: q.id }];
+      }),
+    );
   }
   const jobs = new Map(content.jobs.map((j) => [j.id, j]));
   const npcs = new Map(content.npcs.map((n) => [n.id, n]));
@@ -1273,6 +1319,11 @@ export function indexContent(content: Content): GameContent {
     quarterOf: (locationId) => {
       const hit = locations.get(locationId);
       return hit?.city.quarters.find((q) => q.id === hit.location.quarterId);
+    },
+    laterPins: (cityId) => (laterPins.get(cityId) ?? []).map((p) => ({ ...p, map: { ...p.map } })),
+    hallOf: (cityId) => {
+      const id = cities.get(cityId)?.council?.hall.locationId;
+      return id ? locations.get(id) : undefined;
     },
     hostileRotation: () =>
       content.journeyEvents.filter((j) => j.deck === 'hostile' && j.heatAtLeast === undefined).map((j) => j.id),

@@ -12,9 +12,11 @@ async function openFromList(page: Page, row: RegExp) {
   await page.getByTestId('places-button').filter({ visible: true }).click();
   const list = page.getByRole('dialog', { name: 'Places in Coalport' });
   await expect(list).toBeVisible();
-  const rows = list.getByTestId('place-row');
-  await expect(rows).toHaveCount(6);
-  // In pin order, each with its number and name.
+  // Review 4 (answers §21.2): grouped by quarter; the open places first (the Mill's six in pin order,
+  // then its Town Hall), the Harbour's and the Sidings' greyed after them.
+  const rows = list.locator('[data-testid=place-row]:not([data-locked])');
+  await expect(rows).toHaveCount(7);
+  await expect(list.locator('[data-testid=place-row][data-locked]')).toHaveCount(9);
   expect(
     await rows.evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')!.split(',')[0])),
   ).toEqual([
@@ -24,6 +26,7 @@ async function openFromList(page: Page, row: RegExp) {
     '4. Foundry Row',
     '5. Harbour Quays',
     '6. The Anchor',
+    '12. Town Hall',
   ]);
   // The welcome day's orders point at the Mill Gate and the Union Hall: their rows carry the tag.
   await expect(list.getByRole('button', { name: '1. Mill Gate, Party order' })).toBeVisible();

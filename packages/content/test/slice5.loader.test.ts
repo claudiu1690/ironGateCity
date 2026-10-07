@@ -24,30 +24,43 @@ describe('the real content validates (slice 5)', () => {
   });
 });
 
-describe('quarters (ADR 0035)', () => {
+describe('quarters (ADR 0035; review 4, ADR 0076)', () => {
   it('a home city needs its three quarters in order', () => {
     fails((c) => (cityOf(c, 'coalport').quarters[1]!.opens = { level: 10 }), /three quarters opening at Level 1, Level 6/);
     fails((c) => cityOf(c, 'duskwall').quarters.pop(), /three quarters/);
   });
-  it('a locked quarter needs a teaser; every quarter an outline and a label', () => {
-    fails((c) => delete cityOf(c, 'ashford').quarters[2]!.teaser, /ashford.station-road: a locked quarter needs a teaser/);
-    fails((c) => delete cityOf(c, 'coalport').quarters[1]!.outline, /coalport.harbour: a quarter of a city with two or more needs an outline/);
-    fails((c) => delete cityOf(c, 'coalport').quarters[2]!.label, /coalport.sidings: a quarter of a city with two or more needs a label/);
+  it('a home city is one map: no frame, outline or label on its quarters; a district needs all of them', () => {
+    fails(
+      (c) => (cityOf(c, 'ashford').quarters[1]!.outline = [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0.5], [0, 0.2]]),
+      /ashford.wharf: only the capital's districts have outline/,
+    );
+    fails((c) => delete cityOf(c, 'irongate').quarters[2]!.outline, /irongate.station-market: a district needs its outline/);
+    fails((c) => delete cityOf(c, 'irongate').quarters[3]!.label, /irongate.eastside: a district needs its label/);
   });
-  it('a pin outside its quarter\'s outline (a place, and a teaser quarter\'s survey pin)', () => {
-    fails((c) => (cityOf(c, 'coalport').quarters[1]!.outline = [[0.6, 0.6], [0.99, 0.6], [0.99, 0.96], [0.6, 0.96], [0.58, 0.8], [0.59, 0.7]]), /location "coalport.infirmary": its pin is outside coalport.harbour's outline/);
-    fails((c) => (cityOf(c, 'coalport').quarters[2]!.outline = [[0.36, 0.55], [0.53, 0.55], [0.53, 0.93], [0.36, 0.93], [0.35, 0.8], [0.35, 0.6]]), /survey pin "coalport.st-barbaras": outside coalport.sidings's outline/);
-  });
-  it('two outlines overlapping; a label outside its outline; labels under 0.25 apart', () => {
+  it('the capital tiles the picture: a gap, an overlap, an unshared point each fail by name', () => {
+    // A gap: Garrison Hill pulled in from the top-right corner.
     fails((c) => {
-      const q = cityOf(c, 'ashford').quarters;
-      q[1]!.outline = [[0.0, 0.18], [0.3, 0.18], [0.3, 0.66], [0.4, 0.66], [0.45, 0.61], [0.6, 0.61], [0.66, 0.51], [1, 0.51], [1, 1], [0.0, 1]];
-    }, /ashford.college and ashford.wharf: their outlines overlap/);
-    fails((c) => (cityOf(c, 'duskwall').quarters[1]!.label = { x: 0.5, y: 0.5 }), /duskwall.pass: its label is outside its outline/);
-    fails((c) => (cityOf(c, 'coalport').quarters[2]!.label = { x: 0.4, y: 0.5 }), /coalport.mill and coalport.sidings: their labels are under 0.25 apart|its label is outside/);
+      const q = cityOf(c, 'irongate').quarters.find((x) => x.id === 'irongate.garrison-hill')!;
+      q.outline![1] = [0.98, 0];
+    }, /cities\.irongate: the outlines cover 0\.99\d+ of the picture, not 1 \(a gap or an overlap\)/);
+    // An overlap: the Old Town pushed east over the Government Quarter's top.
+    fails((c) => {
+      const q = cityOf(c, 'irongate').quarters.find((x) => x.id === 'irongate.old-town')!;
+      q.outline![1] = [0.5, 0];
+    }, /cities\.irongate: the outlines cover 1\.0\d+ of the picture, not 1 \(a gap or an overlap\)/);
+    // A T-junction: a point on the river's middle in the Old Town only (the area is unchanged).
+    fails((c) => {
+      const q = cityOf(c, 'irongate').quarters.find((x) => x.id === 'irongate.old-town')!;
+      q.outline!.splice(6, 0, [0.315, 0.415]);
+    }, /irongate\.old-town: the edge \(0\.43, 0\.43\) → \(0\.315, 0\.415\) is not shared with a neighbour \(an unshared point\)/);
   });
-  it("the capital's district anchor stays inside the quarter's outline", () => {
-    fails((c) => (cityOf(c, 'irongate').quarters[0]!.district!.anchor = { x: 0.6, y: 0.42 }), /its anchor is outside its outline/);
+  it("the capital's anchors and labels inside their own district; labels 0.25 apart", () => {
+    fails((c) => (cityOf(c, 'irongate').quarters[0]!.district!.anchor = { x: 0.3, y: 0.6 }), /its anchor is outside its outline/);
+    fails((c) => (cityOf(c, 'irongate').quarters[1]!.label = { x: 0.6, y: 0.8 }), /irongate.old-town: its label is outside its outline/);
+    fails(
+      (c) => (cityOf(c, 'irongate').quarters[2]!.label = { x: 0.3, y: 0.45 }),
+      /irongate.old-town and irongate.station-market: their labels are under 0.25 apart/,
+    );
   });
 });
 

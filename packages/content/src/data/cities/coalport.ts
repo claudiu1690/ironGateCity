@@ -1,5 +1,6 @@
 import type { City } from '../../schemas';
 import { withMissions } from '../missions/attach';
+import { townHall } from './townHall';
 import { coalportMissions } from '../missions/coalport';
 
 /**
@@ -23,40 +24,29 @@ export const coalport: City = {
   map: { day: 'map.coalport.day', night: 'map.coalport.night' },
   // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
   clouds: true,
-  // Slice 5 (design §2, ADR 0035): three quarters, frames on the one picture; the second opens at
-  // Level 6, the third is a teaser (a later edition). Outlines and labels drawn for the overview:
-  // every pin (the survey's too) inside its own outline, no two overlapping, labels 0.25 apart.
+  // Slice 5 (design §2), review 4 (ADR 0076): three quarters, the Level gates of groups of places
+  // (Level 1, Level 6, a later edition), read on the Places list. A home city is one map: no frames,
+  // outlines or labels (the capital's only).
   quarters: [
     {
       id: 'coalport.mill',
       name: 'The Mill',
-      frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 },
       blurb:
         'The mill and the men who work it, the market below the gate, the union hall, the terraces above and the quay at the bottom of the town. Brick, soot, the hooter three times a day.',
-      outline: [[0.33, 0.0], [0.83, 0.0], [0.83, 0.4], [0.78, 0.52], [0.74, 0.6], [0.53, 0.6], [0.53, 0.52], [0.33, 0.52]],
-      label: { x: 0.55, y: 0.35 },
     },
     {
       id: 'coalport.harbour',
       name: 'The Harbour',
-      frame: { x0: 0.11, y0: 0.4, x1: 0.99, y1: 0.89 },
       opens: { level: 6 },
       blurb:
         'Where the basin opens to the sea: the slipway, the customs house, the infirmary, the police, and across the water by ferry the far bank with its fish market and its lower town that votes late.',
-      teaser: 'The slipway, the customs house, and the far bank across the water.',
-      outline: [[0.08, 0.38], [0.22, 0.38], [0.22, 0.7], [0.36, 0.78], [0.36, 0.93], [0.53, 0.93], [0.53, 0.6], [0.74, 0.6], [0.78, 0.52], [0.83, 0.4], [0.99, 0.4], [0.99, 0.96], [0.08, 0.96]],
-      label: { x: 0.7, y: 0.66 },
     },
     {
       id: 'coalport.sidings',
       name: 'The Sidings',
-      frame: { x0: 0.18, y0: 0.21, x1: 0.52, y1: 0.9 },
       opens: { edition: 'later' },
       blurb:
         "The way in and out of town: the station where the line comes in, the coal yards where the town's coal is weighed, the tram sheds, and, up in the old town, St Barbara's church by the canal.",
-      teaser: 'The station, the coal yards and the tram sheds.',
-      outline: [[0.22, 0.2], [0.33, 0.2], [0.33, 0.52], [0.53, 0.52], [0.53, 0.93], [0.36, 0.93], [0.36, 0.78], [0.22, 0.7]],
-      label: { x: 0.38, y: 0.62 },
     },
   ],
   paper: {
@@ -67,8 +57,8 @@ export const coalport: City = {
   },
   // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
   // Review 3: the council sits in the domed hall on the river between the Union Hall and the Mill
-  // Gate (no survey pin; measured on the painting). The election screens' backdrop.
-  council: { offset: 2, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.525, y: 0.19 } },
+  // Gate (measured on the painting). The election screens' backdrop; review 4: the hall is a location.
+  council: { offset: 2, seats: 7, hall: { locationId: 'coalport.town-hall' } },
   locations: withMissions([
     {
       id: 'coalport.mill-gate',
@@ -605,6 +595,17 @@ export const coalport: City = {
         },
       ],
     },
+    // Review 4 (answers §11.1, ADR 0077): the council's hall, a place open at every Level; appended
+    // last so no pin renumbers (answers §29 Q10). Its pin is the survey's.
+    townHall({
+      id: 'coalport.town-hall',
+      name: 'Town Hall',
+      ref: 'the Town Hall',
+      blurb:
+        "The dome on the river, soot on the stone and the council's clock a minute slow. Seven councillors sit here five days at a time, and the rule they pass is pinned in the lobby.",
+      map: { x: 0.525, y: 0.19 },
+      quarterId: 'coalport.mill',
+    }),
   ], coalportMissions),
   // Slice 5 (design §8.1, §9.2): where the game sends a player in this city.
   services: { cells: 'coalport.harbour-police', infirmary: 'coalport.infirmary' },

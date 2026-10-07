@@ -5,6 +5,7 @@ import {
   DeskList,
   ElectionCard,
   FrontPage,
+  WhatNowCard,
   IssuesSection,
   LettersRow,
   Masthead,
@@ -110,6 +111,20 @@ export function PaperPage() {
           <Masthead paper={p} />
           {/* Slice 3 (screens §2.2): the front page the morning a seat is won. */}
           {front && <FrontPage front={front} factionId={character?.factionId ?? 'collective'} />}
+          {/* Review 4 (answers §10.1): *What now* under the headline, above *To the council*. */}
+          {front?.whatNow && (
+            <WhatNowCard
+              whatNow={front.whatNow}
+              hallName={front.whatNow.hall.name}
+              onDesk={() =>
+                void navigate({
+                  to: '/city/$cityId',
+                  params: { cityId: front.whatNow!.cityId },
+                  search: { loc: front.whatNow!.hall.locationId },
+                })
+              }
+            />
+          )}
           {lead && (
             <section className="flex flex-col gap-2 border-b border-ink pb-3" data-testid="headline">
               <h2 className="text-center font-display text-[30px] leading-[1.05] font-black sm:text-[36px]">

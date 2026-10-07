@@ -16,14 +16,14 @@ const modalOf = (page: Page) => page.getByRole('dialog').filter({ has: page.getB
 
 /** The map has measured itself and applied its first view (centred on pin 1). */
 async function mapReady(page: Page) {
-  await expect(page.getByTestId('hotspot')).toHaveCount(6);
+  await expect(page.getByTestId('hotspot')).toHaveCount(7); // review 4: the six and the Town Hall
   await mapAtRest(page);
   await expect(page.getByRole('button', { name: '1. Mill Gate' })).toBeInViewport();
 }
 
 /** Open a hotspot even when it starts off-screen on a phone (keyboard: focus + Enter). */
 async function openAny(page: Page, label: string): Promise<Locator> {
-  await expect(page.getByTestId('hotspot')).toHaveCount(6);
+  await expect(page.getByTestId('hotspot')).toHaveCount(7); // review 4: the six and the Town Hall
   const pin = page.getByRole('button', { name: label });
   await pin.focus();
   await page.keyboard.press('Enter');

@@ -1,8 +1,10 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
-import { useId, useRef } from 'react';
+import { useId, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { cx } from '../format';
 import { HelpButton, helpMark } from './Help';
+import { LockMark } from './LockMark';
 
 /** One place on the city map, as the Places list shows it. */
 export interface PlaceRow {
@@ -19,6 +21,22 @@ export interface PlaceRow {
    * (answers §14): the chip names it, *Issue · Harbour Rates*, and opens `help.issue`.
    */
   issue?: string | null;
+  /**
+   * Review 4 (answers §21.2, ADR 0076): a place the player cannot open yet: the row is greyed, the lock
+   * in place of the number, and this Courier note (*Opens at Level 6* / *Opens with a later edition*).
+   */
+  locked?: string | null;
+}
+
+/**
+ * Review 4 (answers §21.2): a home city's Places list is grouped by quarter: the header carries the
+ * name and the lock line (*The Harbour · opens at Level 6*), and the quarter's blurb opens from it.
+ */
+export interface PlaceGroup {
+  id: string;
+  title: string;
+  blurb: string | null;
+  places: PlaceRow[];
 }
 
 export interface PlacesListProps {
@@ -26,6 +44,8 @@ export interface PlacesListProps {
   onOpenChange: (open: boolean) => void;
   cityName: string;
   places: PlaceRow[];
+  /** Review 4: the rows grouped (a home city); `places` is then ignored. Absent: one list in pin order. */
+  groups?: PlaceGroup[];
   /**
    * A row was tapped: the list closes first, then this runs; the page does exactly what a tap on the
    * pin does (zoom to it, open its sheet).
@@ -42,12 +62,77 @@ export interface PlacesListProps {
  * upright; a small panel at the right from 640 px and on a phone held sideways. Radix Dialog: Escape
  * and the Close button close it, focus moves in and comes back to the Places button.
  */
-export function PlacesList({ open, onOpenChange, cityName, places, onPick, returnFocusTo }: PlacesListProps) {
+export function PlacesList({ open, onOpenChange, cityName, places, groups, onPick, returnFocusTo }: PlacesListProps) {
   // A pick zooms the map and opens the place's own sheet, which takes the focus: none goes back to
   // the Places button (it steps aside while a place is open).
   const picked = useRef(false);
   const ids = useId();
   const rows = [...places].sort((a, b) => a.n - b.n);
+  const [blurbOf, setBlurbOf] = useState<string | null>(null);
+  const row = (p: PlaceRow): ReactNode => (
+    <li key={p.id} className="border-b border-dotted border-faint last:border-b-0">
+      <button
+        type="button"
+        data-testid="place-row"
+        data-locked={p.locked ? true : undefined}
+        // Named like the pin ("3. Union Hall"); a locked one by its note ("Coal Yards, opens with a
+        // later edition"); the line describes it.
+        aria-label={
+          p.locked
+            ? copy.map.lockedPinLabel(p.name, p.locked)
+            : `${p.n}. ${p.name}${p.order ? ', Party order' : ''}`
+        }
+        aria-describedby={`${ids}-${p.id}`}
+        className="flex min-h-11 w-full cursor-pointer items-start gap-3 px-4 py-2 text-left hover:bg-paper-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+        onClick={() => {
+          picked.current = true;
+          onOpenChange(false);
+          onPick(p.id);
+        }}
+      >
+        <span
+          aria-hidden="true"
+          className={cx(
+            'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-paper bg-ink font-label text-[14px] font-semibold text-paper shadow-[0_0_0_2px_var(--color-ink)]',
+            p.locked && 'opacity-50',
+          )}
+        >
+          {p.locked ? <LockMark /> : p.n}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className={cx('font-display text-[16px] leading-tight font-bold', p.locked && 'text-muted')}>
+              {p.name}
+            </span>
+            {p.order && (
+              <span
+                className="label-caps border border-petrol px-1.5 py-px text-[9.5px] text-petrol"
+                data-testid="place-order"
+              >
+                Party order
+              </span>
+            )}
+          </span>
+          {p.locked ? (
+            <span id={`${ids}-${p.id}`} className="font-mono text-[11.5px] text-muted" data-testid="place-locked">
+              {p.locked}
+            </span>
+          ) : (
+            <span id={`${ids}-${p.id}`} className="line-clamp-2 font-body text-[13px] leading-snug text-text-2">
+              {p.blurb}
+            </span>
+          )}
+        </span>
+      </button>
+      {p.issue && !p.locked && (
+        // Review 4 #14: the chip names the Issue and opens its note; a button of its own
+        // beside the row's, never inside it.
+        <div className="-mt-2 pb-1 pl-[60px]">
+          <IssueChip name={p.issue} />
+        </div>
+      )}
+    </li>
+  );
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -84,58 +169,39 @@ export function PlacesList({ open, onOpenChange, cityName, places, onPick, retur
               Close
             </Dialog.Close>
           </div>
-          <ul className="flex flex-col overflow-y-auto overscroll-contain">
-            {rows.map((p) => (
-              <li key={p.id} className="border-b border-dotted border-faint last:border-b-0">
-                <button
-                  type="button"
-                  data-testid="place-row"
-                  // Named like the pin ("3. Union Hall"); the line describes it.
-                  aria-label={`${p.n}. ${p.name}${p.order ? ', Party order' : ''}`}
-                  aria-describedby={`${ids}-${p.id}`}
-                  className="flex min-h-11 w-full cursor-pointer items-start gap-3 px-4 py-2 text-left hover:bg-paper-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
-                  onClick={() => {
-                    picked.current = true;
-                    onOpenChange(false);
-                    onPick(p.id);
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-paper bg-ink font-label text-[14px] font-semibold text-paper shadow-[0_0_0_2px_var(--color-ink)]"
-                  >
-                    {p.n}
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span className="font-display text-[16px] leading-tight font-bold">{p.name}</span>
-                      {p.order && (
-                        <span
-                          className="label-caps border border-petrol px-1.5 py-px text-[9.5px] text-petrol"
-                          data-testid="place-order"
-                        >
-                          Party order
+          {groups ? (
+            <div className="flex flex-col overflow-y-auto overscroll-contain" data-testid="place-groups">
+              {groups.map((g) => (
+                <section key={g.id} aria-label={g.title} data-testid="place-group">
+                  <h3 className="border-b-2 border-ink bg-paper-2">
+                    <button
+                      type="button"
+                      aria-expanded={blurbOf === g.id}
+                      disabled={!g.blurb}
+                      onClick={() => setBlurbOf((x) => (x === g.id ? null : g.id))}
+                      className="label-caps flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 px-4 text-left text-[11px] font-semibold disabled:cursor-default focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+                      data-testid="place-group-title"
+                    >
+                      <span className={cx(g.blurb && helpMark)}>{g.title}</span>
+                      {g.blurb && (
+                        <span aria-hidden="true" className="font-label text-[14px]">
+                          {blurbOf === g.id ? '−' : '+'}
                         </span>
                       )}
-                    </span>
-                    <span
-                      id={`${ids}-${p.id}`}
-                      className="line-clamp-2 font-body text-[13px] leading-snug text-text-2"
-                    >
-                      {p.blurb}
-                    </span>
-                  </span>
-                </button>
-                {p.issue && (
-                  // Review 4 #14: the chip names the Issue and opens its note; a button of its own
-                  // beside the row's, never inside it.
-                  <div className="-mt-2 pb-1 pl-[60px]">
-                    <IssueChip name={p.issue} />
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+                    </button>
+                  </h3>
+                  {blurbOf === g.id && g.blurb && (
+                    <p className="border-b border-dotted border-faint px-4 py-2 font-body text-[13px] leading-snug text-text-2" data-testid="place-group-blurb">
+                      {g.blurb}
+                    </p>
+                  )}
+                  <ul className="flex flex-col">{g.places.map(row)}</ul>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <ul className="flex flex-col overflow-y-auto overscroll-contain">{rows.map(row)}</ul>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

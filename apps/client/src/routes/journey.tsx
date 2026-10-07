@@ -104,7 +104,7 @@ export function JourneyPage() {
           params: { cityId: l.cityId, quarterId: l.quarterId },
           search: l.locationId ? { loc: l.locationId } : {},
         });
-      else void navigate({ to: '/city/$cityId', params: { cityId: l.cityId } });
+      else void navigate({ to: '/city/$cityId', params: { cityId: l.cityId }, search: l.locationId ? { loc: l.locationId } : {} });
     },
     onError: () => setClosing(false),
   });

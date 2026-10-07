@@ -93,7 +93,7 @@ function oddsMaths(text: string): string[] {
     );
 }
 
-const harbour = '/city/coalport/coalport.harbour';
+const harbour = '/city/coalport';
 const farBank = `${harbour}?loc=coalport.far-bank`;
 const POSTERS = 'coalport.far-bank.posters';
 
@@ -204,7 +204,7 @@ test.describe('layout on a 375 × 667 phone (screens §10)', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await signUpAs(page, 'alliance', 'Long Brief');
     await lift(page, { level: 6, iron: 900 });
-    await placeSheet(page, '/city/ashford/ashford.wharf?loc=ashford.wharf');
+    await placeSheet(page, '/city/ashford?loc=ashford.wharf');
     const t = mission(page, 'ashford.wharf.watch');
     await t.scrollIntoViewIfNeeded();
     await t.getByTestId('mission-choose').click();
@@ -495,7 +495,9 @@ test.describe('the overviews at rest', () => {
     ['collective', 'coalport'],
     ['alliance', 'ashford'],
   ] as const) {
-    test(`Level 6 ${city}: three quarter names, clear and apart, at 360 × 640 and 667 × 375`, async ({ page }) => {
+    // Review 4 (ADR 0076): a home city has no overview; its one map at Level 6 has every pin (open and
+    // greyed) apart, the overview route lands on it, and no quarter name is drawn.
+    test(`Level 6 ${city}: one map, every pin apart, at 360 × 640 and 667 × 375`, async ({ page }) => {
       test.setTimeout(120_000);
       await signUpAs(page, faction, 'Over View');
       await lift(page, { level: 6 });
@@ -505,11 +507,23 @@ test.describe('the overviews at rest', () => {
       ]) {
         await page.setViewportSize(size);
         await page.goto(`/city/${city}/overview`);
+        await expect(page).toHaveURL(new RegExp(`/city/${city}$`));
         await mapAtRest(page);
         const n = await names(page);
-        expect(n.count, `${size.width}`).toBe(3);
-        expect(n.overlaps, `${size.width}`).toEqual([]);
-        expect(n.unclear, `${size.width}`).toEqual([]);
+        expect(n.count, `${size.width}`).toBe(0);
+        const pins = page.locator('[data-testid=hotspot],[data-testid=locked-pin]');
+        const overlaps = await pins.evaluateAll((els) => {
+          const c = els.map((e) => {
+            const r = e.getBoundingClientRect();
+            return { l: e.getAttribute('aria-label'), x: r.left + 22, y: r.top + r.height / 2 };
+          });
+          const o: string[] = [];
+          for (let i = 0; i < c.length; i++)
+            for (let j = i + 1; j < c.length; j++)
+              if (Math.hypot(c[i]!.x - c[j]!.x, c[i]!.y - c[j]!.y) < 44) o.push(`${c[i]!.l} × ${c[j]!.l}`);
+          return o;
+        });
+        expect(overlaps, `${size.width}`).toEqual([]);
         expect(await sideScroll(page)).toBeLessThanOrEqual(0);
       }
     });

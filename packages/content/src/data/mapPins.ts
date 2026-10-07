@@ -3,9 +3,11 @@ import type { MapPins } from '../schemas';
 /**
  * Maps v3 §5.4: the survey of the painted art, transcribed from the approved
  * art-direction/maps-v3/pins/pins.json (fractions of each master; quarter = the quarter, or in
- * Irongate the district, it is painted in). **Not game content**: nothing in the server reads it.
- * Its two users are the content test (every location's `map` equals its pin here) and the dev map
- * viewer. A later slice makes a place playable by copying its pin into a new location.
+ * Irongate the district, it is painted in). Review 4 (ADR 0076): the server reads its unbuilt pins as
+ * a home city's later places (`content.laterPins`: greyed pins, *Opens with a later edition*); the
+ * content test holds every location's `map` to its pin here, and the dev map viewer draws it. A later
+ * slice makes a place playable by copying its pin into a new location. A pin that moves here moves in
+ * pins.json too.
  *
  * The nation's pins are the five cities (id = the city id; quarter 1, the picture has none), on
  * nation-day-9216.png, approved by the user on 2 Oct 2026 (design §5.5, §8 Q1). Slice 4 reads them
@@ -30,6 +32,8 @@ export const mapPins: MapPins = {
       { id: 'coalport.coal-yards', name: 'Coal Yards', x: 0.44, y: 0.84, quarter: 3 },
       { id: 'coalport.tram-depot', name: 'Tram Depot', x: 0.29, y: 0.59, quarter: 3 },
       { id: 'coalport.st-barbaras', name: "St Barbara's", x: 0.24, y: 0.27, quarter: 3 },
+      // Review 4 (answers §11.1): the domed hall on the river, review 3's point.
+      { id: 'coalport.town-hall', name: 'Town Hall', x: 0.525, y: 0.19, quarter: 1 },
     ],
   },
   duskwall: {
@@ -50,6 +54,8 @@ export const mapPins: MapPins = {
       { id: 'duskwall.town-square', name: 'Town Square', x: 0.48, y: 0.73, quarter: 3 },
       { id: 'duskwall.signal-lamp', name: 'The Signal Lamp', x: 0.33, y: 0.66, quarter: 3 },
       { id: 'duskwall.brewery', name: 'Brewery', x: 0.1, y: 0.18, quarter: 3 },
+      // Review 4 (answers §11.1): the tower hall on the Customs Market, review 3's point.
+      { id: 'duskwall.town-hall', name: 'Town Hall', x: 0.555, y: 0.55, quarter: 1 },
     ],
   },
   ashford: {
@@ -67,7 +73,8 @@ export const mapPins: MapPins = {
       { id: 'ashford.infirmary', name: 'County Infirmary', x: 0.2, y: 0.47, quarter: 2 },
       { id: 'ashford.police', name: 'Police Station', x: 0.72, y: 0.52, quarter: 2 },
       { id: 'ashford.station', name: 'Ashford Station', x: 0.82, y: 0.08, quarter: 3 },
-      { id: 'ashford.town-hall', name: 'Town Hall', x: 0.8, y: 0.235, quarter: 3 },
+      // Review 4 (answers §11.1): lowered to review 3's point (the tower and the front together).
+      { id: 'ashford.town-hall', name: 'Town Hall', x: 0.805, y: 0.275, quarter: 3 },
       { id: 'ashford.corn-exchange', name: 'Corn Exchange', x: 0.63, y: 0.5, quarter: 3 },
       { id: 'ashford.theatre', name: 'Theatre', x: 0.78, y: 0.4, quarter: 3 },
       { id: 'ashford.park', name: 'Park and Bandstand', x: 0.21, y: 0.1, quarter: 3 },
@@ -107,6 +114,8 @@ export const mapPins: MapPins = {
       { id: 'irongate.esplanade', name: 'The Esplanade', x: 0.91, y: 0.17, quarter: 5 },
       { id: 'irongate.villas', name: 'The Villas', x: 0.82, y: 0.12, quarter: 5 },
       { id: 'irongate.gate-tavern', name: 'The Gate Tavern', x: 0.86, y: 0.27, quarter: 5 },
+      // Review 4 (answers §11.1, GDD §14.9): the City Hall, review 3's point; the 30th place.
+      { id: 'irongate.city-hall', name: 'City Hall', x: 0.57, y: 0.345, quarter: 1 },
     ],
   },
   clearwater: {

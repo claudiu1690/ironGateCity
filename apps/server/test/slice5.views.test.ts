@@ -55,25 +55,21 @@ describe('CityView.quarters for every city (ADR 0035, design §2.1)', () => {
         expect(second).toMatchObject(
           level >= 6 ? { open: true, lock: null } : { open: false, lock: { kind: 'level', level: 6 } },
         );
-        expect(third).toMatchObject({ open: false, lock: { kind: 'edition' }, places: 0 });
+        // Review 4 (ADR 0076): Ashford's third quarter holds its Town Hall (a place), the others none.
+        expect(third).toMatchObject({ open: false, lock: { kind: 'edition' }, places: cityId === 'ashford' ? 1 : 0 });
         for (const [i, q] of v.quarters.entries()) {
           const c = city.quarters[i]!;
-          expect(q.frame).toEqual(c.frame);
-          expect(q.outline!.length).toBeGreaterThanOrEqual(6);
-          expect(q.outline).toEqual(c.outline);
-          expect(q.label).toEqual(c.label);
+          // Review 4 (ADR 0076): a home quarter is a group of places; no shape on the picture.
+          expect([q.frame, q.outline, q.label]).toEqual([undefined, undefined, undefined]);
           expect(q.blurb).toBe(c.blurb ?? null);
-          expect(q.teaser).toBe(c.teaser ?? null);
           expect(q.places).toBe(city.locations.filter((l) => l.quarterId === c.id).length);
         }
-        // The locked quarters' teasers come back; their places are not offered.
-        expect(second!.teaser).toEqual(expect.any(String));
-        expect(third!.teaser).toEqual(expect.any(String));
         expect(second!.places).toBe(5);
         const offered = new Set(v.locations.map((l) => l.quarterId));
         expect(offered.has(first!.id)).toBe(true);
         expect(offered.has(second!.id)).toBe(level >= 6);
-        expect(offered.has(third!.id)).toBe(false);
+        // Review 4 (ADR 0077): the Town Hall is open at every Level, whatever its quarter.
+        expect(offered.has(third!.id)).toBe(cityId === 'ashford');
       });
     }
     it(`irongate at Level ${level}: five districts, all open, with outlines and labels`, async () => {
@@ -82,7 +78,8 @@ describe('CityView.quarters for every city (ADR 0035, design §2.1)', () => {
       const v = await cityOf(p, 'irongate');
       expect(v.quarters).toHaveLength(5);
       for (const q of v.quarters) {
-        expect(q).toMatchObject({ open: true, lock: null, teaser: null });
+        expect(q).toMatchObject({ open: true, lock: null });
+        expect(q.frame).toEqual(content.city('irongate')!.quarters.find((x) => x.id === q.id)!.frame);
         expect(q.outline!.length).toBeGreaterThanOrEqual(6);
         expect(q.label).toEqual(content.city('irongate')!.quarters.find((x) => x.id === q.id)!.label);
         expect(q.places).toBeGreaterThan(0);

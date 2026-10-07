@@ -112,7 +112,14 @@ export function noticeFor(error: unknown): string | undefined {
       return copy.risk.errors.runInPending;
     case 'NO_RUN_IN':
       return copy.risk.errors.noRunIn;
+    // Review 4 (ADR 0076): a place the character cannot open yet, whatever the client sent.
+    case 'ACTION_LOCKED':
+      if (game.lock === 'QUARTER') return copy.map.lockedPlace({ kind: 'level', level: Number(game.need) });
+      if (game.lock === 'EDITION') return copy.map.lockedPlace({ kind: 'edition' });
+      return undefined;
     case 'MISSION_LOCKED':
+      if (game.lock === 'QUARTER') return copy.map.lockedPlace({ kind: 'level', level: Number(game.need) });
+      if (game.lock === 'EDITION') return copy.map.lockedPlace({ kind: 'edition' });
       return game.lock === 'LEVEL'
         ? copy.risk.locked.level(Number(game.need))
         : game.lock === 'RANK'

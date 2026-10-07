@@ -17,8 +17,11 @@ import { R3_ORDER_TITLES, R3_VERBS } from './review3';
 
 const content = loadContent();
 const city = content.city('coalport')!;
-// Slice 5 adds the Harbour's places (slice5.cities.test.ts); slice 1's are the Mill's.
-const actions = city.locations.filter((l) => l.quarterId === city.quarters[0]!.id).flatMap((l) => l.actions);
+// Slice 5 adds the Harbour's places (slice5.cities.test.ts); slice 1's are the Mill's. Review 4 adds the
+// Town Hall to the Mill (ADR 0077; review4.hall.test.ts), which slice 1's lists leave out.
+const actions = city.locations
+  .filter((l) => l.quarterId === city.quarters[0]!.id && l.kind !== 'town-hall')
+  .flatMap((l) => l.actions);
 
 /** Markdown table rows of a section (the lines starting with "| `"). */
 function tableRows(sectionStart: string, sectionEnd: string, row = /^\| (`|\d+ \| `)/): string[][] {
@@ -234,10 +237,11 @@ describe('content vs docs/design/slice-1-content.md', () => {
     expect(ambient).toEqual(pool);
   });
 
-  it('§13.5: the location-kind list is the closed list of 19 in the GDD', () => {
-    const table = GDD.slice(GDD.indexOf('**Location kinds.**'), GDD.indexOf('Nineteen kinds'));
+  it('§13.5: the location-kind list is the closed list of 20 in the GDD (review 4: town-hall)', () => {
+    const table = GDD.slice(GDD.indexOf('**Location kinds.**'), GDD.indexOf('Twenty kinds'));
     const kinds = [...table.matchAll(/\| `([a-z-]+)` \|/g)].map((m) => m[1]);
-    expect(kinds).toHaveLength(19);
+    expect(kinds).toHaveLength(20);
+    expect(kinds).toContain('town-hall');
     // Every kind the schema accepts is in the GDD list, and vice versa.
     const bad = {
       ...(JSON.parse(JSON.stringify(rawContent)) as {

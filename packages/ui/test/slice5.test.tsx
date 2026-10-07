@@ -9,6 +9,7 @@ import {
   missionResultFixture,
   nationViewFixture,
   paperViewFixture,
+  lockedPinFixtures,
   quarterFixtures,
   releasedResultFixture,
   riskCharacterFixture,
@@ -28,12 +29,11 @@ import {
   JourneyCard,
   MissionBriefing,
   MissionTicket,
-  QuarterTeaserSheet,
-  QuartersList,
+  LockedPinSheet,
+  PlacesList,
   ResultModal,
   RiskRows,
   Ticket,
-  TramBar,
   healthNow,
   heatNow,
   minutesLeft,
@@ -554,33 +554,26 @@ describe('the record, Heat and Health (screens §2)', () => {
   });
 });
 
-describe('the quarters (screens §3)', () => {
-  it('the quarter bar: every quarter, the current inverted, a locked one opens its teaser', () => {
-    const onGo = vi.fn();
-    const onLocked = vi.fn();
+describe('a home city is one map (review 4, answers §21.4, ADR 0076)', () => {
+  it('the locked pin sheet: the kicker with the lock, the name, the blurb, *Level 6 opens it; you are Level 5.*, only Close', () => {
     render(
-      <TramBar
-        districts={quarterFixtures.map((q) => ({ id: q.id, name: q.name, locked: q.open === false }))}
-        current="coalport.mill"
-        onGo={onGo}
-        quarters={{ onLocked }}
+      <LockedPinSheet
+        pin={{
+          name: 'The Shipyard',
+          lock: { kind: 'level', level: 6 },
+          quarter: { name: 'The Harbour', blurb: quarterFixtures[1]!.blurb! },
+        }}
+        open
+        onOpenChange={noop}
+        level={5}
       />,
     );
-    const chips = screen.getAllByTestId('quarter-chip');
-    expect(chips.map((c) => c.textContent)).toEqual(['The Mill', 'The Harbour', 'The Sidings']);
-    expect(chips[0]).toHaveAttribute('aria-current', 'page');
-    expect(within(chips[1]!).getByTestId('lock-mark')).toBeInTheDocument();
-    fireEvent.click(chips[1]!);
-    expect(onLocked).toHaveBeenCalledWith('coalport.harbour');
-    expect(onGo).not.toHaveBeenCalled();
-  });
-
-  it('the teaser: the kicker, the name, the blurb, *Level 6 opens it; you are Level 5.*, only Close', () => {
-    render(<QuarterTeaserSheet quarter={quarterFixtures[1]!} open onOpenChange={noop} level={5} />);
-    const sheet = screen.getByTestId('quarter-teaser');
-    expect(within(sheet).getByTestId('teaser-kicker')).toHaveTextContent('Quarter · opens at Level 6');
-    expect(within(sheet).getByRole('heading', { name: 'The Harbour' })).toBeInTheDocument();
-    expect(within(sheet).getByTestId('teaser-level')).toHaveTextContent('Level 6 opens it; you are Level 5.');
+    const sheet = screen.getByTestId('locked-pin-sheet');
+    expect(within(sheet).getByTestId('locked-kicker')).toHaveTextContent('The Harbour · opens at Level 6');
+    expect(within(within(sheet).getByTestId('locked-kicker')).getByTestId('lock-mark')).toBeInTheDocument();
+    expect(within(sheet).getByRole('heading', { name: 'The Shipyard' })).toBeInTheDocument();
+    expect(within(sheet).getByText(quarterFixtures[1]!.blurb!)).toBeInTheDocument();
+    expect(within(sheet).getByTestId('locked-line')).toHaveTextContent('Level 6 opens it; you are Level 5.');
     expect(
       within(sheet)
         .getAllByRole('button')
@@ -588,21 +581,64 @@ describe('the quarters (screens §3)', () => {
     ).toEqual(['Close']);
   });
 
-  it('the Quarters list: the three with their lock lines', () => {
+  it('a later edition: *The Sidings · a later edition* and *Opens with a later edition*', () => {
+    render(
+      <LockedPinSheet
+        pin={{ name: 'Coal Yards', lock: { kind: 'edition' }, quarter: { name: 'The Sidings', blurb: null } }}
+        open
+        onOpenChange={noop}
+        level={9}
+      />,
+    );
+    expect(screen.getByTestId('locked-kicker')).toHaveTextContent('The Sidings · a later edition');
+    expect(screen.getByTestId('locked-line')).toHaveTextContent('Opens with a later edition');
+  });
+
+  it('the Places list grouped by quarter: the lock line in the header, the blurb on tap, locked rows greyed', () => {
     const onPick = vi.fn();
     render(
-      <QuartersList
+      <PlacesList
         open
         onOpenChange={noop}
         cityName="Coalport"
-        quarters={quarterFixtures}
+        places={[]}
+        groups={[
+          {
+            id: 'coalport.mill',
+            title: 'The Mill',
+            blurb: 'The mill and the men who work it.',
+            places: [
+              { id: 'coalport.mill-gate', n: 1, name: 'Mill Gate', blurb: 'The gates.' },
+              { id: 'coalport.town-hall', n: 12, name: 'Town Hall', blurb: 'The dome on the river.' },
+            ],
+          },
+          {
+            id: 'coalport.harbour',
+            title: 'The Harbour · opens at Level 6',
+            blurb: 'Where the basin opens to the sea.',
+            places: [{ id: 'coalport.shipyard', n: 7, name: 'The Shipyard', blurb: '', locked: 'Opens at Level 6' }],
+          },
+        ]}
         onPick={onPick}
       />,
     );
-    const lines = screen.getAllByTestId('quarter-row-line').map((l) => l.textContent);
-    expect(lines).toEqual(['', 'Opens at Level 6', 'Opens with a later edition']);
-    fireEvent.click(screen.getAllByTestId('quarter-row')[2]!);
-    expect(onPick).toHaveBeenCalledWith('coalport.sidings');
+    const titles = screen.getAllByTestId('place-group-title');
+    expect(titles.map((t) => t.textContent)).toEqual(['The Mill+', 'The Harbour · opens at Level 6+']);
+    expect(screen.queryByTestId('place-group-blurb')).toBeNull();
+    fireEvent.click(titles[1]!);
+    expect(screen.getByTestId('place-group-blurb')).toHaveTextContent('Where the basin opens to the sea.');
+    expect(titles[1]).toHaveAttribute('aria-expanded', 'true');
+    const rows = screen.getAllByTestId('place-row');
+    expect(rows.map((r) => r.getAttribute('aria-label'))).toEqual([
+      '1. Mill Gate',
+      '12. Town Hall',
+      'The Shipyard, opens at Level 6',
+    ]);
+    expect(rows[2]).toHaveAttribute('data-locked', 'true');
+    expect(within(rows[2]!).getByTestId('lock-mark')).toBeInTheDocument();
+    expect(within(rows[2]!).getByTestId('place-locked')).toHaveTextContent('Opens at Level 6');
+    fireEvent.click(rows[2]!);
+    expect(onPick).toHaveBeenCalledWith('coalport.shipyard');
   });
 });
 
@@ -864,12 +900,31 @@ describe('vocabulary over the slice-5 screens (screens §1, review 2 §1.13)', (
       />,
     ],
     [
-      'QuarterTeaserSheet',
-      <QuarterTeaserSheet quarter={quarterFixtures[2]!} open onOpenChange={noop} level={5} />,
+      'LockedPinSheet',
+      <LockedPinSheet
+        pin={{ name: 'Coal Yards', lock: { kind: 'edition' }, quarter: { name: 'The Sidings', blurb: quarterFixtures[2]!.blurb! } }}
+        open
+        onOpenChange={noop}
+        level={5}
+      />,
     ],
     [
-      'QuartersList',
-      <QuartersList open onOpenChange={noop} cityName="Coalport" quarters={quarterFixtures} onPick={noop} />,
+      'PlacesList (grouped)',
+      <PlacesList
+        open
+        onOpenChange={noop}
+        cityName="Coalport"
+        places={[]}
+        groups={quarterFixtures.map((q) => ({
+          id: q.id,
+          title: q.name,
+          blurb: q.blurb ?? null,
+          places: lockedPinFixtures
+            .filter((l) => l.quarterId === q.id)
+            .map((l) => ({ id: l.id, n: 0, name: l.name, blurb: '', locked: 'Opens at Level 6' })),
+        }))}
+        onPick={noop}
+      />,
     ],
   ];
   it.each(cases)('%s', (_name, ui) => {

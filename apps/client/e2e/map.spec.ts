@@ -28,7 +28,7 @@ const SIZES = [
 
 /** Every pin clear at rest or after a drag of the map towards it (review 3). */
 async function unreachablePins(page: Page): Promise<string[]> {
-  await expect(page.getByTestId('hotspot')).toHaveCount(6);
+  await expect(page.getByTestId('hotspot')).toHaveCount(7); // review 4: the six and the Town Hall
   await page.waitForTimeout(600); // the first view is applied once the map has measured itself
   return pinsOutOfReach(page);
 }
@@ -171,7 +171,7 @@ test.describe('no black past the art (review 2 follow-up)', () => {
         const at = `${size.width}×${size.height}`;
         await page.setViewportSize(size);
         await page.reload();
-        await expect(page.getByTestId('hotspot')).toHaveCount(6);
+        await expect(page.getByTestId('hotspot')).toHaveCount(7); // review 4: the six and the Town Hall
         await settled(page, false);
         const rest = await mapRects(page);
         expect(rest.fit, `${at} at rest: no bands`).toBe('cover');

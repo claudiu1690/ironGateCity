@@ -36,7 +36,7 @@ export default defineConfig({
         /travel\.spec\.ts/,
         /capital\.spec\.ts/,
         /qa\.slice4\.spec\.ts/,
-        /quarters\.spec\.ts/,
+        /homeMap\.spec\.ts/,
         /missions\.spec\.ts/,
         /(^|[\\/])rival\.spec\.ts$/,
         /qa\.slice5\.spec\.ts/,
@@ -103,18 +103,18 @@ export default defineConfig({
       dependencies: ['capital'],
       use: { ...devices['Pixel 7'] },
     },
-    // Slice 5 (tech design §15.1): the home quarters, missions and the street, and rival ground, each in
+    // Slice 5 (tech design §15.1): the home map (review 4: one map, homeMap.spec.ts), missions and the street, and rival ground, each in
     // its own project after the capital's, in this order.
     {
-      name: 'quarters',
-      testMatch: /quarters\.spec\.ts/,
+      name: 'home-map',
+      testMatch: /homeMap\.spec\.ts/,
       dependencies: ['qa-capital'],
       use: { ...devices['Pixel 7'] },
     },
     {
       name: 'missions',
       testMatch: /missions\.spec\.ts/,
-      dependencies: ['quarters'],
+      dependencies: ['home-map'],
       use: { ...devices['Pixel 7'] },
     },
     {

@@ -1,5 +1,5 @@
 import { FACTION_IDS, MISSION_TYPES, MISSION_TYPE_IDS, missionDifficulty, placeholdersIn } from '@irongate/rules';
-import { inPolygon } from './geometry';
+import { inPolygon, tilingProblems } from './geometry';
 import type { Asset, City, Content, Location, MapPins } from './schemas';
 
 /**
@@ -46,6 +46,37 @@ export function outlinesOverlap(
   return false;
 }
 
+/**
+ * Review 4 (answers §8, ADR 0076): the capital's districts tile the picture, and every pin, anchor and
+ * label lies strictly inside its own district; no two outlines overlap.
+ */
+export function districtShapeProblems(city: City): string[] {
+  const problems: string[] = [];
+  const qs = city.quarters;
+  for (const q of qs) {
+    if (q.outline && q.label && !inPolygon(q.label, q.outline, true)) problems.push(`${q.id}: its label is outside its outline`);
+  }
+  for (const l of city.locations) {
+    const q = qs.find((x) => x.id === l.quarterId);
+    if (q?.outline && !inPolygon(l.map, q.outline, true))
+      problems.push(`location "${l.id}": its pin is outside ${q.id}'s outline`);
+  }
+  const outlined = qs.filter((q) => q.outline).map((q) => ({ id: q.id, poly: q.outline! }));
+  problems.push(...tilingProblems(city.id, outlined));
+  for (let a = 0; a < outlined.length; a++)
+    for (let b = a + 1; b < outlined.length; b++)
+      if (outlinesOverlap(outlined[a]!.poly, outlined[b]!.poly))
+        problems.push(`${outlined[a]!.id} and ${outlined[b]!.id}: their outlines overlap`);
+  for (let a = 0; a < qs.length; a++)
+    for (let b = a + 1; b < qs.length; b++) {
+      const la = qs[a]!.label;
+      const lb = qs[b]!.label;
+      if (la && lb && Math.hypot(la.x - lb.x, la.y - lb.y) < LABEL_MIN_DISTANCE)
+        problems.push(`${qs[a]!.id} and ${qs[b]!.id}: their labels are under ${LABEL_MIN_DISTANCE} apart`);
+    }
+  return problems;
+}
+
 export function slice5Problems(
   content: Content,
   idx: {
@@ -58,47 +89,23 @@ export function slice5Problems(
   const problems: string[] = [];
   const opponentById = new Map(content.opponents.map((o) => [o.id, o]));
 
-  // Quarters (ADR 0035).
+  // Quarters (ADR 0035; review 4, ADR 0076): a home city's three quarters open at Level 1, Level 6
+  // and a later edition, and have no shapes (the loader); the capital's districts are open from
+  // Level 1 and tile the picture.
   for (const city of content.cities) {
     const qs = city.quarters;
     if (city.role === 'home') {
       const want = [{ level: 1 }, { level: 6 }, { edition: 'later' }];
       if (qs.length !== 3 || qs.some((q, i) => JSON.stringify(q.opens ?? { level: 1 }) !== JSON.stringify(want[i])))
         problems.push(`cities.${city.id}: a home city has three quarters opening at Level 1, Level 6 and a later edition`);
-      for (const q of qs.slice(1)) if (!q.teaser) problems.push(`${q.id}: a locked quarter needs a teaser`);
+      // Every survey pin names one of the city's quarters (the later places' group, `laterPins`).
+      for (const pin of idx.mapPins[city.id]?.pins ?? [])
+        if (!qs[pin.quarter - 1]) problems.push(`survey pin "${pin.id}": quarter ${pin.quarter} is not a quarter of ${city.id}`);
     } else if (qs.some((q) => q.opens !== undefined && JSON.stringify(q.opens) !== JSON.stringify({ level: 1 }))) {
       problems.push(`cities.${city.id}: the capital's districts are open from Level 1`);
     }
-    if (qs.length < 2) continue;
-    for (const q of qs) {
-      if (!q.outline) problems.push(`${q.id}: a quarter of a city with two or more needs an outline`);
-      if (!q.label) problems.push(`${q.id}: a quarter of a city with two or more needs a label`);
-      if (q.outline && q.label && !inPolygon(q.label, q.outline)) problems.push(`${q.id}: its label is outside its outline`);
-    }
-    // Every pin inside its own quarter's outline: the content's places, and (a teaser's places are
-    // not content yet) the survey's pins of the quarter by number.
-    for (const l of city.locations) {
-      const q = qs.find((x) => x.id === l.quarterId);
-      if (q?.outline && !inPolygon(l.map, q.outline))
-        problems.push(`location "${l.id}": its pin is outside ${q.id}'s outline`);
-    }
-    if (city.role === 'home') {
-      for (const pin of idx.mapPins[city.id]?.pins ?? []) {
-        const q = qs[pin.quarter - 1];
-        if (q?.outline && !inPolygon(pin, q.outline))
-          problems.push(`survey pin "${pin.id}": outside ${q.id}'s outline`);
-      }
-    }
-    for (let a = 0; a < qs.length; a++)
-      for (let b = a + 1; b < qs.length; b++) {
-        const A = qs[a]!.outline;
-        const B = qs[b]!.outline;
-        if (A && B && outlinesOverlap(A, B)) problems.push(`${qs[a]!.id} and ${qs[b]!.id}: their outlines overlap`);
-        const la = qs[a]!.label;
-        const lb = qs[b]!.label;
-        if (city.role === 'home' && la && lb && Math.hypot(la.x - lb.x, la.y - lb.y) < LABEL_MIN_DISTANCE)
-          problems.push(`${qs[a]!.id} and ${qs[b]!.id}: their labels are under ${LABEL_MIN_DISTANCE} apart`);
-      }
+    if (!isDistricted(city)) continue;
+    problems.push(...districtShapeProblems(city));
   }
 
   // Services (design §8.1, §9.2): every council city's cells and infirmary.

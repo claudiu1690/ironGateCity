@@ -8,7 +8,7 @@ import {
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
-import { MissionBriefing, MissionTicket, ResultModal, quarterLockLine, runInReason } from '../src';
+import { MissionBriefing, MissionTicket, ResultModal, runInReason } from '../src';
 
 /**
  * Slice 5 fix round (docs/qa/slice-5-report.md, docs/design/slice-5-fixes.md): the record cards by
@@ -176,16 +176,8 @@ describe('m3 and §7.2: the mission ticket', () => {
   });
 });
 
-describe('§9: a later edition reads its teaser', () => {
-  it('*Opens with a later edition · …*', () => {
-    expect(quarterLockLine({ lock: { kind: 'edition' }, teaser: 'The station.' }, { teaser: true })).toBe(
-      'Opens with a later edition · The station.',
-    );
-    // The map's pin and the Quarters list keep the lock alone.
-    expect(quarterLockLine({ lock: { kind: 'edition' }, teaser: 'The station.' })).toBe('Opens with a later edition');
-    expect(quarterLockLine({ lock: { kind: 'level', level: 6 }, teaser: 'x' })).toBe('Opens at Level 6');
-  });
-});
+// §9 (a later edition's teaser line) went with the teaser sheet: review 4 (ADR 0076) greys the
+// later places as pins with *Opens with a later edition* (review4.maps.test.tsx).
 
 describe('m8: Escape on the briefing gives focus back to the ticket', () => {
   function Harness() {

@@ -1576,5 +1576,23 @@
     "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":{\"left\":0,\"top\":40,\"width\":2048,\"height\":1158},\"flatten\":null,\"q\":{\"start\":72,\"floor\":56,\"step\":4}}",
     "quality": 56,
     "bytes": 80196
+  },
+  "scene.town-hall-640.avif": {
+    "sourceHash": "0770ba6636bc1731a9ad165220f550558ac9d51369e6e10c87b439bd58de59f7",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 30673
+  },
+  "scene.town-hall-1280.avif": {
+    "sourceHash": "0770ba6636bc1731a9ad165220f550558ac9d51369e6e10c87b439bd58de59f7",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 111893
+  },
+  "scene.town-hall-640.webp": {
+    "sourceHash": "0770ba6636bc1731a9ad165220f550558ac9d51369e6e10c87b439bd58de59f7",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 42312
   }
 }

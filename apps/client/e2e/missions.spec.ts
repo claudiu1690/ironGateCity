@@ -30,7 +30,7 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
 
   // 1. Level 6, then the Shipyard: the Missions kicker, the ticket's type, odds word and risk line.
   await lift(page, { level: 6, iron: 900, pc: 60 });
-  await page.goto('/city/coalport/coalport.harbour');
+  await page.goto('/city/coalport');
   await mapAtRest(page);
   const yard = await openLocation(page, '7. The Shipyard');
   await expect(yard.getByTestId('missions')).toContainText('Missions');
@@ -132,13 +132,14 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
   const discharged = page.getByRole('dialog').filter({ has: page.getByTestId('political-continue') });
   await expect(discharged.getByTestId('stamp')).toHaveText('Discharged');
   await discharged.getByTestId('political-continue').click();
-  await expect(page).toHaveURL(/\/city\/coalport\/coalport\.harbour\?loc=coalport\.infirmary$/);
+  // Review 4 (ADR 0076): a home city is one map; the landing names the place, no quarter.
+  await expect(page).toHaveURL(/\/city\/coalport\?loc=coalport\.infirmary$/);
   await expect(page.getByRole('dialog').getByRole('heading', { name: 'The Infirmary' })).toBeVisible();
 
   // 8. Heat 60, a forced caught: *Taken in* → the cells → *Pay bail* → *Released* → the police.
   await lift(page, { heat: 60 });
   await street(page, { runIn: 'never', checkRoll: 99, caught: 'always' });
-  await page.goto('/city/coalport/coalport.harbour?loc=coalport.far-bank');
+  await page.goto('/city/coalport?loc=coalport.far-bank');
   await posters.scrollIntoViewIfNeeded();
   await posters.getByTestId('mission-again').click();
   const caught = resultModal(page);
@@ -157,7 +158,7 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
   const visitor = await other.newPage();
   await signUp(visitor, 'Ivo Visitor');
   await lift(visitor, { level: 6 });
-  await visitor.goto('/city/coalport/coalport.harbour?loc=coalport.harbour-police');
+  await visitor.goto('/city/coalport?loc=coalport.harbour-police');
   const list = visitor.getByTestId('cells-now');
   await list.scrollIntoViewIfNeeded();
   await expect(list).toContainText('In the cells now');
@@ -187,7 +188,7 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
 
   // 9. A pending run-in left past its window: the next read leaves it to luck and the result waits.
   await street(page, { runIn: 'next', opponentId: 'street-enforcer', choiceRoll: 1, checkRoll: 1 });
-  await page.goto('/city/coalport/coalport.harbour?loc=coalport.far-bank');
+  await page.goto('/city/coalport?loc=coalport.far-bank');
   await posters.scrollIntoViewIfNeeded();
   await posters.getByTestId('mission-again').click();
   await expect(page.getByTestId('run-in')).toBeVisible();
@@ -215,7 +216,7 @@ test('layout on a 375 × 667 phone (screens §10): the briefing, the run-in, the
   await page.setViewportSize({ width: 375, height: 667 });
   await signUp(page, 'Mara Lenk');
   await lift(page, { level: 6, rank: 3, iron: 900 });
-  await page.goto('/city/coalport/coalport.harbour');
+  await page.goto('/city/coalport');
   await mapAtRest(page);
   const hudHeight = async () => (await page.getByRole('region', { name: 'Character' }).boundingBox())!.height;
   const before = await hudHeight();

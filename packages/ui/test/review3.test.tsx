@@ -60,7 +60,7 @@ describe('the free zoom limits (answers §1)', () => {
     for (const id of cities)
       for (const box of BOXES)
         for (const dpr of [1, 2, 3]) {
-          const frame = content.city(id)!.quarters[0]!.frame;
+          const frame = content.city(id)!.quarters[0]!.frame ?? { x0: 0, y0: 0, x1: 1, y1: 1 }; // Review 4 (ADR 0076): a home city is one map, framed whole.
           const c = contentFor(box, 1, frame);
           const { max } = freeZoomLimits({
             fitted: 1,
@@ -81,7 +81,7 @@ describe('the free zoom limits (answers §1)', () => {
     for (const id of cities)
       for (const box of BOXES) {
         const city = content.city(id)!;
-        const frame = city.quarters[0]!.frame;
+        const frame = city.quarters[0]!.frame ?? { x0: 0, y0: 0, x1: 1, y1: 1 }; // Review 4 (ADR 0076): a home city is one map, framed whole.
         const c = contentFor(box, 1, frame);
         const pins = city.locations.map((l) => l.map);
         const insets = { top: 0, bottom: 0, blocks: [] };

@@ -80,7 +80,8 @@ import {
   orderText,
   orderVars,
   preferredStat,
-  quarterOpenFor,
+  lockedPinViews,
+  placeOpenFor,
   quarterViews,
   rankTitle,
   standingSuccesses,
@@ -346,25 +347,7 @@ export async function getCityView(
   const inForceTo = state?.ordinance?.id === ordId ? state?.ordinance?.toDay : undefined;
 
   // ADR 0029: this week's Issues of the city (public: momentum and the leader).
-  const liveIds = state?.issues?.weekDay === weekOf(today) ? state.issues.live.map((l) => l.docId) : [];
-  const issueDocs =
-    liveIds.length > 0 ? await IssueModel.find({ _id: { $in: liveIds } }).lean<IssueDoc[]>() : [];
-  const issueRows: IssueRowView[] = issueDocs
-    .sort((a, b) => a.order - b.order)
-    .map((d) => {
-      const issue = content.issue(d.issueId);
-      return {
-        issueId: d.issueId,
-        name: issue?.name ?? d.issueId,
-        cityId: city.id,
-        districtId: d.districtId,
-        placeName: d.districtId ? (content.district(d.districtId)?.quarter.name ?? d.districtId) : city.name,
-        leader: leaderOf(d.momentum),
-        momentum: { ...d.momentum },
-        effectLine: issue?.effectLine ?? '',
-        ...(issue ? { blurb: issue.blurb, stances: { ...issue.stances } } : {}),
-      };
-    });
+  const issueRows = await cityIssueRows(content, city, state, today);
   // ADR 0030: the named sources in force, with their days left.
   const effects: ModifierSourceView[] = [
     ...(ord && inForceTo !== undefined
@@ -409,7 +392,7 @@ export async function getCityView(
         n: q.district!.n,
         name: q.name,
         blurb: q.blurb ?? '',
-        frame: { ...q.frame },
+        frame: { ...q.frame! },
         anchor: { ...q.district!.anchor },
         outline: q.outline!.map(([x, y]) => [x, y] as [number, number]),
         opinion: d.opinion,
@@ -457,12 +440,16 @@ export async function getCityView(
             name: ord.name,
             line: ord.line,
             effectLine: ord.effectLine,
+            // Review 4 (answers §11.3): the plate's plain words.
+            plainLine: ord.plainLine,
             daysLeft: inForceTo - today,
           }
         : null,
     map: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
-    // Slice 5 (ADR 0035): every quarter, open or locked, with its outline, label, lock and teaser.
+    // Slice 5 (ADR 0035), review 4 (ADR 0076): every quarter, open or locked (the capital's with
+    // their shapes); a home city's greyed pins (its locked places, then the later ones).
     quarters: quarterViews(content, city, c),
+    lockedPins: lockedPinViews(content, city, c),
     ...(city.clouds ? { clouds: true } : {}),
     isNight: isNight(now),
     standing,
@@ -652,19 +639,49 @@ export async function getCityView(
         missions,
         // Review 4 #19 (ADR 0078): the police station's sheet carries *In the cells now*.
         ...(content.servicesOf(city.id)?.cells.location.id === location.id ? { cellsHere: true } : {}),
+        // Review 4 (ADR 0077): the council's hall carries the council's blocks (`council.hall`).
+        ...(city.council?.hall.locationId === location.id ? { hall: true } : {}),
         // Review 4 #9 (answers §9.3): the Lodgings card (Tram Junction).
         ...(location.lodgings
           ? { lodgings: lodgingsView(content, c, location, today, { city: state, residence: residenceDoc }) }
           : {}),
       };
     })
-      // Slice 5 (ADR 0035, GDD §14.13): a locked quarter's places are not offered (their pin numbers
-      // keep their content order); the locked quarter itself is in `quarters` with its lock.
-      .filter((_, index) => {
-        const q = city.quarters.find((x) => x.id === city.locations[index]!.quarterId);
-        return q ? quarterOpenFor(content, c, q).open : true;
-      }),
+      // Slice 5 (ADR 0035, GDD §14.13), review 4 (ADR 0076): a place the character cannot open is
+      // not offered (pin numbers keep their content order); it is in `lockedPins` instead.
+      .filter((_, index) => placeOpenFor(content, c, city.locations[index]!).open),
   };
+}
+
+/**
+ * ADR 0029: a city's Issues this week, in their order, public (momentum and the leader): the city
+ * screen's rows and (review 4) the Town Hall's.
+ */
+export async function cityIssueRows(
+  content: GameContent,
+  city: { id: string; name: string },
+  state: CityDoc | null,
+  today: number,
+): Promise<IssueRowView[]> {
+  const liveIds = state?.issues?.weekDay === weekOf(today) ? state.issues.live.map((l) => l.docId) : [];
+  const issueDocs =
+    liveIds.length > 0 ? await IssueModel.find({ _id: { $in: liveIds } }).lean<IssueDoc[]>() : [];
+  return issueDocs
+    .sort((a, b) => a.order - b.order)
+    .map((d) => {
+      const issue = content.issue(d.issueId);
+      return {
+        issueId: d.issueId,
+        name: issue?.name ?? d.issueId,
+        cityId: city.id,
+        districtId: d.districtId,
+        placeName: d.districtId ? (content.district(d.districtId)?.quarter.name ?? d.districtId) : city.name,
+        leader: leaderOf(d.momentum),
+        momentum: { ...d.momentum },
+        effectLine: issue?.effectLine ?? '',
+        ...(issue ? { blurb: issue.blurb, stances: { ...issue.stances } } : {}),
+      };
+    });
 }
 
 /** For the Me tab: this election's scoreboard lines (every place the caller moved this cycle). */

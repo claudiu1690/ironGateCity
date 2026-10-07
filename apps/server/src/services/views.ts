@@ -1,5 +1,5 @@
 import { isCheckedAction } from '@irongate/content';
-import type { City, GameContent, Quarter } from '@irongate/content';
+import type { City, GameContent, Location, Quarter } from '@irongate/content';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
@@ -33,6 +33,7 @@ import {
   standingView,
   statUse,
   verbsPhrase,
+  placeOpen,
   quarterOpen,
   weekOf,
   wornCha,
@@ -56,6 +57,7 @@ import type {
   OrderTemplate,
   OrdersState,
   OrdersView,
+  LockedPinView,
   QuarterView,
   Stats,
   TileSource,
@@ -263,9 +265,8 @@ function firstPin(
     : [];
   for (const [i, location] of city.locations.entries()) {
     const pin = { locationId: location.id, n: i + 1 };
-    // Review 4 #22: never a pin in a quarter the member cannot open yet.
-    const q = city.quarters.find((x) => x.id === location.quarterId);
-    if (q && !quarterOpenFor(content, doc, q).open) continue;
+    // Review 4 #22: never a pin at a place the member cannot open yet (ADR 0076: `placeOpen`).
+    if (!placeOpenFor(content, doc, location).open) continue;
     for (const m of missions.filter((x) => x.locationId === location.id)) {
       const descriptor: ActionDescriptor = {
         kind: 'mission',
@@ -325,8 +326,7 @@ export function startableMissions(
   const standingLevel = standingView(standingSuccesses(doc, cityId)).level;
   const out: Array<{ locationId: string; missionId: string; seenAs: string; n: number }> = [];
   for (const [i, location] of city.locations.entries()) {
-    const q = city.quarters.find((x) => x.id === location.quarterId);
-    if (q && !quarterOpenFor(content, doc, q).open) continue;
+    if (!placeOpenFor(content, doc, location).open) continue;
     for (const mission of content.missionsAt(location.id)) {
       if (mission.target !== undefined && mission.target !== 'leader' && mission.target === doc.factionId)
         continue;
@@ -429,9 +429,9 @@ export function orderVars(
   const verbs: string[] = [];
   for (const l of city?.locations ?? []) {
     if (l.factionId && l.factionId !== doc.factionId) continue;
-    // Slice 5 (GDD §14.13): only the quarters open to the member (the Harbour's *Carry* from Level 6).
+    // Slice 5 (GDD §14.13): only the places open to the member (the Harbour's *Carry* from Level 6).
     const q = city?.quarters.find((x) => x.id === l.quarterId);
-    if (!quarterOpen(q ?? {}, doc.level ?? 1).open) continue;
+    if (!placeOpen({ quarter: q ?? null, kind: l.kind, level: doc.level ?? 1 }).open) continue;
     for (const a of l.actions) if (!isCheckedAction(a)) verbs.push(a.verb);
   }
   return { issue: issueShort ?? 'the week', city: city?.name ?? '', verbs: verbsPhrase(verbs) };
@@ -557,6 +557,37 @@ export function quarterOpenFor(
 }
 
 /**
+ * Review 4 (ADR 0076–0077): whether a place is open to the character (`placeOpen`): the Town Hall
+ * always, else its quarter by Level, or because the game holds the character in that quarter. Every
+ * place-level call (the city view, the order pins, the missions, the action and mission refusals).
+ */
+export function placeOpenFor(
+  content: GameContent,
+  doc: Pick<CharacterDoc, 'level' | 'held'>,
+  location: Pick<Location, 'kind' | 'quarterId'>,
+): ReturnType<typeof placeOpen> {
+  const quarter = findQuarter(content, location.quarterId);
+  const heldHere = !!doc.held && !!quarter && content.quarterOf(doc.held.locationId)?.id === quarter.id;
+  return placeOpen({ quarter: quarter ?? null, kind: location.kind, level: doc.level, heldHere });
+}
+
+/**
+ * Review 4 (ADR 0076): where a screen lands at a place: the capital's district route with the place,
+ * a home city's one map with the place (no quarter: a home city has no quarter routes).
+ */
+export function landingAt(
+  content: GameContent,
+  cityId: string,
+  locationId: string,
+): { cityId: string; quarterId?: string; locationId: string } {
+  const q = content.location(locationId)?.location.quarterId;
+  return { cityId, ...(q && content.isDistricted(cityId) ? { quarterId: q } : {}), locationId };
+}
+
+const findQuarter = (content: GameContent, quarterId: string): Quarter | undefined =>
+  content.quartersOf(quarterId.slice(0, quarterId.indexOf('.'))).find((q) => q.id === quarterId);
+
+/**
  * Tech design §8.3 (ADR 0035): a city's quarters, every one, open or locked: the frame, the outline
  * and the label for the overview, the lock and its teaser line, the blurb, and how many places it has.
  */
@@ -567,19 +598,42 @@ export function quarterViews(
 ): QuarterView[] {
   return city.quarters.map((q) => {
     const o = quarterOpenFor(content, doc, q);
+    // Review 4 (ADR 0076): a home quarter is a group of places with a Level gate; only the
+    // capital's districts carry their shapes.
     return {
       id: q.id,
       name: q.name,
-      frame: { ...q.frame },
-      outline: (q.outline ?? []).map(([x, y]) => [x, y] as [number, number]),
-      label: q.label ? { ...q.label } : null,
+      ...(q.frame ? { frame: { ...q.frame } } : {}),
+      ...(q.outline ? { outline: q.outline.map(([x, y]) => [x, y] as [number, number]) } : {}),
+      ...(q.label ? { label: { ...q.label } } : {}),
       open: o.open,
       lock: o.lock,
       blurb: q.blurb ?? null,
-      teaser: q.teaser ?? null,
       places: city.locations.filter((l) => l.quarterId === q.id).length,
     };
   });
+}
+
+/**
+ * Review 4 (ADR 0076): a home city's greyed pins, in pin order: its places the character cannot
+ * open yet (a locked quarter's), then the survey's later places (`content.laterPins`, a later
+ * edition). Names and points only: no tickets leave the server. [] in the capital.
+ */
+export function lockedPinViews(
+  content: GameContent,
+  city: City,
+  doc: Pick<CharacterDoc, 'level' | 'held'>,
+): LockedPinView[] {
+  if (content.isDistricted(city.id)) return [];
+  const locked: LockedPinView[] = [];
+  for (const l of city.locations) {
+    const o = placeOpenFor(content, doc, l);
+    if (o.open || !o.lock) continue;
+    locked.push({ id: l.id, name: l.name, quarterId: l.quarterId, map: { ...l.map }, lock: o.lock });
+  }
+  for (const p of content.laterPins(city.id))
+    locked.push({ id: p.id, name: p.name, quarterId: p.quarterId, map: { ...p.map }, lock: { kind: 'edition' } });
+  return locked;
 }
 
 /** Slice 3: the seat held today, from the settlement's projection (ADR 0020). */

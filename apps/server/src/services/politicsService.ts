@@ -45,6 +45,7 @@ import type {
   EndorsementsView,
   FactionId,
   FrontPageView,
+  WhatNowView,
   GameErrorReason,
   HallView,
   LiveHeadline,
@@ -113,17 +114,18 @@ export function givenThisCycle(c: CharacterDoc, spec: ResidenceSpec, cycle: numb
 
 /**
  * Review 3 (GDD §15.3, answers §6.1): the council's hall on the city picture and the map's two stills,
- * for the election screens' header crop (the client picks day or night by the map's rule).
+ * for the election screens' header crop (the client picks day or night by the map's rule). Review 4
+ * (ADR 0077): read from the hall's location (its name, `ref` and pin).
  */
 export function hallView(content: GameContent, cityId: string): HallView | null {
   const city = content.city(cityId);
-  const hall = city?.council?.hall;
+  const hall = content.hallOf(cityId)?.location;
   if (!city || !hall) return null;
   return {
     name: hall.name,
-    ref: hall.ref,
-    x: hall.x,
-    y: hall.y,
+    ref: hall.ref ?? `the ${hall.name}`,
+    x: hall.map.x,
+    y: hall.map.y,
     asset: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
   };
 }
@@ -865,6 +867,7 @@ export async function getCapitalCount(
 // The chamber (council.chamber).
 // ---------------------------------------------------------------------------------------------
 
+/** `council.chamber`: the residence's council (review 4: `councilViewFor` the residence city). */
 export async function councilView(
   content: GameContent,
   c: CharacterDoc,
@@ -872,9 +875,27 @@ export async function councilView(
   today: DayKey,
   session: Session = null,
 ): Promise<CouncilView> {
-  const spec = residenceSpec(content, c);
-  const { city: cityContent, offset } = spec;
-  const capital = isDistrict(spec);
+  return councilViewFor(content, c, residenceSpec(content, c).city.id, city, today, session);
+}
+
+/**
+ * Review 4 (ADR 0077): a city's sitting council for the caller, the city and the capital flag taken
+ * from `cityId` instead of the residence: the seats, the order paper, the window, the rule in force,
+ * and `you` (a councillor only on this council). `city` is that city's document.
+ */
+export async function councilViewFor(
+  content: GameContent,
+  c: CharacterDoc,
+  cityId: string,
+  city: CityDoc | null,
+  today: DayKey,
+  session: Session = null,
+): Promise<CouncilView> {
+  const cityContent = content.city(cityId);
+  if (!cityContent?.council) throw gameError('PRECONDITION_FAILED', 'NO_COUNCIL', { cityId });
+  const offset = cityContent.council.offset;
+  const capital = content.isDistricted(cityId);
+  const spec = { home: cityContent.homeFactionId ?? null };
   const cal = councilDay(today, offset);
   const key = councilKey(cityContent.id, cal.cycle);
   // A seat vacated at a move shows its new holder (ADR 0026).
@@ -1101,6 +1122,26 @@ export async function frontPageView(
     headline: t ? fill(t.headline) : c.name,
     deck: t?.deck ? fill(t.deck) : '',
     count: await countView(content, c, e),
+    // Review 4 (answers §10.1): *What now* rides on the front page (shown once by `frontPageSeenAt`).
+    whatNow: whatNowOf(content, term),
+  };
+}
+
+/**
+ * Review 4 (answers §10.1, ADR 0077): the *What now* card's fields for a player's term: the votes
+ * that pass a rule, the seats, and the moment the council votes.
+ */
+export function whatNowOf(content: GameContent, term: Pick<OfficeTermDoc, '_id' | 'cityId' | 'fromDay'>): WhatNowView {
+  const capital = content.isDistricted(term.cityId);
+  const offset = content.city(term.cityId)?.council?.offset ?? 0;
+  const hall = content.hallOf(term.cityId)?.location;
+  return {
+    termId: term._id.toHexString(),
+    cityId: term.cityId,
+    hall: { locationId: hall?.id ?? '', name: hall?.name ?? '' },
+    seatCount: capital ? CAPITAL_COUNCIL.seats : COUNCIL.seats,
+    passVotes: capital ? CAPITAL_COUNCIL.passVotes : COUNCIL.passVotes,
+    divideAt: dayStart(councilDay(term.fromDay, offset).council.divideDay),
   };
 }
 

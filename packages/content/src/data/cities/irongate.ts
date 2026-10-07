@@ -1,5 +1,6 @@
 import type { City } from '../../schemas';
 import { withMissions } from '../missions/attach';
+import { townHall } from './townHall';
 import { irongateMissions } from '../missions/irongate';
 
 /**
@@ -38,7 +39,7 @@ export const irongate: City = {
         baselineOpinion: { vanguard: 20, collective: 20, alliance: 20, neutral: 40 },
         anchor: { x: 0.53, y: 0.3 },
       },
-      outline: [[0.42, 0.16], [0.47, 0.15], [0.55, 0.15], [0.66, 0.17], [0.71, 0.22], [0.73, 0.3], [0.72, 0.37], [0.66, 0.385], [0.56, 0.395], [0.47, 0.385], [0.42, 0.355], [0.41, 0.28]],
+      outline: [[0.43, 0], [0.7, 0], [0.69, 0.14], [0.71, 0.22], [0.73, 0.3], [0.74, 0.37], [0.75, 0.49], [0.62, 0.47], [0.6, 0.47], [0.5, 0.45], [0.43, 0.43], [0.42, 0.355], [0.41, 0.28], [0.42, 0.16]],
       label: { x: 0.53, y: 0.3 },
     },
     {
@@ -51,7 +52,7 @@ export const irongate: City = {
         baselineOpinion: { vanguard: 15, collective: 15, alliance: 35, neutral: 35 },
         anchor: { x: 0.24, y: 0.25 },
       },
-      outline: [[0.04, 0.06], [0.2, 0.04], [0.36, 0.05], [0.43, 0.08], [0.42, 0.16], [0.41, 0.28], [0.42, 0.355], [0.36, 0.36], [0.28, 0.355], [0.18, 0.34], [0.08, 0.33], [0.03, 0.32], [0.02, 0.2]],
+      outline: [[0, 0], [0.43, 0], [0.42, 0.16], [0.41, 0.28], [0.42, 0.355], [0.43, 0.43], [0.2, 0.4], [0, 0.37]],
       label: { x: 0.24, y: 0.25 },
     },
     {
@@ -65,7 +66,7 @@ export const irongate: City = {
         baselineOpinion: { vanguard: 20, collective: 20, alliance: 20, neutral: 40 },
         anchor: { x: 0.4, y: 0.6 },
       },
-      outline: [[0.29, 0.5], [0.36, 0.515], [0.45, 0.53], [0.55, 0.535], [0.605, 0.53], [0.6, 0.58], [0.585, 0.62], [0.575, 0.64], [0.53, 0.64], [0.52, 0.7], [0.5, 0.745], [0.4, 0.745], [0.31, 0.73], [0.28, 0.65], [0.28, 0.56]],
+      outline: [[0, 0.37], [0.2, 0.4], [0.43, 0.43], [0.5, 0.45], [0.6, 0.47], [0.605, 0.53], [0.6, 0.58], [0.585, 0.62], [0.575, 0.64], [0.53, 0.64], [0.52, 0.7], [0.5, 0.745], [0.52, 0.85], [0.53, 1], [0, 1]],
       label: { x: 0.4, y: 0.6 },
     },
     {
@@ -78,7 +79,7 @@ export const irongate: City = {
         baselineOpinion: { vanguard: 15, collective: 35, alliance: 15, neutral: 35 },
         anchor: { x: 0.76, y: 0.62 },
       },
-      outline: [[0.605, 0.53], [0.6, 0.48], [0.64, 0.47], [0.7, 0.5], [0.8, 0.52], [0.9, 0.54], [0.98, 0.56], [0.985, 0.66], [0.97, 0.73], [0.88, 0.76], [0.76, 0.77], [0.64, 0.76], [0.52, 0.75], [0.5, 0.745], [0.52, 0.7], [0.53, 0.64], [0.575, 0.64], [0.585, 0.62], [0.6, 0.58]],
+      outline: [[0.6, 0.47], [0.62, 0.47], [0.75, 0.49], [1, 0.54], [1, 1], [0.53, 1], [0.52, 0.85], [0.5, 0.745], [0.52, 0.7], [0.53, 0.64], [0.575, 0.64], [0.585, 0.62], [0.6, 0.58], [0.605, 0.53]],
       label: { x: 0.76, y: 0.62 },
     },
     {
@@ -92,7 +93,7 @@ export const irongate: City = {
         baselineOpinion: { vanguard: 35, collective: 15, alliance: 15, neutral: 35 },
         anchor: { x: 0.85, y: 0.16 },
       },
-      outline: [[0.7, 0.02], [0.84, 0.01], [0.98, 0.02], [0.99, 0.12], [0.98, 0.24], [0.95, 0.31], [0.86, 0.33], [0.76, 0.33], [0.73, 0.3], [0.71, 0.22], [0.68, 0.14]],
+      outline: [[0.7, 0], [1, 0], [1, 0.54], [0.75, 0.49], [0.74, 0.37], [0.73, 0.3], [0.71, 0.22], [0.69, 0.14]],
       label: { x: 0.85, y: 0.16 },
     },
   ],
@@ -103,8 +104,8 @@ export const irongate: City = {
     price: '6 marks',
   },
   // Slice 3 (GDD §2): offset 0; ten seats, two per district (§15.3). Design §4, §19 #7: the City Hall,
-  // the clock-tower hall between Parliament and the Opera (unpinned on the survey). Not a location.
-  council: { offset: 0, seats: 10, hall: { name: 'City Hall', ref: 'the City Hall', x: 0.57, y: 0.345 } },
+  // the clock-tower hall between Parliament and the Opera. Review 4 (ADR 0077): the hall is a location.
+  council: { offset: 0, seats: 10, hall: { locationId: 'irongate.city-hall' } },
   locations: withMissions([
     {
       id: 'irongate.parliament',
@@ -1467,6 +1468,17 @@ export const irongate: City = {
         },
       ],
     },
+    // Review 4 (answers §11.1, ADR 0077): the council's hall, a place open at every Level; appended
+    // last so no pin renumbers (answers §29 Q10). Its pin is the survey's.
+    townHall({
+      id: 'irongate.city-hall',
+      name: 'City Hall',
+      ref: 'the City Hall',
+      blurb:
+        "Baroque, copper-domed, between Parliament and the Opera: the capital's own council, ten seats from five districts, and the rule they can agree on, when they can.",
+      map: { x: 0.57, y: 0.345 },
+      quarterId: 'irongate.government-quarter',
+    }),
   ], irongateMissions),
   // Slice 5 (design §8.1, §9.2): where the game sends a player in this city.
   services: { cells: 'irongate.police-hq', infirmary: 'irongate.st-agnes' },

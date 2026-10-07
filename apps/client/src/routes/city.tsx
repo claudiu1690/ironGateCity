@@ -6,7 +6,6 @@ import type {
   FactionId,
   LocationView,
   MissionView,
-  QuarterView,
 } from '@irongate/rules';
 import {
   BottomSheet,
@@ -21,14 +20,13 @@ import {
   JobsCard,
   LodgingsCard,
   LocationSheet,
+  LockedPinSheet,
   MissionBriefing,
   MissionTicket,
   OpinionBars,
   OrdersList,
   OutOfEnergyCard,
   PlacesList,
-  QuarterTeaserSheet,
-  QuartersList,
   RegisterSheet,
   ResidenceCard,
   ResultModal,
@@ -37,6 +35,7 @@ import {
   TodayStrip,
   TrainsCard,
   TramBar,
+  bboxOf,
   comebackLine,
   cx,
   districtStateWord,
@@ -47,13 +46,12 @@ import {
   heatWord,
   helpMark,
   pyramidFor,
-  quarterLockLine,
   residenceLines,
 } from '@irongate/ui';
 import type { Ground } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { MapSwitch } from '../components/MapSwitch';
 import { env } from '../env';
@@ -63,6 +61,7 @@ import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { CellsNow } from '../features/game/CellsNow';
+import { TownHall } from '../features/council/TownHall';
 import { trainingPlacesOf } from '../features/game/trainingPlaces';
 import { useMissionStart } from '../features/street/useMissionStart';
 import { useBoard } from '../features/travel/useBoard';
@@ -92,30 +91,6 @@ function rememberDistrict(cityId: string, districtId: string | null) {
     // Private mode: the capital opens on its overview.
   }
 }
-
-/**
- * Slice 5 (tech design §12.3, ADR 0035): a home city lands on the quarter of `?loc`, else the last
- * viewed this session, else its first (the capital keeps its own district memory above).
- */
-const QUARTER_KEY = 'irongate.lastQuarter.';
-
-export function lastQuarter(cityId: string): string | null {
-  try {
-    return window.sessionStorage.getItem(QUARTER_KEY + cityId);
-  } catch {
-    return null;
-  }
-}
-
-function rememberQuarter(cityId: string, quarterId: string) {
-  try {
-    window.sessionStorage.setItem(QUARTER_KEY + cityId, quarterId);
-  } catch {
-    // Private mode: the city opens on its first quarter.
-  }
-}
-
-const isOpen = (q: QuarterView) => q.open !== false;
 
 /** Every party's short name (content through the character view; faction naming is parked). */
 function namesOf(c: { factionId: FactionId; factionName: string; factionNames?: Record<FactionId, string> }) {
@@ -206,7 +181,7 @@ export function CityPage() {
     }
   }, [act.open]);
   const travel = useBoard();
-  // Slice 5 (screens §4): a mission's briefing, its start, and a locked quarter's teaser.
+  // Slice 5 (screens §4): a mission's briefing and its start.
   const [briefing, setBriefing] = useState<{ mission: MissionView; locationId: string; placeName: string } | null>(
     null,
   );
@@ -221,8 +196,8 @@ export function CityPage() {
   useEffect(() => {
     if (runInPending) setBriefingOpen(false);
   }, [runInPending]);
-  const [teaser, setTeaser] = useState<string | null>(null);
-  const [quartersOpen, setQuartersOpen] = useState(false);
+  // Review 4 (ADR 0076): a home city's greyed pin, its short sheet (no zoom on the tap).
+  const [lockedId, setLockedId] = useState<string | null>(null);
   // Slice 5 (screens §6): held (the release modal not yet closed), the map gives way to the held
   // screen, once this screen's result modal (*To the cells*) and the run-in's are out of the way.
   const heldNow = !!character?.held;
@@ -265,34 +240,40 @@ export function CityPage() {
     if (district) rememberDistrict(cityId, district.id);
   }, [cityId, district]);
 
-  // Slice 5 (ADR 0035): a home city with more than one quarter has the capital's overview and quarter
-  // views: `/city/{id}/overview`, `/city/{id}/{quarter}`, and `/city/{id}` the landing quarter in place.
-  const homeQuarters = !districts && c0 && c0.quarters.length > 1 ? c0.quarters : null;
-  const homeOverview = !!homeQuarters && params.quarterId === 'overview';
-  const homeQuarter: QuarterView | null = (() => {
-    if (!homeQuarters || homeOverview || !c0) return null;
-    const byParam = params.quarterId
-      ? homeQuarters.find((q) => q.id === params.quarterId && isOpen(q))
-      : undefined;
-    if (byParam) return byParam;
-    const locQuarter = loc ? c0.locations.find((l) => l.id === loc)?.quarterId : undefined;
-    const byLoc = locQuarter ? homeQuarters.find((q) => q.id === locQuarter && isOpen(q)) : undefined;
-    if (byLoc) return byLoc;
-    const last = lastQuarter(cityId);
-    const byLast = last ? homeQuarters.find((q) => q.id === last && isOpen(q)) : undefined;
-    return byLast ?? homeQuarters.find(isOpen) ?? homeQuarters[0] ?? null;
-  })();
-  const homeQuarterId = homeQuarter?.id ?? null;
+  // Review 4 (answers §21, ADR 0076): a home city is one map. Its old quarter routes
+  // (`/city/{id}/overview`, `/city/{id}/{quarter}`) land on `/city/{id}`, keeping `?loc`.
+  const homeCity = !!c0 && !districts;
   useEffect(() => {
-    if (homeQuarterId) rememberQuarter(cityId, homeQuarterId);
-  }, [cityId, homeQuarterId]);
-  const currentQuarterId = district?.id ?? homeQuarterId;
-  // The district lock (the picture dimmed outside the quarter, the view held in its frame) once there
-  // is somewhere else to go: with one quarter open (Levels 1–5) the map is slice 4's (tech design
-  // Deviations, phase C).
-  const lockQuarter = !!homeQuarter && (homeQuarters?.filter(isOpen).length ?? 0) > 1;
-  /** A quarter view proper (its plate, the bar, the lock): two quarters or more open. */
-  const qv = lockQuarter ? homeQuarter : null;
+    if (homeCity && params.quarterId)
+      void navigate({ to: '/city/$cityId', params: { cityId }, search: loc ? { loc } : {}, replace: true });
+  }, [homeCity, params.quarterId, cityId, loc, navigate]);
+  const currentQuarterId = district?.id ?? null;
+  // Answers §21.3 (review 4, ADR 0076): a home city is one map. At rest it frames its first quarter's
+  // places (their box grown by 0.06, as the first quarters' frames were, so they keep 44 px apart and
+  // clear of the plate, QA M2); a drag reaches every pin, the greyed ones included, and a pin from
+  // `?loc` (a train lands on the Town Hall's) zooms in from there. The player's own view is kept
+  // (`memoryKey`). Not a lock: the view is free.
+  const homeRest = useMemo(() => {
+    // The Town Hall is left out of the box (a drag away), as are the places a Level opens: the view is
+    // the one slices 1–5 checked at every size; the rest of the city is a drag or the Places list away.
+    if (!c0 || districts) return null;
+    const first = c0.quarters[0]?.id;
+    const rest = c0.locations.filter((l) => l.quarterId === first && !l.hall);
+    if (rest.length === 0) return null;
+    const xs = rest.map((l) => l.map.x);
+    const ys = rest.map((l) => l.map.y);
+    const g = (v: number) => Math.min(1, Math.max(0, v));
+    return {
+      ids: rest.map((l) => l.id),
+      frame: {
+        x0: g(Math.min(...xs) - 0.06),
+        y0: g(Math.min(...ys) - 0.06),
+        x1: g(Math.max(...xs) + 0.06),
+        y1: g(Math.max(...ys) + 0.06),
+      },
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c0?.id, c0?.locations.map((l) => l.id).join(), !!districts]);
 
   // On a train no city is open (IN_TRANSIT): the journey; standing elsewhere: the city you are in.
   const refusal = city.isError ? gameErrorOf(city.error)?.reason : undefined;
@@ -307,9 +288,9 @@ export function CityPage() {
     setJobMessage(null);
     action.reset();
     // The capital shows one district's places (the user's lock): an order's pin for a place in another
-    // district, or on the overview, opens that district, then the place (slice-4 fixes §3). Slice 5: a
-    // home city's quarters likewise.
-    const into = (districts || homeQuarters) && id ? c0?.locations.find((l) => l.id === id)?.quarterId : undefined;
+    // district, or on the overview, opens that district, then the place (slice-4 fixes §3). A home
+    // city is one map (review 4).
+    const into = districts && id ? c0?.locations.find((l) => l.id === id)?.quarterId : undefined;
     if (into && into !== currentQuarterId) {
       void navigate({
         to: '/city/$cityId/$quarterId',
@@ -323,19 +304,6 @@ export function CityPage() {
       search: id ? { loc: id, ...(orderId ? { order: orderId } : {}) } : {},
       replace: true,
     });
-  };
-  /** Slice 5: into a home city's quarter, or (null) its overview. */
-  const goQuarter = (id: string | null) => {
-    setJobMessage(null);
-    action.reset();
-    if (id) void navigate({ to: '/city/$cityId/$quarterId', params: { cityId, quarterId: id } });
-    else void navigate({ to: '/city/$cityId/$quarterId', params: { cityId, quarterId: 'overview' } });
-  };
-  /** A quarter on the overview, the bar or the list: an open one goes in, a locked one shows its teaser. */
-  const pickQuarter = (id: string) => {
-    const q = homeQuarters?.find((x) => x.id === id);
-    if (q && !isOpen(q)) setTeaser(id);
-    else goQuarter(id);
   };
   /** Slice 4: into a district (the overview's outline or name, the Districts list, the tram bar). */
   const goDistrict = (id: string | null) => {
@@ -374,14 +342,16 @@ export function CityPage() {
   const c = city.data;
   const names = namesOf(character);
   const overview = !!districts && !district;
-  // The pins on show: a district's or a quarter's own (the user's lock: only its), none on an overview.
+  // The pins on show: a district's own (the user's lock: only its), none on the overview, a home
+  // city's every open place (review 4: one map; its locked places are greyed pins, `lockedPins`).
   const shownLocations = district
     ? c.locations.filter((l) => l.quarterId === district.id)
-    : homeQuarter
-      ? c.locations.filter((l) => l.quarterId === homeQuarter.id)
-      : overview || homeOverview
-        ? []
-        : c.locations;
+    : overview
+      ? []
+      : c.locations;
+  const lockedPins = districts ? [] : (c.lockedPins ?? []);
+  const lockedPin = lockedPins.find((p) => p.id === lockedId) ?? null;
+  const hallPlace = c.locations.find((l) => l.hall);
   // Slice 5 (screens §8.3): rival ground, the home faction whose morale your work draws from.
   const rival = c.rivalGround ?? null;
   const heat = heatNow(character.heat, tick);
@@ -441,14 +411,36 @@ export function CityPage() {
   const orderAt = new Set(
     character.orders.items.flatMap((o) => (!o.done && o.pin ? [o.pin.locationId] : [])),
   );
-  const places = shownLocations.map((l) => ({
+  const placeRow = (l: LocationView) => ({
     id: l.id,
     n: l.n,
     name: l.name,
     blurb: l.blurb,
     order: orderAt.has(l.id),
     issue: issueName(l.issueIds?.[0]),
-  }));
+  });
+  const places = shownLocations.map(placeRow);
+  // Review 4 (answers §21.2, §29 Q10): a home city's Places list is grouped by quarter in pin order,
+  // each header with its lock line; the Town Hall closes the first open group whatever quarter it is
+  // painted in; the greyed places close their own group.
+  const firstOpen = c.quarters.find((q) => q.open !== false)?.id;
+  const placeGroups = districts
+    ? undefined
+    : c.quarters.map((q) => ({
+        id: q.id,
+        title: copy.places.group(q.name, q.open === false ? (q.lock ?? null) : null),
+        blurb: q.blurb ?? null,
+        places: [
+          ...c.locations
+            .filter((l) => l.quarterId === q.id && !l.hall)
+            .sort((a, b) => a.n - b.n)
+            .map(placeRow),
+          ...(q.id === firstOpen ? c.locations.filter((l) => l.hall).map(placeRow) : []),
+          ...lockedPins
+            .filter((x) => x.quarterId === q.id)
+            .map((x) => ({ id: x.id, n: 0, name: x.name, blurb: '', locked: copy.map.lockedPlace(x.lock) })),
+        ],
+      }));
   /**
    * The Places button (on the overview: *Districts*): a small pill in a corner of the map, clear of the
    * plate and the dock, marked as an overlay so the map's first view keeps the pins clear of it. It
@@ -461,9 +453,7 @@ export function CityPage() {
         data-map-overlay="places"
         data-testid="places-button"
         aria-haspopup="dialog"
-        onClick={() =>
-          overview ? setDistrictsOpen(true) : homeOverview ? setQuartersOpen(true) : setPlacesOpen(true)
-        }
+        onClick={() => (overview ? setDistrictsOpen(true) : setPlacesOpen(true))}
         className={cx(
           'label-caps pointer-events-auto absolute z-10 flex min-h-11 min-w-11 cursor-pointer items-center gap-1.5 bg-paper px-3 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)] hover:bg-paper-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
           className,
@@ -483,7 +473,7 @@ export function CityPage() {
           <circle cx="3.5" cy="12" r="1.2" fill="currentColor" />
           <circle cx="3.5" cy="18" r="1.2" fill="currentColor" />
         </svg>
-        {overview ? copy.capital.districts : homeOverview ? copy.risk.quarters.title : 'Places'}
+        {overview ? copy.capital.districts : 'Places'}
       </button>
     );
   // Slice 4: *City | Nation* (the Map tab's control); City is where you stand (here).
@@ -573,17 +563,7 @@ export function CityPage() {
     </>
   );
   const tramBar = (className?: string, columns?: 2 | 4) =>
-    qv && homeQuarters ? (
-      // Slice 5 (screens §3.1): the quarter bar, every quarter, the current one inverted.
-      <TramBar
-        districts={homeQuarters.map((q) => ({ id: q.id, name: q.name, locked: !isOpen(q) }))}
-        current={qv.id}
-        onGo={(id) => goQuarter(id)}
-        quarters={{ onLocked: (id) => setTeaser(id) }}
-        className={className}
-        columns={columns === 2 ? 2 : 3}
-      />
-    ) : district && districts ? (
+    district && districts ? (
       <TramBar
         districts={districts.map((d) => ({ id: d.id, name: d.name }))}
         current={district.id}
@@ -620,6 +600,30 @@ export function CityPage() {
     </div>
   );
 
+  /**
+   * Review 4 (answers §11.3): the council's rule, said by its effect (*Council rule: Reading Room
+   * Grant · studying costs a fifth less · 3 days left*); a tap opens the Town Hall's sheet. One line
+   * that never wraps; its tap target reaches 44 px without growing the plate.
+   */
+  const ruleLine = (testId: string, className?: string) =>
+    c.ordinance ? (
+      <button
+        type="button"
+        onClick={() => hallPlace && select(hallPlace.id)}
+        disabled={!hallPlace}
+        className={cx(
+          "relative z-20 min-w-0 cursor-pointer truncate text-left font-mono text-[11px] whitespace-nowrap text-text-2 underline decoration-dotted underline-offset-2 after:absolute after:inset-x-0 after:-inset-y-[16px] after:content-[''] hover:text-ink disabled:cursor-default disabled:no-underline",
+          // A phone held sideways: the plate is in the scrolling side column; the line itself is 44 px.
+          side && 'min-h-11 leading-[44px] after:hidden',
+          className,
+        )}
+        data-testid={testId}
+        aria-label={`${copy.plate.rule(c.ordinance.name, c.ordinance.plainLine ?? c.ordinance.effectLine, c.ordinance.daysLeft)}. Open ${hallPlace?.ref ?? 'the Town Hall'}`}
+      >
+        {copy.plate.rule(c.ordinance.name, c.ordinance.plainLine ?? c.ordinance.effectLine, c.ordinance.daysLeft)}
+      </button>
+    ) : null;
+
   /** The home city's plate: over the map, or (sideways) the top of the city column. */
   const homePlate = (
     <>
@@ -638,21 +642,6 @@ export function CityPage() {
         </p>
       )}
       <div className="flex items-stretch border-b-2 border-ink">
-        {/* Slice 5 (screens §3.2): a quarter's way back to the city's overview. */}
-        {qv && (
-          <button
-            type="button"
-            onClick={() => goQuarter(null)}
-            className="label-caps flex min-h-11 shrink-0 cursor-pointer items-center gap-1 border-r border-paper-2 px-2.5 text-[11px] font-semibold hover:bg-paper-2"
-            data-testid="quarter-back"
-            aria-label={`Back to ${c.name}`}
-          >
-            <span aria-hidden="true" className="font-label text-[16px] leading-none">
-              ‹
-            </span>
-            {c.name}
-          </button>
-        )}
         <div className="relative flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2">
           {/* One tap target over the block (the heading stays a heading): the notes behind
               the share, the morale word and the ordinance line. */}
@@ -663,52 +652,16 @@ export function CityPage() {
             testId="plate-help"
             className="absolute inset-0 z-10 w-full bg-transparent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
           />
-          {/* Slice 5: the kicker. On rival ground *Duskwall · rival ground* (screens §8.3); in a
-              quarter *Coalport · The Harbour* (screens §3.4). */}
-          {(rival || qv) && (
-            <span
-              className={cx(
-                'label-caps text-[9px]',
-                rival
-                  ? cx('font-semibold text-failure', helpMark)
-                  : // A phone keeps the plate short: *‹ Coalport* and the heading say it already.
-                    'hidden text-muted sm:block',
-              )}
-              data-testid={rival ? 'plate-rival' : 'quarter-subtitle'}
-            >
-              {rival
-                ? copy.risk.rival.placeLine(c.name)
-                : copy.risk.quarters.subtitle(c.name, qv!.name)}
+          {/* Slice 5: the kicker on rival ground, *Duskwall · rival ground* (screens §8.3). At home the
+              plate's line already says *Home city* (review 4: no quarter subtitle any more). */}
+          {rival && (
+            <span className={cx('label-caps text-[9px] font-semibold text-failure', helpMark)} data-testid="plate-rival">
+              {copy.risk.rival.placeLine(c.name)}
             </span>
           )}
           <div className="flex items-baseline gap-2">
-            <h1
-              className={cx(
-                'font-display leading-none font-black',
-                qv ? 'text-[21px]' : 'text-[24px]',
-              )}
-              data-testid="plate-name"
-            >
-              {qv ? (
-                qv.name
-              ) : homeQuarter ? (
-                // One quarter open (Levels 1–5): the city's name is the way to its overview, where the
-                // other quarters' teasers are (above the plate's notes, which cover the block).
-                <button
-                  type="button"
-                  onClick={() => goQuarter(null)}
-                  className="relative z-20 -my-[10px] inline-flex min-h-11 cursor-pointer items-center gap-1 hover:underline"
-                  data-testid="plate-overview"
-                  aria-label={`${c.name}: its quarters`}
-                >
-                  {c.name}
-                  <span aria-hidden="true" className="font-label text-[18px] font-normal">
-                    ›
-                  </span>
-                </button>
-              ) : (
-                c.name
-              )}
+            <h1 className="font-display text-[24px] leading-none font-black" data-testid="plate-name">
+              {c.name}
             </h1>
             {/* Slice 3 (screens §8): the morale word beside the name, Unrest in the failure
                 colour; no extra line, so every pin stays clear on a small phone (QA M2). */}
@@ -762,19 +715,13 @@ export function CityPage() {
             </span>
           )}
           {/* The ordinance in force, one line that never wraps. Only on a very short phone
-              (360 × 640) it gives way to the map; the tickets carry its tags there. */}
-          {c.ordinance && (
-            <span
-              className={cx(
-                'truncate font-mono text-[11px] whitespace-nowrap text-text-2',
-                !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
-                helpMark,
-              )}
-              data-testid="city-ordinance"
-            >
-              {copy.ordinanceLine(c.ordinance.name, c.ordinance.daysLeft)}
-            </span>
-          )}
+              (360 × 640) it gives way to the map; the tickets carry its tags there. Review 4 (answers
+              §11.3): it says the effect, and a tap opens the Town Hall (above the plate's notes). */}
+          {c.ordinance &&
+            ruleLine(
+              'city-ordinance',
+              cx(!side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden'),
+            )}
           {/* Slice 4 (screens §9.1): this election's scoreboard line in the home city. */}
           {c.scoreboard?.mine && (
             <ScoreboardLine
@@ -911,11 +858,7 @@ export function CityPage() {
         {(comebackLine(district, names) || c.ordinance || district.issues[0] || district.scoreboard.mine) && (
           <div className="flex flex-col font-mono text-[11px] text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden">
             {comebackLine(district, names) && <span>{comebackLine(district, names)}</span>}
-            {c.ordinance && (
-              <span className="truncate" data-testid="district-rule">
-                {copy.capital.councilRule(c.ordinance.name, c.ordinance.daysLeft)}
-              </span>
-            )}
+            {c.ordinance && ruleLine('district-rule')}
             {district.issues[0] && (
               <span className="truncate" data-testid="district-issue-line">
                 {issueLine(district.issues[0], names)}
@@ -935,23 +878,9 @@ export function CityPage() {
 
   const plate = district ? districtPlate : overview ? overviewPlate : homePlate;
 
-  /** Slice 5 (screens §3.2): a home city's overview names, each with its lock line. */
-  const quarterHotspots = (homeQuarters ?? []).map((q, i) => ({
-    id: q.id,
-    n: i + 1,
-    name: q.name,
-    map: q.label ?? { x: (q.frame.x0 + q.frame.x1) / 2, y: (q.frame.y0 + q.frame.y1) / 2 },
-    pin: {
-      style: 'name' as const,
-      ...(isOpen(q) ? {} : { sub: quarterLockLine(q) ?? undefined }),
-      marks: lastQuarter(c.id) === q.id && isOpen(q) ? (['here'] as const) : ([] as const),
-    },
-  }));
-
-  // The map's pins: the overview's five district names; a district's or a home city's places.
-  const hotspots = homeOverview
-    ? quarterHotspots
-    : overview
+  // The map's pins: the overview's five district names; a district's or a home city's places, and (a
+  // home city, review 4) its greyed pins after them.
+  const hotspots = overview
     ? districts!.map((d) => ({
         id: d.id,
         n: d.n,
@@ -967,10 +896,19 @@ export function CityPage() {
           ],
         },
       }))
-    : shownLocations.map((l) => ({
-        ...l,
-        pin: (l.issueIds?.length ?? 0) > 0 ? { marks: ['issue'] as const } : undefined,
-      }));
+    : [
+        ...shownLocations.map((l) => ({
+          ...l,
+          pin: (l.issueIds?.length ?? 0) > 0 ? { marks: ['issue'] as const } : undefined,
+        })),
+        ...lockedPins.map((x) => ({
+          id: x.id,
+          n: 0,
+          name: x.name,
+          map: x.map,
+          pin: { marks: ['locked'] as const, sub: copy.map.lockedPlace(x.lock) },
+        })),
+      ];
 
   const sheetGround = groundFor(c, sheetPlace, names);
   const resultLocation = result ? c.locations.find((l) => l.id === result.place.locationId) : undefined;
@@ -979,8 +917,7 @@ export function CityPage() {
     <div
       className={cx('relative flex h-full', !side && 'min-h-[420px]')}
       data-capital={districts ? (district ? 'district' : 'overview') : undefined}
-      data-quarters={homeQuarters ? (homeOverview ? 'overview' : 'quarter') : undefined}
-      data-quarter={homeQuarter?.id}
+      data-home-map={districts ? undefined : 'one'}
     >
       {/* Sideways (review 2 #3): the plate, the orders and the day in a column beside the map, which
           keeps the full height and no overlay. */}
@@ -1003,33 +940,25 @@ export function CityPage() {
         className="h-full min-w-0 flex-1"
         map={c.map}
         tiles={tiles}
-        // Maps v3: the city opens on its first quarter, a frame on its one picture; the capital's
-        // overview is the whole picture, a district its own frame (the user's lock: held inside it).
-        frame={
-          district
-            ? district.frame
-            : overview || homeOverview
-              ? undefined
-              : (homeQuarter?.frame ?? c.quarters[0]?.frame)
-        }
+        // Maps v3: the capital's overview is the whole picture, a district its own frame (the user's
+        // lock: held inside it). Review 4 (ADR 0076): a home city is one picture, at rest on its open
+        // places' box (`homeRest`); a drag reaches every pin, the greyed ones included.
+        frame={district ? district.frame : (homeRest?.frame ?? undefined)}
+        restFocus={homeRest?.ids}
         // Map atmosphere (clouds by day, fog by night), where the city's content switches it on.
         clouds={c.clouds}
         isNight={c.isNight}
         locations={hotspots}
-        selectedId={overview || homeOverview ? null : (loc ?? null)}
-        onSelect={(id) => (overview ? goDistrict(id) : homeOverview ? pickQuarter(id) : select(id))}
-        outlines={
-          overview
-            ? districts!.map((d) => ({ id: d.id, points: d.outline, label: d.name }))
-            : homeOverview
-              ? homeQuarters!.map((q) => ({ id: q.id, points: q.outline ?? [], label: q.name }))
-              : undefined
+        selectedId={overview ? null : (loc ?? null)}
+        onSelect={(id) =>
+          overview ? goDistrict(id) : lockedPins.some((x) => x.id === id) ? setLockedId(id) : select(id)
         }
-        onOutline={(id) => (homeOverview ? pickQuarter(id) : goDistrict(id))}
-        focusOutline={
-          district?.outline ?? (lockQuarter && homeQuarter?.outline?.length ? homeQuarter.outline : undefined)
-        }
-        lockToFrame={!!district || lockQuarter}
+        outlines={overview ? districts!.map((d) => ({ id: d.id, points: d.outline, label: d.name })) : undefined}
+        onOutline={(id) => goDistrict(id)}
+        focusOutline={district?.outline}
+        lockToFrame={!!district}
+        // Review 4 (answers §8.3, ADR 0076): inside a district the drag reaches its whole outline.
+        panLimit={district ? bboxOf(district.outline) : undefined}
         cover={cover}
         onArrive={(id, { fillsMap }) => {
           setArrived(id);
@@ -1037,7 +966,7 @@ export function CityPage() {
           setFillSheet(!fillsMap);
         }}
         // Review 3: the player's zoom and drag are kept for the session, per city (per district).
-        memoryKey={district ? district.id : homeOverview ? `${c.id}:overview` : (qv?.id ?? c.id)}
+        memoryKey={district ? district.id : c.id}
         // Review 3: + / − under the Places button, on a desktop (a phone pinches and double-taps).
         zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex'}
       >
@@ -1104,16 +1033,16 @@ export function CityPage() {
                 className={cx(
                   'flex flex-col gap-1',
                   // Review 4 #13: away, the orders are one quiet line: nothing to fold.
-                  (districts || qv) && !character.orders.away && '[@media(max-height:700px)]:hidden',
+                  districts && !character.orders.away && '[@media(max-height:700px)]:hidden',
                 )}
               >
-                {district || qv ? (
+                {district ? (
                   <OrdersList orders={character.orders} onPin={(id, orderId) => select(id, orderId)} />
                 ) : (
                   orders
                 )}
               </div>
-              {(districts || qv) && !character.orders.away && (
+              {districts && !character.orders.away && (
                 <button
                   type="button"
                   onClick={() => setOrdersOpen(true)}
@@ -1190,6 +1119,17 @@ export function CityPage() {
             ) : null,
             sheetPlace.cellsHere ? (
               <CellsNow key="cells-now" locationId={sheetPlace.id} open={sheetOpen} factionNames={names} />
+            ) : null,
+            // Review 4 (answers §11.2, ADR 0077): the Town Hall's blocks after its ticket.
+            sheetPlace.hall ? (
+              <TownHall
+                key="town-hall"
+                cityId={c.id}
+                enabled={sheetOpen}
+                names={names}
+                factionId={character.factionId}
+                onWhereToAct={() => setPlacesOpen(true)}
+              />
             ) : null,
           ]}
         >
@@ -1273,12 +1213,14 @@ export function CityPage() {
       )}
 
       <PlacesList
-        open={placesOpen && !overview && !homeOverview}
+        open={placesOpen && !overview}
         onOpenChange={setPlacesOpen}
-        cityName={district?.name ?? (qv ? copy.risk.quarters.subtitle(c.name, qv.name) : c.name)}
+        cityName={district?.name ?? c.name}
         places={places}
-        // Exactly a tap on the pin: the map zooms to it, then its sheet opens (and `?loc=` is set).
-        onPick={(id) => select(id)}
+        groups={placeGroups}
+        // Exactly a tap on the pin: the map zooms to it, then its sheet opens (and `?loc=` is set); a
+        // greyed one opens its short sheet.
+        onPick={(id) => (lockedPins.some((x) => x.id === id) ? setLockedId(id) : select(id))}
         // The Places button on show (there is one per layout; the others are hidden).
         returnFocusTo={() =>
           [...document.querySelectorAll<HTMLElement>('[data-testid="places-button"]')].find(
@@ -1286,31 +1228,26 @@ export function CityPage() {
           ) ?? null
         }
       />
-      {/* Slice 5 (screens §3.2, §3.3): a home city's Quarters list and a locked quarter's teaser. */}
-      {homeQuarters && (
-        <QuartersList
-          open={quartersOpen && homeOverview}
-          onOpenChange={setQuartersOpen}
-          cityName={c.name}
-          quarters={homeQuarters}
-          onPick={(id) => pickQuarter(id)}
-          returnFocusTo={() =>
-            [...document.querySelectorAll<HTMLElement>('[data-testid="places-button"]')].find(
-              (b) => b.offsetParent !== null,
-            ) ?? null
-          }
-        />
-      )}
-      {homeQuarters && (
-        <QuarterTeaserSheet
-          quarter={homeQuarters.find((q) => q.id === teaser) ?? null}
-          open={teaser !== null}
-          onOpenChange={(o) => {
-            if (!o) setTeaser(null);
-          }}
-          level={character.level}
-        />
-      )}
+      {/* Review 4 (answers §21.4): a greyed pin's short sheet: its quarter, its lock, the Level. */}
+      <LockedPinSheet
+        pin={
+          lockedPin
+            ? {
+                name: lockedPin.name,
+                lock: lockedPin.lock,
+                quarter: {
+                  name: c.quarters.find((q) => q.id === lockedPin.quarterId)?.name ?? '',
+                  blurb: c.quarters.find((q) => q.id === lockedPin.quarterId)?.blurb ?? null,
+                },
+              }
+            : null
+        }
+        open={lockedPin !== null}
+        onOpenChange={(o) => {
+          if (!o) setLockedId(null);
+        }}
+        level={character.level}
+      />
       <MissionBriefing
         open={briefingOpen && !!briefing}
         onOpenChange={setBriefingOpen}
@@ -1333,7 +1270,7 @@ export function CityPage() {
         />
       )}
 
-      {(districts || qv) && (
+      {districts && (
         <BottomSheet open={ordersOpen} onOpenChange={setOrdersOpen} title={copy.ordersFold.title}>
           <OrdersList
             orders={character.orders}

@@ -19,8 +19,9 @@ const coalport = (c: ContentInput) => c.cities[0]!;
 describe('the real content', () => {
   const content = loadContent();
   const city = content.city('coalport')!;
-  // Slice 5 adds the Harbour (design §2.3); the slice-1 counts are the Mill's.
-  const mill = city.locations.filter((l) => l.quarterId === 'coalport.mill');
+  // Slice 5 adds the Harbour (design §2.3); the slice-1 counts are the Mill's. Review 4 adds the
+  // Town Hall (ADR 0077), checked in review4.hall.test.ts.
+  const mill = city.locations.filter((l) => l.quarterId === 'coalport.mill' && l.kind !== 'town-hall');
   const actions = mill.flatMap((l) => l.actions);
 
   it('validates and indexes', () => {

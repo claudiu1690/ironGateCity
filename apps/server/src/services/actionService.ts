@@ -50,6 +50,7 @@ import type { StreetForce } from './streetHooks';
 import { closeArrivalInTx } from './travelService';
 import { DayChanged, VersionConflict } from './txn';
 import {
+  placeOpenFor,
   energyState,
   firstDayBonuses,
   fromOrdersState,
@@ -202,7 +203,12 @@ export async function performAction(deps: {
   });
 }
 
-/** Slice 5 (tech design §7.2): `RECORD_BARRED` and `ONCE_ON_RIVAL_GROUND`, before the key and in the transaction. */
+/**
+ * Slice 5 (tech design §7.2): `RECORD_BARRED` and `ONCE_ON_RIVAL_GROUND`, before the key and in the
+ * transaction. Review 4 (tech design §3.2, ADR 0076): a place the character cannot open (a locked
+ * quarter's, or a later edition's) is refused whatever the client sends: `ACTION_LOCKED` with
+ * `lock: 'QUARTER'` and the Level, or `'EDITION'`.
+ */
 function slice5Refusal(
   content: GameContent,
   c: CharacterDoc,
@@ -211,6 +217,15 @@ function slice5Refusal(
   now: number,
 ): GameError | null {
   const { location, city } = located;
+  const open = placeOpenFor(content, c, location);
+  if (!open.open && open.lock) {
+    return new GameError(
+      'ACTION_LOCKED',
+      // `reason` is the error's own key in `error.data.game`, so the lock travels as `lock` (as
+      // MISSION_LOCKED's does).
+      open.lock.kind === 'level' ? { lock: 'QUARTER', need: open.lock.level } : { lock: 'EDITION', need: 0 },
+    );
+  }
   // Design §7.3 (T12's ticket rule): every ticket at a barred place, training included.
   if (
     barredByRecord(recordLevelOf(c, dayKey(now)), {

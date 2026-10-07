@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { signUp } from './helpers';
+import { mapAtRest, signUp } from './helpers';
 
 /**
  * Slice 4's capital (tech design §15.1 `capital.spec.ts`), on a phone and on the shared test clock
@@ -57,7 +57,7 @@ test('the capital: register in Eastside → vote across three parties → the co
   await expect(registered.getByTestId('political-iron')).toContainText('−500 Iron');
   await registered.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByTestId('district-kicker').filter({ visible: true })).toHaveText(/you live here/i);
-  await expect(page.getByTestId('election-line1').filter({ visible: true }).first()).toHaveText('Registered in Eastside');
+  await expect(page.getByTestId('election-line1').filter({ visible: true }).first()).toHaveText('You live in Eastside');
 
   // 3. The district's polls open: Vote now, names of three parties, one tap.
   await advanceTo(page, 2);
@@ -108,4 +108,39 @@ test('the capital: register in Eastside → vote across three parties → the co
   await expect(issues.getByTestId('issues-new')).toHaveText('New this week');
   expect(await issues.getByTestId('issue-row').count()).toBeGreaterThanOrEqual(2);
   await noSideScroll(page);
+});
+
+// Review 4 (answers §8.3, ADR 0076): inside a district the drag reaches its outline's bounding box;
+// Station & Market runs to the picture's bottom-left corner, so (0.02, 0.98) can be brought on screen.
+test("a district's drag reaches its whole outline: Station & Market's far corner", async ({ page }) => {
+  test.setTimeout(120_000);
+  await signUp(page, 'Corner Walker');
+  expect((await page.request.post('/api/test/character', { data: { level: 10, cityId: 'irongate' } })).ok()).toBe(true);
+  await page.goto('/city/irongate/irongate.station-market');
+  await mapAtRest(page);
+  const map = page.getByTestId('city-map');
+  const box = (await map.boundingBox())!;
+  // Drag right and up from the map's middle, several times (each stops at the limit).
+  for (let i = 0; i < 6; i++) {
+    const sx = box.x + box.width / 2;
+    const sy = box.y + box.height / 2;
+    await page.mouse.move(sx, sy);
+    await page.mouse.down();
+    await page.mouse.move(sx + 80, sy - 80, { steps: 4 });
+    await page.mouse.move(sx + 160, sy - 160, { steps: 4 });
+    await page.mouse.up();
+    await page.waitForTimeout(60);
+  }
+  const layer = (await page.getByTestId('map-layer').boundingBox())!;
+  const corner = { x: layer.x + 0.02 * layer.width, y: layer.y + 0.98 * layer.height };
+  const bottomBand = await page
+    .locator('[data-map-overlay=bottom]')
+    .evaluate((e) => e.getBoundingClientRect().top)
+    .catch(() => box.y + box.height);
+  expect(corner.x).toBeGreaterThanOrEqual(box.x);
+  expect(corner.x).toBeLessThanOrEqual(box.x + box.width);
+  expect(corner.y).toBeGreaterThanOrEqual(box.y);
+  expect(corner.y).toBeLessThanOrEqual(Math.min(box.y + box.height, bottomBand) + 1);
+  // The picture's edge never shows: its left edge at most at the map's.
+  expect(layer.x).toBeLessThanOrEqual(box.x + 1);
 });

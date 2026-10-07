@@ -28,13 +28,15 @@ function surveyMismatches(cities: ContentInput['cities'], survey: MapPinsType): 
 }
 
 describe('the survey of the art (pins.json)', () => {
-  it('validates: 89 places over the five cities, and the five cities on the nation', () => {
+  it('validates: 92 places over the five cities, and the five cities on the nation', () => {
     const parsed = MapPins.parse(mapPins);
+    // Review 4 (answers §11.1): Coalport's and Duskwall's Town Halls and Irongate's City Hall are new
+    // pins (Ashford's was surveyed).
     expect(Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, v.pins.length]))).toEqual({
-      coalport: 15,
-      duskwall: 15,
+      coalport: 16,
+      duskwall: 16,
       ashford: 17,
-      irongate: 29,
+      irongate: 30,
       clearwater: 13,
       nation: 5,
     });
@@ -104,48 +106,48 @@ describe('the survey of the art (pins.json)', () => {
   });
 });
 
-describe('quarters are frames (§2)', () => {
-  it('each home city has its first quarter, framed on its pins + 0.06', () => {
+describe("quarters (§2; review 4, ADR 0076: frames are the capital's only)", () => {
+  it("a home city is one map: its quarters have no frame, outline or label; the capital's districts have all three", () => {
     const content = loadContent();
-    // Slice 4: the capital's quarters are its five districts (slice4.irongate.test.ts).
-    // Slice 5 adds the second and third quarters (slice5.cities.test.ts); the first are unchanged.
     expect(
-      content.cities
-        .filter((c) => c.role === 'home')
-        .map((c) => c.quarters.slice(0, 1).map((q) => ({ id: q.id, name: q.name, frame: q.frame }))),
+      content.cities.filter((c) => c.role === 'home').map((c) => c.quarters.slice(0, 1).map((q) => ({ id: q.id, name: q.name }))),
     ).toEqual([
-      [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
-      [{ id: 'duskwall.fortress', name: 'The Fortress', frame: { x0: 0.07, y0: 0.06, x1: 0.65, y1: 0.91 } }],
-      [{ id: 'ashford.college', name: 'The College', frame: { x0: 0.24, y0: 0.19, x1: 0.76, y1: 0.68 } }],
+      [{ id: 'coalport.mill', name: 'The Mill' }],
+      [{ id: 'duskwall.fortress', name: 'The Fortress' }],
+      [{ id: 'ashford.college', name: 'The College' }],
     ]);
-    // The frame is the pins' box grown by 0.06 on every side, clamped to the picture (the capital's
-    // five district frames are the design's, slice4.irongate.test.ts).
+    for (const c of content.cities) {
+      const districted = content.isDistricted(c.id);
+      for (const q of c.quarters) {
+        expect(q.frame !== undefined, q.id).toBe(districted);
+        expect(q.outline !== undefined, q.id).toBe(districted);
+        expect(q.label !== undefined, q.id).toBe(districted);
+      }
+    }
+    // Each home city's first quarter: its six places, then (review 4, appended last) its Town Hall,
+    // except Ashford's, painted in Station Road.
     for (const c of content.cities.filter((x) => x.role === 'home')) {
-      // Slice 5: each quarter frames its own pins (the second quarters' frames are design §2.2's).
-      const first = c.locations.filter((l) => l.quarterId === c.quarters[0]!.id);
-      expect(first).toHaveLength(6);
-      const xs = first.map((l) => l.map.x);
-      const ys = first.map((l) => l.map.y);
-      const r = (v: number) => Math.round(v * 100) / 100;
-      expect(c.quarters[0]!.frame).toEqual({
-        x0: r(Math.max(0, Math.min(...xs) - 0.06)),
-        y0: r(Math.max(0, Math.min(...ys) - 0.06)),
-        x1: r(Math.min(1, Math.max(...xs) + 0.06)),
-        y1: r(Math.min(1, Math.max(...ys) + 0.06)),
-      });
-      for (const l of c.locations.slice(6)) expect(l.quarterId).toBe(c.quarters[1]!.id);
+      const first = c.locations.filter((l) => l.quarterId === c.quarters[0]!.id && l.kind !== 'town-hall');
+      expect(first, c.id).toHaveLength(6);
+      expect(c.locations.at(-1)!.kind, c.id).toBe('town-hall');
     }
   });
 
-  it('rejects a pin outside its frame, or within 0.02 of its edge', () => {
+  it('refuses a frame, an outline or a label on a home quarter', () => {
     const c = clone();
-    city(c, 'coalport').quarters[0]!.frame = { x0: 0.39, y0: 0.02, x1: 0.81, y1: 0.62 };
-    expect(() => parseContent(c)).toThrow(
-      /coalport.market-row": its pin \(0.4, 0.44\) is not 0.02 inside coalport.mill's frame/,
-    );
+    city(c, 'coalport').quarters[0]!.frame = { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 };
+    expect(() => parseContent(c)).toThrow(/coalport.mill: only the capital's districts have frame/);
     const d = clone();
-    city(d, 'ashford').locations[5]!.map = { x: 0.9, y: 0.62 };
-    expect(() => parseContent(d)).toThrow(/ashford.weavers-row": its pin \(0.9, 0.62\) is not/);
+    city(d, 'duskwall').quarters[1]!.label = { x: 0.86, y: 0.25 };
+    expect(() => parseContent(d)).toThrow(/duskwall.pass: only the capital's districts have label/);
+  });
+
+  it("rejects a capital pin outside its district's frame, or within 0.02 of its edge", () => {
+    const c = clone();
+    city(c, 'irongate').quarters[0]!.frame = { x0: 0.47, y0: 0.18, x1: 0.72, y1: 0.43 };
+    expect(() => parseContent(c)).toThrow(
+      /irongate.ministries": its pin \(0.46, 0.24\) is not 0.02 inside irongate.government-quarter's frame/,
+    );
   });
 
   it('rejects an unknown quarter, a quarter of another city, and an empty frame', () => {
@@ -156,7 +158,7 @@ describe('quarters are frames (§2)', () => {
     city(d, 'coalport').locations[0]!.quarterId = 'duskwall.fortress';
     expect(() => parseContent(d)).toThrow(/quarterId "duskwall.fortress" is not a quarter of coalport/);
     const e = clone();
-    city(e, 'duskwall').quarters[0]!.frame = { x0: 0.65, y0: 0.06, x1: 0.07, y1: 0.91 };
+    city(e, 'irongate').quarters[0]!.frame = { x0: 0.72, y0: 0.18, x1: 0.4, y1: 0.43 };
     expect(() => parseContent(e)).toThrow(/x0 < x1 and y0 < y1/);
     const f = clone();
     city(f, 'duskwall').quarters = [];

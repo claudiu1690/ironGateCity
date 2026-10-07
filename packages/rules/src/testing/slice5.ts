@@ -5,6 +5,7 @@ import type {
   HeldView,
   MissionView,
   PoliticalResult,
+  LockedPinView,
   QuarterView,
   RunInPending,
 } from '../types';
@@ -392,57 +393,46 @@ export const deportedResultFixture: PoliticalResult = {
   view: { kind: 'held', landing: { journey: true } },
 };
 
-/** Coalport's three quarters at Level 5: the Mill open, the Harbour at Level 6, the Sidings later. */
+/**
+ * Coalport's three quarters at Level 5 (review 4, ADR 0076: a home quarter is a group of places with a
+ * Level gate, no shape): the Mill open, the Harbour at Level 6, the Sidings later.
+ */
 export const quarterFixtures: QuarterView[] = [
   {
     id: 'coalport.mill',
     name: 'The Mill',
-    frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 },
-    outline: [
-      [0.4, 0.05],
-      [0.8, 0.05],
-      [0.8, 0.55],
-      [0.4, 0.55],
-    ],
-    label: { x: 0.55, y: 0.35 },
     open: true,
     lock: null,
     blurb: 'The mill and the men who work it.',
-    teaser: null,
-    places: 6,
+    places: 7,
   },
   {
     id: 'coalport.harbour',
     name: 'The Harbour',
-    frame: { x0: 0.11, y0: 0.4, x1: 0.99, y1: 0.89 },
-    outline: [
-      [0.5, 0.56],
-      [0.95, 0.56],
-      [0.95, 0.88],
-      [0.5, 0.88],
-    ],
-    label: { x: 0.7, y: 0.66 },
     open: false,
     lock: { kind: 'level', level: 6 },
     blurb: 'Where the basin opens to the sea: the slipway, the customs house, the infirmary, the police.',
-    teaser: 'The slipway, the customs house, and the far bank across the water.',
     places: 5,
   },
   {
     id: 'coalport.sidings',
     name: 'The Sidings',
-    frame: { x0: 0.18, y0: 0.21, x1: 0.52, y1: 0.9 },
-    outline: [
-      [0.2, 0.56],
-      [0.49, 0.56],
-      [0.49, 0.88],
-      [0.2, 0.88],
-    ],
-    label: { x: 0.38, y: 0.62 },
     open: false,
     lock: { kind: 'edition' },
     blurb: 'The way in and out of town.',
-    teaser: 'The station, the coal yards and the tram sheds.',
     places: 0,
   },
+];
+
+/** Review 4 (ADR 0076): Coalport's greyed pins at Level 5: the Harbour's five, then the Sidings' four. */
+export const lockedPinFixtures: LockedPinView[] = [
+  { id: 'coalport.shipyard', name: 'The Shipyard', quarterId: 'coalport.harbour', map: { x: 0.86, y: 0.46 }, lock: { kind: 'level', level: 6 } },
+  { id: 'coalport.customs-house', name: 'Customs House', quarterId: 'coalport.harbour', map: { x: 0.66, y: 0.66 }, lock: { kind: 'level', level: 6 } },
+  { id: 'coalport.infirmary', name: 'The Infirmary', quarterId: 'coalport.harbour', map: { x: 0.17, y: 0.5 }, lock: { kind: 'level', level: 6 } },
+  { id: 'coalport.harbour-police', name: 'Harbour Police', quarterId: 'coalport.harbour', map: { x: 0.56, y: 0.83 }, lock: { kind: 'level', level: 6 } },
+  { id: 'coalport.far-bank', name: 'The Far Bank', quarterId: 'coalport.harbour', map: { x: 0.93, y: 0.62 }, lock: { kind: 'level', level: 6 } },
+  { id: 'coalport.station', name: 'Coalport Station', quarterId: 'coalport.sidings', map: { x: 0.46, y: 0.62 }, lock: { kind: 'edition' } },
+  { id: 'coalport.coal-yards', name: 'Coal Yards', quarterId: 'coalport.sidings', map: { x: 0.44, y: 0.84 }, lock: { kind: 'edition' } },
+  { id: 'coalport.tram-depot', name: 'Tram Depot', quarterId: 'coalport.sidings', map: { x: 0.29, y: 0.59 }, lock: { kind: 'edition' } },
+  { id: 'coalport.st-barbaras', name: "St Barbara's", quarterId: 'coalport.sidings', map: { x: 0.24, y: 0.27 }, lock: { kind: 'edition' } },
 ];

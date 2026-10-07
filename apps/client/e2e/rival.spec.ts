@@ -48,14 +48,16 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   expect((await page.request.post('/api/test/journey', { data: { arriveNow: true } })).ok()).toBe(true);
   await page.reload();
 
-  // 3. The arrival: *Duskwall · The Fortress · rival ground* and the warning. Continue.
+  // 3. The arrival: *Duskwall · rival ground* (review 4: one map, no quarter) and the warning. Continue.
   const arrival = page.getByRole('dialog').filter({ has: page.getByTestId('arrival-continue') });
-  await expect(arrival).toContainText('Duskwall · The Fortress · rival ground');
+  await expect(arrival).toContainText('Duskwall · rival ground');
   await expect(arrival.getByTestId('arrival-rival')).toHaveText(
     'Rival ground: Heat doubles here, every tap can bring a run-in, and nothing you own is at risk.',
   );
   await arrival.getByTestId('arrival-continue').click();
-  await expect(page).toHaveURL(/\/city\/duskwall/);
+  // Review 4 (answers §21.3): the train lands on the Town Hall's pin, its sheet open; close it.
+  await expect(page).toHaveURL(/\/city\/duskwall\?loc=duskwall\.town-hall/);
+  await page.getByRole('dialog').getByRole('button', { name: /^Close/ }).click();
   await mapAtRest(page);
 
   // 4. The plate, a ticket with only *Once* and the rival tag, the orders line.

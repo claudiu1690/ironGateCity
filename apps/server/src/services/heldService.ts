@@ -59,7 +59,7 @@ import { arrestsOf, barsLive, healthDoc, healthTimerOf, heatDoc, heatRateOn, hea
 import { legMinutesBetween } from './travelService';
 import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import { pickArt } from './art';
-import { assetView, energyState, fromOrdersState, toCharacterView, toOrdersState, wornStats } from './views';
+import { assetView, energyState, landingAt, fromOrdersState, toCharacterView, toOrdersState, wornStats } from './views';
 
 /**
  * Slice 5 (ADR 0033, tech design §8.2): the cells and the infirmary. A stay is written inside the
@@ -261,13 +261,7 @@ export async function releaseInTx(
 
   // Design §11.5: from the cells on rival ground, the train home and a day's bar.
   let deport: { journeyId: string; arrivesAt: number } | null = null;
-  let landing: Landing | { journey: true } | null = {
-    cityId: h.cityId,
-    ...(content.location(h.locationId)?.location.quarterId
-      ? { quarterId: content.location(h.locationId)!.location.quarterId }
-      : {}),
-    locationId: h.locationId,
-  };
+  let landing: Landing | { journey: true } | null = landingAt(content, h.cityId, h.locationId);
   let barredUntil: number | null = null;
   if (h.kind === 'cells' && h.rivalGround) {
     const home = residenceCityId(c);
@@ -669,10 +663,9 @@ export async function closeHeld(deps: {
     );
   });
   const fresh = (await Character.findById(loaded.doc._id).lean<CharacterDoc>()) ?? loaded.doc;
-  const place = content.location(stay.locationId)?.location;
   const landing: Landing | { journey: true } = stay.deportJourneyId
     ? { journey: true }
-    : { cityId: stay.cityId, ...(place?.quarterId ? { quarterId: place.quarterId } : {}), locationId: stay.locationId };
+    : landingAt(content, stay.cityId, stay.locationId);
   return { landing, character: toCharacterView(fresh, now, content, loaded.editionReadAt, { city: loaded.city }) };
 }
 

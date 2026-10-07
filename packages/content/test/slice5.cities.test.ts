@@ -37,37 +37,21 @@ const STATS: Record<string, string[]> = {
 };
 
 describe('the quarters (design §2.1–§2.2, §23.4, ADR 0035)', () => {
-  it('three quarters per home city: open, Level 6, a later edition; the new frames equal §2.2', () => {
-    const table = section('### 2.2 Frames', '**Crowding check**')
-      .split('\n')
-      .filter((l) => l.startsWith('| **'));
-    expect(table).toHaveLength(6);
-    for (const row of table) {
-      const [name, , frame] = cells(row);
-      const id = /\(`([a-z.-]+)`\)/.exec(name!)![1]!;
-      const q = content.quartersOf(id.split('.')[0]!).find((x) => x.id === id)!;
-      expect(q, id).toBeDefined();
-      expect(q.name, id).toBe(/· ([^*]+)\*\*/.exec(name!)![1]!.trim());
-      const [x0, y0, x1, y1] = frame!.replace(/\*/g, '').split(',').map(Number);
-      expect(q.frame, id).toEqual({ x0, y0, x1, y1 });
-    }
+  it('three quarters per home city: open, Level 6, a later edition (review 4, ADR 0076: no shapes)', () => {
     for (const c of HOME) {
       expect(city(c).quarters.map((q) => q.opens ?? { level: 1 })).toEqual([
         { level: 1 },
         { level: 6 },
         { edition: 'later' },
       ]);
+      for (const q of city(c).quarters) {
+        expect([q.frame, q.outline, q.label, q.district], q.id).toEqual([undefined, undefined, undefined, undefined]);
+        expect('teaser' in q, q.id).toBe(false);
+      }
     }
   });
 
-  it('the teasers (§2.3) and the blurbs (§23.4, city-quarters.md §2)', () => {
-    const teasers = /\*\*Teaser lines\*\* for the locked plates: (.+)/.exec(section('### 2.3', '### 2.4'))![1]!;
-    for (const c of HOME) {
-      for (const q of city(c).quarters.slice(1)) {
-        const lock = q.opens && 'edition' in q.opens ? 'Opens with a later edition' : 'Opens at Level 6';
-        expect(teasers, q.id).toContain(`*${lock} · ${q.teaser}*`);
-      }
-    }
+  it('the blurbs (§23.4, city-quarters.md §2)', () => {
     const blurbs = section('### 23.4', '### 23.5');
     for (const id of ['duskwall.pass', 'duskwall.town', 'ashford.wharf', 'ashford.station-road']) {
       const q = content.quartersOf(id.split('.')[0]!).find((x) => x.id === id)!;
@@ -78,25 +62,47 @@ describe('the quarters (design §2.1–§2.2, §23.4, ADR 0035)', () => {
     for (const c of content.cities) for (const q of c.quarters) if (q.blurb) expect(q.blurb.length, q.id).toBeLessThanOrEqual(200);
   });
 
-  it('every pin (the survey too) inside its own outline; no two outlines overlap; labels inside and 0.25 apart', () => {
-    for (const c of HOME) {
-      const qs = city(c).quarters;
-      for (const pin of mapPins[c]!.pins) expect(inPolygon(pin, qs[pin.quarter - 1]!.outline!), pin.id).toBe(true);
-      for (const l of city(c).locations) expect(inPolygon(l.map, qs.find((q) => q.id === l.quarterId)!.outline!), l.id).toBe(true);
-      for (let a = 0; a < 3; a++)
-        for (let b = a + 1; b < 3; b++) {
-          expect(outlinesOverlap(qs[a]!.outline!, qs[b]!.outline!), `${qs[a]!.id}/${qs[b]!.id}`).toBe(false);
-          const [la, lb] = [qs[a]!.label!, qs[b]!.label!];
-          expect(Math.hypot(la.x - lb.x, la.y - lb.y), `${qs[a]!.id}/${qs[b]!.id}`).toBeGreaterThanOrEqual(LABEL_MIN_DISTANCE);
-        }
-      for (const q of qs) expect(inPolygon(q.label!, q.outline!), q.id).toBe(true);
-    }
-    // Screens §10's hearts for Coalport.
-    expect(city('coalport').quarters.map((q) => q.label)).toEqual([
-      { x: 0.55, y: 0.35 },
-      { x: 0.7, y: 0.66 },
-      { x: 0.38, y: 0.62 },
+  it('the later places (review 4, ADR 0076): every survey pin with no place, in its painted quarter', () => {
+    const later = (c: string) => content.laterPins(c).map((p) => [p.id, p.quarterId]);
+    expect(later('coalport')).toEqual([
+      ['coalport.station', 'coalport.sidings'],
+      ['coalport.coal-yards', 'coalport.sidings'],
+      ['coalport.tram-depot', 'coalport.sidings'],
+      ['coalport.st-barbaras', 'coalport.sidings'],
     ]);
+    expect(later('duskwall').map(([id]) => id)).toEqual([
+      'duskwall.station',
+      'duskwall.town-square',
+      'duskwall.signal-lamp',
+      'duskwall.brewery',
+    ]);
+    // Ashford's Station Road less its Town Hall, which is a place (open at Level 1).
+    expect(later('ashford').map(([id]) => id)).toEqual([
+      'ashford.station',
+      'ashford.corn-exchange',
+      'ashford.theatre',
+      'ashford.park',
+      'ashford.press-club',
+    ]);
+    expect(content.laterPins('irongate')).toEqual([]);
+    for (const c of HOME)
+      for (const p of content.laterPins(c)) {
+        const pin = mapPins[c]!.pins.find((x) => x.id === p.id)!;
+        expect(p.map, p.id).toEqual({ x: pin.x, y: pin.y });
+      }
+  });
+
+  it("the capital's districts tile the picture: pins, anchors and labels strictly inside; labels 0.25 apart", () => {
+    const qs = city('irongate').quarters;
+    for (const l of city('irongate').locations)
+      expect(inPolygon(l.map, qs.find((q) => q.id === l.quarterId)!.outline!, true), l.id).toBe(true);
+    for (let a = 0; a < qs.length; a++)
+      for (let b = a + 1; b < qs.length; b++) {
+        expect(outlinesOverlap(qs[a]!.outline!, qs[b]!.outline!), `${qs[a]!.id}/${qs[b]!.id}`).toBe(false);
+        const [la, lb] = [qs[a]!.label!, qs[b]!.label!];
+        expect(Math.hypot(la.x - lb.x, la.y - lb.y), `${qs[a]!.id}/${qs[b]!.id}`).toBeGreaterThanOrEqual(LABEL_MIN_DISTANCE);
+      }
+    for (const q of qs) expect(inPolygon(q.label!, q.outline!, true), q.id).toBe(true);
   });
 
   it("the capital's districts keep their outlines, now on the quarter, labelled at their anchors", () => {

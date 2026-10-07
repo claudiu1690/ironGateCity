@@ -17,7 +17,7 @@ test('paper → map → ×3 canvass → modal → Today strip → reload lands o
   await expect(page.getByTestId('desk')).toContainText('150 XP to Level 2');
 
   await toTheCity(page);
-  await expect(page.getByTestId('hotspot')).toHaveCount(6);
+  await expect(page.getByTestId('hotspot')).toHaveCount(7); // review 4: the six and the Town Hall
   const sheet = await openLocation(page, '1. Mill Gate');
   const ticket = sheet.getByTestId('ticket-coalport.mill-gate.canvass');
   await expect(ticket.getByTestId('ticket-chance')).toHaveText('Good odds'); // review 2: a word

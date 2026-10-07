@@ -75,7 +75,7 @@ import {
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
-import { assetView, toCharacterView, toOrdersState, wornStats } from './views';
+import { assetView, landingAt, toCharacterView, toOrdersState, wornStats } from './views';
 
 /**
  * Slice 5 (ADR 0032, tech design §8.2): run-ins. A run-in is an `encounters` document (pending →
@@ -465,11 +465,7 @@ async function resolveTier1InTx(
       placeName: stay.placeName,
       until: spec.until,
       bail: spec.bail?.total ?? null,
-      landing: {
-        cityId: ctx.city.id,
-        ...(place.location.quarterId ? { quarterId: place.location.quarterId } : {}),
-        locationId: place.location.id,
-      },
+      landing: landingAt(content, ctx.city.id, place.location.id),
     };
   }
   const spec = content.opponent(enc.opponent.id)!;

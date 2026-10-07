@@ -41,7 +41,9 @@ const S44 = section(DESIGN, '### 4.4 ', '### 4.5 ');
 const S45 = section(DESIGN, '### 4.5 ', '### 4.6 ');
 const S46 = section(DESIGN, '### 4.6 ', '## 5. Moving within Irongate');
 
-const actions: Action[] = irongate.locations.flatMap((l) => l.actions);
+/** The design's 29 places; review 4's City Hall (ADR 0077, the 30th) is in review4.hall.test.ts. */
+const places = irongate.locations.filter((l) => l.kind !== 'town-hall');
+const actions: Action[] = places.flatMap((l) => l.actions);
 
 describe('Irongate, the city (design §4)', () => {
   it('parses against the City schema', () => {
@@ -61,7 +63,8 @@ describe('Irongate, the city (design §4)', () => {
         strapline: 'All the republic, every morning',
         price: '6 marks',
       },
-      council: { offset: 0, seats: 10, hall: { name: 'City Hall', ref: 'the City Hall', x: 0.57, y: 0.345 } },
+      // Review 4 (ADR 0077): the hall is a place, read from its pin (0.57, 0.345).
+      council: { offset: 0, seats: 10, hall: { locationId: 'irongate.city-hall' } },
     });
     expect(irongate.homeFactionId).toBeUndefined();
     // The design's own words for the hall.
@@ -136,7 +139,7 @@ describe('the five districts (§4.1, §4.2; screens §5.1)', () => {
     for (const l of irongate.locations) {
       const q = irongate.quarters.find((d) => d.id === l.quarterId);
       expect(q, l.id).toBeDefined();
-      const f = q!.frame;
+      const f = q!.frame!;
       const inset = Math.min(l.map.x - f.x0, f.x1 - l.map.x, l.map.y - f.y0, f.y1 - l.map.y);
       expect(inset, l.id).toBeGreaterThanOrEqual(0.02 - 1e-9);
     }
@@ -155,10 +158,11 @@ describe('the 29 locations (§4.3)', () => {
 
   it('are the design table word for word, in pin order', () => {
     expect(table).toHaveLength(29);
-    expect(irongate.locations).toHaveLength(29);
+    expect(places).toHaveLength(29);
+    expect(irongate.locations).toHaveLength(30);
     const districtId = (name: string) => irongate.quarters.find((q) => q.name === name)?.id;
     expect(
-      irongate.locations.map((l, i) => [
+      places.map((l, i) => [
         i + 1,
         l.id,
         l.name,

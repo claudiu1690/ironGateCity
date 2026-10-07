@@ -1,8 +1,10 @@
 import { dayKey } from '@irongate/rules';
+import { Types } from 'mongoose';
 import { z } from 'zod';
 import { councilVote, declare, endorse, propose, vote, withdraw } from '../../services/councilService';
 import { loadCharacter } from '../../services/dayService';
 import { councilView, electionView, getCapitalCount, getCount } from '../../services/politicsService';
+import { markWhatNowSeen, townHallView } from '../../services/townHallService';
 import { protectedProcedure, router } from '../trpc';
 
 /**
@@ -58,6 +60,25 @@ export const councilRouter = router({
     const { doc, city } = await loadCharacter(ctx.user, ctx.content, now);
     return councilView(ctx.content, doc, city, dayKey(now));
   }),
+
+  /**
+   * Review 4 (ADR 0077): the Town Hall's sheet for any city with a council: the council's public face,
+   * and the desk for a councillor of that council.
+   */
+  hall: protectedProcedure.input(z.object({ cityId: z.string().min(1) })).query(async ({ ctx, input }) => {
+    const now = ctx.now();
+    const { doc } = await loadCharacter(ctx.user, ctx.content, now);
+    return townHallView(ctx.content, doc, input.cityId, now);
+  }),
+
+  /** Review 4 (answers §10.1): *What now* was shown; a conditional write, idempotent with no key. */
+  whatNowSeen: protectedProcedure
+    .input(z.object({ termId: z.string().regex(/^[0-9a-f]{24}$/) }))
+    .mutation(async ({ ctx, input }) => {
+      const now = ctx.now();
+      const { doc } = await loadCharacter(ctx.user, ctx.content, now);
+      return markWhatNowSeen(doc, new Types.ObjectId(input.termId), now);
+    }),
 
   declare: protectedProcedure
     .input(z.object({ platformId: z.string().min(1), idempotencyKey: z.uuid() }))

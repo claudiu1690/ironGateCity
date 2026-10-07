@@ -40,6 +40,7 @@ import { modifiersFor, restedCapToday } from './modifiers';
 import { residenceCityId, residenceCtx } from './residence';
 import { flagsToday, heatRateOn, heatTimerOf, recordLevelOf } from './risk';
 import {
+  placeOpenFor,
   energyState,
   firstDayBonuses,
   preferredStat,
@@ -180,7 +181,8 @@ export function missionCtx(
     modifiers: m,
     rivalGround,
     target,
-    offered: offeredTo(target, c.factionId),
+    // Review 4 (ADR 0076): and only at a place the character can open.
+    offered: offeredTo(target, c.factionId) && placeOpenFor(content, c, location).open,
     gate,
     energy: actionEnergy(mission.energy, seenAs, m),
     values: wornStats(c, content),

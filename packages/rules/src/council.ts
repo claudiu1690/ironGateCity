@@ -247,3 +247,31 @@ export function stipendBoundaries(
   }
   return n;
 }
+
+/**
+ * Review 4 (answers §10.2, ADR 0077): the councillor desk's *Next* line, by cycle day. Days 0–1
+ * (voting): the vote's moment, or the vote cast; days 2–4: the rule that runs and when names go in
+ * again, or that the council couldn't agree.
+ */
+export type DeskNext =
+  | { kind: 'votes'; at: number }
+  | { kind: 'voted'; ordinance: string }
+  | { kind: 'runs'; ordinance: string; untilDay: DayKey; nominationsFromDay: DayKey }
+  | { kind: 'rose'; nominationsFromDay: DayKey };
+
+export function deskNext(i: {
+  cycleDay: 0 | 1 | 2 | 3 | 4;
+  voting: boolean;
+  divideAt: number;
+  /** The name of the item the councillor voted for, else null. */
+  voted: string | null;
+  passed: { name: string; untilDay: DayKey } | null;
+  nominationsFromDay: DayKey;
+}): DeskNext {
+  if (i.voting && i.cycleDay <= 1) {
+    return i.voted ? { kind: 'voted', ordinance: i.voted } : { kind: 'votes', at: i.divideAt };
+  }
+  return i.passed
+    ? { kind: 'runs', ordinance: i.passed.name, untilDay: i.passed.untilDay, nominationsFromDay: i.nominationsFromDay }
+    : { kind: 'rose', nominationsFromDay: i.nominationsFromDay };
+}

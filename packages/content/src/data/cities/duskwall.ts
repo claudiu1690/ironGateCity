@@ -1,5 +1,6 @@
 import type { City } from '../../schemas';
 import { withMissions } from '../missions/attach';
+import { townHall } from './townHall';
 import { duskwallMissions } from '../missions/duskwall';
 
 /**
@@ -27,38 +28,27 @@ export const duskwall: City = {
   map: { day: 'map.duskwall.day', night: 'map.duskwall.night' },
   // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
   clouds: true,
-  // Slice 5 (design §2, ADR 0035): three quarters, frames on the one picture; the second opens at
-  // Level 6, the third is a teaser (a later edition). Outlines and labels drawn for the overview:
-  // every pin (the survey's too) inside its own outline, no two overlapping, labels 0.25 apart.
+  // Slice 5 (design §2), review 4 (ADR 0076): three quarters, the Level gates of groups of places
+  // (Level 1, Level 6, a later edition), read on the Places list. A home city is one map: no frames,
+  // outlines or labels (the capital's only).
   quarters: [
     {
       id: 'duskwall.fortress',
       name: 'The Fortress',
-      frame: { x0: 0.07, y0: 0.06, x1: 0.65, y1: 0.91 },
-      outline: [[0.16, 0.0], [0.68, 0.0], [0.68, 0.2], [0.72, 0.3], [0.74, 0.55], [0.8, 0.76], [0.8, 0.97], [0.05, 0.97], [0.05, 0.82], [0.55, 0.82], [0.55, 0.58], [0.16, 0.58]],
-      label: { x: 0.42, y: 0.25 },
     },
     {
       id: 'duskwall.pass',
       name: 'The Pass',
-      frame: { x0: 0.7, y0: 0, x1: 0.94, y1: 0.74 },
       opens: { level: 6 },
       blurb:
         "The road up to the frontier: the checkpoint's barrier under the peaks, the lock-up beside it, the last inn before the pass, the infirmary under the spire and the sawmill on the river bend below.",
-      teaser: 'The road up to the frontier: the checkpoint, the inn and the sawmill.',
-      outline: [[0.68, 0.0], [1, 0.0], [1, 0.76], [0.8, 0.76], [0.74, 0.55], [0.72, 0.3], [0.68, 0.2]],
-      label: { x: 0.86, y: 0.25 },
     },
     {
       id: 'duskwall.town',
       name: 'The Town',
-      frame: { x0: 0.04, y0: 0.12, x1: 0.54, y1: 0.79 },
       opens: { edition: 'later' },
       blurb:
         "The town below the fortress, west of the market: the brewery's chimneys, the Signal Lamp, the station under its glass roof, and the square with the domed church where the town meets on Sundays.",
-      teaser: 'The station, the square and the brewery.',
-      outline: [[0.0, 0.05], [0.16, 0.05], [0.16, 0.58], [0.55, 0.58], [0.55, 0.82], [0.0, 0.82]],
-      label: { x: 0.3, y: 0.7 },
     },
   ],
   paper: {
@@ -69,8 +59,8 @@ export const duskwall: City = {
   },
   // Slice 3 (GDD §2): the council cycle's offset (Irongate 0, Ashford 1, Coalport 2, Duskwall 3, Clearwater 4).
   // Review 3: the council sits in the tower hall on the Customs Market, below the fortress (no survey
-  // pin; measured on the painting). The election screens' backdrop.
-  council: { offset: 3, seats: 7, hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.555, y: 0.55 } },
+  // pin; measured on the painting). The election screens' backdrop; review 4: the hall is a location.
+  council: { offset: 3, seats: 7, hall: { locationId: 'duskwall.town-hall' } },
   locations: withMissions([
     {
       id: 'duskwall.garrison-gate',
@@ -619,6 +609,17 @@ export const duskwall: City = {
         },
       ],
     },
+    // Review 4 (answers §11.1, ADR 0077): the council's hall, a place open at every Level; appended
+    // last so no pin renumbers (answers §29 Q10). Its pin is the survey's.
+    townHall({
+      id: 'duskwall.town-hall',
+      name: 'Town Hall',
+      ref: 'the Town Hall',
+      blurb:
+        'A spire over a clock over a long cold façade on the Customs Market. The council sits under the flags of the republic; the rule in force hangs in a frame by the door.',
+      map: { x: 0.555, y: 0.55 },
+      quarterId: 'duskwall.fortress',
+    }),
   ], duskwallMissions),
   // Slice 5 (design §8.1, §9.2): where the game sends a player in this city.
   services: { cells: 'duskwall.lock-up', infirmary: 'duskwall.infirmary' },

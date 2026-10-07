@@ -181,36 +181,68 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   await expect(mine).toContainText('your vote');
   await expect(stamp).toBeInViewport();
   await expect(page.getByRole('button', { name: 'To the council' })).toBeInViewport();
+  // Review 4 (answers §10.1): *What now* under the headline, above *To the council*.
+  const whatNow = page.getByTestId('what-now');
+  await expect(whatNow).toContainText('What now · your five days');
+  await expect(whatNow.getByRole('listitem')).toHaveCount(3);
+  await expect(whatNow).toContainText('The rule with four of seven passes and runs for five days.');
   await page.reload();
   await expect(page.getByTestId('front-page').getByTestId('stamp')).not.toHaveClass(/animate-stamp/);
 
-  // 7. The chamber: the seats, the branch's motion; propose Open Doors, vote for it.
-  await page.getByRole('button', { name: 'To the council' }).click();
-  await expect(page).toHaveURL(/\/council$/);
-  await expect(page.getByTestId('council-header')).toContainText('Local seats 6 / 7');
+  // 7. The desk at the Town Hall (review 4, answers §10.2): *What now* once at the hall, the seats as
+  // rows, the branch's motion; propose Open Doors, vote for it, from the hall's sheet.
+  await page.getByRole('button', { name: 'To your desk at the Town Hall' }).click();
+  await expect(page).toHaveURL(/\/city\/coalport\?loc=coalport\.town-hall/);
+  const hall = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Town Hall' }) });
+  await expect(hall.getByTestId('what-now')).toBeVisible();
+  await expect(hall.getByTestId('hall-seat')).toHaveCount(7);
+  await expect(hall.getByTestId('hall-seat').filter({ hasText: 'Mara Lenk' })).toContainText('Player · Organiser');
+  await expect(hall.getByTestId('hall-seat').filter({ hasText: 'Local candidate' })).toHaveCount(6);
+  const desk = hall.getByTestId('hall-desk');
+  await expect(desk.getByTestId('desk-next')).toHaveText(/^Next: the council votes .+\.$/);
   // Review 1: the Collective's branch motion is the Long Service Order (was Shift Hours).
-  await expect(page.getByTestId('order-paper')).toContainText('Long Service Order');
-  await expect(page.getByTestId('order-paper')).toContainText("the party's proposal");
-  await page.getByRole('button', { name: 'Put forward a rule · 20 Political Capital' }).click();
+  await expect(desk.getByTestId('order-paper')).toContainText('Long Service Order');
+  await expect(desk.getByTestId('order-paper')).toContainText("the party's proposal");
+  await desk.getByRole('button', { name: 'Put forward a rule · 20 Political Capital' }).click();
   await page
     .getByTestId('ordinance-menu')
     .getByRole('radio', { name: /Open Doors/ })
     .click();
   await expect(modalOf(page).getByTestId('stamp')).toHaveText('Put forward');
   await modalOf(page).getByRole('button', { name: 'Continue' }).click();
-  await page
+  await desk
     .getByTestId('order-paper')
     .getByRole('radio', { name: /Open Doors/ })
     .click();
-  await page.getByRole('button', { name: 'Vote for Open Doors' }).click();
+  await desk.getByRole('button', { name: 'Vote for Open Doors' }).click();
   await expect(modalOf(page).getByTestId('stamp')).toHaveText('Voted');
   await modalOf(page).getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByTestId('council-voted-line')).toContainText('Vote recorded');
+  await expect(desk.getByTestId('desk-next')).toHaveText(
+    "Your vote is in: Open Doors. The result is in tomorrow's paper.",
+  );
+  // *What now* was shown once: the hall's next visit and `/council` (the same blocks) go without it.
+  await page.goto('/city/coalport?loc=coalport.town-hall');
+  await expect(hall.getByTestId('hall-desk')).toBeVisible();
+  await expect(hall.getByTestId('what-now')).toHaveCount(0);
+  await page.goto('/council');
+  await expect(page.getByTestId('council-header')).toContainText('Local seats 6 / 7');
+  await expect(page.getByTestId('desk-next')).toHaveText(/^Your vote is in: Open Doors\./);
+  await expect(page.getByTestId('what-now')).toHaveCount(0);
 
   // 8. The division: Open Doors in force, and a number changes in play.
   await advanceTo(page, 2);
+  // A phone taller than 700 px shows the plate's rule line (a shorter one folds it away, QA M2).
+  await page.setViewportSize({ width: 412, height: 915 });
   await page.goto('/city/coalport');
-  await expect(page.getByTestId('city-ordinance')).toHaveText('Council rule: Open Doors · 5 days left');
+  // Review 4 (answers §11.3): the plate's line says the effect, and a tap opens the Town Hall.
+  await expect(page.getByTestId('city-ordinance')).toHaveText(
+    'Council rule: Open Doors · talking to voters comes off more often · 5 days left',
+  );
+  await page.getByTestId('city-ordinance').click();
+  await expect(page).toHaveURL(/\?loc=coalport\.town-hall/);
+  await expect(page.getByTestId('hall-rule-name')).toHaveText('Open Doors');
+  await expect(page.getByTestId('hall-rule-line')).toHaveText('Talking to voters comes off more often · 5 days left');
+  await page.goto('/city/coalport');
   await page.goto('/city/coalport?loc=coalport.mill-gate');
   const ticket = page.getByTestId('ticket-coalport.mill-gate.canvass');
   // Review 2: the rule's effect on the odds in words (the server's breakdown still carries +4).

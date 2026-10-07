@@ -257,9 +257,10 @@ describe('every §4.2 check has a failing fixture', () => {
       for (const l of pins) expect(inPolygon(l.map, q.outline!), l.id).toBe(true);
       expect(inPolygon(q.district!.anchor, q.outline!), q.id).toBe(true);
     }
-    // The unassigned band at the bottom of the picture lies outside all five.
+    // Review 4 (answers §8, ADR 0076): the five tile the picture, so the old unassigned band at the
+    // bottom of the picture is in exactly one district now.
     for (const x of [0.1, 0.3, 0.5, 0.7, 0.9])
-      expect(content.districtsOf('irongate').some((q) => inPolygon({ x, y: 0.9 }, q.outline!))).toBe(false);
+      expect(content.districtsOf('irongate').filter((q) => inPolygon({ x, y: 0.9 }, q.outline!, true))).toHaveLength(1);
     fails((c) => {
       // Eastside drawn without the Union House's corner.
       irongate(c).quarters[3]!.outline = [

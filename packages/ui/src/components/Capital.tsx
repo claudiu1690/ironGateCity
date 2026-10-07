@@ -8,7 +8,7 @@ import type {
   FactionId,
   IssueRowView,
   OpinionShares,
-  QuarterView,
+  QuarterLock,
   LodgingsView,
   ResidenceCardView,
   ScoreboardLineView,
@@ -20,7 +20,10 @@ import { Button } from './Button';
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { HelpButton, helpMark } from './Help';
 import { PersonMark } from './Politics';
+import { LockMark } from './LockMark';
 import { BottomSheet } from './Sheets';
+
+export { LockMark };
 
 /**
  * Slice 4's capital components (docs/design/slice-4-screens.md §5–§9): plain props, no tRPC. They word
@@ -289,19 +292,13 @@ export function DistrictsList({ open, onOpenChange, districts, names, onPick, re
 // ---------------------------------------------------------------------------------------------
 
 export interface TramBarProps {
-  /** Slice 5 (screens §3.1): a home city's quarters, a locked one with its lock mark. */
-  districts: Array<{ id: string; name: string; locked?: boolean }>;
+  districts: Array<{ id: string; name: string }>;
   /** The district on show: left out of the bar (the other four are the trams). */
   current: string | null;
   onGo: (id: string) => void;
   className?: string;
   /** QA slice 4 M3: two rows of two in a narrow column (the side panel of a phone held sideways). */
-  columns?: 2 | 3 | 4;
-  /**
-   * Slice 5 (screens §3.1): the quarter bar of a home city: every quarter, the current one inverted;
-   * a locked one's tap opens its teaser (`onLocked`) instead of moving. Absent: the capital's trams.
-   */
-  quarters?: { onLocked: (id: string) => void };
+  columns?: 2 | 4;
 }
 
 /**
@@ -310,44 +307,7 @@ export interface TramBarProps {
  * QA slice 4 M3: a label that does not fit its chip wraps to a second line (*Station & / Market*),
  * never runs into the next; in the side panel the chips are two rows of two.
  */
-export function TramBar({ districts, current, onGo, className, columns = 4, quarters }: TramBarProps) {
-  if (quarters)
-    return (
-      <nav
-        aria-label={copy.risk.quarters.title}
-        className={cx(
-          'grid min-h-11 items-stretch gap-px bg-ink-2',
-          columns === 2 ? 'grid-cols-2' : 'grid-cols-3',
-          className,
-        )}
-        data-testid="quarter-bar"
-      >
-        {districts.map((d) => {
-          const on = d.id === current;
-          return (
-            <button
-              key={d.id}
-              type="button"
-              onClick={() => (d.locked ? quarters.onLocked(d.id) : on ? undefined : onGo(d.id))}
-              aria-current={on ? 'page' : undefined}
-              aria-label={d.locked ? copy.risk.quarterLocked(d.name) : d.name}
-              className={cx(
-                'label-caps flex min-h-11 min-w-0 cursor-pointer items-center justify-center gap-1 px-1.5 py-1 text-center text-[11px] leading-[1.15] break-words',
-                'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper',
-                on ? 'bg-paper text-ink' : 'bg-ink text-paper hover:bg-ink-2',
-                d.locked && 'text-dim',
-              )}
-              data-testid="quarter-chip"
-              data-locked={d.locked || undefined}
-              data-current={on || undefined}
-            >
-              {d.locked && <LockMark />}
-              {d.name}
-            </button>
-          );
-        })}
-      </nav>
-    );
+export function TramBar({ districts, current, onGo, className, columns = 4 }: TramBarProps) {
   return (
     <nav
       aria-label={copy.capital.tram}
@@ -376,41 +336,13 @@ export function TramBar({ districts, current, onGo, className, columns = 4, quar
   );
 }
 
-/** A small padlock, the quarter bar's and the Quarters list's lock mark (screens §3.1). */
-export function LockMark({ className }: { className?: string }) {
-  return (
-    <svg
-      width="10"
-      height="12"
-      viewBox="0 0 10 12"
-      aria-hidden="true"
-      className={cx('shrink-0', className)}
-      data-testid="lock-mark"
-    >
-      <path d="M2.5 5V3.5a2.5 2.5 0 0 1 5 0V5" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="1" y="5" width="8" height="6.5" fill="currentColor" />
-    </svg>
-  );
-}
-
 // ---------------------------------------------------------------------------------------------
-// The quarters of a home city (screens §3.2, §3.3).
+// A home city's locked pins (review 4, answers §21.4, ADR 0076).
 // ---------------------------------------------------------------------------------------------
 
-/** A locked quarter's lock line: *Opens at Level 6* / *Opens with a later edition*. */
-export function quarterLockLine(
-  q: Pick<QuarterView, 'lock' | 'teaser'>,
-  opts: { teaser?: boolean } = {},
-): string | null {
-  if (!q.lock) return null;
-  if (q.lock.kind === 'level') return copy.risk.quarters.opensAt(q.lock.level);
-  // QA fixes §9: the teaser sheet's line is the lock and its teaser (*Opens with a later edition · The
-  // station, …*); the map's pin and the list keep the lock alone.
-  return opts.teaser && q.teaser ? `${copy.risk.quarters.later} · ${q.teaser}` : copy.risk.quarters.later;
-}
-
-export interface QuarterTeaserSheetProps {
-  quarter: QuarterView | null;
+export interface LockedPinSheetProps {
+  /** The greyed pin's place and its quarter (the group's name and blurb). */
+  pin: { name: string; lock: QuarterLock; quarter: { name: string; blurb: string | null } } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** The player's Level, for *Level 6 opens it; you are Level 5.* */
@@ -418,119 +350,40 @@ export interface QuarterTeaserSheetProps {
 }
 
 /**
- * Screens §3.3: a locked quarter's teaser: the kicker (*Quarter · opens at Level 6* / *· a later
- * edition*), the name, the blurb from content and one Courier line; no button but Close.
+ * Answers §21.4: a locked pin's short sheet (no zoom on its tap): the kicker *The Harbour · opens at
+ * Level 6* (or *· a later edition*), the place's name, its quarter's blurb, and *Level 6 opens it; you
+ * are Level {n}.*; no button but Close. A pin a locked place's sheet names is never reachable.
  */
-export function QuarterTeaserSheet({ quarter: q, open, onOpenChange, level }: QuarterTeaserSheetProps) {
+export function LockedPinSheet({ pin, open, onOpenChange, level }: LockedPinSheetProps) {
   return (
-    <Dialog.Root open={open && !!q} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open && !!pin} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="ease-dim fixed inset-0 z-40 bg-ink/60" />
         <Dialog.Content
           aria-describedby={undefined}
           className="ease-sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col gap-2.5 overflow-y-auto bg-paper p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)] sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-[440px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]"
-          data-testid="quarter-teaser"
+          data-testid="locked-pin-sheet"
         >
-          {q && (
+          {pin && (
             <>
-              <span className="label-caps text-[10px] text-muted" data-testid="teaser-kicker">
-                {q.lock?.kind === 'level' ? copy.risk.quarters.kicker(q.lock.level) : copy.risk.quarters.kickerLater}
+              <span className="label-caps flex items-center gap-1.5 text-[10px] text-muted" data-testid="locked-kicker">
+                <LockMark />
+                {copy.map.lockedKicker(pin.quarter.name, pin.lock)}
               </span>
-              <Dialog.Title className="font-display text-[20px] leading-tight font-black">{q.name}</Dialog.Title>
-              {q.blurb && <p className="font-body text-[15px] leading-snug text-text-2">{q.blurb}</p>}
-              {q.lock?.kind === 'level' && (
-                <p className="font-mono text-[12px] text-muted" data-testid="teaser-level">
-                  {copy.risk.quarters.levelOpens(q.lock.level, level)}
-                </p>
+              <Dialog.Title className="font-display text-[20px] leading-tight font-black">{pin.name}</Dialog.Title>
+              {pin.quarter.blurb && (
+                <p className="font-body text-[15px] leading-snug text-text-2">{pin.quarter.blurb}</p>
               )}
-              {q.lock && q.lock.kind !== 'level' && (
-                <p className="font-mono text-[12px] text-muted" data-testid="teaser-line">
-                  {quarterLockLine(q, { teaser: true })}
-                </p>
-              )}
+              <p className="font-mono text-[12px] text-muted" data-testid="locked-line">
+                {pin.lock.kind === 'level'
+                  ? copy.map.lockedSheet(pin.lock.level, level)
+                  : copy.map.lockedPlace(pin.lock)}
+              </p>
               <Dialog.Close className="label-caps mt-1 min-h-11 cursor-pointer border-[1.5px] border-ink px-4 text-[13px] hover:bg-ink hover:text-paper">
                 Close
               </Dialog.Close>
             </>
           )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
-
-export interface QuartersListProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  cityName: string;
-  quarters: QuarterView[];
-  /** An open quarter: go in. A locked one: its teaser. */
-  onPick: (id: string) => void;
-  returnFocusTo?: () => HTMLElement | null;
-}
-
-/**
- * Screens §3.2: the overview's Places pill reads *Quarters* and lists them with their lock lines (the
- * Districts list's pattern: a bottom sheet on a phone, a panel at the top right from 640 px).
- */
-export function QuartersList({ open, onOpenChange, cityName, quarters, onPick, returnFocusTo }: QuartersListProps) {
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="ease-dim fixed inset-0 z-40 bg-ink/50" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          data-testid="quarters-list"
-          onCloseAutoFocus={(e) => {
-            const to = returnFocusTo?.();
-            if (to) {
-              e.preventDefault();
-              to.focus();
-            }
-          }}
-          className={cx(
-            'ease-sheet fixed z-50 flex flex-col bg-paper text-ink',
-            'inset-x-0 bottom-0 max-h-[75dvh] pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgb(0_0_0/0.45)]',
-            'sm:inset-x-auto sm:top-[calc(var(--hud-h,44px)+12px)] sm:right-3 sm:bottom-auto sm:w-[360px] sm:pb-0 sm:shadow-[0_0_0_1px_var(--color-ink),0_18px_40px_rgb(0_0_0/0.5)]',
-          )}
-        >
-          <div className="flex items-center gap-3 border-b-2 border-ink py-1.5 pr-2 pl-4">
-            <Dialog.Title className="min-w-0 flex-1 font-display text-[20px] leading-tight font-black">
-              {copy.risk.quartersIn(cityName)}
-            </Dialog.Title>
-            <Dialog.Close className="label-caps min-h-11 min-w-11 cursor-pointer border-[1.5px] border-ink px-2 text-[11px] hover:bg-ink hover:text-paper">
-              Close
-            </Dialog.Close>
-          </div>
-          <ul className="flex flex-col overflow-y-auto overscroll-contain">
-            {quarters.map((q) => {
-              const lock = q.open === false ? quarterLockLine(q) : null;
-              return (
-                <li key={q.id} className="border-b border-dotted border-faint last:border-b-0">
-                  <button
-                    type="button"
-                    data-testid="quarter-row"
-                    data-locked={lock ? true : undefined}
-                    className="flex min-h-11 w-full cursor-pointer items-start gap-3 px-4 py-2 text-left hover:bg-paper-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
-                    onClick={() => {
-                      onOpenChange(false);
-                      onPick(q.id);
-                    }}
-                  >
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="flex items-center gap-2 font-display text-[16px] leading-tight font-bold">
-                        {lock && <LockMark />}
-                        {q.name}
-                      </span>
-                      <span className="font-mono text-[11.5px] text-muted" data-testid="quarter-row-line">
-                        {lock ?? q.teaser ?? ''}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
