@@ -388,7 +388,7 @@ The loader checks:
 
 Dev only, as the viewer is.
 
-`copy.travel.*`: *arrives in {when} · {clock}*, *Follow the train*, the train's name (*The {hh:mm} to {City}*), *THIRD CLASS · CAR 4*, and the sentence of answers §7.3 (*You can close the game* removed).
+`copy.travel.*`: *arrives in {when} · {clock}*, *Follow your pin*, the train's name (*The {hh:mm} to {City}*), *THIRD CLASS · CAR 4*, and the sentence of answers §7.3 (*You can close the game* removed).
 
 ### 6.2 Rules (`packages/rules/src/travel.ts`)
 
@@ -440,12 +440,12 @@ export function drawCardAt(rng: Rng, boardedAt: number, arrivesAt: number): numb
   - one `CityMap` on the nation picture (tiles, day or night), its frame fitted to the two cities' pins grown by 0.08;
   - the other cities muted (`muted` pins);
   - an SVG overlay: the legs as a 2 px ink polyline over a 4 px paper halo, drawn in fractions so it holds at any zoom;
-  - **`TrainMark`** at `trainAt(legs, journeyProgress(boardedAt, arrivesAt, now))`, `useNow(1000)`, with the name under it in Courier;
-  - after a user drag, a *Follow the train* chip recentres the view.
+  - **`TravelPin`** (user, 7 Oct: a plain moving pin, not a train) at `trainAt(legs, journeyProgress(boardedAt, arrivesAt, now))`, `useNow(1000)`: the city-marker pin in the faction's colour, 20 px, with a Courier label under it (*To Coalport · in 12 min*);
+  - after a user drag, a *Follow your pin* chip recentres the view.
 - **The plate** (top on a phone, a 480 px side sheet from 1024 px): kicker, title, *arrives in 7 min · 14:22* (`copy.when` + the clock), the 2 px track (`JourneyProgress`, kept), the sentence, and the two *while you ride* rows in its foot.
-- **The card:** a timer at `cardAt` (+400 ms) refetches `travel.journey`. When `card` arrives, a `BottomSheet` opens with `JourneyCard`, and the train mark pulses once (`ease-card`; no pulse under reduced motion). On return with an answerable card the sheet is open.
+- **The card:** a timer at `cardAt` (+400 ms) refetches `travel.journey`. When `card` arrives, a `BottomSheet` opens with `JourneyCard`, and the pin pulses once (`ease-card`; no pulse under reduced motion). On return with an answerable card the sheet is open.
 - At `arrivesAt`: as today, the arrival modal over the destination.
-- **The train mark art:** `vector.train-mark` (answers §28 art 2) when delivered. Until then, `TrainMark` draws a 28 px ink disc with a brass ring and the existing locomotive-free label, so nothing waits on art.
+- **No train art (user, 7 Oct):** the traveller is a plain pin drawn in code; `vector.train-mark` is dropped.
 
 ### 6.6 Tests
 
@@ -456,7 +456,7 @@ export function drawCardAt(rng: Rng, boardedAt: number, arrivesAt: number): numb
   - The hostile deck behaves the same.
   - An unanswered card is in the arrival modal.
   - A migrated journey with no `at` is answerable at once.
-- **UI:** `TrainMark` positions for fixtures.
+- **UI:** `TravelPin` positions for fixtures.
 - **E2E:** `travel.spec.ts` updated: board, the plate's line, the dev clock jumped past `cardAt` → the sheet, answered, arrival.
 
 ### 6.7 Risks
@@ -1075,7 +1075,7 @@ The rules, content, db, server and UI tests are listed under each feature (§4.2
 - [ ] 3 At 1440 px the paper lies on a desk.
 - [ ] 4 The clock shows your time; the dev clock moves it; every countdown reads one way.
 - [ ] 6 The third order's line says what follows.
-- [ ] 7 The train moves on the map; the card arrives on the way.
+- [ ] 7 Your pin moves along the route on the map; the card arrives on the way.
 - [ ] 8 No part of Irongate is outside a district.
 - [ ] 9 One *Live here* button with its why; a bed at Tram Junction.
 - [ ] 10 A new councillor sees *What now* and finds the desk.
@@ -1153,7 +1153,7 @@ The rules, content, db, server and UI tests are listed under each feature (§4.2
 
 | Left out | Why / where |
 |---|---|
-| `scene.town-hall`, the train mark's final SVG, the lock glyph's new pin variant | Art (answers §28): the map crop, a drawn placeholder and the existing `LockMark` stand in |
+| `scene.town-hall`, the lock glyph's new pin variant (the train mark is dropped: a plain pin, user 7 Oct) | Art (answers §28): the map crop, a drawn placeholder and the existing `LockMark` stand in |
 | A night variant of the station scene | Optional (answers §28) |
 | *Post bail* on the station's list; the Members status | Slice 6 |
 | A republic-wide cells list | Answers §19: not built |
@@ -1294,7 +1294,7 @@ Phase 0 (in hand) ─► Phase 1 (groundwork + copy, lane A)
 
 **T19. Rules, DB, server.** `journeyLegs`, `trainAt`, `drawCardAt`; `card.at` at boarding; `JourneyView` v3; `CARD_NOT_YET`; `heraldVisitor` removed (coordinated with T23); migration 008's `cardAtForOpenJourneys`. *Done when:* §6.2's and §6.6's rules and server tests pass, and every slice 4–5 travel test passes.
 
-**T20. Client.** `JourneyMap`, `TrainMark`, the plate, the card sheet at `cardAt` and on return, *Follow the train*, the desktop side sheet. *Done when:* fix list item 26 passes and `travel.spec.ts` (with the dev clock) passes on the phone and desktop projects.
+**T20. Client.** `JourneyMap`, `TravelPin` (a plain pin, not a train), the plate, the card sheet at `cardAt` and on return, *Follow your pin*, the desktop side sheet. *Done when:* fix list item 26 passes and `travel.spec.ts` (with the dev clock) passes on the phone and desktop projects.
 
 ### Phase 7 — Local editions (lane P)
 
@@ -1463,3 +1463,48 @@ Recorded as each phase lands (T30 completes this section).
 43. **Not changed here**: the Election card's *Registered in Eastside* (its first line in the capital) still says *Registered*; answers §9.2's vocabulary note (*you live in {district}*) is for the GDD's table. A follow-up if the designer wants the card to match.
 
 **The small extra (the floating menu on desktop).** From 1024 px the tab bar floats 48 px above the bottom and is about 60 px tall, so a scrolling page needs about 130 px under its last line. Pages that had less now end with `lg:pb-[132px]` like the paper and the council: the Me tab and the cells' and the ward's column (112 px before), the chapter screen inside the shell (24 px before, so its sticky *Choose* bar sat under the menu) and the chapter's waiting screen.
+### Phases 3 and 4 (T9–T15, 7 Oct 2026)
+
+**T9. Irongate tiles the picture.**
+
+44. **`tilingProblems` names one more case**: an edge that runs the same way in two outlines (an overlap, or an outline wound the other way). Pins, anchors and labels are checked **strictly** inside their district (`inPolygon(…, true)`); the 0.25 label distance now applies to the capital's names (a home city has none). The checks live in `districtShapeProblems` (`slice5.ts`).
+45. **The drag limit is a margin argument.** `restPanLimits` and `freePanLimits` take `margin` (default `REST_PAN_MARGIN`); with `CityMap.panLimit` they run on the outline's box with margin 0, at rest and zoomed into a place (`panLimits(…, panLimit, 0)`). `bboxOf` is exported from `packages/ui`.
+46. **The UI frame tests moved to the capital's districts** (home cities have no frames). The "every pin reachable" test found three pins that only a zoom step and a drag bring clear: on portrait tablets (640 × 900, 768 × 1024) a district opens zoomed out to fit its pins and a pin at the picture's top-left edge (the Ministries; Concord House) sits under the desktop plate. This is not new (the capital was never in that test); the three are pinned in the test, and the + button or a pinch brings them out.
+
+**T10. `placeOpen` and the home quarters' content.**
+
+47. **Duskwall's hall blurb**: *a long cold front* → ***a long cold façade***. The vocabulary test allows *front* only as a building's front (*out front*, *the front of* …). For the designer to confirm.
+48. **The loader checks the hall's kind**: `council.hall.locationId` must be a place of the city and a `town-hall` (or `bar`, for Clearwater's Casino in slice 7).
+49. **`scene.town-hall` is bound now** (the art exists in `mvp/scenes`): the hall's sheet and the gallery's result show the chamber, not the map crop. Its alt text (the design gives a description, not a line) is *A council chamber: a horseshoe of desks, the chair under an arched window, a clerk with the minute book, and the public at the gallery rail.*
+50. **The sheet's kicker is the kind's label**, *{n} · Town Hall*, Irongate's City Hall included (*30 · Town Hall*).
+51. **The art folder's `pins.json`** is not edited here (outside the repo): the three new hall pins and Ashford's moved one are in `mapPins.ts` only.
+
+**T11. Server.**
+
+52. **`ACTION_LOCKED`'s lock travels as `lock`** (`'QUARTER'` with `need`, or `'EDITION'`), as `MISSION_LOCKED`'s does: `reason` is the error's own key in `error.data.game` and would overwrite it. The client words both with `copy.map.lockedPlace`.
+53. **`missionCtx.offered`** also requires `placeOpenFor`, so no locked place's mission is ever offered.
+54. **A rival trip lands on the hall too**, and its arrival line is *Duskwall · rival ground* (it named the first quarter, *Duskwall · The Fortress · rival ground*).
+
+**T12. Client.**
+
+55. **The rest view keeps pins apart.** At rest a home city is centred on one pin at the covering scale, **zoomed further in only as far as keeps every two pins' 44 px targets apart** (`CityMap.restGap`, `gapRestView`): tech §8.5 asks for no overlapping pins at every size, and the covering scale alone overlaps them on a phone (Duskwall's Checkpoint and Lock-up are 0.05 apart). The free zoom still goes out to the covering scale. The pin is `?loc`, else the player's party HQ in the city, else the Town Hall; chosen once per visit, so opening another pin never moves the view under it; the player's own view is kept by the existing per-city memory.
+56. **No *Coalport · Home city* kicker**: the plate's line already reads *Home city · Collective 70.0 %*, and a second *Home city* was noise (`copy.plate.homeCity` is not added).
+57. **A greyed pin is `data-testid="locked-pin"`**, not `hotspot` (its accessible name is *The Shipyard, opens at Level 6*; `copy.map.lockedPinLabel`). A tap opens `LockedPinSheet`, never `?loc`.
+58. **The Places list**: a group header toggles its quarter's blurb (+ / −); in each group the open places in pin order, then (the first open group) the Town Hall, then the greyed places with their Courier note; a greyed row opens the pin's short sheet.
+59. **Removed with the home overview**: `TramBar`'s quarters mode, `QuarterTeaserSheet`, `QuartersList`, `quarterLockLine`, the `irongate.lastQuarter.*` memory, `Quarter.teaser` and `QuarterView.teaser`. `LockMark` moved to its own file.
+60. **The journey's Continue keeps `?loc`** for a home landing, so arriving by train opens the Town Hall's sheet (*the hall's pin selected*).
+
+**T13–T14. Content, rules, DB, server.**
+
+61. **`WhatNowView` carries the hall** (`{ locationId, name }`), so the front page's *To your desk at the Town Hall* goes to the hall's pin; `TownHallView` gains `divideAt` (the council's vote, for *Voted Tuesday: …*) and `issuesSettleAt` (the Issue rows' line).
+62. **No migration step** for `officeTerms.whatNowSeenAt`: the schema default is null and an absent field reads as unseen (§14).
+63. **The Election card on the hall is the reader's own**: `TownHallView.election` is the residence's card at the residence's hall and null at another city's (a visitor has no vote there, and the card is about the reader's vote).
+64. **`deskNext`**: `runs.untilDay` is the ordinance window's end (printed as its weekday, like *Term ends*); `nominationsFromDay` the next cycle's start. The *rose* line is the developer's: *Next: no rule this term; candidates put their names in from {weekday}.* For the designer to confirm.
+65. **`council.whatNowSeen` on another character's term** writes nothing and returns `{ seenAt: null }`.
+
+**T15. Client.**
+
+66. **`/council` is the Town Hall's blocks** for the residence's city under a short plate (the local seats, *Last result*); the seat grid and the chamber's sticky vote bar are gone from it. The desk's vote button is inline, and after the vote the desk's Next line (*Your vote is in: …*) replaces *Vote recorded*.
+67. **The plate's rule line is a button** (a 44 px tap area drawn past its one line, so the plate does not grow), in a home city's plate and in a district's; it folds away on a phone under 700 px tall as before.
+68. ***What now* at the hall** is marked seen the moment it shows (`council.whatNowSeen`) and stays on screen for that visit.
+69. **The small extra**: the capital Election card's *Registered in Eastside* reads ***You live in Eastside*** (`copy.election.registered`; recorded in `packages/content/test/review4.ts`).

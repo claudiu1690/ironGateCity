@@ -14,7 +14,7 @@ Nothing here adds a required tap to a session. The prologue loses two taps (8 fr
 | 4 | No clock | **A clock in the top bar**, the player's own time; **one countdown style** everywhere | §4; GDD §2.2 |
 | 5 | Level-up line stale | Bug: after the point is placed the line reads the placed stat | §5 |
 | 6 | *see the note* | Rewritten: *That's all three; Holm has a word for you when you close this.* | §6 |
-| 7 | Travel | **The journey runs on the nation map**: the train moves along the painted line; cards fire at a point drawn at boarding; lazy and server-authoritative | §7; GDD §14.10 |
+| 7 | Travel | **The journey runs on the nation map**: a pin moves along the traced route (roads or rails; user, 7 Oct); cards fire at a point drawn at boarding; lazy and server-authoritative | §7; GDD §14.10 |
 | 8 | Unassigned land in Irongate | **The five districts tile the whole picture**, river included, split along the river's middle; new outlines | §8; GDD §14.9 |
 | 9 | Register or take a room? | **One button, *Live here***, with the plain why; **lodgings leave the residence card** and become a card at a place | §9; GDD §14.11 |
 | 10 | Won a seat, now what? | **A *What now* card** on the front page and the first Town Hall visit; **a councillor's desk** | §10; GDD §15.3 |
@@ -204,13 +204,15 @@ The modal itself is unchanged.
 
 ### 7.1 The rule
 
-A journey is **drawn on the nation map**. The map opens zoomed so the two cities are both in view, the painted railway between them is **traced** (a 2 px ink line with a paper halo over the painted rails, so the route reads at any zoom), and **the train** (a small ink-and-brass locomotive mark, 28 px, with its name under it in Courier: *The 14:10 to Coalport*) sits on the line at the point the clock says: `progress = (now − boardedAt) ÷ (arrivesAt − boardedAt)`, mapped onto the route's polyline by length. It ticks on the client once a second; the server is the authority, and the client only asks (as today). Everything else about a journey is unchanged: it leaves at the tap, it runs with the app closed, Energy refills, the paper and the political acts work, arrival is settled lazily by any read at or after `arrivesAt`.
+**User decision (7 Oct 2026):** the traveller is **a simple moving pin, not a train**. It moves along the route (the roads or rails traced between the two cities); no locomotive mark, no train art, no railway styling required.
+
+A journey is **drawn on the nation map**. The map opens zoomed so the two cities are both in view, the painted railway between them is **traced** (a 2 px ink line with a paper halo over the painted rails, so the route reads at any zoom), and **your pin** (the same map pin as the city markers, in your faction's colour with a small ink ring, 20 px, with a Courier label under it: *To Coalport · in 12 min*) sits on the route at the point the clock says: `progress = (now − boardedAt) ÷ (arrivesAt − boardedAt)`, mapped onto the route's polyline by length. It ticks on the client once a second; the server is the authority, and the client only asks (as today). Everything else about a journey is unchanged: it leaves at the tap, it runs with the app closed, Energy refills, the paper and the political acts work, arrival is settled lazily by any read at or after `arrivesAt`.
 
 **Routes are content**: `nation.routes[]`, one polyline per leg (Irongate–Coalport, Irongate–Ashford, Irongate–Duskwall, Irongate–Clearwater; 8–20 points in fractions of the nation picture), traced by the developer in the dev viewer along the painted rails (the halts and villages are scenery the train passes). A journey between two outer cities is the two legs joined, as the times already are.
 
 ### 7.2 The card fires on the way
 
-**Where the card fires is drawn at boarding**, seeded with the card: a fraction `cardAt` uniform in **0.20–0.80** of the journey, stored as a timestamp beside the card. Until then the card is not shown; **from `cardAt` the card is shown** as a sheet over the map (the `JourneyCard` as today, the train mark pulsing once), answerable until arrival or on the arrival modal; unanswered after that, it was slept through. Lazy and server-authoritative: the server returns `card.at`; the client shows it when its clock passes it; the answer is a call the server accepts between `cardAt` and the arrival's settlement, never before `cardAt`. Nothing is scheduled.
+**Where the card fires is drawn at boarding**, seeded with the card: a fraction `cardAt` uniform in **0.20–0.80** of the journey, stored as a timestamp beside the card. Until then the card is not shown; **from `cardAt` the card is shown** as a sheet over the map (the `JourneyCard` as today, the pin pulsing once), answerable until arrival or on the arrival modal; unanswered after that, it was slept through. Lazy and server-authoritative: the server returns `card.at`; the client shows it when its clock passes it; the answer is a call the server accepts between `cardAt` and the arrival's settlement, never before `cardAt`. Nothing is scheduled.
 
 **Leaving and coming back:** the map shows the train where the clock puts it. If `cardAt` has passed and the card is unanswered, the sheet is open on return. If `arrivesAt` has passed, the first read settles the arrival and shows the arrival modal with the card inside it if still unanswered, exactly as slice 4 says. A player who never comes back is settled by the tidy job as before.
 
@@ -622,7 +624,7 @@ Ordered; each with *Done when*. Items marked **(in hand)** are being coded in pa
 - **Exists, reused:** `mvp/scenes/station.png` (beat 1); `art-direction/train-compartment.png` (beats 2–3; copy into `mvp/scenes` as `train-compartment.png`, 2688 × 1520 crop); the three secretaries' portraits; `event-town-hall.png` is an event scene and is not used for the hall.
 - **New, wanted:**
   1. **`scene.town-hall`** — one council chamber for the `town-hall` kind (a horseshoe of desks under a clock, the republic's plain flag, a public gallery rail, a clerk's table with the minute book; no party colours), 2688 × 1520. Until it exists the map crop at the hall point stands in (the fallback ladder, §13.5), which is what the election screens already show, so this is not blocking. **Done 6 Oct 2026:** generated and saved as `mvp/scenes/town-hall.png` (a horseshoe of desks, the presiding chair under an arched window, the clerk with the minute book, the public gallery rail in the foreground; no flag drawn, so no device appears), and `train-compartment.png` copied into `mvp/scenes`.
-  2. **The train mark** for the nation map: a 28 px locomotive in ink and brass, two frames (still, and a puff of smoke), SVG.
+  2. ~~The train mark~~ **Dropped (user, 7 Oct):** the traveller is a plain pin drawn by the client; no art needed.
   3. **The lock glyph** for locked pins (SVG, 12 px), and a lock variant of the pin disc.
 - **Optional:** a night variant of the station scene for beat 1 (the text says *the last train in*; the existing picture is daylight through glass and reads well enough as early morning: the narrative says *the night train empties*, which the engine's steam and the lamps carry).
 

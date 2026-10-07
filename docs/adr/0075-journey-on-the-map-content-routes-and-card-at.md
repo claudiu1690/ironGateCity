@@ -6,7 +6,7 @@
 
 Review 4 (`docs/design/review-4-answers.md` §7, GDD §14.10) moves the journey onto the nation map.
 
-- The painted railway between the two cities is traced, and a train mark sits on it **at the point the clock says**.
+- The painted railway between the two cities is traced, and the player's **pin** (a plain moving pin, not a train; user, 7 Oct 2026) sits on it **at the point the clock says**.
 - The journey's card (when one was drawn) **fires at a point drawn at boarding**, 0.20–0.80 of the way, and is answerable from then until the arrival's settlement.
 - Timing stays lazy and server-authoritative. Nothing is scheduled.
 
