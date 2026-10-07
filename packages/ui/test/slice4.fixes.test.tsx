@@ -1,7 +1,7 @@
-import { districtFixtures, residenceCardFixtures } from '@irongate/rules/testing';
+import { districtFixtures, lodgingsFixtures, residenceCardFixtures } from '@irongate/rules/testing';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ResidenceCard, TramBar, coverRestView, nameHalfWidth, namesRestView, placeNames } from '../src';
+import { LodgingsCard, ResidenceCard, TramBar, coverRestView, nameHalfWidth, namesRestView, placeNames } from '../src';
 import type { NameSpot } from '../src';
 
 /**
@@ -135,26 +135,24 @@ describe('the residence card in the fix round (slice-4-fixes.md §1, §6)', () =
 
   it('a candidate on the ballot where they live: the day they can move, no button', () => {
     render(
-      <ResidenceCard card={residenceCardFixtures.onBallot} placeName="Eastside" rank2Title="Activist" onRegister={noop} onRoom={noop} />,
+      <ResidenceCard card={residenceCardFixtures.onBallot} placeName="Eastside" rank2Title="Activist" onRegister={noop} />,
     );
     expect(screen.getByTestId('residence-line1')).toHaveTextContent('You live in Coalport');
     expect(screen.getByTestId('residence-line2')).toHaveTextContent(
-      "You're a candidate in Coalport until the result · you can move from Friday",
+      "You're a candidate in Coalport until the result · you can move from Friday.",
     );
     expect(screen.queryByTestId('residence-register')).toBeNull();
   });
 
-  it('Renew adds seven nights; with more than seven paid, the day it comes back and no button', () => {
-    const { unmount } = render(
-      <ResidenceCard card={residenceCardFixtures.resident} placeName="Eastside" rank2Title="Activist" onRegister={noop} onRoom={noop} />,
-    );
-    expect(screen.getByTestId('room-take')).toHaveTextContent('Renew · 100 Iron · 7 more nights');
+  // Review 4 #9 (answers §9.3): the room is the Lodgings card at Tram Junction.
+  it('Seven more nights while seven or fewer remain; with more than seven paid, the day it comes back and no button', () => {
+    const { unmount } = render(<LodgingsCard lodgings={lodgingsFixtures.renew} onTake={noop} />);
+    expect(screen.getByTestId('lodgings-take')).toHaveTextContent('Seven more nights · 100 Iron');
     unmount();
-    // Renewed on the first day: fourteen nights, Renew back when seven remain.
-    const room = residenceCardFixtures.resident.room!;
-    const ahead = { ...residenceCardFixtures.resident, room: { ...room, untilDay: room.untilDay! + 7, renewFromDay: room.untilDay! } };
-    render(<ResidenceCard card={ahead} placeName="Eastside" rank2Title="Activist" onRegister={noop} onRoom={noop} />);
-    expect(screen.getByTestId('room-line')).toHaveTextContent('Room until Sunday · Rested cap 250 · renew from Sunday');
-    expect(screen.queryByTestId('room-take')).toBeNull();
+    render(<LodgingsCard lodgings={lodgingsFixtures.notYet} onTake={noop} />);
+    expect(screen.getByTestId('lodgings-running')).toHaveTextContent(
+      'Your bed until Sunday · Rested banks to 250 · renew from Sunday',
+    );
+    expect(screen.queryByTestId('lodgings-take')).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { closeHeld, getHeld, heldAct, payOut, strikeMark } from '../../services/heldService';
+import { cellsNow, closeHeld, getHeld, heldAct, payOut, strikeMark } from '../../services/heldService';
 import { protectedProcedure, router } from '../trpc';
 
 const Keyed = z.object({ idempotencyKey: z.uuid() });
@@ -7,6 +7,10 @@ const Keyed = z.object({ idempotencyKey: z.uuid() });
 /** Slice 5 (tech design §8.1, ADR 0033): the cells and the infirmary. */
 export const heldRouter = router({
   get: protectedProcedure.query(({ ctx }) => getHeld({ user: ctx.user, content: ctx.content, now: ctx.now })),
+  /** Review 4 #19 (ADR 0078): *In the cells now* on a police station's sheet. */
+  inCells: protectedProcedure
+    .input(z.object({ locationId: z.string().min(1) }))
+    .query(({ ctx, input }) => cellsNow({ user: ctx.user, content: ctx.content, now: ctx.now, input })),
   act: protectedProcedure
     .input(Keyed)
     .mutation(({ ctx, input }) => heldAct({ user: ctx.user, content: ctx.content, now: ctx.now, input })),

@@ -9,6 +9,7 @@ import type {
   IssueRowView,
   OpinionShares,
   QuarterView,
+  LodgingsView,
   ResidenceCardView,
   ScoreboardLineView,
   ScoreboardTableView,
@@ -643,18 +644,19 @@ export function ScoreboardTable({
 
 export interface ResidenceCardProps {
   card: ResidenceCardView;
-  /** The place a Register here moves to: the district on show, or (at home) the home city. */
+  /** The place *Live here* moves to: the district on show, or (at home) the home city. */
   placeName: string;
   /** The faction's Rank 2 title, for the below-Rank line. */
   rank2Title: string;
   onRegister: () => void;
-  onRoom: () => void;
   registerPending?: boolean;
-  roomPending?: boolean;
   className?: string;
 }
 
-/** The residence card's two lines and its button, per state (screens §6.1's table). */
+/**
+ * The residence card's two lines and its button, per state (review 4 #9, answers §9.2's table): one
+ * button, *Live here · 500 Iron*, and the plain reason why.
+ */
 export function residenceLines(
   card: ResidenceCardView,
   placeName: string,
@@ -662,23 +664,20 @@ export function residenceLines(
 ): { line1: string; line2: string; button: { label: string; enabled: boolean } | null } {
   const r = copy.residence;
   const live = r.youLiveIn(card.livesIn);
+  const liveHere = { label: r.liveHere(card.cost), enabled: card.button?.enabled ?? true };
   switch (card.state) {
     case 'visitingMay':
-      return { line1: live, line2: r.registerHere(placeName), button: { label: r.registerIn(placeName, card.cost), enabled: card.button?.enabled ?? true } };
+      return { line1: live, line2: r.liveHereLine(placeName), button: liveHere };
     case 'belowRank':
       return { line1: live, line2: r.belowRank(rank2Title, RANK_FXP[1]), button: null };
     case 'cooldown':
       return { line1: live, line2: r.canMoveAgainFrom(weekdayOf(card.canMoveFromDay ?? 0)), button: null };
     case 'noIron':
-      return {
-        line1: live,
-        line2: r.registerHereShort(placeName),
-        button: { label: r.needsIron(card.cost), enabled: false },
-      };
+      return { line1: live, line2: r.liveHereShort(placeName), button: { label: r.needsIron(card.cost), enabled: false } };
     case 'resident':
       return {
         line1: live,
-        line2: r.registeredLine(
+        line2: r.sinceLine(
           weekdayOf(card.registeredDay ?? 0),
           weekdayOf(card.votesFromDay ?? 0),
           weekdayOf(card.canMoveFromDay ?? 0),
@@ -686,11 +685,7 @@ export function residenceLines(
         button: null,
       };
     case 'homeElsewhere':
-      return {
-        line1: live,
-        line2: r.registerBackHome(placeName, card.cost),
-        button: { label: r.registerIn(placeName, card.cost), enabled: card.button?.enabled ?? true },
-      };
+      return { line1: live, line2: r.liveHereAgain(placeName), button: liveHere };
     case 'atHome':
       return { line1: live, line2: '', button: null };
     // Slice-4 fixes §1 (QA M2): a candidate on the ballot where they live moves after the result.
@@ -703,22 +698,12 @@ export function residenceLines(
 }
 
 /**
- * Screens §6.1: *Where you live*, the `JobsCard` pattern. One state line, one button; in Irongate a
- * second row for the room (*Take a room · 100 Iron*, or *Room until Sunday · Rested cap 250* with Renew).
+ * Screens §6.1, review 4 #9 (answers §9.2): *Where you live*, the `JobsCard` pattern. One state line,
+ * the plain reason why, one button (*Live here · 500 Iron*). The room is the Lodgings card at Tram
+ * Junction (`LodgingsCard`), not a row here.
  */
-export function ResidenceCard({
-  card,
-  placeName,
-  rank2Title,
-  onRegister,
-  onRoom,
-  registerPending,
-  roomPending,
-  className,
-}: ResidenceCardProps) {
+export function ResidenceCard({ card, placeName, rank2Title, onRegister, registerPending, className }: ResidenceCardProps) {
   const l = residenceLines(card, placeName, rank2Title);
-  const room = card.room;
-  const priceLine = room?.price.lines[0];
   return (
     <section
       aria-label={copy.residence.whereYouLive}
@@ -728,7 +713,7 @@ export function ResidenceCard({
     >
       <div className="flex flex-col gap-1 px-3 py-2">
         <HelpButton
-          notes={[copy.residence.help.whereYouLive()]}
+          notes={[copy.help.residence()]}
           label={`What ${copy.residence.whereYouLive} means`}
           className="-my-2 self-start"
         >
@@ -754,26 +739,72 @@ export function ResidenceCard({
           </Button>
         )}
       </div>
-      {room && (
-        <div className="flex flex-col gap-1 border-t border-dotted border-faint px-3 py-2" data-testid="room-row">
-          <span className="font-display text-[14px] font-bold">{copy.residence.room}</span>
-          <span className="font-mono text-[11px] text-muted" data-testid="room-line">
-            {room.state === 'running'
-              ? room.renewFromDay !== undefined
-                ? copy.residence.roomPaidAhead(weekdayOf(room.untilDay ?? 0), room.cap, weekdayOf(room.renewFromDay))
-                : copy.residence.roomUntil(weekdayOf(room.untilDay ?? 0), room.cap)
-              : priceLine
-                ? `${room.price.total} Iron · ${priceLine.label}`
-                : copy.residence.roomLine(room.price.total, 7, 50)}
-          </span>
-          {/* Slice-4 fixes §6 (QA m5): Renew adds seven nights, offered while seven or fewer remain. */}
-          {room.renewFromDay === undefined && (
-            <Button variant="outline" className="w-full" pending={roomPending} onClick={onRoom} data-testid="room-take">
-              {room.state === 'running' ? copy.residence.renew(room.price.total) : copy.residence.takeARoom(room.price.total)}
-            </Button>
-          )}
-        </div>
-      )}
+    </section>
+  );
+}
+
+export interface LodgingsCardProps {
+  lodgings: LodgingsView;
+  onTake: () => void;
+  pending?: boolean;
+  /** One line under the button after a refusal. */
+  notice?: string | null;
+  className?: string;
+}
+
+/**
+ * Review 4 #9 (answers §9.3): *Lodgings* on the place's sheet (Tram Junction), the `JobsCard` pattern,
+ * its benefit in words. The line, the cap in a sentence and *Take a bed · 100 Iron* (outline); running,
+ * *Your bed until Sunday · Rested banks to 250* and *Seven more nights · 100 Iron* while seven or fewer
+ * remain, else *renew from Monday*. Under a rents Issue the price line names it (*50 Iron · Eviction
+ * Notices*).
+ */
+export function LodgingsCard({ lodgings: g, onTake, pending, notice, className }: LodgingsCardProps) {
+  const l = copy.lodgings;
+  const priced = g.price.lines[0];
+  return (
+    <section
+      aria-label={l.kicker}
+      className={cx('mt-1 flex flex-col border-[1.5px] border-ink bg-paper-card', className)}
+      data-testid="lodgings"
+      data-tap={g.tap}
+    >
+      <div className="flex items-center border-b border-ink px-3 py-1.5">
+        <HelpButton notes={[copy.help.lodgings()]} label={`What ${l.kicker} means`} className="-my-2">
+          <span className={cx('label-caps text-[11px] font-semibold', helpMark)}>{l.kicker}</span>
+        </HelpButton>
+      </div>
+      <div className="flex flex-col gap-1.5 px-3 py-2">
+        <span className="font-display text-[15px] font-bold" data-testid="lodgings-line">
+          {g.line}
+        </span>
+        {g.running ? (
+          <p className="font-mono text-[11.5px] text-petrol" data-testid="lodgings-running">
+            {g.renewFromDay !== null
+              ? l.paidAhead(weekdayOf(g.running.untilDay), g.cap.with, weekdayOf(g.renewFromDay))
+              : l.running(weekdayOf(g.running.untilDay), g.cap.with)}
+          </p>
+        ) : (
+          <p className="font-mono text-[11.5px] text-text-2" data-testid="lodgings-benefit">
+            {l.benefit(g.cap.with, g.cap.now)}
+          </p>
+        )}
+        {priced && (
+          <p className="font-mono text-[11px] text-muted" data-testid="lodgings-priced">
+            {l.priced(g.price.total, priced.label)}
+          </p>
+        )}
+        {g.tap !== 'notYet' && (
+          <Button variant="outline" className="w-full" pending={pending} onClick={onTake} data-testid="lodgings-take">
+            {g.tap === 'renew' ? l.more(g.price.total) : l.take(g.price.total)}
+          </Button>
+        )}
+        {notice && (
+          <p role="status" className="font-mono text-[12px] text-collective">
+            {notice}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
@@ -791,7 +822,7 @@ export interface RegisterSheetProps {
 /** Screens §6.2: the consequences before the tap, then one button. */
 export function RegisterSheet({ open, onOpenChange, placeName, cost, lines, onRegister, pending }: RegisterSheetProps) {
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange} title={copy.residence.registerIn(placeName, cost)}>
+    <BottomSheet open={open} onOpenChange={onOpenChange} title={copy.residence.liveIn(placeName, cost)}>
       <ul className="flex flex-col gap-1.5" data-testid="register-lines">
         {lines.map((l) => (
           <li key={l.text} className={cx('flex gap-2 font-body text-[14px] leading-snug', l.warn && 'text-failure')}>
@@ -803,7 +834,7 @@ export function RegisterSheet({ open, onOpenChange, placeName, cost, lines, onRe
         ))}
       </ul>
       <Button className="w-full" pending={pending} onClick={onRegister} data-testid="register-confirm">
-        {copy.residence.register(cost)}
+        {copy.residence.liveHere(cost)}
       </Button>
     </BottomSheet>
   );

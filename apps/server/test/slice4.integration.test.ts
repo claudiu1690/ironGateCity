@@ -171,8 +171,8 @@ describe('a capital week (tech design §15, T19)', () => {
     expect(home.fare).toMatchObject({ total: 10 });
     expect(home.fare!.lines.map((l) => l.id)).toContain('issue.tram-fares');
     const city = await cleo.caller.city.get({ cityId: 'irongate' });
-    const card = city.districts!.find((d) => d.id === E)!.residence;
-    expect(card.room?.price.total).toBe(50);
+    // Review 4 #9: the room is the Lodgings card at the Junction.
+    expect(city.locations.find((l) => l.id === 'irongate.tram-junction')!.lodgings?.price.total).toBe(50);
     const veraPaper = await vera.caller.paper.today();
     expect(veraPaper.desk.awards).toEqual(
       expect.arrayContaining([{ kind: 'issue', label: 'Your work on the tram fares', pc: 4 }]),

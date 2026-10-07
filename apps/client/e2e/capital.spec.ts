@@ -32,16 +32,19 @@ test('the capital: register in Eastside → vote across three parties → the co
   });
   expect(lift.ok()).toBe(true);
 
-  // 2. Eastside: where you live (a phone: the plate's corner), the card, the sheet, Register.
+  // 2. Eastside: where you live (a phone: the plate's corner), the card, the sheet, *Live here*.
   await page.goto('/city/irongate/irongate.eastside');
   await expect(page.getByTestId('district-name').filter({ visible: true })).toHaveText('Eastside');
   await expect(page.getByTestId('district-kicker').filter({ visible: true })).toHaveText(/visiting/i);
   await page.getByTestId('residence-row').filter({ visible: true }).click();
   const card = page.getByRole('dialog', { name: 'Where you live' });
-  await expect(card.getByTestId('residence-line1')).toHaveText('You live in Coalport');
-  await expect(card.getByTestId('residence-register')).toHaveText('Register in Eastside · 500 Iron');
+  await expect(card.getByTestId('residence-line1')).toHaveText('You live in Coalport.');
+  await expect(card.getByTestId('residence-line2')).toHaveText(
+    'Live in Eastside instead: vote and stand here, and your orders come from here. A week between moves.',
+  );
+  await expect(card.getByTestId('residence-register')).toHaveText('Live here · 500 Iron');
   await card.getByTestId('residence-register').click();
-  const sheet = page.getByRole('dialog', { name: 'Register in Eastside · 500 Iron' });
+  const sheet = page.getByRole('dialog', { name: 'Live in Eastside · 500 Iron' });
   await expect(sheet).toBeVisible();
   const lines = await sheet.getByTestId('register-lines').getByRole('listitem').allTextContents();
   expect(lines.length).toBeGreaterThanOrEqual(4);
@@ -49,7 +52,7 @@ test('the capital: register in Eastside → vote across three parties → the co
   expect(lines.join(' ')).toContain('Your job, reputation, Iron and rank are untouched.');
   await sheet.getByTestId('register-confirm').click();
   const registered = modalOf(page);
-  await expect(registered.getByTestId('stamp')).toHaveText('Registered');
+  await expect(registered.getByTestId('stamp')).toHaveText('Moved in');
   await expect(registered).toContainText('Eastside has a new voter');
   await expect(registered.getByTestId('political-iron')).toContainText('−500 Iron');
   await registered.getByRole('button', { name: 'Continue' }).click();

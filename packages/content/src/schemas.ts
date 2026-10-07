@@ -296,6 +296,12 @@ export const Location = z.strictObject({
   actions: z.array(Action).min(1),
   /** Slice 5 (ADR 0031): the place's missions, listed after its tickets. */
   missions: z.array(Mission).optional(),
+  /**
+   * Review 4 #9 (answers §9.3, tech design §10.1): the paid bed is a card at a place, said as a bed
+   * (*A bed on the tram line · 7 nights · 100 Iron*). At most one per city, and only in `ROOM.cityId`
+   * until slice 7 (the Rows in Clearwater).
+   */
+  lodgings: z.strictObject({ line: z.string().min(1).max(60) }).optional(),
 });
 
 export const City = z.strictObject({

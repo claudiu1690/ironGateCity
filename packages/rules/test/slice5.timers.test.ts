@@ -212,8 +212,12 @@ describe('the record (§6.4)', () => {
     expect(marksFor({ ...base, type: 'theft' }).add.map((m) => m.kind)).toEqual(['moderate', 'moderate']);
     expect(marksFor({ ...base, type: 'sabotage' }).add).toHaveLength(3);
     expect(marksFor({ ...base, type: 'speech' }).add).toEqual([]);
-    expect(marksFor({ ...base, type: 'surveillance', arrested: true, arrests: [9] }).add).toEqual([]);
-    expect(marksFor({ ...base, type: null, arrested: true, arrests: [9] })).toEqual({ add: [], escalated: false });
+    // Review 4 #20 (GDD §11.2, ADR 0078): an arrest always marks, and every arrest escalates a later one.
+    expect(marksFor({ ...base, type: 'surveillance', arrested: true, arrests: [] }).add).toEqual([{ day: 10, kind: 'minor', logId: 'L' }]);
+    expect(marksFor({ ...base, type: null, arrested: true, arrests: [9] })).toEqual({
+      add: Array.from({ length: 3 }, () => ({ day: 10, kind: 'serious', logId: 'L' })),
+      escalated: true,
+    });
     // Day 0 and day 6 escalate; day 0 and day 7 do not; a name taken (no arrest) never escalates.
     const six = marksFor({ type: 'vandalism', arrested: true, arrests: [0], today: 6, logId: null });
     expect(six.escalated).toBe(true);

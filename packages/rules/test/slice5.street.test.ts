@@ -217,12 +217,14 @@ describe('the caught check (design §7.1, §15.3, economy §19.4)', () => {
 });
 
 describe('the cells and the infirmary (design §8.2, §9.2)', () => {
-  it('sentences: 39 at Heat 58; 58 on rival ground; never over 60', () => {
-    expect(sentenceMinutes(58, false)).toBe(39);
-    expect(sentenceMinutes(58, true)).toBe(58);
+  // Review 4 #20 (GDD §19.2, ADR 0078): 20 + Heat ÷ 2 (was 10 +).
+  it('sentences: 20 at Heat 0; 49 at Heat 58; 60 at 80; 60 on rival ground; never over 60', () => {
+    expect(sentenceMinutes(0, false)).toBe(20);
+    expect(sentenceMinutes(58, false)).toBe(49);
+    expect(sentenceMinutes(80, false)).toBe(60);
+    expect(sentenceMinutes(58, true)).toBe(60);
     expect(sentenceMinutes(100, false)).toBe(60);
     expect(sentenceMinutes(100, true)).toBe(60);
-    expect(sentenceMinutes(0, false)).toBe(10);
   });
   it("bail: 100, 200, 800, 1,600, 800; The Cells Are Full halves it", () => {
     const b = (marks: number, over: Partial<Parameters<typeof bailFor>[0]> = {}) =>
@@ -361,7 +363,8 @@ describe('finishMission (design §4.6, §7.2, §8.1, §9.2)', () => {
     expect(f.record.added).toEqual([]);
   });
 
-  it("a police loss: the cells with the type's marks (none for a watch), Health 30", () => {
+  // Review 4 #20 (GDD §11.2, ADR 0078): a watch's arrest is one minor mark (was none).
+  it("a police loss: the cells with the type's marks (one minor mark for a watch), Health 30", () => {
     const s = startOf({ force: { checkRoll: 1 } });
     const f = finish(s, fight([100], 125, tier2('city-police')), 'police', null);
     expect(f).toMatchObject({ stamp: 'takenIn', sentTo: { kind: 'cells', reason: 'policeLoss' } });
@@ -372,9 +375,9 @@ describe('finishMission (design §4.6, §7.2, §8.1, §9.2)', () => {
     const watch = startOf({ mission: { ...base.mission, type: 'surveillance', energy: 12 }, target: null });
     const w = finish(watch, fight([100], 125, tier2('city-police')), 'police', null);
     expect(w.sentTo?.kind).toBe('cells');
-    expect(w.record.added).toEqual([]);
-    expect(w.record.arrests).toEqual([]);
-    expect(w.sentTo?.held.bail?.total).toBe(100);
+    expect(w.record.added).toEqual([{ day: 20_730, kind: 'minor', logId: 'log1' }]);
+    expect(w.record.arrests).toEqual([20_730]);
+    expect(w.sentTo?.held.bail?.total).toBe(150);
   });
 
   it('caught while Noticed: the name taken; while Hot: the cells, the sentence by the Heat at the arrest', () => {
@@ -384,7 +387,7 @@ describe('finishMission (design §4.6, §7.2, §8.1, §9.2)', () => {
     const hot = startOf({ force: { checkRoll: 99 }, heat: { value: 50, at: T0 } });
     const cells = finish(hot, null, null, { checked: true, chance: 50, roll: 1, caught: true, withoutRoll: false, arrest: true });
     expect(cells.stamp).toBe('takenIn');
-    expect(cells.sentTo).toMatchObject({ kind: 'cells', reason: 'caught', held: { minutes: 10 + 28 } });
+    expect(cells.sentTo).toMatchObject({ kind: 'cells', reason: 'caught', held: { minutes: 20 + 28 } });
     // Wanted and a Failure: arrested without a roll.
     const wanted = startOf({ force: { checkRoll: 100 }, heat: { value: 80, at: T0 } });
     expect(finish(wanted, null, null, { checked: true, chance: null, roll: null, caught: true, withoutRoll: true, arrest: true }).sentTo?.reason).toBe('wanted');

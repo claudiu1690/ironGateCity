@@ -211,6 +211,10 @@ function PoliticalBody({
   // Slice 5 (tech design §10.3): out of the cells or the infirmary, the record struck.
   if (k.heat)
     lines.push({ id: 'heat', text: copy.risk.heatKnock(k.heat.before, k.heat.after, heatWord(heatState(k.heat.after))) });
+  // Review 4 #20 (answers §20.3): out of the cells, the arrest's mark and the orders off.
+  if (k.takenIn)
+    lines.push({ id: 'taken-in', text: copy.risk.takenInKnock(k.takenIn.added, recordWord(k.takenIn.level)) });
+  if (k.ordersOff) lines.push({ id: 'orders-off', text: copy.risk.ordersOffKnock });
   if (k.health) lines.push({ id: 'health', text: copy.risk.healthKnock(k.health.before, k.health.after) });
   if (k.record)
     lines.push({ id: 'record', text: copy.risk.recordKnock(recordWord(k.record.after.level), k.record.after.marks) });
@@ -1224,7 +1228,13 @@ function StreetLines({
   }
   const rec = street?.record ?? null;
   if (rec && rec.added > 0) {
-    lines.push({ id: 'record', text: copy.risk.nameTaken(rec.marks, recordWord(rec.after)) });
+    // Review 4 #20 (answers §20.3): an arrest's marks read *Your record: taken in · 1 mark · On file*.
+    lines.push({
+      id: 'record',
+      text: rec.takenIn
+        ? copy.risk.takenInKnock(rec.added, recordWord(rec.after))
+        : copy.risk.nameTaken(rec.marks, recordWord(rec.after)),
+    });
     if (rec.escalated) lines.push({ id: 'record-escalated', text: copy.risk.secondTime, tone: 'text-failure' });
     // QA m5: the card of the level reached, on its first crossing; the fade clause only when every
     // live mark is minor (a result stored before the fix has no `allMinor`: minor unless escalated).
@@ -1235,6 +1245,8 @@ function StreetLines({
         card: true,
       });
   }
+  // Review 4 #20 (answers §20.3, tech design §11.6): the cells took the day's orders off.
+  if (street?.ordersOff) lines.push({ id: 'orders-off', text: copy.risk.ordersOffKnock, tone: 'text-failure' });
   const agi = street?.agility ?? null;
   if (agi && agi.quarters > 0 && !(stat && stat.stat === 'agi'))
     lines.push({ id: 'agility', text: copy.risk.agility(4 - agi.quarters) });

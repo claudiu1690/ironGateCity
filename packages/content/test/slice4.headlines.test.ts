@@ -394,26 +394,27 @@ describe('the new UI copy, word for word against slice-4-screens.md §11', () =>
     t.boardTheTrainTo(P('city'), P('fare'), P('min')),
     t.seeTheNationMap,
     r.whereYouLive,
+    // Review 4 #9 (answers §9.2–§9.3): *Live here*, and the room as the Lodgings card's bed.
     r.youLiveIn(P('place')),
-    r.registerIn(P('district'), 500),
+    r.liveIn(P('district'), 500),
     r.needsIron(500),
-    r.registerHere(P('district')),
+    r.liveHereLine(P('district')),
     r.canMoveAgainFrom(P('weekday')),
     r.onBallotLine(P('place'), P('weekday')),
-    r.registeredLine(P('weekday'), P('weekday2'), P('weekday3')),
+    r.sinceLine(P('weekday'), P('weekday2'), P('weekday3')),
     r.belowRank(P('rank2'), 400),
-    r.register(500),
-    r.registered,
+    r.liveHere(500),
+    r.movedIn,
     r.newVoter(P('district')),
     r.seatGivenUp('Coalport'),
     r.nextVote(P('district'), P('weekday')),
-    r.room,
-    r.roomLine(100, 7, 50),
-    r.takeARoom(100),
-    r.renew(100),
-    r.roomUntil(P('weekday'), P('cap')),
-    r.roomPaidAhead(P('weekday'), P('cap'), P('renewFrom')),
-    r.taken,
+    copy.lodgings.headline,
+    copy.lodgings.benefit(P('cap') as unknown as number, P('base') as unknown as number),
+    copy.lodgings.take(100),
+    copy.lodgings.more(100),
+    copy.lodgings.running(P('weekday'), P('cap') as unknown as number),
+    copy.lodgings.paidAhead(P('weekday'), P('cap') as unknown as number, P('renewFrom')),
+    copy.lodgings.stamp,
     i.theIssues,
     i.leads,
     i.open,
@@ -453,17 +454,22 @@ describe('the new UI copy, word for word against slice-4-screens.md §11', () =>
     expect(t.votesIn(1)).toBe('Votes in 1 day');
     expect(c.councilRule('Tram Subsidy', 1)).toBe('Council rule: Tram Subsidy · 1 day left');
     expect(r.belowRank('Activist', 400)).toBe(
-      'Activists can register in the capital. 400 Party XP makes an Activist.',
+      'Activists can live in the capital. 400 Party XP makes an Activist.',
     );
     expect(r.belowRank('Steward', 400)).toBe(
-      'Stewards can register in the capital. 400 Party XP makes a Steward.',
+      'Stewards can live in the capital. 400 Party XP makes a Steward.',
     );
   });
 
   it('the help notes word for word (§6.1, §7.1, §11)', () => {
     const notes = section(SCREENS, 'Help notes (tap', 'British English');
-    expect(r.help.whereYouLive()[0]).toBe('Where you live');
-    expect(SCREENS).toContain(`the help note *${r.help.whereYouLive()[1]}*`);
+    // Review 4 #9 (answers §9.2): the card's note is `help.residence`, in plain words; the slice-4
+    // note it replaced stays on record in the screens document.
+    expect(copy.help.residence()).toEqual([
+      'Where you live',
+      'The town whose council you vote for and stand for, whose paper comes first, and whose Party orders you get. Living somewhere else costs 500 Iron and a week between moves; everything you own comes with you.',
+    ]);
+    expect(SCREENS).toContain('the help note *Where you live is where you vote and stand for the council');
     expect(i.help.theIssues()[0]).toBe('The Issues');
     expect(SCREENS).toContain(`the help note *${i.help.theIssues()[1]}*`);
     expect(c.help.closeRace()).toEqual(['Close race', /\*Close race\* \(\*(.+?)\*\)/.exec(notes)![1]]);

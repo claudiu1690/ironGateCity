@@ -17,7 +17,8 @@ export const residenceRouter = router({
     )
     .mutation(({ ctx, input }) => register({ user: ctx.user, content: ctx.content, now: ctx.now, input })),
 
+  /** Review 4 #9 (tech design §10.3): a bed at the place with the Lodgings card. */
   room: protectedProcedure
-    .input(z.object({ idempotencyKey: z.uuid() }))
+    .input(z.object({ locationId: z.string().min(1), idempotencyKey: z.uuid() }))
     .mutation(({ ctx, input }) => takeRoom({ user: ctx.user, content: ctx.content, now: ctx.now, input })),
 });

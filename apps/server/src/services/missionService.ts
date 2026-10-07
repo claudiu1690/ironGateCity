@@ -289,7 +289,7 @@ async function storedStart(
  * level (QA m5: *On file*, *Repeat offender*, *Notorious*, each its card once). A character who had
  * the first-mark card before the fix round (`firsts.mark`) has seen *On file*'s.
  */
-function firstsAfter(
+export function firstsAfter(
   c: Pick<CharacterDoc, 'firsts'>,
   stateAfter: HeatState,
   stateBefore: HeatState,

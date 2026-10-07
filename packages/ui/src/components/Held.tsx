@@ -1,8 +1,9 @@
 import { copy } from '@irongate/content/copy';
-import type { HeldView } from '@irongate/rules';
+import type { CellsNowRow, FactionId, HeldView } from '@irongate/rules';
 import type { ReactNode } from 'react';
 import { cx, formatWhen } from '../format';
 import { Button } from './Button';
+import { FactionCrest } from './FactionCrest';
 import { GroundSash } from './GroundSash';
 import type { Ground } from './GroundSash';
 import { ArtPanel } from './HallHeader';
@@ -120,10 +121,11 @@ export function HeldScreen({
             {ground && <GroundSash ground={ground} />}
           </ArtPanel>
         )}
-        <div className="flex flex-col gap-3 px-4 pt-3 pb-8 lg:pb-28">
+        {/* Review 4: from 1024 px the floating tab bar needs ~130 px under the last line. */}
+        <div className="flex flex-col gap-3 px-4 pt-3 pb-8 lg:pb-[132px]">
           <header className="flex flex-col gap-1">
             <HelpButton
-              notes={[cells ? copy.risk.help.cells() : copy.risk.help.infirmary()]}
+              notes={[cells ? copy.help.cells() : copy.risk.help.infirmary()]}
               label={cells ? 'What the cells mean' : 'What the infirmary means'}
               className="-my-2 self-start"
             >
@@ -170,6 +172,12 @@ export function HeldScreen({
             data-testid="held-sentence"
           >
             {cells ? copy.risk.cells.eitherWay(out) : copy.risk.infirmary.eitherWay(out)}
+            {/* Review 4 #20 (answers §20.3): the arrest took the day's orders off. */}
+            {cells && h.ordersOff && (
+              <span className="mt-1 block" data-testid="held-orders-off">
+                {copy.risk.cells.ordersOff}
+              </span>
+            )}
           </p>
 
           {cells && h.bail && (
@@ -261,5 +269,75 @@ export function HeldScreen({
         </div>
       </article>
     </div>
+  );
+}
+
+export interface CellsNowCardProps {
+  /** The players held here now, soonest out first; undefined while loading. */
+  rows: CellsNowRow[] | undefined;
+  /** The server's clock now (the caller ticks it). */
+  now: number;
+  factionNames: Partial<Record<FactionId, string>>;
+  className?: string;
+}
+
+/**
+ * Review 4 #19 (answers §19, ADR 0078): *In the cells now* on a police station's sheet, the
+ * `JobsCard` pattern. One row per player held here, any party: the avatar, the name, the party's small
+ * mark and *out in 24 min*; the viewer's own row reads *you*. Empty: *Nobody. The duty officer is
+ * reading.* Read-only until slice 6 (*Post bail* on a faction mate's row).
+ */
+export function CellsNowCard({ rows, now, factionNames, className }: CellsNowCardProps) {
+  const live = (rows ?? []).filter((r) => r.until > now);
+  return (
+    <section
+      aria-label={copy.cellsNow.kicker}
+      className={cx('mt-1 flex flex-col border-[1.5px] border-ink bg-paper-card', className)}
+      data-testid="cells-now"
+    >
+      <h3 className="label-caps border-b border-ink px-3 py-1.5 text-[11px] font-semibold">{copy.cellsNow.kicker}</h3>
+      {rows === undefined ? (
+        <p className="px-3 py-2 font-mono text-[12px] text-muted" role="status">
+          …
+        </p>
+      ) : live.length === 0 ? (
+        <p className="px-3 py-2 font-body text-[13.5px] text-text-2 italic" data-testid="cells-now-empty">
+          {copy.cellsNow.empty}
+        </p>
+      ) : (
+        <ul className="flex flex-col">
+          {live.map((r) => {
+            const party = factionNames[r.factionId] ?? r.factionId;
+            const out = copy.cellsNow.out(formatWhen(r.until, now));
+            return (
+              <li
+                key={`${r.name}-${r.until}`}
+                className="flex min-h-11 items-center gap-2.5 border-b border-dotted border-faint px-3 py-1.5 last:border-b-0"
+                data-testid="cells-now-row"
+                data-you={r.you || undefined}
+              >
+                <span className="size-8 shrink-0 overflow-hidden rounded-full border border-ink bg-paper-2" aria-hidden="true">
+                  {r.avatar && (
+                    <Picture asset={r.avatar} sizes="32px" decorative className="size-full object-cover object-top" />
+                  )}
+                </span>
+                <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className="truncate font-body text-[14px] font-semibold">{r.name}</span>
+                  <FactionCrest factionId={r.factionId} size={11} label={party} />
+                  {r.you && (
+                    <span className="label-caps shrink-0 text-[10px] text-petrol" data-testid="cells-now-you">
+                      {copy.cellsNow.you}
+                    </span>
+                  )}
+                </span>
+                <span className="shrink-0 font-mono text-[11.5px] text-text-2">
+                  {out}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }

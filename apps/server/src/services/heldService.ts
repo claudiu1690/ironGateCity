@@ -8,7 +8,9 @@ import {
   RECORD,
   admit,
   arrest,
+  arrestOnRecord,
   bailFor,
+  closeOrders,
   computeCheck,
   dayKey,
   dayStart,
@@ -32,6 +34,8 @@ import {
 import type {
   ActionResult,
   ActionView,
+  CellsNowView,
+  DayKey,
   HeldSpec,
   HeldView,
   Landing,
@@ -51,11 +55,11 @@ import { keySeed } from './keyGuard';
 import { readPlace } from './place';
 import { residenceCityId } from './residence';
 import { withRequestKey } from './requestKey';
-import { barsLive, healthDoc, healthTimerOf, heatDoc, heatRateOn, heatTimerOf, marksOf } from './risk';
+import { arrestsOf, barsLive, healthDoc, healthTimerOf, heatDoc, heatRateOn, heatTimerOf, marksOf } from './risk';
 import { legMinutesBetween } from './travelService';
 import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import { pickArt } from './art';
-import { assetView, energyState, toCharacterView, wornStats } from './views';
+import { assetView, energyState, fromOrdersState, toCharacterView, toOrdersState, wornStats } from './views';
 
 /**
  * Slice 5 (ADR 0033, tech design §8.2): the cells and the infirmary. A stay is written inside the
@@ -245,6 +249,15 @@ export async function releaseInTx(
     knockOns.iron = { before: c.iron, after: c.iron - ironPaid };
   }
   if (h.kind === 'infirmary') knockOns.health = { before: healthBefore, after: healthAfter, max };
+  if (h.kind === 'cells') {
+    // Review 4 #20 (answers §20.3, ADR 0078): *Your record: taken in · 1 mark · On file* (the marks
+    // this arrest added, the live record after it) and *Orders off until the day turns*.
+    if ((stay.marks ?? 0) > 0) {
+      const rec = recordView(marksOf(c), dayKey(at));
+      knockOns.takenIn = { added: stay.marks, marks: rec.marks, level: rec.level };
+    }
+    if (ordersOffToday(c, dayKey(at))) knockOns.ordersOff = true;
+  }
 
   // Design §11.5: from the cells on rival ground, the train home and a day's bar.
   let deport: { journeyId: string; arrivesAt: number } | null = null;
@@ -357,6 +370,10 @@ export async function releaseInTx(
   if (done.modifiedCount !== 1) throw new VersionConflict();
   return { result, deport };
 }
+
+/** Review 4 #20 (ADR 0078): today's orders are off since an arrest. */
+const ordersOffToday = (c: Pick<CharacterDoc, 'orders'>, today: DayKey): boolean =>
+  c.orders?.day === today && !!c.orders.off;
 
 /** ADR 0025 §5: a deportation's train is scheduled after the commit, best effort. */
 function scheduleDeport(deport: { journeyId: string; arrivesAt: number } | null, now: number): void {
@@ -581,6 +598,51 @@ export async function getHeld(deps: { user: SessionUser; content: GameContent; n
     release: h.state === 'out' ? ((stay?.result as PoliticalResult | null) ?? null) : null,
     election: null,
     paperUnread: loaded.editionReadAt === null ? 1 : 0,
+    ...(cells ? { ordersOff: ordersOffToday(c, dayKey(now)) } : {}),
+  };
+}
+
+/**
+ * `held.inCells` (review 4 #19, ADR 0078): *In the cells now* on a police station's sheet, any
+ * party, read through the `held_cells_now` partial index. A stay past its `until` but not yet
+ * released (release is lazy) is not shown. Public fields only; the viewer's own row is *you*.
+ */
+export async function cellsNow(deps: {
+  user: SessionUser;
+  content: GameContent;
+  now: () => number;
+  input: { locationId: string };
+}): Promise<CellsNowView> {
+  const { content } = deps;
+  const located = content.location(deps.input.locationId);
+  const station = located ? content.servicesOf(located.city.id)?.cells.location.id : undefined;
+  if (!located || station !== deps.input.locationId) {
+    throw gameError('NOT_FOUND', 'UNKNOWN_LOCATION', { locationId: deps.input.locationId });
+  }
+  const now = deps.now();
+  const loaded = await loadCharacter(deps.user, content, now);
+  const rows = await Character.find(
+    {
+      'held.state': 'in',
+      'held.kind': 'cells',
+      'held.locationId': deps.input.locationId,
+      'held.until': { $gt: new Date(now) },
+    },
+    { name: 1, avatarId: 1, factionId: 1, 'held.until': 1 },
+  )
+    .sort({ 'held.until': 1 })
+    .limit(50)
+    .hint('held_cells_now')
+    .lean<Array<Pick<CharacterDoc, '_id' | 'name' | 'avatarId' | 'factionId' | 'held'>>>();
+  return {
+    rows: rows.map((r) => ({
+      name: r.name,
+      avatar: r.avatarId ? assetView(content, r.avatarId) : null,
+      factionId: r.factionId,
+      until: new Date(r.held!.until).getTime(),
+      you: r._id.equals(loaded.doc._id),
+    })),
+    serverNow: now,
   };
 }
 
@@ -699,9 +761,17 @@ export async function sendToHeld(
     const set: Record<string, unknown> = {};
     let spec: HeldSpec;
     let heatAt: number | null = null;
+    let added = 0;
     if (kind === 'cells') {
       heatAt = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity)).value;
-      const marks = recordView(marksOf(c), today).marks;
+      // Review 4 #20 (ADR 0078): the hook writes what an arrest writes: the mark (one minor, or three
+      // serious within seven days of an earlier arrest), the arrest's day, and the day's orders off.
+      const rec = arrestOnRecord({ marks: marksOf(c), arrests: arrestsOf(c), today, logId: null });
+      added = rec.added.length;
+      set.record = { marks: rec.marks, arrests: rec.arrests };
+      const orders = toOrdersState(c.orders);
+      if (orders.day === today) set.orders = fromOrdersState(closeOrders(orders, now));
+      const marks = rec.marks.length;
       const bail = bailFor({
         marks,
         notorious: recordLevel(marks) === 'notorious',
@@ -719,7 +789,7 @@ export async function sendToHeld(
       cityId: c.cityId,
       held: spec,
       reason: 'dev',
-      marks: 0,
+      marks: added,
       heatAtArrest: heatAt,
       logId: null,
       encounterId: null,

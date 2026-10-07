@@ -85,6 +85,20 @@ export interface OrdersListProps {
  */
 export function OrdersList({ orders, variant = 'compact', className, onPin }: OrdersListProps) {
   const paper = variant === 'paper';
+  // Review 4 #20 (answers §20.1): an arrest today took the orders off; the panel is one quiet line
+  // (it wins over *away*: nothing is to be done anywhere until the day turns).
+  if (orders.off && !paper) {
+    return (
+      <section aria-label="Party orders" className={cx('flex flex-col', className)} data-testid="orders">
+        <p
+          className="flex h-9 items-center truncate font-mono text-[12px] text-failure"
+          data-testid="orders-off"
+        >
+          {copy.orders.off}
+        </p>
+      </section>
+    );
+  }
   if (orders.away && !paper) {
     return (
       <section aria-label="Party orders" className={cx('flex flex-col', className)} data-testid="orders">
@@ -117,6 +131,11 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
             <span className="font-mono text-[11px] text-muted">{orders.issuer.title}</span>
           </div>
         </div>
+      )}
+      {paper && orders.off && (
+        <p className="border-b border-dotted border-faint py-1.5 font-mono text-[12px] text-failure" data-testid="orders-off">
+          {copy.orders.off}
+        </p>
       )}
       <ul className="flex flex-col">
         {orders.items.map((o) => (
@@ -324,7 +343,7 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
         ))}
         {desk.room && (
           <Line testId="desk-room" small>
-            {copy.residence.roomUntil(WEEKDAY_NAMES[weekday(desk.room.untilDay)], desk.room.cap)}
+            {copy.lodgings.running(WEEKDAY_NAMES[weekday(desk.room.untilDay)], desk.room.cap)}
           </Line>
         )}
         <div className="flex items-baseline justify-between gap-2.5 border-b border-dotted border-faint text-[14px]">

@@ -14,6 +14,7 @@ import type {
   PaperView,
   PoliticalResult,
   PoliticsSummaryView,
+  LodgingsView,
   ResidenceCardView,
 } from '../types';
 import {
@@ -64,7 +65,6 @@ export const travellerFixture: CharacterView = {
     standsFromDay: 0,
     canMoveFromDay: 0,
   },
-  room: null,
   trainOpen: true,
   hero: null,
   heroes: [],
@@ -263,7 +263,41 @@ export const journeyArrivedFixture: JourneyView = {
   },
 };
 
-const room = { state: 'none' as const, price: { total: 100, lines: [] }, cap: 200 };
+/** Review 4 #9 (answers §9.3): the Lodgings card at Tram Junction, by what a tap buys. */
+export const lodgingsFixtures: Record<'take' | 'renew' | 'notYet' | 'evictions', LodgingsView> = {
+  take: {
+    line: 'A bed on the tram line · 7 nights · 100 Iron',
+    price: { base: 100, lines: [], total: 100 },
+    running: null,
+    tap: 'take',
+    renewFromDay: null,
+    cap: { now: 200, with: 250 },
+  },
+  renew: {
+    line: 'A bed on the tram line · 7 nights · 100 Iron',
+    price: { base: 100, lines: [], total: 100 },
+    running: { untilDay: DAY + 5 },
+    tap: 'renew',
+    renewFromDay: null,
+    cap: { now: 250, with: 250 },
+  },
+  notYet: {
+    line: 'A bed on the tram line · 7 nights · 100 Iron',
+    price: { base: 100, lines: [], total: 100 },
+    running: { untilDay: DAY + 12 },
+    tap: 'notYet',
+    renewFromDay: DAY + 5,
+    cap: { now: 250, with: 250 },
+  },
+  evictions: {
+    line: 'A bed on the tram line · 7 nights · 100 Iron',
+    price: { base: 100, lines: [{ id: 'issue.evictions', label: 'Eviction Notices', pct: -50 }], total: 50 },
+    running: null,
+    tap: 'take',
+    renewFromDay: null,
+    cap: { now: 200, with: 250 },
+  },
+};
 
 export const residenceCardFixtures: Record<ResidenceCardView['state'], ResidenceCardView> = {
   visitingMay: {
@@ -280,9 +314,8 @@ export const residenceCardFixtures: Record<ResidenceCardView['state'], Residence
         { text: 'Moving again: from Tuesday.', warn: false },
       ],
     },
-    room,
   },
-  belowRank: { state: 'belowRank', livesIn: 'Coalport', cost: 500, button: null, sheet: null, room },
+  belowRank: { state: 'belowRank', livesIn: 'Coalport', cost: 500, button: null, sheet: null },
   cooldown: {
     state: 'cooldown',
     livesIn: 'Eastside',
@@ -290,9 +323,8 @@ export const residenceCardFixtures: Record<ResidenceCardView['state'], Residence
     cost: 500,
     button: null,
     sheet: null,
-    room,
   },
-  noIron: { state: 'noIron', livesIn: 'Coalport', cost: 500, button: { enabled: false }, sheet: null, room },
+  noIron: { state: 'noIron', livesIn: 'Coalport', cost: 500, button: { enabled: false }, sheet: null },
   resident: {
     state: 'resident',
     livesIn: 'Eastside',
@@ -302,7 +334,6 @@ export const residenceCardFixtures: Record<ResidenceCardView['state'], Residence
     cost: 500,
     button: null,
     sheet: null,
-    room: { state: 'running', price: { total: 100, lines: [] }, untilDay: DAY + 5, cap: 250 },
   },
   homeElsewhere: {
     state: 'homeElsewhere',
@@ -317,9 +348,8 @@ export const residenceCardFixtures: Record<ResidenceCardView['state'], Residence
         { text: 'Moving again: from Tuesday.', warn: false },
       ],
     },
-    room: null,
   },
-  atHome: { state: 'atHome', livesIn: 'Coalport', cost: 500, button: null, sheet: null, room: null },
+  atHome: { state: 'atHome', livesIn: 'Coalport', cost: 500, button: null, sheet: null },
   // Slice-4 fixes §1 (QA M2): a candidate on the Coalport ballot; the count day is the move day.
   onBallot: {
     state: 'onBallot',
@@ -328,10 +358,9 @@ export const residenceCardFixtures: Record<ResidenceCardView['state'], Residence
     cost: 500,
     button: null,
     sheet: null,
-    room,
   },
   // Slice 5 (screens §8.3): a visitor on rival ground can neither live nor stand there.
-  rivalGround: { state: 'rivalGround', livesIn: 'Coalport', cost: 500, button: null, sheet: null, room: null },
+  rivalGround: { state: 'rivalGround', livesIn: 'Coalport', cost: 500, button: null, sheet: null },
 };
 
 const district = (

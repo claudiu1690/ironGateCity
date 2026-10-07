@@ -33,6 +33,39 @@ export const REVIEW4_REWORDED: Readonly<Record<string, string>> = {
   'Your orders are in {city} today': 'Your orders are in {city} · {done} of {of} done',
   // Review 4 #17 (answers §17).
   'Legal Aid: half price': 'Legal Aid · the Alliance pays half your bail',
+  // Review 4 #20 (answers §20.3, ADR 0078): the cells' decks gain the orders clause (past tense: the
+  // paper prints the morning after), and the cells' note the new rule.
+  'Taken in after {missionTitle}; {how} The duty officer wrote it down. Heat is back to 25; the branch says nothing.':
+    "Taken in after {missionTitle}; {how} The duty officer wrote it down. Heat is back to 25; the day's orders were off.",
+  'Taken in after {missionTitle}; {how} Heat is back to 25. The committee has read this and will say so.':
+    "Taken in after {missionTitle}; {how} Heat is back to 25. The committee has read this and took the day's orders off the board.",
+  'Taken in after {missionTitle}; {how} Legal Aid halved the bail; the Rooms would rather not mention it. Heat is back to 25.':
+    "Taken in after {missionTitle}; {how} Legal Aid halved the bail. Heat is back to 25; the Rooms took the day's orders off the board.",
+  'Taken in at police headquarters after {missionTitle}; {how} Heat is back to 25. The Herald prints names.':
+    "Taken in at police headquarters after {missionTitle}; {how} Heat is back to 25, the day's orders off. The Herald prints names.",
+  'A sentence of ten to sixty minutes, by your Heat. Pay bail or wait; either way you walk out with Heat at 25. Energy, the wage and the vote carry on without you.':
+    'A sentence of twenty to sixty minutes, by your Heat. Pay bail or wait; either way you walk out with Heat at 25, a mark on your record, and no Party orders until the day turns. Energy, the wage and the vote carry on without you.',
+  // Review 4 #9 (answers §9.2–§9.3): *Live here*, and the room as a bed at the Junction's Lodgings card.
+  'You live in {place}': 'You live in {place}.',
+  'Register in {district} · 500 Iron': 'Live in {district} · 500 Iron',
+  'Register here to vote and stand in {district} · 7 days between moves':
+    'Live in {district} instead: vote and stand here, and your orders come from here. A week between moves.',
+  'You can move again from {weekday}': 'You can move again from {weekday}.',
+  "You're a candidate in {place} until the result · you can move from {weekday}":
+    "You're a candidate in {place} until the result · you can move from {weekday}.",
+  'Registered {weekday} · you vote from {weekday2} · move again from {weekday3}':
+    'Since {weekday} · you vote from {weekday2} · move again from {weekday3}.',
+  '{rank2}s can register in the capital. 400 Party XP makes a {rank2}.':
+    '{rank2}s can live in the capital. 400 Party XP makes a {rank2}.',
+  'Register · 500 Iron': 'Live here · 500 Iron',
+  Registered: 'Moved in',
+  'A room in Irongate': 'A bed in Irongate',
+  '100 Iron · 7 days · Rested cap +50': 'Rested banks higher while you have it: up to {cap} instead of {base}.',
+  'Take a room · 100 Iron': 'Take a bed · 100 Iron',
+  'Renew · 100 Iron · 7 more nights': 'Seven more nights · 100 Iron',
+  'Room until {weekday} · Rested cap {cap}': 'Your bed until {weekday} · Rested banks to {cap}',
+  'Room until {weekday} · Rested cap {cap} · renew from {renewFrom}':
+    'Your bed until {weekday} · Rested banks to {cap} · renew from {renewFrom}',
   // The screens' worked examples.
   'In the cells at Harbour Police · 24 minutes to go · bail 150 Iron':
     'In the cells at Harbour Police · out in 24 min · bail 150 Iron',

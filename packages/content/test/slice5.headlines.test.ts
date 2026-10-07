@@ -108,7 +108,7 @@ describe('the risk headlines (design §14)', () => {
     expect(CLARION).toHaveLength(10);
     for (const [id, gp, , headline, deck] of CLARION) {
       const h = get(id!);
-      expect([h.headline, h.deck], id).toEqual([headline, deck]);
+      expect([h.headline, h.deck], id).toEqual([headline, reworded(deck!)]);
       const [, group, priority] = /^(personal|city) (\d)/.exec(gp!)!;
       expect([h.group, h.priority], id).toEqual([group, Number(priority)]);
     }
@@ -124,7 +124,7 @@ describe('the risk headlines (design §14)', () => {
       expect(
         p.names.map((n) => get(`${p.prefix}${n}`).deck),
         p.prefix,
-      ).toEqual(decks[p.prefix]);
+      ).toEqual(decks[p.prefix]!.map(reworded));
     // The substitutions the design names, and (a deviation: the Clarion's headline names its own
     // quarter and city) the paper's own second quarter and city.
     const swap: Record<string, Array<[string, string]>> = {
@@ -428,9 +428,14 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
       const key = /`(\w+)`/.exec(keyCell!)![1] as keyof typeof r.help;
       // Review 4 #12: Heat's note is written by state (answers §12; checked in review4.copy.test.ts).
       if (key === 'heat') continue;
+      // Review 4 #20 (answers §20.3): the cells' note is `copy.help.cells`, under the new rule.
+      if ((key as string) === 'cells') {
+        expect(copy.help.cells()).toEqual([kicker, reworded(note!)]);
+        continue;
+      }
       expect(r.help[key](), key).toEqual([kicker, note]);
     }
-    expect(Object.keys(r.help).sort()).toEqual(table.map((t) => /`(\w+)`/.exec(t[0]!)![1]).sort());
+    expect([...Object.keys(r.help), 'cells'].sort()).toEqual(table.map((t) => /`(\w+)`/.exec(t[0]!)![1]).sort());
   });
 
   it("the duty officer's and the matron's lines word for word (screens §6.2, §7.2)", () => {

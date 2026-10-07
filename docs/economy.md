@@ -999,6 +999,7 @@ For the day-10 reference player on the illegal road (§19.3–19.5; about one ar
 | The sentence's base 10 → 20 min | 5 Energy of regen, ~25 XP and ~10 Iron | Still a wait most players close the app for; §19.7's "bail is two to six times the time's value" becomes one and a half to four times, so a few more pay |
 | The day's orders off | 0–60 Party XP and 0–5 Political Capital, by the hour of the arrest; **~30 Party XP and ~2 PC on average** | About a sixth of a day's Party XP, once a week: **2–3 % of the week's Party XP**. Rank 3 (day 9) and Rank 4 (day 27) move by less than half a day |
 | An arrest is at least one mark | On legal work (a watch's police run-in lost): −10 % mission Iron for a fortnight, **~40 Iron a day**, where there was nothing | On illegal work the type's marks already applied; nothing changes there |
+| Bail with the arrest's own mark | A watch's or a tap's police loss: **100 → 150 Iron** (50 → 80 with Legal Aid, 200 → 300 on rival ground); a second arrest within seven days is three serious marks on any work | The marks are counted after the arrest, as before (`bailFor`; `review4.cells.test.ts`, `slice5.street.test.ts`) |
 
 **Verdict:** the cells now cost about **a hundred Iron, thirty Party XP and twenty minutes** per visit for the player who waits, and the record remembers it; nothing owned is taken, no rate is lowered for good. §19.7's sentence "the model waits and closes the app" stands; §19.11's #50 lever is reworded in the GDD (the base back to 10 before anything else). No §5.2 milestone moves.
 

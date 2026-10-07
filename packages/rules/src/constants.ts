@@ -356,6 +356,8 @@ export const RECORD = {
   strikePc: 30,
   escalateWithinDays: 7,
   escalatedMarks: 3,
+  /** Review 4 #20 (GDD §11.2, ADR 0078): an arrest on work that carries no mark is one minor mark. */
+  arrestMarks: 1,
   notoriousBars: { kinds: ['court', 'university'], hqOf: 'alliance' },
 } as const;
 
@@ -373,7 +375,8 @@ export const HEALTH = {
 
 /** §19.2 (design §8.2): the sentence and bail. */
 export const CELLS = {
-  baseMinutes: 10,
+  /** Review 4 #20 (GDD §19.2, ADR 0078): was 10. */
+  baseMinutes: 20,
   heatDivisor: 2,
   maxMinutes: 60,
   rivalFactor: 1.5,

@@ -16,7 +16,7 @@ export {
 } from './migrations/005-review2-street-ordinances';
 export { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
 export { migrateSlice5Risk } from './migrations/007-slice5-risk';
-export { cardAtForOpenJourneys, migrateReview4, resetOldDrafts } from './migrations/008-review4';
+export { CELLS_NOW_INDEX, cardAtForOpenJourneys, cellsNowIndex, migrateReview4, resetOldDrafts } from './migrations/008-review4';
 export type { Review4Counts, Review4Step, StepCounts } from './migrations/008-review4';
 export { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
 // Slice 4 (tech design §5).

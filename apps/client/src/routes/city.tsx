@@ -19,6 +19,7 @@ import {
   HelpButton,
   IssueChip,
   JobsCard,
+  LodgingsCard,
   LocationSheet,
   MissionBriefing,
   MissionTicket,
@@ -61,6 +62,7 @@ import type { PerformTarget } from '../features/action/usePerformAction';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
+import { CellsNow } from '../features/game/CellsNow';
 import { trainingPlacesOf } from '../features/game/trainingPlaces';
 import { useMissionStart } from '../features/street/useMissionStart';
 import { useBoard } from '../features/travel/useBoard';
@@ -531,7 +533,9 @@ export function CityPage() {
         idempotencyKey: k,
       }),
     );
-  const takeRoom = () => void act.run('room', (k) => trpcClient.residence.room.mutate({ idempotencyKey: k }));
+  // Review 4 #9 (answers §9.3): the bed is taken at the place with the Lodgings card.
+  const takeRoom = (locationId: string) =>
+    void act.run('room', (k) => trpcClient.residence.room.mutate({ locationId, idempotencyKey: k }));
   const residenceFull = (className?: string) =>
     residenceCard ? (
       <ResidenceCard
@@ -539,8 +543,6 @@ export function CityPage() {
         placeName={residencePlace}
         rank2Title={rank2}
         onRegister={() => setRegisterOpen(true)}
-        onRoom={takeRoom}
-        roomPending={act.pending === 'room'}
         className={className}
       />
     ) : null;
@@ -1177,6 +1179,18 @@ export function CityPage() {
                 take.mutate({ jobId, idempotencyKey: crypto.randomUUID() });
               }}
             />,
+            sheetPlace.lodgings ? (
+              <LodgingsCard
+                key="lodgings"
+                lodgings={sheetPlace.lodgings}
+                onTake={() => takeRoom(sheetPlace.id)}
+                pending={act.pending === 'room'}
+                notice={act.pending === null && act.error !== null ? noticeFor(act.error) : null}
+              />
+            ) : null,
+            sheetPlace.cellsHere ? (
+              <CellsNow key="cells-now" locationId={sheetPlace.id} open={sheetOpen} factionNames={names} />
+            ) : null,
           ]}
         >
           {energy.value < cheapest && <OutOfEnergyCard fullAt={character.energy.fullAt} waiting={waiting} />}

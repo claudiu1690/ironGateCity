@@ -193,7 +193,8 @@ export function StoryScreen({
         'bg-ink text-ink',
         full
           ? 'min-h-dvh lg:flex lg:items-center lg:justify-center lg:p-8'
-          : 'flex min-h-full flex-col lg:p-6',
+          : // Review 4: from 1024 px the tab bar floats over the bottom; the card ends above it.
+            'flex min-h-full flex-col lg:p-6 lg:pb-[132px]',
       )}
     >
       <section

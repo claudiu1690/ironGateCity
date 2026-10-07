@@ -24,11 +24,11 @@ import {
   swingFactors,
 } from './ordinances';
 import type { Modifiers, PriceLine, SwingFactor } from './ordinances';
-import { advanceOrders } from './orders';
+import { advanceOrders, closeOrders } from './orders';
 import type { MatchCtx } from './orders';
 import { barredByRecord, liveMarks, marksFor, recordArrest, recordLevel } from './record';
 import type { Mark, RecordLevel } from './record';
-import { computeRewards, roundHalfUp } from './rewards';
+import { ORDER_PART, computeRewards, roundHalfUp } from './rewards';
 import type { LineShare } from './rewards';
 import { createRng } from './rng';
 import type { Rng } from './rng';
@@ -576,6 +576,11 @@ export interface MissionFinal {
   };
   sentTo: { kind: 'cells' | 'infirmary'; reason: HeldReason; held: HeldSpec } | null;
   agility: { quarters: number; gained: boolean; statUp: boolean } | null;
+  /**
+   * Review 4 #20 (ADR 0078): sent to the cells, so the day's orders are off from the arrest; the
+   * arresting act advanced none (`orders.after` is the state before it, closed).
+   */
+  ordersOff: boolean;
 }
 
 export const RUN_IN_PART = { id: 'runIn', label: 'The run-in' } as const;
@@ -620,6 +625,11 @@ export function finishMission(i: {
   const dropped: MissionFinal['dropped'] = r?.outcome === 'ran' ? 'ran' : r?.outcome === 'lost' ? 'lost' : null;
   const paid = dropped ? 'dropped' : 'rolled';
   let rewards = paid === 'rolled' ? s.rewards.rolled : s.rewards.dropped;
+  // Review 4 #20 (ADR 0078, §23.1 Q4): an arrest takes the day's orders off from the arrest, and the
+  // arresting act counts for none of them, nor for the order's +25 % Party XP.
+  const takenIn =
+    (r?.outcome === 'lost' && i.opponentSide === 'police') || (i.caught?.caught === true && i.caught.arrest);
+  if (takenIn) rewards = { ...rewards, fxp: withoutOrderPart(rewards.fxp) };
   if (r) {
     rewards = { ...rewards, xp: addPart(rewards.xp, { ...RUN_IN_PART, amount: r.xp }) };
     if (r.fullStrength) {
@@ -661,7 +671,8 @@ export function finishMission(i: {
   const nameTaken = caught && !i.caught!.arrest;
   const marks = policeLoss || caught ? marksFor({ type: s.type, arrested, arrests: i.arrests, today, logId: i.logId }) : { add: [], escalated: false };
   const after = [...liveBefore, ...marks.add];
-  const arrests = arrested && marks.add.length > 0 ? recordArrest(i.arrests, today) : [...i.arrests];
+  // Review 4 #20 (ADR 0078): every arrest is recorded for the seven-day escalation.
+  const arrests = arrested ? recordArrest(i.arrests, today) : [...i.arrests];
 
   let sentTo: MissionFinal['sentTo'] = null;
   if (arrested) {
@@ -690,6 +701,13 @@ export function finishMission(i: {
     agility = { quarters: q % 4, gained, statUp: gained && q >= 4 };
   }
 
+  const ordersOff = sentTo?.kind === 'cells';
+  const orders: OrdersAdvance = ordersOff
+    ? { after: closeOrders(s.orders.before, i.at), advanced: null, completed: [], allDone: false }
+    : paid === 'rolled'
+      ? s.orders.rolled
+      : s.orders.dropped;
+
   const stamp: MissionStamp = sentTo
     ? sentTo.kind === 'cells'
       ? 'takenIn'
@@ -701,7 +719,7 @@ export function finishMission(i: {
     paid,
     dropped,
     rewards,
-    orders: paid === 'rolled' ? s.orders.rolled : s.orders.dropped,
+    orders,
     standing: paid === 'rolled' ? s.standing.rolled : s.standing.dropped,
     points: paid === 'rolled' ? s.points : 0,
     swing: paid === 'rolled' ? s.opinion.swing.rolled : 0,
@@ -718,5 +736,15 @@ export function finishMission(i: {
     },
     sentTo,
     agility,
+    ordersOff,
   };
+}
+
+/** A Party XP line without its *Party order* share (the act an arrest stopped from counting). */
+function withoutOrderPart(l: RewardLine): RewardLine {
+  const amount = l.parts ? (l.parts.find((p) => p.id === ORDER_PART.id)?.amount ?? 0) : l.bonus;
+  if (amount === 0) return l;
+  const out: RewardLine = { base: l.base, bonus: l.bonus - amount, total: l.total - amount };
+  if (l.parts) out.parts = l.parts.filter((p) => p.id !== ORDER_PART.id);
+  return out;
 }

@@ -171,7 +171,14 @@ describe('city.get v4 in the capital (tech design §8.3)', () => {
     expect(sm.residence.sheet!.lines[0]!.text).toMatch(
       /^You vote and stand in Station & Market from the next election/,
     );
-    expect(sm.residence.room).toMatchObject({ state: 'none', price: { total: 100 }, cap: 250 });
+    // Review 4 #9 (answers §9.3): the room left the residence card for the Lodgings card at the Junction.
+    expect('room' in sm.residence).toBe(false);
+    expect(city.locations.find((l) => l.id === 'irongate.tram-junction')!.lodgings).toMatchObject({
+      running: null,
+      tap: 'take',
+      price: { total: 100 },
+      cap: { with: 250 },
+    });
     const station = city.locations.find((l) => l.id === 'irongate.central-station')!;
     expect(station.quarterId).toBe(SM);
     expect(station.issueIds).toEqual(['issue.tram-fares']);

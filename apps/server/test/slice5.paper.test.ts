@@ -324,7 +324,8 @@ describe('the desk (tech design §11.3, screens §2.5)', () => {
     expect(desk.heat).toMatchObject({ state: 'hot' });
     expect(desk.heat!.value).toBeGreaterThan(50);
     expect(desk.heat!.coolsAt).toBeGreaterThan(clock.now());
-    expect(desk.record).toEqual({ level: 'onFile', marks: 2 });
+    // Review 4 #20 (ADR 0078): the arrest adds its own mark: three, a Repeat offender.
+    expect(desk.record).toEqual({ level: 'repeat', marks: 3 });
     expect(desk.where).toBeNull();
   });
 

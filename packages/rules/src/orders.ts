@@ -167,7 +167,23 @@ export function verbsPhrase(verbs: Iterable<string>): string {
   return words.length <= 1 ? (words[0] ?? '') : `${words.slice(0, -1).join(', ')} or ${words.at(-1)!}`;
 }
 
-/** The first open item this row would advance, if any (successes-only items only on Success). */
+/**
+ * Review 4 #20 (GDD §13.7, §19.2; ADR 0078): an arrest takes the day's orders off the board at `at`.
+ * Orders already done stay done and paid; nothing else advances until the settlement's new orders.
+ * Set once: a second call returns the state unchanged.
+ */
+export function closeOrders(o: OrdersState, at: number): OrdersState {
+  if (o.off) return o;
+  return { ...o, items: o.items.map((x) => ({ ...x })), off: { at, reason: 'cells' } };
+}
+
+/** Whether the day's orders are off (an arrest today). */
+export const ordersOff = (o: Pick<OrdersState, 'off'>): boolean => !!o.off;
+
+/**
+ * The first open item this row would advance, if any (successes-only items only on Success). None
+ * while the orders are off (review 4, ADR 0078).
+ */
 export function findAdvancingItem(
   o: OrdersState,
   templates: readonly OrderTemplate[],
@@ -175,6 +191,7 @@ export function findAdvancingItem(
   outcome: Outcome,
   ctx: MatchCtx,
 ): number {
+  if (o.off) return -1;
   return o.items.findIndex((item) => {
     if (item.doneAt !== null) return false;
     const t = templates.find((x) => x.id === item.templateId);
@@ -214,7 +231,7 @@ export function advanceOrders(
   const everyDone = items.length > 0 && items.every((x) => x.doneAt !== null);
   const allDone = completed && everyDone && o.allDoneAt === null;
   return {
-    orders: { day: o.day, items, allDoneAt: allDone ? now : o.allDoneAt },
+    orders: { ...o, items, allDoneAt: allDone ? now : o.allDoneAt },
     advanced: { ...item },
     completed: completed ? { ...item } : null,
     allDone,

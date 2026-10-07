@@ -12,8 +12,10 @@ import {
   addHeat,
   admit,
   arrest,
+  arrestOnRecord,
   armourOf,
   bailFor,
+  closeOrders,
   createRng,
   dayKey,
   dayStart,
@@ -56,7 +58,7 @@ import { writeTier1 } from './actionService';
 import { loadCharacter } from './dayService';
 import { createStayInTx, heldPlace } from './heldService';
 import type { HeldMission } from './missionService';
-import { writeMissionFinal } from './missionService';
+import { firstsAfter, writeMissionFinal } from './missionService';
 import { readPlace } from './place';
 import type { PlaceCtx } from './place';
 import { withRequestKey } from './requestKey';
@@ -67,12 +69,13 @@ import {
   heatDoc,
   heatRateOn,
   heatTimerOf,
-  liveMarkCount,
+  arrestsOf,
+  marksOf,
 } from './risk';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
-import { assetView, toCharacterView, wornStats } from './views';
+import { assetView, toCharacterView, toOrdersState, wornStats } from './views';
 
 /**
  * Slice 5 (ADR 0032, tech design §8.2): run-ins. A run-in is an `encounters` document (pending →
@@ -395,15 +398,44 @@ async function resolveTier1InTx(
   const extraSet: Record<string, unknown> = { 'runIn.state': 'resolved', health: healthDoc(health) };
   if (heat) extraSet.heat = heatDoc(heat.timer);
   let sentTo: StreetView['sentTo'] = null;
+  let recordBlock: StreetView['record'] = null;
+  let resolutionOrders: Tier1Resolution['orders'] | null = null;
+  let addedMarks = 0;
   if (o.outcome === 'lost') {
-    // Design §23.1 #3, #4: a loss to the police is the cells (no marks for a tap); else the infirmary.
+    // Design §23.1 #3, #4: a loss to the police is the cells; else the infirmary. Review 4 #20 (ADR
+    // 0078): the arrest marks (one minor mark, or three serious within seven days), counts for the
+    // escalation, and takes the day's orders off from it (not on a day already settled past).
     const kind = i.opponentSide === 'police' ? 'cells' : 'infirmary';
     let spec;
     if (kind === 'cells') {
-      const marks = liveMarkCount(c, i.day);
+      const rec = arrestOnRecord({ marks: marksOf(c), arrests: arrestsOf(c), today: i.day, logId: logId.toHexString() });
+      addedMarks = rec.added.length;
+      extraSet.record = { marks: rec.marks, arrests: rec.arrests };
+      const firsts = firstsAfter(
+        c,
+        heatState(heat?.after ?? heatBefore.value),
+        heatState(heat?.after ?? heatBefore.value),
+        { added: rec.added.length, before: rec.before, after: rec.after },
+        new Date(i.asOf),
+      );
+      Object.assign(extraSet, firsts.set);
+      recordBlock = {
+        added: rec.added.length,
+        escalated: rec.escalated,
+        before: rec.before,
+        after: rec.after,
+        marks: rec.marks.length,
+        first: firsts.recordFirst,
+        allMinor: rec.marks.every((m) => m.kind === 'minor'),
+        takenIn: true,
+      };
+      if (!i.frozen) {
+        const before = toOrdersState(c.orders);
+        resolutionOrders = { before, after: closeOrders(before, i.asOf), completed: [], allDone: false };
+      }
       const bail = bailFor({
-        marks,
-        notorious: recordLevel(marks) === 'notorious',
+        marks: rec.marks.length,
+        notorious: recordLevel(rec.marks.length) === 'notorious',
         rivalGround: ctx.rival !== null,
         alliance: c.factionId === 'alliance',
         sources: priceLines(ctx.modifiers, 'bailPct'),
@@ -420,7 +452,7 @@ async function resolveTier1InTx(
       cityId: ctx.city.id,
       held: spec,
       reason: kind === 'cells' ? 'policeLoss' : 'runInLost',
-      marks: 0,
+      marks: addedMarks,
       heatAtArrest: kind === 'cells' ? (heat?.after ?? heatBefore.value) : null,
       logId,
       encounterId: enc._id,
@@ -474,11 +506,12 @@ async function resolveTier1InTx(
         }
       : null,
     caught: null,
-    record: null,
+    record: recordBlock,
     sentTo,
     agility: null,
     remembered: false,
     dropped,
+    ...(resolutionOrders ? { ordersOff: true } : {}),
   };
   const result = await writeTier1({
     content,
@@ -486,7 +519,7 @@ async function resolveTier1InTx(
     located,
     c,
     ctx,
-    resolution,
+    resolution: resolutionOrders ? { ...resolution, orders: resolutionOrders } : resolution,
     seed: enc.seed,
     now: i.now,
     idempotencyKey: enc.idempotencyKey,

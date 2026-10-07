@@ -31,6 +31,11 @@ export interface StoredOrders {
   day: DayKey;
   items: StoredOrderItem[];
   allDoneAt: Date | null;
+  /**
+   * Review 4 #20 (ADR 0078): the day's orders taken off the board by an arrest. It lives inside the
+   * object the settlement replaces each City Day, so it ends at the day's turn (absent = null).
+   */
+  off?: { at: Date; reason: 'cells' } | null;
 }
 
 /**
@@ -404,6 +409,13 @@ const characterSchema = new Schema<CharacterDoc>(
       day: { type: Number, default: 0 },
       items: { type: [orderItemSchema], default: [] },
       allDoneAt: { type: Date, default: null },
+      off: {
+        type: new Schema(
+          { at: { type: Date, required: true }, reason: { type: String, enum: ['cells'], required: true } },
+          { _id: false },
+        ),
+        default: undefined,
+      },
     },
     ordersNoteSeenDay: { type: Number, default: null },
     today: { type: tallySchema, default: () => ({}) },
@@ -604,5 +616,11 @@ characterSchema.index({
 });
 // Slice 4 (ADR 0025): the tidy job and the report find characters on a train.
 characterSchema.index({ 'journey.status': 1 }, { partialFilterExpression: { 'journey.status': 'onTheWay' } });
+
+// Review 4 #19 (ADR 0078): *In the cells now* on a police station's sheet reads the players held there.
+characterSchema.index(
+  { 'held.locationId': 1, 'held.until': 1 },
+  { partialFilterExpression: { 'held.state': 'in', 'held.kind': 'cells' }, name: 'held_cells_now' },
+);
 
 export const Character = model<CharacterDoc>('Character', characterSchema);

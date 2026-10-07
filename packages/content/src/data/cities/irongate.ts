@@ -743,6 +743,8 @@ export const irongate: City = {
       // Pin 14: the survey pin (mapPins.irongate).
       map: { x: 0.43, y: 0.68 },
       quarterId: 'irongate.station-market',
+      // Review 4 #9 (answers §9.3): the paid bed, off the residence card and onto a place.
+      lodgings: { line: 'A bed on the tram line · 7 nights · 100 Iron' },
       actions: [
         {
           ...canvass,

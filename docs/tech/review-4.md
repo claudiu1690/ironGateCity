@@ -1421,3 +1421,45 @@ Recorded as each phase lands (T30 completes this section).
 **T5. The order test.**
 
 20. **Issue orders** (`issueTagged`) are checked against every Issue that can be drawn in the residence city, one at a time, so the order holds whatever the week's draw. The check found no failing template on today's content.
+
+### Phases 2 and 5 (T6–T8, T16–T17, 7 Oct 2026)
+
+**T6. The cells' rules.**
+
+21. **An arrest's own mark is a constant**, `RECORD.arrestMarks: 1`. `marksFor` adds it when `arrested` and the type carries none; the seven-day escalation now applies to **any** arrest after any earlier arrest, legal work included (a speech arrest the day after a watch's is three serious marks), as answers §20.1 says (*a second arrest within seven days is three marks for every arrest*). A caught check that is no arrest still adds only the type's marks.
+22. **The arresting act counts for no order and for none of the order's +25 % Party XP.** §23.1 Q4 takes the order's progress away; the *Party order* part of the Party XP line, worked out at the start when the order was open, is taken away with it (`withoutOrderPart` in `finishMission`, before the run-in's parts), so the receipt never pays for an order that did not count.
+23. **There is no rival tier-1 finish in `runIn.ts`** (the tech doc's §11.2 names one): a tap's run-in is finished in `streetService.resolveTier1InTx`. Rules gain `arrestOnRecord` (the marks, the record levels and the arrests after an arrest outside a mission), which the tap's police loss and the test hook call with `closeOrders`; `finishMission` keeps its own (it already decides the marks).
+24. **A run-in resolved on a day already settled past it** (the read path after the day's turn, `frozenOrders`) does not close today's orders: the arrest's day has turned, so its orders-off is over. Its result shows no orders-off line. The arrest's mark is still written.
+
+**T7. DB and server.**
+
+25. **Migration 008 has a step for the cells**, `cellsNowIndex`: the `held_cells_now` partial index, made when missing (`matched` 1 when there, `modified` 1 when this run made it). §14 says `syncIndexes` makes it, which it does at start-up; the step makes the migration complete on its own (a database whose indexes were never synced). Nothing on `characters` changes.
+26. **The test hook *Send to the cells* writes what an arrest writes** (ADR 0078 §4): the minor mark, the arrest's day and the orders off. So the hook's bail is 150 (was 100) and a held player's record is one mark higher; the slice-5 server tests that used the hook are updated with the figures, citing review 4.
+27. **The release knock-ons are two new fields**, `knockOns.takenIn { added, marks, level }` and `knockOns.ordersOff`, not `record { added, marks, level }`: `knockOns.record` already exists with the strike-off's `before/after` shape. `heat.state` is not added (the modal reads the state from `after`). *Your record: taken in* shows only when the stay counted marks (a stay from before the change has 0).
+28. **The mission and tap results carry the lines on the street block**: `StreetView.record.takenIn` (the record line reads *Your record: taken in · 1 mark · On file* instead of *The police took your name*) and `StreetView.ordersOff` (*Orders off until the day turns*, in the failure colour), filled from `MissionFinal.ordersOff` / the tap's closed orders.
+29. **`held.inCells` refuses an unknown place or one that is not a city's cells with `UNKNOWN_LOCATION`** (tRPC `NOT_FOUND`; there is no `NOT_FOUND` reason). The query is hinted with the index's name. `held.get` gains `ordersOff` for the cells only.
+30. **While the orders are off, the orders view has no pins** (nothing to go to), besides the tickets' tags (§11.4).
+
+**T8. Client and content.**
+
+31. **The orders panel when off is one quiet line in the failure colour** (*Orders off today · the branch heard about the cells*), and it wins over *away* (nothing is to be done anywhere until the day turns). The paper keeps the list and prints the line above it.
+32. **The `hl.cells` decks are in the past tense**: the paper prints them the morning after the arrest, when the day's orders are back. The Clarion's reads *… Heat is back to 25; the day's orders were off.* (answers §20.3 wrote *today's orders are off*, which would be wrong that morning); the Sentinel's *… The committee has read this and took the day's orders off the board.*; the Gazette's *… Legal Aid halved the bail. Heat is back to 25; the Rooms took the day's orders off the board.* (*the Rooms would rather not mention it* went for length); the Herald's *… Heat is back to 25, the day's orders off. The Herald prints names.* Each fits 200 with every real fill. For the designer to confirm. `packages/content/test/review4.ts` records old → new.
+33. **The cells screen's orders line sits inside the sentence block** (one bordered block: *The door opens … either way …* then *The branch has taken today's orders off the board.*). `copy.risk.help.cells` is retired; the kicker's note is `help.cells`.
+34. ***In the cells now* asks on open and every 60 s while the sheet is open**; between reads a row whose `until` has passed is hidden on the client. The party's mark is the crest with the party's name as its label.
+35. **`docs/economy.md` §24.3 gains a row for bail with the arrest's own mark** (100 → 150 Iron; 50 → 80 with Legal Aid; 200 → 300 on rival ground).
+
+**T16. Content and server.**
+
+36. **`ResidenceCardView` keeps its slice-4 state names and its `button` and `sheet`.** They map one to one onto answers §9.2's rows (`visitingMay` is *move*, `noIron` *short*, `onBallot` *candidate*, `resident`, `belowRank`, `cooldown`, `homeElsewhere`; `atHome` and `rivalGround` as before); only `room` is removed. The v2 renames and the new fields of §10.3 (`here`, `sinceDay`, `candidateUntilDay`, `rank2`) are not made: the card's copy is chosen on the client from `state` with the fields it already had, and renaming would change three test suites for no player-facing difference. `residenceCardView` drops its unused documents argument.
+37. **`LodgingsView.cap.now` is the cap today** (with the bed while one runs), `with` the cap with a bed: the card reads *up to 250 instead of 200* before, *Rested banks to 250* while running. `content.lodgingsOf(cityId)` locates the place.
+38. **`residence.room` refusals**: an unknown place is `UNKNOWN_LOCATION` (`NOT_FOUND`) before the key; a place without lodgings `NO_LODGINGS` and anywhere else, or on a train, `NOT_HERE` (with the city, and `arrivesAt` on a train), inside the keyed transaction. `NOT_IN_CITY` and `IN_TRANSIT` are no longer returned by it. The bed's `cityId` is the place's city. The request log keeps `locationId` as the input.
+39. **The bed's result**: headline *A bed in Irongate* for a bed and for seven more nights; the stamps stay *Taken* and *Renewed*; the bodies and the Next lines are unchanged. *Live here*'s result is stamped *Moved in* (content `politics.results.register`).
+
+**T17. Client.**
+
+40. **Line 1 of the residence card ends with a full stop** (*You live in Coalport.*, as the table), which the phone's one-line row and the Me tab's line also show.
+41. **The residence card's note is `help.residence`**; slice 4's `copy.residence.help` is retired. The Lodgings card's kicker carries `help.lodgings`. Its price line under a rents Issue is its own Courier line (*50 Iron · Eviction Notices*), and the button carries the price (*Take a bed · 50 Iron*).
+42. **The desk's room row reads as a bed**: *Your bed until Sunday · Rested banks to 250* (was *Room until Sunday · Rested cap 250*).
+43. **Not changed here**: the Election card's *Registered in Eastside* (its first line in the capital) still says *Registered*; answers §9.2's vocabulary note (*you live in {district}*) is for the GDD's table. A follow-up if the designer wants the card to match.
+
+**The small extra (the floating menu on desktop).** From 1024 px the tab bar floats 48 px above the bottom and is about 60 px tall, so a scrolling page needs about 130 px under its last line. Pages that had less now end with `lg:pb-[132px]` like the paper and the council: the Me tab and the cells' and the ward's column (112 px before), the chapter screen inside the shell (24 px before, so its sticky *Choose* bar sat under the menu) and the chapter's waiting screen.

@@ -216,6 +216,11 @@ export interface OrdersState {
   day: DayKey;
   items: OrderItem[];
   allDoneAt: number | null;
+  /**
+   * Review 4 #20 (ADR 0078): the day's orders taken off the board by an arrest. Nothing advances
+   * while it is set; it ends with the settlement's new orders (absent = null).
+   */
+  off?: { at: number; reason: 'cells' } | null;
 }
 
 export type HeadlineGroup = 'personal' | 'city' | 'ambient';
@@ -668,6 +673,12 @@ export interface OrdersView {
    * slice 5's rival-ground `elsewhere`. Null at home. The paper keeps the full list.
    */
   away: { cityName: string; done: number; of: number } | null;
+  /**
+   * Review 4 #20 (GDD §13.7, ADR 0078): an arrest took today's orders off the board: the panel and the
+   * paper read *Orders off today · the branch heard about the cells*; no pins, no ticket tags. Ends at
+   * the day's turn. Absent on views built before it.
+   */
+  off?: { reason: 'cells' } | null;
 }
 
 /** Review 4 #25: what a Rank opens, a key of `copy.ranks.opens` (`RANK_OPENS`). */
@@ -878,6 +889,10 @@ export interface LocationView {
       canBoard: boolean;
     }>;
   } | null;
+  /** Review 4 #19 (ADR 0078): the city's police station: its sheet carries *In the cells now*. */
+  cellsHere?: boolean;
+  /** Review 4 #9 (answers §9.3): the Lodgings card (Tram Junction); absent or null elsewhere. */
+  lodgings?: LodgingsView | null;
 }
 
 export interface CityView {
@@ -1766,6 +1781,13 @@ export interface PoliticalResult {
     candidacyWithdrawn?: boolean;
     /** Slice 5 (tech design §10.3): the cells, the infirmary and the record. */
     heat?: { before: number; after: number } | null;
+    /**
+     * Review 4 #20 (answers §20.3, ADR 0078): out of the cells, *Your record: taken in · 1 mark · On
+     * file* (`added`: the marks this arrest added; `marks`, `level`: the live record after it) and
+     * *Orders off until the day turns* (while today's orders are still off).
+     */
+    takenIn?: { added: number; marks: number; level: RecordLevel } | null;
+    ordersOff?: boolean;
     health?: { before: number; after: number; max: number } | null;
     energy?: { before: number; after: number } | null;
     barred?: { cityId: string; cityName: string; until: number } | null;
@@ -2009,14 +2031,24 @@ export interface ResidenceCardView {
   cost: 500;
   button: { enabled: boolean } | null;
   sheet: { lines: Array<{ text: string; warn: boolean }> } | null;
-  room: {
-    state: 'none' | 'running';
-    price: { total: number; lines: PriceLineView[] };
-    untilDay?: DayKey;
-    /** Slice-4 fixes §6: more than seven nights paid; Renew comes back on this day. */
-    renewFromDay?: DayKey;
-    cap: number;
-  } | null;
+  // Review 4 #9 (answers §9.3): the room left the card; it is `LocationView.lodgings` at Tram Junction.
+}
+
+/**
+ * Review 4 #9 (answers §9.3, tech design §10.3): the Lodgings card at a place (Tram Junction), the
+ * room's rule unchanged: 100 Iron (half under a rents Issue), seven nights, Rested's cap +50, seven
+ * more nights while seven or fewer remain, at most fourteen paid.
+ */
+export interface LodgingsView {
+  /** Content: *A bed on the tram line · 7 nights · 100 Iron*. */
+  line: string;
+  price: { base: number; lines: PriceLineView[]; total: number };
+  running: { untilDay: DayKey } | null;
+  /** *Take a bed*, *Seven more nights*, or more than seven nights paid (`renewFromDay`). */
+  tap: 'take' | 'renew' | 'notYet';
+  renewFromDay: DayKey | null;
+  /** Rested's cap now, and with a bed (*up to 250 instead of 200*). */
+  cap: { now: number; with: number };
 }
 
 export interface DistrictStateView {
@@ -2280,7 +2312,14 @@ export interface StreetView {
     first: boolean;
     /** Every live mark is minor: the card's fade clause (QA m5). Absent on older results. */
     allMinor?: boolean;
+    /**
+     * Review 4 #20 (ADR 0078): the marks are an arrest's (*Your record: taken in · 1 mark · On
+     * file*), not a name taken. Absent on older results.
+     */
+    takenIn?: boolean;
   } | null;
+  /** Review 4 #20 (ADR 0078): sent to the cells, the day's orders are off (*Orders off until the day turns*). */
+  ordersOff?: boolean;
   sentTo: {
     kind: 'cells' | 'infirmary';
     stayId: string;
@@ -2294,6 +2333,26 @@ export interface StreetView {
   remembered: boolean;
   /** A tier-1 tap on rival ground or a mission dropped by a Run or a loss. */
   dropped?: 'ran' | 'lost' | null;
+}
+
+/**
+ * Review 4 #19 (answers §19, ADR 0078): one row of *In the cells now* on a police station's sheet.
+ * Public fields only: being held is printed in the paper; the record, Heat and bail are not shown.
+ */
+export interface CellsNowRow {
+  name: string;
+  avatar: AssetView | null;
+  factionId: FactionId;
+  /** Epoch ms: *out in 24 min*. */
+  until: number;
+  /** The viewer's own row reads *you*. */
+  you: boolean;
+}
+
+/** `held.inCells`: the players held at a station now, soonest out first (at most 50). */
+export interface CellsNowView {
+  rows: CellsNowRow[];
+  serverNow: number;
 }
 
 /** The cells or the infirmary (`/held`, tech design §8.3). */
@@ -2327,6 +2386,11 @@ export interface HeldView {
   release: PoliticalResult | null;
   election: PoliticsSummaryView | null;
   paperUnread: number;
+  /**
+   * Review 4 #20 (ADR 0078): the arrest took today's orders off (*The branch has taken today's orders
+   * off the board.*). Absent on the infirmary.
+   */
+  ordersOff?: boolean;
 }
 
 /** Slice 5 additions to the character view (tech design §8.3; optional on it until phase B). */

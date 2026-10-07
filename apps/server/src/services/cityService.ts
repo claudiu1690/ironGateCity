@@ -70,7 +70,7 @@ import { issueEffectsOn, modifiersFor, ordinanceIdOn } from './modifiers';
 import { pickArt } from './art';
 import { politicsSummary } from './politicsService';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
-import { residenceCardView } from './residenceService';
+import { lodgingsView, residenceCardView } from './residenceService';
 import { recordLevelOf } from './risk';
 import { trainsFrom } from './travelService';
 import {
@@ -99,6 +99,8 @@ function orderTag(
   a: ActionDescriptor,
   rivalGround = false,
 ): ActionView['order'] {
+  // Review 4 #20 (ADR 0078): the day's orders off since an arrest: no tag at all.
+  if (orders.off) return null;
   const templates = content.ordersOf(c.factionId);
   const ctx = rivalGround ? { ...residenceCtx(c), rivalGround: true } : residenceCtx(c);
   let idx = findAdvancingItem(orders, templates, a, 'success', ctx);
@@ -302,7 +304,6 @@ export async function getCityView(
   const state = await docOf(city.id);
   const residenceDoc = await docOf(residenceCityId(c));
   const capitalId = content.nation.capitalId;
-  const capitalDoc = city.id === capitalId ? state : await docOf(capitalId);
   const districted = content.isDistricted(city.id);
   const districtDocs = districted
     ? new Map((await District.find({ cityId: city.id }).lean<DistrictDoc[]>()).map((d) => [d._id, d]))
@@ -421,10 +422,7 @@ export async function getCityView(
           .sort((a, b) => a.seat - b.seat)
           .map((t) => ({ name: t.holder.name, factionId: t.factionId!, local: t.holder.kind === 'npc' })),
         scoreboard: await scoreboardOf(content, c, city.id, q.id, today),
-        residence: await residenceCardView(content, c, { cityId: city.id, districtId: q.id }, today, {
-          capital: capitalDoc,
-          residence: residenceDoc,
-        }),
+        residence: await residenceCardView(content, c, { cityId: city.id, districtId: q.id }, today),
         you: { resident: r.cityId === city.id && r.districtId === q.id },
       });
     }
@@ -481,10 +479,7 @@ export async function getCityView(
     // Slice 5 (screens §8.3): on rival ground the card's one line, *You can't live or stand here*.
     residence:
       atHome || rival
-        ? await residenceCardView(content, c, { cityId: city.id, districtId: null }, today, {
-            capital: capitalDoc,
-            residence: residenceDoc,
-          })
+        ? await residenceCardView(content, c, { cityId: city.id, districtId: null }, today)
         : null,
     // Slice 5 (screens §8.3): the plate's *1.3 of 2.0 points left today*.
     rivalGround: rival
@@ -655,6 +650,12 @@ export async function getCityView(
         }),
         council: location.id === ownHq?.id ? council : null,
         missions,
+        // Review 4 #19 (ADR 0078): the police station's sheet carries *In the cells now*.
+        ...(content.servicesOf(city.id)?.cells.location.id === location.id ? { cellsHere: true } : {}),
+        // Review 4 #9 (answers §9.3): the Lodgings card (Tram Junction).
+        ...(location.lodgings
+          ? { lodgings: lodgingsView(content, c, location, today, { city: state, residence: residenceDoc }) }
+          : {}),
       };
     })
       // Slice 5 (ADR 0035, GDD §14.13): a locked quarter's places are not offered (their pin numbers

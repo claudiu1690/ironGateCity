@@ -77,11 +77,12 @@ export const recordBonus = (level: RecordLevel): number =>
   level === 'repeat' || level === 'notorious' ? RECORD.repeatBonus : 0;
 
 /**
- * The marks a mission adds (design §7.2): the type's, one unit each; an arrest that carries marks
- * within seven City Days of an earlier one becomes three serious marks (day 0 and day 6 escalate,
- * day 0 and day 7 do not). `arrests` are the days of earlier arrests that carried marks (design
- * §23.1 #3: an arrest with no marks never escalates a later one). A legal type (or a tier-1 tap,
- * `type: null`) adds none.
+ * The marks a mission (or a run-in on a tap) adds (design §7.2; review 4 #20, ADR 0078): the type's,
+ * one unit each, and **an arrest always marks**: one minor mark when the work carried none (legal
+ * work, a tier-1 tap, `type: null`). An arrest within seven City Days of an earlier one becomes three
+ * serious marks (day 0 and day 6 escalate, day 0 and day 7 do not). `arrests` are the days of every
+ * earlier arrest (review 4: slice 5's "an arrest with no marks never escalates" is moot). A caught
+ * check that is no arrest adds the type's marks, never escalated.
  */
 export function marksFor(i: {
   type: MissionType | null;
@@ -91,20 +92,47 @@ export function marksFor(i: {
   logId: string | null;
 }): { add: Mark[]; escalated: boolean } {
   const spec = i.type ? MISSION_TYPES[i.type] : null;
-  if (!spec || spec.marks === 0 || spec.markKind === null) return { add: [], escalated: false };
+  const carries = !!spec && spec.marks > 0 && spec.markKind !== null;
+  if (!carries && !i.arrested) return { add: [], escalated: false };
   const escalated =
     i.arrested && i.arrests.some((d) => i.today - d >= 0 && i.today - d < RECORD.escalateWithinDays);
-  const n = escalated ? RECORD.escalatedMarks : spec.marks;
-  const kind: MarkKind = escalated ? 'serious' : spec.markKind;
+  const n = escalated ? RECORD.escalatedMarks : carries ? spec.marks : RECORD.arrestMarks;
+  const kind: MarkKind = escalated ? 'serious' : carries ? spec.markKind! : 'minor';
   return {
     add: Array.from({ length: n }, () => ({ day: i.today, kind, logId: i.logId })),
     escalated,
   };
 }
 
-/** Arrests kept for the seven-day escalation: the last three that carried marks. */
+/** Arrests kept for the seven-day escalation: the last three, every arrest (review 4, ADR 0078). */
 export function recordArrest(arrests: readonly DayKey[], day: DayKey): DayKey[] {
   return [...arrests, day].slice(-3);
+}
+
+/**
+ * Review 4 #20 (ADR 0078): the record after an arrest that is not a mission's (`finishMission` does
+ * its own): a run-in with the police lost on a tier-1 tap, the test hook. The marks (one minor, or
+ * three serious within seven days of an earlier arrest), the stored marks after (faded ones pruned)
+ * and the arrests kept for the escalation.
+ */
+export function arrestOnRecord(i: {
+  marks: readonly Mark[];
+  arrests: readonly DayKey[];
+  today: DayKey;
+  logId: string | null;
+  type?: MissionType | null;
+}): { added: Mark[]; escalated: boolean; before: RecordLevel; after: RecordLevel; marks: Mark[]; arrests: DayKey[] } {
+  const live = liveMarks(i.marks, i.today);
+  const m = marksFor({ type: i.type ?? null, arrested: true, arrests: i.arrests, today: i.today, logId: i.logId });
+  const marks = [...live, ...m.add];
+  return {
+    added: m.add,
+    escalated: m.escalated,
+    before: recordLevel(live.length),
+    after: recordLevel(marks.length),
+    marks,
+    arrests: recordArrest(i.arrests, i.today),
+  };
 }
 
 /**

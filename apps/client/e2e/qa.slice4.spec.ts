@@ -112,7 +112,8 @@ test.describe('the tram bar (screens §5.2: four chips, 44 px, one tap)', () => 
 });
 
 test.describe('a double tap spends once (QA slice 2 M1, tech design §12.4)', () => {
-  test('Board on the city card: one journey, 20 Iron; Register in the sheet: one move, 500 Iron', async ({ page }) => {
+  // Review 4 #9: *Live here* in the sheet (was *Register*), and a bed at the Junction's Lodgings card.
+  test('Board on the city card: one journey, 20 Iron; Live here in the sheet: one move, 500 Iron; a bed: 100 Iron', async ({ page }) => {
     test.setTimeout(120_000);
     await signUp(page, 'Dot Double');
     await lift(page, { level: 10, fxp: 500, iron: 900 });
@@ -132,10 +133,29 @@ test.describe('a double tap spends once (QA slice 2 M1, tech design §12.4)', ()
     await atRest(page);
     await page.getByTestId('residence-row').filter({ visible: true }).click();
     await page.getByRole('dialog', { name: 'Where you live' }).getByTestId('residence-register').click();
-    const confirm = page.getByRole('dialog', { name: /^Register in Eastside/ }).getByTestId('register-confirm');
+    const confirm = page.getByRole('dialog', { name: /^Live in Eastside/ }).getByTestId('register-confirm');
+    await expect(confirm).toHaveText('Live here · 500 Iron');
     await confirm.dblclick();
-    await expect(page.getByTestId('stamp')).toHaveText('Registered');
+    await expect(page.getByTestId('stamp')).toHaveText('Moved in');
     await expect.poll(() => iron(page)).toBe(380);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    // The residence card has no room row; the bed is a card at Tram Junction (answers §9.3).
+    await expect(page.getByTestId('room-row')).toHaveCount(0);
+    await page.goto('/city/irongate/irongate.station-market?loc=irongate.tram-junction');
+    const lodgings = page.getByRole('dialog').getByTestId('lodgings');
+    await lodgings.scrollIntoViewIfNeeded();
+    await expect(lodgings.getByTestId('lodgings-line')).toHaveText('A bed on the tram line · 7 nights · 100 Iron');
+    await expect(lodgings.getByTestId('lodgings-benefit')).toHaveText(
+      'Rested banks higher while you have it: up to 250 instead of 200.',
+    );
+    await expect(lodgings.getByTestId('lodgings-take')).toHaveText('Take a bed · 100 Iron');
+    await lodgings.getByTestId('lodgings-take').dblclick();
+    await expect(page.getByTestId('stamp')).toHaveText('Taken');
+    await expect(page.getByRole('dialog').filter({ has: page.getByTestId('stamp') })).toContainText('A bed in Irongate');
+    await expect.poll(() => iron(page)).toBe(280);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByRole('dialog').getByTestId('lodgings-running')).toContainText('Rested banks to 250');
+    await expect(page.getByRole('dialog').getByTestId('lodgings-take')).toHaveText('Seven more nights · 100 Iron');
   });
 });
 

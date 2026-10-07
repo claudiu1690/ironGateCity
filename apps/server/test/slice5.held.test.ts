@@ -27,10 +27,10 @@ describe('the cells (design §8)', () => {
     await setRisk(p.id, clock.now(), { heat: 60 });
     await sendToHeld(content, oid(p.id), 'cells', clock.now());
     let held = (await p.caller.held.get())!;
-    // 10 + 60 ÷ 2 = 40 minutes; bail 100 (no marks).
-    expect(held).toMatchObject({ kind: 'cells', state: 'in', placeName: 'Harbour Police', again: false });
-    expect(held.until - at(DAY)).toBe(40 * 60_000);
-    expect(held.bail).toMatchObject({ total: 100, legalAid: false });
+    // Review 4 #20 (ADR 0078): 20 + 60 ÷ 2 = 50 minutes; bail 100 + 50 for the arrest's own mark.
+    expect(held).toMatchObject({ kind: 'cells', state: 'in', placeName: 'Harbour Police', again: false, ordersOff: true });
+    expect(held.until - at(DAY)).toBe(50 * 60_000);
+    expect(held.bail).toMatchObject({ total: 150, legalAid: false });
     expect(held.tap).toMatchObject({ id: 'held.cells', energy: 3, energy3: null });
     expect(held.walkOut).toBeNull();
 
@@ -43,7 +43,11 @@ describe('the cells (design §8)', () => {
     expect(stay).toMatchObject({ how: 'served', heatAfter: 25 });
     expect(stay.releasedAt!.getTime()).toBe(held.until);
     held = (await p.caller.held.get())!;
-    expect(held.release).toMatchObject({ act: 'released', stamp: { label: 'Released' }, knockOns: { heat: { after: 25 } } });
+    expect(held.release).toMatchObject({
+      act: 'released',
+      stamp: { label: 'Released' },
+      knockOns: { heat: { after: 25 }, takenIn: { added: 1, marks: 1, level: 'onFile' }, ordersOff: true },
+    });
     const closed = await p.caller.held.close({ stayId: held.stayId });
     expect(closed.landing).toMatchObject({ cityId: 'coalport', locationId: 'coalport.harbour-police' });
     expect(closed.character.held).toBeNull();
@@ -52,10 +56,11 @@ describe('the cells (design §8)', () => {
 
   it('bail: the Iron, out now; bail in the infirmary is refused NOT_IN_CELLS; short of Iron NOT_ENOUGH_IRON', async () => {
     const clock = testClock(at(DAY));
-    const p = await member(clock, { name: 'Bo Bail', iron: 120 });
+    // Review 4 #20: the hook's arrest marks, so bail is 150.
+    const p = await member(clock, { name: 'Bo Bail', iron: 170 });
     await sendToHeld(content, oid(p.id), 'cells', clock.now());
     const r = await p.caller.held.bail({ idempotencyKey: key() });
-    expect(r).toMatchObject({ act: 'bail', knockOns: { iron: { before: 120, after: 20 } }, view: { kind: 'held' } });
+    expect(r).toMatchObject({ act: 'bail', knockOns: { iron: { before: 170, after: 20 } }, view: { kind: 'held' } });
     expect((await Character.findById(p.id).lean())!.iron).toBe(20);
     expect((await Stay.findOne({ characterId: p.id }).lean())!.how).toBe('bail');
 
@@ -75,13 +80,14 @@ describe('the cells (design §8)', () => {
     const clock = testClock(at(DAY));
     const a = await member(clock, { name: 'Ed Aid', factionId: 'alliance' });
     await sendToHeld(content, oid(a.id), 'cells', clock.now());
-    expect((await a.caller.held.get())!.bail).toMatchObject({ total: 50, legalAid: true });
+    // Review 4 #20: (100 + 50 for the arrest's mark) ÷ 2 = 75, to the nearest 10.
+    expect((await a.caller.held.get())!.bail).toMatchObject({ total: 80, legalAid: true });
 
     await setIssueEffect('irongate', 'issue.cells-full', DAY - 1, DAY + 6);
     const b = await member(clock, { name: 'Flo Full', level: 10, cityId: 'irongate' });
     await sendToHeld(content, oid(b.id), 'cells', clock.now());
     const bail = (await b.caller.held.get())!.bail!;
-    expect(bail.total).toBe(50);
+    expect(bail.total).toBe(80);
     expect(bail.lines.map((l) => l.id)).toContain('issue.cells-full');
   });
 
@@ -151,8 +157,8 @@ describe('deportation (design §11.5)', () => {
     const p = await member(clock, { name: 'Lu Visitor', level: 10, cityId: 'duskwall' });
     await sendToHeld(content, oid(p.id), 'cells', clock.now());
     const held = (await p.caller.held.get())!;
-    expect(held).toMatchObject({ rivalGround: true, bail: { total: 200 } }); // rival ground doubles
-    expect(held.until - at(DAY)).toBe(15 * 60_000); // 10 × 1.5
+    expect(held).toMatchObject({ rivalGround: true, bail: { total: 300 } }); // rival ground doubles 150
+    expect(held.until - at(DAY)).toBe(30 * 60_000); // review 4: 20 × 1.5
     await releaseHeldNow(oid(p.id), clock.now() + 60_000);
     clock.set(clock.now() + 60_000);
     const me = await p.caller.character.me();

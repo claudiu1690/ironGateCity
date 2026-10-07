@@ -224,8 +224,9 @@ describe('the real content, slice 4', () => {
     expect(content.hqOf('vanguard', 'irongate').location.id).toBe('irongate.vanguard-house');
     expect(content.hqOf('alliance', 'irongate').location.id).toBe('irongate.concord-house');
     expect(content.councilCities().map((c) => c.id)).toEqual(['coalport', 'duskwall', 'ashford', 'irongate']);
-    expect(content.politics.results.register.stamp).toBe('Registered');
-    expect(content.politics.results.room.stamp).toBe('Taken');
+    // Review 4 #9 (answers §9.2–§9.3): *Moved in* (was *Registered*); the bed's headline.
+    expect(content.politics.results.register.stamp).toBe('Moved in');
+    expect(content.politics.results.room).toMatchObject({ stamp: 'Taken', headline: 'A bed in Irongate' });
   });
 });
 

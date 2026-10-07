@@ -224,8 +224,11 @@ export function buildMissionResult(i: {
             marks: f.record.marks.length,
             first: i.firstMark,
             allMinor: f.record.marks.every((m) => m.kind === 'minor'),
+            ...(f.sentTo?.kind === 'cells' ? { takenIn: true } : {}),
           }
         : null,
+    // Review 4 #20 (ADR 0078): *Orders off until the day turns* (not on a day already settled past).
+    ...(f.ordersOff && i.orders.after.off ? { ordersOff: true } : {}),
     sentTo:
       f.sentTo && i.sentTo
         ? {

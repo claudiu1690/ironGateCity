@@ -12,6 +12,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { gameData, setupDb, teardownDb, testClock } from './helpers';
 import { at, content, setIssueEffect, traveller } from './slice4.helpers';
 
+/** Review 4 #9: the room is taken at the Lodgings card (Tram Junction). */
+const JUNCTION = 'irongate.tram-junction';
 const DAY = 20732; // Tue 6 Oct 2026: Irongate cycle day 2, Coalport cycle day 0
 const key = () => randomUUID();
 const refusal = async (p: Promise<unknown>) =>
@@ -31,7 +33,7 @@ afterAll(teardownDb);
 
 describe('registering (residence.register)', () => {
   it.each(content.districtsOf('irongate').map((q) => [q.id, q.name]))(
-    'in %s: 500 Iron, the windows, the Registered modal, the resident card',
+    'in %s: 500 Iron, the windows, the *Moved in* modal (review 4 #9), the resident card',
     async (districtId, name) => {
       const clock = testClock(at(DAY));
       const p = await traveller(clock, { cityId: 'irongate', name: 'Ada Kern' });
@@ -39,7 +41,7 @@ describe('registering (residence.register)', () => {
       expect(r).toMatchObject({
         kind: 'political',
         act: 'register',
-        stamp: { label: 'Registered' },
+        stamp: { label: 'Moved in' },
         headline: `${name} has a new voter`,
         paper: { name: 'The Irongate Herald' },
         knockOns: { iron: { before: 1000, after: 500 }, seatGivenUp: null, candidacyWithdrawn: false },
@@ -193,11 +195,12 @@ describe('registering (residence.register)', () => {
 });
 
 describe('the room and the Rested cap (design §7.4, ADR 0030 §5)', () => {
-  it('100 Iron for seven days, the cap +50 wherever; a renewal adds seven nights (slice-4 fixes §6); NOT_IN_CITY at home', async () => {
+  // Review 4 #9 (tech design §10.5): the same rule through the Lodgings card at the Junction.
+  it('100 Iron for seven days, the cap +50 wherever; a renewal adds seven nights (slice-4 fixes §6); NOT_HERE at home', async () => {
     const clock = testClock(at(DAY));
     const p = await traveller(clock, { name: 'Dora Fink', cityId: 'irongate' });
-    const r = await p.caller.residence.room({ idempotencyKey: key() });
-    expect(r).toMatchObject({ act: 'room', stamp: { label: 'Taken' }, headline: 'A room in Irongate' });
+    const r = await p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() });
+    expect(r).toMatchObject({ act: 'room', stamp: { label: 'Taken' }, headline: 'A bed in Irongate' });
     expect(r.body).toContain('Rested banks to 250');
     expect(r.knockOns.iron).toEqual({ before: 1000, after: 900 });
     expect(r.character.restedCap).toBe(250);
@@ -205,14 +208,14 @@ describe('the room and the Rested cap (design §7.4, ADR 0030 §5)', () => {
     // Slice-4 fixes §6 (QA m5): a renewal adds seven nights to the end, never restarts the room;
     // with more than seven nights paid it is refused, so at most fourteen are ever paid for.
     clock.set(at(DAY + 2));
-    const renewed = await p.caller.residence.room({ idempotencyKey: key() });
-    expect(renewed).toMatchObject({ act: 'renew', stamp: { label: 'Renewed' }, headline: 'A room in Irongate' });
+    const renewed = await p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() });
+    expect(renewed).toMatchObject({ act: 'renew', stamp: { label: 'Renewed' }, headline: 'A bed in Irongate' });
     expect(renewed.knockOns.iron).toEqual({ before: 900, after: 800 });
     expect((await Character.findById(p.id).lean<CharacterDoc>())!.room).toMatchObject({
       fromDay: DAY,
       untilDay: DAY + 14,
     });
-    expect((await refusal(p.caller.residence.room({ idempotencyKey: key() }))).game).toEqual({
+    expect((await refusal(p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() }))).game).toEqual({
       reason: 'ROOM_PAID_AHEAD',
       renewFromDay: DAY + 7,
       renewFromAt: expect.any(Number),
@@ -221,8 +224,8 @@ describe('the room and the Rested cap (design §7.4, ADR 0030 §5)', () => {
     // At home the room still raises the cap; it cannot be taken there.
     await Character.updateOne({ _id: p.id }, { $set: { cityId: 'coalport' } });
     expect((await p.caller.character.me()).restedCap).toBe(250);
-    expect((await refusal(p.caller.residence.room({ idempotencyKey: key() }))).game?.reason).toBe(
-      'NOT_IN_CITY',
+    expect((await refusal(p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() }))).game?.reason).toBe(
+      'NOT_HERE',
     );
   });
 
@@ -237,7 +240,7 @@ describe('the room and the Rested cap (design §7.4, ADR 0030 §5)', () => {
     await setIssueEffect('irongate', 'issue.fever-st-agnes', DAY - 1, DAY + 6);
     expect((await resident.caller.character.me()).restedCap).toBe(250);
     expect((await visitor.caller.character.me()).restedCap).toBe(200);
-    await resident.caller.residence.room({ idempotencyKey: key() });
+    await resident.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() });
     expect((await resident.caller.character.me()).restedCap).toBe(300);
     await City.updateOne({ _id: 'irongate' }, { $set: { 'issues.effects': [] } });
   });

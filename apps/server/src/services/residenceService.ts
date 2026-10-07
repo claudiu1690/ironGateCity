@@ -23,6 +23,7 @@ import type {
   DayKey,
   GameErrorReason,
   PoliticalPlaceholder,
+  LodgingsView,
   PoliticalResult,
   ResidenceCardView,
 } from '@irongate/rules';
@@ -42,8 +43,9 @@ import { energyState, toCharacterView } from './views';
 /**
  * Residence (slice-4 tech design §8.2, ADR 0026, design §7): registering in a capital district or
  * back at home (Rank 2, 500 Iron, seven days between moves), with the old place's candidacy
- * withdrawn and seat vacated in the same transaction; and the room in Irongate (100 Iron, seven
- * days, Rested cap +50). Both re-base Energy at the tap, so the projection never mixes two caps.
+ * withdrawn and seat vacated in the same transaction; and (review 4 #9) a bed at the Lodgings card
+ * (100 Iron, seven days, Rested cap +50). Both re-base Energy at the tap, so the projection never
+ * mixes two caps.
  */
 
 const capitalOf = (content: GameContent) => content.nation.capitalId;
@@ -102,6 +104,43 @@ async function oldPlaceStakes(
 }
 
 /**
+ * Review 4 #9 (answers §9.3, tech design §10.3): the Lodgings card at the place that has one (Tram
+ * Junction). The room's rule, unchanged: its price under the day's rules of the place's city, whether
+ * a bed is running, what a tap buys (`roomTap`), and Rested's cap now and with a bed.
+ */
+export function lodgingsView(
+  content: GameContent,
+  c: CharacterDoc,
+  location: { lodgings?: { line: string } },
+  today: DayKey,
+  docs: { city: CityDoc | null; residence: CityDoc | null },
+): LodgingsView | null {
+  if (!location.lodgings) return null;
+  const price = roomPrice(dayModifiers(content, docs.city, today));
+  const running = !!c.room && c.room.fromDay <= today && today < c.room.untilDay;
+  const tap = roomTap(c.room, today);
+  return {
+    line: location.lodgings.line,
+    price: {
+      base: price.base,
+      lines: price.lines.map((l) => ({ id: l.id, label: l.label, pct: l.pct })),
+      total: price.total,
+    },
+    running: running ? { untilDay: c.room!.untilDay } : null,
+    tap: tap.kind === 'paidAhead' ? 'notYet' : tap.kind,
+    renewFromDay: tap.kind === 'paidAhead' ? tap.renewFromDay : null,
+    cap: {
+      now: restedCapToday(content, docs.residence, today, c.room),
+      with: restedCapToday(content, docs.residence, today, {
+        cityId: ROOM.cityId,
+        fromDay: today,
+        untilDay: today + ROOM.days,
+      }),
+    },
+  };
+}
+
+/**
  * Screens §6.1: the residence card for a district of the capital (or, with `districtId: null`, the
  * home city's card for the way back), chosen on the server.
  */
@@ -110,33 +149,13 @@ export async function residenceCardView(
   c: CharacterDoc,
   target: { cityId: string; districtId: string | null },
   today: DayKey,
-  docs: { capital: CityDoc | null; residence: CityDoc | null },
 ): Promise<ResidenceCardView> {
   const r = residenceOf(c);
   const capital = capitalOf(content);
   const livesIn = placeName(content, r.cityId, r.districtId);
   const here = r.cityId === target.cityId && r.districtId === target.districtId;
-  const room =
-    c.cityId === capital
-      ? (() => {
-          const price = roomPrice(dayModifiers(content, docs.capital, today));
-          const running = !!c.room && c.room.fromDay <= today && today < c.room.untilDay;
-          const tap = roomTap(c.room, today);
-          return {
-            state: running ? ('running' as const) : ('none' as const),
-            price: { total: price.total, lines: price.lines },
-            ...(running ? { untilDay: c.room!.untilDay } : {}),
-            // Slice-4 fixes §6 (QA m5): more than seven nights paid, no Renew until this day.
-            ...(tap.kind === 'paidAhead' ? { renewFromDay: tap.renewFromDay } : {}),
-            cap: restedCapToday(content, docs.residence, today, {
-              cityId: ROOM.cityId,
-              fromDay: today,
-              untilDay: today + ROOM.days,
-            }),
-          };
-        })()
-      : null;
-  const base = { livesIn, cost: RESIDENCE.cost as 500, room };
+  // Review 4 #9 (answers §9.3): the room left the card; it is the Lodgings card at Tram Junction.
+  const base = { livesIn, cost: RESIDENCE.cost as 500 };
   // Slice 5 (screens §8.3, GDD §14.12): another faction's home city is rival ground, where nobody
   // may live or stand: *You can't live or stand here*.
   const homeFaction = content.city(target.cityId)?.homeFactionId;
@@ -422,8 +441,6 @@ export async function register(deps: {
       if (stakes.term) await vacateSeat(content, stakes.term, today, session);
 
       const newCity = await City.findById(target.cityId).session(session).lean<CityDoc>();
-      const capitalDoc =
-        target.cityId === capital ? newCity : await City.findById(capital).session(session).lean<CityDoc>();
       const place = placeName(content, target.cityId, target.districtId);
       const hq = content.hqOf(c.factionId, target.cityId).location;
       return residenceResult(content, {
@@ -441,10 +458,7 @@ export async function register(deps: {
         residenceCity: newCity,
         view: {
           kind: 'residence',
-          residence: await residenceCardView(content, updated, target, today, {
-            capital: capitalDoc,
-            residence: newCity,
-          }),
+          residence: await residenceCardView(content, updated, target, today),
           election: await politicsSummary(content, updated, newCity, now, today, session),
         },
       });
@@ -453,17 +467,21 @@ export async function register(deps: {
 }
 
 /**
- * residence.room: a room in Irongate for seven days; on a room running with seven or fewer nights
- * left, seven more nights at its end (slice-4 fixes §6, QA m5); more than seven left, refused
- * (ROOM_PAID_AHEAD), so at most fourteen nights are ever paid for.
+ * residence.room (review 4 #9, tech design §10.3): a bed at the place with the Lodgings card (Tram
+ * Junction), for seven days; on a bed running with seven or fewer nights left, seven more nights at its
+ * end (slice-4 fixes §6, QA m5); more than seven left, refused (ROOM_PAID_AHEAD), so at most fourteen
+ * nights are ever paid for. The place must have lodgings (`NO_LODGINGS`), and the character must stand
+ * in its city, off the train (`NOT_HERE`). The rule is the room's, unchanged.
  */
 export async function takeRoom(deps: {
   user: SessionUser;
   content: GameContent;
   now: () => number;
-  input: { idempotencyKey: string };
+  input: { locationId: string; idempotencyKey: string };
 }): Promise<PoliticalResult> {
   const { content, input } = deps;
+  const located = content.location(input.locationId);
+  if (!located) throw gameError('NOT_FOUND', 'UNKNOWN_LOCATION', { locationId: input.locationId });
   const loaded = await loadCharacter(deps.user, content, deps.now());
   // Slice 5 (tech design §7.2): not from the cells, the ward or a run-in.
   assertFree(loaded.doc);
@@ -471,7 +489,7 @@ export async function takeRoom(deps: {
     characterId: loaded.doc._id,
     idempotencyKey: input.idempotencyKey,
     kind: 'residence.room',
-    input: {},
+    input: { locationId: input.locationId },
     resettle: async () => {
       const fresh = await Character.findById(loaded.doc._id).lean<CharacterDoc>();
       if (fresh) await ensureSettled(content, fresh, deps.now());
@@ -484,18 +502,21 @@ export async function takeRoom(deps: {
       if (c.day.settled !== today) throw new DayChanged();
       const blocked = notFree(c);
       if (blocked) throw blocked;
-      if (c.journey?.status === 'onTheWay') {
-        throw new GameError('IN_TRANSIT', { arrivesAt: new Date(c.journey.arrivesAt).getTime() });
+      const roomCity = located.city.id;
+      if (!located.location.lodgings) throw new GameError('NO_LODGINGS', { locationId: input.locationId });
+      const onTrain = c.journey?.status === 'onTheWay';
+      if (onTrain || c.cityId !== roomCity) {
+        throw new GameError('NOT_HERE', {
+          cityId: roomCity,
+          ...(onTrain ? { arrivesAt: new Date(c.journey!.arrivesAt).getTime() } : {}),
+        });
       }
-      if (c.cityId !== ROOM.cityId) throw new GameError('NOT_IN_CITY', { cityId: ROOM.cityId });
-      const capitalDoc = await City.findById(ROOM.cityId).session(session).lean<CityDoc>();
-      const price = roomPrice(dayModifiers(content, capitalDoc, today));
+      const cityDoc = await City.findById(roomCity).session(session).lean<CityDoc>();
+      const price = roomPrice(dayModifiers(content, cityDoc, today));
       if (c.iron < price.total) throw new GameError('NOT_ENOUGH_IRON', { iron: c.iron, cost: price.total });
       const r = residenceOf(c);
       const residenceCity =
-        r.cityId === ROOM.cityId
-          ? capitalDoc
-          : await City.findById(r.cityId).session(session).lean<CityDoc>();
+        r.cityId === roomCity ? cityDoc : await City.findById(r.cityId).session(session).lean<CityDoc>();
       const tap = roomTap(c.room, today);
       if (tap.kind === 'paidAhead') {
         throw new GameError('ROOM_PAID_AHEAD', {
@@ -503,7 +524,7 @@ export async function takeRoom(deps: {
           renewFromAt: dayStart(tap.renewFromDay),
         });
       }
-      const room = { cityId: ROOM.cityId, fromDay: tap.fromDay, untilDay: tap.untilDay };
+      const room = { cityId: roomCity, fromDay: tap.fromDay, untilDay: tap.untilDay };
       const updated = await Character.findOneAndUpdate(
         { _id: c._id, version: c.version, 'day.settled': today, iron: { $gte: price.total } },
         {
@@ -513,10 +534,11 @@ export async function takeRoom(deps: {
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
-      const district = r.cityId === ROOM.cityId && r.districtId ? r.districtId : stationDistrict(content);
+      const capital = capitalOf(content);
+      const district = r.cityId === capital && r.districtId ? r.districtId : stationDistrict(content);
       return residenceResult(content, {
         act: tap.kind === 'renew' ? 'renew' : 'room',
-        cityId: ROOM.cityId,
+        cityId: roomCity,
         c: updated,
         now,
         idempotencyKey: input.idempotencyKey,
@@ -528,13 +550,7 @@ export async function takeRoom(deps: {
         residenceCity,
         view: {
           kind: 'residence',
-          residence: await residenceCardView(
-            content,
-            updated,
-            { cityId: ROOM.cityId, districtId: district },
-            today,
-            { capital: capitalDoc, residence: residenceCity },
-          ),
+          residence: await residenceCardView(content, updated, { cityId: capital, districtId: district }, today),
           election: await politicsSummary(content, updated, residenceCity, now, today, session),
         },
       });

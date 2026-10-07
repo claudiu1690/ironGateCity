@@ -12,6 +12,8 @@ import { settleCityDay } from '../src/services/cityDay';
 import { gameData, setupDb, teardownDb, testClock } from './helpers';
 import { at, content, setIssueEffect, traveller } from './slice4.helpers';
 
+/** Review 4 #9: the room is taken at the Lodgings card (Tram Junction). */
+const JUNCTION = 'irongate.tram-junction';
 const DAY = 20732; // Tue 6 Oct 2026: Irongate cycle day 2, Coalport cycle day 0 (nominations)
 const COALPORT_POLLS = 20734; // Thu 8 Oct: Coalport cycle day 2 (the close; polls open)
 const COALPORT_COUNT = 20737; // Sun 11 Oct: Coalport cycle day 0 (election coalport:4146 counted)
@@ -161,9 +163,10 @@ describe('the room (design §7.4, screens §6.1)', () => {
     const p = await traveller(clock, { name: 'Tess Wahl', cityId: 'irongate' });
     await setIssueEffect('irongate', 'issue.evictions', DAY - 1, DAY + 6);
     const city = await p.caller.city.get({ cityId: 'irongate' });
-    const room = city.districts!.find((d) => d.id === 'irongate.eastside')!.residence.room!;
-    expect(room.price).toEqual({ total: 50, lines: [{ id: 'issue.evictions', label: expect.any(String), pct: -50 }] });
-    const r = await p.caller.residence.room({ idempotencyKey: key() });
+    // Review 4 #9: the room is the Lodgings card at the Junction.
+    const room = city.locations.find((l) => l.id === JUNCTION)!.lodgings!;
+    expect(room.price).toEqual({ base: 100, total: 50, lines: [{ id: 'issue.evictions', label: expect.any(String), pct: -50 }] });
+    const r = await p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() });
     expect(r.knockOns.iron).toEqual({ before: 1000, after: 950 });
     await City.updateOne({ _id: 'irongate' }, { $set: { 'issues.effects': [] } });
   });
@@ -171,21 +174,23 @@ describe('the room (design §7.4, screens §6.1)', () => {
   it('fixed (m5): a renewal on the day the room was taken adds seven nights; a second is refused', async () => {
     const clock = testClock(at(DAY));
     const p = await traveller(clock, { name: 'Uwe Rand', cityId: 'irongate' });
-    await p.caller.residence.room({ idempotencyKey: key() });
-    // The card reads "Room until …" with *Renew · 100 Iron · 7 more nights* (slice-4-fixes.md §6).
-    const card = (await p.caller.city.get({ cityId: 'irongate' })).districts![0]!.residence.room!;
-    expect(card).toMatchObject({ state: 'running', untilDay: DAY + 7 });
-    expect(card.renewFromDay).toBeUndefined();
-    const r = await p.caller.residence.room({ idempotencyKey: key() });
+    await p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() });
+    // The card reads *Your bed until …* with *Seven more nights · 100 Iron* (slice-4-fixes.md §6, review 4 #9).
+    const lodgings = async () =>
+      (await p.caller.city.get({ cityId: 'irongate' })).locations.find((l) => l.id === JUNCTION)!.lodgings!;
+    const card = await lodgings();
+    expect(card).toMatchObject({ running: { untilDay: DAY + 7 }, tap: 'renew' });
+    expect(card.renewFromDay).toBeNull();
+    const r = await p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() });
     expect(r).toMatchObject({ act: 'renew', knockOns: { iron: { before: 900, after: 800 } } });
     expect((await Character.findById(p.id).lean<CharacterDoc>())!.room).toMatchObject({
       fromDay: DAY,
       untilDay: DAY + 14,
     });
     // Fourteen nights paid: no Renew until seven remain, and a request that arrives anyway is refused.
-    const after = (await p.caller.city.get({ cityId: 'irongate' })).districts![0]!.residence.room!;
-    expect(after.renewFromDay).toBe(DAY + 7);
-    const err = await p.caller.residence.room({ idempotencyKey: key() }).catch((e: unknown) => e);
+    const after = await lodgings();
+    expect(after).toMatchObject({ tap: 'notYet', renewFromDay: DAY + 7 });
+    const err = await p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() }).catch((e: unknown) => e);
     expect(gameData(err).game?.reason).toBe('ROOM_PAID_AHEAD');
     expect((await Character.findById(p.id).lean<CharacterDoc>())!.iron).toBe(800);
   });
@@ -196,8 +201,8 @@ describe('the room (design §7.4, screens §6.1)', () => {
     const clock = testClock(at(DAY));
     const p = await traveller(clock, { name: 'Vera Holz', cityId: 'irongate' });
     await Promise.allSettled([
-      p.caller.residence.room({ idempotencyKey: key() }),
-      p.caller.residence.room({ idempotencyKey: key() }),
+      p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() }),
+      p.caller.residence.room({ locationId: JUNCTION, idempotencyKey: key() }),
     ]);
     const c = (await Character.findById(p.id).lean<CharacterDoc>())!;
     // Slice-4 fixes §6: the second is a renewal (seven more nights) or loses the race; never more

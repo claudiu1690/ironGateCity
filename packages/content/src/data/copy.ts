@@ -260,6 +260,18 @@ export const copy = {
    */
   orders: {
     away: (city: string, done: number, of: number) => `Your orders are in ${city} · ${done} of ${of} done`,
+    /** Review 4 #20 (answers §20.1, ADR 0078): the panel and the paper's row after an arrest today. */
+    off: 'Orders off today · the branch heard about the cells',
+  },
+  /**
+   * Review 4 #19 (answers §19): the card on every police station's sheet. `out` is a `when` phrase
+   * (*in 24 min*).
+   */
+  cellsNow: {
+    kicker: 'In the cells now',
+    empty: 'Nobody. The duty officer is reading.',
+    you: 'you',
+    out: (when: string) => `out ${when}`,
   },
   /** QA slice 4 m7: the capital's orders folded to one line on a short phone (a tap opens them). */
   ordersFold: {
@@ -435,7 +447,7 @@ export const copy = {
     ],
     /**
      * Review 4 #20 (answers §20.3): the cells' note under the new rule (twenty minutes, orders off, a
-     * mark). Shown from phase 2, with the rule; until then the cells screen keeps `risk.help.cells`.
+     * mark), on the cells screen's kicker (it replaced slice 5's `risk.help.cells`).
      */
     cells: () => [
       'The cells',
@@ -1025,48 +1037,43 @@ export const copy = {
       ],
     },
   },
-  /** Where you live: the residence card, the sheet, the result and the room (screens §6). */
+  /**
+   * Where you live: the residence card, the sheet and the result (screens §6). Review 4 #9 (answers
+   * §9.2): one button, *Live here · 500 Iron*, and the plain reason why; the room left the card for
+   * `copy.lodgings`.
+   */
   residence: {
     whereYouLive: 'Where you live',
-    youLiveIn: (place: string) => `You live in ${place}`,
-    registerIn: (district: string, iron: number) => `Register in ${district} · ${iron} Iron`,
+    youLiveIn: (place: string) => `You live in ${place}.`,
+    /** The button (and the sheet's): *Live here · 500 Iron*. */
+    liveHere: (iron: number) => `Live here · ${iron} Iron`,
+    /** The sheet's title: *Live in Eastside · 500 Iron*. */
+    liveIn: (place: string, iron: number) => `Live in ${place} · ${iron} Iron`,
     needsIron: (iron: number) => `Needs ${iron} Iron`,
-    registerHere: (district: string) =>
-      `Register here to vote and stand in ${district} · 7 days between moves`,
-    /** The not-enough-Iron state's line 2 (screens §6.1). */
-    registerHereShort: (district: string) => `Register here to vote and stand in ${district}`,
-    canMoveAgainFrom: (weekday: string) => `You can move again from ${weekday}`,
+    /** Visiting, may move (answers §9.2, row 1). */
+    liveHereLine: (place: string) =>
+      `Live in ${place} instead: vote and stand here, and your orders come from here. A week between moves.`,
+    /** Short of Iron (row 5). */
+    liveHereShort: (place: string) =>
+      `Live in ${place} instead: vote and stand here, and your orders come from here.`,
+    canMoveAgainFrom: (weekday: string) => `You can move again from ${weekday}.`,
     /** Slice-4 fixes §1 (QA M2): a candidate on the ballot where they live stays until the result. */
     onBallotLine: (place: string, weekday: string) =>
-      `You're a candidate in ${place} until the result · you can move from ${weekday}`,
-    /** "Registered Monday · you vote from Thursday · move again from Monday". */
-    registeredLine: (weekday: string, votesFrom: string, moveFrom: string) =>
-      `Registered ${weekday} · you vote from ${votesFrom} · move again from ${moveFrom}`,
+      `You're a candidate in ${place} until the result · you can move from ${weekday}.`,
+    /** Resident here: *Since Monday · you vote from Thursday · move again from Monday.* */
+    sinceLine: (weekday: string, votesFrom: string, moveFrom: string) =>
+      `Since ${weekday} · you vote from ${votesFrom} · move again from ${moveFrom}.`,
     belowRank: (rank2: string, fxp: number) =>
-      `${rank2}s can register in the capital. ${fxp} Party XP makes ${/^[aeiou]/i.test(rank2) ? 'an' : 'a'} ${rank2}.`,
-    register: (iron: number) => `Register · ${iron} Iron`,
-    /** The result's stamp. */
-    registered: 'Registered',
+      `${rank2}s can live in the capital. ${fxp} Party XP makes ${/^[aeiou]/i.test(rank2) ? 'an' : 'a'} ${rank2}.`,
+    /** At home, resident elsewhere (row 7). */
+    liveHereAgain: (city: string) => `Live in ${city} again: vote and stand at home.`,
+    /** The result's stamp (content: `politics.results.register.stamp`). */
+    movedIn: 'Moved in',
     newVoter: (district: string) => `${district} has a new voter`,
     /** A knock-on line: "Coalport seat given up". */
     seatGivenUp: (city: string) => `${city} seat given up`,
     candidacyWithdrawn: 'Your name came off the list where you lived',
     nextVote: (district: string, weekday: string) => `Next: vote in ${district} from ${weekday}.`,
-    room: 'A room in Irongate',
-    roomLine: (iron: number, days: number, cap: number) => `${iron} Iron · ${days} days · Rested cap +${cap}`,
-    takeARoom: (iron: number) => `Take a room · ${iron} Iron`,
-    /** Slice-4 fixes §6 (QA m5): a renewal adds seven nights to the end of the room. */
-    renew: (iron: number) => `Renew · ${iron} Iron · 7 more nights`,
-    roomUntil: (weekday: string, cap: number) => `Room until ${weekday} · Rested cap ${cap}`,
-    /** More than seven nights paid: no button, the day it comes back. */
-    roomPaidAhead: (weekday: string, cap: number, renewFrom: string) =>
-      `Room until ${weekday} · Rested cap ${cap} · renew from ${renewFrom}`,
-    /** The room's stamp. */
-    taken: 'Taken',
-    /** The Me tab: "You live in Eastside, Irongate · move again from Monday". */
-    /** The home city's card when living elsewhere (screens §6.1, last row). */
-    registerBackHome: (city: string, iron: number) =>
-      `Register in ${city} to vote at home again · ${iron} Iron`,
     /** The sheet's five lines (screens §6.2), built on the server with the player's places. */
     sheet: {
       vote: (place: string, weekday: string) =>
@@ -1082,12 +1089,27 @@ export const copy = {
     },
     meLine: (district: string, weekday: string) =>
       `You live in ${district}, Irongate · move again from ${weekday}`,
-    help: {
-      whereYouLive: () => [
-        'Where you live',
-        'Where you live is where you vote and stand for the council, whose paper you read first and whose Party orders you get. Moving costs 500 Iron and seven days between moves.',
-      ],
-    },
+  },
+  /**
+   * Review 4 #9 (answers §9.3): the paid bed, a card at a place (Tram Junction), in the `JobsCard`
+   * pattern. The rule is the room's (100 Iron, seven nights, Rested's cap +50, renewal at the end).
+   */
+  lodgings: {
+    kicker: 'Lodgings',
+    /** `cap` with a bed, `base` without: *up to 250 instead of 200*. */
+    benefit: (cap: number, base: number) =>
+      `Rested banks higher while you have it: up to ${cap} instead of ${base}.`,
+    take: (iron: number) => `Take a bed · ${iron} Iron`,
+    more: (iron: number) => `Seven more nights · ${iron} Iron`,
+    running: (weekday: string, cap: number) => `Your bed until ${weekday} · Rested banks to ${cap}`,
+    /** More than seven nights paid: no button, the day it comes back. */
+    paidAhead: (weekday: string, cap: number, renewFrom: string) =>
+      `Your bed until ${weekday} · Rested banks to ${cap} · renew from ${renewFrom}`,
+    /** Under a rents Issue: *50 Iron · Eviction Notices*. */
+    priced: (iron: number, label: string) => `${iron} Iron · ${label}`,
+    /** The result's stamp and headline (content: `politics.results.room`). */
+    stamp: 'Taken',
+    headline: 'A bed in Irongate',
   },
   /** The Issues section of the paper (screens §7.1). */
   issues: {
@@ -1459,7 +1481,15 @@ export const copy = {
       /** Review 4 #17 (answers §17): dotted; its note is `help.legalAid`. */
       legalAid: 'Legal Aid · the Alliance pays half your bail',
       tap: 'Listen to the cells',
+      /** Review 4 #20 (answers §20.3): the sentence's second line while today's orders are off. */
+      ordersOff: "The branch has taken today's orders off the board.",
     },
+    /**
+     * Review 4 #20 (answers §20.3): the release modal's and the mission result's knock-ons:
+     * *Your record: taken in · 1 mark · On file*, *Orders off until the day turns*.
+     */
+    takenInKnock: (n: number, level: string) => `Your record: taken in · ${n} ${n === 1 ? 'mark' : 'marks'} · ${level}`,
+    ordersOffKnock: 'Orders off until the day turns',
     minutes: (n: number) => `${n} ${n === 1 ? 'minute' : 'minutes'}`,
     /** The duty officer's one line, by case (screens §6.2). */
     dutyOfficer: {
@@ -1610,10 +1640,6 @@ export const copy = {
       rivalGround: () => [
         'Rival ground',
         "The other side's home town. Everything is harder, Heat doubles, every tap can bring a run-in, and party work pays half again. Nothing you own is at risk; the worst is a night in the cells and the train home.",
-      ],
-      cells: () => [
-        'The cells',
-        'A sentence of ten to sixty minutes, by your Heat. Pay bail or wait; either way you walk out with Heat at 25. Energy, the wage and the vote carry on without you.',
       ],
       infirmary: () => [
         'The infirmary',

@@ -5,6 +5,7 @@ import {
   PLACEHOLDERS,
   POLITICAL_PLACEHOLDERS,
   RISK_PLACEHOLDERS,
+  ROOM,
   STORY_PLACEHOLDERS,
   TIME_TOKENS,
   isPoliticalCondition,
@@ -357,6 +358,13 @@ export function parseContent(raw: unknown): Content {
       if (!q.id.startsWith(`${city.id}.`))
         problems.push(`quarter "${q.id}" must be dotted under its city "${city.id}"`);
     }
+    // Review 4 #9 (tech design §10.1): at most one Lodgings card a city, and only where the room's
+    // rule holds (`ROOM.cityId`; slice 7 widens it to the battleground cities).
+    const lodgings = city.locations.filter((l) => l.lodgings);
+    if (lodgings.length > 1)
+      problems.push(`cities.${city.id} has ${lodgings.length} places with lodgings (at most one)`);
+    if (lodgings.length > 0 && city.id !== ROOM.cityId)
+      problems.push(`location "${lodgings[0]!.id}": lodgings only in ${ROOM.cityId} (the room's rule)`);
     city.locations.forEach((location, i) => {
       unique('location', location.id);
       const quarter = quarterById.get(location.quarterId);
@@ -1103,6 +1111,8 @@ export interface GameContent extends Content {
   /** The cells and the infirmary of a city, located (undefined for a city without). */
   servicesOf(cityId: string): { cells: { city: City; location: Location }; infirmary: { city: City; location: Location } } | undefined;
   heldAction(kind: 'cells' | 'infirmary'): HeldAction;
+  /** Review 4 #9: the place with the Lodgings card in a city, located (undefined for none). */
+  lodgingsOf(cityId: string): { city: City; location: Location } | undefined;
   quartersOf(cityId: string): Quarter[];
   quarterOf(locationId: string): Quarter | undefined;
   /** The hostile deck's rotation (the checkpoint, the informer, the conductor), file order. */
@@ -1255,6 +1265,10 @@ export function indexContent(content: Content): GameContent {
       return cells && infirmary ? { cells, infirmary } : undefined;
     },
     heldAction: (kind) => content.held[kind],
+    lodgingsOf: (cityId) => {
+      const l = cities.get(cityId)?.locations.find((x) => x.lodgings);
+      return l ? locations.get(l.id) : undefined;
+    },
     quartersOf: (cityId) => [...(cities.get(cityId)?.quarters ?? [])],
     quarterOf: (locationId) => {
       const hit = locations.get(locationId);

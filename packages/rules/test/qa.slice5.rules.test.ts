@@ -149,12 +149,13 @@ describe('QA · the slice-5 numbers in rules equal the GDD text', () => {
     expect(MISSION_TYPES.surveillance.marks).toBe(0);
   });
 
-  it('§19.2: the sentence 10 + Heat ÷ 2, at most 60, ×1.5 on rival ground; bail 100 + 50 a mark, ×2, ×2, ×½', () => {
-    expect(jail).toContain('10 minutes + Heat ÷ 2 minutes as it stands at the arrest, at most 60; **×1.5 on rival ground**');
+  // Review 4 #20 (GDD §19.2, ADR 0078): the base is 20 minutes (was 10).
+  it('§19.2: the sentence 20 + Heat ÷ 2, at most 60, ×1.5 on rival ground; bail 100 + 50 a mark, ×2, ×2, ×½', () => {
+    expect(jail).toContain('**20 minutes** (review 4; was 10) + Heat ÷ 2 minutes as it stands at the arrest, at most 60; **×1.5 on rival ground**');
     expect(jail).toContain('**Bail = 100 Iron + 50 per mark on the record**');
     expect(jail).toContain('**×2 for a Notorious record, ×2 on rival ground, ×½ for Alliance members anywhere**');
     expect(jail).toContain('**Afterwards Heat is 25**');
-    expect(CELLS).toMatchObject({ baseMinutes: 10, heatDivisor: 2, maxMinutes: 60, rivalFactor: 1.5 });
+    expect(CELLS).toMatchObject({ baseMinutes: 20, heatDivisor: 2, maxMinutes: 60, rivalFactor: 1.5 });
     expect(CELLS.bail).toMatchObject({ base: 100, perMark: 50, notoriousPct: 100, rivalPct: 100, legalAidPct: -50, roundTo: 10 });
     expect(HEAT.afterRelease).toBe(25);
   });
@@ -342,9 +343,15 @@ describe('QA · the record: fading, escalation, strike-off (§11.3–§11.4, des
       // A name taken (no arrest) never escalates, whatever the arrests.
       expect(marksFor({ type, arrested: false, arrests: [500], today: 501, logId: 'x' }).escalated).toBe(false);
     }
-    // A legal type and a tier-1 tap carry no marks, so they neither escalate nor count.
-    expect(marksFor({ type: 'speech', arrested: true, arrests: [500], today: 501, logId: 'x' }).add).toEqual([]);
-    expect(marksFor({ type: null, arrested: true, arrests: [500], today: 501, logId: 'x' }).add).toEqual([]);
+    // Review 4 #20 (GDD §11.2, ADR 0078): an arrest always marks. A legal type or a tier-1 tap is one
+    // minor mark, and within seven City Days of an earlier arrest three serious marks like any other.
+    for (const type of ['speech', null] as const) {
+      expect(marksFor({ type, arrested: true, arrests: [], today: 501, logId: 'x' }).add).toEqual([{ day: 501, kind: 'minor', logId: 'x' }]);
+      const again = marksFor({ type, arrested: true, arrests: [500], today: 501, logId: 'x' });
+      expect([again.escalated, again.add.length, again.add[0]!.kind]).toEqual([true, 3, 'serious']);
+      // A name taken on legal work (no arrest) adds nothing.
+      expect(marksFor({ type, arrested: false, arrests: [500], today: 501, logId: 'x' }).add).toEqual([]);
+    }
   });
 
   it('strike-off takes the oldest live mark, prunes faded ones, and is null on a clean record (2,000 random)', () => {
@@ -657,8 +664,8 @@ describe('QA · rival ground (§14.12): +4 difficulty, ×2 Heat and run-ins, the
 
   it('the sentence ×1.5 at most 60 and bail ×2 on rival ground, for every Heat and record', () => {
     for (let heat = 0; heat <= 100; heat++) {
-      expect(sentenceMinutes(heat, false)).toBe(Math.min(60, 10 + Math.floor(heat / 2)));
-      expect(sentenceMinutes(heat, true)).toBe(Math.min(60, Math.floor((10 + Math.floor(heat / 2)) * 1.5)));
+      expect(sentenceMinutes(heat, false)).toBe(Math.min(60, 20 + Math.floor(heat / 2)));
+      expect(sentenceMinutes(heat, true)).toBe(Math.min(60, Math.floor((20 + Math.floor(heat / 2)) * 1.5)));
     }
     for (let marks = 0; marks <= 12; marks++) {
       for (const rival of [false, true]) {
@@ -810,13 +817,17 @@ describe('QA · a mission end to end in rules (resolveMission → finishMission)
     expect(fin('won').sentTo?.reason).toBe('wanted');
   });
 
-  it('a police loss on a surveillance mission: the cells, no marks, and it never escalates a later arrest', () => {
+  // Review 4 #20 (GDD §11.2, ADR 0078): an arrest always marks (one minor mark on a watch) and counts
+  // for the escalation; the day's orders are off from it.
+  it('a police loss on a surveillance mission: the cells, one minor mark, recorded for the escalation, orders off', () => {
     const s = start({ mission: { ...base.mission, id: 'coalport.customs-house.watch', type: 'surveillance', energy: 12, pool: ['city-police'] }, target: null });
     const lost = { choice: 'fight', steps: [], outcome: 'lost', healthLoss: 125, healthAfter: 0, ironPaid: 0, heatAdded: 0, xp: 0, fullStrength: false, cause: 'power' } as const;
     const f = finishMission({ start: s, runIn: lost as never, opponentSide: 'police', caught: null, marks: [], arrests: [], agiQuarters: 0, health: { damage: 0, at: T0 }, level: 6, at: T0, today: dayKey(T0), rateOn: () => 5, logId: 'l', bail: { alliance: false, sources: [] } });
     expect(f.sentTo?.kind).toBe('cells');
-    expect(f.record.added).toEqual([]);
-    expect(f.record.arrests).toEqual([]);
+    expect(f.record.added).toEqual([{ day: dayKey(T0), kind: 'minor', logId: 'l' }]);
+    expect(f.record.arrests).toEqual([dayKey(T0)]);
+    expect(f.ordersOff).toBe(true);
+    expect(f.orders.after.off).toEqual({ at: T0, reason: 'cells' });
     expect(f.health?.after).toBe(30);
     expect(f.stamp).toBe('takenIn');
     expect(f.rewards.xp.base).toBe(12); // Failure's small XP: 60 ÷ 5

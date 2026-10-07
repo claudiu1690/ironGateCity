@@ -69,7 +69,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
     headline: '{name} Spent {minutes} Minutes in the Cells',
-    deck: 'Taken in after {missionTitle}; {how} The duty officer wrote it down. Heat is back to 25; the branch says nothing.',
+    deck: "Taken in after {missionTitle}; {how} The duty officer wrote it down. Heat is back to 25; the day's orders were off.",
   },
   {
     id: 'hl.infirmary',
@@ -159,7 +159,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
     headline: '{name} Spent {minutes} Minutes in the Cells',
-    deck: 'Taken in after {missionTitle}; {how} Heat is back to 25. The committee has read this and will say so.',
+    deck: "Taken in after {missionTitle}; {how} Heat is back to 25. The committee has read this and took the day's orders off the board.",
   },
   {
     id: 'hl.v.infirmary',
@@ -249,7 +249,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
     headline: '{name} Spent {minutes} Minutes in the Cells',
-    deck: 'Taken in after {missionTitle}; {how} Legal Aid halved the bail; the Rooms would rather not mention it. Heat is back to 25.',
+    deck: "Taken in after {missionTitle}; {how} Legal Aid halved the bail. Heat is back to 25; the Rooms took the day's orders off the board.",
   },
   {
     id: 'hl.a.infirmary',
@@ -330,7 +330,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
     headline: '{name} Spent {minutes} Minutes in the Cells',
-    deck: 'Taken in at police headquarters after {missionTitle}; {how} Heat is back to 25. The Herald prints names.',
+    deck: "Taken in at police headquarters after {missionTitle}; {how} Heat is back to 25, the day's orders off. The Herald prints names.",
   },
   {
     id: 'hl.ig.infirmary',

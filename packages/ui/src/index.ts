@@ -151,8 +151,8 @@ export {
   runInReason,
 } from './components/Street';
 export type { EncounterModalProps, EncounterRowProps, RiskRowsProps, RunInChoice } from './components/Street';
-export { HeldScreen, heldVoiceLine, minutesLeft } from './components/Held';
-export type { HeldPending, HeldScreenProps } from './components/Held';
+export { CellsNowCard, HeldScreen, heldVoiceLine, minutesLeft } from './components/Held';
+export type { CellsNowCardProps, HeldPending, HeldScreenProps } from './components/Held';
 export type { StampProps, StampTone } from './components/Stamp';
 export { TYPE_LABEL, Ticket, placeTagText } from './components/Ticket';
 export { GroundSash, groundOf } from './components/GroundSash';
@@ -165,6 +165,7 @@ export {
   IssueRow,
   IssuesSection,
   LockMark,
+  LodgingsCard,
   OpinionBars,
   QuarterTeaserSheet,
   QuartersList,
@@ -191,6 +192,7 @@ export type {
   FactionNames,
   IssueRowProps,
   IssuesSectionProps,
+  LodgingsCardProps,
   OpinionBarsProps,
   QuarterTeaserSheetProps,
   QuartersListProps,

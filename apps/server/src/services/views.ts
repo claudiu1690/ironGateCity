@@ -362,6 +362,8 @@ export function toOrdersState(o: StoredOrders): OrdersState {
       doneAt: i.doneAt ? new Date(i.doneAt).getTime() : null,
     })),
     allDoneAt: o.allDoneAt ? new Date(o.allDoneAt).getTime() : null,
+    // Review 4 #20 (ADR 0078): the day's orders off since an arrest.
+    ...(o.off ? { off: { at: new Date(o.off.at).getTime(), reason: o.off.reason } } : {}),
   };
 }
 
@@ -370,6 +372,7 @@ export function fromOrdersState(o: OrdersState): StoredOrders {
     day: o.day,
     items: o.items.map((i) => ({ ...i, doneAt: i.doneAt === null ? null : new Date(i.doneAt) })),
     allDoneAt: o.allDoneAt === null ? null : new Date(o.allDoneAt),
+    ...(o.off ? { off: { at: new Date(o.off.at), reason: o.off.reason } } : {}),
   };
 }
 
@@ -477,6 +480,8 @@ export function ordersView(
   const templates = content.ordersOf(doc.factionId);
   const state = toOrdersState(doc.orders);
   const items = state.day === today ? state.items : [];
+  // Review 4 #20 (ADR 0078): an arrest today took the orders off: no pins (nothing to go to).
+  const off = state.day === today && !!state.off;
   return {
     day: today,
     resetsAt: dayStart(today + 1),
@@ -499,7 +504,7 @@ export function ordersView(
           progress: Math.min(item.progress, item.target),
           target: item.target,
           done: item.doneAt !== null,
-          pin: item.doneAt === null ? orderPin(content, doc, item, t, live, today) : null,
+          pin: item.doneAt === null && !off ? orderPin(content, doc, item, t, live, today) : null,
         },
       ];
     }),
@@ -533,6 +538,7 @@ export function ordersView(
             of: items.length,
           }
         : null,
+    off: off ? { reason: 'cells' } : null,
   };
 }
 

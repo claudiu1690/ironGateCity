@@ -14,6 +14,7 @@ import {
   journeyViewFixture,
   nationViewFixture,
   registerResultFixture,
+  lodgingsFixtures,
   residenceCardFixtures,
   stationMarketFixture,
 } from '@irongate/rules/testing';
@@ -36,6 +37,7 @@ import {
   OpinionBars,
   OrderPaper,
   RegisterSheet,
+  LodgingsCard,
   ResidenceCard,
   ResultModal,
   ScoreboardLine,
@@ -430,12 +432,13 @@ describe('the capital (screens §5)', () => {
 
 describe('where you live (screens §6)', () => {
   const cases: Array<[keyof typeof residenceCardFixtures, string, string, string | null]> = [
-    ['visitingMay', 'You live in Coalport', 'Register here to vote and stand in Eastside · 7 days between moves', 'Register in Eastside · 500 Iron'],
-    ['belowRank', 'You live in Coalport', 'Activists can register in the capital. 400 Party XP makes an Activist.', null],
-    ['cooldown', 'You live in Eastside', 'You can move again from Thursday', null],
-    ['noIron', 'You live in Coalport', 'Register here to vote and stand in Eastside', 'Needs 500 Iron'],
-    ['resident', 'You live in Eastside', 'Registered Monday · you vote from Thursday · move again from Monday', null],
-    ['homeElsewhere', 'You live in Eastside', 'Register in Eastside to vote at home again · 500 Iron', 'Register in Eastside · 500 Iron'],
+    // Review 4 #9 (answers §9.2): one button, *Live here · 500 Iron*, and the plain reason why.
+    ['visitingMay', 'You live in Coalport.', 'Live in Eastside instead: vote and stand here, and your orders come from here. A week between moves.', 'Live here · 500 Iron'],
+    ['belowRank', 'You live in Coalport.', 'Activists can live in the capital. 400 Party XP makes an Activist.', null],
+    ['cooldown', 'You live in Eastside.', 'You can move again from Thursday.', null],
+    ['noIron', 'You live in Coalport.', 'Live in Eastside instead: vote and stand here, and your orders come from here.', 'Needs 500 Iron'],
+    ['resident', 'You live in Eastside.', 'Since Monday · you vote from Thursday · move again from Monday.', null],
+    ['homeElsewhere', 'You live in Eastside.', 'Live in Eastside again: vote and stand at home.', 'Live here · 500 Iron'],
   ];
   it.each(cases)('%s', (state, line1, line2, button) => {
     render(
@@ -444,7 +447,7 @@ describe('where you live (screens §6)', () => {
         placeName="Eastside"
         rank2Title="Activist"
         onRegister={noop}
-        onRoom={noop}
+       
       />,
     );
     expect(screen.getByTestId('residence-line1')).toHaveTextContent(line1);
@@ -454,28 +457,32 @@ describe('where you live (screens §6)', () => {
     if (state === 'noIron') expect(screen.getByTestId('residence-register')).toBeDisabled();
   });
 
-  it('the room: Take a room · 100 Iron, or Room until … · Rested cap 250 with Renew; the Evictions price', () => {
-    const onRoom = vi.fn();
-    const { unmount } = render(
-      <ResidenceCard card={residenceCardFixtures.visitingMay} placeName="Eastside" rank2Title="Activist" onRegister={noop} onRoom={onRoom} />,
+  // Review 4 #9 (answers §9.3): the room left the card; the Lodgings card at Tram Junction says it as a bed.
+  it('the card has no room row; Lodgings: Take a bed · 100 Iron, or Your bed until … with Seven more nights; the Evictions price', () => {
+    const { unmount: u0 } = render(
+      <ResidenceCard card={residenceCardFixtures.resident} placeName="Eastside" rank2Title="Activist" onRegister={noop} />,
     );
-    expect(screen.getByTestId('room-line')).toHaveTextContent('100 Iron · 7 days · Rested cap +50');
-    fireEvent.click(screen.getByTestId('room-take'));
-    expect(onRoom).toHaveBeenCalled();
-    expect(screen.getByTestId('room-take')).toHaveTextContent('Take a room · 100 Iron');
+    expect(screen.queryByTestId('room-row')).toBeNull();
+    expect(screen.getByTestId('residence-card')).not.toHaveTextContent(/room|bed/i);
+    u0();
+    const onTake = vi.fn();
+    const { unmount } = render(<LodgingsCard lodgings={lodgingsFixtures.take} onTake={onTake} />);
+    expect(screen.getByTestId('lodgings')).toHaveTextContent('Lodgings');
+    expect(screen.getByTestId('lodgings-line')).toHaveTextContent('A bed on the tram line · 7 nights · 100 Iron');
+    expect(screen.getByTestId('lodgings-benefit')).toHaveTextContent(
+      'Rested banks higher while you have it: up to 250 instead of 200.',
+    );
+    fireEvent.click(screen.getByTestId('lodgings-take'));
+    expect(onTake).toHaveBeenCalled();
+    expect(screen.getByTestId('lodgings-take')).toHaveTextContent('Take a bed · 100 Iron');
     unmount();
-    const { unmount: u2 } = render(
-      <ResidenceCard card={residenceCardFixtures.resident} placeName="Eastside" rank2Title="Activist" onRegister={noop} onRoom={noop} />,
-    );
-    expect(screen.getByTestId('room-line')).toHaveTextContent('Room until Sunday · Rested cap 250');
-    expect(screen.getByTestId('room-take')).toHaveTextContent('Renew · 100 Iron');
+    const { unmount: u2 } = render(<LodgingsCard lodgings={lodgingsFixtures.renew} onTake={noop} />);
+    expect(screen.getByTestId('lodgings-running')).toHaveTextContent('Your bed until Sunday · Rested banks to 250');
+    expect(screen.getByTestId('lodgings-take')).toHaveTextContent('Seven more nights · 100 Iron');
     u2();
-    const evictions = {
-      ...residenceCardFixtures.visitingMay,
-      room: { state: 'none' as const, price: { total: 50, lines: [{ id: 'issue.evictions', label: 'Eviction Notices', pct: -50 }] }, cap: 200 },
-    };
-    render(<ResidenceCard card={evictions} placeName="Eastside" rank2Title="Activist" onRegister={noop} onRoom={noop} />);
-    expect(screen.getByTestId('room-line')).toHaveTextContent('50 Iron · Eviction Notices');
+    render(<LodgingsCard lodgings={lodgingsFixtures.evictions} onTake={noop} />);
+    expect(screen.getByTestId('lodgings-priced')).toHaveTextContent('50 Iron · Eviction Notices');
+    expect(screen.getByTestId('lodgings-take')).toHaveTextContent('Take a bed · 50 Iron');
   });
 
   it('the sheet: the five lines before the tap, a lost seat in the failure colour, one button', () => {
@@ -483,13 +490,13 @@ describe('where you live (screens §6)', () => {
     render(
       <RegisterSheet open onOpenChange={noop} placeName="Eastside" cost={500} lines={residenceCardFixtures.visitingMay.sheet!.lines} onRegister={onRegister} />,
     );
-    expect(screen.getByRole('dialog', { name: 'Register in Eastside · 500 Iron' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Live in Eastside · 500 Iron' })).toBeInTheDocument();
     const items = within(screen.getByTestId('register-lines')).getAllByRole('listitem');
     expect(items).toHaveLength(5);
     expect(items[1]!.className).toMatch(/text-failure/);
     fireEvent.click(screen.getByTestId('register-confirm'));
     expect(onRegister).toHaveBeenCalled();
-    expect(screen.getByTestId('register-confirm')).toHaveTextContent('Register · 500 Iron');
+    expect(screen.getByTestId('register-confirm')).toHaveTextContent('Live here · 500 Iron');
   });
 });
 
@@ -710,7 +717,7 @@ describe('slice 4: no system term in what packages/ui prints', () => {
     ['JourneyCard', <JourneyCard card={journeyChosenFixture.card!} onChoose={noop} />],
     ['Arrival', <ResultModal result={{ kind: 'journey', journey: journeyArrivedFixture }} open onOpenChange={noop} onContinue={noop} />],
     ['Capital result', <ResultModal result={capitalActionResultFixture} open onOpenChange={noop} factionNames={NAMES} />],
-    ['ResidenceCard', <ResidenceCard card={residenceCardFixtures.visitingMay} placeName="Eastside" rank2Title="Activist" onRegister={noop} onRoom={noop} />],
+    ['ResidenceCard', <ResidenceCard card={residenceCardFixtures.visitingMay} placeName="Eastside" rank2Title="Activist" onRegister={noop} />],
     ['DistrictResultTable', <DistrictResultTable district={capitalCountFixture.districts[0]!} names={NAMES} />],
     ['IssuesSection', <IssuesSection issues={capitalPaperFixture.issues!} names={NAMES} settles="Sunday midnight" />],
     ['ElectionCard capital', <ElectionCard summary={capitalResultSummaryFixture} onOpen={noop} factionNames={NAMES} />],

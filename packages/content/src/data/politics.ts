@@ -50,14 +50,16 @@ export const politics: ContentInput['politics'] = {
     // weekday its vote opens (register) or the room ends (room), `{hq}` the faction's capital HQ,
     // `{cap}` the Rested cap with the room.
     register: {
-      stamp: 'Registered',
+      // Review 4 #9 (answers §9.2): *Moved in* (was *Registered*).
+      stamp: 'Moved in',
       headline: '{district} has a new voter',
       body: 'The Herald is your paper from tomorrow. {district} votes from {weekday}. {hq} expects you at six.',
       next: 'Next: vote in {district} from {weekday}.',
     },
+    // Review 4 #9 (answers §9.3): the bed at Tram Junction (*A bed in Irongate*, was *A room in Irongate*).
     room: {
       stamp: 'Taken',
-      headline: 'A room in Irongate',
+      headline: 'A bed in Irongate',
       body: 'Seven nights, a window on the tram line. Rested banks to {cap} until {weekday}.',
       // The Next line (screens §6.3, written 3 Oct 2026).
       // Slice-4 fixes §6 (QA m5): a renewal adds seven nights.
@@ -66,7 +68,7 @@ export const politics: ContentInput['politics'] = {
     // Slice-4 fixes §6: seven more nights on a room running; `{weekday}` the room's new last day.
     renew: {
       stamp: 'Renewed',
-      headline: 'A room in Irongate',
+      headline: 'A bed in Irongate',
       body: 'Seven more nights on the tram line. Rested banks to {cap} until {weekday}.',
       next: 'Next: rest up. The room runs to {weekday}.',
     },

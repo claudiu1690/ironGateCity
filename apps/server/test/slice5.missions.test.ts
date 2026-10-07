@@ -161,11 +161,11 @@ describe('an illegal mission (design §4.2, §6, §7)', () => {
     expect(r.stamp).toBe('takenIn');
     expect(r.again).toBeNull();
     expect(r.street!.sentTo).toMatchObject({ kind: 'cells', placeName: 'Harbour Police' });
-    // 10 + 66 ÷ 2 = 43 minutes; bail 100 + 50 × 1 mark = 150.
-    expect(r.street!.sentTo!.until - at(DAY)).toBe(43 * 60_000);
+    // Review 4 #20: 20 + 66 ÷ 2 = 53 minutes; bail 100 + 50 × 1 mark = 150.
+    expect(r.street!.sentTo!.until - at(DAY)).toBe(53 * 60_000);
     expect(r.street!.sentTo!.bail).toBe(150);
     const stay = (await Stay.findOne({ characterId: p.id }).lean())!;
-    expect(stay).toMatchObject({ kind: 'cells', reason: 'caught', minutes: 43, marks: 1, heatAtArrest: 66, again: false });
+    expect(stay).toMatchObject({ kind: 'cells', reason: 'caught', minutes: 53, marks: 1, heatAtArrest: 66, again: false });
     const c = (await Character.findById(p.id).lean())!;
     expect(c.held).toMatchObject({ kind: 'cells', state: 'in', locationId: 'coalport.harbour-police' });
     expect(c.record!.arrests).toEqual([DAY]);

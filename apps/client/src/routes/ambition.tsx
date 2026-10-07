@@ -107,7 +107,7 @@ export function AmbitionPage() {
     // Nothing open: the next chapter waits for its day and requirement (or is not written yet). The
     // screen shows the hook, as the last modal did (onboarding §14.3 n13): no choices, no odds.
     return (
-      <div className="paper-grain min-h-full p-4 text-ink">
+      <div className="paper-grain min-h-full p-4 text-ink lg:pb-[132px]">
         <div className="mx-auto flex max-w-[640px] flex-col gap-3">
           <span className="label-caps text-[11px] text-muted">
             {copy.chapterKicker(v.title, v.chapter, v.of)}

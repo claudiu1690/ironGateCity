@@ -107,7 +107,7 @@ export function MePage() {
 
   return (
     <div className="paper-grain min-h-full text-ink">
-      <div className="mx-auto flex max-w-[640px] flex-col gap-3 px-4 pt-4 pb-8 lg:pb-28">
+      <div className="mx-auto flex max-w-[640px] flex-col gap-3 px-4 pt-4 pb-8 lg:pb-[132px]">
         <header className="flex items-center gap-3">
           <button
             type="button"

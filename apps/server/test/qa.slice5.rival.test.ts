@@ -63,9 +63,9 @@ describe('QA · a mission on rival ground (design §11.2)', () => {
     expect(r.stamp).toBe('takenIn');
     expect(r.street!.heat).toMatchObject({ before: 40, after: 56 });
     const held = (await p.caller.held.get())!;
-    // (10 + 56 ÷ 2) × 1.5 = 57 minutes; bail (100 + 50 × 1 mark) × 2 = 300.
+    // Review 4 #20: (20 + 56 ÷ 2) × 1.5 = 72, at most 60 minutes; bail (100 + 50 × 1 mark) × 2 = 300.
     expect(held).toMatchObject({ kind: 'cells', rivalGround: true, placeName: 'Lock-up' });
-    expect(held.until - clock.now()).toBe(57 * 60_000);
+    expect(held.until - clock.now()).toBe(60 * 60_000);
     expect(held.bail!.total).toBe(300);
     clock.set(held.until + 1);
     const me = await p.caller.character.me();

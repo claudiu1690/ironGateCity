@@ -1,6 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { devices, expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { mapAtRest, openLocation, signUp } from './helpers';
+
+/** Review 4 #19: the second player's phone (the project's device). */
+const devicesPhone = devices['Pixel 7'];
 
 /**
  * Slice 5's missions and the street (tech design §15.1 `missions.spec.ts`; screens §2, §4–§7), on a
@@ -20,6 +23,7 @@ const mission = (page: Page, id: string) => page.locator(`[data-mission="${id}"]
 
 test('missions: the first, Again, a run-in paid off, the infirmary, the cells, luck, the record', async ({
   page,
+  browser,
 }) => {
   test.setTimeout(300_000);
   await signUp(page, 'Mara Lenk');
@@ -139,12 +143,30 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
   await posters.getByTestId('mission-again').click();
   const caught = resultModal(page);
   await expect(caught.getByTestId('stamp')).toHaveText('Taken in');
-  await expect(caught.getByTestId('effect-record')).toContainText('The police took your name');
+  // Review 4 #20 (answers §20.3): the arrest's mark and the orders off.
+  await expect(caught.getByTestId('effect-record')).toHaveText('Your record: taken in · 1 mark · On file');
+  await expect(caught.getByTestId('effect-orders-off')).toHaveText('Orders off until the day turns');
   await caught.getByTestId('result-sent-to').click();
   await expect(page).toHaveURL(/\/held$/);
   await expect(page.getByTestId('held')).toHaveAttribute('data-kind', 'cells');
   await expect(page.getByTestId('held-kicker')).toHaveText('The cells · Harbour Police');
+  await expect(page.getByTestId('held-orders-off')).toHaveText("The branch has taken today's orders off the board.");
   await expect(page.getByTestId('held-bail')).toBeInViewport();
+  // Review 4 #19 (answers §19): another player at the station reads *In the cells now*.
+  const other = await browser.newContext({ ...devicesPhone });
+  const visitor = await other.newPage();
+  await signUp(visitor, 'Ivo Visitor');
+  await lift(visitor, { level: 6 });
+  await visitor.goto('/city/coalport/coalport.harbour?loc=coalport.harbour-police');
+  const list = visitor.getByTestId('cells-now');
+  await list.scrollIntoViewIfNeeded();
+  await expect(list).toContainText('In the cells now');
+  const row = list.getByTestId('cells-now-row');
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText('Mara Lenk');
+  await expect(row).toContainText(/out in \d+ min/);
+  await expect(row.getByTestId('cells-now-you')).toHaveCount(0);
+  await other.close();
   // The Map tab lands here while held.
   await page.getByRole('link', { name: 'Map' }).click();
   await expect(page).toHaveURL(/\/held$/);
@@ -152,8 +174,16 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
   const released = page.getByRole('dialog').filter({ has: page.getByTestId('political-continue') });
   await expect(released.getByTestId('stamp')).toHaveText('Released');
   await expect(released.getByTestId('political-heat')).toContainText('→ 25');
+  await expect(released.getByTestId('political-taken-in')).toHaveText('Your record: taken in · 1 mark · On file');
+  await expect(released.getByTestId('political-orders-off')).toHaveText('Orders off until the day turns');
   await released.getByTestId('political-continue').click();
   await expect(page).toHaveURL(/\?loc=coalport\.harbour-police$/);
+  // Out: the station's list is empty again, and the orders panel says the day's orders are off.
+  await expect(page.getByTestId('cells-now-empty')).toHaveText('Nobody. The duty officer is reading.');
+  await page.getByRole('dialog').getByRole('button', { name: /^Close/ }).click();
+  await expect(page.getByTestId('orders-off').filter({ visible: true }).first()).toHaveText(
+    'Orders off today · the branch heard about the cells',
+  );
 
   // 9. A pending run-in left past its window: the next read leaves it to luck and the result waits.
   await street(page, { runIn: 'next', opponentId: 'street-enforcer', choiceRoll: 1, checkRoll: 1 });

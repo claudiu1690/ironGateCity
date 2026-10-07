@@ -40,7 +40,8 @@ describe('QA · the ways out, from several taps at once', () => {
     await setRisk(p.id, clock.now(), { heat: 60, marks: [{ day: DAY, kind: 'minor' }] });
     await sendToHeld(content, oid(p.id), 'cells', clock.now());
     const bail = (await p.caller.held.get())!.bail!.total;
-    expect(bail).toBe(150);
+    // Review 4 #20 (ADR 0078): the arrest adds its own mark: 100 + 50 × 2.
+    expect(bail).toBe(200);
     const { ok, bad } = settled(await Promise.allSettled(Array.from({ length: 5 }, () => p.caller.held.bail({ idempotencyKey: key() }))));
     expect(ok).toHaveLength(1);
     expect(bad.map(reason).every((r) => r === 'NOT_IN_CELLS' || r === 'NOT_HELD')).toBe(true);
@@ -58,7 +59,7 @@ describe('QA · the ways out, from several taps at once', () => {
     const rs = await Promise.all(Array.from({ length: 5 }, () => p.caller.held.bail({ idempotencyKey: k })));
     expect(new Set(rs.map((r) => JSON.stringify(r))).size).toBe(1);
     expect(await RequestLog.countDocuments({ characterId: p.id, idempotencyKey: k })).toBe(1);
-    expect((await Character.findById(p.id).lean())!.iron).toBe(400);
+    expect((await Character.findById(p.id).lean())!.iron).toBe(350); // review 4: bail 150 (the arrest's mark)
   });
 
   it('Walk out well and Discharge yourself at once: one of them, its cost once', async () => {
@@ -125,7 +126,7 @@ describe('QA · while held (design §8.2, §9.2)', () => {
     await Character.updateOne({ _id: p.id }, { $set: { 'energy.value': 40, 'energy.updatedAt': new Date(clock.now()) }, $inc: { version: 1 } });
     await sendToHeld(content, oid(p.id), 'cells', clock.now());
     const held = (await p.caller.held.get())!;
-    expect(held.until - clock.now()).toBe(40 * 60_000);
+    expect(held.until - clock.now()).toBe(50 * 60_000); // review 4: 20 + 60 ÷ 2
     await expect(
       p.caller.mission.start({ locationId: 'coalport.far-bank', missionId: 'coalport.far-bank.posters', wayId: 'agi', idempotencyKey: key() }),
     ).rejects.toSatisfy((e) => reason(e) === 'HELD');
@@ -135,7 +136,7 @@ describe('QA · while held (design §8.2, §9.2)', () => {
     clock.set(held.until + 1);
     const me = await p.caller.character.me();
     expect(me.held).toMatchObject({ state: 'out' });
-    expect(me.energy.value).toBe(60);
+    expect(me.energy.value).toBe(65); // review 4: 40 + 5 × 5 over the 50 minutes
   });
 
   it('Heat is 25 after a release whatever it was before (here 0: a speech lost to the police)', async () => {
@@ -153,7 +154,7 @@ describe('QA · while held (design §8.2, §9.2)', () => {
     await setRisk(p.id, clock.now(), { heat: 90 });
     await sendToHeld(content, oid(p.id), 'cells', clock.now());
     const held = (await p.caller.held.get())!;
-    expect(held.until - clock.now()).toBe(55 * 60_000); // 10 + 45
+    expect(held.until - clock.now()).toBe(60 * 60_000); // review 4: 20 + 45, at most 60
     clock.set(held.until + 2 * H);
     expect((await p.caller.character.me()).heat!.value).toBe(15);
   });
