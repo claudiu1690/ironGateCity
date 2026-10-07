@@ -78,14 +78,14 @@ Then the welcome edition, as today, and the first landing on **the HQ's pin with
 
 - **Under the rows** (Courier): *Whoever you help, you go with. Permanent: a Faction Reset token is the only way back.*
 - **The confirm button** once a row is selected: ***Help Holm · the six o'clock to Coalport*** / ***Help Stahl · the six o'clock to Duskwall*** / ***Help Grey · the six o'clock to Ashford***. A row selects, the button commits (the mission briefing's pattern, so a brush is not a party).
-- **Echo line** on beat 2: *You carried Holm's parcel.* / *You took Stahl's bundle.* / *You witnessed Grey's signature.*
+- **Echo line** on beat 2: *You carried Holm's parcel.* / *You took Stahl's bundle.* / *You witnessed a tenant's signature for Grey.* (the QA fix round, with §30.2's deck: the signature is the tenant's; was *You witnessed Grey's signature.*)
 
 The Vanguard row is reviewed against the content policy (§26): a steward, a meeting, a bundle of leaflets; no uniform, no march, no symbol; the party is named as the GDD names it (naming stays parked).
 
 ### 2.4 Beat 2 — *The suitcase* (`origin.step-suitcase`)
 
 - **Art:** `art-direction/train-compartment.png` (exists; promoted to `mvp/scenes/train-compartment.png`, asset `scene.train-compartment`) · kicker ***The six o'clock to {City} · the compartment*** · portrait: the person helped (`holm` / `stahl` / `grey`).
-- **Narrative:** *{Holm} dozes against the window before the viaduct. The suitcase sits between your feet, heavier than it should be. {She} wakes long enough to ask what a person carries to a new town.*
+- **Narrative** (§30.3, against the empty compartment; was *{Holm} dozes against the window before the viaduct…*): *{Holm} is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. {She} comes back to ask what a person carries to a new town.*
 - **Answers** (one tap, final):
 
 | Id | Text | Effect | Echo |
@@ -110,7 +110,7 @@ The Vanguard row is reviewed against the content policy (§26): a steward, a mee
 
 ### 2.6 The favour: the first action (GDD §7.5, §13.7)
 
-The favour is **slot B of the welcome set**, replacing the committee session on the welcome day only: the same type (`council`: a best-stat check, party work, Party XP at 1.5×, no opinion), **10 Energy**, difficulty 10, the *First day* +10 %. Only the texts change. It is a one-off welcome action at the HQ (`use: 'welcome'`), and the first landing opens the HQ's pin with it highlighted.
+The favour is **slot B of the welcome set**, replacing the committee session on the welcome day only: the same type (`council`: a best-stat check, party work, Party XP at 1.5×, no opinion), **10 Energy**, difficulty 8 (the home tier-1 difficulty, GDD §8.4; was written *10*, corrected in the review-4 QA fix round, n6), the *First day* +10 %. Only the texts change. It is a one-off welcome action at the HQ (`use: 'welcome'`), and the first landing opens the HQ's pin with it highlighted.
 
 | Party | Order (`dir.welcome-b`, `dir.v.welcome-b`, `dir.a.welcome-b`) | Ticket title | Success (≤ 240) | Partial (≤ 240) |
 |---|---|---|---|---|
@@ -341,7 +341,7 @@ Where: GDD §15.3 (*What the player sees*); `slice-3-screens.md` §2.2, §6 (add
 
 **Blurbs** (≤ 200): Coalport *The dome on the river, soot on the stone and the council's clock a minute slow. Seven councillors sit here five days at a time, and the rule they pass is pinned in the lobby.* · Duskwall *A spire over a clock over a long cold front on the Customs Market. The council sits under the flags of the republic; the rule in force hangs in a frame by the door.* · Ashford *The clock-tower hall by the bridge, where the county has argued for two hundred years. The council's rule is printed and posted; the public gallery is free.* · Irongate *Baroque, copper-domed, between Parliament and the Opera: the capital's own council, ten seats from five districts, and the rule they can agree on, when they can.*
 
-**The ticket** (one, tier 1, type `intelligence`, Intelligence, **6 Energy**, difficulty 10): ***Sit in the public gallery*** · *Watch and listen*. Success: *An hour on the hard bench above the chamber. Who sits with whom, who leaves before the vote, which clerk the chairman looks at. The minute book says less than the room.* Partial: *The gallery is cleared for a closed session after twenty minutes. You get the seating plan and the clerk's cold. The rest is in the paper tomorrow, if it's anywhere.* Rewards at the tier-1 intelligence rate (XP, Iron; no Party XP, no opinion). The same four texts in every city; the Irongate hall's texts say *ten seats*.
+**The ticket** (one, tier 1, type `intelligence`, Intelligence, **6 Energy**, the city's tier-1 difficulty, GDD §8.4: 8 at home, 10 in Irongate; corrected in the QA fix round, n6): ***Sit in the public gallery*** · *Watch and listen*. Success: *An hour on the hard bench above the chamber. Who sits with whom, who leaves before the vote, which clerk the chairman looks at. The minute book says less than the room.* Partial: *The gallery is cleared for a closed session after twenty minutes. You get the seating plan and the clerk's cold. The rest is in the paper tomorrow, if it's anywhere.* Rewards at the tier-1 intelligence rate (XP, Iron; no Party XP, no opinion). The same four texts in every city; the Irongate hall's texts say *ten seats*.
 
 ### 11.2 The sheet
 

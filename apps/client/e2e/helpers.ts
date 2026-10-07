@@ -42,7 +42,9 @@ export async function signUpOnly(page: Page, name = 'Mara Lenk', face = 3): Prom
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill('e2e-password-123');
   await page.getByRole('button', { name: 'Sign up' }).click();
-  await expect(page).toHaveURL(/\/arrive$/);
+  // QA review 4 n7: a sign-up under load (password hashing, the session, the draft) can take longer
+  // than the default 5 s; one slow sign-up used to fail its test and skip every later project.
+  await expect(page).toHaveURL(/\/arrive$/, { timeout: 30_000 });
   return email;
 }
 

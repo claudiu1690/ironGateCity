@@ -26,11 +26,31 @@ describe('#5 the level-up line follows the waiting point', () => {
     const d = within(screen.getByRole('dialog'));
     expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · place your point');
     expect(d.getByRole('button', { name: 'STR 10 → 11' })).toBeInTheDocument();
-    // The placement lands in the `me` cache; the modal re-renders with the new count.
+    // The placement lands in the `me` cache; the modal re-renders with the new count. Nothing was seen
+    // to move here (the stats are the same), so the plain placed line; with a stat moved, see below.
     rerender(modal(0));
     expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · point placed');
     expect(d.getByTestId('effect-level')).not.toHaveTextContent('place your point');
     expect(d.queryByRole('button', { name: 'STR 10 → 11' })).toBeNull();
+  });
+
+  it('answers §5: once placed, the stat in full ("Level 2 · Strength 10 → 11")', () => {
+    const at = (pending: number, str: number) => (
+      <ResultModal
+        result={batchResultFixture}
+        open
+        onOpenChange={vi.fn()}
+        onAgain={vi.fn()}
+        energy={{ value: 90, nextTickAt: null }}
+        statPoints={{ pending, level: 2, stats: { str, int: 12, agi: 5 } }}
+        onPlaceStat={vi.fn()}
+      />
+    );
+    const { rerender } = render(at(1, 10));
+    rerender(at(0, 11));
+    const line = within(screen.getByRole('dialog')).getByTestId('effect-level');
+    expect(line).toHaveTextContent('Level 2 · Strength 10 → 11');
+    expect(line).not.toHaveTextContent('point placed');
   });
 });
 

@@ -161,7 +161,8 @@ export function welcomeLanding(
 
 /**
  * Review 4 (ADR 0073): a welcome ticket (the favour from the platform) is offered only while today's
- * orders hold an open item whose template is `use: 'welcome'` and matches it. Any other action is
+ * orders hold an open item whose template is `use: 'welcome'` and matches it, and the orders are on.
+ * Once done it stays done: the welcome set is dealt once per character (`carriedWelcome`, QA m2). Any other action is
  * always "offered" here (its own rules apply).
  */
 export function welcomeOffered(
@@ -172,6 +173,9 @@ export function welcomeOffered(
 ): boolean {
   if (!isWelcomeAction(action)) return true;
   if (c.orders.day !== today) return false;
+  // QA n2: while the day's orders are off (an arrest) its order cannot be done, so the errand is not
+  // offered either: it would pay on every tap. It comes back with an open order (a second welcome day).
+  if (c.orders.off) return false;
   const templates = content.ordersOf(c.factionId);
   return c.orders.items.some((item) => {
     if (item.doneAt) return false;
@@ -544,14 +548,15 @@ export function ordersView(
     },
     // Review 1 (§13.7): the note waits until it is seen (Carry on), today only. The FXP tile sums
     // today's completions; a Take a job item started done (doneAt at the day's start: a second
-    // welcome day with a job already held) paid nothing.
+    // welcome day with a job already held) paid nothing, and an item carried done from the evening
+    // before (QA m2: a late sign-up's set carried on) paid then.
     complete:
       state.day === today && state.allDoneAt !== null && doc.ordersNoteSeenDay !== today
         ? {
             pc: DIRECTIVES.allDonePc,
             fxp: items.reduce((sum, i) => {
               const t = templates.find((x) => x.id === i.templateId);
-              return i.doneAt !== null && i.doneAt !== dayStart(today) ? sum + orderDoneFxp(t) : sum;
+              return i.doneAt !== null && i.doneAt > dayStart(today) ? sum + orderDoneFxp(t) : sum;
             }, 0),
           }
         : null,

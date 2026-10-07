@@ -355,15 +355,14 @@ export const assets: Asset[] = [
     'Inside a glass-roofed station: the departure board and clock, porters with trunks on trolleys, passengers in coats, a locomotive letting off steam.',
     { x: 0.45, y: 0.6 },
   ),
-  // Review 4 (answers §2.9, §29.3; ADR 0073): beats 2 and 3 of *The Last Train In*. The source is
-  // 2752 × 1536; the scenes' 2688 × 1520 is cut from its middle.
-  {
-    ...scene(
-      'train-compartment',
-      'A third-class compartment at dawn: wooden seats, a suitcase between two pairs of feet, a woman asleep against the window, fields going past.',
-    ),
-    crop: { left: 32, top: 8, width: 2688, height: 1520 },
-  },
+  // Review 4 (answers §2.9, §30.3; ADR 0073): beats 2 and 3 of *The Last Train In*. The source (7 Oct,
+  // the empty compartment) is the scenes' 2688 × 1520 already, so nothing is cut. The desktop's tall
+  // panel centres on the rack and the window's left half, so the suitcase stays in the picture.
+  scene(
+    'train-compartment',
+    'An empty third-class compartment at first light: wooden benches, a suitcase on the rack, a dark coat on one bench, a parcel on the other, fields at the window.',
+    { x: 0.3, y: 0.4 },
+  ),
   scene(
     'street',
     'A terraced street of brick houses: a woman with a flyer at a doorstep, washing on the lines, children playing football on the cobbles.',

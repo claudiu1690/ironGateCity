@@ -278,6 +278,16 @@ describe('zoomView and panLimits (review 2 #9)', () => {
     }
   });
 
+  it('QA review 4: a band thinner than a pin needs (the paper banner on a 360 × 640 phone) keeps the pin at the sheet edge', () => {
+    // The map is 439 px tall; the sheet covers 384 of it, leaving 55 px (under 2 × 30).
+    const short = { w: 360, h: 439 };
+    const art = { w: short.h * ASPECT * 2, h: short.h * 2 };
+    const v = zoomView({ box: short, content: art, fitted: { scale: 0.5, x: 0, y: 0 }, pin: { x: 0.5, y: 0.5 }, cover: { bottom: 384 } });
+    const py = v.y + 0.5 * art.h * v.scale;
+    expect(py).toBeGreaterThanOrEqual(0);
+    expect(py).toBeLessThanOrEqual(60);
+  });
+
   it('never above 3 ×, never past the native resolution, never below the covering scale', () => {
     const mid = { x: 0.5, y: 0.5 };
     expect(zoomView({ box, content, fitted: { scale: 2, x: 0, y: 0 }, pin: mid }).scale).toBe(3);

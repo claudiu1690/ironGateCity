@@ -1123,8 +1123,12 @@ function slice4Problems(
     // Slice-4 fixes §2 (QA m1): `{city}` and `{verbs}` resolved at read; `{verbs}` names training.
     if (used.includes('verbs') && !(t.match.kinds?.length === 1 && t.match.kinds[0] === 'training'))
       problems.push(`order "${t.id}": {verbs} only on a training order`);
+    // QA review 4 (R4-QA-02): `{at}`, the day's next turn, in the line only; the paper renders it in
+    // the player's clock (*tomorrow 03:00*).
+    if (placeholdersIn(t.title).includes('at')) problems.push(`order "${t.id}": {at} only in the line`);
     for (const ph of used)
-      if (!['issue', 'city', 'verbs'].includes(ph)) problems.push(`order "${t.id}": unknown placeholder {${ph}}`);
+      if (!['issue', 'city', 'verbs', 'at'].includes(ph))
+        problems.push(`order "${t.id}": unknown placeholder {${ph}}`);
     if (t.slot === 'C' && t.use === 'rotation' && t.residence !== 'any')
       problems.push(`order "${t.id}": a slot C rotation order serves every residence`);
     // Slice 5 (design §12.2): the slot-B mission order serves every residence too.

@@ -105,6 +105,35 @@ export function startOrders(
   };
 }
 
+/**
+ * Review 4 QA m2 (ADR 0073: the favour is *a first action that is offered once*; GDD §13.7): the welcome
+ * set is dealt once per character. A character created after 22:00 UTC has two welcome days; on the
+ * second, the set dealt the evening before goes on as it stands, items done stay done (so the favour
+ * and its order cannot pay twice) and the day's *off* ends. A set already finished gives way to the
+ * day's rotation (`'rotation'`). `null`: yesterday held no welcome set (deal it fresh).
+ */
+export function carriedWelcome(
+  prev: OrdersState,
+  today: DayKey,
+  welcomeBId: string,
+  templates: readonly OrderTemplate[],
+  hasJob: boolean,
+  now: number,
+): OrdersState | 'rotation' | null {
+  if (prev.day >= today || !prev.items.some((i) => i.templateId === welcomeBId)) return null;
+  if (prev.allDoneAt !== null || prev.items.every((i) => i.doneAt !== null)) return 'rotation';
+  return {
+    day: today,
+    items: prev.items.map((i) => {
+      const t = templates.find((x) => x.id === i.templateId);
+      // As `startOrders`: a job taken (with the orders off, say) counts for *Take a job*.
+      const already = i.doneAt === null && hasJob && (t?.match.kinds ?? []).includes('takeJob');
+      return already ? { ...i, progress: i.target, doneAt: now } : { ...i };
+    }),
+    allDoneAt: null,
+  };
+}
+
 /** Where `'home'` points: a residence, or (slice 1–3 callers) a city id with no district. */
 export type MatchCtx = ResidenceCtx | string;
 

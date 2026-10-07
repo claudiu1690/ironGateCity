@@ -44,6 +44,22 @@ function listOr(items: string[]): string {
 const STAT_NAMES = { str: 'Strength', int: 'Intelligence', agi: 'Agility', cha: 'Charisma' } as const;
 
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const;
+/** QA n5: a week or more ahead a weekday would read as this week's, so the date (*19 October*). */
+const WEEK_DAYS = 7;
 const HOUR_MS = 3_600_000;
 const MINUTE_MS = 60_000;
 
@@ -71,7 +87,7 @@ function zoneFormat(timeZone: string | undefined): Intl.DateTimeFormat {
 function localParts(
   ms: number,
   timeZone: string | undefined,
-): { day: number; weekday: number; time: string } {
+): { day: number; weekday: number; time: string; date: string } {
   const parts: Record<string, string> = {};
   for (const p of zoneFormat(timeZone).formatToParts(ms)) parts[p.type] = p.value;
   const utcDay = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
@@ -79,6 +95,7 @@ function localParts(
     day: Math.round(utcDay / 86_400_000),
     weekday: new Date(utcDay).getUTCDay(),
     time: `${parts.hour}:${parts.minute}`,
+    date: `${Number(parts.day)} ${MONTH_NAMES[Number(parts.month) - 1]}`,
   };
 }
 
@@ -92,7 +109,8 @@ export interface WhenOptions {
 /**
  * Review 4 (answers §4.2, GDD §2.2): every moment a player reads, written one way by how far off it
  * is, in the player's own clock: *in 24 min* under an hour; *at 14:40* later today; *tomorrow 01:00*;
- * *Thursday* two days or more ahead (*Saturday 01:00* `withTime`); *now* once it has passed. The
+ * *Thursday* two to six days ahead (*Saturday 01:00* `withTime`); the date a week or more ahead
+ * (*19 October*, QA n5); *now* once it has passed. The
  * phrase carries its own preposition, so a line reads *ready in 24 min*, *Cool at 20:40*.
  */
 export function when(at: number, now: number, o: WhenOptions = {}): string {
@@ -104,7 +122,8 @@ export function when(at: number, now: number, o: WhenOptions = {}): string {
   const days = a.day - n.day;
   if (days <= 0) return `at ${a.time}`;
   if (days === 1) return `tomorrow ${a.time}`;
-  return o.withTime ? `${WEEKDAY_NAMES[a.weekday]} ${a.time}` : WEEKDAY_NAMES[a.weekday]!;
+  const day = days >= WEEK_DAYS ? a.date : WEEKDAY_NAMES[a.weekday]!;
+  return o.withTime ? `${day} ${a.time}` : day;
 }
 
 /**
@@ -118,7 +137,7 @@ export function boundary(at: number, now: number, o: Omit<WhenOptions, 'withTime
   const days = a.day - n.day;
   if (days <= 0) return a.time;
   if (days === 1) return `tomorrow ${a.time}`;
-  return `${WEEKDAY_NAMES[a.weekday]} ${a.time}`;
+  return `${days >= WEEK_DAYS ? a.date : WEEKDAY_NAMES[a.weekday]} ${a.time}`;
 }
 
 /** A length that is not a moment (a sentence, a wait): *38 minutes*, *1 minute*. */
@@ -469,13 +488,14 @@ export const copy = {
       'Morale',
       "The home party's share is its morale. Fired up, 80 and over: party work here pays +10 % Party XP. Steady: nothing special. Unrest, under 60: the branch is in trouble and the orders change.",
     ],
-    ordinance: () => [
+    /** QA m4: the majority per council: four of seven at home, six of ten in the capital (§15.3). */
+    ordinance: (passVotes: 4 | 6 = 4, seats: 7 | 10 = 7) => [
       'Council rule',
-      "The council's rule for the town, in force for five days and for everyone here whatever their party. Passed by four councillors of seven. The rule in force is on the city plate and at the Town Hall.",
+      `The council's rule for the town, in force for five days and for everyone here whatever their party. Passed by ${passVotes === 6 ? 'six' : 'four'} councillors of ${seats === 10 ? 'ten' : 'seven'}. The rule in force is on the city plate and at the Town Hall.`,
     ],
     today: (at: string) => [
       'Today',
-      `What you have done since midnight. The day turns at ${at}, and this becomes Yesterday in the morning paper.`,
+      `What you have done since the day turned. It turns again at ${at}, and this becomes Yesterday in the morning paper.`,
     ],
     todayEnergy: () => ['Energy spent', "Energy spent today. A ×3 is three actions' worth."],
     todayAttempts: () => ['Attempts', 'Actions taken today, a ×3 counting three.'],
@@ -484,7 +504,7 @@ export const copy = {
     todayFxp: () => ['Party XP today', "Party XP earned today, the orders' bonuses included."],
     todayIron: () => [
       'Iron today',
-      'Iron earned by actions today. Your wage lands at midnight and shows on the desk.',
+      'Iron earned by actions today. Your wage lands when the day turns and shows on the desk.',
     ],
     todayOpinion: (city: string) => [
       'Opinion moved',
@@ -529,9 +549,10 @@ export const copy = {
         "A seat is five days on the council: a vote on the city's rule, which needs six votes of ten, and 10 Political Capital and 20 Party XP a day.",
       ].join('\n'),
     ],
-    rule: (city: string) => [
+    /** QA m4: ten councillors in the capital. */
+    rule: (city: string, seats: 7 | 10 = 7) => [
       'Council rule',
-      `The seven councillors pick one rule for the town each term. It changes a real number for everyone in ${city} for five days.`,
+      `The ${seats === 10 ? 'ten' : 'seven'} councillors pick one rule for the town each term. It changes a real number for everyone in ${city} for five days.`,
     ],
     backers: () => [
       'Backers',
@@ -555,11 +576,18 @@ export const copy = {
   levelPointsToPlace: (level: number, n: number) =>
     `Level ${level} · ${n} stat ${n === 1 ? 'point' : 'points'} to place`,
   statButton: (stat: string, from: number) => `${stat} ${from} → ${from + 1}`,
-  levelUpLine: (from: number, to: number, points: number) =>
-    to - from > 1 ? `Levels ${from + 1}–${to} · ${points} points to place` : `Level ${to} · place your point`,
-  /** Review 4 #5: the level-up line once its points are placed (in the modal, or anywhere else). */
-  levelUpPlaced: (from: number, to: number) =>
-    to - from > 1 ? `Levels ${from + 1}–${to} · points placed` : `Level ${to} · point placed`,
+  /** Answers §5: *Level 2 · place your point*; with two waiting, *Level 3 · place your points (2)*. */
+  levelUpLine: (to: number, points: number) =>
+    points > 1 ? `Level ${to} · place your points (${points})` : `Level ${to} · place your point`,
+  /**
+   * Review 4 #5 (answers §5): the level-up line once its points are placed, with the stat in full:
+   * *Level 2 · Intelligence 12 → 13*. `placed` is each stat that moved while the result was open; when
+   * the point went in elsewhere (nothing seen to move), the plain *Level 2 · point placed*.
+   */
+  levelUpPlaced: (to: number, placed: { stat: string; from: number; to: number }[], points = 1) =>
+    placed.length > 0
+      ? `Level ${to} · ${placed.map((p) => `${p.stat} ${p.from} → ${p.to}`).join(' · ')}`
+      : `Level ${to} · ${points > 1 ? 'points placed' : 'point placed'}`,
   standingUp: (city: string, name: string) => `${city}: ${name} · everything here goes a little better`,
   /**
    * Review 1 (answers §9, GDD §13.4): the Standing card in the result modal on a level crossing.
@@ -1012,6 +1040,9 @@ export const copy = {
      */
     pinTo: (city: string, when: string) => `To ${city} · ${when}`,
     pinName: (city: string, when: string) => `Your pin: to ${city}, arriving ${when}`,
+    /** QA review 4 §7.5: once the train is in, the label is where you are (was *To Coalport · now*). */
+    pinIn: (city: string) => `In ${city}`,
+    pinInName: (city: string) => `Your pin: in ${city}`,
     followYourPin: 'Follow your pin',
     /** Review 4: the plate's row back to an unanswered card after its sheet was closed. */
     backToTheCard: (title: string) => `On the way · ${title}`,

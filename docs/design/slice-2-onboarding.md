@@ -195,11 +195,13 @@ Your first night in the rented room, a man in a good coat knocks and doesn't com
 
 | | Choice | Hint | Flag |
 |---|---|---|---|
-| A | Ask who sent him | A name is worth more than a month. | `askedName` |
-| B | Say nothing and shut the door | Let them wonder what you know. | `saidNothing` |
+| A | Ask the branch who in Clearwater holds paper like this | A name is worth more than a month. | `askedName` |
+| B | Say nothing to anyone, and put it back under the lining | Let them come to you, if they come. | `saidNothing` |
+
+*Review 4 (`docs/design/review-4-answers.md` §2.8, §30.1): the step-1 narrative is now §2.8's (the marker found in the lining); the choices, step 2 and the partial and failure bodies are refitted to* The Last Train In *(nobody has called yet).*
 
 **Step 2** · *The man in the good coat*
-He's back the next evening, on the stairs, with the same paper and the same smile. You have no two thousand marks. What you have is a minute, and it's a question of how you use it.
+He finds you on the third evening, on the stairs, with a copy of the marker and a good coat. The Clearwater people know which train you took. You have no two thousand marks; you have a minute, and it's a question of how you use it.
 
 | Approach | Check |
 |---|---|
@@ -210,8 +212,8 @@ CTA: **Answer him · 10 Energy**
 
 **Step 3**
 - Success — *A month, and a name* — The countersignature is a house on the Clearwater riverside. He shrugs: a month, then they'll want something instead of money. A month is a long time in politics. You write the house down.
-- Partial — *A month, no name* — You get a month, not a name. He takes the stairs two at a time, whistling, and leaves the marker on the banister. You'll see him again; you'd both rather it was later.
-- Failure — *A fortnight* — He gives you a fortnight and no name, and looks round the room as if pricing it. The stairwell is very quiet after he's gone. You put the marker in the suitcase, next to the shirts.
+- Partial — *A month, no name* — You get a month, not a name. He takes the stairs two at a time, whistling, and leaves his copy of the marker on the banister. You'll see him again; you'd both rather it was later.
+- Failure — *A fortnight* — He gives you a fortnight and no name, and looks round the room as if pricing it. The stairwell is very quiet after he's gone. You put the marker back under the lining, where he kept it.
 - Knock-on: *Keepsake: The marker* · *Chapter 2, "The riverside house": from {date}, at Level 6*
 
 ---

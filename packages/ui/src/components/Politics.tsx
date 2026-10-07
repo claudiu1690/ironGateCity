@@ -226,7 +226,12 @@ export function ElectionCard({
   const kicker = s.seats === 2 ? copy.capitalElection.kicker(s.placeName ?? s.cityName) : copy.election.kicker(s.cityName);
   const k = s.card;
   const strong = k.state === 'voting' || k.state === 'candidateVoting' || k.state === 'councilSits';
-  const rule = s.inForce ? copy.election.ruleLine(s.inForce.name, s.inForce.daysLeft) : null;
+  // QA review 4: the plain-words effect after the name, as on the plate.
+  const rule = s.inForce
+    ? s.inForce.plainLine
+      ? copy.plate.rule(s.inForce.name, s.inForce.plainLine, s.inForce.daysLeft)
+      : copy.election.ruleLine(s.inForce.name, s.inForce.daysLeft)
+    : null;
   const firstTime = k.firstTime ? copy.election.firstTime(s.cityName, s.rank3Title) : null;
   const target = l.primary ?? l.secondary;
   if (layout !== 'card') {
@@ -321,7 +326,7 @@ export function ElectionCard({
           s.seats === 2
             ? copy.help.capitalElection(s.rank2Title, s.rank3Title)
             : copy.help.election(s.cityName, s.rank2Title, s.rank3Title),
-          ...(s.inForce ? [copy.help.rule(s.cityName)] : []),
+          ...(s.inForce ? [copy.help.rule(s.cityName, s.seats === 2 ? 10 : 7)] : []),
         ]}
         label={`What the ${s.cityName} election means`}
         testId="election-help"

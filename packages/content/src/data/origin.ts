@@ -56,7 +56,7 @@ export const origin: OriginInput = {
               ],
               portrait: 'portrait.grey',
               confirm: "Help Grey · the six o'clock to Ashford",
-              echo: "You witnessed Grey's signature.",
+              echo: "You witnessed a tenant's signature for Grey.",
               effects: [{ kind: 'faction', factionId: 'alliance', person: 'grey' }],
             },
           ],
@@ -68,7 +68,7 @@ export const origin: OriginInput = {
       kicker: "The six o'clock to {city} · the compartment",
       title: 'The suitcase',
       narrative:
-        '{helper} dozes against the window before the viaduct. The suitcase sits between your feet, heavier than it should be. {helperPronoun} wakes long enough to ask what a person carries to a new town.',
+        "{helper} is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. {helperPronoun} comes back to ask what a person carries to a new town.",
       art: 'scene.train-compartment',
       portrait: 'helper',
       questions: [

@@ -68,7 +68,7 @@ export const riskHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
-    headline: '{name} Spent {minutes} Minutes in the Cells',
+    headline: '{name} Spent {minutes} in the Cells',
     deck: "Taken in after {missionTitle}; {how} The duty officer wrote it down. Heat is back to 25; the day's orders were off.",
   },
   {
@@ -158,7 +158,7 @@ export const riskHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
-    headline: '{name} Spent {minutes} Minutes in the Cells',
+    headline: '{name} Spent {minutes} in the Cells',
     deck: "Taken in after {missionTitle}; {how} Heat is back to 25. The committee has read this and took the day's orders off the board.",
   },
   {
@@ -248,7 +248,7 @@ export const riskHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
-    headline: '{name} Spent {minutes} Minutes in the Cells',
+    headline: '{name} Spent {minutes} in the Cells',
     deck: "Taken in after {missionTitle}; {how} Legal Aid halved the bail. Heat is back to 25; the Rooms took the day's orders off the board.",
   },
   {
@@ -329,7 +329,7 @@ export const riskHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 0,
     when: [{ kind: 'arrestedYesterday' }],
-    headline: '{name} Spent {minutes} Minutes in the Cells',
+    headline: '{name} Spent {minutes} in the Cells',
     deck: "Taken in at police headquarters after {missionTitle}; {how} Heat is back to 25, the day's orders off. The Herald prints names.",
   },
   {
@@ -747,7 +747,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Ashford',
-    deck: "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Grey's signature wants a witness at {place}; start there.",
+    deck: "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Grey's tenant wants a witness at {place}; start there.",
   },
   {
     id: 'hl.a.arrival',

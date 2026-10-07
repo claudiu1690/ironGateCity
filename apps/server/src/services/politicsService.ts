@@ -293,7 +293,12 @@ export async function politicsSummary(
         : null,
     inForce:
       ord && city?.ordinance && city.ordinance.id === ord.id
-        ? { ordinanceId: ord.id, name: ord.name, daysLeft: city.ordinance.toDay - today }
+        ? {
+            ordinanceId: ord.id,
+            name: ord.name,
+            daysLeft: city.ordinance.toDay - today,
+            plainLine: ord.plainLine,
+          }
         : null,
     rank2Title: faction.rankTitles[1]!,
     rank3Title: faction.rankTitles[COUNCIL.standRank - 1]!,

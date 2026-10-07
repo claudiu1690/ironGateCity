@@ -792,15 +792,29 @@ type ZoomInput = {
   factor?: number;
 };
 
-/** The clear part of the box: all of it but what the panel covers (the whole box if that is nothing). */
+/**
+ * The clear part of the box: all of it but what the panel covers. QA review 4 (the browser audit): on
+ * a short phone with the paper's banner over the map, a sheet can leave a band thinner than a pin
+ * needs; the band then keeps its open edge and reaches 2 × PIN_PAD into the cover, so the pin sits at
+ * the edge of the sheet, not centred under it (it used to fall back to the whole box).
+ */
 function clearArea(box: { w: number; h: number }, cover: MapCover = {}): MapRect {
-  const r = {
-    x0: cover.left ?? 0,
-    x1: box.w - (cover.right ?? 0),
-    y0: cover.top ?? 0,
-    y1: box.h - (cover.bottom ?? 0),
+  const axis = (len: number, lo: number, hi: number): [number, number] => {
+    const lo0 = Math.max(0, lo);
+    const hi0 = Math.min(len, len - hi);
+    if (hi0 - lo0 >= 2 * PIN_PAD) return [lo0, hi0];
+    if (len < 2 * PIN_PAD) return [0, len];
+    // Grow into the larger cover, keeping the open edge on the other side.
+    if (hi >= lo) {
+      const a = Math.min(lo0, len - 2 * PIN_PAD);
+      return [a, a + 2 * PIN_PAD];
+    }
+    const b = Math.max(hi0, 2 * PIN_PAD);
+    return [b - 2 * PIN_PAD, b];
   };
-  return r.x1 - r.x0 < 2 * PIN_PAD || r.y1 - r.y0 < 2 * PIN_PAD ? { x0: 0, x1: box.w, y0: 0, y1: box.h } : r;
+  const [x0, x1] = axis(box.w, cover.left ?? 0, cover.right ?? 0);
+  const [y0, y1] = axis(box.h, cover.top ?? 0, cover.bottom ?? 0);
+  return { x0, x1, y0, y1 };
 }
 
 /**

@@ -1466,7 +1466,8 @@ export interface PoliticsSummaryView {
     seats: number;
     turnout: { voters: number; eligible: number };
   } | null;
-  inForce: { ordinanceId: string; name: string; daysLeft: number } | null;
+  /** QA review 4: `plainLine`, the rule's effect in plain words (answers §11.3), after its name. */
+  inForce: { ordinanceId: string; name: string; daysLeft: number; plainLine?: string } | null;
   rank2Title: string;
   /** Review 2: "Organisers who are Known here can stand" (the Election card's notes). */
   rank3Title: string;

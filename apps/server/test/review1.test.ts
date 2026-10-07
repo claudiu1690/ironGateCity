@@ -6,7 +6,6 @@
 import { randomUUID } from 'node:crypto';
 import { getContent } from '@irongate/content';
 import { Character, City } from '@irongate/db';
-import { dayKey, dayStart } from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -210,7 +209,9 @@ describe('First day +10 % (GDD §8.4)', () => {
     expect(r2.bonusTags.map((t) => t.id)).not.toContain('first-day');
   });
 
-  it('a join after 22:00 UTC: the next City Day is a welcome day too, with the welcome set again; the day after is not', async () => {
+  // Review 4 QA m2: the welcome set is dealt once per character; the second welcome day carries the
+  // evening's set on as it stood (Take a job, done at 22:30 when the job was taken, stays done).
+  it('a join after 22:00 UTC: the next City Day is a welcome day too, with the evening’s welcome set carried on; the day after is not', async () => {
     const clock = testClock(Date.UTC(2026, 8, 29, 22, 30));
     const { caller } = await joined(clock);
     await caller.job.take({ jobId: 'coalport-factory-worker', idempotencyKey: randomUUID() });
@@ -218,10 +219,10 @@ describe('First day +10 % (GDD §8.4)', () => {
     const day2 = await caller.character.me();
     expect(day2.welcomeDay).toBe(true);
     expect(day2.orders.items.map((o) => o.id)).toEqual(['dir.shift-change', 'dir.welcome-b', 'dir.take-a-job']);
-    // The job is already held: Take a job starts done (at the day's start) and pays nothing.
+    // The job was taken the evening before: Take a job stays done (from then) and pays nothing today.
     expect(day2.orders.items[2]).toMatchObject({ done: true, progress: 1 });
     const stored = (await Character.findOne({ _id: day2.id }).lean())!;
-    expect(stored.orders.items[2]!.doneAt?.getTime()).toBe(dayStart(dayKey(clock.now())));
+    expect(stored.orders.items[2]!.doneAt?.getTime()).toBe(Date.UTC(2026, 8, 29, 22, 30));
     expect(day2.today.fxp).toBe(0);
     const city = await caller.city.get({ cityId: 'coalport' });
     expect(city.locations[0]!.actions[0]!.preview?.chance).toBe(76);

@@ -87,7 +87,7 @@ export const REVIEW4_WELCOME_DECKS: Readonly<Record<string, string>> = {
   "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.":
     "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Stahl's bundle goes out at {place}; start there.",
   "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.":
-    "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Grey's signature wants a witness at {place}; start there.",
+    "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Grey's tenant wants a witness at {place}; start there.",
 };
 
 /**

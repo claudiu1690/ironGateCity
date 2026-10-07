@@ -32,6 +32,8 @@ function withChosen(r: JourneyCardResult): JourneyView {
 
 /** Review 4 (tech design §6.5): the map's frame, the route and its two ends grown by 0.08. */
 const FRAME_GROW = 0.08;
+/** QA review 4 (R4-QA-05): the card's sheet opens once the pin's 700 ms pulse is seen. */
+const PULSE_BEFORE_SHEET_MS = 800;
 function frameOf(points: ReadonlyArray<readonly [number, number]>): MapRect {
   const xs = points.map((p) => p[0]);
   const ys = points.map((p) => p[1]);
@@ -186,13 +188,21 @@ export function JourneyPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pulse, setPulse] = useState(0);
   const openedFor = useRef<string | null>(null);
+  const sheetTimer = useRef<number | undefined>(undefined);
   const answerable = !!data?.card && !data.card.chosen && data.status === 'onTheWay';
   useEffect(() => {
     if (!data || !answerable || openedFor.current === data.id) return;
     openedFor.current = data.id;
-    setSheetOpen(true);
     setPulse((n) => n + 1);
+    // QA review 4 (R4-QA-05): the pin pulses first, where the player can see it, then the sheet opens
+    // over the map (the pulse is 700 ms). Under reduced motion there is no pulse, so no wait.
+    const still =
+      typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (still) setSheetOpen(true);
+    // A ref, not the effect's cleanup: a refetch changes `data` inside the wait and must not cancel it.
+    else sheetTimer.current = window.setTimeout(() => setSheetOpen(true), PULSE_BEFORE_SHEET_MS);
   }, [data, answerable]);
+  useEffect(() => () => window.clearTimeout(sheetTimer.current), []);
 
   // The card: one tap, final; the row collapses at once (QA slice 2 M1). Answered on the arrival
   // modal, its outcome stays there; answered on the way, the sheet shows it until closed.
@@ -279,9 +289,12 @@ export function JourneyPage() {
     return {
       at: (now) => {
         const p = trainAt(legs, journeyProgress(boardedAt, at, now));
-        return { x: p.x, y: p.y, label: copy.travel.pinTo(to.name, formatWhen(at, now)) };
+        // QA review 4: after arrival the label says where you are, *In Coalport*, not *· now*.
+        const label = now >= at ? copy.travel.pinIn(to.name) : copy.travel.pinTo(to.name, formatWhen(at, now));
+        return { x: p.x, y: p.y, label };
       },
-      name: (now) => copy.travel.pinName(to.name, formatWhen(at, now)),
+      name: (now) =>
+        now >= at ? copy.travel.pinInName(to.name) : copy.travel.pinName(to.name, formatWhen(at, now)),
       colour: `var(--color-${factionId})`,
       pulse,
     };

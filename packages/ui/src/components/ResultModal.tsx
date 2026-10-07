@@ -433,6 +433,17 @@ export function ordinanceTagText(t: OrdinanceTagView): string {
   }
 }
 
+/** Each stat that moved between the result's first look and now, in the panel's order. */
+function placedStats(
+  before: { str: number; int: number; agi: number } | null,
+  now: { str: number; int: number; agi: number },
+): { stat: string; from: number; to: number }[] {
+  if (!before) return [];
+  return (['str', 'int', 'agi'] as const)
+    .filter((k) => now[k] > before[k])
+    .map((k) => ({ stat: statName(k), from: before[k], to: now[k] }));
+}
+
 function standingLine(s: NonNullable<ActionResult['effects']['standing']>): string {
   const a: NamedStandingView = s.after;
   if (a.level > s.before.level) return copy.standingUp(a.cityName, a.name);
@@ -454,6 +465,10 @@ function ResultBody({
   sentToPending,
 }: ResultModalProps & { result: ActionResult }) {
   const [later, setLater] = useState(false);
+  // Review 4 #5 (answers §5): the stats as this result found them, so the placed line can name the
+  // stat that moved (*Level 2 · Intelligence 12 → 13*). Taken again when a new result comes in.
+  const [seen, setSeen] = useState({ r, stats: statPoints?.stats ?? null });
+  if (seen.r !== r || (!seen.stats && statPoints)) setSeen({ r, stats: statPoints?.stats ?? null });
   const stamp = stampFor(r);
   const street = r.street ?? null;
   const toneText =
@@ -612,8 +627,12 @@ function ResultBody({
                 {/* Review 4 #5: the result is a record of the moment, but the line follows the
                     character: once no point waits it says so, wherever the point was placed. */}
                 {statPoints && statPoints.pending <= 0
-                  ? copy.levelUpPlaced(e.levelUp.from, e.levelUp.to)
-                  : copy.levelUpLine(e.levelUp.from, e.levelUp.to, e.levelUp.statPoints)}
+                  ? copy.levelUpPlaced(
+                      e.levelUp.to,
+                      placedStats(seen.r === r ? seen.stats : null, statPoints.stats),
+                      e.levelUp.statPoints,
+                    )
+                  : copy.levelUpLine(e.levelUp.to, statPoints?.pending ?? e.levelUp.statPoints)}
               </span>
               {statPoints && onPlaceStat && !later && (
                 <StatPointsPanel

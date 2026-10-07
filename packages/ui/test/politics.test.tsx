@@ -221,6 +221,20 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
       />,
     );
     expect(screen.getByTestId('election-rule')).toHaveTextContent('Council rule: Open Doors · 3 days left');
+    // QA review 4: with the rule's plain words, they follow its name, as on the plate.
+    rerender(
+      <ElectionCard
+        summary={{
+          ...S,
+          inForce: { ordinanceId: 'ord.open-doors', name: 'Open Doors', daysLeft: 3, plainLine: 'talking to voters comes off more often' },
+        }}
+        onOpen={onOpen}
+        now={now}
+      />,
+    );
+    expect(screen.getByTestId('election-rule')).toHaveTextContent(
+      'Council rule: Open Doors · talking to voters comes off more often · 3 days left',
+    );
     // Below Rank 2 the row is not a button (nothing to do yet, but the candidates on the card).
     rerender(<ElectionCard summary={card({ state: 'belowRank' })} onOpen={onOpen} layout="row" now={now} />);
     expect(screen.getByTestId('polling-day-row').tagName).toBe('BUTTON');

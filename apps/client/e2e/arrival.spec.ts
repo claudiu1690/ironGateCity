@@ -49,7 +49,7 @@ const CASES = [
     welcome: 'Welcome to Ashford',
     arrival: 'Kaspar Lind Arrives on the Irongate Train',
     secretary: '— T.G.',
-    echo: "You witnessed Grey's signature.",
+    echo: "You witnessed a tenant's signature for Grey.",
     hq: /^\d+\. Assembly Rooms$/,
     favour: 'Witness the signature',
     order: 'Witness the signature at the Assembly Rooms',
@@ -110,7 +110,7 @@ for (const c of CASES) {
     for (const ch of await choices.all()) await expect(ch).toBeInViewport();
     // No number on beats 2 and 3 (§7.1): the text and the choices (the footer counts the steps).
     for (const ch of await choices.all()) await expect(ch).not.toContainText(/\d/);
-    await expect(page.getByText(/dozes against the window/)).not.toContainText(/\d/);
+    await expect(page.getByText(/down the corridor arguing with the guard/)).not.toContainText(/\d/);
     await answer(page, ANSWERS.reference[0]!);
     taps += 1;
 

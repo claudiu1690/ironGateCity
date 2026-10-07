@@ -388,12 +388,13 @@ export function CityPage() {
         copy.capital.help.whoHolds(district.name),
         copy.capital.help.closeRace(),
         ...(district.state.groundswell ? [copy.capital.help.comeback()] : []),
-        ...(c.ordinance ? [copy.help.ordinance()] : []),
+        ...(c.ordinance ? [copy.help.ordinance(6, 10)] : []),
       ]
     : [
         copy.help.share(c.name),
         ...(c.morale ? [copy.help.morale()] : []),
-        ...(c.ordinance ? [copy.help.ordinance()] : []),
+        // QA m4: the capital's overview passes a rule with six of ten too.
+        ...(c.ordinance ? [districts ? copy.help.ordinance(6, 10) : copy.help.ordinance(4, 7)] : []),
       ];
 
   // Review 3: the Places list, in pin order, with a tag where an open Party order points (the same
@@ -680,15 +681,23 @@ export function CityPage() {
           </div>
           <span
             className={cx(
-              'label-caps flex flex-wrap items-center gap-1.5 text-[9.5px] text-muted',
+              // QA review 4 (nit): the dot between the two parts is drawn before the second, in the
+              // gap; when the line wraps the second part starts the new line and its dot is clipped
+              // off (no *HOME CITY ·* left dangling).
+              'label-caps flex flex-wrap items-center gap-x-3.5 gap-y-1 overflow-hidden text-[9.5px] text-muted',
               // QA m7 (QA fixes §6): on rival ground under 700 px tall the morale line folds, not the
               // pressure line.
               rival && !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
             )}
             data-testid="city-plate"
           >
-            {c.role === 'home' ? 'Home city' : 'Close race'} ·
-            <span className={cx('flex items-center gap-1.5', helpMark)}>
+            <span>{c.role === 'home' ? 'Home city' : 'Close race'}</span>
+            <span
+              className={cx(
+                "relative flex items-center gap-1.5 before:absolute before:-left-[9px] before:content-['·']",
+                helpMark,
+              )}
+            >
               <FactionCrest factionId={plateFaction} size={8} />{' '}
               {rival ? (names[plateFaction] ?? plateFaction) : character.factionName} {formatShare(share)} %
             </span>

@@ -244,14 +244,15 @@ export const ambitions: AmbitionInput[] = [
             choices: [
               {
                 id: 'ask',
-                text: 'Ask who sent him',
+                // Review 4 (answers §30.1): refitted to *The Last Train In*: nobody has called yet.
+                text: 'Ask the branch who in Clearwater holds paper like this',
                 hint: 'A name is worth more than a month.',
                 flag: 'asked-name',
               },
               {
                 id: 'silent',
-                text: 'Say nothing and shut the door',
-                hint: 'Let them wonder what you know.',
+                text: 'Say nothing to anyone, and put it back under the lining',
+                hint: 'Let them come to you, if they come.',
                 flag: 'said-nothing',
               },
             ],
@@ -259,7 +260,7 @@ export const ambitions: AmbitionInput[] = [
           check: {
             title: 'The man in the good coat',
             narrative:
-              "He's back the next evening, on the stairs, with the same paper and the same smile. You have no two thousand marks. What you have is a minute, and it's a question of how you use it.",
+              "He finds you on the third evening, on the stairs, with a copy of the marker and a good coat. The Clearwater people know which train you took. You have no two thousand marks; you have a minute, and it's a question of how you use it.",
             approaches: [
               { id: 'date', text: 'Look him in the eye and name a date', stats: ['cha', 'str'] },
               { id: 'read', text: 'Read the marker properly before you answer', stats: ['int'] },
@@ -280,11 +281,11 @@ export const ambitions: AmbitionInput[] = [
             },
             partial: {
               headline: 'A month, no name',
-              body: "You get a month, not a name. He takes the stairs two at a time, whistling, and leaves the marker on the banister. You'll see him again; you'd both rather it was later.",
+              body: "You get a month, not a name. He takes the stairs two at a time, whistling, and leaves his copy of the marker on the banister. You'll see him again; you'd both rather it was later.",
             },
             failure: {
               headline: 'A fortnight',
-              body: "He gives you a fortnight and no name, and looks round the room as if pricing it. The stairwell is very quiet after he's gone. You put the marker in the suitcase, next to the shirts.",
+              body: "He gives you a fortnight and no name, and looks round the room as if pricing it. The stairwell is very quiet after he's gone. You put the marker back under the lining, where he kept it.",
             },
           },
           rewards: CHAPTER_1_REWARDS,

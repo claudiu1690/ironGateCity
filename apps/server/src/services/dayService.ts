@@ -27,6 +27,7 @@ import {
   seniorityStep,
   settleDays,
   standingView,
+  carriedWelcome,
   startOrders,
   stipendBoundaries,
 } from '@irongate/rules';
@@ -45,7 +46,14 @@ import { ensureArrived } from './journeyArrival';
 import type { NewEdition, RiskRead } from './edition';
 import { capOn, dayModifiers, moraleOf } from './modifiers';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
-import { energyState, fromOrdersState, startableMissions, welcomeDayOf, welcomeOrderIds } from './views';
+import {
+  energyState,
+  fromOrdersState,
+  startableMissions,
+  toOrdersState,
+  welcomeDayOf,
+  welcomeOrderIds,
+} from './views';
 
 /** What a settlement writes: the character's `$set` and `$inc`, the edition, the refunds. */
 export interface SettlementWrite {
@@ -187,7 +195,21 @@ export function computeSettlement(
   const faction = content.faction(c.factionId);
   // Review 1 (§13.7): the welcome set on the welcome day (the creation day, and the next when created
   // after 22:00 UTC), slot A by the best trained stat.
-  const welcome = s.firstEdition || welcomeDayOf(c, today) ? welcomeOrderIds(content, c) : undefined;
+  // QA m2 (ADR 0073): the set is dealt once per character. On a late sign-up's second welcome day the
+  // evening's set goes on as it stands (the favour done stays done), or the rotation once it is finished.
+  const welcomeDay = s.firstEdition || welcomeDayOf(c, today);
+  const carried =
+    welcomeDay && !s.firstEdition
+      ? carriedWelcome(
+          toOrdersState(c.orders),
+          today,
+          faction.welcomeOrders.B,
+          content.ordersOf(c.factionId),
+          s.job !== null,
+          dayStart(today),
+        )
+      : null;
+  const welcome = welcomeDay && carried === null ? welcomeOrderIds(content, c) : undefined;
   // The crisis pair only for a member living in the faction's home city (design §10).
   const homeOfFaction = content.city(residenceCityId(c))?.homeFactionId === c.factionId;
   const unrest = homeOfFaction && moraleOf(content, city) === 'unrest';
@@ -200,7 +222,7 @@ export function computeSettlement(
       residenceCityId(c),
       today,
     ).length > 0;
-  const orders = startOrders(
+  const orders = carried && carried !== 'rotation' ? carried : startOrders(
     content.ordersOf(c.factionId),
     today,
     s.job !== null,

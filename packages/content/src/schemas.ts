@@ -456,7 +456,7 @@ export const Npc = z.strictObject({
   factionId: FactionId.optional(),
   cityId: z.string().optional(),
   portrait: AssetId,
-  /** Review 4: the story's `{helperPronoun}` (*She* dozes against the window). */
+  /** Review 4: the story's `{helperPronoun}` (*She* comes back to ask). */
   pronoun: z.enum(['she', 'he']).optional(),
 });
 

@@ -130,7 +130,7 @@ export const ordersViewFixture: OrdersView = {
     {
       id: 'dir.take-a-job',
       title: 'Take a job at the Mill Gate',
-      line: "The party doesn't pay wages. The mill does, and a fifth more to members. Paid at midnight, every day.",
+      line: "The party doesn't pay wages. The mill does, every day, and a fifth more to members. The first wage lands {at}.",
       progress: 1,
       target: 1,
       done: true,
@@ -569,7 +569,7 @@ export const originScreenFixture: StoryScreenView = {
   kicker: "The six o'clock to Coalport · the compartment",
   title: 'The suitcase',
   narrative:
-    'Holm dozes against the window before the viaduct. The suitcase sits between your feet, heavier than it should be. She wakes long enough to ask what a person carries to a new town.',
+    "Holm is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. She comes back to ask what a person carries to a new town.",
   art: { kind: 'scene', asset: compartment, focus: { x: 0.5, y: 0.5 } },
   portrait: assetFixture('portrait.holm', 760, 950, [256, 512]),
   echo: "You carried Holm's parcel.",

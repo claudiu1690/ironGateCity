@@ -14,10 +14,12 @@ function StoryArt({ view }: { view: StoryScreenView }) {
   const art = view.art;
   if (art.kind === 'scene') {
     return (
+      // QA review 4 (R4-QA-09, answers §30.3): a scene is the beat's picture, so it carries its alt text
+      // (the compartment's is the one thing that says the helper is not in it). The map backdrop below
+      // stays decorative.
       <Picture
         asset={art.asset}
         sizes="(min-width: 1024px) 420px, 100vw"
-        decorative
         loading="eager"
         className="absolute inset-0 size-full object-cover"
         style={{ objectPosition: objectPosition(art.focus) }}

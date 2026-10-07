@@ -15,6 +15,7 @@ import {
 import type { TownHallView } from '@irongate/rules';
 import type { Types } from 'mongoose';
 import { gameError } from '../gameError';
+import { ensureCityDay } from './cityDay';
 import { cityIssueRows } from './cityService';
 import { councilViewFor, hallView, politicsSummary, whatNowOf } from './politicsService';
 import { residenceCityId } from './residence';
@@ -37,8 +38,9 @@ export async function townHallView(
   const hall = hallView(content, cityId);
   if (!hall) throw gameError('PRECONDITION_FAILED', 'NO_COUNCIL', { cityId });
   const today = dayKey(now);
-  const doc = await City.findById(cityId).lean<CityDoc>();
-  // ELECTION_NOT_READY when the city has no order paper yet (not bootstrapped).
+  // QA n3: settle (and bootstrap) the city's day first, as `city.get` does, so the hall answers for a
+  // city nobody has touched yet. One read by `_id` once it is settled.
+  const doc = await ensureCityDay(content, cityId, now);
   const council = await councilViewFor(content, c, cityId, doc, today);
   const capital = content.isDistricted(cityId);
   const cal = councilDay(today, city.council.offset);

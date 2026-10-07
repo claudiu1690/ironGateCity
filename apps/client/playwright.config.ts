@@ -41,6 +41,7 @@ export default defineConfig({
         /(^|[\\/])rival\.spec\.ts$/,
         /qa\.slice5\.spec\.ts/,
         /review4\.spec\.ts/,
+        /qa\.review4\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -137,8 +138,18 @@ export default defineConfig({
     // vocabulary sweep on every screen; last, after everything else.
     {
       name: 'review4',
-      testMatch: /review4\.spec\.ts/,
+      // Not `qa.review4.spec.ts`.
+      testMatch: /(^|[\\/])review4\.spec\.ts$/,
       dependencies: ['qa-risk'],
+      use: { ...devices['Pixel 7'] },
+    },
+    // QA review 4 (client half): the opening for the other two parties, the journey on the map, the
+    // maps and halls, Live here and the bed, the cells, the HUD, the desk and the editions, with the
+    // known bugs as expected failures (QA_SHOW_BUGS=1 shows them); last, it moves the shared clock.
+    {
+      name: 'qa-review4',
+      testMatch: /qa\.review4\.spec\.ts/,
+      dependencies: ['review4'],
       use: { ...devices['Pixel 7'] },
     },
   ],

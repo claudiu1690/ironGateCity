@@ -149,7 +149,7 @@ function RuleInForce({ hall }: { hall: TownHallView }) {
   return (
     <section aria-label={copy.hall.ruleInForce} className="flex flex-col gap-1" data-testid="hall-rule">
       <HelpButton
-        notes={[copy.help.ordinance()]}
+        notes={[copy.help.ordinance(hall.passVotes, hall.seatCount)]}
         label={`${copy.hall.ruleInForce}: what a council rule is`}
         className={cx(kicker, 'w-full text-left')}
       >

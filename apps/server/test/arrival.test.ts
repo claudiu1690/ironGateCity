@@ -71,7 +71,7 @@ describe('arrival: the face and the three beats (ADR 0011, 0073)', () => {
   it.each([
     ['holm', 'Coalport', 'Holm', 'She', "You carried Holm's parcel."],
     ['stahl', 'Duskwall', 'Stahl', 'He', "You took Stahl's bundle."],
-    ['grey', 'Ashford', 'Grey', 'He', "You witnessed Grey's signature."],
+    ['grey', 'Ashford', 'Grey', 'He', "You witnessed a tenant's signature for Grey."],
   ] as const)(
     'beat 2 after helping %s: the six o’clock to %s, the helper beside the text, the echo; resumes on reload',
     async (helper, city, surname, pronoun, echo) => {
@@ -91,7 +91,7 @@ describe('arrival: the face and the three beats (ADR 0011, 0073)', () => {
         progress: { step: 2, of: 3 },
       });
       expect(again.screen?.narrative).toBe(
-        `${surname} dozes against the window before the viaduct. The suitcase sits between your feet, heavier than it should be. ${pronoun} wakes long enough to ask what a person carries to a new town.`,
+        `${surname} is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. ${pronoun} comes back to ask what a person carries to a new town.`,
       );
       // No number on beats 2 and 3 (§7.1); the rows' lines on beat 1 carry the party's bonus.
       expect(JSON.stringify(again.screen?.choices)).not.toMatch(/\d/);

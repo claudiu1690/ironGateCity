@@ -164,6 +164,8 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
             )}
             {/* Review 4 (answers §4.1): the clock in the first line on wide screens (and on a phone
                 held sideways); under 1024 px it sits at the right of the Energy line. */}
+            {/* QA review 4 (R4-QA-03): in the first line the clock is drawn under the gauges' button, as
+                Political Capital is, so its 44 px reach never covers the Party XP label below it. */}
             <HudClock now={now} testId="hud-clock-line" className="hidden self-center lg:ml-auto lg:flex short:flex" />
             <span className="ml-auto flex shrink-0 items-baseline gap-1 lg:ml-0 short:ml-0">
               <span className="font-label text-[14px] leading-none font-medium" data-testid="hud-iron">
@@ -198,7 +200,9 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
           </div>
           <div
             ref={gauges}
-            className="relative grid gap-[3px] lg:grid-cols-3 lg:gap-x-6 short:grid-cols-3 short:gap-x-4"
+            // QA review 4 (R4-QA-03): held sideways the three columns are as wide as their words (the
+            // rest shared out), so *1,212 / 2,000 Party XP* is never clipped beside a short Energy line.
+            className="relative grid gap-[3px] lg:grid-cols-3 lg:gap-x-6 short:grid-cols-[repeat(3,auto)] short:gap-x-4"
           >
             <div className="flex min-w-0 items-center gap-1 lg:contents short:contents">
               <Gauge
@@ -216,7 +220,8 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
                 className="flex-1"
                 narrowBar
               />
-              <HudClock now={now} testId="hud-clock" className="-mr-2 flex lg:hidden short:hidden" />
+              {/* Inside the gauges, above their button (z-10), so a tap on the time opens the clock. */}
+              <HudClock now={now} testId="hud-clock" className="relative z-10 -mr-2 flex lg:hidden short:hidden" />
             </div>
             {/* Review 4 #12 (answers §12): Heat is a body line of its own under Energy, from 1. */}
             {heatValue > 0 && <HeatRow value={heatValue} size="line" className="short:hidden lg:row-start-2" />}
@@ -344,7 +349,7 @@ function HudClock({ now, testId, className }: { now: number; testId: string; cla
       label={`${time}: what the clock means`}
       testId={testId}
       className={cx(
-        'relative z-10 -my-[15px] min-w-11 shrink-0 items-center justify-end text-paper',
+        '-my-[15px] min-w-11 shrink-0 items-center justify-end text-paper',
         className,
       )}
     >

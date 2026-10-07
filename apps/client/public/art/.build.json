@@ -1596,21 +1596,21 @@
     "bytes": 42312
   },
   "scene.train-compartment-640.avif": {
-    "sourceHash": "dbdce92dd659f0f7387f6be633021e993666d4dcc4c1145b62a921a6b1fbe8d9",
-    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":{\"left\":32,\"top\":8,\"width\":2688,\"height\":1520},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "sourceHash": "38bafcd1edeab7275e5b6369208d38654a69c629261ef613d94dc23c94f41295",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
     "quality": 55,
-    "bytes": 20430
+    "bytes": 30978
   },
   "scene.train-compartment-1280.avif": {
-    "sourceHash": "dbdce92dd659f0f7387f6be633021e993666d4dcc4c1145b62a921a6b1fbe8d9",
-    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":{\"left\":32,\"top\":8,\"width\":2688,\"height\":1520},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "sourceHash": "38bafcd1edeab7275e5b6369208d38654a69c629261ef613d94dc23c94f41295",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
     "quality": 55,
-    "bytes": 58901
+    "bytes": 122372
   },
   "scene.train-compartment-640.webp": {
-    "sourceHash": "dbdce92dd659f0f7387f6be633021e993666d4dcc4c1145b62a921a6b1fbe8d9",
-    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":{\"left\":32,\"top\":8,\"width\":2688,\"height\":1520},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "sourceHash": "38bafcd1edeab7275e5b6369208d38654a69c629261ef613d94dc23c94f41295",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
-    "bytes": 32028
+    "bytes": 44492
   }
 }

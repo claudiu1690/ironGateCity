@@ -2,7 +2,16 @@ import { copy } from '@irongate/content/copy';
 import { WEEKDAY_NAMES, weekday } from '@irongate/rules';
 import type { DailyTally, DeskView, OrdersView, PaperView } from '@irongate/rules';
 import type { ReactNode } from 'react';
-import { cx, formatClock, formatNumber, formatOpinionDelta, formatWhen, nextDayTurn, plural } from '../format';
+import {
+  cx,
+  formatClock,
+  formatNumber,
+  formatOpinionDelta,
+  formatWhen,
+  nextDayTurn,
+  plural,
+  renderTimeTokens,
+} from '../format';
 import { HelpButton, helpMark } from './Help';
 import type { HelpNote } from './Help';
 import { Picture } from './Picture';
@@ -198,7 +207,12 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
                 {o.progress} / {o.target}
               </span>
             </div>
-            {paper && <span className="pl-6 font-body text-[13px] text-text-2 italic">{o.line}</span>}
+            {/* QA review 4 R4-QA-02: `{at}` (the wage's first day turn) in the player's clock. */}
+            {paper && (
+              <span className="pl-6 font-body text-[13px] text-text-2 italic">
+                {renderTimeTokens(o.line, { at: nextDayTurn() })}
+              </span>
+            )}
           </li>
         ))}
       </ul>

@@ -127,7 +127,7 @@ The outcome texts are the step's existing ones; an approach chooses a check, not
 | `dir.sharpen-up` | C | Train once, anywhere in Coalport | A tired organiser is a bad one. An hour in the reading room, on the hooks, or running for the street committee. | training · 1 |
 | `dir.full-day` | C | Six wins anywhere in Coalport | Six wins before the paper goes to bed. | checked, home · 6 Successes |
 | `dir.five-in-the-book` (new) | C | Five attempts anywhere in Coalport | Five entries in the day book, win or lose. Volume is the point. | checked, home · 5 attempts |
-| `dir.take-a-job` (welcome only) | C | Take a job at the Mill Gate | The party doesn't pay wages. The mill does, and a fifth more to members. Paid at midnight, every day. | takeJob · 1 |
+| `dir.take-a-job` (welcome only) | C | Take a job at the Mill Gate | The party doesn't pay wages. The mill does, every day, and a fifth more to members. The first wage lands {at}. | takeJob · 1 |
 | `dir.w.leaflets-market-row` (welcome, AGI) | A | Hand out flyers on Market Row | Quick hands between the stalls. Two rounds, before the inspector wakes up. | `coalport.market-row.leaflets` · 2 |
 | `dir.restore-canvass` | A (crisis) | Win back Coalport: talk to voters anywhere | The wards are asking what the branch is for. Answer them at the door: three conversations, today. | canvass, coalport · 3 · +40 |
 | `dir.restore-speech` | B (crisis) | Win back Coalport: a speech anywhere | The Anchor says the party has gone quiet. Prove it wrong, out loud, from the plinth. | speech, coalport · 1 · +40 |
@@ -148,7 +148,7 @@ The outcome texts are the step's existing ones; an approach chooses a check, not
 | `dir.v.sharpen-up` | C | Train once, anywhere in Duskwall | A soft organiser is no use to me. The bonded store, the reading room, or the ward office's messages. | training · 1 |
 | `dir.v.full-day` | C | Six wins anywhere in Duskwall | Six wins before lights out. | checked, home · 6 Successes |
 | `dir.v.five-in-the-book` (new) | C | Five attempts anywhere in Duskwall | Five entries in the day book. I read it every night. | checked, home · 5 attempts |
-| `dir.v.take-a-job` (welcome only) | C | Take a job at the Fortress Gate | The movement does not pay wages. The customs stores do, and members draw a fifth more. Paid at midnight. | takeJob · 1 |
+| `dir.v.take-a-job` (welcome only) | C | Take a job at the Fortress Gate | The movement does not pay wages. The customs stores do, and members draw a fifth more. The first wage lands {at}. | takeJob · 1 |
 | `dir.v.w.ration-queue` (welcome, INT) | A | Talk to the queue at the Customs Market | Sixty people in the sugar queue with nowhere to go. Twice through the line, price list in hand. | `duskwall.quartermaster-market.canvass` · 2 |
 | `dir.v.w.leaflets-market` (welcome, AGI) | A | Hand out flyers at the Customs Market | The tent rows, at a trot. Two rounds before the inspector notices. | `duskwall.quartermaster-market.leaflets` · 2 |
 | `dir.v.restore-canvass` | A (crisis) | Win back Duskwall: talk to voters anywhere | Rampart Row has questions. Three wards, three answers, in order, on my desk tonight. | canvass, duskwall · 3 · +40 |
@@ -170,11 +170,13 @@ The outcome texts are the step's existing ones; an approach chooses a check, not
 | `dir.a.sharpen-up` | C | Train once, anywhere in Ashford | A tired canvasser is a bad one. The college reading room, the newsprint lorry, or the tenants' messages. | training · 1 |
 | `dir.a.full-day` | C | Six wins anywhere in Ashford | Six wins before the Gazette goes to bed. | checked, home · 6 Successes |
 | `dir.a.five-in-the-book` (new) | C | Five attempts anywhere in Ashford | Five lines in the day book, and I count the lines. | checked, home · 5 attempts |
-| `dir.a.take-a-job` (welcome only) | C | Take a job at Gazette House | The Alliance doesn't pay wages. The Gazette does, and a fifth more to members. Paid at midnight. | takeJob · 1 |
+| `dir.a.take-a-job` (welcome only) | C | Take a job at Gazette House | The Alliance doesn't pay wages. The Gazette does, and a fifth more to members. The first wage lands {at}. | takeJob · 1 |
 | `dir.a.w.bills` (welcome, STR) | A | Put up posters on Weavers' Row | The yard hoardings on Weavers' Row, bucket and brush. Two rounds, straight and high. | `ashford.weavers-row.bills` · 2 |
 | `dir.a.w.evening-run` (welcome, AGI) | A | Slip flyers into the paper at Gazette House | The evening edition to the stands before the trams fill. Two runs. Don't drop any. | `ashford.gazette-house.evening-run` · 2 |
 | `dir.a.restore-canvass` | A (crisis) | Win back Ashford: talk to voters anywhere | Ashford is muttering. Three wards, three honest conversations, and listen more than you talk. | canvass, ashford · 3 · +40 |
 | `dir.a.restore-speech` | B (crisis) | Win back Ashford: a speech anywhere | The Rooms have gone quiet and the town has noticed. Speak today, anywhere with a crowd. | speech, ashford · 1 · +40 |
+
+*Review 4, QA fix round (R4-QA-02): the three *Take a job* lines end *The first wage lands {at}.*, `{at}` being the day's next turn in the player's clock (*tomorrow 03:00*); they said *Paid at midnight*.*
 
 ### 3.4 Rotation after the change
 
@@ -257,13 +259,13 @@ The strings, in the paper's voice. `{n}` values come from the character; the dev
 | **The share bar** (plate; caption *Who holds {city}*) | WHO HOLDS {CITY} | Each party's share of the town, and in grey the undecided: Neutral is nobody's, and every canvass draws from it first. A home city never falls below half for its own party; the rest is the fight. |
 | **Morale word** (plate, after the share) | MORALE | The home party's share is its morale. Fired up, 80 and over: party work here pays +10 % Faction XP. Steady: nothing special. Unrest, under 60: the branch is in trouble and the orders change. |
 | **Ordinance line** (plate) | ORDINANCE | The council's standing order for the town, in force for five days and for everyone here whatever their party. Passed at the council by four votes of seven. |
-| **Today** (the strip's label) | TODAY | What you have done since midnight. The day turns at {time}, and this becomes *Yesterday* in the morning paper. |
+| **Today** (the strip's label) | TODAY | What you have done since the day turned. It turns again at {time}, and this becomes *Yesterday* in the morning paper. *(Review 4 QA n1: no* midnight*; was* since midnight*.)* |
 | Today: **Energy** | ENERGY SPENT | Energy spent today. A ×3 is three actions' worth. |
 | Today: **attempts** | ATTEMPTS | Actions taken today, a ×3 counting three. |
 | Today: **wins** | WINS | Successes today. Each one counts towards your standing here. |
 | Today: **XP** | EXPERIENCE TODAY | Experience earned today, Rested included. |
 | Today: **FXP** | FACTION XP TODAY | Faction XP earned today, the orders' bonuses included. |
-| Today: **Iron** | IRON TODAY | Iron earned by actions today. Your wage lands at midnight and shows on the desk. |
+| Today: **Iron** | IRON TODAY | Iron earned by actions today. Your wage lands when the day turns and shows on the desk. |
 | Today: **opinion** | OPINION MOVED | How far your work moved {city}'s meter today, in points of the town. A canvass is +0.05. |
 | Today: **orders** | ORDERS | Party orders carried out today, of three. All three: +5 Political Capital. |
 | Today: **trained** | TRAINED | Stat points trained today. |

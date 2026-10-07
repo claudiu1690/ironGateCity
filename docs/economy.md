@@ -979,16 +979,18 @@ Rules: GDD §0 (*Added 6 Oct 2026, review 4*), §7.1, §8.5, §11.2, §13.7, §1
 
 | | Until review 4 | Now | What moves |
 |---|---|---|---|
-| Stats | STR 10 / INT 12 / AGI 5 / CHA 2 | **STR 8 / INT 12 / AGI 5 / CHA 5** | INT and every Intelligence figure in this sheet: nothing. STR −2: the second stat's home check 50 → 42 % (the STR actions, two or three of fifteen at home); the Fight power 17 → 15 (§19.5: 29 → 25 % against the enforcer; the recruit pays or takes luck either way). CHA +3: Talk 30 → 42 % against the enforcer, 14 → 22 % against the constable |
+| Stats | STR 10 / INT 12 / AGI 5 / CHA 2 | **STR 8 / INT 12 / AGI 5 / CHA 5** | INT and every Intelligence figure in this sheet: nothing. STR −2: the second stat's home check 58 → 50 % (the STR actions, two or three of fifteen at home; home tier-1 difficulty 8, §8.4); the Fight power 17 → 15 (§19.5: 29 → 25 % against the enforcer; the recruit pays or takes luck either way). CHA +3: Talk 30 → 42 % against the enforcer, 14 → 22 % against the constable |
 | Iron at start | 150 (coat refused) | 0 | The reference day's income is ~1,000; 150 is a seventh of day 1 and nothing after. Level 2 lands on the same tap |
 | Party XP at start | 50 (the wish) | 0, and the favour pays 15 / 8 on Success / Partial at 1.5× council rate on 10 Energy (the committee session's own figures) | Rank 2 (400) moves from early day 2 to later on day 2 for the reference player: the day-1 FXP of §13.3 was ~190 with the seed and the committee; it is ~155 now, and day 2's ~205 crosses 400 either way. **The first ballot is still by day 4** (§14.1) |
 | Taps to the first result | 11 | **8** | §11's session shape improves |
 
-The tuning characters for Duskwall and Ashford move the same way (STR 14 / INT 6 / AGI 5 and STR 6 / INT 14 / AGI 5): the Vanguard's best-stat day-1 check rises from 54 to 66 % (STR 11 → 14 under the STR actions), the Alliance's is unchanged (INT 14). **The flattest build** is now *light* in any party (AGI 11): 54 % everywhere on the AGI actions and 42–46 % elsewhere on day 1 with the +10 % First day bonus on top; the first level-up point lands inside the first bar as before. §13.1's table is superseded by this one; §13.2–13.3's day-1 totals hold within 10 % (the committee session's Energy and rewards are the favour's).
+The tuning characters for Duskwall and Ashford move the same way (STR 14 / INT 6 / AGI 5 and STR 6 / INT 14 / AGI 5): the Vanguard's best-stat day-1 check rises from 62 to 74 % (STR 11 → 14 under the STR actions, at the home difficulty 8), the Alliance's is unchanged (INT 14). **The flattest build** is now *light* in any party (AGI 11): 62 % everywhere on the AGI actions and 50–54 % elsewhere on day 1 with the +10 % First day bonus on top; the first level-up point lands inside the first bar as before. §13.1's table is superseded by this one; §13.2–13.3's day-1 totals hold within 10 % (the committee session's Energy and rewards are the favour's).
+
+*Corrected 7 Oct 2026 (review-4 QA fix round, n6): the chances in this section were first worked at difficulty 10. A home tier-1 check, the favour included, is at 8 (GDD §8.4), as the build has it; the figures above are at 8. Nothing else moves: the 60–85 % band for a best-stat day-1 check holds (the Vanguard's 74 % plus the First day's 10 is 84 %).*
 
 ### 24.2 The Town Hall's ticket
 
-*Sit in the public gallery*: tier-1 intelligence at 6 Energy (14 / 7 XP, 12 / 6 Iron at the tier-1 rates with the intelligence Iron factor; no Party XP, no opinion), one per city. It is one more intelligence ticket in a city that has two or three; the model's intelligence share (about 15 % of Energy) is unchanged, so nothing in §4 moves. A wins-counting tap for Reputation like any other.
+*Sit in the public gallery*: tier-1 intelligence at 6 Energy and the city's tier-1 difficulty (8 at home, 10 in Irongate; GDD §8.4) (14 / 7 XP, 12 / 6 Iron at the tier-1 rates with the intelligence Iron factor; no Party XP, no opinion), one per city. It is one more intelligence ticket in a city that has two or three; the model's intelligence share (about 15 % of Energy) is unchanged, so nothing in §4 moves. A wins-counting tap for Reputation like any other.
 
 ### 24.3 The cells: what the three costs are worth
 

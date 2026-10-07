@@ -288,7 +288,12 @@ export function riskEdition(
     const spent = cells.releasedAt
       ? Math.max(1, Math.round((new Date(cells.releasedAt).getTime() - new Date(cells.since).getTime()) / 60_000))
       : cells.minutes;
-    varsByKind.arrestedYesterday = { missionTitle: cellsTitle, how, minutes: String(spent) };
+    // QA review 4 (nit): the unit with the count, so a minute's stay reads *Spent 1 Minute in the Cells*.
+    varsByKind.arrestedYesterday = {
+      missionTitle: cellsTitle,
+      how,
+      minutes: `${spent} ${spent === 1 ? 'Minute' : 'Minutes'}`,
+    };
   }
 
   // Admitted yesterday: the opponent of its run-in.

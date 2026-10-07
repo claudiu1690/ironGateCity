@@ -194,9 +194,11 @@ describe('the risk headlines, each from its facts (tech design §11.2)', () => {
     expect(ids).toContain('hl.deported');
     // Design §14 (4 Oct 2026): a dev stay has no act behind it, so the fallback fills.
     expect(ids).toContain('hl.cells');
-    expect(find(paper, 'Minutes in the Cells')!.deck).toMatch(
+    expect(find(paper, ' in the Cells')!.deck).toMatch(
       /^Taken in after a word with the police; no reason was given\. /,
     );
+    // QA review 4 (nit): the unit agrees with the count (*1 Minute*, never *1 Minutes*).
+    expect(find(paper, ' in the Cells')!.headline).toMatch(/ Spent (1 Minute|([02-9]|\d\d+) Minutes) in the Cells$/);
     expect(find(paper, 'Put on the Train Home from Duskwall')).toMatchObject({ inPrint: true });
     expect(find(paper, 'Put on the Train Home from Duskwall')!.deck).toContain('Duskwall is barred for a day');
     expect(noPlaceholder(paper)).toBe(true);
@@ -253,7 +255,7 @@ describe('a night in the cells (tech design §15, the read path)', () => {
     const ids = await idsOn(p.id, DAY + 2);
     expect(ids).toContain('hl.cells');
     expect(ids).not.toContain('hl.seen');
-    const cells = find(paper, 'Minutes in the Cells')!;
+    const cells = find(paper, ' in the Cells')!;
     expect(cells).toMatchObject({ headline: `Lu Night Spent ${stay.minutes} Minutes in the Cells`, inPrint: true });
     expect(cells.deck!.startsWith(`Taken in after ${POSTERS_NAME}; the police took the name while Hot.`)).toBe(true);
     expect(cells.deck!.length).toBeLessThanOrEqual(DECK_MAX);
@@ -282,7 +284,7 @@ describe('a night in the cells (tech design §15, the read path)', () => {
     const ids = await idsOn(p.id, DAY + 2);
     expect(ids).toContain('hl.cells');
     expect(ids).not.toContain('hl.seen');
-    expect(find(paper, 'Minutes in the Cells')!.headline).toBe(`Mo Late Spent ${stay.minutes} Minutes in the Cells`);
+    expect(find(paper, ' in the Cells')!.headline).toBe(`Mo Late Spent ${stay.minutes} Minutes in the Cells`);
     expect(paper.desk.held).toMatchObject({ kind: 'cells', placeName: 'Harbour Police' });
   });
 
@@ -294,7 +296,7 @@ describe('a night in the cells (tech design §15, the read path)', () => {
     clock.advance(7 * 60_000);
     await p.caller.held.bail({ idempotencyKey: key() });
     const paper = await nextMorning(clock, p);
-    expect(find(paper, 'Minutes in the Cells')!.headline).toBe('Ned Bail Spent 7 Minutes in the Cells');
+    expect(find(paper, ' in the Cells')!.headline).toBe('Ned Bail Spent 7 Minutes in the Cells');
   });
 });
 
