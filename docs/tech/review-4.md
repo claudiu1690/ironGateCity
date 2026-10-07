@@ -1508,3 +1508,32 @@ Recorded as each phase lands (T30 completes this section).
 67. **The plate's rule line is a button** (a 44 px tap area drawn past its one line, so the plate does not grow; in a phone's sideways side column the line itself is 44 px high), in a home city's plate and in a district's; it folds away on a phone under 700 px tall as before.
 68. ***What now* at the hall** is marked seen the moment it shows (`council.whatNowSeen`) and stays on screen for that visit.
 69. **The small extra**: the capital Election card's *Registered in Eastside* reads ***You live in Eastside*** (`copy.election.registered`; recorded in `packages/content/test/review4.ts`).
+
+### Phase 6 (T18–T20, 7 Oct 2026)
+
+**T18. The viewer's trace mode and the routes.**
+
+70. **How the legs were traced.** The four legs were read off the nation picture on a fraction grid and checked over the painted rails in the viewer's new trace mode (`/dev/maps` → nation → *Trace* draws `nation.routes` with any line being traced). Each leaves the capital's pin through the city to its line: Ashford and Coalport by the riverside line round the south of the city to the west curve, Duskwall by the north line past the domed church and the viaduct, Clearwater by the station's east line. Coalport's last stretch leaves the line for the city's pin across the works (no spur is painted). 16–19 points each.
+71. **`routeProblems`** (exported from `@irongate/content`) holds the loader's route checks; the 8–20 points and the four legs are the schema's. The viewer's lines come from `@irongate/content/maps` (`nationRoutes`, `cityOutlines`), as its pins do.
+
+**T19. Rules, DB, server.**
+
+72. **`JourneyView.route` carries `cities`** (the nation's five pins) besides `legs`: the map draws the two ends and mutes the others, and the view had no pins (a second query to `travel.nation` avoided).
+73. **The card is open from its moment *or* once the journey has arrived** (`cardOpen`: `now ≥ card.at`, or the status is not `onTheWay`, or `arrivesAt` has passed). A real moment is always before the arrival; the arrival test hook and the dev panel's *Arrive now* bring the arrival forward, and refusing then would leave the card unanswerable in the arrival modal.
+74. **`drawCardAt` draws whole seconds inside the window**: the lower bound rounded up, the upper down, so [0.20, 0.80] holds exactly after rounding. `trainAt` takes the picture's aspect (default 1: the nation picture is square), and `legSpans` (the legs' time shares) is exported; the view's `fromT`/`toT` come from it.
+75. **`heraldVisitor` stays until phase 7** (T23 removes the arrival's Herald line with the edition rule), so phase 6 changes no paper behaviour.
+76. **The slice 4–5 server tests read the card at its moment**: `toTheCard(clock, journey)` moves a test's clock to `cardAt`; where the figures hang on the clock (Heat cools), `cardNow(journeyId, at)` sets the stored moment to boarding instead. Tests that checked the draw on `board`'s result read the stored journey.
+
+**T20. Client.**
+
+77. **The map's frame is the route's box, not only the two pins'**, grown by 0.08, and the at-rest view keeps the route in sight (`CityMap.restPoints`): a leg bends outside its two pins' box (Ashford's runs south of the capital to the riverside line).
+78. **`CityMap` gains** `paths` (the route: a 2 px ink line over a 6 px paper halo, 90 % opaque, holding its width at any zoom), `traveller` (`TravelPin`), `onPictureTap` (the viewer), `onUserMove` and `recentre` (*Follow your pin*), and `restPoints`. **`TravelPin` ticks on its own** once a second on the server's clock (`clockNow`), so neither the map nor its tiles re-render with it; the journey page itself ticks once a minute (day or night), and the plate once a second.
+79. ***Follow your pin* returns the map to its rest view** (the two ends and the route, the pin on it), eased. On a desktop at rest the map may have nowhere to drag (the picture is already as wide as the box allows); the chip shows after any move the player makes (a zoom step or a drag).
+80. **The plate**: on a phone it sits above the map (not over it), at most 46 % of the screen, and scrolls (its foot, the *while you ride* rows, may need a scroll on a short phone); from 1024 px a 480 px side sheet over the map's top left, clear of the floating tab bar. The 2 px track (`JourneyProgress`) is kept, with its small mark.
+81. **The card's sheet** is the existing `BottomSheet`, titled *On the train to {City}*. It opens by itself once per journey and visit (the card's moment, or on return while it can be answered), and the pin pulses once (`travel-pin-pulse`, none under reduced motion). Closed while the card can still be answered, the plate shows a row ***On the way · {the card's title}*** that opens it again (`copy.travel.backToTheCard`, the developer's words). After an answer the sheet shows the outcome until closed.
+82. **New words** (the developer's, for the designer): the pin's label *To Coalport · in 12 min* (`copy.travel.pinTo`, the `when` phrase), its accessible name *Your pin: to Coalport, arriving in 12 min*, and *Follow your pin*. A pin's label after the arrival reads *To Coalport · now*.
+83. **E2E**: `toTheCard(page)` moves the shared test clock just past `data-card-at` and reloads (the sheet is open on return); `travel.spec.ts`, `rival.spec.ts` and `qa.slice4.spec.ts` use it. The travel project is a phone project, so `travel.spec.ts` gains a test at 1440 × 900 and 390 × 844 (the side sheet, the route, the muted pins, the pin, the card's sheet and its row, *Follow your pin*, the arrival).
+
+**The known red: `qa.slice3.server` "struck: the deposit comes back exactly once…".**
+
+84. **A real race, fixed.** `settleCityDay` decided "already settled" from a plain read of the city. Under load a concurrent settler's commit can be visible to that (local) read a moment before it is in the majority snapshot that the caller's next transaction reads (`readConcern: snapshot`). The character's settlement then ran on a snapshot without the struck candidate's `deposit: 'due'`, so the deposit came back a day late (never twice: the test's PC check at the next day failed). The read is now at majority (`readConcern('majority')`), so "settled" holds for every transaction that follows. It did not reproduce in 18 loaded runs before the fix (the window is short), and passes in every run since; no test change.

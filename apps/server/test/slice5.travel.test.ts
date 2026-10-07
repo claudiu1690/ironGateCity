@@ -16,6 +16,7 @@ import { wornStats } from '../src/services/views';
 import { gameData, setupDb, teardownDb, testClock } from './helpers';
 import type { Player } from './politics.helpers';
 import { at, content, key, member, setRisk } from './slice5.helpers';
+import { cardNow } from './slice4.helpers';
 
 const DAY = 20732; // Tue 6 Oct 2026
 const MIN = 60_000;
@@ -45,6 +46,16 @@ const fresh = async (opts: Parameters<typeof member>[1] = {}): Promise<Player & 
 const doc = async (id: string) => (await Character.findById(id).lean<CharacterDoc>())!;
 const journey = async (id: string) => (await Journey.findById(id).lean<JourneyDoc>())!;
 
+/**
+ * Review 4 (ADR 0075): board, and open the card now (its moment set to the boarding's), so the
+ * figures that hang on the clock (Heat) read as at boarding. The journey view with the card.
+ */
+async function boardCard(p: Player & { clock: Clock }, to: string) {
+  const b = await p.caller.travel.board({ to, idempotencyKey: key() });
+  await cardNow(b.journey.id, p.clock.now());
+  return { ...b, journey: (await p.caller.travel.journey())! };
+}
+
 /** Board to `to` and arrive (the lazy arrival on the next read). */
 async function ride(p: Player & { clock: Clock }, to: string) {
   const b = await p.caller.travel.board({ to, idempotencyKey: key() });
@@ -73,7 +84,7 @@ describe('rival ground opens from Level 10 (design §11.1)', () => {
     });
     expect(n.cities.find((c) => c.cityId === 'irongate')!.rival).toBeUndefined();
 
-    const b = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b = await boardCard(p, 'duskwall');
     expect(b.journey.card).toMatchObject({ eventId: 'jev.checkpoint', deck: 'hostile' });
     expect(b.character.iron).toBe(980);
     const c = await doc(p.id);
@@ -83,11 +94,8 @@ describe('rival ground opens from Level 10 (design §11.1)', () => {
       false,
     ]);
     const j = await journey(b.journey.id);
-    expect([j.kind, j.rivalGround, j.card]).toEqual([
-      'ticket',
-      true,
-      { eventId: 'jev.checkpoint', deck: 'hostile' },
-    ]);
+    expect([j.kind, j.rivalGround]).toEqual(['ticket', true]);
+    expect(j.card).toMatchObject({ eventId: 'jev.checkpoint', deck: 'hostile', at: expect.any(Date) });
   });
 
   it('the Trains card lists rival homes (boardable) and Clearwater not at all', async () => {
@@ -103,7 +111,7 @@ describe('rival ground opens from Level 10 (design §11.1)', () => {
   it("the passenger is still the first ordinary journey's card after a rival trip", async () => {
     const p = await fresh({ name: 'Ria First' });
     await ride(p, 'duskwall');
-    const back = await p.caller.travel.board({ to: 'irongate', idempotencyKey: key() });
+    const back = await boardCard(p, 'irongate');
     expect(back.journey.card).toMatchObject({ eventId: 'jev.passenger', deck: 'ordinary' });
     expect((await doc(p.id)).journeyDeck).toEqual({ seen: ['jev.passenger'], firstDone: true });
   });
@@ -145,7 +153,7 @@ describe('the hostile draw (design §11.4, §23.1 #12)', () => {
     const trip = async (heat: number) => {
       await setRisk(p.id, p.clock.now(), { heat });
       const { b } = await ride(p, 'duskwall');
-      drawn.push(b.journey.card!.eventId);
+      drawn.push((await journey(b.journey.id)).card!.eventId);
       await ride(p, 'coalport');
       return b;
     };
@@ -172,7 +180,7 @@ describe('the hostile draw (design §11.4, §23.1 #12)', () => {
 describe('the cards on rival ground (tech design §10.4, design §23.2)', () => {
   it('the checkpoint rows: no odds word on the gated row, difficulty 14 on the checked one', async () => {
     const p = await fresh({ name: 'Ria Rows' });
-    const b = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b = await boardCard(p, 'duskwall');
     const rows = b.journey.card!.choices;
     expect(rows.find((r) => r.id === 'papers')).toMatchObject({ gated: true, chance: null, stat: null });
     expect(rows.find((r) => r.id === 'lamp')).toMatchObject({ gated: false, chance: null, cost: 30 });
@@ -185,7 +193,7 @@ describe('the cards on rival ground (tech design §10.4, design §23.2)', () => 
 
   it('the gate holds (Cool and Clean): waved on, nothing written but the choice', async () => {
     const p = await fresh({ name: 'Ria Clean' });
-    const b = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b = await boardCard(p, 'duskwall');
     const r = await p.caller.travel.choose({
       journeyId: b.journey.id,
       choiceId: 'papers',
@@ -204,7 +212,7 @@ describe('the cards on rival ground (tech design §10.4, design §23.2)', () => 
       heat: 25,
       flags: [{ cityId: 'duskwall', day: DAY - 1, flag: 'warned' }],
     });
-    const b = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b = await boardCard(p, 'duskwall');
     const r = await p.caller.travel.choose({
       journeyId: b.journey.id,
       choiceId: 'papers',
@@ -235,7 +243,7 @@ describe('the cards on rival ground (tech design §10.4, design §23.2)', () => 
   it('the gate fails on a live mark at Heat 0', async () => {
     const p = await fresh({ name: 'Ria Marked' });
     await setRisk(p.id, p.clock.now(), { marks: [{ day: DAY - 1, kind: 'minor' }] });
-    const b = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b = await boardCard(p, 'duskwall');
     const r = await p.caller.travel.choose({
       journeyId: b.journey.id,
       choiceId: 'papers',
@@ -247,7 +255,7 @@ describe('the cards on rival ground (tech design §10.4, design §23.2)', () => 
 
   it('a checked hostile row pays §23.2 (Partial: half, rounded half up, and Watched); the lamp costs 30', async () => {
     const p = await fresh({ name: 'Ria Talk' });
-    const b = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b = await boardCard(p, 'duskwall');
     const r = await p.caller.travel.choose({
       journeyId: b.journey.id,
       choiceId: 'talk',
@@ -264,7 +272,7 @@ describe('the cards on rival ground (tech design §10.4, design §23.2)', () => 
     expect([r.opinion, r.points]).toEqual([null, null]);
 
     const q = await fresh({ name: 'Ria Lamp' });
-    const b2 = await q.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b2 = await boardCard(q, 'duskwall');
     const lamp = await q.caller.travel.choose({
       journeyId: b2.journey.id,
       choiceId: 'lamp',
@@ -383,7 +391,7 @@ describe('an unanswered card: its ignore effects once (tech design §8.2)', () =
 
   it('an answered card applies nothing more at Continue; the conductor slept through is the line only', async () => {
     const p = await fresh({ name: 'Ria Answers' });
-    const b = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
+    const b = await boardCard(p, 'duskwall');
     await p.caller.travel.choose({ journeyId: b.journey.id, choiceId: 'papers', idempotencyKey: key() });
     p.clock.set(b.journey.arrivesAt);
     await p.caller.travel.close({ journeyId: b.journey.id });

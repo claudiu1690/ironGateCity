@@ -12,7 +12,7 @@ import type { FactionId, OpinionShares } from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { settleCityDay } from '../src/services/cityDay';
 import { resetCity, setupDb, teardownDb, testClock } from './helpers';
-import { at, content, setDistrict, setLiveIssues, traveller } from './slice4.helpers';
+import { at, content, setDistrict, setLiveIssues, toTheCard, traveller } from './slice4.helpers';
 
 const DAY = 20732; // Tue 6 Oct 2026 (week 20731)
 const MONDAY = 20738; // Mon 12 Oct: week 20731 resolves
@@ -61,6 +61,7 @@ describe('the ledger adds up (GDD §14.5: every opinion change is a row)', () =>
     for (const p of players) await p.caller.action.perform({ ...ARRIVALS, idempotencyKey: key(), times: 3 });
     const rider = await traveller(clock, { name: 'Ledger Rider' });
     const b = await rider.caller.travel.board({ to: 'irongate', idempotencyKey: key() });
+    toTheCard(clock, b.journey);
     await rider.caller.travel.choose({ journeyId: b.journey.id, choiceId: 'talk', idempotencyKey: key() });
     clock.set(at(DAY + 3));
     await settleCityDay(content, 'irongate', clock.now());

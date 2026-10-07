@@ -5,7 +5,7 @@
  * Heat **projected** at boarding, and the first trip's checkpoint even when Hot. ADR 0034; design §11,
  * §23.1 #12; GDD §14.11–§14.12.
  */
-import { City, Character } from '@irongate/db';
+import { City, Character, Journey } from '@irongate/db';
 import type { CityDoc } from '@irongate/db';
 import type { ActionResult } from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -115,7 +115,8 @@ describe('QA · the hostile draw at boarding (design §11.4, §23.1 #12)', () =>
     const p = await member(clock, { name: 'Ed First', level: 10 });
     await setRisk(p.id, clock.now(), { heat: 90 });
     const j = await p.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
-    expect(j.journey.card!.eventId).toBe('jev.checkpoint');
+    // Review 4 (ADR 0075): the draw is stored at boarding; the view shows it from its moment.
+    expect((await Journey.findById(j.journey.id).lean())!.card!.eventId).toBe('jev.checkpoint');
   });
 
   it('the list reads the Heat projected at boarding: stored 52 two hours ago is 42, so no list; 50 now is the list', async () => {
@@ -127,10 +128,10 @@ describe('QA · the hostile draw at boarding (design §11.4, §23.1 #12)', () =>
     await setRisk(hot.id, clock.now(), { heat: 50 });
     const a = await cooled.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
     const b = await hot.caller.travel.board({ to: 'duskwall', idempotencyKey: key() });
-    const id = (x: typeof a) => x.journey.card!.eventId;
-    expect(id(a)).not.toBe('jev.listed');
-    expect(['jev.informer', 'jev.conductor']).toContain(id(a));
-    expect(id(b)).toBe('jev.listed');
+    const id = async (x: typeof a) => (await Journey.findById(x.journey.id).lean())!.card!.eventId;
+    expect(await id(a)).not.toBe('jev.listed');
+    expect(['jev.informer', 'jev.conductor']).toContain(await id(a));
+    expect(await id(b)).toBe('jev.listed');
   });
 });
 

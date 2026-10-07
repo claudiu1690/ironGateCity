@@ -40,6 +40,8 @@ export type {
   RestView,
 } from './components/CityMap';
 export { TileLayer } from './components/TileLayer';
+export { TravelPin } from './components/TravelPin';
+export type { MapTraveller, TravelPinProps } from './components/TravelPin';
 export { CloudLayer } from './components/CloudLayer';
 export type { CloudLayerProps } from './components/CloudLayer';
 export { CLOUDS, cloudPass, cloudPaths, cloudPlane, spriteCount } from './clouds';

@@ -7,6 +7,7 @@ export {
   parseContent,
   inPolygon,
   rawContent,
+  routeProblems,
   sentenceCount,
 } from './load';
 export type { GameContent, LaterPin, LocatedAction, LocatedMission } from './load';

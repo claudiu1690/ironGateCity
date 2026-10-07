@@ -1,5 +1,5 @@
 import { getContent } from '@irongate/content';
-import { Character, City, District, IssueModel, issueDocId } from '@irongate/db';
+import { Character, City, District, IssueModel, Journey, issueDocId } from '@irongate/db';
 import type { CityDoc } from '@irongate/db';
 import { dayKey, dayStart, weekOf, xpForLevel } from '@irongate/rules';
 import type { DayKey, FactionId, OpinionShares } from '@irongate/rules';
@@ -164,3 +164,22 @@ export async function setDistrict(
 }
 
 export const today = (clock: { now: () => number }) => dayKey(clock.now());
+
+/**
+ * Review 4 (ADR 0075 §4): the card is withheld until its moment, drawn at boarding in 0.20–0.80 of
+ * the journey. Moves the test clock to that moment (never back), so the card can be read and answered.
+ */
+export function toTheCard(
+  clock: { now: () => number; set: (ms: number) => void },
+  journey: { cardAt: number | null },
+): void {
+  if (journey.cardAt !== null && clock.now() < journey.cardAt) clock.set(journey.cardAt);
+}
+
+/**
+ * Review 4 (ADR 0075): the journey's card opens now (its stored moment set to `at`), for tests whose
+ * figures hang on the clock at boarding (Heat cools as the clock moves). Nothing else changes.
+ */
+export async function cardNow(journeyId: string, at: number): Promise<void> {
+  await Journey.updateOne({ _id: journeyId, card: { $ne: null } }, { $set: { 'card.at': new Date(at) } });
+}

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { signUp, unclearPins } from './helpers';
+import { signUp, toTheCard, unclearPins } from './helpers';
 
 /**
  * QA slice 4 (docs/qa/slice-4-report.md): the capital's overview at rest at several sizes (every
@@ -175,6 +175,8 @@ test.describe('by keyboard, and in plain words (GDD §1.5, review 2)', () => {
     await page.getByTestId('city-sheet').getByTestId('city-board').click();
     await expect(page).toHaveURL(/\/journey$/);
     await read();
+    // Review 4 (ADR 0075): the card opens as a sheet at its moment (the dev clock moved past it).
+    await toTheCard(page);
     const first = page.getByTestId('journey-choice').first();
     for (let i = 0; i < 60 && !(await first.evaluate((e) => e === document.activeElement)); i++) await page.keyboard.press('Tab');
     await expect(first).toBeFocused();

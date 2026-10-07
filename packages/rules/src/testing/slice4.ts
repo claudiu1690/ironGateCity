@@ -186,6 +186,36 @@ export const journeyViewFixture: JourneyView = {
   status: 'onTheWay',
   firstJourney: true,
   others: 2,
+  // Review 4 (tech design §6.4): Coalport's leg into the capital, the nation's pins, the card's moment.
+  route: {
+    legs: [
+      {
+        points: [
+          [0.18, 0.8],
+          [0.228, 0.738],
+          [0.272, 0.692],
+          [0.241, 0.659],
+          [0.236, 0.606],
+          [0.268, 0.564],
+          [0.336, 0.535],
+          [0.355, 0.565],
+          [0.44, 0.6],
+          [0.52, 0.53],
+        ],
+        fromT: 0,
+        toT: 1,
+      },
+    ],
+    cities: [
+      { cityId: 'irongate', name: 'Irongate', x: 0.52, y: 0.53 },
+      { cityId: 'ashford', name: 'Ashford', x: 0.12, y: 0.17 },
+      { cityId: 'duskwall', name: 'Duskwall', x: 0.88, y: 0.25 },
+      { cityId: 'coalport', name: 'Coalport', x: 0.18, y: 0.8 },
+      { cityId: 'clearwater', name: 'Clearwater', x: 0.88, y: 0.85 },
+    ],
+  },
+  map: { day: nationMap('map.nation.day'), night: nationMap('map.nation.night') },
+  cardAt: T0 + 3 * 60_000,
   card: {
     eventId: 'jev.passenger',
     title: 'A talkative passenger',

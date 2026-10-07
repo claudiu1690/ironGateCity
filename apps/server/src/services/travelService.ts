@@ -17,13 +17,16 @@ import {
   dayKey,
   dayStart,
   destinationState,
+  drawCardAt,
   drawHostileCard,
   drawJourneyCard,
   fare,
   fillTemplate,
   isNight,
   journeyChoiceCheck,
+  journeyLegs,
   legMinutes,
+  legSpans,
   liveMarks,
   projectEnergy,
   projectHeat,
@@ -397,6 +400,14 @@ export async function board(deps: {
       const id = new Types.ObjectId();
       const boardedAt = new Date(now);
       const arrivesAt = new Date(now + minutes * MINUTE);
+      // Review 4 (ADR 0075 §3): the card's moment, drawn with the card from the key's seed, so a
+      // re-run of this transaction draws the same moment.
+      const drawnCard = card
+        ? {
+            ...card,
+            at: new Date(drawCardAt(createRng(`${seed}:cardAt`), boardedAt.getTime(), arrivesAt.getTime())),
+          }
+        : null;
       await Journey.create(
         [
           {
@@ -410,7 +421,7 @@ export async function board(deps: {
             minutes,
             fare: f,
             seed,
-            card,
+            card: drawnCard,
             kind: 'ticket',
             rivalGround: rival,
             choice: null,
@@ -473,6 +484,41 @@ async function firstIssueOf(
   return (session ? q.session(session) : q).lean<IssueDoc>();
 }
 
+/**
+ * Review 4 (ADR 0075 §4–§5): the card's moment, epoch ms; a card drawn before review 4 (no `at`)
+ * reads as `boardedAt`, answerable at once as it was. Null when the journey drew no card.
+ */
+export function cardAtOf(j: Pick<JourneyDoc, 'card' | 'boardedAt'>): number | null {
+  if (!j.card) return null;
+  return j.card.at ? new Date(j.card.at).getTime() : j.boardedAt.getTime();
+}
+
+/**
+ * Review 4 (ADR 0075 §4): whether the card's content may be shown and answered now: from its
+ * moment, or once the journey has arrived (a moment is always before the arrival; the arrival test
+ * hook and the dev panel bring the arrival forward).
+ */
+export function cardOpen(j: Pick<JourneyDoc, 'card' | 'boardedAt' | 'arrivesAt' | 'status'>, now: number): boolean {
+  const at = cardAtOf(j);
+  if (at === null) return false;
+  return now >= at || j.status !== 'onTheWay' || now >= j.arrivesAt.getTime();
+}
+
+/** Review 4 (tech design §6.4): the journey's legs on the nation picture and their time spans. */
+export function routeOf(content: GameContent, from: string, to: string): JourneyView['route'] {
+  const minutes = minutesMap(content);
+  const legs = journeyLegs(content.nation.routes, from, to, capitalOf(content), (id) => minutes[id] ?? 0);
+  const spans = legSpans(legs);
+  return {
+    legs: legs.map((l, i) => ({
+      points: l.points.map((p) => [p[0], p[1]] as [number, number]),
+      fromT: spans[i]!.fromT,
+      toT: spans[i]!.toT,
+    })),
+    cities: content.nation.cities.map((c) => ({ cityId: c.cityId, name: c.name, x: c.x, y: c.y })),
+  };
+}
+
 const fillCard = (content: GameContent, text: string, vars: { destination: string; issue: string }) =>
   fillTemplate(text, vars as Record<string, string>);
 
@@ -511,7 +557,9 @@ export async function journeyView(
     },
   });
   const others = await (session ? othersQ.session(session) : othersQ);
-  const ev = j.card ? content.journeyEvent(j.card.eventId) : undefined;
+  // Review 4 (ADR 0075 §4): the card's content is kept until its moment; `cardAt` is sent at once.
+  const cardAt = cardAtOf(j);
+  const ev = j.card && cardOpen(j, now) ? content.journeyEvent(j.card.eventId) : undefined;
   const values = wornStats(c, content);
   const successes = standingSuccesses(c, j.to);
   const named = namedStanding(content, j.to, successes);
@@ -588,6 +636,12 @@ export async function journeyView(
     status,
     firstJourney: j.n === 1,
     others,
+    route: routeOf(content, j.from, j.to),
+    map: {
+      day: assetView(content, content.nation.map.day),
+      night: assetView(content, content.nation.map.night),
+    },
+    cardAt,
     card: ev
       ? {
           eventId: ev.id,
@@ -719,6 +773,9 @@ export async function choose(deps: {
       if (!j.card) throw new GameError('NO_CARD');
       if (j.status === 'closed') throw new GameError('CARD_CLOSED');
       if (j.choice) throw new GameError('ALREADY_CHOSEN', { choiceId: j.choice.choiceId }, 'CONFLICT');
+      // Review 4 (ADR 0075 §4): never before the card's moment; nothing is written, and the request
+      // key is not kept (`withRequestKey` stores a key only on success), so the same key works later.
+      if (!cardOpen(j, now)) throw new GameError('CARD_NOT_YET', { at: cardAtOf(j) });
       const ev = content.journeyEvent(j.card.eventId)!;
       const ch = ev.choices.find((x) => x.id === input.choiceId);
       if (!ch) throw new GameError('UNKNOWN_CHOICE', { choiceId: input.choiceId }, 'BAD_REQUEST');

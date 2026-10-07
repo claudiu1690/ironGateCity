@@ -335,3 +335,27 @@
     flex: 1 0 auto;
   }
 }
+
+/*
+ * Review 4 (tech design §6.5): the traveller's pin pulses once when the journey's card arrives, on the
+ * sheets' curve. Transform only; none under reduced motion.
+ */
+@keyframes travel-pin-pulse {
+  0% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
+  }
+  40% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1.7);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
+  }
+}
+.travel-pin-pulse {
+  animation: travel-pin-pulse 700ms var(--place-ease) 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .travel-pin-pulse {
+    animation: none;
+  }
+}

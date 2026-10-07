@@ -24,8 +24,12 @@ export interface JourneyDoc {
   fare: { base: number; lines: Array<{ id: string; label: string; pct: number }>; total: number };
   /** 32 hex: the card draw and the card's roll. */
   seed: string;
-  /** Slice 5: `deck` is the card's deck (absent on cards drawn before slice 5: ordinary). */
-  card: { eventId: string; deck?: 'ordinary' | 'hostile' } | null;
+  /**
+   * Slice 5: `deck` is the card's deck (absent on cards drawn before slice 5: ordinary). Review 4
+   * (ADR 0075 §3): `at` is the card's moment, drawn at boarding from `seed + ':cardAt'`; absent (a
+   * journey boarded before review 4) reads as `boardedAt`.
+   */
+  card: { eventId: string; deck?: 'ordinary' | 'hostile'; at?: Date } | null;
   /**
    * Slice 5 (ADR 0033): a deportation is a fareless, cardless train home on release from the cells
    * on rival ground. Absent means a ticket.

@@ -2005,6 +2005,22 @@ export interface JourneyView {
   firstJourney: boolean;
   /** Other journeys on this leg boarded within ten minutes. */
   others: number;
+  /**
+   * Review 4 (tech design §6.4, ADR 0075): the route on the nation picture. Each leg's points in
+   * travel order (fractions of the picture) and its share of the journey's time; `cities` are the
+   * nation's pins (the two ends drawn, the others muted). The client places the pin with `trainAt`.
+   */
+  route: {
+    legs: Array<{ points: Array<[number, number]>; fromT: number; toT: number }>;
+    cities: Array<{ cityId: string; name: string; x: number; y: number }>;
+  };
+  /** Review 4: the nation pictures (tiles), day and night. */
+  map: { day: AssetView; night: AssetView };
+  /**
+   * Review 4 (ADR 0075 §4): the card's moment, epoch ms, whenever the journey drew a card (null: no
+   * card). `card` itself is sent only from this moment (or once the journey has arrived).
+   */
+  cardAt: number | null;
   card: JourneyCardView | null;
   arrival: {
     stamp: 'Arrived';

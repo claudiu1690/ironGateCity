@@ -257,6 +257,41 @@ const NATION_FRAME_MARGIN = 0.06;
 const OUTCOME_TEXT_MAX_CHARS = 240;
 const OUTCOME_TEXT_MAX_SENTENCES = 4;
 
+/**
+ * Review 4 (tech design §6.1, ADR 0075): the nation's routes. One leg per nation city other than the
+ * capital; each starts at the capital's pin and ends at its city's pin (exactly); no two consecutive
+ * points are equal; every point is inside the picture (the schema's fractions already hold it).
+ */
+export function routeProblems(n: Pick<Content['nation'], 'capitalId' | 'cities' | 'routes'>): string[] {
+  const problems: string[] = [];
+  const capital = n.cities.find((c) => c.cityId === n.capitalId);
+  const outer = n.cities.filter((c) => c.cityId !== n.capitalId).map((c) => c.cityId);
+  const legs = n.routes.map((r) => r.to);
+  for (const id of outer)
+    if (legs.filter((x) => x === id).length !== 1) problems.push(`nation.routes: one leg to ${id}`);
+  for (const r of n.routes) {
+    const city = n.cities.find((c) => c.cityId === r.to);
+    if (!city || r.to === n.capitalId) {
+      problems.push(`nation.routes: "${r.to}" is not a nation city other than the capital`);
+      continue;
+    }
+    const first = r.points[0];
+    const last = r.points[r.points.length - 1];
+    if (!capital || !first || first[0] !== capital.x || first[1] !== capital.y)
+      problems.push(`nation.routes.${r.to}: must start at the capital's pin`);
+    if (!last || last[0] !== city.x || last[1] !== city.y)
+      problems.push(`nation.routes.${r.to}: must end at ${r.to}'s pin`);
+    for (let i = 1; i < r.points.length; i++) {
+      const a = r.points[i - 1]!;
+      const b = r.points[i]!;
+      if (a[0] === b[0] && a[1] === b[1]) problems.push(`nation.routes.${r.to}: points ${i - 1} and ${i} are equal`);
+    }
+    for (const [x, y] of r.points)
+      if (x < 0 || x > 1 || y < 0 || y > 1) problems.push(`nation.routes.${r.to}: a point outside the picture`);
+  }
+  return problems;
+}
+
 /** Sentences in a text: split after . ? or ! (and a closing quote), before whitespace. */
 export function sentenceCount(text: string): number {
   return text
@@ -910,6 +945,7 @@ function slice4Problems(
   const capital = idx.cityById.get(n.capitalId);
   if (!capital || !isDistricted(capital))
     problems.push(`nation.capitalId "${n.capitalId}" must be a city with districts`);
+  problems.push(...routeProblems(n));
 
   // The journey cards (design §3, §19 Q2).
   // Slice 5: each deck has exactly one card drawn first (the passenger, the checkpoint).

@@ -1004,6 +1004,15 @@ export const copy = {
     /** The map's top bar: "Coalport · home". */
     hereHome: (city: string) => `${city} · home`,
     continue: 'Continue',
+    /**
+     * Review 4 (answers §7.1, §7.3; the user, 7 Oct: a plain moving pin): the traveller's label on the
+     * nation map, *To Coalport · in 12 min*, its accessible name, and the chip that recentres the map.
+     */
+    pinTo: (city: string, when: string) => `To ${city} · ${when}`,
+    pinName: (city: string, when: string) => `Your pin: to ${city}, arriving ${when}`,
+    followYourPin: 'Follow your pin',
+    /** Review 4: the plate's row back to an unanswered card after its sheet was closed. */
+    backToTheCard: (title: string) => `On the way · ${title}`,
   },
   /** Slice 4: refusals, worded (the server's reason decides). */
   errors: {

@@ -624,7 +624,12 @@ export async function settleCityDay(content: GameContent, cityId: string, now: n
   const today = dayKey(now);
   const capital = content.isDistricted(cityId);
   for (let guard = 0; guard < 1_000; guard++) {
-    const city = await City.findById(cityId).lean<CityDoc>();
+    // Review 4 (the deposit test's flake): read at majority. A concurrent settler's commit can be
+    // visible to a plain (local) read a moment before it is in the majority snapshot that the
+    // caller's next transaction reads (`readConcern: snapshot`); the character's settlement then
+    // missed what the city day had just written (a struck candidate's deposit came back a day late).
+    // "Settled" must mean "settled for every transaction that follows".
+    const city = await City.findById(cityId).readConcern('majority').lean<CityDoc>();
     const needsIssues = !!city?.world && !city.issues;
     if (!needsIssues && city?.world && city.world.settledDay >= today) return city;
     const d = city?.world ? city.world.settledDay + 1 : today;

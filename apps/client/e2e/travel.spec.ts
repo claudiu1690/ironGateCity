@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { pinsOutOfReach, sheetSettled, signUp, unclearPins } from './helpers';
+import { pinsOutOfReach, sheetSettled, signUp, toTheCard, unclearPins } from './helpers';
 
 /**
  * Slice 4's first trip (tech design §15.1 `travel.spec.ts`), on a phone: Level 10 by the hook → the
@@ -84,11 +84,21 @@ test('the first trip: nation → board → the journey card → arrival → the 
   await expect(card.getByTestId('city-board')).toHaveText('Board · 20 Iron · 12 min');
   await card.getByTestId('city-board').click();
 
-  // 3. The journey: its name, the progress, the sentence, the first card with odds words, no digits.
+  // 3. The journey on the nation map (review 4, answers §7): its name, the progress, the sentence,
+  // the route and your pin on it; no card until its moment. The dev clock past the moment: the
+  // card's sheet is open on return, with odds words and no digits.
   await expect(page).toHaveURL(/\/journey$/);
   await expect(page.getByTestId('journey-title')).toHaveText(/^The \d\d:\d\d to Irongate$/);
   await expect(page.getByTestId('journey-sentence')).toContainText("You'll arrive either way");
-  const jcard = page.getByTestId('journey-card');
+  await expect(page.getByTestId('map-path')).toHaveCount(1);
+  await expect(page.getByTestId('travel-pin-label')).toHaveText(/^To Irongate · in \d+ min$/);
+  await expect(page.getByTestId('journey-card')).toHaveCount(0);
+  const pinAt = async () => Number(await page.getByTestId('travel-pin').getAttribute('data-map-x'));
+  const startX = await pinAt();
+  await toTheCard(page);
+  // Coalport is west of the capital: the pin has moved east along the line.
+  await expect.poll(pinAt).toBeGreaterThan(startX);
+  const jcard = page.getByRole('dialog').getByTestId('journey-card');
   await expect(jcard).toContainText('A talkative passenger');
   const lines = await jcard.getByTestId('journey-choice-line').allTextContents();
   expect(lines[0]).toMatch(/^(Good odds|Fair odds|Long shot) · /);
@@ -98,6 +108,8 @@ test('the first trip: nation → board → the journey card → arrival → the 
   await jcard.getByTestId('journey-choice').first().click();
   await expect(jcard.getByTestId('journey-outcome')).toBeVisible();
   await expect(jcard.getByTestId('journey-choice')).toHaveCount(1);
+  await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // 4. Arrive now (the hook): the arrival modal, the stamp, the ground sash, then Station & Market.
   const arrive = await page.request.post('/api/test/journey', { data: { arriveNow: true } });
@@ -276,6 +288,84 @@ test('the journey: its header, progress, sentence and the card’s first row abo
   await page.getByTestId('city-sheet').getByTestId('city-board').click();
   await expect(page).toHaveURL(/\/journey$/);
   for (const id of ['journey-title', 'journey-progress', 'journey-sentence']) await expect(page.getByTestId(id)).toBeInViewport();
+  // Review 4 (answers §7.3): the map under the plate, with your pin on the line.
+  await expect(page.getByTestId('travel-pin-mark')).toBeInViewport();
+  // The card is a sheet over the map at its moment (the dev clock moved past it).
+  await toTheCard(page);
   await expect(page.getByTestId('journey-card').getByRole('heading')).toBeInViewport();
   await expect(page.getByTestId('journey-choice').first()).toBeInViewport();
+});
+
+test('review 4 (answers §7): the journey on the nation map at 1440 × 900 and 390 × 844', async ({ page }) => {
+  test.setTimeout(180_000);
+  await signUp(page, 'Ines Lorr');
+  expect((await page.request.post('/api/test/character', { data: { level: 10, fxp: 500, iron: 600 } })).ok()).toBe(true);
+  for (const size of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    const at = `${size.width}×${size.height}`;
+    await page.setViewportSize(size);
+    await page.goto('/nation');
+    await page.getByTestId('cities-button').filter({ visible: true }).click();
+    const list = page.getByRole('dialog', { name: 'Cities of the republic' });
+    // Coalport → Irongate, then back: whichever city the player is in, the other one.
+    await list.getByTestId('city-row').filter({ hasText: size.width > 1000 ? 'Irongate' : 'Coalport' }).click();
+    await page.getByTestId('city-sheet').getByTestId('city-board').click();
+    await expect(page, at).toHaveURL(/\/journey$/);
+    // The plate: a 480 px side sheet over the map from 1024 px; on top of the map on a phone.
+    const plate = page.getByTestId('journey-plate');
+    const pb = (await plate.boundingBox())!;
+    const mb = (await page.getByTestId('city-map').boundingBox())!;
+    if (size.width > 1000) {
+      expect(Math.round(pb.width), at).toBe(480);
+      expect(pb.x, at).toBeLessThan(mb.x + 20);
+    } else {
+      expect(pb.y + pb.height, at).toBeLessThanOrEqual(mb.y + 1);
+    }
+    // The route traced, the two ends drawn and the other cities muted, your pin on the line.
+    await expect(page.getByTestId('map-path'), at).toHaveCount(1);
+    await expect(page.locator('[data-testid=hotspot][data-marks=muted]'), at).toHaveCount(3);
+    await expect(page.getByTestId('travel-pin-mark'), at).toBeInViewport();
+    await expect(page.getByRole('img', { name: /^Your pin: to (Irongate|Coalport), arriving in \d+ min$/ }), at).toHaveCount(1);
+    // Nothing says a card is coming; at its moment its sheet opens, and closed, the plate's row
+    // opens it again. (The first journey always draws one; the second, one in three.)
+    await expect(page.getByTestId('journey-card'), at).toHaveCount(0);
+    if ((await page.getByTestId('journey').getAttribute('data-card-at')) !== null) {
+      await toTheCard(page);
+      const sheet = page.getByRole('dialog');
+      await sheet.getByRole('button', { name: 'Close' }).click();
+      await expect(sheet, at).toHaveCount(0);
+      await page.getByTestId('journey-card-open').click();
+      await expect(page.getByRole('dialog').getByTestId('journey-card'), at).toBeVisible();
+      await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+      await expect(page.getByRole('dialog'), at).toHaveCount(0);
+    } else expect(size.width, 'the first journey draws a card').toBeLessThan(1000);
+    // A drag away shows *Follow your pin*; it brings the map back to rest.
+    const map = page.getByTestId('city-map');
+    await expect(map, at).toHaveAttribute('data-moving', 'false');
+    await page.waitForTimeout(400);
+    const rest = await map.getAttribute('data-view');
+    if (size.width > 1000) {
+      // A zoom step is a move too (at rest the map may have nowhere to drag; with the stills the
+      // fitted view may already be the closest zoom).
+      const zin = page.getByTestId('map-zoom-in');
+      await ((await zin.isEnabled()) ? zin : page.getByTestId('map-zoom-out')).click();
+    } else {
+      const b = (await map.boundingBox())!;
+      await page.mouse.move(b.x + b.width * 0.6, b.y + b.height * 0.5);
+      await page.mouse.down();
+      await page.mouse.move(b.x + b.width * 0.6 + 100, b.y + b.height * 0.5 + 60, { steps: 8 });
+      await page.mouse.up();
+    }
+    await page.getByTestId('follow-pin').click();
+    await expect(page.getByTestId('follow-pin'), at).toHaveCount(0);
+    await expect(map, at).toHaveAttribute('data-moving', 'false');
+    await expect.poll(() => map.getAttribute('data-view'), { message: at }).toBe(rest);
+    // Arrive (the hook) and Continue.
+    expect((await page.request.post('/api/test/journey', { data: { arriveNow: true } })).ok()).toBe(true);
+    await page.reload();
+    await page.getByTestId('arrival-continue').click();
+    await expect(page, at).toHaveURL(/\/city\//);
+  }
 });

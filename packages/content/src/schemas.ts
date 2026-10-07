@@ -878,6 +878,20 @@ export const Nation = z.strictObject({
       }),
     )
     .length(5),
+  /**
+   * Review 4 (tech design §6.1, ADR 0075): one leg per city other than the capital, traced along the
+   * painted rails in the dev map viewer's trace mode, from the capital's pin to the city's. A journey
+   * between two outer cities is the two legs joined through the capital.
+   */
+  routes: z
+    .array(
+      z.strictObject({
+        /** A nation city other than the capital. */
+        to: Id,
+        points: z.array(z.tuple([Fraction, Fraction])).min(8).max(20),
+      }),
+    )
+    .length(4),
 });
 
 const NonNeg = z.number().min(0);

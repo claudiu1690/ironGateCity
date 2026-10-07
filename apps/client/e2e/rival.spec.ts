@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { mapAtRest, openLocation, signUp } from './helpers';
+import { mapAtRest, openLocation, signUp, toTheCard } from './helpers';
 
 /**
  * Slice 5's rival ground (tech design §15.1 `rival.spec.ts`; screens §8), on a phone: a Collective at
@@ -37,6 +37,8 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
 
   // 2. The journey: *Papers, please*; *Show your papers* has no odds word → *Waved on*. Arrive now.
   await expect(page).toHaveURL(/\/journey$/);
+  // Review 4 (ADR 0075): the card opens as a sheet at its moment (the dev clock moved past it).
+  await toTheCard(page);
   const jcard = page.getByTestId('journey-card');
   await expect(jcard).toContainText('Papers, please');
   const show = jcard.getByTestId('journey-choice').filter({ hasText: 'Show your papers' });

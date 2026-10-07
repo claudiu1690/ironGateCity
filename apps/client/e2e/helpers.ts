@@ -208,3 +208,22 @@ export async function openPlace(page: Page, label: string) {
     await page.locator(`[data-testid="hotspot"][aria-label="${label}"]`).click();
   }
 }
+
+/**
+ * Review 4 (ADR 0075, tech design §6.6): the journey's card is shown from its moment, drawn at
+ * boarding in 0.20–0.80 of the way. The shared test clock (the dev clock) is moved just past it and
+ * the page reloaded: on return with an answerable card, its sheet is open.
+ */
+export async function toTheCard(page: Page): Promise<void> {
+  const journey = page.getByTestId('journey');
+  await expect(journey).toHaveAttribute('data-card-at', /^\d+$/);
+  const cardAt = Number(await journey.getAttribute('data-card-at'));
+  const res = await page.request.post('/api/test/clock', { data: { advanceMs: 0 } });
+  const { now } = (await res.json()) as { now: number };
+  if (cardAt > now) {
+    const moved = await page.request.post('/api/test/clock', { data: { advanceMs: cardAt - now + 1_000 } });
+    expect(moved.ok()).toBe(true);
+  }
+  await page.reload();
+  await expect(page.getByRole('dialog').getByTestId('journey-card')).toBeVisible();
+}

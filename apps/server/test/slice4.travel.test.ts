@@ -10,7 +10,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { recordingScheduler, setJourneyScheduler, noScheduler } from '../src/jobs/scheduler';
 import { settleArrival } from '../src/services/travelService';
 import { gameData, setupDb, teardownDb, testClock } from './helpers';
-import { at, content, setIssueEffect, setLiveIssues, traveller } from './slice4.helpers';
+import { at, content, setIssueEffect, setLiveIssues, toTheCard, traveller } from './slice4.helpers';
 
 const DAY = 20732; // Tue 6 Oct 2026
 const MIN = 60_000;
@@ -49,12 +49,17 @@ describe('boarding (travel.board)', () => {
       firstJourney: true,
       arrivesAt: clock.now() + 12 * MIN,
     });
-    expect(r.journey.card?.eventId).toBe('jev.passenger');
-    // The odds are a number for the client's word; the destination is Station & Market.
-    expect(r.journey.card!.choices[0]!.chance).toBeGreaterThan(0);
-    expect(r.journey.card!.choices[0]!.detail).toContain('Station & Market');
     expect(r.character.journey).toMatchObject({ to: 'irongate', status: 'onTheWay' });
     expect(rec.calls).toEqual([{ journeyId: r.journey.id, at: new Date(clock.now() + 12 * MIN) }]);
+    // Review 4 (ADR 0075 §4): the card is drawn now and shown from its moment.
+    expect(r.journey.card).toBeNull();
+    expect(r.journey.cardAt).not.toBeNull();
+    toTheCard(clock, r.journey);
+    const card = (await caller.travel.journey())!.card;
+    expect(card?.eventId).toBe('jev.passenger');
+    // The odds are a number for the client's word; the destination is Station & Market.
+    expect(card!.choices[0]!.chance).toBeGreaterThan(0);
+    expect(card!.choices[0]!.detail).toContain('Station & Market');
     const c = (await Character.findById(id).lean<CharacterDoc>())!;
     expect([c.cityId, c.journeysMade, c.journeyDeck?.seen]).toEqual(['coalport', 1, ['jev.passenger']]);
     const j = (await Journey.findById(r.journey.id).lean<JourneyDoc>())!;
@@ -221,8 +226,9 @@ describe('arrival (ADR 0025 §4)', () => {
 
 describe('the card (travel.choose)', () => {
   it('during the journey: the passenger moves Station & Market, writes the ledger; once only', async () => {
-    const { caller, id } = await fresh();
+    const { caller, id, clock } = await fresh();
     const b = await caller.travel.board({ to: 'irongate', idempotencyKey: key() });
+    toTheCard(clock, b.journey);
     const before = (await District.findById('irongate.station-market').lean())!.opinion.collective;
     const r = await caller.travel.choose({
       journeyId: b.journey.id,

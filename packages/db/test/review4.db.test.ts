@@ -50,3 +50,43 @@ describe('migration 008 (review 4)', () => {
     await Character.deleteOne({ _id });
   });
 });
+
+// Phase 6 (ADR 0075 §5): a journey on the way with a card and no `card.at` is answerable at once.
+describe('migration 008: cardAtForOpenJourneys', () => {
+  it('sets card.at = boardedAt on open journeys with a card and none, and nothing else; twice modifies nothing', async () => {
+    const { Journey, cardAtForOpenJourneys } = await import('../src');
+    const characterId = new mongoose.Types.ObjectId();
+    const boardedAt = new Date(Date.UTC(2026, 9, 7, 14, 10));
+    const base = {
+      characterId,
+      from: 'coalport',
+      to: 'irongate',
+      boardedAt,
+      arrivesAt: new Date(boardedAt.getTime() + 12 * 60_000),
+      minutes: 12,
+      fare: { base: 20, lines: [], total: 20 },
+      seed: 'a'.repeat(32),
+      choice: null,
+    };
+    const drawnAt = new Date(boardedAt.getTime() + 5 * 60_000);
+    const docs = await Journey.collection.insertMany([
+      { ...base, n: 1, status: 'onTheWay', card: { eventId: 'jev.passenger', deck: 'ordinary' } },
+      { ...base, n: 2, status: 'onTheWay', card: { eventId: 'jev.passenger', at: drawnAt } },
+      { ...base, n: 3, status: 'onTheWay', card: null },
+      { ...base, n: 4, status: 'arrived', card: { eventId: 'jev.passenger' } },
+      { ...base, n: 5, status: 'closed', card: { eventId: 'jev.passenger' } },
+    ] as never[]);
+    const ids = Object.values(docs.insertedIds);
+    const first = await cardAtForOpenJourneys();
+    expect(first).toEqual({ matched: 1, modified: 1 });
+    const read = async (i: number) => (await Journey.collection.findOne({ _id: ids[i] }))!.card as { at?: Date } | null;
+    expect((await read(0))?.at).toEqual(boardedAt);
+    expect((await read(0)) as unknown).toMatchObject({ eventId: 'jev.passenger', deck: 'ordinary' });
+    expect((await read(1))?.at).toEqual(drawnAt);
+    expect(await read(2)).toBeNull();
+    expect((await read(3))?.at).toBeUndefined();
+    expect((await read(4))?.at).toBeUndefined();
+    expect(await cardAtForOpenJourneys()).toEqual({ matched: 0, modified: 0 });
+    await Journey.deleteMany({ characterId });
+  });
+});

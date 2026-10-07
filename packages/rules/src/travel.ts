@@ -238,3 +238,126 @@ export function resolveJourneyChoice(i: {
   const rewards = outcome === 'success' ? i.choice.success.rewards : (i.choice.partial?.rewards ?? {});
   return { outcome, check, roll, rewards: { ...rewards }, cost };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Review 4 (docs/tech/review-4.md §6.2, ADR 0075): the journey on the nation map. The route's legs,
+// where the traveller's pin is at a moment, and the card's moment.
+// ---------------------------------------------------------------------------------------------
+
+/** A point on a picture, in fractions of its width and height. */
+export type Pt = readonly [number, number];
+
+/** One leg of a journey on the nation picture: its points in travel order and its minutes. */
+export interface RouteLeg {
+  points: Pt[];
+  minutes: number;
+}
+
+/**
+ * The legs from `from` to `to` (ADR 0075 §2). Routes are stored from the capital out: a journey out
+ * of the capital takes the leg as stored, one into it the leg reversed, and an outer city to another
+ * the first city's leg reversed, then the second's (through the capital, as the times are added).
+ */
+export function journeyLegs(
+  routes: ReadonlyArray<{ to: string; points: readonly Pt[] }>,
+  from: string,
+  to: string,
+  capitalId: string,
+  minutesOf: (cityId: string) => number,
+): RouteLeg[] {
+  if (from === to) return [];
+  const leg = (cityId: string): Pt[] => {
+    const r = routes.find((x) => x.to === cityId);
+    if (!r) throw new RangeError(`no route to "${cityId}"`);
+    return r.points.map((p) => [p[0], p[1]] as const);
+  };
+  if (from === capitalId) return [{ points: leg(to), minutes: minutesOf(to) }];
+  if (to === capitalId) return [{ points: leg(from).reverse(), minutes: minutesOf(from) }];
+  return [
+    { points: leg(from).reverse(), minutes: minutesOf(from) },
+    { points: leg(to), minutes: minutesOf(to) },
+  ];
+}
+
+/**
+ * Each leg's share of the journey's time, as fractions 0…1 (§23.1 Q8: by its minutes, not by its
+ * drawn length). Legs of 0 minutes share the time equally.
+ */
+export function legSpans(legs: ReadonlyArray<Pick<RouteLeg, 'minutes'>>): Array<{ fromT: number; toT: number }> {
+  const total = legs.reduce((s, l) => s + Math.max(0, l.minutes), 0);
+  let acc = 0;
+  return legs.map((l, i) => {
+    const share = total > 0 ? Math.max(0, l.minutes) / total : 1 / legs.length;
+    const fromT = acc;
+    acc = i === legs.length - 1 ? 1 : acc + share;
+    return { fromT, toT: acc };
+  });
+}
+
+/** Where `f` (0…1 of its length) falls on a polyline, and the heading there in degrees. */
+function along(points: readonly Pt[], f: number, aspect: number): { x: number; y: number; angle: number } {
+  const first = points[0];
+  if (!first) return { x: 0, y: 0, angle: 0 };
+  if (points.length === 1) return { x: first[0], y: first[1], angle: 0 };
+  const seg = (i: number) => {
+    const a = points[i]!;
+    const b = points[i + 1]!;
+    return Math.hypot((b[0] - a[0]) * aspect, b[1] - a[1]);
+  };
+  let total = 0;
+  for (let i = 0; i < points.length - 1; i++) total += seg(i);
+  let left = Math.min(1, Math.max(0, f)) * total;
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i]!;
+    const b = points[i + 1]!;
+    const len = seg(i);
+    if (left <= len || i === points.length - 2) {
+      const t = len > 0 ? Math.min(1, left / len) : 1;
+      const angle = (Math.atan2(b[1] - a[1], (b[0] - a[0]) * aspect) * 180) / Math.PI;
+      return { x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t, angle };
+    }
+    left -= len;
+  }
+  const last = points[points.length - 1]!;
+  return { x: last[0], y: last[1], angle: 0 };
+}
+
+/**
+ * The traveller at `progress` (0–1 of the journey's time; ADR 0075 §2): each leg takes its minutes'
+ * share of the time, and within a leg the pin moves by length. `aspect` is the picture's width over
+ * its height (the nation picture is square: 1), so length is measured on the picture.
+ */
+export function trainAt(
+  legs: readonly RouteLeg[],
+  progress: number,
+  aspect = 1,
+): { x: number; y: number; angle: number; leg: number } {
+  if (legs.length === 0) return { x: 0, y: 0, angle: 0, leg: 0 };
+  const p = Math.min(1, Math.max(0, progress));
+  const spans = legSpans(legs);
+  for (let i = 0; i < legs.length; i++) {
+    const s = spans[i]!;
+    if (p <= s.toT || i === legs.length - 1) {
+      const f = s.toT > s.fromT ? (p - s.fromT) / (s.toT - s.fromT) : 1;
+      return { ...along(legs[i]!.points, f, aspect), leg: i };
+    }
+  }
+  return { ...along(legs[legs.length - 1]!.points, 1, aspect), leg: legs.length - 1 };
+}
+
+/** ADR 0075 §3 (answers §7.2): the card fires between a fifth and four fifths of the way. */
+export const CARD_AT = { from: 0.2, to: 0.8 } as const;
+
+/**
+ * The card's moment, epoch ms in whole seconds, uniform in CARD_AT of [boardedAt, arrivesAt]
+ * (ADR 0075 §3). The server draws it from `seed + ':cardAt'`, so a re-run under the same request key
+ * draws the same moment.
+ */
+export function drawCardAt(rng: Rng, boardedAt: number, arrivesAt: number): number {
+  const span = Math.max(0, arrivesAt - boardedAt);
+  const lo = Math.ceil((boardedAt + CARD_AT.from * span) / 1_000) * 1_000;
+  const hi = Math.floor((boardedAt + CARD_AT.to * span) / 1_000) * 1_000;
+  const f = rng.next();
+  if (hi < lo) return boardedAt + Math.round(((CARD_AT.from + CARD_AT.to) / 2) * span);
+  return lo + Math.round((f * (hi - lo)) / 1_000) * 1_000;
+}

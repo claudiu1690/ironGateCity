@@ -1,4 +1,4 @@
-import { cloudyMaps, mapAlt, mapPins, tilePyramids } from '@irongate/content/maps';
+import { cityOutlines, cloudyMaps, mapAlt, mapPins, nationRoutes, tilePyramids } from '@irongate/content/maps';
 import type { AssetView } from '@irongate/rules';
 import { CLOUDS, CityMap, cx, pyramidFor } from '@irongate/ui';
 import type { CloudConfig, CloudDepthName, MapRect } from '@irongate/ui';
@@ -16,6 +16,13 @@ import { env } from '../../env';
  * `CLOUDS` config live (Speed 10 × shows the drift at a glance), and High, Middle and Low switch each
  * depth of the sky on or off. `?clouds=0|1&speed=&opacity=&depths=high,middle,low` set them from the
  * address too.
+ *
+ * Review 4 (tech design §6.1): the *Trace* mode. Each tap on the picture adds a point (fractions,
+ * three decimals), drawn as a line; *Undo* takes the last one off and *Copy* puts the points on the
+ * clipboard as the JSON for `nation.ts` (`routes[].points`) or a quarter's `outline`. While tracing,
+ * the content's lines are drawn too: the nation's legs on the nation picture, a city's district
+ * outlines on its own, so a leg is traced over the painted rails and a shared outline point can be
+ * slid along the river with its neighbours kept equal (answers §8.2).
  */
 
 const NAMES = ['coalport', 'duskwall', 'ashford', 'clearwater', 'irongate', 'nation'] as const;
@@ -59,6 +66,9 @@ export function MapViewer() {
   const [night, setNight] = useState(false);
   const [quarter, setQuarter] = useState(1); // 0: the whole picture
   const [selected, setSelected] = useState<string | null>(null);
+  const [tracing, setTracing] = useState(false);
+  const [traced, setTraced] = useState<Array<[number, number]>>([]);
+  const [copied, setCopied] = useState(false);
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const [cloudsOn, setCloudsOn] = useState<boolean | null>(
     params.has('clouds') ? params.get('clouds') !== '0' : null,
@@ -98,7 +108,27 @@ export function MapViewer() {
     setName(n);
     setQuarter(n === 'nation' ? 0 : 1);
     setSelected(null);
+    setTraced([]);
   };
+  const round = (v: number) => Math.round(Math.min(1, Math.max(0, v)) * 1000) / 1000;
+  const tracedJson = `[${traced.map(([x, y]) => `[${x}, ${y}]`).join(', ')}]`;
+  const copyTrace = () => {
+    void navigator.clipboard?.writeText(tracedJson).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1_200);
+    });
+  };
+  const contentLines = tracing
+    ? name === 'nation'
+      ? nationRoutes.map((r) => ({ id: `route:${r.to}`, points: r.points, tone: 'route' as const }))
+      : []
+    : [];
+  const paths = [
+    ...contentLines,
+    ...(tracing && traced.length > 1 ? [{ id: 'trace', points: traced, tone: 'trace' as const }] : []),
+  ];
+  const outlines =
+    tracing && name !== 'nation' ? (cityOutlines[name] ?? []).map((o) => ({ ...o, label: o.id })) : undefined;
 
   return (
     <div className="flex h-dvh flex-col bg-ink text-paper">
@@ -196,6 +226,40 @@ export function MapViewer() {
             ))}
           </select>
         </label>
+        <button
+          type="button"
+          className={cx('h-11 border border-paper px-3', tracing && 'bg-paper text-ink')}
+          aria-pressed={tracing}
+          onClick={() => setTracing((v) => !v)}
+          data-testid="viewer-trace"
+        >
+          Trace
+        </button>
+        {tracing && (
+          <>
+            <button
+              type="button"
+              className="h-11 border border-paper px-3 disabled:opacity-40"
+              disabled={traced.length === 0}
+              onClick={() => setTraced((t) => t.slice(0, -1))}
+              data-testid="viewer-undo"
+            >
+              Undo
+            </button>
+            <button
+              type="button"
+              className="h-11 border border-paper px-3 disabled:opacity-40"
+              disabled={traced.length === 0}
+              onClick={copyTrace}
+              data-testid="viewer-copy"
+            >
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+            <span className="font-mono text-[12px] text-dim" data-testid="viewer-traced">
+              {traced.length} points{traced.length > 0 ? ` · last ${traced.at(-1)!.join(', ')}` : ''}
+            </span>
+          </>
+        )}
         {selected && (
           <button type="button" className="h-11 border border-paper px-3" onClick={() => setSelected(null)}>
             Back out
@@ -217,6 +281,9 @@ export function MapViewer() {
           locations={shown.map((p, i) => ({ id: p.id, n: i + 1, name: p.name, map: { x: p.x, y: p.y } }))}
           selectedId={selected}
           onSelect={(id) => setSelected((s) => (s === id ? null : id))}
+          paths={paths}
+          outlines={outlines}
+          onPictureTap={tracing ? (at) => setTraced((t) => [...t, [round(at.x), round(at.y)]]) : undefined}
         />
       ) : (
         <p className="p-6">No tiles for {name}: run pnpm art:tiles.</p>

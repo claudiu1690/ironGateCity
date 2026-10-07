@@ -1,12 +1,13 @@
 import type { Content } from '@irongate/content';
 import { Character } from '../models/character';
+import { Journey } from '../models/journey';
 
 /**
  * Review 4 (tech design docs/tech/review-4.md §14): the fix round's data changes, one exported step
  * per feature, each idempotent (a second run matches and modifies nothing) and each returning its
  * counts, which `migrateReview4` collects in order.
  *
- * Phase 1 lays the skeleton: every step is in place and does nothing yet. Each phase fills its own:
+ * Phase 1 laid the skeleton; each phase fills its own step:
  *
  * | Step | Phase | Filter → update |
  * |---|---|---|
@@ -38,11 +39,16 @@ export async function resetOldDrafts(_content: Pick<Content, 'origin'>): Promise
 }
 
 /**
- * Phase 6 (the journey on the map, ADR 0075): a journey on the way with a card and no `card.at` is
- * answerable at once, as before the change. Not filled yet: no journey carries `card.at`.
+ * Phase 6 (the journey on the map, ADR 0075 §5): a journey on the way with a card and no `card.at`
+ * (boarded before the change) gets `card.at = boardedAt`, so it stays answerable at once, as before;
+ * the read path defaults the same way. An update pipeline, one write; a second run matches nothing.
  */
 export async function cardAtForOpenJourneys(): Promise<StepCounts> {
-  return nothing();
+  const r = await Journey.collection.updateMany(
+    { status: 'onTheWay', card: { $ne: null }, 'card.at': { $exists: false } },
+    [{ $set: { 'card.at': '$boardedAt' } }],
+  );
+  return { matched: r.matchedCount, modified: r.modifiedCount };
 }
 
 /** Review 4 #19 (ADR 0078): the partial index *In the cells now* reads, as the schema declares it. */

@@ -22,3 +22,17 @@ export const cloudyMaps: ReadonlySet<string> = new Set([
   ...(nation.clouds ? ['nation'] : []),
 ]);
 export type { MapPins, SurveyPin, TilesEntry, TilesManifest } from './schemas';
+
+/** Review 4 (tech design §6.1): the nation's legs, drawn over the picture by the viewer. */
+export const nationRoutes = nation.routes;
+/**
+ * Review 4 (answers §8.2): every city's quarter outlines that content has (the capital's districts),
+ * so the viewer's trace mode can show them and slide a shared point along the river.
+ */
+export const cityOutlines: Readonly<Record<string, ReadonlyArray<{ id: string; points: ReadonlyArray<readonly [number, number]> }>>> =
+  Object.fromEntries(
+    [coalport, duskwall, ashford, irongate].map((c) => [
+      c.id,
+      (c.quarters ?? []).flatMap((q) => (q.outline ? [{ id: q.id, points: q.outline }] : [])),
+    ]),
+  );

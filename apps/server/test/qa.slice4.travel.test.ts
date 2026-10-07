@@ -19,7 +19,7 @@ import { JOURNEY_ARRIVE_JOB, agendaJourneyScheduler } from '../src/jobs/schedule
 import { settleCityDay } from '../src/services/cityDay';
 import { settleArrival } from '../src/services/travelService';
 import { gameData, setupDb, teardownDb, testClock } from './helpers';
-import { at, content, traveller } from './slice4.helpers';
+import { at, content, toTheCard, traveller } from './slice4.helpers';
 
 const DAY = 20732; // Tue 6 Oct 2026
 const MIN = 60_000;
@@ -98,6 +98,7 @@ describe('the card: one choice per journey (design §3, ADR 0025 §6)', () => {
     const clock = testClock(at(DAY));
     const p = await traveller(clock, { name: 'Xaver Linz' });
     const b = await p.caller.travel.board({ to: 'irongate', idempotencyKey: key() });
+    toTheCard(clock, b.journey);
     const before = (await Character.findById(p.id).lean<CharacterDoc>())!;
     const all = await Promise.allSettled(
       ['listen', 'listen', 'talk'].map((choiceId) =>
@@ -125,8 +126,11 @@ describe('the card: one choice per journey (design §3, ADR 0025 §6)', () => {
     for (let n = 1; n <= 24; n++) {
       const to = where === 'coalport' ? 'irongate' : 'coalport';
       const b = await p.caller.travel.board({ to, idempotencyKey: key() });
-      if (n === 1) expect(b.journey.card?.eventId).toBe('jev.passenger');
-      if (b.journey.card) drawn.push(b.journey.card.eventId);
+      // Review 4 (ADR 0075): the draw is stored at boarding; the view shows it from its moment.
+      const card = (await Journey.findById(b.journey.id).lean<JourneyDoc>())!.card;
+      expect(b.journey.cardAt !== null).toBe(card !== null);
+      if (n === 1) expect(card?.eventId).toBe('jev.passenger');
+      if (card) drawn.push(card.eventId);
       clock.set(b.journey.arrivesAt);
       await p.caller.travel.close({ journeyId: b.journey.id });
       where = to;

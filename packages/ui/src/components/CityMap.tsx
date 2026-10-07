@@ -11,6 +11,8 @@ import { CloudLayer } from './CloudLayer';
 import { LockMark } from './LockMark';
 import { Picture } from './Picture';
 import { TileLayer } from './TileLayer';
+import { TravelPin } from './TravelPin';
+import type { MapTraveller } from './TravelPin';
 
 export interface MapHotspot {
   id: string;
@@ -143,6 +145,31 @@ export interface CityMapProps {
    * blocks. The zoom-out limit is unchanged (the frame's at-rest view).
    */
   panLimit?: MapRect;
+  /**
+   * Review 4 (tech design §6.5, ADR 0075): lines drawn on the picture, in fractions of it (a
+   * journey's route): a 2 px ink line over a 4 px paper halo, holding its width at any zoom. `trace`
+   * draws the dev viewer's line being traced (petrol).
+   */
+  paths?: ReadonlyArray<{ id: string; points: ReadonlyArray<readonly [number, number]>; tone?: 'route' | 'trace' }>;
+  /** Review 4: the traveller's pin on the nation map, ticking on its own (`TravelPin`). */
+  traveller?: MapTraveller | null;
+  /**
+   * Review 4 (the dev viewer's trace mode): a single tap on the picture (not a pin or a control),
+   * in fractions of it. While set, a tap does not count towards a double tap's zoom.
+   */
+  onPictureTap?: (at: { x: number; y: number }) => void;
+  /**
+   * Review 4 (*Follow your pin*): the player moved the map at rest (a drag, a pinch, the wheel or the
+   * zoom buttons). Called with false when the view is back at rest by `recentre`.
+   */
+  onUserMove?: (moved: boolean) => void;
+  /** Review 4: changing this number eases the map back to its at-rest view (*Follow your pin*). */
+  recentre?: number;
+  /**
+   * Review 4 (the journey map): points of the picture the at-rest view keeps in sight besides the
+   * `restFocus` pins (a route's bend), in fractions of it.
+   */
+  restPoints?: ReadonlyArray<{ x: number; y: number }>;
 }
 
 /** Review 4 (ADR 0076): a polygon's bounding box, in fractions of the picture (a district's drag limit). */
@@ -967,6 +994,8 @@ export function restPanLimits(
 /** An SVG path of a polygon in fractions of the picture (the layer's 0..1 view box). */
 const polyPath = (pts: ReadonlyArray<readonly [number, number]>) =>
   `M${pts.map(([x, y]) => `${x} ${y}`).join('L')}Z`;
+/** Review 4: an open SVG path through points (a route). */
+const linePath = (pts: ReadonlyArray<readonly [number, number]>) => `M${pts.map(([x, y]) => `${x} ${y}`).join('L')}`;
 
 const sameView = (a: MapView, b: MapView) =>
   Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.scale - b.scale) < 1e-4;
@@ -1149,6 +1178,12 @@ export function CityMap({
   focusOutline,
   lockToFrame = false,
   panLimit,
+  paths,
+  traveller,
+  onPictureTap,
+  onUserMove,
+  recentre,
+  restPoints,
 }: CityMapProps) {
   const cloudConfig = clouds === true ? CLOUDS : clouds || null;
   const boxRef = useRef<HTMLDivElement>(null);
@@ -1240,7 +1275,7 @@ export function CityMap({
   const pinsKey = locations.map((l) => `${l.id}:${l.map.x},${l.map.y}`).join(';');
   // Slice 4: the pins the at-rest view is about (the nation: your city and the capital).
   const focusPins = restFocus?.length ? locations.filter((l) => restFocus.includes(l.id)) : locations;
-  const focusKey = restFocus?.join(',') ?? '';
+  const focusKey = `${restFocus?.join(',') ?? ''}|${restPoints?.map((p) => `${p.x},${p.y}`).join(';') ?? ''}`;
   const hasOutlines = (outlines?.length ?? 0) > 0;
   const coverKey = `${cover?.top ?? 0},${cover?.right ?? 0},${cover?.bottom ?? 0},${cover?.left ?? 0}`;
   const selected = locations.find((l) => l.id === selectedId) ?? null;
@@ -1272,9 +1307,12 @@ export function CityMap({
     r: recall(memoryKey),
   }));
   const restAt = restState.key === memoryKey ? restState.r : recall(memoryKey);
+  const onUserMoveRef = useRef(onUserMove);
+  onUserMoveRef.current = onUserMove;
   const setRestAt = (r: RestView | null) => {
     remember(memoryKey, r);
     setRestState({ key: memoryKey, r });
+    onUserMoveRef.current?.(r !== null);
   };
   // A view kept for another size of map does not apply to this one (see RestView).
   const mine = restAt && restAt.box === `${w}x${h}` ? restAt : null;
@@ -1307,7 +1345,7 @@ export function CityMap({
     if (w === 0 || h === 0 || !insets) return null;
     const box = { w, h };
     const content = { w: contentW, h: contentH };
-    const pins = (focusPins.length > 0 ? focusPins : locations).map((l) => l.map);
+    const pins = [...(focusPins.length > 0 ? focusPins : locations).map((l) => l.map), ...(restPoints ?? [])];
     // QA slice 4 M1: the overview (outlines to tap) rests on the whole picture, centred on its names.
     if (hasOutlines) {
       const base = coverRestView({ box, content, pins, insets, minScale: coverScale });
@@ -1750,6 +1788,14 @@ export function CityMap({
       // Review 3: a double tap on the map (not a pin, a control or an overlay) zooms.
       if (e.type !== 'pointerup' || isOverlay(e.target) || selected) return;
       const at = local(e);
+      // Review 4 (the viewer's trace mode): a tap on the picture is a point, not half a double tap.
+      if (onPictureTap && view) {
+        onPictureTap({
+          x: (at.x - view.x) / (contentW * view.scale),
+          y: (at.y - view.y) / (contentH * view.scale),
+        });
+        return;
+      }
       const t = Date.now();
       const prev = lastTap.current;
       if (prev && t - prev.t < DOUBLE_TAP_MS && Math.hypot(at.x - prev.x, at.y - prev.y) < DOUBLE_TAP_PX) {
@@ -1772,6 +1818,15 @@ export function CityMap({
       setRestAt(null);
     } else zoomTo(target.fitted.scale * FREE_ZOOM_STEP, at, true);
   };
+  // Review 4 (*Follow your pin*): back to the at-rest view, eased, when the caller asks.
+  const recentredFor = useRef(recentre);
+  useEffect(() => {
+    if (recentre === recentredFor.current) return;
+    recentredFor.current = recentre;
+    animateNext.current = true;
+    setRestAt(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentre]);
   /** The + / − buttons: a step about the middle of the part of the map on show. */
   const stepZoom = (k: number) => {
     const v = current();
@@ -1957,6 +2012,44 @@ export function CityMap({
             {/* The user's district lock (3 Oct 2026): the districts' shapes on the overview, and in a
                 district its edge with the picture dimmed outside it. In the layer, so they move with the
                 art; the stroke keeps about 2 px on screen at any zoom. */}
+            {/* Review 4 (tech design §6.5): a journey's route, a 2 px ink line over a 4 px paper halo, in
+                the layer so it moves with the art; the dev viewer's trace in petrol. */}
+            {paths && paths.length > 0 && view && (
+              <svg
+                className="pointer-events-none absolute inset-0 z-50 size-full overflow-visible"
+                viewBox="0 0 1 1"
+                preserveAspectRatio="none"
+                data-testid="map-paths"
+              >
+                {paths.map((p) => (
+                  <path
+                    key={`${p.id}:halo`}
+                    d={linePath(p.points)}
+                    fill="none"
+                    style={{ stroke: 'var(--color-paper)' }}
+                    strokeOpacity={0.9}
+                    strokeWidth={6 / view.scale}
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                ))}
+                {paths.map((p) => (
+                  <path
+                    key={p.id}
+                    d={linePath(p.points)}
+                    fill="none"
+                    style={{ stroke: p.tone === 'trace' ? 'var(--color-petrol)' : 'var(--color-ink)' }}
+                    strokeWidth={2 / view.scale}
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    data-testid="map-path"
+                    data-path={p.id}
+                  />
+                ))}
+              </svg>
+            )}
             {(focusOutline || outlines) && view && (
               <svg
                 // Above the tiles, whose z-index is their level (TileLayer).
@@ -2179,6 +2272,12 @@ export function CityMap({
                 );
               })}
           </div>
+          {/* Review 4: the traveller's pin, above the city pins' layer (it ticks on its own). */}
+          {traveller && view && (
+            <div className="pointer-events-none absolute inset-0">
+              <TravelPin traveller={traveller} view={view} content={{ w: contentW, h: contentH }} transition={transition} />
+            </div>
+          )}
           {/* Review 3: + / − beside the Places button on a desktop (the caller places them); the
               wheel, a pinch and a double tap do the same. They step aside while a place is open. */}
           {zoomButtons !== undefined && (
