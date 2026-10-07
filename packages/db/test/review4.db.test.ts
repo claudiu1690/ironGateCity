@@ -90,3 +90,59 @@ describe('migration 008: cardAtForOpenJourneys', () => {
     await Journey.deleteMany({ characterId });
   });
 });
+
+// Phase 8 (ADR 0073): a draft mid-way through the old six questions starts again at the platform.
+describe('migration 008: resetOldDrafts', () => {
+  it('empties the answers of an open draft on the old questions only, keeping face and name; twice modifies nothing', async () => {
+    const { Arrival, resetOldDrafts } = await import('../src');
+    const content = getContent();
+    const userIds = ['u-old', 'u-new', 'u-empty', 'u-done'].map((x) => `${x}-${Date.now()}`);
+    const at = new Date(Date.UTC(2026, 9, 7, 9));
+    const old = [
+      { questionId: 'origin.summer', answerId: 'c', at },
+      { questionId: 'origin.trouble', answerId: 'c', at },
+    ];
+    const fresh = [{ questionId: 'origin.platform', answerId: 'holm', at }];
+    const docs = await Arrival.insertMany([
+      { userId: userIds[0], name: 'Old Draft', avatarId: 'avatar.woman-30s', answers: old },
+      { userId: userIds[1], name: 'New Draft', avatarId: 'avatar.woman-30s', answers: fresh },
+      { userId: userIds[2], name: 'Empty Draft', avatarId: 'avatar.woman-30s', answers: [] },
+      {
+        userId: userIds[3],
+        name: 'Done',
+        avatarId: 'avatar.woman-30s',
+        answers: old,
+        completedAt: at,
+        factionId: 'collective',
+        characterId: new mongoose.Types.ObjectId(),
+      },
+    ]);
+    expect(await resetOldDrafts(content)).toEqual({ matched: 1, modified: 1 });
+    const read = async (i: number) => (await Arrival.findById(docs[i]!._id).lean())!;
+    const reset = await read(0);
+    expect(reset.answers).toEqual([]);
+    expect([reset.name, reset.avatarId, reset.completedAt]).toEqual(['Old Draft', 'avatar.woman-30s', null]);
+    expect((await read(1)).answers.map((a) => a.questionId)).toEqual(['origin.platform']);
+    expect((await read(3)).answers).toHaveLength(2);
+    expect(await resetOldDrafts(content)).toEqual({ matched: 0, modified: 0 });
+    await Arrival.deleteMany({ userId: { $in: userIds } });
+  });
+
+  it('a transaction over characters, journeys, arrivals and officeTerms commits', async () => {
+    const { Arrival, Journey, OfficeTerm } = await import('../src');
+    const session = await mongoose.startSession();
+    const userId = `u-tx-${Date.now()}`;
+    try {
+      await session.withTransaction(async () => {
+        await Character.find({}).session(session).limit(1);
+        await Journey.find({}).session(session).limit(1);
+        await OfficeTerm.find({}).session(session).limit(1);
+        await Arrival.create([{ userId, name: 'Tx', avatarId: null, answers: [] }], { session });
+      });
+    } finally {
+      await session.endSession();
+    }
+    expect(await Arrival.countDocuments({ userId })).toBe(1);
+    await Arrival.deleteMany({ userId });
+  });
+});

@@ -50,7 +50,8 @@ export function PaperPage() {
       await navigate({
         to: '/city/$cityId',
         params: { cityId: landing.cityId },
-        search: { loc: landing.locationId },
+        // Review 4 (§7.5): the HQ's sheet with the favour's ticket highlighted.
+        search: { loc: landing.locationId, ...(landing.actionId ? { act: landing.actionId } : {}) },
       });
       return;
     }

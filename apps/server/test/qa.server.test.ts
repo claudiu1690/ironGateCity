@@ -346,7 +346,8 @@ describe('atomicity and idempotency (ADR 0002, 0006, 0008)', () => {
     );
     c = await caller.character.me();
     expect(fulfilled(rs)).toHaveLength(2);
-    expect(c.stats.str).toBe(12);
+    // Review 4 (GDD §8.5): the reference recruit's STR 8 + these two.
+    expect(c.stats.str).toBe(10);
     expect(c.statPointsPending).toBe(0);
     for (const e of rejected(rs)) expect(['NO_STAT_POINTS', 'ACTION_CONFLICT']).toContain(e.game?.reason);
   });

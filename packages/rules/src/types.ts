@@ -545,7 +545,11 @@ export const TIME_TOKENS = ['until', 'at'] as const;
  * design §4.4): the character's name, the faction secretary's form of address, the HQ's short
  * reference and the home city's name. Resolved on the server before any text leaves it.
  */
-export const STORY_PLACEHOLDERS = ['name', 'secretary', 'hq', 'city'] as const;
+/**
+ * Review 4 (ADR 0073): `{helper}` is the surname of the person helped on the platform (*Holm*) and
+ * `{helperPronoun}` their pronoun, capitalised (*She*); `{city}` is that party's home city.
+ */
+export const STORY_PLACEHOLDERS = ['name', 'secretary', 'hq', 'city', 'helper', 'helperPronoun'] as const;
 export type StoryPlaceholder = (typeof STORY_PLACEHOLDERS)[number];
 
 // ---------------------------------------------------------------------------------------------
@@ -1225,8 +1229,11 @@ export interface PaperView {
   localElection: { cityName: string; phase: 'nominations' | 'polling'; until: number } | null;
   /** Slice 3: the front page, on the first edition a winner opens during the term. */
   frontPage: FrontPageView | null;
-  /** The first edition's "To the city": the first pin's sheet (slice-2 tech design §10). */
-  landing: { cityId: string; locationId: string } | null;
+  /**
+   * The first edition's "To the city": the first pin's sheet (slice-2 tech design §10); review 4: the
+   * HQ's, with the favour's ticket (`actionId`) highlighted.
+   */
+  landing: { cityId: string; locationId: string; actionId?: string } | null;
   readAt: number | null;
   due: boolean;
 }
@@ -1364,8 +1371,21 @@ export interface StoryScreenView {
   echo: string | null;
   /** The question, or null. */
   prompt: string | null;
-  /** One tap commits. */
-  choices: Array<{ id: string; text: string; hint: string | null }>;
+  /**
+   * One tap commits. Review 4 (the platform, answers §2.3): a choice may be a row with the person's
+   * 40 px `portrait` and two Courier `lines`; when it carries `confirm`, a tap selects and the
+   * confirm button commits (the briefing's pattern, so a brush is not a party).
+   */
+  choices: Array<{
+    id: string;
+    text: string;
+    hint: string | null;
+    portrait?: AssetView | null;
+    lines?: [string, string] | null;
+    confirm?: string | null;
+  }>;
+  /** Review 4: a Courier line under the choices (*Whoever you help, you go with…*), or absent. */
+  note?: string | null;
   /** Chapter step 2: pick one, then the CTA. */
   approaches: Array<{ id: string; text: string; check: CheckBreakdown }>;
   /** `readyAt` null = affordable now. */
@@ -1373,24 +1393,12 @@ export interface StoryScreenView {
   progress: { step: number; of: number };
 }
 
-/** A faction card on the street (§7.3). */
-export interface FactionCardView {
-  factionId: FactionId;
-  name: string;
-  crest: AssetView;
-  blurb: string;
-  /** "+3 Strength" · "Starts in Duskwall" · "Their event: the Grand Rally". */
-  facts: [string, string, string];
-  /** The father's wish matches this faction. */
-  wish: boolean;
-  /** "His wish · +50 Faction XP" on the matching card, else null. */
-  wishLabel: string | null;
-  /** "Join the Iron Vanguard · take the train to Duskwall". */
-  confirm: string;
-}
-
+/**
+ * The arrival (ADR 0011, review 4 ADR 0073): `face → story → ready → arrived`. `ready`: the three
+ * answers are in and no character exists yet; the client calls `arrival.join` at once.
+ */
 export interface ArrivalView {
-  phase: 'face' | 'story' | 'street' | 'arrived';
+  phase: 'face' | 'story' | 'ready' | 'arrived';
   name: string;
   avatar: AssetView | null;
   /** Phase 'face' only. */
@@ -1398,9 +1406,8 @@ export interface ArrivalView {
   /** Phase 'story': the next unanswered question, and its id for `arrival.answer`. */
   screen: StoryScreenView | null;
   questionId: string | null;
-  street: { screen: StoryScreenView; note: string; cards: FactionCardView[] } | null;
-  /** Phase 'arrived'. */
-  landing: { cityId: string; locationId: string } | null;
+  /** Phase 'arrived': the first landing (review 4: the HQ, with the favour's `actionId`). */
+  landing: { cityId: string; locationId: string; actionId?: string } | null;
 }
 
 export interface AmbitionView {

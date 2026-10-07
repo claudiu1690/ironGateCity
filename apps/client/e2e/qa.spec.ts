@@ -267,10 +267,11 @@ test.describe('phone 375×812', () => {
     }
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await page.getByTestId('hud-points').click();
-    await page.getByRole('button', { name: 'STR 10 → 11' }).click();
+    // Review 4 (GDD §8.5): the reference recruit's STR is 8.
+    await page.getByRole('button', { name: 'STR 8 → 9' }).click();
     await expect(page.getByTestId('hud-points')).toHaveCount(0);
     await page.getByRole('link', { name: /^Me/ }).click();
-    await expect(page.getByTestId('stat-str')).toHaveText('11');
+    await expect(page.getByTestId('stat-str')).toHaveText('9');
     await expect(page.getByTestId('stat-int')).toHaveText('13');
   });
 

@@ -14,7 +14,6 @@ import type {
   CheckBreakdown,
   CityView,
   DailyTally,
-  FactionCardView,
   StoryScreenView,
   NamedStandingView,
   OrdersView,
@@ -559,26 +558,64 @@ export const paperViewFixture: PaperView = {
 // Slice 2: tier-3 story screens, the street and a chapter result (tech design §14 UI fixtures).
 // ---------------------------------------------------------------------------------------------
 
-const deathbed = {
-  ...assetFixture('scene.origin-deathbed', 2688, 1520, [640, 1280]),
-  focus: { x: 0.3, y: 0.5 },
+const compartment = {
+  ...assetFixture('scene.train-compartment', 2688, 1520, [640, 1280]),
+  focus: null,
+};
+const station = { ...assetFixture('scene.station', 2688, 1520, [640, 1280]), focus: null };
+
+/** Review 4, beat 2 (the suitcase): the helper's portrait, the echo of beat 1, one tap commits. */
+export const originScreenFixture: StoryScreenView = {
+  kicker: "The six o'clock to Coalport · the compartment",
+  title: 'The suitcase',
+  narrative:
+    'Holm dozes against the window before the viaduct. The suitcase sits between your feet, heavier than it should be. She wakes long enough to ask what a person carries to a new town.',
+  art: { kind: 'scene', asset: compartment, focus: { x: 0.5, y: 0.5 } },
+  portrait: assetFixture('portrait.holm', 760, 950, [256, 512]),
+  echo: "You carried Holm's parcel.",
+  prompt: null,
+  choices: [
+    { id: 'tools', text: "Tools, mostly. I'm better with my hands than my mouth.", hint: null },
+    { id: 'books', text: 'Books. His, and a few of mine.', hint: null },
+    { id: 'light', text: 'Not much. I travel light, and I run when I have to.', hint: null },
+  ],
+  approaches: [],
+  cta: null,
+  progress: { step: 2, of: 3 },
 };
 
-/** Origin step 1, second question, with the echo of the first answer. */
-export const originScreenFixture: StoryScreenView = {
-  kicker: 'Irongate · a rented room above the tram depot · night',
-  title: 'The room',
+/** Review 4, beat 1 (the platform): three rows with a portrait and two lines; a row selects. */
+export const platformScreenFixture: StoryScreenView = {
+  kicker: 'Irongate · Central Station · the last train in',
+  title: 'The platform',
   narrative:
-    'Your father has the bed by the window and not much else. The trams have stopped. He wants to talk, and there is no one else he can talk to.',
-  art: { kind: 'scene', asset: deathbed, focus: { x: 0.3, y: 0.5 } },
-  portrait: assetFixture('portrait.father', 760, 950, [256, 512]),
-  echo: 'You went fishing with him.',
-  prompt: 'And when the street kids got into trouble. What did you do?',
+    'The night train empties onto a platform that smells of coal smoke and wet wool. One suitcase, nobody waiting. Three people are, in their way, and each wants two minutes of you.',
+  art: { kind: 'scene', asset: station, focus: { x: 0.5, y: 0.5 } },
+  portrait: null,
+  echo: null,
+  prompt: null,
   choices: [
-    { id: 'a', text: 'Led them in. Someone had to.', hint: null },
-    { id: 'b', text: 'Talked them out of it.', hint: null },
-    { id: 'c', text: 'Watched from the corner, and learned.', hint: null },
+    {
+      id: 'holm',
+      text: "\"Carry this parcel for me as far as the Coalport train. My hands are full and the porter's been bought.\"",
+      hint: null,
+      portrait: assetFixture('portrait.holm', 760, 950, [256, 512]),
+      lines: [
+        'Petra Holm · union organiser · Coalport',
+        'Red Collective · the mill and the docks against the men who own them · +2 Strength, +1 Intelligence',
+      ],
+      confirm: "Help Holm · the six o'clock to Coalport",
+    },
+    {
+      id: 'stahl',
+      text: '"Take a bundle. Hand them out on your way down the platform. The meeting is Thursday and this town forgets."',
+      hint: null,
+      portrait: assetFixture('portrait.stahl', 760, 950, [256, 512]),
+      lines: ['Viktor Stahl · steward · Duskwall', 'Iron Vanguard · order, discipline and a strong hand · +3 Strength'],
+      confirm: "Help Stahl · the six o'clock to Duskwall",
+    },
   ],
+  note: 'Whoever you help, you go with. Permanent: a Faction Reset token is the only way back.',
   approaches: [],
   cta: null,
   progress: { step: 1, of: 3 },
@@ -614,29 +651,6 @@ export const chapterCheckScreenFixture: StoryScreenView = {
   cta: { label: 'Walk his ward', energy: 10, readyAt: T0 + 600_000 },
   progress: { step: 2, of: 3 },
 };
-
-export const factionCardFixtures: FactionCardView[] = [
-  {
-    factionId: 'vanguard',
-    name: 'Iron Vanguard',
-    crest: svgFixture('crest.vanguard'),
-    blurb: 'Order, discipline and a strong hand.',
-    facts: ['+3 Strength', 'Starts in Duskwall', 'Their event: the Grand Rally'],
-    wish: false,
-    wishLabel: null,
-    confirm: 'Join the Iron Vanguard · take the train to Duskwall',
-  },
-  {
-    factionId: 'collective',
-    name: 'Red Collective',
-    crest: svgFixture('crest.collective'),
-    blurb: 'The mill and the docks against the men who own them.',
-    facts: ['+2 Strength, +1 Intelligence', 'Starts in Coalport', 'Their event: the General Strike'],
-    wish: true,
-    wishLabel: 'His wish · +50 Faction XP',
-    confirm: 'Join the Red Collective · take the train to Coalport',
-  },
-];
 
 /** Chapter 1 ended in a Failure: 25 XP, the keepsake, the hook. */
 export const chapterResultFixture: ActionResult = {

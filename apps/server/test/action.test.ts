@@ -95,9 +95,10 @@ describe('city.get v2', () => {
       },
       locked: null,
     });
+    // Review 4 (GDD §8.5): every recruit wears his coat, CHA 5: (5 + 12) / 2 = 8.5 → 52 %.
     expect(mill.actions[1]).toMatchObject({
       kind: 'checked',
-      preview: { stats: ['cha', 'int'], chance: 46 },
+      preview: { stats: ['cha', 'int'], chance: 52 },
     });
     // Review 1 (§9.1): a job is a wage: no shift ticket, and the Jobs card has no switch cost.
     expect(mill.actions.map((a) => a.kind)).not.toContain('shift');
@@ -393,7 +394,8 @@ describe('levels and stat points (§5.3)', () => {
       caller.character.placeStatPoint({ stat: 'str', idempotencyKey: key }),
     ]);
     expect(a).toEqual(b);
-    expect(a).toMatchObject({ statPointsPending: 1, stats: { str: 11 } });
+    // Review 4 (GDD §8.5): the reference recruit's STR is 8.
+    expect(a).toMatchObject({ statPointsPending: 1, stats: { str: 9 } });
     const reused = await caller.character
       .placeStatPoint({ stat: 'int', idempotencyKey: key })
       .catch((e: unknown) => e);

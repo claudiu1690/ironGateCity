@@ -1,125 +1,105 @@
 import type { OriginInput } from '../schemas';
 
 /**
- * The origin story (GDD §7.2, docs/design/slice-2-onboarding.md §2 and §5): three steps of two of
- * the father's questions, then the street. Effects are the rules' closed DSL; no number is ever
- * shown to the player. Echo lines (§2, designer answer §13 Q1) follow the first question of a step.
+ * The origin (GDD §7.1, review 4: *The Last Train In*; docs/design/review-4-answers.md §2, ADR 0073):
+ * three beats of one choice each. Beat 1, the platform: whom you help is your party (a row selects,
+ * the button commits). Beat 2, the suitcase: +6 to one stat, +1 to another. Beat 3, the lining: the
+ * Ambition, and his coat worn from here on. Effects are the rules' closed DSL; the echo lines show at
+ * the top of the next beat. `{helper}`, `{helperPronoun}` and `{city}` are the person helped and
+ * their town (the designer's `{Holm}`, `{She}`, `{City}`).
  */
 export const origin: OriginInput = {
   steps: [
     {
-      id: 'origin.step-room',
-      kicker: 'Irongate · a rented room above the tram depot · night',
-      title: 'The room',
+      id: 'origin.step-platform',
+      kicker: 'Irongate · Central Station · the last train in',
+      title: 'The platform',
       narrative:
-        'Your father has the bed by the window and not much else. The trams have stopped. He wants to talk, and there is no one else he can talk to.',
-      art: 'scene.origin-deathbed',
-      portrait: 'portrait.father',
+        'The night train empties onto a platform that smells of coal smoke and wet wool. One suitcase, nobody waiting. Three people are, in their way, and each wants two minutes of you.',
+      art: 'scene.station',
+      portrait: null,
+      note: 'Whoever you help, you go with. Permanent: a Faction Reset token is the only way back.',
       questions: [
         {
-          id: 'origin.summer',
-          prompt: 'Do you remember the summer you were ten? What did you do every day?',
+          id: 'origin.platform',
           answers: [
             {
-              id: 'a',
-              text: 'Fished the river with you.',
-              echo: 'You went fishing with him.',
-              effects: [{ kind: 'stat', stat: 'agi', value: 3 }],
+              id: 'holm',
+              text: '"Carry this parcel for me as far as the Coalport train. My hands are full and the porter\'s been bought."',
+              lines: [
+                'Petra Holm · union organiser · Coalport',
+                'Red Collective · the mill and the docks against the men who own them · +2 Strength, +1 Intelligence',
+              ],
+              portrait: 'portrait.holm',
+              confirm: "Help Holm · the six o'clock to Coalport",
+              echo: "You carried Holm's parcel.",
+              effects: [{ kind: 'faction', factionId: 'collective', person: 'holm' }],
             },
             {
-              id: 'b',
-              text: 'Worked the factory floor after school.',
-              echo: 'You worked the factory floor.',
-              effects: [{ kind: 'stat', stat: 'str', value: 3 }],
+              id: 'stahl',
+              text: '"Take a bundle. Hand them out on your way down the platform. The meeting is Thursday and this town forgets."',
+              lines: [
+                'Viktor Stahl · steward · Duskwall',
+                'Iron Vanguard · order, discipline and a strong hand · +3 Strength',
+              ],
+              portrait: 'portrait.stahl',
+              confirm: "Help Stahl · the six o'clock to Duskwall",
+              echo: "You took Stahl's bundle.",
+              effects: [{ kind: 'faction', factionId: 'vanguard', person: 'stahl' }],
             },
             {
-              id: 'c',
-              text: 'Sat in the library till they threw me out.',
-              echo: 'You sat in the library.',
-              effects: [{ kind: 'stat', stat: 'int', value: 3 }],
-            },
-          ],
-        },
-        {
-          id: 'origin.trouble',
-          prompt: 'And when the street kids got into trouble. What did you do?',
-          answers: [
-            {
-              id: 'a',
-              text: 'Led them in. Someone had to.',
-              effects: [{ kind: 'stat', stat: 'str', value: 2 }],
-            },
-            { id: 'b', text: 'Talked them out of it.', effects: [{ kind: 'chaBase', value: 2 }] },
-            {
-              id: 'c',
-              text: 'Watched from the corner, and learned.',
-              effects: [{ kind: 'stat', stat: 'int', value: 2 }],
+              id: 'grey',
+              text: '"Witness a signature. A pen, your name, two minutes. His lease runs out at midnight and the office that stamps it opens at nine."',
+              lines: [
+                'Thomas Grey · agent · Ashford',
+                'Civic Alliance · elections, courts and a free press · +3 Intelligence',
+              ],
+              portrait: 'portrait.grey',
+              confirm: "Help Grey · the six o'clock to Ashford",
+              echo: "You witnessed Grey's signature.",
+              effects: [{ kind: 'faction', factionId: 'alliance', person: 'grey' }],
             },
           ],
         },
       ],
     },
     {
-      id: 'origin.step-talent',
-      kicker: 'The same room · later',
-      title: 'The talent',
-      narrative: 'He coughs, and waves you back down when you stand. The lamp needs oil. He is not finished.',
-      art: 'scene.origin-deathbed',
-      portrait: 'portrait.father',
+      id: 'origin.step-suitcase',
+      kicker: "The six o'clock to {city} · the compartment",
+      title: 'The suitcase',
+      narrative:
+        '{helper} dozes against the window before the viaduct. The suitcase sits between your feet, heavier than it should be. {helperPronoun} wakes long enough to ask what a person carries to a new town.',
+      art: 'scene.train-compartment',
+      portrait: 'helper',
       questions: [
         {
-          id: 'origin.talent',
-          prompt: 'You always had a talent. What was it?',
+          id: 'origin.suitcase',
           answers: [
             {
-              id: 'a',
-              text: 'I could outrun anyone on the block.',
-              echo: 'You could outrun anyone.',
-              effects: [{ kind: 'stat', stat: 'agi', value: 3 }],
-            },
-            {
-              id: 'b',
-              text: 'I could fix anything with my hands.',
-              echo: 'You could fix anything.',
+              id: 'tools',
+              text: "Tools, mostly. I'm better with my hands than my mouth.",
+              echo: 'You carry tools.',
               effects: [
-                { kind: 'stat', stat: 'str', value: 3 },
+                { kind: 'stat', stat: 'str', value: 6 },
                 { kind: 'stat', stat: 'int', value: 1 },
               ],
             },
             {
-              id: 'c',
-              text: 'I could read people like a book.',
-              echo: 'You could read people.',
+              id: 'books',
+              text: 'Books. His, and a few of mine.',
+              echo: 'You carry books.',
               effects: [
-                { kind: 'chaBase', value: 1 },
-                { kind: 'stat', stat: 'int', value: 3 },
+                { kind: 'stat', stat: 'int', value: 6 },
+                { kind: 'stat', stat: 'str', value: 1 },
               ],
             },
-          ],
-        },
-        {
-          id: 'origin.coat',
-          prompt: "Take my coat. It's all I have left.",
-          answers: [
             {
-              id: 'a',
-              text: 'Take it, and say nothing.',
-              hint: 'A good wool coat.',
-              effects: [{ kind: 'wear', itemId: 'outfit.fathers-coat' }],
-            },
-            {
-              id: 'b',
-              text: "No. I'll earn my own.",
-              hint: 'He tells you where the tin is.',
-              effects: [{ kind: 'iron', value: 150 }],
-            },
-            {
-              id: 'c',
-              text: 'Take it, and promise to bring it back.',
-              hint: 'His coat, and your word.',
+              id: 'light',
+              text: 'Not much. I travel light, and I run when I have to.',
+              echo: 'You travel light.',
               effects: [
-                { kind: 'wear', itemId: 'outfit.fathers-coat-promised' },
-                { kind: 'chaBase', value: 1 },
+                { kind: 'stat', stat: 'agi', value: 6 },
+                { kind: 'stat', stat: 'str', value: 1 },
               ],
             },
           ],
@@ -127,80 +107,53 @@ export const origin: OriginInput = {
       ],
     },
     {
-      id: 'origin.step-promise',
-      kicker: 'The same room · before the first tram',
-      title: 'The promise',
+      id: 'origin.step-lining',
+      kicker: 'The same compartment · under the lining',
+      title: 'The lining',
       narrative:
-        'Near the end he holds your wrist harder than a dying man should. There is something he has carried for twenty years, and now it is yours.',
-      art: 'scene.origin-deathbed',
-      portrait: 'portrait.father',
+        'Under the lining, where he kept what mattered: his coat, folded small, and one thing more. Your father has been three weeks in the ground in the capital. This is what he left you to finish.',
+      art: 'scene.train-compartment',
+      portrait: null,
       questions: [
         {
-          id: 'origin.promise',
-          prompt: 'Promise me one thing…',
+          id: 'origin.lining',
           answers: [
             {
-              id: 'a',
-              text: "…I'll clear your name.",
-              hint: "The Mill Fire of '19. He didn't set it.",
-              echo: 'You promised to clear his name.',
-              effects: [{ kind: 'ambition', ambitionId: 'clear-his-name' }],
+              id: 'ward-book',
+              text: 'His ward book.',
+              hint: 'Two hundred names in his hand, and the seat he lost.',
+              effects: [
+                { kind: 'ambition', ambitionId: 'finish-his-work' },
+                { kind: 'wear', itemId: 'outfit.fathers-coat' },
+              ],
             },
             {
-              id: 'b',
-              text: "…I'll settle what you owed.",
-              hint: 'The Clearwater people will come for it.',
-              echo: 'You promised to settle what he owed.',
-              effects: [{ kind: 'ambition', ambitionId: 'settle-his-debts' }],
+              id: 'letter',
+              text: 'His letter from prison.',
+              hint: "The Mill Fire of '19, and the word innocent, underlined twice.",
+              effects: [
+                { kind: 'ambition', ambitionId: 'clear-his-name' },
+                { kind: 'wear', itemId: 'outfit.fathers-coat' },
+              ],
             },
             {
-              id: 'c',
-              text: "…I'll finish what you started.",
-              hint: 'He lost his seat, and everything with it.',
-              echo: 'You promised to finish what he started.',
-              effects: [{ kind: 'ambition', ambitionId: 'finish-his-work' }],
-            },
-          ],
-        },
-        {
-          id: 'origin.wish',
-          prompt: 'And you. What do you want, when all this is over?',
-          answers: [
-            {
-              id: 'a',
-              text: 'Order. Somebody has to keep the streets quiet.',
-              effects: [{ kind: 'wish', factionId: 'vanguard', fxp: 50 }],
-            },
-            {
-              id: 'b',
-              text: 'Justice. The workers deserve better.',
-              effects: [{ kind: 'wish', factionId: 'collective', fxp: 50 }],
-            },
-            {
-              id: 'c',
-              text: 'Truth. Let the people decide.',
-              effects: [{ kind: 'wish', factionId: 'alliance', fxp: 50 }],
+              id: 'marker',
+              text: 'The marker.',
+              hint: 'What he owed, to whom, and the Clearwater address.',
+              effects: [
+                { kind: 'ambition', ambitionId: 'settle-his-debts' },
+                { kind: 'wear', itemId: 'outfit.fathers-coat' },
+              ],
             },
           ],
         },
       ],
     },
   ],
-  street: {
-    kicker: 'Irongate · morning',
-    title: 'He dies before the first tram.',
-    narrative:
-      'You come down into the street with his suitcase. A newsboy is shouting the Herald: the government has fallen, and every party in the republic is recruiting.',
-    art: 'scene.origin-street',
-    note: "Permanent: you can't change party later.",
-  },
-  // §8.5, onboarding §2.4: library · watched · fix anything · refuse the coat · Finish His Work · Justice.
+  // §8.5 (review 4): helped Holm · books · his ward book (STR 8 / INT 12 / AGI 5 / CHA 5).
   reference: [
-    { questionId: 'origin.summer', answerId: 'c' },
-    { questionId: 'origin.trouble', answerId: 'c' },
-    { questionId: 'origin.talent', answerId: 'b' },
-    { questionId: 'origin.coat', answerId: 'b' },
-    { questionId: 'origin.promise', answerId: 'c' },
-    { questionId: 'origin.wish', answerId: 'b' },
+    { questionId: 'origin.platform', answerId: 'holm' },
+    { questionId: 'origin.suitcase', answerId: 'books' },
+    { questionId: 'origin.lining', answerId: 'ward-book' },
   ],
 };

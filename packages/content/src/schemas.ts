@@ -153,6 +153,11 @@ export const CheckedAction = z.strictObject({
       standing: z.number().int().min(0).max(4).optional(),
     })
     .optional(),
+  /**
+   * Review 4 (ADR 0073): a one-off welcome ticket (the favour from the platform). Offered only while
+   * its `use: 'welcome'` order is open today; ×1 only (`ONCE_ONLY`), otherwise `NOT_OFFERED`.
+   */
+  use: z.literal('welcome').optional(),
   text: z.strictObject({ success: OutcomeText, partial: OutcomeText }),
 });
 
@@ -451,6 +456,8 @@ export const Npc = z.strictObject({
   factionId: FactionId.optional(),
   cityId: z.string().optional(),
   portrait: AssetId,
+  /** Review 4: the story's `{helperPronoun}` (*She* dozes against the window). */
+  pronoun: z.enum(['she', 'he']).optional(),
 });
 
 /** §13.4: the five Local Standing names; the thresholds live in rules. */
@@ -629,32 +636,43 @@ export const Item = z.strictObject({
 /** Story texts: at most 240 characters (and, checked by the loader, 4 sentences; GDD §1.2). */
 export const StoryText = z.string().min(1).max(240);
 
+/**
+ * Review 4 (GDD §7.1, ADR 0073, tech design §4.1): *The Last Train In*. Beat 1's answer carries the
+ * party (`faction`, with the person helped); beat 2's +6 and +1; beat 3's Ambition and his coat.
+ * `chaBase`, `iron` and `wish` are gone with the deathbed scene.
+ */
 export const OriginEffect = z.discriminatedUnion('kind', [
+  z.strictObject({ kind: z.literal('faction'), factionId: FactionId, person: NpcId }),
   z.strictObject({
     kind: z.literal('stat'),
     stat: z.enum(['str', 'int', 'agi']),
-    value: z.number().int().min(1).max(5),
+    value: z.number().int().min(1).max(6),
   }),
-  z.strictObject({ kind: z.literal('chaBase'), value: z.number().int().min(1).max(4) }),
-  z.strictObject({ kind: z.literal('iron'), value: z.number().int().min(1) }),
   z.strictObject({ kind: z.literal('wear'), itemId: ItemId }),
   z.strictObject({ kind: z.literal('ambition'), ambitionId: AmbitionId }),
-  z.strictObject({ kind: z.literal('wish'), factionId: FactionId, fxp: z.number().int().min(1) }),
 ]) satisfies z.ZodType<OriginEffectRule>;
 
 export const OriginAnswer = z.strictObject({
-  id: z.string().regex(/^[a-z]$/),
-  text: z.string().min(1).max(80),
-  /** Words under the button (the coat, the promise); never a number. */
-  hint: z.string().min(1).max(60).optional(),
-  /** Shown in Courier above the step's second question (onboarding §2). */
+  /** `holm`, `tools`, `ward-book`. */
+  id: Id,
+  /** Beat 1's asks run to about 110 characters. */
+  text: z.string().min(1).max(140),
+  /** Beat 1's two Courier lines under the ask (who, and what their party wants). */
+  lines: z.tuple([z.string().min(1).max(110), z.string().min(1).max(110)]).optional(),
+  /** Beat 1's row portrait (40 px). */
+  portrait: AssetId.optional(),
+  /** Beat 1: a row selects, this button commits (*Help Holm · the six o'clock to Coalport*). */
+  confirm: z.string().min(1).max(60).optional(),
+  /** Words under the button (beat 3); never a number. */
+  hint: z.string().min(1).max(80).optional(),
+  /** Shown in Courier at the top of the next step (*You carried Holm's parcel.*). */
   echo: z.string().min(1).max(80).optional(),
-  effects: z.array(OriginEffect),
+  effects: z.array(OriginEffect).min(1),
 });
 
 export const OriginQuestion = z.strictObject({
   id: Id,
-  prompt: z.string().min(1).max(120),
+  prompt: z.string().min(1).max(120).optional(),
   answers: z.array(OriginAnswer).length(3),
 });
 
@@ -665,22 +683,17 @@ export const OriginStep = z.strictObject({
   narrative: StoryText,
   /** A scene. */
   art: AssetId,
-  /** The father, beside the question. */
-  portrait: AssetId,
-  questions: z.tuple([OriginQuestion, OriginQuestion]),
+  /** Beside the text: a portrait, `'helper'` (the person helped on the platform), or none. */
+  portrait: z.union([AssetId, z.literal('helper')]).nullable(),
+  /** Beat 1: the Courier line under the rows (*Whoever you help, you go with…*). */
+  note: z.string().min(1).max(120).optional(),
+  questions: z.tuple([OriginQuestion]),
 });
 
 export const Origin = z.strictObject({
   steps: z.tuple([OriginStep, OriginStep, OriginStep]),
-  street: z.strictObject({
-    kicker: z.string().min(1).max(80),
-    title: z.string().min(1).max(40),
-    narrative: StoryText,
-    art: AssetId,
-    note: z.string().min(1).max(80),
-  }),
-  /** §8.5: the reference recruit's answers (tests, migration 002). */
-  reference: z.array(z.strictObject({ questionId: Id, answerId: z.string() })).length(6),
+  /** §8.5: the reference recruit's answers (tests, migration 002): Holm · books · his ward book. */
+  reference: z.array(z.strictObject({ questionId: Id, answerId: z.string() })).length(3),
 });
 
 const ChapterReward = z.strictObject({
@@ -1103,3 +1116,5 @@ export type { HeadlineTemplate, OrderTemplate };
 /** Narrowing helpers for the action union. */
 export const isCheckedAction = (a: Action): a is CheckedAction => a.type !== 'training';
 export const isTrainingAction = (a: Action): a is TrainingAction => a.type === 'training';
+/** Review 4 (ADR 0073): a one-off welcome ticket (the favour from the platform). */
+export const isWelcomeAction = (a: Action): boolean => isCheckedAction(a) && a.use === 'welcome';

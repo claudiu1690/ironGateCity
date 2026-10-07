@@ -64,8 +64,8 @@ describe('the arrival funnel (tech design §14.1)', () => {
     expect(Object.fromEntries(f.steps.map((s) => [s.step, s.players]))).toMatchObject({
       accounts: 3,
       face: 3,
-      'answer 3': 3,
-      'answer 4': 2,
+      // Review 4: three beats.
+      'beat 3 (the lining)': 3,
       joined: 2,
       'first action': 2,
       'welcome orders 3 / 3 on day 1': 1,

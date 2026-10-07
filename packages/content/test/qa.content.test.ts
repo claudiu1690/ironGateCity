@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import GDD from '../../../docs/GDD.md?raw';
 import DOC from '../../../docs/design/slice-1-content.md?raw';
 import R1 from '../../../docs/design/review-1-answers.md?raw';
-import { copy, isCheckedAction, loadContent, rawContent } from '../src';
+import { copy, isCheckedAction, isWelcomeAction, loadContent, rawContent } from '../src';
 import { mapPins } from '../src/data/mapPins';
 import { R2_ORDERS, plainProse } from './review2';
 import { FIX4_ORDERS } from './fixes4';
@@ -21,7 +21,9 @@ const city = content.city('coalport')!;
 // Town Hall to the Mill (ADR 0077; review4.hall.test.ts), which slice 1's lists leave out.
 const actions = city.locations
   .filter((l) => l.quarterId === city.quarters[0]!.id && l.kind !== 'town-hall')
-  .flatMap((l) => l.actions);
+  .flatMap((l) => l.actions)
+  // Review 4 (ADR 0073): the favour from the platform is answers §2.6's (review4.prologue.test.ts).
+  .filter((a) => !isWelcomeAction(a));
 
 /** Markdown table rows of a section (the lines starting with "| `"). */
 function tableRows(sectionStart: string, sectionEnd: string, row = /^\| (`|\d+ \| `)/): string[][] {
@@ -179,7 +181,10 @@ describe('content vs docs/design/slice-1-content.md', () => {
     // Slice 4's capital rotation is checked word for word in slice4.content.test.ts.
     // Slice 5's slot-B mission orders (minLevel 6) are design §12.2's (slice5.content.test.ts).
     expect(rows).toHaveLength(
-      content.orderTemplates.filter((t) => t.residence !== 'capital' && t.minLevel === undefined).length,
+      // Review 4: the three welcome-B templates (the favour) are answers §2.6's (review4.prologue.test.ts).
+      content.orderTemplates.filter(
+        (t) => t.residence !== 'capital' && t.minLevel === undefined && !t.id.endsWith('welcome-b'),
+      ).length,
     );
     for (const r of rows) {
       const [id, slot, title, line, target] = r as [string, string, string, string, string];
@@ -257,6 +262,8 @@ describe('content vs docs/design/slice-1-content.md', () => {
       if (kind === 'faction-hq') {
         gate.factionId = 'collective';
         delete hall.factionId;
+        // Review 4 (ADR 0073): the favour is a welcome ticket only at a party HQ.
+        delete (hall as unknown as { actions: Array<{ use?: string }> }).actions[0]!.use;
       } else {
         delete gate.factionId;
         hall.factionId = 'collective';

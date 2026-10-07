@@ -13,15 +13,24 @@ import {
   tier1Difficulty,
   wornCha,
 } from '@irongate/rules';
-import type { FactionId } from '@irongate/rules';
 import { describe, expect, it } from 'vitest';
 import CITIES from '../../../docs/design/slice-2-cities.md?raw';
 import ONB from '../../../docs/design/slice-2-onboarding.md?raw';
 import R1 from '../../../docs/design/review-1-answers.md?raw';
-import { ContentError, copy, isCheckedAction, loadContent, parseContent, rawContent } from '../src';
+import R4 from '../../../docs/design/review-4-answers.md?raw';
+import {
+  ContentError,
+  copy,
+  isCheckedAction,
+  isWelcomeAction,
+  loadContent,
+  parseContent,
+  rawContent,
+} from '../src';
 import type { ContentInput } from '../src';
 import { mapPins } from '../src/data/mapPins';
 import { plainHeadline, plainProse } from './review2';
+import { REVIEW4_WELCOME_DECKS } from './review4';
 
 const content = loadContent();
 const deepCopy = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
@@ -57,7 +66,10 @@ describe('the real content, slice 2', () => {
     // Review 4's Town Halls (ADR 0077) are in review4.hall.test.ts.
     const first = (c: (typeof home)[number]) =>
       c.locations.filter((l) => l.quarterId === c.quarters[0]!.id && l.kind !== 'town-hall');
-    expect(home.flatMap((c) => first(c).flatMap((l) => l.actions))).toHaveLength(55);
+    // Review 4's favours (ADR 0073) are in review4.prologue.test.ts.
+    expect(
+      home.flatMap((c) => first(c).flatMap((l) => l.actions.filter((a) => !isWelcomeAction(a)))),
+    ).toHaveLength(55);
     expect(content.jobs.filter((j) => !j.id.startsWith('irongate'))).toHaveLength(9);
     // Slice 3 adds six crisis templates (Restore the base, two per faction), which never rotate.
     expect(
@@ -88,7 +100,8 @@ describe('the real content, slice 2', () => {
         f.welcomeOrders,
       ]),
     ).toEqual([
-      // Review 1 (answers §2): slot A by best trained stat; B the committee; C Take a job.
+      // Review 1 (answers §2): slot A by best trained stat; C Take a job. Review 4 (answers §2.6): B
+      // the favour from the platform (it was the committee).
       [
         'vanguard',
         'stahl',
@@ -96,7 +109,7 @@ describe('the real content, slice 2', () => {
         'Beacon House',
         {
           A: { str: 'dir.v.guard-change', int: 'dir.v.w.ration-queue', agi: 'dir.v.w.leaflets-market' },
-          B: 'dir.v.report',
+          B: 'dir.v.welcome-b',
           C: 'dir.v.take-a-job',
         },
       ],
@@ -107,7 +120,7 @@ describe('the real content, slice 2', () => {
         'the Union Hall',
         {
           A: { str: 'dir.noon-break', int: 'dir.shift-change', agi: 'dir.w.leaflets-market-row' },
-          B: 'dir.report',
+          B: 'dir.welcome-b',
           C: 'dir.take-a-job',
         },
       ],
@@ -118,7 +131,7 @@ describe('the real content, slice 2', () => {
         'the Rooms',
         {
           A: { str: 'dir.a.w.bills', int: 'dir.a.print-room', agi: 'dir.a.w.evening-run' },
-          B: 'dir.a.report',
+          B: 'dir.a.welcome-b',
           C: 'dir.a.take-a-job',
         },
       ],
@@ -128,10 +141,11 @@ describe('the real content, slice 2', () => {
       'outfit.mill-coat',
       'outfit.worn-overcoat',
     ]);
-    expect(content.factions.map((f) => copy.theirEvent(f.card.signatureEvent))).toEqual([
-      'Their event: the Grand Rally',
-      'Their event: the General Strike',
-      'Their event: the Headline Story',
+    // Review 4: the street's cards are gone; each party's event stays on its faction.
+    expect(content.factions.map((f) => f.card.signatureEvent)).toEqual([
+      'the Grand Rally',
+      'the General Strike',
+      'the Headline Story',
     ]);
     expect(content.factions.map((f) => copy.statBonus(f.startingBonus))).toEqual([
       '+3 Strength',
@@ -142,19 +156,24 @@ describe('the real content, slice 2', () => {
     expect(content.hqOf('alliance').location.id).toBe('ashford.assembly-rooms');
   });
 
-  it('builds the reference recruits exactly (onboarding §2.4) and pays the seed only to Justice', () => {
-    const recruit = (factionId: FactionId) => {
-      const f = content.faction(factionId);
-      const r = resolveOrigin({ origin: content.originSpec, answers: content.origin.reference, faction: f });
+  it('builds the reference recruit and the tuning characters exactly (review 4, GDD §8.5)', () => {
+    const recruit = (helper: string, suitcase: string) => {
+      const answers = [
+        { questionId: 'origin.platform', answerId: helper },
+        { questionId: 'origin.suitcase', answerId: suitcase },
+        { questionId: 'origin.lining', answerId: 'ward-book' },
+      ];
+      const r = resolveOrigin({ origin: content.originSpec, answers, factions: content.factions });
       if (!r.ok) throw new Error(r.reason);
+      const f = content.faction(r.outcome.factionId);
       const c = buildNewCharacter({
         userId: 'u',
         name: 'Mara',
         avatarId: null,
-        factionId,
+        factionId: f.id,
         homeCityId: f.homeCityId,
         outcome: r.outcome,
-        answers: content.origin.reference,
+        answers,
         now: Date.UTC(2026, 8, 29, 9),
         uid: (() => {
           let n = 0;
@@ -165,23 +184,24 @@ describe('the real content, slice 2', () => {
         c.stats.chaBase,
         equippedItems(c.inventory, c.equipment, (id) => content.itemSpec(id)),
       );
-      return [c.stats.str, c.stats.int, c.stats.agi, cha, c.iron, c.fxp];
+      return [c.factionId, c.stats.str, c.stats.int, c.stats.agi, cha, c.iron, c.fxp];
     };
-    expect(recruit('collective')).toEqual([10, 12, 5, 2, 150, 50]);
-    expect(recruit('vanguard')).toEqual([11, 11, 5, 2, 150, 0]);
-    expect(recruit('alliance')).toEqual([8, 14, 5, 2, 150, 0]);
+    expect(content.origin.reference.map((r) => r.answerId)).toEqual(['holm', 'books', 'ward-book']);
+    expect(recruit('holm', 'books')).toEqual(['collective', 8, 12, 5, 5, 0, 0]);
+    expect(recruit('stahl', 'tools')).toEqual(['vanguard', 14, 6, 5, 5, 0, 0]);
+    expect(recruit('grey', 'books')).toEqual(['alliance', 6, 14, 5, 5, 0, 0]);
   });
 
-  it('shows the first-pin canvass at 66 % / 62 % / 74 % for the reference recruits', () => {
+  it('shows the first-pin canvass at 66 % / 74 % / 74 % (GDD §8.5: INT unchanged; Vanguard tools STR 14)', () => {
     const odds = (cityId: string, values: { str: number; int: number; agi: number; cha: number }) => {
       const city = content.city(cityId)!;
       const a = city.locations[0]!.actions.find((x) => x.type === 'canvass');
       if (!a || !isCheckedAction(a)) throw new Error('no canvass at pin 1');
       return computeCheck({ stats: a.stats, values, difficulty: tier1Difficulty(city.role) }).chance;
     };
-    expect(odds('coalport', { str: 10, int: 12, agi: 5, cha: 2 })).toBe(66);
-    expect(odds('duskwall', { str: 11, int: 11, agi: 5, cha: 2 })).toBe(62);
-    expect(odds('ashford', { str: 8, int: 14, agi: 5, cha: 2 })).toBe(74);
+    expect(odds('coalport', { str: 8, int: 12, agi: 5, cha: 5 })).toBe(66);
+    expect(odds('duskwall', { str: 14, int: 6, agi: 5, cha: 5 })).toBe(74);
+    expect(odds('ashford', { str: 6, int: 14, agi: 5, cha: 5 })).toBe(74);
   });
 });
 
@@ -194,7 +214,9 @@ describe.each([
   // Review 4's Town Halls (ADR 0077) are in review4.hall.test.ts.
   const actions = city.locations
     .filter((l) => l.quarterId === city.quarters[0]!.id && l.kind !== 'town-hall')
-    .flatMap((l) => l.actions);
+    .flatMap((l) => l.actions)
+    // Review 4 (ADR 0073): the favour from the platform is answers §2.6's (review4.prologue.test.ts).
+    .filter((a) => !isWelcomeAction(a));
 
   // Maps v3 (design §5.3): the doc's positions were measured on the retired pen-and-ink map; a
   // location now sits at its approved pin in the survey (pins.json).
@@ -339,58 +361,13 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
   const steps = content.origin.steps;
   const questions = steps.flatMap((s) => s.questions);
 
-  it('§2: three steps, their kickers and narratives', () => {
-    const got = steps.map((s) => [s.title, s.kicker, s.narrative]);
-    for (const [title, kicker, narrative] of got) {
-      const sec = section(ONB, `— ${title}`, '###');
-      expect(sec).toContain(`Kicker: *${kicker}*`);
-      expect(sec).toContain(`Narrative: ${narrative}`);
-    }
-    expect(got.map((g) => g[0])).toEqual(['The room', 'The talent', 'The promise']);
-  });
-
-  it('§2: every question, answer and hint word for word; no number on any origin screen', () => {
-    for (const q of questions) {
-      expect(ONB, q.id).toContain(`**"${q.prompt}"**`);
-      const table = ONB.slice(ONB.indexOf(`**"${q.prompt}"**`)).split('\n\n')[1]!;
-      const r = rows(table, /^\| [ABC] \|/);
-      expect(
-        r.map((x) => x[1]),
-        q.id,
-      ).toEqual(q.answers.map((a) => a.text));
-      for (const [i, a] of q.answers.entries()) {
-        if (r[i]!.length === 4) expect(a.hint, `${q.id} ${a.id}`).toBe(r[i]![2]);
-        else expect(a.hint).toBeUndefined();
-        // No game number; the only digits are the year of the Mill Fire ('19).
-        expect(`${a.text} ${a.hint ?? ''} ${a.echo ?? ''}`.replace("'19", '')).not.toMatch(/\d/);
-      }
-    }
-  });
-
-  it('§2: the nine echo lines, on the first question of each step only (§13 Q1)', () => {
-    const table = rows(section(ONB, '**Echo lines**', '### 2.1'), /^\| \d \*/);
-    expect(table).toHaveLength(3);
-    steps.forEach((s, i) => {
-      expect(s.questions[0].answers.map((a) => a.echo)).toEqual(table[i]!.slice(1));
-      expect(s.questions[1].answers.every((a) => a.echo === undefined)).toBe(true);
-    });
-  });
-
-  it('§5: the street, its note, and the three cards word for word', () => {
-    const street = content.origin.street;
-    expect(ONB).toContain(`Kicker *${street.kicker}*`);
-    expect(ONB).toContain(`**${street.title}** ${street.narrative.replace('the Herald', 'the *Herald*')}`);
-    // Review 2 (answers §1.10): the note in plain words.
-    expect(plainProse(ONB)).toContain(`*${street.note}*`);
-    for (const f of content.factions) {
-      const line = ONB.split('\n').find((l) => l.includes(` ${f.name}** — `))!;
-      expect(line.split(' — ')[1]).toBe(f.card.blurb);
-      const facts = ONB.split('\n')[ONB.split('\n').indexOf(line) + 1]!;
-      const city = content.city(f.homeCityId)!.name;
-      expect(facts).toBe(
-        `*${copy.statBonus(f.startingBonus)} · ${copy.startsIn(city)} · ${copy.theirEvent(f.card.signatureEvent)}*`,
-      );
-    }
+  // Review 4 (answers §2, GDD §7.1): onboarding §2 (the deathbed's six questions) and §5 (the street)
+  // are superseded by *The Last Train In*; its texts are checked word for word against the answers in
+  // review4.prologue.test.ts.
+  it('§2, §5: superseded by review 4 (the platform, the suitcase, the lining)', () => {
+    expect(steps.map((s) => s.title)).toEqual(['The platform', 'The suitcase', 'The lining']);
+    expect(questions).toHaveLength(3);
+    expect(ONB).toContain('— The room');
   });
 
   it('§4.2: the nine items with slot, tier, CHA and keepsake flag', () => {
@@ -421,7 +398,8 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
       const ch = amb.chapters[0]!;
       const s = ch.story!;
       expect(doc).toContain(`Chapter 1: *${ch.title}*`);
-      expect(doc).toContain(s.choose.narrative);
+      // Review 4 (answers §2.8): the openers no longer discover what the lining found.
+      expect(R4).toContain(`*${s.choose.narrative}*`);
       expect(doc).toContain(`**Step 2** · *${s.check.title}*\n${s.check.narrative}`);
       expect(doc).toContain(`CTA: **${s.check.cta} · ${s.check.energy} Energy**`);
       for (const c of s.choose.choices) expect(doc).toContain(`| ${c.text} | ${c.hint} |`);
@@ -468,9 +446,10 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
     for (const [cityName, id, group, headline, deck] of r) {
       const h = content.headlines.find((x) => x.id === unq(id!).split(' ')[0])!;
       expect(h.cityId).toBe(cityName!.toLowerCase());
-      // Review 1 (answers §3.4): the welcome deck names slot A's place, which follows the best stat.
+      // Review 1 (answers §3.4): the welcome deck named slot A's place; review 4 (answers §2.6): it
+      // names the favour and the HQ (`REVIEW4_WELCOME_DECKS`, old → new).
       const want = deck!.replace(/Spend it at (.+) first\.$/, 'Spend it at {place} first.');
-      expect([h.headline, h.deck]).toEqual([headline, want]);
+      expect([h.headline, h.deck]).toEqual([headline, REVIEW4_WELCOME_DECKS[want] ?? want]);
       expect(`${h.group} ${h.priority}`).toBe(group!.split(',')[0]);
       expect(h.when).toEqual([{ kind: 'firstEdition' }]);
     }
@@ -512,21 +491,68 @@ describe('slice-2 cross-checks (tech design §4.3): one failing fixture each', (
     fails((c) => (c.ambitions[0]!.chapters[0]!.story!.keepsake = 'outfit.mill-coat'), /is not a keepsake/);
   });
 
-  it('the origin', () => {
-    fails((c) => (c.origin.steps[0].questions[0].answers[1]!.id = 'a'), /duplicate answer ids/);
+  it('the origin (review 4: the three beats, ADR 0073)', () => {
+    fails((c) => (c.origin.steps[0].questions[0].answers[1]!.id = 'holm'), /duplicate answer ids/);
     fails((c) => {
-      c.origin.steps[2].questions[0].answers[0]!.effects = [{ kind: 'iron', value: 1 }];
-    }, /exactly one Ambition/);
+      c.origin.steps[2].questions[0].answers[0]!.effects = [{ kind: 'wear', itemId: 'outfit.fathers-coat' }];
+    }, /one Ambition and outfit.fathers-coat/);
     fails((c) => {
-      c.origin.steps[2].questions[1].answers[0]!.effects = [{ kind: 'wish', factionId: 'alliance', fxp: 50 }];
-    }, /a wish for each faction/);
+      c.origin.steps[0].questions[0].answers[1]!.effects = [{ kind: 'faction', factionId: 'collective', person: 'holm' }];
+    }, /each party once/);
+    fails((c) => {
+      c.origin.steps[0].questions[0].answers[0]!.effects = [{ kind: 'faction', factionId: 'collective', person: 'stahl' }];
+    }, /is not the collective secretary/);
+    fails((c) => {
+      delete c.origin.steps[0].questions[0].answers[0]!.confirm;
+    }, /a portrait, two lines and a confirm/);
+    fails((c) => {
+      c.origin.steps[1].questions[0].answers[0]!.effects = [{ kind: 'stat', stat: 'str', value: 6 }];
+    }, /\+6 to one stat and \+1 to another/);
+    fails((c) => {
+      c.origin.steps[1].questions[0].answers[0]!.effects = [
+        { kind: 'stat', stat: 'str', value: 6 },
+        { kind: 'stat', stat: 'str', value: 1 },
+      ];
+    }, /\+6 to one stat and \+1 to another/);
+    fails((c) => {
+      c.origin.steps[1].questions[0].answers[0]!.effects.push({ kind: 'faction', factionId: 'vanguard', person: 'stahl' });
+    }, /only the platform carries a faction/);
+    fails((c) => {
+      c.origin.steps[1].questions[0].answers[0]!.effects = [
+        { kind: 'stat', stat: 'str', value: 7 },
+        { kind: 'stat', stat: 'int', value: 1 },
+      ];
+    }, ContentError as unknown as RegExp);
     fails((c) => (c.origin.reference[0]!.answerId = 'z'), /unknown answer "z"/);
-    fails((c) => (c.origin.steps[0].art = 'portrait.father'), /a portrait, not a scene/);
+    fails((c) => (c.origin.steps[0].art = 'portrait.holm'), /a portrait, not a scene/);
     fails((c) => {
-      c.origin.steps[1].questions[1].answers[0]!.effects = [{ kind: 'wear', itemId: 'doc.party-card' }];
+      c.origin.steps[2].questions[0].answers[0]!.effects = [
+        { kind: 'ambition', ambitionId: 'finish-his-work' },
+        { kind: 'wear', itemId: 'doc.party-card' },
+      ];
     }, /which is not clothing/);
     fails((c) => (c.origin.steps[0].narrative = 'One. Two. Three. Four. Five.'), /5 sentences/);
     fails((c) => (c.origin.steps[0].narrative = 'Hello {rank}.'), /unknown story placeholder \{rank\}/);
+    fails((c) => {
+      delete c.npcs.find((n) => n.id === 'holm')!.pronoun;
+    }, /needs a pronoun/);
+  });
+
+  it('the favour (review 4: a welcome ticket at the party HQ, ADR 0073)', () => {
+    const favour = (c: ContentInput) =>
+      c.cities.find((x) => x.id === 'coalport')!.locations.find((l) => l.id === 'coalport.union-hall')!
+        .actions[0] as { use?: string; type: string };
+    fails((c) => (favour(c).type = 'canvass'), /must be a council session/);
+    fails((c) => {
+      c.factions.find((f) => f.id === 'collective')!.welcomeOrders.B = 'dir.report';
+    }, /its welcomeOrders.B/);
+    fails((c) => {
+      const mill = c.cities.find((x) => x.id === 'coalport')!.locations.find((l) => l.id === 'coalport.mill-gate')!;
+      const a = mill.actions[0] as { use?: string };
+      a.use = 'welcome';
+    }, /must be at a party HQ/);
+    // The favour is first on the HQ's sheet.
+    expect(favour(clone()).use).toBe('welcome');
   });
 
   it('factions', () => {

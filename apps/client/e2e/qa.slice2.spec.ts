@@ -5,17 +5,20 @@
  * resuming at the street and mid-chapter after a reload; the lost-tap regression on the first
  * landing's sheet; and a blank name at sign-up. Known bugs are `test.fail` with the bug id from
  * docs/qa/slice-2.md; when a bug is fixed its test turns red, as a reminder to drop the annotation.
+ *
+ * Review 4 (GDD §7.1, ADR 0073): the origin is *The Last Train In*; the street is gone (beat 1's row
+ * and confirm choose the party), and the first landing is the HQ with the favour highlighted.
  */
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { ANSWERS, answer, arrive, pinsOutOfReach, signUpOnly } from './helpers';
+import { ANSWERS, answer, arrive, helpOnPlatform, pinsOutOfReach, signUpOnly } from './helpers';
 
 const SMALL = { width: 360, height: 640 };
 const PHONE = { width: 375, height: 812 };
 const DESKTOP = { width: 1440, height: 900 };
 const modalOf = (page: Page) => page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
 
-/** Welcome edition → "To the city" (the first pin's sheet opens) → ×1 on the first canvass. */
+/** Welcome edition → "To the city" (review 4: the HQ's sheet) → ×1 on its first ticket, the favour. */
 async function firstCanvass(page: Page) {
   await page.getByRole('button', { name: 'To the city' }).click();
   await expect(page).toHaveURL(/\?loc=/);
@@ -67,6 +70,10 @@ test.describe('phone 375×812', () => {
   // for, and a new question's choices take taps only once it has settled on screen (500 ms).
   test('M1: a double tap on an origin answer does not also answer the next question', async ({ page }) => {
     await signUpOnly(page, 'Otto Brandt', 1);
+    // Review 4: beat 1's rows only select (the confirm commits); beat 2 is one tap.
+    await helpOnPlatform(page, 'collective');
+    await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+    await page.waitForTimeout(700); // the beat has settled on screen
     const first = page.getByTestId('story-choice').first();
     const box = (await first.boundingBox())!;
     const x = box.x + box.width / 2;
@@ -75,11 +82,10 @@ test.describe('phone 375×812', () => {
     await page.waitForTimeout(200); // a relaxed double tap
     await page.touchscreen.tap(x, y);
     await page.waitForTimeout(800);
-    // Still on the second question, with the first answer echoed.
-    await expect(page.getByTestId('story-prompt')).toHaveText(
-      '“And when the street kids got into trouble. What did you do?”',
-    );
-    await expect(page.getByTestId('story-echo')).toHaveText('You went fishing with him.');
+    // On beat 3, unanswered, with the suitcase's answer echoed.
+    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
+    await expect(page.getByTestId('story-echo')).toHaveText('You carry tools.');
+    await expect(page.getByTestId('story-choice')).toHaveCount(3);
   });
 
   // m1 (minor): the Faction XP and opinion tiles use the faction's colour for their numbers. The
@@ -101,19 +107,21 @@ test.describe('phone 375×812', () => {
     });
   }
 
-  test('resumes at the street and mid-chapter after a reload; the chapter echo is the choice', async ({
+  test('resumes at the lining and mid-chapter after a reload; the chapter echo is the choice', async ({
     page,
   }) => {
     await signUpOnly(page, 'Otto Brandt', 5);
-    for (const text of ANSWERS.reference) await answer(page, text);
-    await expect(page.getByTestId('join')).toBeVisible();
+    await helpOnPlatform(page, 'vanguard');
+    await answer(page, ANSWERS.reference[0]!);
+    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('radio', { name: /Red Collective/ }).getByTestId('wish-tag')).toBeVisible();
-    await page.getByRole('radio', { name: /Iron Vanguard/ }).click();
-    await page.getByTestId('join').click();
+    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
+    await expect(page.getByTestId('story-echo')).toHaveText('You carry books.');
+    await answer(page, ANSWERS.reference[1]!);
     await expect(page).toHaveURL(/\/paper$/);
-    // The coat was refused, so the Vanguard's own outfit is worn (§21.4).
-    await expect(page.getByTestId('desk')).toContainText('Work jacket and cap');
+    await expect(page.getByRole('heading', { name: 'The Duskwall Sentinel' })).toBeVisible();
+    // Review 4 (GDD §7.1): his coat, worn from the lining on; the Vanguard's outfit is kept.
+    await expect(page.getByTestId('desk')).toContainText("Your father's coat");
     await page.getByTestId('letters-row').click();
     await page.getByRole('button', { name: /^Keep it to yourself for now/ }).click();
     // Review 1 (answers §2.1): a third approach, Legwork, on the best stat.
@@ -135,11 +143,12 @@ test.describe('phone 375×812', () => {
     const sheet = page.getByRole('dialog');
     await expect(sheet).toBeVisible();
     await sheet.getByRole('button', { name: /^Close/ }).click();
-    const pin = page.locator('[data-testid="hotspot"][aria-label="3. Beacon House"]');
+    // Review 4: the first landing is Beacon House (the favour); the other pin is the Fortress Gate.
+    const pin = page.locator('[data-testid="hotspot"][aria-label="1. Fortress Gate"]');
     await page.waitForTimeout(15);
     await pin.click();
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 1500 });
-    await expect(page.getByRole('dialog')).toContainText('Beacon House');
+    await expect(page.getByRole('dialog')).toContainText('Fortress Gate');
   });
 
   // m3 (minor): a name of spaces passes the form (`required` accepts whitespace), the client trims it
@@ -265,7 +274,7 @@ test.describe('small phone 360×640', () => {
 test.describe('desktop 1440×900, keyboard only', () => {
   test.use({ viewport: DESKTOP, isMobile: false, hasTouch: false });
 
-  test('sign-up, the origin, the street and the join with the keyboard alone', async ({ page }) => {
+  test('sign-up and the three beats with the keyboard alone', async ({ page }) => {
     await page.goto('/signup');
     const focusIs = async (loc: ReturnType<Page['locator']>) =>
       loc.evaluate((el) => el === document.activeElement || el.contains(document.activeElement));
@@ -290,6 +299,16 @@ test.describe('desktop 1440×900, keyboard only', () => {
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/arrive$/);
 
+    // Beat 1: Tab to Grey's row, Space picks it, Tab to the confirm, Enter.
+    const row = page.getByRole('radio', { name: /Witness a signature/ });
+    await tabTo(row);
+    await page.keyboard.press('Space');
+    await expect(row).toHaveAttribute('aria-checked', 'true');
+    const confirm = page.getByTestId('story-confirm');
+    await tabTo(confirm);
+    await expect(confirm).toHaveText("Help Grey · the six o'clock to Ashford");
+    await page.keyboard.press('Enter');
+    await expect(row).toBeHidden();
     for (const text of ANSWERS.reference) {
       const btn = page.getByRole('button', {
         name: new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
@@ -298,14 +317,6 @@ test.describe('desktop 1440×900, keyboard only', () => {
       await page.keyboard.press('Enter');
       await expect(btn).toBeHidden();
     }
-    const card = page.getByRole('radio', { name: /Civic Alliance/ });
-    await tabTo(card);
-    await page.keyboard.press('Space');
-    await expect(card).toHaveAttribute('aria-checked', 'true');
-    const join = page.getByTestId('join');
-    await tabTo(join);
-    await expect(join).toContainText('Join the Civic Alliance · take the train to Ashford');
-    await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/paper$/);
     await expect(page.getByRole('heading', { name: 'The Ashford Gazette' })).toBeVisible();
   });

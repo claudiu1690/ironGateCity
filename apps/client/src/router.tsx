@@ -130,6 +130,8 @@ export interface CitySearch {
   order?: string;
   /** Slice 4: open the Places list on arrival (*Show places*, *Where to act*). */
   places?: boolean;
+  /** Review 4 (§7.5, ADR 0073): the ticket highlighted on the open sheet (the favour, first landing). */
+  act?: string;
 }
 
 const cityRoute = createRoute({
@@ -141,6 +143,9 @@ const cityRoute = createRoute({
       ? { order: search.order }
       : {}),
     ...(search.places === true || search.places === 'true' || search.places === '1' ? { places: true } : {}),
+    ...(typeof search.loc === 'string' && search.loc && typeof search.act === 'string' && search.act
+      ? { act: search.act }
+      : {}),
   }),
   component: CityPage,
 });

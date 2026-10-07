@@ -105,8 +105,12 @@ export function buildEdition(i: {
   const itemA = i.ordersToday.items[0];
   const slotA = itemA ? content.ordersOf(c.factionId).find((t) => t.id === itemA.templateId) : undefined;
   const orderA = itemA && slotA ? itemSpec(itemA, slotA) : undefined;
-  // Review 1 (§7.5): the welcome deck's "Spend it at {place} first." names slot A's place.
-  const firstAction = slotA?.match.actionIds?.[0];
+  // Review 1 (§7.5): the welcome deck's {place} named slot A's place. Review 4 (ADR 0073): it names
+  // the favour's, slot B's welcome template (the HQ), when today's orders hold one.
+  const welcomeB = i.ordersToday.items
+    .map((it) => content.ordersOf(c.factionId).find((t) => t.id === it.templateId))
+    .find((t) => t?.slot === 'B' && t.use === 'welcome');
+  const firstAction = (welcomeB ?? slotA)?.match.actionIds?.[0];
   const placeId = firstAction ? content.action(firstAction)?.location.id : undefined;
   const standing = namedStanding(content, paperCityId, standingSuccesses(c, paperCityId));
   const job = s.job ? content.job(s.job.id) : undefined;

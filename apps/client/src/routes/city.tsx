@@ -130,7 +130,7 @@ export function groundFor(
 export function CityPage() {
   const params = useParams({ strict: false }) as { cityId: string; quarterId?: string };
   const cityId = params.cityId;
-  const { loc, order: orderHl, places: placesSearch } = useSearch({ from: '/app/city/$cityId' });
+  const { loc, order: orderHl, places: placesSearch, act: actHl } = useSearch({ from: '/app/city/$cityId' });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { character, now: tick } = useCharacter();
@@ -920,10 +920,11 @@ export function CityPage() {
       data-home-map={districts ? undefined : 'one'}
     >
       {/* Sideways (review 2 #3): the plate, the orders and the day in a column beside the map, which
-          keeps the full height and no overlay. */}
+          keeps the full height and no overlay. Review 4: positioned, so a done order's absolute mark
+          scrolls inside the column instead of growing the page (the favour is done in the first minute). */}
       {side && (
         <aside
-          className="flex shrink-0 flex-col overflow-y-auto overscroll-contain border-r-2 border-ink bg-paper text-ink"
+          className="relative flex shrink-0 flex-col overflow-y-auto overscroll-contain border-r-2 border-ink bg-paper text-ink"
           style={{ width: SIDE_W }}
           data-testid="city-side"
         >
@@ -1139,7 +1140,7 @@ export function CityPage() {
               key={a.id}
               action={a}
               energy={energy}
-              highlight={!!orderHl && a.order?.id === orderHl}
+              highlight={(!!orderHl && a.order?.id === orderHl) || a.id === actHl}
               onPerform={(times) => perform({ actionId: a.id, locationId: sheetPlace.id }, times)}
               pending={
                 action.isPending && action.variables?.actionId === a.id

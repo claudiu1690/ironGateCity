@@ -89,18 +89,23 @@ describe('the wage under the Long Service Order (GDD §9.1, §15.3)', () => {
 });
 
 describe('the welcome set by the best trained stat (GDD §13.7)', () => {
-  it('the Vanguard reference recruit (STR 11 = INT 11): the tie goes to STR, the faction’s stat', async () => {
-    const { caller } = await joined(testClock(), 'vanguard');
-    const me = await caller.character.me();
+  it('a Vanguard with STR 11 = INT 11: the tie goes to STR, the faction’s stat', async () => {
+    // Review 4: the Vanguard tuning character is STR 14 / INT 6 (GDD §8.5); the tie is seeded.
+    const { me } = await welcomeRecruit('vanguard', { str: 11, int: 11, agi: 5 });
     expect(me.stats).toMatchObject({ str: 11, int: 11 });
     expect(me.orders.items.map((o) => o.id)).toEqual([
       'dir.v.guard-change',
-      'dir.v.report',
+      'dir.v.welcome-b',
       'dir.v.take-a-job',
     ]);
-    const paper = await caller.paper.today();
-    expect(paper.landing).toEqual({ cityId: 'duskwall', locationId: 'duskwall.garrison-gate' });
-    expect(paper.headlines[0]!.deck).toMatch(/Spend it at the Fortress Gate first\.$/);
+    // Review 4 (§7.5, ADR 0073): the landing is the HQ with the favour, and the deck names it.
+    const paper = await (await joined(testClock(), 'vanguard')).caller.paper.today();
+    expect(paper.landing).toEqual({
+      cityId: 'duskwall',
+      locationId: 'duskwall.beacon-house',
+      actionId: 'duskwall.beacon-house.favour',
+    });
+    expect(paper.headlines[0]!.deck).toMatch(/Stahl's bundle goes out at Beacon House; start there\.$/);
   });
 
   it('a STR-heavy Vanguard (STR 14, INT 5): the Fortress Gate canvass, and the committee checks STR', async () => {
@@ -108,7 +113,8 @@ describe('the welcome set by the best trained stat (GDD §13.7)', () => {
     expect(me.welcomeDay).toBe(true);
     expect(me.orders.items.map((o) => [o.id, o.title])).toEqual([
       ['dir.v.guard-change', 'Talk to the customs men at the Fortress Gate'],
-      ['dir.v.report', 'Go to the district meeting at Beacon House'],
+      // Review 4 (answers §2.6): slot B of the welcome set is the favour from the platform.
+      ['dir.v.welcome-b', "Hand out Stahl's bundle at Beacon House"],
       ['dir.v.take-a-job', 'Take a job at the Fortress Gate'],
     ]);
     expect(me.orders.items[0]!.pin?.locationId).toBe('duskwall.garrison-gate');
@@ -211,7 +217,7 @@ describe('First day +10 % (GDD §8.4)', () => {
     clock.set(Date.UTC(2026, 8, 30, 9));
     const day2 = await caller.character.me();
     expect(day2.welcomeDay).toBe(true);
-    expect(day2.orders.items.map((o) => o.id)).toEqual(['dir.shift-change', 'dir.report', 'dir.take-a-job']);
+    expect(day2.orders.items.map((o) => o.id)).toEqual(['dir.shift-change', 'dir.welcome-b', 'dir.take-a-job']);
     // The job is already held: Take a job starts done (at the day's start) and pays nothing.
     expect(day2.orders.items[2]).toMatchObject({ done: true, progress: 1 });
     const stored = (await Character.findOne({ _id: day2.id }).lean())!;

@@ -33,14 +33,15 @@ describe('character.me v2', () => {
       factionName: 'Collective',
       homeCityId: 'coalport',
       cityId: 'coalport',
-      stats: { str: 10, int: 12, agi: 5, cha: 2 },
+      // Review 4 (GDD §8.5): the reference recruit, his coat CHA 5.
+      stats: { str: 8, int: 12, agi: 5, cha: 5 },
       energy: { value: 100, max: 100, updatedAt: clock.now(), nextTickAt: null, fullAt: null },
       rested: 0,
       xp: 0,
       level: 1,
-      // The reference answers: the refused coat's 150 Iron and Justice's 50 FXP (onboarding §2.4).
-      fxp: 50,
-      iron: 150,
+      // Review 4 (GDD §7.1): no refused coat's Iron and no wish's FXP any more.
+      fxp: 0,
+      iron: 0,
       version: 0,
       serverNow: clock.now(),
       day: { key: today, endsAt: (today + 1) * 86_400_000 },
@@ -65,7 +66,8 @@ describe('character.me v2', () => {
     // stat (INT 12: the Mill Gate canvass), titles that say what and where, Take a job welcome-only.
     expect(first.orders.items.map((o) => [o.id, o.title, o.target])).toEqual([
       ['dir.shift-change', 'Talk to the workers at the Mill Gate', 2],
-      ['dir.report', 'Go to the branch meeting at the Union Hall', 1],
+      // Review 4 (answers §2.6): slot B is the favour from the platform.
+      ['dir.welcome-b', "Deliver Holm's parcel at the Union Hall", 1],
       ['dir.take-a-job', 'Take a job at the Mill Gate', 1],
     ]);
     expect(first.orders.issuer).toMatchObject({

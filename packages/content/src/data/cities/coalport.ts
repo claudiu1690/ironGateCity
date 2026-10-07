@@ -168,6 +168,8 @@ export const coalport: City = {
     {
       id: 'coalport.union-hall',
       name: 'Union Hall',
+      // Review 4: the welcome deck's {place} (answers §2.6: *at the Union Hall*).
+      ref: 'the Union Hall',
       kind: 'faction-hq',
       // Slice 4 (design §4.3): an HQ's tickets are for its own faction's members.
       factionId: 'collective',
@@ -177,6 +179,29 @@ export const coalport: City = {
       map: { x: 0.42, y: 0.35 },
       quarterId: 'coalport.mill',
       actions: [
+        {
+          // Review 4 (answers §2.6, §29.2; ADR 0073): the favour from the platform, the first action.
+          // Slot B of the welcome set; offered only while that order is open, once only.
+          id: 'coalport.union-hall.favour',
+          name: 'Deliver the parcel',
+          tier: 1,
+          type: 'council',
+          stats: ['best'],
+          energy: 10,
+          givesFxp: true,
+          givesOpinion: false,
+          use: 'welcome',
+          text: {
+            success: {
+              headline: 'The parcel, counted in',
+              body: "The parcel is flyers, five hundred of them, and the man on the door counts them while you wait. \"She said you'd come.\" He writes your name in the book under hers.",
+            },
+            partial: {
+              headline: 'Counted twice, in pencil',
+              body: "The man on the door is out and the parcel waits on a bench till he's back. He counts them twice and asks your name three times. It goes in the book, in pencil.",
+            },
+          },
+        },
         {
           id: 'coalport.union-hall.committee',
           name: 'Go to the branch meeting',

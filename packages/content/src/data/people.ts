@@ -9,6 +9,8 @@ export const npcs: Npc[] = [
     factionId: 'collective',
     cityId: 'coalport',
     portrait: 'portrait.holm',
+    // Review 4: the story's {helperPronoun} on the train (answers §29.3).
+    pronoun: 'she',
   },
   {
     // docs/design/slice-2-cities.md §1.4: the movement's administrator, not its face.
@@ -18,6 +20,8 @@ export const npcs: Npc[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     portrait: 'portrait.stahl',
+    // Review 4: the story's {helperPronoun} on the train (answers §29.3).
+    pronoun: 'he',
   },
   {
     // docs/design/slice-2-cities.md §2.4: a former Gazette sub-editor who counts words.
@@ -27,6 +31,8 @@ export const npcs: Npc[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     portrait: 'portrait.grey',
+    // Review 4: the story's {helperPronoun} on the train (answers §29.3).
+    pronoun: 'he',
   },
 ];
 

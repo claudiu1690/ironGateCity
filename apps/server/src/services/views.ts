@@ -1,5 +1,5 @@
-import { isCheckedAction } from '@irongate/content';
-import type { City, GameContent, Location, Quarter } from '@irongate/content';
+import { isCheckedAction, isWelcomeAction } from '@irongate/content';
+import type { Action, City, GameContent, Location, Quarter } from '@irongate/content';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
 import {
@@ -137,19 +137,47 @@ export function locationRef(content: GameContent, locationId: string): string {
   return l ? (l.ref ?? l.name) : locationId;
 }
 
-/** Review 1 (§7.5): the first landing opens slot A's pin: the location of its first action. */
+/**
+ * Review 1 (§7.5): the first landing opened slot A's pin. Review 4 (ADR 0073): it opens the welcome
+ * set's slot B, the favour from the platform: its HQ, with the favour's ticket (`actionId`)
+ * highlighted. Without a slot-B action, the home city's first place.
+ */
 export function welcomeLanding(
   content: GameContent,
-  doc: Pick<CharacterDoc, 'factionId' | 'stats' | 'homeCityId'>,
-): { cityId: string; locationId: string } {
-  const [a] = welcomeOrderIds(content, doc);
-  const t = content.ordersOf(doc.factionId).find((x) => x.id === a);
+  doc: Pick<CharacterDoc, 'factionId'>,
+): { cityId: string; locationId: string; actionId?: string } {
+  const b = content.faction(doc.factionId).welcomeOrders.B;
+  const t = content.ordersOf(doc.factionId).find((x) => x.id === b);
   const first = t?.match.actionIds?.[0];
   const found = first ? content.action(first) : undefined;
   // The welcome landing is in the faction's home city.
   // eslint-disable-next-line no-restricted-properties -- the faction's home
   const city = content.city(content.faction(doc.factionId).homeCityId)!;
-  return { cityId: city.id, locationId: found?.location.id ?? city.locations[0]!.id };
+  if (found && found.city.id === city.id) {
+    return { cityId: city.id, locationId: found.location.id, actionId: found.action.id };
+  }
+  return { cityId: city.id, locationId: city.locations[0]!.id };
+}
+
+/**
+ * Review 4 (ADR 0073): a welcome ticket (the favour from the platform) is offered only while today's
+ * orders hold an open item whose template is `use: 'welcome'` and matches it. Any other action is
+ * always "offered" here (its own rules apply).
+ */
+export function welcomeOffered(
+  content: GameContent,
+  c: Pick<CharacterDoc, 'factionId' | 'orders'>,
+  action: Action,
+  today: DayKey,
+): boolean {
+  if (!isWelcomeAction(action)) return true;
+  if (c.orders.day !== today) return false;
+  const templates = content.ordersOf(c.factionId);
+  return c.orders.items.some((item) => {
+    if (item.doneAt) return false;
+    const t = templates.find((x) => x.id === item.templateId);
+    return t?.use === 'welcome' && (t.match.actionIds ?? []).includes(action.id);
+  });
 }
 
 /** "29 September": the dateline's form, no year (§3.3). */

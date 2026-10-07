@@ -2,18 +2,16 @@ import {
   chapterCheckScreenFixture,
   chapterResultFixture,
   characterViewFixture,
-  factionCardFixtures,
   originScreenFixture,
   paperViewFixture,
+  platformScreenFixture,
 } from '@irongate/rules/testing';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   AvatarPicker,
   DeskList,
-  FactionCard,
   HudBar,
   LettersRow,
   ResultModal,
@@ -28,24 +26,67 @@ const settled = () =>
     for (const b of screen.queryAllByRole('radio')) expect(b).not.toHaveAttribute('aria-disabled');
   });
 
-/** Slice-2 tech design §14 UI fixtures: the story screen, the faction card, the chapter modal. */
+/** Slice-2 tech design §14 UI fixtures (review 4: the three beats): the story screen, the chapter modal. */
 describe('StoryScreen (ADR 0013)', () => {
-  it('an origin step: the echo, the prompt beside the portrait, one tap commits a choice', async () => {
+  it('beat 2: the echo at the top, the helper beside the text, one tap commits a choice', async () => {
     const user = userEvent.setup();
     const onChoose = vi.fn();
     render(<StoryScreen view={originScreenFixture} onChoose={onChoose} />);
-    expect(screen.getByRole('heading', { name: 'The room' })).toBeInTheDocument();
-    expect(screen.getByTestId('story-echo')).toHaveTextContent('You went fishing with him.');
-    expect(screen.getByTestId('story-prompt')).toHaveTextContent(
-      'And when the street kids got into trouble.',
-    );
+    expect(screen.getByRole('heading', { name: 'The suitcase' })).toBeInTheDocument();
+    expect(screen.getByTestId('story-echo')).toHaveTextContent("You carried Holm's parcel.");
+    expect(screen.queryByTestId('story-prompt')).toBeNull();
+    // The art and the helper's portrait.
+    expect(document.querySelectorAll('img')).toHaveLength(2);
     expect(screen.getAllByTestId('story-choice')).toHaveLength(3);
+    expect(screen.queryByTestId('story-confirm')).toBeNull();
     await settled();
-    await user.click(screen.getByRole('button', { name: 'Talked them out of it.' }));
-    expect(onChoose).toHaveBeenCalledWith('b', expect.any(String));
-    expect(screen.getByTestId('story-waits')).toHaveTextContent('This waits for you · Step 1 of 3');
+    await user.click(screen.getByRole('button', { name: 'Books. His, and a few of mine.' }));
+    expect(onChoose).toHaveBeenCalledWith('books', expect.any(String));
+    expect(screen.getByTestId('story-waits')).toHaveTextContent('This waits for you · Step 2 of 3');
     // The art panel crops at the focus point (ADR 0015).
-    expect(document.querySelector('img')).toHaveStyle({ objectPosition: '30% 50%' });
+    expect(document.querySelector('img')).toHaveStyle({ objectPosition: '50% 50%' });
+  });
+
+  it('beat 1: rows with a portrait and two lines select; the confirm commits; the note under them', async () => {
+    const user = userEvent.setup();
+    const onChoose = vi.fn();
+    render(<StoryScreen view={platformScreenFixture} onChoose={onChoose} />);
+    const rows = screen.getAllByRole('radio');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('Petra Holm · union organiser · Coalport');
+    expect(rows[0]!.querySelector('img')).not.toBeNull();
+    expect(screen.getByTestId('story-note')).toHaveTextContent('Whoever you help, you go with.');
+    const confirm = screen.getByTestId('story-confirm');
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveTextContent('Choose whom to help');
+    await settled();
+    await user.click(rows[1]!);
+    expect(rows[1]).toHaveAttribute('aria-checked', 'true');
+    expect(onChoose).not.toHaveBeenCalled();
+    expect(confirm).toHaveTextContent("Help Stahl · the six o'clock to Duskwall");
+    await user.click(rows[0]!);
+    expect(confirm).toHaveTextContent("Help Holm · the six o'clock to Coalport");
+    await user.click(confirm);
+    expect(onChoose).toHaveBeenCalledWith('holm', expect.any(String));
+  });
+
+  it('beat 1: the arrow keys move through the rows and pick one, as a radio group does', async () => {
+    const user = userEvent.setup();
+    render(<StoryScreen view={platformScreenFixture} onChoose={() => undefined} />);
+    const rows = screen.getAllByRole('radio');
+    await settled();
+    rows[0]!.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(rows[1]).toHaveFocus();
+    expect(rows[1]).toHaveAttribute('aria-checked', 'true');
+    await user.keyboard('{ArrowDown}');
+    expect(rows[0]).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('beat 1: while the choice is sent the confirm is busy and the rows are disabled', () => {
+    render(<StoryScreen view={platformScreenFixture} onChoose={() => undefined} pendingChoice="holm" />);
+    for (const r of screen.getAllByRole('radio')) expect(r).toBeDisabled();
+    expect(screen.getByTestId('story-confirm')).toHaveAttribute('aria-busy', 'true');
   });
 
   it('while a choice is sent every choice is disabled', () => {
@@ -90,12 +131,13 @@ describe('StoryScreen (ADR 0013)', () => {
 describe('StoryScreen: a double tap never reaches a screen the player has not read (QA M1)', () => {
   const next = {
     ...originScreenFixture,
-    echo: null,
-    prompt: 'You always had a talent. What was it?',
+    title: 'The lining',
+    echo: 'You carry books.',
+    prompt: 'What did he leave you?',
     choices: [
-      { id: 'a', text: 'I could fix anything with my hands.', hint: null },
-      { id: 'b', text: 'I could talk to anyone.', hint: null },
-      { id: 'c', text: 'I could read people.', hint: null },
+      { id: 'ward-book', text: 'His ward book.', hint: null },
+      { id: 'letter', text: 'His letter from prison.', hint: null },
+      { id: 'marker', text: 'The marker.', hint: null },
     ],
   };
 
@@ -106,26 +148,26 @@ describe('StoryScreen: a double tap never reaches a screen the player has not re
       const { rerender } = render(
         <StoryScreen view={originScreenFixture} screenKey="q2" settleOnMount onChoose={onChoose} />,
       );
-      const first = screen.getByRole('button', { name: 'Led them in. Someone had to.' });
+      const first = screen.getByRole('button', { name: "Tools, mostly. I'm better with my hands than my mouth." });
       expect(first).toHaveAttribute('aria-disabled', 'true');
       fireEvent.click(first, { detail: 1 });
       expect(onChoose).not.toHaveBeenCalled();
       act(() => vi.advanceTimersByTime(STORY_SETTLE_MS));
       expect(first).not.toHaveAttribute('aria-disabled');
       fireEvent.click(first, { detail: 1 });
-      expect(onChoose).toHaveBeenLastCalledWith('a', 'q2');
+      expect(onChoose).toHaveBeenLastCalledWith('tools', 'q2');
 
       // The answer is back: the next question takes the same place. Its choices are new buttons,
       // and the second tap of the double tap, 200 ms later, does nothing.
       rerender(<StoryScreen view={next} screenKey="q3" onChoose={onChoose} />);
-      const again = screen.getByRole('button', { name: /^I could fix anything/ });
+      const again = screen.getByRole('button', { name: /^His ward book/ });
       expect(again).not.toBe(first);
       act(() => vi.advanceTimersByTime(200));
       fireEvent.click(again, { detail: 1 });
       expect(onChoose).toHaveBeenCalledTimes(1);
       act(() => vi.advanceTimersByTime(STORY_SETTLE_MS - 200));
       fireEvent.click(again, { detail: 1 });
-      expect(onChoose).toHaveBeenLastCalledWith('a', 'q3');
+      expect(onChoose).toHaveBeenLastCalledWith('ward-book', 'q3');
     } finally {
       vi.useRealTimers();
     }
@@ -138,11 +180,11 @@ describe('StoryScreen: a double tap never reaches a screen the player has not re
       const { rerender } = render(
         <StoryScreen view={originScreenFixture} screenKey="q2" settleOnMount onChoose={onChoose} />,
       );
-      const first = screen.getByRole('button', { name: 'Talked them out of it.' });
+      const first = screen.getByRole('button', { name: 'Books. His, and a few of mine.' });
       first.focus();
       // A key press (click detail 0) works at once: the player chose the button with the keyboard.
       fireEvent.click(first, { detail: 0 });
-      expect(onChoose).toHaveBeenLastCalledWith('b', 'q2');
+      expect(onChoose).toHaveBeenLastCalledWith('books', 'q2');
       rerender(<StoryScreen view={next} screenKey="q3" onChoose={onChoose} />);
       // The old button is gone; the focus is on the new question, not on one of its answers.
       expect(screen.getByTestId('story-prompt')).toHaveFocus();
@@ -180,67 +222,13 @@ describe('StoryScreen: a double tap never reaches a screen the player has not re
     try {
       const onChoose = vi.fn();
       render(<StoryScreen view={originScreenFixture} screenKey="q2" onChoose={onChoose} />);
-      const first = screen.getByRole('button', { name: 'Led them in. Someone had to.' });
+      const first = screen.getByRole('button', { name: "Tools, mostly. I'm better with my hands than my mouth." });
       expect(first).not.toHaveAttribute('aria-disabled');
       fireEvent.click(first, { detail: 1 });
-      expect(onChoose).toHaveBeenCalledWith('a', 'q2');
+      expect(onChoose).toHaveBeenCalledWith('tools', 'q2');
     } finally {
       vi.useRealTimers();
     }
-  });
-});
-
-describe('FactionCard (§7.3)', () => {
-  it('collapsed: the first line and the wish tag; selected: the blurb and the facts', async () => {
-    const user = userEvent.setup();
-    const onSelect = vi.fn();
-    const { rerender } = render(
-      <FactionCard card={factionCardFixtures[1]!} selected={false} onSelect={onSelect} />,
-    );
-    expect(screen.getByTestId('wish-tag')).toHaveTextContent('His wish · +50 Faction XP');
-    expect(screen.queryByTestId('faction-facts')).toBeNull();
-    await user.click(screen.getByRole('radio', { name: /Red Collective/ }));
-    expect(onSelect).toHaveBeenCalled();
-    rerender(<FactionCard card={factionCardFixtures[1]!} selected onSelect={onSelect} />);
-    expect(screen.getByTestId('faction-facts')).toHaveTextContent('Starts in Coalport');
-    render(<FactionCard card={factionCardFixtures[0]!} selected={false} onSelect={onSelect} />);
-    expect(screen.getAllByTestId('wish-tag')).toHaveLength(1);
-  });
-
-  it('n4: the arrow keys move through the cards and pick one, as a radio group does; Tab still reaches each', async () => {
-    const user = userEvent.setup();
-    function Street() {
-      const [picked, setPicked] = useState<string | null>(null);
-      return (
-        <div role="radiogroup" aria-label="The parties">
-          {factionCardFixtures.map((card) => (
-            <FactionCard
-              key={card.factionId}
-              card={card}
-              selected={picked === card.factionId}
-              onSelect={() => setPicked(card.factionId)}
-            />
-          ))}
-        </div>
-      );
-    }
-    render(<Street />);
-    const cards = screen.getAllByRole('radio');
-    await user.tab();
-    expect(cards[0]).toHaveFocus();
-    await user.keyboard('{ArrowDown}');
-    expect(cards[1]).toHaveFocus();
-    expect(cards[1]).toHaveAttribute('aria-checked', 'true');
-    // It wraps round, and Home and End go to the ends.
-    await user.keyboard('{ArrowDown}');
-    expect(cards[0]).toHaveFocus();
-    expect(cards[0]).toHaveAttribute('aria-checked', 'true');
-    await user.keyboard('{End}');
-    expect(cards.at(-1)).toHaveAttribute('aria-checked', 'true');
-    await user.keyboard('{Home}');
-    expect(cards[0]).toHaveAttribute('aria-checked', 'true');
-    await user.tab();
-    expect(cards[1]).toHaveFocus();
   });
 });
 

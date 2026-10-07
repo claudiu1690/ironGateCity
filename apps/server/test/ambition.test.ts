@@ -78,10 +78,11 @@ describe('ambition.get and choose', () => {
     });
     const v = views[0]!;
     expect(v.status).toBe('midway');
-    // Review 1 (§8.4, §17.1): on the welcome day the First day row adds +10 % (46 → 56, 66 → 76), and
-    // chapter 1 has a third approach, Legwork, on the best trained stat (INT 12: 66 + 10).
+    // Review 1 (§8.4, §17.1): on the welcome day the First day row adds +10 % (66 → 76), and chapter 1
+    // has a third approach, Legwork, on the best trained stat (INT 12: 66 + 10). Review 4 (GDD §8.5):
+    // his coat is CHA 5, so *knock* (CHA+INT) is (5 + 12) / 2 = 8.5 → 52 %, 62 % on the welcome day.
     expect(v.screen?.approaches.map((a) => [a.id, a.check.chance])).toEqual([
-      ['knock', 56],
+      ['knock', 62],
       ['sort', 76],
       ['legwork', 76],
     ]);

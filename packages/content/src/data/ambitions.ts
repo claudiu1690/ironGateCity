@@ -26,7 +26,8 @@ export const ambitions: AmbitionInput[] = [
           choose: {
             title: 'His ward book',
             narrative:
-              'At the bottom of the suitcase, under the shirts: a ward book. Two hundred names in his hand, a tick or a cross against each, and the last page dated the week he lost his seat.',
+              // Review 4 (answers §2.8): the lining found it already; the opener reads it properly.
+              "The ward book, opened properly for the first time, on the hall's table: two hundred names in his hand, a tick or a cross against each, and the last page dated the week he lost his seat.",
             choices: [
               {
                 id: 'show',
@@ -165,7 +166,8 @@ export const ambitions: AmbitionInput[] = [
           choose: {
             title: 'The prison letter',
             narrative:
-              'Sewn into the lining of the suitcase: a letter on prison paper, dated the second winter of his sentence. Someone has crossed a name out so hard the pen went through. He kept it twenty-five years.',
+              // Review 4 (answers §2.8).
+              "The letter, read again in daylight: the Mill Fire of '19, his cell number, and the word innocent underlined twice in a hand that shook.",
             choices: [
               {
                 id: 'lamp',
@@ -237,7 +239,8 @@ export const ambitions: AmbitionInput[] = [
           choose: {
             title: 'The marker',
             narrative:
-              'Your first night in the rented room, a man in a good coat knocks and doesn\'t come in. He leaves a folded paper: a marker for two thousand marks in your father\'s hand, countersigned in Clearwater. "No hurry," he says. "Not yet."',
+              // Review 4 (answers §2.8).
+              'The marker, flat on the table: what he owed, who to, and the Clearwater address written small, as if that made it less.',
             choices: [
               {
                 id: 'ask',

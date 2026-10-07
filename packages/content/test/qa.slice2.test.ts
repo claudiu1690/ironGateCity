@@ -1,5 +1,5 @@
 /**
- * QA (slice 2): the onboarding content and rules checked against the GDD itself (§7.2 answer table,
+ * QA (slice 2; review 4): the onboarding content and rules checked against the GDD itself (§7.1 beats,
  * §7.3 faction bonuses, §8.5 reference recruits, §17.1 chapter numbers, §21.4 catalogue, §3.3
  * mastheads, §13.7 secretaries) rather than against the design documents the developer transcribed
  * from; the marginal effect of every answer through the real resolver; the kit and worn CHA for
@@ -22,16 +22,17 @@ function gddSection(start: string, end: string): string {
   const to = GDD.indexOf(end, from + 1);
   return GDD.slice(from, to < 0 ? undefined : to);
 }
-const norm = (s: string) =>
-  s.replace(/\*\*/g, '').replace(/\*/g, '').replace(/[“”"]/g, '').replace(/[.]+$/, '').trim();
-
-function outcome(answers: OriginAnswerRef[], factionId: FactionId) {
-  const r = resolveOrigin({ origin: content.originSpec, answers, faction: content.faction(factionId) });
+function outcome(answers: OriginAnswerRef[]) {
+  const r = resolveOrigin({ origin: content.originSpec, answers, factions: content.factions });
   if (!r.ok) throw new Error(r.reason);
   return r.outcome;
 }
 const withAnswer = (questionId: string, answerId: string): OriginAnswerRef[] =>
   REF.map((a) => (a.questionId === questionId ? { questionId, answerId } : { ...a }));
+/** The platform's row for each party (whom you help is your party). */
+const HELPS: Record<FactionId, string> = { vanguard: 'stahl', collective: 'holm', alliance: 'grey' };
+const joining = (f: FactionId, answers: OriginAnswerRef[] = REF) =>
+  answers.map((a) => (a.questionId === 'origin.platform' ? { ...a, answerId: HELPS[f] } : { ...a }));
 
 function wornOf(o: ReturnType<typeof outcome>, factionId: FactionId) {
   const doc = buildNewCharacter({
@@ -52,115 +53,104 @@ function wornOf(o: ReturnType<typeof outcome>, factionId: FactionId) {
   return { doc, cha: wornCha(doc.stats.chaBase, equipped), equipped: equipped.map((i) => i.id) };
 }
 
-describe('GDD §7.2: the answer table, and each answer’s effect through the resolver', () => {
-  const table = gddSection('### 7.2 Dialogue', '**The answers stack')
+describe('GDD §7.1: the three beats of *The Last Train In*, and each answer’s effect through the resolver', () => {
+  const table = gddSection('### 7.1 *The Last Train In*', '### 7.2')
     .split('\n')
-    .filter((l) => /^\| [123]/.test(l))
+    .filter((l) => /^\| [123] \*/.test(l))
     .map((l) =>
       l
         .split('|')
         .slice(1, -1)
         .map((c) => c.trim()),
     );
-  const questions = content.origin.steps.flatMap((s) => s.questions);
+  const steps = content.origin.steps;
 
-  it('has six rows in the order of the content, with the same prompts and answer texts', () => {
-    expect(table).toHaveLength(6);
+  it('has three beats in the order of the content, with the same titles, places and art', () => {
+    expect(table).toHaveLength(3);
     table.forEach((row, i) => {
-      const q = questions[i]!;
-      expect(norm(q.prompt)).toBe(norm(row[1]!));
-      q.answers.forEach((a, k) => expect(norm(a.text), `${q.id} ${a.id}`).toBe(norm(row[2 + k]!)));
+      const step = steps[i]!;
+      expect(row[0], step.id).toBe(`${i + 1} *${step.title}*`);
+      expect(row[1]!.split(' (`')[0], step.id).toBe(step.kicker);
+      if (row[1]!.includes('(`')) expect(row[1], step.id).toContain(`(\`${step.art}\`)`);
+      expect(step.questions).toHaveLength(1);
     });
   });
 
-  it('the stat answers (summer, trouble, talent) change exactly what the GDD says, from the reference build', () => {
-    // Effect column, as written in the GDD, per stat question.
-    const expected: Record<
-      string,
-      Record<string, Partial<Record<'str' | 'int' | 'agi' | 'chaBase', number>>>
-    > = {
-      'origin.summer': { a: { agi: 3 }, b: { str: 3 }, c: { int: 3 } },
-      'origin.trouble': { a: { str: 2 }, b: { chaBase: 2 }, c: { int: 2 } },
-      'origin.talent': { a: { agi: 3 }, b: { str: 3, int: 1 }, c: { chaBase: 1, int: 3 } },
-    };
-    // The GDD effect cells, parsed, must say the same thing as the map above.
-    const parse = (cell: string) =>
-      Object.fromEntries(
-        cell.split(' · ').map((part) => {
-          const [letter, ...rest] = part.trim().split(' ');
-          const effects: Record<string, number> = {};
-          for (const m of rest.join(' ').matchAll(/\+(\d) (STR|INT|AGI|CHA)/g)) {
-            effects[m[2] === 'CHA' ? 'chaBase' : m[2]!.toLowerCase()] = Number(m[1]);
-          }
-          return [letter!.toLowerCase(), effects];
-        }),
+  it('beat 1: Holm, Stahl and Grey, each their party’s secretary; whom you help is your party', () => {
+    expect(table[0]![2]).toMatch(/^Holm's parcel · Stahl's bundle · Grey's signature;/);
+    expect(table[0]![2]).toContain("*Help Holm · the six o'clock to Coalport*");
+    const platform = steps[0].questions[0];
+    expect(platform.answers.map((a) => a.id)).toEqual(['holm', 'stahl', 'grey']);
+    for (const a of platform.answers) {
+      const f = a.effects[0]!;
+      expect(f.kind).toBe('faction');
+      if (f.kind !== 'faction') continue;
+      expect(content.faction(f.factionId).secretary.npcId, a.id).toBe(a.id);
+      expect(f.person).toBe(a.id);
+      expect(a.confirm).toBe(
+        `Help ${content.npc(a.id)!.name.split(' ')[1]} · the six o'clock to ${content.city(content.faction(f.factionId).homeCityId)!.name}`,
       );
-    expect(parse(table[0]![5]!)).toEqual(expected['origin.summer']);
-    expect(parse(table[1]![5]!)).toEqual(expected['origin.trouble']);
-    expect(parse(table[2]![5]!)).toEqual(expected['origin.talent']);
+      // The party, and so the home city (§7.4), through the real resolver.
+      expect(outcome(joining(f.factionId)).factionId).toBe(f.factionId);
+    }
+    // §7.1: the GDD names the three people with their parties.
+    const intro = gddSection('### 7.1 *The Last Train In*', '| Beat |');
+    expect(intro).toContain('**Petra Holm**, the Collective');
+    expect(intro).toContain('**Viktor Stahl**, the Vanguard');
+    expect(intro).toContain('**Thomas Grey**, the Alliance');
+  });
 
-    // Marginal effect through the real resolver: swap one answer of the reference build to each
-    // answer in turn; the difference between two answers equals the difference of their effects.
-    for (const [qid, answers] of Object.entries(expected)) {
+  it('beat 2: the suitcase’s answers and their +6 / +1 change exactly what the GDD says', () => {
+    const cell = table[1]![2]!;
+    const parsed = [...cell.matchAll(/\*([^*]+)\* \(\+6 (STR|INT|AGI), \+1 (STR|INT|AGI)\)/g)].map((m) => ({
+      text: m[1]!.replace(/…$/, ''),
+      six: m[2]!.toLowerCase(),
+      one: m[3]!.toLowerCase(),
+    }));
+    expect(parsed).toHaveLength(3);
+    const answers = steps[1].questions[0].answers;
+    parsed.forEach((p, i) => {
+      const a = answers[i]!;
+      expect(a.text.startsWith(p.text), `${a.id}: ${p.text}`).toBe(true);
+      // Marginal effect through the real resolver, in every party.
       for (const f of FACTIONS) {
-        const zero = { str: 0, int: 0, agi: 0, chaBase: 0 };
-        const base = outcome(withAnswer(qid, 'a'), f).stats;
-        for (const [aid, eff] of Object.entries(answers)) {
-          const got = outcome(withAnswer(qid, aid), f).stats;
-          const effA = { ...zero, ...answers.a };
-          const want = { ...zero, ...eff };
-          for (const k of ['str', 'int', 'agi', 'chaBase'] as const) {
-            expect(got[k] - base[k], `${f} ${qid} ${aid} ${k}`).toBe(want[k] - effA[k]);
-          }
+        const base = { ...outcome(joining(f, withAnswer('origin.suitcase', 'books'))).stats };
+        const got = outcome(joining(f, withAnswer('origin.suitcase', a.id))).stats;
+        const books = { str: 1, int: 6, agi: 0 };
+        const want = { str: 0, int: 0, agi: 0, [p.six]: 6, [p.one]: 1 } as Record<'str' | 'int' | 'agi', number>;
+        for (const k of ['str', 'int', 'agi'] as const) {
+          expect(got[k] - base[k], `${f} ${a.id} ${k}`).toBe(want[k] - books[k]);
         }
       }
-    }
+    });
   });
 
-  it('the coat: A wears the father’s coat (CHA 5), B pays +150 Iron in the faction outfit (CHA 2), C wears the promised coat (keepsake) and +1 CHA base', () => {
-    const cell = table[3]![5]!;
-    expect(cell).toMatch(/CHA 5/);
-    expect(cell).toMatch(/\+150 IM/);
-    expect(cell).toMatch(/keepsake.*\+1 CHA base/);
-    for (const f of FACTIONS) {
-      const outfit = content.faction(f).kit.outfit;
-      const a = outcome(withAnswer('origin.coat', 'a'), f);
-      const b = outcome(withAnswer('origin.coat', 'b'), f);
-      const c = outcome(withAnswer('origin.coat', 'c'), f);
-      // Iron: 0, 150, 0 (§21.4: every new character starts with 0 Iron; +150 if refused).
-      expect([a.iron, b.iron, c.iron]).toEqual([0, 150, 0]);
-      // The reference build's CHA base is 0; the promised coat adds 1.
-      expect([a.stats.chaBase, b.stats.chaBase, c.stats.chaBase]).toEqual([0, 0, 1]);
-      // Worn CHA: 5, 2, 6 (onboarding §4.1 "2 (refused) · 5 (accepted) · 6 (promised)").
-      const wa = wornOf(a, f);
-      const wb = wornOf(b, f);
-      const wc = wornOf(c, f);
-      expect([wa.cha, wb.cha, wc.cha], f).toEqual([5, 2, 6]);
-      expect(wa.equipped).toEqual(['outfit.fathers-coat', 'doc.party-card']);
-      expect(wb.equipped).toEqual([outfit, 'doc.party-card']);
-      expect(wc.equipped).toEqual(['outfit.fathers-coat-promised', 'doc.party-card']);
-      // The outfit is kept (not worn) when a coat is taken: nothing is destroyed at the start.
-      for (const w of [wa, wc]) expect(w.doc.inventory.map((e) => e.itemId)).toContain(outfit);
-      expect(content.item('outfit.fathers-coat-promised')?.keepsake).toBe(true);
-      expect(content.item('outfit.fathers-coat')?.keepsake).toBe(false);
-    }
-  });
-
-  it('the promise chooses the Ambition; the wish pays +50 FXP only when the chosen faction matches (3 × 3)', () => {
-    const ambitions = { a: 'clear-his-name', b: 'settle-his-debts', c: 'finish-his-work' };
+  it('beat 3: the lining chooses the Ambition (§17.1), and his coat is worn by everyone', () => {
+    expect(table[2]![2]).toBe('*His ward book* · *His letter from prison* · *The marker*');
+    const ambitions = { 'ward-book': 'finish-his-work', letter: 'clear-his-name', marker: 'settle-his-debts' };
+    const answers = steps[2].questions[0].answers;
+    expect(answers.map((a) => a.text.replace(/\.$/, ''))).toEqual(['His ward book', 'His letter from prison', 'The marker']);
     for (const [aid, amb] of Object.entries(ambitions)) {
-      expect(outcome(withAnswer('origin.promise', aid), 'collective').ambitionId).toBe(amb);
-    }
-    const wishes: Record<string, FactionId> = { a: 'vanguard', b: 'collective', c: 'alliance' };
-    for (const [aid, wished] of Object.entries(wishes)) {
       for (const f of FACTIONS) {
-        const o = outcome(withAnswer('origin.wish', aid), f);
-        expect(o.fxp, `wish ${aid} joining ${f}`).toBe(f === wished ? 50 : 0);
+        const o = outcome(joining(f, withAnswer('origin.lining', aid)));
+        expect(o.ambitionId).toBe(amb);
+        const w = wornOf(o, f);
+        // §7.1, §8.5: his coat (Tier I, CHA 5) worn from here on; the party's outfit kept.
+        expect(w.cha, `${f} ${aid}`).toBe(5);
+        expect(w.equipped).toEqual(['outfit.fathers-coat', 'doc.party-card']);
+        expect(w.doc.inventory.map((e) => e.itemId)).toContain(content.faction(f).kit.outfit);
       }
     }
-    expect(table[5]![5]).toMatch(
-      /\+50 FXP seed toward Vanguard \/ Collective \/ Alliance, paid if you join that faction/,
-    );
+    expect(table[2]![3]).toMatch(/\*\*his coat\*\*, worn from here on \(Tier I, CHA 5\)/);
+    expect(content.item('outfit.fathers-coat')?.keepsake).toBe(false);
+  });
+
+  it('no Iron and no FXP seed any more (the wish and the refused coat are gone)', () => {
+    expect(gddSection('### 7.1 *The Last Train In*', '### 7.2')).toMatch(/the father's \*wish\* \(\+50 FXP\) are gone/);
+    for (const f of FACTIONS) {
+      const o = outcome(joining(f));
+      expect([o.iron, o.fxp, o.stats.chaBase]).toEqual([0, 0, 0]);
+    }
   });
 });
 
@@ -176,19 +166,20 @@ describe('GDD §7.3, §8.5, §21.4: bonuses, the reference recruits and the kit'
     ]);
   });
 
-  it('§8.5 reference recruits: Collective 10/12/5 CHA 2 with 150 Iron and +50 FXP; Vanguard 11/11/5/2; Alliance 8/14/5/2', () => {
-    const want: Record<FactionId, [number, number, number, number, number]> = {
-      collective: [10, 12, 5, 2, 50],
-      vanguard: [11, 11, 5, 2, 0],
-      alliance: [8, 14, 5, 2, 0],
+  it('§8.5 (review 4) the reference recruit 8 / 12 / 5 / 5; the tuning characters Vanguard tools 14 / 6 / 5 / 5, Alliance books 6 / 14 / 5 / 5', () => {
+    const gdd = gddSection('### 8.5', '## 9.');
+    expect(gdd).toMatch(/\| 8 \| 12 \| 5 \| 5 \|/);
+    expect(gdd).toContain('**Vanguard STR 14 / INT 6 / AGI 5 / CHA 5** (*tools*)');
+    expect(gdd).toContain('**Alliance STR 6 / INT 14 / AGI 5 / CHA 5** (*books*)');
+    const sheet = (answers: OriginAnswerRef[]) => {
+      const o = outcome(answers);
+      const w = wornOf(o, o.factionId);
+      return [o.factionId, o.stats.str, o.stats.int, o.stats.agi, w.cha, o.iron, o.fxp];
     };
-    for (const f of FACTIONS) {
-      const o = outcome(REF, f);
-      const w = wornOf(o, f);
-      expect([o.stats.str, o.stats.int, o.stats.agi, w.cha, o.fxp], f).toEqual(want[f]);
-      expect(o.iron).toBe(150);
-      expect(o.ambitionId).toBe('finish-his-work');
-    }
+    expect(sheet(REF)).toEqual(['collective', 8, 12, 5, 5, 0, 0]);
+    expect(outcome(REF).ambitionId).toBe('finish-his-work');
+    expect(sheet(joining('vanguard', withAnswer('origin.suitcase', 'tools')))).toEqual(['vanguard', 14, 6, 5, 5, 0, 0]);
+    expect(sheet(joining('alliance'))).toEqual(['alliance', 6, 14, 5, 5, 0, 0]);
   });
 
   it('§21.4 catalogue: ids, names, slots, CHA and the keepsake flag, from the GDD table', () => {
@@ -348,12 +339,17 @@ describe('Content policy (CLAUDE.md rules 2 and 6; content-policy review §7 che
     expect(allowed).toEqual([]);
   });
 
-  it('the Vanguard card and wish read as reviewed (review §3)', () => {
+  it('the Vanguard card and the platform’s Vanguard row read as reviewed (review §3; answers §26)', () => {
     const v = content.faction('vanguard');
     expect(v.card.signatureEvent).toBe('the Grand Rally');
     expect(v.card.blurb).not.toMatch(/soldier|garrison|nation above all/i);
-    const wish = content.origin.steps[2]!.questions[1]!.answers[0]!;
-    expect(wish.text).toBe('Order. Somebody has to keep the streets quiet.');
+    // Review 4: a steward, a meeting and a bundle of flyers; no uniform, march, symbol or slogan.
+    const stahl = content.origin.steps[0].questions[0].answers.find((a) => a.id === 'stahl')!;
+    expect(stahl.lines).toEqual([
+      'Viktor Stahl · steward · Duskwall',
+      'Iron Vanguard · order, discipline and a strong hand · +3 Strength',
+    ]);
+    expect(`${stahl.text} ${stahl.lines!.join(' ')}`).not.toMatch(/uniform|march|salute|veteran|soldier|banner/i);
     expect(v.rankTitles).toEqual([
       'Initiate',
       'Steward',

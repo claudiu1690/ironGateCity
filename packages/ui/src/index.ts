@@ -224,12 +224,11 @@ export { bandNote, batchReasons, oddsBand, oddsTag, reasonFor, statLine, statNam
 export type { OddsBand, Reason, TrainingPlaces } from './odds';
 export {
   AvatarPicker,
-  FactionCard,
   ItemLine,
   LettersRow,
   STORY_SETTLE_MS,
   StoryScreen,
 } from './components/Story';
-export type { AvatarPickerProps, FactionCardProps, StoryScreenProps } from './components/Story';
+export type { AvatarPickerProps, StoryScreenProps } from './components/Story';
 export { TownHallBlocks, WhatNowCard, deskNextLine } from './components/TownHall';
 export type { DeskActs, TownHallBlocksProps, WhatNowCardProps } from './components/TownHall';

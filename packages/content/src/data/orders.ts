@@ -79,6 +79,18 @@ export const orderTemplates: OrderTemplate[] = [
     target: 1,
     counts: 'attempts',
   },
+  // Review 4 (answers §2.6, ADR 0073): slot B of the welcome set, the favour from the platform.
+  {
+    id: 'dir.welcome-b',
+    factionId: 'collective',
+    slot: 'B',
+    title: "Deliver Holm's parcel at the Union Hall",
+    line: "The parcel, to the hall, to whoever's on the door. Then come and find me; there's tea.",
+    match: { actionIds: ['coalport.union-hall.favour'] },
+    target: 1,
+    counts: 'attempts',
+    use: 'welcome',
+  },
   {
     id: 'dir.report',
     factionId: 'collective',
@@ -238,6 +250,18 @@ export const orderTemplates: OrderTemplate[] = [
     match: { actionTypes: ['speech'], cityId: 'duskwall' },
     target: 1,
     counts: 'attempts',
+  },
+  // Review 4 (answers §2.6, ADR 0073): slot B of the welcome set, the favour from the platform.
+  {
+    id: 'dir.v.welcome-b',
+    factionId: 'vanguard',
+    slot: 'B',
+    title: "Hand out Stahl's bundle at Beacon House",
+    line: 'The rest of the bundle on my desk by noon; the first handful to whoever is at the door. Names, if you can.',
+    match: { actionIds: ['duskwall.beacon-house.favour'] },
+    target: 1,
+    counts: 'attempts',
+    use: 'welcome',
   },
   {
     id: 'dir.v.report',
@@ -409,6 +433,18 @@ export const orderTemplates: OrderTemplate[] = [
     match: { actionTypes: ['speech'], cityId: 'ashford' },
     target: 1,
     counts: 'attempts',
+  },
+  // Review 4 (answers §2.6, ADR 0073): slot B of the welcome set, the favour from the platform.
+  {
+    id: 'dir.a.welcome-b',
+    factionId: 'alliance',
+    slot: 'B',
+    title: 'Witness the signature at the Assembly Rooms',
+    line: "Mr Albrecht's lease, the reading room, the pen on the desk. Your name under his, and the date right.",
+    match: { actionIds: ['ashford.assembly-rooms.favour'] },
+    target: 1,
+    counts: 'attempts',
+    use: 'welcome',
   },
   {
     id: 'dir.a.report',

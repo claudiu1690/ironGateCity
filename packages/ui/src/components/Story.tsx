@@ -1,10 +1,9 @@
 import { copy } from '@irongate/content/copy';
-import type { AssetView, FactionCardView, LetterView, StoryScreenView } from '@irongate/rules';
+import type { AssetView, LetterView, StoryScreenView } from '@irongate/rules';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import { cx } from '../format';
 import { statLine } from '../odds';
-import { FACTION_STYLE } from './FactionCrest';
 import { Picture } from './Picture';
 
 /** Where a cropping panel centres the image (ADR 0015 `focus`). */
@@ -115,7 +114,9 @@ export interface StoryScreenProps {
   settleOnMount?: boolean;
   /**
    * One tap commits a choice (the origin, chapter step 1). `screenKey` is the screen the tapped
-   * button was rendered for: the caller drops a tap for a screen that is no longer current.
+   * button was rendered for: the caller drops a tap for a screen that is no longer current. Review 4
+   * (the platform): when the choices carry `confirm`, a tap selects a row and the confirm button
+   * commits it.
    */
   onChoose?: (id: string, screenKey: string) => void;
   /** The choice being sent: every choice is disabled meanwhile. */
@@ -129,9 +130,9 @@ export interface StoryScreenProps {
   ctaNote?: string;
   /** A refusal, worded for the player. */
   error?: string;
-  /** Extra content under the text (the street's faction cards). */
+  /** Extra content under the text. */
   children?: ReactNode;
-  /** A sticky footer in place of the CTA (the street's confirm). */
+  /** A sticky footer in place of the CTA. */
   footer?: ReactNode;
   /** A small control in the corner (Sign out, Close). */
   corner?: ReactNode;
@@ -165,12 +166,16 @@ export function StoryScreen({
 }: StoryScreenProps) {
   const titleId = useId();
   const full = layout === 'fullscreen';
+  /** Review 4 (answers §2.3): rows that select, and a confirm that commits (the briefing's pattern). */
+  const rows = view.choices.some((c) => c.confirm);
+  const [picked, setPicked] = useState<{ key: string; id: string } | null>(null);
   const cta = view.cta;
   const short = cta !== null && cta.readyAt !== null;
   const key = screenKey ?? keyOf(view);
   const settled = useSettled(key, settleMs, settleOnMount);
   /** A tap (not a key press) on a screen that is still settling: ignored (QA M1). */
   const early = (e: MouseEvent) => !settled && e.detail !== 0;
+  const selected = rows && picked?.key === key ? view.choices.find((c) => c.id === picked.id) : undefined;
 
   // When the screen changes its old buttons go, and the focus with them: put it on the new prompt
   // (or the title), so a screen reader reads the new question and Tab moves on to its choices.
@@ -231,14 +236,25 @@ export function StoryScreen({
 
         <div className="flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
           <div className="flex flex-1 flex-col gap-2.5 px-4 pt-3 pb-3 lg:gap-4 lg:px-8 lg:pt-7">
-            <p className="font-body text-[14.5px] leading-snug text-text-2 lg:text-[16px] lg:leading-normal">
-              {view.narrative}
-            </p>
+            {/* Review 4: the echo of the last beat at the top, then the text, the speaker beside it. */}
             {view.echo && (
               <p className="font-mono text-[12.5px] text-muted" data-testid="story-echo">
                 {view.echo}
               </p>
             )}
+            <div className="flex items-start gap-3">
+              {view.portrait && !view.prompt && (
+                <Picture
+                  asset={view.portrait}
+                  sizes="48px"
+                  decorative
+                  className="mt-0.5 size-12 shrink-0 rounded-full border-2 border-ink object-cover object-top"
+                />
+              )}
+              <p className="font-body text-[14.5px] leading-snug text-text-2 lg:text-[16px] lg:leading-normal">
+                {view.narrative}
+              </p>
+            </div>
             {view.prompt && (
               <div className="flex items-center gap-3">
                 {view.portrait && (
@@ -259,7 +275,65 @@ export function StoryScreen({
                 </p>
               </div>
             )}
-            {view.choices.length > 0 && (
+            {rows && (
+              <div
+                className={cx(
+                  'flex flex-col gap-2 transition-opacity duration-300',
+                  !settled && 'opacity-60',
+                )}
+                role="radiogroup"
+                aria-label={view.prompt ?? view.title}
+              >
+                {view.choices.map((c) => {
+                  const on = selected?.id === c.id;
+                  return (
+                    <button
+                      key={`${key}:${c.id}`}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      aria-disabled={!settled || undefined}
+                      disabled={pendingChoice !== null}
+                      onClick={(e) => {
+                        if (early(e)) return;
+                        setPicked({ key, id: c.id });
+                      }}
+                      onKeyDown={onRadioArrowKey}
+                      className={cx(
+                        'flex min-h-14 w-full scroll-mb-36 items-start gap-3 border-[1.5px] border-ink px-3 py-2.5 text-left',
+                        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol',
+                        on ? 'bg-ink text-paper' : 'bg-paper-card hover:bg-paper',
+                        settled ? 'cursor-pointer' : 'cursor-default',
+                      )}
+                      data-testid="story-row"
+                    >
+                      {c.portrait && (
+                        <Picture
+                          asset={c.portrait}
+                          sizes="40px"
+                          decorative
+                          className="mt-0.5 size-10 shrink-0 rounded-full border-[1.5px] border-current object-cover object-top"
+                        />
+                      )}
+                      <span className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className="font-body text-[15px] leading-snug font-semibold">{c.text}</span>
+                        {c.lines?.map((line) => (
+                          <span key={line} className="font-mono text-[11.5px] leading-snug opacity-85">
+                            {line}
+                          </span>
+                        ))}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {rows && view.note && (
+              <p className="font-mono text-[12px] text-muted" data-testid="story-note">
+                {view.note}
+              </p>
+            )}
+            {!rows && view.choices.length > 0 && (
               <div
                 className={cx(
                   'flex flex-col gap-2 transition-opacity duration-300',
@@ -356,7 +430,19 @@ export function StoryScreen({
             data-testid="story-footer"
           >
             {footer ??
-              (cta && (
+              (rows ? (
+                <button
+                  type="button"
+                  disabled={!selected || pendingChoice !== null}
+                  aria-busy={pendingChoice !== null || undefined}
+                  onClick={() => selected && onChoose?.(selected.id, key)}
+                  className="label-caps flex min-h-14 w-full cursor-pointer items-center justify-center bg-ink px-4 text-center text-[13px] text-paper hover:bg-ink-2 disabled:cursor-not-allowed disabled:bg-faint"
+                  data-testid="story-confirm"
+                >
+                  {selected?.confirm ?? copy.arrival.chooseSomeone}
+                </button>
+              ) : (
+                cta && (
                 <button
                   type="button"
                   onClick={onCta}
@@ -368,6 +454,7 @@ export function StoryScreen({
                   <span>{cta.label}</span>
                   <span className="text-energy-light normal-case">{cta.energy} Energy</span>
                 </button>
+                )
               ))}
             {ctaNote && (
               <p className="font-mono text-[11.5px] text-muted" data-testid="story-cta-note">
@@ -381,65 +468,6 @@ export function StoryScreen({
         </div>
       </section>
     </div>
-  );
-}
-
-export interface FactionCardProps {
-  card: FactionCardView;
-  selected: boolean;
-  onSelect: () => void;
-}
-
-/** §7.3: a street card. Collapsed: crest, name, first line, the wish tag; selected: blurb and facts. */
-export function FactionCard({ card, selected, onSelect }: FactionCardProps) {
-  const first = card.blurb.split(/(?<=\.)\s/)[0];
-  const color = FACTION_STYLE[card.factionId].color;
-  // QA n3: a selected card grows by its blurb and facts; bring the whole card into view, above the
-  // sticky confirm (scroll-margin), so the facts are not left under it on a small phone.
-  const ref = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (selected) ref.current?.scrollIntoView?.({ block: 'nearest' });
-  }, [selected]);
-  return (
-    <button
-      ref={ref}
-      type="button"
-      role="radio"
-      aria-checked={selected}
-      onClick={onSelect}
-      onKeyDown={onRadioArrowKey}
-      className={cx(
-        'flex w-full scroll-mt-4 scroll-mb-36 cursor-pointer gap-3 border-[1.5px] border-ink p-3 text-left',
-        selected ? 'bg-paper-card shadow-[inset_4px_0_0_var(--faction)]' : 'bg-paper hover:bg-paper-card',
-      )}
-      style={{ ['--faction' as string]: color }}
-      data-testid="faction-card"
-    >
-      <Picture asset={card.crest} decorative className="size-11 shrink-0" />
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-display text-[19px] leading-tight font-black">{card.name}</span>
-          {card.wishLabel && (
-            <span
-              className="label-caps border border-petrol px-1.5 py-0.5 text-[10px] text-petrol"
-              data-testid="wish-tag"
-            >
-              {card.wishLabel}
-            </span>
-          )}
-        </span>
-        <span className="font-body text-[14px] leading-snug text-text-2">
-          {selected ? card.blurb : first}
-        </span>
-        {selected && (
-          <span className="flex flex-col gap-0.5 pt-1 font-mono text-[12px]" data-testid="faction-facts">
-            {card.facts.map((f) => (
-              <span key={f}>{f}</span>
-            ))}
-          </span>
-        )}
-      </span>
-    </button>
   );
 }
 

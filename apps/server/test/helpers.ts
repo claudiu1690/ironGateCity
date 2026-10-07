@@ -209,8 +209,8 @@ export async function seedRecruit(
   const faction = content.faction(factionId);
   await rewindCityIfAhead(faction.homeCityId, now);
   await keepCapitalNear(now);
-  const answers = content.origin.reference;
-  const r = resolveOrigin({ origin: content.originSpec, answers, faction });
+  const answers = originAnswers(factionId);
+  const r = resolveOrigin({ origin: content.originSpec, answers, factions: content.factions });
   if (!r.ok) throw new Error(r.reason);
   const doc = buildNewCharacter({
     userId: user.id,
@@ -251,9 +251,28 @@ export async function freshCharacter(
   return { user, caller, me, clock };
 }
 
+/** The platform's row for each party (review 4, ADR 0073: whom you help is your party). */
+export const HELPS: Record<FactionId, string> = { vanguard: 'stahl', collective: 'holm', alliance: 'grey' };
+
 /**
- * The real arrival through the procedures (slice-2 tech design §14): a face, six answers (the
- * reference answers unless given), then the faction. Returns the join's result.
+ * Review 4 (GDD §8.5): the reference recruit and the tuning characters. Beat 1 helps the party's
+ * secretary; the suitcase is *books*, *tools* for the Vanguard; the lining his ward book. Collective
+ * 8 / 12 / 5, Vanguard 14 / 6 / 5, Alliance 6 / 14 / 5, all CHA 5 (his coat).
+ */
+export function originAnswers(factionId: FactionId = 'collective'): Array<{ questionId: string; answerId: string }> {
+  return getContent().origin.reference.map((a) =>
+    a.questionId === 'origin.platform'
+      ? { ...a, answerId: HELPS[factionId] }
+      : a.questionId === 'origin.suitcase' && factionId === 'vanguard'
+        ? { ...a, answerId: 'tools' }
+        : { ...a },
+  );
+}
+
+/**
+ * The real arrival through the procedures (slice-2 tech design §14; review 4): a face, the three
+ * answers (the reference answers, beat 1 helping `factionId`'s secretary, unless given), then the
+ * join. Returns the join's result.
  */
 export async function arrive(
   caller: ReturnType<typeof callerFor>,
@@ -264,8 +283,8 @@ export async function arrive(
   } = {},
 ) {
   await caller.arrival.start({ avatarId: opts.avatarId ?? 'avatar.woman-30s' });
-  for (const a of opts.answers ?? getContent().origin.reference) await caller.arrival.answer(a);
-  return caller.arrival.join({ factionId: opts.factionId ?? 'collective' });
+  for (const a of opts.answers ?? originAnswers(opts.factionId)) await caller.arrival.answer(a);
+  return caller.arrival.join({});
 }
 
 /** The arrival over HTTP with a session cookie (tRPC POSTs), for the HTTP tests. */
@@ -291,8 +310,8 @@ export async function arriveOverHttp(
     if (res.statusCode !== 200) throw new Error(`${path}: ${res.statusCode} ${res.body}`);
   };
   await post('arrival.start', { avatarId: 'avatar.man-30s' });
-  for (const a of getContent().origin.reference) await post('arrival.answer', a);
-  await post('arrival.join', { factionId });
+  for (const a of originAnswers(factionId)) await post('arrival.answer', a);
+  await post('arrival.join', {});
 }
 
 /**

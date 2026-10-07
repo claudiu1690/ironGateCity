@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { ANSWERS, answer, pinsOutOfReach, signUp, signUpOnly, sheetSettled } from './helpers';
+import { ANSWERS, PLATFORM_ROWS, answer, pinsOutOfReach, signUp, signUpOnly, sheetSettled } from './helpers';
 
 /**
  * Review 2 #3: a phone held sideways (812 × 375, 667 × 375) is playable. The arrival, the paper,
@@ -42,16 +42,17 @@ for (const vp of [
       page,
     }) => {
       test.setTimeout(120_000);
-      // The arrival: every answer and the join button reachable, no sideways scroll.
+      // The arrival (review 4: the three beats): every row, answer and the confirm reachable, no
+      // sideways scroll.
       await signUpOnly(page, 'Anna Roth', 1);
       await noSideScroll(page);
-      for (const text of ANSWERS.slice1) await answer(page, text);
-      await page.getByRole('radio', { name: /Red Collective/ }).click();
-      const join = page.getByTestId('join');
-      await join.scrollIntoViewIfNeeded();
-      await expect(join).toBeInViewport({ ratio: 1 });
+      await page.getByRole('radio', { name: PLATFORM_ROWS.collective }).click();
+      const confirm = page.getByTestId('story-confirm');
+      await confirm.scrollIntoViewIfNeeded();
+      await expect(confirm).toBeInViewport({ ratio: 1 });
       await noSideScroll(page);
-      await join.click();
+      await confirm.click();
+      for (const text of ANSWERS.slice1) await answer(page, text);
 
       // The paper: the headlines, and "To the city" on the first screen.
       await expect(page).toHaveURL(/\/paper$/);
@@ -68,7 +69,7 @@ for (const vp of [
       await expect(page.getByTestId('hud-energy')).toBeInViewport({ ratio: 1 });
       await expect(page.getByTestId('hud-fxp')).toBeInViewport({ ratio: 1 });
 
-      // The city: the first landing zooms into pin 1 and opens it in the side panel.
+      // The city: the first landing zooms into the HQ (review 4: the favour) and opens it in the side panel.
       await page.getByRole('button', { name: 'To the city' }).click();
       await expect(page).toHaveURL(/\/city\/coalport\?loc=/);
       const panel = page.getByRole('dialog');
@@ -79,7 +80,7 @@ for (const vp of [
       expect(inside(p, vp)).toBe(true);
       expect(p.y).toBeGreaterThanOrEqual(hud.y + hud.height - 1);
       const map = await boxOf(page.getByTestId('city-map'));
-      const pin1 = await boxOf(page.locator('[data-testid="hotspot"][aria-label="1. Mill Gate"]'));
+      const pin1 = await boxOf(page.locator('[data-testid="hotspot"][aria-label="3. Union Hall"]'));
       // The pin sits in the map, clear of the panel.
       expect(pin1.x).toBeGreaterThanOrEqual(p.x + p.width);
       expect(pin1.x + pin1.width).toBeLessThanOrEqual(map.x + map.width);

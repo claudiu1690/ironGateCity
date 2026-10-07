@@ -1,4 +1,4 @@
-import { isCheckedAction, isTrainingAction } from '@irongate/content';
+import { isCheckedAction, isTrainingAction, isWelcomeAction } from '@irongate/content';
 import type { CheckedAction, GameContent, LocatedAction } from '@irongate/content';
 import { residenceCityId, residenceCtx } from './residence';
 import { ActionLog, Character, Encounter } from '@irongate/db';
@@ -57,6 +57,7 @@ import {
   preferredStat,
   standingSuccesses,
   toOrdersState,
+  welcomeOffered,
   wornStats,
 } from './views';
 
@@ -127,6 +128,11 @@ export async function performAction(deps: {
   // §8.5, §13.1: training has no batch.
   if (isTrainingAction(action) && input.times !== 1) {
     throw gameError('BAD_REQUEST', 'TRAINING_IS_ONCE', { actionId: action.id });
+  }
+  // Review 4 (ADR 0073): the favour from the platform is once only (its order is checked in the
+  // transaction, below).
+  if (isWelcomeAction(action) && input.times !== 1) {
+    throw gameError('BAD_REQUEST', 'ONCE_ONLY', { actionId: action.id });
   }
   const loaded = await loadCharacter(user, content, deps.now());
   const c0 = loaded.doc;
@@ -269,6 +275,12 @@ async function resolveAndWrite(i: {
   }
   const refusal = slice5Refusal(content, c, located, input.times, now);
   if (refusal) throw refusal;
+  // Review 4 (ADR 0073): a welcome ticket only while its welcome order is open today, read on the
+  // transaction's character, so two taps under two keys cannot both pay (the loser re-reads a done
+  // order). Checked here only, so a retry of the winning key still finds its stored result.
+  if (!welcomeOffered(content, c, located.action, today)) {
+    throw new GameError('NOT_OFFERED', { actionId: located.action.id });
+  }
   // Slice 5 (tech design §8.2): the first act in a city closes its arrived journey.
   c = await closeArrivalHere(content, session, c, now);
 

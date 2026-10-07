@@ -8,19 +8,27 @@ export type StoryVars = Partial<Record<StoryPlaceholder, string>>;
 /**
  * Tech design §4.4: the story placeholders, resolved on the server before any text leaves it:
  * `{name}`, `{secretary}` (the secretary's form of address), `{hq}` and `{city}` (the home city).
- * Before a faction is chosen only `{name}` is known.
+ * Before a faction is chosen only `{name}` is known. Review 4 (ADR 0073): with `helper` (the person
+ * helped on the platform, an NPC id), `{helper}` is their surname and `{helperPronoun}` their pronoun.
  */
 export function storyVars(
   content: GameContent,
-  c: { name: string; factionId?: FactionId | null },
+  c: { name: string; factionId?: FactionId | null; helper?: string | null },
 ): StoryVars {
   if (!c.factionId) return { name: c.name };
   const f = content.faction(c.factionId);
+  const npc = c.helper ? content.npc(c.helper) : undefined;
   return {
     name: c.name,
     secretary: f.secretary.addressedAs,
     hq: f.hqRef,
     city: content.city(f.homeCityId)?.name ?? f.homeCityId,
+    ...(npc
+      ? {
+          helper: npc.name.split(' ').slice(-1)[0]!,
+          helperPronoun: npc.pronoun === 'he' ? 'He' : 'She',
+        }
+      : {}),
   };
 }
 

@@ -39,9 +39,12 @@ export interface FunnelCharacter {
   /** The City Day the current job was taken, or null (a job taken on day 1 and switched later shows
    * the later day: the `job` rows count the take itself). */
   jobSinceDay: number | null;
-  /** The welcome set's slot-A action (the first pin's canvass). */
+  /** The first landing's ticket: review 4's favour (welcome slot B); before, slot A's canvass. */
   welcomeActionId: string;
 }
+
+/** Review 4: the prologue's three beats, as funnel steps. */
+export const BEAT_STEPS = ['beat 1 (the platform)', 'beat 2 (the suitcase)', 'beat 3 (the lining)'] as const;
 
 export interface FunnelStep {
   step: string;
@@ -96,9 +99,10 @@ export function buildArrivalFunnel(
   const steps: FunnelStep[] = [
     { step: 'accounts', players: arrivals.length },
     { step: 'face', players: count((a) => a.hasFace) },
-    ...[1, 2, 3, 4, 5, 6].map((n) => ({
-      step: `answer ${n}`,
-      players: count((a) => a.answeredAt.length >= n),
+    // Review 4 (ADR 0073): three beats, one answer each (was six questions).
+    ...BEAT_STEPS.map((step, k) => ({
+      step,
+      players: count((a) => a.answeredAt.length >= k + 1),
     })),
     { step: 'joined', players: joined.length },
     { step: 'first action', players: count((_a, c, acts) => !!c && acts.some(tap)) },

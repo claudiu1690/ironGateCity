@@ -68,17 +68,18 @@ test.describe('every pin clear at every size (QA M2)', () => {
     await arrive(page, { faction: 'alliance', answers: ANSWERS.reference });
     await page.getByRole('button', { name: 'To the city' }).click();
     const sheet = page.getByRole('dialog');
-    await expect(sheet).toContainText('Gazette House');
-    // Review 2: the map zoomed into pin 1 behind the centred panel.
+    // Review 4 (§7.5): the first landing is the HQ, with the favour.
+    await expect(sheet).toContainText('Assembly Rooms');
+    // Review 2: the map zoomed into the pin behind the centred panel.
     await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'true');
-    await expect(page.locator('[data-testid="hotspot"][aria-label="1. Gazette House"]')).toBeInViewport();
+    await expect(page.locator('[data-testid="hotspot"][aria-label="2. Assembly Rooms"]')).toBeInViewport();
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await expect(page).toHaveURL(/\/city\/ashford$/);
     await expect(page.getByTestId('city-map')).toHaveAttribute('data-zoomed', 'false');
     expect(await unreachablePins(page)).toEqual([]);
     // And a pin tapped at once opens (the lost-tap fix, c732d64, still holds).
-    await page.locator('[data-testid="hotspot"][aria-label="2. Assembly Rooms"]').click();
-    await expect(page.getByRole('dialog')).toContainText('Assembly Rooms');
+    await page.locator('[data-testid="hotspot"][aria-label="1. Gazette House"]').click();
+    await expect(page.getByRole('dialog')).toContainText('Gazette House');
   });
 });
 

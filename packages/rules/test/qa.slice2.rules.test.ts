@@ -128,14 +128,14 @@ describe('§17.1 chapter status at the seven-day boundary', () => {
   });
 });
 
-describe('the origin resolver and the kit (§7.2, §8.2, §8.5, §21.4)', () => {
+describe('the origin resolver and the kit (review 4: §7.1, §8.2, §8.5, §21.4)', () => {
   const spec: OriginSpec = {
     questions: [
       {
         id: 'q1',
         answers: [
-          { id: 'a', effects: [{ kind: 'stat', stat: 'int', value: 3 }] },
-          { id: 'b', effects: [{ kind: 'chaBase', value: 2 }] },
+          { id: 'a', effects: [{ kind: 'faction', factionId: 'alliance', person: 'grey' }] },
+          { id: 'b', effects: [{ kind: 'faction', factionId: 'vanguard', person: 'stahl' }] },
         ],
       },
       {
@@ -144,11 +144,10 @@ describe('the origin resolver and the kit (§7.2, §8.2, §8.5, §21.4)', () => 
           {
             id: 'a',
             effects: [
-              { kind: 'wear', itemId: 'coat.promised' },
-              { kind: 'chaBase', value: 1 },
+              { kind: 'stat', stat: 'int', value: 6 },
+              { kind: 'stat', stat: 'str', value: 1 },
             ],
           },
-          { id: 'b', effects: [{ kind: 'iron', value: 150 }] },
         ],
       },
       {
@@ -158,61 +157,60 @@ describe('the origin resolver and the kit (§7.2, §8.2, §8.5, §21.4)', () => 
             id: 'a',
             effects: [
               { kind: 'ambition', ambitionId: 'finish-his-work' },
-              { kind: 'chaBase', value: 1 },
+              { kind: 'wear', itemId: 'coat' },
             ],
           },
         ],
       },
-      { id: 'q4', answers: [{ id: 'a', effects: [{ kind: 'wish', factionId: 'alliance', fxp: 50 }] }] },
     ],
   };
-  const faction = {
-    id: 'alliance' as const,
-    startingBonus: { int: 3 },
-    kit: { outfit: 'outfit', card: 'card' },
-  };
+  const factions = [
+    { id: 'alliance' as const, startingBonus: { int: 3 }, kit: { outfit: 'outfit', card: 'card' } },
+    { id: 'vanguard' as const, startingBonus: { str: 3 }, kit: { outfit: 'outfit', card: 'card' } },
+  ];
   const items: Record<string, ItemSpec> = {
     outfit: { id: 'outfit', slot: 'clothing', cha: 2, keepsake: false },
     card: { id: 'card', slot: 'document', cha: 0, keepsake: true },
-    'coat.promised': { id: 'coat.promised', slot: 'clothing', cha: 5, keepsake: true },
+    coat: { id: 'coat', slot: 'clothing', cha: 5, keepsake: false },
   };
+  const inOrder = [
+    { questionId: 'q1', answerId: 'a' },
+    { questionId: 'q2', answerId: 'a' },
+    { questionId: 'q3', answerId: 'a' },
+  ];
 
-  it('does not depend on the order the answers are listed in', () => {
-    const inOrder = [
-      { questionId: 'q1', answerId: 'b' },
-      { questionId: 'q2', answerId: 'a' },
-      { questionId: 'q3', answerId: 'a' },
-      { questionId: 'q4', answerId: 'a' },
-    ];
-    const a = resolveOrigin({ origin: spec, answers: inOrder, faction });
-    const b = resolveOrigin({ origin: spec, answers: [...inOrder].reverse(), faction });
+  it('does not depend on the order the answers are listed in, and takes the party from beat 1', () => {
+    const a = resolveOrigin({ origin: spec, answers: inOrder, factions });
+    const b = resolveOrigin({ origin: spec, answers: [...inOrder].reverse(), factions });
     expect(a).toEqual(b);
     expect(a.ok && a.outcome).toMatchObject({
-      stats: { str: 5, int: 8, agi: 5, chaBase: 4 },
+      factionId: 'alliance',
+      stats: { str: 6, int: 14, agi: 5, chaBase: 0 },
       iron: 0,
-      fxp: 50,
+      fxp: 0,
       ambitionId: 'finish-his-work',
+    });
+    const v = resolveOrigin({ origin: spec, answers: [{ questionId: 'q1', answerId: 'b' }, ...inOrder.slice(1)], factions });
+    expect(v.ok && v.outcome.factionId).toBe('vanguard');
+    expect(v.ok && v.outcome.stats).toEqual({ str: 9, int: 11, agi: 5, chaBase: 0 });
+  });
+
+  it('a party the content names but the rules were not given is NO_FACTION', () => {
+    expect(resolveOrigin({ origin: spec, answers: inOrder, factions: factions.slice(1) })).toMatchObject({
+      ok: false,
+      reason: 'NO_FACTION',
     });
   });
 
-  it('the largest CHA base (4) and the promised coat make worn CHA 9, the top of §8.5’s range', () => {
-    const r = resolveOrigin({
-      origin: spec,
-      answers: [
-        { questionId: 'q1', answerId: 'b' },
-        { questionId: 'q2', answerId: 'a' },
-        { questionId: 'q3', answerId: 'a' },
-        { questionId: 'q4', answerId: 'a' },
-      ],
-      faction,
-    });
+  it('his coat is worn (CHA 5), the outfit kept; the new character is Rank 1 with no FXP', () => {
+    const r = resolveOrigin({ origin: spec, answers: inOrder, factions });
     if (!r.ok) throw new Error(r.reason);
     let n = 0;
     const doc = buildNewCharacter({
       userId: 'u',
       name: 'Q',
       avatarId: null,
-      factionId: 'alliance',
+      factionId: r.outcome.factionId,
       homeCityId: 'ashford',
       outcome: r.outcome,
       answers: [],
@@ -223,13 +221,12 @@ describe('the origin resolver and the kit (§7.2, §8.2, §8.5, §21.4)', () => 
     expect(new Set(doc.inventory.map((e) => e.uid)).size).toBe(3);
     expect(doc.equipment).toEqual({ clothing: 'u3', document: 'u2' });
     const worn = equippedItems(doc.inventory, doc.equipment, (id) => items[id]);
-    expect(wornCha(doc.stats.chaBase, worn)).toBe(9);
-    // The FXP seed gives Rank 1 (Rank 2 is at 400, §5.4).
-    expect(doc.rank).toBe(rankForFxp(50));
+    expect(wornCha(doc.stats.chaBase, worn)).toBe(5);
+    expect(doc.rank).toBe(rankForFxp(0));
     expect(doc.rank).toBe(1);
-    // A keepsake is never granted twice; an ordinary item can be.
+    // An ordinary item can be granted again; a keepsake (the party card) never twice.
     expect(
-      grantItem(doc.inventory, items['coat.promised']!, { uid: 'x', day: DAY, source: 'chapter' }).granted,
+      grantItem(doc.inventory, items.card!, { uid: 'x', day: DAY, source: 'chapter' }).granted,
     ).toBe(false);
     expect(
       grantItem(doc.inventory, items.outfit!, { uid: 'y', day: DAY, source: 'chapter' }).inventory,

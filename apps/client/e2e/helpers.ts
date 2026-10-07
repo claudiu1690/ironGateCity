@@ -1,33 +1,26 @@
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-/** The origin's answers by button text, in order (docs/design/slice-2-onboarding.md §2). */
+/**
+ * Review 4 (*The Last Train In*, GDD §7.1, ADR 0073): the answers to beats 2 and 3 by button text;
+ * beat 1 (whom you help) is the party, picked by `arrive`'s `faction`. The reference recruit (GDD
+ * §8.5): Holm · books · his ward book, STR 8 / INT 12 / AGI 5, his coat CHA 5, no Iron.
+ */
 export const ANSWERS = {
-  /** §2.4: library · watched · fix anything · refuse the coat · Finish His Work · Justice. */
-  reference: [
-    'Sat in the library till they threw me out.',
-    'Watched from the corner, and learned.',
-    'I could fix anything with my hands.',
-    "No. I'll earn my own.",
-    "…I'll finish what you started.",
-    'Justice. The workers deserve better.',
-  ],
-  /**
-   * The same, but taking the coat: the slice-1 specs keep their numbers (Iron starts at 0; the
-   * INT and STR odds are the reference recruit's, 66 % INT at home).
-   */
-  slice1: [
-    'Sat in the library till they threw me out.',
-    'Watched from the corner, and learned.',
-    'I could fix anything with my hands.',
-    'Take it, and say nothing.',
-    "…I'll finish what you started.",
-    'Justice. The workers deserve better.',
-  ],
+  reference: ['Books. His, and a few of mine.', 'His ward book.'],
+  /** The slice-1 specs' numbers: INT 12 (66 % INT at home), as the reference. */
+  slice1: ['Books. His, and a few of mine.', 'His ward book.'],
 };
+/** GDD §8.5: the Vanguard's tuning character carries tools (STR 14 / INT 6), the others books. */
+const TOOLS = "Tools, mostly. I'm better with my hands than my mouth.";
 
-const FACTION_NAMES = { vanguard: 'Iron Vanguard', collective: 'Red Collective', alliance: 'Civic Alliance' };
-export type FactionKey = keyof typeof FACTION_NAMES;
+export type FactionKey = 'vanguard' | 'collective' | 'alliance';
+/** Beat 1's row for each party: the person you help (their ask's first words). */
+export const PLATFORM_ROWS: Record<FactionKey, RegExp> = {
+  collective: /Carry this parcel/,
+  vanguard: /Take a bundle/,
+  alliance: /Witness a signature/,
+};
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -53,21 +46,32 @@ export async function signUpOnly(page: Page, name = 'Mara Lenk', face = 3): Prom
   return email;
 }
 
-/** The six answers and the street: lands on the welcome edition. */
+/** Beat 1, the platform: select the party's row, then the confirm (*Help Holm · …*) commits it. */
+export async function helpOnPlatform(page: Page, faction: FactionKey = 'collective'): Promise<void> {
+  const row = page.getByRole('radio', { name: PLATFORM_ROWS[faction] });
+  await row.click();
+  await expect(row).toHaveAttribute('aria-checked', 'true');
+  const confirm = page.getByTestId('story-confirm');
+  await expect(confirm).toHaveText(/^Help /);
+  await confirm.click();
+  await expect(row).toBeHidden();
+}
+
+/** The three beats (the platform, the suitcase, the lining): lands on the welcome edition. */
 export async function arrive(
   page: Page,
   opts: { answers?: string[]; faction?: FactionKey } = {},
 ): Promise<void> {
-  for (const text of opts.answers ?? ANSWERS.slice1) await answer(page, text);
-  const name = FACTION_NAMES[opts.faction ?? 'collective'];
-  await page.getByRole('radio', { name: new RegExp(name) }).click();
-  await page.getByTestId('join').click();
+  await helpOnPlatform(page, opts.faction ?? 'collective');
+  const given = opts.answers ?? ANSWERS.slice1;
+  const tuning = opts.faction === 'vanguard' && (given === ANSWERS.reference || given === ANSWERS.slice1);
+  for (const text of tuning ? [TOOLS, given[1]!] : given) await answer(page, text);
   await expect(page).toHaveURL(/\/paper$/);
 }
 
 /**
- * Sign up a fresh test account and arrive (the Collective, the coat taken so the slice-1 numbers
- * hold); the first screen is the Morning Paper's welcome edition (§3.3).
+ * Sign up a fresh test account and arrive (the Collective, the reference recruit); the first screen
+ * is the Morning Paper's welcome edition (§3.3).
  */
 export async function signUp(page: Page, name = 'Mara Lenk'): Promise<string> {
   const email = await signUpOnly(page, name);
@@ -76,8 +80,8 @@ export async function signUp(page: Page, name = 'Mara Lenk'): Promise<string> {
 }
 
 /**
- * From the paper to the city map. The first edition opens the first pin's sheet (§7.5); it is
- * closed here so the slice-1 specs start from the map as before.
+ * From the paper to the city map. The first edition opens the HQ's sheet with the favour highlighted
+ * (§7.5, review 4); it is closed here so the slice-1 specs start from the map as before.
  */
 export async function toTheCity(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'To the city' }).click();

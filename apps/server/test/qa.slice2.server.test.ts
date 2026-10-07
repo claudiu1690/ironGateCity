@@ -6,6 +6,10 @@
  * the transaction leaves nothing), the kit and worn CHA for every coat choice, worn CHA inside real
  * CHA checks, chapter concurrency, key reuse, the hook's computed date, the Today tally, the
  * migration through the API, and a content-policy sweep of the code's own strings.
+ *
+ * Review 4 (GDD §7.1, ADR 0073): the origin is *The Last Train In*, three beats; beat 1's answer is the
+ * party, so the join takes no input; everyone wears his coat (CHA 5) with no Iron or FXP seed. The
+ * origin, join and kit sections are rewritten for it.
  */
 import { randomUUID } from 'node:crypto';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -23,7 +27,7 @@ import {
 } from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { arrive, callerFor, gameData, newUser, setupDb, teardownDb, testClock } from './helpers';
+import { arrive, callerFor, gameData, newUser, originAnswers, setupDb, teardownDb, testClock } from './helpers';
 
 beforeAll(async () => {
   await setupDb('qa-slice2-test');
@@ -45,8 +49,10 @@ const refusal = async (p: Promise<unknown>) =>
     ),
   );
 const questions = content.origin.steps.flatMap((s) => s.questions);
-const answersWith = (over: Record<string, string>) =>
-  REF.map((a) => ({ questionId: a.questionId, answerId: over[a.questionId] ?? a.answerId }));
+const answersWith = (over: Record<string, string>, factionId: FactionId = 'collective') =>
+  originAnswers(factionId).map((a) => ({ questionId: a.questionId, answerId: over[a.questionId] ?? a.answerId }));
+/** The lining's answer for each Ambition (was the promise's a / b / c). */
+const LINING = { a: 'letter', b: 'marker', c: 'ward-book' } as const;
 function fresh(name = 'Ida Brenner', clock = testClock(T0)) {
   const user = newUser(name);
   return { user, clock, caller: callerFor(user, clock.now) };
@@ -60,7 +66,7 @@ describe('permissions and validation (tech design §7.1)', () => {
       ['arrival.get', () => anon.arrival.get()],
       ['arrival.start', () => anon.arrival.start({ avatarId: 'avatar.man-20s' })],
       ['arrival.answer', () => anon.arrival.answer(REF[0]!)],
-      ['arrival.join', () => anon.arrival.join({ factionId: 'collective' })],
+      ['arrival.join', () => anon.arrival.join({})],
       ['ambition.get', () => anon.ambition.get()],
       ['ambition.choose', () => anon.ambition.choose({ chapter: 1, choiceId: 'show' })],
       [
@@ -118,14 +124,14 @@ describe('permissions and validation (tech design §7.1)', () => {
     expect(await PaperEntry.countDocuments({})).toBeGreaterThanOrEqual(0);
   });
 
-  it('refuses bad input: unknown faction, face, question or answer; no face; chapter and key shapes', async () => {
+  it('refuses bad input: any join input, face, question or answer; no face; chapter and key shapes', async () => {
     const { caller } = fresh();
     // No face yet: answers and the join are refused (the draft does not exist).
     expect(await refusal(caller.arrival.answer(REF[0]!))).toMatchObject({
       code: 'PRECONDITION_FAILED',
       game: { reason: 'NO_FACE' },
     });
-    expect(await refusal(caller.arrival.join({ factionId: 'collective' }))).toMatchObject({
+    expect(await refusal(caller.arrival.join({}))).toMatchObject({
       code: 'PRECONDITION_FAILED',
       game: { reason: 'NO_FACE' },
     });
@@ -137,39 +143,49 @@ describe('permissions and validation (tech design §7.1)', () => {
     await caller.arrival.start({ avatarId: 'avatar.man-20s' });
     // An answer id of another question, a made-up id, an unknown question.
     for (const bad of [
-      { questionId: 'origin.summer', answerId: 'd' },
+      { questionId: 'origin.platform', answerId: 'tools' },
       { questionId: 'origin.nope', answerId: 'a' },
       { questionId: '', answerId: 'a' },
     ]) {
       expect((await refusal(caller.arrival.answer(bad))).code, JSON.stringify(bad)).toBe('BAD_REQUEST');
     }
-    // A faction that doesn't exist, or a faction smuggled as a number.
+    // Review 4: the join takes no input at all; a faction (any) is refused by the schema.
     const join = caller.arrival.join as unknown as (i: unknown) => Promise<unknown>;
+    expect((await refusal(join({ factionId: 'collective' }))).code).toBe('BAD_REQUEST');
     expect((await refusal(join({ factionId: 'neutral' }))).code).toBe('BAD_REQUEST');
     expect((await refusal(join({ factionId: 1 }))).code).toBe('BAD_REQUEST');
   });
 
-  it('the client cannot set stats, Iron, FXP, items or a seed: extra fields are stripped', async () => {
-    const { caller } = fresh();
+  it('the client cannot set a party, stats, Iron, FXP, items or a seed: the join refuses any field', async () => {
+    const { user, caller } = fresh();
     await caller.arrival.start({ avatarId: 'avatar.man-20s' });
     for (const a of REF) await caller.arrival.answer(a);
     const join = caller.arrival.join as unknown as (i: unknown) => Promise<{ character: { stats: unknown } }>;
-    const r = await join({
-      factionId: 'collective',
-      stats: { str: 60, int: 60, agi: 60, cha: 60 },
-      iron: 1e6,
-      fxp: 1e6,
-      items: ['outfit.fathers-coat'],
-      seed: '00',
-      homeCityId: 'ashford',
-    });
+    expect(
+      (
+        await refusal(
+          join({
+            factionId: 'vanguard',
+            stats: { str: 60, int: 60, agi: 60, cha: 60 },
+            iron: 1e6,
+            fxp: 1e6,
+            items: ['outfit.fathers-coat'],
+            seed: '00',
+            homeCityId: 'ashford',
+          }),
+        )
+      ).code,
+    ).toBe('BAD_REQUEST');
+    expect(await Character.countDocuments({ userId: user.id })).toBe(0);
+    const r = await caller.arrival.join({});
     const me = await caller.character.me();
-    expect(r.character.stats).toEqual({ str: 10, int: 12, agi: 5, cha: 2 });
+    expect(r.character.stats).toEqual({ str: 8, int: 12, agi: 5, cha: 5 });
     expect(me).toMatchObject({
-      iron: 150,
-      fxp: 50,
+      factionId: 'collective',
+      iron: 0,
+      fxp: 0,
       homeCityId: 'coalport',
-      wearing: { name: 'Mill work coat' },
+      wearing: { name: "Your father's coat" },
     });
     // The chapter's roll is the server's: a client seed is ignored and the stored seed replays.
     await caller.ambition.choose({ chapter: 1, choiceId: 'keep' });
@@ -201,116 +217,100 @@ describe('permissions and validation (tech design §7.1)', () => {
   });
 });
 
-describe('the origin: set-once answers, resumable after a reload at every step (§7.2, ADR 0011)', () => {
-  it('after each of the six answers a new session sees the next question, with the echo on the second question of each step only', async () => {
+describe('the origin: set-once answers, resumable after a reload at every beat (§7.1, ADR 0011, 0073)', () => {
+  it('after each of the three answers a new session sees the next beat with the previous answer echoed, then ready', async () => {
     const { user, clock } = fresh();
     const first = callerFor(user, clock.now);
     await first.arrival.start({ avatarId: 'avatar.woman-20s' });
     // A non-reference path, so the echoes differ from the developer's test.
-    const path = answersWith({ 'origin.summer': 'a', 'origin.talent': 'c', 'origin.promise': 'b' });
+    const path = answersWith({ 'origin.platform': 'stahl', 'origin.suitcase': 'light', 'origin.lining': 'marker' });
     for (const [i, a] of path.entries()) {
       await first.arrival.answer(a);
       const reloaded = await callerFor(user, clock.now).arrival.get();
-      if (i < 5) {
+      if (i < 2) {
         expect(reloaded.phase).toBe('story');
         expect(reloaded.questionId).toBe(questions[i + 1]!.id);
-        const secondOfStep = (i + 1) % 2 === 1;
-        const echo = secondOfStep ? questions[i]!.answers.find((x) => x.id === a.answerId)!.echo : null;
+        const echo = questions[i]!.answers.find((x) => x.id === a.answerId)!.echo;
         expect(reloaded.screen?.echo ?? null, `after answer ${i + 1}`).toBe(echo ?? null);
-        expect(reloaded.screen?.progress).toEqual({ step: Math.floor((i + 1) / 2) + 1, of: 3 });
+        expect(reloaded.screen?.progress).toEqual({ step: i + 2, of: 3 });
+        // Beat 2 names Stahl's town and Stahl beside the text.
+        if (i === 0) {
+          expect(reloaded.screen?.kicker).toBe("The six o'clock to Duskwall · the compartment");
+          expect(reloaded.screen?.portrait?.id).toBe('portrait.stahl');
+        }
       } else {
-        expect(reloaded.phase).toBe('street');
-        // Justice was the wish: the Collective's card carries the tag, and only it.
-        expect(reloaded.street?.cards.map((c) => [c.factionId, c.wish, c.wishLabel])).toEqual([
-          ['vanguard', false, null],
-          ['collective', true, 'His wish · +50 Party XP'],
-          ['alliance', false, null],
-        ]);
+        expect(reloaded).toMatchObject({ phase: 'ready', screen: null, questionId: null });
       }
-      // No number reaches an origin screen (§7.1): the view carries no stats, Iron or effects.
+      // The view carries no stats, Iron or effects (the platform's lines carry the party's words).
       expect(JSON.stringify(reloaded)).not.toMatch(/"effects"|"stat"|"iron"|"chaBase"|"fxp"/);
     }
     // Changing the face mid-way keeps the answers (a cosmetic value).
     const v = await first.arrival.start({ avatarId: 'avatar.man-40s' });
-    expect(v.phase).toBe('street');
-    expect((await Arrival.findOne({ userId: user.id }).lean())!.answers).toHaveLength(6);
+    expect(v.phase).toBe('ready');
+    expect((await Arrival.findOne({ userId: user.id }).lean())!.answers).toHaveLength(3);
   });
 
   it('replaying an earlier answer (same or different) changes nothing; answering ahead is OUT_OF_ORDER', async () => {
     const { user, caller } = fresh();
     await caller.arrival.start({ avatarId: 'avatar.man-20s' });
-    for (const a of REF.slice(0, 3)) await caller.arrival.answer(a);
+    await caller.arrival.answer(REF[0]!);
     const before = (await Arrival.findOne({ userId: user.id }).lean())!.answers;
     const same = await caller.arrival.answer(REF[0]!);
-    const other = await caller.arrival.answer({ questionId: REF[1]!.questionId, answerId: 'a' });
-    expect(same.questionId).toBe('origin.coat');
-    expect(other.questionId).toBe('origin.coat');
+    const other = await caller.arrival.answer({ questionId: REF[0]!.questionId, answerId: 'grey' });
+    expect(same.questionId).toBe('origin.suitcase');
+    expect(other.questionId).toBe('origin.suitcase');
     expect((await Arrival.findOne({ userId: user.id }).lean())!.answers).toEqual(before);
-    expect(await refusal(caller.arrival.answer(REF[5]!))).toMatchObject({
+    expect(await refusal(caller.arrival.answer(REF[2]!))).toMatchObject({
       code: 'BAD_REQUEST',
-      game: { reason: 'OUT_OF_ORDER', next: 'origin.coat' },
+      game: { reason: 'OUT_OF_ORDER', next: 'origin.suitcase' },
     });
   });
 
   it('a double tap and a racing different answer store one answer; answers are never stored out of order', async () => {
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 3; i++) {
       const { user, caller } = fresh();
       await caller.arrival.start({ avatarId: 'avatar.man-20s' });
       for (const a of REF.slice(0, i)) await caller.arrival.answer(a);
       const q = questions[i]!;
       const next = questions[i + 1];
+      const [x, y] = [q.answers[0]!.id, q.answers[1]!.id];
       const calls = [
-        ...Array.from({ length: 4 }, () => caller.arrival.answer({ questionId: q.id, answerId: 'a' })),
-        ...Array.from({ length: 4 }, () => caller.arrival.answer({ questionId: q.id, answerId: 'b' })),
+        ...Array.from({ length: 4 }, () => caller.arrival.answer({ questionId: q.id, answerId: x })),
+        ...Array.from({ length: 4 }, () => caller.arrival.answer({ questionId: q.id, answerId: y })),
         // A tap on the next question racing the first: it may land after it, never before it.
-        ...(next ? [caller.arrival.answer({ questionId: next.id, answerId: 'c' })] : []),
+        ...(next ? [caller.arrival.answer({ questionId: next.id, answerId: next.answers[2]!.id })] : []),
       ];
       const settled = await Promise.allSettled(calls);
       const stored = (await Arrival.findOne({ userId: user.id }).lean())!.answers;
       expect(stored.slice(0, i + 1).map((s) => s.questionId)).toEqual(
-        questions.slice(0, i + 1).map((x) => x.id),
+        questions.slice(0, i + 1).map((z) => z.id),
       );
       expect(stored.length === i + 1 || stored.length === i + 2).toBe(true);
       if (stored.length === i + 2) expect(stored[i + 1]!.questionId).toBe(next!.id);
       const winner = stored[i]!.answerId;
-      expect(['a', 'b']).toContain(winner);
+      expect([x, y]).toContain(winner);
       // Every copy of the tap on question i succeeds (no refusal for a double tap).
-      for (const s of settled.slice(0, 8)) expect(s.status).toBe('fulfilled');
+      for (const r of settled.slice(0, 8)) expect(r.status).toBe('fulfilled');
     }
   });
 });
 
 describe('the join (ADR 0011, 0012): atomic, one character per user, permanent', () => {
-  it('nine concurrent joins naming three factions: one character, one paper, the losers get it or ALREADY_ARRIVED', async () => {
+  it('nine concurrent joins: one character of the platform’s party, one paper, every join returns it', async () => {
     const { user, caller } = fresh();
     await caller.arrival.start({ avatarId: 'avatar.man-20s' });
-    for (const a of REF) await caller.arrival.answer(a);
-    const joins = FACTIONS.flatMap((f) => [f, f, f]).map((f) =>
-      caller.arrival.join({ factionId: f }).then(
-        (r) => ({ ok: true as const, f, id: r.character.id, faction: r.character.factionId }),
-        (e: unknown) => ({ ok: false as const, f, ...gameData(e) }),
-      ),
-    );
-    const results = await Promise.all(joins);
+    for (const a of answersWith({ 'origin.platform': 'grey' })) await caller.arrival.answer(a);
+    const results = await Promise.all(Array.from({ length: 9 }, () => caller.arrival.join({})));
     const chars = await Character.find({ userId: user.id }).lean();
     expect(chars).toHaveLength(1);
     const winner = chars[0]!;
+    expect(winner.factionId).toBe('alliance');
     expect(await PaperEntry.countDocuments({ characterId: winner._id })).toBe(1);
     const arrival = (await Arrival.findOne({ userId: user.id }).lean())!;
     expect(arrival.completedAt).not.toBeNull();
-    expect(arrival.factionId).toBe(winner.factionId);
+    expect(arrival.factionId).toBe('alliance');
     expect(String(arrival.characterId)).toBe(String(winner._id));
-    for (const r of results) {
-      if (r.f === winner.factionId) {
-        expect(r).toMatchObject({ ok: true, id: winner._id.toHexString(), faction: winner.factionId });
-      } else {
-        expect(r).toMatchObject({
-          ok: false,
-          code: 'CONFLICT',
-          game: { reason: 'ALREADY_ARRIVED', factionId: winner.factionId },
-        });
-      }
-    }
+    for (const r of results) expect(r.character.id).toBe(winner._id.toHexString());
     // After the join, the origin is closed and the face is on the character.
     expect(await refusal(caller.arrival.answer(REF[0]!))).toMatchObject({
       game: { reason: 'ALREADY_ARRIVED' },
@@ -318,23 +318,25 @@ describe('the join (ADR 0011, 0012): atomic, one character per user, permanent',
     const again = await caller.arrival.start({ avatarId: 'avatar.woman-40s' });
     expect(again.phase).toBe('arrived');
     expect((await Arrival.findOne({ userId: user.id }).lean())!.avatarId).toBe('avatar.man-20s');
+    // Review 4 (§7.5): the landing is the HQ with the favour.
     expect((await caller.arrival.get()).landing).toEqual({
-      cityId: winner.homeCityId,
-      locationId: content.city(winner.homeCityId)!.locations[0]!.id,
+      cityId: 'ashford',
+      locationId: 'ashford.assembly-rooms',
+      actionId: 'ashford.assembly-rooms.favour',
     });
   });
 
   it('is atomic: a failure while printing the welcome edition leaves no character, no paper and an open arrival; a retry then works', async () => {
     const { user, caller } = fresh();
     await caller.arrival.start({ avatarId: 'avatar.man-20s' });
-    for (const a of REF) await caller.arrival.answer(a);
+    for (const a of originAnswers('vanguard')) await caller.arrival.answer(a);
     const spy = vi.spyOn(PaperEntry, 'create').mockRejectedValueOnce(new Error('QA: the disk is full'));
-    await expect(caller.arrival.join({ factionId: 'vanguard' })).rejects.toThrow(/QA: the disk is full/);
+    await expect(caller.arrival.join({})).rejects.toThrow(/QA: the disk is full/);
     expect(spy).toHaveBeenCalled();
     expect(await Character.countDocuments({ userId: user.id })).toBe(0);
     expect((await Arrival.findOne({ userId: user.id }).lean())!.completedAt).toBeNull();
     spy.mockRestore();
-    const r = await caller.arrival.join({ factionId: 'vanguard' });
+    const r = await caller.arrival.join({});
     expect(r.character.factionId).toBe('vanguard');
     expect(
       await PaperEntry.countDocuments({ characterId: (await Character.findOne({ userId: user.id }))!._id }),
@@ -344,18 +346,18 @@ describe('the join (ADR 0011, 0012): atomic, one character per user, permanent',
   it('is atomic: a failure while closing the arrival rolls back the character and the paper', async () => {
     const { user, caller } = fresh();
     await caller.arrival.start({ avatarId: 'avatar.man-20s' });
-    for (const a of REF) await caller.arrival.answer(a);
+    for (const a of originAnswers('alliance')) await caller.arrival.answer(a);
     const papersBefore = await PaperEntry.countDocuments({});
     const spy = vi.spyOn(Arrival, 'updateOne').mockRejectedValueOnce(new Error('QA: primary stepped down'));
-    await expect(caller.arrival.join({ factionId: 'alliance' })).rejects.toThrow(/QA: primary stepped down/);
+    await expect(caller.arrival.join({})).rejects.toThrow(/QA: primary stepped down/);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(await Character.countDocuments({ userId: user.id })).toBe(0);
     expect(await PaperEntry.countDocuments({})).toBe(papersBefore);
     vi.restoreAllMocks();
-    expect((await caller.arrival.join({ factionId: 'alliance' })).character.homeCityId).toBe('ashford');
+    expect((await caller.arrival.join({})).character.homeCityId).toBe('ashford');
   });
 
-  it('the new character is settled today in one write: version 0, the welcome set, the first edition, landing on pin 1', async () => {
+  it('the new character is settled today in one write: version 0, the welcome set, the first edition, landing on the favour', async () => {
     const { user, caller } = fresh();
     const r = await arrive(caller, { factionId: 'vanguard' });
     const doc = (await Character.findOne({ userId: user.id }).lean())!;
@@ -368,13 +370,18 @@ describe('the join (ADR 0011, 0012): atomic, one character per user, permanent',
     });
     expect(doc.orders.items.map((i) => [i.templateId, i.variant, i.target, i.progress])).toEqual([
       ['dir.v.guard-change', 'main', 2, 0],
-      ['dir.v.report', 'main', 1, 0],
+      // Review 4 (answers §2.6): slot B is the favour from the platform.
+      ['dir.v.welcome-b', 'main', 1, 0],
       // Review 1 (§13.7): "Take a job at {place}" is its own welcome-only template (no noJob variant).
       ['dir.v.take-a-job', 'main', 1, 0],
     ]);
     const paper = await PaperEntry.findOne({ characterId: doc._id }).lean();
     expect(paper).toMatchObject({ day: dayKey(T0), firstEdition: true, cityId: 'duskwall' });
-    expect(r.landing).toEqual({ cityId: 'duskwall', locationId: 'duskwall.garrison-gate' });
+    expect(r.landing).toEqual({
+      cityId: 'duskwall',
+      locationId: 'duskwall.beacon-house',
+      actionId: 'duskwall.beacon-house.favour',
+    });
   });
 });
 
@@ -385,76 +392,50 @@ describe('the kit and worn CHA (GDD §8.2, §21.4, ADR 0014)', () => {
     alliance: ['outfit.worn-overcoat', 'Worn wool overcoat'],
   };
 
-  it.each(FACTIONS.flatMap((f) => (['a', 'b', 'c'] as const).map((coat) => [f, coat] as const)))(
-    '%s, coat answer %s: inventory, what is worn, worn CHA, Iron, keepsakes and the party card',
-    async (f, coat) => {
+  it.each(FACTIONS.flatMap((f) => (['ward-book', 'letter', 'marker'] as const).map((lining) => [f, lining] as const)))(
+    '%s, lining %s: inventory, his coat worn, worn CHA 5, no Iron, no keepsake and the party card',
+    async (f, lining) => {
       const { user, caller } = fresh();
-      await arrive(caller, { factionId: f, answers: answersWith({ 'origin.coat': coat }) });
+      await arrive(caller, { factionId: f, answers: answersWith({ 'origin.lining': lining }, f) });
       const me = await caller.character.me();
       const doc = (await Character.findOne({ userId: user.id }).lean())!;
-      const [outfitId, outfitName] = outfits[f];
+      const [outfitId] = outfits[f];
       const inv = doc.inventory.map((e) => [e.itemId, e.source]);
       const worn = doc.inventory.find((e) => e.uid === doc.equipment.clothing)!.itemId;
       const card = doc.inventory.find((e) => e.uid === doc.equipment.document)!.itemId;
       expect(card).toBe('doc.party-card');
-      if (coat === 'b') {
-        expect(inv).toEqual([
-          [outfitId, 'kit'],
-          ['doc.party-card', 'kit'],
-        ]);
-        expect(worn).toBe(outfitId);
-        expect(me).toMatchObject({
-          iron: 150,
-          chaBase: 0,
-          stats: { cha: 2 },
-          wearing: { name: outfitName, cha: 2 },
-        });
-        expect(me.keepsakes).toEqual([]);
-      } else {
-        const coatId = coat === 'a' ? 'outfit.fathers-coat' : 'outfit.fathers-coat-promised';
-        expect(inv).toEqual([
-          [outfitId, 'kit'],
-          ['doc.party-card', 'kit'],
-          [coatId, 'origin'],
-        ]);
-        expect(worn).toBe(coatId);
-        expect(me).toMatchObject({
-          iron: 0,
-          chaBase: coat === 'c' ? 1 : 0,
-          stats: { cha: coat === 'c' ? 6 : 5 },
-          wearing: { name: "Your father's coat", cha: 5 },
-        });
-        expect(me.keepsakes.map((k) => k.itemId)).toEqual(
-          coat === 'c' ? ['outfit.fathers-coat-promised'] : [],
-        );
-      }
+      expect(inv).toEqual([
+        [outfitId, 'kit'],
+        ['doc.party-card', 'kit'],
+        ['outfit.fathers-coat', 'origin'],
+      ]);
+      expect(worn).toBe('outfit.fathers-coat');
+      expect(me).toMatchObject({
+        iron: 0,
+        chaBase: 0,
+        stats: { cha: 5 },
+        wearing: { name: "Your father's coat", cha: 5 },
+      });
+      expect(me.keepsakes).toEqual([]);
       expect(me.partyCard).toMatchObject({
         factionName: content.faction(f).name,
         rankTitle: content.faction(f).rankTitles[0],
       });
       const paper = await caller.paper.today();
-      expect(paper.desk.wearing).toEqual(
-        coat === 'b' ? { name: outfitName, cha: 2 } : { name: "Your father's coat", cha: 5 },
-      );
+      expect(paper.desk.wearing).toEqual({ name: "Your father's coat", cha: 5 });
     },
   );
 
   it('worn CHA is the CHA of every CHA check: previews, a real CHA+INT attempt and a chapter approach', async () => {
-    // Alliance: library · watched · read people · the promised coat · Settle His Debts · Truth.
+    // Review 4: Alliance (Grey) · books · the marker (Settle His Debts): STR 6, INT 14, his coat CHA 5.
     const { caller } = fresh();
     await arrive(caller, {
       factionId: 'alliance',
-      answers: answersWith({
-        'origin.talent': 'c',
-        'origin.coat': 'c',
-        'origin.promise': 'b',
-        'origin.wish': 'c',
-      }),
+      answers: answersWith({ 'origin.lining': 'marker' }, 'alliance'),
     });
     const me = await caller.character.me();
-    // CHA base: read people 1 + promised coat 1 = 2; worn: 2 + the coat's 5 = 7. INT 5+3+2+3+3 = 16.
-    expect(me.stats).toEqual({ str: 5, int: 16, agi: 5, cha: 7 });
-    expect(me.fxp).toBe(50);
+    expect(me.stats).toEqual({ str: 6, int: 14, agi: 5, cha: 5 });
+    expect(me.fxp).toBe(0);
     const city = await caller.city.get({ cityId: 'ashford' });
     const difficulty = tier1Difficulty('home');
     let chaChecks = 0;
@@ -481,17 +462,17 @@ describe('the kit and worn CHA (GDD §8.2, §21.4, ADR 0014)', () => {
       times: 1,
       idempotencyKey: randomUUID(),
     });
-    // (7 + 16) / 2 = 11.5 → 50 + 4 × 3.5 = 64 %, and +10 % on the welcome day (review 1, §8.4).
-    expect(r.attempts[0]!.check.chance).toBe(74);
+    // (5 + 14) / 2 = 9.5 → 50 + 4 × 1.5 = 56 %, and +10 % on the welcome day (review 1, §8.4).
+    expect(r.attempts[0]!.check.chance).toBe(66);
     expect(JSON.stringify(r.attempts[0]!.check)).toMatch(/"cha"/);
     await caller.ambition.choose({ chapter: 1, choiceId: 'ask' });
     const amb = await caller.ambition.get();
-    // Settle His Debts: CHA+STR (7 + 5) / 2 = 6 → 42 %; INT 16 → 82 %. Review 1 (§8.4, §17.1): +10 %
-    // on the welcome day, and Legwork on the best stat (INT 16).
+    // Settle His Debts: CHA+STR (5 + 6) / 2 = 5.5 → 40 %; INT 14 → 74 %. Review 1 (§8.4, §17.1): +10 %
+    // on the welcome day, and Legwork on the best stat (INT 14).
     expect(amb.screen?.approaches.map((a) => [a.id, a.check.chance])).toEqual([
-      ['date', 52],
-      ['read', 92],
-      ['legwork', 92],
+      ['date', 50],
+      ['read', 84],
+      ['legwork', 84],
     ]);
   });
 });
@@ -503,7 +484,7 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
     const { user, caller, clock } = fresh('Ida Brenner', opts.clock);
     await arrive(caller, {
       factionId: opts.factionId ?? 'collective',
-      answers: answersWith({ 'origin.promise': opts.promise ?? 'c' }),
+      answers: answersWith({ 'origin.lining': LINING[opts.promise ?? 'c'] }, opts.factionId ?? 'collective'),
     });
     const amb = await caller.ambition.get();
     const choice = amb.screen!.choices[0]!.id;
@@ -624,7 +605,7 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
       {
         spec,
         approachId: 'sort',
-        values: { str: 10, int: 12, agi: 5, cha: 2 },
+        values: { str: 8, int: 12, agi: 5, cha: 5 },
         energy: { value: 100, rested: 0, updatedAt: T0 },
         now: T0,
         // Review 1 (§8.4): played on the welcome day, so the First day row is part of the check.

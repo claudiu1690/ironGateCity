@@ -579,6 +579,29 @@ export function parseContent(raw: unknown): Content {
     }
   }
 
+  // Review 4 (ADR 0073, tech design §4.1): a one-off welcome ticket (the favour) is a council
+  // session at a party HQ, matched by exactly one `use: 'welcome'` template of that party, which is
+  // that party's welcome slot B.
+  for (const [actionId, hit] of actionById) {
+    const a = hit.action;
+    if (!isCheckedAction(a) || a.use !== 'welcome') continue;
+    const loc = hit.location;
+    const party = loc?.factionId ?? (loc?.kind === 'faction-hq' ? hit.city.homeFactionId : undefined);
+    if (loc?.kind !== 'faction-hq' || !party) {
+      problems.push(`action "${actionId}": a welcome ticket must be at a party HQ`);
+      continue;
+    }
+    if (a.type !== 'council') problems.push(`action "${actionId}": a welcome ticket must be a council session`);
+    const matching = content.orderTemplates.filter(
+      (t) => t.use === 'welcome' && (t.match.actionIds ?? []).includes(actionId),
+    );
+    const faction = content.factions.find((f) => f.id === party);
+    if (matching.length !== 1 || matching[0]!.factionId !== party || faction?.welcomeOrders.B !== matching[0]!.id)
+      problems.push(
+        `action "${actionId}": a welcome ticket needs exactly one welcome template of ${party}, its welcomeOrders.B`,
+      );
+  }
+
   // Story texts (tech design §4.3, §4.4): 240 characters, 4 sentences, story placeholders only.
   const checkStory = (where: string, text: string) => {
     if (text.length > OUTCOME_TEXT_MAX_CHARS)
@@ -590,22 +613,23 @@ export function parseContent(raw: unknown): Content {
     }
   };
 
-  // The origin.
+  // The origin (review 4: *The Last Train In*, ADR 0073, tech design §4.1).
   const ambitionIds = new Set(content.ambitions.map((a) => a.id));
   const questions = content.origin.steps.flatMap((s) => s.questions);
   content.origin.steps.forEach((s, i) => {
     unique('origin step', s.id);
     needAsset(`origin.steps[${i}].art`, s.art, 'scene');
-    needAsset(`origin.steps[${i}].portrait`, s.portrait, 'portrait');
+    if (s.portrait !== null && s.portrait !== 'helper')
+      needAsset(`origin.steps[${i}].portrait`, s.portrait, 'portrait');
     checkStory(`origin.steps[${i}].narrative`, s.narrative);
+    checkStory(`origin.steps[${i}].kicker`, s.kicker);
   });
-  needAsset('origin.street.art', content.origin.street.art, 'scene');
-  checkStory('origin.street.narrative', content.origin.street.narrative);
   for (const q of questions) {
     unique('origin question', q.id);
     const ids = new Set(q.answers.map((a) => a.id));
     if (ids.size !== q.answers.length) problems.push(`origin question "${q.id}" has duplicate answer ids`);
     for (const a of q.answers) {
+      if (a.portrait) needAsset(`origin "${q.id}" ${a.id}.portrait`, a.portrait, 'portrait');
       for (const e of a.effects) {
         if (e.kind === 'wear') needItem(`origin "${q.id}" ${a.id}`, e.itemId, 'clothing');
         if (e.kind === 'ambition' && !ambitionIds.has(e.ambitionId))
@@ -613,25 +637,54 @@ export function parseContent(raw: unknown): Content {
       }
     }
   }
-  const promise = questions.find((q) => q.answers.every((a) => a.effects.some((e) => e.kind === 'ambition')));
-  const promised = promise?.answers.flatMap((a) => a.effects.filter((e) => e.kind === 'ambition')) ?? [];
-  if (
-    !promise ||
-    promised.length !== 3 ||
-    new Set(promised.map((e) => (e.kind === 'ambition' ? e.ambitionId : ''))).size !== 3
-  ) {
-    problems.push(
-      'origin: one question must give each answer exactly one Ambition, naming three different Ambitions',
-    );
-  } else if (content.origin.steps[2].questions[0].id !== promise.id) {
-    problems.push("origin: the promise (the Ambition question) must be step 3's first question");
+  const [platform, suitcase, lining] = [0, 1, 2].map((i) => content.origin.steps[i as 0 | 1 | 2].questions[0]) as [
+    (typeof questions)[number],
+    (typeof questions)[number],
+    (typeof questions)[number],
+  ];
+  // Beat 1: one `faction` effect per answer, three distinct parties, each person that party's
+  // secretary; each row has a portrait, two lines and a confirm.
+  const parties = new Set<string>();
+  for (const a of platform.answers) {
+    const fx = a.effects.filter((e) => e.kind === 'faction');
+    if (fx.length !== 1 || a.effects.length !== 1) {
+      problems.push(`origin "${platform.id}" ${a.id}: needs exactly one faction effect and nothing else`);
+      continue;
+    }
+    const f = fx[0]!;
+    if (f.kind !== 'faction') continue;
+    parties.add(f.factionId);
+    const faction = content.factions.find((x) => x.id === f.factionId);
+    if (faction && faction.secretary.npcId !== f.person)
+      problems.push(`origin "${platform.id}" ${a.id}: "${f.person}" is not the ${f.factionId} secretary`);
+    if (!npcById.get(f.person)?.pronoun)
+      problems.push(`origin "${platform.id}" ${a.id}: the person "${f.person}" needs a pronoun ({helperPronoun})`);
+    if (!a.portrait || !a.lines || !a.confirm)
+      problems.push(`origin "${platform.id}" ${a.id}: a platform row needs a portrait, two lines and a confirm`);
   }
-  const wishes = questions.find((q) => q.answers.every((a) => a.effects.some((e) => e.kind === 'wish')));
-  const wished = new Set(
-    wishes?.answers.flatMap((a) => a.effects.flatMap((e) => (e.kind === 'wish' ? [e.factionId] : []))) ?? [],
-  );
-  if (!wishes || wished.size !== FACTION_IDS.length)
-    problems.push('origin: one question must carry a wish for each faction');
+  if (parties.size !== FACTION_IDS.length)
+    problems.push('origin: the platform must offer each party once (one faction effect per answer)');
+  for (const q of [suitcase, lining]) {
+    if (q.answers.some((a) => a.effects.some((e) => e.kind === 'faction')))
+      problems.push(`origin "${q.id}": only the platform carries a faction`);
+  }
+  // Beat 2: one +6 and one +1 on two different stats.
+  for (const a of suitcase.answers) {
+    const st = a.effects.flatMap((e) => (e.kind === 'stat' ? [e] : []));
+    const values = st.map((e) => e.value).sort((x, y) => x - y);
+    if (st.length !== a.effects.length || values.join() !== '1,6' || new Set(st.map((e) => e.stat)).size !== 2)
+      problems.push(`origin "${suitcase.id}" ${a.id}: needs +6 to one stat and +1 to another, nothing else`);
+  }
+  // Beat 3: one Ambition each (three different), and his coat on everyone.
+  const promised = new Set<string>();
+  for (const a of lining.answers) {
+    const amb = a.effects.flatMap((e) => (e.kind === 'ambition' ? [e.ambitionId] : []));
+    const coat = a.effects.filter((e) => e.kind === 'wear' && e.itemId === 'outfit.fathers-coat');
+    if (amb.length !== 1 || coat.length !== 1 || a.effects.length !== 2)
+      problems.push(`origin "${lining.id}" ${a.id}: needs one Ambition and outfit.fathers-coat, nothing else`);
+    amb.forEach((x) => promised.add(x));
+  }
+  if (promised.size !== 3) problems.push('origin: the lining must name three different Ambitions');
   content.origin.reference.forEach((r, i) => {
     const q = questions[i];
     if (!q || q.id !== r.questionId) problems.push(`origin.reference[${i}] must answer "${q?.id}" in order`);

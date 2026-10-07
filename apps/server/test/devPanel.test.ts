@@ -323,6 +323,9 @@ describe('dev panel, slice 4 (tech design §8.6–§8.7)', () => {
     });
     cookie = cookieOf(signUp.headers['set-cookie']);
     await arriveOverHttp(app, cookie);
+    // Review 4 (GDD §7.1): a new character starts with no Iron (the refused coat's 150 is gone); the
+    // fare is paid from the wage in play, here set directly.
+    await Character.updateOne({ name: 'Slice Four' }, { $set: { iron: 150 } });
   });
   afterAll(async () => {
     await app.close();

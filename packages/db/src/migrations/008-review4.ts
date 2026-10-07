@@ -1,4 +1,5 @@
 import type { Content } from '@irongate/content';
+import { Arrival } from '../models/arrival';
 import { Character } from '../models/character';
 import { Journey } from '../models/journey';
 
@@ -28,14 +29,19 @@ export type Review4Step = 'resetOldDrafts' | 'cardAtForOpenJourneys' | 'cellsNow
 
 export type Review4Counts = Record<Review4Step, StepCounts>;
 
-const nothing = (): StepCounts => ({ matched: 0, modified: 0 });
-
 /**
- * Phase 8 (the prologue, ADR 0073): a draft part-way through the old six questions starts again at the
- * platform; its face and name are kept. Not filled yet: the old questions are still the live ones.
+ * Phase 8 (the prologue, ADR 0073): a draft part-way through the old six questions (an answer to a
+ * question that is no longer in the origin) starts again at the platform; its face and name are
+ * kept. A draft already on the new beats, an empty one, or a completed one is left alone, so a second
+ * run matches nothing.
  */
-export async function resetOldDrafts(_content: Pick<Content, 'origin'>): Promise<StepCounts> {
-  return nothing();
+export async function resetOldDrafts(content: Pick<Content, 'origin'>): Promise<StepCounts> {
+  const live = content.origin.steps.flatMap((s) => s.questions.map((q) => q.id));
+  const r = await Arrival.updateMany(
+    { completedAt: null, 'answers.0': { $exists: true }, 'answers.questionId': { $nin: live } },
+    { $set: { answers: [] } },
+  );
+  return { matched: r.matchedCount, modified: r.modifiedCount };
 }
 
 /**

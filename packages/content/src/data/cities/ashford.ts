@@ -137,6 +137,8 @@ export const ashford: City = {
     {
       id: 'ashford.assembly-rooms',
       name: 'Assembly Rooms',
+      // Review 4: the welcome deck's {place} (answers §2.6: *at the Union Hall*).
+      ref: 'the Assembly Rooms',
       kind: 'faction-hq',
       // Slice 4 (design §4.3): an HQ's tickets are for its own faction's members.
       factionId: 'alliance',
@@ -146,6 +148,29 @@ export const ashford: City = {
       map: { x: 0.69, y: 0.27 },
       quarterId: 'ashford.college',
       actions: [
+        {
+          // Review 4 (answers §2.6, §29.2; ADR 0073): the favour from the platform, the first action.
+          // Slot B of the welcome set; offered only while that order is open, once only.
+          id: 'ashford.assembly-rooms.favour',
+          name: 'Witness the signature',
+          tier: 1,
+          type: 'council',
+          stats: ['best'],
+          energy: 10,
+          givesFxp: true,
+          givesOpinion: false,
+          use: 'welcome',
+          text: {
+            success: {
+              headline: "\"That'll hold\"",
+              body: "The tenant signs, you sign, Grey blots it and holds it to the light. \"That'll hold.\" The reading room has your name on a tenancy now, which is how the Rooms start people.",
+            },
+            partial: {
+              headline: 'The second copy counts',
+              body: "The tenant is late and nervous and signs on the wrong line; the second copy is the one that counts. Grey files it without comment and writes your name in the Rooms' book.",
+            },
+          },
+        },
         {
           id: 'ashford.assembly-rooms.committee',
           name: 'Go to the meeting',

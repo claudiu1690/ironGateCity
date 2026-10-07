@@ -24,7 +24,7 @@ export const factions: Faction[] = [
     // Review 1 (answers §2): slot A by best trained stat; the committee; Take a job.
     welcomeOrders: {
       A: { str: 'dir.v.guard-change', int: 'dir.v.w.ration-queue', agi: 'dir.v.w.leaflets-market' },
-      B: 'dir.v.report',
+      B: 'dir.v.welcome-b',
       C: 'dir.v.take-a-job',
     },
     card: {
@@ -58,7 +58,7 @@ export const factions: Faction[] = [
     kit: { outfit: 'outfit.mill-coat', card: 'doc.party-card' },
     welcomeOrders: {
       A: { str: 'dir.noon-break', int: 'dir.shift-change', agi: 'dir.w.leaflets-market-row' },
-      B: 'dir.report',
+      B: 'dir.welcome-b',
       C: 'dir.take-a-job',
     },
     card: {
@@ -97,7 +97,7 @@ export const factions: Faction[] = [
     kit: { outfit: 'outfit.worn-overcoat', card: 'doc.party-card' },
     welcomeOrders: {
       A: { str: 'dir.a.w.bills', int: 'dir.a.print-room', agi: 'dir.a.w.evening-run' },
-      B: 'dir.a.report',
+      B: 'dir.a.welcome-b',
       C: 'dir.a.take-a-job',
     },
     card: {

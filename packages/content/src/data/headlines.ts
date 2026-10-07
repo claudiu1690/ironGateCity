@@ -384,7 +384,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Coalport',
-    deck: "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.",
+    deck: "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Holm's parcel wants delivering at {place}; start there.",
   },
   {
     id: 'hl.arrival',
@@ -568,7 +568,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Duskwall',
-    deck: "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.",
+    deck: "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Stahl's bundle goes out at {place}; start there.",
   },
   {
     id: 'hl.v.arrival',
@@ -747,7 +747,7 @@ export const headlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'firstEdition' }],
     headline: 'Welcome to Ashford',
-    deck: "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.",
+    deck: "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Grey's signature wants a witness at {place}; start there.",
   },
   {
     id: 'hl.a.arrival',

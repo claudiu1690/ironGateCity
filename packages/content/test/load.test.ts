@@ -5,6 +5,7 @@ import {
   copy,
   getContent,
   isCheckedAction,
+  isWelcomeAction,
   loadContent,
   parseContent,
   rawContent,
@@ -22,7 +23,8 @@ describe('the real content', () => {
   // Slice 5 adds the Harbour (design §2.3); the slice-1 counts are the Mill's. Review 4 adds the
   // Town Hall (ADR 0077), checked in review4.hall.test.ts.
   const mill = city.locations.filter((l) => l.quarterId === 'coalport.mill' && l.kind !== 'town-hall');
-  const actions = mill.flatMap((l) => l.actions);
+  // Review 4 (ADR 0073): the favour from the platform is checked in review4.prologue.test.ts.
+  const actions = mill.flatMap((l) => l.actions).filter((a) => !isWelcomeAction(a));
 
   it('validates and indexes', () => {
     expect(content.factions.map((f) => f.id)).toEqual(['vanguard', 'collective', 'alliance']);
@@ -124,13 +126,11 @@ describe('the real content', () => {
   });
 
   it('names the reference recruit in the origin (§8.5; startingCharacter is gone, ADR 0011)', () => {
+    // Review 4 (GDD §8.5): helped Holm · books · his ward book.
     expect(content.origin.reference.map((r) => `${r.questionId}:${r.answerId}`)).toEqual([
-      'origin.summer:c',
-      'origin.trouble:c',
-      'origin.talent:b',
-      'origin.coat:b',
-      'origin.promise:c',
-      'origin.wish:b',
+      'origin.platform:holm',
+      'origin.suitcase:books',
+      'origin.lining:ward-book',
     ]);
   });
 

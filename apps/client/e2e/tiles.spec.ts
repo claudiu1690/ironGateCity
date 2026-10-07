@@ -104,7 +104,9 @@ test.describe('the map from tiles', () => {
     const rest = await tileState(page);
     const before = seen.length;
     await markPins(page);
-    await page.getByRole('button', { name: '3. Union Hall' }).click();
+    // Review 4: the welcome landing zoomed into the Union Hall (the favour), so its closer tiles are
+    // fetched already: zoom into a place across the map instead.
+    await page.getByRole('button', { name: '5. Harbour Quays' }).click();
     await expect(map).toHaveAttribute('data-zoomed', 'true');
     await expect(map).toHaveAttribute('data-moving', 'false');
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -121,7 +123,7 @@ test.describe('the map from tiles', () => {
     const map = page.getByTestId('city-map');
     await expect(map).toHaveAttribute('data-art', 'still', { timeout: 2_000 });
     await expect(page.getByTestId('map-layer').locator('picture img')).toBeVisible();
-    await expect(page.getByRole('dialog')).toBeVisible(); // the welcome landing still zooms into pin 1
+    await expect(page.getByRole('dialog')).toBeVisible(); // the welcome landing still zooms into a pin (review 4: the HQ)
     await page
       .getByRole('dialog')
       .getByRole('button', { name: /^Close/ })

@@ -645,16 +645,19 @@ export const copy = {
   /** Review 4 #16: nothing invites the player to close the game. */
   storyWaits: 'This waits for you',
   storyProgress: (step: number, of: number) => `Step ${step} of ${of}`,
-  hisWish: (fxp: number) => `His wish · +${fxp} Party XP`,
-  joinFaction: (name: string, city: string) => `Join the ${name} · take the train to ${city}`,
+  /**
+   * Review 4 (ADR 0073): the platform's confirm before a row is chosen (the row's own confirm, *Help
+   * Holm · the six o'clock to Coalport*, is content), and the line while the join is sent.
+   */
+  arrival: {
+    chooseSomeone: 'Choose whom to help',
+    boarding: "The six o'clock is boarding…",
+  },
   /** "+2 Strength, +1 Intelligence". */
   statBonus: (bonus: Partial<Record<'str' | 'int' | 'agi', number>>) =>
     (Object.entries(bonus) as Array<['str' | 'int' | 'agi', number]>)
       .map(([stat, n]) => `+${n} ${STAT_NAMES[stat]}`)
       .join(', '),
-  startsIn: (city: string) => `Starts in ${city}`,
-  /** The article travels with the content string: "Their event: the General Strike". */
-  theirEvent: (name: string) => `Their event: ${name}`,
   letterReady: (chapter: number, energy: number) => `Chapter ${chapter} is ready · ${energy} Energy`,
   letterMidway: 'waiting for you',
   wearing: (name: string, cha: number) => `Wearing: ${name} · Charisma ${cha}`,

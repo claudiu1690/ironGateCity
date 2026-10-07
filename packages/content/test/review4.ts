@@ -75,3 +75,29 @@ export const REVIEW4_REWORDED: Readonly<Record<string, string>> = {
 
 /** A design string as review 4 words it (unchanged when the review left it alone). */
 export const reworded = (s: string): string => REVIEW4_REWORDED[s] ?? s;
+
+/**
+ * Review 4 #2 (answers §2.6, ADR 0073): the welcome deck named slot A's place (*Spend it at {place}
+ * first.*); it now names the favour from the platform and the HQ. Stahl's line is shortened to keep
+ * the printed deck within 200 (*goes out at Beacon House*, the developer's words for the designer).
+ */
+export const REVIEW4_WELCOME_DECKS: Readonly<Record<string, string>> = {
+  "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.":
+    "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Holm's parcel wants delivering at {place}; start there.",
+  "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.":
+    "Three orders from Organiser Stahl below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Stahl's bundle goes out at {place}; start there.",
+  "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Spend it at {place} first.":
+    "Three orders from Mr Grey below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Grey's signature wants a witness at {place}; start there.",
+};
+
+/**
+ * Review 4 #2 (answers §2.6): two favour texts reworded for the vocabulary checks, for the designer
+ * to confirm. *in front of* is kept off mission and place text (it reads as a front), and *leaflets*
+ * are *flyers* in every player-facing string (review 2 §1.13).
+ */
+export const REVIEW4_PROLOGUE_REWORDED: Readonly<Record<string, string>> = {
+  'The parcel is flyers, five hundred of them, and the man on the door counts them in front of you. "She said you\'d come." He writes your name in the book under hers.':
+    'The parcel is flyers, five hundred of them, and the man on the door counts them while you wait. "She said you\'d come." He writes your name in the book under hers.',
+  'Twenty leaflets go into twenty hands on the steps of Beacon House, and the clerk inside takes the rest with a nod that is nearly approval. Your name goes on the list under Thursday.':
+    'Twenty flyers go into twenty hands on the steps of Beacon House, and the clerk inside takes the rest with a nod that is nearly approval. Your name goes on the list under Thursday.',
+};

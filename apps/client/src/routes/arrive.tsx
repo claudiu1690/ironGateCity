@@ -1,6 +1,6 @@
 import { copy } from '@irongate/content/copy';
-import type { ArrivalView, FactionId } from '@irongate/rules';
-import { AvatarPicker, Button, FactionCard, StoryScreen } from '@irongate/ui';
+import type { ArrivalView } from '@irongate/rules';
+import { AvatarPicker, Button, StoryScreen } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
@@ -10,9 +10,11 @@ import { authClient, resetSession } from '../lib/auth';
 import { isNetworkError, trpc } from '../lib/trpc';
 
 /**
- * The arrival (GDD §7.2–7.3, slice-2 tech design §12): the face if sign-up did not save one, the
- * origin's six questions (one tap each, saved at once, so a closed tab resumes at the next
- * question), then the street and the one permanent choice. Full screen: no HUD, no tab bar.
+ * The arrival (GDD §7.1–7.3, slice-2 tech design §12; review 4, ADR 0073): the face if sign-up did
+ * not save one, then *The Last Train In*: three beats, each saved as tapped, so a closed tab resumes
+ * at the next one. Beat 1's rows select and its button commits (whom you help is your party). Once
+ * the three are in (`ready`) the join is sent at once, and again on any later visit (it is idempotent
+ * on the user). Full screen: no HUD, no tab bar.
  */
 export function ArrivePage() {
   const navigate = useNavigate();
@@ -51,12 +53,18 @@ export function ArrivePage() {
 
   const [face, setFace] = useState<string | null>(null);
   const [faceError, setFaceError] = useState<string>();
-  const [faction, setFaction] = useState<FactionId | null>(null);
 
   const phase = arrival.data?.phase;
   useEffect(() => {
     if (phase === 'arrived') void navigate({ to: '/', replace: true });
   }, [phase, navigate]);
+  // Review 4 (ADR 0073): the three beats are in: join at once (a reload or a lost response joins again).
+  const joinNow = join.mutate;
+  useEffect(() => {
+    if (phase !== 'ready' || busy.current) return;
+    busy.current = true;
+    joinNow({});
+  }, [phase, joinNow]);
 
   async function signOut() {
     await authClient.signOut();
@@ -145,45 +153,29 @@ export function ArrivePage() {
     );
   }
 
-  const street = v.street!;
-  const chosen = street.cards.find((c) => c.factionId === faction);
+  // `ready`: the join is on its way (or failed: try again).
   return (
-    <StoryScreen
-      view={street.screen}
-      corner={signOutButton}
-      error={noticeFor(join.error)}
-      footer={
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-ink p-4 text-paper">
+      <p className="label-caps text-[12px] text-dim" role="status" data-testid="arrival-boarding">
+        {copy.arrival.boarding}
+      </p>
+      {join.isError && (
         <>
-          <p className="font-mono text-[12px] text-muted" data-testid="street-note">
-            {street.note}
+          <p role="alert" className="font-body text-[14px]">
+            {noticeFor(join.error)}
           </p>
-          <button
-            type="button"
-            disabled={!chosen || join.isPending}
-            aria-busy={join.isPending || undefined}
+          <Button
+            variant="outline-light"
             onClick={() => {
-              if (!chosen || busy.current) return;
+              if (busy.current) return;
               busy.current = true;
-              join.mutate({ factionId: chosen.factionId });
+              join.mutate({});
             }}
-            className="label-caps flex min-h-14 w-full cursor-pointer items-center justify-center bg-ink px-4 text-center text-[13px] text-paper hover:bg-ink-2 disabled:cursor-not-allowed disabled:bg-faint"
-            data-testid="join"
           >
-            {chosen ? chosen.confirm : 'Choose a party'}
-          </button>
+            Try again
+          </Button>
         </>
-      }
-    >
-      <div className="flex flex-col gap-2" role="radiogroup" aria-label="The parties">
-        {street.cards.map((card) => (
-          <FactionCard
-            key={card.factionId}
-            card={card}
-            selected={card.factionId === faction}
-            onSelect={() => setFaction(card.factionId)}
-          />
-        ))}
-      </div>
-    </StoryScreen>
+      )}
+    </main>
   );
 }

@@ -195,6 +195,29 @@ export const duskwall: City = {
       quarterId: 'duskwall.fortress',
       actions: [
         {
+          // Review 4 (answers §2.6, §29.2; ADR 0073): the favour from the platform, the first action.
+          // Slot B of the welcome set; offered only while that order is open, once only.
+          id: 'duskwall.beacon-house.favour',
+          name: 'Hand out the bundle',
+          tier: 1,
+          type: 'council',
+          stats: ['best'],
+          energy: 10,
+          givesFxp: true,
+          givesOpinion: false,
+          use: 'welcome',
+          text: {
+            success: {
+              headline: 'Twenty hands on the steps',
+              body: 'Twenty flyers go into twenty hands on the steps of Beacon House, and the clerk inside takes the rest with a nod that is nearly approval. Your name goes on the list under Thursday.',
+            },
+            partial: {
+              headline: 'Thursday, twice',
+              body: 'The steps are empty at that hour and most of the bundle goes to the clerk unread. He enters your name in the day book and says Thursday, twice.',
+            },
+          },
+        },
+        {
           id: 'duskwall.beacon-house.committee',
           name: 'Go to the district meeting',
           tier: 1,

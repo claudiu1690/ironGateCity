@@ -86,6 +86,7 @@ import {
   rankTitle,
   standingSuccesses,
   toOrdersState,
+  welcomeOffered,
   wornStats,
 } from './views';
 
@@ -491,7 +492,10 @@ export async function getCityView(
       const barred = barredByRecord(record, { kind: location.kind, ...(hqFaction ? { factionId: hqFaction } : {}) });
       const recordLock = { reason: 'RECORD' as const, need: 0 };
       const tagged = new Set<string>();
-      const actions = location.actions.map((action): ActionView => {
+      // Review 4 (ADR 0073): the favour shows only while its welcome order is open today (×1 only);
+      // otherwise the HQ's sheet is the ordinary one.
+      const offered = location.actions.filter((a) => welcomeOffered(content, c, a, today));
+      const actions = offered.map((action): ActionView => {
         const descriptor: ActionDescriptor = {
           kind: isCheckedAction(action) ? 'checked' : 'training',
           actionId: action.id,
@@ -543,8 +547,8 @@ export async function getCityView(
             kind: 'checked',
             givesFxp: action.givesFxp,
             energy: cost,
-            // Design §11.2: ×1 only on rival ground.
-            energy3: rival ? null : cost * 3,
+            // Design §11.2: ×1 only on rival ground; review 4: a welcome ticket is once only.
+            energy3: rival || action.use === 'welcome' ? null : cost * 3,
             preview: computeCheck({
               stats: action.stats,
               values,

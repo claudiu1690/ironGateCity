@@ -18,19 +18,31 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   page,
 }) => {
   test.setTimeout(120_000);
-  // The reference answers: STR 11 = INT 11, so the tie goes to the Vanguard's STR (answers §2).
+  // Review 4 (GDD §8.5): the Vanguard tuning character (Stahl · tools): STR 14, so slot A is STR's.
   await signUpOnly(page, 'Otto Brandt', 1);
   await arrive(page, { faction: 'vanguard', answers: ANSWERS.reference });
-  await expect(page.getByTestId('headline').first()).toContainText('Spend it at the Fortress Gate first.');
+  await expect(page.getByTestId('headline').first()).toContainText(
+    "Stahl's bundle goes out at Beacon House; start there.",
+  );
   const orders = page.getByTestId('orders').getByTestId('order');
   await expect(orders.nth(0)).toContainText('Talk to the customs men at the Fortress Gate');
-  await expect(orders.nth(1)).toContainText('Go to the district meeting at Beacon House');
+  await expect(orders.nth(1)).toContainText("Hand out Stahl's bundle at Beacon House");
   await expect(orders.nth(2)).toContainText('Take a job at the Fortress Gate');
 
-  // The first landing opens slot A's pin; the ticket names its stat; First day +10 % (62 → 72).
+  // Review 4 (§7.5): the first landing opens the HQ with the favour highlighted.
   await page.getByRole('button', { name: 'To the city' }).click();
-  await expect(page).toHaveURL(/\/city\/duskwall\?loc=duskwall\.garrison-gate/);
+  await expect(page).toHaveURL(/\/city\/duskwall\?loc=duskwall\.beacon-house&act=duskwall\.beacon-house\.favour/);
   let sheet = page.getByRole('dialog');
+  await expect(sheet.getByRole('heading', { name: 'Beacon House' })).toBeVisible();
+  await expect(sheet.getByTestId('ticket-duskwall.beacon-house.favour')).toHaveAttribute('data-highlight', 'true');
+  await sheet.getByRole('button', { name: /^Close/ }).click();
+  // Slot A's pin: the ticket names its stat; First day +10 %.
+  await page
+    .getByTestId('order-pin')
+    .filter({ visible: true })
+    .filter({ hasText: 'Talk to the customs men at' })
+    .click();
+  sheet = page.getByRole('dialog');
   await expect(sheet.getByRole('heading', { name: 'Fortress Gate' })).toBeVisible();
   const gate = sheet.getByTestId('ticket-duskwall.garrison-gate.canvass');
   await expect(gate.getByTestId('ticket-odds')).toHaveText('Good odds · Strength');
@@ -91,14 +103,14 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await expect(page.getByTestId('orders-complete')).toHaveCount(0);
   await sheet.getByRole('button', { name: /^Close/ }).click();
 
-  // The committee checks the best stat (answers §2): "your best, STR 11".
+  // The favour (review 4, answers §2.6), a council session on the best stat: "your best, Strength".
   await page
     .getByTestId('order-pin')
     .filter({ visible: true })
-    .filter({ hasText: 'Go to the district meeting' })
+    .filter({ hasText: "Hand out Stahl's bundle" })
     .click();
   sheet = page.getByRole('dialog');
-  const committee = sheet.getByTestId('ticket-duskwall.beacon-house.committee');
+  const committee = sheet.getByTestId('ticket-duskwall.beacon-house.favour');
   await expect(committee.getByTestId('ticket-odds')).toHaveText('Good odds · your best, Strength');
   await expect(committee).toHaveAttribute('data-highlight', 'true');
   await committee.getByRole('button', { name: /, once, 10 Energy$/ }).click();
