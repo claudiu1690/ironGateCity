@@ -145,10 +145,8 @@ export function selectHeadlines(
     if (picked.length >= PAPER.headlines) break;
     picked.push(t);
   }
-  const ambient = templates.filter((t) => t.group === 'ambient');
-  if (picked.length < PAPER.headlines && ambient.length > 0) {
-    picked.push(ambient[mod(cityDayIndex(day), ambient.length)]!);
-  }
+  const ambient = ambientFor(templates, day);
+  if (picked.length < PAPER.headlines && ambient) picked.push(ambient);
   return picked;
 }
 
@@ -439,4 +437,147 @@ export function mergeHeadlines(
   const ambient = stored.find((h) => h.group === 'ambient');
   if (out.length < PAPER.headlines && ambient) out.push(ambient);
   return out;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Review 4 (docs/tech/review-4.md §5.2, ADR 0074): local editions. The stored edition is always the
+// residence's paper; away from home its local parts are composed at read.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The ambient line the settlement would pick from these templates on this day: the same rotation
+ * `selectHeadlines` uses. Null when the set has no ambient template.
+ */
+export function ambientFor(templates: readonly HeadlineTemplate[], day: DayKey): HeadlineTemplate | null {
+  const ambient = templates.filter((t) => t.group === 'ambient');
+  return ambient.length > 0 ? ambient[mod(cityDayIndex(day), ambient.length)]! : null;
+}
+
+export interface EditionParts {
+  /** Today's stored edition (personal, city and ambient lines, as printed at settlement). */
+  stored: readonly LiveHeadline[];
+  /** The residence's live political and capital lines (ADR 0023). */
+  residenceLive: readonly LiveHeadline[];
+  /** The city the reader is in, when it is not the edition's: its ambient line and its one local line. */
+  local: { ambient: LiveHeadline | null; line: LiveHeadline | null } | null;
+  /** The welcome edition: its stored lines win ties, and it is never composed away. */
+  storedFirst?: boolean;
+}
+
+/**
+ * ADR 0074 §3, §23.1 Q12. At home (or the welcome edition): `mergeHeadlines(stored, residenceLive)`,
+ * exactly as before. Away: the stored ambient line is dropped; personal lines (stored and live, by
+ * priority, live first on a tie) up to PAPER.personalMax; then the one local line; then the
+ * residence's city lines (stored and live, by priority); then the local ambient line; at most
+ * PAPER.headlines.
+ */
+export function composeHeadlines(p: EditionParts): LiveHeadline[] {
+  if (!p.local || p.storedFirst) return mergeHeadlines(p.stored, p.residenceLive, { storedFirst: p.storedFirst });
+  const byGroup = (g: HeadlineGroup) =>
+    [
+      ...p.residenceLive.filter((h) => h.group === g).map((h, i) => ({ h, live: 0, i })),
+      ...p.stored.filter((h) => h.group === g).map((h, i) => ({ h, live: 1, i })),
+    ]
+      .sort((a, b) => a.h.priority - b.h.priority || a.live - b.live || a.i - b.i)
+      .map((x) => x.h);
+  const out = byGroup('personal').slice(0, PAPER.personalMax);
+  if (p.local.line && out.length < PAPER.headlines) out.push(p.local.line);
+  for (const h of byGroup('city')) {
+    if (out.length >= PAPER.headlines) break;
+    out.push(h);
+  }
+  if (out.length < PAPER.headlines && p.local.ambient) out.push(p.local.ambient);
+  return out;
+}
+
+/**
+ * Review 4 (answers §29.1): what the reader's city knows for its neutral local line (`hl.local.*`,
+ * `cityId: '*'`), with its placeholders. `homeShare` and `moraleLost` are null where the city has
+ * no home party (the capital, Clearwater), so the last two templates never match there.
+ */
+export interface LocalFacts {
+  countToday: boolean;
+  phase: CouncilPhase;
+  cycleDay: number;
+  ordinanceFromToday: boolean;
+  /** Points the home party lost to rivals yesterday; null without a home party. */
+  moraleLost: number | null;
+  /** The home party's share of the city, in points; null without a home party. */
+  homeShare: number | null;
+  /** `{city}`, `{faction}`, `{ordinance}`, `{plainLine}`, `{playerSeats}`, `{npcSeats}`, `{lost}`, `{share}`. */
+  vars: Partial<Record<string, string>>;
+  /** Epoch ms of the boundaries `{until}` may name. */
+  until: { nominations: number; polls: number };
+}
+
+function localHolds(c: HeadlineCondition, f: LocalFacts): boolean {
+  switch (c.kind) {
+    case 'countToday':
+      return f.countToday;
+    case 'phaseToday':
+      return f.phase === c.phase && (c.cycleDay === undefined || c.cycleDay === f.cycleDay);
+    case 'ordinanceFromToday':
+      return f.ordinanceFromToday;
+    case 'moraleLostToRivals':
+      return f.moraleLost !== null && f.moraleLost >= c.min;
+    case 'homeShare':
+      return (
+        f.homeShare !== null &&
+        (c.min === undefined || f.homeShare >= c.min) &&
+        (c.max === undefined || f.homeShare < c.max)
+      );
+    default:
+      return false;
+  }
+}
+
+/** The condition kinds a local-line template may use (the loader checks it). */
+export const LOCAL_CONDITION_KINDS = [
+  'countToday',
+  'phaseToday',
+  'ordinanceFromToday',
+  'moraleLostToRivals',
+  'homeShare',
+] as const;
+
+/** The placeholders a local-line template may use (the loader checks it). */
+export const LOCAL_PLACEHOLDERS = [
+  'city',
+  'faction',
+  'ordinance',
+  'plainLine',
+  'playerSeats',
+  'npcSeats',
+  'lost',
+  'share',
+  'until',
+] as const;
+
+/**
+ * Answers §29.1: the one local line of a home-city edition, the first template (by priority, file
+ * order on a tie) whose conditions hold for the city the reader is in, filled; `{until}` is left in
+ * the text beside its epoch ms. Null when none holds (the local ambient line then has the room).
+ */
+export function selectLocalLine(templates: readonly HeadlineTemplate[], f: LocalFacts): LiveHeadline | null {
+  const hit = templates
+    .map((t, idx) => ({ t, idx }))
+    .filter(({ t }) => t.when.every((c) => localHolds(c, f)))
+    .sort((a, b) => a.t.priority - b.t.priority || a.idx - b.idx)[0]?.t;
+  if (!hit) return null;
+  const phase = hit.when.find((c) => c.kind === 'phaseToday');
+  const text = `${hit.headline} ${hit.deck ?? ''}`;
+  const until =
+    text.includes('{until}') && phase?.kind === 'phaseToday'
+      ? phase.phase === 'nominations'
+        ? f.until.nominations
+        : f.until.polls
+      : undefined;
+  return {
+    templateId: hit.id,
+    group: hit.group,
+    priority: hit.priority,
+    headline: capitalise(fillTemplate(hit.headline, f.vars as Record<string, string>)),
+    ...(hit.deck ? { deck: capitalise(fillTemplate(hit.deck, f.vars as Record<string, string>)) } : {}),
+    ...(until !== undefined ? { until } : {}),
+  };
 }

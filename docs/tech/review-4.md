@@ -1537,3 +1537,26 @@ Recorded as each phase lands (T30 completes this section).
 **The known red: `qa.slice3.server` "struck: the deposit comes back exactly once…".**
 
 84. **A real race, fixed.** `settleCityDay` decided "already settled" from a plain read of the city. Under load a concurrent settler's commit can be visible to that (local) read a moment before it is in the majority snapshot that the caller's next transaction reads (`readConcern: snapshot`). The character's settlement then ran on a snapshot without the struck candidate's `deposit: 'due'`, so the deposit came back a day late (never twice: the test's PC check at the next day failed). The read is now at majority (`readConcern('majority')`), so "settled" holds for every transaction that follows. It did not reproduce in 18 loaded runs before the fix (the window is short), and passes in every run since; no test change.
+
+### Phase 7 (T21–T23, 7 Oct 2026)
+
+**T21. Rules.**
+
+85. **`selectLocalLine` and `LocalFacts`** (rules `paper.ts`) pick the one neutral local line of a home-city edition from the six `hl.local.*` templates of answers §29.1 (by priority, file order on a tie). Their conditions are the existing kinds read for the city the reader is in: `countToday`, `phaseToday`, `ordinanceFromToday`, `moraleLostToRivals` and `homeShare` (a settlement kind, so the local lines have their own evaluator rather than `selectPoliticalHeadlines`). `LOCAL_CONDITION_KINDS` and `LOCAL_PLACEHOLDERS` are exported for the loader. `selectHeadlines` now takes its ambient line from `ambientFor`, so the two cannot drift.
+86. **The welcome edition is never composed away** (`storedFirst` short-circuits to `mergeHeadlines`), as §5.2 asks; with only the residence's lines and no local one, the away order is personal → the residence's city lines → the local ambient.
+
+**T22. Content and server.**
+
+87. **The six local lines are content** (`packages/content/src/data/localHeadlines.ts`, word for word from answers §29.1), `cityId: '*'`: `HeadlineTemplate.cityId` accepts `'*'`, and the loader keeps such lines to `hl.local.*` ids, the `city` group, the local conditions and the local placeholders (`{city}`, `{faction}`, `{ordinance}`, `{plainLine}`, `{playerSeats}`, `{npcSeats}`, `{lost}`, `{share}`, `{until}`). No city's `headlinesOf` or `politicalHeadlinesOf` returns them. `{faction}` is the party's short name (*Vanguard Holds Duskwall at 70.0 %*, as the home papers' morale lines); `{playerSeats}` is the seats seated less the NPC seats of the last count.
+88. **The count line needs a stored count**: on a count morning with no counted election behind it (a city bootstrapped this cycle) the count line does not print and the next line takes the slot.
+89. **The capital's local line** is the first of the Herald's lines selected with slice 4's visitor facts (`localEdition.ts`, moved out of `getPaper`), so a reader's first arrival in the capital (*Mara Lenk Arrives in the Capital*) still prints there. The visitor block left `{rank3}` unfilled in *Irongate Council: Candidates Wanted*; it is filled now (the reader's party's Rank 3 title).
+90. **`paperCityFor(content, c, day)` is `paperCityOf(c)`**, the residence city, wherever the character stands.
+91. **`PaperView.issues` keeps its shape** (`{ newThisWeek, settlesAt, rows, more }`; the tech doc's §5.3 sketched an array): the local city's rows come first with `local: true`, then the residence's, then the capital's when it is neither; `more` the rest. On the page the first four rows show as before (each row already names its place, so no extra heading); in a local edition the rows past four join the folded row instead of dropping off the end (at home nothing changes).
+92. **`localElection`** is set whenever the local city has a council (its calendar is always taking names or polling), and never for the residence itself (an edition stored before the change, read at home, prints none). Its Courier line, the developer's words for nominations: *Duskwall elects its council: names go in until Friday 03:00*; for polling *… voting until …* (answers §23.2).
+93. **`JourneyView.arrival.knockOns.heraldVisitor` and `copy.travel.heraldYours` are removed** (§23.1 Q5); the slice 4–5 tests expecting the visitor's Herald now expect their own paper's Irongate edition (GDD §3.3).
+
+**T23. Client.**
+
+94. **The masthead's edition line** is `· Duskwall edition` in Courier under the name (so the masthead reads *The Coalport Clarion · Duskwall edition*), dotted, opening `help.edition`; its button is named *What the Duskwall edition means* (`copy.paper.editionLabel`). `copy.paper` is a new top-level block (`edition`, `editionLabel`, `localElection`).
+95. **The local election's line** sits under the reader's own Election row on the paper (`data-testid="local-election"`), not on the journey's *while you ride* rows.
+96. **E2E**: `rival.spec.ts` reads the masthead in Duskwall (*The Coalport Clarion · Duskwall edition*, the dateline, the local election line) after the arrival.

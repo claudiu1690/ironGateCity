@@ -11,6 +11,8 @@ import {
   isPoliticalCondition,
   isPoliticalTemplate,
   placeholdersIn,
+  LOCAL_CONDITION_KINDS,
+  LOCAL_PLACEHOLDERS,
 } from '@irongate/rules';
 import type {
   ChapterRules,
@@ -31,6 +33,7 @@ import { duskwall } from './data/cities/duskwall';
 import { irongate } from './data/cities/irongate';
 import { factions } from './data/factions';
 import { headlines } from './data/headlines';
+import { localHeadlines } from './data/localHeadlines';
 import { held } from './data/held';
 import { heraldHeadlines } from './data/heraldHeadlines';
 import { issues } from './data/issues';
@@ -91,7 +94,7 @@ export const rawContent: unknown = {
   standingLevels,
   jobs: [...jobs, ...irongateJobs],
   orderTemplates,
-  headlines: [...headlines, ...politicalHeadlines, ...capitalHomeHeadlines, ...heraldHeadlines],
+  headlines: [...headlines, ...politicalHeadlines, ...capitalHomeHeadlines, ...heraldHeadlines, ...localHeadlines],
   ordinances,
   candidates: [...candidates, ...irongateCandidates],
   politics,
@@ -699,6 +702,19 @@ export function parseContent(raw: unknown): Content {
   };
   for (const h of content.headlines) {
     unique('headline', h.id);
+    // Review 4 (answers §29.1): the neutral local lines, read for the city the reader is in.
+    if (h.cityId === '*') {
+      if (!h.id.startsWith('hl.local.')) problems.push(`headline "${h.id}": a '*' line is an hl.local.* line`);
+      if (h.group !== 'city') problems.push(`headline "${h.id}": a local line is a city line`);
+      for (const c of h.when)
+        if (!(LOCAL_CONDITION_KINDS as readonly string[]).includes(c.kind))
+          problems.push(`headline "${h.id}": "${c.kind}" is not a local condition`);
+      for (const p of placeholdersIn(`${h.headline} ${h.deck ?? ''}`))
+        if (!(LOCAL_PLACEHOLDERS as readonly string[]).includes(p))
+          problems.push(`headline "${h.id}": unknown local placeholder {${p}}`);
+      continue;
+    }
+    if (h.id.startsWith('hl.local.')) problems.push(`headline "${h.id}": an hl.local.* line is for any city ('*')`);
     if (!cityById.has(h.cityId)) problems.push(`headline "${h.id}": city "${h.cityId}" is not loaded`);
     if (isPoliticalTemplate(h)) {
       if (!h.when.every(isPoliticalCondition))

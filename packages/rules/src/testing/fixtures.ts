@@ -508,6 +508,8 @@ export const paperViewFixture: PaperView = {
     strapline: 'The voice of the mill and the quays',
     price: '5 marks',
   },
+  edition: null,
+  localElection: null,
   dateline: { weekday: 'Tuesday', date: '29 September', city: 'Coalport' },
   headlines: [
     {

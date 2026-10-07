@@ -287,7 +287,7 @@ export const journeyArrivedFixture: JourneyView = {
     headline: "You're in the capital",
     body: 'The train was on time. Nothing happened, which is rare.',
     cardLine: null,
-    knockOns: { ticket: 20, heraldVisitor: true },
+    knockOns: { ticket: 20 },
     art: { rung: 'map-crop', asset: irongateDay, x: 0.35, y: 0.555 },
     landing: { cityId: 'irongate', quarterId: 'irongate.station-market', locationId: 'irongate.central-station' },
   },

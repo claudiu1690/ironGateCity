@@ -617,7 +617,6 @@ export async function journeyView(
     }
     knockOns = {
       ticket: j.fare?.total ?? 0,
-      heraldVisitor: j.to === capital && residenceCityId(c) !== capital,
       rivalGround: firstRival,
       flags: [
         ...(flags.watched ? (['watched'] as const) : []),

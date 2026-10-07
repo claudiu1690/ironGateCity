@@ -13,7 +13,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { activeMembersFilter, ensurePlaces } from '../src/services/cityDay';
 import {
   jobCityOf,
-  paperCityFor,
+  paperCityOf,
   placesOf,
   residenceCtx,
   residenceOf,
@@ -44,11 +44,12 @@ describe('the seam (pure)', () => {
     expect(residenceCtx({ homeCityId: 'coalport' })).toEqual({ cityId: 'coalport', districtId: null });
     const eastside = { ...home, cityId: 'irongate', districtId: 'irongate.eastside', sinceDay: 20_731 };
     expect(residenceOf({ homeCityId: 'coalport', residence: eastside })).toBe(eastside);
-    expect(paperCityFor(content, { homeCityId: 'coalport', residence: eastside }, 20_732)).toBe('irongate');
-    // A Coalport resident visiting the capital, or on the train to it, reads the Herald.
+    expect(paperCityOf({ homeCityId: 'coalport', residence: eastside })).toBe('irongate');
+    // Review 4 (GDD §3.3, ADR 0074): a Coalport resident in the capital, or on the train to it, reads
+    // the Clarion (its Irongate edition is composed at read), not the Herald.
     const visitor = { homeCityId: 'coalport', residence: home, cityId: 'irongate' };
-    expect(paperCityFor(content, visitor, 20_732)).toBe('irongate');
-    expect(paperCityFor(content, { ...visitor, cityId: 'coalport' }, 20_732)).toBe('coalport');
+    expect(paperCityOf(visitor)).toBe('coalport');
+    expect(paperCityOf({ homeCityId: 'duskwall' })).toBe('duskwall');
   });
 
   it("the residence's council: the home city's for a home resident; the capital's comes with T17", () => {

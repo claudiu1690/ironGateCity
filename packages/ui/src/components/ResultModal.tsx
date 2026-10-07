@@ -365,11 +365,6 @@ function JourneyBody({
             <li className="border-b border-dotted border-faint py-1 font-body text-[12.5px]" data-testid="arrival-ticket">
               {copy.travel.ticket(a.knockOns.ticket)}
             </li>
-            {a.knockOns.heraldVisitor && (
-              <li className="border-b border-dotted border-faint py-1 font-body text-[12.5px]" data-testid="arrival-herald">
-                {copy.travel.heraldYours}
-              </li>
-            )}
             {/* Slice 5 (screens §8.2): rival ground's warning (the first trip), the day's flags, Heat. */}
             {a.knockOns.rivalGround && (
               <li className="border-b border-dotted border-faint py-1 font-body text-[12.5px]" data-testid="arrival-rival">

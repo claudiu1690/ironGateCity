@@ -230,7 +230,8 @@ describe('the arrival (ResultModal kind journey, screens §4)', () => {
     expect(screen.getByTestId('stamp')).toHaveTextContent('Arrived');
     expect(screen.getByTestId('arrival-headline')).toHaveTextContent("You're in the capital");
     expect(screen.getByTestId('arrival-ticket')).toHaveTextContent('−20 Iron · ticket');
-    expect(screen.getByTestId('arrival-herald')).toHaveTextContent("The Herald is your paper while you're here");
+    // Review 4 (ADR 0074, §23.1 Q5): no *the Herald is your paper* line; the masthead's edition says it.
+    expect(screen.queryByTestId('arrival-herald')).toBeNull();
     expect(screen.getByRole('dialog')).toHaveTextContent('Irongate · Station & Market');
     // The unanswered card inside, answerable until Continue.
     expect(screen.getAllByTestId('journey-choice')).toHaveLength(2);

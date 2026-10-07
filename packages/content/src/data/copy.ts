@@ -988,7 +988,6 @@ export const copy = {
     unread: (n: number) => `${n} unread`,
     /** The arrival's knock-ons (screens §4). */
     ticket: (fare: number) => `−${fare} Iron · ticket`,
-    heraldYours: "The Herald is your paper while you're here",
     /** The nation map's pin labels: "Coalport · home · 12 min", "Irongate · 12 min". */
     pinLabel: (name: string, tags: string[]) => [name, ...tags].join(' · '),
     min: (n: number) => `${n} min`,
@@ -1209,6 +1208,19 @@ export const copy = {
         'Two things the town is arguing about this week. Work on them moves opinion half again and scores points for your party; on Sunday night the party with most points owns the Issue, and that changes a number for everyone for a week.',
       ],
     },
+  },
+  /**
+   * Review 4 (answers §23, tech design §5.1): the local edition. The masthead's line under the name
+   * (*· Duskwall edition*, so the masthead reads *The Coalport Clarion · Duskwall edition*), its note's
+   * accessible name, and the local election's Courier line under the reader's own Election row.
+   */
+  paper: {
+    edition: (city: string) => `· ${city} edition`,
+    editionLabel: (city: string) => `What the ${city} edition means`,
+    localElection: (city: string, phase: 'nominations' | 'polling', until: string) =>
+      phase === 'polling'
+        ? `${city} elects its council: voting until ${until}`
+        : `${city} elects its council: names go in until ${until}`,
   },
   /** The Election card in the capital and the result (screens §7.2, §8); `election.registered` is line 1 and 2 of its first state. */
   capitalElection: {

@@ -420,7 +420,7 @@ describe('the arrival on rival ground (screens §8.2)', () => {
       stamp: 'Arrived',
       place: 'Duskwall · rival ground', // Review 4 (ADR 0076): one map, no quarter.
       headline: 'Duskwall',
-      knockOns: { ticket: 20, heraldVisitor: false, rivalGround: true },
+      knockOns: { ticket: 20, rivalGround: true },
       // Review 4 (answers §21.3, ADR 0076): a train lands on the Town Hall's pin.
       landing: { cityId: 'duskwall', locationId: 'duskwall.town-hall' },
     });

@@ -591,7 +591,8 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
 
 export const HeadlineTemplateSchema = z.strictObject({
   id: Id,
-  cityId: Id,
+  /** Review 4 (answers §29.1): `'*'` for the neutral local lines (`hl.local.*`), read for any city. */
+  cityId: Id.or(z.literal('*')),
   group: z.enum(['personal', 'city', 'ambient']),
   /** Lower first. */
   priority: z.number().int().default(0),

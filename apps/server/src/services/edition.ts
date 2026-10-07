@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
-import { paperCityFor, residenceOf } from './residence';
+import { paperCityOf, residenceOf } from './residence';
 import type { CharacterDoc, CityDoc, PaperEntryDoc, StayDoc } from '@irongate/db';
 import {
   HEAT,
@@ -64,8 +64,8 @@ export function buildEdition(i: {
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
-  // Slice 4 (tech design §11.1): the edition's paper (the Herald for a visitor to the capital).
-  const paperCityId = paperCityFor(content, c, today);
+  // Review 4 (ADR 0074): the edition's paper is always the residence's.
+  const paperCityId = paperCityOf(c);
   const homeCity = content.city(paperCityId);
   const homeShare = (i.home?.opinion ?? homeCity?.baselineOpinion)?.[c.factionId] ?? 0;
   const standingLevel = standingView(standingSuccesses(c, paperCityId)).level;

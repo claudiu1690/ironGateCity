@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
 import type { CharacterDoc, StoredResidence } from '@irongate/db';
-import type { DayKey, FactionId, ResidenceCtx } from '@irongate/rules';
+import type { FactionId, ResidenceCtx } from '@irongate/rules';
 import { gameError } from '../gameError';
 
 /**
@@ -93,17 +93,12 @@ export function jobCityOf(content: GameContent, c: Pick<CharacterDoc, 'job'>): s
 }
 
 /**
- * Tech design §11.1 (design §19 Q6): whose paper the edition is: the Herald when it is printed with
- * the character in the capital or on a train to it; otherwise the residence city's.
+ * Review 4 (ADR 0074 §1, answers §23.1): whose paper the edition is: always the residence city's,
+ * wherever the character stands (slice 4's "the Herald for a visitor to the capital" is reversed).
+ * Away from home it is read as a local edition, composed at read (`paperService`, `localEdition`).
  */
-export function paperCityFor(
-  content: GameContent,
-  c: ResidenceSource & Partial<Pick<CharacterDoc, 'cityId' | 'journey'>>,
-  _today: DayKey,
-): string {
-  const capital = content.nation.capitalId;
-  const there = c.journey?.status === 'onTheWay' ? c.journey.to : c.cityId;
-  return there === capital ? capital : residenceCityId(c);
+export function paperCityOf(c: ResidenceSource): string {
+  return residenceCityId(c);
 }
 
 /**

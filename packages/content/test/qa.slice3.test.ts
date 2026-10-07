@@ -3,7 +3,7 @@
  * derives (design §17 Q4), chapter 2's numbers against the GDD text (§17.1), and a slice-3 sweep
  * for war framing and real-world echoes beyond the slice-2 checklist (CLAUDE.md rules 2 and 6).
  */
-import { CAPITAL_PLACEHOLDERS, RISK_PLACEHOLDERS, isPoliticalTemplate, standingView } from '@irongate/rules';
+import { CAPITAL_PLACEHOLDERS, LOCAL_PLACEHOLDERS, RISK_PLACEHOLDERS, isPoliticalTemplate, standingView } from '@irongate/rules';
 import { describe, expect, it } from 'vitest';
 import GDD from '../../../docs/GDD.md?raw';
 import { copy, loadContent } from '../src';
@@ -55,7 +55,8 @@ describe('QA · political copy at its longest (design §8, §17.3)', () => {
 
   it('no text leaves a placeholder the server does not know', () => {
     // Slice 4: the capital's and the Issues' live lines, resolved on the server (tech design §4.3).
-    const known = new Set([...Object.keys(LONGEST), 'ordinanceLine', ...CAPITAL_PLACEHOLDERS, ...RISK_PLACEHOLDERS]);
+    // Review 4: the neutral local lines (`hl.local.*`) fill their own set (answers §29.1; the loader checks it).
+    const known = new Set([...Object.keys(LONGEST), 'ordinanceLine', ...CAPITAL_PLACEHOLDERS, ...RISK_PLACEHOLDERS, ...LOCAL_PLACEHOLDERS]);
     const texts = [
       ...content.headlines.filter(isPoliticalTemplate).map((h) => [h.id, `${h.headline} ${h.deck ?? ''}`]),
       ...Object.entries(content.politics.results).map(([a, t]) => [a, `${t.headline} ${t.body}`]),

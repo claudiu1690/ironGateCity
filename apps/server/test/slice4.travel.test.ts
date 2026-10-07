@@ -166,7 +166,7 @@ describe('arrival (ADR 0025 §4)', () => {
       stamp: 'Arrived',
       place: 'Irongate · Station & Market',
       headline: "You're in the capital",
-      knockOns: { ticket: 20, heraldVisitor: true },
+      knockOns: { ticket: 20 },
       landing: {
         cityId: 'irongate',
         quarterId: 'irongate.station-market',
@@ -340,11 +340,15 @@ describe('the nation map and the visitor (travel.nation, tech design §11.1)', (
     await caller.travel.close({ journeyId: b.journey.id });
     clock.set(at(DAY + 1));
     const paper = await caller.paper.today();
-    expect(paper.paper.name).toBe('The Irongate Herald');
-    // The residence's Election row and the Issues still follow the residence (Coalport first).
+    // Review 4 (GDD §3.3, ADR 0074): the visitor reads their own paper's Irongate edition, not the
+    // Herald (slice 4's rule reversed).
+    expect(paper.paper.name).toBe('The Coalport Clarion');
+    expect(paper.edition).toEqual({ cityId: 'irongate', cityName: 'Irongate' });
+    // The residence's Election row follows the residence; the Issues are the capital's first (local).
     expect(paper.pollingDay?.cityId).toBe('coalport');
-    expect(paper.issues!.rows[0]!.cityId).toBe('coalport');
-    // The first arrival in the capital is news in the Herald.
+    expect(paper.issues!.rows[0]!).toMatchObject({ cityId: 'irongate', local: true });
+    expect(paper.issues!.rows.some((r) => r.cityId === 'coalport' && !r.local)).toBe(true);
+    // The first arrival in the capital is news: the Herald's line is the edition's local line.
     expect(paper.headlines.map((h) => h.headline)).toContain('Mara Lenk Arrives in the Capital');
     expect(dayKey(clock.now())).toBe(DAY + 1);
   });

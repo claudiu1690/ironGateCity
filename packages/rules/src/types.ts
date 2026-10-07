@@ -1188,7 +1188,14 @@ export interface LetterView {
 export interface PaperView {
   day: DayKey;
   firstEdition: boolean;
+  /** The paper's masthead: always the stored edition's (the residence's; ADR 0074). */
   paper: { name: string; shortName: string; strapline: string; price: string };
+  /**
+   * Review 4 (ADR 0074, answers §23.1): away from the edition's city, the city the reader is in (on a
+   * train, the destination): *The Coalport Clarion · Duskwall edition*. Null at home.
+   */
+  edition: { cityId: string; cityName: string } | null;
+  /** The dateline's city is the city the reader is in (review 4). */
   dateline: { weekday: string; date: string; city: string };
   /** `until`: the epoch ms a `{until}` token in the text names (rendered in the player's clock). */
   /** Slice 4 (screens §7.3): `inPrint` for the hero and the reporter's quote (the In Print kicker). */
@@ -1211,6 +1218,11 @@ export interface PaperView {
   letters: LetterView[];
   /** Slice 3: the Polling Day row, live (ADR 0023). */
   pollingDay: PoliticsSummaryView | null;
+  /**
+   * Review 4 (answers §23.2): in a local edition, the local city's election as a Courier line under
+   * the reader's own Election row (not actionable); null at home or without a council.
+   */
+  localElection: { cityName: string; phase: 'nominations' | 'polling'; until: number } | null;
   /** Slice 3: the front page, on the first edition a winner opens during the term. */
   frontPage: FrontPageView | null;
   /** The first edition's "To the city": the first pin's sheet (slice-2 tech design §10). */
@@ -2030,7 +2042,6 @@ export interface JourneyView {
     cardLine: string | null;
     knockOns: {
       ticket: number;
-      heraldVisitor: boolean;
       /** Slice 5 (screens §8.2): on rival ground (the warning once), the day flags, an unanswered card's Heat. */
       rivalGround?: boolean;
       flags?: Array<'watched' | 'warned'>;
@@ -2206,6 +2217,8 @@ export interface IssueRowView {
   leader: FactionId | null;
   momentum: Record<FactionId, number>;
   effectLine: string;
+  /** Review 4 (ADR 0074): a local edition's row of the city the reader is in (listed first). */
+  local?: boolean;
   /** Screens §7.1 (the row opened): the Issue's blurb and each party's stance, from content. */
   blurb?: string;
   stances?: Record<FactionId, string>;

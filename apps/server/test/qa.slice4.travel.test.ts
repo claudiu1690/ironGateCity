@@ -181,7 +181,7 @@ describe('closing the game mid-journey (GDD §14.10, design §2.4)', () => {
 });
 
 describe('arriving while away (ADR 0025 §4–§5)', () => {
-  it('the tidy job alone settles it; days later the arrival modal still waits with its card; the Herald says so', async () => {
+  it('the tidy job alone settles it; days later the arrival modal still waits with its card; the paper says so', async () => {
     const clock = testClock(at(DAY));
     const p = await traveller(clock, { name: 'Anton Reis' });
     const b = await p.caller.travel.board({ to: 'irongate', idempotencyKey: key() });
@@ -201,7 +201,9 @@ describe('arriving while away (ADR 0025 §4–§5)', () => {
     const r = await p.caller.travel.choose({ journeyId: j.id, choiceId: 'listen', idempotencyKey: key() });
     expect(r.rewards).toEqual([{ id: 'xp', amount: 14 }]);
     const paper = await p.caller.paper.today();
-    expect(paper.paper.name).toBe('The Irongate Herald');
+    // Review 4 (ADR 0074): their own paper's Irongate edition (the Herald is no longer forced).
+    expect(paper.paper.name).toBe('The Coalport Clarion');
+    expect(paper.edition?.cityName).toBe('Irongate');
     await p.caller.travel.close({ journeyId: j.id });
     expect((await Journey.findById(j.id).lean<JourneyDoc>())!.sleptThrough).toBe(false);
   });

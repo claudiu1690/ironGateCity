@@ -184,6 +184,12 @@ export function PaperPage() {
               onOpen={(route) => void navigate({ to: route })}
             />
           )}
+          {/* Review 4 (answers §23.2): the local city's election, a Courier line, not actionable. */}
+          {p.localElection && (
+            <p className="-mt-2 font-mono text-[11.5px] text-text-2" data-testid="local-election">
+              {copy.paper.localElection(p.localElection.cityName, p.localElection.phase, formatUntil(p.localElection.until, now))}
+            </p>
+          )}
           {p.letters.map((l) => (
             <LettersRow
               key={`${l.kind}-${l.title}`}

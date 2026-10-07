@@ -62,6 +62,17 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   await page.getByRole('dialog').getByRole('button', { name: /^Close/ }).click();
   await mapAtRest(page);
 
+  // Review 4 (answers §23.1, ADR 0074): the paper on rival ground is your own, in Duskwall's edition.
+  await expect(arrival).toHaveCount(0);
+  await page.goto('/paper');
+  const masthead = page.locator('header').filter({ has: page.getByTestId('dateline') });
+  await expect(masthead).toContainText('The Coalport Clarion· Duskwall edition');
+  await expect(page.getByTestId('edition-line')).toHaveText('· Duskwall edition');
+  await expect(page.getByTestId('dateline')).toContainText('Duskwall');
+  await expect(page.getByTestId('local-election')).toContainText('Duskwall elects its council');
+  await page.goto('/city/duskwall');
+  await mapAtRest(page);
+
   // 4. The plate, a ticket with only *Once* and the rival tag, the orders line.
   await expect(page.getByTestId('plate-rival').filter({ visible: true })).toHaveText(
     'Duskwall · rival ground',

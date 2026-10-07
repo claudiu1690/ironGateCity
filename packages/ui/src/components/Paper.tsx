@@ -221,8 +221,12 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
   );
 }
 
-/** The masthead (§3.3): name, edition line, dateline. */
-export function Masthead({ paper }: { paper: Pick<PaperView, 'paper' | 'dateline'> }) {
+/**
+ * The masthead (§3.3): name, edition line, dateline. Review 4 (answers §23.1, ADR 0074): away from
+ * home, the local edition's line under the name in Courier (*The Coalport Clarion · Duskwall edition*),
+ * dotted, opening its note; the dateline names the city the reader is in.
+ */
+export function Masthead({ paper }: { paper: Pick<PaperView, 'paper' | 'dateline'> & Partial<Pick<PaperView, 'edition'>> }) {
   return (
     <header className="flex flex-col items-center gap-1.5 border-b-[3px] border-double border-ink pb-2">
       <div className="label-caps flex w-full justify-between text-[9px]">
@@ -232,6 +236,13 @@ export function Masthead({ paper }: { paper: Pick<PaperView, 'paper' | 'dateline
       <h1 className="text-center font-display text-[34px] leading-none font-black tracking-[-0.01em] sm:text-[40px]">
         {paper.paper.name}
       </h1>
+      {paper.edition && (
+        <HelpButton notes={[copy.help.edition()]} label={copy.paper.editionLabel(paper.edition.cityName)} className="-my-1">
+          <span className={cx('font-mono text-[12px] text-text-2', helpMark)} data-testid="edition-line">
+            {copy.paper.edition(paper.edition.cityName)}
+          </span>
+        </HelpButton>
+      )}
       <p className="font-display text-[13px] italic text-text-2">{paper.paper.strapline}</p>
       <div
         className="flex w-full justify-center border-t border-ink pt-1 font-mono text-[11px]"

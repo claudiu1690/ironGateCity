@@ -93,22 +93,30 @@ export async function issueRowsOf(
     });
 }
 
-/** Screens §7.1: the residence city's two, then the capital's, then the rest folded. */
+/**
+ * Screens §7.1: the residence city's two, then the capital's, then the rest folded. Review 4 (answers
+ * §23.2, ADR 0074): in a local edition the city the reader is in comes first, its rows marked
+ * `local`, then the residence's (and the capital's when it is neither).
+ */
 export async function paperIssues(
   content: GameContent,
   c: CharacterDoc,
   today: DayKey,
+  opts: { local?: string | null } = {},
 ): Promise<NonNullable<PaperView['issues']>> {
   const residence = residenceOf(c).cityId;
   const capital = content.nation.capitalId;
+  const local = opts.local && opts.local !== residence ? opts.local : null;
   const ids = content.councilCities().map((x) => x.id);
   const docs = new Map(
     (await City.find({ _id: { $in: ids } }, { issues: 1 }).lean<CityDoc[]>()).map((d) => [d._id, d]),
   );
   const rowsOf = (id: string) => issueRowsOf(content, id, docs.get(id) ?? null, today);
-  const rows = [...(await rowsOf(residence)), ...(residence !== capital ? await rowsOf(capital) : [])];
+  const first = [local, residence, capital].filter((x, i, all): x is string => !!x && all.indexOf(x) === i);
+  const rows: IssueRowView[] = [];
+  for (const id of first) rows.push(...(await rowsOf(id)).map((r) => (id === local ? { ...r, local: true } : r)));
   const more: IssueRowView[] = [];
-  for (const id of ids) if (id !== residence && id !== capital) more.push(...(await rowsOf(id)));
+  for (const id of ids) if (!first.includes(id)) more.push(...(await rowsOf(id)));
   return { newThisWeek: isMonday(today), settlesAt: dayStart(nextMonday(today)), rows, more };
 }
 

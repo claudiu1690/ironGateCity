@@ -781,13 +781,20 @@ export interface IssuesSectionProps {
 
 /**
  * Screens §7.1: *The Issues* between the headlines and the Election row: the residence city's two,
- * the capital's two, then a folded row for the other cities; one row open at a time.
+ * the capital's two, then a folded row for the other cities; one row open at a time. Review 4: in a
+ * local edition the local city's pair first (`local`; each row names its place), then the residence's;
+ * four rows shown, the rest folded.
  */
 export function IssuesSection({ issues, names, settles, onWhereToAct }: IssuesSectionProps) {
   const [open, setOpen] = useState<string | null>(null);
   const [more, setMore] = useState(false);
   const toggle = (k: string) => setOpen((o) => (o === k ? null : k));
-  const others = [...new Set(issues.more.map((r) => r.placeName))];
+  const shown = issues.rows.slice(0, 4);
+  const localRows = shown.filter((r) => r.local);
+  // In a local edition the residence's pair follows the local pair, so the capital's (when it is
+  // neither) joins the folded row instead of dropping off the end.
+  const folded = [...(localRows.length > 0 ? issues.rows.slice(4) : []), ...issues.more];
+  const others = [...new Set(folded.map((r) => r.placeName))];
   if (issues.rows.length === 0 && issues.more.length === 0) return null;
   return (
     <section aria-label={copy.issues.theIssues} className="flex flex-col" data-testid="issues-section">
@@ -802,7 +809,7 @@ export function IssuesSection({ issues, names, settles, onWhereToAct }: IssuesSe
         )}
       </div>
       <ul className="flex flex-col">
-        {issues.rows.slice(0, 4).map((r) => (
+        {shown.map((r) => (
           <IssueRow
             key={`${r.cityId}:${r.issueId}`}
             row={r}
@@ -828,7 +835,7 @@ export function IssuesSection({ issues, names, settles, onWhereToAct }: IssuesSe
           </li>
         )}
         {more &&
-          issues.more.map((r) => (
+          folded.map((r) => (
             <IssueRow
               key={`${r.cityId}:${r.issueId}`}
               row={r}
