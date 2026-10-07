@@ -65,8 +65,9 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   await expect(page.getByTestId('plate-pressure').filter({ visible: true })).toContainText(
     "Your work here draws from the Vanguard's morale",
   );
-  await expect(page.getByTestId('orders-elsewhere').filter({ visible: true }).first()).toHaveText(
-    'Your orders are in Coalport today',
+  // Review 4 #13: away, the orders are one quiet line with the day's count.
+  await expect(page.getByTestId('orders-away').filter({ visible: true }).first()).toHaveText(
+    /^Your orders are in Coalport · \d of 3 done$/,
   );
   const gate = await openLocation(page, '1. Fortress Gate');
   const ticket = gate.locator('div[data-testid^="ticket-duskwall."]').first();
@@ -124,7 +125,8 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   await page.goto('/nation');
   await duskwallPin(page).click();
   await expect(page.getByTestId('city-card').getByTestId('city-lock')).toHaveText(
-    /^Barred · until \w+day \d\d:\d\d$/,
+    // Review 4 (§23 Q6): a boundary prints its time: *14:00*, *tomorrow 01:00*, *Saturday 01:00*.
+    /^Barred · until (\d\d:\d\d|tomorrow \d\d:\d\d|\w+day \d\d:\d\d)$/,
   );
   await expect(page.getByTestId('city-card').getByTestId('city-board')).toHaveCount(0);
 });

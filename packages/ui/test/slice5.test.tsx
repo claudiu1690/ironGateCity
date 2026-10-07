@@ -38,6 +38,7 @@ import {
   heatNow,
   minutesLeft,
   recordText,
+  setClockSource,
 } from '../src';
 
 /**
@@ -318,7 +319,9 @@ describe('the mission result (screens §4.3)', () => {
     expect(screen.getByTestId('run-in-health')).toHaveTextContent('Health 125 → 30');
     expect(screen.getByTestId('run-in-reason')).toHaveTextContent('You were outmatched.');
     expect(screen.getByTestId('attempt-dropped')).toHaveTextContent('dropped: you lost');
-    expect(screen.getByTestId('effect-heat')).toHaveTextContent(/^Heat \+6 → 58 · Hot · cools by \d\d:\d\d$/);
+    expect(screen.getByTestId('effect-heat')).toHaveTextContent(
+      /^Heat \+6 → 58 · Hot · Cool (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day|now)$/,
+    );
     expect(screen.getByTestId('effect-record')).toHaveTextContent(
       'The police took your name · 1 mark · On file',
     );
@@ -349,9 +352,11 @@ describe('the cells and the infirmary (screens §6, §7)', () => {
     );
     expect(screen.getByTestId('held-kicker')).toHaveTextContent('The cells · Harbour Police');
     expect(screen.getByTestId('held-minutes')).toHaveTextContent('38 minutes');
-    expect(screen.getByTestId('held-out-at')).toHaveTextContent(/^out at \d\d:\d\d · or pay bail$/);
+    expect(screen.getByTestId('held-out-at')).toHaveTextContent('out in 38 min · or pay bail');
     expect(screen.getByTestId('held-voice')).toHaveTextContent('"Name." He has it already.');
-    expect(screen.getByTestId('held-sentence')).toHaveTextContent('You can close the game.');
+    expect(screen.getByTestId('held-sentence')).toHaveTextContent(
+      'The door opens in 38 min either way, and Energy keeps refilling in here.',
+    );
     expect(screen.getByTestId('stamp')).toHaveTextContent('Taken in');
     fireEvent.click(screen.getByTestId('held-bail'));
     expect(onBail).toHaveBeenCalled();
@@ -428,13 +433,13 @@ describe('the cells and the infirmary (screens §6, §7)', () => {
     render(<ResultModal result={deportedResultFixture} open onOpenChange={noop} onContinue={noop} />);
     expect(screen.getByTestId('stamp')).toHaveTextContent('Put on the train');
     expect(screen.getByTestId('political-barred')).toHaveTextContent(
-      /^Barred from Duskwall until \w+day \d\d:\d\d$/,
+      /^Barred from Duskwall until (\d\d:\d\d|tomorrow \d\d:\d\d|\w+day \d\d:\d\d)$/,
     );
   });
 });
 
 describe('the record, Heat and Health (screens §2)', () => {
-  it('the Me rows: Health, Heat with *cool by*, the record and *Have a mark struck off*', () => {
+  it('the Me rows: Health, Heat with *Cool at*, the record and *Have a mark struck off*', () => {
     const onStrike = vi.fn();
     const c = riskCharacterFixture;
     render(
@@ -449,7 +454,9 @@ describe('the record, Heat and Health (screens §2)', () => {
       />,
     );
     expect(screen.getByTestId('me-health')).toHaveTextContent('96 / 125');
-    expect(screen.getByTestId('me-heat')).toHaveTextContent(/^32 · Noticed · cool by \d\d:\d\d$/);
+    expect(screen.getByTestId('me-heat')).toHaveTextContent(
+      /^32 · Noticed · Cool (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day|now)$/,
+    );
     expect(screen.getByTestId('me-record')).toHaveTextContent(/^On file · 2 marks · one fades on \w+day$/);
     fireEvent.click(screen.getByTestId('me-strike'));
     expect(onStrike).toHaveBeenCalled();
@@ -517,25 +524,32 @@ describe('the record, Heat and Health (screens §2)', () => {
 
   it('the desk: the held line first, then Where you are, Heat and the record', () => {
     const onHeld = vi.fn();
+    // Review 4 (answers §4.2): the times read the clock source, pinned here.
+    const now = Date.UTC(2026, 9, 6, 18, 0);
+    setClockSource(() => now);
     const desk: DeskView = {
       ...paperViewFixture.desk,
-      held: { kind: 'cells', placeName: 'Harbour Police', minutesLeft: 24, bail: 150 },
+      held: {
+        kind: 'cells',
+        placeName: 'Harbour Police',
+        minutesLeft: 24,
+        until: now + 24 * 60_000,
+        bail: 150,
+      },
       where: { rivalGround: { cityName: 'Duskwall' } },
       heat: { value: 32, state: 'noticed', coolsAt: Date.UTC(2026, 9, 6, 20, 40) },
       record: { level: 'onFile', marks: 2 },
     };
     render(<DeskList desk={desk} onHeld={onHeld} />);
     expect(screen.getByTestId('desk-held')).toHaveTextContent(
-      'In the cells at Harbour Police · 24 minutes to go · bail 150 Iron',
+      'In the cells at Harbour Police · out in 24 min · bail 150 Iron',
     );
     fireEvent.click(screen.getByTestId('desk-held'));
     expect(onHeld).toHaveBeenCalled();
     expect(screen.getByTestId('desk-where')).toHaveTextContent(
       'Rival ground · Duskwall · everything is harder here',
     );
-    expect(screen.getByTestId('desk-heat')).toHaveTextContent(
-      /^Noticed \(32\), cooling · Cool by \d\d:\d\d$/,
-    );
+    expect(screen.getByTestId('desk-heat')).toHaveTextContent(/^Noticed \(32\), cooling · Cool at 20:40$/);
     expect(screen.getByTestId('desk-record')).toHaveTextContent('On file · 2 marks');
   });
 });
@@ -624,7 +638,9 @@ describe('rival ground (screens §8)', () => {
         onBoard={noop}
       />,
     );
-    expect(screen.getByTestId('city-lock')).toHaveTextContent(/^Barred · until \w+day \d\d:\d\d$/);
+    expect(screen.getByTestId('city-lock')).toHaveTextContent(
+      /^Barred · until (\d\d:\d\d|tomorrow \d\d:\d\d|\w+day \d\d:\d\d)$/,
+    );
     expect(screen.queryByTestId('city-board')).toBeNull();
   });
 
@@ -702,7 +718,12 @@ describe('rival ground (screens §8)', () => {
             opinion: null,
             points: null,
             quoted: false,
-            flag: { flag: 'watched', line: 'Watched today: run-ins likelier in Duskwall until midnight' },
+            // Review 4: `{until}` (the day's turn) is rendered in the player's clock.
+            flag: {
+              flag: 'watched',
+              line: 'Watched today: run-ins likelier in Duskwall until {until}',
+              until: Date.UTC(2026, 9, 8),
+            },
             performedAt: new Date(0).toISOString(),
             idempotencyKey: 'k',
             character: riskCharacterFixture,
@@ -714,7 +735,7 @@ describe('rival ground (screens §8)', () => {
     );
     expect(screen.getByTestId('journey-rewards')).toHaveTextContent('Heat +10');
     expect(screen.getByTestId('journey-flag')).toHaveTextContent(
-      'Watched today: run-ins likelier in Duskwall until midnight',
+      /^Watched today: run-ins likelier in Duskwall until (\d\d:\d\d|tomorrow \d\d:\d\d|\w+day \d\d:\d\d)$/,
     );
   });
 });

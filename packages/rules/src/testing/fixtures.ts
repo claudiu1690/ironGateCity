@@ -20,6 +20,7 @@ import type {
   OrdersView,
   PaperView,
 } from '../types';
+import { rankLadder } from '../rank';
 
 /**
  * Test fixtures shared by packages (`@irongate/rules/testing`): the reference recruit and results in
@@ -140,6 +141,7 @@ export const ordersViewFixture: OrdersView = {
   allDone: false,
   rewards: { matchFxpBonusPct: 25, orderDoneFxp: 20, allDonePc: 5 },
   complete: null,
+  away: null,
 };
 
 export const characterViewFixture: CharacterView = {
@@ -167,6 +169,7 @@ export const characterViewFixture: CharacterView = {
     nextTitle: 'Activist',
     ladder: ['Recruit', 'Activist', 'Organiser', 'Convenor', 'Delegate', 'Tribune', 'Chairman'],
   },
+  ranks: rankLadder(['Recruit', 'Activist', 'Organiser', 'Convenor', 'Delegate', 'Tribune', 'Chairman']),
   pc: 0,
   statPointsPending: 0,
   job: null,

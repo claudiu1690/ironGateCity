@@ -1,7 +1,7 @@
 import { copy } from '@irongate/content/copy';
 import type { HeldView } from '@irongate/rules';
 import type { ReactNode } from 'react';
-import { cx, formatClock } from '../format';
+import { cx, formatWhen } from '../format';
 import { Button } from './Button';
 import { GroundSash } from './GroundSash';
 import type { Ground } from './GroundSash';
@@ -50,9 +50,9 @@ export function heldVoiceLine(h: Pick<HeldView, 'kind' | 'rivalGround' | 'again'
 
 /**
  * Screens §6–§7: the cells and the infirmary share this screen, in place of the map while you are held.
- * The place's picture with the stamp; the header (the kicker, the minutes, *out at 15:12 · or pay bail*
+ * The place's picture with the stamp; the header (the kicker, the minutes, *out in 38 min · or pay bail*
  * and a track that empties); the voice (the duty officer or the matron) and one line; the sentence
- * (*You can close the game…*); the ways out (*Pay bail*, or *Walk out well* and *Discharge yourself*);
+ * (*The door opens in 38 min either way…*); the ways out (*Pay bail*, or *Walk out well* and *Discharge yourself*);
  * the one tap; and *While you wait*. The header, the voice, the sentence and the first button sit above
  * the fold on a 375 × 667 phone. On a desktop it is a 640 px column over the place's picture, dimmed.
  */
@@ -76,21 +76,27 @@ export function HeldScreen({
   const left = minutesLeft(h.until, now);
   const total = Math.max(1, h.until - h.since);
   const share = Math.max(0, Math.min(1, (h.until - now) / total));
-  const out = formatClock(h.until);
+  const out = formatWhen(h.until, now);
   const busy = pending !== null;
   return (
-    <div className="relative min-h-full bg-ink" data-testid="held" data-kind={h.kind} data-state={h.state}>
-      {/* Desktop: the column over the place's own picture, dimmed (scene art, never a plain ground). */}
+    <div
+      className="relative min-h-full bg-ink min-[960px]:bg-transparent"
+      data-testid="held"
+      data-kind={h.kind}
+      data-state={h.state}
+    >
+      {/* Tablet: the column over the place's own picture, dimmed (scene art, never a plain ground).
+          From 960 px the page is a sheet on the desk (review 4 #3, PaperSheet) and fills it. */}
       {h.art && (
         <div
-          className="pointer-events-none absolute inset-0 hidden overflow-hidden sm:block"
+          className="pointer-events-none absolute inset-0 hidden overflow-hidden sm:block min-[960px]:hidden"
           aria-hidden="true"
         >
           <ArtPanel art={h.art} className="absolute inset-0 h-full opacity-60" />
           <div className="absolute inset-0 bg-ink/55" />
         </div>
       )}
-      <article className="paper-grain relative mx-auto flex min-h-full max-w-[640px] flex-col bg-paper text-ink sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]">
+      <article className="paper-grain relative mx-auto flex min-h-full max-w-[640px] flex-col bg-paper text-ink sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)] min-[960px]:max-w-none min-[960px]:shadow-none">
         {h.art && (
           <ArtPanel art={h.art} className="h-[112px] sm:h-[150px]">
             <div
@@ -163,7 +169,7 @@ export function HeldScreen({
             className="border-y border-ink py-2 font-body text-[15px] leading-snug"
             data-testid="held-sentence"
           >
-            {cells ? copy.risk.cells.youCanClose(out) : copy.risk.infirmary.youCanClose(out)}
+            {cells ? copy.risk.cells.eitherWay(out) : copy.risk.infirmary.eitherWay(out)}
           </p>
 
           {cells && h.bail && (
@@ -185,9 +191,19 @@ export function HeldScreen({
                 </span>
               )}
               {h.bail.legalAid && (
-                <span className="font-mono text-[11px] text-muted" data-testid="held-legal-aid">
-                  {copy.risk.cells.legalAid}
-                </span>
+                // Review 4 #17 (answers §17): the line says what it means, and its note says why.
+                <HelpButton
+                  notes={[copy.help.legalAid()]}
+                  label={`${copy.risk.cells.legalAid}: what Legal Aid is`}
+                  className="-my-2 self-start"
+                >
+                  <span
+                    className={cx('font-mono text-[11px] text-muted', helpMark)}
+                    data-testid="held-legal-aid"
+                  >
+                    {copy.risk.cells.legalAid}
+                  </span>
+                </HelpButton>
               )}
             </div>
           )}

@@ -240,6 +240,7 @@ export function deskRisk(
           kind: h.kind,
           placeName: content.location(h.locationId)?.location.name ?? h.locationId,
           minutesLeft: Math.max(0, Math.ceil((new Date(h.until).getTime() - now) / 60_000)),
+          until: new Date(h.until).getTime(),
           bail: h.kind === 'cells' ? (h.bail?.total ?? null) : null,
         }
       : null,

@@ -163,7 +163,7 @@ export function JourneyPage() {
           now={Math.min(now, data.arrivesAt)}
         />
         <p className="border-y border-ink py-2 font-body text-[15px] leading-snug italic" data-testid="journey-sentence">
-          {copy.travel.youCanClose}
+          {copy.travel.eitherWay}
         </p>
         {card && !arrived && (
           <JourneyCard card={card} onChoose={onChoose} pendingChoiceId={choose.isPending ? (choose.variables?.choiceId ?? null) : null} />

@@ -43,9 +43,7 @@ describe('StoryScreen (ADR 0013)', () => {
     await settled();
     await user.click(screen.getByRole('button', { name: 'Talked them out of it.' }));
     expect(onChoose).toHaveBeenCalledWith('b', expect.any(String));
-    expect(screen.getByTestId('story-waits')).toHaveTextContent(
-      'Close the game now and this waits for you · Step 1 of 3',
-    );
+    expect(screen.getByTestId('story-waits')).toHaveTextContent('This waits for you · Step 1 of 3');
     // The art panel crops at the focus point (ADR 0015).
     expect(document.querySelector('img')).toHaveStyle({ objectPosition: '30% 50%' });
   });

@@ -1,7 +1,7 @@
 import { copy } from '@irongate/content/copy';
 import { energyReadyAt } from '@irongate/rules';
 import type { ActionResult } from '@irongate/rules';
-import { Button, ResultModal, StoryScreen, formatClock } from '@irongate/ui';
+import { Button, ResultModal, StoryScreen, formatWhen } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useRef, useState } from 'react';
@@ -171,7 +171,7 @@ export function AmbitionPage() {
         ctaPending={attempt.isPending}
         ctaNote={
           live.cta && live.cta.readyAt !== null
-            ? copy.needsEnergy(live.cta.energy, formatClock(live.cta.readyAt))
+            ? copy.needsEnergy(live.cta.energy, formatWhen(live.cta.readyAt))
             : undefined
         }
         error={noticeFor(choose.error) ?? noticeFor(attempt.error)}

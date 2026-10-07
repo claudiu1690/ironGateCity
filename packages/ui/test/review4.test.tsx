@@ -86,9 +86,15 @@ describe('#12 each HUD label opens its own note', () => {
       fireEvent.click(within(screen.getByTestId('help-note')).getByRole('button', { name: 'Close' }));
       return title;
     };
-    expect(opened(65)).toBe('Heat');
+    // Review 4 #12 (answers §12): Heat's note names its state.
+    expect(opened(65)).toBe('Heat · Hot');
     expect(opened(50)).toBe('Health');
-    expect(opened(33)).toBe('Party XP');
+    // Review 4 #25: the Party XP label opens the rank ladder instead of a note.
+    fireEvent.click(help, { clientX: 20, clientY: 33, detail: 1 });
+    expect(screen.queryByTestId('help-note')).toBeNull();
+    const ladder = screen.getByTestId('rank-ladder');
+    expect(ladder).toHaveTextContent("The Collective's ranks");
+    fireEvent.click(within(ladder).getByRole('button', { name: 'Close' }));
     expect(opened(4)).toBe('Energy');
     // A keyboard press (detail 0) keeps the order: Energy first.
     fireEvent.click(help, { detail: 0 });

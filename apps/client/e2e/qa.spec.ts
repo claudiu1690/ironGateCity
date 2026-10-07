@@ -144,7 +144,7 @@ test.describe('phone 375×812', () => {
       'Your job · seniority 0 days · +0 %',
     );
     await expect(page.getByRole('region', { name: 'Job' })).toContainText(
-      /216 a day · paid at midnight · \d\d:\d\d/,
+      /216 a day · paid (at|tomorrow) \d\d:\d\d/,
     );
     // Review 1 (answers §8): the full Faction XP row.
     await expect(page.getByTestId('me-rank')).toContainText(
@@ -167,7 +167,7 @@ test.describe('phone 375×812', () => {
     await expect(page.getByTestId('hud-energy')).toHaveText('60 / 100');
   });
 
-  test('out of Energy: ×1 and ×3 disabled with "Needs … · ready at", the out-of-Energy card, nothing spent', async ({
+  test('out of Energy: ×1 and ×3 disabled with "Needs … · ready in", the out-of-Energy card, nothing spent', async ({
     page,
   }) => {
     await signUp(page);
@@ -193,14 +193,18 @@ test.describe('phone 375×812', () => {
     // Review 3: a disabled repeat keeps its label and cost; the hint names it.
     await expect(modalOf(page).getByRole('button', { name: 'Once more · 10 Energy' })).toBeDisabled();
     await expect(modalOf(page).getByTestId('again-hint')).toHaveText(
-      /^Once more needs 10 Energy · ready at \d\d:\d\d$/,
+      /^Once more needs 10 Energy · ready (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day)$/,
     );
     await continueModal(page);
     await expect(
       sheet.getByRole('button', { name: 'Talk to the workers coming off shift, once, 10 Energy' }),
     ).toBeDisabled();
-    await expect(ticket.getByTestId('ticket-hint')).toHaveText(/^Needs 10 Energy · ready at \d\d:\d\d$/);
-    await expect(sheet.getByTestId('out-of-energy')).toContainText(/full at \d\d:\d\d/);
+    await expect(ticket.getByTestId('ticket-hint')).toHaveText(
+      /^Needs 10 Energy · ready (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day)$/,
+    );
+    await expect(sheet.getByTestId('out-of-energy')).toContainText(
+      /full (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day)/,
+    );
     await expect(page.getByTestId('hud-energy')).toHaveText('0 / 100');
   });
 
@@ -217,7 +221,7 @@ test.describe('phone 375×812', () => {
     sheet = await openAny(page, '2. Market Row');
     await sheet.getByRole('button', { name: 'Switch · seniority resets' }).click();
     await expect(sheet.getByTestId('job-coalport-street-vendor')).toContainText(
-      /Switched · seniority reset · paid at \d\d:\d\d/,
+      /Switched · seniority reset · paid (at|tomorrow) \d\d:\d\d/,
     );
     // Review 1: switching costs no Energy, and there is no shift to work.
     await expect(page.getByTestId('hud-energy')).toHaveText('100 / 100');

@@ -87,7 +87,7 @@ test('the first trip: nation → board → the journey card → arrival → the 
   // 3. The journey: its name, the progress, the sentence, the first card with odds words, no digits.
   await expect(page).toHaveURL(/\/journey$/);
   await expect(page.getByTestId('journey-title')).toHaveText(/^The \d\d:\d\d to Irongate$/);
-  await expect(page.getByTestId('journey-sentence')).toContainText('You can close the game');
+  await expect(page.getByTestId('journey-sentence')).toContainText("You'll arrive either way");
   const jcard = page.getByTestId('journey-card');
   await expect(jcard).toContainText('A talkative passenger');
   const lines = await jcard.getByTestId('journey-choice-line').allTextContents();

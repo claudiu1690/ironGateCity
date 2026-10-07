@@ -2,7 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
 import { HEALTH, heatState } from '@irongate/rules';
 import type { CharacterView, HeatState, RecordLevel, RunInPending, StreetView } from '@irongate/rules';
-import { cx, formatClock, formatWeekday } from '../format';
+import { cx, formatWeekday, formatWhen } from '../format';
 import { statName } from '../odds';
 import type { TrainingPlaces } from '../odds';
 import { Button } from './Button';
@@ -43,19 +43,22 @@ const hotOrWorse = (s: HeatState) => s === 'hot' || s === 'wanted';
 // ---------------------------------------------------------------------------------------------
 
 /**
- * *Heat 32 · Noticed* in Courier 11 px, only above 0; the state word in the failure colour from *Hot*.
- * Review 4 #12: a line inside the HUD's group of labels, not a button of its own: its 44 px target
- * used to reach over Political Capital, so a tap there opened Heat's note. The group's one button
- * opens on the note of the label under the tap (`data-note`).
+ * *Heat 32 · Noticed*, only above 0; the state word in the failure colour from *Hot*. Review 4 #12:
+ * a line inside the HUD's group of labels, not a button of its own: its 44 px target used to reach
+ * over Political Capital, so a tap there opened Heat's note. The group's one button opens on the note
+ * of the label under the tap (`data-note`). Review 4 (answers §12): in the HUD a body line of its own,
+ * 13 px, under Energy (`size="line"`); Courier 11 px in the sideways name line (`size="small"`).
  */
 export function HeatRow({
   value,
   tone = 'ink',
+  size = 'small',
   className,
   testIds = true,
 }: {
   value: number;
   tone?: 'ink' | 'paper';
+  size?: 'line' | 'small';
   className?: string;
   /** False for a second copy on the same screen (the HUD's sideways name line). */
   testIds?: boolean;
@@ -65,7 +68,8 @@ export function HeatRow({
   return (
     <span
       className={cx(
-        'flex min-w-0 items-center font-mono text-[11px] leading-tight whitespace-nowrap',
+        'flex min-w-0 items-center leading-tight whitespace-nowrap',
+        size === 'line' ? 'font-body text-[13px]' : 'font-mono text-[11px]',
         tone === 'ink' ? 'text-paper' : 'text-ink',
         className,
       )}
@@ -194,7 +198,7 @@ export function RiskRows({
       <div className="flex min-h-11 items-center justify-between gap-3 border-b border-dotted border-faint">
         <dt>
           <HelpButton
-            notes={[copy.risk.help.heat()]}
+            notes={[copy.risk.help.heat(s, s !== 'cool' && coolsAt !== null ? formatWhen(coolsAt) : null)]}
             label="What Heat means"
             // QA m9: "Heat" alone is 31 px wide; the target is at least 44 × 44.
             className="min-w-11 font-body text-[14px]"
@@ -206,11 +210,7 @@ export function RiskRows({
           className={cx('text-right font-label text-[14px]', hotOrWorse(s) && 'text-failure')}
           data-testid="me-heat"
         >
-          {copy.risk.heatMe(
-            heat,
-            heatWord(s),
-            s !== 'cool' && coolsAt !== null ? formatClock(coolsAt) : null,
-          )}
+          {copy.risk.heatMe(heat, heatWord(s), s !== 'cool' && coolsAt !== null ? formatWhen(coolsAt) : null)}
         </dd>
       </div>
       <div className="flex flex-col gap-1 border-b border-dotted border-faint py-1">

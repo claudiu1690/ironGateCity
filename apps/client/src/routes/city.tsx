@@ -17,6 +17,7 @@ import {
   FACTION_STYLE,
   FactionCrest,
   HelpButton,
+  IssueChip,
   JobsCard,
   LocationSheet,
   MissionBriefing,
@@ -38,7 +39,7 @@ import {
   comebackLine,
   cx,
   districtStateWord,
-  formatClock,
+  formatWhen,
   formatShare,
   groundOf,
   heatNow,
@@ -236,7 +237,7 @@ export function CityPage() {
     onSuccess: (r, vars) => {
       queryClient.setQueryData(trpc.character.me.queryKey(), r.character);
       void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
-      const at = formatClock(r.outcome.firstPayAt);
+      const at = formatWhen(r.outcome.firstPayAt);
       setJobMessage({
         jobId: vars.jobId,
         text: r.outcome.switched
@@ -425,6 +426,16 @@ export function CityPage() {
 
   // Review 3: the Places list, in pin order, with a tag where an open Party order points (the same
   // pins the orders list links to); slice 4: and the Issue mark where work is tagged.
+  // Review 4 #14: the Issue's name for its chip (the city's Issues, or the capital districts').
+  const issueName = (id: string | undefined): string | null =>
+    id === undefined
+      ? null
+      : (c.issues?.find((i) => i.issueId === id)?.name ??
+        c.districts?.flatMap((d) => d.issues).find((i) => i.issueId === id)?.name ??
+        c.locations
+          .flatMap((l) => l.actions.flatMap((a) => a.placeTags ?? []))
+          .flatMap((t) => (t.kind === 'issue' && t.issueId === id ? [t.name] : []))[0] ??
+        null);
   const orderAt = new Set(
     character.orders.items.flatMap((o) => (!o.done && o.pin ? [o.pin.locationId] : [])),
   );
@@ -434,7 +445,7 @@ export function CityPage() {
     name: l.name,
     blurb: l.blurb,
     order: orderAt.has(l.id),
-    issue: (l.issueIds?.length ?? 0) > 0,
+    issue: issueName(l.issueIds?.[0]),
   }));
   /**
    * The Places button (on the overview: *Districts*): a small pill in a corner of the map, clear of the
@@ -1090,7 +1101,8 @@ export function CityPage() {
               <div
                 className={cx(
                   'flex flex-col gap-1',
-                  (districts || qv) && '[@media(max-height:700px)]:hidden',
+                  // Review 4 #13: away, the orders are one quiet line: nothing to fold.
+                  (districts || qv) && !character.orders.away && '[@media(max-height:700px)]:hidden',
                 )}
               >
                 {district || qv ? (
@@ -1099,7 +1111,7 @@ export function CityPage() {
                   orders
                 )}
               </div>
-              {(districts || qv) && (
+              {(districts || qv) && !character.orders.away && (
                 <button
                   type="button"
                   onClick={() => setOrdersOpen(true)}
@@ -1146,6 +1158,26 @@ export function CityPage() {
           art={sheetPlace.art}
           ground={sheetGround}
           tags={character.rested > 0 ? [`Rested ${character.rested} · +50 % XP and Iron`] : []}
+          chips={
+            issueName(sheetPlace.issueIds?.[0]) ? <IssueChip name={issueName(sheetPlace.issueIds?.[0])!} /> : null
+          }
+          // Review 4 (tech design §3.1): the place's cards, in the slot's fixed order. Jobs first; the
+          // Lodgings, *In the cells now* and the Town Hall's blocks follow in their phases.
+          cards={[
+            <JobsCard
+              key="jobs"
+              jobs={sheetPlace.jobs}
+              held={character.job ? character.job.seniority : null}
+              pendingJobId={take.isPending ? take.variables?.jobId : null}
+              message={jobMessage}
+              onTake={(jobId) => {
+                if (takeBusy.current) return;
+                takeBusy.current = true;
+                setJobMessage(null);
+                take.mutate({ jobId, idempotencyKey: crypto.randomUUID() });
+              }}
+            />,
+          ]}
         >
           {energy.value < cheapest && <OutOfEnergyCard fullAt={character.energy.fullAt} waiting={waiting} />}
           {sheetPlace.actions.map((a) => (
@@ -1223,18 +1255,6 @@ export function CityPage() {
               {noticeFor(travel.error)}
             </p>
           )}
-          <JobsCard
-            jobs={sheetPlace.jobs}
-            held={character.job ? character.job.seniority : null}
-            pendingJobId={take.isPending ? take.variables?.jobId : null}
-            message={jobMessage}
-            onTake={(jobId) => {
-              if (takeBusy.current) return;
-              takeBusy.current = true;
-              setJobMessage(null);
-              take.mutate({ jobId, idempotencyKey: crypto.randomUUID() });
-            }}
-          />
         </LocationSheet>
       )}
 
@@ -1392,7 +1412,7 @@ function issueLine(i: DistrictView['issues'][number], names: Partial<Record<Fact
 function ReputationBlock({ city: c }: { city: CityView }) {
   return (
     <HelpButton
-      notes={[copy.help.standing(c.name)]}
+      notes={[copy.help.standing(c.name, c.standing.level)]}
       label="What Reputation means"
       testId="standing-help"
       className="flex flex-col items-end justify-center gap-0.5 border-l border-paper-2 px-3 py-2"

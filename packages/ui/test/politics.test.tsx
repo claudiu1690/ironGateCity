@@ -22,21 +22,30 @@ import {
   formatUntil,
   ordinanceTagText,
   renderTimeTokens,
+  setClockSource,
 } from '../src';
 
 const S = politicsSummaryFixture;
 
-describe('time tokens (tech design §4.3)', () => {
-  it('until: "{weekday} midnight" at local 00:00, else "{weekday} hh:mm"; at: "hh:mm on {weekday}"', () => {
-    // The test runner's clock is UTC (vitest config TZ).
+describe('time tokens (tech design §4.3; review 4 §12.1, §23 Q6)', () => {
+  it('until: a boundary always prints its time; at: the `when` phrase; "at {token}" reads the phrase', () => {
+    // The test runner's clock is UTC (vitest config TZ). Now: Monday 5 October, noon.
+    const now = Date.UTC(2026, 9, 5, 12);
     const wedMidnight = Date.UTC(2026, 9, 7); // Wednesday 7 October 00:00 UTC
-    expect(formatUntil(wedMidnight)).toBe('Tuesday midnight');
-    expect(formatUntil(wedMidnight + 3_600_000)).toBe('Wednesday 01:00');
-    expect(formatAt(wedMidnight)).toBe('00:00 on Wednesday');
-    expect(renderTimeTokens('Until {until}; at {at}.', { until: wedMidnight, at: wedMidnight })).toBe(
-      'Until Tuesday midnight; at 00:00 on Wednesday.',
-    );
-    expect(renderTimeTokens('No {until} here', {})).toBe('No {until} here');
+    expect(formatUntil(wedMidnight, now)).toBe('Wednesday 00:00');
+    expect(formatUntil(Date.UTC(2026, 9, 6, 1), now)).toBe('tomorrow 01:00');
+    expect(formatUntil(Date.UTC(2026, 9, 5, 18), now)).toBe('18:00');
+    expect(formatAt(wedMidnight, now)).toBe('Wednesday 00:00');
+    expect(formatAt(Date.UTC(2026, 9, 5, 18), now)).toBe('at 18:00');
+    expect(formatAt(now + 20 * 60_000, now)).toBe('in 20 min');
+    expect(
+      renderTimeTokens(
+        'Until {until}; the council votes at {until}; {at}.',
+        { until: wedMidnight, at: now + 1_200_000 },
+        now,
+      ),
+    ).toBe('Until Wednesday 00:00; the council votes Wednesday 00:00; in 20 min.');
+    expect(renderTimeTokens('No {until} here', {}, now)).toBe('No {until} here');
   });
 });
 
@@ -88,7 +97,7 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
       'standing',
       { state: 'standing', backers: { n: 1, needed: 2, branchLine: false, branchWillMakeUp: false } },
       "You're standing · backers 1 of 2",
-      "Two backers by Tuesday midnight or your name comes off · do today's orders and the branch backs you",
+      "Two backers before Wednesday 00:00 or your name comes off · do today's orders and the branch backs you",
       'See the candidates',
       null,
     ],
@@ -104,7 +113,7 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
       'voting',
       { state: 'voting', closesAt: sun },
       'Voting is open',
-      'Closes Saturday midnight · 6 days left · your vote is secret',
+      'Closes Sunday 00:00 · 6 days left · your vote is secret',
       'Vote now',
       null,
     ],
@@ -120,7 +129,7 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
       'candidateVoting',
       { state: 'candidateVoting', closesAt: sun },
       "You're a candidate · voting is open",
-      'Closes Saturday midnight · you can vote for yourself',
+      'Closes Sunday 00:00 · you can vote for yourself',
       'Vote now',
       null,
     ],
@@ -132,7 +141,7 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
         result: { ...result, yourLine: { kind: 'voteWon', name: 'Anna Weiss' } },
       },
       'Result: Anna Weiss topped the poll · your vote: Anna Weiss was elected',
-      'Seven seats · the new council sits until Friday · next election: names in until Tuesday midnight',
+      'Seven seats · the new council sits until Friday · next election: names in until Wednesday 00:00',
       'See the result',
       'Stand for the council · 10 Political Capital',
     ],
@@ -140,7 +149,7 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
       'councilSits',
       { state: 'councilSits', rule: { votedFor: null, divideAt: wed } },
       "You're on the council · vote on the rule",
-      'The council votes Tuesday midnight · 2 days',
+      'The council votes Wednesday 00:00 · 2 days',
       'Vote on the rule',
       null,
     ],
@@ -178,7 +187,7 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
     expect(line(null)).toBe('Result: Anna Weiss topped the poll');
   });
 
-  it('the last day of voting closes tonight; the rule line; the first-time note; the buttons open routes', async () => {
+  it('the last day of voting closes tomorrow 00:00; the rule line; the first-time note; the buttons open routes', async () => {
     const onOpen = vi.fn();
     render(
       <ElectionCard
@@ -188,7 +197,7 @@ describe('ElectionCard (review 2: screens §1a, §2.1, §7)', () => {
       />,
     );
     expect(screen.getByTestId('election-line2')).toHaveTextContent(
-      'Closes tonight at midnight · your vote is secret',
+      'Closes tomorrow 00:00 · 1 day left · your vote is secret',
     );
     expect(screen.getByTestId('election-first-time')).toHaveTextContent(
       'Coalport elects its council every five days. You can vote now; Organisers who are Known here can stand.',
@@ -413,6 +422,7 @@ describe('ResultModal, kind political (screens §9)', () => {
   });
 
   it('standing: the Political Capital line and {until} rendered in the local clock', () => {
+    setClockSource(() => Date.UTC(2026, 9, 5, 12));
     render(
       <ResultModal
         result={{
@@ -427,7 +437,7 @@ describe('ResultModal, kind political (screens §9)', () => {
       />,
     );
     expect(
-      screen.getByText('You need two backers by Tuesday midnight or your name comes off.'),
+      screen.getByText('You need two backers by Wednesday 00:00 or your name comes off.'),
     ).toBeInTheDocument();
     expect(screen.getByTestId('political-pc')).toHaveTextContent('−10 Political Capital · 35 left');
   });

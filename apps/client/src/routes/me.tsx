@@ -11,6 +11,7 @@ import {
   OrdersList,
   Picture,
   ProgressBar,
+  RankLadderSheet,
   ResultModal,
   RiskRows,
   Rosette,
@@ -18,7 +19,7 @@ import {
   StatPointsPanel,
   weekdayOf,
   TodayStrip,
-  formatClock,
+  formatWhen,
   formatNumber,
   formatWeekday,
   healthNow,
@@ -66,6 +67,7 @@ export function MePage() {
   const fresh = useQuery({ ...trpc.character.me.queryOptions(), refetchOnMount: 'always' });
   const stat = usePlaceStat();
   const [faceOpen, setFaceOpen] = useState(false);
+  const [ladderOpen, setLadderOpen] = useState(false);
   const faces = useQuery({ ...trpc.arrival.faces.queryOptions(), staleTime: Infinity, enabled: faceOpen });
   const setAvatar = useMutation({
     ...trpc.character.setAvatar.mutationOptions(),
@@ -267,27 +269,25 @@ export function MePage() {
         </BottomSheet>
 
         <Card title="Rank">
-          {/* Review 1 (answers §8): the full row, "Iron Vanguard · Steward · 212 / 2,000 to Bailiff". */}
-          <HelpButton
-            notes={[
-              copy.help.fxp(
-                c.rank.ladder[1] ?? '',
-                c.rank.ladder[2] ?? '',
-                c.rank.fxpNext !== null ? formatNumber(c.rank.fxpNext - c.fxp) : null,
-                c.rank.nextTitle,
-              ),
-            ]}
-            label="What Party XP means"
-            className="flex flex-col gap-1.5"
-            testId="me-rank-help"
+          {/* Review 1 (answers §8): the full row; review 4 #25 (answers §25): *{title} · {fxp} / {next}
+              to {nextTitle}*, and the Party XP opens the rank ladder. */}
+          <button
+            type="button"
+            onClick={() => setLadderOpen(true)}
+            aria-label={`${copy.ranks.meLine(c.rank.title, formatNumber(c.fxp), c.rank.fxpNext !== null ? formatNumber(c.rank.fxpNext) : null, c.rank.nextTitle)}: the party's ranks`}
+            aria-haspopup="dialog"
+            className="flex min-h-11 cursor-pointer flex-col gap-1.5 text-left"
+            data-testid="me-rank-help"
           >
             <span className="font-label text-[14px]" data-testid="me-rank">
-              {c.partyCard?.factionName ?? c.factionName} · {c.rank.title} ·{' '}
+              {c.partyCard?.factionName ?? c.factionName} ·{' '}
               <span className={helpMark}>
-                {formatNumber(c.fxp)}
-                {c.rank.fxpNext !== null
-                  ? ` / ${formatNumber(c.rank.fxpNext)} to ${c.rank.nextTitle ?? ''}`
-                  : ' Party XP'}
+                {copy.ranks.meLine(
+                  c.rank.title,
+                  formatNumber(c.fxp),
+                  c.rank.fxpNext !== null ? formatNumber(c.rank.fxpNext) : null,
+                  c.rank.nextTitle,
+                )}
               </span>
             </span>
             <ProgressBar
@@ -297,7 +297,15 @@ export function MePage() {
               color={FACTION_STYLE[c.factionId].color}
               className="w-full"
             />
-          </HelpButton>
+          </button>
+          <RankLadderSheet
+            open={ladderOpen}
+            onOpenChange={setLadderOpen}
+            factionName={c.factionName}
+            ranks={c.ranks}
+            rank={c.rank.value}
+            fxp={c.fxp}
+          />
           <HelpButton notes={[copy.help.pc()]} label="What Political Capital means" className="self-start">
             <span className="font-mono text-[12px] text-muted" data-testid="me-pc">
               <span className={helpMark}>{copy.pcSinks(c.pc)}</span>
@@ -353,7 +361,7 @@ export function MePage() {
                 {copy.yourJob(c.job.seniority.days, c.job.seniority.pct)}
               </span>
               <span className="font-mono text-[12px] text-muted">
-                {copy.jobPayLine(c.job.dailyPay)} · {formatClock(c.job.paidAt)}
+                {copy.jobPayLine(c.job.dailyPay, formatWhen(c.job.paidAt))}
               </span>
               <Link
                 to="/city/$cityId"

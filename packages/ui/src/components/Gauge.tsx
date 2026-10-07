@@ -24,6 +24,8 @@ export interface GaugeProps {
   className?: string;
   /** Review 4 #12: the key of this label's note, for a group's help button (`pickNoteAt`). */
   noteKey?: string;
+  /** Review 4 (answers §4.1): a bar that may shrink further (the Energy line shares its row with the clock). */
+  narrowBar?: boolean;
 }
 
 const tones = {
@@ -52,6 +54,7 @@ export function Gauge({
   noteTestId,
   className,
   noteKey,
+  narrowBar,
 }: GaugeProps) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   const t = tones[tone];
@@ -84,7 +87,10 @@ export function Gauge({
         aria-valuemax={max}
         aria-valuenow={value}
         aria-valuetext={valueText}
-        className="h-[5px] min-w-8 flex-1 bg-ink-2 short:col-span-2 short:row-start-2"
+        className={cx(
+          'h-[5px] flex-1 bg-ink-2 short:col-span-2 short:row-start-2',
+          narrowBar ? 'min-w-4 lg:min-w-8' : 'min-w-8',
+        )}
       >
         <div
           className={cx('h-[5px] transition-[width] duration-300', fillColor ? null : t.fill)}

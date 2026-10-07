@@ -11,7 +11,7 @@ import type {
   PoliticsSummaryView,
 } from '@irongate/rules';
 import { useState } from 'react';
-import { cx, formatUntil, formatWeekday } from '../format';
+import { cx, formatAt, formatUntil, formatWeekday } from '../format';
 import { HelpButton, helpMark } from './Help';
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { Picture } from './Picture';
@@ -107,7 +107,7 @@ export function electionLines(
       };
     case 'standing':
       return {
-        ...lines(e.standing(k.backers?.n ?? 0, k.backers?.needed ?? 2, formatUntil(k.closesAt))),
+        ...lines(e.standing(k.backers?.n ?? 0, k.backers?.needed ?? 2, formatUntil(k.closesAt, now))),
         primary: slate(e.seeTheCandidates),
         secondary: null,
       };
@@ -122,18 +122,18 @@ export function electionLines(
         // Slice 4 (screens §7.2): *Voting is open in Eastside* · *Two seats · any name · …*.
         return {
           line1: copy.capitalElection.votingIsOpenIn(place),
-          line2: copy.capitalElection.twoSeats(formatUntil(k.closesAt)),
+          line2: copy.capitalElection.twoSeats(formatUntil(k.closesAt, now)),
           primary: { label: e.voteNow, route: '/council/ballot' },
           secondary: null,
         };
       return {
-        ...lines(e.voting(formatUntil(k.closesAt), daysTo(k.closesAt, now))),
+        ...lines(e.voting(formatUntil(k.closesAt, now), daysTo(k.closesAt, now))),
         primary: { label: e.voteNow, route: '/council/ballot' },
         secondary: null,
       };
     case 'candidateVoting':
       return {
-        ...lines(e.candidateVoting(formatUntil(k.closesAt))),
+        ...lines(e.candidateVoting(formatUntil(k.closesAt, now))),
         primary: { label: e.voteNow, route: '/council/ballot' },
         secondary: null,
       };
@@ -170,14 +170,14 @@ export function electionLines(
         };
       }
       return {
-        ...lines(e.result(r.winner, your, formatWeekday(r.councilUntil - 1), formatUntil(r.namesUntil))),
+        ...lines(e.result(r.winner, your, formatWeekday(r.councilUntil - 1), formatUntil(r.namesUntil, now))),
         primary: { label: e.seeTheResult, route: '/council/count' },
         secondary: k.canStand ? stand : null,
       };
     }
     case 'councilSits':
       return {
-        ...lines(e.councilSits(formatUntil(k.closesAt), e.days(daysTo(k.closesAt, now)))),
+        ...lines(e.councilSits(formatAt(k.closesAt, now), e.days(daysTo(k.closesAt, now)))),
         primary: { label: e.voteOnTheRule, route: '/council' },
         secondary: null,
       };

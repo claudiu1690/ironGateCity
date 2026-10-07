@@ -105,7 +105,7 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   const card = page.getByTestId('declare-card');
   await expect(card).toContainText('✓ Rank 3, Organiser');
   await expect(card).toContainText('✓ Known in Coalport (200 wins)');
-  await expect(card).toContainText('2 backers by');
+  await expect(card).toContainText('2 backers before');
   await card.getByRole('button', { name: 'Stand · 10 Political Capital' }).click();
   await expect(modalOf(page).getByTestId('stamp')).toHaveText("You're standing");
   await expect(modalOf(page)).toContainText('Your name is on the list');

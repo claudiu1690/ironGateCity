@@ -250,7 +250,7 @@ describe('the journey (screens §3)', () => {
     render(<JourneyProgress from="Coalport" to="Irongate" boardedAt={j.boardedAt} arrivesAt={j.arrivesAt} now={j.boardedAt + 3 * 60_000} />);
     const p = screen.getByTestId('journey-progress');
     expect(p).toHaveAttribute('data-progress', '0.250');
-    expect(screen.getByTestId('journey-left')).toHaveTextContent('9 min to go · arrives 14:22');
+    expect(screen.getByTestId('journey-left')).toHaveTextContent('arrives in 9 min · 14:22');
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25');
   });
 

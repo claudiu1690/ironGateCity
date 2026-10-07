@@ -28,6 +28,7 @@ import { items } from '../src/data/items';
 import { journeyEvents } from '../src/data/journeyEvents';
 import { opponents } from '../src/data/opponents';
 import { orderTemplates } from '../src/data/orders';
+import { reworded } from './review4';
 import { playerStrings, systemTermHits } from './vocabulary';
 
 const hl = HeadlineTemplateSchema.array().parse(riskHeadlines);
@@ -229,7 +230,9 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
   const r = copy.risk;
   const listed = italics(section(SCREENS, '## 11. Copy', 'British English, no exclamation'))
     // "{n} mark{s}" is a plural; the copy prints "1 mark" and "{n} marks" (checked below).
-    .map((s) => s.replace('{n} mark{s}', '{n} marks'));
+    .map((s) => s.replace('{n} mark{s}', '{n} marks'))
+    // Review 4: the strings the review reworded are compared as reworded (./review4.ts).
+    .map(reworded);
   const ledger = ambitions.find((a) => a.id === 'settle-his-debts')!.chapters[1]!;
   const produced: string[] = [
     r.missions,
@@ -327,7 +330,7 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     r.cells.kicker(P('place')),
     r.minutes(P('n')),
     r.cells.outAt(P('time')),
-    r.cells.youCanClose(P('time')),
+    r.cells.eitherWay(P('time')),
     r.cells.payBail(P('n')),
     r.cells.bailDouble,
     r.cells.legalAid,
@@ -342,7 +345,7 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     r.barredFrom(P('city'), P('time')),
     r.infirmary.kicker,
     r.infirmary.outAt(P('time'), P('hp'), P('max')),
-    r.infirmary.youCanClose(P('time')),
+    r.infirmary.eitherWay(P('time')),
     r.infirmary.walkOut(5, 100),
     r.infirmary.discharge(5),
     r.infirmary.tap,
@@ -351,8 +354,8 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     r.discharged.headlineWell,
     r.discharged.body(P('hp'), P('max')),
     r.wardPaid(100),
-    r.desk.cells(P('place'), P('n'), P('iron')),
-    r.desk.infirmary(P('place'), P('n')),
+    r.desk.cells(P('place'), P('out'), P('iron')),
+    r.desk.infirmary(P('place'), P('out')),
     r.desk.whereYouAre,
     r.desk.rivalGround(P('city')),
     copy.travel.rivalGround,
@@ -361,13 +364,13 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     r.rival.barred(P('time')),
     r.rival.placeLine(P('city')),
     r.rivalGroundTag,
-    r.rival.ordersIn(P('city')),
+    copy.orders.away(P('city'), P('done'), P('of')),
     r.cantLiveHere,
     r.rival.drawsFrom(P('faction'), P('left')),
     r.pressureCapped,
     r.rival.arrivalWarning,
-    r.flags.watched(P('city')),
-    r.flags.warned(P('city')),
+    r.flags.watched(P('city'), P('until')),
+    r.flags.warned(P('city'), P('until')),
     r.cards.papersDetail,
     r.cards.payTheLamp(30),
     r.quarters.title,
@@ -394,15 +397,19 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     expect(r.recordLine('On file', 1)).toBe('On file · 1 mark');
     expect(r.minutes(1)).toBe('1 minute');
     expect(r.heatMove('+6', 6, r.heatState.cool, null)).toBe('Heat +6 → 6 · Cool');
-    expect(r.heatMove('+8', 32, r.heatState.noticed, '20:40')).toBe(
-      'Heat +8 → 32 · Noticed · cools by 20:40',
+    // Review 4 (answers §12): the `when` phrase, *Cool at 20:40*.
+    expect(r.heatMove('+8', 32, r.heatState.noticed, 'at 20:40')).toBe(
+      'Heat +8 → 32 · Noticed · Cool at 20:40',
     );
     expect(r.locked.rank('Organiser')).toBe('Organisers and above');
     // Design §13's quiet-way knock-on.
     expect(DESIGN).toContain(`${r.heatMove('+6', 6, r.heatState.cool, null)} · ${r.heatFirstCool}`);
     // The screens' examples, as the copy builds them.
     expect(SCREENS).toContain(r.ifCaught(1));
-    expect(SCREENS).toContain(r.desk.cells('Harbour Police', 24, 150));
+    expect(r.desk.cells('Harbour Police', 'in 24 min', 150)).toBe(
+      reworded('In the cells at Harbour Police · 24 minutes to go · bail 150 Iron'),
+    );
+    expect(SCREENS).toContain('In the cells at Harbour Police · 24 minutes to go · bail 150 Iron');
     expect(SCREENS).toContain(r.you(125, 125, 14, 'Cool'));
   });
 
@@ -419,6 +426,8 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
     expect(table).toHaveLength(8);
     for (const [keyCell, kicker, note] of table) {
       const key = /`(\w+)`/.exec(keyCell!)![1] as keyof typeof r.help;
+      // Review 4 #12: Heat's note is written by state (answers §12; checked in review4.copy.test.ts).
+      if (key === 'heat') continue;
       expect(r.help[key](), key).toEqual([kicker, note]);
     }
     expect(Object.keys(r.help).sort()).toEqual(table.map((t) => /`(\w+)`/.exec(t[0]!)![1]).sort());

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { ANSWERS, answer, pinsOutOfReach, signUpOnly, sheetSettled } from './helpers';
+import { ANSWERS, answer, pinsOutOfReach, signUp, signUpOnly, sheetSettled } from './helpers';
 
 /**
  * Review 2 #3: a phone held sideways (812 × 375, 667 × 375) is playable. The arrival, the paper,
@@ -133,3 +133,36 @@ for (const vp of [
     });
   });
 }
+
+/**
+ * Review 4 #3 (answers §3, tech design §12.6): from 960 px the paper is a 720 px framed sheet on a
+ * desk; under 960 px nothing changes (the wrappers are `display: contents`).
+ */
+test('the paper on a desk: a 720 px sheet at 1280 px, nothing changed at 959 px', async ({ page }) => {
+  test.setTimeout(90_000);
+  await signUp(page, 'Vera Desk');
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/paper');
+  await expect(page.getByTestId('headline').first()).toBeVisible();
+  const sheet = page.getByTestId('paper-sheet');
+  expect((await boxOf(sheet)).width).toBe(720);
+  const look = await sheet.evaluate((el) => {
+    const s = getComputedStyle(el);
+    const d = getComputedStyle(el.parentElement!);
+    return { border: s.borderLeftWidth, shadow: s.boxShadow, desk: d.backgroundColor };
+  });
+  expect(look.border).toBe('3px');
+  expect(look.shadow).toContain('rgba(0, 0, 0, 0.45) 0px 24px 48px');
+  expect(look.desk).toBe('rgb(28, 26, 23)');
+  // The HUD and the tab bar stay full width.
+  expect((await boxOf(page.getByRole('region', { name: 'Character' }))).width).toBe(1280);
+  await noSideScroll(page);
+
+  await page.setViewportSize({ width: 959, height: 800 });
+  await expect(sheet).toHaveCSS('display', 'contents');
+  await expect(page.getByTestId('paper-desk')).toHaveCSS('display', 'contents');
+  // The paper itself spans the page as before.
+  const article = page.locator('main article').first();
+  expect((await boxOf(article)).width).toBe(959);
+  await noSideScroll(page);
+});

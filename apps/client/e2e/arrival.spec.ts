@@ -78,7 +78,7 @@ for (const c of CASES) {
     await expect(choices).toHaveCount(3);
     for (const ch of await choices.all()) await expect(ch).toBeInViewport();
     await expect(page.getByTestId('story-prompt')).toBeInViewport();
-    await expect(page.getByTestId('story-waits')).toContainText('Close the game now and this waits for you');
+    await expect(page.getByTestId('story-waits')).toContainText('This waits for you');
 
     for (const text of ANSWERS.reference.slice(0, 3)) await answer(page, text);
     // Closing the tab keeps the place: the same question, with the echo of the talent.

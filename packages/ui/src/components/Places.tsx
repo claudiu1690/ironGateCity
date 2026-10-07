@@ -1,6 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog';
+import { copy } from '@irongate/content/copy';
 import { useId, useRef } from 'react';
 import { cx } from '../format';
+import { HelpButton, helpMark } from './Help';
 
 /** One place on the city map, as the Places list shows it. */
 export interface PlaceRow {
@@ -12,8 +14,11 @@ export interface PlaceRow {
   blurb: string;
   /** An open Party order points here (the orders list's pin link): a small tag. */
   order?: boolean;
-  /** Slice 4 (screens §7.1): work here is tagged with a live Issue: the small Issue mark. */
-  issue?: boolean;
+  /**
+   * Slice 4 (screens §7.1): work here is tagged with a live Issue: the small Issue mark. Review 4 #14
+   * (answers §14): the chip names it, *Issue · Harbour Rates*, and opens `help.issue`.
+   */
+  issue?: string | null;
 }
 
 export interface PlacesListProps {
@@ -112,15 +117,6 @@ export function PlacesList({ open, onOpenChange, cityName, places, onPick, retur
                           Party order
                         </span>
                       )}
-                      {p.issue && (
-                        <span
-                          className="label-caps flex items-center gap-1 border border-ink px-1.5 py-px text-[9.5px]"
-                          data-testid="place-issue"
-                        >
-                          <span className="size-2 rounded-full bg-petrol" aria-hidden="true" />
-                          Issue
-                        </span>
-                      )}
                     </span>
                     <span
                       id={`${ids}-${p.id}`}
@@ -130,11 +126,38 @@ export function PlacesList({ open, onOpenChange, cityName, places, onPick, retur
                     </span>
                   </span>
                 </button>
+                {p.issue && (
+                  // Review 4 #14: the chip names the Issue and opens its note; a button of its own
+                  // beside the row's, never inside it.
+                  <div className="-mt-2 pb-1 pl-[60px]">
+                    <IssueChip name={p.issue} />
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+/**
+ * Review 4 #14 (answers §14): *Issue · Harbour Rates*, the Places list's and a place sheet's chip; a
+ * tap opens *Issue of the week* (`help.issue`).
+ */
+export function IssueChip({ name, className }: { name: string; className?: string }) {
+  return (
+    <HelpButton
+      notes={[copy.help.issue()]}
+      label={`${copy.issueChip(name)}: what an Issue is`}
+      testId="place-issue"
+      className={cx('flex items-center', className)}
+    >
+      <span className="label-caps flex items-center gap-1 border border-ink px-1.5 py-px text-[9.5px]">
+        <span className="size-2 shrink-0 rounded-full bg-petrol" aria-hidden="true" />
+        <span className={helpMark}>{copy.issueChip(name)}</span>
+      </span>
+    </HelpButton>
   );
 }

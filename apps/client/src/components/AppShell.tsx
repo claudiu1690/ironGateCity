@@ -108,6 +108,7 @@ export function AppShell() {
           <HudBar
             character={character}
             nextTickIn={nextTickIn}
+            now={now}
             heat={heatNow(character.heat, now)}
             health={
               character.health

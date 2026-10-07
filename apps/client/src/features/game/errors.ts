@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { formatClock, formatWeekday, weekdayOf } from '@irongate/ui';
+import { formatUntil, formatWhen, weekdayOf } from '@irongate/ui';
 import { gameErrorOf } from '../../lib/trpc';
 
 /** A refused request, worded for the player. The server's reason decides; the client only words it. */
@@ -9,7 +9,7 @@ export function noticeFor(error: unknown): string | undefined {
   switch (game?.reason) {
     case 'NOT_ENOUGH_ENERGY': {
       const at = typeof game.nextTickAt === 'number' ? game.nextTickAt : null;
-      return copy.needsEnergy(Number(game.cost), at === null ? '—' : formatClock(at));
+      return copy.needsEnergy(Number(game.cost), at === null ? '—' : formatWhen(at));
     }
     case 'JOB_LOCKED':
       return copy.jobNeeds([
@@ -129,7 +129,7 @@ export function noticeFor(error: unknown): string | undefined {
       return copy.risk.errors.moved;
     case 'BARRED':
       return copy.risk.rival.barred(
-        typeof game.until === 'number' ? `${formatWeekday(game.until)} ${formatClock(game.until)}` : '',
+        typeof game.until === 'number' ? formatUntil(game.until) : '',
       );
     case 'NOT_HELD':
     case 'NOT_IN_CELLS':
@@ -139,6 +139,19 @@ export function noticeFor(error: unknown): string | undefined {
       return copy.risk.errors.noMarks;
     case 'CANNOT_PAY':
       return game.why === 'NOT_BRIBABLE' ? copy.risk.wontBeBought : copy.risk.needsIron(Number(game.cost ?? 0));
+    // Review 4 (tech design §3.3).
+    case 'NOT_OFFERED':
+      return copy.errors.notOffered;
+    case 'ONCE_ONLY':
+      return copy.errors.onceOnly;
+    case 'CARD_NOT_YET':
+      return copy.errors.cardNotYet(formatWhen(typeof game.at === 'number' ? game.at : 0));
+    case 'NO_LODGINGS':
+      return copy.errors.noLodgings;
+    case 'NOT_HERE':
+      return copy.errors.notHere;
+    case 'NO_COUNCIL':
+      return copy.errors.noCouncil;
     default:
       return 'That did not go through. Check your connection and tap again.';
   }

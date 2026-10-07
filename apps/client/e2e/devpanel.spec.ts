@@ -96,10 +96,21 @@ test('the dev panel: shown with the hooks, clear of the pins and the tab bar, an
   );
   await tap(page, 'Boost me', /^Already boosted · Energy 100$/);
 
-  // 4. +1 hour moves the clock an hour.
+  // 4. +1 hour moves the clock an hour, and the HUD's clock with it (review 4, T1).
   const before = await panel.getByTestId('dev-utc').textContent();
+  const minutesOf = (t: string | null) => {
+    const [h, m] = (t ?? '').split(':').map(Number);
+    return h! * 60 + m!;
+  };
+  const hudClock = page.getByTestId('hud-clock-time');
+  await expect(hudClock).toHaveText(/^\d\d:\d\d$/);
+  const clockBefore = minutesOf(await hudClock.textContent());
   await tap(page, '+1 hour', /^Now \w+day \d{1,2} \w{3} \d{2}:\d{2} UTC/);
   await expect(panel.getByTestId('dev-utc')).not.toHaveText(before ?? '');
+  await expect
+    .poll(async () => (minutesOf(await hudClock.textContent()) - clockBefore + 1440) % 1440)
+    .toBeGreaterThanOrEqual(60);
+  expect((minutesOf(await hudClock.textContent()) - clockBefore + 1440) % 1440).toBeLessThanOrEqual(62);
 
   // 5. Skip to nominations: the paper's Election row (Rank 3, Known, 10 Political Capital).
   await skipTo(page, /^(Count day|Nominations)/);

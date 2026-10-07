@@ -662,8 +662,24 @@ export interface OrdersView {
    * been seen (*Carry on*). `fxp` sums today's completions; `pc` is the all-done PC.
    */
   complete: { pc: number; fxp: number } | null;
-  /** Slice 5 (screens §8.3): on rival ground, *Your orders are in {city} today*. */
-  elsewhere?: { cityName: string } | null;
+  /**
+   * Review 4 #13 (answers §13, tech design §12.3): in any city but the residence, and on a train, the
+   * panel is one quiet line, *Your orders are in Coalport · 1 of 3 done*, not tappable. It replaces
+   * slice 5's rival-ground `elsewhere`. Null at home. The paper keeps the full list.
+   */
+  away: { cityName: string; done: number; of: number } | null;
+}
+
+/** Review 4 #25: what a Rank opens, a key of `copy.ranks.opens` (`RANK_OPENS`). */
+export type RankOpensKey = 'hall' | 'vote' | 'stand' | 'chair' | 'list' | 'president' | 'life';
+
+/** Review 4 #25: one row of the rank ladder. */
+export interface RankRowView {
+  rank: number;
+  title: string;
+  /** The Party XP the rank begins at. */
+  fxp: number;
+  opens: RankOpensKey;
 }
 
 export interface CharacterView {
@@ -699,6 +715,8 @@ export interface CharacterView {
     nextTitle: string | null;
     ladder: string[];
   };
+  /** Review 4 #25 (answers §25): the rank ladder's seven rows, Rank 1 first (`rankLadder`). */
+  ranks: RankRowView[];
   pc: number;
   statPointsPending: number;
   job: JobView | null;
@@ -1251,7 +1269,20 @@ export type GameErrorReason =
   | 'NOT_IN_CELLS'
   | 'NOT_IN_INFIRMARY'
   | 'NO_MARKS'
-  | 'CANNOT_PAY';
+  | 'CANNOT_PAY'
+  // Review 4 (tech design §3.3).
+  /** A welcome ticket (the first day's favour) outside its open order. */
+  | 'NOT_OFFERED'
+  /** ×3 on a one-off ticket. */
+  | 'ONCE_ONLY'
+  /** A journey card answered before its moment; `at` is the moment (epoch ms). */
+  | 'CARD_NOT_YET'
+  /** A bed asked for at a place without lodgings. */
+  | 'NO_LODGINGS'
+  /** Lodgings in another city than the one the character stands in. */
+  | 'NOT_HERE'
+  /** A Town Hall asked for in a city without a council. */
+  | 'NO_COUNCIL';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -1904,9 +1935,10 @@ export interface JourneyCardResult {
   quoted: boolean;
   /**
    * Slice 5 (tech design §10.4): a hostile card's day flag in the destination, worded (*Watched
-   * today: run-ins likelier in Duskwall until midnight*). Absent when the card set none.
+   * today: run-ins likelier in Duskwall until {until}*; review 4: the client renders `{until}`, the
+   * day's turn, in the player's clock). Absent when the card set none.
    */
-  flag?: { flag: 'watched' | 'warned'; line: string };
+  flag?: { flag: 'watched' | 'warned'; line: string; until: number };
   performedAt: string;
   idempotencyKey: string;
   character: CharacterView;
@@ -1952,7 +1984,9 @@ export type PlaceTagView =
   // Slice 5 (tech design §8.3).
   | { kind: 'rivalGround'; fxpPct: 50 | 75 }
   | { kind: 'record'; ironPct: number; level: RecordLevel }
-  | { kind: 'pressureCapped' };
+  | { kind: 'pressureCapped' }
+  // Review 4 #18 (answers §18): Familiar or better here, *Known here · better odds*.
+  | { kind: 'known' };
 
 /** Screens §6.1: the residence card's state, chosen on the server per district. */
 export interface ResidenceCardView {
@@ -2333,7 +2367,14 @@ export interface CharacterViewV6 {
 
 /** Slice 5 desk rows (tech design §11.3), live at read. */
 export interface DeskViewV5 {
-  held: { kind: 'cells' | 'infirmary'; placeName: string; minutesLeft: number; bail: number | null } | null;
+  /** `until` (review 4): the epoch ms the stay ends, for *out in 24 min* (`copy.when`). */
+  held: {
+    kind: 'cells' | 'infirmary';
+    placeName: string;
+    minutesLeft: number;
+    until: number;
+    bail: number | null;
+  } | null;
   heat: { value: number; state: HeatState; coolsAt: number | null } | null;
   record: { level: RecordLevel; marks: number } | null;
   where: { rivalGround: { cityName: string } } | null;

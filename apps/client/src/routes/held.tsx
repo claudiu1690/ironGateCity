@@ -1,6 +1,6 @@
 import { copy } from '@irongate/content/copy';
 import type { ActionResult, FactionId, PoliticalResult } from '@irongate/rules';
-import { ElectionCard, HeldScreen, ResultModal, healthNow } from '@irongate/ui';
+import { ElectionCard, HeldScreen, PaperSheet, ResultModal, healthNow } from '@irongate/ui';
 import type { HeldPending } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
@@ -162,7 +162,7 @@ export function HeldPage() {
     : { value: h.health.value, max: h.health.max };
   const energy = { value: character.energy.value, nextTickAt: character.energy.nextTickAt };
   return (
-    <>
+    <PaperSheet>
       <HeldScreen
         held={h}
         now={Math.min(now, h.until)}
@@ -225,6 +225,6 @@ export function HeldPage() {
         factionNames={names}
         trainingPlaces={trainingPlacesOf(city.data)}
       />
-    </>
+    </PaperSheet>
   );
 }

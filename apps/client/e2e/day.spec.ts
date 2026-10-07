@@ -14,7 +14,7 @@ test('take a job → next day: the paper is due, the wage and seniority on the d
   // No shift ticket any more; the Jobs card says how the job pays.
   await expect(sheet.getByTestId('ticket-coalport.mill-gate.shift')).toHaveCount(0);
   await expect(sheet.getByTestId('job-coalport-factory-worker')).toContainText(
-    '216 a day · paid at midnight',
+    /216 a day · paid (at|tomorrow) \d\d:\d\d/,
   );
   await sheet.getByRole('button', { name: 'Take the job' }).click();
   await expect(sheet.getByTestId('job-coalport-factory-worker')).toContainText(/Taken · /);

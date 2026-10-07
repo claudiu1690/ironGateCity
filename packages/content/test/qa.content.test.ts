@@ -274,17 +274,18 @@ describe('content vs docs/design/slice-1-content.md', () => {
   });
 
   it('§12.1 UI copy: the exact strings of the table', () => {
-    expect(copy.needsEnergy(10, '14:20')).toBe('Needs 10 Energy · ready at 14:20');
+    // Review 4 (answers §4.2): every moment is a `copy.when` phrase, with its own preposition.
+    expect(copy.needsEnergy(10, 'at 14:20')).toBe('Needs 10 Energy · ready at 14:20');
     expect(copy.x3Needs(30)).toBe('×3 needs 30 Energy');
     expect(copy.x3Needs(138)).toBe('×3 needs 138 Energy');
     // Review 1 (answers §1.2, §10.6): the shift strings are retired; the wage's lines replace them.
-    expect(copy.jobPayLine(216)).toBe('216 a day · paid at midnight');
+    expect(copy.jobPayLine(216, 'tomorrow 01:00')).toBe('216 a day · paid tomorrow 01:00');
     expect(copy.switchJob).toBe('Switch · seniority resets');
     expect(copy.yourJob(4, 8)).toBe('Your job · seniority 4 days · +8 %');
     expect(copy.jobNeeds(['Level 3', 'AGI 10'])).toBe('Needs Level 3, AGI 10');
-    expect(copy.jobTaken('01:00')).toBe('Taken · paid at 01:00');
+    expect(copy.jobTaken('at 01:00')).toBe('Taken · paid at 01:00');
     expect(copy.jobTakenOrder(20)).toBe('Taken · party order complete: +20 Party XP');
-    expect(copy.jobSwitched('01:00')).toBe('Switched · seniority reset · paid at 01:00');
+    expect(copy.jobSwitched('at 01:00')).toBe('Switched · seniority reset · paid at 01:00');
     expect(copy.orderTag(1, 3, 25)).toBe('Party order 1 / 3 · +25 % Party XP'); // review 2: Party XP
     expect(copy.orderDone).toBe('Order done');
     expect(copy.allOrdersDone(5)).toBe('All orders carried out · +5 Political Capital');

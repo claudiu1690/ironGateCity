@@ -41,6 +41,89 @@ function listOr(items: string[]): string {
 
 const STAT_NAMES = { str: 'Strength', int: 'Intelligence', agi: 'Agility', cha: 'Charisma' } as const;
 
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+const HOUR_MS = 3_600_000;
+const MINUTE_MS = 60_000;
+
+/** One formatter per zone (`undefined`: the runtime's own, the player's clock). */
+const zoneFormats = new Map<string, Intl.DateTimeFormat>();
+function zoneFormat(timeZone: string | undefined): Intl.DateTimeFormat {
+  const key = timeZone ?? '';
+  let f = zoneFormats.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-GB', {
+      ...(timeZone ? { timeZone } : {}),
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    });
+    zoneFormats.set(key, f);
+  }
+  return f;
+}
+
+/** A moment in a zone: its local day as a count of days (for "today" / "tomorrow"), weekday and time. */
+function localParts(
+  ms: number,
+  timeZone: string | undefined,
+): { day: number; weekday: number; time: string } {
+  const parts: Record<string, string> = {};
+  for (const p of zoneFormat(timeZone).formatToParts(ms)) parts[p.type] = p.value;
+  const utcDay = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+  return {
+    day: Math.round(utcDay / 86_400_000),
+    weekday: new Date(utcDay).getUTCDay(),
+    time: `${parts.hour}:${parts.minute}`,
+  };
+}
+
+export interface WhenOptions {
+  /** Two days or more ahead: the weekday and the time ("Saturday 01:00"), not the weekday alone. */
+  withTime?: boolean;
+  /** The zone to read the moment in; absent, the runtime's own (the player's clock). */
+  timeZone?: string;
+}
+
+/**
+ * Review 4 (answers §4.2, GDD §2.2): every moment a player reads, written one way by how far off it
+ * is, in the player's own clock: *in 24 min* under an hour; *at 14:40* later today; *tomorrow 01:00*;
+ * *Thursday* two days or more ahead (*Saturday 01:00* `withTime`); *now* once it has passed. The
+ * phrase carries its own preposition, so a line reads *ready in 24 min*, *Cool at 20:40*.
+ */
+export function when(at: number, now: number, o: WhenOptions = {}): string {
+  const ahead = at - now;
+  if (ahead <= 0) return 'now';
+  if (ahead < HOUR_MS) return `in ${Math.max(1, Math.ceil(ahead / MINUTE_MS))} min`;
+  const a = localParts(at, o.timeZone);
+  const n = localParts(now, o.timeZone);
+  const days = a.day - n.day;
+  if (days <= 0) return `at ${a.time}`;
+  if (days === 1) return `tomorrow ${a.time}`;
+  return o.withTime ? `${WEEKDAY_NAMES[a.weekday]} ${a.time}` : WEEKDAY_NAMES[a.weekday]!;
+}
+
+/**
+ * The end of a window (`{until}`, *Names go in until …*): a boundary always prints the time (§23 Q6,
+ * GDD §2.2): *until 14:00*, *until tomorrow 01:00*, *until Saturday 01:00*. No preposition: the line
+ * carries its own (*until*, *closes*).
+ */
+export function boundary(at: number, now: number, o: Omit<WhenOptions, 'withTime'> = {}): string {
+  const a = localParts(at, o.timeZone);
+  const n = localParts(now, o.timeZone);
+  const days = a.day - n.day;
+  if (days <= 0) return a.time;
+  if (days === 1) return `tomorrow ${a.time}`;
+  return `${WEEKDAY_NAMES[a.weekday]} ${a.time}`;
+}
+
+/** A length that is not a moment (a sentence, a wait): *38 minutes*, *1 minute*. */
+export function count(minutes: number): string {
+  return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+}
+
 /** "3 of 4", or "nil" when no member was eligible (a quiet city, counted with nobody active). */
 export const turnoutOf = (voters: number, eligible: number) =>
   eligible === 0 ? 'nil' : `${voters} of ${eligible}`;
@@ -50,9 +133,17 @@ const needsPhrase = (needs: string | null) =>
   needs ? (needs.startsWith('after ') ? `, ${needs}` : `, at ${needs}`) : '';
 
 export const copy = {
-  needsEnergy: (cost: number, readyAt: string) => `Needs ${cost} Energy · ready at ${readyAt}`,
+  /** Review 4 (answers §4.2): the one countdown style, `copy.when(at, now)`; see `when`. */
+  when,
+  /** The end of a window, always with its time; see `boundary`. */
+  boundary,
+  /** A length, not a moment: *38 minutes*. */
+  count,
+  /** `ready`: a `when` phrase, "Needs 10 Energy · ready in 24 min" / "· ready at 14:40". */
+  needsEnergy: (cost: number, ready: string) => `Needs ${cost} Energy · ready ${ready}`,
   energyFull: (rested: number) => `Rested ${rested}`,
-  energyFullAt: (at: string) => `full at ${at}`,
+  /** `at`: a `when` phrase, "full in 40 min" / "full at 16:21". */
+  energyFullAt: (at: string) => `full ${at}`,
   // The HUD's gauges in words (review 1 #3, #4, #14; answers §5, §8).
   hud: {
     energy: 'Energy',
@@ -84,10 +175,11 @@ export const copy = {
     threeLabel: 'Three more',
     trainLabel: (verb: string) => `${verb} again`,
     cost: (cost: number) => `${cost} Energy`,
-    onceNeeds: (cost: number, readyAt: string) => `Once more needs ${cost} Energy · ready at ${readyAt}`,
-    threeNeeds: (cost: number, readyAt: string) => `Three more needs ${cost} Energy · ready at ${readyAt}`,
-    trainNeeds: (verb: string, cost: number, readyAt: string) =>
-      `${verb} again needs ${cost} Energy · ready at ${readyAt}`,
+    /** `ready`: a `when` phrase (review 4, answers §4.2): "· ready in 24 min", "· ready at 14:40". */
+    onceNeeds: (cost: number, ready: string) => `Once more needs ${cost} Energy · ready ${ready}`,
+    threeNeeds: (cost: number, ready: string) => `Three more needs ${cost} Energy · ready ${ready}`,
+    trainNeeds: (verb: string, cost: number, ready: string) =>
+      `${verb} again needs ${cost} Energy · ready ${ready}`,
   },
   /**
    * Review 3 (answers §4.3): the ticket's buttons, *Once* and *×3* with its cost under it. (Open
@@ -137,8 +229,9 @@ export const copy = {
   /** Me tab, no job: the home city's places with a Jobs card, in pin order (content §13.7, n4). */
   meNoJob: (places: string[]) => `No job yet · take one at ${listOr(places)}`,
   takeJob: 'Take the job',
-  // Review 1 (answers §1.2, §10.6): a job is a wage.
-  jobPayLine: (pay: number) => `${pay} a day · paid at midnight`,
+  // Review 1 (answers §1.2, §10.6): a job is a wage. Review 4 (answers §4.2): the pay's moment is a
+  // `when` phrase, "paid tomorrow 01:00" (the day's turn in the player's clock).
+  jobPayLine: (pay: number, paid: string) => `${pay} a day · paid ${paid}`,
   switchJob: 'Switch · seniority resets',
   yourJob: (days: number, pct: number) =>
     `Your job · seniority ${days} ${days === 1 ? 'day' : 'days'} · +${pct} %`,
@@ -154,13 +247,20 @@ export const copy = {
   oneOfUsPaid: (pc: number) => `One of Us · +${pc} Political Capital from the town`,
   /** "Needs Level 3, AGI 10": only the unmet requirements, level first. */
   jobNeeds: (parts: string[]) => `Needs ${parts.join(', ')}`,
-  jobTaken: (firstPayAt: string) => `Taken · paid at ${firstPayAt}`,
+  jobTaken: (paid: string) => `Taken · paid ${paid}`,
   jobTakenOrder: (fxp: number) => `Taken · party order complete: +${fxp} Party XP`,
-  jobSwitched: (firstPayAt: string) => `Switched · seniority reset · paid at ${firstPayAt}`,
+  jobSwitched: (paid: string) => `Switched · seniority reset · paid ${paid}`,
   orderTag: (progress: number, target: number, pct: number) =>
     `Party order ${progress} / ${target} · +${pct} % Party XP`,
   orderDone: 'Order done',
   allOrdersDone: (pc: number) => `All orders carried out · +${pc} Political Capital`,
+  /**
+   * Review 4 #13 (answers §13): away from home (any city but the residence, and on a train), the
+   * orders panel is this one quiet line, not tappable. It replaces slice 5's rival-ground line.
+   */
+  orders: {
+    away: (city: string, done: number, of: number) => `Your orders are in ${city} · ${done} of ${of} done`,
+  },
   /** QA slice 4 m7: the capital's orders folded to one line on a short phone (a tap opens them). */
   ordersFold: {
     title: 'Party orders',
@@ -173,15 +273,15 @@ export const copy = {
   orderSigned: {
     vanguard: (fxp: number, left: number) =>
       left === 0
-        ? `Order carried out · +${fxp} Party XP. That's all three: see the note.`
+        ? `Order carried out · +${fxp} Party XP. That's all three; Stahl's note follows when you close this.`
         : `Order carried out · +${fxp} Party XP. ${left === 1 ? 'One remains' : 'Two remain'}. — V.S.`,
     collective: (fxp: number, left: number) =>
       left === 0
-        ? `Order carried out · +${fxp} Party XP. That's all three: see the note.`
+        ? `Done, that one · +${fxp} Party XP. That's the three; Holm has a word for you when you close this.`
         : `Done, that one · +${fxp} Party XP. ${left === 1 ? 'One to go' : 'Two to go'}. — P.H.`,
     alliance: (fxp: number, left: number) =>
       left === 0
-        ? `Order carried out · +${fxp} Party XP. That's all three: see the note.`
+        ? `Ticked · +${fxp} Party XP. Three for three; Grey has something to say when you close this.`
         : `Ticked · +${fxp} Party XP. ${left === 1 ? 'One left' : 'Two left'}. — T.G.`,
   },
   /** Review 1 (answers §6): the orders-complete note, in the secretary's voice. */
@@ -281,7 +381,7 @@ export const copy = {
   help: {
     energy: (fullAt: string | null) => [
       'Energy',
-      `Every action costs Energy. It refills by itself, five points every ten minutes, up to 100. Nothing is lost by waiting${fullAt ? `: full at ${fullAt}` : ''}.`,
+      `Every action costs Energy. It refills by itself, five points every ten minutes, up to 100. Nothing is lost by waiting${fullAt ? `: full ${fullAt}` : ''}.`,
     ],
     rested: () => [
       'Rested',
@@ -291,17 +391,60 @@ export const copy = {
       'Experience',
       `Every action pays Experience. Levels open places, kit and the train, and each one gives a stat point. ${n} more to Level ${next}.`,
     ],
-    fxp: (rank2: string, rank3: string, n: string | null, nextTitle: string | null) => [
+    /** Review 4 #25 (answers §25): shortened; the ladder says what each rank gives. */
+    fxp: (n: string | null, nextTitle: string | null) => [
       'Party XP',
-      `What the party thinks of you, earned by party work and orders. Ranks give rights: the vote at ${rank2}, standing for the council at ${rank3}.${n !== null && nextTitle ? ` ${n} more to ${nextTitle}.` : ''}`,
+      `What the party thinks of you, earned by party work and orders. Ranks give rights: tap for the ladder.${n !== null && nextTitle ? ` ${n} more to ${nextTitle}.` : ''}`,
+    ],
+    /**
+     * Review 4 (answers §4.1): the HUD clock's note. `dayTurn` is 00:00 UTC, `nightFrom` / `nightTo`
+     * 20:00 and 06:00 UTC, all in the player's clock (*01:00*, *21:00 to 07:00* at UTC+1).
+     */
+    clock: (dayTurn: string, nightFrom: string, nightTo: string) => [
+      'The clock',
+      `The game runs on real time, shown in your own clock. The day turns at ${dayTurn}; the map is dark from ${nightFrom} to ${nightTo}. Every time you read in the game is in this clock.`,
     ],
     pc: () => [
       'Political Capital',
       'Your pull in the party. You earn it by doing all three Party orders (+5 a day) and by holding a council seat. You spend it to stand for the council (10), to back a candidate (10) or to put a rule to the council (20).',
     ],
-    standing: (city: string) => [
+    /** Review 4 #18 (answers §18): the figure, said once; `steps` is the Reputation level here (0–4). */
+    standing: (city: string, steps: number) => [
       'Reputation',
-      `How well ${city} knows your face. Every win here counts: Familiar at 10, Known at 30, Trusted at 70, One of Us at 150. Each step makes everything you do here go a little better; One of Us pays 1 Political Capital a day.`,
+      `How well ${city} knows your face. Every win here counts: Familiar at 10, Known at 30, Trusted at 70, One of Us at 150. Each step makes everything you try here come off three times in a hundred more; you are ${steps} ${steps === 1 ? 'step' : 'steps'} up. One of Us pays 1 Political Capital a day.`,
+    ],
+    /** Review 4 #14 (answers §14): the Issue chip's note. */
+    issue: () => [
+      'Issue of the week',
+      'Two things the town is arguing about this week, drawn Monday. Work tagged with one moves opinion half again and counts for your party on it; on Sunday night the party with the most work owns the Issue, gains three points here, and its effect runs for a week.',
+    ],
+    /** Review 4 #9 (answers §9.2): where you live, in plain words (the card's kicker). */
+    residence: () => [
+      'Where you live',
+      'The town whose council you vote for and stand for, whose paper comes first, and whose Party orders you get. Living somewhere else costs 500 Iron and a week between moves; everything you own comes with you.',
+    ],
+    /** Review 4 #9 (answers §9.3): the Lodgings card's note. */
+    lodgings: () => [
+      'Lodgings',
+      'A paid bed for a week. While you have one, Rested banks to 250 instead of 200. Nothing else; your vote and your orders have nothing to do with it.',
+    ],
+    /** Review 4 #23 (answers §23.3): the masthead's edition line. */
+    edition: () => [
+      'Local edition',
+      "Your paper is the paper of where you live. Away from home it prints a local edition: the town's own news and Issues first, your party's voice throughout.",
+    ],
+    /**
+     * Review 4 #20 (answers §20.3): the cells' note under the new rule (twenty minutes, orders off, a
+     * mark). Shown from phase 2, with the rule; until then the cells screen keeps `risk.help.cells`.
+     */
+    cells: () => [
+      'The cells',
+      'A sentence of twenty to sixty minutes, by your Heat. Pay bail or wait; either way you walk out with Heat at 25, a mark on your record, and no Party orders until the day turns. Energy, the wage and the vote carry on without you.',
+    ],
+    /** Review 4 #17 (answers §17): Legal Aid, on the cells screen and (slice 6) the bail sheet. */
+    legalAid: () => [
+      'Legal Aid',
+      'The Alliance runs a legal-aid desk in every town. Its members pay half of any bail, anywhere, as a matter of policy. The other parties have no such desk.',
     ],
     share: (city: string) => [
       `Who holds ${city}`,
@@ -412,7 +555,7 @@ export const copy = {
     kicker: 'Reputation',
     1: (city: string, rank3: string) => [
       `Familiar in ${city}`,
-      `Faces nod. Everything you do in ${city} goes a little better now.`,
+      `Faces nod. Everything you try in ${city} comes off three in a hundred more often, from now on.`,
       `Known at 30 wins: better again, and your name will do to stand for the council once you are a ${rank3}.`,
     ],
     2: (city: string, rank3: string) => [
@@ -433,10 +576,40 @@ export const copy = {
   } as Record<'kicker', string> &
     Record<1 | 2 | 3 | 4, (city: string, rank3: string) => [string, string, string]>,
   orderComplete: (fxp: number) => `Party order complete: +${fxp} Party XP`,
+  /**
+   * Review 4 #25 (answers §25): the rank ladder. Seven rows, *title · Party XP · what it opens*, the
+   * player's row *you*, the next *next · {n} more*. `opens` is the same in every party.
+   */
+  ranks: {
+    kicker: (faction: string) => `The ${faction}'s ranks`,
+    opens: {
+      hall: "The party's hall and its chat; a pair of hands at any campaign event",
+      vote: 'The vote in every election; a named role at campaign events; backing a candidate',
+      stand: 'Standing for the council; calling campaign events; the harder missions',
+      chair: 'Standing for Chair after a council term; the party strikes a mark off your record once a month',
+      list: "The party's list for Parliament after a term as Governor or three on a council",
+      president: 'Standing for President after a term in Parliament',
+      life: "The title for life, and a line in the party's history",
+    } as Record<'hall' | 'vote' | 'stand' | 'chair' | 'list' | 'president' | 'life', string>,
+    fxp: (fxp: string) => `${fxp} Party XP`,
+    you: 'you',
+    next: (n: string) => `next · ${n} more`,
+    /** The Me tab's line: "Activist · 1,212 / 2,000 to Organiser"; at the top, "… · 61,000 Party XP". */
+    meLine: (title: string, fxp: string, next: string | null, nextTitle: string | null) =>
+      next !== null && nextTitle !== null
+        ? `${title} · ${fxp} / ${next} to ${nextTitle}`
+        : `${title} · ${fxp} Party XP`,
+    /** The HUD's notes sheet: the button under Party XP's note. */
+    seeTheLadder: 'See the ranks',
+  },
+  /** Review 4 #18 (answers §18): the ticket tag where the player is Familiar or better. */
+  knownHere: 'Known here · better odds',
+  /** Review 4 #14 (answers §14): the Places list's and the sheet's chip, *Issue · Harbour Rates*. */
+  issueChip: (name: string) => `Issue · ${name}`,
   later: 'Later',
   // Not in the §12.1 table: the out-of-Energy card and the Today strip (tech design §12.2).
   outOfEnergy: 'Out of Energy',
-  outOfEnergyRegen: (fullAt: string) => `+5 every 10 min · full at ${fullAt}`,
+  outOfEnergyRegen: (fullAt: string) => `+5 every 10 min · full ${fullAt}`,
   outOfEnergyRested: "Rested banks once you're full",
   waitingForYou: 'Waiting for you',
   toTheCity: 'To the city',
@@ -455,7 +628,8 @@ export const copy = {
   chooseYourFace: 'Choose your face',
   /** Me tab, a migrated character with no face yet (onboarding §13 Q7). */
   noFaceYet: 'No face yet',
-  storyWaits: 'Close the game now and this waits for you',
+  /** Review 4 #16: nothing invites the player to close the game. */
+  storyWaits: 'This waits for you',
   storyProgress: (step: number, of: number) => `Step ${step} of ${of}`,
   hisWish: (fxp: number) => `His wish · +${fxp} Party XP`,
   joinFaction: (name: string, city: string) => `Join the ${name} · take the train to ${city}`,
@@ -510,7 +684,8 @@ export const copy = {
   castYourBallot: 'Vote now',
   castYourBallotFor: (name: string) => `Vote for ${name}`,
   chooseAName: 'Choose a name',
-  ballotCaption: (at: string) => `One vote, final. The result is at ${at}.`,
+  /** `at`: a `when` phrase with its time, "The result is tomorrow 01:00." */
+  ballotCaption: (at: string) => `One vote, final. The result is ${at}.`,
   ballotCastLine: (weekday: string) =>
     `Vote cast · the result is in ${weekday}'s paper and on the Election card`,
   youVotedFor: (name: string) => `You voted for ${name}`,
@@ -577,7 +752,7 @@ export const copy = {
   youMoved: (name: string) => `You put forward ${name}`,
   voteFor: (name: string) => `Vote for ${name}`,
   chooseAMotion: 'Choose a rule',
-  councilCaption: (at: string) => `One vote, final; the whole council sees it. The council votes at ${at}.`,
+  councilCaption: (at: string) => `One vote, final; the whole council sees it. The council votes ${at}.`,
   voteRecorded: (weekday: string) =>
     `Vote recorded · the result is in ${weekday}'s paper and on the Election card`,
   passed: 'Passed',
@@ -629,7 +804,7 @@ export const copy = {
     ],
     standing: (n: number, needed: number, until: string) => [
       `You're standing · backers ${n} of ${needed}`,
-      `Two backers by ${until} or your name comes off · do today's orders and the branch backs you`,
+      `Two backers before ${until} or your name comes off · do today's orders and the branch backs you`,
     ],
     backing: (name: string, pollsWeekday: string, days: string) => [
       `You're backing ${name}`,
@@ -640,10 +815,10 @@ export const copy = {
       `Registered in ${place}`,
       `You vote from ${votesWeekday} · the result every fifth morning`,
     ],
-    /** "{n} days left" to the closing boundary, rounded up; the last day "closes tonight at midnight". */
+    /** "{n} days left" to the closing boundary, rounded up; `until` always prints its time (§23 Q6). */
     voting: (until: string, days: number) => [
       'Voting is open',
-      `${days <= 1 && until.endsWith('midnight') ? 'Closes tonight at midnight' : `Closes ${until} · ${days} ${days === 1 ? 'day' : 'days'} left`} · your vote is secret`,
+      `Closes ${until} · ${days} ${days === 1 ? 'day' : 'days'} left · your vote is secret`,
     ],
     voted: (name: string, countWeekday: string, paper: string) => [
       `You voted for ${name}`,
@@ -702,8 +877,10 @@ export const copy = {
     onTheTrainTo: (city: string) => `On the train to ${city}`,
     /** The journey's header: "The 14:20 to Irongate". */
     theTrainAt: (time: string, city: string) => `The ${time} to ${city}`,
-    minToGo: (n: number, time: string) => `${n} min to go · arrives ${time}`,
-    youCanClose: "You can close the game. You'll arrive either way, and Energy keeps refilling on the way.",
+    /** Review 4 (answers §4.2, §7.3): "arrives in 7 min · 14:22" (`when`, then the clock). */
+    arrives: (when: string, clock: string) => `arrives ${when} · ${clock}`,
+    /** Review 4 #16: nothing invites the player to close the game. */
+    eitherWay: "You'll arrive either way, and Energy keeps refilling on the way.",
     onTheWay: 'On the way',
     optional: 'Optional',
     oneChoice: 'one choice',
@@ -760,6 +937,14 @@ export const copy = {
     onBallot: "You're a candidate where you live until the result. You can move after it.",
     roomPaidAhead: (weekday: string) =>
       `The room is paid for a week ahead already. You can renew from ${weekday}.`,
+    /** Review 4 (tech design §3.3): the new refusals, worded. */
+    notOffered: "That errand was for your first day, and it's done.",
+    onceOnly: 'Once only',
+    /** `when`: the card's moment as a `when` phrase. */
+    cardNotYet: (when: string) => `Not yet: that moment on the train comes ${when}.`,
+    noLodgings: 'There is no bed to be had here.',
+    notHere: 'A bed is taken where you stand: take the train there first.',
+    noCouncil: 'This town has no council.',
   },
   /**
    * The ground sash (slice-4 screens, 3 Oct 2026): whose ground a place is, on the big scene art.
@@ -946,7 +1131,7 @@ export const copy = {
     howSeatsAreWon:
       "Each party's score mixes its share of the votes with its share of opinion. The top score takes the first seat; a party takes both only with more than twice the next. Ties: votes, then opinion, then the returning officer's draw.",
     factionProposal: (faction: string, secretary: string) => `the ${faction}'s proposal · ${secretary}`,
-    sixVotes: (at: string) => `Six votes of ten to pass. The council votes at ${at}.`,
+    sixVotes: (at: string) => `Six votes of ten to pass. The council votes ${at}.`,
   },
   /** The scoreboard, the player's word for the ledger (screens §9), and In Print (§7.3). */
   scoreboard: {
@@ -986,12 +1171,12 @@ export const copy = {
     toInfirmary: 'To the infirmary',
     /** The held screens' *While you wait* rows (screens §6.5, §7.5). */
     whileYouWait: 'While you wait',
-    /** Me tab (screens §2.4): "32 · Noticed · cool by 20:40" (no time while Cool). */
+    /** Me tab (screens §2.4): "32 · Noticed · Cool at 20:40" (`when`; no time while Cool). */
     heatMe: (n: number, state: string, time: string | null) =>
-      `${n} · ${state}${time ? ` · cool by ${time}` : ''}`,
-    /** The desk (screens §2.5): "Noticed (32), cooling · Cool by 20:40". */
+      `${n} · ${state}${time ? ` · Cool ${time}` : ''}`,
+    /** The desk (screens §2.5): "Noticed (32), cooling · Cool at 20:40". */
     heatDesk: (state: string, n: number, time: string | null) =>
-      `${state} (${n}), cooling${time ? ` · Cool by ${time}` : ''}`,
+      `${state} (${n}), cooling${time ? ` · Cool ${time}` : ''}`,
     needsPc: (n: number) => `Needs ${n} Political Capital`,
     /** The political modal's knock-ons (tech design §10.3). */
     heatKnock: (a: number, b: number, state: string) => `Heat ${a} → ${b} · ${state}`,
@@ -1070,10 +1255,18 @@ export const copy = {
       'You were outmatched. Strength is what counts in a fight; a coat with some weight to it helps.',
     remembered: 'Missions remember: next time, one tap',
     agility: (n: number) => `Agility +¼ · ${n} more for a point`,
-    /** "Heat +8 → 32 · Noticed · cools by 20:40"; no time while Cool ("Heat +6 → 6 · Cool"). */
+    /** "Heat +8 → 32 · Noticed · Cool at 20:40" (`when`); no time while Cool ("Heat +6 → 6 · Cool"). */
     heatMove: (gain: string, after: number | string, state: string, time: string | null) =>
-      `Heat ${gain} → ${after} · ${state}${time ? ` · cools by ${time}` : ''}`,
+      `Heat ${gain} → ${after} · ${state}${time ? ` · Cool ${time}` : ''}`,
     heatLine: (n: number | string, state: string) => `Heat ${n} · ${state}`,
+    /** Review 4 (answers §12): what each state does, in the Heat note (`{stateLine}`). */
+    heatStateLine: {
+      cool: 'Cool: nothing follows you.',
+      noticed:
+        'Noticed (25 and over): run-ins are likelier and the police join them; a mission that goes wrong is likelier to cost a mark.',
+      hot: 'Hot (50 and over): the same, more so, and your name taken means the cells.',
+      wanted: 'Wanted (75 and over): any mission that fails is the cells, no roll.',
+    } as Record<'cool' | 'noticed' | 'hot' | 'wanted', string>,
     heatState: { cool: 'Cool', noticed: 'Noticed', hot: 'Hot', wanted: 'Wanted' } as Record<
       'cool' | 'noticed' | 'hot' | 'wanted',
       string
@@ -1085,6 +1278,8 @@ export const copy = {
       hot: 'HOT · The police know your face. Your name taken now means the cells. A quiet day cools it.',
       wanted: 'WANTED · Any mission that goes wrong is the cells. Stay in, or stay legal, until it cools.',
     } as Record<'noticed' | 'hot' | 'wanted', string>,
+    /** Review 4 (answers §12): the Noticed card's last sentence, "Cool at 20:40." (`when`). */
+    heatCardCool: (when: string) => `Cool ${when}.`,
     /** Design §13: the chapter's quiet way, the Heat line's tail the first time ("Heat +6 → 6 · Cool · …"). */
     heatFirstCool: 'the first mark of attention: it cools five an hour',
     /** "The police took your name · 1 mark · On file". */
@@ -1154,7 +1349,7 @@ export const copy = {
     // Health (screens §2.2) and the run-in (screens §5).
     health: 'Health',
     healthValue: (hp: number, max: number) => `${hp} / ${max}`,
-    healthMove: (a: number, b: number, time: string) => `Health ${a} → ${b} · full again by ${time}`,
+    healthMove: (a: number, b: number, time: string) => `Health ${a} → ${b} · full again ${time}`,
     /** The run-in modal's kicker: "A run-in · The Far Bank". */
     runInKicker: (place: string) => `A run-in · ${place}`,
     /** Your line under the opponent: "Health 125 / 125 · Heat 14 · Cool". */
@@ -1255,12 +1450,14 @@ export const copy = {
     // The cells (screens §6).
     cells: {
       kicker: (place: string) => `The cells · ${place}`,
-      outAt: (time: string) => `out at ${time} · or pay bail`,
-      youCanClose: (time: string) =>
-        `You can close the game. The door opens at ${time} either way, and Energy keeps refilling in here.`,
+      /** `time`: a `when` phrase, "out in 38 min · or pay bail". */
+      outAt: (time: string) => `out ${time} · or pay bail`,
+      /** Review 4 #16: the sentence, with nothing inviting the player to close the game. */
+      eitherWay: (time: string) => `The door opens ${time} either way, and Energy keeps refilling in here.`,
       payBail: (n: number) => `Pay bail · ${n} Iron`,
       bailDouble: 'Bail is double on rival ground',
-      legalAid: 'Legal Aid: half price',
+      /** Review 4 #17 (answers §17): dotted; its note is `help.legalAid`. */
+      legalAid: 'Legal Aid · the Alliance pays half your bail',
       tap: 'Listen to the cells',
     },
     minutes: (n: number) => `${n} ${n === 1 ? 'minute' : 'minutes'}`,
@@ -1287,9 +1484,9 @@ export const copy = {
     // The infirmary (screens §7).
     infirmary: {
       kicker: 'The infirmary · the ward',
-      outAt: (time: string, hp: number, max: number) => `out at ${time} · Health ${hp} / ${max}, rising`,
-      youCanClose: (time: string) =>
-        `You can close the game. You're discharged at ${time} either way, and Health comes back ten every ten minutes.`,
+      outAt: (time: string, hp: number, max: number) => `out ${time} · Health ${hp} / ${max}, rising`,
+      eitherWay: (time: string) =>
+        `You're discharged ${time} either way, and Health comes back ten every ten minutes.`,
       walkOut: (energy: number, iron: number) => `Walk out well · ${energy} Energy · ${iron} Iron`,
       discharge: (energy: number) => `Discharge yourself · ${energy} Energy`,
       tap: 'Talk to the ward',
@@ -1311,9 +1508,10 @@ export const copy = {
 
     // The desk (screens §2.5).
     desk: {
-      cells: (place: string, n: number, iron: number) =>
-        `In the cells at ${place} · ${n} minutes to go · bail ${iron} Iron`,
-      infirmary: (place: string, n: number) => `In the infirmary at ${place} · ${n} minutes to go`,
+      /** `out`: a `when` phrase, "In the cells at Harbour Police · out in 24 min · bail 150 Iron". */
+      cells: (place: string, out: string, iron: number) =>
+        `In the cells at ${place} · out ${out} · bail ${iron} Iron`,
+      infirmary: (place: string, out: string) => `In the infirmary at ${place} · out ${out}`,
       whereYouAre: 'Where you are',
       rivalGround: (city: string) => `Rival ground · ${city} · everything is harder here`,
     },
@@ -1348,7 +1546,6 @@ export const copy = {
         'Everything is harder here. Heat doubles, every tap can bring a run-in, and party work pays half again. Nothing you own is at risk.',
       barred: (time: string) => `Barred · until ${time}`,
       placeLine: (city: string) => `${city} · rival ground`,
-      ordersIn: (city: string) => `Your orders are in ${city} today`,
       drawsFrom: (faction: string, left: string) =>
         `Your work here draws from the ${faction}'s morale · ${left} of 2.0 points left today`,
       arrivalWarning:
@@ -1356,8 +1553,9 @@ export const copy = {
     },
     /** A card's day flag on arrival. */
     flags: {
-      watched: (city: string) => `Watched today: run-ins likelier in ${city} until midnight`,
-      warned: (city: string) => `Warned: run-ins less likely in ${city} until midnight`,
+      /** `until`: the day's turn as a boundary, "until tomorrow 01:00". */
+      watched: (city: string, until: string) => `Watched today: run-ins likelier in ${city} until ${until}`,
+      warned: (city: string, until: string) => `Warned: run-ins less likely in ${city} until ${until}`,
     },
     /** The checkpoint card's rows as the journey screen prints them (screens §8.2). */
     cards: {
@@ -1382,9 +1580,16 @@ export const copy = {
 
     /** Help notes (screens §2.3; the review-1 pattern: [kicker, note]). */
     help: {
-      heat: () => [
-        'Heat',
-        'How much notice the police are taking of you. It rises with the harder work and cools five an hour on its own. From 25 the police start to turn up; from 50 a mark on your record can mean the cells.',
+      /**
+       * Review 4 #12 (answers §12): the note by state, with *Cool at {time}* on its own line while not
+       * Cool. `cool` is a `when` phrase (*at 20:40*), from the view's `coolsAt`.
+       */
+      heat: (state: 'cool' | 'noticed' | 'hot' | 'wanted' = 'cool', cool: string | null = null): string[] => [
+        `Heat · ${copy.risk.heatState[state]}`,
+        [
+          `How much notice the police are taking of you. ${copy.risk.heatStateLine[state]} It cools five an hour on its own, faster under a Customs Strike; a quiet day clears it. Nothing you own is at risk from Heat.`,
+          ...(state !== 'cool' && cool ? [`Cool ${cool}.`] : []),
+        ].join('\n'),
       ],
       health: () => [
         'Health',

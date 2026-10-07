@@ -2,7 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
 import type { JourneyCardResult, JourneyCardView, NationCityView, LocationView } from '@irongate/rules';
 import { useRef } from 'react';
-import { cx, formatClock, formatOpinionDelta, formatUntil, formatWeekday } from '../format';
+import { cx, formatClock, formatOpinionDelta, formatUntil, formatWhen, renderTimeTokens } from '../format';
 import { statName } from '../odds';
 import { Button } from './Button';
 import { OpinionBars } from './Capital';
@@ -26,7 +26,7 @@ export function cityCardNote(c: NationCityView): string | null {
   if (c.state === 'rival') return copy.risk.rival.cardNote;
   if (c.state === 'barred')
     return copy.risk.rival.barred(
-      c.barredUntil ? `${formatWeekday(c.barredUntil)} ${formatClock(c.barredUntil)}` : '',
+      c.barredUntil ? formatUntil(c.barredUntil) : '',
     );
   if (c.state === 'later') return copy.travel.noServiceYetCard;
   return null;
@@ -221,12 +221,12 @@ export interface JourneyProgressProps {
 
 /**
  * Screens §3.2: the two city names at the ends, a 2 px track with a train mark at
- * (now − boardedAt) / (arrivesAt − boardedAt), and *{n} min to go · arrives 14:22* under it.
+ * (now − boardedAt) / (arrivesAt − boardedAt), and *arrives in 7 min · 14:22* under it (review 4,
+ * answers §4.2: the `when` phrase, then the clock).
  */
 export function JourneyProgress({ from, to, boardedAt, arrivesAt, now }: JourneyProgressProps) {
   const span = Math.max(1, arrivesAt - boardedAt);
   const f = Math.min(1, Math.max(0, (now - boardedAt) / span));
-  const left = Math.max(0, Math.ceil((arrivesAt - now) / 60_000));
   return (
     <div className="flex flex-col gap-1.5" data-testid="journey-progress" data-progress={f.toFixed(3)}>
       <div className="label-caps flex justify-between text-[11px] font-semibold">
@@ -249,7 +249,7 @@ export function JourneyProgress({ from, to, boardedAt, arrivesAt, now }: Journey
         />
       </div>
       <p className="font-mono text-[12px] text-text-2" data-testid="journey-left">
-        {copy.travel.minToGo(left, formatClock(arrivesAt))}
+        {copy.travel.arrives(formatWhen(arrivesAt, now), formatClock(arrivesAt))}
       </p>
     </div>
   );
@@ -348,7 +348,7 @@ export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = 
           )}
           {chosen.flag && (
             <p className="font-mono text-[11.5px] text-failure" data-testid="journey-flag">
-              {chosen.flag.line}
+              {renderTimeTokens(chosen.flag.line, { until: chosen.flag.until })}
             </p>
           )}
           {chosen.rewards.length > 0 && (

@@ -28,6 +28,7 @@ import {
   orderMatches,
   projectEnergy,
   rankBounds,
+  rankLadder,
   seniorityPct,
   standingView,
   statUse,
@@ -37,7 +38,7 @@ import {
   wornCha,
 } from '@irongate/rules';
 import { liveIssuesOf, restedCapToday } from './modifiers';
-import { isRivalGround, recordLevelOf, riskView } from './risk';
+import { recordLevelOf, riskView } from './risk';
 import type { LiveIssue } from '@irongate/rules';
 import type {
   ActionDescriptor,
@@ -521,11 +522,17 @@ export function ordersView(
             }, 0),
           }
         : null,
-    // Slice 5 (screens §8.3): on rival ground the orders stand, but they are done at home:
-    // *Your orders are in Coalport today* (the residence city, which `{city}` names too).
-    elsewhere: isRivalGround(content, doc, doc.cityId)
-      ? { cityName: content.city(residenceCityId(doc))?.name ?? residenceCityId(doc) }
-      : null,
+    // Review 4 #13 (answers §13): away from the residence (rival ground included) and on a train,
+    // the orders stand but are done at home: one quiet line, *Your orders are in Coalport · 1 of 3
+    // done* (the residence city, which `{city}` names too).
+    away:
+      doc.journey?.status === 'onTheWay' || doc.cityId !== residenceCityId(doc)
+        ? {
+            cityName: content.city(residenceCityId(doc))?.name ?? residenceCityId(doc),
+            done: items.filter((i) => i.doneAt !== null).length,
+            of: items.length,
+          }
+        : null,
   };
 }
 
@@ -641,6 +648,8 @@ export function toCharacterView(
       nextTitle: bounds.next === null ? null : rankTitle(content, doc, doc.rank + 1),
       ladder: [...faction.rankTitles],
     },
+    // Review 4 #25 (answers §25): the ladder's rows, for the sheet the Party XP label opens.
+    ranks: rankLadder(faction.rankTitles),
     pc: doc.pc,
     statPointsPending: doc.statPointsPending,
     job: jobView(content, doc, today),

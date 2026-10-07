@@ -313,7 +313,14 @@ describe('the desk (tech design §11.3, screens §2.5)', () => {
     const { desk } = await p.caller.paper.today();
     const held = (await Character.findById(p.id).lean())!.held!;
     const left = Math.ceil((held.until.getTime() - clock.now()) / 60_000);
-    expect(desk.held).toEqual({ kind: 'cells', placeName: 'Harbour Police', minutesLeft: left, bail: held.bail!.total });
+    // Review 4 (answers §4.2): `until` for *out in 24 min*, read in the player's clock.
+    expect(desk.held).toEqual({
+      kind: 'cells',
+      placeName: 'Harbour Police',
+      minutesLeft: left,
+      until: held.until.getTime(),
+      bail: held.bail!.total,
+    });
     expect(desk.heat).toMatchObject({ state: 'hot' });
     expect(desk.heat!.value).toBeGreaterThan(50);
     expect(desk.heat!.coolsAt).toBeGreaterThan(clock.now());
@@ -334,10 +341,11 @@ describe('the desk (tech design §11.3, screens §2.5)', () => {
     const { p } = await settledMember('Ros Visit', { level: 10, cityId: 'duskwall' });
     const paper = await p.caller.paper.today();
     expect(paper.desk.where).toEqual({ rivalGround: { cityName: 'Duskwall' } });
-    expect(paper.orders.elsewhere).toEqual({ cityName: 'Coalport' });
+    // Review 4 #13: `away` replaces `elsewhere`, with the day's count.
+    expect(paper.orders.away).toEqual({ cityName: 'Coalport', done: expect.any(Number), of: 3 });
 
     const home = await settledMember('Sal Home');
-    expect((await home.p.caller.paper.today()).orders.elsewhere).toBeNull();
+    expect((await home.p.caller.paper.today()).orders.away).toBeNull();
   });
 });
 

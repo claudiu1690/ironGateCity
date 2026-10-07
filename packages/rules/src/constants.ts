@@ -70,6 +70,12 @@ export const FIRST_DAY = { chancePct: 10, lateFromHourUtc: 22 } as const;
 /** §5.4 — FXP at which Ranks 1..7 are reached (Rank 2 lowered to 400). */
 export const RANK_FXP = [0, 400, 2_000, 6_000, 15_000, 25_000, 60_000] as const;
 
+/**
+ * Review 4 #25 (answers §25, GDD §5.4): what each Rank opens, Rank 1 first, as keys of the ladder's
+ * plain-words lines (`copy.ranks.opens`): the same in every party.
+ */
+export const RANK_OPENS = ['hall', 'vote', 'stand', 'chair', 'list', 'president', 'life'] as const;
+
 /** §5.3 — stat points granted per level gained, placed on STR, INT or AGI (review 1). */
 export const LEVEL_UP = { statPoints: 1 } as const;
 

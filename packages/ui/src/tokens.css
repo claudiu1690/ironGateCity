@@ -297,3 +297,41 @@
     animation: sash-in 150ms ease-out both;
   }
 }
+
+/*
+ * Review 4 #3 (answers §3, tech design §12.6): the paper as a sheet on a desk. Under 960 px the two
+ * wrappers are not there at all (`display: contents`), so nothing changes. From 960 px the ground is a
+ * desk, ink-2 #1c1a17 under a soft radial vignette, and the page is a 720 px sheet on it: a 3 px edge
+ * of paper-2, a 1 px ink line and a shadow. The HUD and the tab bar stay full width.
+ */
+.paper-desk,
+.paper-desk > .paper-sheet {
+  display: contents;
+}
+@media (min-width: 960px) {
+  .paper-desk {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 32px 24px 0;
+    background-color: #1c1a17;
+    background-image:
+      radial-gradient(ellipse 70% 60% at 50% 35%, rgb(255 255 255 / 0.05) 0%, rgb(0 0 0 / 0) 60%),
+      radial-gradient(ellipse 120% 100% at 50% 50%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.45) 100%);
+  }
+  .paper-desk > .paper-sheet {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    width: 720px;
+    margin-inline: auto;
+    border: 3px solid var(--color-paper-2);
+    border-bottom: 0;
+    box-shadow:
+      0 0 0 1px var(--color-ink),
+      0 24px 48px rgb(0 0 0 / 0.45);
+  }
+  .paper-desk > .paper-sheet > * {
+    flex: 1 0 auto;
+  }
+}

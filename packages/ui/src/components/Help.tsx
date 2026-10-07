@@ -30,6 +30,13 @@ export interface HelpButtonProps {
    * given.
    */
   firstAt?: (x: number, y: number) => number | null;
+  /**
+   * Review 4 #25: a tap on the label of note `index` (by `firstAt`) that opens something else (the
+   * Party XP label opens the rank ladder); return true to keep the notes closed.
+   */
+  onPick?: (index: number) => boolean;
+  /** Review 4 #25: a button under a note (by its index in `notes`), e.g. *See the ranks*. */
+  actions?: Readonly<Record<number, { label: string; onClick: () => void }>>;
 }
 
 /** A label's box on screen, for `pickNoteAt`. */
@@ -62,6 +69,14 @@ export function notesFrom<T>(notes: ReadonlyArray<T>, first: number | null): Rea
   return [notes[first]!, ...notes.filter((_, i) => i !== first)];
 }
 
+/** The indices of `notesFrom`'s order (so a note keeps its action when moved first). */
+function orderFrom(length: number, first: number | null): number[] {
+  return notesFrom(
+    Array.from({ length }, (_, i) => i),
+    first,
+  ) as number[];
+}
+
 /**
  * Review 1 (answers §5, GDD §3.7): tap the label. The labels a note explains are set with a dotted
  * underline; a tap (or a click, or Enter on the focused button) opens the notes as a bottom sheet on
@@ -77,12 +92,15 @@ export function HelpButton({
   testId,
   buttonRef,
   firstAt,
+  onPick,
+  actions,
 }: HelpButtonProps) {
   const own = useRef<HTMLButtonElement>(null);
   const ref = buttonRef ?? own;
   const [open, setOpen] = useState(false);
   const [first, setFirst] = useState<number | null>(null);
-  const shown = notesFrom(notes, first);
+  const order = orderFrom(notes.length, first);
+  const shown = order.map((i) => notes[i]!);
   const [at, setAt] = useState<{ top: number; left: number } | null>(null);
   return (
     <Dialog.Root
@@ -106,7 +124,19 @@ export function HelpButton({
           aria-label={label}
           data-testid={testId}
           // A pointer tap (detail > 0) opens on the note under it; Enter or Space keeps the order.
-          onClick={firstAt ? (e) => setFirst(e.detail > 0 ? firstAt(e.clientX, e.clientY) : null) : undefined}
+          onClick={
+            firstAt
+              ? (e) => {
+                  const at = e.detail > 0 ? firstAt(e.clientX, e.clientY) : null;
+                  // Radix skips its toggle when the click's default is prevented.
+                  if (at !== null && onPick?.(at)) {
+                    e.preventDefault();
+                    return;
+                  }
+                  setFirst(at);
+                }
+              : undefined
+          }
           className={cx('min-h-11 cursor-pointer text-left', className)}
         >
           {children}
@@ -125,8 +155,21 @@ export function HelpButton({
           data-testid="help-note"
         >
           <div className="flex flex-col gap-3">
-            {shown.map(([kicker, text], i) =>
-              i === 0 ? (
+            {shown.map(([kicker, text], i) => {
+              const action = actions?.[order[i]!];
+              const button = action && (
+                <button
+                  type="button"
+                  className="label-caps min-h-11 cursor-pointer self-start border-[1.5px] border-ink px-3 text-[11px] hover:bg-ink hover:text-paper"
+                  onClick={() => {
+                    setOpen(false);
+                    action.onClick();
+                  }}
+                >
+                  {action.label}
+                </button>
+              );
+              return i === 0 ? (
                 <div key={kicker} className="flex flex-col gap-1">
                   <Dialog.Title className="label-caps text-[11px] font-semibold text-muted">
                     {kicker}
@@ -134,6 +177,7 @@ export function HelpButton({
                   <Dialog.Description className="font-body text-[15px] leading-snug">
                     <NoteLines text={text!} />
                   </Dialog.Description>
+                  {button}
                 </div>
               ) : (
                 <div key={kicker} className="flex flex-col gap-1 border-t border-dotted border-faint pt-2.5">
@@ -141,9 +185,10 @@ export function HelpButton({
                   <p className="font-body text-[15px] leading-snug">
                     <NoteLines text={text!} />
                   </p>
+                  {button}
                 </div>
-              ),
-            )}
+              );
+            })}
           </div>
           <Dialog.Close className="label-caps min-h-11 cursor-pointer self-end border-[1.5px] border-ink px-3 text-[11px] hover:bg-ink hover:text-paper">
             {copy.help.close}

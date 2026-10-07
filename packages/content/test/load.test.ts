@@ -145,11 +145,12 @@ describe('the real content', () => {
   });
 
   it('exposes the UI copy (§12.1)', () => {
-    expect(copy.needsEnergy(10, '14:20')).toBe('Needs 10 Energy · ready at 14:20');
+    // Review 4 (answers §4.2): the moment is a `copy.when` phrase, which carries its own preposition.
+    expect(copy.needsEnergy(10, 'at 14:20')).toBe('Needs 10 Energy · ready at 14:20');
     expect(copy.jobNeeds(['Level 3', 'AGI 10'])).toBe('Needs Level 3, AGI 10');
     // Review 1 (answers §7): the waiting badge says nothing is lost by choosing later.
     expect(copy.pointsToPlace(1)).toBe('1 point to place · nothing is lost by choosing later');
-    expect(copy.jobPayLine(216)).toBe('216 a day · paid at midnight');
+    expect(copy.jobPayLine(216, 'tomorrow 01:00')).toBe('216 a day · paid tomorrow 01:00');
     expect(copy.switchJob).toBe('Switch · seniority resets');
     expect(copy.deskPaid(216, 'Stores hand', 4, 8)).toBe(
       'Paid: 216 Iron · Stores hand · seniority 4 days (+8 %)',

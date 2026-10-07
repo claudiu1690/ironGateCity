@@ -3,23 +3,24 @@ import { isNight } from '@irongate/rules';
 import type { CapitalCountView, CouncilView, ElectionView, FactionId, HallView } from '@irongate/rules';
 import {
   Button,
-  cx,
   CountTable,
   DistrictResultTable,
   DistrictSwitcher,
-  weekdayOf,
   HallHeader,
   HowElectionsWork,
   OrderPaper,
   OrdinanceMenu,
+  PaperSheet,
   Plate,
   ProgressBar,
   ResultModal,
   SeatGrid,
   Slate,
+  cx,
   formatAt,
   formatUntil,
   formatWeekday,
+  weekdayOf,
 } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
@@ -68,6 +69,7 @@ function Page({
 }) {
   const now = useNow(60_000);
   return (
+    <PaperSheet>
     <div className="paper-grain min-h-full text-ink">
       <div className="mx-auto flex max-w-[640px] flex-col gap-3 px-4 pt-4 pb-8 sm:pt-4 lg:pb-[132px]">
         {hall?.hall && (
@@ -85,6 +87,7 @@ function Page({
         {children}
       </div>
     </div>
+    </PaperSheet>
   );
 }
 
@@ -193,7 +196,7 @@ function DeclareCard({
         <li>
           {tick(known.met)} Known in {e.cityName} ({known.successes} wins)
         </li>
-        <li>2 backers by {formatUntil(e.nominationsCloseAt)}</li>
+        <li>2 backers before {formatUntil(e.nominationsCloseAt)}</li>
       </ul>
       {/* Review 3 (answers §6.3): what a seat gives, in words. */}
       <p className="font-mono text-[12px] text-text-2" data-testid="seat-gives">

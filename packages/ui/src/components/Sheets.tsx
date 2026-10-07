@@ -1,8 +1,9 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
 import type { LocationJobView, ResultArt } from '@irongate/rules';
+import { Fragment } from 'react';
 import type { ReactNode } from 'react';
-import { cx, formatClock } from '../format';
+import { cx, formatWhen, nextDayTurn } from '../format';
 import { GroundSash } from './GroundSash';
 import type { Ground } from './GroundSash';
 import { ArtPanel } from './HallHeader';
@@ -23,6 +24,8 @@ export interface LocationSheetProps {
   blurb: string;
   /** Small bonus tags ("Rested +50 % XP and Iron"). */
   tags?: string[];
+  /** Review 4 #14: tappable chips after the tags (the Issue chip, *Issue · Harbour Rates*). */
+  chips?: ReactNode;
   layout?: LocationLayout;
   /**
    * A bottom sheet the full 60 dvh, however little it holds: the zoomed map's art stops short of the
@@ -40,6 +43,12 @@ export interface LocationSheetProps {
   /** Slice 4: the sheet's accessible name when it is not the place's (the district card). */
   testId?: string;
   children: ReactNode;
+  /**
+   * Review 4 (tech design §3.1): the place's cards, after the tickets and missions, in a fixed order:
+   * the Jobs card · Lodgings · *In the cells now* · the Town Hall's blocks · (slice 8: shops). The
+   * caller builds the list from the place's view; each feature adds its card here.
+   */
+  cards?: ReadonlyArray<ReactNode>;
 }
 
 /** A pointer-down on the city map (a drag of the zoomed map, another pin) keeps the sheet open. */
@@ -64,6 +73,7 @@ export function LocationSheet({
   name,
   blurb,
   tags = [],
+  chips = null,
   layout = 'sheet',
   fill = false,
   art,
@@ -71,6 +81,7 @@ export function LocationSheet({
   kicker,
   testId,
   children,
+  cards = [],
 }: LocationSheetProps) {
   const modal = layout === 'panel';
   return (
@@ -158,6 +169,7 @@ export function LocationSheet({
                   ))}
                 </ul>
               )}
+              {chips && <div className="flex flex-wrap gap-1.5">{chips}</div>}
             </div>
             <Dialog.Close
               className="label-caps -mr-1 min-h-11 min-w-11 cursor-pointer border-[1.5px] border-ink px-2 text-[11px] hover:bg-ink hover:text-paper"
@@ -166,7 +178,12 @@ export function LocationSheet({
               Close
             </Dialog.Close>
           </div>
-          <div className="flex flex-col gap-2 px-3 pt-2.5 pb-4">{children}</div>
+          <div className="flex flex-col gap-2 px-3 pt-2.5 pb-4">
+            {children}
+            {cards.map((card, i) => (
+              <Fragment key={i}>{card}</Fragment>
+            ))}
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -206,7 +223,9 @@ export function JobsCard({ jobs, held, onTake, pendingJobId, message }: JobsCard
         >
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-display text-[15px] font-bold">{j.name}</span>
-            <span className="font-label text-[13px]">{copy.jobPayLine(j.pay)}</span>
+            <span className="font-label text-[13px]">
+              {copy.jobPayLine(j.pay, formatWhen(nextDayTurn()))}
+            </span>
           </div>
           <p className="font-body text-[13px] text-text-2">{j.blurb}</p>
           {j.held ? (
@@ -259,7 +278,7 @@ export function OutOfEnergyCard({ fullAt, waiting }: OutOfEnergyCardProps) {
     >
       <span className="label-caps text-[11px] font-semibold">{copy.outOfEnergy}</span>
       {fullAt !== null && (
-        <span className="font-label text-[14px]">{copy.outOfEnergyRegen(formatClock(fullAt))}</span>
+        <span className="font-label text-[14px]">{copy.outOfEnergyRegen(formatWhen(fullAt))}</span>
       )}
       <span className="font-mono text-[11px] text-dim">{copy.outOfEnergyRested}</span>
       {waiting.length > 0 && (

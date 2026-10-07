@@ -105,7 +105,7 @@ describe('ResultModal v2', () => {
     expect(d.getByRole('button', { name: 'Three more · 30 Energy' })).toBeDisabled();
     expect(d.getByTestId('again-three')).toHaveTextContent('30 Energy');
     expect(d.getByTestId('again-hint')).toHaveTextContent(
-      /^Three more needs 30 Energy · ready at \d\d:\d\d$/,
+      /^Three more needs 30 Energy · ready (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day|now)$/,
     );
     // The parts of a reward, worded ("+40 and Rested +5").
     expect(within(d.getByTestId('reward-xp')).getByTestId('reward-note').textContent).toMatch(/^\+\d+ and /);
@@ -167,7 +167,7 @@ describe('ResultModal v2', () => {
     expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
     expect(d.getByRole('button', { name: 'Study again · 46 Energy' })).toBeDisabled();
     expect(d.getByTestId('again-hint')).toHaveTextContent(
-      /^Study again needs 46 Energy · ready at \d\d:\d\d$/,
+      /^Study again needs 46 Energy · ready (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day|now)$/,
     );
   });
 

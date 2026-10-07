@@ -1,15 +1,16 @@
 import { copy } from '@irongate/content/copy';
-import { heatState, xpForLevel } from '@irongate/rules';
+import { DAY_NIGHT, dayKey, dayStart, heatState, xpForLevel } from '@irongate/rules';
 import type { CharacterView, StatPointTarget } from '@irongate/rules';
 import { useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import { cx, formatClock, formatCountdown, formatNumber } from '../format';
+import { clockNow, cx, formatClock, formatCountdown, formatNumber, formatWhen } from '../format';
 
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { Gauge } from './Gauge';
 import { HelpButton, helpMark, pickNoteAt } from './Help';
 import type { HelpNote, NoteBox } from './Help';
 import { Picture } from './Picture';
+import { RankLadderSheet } from './RankLadder';
 import { StatPointsPanel } from './Shell';
 import { HealthBar, HeatRow, heatWord } from './Street';
 
@@ -24,6 +25,11 @@ export interface HudBarProps {
   health?: { value: number; max: number };
   /** Milliseconds until the next +5 Energy, or null when full. */
   nextTickIn: number | null;
+  /**
+   * Review 4 (answers §4.1): the server's clock now (the dev panel's test clock included), ticking;
+   * the HUD's clock shows it to the minute. Absent: the clock source's now.
+   */
+  now?: number;
   /** Stat points: the badge opens a small panel with STR / INT / AGI. */
   onPlaceStat?: (stat: StatPointTarget) => void;
   placing?: StatPointTarget | null;
@@ -39,14 +45,17 @@ export interface HudBarProps {
  * sheet on the note of the label under it (review 4 #12), the others after it. Political Capital is
  * its own button with its own note. A badge shows when stat points wait.
  */
-export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, health }: HudBarProps) {
+export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, health, now: nowProp }: HudBarProps) {
+  const now = nowProp ?? clockNow();
   const heatValue = heat ?? c.heat?.value ?? 0;
+  const heatS = heatState(heatValue);
+  const coolsAt = c.heat?.coolsAt ?? null;
   const hp = health ?? (c.health ? { value: c.health.value, max: c.health.max } : null);
   const [open, setOpen] = useState(false);
   const levelFloor = xpForLevel(c.level);
   const levelNext = xpForLevel(c.level + 1);
   const next = nextTickIn === null ? 'full' : `next +5 in ${formatCountdown(nextTickIn)}`;
-  const fullAt = c.energy.fullAt !== null ? formatClock(c.energy.fullAt) : null;
+  const fullAt = c.energy.fullAt !== null ? formatWhen(c.energy.fullAt, now) : null;
   const status =
     fullAt !== null ? copy.energyFullAt(fullAt) : c.rested > 0 ? copy.energyFull(c.rested) : 'Full';
   const { fxpFloor, fxpNext, nextTitle } = c.rank;
@@ -57,25 +66,34 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
   const keyed: Array<{ key: string; note: HelpNote }> = [
     { key: 'energy', note: copy.help.energy(fullAt) as HelpNote },
     ...(c.rested > 0 ? [{ key: 'rested', note: copy.help.rested() as HelpNote }] : []),
+    // Review 4 #12: Heat's line sits under Energy; its note says the state and when it cools.
+    ...(heatValue > 0
+      ? [
+          {
+            key: 'heat',
+            note: copy.risk.help.heat(
+              heatS,
+              heatS !== 'cool' && coolsAt !== null ? formatWhen(coolsAt, now) : null,
+            ) as HelpNote,
+          },
+        ]
+      : []),
     { key: 'xp', note: copy.help.xp(toNext, c.level + 1) as HelpNote },
     {
       key: 'fxp',
-      note: copy.help.fxp(
-        c.rank.ladder[1] ?? '',
-        c.rank.ladder[2] ?? '',
-        up ? formatNumber(up.fxp - c.fxp) : null,
-        up?.title ?? null,
-      ) as HelpNote,
+      note: copy.help.fxp(up ? formatNumber(up.fxp - c.fxp) : null, up?.title ?? null) as HelpNote,
     },
     ...(hp ? [{ key: 'health', note: copy.risk.help.health() as HelpNote }] : []),
-    ...(heatValue > 0 ? [{ key: 'heat', note: copy.risk.help.heat() as HelpNote }] : []),
   ];
   const notes = keyed.map((k) => k.note);
+  // Review 4 #25: the Party XP label opens the rank ladder; its note carries *See the ranks*.
+  const [ladder, setLadder] = useState(false);
+  const fxpAt = keyed.findIndex((k) => k.key === 'fxp');
   const gauges = useRef<HTMLDivElement>(null);
   const firstAt = firstNoteIn(gauges, keyed);
   // Review 4 #24: on a phone held sideways (the 60 px HUD) Health and Heat sit in the name line, one
   // button of their own (the gauges keep their one row).
-  const vitalsKeyed = keyed.filter((k) => k.key === 'health' || k.key === 'heat');
+  const vitalsKeyed = ['health', 'heat'].flatMap((key) => keyed.filter((k) => k.key === key));
   const vitals = useRef<HTMLButtonElement>(null);
   return (
     <div
@@ -144,7 +162,10 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
                 )}
               </HelpButton>
             )}
-            <span className="ml-auto flex shrink-0 items-baseline gap-1">
+            {/* Review 4 (answers §4.1): the clock in the first line on wide screens (and on a phone
+                held sideways); under 1024 px it sits at the right of the Energy line. */}
+            <HudClock now={now} testId="hud-clock-line" className="hidden self-center lg:ml-auto lg:flex short:flex" />
+            <span className="ml-auto flex shrink-0 items-baseline gap-1 lg:ml-0 short:ml-0">
               <span className="font-label text-[14px] leading-none font-medium" data-testid="hud-iron">
                 {formatNumber(c.iron)}
               </span>
@@ -179,19 +200,26 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
             ref={gauges}
             className="relative grid gap-[3px] lg:grid-cols-3 lg:gap-x-6 short:grid-cols-3 short:gap-x-4"
           >
-            <Gauge
-              label={copy.hud.energy}
-              name="Energy"
-              tone="energy"
-              value={c.energy.value}
-              max={c.energy.max}
-              valueText={`${c.energy.value} of ${c.energy.max}, ${next}`}
-              figure={`${c.energy.value} / ${c.energy.max}`}
-              figureTestId="hud-energy"
-              noteKey="energy"
-              note={status}
-              noteTestId="hud-next-tick"
-            />
+            <div className="flex min-w-0 items-center gap-1 lg:contents short:contents">
+              <Gauge
+                label={copy.hud.energy}
+                name="Energy"
+                tone="energy"
+                value={c.energy.value}
+                max={c.energy.max}
+                valueText={`${c.energy.value} of ${c.energy.max}, ${next}`}
+                figure={`${c.energy.value} / ${c.energy.max}`}
+                figureTestId="hud-energy"
+                noteKey="energy"
+                note={status}
+                noteTestId="hud-next-tick"
+                className="flex-1"
+                narrowBar
+              />
+              <HudClock now={now} testId="hud-clock" className="-mr-2 flex lg:hidden short:hidden" />
+            </div>
+            {/* Review 4 #12 (answers §12): Heat is a body line of its own under Energy, from 1. */}
+            {heatValue > 0 && <HeatRow value={heatValue} size="line" className="short:hidden lg:row-start-2" />}
             <Gauge
               label={copy.hud.xp}
               name="Experience to next level"
@@ -236,10 +264,9 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
               figureTestId="hud-fxp"
               noteKey="fxp"
             />
-            {/* Slice 5 (screens §2.2), review 4 #24: Health under Party XP, always; Heat beside it on
-                wide screens (under it on a phone), only above 0. */}
-            {hp && <HealthBar value={hp.value} max={hp.max} className="short:hidden" />}
-            {heatValue > 0 && <HeatRow value={heatValue} className="short:hidden" />}
+            {/* Slice 5 (screens §2.2), review 4 #24: Health under Party XP, always (the second row's
+                third column on wide screens; Heat sits under Energy). */}
+            {hp && <HealthBar value={hp.value} max={hp.max} className="short:hidden lg:col-start-3 lg:row-start-2" />}
             {/* One tap target over the gauges (44 px tall): the notes behind their labels, opening on
                 the one under the tap. */}
             <HelpButton
@@ -248,10 +275,24 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
               label={heatValue > 0 ? 'What Energy, XP, Party XP, Health and Heat mean' : 'What Energy, XP, Party XP and Health mean'}
               testId="hud-help"
               className="absolute inset-x-0 -top-1 -bottom-1 h-auto w-full bg-transparent focus-visible:outline-2 focus-visible:outline-paper lg:-bottom-3 short:-top-0.5"
+              onPick={(i) => {
+                if (i !== fxpAt) return false;
+                setLadder(true);
+                return true;
+              }}
+              actions={{ [fxpAt]: { label: copy.ranks.seeTheLadder, onClick: () => setLadder(true) } }}
             />
           </div>
         </div>
       </div>
+      <RankLadderSheet
+        open={ladder}
+        onOpenChange={setLadder}
+        factionName={c.factionName}
+        ranks={c.ranks}
+        rank={c.rank.value}
+        fxp={c.fxp}
+      />
       {c.statPointsPending > 0 && onPlaceStat && (
         <div className="mx-auto max-w-6xl px-3 pb-1.5">
           <button
@@ -280,6 +321,37 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Review 4 (answers §4.1): the time in the player's own clock, Courier 12 px, dotted: its note says
+ * when the day turns and when the map is dark, in the same clock (00:00, 20:00 and 06:00 UTC). A
+ * 44 px target over a 12 px line, drawn above the gauges' group button.
+ */
+function HudClock({ now, testId, className }: { now: number; testId: string; className?: string }) {
+  const turn = dayStart(dayKey(now));
+  const hour = 3_600_000;
+  const note = copy.help.clock(
+    formatClock(turn),
+    formatClock(turn + DAY_NIGHT.nightFromHour * hour),
+    formatClock(turn + DAY_NIGHT.dayFromHour * hour),
+  ) as HelpNote;
+  const time = formatClock(now);
+  return (
+    <HelpButton
+      notes={[note]}
+      label={`${time}: what the clock means`}
+      testId={testId}
+      className={cx(
+        'relative z-10 -my-[15px] min-w-11 shrink-0 items-center justify-end text-paper',
+        className,
+      )}
+    >
+      <span className={cx('font-mono text-[12px] leading-none', helpMark)} data-testid={`${testId}-time`}>
+        {time}
+      </span>
+    </HelpButton>
   );
 }
 

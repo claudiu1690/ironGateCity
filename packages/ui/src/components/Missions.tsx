@@ -3,7 +3,7 @@ import { copy } from '@irongate/content/copy';
 import { energyReadyAt, riskBand } from '@irongate/rules';
 import type { FactionId, MissionRiskView, MissionView } from '@irongate/rules';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { cx, formatClock } from '../format';
+import { cx, formatWhen } from '../format';
 import { oddsTag, ticketOdds } from '../odds';
 import { HelpButton, helpMark } from './Help';
 import { ordinanceTagText } from './ResultModal';
@@ -147,7 +147,7 @@ export function MissionTicket({
   const short = energy.value < m.energy;
   const readyAt = short ? energyReadyAt(energy, m.energy) : null;
   const reason =
-    lock ?? (short ? copy.needsEnergy(m.energy, readyAt === null ? '—' : formatClock(readyAt)) : null);
+    lock ?? (short ? copy.needsEnergy(m.energy, readyAt === null ? '—' : formatWhen(readyAt)) : null);
   const placeTags = m.placeTags ?? [];
   const rival = placeTags.some((t) => t.kind === 'rivalGround');
   const orderDone = !!m.order && m.order.progress >= m.order.target;
@@ -171,8 +171,12 @@ export function MissionTicket({
   const tags = [missionLabel(m, names), ...(lock || !way ? [] : [ticketOdds(way.preview)])].join(' · ');
   const chips: Array<{ text: string; order?: boolean }> = [
     ...(m.tags ?? []).filter((t) => t.kind === 'energy').map(ordinanceTagText),
-    ...placeTags.filter((t) => t.kind !== 'membersOnly' && t.kind !== 'pressureCapped').map(placeTagText),
+    ...placeTags
+      .filter((t) => t.kind !== 'membersOnly' && t.kind !== 'pressureCapped' && t.kind !== 'known')
+      .map(placeTagText),
     ...(m.tags ?? []).filter((t) => t.kind !== 'energy').map(ordinanceTagText),
+    // Review 4 #18: *Known here · better odds* where *Open Doors · better odds* sits.
+    ...placeTags.filter((t) => t.kind === 'known').map(placeTagText),
     ...bonusTags,
   ].map((text) => ({ text }));
   if (order) chips.push({ text: order, order: !orderDone });

@@ -2,7 +2,7 @@ import { copy } from '@irongate/content/copy';
 import { WEEKDAY_NAMES, weekday } from '@irongate/rules';
 import type { DailyTally, DeskView, OrdersView, PaperView } from '@irongate/rules';
 import type { ReactNode } from 'react';
-import { cx, formatClock, formatNumber, formatOpinionDelta, plural } from '../format';
+import { cx, formatClock, formatNumber, formatOpinionDelta, formatWhen, nextDayTurn, plural } from '../format';
 import { HelpButton, helpMark } from './Help';
 import type { HelpNote } from './Help';
 import { Picture } from './Picture';
@@ -78,9 +78,25 @@ export interface OrdersListProps {
   onPin?: (locationId: string, orderId: string) => void;
 }
 
-/** Today's Party orders (§13.7) with progress. */
+/**
+ * Today's Party orders (§13.7) with progress. Review 4 #13 (answers §13): away from home the panel is
+ * one quiet line, 36 px, not tappable, no chevron: *Your orders are in Coalport · 1 of 3 done*. The
+ * paper keeps the full list.
+ */
 export function OrdersList({ orders, variant = 'compact', className, onPin }: OrdersListProps) {
   const paper = variant === 'paper';
+  if (orders.away && !paper) {
+    return (
+      <section aria-label="Party orders" className={cx('flex flex-col', className)} data-testid="orders">
+        <p
+          className="flex h-9 items-center truncate font-mono text-[12px] text-text-2"
+          data-testid="orders-away"
+        >
+          {copy.orders.away(orders.away.cityName, orders.away.done, orders.away.of)}
+        </p>
+      </section>
+    );
+  }
   return (
     <section aria-label="Party orders" className={cx('flex flex-col', className)} data-testid="orders">
       {paper && (
@@ -102,13 +118,7 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
           </div>
         </div>
       )}
-      {/* Slice 5 (screens §8.3): on rival ground the orders wait at home. */}
-      {orders.elsewhere && (
-        <p className="py-1 font-mono text-[12px] text-text-2" data-testid="orders-elsewhere">
-          {copy.risk.rival.ordersIn(orders.elsewhere.cityName)}
-        </p>
-      )}
-      <ul className={cx('flex flex-col', orders.elsewhere && !paper && 'hidden')}>
+      <ul className="flex flex-col">
         {orders.items.map((o) => (
           <li
             key={o.id}
@@ -182,8 +192,8 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
         <>
           <p className="pt-1.5 font-mono text-[11px] text-muted">
             +{orders.rewards.matchFxpBonusPct} % Party XP on matching actions · +{orders.rewards.orderDoneFxp}{' '}
-            Party XP per order · +{orders.rewards.allDonePc} Political Capital for all three · new orders at{' '}
-            {formatClock(orders.resetsAt)}
+            Party XP per order · +{orders.rewards.allDonePc} Political Capital for all three · new orders{' '}
+            {formatWhen(orders.resetsAt)}
           </p>
           <p className="self-end pt-1 font-display text-[15px] italic">{orders.issuer.signature}</p>
         </>
@@ -247,8 +257,8 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
   const held = desk.held ?? null;
   const heldLine = held
     ? held.kind === 'cells'
-      ? copy.risk.desk.cells(held.placeName, held.minutesLeft, held.bail ?? 0)
-      : copy.risk.desk.infirmary(held.placeName, held.minutesLeft)
+      ? copy.risk.desk.cells(held.placeName, formatWhen(held.until), held.bail ?? 0)
+      : copy.risk.desk.infirmary(held.placeName, formatWhen(held.until))
     : null;
   return (
     <section aria-label="Your desk" className="flex flex-col">
@@ -301,7 +311,7 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
             )}
           </>
         ) : desk.job ? (
-          <Row label={desk.job.name} value={copy.jobPayLine(desk.job.dailyPay)} />
+          <Row label={desk.job.name} value={copy.jobPayLine(desk.job.dailyPay, formatWhen(nextDayTurn()))} />
         ) : (
           <Line testId="desk-no-job">{copy.deskNoJob(desk.jobPlaces)}</Line>
         )}
@@ -343,7 +353,7 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
             value={copy.risk.heatDesk(
               copy.risk.heatState[desk.heat.state],
               desk.heat.value,
-              desk.heat.coolsAt !== null ? formatClock(desk.heat.coolsAt) : null,
+              desk.heat.coolsAt !== null ? formatWhen(desk.heat.coolsAt) : null,
             )}
             tone={desk.heat.state === 'hot' || desk.heat.state === 'wanted' ? 'text-failure' : undefined}
             testId="desk-heat"
@@ -358,7 +368,7 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
         )}
         <Row
           label="Energy"
-          value={`${desk.energy.value} / ${desk.energy.max}${desk.energy.fullAt ? ` · full at ${formatClock(desk.energy.fullAt)}` : ''}`}
+          value={`${desk.energy.value} / ${desk.energy.max}${desk.energy.fullAt ? ` · ${copy.energyFullAt(formatWhen(desk.energy.fullAt))}` : ''}`}
         />
         <Row
           label={`Level ${desk.level.level}`}

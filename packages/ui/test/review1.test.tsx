@@ -156,10 +156,10 @@ describe('tap the label (answers §5)', () => {
       expect(note).toHaveTextContent(kicker);
     // Review 4 #12: Political Capital has its own button and its own note.
     expect(note).not.toHaveTextContent('Political Capital');
-    // The Faction XP note names the vote, the candidacy and what is left to the next Rank.
-    expect(note).toHaveTextContent(
-      'the vote at Activist, standing for the council at Organiser. 394 more to Activist.',
-    );
+    // Review 4 #25 (answers §25): the Party XP note points at the ladder and says what is left to the
+    // next Rank; a button under it opens the ladder.
+    expect(note).toHaveTextContent('Ranks give rights: tap for the ladder. 394 more to Activist.');
+    expect(within(note).getByRole('button', { name: 'See the ranks' })).toBeInTheDocument();
   });
 
   it('the Today strip explains each of its items', async () => {
@@ -242,7 +242,10 @@ describe('the Standing card (answers §9)', () => {
     // Review 2 (answers §1.9): Reputation, and no percentages.
     expect(card).toHaveTextContent('Reputation');
     expect(card).toHaveTextContent('Familiar in Duskwall');
-    expect(card).toHaveTextContent('Faces nod. Everything you do in Duskwall goes a little better now.');
+    // Review 4 #18 (answers §18): the figure, said once.
+    expect(card).toHaveTextContent(
+      'Faces nod. Everything you try in Duskwall comes off three in a hundred more often, from now on.',
+    );
     expect(card).toHaveTextContent('your name will do to stand for the council once you are a Bailiff.');
     expect(card).not.toHaveTextContent('%');
   });

@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
-import { energyReadyAt, heatState, xpForLevel } from '@irongate/rules';
+import { dayKey, dayStart, energyReadyAt, heatState, xpForLevel } from '@irongate/rules';
 import type {
   ActionResult,
   CharacterView,
@@ -22,7 +22,8 @@ import {
   formatOpinionDelta,
   formatShare,
   formatSigned,
-  formatWeekday,
+  formatUntil,
+  formatWhen,
   renderTimeTokens,
 } from '../format';
 import { batchReasons, statName } from '../odds';
@@ -216,7 +217,7 @@ function PoliticalBody({
   if (k.barred)
     lines.push({
       id: 'barred',
-      text: copy.risk.barredFrom(k.barred.cityName, `${formatWeekday(k.barred.until)} ${formatClock(k.barred.until)}`),
+      text: copy.risk.barredFrom(k.barred.cityName, formatUntil(k.barred.until)),
     });
   if (k.pc) lines.push({ id: 'pc', text: copy.pcLeft(k.pc.before - k.pc.after, k.pc.after) });
   if (k.morale) {
@@ -386,7 +387,7 @@ function JourneyBody({
                 className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
                 data-testid="arrival-flag"
               >
-                {copy.risk.flags[f](result.journey.to.name)}
+                {copy.risk.flags[f](result.journey.to.name, formatUntil(dayStart(dayKey(result.journey.arrivesAt) + 1)))}
               </li>
             ))}
           </ul>
@@ -1087,7 +1088,7 @@ function AgainButtons({
   ready1: number | null;
   ready3: number | null;
 }) {
-  const at = (t: number | null) => (t === null ? '—' : formatClock(t));
+  const at = (t: number | null) => (t === null ? '—' : formatWhen(t));
   // A *Trained* result: the action's verb (stored results from before review 3 have none).
   const verb = again.cost3 === null && again.verb ? again.verb : null;
   const once = mission
@@ -1206,12 +1207,20 @@ function StreetLines({
         formatSigned(heat.after - heat.before),
         heat.after,
         heatWord(heat.state),
-        heat.state !== 'cool' && heat.coolsAt !== null ? formatClock(heat.coolsAt) : null,
+        heat.state !== 'cool' && heat.coolsAt !== null ? formatWhen(heat.coolsAt) : null,
       ),
       tone: heat.state === 'hot' || heat.state === 'wanted' ? 'text-failure' : undefined,
     });
     if (heat.first && heat.state !== 'cool')
-      lines.push({ id: 'heat-card', text: copy.risk.heatCard[heat.state], card: true });
+      lines.push({
+        id: 'heat-card',
+        // Review 4 (answers §12): the Noticed card says when it cools.
+        text:
+          heat.state === 'noticed' && heat.coolsAt !== null
+            ? `${copy.risk.heatCard.noticed} ${copy.risk.heatCardCool(formatWhen(heat.coolsAt))}`
+            : copy.risk.heatCard[heat.state],
+        card: true,
+      });
   }
   const rec = street?.record ?? null;
   if (rec && rec.added > 0) {

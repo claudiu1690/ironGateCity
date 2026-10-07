@@ -92,7 +92,9 @@ describe('Ticket v2', () => {
       />,
     );
     expect(screen.getByRole('button', { name: /once/ })).toBeDisabled();
-    expect(screen.getByTestId('ticket-hint')).toHaveTextContent(/^Needs 10 Energy · ready at \d\d:\d\d$/);
+    expect(screen.getByTestId('ticket-hint')).toHaveTextContent(
+      /^Needs 10 Energy · ready (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day|now)$/,
+    );
   });
 
   it('review 2: tapping the odds word opens the band note, never a number', async () => {
@@ -490,9 +492,9 @@ describe('JobsCard', () => {
     render(<JobsCard jobs={[mill.jobs[0]!, driver]} held={null} onTake={onTake} />);
     await user.click(screen.getByRole('button', { name: 'Take the job' }));
     expect(onTake).toHaveBeenCalledWith('coalport-factory-worker');
-    // Review 1: a wage, paid at midnight; no Energy anywhere.
+    // Review 1: a wage, paid at the day's turn; no Energy anywhere. Review 4: the moment in `when`.
     expect(screen.getByTestId('job-coalport-factory-worker')).toHaveTextContent(
-      '216 a day · paid at midnight',
+      /216 a day · paid (at|tomorrow) \d\d:\d\d/,
     );
     expect(screen.getByRole('button', { name: 'Needs Level 3, AGI 10' })).toBeDisabled();
   });
@@ -582,7 +584,9 @@ describe('HudBar v2', () => {
     expect(screen.getByText('Mara Lenk')).toBeInTheDocument();
     expect(screen.getByTestId('hud-rank')).toHaveTextContent('Recruit · Lv 1');
     expect(screen.getByTestId('hud-energy')).toHaveTextContent('90 / 100');
-    expect(screen.getByTestId('hud-next-tick')).toHaveTextContent(/^full at \d\d:\d\d$/);
+    expect(screen.getByTestId('hud-next-tick')).toHaveTextContent(
+      /^full (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day|now)$/,
+    );
     expect(screen.getByRole('meter', { name: 'Energy' })).toHaveAttribute(
       'aria-valuetext',
       '90 of 100, next +5 in 7:05',

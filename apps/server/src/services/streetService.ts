@@ -5,6 +5,7 @@ import type { CharacterDoc, CityDoc, EncounterDoc } from '@irongate/db';
 import {
   FULL_STRENGTH_PART,
   HEALTH,
+  HEAT,
   PAID_OFF_PART,
   RUN_IN,
   RUN_IN_PART,
@@ -18,6 +19,7 @@ import {
   dayStart,
   healthMax,
   healthNow,
+  heatEta,
   heatState,
   luckChoice,
   oddsBand,
@@ -466,7 +468,8 @@ async function resolveTier1InTx(
           after: heat.after,
           state: heat.stateAfter,
           stateBefore: heat.stateBefore,
-          coolsAt: null,
+          // Review 4 #12 (answers §12): the knock-on reads *… · Cool at 20:40*.
+          coolsAt: heat.stateAfter === 'cool' ? null : heatEta(heat.timer, i.asOf, rateOn, HEAT.states.noticed),
           first: false,
         }
       : null,

@@ -917,7 +917,9 @@ export async function choose(deps: {
           ? {
               flag: {
                 flag: rw.flag,
-                line: copy.risk.flags[rw.flag](content.city(j.to)?.name ?? j.to),
+                // Review 4 (answers §4.2): `{until}` is rendered by the client in the player's clock.
+                line: copy.risk.flags[rw.flag](content.city(j.to)?.name ?? j.to, '{until}'),
+                until: dayStart(dayKey(at.getTime()) + 1),
               },
             }
           : {}),

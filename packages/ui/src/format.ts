@@ -1,4 +1,29 @@
 /** Display helpers. They format numbers the server decided; they never compute game outcomes. */
+import { boundary, when } from '@irongate/content/copy';
+import { dayKey, dayStart } from '@irongate/rules';
+
+/**
+ * Review 4 (tech design §12.1): the clock the time helpers read "now" from. The client points it at
+ * the server's clock (`serverNow`, the dev panel's test clock included) at start-up; tests and
+ * storybook-like renders keep the device's.
+ */
+let clockSource: () => number = () => Date.now();
+export function setClockSource(source: () => number): void {
+  clockSource = source;
+}
+export function clockNow(): number {
+  return clockSource();
+}
+
+/** The next turn of the City Day (00:00 UTC), when wages land: "paid tomorrow 01:00". */
+export function nextDayTurn(now: number = clockNow()): number {
+  return dayStart(dayKey(now) + 1);
+}
+
+/** A moment in the one countdown style (answers §4.2): "in 24 min", "at 14:40", "tomorrow 01:00". */
+export function formatWhen(ms: number, now: number = clockNow(), withTime = false): string {
+  return when(ms, now, { withTime });
+}
 
 export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ');
@@ -61,25 +86,21 @@ export function plural(n: number, one: string, many = `${one}s`): string {
 }
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
-const pad = (n: number) => String(n).padStart(2, '0');
 
 /**
- * Slice 3 (tech design §4.3): a boundary as the end of a window in the player's local clock:
- * "Tuesday midnight" when the local time is 00:00 (the midnight that ends Tuesday), else
- * "Wednesday 01:00" at UTC+1, "Tuesday 19:00" at UTC−5.
+ * The end of a window in the player's clock, always with its time (review 4 §23 Q6, GDD §2.2):
+ * "14:00" today, "tomorrow 01:00", "Saturday 01:00". The line says *until* or *closes* itself.
  */
-export function formatUntil(ms: number): string {
-  const d = new Date(ms);
-  if (d.getHours() === 0 && d.getMinutes() === 0) {
-    return `${WEEKDAYS[new Date(ms - 1).getDay()]} midnight`;
-  }
-  return `${WEEKDAYS[d.getDay()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+export function formatUntil(ms: number, now: number = clockNow()): string {
+  return boundary(ms, now);
 }
 
-/** A boundary as a moment in the player's clock: "00:00 on Wednesday", "01:00 on Wednesday". */
-export function formatAt(ms: number): string {
-  const d = new Date(ms);
-  return `${pad(d.getHours())}:${pad(d.getMinutes())} on ${WEEKDAYS[d.getDay()]}`;
+/**
+ * A moment as a `when` phrase with its time (review 4): "at 14:00", "in 20 min", "tomorrow 01:00",
+ * "Saturday 01:00". The phrase carries its preposition (*The council votes tomorrow 01:00*).
+ */
+export function formatAt(ms: number, now: number = clockNow()): string {
+  return when(ms, now, { withTime: true });
 }
 
 /** The local weekday of a moment ("the count is in Sunday's paper"). */
@@ -87,10 +108,22 @@ export function formatWeekday(ms: number): string {
   return WEEKDAYS[new Date(ms).getDay()]!;
 }
 
-/** Server text with the `{until}` / `{at}` tokens rendered in the player's clock. */
-export function renderTimeTokens(text: string, t: { until?: number | null; at?: number | null }): string {
+/**
+ * Server text with the `{until}` / `{at}` tokens rendered in the player's clock (review 4): *at {…}*
+ * becomes the `when` phrase (*The council votes tomorrow 01:00*, *… at 14:00*), any other `{until}`
+ * the boundary (*until tomorrow 01:00*) and any other `{at}` the `when` phrase.
+ */
+export function renderTimeTokens(
+  text: string,
+  t: { until?: number | null; at?: number | null },
+  now: number = clockNow(),
+): string {
   let out = text;
-  if (t.until != null) out = out.replace(/\{until\}/g, formatUntil(t.until));
-  if (t.at != null) out = out.replace(/\{at\}/g, formatAt(t.at));
+  for (const key of ['until', 'at'] as const) {
+    const ms = t[key];
+    if (ms == null) continue;
+    out = out.replace(new RegExp(String.raw`\bat \{${key}\}`, 'g'), formatAt(ms, now));
+    out = out.replaceAll(`{${key}}`, key === 'until' ? formatUntil(ms, now) : formatAt(ms, now));
+  }
   return out;
 }

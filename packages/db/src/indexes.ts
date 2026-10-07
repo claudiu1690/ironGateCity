@@ -7,6 +7,7 @@ import { migrateReview1Wage } from './migrations/004-review1-wage';
 import { migrateReview2StreetOrdinances } from './migrations/005-review2-street-ordinances';
 import { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
 import { migrateSlice5Risk } from './migrations/007-slice5-risk';
+import { migrateReview4 } from './migrations/008-review4';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
@@ -71,4 +72,6 @@ export async function ensureIndexes(
   await migrateSlice4TravelResidence(content);
   // Slice 5: Heat, Health, the record and the run-in state; the districts' leader; after 006.
   await migrateSlice5Risk();
+  // Review 4 (tech design §14): one step per feature, filled phase by phase; after 007.
+  await migrateReview4(content);
 }

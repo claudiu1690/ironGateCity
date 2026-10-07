@@ -36,7 +36,9 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await expect(gate.getByTestId('ticket-odds')).toHaveText('Good odds · Strength');
   await expect(gate.getByTestId('ticket-tags')).toContainText('First day in Duskwall · better odds');
   // The job is a wage: no shift ticket; take it (free, no Energy) and Take a job is done.
-  await expect(sheet.getByTestId('job-duskwall-stores-hand')).toContainText('216 a day · paid at midnight');
+  await expect(sheet.getByTestId('job-duskwall-stores-hand')).toContainText(
+    /216 a day · paid (at|tomorrow) \d\d:\d\d/,
+  );
   await sheet.getByRole('button', { name: 'Take the job' }).click();
   await expect(sheet.getByTestId('job-duskwall-stores-hand')).toContainText(
     'Taken · party order complete: +20 Party XP',
@@ -51,7 +53,9 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await page.getByTestId('hud-help').click();
   let note = page.getByTestId('help-note');
   await expect(note).toContainText('Every action costs Energy.');
-  await expect(note).toContainText('the vote at Steward, standing for the council at Bailiff');
+  // Review 4 #25: the Party XP note points at the ladder, and carries its button.
+  await expect(note).toContainText('Ranks give rights: tap for the ladder.');
+  await expect(note.getByRole('button', { name: 'See the ranks' })).toBeVisible();
   await note.getByRole('button', { name: 'Close' }).click();
   await page.getByTestId('standing-help').click();
   note = page.getByTestId('help-note');
@@ -100,7 +104,8 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await committee.getByRole('button', { name: /, once, 10 Energy$/ }).click();
   modal = modalOf(page);
   await expect(modal.getByTestId('effect-order-signed')).toHaveText(
-    "Order carried out · +20 Party XP. That's all three: see the note.",
+    // Review 4 #6 (answers §6): the third line says what follows, in Stahl's voice.
+    "Order carried out · +20 Party XP. That's all three; Stahl's note follows when you close this.",
   );
   await expect(modal.getByTestId('effect-all-orders')).toHaveText(
     'All orders carried out · +5 Political Capital',

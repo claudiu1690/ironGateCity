@@ -23,6 +23,7 @@ import { copy } from '../src/data/copy';
 import { headlines as storedHeadlines } from '../src/data/headlines';
 import { heraldHeadlines } from '../src/data/heraldHeadlines';
 import { politicalHeadlines } from '../src/data/politicalHeadlines';
+import { reworded } from './review4';
 import { systemTermHits } from './vocabulary';
 
 /**
@@ -358,8 +359,8 @@ describe('the new UI copy, word for word against slice-4-screens.md §11', () =>
     t.votingOpenUntil(P('until')),
     t.onTheTrainTo(P('city')),
     t.theTrainAt(P('time'), P('city')),
-    t.minToGo(P('n'), P('time')),
-    t.youCanClose,
+    t.arrives(P('when'), P('time')),
+    t.eitherWay,
     t.onTheWay,
     t.optional,
     t.oneChoice,
@@ -438,8 +439,9 @@ describe('the new UI copy, word for word against slice-4-screens.md §11', () =>
     r.meLine(P('district'), P('weekday')),
     s.inPrint,
   ];
+  // Review 4: the strings the review reworded are compared as reworded (./review4.ts).
   const listed = [...section(SCREENS, '## 11. Copy', 'Help notes (tap').matchAll(/\*([^*]+)\*/g)].map(
-    (m) => m[1]!,
+    (m) => reworded(m[1]!),
   );
 
   it('every §11 string is in copy, and nothing else', () => {

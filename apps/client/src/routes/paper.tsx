@@ -3,12 +3,13 @@ import type { FactionId, IssueRowView } from '@irongate/rules';
 import {
   Button,
   DeskList,
+  ElectionCard,
   FrontPage,
   IssuesSection,
   LettersRow,
   Masthead,
   OrdersList,
-  ElectionCard,
+  PaperSheet,
   Rosette,
   formatUntil,
   renderTimeTokens,
@@ -103,93 +104,95 @@ export function PaperPage() {
   };
 
   return (
-    <article className="paper-grain min-h-full text-ink">
-      <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-4 pb-8 lg:pb-[132px]">
-        <Masthead paper={p} />
-        {/* Slice 3 (screens §2.2): the front page the morning a seat is won. */}
-        {front && <FrontPage front={front} factionId={character?.factionId ?? 'collective'} />}
-        {lead && (
-          <section className="flex flex-col gap-2 border-b border-ink pb-3" data-testid="headline">
-            <h2 className="text-center font-display text-[30px] leading-[1.05] font-black sm:text-[36px]">
-              {lead.headline}
-            </h2>
-            {lead.deck && (
-              <p className="text-center font-display text-[16px] leading-snug font-bold text-text-2 italic">
-                {lead.deck}
-              </p>
-            )}
-          </section>
-        )}
-        {rest.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {rest.map((h) => (
-              <section
-                key={h.headline}
-                className="flex flex-col gap-1 border-b border-dotted border-faint pb-2"
-                data-testid="headline"
-                data-in-print={h.inPrint || undefined}
-              >
-                {/* Slice 4 (screens §7.3): the hero and the reporter's quote are In Print. */}
-                {h.inPrint && (
-                  <span className="label-caps text-[10px] font-semibold text-muted" data-testid="in-print">
-                    {copy.scoreboard.inPrint}
-                  </span>
-                )}
-                <h3 className="flex items-start gap-1.5 font-display text-[19px] leading-tight font-bold">
-                  {h.medal && (
-                    <span className="mt-1 shrink-0">
-                      <Rosette size={16} />
+    <PaperSheet>
+      <article className="paper-grain min-h-full text-ink">
+        <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-4 pb-8 lg:pb-[132px]">
+          <Masthead paper={p} />
+          {/* Slice 3 (screens §2.2): the front page the morning a seat is won. */}
+          {front && <FrontPage front={front} factionId={character?.factionId ?? 'collective'} />}
+          {lead && (
+            <section className="flex flex-col gap-2 border-b border-ink pb-3" data-testid="headline">
+              <h2 className="text-center font-display text-[30px] leading-[1.05] font-black sm:text-[36px]">
+                {lead.headline}
+              </h2>
+              {lead.deck && (
+                <p className="text-center font-display text-[16px] leading-snug font-bold text-text-2 italic">
+                  {lead.deck}
+                </p>
+              )}
+            </section>
+          )}
+          {rest.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {rest.map((h) => (
+                <section
+                  key={h.headline}
+                  className="flex flex-col gap-1 border-b border-dotted border-faint pb-2"
+                  data-testid="headline"
+                  data-in-print={h.inPrint || undefined}
+                >
+                  {/* Slice 4 (screens §7.3): the hero and the reporter's quote are In Print. */}
+                  {h.inPrint && (
+                    <span className="label-caps text-[10px] font-semibold text-muted" data-testid="in-print">
+                      {copy.scoreboard.inPrint}
                     </span>
                   )}
-                  <span>{h.headline}</span>
-                </h3>
-                {h.deck && <p className="font-body text-[14px] leading-snug text-text-2">{h.deck}</p>}
-              </section>
-            ))}
-          </div>
-        )}
-        {/* Slice 4 (screens §7.1): the Issues, between the headlines and the Election row. */}
-        {p.issues && (
-          <IssuesSection
-            issues={p.issues}
-            names={names}
-            settles={formatUntil(p.issues.settlesAt)}
-            onWhereToAct={whereToAct}
-          />
-        )}
-        <OrdersList orders={p.orders} variant="paper" />
-        {p.pollingDay && (
-          <ElectionCard
-            summary={p.pollingDay}
-            layout="row"
-            now={now}
-            factionNames={names}
-            onOpen={(route) => void navigate({ to: route })}
-          />
-        )}
-        {p.letters.map((l) => (
-          <LettersRow
-            key={`${l.kind}-${l.title}`}
-            letter={l}
-            onOpen={() => void navigate({ to: '/story/ambition', search: { from: '/paper' } })}
-          />
-        ))}
-        <DeskList desk={p.desk} onHeld={() => void navigate({ to: '/held' })} />
-        {/* Sticky, so "To the city" is on the first screen (§12.3). On wide screens it rides above
+                  <h3 className="flex items-start gap-1.5 font-display text-[19px] leading-tight font-bold">
+                    {h.medal && (
+                      <span className="mt-1 shrink-0">
+                        <Rosette size={16} />
+                      </span>
+                    )}
+                    <span>{h.headline}</span>
+                  </h3>
+                  {h.deck && <p className="font-body text-[14px] leading-snug text-text-2">{h.deck}</p>}
+                </section>
+              ))}
+            </div>
+          )}
+          {/* Slice 4 (screens §7.1): the Issues, between the headlines and the Election row. */}
+          {p.issues && (
+            <IssuesSection
+              issues={p.issues}
+              names={names}
+              settles={formatUntil(p.issues.settlesAt)}
+              onWhereToAct={whereToAct}
+            />
+          )}
+          <OrdersList orders={p.orders} variant="paper" />
+          {p.pollingDay && (
+            <ElectionCard
+              summary={p.pollingDay}
+              layout="row"
+              now={now}
+              factionNames={names}
+              onOpen={(route) => void navigate({ to: route })}
+            />
+          )}
+          {p.letters.map((l) => (
+            <LettersRow
+              key={`${l.kind}-${l.title}`}
+              letter={l}
+              onOpen={() => void navigate({ to: '/story/ambition', search: { from: '/paper' } })}
+            />
+          ))}
+          <DeskList desk={p.desk} onHeld={() => void navigate({ to: '/held' })} />
+          {/* Sticky, so "To the city" is on the first screen (§12.3). On wide screens it rides above
             the floating tab dock (QA n1), and the page's bottom padding lets the Letters row and the
             desk scroll clear of both. */}
-        <div className="sticky bottom-0 z-10 -mx-4 border-t border-track bg-paper px-4 pt-2 pb-2 lg:bottom-[124px] lg:mx-0 lg:border lg:border-ink lg:p-2 lg:shadow-[0_8px_24px_rgb(0_0_0/0.35)]">
-          {front ? (
-            <Button onClick={() => void navigate({ to: '/council' })} className="w-full">
-              {copy.toTheCouncil}
-            </Button>
-          ) : (
-            <Button onClick={() => void toCity()} className="w-full">
-              {copy.toTheCity}
-            </Button>
-          )}
+          <div className="sticky bottom-0 z-10 -mx-4 border-t border-track bg-paper px-4 pt-2 pb-2 lg:bottom-[124px] lg:mx-0 lg:border lg:border-ink lg:p-2 lg:shadow-[0_8px_24px_rgb(0_0_0/0.35)]">
+            {front ? (
+              <Button onClick={() => void navigate({ to: '/council' })} className="w-full">
+                {copy.toTheCouncil}
+              </Button>
+            ) : (
+              <Button onClick={() => void toCity()} className="w-full">
+                {copy.toTheCity}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </PaperSheet>
   );
 }

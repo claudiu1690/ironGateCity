@@ -174,6 +174,8 @@ export function missionView(
     typeSpec.opinion === 'persuade' ? rival?.homeFactionId : typeSpec.opinion === 'against' ? ctx.target : null;
   if (rival && drawsFrom === rival.homeFactionId && rival.pressureLeft <= 0)
     placeTags.push({ kind: 'pressureCapped' });
+  // Review 4 #18 (answers §18): Familiar or better here.
+  if (standingView(ctx.standing.successes).level >= 1) placeTags.push({ kind: 'known' });
 
   return {
     id: mission.id,
@@ -552,6 +554,8 @@ export async function getCityView(
           // cap is reached *The town has had enough today · no opinion* on what moves opinion.
           if (rival) placeTags.push({ kind: 'rivalGround', fxpPct: rival.unrest ? 75 : 50 });
           if (rival && action.givesOpinion && rival.pressureLeft <= 0) placeTags.push({ kind: 'pressureCapped' });
+          // Review 4 #18 (answers §18): the Reputation bonus is in the odds word; the tag says so.
+          if (standingView(successes).level >= 1) placeTags.push({ kind: 'known' });
           return {
             ...base,
             kind: 'checked',

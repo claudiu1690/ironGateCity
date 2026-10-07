@@ -2,7 +2,7 @@ import { copy } from '@irongate/content/copy';
 import { energyReadyAt } from '@irongate/rules';
 import type { ActionView, PlaceTagView } from '@irongate/rules';
 import { useEffect, useId, useRef } from 'react';
-import { cx, formatClock } from '../format';
+import { cx, formatWhen } from '../format';
 import { bandNote, oddsTag, statName, ticketOdds } from '../odds';
 import { HelpButton, helpMark } from './Help';
 import { ordinanceTagText } from './ResultModal';
@@ -31,6 +31,8 @@ export function placeTagText(t: PlaceTagView): string {
       return copy.risk.recordTag(copy.risk.recordLevel[t.level === 'clean' ? 'onFile' : t.level], Math.abs(t.ironPct));
     case 'pressureCapped':
       return copy.risk.pressureCapped;
+    case 'known':
+      return copy.knownHere;
   }
 }
 
@@ -97,7 +99,7 @@ export function Ticket({
   const hint =
     blocked ??
     (short1
-      ? copy.needsEnergy(a.energy, readyAt === null ? '—' : formatClock(readyAt))
+      ? copy.needsEnergy(a.energy, readyAt === null ? '—' : formatWhen(readyAt))
       : short3 && a.energy3 !== null
         ? copy.x3Needs(a.energy3)
         : null);
@@ -131,8 +133,10 @@ export function Ticket({
   const tags = [
     TYPE_LABEL[a.type] ?? a.type,
     ...costTags,
-    ...placeTags.filter((t) => t.kind !== 'membersOnly').map(placeTagText),
+    ...placeTags.filter((t) => t.kind !== 'membersOnly' && t.kind !== 'known').map(placeTagText),
     ...ruleTags,
+    // Review 4 #18: *Known here · better odds* where *Open Doors · better odds* sits.
+    ...placeTags.filter((t) => t.kind === 'known').map(placeTagText),
     ...bonusTags,
     membersOnly ? null : order,
   ]

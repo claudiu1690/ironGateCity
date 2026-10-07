@@ -1378,3 +1378,46 @@ None blocking. Two points for awareness:
 6. **The rank ladder example** (answers §25): §23 Q9.
 7. **"Opens with a later edition" pins** come from the survey. When a survey pin moves (Ashford's Town Hall), `pins.json` in the art folder should move with `mapPins.ts`.
 8. **The order test** (answers §22) is stated for every template. It is built for the mission order (in hand) and guaranteed for the rest by a content test (§12.7). A future template gated by Level, Rank or Reputation must be offered through the same `offerable` predicate.
+
+---
+
+## Deviations
+
+Recorded as each phase lands (T30 completes this section).
+
+### Phase 1 (T1–T5, 7 Oct 2026)
+
+**T1. `copy.when`, the countdown sweep, the clock.**
+
+1. **A third helper, `copy.boundary(at, now)`**, beside `when` and `count`, for the end of a window (`{until}`, *Names go in until …*, *Closes …*): it always prints the time and carries no preposition: *14:00*, *tomorrow 01:00*, *Saturday 01:00* (§23 Q6). `when`'s same-day form *at 14:00* would read *until at 14:00*. `formatUntil` renders through `boundary`; `formatAt` through `when` with `withTime`.
+2. **`renderTimeTokens`**: in server text, *at {until}* and *at {at}* become the `when` phrase (*The council votes tomorrow 01:00*, *… votes at 14:00*), so the designer's headline decks (*The council votes at {until}*) read right without a content change; any other `{until}` is the boundary, any other `{at}` the `when` phrase.
+3. **No "midnight" any more.** A boundary at local 00:00 prints *00:00* (*Closes Sunday 00:00*); slice 3's *Tuesday midnight* and *Closes tonight at midnight* are gone with it. Players at UTC+1 and +2 (the usual case) read *01:00* / *02:00* as before.
+4. **Where "now" comes from.** The `packages/ui` time helpers read a clock source the client points at `serverNow` at start-up (`setClockSource`), so every countdown follows the server's clock and the dev panel's test clock without threading a `now` prop through every component. Components that already tick (`HeldScreen`, `JourneyProgress`, the Election card, the HUD) pass their `now`.
+5. **Day-granular lines keep the weekday** (§23 Q6): the residence's *from Thursday*, *Result Sunday morning*, *Term ends Friday*. They are not countdowns.
+6. **Renamed keys**: `copy.travel.minToGo` → `arrives(when, clock)` (*arrives in 7 min · 14:22*), `travel.youCanClose` → `eitherWay`, `risk.cells.youCanClose` / `risk.infirmary.youCanClose` → `eitherWay(when)`. `copy.storyWaits` (*Close the game now and this waits for you*) is reworded *This waits for you*, since *close the game* may appear only in the encounter's warning; the prologue (phase 8) replaces the screen anyway.
+7. **Copy reworded for the style** beyond the answers' list: *Two backers by {until}* → *Two backers before {until}* (the Election card, the slate's checklist); *paid at midnight* → *paid tomorrow 01:00* (the Jobs card, the desk, the Me tab, *Taken · paid …*); *Watched today: … until midnight* → *until {until}*, the server sending the line with the token and the day's turn as `flag.until` (`JourneyCardResult.flag`, which gains `until`); the desk's *{n} minutes to go* → *out in 24 min* (`PaperView.desk.held` gains `until`).
+8. **The word-for-word tests** against slice-4 and slice-5 screens §11 read the old design strings through `packages/content/test/review4.ts` (`REVIEW4_REWORDED`, old → new), so both are on record.
+
+**T2. Shared UI and plumbing.**
+
+9. **`PaperSheet` is two `display: contents` wrappers under 960 px** (`paper-desk`, `paper-sheet` in `tokens.css`), so nothing at all changes there; from 960 px a 720 px sheet (3 px paper-2 edge, 1 px ink line, the shadow) on the ink-2 #1c1a17 desk with a radial vignette. On `/held` the held screen fills the sheet from 960 px (its own dimmed-art ground and 640 px column step aside there).
+10. **The new refusals' words** are the developer's (the design gave none): *That errand was for your first day, and it's done.* (`NOT_OFFERED`) · *Once only* · *Not yet: that moment on the train comes {when}.* (`CARD_NOT_YET`) · *There is no bed to be had here.* · *A bed is taken where you stand: take the train there first.* (`NOT_HERE`) · *This town has no council.* For the designer to confirm.
+11. **Migration 008's skeleton**: each step returns `{ matched, modified }` and does nothing yet; `migrateReview4` returns the counts by step and runs after 007 in `ensureIndexes`. Phases 6 and 8 fill their steps.
+
+**T3. Copy and small server views.**
+
+12. **`OrdersView.away` replaces `elsewhere`** (removed, with `copy.risk.rival.ordersIn`). The paper's variant shows the full list with no away line. In the capital the short-phone fold (*Party orders · 1 of 3 done ›*) is not shown while away: the one line is already the fold.
+13. **The rank ladder opens from a tap on the Party XP label** in the HUD's group button (`HelpButton` gains `onPick`); a keyboard press still opens the notes in order, and the Party XP note carries a *See the ranks* button (`HelpButton` gains `actions`). The ladder sheet prints the shortened Party XP note under its kicker. The Me tab's line keeps the party's name before it: *Red Collective · Activist · 1,212 / 2,000 to Organiser*.
+14. **The ladder's *Standing for Chair* / *Standing for President*** are allowed by the vocabulary check beside *Standing for the council* (`ALLOWED_PHRASES`): *Standing* there is the everyday word, not the meter.
+15. **The Issue chip is a button of its own** under the Places row's blurb (a button inside the row's button is not allowed), and on the place sheet's header (`LocationSheet.chips`). Its name comes from the city's Issues (the capital's districts', else the tickets' tags).
+16. **The help texts written now but shown later** keep their screens' current notes until the rule they describe is built: `copy.help.cells` (twenty minutes, orders off, a mark) is wired in phase 2; `help.residence`, `help.lodgings` and `help.edition` in phases 5 and 7. **Legal Aid** is wired now (the line *Legal Aid · the Alliance pays half your bail*, dotted, and its note): the rule already holds.
+17. **The Standing card**: only its Familiar card gains the figure (the answers give that one); the other three keep their lines. `help.standing` takes the level as `{n} steps up`.
+
+**T4. Heat.**
+
+18. **Heat's note**: the kicker is *Heat · {State}* (answers: *HEAT · {state}*), and *Cool at 20:40.* is its own line under the note while not Cool. The first-state *Noticed* card gains *Cool at {time}.* too. On a phone held sideways the Heat line stays in the name line, Courier 11 px (phase 0's layout); everywhere else it is the 13 px body line under Energy (from 1024 px: under Energy in the first column, Health under Party XP).
+19. **The run-in's Heat block** (`streetService`) now carries `coolsAt` like the mission's, so its knock-on reads *… · Cool at 20:40* too.
+
+**T5. The order test.**
+
+20. **Issue orders** (`issueTagged`) are checked against every Issue that can be drawn in the residence city, one at a time, so the order holds whatever the week's draw. The check found no failing template on today's content.

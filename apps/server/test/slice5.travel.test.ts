@@ -214,7 +214,12 @@ describe('the cards on rival ground (tech design §10.4, design §23.2)', () => 
       stamp: null,
       headline: 'They write your name down',
       rewards: [{ id: 'heat', amount: 10 }],
-      flag: { flag: 'watched', line: 'Watched today: run-ins likelier in Duskwall until midnight' },
+      // Review 4: the day's turn travels as `until`, rendered by the client.
+      flag: {
+        flag: 'watched',
+        line: 'Watched today: run-ins likelier in Duskwall until {until}',
+        until: (DAY + 1) * 86_400_000,
+      },
     });
     const c = await doc(p.id);
     expect(c.heat?.value).toBe(35);
@@ -308,9 +313,11 @@ describe('the cards on rival ground (tech design §10.4, design §23.2)', () => 
       choiceId: 'warning',
       idempotencyKey: key(),
     });
+    // Review 4: the day's turn travels as `until`, rendered by the client.
     expect(w.flag).toEqual({
       flag: 'warned',
-      line: 'Warned: run-ins less likely in Duskwall until midnight',
+      line: 'Warned: run-ins less likely in Duskwall until {until}',
+      until: (DAY + 1) * 86_400_000,
     });
     // The first trip's checkpoint, slept through, left Watched; Warned joins it (both count).
     expect((await doc(q.id)).flags).toEqual([
