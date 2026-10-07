@@ -677,8 +677,54 @@ The bodies are §2.6's and §11.1's, unchanged.
 
 ### 29.3 Notes taken (`docs/tech/review-4.md` §24)
 
-The schema limits raised in §4.1 are accepted; `{Holm}` / `{She}` / `{City}` are `{helper}` / `{helperPronoun}` / `{city}` with a `pronoun` on the three secretaries (Holm *she*, Stahl and Grey *he*); `pins.json` moves with `mapPins.ts` when a survey pin moves; the order test is the `offerable` predicate for every template, now and later. The alt text for `scene.train-compartment` (≤ 160): *A third-class compartment at dawn: wooden seats, a suitcase between two pairs of feet, a woman asleep against the window, fields going past.*
+The schema limits raised in §4.1 are accepted; `{Holm}` / `{She}` / `{City}` are `{helper}` / `{helperPronoun}` / `{city}` with a `pronoun` on the three secretaries (Holm *she*, Stahl and Grey *he*); `pins.json` moves with `mapPins.ts` when a survey pin moves; the order test is the `offerable` predicate for every template, now and later. The alt text for `scene.train-compartment` (≤ 160; the picture is an empty compartment, §30.3): *An empty third-class compartment at first light: wooden benches, a suitcase on the rack, a dark coat on one bench, a parcel on the other, fields at the window.*
 
+
+## 30. After the build (7 Oct 2026; `f7e180d`)
+
+### 30.1 *The marker*, chapter 1, refitted to *The Last Train In* (`ambitions.ts`, `settle-his-debts` ch. 1)
+
+The old chapter assumed a man had already called at the door (the origin's *The Clearwater people will come for it*). Now the marker came out of the lining on the train, nobody has called yet, and the player has been in town a day. Ids and flags are kept so nothing downstream moves.
+
+| Where | Field | New string |
+|---|---|---|
+| `choose.narrative` | unchanged | *The marker, flat on the table: what he owed, who to, and the Clearwater address written small, as if that made it less.* |
+| `choose.choices[ask]` | `text` | **Ask the branch who in Clearwater holds paper like this** |
+| | `hint` | *A name is worth more than a month.* (unchanged) |
+| | `flag` | `asked-name` (unchanged) |
+| `choose.choices[silent]` | `text` | **Say nothing to anyone, and put it back under the lining** |
+| | `hint` | *Let them come to you, if they come.* |
+| | `flag` | `said-nothing` (unchanged) |
+| `check.title` | unchanged | *The man in the good coat* |
+| `check.narrative` | | **He finds you on the third evening, on the stairs, with a copy of the marker and a good coat. The Clearwater people know which train you took. You have no two thousand marks; you have a minute, and it's a question of how you use it.** (236 characters, four sentences) |
+| `check.approaches` | unchanged | *Look him in the eye and name a date* · *Read the marker properly before you answer* · *Legwork. Walk the riverside road first and see whose house he goes back to.* |
+| `check.cta` | unchanged | *Answer him* |
+| `result.success` | unchanged | *A month, and a name* / the body stands |
+| `result.partial.body` | | *You get a month, not a name. He takes the stairs two at a time, whistling, and leaves **his copy of** the marker on the banister. You'll see him again; you'd both rather it was later.* |
+| `result.failure.body` | | *He gives you a fortnight and no name, and looks round the room as if pricing it. The stairwell is very quiet after he's gone. You put the marker **back under the lining**, where he kept it.* |
+
+The chapter-2 hook (*The riverside house*, Level 6) and the keepsake are unchanged. *His ward book* and *The prison letter* need nothing: their openers were already refitted (§2.8) and neither had a caller.
+
+### 30.2 The developer's wordings
+
+| String | Decision |
+|---|---|
+| Collective favour body: *…counts them while you wait.* | **Confirmed** (plainer than *in front of you*). |
+| Vanguard favour body: *Twenty flyers go into twenty hands…* | **Confirmed**: *flyers* is §1.5's word; *leaflets* was mine in prose only. |
+| Stahl's welcome deck: *…Stahl's bundle goes out at Beacon House; start there.* | **Confirmed** (with `{place}` as built). |
+| Grey's welcome deck: *…Grey's signature wants a witness at {place}; start there.* | **Replace**: the signature is the tenant's, not Grey's. ***…Grey's tenant wants a witness at {place}; start there.*** |
+| `pinName`: *Your pin: to Coalport, arriving in 12 min* | **Keep** (main session, 7 Oct: the user decided the traveller is a plain pin, not a train, so the words say *pin*; the designer's *Your train* proposal is overruled). |
+| `followYourPin`: *Follow your pin* | **Keep** (the user's plain-pin decision). |
+| `backToTheCard`: *On the way · {title}* | **Confirmed.** |
+| `localElection`: *{City} elects its council: names go in until …* / *voting until …* | **Confirmed** (both phases; the time printed per §29 Q6). |
+
+### 30.3 Beat 2 against the empty compartment
+
+With no helper in the picture, *{helper} dozes against the window* contradicts the art. New `origin.step-suitcase.narrative` (≤ 240):
+
+> ***{helper} is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. {helperPronoun} comes back to ask what a person carries to a new town.***
+
+The kicker, the portrait slot (`helper`, beside the question) and the three answers are unchanged; the portrait beside the question is where the person is, which is why the picture needn't hold one. Beat 3's narrative already has nobody in it. The alt text for `scene.train-compartment` (replacing §29.3's): ***An empty third-class compartment at first light: wooden benches, a suitcase on the rack, a dark coat on one bench, a parcel on the other, fields at the window.***
 
 ## Appendix A — The other prologue options (for the user to swap)
 
