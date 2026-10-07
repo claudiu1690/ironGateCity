@@ -2,12 +2,13 @@
  * `pnpm report:playtest`: the playtest report, read-only, against MONGODB_URI (reads
  * apps/server/.env when it is not set). Prints a table per player and the overall numbers, the
  * arrival funnel (slice 2), the elections section (slice 3, tech design §14.1), the battleground (slice
- * 4) and risk (slice 5, tech design §15.2), boosted testers apart where a section says so. Add
- * `--json` for machine-readable output.
+ * 4), risk (slice 5, tech design §15.2) and review 4 (tech design docs/tech/review-4.md §18.3: the
+ * prologue, the favour, the journey's cards, the Town Hall, the cells' marks and orders off), boosted
+ * testers apart where a section says so. Add `--json` for machine-readable output.
  */
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { getContent } from '@irongate/content';
+import { getContent, isWelcomeAction } from '@irongate/content';
 import { bestTrainedStat } from '@irongate/rules';
 import type { ActionResult } from '@irongate/rules';
 import {
@@ -41,6 +42,7 @@ import type { Funnel } from '../src/funnel';
 import { buildPlaytestReport } from '../src/report';
 import { buildRiskReport, riskTables } from '../src/risk';
 import type { RiskResult } from '../src/risk';
+import { buildReview4Report, review4Tables } from '../src/review4Report';
 
 const serverEnv = fileURLToPath(new URL('../../../apps/server/.env', import.meta.url));
 if (!process.env.MONGODB_URI && existsSync(serverEnv)) process.loadEnvFile(serverEnv);
@@ -109,10 +111,14 @@ try {
 
   // Slice 2 (tech design §14.1): the arrival funnel, overall and per faction.
   const content = getContent();
-  // Review 1: slot A of the welcome set is chosen by the best trained stat (ties: the faction's stat).
+  // Review 4 (§7.5, ADR 0073): the first landing opens the favour (welcome slot B) at the HQ, so the
+  // first action that "matches" is the favour. (Review 1's slot A by the best stat is kept for a party
+  // without a welcome ticket.)
   const welcomeAction = (c: { factionId: string; stats: { str: number; int: number; agi: number } }) => {
     const f = content.factions.find((x) => x.id === c.factionId);
     if (!f) return '';
+    const b = content.orderTemplates.find((x) => x.id === f.welcomeOrders.B);
+    if (b?.use === 'welcome' && b.match.actionIds?.[0]) return b.match.actionIds[0];
     const bonus = f.startingBonus;
     const prefer = (['str', 'int', 'agi'] as const).reduce(
       (a, s) => ((bonus[s] ?? 0) > (bonus[a] ?? 0) ? s : a),
@@ -499,8 +505,33 @@ try {
     }),
   });
 
+  // Review 4 (T29): the notes in play: the prologue and the favour, cards on the way, the Town Hall,
+  // the cells' marks and orders off.
+  const allActions = content.cities.flatMap((c) => c.locations.flatMap((l) => l.actions));
+  const review4 = buildReview4Report({
+    arrivals: arrivals.map((a) => ({
+      answers: a.answers.map((x) => ({ questionId: x.questionId, answerId: x.answerId })),
+      completedAt: a.completedAt,
+    })),
+    characters: characters.map((c) => ({ id: c._id.toHexString(), createdAt: c.createdAt, factionId: c.factionId })),
+    actions: logs.map((l) => ({ characterId: l.characterId.toHexString(), createdAt: l.createdAt, actionId: l.actionId })),
+    journeys: (await Journey.find({}, { card: 1, choice: 1, arrivesAt: 1 }).lean()).map((j) => ({
+      card: j.card !== null,
+      cardAt: (j.card as { at?: Date } | null)?.at ?? null,
+      choiceAt: j.choice?.at ?? null,
+      arrivesAt: j.arrivesAt,
+    })),
+    stays: (await Stay.find({}, { kind: 1, marks: 1, since: 1 }).lean()).map((s) => ({
+      kind: s.kind,
+      marks: s.marks,
+      since: s.since,
+    })),
+    favourIds: allActions.filter(isWelcomeAction).map((a) => a.id),
+    galleryIds: allActions.filter((a) => a.id.endsWith('.gallery')).map((a) => a.id),
+  });
+
   if (process.argv.includes('--json')) {
-    console.log(JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk }, null, 2));
+    console.log(JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk, review4 }, null, 2));
   } else {
     console.log('\nIs spending a bar of Energy fun, and do players want to come back in 3 hours?\n');
     console.table(
@@ -628,6 +659,12 @@ try {
       console.log(t.title);
       if (t.rows.length > 0) console.table(t.rows);
       else console.log('  none');
+    }
+
+    console.log('\nReview 4: does each of the twenty-five notes read as answered, in play?\n');
+    for (const t of review4Tables(review4)) {
+      console.log(t.title);
+      console.table(t.rows);
     }
   }
 } finally {

@@ -1473,6 +1473,15 @@ None blocks lanes A–C. Defaults taken:
 
 ---
 
+## Review 4 knock-ons (dated note, 7 Oct 2026)
+
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- `PURPOSE_SCREENS`: `cityQuarter` and `cityOverview` apply to the capital only. A home city is `city`.
+- The funnel counts three `origin.step`s and eight taps to the first result.
+- The performance and axe checks add `/journey` (the map) and the hall's sheet.
+- *While you were away* uses `copy.when`.
+
 ## Deviations (as built)
 
 *Filled in by T26.*

@@ -1383,7 +1383,7 @@ None blocking. Two points for awareness:
 
 ## Deviations
 
-Recorded as each phase lands (T30 completes this section).
+Recorded as each phase landed; T30 completed this section (7 Oct 2026).
 
 ### Phase 1 (T1–T5, 7 Oct 2026)
 
@@ -1589,3 +1589,29 @@ Recorded as each phase lands (T30 completes this section).
 112. **`StoryScreen`**: the echo is at the top of the text on every beat; a portrait with no prompt (beat 2's helper) sits beside the narrative; rows are a radio group (arrow keys, as the faction cards were) with the confirm in the sticky footer (*Choose whom to help* until a row is picked); `FactionCard` and `factionCardFixtures` are removed.
 113. **The first landing's ticket is highlighted with the existing order highlight** (the 3 px XP ring of review 1), through a new `?act=` search parameter kept only with `?loc=`, not a new 2 px ink ring.
 114. **The e2e helper** (`arrive`): beat 1's row by its ask, the confirm, then the two answers; a Vanguard arrival with the reference answers carries *tools* (the tuning character), so the Vanguard specs keep their STR slot A. `helpOnPlatform` and `PLATFORM_ROWS` are exported. `arrival.spec.ts` counts **eight taps** from sign-up to the favour's result: the face, *Sign up*, the row, the confirm, the suitcase, the lining, *To the city*, *Once*.
+
+### Phase 9 (T28–T30, 7 Oct 2026)
+
+**T28. E2E and vocabulary.**
+
+115. **`review4.spec.ts` is one walk** through the notes a new member meets (the eighteen faces, the three beats, the welcome deck, the clock, the paper on the desk at 1440 px, the rank ladder, the favour as the first result, one map with greyed pins and a Town Hall, the Places list), in its own project after every other (`review4`, after `qa-risk`). The notes that need a seat, a journey, a bed or the cells are walked in the specs that already set them up (`travel`, `rival`, `capital`, `qa.slice4`, `council`, `missions`, `qa.slice5`, `review1`, `landscape`); the spec's header maps each note to its spec rather than repeating those set-ups.
+116. **The vocabulary sweep** runs in the browser on every screen the walk passes: the visible text has no system term (GDD §1.5), no war word (CLAUDE.md rule 2) and no *close the game*. The content and copy guards (`qa.vocabulary`, `qa.content`, `qa.slice2`) already scan every review-4 string at the unit level; the server's QA sweep scans the client, UI and server sources. The phase 6–7 words left for the designer (*Your pin: to Coalport, arriving in 12 min*, *Follow your pin*, *On the way · {title}*, *{City} elects its council: names go in until …*) pass both and are kept.
+117. **The suite was run three times in a row** (all projects, `E2E_WEB_PORT=4273 E2E_API_PORT=3301 pnpm e2e`), green each time.
+
+117a. **A flake found on the way**: `qa.slice4.spec.ts`'s capital ballot test (*the first name shows whole above the vote button*) failed once when the welcome edition's read was still on its way and the *The Clarion is in* banner took the ballot's room at 375 × 667. The test now reads the paper (and lets the read land) before measuring; the ballot's layout is unchanged.
+
+**The bug: the journey's pin label under the side sheet.**
+
+118. **The label moves, not the map.** Keeping the label's box clear in the at-rest fit was tried first: the route's points with a label's reach could not all be clear of the 480 px sheet and the bottom bands at the covering scale, and the fit's fallback then dropped the start of the line (Coalport and the pin off screen). So the rest view is unchanged (the route's points and both ends clear of the blocks, as phase 6 built it) and **the label places itself**: `TravelPin` measures its label and, centred under the pin when that is clear, otherwise slides to the right of (or left of) the overlay it meets — the side sheet, the zoom buttons, the dock — and stays inside the map box; near the bottom it goes above the pin (`travelLabelLeft`, `travelLabelAbove`). A pin dragged off the map keeps its label with it. At rest and after *Follow your pin* the pin and its label are therefore clear of the sheet wherever the pin is on the line (the screenshots `1440x900-10-…` and `-11-…`).
+119. **City maps from 1024 px**: a numbered pin's name (on its right) that would run under an overlay goes on its left when that side is clear (`labelSide`), and **a pin that is itself under an overlay shows no name** (St Barbara's half-name peeked out beside Coalport's corner plate); the pin is a drag or a Places-list tap away, as before.
+120. **Not changed**: at 1440 × 900 Coalport's first view still leaves pin 6, The Anchor, under the desktop dock (the fit's most-pins-clear fallback, from slice 2's QA M2; `map.spec.ts` checks every pin is clear at rest or a drag away, which holds). Its name is now hidden with it rather than peeking out.
+121. **The sideways phone's city column is positioned** (`relative`, landed with phase 8): a done order's mark (absolutely placed) grew the page by 148 px instead of scrolling inside the column, found when the favour made an order done in the first minute (`landscape.spec.ts`).
+
+**T29. Migration and report.**
+
+122. **`ensureIndexes` returns migration 008's counts** (`{ review4 }`) and the server logs them at start-up (*Migration 008: resetOldDrafts 0 matched / 0 modified · …*). `packages/db/scripts/migration008Check.ts` (`pnpm --filter @irongate/db migration:008`) runs it twice through `ensureIndexes` on a seeded in-memory database holding two drafts mid-way through the old origin, an empty and a completed draft, an open journey with a card from before `card.at` and a closed one: run 1 `resetOldDrafts 2 / 2`, `cardAtForOpenJourneys 1 / 1`, `cellsNowIndex 1 matched / 0 modified`; **run 2 modifies nothing**.
+123. **The playtest report's review-4 section** (`buildReview4Report`, `review4Tables`; `review4` in `--json`): the prologue (drafts at each beat, whom players helped, joins), the favour (done, on day 1, join → favour median and p75), cards answered on the way or on arrival, the Town Hall's gallery sits, and the cells' marked arrests, marks and orders off. The slice-5 risk section already reads the marks added; the orders off are the marked cells stays (ADR 0078: every arrest in the cells closes the day's orders), so they are counted there rather than stored. The funnel's first-action match is now the favour.
+
+**T30. Docs.**
+
+124. **README**: the e2e line, the report line, a new *The Last Train In* walk-through and *The Town Hall's desk*, and the journey, *Live here*, the bed, the home map, the cells and the rival trip walk-throughs updated for review 4. ADRs 0073–0078 are accepted, ADR 0035 superseded in part by 0076, the §20 knock-ons are dated notes in the slice 6–9 tech docs, and `docs/IMPLEMENTATION_PLAN.md` §5 has a review-4 row. `docs/review/review-4-build-notes.md` lists, for the user, what changed for each of the twenty-five notes.

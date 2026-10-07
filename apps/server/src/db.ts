@@ -33,7 +33,13 @@ export async function startDb(env: Env, log: (message: string) => void): Promise
 
   // In development the database may still be booting (Docker healthcheck, `pnpm db:mem`).
   await connectDb(uri, { waitMs: env.NODE_ENV === 'production' ? 30_000 : 300_000, log });
-  await ensureIndexes();
+  const migrated = await ensureIndexes();
+  // Review 4 (tech design §14): migration 008's counts, step by step (all 0 once it has run).
+  log(
+    `Migration 008: ${Object.entries(migrated.review4)
+      .map(([step, c]) => `${step} ${c.matched} matched / ${c.modified} modified`)
+      .join(' · ')}`,
+  );
   // The seed is idempotent ($setOnInsert). Production runs `pnpm seed` once instead (tech design §12).
   if (env.DB_MODE === 'memory' || env.NODE_ENV !== 'production') await seed(getContent());
 

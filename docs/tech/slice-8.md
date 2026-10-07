@@ -1694,6 +1694,15 @@ None blocks the build. Defaults taken:
 
 ---
 
+## Review 4 knock-ons (dated note, 7 Oct 2026)
+
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- Worn Charisma's "the origin's base" is 0 for every character from review 4 (old characters keep theirs). Every new character wears the coat. `outfit.fathers-coat-promised` is no longer granted (the keepsakes list and the content check).
+- **The Front opens** by its places leaving `laterPins` (they become locations); no quarter view.
+- Shops are place cards in the slot.
+- The residence card's second line is *Where you sleep* only; lodgings are the place card.
+
 ## Deviations (as built)
 
 *Filled in by T25.*

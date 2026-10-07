@@ -1,6 +1,6 @@
 # ADR 0075 — The journey on the nation map: routes as content, the card's moment drawn at boarding
 
-**Status:** proposed (review 4 fix round; amends ADR 0025) · **Date:** 2026-10-06
+**Status:** accepted, built in the review 4 fix round (7 Oct 2026; amends ADR 0025) · **Date:** 2026-10-06
 
 ## Context
 

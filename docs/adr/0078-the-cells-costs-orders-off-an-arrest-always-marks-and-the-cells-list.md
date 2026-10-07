@@ -1,6 +1,6 @@
 # ADR 0078 — The cells' costs: the day's orders off on the orders state, an arrest always marks, the cells list by a partial index
 
-**Status:** proposed (review 4 fix round; amends ADR 0033 and the slice-5 design defaults §23.1 #3) · **Date:** 2026-10-06
+**Status:** accepted, built in the review 4 fix round (7 Oct 2026; amends ADR 0033 and the slice-5 design defaults §23.1 #3) · **Date:** 2026-10-06
 
 ## Context
 

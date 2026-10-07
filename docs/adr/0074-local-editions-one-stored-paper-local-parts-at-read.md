@@ -1,6 +1,6 @@
 # ADR 0074 — Local editions: one stored paper per player, its local parts composed at read
 
-**Status:** proposed (review 4 fix round; replaces the "which paper" rule of `docs/tech/slice-4.md` §11.1 and `docs/tech/slice-5.md` §11.1; extends ADR 0023) · **Date:** 2026-10-06
+**Status:** accepted, built in the review 4 fix round (7 Oct 2026; replaces the "which paper" rule of `docs/tech/slice-4.md` §11.1 and `docs/tech/slice-5.md` §11.1; extends ADR 0023) · **Date:** 2026-10-06
 
 ## Context
 

@@ -233,6 +233,11 @@ test.describe('the capital ballot on a short phone (screens §10; slice-3 QA m4)
       cityId: 'irongate',
       residence: { cityId: 'irongate', districtId: 'irongate.eastside' },
     });
+    // The paper read first, so the *paper is in* banner does not take the ballot's room (review 4: the
+    // join lands on the welcome edition, whose read could still be on its way).
+    await page.goto('/paper');
+    await expect(page.getByTestId('headline').first()).toBeVisible();
+    await page.waitForLoadState('networkidle');
     for (const size of [
       { width: 375, height: 667 },
       { width: 360, height: 640 },

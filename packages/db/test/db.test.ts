@@ -100,7 +100,9 @@ describe('indexes', () => {
   });
 
   it('ensureIndexes can run again', async () => {
-    await expect(ensureIndexes()).resolves.toBeUndefined();
+    // Review 4 (T29): it returns migration 008's counts; a second run modifies nothing.
+    const again = await ensureIndexes();
+    for (const c of Object.values(again.review4)) expect(c.modified).toBe(0);
   });
 });
 

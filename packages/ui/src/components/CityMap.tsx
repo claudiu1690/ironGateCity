@@ -609,6 +609,26 @@ export function placeNames(
   return out;
 }
 
+/**
+ * Review 4: which side of a numbered pin its name label goes (box pixels): right as always, unless
+ * the label would run under an overlay there and the left side is clear; `none` when the pin itself
+ * is under an overlay (its name would peek out beside the plate; a drag or the Places list brings the
+ * pin out). The width is estimated from the letters (Oswald caps at 11 px, or the Courier sub line).
+ */
+export function labelSide(
+  px: number,
+  py: number,
+  label: string,
+  sub: string | undefined,
+  blocks: ReadonlyArray<MapRect>,
+): 'right' | 'left' | 'none' {
+  if (blocks.some((b) => px > b.x0 && px < b.x1 && py > b.y0 && py < b.y1)) return 'none';
+  const width = Math.max(label.length * 7.4, (sub?.length ?? 0) * 6.2) + 28;
+  const hits = (x0: number, x1: number) => blocks.some((b) => x0 < b.x1 && x1 > b.x0 && py - 18 < b.y1 && py + 18 > b.y0);
+  if (!hits(px + 16, px + 16 + width)) return 'right';
+  return hits(px - 16 - width, px - 16) ? 'right' : 'left';
+}
+
 /** A name label's width on the map, estimated from its letters (Oswald caps at 12 px), with its marks. */
 export const nameHalfWidth = (label: string, marks: ReadonlyArray<string> = [], compact = false) =>
   ((compact ? label.length * 7.4 + 24 : label.length * 8.8 + 30) + (marks.includes('residence') ? 18 : 0)) / 2;
@@ -2152,7 +2172,11 @@ export function CityMap({
                 const label = l.pin?.label ?? l.name;
                 // Slice 4: a label pin near the right edge carries its label on its left, so it stays on
                 // the map (the nation's capital on a phone held upright).
-                const flip = style === 'label' && px > w - 170;
+                // Review 4 (the user: a label half under the desktop plate): a numbered pin's name (shown
+                // from 1024 px) that would run under an overlay (the corner plate, the dock) goes on the
+                // pin's left instead, when that side is clear.
+                const side = style === 'number' && w >= 1024 ? labelSide(px, py, label, l.pin?.sub, insets?.blocks ?? []) : 'right';
+                const flip = (style === 'label' && px > w - 170) || side === 'left';
                 // The user's district lock: a district's name is centred on its point, but kept on the
                 // map and clear (QA slice 4 M1): it slides out from under an overlay or another name,
                 // staying inside its own outline (`placeNames`).
@@ -2253,7 +2277,13 @@ export function CityMap({
                       <span
                         className={cx(
                           'hotspot label-caps flex-col border py-1 pr-2 pl-2.5 text-[11px] leading-tight whitespace-nowrap',
-                          style === 'number' ? '-ml-2 hidden border-l-0 lg:inline-flex' : 'inline-flex',
+                          style === 'number'
+                            ? side === 'none'
+                              ? 'hidden'
+                              : flip
+                              ? '-mr-2 hidden items-end border-r-0 pr-2.5 pl-2 lg:inline-flex'
+                              : '-ml-2 hidden border-l-0 lg:inline-flex'
+                            : 'inline-flex',
                           style === 'label' ? (flip ? '-mr-1 items-end' : '-ml-1') : style === 'district' ? '-ml-2 border-l-0' : '',
                           on ? 'border-ink bg-paper text-ink' : 'border-paper bg-ink text-paper',
                         )}
@@ -2275,7 +2305,15 @@ export function CityMap({
           {/* Review 4: the traveller's pin, above the city pins' layer (it ticks on its own). */}
           {traveller && view && (
             <div className="pointer-events-none absolute inset-0">
-              <TravelPin traveller={traveller} view={view} content={{ w: contentW, h: contentH }} transition={transition} />
+              <TravelPin
+                traveller={traveller}
+                view={view}
+                content={{ w: contentW, h: contentH }}
+                transition={transition}
+                boxW={w}
+                boxH={h}
+                avoid={insets?.blocks ?? []}
+              />
             </div>
           )}
           {/* Review 3: + / − beside the Places button on a desktop (the caller places them); the

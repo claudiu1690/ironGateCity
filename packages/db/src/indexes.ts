@@ -8,6 +8,7 @@ import { migrateReview2StreetOrdinances } from './migrations/005-review2-street-
 import { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
 import { migrateSlice5Risk } from './migrations/007-slice5-risk';
 import { migrateReview4 } from './migrations/008-review4';
+import type { Review4Counts } from './migrations/008-review4';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
@@ -54,7 +55,7 @@ export const models = [
  */
 export async function ensureIndexes(
   content: Pick<Content, 'origin' | 'factions' | 'cities'> = getContent(),
-): Promise<void> {
+): Promise<{ review4: Review4Counts }> {
   for (const m of models) {
     await m.createCollection();
     await m.syncIndexes();
@@ -73,5 +74,6 @@ export async function ensureIndexes(
   // Slice 5: Heat, Health, the record and the run-in state; the districts' leader; after 006.
   await migrateSlice5Risk();
   // Review 4 (tech design §14): one step per feature, filled phase by phase; after 007.
-  await migrateReview4(content);
+  // Review 4 (T29): the counts are returned for the start-up log (a second run modifies nothing).
+  return { review4: await migrateReview4(content) };
 }

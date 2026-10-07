@@ -40,6 +40,7 @@ export default defineConfig({
         /missions\.spec\.ts/,
         /(^|[\\/])rival\.spec\.ts$/,
         /qa\.slice5\.spec\.ts/,
+        /review4\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -130,6 +131,14 @@ export default defineConfig({
       name: 'qa-risk',
       testMatch: /qa\.slice5\.spec\.ts/,
       dependencies: ['rival'],
+      use: { ...devices['Pixel 7'] },
+    },
+    // Review 4 (tech design §18.2, T28): a walk through the notes a new member meets, with the
+    // vocabulary sweep on every screen; last, after everything else.
+    {
+      name: 'review4',
+      testMatch: /review4\.spec\.ts/,
+      dependencies: ['qa-risk'],
       use: { ...devices['Pixel 7'] },
     },
   ],

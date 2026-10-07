@@ -1,6 +1,6 @@
 # ADR 0076 — Home cities are one map; only the capital's districts have outlines, and they tile the picture
 
-**Status:** proposed (review 4 fix round; **reverses ADR 0035 for home cities**, keeps it for the capital; amends the slice-4 district lock) · **Date:** 2026-10-06
+**Status:** accepted, built in the review 4 fix round (7 Oct 2026; **reverses ADR 0035 for home cities**, keeps it for the capital; amends the slice-4 district lock) · **Date:** 2026-10-06
 
 ## Context
 

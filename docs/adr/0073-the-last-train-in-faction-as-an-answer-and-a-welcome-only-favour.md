@@ -1,6 +1,6 @@
 # ADR 0073 — *The Last Train In*: the faction is an origin answer, and the favour is a welcome-only ticket
 
-**Status:** proposed (review 4 fix round; amends ADR 0011 and ADR 0012) · **Date:** 2026-10-06
+**Status:** accepted, built in the review 4 fix round (7 Oct 2026; amends ADR 0011 and ADR 0012) · **Date:** 2026-10-06
 
 ## Context
 

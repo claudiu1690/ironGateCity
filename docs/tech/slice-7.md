@@ -1754,6 +1754,21 @@ None blocks the build. Defaults taken:
 
 ---
 
+## Review 4 knock-ons (dated note, 7 Oct 2026)
+
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- **Clearwater is a one-map city** (ADR 0076):
+  - no frames, outlines or labels on its quarters;
+  - no `CityView.landingQuarterId` (§1290 there): the arrival selects the Casino, the hall;
+  - the "teaser landing" fixture and the loader rule go;
+  - The Front's four places are later pins until slice 8.
+- `council.hall` is `{ locationId: 'clearwater.casino' }` (kind `bar`). The Casino's sheet gets `TownHallBlocks`. The Governor's line joins `TownHallView`.
+- `ROOM.cityId`'s removal: `Location.lodgings` on the Rows, and the loader allows lodgings in every battleground city. `residence.room` already takes `locationId`.
+- **The Courier is the lake resident's paper**, and a visitor reads their own paper's Clearwater edition (ADR 0074). The "a visitor's while in Clearwater (the Herald's rule)" line is superseded.
+- `Ordinance.plainLine` is required on any new ordinance. `BATTLEGROUND_COUNCILS` feeds `TownHallView.seatCount`/`passVotes`.
+- The *From the capital* lines join `composeHeadlines` after the residence's city lines (a parameter, not a new rule).
+
 ## Deviations (as built)
 
 *Filled in by T31.*

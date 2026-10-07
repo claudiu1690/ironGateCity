@@ -14,7 +14,8 @@
     "mem": "tsx scripts/memMongo.ts",
     "seed": "tsx scripts/seed.ts",
     "report:playtest": "tsx scripts/playtestReport.ts",
-    "admin:boost": "tsx scripts/boostPlaytest.ts"
+    "admin:boost": "tsx scripts/boostPlaytest.ts",
+    "migration:008": "tsx scripts/migration008Check.ts"
   },
   "dependencies": {
     "@irongate/content": "workspace:*",

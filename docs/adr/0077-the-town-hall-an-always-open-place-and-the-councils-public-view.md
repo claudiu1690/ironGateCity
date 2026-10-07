@@ -1,6 +1,6 @@
 # ADR 0077 — The Town Hall: an always-open place, the council's public view by city, the hall read from its location
 
-**Status:** proposed (review 4 fix round; amends review 3's `council.hall` and ADR 0020's council read) · **Date:** 2026-10-06
+**Status:** accepted, built in the review 4 fix round (7 Oct 2026; amends review 3's `council.hall` and ADR 0020's council read) · **Date:** 2026-10-06
 
 ## Context
 

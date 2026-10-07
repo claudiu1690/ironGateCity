@@ -1,6 +1,6 @@
 # ADR 0035 — Home-city quarters: outlines and opening on `Quarter`, one overview path for every city
 
-**Status:** accepted, built in slice 5 (extends ADR 0024's revision and the slice-4 district lock) · **Date:** 2026-10-03
+**Status:** accepted, built in slice 5; **superseded in part by [ADR 0076](0076-home-cities-one-map-capital-districts-tile-the-picture.md)** (review 4: home cities are one map with no quarters on it; the outlines, frames and overview stay the capital's) (extends ADR 0024's revision and the slice-4 district lock) · **Date:** 2026-10-03
 
 ## Context
 

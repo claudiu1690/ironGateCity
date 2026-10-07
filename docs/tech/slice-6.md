@@ -1331,6 +1331,15 @@ None blocking. Points for awareness (defaults taken):
 
 ---
 
+## Review 4 knock-ons (dated note, 7 Oct 2026)
+
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- *Post bail* also sits on `CellsNowCard`'s own-party rows. It is the same `FavourSheet` and `favour.bail`, reading `held.inCells` (the same index).
+- The Members status line uses `copy.when` (*in the cells at Harbour Police · out in 24 min*).
+- The Faction tab's orders show `off`.
+- Events and the HQ card go into the place card slot (§3.1), not new sheet code.
+
 ## Deviations (as built)
 
 *Filled in by T25.*
