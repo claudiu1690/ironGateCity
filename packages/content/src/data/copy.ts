@@ -400,6 +400,9 @@ export const copy = {
   statButton: (stat: string, from: number) => `${stat} ${from} → ${from + 1}`,
   levelUpLine: (from: number, to: number, points: number) =>
     to - from > 1 ? `Levels ${from + 1}–${to} · ${points} points to place` : `Level ${to} · place your point`,
+  /** Review 4 #5: the level-up line once its points are placed (in the modal, or anywhere else). */
+  levelUpPlaced: (from: number, to: number) =>
+    to - from > 1 ? `Levels ${from + 1}–${to} · points placed` : `Level ${to} · point placed`,
   standingUp: (city: string, name: string) => `${city}: ${name} · everything here goes a little better`,
   /**
    * Review 1 (answers §9, GDD §13.4): the Standing card in the result modal on a level crossing.

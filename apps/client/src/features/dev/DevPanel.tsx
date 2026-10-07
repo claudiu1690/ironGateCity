@@ -4,6 +4,7 @@ import { Button, cx, formatShare } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useId, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useCharacter } from '../game/hooks';
 import { noteServerNow, useNow } from '../../lib/useNow';
 import { devStatusQuery, postDevAction } from './devApi';
@@ -68,6 +69,19 @@ function DevPanelOn({ status }: { status: DevStatus }) {
   const { character } = useCharacter();
   const aboveModal = character?.runIn?.state === 'pending' && 'pointer-events-auto z-[60]';
   const [open, setOpen] = useState(false);
+  // Review 4 #24: the HUD's height changes with what it shows (Health always, Heat above 0), so the
+  // open panel sits under its measured bottom rather than a fixed offset.
+  const [devTop, setDevTop] = useState(84);
+  useEffect(() => {
+    if (!open) return;
+    const measure = () => {
+      const hud = document.querySelector('[role="region"][aria-label="Character"]');
+      if (hud) setDevTop(Math.round(hud.getBoundingClientRect().bottom) + 8);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [open]);
   const [line, setLine] = useState<{ text: string; error: boolean } | null>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -285,12 +299,13 @@ function DevPanelOn({ status }: { status: DevStatus }) {
           aria-labelledby={titleId}
           tabIndex={-1}
           data-testid="dev-panel"
+          style={{ '--dev-top': `${devTop}px` } as CSSProperties}
           className={cx(
             // Between the HUD and the tab bar, left of the button, so both stay visible (phones);
             // a narrow card on the right on wide screens, clear of the dock.
-            'fixed top-[84px] right-[52px] left-2 z-30 flex max-h-[calc(100dvh-164px)] flex-col overflow-y-auto',
+            'fixed top-(--dev-top) right-[52px] left-2 z-30 flex max-h-[calc(100dvh-var(--dev-top)-80px)] flex-col overflow-y-auto',
             'border-2 border-dashed border-xp bg-paper text-ink shadow-[0_0_0_1px_var(--color-ink),0_12px_30px_rgb(0_0_0/0.5)] outline-none',
-            'sm:left-auto sm:w-[360px] lg:top-[76px] lg:max-h-[calc(100dvh-220px)]',
+            'sm:left-auto sm:w-[360px] lg:max-h-[calc(100dvh-var(--dev-top)-144px)]',
             aboveModal,
           )}
         >

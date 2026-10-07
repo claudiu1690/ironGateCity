@@ -348,6 +348,27 @@ describe('orders (design §12.2)', () => {
       ordersForDay(TEMPLATES5, 20_731, 'home', 6).map((t) => t.id),
     );
   });
+
+  it('review 4 #22: `offerable` keeps the mission order out of slot B on a day there is no mission to start', () => {
+    const noMission = (t: (typeof TEMPLATES5)[number]) => !(t.match.kinds ?? []).includes('mission');
+    const days = [20_730, 20_731, 20_732, 20_733, 20_734];
+    const slotB = (offerable?: typeof noMission) =>
+      days.map((d) => ordersForDay(TEMPLATES5, d, 'home', 6, offerable)[1]!.id);
+    expect(slotB()).toContain('dir.mission');
+    expect(slotB(noMission)).not.toContain('dir.mission');
+    // Slot B still has an order every day, and the other slots are as before.
+    for (const d of days) {
+      const withIt = ordersForDay(TEMPLATES5, d, 'home', 6);
+      const without = ordersForDay(TEMPLATES5, d, 'home', 6, noMission);
+      expect(without).toHaveLength(withIt.length);
+      expect([without[0]!.id, without[2]!.id]).toEqual([withIt[0]!.id, withIt[2]!.id]);
+    }
+    expect(
+      startOrders(TEMPLATES5, 20_731, false, undefined, undefined, 0, 'home', 6, noMission).items.map(
+        (i) => i.templateId,
+      ),
+    ).toEqual(ordersForDay(TEMPLATES5, 20_731, 'home', 6, noMission).map((t) => t.id));
+  });
   it('kinds mission; nothing matches on rival ground', () => {
     const d: ActionDescriptor = { kind: 'mission', type: 'vandalism', cityId: 'coalport', actionId: 'x' };
     expect(orderMatches({ kinds: ['mission'], cityId: 'home' }, d, 'coalport')).toBe(true);

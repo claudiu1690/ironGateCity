@@ -5,6 +5,7 @@ import type { CharacterView, StatPointTarget } from '@irongate/rules';
 import { GameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { ensureSettled, loadCharacter } from './dayService';
+import { fullCharacterView } from './meView';
 import { withRequestKey } from './requestKey';
 import { VersionConflict } from './txn';
 import { toCharacterView } from './views';
@@ -18,7 +19,7 @@ export async function placeStatPoint(deps: {
 }): Promise<CharacterView> {
   const { content, input } = deps;
   const loaded = await loadCharacter(deps.user, content, deps.now());
-  return withRequestKey({
+  await withRequestKey({
     characterId: loaded.doc._id,
     idempotencyKey: input.idempotencyKey,
     kind: 'stat.place',
@@ -41,4 +42,7 @@ export async function placeStatPoint(deps: {
       return toCharacterView(updated, now, content, loaded.editionReadAt);
     },
   });
+  // Review 4 #5: the client puts this view in its `me` cache, so it is the full one `me` reads (the
+  // residence city's Rested cap, the politics dot, the Me tab's extras), not the bare stored one.
+  return fullCharacterView(deps.user, content, deps.now());
 }

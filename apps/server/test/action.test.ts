@@ -408,6 +408,16 @@ describe('levels and stat points (§5.3)', () => {
       .catch((e: unknown) => e);
     expect(gameData(none)).toMatchObject({ code: 'PRECONDITION_FAILED', game: { reason: 'NO_STAT_POINTS' } });
   });
+
+  it('review 4 #5: placing a point returns the same full view `me` reads (the client caches it as `me`)', async () => {
+    const { caller, me } = await freshCharacter(testClock(ORDERS_DAY));
+    await Character.updateOne({ _id: me.id }, { $set: { xp: 200 } });
+    const r = await caller.action.perform({ ...STUDY, idempotencyKey: randomUUID(), times: 1 });
+    expect(r.effects.levelUp).toEqual({ from: 1, to: 2, statPoints: 1 });
+    const placed = await caller.character.placeStatPoint({ stat: 'agi', idempotencyKey: randomUUID() });
+    expect(placed.statPointsPending).toBe(0);
+    expect(placed).toEqual(await caller.character.me());
+  });
 });
 
 describe('Party orders (ADR 0009)', () => {

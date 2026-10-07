@@ -127,6 +127,9 @@ test.describe('phone 375×812', () => {
     if (await level.isVisible()) {
       await level.getByRole('button', { name: /^INT \d+ → \d+$/ }).click();
       await expect(page.getByTestId('hud-points')).toHaveCount(0);
+      // Review 4 #5: the line follows the placed point, not the moment of the level-up.
+      await expect(level).toContainText('point placed');
+      await expect(level).not.toContainText('place your point');
     }
     await continueModal(page);
     await sheet.getByRole('button', { name: /^Close/ }).click();

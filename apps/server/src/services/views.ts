@@ -19,6 +19,8 @@ import {
   issueTags,
   itemSpec,
   jobLocks,
+  MISSION_TYPES,
+  missionGate,
   firstDayBonus,
   isWelcomeDay,
   jobPay,
@@ -35,7 +37,7 @@ import {
   wornCha,
 } from '@irongate/rules';
 import { liveIssuesOf, restedCapToday } from './modifiers';
-import { isRivalGround, riskView } from './risk';
+import { isRivalGround, recordLevelOf, riskView } from './risk';
 import type { LiveIssue } from '@irongate/rules';
 import type {
   ActionDescriptor,
@@ -224,7 +226,9 @@ export function orderPin(
   doc: CharacterDoc,
   item: OrderItem,
   t: OrderTemplate,
-  live: readonly LiveIssue[] = [],
+  live: readonly LiveIssue[],
+  /** The day read, for a mission order's gates (the record's marks fade by day). */
+  today: DayKey,
 ): { locationId: string; n: number } | null {
   // Slice 4 (ADR 0026): the pins of the residence city, where its orders point.
   const city = content.city(residenceCityId(doc));
@@ -232,12 +236,12 @@ export function orderPin(
   const spec = itemSpec(item, t);
   if (spec.match.issueTagged) {
     for (const issue of live) {
-      const pin = firstPin(content, doc, city, spec.match, [issue]);
+      const pin = firstPin(content, doc, city, spec.match, [issue], today);
       if (pin) return pin;
     }
     return null;
   }
-  return firstPin(content, doc, city, spec.match, live);
+  return firstPin(content, doc, city, spec.match, live, today);
 }
 
 /** The first pin of the city, in pin order, where an action (or a job) matches the order's rule. */
@@ -247,12 +251,32 @@ function firstPin(
   city: NonNullable<ReturnType<GameContent['city']>>,
   match: OrderTemplate['match'],
   live: readonly LiveIssue[],
+  today: DayKey,
 ): { locationId: string; n: number } | null {
   const ctx = residenceCtx(doc);
   const spec = { match };
   const values = wornStats(doc, content);
+  // Review 4 #22: a mission order points at the first place with a mission the member can start.
+  const missions = spec.match.kinds?.includes('mission')
+    ? startableMissions(content, doc, city.id, today)
+    : [];
   for (const [i, location] of city.locations.entries()) {
     const pin = { locationId: location.id, n: i + 1 };
+    // Review 4 #22: never a pin in a quarter the member cannot open yet.
+    const q = city.quarters.find((x) => x.id === location.quarterId);
+    if (q && !quarterOpenFor(content, doc, q).open) continue;
+    for (const m of missions.filter((x) => x.locationId === location.id)) {
+      const descriptor: ActionDescriptor = {
+        kind: 'mission',
+        actionId: m.missionId,
+        type: m.seenAs,
+        locationId: location.id,
+        cityId: city.id,
+        districtId: location.quarterId,
+        locationKind: location.kind,
+      };
+      if (orderMatches(spec.match, descriptor, ctx)) return pin;
+    }
     if (location.factionId && location.factionId !== doc.factionId) continue;
     if (spec.match.kinds?.includes('takeJob')) {
       const takeable = content
@@ -278,6 +302,52 @@ function firstPin(
     }
   }
   return null;
+}
+
+/**
+ * Review 4 #22: the missions `doc` could start in `cityId` on `today`, in pin order: the place's
+ * quarter open to them (GDD §14.13), the mission offered to their party (not against it, design
+ * §4.1), and no gate unmet (Level, Rank, reputation, record: `missionGate`). The capital's
+ * `leader` missions always have a target other than the actor, so they are offered. Energy, Heat,
+ * Health and the cells are left out: they pass within the day. The slot-B mission order is only drawn
+ * when this is not empty, and its pin is the first of them.
+ */
+export function startableMissions(
+  content: GameContent,
+  doc: Pick<CharacterDoc, 'factionId' | 'level' | 'rank' | 'localStanding' | 'record' | 'held'>,
+  cityId: string,
+  today: DayKey,
+): Array<{ locationId: string; missionId: string; seenAs: string; n: number }> {
+  const city = content.city(cityId);
+  if (!city) return [];
+  const record = recordLevelOf(doc, today);
+  const standingLevel = standingView(standingSuccesses(doc, cityId)).level;
+  const out: Array<{ locationId: string; missionId: string; seenAs: string; n: number }> = [];
+  for (const [i, location] of city.locations.entries()) {
+    const q = city.quarters.find((x) => x.id === location.quarterId);
+    if (q && !quarterOpenFor(content, doc, q).open) continue;
+    for (const mission of content.missionsAt(location.id)) {
+      if (mission.target !== undefined && mission.target !== 'leader' && mission.target === doc.factionId)
+        continue;
+      const hq = location.factionId ?? (location.kind === 'faction-hq' ? city.homeFactionId : undefined);
+      const gate = missionGate({
+        level: doc.level,
+        rank: doc.rank,
+        standingLevel,
+        record,
+        mission,
+        place: { kind: location.kind, ...(hq ? { factionId: hq } : {}) },
+      });
+      if (gate) continue;
+      out.push({
+        locationId: location.id,
+        missionId: mission.id,
+        seenAs: MISSION_TYPES[mission.type].seenAs,
+        n: i + 1,
+      });
+    }
+  }
+  return out;
 }
 
 export function toOrdersState(o: StoredOrders): OrdersState {
@@ -428,7 +498,7 @@ export function ordersView(
           progress: Math.min(item.progress, item.target),
           target: item.target,
           done: item.doneAt !== null,
-          pin: item.doneAt === null ? orderPin(content, doc, item, t, live) : null,
+          pin: item.doneAt === null ? orderPin(content, doc, item, t, live, today) : null,
         },
       ];
     }),

@@ -45,7 +45,7 @@ import { ensureArrived } from './journeyArrival';
 import type { NewEdition, RiskRead } from './edition';
 import { capOn, dayModifiers, moraleOf } from './modifiers';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
-import { energyState, fromOrdersState, welcomeDayOf, welcomeOrderIds } from './views';
+import { energyState, fromOrdersState, startableMissions, welcomeDayOf, welcomeOrderIds } from './views';
 
 /** What a settlement writes: the character's `$set` and `$inc`, the edition, the refunds. */
 export interface SettlementWrite {
@@ -193,6 +193,13 @@ export function computeSettlement(
   const unrest = homeOfFaction && moraleOf(content, city) === 'unrest';
   // Slice 4 (design §10): a capital resident takes the capital rotation from the day after the move.
   const residenceKind = content.isDistricted(residenceCityId(c)) ? 'capital' : 'home';
+  const missionsOpen =
+    startableMissions(
+      content,
+      { ...c, level: gains.next.level, rank: gains.next.rank },
+      residenceCityId(c),
+      today,
+    ).length > 0;
   const orders = startOrders(
     content.ordersOf(c.factionId),
     today,
@@ -203,6 +210,9 @@ export function computeSettlement(
     residenceKind,
     // Slice 5 (design §12.2): the slot-B mission order enters the rotation at Level 6.
     gains.next.level,
+    // Review 4 #22: and only on a day the member has a mission they can start in the residence city
+    // (its quarter open, offered to their party, no gate unmet); else slot B draws another order.
+    (t) => !(t.match.kinds ?? []).includes('mission') || missionsOpen,
   );
   const edition = buildEdition({
     content,
@@ -312,7 +322,10 @@ export async function ensureSettled(
         const due = await Candidacy.find({ characterId: c._id, deposit: 'due' })
           .session(session)
           .lean<CandidacyDoc[]>();
+        // A stable order on the desk (heroes, then Issues, each oldest first): an unsorted read came
+        // back in either order under load.
         const awards = await Award.find({ characterId: c._id, creditedAt: null })
+          .sort({ kind: 1, _id: 1 })
           .session(session)
           .lean<AwardDoc[]>();
         // Slice 5 (tech design §8.4): yesterday's stays and what they and the marks were for.

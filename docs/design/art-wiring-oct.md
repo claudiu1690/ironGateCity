@@ -43,19 +43,21 @@ Twelve new faces join the six of slice 2: eighteen at sign-up, still cosmetic (A
 | File | Asset id | `top` | Alt text |
 |---|---|---|---|
 | `avatar-man-20s-b.png` | `avatar.man-20s-b` | 40 | A young man with cropped fair hair and freckles, in a cable-knit jumper, holding his flat cap. |
-| `avatar-man-20s-c.png` | `avatar.man-20s-c` | 40 | A young man with dark curls and round spectacles, in a knitted waistcoat and a red tie, a book under his arm. |
+| `avatar-man-20s-c.png` | `avatar.man-20s-c` | 40 | A lanky, freckled young man with red hair and big ears, in a jacket too big for him. |
 | `avatar-man-30s-b.png` | `avatar.man-30s-b` | 40 | A man in his thirties with a shaved head and a moustache, in shirt sleeves and a dark waistcoat. |
-| `avatar-man-30s-c.png` | `avatar.man-30s-c` | 40 | A man in his thirties with close-cropped hair, in a double-breasted suit with a red tie and a pocket handkerchief. |
+| `avatar-man-30s-c.png` | `avatar.man-30s-c` | 40 | A stocky bearded docker in his thirties in a knit cap, a fisherman's sweater and a pea coat. |
 | `avatar-man-40s-b.png` | `avatar.man-40s-b` | 20 | A man in his forties in a flat cap, unshaven, in a heavy worn coat with the collar up and a scarf. |
 | `avatar-man-50s.png` | `avatar.man-50s` | 20 | A man in his fifties with silver hair and a short beard, a red knitted scarf over a tweed coat. |
-| `avatar-woman-20s-b.png` | `avatar.woman-20s-b` | 20 | A young woman in a red beret over dark curls, in a striped blouse under a dark jacket. |
-| `avatar-woman-20s-c.png` | `avatar.woman-20s-c` | 40 | A young woman with long dark curls and a pencil behind her ear, in a white shirt with the sleeves rolled, and braces. |
+| `avatar-woman-20s-b.png` | `avatar.woman-20s-b` | 20 | A broad-faced young woman with a long light-brown plait, in a knitted waistcoat. |
+| `avatar-woman-20s-c.png` | `avatar.woman-20s-c` | 40 | A lean young woman with cropped dark hair under a flat cap, a cigarette behind her ear. |
 | `avatar-woman-30s-b.png` | `avatar.woman-30s-b` | 20 | A woman in her thirties with red hair in a plait and a smudge on her cheek, in a red neckerchief and dungarees. |
-| `avatar-woman-30s-c.png` | `avatar.woman-30s-c` | 40 | A woman in her thirties with fair waved hair and a string of pearls, in a dark tailored jacket. |
+| `avatar-woman-30s-c.png` | `avatar.woman-30s-c` | 40 | A sturdy, round-faced woman in her thirties in a patterned headscarf and an apron. |
 | `avatar-woman-40s-b.png` | `avatar.woman-40s-b` | 20 | A woman in her forties in a small dark red hat and pearl earrings, in a tailored suit. |
 | `avatar-woman-50s.png` | `avatar.woman-50s` | 40 | A woman in her fifties with grey hair pinned up and spectacles on a chain, in a dark cardigan with a brooch. |
 
-The alt texts follow the six existing ones (hair, face, clothes; no skin tones for any face, the same rule for all eighteen). Policy: no insignia, no uniform; the brooch is a plain round one; the red ties, scarf, beret and neckerchief are clothes, not colours of a party (red is worn by faces across the order below, and every faction's recruit picks from the same eighteen).
+Review 4 (6 Oct 2026, note 1): five of these looked too alike and were redrawn with the same file names and crops: `woman-20s-b`, `woman-20s-c`, `woman-30s-c`, `man-20s-c` and `man-30s-c`; the rows above carry their new alt texts.
+
+The alt texts follow the six existing ones (hair, face, clothes; no skin tones for any face, the same rule for all eighteen). Policy: no insignia, no uniform; the brooch is a plain round one; the red scarves, hat and neckerchief are clothes, not colours of a party (red is worn by faces across the order below, and every faction's recruit picks from the same eighteen).
 
 ### 2.1 The sign-up order (`avatars` in `art.ts`)
 
@@ -63,21 +65,21 @@ Eighteen in the order shown, mixing age, sex and look so that **the first row is
 
 | # | Asset id | The look |
 |---|---|---|
-| 1 | `avatar.woman-20s-c` | shirt sleeves and braces, a pencil behind her ear |
+| 1 | `avatar.woman-20s-c` | cropped hair, flat cap, a cigarette behind her ear (review 4) |
 | 2 | `avatar.man-40s-b` | flat cap, worn coat |
 | 3 | `avatar.woman-50s` | grey hair up, spectacles on a chain |
 | 4 | `avatar.man-20s` | braces, the scar (slice 2) |
-| 5 | `avatar.woman-30s-c` | fair waves, pearls |
-| 6 | `avatar.man-30s-c` | double-breasted suit |
+| 5 | `avatar.woman-30s-c` | round face, headscarf and apron (review 4) |
+| 6 | `avatar.man-30s-c` | bearded docker, knit cap, pea coat (review 4) |
 | 7 | `avatar.woman-20s` | dark curls, cardigan, red scarf (slice 2) |
 | 8 | `avatar.man-50s` | silver hair and beard |
 | 9 | `avatar.woman-40s-b` | the small red hat |
-| 10 | `avatar.man-20s-c` | spectacles, a book |
+| 10 | `avatar.man-20s-c` | red hair, freckles, a jacket too big (review 4) |
 | 11 | `avatar.woman-30s-b` | red plait, dungarees |
 | 12 | `avatar.man-40s` | tweed, moustache, cap in hand (slice 2) |
 | 13 | `avatar.woman-40s` | greying hair pinned back, dark jacket (slice 2) |
 | 14 | `avatar.man-30s-b` | shaved head, waistcoat |
-| 15 | `avatar.woman-20s-b` | red beret |
+| 15 | `avatar.woman-20s-b` | light-brown plait, knitted waistcoat (review 4) |
 | 16 | `avatar.man-30s` | curls, leather jacket (slice 2) |
 | 17 | `avatar.woman-30s` | trench coat (slice 2) |
 | 18 | `avatar.man-20s-b` | cropped fair hair, cable-knit jumper |

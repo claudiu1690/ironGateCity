@@ -284,7 +284,7 @@ export const assets: Asset[] = [
   avatar(
     'man-20s-c',
     40,
-    'A young man with dark curls and round spectacles, in a knitted waistcoat and a red tie, a book under his arm.',
+    'A lanky, freckled young man with red hair and big ears, in a jacket too big for him.',
   ),
   avatar(
     'man-30s-b',
@@ -294,7 +294,7 @@ export const assets: Asset[] = [
   avatar(
     'man-30s-c',
     40,
-    'A man in his thirties with close-cropped hair, in a double-breasted suit with a red tie and a pocket handkerchief.',
+    "A stocky bearded docker in his thirties in a knit cap, a fisherman's sweater and a pea coat.",
   ),
   avatar(
     'man-40s-b',
@@ -309,12 +309,12 @@ export const assets: Asset[] = [
   avatar(
     'woman-20s-b',
     20,
-    'A young woman in a red beret over dark curls, in a striped blouse under a dark jacket.',
+    'A broad-faced young woman with a long light-brown plait, in a knitted waistcoat.',
   ),
   avatar(
     'woman-20s-c',
     40,
-    'A young woman with long dark curls and a pencil behind her ear, in a white shirt with the sleeves rolled, and braces.',
+    'A lean young woman with cropped dark hair under a flat cap, a cigarette behind her ear.',
   ),
   avatar(
     'woman-30s-b',
@@ -324,7 +324,7 @@ export const assets: Asset[] = [
   avatar(
     'woman-30s-c',
     40,
-    'A woman in her thirties with fair waved hair and a string of pearls, in a dark tailored jacket.',
+    'A sturdy, round-faced woman in her thirties in a patterned headscarf and an apron.',
   ),
   avatar(
     'woman-40s-b',

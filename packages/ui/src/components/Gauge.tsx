@@ -22,6 +22,8 @@ export interface GaugeProps {
   figureTestId?: string;
   noteTestId?: string;
   className?: string;
+  /** Review 4 #12: the key of this label's note, for a group's help button (`pickNoteAt`). */
+  noteKey?: string;
 }
 
 const tones = {
@@ -49,11 +51,13 @@ export function Gauge({
   figureTestId,
   noteTestId,
   className,
+  noteKey,
 }: GaugeProps) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   const t = tones[tone];
   return (
     <div
+      data-note={noteKey}
       className={cx(
         'flex min-w-0 items-center gap-2',
         // Review 2 #3: on a phone held sideways the three gauges share one row, each with its label

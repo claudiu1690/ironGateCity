@@ -29,6 +29,12 @@ export function ordersForDay(
    * not pass it keeps the slice-4 rotation.
    */
   level = 1,
+  /**
+   * Review 4 #22: whether the member can do a template's work today at all (the slot-B mission
+   * order needs a mission they can start in the residence city). A template it refuses leaves the
+   * slot's rotation for the day, like one under `minLevel`. Absent: every template.
+   */
+  offerable: (t: OrderTemplate) => boolean = () => true,
 ): OrderTemplate[] {
   const i = cityDayIndex(day);
   const picked: OrderTemplate[] = [];
@@ -40,7 +46,8 @@ export function ordersForDay(
         t.slot === slot &&
         (t.use ?? 'rotation') === 'rotation' &&
         ((t.residence ?? 'home') === residence || t.residence === 'any') &&
-        (t.minLevel ?? 1) <= level,
+        (t.minLevel ?? 1) <= level &&
+        offerable(t),
     );
     if (inSlot.length > 0) picked.push(inSlot[mod(i, inSlot.length)]!);
   }
@@ -65,6 +72,8 @@ export function startOrders(
   residence: 'home' | 'capital' = 'home',
   /** Slice 5: the member's Level, for `minLevel` templates (default 1). */
   level = 1,
+  /** Review 4 #22: `ordersForDay`'s filter (the mission order only with a mission to start). */
+  offerable?: (t: OrderTemplate) => boolean,
 ): OrdersState {
   const byId = (kind: string) => (id: string) => {
     const t = templates.find((x) => x.id === id);
@@ -74,7 +83,7 @@ export function startOrders(
   let picked: OrderTemplate[];
   if (welcome) picked = welcome.map(byId('welcome'));
   else {
-    picked = ordersForDay(templates, day, residence, level);
+    picked = ordersForDay(templates, day, residence, level, offerable);
     if (crisis && residence === 'home') {
       const [a, b] = crisis.map(byId('crisis'));
       picked = [a!, b!, ...picked.filter((t) => t.slot !== 'A' && t.slot !== 'B')];

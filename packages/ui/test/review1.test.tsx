@@ -140,14 +140,22 @@ describe('tap the label (answers §5)', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('the HUD gauges carry one 44 px target with the Energy, XP and Party XP notes', async () => {
+  it('the HUD gauges carry one 44 px target with the Energy, XP, Party XP and Health notes', async () => {
     const user = userEvent.setup();
-    render(<HudBar character={{ ...characterViewFixture, pc: 5 }} nextTickIn={null} />);
+    render(
+      <HudBar
+        character={{ ...characterViewFixture, pc: 5 }}
+        nextTickIn={null}
+        health={{ value: 125, max: 125 }}
+      />,
+    );
     expect(screen.getByRole('meter', { name: 'Energy' })).toBeInTheDocument();
     await user.click(screen.getByTestId('hud-help'));
     const note = screen.getByTestId('help-note');
-    for (const kicker of ['Energy', 'Experience', 'Party XP', 'Political Capital'])
+    for (const kicker of ['Energy', 'Experience', 'Party XP', 'Health'])
       expect(note).toHaveTextContent(kicker);
+    // Review 4 #12: Political Capital has its own button and its own note.
+    expect(note).not.toHaveTextContent('Political Capital');
     // The Faction XP note names the vote, the candidacy and what is left to the next Rank.
     expect(note).toHaveTextContent(
       'the vote at Activist, standing for the council at Organiser. 394 more to Activist.',

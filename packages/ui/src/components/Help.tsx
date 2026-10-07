@@ -24,6 +24,42 @@ export interface HelpButtonProps {
   testId?: string;
   /** For a decorative neighbour that opens the same notes on a tap (the plate's share bar). */
   buttonRef?: RefObject<HTMLButtonElement | null>;
+  /**
+   * Review 4 #12: for an overlay over a group of labels, the index of the note under a tap at
+   * (x, y), which the sheet then opens on (the others follow). Null, or a keyboard press: the order
+   * given.
+   */
+  firstAt?: (x: number, y: number) => number | null;
+}
+
+/** A label's box on screen, for `pickNoteAt`. */
+export interface NoteBox {
+  key: string;
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
+/**
+ * Review 4 #12: the label under a tap: the box that holds the point, else the nearest one (a tap in
+ * the gap between two labels goes to the closer). Null when there are no boxes.
+ */
+export function pickNoteAt(boxes: ReadonlyArray<NoteBox>, x: number, y: number): string | null {
+  let best: { key: string; d: number } | null = null;
+  for (const b of boxes) {
+    const dx = x < b.left ? b.left - x : x > b.right ? x - b.right : 0;
+    const dy = y < b.top ? b.top - y : y > b.bottom ? y - b.bottom : 0;
+    const d = dx * dx + dy * dy;
+    if (!best || d < best.d) best = { key: b.key, d };
+  }
+  return best?.key ?? null;
+}
+
+/** The notes with the one at `first` moved to the front (the rest in their order). */
+export function notesFrom<T>(notes: ReadonlyArray<T>, first: number | null): ReadonlyArray<T> {
+  if (first === null || first <= 0 || first >= notes.length) return notes;
+  return [notes[first]!, ...notes.filter((_, i) => i !== first)];
 }
 
 /**
@@ -33,10 +69,20 @@ export interface HelpButtonProps {
  * labels sit too close together for a 44 px target each (the HUD's gauges, the city plate, the
  * Today strip), one button covers the group and its sheet lists each label's note.
  */
-export function HelpButton({ notes, label, children, className, testId, buttonRef }: HelpButtonProps) {
+export function HelpButton({
+  notes,
+  label,
+  children,
+  className,
+  testId,
+  buttonRef,
+  firstAt,
+}: HelpButtonProps) {
   const own = useRef<HTMLButtonElement>(null);
   const ref = buttonRef ?? own;
   const [open, setOpen] = useState(false);
+  const [first, setFirst] = useState<number | null>(null);
+  const shown = notesFrom(notes, first);
   const [at, setAt] = useState<{ top: number; left: number } | null>(null);
   return (
     <Dialog.Root
@@ -59,6 +105,8 @@ export function HelpButton({ notes, label, children, className, testId, buttonRe
           type="button"
           aria-label={label}
           data-testid={testId}
+          // A pointer tap (detail > 0) opens on the note under it; Enter or Space keeps the order.
+          onClick={firstAt ? (e) => setFirst(e.detail > 0 ? firstAt(e.clientX, e.clientY) : null) : undefined}
           className={cx('min-h-11 cursor-pointer text-left', className)}
         >
           {children}
@@ -77,7 +125,7 @@ export function HelpButton({ notes, label, children, className, testId, buttonRe
           data-testid="help-note"
         >
           <div className="flex flex-col gap-3">
-            {notes.map(([kicker, text], i) =>
+            {shown.map(([kicker, text], i) =>
               i === 0 ? (
                 <div key={kicker} className="flex flex-col gap-1">
                   <Dialog.Title className="label-caps text-[11px] font-semibold text-muted">

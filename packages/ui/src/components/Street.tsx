@@ -43,59 +43,85 @@ const hotOrWorse = (s: HeatState) => s === 'hot' || s === 'wanted';
 // ---------------------------------------------------------------------------------------------
 
 /**
- * *Heat 32 · Noticed* in Courier 11 px, under Political Capital, only above 0; the state word in the
- * failure colour from *Hot*. A tap on the label opens its note.
+ * *Heat 32 · Noticed* in Courier 11 px, only above 0; the state word in the failure colour from *Hot*.
+ * Review 4 #12: a line inside the HUD's group of labels, not a button of its own: its 44 px target
+ * used to reach over Political Capital, so a tap there opened Heat's note. The group's one button
+ * opens on the note of the label under the tap (`data-note`).
  */
-export function HeatRow({ value, tone = 'ink' }: { value: number; tone?: 'ink' | 'paper' }) {
+export function HeatRow({
+  value,
+  tone = 'ink',
+  className,
+  testIds = true,
+}: {
+  value: number;
+  tone?: 'ink' | 'paper';
+  className?: string;
+  /** False for a second copy on the same screen (the HUD's sideways name line). */
+  testIds?: boolean;
+}) {
   if (value <= 0) return null;
   const s = heatState(value);
   return (
-    <HelpButton
-      notes={[copy.risk.help.heat()]}
-      label={`${copy.risk.heatLine(value, heatWord(s))}: what Heat means`}
-      testId="hud-heat"
+    <span
       className={cx(
-        // A 44 px target over a 14 px line (the HUD stays at most two lines taller, screens §10).
-        '-my-[15px] inline-flex items-center self-start font-mono text-[11px] leading-none',
+        'flex min-w-0 items-center font-mono text-[11px] leading-tight whitespace-nowrap',
         tone === 'ink' ? 'text-paper' : 'text-ink',
+        className,
       )}
+      data-note="heat"
+      data-testid={testIds ? 'hud-heat' : undefined}
     >
-      <span data-testid="hud-heat-line">
+      <span data-testid={testIds ? 'hud-heat-line' : undefined}>
         <span className={helpMark}>Heat</span> {value} ·{' '}
         <span className={hotOrWorse(s) ? 'text-failure-fill' : undefined} data-heat-state={s}>
           {heatWord(s)}
         </span>
       </span>
-    </HelpButton>
+    </span>
   );
 }
 
-/** Screens §2.2: a thin bar under Party XP while Health is below full: *Health* · *96 / 125*. */
-export function HealthBar({ value, max }: { value: number; max: number }) {
-  if (value >= max) return null;
+/**
+ * Screens §2.2: a thin bar in the HUD's gauges: *Health* · *96 / 125*. Review 4 #24: always shown,
+ * full or not, in the gauges' columns (one more short line on a phone). Its note opens from the
+ * gauges' button (`data-note`).
+ */
+export function HealthBar({ value, max, className }: { value: number; max: number; className?: string }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   return (
-    <HelpButton
-      notes={[copy.risk.help.health()]}
-      label={`${copy.risk.health} ${copy.risk.healthValue(value, max)}: what Health means`}
-      testId="hud-health"
-      className="-my-[15px] grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 leading-none"
+    <div
+      className={cx('flex min-w-0 items-center gap-2', className)}
+      data-note="health"
+      data-testid="hud-health"
     >
-      <span className={cx('label-caps text-[9px] text-dim', helpMark)}>{copy.risk.health}</span>
       <span
-        role="progressbar"
+        className={cx(
+          'label-caps w-[66px] shrink-0 text-[9px] leading-tight text-dim min-[400px]:w-[92px] lg:w-auto',
+          helpMark,
+        )}
+        aria-hidden="true"
+      >
+        {copy.risk.health}
+      </span>
+      <span
+        role="meter"
         aria-label={copy.risk.health}
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuenow={value}
-        className="h-1 w-full bg-failure"
+        aria-valuetext={copy.risk.healthValue(value, max)}
+        className="h-[5px] min-w-8 flex-1 bg-failure"
       >
-        <span className="block h-1 bg-paper" style={{ width: `${pct}%` }} />
+        <span className="block h-[5px] bg-paper" style={{ width: `${pct}%` }} />
       </span>
-      <span className="font-label text-[11px] leading-none text-paper" data-testid="hud-health-value">
+      <span
+        className="w-[138px] shrink-0 font-label text-[12px] leading-none font-medium text-paper"
+        data-testid="hud-health-value"
+      >
         {copy.risk.healthValue(value, max)}
       </span>
-    </HelpButton>
+    </div>
   );
 }
 

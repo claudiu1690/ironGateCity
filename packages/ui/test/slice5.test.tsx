@@ -480,7 +480,7 @@ describe('the record, Heat and Health (screens §2)', () => {
     );
   });
 
-  it('the HUD: Heat only above 0, Health only below full', () => {
+  it('the HUD: Heat only above 0; Health always (review 4 #24)', () => {
     const { unmount } = render(
       <HudBar
         character={riskCharacterFixture}
@@ -501,7 +501,8 @@ describe('the record, Heat and Health (screens §2)', () => {
       />,
     );
     expect(screen.queryByTestId('hud-heat-line')).toBeNull();
-    expect(screen.queryByTestId('hud-health')).toBeNull();
+    expect(screen.getByTestId('hud-health-value')).toHaveTextContent('125 / 125');
+    expect(screen.getByRole('meter', { name: 'Health' })).toHaveAttribute('aria-valuenow', '125');
   });
 
   it('the lazy states tick on the client: Heat cools a point a step, Health back ten every ten minutes', () => {

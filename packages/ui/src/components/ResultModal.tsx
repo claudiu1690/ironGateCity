@@ -609,7 +609,11 @@ function ResultBody({
               data-testid="effect-level"
             >
               <span className="font-label text-[14px]">
-                {copy.levelUpLine(e.levelUp.from, e.levelUp.to, e.levelUp.statPoints)}
+                {/* Review 4 #5: the result is a record of the moment, but the line follows the
+                    character: once no point waits it says so, wherever the point was placed. */}
+                {statPoints && statPoints.pending <= 0
+                  ? copy.levelUpPlaced(e.levelUp.from, e.levelUp.to)
+                  : copy.levelUpLine(e.levelUp.from, e.levelUp.to, e.levelUp.statPoints)}
               </span>
               {statPoints && onPlaceStat && !later && (
                 <StatPointsPanel
