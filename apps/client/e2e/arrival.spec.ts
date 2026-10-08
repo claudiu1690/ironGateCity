@@ -162,8 +162,9 @@ for (const c of CASES) {
     taps += 1;
     const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
     await expect(modal.getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);
-    await expect(modal.getByTestId('effect-order')).toContainText('1 / 1');
-    await expect(modal.getByText(c.order)).toBeVisible();
+    // Review 5 (answers §17.2 item 6): a done order is its signed line (the progress row goes).
+    await expect(modal.getByTestId('effect-order-signed')).toBeVisible();
+    await expect(modal.getByTestId('effect-order')).toHaveCount(0);
     counting = false;
     // GDD §7.5: eight taps from sign-up to the first result.
     expect(taps).toBe(8);

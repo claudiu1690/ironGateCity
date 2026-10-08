@@ -289,11 +289,14 @@ test.describe('a double tap spends once (tech design §12.4)', () => {
     await runIn.getByTestId('run-in-pay').dblclick();
     const paid = resultModal(page);
     await expect(paid.getByTestId('run-in-did')).toContainText('You paid him off.');
+    // Review 5 (answers §17.2 item 5): the receipt's Iron is the net line (the reward and the 60
+    // paid off, whose parts wait in *Details*).
     const ironRow = paid.getByTestId('reward-iron');
-    const ironReward = (await ironRow.count())
-      ? Number((await ironRow.innerText()).match(/\+(\d+)/)?.[1] ?? '0')
+    const ironNet = (await ironRow.count())
+      ? Number((await ironRow.getByTestId('reward-value').innerText()).replace('−', '-'))
       : 0;
-    await expect.poll(async () => (await me(page)).iron).toBe(i0 - 60 + ironReward);
+    await expect(paid.getByTestId('detail-iron')).toContainText('paid off −60');
+    await expect.poll(async () => (await me(page)).iron).toBe(i0 + ironNet);
     await paid.getByRole('button', { name: 'Continue' }).click();
 
     // *Pay bail*: one bail.

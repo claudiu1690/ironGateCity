@@ -37,12 +37,12 @@ test('sign up → talk to voters at the Mill Gate → result modal → HUD shows
   const stamp = modal.getByTestId('stamp');
   await expect(stamp).toHaveText(/^(Success|Partial)$/);
   const success = (await stamp.textContent()) === 'Success';
-  const rows = modal.getByTestId('attempt-row');
-  await expect(rows).toHaveCount(1);
-  // Review 2 (§8.4): the outcome and its XP; a reason under a Partial; never the roll or the odds.
-  await expect(rows.first().getByTestId('attempt-outcome')).toHaveText(/^(Success|Partial)$/);
-  await expect(rows.first()).not.toContainText(/Rolled|\d+ %/);
-  if (!success) await expect(rows.first().getByTestId('attempt-reason')).not.toHaveText(/\d/);
+  // Review 5 (answers §17.2 item 3): a ×1 prints no row (the stamp says it); a Partial prints one
+  // reason line under the body; never the roll or the odds.
+  await expect(modal.getByTestId('attempt-row')).toHaveCount(0);
+  await expect(modal.getByTestId('result-middle')).not.toContainText(/\broll(ed)?\b|\bchance\b/i);
+  if (!success) await expect(modal.getByTestId('attempt-reason')).not.toHaveText(/\d/);
+  else await expect(modal.getByTestId('attempt-reason')).toHaveCount(0);
   // Review 3 (GDD §13.1a): the rewards as a receipt, one line each, the value at the right.
   await expect(modal.getByTestId('reward-xp').getByTestId('reward-value')).toHaveText(
     success ? '+45' : '+23',

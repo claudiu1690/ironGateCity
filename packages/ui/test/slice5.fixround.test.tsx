@@ -123,9 +123,11 @@ describe('n4: the receipt', () => {
       <ResultModal result={r} open onOpenChange={noop} onAgain={noop} energy={energy} factionNames={NAMES} />,
     );
     const opinion = screen.getByTestId('reward-opinion');
-    expect(opinion).toHaveTextContent('Coalport−0.2Vanguard');
+    expect(opinion).toHaveTextContent(/Coalport−0.2$/);
+    expect(screen.getByTestId('detail-opinion').textContent).toMatch(/^Vanguard/);
     expect(opinion).not.toHaveTextContent('−0.2 %');
-    expect(screen.getByTestId('reward-fxp')).toHaveTextContent('+6 · rival ground +3');
+    // Review 5 (answers §17.2 item 5): the parts in *Details*.
+    expect(screen.getByTestId('detail-fxp')).toHaveTextContent('+6 · rival ground +3');
   });
 });
 

@@ -177,10 +177,12 @@ describe('the result modal in the capital (tech design §10.1)', () => {
     const row = screen.getByTestId('reward-opinion');
     expect(within(row).getByTestId('reward-label')).toHaveTextContent('Opinion in Station & Market');
     expect(within(row).getByTestId('reward-value')).toHaveTextContent('+0.094 %');
-    expect(within(row).getByTestId('reward-note')).toHaveTextContent(
+    // Review 5 (answers §17.2 item 5): no note under opinion; its factors and meter wait in *Details*.
+    expect(within(row).queryByTestId('reward-note')).toBeNull();
+    expect(screen.getByTestId('detail-opinion')).toHaveTextContent(
       'Close race +25 % · Issue: Tram Fare Hike +50 % · Collective 20.0 → 20.1 %',
     );
-    expect(within(screen.getByTestId('reward-fxp')).getByTestId('reward-note')).toHaveTextContent('+6 and Close race +2');
+    expect(screen.getByTestId('detail-fxp')).toHaveTextContent('Party XP · +6 and Close race +2');
     expect(screen.getByTestId('effect-issue')).toHaveTextContent('Tram Fare Hike: Collective +10 points (leads 130 to 85)');
     expect(screen.getByTestId('effect-scoreboard')).toHaveTextContent(
       "This election you've moved Station & Market +0.39 for the Collective (1st of 3)",

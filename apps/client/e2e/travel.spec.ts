@@ -143,7 +143,8 @@ test('the first trip: nation → board → the journey card → arrival → the 
   const opinion = result.getByTestId('reward-opinion');
   if ((await opinion.count()) > 0) {
     await expect(opinion.getByTestId('reward-label')).toHaveText('Opinion in Station & Market');
-    await expect(opinion.getByTestId('reward-note')).toContainText('Close race +25 %');
+    // Review 5 (answers §17.2 item 5): the factors in *Details*.
+    await expect(result.getByTestId('detail-opinion')).toContainText('Close race +25 %');
   }
   await result.getByRole('button', { name: 'Continue' }).click();
   await expect(result).toBeHidden();

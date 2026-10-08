@@ -98,7 +98,8 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   await page.getByTestId('run-in-luck').click();
   const tap = resultModal(page);
   await expect(tap.getByTestId('run-in-did')).toContainText(/^Luck chose to /);
-  await expect(tap.getByTestId('reward-fxp')).toContainText('rival ground +');
+  // Review 5 (answers §17.2 item 5): the Party XP's parts wait in *Details*.
+  await expect(tap.getByTestId('detail-fxp')).toContainText('rival ground +');
   await expect(tap.getByTestId('reward-opinion')).toContainText('Opinion against the Vanguard');
   await tap.getByRole('button', { name: 'Continue' }).click();
   await expect(tap).toHaveCount(0);

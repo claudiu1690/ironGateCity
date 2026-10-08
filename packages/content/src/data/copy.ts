@@ -239,6 +239,18 @@ export const copy = {
     /** "Collective 84.0 → 84.1 %" (the town's meter, moved here from the knock-on block). */
     opinionMove: (faction: string, before: string, after: string) => `${faction} ${before} → ${after} %`,
   },
+  /**
+   * Review 5 (answers §17.2): the compact result modal's folds. *Details ▾* at the receipt's foot (the
+   * breakdown, the cut tags, a ×3's reasons); *+1 more* at the end of a cut tags line; *4 more ▾*
+   * under the third knock-on line.
+   */
+  result: {
+    details: 'Details',
+    moreTags: (n: number) => `+${n} more`,
+    more: (n: number) => `${n} more`,
+    /** The Energy line's Rested part, *Rested 30 → 20*. */
+    rested: (before: number, after: number) => `Rested ${before} → ${after}`,
+  },
   /** Review 2 (answers §1.11): a ticket locked on reputation, "Needs a Known reputation here". */
   needsReputation: (level: number) =>
     `Needs a ${['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us'][level] ?? 'better'} reputation here`,

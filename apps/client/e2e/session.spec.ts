@@ -35,7 +35,8 @@ test('paper → map → ×3 canvass → modal → Today strip → reload lands o
   // Review 3: the meter's move is the opinion line's note on the receipt.
   // Slice 4's factors (*Issue: … +50 %*) lead the note when the week's Issue tags the canvass; slice
   // 5's larger deck changes which Issues a week draws.
-  await expect(modal.getByTestId('reward-opinion').getByTestId('reward-note')).toHaveText(
+  // Review 5 (answers §17.2 item 5): the meter's move waits in *Details*.
+  await expect(modal.getByTestId('detail-opinion')).toHaveText(
     /^(?:.+ · )?Collective \d+\.\d → \d+\.\d %$/,
   );
   const xp = ((await modal.getByTestId('reward-xp').getByTestId('reward-value').textContent()) ?? '').match(

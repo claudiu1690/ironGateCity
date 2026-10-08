@@ -9,11 +9,10 @@ import type {
   NamedStandingView,
   OrdinanceTagView,
   PoliticalResult,
-  ResultAttempt,
   RewardLine,
   StatPointTarget,
 } from '@irongate/rules';
-import { useState } from 'react';
+import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   cx,
@@ -27,6 +26,8 @@ import {
   renderTimeTokens,
 } from '../format';
 import { batchReasons, statName } from '../odds';
+import { KNOCK_ONS_SHOWN, fitTagCount, howItWent, knockOnLines } from '../result';
+import type { KnockOnLine } from '../result';
 import type { TrainingPlaces } from '../odds';
 import { Button } from './Button';
 import { formatSwing, ordinal } from './Capital';
@@ -177,7 +178,11 @@ function ArtHeader({
   ground?: Ground | null;
 }) {
   return (
-    <ArtPanel art={art} className="h-[150px] shrink-0">
+    // Review 5 (answers §17.2 item 1): 112 px under 800 px of height, 136 up to 900, 150 above.
+    <ArtPanel
+      art={art}
+      className="h-[112px] shrink-0 [@media(min-height:800px)]:h-[136px] [@media(min-height:900px)]:h-[150px]"
+    >
       <div
         className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.9)_0%,rgb(21_24_26/0)_55%)]"
         aria-hidden="true"
@@ -189,7 +194,10 @@ function ArtHeader({
         )}
         data-testid="result-stamp"
       >
-        <Stamp tone={stamp.tone} label={stamp.label} />
+        {/* The stamp at 80 % on the short crops. */}
+        <div className="scale-80 [@media(min-height:800px)]:scale-100">
+          <Stamp tone={stamp.tone} label={stamp.label} />
+        </div>
       </div>
       <span className="label-caps absolute bottom-2 left-3 text-[10px] text-dim">{caption}</span>
       {ground && <GroundSash ground={ground} />}
@@ -459,6 +467,132 @@ function standingLine(s: NonNullable<ActionResult['effects']['standing']>): stri
   return a.next === null ? a.name : `${a.name} · ${a.successes} / ${a.next} to ${a.nextName}`;
 }
 
+const OUTCOME_TONE = { success: 'text-success', partial: 'text-partial', failure: 'text-failure' } as const;
+const OUTCOME_WORD = { success: 'Success', partial: 'Partial', failure: 'Failure' } as const;
+
+/** A fold's text row: right-aligned Courier, *Details ▾* / *4 more ▾*, expanding in place. */
+function FoldButton({
+  open,
+  onToggle,
+  controls,
+  children,
+  testId,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  controls: string;
+  children: ReactNode;
+  testId: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-expanded={open}
+      aria-controls={controls}
+      onClick={onToggle}
+      // A 20 px row in the layout (answers §17.2), a 44 px target: the box reaches 12 px above and
+      // below it by negative margins.
+      className="-my-3 flex min-h-11 min-w-11 cursor-pointer items-center justify-end gap-1 self-end font-mono text-[12px] leading-5 text-petrol hover:underline focus-visible:outline-2 focus-visible:outline-petrol"
+      data-testid={testId}
+    >
+      {children}
+      <span aria-hidden="true" className={cx('inline-block transition-transform', open && 'rotate-180')}>
+        ▾
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Review 5 (answers §17.2 item 4): the bonus tags as one line, Oswald caps, no boxes, joined with *·*.
+ * When they would wrap the line is cut at the last whole tag that fits and ends *· +n more*, which
+ * opens *Details* (where the cut tags are). The tags' widths are measured once per set; a resize only
+ * re-fits them.
+ */
+function TagsLine({
+  tags,
+  fit,
+  onFit,
+  onMore,
+}: {
+  tags: ActionResult['bonusTags'];
+  fit: number;
+  onFit: (n: number) => void;
+  onMore: () => void;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  const sizes = useRef<{ key: string; widths: number[]; sep: number; more: number } | null>(null);
+  const key = tags.map((t) => t.id).join('|');
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const measure = () => {
+      if (sizes.current?.key !== key) {
+        const items = [...el.querySelectorAll<HTMLElement>('[data-tag]')];
+        // Only when every tag is on the line (the first render of a set); layout widths, so the
+        // modal's rise-in transform does not skew them.
+        if (items.length !== tags.length) return;
+        const sep = el.querySelector<HTMLElement>('[data-tag-sep]')?.offsetWidth ?? 0;
+        const more = el.querySelector<HTMLElement>('[data-tag-probe]')?.offsetWidth ?? 0;
+        sizes.current = { key, widths: items.map((t) => t.offsetWidth), sep, more };
+      }
+      const s = sizes.current;
+      // Two pixels spare for the rounding of the layout widths.
+      if (el.clientWidth <= 0) return;
+      onFit(fitTagCount(s.widths, el.clientWidth - 2, s.sep, () => s.more));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [key, tags.length, onFit]);
+  const shown = tags.slice(0, fit);
+  const cut = tags.length - shown.length;
+  const sep = (
+    <span aria-hidden="true" className="px-1.5" data-tag-sep>
+      ·
+    </span>
+  );
+  return (
+    <div
+      ref={box}
+      className="relative flex h-4 min-w-0 items-center overflow-x-clip leading-4 whitespace-nowrap"
+      data-testid="result-tags"
+    >
+      <ul className="flex min-w-0 items-baseline">
+        {shown.map((t, i) => (
+          <li key={t.id} className="label-caps flex items-baseline text-[10px] text-petrol">
+            {i > 0 && sep}
+            <span data-tag={t.id}>
+              {t.label} · {t.note}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {cut > 0 && (
+        <button
+          type="button"
+          onClick={onMore}
+          // A 16 px line, a 44 px target (the box reaches 14 px above and below it).
+          className="label-caps -my-3.5 flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center text-[10px] text-petrol underline decoration-dotted underline-offset-[3px]"
+          data-testid="result-tags-more"
+        >
+          {shown.length > 0 && sep}
+          {copy.result.moreTags(cut)}
+        </button>
+      )}
+      {/* The width of *+n more* (the · before it is the separator's), for the fit: generated content,
+          so it is never seen, read or in the line's text. */}
+      <span
+        aria-hidden="true"
+        className="label-caps invisible absolute top-0 left-0 text-[10px] whitespace-pre before:content-[attr(data-tag-probe)]"
+        data-tag-probe={copy.result.moreTags(9)}
+      />
+    </div>
+  );
+}
+
 function ResultBody({
   result: r,
   onAgain,
@@ -474,11 +608,20 @@ function ResultBody({
   sentToPending,
 }: ResultModalProps & { result: ActionResult }) {
   const [picking, setPicking] = useState(false);
+  const [details, setDetails] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [tagFit, setTagFit] = useState(r.bonusTags.length);
+  const ids = useId();
   // Review 4 #5 (answers §5): the stats as this result found them, so the placed line can name the
   // stat that moved (*Level 2 · Intelligence 12 → 13*). Taken again when a new result comes in.
   const [seen, setSeen] = useState({ r, stats: statPoints?.stats ?? null });
   if (seen.r !== r || (!seen.stats && statPoints)) {
-    if (seen.r !== r) setPicking(false);
+    if (seen.r !== r) {
+      setPicking(false);
+      setDetails(false);
+      setMoreOpen(false);
+      setTagFit(r.bonusTags.length);
+    }
     setSeen({ r, stats: statPoints?.stats ?? null });
   }
   const stamp = stampFor(r);
@@ -502,48 +645,60 @@ function ResultBody({
     : missionKicker
       ? `${missionKicker} · ${r.action.name}`
       : r.action.times > 1
-      ? `${r.action.name} · ${r.action.times} times`
-      : r.action.name;
-  const item = e.item ?? null;
-  const hooks = e.hooks ?? [];
+        ? `${r.action.name} · ${r.action.times} times`
+        : r.action.name;
   const energyNow = energy?.value ?? r.character.energy.value;
   const short1 = r.again ? energyNow < r.again.cost1 : true;
   const short3 = r.again && r.again.cost3 !== null ? energyNow < r.again.cost3 : false;
   const ready1 = r.again && short1 && energy ? energyReadyAt(energy, r.again.cost1) : null;
   const ready3 =
     r.again && r.again.cost3 !== null && short3 && energy ? energyReadyAt(energy, r.again.cost3) : null;
-  // Orders still open after this action, for the signed line ("Two remain").
-  const left = r.character.orders.items.filter((o) => !o.done).length;
-  const signed = e.orders
-    .filter((o) => o.fxp > 0)
-    .map((o) => copy.orderSigned[r.character.factionId](o.fxp, left));
   const reasons = batchReasons(r.attempts, trainingPlaces);
+  const how = howItWent(r, reasons);
+
+  // Review 5 (answers §17.2 item 5): what *Details* holds beyond the receipt's breakdown: the cut
+  // tags with their notes, and a ×3's per-row reasons (the one printed under the rows excepted).
+  const cutTags = r.bonusTags.slice(tagFit);
+  const printedReason = how.kind === 'rows' ? how.reason : null;
+  const rowReasons =
+    how.kind === 'rows'
+      ? r.attempts
+          .map((a) => ({ index: a.index, text: reasons.byRow.get(a.index) ?? null }))
+          .filter((x): x is { index: number; text: string } => !!x.text && x.text !== printedReason)
+      : [];
+  const extraDetails: ReactNode[] = [
+    ...cutTags.map((t) => (
+      <li key={`tag:${t.id}`} className="label-caps text-[10px] text-petrol" data-testid="detail-tag">
+        {t.label} · {t.note}
+      </li>
+    )),
+    ...rowReasons.map((x) => (
+      <li key={`reason:${x.index}`} data-testid="attempt-reason" data-row={x.index}>
+        {x.index} · {x.text}
+      </li>
+    )),
+  ];
 
   // Slice 4 (tech design §10.1): the points this work added to an Issue, and the scoreboard line.
-  const names = factionNames ?? {};
-  const fname = (f: FactionId) => names[f] ?? (f === r.character.factionId ? r.character.factionName : f);
-  const issueLines = (e.issues ?? []).map((x) => {
-    const sorted = Object.values(x.totals).sort((a, b) => b - a);
-    const who = x.leader === null ? null : x.leader === x.factionId ? '' : fname(x.leader);
-    return {
-      id: x.issueId,
-      text: copy.capital.issuePoints(
-        x.name,
-        fname(x.factionId),
-        x.added,
-        copy.capital.leadsBy(who, sorted[0] ?? 0, sorted[1] ?? 0),
-      ),
-    };
+  const lines = knockOnLines(r, { statPending: statPoints?.pending ?? e.levelUp?.statPoints ?? 0 });
+  const shown = lines.slice(0, KNOCK_ONS_SHOWN);
+  const rest = lines.slice(KNOCK_ONS_SHOWN);
+  const knock = knockOnNodes(r, {
+    names: names0,
+    level: e.levelUp ? (
+      <LevelUpLine
+        to={e.levelUp.to}
+        statPoints={e.levelUp.statPoints}
+        pending={statPoints?.pending ?? null}
+        placed={
+          statPoints && statPoints.pending <= 0
+            ? placedStats(seen.r === r ? seen.stats : null, statPoints.stats)
+            : null
+        }
+        onPlaceIt={statPoints && onPlaceStat && statPoints.pending > 0 ? () => setPicking(true) : null}
+      />
+    ) : null,
   });
-  const scoreLine = e.scoreboard
-    ? copy.scoreboard.line(
-        e.scoreboard.placeName,
-        formatSwing(e.scoreboard.swing),
-        r.character.factionName,
-        ordinal(e.scoreboard.rank),
-        e.scoreboard.of,
-      )
-    : null;
 
   return (
     <>
@@ -554,253 +709,141 @@ function ResultBody({
         ground={ground}
       />
       <div
-        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pt-3.5 pb-4"
+        // Review 5 (answers §17.2): under 800 px of height the kickers lose their 8 px top gap.
+        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pt-3 pb-3 [@media(max-height:799.98px)]:gap-2"
         data-testid="result-middle"
       >
-        {/* Slice 5 (screens §4.3): the run-in first, when there was one. */}
+        {/* Slice 5 (screens §4.3): the run-in first, when there was one (it is the thing that happened). */}
         {street?.runIn && <RunInBlock runIn={street.runIn} places={trainingPlaces} />}
-        {/* 2. What happened */}
+        {/* 2. What happened; review 5: *How it went* only when it says what the stamp does not. */}
         <section className="flex flex-col gap-1">
           <span className={cx('label-caps text-[10px]', toneText)} data-testid="result-kicker">
             {kicker}
           </span>
-          <Dialog.Title className="font-display text-[24px] leading-tight font-black">
+          <Dialog.Title className="font-display text-[22px] leading-tight font-black sm:text-[24px]">
             {r.headline}
           </Dialog.Title>
-          <Dialog.Description className="font-body text-[14px] leading-normal text-text-2">
+          <Dialog.Description className="font-body text-[15px] leading-[22px] text-text-2">
             {r.body}
           </Dialog.Description>
-        </section>
-
-        {/* 3. How it went */}
-        <section aria-labelledby="how-it-went" className="flex flex-col gap-1.5">
-          <h3 id="how-it-went" className="label-caps text-[10px] text-muted">
-            How it went
-          </h3>
-          {r.attempts.map((a) => (
-            <AttemptRow
-              key={a.index}
-              attempt={a}
-              reason={reasons.byRow.get(a.index) ?? null}
-              dropped={a.index === 1 ? (street?.dropped ?? null) : null}
-            />
-          ))}
-          {reasons.shared && (
-            <p
-              className="pl-6 font-body text-[12.5px] leading-snug text-text-2"
-              data-testid="attempts-reason"
-            >
-              {reasons.shared}
+          {how.kind === 'reason' && (
+            <p className="mt-1 font-body text-[13.5px] leading-snug text-text-2 italic" data-testid="attempt-reason">
+              {how.text}
             </p>
           )}
-          {r.rows.map((row) => (
-            <div
-              key={row.index}
-              className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2"
-              data-testid="attempt-row"
-            >
-              <span className="font-label text-[12px] text-muted">{row.index}</span>
-              <span className="font-label text-[13px]">{row.label}</span>
-              <span className="font-mono text-[11px] text-muted">{row.detail}</span>
-            </div>
-          ))}
+          {how.kind === 'rows' && (
+            <>
+              <p className="mt-1 font-mono text-[12px] leading-snug" data-testid="attempt-rows" aria-label={how.line}>
+                {r.attempts.map((a, i) => (
+                  <span key={a.index} data-testid="attempt-row" data-outcome={a.outcome} aria-hidden="true">
+                    {i > 0 && ' · '}
+                    {a.index} ·{' '}
+                    <span className={OUTCOME_TONE[a.outcome]} data-testid="attempt-outcome">
+                      {OUTCOME_WORD[a.outcome]}
+                    </span>{' '}
+                    · {formatSigned(a.rewards.xp.total)}
+                  </span>
+                ))}
+              </p>
+              {how.reason && (
+                <p
+                  className="font-body text-[13.5px] leading-snug text-text-2 italic"
+                  data-testid={reasons.shared ? 'attempts-reason' : 'attempt-reason'}
+                >
+                  {how.reason}
+                </p>
+              )}
+            </>
+          )}
+          {how.kind === 'runIn' && street?.dropped && r.attempts[0] && (
+            // Slice 5 (screens §4.3): after a Run or a loss, the check's outcome with *dropped: you ran*.
+            <p className="mt-1 font-mono text-[12px]" data-testid="attempt-row" data-outcome={r.attempts[0].outcome}>
+              <span className={OUTCOME_TONE[r.attempts[0].outcome]} data-testid="attempt-outcome">
+                {OUTCOME_WORD[r.attempts[0].outcome]}
+              </span>{' '}
+              <span className="text-muted" data-testid="attempt-dropped">
+                {copy.risk.dropped[street.dropped]}
+              </span>
+            </p>
+          )}
         </section>
 
-        {/* 4. Rewards */}
-        <section aria-labelledby="rewards" className="flex flex-col gap-2">
-          <h3 id="rewards" className="label-caps text-[10px] text-muted">
+        {/* 4. Rewards: the tags on one line, the receipt (four lines at most) and *Details*. */}
+        <section aria-labelledby={`${ids}-rewards`} className="flex flex-col gap-1">
+          <h3 id={`${ids}-rewards`} className="label-caps text-[10px] text-muted">
             Rewards
           </h3>
           {r.bonusTags.length > 0 && (
-            <ul className="flex flex-wrap gap-1.5">
-              {r.bonusTags.map((tag) => (
-                <li
-                  key={tag.id}
-                  className="label-caps border border-petrol px-1.5 py-0.5 text-[10px] text-petrol"
-                >
-                  {tag.label} · {tag.note}
-                </li>
-              ))}
-            </ul>
+            <TagsLine
+              tags={r.bonusTags}
+              fit={Math.min(tagFit, r.bonusTags.length)}
+              onFit={setTagFit}
+              onMore={() => setDetails(true)}
+            />
           )}
-          <Receipt r={r} names={names0} />
+          <Receipt
+            r={r}
+            names={names0}
+            open={details}
+            onToggle={() => setDetails((o) => !o)}
+            detailsId={`${ids}-details`}
+            extra={extraDetails}
+          />
         </section>
 
-        {/* 5. Knock-on effects */}
-        <section aria-labelledby="effects">
-          <h3 id="effects" className="label-caps mb-1 text-[10px] text-muted">
-            Knock-on effects
-          </h3>
-          {/* n2: the level-up and its stat point first, so on a desktop it is on the first screen with
-              Continue, not below the list of effects. */}
-          {e.levelUp && (
-            <div
-              className="mb-2 flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-[1.5px] border-xp bg-paper-card px-2.5 py-1.5"
-              data-testid="effect-level"
-            >
-              <span className="font-label text-[14px]">
-                {/* Review 4 #5: the result is a record of the moment, but the line follows the
-                    character: once no point waits it says so, wherever the point was placed. */}
-                {statPoints && statPoints.pending <= 0
-                  ? copy.levelUpPlaced(
-                      e.levelUp.to,
-                      placedStats(seen.r === r ? seen.stats : null, statPoints.stats),
-                      e.levelUp.statPoints,
-                    )
-                  : copy.levelUpLine(e.levelUp.to, statPoints?.pending ?? e.levelUp.statPoints)}
-              </span>
-              {/* Review 5 #4 (answers §4.1): the picker is not inline in the modal; *Place it* opens it
-                  as a sheet over the modal, and placing the point closes it. */}
-              {statPoints && onPlaceStat && statPoints.pending > 0 && (
-                <Button
-                  variant="outline"
-                  className="px-4"
-                  onClick={() => setPicking(true)}
-                  data-testid="place-it"
-                >
-                  {copy.placeIt}
-                </Button>
-              )}
-            </div>
-          )}
-          {e.levelUp && statPoints && onPlaceStat && statPoints.pending > 0 && (
-            <BottomSheet
-              stacked
-              open={picking}
-              onOpenChange={setPicking}
-              title={copy.levelUpLine(e.levelUp.to, statPoints.pending)}
-            >
-              <StatPointsPanel
-                pending={statPoints.pending}
-                level={statPoints.level}
-                stats={statPoints.stats}
-                guide={statPoints.guide}
-                onPlace={onPlaceStat}
-                placing={placing}
-                onLater={() => setPicking(false)}
-                title={copy.pointsToPlace(statPoints.pending)}
-              />
-            </BottomSheet>
-          )}
-          {/* Review 1 (§13.4, answers §9): a Standing level crossed is a card in the level-up's block. */}
-          {e.standingUp && <StandingCard up={e.standingUp} />}
-          <StreetLines street={street} heat={e.heat ?? null} stat={e.stat} />
-          {(item ||
-            hooks.length > 0 ||
-            e.ordersAllDone ||
-            e.morale ||
-            e.branchEndorsement ||
-            issueLines.length > 0 ||
-            scoreLine ||
-            signed.length > 0) && (
-            <ul className="flex flex-col">
-              {/* Slice 4: the Issue's points and the scoreboard (tech design §10.1). */}
-              {issueLines.map((l) => (
-                <li
-                  key={l.id}
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
-                  data-testid="effect-issue"
-                >
-                  {l.text}
-                </li>
-              ))}
-              {scoreLine && (
-                <li
-                  className="border-b border-dotted border-faint py-1 font-mono text-[12px] text-petrol"
-                  data-testid="effect-scoreboard"
-                >
-                  {scoreLine}
-                </li>
-              )}
-              {/* Review 1 (answers §6): an order done is a signed line from the secretary. */}
-              {signed.map((line) => (
-                <li
-                  key={line}
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px] text-petrol"
-                  data-testid="effect-order-signed"
-                >
-                  {line}
-                </li>
-              ))}
-              {e.morale && (
-                <li
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
-                  data-testid="effect-morale"
-                >
-                  {copy.moraleCrossed(e.morale.cityName, e.morale.after)}
-                </li>
-              )}
-              {e.branchEndorsement && (
-                <li
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
-                  data-testid="effect-branch"
-                >
-                  {copy.branchEndorsesYou} · {e.branchEndorsement.endorsements} / {e.branchEndorsement.needed}
-                </li>
-              )}
-              {/* m5: where PC first appears, the same line on every device (onboarding §14.1). */}
-              {e.ordersAllDone && (
-                <li
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
-                  data-testid="effect-all-orders"
-                >
-                  {copy.allOrdersDone(e.ordersAllDone.pc)}
-                </li>
-              )}
-              {item && (
-                <li
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
-                  data-testid="effect-item"
-                >
-                  {copy.keepsakeLine(item.name)}
-                </li>
-              )}
-              {hooks.map((h) => (
-                <li
-                  key={h}
-                  className="border-b border-dotted border-faint py-1 font-body text-[12.5px]"
-                  data-testid="effect-hook"
-                >
-                  {h}
-                </li>
-              ))}
+        {/* 5. Knock-on effects: three lines in the priority of answers §17.2 item 6, then *n more*. */}
+        {lines.length > 0 && (
+          <section aria-labelledby={`${ids}-effects`} className="flex flex-col">
+            <h3 id={`${ids}-effects`} className="label-caps mb-0.5 text-[10px] text-muted">
+              Knock-on effects
+            </h3>
+            <ul className="flex flex-col" data-testid="effect-lines">
+              {shown.map((l) => knock(l))}
             </ul>
-          )}
-          <dl className="flex flex-col">
-            {e.standing && (
-              <Effect label="Reputation" value={standingLine(e.standing)} testId="effect-standing" />
+            {rest.length > 0 && (
+              <>
+                <ul id={`${ids}-more`} className="flex flex-col" hidden={!moreOpen} data-testid="effect-more">
+                  {rest.map((l) => knock(l))}
+                </ul>
+                <FoldButton
+                  open={moreOpen}
+                  onToggle={() => setMoreOpen((o) => !o)}
+                  controls={`${ids}-more`}
+                  testId="effect-more-toggle"
+                >
+                  {copy.result.more(rest.length)}
+                </FoldButton>
+              </>
             )}
-            {e.orders.map((o) => (
-              <Effect
-                key={o.id}
-                label={o.title}
-                value={`${o.before} → ${o.after} / ${o.target}${o.done ? ' ✓' : ''}`}
-                testId="effect-order"
-              />
-            ))}
-            {e.rankUp && <Effect label={`Rank ${e.rankUp.to}`} value={e.rankUp.title} />}
-            {e.stat && (
-              <Effect
-                label="Trained"
-                value={`${statName(e.stat.stat)} ${e.stat.before} → ${e.stat.after}`}
-                testId="effect-stat"
-              />
-            )}
-            <Effect label="Energy" value={`${e.energy.before} → ${e.energy.after}`} testId="effect-energy" />
-            {(e.rested.before > 0 || e.rested.after > 0) && (
-              <Effect label="Rested" value={`${e.rested.before} → ${e.rested.after}`} />
-            )}
-            {/* Review 3 (answers §3.3): the XP, Party XP, Iron and opinion before → after lines are on
-                the receipt above. */}
-            {e.pc && <Effect label="Political Capital" value={`${e.pc.before} → ${e.pc.after}`} />}
-          </dl>
-        </section>
+          </section>
+        )}
+        {/* Review 5 #4 (answers §4.1): the picker is not inline in the modal; *Place it* opens it as a
+            sheet over the modal, and placing the point closes it. */}
+        {e.levelUp && statPoints && onPlaceStat && statPoints.pending > 0 && (
+          <BottomSheet
+            stacked
+            open={picking}
+            onOpenChange={setPicking}
+            title={copy.levelUpLine(e.levelUp.to, statPoints.pending)}
+          >
+            <StatPointsPanel
+              pending={statPoints.pending}
+              level={statPoints.level}
+              stats={statPoints.stats}
+              guide={statPoints.guide}
+              onPlace={onPlaceStat}
+              placing={placing}
+              onLater={() => setPicking(false)}
+              title={copy.pointsToPlace(statPoints.pending)}
+            />
+          </BottomSheet>
+        )}
       </div>
 
       {/* 6. Buttons: a sticky bar, so Again and Continue are on the first screen of a phone
           (mockup MobileMission) however long the breakdown above runs. */}
       <div
-        className="sticky bottom-0 z-10 mt-auto flex flex-col gap-1.5 border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
+        className="sticky bottom-0 z-10 mt-auto flex flex-col gap-1.5 border-t border-track bg-paper px-4 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]"
         data-testid="result-buttons"
       >
         {street?.sentTo ? (
@@ -837,76 +880,213 @@ function ResultBody({
   );
 }
 
+/**
+ * The level-up line (review 5 #4, answers §4.1): *Level 4 · one point to place* and *Place it*; the
+ * result is a record of the moment, but the line follows the character (review 4 #5): once no point
+ * waits it says so, wherever the point was placed.
+ */
+function LevelUpLine({
+  to,
+  statPoints,
+  pending,
+  placed,
+  onPlaceIt,
+}: {
+  to: number;
+  statPoints: number;
+  pending: number | null;
+  placed: { stat: string; from: number; to: number }[] | null;
+  onPlaceIt: (() => void) | null;
+}) {
+  return (
+    <li
+      className="mb-1 flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-[1.5px] border-xp bg-paper-card px-2.5 py-1"
+      data-testid="effect-level"
+    >
+      <span className="font-label text-[14px]">
+        {placed ? copy.levelUpPlaced(to, placed, statPoints) : copy.levelUpLine(to, pending ?? statPoints)}
+      </span>
+      {onPlaceIt && (
+        <Button variant="outline" className="px-4" onClick={onPlaceIt} data-testid="place-it">
+          {copy.placeIt}
+        </Button>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Every knock-on line's node by its `knockOnLines` id (review 5, answers §17.2 item 6): one line each
+ * (Courier 12 for a figure, the body face for a sentence) unless it is a card.
+ */
+function knockOnNodes(
+  r: ActionResult,
+  o: { names: Partial<Record<FactionId, string>>; level: ReactNode },
+): (l: KnockOnLine) => ReactNode {
+  const e = r.effects;
+  const street = r.street ?? null;
+  const left = r.character.orders.items.filter((x) => !x.done).length;
+  const fname = (f: FactionId) => o.names[f] ?? (f === r.character.factionId ? r.character.factionName : f);
+  const line = (id: string, text: ReactNode, testId: string, tone?: string) => (
+    <li
+      key={id}
+      className={cx('border-b border-dotted border-faint py-[3px] font-body text-[12.5px] leading-4', tone)}
+      data-testid={testId}
+    >
+      {text}
+    </li>
+  );
+  const card = (id: string, body: ReactNode, testId: string) => (
+    <li
+      key={id}
+      className="my-1 border-[1.5px] border-ink bg-paper-card px-2.5 py-1.5 font-body text-[12.5px] leading-snug"
+      data-testid={testId}
+    >
+      {body}
+    </li>
+  );
+  const street_ = streetLines(street, e.heat ?? null);
+  return (l) => {
+    const [kind, ref] = [l.id.split(':')[0]!, l.id.slice(l.id.indexOf(':') + 1)];
+    switch (kind) {
+      case 'placeIt':
+        return <Fragment key={l.id}>{o.level}</Fragment>;
+      case 'standing-card':
+        return e.standingUp ? <StandingCard key={l.id} up={e.standingUp} /> : null;
+      case 'rank':
+        return e.rankUp ? <Effect key={l.id} label={`Rank ${e.rankUp.to}`} value={e.rankUp.title} /> : null;
+      case 'heat':
+      case 'heat-card':
+      case 'record':
+      case 'record-escalated':
+      case 'record-card':
+      case 'orders-off': {
+        const s = street_[kind];
+        if (!s) return null;
+        return s.card ? card(l.id, s.text, `effect-${kind}`) : line(l.id, s.text, `effect-${kind}`, s.tone);
+      }
+      case 'agility': {
+        const agi = street?.agility;
+        return agi ? line(l.id, copy.risk.agility(4 - agi.quarters), 'effect-agility') : null;
+      }
+      case 'remembered':
+        return line(l.id, copy.risk.remembered, 'effect-remembered');
+      case 'order-signed': {
+        // Review 1 (answers §6): an order done is a signed line from the secretary.
+        const x = e.orders.find((y) => y.id === ref);
+        return x ? line(l.id, copy.orderSigned[r.character.factionId](x.fxp, left), 'effect-order-signed', 'text-petrol') : null;
+      }
+      case 'order': {
+        const x = e.orders.find((y) => y.id === ref);
+        return x ? (
+          <Effect
+            key={l.id}
+            label={x.title}
+            value={`${x.before} → ${x.after} / ${x.target}${x.done ? ' ✓' : ''}`}
+            testId="effect-order"
+          />
+        ) : null;
+      }
+      case 'all-orders':
+        // m5: where PC first appears, the same line on every device (onboarding §14.1).
+        return e.ordersAllDone ? line(l.id, copy.allOrdersDone(e.ordersAllDone.pc), 'effect-all-orders') : null;
+      case 'morale':
+        return e.morale ? line(l.id, copy.moraleCrossed(e.morale.cityName, e.morale.after), 'effect-morale') : null;
+      case 'issue': {
+        const x = (e.issues ?? []).find((y) => y.issueId === ref);
+        if (!x) return null;
+        const sorted = Object.values(x.totals).sort((a, b) => b - a);
+        const who = x.leader === null ? null : x.leader === x.factionId ? '' : fname(x.leader);
+        return line(
+          l.id,
+          copy.capital.issuePoints(x.name, fname(x.factionId), x.added, copy.capital.leadsBy(who, sorted[0] ?? 0, sorted[1] ?? 0)),
+          'effect-issue',
+        );
+      }
+      case 'branch':
+        return e.branchEndorsement
+          ? line(l.id, `${copy.branchEndorsesYou} · ${e.branchEndorsement.endorsements} / ${e.branchEndorsement.needed}`, 'effect-branch')
+          : null;
+      case 'pc':
+        return e.pc ? <Effect key={l.id} label="Political Capital" value={`${e.pc.before} → ${e.pc.after}`} /> : null;
+      case 'standing':
+        return e.standing ? (
+          <Effect key={l.id} label="Reputation" value={standingLine(e.standing)} testId="effect-standing" />
+        ) : null;
+      case 'scoreboard':
+        return e.scoreboard ? (
+          <li
+            key={l.id}
+            className="border-b border-dotted border-faint py-[3px] font-mono text-[12px] leading-4 text-petrol"
+            data-testid="effect-scoreboard"
+          >
+            {copy.scoreboard.line(
+              e.scoreboard.placeName,
+              formatSwing(e.scoreboard.swing),
+              r.character.factionName,
+              ordinal(e.scoreboard.rank),
+              e.scoreboard.of,
+            )}
+          </li>
+        ) : null;
+      case 'hook': {
+        const h = (e.hooks ?? [])[Number(ref)];
+        return h ? line(l.id, h, 'effect-hook') : null;
+      }
+      case 'trained':
+        return e.stat ? (
+          <Effect
+            key={l.id}
+            label="Trained"
+            value={`${statName(e.stat.stat)} ${e.stat.before} → ${e.stat.after}`}
+            testId="effect-stat"
+          />
+        ) : null;
+      case 'energy':
+        return (
+          <Effect
+            key={l.id}
+            label="Energy"
+            value={`${e.energy.before} → ${e.energy.after}`}
+            testId="effect-energy"
+            more={
+              e.rested.before > 0 || e.rested.after > 0 ? (
+                <span className="font-label text-muted" data-testid="effect-rested">
+                  {copy.result.rested(e.rested.before, e.rested.after)}
+                </span>
+              ) : null
+            }
+          />
+        );
+      default:
+        return null;
+    }
+  };
+}
+
 /** Review 1 (answers §9): the new level's title, what changed, what the next level brings. */
 function StandingCard({ up }: { up: NonNullable<ActionResult['effects']['standingUp']> }) {
   const [heading, now, next] = copy.standingCard[up.level](up.cityName, up.rank3Title);
   return (
-    <div
-      className="mb-2 flex flex-col gap-1 border-[1.5px] border-petrol bg-paper-card p-2.5"
+    <li
+      className="my-1 flex flex-col gap-0.5 border-[1.5px] border-petrol bg-paper-card px-2.5 py-1.5"
       data-testid="effect-standing-card"
     >
       <span className="label-caps text-[10px] text-muted">{copy.standingCard.kicker}</span>
-      <span className="font-display text-[18px] leading-tight font-black text-petrol">{heading}</span>
+      <span className="font-display text-[17px] leading-tight font-black text-petrol">{heading}</span>
       <span className="font-body text-[13px]">{now}</span>
       <span className="font-body text-[12.5px] text-text-2">{next}</span>
-    </div>
+    </li>
   );
 }
 
 /**
- * One attempt (review 2, answers §2.3): the index, the outcome in its colour and the XP; under a row
- * that isn't a Success, one plain reason. Nothing opens on a tap: no bar, no roll, no ledger.
- */
-function AttemptRow({
-  attempt: a,
-  reason,
-  dropped = null,
-}: {
-  attempt: ResultAttempt;
-  reason: string | null;
-  /** Slice 5 (screens §4.3): after a Run or a loss, the check's outcome with *dropped: you ran*. */
-  dropped?: 'ran' | 'lost' | null;
-}) {
-  const success = a.outcome === 'success';
-  const failure = a.outcome === 'failure';
-  const label = success ? 'Success' : a.outcome === 'partial' ? 'Partial' : 'Failure';
-  return (
-    <div className="flex flex-col gap-0.5" data-testid="attempt-row" data-outcome={a.outcome}>
-      <div className="grid min-h-8 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2">
-        <span className="font-label text-[12px] text-muted">{a.index}</span>
-        <span
-          className={cx(
-            'label-caps text-[12px] font-semibold tracking-[0.08em]',
-            success ? 'text-success' : failure ? 'text-failure' : 'text-partial',
-          )}
-          data-testid="attempt-outcome"
-        >
-          {label}
-          {dropped && (
-            <span
-              className="ml-2 font-mono text-[11px] font-normal tracking-normal text-muted normal-case"
-              data-testid="attempt-dropped"
-            >
-              {copy.risk.dropped[dropped]}
-            </span>
-          )}
-        </span>
-        <span className="font-label text-[13px]">{formatSigned(a.rewards.xp.total)} XP</span>
-      </div>
-      {reason && (
-        <p className="pl-6 font-body text-[12.5px] leading-snug text-text-2" data-testid="attempt-reason">
-          {reason}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/**
- * Review 3 (answers §3, GDD §13.1a): the rewards as a printed receipt, one line per reward in a fixed
- * order (XP, Party XP, Iron, opinion, an item), its value set large at the right, a note under the
- * label where there is something to say, and a thin bar under XP and Party XP (the HUD's bars in
- * miniature, read from the character view after the gain). A zero line is not printed.
+ * Review 3 (answers §3, GDD §13.1a), compacted by review 5 (answers §17.2 item 5): the rewards as a
+ * printed receipt, four lines at most (XP, Party XP, Iron, opinion; an item or keepsake as a fifth on
+ * a chapter, §18 Q2). XP and Party XP keep their bar and one Courier note, the distance to the next
+ * Level or Rank; Iron and opinion are one line each with no note. A zero line is not printed. The
+ * breakdown (the parts of XP, Party XP and Iron, the opinion's factors and meter line), the cut tags
+ * and a ×3's reasons wait behind *Details ▾*, which expands in place.
  */
 /**
  * Review 3 open point (answers §9.2): the thin bars under XP and Party XP. If they read as clutter in
@@ -914,7 +1094,21 @@ function AttemptRow({
  */
 const RECEIPT_BARS = true;
 
-function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<FactionId, string>> }) {
+function Receipt({
+  r,
+  names = {},
+  open,
+  onToggle,
+  detailsId,
+  extra,
+}: {
+  r: ActionResult;
+  names?: Partial<Record<FactionId, string>>;
+  open: boolean;
+  onToggle: () => void;
+  detailsId: string;
+  extra: ReactNode[];
+}) {
   const c = r.character;
   const e = r.effects;
   const item = e.item ?? null;
@@ -929,13 +1123,22 @@ function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<Fa
     : copy.reward.top(formatNumber(c.fxp));
   const join = (...parts: Array<string | null>) => parts.filter(Boolean).join(' · ') || null;
   const rows: ReactNode[] = [];
-  if (r.rewards.xp.total !== 0)
+  const details: ReactNode[] = [];
+  const detail = (id: string, label: string, text: string | null) => {
+    if (text)
+      details.push(
+        <li key={id} data-testid={`detail-${id}`}>
+          {label} · {text}
+        </li>,
+      );
+  };
+  if (r.rewards.xp.total !== 0) {
     rows.push(
       <ReceiptRow
         key="xp"
         label={copy.reward.xp}
         value={formatSigned(r.rewards.xp.total)}
-        note={join(partsNote(r.rewards.xp), toLevel)}
+        note={toLevel}
         bar={
           RECEIPT_BARS
             ? { label: copy.hud.xp, value: c.xp - floor, max: next - floor, className: 'bg-ink' }
@@ -944,14 +1147,16 @@ function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<Fa
         testId="reward-xp"
       />,
     );
-  if (r.rewards.fxp.total !== 0)
+    detail('xp', copy.reward.xp, partsNote(r.rewards.xp));
+  }
+  if (r.rewards.fxp.total !== 0) {
     rows.push(
       <ReceiptRow
         key="fxp"
         label={copy.reward.fxp}
         value={formatSigned(r.rewards.fxp.total)}
         valueClassName={factionStyle.text}
-        note={join(partsNote(r.rewards.fxp), toRank)}
+        note={toRank}
         bar={
           RECEIPT_BARS
             ? {
@@ -965,32 +1170,35 @@ function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<Fa
         testId="reward-fxp"
       />,
     );
-  if (r.rewards.iron.total !== 0)
+    detail('fxp', copy.reward.fxp, partsNote(r.rewards.fxp));
+  }
+  if (r.rewards.iron.total !== 0) {
     rows.push(
-      <ReceiptRow
-        key="iron"
-        label={copy.reward.iron}
-        value={formatSigned(r.rewards.iron.total)}
-        note={partsNote(r.rewards.iron)}
-        testId="reward-iron"
-      />,
+      <ReceiptRow key="iron" label={copy.reward.iron} value={formatSigned(r.rewards.iron.total)} testId="reward-iron" />,
     );
+    detail('iron', copy.reward.iron, partsNote(r.rewards.iron));
+  }
   const against = e.opinion?.mode === 'against' ? e.opinion : null;
   if (against && against.applied !== 0) {
-    // Slice 5 (screens §4.3): *Opinion against the Vanguard in Coalport · −0.20 · Vanguard 9.0 → 8.8 %*.
+    // Slice 5 (screens §4.3): *Opinion against the Vanguard in Coalport · −0.20*; the meter in Details.
     const target = against.targetFactionId ?? against.factionId;
     const tname = names[target] ?? c.factionNames?.[target] ?? target;
+    const label = copy.risk.opinionAgainst(tname, against.placeName ?? r.place.cityName);
     rows.push(
       <ReceiptRow
         key="opinion"
-        label={copy.risk.opinionAgainst(tname, against.placeName ?? r.place.cityName)}
+        label={label}
         // QA fixes n4: points, never a `%` (the share's move carries the %).
         value={formatOpinionDelta(-Math.abs(against.applied))}
-        note={copy.reward.opinionMove(tname, formatShare(against.shareBefore), formatShare(against.shareAfter))}
         testId="reward-opinion"
       />,
     );
-  } else if (e.opinion && r.rewards.opinion !== 0)
+    details.push(
+      <li key="opinion" data-testid="detail-opinion">
+        {copy.reward.opinionMove(tname, formatShare(against.shareBefore), formatShare(against.shareAfter))}
+      </li>,
+    );
+  } else if (e.opinion && r.rewards.opinion !== 0) {
     rows.push(
       <ReceiptRow
         key="opinion"
@@ -998,24 +1206,25 @@ function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<Fa
         label={copy.reward.opinion(e.opinion.placeName ?? r.place.cityName)}
         value={`${formatOpinionDelta(r.rewards.opinion)} %`}
         valueClassName={factionStyle.text}
-        // Slice 4 (ADR 0030 §4): the named factors first (*Close race +25 % · Issue: Tram Fare Hike
-        // +50 %*), then the meter's move.
-        note={join(
-          ...(r.rewards.opinionFactors ?? []).map((f) => copy.reward.factor(f.label, f.pct)),
-          copy.reward.opinionMove(
-            c.factionName,
-            formatShare(e.opinion.shareBefore),
-            formatShare(e.opinion.shareAfter),
-          ),
-        )}
         testId="reward-opinion"
       />,
     );
+    // Slice 4 (ADR 0030 §4): the named factors first (*Close race +25 % · Issue: Tram Fare Hike
+    // +50 %*), then the meter's move.
+    details.push(
+      <li key="opinion" data-testid="detail-opinion">
+        {join(
+          ...(r.rewards.opinionFactors ?? []).map((f) => copy.reward.factor(f.label, f.pct)),
+          copy.reward.opinionMove(c.factionName, formatShare(e.opinion.shareBefore), formatShare(e.opinion.shareAfter)),
+        )}
+      </li>,
+    );
+  }
   if (item)
     rows.push(
       <li
         key="item"
-        className="flex min-h-[52px] items-center gap-2.5 border-b border-dotted border-faint py-1.5"
+        className="flex min-h-[48px] items-center gap-2.5 border-b border-dotted border-faint py-1"
         data-testid="reward-item"
       >
         <Picture asset={item.art} sizes="40px" decorative className="size-10 shrink-0 object-cover" />
@@ -1025,11 +1234,31 @@ function Receipt({ r, names = {} }: { r: ActionResult; names?: Partial<Record<Fa
         </span>
       </li>,
     );
-  if (rows.length === 0) return null;
+  const all = [...details, ...extra];
+  if (rows.length === 0 && all.length === 0) return null;
   return (
-    <ul className="flex flex-col border-t border-dotted border-faint" data-testid="receipt">
-      {rows}
-    </ul>
+    <div className="flex flex-col">
+      {rows.length > 0 && (
+        <ul className="flex flex-col border-t border-dotted border-faint" data-testid="receipt">
+          {rows}
+        </ul>
+      )}
+      {all.length > 0 && (
+        <>
+          <FoldButton open={open} onToggle={onToggle} controls={detailsId} testId="result-details">
+            {copy.result.details}
+          </FoldButton>
+          <ul
+            id={detailsId}
+            hidden={!open}
+            className="flex flex-col gap-0.5 border-b border-dotted border-faint pb-1.5 font-mono text-[11px] leading-snug text-muted"
+            data-testid="result-details-list"
+          >
+            {all}
+          </ul>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -1073,12 +1302,21 @@ function ReceiptRow({
   const pct = bar && bar.max > 0 ? Math.max(0, Math.min(100, (bar.value / bar.max) * 100)) : 0;
   return (
     <li
-      className="flex min-h-8 flex-col justify-center gap-0.5 border-b border-dotted border-faint py-1.5"
+      className="flex min-h-7 flex-col justify-center gap-px border-b border-dotted border-faint py-[3px]"
       data-testid={testId}
     >
+      {/* Review 5 (answers §17.2 item 5): the one note (the distance to the next Level or Rank) beside
+          the label, so the line and its bar take two rows, not three. */}
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-body text-[13px]" data-testid="reward-label">
-          {label}
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="shrink-0 font-body text-[13px]" data-testid="reward-label">
+            {label}
+          </span>
+          {note && (
+            <span className="truncate font-mono text-[10.5px] text-muted" data-testid="reward-note">
+              {note}
+            </span>
+          )}
         </span>
         <span
           className={cx('font-label text-[17px] leading-none font-semibold', valueClassName)}
@@ -1087,11 +1325,6 @@ function ReceiptRow({
           {value}
         </span>
       </div>
-      {note && (
-        <span className="font-mono text-[10.5px] leading-snug text-muted" data-testid="reward-note">
-          {note}
-        </span>
-      )}
       {bar && (
         <div
           role="progressbar"
@@ -1099,7 +1332,7 @@ function ReceiptRow({
           aria-valuemin={0}
           aria-valuemax={bar.max}
           aria-valuenow={Math.min(bar.value, bar.max)}
-          className="mt-0.5 h-[3px] w-full bg-track"
+          className="mt-px h-[3px] w-full bg-track"
           data-testid="reward-bar"
         >
           <div
@@ -1116,9 +1349,10 @@ function ReceiptRow({
  * Review 3 (answers §4.2): the repeat buttons say what they do and what they cost, never a bare
  * number: *Once more · 10 Energy* · *Three more · 30 Energy* · *Continue*, or after a *Trained*
  * result *Study again · 46 Energy* · *Continue*. On a phone the repeats sit side by side with the cost
- * on a second line and *Continue* under them; from 640 px one row, the labels on one line. Short of
- * Energy a button is disabled and keeps its label and cost; one hint line says when (the first that
- * is short).
+ * on a second line and *Continue* under them; from 640 px one row, the labels on one line. Review 5
+ * (answers §17.2): a single repeat (a mission's *Again*, a training's) sits beside *Continue* on a
+ * phone too, a row the compact result needs. Short of Energy a button is disabled and keeps its label
+ * and cost; one hint line says when (the first that is short).
  */
 function AgainButtons({
   mission = false,
@@ -1163,7 +1397,7 @@ function AgainButtons({
       pending={againPending === times}
       disabled={short || !!againPending}
       aria-label={full}
-      className="min-h-[52px] flex-col gap-0.5 px-2 sm:min-h-11 sm:flex-row sm:gap-1.5"
+      className="min-h-12 flex-col gap-0 px-2 sm:min-h-11 sm:flex-row sm:gap-1.5"
       data-testid={testId}
     >
       {/* Phone: the label over its cost; from 640 px one line, "Once more · 10 Energy". */}
@@ -1197,7 +1431,7 @@ function AgainButtons({
       <div
         className={cx(
           'grid gap-2',
-          again.cost3 === null ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3',
+          again.cost3 === null ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3',
         )}
       >
         {repeat(1, once.full, once.label, again.cost1, short1, 'primary', 'again-once')}
@@ -1226,101 +1460,80 @@ function AgainButtons({
   );
 }
 
-function Effect({ label, value, testId }: { label: string; value: string; testId?: string }) {
+/** One knock-on figure: the label left, the value right (Courier-free: the label face), on one line. */
+function Effect({
+  label,
+  value,
+  testId,
+  more,
+}: {
+  label: string;
+  value: string;
+  testId?: string;
+  /** A second figure on the same line (Energy's *Rested 30 → 20*). */
+  more?: ReactNode;
+}) {
   return (
-    <div className="flex justify-between gap-2.5 border-b border-dotted border-faint py-1 text-[12.5px]">
-      <dt className="font-body">{label}</dt>
-      <dd className="text-right font-label" data-testid={testId}>
-        {value}
-      </dd>
-    </div>
+    <li className="flex justify-between gap-2.5 border-b border-dotted border-faint py-[3px] text-[12.5px] leading-4">
+      <span className="font-body">{label}</span>
+      <span className="flex flex-wrap justify-end gap-x-2 text-right">
+        <span className="font-label" data-testid={testId}>
+          {value}
+        </span>
+        {more}
+      </span>
+    </li>
   );
 }
 
 /**
- * Slice 5 (screens §4.3): the street's knock-on lines, in order: Heat (and the first crossing's card),
- * the record (and the first mark's card), *Agility +¼*, *Missions remember*. Also a chapter's Heat.
+ * Slice 5 (screens §4.3): the street's knock-on lines by id: Heat (and the first crossing's card), the
+ * record (and the first mark's card), the orders taken off. Also a chapter's Heat.
  */
-function StreetLines({
-  street,
-  heat: chapterHeat,
-  stat,
-}: {
-  street: NonNullable<ActionResult['street']> | null;
-  heat: NonNullable<ActionResult['effects']['heat']> | null;
-  stat: ActionResult['effects']['stat'];
-}) {
+function streetLines(
+  street: NonNullable<ActionResult['street']> | null,
+  chapterHeat: NonNullable<ActionResult['effects']['heat']> | null,
+): Partial<Record<string, { text: string; card?: boolean; tone?: string }>> {
+  const out: Partial<Record<string, { text: string; card?: boolean; tone?: string }>> = {};
   const heat = street?.heat ?? chapterHeat;
-  const lines: Array<{ id: string; text: string; card?: boolean; tone?: string }> = [];
   if (heat && heat.after !== heat.before) {
-    lines.push({
-      id: 'heat',
+    out.heat = {
       text: copy.risk.heatMove(
         formatSigned(heat.after - heat.before),
         heat.after,
         heatWord(heat.state),
         heat.state !== 'cool' && heat.coolsAt !== null ? formatWhen(heat.coolsAt) : null,
       ),
-      tone: heat.state === 'hot' || heat.state === 'wanted' ? 'text-failure' : undefined,
-    });
+      ...(heat.state === 'hot' || heat.state === 'wanted' ? { tone: 'text-failure' } : {}),
+    };
     if (heat.first && heat.state !== 'cool')
-      lines.push({
-        id: 'heat-card',
+      out['heat-card'] = {
         // Review 4 (answers §12): the Noticed card says when it cools.
         text:
           heat.state === 'noticed' && heat.coolsAt !== null
             ? `${copy.risk.heatCard.noticed} ${copy.risk.heatCardCool(formatWhen(heat.coolsAt))}`
             : copy.risk.heatCard[heat.state],
         card: true,
-      });
+      };
   }
   const rec = street?.record ?? null;
   if (rec && rec.added > 0) {
     // Review 4 #20 (answers §20.3): an arrest's marks read *Your record: taken in · 1 mark · On file*.
-    lines.push({
-      id: 'record',
+    out.record = {
       text: rec.takenIn
         ? copy.risk.takenInKnock(rec.added, recordWord(rec.after))
         : copy.risk.nameTaken(rec.marks, recordWord(rec.after)),
-    });
-    if (rec.escalated) lines.push({ id: 'record-escalated', text: copy.risk.secondTime, tone: 'text-failure' });
+    };
+    if (rec.escalated) out['record-escalated'] = { text: copy.risk.secondTime, tone: 'text-failure' };
     // QA m5: the card of the level reached, on its first crossing; the fade clause only when every
     // live mark is minor (a result stored before the fix has no `allMinor`: minor unless escalated).
     if (rec.first && rec.after !== 'clean')
-      lines.push({
-        id: 'record-card',
+      out['record-card'] = {
         text: copy.risk.recordCard(rec.after, rec.marks, rec.allMinor ?? !rec.escalated),
         card: true,
-      });
+      };
   }
   // Review 4 #20 (answers §20.3, tech design §11.6): the cells took the day's orders off.
-  if (street?.ordersOff) lines.push({ id: 'orders-off', text: copy.risk.ordersOffKnock, tone: 'text-failure' });
-  const agi = street?.agility ?? null;
-  if (agi && agi.quarters > 0 && !(stat && stat.stat === 'agi'))
-    lines.push({ id: 'agility', text: copy.risk.agility(4 - agi.quarters) });
-  if (street?.remembered) lines.push({ id: 'remembered', text: copy.risk.remembered });
-  if (lines.length === 0) return null;
-  return (
-    <ul className="mb-1 flex flex-col" data-testid="effect-street">
-      {lines.map((l) =>
-        l.card ? (
-          <li
-            key={l.id}
-            className="my-1 border-[1.5px] border-ink bg-paper-card px-2.5 py-1.5 font-body text-[12.5px] leading-snug"
-            data-testid={`effect-${l.id}`}
-          >
-            {l.text}
-          </li>
-        ) : (
-          <li
-            key={l.id}
-            className={cx('border-b border-dotted border-faint py-1 font-body text-[12.5px]', l.tone)}
-            data-testid={`effect-${l.id}`}
-          >
-            {l.text}
-          </li>
-        ),
-      )}
-    </ul>
-  );
+  if (street?.ordersOff) out['orders-off'] = { text: copy.risk.ordersOffKnock, tone: 'text-failure' };
+  return out;
 }

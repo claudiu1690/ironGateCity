@@ -225,6 +225,8 @@ export type { TicketProps } from './components/Ticket';
 export * from './format';
 export { bandNote, batchReasons, oddsBand, oddsTag, reasonFor, statLine, statName, ticketOdds } from './odds';
 export type { OddsBand, Reason, TrainingPlaces } from './odds';
+export { KNOCK_ONS_SHOWN, fitTagCount, howItWent, knockOnLines, rowsReason } from './result';
+export type { BatchReasons, HowItWent, KnockOnKey, KnockOnLine } from './result';
 export {
   AvatarPicker,
   ItemLine,

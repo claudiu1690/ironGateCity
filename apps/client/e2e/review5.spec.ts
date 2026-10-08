@@ -96,45 +96,97 @@ test('#6 the top bar: Energy, Health, Heat, XP, Party XP on a phone, held sidewa
   await shot(hud, 'hud-desktop-1440');
 });
 
-test('#4 results: only the middle scrolls; the level-up is a line and Place it; one thin bar', async ({
+/**
+ * Review 5 (answers §17.3; tech design §4.3): the measured cases as assertions. How far a result's
+ * middle may run past its box at 390 × 740, 390 × 844 and 1440 × 900; the picture's height at each.
+ */
+const SIZES = [
+  [390, 740],
+  [390, 844],
+  [1440, 900],
+] as const;
+const PICTURE: Record<number, number> = { 740: 112, 844: 136, 900: 150 };
+
+test('#4 results: the compact modal fits; only the middle scrolls; the level-up is a line and Place it; one thin bar', async ({
   page,
 }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
   await page.setViewportSize({ width: 390, height: 740 });
   await signUp(page, 'Ilse Brand');
   await lift(page, { level: 6, iron: 900, pc: 60 });
   await page.goto('/city/coalport');
   await mapAtRest(page);
   // By the attribute, not the role: a resize past 640 px remounts the place's sheet as a modal panel,
-  // which hides the result from the accessibility tree. (No tap follows a resize with a modal open.)
+  // which hides the result from the accessibility tree. (No tap by role follows a resize.)
   const result = page.locator('[role=dialog]').filter({ has: page.getByTestId('result-buttons') });
   const middle = result.getByTestId('result-middle');
-  /** One tier-1 action at the Mill Gate; how far its result's middle runs past its box. */
-  const ordinary = async (size: string) => {
+
+  /** The open result at each size: the modal never scrolls, the middle by at most `limits[i]`. */
+  const measure = async (name: string, limits: readonly [number, number, number], each?: (size: string) => Promise<void>) => {
+    for (const [i, [w, h]] of SIZES.entries()) {
+      await page.setViewportSize({ width: w, height: h });
+      await settled(page);
+      expect(await overflow(result), `${name} at ${w} × ${h}: the modal itself never scrolls`).toBeLessThanOrEqual(0);
+      const o = await overflow(middle);
+      console.log(`${name} at ${w} × ${h} overflows by ${o}px`);
+      expect(o, `${name} at ${w} × ${h}`).toBeLessThanOrEqual(limits[i]!);
+      const picture = (await result.locator('[data-art]').first().boundingBox())!;
+      expect(Math.round(picture.height), `the picture at ${w} × ${h}`).toBe(PICTURE[h]);
+      await shot(page, `${name}-${w}x${h}`);
+      await each?.(`${w}x${h}`);
+    }
+  };
+  /** One tier-1 tap at the Mill Gate under forced rolls, at 390 × 740. */
+  const tap = async (rolls: number[], times: 'once' | 'three times') => {
+    await page.setViewportSize({ width: 390, height: 740 });
+    await page.goto('/city/coalport');
+    await mapAtRest(page);
+    await street(page, { rolls });
     const sheet = await openLocation(page, '1. Mill Gate');
-    await sheet.locator('[data-testid^="ticket-"]').first().getByRole('button', { name: /, once, / }).click();
+    await sheet
+      .locator('[data-testid^="ticket-"]')
+      .first()
+      .getByRole('button', { name: new RegExp(`, ${times}, `) })
+      .click();
     await expect(result.getByTestId('stamp')).toBeVisible();
     await settled(page);
-    // Only the middle scrolls: the modal itself never does (the art and the buttons stay put). How far
-    // the middle runs past its box is reported, not yet asserted: the answers' rule 1 (an ordinary
-    // result fits 390 × 740 and any desktop) needs the result's parts compacted, which the answers
-    // don't specify (an open design question).
-    expect(await overflow(result), 'the modal itself never scrolls').toBeLessThanOrEqual(0);
-    console.log(`an ordinary result at ${size} overflows by ${await overflow(middle)}px`);
-    await shot(page, `result-ordinary-${size.replace(' × ', 'x')}`);
-    await result.getByRole('button', { name: 'Continue' }).click();
-    await expect(result).toHaveCount(0);
-    await page.getByRole('dialog').getByRole('button', { name: /^Close/ }).first().click();
-    await mapAtRest(page);
   };
-  await ordinary('390 × 740');
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await mapAtRest(page);
-  await ordinary('1440 × 900');
 
-  // A mission with a level-up (one success from Level 7, 3,500 XP), at 1440 × 900.
+  // A ×1 Success never scrolls; no *How it went* (the stamp says it).
+  await tap([1], 'once');
+  await expect(result.getByTestId('stamp')).toHaveText('Success');
+  await expect(result.getByTestId('attempt-row')).toHaveCount(0);
+  await measure('result-ordinary', [0, 0, 0]);
+
+  // A ×3 (2 of 3): one Courier line of the rows; a short scroll on a 740 px phone only.
+  await tap([1, 99, 1], 'three times');
+  await expect(result.getByTestId('stamp')).toHaveText('2 of 3');
+  await expect(result.getByTestId('attempt-rows')).toHaveAttribute(
+    'aria-label',
+    /^1 · Success · \+\d+ · 2 · Partial · \+\d+ · 3 · Success · \+\d+$/,
+  );
+  await measure('result-x3', [100, 0, 0]);
+
+  // A ×1 Partial with its reason line: the same allowance.
+  await tap([99], 'once');
+  await expect(result.getByTestId('stamp')).toHaveText('Partial');
+  await expect(result.getByTestId('attempt-reason')).toBeVisible();
+  // *Details* opens the breakdown in place, and closes again.
+  const details = result.getByTestId('result-details');
+  await expect(details).toHaveAttribute('aria-expanded', 'false');
+  await expect(result.getByTestId('result-details-list')).toBeHidden();
+  await details.click();
+  await expect(details).toHaveAttribute('aria-expanded', 'true');
+  await expect(result.getByTestId('result-details-list')).toBeVisible();
+  await details.click();
+  await expect(result.getByTestId('result-details-list')).toBeHidden();
+  await measure('result-partial', [100, 0, 0]);
+
+  // A mission with a level-up (one success from Level 7, 3,500 XP) never scrolls; its *Place it*
+  // opens the picker as a sheet over the modal at every size.
+  await page.setViewportSize({ width: 390, height: 740 });
   await lift(page, { xp: 3_499 });
-  await page.reload();
+  await page.goto('/city/coalport');
   await mapAtRest(page);
   await street(page, { runIn: 'never', checkRoll: 1 });
   await openLocation(page, '7. The Shipyard');
@@ -147,31 +199,23 @@ test('#4 results: only the middle scrolls; the level-up is a line and Place it; 
   await expect(level).toHaveText(/^Level 7 · one point to placePlace it$/);
   await settled(page);
   // Not inline: the stat buttons are behind *Place it*.
-  await expect(result.getByRole('button', { name: /^STR \d+ → \d+$/ })).toHaveCount(0);
-  expect(await overflow(result), 'the modal itself never scrolls').toBeLessThanOrEqual(0);
-  console.log(`the mission level-up at 1440 × 900 overflows by ${await overflow(middle)}px`);
-  await shot(page, 'levelup-1440x900');
-  // *Place it*: the picker as a sheet over the modal; placing closes it and the line names the stat.
-  await level.getByRole('button', { name: 'Place it' }).click();
+  await expect(result.getByTestId('stat-points')).toHaveCount(0);
   const picker = page.getByRole('dialog', { name: 'Level 7 · one point to place' });
-  await expect(picker).toBeVisible();
-  await settled(page);
-  await shot(page, 'levelup-place-it-sheet-1440');
+  await measure('levelup', [0, 0, 0], async (size) => {
+    // A dispatched click: after a resize past 640 px the remounted place panel's dim lies over the
+    // result for the pointer and holds the focus (a test-only state: nobody resizes with a result open).
+    await level.getByTestId('place-it').dispatchEvent('click');
+    await expect(picker).toBeVisible();
+    await settled(page);
+    await shot(page, `levelup-place-it-sheet-${size}`);
+    await page.keyboard.press('Escape');
+    await expect(picker).toHaveCount(0);
+  });
+  // Placing the point closes the sheet and the line names the stat.
+  await level.getByTestId('place-it').dispatchEvent('click');
   await picker.getByRole('button', { name: /^STR \d+ → \d+$/ }).click();
   await expect(picker).toHaveCount(0);
   await expect(level).toHaveText(/^Level 7 · Strength \d+ → \d+$/);
-
-  // On a phone (measured only, as above).
-  for (const [w, h] of [
-    [390, 844],
-    [390, 740],
-  ] as const) {
-    await page.setViewportSize({ width: w, height: h });
-    await settled(page);
-    expect(await overflow(result), 'the modal itself never scrolls').toBeLessThanOrEqual(0);
-    console.log(`the mission level-up at ${w} × ${h} overflows by ${await overflow(middle)}px`);
-    await shot(page, `levelup-${w}x${h}`);
-  }
 
   // The scroll bar: a short window makes the middle scroll; its bar is the thin (6 px) one.
   await page.setViewportSize({ width: 1024, height: 520 });

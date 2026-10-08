@@ -288,8 +288,9 @@ describe('the mission result (screens §4.3)', () => {
     expect(screen.getByTestId('reward-opinion')).toHaveTextContent(
       'Opinion against the Vanguard in Coalport',
     );
-    expect(screen.getByTestId('reward-opinion')).toHaveTextContent('Vanguard 9.0 → 8.8 %');
-    expect(screen.getByTestId('reward-iron')).toHaveTextContent('paid off −60');
+    // Review 5 (answers §17.2 item 5): the meter and the Iron parts in *Details*.
+    expect(screen.getByTestId('detail-opinion')).toHaveTextContent('Vanguard 9.0 → 8.8 %');
+    expect(screen.getByTestId('detail-iron')).toHaveTextContent('paid off −60');
     expect(screen.getByTestId('effect-heat')).toHaveTextContent('Heat +6 → 6 · Cool');
     expect(screen.getByTestId('effect-remembered')).toHaveTextContent(
       'Missions remember: next time, one tap',

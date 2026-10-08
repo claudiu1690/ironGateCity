@@ -280,7 +280,8 @@ describe('ResultModal, a chapter (§9.1)', () => {
     // Review 3: the keepsake is a receipt line with its picture; no opinion line on a chapter.
     expect(screen.getByTestId('reward-item')).toHaveTextContent("Keepsake · The unit's list");
     expect(screen.queryByTestId('reward-opinion')).toBeNull();
-    expect(screen.getByTestId('effect-item')).toHaveTextContent("Keepsake: The unit's list");
+    // Review 5 (answers §18 Q2): the item stays on the receipt and is not repeated as a knock-on.
+    expect(screen.queryByTestId('effect-item')).toBeNull();
     expect(screen.getByTestId('effect-hook')).toHaveTextContent(
       'Chapter 2, "Stand for the stone": from Tuesday 6 October, at Rank 2',
     );

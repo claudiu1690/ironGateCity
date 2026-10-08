@@ -250,7 +250,10 @@ test('the first vote and the first seat: declare → endorsed → ballot → cou
   await expect(ticket.getByTestId('ticket-chance')).toHaveText('Good odds');
   await ticket.getByRole('button', { name: /, once, / }).click();
   const modal = modalOf(page);
-  await expect(modal.getByText('Open Doors · better odds')).toBeVisible();
+  // Review 5 (answers §17.2 item 4): the tags are one line; a tag cut from it waits in *Details*.
+  const tag = modal.getByText('Open Doors · better odds');
+  if (!(await tag.isVisible())) await modal.getByTestId('result-details').click();
+  await expect(tag).toBeVisible();
   await modal.getByRole('button', { name: 'Continue' }).click();
   await page.goto('/paper');
   await expect(page.getByTestId('headline').filter({ hasText: 'Council Passes Open Doors' })).toHaveCount(1);

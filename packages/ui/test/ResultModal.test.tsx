@@ -34,14 +34,12 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('stamp')).toHaveTextContent('Success');
     expect(d.getByText('Coalport · Mill Gate · 09:00')).toBeInTheDocument();
     expect(dialog).toHaveAccessibleName('The whistle goes, and they stop');
-    const rows = d.getAllByTestId('attempt-row');
-    expect(rows).toHaveLength(1);
-    // Review 2 (GDD §8.4, answers §2.3): the outcome and its XP; no chance, roll or reason on a Success.
-    expect(within(rows[0]!).getByTestId('attempt-outcome')).toHaveTextContent('Success');
-    expect(rows[0]).toHaveTextContent('+45 XP');
-    expect(within(rows[0]!).queryByTestId('attempt-reason')).toBeNull();
-    expect(rows[0]!.textContent).not.toMatch(/%|Rolled|roll/);
-    expect(within(rows[0]!).queryByRole('button')).toBeNull();
+    // Review 5 (answers §17.2 item 3): a ×1 Success prints no *How it went*: the stamp says it and the
+    // receipt says the XP.
+    expect(d.queryByTestId('attempt-row')).toBeNull();
+    expect(d.queryByTestId('attempt-reason')).toBeNull();
+    expect(d.queryByText('How it went')).toBeNull();
+    expect(dialog.textContent).not.toMatch(/Rolled|roll/);
     // Review 3 (answers §3): the receipt, one line per reward in a fixed order, the value at the right.
     const lines = within(d.getByTestId('receipt')).getAllByRole('listitem');
     expect(lines.map((l) => l.dataset.testid)).toEqual([
@@ -63,9 +61,10 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('reward-iron')).toHaveTextContent(/^Iron\+20$/);
     // No bar on Iron or opinion.
     expect(within(d.getByTestId('reward-iron')).queryByRole('progressbar')).toBeNull();
-    expect(d.getByTestId('reward-opinion')).toHaveTextContent(
-      'Opinion in Coalport+0.05 %Collective 70.0 → 70.1 %',
-    );
+    // Review 5 (answers §17.2 item 5): Iron and opinion are one line each, no note; the meter is in
+    // *Details*.
+    expect(d.getByTestId('reward-opinion')).toHaveTextContent(/^Opinion in Coalport\+0\.05 %$/);
+    expect(d.getByTestId('detail-opinion')).toHaveTextContent('Collective 70.0 → 70.1 %');
     // The knock-on block keeps Energy and Reputation; the before → after lines moved to the receipt.
     expect(d.queryByTestId('effect-opinion')).toBeNull();
     expect(d.getByTestId('effect-standing')).toHaveTextContent('Stranger · 1 / 10 to Familiar');
@@ -86,14 +85,18 @@ describe('ResultModal v2', () => {
     const d = within(dialog);
     expect(d.getByTestId('stamp')).toHaveTextContent('2 of 3');
     expect(d.getByText('Canvass the shift change · 3 times')).toBeInTheDocument();
+    // Review 5 (answers §17.2 item 3): the rows as one Courier line, then the reason line.
     expect(d.getAllByTestId('attempt-row')).toHaveLength(3);
-    // The non-Success row carries one plain reason, no digits (answers §2.4).
-    const partial = d.getAllByTestId('attempt-row').find((r) => r.dataset.outcome !== 'success')!;
-    expect(within(partial).getByTestId('attempt-reason').textContent).not.toMatch(/\d/);
+    expect(d.getByTestId('attempt-rows')).toHaveAccessibleName(
+      /^1 · (Success|Partial) · \+\d+ · 2 · (Success|Partial) · \+\d+ · 3 · (Success|Partial) · \+\d+$/,
+    );
+    const reason = d.queryByTestId('attempts-reason') ?? d.getAllByTestId('attempt-reason')[0]!;
+    expect(reason.textContent).not.toMatch(/Rolled|%/);
     expect(d.getByText('Rested · 22 of 30 Energy, +37 % XP and Iron')).toBeInTheDocument();
     expect(d.getByText('Party order · +25 % Party XP')).toBeInTheDocument();
-    expect(d.getByTestId('effect-order')).toHaveTextContent('0 → 2 / 2 ✓');
-    // Review 1 (answers §6): a signed line from the secretary.
+    // Review 1 (answers §6): a signed line from the secretary; review 5 (answers §17.2 item 6): the
+    // order's signed line or its progress, so a done order is its signed line alone.
+    expect(d.queryByTestId('effect-order')).toBeNull();
     expect(d.getByTestId('effect-order-signed')).toHaveTextContent(
       /^Done, that one · \+20 Party XP\. (One|Two) to go\. — P\.H\.$/,
     );
@@ -111,7 +114,9 @@ describe('ResultModal v2', () => {
       /^Three more needs 30 Energy · ready (in \d+ min|at \d\d:\d\d|tomorrow \d\d:\d\d|\w+day|now)$/,
     );
     // The parts of a reward, worded ("+40 and Rested +5").
-    expect(within(d.getByTestId('reward-xp')).getByTestId('reward-note').textContent).toMatch(/^\+\d+ and /);
+    // Review 5 (answers §17.2 item 5): the breakdown in *Details*, the note the distance alone.
+    expect(d.getByTestId('detail-xp').textContent).toMatch(/^XP · \+\d+ and /);
+    expect(within(d.getByTestId('reward-xp')).getByTestId('reward-note').textContent).toMatch(/^\d+ to Level \d+$/);
   });
 
   it('review 2: the reason names where to train the stat; nothing opens on a tap', () => {
@@ -142,12 +147,13 @@ describe('ResultModal v2', () => {
         trainingPlaces={{ int: 'the Union Hall' }}
       />,
     );
-    const row = screen.getAllByTestId('attempt-row')[0]!;
-    expect(within(row).getByTestId('attempt-outcome')).toHaveTextContent('Partial');
-    expect(within(row).getByTestId('attempt-reason')).toHaveTextContent(
-      'Your Intelligence is low for this. Raise it at the Union Hall.',
-    );
-    expect(within(row).queryByRole('button')).toBeNull();
+    // Review 5 (answers §17.2 item 3): a ×1 Partial is one italic reason line under the body, no row.
+    expect(screen.getByTestId('stamp')).toHaveTextContent('Partial');
+    expect(screen.queryByTestId('attempt-row')).toBeNull();
+    const reason = screen.getByTestId('attempt-reason');
+    expect(reason).toHaveTextContent('Your Intelligence is low for this. Raise it at the Union Hall.');
+    expect(reason).toHaveClass('italic');
+    expect(within(reason).queryByRole('button')).toBeNull();
   });
 
   it('training: Trained, one "always works" row, Intelligence 12 → 13', () => {
@@ -157,8 +163,11 @@ describe('ResultModal v2', () => {
     });
     const d = within(dialog);
     expect(d.getByTestId('stamp')).toHaveTextContent('Trained');
-    expect(d.getByText('44 Energy · always works')).toBeInTheDocument();
+    // Review 5 (answers §17.2 item 3, §18 Q3): the stamp says *Trained*, and the trained stat is the
+    // first knock-on line; the row is not repeated.
+    expect(d.queryByText('44 Energy · always works')).toBeNull();
     expect(d.getByTestId('effect-stat')).toHaveTextContent('Intelligence 12 → 13');
+    expect(within(d.getByTestId('effect-lines')).getAllByRole('listitem')[0]).toHaveTextContent('Trained');
     // Review 3 (answers §3.2): a zero line is not printed; a training result is one line, XP.
     const lines = within(d.getByTestId('receipt')).getAllByRole('listitem');
     expect(lines.map((l) => l.dataset.testid)).toEqual(['reward-xp']);
