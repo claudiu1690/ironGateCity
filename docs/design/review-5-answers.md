@@ -8,7 +8,7 @@ Nothing here adds a required tap to a session. The level-up picker is one tap as
 
 | # | Note | Decision | Where |
 |---|---|---|---|
-| 1 | The opening is weak | **Three full versions**, A *Next of kin*, B *He never chose*, C *The bill*; **▶ B recommended**; the mechanics (party · stat · Ambition) unchanged | §1; GDD §7.1 |
+| 1 | The opening is weak | Round 1: A, B, C (§1), **not taken** (*"unrelated to the father"*). **Round 2 (§16.2–16.6): D *The warrant*, E *After the count*, G *The frontier train*, no father in any; ▶ E recommended**; the mechanics unchanged; each re-anchors the three Ambitions | §16; GDD §7.1, §17.1 |
 | 2 | Small clouds | **Fewer, larger**: three clouds and two wisps by day, none narrower than 0.36 of the picture; the small puffs are gone; **a config change, no new art** | §2 |
 | 3 | Level-up boxes | **Three paper cards in the ticket's style**, one per stat, the whole card the tap; the black blocks are gone | §3; GDD §5.3 |
 | 4 | Unstyled scroll bar | The result modal never scrolls for an ordinary result; the picker in a modal is **a line and a button that opens a sheet**; **one thin ink scroll bar** everywhere else | §4 |
@@ -17,13 +17,14 @@ Nothing here adds a required tap to a session. The level-up picker is one tap as
 | 7 | The journey card can be skipped | **The card stays until answered**: no scrim-dismiss, an explicit *Sleep through it* row, the arrival modal's *Continue* only after a row | §7; GDD §14.10 |
 | 8 | Pay to heal | **A *Treatment* card on every infirmary**: *Get patched up · n Iron*, **one Iron a point of Health missing**, no Energy, no limit but being below full | §8; GDD §19.1 |
 | 9 | What's here | **The Places list becomes *What's here***: the city's Issues, the missions you can start, your orders here, then the places | §9; GDD §14.13 |
-| 10 | Rival ground emphasis | **▶ A three-line header**: the push bar against the 2-point cap, the danger in words, **the goal: Unrest** (what it does to them and for you, the points to go); **▶ a prize** for pushing a town into Unrest | §10; GDD §14.12 |
-| 11 | Day/night more often | **▶ Option B: a six-hour game day, the last two hours night, the same for everyone; every daily rule stays on the real City Day** | §11; GDD §2.2 |
-| 12 | Night missions and patrols | **▶ Night-only ways and four night missions (+25 % Iron); on rival ground at night a higher run-in base while acting, and one *Patrol* stop a night on the first read there, never while absent** | §12; GDD §14.12 |
+| 10 | Rival ground emphasis | **Decided (user, 8 Oct): a three-line header** (the push bar against the 2-point cap, the danger in words, **the goal: Unrest** with the points to go) and **the prize** for pushing a town into Unrest | §10; GDD §14.12, §14.11 |
+| 11 | Day/night more often | **Decided (user, 8 Oct): a six-hour game day**, dusk at 04 / 10 / 16 / 22 UTC, the last two hours night, the same for everyone; every daily rule stays on the real City Day | §11; GDD §2.2 |
+| 12 | Night missions and patrols | **Decided (user, 8 Oct):** night-only ways and four night missions (+25 % Iron); on rival ground at night a higher run-in base while acting, and **a random *Patrol* stop** on a city read (12 % a ten-minute bucket, by Heat and the flags, at most two a night), never while absent | §12, §16.1; GDD §14.12 |
+| 17 | The result modal overflows | **A compact layout** (the picture 112 / 136 / 150 px; *How it went* only when it says something; tags one line; the receipt's notes behind *Details*; three knock-on lines and *n more*); a ×3 or a reason line may scroll ≤ 100 px on a 740 px phone | §17 |
 
 ---
 
-## 1. #1 — The opening (needs the user's decision)
+## 1. #1 — The opening, round 1 (not taken: the user asked for a premise unrelated to the father; see §16.2)
 
 ### 1.1 What was wrong
 
@@ -334,7 +335,7 @@ On rival ground the blocks read the same (the missions block lists the visitor's
 
 ---
 
-## 10. #10 — Rival ground: the push, the danger, the goal (needs the user's decision)
+## 10. #10 — Rival ground: the push, the danger, the goal (decided: the user approved §10.2 and §10.3 as proposed, 8 Oct 2026)
 
 ### 10.1 What was wrong
 
@@ -364,7 +365,7 @@ A goal needs a reward beyond the +25 % more Party XP once it is reached. **When 
 
 ---
 
-## 11. #11 — Should time pass in real time? (needs the user's decision)
+## 11. #11 — Should time pass in real time? (decided: the user took option B as §11.3 specifies it, 8 Oct 2026)
 
 ### 11.1 What the days drive
 
@@ -392,7 +393,7 @@ Every rule with a day in it runs on the **real City Day** (00:00 UTC): the wage 
 
 ---
 
-## 12. #12 — Night missions, and patrols on rival ground at night (needs the user's decision)
+## 12. #12 — Night missions, and patrols on rival ground at night (decided: the user approved §12.1 and §12.2, with the night stop made random as §16.1 settles it, 8 Oct 2026)
 
 ### 12.1 ▶ Default: night as a window on content
 
@@ -489,3 +490,170 @@ Ordered; each with *Done when*. Items marked **(user)** wait for the user's pick
 
 - **None required.** The clouds reuse the five day sprites; the station scene serves every opening version; the *Treatment* card uses the `hospital` scene on its modal; the *Patrol* card uses the hostile deck's checkpoint art (the map crop at the place, as the journey cards do).
 - **Optional:** two more big day clouds (`bigcloud-day-3`, `-4`; 1100 × 650–850, soft edges, no stray fragment) if the two-sprite pool reads repetitive; a night variant of `scene.station` (review 4 §28, still optional); a **patrol portrait** (two men under a lamp, 880 × 1168, no insignia) for the card's row art if the map crop reads too plain.
+
+---
+
+## 16. Round 2 (8 Oct 2026): the user's decisions, and three openings without the father
+
+The user decided the four open notes the same day: **#10 approved** as proposed (the header and the Unrest prize); **#11 approved**, option B as specified (a six-hour game day, dusk at 04 / 10 / 16 / 22 UTC, night the last two hours); **#12 approved, with the night stop made random** instead of once on the first read; **#1: none of A, B or C** — *"come up with a better one, unrelated to the father."* §16.1 settles the patrol numbers; §16.2–16.5 are the three new openings; §16.6 the pick; §16.7 the fix-list changes. §1, §10.2–10.3, §11.3 and §12.2 above stand as the record of the first round, with the decisions marked in their headings.
+
+### 16.1 The patrol, made random (decided; GDD §14.12, §20)
+
+**The shape.** On rival ground at night (§2.2's window) there are two patrols, as before: **while acting** the run-in is the patrol (the tier-1 base 25 instead of 15, a mission's +10 after its ×2; unchanged from §12.2); **while present** the *Patrol* card may stop a player who is only looking at the town. The card is now **a chance on a read, not a certainty on the first one**:
+
+| | Rule |
+|---|---|
+| **When a roll happens** | On a **read of the city view** (the Map tab opening on the city, a return to it from another tab or from a result) **at night, on rival ground**, not held, not in transit, not within **ten minutes of arriving by train** (the journey's hostile card was tonight's first stop), and **at most one roll per ten-minute bucket per city** (`floor(now ÷ 10 min)` keyed with the character and the city, idempotent), so a refresh never rolls twice. An **act never rolls the patrol**: an act rolls its run-in and nothing else |
+| **The chance per roll** | **12 %**, **+5 at *Noticed*, +10 at *Hot* or *Wanted***, **+10 *Watched*, −10 *Warned***, ×2 under the Curfew Order (slice 7), kept between **5 and 40**. A new, Cool visitor: 12 % a bucket |
+| **The cap** | **At most two stops a night per city**, and **never within fifteen minutes of the last stop or of a run-in** (the street is quiet after trouble). Expected for a player present and reading through a whole two-hour night: 12 buckets × 0.12 ≈ **1.4 stops**, capped at 2; for a five-minute look-in: **one roll at 12 %**; for a *Hot*, *Watched* visitor: 32 % a bucket, two stops in most full nights |
+| **What a stop is** | The *Patrol* card of §12.2, unchanged: difficulty 14, never failing, no Energy; *Show your papers* (Cool and clean passes; else the name written down, Heat +10, *Watched*) · *Talk your way past* (Charisma; Partial Heat +5) · *Slip down a side street* (Agility; Partial Heat +5, *Watched*) · *Let it pass*. A card, not a fight; it never sends anyone to the cells by itself |
+| **Interaction with the run-in** | Separate rolls on separate events (reads and acts). A stop's Heat and *Watched* raise the next act's run-in (+5 / +15 by state, +10 *Watched*), which is the chain. A run-in in a bucket suppresses the patrol roll for fifteen minutes; a stop never changes the run-in's own chance except through Heat and the flag |
+| **Absence** | Nothing rolls on a timer; nothing rolls with the app closed; a player who closes the app on rival ground at dusk and reopens at midnight gets one 12 % roll, not a stop. Nothing owned is ever at risk (§4.3) |
+
+**The ticket tag** on rival ground at night reads ***Night · patrols out*** as before; the plate's danger line (§10.2) reads ***Risk here: Dangerous · patrols out · every tap can bring a run-in · Heat counts double · the cells put you on the train home***. `help.patrols`: *After dark on rival ground the streets are watched: every tap is likelier to bring a run-in, and now and then a patrol stops you just for being out. A stop is papers, a word or a side street, never a fight; your name taken means more Heat. Nothing you own is at risk, and nothing happens while you are away.*
+
+**Why these numbers.** Twelve per cent a bucket is low enough that a quick visit at night usually passes, high enough that a player who works a whole night there meets the patrol more often than not; the cap of two keeps the card from becoming a tax; the fifteen-minute quiet after any trouble keeps two cards from landing back to back; the Heat and flag terms make the stop the consequence of being noticed, which is what a patrol is. Appendix C #101 carries the levers (the 12, the cap, the quiet).
+
+### 16.2 The openings, round 2: no father
+
+The last round's three versions all hung on a dead man the player had never met in play; the user asked for a premise that stands on its own. Each version below gives **who you are** (a trade, a state), **why tonight** (something ends or starts at this station tonight), **why these three people** are on the platform and **what each wants from you** that only this player can give, tied to their party's politics. The mechanics are unchanged: **beat 1, whom you help is your party**; **beat 2, what you carry sets a stat** (+6 and +1); **beat 3 sets your long-term story** (the Ambition) and dresses you (a Tier I coat at CHA 5). Each version re-anchors the three Ambitions without the father; the ladder of *Finish His Work* (twelve chapters, three built, nine designed) survives in every one as a different person's climb, because its keepsakes are electoral documents and its chapters are rungs, not memories. Ids never change (`finish-his-work`, `clear-his-name`, `settle-his-debts`, `keep.*`, `outfit.fathers-coat`); only names and strings do.
+
+**Common cost of any version:** `origin.ts` (three beats' strings), three order templates, three favour actions with four texts each, three welcome decks, three outcome headlines; the item names of `outfit.fathers-coat` and the three chapter-1 keepsakes; the three Ambitions' titles and premises; the scripts of the five built chapters (three chapter 1s, *Stand where he stood*, *The riverside house*) and the Letters rows; the strings of the designed chapters (*The deposit*, chapters 4–12, *The night foreman*, *The collector*) in `slice-7-nation.md` and `slice-8-life.md`; GDD §7.1 and §17.1; a content test that no player string contains *father*. Nothing in rules, schema, rewards, requirements or ids moves.
+
+### 16.3 Version D — *The warrant* (demobbed, with nothing)
+
+**Premise.** You are six years away: the war, then the camp, then the demob train that empties at Irongate Central at midnight with a cardboard case each, a suit that fits nobody, and **a railway warrant good for one journey anywhere in the republic** before the six o'clock trains. The address you had is the Bombed Blocks. The parties have tables at the barrier, because the demob train is where every party recruits; three people want your warrant to say their town.
+
+**Beat 1 — *The barrier*** (`scene.station`; kicker *Irongate · Central Station · the demob train*)
+
+> *The demob train empties at midnight: suits that fit nobody, a cardboard case each, a railway warrant good for one journey anywhere in the republic. The parties have tables at the barrier. Three people want your warrant to say their town.*
+
+| Row | The ask | Line 1 · Line 2 |
+|---|---|---|
+| `holm` | **"The mill takes its men back Monday at the old rate unless we're at the gate with names. Use your warrant on the six o'clock to Coalport, stand with us at the gate, and the branch finds you a bed."** | Petra Holm · union organiser · Coalport · Red Collective · the mill and the docks against the men who own them · +2 Strength, +1 Intelligence |
+| `stahl` | **"Your gratuity is three days' queue here and an hour in Duskwall, and the club has a bed and a trade for men who want order after what they've seen. The six o'clock; I'll sign your warrant."** | Viktor Stahl · steward · Duskwall · Iron Vanguard · order, discipline and a strong hand · +3 Strength |
+| `grey` | **"Six years away and your name is on no roll in the republic. Ashford's closes Friday. The Rooms register the demobbed; I'll do yours on the six o'clock, and the first thing you do is vote."** | Thomas Grey · agent · Ashford · Civic Alliance · elections, courts and a free press · +3 Intelligence |
+
+Under the rows: *One warrant, one town. Whoever signs it, you go with. Permanent: a Faction Reset token is the only way back.* Confirm: ***Go with Holm · the six o'clock to Coalport*** (and Stahl, Grey). Echo: *Your warrant says Coalport.* / *Duskwall.* / *Ashford.*
+
+**Beat 2 — *The case***: *The six o'clock, the case on the rack, the suit on your back. {helper} asks what six years left you with, besides the suit.* Answers: **Tools, mostly. A trade travels.** (+6 STR, +1 INT) · **Books. The ones I could carry.** (+6 INT, +1 STR) · **Not much. I learned to run before I learned to carry.** (+6 AGI, +1 STR).
+
+**Beat 3 — *Under the suit***: *In the case, under the suit, the three things you kept through six years. One of them is why you came back.* Answers: ***The names on the doors*** (hint *Who lived in the Blocks, floor by floor, before the bombs. Nobody speaks for them.*) · ***The camp letter*** (*A letter that reached the camp: the Blocks' leases, sold while you were away, and a name.*) · ***The chit*** (*Your gratuity, signed over for cash on the train to a man with a Clearwater address.*). **The demob suit** is worn from here on (`outfit.fathers-coat` renamed *The demob suit*, CHA 5).
+
+**The favours** (slot B at the HQ; type `council`, 10 Energy): Collective ***Stand at the Mill Gate with the branch*** (*The gate at seven, the branch's list, your name on it first. Then the hall; there's tea. — P.H.*; Success *The owners' clerk reads the old rate off a board and the branch reads two hundred names back at him, yours first. Monday is not settled, but it is not his either.*; Partial *The clerk is late and the gate opens before the list is read. Half the names go in at the old rate. Holm writes yours in the branch book anyway, under Monday.*) · Vanguard ***Sign the club's book at Beacon House*** (*The club's book on my desk, the gratuity office next door. Your name in the one and your chit at the other, by noon. — V.S.*; Success *The gratuity office takes an hour, as promised, and the club's book takes a minute. "Thursday," says the clerk, which is the meeting, and nearly a welcome.*; Partial *The gratuity office wants a form the camp never gave you. The club's clerk enters your name in the day book and says Thursday, twice, and the form can wait.*) · Alliance ***Go on the roll at the Assembly Rooms*** (*The Ashford roll, the registrar's desk in the reading room, your demob papers. Your name, your address, the date right. — T.G.*; Success *The registrar reads the demob papers twice and writes you onto the roll in a fair hand. "That'll hold," says Grey. The first thing you do in Ashford is be allowed to vote.*; Partial *The registrar wants an address and the Rooms' hostel will do, in pencil. Grey initials it and writes your name in the Rooms' book under *roll*.*).
+
+**The long story re-anchored.** *Finish His Work* → ***The Blocks*** (premise: *The Bombed Blocks were your street; the people on its doors have no one on any council. Speak for them, up to Parliament.*; chapters 1–12 as built and designed with the names changed: 1 *The names on the doors*, 2 *Stand for the Blocks*, 3 *The deposit*, 4 *The count*, 5 *Your seat*, 6 *The hall*, 7 *The cutting*, 8 *The rule*, 9 *The list*, 10 *The republic votes*, 11 *Twenty-five marks*, 12 *Under the Blocks' name*; keepsakes *The names on the doors*, *Your election bill*, *Your deposit receipt*, *The count sheet*, … *The Blocks' rosette*). *Clear His Name* → ***Who Sold the Blocks*** (the camp letter's name; the leases sold while the tenants were away; the Dossier and the exposé; ending: the buyer, now a senator; chapter 2 *The night foreman* becomes *The night watchman* at the Blocks, Brandauer kept as the name with no party). *Settle His Debts* → ***The Chit*** (the gratuity signed over; the Clearwater man holds your paper; chapters *The chit*, *The riverside house*, *The collector*, *The parcel* unchanged but for the marker's name). **Cost:** the common cost, plus the Bombed Blocks gaining the Ambition's scenes (the place exists; no art).
+
+**For:** the strongest "who am I" (nothing, and a warrant); the asks are three things a demobbed person needs (work, money, a vote) read through three politics; the Alliance's *the first thing you do is vote* is the game's own first week. **Against:** the war is in the first line (a backstory, not the game's framing, but it is there); the Vanguard recruiting men off the demob train is accurate to the period and the most delicate row of any version; *The Blocks* ties the long story to the capital, so a Coalport player's chapters travel.
+
+### 16.4 Version E — *After the count* (the ballot-box clerk) ▶ recommended
+
+**Premise.** You are a counting clerk of the republic's electoral office: for years you have counted other people's ballots, for every party and none, and never cast one. Tonight the capital counted, and you counted it straight. The three parties' scrutineers walked you from the Town Hall to the station, because the office posts its clerks to the towns on Friday for the council cycle and your posting is your choice. Each wants the clerk who counts straight in their town, for a reason of their own. **Neutral is a job; tonight you quit it.** (Why tonight: the count ended at eleven and the office closed; the last train in is the first train out.)
+
+**Beat 1 — *After the count*** (`scene.station`; kicker *Irongate · Central Station · after the count*)
+
+> *After the count, the last train. You counted the capital's ballots tonight for the electoral office, as you have for years, for every party and none. The three scrutineers walked you to the station. Each wants the clerk who counts straight, in their town, by Friday.*
+
+| Row | The ask | Line 1 · Line 2 |
+|---|---|---|
+| `holm` | **"The Coalport roll is two hundred names short of the men on the mill's books; somebody struck them. Come on the six o'clock and count it right before Friday's names go in. The branch pays a clerk's wage."** | Petra Holm · union organiser · Coalport · Red Collective · the mill and the docks against the men who own them · +2 Strength, +1 Intelligence |
+| `stahl` | **"Duskwall counts on Thursday and the club wants a clerk at the table who can't be bought and won't be shouted down. The six o'clock, a desk at Beacon House, and the count done properly."** | Viktor Stahl · steward · Duskwall · Iron Vanguard · order, discipline and a strong hand · +3 Strength |
+| `grey` | **"Ashford's roll has dead men on it and they all vote the same way. The Rooms want it audited before the poll, by someone the court will believe. The six o'clock; the Gazette prints what you find."** | Thomas Grey · agent · Ashford · Civic Alliance · elections, courts and a free press · +3 Intelligence |
+
+Under the rows: *Neutral is a job. Tonight you quit it: whoever you count for, you go with. Permanent: a Faction Reset token is the only way back.* Confirm: ***Count for Holm · the six o'clock to Coalport*** / ***Count for Stahl · the six o'clock to Duskwall*** / ***Count for Grey · the six o'clock to Ashford***. Echo: *You'll count for the branch.* / *You'll count for the club.* / *You'll count for the Rooms.*
+
+**Beat 2 — *The satchel*** (portrait `helper`): *The six o'clock. The office's satchel on the rack, your name still on the strap. {helper} asks what a clerk is good for, besides counting.* Answers: **My hands. I carried the boxes before I counted them.** (+6 STR, +1 INT) · **Figures. Give me a roll and I'll tell you who's missing.** (+6 INT, +1 STR) · **My legs. I ran the sheets between halls on count nights.** (+6 AGI, +1 STR).
+
+**Beat 3 — *What you kept***: *In the satchel, under the tally boards, three things you should have handed in tonight. One of them is why you're on this train.* Answers:
+
+| Id (unchanged) | Text | Hint | Sets |
+|---|---|---|---|
+| `ward-book` | **The struck roll.** | Two hundred names with a line through each, in a hand you know. | ***The Honest Count*** |
+| `letter` | **The altered sheet.** | A tally changed after the seal, and the initials beside it. | ***The Altered Sheet*** |
+| `marker` | **The receipt.** | For a ballot box you signed for and never saw again. A Clearwater address on the back. | ***The Box*** |
+
+**The office coat** is worn from here on (`outfit.fathers-coat` renamed ***The office coat***, CHA 5: *the republic's clerk's coat, brass buttons, which you were told to hand in*).
+
+**The favours** (slot B at the HQ; `council`, 10 Energy, difficulty 8):
+
+| Party | Order | Ticket | Success | Partial |
+|---|---|---|---|---|
+| Collective | **Count the roll at the Union Hall** · *The Coalport roll and the mill's books, side by side on the hall's table. Every name that's in one and not the other, in your hand. — P.H.* | Count the roll | **Two hundred names back** · Two hundred names back on the roll by eleven, in your hand, with the mill's books beside them to prove it. Holm reads the first page and says nothing, which from her is a speech. | **A hundred and forty** · A hundred and forty names by noon; the rest are in a book the mill keeps locked. Holm writes your name in the branch book under *clerk* and says Friday. |
+| Vanguard | **Take the table at Beacon House** · *The club's count is Thursday; today the membership roll, the tin and the ledger, and a clerk's hand on all three. Noon. — V.S.* | Take the table | **To the penny** · The roll, the tin and the ledger agree by eleven, which the clerk says they have not done since March. Your name goes on the list for Thursday under the word *table*. | **A slip short** · The tin is short a subscription and the roll long a name; you find both by noon. The clerk enters you in the day book and says Thursday, twice. |
+| Alliance | **Audit the roll at the Assembly Rooms** · *The Ashford roll, the parish's burial book, a ruler and a pen. Every name in both, struck, initialled, dated. — T.G.* | Audit the roll | **Eleven dead men** · Eleven dead men voting, each with a burial date beside his name in your hand. Grey holds the page to the light. "That'll hold." The Gazette has it by four. | **Six, and a dispute** · Six dead men by noon and a page the registrar disputes. Grey files it, initials it, and writes your name in the Rooms' book under *audit*. |
+
+Welcome decks: *…the Coalport roll wants counting at the Union Hall; start there.* · *…the club's table wants a clerk at Beacon House; start there.* · *…the Ashford roll wants auditing at the Assembly Rooms; start there.* Outcome headlines as the table.
+
+**The long story re-anchored.** *Finish His Work* → ***The Honest Count*** (premise: *You counted the republic's votes for years and never had one counted for you. Climb from a struck roll to a seat in Parliament, and have your name read out.*; **every chapter survives with its title nearly intact**, because its keepsakes are already the documents of a count: 1 *The struck roll* (the built *His ward book*: two hundred names, the choice *show the branch / keep it*, the step *Three names*, the check unchanged), 2 *Stand on your own name* (*Stand where he stood*; keepsake *Your election bill*), 3 *The deposit*, 4 *The count* (the chapter in which the counter is counted), 5 *Your seat*, 6 *The hall*, 7 *The cutting*, 8 *The rule*, 9 *The list*, 10 *The republic votes*, 11 *Twenty-five marks*, 12 ***Under your own name*** (keepsake ***Your rosette***, Legacy 30); the keepsakes *The struck roll*, *Your election bill*, *Your deposit receipt*, *The count sheet*, *The minute book*, *Your ballot stub*, *The cutting*, *Your rule, in draft*, *The letter from the list*, *Your polling card*, *The list's receipt*). *Clear His Name* → ***The Altered Sheet*** (premise: *A tally changed after the seal, in a hand you know. The man who held the pen is rising. Prove it before he is a senator.*; the Dossier, Case Files and the exposé as before; chapter 2 *The night foreman* becomes ***The night clerk*** — the returning officer's clerk, Konrad Brandauer kept as the Coalport name with no party; chapter 3 *The archive*; the Mill Fire of '19 goes). *Settle His Debts* → ***The Box*** (premise: *A ballot box you signed for never came back, and the people who have it have your signature. Pay, betray or take them over.*; chapters *The receipt* (the built *The marker*, the man in the good coat now holding *a copy of your receipt*), *The riverside house*, *The collector*, *The parcel*, unchanged but for the names). **Cost:** the common cost only; nothing moves city.
+
+**For:** the stake is the player's own and it is **the game's own stake** (rolls, counts, ballots); the three asks are one skill applied three ways by three politics (a struck roll, a table that can't be bought, a roll of dead men), each a real job for the next morning; the long story's keepsakes were electoral documents already, so chapters 4–12 survive with their titles and the ending *Under your own name* is earned by a person who spent years counting other people's names; the coat you were told to hand in is a better coat than a dead man's; the Vanguard's row is the most policy-safe of any version written (a clerk at a table). **Against:** a clerk is a quieter person to be than a soldier or a refugee; the premise asks the player to accept that the office lets clerks choose their posting (one line carries it).
+
+### 16.5 Version G — *The frontier train* (papers that don't quite work)
+
+**Premise.** You came over the Pass tonight on the frontier train, which ends at Irongate Central, and so do your papers: issued by an office that no longer exists, in a name that is yours. The capital's registry closes your case at nine tomorrow and does not reopen it. Three people meet this train every night for people like you, because each party has a way to make papers good in its own town, and each wants to be the one you owe.
+
+**Beat 1 — *The frontier train*** (`scene.station`; kicker *Irongate · Central Station · the frontier train*)
+
+> *The frontier train ends at Irongate Central, and so do your papers: issued by an office that no longer exists, in a name that is yours. The registry closes your case at nine tomorrow. Three people meet this train every night, for people like you.*
+
+| Row | The ask | Line 1 · Line 2 |
+|---|---|---|
+| `holm` | **"The union hostel in Coalport registers anyone who'll work the mill, and the mill asks no office for a stamp. A bed tonight, a card tomorrow, and the six o'clock gets you there before the registry opens."** | Petra Holm · union organiser · Coalport · Red Collective · … · +2 Strength, +1 Intelligence |
+| `stahl` | **"The frontier office answers to the club in Duskwall, and a customs stamp tonight outranks a registry tomorrow. Order has its uses. The six o'clock; I'll vouch at the Fortress Gate myself."** | Viktor Stahl · steward · Duskwall · Iron Vanguard · … · +3 Strength |
+| `grey` | **"A closed case can be appealed, and the Rooms' legal-aid desk files appeals before nine. Yours needs a witness and a town, and Ashford will do. The six o'clock, and sign nothing before I've read it."** | Thomas Grey · agent · Ashford · Civic Alliance · … · +3 Intelligence |
+
+Under the rows: *Whoever makes your papers good, you go with. Permanent: a Faction Reset token is the only way back.* Confirm: ***Go with Holm · the six o'clock to Coalport*** (and Stahl, Grey). Echo: *The branch will stamp your papers.* / *The club will stamp your papers.* / *Grey will file your appeal.*
+
+**Beat 2 — *The case***: *The six o'clock. One case, which crossed with you, lighter than it was. {helper} asks what you brought over, besides the name.* Answers: **Tools, mostly. A trade travels.** · **Books. The ones I couldn't leave.** · **Not much. You learn to run before you learn to carry.** (+6 / +1 as always).
+
+**Beat 3 — *In the lining***: *Sewn into your coat, where the frontier guards didn't look, three papers. One of them is why you crossed.* Answers: ***The old passport*** (*Your name as it was, and a photograph of someone younger.* → ***Under Your Own Name***) · ***The registry's stamp*** (*From the office that burned, dated the week before it did.* → ***The Office That Burned***) · ***The crossing's price*** (*What you owe the man who got you over, and the Clearwater address.* → ***The Crossing***). **The coat you crossed in** is worn (`outfit.fathers-coat` renamed, CHA 5).
+
+**The favours:** Collective ***Register at the hostel through the Union Hall*** (*The hostel's book is at the hall; your name in it and the mill's card by noon. Then tea. — P.H.*) · Vanguard ***Have the club vouch at Beacon House*** (*The club's letter to the frontier office, on my desk, wants your name and mine. The clerk has the form. — V.S.*) · Alliance ***File the appeal at the Assembly Rooms*** (*The appeal, the reading room, the witness line. Read it first; then your name, and the date right. — T.G.*); outcome texts in the §1 favours' shape, written with the build.
+
+**The long story re-anchored.** *Finish His Work* → ***Under Your Own Name*** (premise: *Papers that don't quite work, and a name that does. Make it good the long way: a vote, a seat, a chamber that reads it out.*; chapters 1–12 as the ladder, renamed: 1 *The old passport*, 2 *Stand on the name*, … 12 *Under your own name*). *Clear His Name* → ***The Office That Burned*** (who burned the registry that issued your papers, and why; the Dossier and the exposé; the culprit now a senator). *Settle His Debts* → ***The Crossing*** (the man who got you over holds the price; the Clearwater syndicate; pay, betray or take over). **Cost:** the common cost, plus one new Dossier name (the registry's clerk) in `people.ts`.
+
+**For:** the most 1946 of the three and the best noir line (*in a name that is yours*); three politics in three stamps (solidarity, order, law); the ending *Under your own name* lands hardest here. **Against:** a nationalist party making a border-crosser's papers good is the row most likely to read wrong whatever its words (it is written as the club buying a debt, not a kindness, and it is still the row a reviewer will stop on); the premise is about papers, not about the game's verbs, so the first week's canvassing is a job you took rather than the thing you came for.
+
+### 16.6 The pick
+
+**▶ Default: version E, *After the count*.** It is stronger than the last round because the stake is the player's own, not a dead man's, and it is the stake the game is made of: the person who counted everyone's votes and never cast one chooses a side on the night of a count, and the long story ends with their own name read out in Parliament. The three asks are the same skill asked for by three politics, each a real piece of work the next morning at the HQ, and the Vanguard's is a clerk at a table. It is also the cheapest re-anchor: the twelve chapters of the ladder keep their titles and keepsakes with a pronoun changed, because they were electoral documents all along. D is a close second (the strongest first line; the war in it, and the demob-train Vanguard row, are the reasons it is second). G is the best-written row of the three and the riskiest.
+
+### 16.7 Changes to the fix list
+
+- **Item 9** becomes: **(user) The opening, version D, E or G** (§16.3–16.5). *Done when* the chosen version's three narratives, nine row strings, three confirms, three echoes, three beat-2 answers, three beat-3 answers with hints, three order templates, three favour tickets with their four texts, three welcome decks and three outcome headlines are in content; the coat item and the three chapter-1 keepsakes carry the version's names (ids unchanged); the three Ambitions' titles and premises and the five built chapters' strings are rewritten as the version says; a content test finds no player string containing *father*; every text ≤ 240 and four sentences; the Vanguard strings pass the policy regex; the reference answers (`holm · books · ward-book`) still give STR 8 / INT 12 / AGI 5 / CHA 5 and the first Ambition.
+- **Item 10** is **decided**: build the header and the prize as §10.2–10.3.
+- **Item 11** is **decided**: build the six-hour day as §11.3.
+- **Item 12** is **decided with §16.1**: the *Patrol* card rolls at 12 % (+5 / +10 by Heat state, +10 *Watched*, −10 *Warned*, ×2 under the Curfew Order, 5–40) once per ten-minute bucket per city on a city read at night on rival ground, never within ten minutes of arrival, fifteen minutes of a stop or a run-in, at most two a night per city; *Done when* a test with a seeded clock rolls once per bucket, never on an act, never while held or in transit, never with no read, caps at two, and a Cool clean player's stop passes *Show your papers*.
+- **Designed chapters** (`slice-7-nation.md` §13, `slice-8-life.md` §8 and §16) are re-strung when the version is picked; no number in them moves.
+
+---
+
+## 17. The result modal that fits (8 Oct 2026, after the build of §4; decided)
+
+### 17.1 What the screenshots show
+
+With the picker in a sheet and the picture, the stamp and the buttons fixed, the middle still overflows: an ordinary ×1 result by **303–358 px at 390 × 740** and **74–121 px at 1440 × 900**; a mission with a level-up by 255 / 151 / 61 px (390 × 740, 390 × 844, 1440 × 900). The height goes on five things, in order: a 150 px picture; the *How it went* section printing a row the stamp already prints (*1 · Success · +45 XP*); three bonus tags as three boxed lines; a receipt whose every line has a note and two have bars; a knock-on block that prints every line it has.
+
+### 17.2 The compact layout (all sizes; the phone budget in brackets)
+
+Top to bottom, one rule each:
+
+1. **The picture:** **112 px on phones under 800 px tall, 136 px up to 900, 150 px above** (the 2688 × 1520 scene cropped to the width, the stamp at 80 % on the short crops, the place line *COALPORT · MILL GATE · 14:16* in the picture's bottom band as now). [112]
+2. **The title block:** kicker, headline (Playfair **22 px** on phones, 24 on desktop), the body at 15 / 22 px, at most 240 characters (five lines at 390 px). [≈ 172 with its gaps]
+3. ***How it went* is printed only when it says something the stamp does not:** for a **×1 Success it is omitted** (the stamp says *Success*, the receipt says the XP); for a **×1 Partial or Failure** the section is **one italic reason line under the body** (*Bad luck. The odds were good; it just didn't come off. Try again.*; no kicker, no row); for a **×3** it is **one Courier line** of the rows, ***1 · Success · +45 · 2 · Partial · +23 · 3 · Success · +45***, then the reason line if any; a run-in's block stays as built (it is the thing that happened). [0 / 40 / 64]
+4. **Bonus tags as one line:** Oswald caps 10 px, no boxes, joined with *·*: ***Party order · +25 % Party XP · First day in Coalport · better odds · Issue · opinion +50 %***; when it would wrap, the line is cut at the last whole tag that fits and ends ***· +1 more*** (the rest in *Details*). The tag's note opens on a tap of its words, as the chips did. [20]
+5. **The receipt, four lines at most** (XP, Party XP, Iron, opinion; a zero line is not printed, as before): **XP and Party XP keep their bar and their one Courier note** (*955 to Level 7* · *8 / 400 to Activist*: the HUD in miniature); **Iron and opinion are one line each**, label left, value right, **no note**. Everything else the receipt said moves into ***Details***: the base-and-bonus breakdown (*+6 and +2 bonus · party order*; *Rested: 3 of 10 Energy, +15 % XP and Iron*), the opinion's meter and Issue line (*Issue: Men at the Labour Exchange +50 % · Collective 70.1 → 70.3 %*), the tags that were cut, the ×3 rows' XP. *Details* is a Courier text row at the receipt's foot, right-aligned, ***Details ▾***, expanding in place (the middle may then scroll; the player asked for it). [16 + 44 + 44 + 28 + 28 + 20 = 180]
+6. **Knock-on lines capped at three**, in this priority, each one line (Courier 12) unless it is a card: **a point to place** (the *Place it* line, 48 px, counts as one) · **a rank-up or a Reputation step** (its card; the first-time Heat card likewise) · **Heat** (*Heat +8 → 32 · Noticed · Cool at 20:40*) · **the order's signed line or progress** · **Issue momentum** · **the election / ledger line** · **the chapter hook** · **Energy and Rested before → after** · ***Missions remember: next time, one tap*** (the first mission only). After the third: ***n more ▾***, a text row that expands in place. Nothing is dropped; the fourth and later lines are behind the row. [16 + 3 × 24 = 88; with *Place it* 112]
+7. **The buttons** as built: the pair side by side with the cost on a second line, *Continue* under them. [108]
+
+Phone budget at 390 × 740, ×1 Success: 112 + 172 + 0 + 20 + 180 + 88 + 108 + 40 (paddings and rules) = **720**. A mission with a level-up: 112 + 172 + 0 + 20 + 180 + 112 + 108 + 40 = **744**: four pixels over, taken from the paddings (the kickers *REWARDS* and *KNOCK-ON EFFECTS* lose their 8 px top gap on phones under 800 px). A ×1 Partial with a reason: 760 → the rule below.
+
+### 17.3 The rule, restated
+
+- **Never scrolls:** a ×1 Success, and a mission result with a level-up, at **390 × 740** and on **every desktop** (1440 × 900 has ~150 px to spare under the layout above; 1024 × 520 is a sideways phone and follows the phone rule).
+- **A short scroll is accepted on a 740 px phone** (at most **about 100 px** of the middle, the picture and the buttons fixed) for a **×3**, a result **with a reason line**, or a **run-in**; never on phones of 844 px and above. The thin bar of §4.2 shows it.
+- *Details* and *n more* may scroll the middle anywhere, by the player's own tap.
+
+**Where:** `ResultModal` (`packages/ui`), `Receipt` (the fold), the tags line, the knock-on cap; `copy.result.details`, `copy.result.more(n)`; no rule in the GDD changes (§13.1a gains one sentence); the slice-3 receipt design (`review-3-answers.md` §3) is superseded by §17.2's item 5 for the notes.
+
+**Fix-list item 2 becomes:** *Done when* a ×1 Success and a mission with a level-up fit 390 × 740 and 1440 × 900 without a scroll bar; a ×3 or a Partial scrolls at most 100 px at 390 × 740 and nothing at 390 × 844; the picture is 112 / 136 / 150 by height; the tags are one line with *+n more*; the receipt prints no note under Iron or opinion and *Details* opens the breakdown; the knock-on block shows three lines and *n more*; Playwright measures the five cases of §17.1.

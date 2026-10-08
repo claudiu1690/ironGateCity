@@ -1035,13 +1035,13 @@ Training Agility to 10 for the Driver (30 + 32 + 34 + 36 + 38 = **170 Energy**) 
 
 One Iron a point, at least 10. The day-10 reference player on the illegal road loses Health about 1.5 times a day (§19.5) and comes out of a won fight 10–25 points down; a top-up is **10–25 Iron**, bought maybe twice a day by the impatient: **~40 Iron a day at most**, against ~1,000 of income and §19.7's ~50–100 of pay-offs, bail and the ward. A player who never fights never sees the card's button. The ward's *Walk out well* (100 for the stay's remaining Health plus the twenty minutes) is the same rate plus the time, so the two prices agree.
 
-### 25.3 The Unrest prize (proposed; GDD §14.11)
+### 25.3 The Unrest prize (decided by the user 8 Oct 2026; GDD §14.11)
 
 +50 Party XP once per entry per city, at most once in seven days per city, to members with ≥ 0.5 points moved there in seven days. A rival-ground specialist (§19.6: ~320 Party XP a day) earns at most +50 a week from it: **+2 % of the week**, inside the heavy player's +35 % envelope. The push bar and the goal line change no rate. A town goes from 70 to 60 in five days with both rivals at the cap (Appendix C #52), so the prize pays at most once a week per town and only when two parties' members have spent about ten days of rival-ground Energy between them.
 
-### 25.4 The night (proposed; GDD §2.2, §13.1, §14.12)
+### 25.4 The night (decided by the user 8 Oct 2026, the patrol made random; GDD §2.2, §13.1, §14.12)
 
-**Night missions** at +25 % Iron: four at 10–15 Energy, at most one of each a session, about **+60 Iron a day** for a player who plays every night window; no Party XP, so Rank pacing is untouched. **Patrols:** a thirty-tap rival-ground day spent wholly at night sees **7.5 run-ins instead of 4.5** (25 % against 15), about +180 Iron of pay-offs or one infirmary stay more, and the night stop's +10 Heat once; the +50 % Party XP is unchanged, so the night pays the same and costs more. A mixed day (a third of taps at night under option B) is +1 run-in. **The six-hour day** changes no rate: every daily figure in this sheet is per real City Day.
+**Night missions** at +25 % Iron: four at 10–15 Energy, at most one of each a session, about **+60 Iron a day** for a player who plays every night window; no Party XP, so Rank pacing is untouched. **Patrols:** a thirty-tap rival-ground day spent wholly at night sees **7.5 run-ins instead of 4.5** (25 % against 15), about +180 Iron of pay-offs or one infirmary stay more. **The random stop** (12 % per ten-minute bucket on a city read, +5 / +10 by Heat state, +10 *Watched*, at most two a night per city): a Cool visitor reading through a whole two-hour night meets about **1.4 stops**, a five-minute look-in one roll at 12 %, a *Hot* and *Watched* visitor about two; a stop costs at most +10 Heat and *Watched* (worth about +10 points on the next act's run-in), so the full night's expected extra cost is **one more run-in's worth, ~60 Iron**; the +50 % Party XP is unchanged, so the night pays the same and costs more. A mixed day (a third of taps at night under option B) is +1 run-in. **The six-hour day** changes no rate: every daily figure in this sheet is per real City Day.
 
 ### 25.5 Session shape (pillar 7)
 

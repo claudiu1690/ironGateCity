@@ -1072,5 +1072,5 @@ Every deck ≤ 200 characters with the longest tokens. The Courier's non-politic
 ## Added 8 Oct 2026 — review 5
 
 - **§9.4, the jobs:** the **Tram conductor pays 240** (was 200), by the rung rule of GDD §9.2 (`docs/design/review-5-answers.md` §5). The vendor (100) and the Cannery hand (180) are unchanged.
-- **§7.2, the Curfew Order:** its window is §2.2's night; if the user takes the six-hour game day (answers §11), that is the last two hours of every six, a third of the day rather than ten hours in twenty-four. The bound (+100) is unchanged.
+- **§7.2, the Curfew Order:** its window is §2.2's night, which the user set on 8 Oct 2026 to **the last two hours of every six** (dusk at 04 / 10 / 16 / 22 UTC): a third of the day rather than ten hours in twenty-four. The bound (+100) is unchanged.
 - **§9.2, the Sanatorium:** carries the *Treatment* card like every `hospital` place (answers §8).
