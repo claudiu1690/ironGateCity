@@ -8,7 +8,7 @@ Nothing here adds a required tap to a session. The level-up picker is one tap as
 
 | # | Note | Decision | Where |
 |---|---|---|---|
-| 1 | The opening is weak | Round 1: A, B, C (§1), **not taken** (*"unrelated to the father"*). **Round 2 (§16.2–16.6): D *The warrant*, E *After the count*, G *The frontier train*, no father in any; ▶ E recommended**; the mechanics unchanged; each re-anchors the three Ambitions | §16; GDD §7.1, §17.1 |
+| 1 | The opening is weak | Round 1: A, B, C (§1), **not taken** (*"unrelated to the father"*). Round 2: D, E, G (§16.2–16.6), **rejected** (*"tables at a train station"*). **Round 3 (§19): *Coming home*** — the demob office, the clerk's three pieces of bad news (the mill sold, the stamp missing, the flat requisitioned), three people in the hall for their own reasons; which problem you chase is your party; the kitbag sets the stat; the office's post sets the long story (*The Names on the Stone*, *Who Sold the Homes*, *The Ration Ledger*) | §19; GDD §7.1, §17.1 |
 | 2 | Small clouds | **Fewer, larger**: three clouds and two wisps by day, none narrower than 0.36 of the picture; the small puffs are gone; **a config change, no new art** | §2 |
 | 3 | Level-up boxes | **Three paper cards in the ticket's style**, one per stat, the whole card the tap; the black blocks are gone | §3; GDD §5.3 |
 | 4 | Unstyled scroll bar | The result modal never scrolls for an ordinary result; the picker in a modal is **a line and a button that opens a sheet**; **one thin ink scroll bar** everywhere else | §4 |
@@ -514,7 +514,7 @@ The user decided the four open notes the same day: **#10 approved** as proposed 
 
 **Why these numbers.** Twelve per cent a bucket is low enough that a quick visit at night usually passes, high enough that a player who works a whole night there meets the patrol more often than not; the cap of two keeps the card from becoming a tax; the fifteen-minute quiet after any trouble keeps two cards from landing back to back; the Heat and flag terms make the stop the consequence of being noticed, which is what a patrol is. Appendix C #101 carries the levers (the 12, the cap, the quiet).
 
-### 16.2 The openings, round 2: no father
+### 16.2 The openings, round 2: no father (**D, E and G rejected by the user, 8 Oct 2026**: *"none of the stories make any sense… tables at a train station"*; the record stands; round 3 is §19)
 
 The last round's three versions all hung on a dead man the player had never met in play; the user asked for a premise that stands on its own. Each version below gives **who you are** (a trade, a state), **why tonight** (something ends or starts at this station tonight), **why these three people** are on the platform and **what each wants from you** that only this player can give, tied to their party's politics. The mechanics are unchanged: **beat 1, whom you help is your party**; **beat 2, what you carry sets a stat** (+6 and +1); **beat 3 sets your long-term story** (the Ambition) and dresses you (a Tier I coat at CHA 5). Each version re-anchors the three Ambitions without the father; the ladder of *Finish His Work* (twelve chapters, three built, nine designed) survives in every one as a different person's climb, because its keepsakes are electoral documents and its chapters are rungs, not memories. Ids never change (`finish-his-work`, `clear-his-name`, `settle-his-debts`, `keep.*`, `outfit.fathers-coat`); only names and strings do.
 
@@ -614,7 +614,7 @@ Under the rows: *Whoever makes your papers good, you go with. Permanent: a Facti
 
 **For:** the most 1946 of the three and the best noir line (*in a name that is yours*); three politics in three stamps (solidarity, order, law); the ending *Under your own name* lands hardest here. **Against:** a nationalist party making a border-crosser's papers good is the row most likely to read wrong whatever its words (it is written as the club buying a debt, not a kindness, and it is still the row a reviewer will stop on); the premise is about papers, not about the game's verbs, so the first week's canvassing is a job you took rather than the thing you came for.
 
-### 16.6 The pick
+### 16.6 The pick (superseded: all three rejected; see §19)
 
 **▶ Default: version E, *After the count*.** It is stronger than the last round because the stake is the player's own, not a dead man's, and it is the stake the game is made of: the person who counted everyone's votes and never cast one chooses a side on the night of a count, and the long story ends with their own name read out in Parliament. The three asks are the same skill asked for by three politics, each a real piece of work the next morning at the HQ, and the Vanguard's is a clerk at a table. It is also the cheapest re-anchor: the twelve chapters of the ladder keep their titles and keepsakes with a pronoun changed, because they were electoral documents all along. D is a close second (the strongest first line; the war in it, and the demob-train Vanguard row, are the reasons it is second). G is the best-written row of the three and the riskiest.
 
@@ -729,3 +729,109 @@ Outcome headlines for the paper's *In Print* line, where a mission prints one: t
 5. The unranked knock-ons: Q3 above, in the §4.1 order.
 6. `slice-2-cities.md` §1.3 and §2.3 Driver rows print **240** *(was 200 until review 5)* in place; the same in `slice-1-content.md` §3 and §12.1, `slice-4-battleground.md` §4.4 and §4.5, `slice-7-nation.md` §9.4. The content tests that read 200 (`load.test.ts`, `qa.content.test.ts`) are the developer's to move with the data.
 7. Economy §25.3: the cap is per city, at most 100 a week across both rival towns (Q9).
+
+---
+
+## 19. The opening, round 3: *Coming home* (8 Oct 2026; one version, from the main session)
+
+**The user rejected D, E and G** (*"none of the stories make any sense… coming back from the war is good but tables at a train station wtf?"*). What they liked is the direction of D; what broke every version so far is the device: three party people waiting on a platform for one stranger. This version keeps the logic the user set out and drops the device. **The three people are in the hall for their own reasons, and the player's three problems come from the clerk, not from them.**
+
+### 19.1 The premise
+
+Spring 1946. The player is demobbed after years away: the war, then a camp. The demob trains end at Irongate Central, and nobody goes home without a stamp from the **demobilisation office**, which is a real place: a hall with queues, clerks and rubber stamps, open nine to four. On the second morning home the player reaches the counter, and the clerk gives them three pieces of news without looking up: **the mill they left has been sold and the job with it; the discharge papers are missing a stamp, which means six weeks with no pay; the family flat was requisitioned and given to someone else.** Three people work that hall every day because that hall is where those three problems arrive: a union organiser signing up men off the trains, the League's welfare desk, and a legal-aid lawyer taking housing cases. The player can chase **one** problem today. That one is their party and their town.
+
+Nothing a stranger need know: a demob office, a lost job, a missing stamp, a lost flat, and three people whose job is one of those three things.
+
+### 19.2 Beat 1 — *The counter* (`origin.step-platform`, id kept; kicker *Irongate · the demobilisation office · the second morning home*; art `scene.ministry`, §19.7)
+
+> *The demobilisation office, the second morning home. You reach the counter at eleven with a kitbag and your papers, and the clerk gives you three pieces of news without looking up. The mill is sold. The stamp is missing. The flat is gone.*
+
+The three rows (the portrait at the left; the title is the ask; line 1 says who they are and why they are in this hall; line 2 is the party line and the bonus, as built):
+
+| Row | The ask | Line 1 | Line 2 |
+|---|---|---|---|
+| `holm` | **"Your mill's sold, but Coalport's rehires on Monday, union men first. Put your name on my sheet now and you've a place at the gate and a bed at the union hostel tonight. The six o'clock to Coalport."** | Petra Holm · union organiser · at the bench by the door, signing up men off the trains | Red Collective · the mill and the docks against the men who own them · +2 Strength, +1 Intelligence |
+| `stahl` | **"No stamp, no pay, and this office takes six weeks. The League in Duskwall sees to its men: the stamp by Thursday, the pension after, and a bed at the League's hostel till then. The six o'clock; I'll put you on the list."** | Viktor Stahl · the Duskwall League's welfare desk · stamps, pensions and a bed for men coming home | Iron Vanguard · order, discipline and a strong hand · +3 Strength |
+| `grey` | **"A requisition can be appealed, and Ashford's court hears housing cases this week. I need your discharge papers, the flat's address and your signature today; the Rooms file on Thursday. The six o'clock to Ashford."** | Thomas Grey · legal-aid lawyer · at the end of the counter, taking housing cases | Civic Alliance · elections, courts and a free press · +3 Intelligence |
+
+Under the rows (Courier): *One of these today. The other two will keep, or they won't. Whoever you go with, you go with: a Faction Reset token is the only way back.*
+
+Confirm: ***Go for the work · the six o'clock to Coalport*** / ***Go for the stamp · the six o'clock to Duskwall*** / ***Go for the flat · the six o'clock to Ashford***. Echo on beat 2: *You went for the work.* / *You went for the stamp.* / *You went for the flat.*
+
+### 19.3 Beat 2 — *The kitbag* (`origin.step-suitcase`, id kept; kicker *The six o'clock to {city} · the compartment*; art `scene.train-compartment`; portrait `helper`)
+
+> *The six o'clock, the kitbag on the rack. Everything you own is in it, and it still isn't heavy. {helper} asks what a person brings home from four years.*
+
+| Id | Answer | Effect | Echo |
+|---|---|---|---|
+| `tools` | **Tools. I kept the workshop's kit when the workshop went.** | +6 STR, +1 INT | You brought tools. |
+| `books` | **Books, from the camp library. They let us keep those.** | +6 INT, +1 STR | You brought books. |
+| `light` | **The boots I walked out in. Two hundred miles, and they still fit.** | +6 AGI, +1 STR | You brought the boots. |
+
+### 19.4 Beat 3 — *The post* (`origin.step-lining`, id kept; kicker *The same compartment · the office's post*; portrait none)
+
+> *The office held post in your name since the autumn: three envelopes, handed over with the bad news, which you open on the train. A list, an order, a torn page. One of them is why you'll stay.*
+
+| Id (kept) | Text | Hint (Courier) | Sets |
+|---|---|---|---|
+| `ward-book` | **The unit's list.** | Forty names in your hand, and the town's memorial being cut without them. | ***The Names on the Stone*** + `outfit.fathers-coat` renamed ***The demob suit*** (Tier I, CHA 5), worn |
+| `letter` | **The requisition order.** | The flat, the date, and a signature you can read. | ***Who Sold the Homes*** + the suit |
+| `marker` | **The ration page.** | A year of rations drawn in your family's name after they were gone. Somebody ate them. | ***The Ration Ledger*** + the suit |
+
+Then the welcome edition and the first landing on the HQ's pin with the favour's ticket highlighted, as built.
+
+### 19.5 The favours (slot B of the welcome set at the HQ; `use: 'welcome'`, type `council`, 10 Energy, difficulty 8; each follows from the beat-1 problem)
+
+| Party | Order (`dir.welcome-b`, `dir.v.welcome-b`, `dir.a.welcome-b`) | Ticket | Success | Partial |
+|---|---|---|---|---|
+| Collective | **Sign on at the Union Hall** · *The rehiring sheet, at the hall, before Monday's gate. Your name, your trade, the years. Then tea. — P.H.* | Sign on | **Union men first** · The sheet is a school exercise book and your name goes in it under forty others, with the trade and the years. "Monday, seven, the gate," says the man at the table. "Union men first." There's tea. | **The second page** · The first page is full and the second is for men without a card, which is you till Monday. He writes you in pencil and says come early. The tea is cold. |
+| Vanguard | **Get the stamp at Beacon House** · *Your discharge papers on the clerk's desk by ten. The League's letter goes with them to the office at eleven; the stamp comes back Thursday. — V.S.* | Get the stamp | **Thursday, stamped** · The clerk reads your papers, writes the League's letter in a fair hand and pins the two together. "Thursday," he says, "and the pension office after." Your name goes in the League's book under the word *stamp*. | **A form the camp never gave you** · The clerk wants a form the camp never issued, and writes to say so. Thursday becomes next week. He enters your name in the day book and says the bed is yours till then. |
+| Alliance | **File the appeal at the Assembly Rooms** · *The requisition order, your papers, the flat's address, the reading room's desk. Read it; then your name, and the date right. — T.G.* | File the appeal | **Filed** · Grey reads the order twice, writes the appeal in a hand that counts words, and you sign it under his. "Thursday," he says, "and they'll hate it." The Rooms' book has your name under *housing*. | **A copy is missing** · The order's second copy is in an office that shuts at four, and the appeal goes in with a gap where it should be. Grey files it anyway and writes your name in the Rooms' book, in pencil. |
+
+**Welcome decks** (the welcome headline's second sentence): *…the rehiring sheet wants your name at the Union Hall; start there.* · *…your papers want the League's letter at Beacon House; start there.* · *…the appeal wants your signature at the Assembly Rooms; start there.* **Outcome headlines** for the paper: the Success and Partial headlines above. Slot A (two attempts at a political action by the best stat) and slot C (*Take a job*) are unchanged.
+
+### 19.6 The long story, re-anchored (no father; the ladder, its numbers and every id kept)
+
+| Was | Now | Premise | Systems | Ending |
+|---|---|---|---|---|
+| *Finish His Work* (`finish-his-work`) | ***The Names on the Stone*** | Forty of your unit didn't come home, and the town is cutting its memorial without them: the council says they weren't the town's own. Get the names on the stone, and that takes a seat. | Campaigning, offices, speeches (unchanged) | A law for the republic's memorials, and the names read out in Parliament |
+| *Clear His Name* (`clear-his-name`) | ***Who Sold the Homes*** | Requisitioned flats were given away while their people were away, and somebody was paid for each one. The signature on your order belongs to a man who is rising. | Dossier, Case Files, exposés (unchanged) | Expose him, now a senator |
+| *Settle His Debts* (`settle-his-debts`) | ***The Ration Ledger*** | A year of rations drawn in your family's name after they were gone, by a ring that ran the ration books from Clearwater. They want the page back, and they have a price for your silence. | Iron, Heat, the Black Market, patrons (unchanged) | Pay, betray or take over the ring |
+
+**The ladder of *The Names on the Stone*** (chapters, requirements, difficulties, rewards unchanged from §17.1; titles and keepsakes renamed; `keep.*` ids kept):
+
+| Ch | Title | Keepsake |
+|---|---|---|
+| 1 | *The unit's list* (the built *His ward book*: the choice *show the branch / keep it*; the step *Three names* becomes three families to knock on; the check unchanged) | *The unit's list* |
+| 2 | *Stand for the stone* (first ballot) | *Your election bill* |
+| 3 | *The deposit* (Rank 3) | *Your deposit receipt* |
+| 4 | *The count* | *The count sheet* |
+| 5 | *Your seat* (Rank 4) | *The minute book* |
+| 6 | *The hall* | *Your ballot stub* |
+| 7 | *The cutting* (a Case File) | *The cutting* |
+| 8 | *The stone's rule* (a Governor's term or three council terms: the council rule that cuts the names) | *The rule, in draft* |
+| 9 | *The list* (Rank 5) | *The letter from the list* |
+| 10 | *The republic votes* | *Your polling card* |
+| 11 | *Twenty-five marks* | *The list's receipt* |
+| 12 | *The names read out* (a term as a deputy begun) | ***The memorial ribbon*** (wearable, CHA 5; the rosette renamed; a plain black ribbon, no device) · Legacy 30 |
+
+*Who Sold the Homes*: chapter 1 *The requisition order* (the built *The prison letter*: the lamp / the branch choice; the reading-room check becomes the housing office's register), chapter 2 *The night caretaker* (the built *The night foreman*: the block's caretaker; Konrad Brandauer kept as the Coalport name with no party), chapter 3 *The archive* (a Case File). *The Ration Ledger*: chapter 1 *The ration page* (the built *The marker*: the man in the good coat holds *a copy of the page*), 2 *The riverside house*, 3 *The collector*, 4 *The parcel*, unchanged but for the names. The Mill Fire of '19 goes.
+
+**Cost:** the common cost of §16.2 (strings only: `origin.ts`, three order templates, three favours, three welcome decks, three outcome headlines, the item and keepsake names, the three Ambitions' titles and premises, the five built chapters' strings, the designed chapters' titles in `slice-7-nation.md` §13 and `slice-8-life.md` §8/§16, GDD §7.1 and §17.1, a content test for no *father*). Ids, rules, rewards and requirements do not move; the reference answers (`holm · books · ward-book`) still give STR 8 / INT 12 / AGI 5 / CHA 5 and the first Ambition.
+
+### 19.7 Art (checked against `mvp/scenes`)
+
+- **Beat 1:** `scene.ministry` (exists: a counter hall, clerks stamping, a queue with cases, a clock) **stands in and reads as the demob office**; the kicker names the office. **Optional, not blocking:** a dedicated **`scene.demob-office`** (2688 × 1520, the same lithograph grain): a longer queue of men in ill-fitting suits with kitbags, a counter of stamps, a *DEMOBILISATION — DISCHARGES · PENSIONS · HOUSING* board in the republic's plain lettering, no flag, no insignia, no uniform. Alt text: *A crowded office hall at eleven: a long counter, clerks with rubber stamps, a queue of men in new suits with kitbags, a clock.*
+- **Beats 2–3:** `scene.train-compartment` (exists).
+- **The favours' modals:** the HQ scenes (`scene.union-hq`, `scene.vanguard-office`, `scene.alliance-hq`; exist).
+- **The three portraits:** `holm`, `stahl`, `grey` (exist). No other art.
+
+### 19.8 Policy check
+
+The war is the past and is named once as *four years* and *the camp*; nothing in play is a fight. The Vanguard row is a **welfare desk**: the League, stamps, pensions, a hostel bed, a clerk, a letter, a day book; no uniform, rank, march, symbol or slogan; *the League sees to its men* is the voice of a lobby, not a militia. The memorial ribbon is plain and carries no device. Checked against `docs/design/content-policy-review.md` §7.
+
+### 19.9 Changes elsewhere
+
+- §16.2–16.6 (D, E, G) are **rejected** and stand as the record; the summary table's row 1 points here.
+- Fix-list item 9 reads: **The opening, *Coming home*** (§19). *Done when* the three beats, nine row strings, three confirms and echoes, the three kitbag answers, the three post items with hints, the three favours with their four texts, the three welcome decks and outcome headlines are in content; the suit and the three keepsakes carry §19.4's names; the three Ambitions' titles, premises and the five built chapters' strings read as §19.6; `review5.opening.test.ts` finds no *father*; the Vanguard strings pass the policy regex; eight taps from sign-up to the first result; the reference recruit's stats unchanged.
+- GDD §7.1 and §17.1 carry a one-line pointer to this section until the user confirms; `docs/tech/review-5.md` §12 (phase 10) builds this version.
