@@ -996,3 +996,6 @@ Was *Three orders from Secretary Holm below, and a letter from your father's thi
 - Alliance: **Three orders from Mr Grey below, and the envelope you opened on the train.**
 
 The rest of each deck (the Energy line and the §19.5 *start there* sentence) is as §19.5, **except the Vanguard's last sentence**, which with this first sentence ran to 202 characters against the deck's 200 cap (the developer's count, 8 Oct 2026). Decision: keep the first sentence identical across the three parties and shorten the Vanguard's last sentence to ***The League's letter waits at {place}; start there.*** (the full template is 192). §19.5's Vanguard deck line reads so from now on.
+
+
+**Art, 8 Oct 2026:** the keepsake *The memorial ribbon* (which replaces *His rosette*) is drawn as a plain black mourning ribbon on a pin, with no colours or device. It's saved as `mvp/items/memorial-ribbon.jpg` (512 × 512) and replaces `item.rosette` for the slice-8 build. Alt text: *A plain black mourning ribbon on a pin.*
