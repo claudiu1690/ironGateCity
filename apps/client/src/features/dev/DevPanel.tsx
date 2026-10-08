@@ -52,6 +52,8 @@ function inWords(ms: number): string {
 const BUTTONS: Array<{ action: DevAction; label: string; needsCharacter: boolean }> = [
   { action: 'hour', label: '+1 hour', needsCharacter: false },
   { action: 'day', label: 'Next day', needsCharacter: false },
+  // Review 5 (ADR 0079): a minute past the next dusk (04, 10, 16 or 22 UTC).
+  { action: 'dusk', label: 'To dusk', needsCharacter: false },
   { action: 'phase', label: 'Skip to next phase', needsCharacter: true },
   { action: 'boost', label: 'Boost me', needsCharacter: true },
   { action: 'energy', label: 'Refill Energy', needsCharacter: true },
@@ -146,6 +148,13 @@ function DevPanelOn({ status }: { status: DevStatus }) {
     ['Your clock', localLine(now), 'dev-local'],
     ['City Day', String(status.cityDay), 'dev-city-day'],
   ];
+  // Review 5 (ADR 0079): the town's night, the next dusk or dawn, and the seam's mode.
+  if (status.night)
+    rows.push([
+      'Night',
+      `${status.night.night ? `night · dawn ${status.night.nextDawnUtc}` : `day · dusk ${status.night.nextDuskUtc}`}${status.night.mode === 'clock' ? '' : ` · pinned ${status.night.mode}`}${status.night.tapRunIn !== null ? ` · tap run-in ${status.night.tapRunIn} %` : ''}`,
+      'dev-night',
+    ]);
   // Slice 4 (tech design §8.7): where the character is, where they live, the capital and the Issues.
   const where = status.where;
   const onTrain = !!where && 'train' in where;

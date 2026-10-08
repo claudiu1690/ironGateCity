@@ -203,6 +203,8 @@ export function missionRisk(i: {
   heat: number;
   record: RecordLevel;
   flags: DayFlags;
+  /** Review 5 (ADR 0080): night at the read; on rival ground the run-in gains +10. */
+  night?: boolean;
 }): { heat: number; runInChance: number; marks: 0 | 1 | 2 | 3 } {
   const spec = MISSION_TYPES[i.type];
   const heat = (i.way.heat ?? spec.heat) * (i.rivalGround ? RIVAL_GROUND.heatFactor : 1);
@@ -213,6 +215,7 @@ export function missionRisk(i: {
     heatState: heatState(Math.min(100, i.heat + heat)),
     record: i.record,
     flags: i.flags,
+    ...(i.night !== undefined ? { night: i.night } : {}),
   });
   return { heat, runInChance: runIn, marks: spec.marks };
 }
@@ -348,6 +351,8 @@ export interface MissionInput {
   opponents: { sideOf: (id: string) => FactionId | 'police'; policeId: string };
   /** Test hooks (tech design §8.5): the check's roll, the run-in, the opponent. */
   force?: { checkRoll?: number; runIn?: 'next' | 'never'; opponentId?: string };
+  /** Review 5 (ADR 0080): night at the act; on rival ground the run-in +10 and the police half. */
+  night?: boolean;
 }
 
 /** The pure start of a mission, stored in the encounter while a run-in is pending (ADR 0032). */
@@ -495,6 +500,7 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
     heatState: heat.stateAfter,
     record: i.record,
     flags: i.flags,
+    ...(i.night !== undefined ? { night: i.night } : {}),
   });
   const runRoll = street.roll100();
   const fires = i.force?.runIn === 'next' ? true : i.force?.runIn === 'never' ? false : runRoll <= chance;
@@ -507,6 +513,7 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
         sideOf: i.opponents.sideOf,
         policeId: i.opponents.policeId,
         rng: street,
+        ...(i.night !== undefined ? { night: i.night, rivalGround: rival !== null } : {}),
       }))
     : null;
 

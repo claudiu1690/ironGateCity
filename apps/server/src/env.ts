@@ -73,6 +73,11 @@ const EnvSchema = z
       .enum(['0', '1', ''])
       .optional()
       .transform((v) => v === '1'),
+    /**
+     * Review 5 (ADR 0079): the night seam's test mode at start-up (`clock`, `day` or `night`); read only
+     * with E2E_TEST_HOOKS. Playwright runs with `day`; `pnpm dev:mem` leaves it unset (the clock).
+     */
+    E2E_NIGHT: z.enum(['clock', 'day', 'night']).optional(),
   })
   .superRefine((env, ctx) => {
     if (env.DB_MODE === 'uri' && !env.MONGODB_URI) {

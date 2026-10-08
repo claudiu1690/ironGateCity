@@ -1,9 +1,10 @@
 import type { GameContent } from '@irongate/content';
 import { Character, City, Encounter } from '@irongate/db';
 import type { CharacterDoc, CityDoc, EncounterDoc } from '@irongate/db';
-import { RIVAL_GROUND, dayKey, dayStart, pressureLostToday } from '@irongate/rules';
+import { RIVAL_GROUND, dayKey, dayStart, pressureLostToday, runInChance } from '@irongate/rules';
 import { z } from 'zod';
 import { releaseHeldNow, sendToHeld } from '../services/heldService';
+import { nightAt } from '../services/night';
 import { riskView } from '../services/risk';
 import { streetHooks } from '../services/streetHooks';
 import type { StreetForce } from '../services/streetHooks';
@@ -54,8 +55,13 @@ export const StreetBody = z
     checkRoll: roll.optional(),
     choiceRoll: roll.optional(),
     caught: z.enum(['always', 'never']).optional(),
+    // Review 5 (tech design §4.3): each row's check roll for any act, home tier 1 included.
+    rolls: z.array(roll).min(1).max(3).optional(),
   })
   .strict();
+
+/** Review 5 (ADR 0079): `POST /api/test/night`, the night seam's test mode. */
+export const NightBody = z.object({ mode: z.enum(['clock', 'day', 'night']) }).strict();
 
 /** `POST /api/test/held`: one of the two. */
 export const HeldBody = z.union([
@@ -148,6 +154,29 @@ export function rivalHomes(
     .councilCities()
     .filter((x) => x.homeFactionId && x.homeFactionId !== c.factionId)
     .map((x) => ({ cityId: x.id, cityName: x.name }));
+}
+
+/**
+ * Review 5 (ADR 0080): a tier-1 tap's run-in chance for `c` where it stands, at `now` (the night
+ * read through the seam); null off rival ground. The status's night block shows it.
+ */
+export function tapRunInChance(
+  content: GameContent,
+  c: CharacterDoc,
+  residenceCity: CityDoc | null,
+  now: number,
+): number | null {
+  const v = riskView(content, c, now, residenceCity);
+  if (!v.here.rivalGround) return null;
+  return runInChance({
+    base: 0,
+    tier: 1,
+    rivalGround: true,
+    heatState: v.heat.state,
+    record: v.record.level,
+    flags: { watched: v.here.flags.includes('watched'), warned: v.here.flags.includes('warned') },
+    night: nightAt(now).night,
+  });
 }
 
 /** The status's risk block (tech design §8.6), read from the stored character without settling it. */

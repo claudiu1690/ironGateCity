@@ -17,6 +17,7 @@ import { CharacterRiskBody, zodLine } from './dev/risk';
 import { registerRiskHooks } from './dev/riskRoutes';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
+import { nightHooks } from './services/night';
 import { captureException } from './sentry';
 import type { Context } from './trpc/context';
 import { appRouter } from './trpc/router';
@@ -64,6 +65,8 @@ export async function buildApp({
   });
 
   if (env.E2E_TEST_HOOKS) {
+    // Review 5 (ADR 0079): the night seam's test mode, when the run asks for one (Playwright: day).
+    if (env.E2E_NIGHT) nightHooks.mode = env.E2E_NIGHT;
     // Memory mode only (env.ts refuses E2E_TEST_HOOKS otherwise). The clock moves forward only
     // (QA n11): lazy time assumes it never runs back past a settled day.
     app.post('/api/test/clock', async (request, reply) => {

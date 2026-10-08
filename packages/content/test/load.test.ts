@@ -64,7 +64,7 @@ describe('the real content', () => {
     expect(content.jobs.filter((j) => j.id.startsWith('coalport-')).map((j) => [j.id, j.dailyPay])).toEqual([
       ['coalport-street-vendor', 100],
       ['coalport-factory-worker', 180],
-      ['coalport-driver', 200],
+      ['coalport-driver', 240], // Review 5 (answers §5, GDD §9.2): was 200.
     ]);
     expect(content.jobsAt('coalport.mill-gate').map((j) => j.id)).toEqual(['coalport-factory-worker']);
   });

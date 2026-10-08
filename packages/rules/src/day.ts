@@ -1,4 +1,4 @@
-import { CITY_DAY, DAY_NIGHT, DIRECTIVES } from './constants';
+import { CITY_DAY, DIRECTIVES, GAME_DAY_HOURS, NIGHT_HOURS } from './constants';
 
 /** Whole City Days since 1970-01-01 in game time (ADR 0005). */
 export type DayKey = number;
@@ -58,11 +58,44 @@ export function cityDayIndex(day: DayKey): number {
   return day - DIRECTIVES.epochDay;
 }
 
-/** §2.2: night art from 20:00 to 06:00 UTC. Cosmetic in slice 1. */
+const HOUR_MS = 3_600_000;
+const GAME_DAY_MS = GAME_DAY_HOURS * HOUR_MS;
+/** Into the six-hour block, the night starts here (04:00 of each block). */
+const DUSK_INTO_MS = (GAME_DAY_HOURS - NIGHT_HOURS) * HOUR_MS;
+
+/** The town's day index: whole six-hour blocks since the epoch, on the City Day's offset. */
+const gameDayIndex = (now: number): number => Math.floor((now + CITY_DAY.utcOffsetMs) / GAME_DAY_MS);
+
+/**
+ * §2.2 (review 5, ADR 0079): the start (a dawn) of the six-hour block holding `now`, aligned to the
+ * City Day so 00:00 UTC is always a dawn.
+ */
+export function gameDayStart(now: number): number {
+  return gameDayIndex(now) * GAME_DAY_MS - CITY_DAY.utcOffsetMs;
+}
+
+/**
+ * §2.2 (review 5, ADR 0079): night is the last two hours of every six. Dusk is inclusive (04:00:00 is
+ * night), dawn exclusive (06:00:00 is day).
+ */
 export function isNight(now: number): boolean {
-  const msIntoDay = (((now + CITY_DAY.utcOffsetMs) % CITY_DAY.ms) + CITY_DAY.ms) % CITY_DAY.ms;
-  const hour = Math.floor(msIntoDay / 3_600_000);
-  return hour >= DAY_NIGHT.nightFromHour || hour < DAY_NIGHT.dayFromHour;
+  return now - gameDayStart(now) >= DUSK_INTO_MS;
+}
+
+/** The first dusk strictly after `now`. */
+export function nextDusk(now: number): number {
+  const dusk = gameDayStart(now) + DUSK_INTO_MS;
+  return dusk > now ? dusk : dusk + GAME_DAY_MS;
+}
+
+/** The first dawn strictly after `now` (the end of the six-hour block holding it). */
+export function nextDawn(now: number): number {
+  return gameDayStart(now) + GAME_DAY_MS;
+}
+
+/** The night's index (its six-hour block) while it is night; null by day. */
+export function nightKey(now: number): number | null {
+  return isNight(now) ? gameDayIndex(now) : null;
 }
 
 /** Non-negative modulo, for rotations indexed by a day number that may precede the epoch. */

@@ -28,10 +28,11 @@ import { loadCharacter } from '../services/dayService';
 import { moraleOf, ordinanceIdOn, restedCapToday } from '../services/modifiers';
 import { residenceCityId, residenceOf } from '../services/residence';
 import { groundswellOn } from '../services/modifiers';
+import { nightAt, nightHooks } from '../services/night';
 import { energyState } from '../services/views';
 import type { SessionUser } from '../trpc/context';
 import { applyCharacterSeed } from './characterSeed';
-import { HOUR_MS, formatUtc, nextDayAt, nextPhaseAt, phaseLabel, phaseOf } from './clock';
+import { HOUR_MS, formatUtc, nextDayAt, nextPhaseAt, phaseLabel, phaseOf, toDuskAt } from './clock';
 import {
   DevRefusal,
   decideNow,
@@ -41,6 +42,7 @@ import {
   sendHeld,
   setNextRunIn,
   setStreet,
+  tapRunInChance,
 } from './risk';
 import type { DevAction, DevActionResult, DevHomeCity, DevStatus } from './types';
 
@@ -91,6 +93,8 @@ const DEV_ACTIONS: readonly DevAction[] = [
   'rank3',
   'goto',
   'unbar',
+  // Review 5 (ADR 0079).
+  'dusk',
 ];
 /** Slice 5 (tech design §8.6): the panel's *Level 6* and *Rank 3*. */
 const DEV_LEVEL = 6;
@@ -218,6 +222,18 @@ async function statusFor(
       utc: formatUtc(now),
       offsetMs: clock.offsetMs(),
       cityDay: dayKey(now),
+      night: (() => {
+        const n = nightAt(now);
+        return {
+          night: n.night,
+          nextDusk: n.nextDusk,
+          nextDuskUtc: formatUtc(n.nextDusk),
+          nextDawn: n.nextDawn,
+          nextDawnUtc: formatUtc(n.nextDawn),
+          mode: nightHooks.mode,
+          tapRunIn: c ? tapRunInChance(content, c, city, now) : null,
+        };
+      })(),
       character:
         c && energy
           ? { name: c.name, rank: c.rank, pc: c.pc, energy: energy.value, energyMax: energy.max }
@@ -278,6 +294,10 @@ async function runAction(
       break;
     case 'day':
       clock.advance(nextDayAt(clock.now()) - clock.now());
+      moved = true;
+      break;
+    case 'dusk':
+      clock.advance(toDuskAt(clock.now()) - clock.now());
       moved = true;
       break;
     case 'phase': {

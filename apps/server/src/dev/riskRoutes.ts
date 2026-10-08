@@ -5,10 +5,12 @@ import { fromNodeHeaders } from 'better-auth/node';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { z } from 'zod';
 import type { Auth } from '../auth';
+import { nightAt, nightHooks } from '../services/night';
 import { streetHooks } from '../services/streetHooks';
 import {
   DevRefusal,
   HeldBody,
+  NightBody,
   RunInBody,
   StreetBody,
   decideNow,
@@ -19,7 +21,8 @@ import {
 } from './risk';
 
 /**
- * Slice 5 (tech design §8.5): the e2e risk hooks `POST /api/test/street`, `/held` and `/run-in`.
+ * Slice 5 (tech design §8.5): the e2e risk hooks `POST /api/test/street`, `/held` and `/run-in`;
+ * review 5 (ADR 0079): `POST /api/test/night`.
  * Registered only inside the E2E_TEST_HOOKS guard in app.ts (memory mode), which also turns the
  * street hooks on; anywhere else these routes do not exist and `streetHooks.take` returns null.
  */
@@ -54,6 +57,14 @@ export function registerRiskHooks(
         throw err;
       }
     };
+
+  // Review 5 (ADR 0079): the night seam's test mode for the whole server (no sign-in: like the clock).
+  app.post('/api/test/night', async (request, reply) => {
+    const parsed = NightBody.safeParse(request.body ?? {});
+    if (!parsed.success) return reply.code(400).send({ error: zodLine(parsed.error) });
+    nightHooks.mode = parsed.data.mode;
+    return { ok: true, mode: nightHooks.mode, night: nightAt(now()) };
+  });
 
   // What the caller's next act (a mission or a tap on rival ground) uses; consumed once.
   app.post(

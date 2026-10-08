@@ -35,13 +35,13 @@ export async function townHallView(
   const city = content.city(cityId);
   if (!city) throw gameError('NOT_FOUND', 'UNKNOWN_CITY', { cityId });
   if (!city.council) throw gameError('PRECONDITION_FAILED', 'NO_COUNCIL', { cityId });
-  const hall = hallView(content, cityId);
+  const hall = hallView(content, cityId, now);
   if (!hall) throw gameError('PRECONDITION_FAILED', 'NO_COUNCIL', { cityId });
   const today = dayKey(now);
   // QA n3: settle (and bootstrap) the city's day first, as `city.get` does, so the hall answers for a
   // city nobody has touched yet. One read by `_id` once it is settled.
   const doc = await ensureCityDay(content, cityId, now);
-  const council = await councilViewFor(content, c, cityId, doc, today);
+  const council = await councilViewFor(content, c, cityId, doc, now);
   const capital = content.isDistricted(cityId);
   const cal = councilDay(today, city.council.offset);
   const plain = (id: string) => content.ordinance(id)?.plainLine ?? '';
@@ -96,6 +96,7 @@ export async function townHallView(
     cityId,
     cityName: city.name,
     hall,
+    night: hall.night,
     seatCount: capital ? CAPITAL_COUNCIL.seats : COUNCIL.seats,
     passVotes: capital ? CAPITAL_COUNCIL.passVotes : COUNCIL.passVotes,
     termEndsAt: council.termEndsAt,

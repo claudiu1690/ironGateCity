@@ -33,6 +33,9 @@ export function placeTagText(t: PlaceTagView): string {
       return copy.risk.pressureCapped;
     case 'known':
       return copy.knownHere;
+    // Review 5 (ADR 0080): on rival ground at night.
+    case 'night':
+      return copy.night.patrolsTag;
   }
 }
 

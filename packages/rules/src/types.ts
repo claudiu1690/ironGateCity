@@ -914,6 +914,20 @@ export interface LockedPinView {
   lock: QuarterLock;
 }
 
+/**
+ * Review 5 (ADR 0079): the town's night at the read, from the server's one seam (`nightAt`). The
+ * client never computes night itself: it refetches the view at `changesAt` (null while a test pins it).
+ */
+export interface NightView {
+  night: boolean;
+  /** The first dusk strictly after the read, epoch ms. */
+  nextDusk: number;
+  /** The first dawn strictly after the read, epoch ms. */
+  nextDawn: number;
+  /** `nextDawn` at night, `nextDusk` by day; null while the night is pinned (tests only). */
+  changesAt: number | null;
+}
+
 export interface CityView {
   id: string;
   name: string;
@@ -934,7 +948,9 @@ export interface CityView {
   lockedPins?: LockedPinView[];
   /** Map atmosphere: clouds by day and fog by night drift over the map (content `City.clouds`). */
   clouds?: boolean;
+  /** First paint; `night` is the block the client reads (review 5, ADR 0079). */
   isNight: boolean;
+  night: NightView;
   standing: NamedStandingView;
   locations: LocationView[];
   /** Slice 3: the home share as morale, for a home city (the plate's state word). */
@@ -1343,7 +1359,14 @@ export type GameErrorReason =
   /** Lodgings in another city than the one the character stands in. */
   | 'NOT_HERE'
   /** A Town Hall asked for in a city without a council. */
-  | 'NO_COUNCIL';
+  | 'NO_COUNCIL'
+  // Review 5 (tech design §3.5).
+  /** A patrol card waits to be answered in `cityId` (phase 6): Energy acts and boarding wait. */
+  | 'PATROL_PENDING'
+  /** `patrol.answer` with no card pending (answered by another key, or none). */
+  | 'NO_PATROL'
+  /** Treatment asked for at full Health. */
+  | 'FULL_HEALTH';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -1592,8 +1615,8 @@ export interface CandidateView {
 
 /**
  * Review 3 (GDD §15.3, answers §6.1): the building the council sits in, a point on the city picture
- * (fractions, like a pin), and the city's map stills, for the election screens' header crop. The
- * client picks day or night by the map's rule (`isNight` on the server's clock).
+ * (fractions, like a pin), and the city's map stills, for the election screens' header crop. Review
+ * 5: the client picks day or night by `night` (the server's seam, ADR 0079).
  */
 export interface HallView {
   name: string;
@@ -1602,6 +1625,8 @@ export interface HallView {
   x: number;
   y: number;
   asset: { day: AssetView; night: AssetView };
+  /** Review 5 (ADR 0079): the header's art follows the server's night, not the browser's clock. */
+  night: NightView;
 }
 
 export interface ElectionView {
@@ -1779,6 +1804,8 @@ export interface TownHallView {
   cityId: string;
   cityName: string;
   hall: HallView;
+  /** Review 5 (ADR 0079): the same block as `hall.night`. */
+  night: NightView;
   seatCount: 7 | 10;
   passVotes: 4 | 6;
   termEndsAt: number;
@@ -1984,6 +2011,8 @@ export interface NationView {
   frame: Frame;
   clouds: boolean;
   isNight: boolean;
+  /** Review 5 (ADR 0079). */
+  night: NightView;
   here: { cityId: string } | { journey: { from: string; to: string } };
   /** Level 10 or more. */
   trainOpen: boolean;
@@ -2038,6 +2067,8 @@ export interface JourneyView {
   };
   /** Review 4: the nation pictures (tiles), day and night. */
   map: { day: AssetView; night: AssetView };
+  /** Review 5 (ADR 0079): the night at the read; the map's art follows it. */
+  night: NightView;
   /**
    * Review 4 (ADR 0075 §4): the card's moment, epoch ms, whenever the journey drew a card (null: no
    * card). `card` itself is sent only from this moment (or once the journey has arrived).
@@ -2142,7 +2173,9 @@ export type PlaceTagView =
   | { kind: 'record'; ironPct: number; level: RecordLevel }
   | { kind: 'pressureCapped' }
   // Review 4 #18 (answers §18): Familiar or better here, *Known here · better odds*.
-  | { kind: 'known' };
+  | { kind: 'known' }
+  // Review 5 (ADR 0080): on rival ground at night, *Night · patrols out*.
+  | { kind: 'night' };
 
 /** Screens §6.1: the residence card's state, chosen on the server per district. */
 export interface ResidenceCardView {

@@ -612,14 +612,14 @@ describe('§13.1 ×3 and §15.4 Party orders', () => {
 });
 
 describe('§2.2 day and night', () => {
-  it('night is 20:00–06:00 UTC; the City Day turns at 00:00 UTC', () => {
+  it('night is the last two hours of every six (review 5, ADR 0079); the City Day turns at 00:00 UTC', () => {
     const at = (h: number, m = 0) => Date.UTC(2026, 8, 29, h, m);
-    expect([at(5, 59), at(6), at(19, 59), at(20), at(0), at(23, 59)].map(isNight)).toEqual([
+    expect([at(5, 59), at(6), at(21, 59), at(22), at(0), at(23, 59)].map(isNight)).toEqual([
       true,
       false,
       false,
       true,
-      true,
+      false,
       true,
     ]);
     expect(dayKey(Date.UTC(2026, 8, 29, 23, 59, 59, 999)) + 1).toBe(dayKey(Date.UTC(2026, 8, 30)));

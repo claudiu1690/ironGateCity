@@ -31,6 +31,9 @@ const [CLAMP_MIN, CLAMP_MAX] = RUN_IN.clamp;
  * ×2 on rival ground; a tier-1 tap on rival ground: 15 flat (none at home); then + the Heat state's
  * bonus + 5 for a Repeat offender or worse + 10 Watched − 10 Warned, kept 0–90. The state is the one
  * after the act's own Heat.
+ *
+ * Review 5 (§14.12, ADR 0080): at `night` on rival ground the tier-1 base is 25, and a mission's
+ * gains +10 after its ×2. At home or in a battleground `night` changes nothing.
  */
 export function runInChance(i: {
   base: number;
@@ -39,10 +42,13 @@ export function runInChance(i: {
   heatState: HeatState;
   record: RecordLevel;
   flags: DayFlags;
+  night?: boolean;
 }): number {
+  const night = i.rivalGround && i.night === true;
   let base: number;
-  if (i.tier === 2) base = i.base * (i.rivalGround ? RUN_IN.rivalFactor : 1);
-  else if (i.rivalGround) base = RUN_IN.rivalTier1;
+  if (i.tier === 2)
+    base = i.base * (i.rivalGround ? RUN_IN.rivalFactor : 1) + (night ? RUN_IN.rivalNightAdd : 0);
+  else if (i.rivalGround) base = night ? RUN_IN.rivalTier1Night : RUN_IN.rivalTier1;
   else return 0;
   const raw =
     base +
@@ -57,6 +63,9 @@ export function runInChance(i: {
  * Design §10.2: who it is. The actor's own side is dropped; from *Noticed* the police are picked
  * half the time and the rest of the pool (police excluded) the other half, uniformly; at *Cool* the
  * pool as written, uniformly. An empty pool is the police.
+ *
+ * Review 5 (§14.12, ADR 0080): at `night` on `rivalGround` the police take half whatever the Heat
+ * state, as from *Noticed*.
  */
 export function pickOpponent(i: {
   pool: readonly string[];
@@ -65,9 +74,11 @@ export function pickOpponent(i: {
   sideOf: (id: string) => FactionId | 'police';
   policeId: string;
   rng: Rng;
+  night?: boolean;
+  rivalGround?: boolean;
 }): string {
   const allowed = i.pool.filter((id) => i.sideOf(id) !== i.actor);
-  if (i.heatState !== 'cool') {
+  if (i.heatState !== 'cool' || (i.night === true && i.rivalGround === true)) {
     const rest = allowed.filter((id) => id !== i.policeId);
     if (rest.length === 0 || i.rng.next() < RUN_IN.policeShare) return i.policeId;
     return rest[i.rng.int(0, rest.length - 1)]!;

@@ -239,7 +239,7 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
         vars: { name: c.name, pollsWeekday: weekdayName(cal.election.pollsFrom) },
         until: dayStart(cal.election.pollsFrom),
         knockOns: { pc: { before: c.pc, after: updated.pc } },
-        view: { kind: 'election', election: await electionView(content, updated, today, session) },
+        view: { kind: 'election', election: await electionView(content, updated, x.now, session) },
       },
     );
   });
@@ -266,7 +266,7 @@ export function withdraw(deps: ActDeps<object>): Promise<PoliticalResult> {
       act: 'withdraw',
       idempotencyKey: deps.input.idempotencyKey,
       vars: { weekday: weekdayName(nextNominationsAfter(today, spec.offset)) },
-      view: { kind: 'election', election: await electionView(content, c, today, session) },
+      view: { kind: 'election', election: await electionView(content, c, x.now, session) },
     });
   });
 }
@@ -351,7 +351,7 @@ export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<Politic
           pc: { before: c.pc, after: updated.pc },
           endorsements: { name: cand.name, n, needed: COUNCIL.endorsementsNeeded },
         },
-        view: { kind: 'election', election: await electionView(content, updated, today, session) },
+        view: { kind: 'election', election: await electionView(content, updated, x.now, session) },
       },
     );
   });
@@ -416,7 +416,7 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
         idempotencyKey: deps.input.idempotencyKey,
         vars: { name: line.name, countDay: weekdayName(e.countDay) },
         at: dayStart(e.countDay),
-        view: { kind: 'election', election: await electionView(content, c, today, session) },
+        view: { kind: 'election', election: await electionView(content, c, x.now, session) },
       });
     }
     // ADR 0022: +0.5 morale per ballot, in the ballot's transaction; a ledger row, not a contribution.
@@ -464,7 +464,7 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
             stateAfter: moraleState(op.shares[home]),
           },
         },
-        view: { kind: 'election', election: await electionView(content, c, today, session) },
+        view: { kind: 'election', election: await electionView(content, c, x.now, session) },
       },
     );
   });
@@ -547,7 +547,7 @@ export function propose(deps: ActDeps<{ ordinanceId: string }>): Promise<Politic
         vars: { ordinance: o.name, ordinanceLine: o.line },
         at: dayStart(cal.council.divideDay),
         knockOns: { pc: { before: c.pc, after: updated.pc } },
-        view: { kind: 'council', council: await councilView(content, updated, x.city, today, session) },
+        view: { kind: 'council', council: await councilView(content, updated, x.city, x.now, session) },
       },
     );
   });
@@ -556,7 +556,7 @@ export function propose(deps: ActDeps<{ ordinanceId: string }>): Promise<Politic
 export function councilVote(deps: ActDeps<{ choice: string }>): Promise<PoliticalResult> {
   const { content } = deps;
   return runAct(deps, 'council.councilVote', async (x) => {
-    const { c, spec, cal, today, session } = x;
+    const { c, spec, cal, session } = x;
     const term = await councillorTerm(x);
     const key = councilKey(spec.city.id, cal.cycle);
     const p = await OrderPaper.findById(key).session(session).lean<OrderPaperDoc>();
@@ -589,7 +589,7 @@ export function councilVote(deps: ActDeps<{ choice: string }>): Promise<Politica
         resultWeekday: weekdayName(cal.council.divideDay),
       },
       at: dayStart(cal.council.divideDay),
-      view: { kind: 'council', council: await councilView(content, c, x.city, today, session) },
+      view: { kind: 'council', council: await councilView(content, c, x.city, x.now, session) },
     });
   });
 }

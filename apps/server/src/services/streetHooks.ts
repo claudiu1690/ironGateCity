@@ -13,6 +13,11 @@ export interface StreetForce {
   /** 1..100: the run-in choice's first roll. */
   choiceRoll?: number;
   caught?: 'always' | 'never';
+  /**
+   * Review 5 (tech design §4.3): each row's check roll (1..100), for any act while hooks are on, home
+   * tier 1 included (`checkRoll` covers only missions and rival taps). Consumed once like the rest.
+   */
+  rolls?: number[];
 }
 
 const pending = new Map<string, StreetForce>();
@@ -41,6 +46,27 @@ export const streetHooks = {
       if (byTap.size > TAPS_KEPT) byTap.delete(byTap.keys().next().value!);
     }
     return f;
+  },
+  /**
+   * Review 5: an act that reads only the rows' rolls (a tier-1 tap at home) takes `rolls` and leaves
+   * the rest of the force for the next act on rival ground or the next mission.
+   */
+  takeRolls(characterId: string, idempotencyKey?: string): StreetForce | null {
+    if (!streetHooks.enabled) return null;
+    const tap = idempotencyKey ? `${characterId}|${idempotencyKey}` : null;
+    if (tap && byTap.has(tap)) return byTap.get(tap) ?? null;
+    const f = pending.get(characterId);
+    const taken = f?.rolls ? { rolls: f.rolls } : null;
+    if (f?.rolls) {
+      const { rolls: _r, ...rest } = f;
+      if (Object.keys(rest).length > 0) pending.set(characterId, rest);
+      else pending.delete(characterId);
+    }
+    if (tap) {
+      byTap.set(tap, taken);
+      if (byTap.size > TAPS_KEPT) byTap.delete(byTap.keys().next().value!);
+    }
+    return taken;
   },
   peek(characterId: string): StreetForce | null {
     return streetHooks.enabled ? (pending.get(characterId) ?? null) : null;

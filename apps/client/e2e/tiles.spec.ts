@@ -87,6 +87,11 @@ const artCoversMap = (page: Page) =>
   });
 
 test.describe('the map from tiles', () => {
+  // Review 5 (ADR 0079): whatever a test did to the night, the next spec starts at the suite's day.
+  test.afterEach(async ({ request }) => {
+    await request.post('/api/test/night', { data: { mode: 'day' } });
+  });
+
   test('tiles draw the map; a pin zooms in, fetching a closer level, with the same pin buttons', async ({
     page,
   }) => {
@@ -194,16 +199,8 @@ test.describe('the map from tiles', () => {
 
   test('at night the night tiles show; flipped back to day, one tile layer is left', async ({ page }) => {
     test.setTimeout(90_000);
-    // The shared test clock to 21:00 UTC (it only moves forward; this spec runs last of the phone's).
-    const { now } = (await (
-      await page.request.post('/api/test/clock', { data: { advanceMs: 0 } })
-    ).json()) as {
-      now: number;
-    };
-    const DAY = 86_400_000;
-    const at21 = Math.floor(now / DAY) * DAY + 21 * 3_600_000;
-    const to = at21 > now ? at21 : at21 + DAY;
-    expect((await page.request.post('/api/test/clock', { data: { advanceMs: to - now } })).ok()).toBe(true);
+    // Review 5 (ADR 0079): the night through the seam's test mode, not a clock jump; restored after.
+    expect((await page.request.post('/api/test/night', { data: { mode: 'night' } })).ok()).toBe(true);
 
     await serveTiles(page);
     await signUp(page);
@@ -215,10 +212,8 @@ test.describe('the map from tiles', () => {
     const nightSrc = await night.locator('img[data-tile]').first().getAttribute('src');
     expect(nightSrc).toContain('/e2e-tiles/map.coalport.night/');
 
-    // To 07:00 the next morning; the city is fetched again when the page comes back into view.
-    expect((await page.request.post('/api/test/clock', { data: { advanceMs: 10 * 3_600_000 } })).ok()).toBe(
-      true,
-    );
+    // Back to day; the city is fetched again when the page comes back into view.
+    expect((await page.request.post('/api/test/night', { data: { mode: 'day' } })).ok()).toBe(true);
     await page.waitForTimeout(10_500); // the city query goes stale after 10 s
     await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')));
     await expect(night).toHaveCSS('opacity', '0');

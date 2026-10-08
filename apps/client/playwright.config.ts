@@ -183,6 +183,9 @@ export default defineConfig({
         // POST /api/test/clock, /city-day and /character (tech design §7.8, slice-3 §8.6);
         // refused outside DB_MODE=memory.
         E2E_TEST_HOOKS: '1',
+        // Review 5 (ADR 0079): the town held at day, so a third of all times being night never makes
+        // a spec flaky; night specs switch it with POST /api/test/night and restore it.
+        E2E_NIGHT: 'day',
       },
     },
     {

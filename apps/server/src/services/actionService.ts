@@ -45,6 +45,7 @@ import { policeIdOf } from './missionService';
 import { assertFree, flagsToday, heatRateOn, heatTimerOf, isRivalGround, notFree, recordLevelOf } from './risk';
 import { pendingView, startRunInInTx, storedEncounterResult } from './streetService';
 import type { HeldAction } from './streetService';
+import { nightAt } from './night';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { closeArrivalInTx } from './travelService';
@@ -182,9 +183,12 @@ export async function performAction(deps: {
   const refusal = slice5Refusal(content, c0, located, input.times, deps.now());
   if (refusal) throw refusal.toTRPC();
   // Slice 5 (tech design §8.5): the test hooks' forced rolls for the next act on rival ground.
-  const force = isCheckedAction(action) && isRivalGround(content, c0, located.city.id)
-    ? streetHooks.take(c0._id.toHexString(), input.idempotencyKey)
-    : null;
+  // Review 5 (tech design §4.3): at home a checked tap takes only the rows' rolls.
+  const force = !isCheckedAction(action)
+    ? null
+    : isRivalGround(content, c0, located.city.id)
+      ? streetHooks.take(c0._id.toHexString(), input.idempotencyKey)
+      : streetHooks.takeRolls(c0._id.toHexString(), input.idempotencyKey);
 
   return runKeyedAction<ActionResult | RunInPending>({
     key: { characterId: c0._id, idempotencyKey: input.idempotencyKey },
@@ -300,6 +304,7 @@ async function resolveAndWrite(i: {
       now,
       seed,
       ...(i.force?.checkRoll !== undefined ? { forceRoll: i.force.checkRoll } : {}),
+      ...(i.force?.rolls ? { forceRolls: i.force.rolls } : {}),
     });
     if (!r.ok) {
       if (r.reason === 'ONCE_ON_RIVAL_GROUND') throw new GameError('ONCE_ON_RIVAL_GROUND', { cityId: city.id });
@@ -355,6 +360,8 @@ async function rivalRunIn(i: {
   const today = ctx.today;
   const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity));
   const state = heatState(heat.value);
+  // Review 5 (ADR 0080): the night at the act (the tier-1 base 25, the police half the pool).
+  const night = nightAt(now).night;
   const chance = runInChance({
     base: 0,
     tier: 1,
@@ -362,6 +369,7 @@ async function rivalRunIn(i: {
     heatState: state,
     record: recordLevelOf(c, today),
     flags: flagsToday(c, ctx.city.id, today),
+    night,
   });
   const street = createRng(`${i.seed}:runIn`);
   const roll = street.roll100();
@@ -376,6 +384,8 @@ async function rivalRunIn(i: {
       sideOf: (id) => content.opponent(id)?.side ?? 'police',
       policeId: policeIdOf(content),
       rng: street,
+      night,
+      rivalGround: true,
     });
   const twin = computeTier1({
     content,
@@ -388,6 +398,7 @@ async function rivalRunIn(i: {
     seed: i.seed,
     forceOutcome: 'partial',
     ...(i.force?.checkRoll !== undefined ? { forceRoll: i.force.checkRoll } : {}),
+    ...(i.force?.rolls ? { forceRolls: i.force.rolls } : {}),
   });
   if (!twin.ok) throw new Error('the dropped twin cannot fail where the tap did not');
   const held: HeldAction = {
@@ -430,6 +441,7 @@ export function computeTier1(i: {
   /** Slice 5: the dropped twin of a rival tap (ADR 0032 §1); a test hook's first roll. */
   forceOutcome?: 'partial';
   forceRoll?: number;
+  forceRolls?: readonly number[];
 }): ResolveResult {
   const { content, c, located, action, ctx } = i;
   const { city, location } = located;
@@ -465,6 +477,7 @@ export function computeTier1(i: {
       prefer: preferredStat(content, c.factionId),
       ...(i.forceOutcome ? { forceOutcome: i.forceOutcome } : {}),
       ...(i.forceRoll !== undefined ? { forceRoll: i.forceRoll } : {}),
+      ...(i.forceRolls ? { forceRolls: i.forceRolls } : {}),
     },
     createRng(i.seed),
   );

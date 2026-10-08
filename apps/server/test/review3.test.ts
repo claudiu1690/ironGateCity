@@ -72,7 +72,7 @@ describe("the election screens stand on the council's hall (GDD §15.3)", () => 
       ['duskwall', 0.555, 0.55],
       ['ashford', 0.805, 0.275],
     ] as const) {
-      const hall = hallView(content, cityId)!;
+      const hall = hallView(content, cityId, Date.UTC(2026, 9, 8, 9))!;
       const city = content.city(cityId)!;
       expect(hall, cityId).toMatchObject({ name: 'Town Hall', ref: 'the Town Hall', x, y });
       expect(hall.asset.day.id).toBe(city.map.day);
@@ -80,14 +80,14 @@ describe("the election screens stand on the council's hall (GDD §15.3)", () => 
       expect(hall.asset.day.width).toBeGreaterThan(0);
     }
     // Slice 4 (design §19 Q7): the capital's council sits in the City Hall.
-    expect(hallView(content, 'irongate')).toMatchObject({
+    expect(hallView(content, 'irongate', Date.UTC(2026, 9, 8, 9))).toMatchObject({
       name: 'City Hall',
       ref: 'the City Hall',
       x: 0.57,
       y: 0.345,
     });
     // A city without a council (Clearwater has no content yet) has no hall.
-    expect(hallView(content, 'clearwater')).toBeNull();
+    expect(hallView(content, 'clearwater', Date.UTC(2026, 9, 8, 9))).toBeNull();
   });
 
   it("who's standing carries the hall", async () => {

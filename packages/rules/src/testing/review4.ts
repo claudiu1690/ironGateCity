@@ -1,5 +1,5 @@
 import type { TownHallView, WhatNowView } from '../types';
-import { councilViewFixture, hallFixture } from './fixtures';
+import { councilViewFixture, hallFixture, nightFixture } from './fixtures';
 
 /**
  * Review 4 (answers §10–§11, ADR 0077): the Town Hall's sheet for a visitor (no desk) and for a
@@ -22,6 +22,7 @@ export const townHallFixture: TownHallView = {
   cityId: 'coalport',
   cityName: 'Coalport',
   hall: hallFixture,
+  night: nightFixture,
   seatCount: 7,
   passVotes: 4,
   termEndsAt,

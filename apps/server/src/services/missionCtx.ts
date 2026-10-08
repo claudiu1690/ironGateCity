@@ -48,6 +48,7 @@ import {
   toOrdersState,
   wornStats,
 } from './views';
+import { nightAt } from './night';
 
 /**
  * Slice 5 (tech design §8.2–§8.3, ADR 0031): everything a mission needs about the player, the place
@@ -102,6 +103,8 @@ export interface MissionCtx {
   recordIronPct: number;
   /** Today's *Watched* / *Warned* in this city. */
   flags: DayFlags;
+  /** Review 5 (ADR 0080): night at `now` (the read's or the act's), from the one seam. */
+  night: boolean;
   /** The descriptor a start would carry (kind `mission`, the seen-as type, its Issue tags). */
   descriptor: ActionDescriptor;
   /** The mission as `resolveMission` takes it. */
@@ -195,6 +198,7 @@ export function missionCtx(
     record,
     recordIronPct: RECORD.ironPct[record],
     flags: flagsToday(c, city.id, today),
+    night: nightAt(now).night,
     descriptor: tagged.length > 0 ? { ...untagged, issueIds: tagged.map((t) => t.issueId) } : untagged,
     spec: {
       id: mission.id,
@@ -237,6 +241,7 @@ export function wayRisk(ctx: MissionCtx, way: Way): MissionRiskView {
     heat: ctx.heatNow,
     record: ctx.record,
     flags: ctx.flags,
+    night: ctx.night,
   });
 }
 
@@ -285,6 +290,7 @@ export function missionInput(
     rateOn: ctx.rateOn,
     record: ctx.record,
     flags: ctx.flags,
+    night: ctx.night,
     opponents: {
       sideOf: (id) => content.opponent(id)?.side ?? 'police',
       policeId: police?.id ?? '',

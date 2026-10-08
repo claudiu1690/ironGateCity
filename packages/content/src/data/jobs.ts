@@ -30,7 +30,7 @@ export const jobs: Job[] = [
     name: 'Driver',
     locationId: 'coalport.quays',
     unlock: { level: 3, stats: { agi: 10 } },
-    dailyPay: 200,
+    dailyPay: 240, // Review 5 (answers §5, GDD §9.2): was 200.
     blurb:
       'The dock lorry between the quay and the goods yard, a full load each way. Needs a quick hand on the cobbles.',
   },
@@ -58,7 +58,7 @@ export const jobs: Job[] = [
     name: 'Driver',
     locationId: 'duskwall.goods-yard',
     unlock: { level: 3, stats: { agi: 10 } },
-    dailyPay: 200,
+    dailyPay: 240, // Review 5 (answers §5, GDD §9.2): was 200.
     blurb:
       'The yard lorry between the sidings and the customs depot, a full load each way. Needs a quick hand on the frost.',
   },
@@ -86,7 +86,7 @@ export const jobs: Job[] = [
     name: 'Driver',
     locationId: 'ashford.bridge-street',
     unlock: { level: 3, stats: { agi: 10 } },
-    dailyPay: 200,
+    dailyPay: 240, // Review 5 (answers §5, GDD §9.2): was 200.
     blurb:
       'The market van between Bridge Street and the station goods shed, a full load each way. Needs a quick hand on the wet setts.',
   },
@@ -121,7 +121,7 @@ export const irongateJobs: Job[] = [
     name: 'Driver',
     locationId: 'irongate.riverside-quays',
     unlock: { level: 3, stats: { agi: 10 } },
-    dailyPay: 200,
+    dailyPay: 240, // Review 5 (answers §5, GDD §9.2): was 200.
     blurb:
       'The quay lorry between the cranes and the works, a full load each way. Needs a quick hand on the setts by the bridge.',
   },

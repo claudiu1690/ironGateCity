@@ -17,6 +17,7 @@ import type {
   StoryScreenView,
   NamedStandingView,
   OrdersView,
+  NightView,
   PaperView,
 } from '../types';
 import { rankLadder } from '../rank';
@@ -29,6 +30,14 @@ import { rankLadder } from '../rank';
 const T0 = Date.UTC(2026, 8, 29, 9, 0, 0);
 const DAY = Math.floor(T0 / 86_400_000);
 const DAY_END = (DAY + 1) * 86_400_000;
+
+/** Review 5 (ADR 0079): 09:00 UTC is day; dusk at 10:00, the dawn after it at 12:00. */
+export const nightFixture: NightView = {
+  night: false,
+  nextDusk: T0 + 3_600_000,
+  nextDawn: T0 + 3 * 3_600_000,
+  changesAt: T0 + 3_600_000,
+};
 
 export const assetFixture = (id: string, width: number, height: number, widths: number[]): AssetView => ({
   id,
@@ -422,6 +431,7 @@ export const cityViewFixture: CityView = {
   map: { day: mapDay, night: mapFixture('map.coalport.night', '5e6f7a8b') },
   quarters: [{ id: 'coalport.mill', name: 'The Mill', frame: { x0: 0.34, y0: 0.02, x1: 0.81, y1: 0.62 } }],
   isNight: false,
+  night: nightFixture,
   standing: standingFixture,
   locations: [
     {
@@ -813,6 +823,7 @@ export const hallFixture: HallView = {
     day: mapFixture('map.coalport.day'),
     night: mapFixture('map.coalport.night', '5e6f7a8b'),
   },
+  night: nightFixture,
 };
 
 export const electionViewFixture: ElectionView = {

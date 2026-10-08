@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { isNight, journeyProgress, trainAt } from '@irongate/rules';
+import { journeyProgress, trainAt } from '@irongate/rules';
 import type { FactionId, JourneyCardResult, JourneyView, RouteLeg } from '@irongate/rules';
 import {
   CityMap,
@@ -23,6 +23,7 @@ import { noticeFor } from '../features/game/errors';
 import { useCharacter } from '../features/game/hooks';
 import { setResultModalOpen } from '../lib/modalGate';
 import { isNetworkError, trpc } from '../lib/trpc';
+import { useNightTurn } from '../lib/useNightTurn';
 import { noteServerNow, serverNow, useMinWidth, useNow } from '../lib/useNow';
 
 /** The journey with a card's outcome folded in (the result's own journey view carries none). */
@@ -146,9 +147,9 @@ export function JourneyPage() {
   const { character } = useCharacter();
   const j = useQuery({ ...trpc.travel.journey.queryOptions(), refetchOnWindowFocus: true });
   const wide = useMinWidth(1024);
-  // Day or night art: a slow tick is enough (the plate and the pin tick on their own).
-  const minute = useNow(60_000);
   const data = j.data;
+  // Review 5 (ADR 0079): the map's day or night is the view's, read again at dusk and dawn.
+  useNightTurn(data?.night, [trpc.travel.journey.queryKey()]);
   useEffect(() => {
     if (data) noteServerNow(data.serverNow);
   }, [data]);
@@ -361,7 +362,7 @@ export function JourneyPage() {
         map={data.map}
         tiles={tiles}
         frame={frame}
-        isNight={isNight(minute)}
+        isNight={data.night.night}
         locations={pins}
         selectedId={null}
         onSelect={() => undefined}

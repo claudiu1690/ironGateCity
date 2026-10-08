@@ -329,10 +329,13 @@ describe('Content policy (CLAUDE.md rules 2 and 6; content-policy review §7 che
     // design §18: *the front room* (a room); GDD §1.5: *close race* (the plain word for a
     // battleground). All four kept by the designer on 3 Oct 2026 (design §18); the Police
     // Headquarters' *desk sergeant* became *the duty officer*, so no rank is allowed. Slice 5 (design
-    // §23.7): *the front door* (the Union Hall briefing), a door in its everyday sense.
+    // §23.7): *the front door* (the Union Hall briefing), a door in its everyday sense. Review 5
+    // (answers §12.2, §13, §16.1; GDD §14.12, decided by the user 8 Oct 2026): the republic's police
+    // on rival ground at night, never a party's: *Night · patrols out*, *A patrol has stopped you*,
+    // *The patrol has moved on* (the Vanguard still has no patrol).
     const allowed = hits.filter(
       (h) =>
-        !/General Strike|front row|out front|front room|front door|Garrison Hill|(since|by) the war|the war gutted|close ?race/i.test(
+        !/General Strike|front row|out front|front room|front door|Garrison Hill|(since|by) the war|the war gutted|close ?race|patrols out|A patrol has stopped|The patrol has moved/i.test(
           h,
         ),
     );

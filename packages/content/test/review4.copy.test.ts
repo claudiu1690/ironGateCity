@@ -114,10 +114,10 @@ describe('the vocabulary of times in copy.ts (fix list 6, 13)', () => {
 });
 
 describe('the notes, word for word (answers §4.1, §12)', () => {
-  it('the clock', () => {
-    const [kicker, note] = copy.help.clock('{dayTurn}', '{nightFrom}', '{nightTo}');
+  it('the clock (review 5 rewrote it for the six-hour day: review5.copy.test.ts)', () => {
+    const [kicker, note] = copy.help.clock('{dayTurn}');
     expect(kicker).toBe('The clock');
-    expect(ANSWERS).toContain(`> ${note}`);
+    expect(note).toContain('The day turns at {dayTurn}');
   });
 
   it('Heat, by state, with "Cool at" on its own line while not Cool', () => {

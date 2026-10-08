@@ -54,8 +54,13 @@ export const LEVEL_XP_STEP = { fromLevel: 31, firstStep: 9_300, growth: 600 } as
 /** §2.2 — the City Day runs from 00:00 UTC; one constant so the boundary can move (ADR 0005). */
 export const CITY_DAY = { ms: 86_400_000, utcOffsetMs: 0 } as const;
 
-/** §2.2 — night is 20:00–06:00 UTC, the same for everyone. Cosmetic in slice 1. */
-export const DAY_NIGHT = { dayFromHour: 6, nightFromHour: 20 } as const;
+/**
+ * §2.2 (review 5, ADR 0079): the town's own day is six hours, aligned to the City Day so 00:00 UTC is
+ * a dawn; night is its last two (dusk at 04, 10, 16 and 22 UTC). The same for everyone. Every daily
+ * rule stays on the real City Day.
+ */
+export const GAME_DAY_HOURS = 6;
+export const NIGHT_HOURS = 2;
 
 /** §13.4 — Local Standing: Successes needed for each level (0–4) and +3 % per level on checks there. */
 /** Review 1 (§13.4): One of Us (level 4) pays 1 PC a day at the boundary, per city where held. */
@@ -393,6 +398,10 @@ export const RUN_IN = {
   repeatBonus: 5,
   /** Design §23.1 #2: a tier-1 tap on rival ground, 15 flat. */
   rivalTier1: 15,
+  /** §14.12 (review 5, ADR 0080): at night on rival ground the tier-1 base is 25. */
+  rivalTier1Night: 25,
+  /** §14.12 (review 5, ADR 0080): a mission's run-in at night on rival ground, after the ×2. */
+  rivalNightAdd: 10,
   rivalFactor: 2,
   policeShare: 0.5,
   tier2PowerFactor: 1.1,

@@ -35,13 +35,13 @@ describe('T1 the clock in the top bar (answers §4.1)', () => {
     expect(screen.getByTestId('hud-clock-time')).toHaveTextContent('15:22');
   });
 
-  it('its note: when the day turns and when the map is dark, in the same clock', () => {
+  it("its note: when the day turns, and (review 5, answers §11.3) the town's six-hour day", () => {
     render(<HudBar character={characterViewFixture} nextTickIn={null} now={at(14, 22)} />);
     fireEvent.click(screen.getByTestId('hud-clock'));
     const note = screen.getByTestId('help-note');
     expect(within(note).getByRole('heading', { level: 2 })).toHaveTextContent('The clock');
     expect(note).toHaveTextContent(
-      'The game runs on real time, shown in your own clock. The day turns at 00:00; the map is dark from 20:00 to 06:00. Every time you read in the game is in this clock.',
+      "The game runs on real time, shown in your own clock. The day turns at 00:00. The town's own day is six hours long: dusk comes round four times a day, and the map and the streets are dark for two hours each time. Every time you read in the game is in this clock.",
     );
   });
 

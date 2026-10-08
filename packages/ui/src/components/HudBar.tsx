@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { DAY_NIGHT, dayKey, dayStart, heatState, xpForLevel } from '@irongate/rules';
+import { dayKey, dayStart, heatState, xpForLevel } from '@irongate/rules';
 import type { CharacterView, StatPointTarget } from '@irongate/rules';
 import { useRef, useState } from 'react';
 import type { RefObject } from 'react';
@@ -342,17 +342,12 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
 
 /**
  * Review 4 (answers §4.1): the time in the player's own clock, Courier 12 px, dotted: its note says
- * when the day turns and when the map is dark, in the same clock (00:00, 20:00 and 06:00 UTC). A
- * 44 px target over a 12 px line, drawn above the gauges' group button.
+ * when the day turns (00:00 UTC) in the same clock, and (review 5, answers §11.3) that the town's own
+ * day is six hours. A 44 px target over a 12 px line, drawn above the gauges' group button.
  */
 function HudClock({ now, testId, className }: { now: number; testId: string; className?: string }) {
   const turn = dayStart(dayKey(now));
-  const hour = 3_600_000;
-  const note = copy.help.clock(
-    formatClock(turn),
-    formatClock(turn + DAY_NIGHT.nightFromHour * hour),
-    formatClock(turn + DAY_NIGHT.dayFromHour * hour),
-  ) as HelpNote;
+  const note = copy.help.clock(formatClock(turn)) as HelpNote;
   const time = formatClock(now);
   return (
     <HelpButton

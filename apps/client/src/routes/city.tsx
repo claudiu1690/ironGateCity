@@ -53,6 +53,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { DuskLine, duskNote } from '../components/DuskLine';
 import { MapSwitch } from '../components/MapSwitch';
 import { env } from '../env';
 import { usePerformAction } from '../features/action/usePerformAction';
@@ -67,6 +68,7 @@ import { useMissionStart } from '../features/street/useMissionStart';
 import { useBoard } from '../features/travel/useBoard';
 import { setResultModalOpen } from '../lib/modalGate';
 import { gameErrorOf, isNetworkError, trpc, trpcClient } from '../lib/trpc';
+import { useNightTurn } from '../lib/useNightTurn';
 import { useLocationLayout, useNow } from '../lib/useNow';
 
 /** The city column beside the map on a phone held sideways (review 2 #3). */
@@ -135,6 +137,8 @@ export function CityPage() {
   const queryClient = useQueryClient();
   const { character, now: tick } = useCharacter();
   const city = useQuery(trpc.city.get.queryOptions({ cityId }));
+  // Review 5 (ADR 0079): at dusk and dawn (+ up to 20 s) the view is read again: art, tickets, plate.
+  useNightTurn(city.data?.night, [trpc.city.get.queryKey({ cityId })]);
   const stat = usePlaceStat();
   const layout = useLocationLayout();
   // The Election card's countdown, on the server's clock (a wrong phone clock never miscounts).
@@ -625,6 +629,25 @@ export function CityPage() {
       </button>
     ) : null;
 
+  /**
+   * Review 5 (answers §11.3): the town's dusk or dawn shares the rule's line (the rule truncates first),
+   * so the plate grows by no line where a rule is in force and every pin stays clear.
+   */
+  const ruleAndDusk = (testId: string, button: boolean, className?: string) => (
+    <div
+      className={cx(
+        'flex min-w-0 font-mono text-[11px] text-text-2',
+        // Sideways the plate is the scrolling side column: two lines, the rule's a full 44 px target.
+        side ? 'flex-col items-start' : 'items-center gap-x-1.5',
+        className,
+      )}
+    >
+      {c.ordinance && ruleLine(testId, side ? 'max-w-full' : 'min-w-11 flex-1')}
+      {c.ordinance && !side && <span aria-hidden="true">·</span>}
+      <DuskLine night={c.night} button={button} className="shrink-0" />
+    </div>
+  );
+
   /** The home city's plate: over the map, or (sideways) the top of the city column. */
   const homePlate = (
     <>
@@ -647,7 +670,13 @@ export function CityPage() {
           {/* One tap target over the block (the heading stays a heading): the notes behind
               the share, the morale word and the ordinance line. */}
           <HelpButton
-            notes={rival ? [copy.risk.help.rivalGround(), ...plateNotes] : plateNotes}
+            notes={[
+              ...(rival ? [copy.risk.help.rivalGround()] : []),
+              ...plateNotes,
+              // Review 5: the dusk line's note, and after dark on rival ground the patrols'.
+              duskNote(now),
+              ...(rival && c.night.night ? [copy.help.patrols()] : []),
+            ]}
             label={`What the plate says about ${c.name}`}
             buttonRef={plateHelp}
             testId="plate-help"
@@ -726,11 +755,13 @@ export function CityPage() {
           {/* The ordinance in force, one line that never wraps. Only on a very short phone
               (360 × 640) it gives way to the map; the tickets carry its tags there. Review 4 (answers
               §11.3): it says the effect, and a tap opens the Town Hall (above the plate's notes). */}
-          {c.ordinance &&
-            ruleLine(
-              'city-ordinance',
-              cx(!side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden'),
-            )}
+          {/* Review 5 (answers §11.3): the town's dusk or dawn after the rule, on its line; folded with
+              it on a very short phone (the HUD clock's note says it too). */}
+          {ruleAndDusk(
+            'city-ordinance',
+            false,
+            cx(!side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden'),
+          )}
           {/* Slice 4 (screens §9.1): this election's scoreboard line in the home city. */}
           {c.scoreboard?.mine && (
             <ScoreboardLine
@@ -764,7 +795,11 @@ export function CityPage() {
             ),
           )}
         </span>
-        <span className="label-caps text-[9px] text-muted">{copy.capital.heldLegend}</span>
+        <div className="flex flex-wrap items-center justify-between gap-x-3">
+          <span className="label-caps text-[9px] text-muted">{copy.capital.heldLegend}</span>
+          {/* Review 5 (answers §11.3): the town's dusk or dawn. */}
+          <DuskLine night={c.night} />
+        </div>
       </div>
       <ReputationBlock city={c} />
     </div>
@@ -864,23 +899,22 @@ export function CityPage() {
           {copy.capital.whoHolds(district.name)}
         </span>
         <OpinionBars values={district.opinion} names={names} />
-        {(comebackLine(district, names) || c.ordinance || district.issues[0] || district.scoreboard.mine) && (
-          <div className="flex flex-col font-mono text-[11px] text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden">
-            {comebackLine(district, names) && <span>{comebackLine(district, names)}</span>}
-            {c.ordinance && ruleLine('district-rule')}
-            {district.issues[0] && (
-              <span className="truncate" data-testid="district-issue-line">
-                {issueLine(district.issues[0], names)}
-              </span>
-            )}
-            {district.scoreboard.mine && (
-              <ScoreboardLine
-                line={{ ...district.scoreboard.mine, placeName: district.name }}
-                factionName={character.factionName}
-              />
-            )}
-          </div>
-        )}
+        {/* Review 5 (answers §11.3): the town's dusk or dawn on the district's plate, on the rule's line. */}
+        <div className="flex flex-col font-mono text-[11px] text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden">
+          {comebackLine(district, names) && <span>{comebackLine(district, names)}</span>}
+          {ruleAndDusk('district-rule', true)}
+          {district.issues[0] && (
+            <span className="truncate" data-testid="district-issue-line">
+              {issueLine(district.issues[0], names)}
+            </span>
+          )}
+          {district.scoreboard.mine && (
+            <ScoreboardLine
+              line={{ ...district.scoreboard.mine, placeName: district.name }}
+              factionName={character.factionName}
+            />
+          )}
+        </div>
       </div>
     </>
   ) : null;
@@ -957,7 +991,7 @@ export function CityPage() {
         restFocus={homeRest?.ids}
         // Map atmosphere (clouds by day, fog by night), where the city's content switches it on.
         clouds={c.clouds}
-        isNight={c.isNight}
+        isNight={c.night.night}
         locations={hotspots}
         selectedId={overview ? null : (loc ?? null)}
         onSelect={(id) =>

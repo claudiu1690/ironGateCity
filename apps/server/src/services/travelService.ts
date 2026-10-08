@@ -23,7 +23,6 @@ import {
   drawJourneyCard,
   fare,
   fillTemplate,
-  isNight,
   journeyChoiceCheck,
   journeyLegs,
   legMinutes,
@@ -90,6 +89,7 @@ import {
   toCharacterView,
   wornStats,
 } from './views';
+import { nightAt } from './night';
 export { ensureArrived, settleArrival } from './journeyArrival';
 
 /**
@@ -218,6 +218,7 @@ export function trainsFrom(
 
 export async function nationView(content: GameContent, c: CharacterDoc, now: number): Promise<NationView> {
   const today = dayKey(now);
+  const night = nightAt(now);
   const capital = capitalOf(content);
   // Every open city's day, so their Issues and calendars are today's (one read each once settled).
   const docs = new Map<string, CityDoc | null>();
@@ -308,7 +309,8 @@ export async function nationView(content: GameContent, c: CharacterDoc, now: num
     tiles: true,
     frame: { ...content.nation.frame },
     clouds: content.nation.clouds ?? false,
-    isNight: isNight(now),
+    isNight: night.night,
+    night,
     here:
       c.journey?.status === 'onTheWay'
         ? { journey: { from: c.journey.from, to: c.journey.to } }
@@ -573,7 +575,7 @@ export async function journeyView(
   const art = city
     ? {
         rung: 'map-crop' as const,
-        asset: assetView(content, isNight(now) ? city.map.night : city.map.day),
+        asset: assetView(content, nightAt(now).night ? city.map.night : city.map.day),
         x: nc?.arrival.x ?? 0.5,
         y: nc?.arrival.y ?? 0.5,
       }
@@ -642,6 +644,7 @@ export async function journeyView(
       day: assetView(content, content.nation.map.day),
       night: assetView(content, content.nation.map.night),
     },
+    night: nightAt(now),
     cardAt,
     card: ev
       ? {

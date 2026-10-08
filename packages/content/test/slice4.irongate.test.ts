@@ -392,7 +392,8 @@ describe('the three Irongate jobs (§4.5)', () => {
           unlock[2]
             ? { level: Number(unlock[1]), stats: { [unlock[2].toLowerCase()]: Number(unlock[3]) } }
             : { level: Number(unlock[1]) },
-          Number(unq(r[4]!)),
+          // Review 5 (GDD §9.2): the bold figure (*240* (was 200 until review 5)).
+          Number(/\d+/.exec(unq(r[4]!))![0]),
           r[5],
         ];
       }),

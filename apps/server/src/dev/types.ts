@@ -38,7 +38,9 @@ export type DevAction =
   | 'level6'
   | 'rank3'
   | 'goto'
-  | 'unbar';
+  | 'unbar'
+  // Review 5 (ADR 0079): `dusk` moves the clock a minute past the next dusk.
+  | 'dusk';
 
 /** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
 export interface DevStreetForce {
@@ -47,6 +49,8 @@ export interface DevStreetForce {
   checkRoll?: number;
   choiceRoll?: number;
   caught?: 'always' | 'never';
+  /** Review 5: each row's check roll, for any act. */
+  rolls?: number[];
 }
 
 /** Slice 5 (tech design §8.6): the status's risk block, read from the stored character. */
@@ -119,6 +123,17 @@ export interface DevStatus {
   offsetMs: number;
   /** The City Day key (whole days since 1970-01-01, 00:00 UTC boundary). */
   cityDay: number;
+  /** Review 5 (ADR 0079): the town's night now, the next dusk and dawn, and the seam's test mode. */
+  night: {
+    night: boolean;
+    nextDusk: number;
+    nextDuskUtc: string;
+    nextDawn: number;
+    nextDawnUtc: string;
+    mode: 'clock' | 'day' | 'night';
+    /** Review 5 (ADR 0080): a tier-1 tap's run-in chance here and now on rival ground; null elsewhere. */
+    tapRunIn: number | null;
+  };
   /** The signed-in player's character, or null (signed out, or still arriving). */
   character: { name: string; rank: number; pc: number; energy: number; energyMax: number } | null;
   home: DevHomeCity | null;

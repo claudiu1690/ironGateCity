@@ -434,12 +434,17 @@ export const copy = {
       `What the party thinks of you, earned by party work and orders. Ranks give rights: tap for the ladder.${n !== null && nextTitle ? ` ${n} more to ${nextTitle}.` : ''}`,
     ],
     /**
-     * Review 4 (answers §4.1): the HUD clock's note. `dayTurn` is 00:00 UTC, `nightFrom` / `nightTo`
-     * 20:00 and 06:00 UTC, all in the player's clock (*01:00*, *21:00 to 07:00* at UTC+1).
+     * Review 4 (answers §4.1), review 5 (answers §11.3, ADR 0079): the HUD clock's note, and the plate's
+     * dusk line's. `dayTurn` is 00:00 UTC in the player's clock (*01:00* at UTC+1).
      */
-    clock: (dayTurn: string, nightFrom: string, nightTo: string) => [
+    clock: (dayTurn: string) => [
       'The clock',
-      `The game runs on real time, shown in your own clock. The day turns at ${dayTurn}; the map is dark from ${nightFrom} to ${nightTo}. Every time you read in the game is in this clock.`,
+      `The game runs on real time, shown in your own clock. The day turns at ${dayTurn}. The town's own day is six hours long: dusk comes round four times a day, and the map and the streets are dark for two hours each time. Every time you read in the game is in this clock.`,
+    ],
+    /** Review 5 (answers §16.1, GDD §14.12): the *Night · patrols out* tag's note. */
+    patrols: () => [
+      'Patrols',
+      'After dark on rival ground the streets are watched: every tap is likelier to bring a run-in, and now and then a patrol stops you just for being out. A stop is papers, a word or a side street, never a fight; your name taken means more Heat. Nothing you own is at risk, and nothing happens while you are away.',
     ],
     pc: () => [
       'Political Capital',
@@ -1095,6 +1100,10 @@ export const copy = {
     noLodgings: 'There is no bed to be had here.',
     notHere: 'A bed is taken where you stand: take the train there first.',
     noCouncil: 'This town has no council.',
+    /** Review 5 (tech design §3.5): the new refusals, worded. */
+    patrolPending: 'A patrol has stopped you · answer it on the map',
+    noPatrol: 'The patrol has moved on.',
+    fullHealth: "You're in full health: there's nothing to patch up.",
   },
   /**
    * The ground sash (slice-4 screens, 3 Oct 2026): whose ground a place is, on the big scene art.
@@ -1797,6 +1806,19 @@ export const copy = {
         'Twenty minutes on the ward after a run-in lost. Walk out well for 100 Iron, or discharge yourself at half strength. Energy, the wage and the vote carry on without you.',
       ],
     },
+  },
+  /**
+   * Review 5 (answers §11.3, §12, ADR 0079–0080): the town's six-hour day. `at` phrases come from
+   * `when` (*in 40 min*, *at 16:00*), in the player's own clock.
+   */
+  night: {
+    /** The plate's line: *Dusk in 40 min* / *Dusk at 16:00*; *Night · dawn in 25 min* / *Night · dawn at 18:00*. */
+    plate: (n: { night: boolean; nextDusk: number; nextDawn: number }, now: number) =>
+      n.night ? `Night · dawn ${when(n.nextDawn, now)}` : `Dusk ${when(n.nextDusk, now)}`,
+    /** A night window's lock line (answers §12.1): *Opens at nightfall · dusk at 16:00*. */
+    opensAt: (at: string) => `Opens at nightfall · dusk ${at}`,
+    /** The ticket tag on rival ground at night (answers §12.2). */
+    patrolsTag: 'Night · patrols out',
   },
 } as const;
 

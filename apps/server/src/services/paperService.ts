@@ -57,7 +57,7 @@ export async function getPaper(deps: {
   // ADR 0023: the political sections are live at read; the front page on a winner's first paper
   // of the term; political headlines merged into the stored edition by priority.
   const term = await frontPageTerm(c, today);
-  const frontPage = term ? await frontPageView(content, c, term) : null;
+  const frontPage = term ? await frontPageView(content, c, term, now) : null;
   // Slice 4 (tech design §11.2): the residence's live lines (its election, Issues, the moves, heroes
   // and quotes).
   const residenceId = residenceCityId(c);

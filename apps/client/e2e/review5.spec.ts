@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { mapAtRest, openLocation, signUp, toTheCard } from './helpers';
+import { mapAtRest, openLocation, signUp, toTheCard, toTheCity } from './helpers';
 
 /**
  * Design Review 2 (docs/review/2026-10-08-review-5.md; answers in docs/design/review-5-answers.md),
@@ -8,7 +8,9 @@ import { mapAtRest, openLocation, signUp, toTheCard } from './helpers';
  * sideways, 1440 px); #4 one thin scroll bar, an ordinary result that never scrolls, and the level-up
  * as a line and *Place it*; #7 the journey card stays until a row is tapped (Escape and a tap on the
  * map under it do nothing, the tab bar still works and the Map tab comes back to it, the put-aside
- * row, and the arrival's Continue only after a row). REVIEW5_SHOTS=<dir> saves the screenshots.
+ * row, and the arrival's Continue only after a row). Phase 1 (ADR 0079): #11 the six-hour day, the
+ * map turning at dusk without a reload and the plate's dusk line. REVIEW5_SHOTS=<dir> saves the
+ * screenshots.
  */
 
 const SHOTS = process.env.REVIEW5_SHOTS;
@@ -273,4 +275,54 @@ test('#7 the arrival: Continue only after a row of an unanswered card', async ({
   await expect(arrival.getByTestId('journey-outcome')).toBeVisible();
   await arrival.getByTestId('arrival-continue').click();
   await expect(page).toHaveURL(/\/city\//);
+});
+
+/**
+ * Review 5 phase 1 (answers §11.3, ADR 0079, tech design T3): the town's six-hour day. The suite holds
+ * the night at day; this test lets the seam follow the clock, moves the shared clock to half a minute
+ * before a dusk, and watches the map turn to night by itself (the view's `changesAt` + up to 20 s),
+ * with the plate's line going from *Dusk in 1 min* to *Night · dawn at …*. Last: it moves the clock.
+ */
+test('#11 the six-hour day: the map turns at dusk without a reload; the plate says when', async ({ page }) => {
+  test.setTimeout(150_000);
+  const H = 3_600_000;
+  await signUp(page, 'Ilse Dusk');
+  await toTheCity(page);
+  try {
+    expect((await page.request.post('/api/test/night', { data: { mode: 'clock' } })).ok()).toBe(true);
+    const { now } = (await (await page.request.post('/api/test/clock', { data: { advanceMs: 0 } })).json()) as {
+      now: number;
+    };
+    // Dusk is 04:00 into every six-hour block from 00:00 UTC; land 30 s before the next one.
+    let dusk = Math.floor(now / (6 * H)) * 6 * H + 4 * H;
+    if (dusk - 30_000 <= now) dusk += 6 * H;
+    expect(
+      (await page.request.post('/api/test/clock', { data: { advanceMs: dusk - 30_000 - now } })).ok(),
+    ).toBe(true);
+    await page.reload();
+    await mapAtRest(page);
+    const night = page.getByTestId('map-night');
+    const line = page.getByTestId('plate-dusk');
+    await expect(line).toHaveText('Dusk in 1 min');
+    await expect(line).toHaveAttribute('data-night', 'false');
+    await expect(night).toHaveCSS('opacity', '0');
+    await shot(page, 'phase1-map-day');
+    await shot(line, 'phase1-plate-dusk-line');
+    await shot(page.getByTestId('city-plate').locator('..').locator('..'), 'phase1-plate-day');
+
+    // No reload from here: a marker on the window survives the turn.
+    await page.evaluate(() => ((window as unknown as { __sameLoad: boolean }).__sameLoad = true));
+    await expect(night).toHaveCSS('opacity', '1', { timeout: 75_000 });
+    await expect(line).toHaveAttribute('data-night', 'true');
+    // *at 06:00*, or *tomorrow 01:00* when the dawn falls after midnight in the browser's own clock.
+    await expect(line).toHaveText(/^Night · dawn (at|tomorrow) \d\d:\d\d$/);
+    expect(await page.evaluate(() => (window as unknown as { __sameLoad?: boolean }).__sameLoad)).toBe(true);
+    // The art has finished its cross-fade before the picture is taken.
+    await page.waitForTimeout(1_500);
+    await shot(page, 'phase1-map-night');
+    await shot(line, 'phase1-plate-night-line');
+    await shot(page.getByTestId('city-plate').locator('..').locator('..'), 'phase1-plate-night');
+  } finally {
+    await page.request.post('/api/test/night', { data: { mode: 'day' } });
+  }
 });

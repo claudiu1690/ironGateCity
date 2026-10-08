@@ -1,4 +1,4 @@
-import { MONTH_NAMES, WEEKDAY_NAMES, councilDay, dayKey, dayStart, weekday } from '@irongate/rules';
+import { MONTH_NAMES, WEEKDAY_NAMES, councilDay, dayKey, dayStart, nextDusk, weekday } from '@irongate/rules';
 import type { CycleDay, DayKey } from '@irongate/rules';
 
 /**
@@ -23,6 +23,11 @@ export function phaseOf(cycleDay: CycleDay): DevPhase {
 /** 00:01 UTC on the next City Day. */
 export function nextDayAt(now: number): number {
   return dayStart(dayKey(now) + 1) + PAST_BOUNDARY_MS;
+}
+
+/** Review 5 (ADR 0079): the panel's *To dusk*, a minute past the next dusk (04, 10, 16 or 22 UTC). */
+export function toDuskAt(now: number): number {
+  return nextDusk(now) + PAST_BOUNDARY_MS;
 }
 
 /**

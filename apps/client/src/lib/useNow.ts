@@ -22,6 +22,14 @@ export function serverNow(): number {
   return Date.now() + skewMs;
 }
 
+/** Told when the server clock jumps (a first reading, a dev-panel skip); returns the unsubscribe. */
+export function onServerClockJump(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 /** The server's current time, updated every `intervalMs` (for countdowns; the server stays authoritative). */
 export function useNow(intervalMs = 1_000): number {
   const [now, setNow] = useState(serverNow);

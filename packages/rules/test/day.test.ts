@@ -26,12 +26,13 @@ describe('day (ADR 0005, GDD §2.2)', () => {
     expect(weekday(dayKey(Date.UTC(2026, 8, 29)))).toBe(1); // a Tuesday
   });
 
-  it('night is 20:00–06:00 UTC', () => {
+  it('night is the last two hours of every six (review 5, ADR 0079)', () => {
     const d = Date.UTC(2026, 8, 29);
+    expect(isNight(d + 3 * H + 59 * 60_000)).toBe(false);
+    expect(isNight(d + 4 * H)).toBe(true);
     expect(isNight(d + 5 * H + 59 * 60_000)).toBe(true);
     expect(isNight(d + 6 * H)).toBe(false);
-    expect(isNight(d + 19 * H + 59 * 60_000)).toBe(false);
-    expect(isNight(d + 20 * H)).toBe(true);
-    expect(isNight(d)).toBe(true);
+    expect(isNight(d + 22 * H)).toBe(true);
+    expect(isNight(d)).toBe(false);
   });
 });

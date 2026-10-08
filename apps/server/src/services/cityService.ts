@@ -23,7 +23,6 @@ import {
   councilDay,
   dayKey,
   findAdvancingItem,
-  isNight,
   isPoliticalType,
   issueTags,
   itemSpec,
@@ -89,6 +88,7 @@ import {
   welcomeOffered,
   wornStats,
 } from './views';
+import { nightAt } from './night';
 
 /**
  * The order a tap here would advance (open first), or a done one it matched, for the ticket tag.
@@ -171,6 +171,8 @@ export function missionView(
   if (g && political && g.factionId === c.factionId)
     placeTags.push({ kind: 'comeback', factionId: g.factionId, pct: g.pct });
   if (rival) placeTags.push({ kind: 'rivalGround', fxpPct: rival.unrest ? 75 : 50 });
+  // Review 5 (ADR 0080): *Night · patrols out* on rival ground at night (the run-in's higher base).
+  if (rival && ctx.night) placeTags.push({ kind: 'night' });
   if (ctx.recordIronPct < 0) placeTags.push({ kind: 'record', ironPct: ctx.recordIronPct, level: ctx.record });
   // On rival ground a speech too draws from the home faction (design §11.2); a mission against
   // another visitor's party is not under the home faction's cap.
@@ -296,6 +298,8 @@ export async function getCityView(
 ): Promise<CityView> {
   const city = content.city(cityId);
   if (!city) throw gameError('NOT_FOUND', 'UNKNOWN_CITY', { cityId });
+  // Review 5 (ADR 0079): the night at the read, from the one seam; the tickets and the art follow it.
+  const night = nightAt(now);
 
   const docOf = async (id: string) =>
     places?.has(id)
@@ -452,7 +456,8 @@ export async function getCityView(
     quarters: quarterViews(content, city, c),
     lockedPins: lockedPinViews(content, city, c),
     ...(city.clouds ? { clouds: true } : {}),
-    isNight: isNight(now),
+    isNight: night.night,
+    night,
     standing,
     districts,
     scoreboard: homeScoreboard
@@ -539,6 +544,8 @@ export async function getCityView(
           // Slice 5 (screens §8.3): *Rival ground · +50 % Party XP · worse odds*, and once the day's
           // cap is reached *The town has had enough today · no opinion* on what moves opinion.
           if (rival) placeTags.push({ kind: 'rivalGround', fxpPct: rival.unrest ? 75 : 50 });
+          // Review 5 (ADR 0080): every tap there at night is likelier to bring a run-in.
+          if (rival && night.night) placeTags.push({ kind: 'night' });
           if (rival && action.givesOpinion && rival.pressureLeft <= 0) placeTags.push({ kind: 'pressureCapped' });
           // Review 4 #18 (answers §18): the Reputation bonus is in the odds word; the tag says so.
           if (standingView(successes).level >= 1) placeTags.push({ kind: 'known' });

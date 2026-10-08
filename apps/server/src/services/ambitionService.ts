@@ -18,7 +18,6 @@ import {
   energyReadyAt,
   grantItem,
   heatEta,
-  isNight,
   projectEnergy,
   resolveChapterCheck,
   weekday,
@@ -45,6 +44,7 @@ import {
   toCharacterView,
   wornStats,
 } from './views';
+import { nightAt } from './night';
 
 /**
  * Ambition chapters (GDD §17.1, ADR 0013): step 1 is a set-once choice, step 2 a check paid in
@@ -62,7 +62,7 @@ function hqCrop(content: GameContent, c: CharacterDoc, now: number): StoryScreen
   const { city, location } = content.hqOf(c.factionId);
   return {
     kind: 'map-crop',
-    asset: assetView(content, isNight(now) ? city.map.night : city.map.day),
+    asset: assetView(content, nightAt(now).night ? city.map.night : city.map.day),
     x: location.map.x,
     y: location.map.y,
   };
@@ -390,7 +390,7 @@ export async function attemptChapter(deps: {
         body: fill(text.body, vars),
         art: {
           rung: 'map-crop',
-          asset: assetView(content, isNight(now) ? city.map.night : city.map.day),
+          asset: assetView(content, nightAt(now).night ? city.map.night : city.map.day),
           x: location.map.x,
           y: location.map.y,
         },

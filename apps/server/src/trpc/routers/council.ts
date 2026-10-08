@@ -1,4 +1,3 @@
-import { dayKey } from '@irongate/rules';
 import { Types } from 'mongoose';
 import { z } from 'zod';
 import { councilVote, declare, endorse, propose, vote, withdraw } from '../../services/councilService';
@@ -16,7 +15,7 @@ export const councilRouter = router({
   election: protectedProcedure.query(async ({ ctx }) => {
     const now = ctx.now();
     const { doc } = await loadCharacter(ctx.user, ctx.content, now);
-    return electionView(ctx.content, doc, dayKey(now));
+    return electionView(ctx.content, doc, now);
   }),
 
   /** The latest counted election by default; null while the asked-for election is open. */
@@ -33,8 +32,9 @@ export const councilRouter = router({
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const { doc } = await loadCharacter(ctx.user, ctx.content, ctx.now());
-      return getCount(ctx.content, doc, input?.electionId);
+      const now = ctx.now();
+      const { doc } = await loadCharacter(ctx.user, ctx.content, now);
+      return getCount(ctx.content, doc, input?.electionId, now);
     }),
 
   /** Slice 4 (tech design §8.1, §10.5): the capital's count, five districts, by its council key. */
@@ -50,15 +50,16 @@ export const councilRouter = router({
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const { doc } = await loadCharacter(ctx.user, ctx.content, ctx.now());
-      return getCapitalCount(ctx.content, doc, input?.cycleKey);
+      const now = ctx.now();
+      const { doc } = await loadCharacter(ctx.user, ctx.content, now);
+      return getCapitalCount(ctx.content, doc, input?.cycleKey, now);
     }),
 
   /** The sitting council: seats, the order paper, the vote. */
   chamber: protectedProcedure.query(async ({ ctx }) => {
     const now = ctx.now();
     const { doc, city } = await loadCharacter(ctx.user, ctx.content, now);
-    return councilView(ctx.content, doc, city, dayKey(now));
+    return councilView(ctx.content, doc, city, now);
   }),
 
   /**

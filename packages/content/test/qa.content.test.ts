@@ -161,7 +161,8 @@ describe('content vs docs/design/slice-1-content.md', () => {
     expect(coalportJobs.map((j) => [j.id, j.locationId, j.dailyPay, j.unlock])).toEqual([
       ['coalport-street-vendor', 'coalport.market-row', 100, { level: 1 }],
       ['coalport-factory-worker', 'coalport.mill-gate', 180, { level: 1, stats: { str: 5 } }],
-      ['coalport-driver', 'coalport.quays', 200, { level: 3, stats: { agi: 10 } }],
+      // Review 5 (answers §5, GDD §9.2): the Driver pays 240 (was 200).
+      ['coalport-driver', 'coalport.quays', 240, { level: 3, stats: { agi: 10 } }],
     ]);
   });
 

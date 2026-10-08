@@ -1,5 +1,4 @@
 import { copy } from '@irongate/content/copy';
-import { isNight } from '@irongate/rules';
 import type { CapitalCountView, ElectionView, FactionId, HallView } from '@irongate/rules';
 import {
   Button,
@@ -28,7 +27,10 @@ import { noticeFor } from '../features/game/errors';
 import { useCharacter } from '../features/game/hooks';
 import { TownHall } from '../features/council/TownHall';
 import { trpcClient, trpc } from '../lib/trpc';
-import { useNow } from '../lib/useNow';
+import { useNightTurn } from '../lib/useNightTurn';
+
+/** Every council screen's query (the hall header rides on each): read again at dusk and dawn. */
+const COUNCIL_KEYS = [trpc.council.pathKey()];
 
 /**
  * Slice 4: the capital's election views name the district after the city ("Irongate · Eastside"):
@@ -65,7 +67,8 @@ function Page({
   /** QA slice 4 m6: the ballot keeps the hall to a thin band on a short screen, so a name shows above the CTA. */
   shortHall?: boolean;
 }) {
-  const now = useNow(60_000);
+  // Review 5 (ADR 0079): the hall's art is the server's night; at dusk and dawn the screens read again.
+  useNightTurn(hall?.hall?.night, COUNCIL_KEYS);
   return (
     <PaperSheet>
     <div className="paper-grain min-h-full text-ink">
@@ -74,7 +77,7 @@ function Page({
           <HallHeader
             hall={hall.hall}
             cityName={placeOf(hall.cityName).city}
-            night={isNight(now)}
+            night={hall.hall.night.night}
             className={cx(
               '-mx-4 -mt-4 -mb-3 sm:mx-0 sm:mt-0',
               shortHall &&

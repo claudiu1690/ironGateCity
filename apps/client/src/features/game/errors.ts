@@ -118,6 +118,9 @@ export function noticeFor(error: unknown): string | undefined {
       if (game.lock === 'EDITION') return copy.map.lockedPlace({ kind: 'edition' });
       return undefined;
     case 'MISSION_LOCKED':
+      // Review 5 (ADR 0080): a night window, *Opens at nightfall · dusk at 16:00*.
+      if (game.lock === 'NIGHT')
+        return copy.night.opensAt(formatWhen(typeof game.opensAt === 'number' ? game.opensAt : 0));
       if (game.lock === 'QUARTER') return copy.map.lockedPlace({ kind: 'level', level: Number(game.need) });
       if (game.lock === 'EDITION') return copy.map.lockedPlace({ kind: 'edition' });
       return game.lock === 'LEVEL'
@@ -159,6 +162,13 @@ export function noticeFor(error: unknown): string | undefined {
       return copy.errors.notHere;
     case 'NO_COUNCIL':
       return copy.errors.noCouncil;
+    // Review 5 (tech design §3.5).
+    case 'PATROL_PENDING':
+      return copy.errors.patrolPending;
+    case 'NO_PATROL':
+      return copy.errors.noPatrol;
+    case 'FULL_HEALTH':
+      return copy.errors.fullHealth;
     default:
       return 'That did not go through. Check your connection and tap again.';
   }

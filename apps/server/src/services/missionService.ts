@@ -203,7 +203,11 @@ export async function startMission(deps: {
       if (!mctx) throw new Error(`unknown mission ${located.mission.id}`);
       const forced = force
         ? {
-            ...(force.checkRoll !== undefined ? { checkRoll: force.checkRoll } : {}),
+            ...(force.checkRoll !== undefined
+              ? { checkRoll: force.checkRoll }
+              : force.rolls?.[0] !== undefined
+                ? { checkRoll: force.rolls[0] }
+                : {}),
             ...(force.runIn ? { runIn: force.runIn } : {}),
             ...(force.opponentId ? { opponentId: force.opponentId } : {}),
           }

@@ -1,6 +1,6 @@
 import type { City, GameContent, Location } from '@irongate/content';
-import { isNight } from '@irongate/rules';
 import type { ResultArt } from '@irongate/rules';
+import { nightAt } from './night';
 import { assetView } from './views';
 
 /**
@@ -16,7 +16,7 @@ export function pickArt(content: GameContent, city: City, location: Location, no
   if (scene) return { rung: 'scene', asset: assetView(content, scene.assetId) };
   return {
     rung: 'map-crop',
-    asset: assetView(content, isNight(now) ? city.map.night : city.map.day),
+    asset: assetView(content, nightAt(now).night ? city.map.night : city.map.day),
     x: location.map.x,
     y: location.map.y,
   };

@@ -11,6 +11,7 @@ import { noticeFor } from '../features/game/errors';
 import { useCharacter } from '../features/game/hooks';
 import { useBoard } from '../features/travel/useBoard';
 import { trpc } from '../lib/trpc';
+import { useNightTurn } from '../lib/useNightTurn';
 import { useLocationLayout } from '../lib/useNow';
 import { lastDistrict } from './city';
 
@@ -47,6 +48,8 @@ export function NationPage() {
   const navigate = useNavigate();
   const { character } = useCharacter();
   const nation = useQuery(trpc.travel.nation.queryOptions());
+  // Review 5 (ADR 0079): the republic turns at dusk and dawn with its view.
+  useNightTurn(nation.data?.night, [trpc.travel.nation.queryKey()]);
   const layout = useLocationLayout();
   const side = layout === 'side';
   const search = useSearch({ strict: false }) as NationSearch;
@@ -141,7 +144,7 @@ export function NationPage() {
         tiles={tiles}
         frame={n.frame}
         clouds={n.clouds}
-        isNight={n.isNight}
+        isNight={n.night.night}
         locations={pins}
         selectedId={selected}
         onSelect={(id) => setSelected(id)}

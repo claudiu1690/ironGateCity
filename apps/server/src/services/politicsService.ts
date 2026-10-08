@@ -18,6 +18,7 @@ import {
   ORDINALS,
   WEEKDAY_NAMES,
   councilDay,
+  dayKey,
   councilKey,
   cycleOfKey,
   dayStart,
@@ -66,6 +67,7 @@ import { residenceOf, residenceSpec } from './residence';
 import type { ResidenceSpec } from './residence';
 import { ordinanceIdOn } from './modifiers';
 import { assetView, namedStanding, rankTitle, standingSuccesses } from './views';
+import { nightAt } from './night';
 
 /**
  * The political views (ADR 0023): the Polling Day row and the HQ council card (one summary), the
@@ -117,7 +119,7 @@ export function givenThisCycle(c: CharacterDoc, spec: ResidenceSpec, cycle: numb
  * for the election screens' header crop (the client picks day or night by the map's rule). Review 4
  * (ADR 0077): read from the hall's location (its name, `ref` and pin).
  */
-export function hallView(content: GameContent, cityId: string): HallView | null {
+export function hallView(content: GameContent, cityId: string, now: number): HallView | null {
   const city = content.city(cityId);
   const hall = content.hallOf(cityId)?.location;
   if (!city || !hall) return null;
@@ -127,6 +129,7 @@ export function hallView(content: GameContent, cityId: string): HallView | null 
     x: hall.map.x,
     y: hall.map.y,
     asset: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },
+    night: nightAt(now),
   };
 }
 
@@ -489,9 +492,10 @@ export async function politicsWaiting(
 export async function electionView(
   content: GameContent,
   c: CharacterDoc,
-  today: DayKey,
+  now: number,
   session: Session = null,
 ): Promise<ElectionView> {
+  const today = dayKey(now);
   const spec = residenceSpec(content, c);
   const { city, offset } = spec;
   const cal = councilDay(today, offset);
@@ -696,7 +700,7 @@ export async function electionView(
       ? { candidacyId: endorsedNow.candidacyId.toHexString(), name: endorsedNow.name }
       : null,
     pc: c.pc,
-    hall: hallView(content, city.id),
+    hall: hallView(content, city.id, now),
   };
 }
 
@@ -708,6 +712,7 @@ export async function countView(
   content: GameContent,
   c: CharacterDoc,
   e: Pick<ElectionDoc, '_id' | 'cityId' | 'countDay' | 'result' | 'kind'>,
+  now: number,
 ): Promise<CountView> {
   const r = e.result!;
   const vote = await Vote.findOne({ electionId: e._id, voterId: c._id }, { candidateKey: 1 }).lean<VoteDoc>();
@@ -733,7 +738,7 @@ export async function countView(
     turnout: r.turnout,
     seats: e.kind === 'district' ? CAPITAL_COUNCIL.perDistrict : COUNCIL.seats,
     npcSeats: r.npcSeats,
-    hall: hallView(content, e.cityId),
+    hall: hallView(content, e.cityId, now),
   };
 }
 
@@ -754,6 +759,7 @@ export async function capitalCountView(
   c: CharacterDoc,
   cityId: string,
   cycle: number,
+  now: number,
 ): Promise<CapitalCountView | null> {
   const ds = content.districtsOf(cityId);
   const ids = ds.map((d) => electionKey(d.id, cycle));
@@ -810,7 +816,7 @@ export async function capitalCountView(
     .sort((a, b) => Number(b.districtId === mineFirst) - Number(a.districtId === mineFirst));
   return {
     kind: 'capital',
-    hall: hallView(content, cityId),
+    hall: hallView(content, cityId, now),
     councilKey: councilKey(cityId, cycle + 1),
     cycle,
     countDay: es[0]!.countDay,
@@ -828,6 +834,7 @@ export async function getCount(
   content: GameContent,
   c: CharacterDoc,
   electionId: string | undefined,
+  now: number,
 ): Promise<CountView | null> {
   const spec = residenceSpec(content, c);
   const place = spec.place.id;
@@ -837,13 +844,13 @@ export async function getCount(
       throw gameError('BAD_REQUEST', 'WRONG_CITY', { cityId: place, requested: placeId });
     const e = await Election.findById(electionId).lean<ElectionDoc>();
     if (!e) throw gameError('NOT_FOUND', 'UNKNOWN_ELECTION', { electionId });
-    return e.status === 'counted' && e.result ? countView(content, c, e) : null;
+    return e.status === 'counted' && e.result ? countView(content, c, e, now) : null;
   }
   const filter = isDistrict(spec)
     ? { placeId: place, status: 'counted' as const }
     : { cityId: place, status: 'counted' as const };
   const e = await Election.findOne(filter).sort({ cycle: -1 }).lean<ElectionDoc>();
-  return e?.result ? countView(content, c, e) : null;
+  return e?.result ? countView(content, c, e, now) : null;
 }
 
 /**
@@ -854,18 +861,19 @@ export async function getCapitalCount(
   content: GameContent,
   c: CharacterDoc,
   cycleKey: string | undefined,
+  now: number,
 ): Promise<CapitalCountView | null> {
   const capital = content.nation.capitalId;
   if (cycleKey !== undefined) {
     const cityId = cycleKey.slice(0, cycleKey.lastIndexOf(':'));
     if (cityId !== capital)
       throw gameError('BAD_REQUEST', 'WRONG_CITY', { cityId: capital, requested: cityId });
-    return capitalCountView(content, c, capital, cycleOfKey(cycleKey));
+    return capitalCountView(content, c, capital, cycleOfKey(cycleKey), now);
   }
   const latest = await Election.findOne({ cityId: capital, kind: 'district', status: 'counted' })
     .sort({ cycle: -1 })
     .lean<ElectionDoc>();
-  return latest ? capitalCountView(content, c, capital, latest.cycle) : null;
+  return latest ? capitalCountView(content, c, capital, latest.cycle, now) : null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -877,10 +885,10 @@ export async function councilView(
   content: GameContent,
   c: CharacterDoc,
   city: CityDoc | null,
-  today: DayKey,
+  now: number,
   session: Session = null,
 ): Promise<CouncilView> {
-  return councilViewFor(content, c, residenceSpec(content, c).city.id, city, today, session);
+  return councilViewFor(content, c, residenceSpec(content, c).city.id, city, now, session);
 }
 
 /**
@@ -893,9 +901,10 @@ export async function councilViewFor(
   c: CharacterDoc,
   cityId: string,
   city: CityDoc | null,
-  today: DayKey,
+  now: number,
   session: Session = null,
 ): Promise<CouncilView> {
+  const today = dayKey(now);
   const cityContent = content.city(cityId);
   if (!cityContent?.council) throw gameError('PRECONDITION_FAILED', 'NO_COUNCIL', { cityId });
   const offset = cityContent.council.offset;
@@ -1051,7 +1060,7 @@ export async function councilViewFor(
       ord && city?.ordinance?.id === ord.id
         ? { ordinanceId: ord.id, name: ord.name, line: ord.line, daysLeft: city.ordinance.toDay - today }
         : null,
-    hall: hallView(content, cityContent.id),
+    hall: hallView(content, cityContent.id, now),
     passVotes: capital ? CAPITAL_COUNCIL.passVotes : COUNCIL.passVotes,
     seatCount: capital ? CAPITAL_COUNCIL.seats : COUNCIL.seats,
   };
@@ -1082,6 +1091,7 @@ export async function frontPageView(
   content: GameContent,
   c: CharacterDoc,
   term: OfficeTermDoc,
+  now: number,
 ): Promise<FrontPageView | null> {
   const e = await Election.findById(term.electionId).lean<ElectionDoc>();
   if (!e?.result) return null;
@@ -1126,7 +1136,7 @@ export async function frontPageView(
     animate: term.frontPageSeenAt === null,
     headline: t ? fill(t.headline) : c.name,
     deck: t?.deck ? fill(t.deck) : '',
-    count: await countView(content, c, e),
+    count: await countView(content, c, e, now),
     // Review 4 (answers §10.1): *What now* rides on the front page (shown once by `frontPageSeenAt`).
     whatNow: whatNowOf(content, term),
   };

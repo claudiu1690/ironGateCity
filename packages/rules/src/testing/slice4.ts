@@ -26,6 +26,7 @@ import {
   countViewFixture,
   hallFixture,
   mapFixture,
+  nightFixture,
   paperViewFixture,
   politicalResultFixture,
   politicsSummaryFixture,
@@ -79,6 +80,7 @@ export const nationViewFixture: NationView = {
   frame: { x0: 0.06, y0: 0.11, x1: 0.94, y1: 0.91 },
   clouds: true,
   isNight: false,
+  night: nightFixture,
   here: { cityId: 'coalport' },
   trainOpen: true,
   cities: [
@@ -186,6 +188,7 @@ export const journeyViewFixture: JourneyView = {
   status: 'onTheWay',
   firstJourney: true,
   others: 2,
+  night: nightFixture,
   // Review 4 (tech design §6.4): Coalport's leg into the capital, the nation's pins, the card's moment.
   route: {
     legs: [
@@ -583,6 +586,7 @@ export const capitalCityViewFixture: CityView = {
   quarters: districtFixtures.map((d) => ({ id: d.id, name: d.name, frame: d.frame })),
   clouds: true,
   isNight: false,
+  night: nightFixture,
   standing: { ...characterViewFixture.standing, cityId: 'irongate', cityName: 'Irongate' },
   locations: [
     capitalLocation({}),

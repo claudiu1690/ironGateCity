@@ -132,6 +132,8 @@ export interface Tier1ActionInput {
   forceOutcome?: 'partial';
   /** Slice 5 (test hooks, tech design §8.5): the first row's roll. */
   forceRoll?: number;
+  /** Review 5 (test hooks, tech design §4.3): each row's roll in order (row n takes `forceRolls[n − 1]`). */
+  forceRolls?: readonly number[];
 }
 
 /** Stamp for a run of checked attempts (ADR 0006, GDD §13.1): ×1 by outcome, a batch "n of N". */
@@ -222,7 +224,7 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       ...(i.prefer ? { prefer: i.prefer } : {}),
     });
     const drawn = rng.roll100();
-    const roll = n === 1 && i.forceRoll !== undefined ? i.forceRoll : drawn;
+    const roll = i.forceRolls?.[n - 1] ?? (n === 1 && i.forceRoll !== undefined ? i.forceRoll : drawn);
     const outcome = i.forceOutcome ?? outcomeForRoll(roll, check.chance, 1);
 
     const adv = advanceOrders(orders, i.orderTemplates, descriptor, outcome, ctx, i.now);
