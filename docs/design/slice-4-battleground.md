@@ -187,7 +187,7 @@ The halt is fiction: the journey's `arrivesAt` never changes. Rested from a card
 | Secretaries | The three faction secretaries (Holm, Stahl, Grey) set the capital rotation of Party orders (§12); there is no fourth NPC |
 | Council | Ten seats, two per district, cycle offset 0 (§8) |
 | Council hall (review 3 §6.1; settled 3 Oct 2026) | **The City Hall**, `council.hall { name: 'City Hall', ref: 'the City Hall', x: 0.57, y: 0.345 }`: the baroque hall with the clock tower and the copper-domed turret between Parliament and the Opera, facing the formal gardens above the river (unpinned on the survey; the tower tops at about 0.566, 0.326 and the front runs along y 0.36, so the point holds the tower above the front at the header's 55 %). Not the Parliament dome: Parliament is the republic's, the City Hall is the council's. The election screens' caps line reads *IRONGATE COUNCIL · THE CITY HALL*. A backdrop and a name, not a location |
-| Jobs | Three (§4.5): Porter at Central Station (180), Street vendor at Market Square (100), Driver at Riverside Quays (200). No faction pays a fifth more here: the +20 % is a home-city perk. A job is a wage (§9): there are no shift actions |
+| Jobs | Three (§4.5): Porter at Central Station (180), Street vendor at Market Square (100), Driver at Riverside Quays (240; 200 until review 5). No faction pays a fifth more here: the +20 % is a home-city perk. A job is a wage (§9): there are no shift actions |
 
 ### 4.1 The districts and their baselines (§14.9, §14.11 pinned)
 
@@ -373,7 +373,7 @@ A job is a wage (§9, review 1): taken with one tap on the **Jobs card** at its 
 |---|---|---|---|---|---|
 | **Porter** | `irongate-porter` | Central Station | Level 1, STR 5 | **180** | Eight hours of trunks and hatboxes under the glass arches. The stationmaster pays by the day and asks nobody's party. |
 | **Street vendor** | `irongate-street-vendor` | Market Square | Level 1 | **100** | Matches, bootlaces and this morning's Herald from a stall under the column. The market beadle has stopped asking. |
-| **Driver** | `irongate-driver` | Riverside Quays | Level 3, AGI 10 | **200** | The quay lorry between the cranes and the works, a full load each way. Needs a quick hand on the setts by the bridge. |
+| **Driver** | `irongate-driver` | Riverside Quays | Level 3, AGI 10 | **240** (was 200 until review 5) | The quay lorry between the cranes and the works, a full load each way. Needs a quick hand on the setts by the bridge. |
 
 The Porter is the capital's version of the day-1 job **without the faction's fifth**. Since a home job pays in full from anywhere, a member who keeps the Factory worker (216 plus seniority) loses nothing by living in the capital, and the Porter is for a player with no job (§9.2): a switch would give up 36 a day and start seniority again. Living in Irongate therefore has **no running cost** beyond the move (`docs/economy.md` §15.3).
 

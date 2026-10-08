@@ -1222,36 +1222,38 @@ Phase 10 (lane O, when the user picks D, E or G): the opening — depends on not
 
 ### 21.1 For the game designer (each has a default, so the build doesn't wait)
 
-1. **The night rate on the compact receipt.**
+> **All fourteen settled by the game designer, 8 Oct 2026** (`docs/design/review-5-answers.md` §18): **1 default** (the tag, the part in *Details*) · **2 default** (the item line stays) · **3 default** (the §4.1 order; *all three done* with the order, the record with Heat, a trained stat first on *Trained*) · **4 default** · **5 text given** (streets per rival home city: Foundry Row / Rampart Row / Weavers' Row as `cities[].patrol.street`; the six outcome texts and the ignore line, §18.1) · **6 text given** (the twelve outcome texts, §18.2) · **7 default: no doubling** · **8 default: yes**, the refusal reads *A patrol has stopped you · answer it on the map* · **9 default: per city**, economy §25.3 corrected to at most 100 a week · **10 default**, the three decks written (§18.3) · **11 accepted** · **12 default** · **13 default** · **14 default**, the Sanatorium's carer is *nurse*. The §22 notes are fixed in place (§18.4 there).
+
+1. **The night rate on the compact receipt.** *Settled: default.*
    - Answers §12.1 calls the night rate *a line on the receipt*, but §17.2 gives Iron one line with no note.
    - **Default:** the tag *Night rate · +25 % Iron* on the tags line, and the part in *Details*.
-2. **The receipt's item or keepsake line.**
+2. **The receipt's item or keepsake line.** *Settled: default.*
    - §17.2 says *four lines at most (XP, Party XP, Iron, opinion)*, while GDD §13.1a lists *an item or Dossier entry* as the fifth.
    - **Default:** the item line stays on the receipt when present. It only appears on chapter results, which are not among the measured cases.
-3. **The knock-ons §17.2 doesn't rank:** the morale crossing, the branch's endorsement, *all three done*, a trained stat, PC, Reputation progress, the record line and the item.
+3. *Settled: default (the §4.1 order).* **The knock-ons §17.2 doesn't rank:** the morale crossing, the branch's endorsement, *all three done*, a trained stat, PC, Reputation progress, the record line and the item.
    - **Default:** the order of §4.1. *All three done* goes with the order, the record with Heat, and a trained stat first on a *Trained* result.
-4. ***n more from Level 8 · 3 from Rank 3*** when needs differ (Levels 8 and 10).
+4. ***n more from Level 8 · 3 from Rank 3*** when needs differ (Levels 8 and 10). *Settled: default.*
    - **Default:** group by gate and need, print the two lowest groups (*2 more from Level 8 · 1 from Level 10*), and print Reputation as *from Known here*.
    - Members-only, own-target and record bars are never counted.
-5. **The patrol card:**
+5. **The patrol card:** *Settled: text given, answers §18.1 (`cities[].patrol.street`; the kicker A PATROL · FOUNDRY ROW / RAMPART ROW / WEAVERS' ROW; six outcome texts and the ignore line).*
    - **the kicker's street:** *RAMPART ROW* is one example. **Default:** *A PATROL · {CITY}* until you give one street per rival home city (or one per place);
    - **the rows' outcome texts** (Success and Partial for *Talk your way past* and *Slip down a side street*; pass and stopped for *Show your papers*) are needed. **Default:** stand-ins.
-6. **The four night missions' outcome texts** (answers §12.1: written with the build). **Default:** stand-ins until delivered in phase 5.
-7. **Does rival ground double the patrol card's Heat?**
+6. **The four night missions' outcome texts** (answers §12.1: written with the build). *Settled: text given, answers §18.2.* **Default:** stand-ins until delivered in phase 5.
+7. **Does rival ground double the patrol card's Heat?** *Settled: no (default).*
    - **Default: no.** The card's +10 and +5 are final, as the checkpoint card's are (GDD §14.12 lists them as figures).
-8. **A pending patrol card holds Energy acts and boarding until answered**, and never resolves itself.
+8. **A pending patrol card holds Energy acts and boarding until answered**, and never resolves itself. *Settled: yes (default); the refusal reads* A patrol has stopped you · answer it on the map.
    - **Default: yes**, the run-in's pattern without the luck timer, because a luck timer would punish absence.
    - Otherwise the card could be ignored by acting, and a scripted client could skip it.
-9. **The prize across two rival cities.** Per city as written, a member can earn up to 100 Party XP a week (economy §25.3 says *at most +50 a week*).
+9. **The prize across two rival cities.** Per city as written, a member can earn up to 100 Party XP a week (economy §25.3 says *at most +50 a week*). *Settled: per city (default); economy §25.3, GDD §14.11 and Appendix C #102 now say at most 100 a week across both rival towns.*
    - **Default:** per city, as the rule says. If it should be per member, the boundary checks the member's last `unrest` award.
-10. **The prize headline.**
+10. **The prize headline.** *Settled: the reader's party's top three (default); the three decks and the neutral line written, answers §18.3.*
     - *{Top three}*: **Default:** the top three pushers **of the reader's party**.
     - **The three decks:** **Default:** stand-ins, with the answers' line in each party's name.
-11. **Version-guard races on `city.get` vs a tap.** A tap in flight while a patrol bucket is written retries once and may then be refused `PATROL_PENDING` (the stop came first).
+11. *Settled: accepted (default).* **Version-guard races on `city.get` vs a tap.** A tap in flight while a patrol bucket is written retries once and may then be refused `PATROL_PENDING` (the stop came first).
     - **Default: accepted.** The tap's sheet shows the refusal's message, and the card is on the map.
-12. **Quiet after arrival.** **Default:** `arrivesAt + 10 min`, also when the arrival modal is still open. Deportation never lands on rival ground, so it needs no rule.
-13. ***What's here* in the capital.** **Default:** the district the sheet is opened on: its places, its Issues and its missions. The plate is per district.
-14. **The Treatment carer:** **Default:** *matron* in the three home infirmaries and *sister* at St Agnes, from `Location.treatment.carer`. Clearwater's Sanatorium is yours to name in slice 7.
+12. **Quiet after arrival.** *Settled: default.* **Default:** `arrivesAt + 10 min`, also when the arrival modal is still open. Deportation never lands on rival ground, so it needs no rule.
+13. ***What's here* in the capital.** *Settled: default.* **Default:** the district the sheet is opened on: its places, its Issues and its missions. The plate is per district.
+14. **The Treatment carer:** *Settled: default; the Sanatorium's carer is* nurse *(See the nurse).* **Default:** *matron* in the three home infirmaries and *sister* at St Agnes, from `Location.treatment.carer`. Clearwater's Sanatorium is yours to name in slice 7.
 
 ### 21.2 For the user
 

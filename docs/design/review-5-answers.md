@@ -408,7 +408,7 @@ Every rule with a day in it runs on the **real City Day** (00:00 UTC): the wage 
 | *Spike the duplicator* (three HQs) and *Lift the roll* (three HQs) | the Agility way | the other ways stay |
 | *Watch the sheds / the checkpoint / the wharf after dark* | the Agility way (the roofs, the fence) | the Intelligence way (the bollard, the flask) stays, title and all: a watch can start at dusk |
 
-**Four new night missions**, one per city, at the tier-2 rate with **+25 % Iron** (*the night rate*, a line on the receipt; never Party XP, so the dark cannot be turned into political power), the difficulty ladder by Level (§8.4):
+**Four new night missions**, one per city, at the tier-2 rate with **+25 % Iron** (*the night rate*: the tag ***Night rate · +25 % Iron*** on the ticket and on the result's tags line, its part in the receipt's *Details* (§17.2, settled §18); never Party XP, so the dark cannot be turned into political power), the difficulty ladder by Level (§8.4):
 
 | Id | Title | Place | Type · Energy · Level | Ways (stat) | Briefing (≤ 300) |
 |---|---|---|---|---|---|
@@ -484,7 +484,7 @@ Ordered; each with *Done when*. Items marked **(user)** wait for the user's pick
 9. **(user) The opening, version A, B or C** (§1). *Done when* the chosen version's three narratives, nine row strings, three confirms, three echoes, three order templates, three favour tickets with their four texts and three welcome decks are in content (`origin.ts`, `orders.ts`, `cities/*.ts`, `headlines.ts`), every text ≤ 240 and four sentences, the Vanguard strings pass the policy regex, and the reference answers still give STR 8 / INT 12 / AGI 5 / CHA 5 and *Finish His Work*.
 10. **(user) The rival-ground header and the prize** (§10). *Done when* the plate on rival ground shows the push bar in two colours against 2, the danger line with the player's risk word, and the goal line with the points to go and the party's week; the city-day job pays +50 Party XP once per Unrest entry per city to members with ≥ 0.5 points there in seven days and prints the headline; a test enters Unrest twice in a day and pays once.
 11. **(user) The six-hour game day** (§11). *Done when* `isNight` is the last two hours of every six from 00:00 UTC, `nextDusk`/`nextDawn` exist, the plate reads *Dusk in n min* / *Night · dawn at hh:mm*, the clock's note says the town's day is six hours, the map and the clouds flip on the new window in the dev panel's clock, and every daily rule's test is unchanged.
-12. **(user) Night windows and patrols** (§12). *Done when* a mission or a way with `window: 'night'` is locked by day with *Opens at nightfall · dusk at hh:mm* and plays at night; the twelve night-only ways (three posters, three duplicators, three rolls, three watches) and four night missions are in content with their texts; the night rate (+25 % Iron) is a receipt line; on rival ground at night the tier-1 run-in base is 25 and a mission's +10, with the *Night · patrols out* tag; the *Patrol* card fires once per night per city on the first city read, never while held, in transit, or on the night a hostile journey card fired, and never with the app closed; tests cover the once-a-night key and the absence case.
+12. **Night windows and patrols** (§12, §16.1, §18; decided). *Done when* a mission or a way with `window: 'night'` is locked by day with *Opens at nightfall · dusk at hh:mm* and plays at night; the twelve night-only ways (three posters, three duplicators, three rolls, three watches) and the four night missions are in content with the outcome texts of §18.2; the night rate is the tag *Night rate · +25 % Iron* with its part in *Details*; on rival ground at night the tier-1 run-in base is 25 and a mission's +10, with the *Night · patrols out* tag; the *Patrol* card (`patrol.stop`, the kicker *A PATROL · {street}* from §18.1) rolls **once per ten-minute bucket per city on a city read at night on rival ground at 12 % (+5 / +10 by Heat state, +10 *Watched*, −10 *Warned*, ×2 under the Curfew Order, 5–40)**, never on an act, never within ten minutes of `arrivesAt`, never within fifteen minutes of a stop or a run-in, at most two a night per city, never while held or in transit, never with no read; a pending card holds Energy acts and boarding and never resolves itself; tests with a seeded clock cover one roll per bucket, the cap of two, the quiet after a run-in and after arrival, the absence case (no read, no roll) and a Cool clean player passing *Show your papers*.
 
 ### Art (noir lithograph, the `mvp` style)
 
@@ -642,7 +642,7 @@ Top to bottom, one rule each:
 2. **The title block:** kicker, headline (Playfair **22 px** on phones, 24 on desktop), the body at 15 / 22 px, at most 240 characters (five lines at 390 px). [≈ 172 with its gaps]
 3. ***How it went* is printed only when it says something the stamp does not:** for a **×1 Success it is omitted** (the stamp says *Success*, the receipt says the XP); for a **×1 Partial or Failure** the section is **one italic reason line under the body** (*Bad luck. The odds were good; it just didn't come off. Try again.*; no kicker, no row); for a **×3** it is **one Courier line** of the rows, ***1 · Success · +45 · 2 · Partial · +23 · 3 · Success · +45***, then the reason line if any; a run-in's block stays as built (it is the thing that happened). [0 / 40 / 64]
 4. **Bonus tags as one line:** Oswald caps 10 px, no boxes, joined with *·*: ***Party order · +25 % Party XP · First day in Coalport · better odds · Issue · opinion +50 %***; when it would wrap, the line is cut at the last whole tag that fits and ends ***· +1 more*** (the rest in *Details*). The tag's note opens on a tap of its words, as the chips did. [20]
-5. **The receipt, four lines at most** (XP, Party XP, Iron, opinion; a zero line is not printed, as before): **XP and Party XP keep their bar and their one Courier note** (*955 to Level 7* · *8 / 400 to Activist*: the HUD in miniature); **Iron and opinion are one line each**, label left, value right, **no note**. Everything else the receipt said moves into ***Details***: the base-and-bonus breakdown (*+6 and +2 bonus · party order*; *Rested: 3 of 10 Energy, +15 % XP and Iron*), the opinion's meter and Issue line (*Issue: Men at the Labour Exchange +50 % · Collective 70.1 → 70.3 %*), the tags that were cut, the ×3 rows' XP. *Details* is a Courier text row at the receipt's foot, right-aligned, ***Details ▾***, expanding in place (the middle may then scroll; the player asked for it). [16 + 44 + 44 + 28 + 28 + 20 = 180]
+5. **The receipt, four lines at most** (XP, Party XP, Iron, opinion; a zero line is not printed, as before; **a fifth, the item or keepsake line, stays when a result carries one**: chapter results only, outside the measured cases; settled §18): **XP and Party XP keep their bar and their one Courier note** (*955 to Level 7* · *8 / 400 to Activist*: the HUD in miniature); **Iron and opinion are one line each**, label left, value right, **no note**. Everything else the receipt said moves into ***Details***: the base-and-bonus breakdown (*+6 and +2 bonus · party order*; *Rested: 3 of 10 Energy, +15 % XP and Iron*), the opinion's meter and Issue line (*Issue: Men at the Labour Exchange +50 % · Collective 70.1 → 70.3 %*), the tags that were cut, the ×3 rows' XP. *Details* is a Courier text row at the receipt's foot, right-aligned, ***Details ▾***, expanding in place (the middle may then scroll; the player asked for it). [16 + 44 + 44 + 28 + 28 + 20 = 180]
 6. **Knock-on lines capped at three**, in this priority, each one line (Courier 12) unless it is a card: **a point to place** (the *Place it* line, 48 px, counts as one) · **a rank-up or a Reputation step** (its card; the first-time Heat card likewise) · **Heat** (*Heat +8 → 32 · Noticed · Cool at 20:40*) · **the order's signed line or progress** · **Issue momentum** · **the election / ledger line** · **the chapter hook** · **Energy and Rested before → after** · ***Missions remember: next time, one tap*** (the first mission only). After the third: ***n more ▾***, a text row that expands in place. Nothing is dropped; the fourth and later lines are behind the row. [16 + 3 × 24 = 88; with *Place it* 112]
 7. **The buttons** as built: the pair side by side with the cost on a second line, *Continue* under them. [108]
 
@@ -657,3 +657,75 @@ Phone budget at 390 × 740, ×1 Success: 112 + 172 + 0 + 20 + 180 + 88 + 108 + 4
 **Where:** `ResultModal` (`packages/ui`), `Receipt` (the fold), the tags line, the knock-on cap; `copy.result.details`, `copy.result.more(n)`; no rule in the GDD changes (§13.1a gains one sentence); the slice-3 receipt design (`review-3-answers.md` §3) is superseded by §17.2's item 5 for the notes.
 
 **Fix-list item 2 becomes:** *Done when* a ×1 Success and a mission with a level-up fit 390 × 740 and 1440 × 900 without a scroll bar; a ×3 or a Partial scrolls at most 100 px at 390 × 740 and nothing at 390 × 844; the picture is 112 / 136 / 150 by height; the tags are one line with *+n more*; the receipt prints no note under Iron or opinion and *Details* opens the breakdown; the knock-on block shows three lines and *n more*; Playwright measures the five cases of §17.1.
+
+---
+
+## 18. Settled with the architect (8 Oct 2026; `docs/tech/review-5.md` §21.1 and §22)
+
+Fourteen questions, each with the architect's default; eleven take the default, two are given text here (Q5, Q6), one is confirmed with the economy sheet corrected (Q9). The §22 doc notes are all fixed in place (§18.4).
+
+| Q | Decision |
+|---|---|
+| 1 | **Default.** The night rate is the tag ***Night rate · +25 % Iron*** on the tags line; its part (*+15 · night rate*) in *Details*. §12.1 and GDD §13.1 reworded |
+| 2 | **Default.** The item or keepsake line stays on the receipt when a result carries one (chapter results only); §17.2 item 5 says so |
+| 3 | **Default**, the order of §4.1 in the tech doc: the morale crossing and *all three done* go with the order's line; the record line goes with Heat; a trained stat is first on a *Trained* result; the branch's endorsement, PC and Reputation progress after the Issue line, before the election line; the item never in the knock-on block (it is on the receipt) |
+| 4 | **Default.** Group by gate and need, print the two lowest groups (*2 more from Level 8 · 1 from Level 10*), Reputation as *from Known here*; members-only, own-target and record bars never counted |
+| 5 | **Text given** (§18.1): one street per rival home city (`cities[].patrol.street`: Coalport *Foundry Row*, Duskwall *Rampart Row*, Ashford *Weavers' Row*; the kicker *A PATROL · FOUNDRY ROW*), and the rows' six outcome texts and the ignore line |
+| 6 | **Text given** (§18.2): the twelve outcome texts of the four night missions |
+| 7 | **Default: no.** Rival ground does not double the patrol card's Heat; +10 and +5 are final, like the checkpoint card's |
+| 8 | **Default: yes.** A pending patrol card holds Energy acts and boarding until a row is tapped and never resolves itself; the paper, the Me tab and every political act work meanwhile; the refusal reads *A patrol has stopped you · answer it on the map* |
+| 9 | **Default, per city**, and **economy §25.3 corrected**: a member has two rival home cities, so the prize can pay at most **100 a week**, only when both towns enter Unrest in the same seven days (about ten rival-ground days of two parties' Energy); in practice 50. GDD §14.11 and Appendix C #102 say *per city* |
+| 10 | **Default**, the top three of the reader's party; **the three decks written** (§18.3) |
+| 11 | **Default: accepted.** A tap refused `PATROL_PENDING` shows the §18 Q8 message on its sheet, with the card on the map |
+| 12 | **Default.** Quiet until `arrivesAt + 10 min`, the arrival modal open or not |
+| 13 | **Default.** In the capital *What's here* is the district the sheet is opened on; the plate is per district |
+| 14 | **Default.** `Location.treatment.carer`: *matron* in the three home infirmaries, *sister* at St Agnes; **Clearwater's Sanatorium: *nurse*** (*See the nurse*; the modal's body *The nurse does it in ten minutes and the clerk charges for twenty. Mind the step.*) |
+
+### 18.1 The patrol card (`patrol.stop`, `deck: 'patrol'`; kicker *A PATROL · {street}*)
+
+| Field | String |
+|---|---|
+| `title` | **A patrol** |
+| `setup` | *Two of them under the corner lamp, with the walk of men paid by the hour. "Late to be out. Papers."* |
+| `papers` *Show your papers* · detail | *Your party card · it depends on your Heat and your record* |
+| `papers.success` | **Waved on** · He reads the card by the lamp, then your face, and hands it back. "Mind how you go." They walk on, slowly, so that you have to walk the other way. |
+| `papers.partial` (Heat +10, *Watched*) | **They write your name down** · He reads the card twice and writes something in a book, slowly, so you can see him do it. "Visiting, are we." The lamp stays on you to the corner. |
+| `talk` *Talk your way past* · detail | *Charisma* |
+| `talk.success` | **A lodger, late back** · You've a room at the inn and a landlady who locks the door at twelve, and you say so as if it's their fault. The taller one laughs. They let you by. |
+| `talk.partial` (Heat +5) | **Half believed** · They take the story, the accent and the hour, and the shorter one writes your name down anyway, to be safe. "Straight home, then." |
+| `slip` *Slip down a side street* · detail | *Agility* |
+| `slip.success` | **A door closing** · You know the lane behind the lamp better than they do, or you walk as if you do. By the time the lamp swings round the corner you are a door closing. |
+| `slip.partial` (Heat +5, *Watched*) | **A yard with a wall** · The lane is a yard with a wall. You get over it with the lamp on your back and a name shouted after you, which means they have it. |
+| `ignore` (*Let it pass*; Heat +10, *Watched*) | You stand still and say nothing. They write your name down anyway, and the lamp follows you to the corner. |
+
+The streets: `coalport.patrol.street = 'Foundry Row'`, `duskwall … 'Rampart Row'`, `ashford … 'Weavers' Row'` (each city's `street`-kind place; the kicker prints it in caps). Every body ≤ 240 and four sentences; no party is named (the pool decides who the men are).
+
+### 18.2 The four night missions' outcome texts (≤ 240, four sentences)
+
+| Id | Success | Partial | Failure |
+|---|---|---|---|
+| `coalport.customs-house.lorry` | **The yard behind the Anchor** · The lorry takes the long way round the basin and turns in at a yard behind the Anchor, where a man with a lantern counts it in. The yard, the man, the time: the notebook's best page. The quay's owner owns the Anchor too. | **Lost at the bridge** · You keep the lorry to the swing bridge, which opens for a barge and closes with you on the wrong side. One street name and the lights going north. Another night, from the bridge end. | **A lorry is a lorry** · It stops at the first corner and the driver gets out to look at you, long enough to be sure. Then it goes, unhurried, somewhere you aren't. You walk home by the lit streets. The sheds have your face. |
+| `duskwall.checkpoint.log` | **A week of the Pass** · The log is a school exercise book in the night clerk's hand, and a week of the Pass is in it: who crossed, when, who was turned back and why. It is in your coat before the stove needs feeding. | **Three pages** · The clerk comes back for his tobacco and you get three pages, torn clean, before the window. Thursday to Saturday, and a name the club will miss on Friday. The rest stays by the stove. | **The stove goes out** · The stove goes out and the clerk comes to see why, with the lamp. You are gone by the time he reaches the window, and the book is where it was. The Pass has your face now. |
+| `ashford.brewery.dawn-shift` | **Four hundred readers** · The watchman does his round at four, the gate is bare at five and yours by ten past. Four hundred men read it at the dawn shift, and the dray horses after. The Rooms' man comes with a bucket at seven and finds he is the news. | **Half the gate** · You get the left-hand gate pasted before the watchman's lamp comes round the stables, and leave by the hop store. Half the gate is yours. The shift reads both halves and argues. | **The paste won't take** · Wet night, cold paste, and the posters slide off the gate in sheets the size of a tablecloth. The watchman finds you on the second. You walk out past the stables with the bucket. The gate says what it said. |
+| `irongate.tram-junction.last-tram` | **The whole car** · A flyer for every stop and a word for every face, and by the Iron Bridge the whole car is reading. The conductor takes one for his wife. Two hundred people get off in Eastside with your side in their pockets. | **Half a car** · The front half of the car takes flyers and the back half takes offence, and the conductor rings for the bridge before it comes to anything. A hundred flyers out and a hundred still in your coat. | **Off at the bridge** · A man in the back seat wants to know who printed it, loudly, and the car takes his side. The conductor stops at the bridge and says this is your stop. The flyers go out of the window behind you. |
+
+Outcome headlines for the paper's *In Print* line, where a mission prints one: the Success and Partial headlines above.
+
+### 18.3 The prize decks (`hl.unrest-pushed`, `hl.v.unrest-pushed`, `hl.a.unrest-pushed`; `{city}`, `{party}` the home party, `{top}` the reader's party's top three; decks ≤ 200)
+
+| Paper | Headline | Deck |
+|---|---|---|
+| The Clarion (Collective) | **{city} Wobbles: the Branch Pushed Hard** | The {party}'s share of its own town fell under 60 overnight. {top} did the heaviest carrying. The Collective's work there pays three quarters more while it lasts. |
+| The Sentinel (Vanguard) | **{city} Under Sixty** | The {party}'s town is in Unrest this morning. {top} are named by the district office for their part. Work there pays more until the town settles, which it will not do on its own. |
+| The Gazette (Alliance) | **{city} in Unrest: the Rooms' Callers Did It** | The {party}'s share of its home town fell under sixty. {top} knocked the most doors. Every Alliance act there pays three quarters more while it lasts. |
+| The Herald and the local line (neutral, `cityId: '*'`) | **{pushingParty} Callers Push {city} into Unrest** | The town's share fell under 60 overnight. {top} did most of the pushing; the {party}'s branch has dropped everything to win it back. |
+
+### 18.4 The §22 doc notes, fixed in place
+
+1. GDD §2.2's old night bullet is struck through and marked superseded; the clock's help note no longer prints *{nightFrom} to {nightTo}*; §14.12's slice-8 paragraph reads *§2.2's night* in place of *20:00–06:00 UTC*.
+2. Fix-list item 12's *Done when* rewritten to the bucket roll and the ten minutes after arrival (§15).
+3. The night rate's wording: §12.1 and GDD §13.1 (Q1).
+4. The receipt's item line: §17.2 item 5 (Q2).
+5. The unranked knock-ons: Q3 above, in the §4.1 order.
+6. `slice-2-cities.md` §1.3 and §2.3 Driver rows print **240** *(was 200 until review 5)* in place; the same in `slice-1-content.md` §3 and §12.1, `slice-4-battleground.md` §4.4 and §4.5, `slice-7-nation.md` §9.4. The content tests that read 200 (`load.test.ts`, `qa.content.test.ts`) are the developer's to move with the data.
+7. Economy §25.3: the cap is per city, at most 100 a week across both rival towns (Q9).

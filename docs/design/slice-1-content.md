@@ -212,7 +212,7 @@ Three jobs are placed in slice 1. Daily pay is pinned to one figure each (the §
 |---|---|---|---|---|---|
 | **Street vendor** | Market Row, *Work the stall* | Level 1 | 3 | **100** | The fallback job; no requirement |
 | **Factory worker** | Mill Gate, *Work your shift at the mill* | Level 1, STR 5 | 4 | **180**, **216 for Collective members** (+20 %) | The job every Coalport recruit should take on day 1 |
-| **Driver** | Harbour Quays, *Drive the dock lorry* | Level 3, AGI 10 | 4 | **200** | Visible and locked for the recruit (AGI 5): the first thing training AGI unlocks |
+| **Driver** | Harbour Quays, *Drive the dock lorry* | Level 3, AGI 10 | 4 | **240** (was 200 until review 5) | Visible and locked for the recruit (AGI 5): the first thing training AGI unlocks |
 
 Market trader (Level 3, INT 8) has a mini-game and is deferred with it.
 
@@ -401,7 +401,7 @@ On top of slice 0: the ×3 stamp and rows · bonus tags for *Rested*, *Party ord
 | §6.5 | PC is stored and shown from slice 1; the Directive completion bonus is +5 PC and +20 FXP per order |
 | §8.5 | Training: always succeeds, half-rate XP only, ×3 at rising costs, does not count for Standing |
 | §9.1 | Streak formula, sick-day refill, switching resets the streak, half pay per boundary, shifts are not checks and pay no XP |
-| §9.2 | Pinned daily pay: Street vendor 100 · Factory worker 180 (216 Collective) · Driver 200; Market trader deferred |
+| §9.2 | Pinned daily pay: Street vendor 100 · Factory worker 180 (216 Collective) · Driver 240 (200 until review 5); Market trader deferred |
 | §13.1 | ×3 rules (one seed, three rows, disabled when short, no partial batch); ×5 deferred |
 | §13.3 | Council FXP ×1.5 and no opinion; intelligence pays XP and Iron in slice 1; two-stat tier-1 checks |
 | §13.4 | Standing thresholds pinned at 10 / 30 / 70 / 150; what counts |

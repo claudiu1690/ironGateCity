@@ -1037,7 +1037,7 @@ One Iron a point, at least 10. The day-10 reference player on the illegal road l
 
 ### 25.3 The Unrest prize (decided by the user 8 Oct 2026; GDD §14.11)
 
-+50 Party XP once per entry per city, at most once in seven days per city, to members with ≥ 0.5 points moved there in seven days. A rival-ground specialist (§19.6: ~320 Party XP a day) earns at most +50 a week from it: **+2 % of the week**, inside the heavy player's +35 % envelope. The push bar and the goal line change no rate. A town goes from 70 to 60 in five days with both rivals at the cap (Appendix C #52), so the prize pays at most once a week per town and only when two parties' members have spent about ten days of rival-ground Energy between them.
++50 Party XP once per entry per city, at most once in seven days per city, to members with ≥ 0.5 points moved there in seven days. **The cap is per city** (settled with the architect, 8 Oct 2026): a member has two rival home cities, so the most the prize can pay is **+100 a week**, and only when both towns enter Unrest in the same seven days, which takes about ten rival-ground days of two parties' Energy. A rival-ground specialist (§19.6: ~320 Party XP a day) earns at most +100 a week from it, in practice +50: **+2–4 % of the week**, inside the heavy player's +35 % envelope. The push bar and the goal line change no rate. A town goes from 70 to 60 in five days with both rivals at the cap (Appendix C #52), so the prize pays at most once a week per town and only when two parties' members have spent about ten days of rival-ground Energy between them.
 
 ### 25.4 The night (decided by the user 8 Oct 2026, the patrol made random; GDD §2.2, §13.1, §14.12)
 

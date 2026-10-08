@@ -75,7 +75,7 @@ Rewards are Success / Partial at the §5.5 rates. E = Energy. Opinion in points 
 |---|---|---|---|---|---|---|
 | **Stores hand** | `duskwall-stores-hand` | Fortress Gate, *Work your shift in the customs stores* | Level 1, STR 5 | 4 | **180**, **216 for Vanguard members** (+20 %) | The Factory worker's mirror: the job every Duskwall recruit should take on day 1. New in §9.2 |
 | **Street vendor** | `duskwall-street-vendor` | Customs Market, *Work the market stall* | Level 1 | 3 | **100** | The fallback; no requirement |
-| **Driver** | `duskwall-driver` | Goods Yard, *Drive the yard lorry* | Level 3, AGI 10 | 4 | **200** | Visible and locked for most recruits (AGI 5): the first thing training AGI unlocks |
+| **Driver** | `duskwall-driver` | Goods Yard, *Drive the yard lorry* | Level 3, AGI 10 | 4 | **240** (was 200 until review 5) | Visible and locked for most recruits (AGI 5): the first thing training AGI unlocks |
 
 Blurbs (≤ 160 characters):
 
@@ -293,7 +293,7 @@ Where the pins land on the art: 1 on the lettered front of the big glass-roofed 
 |---|---|---|---|---|---|---|
 | **Copy clerk** | `ashford-copy-clerk` | Gazette House, *Work your shift on the copy desk* | Level 1, INT 5 | 4 | **180**, **216 for Alliance members** (+20 %) | The Factory worker's mirror; the day-1 job. New in §9.2 |
 | **Street vendor** | `ashford-street-vendor` | Bridge Street, *Work the news-stand* | Level 1 | 3 | **100** | The fallback |
-| **Driver** | `ashford-driver` | Bridge Street, *Drive the market van* | Level 3, AGI 10 | 4 | **200** | Locked for most recruits until AGI is trained |
+| **Driver** | `ashford-driver` | Bridge Street, *Drive the market van* | Level 3, AGI 10 | 4 | **240** (was 200 until review 5) | Locked for most recruits until AGI is trained |
 
 Blurbs (≤ 160 characters):
 
