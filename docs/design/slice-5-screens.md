@@ -224,3 +224,13 @@ British English, no exclamation marks, no percentages for odds, times in the pla
 - **§8.3, rival ground:** the orders panel is one collapsed line, *Your orders are in Coalport · 1 of 3 done*, not tappable; the paper is *The Coalport Clarion · Duskwall edition*.
 - **Every countdown** in §6–§8 uses the one style (*in n min* under an hour, *at hh:mm* today; GDD §2.2).
 - **A clock** in the top bar (answers §4.1).
+
+
+## 14. Review 5 addendum (8 Oct 2026)
+
+- **§2.1–§2.2, the HUD:** the order is **Energy · Health · Heat (above 0) · XP · Party XP** at every width; on wide screens Energy over Health in the first column, Heat's line under Health. The help group's order follows. Answers §6; GDD §6.1, §6.4.
+- **The level-up picker** (`StatPointsPanel`): three paper cards in the ticket's style, the whole card the tap, tags *Most used here* and *Your best*, heading *Level 4 · one point to place*; **in the result modal it is one line and a *Place it* button opening the cards as a `BottomSheet`**, so a result never scrolls for it. Answers §3–§4; GDD §5.3.
+- **Scroll bars:** one thin bar everywhere (6 px, no arrows, a transparent track, ink at 45 % on paper, paper at 35 % on ink); the result modal's middle is its only scrolling box and an ordinary result fits 740 × 390 without one. Answers §4.
+- **§7, the infirmary, and every `hospital` sheet:** a ***Treatment*** card (`TreatmentCard`, the `JobsCard` pattern) for a player who is not admitted: *See the matron · Health 64 / 125* · *One Iron a point: 61 Iron to be whole now. It comes back on its own, ten every ten minutes.* · **Get patched up · 61 Iron**; at full Health *You're well · nothing to treat*; the modal's stamp *Patched up*, headline *Whole again*. St Agnes reads *See the sister*. Answers §8; GDD §19.1.
+- **§8.3, rival ground (proposed; the user decides):** the one pressure line becomes three: the push bar (`PushBar`, two colours against 2), the danger line in the player's risk word, and the goal line (*The goal: Unrest. … 11.4 points to go · your party has pushed 4.2 this week.*), with notes `help.push` and `help.unrest`; under 700 px of height the goal line folds into the push bar's note. Answers §10.
+- **§8.3, the plate under the six-hour day (proposed):** a line *Dusk in 40 min* / *Night · dawn at 18:00* in the §4.2 style; a night mission's ticket by day reads *Opens at nightfall · dusk at 16:00*; on rival ground at night the tag *Night · patrols out*. Answers §11–§12.

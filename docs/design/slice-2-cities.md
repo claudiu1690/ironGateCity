@@ -460,3 +460,8 @@ The remaining unassigned portrait, `adler.png` (young woman with a satchel strap
 5. **The `library` kind at the Archives** is the GDD's own mapping (§13.5: "reading rooms, the state archives"); the Archives are not a `ministry` even though the movement holds them. The kind decides art and presence text only.
 6. **Reserved pins** (checkpoint, The Signal Lamp, Ashford Station, the wharf) are listed here so the mockups' extra pins have a home; nothing about them is data in slice 2.
 7. **Ids after the content-policy review** (29 Sep 2026): the Duskwall ids `duskwall.garrison-gate` (and its four actions, including `.drill`), `duskwall.quartermaster-market` (and its four), `duskwall.beacon-house.muster`, `duskwall.rampart-row.chalk` and `dir.v.guard-change` keep their ids; only display text changed, and a character's job, order progress and logs reference them. Ids are never shown to players. Rename them, if wanted, with the next migration that touches Duskwall. The one data change that is not text is the Fortress Gate's kind: `barracks` → `ministry` (no scene either way; the map crop stands in).
+
+
+## Review 5 addendum (8 Oct 2026)
+
+- **§1.3 and §2.3, the jobs:** the Duskwall and Ashford **Drivers pay 240** (was 200), by the rung rule of GDD §9.2 (review 5): a job that asks more pays more. The Stores hand and the Copy clerk (180, 216 for members) and the vendors (100) are unchanged. `docs/design/review-5-answers.md` §5.

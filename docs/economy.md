@@ -1012,3 +1012,37 @@ The paid room is a *Lodgings* card at Tram Junction (the Rows in Clearwater): 10
 ### 24.5 Session shape (pillar 7)
 
 The prologue is three taps shorter. The Town Hall is one pin; its sheet reads top to bottom with the ticket first. The journey on the map is the same wait with a better picture; the card fires once, at a point the player cannot predict, and is answered on return if missed. The clock and the countdown style are read, not tapped. The local edition changes which lines a paper prints, not how many. Nothing here needs the player at a set time.
+
+
+## 25. Review 5: the job ladder, treatment, the Unrest prize and the night
+
+Rules: GDD §0 (*Added 8 Oct 2026, review 5*), §9.2, §19.1, §14.11, §14.12, §13.1, §2.2; answers in `docs/design/review-5-answers.md`. **One pay figure moves (the Driver, 200 → 240) and one optional sink arrives (treatment).** The three proposals that wait on the user (the game day, the night, the Unrest prize) are costed below so that nothing is retuned twice. No §5.2 milestone moves.
+
+### 25.1 The job ladder (GDD §9.2)
+
+The rule: each rung pays at least a tenth over the best pay of the rung below, the member's fifth counted (216 × 1.1 = 238 → **240**; then 320, 500, 900, 1,500).
+
+| Who | Job on day 10 | Wage a day (seniority +20 %) | Change |
+|---|---|---|---|
+| Reference recruit (Intelligence; keeps the factory job) | Factory worker, member | 216 × 1.2 = **259** | none; every figure in §5.1 stands |
+| An Agility build (*light*, AGI 11; Level 3 inside the first bar) | Driver from day 1 | 240 × 1.2 = **288** | +29 a day over the member's job, +3 % on the day's Iron; the build's visible perk |
+| A member who switches on day 6 (AGI 10 by level points) | Driver, seniority from 0 | day 6: 245 · day 10: 259 · day 16: 288 | overtakes the old job's seniority on the **fourth** day after the switch; +24 a day at the top |
+| A capital resident with no job | Porter | 180 × 1.2 = 216 | none |
+
+Training Agility to 10 for the Driver (30 + 32 + 34 + 36 + 38 = **170 Energy**) forgoes about 340 Iron of actions and pays back in about three weeks of +24: not worth it for the Iron alone, which is right (the Driver is a step a build takes on the way, not a target to train for). The Level-6 rung (320) is unplaced until the Wardrobe (slice 8) supplies the Charisma; when it lands, a Level-6 guard pays +80 over a member's day-1 job and +32 over the Driver, the same tenth-plus step.
+
+### 25.2 Treatment (GDD §19.1)
+
+One Iron a point, at least 10. The day-10 reference player on the illegal road loses Health about 1.5 times a day (§19.5) and comes out of a won fight 10–25 points down; a top-up is **10–25 Iron**, bought maybe twice a day by the impatient: **~40 Iron a day at most**, against ~1,000 of income and §19.7's ~50–100 of pay-offs, bail and the ward. A player who never fights never sees the card's button. The ward's *Walk out well* (100 for the stay's remaining Health plus the twenty minutes) is the same rate plus the time, so the two prices agree.
+
+### 25.3 The Unrest prize (proposed; GDD §14.11)
+
++50 Party XP once per entry per city, at most once in seven days per city, to members with ≥ 0.5 points moved there in seven days. A rival-ground specialist (§19.6: ~320 Party XP a day) earns at most +50 a week from it: **+2 % of the week**, inside the heavy player's +35 % envelope. The push bar and the goal line change no rate. A town goes from 70 to 60 in five days with both rivals at the cap (Appendix C #52), so the prize pays at most once a week per town and only when two parties' members have spent about ten days of rival-ground Energy between them.
+
+### 25.4 The night (proposed; GDD §2.2, §13.1, §14.12)
+
+**Night missions** at +25 % Iron: four at 10–15 Energy, at most one of each a session, about **+60 Iron a day** for a player who plays every night window; no Party XP, so Rank pacing is untouched. **Patrols:** a thirty-tap rival-ground day spent wholly at night sees **7.5 run-ins instead of 4.5** (25 % against 15), about +180 Iron of pay-offs or one infirmary stay more, and the night stop's +10 Heat once; the +50 % Party XP is unchanged, so the night pays the same and costs more. A mixed day (a third of taps at night under option B) is +1 run-in. **The six-hour day** changes no rate: every daily figure in this sheet is per real City Day.
+
+### 25.5 Session shape (pillar 7)
+
+*What's here* is one tap to a list that was four pins. The treatment card is one optional tap. The picker is the same tap on a friendlier card; in a modal it is one more tap (*Place it*) in exchange for a result that never scrolls. The journey card already needed a tap; now it cannot be lost by one. The rival header and the clock's dusk line are read, not tapped. The night stop is one tap, once a night, only when the player is there. Nothing here needs the player at a set time; night content is an opportunity that comes round four times a day under option B and is never on the ladder.

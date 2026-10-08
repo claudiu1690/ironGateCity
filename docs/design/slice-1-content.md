@@ -581,3 +581,8 @@ The developer's three lines were right in substance; each gets one short second 
 | §13.1 | Repeatable ×1 / ×3 / ×5 applies to checked actions only; training and shifts ×1; the modal's buttons after a Trained or Shift result |
 
 Companion edits: `docs/economy.md` §1 (training row); this document's §2.1, §2.3, §2.4, §2.5, §3, §3.1, §7.4 and §12.1.
+
+
+## 14. Review 5 addendum (8 Oct 2026)
+
+- **§3, the jobs:** the Coalport **Driver pays 240** (was 200). The rule (GDD §9.2, review 5): a job that asks more pays more, each rung at least a tenth over the best pay of the rung below, the member's fifth counted (216 × 1.1 → 240). The vendor (100) and the Factory worker (180, 216 for members) are unchanged. Audit of every job: `docs/design/review-5-answers.md` §5; economy §25.1.

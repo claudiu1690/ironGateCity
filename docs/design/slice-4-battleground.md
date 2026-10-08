@@ -1273,3 +1273,9 @@ The architect's slice-4 technical design (`docs/tech/slice-4.md` §21–§23, AD
 - **§4.3, the places:** a thirtieth, **`irongate.city-hall` · City Hall** (0.57, 0.345, Government Quarter, kind `town-hall`), with *Sit in the public gallery* (intelligence, 6 Energy) and the council's sheet (GDD §15.3). The blurb: *Baroque, copper-domed, between Parliament and the Opera: the capital's own council, ten seats from five districts, and the rule they can agree on, when they can.*
 - **§7, residence:** the button is ***Live here · 500 Iron***, the stamp *Moved in*, the why in words (answers §9.2); *registered in* becomes *you live in*. **§7.4, the room:** a ***Lodgings*** card at **Tram Junction**, not on the residence card (*A bed on the tram line · 7 nights · 100 Iron · Rested banks higher while you have it: up to 250 instead of 200*); the rule is unchanged.
 - **§12, the Herald:** the Herald is the **capital resident's** paper; a visitor reads **their own paper in its Irongate edition** (GDD §3.3). The Herald's city-group templates double as the neutral local line in every other paper's editions.
+
+
+## Added 8 Oct 2026 — review 5
+
+- **§4.5, the jobs:** the capital's **Driver pays 240** (was 200), by the rung rule of GDD §9.2 (a job that asks more pays more; `docs/design/review-5-answers.md` §5). The Porter (180) and the vendor (100) are unchanged.
+- **§3, the journey cards:** a card **stays until a row is tapped** (GDD §14.10): no scrim-dismiss; an explicit *Sleep through it* row on the ordinary deck, *Let it pass* on the hostile deck with its consequence line; the arrival modal's *Continue* waits for a row. `copy.travel.ignoreIt` is withdrawn (answers §7).

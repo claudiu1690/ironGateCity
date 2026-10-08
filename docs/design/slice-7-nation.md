@@ -1067,3 +1067,10 @@ Every deck ≤ 200 characters with the longest tokens. The Courier's non-politic
 - **§9.2, the Casino:** its sheet carries **the council's blocks** (the desk for a councillor, the rule in force with its effect, the seven seats as rows, the order paper, the week's Issues, the Election card; GDD §15.3) under its own tickets; the kind stays `bar`. **§9.4, the room:** a ***Lodgings*** card at **the Rows** (*A bed in the Rows · 7 nights · 100 Iron · Rested banks to 250*), not on the residence card; half price under *Rents in the Rows*.
 - **§11.3, the Courier:** the **lake resident's** paper; a visitor reads their own paper in its *Clearwater edition* (GDD §3.3). The Courier's city-group templates serve as the neutral local line in other papers' Clearwater editions; its ambient set is the edition's.
 - **§3.1, the Governor:** the *What now* card's third line for a Governor reads the office's pay; the Governor's rule is item 1 on the Town Hall's *Up for a vote* block as on `/council`.
+
+
+## Added 8 Oct 2026 — review 5
+
+- **§9.4, the jobs:** the **Tram conductor pays 240** (was 200), by the rung rule of GDD §9.2 (`docs/design/review-5-answers.md` §5). The vendor (100) and the Cannery hand (180) are unchanged.
+- **§7.2, the Curfew Order:** its window is §2.2's night; if the user takes the six-hour game day (answers §11), that is the last two hours of every six, a third of the day rather than ten hours in twenty-four. The bound (+100) is unchanged.
+- **§9.2, the Sanatorium:** carries the *Treatment* card like every `hospital` place (answers §8).
