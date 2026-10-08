@@ -205,6 +205,7 @@ export {
   CitiesList,
   CityCard,
   JourneyCard,
+  JourneyCardSheet,
   JourneyProgress,
   TrainsCard,
   boardButton,
@@ -216,6 +217,7 @@ export type {
   CitiesListProps,
   CityCardProps,
   JourneyCardProps,
+  JourneyCardSheetProps,
   JourneyProgressProps,
   TrainsCardProps,
 } from './components/Travel';

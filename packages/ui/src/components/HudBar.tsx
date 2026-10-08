@@ -40,8 +40,11 @@ export interface HudBarProps {
  * Iron, Political Capital once earned, then the gauges in words: Energy (ticking) with "full at" or
  * Rested; XP with "{xp} XP · {n} to Level {next}", the bar filling within the level; and the
  * Faction XP bar to the next Rank in the faction's colour, labelled *To {rank title}* (*To Rank n* on
- * phones under 400 px) with its numbers after it, *38 / 400 FXP* (review 2 #7), then Health (always,
- * review 4 #24) and Heat above 0. The gauges carry one help button over the group; a tap opens the
+ * phones under 400 px) with its numbers after it, *38 / 400 FXP* (review 2 #7). Design Review 2 #6:
+ * the order is Energy · Health (always, review 4 #24) · Heat (above 0) · XP · Party XP (review 5
+ * answers §6); on wide screens the first column is Energy over Health over Heat, XP and Party XP the
+ * first row's other two. Held sideways, Health and Heat ride in the name line. The gauges carry one
+ * help button over the group; a tap opens the
  * sheet on the note of the label under it (review 4 #12), the others after it. Political Capital is
  * its own button with its own note. A badge shows when stat points wait.
  */
@@ -66,7 +69,9 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
   const keyed: Array<{ key: string; note: HelpNote }> = [
     { key: 'energy', note: copy.help.energy(fullAt) as HelpNote },
     ...(c.rested > 0 ? [{ key: 'rested', note: copy.help.rested() as HelpNote }] : []),
-    // Review 4 #12: Heat's line sits under Energy; its note says the state and when it cools.
+    // Design Review 2 #6: Health directly under Energy, then Heat (review 4 #12: its note says the
+    // state and when it cools), then XP and Party XP.
+    ...(hp ? [{ key: 'health', note: copy.risk.help.health() as HelpNote }] : []),
     ...(heatValue > 0
       ? [
           {
@@ -83,7 +88,6 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
       key: 'fxp',
       note: copy.help.fxp(up ? formatNumber(up.fxp - c.fxp) : null, up?.title ?? null) as HelpNote,
     },
-    ...(hp ? [{ key: 'health', note: copy.risk.help.health() as HelpNote }] : []),
   ];
   const notes = keyed.map((k) => k.note);
   // Review 4 #25: the Party XP label opens the rank ladder; its note carries *See the ranks*.
@@ -217,14 +221,22 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
                 noteKey="energy"
                 note={status}
                 noteTestId="hud-next-tick"
-                className="flex-1"
+                // Wide screens: every gauge in its own cell (Design Review 2 #6), Energy the first.
+                className="flex-1 lg:col-start-1 lg:row-start-1"
                 narrowBar
               />
               {/* Inside the gauges, above their button (z-10), so a tap on the time opens the clock. */}
               <HudClock now={now} testId="hud-clock" className="relative z-10 -mr-2 flex lg:hidden short:hidden" />
             </div>
-            {/* Review 4 #12 (answers §12): Heat is a body line of its own under Energy, from 1. */}
-            {heatValue > 0 && <HeatRow value={heatValue} size="line" className="short:hidden lg:row-start-2" />}
+            {/* Design Review 2 #6: Health directly under Energy, always (review 4 #24); on wide screens
+                the second row's first column. */}
+            {hp && <HealthBar value={hp.value} max={hp.max} className="short:hidden lg:col-start-1 lg:row-start-2" />}
+            {/* Review 4 #12 (answers §12): Heat is a body line of its own from 1, right after Health;
+                review 5 answers §6: on wide screens under Health (the first column's third row, so the
+                bar is three rows deep only while Heat is above 0). */}
+            {heatValue > 0 && (
+              <HeatRow value={heatValue} size="line" className="short:hidden lg:col-start-1 lg:row-start-3" />
+            )}
             <Gauge
               label={copy.hud.xp}
               name="Experience to next level"
@@ -235,6 +247,7 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
               figure={copy.hud.xpLine(formatNumber(c.xp), toNext, c.level + 1)}
               figureTestId="hud-xp"
               noteKey="xp"
+              className="lg:col-start-2 lg:row-start-1"
             />
             <Gauge
               // Review 2 #7: "To Steward" before the bar and "38 / 400 FXP" after it, always shown.
@@ -268,16 +281,14 @@ export function HudBar({ character: c, nextTickIn, onPlaceStat, placing, heat, h
               }
               figureTestId="hud-fxp"
               noteKey="fxp"
+              className="lg:col-start-3 lg:row-start-1"
             />
-            {/* Slice 5 (screens §2.2), review 4 #24: Health under Party XP, always (the second row's
-                third column on wide screens; Heat sits under Energy). */}
-            {hp && <HealthBar value={hp.value} max={hp.max} className="short:hidden lg:col-start-3 lg:row-start-2" />}
             {/* One tap target over the gauges (44 px tall): the notes behind their labels, opening on
                 the one under the tap. */}
             <HelpButton
               notes={notes}
               firstAt={firstAt}
-              label={heatValue > 0 ? 'What Energy, XP, Party XP, Health and Heat mean' : 'What Energy, XP, Party XP and Health mean'}
+              label={heatValue > 0 ? 'What Energy, Health, Heat, XP and Party XP mean' : 'What Energy, Health, XP and Party XP mean'}
               testId="hud-help"
               className="absolute inset-x-0 -top-1 -bottom-1 h-auto w-full bg-transparent focus-visible:outline-2 focus-visible:outline-paper lg:-bottom-3 short:-top-0.5"
               onPick={(i) => {

@@ -1038,6 +1038,8 @@ function slice4Problems(
     story(`${j.id}.ignore`, j.ignore);
     if (new Set(j.choices.map((c) => c.id)).size !== j.choices.length)
       problems.push(`${j.id}: duplicate choice ids`);
+    // Review 5 #7: the put-aside row's id (JOURNEY_SET_ASIDE in the rules) is the server's own.
+    if (j.choices.some((c) => c.id === 'set-aside')) problems.push(`${j.id}: the choice id set-aside is reserved`);
     for (const c of j.choices) {
       const where = `${j.id}.${c.id}`;
       for (const p of placeholdersIn(c.detail))

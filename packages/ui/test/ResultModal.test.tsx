@@ -97,9 +97,12 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('effect-order-signed')).toHaveTextContent(
       /^Done, that one · \+20 Party XP\. (One|Two) to go\. — P\.H\.$/,
     );
-    expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · place your point');
-    await user.click(d.getByRole('button', { name: 'STR 10 → 11' }));
+    expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · one point to place');
+    // Review 5 (answers §4.1): *Place it* opens the picker as a sheet over the modal.
+    await user.click(d.getByRole('button', { name: 'Place it' }));
+    await user.click(screen.getByRole('button', { name: 'STR 10 → 11' }));
     expect(onPlaceStat).toHaveBeenCalledWith('str');
+    await user.keyboard('{Escape}');
     // 25 Energy: once is fine, three need 30; the disabled button keeps its label and cost.
     expect(d.getByRole('button', { name: 'Once more · 10 Energy' })).toBeEnabled();
     expect(d.getByRole('button', { name: 'Three more · 30 Energy' })).toBeDisabled();

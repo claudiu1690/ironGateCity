@@ -364,7 +364,6 @@ describe('the new UI copy, word for word against slice-4-screens.md §11', () =>
     t.onTheWay,
     t.optional,
     t.oneChoice,
-    t.ignoreIt,
     t.arrived,
     t.inTheCapital,
     t.nothingHappened,
@@ -441,13 +440,22 @@ describe('the new UI copy, word for word against slice-4-screens.md §11', () =>
     s.inPrint,
   ];
   // Review 4: the strings the review reworded are compared as reworded (./review4.ts).
-  const listed = [...section(SCREENS, '## 11. Copy', 'Help notes (tap').matchAll(/\*([^*]+)\*/g)].map(
-    (m) => reworded(m[1]!),
-  );
+  // Review 5 #7 (answers §7): the *Ignore it* line is withdrawn for the card's put-aside row.
+  const listed = [...section(SCREENS, '## 11. Copy', 'Help notes (tap').matchAll(/\*([^*]+)\*/g)]
+    .map((m) => reworded(m[1]!))
+    .filter((x) => x !== 'Ignore it and you sleep through it. Nothing happens.');
 
   it('every §11 string is in copy, and nothing else', () => {
     expect([...new Set(produced)].sort()).toEqual([...new Set(listed)].sort());
     expect(new Set(produced).size).toBe(produced.length);
+  });
+
+  it('review 5 #7 (answers §7): the put-aside rows, word for word', () => {
+    expect([t.sleepThrough, t.nothingHappens, t.letItPass]).toEqual(['Sleep through it', 'Nothing happens.', 'Let it pass']);
+    expect(t.letItPassLine({ heat: 10, flag: 'watched' })).toBe('your name gets written down · Heat +10 · Watched today');
+    expect(t.letItPassLine({ flag: 'watched' })).toBe('Watched today');
+    expect(t.letItPassLine(undefined)).toBe('nothing');
+    expect('ignoreIt' in t).toBe(false);
   });
 
   it('the plural and article forms beyond the design string', () => {

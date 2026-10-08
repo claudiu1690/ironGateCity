@@ -1,7 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
 import type { JourneyCardResult, JourneyCardView, NationCityView, LocationView } from '@irongate/rules';
-import { useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { cx, formatClock, formatOpinionDelta, formatUntil, formatWhen, renderTimeTokens } from '../format';
 import { statName } from '../odds';
 import { Button } from './Button';
@@ -279,12 +280,17 @@ export interface JourneyCardProps {
 /**
  * Screens §3.4: *On the way* · *Optional*, the title and the setup, the choices as `StoryScreen` rows
  * (one tap, final); after the choice, the chosen row and the outcome with its stamp and (a Partial)
- * the one-line reason; under it *Ignore it and you sleep through it*.
+ * the one-line reason. Review 5 #7 (answers §7): the card stays until a row is tapped, so its foot is
+ * the explicit put-aside row, *Sleep through it* · *Nothing happens.* or *Let it pass* with its
+ * consequence (the server's last choice, `setAside`); its outcome is the card's ignore text, no stamp.
  */
 export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = false }: JourneyCardProps) {
   const chosen: JourneyCardResult | null = card.chosen;
   const pick = chosen?.choiceId ?? pendingChoiceId;
-  const rows = pick ? card.choices.filter((c) => c.id === pick) : card.choices;
+  const all = pick ? card.choices.filter((c) => c.id === pick) : card.choices;
+  const rows = all.filter((c) => !c.setAside);
+  const aside = all.find((c) => c.setAside);
+  const setAside = !!chosen && card.choices.some((c) => c.setAside && c.id === chosen.choiceId);
   return (
     <section
       aria-label={card.title}
@@ -327,11 +333,35 @@ export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = 
             </button>
           );
         })}
+        {aside && (
+          // A text row at the foot (44 px): no box, a dotted rule above; inverted once tapped.
+          <button
+            type="button"
+            disabled={!!pick}
+            aria-busy={pendingChoiceId === aside.id || undefined}
+            aria-pressed={pick === aside.id || undefined}
+            onClick={() => onChoose(aside.id)}
+            className={cx(
+              'flex min-h-11 w-full flex-col items-start justify-center gap-0.5 border-t border-dotted border-faint px-3 py-1.5 text-left',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol',
+              pick === aside.id
+                ? 'border-t-0 bg-ink text-paper'
+                : 'cursor-pointer hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:opacity-60',
+            )}
+            data-testid="journey-set-aside"
+          >
+            <span className="font-body text-[14px] leading-snug font-semibold">{aside.title}</span>
+            <span className="font-mono text-[11px] opacity-85" data-testid="journey-set-aside-line">
+              {aside.detail}
+            </span>
+          </button>
+        )}
       </div>
       {chosen && (
         <div className="flex flex-col gap-1" data-testid="journey-outcome">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-[17px] leading-tight font-bold">{chosen.headline}</h3>
+            {/* The put-aside row's outcome is its text alone (the row above already names it). */}
+            {!setAside && <h3 className="font-display text-[17px] leading-tight font-bold">{chosen.headline}</h3>}
             {chosen.stamp && (
               <Stamp
                 tone={chosen.stamp}
@@ -368,7 +398,6 @@ export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = 
           )}
         </div>
       )}
-      {!chosen && <p className="font-mono text-[11px] text-muted">{copy.travel.ignoreIt}</p>}
     </section>
   );
 }
@@ -412,5 +441,66 @@ export function TrainsCard({ trains, onBoard, pendingCityId, onNation }: TrainsC
         </button>
       </div>
     </section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Review 5 #7 (answers §7, GDD §14.10): the journey card's sheet, which stays until a row is tapped.
+// ---------------------------------------------------------------------------------------------
+
+export interface JourneyCardSheetProps {
+  title: string;
+  children: ReactNode;
+  /** Once the card is answered: its Close button, and a tap on the dim closes it. Absent: neither. */
+  onClose?: () => void;
+}
+
+/**
+ * The card over the journey's map, drawn inside the journey screen (its parent is `relative` and
+ * isolated), not over the whole app: the map under the dim is inert (a tap there does nothing), there
+ * is no Close, no Escape and no swipe while the card waits, and the tab bar and the top bar stay
+ * usable (the Paper, Me and Council tabs work; the Map tab comes back to the card). A bottom sheet on
+ * a phone, a centred card from 640 px. Focus moves into it when it opens.
+ */
+export function JourneyCardSheet({ title, children, onClose }: JourneyCardSheetProps) {
+  const titleId = useId();
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    ref.current?.focus({ preventScroll: true });
+  }, []);
+  return (
+    <>
+      <div
+        className="ease-dim absolute inset-0 z-30 bg-ink/60"
+        data-state="open"
+        data-testid="card-dim"
+        aria-hidden="true"
+        onClick={onClose}
+      />
+      <section
+        ref={ref}
+        role="dialog"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        data-state="open"
+        data-testid="journey-card-sheet"
+        onKeyDown={onClose ? (e) => e.key === 'Escape' && onClose() : undefined}
+        className="ease-sheet absolute inset-x-0 bottom-0 z-40 flex max-h-[85%] flex-col gap-3 overflow-y-auto overscroll-contain bg-paper p-4 text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)] outline-none sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100%-32px)] sm:w-[520px] sm:max-w-[calc(100%-32px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]"
+      >
+        <h2 id={titleId} className="font-display text-[22px] font-bold">
+          {title}
+        </h2>
+        {children}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="label-caps min-h-11 cursor-pointer border-[1.5px] border-ink px-4 text-[13px] hover:bg-ink hover:text-paper"
+          >
+            Close
+          </button>
+        )}
+      </section>
+    </>
   );
 }

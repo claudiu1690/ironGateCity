@@ -345,6 +345,13 @@ export function trainAt(
   return { ...along(legs[legs.length - 1]!.points, 1, aspect), leg: legs.length - 1 };
 }
 
+/**
+ * Review 5 #7 (answers §7, GDD §14.10): the journey card's explicit put-aside row (*Sleep through it*,
+ * or *Let it pass* on the hostile deck), sent as the card's last choice and chosen like any other.
+ * Its outcome is the card's `ignore` text and `ignoreEffects`, at once. No content choice uses this id.
+ */
+export const JOURNEY_SET_ASIDE = 'set-aside';
+
 /** ADR 0075 §3 (answers §7.2): the card fires between a fifth and four fifths of the way. */
 export const CARD_AT = { from: 0.2, to: 0.8 } as const;
 

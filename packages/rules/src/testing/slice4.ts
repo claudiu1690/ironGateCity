@@ -241,6 +241,17 @@ export const journeyViewFixture: JourneyView = {
         cost: null,
         affordable: true,
       },
+      // Review 5 #7: the put-aside row, the server's last choice.
+      {
+        id: 'set-aside',
+        title: 'Sleep through it',
+        detail: 'Nothing happens.',
+        stat: null,
+        chance: null,
+        cost: null,
+        affordable: true,
+        setAside: true,
+      },
     ],
     chosen: null,
   },

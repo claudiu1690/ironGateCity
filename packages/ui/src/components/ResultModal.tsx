@@ -35,6 +35,7 @@ import { GroundSash } from './GroundSash';
 import type { Ground } from './GroundSash';
 import { ArtPanel } from './HallHeader';
 import { Picture } from './Picture';
+import { BottomSheet } from './Sheets';
 import { StatPointsPanel } from './Shell';
 import { Stamp } from './Stamp';
 import type { StampTone } from './Stamp';
@@ -130,6 +131,9 @@ const CARD_ACTS = new Set(['bail', 'released', 'deported', 'walkOut', 'discharge
 export function ResultModal(props: ResultModalProps) {
   const { result, open, onOpenChange } = props;
   const card = result?.kind === 'political' && CARD_ACTS.has(result.act);
+  // Review 5 #4 (answers §4.1): an action's result scrolls only in its middle (the art and the stamp
+  // stay at the top, the buttons at the bottom).
+  const action = !!result && result.kind !== 'political' && result.kind !== 'journey';
   return (
     <Dialog.Root open={open && result !== null} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -139,7 +143,7 @@ export function ResultModal(props: ResultModalProps) {
             // Slice 5 (review 3: never pop): it rises in over the dim and back out.
             card
               ? 'ease-sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col overflow-y-auto bg-paper text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)]'
-              : 'ease-card fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper text-ink',
+              : cx('ease-card fixed inset-0 z-50 flex flex-col bg-paper text-ink', action ? 'overflow-hidden' : 'overflow-y-auto'),
             'sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[92dvh] sm:w-[min(600px,calc(100vw-32px))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]',
           )}
         >
@@ -173,7 +177,7 @@ function ArtHeader({
   ground?: Ground | null;
 }) {
   return (
-    <ArtPanel art={art} className="h-[150px]">
+    <ArtPanel art={art} className="h-[150px] shrink-0">
       <div
         className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.9)_0%,rgb(21_24_26/0)_55%)]"
         aria-hidden="true"
@@ -343,6 +347,7 @@ function JourneyBody({
   journeyCard,
 }: ResultModalProps & { result: JourneyArrivalResult }) {
   const a = result.journey.arrival;
+  const waiting = !!result.journey.card && !result.journey.card.chosen;
   if (!a) return null;
   return (
     <>
@@ -393,20 +398,24 @@ function JourneyBody({
         </section>
         {journeyCard}
       </div>
-      <div
-        className="sticky bottom-0 z-10 mt-auto border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
-        data-testid="result-buttons"
-      >
-        <Button
-          variant="primary"
-          className="w-full"
-          onClick={onContinue}
-          pending={continuePending}
-          data-testid="arrival-continue"
+      {/* Review 5 #7 (answers §7): with a card still to answer, Continue is not shown until one of its
+          rows (a choice, or the put-aside row) is tapped; then the outcome prints and it appears. */}
+      {!waiting && (
+        <div
+          className="sticky bottom-0 z-10 mt-auto border-t border-track bg-paper px-4 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom))]"
+          data-testid="result-buttons"
         >
-          {copy.travel.continue}
-        </Button>
-      </div>
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={onContinue}
+            pending={continuePending}
+            data-testid="arrival-continue"
+          >
+            {copy.travel.continue}
+          </Button>
+        </div>
+      )}
     </>
   );
 }
@@ -464,11 +473,14 @@ function ResultBody({
   onSentTo,
   sentToPending,
 }: ResultModalProps & { result: ActionResult }) {
-  const [later, setLater] = useState(false);
+  const [picking, setPicking] = useState(false);
   // Review 4 #5 (answers §5): the stats as this result found them, so the placed line can name the
   // stat that moved (*Level 2 · Intelligence 12 → 13*). Taken again when a new result comes in.
   const [seen, setSeen] = useState({ r, stats: statPoints?.stats ?? null });
-  if (seen.r !== r || (!seen.stats && statPoints)) setSeen({ r, stats: statPoints?.stats ?? null });
+  if (seen.r !== r || (!seen.stats && statPoints)) {
+    if (seen.r !== r) setPicking(false);
+    setSeen({ r, stats: statPoints?.stats ?? null });
+  }
   const stamp = stampFor(r);
   const street = r.street ?? null;
   const toneText =
@@ -541,7 +553,10 @@ function ResultBody({
         caption={`${r.place.cityName} · ${r.place.locationName} · ${formatClock(Date.parse(r.performedAt))}`}
         ground={ground}
       />
-      <div className="flex flex-1 flex-col gap-4 px-4 pt-3.5 pb-4">
+      <div
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pt-3.5 pb-4"
+        data-testid="result-middle"
+      >
         {/* Slice 5 (screens §4.3): the run-in first, when there was one. */}
         {street?.runIn && <RunInBlock runIn={street.runIn} places={trainingPlaces} />}
         {/* 2. What happened */}
@@ -620,7 +635,7 @@ function ResultBody({
               Continue, not below the list of effects. */}
           {e.levelUp && (
             <div
-              className="mb-2 flex flex-col gap-1.5 border-[1.5px] border-xp bg-paper-card p-2.5"
+              className="mb-2 flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-[1.5px] border-xp bg-paper-card px-2.5 py-1.5"
               data-testid="effect-level"
             >
               <span className="font-label text-[14px]">
@@ -634,19 +649,38 @@ function ResultBody({
                     )
                   : copy.levelUpLine(e.levelUp.to, statPoints?.pending ?? e.levelUp.statPoints)}
               </span>
-              {statPoints && onPlaceStat && !later && (
-                <StatPointsPanel
-                  pending={statPoints.pending}
-                  level={statPoints.level}
-                  stats={statPoints.stats}
-                  guide={statPoints.guide}
-                  onPlace={onPlaceStat}
-                  placing={placing}
-                  onLater={() => setLater(true)}
-                  title={statPoints.pending > 0 ? copy.pointsToPlace(statPoints.pending) : undefined}
-                />
+              {/* Review 5 #4 (answers §4.1): the picker is not inline in the modal; *Place it* opens it
+                  as a sheet over the modal, and placing the point closes it. */}
+              {statPoints && onPlaceStat && statPoints.pending > 0 && (
+                <Button
+                  variant="outline"
+                  className="px-4"
+                  onClick={() => setPicking(true)}
+                  data-testid="place-it"
+                >
+                  {copy.placeIt}
+                </Button>
               )}
             </div>
+          )}
+          {e.levelUp && statPoints && onPlaceStat && statPoints.pending > 0 && (
+            <BottomSheet
+              stacked
+              open={picking}
+              onOpenChange={setPicking}
+              title={copy.levelUpLine(e.levelUp.to, statPoints.pending)}
+            >
+              <StatPointsPanel
+                pending={statPoints.pending}
+                level={statPoints.level}
+                stats={statPoints.stats}
+                guide={statPoints.guide}
+                onPlace={onPlaceStat}
+                placing={placing}
+                onLater={() => setPicking(false)}
+                title={copy.pointsToPlace(statPoints.pending)}
+              />
+            </BottomSheet>
           )}
           {/* Review 1 (§13.4, answers §9): a Standing level crossed is a card in the level-up's block. */}
           {e.standingUp && <StandingCard up={e.standingUp} />}

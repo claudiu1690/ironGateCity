@@ -2001,6 +2001,8 @@ export interface JourneyChoiceView {
   affordable: boolean;
   /** Slice 5 (design §23.2): an unchecked row that depends on Heat and the record (no odds word). */
   gated?: boolean;
+  /** Review 5 #7: the put-aside row (`JOURNEY_SET_ASIDE`), last; its detail says what it costs. */
+  setAside?: boolean;
 }
 
 export interface JourneyCardView {

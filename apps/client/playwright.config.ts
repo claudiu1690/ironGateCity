@@ -42,6 +42,7 @@ export default defineConfig({
         /qa\.slice5\.spec\.ts/,
         /review4\.spec\.ts/,
         /qa\.review4\.spec\.ts/,
+        /review5\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -151,6 +152,15 @@ export default defineConfig({
       testMatch: /qa\.review4\.spec\.ts/,
       dependencies: ['review4'],
       use: { ...devices['Pixel 7'] },
+    },
+    // Design Review 2 quick fixes (#4 scroll bars, #6 Health under Energy, #7 the journey card): on
+    // a desktop browser (classic scroll bars), each test setting its own size; last, it moves the
+    // shared clock to the journey card's moment.
+    {
+      name: 'review5',
+      testMatch: /(^|[\\/])review5\.spec\.ts$/,
+      dependencies: ['qa-review4'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
   ],
   webServer: [

@@ -4,6 +4,7 @@ import { Character, City, District, IssueModel, Journey, PaperEntry } from '@iro
 import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc, JourneyDoc } from '@irongate/db';
 import {
   ENERGY,
+  JOURNEY_SET_ASIDE,
   TRAVEL,
   addHeat,
   addToTally,
@@ -43,6 +44,7 @@ import type {
   GameErrorReason,
   JourneyCardResult,
   JourneyChoiceSpec,
+  JourneyChoiceView,
   JourneyView,
   Landing,
   LocationView,
@@ -647,7 +649,7 @@ export async function journeyView(
           title: ev.title,
           setup: fillCard(content, ev.setup, vars),
           ignore: fillCard(content, ev.ignore, vars),
-          choices: ev.choices.map((ch) => ({
+          choices: ev.choices.map((ch): JourneyChoiceView => ({
             id: ch.id,
             title: ch.title,
             detail: fillCard(content, ch.detail, vars),
@@ -659,7 +661,19 @@ export async function journeyView(
             affordable: c.iron >= (ch.cost?.iron ?? 0),
             // Design §23.2: the checkpoint's papers depend on Heat and the record (no odds word).
             gated: !!ch.gate,
-          })),
+          })).concat([
+            // Review 5 #7 (answers §7): the explicit put-aside row, last; the only way out but a choice.
+            {
+              id: JOURNEY_SET_ASIDE,
+              title: hostile ? copy.travel.letItPass : copy.travel.sleepThrough,
+              detail: hostile ? copy.travel.letItPassLine(ev.ignoreEffects) : copy.travel.nothingHappens,
+              stat: null,
+              chance: null,
+              cost: null,
+              affordable: true,
+              setAside: true,
+            },
+          ]),
           chosen,
           deck: hostile ? 'hostile' : 'ordinary',
         }
@@ -741,6 +755,96 @@ function partialReason(
   return copy.reason.statLowTwo(name(stats[0]!), name(stats[1]!), name(weak), where);
 }
 
+/**
+ * Review 5 #7 (answers §7, GDD §14.10): the card's put-aside row, *Sleep through it* (the ordinary
+ * deck: nothing happens) or *Let it pass* (the hostile deck: its `ignoreEffects` now, Heat at the
+ * residence city's rate and the day flag in the destination). The outcome is the card's `ignore`
+ * text, no stamp. Stored as the journey's choice (so the arrival applies nothing again) and marked
+ * slept through, inside `choose`'s transaction and request key.
+ */
+async function setAsideInTx(a: {
+  content: GameContent;
+  session: ClientSession;
+  loaded: LoadedCharacter;
+  c: CharacterDoc;
+  j: JourneyDoc;
+  ev: NonNullable<ReturnType<GameContent['journeyEvent']>>;
+  now: number;
+  idempotencyKey: string;
+}): Promise<JourneyCardResult> {
+  const { content, session, loaded, c, j, ev, now } = a;
+  const today = dayKey(now);
+  const at = new Date(now);
+  const hostile = ev.deck === 'hostile';
+  const fx = hostile ? ev.ignoreEffects : undefined;
+  const vars = { destination: destinationName(content, j.to), issue: 'the week' };
+  const destCity = await City.findById(j.to).session(session).lean<CityDoc>();
+  const issue = await firstIssueOf(j.to, destCity, today, session);
+  if (issue) vars.issue = content.issue(issue.issueId)?.short ?? vars.issue;
+  const heatChange = fx?.heat ? addHeat(heatTimerOf(c), now, heatRateOn(content, loaded.city), fx.heat) : null;
+  const set: Record<string, unknown> = {};
+  if (heatChange) set.heat = heatDoc(heatChange.timer);
+  if (fx?.flag) set.flags = withFlag(c, j.to, today, fx.flag);
+  let updated = c;
+  if (Object.keys(set).length > 0) {
+    const w = await Character.findOneAndUpdate(
+      { _id: c._id, version: c.version, 'day.settled': today },
+      { $set: set, $inc: { version: 1 } },
+      { session, returnDocument: 'after', lean: true },
+    );
+    if (!w) throw new VersionConflict();
+    updated = w;
+  }
+  const rewards: JourneyCardResult['rewards'] = [];
+  if (heatChange && heatChange.after !== heatChange.before)
+    rewards.push({ id: 'heat', amount: heatChange.after - heatChange.before });
+  const heat = heatChange ? { before: heatChange.before, after: heatChange.after } : null;
+  const jView = await journeyView(content, updated, j, now, { city: loaded.city, session, chosenless: true, heat });
+  const result: JourneyCardResult = {
+    kind: 'journeyCard',
+    journeyId: j._id.toHexString(),
+    eventId: ev.id,
+    choiceId: JOURNEY_SET_ASIDE,
+    stamp: null,
+    headline: hostile ? copy.travel.letItPass : copy.travel.sleepThrough,
+    body: fillCard(content, ev.ignore, vars),
+    reason: null,
+    rewards,
+    opinion: null,
+    points: null,
+    quoted: false,
+    ...(fx?.flag
+      ? {
+          flag: {
+            flag: fx.flag,
+            line: copy.risk.flags[fx.flag](content.city(j.to)?.name ?? j.to, '{until}'),
+            until: dayStart(dayKey(at.getTime()) + 1),
+          },
+        }
+      : {}),
+    performedAt: at.toISOString(),
+    idempotencyKey: a.idempotencyKey,
+    character: toCharacterView(updated, now, content, loaded.editionReadAt, { city: loaded.city }),
+    journey: jView,
+  };
+  const stored = await Journey.updateOne(
+    { _id: j._id, choice: null, status: { $ne: 'closed' } },
+    {
+      $set: {
+        choice: { choiceId: JOURNEY_SET_ASIDE, outcome: 'chosen', at, result, ...(heat ? { heat } : {}) },
+        sleptThrough: true,
+      },
+    },
+    { session },
+  );
+  if (stored.matchedCount === 0) {
+    const again = await Journey.findById(j._id).session(session).lean<JourneyDoc>();
+    if (again?.status === 'closed') throw new GameError('CARD_CLOSED');
+    throw new GameError('ALREADY_CHOSEN', { choiceId: again?.choice?.choiceId ?? null }, 'CONFLICT');
+  }
+  return result;
+}
+
 export async function choose(deps: {
   user: SessionUser;
   content: GameContent;
@@ -776,6 +880,9 @@ export async function choose(deps: {
       // key is not kept (`withRequestKey` stores a key only on success), so the same key works later.
       if (!cardOpen(j, now)) throw new GameError('CARD_NOT_YET', { at: cardAtOf(j) });
       const ev = content.journeyEvent(j.card.eventId)!;
+      if (input.choiceId === JOURNEY_SET_ASIDE) {
+        return setAsideInTx({ content, session, loaded, c, j, ev, now, idempotencyKey: input.idempotencyKey });
+      }
       const ch = ev.choices.find((x) => x.id === input.choiceId);
       if (!ch) throw new GameError('UNKNOWN_CHOICE', { choiceId: input.choiceId }, 'BAD_REQUEST');
       const cost = ch.cost?.iron ?? 0;
@@ -1048,18 +1155,15 @@ async function closeJourneyInTx(
   const at = new Date(now);
   // Slept through is decided on the document as it is closed, not on an earlier read: an answer
   // committed before this write is an answer (QA slice 4 n1). A card still unanswered closes first;
-  // anything else (no card, or a choice) closes as not slept through.
+  // anything else (no card, or a choice) closes as it is: not slept through, unless the choice was the
+  // put-aside row (review 5 #7, already marked and its effects already applied).
   const slept = await Journey.findOneAndUpdate(
     { _id: journeyId, status: 'arrived', card: { $ne: null }, choice: null },
     { $set: { status: 'closed', closedAt: at, sleptThrough: true } },
     { session, returnDocument: 'after', lean: true },
   );
   if (!slept) {
-    await Journey.updateOne(
-      { _id: journeyId, status: 'arrived' },
-      { $set: { status: 'closed', closedAt: at, sleptThrough: false } },
-      { session },
-    );
+    await Journey.updateOne({ _id: journeyId, status: 'arrived' }, { $set: { status: 'closed', closedAt: at } }, { session });
   }
   const set: Record<string, unknown> = {};
   const fx = slept?.card ? content.journeyEvent(slept.card.eventId)?.ignoreEffects : undefined;

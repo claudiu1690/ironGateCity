@@ -294,40 +294,8 @@ test.describe('#7 the journey on the nation map', () => {
     expect(await smallTargets(page, '[data-testid=journey-plate]')).toEqual([]);
     await plainWords(page, 'the journey');
 
-    // The card turns up by itself at its moment: no reload, the pin pulses, the sheet opens.
-    await justBeforeTheCard(page, cardAt);
-    const pulsed = page
-      .waitForFunction(() => !!document.querySelector('.travel-pin-pulse'), null, { timeout: 20_000 })
-      .then(() => true);
-    const card = page.getByRole('dialog').getByTestId('journey-card');
-    await expect(card).toBeVisible({ timeout: 20_000 });
-    expect(await pulsed).toBe(true);
-    await expect(page.getByRole('dialog')).toContainText('On the train to Irongate');
-    expect(await smallTargets(page, '[role=dialog]')).toEqual([]);
-    // Closed: the plate's row *On the way · {title}* (44 px) opens it again.
-    await page.keyboard.press('Escape');
-    await expect(card).toHaveCount(0);
-    const row = page.getByTestId('journey-card-open');
-    await expect(row).toHaveText(/^On the way · .+/);
-    expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    await row.click();
-    await expect(page.getByRole('dialog').getByTestId('journey-card')).toBeVisible();
-    await page.keyboard.press('Escape');
-    // Leave by the tab bar and come back: the sheet is open on return; and after a reload.
-    await page.getByRole('link', { name: /Paper/ }).first().click();
-    await expect(page).toHaveURL(/\/paper$/);
-    await expect(page.getByTestId('edition-line')).toHaveText('· Irongate edition');
-    await expect(page.getByTestId('dateline')).toContainText('Irongate');
-    await page.getByRole('link', { name: /^Map/ }).first().click();
-    await expect(page).toHaveURL(/\/journey$/);
-    await expect(page.getByRole('dialog').getByTestId('journey-card')).toBeVisible();
-    await page.keyboard.press('Escape');
-    await page.reload();
-    await expect(page.getByRole('dialog').getByTestId('journey-card')).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-
-    // Drag the map away: *Follow your pin* shows; it brings the pin back and goes.
+    // Drag the map away: *Follow your pin* shows; it brings the pin back and goes. (Before the card:
+    // review 5 #7, while the card waits the map under it is inert.)
     const map = (await page.getByTestId('city-map').boundingBox())!;
     const sx = map.x + map.width * 0.7;
     const sy = map.y + map.height * 0.6;
@@ -350,12 +318,48 @@ test.describe('#7 the journey on the nation map', () => {
       })
       .toBe(true);
 
-    // The arrival with the card unanswered: it waits in the arrival modal.
+    // The card turns up by itself at its moment: no reload, the pin pulses, the sheet opens.
+    await justBeforeTheCard(page, cardAt);
+    const pulsed = page
+      .waitForFunction(() => !!document.querySelector('.travel-pin-pulse'), null, { timeout: 20_000 })
+      .then(() => true);
+    const card = page.getByRole('dialog').getByTestId('journey-card');
+    await expect(card).toBeVisible({ timeout: 20_000 });
+    expect(await pulsed).toBe(true);
+    await expect(page.getByRole('dialog')).toContainText('On the train to Irongate');
+    expect(await smallTargets(page, '[role=dialog]')).toEqual([]);
+    // Review 5 #7 (answers §7): it stays until a row is tapped: no Close, Escape and a tap on the map
+    // under its dim leave it open (and the plate's row is not offered while it is open).
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Close' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await page.mouse.click(map.x + map.width * 0.85, map.y + map.height * 0.5);
+    await expect(card).toBeVisible();
+    await expect(page.getByTestId('journey-card-open')).toHaveCount(0);
+    // The tab bar still works (a vote never waits for a card); the Map tab comes back to the card;
+    // and after a reload.
+    await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: /Paper/ }).click();
+    await expect(page).toHaveURL(/\/paper$/);
+    await expect(page.getByTestId('edition-line')).toHaveText('· Irongate edition');
+    await expect(page.getByTestId('dateline')).toContainText('Irongate');
+    await page.getByRole('link', { name: /^Map/ }).first().click();
+    await expect(page).toHaveURL(/\/journey$/);
+    await expect(page.getByRole('dialog').getByTestId('journey-card')).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole('dialog').getByTestId('journey-card')).toBeVisible();
+
+    // The arrival with the card unanswered: it waits in the arrival modal, with its put-aside row;
+    // Continue only after a row is tapped.
     expect((await page.request.post('/api/test/journey', { data: { arriveNow: true } })).ok()).toBe(true);
     await page.reload();
-    const arrival = page.getByRole('dialog').filter({ has: page.getByTestId('arrival-continue') });
+    const arrival = page.getByRole('dialog').filter({ has: page.getByTestId('arrival-headline') });
     await expect(arrival).toContainText('Arrived');
     await expect(arrival.getByTestId('journey-card')).toBeVisible();
+    await expect(arrival.getByTestId('arrival-continue')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(arrival).toBeVisible();
+    await arrival.getByTestId('journey-set-aside').click();
+    await expect(arrival.getByTestId('journey-outcome')).toBeVisible();
+    await expect(arrival.getByTestId('arrival-continue')).toBeVisible();
   });
 
   test('1920 × 1080: the pin and its label stay clear of the side sheet', async ({ page }) => {
@@ -786,9 +790,11 @@ test('R4-QA-01: after placing the point the line reads "Level 2 · Strength 8 �
     .click();
   const modal = stampModal(page);
   const line = modal.getByTestId('effect-level');
-  await expect(line).toContainText('Level 2 · place your point');
-  await line.getByRole('button', { name: 'STR 8 → 9' }).click();
-  await expect(line).not.toContainText('place your point');
+  // Review 5 (answers §4.1): the line and *Place it*; the picker is a sheet over the modal.
+  await expect(line).toContainText('Level 2 · one point to place');
+  await line.getByRole('button', { name: 'Place it' }).click();
+  await page.getByRole('dialog', { name: 'Level 2 · one point to place' }).getByRole('button', { name: 'STR 8 → 9' }).click();
+  await expect(line).not.toContainText('to place');
   await expect(line).toContainText('Level 2 · Strength 8 → 9');
 });
 

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { pinsOutOfReach, sheetSettled, signUp, toTheCard, unclearPins } from './helpers';
+import { arrivalContinue, pinsOutOfReach, sheetSettled, signUp, toTheCard, unclearPins } from './helpers';
 
 /**
  * Slice 4's first trip (tech design §15.1 `travel.spec.ts`), on a phone: Level 10 by the hook → the
@@ -207,9 +207,10 @@ test('the first trip: nation → board → the journey card → arrival → the 
   await expect(page.getByTestId('journey-title')).toHaveText(/to Coalport$/);
   expect((await page.request.post('/api/test/journey', { data: { arriveNow: true } })).ok()).toBe(true);
   await page.reload();
-  const home = page.getByRole('dialog').filter({ has: page.getByTestId('arrival-continue') });
+  const home = page.getByRole('dialog').filter({ has: page.getByTestId('arrival-headline') });
   await expect(home.getByTestId('arrival-headline')).toHaveText('Home');
-  await home.getByTestId('arrival-continue').click();
+  // Review 5 #7: a card drawn on this trip (one in three) is put aside first.
+  await arrivalContinue(page);
   // Review 4 (answers §21.3): a train into a home city selects the Town Hall's pin (its sheet opens).
   await expect(page).toHaveURL(/\/city\/coalport\?loc=coalport\.town-hall$/);
   await expect(page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Town Hall' }) })).toBeVisible();
@@ -331,14 +332,17 @@ test('review 4 (answers §7): the journey on the nation map at 1440 × 900 and 3
     // Nothing says a card is coming; at its moment its sheet opens, and closed, the plate's row
     // opens it again. (The first journey always draws one; the second, one in three.)
     await expect(page.getByTestId('journey-card'), at).toHaveCount(0);
+    // Review 5 #7 (answers §7): it stays until a row is tapped (no Close, Escape does nothing); the
+    // put-aside row answers it, and then it closes.
     if ((await page.getByTestId('journey').getAttribute('data-card-at')) !== null) {
       await toTheCard(page);
       const sheet = page.getByRole('dialog');
+      await expect(sheet.getByRole('button', { name: 'Close' }), at).toHaveCount(0);
+      await page.keyboard.press('Escape');
+      await expect(sheet.getByTestId('journey-card'), at).toBeVisible();
+      await sheet.getByTestId('journey-set-aside').click();
+      await expect(sheet.getByTestId('journey-outcome'), at).toBeVisible();
       await sheet.getByRole('button', { name: 'Close' }).click();
-      await expect(sheet, at).toHaveCount(0);
-      await page.getByTestId('journey-card-open').click();
-      await expect(page.getByRole('dialog').getByTestId('journey-card'), at).toBeVisible();
-      await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
       await expect(page.getByRole('dialog'), at).toHaveCount(0);
     } else expect(size.width, 'the first journey draws a card').toBeLessThan(1000);
     // A drag away shows *Follow your pin*; it brings the map back to rest.
@@ -365,7 +369,7 @@ test('review 4 (answers §7): the journey on the nation map at 1440 × 900 and 3
     // Arrive (the hook) and Continue.
     expect((await page.request.post('/api/test/journey', { data: { arriveNow: true } })).ok()).toBe(true);
     await page.reload();
-    await page.getByTestId('arrival-continue').click();
+    await arrivalContinue(page);
     await expect(page, at).toHaveURL(/\/city\//);
   }
 });

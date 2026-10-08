@@ -233,3 +233,21 @@ export async function toTheCard(page: Page): Promise<void> {
   await page.reload();
   await expect(page.getByRole('dialog').getByTestId('journey-card')).toBeVisible();
 }
+
+/**
+ * Review 5 #7 (answers §7): the arrival's *Continue* is shown only once its card (when there is one
+ * still to answer) has a row tapped. An unanswered card is put aside (*Sleep through it* / *Let it
+ * pass*), then Continue. Returns the arrival modal.
+ */
+export async function arrivalContinue(page: Page) {
+  const modal = page.getByRole('dialog').filter({ has: page.getByTestId('arrival-headline') });
+  await expect(modal).toBeVisible();
+  const aside = modal.getByTestId('journey-set-aside');
+  if ((await aside.count()) > 0 && (await aside.isEnabled())) {
+    await expect(modal.getByTestId('arrival-continue')).toHaveCount(0);
+    await aside.click();
+    await expect(modal.getByTestId('journey-outcome')).toBeVisible();
+  }
+  await modal.getByTestId('arrival-continue').click();
+  return modal;
+}

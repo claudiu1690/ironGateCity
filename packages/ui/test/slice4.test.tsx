@@ -218,7 +218,7 @@ describe('the result modal in the capital (tech design §10.1)', () => {
 describe('the arrival (ResultModal kind journey, screens §4)', () => {
   it('Arrived on the station, the headline, the ticket and the Herald; Continue closes it', () => {
     const onContinue = vi.fn();
-    render(
+    const { rerender } = render(
       <ResultModal
         result={{ kind: 'journey', journey: journeyArrivedFixture }}
         open
@@ -233,15 +233,27 @@ describe('the arrival (ResultModal kind journey, screens §4)', () => {
     // Review 4 (ADR 0074, §23.1 Q5): no *the Herald is your paper* line; the masthead's edition says it.
     expect(screen.queryByTestId('arrival-herald')).toBeNull();
     expect(screen.getByRole('dialog')).toHaveTextContent('Irongate · Station & Market');
-    // The unanswered card inside, answerable until Continue.
+    // The unanswered card inside; review 5 #7: Continue waits for one of its rows.
     expect(screen.getAllByTestId('journey-choice')).toHaveLength(2);
+    expect(screen.getByTestId('journey-set-aside')).toBeInTheDocument();
+    expect(screen.queryByTestId('arrival-continue')).toBeNull();
+    const answered = { ...journeyArrivedFixture, card: journeyChosenFixture.card };
+    rerender(
+      <ResultModal result={{ kind: 'journey', journey: answered }} open onOpenChange={noop} onContinue={onContinue} />,
+    );
     fireEvent.click(screen.getByTestId('arrival-continue'));
     expect(onContinue).toHaveBeenCalledOnce();
   });
 
   it('Continue is disabled from the tap until the answer', () => {
     render(
-      <ResultModal result={{ kind: 'journey', journey: journeyArrivedFixture }} open onOpenChange={noop} onContinue={noop} continuePending />,
+      <ResultModal
+        result={{ kind: 'journey', journey: { ...journeyArrivedFixture, card: journeyChosenFixture.card } }}
+        open
+        onOpenChange={noop}
+        onContinue={noop}
+        continuePending
+      />,
     );
     expect(screen.getByTestId('arrival-continue')).toBeDisabled();
   });
@@ -266,7 +278,9 @@ describe('the journey (screens §3)', () => {
     for (const l of lines) noOddsNumbers(l);
     expect(screen.getByTestId('journey-card')).toHaveTextContent('On the way');
     expect(screen.getByTestId('journey-card')).toHaveTextContent('Optional');
-    expect(screen.getByTestId('journey-card')).toHaveTextContent('Ignore it and you sleep through it. Nothing happens.');
+    // Review 5 #7: the old *Ignore it* line is replaced by the put-aside row.
+    expect(screen.getByTestId('journey-card')).not.toHaveTextContent('Ignore it');
+    expect(screen.getByTestId('journey-set-aside')).toHaveTextContent('Sleep through it');
     fireEvent.click(screen.getAllByTestId('journey-choice')[0]!);
     expect(onChoose).toHaveBeenCalledWith('talk');
   });

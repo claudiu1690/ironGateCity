@@ -21,17 +21,18 @@ describe('#5 the level-up line follows the waiting point', () => {
     />
   );
 
-  it('"place your point" while it waits, "point placed" once the character has none left', () => {
+  it('"one point to place" while it waits, "point placed" once the character has none left', () => {
     const { rerender } = render(modal(1));
     const d = within(screen.getByRole('dialog'));
-    expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · place your point');
-    expect(d.getByRole('button', { name: 'STR 10 → 11' })).toBeInTheDocument();
+    // Review 5 (answers §4.1): the line and *Place it*; the picker is a sheet behind it.
+    expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · one point to place');
+    expect(d.getByRole('button', { name: 'Place it' })).toBeInTheDocument();
     // The placement lands in the `me` cache; the modal re-renders with the new count. Nothing was seen
     // to move here (the stats are the same), so the plain placed line; with a stat moved, see below.
     rerender(modal(0));
     expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · point placed');
-    expect(d.getByTestId('effect-level')).not.toHaveTextContent('place your point');
-    expect(d.queryByRole('button', { name: 'STR 10 → 11' })).toBeNull();
+    expect(d.getByTestId('effect-level')).not.toHaveTextContent('to place');
+    expect(d.queryByRole('button', { name: 'Place it' })).toBeNull();
   });
 
   it('answers §5: once placed, the stat in full ("Level 2 · Strength 10 → 11")', () => {
@@ -92,14 +93,15 @@ describe('#12 each HUD label opens its own note', () => {
         health={{ value: 90, max: 125 }}
       />,
     );
-    const rows: Record<string, number> = { energy: 0, xp: 15, fxp: 30, health: 45, heat: 60 };
+    // Design Review 2 #6: Energy, Health, Heat, XP, Party XP from the top.
+    const rows: Record<string, number> = { energy: 0, health: 15, heat: 30, xp: 45, fxp: 60 };
     for (const el of document.querySelectorAll<HTMLElement>('[data-note]')) {
       const top = rows[el.dataset.note!]!;
       el.getBoundingClientRect = () =>
         ({ top, bottom: top + 12, left: 0, right: 300, width: 300, height: 12, x: 0, y: top }) as DOMRect;
     }
     const help = screen.getByTestId('hud-help');
-    expect(help).toHaveAccessibleName('What Energy, XP, Party XP, Health and Heat mean');
+    expect(help).toHaveAccessibleName('What Energy, Health, Heat, XP and Party XP mean');
     const opened = (y: number) => {
       fireEvent.click(help, { clientX: 20, clientY: y, detail: 1 });
       const title = screen.getByTestId('help-note').querySelector('h2')!.textContent;
@@ -107,10 +109,11 @@ describe('#12 each HUD label opens its own note', () => {
       return title;
     };
     // Review 4 #12 (answers §12): Heat's note names its state.
-    expect(opened(65)).toBe('Heat · Hot');
-    expect(opened(50)).toBe('Health');
+    expect(opened(35)).toBe('Heat · Hot');
+    expect(opened(20)).toBe('Health');
+    expect(opened(50)).toBe('Experience');
     // Review 4 #25: the Party XP label opens the rank ladder instead of a note.
-    fireEvent.click(help, { clientX: 20, clientY: 33, detail: 1 });
+    fireEvent.click(help, { clientX: 20, clientY: 63, detail: 1 });
     expect(screen.queryByTestId('help-note')).toBeNull();
     const ladder = screen.getByTestId('rank-ladder');
     expect(ladder).toHaveTextContent("The Collective's ranks");

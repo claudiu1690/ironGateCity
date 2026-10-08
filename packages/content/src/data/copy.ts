@@ -153,6 +153,10 @@ export const turnoutOf = (voters: number, eligible: number) =>
 const needsPhrase = (needs: string | null) =>
   needs ? (needs.startsWith('after ') ? `, ${needs}` : `, at ${needs}`) : '';
 
+/** Review 5 (answers §3.2): a small count in words (*one point*, *two points*), digits from 11. */
+const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const countWord = (n: number): string => COUNT_WORDS[n] ?? String(n);
+
 export const copy = {
   /** Review 4 (answers §4.2): the one countdown style, `copy.when(at, now)`; see `when`. */
   when,
@@ -576,9 +580,13 @@ export const copy = {
   levelPointsToPlace: (level: number, n: number) =>
     `Level ${level} · ${n} stat ${n === 1 ? 'point' : 'points'} to place`,
   statButton: (stat: string, from: number) => `${stat} ${from} → ${from + 1}`,
-  /** Answers §5: *Level 2 · place your point*; with two waiting, *Level 3 · place your points (2)*. */
+  /**
+   * Review 5 (answers §4.1, §3.2): the result modal's level-up line, *Level 4 · one point to place*;
+   * with two waiting, *Level 5 · two points to place*. Beside it, *Place it* opens the picker.
+   */
   levelUpLine: (to: number, points: number) =>
-    points > 1 ? `Level ${to} · place your points (${points})` : `Level ${to} · place your point`,
+    `Level ${to} · ${countWord(points)} ${points === 1 ? 'point' : 'points'} to place`,
+  placeIt: 'Place it',
   /**
    * Review 4 #5 (answers §5): the level-up line once its points are placed, with the stat in full:
    * *Level 2 · Intelligence 12 → 13*. `placed` is each stat that moved while the result was open; when
@@ -1000,7 +1008,22 @@ export const copy = {
     onTheWay: 'On the way',
     optional: 'Optional',
     oneChoice: 'one choice',
-    ignoreIt: 'Ignore it and you sleep through it. Nothing happens.',
+    /**
+     * Review 5 #7 (answers §7): the card stays until a row is tapped; its put-aside row replaces the
+     * old *Ignore it* line. The ordinary deck's row and its detail; the hostile deck's row, its detail
+     * the consequence (*your name gets written down · Heat +10 · Watched today*, *Watched today*, or
+     * *nothing*).
+     */
+    sleepThrough: 'Sleep through it',
+    nothingHappens: 'Nothing happens.',
+    letItPass: 'Let it pass',
+    letItPassLine: (fx: { heat?: number; flag?: 'watched' | 'warned' } | undefined) => {
+      const parts = [
+        ...(fx?.heat ? ['your name gets written down', `Heat +${fx.heat}`] : []),
+        ...(fx?.flag === 'watched' ? ['Watched today'] : fx?.flag === 'warned' ? ['Warned today'] : []),
+      ];
+      return parts.length > 0 ? parts.join(' · ') : 'nothing';
+    },
     arrived: 'Arrived',
     inTheCapital: "You're in the capital",
     nothingHappened: 'The train was on time. Nothing happened, which is rare.',

@@ -2,10 +2,10 @@ import { copy } from '@irongate/content/copy';
 import { isNight, journeyProgress, trainAt } from '@irongate/rules';
 import type { FactionId, JourneyCardResult, JourneyView, RouteLeg } from '@irongate/rules';
 import {
-  BottomSheet,
   CityMap,
   ElectionCard,
   JourneyCard,
+  JourneyCardSheet,
   JourneyProgress,
   ResultModal,
   cx,
@@ -184,7 +184,10 @@ export function JourneyPage() {
   }, [arrived]);
 
   // The card's sheet: open when the card arrives (or on return while it can be answered), once per
-  // journey; closed, the plate's row opens it again. The pin pulses as it opens.
+  // journey mount. Review 5 #7 (answers §7): it can't be put aside without a row; left by another tab
+  // (the Paper, Me, Council), the browser or the app closed, it is open again on return to the map,
+  // or waits in the arrival modal. The plate's row opens it early, in the pulse's wait. The pin
+  // pulses as it opens.
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pulse, setPulse] = useState(0);
   const openedFor = useRef<string | null>(null);
@@ -346,7 +349,8 @@ export function JourneyPage() {
 
   return (
     <div
-      className="relative flex h-full min-h-[420px] flex-col bg-ink"
+      // `isolate`: the card's dim and sheet stay under the app's tab bar and top bar (review 5 #7).
+      className="relative isolate flex h-full min-h-[420px] flex-col bg-ink"
       data-testid="journey"
       data-card-at={data.cardAt ?? undefined}
       data-status={data.status}
@@ -398,8 +402,14 @@ export function JourneyPage() {
           </button>
         )}
       </CityMap>
-      {card && !arrived && (
-        <BottomSheet open={sheetOpen} onOpenChange={setSheetOpen} title={copy.travel.onTheTrainTo(data.to.name)}>
+      {card && !arrived && sheetOpen && (
+        // Review 5 #7 (answers §7): unanswered, the card stays until a row is tapped (no Close, no
+        // Escape, the map under its dim inert); the tab bar still works. Answered, it shows the
+        // outcome and closes as before.
+        <JourneyCardSheet
+          title={copy.travel.onTheTrainTo(data.to.name)}
+          onClose={answerable ? undefined : () => setSheetOpen(false)}
+        >
           <JourneyCard
             card={card}
             onChoose={onChoose}
@@ -410,13 +420,14 @@ export function JourneyPage() {
               {noticeFor(choose.error)}
             </p>
           )}
-        </BottomSheet>
+        </JourneyCardSheet>
       )}
       <ResultModal
         result={arrived ? { kind: 'journey', journey: data } : null}
         open={arrived}
         onOpenChange={(o) => {
-          if (!o) onContinue();
+          // Review 5 #7: Escape or a tap outside is Continue, and Continue waits for the card's row.
+          if (!o && !(card && !card.chosen)) onContinue();
         }}
         onContinue={onContinue}
         continuePending={closing}

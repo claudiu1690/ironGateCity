@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { signUp, toTheCard, unclearPins } from './helpers';
+import { arrivalContinue, signUp, toTheCard, unclearPins } from './helpers';
 
 /**
  * QA slice 4 (docs/qa/slice-4-report.md): the capital's overview at rest at several sizes (every
@@ -127,7 +127,7 @@ test.describe('a double tap spends once (QA slice 2 M1, tech design §12.4)', ()
     await expect.poll(() => iron(page)).toBe(880);
     expect((await page.request.post('/api/test/journey', { data: { arriveNow: true } })).ok()).toBe(true);
     await page.reload();
-    await page.getByTestId('arrival-continue').click();
+    await arrivalContinue(page);
     await expect(page).toHaveURL(/station-market/);
     await page.goto('/city/irongate/irongate.eastside');
     await atRest(page);

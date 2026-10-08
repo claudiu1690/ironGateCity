@@ -295,18 +295,23 @@ export interface BottomSheetProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   children: ReactNode;
+  /** Review 5 #4: opened over another modal (the result's picker): drawn, dim included, above it. */
+  stacked?: boolean;
 }
 
 /** A bottom sheet on phones, a centred card from 640 px (the Me tab's face change, slice 2 §12.3). */
-export function BottomSheet({ open, onOpenChange, title, children }: BottomSheetProps) {
+export function BottomSheet({ open, onOpenChange, title, children, stacked = false }: BottomSheetProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="ease-dim fixed inset-0 z-40 bg-ink/60" />
+        <Dialog.Overlay className={cx('ease-dim fixed inset-0 bg-ink/60', stacked ? 'z-[60]' : 'z-40')} />
         <Dialog.Content
           aria-describedby={undefined}
           // Slice 5 (review 3: never pop): it slides up on a phone and rises in from 640 px.
-          className="ease-sheet fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col gap-3 overflow-y-auto bg-paper p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-ink sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2"
+          className={cx(
+            'ease-sheet fixed inset-x-0 bottom-0 flex max-h-[80dvh] flex-col gap-3 overflow-y-auto bg-paper p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-ink sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2',
+            stacked ? 'z-[70]' : 'z-50',
+          )}
         >
           <Dialog.Title className="font-display text-[22px] font-bold">{title}</Dialog.Title>
           {children}

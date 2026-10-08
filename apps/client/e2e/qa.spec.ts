@@ -125,11 +125,13 @@ test.describe('phone 375×812', () => {
     // 135 XP or more crosses Level 2 (150) with the earlier 23–45: a stat point can be placed from the modal.
     const level = modal.getByTestId('effect-level');
     if (await level.isVisible()) {
-      await level.getByRole('button', { name: /^INT \d+ → \d+$/ }).click();
+      // Review 5 (answers §4.1): *Place it* opens the picker as a sheet over the modal.
+      await level.getByRole('button', { name: 'Place it' }).click();
+      await page.getByRole('dialog', { name: /^Level \d+ · one point to place$/ }).getByRole('button', { name: /^INT \d+ → \d+$/ }).click();
       await expect(page.getByTestId('hud-points')).toHaveCount(0);
       // Review 4 #5 (answers §5): the line follows the placed point, with the stat in full.
       await expect(level).toContainText(/Level \d+ · Intelligence \d+ → \d+/);
-      await expect(level).not.toContainText('place your point');
+      await expect(level).not.toContainText('to place');
     }
     await continueModal(page);
     await sheet.getByRole('button', { name: /^Close/ }).click();

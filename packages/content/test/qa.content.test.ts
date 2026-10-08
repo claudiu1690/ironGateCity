@@ -306,9 +306,10 @@ describe('content vs docs/design/slice-1-content.md', () => {
     ]);
     expect(copy.levelPointsToPlace(4, 1)).toBe('Level 4 · 1 stat point to place');
     expect(copy.statButton('STR', 10)).toBe('STR 10 → 11');
-    // Review 4 (answers §5): *Level 3 · place your points (2)*.
-    expect(copy.levelUpLine(5, 2)).toBe('Level 5 · place your points (2)');
-    expect(copy.levelUpLine(2, 1)).toBe('Level 2 · place your point');
+    // Review 5 (answers §4.1, §3.2): *Level 5 · two points to place*.
+    expect(copy.levelUpLine(5, 2)).toBe('Level 5 · two points to place');
+    expect(copy.levelUpLine(2, 1)).toBe('Level 2 · one point to place');
+    expect(copy.placeIt).toBe('Place it');
     expect(copy.standingUp('Coalport', 'Familiar')).toBe(
       'Coalport: Familiar · everything here goes a little better',
     );

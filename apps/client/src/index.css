@@ -20,3 +20,46 @@
     outline-color: var(--color-petrol);
   }
 }
+
+/*
+ * Review 5 #4 (answers §4.2): one thin scroll bar everywhere, on paper and on ink alike: 6 px, no
+ * arrows, a transparent track, a square thumb of ink at 45 % on paper grounds and paper at 35 % on
+ * ink grounds, no reserved gutter. Each surface sets the thumb; a scrolling box takes the one of the
+ * surface it is, or sits on (the page itself is ink). Firefox reads `scrollbar-width` and
+ * `scrollbar-color`; WebKit and Blink the `::-webkit-scrollbar` parts (Chromium ignores those once
+ * `scrollbar-color` is set, so the standard pair is given only to engines without them).
+ */
+@layer base {
+  html,
+  .bg-ink,
+  .bg-ink-2 {
+    --scroll-thumb: rgb(239 230 210 / 0.35);
+  }
+  .bg-paper,
+  .bg-paper-card,
+  .bg-paper-2,
+  .paper-grain {
+    --scroll-thumb: rgb(21 24 26 / 0.45);
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scroll-thumb) transparent;
+    }
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scroll-thumb);
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+}
