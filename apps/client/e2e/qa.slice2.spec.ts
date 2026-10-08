@@ -6,12 +6,12 @@
  * landing's sheet; and a blank name at sign-up. Known bugs are `test.fail` with the bug id from
  * docs/qa/slice-2.md; when a bug is fixed its test turns red, as a reminder to drop the annotation.
  *
- * Review 4 (GDD §7.1, ADR 0073): the origin is *The Last Train In*; the street is gone (beat 1's row
+ * Review 4 (GDD §7.1, ADR 0073): the origin is three beats (review 5: *Coming home*); the street is gone (beat 1's row
  * and confirm choose the party), and the first landing is the HQ with the favour highlighted.
  */
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { ANSWERS, answer, arrive, helpOnPlatform, pinsOutOfReach, signUpOnly } from './helpers';
+import { ANSWERS, answer, arrive, helpOnPlatform, pinsOutOfReach, platformRow, signUpOnly } from './helpers';
 
 const SMALL = { width: 360, height: 640 };
 const PHONE = { width: 375, height: 812 };
@@ -72,7 +72,7 @@ test.describe('phone 375×812', () => {
     await signUpOnly(page, 'Otto Brandt', 1);
     // Review 4: beat 1's rows only select (the confirm commits); beat 2 is one tap.
     await helpOnPlatform(page, 'collective');
-    await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
     await page.waitForTimeout(700); // the beat has settled on screen
     const first = page.getByTestId('story-choice').first();
     const box = (await first.boundingBox())!;
@@ -82,9 +82,9 @@ test.describe('phone 375×812', () => {
     await page.waitForTimeout(200); // a relaxed double tap
     await page.touchscreen.tap(x, y);
     await page.waitForTimeout(800);
-    // On beat 3, unanswered, with the suitcase's answer echoed.
-    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
-    await expect(page.getByTestId('story-echo')).toHaveText('You carry tools.');
+    // On beat 3, unanswered, with the kitbag's answer echoed.
+    await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
+    await expect(page.getByTestId('story-echo')).toHaveText('You brought tools.');
     await expect(page.getByTestId('story-choice')).toHaveCount(3);
   });
 
@@ -107,21 +107,21 @@ test.describe('phone 375×812', () => {
     });
   }
 
-  test('resumes at the lining and mid-chapter after a reload; the chapter echo is the choice', async ({
+  test('resumes at the post and mid-chapter after a reload; the chapter echo is the choice', async ({
     page,
   }) => {
     await signUpOnly(page, 'Otto Brandt', 5);
     await helpOnPlatform(page, 'vanguard');
     await answer(page, ANSWERS.reference[0]!);
-    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
-    await expect(page.getByTestId('story-echo')).toHaveText('You carry books.');
+    await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
+    await expect(page.getByTestId('story-echo')).toHaveText('You brought books.');
     await answer(page, ANSWERS.reference[1]!);
     await expect(page).toHaveURL(/\/paper$/);
     await expect(page.getByRole('heading', { name: 'The Duskwall Sentinel' })).toBeVisible();
-    // Review 4 (GDD §7.1): his coat, worn from the lining on; the Vanguard's outfit is kept.
-    await expect(page.getByTestId('desk')).toContainText("Your father's coat");
+    // Review 5 (GDD §7.1, answers §19.4): the demob suit, worn from the post on.
+    await expect(page.getByTestId('desk')).toContainText('The demob suit');
     await page.getByTestId('letters-row').click();
     await page.getByRole('button', { name: /^Keep it to yourself for now/ }).click();
     // Review 1 (answers §2.1): a third approach, Legwork, on the best stat.
@@ -258,7 +258,7 @@ test.describe('small phone 360×640', () => {
     await approaches.nth(1).click();
     const cta = page.getByTestId('story-cta');
     await expect(cta).toBeInViewport();
-    await expect(cta).toContainText('Walk his streets');
+    await expect(cta).toContainText('Knock the three doors');
     await expect(cta).toContainText('10');
     for (const a of await approaches.all()) await expect(a).toBeInViewport({ ratio: 0.9 });
     await cta.click();
@@ -300,19 +300,17 @@ test.describe('desktop 1440×900, keyboard only', () => {
     await expect(page).toHaveURL(/\/arrive$/);
 
     // Beat 1: Tab to Grey's row, Space picks it, Tab to the confirm, Enter.
-    const row = page.getByRole('radio', { name: /Witness a signature/ });
+    const row = platformRow(page, 'alliance');
     await tabTo(row);
     await page.keyboard.press('Space');
     await expect(row).toHaveAttribute('aria-checked', 'true');
     const confirm = page.getByTestId('story-confirm');
     await tabTo(confirm);
-    await expect(confirm).toHaveText("Help Grey · the six o'clock to Ashford");
+    await expect(confirm).toHaveText("Go for the flat · the six o'clock to Ashford");
     await page.keyboard.press('Enter');
     await expect(row).toBeHidden();
-    for (const text of ANSWERS.reference) {
-      const btn = page.getByRole('button', {
-        name: new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
-      });
+    for (const id of ANSWERS.reference) {
+      const btn = page.locator(`[data-testid="story-choice"][data-choice="${id}"]`);
       await tabTo(btn);
       await page.keyboard.press('Enter');
       await expect(btn).toBeHidden();

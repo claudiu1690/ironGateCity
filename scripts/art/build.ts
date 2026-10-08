@@ -65,9 +65,10 @@ const VECTOR_BUDGET = 8 * KB;
  * their WebP at 640 px only, and twelve faces) takes it to 16.31 MB: the measured figure plus 0.5 MB.
  * Slice 5 (tech design §13): eight scenes (the five mission cards, the strike card, the infirmary and
  * the cells) and eight portraits (the opponents, the duty officer, the constable and the matron) take
- * the measured set to 18.77 MB, so 19.27 MB.
+ * the measured set to 18.77 MB, so 19.27 MB. Review 5 (answers §19.7): the demobilisation office's
+ * scene takes the measured set to 19.35 MB, so 19.85 MB (the measured figure plus 0.5 MB).
  */
-const TOTAL_BUDGET = 19.27 * KB * KB;
+const TOTAL_BUDGET = 19.85 * KB * KB;
 
 interface ManifestEntry {
   sourceHash: string;

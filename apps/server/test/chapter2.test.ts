@@ -1,6 +1,6 @@
 /**
- * T19: Finish His Work chapter 2, "Stand where he stood" (design §17.7): it opens seven City Days
- * after chapter 1 and after the player's first ballot, as a Letter from the back of the ward book,
+ * T19: The Names on the Stone (`finish-his-work`) chapter 2, "Stand for the stone" (design §17.7): it opens seven City Days
+ * after chapter 1 and after the player's first ballot, as a Letter from the branch's press (review 5),
  * and pays the chapter-2 numbers with the election bill.
  */
 import { randomUUID } from 'node:crypto';
@@ -14,7 +14,7 @@ beforeAll(async () => {
 });
 afterAll(teardownDb);
 
-describe('Finish His Work, chapter 2', () => {
+describe('The Names on the Stone, chapter 2', () => {
   it('waits for the day and the first ballot, then plays with its numbers and keepsake', async () => {
     await resetCity('coalport');
     const D = nextCycleDay('coalport', 0, 21100);
@@ -27,7 +27,7 @@ describe('Finish His Work, chapter 2', () => {
       idempotencyKey: randomUUID(),
     });
     expect(r1.effects.hooks[0]).toMatch(
-      /^Chapter 2, "Stand where he stood": from .+, after your first vote$/,
+      /^Chapter 2, "Stand for the stone": from .+, after your first vote$/,
     );
 
     // Seven days on (a polling day), but no ballot yet: still waiting.
@@ -39,15 +39,15 @@ describe('Finish His Work, chapter 2', () => {
     await p.caller.council.vote({ candidateKey: 'n:npc.c.weiss', idempotencyKey: key() });
     expect((await Character.findById(p.id).lean())!.firstBallotAt).toBeInstanceOf(Date);
     a = await p.caller.ambition.get();
-    expect(a).toMatchObject({ chapter: 2, status: 'ready', letterFrom: 'From the back of the ward book' });
-    expect(a.screen?.title).toBe('His election bill');
+    expect(a).toMatchObject({ chapter: 2, status: 'ready', letterFrom: "From the branch's press" });
+    expect(a.screen?.title).toBe('Your election bill');
     expect(a.screen?.narrative).toContain('the Union Hall');
     const paper = await p.caller.paper.today();
     expect(paper.letters).toEqual([
       {
         kind: 'chapter',
-        from: 'From the back of the ward book',
-        title: 'His election bill',
+        from: "From the branch's press",
+        title: 'Your election bill',
         chapter: 2,
         status: 'ready',
         energy: 15,
@@ -58,7 +58,7 @@ describe('Finish His Work, chapter 2', () => {
     await p.caller.ambition.choose({ chapter: 2, choiceId: 'alone' });
     const check = await p.caller.ambition.get();
     expect(check.screen?.approaches.map((x) => x.check.difficulty)).toEqual([14, 14]);
-    expect(check.screen?.cta).toMatchObject({ label: 'Stand where he stood', energy: 15 });
+    expect(check.screen?.cta).toMatchObject({ label: 'Stand for the stone', energy: 15 });
     const r2 = await p.caller.ambition.attempt({
       chapter: 2,
       approachId: 'edge',
@@ -68,7 +68,7 @@ describe('Finish His Work, chapter 2', () => {
     expect([r2.rewards.xp.base, r2.rewards.fxp.total, r2.rewards.iron.base]).toEqual(
       want[r2.stamp as keyof typeof want],
     );
-    expect(r2.effects.item).toMatchObject({ itemId: 'keep.election-bill', name: 'His election bill' });
+    expect(r2.effects.item).toMatchObject({ itemId: 'keep.election-bill', name: 'Your election bill' });
     expect(r2.effects.hooks[0]).toMatch(/^Chapter 3, "The deposit": from .+, at Rank 3$/);
     expect(r2.story).toMatchObject({ chapter: 2, of: 12 });
   });

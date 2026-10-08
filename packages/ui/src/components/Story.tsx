@@ -308,6 +308,8 @@ export function StoryScreen({
                         settled ? 'cursor-pointer' : 'cursor-default',
                       )}
                       data-testid="story-row"
+                      // The choice's content id (`holm`): the e2e helpers pick rows by it, not by text.
+                      data-choice={c.id}
                     >
                       {c.portrait && (
                         <Picture
@@ -364,6 +366,7 @@ export function StoryScreen({
                       pendingChoice === c.id && 'bg-ink! text-paper! opacity-100!',
                     )}
                     data-testid="story-choice"
+                    data-choice={c.id}
                   >
                     <span className="font-body text-[15px] leading-snug">{c.text}</span>
                     {c.hint && <span className="font-mono text-[11.5px] opacity-80">{c.hint}</span>}
@@ -547,7 +550,7 @@ export function AvatarPicker({
   );
 }
 
-/** §3.3 v2: the Letters row, "From your father's things · His ward book · Chapter 1 is ready · 10 Energy". */
+/** §3.3 v2: the Letters row, "From the office's post · The unit's list · Chapter 1 is ready · 10 Energy". */
 export function LettersRow({ letter, onOpen }: { letter: LetterView; onOpen: () => void }) {
   return (
     <section aria-label="Letters" className="flex flex-col">
@@ -572,7 +575,7 @@ export function LettersRow({ letter, onOpen }: { letter: LetterView; onOpen: () 
   );
 }
 
-/** "Wearing: Your father's coat · CHA 5" (§8.2), optionally with the item's picture. */
+/** "Wearing: The demob suit · CHA 5" (§8.2), optionally with the item's picture. */
 export function ItemLine({ name, cha, art }: { name: string; cha: number; art?: AssetView }) {
   return (
     <span className="flex items-center gap-2 font-body text-[14px]" data-testid="item-line">

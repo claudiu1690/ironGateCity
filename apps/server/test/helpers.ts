@@ -256,7 +256,7 @@ export const HELPS: Record<FactionId, string> = { vanguard: 'stahl', collective:
 
 /**
  * Review 4 (GDD §8.5): the reference recruit and the tuning characters. Beat 1 helps the party's
- * secretary; the suitcase is *books*, *tools* for the Vanguard; the lining his ward book. Collective
+ * secretary; the kitbag is *books*, *tools* for the Vanguard; the post the unit's list. Collective
  * 8 / 12 / 5, Vanguard 14 / 6 / 5, Alliance 6 / 14 / 5, all CHA 5 (his coat).
  */
 export function originAnswers(factionId: FactionId = 'collective'): Array<{ questionId: string; answerId: string }> {

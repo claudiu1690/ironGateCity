@@ -17,7 +17,6 @@ import { describe, expect, it } from 'vitest';
 import CITIES from '../../../docs/design/slice-2-cities.md?raw';
 import ONB from '../../../docs/design/slice-2-onboarding.md?raw';
 import R1 from '../../../docs/design/review-1-answers.md?raw';
-import R4 from '../../../docs/design/review-4-answers.md?raw';
 import {
   ContentError,
   copy,
@@ -30,7 +29,7 @@ import {
 import type { ContentInput } from '../src';
 import { mapPins } from '../src/data/mapPins';
 import { plainHeadline, plainProse } from './review2';
-import { REVIEW4_WELCOME_DECKS } from './review4';
+import { expectChapterRestrung, itemNameNow, welcomeDeckNow } from './review5';
 
 const content = loadContent();
 const deepCopy = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
@@ -362,10 +361,10 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
   const questions = steps.flatMap((s) => s.questions);
 
   // Review 4 (answers §2, GDD §7.1): onboarding §2 (the deathbed's six questions) and §5 (the street)
-  // are superseded by *The Last Train In*; its texts are checked word for word against the answers in
-  // review4.prologue.test.ts.
-  it('§2, §5: superseded by review 4 (the platform, the suitcase, the lining)', () => {
-    expect(steps.map((s) => s.title)).toEqual(['The platform', 'The suitcase', 'The lining']);
+  // were superseded by *The Last Train In*, and that by review 5's *Coming home* (answers §19); its
+  // texts are checked word for word against the answers in review5.opening.test.ts.
+  it('§2, §5: superseded by review 5 (the counter, the kitbag, the post)', () => {
+    expect(steps.map((s) => s.title)).toEqual(['The counter', 'The kitbag', 'The post']);
     expect(questions).toHaveLength(3);
     expect(ONB).toContain('— The room');
   });
@@ -377,7 +376,8 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
     expect(r.map((x) => unq(x[0]!))).toEqual(slice2.map((i) => i.id));
     for (const [id, name, slot, , effects, flags] of r) {
       const item = content.item(unq(id!))!;
-      expect(item.name).toBe(name);
+      // Review 5 (answers §19.4, §19.6): the suit and the keepsakes renamed, ids kept.
+      expect(item.name).toBe(itemNameNow(name!));
       expect(item.slot ?? 'keepsake (no slot)').toBe(
         slot!.startsWith('keepsake') ? 'keepsake (no slot)' : slot,
       );
@@ -386,48 +386,33 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
     }
   });
 
-  it('§3: each chapter 1 word for word, with its numbers (§3.1)', () => {
+  it('§3: each chapter 1 with its numbers (§3.1); the words are review 5’s (answers §19.10)', () => {
     const sections = {
-      'finish-his-work': '### 3.2',
-      'clear-his-name': '### 3.3',
-      'settle-his-debts': '### 3.4',
-    };
+      'finish-his-work': ['### 3.2', '19.10.1'],
+      'clear-his-name': ['### 3.3', '19.10.3'],
+      'settle-his-debts': ['### 3.4', '19.10.4'],
+    } as const;
     for (const amb of content.ambitions) {
-      // Review 2 (answers §1.10, §1.13): flyers, and the streets he walked.
-      const doc = plainProse(section(ONB, sections[amb.id as keyof typeof sections], '\n### '));
+      const [onb, restrung] = sections[amb.id as keyof typeof sections];
+      const doc = plainProse(section(ONB, onb, '\n### '));
       const ch = amb.chapters[0]!;
       const s = ch.story!;
-      expect(doc).toContain(`Chapter 1: *${ch.title}*`);
-      // Review 4 (answers §2.8): the openers no longer discover what the lining found.
-      expect(R4).toContain(`*${s.choose.narrative}*`);
-      expect(doc).toContain(`**Step 2** · *${s.check.title}*\n${s.check.narrative}`);
-      expect(doc).toContain(`CTA: **${s.check.cta} · ${s.check.energy} Energy**`);
-      for (const c of s.choose.choices) expect(doc).toContain(`| ${c.text} | ${c.hint} |`);
+      // Review 5 (answers §19.10): every string re-strung under *Coming home*; the ids, the stats,
+      // the flags and the numbers are the slice-2 design's.
+      expectChapterRestrung(ch, restrung);
+      expect(doc).toContain(`CTA: **`);
+      expect(doc).toContain(` · ${s.check.energy} Energy**`);
+      for (const c of s.choose.choices) expect(c.flag).toMatch(/^[a-z-]+$/);
       for (const a of s.check.approaches) {
-        // Review 1 (answers §2.1): the third approach, Legwork, is in the answers, not this doc.
+        // Review 1 (answers §2.1): the third approach, Legwork, on the best stat.
         if (a.id === 'legwork') {
           expect(a.stats).toEqual(['best']);
-          expect(R1).toContain(`**Legwork.** *${a.text.replace(/^Legwork\. /, '')}*`);
           continue;
         }
-        expect(doc).toContain(
-          `| ${a.text} | ${a.stats.map((x) => x.toUpperCase()).join('+')} vs ${s.check.difficulty}`,
-        );
+        expect(doc).toContain(`| ${a.stats.map((x) => x.toUpperCase()).join('+')} vs ${s.check.difficulty}`);
       }
-      for (const [label, o] of [
-        ['Success', 'success'],
-        ['Partial', 'partial'],
-        ['Failure', 'failure'],
-      ] as const) {
-        expect(doc).toContain(`- ${label} — *${s.result[o].headline}* — ${s.result[o].body}`);
-      }
-      const hook = amb.chapters[1]!;
-      // The requirement part is superseded in slice 3 (slice-3-politics.md §17 Q21: chapter 2 keys
-      // off the first ballot); until then the content keeps the slice-2 requirement.
-      expect(doc).toContain(`Chapter 2, "${hook.title}": from {date}, `);
-      // Slice 3: Finish His Work chapter 2 opens "after your first ballot".
-      expect(copy.chapterNeeds(hook.requires!)).toMatch(/^((Rank|Level) \d+|after your first vote)$/);
-      expect(doc).toContain(copy.keepsakeLine(content.item(s.keepsake)!.name));
+      // Slice 3: chapter 2 of *The Names on the Stone* opens "after your first ballot".
+      expect(copy.chapterNeeds(amb.chapters[1]!.requires!)).toMatch(/^((Rank|Level) \d+|after your first vote)$/);
       expect([s.check.difficulty, s.check.energy, s.rewards]).toEqual([
         8,
         10,
@@ -447,9 +432,9 @@ describe('the onboarding vs docs/design/slice-2-onboarding.md', () => {
       const h = content.headlines.find((x) => x.id === unq(id!).split(' ')[0])!;
       expect(h.cityId).toBe(cityName!.toLowerCase());
       // Review 1 (answers §3.4): the welcome deck named slot A's place; review 4 (answers §2.6): it
-      // names the favour and the HQ (`REVIEW4_WELCOME_DECKS`, old → new).
+      // names the favour and the HQ; review 5 (answers §19.5): the favour from the counter.
       const want = deck!.replace(/Spend it at (.+) first\.$/, 'Spend it at {place} first.');
-      expect([h.headline, h.deck]).toEqual([headline, REVIEW4_WELCOME_DECKS[want] ?? want]);
+      expect([h.headline, h.deck]).toEqual([headline, welcomeDeckNow(want)]);
       expect(`${h.group} ${h.priority}`).toBe(group!.split(',')[0]);
       expect(h.when).toEqual([{ kind: 'firstEdition' }]);
     }
@@ -531,7 +516,9 @@ describe('slice-2 cross-checks (tech design §4.3): one failing fixture each', (
         { kind: 'wear', itemId: 'doc.party-card' },
       ];
     }, /which is not clothing/);
-    fails((c) => (c.origin.steps[0].narrative = 'One. Two. Three. Four. Five.'), /5 sentences/);
+    fails((c) => (c.origin.steps[1].narrative = 'One. Two. Three. Four. Five.'), /5 sentences \(at most 4\)/);
+    // Review 5 (answers §19.2): the counter's news may run beat 1 to five sentences, not six.
+    fails((c) => (c.origin.steps[0].narrative = 'One. Two. Three. Four. Five. Six.'), /6 sentences \(at most 5\)/);
     fails((c) => (c.origin.steps[0].narrative = 'Hello {rank}.'), /unknown story placeholder \{rank\}/);
     fails((c) => {
       delete c.npcs.find((n) => n.id === 'holm')!.pronoun;

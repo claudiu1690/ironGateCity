@@ -22,11 +22,11 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await signUpOnly(page, 'Otto Brandt', 1);
   await arrive(page, { faction: 'vanguard', answers: ANSWERS.reference });
   await expect(page.getByTestId('headline').first()).toContainText(
-    "Stahl's bundle goes out at Beacon House; start there.",
+    "The League's letter waits at Beacon House; start there.",
   );
   const orders = page.getByTestId('orders').getByTestId('order');
   await expect(orders.nth(0)).toContainText('Talk to the customs men at the Fortress Gate');
-  await expect(orders.nth(1)).toContainText("Hand out Stahl's bundle at Beacon House");
+  await expect(orders.nth(1)).toContainText("Get the stamp at Beacon House");
   await expect(orders.nth(2)).toContainText('Take a job at the Fortress Gate');
 
   // Review 4 (§7.5): the first landing opens the HQ with the favour highlighted.
@@ -107,7 +107,7 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await page
     .getByTestId('order-pin')
     .filter({ visible: true })
-    .filter({ hasText: "Hand out Stahl's bundle" })
+    .filter({ hasText: "Get the stamp" })
     .click();
   sheet = page.getByRole('dialog');
   const committee = sheet.getByTestId('ticket-duskwall.beacon-house.favour');

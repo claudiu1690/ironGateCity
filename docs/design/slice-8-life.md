@@ -12,7 +12,7 @@ Game designer, 4 Oct 2026. Companion to `docs/design/slice-8-screens.md` (the sc
 
 ## 1. The design in one paragraph
 
-What you wear is your **Charisma**, and from this slice it is also a decision: the **Wardrobe** has four slots in plain words (*Coat · On you · Papers · Tools*), two outfits with names (*Town* and *Plain clothes*; a flat adds *Evening*), and shops that are cards on the places a player already stands in. A good coat opens the opera and the casino and gets you recognised on rival ground; plain clothes do the opposite. The **Dossier** opens as the fourth tab: entries on the republic's named people, gathered by watching and listening, going stale after a week; three on one name make a **Case File**, and a Case File taken to a newspaper is an **exposé**: three steps, one check, a headline with your name and a swing against the subject's party in their town. Two **patrons** can be courted over real days, **Edith Crane** of the *Herald* and **Julius Marr** of Clearwater, with Requests in the morning paper, gifts, and perks at 10, 30, 60 and 90 Favour. A **flat** is the first home with a price: 2,500 Iron and 150 a week, prepaid, never repossessed. The **Legacy** record is the public, permanent account of what a player did, with small permanent perks bought from it. ***Finish His Work*** runs to its twelfth chapter and a seat in Parliament under his name. And the **Political Season** gets its skeleton: three terms, the Season Election, the Champion faction and four awards, the Hall of Fame, and a rollover that resets the map halfway and nothing a player owns.
+What you wear is your **Charisma**, and from this slice it is also a decision: the **Wardrobe** has four slots in plain words (*Coat · On you · Papers · Tools*), two outfits with names (*Town* and *Plain clothes*; a flat adds *Evening*), and shops that are cards on the places a player already stands in. A good coat opens the opera and the casino and gets you recognised on rival ground; plain clothes do the opposite. The **Dossier** opens as the fourth tab: entries on the republic's named people, gathered by watching and listening, going stale after a week; three on one name make a **Case File**, and a Case File taken to a newspaper is an **exposé**: three steps, one check, a headline with your name and a swing against the subject's party in their town. Two **patrons** can be courted over real days, **Edith Crane** of the *Herald* and **Julius Marr** of Clearwater, with Requests in the morning paper, gifts, and perks at 10, 30, 60 and 90 Favour. A **flat** is the first home with a price: 2,500 Iron and 150 a week, prepaid, never repossessed. The **Legacy** record is the public, permanent account of what a player did, with small permanent perks bought from it. ***The Names on the Stone*** (review 5; was *Finish His Work*) runs to its twelfth chapter, a seat in Parliament and the forty names read out there. And the **Political Season** gets its skeleton: three terms, the Season Election, the Champion faction and four awards, the Hall of Fame, and a rollover that resets the map halfway and nothing a player owns.
 
 ### 1.1 Plain words for slice 8 (GDD §1.5)
 
@@ -154,7 +154,7 @@ Eleven items exist (slice 2, 3, 5, 7). The slice adds **nineteen** wearable or u
 | `acc.wristwatch` | Gold wristwatch | On you | III | 10 | — | — | 2,500 | the tailor | Level 16 | `item.wristwatch` ← `gold-wristwatch.jpg` |
 | `acc.cranes-pen` | Edith Crane's pen | On you | — | 8 | — | `dossierChance 10` | — | Crane at Protégé | keepsake (wearable) | *new* `item.fountain-pen` |
 | `acc.marrs-case` | Julius Marr's cigarette case | On you | — | 8 | — | `chancePct bluff 10` | — | Marr at Protégé | keepsake (wearable) | *new* `item.cigarette-case` |
-| `acc.his-rosette` | His rosette | On you | — | 5 | — | — | — | *Finish His Work* chapter 12 | keepsake (wearable) | *new* `item.rosette` |
+| `acc.his-rosette` | The memorial ribbon | On you | — | 5 | — | — | — | *The Names on the Stone* chapter 12 | keepsake (wearable) | *new* `item.rosette` (a plain black ribbon; *His rosette* until review 5, id kept) |
 | `doc.forged-papers` | Forged papers | Papers | II | 0 | — | `chancePct checkpoint 10`, `chancePct bluff 10` (the police only) | 600 | the back room | Rank 3 | `item.forged-papers` ← `forged-papers.jpg` |
 | `doc.press-pass` | Press pass | Papers | II | 0 | — | `chancePct intelligence 10`, `chancePct surveillance 10`, `dossierChance 10` | 500 | the press | Level 6 | *new* `item.press-pass` |
 | `tool.paste-and-brush` | Paste and brush | Tools | I | 0 | — | `chancePct propaganda 10` | 300 | the party store | members | `item.propaganda-kit` ← `propaganda-kit.jpg` |
@@ -252,7 +252,7 @@ Both are neutral, both live in a battleground (Level 10 opens the train), so eve
 | **A Request done** (§5.3) | **+6** | one Request every 2 City Days; hold at most 2; each expires 4 days after it arrives |
 | **A gift** (200 Iron, at the patron's place, one tap) | **+2** | one a day per patron |
 | **A society call** Success in the patron's city (§3.7) | +2 (Partial +1) | once a day per place |
-| **An Ambition chapter** that names the patron (*Clear His Name* 3, *Finish His Work* 7) | +5 | once |
+| **An Ambition chapter** that names the patron (*Who Sold the Homes* 3, *The Names on the Stone* 7) | +5 | once |
 | A Legacy perk (*Favour +10 %*) | every gain ×1.1, rounded up | — |
 
 A devoted player gains about 5–7 a day; a player who does the Requests and nothing else about 3. **Tiers:** Acquaintance **10** · Associate **30** · Confidant **60** · Protégé **90**. The clock card on the Me tab reads *Edith Crane · Associate · 41 · Confidant at 60*.
@@ -337,25 +337,25 @@ The reference player has about 15 Legacy by day 30 (three council terms, a hero 
 
 ---
 
-## 8. *Finish His Work*, chapters 4–12 (GDD §17.1); the two due chapters of the others
+## 8. *The Names on the Stone*, chapters 4–12 (GDD §17.1); the two due chapters of the others (re-strung for *Coming home*, 8 Oct 2026: titles, keepsakes and strings only; no number moved)
 
 The chapter rules are §17.1's: three steps, one check with three ways (two written, one *Legwork* on the best stat), never fails, no run-in at home (chapters 6, 8, 10 and 12 are set in the capital and carry none either: an Ambition is the one thing the street never interrupts), Rested applies, no Standing, no orders, seven City Days between chapters plus the requirement, the keepsake on every outcome. **Difficulties follow the tier-3 band** (22–30) once the player is past Level 16; the reference player meets each at *Fair* to *Good* odds on their best stat. Scripts: §16.1. Keepsakes use `item.document-folder` unless named.
 
 | Ch | Title | Letters row | Requirement (plus 7 days) | About when | Difficulty · Energy | Success / Partial / Failure (XP / FXP / Iron) | Keepsake |
 |---|---|---|---|---|---|---|---|
-| 4 | *The count* | *From the count's night* | a completed council term | day 20 | 18 · 20 | 400 / 100 / 250 · 200 / 50 / 125 · 60 / 0 / 0 | `keep.count-sheet` *His count sheet* |
-| 5 | *His seat* | *From the chamber's back row* | Rank 4 | day 27 | 18 · 20 | 400 / 100 / 250 · half · 60 / 0 / 0 | `keep.minute-book` *The minute book* |
-| 6 | *The hall* | *From the Chair's ballot* | voted in a Chair election | day 35 | 20 · 20 | 450 / 120 / 300 · half · 70 / 0 / 0 | `keep.ballot-stub` *His ballot stub* |
+| 4 | *The count* | *From the count's night* | a completed council term | day 20 | 18 · 20 | 400 / 100 / 250 · 200 / 50 / 125 · 60 / 0 / 0 | `keep.count-sheet` *The count sheet* |
+| 5 | *Your seat* | *From the chamber's back row* | Rank 4 | day 27 | 18 · 20 | 400 / 100 / 250 · half · 60 / 0 / 0 | `keep.minute-book` *The minute book* |
+| 6 | *The hall* | *From the Chair's ballot* | voted in a Chair election | day 35 | 20 · 20 | 450 / 120 / 300 · half · 70 / 0 / 0 | `keep.ballot-stub` *Your ballot stub* |
 | 7 | *The cutting* | *From the Herald's morgue* | a Case File made (Level 16) | day 42 | 20 · 20 | 450 / 120 / 300 · half · 70 / 0 / 0 | `keep.cutting` *The cutting* |
-| 8 | *The rule* | *From the Governor's desk* | a term as Governor or Mayor completed, or three council terms | day 50 | 22 · 25 | 500 / 140 / 350 · half · 80 / 0 / 0 | `keep.rule-draft` *His rule, in draft* |
+| 8 | *The stone's rule* | *From the Governor's desk* | a term as Governor or Mayor completed, or three council terms | day 50 | 22 · 25 | 500 / 140 / 350 · half · 80 / 0 / 0 | `keep.rule-draft` *The rule, in draft* |
 | 9 | *The list* | *From the party's list* | Rank 5 | day 56 | 22 · 25 | 500 / 140 / 350 · half · 80 / 0 / 0 | `keep.list-letter` *The letter from the list* |
-| 10 | *The republic votes* | *From the ballot box* | voted in a national election | day 63 | 24 · 25 | 600 / 160 / 400 · half · 90 / 0 / 0 | `keep.polling-card` *His polling card* |
+| 10 | *The republic votes* | *From the ballot box* | voted in a national election | day 63 | 24 · 25 | 600 / 160 / 400 · half · 90 / 0 / 0 | `keep.polling-card` *Your polling card* |
 | 11 | *Twenty-five marks* | *From the clerk's receipt* | on the party's list for Parliament | day 70 | 24 · 25 | 600 / 160 / 400 · half · 90 / 0 / 0 | `keep.list-receipt` *The list's receipt* |
-| 12 | *Under his name* | *From the roll of the chamber* | a term as a deputy begun (the seat taken at a term's day 0) | day 84+ | 26 · 30 | 1,000 / 300 / 1,000 · 500 / 150 / 500 · 150 / 0 / 0 | `acc.his-rosette` *His rosette* (wearable, §3.9); **Ambition completed: Legacy 30** |
+| 12 | *The names read out* | *From the roll of the chamber* | a term as a deputy begun (the seat taken at a term's day 0) | day 84+ | 26 · 30 | 1,000 / 300 / 1,000 · 500 / 150 / 500 · 150 / 0 / 0 | `acc.his-rosette` *The memorial ribbon* (wearable, §3.9; a plain black ribbon, no device); **Ambition completed: Legacy 30** |
 
-Chapter 12's requirement is the GDD's ending (a seat in Parliament under his name). For most players it lands in season 2; that is the design (§17.1: "runs for months"). The *Chapter n of 12* kicker is honest from this slice.
+Chapter 12's requirement is the GDD's ending (a seat in Parliament, and the forty names read out there). For most players it lands in season 2; that is the design (§17.1: "runs for months"). The *Chapter n of 12* kicker is honest from this slice. The spine across the nine chapters is the council's memorial rule (*the town's own*): the motion that lost (5), the party's position (6), the proof the forty were on the town's rates (7), the rule replaced (8), and a memorials law for the republic (12). Flags renamed where they said *his* (`forty-total`, `sent-ahead` / `kept-for-floor`, `stone-rule`, `stone-first`, `closed-names` / `left-names`, `forty-read`); nothing is built on them yet.
 
-**The two due chapters:** ***Clear His Name* chapter 2, *The night foreman*** (requirement Level 6, Dossier work; difficulty 14, 15 Energy; 300 / 80 / 150; keepsake `keep.foremans-name` *The foreman's name*; it gives the player's first Dossier entry by hand: a political line on Brandauer, a name added to `people.ts` with no party and the city Coalport, so the chapter and the Dossier meet) and ***Settle His Debts* chapter 3, *The collector*** (Rank 3; difficulty 16, 15 Energy; 350 / 90 / 200; keepsake `keep.collectors-card` *The collector's card*; the Agility way carries Heat +6 as chapter 2 did). Scripts: §16.2. Chapter 3 of *Clear His Name* and chapter 4 of *Settle His Debts* are written with the next slice that touches them (§25: four chapters each by launch).
+**The two due chapters:** ***Who Sold the Homes* chapter 2, *The night caretaker*** (requirement Level 6, Dossier work; difficulty 14, 15 Energy; 300 / 80 / 150; keepsake `keep.foremans-name` *The caretaker's name*; it gives the player's first Dossier entry by hand: a political line on Brandauer, the block's night caretaker, a name added to `people.ts` with no party and the city Coalport, so the chapter and the Dossier meet) and ***The Ration Ledger* chapter 3, *The collector*** (Rank 3; difficulty 16, 15 Energy; 350 / 90 / 200; keepsake `keep.collectors-card` *The collector's card*; the Agility way carries Heat +6 as chapter 2 did). Scripts: §16.2. Chapter 3 of *Who Sold the Homes* and chapter 4 of *The Ration Ledger* are written with the next slice that touches them (§25: four chapters each by launch).
 
 ---
 
@@ -505,98 +505,97 @@ Every string was read against `content-policy-review.md` §7. The Vanguard's coa
 
 ## 16. Content
 
-### 16.1 *Finish His Work*, chapters 4–12 (scripts; every text ≤ 240 characters and four sentences)
+### 16.1 *The Names on the Stone*, chapters 4–12 (scripts; every text ≤ 240 characters and four sentences; re-strung for *Coming home*, 8 Oct 2026: no number moved)
 
-**Chapter 4 · *The count*** · kicker *Ambition · Finish His Work · Chapter 4 of 12* · art `scene.election-night`
-*Step 1.* The count's night, and your name on the board where his was in '21. The ward book's last page is a tally in his hand: his votes, and a line under them, *not enough*. You have the chalk and the branch's runner at the door.
-- A · *Chalk his total under yours* (hint: *The hall will see the two numbers.* flag `his-total`) · B · *Chalk yours alone* (hint: *The board is tonight's.* flag `own-total`)
+**Chapter 4 · *The count*** · kicker *Ambition · The Names on the Stone · Chapter 4 of 12* · art `scene.election-night`
+*Step 1.* The count's night, and your name on the board. The forty's families are at the back of the hall, standing, because the branch's chairs ran out. You have the chalk, the list in your coat and the branch's runner at the door.
+- A · *Chalk the forty under your total* (hint: *The hall will see what the seat is for.* flag `forty-total`) · B · *Chalk yours alone* (hint: *The board is tonight's.* flag `own-total`)
 *Step 2 · The margin.* Two seats, three names, and the margin is a handful. The runner says the Rows haven't come in and the hall is drifting home. Somebody has to fetch them.
-- *Send the runner with his name and yours* (Charisma and Intelligence) · *Work out which street is short and go there* (Intelligence) · *Legwork. Knock the Rows yourself, book in hand, until the hall is full again* (best)
-*Step 3.* Success — *Full house* — The Rows come in wet and loud and the margin stops being a handful. The returning officer writes the figure twice. Under it, in chalk, a second figure nobody asks about. · Partial — *Enough* — Half the Rows, enough of the hall. It holds. The runner says the old man would have fetched the other half himself, and you say he did, once, and it wasn't enough. · Failure — *The board stays* — The Rows stay in and the margin goes the other way. The board is wiped at eleven. You keep the chalk. The count sheet goes in the suitcase with the rest of it.
-- Knock-on: *Keepsake: His count sheet* · *Chapter 5, "His seat": from {date}, at Rank 4*
+- *Send the runner with your name and the forty's* (Charisma and Intelligence) · *Work out which street is short and go there* (Intelligence) · *Legwork. Knock the Rows yourself, list in hand, until the hall is full again* (best)
+*Step 3.* Success — *Full house* — The Rows come in wet and loud and the margin stops being a handful. The returning officer writes the figure twice. Under it, in chalk, forty names nobody rubs out. · Partial — *Enough* — Half the Rows, enough of the hall. It holds. The runner says the families fetched the other half themselves, and you say that's what the seat is for. · Failure — *The board stays* — The Rows stay in and the margin goes the other way. The board is wiped at eleven. You keep the chalk. The count sheet goes in the kitbag with the list.
+- Knock-on: *Keepsake: The count sheet* · *Chapter 5, "Your seat": from {date}, at Rank 4*
 
-**Chapter 5 · *His seat*** · art `scene.union-hq` (the faction's HQ scene)
-*Step 1.* The branch's minute book, the back row of the chamber he sat in for one term. His entries stop in March '21. The secretary says the book is yours to fill now, if you want it.
-- A · *Take the book* (hint: *His pages stay in it.* `took-book`) · B · *Leave his pages and start a new one* (hint: *A clean book, your hand.* `new-book`)
-*Step 2 · The motion he never moved.* On the last of his pages a motion in draft, crossed through: a public baths for the Rows. The branch meets at six; the Governor wants the hour for the licence. You have the draft and a room that owes him.
-- *Move it from the floor in his words* (Charisma and Intelligence) · *Cost it, then move it in yours* (Intelligence) · *Legwork. Find three members who remember the draft and bring them* (best)
-*Step 3.* Success — *Carried* — The baths go to the vote and carry on a show of hands, the Governor's licence pushed to seven. The secretary writes *carried* in your hand on his page. · Partial — *Referred* — Referred to the next meeting, which is a kind of yes. The Governor is polite about it. The secretary writes *referred* and underlines nothing. · Failure — *Out of time* — The licence takes the hour and the baths wait for another March. You write the date under his, and the word *again*.
+**Chapter 5 · *Your seat*** · art `scene.union-hq` (the faction's HQ scene)
+*Step 1.* The branch's minute book, and the back row of the chamber where the newest councillor sits. The last motion in it is the memorial's, moved in the autumn and lost four to three. The secretary says the book is yours to fill now.
+- A · *Take the book* (hint: *The autumn's pages stay in it.* `took-book`) · B · *Leave the old pages and start a new one* (hint: *A clean book, your hand.* `new-book`)
+*Step 2 · The motion that lost.* On the last page, the motion in draft: that the stone carry every name the town buried, lodged or paid. The branch meets at six; the Governor wants the hour for the licence. You have the draft and a room that lost once.
+- *Move it from the floor in the families' words* (Charisma and Intelligence) · *Cost it, forty names at the mason's rate, then move it in yours* (Intelligence) · *Legwork. Find three members who voted for it in the autumn and bring them* (best)
+*Step 3.* Success — *Carried* — The names go to the vote and carry on a show of hands, the Governor's licence pushed to seven. The secretary writes *carried* in your hand under the autumn's *lost*. · Partial — *Referred* — Referred to the next meeting, which is a kind of yes. The Governor is polite about it. The secretary writes *referred* and underlines nothing. · Failure — *Out of time* — The licence takes the hour and the names wait for another month. You write the date under the autumn's, and the word *again*.
 - Knock-on: *Keepsake: The minute book* · *Chapter 6, "The hall": from {date}, after you vote for a Chair*
 
 **Chapter 6 · *The hall*** · art the faction's capital house scene
-*Step 1.* The party chose its Chair this week and you voted. He never did: the ward book says the '21 ballot went out the morning he lost his seat and he didn't open it. His stub is in the suitcase, blank.
-- A · *Vote his stub, for the record* (hint: *Nobody counts it. You'll know.* `voted-his`) · B · *Burn the stub* (hint: *The vote was yours.* `burned-stub`)
-*Step 2 · The question from the floor.* The new Chair's first meeting at the capital house. There's a question from the floor about the orders and nobody asking it. It's his question; he wrote it on the stub's back.
-- *Ask it, standing, in his words* (Charisma and Intelligence) · *Write it out and hand it to the Chair's clerk* (Intelligence) · *Legwork. Ask three branches first, so the floor is already with you* (best)
-*Step 3.* Success — *Minuted* — The Chair answers it and the clerk minutes it under your name. Afterwards the Chair asks whose question it was. You say a councillor's, from '21. · Partial — *Noted* — Noted, the Chair says, which means tomorrow. Two members stop you at the door to say it was a fair question. · Failure — *Next business* — The Chair moves to next business and the floor lets it. You keep the stub. The question is still written on it.
-- Knock-on: *Keepsake: His ballot stub* · *Chapter 7, "The cutting": from {date}, after your first Case File*
+*Step 1.* The party chose its Chair this week and you voted. Your stub is in your coat, and on its back, in your hand, the question the branch never got answered: where does the party stand on the stone? The new Chair's first meeting is Thursday.
+- A · *Send the question to the Chair's clerk in advance* (hint: *The Chair will have an answer ready, or an excuse.* `sent-ahead`) · B · *Keep it for the floor* (hint: *A question nobody expects gets an honest answer.* `kept-for-floor`)
+*Step 2 · The question from the floor.* The new Chair's first meeting at the capital house. There's a question from the floor about memorials and nobody asking it: every town has a stone, and every stone has a rule. You have the stub and the forty names.
+- *Ask it, standing, with the names* (Charisma and Intelligence) · *Write it out and hand it to the Chair's clerk* (Intelligence) · *Legwork. Ask three branches first, so the floor is already with you* (best)
+*Step 3.* Success — *Minuted* — The Chair answers it and the clerk minutes it under your name: the party will back a memorials rule, town by town. Afterwards the Chair asks how many names. You say forty, so far. · Partial — *Noted* — Noted, the Chair says, which means tomorrow. Two members stop you at the door to say their towns have a stone like that too. · Failure — *Next business* — The Chair moves to next business and the floor lets it. You keep the stub. The question is still written on it.
+- Knock-on: *Keepsake: Your ballot stub* · *Chapter 7, "The cutting": from {date}, after your first Case File*
 
 **Chapter 7 · *The cutting*** · art `scene.newsroom`
-*Step 1.* The Herald's morgue has a cutting from March '21: *Councillor Loses Seat; Questions on Baths Fund*. Edith Crane has it on her desk when you come in. "Your father. I was the junior who wrote it. Do you want to know who gave me the story?"
-- A · *Yes* (hint: *The truth, and a debt to Crane.* `asked-crane`) · B · *No. Let him stay a councillor who lost* (hint: *Some files stay shut.* `let-it-lie`)
-*Step 2 · The second source.* The story was true and the fund was his own money, which the cutting left out. Crane will print a correction twenty-five years late, if you can bring her a second source.
-- *Find the clerk who kept the fund's book* (Intelligence) · *Ask Crane to run it on your name alone* (Charisma and Intelligence) · *Legwork. Walk the Rows for anyone who used the baths* (best)
-*Step 3.* Success — *Corrected* — Page five, a paragraph: the fund was the councillor's own, and the baths were built. Crane signs it. Favour +5. A cutting goes in the suitcase next to the old one. · Partial — *A letter* — A letter to the editor, under your name, printed on Thursday. Crane says it's what she can do with one source. Favour +5. · Failure — *Held* — The clerk is dead and the Rows don't read page five. Crane keeps the cutting on her desk, which she says is a kind of printing.
-- Knock-on: *Keepsake: The cutting* · *Favour: Edith Crane +5* · *Chapter 8, "The rule": from {date}, after a term as Governor, or three council terms*
+*Step 1.* The Herald's morgue has a cutting from the autumn: *Council Trims Memorial List; "Not the Town's Own"*. Edith Crane has it on her desk when you come in. "I wrote it from the council's hand-out. Do you want to know who wrote the hand-out?"
+- A · *Yes* (hint: *The name, and a debt to Crane.* `asked-crane`) · B · *No. The names matter, not the man* (hint: *Some files stay shut.* `let-it-lie`)
+*Step 2 · The second source.* The hand-out called the forty lodgers. The mill's wage book would show they lived in the Rows and paid the town's rates, which makes them the town's own by the council's own rule. Crane will print it, if you bring her a second source.
+- *Find the clerk who kept the mill's wage book* (Intelligence) · *Ask Crane to run it on your name alone* (Charisma and Intelligence) · *Legwork. Walk the Rows for anyone who lodged one of the forty* (best)
+*Step 3.* Success — *Printed* — Page five, a paragraph: forty men on the town's rates, their names, and the council's rule beside them. Crane signs it. Favour +5. The cutting goes in your coat next to the autumn's. · Partial — *A letter* — A letter to the editor, under your name, printed on Thursday, with the forty names in small type. Crane says it's what she can do with one source. Favour +5. · Failure — *Held* — The clerk is dead and the Rows don't read page five. Crane keeps the cutting on her desk, which she says is a kind of printing.
+- Knock-on: *Keepsake: The cutting* · *Favour: Edith Crane +5* · *Chapter 8, "The stone's rule": from {date}, after a term as Governor, or three council terms*
 
-**Chapter 8 · *The rule*** · art `scene.ministry`
-*Step 1.* The Governor's desk, or the back of three terms: either way the rule that goes first is yours to choose this week. His draft from '21 is in the minute book: the baths, costed, with a line he never got to move.
-- A · *Put his rule first* (hint: *The baths, in his costing.* `his-rule`) · B · *Put the rule the town needs this week* (hint: *His can wait a term.* `towns-rule`)
-*Step 2 · Four of seven.* Four votes of seven, and two councillors who think a public baths is a vanity. One of them owes the branch; the other owes nobody.
-- *Trade the licence hour for the two votes* (Charisma and Intelligence) · *Rewrite the costing so the baths pay for themselves* (Intelligence) · *Legwork. Walk both councillors to the Rows and show them the standpipe* (best)
-*Step 3.* Success — *Four of seven* — Carried, four to three, the second councillor's hand going up last and slowest. The rule is in force from Thursday. You write *carried* on his draft and date it. · Partial — *Amended* — Carried with a cut: half the baths, the Rows' end first. He'd have taken half. You take half. · Failure — *Three of seven* — Three. The licence goes first and the baths go to the next paper. You've learned which councillor owes nobody, which is worth a term.
-- Knock-on: *Keepsake: His rule, in draft* · *Chapter 9, "The list": from {date}, at Rank 5*
+**Chapter 8 · *The stone's rule*** · art `scene.ministry`
+*Step 1.* The Governor's desk, or the back of three terms: either way the rule that goes first is yours to choose this week. The council's rule is one line, *the town's own*; the draft that replaces it is in the minute book, costed to the last mark.
+- A · *Put the stone's rule first* (hint: *The names, before anything else.* `stone-rule`) · B · *Put the rule the town needs this week* (hint: *The stone can wait a term.* `towns-rule`)
+*Step 2 · Four of seven.* Four votes of seven, and two councillors who think forty names on a stone is a vanity. One of them owes the branch; the other owes nobody.
+- *Trade the licence hour for the two votes* (Charisma and Intelligence) · *Rewrite the costing so the names cost the town nothing* (Intelligence) · *Legwork. Walk both councillors to the Rows and show them the three doors* (best)
+*Step 3.* Success — *Four of seven* — Carried, four to three, the second councillor's hand going up last and slowest. The rule is in force from Thursday: every name the town buried, lodged or paid. You write *carried* on the draft and date it. · Partial — *Amended* — Carried with a cut: the names go on, but on a second tablet, at the back. The families would take half. You take half. · Failure — *Three of seven* — Three. The licence goes first and the stone goes to the next paper. You've learned which councillor owes nobody, which is worth a term.
+- Knock-on: *Keepsake: The rule, in draft* · *Chapter 9, "The list": from {date}, at Rank 5*
 
 **Chapter 9 · *The list*** · art the faction's capital house scene
-*Step 1.* Rank 5. A letter from the party's list committee: would you let your name go forward for Parliament. The same letter came to him in '20, and he wrote *no* on the back, and the reason: *the ward first*.
-- A · *Write yes* (hint: *The list, when names are in.* `wrote-yes`) · B · *Write what he wrote, and then yes* (hint: *The ward first. Then the list.* `ward-first`)
-*Step 2 · The backer.* The list goes by backers, and you need one who isn't the branch. The old docker who signed his deposit in '21 is still on the quay and still argues.
-- *Ask him, on the quay, in front of the gang* (Charisma and Intelligence) · *Write to him with the ward book's page about '21* (Intelligence) · *Legwork. Carry for his gang a morning and ask at the break* (best)
-*Step 3.* Success — *Backed* — He backs you at the break with the gang watching, and says the old man would have asked worse. The letter goes back with yes on it. · Partial — *Backed, with a condition* — He'll back you if the baths get finished. You say they will. He says the old man said that. · Failure — *The quay says no* — Not this term, he says; the ward first. You keep the letter and the reason, which is now two reasons in two hands.
+*Step 1.* Rank 5. A letter from the party's list committee: would you let your name go forward for Parliament. A town's rule is a town's rule; a law for every stone in the republic needs a seat in the chamber. The letter wants an answer by Friday.
+- A · *Write yes* (hint: *The list, when names are in.* `wrote-yes`) · B · *Write the stone first, and then yes* (hint: *The town's names first. Then the republic's.* `stone-first`)
+*Step 2 · The backer.* The list goes by backers, and you need one who isn't the branch. The old docker who backed your deposit is still on the quay and still argues.
+- *Ask him, on the quay, in front of the gang* (Charisma and Intelligence) · *Write to him with the cutting and the forty names* (Intelligence) · *Legwork. Carry for his gang a morning and ask at the break* (best)
+*Step 3.* Success — *Backed* — He backs you at the break with the gang watching, and says his boy's name had better be on the first tablet. The letter goes back with yes on it. · Partial — *Backed, with a condition* — He'll back you if the stone gets cut this year. You say it will. He says the council said that. · Failure — *The quay says no* — Not this term, he says; the stone first. You keep the letter and the reason, which is now two reasons in two hands.
 - Knock-on: *Keepsake: The letter from the list* · *Chapter 10, "The republic votes": from {date}, after you vote for President*
 
 **Chapter 10 · *The republic votes*** · art `scene.parliament`
-*Step 1.* The republic voted and so did you. His polling card from '21 is in the suitcase, unused: the election was the week after he lost the seat and the ward book says *didn't go*. You have his card and the registrar's office is on the Forecourt.
-- A · *Ask the registrar to strike his card* (hint: *The roll closes a name properly.* `struck-card`) · B · *Keep the card* (hint: *A name on the roll is a name on the roll.* `kept-card`)
+*Step 1.* The republic voted and so did you. Your polling card has a number on it, and the register the number comes from still carries the forty: nobody struck them, and nobody voted for them either. The registrar's office is on the Forecourt.
+- A · *Ask the registrar to close the forty's names properly* (hint: *The roll closes a name with a date and a reason.* `closed-names`) · B · *Leave them on the roll* (hint: *A name on the roll is a name on the roll.* `left-names`)
 *Step 2 · The turnout.* Turnout in the Rows was half what it was in the Villas. The result is in; the next isn't. The branch wants a canvass that explains the republic to a street that voted for a council once.
 - *Speak in the Rows on why the republic's vote is theirs* (Charisma and Intelligence) · *Draw the republic as a sum on the back of a poster* (Intelligence) · *Legwork. Walk the Rows with the sum until it's in every window* (best)
-*Step 3.* Success — *The sum in the window* — The sum is in forty windows by dark and three people ask when the next one is. The branch counts it as a canvass; you count it as his. · Partial — *Twenty windows* — Twenty windows and a long argument at the standpipe about whether the capital counts. It does. Half the street believes you. · Failure — *Rain* — Rain, and the posters run. The sum is in your pocket. The Rows will vote next term or they won't; you'll be there.
-- Knock-on: *Keepsake: His polling card* · *Chapter 11, "Twenty-five marks": from {date}, when your name is on the party's list*
+*Step 3.* Success — *The sum in the window* — The sum is in forty windows by dark and three people ask when the next one is. The branch counts it as a canvass; you count it as forty. · Partial — *Twenty windows* — Twenty windows and a long argument at the standpipe about whether the capital counts. It does. Half the street believes you. · Failure — *Rain* — Rain, and the posters run. The sum is in your pocket. The Rows will vote next term or they won't; you'll be there.
+- Knock-on: *Keepsake: Your polling card* · *Chapter 11, "Twenty-five marks": from {date}, when your name is on the party's list*
 
 **Chapter 11 · *Twenty-five marks*** · art the faction's capital house scene
-*Step 1.* Twenty-five Political Capital and your name on the party's list for Parliament. The clerk's receipt is the same form as the one from '21 in the tin. He never filled this one in. Somebody has to say so.
-- A · *Tell the list committee whose child you are* (hint: *The list will know.* `told-list`) · B · *Say nothing; let the name stand on its own* (hint: *It's your name on the receipt.* `own-name`)
+*Step 1.* Twenty-five Political Capital and your name on the party's list for Parliament. The clerk's receipt asks what you stand for, in one line, for the list's printed sheet. The forty are a long line.
+- A · *Write the forty names on the back of the receipt* (hint: *The list will know what the seat is for.* `told-list`) · B · *Write your own name, and nothing else* (hint: *It's your name on the receipt.* `own-name`)
 *Step 2 · The place on the list.* The list goes by backers and you're third. Third is a seat only if the party takes three. One more backer puts you second.
 - *Ask the Chair for the party's backing, in the Officers' room* (Charisma and Intelligence) · *Show the second-placed name the arithmetic and ask them to swap* (Intelligence) · *Legwork. Find one member in every branch who'll back a name from the Rows* (best)
-*Step 3.* Success — *Second* — Second on the list by the close of names. The Chair says the Rows have never had a second. You say they had a first, once, who wrote no on the back. · Partial — *Third, with a promise* — Third, and the Chair's word that the party will push for three seats. A word is a word. The receipt is stamped. · Failure — *Third* — Third. The arithmetic doesn't move and neither does the second name. The receipt is stamped anyway, and filed with his.
-- Knock-on: *Keepsake: The list's receipt* · *Chapter 12, "Under his name": from {date}, when you take a seat in Parliament*
+*Step 3.* Success — *Second* — Second on the list by the close of names. The Chair says the Rows have never had a second. You say they had forty who never had a vote. · Partial — *Third, with a promise* — Third, and the Chair's word that the party will push for three seats. A word is a word. The receipt is stamped. · Failure — *Third* — Third. The arithmetic doesn't move and neither does the second name. The receipt is stamped anyway, and filed with the rest.
+- Knock-on: *Keepsake: The list's receipt* · *Chapter 12, "The names read out": from {date}, when you take a seat in Parliament*
 
-**Chapter 12 · *Under his name*** · art `scene.parliament`
-*Step 1.* The roll of the chamber, and a clerk with a pen. "Name as it is to be entered." The ward book is in your coat. The clerk is waiting.
-- A · *Your name, and his after it* (hint: *Two names on the roll.* `two-names`) · B · *Your name* (hint: *His is in the book. Yours is on the roll.* `one-name`)
-*Step 2 · The maiden speech.* A deputy's first words in the chamber, and the baths fund of '21 is a sentence you could say or not. Sixty seats, three parties and a gallery with the Herald in it.
-- *Say it, standing, to the chamber* (Charisma and Intelligence) · *Write it into a question on the public baths bill* (Intelligence) · *Legwork. Say it first in every branch, so the chamber has heard it before you stand* (best)
-*Step 3.* Success — *On the record* — The chamber hears it and the record has it: a councillor, a fund, a baths, a seat lost, a seat taken. The Herald prints the sentence. The clerk hands you the rosette they give new deputies, and you wear it. · Partial — *In the question* — The question is on the order paper with the sentence in it, which the clerk says is the record too. The rosette is yours. · Failure — *Next speaker* — Your name is called and the chamber is loud and the sentence stays in your coat. The rosette is yours anyway. You'll stand again; there's a term.
-- Knock-on: *Keepsake: His rosette · wear it from the Me tab* · *Finish His Work: completed · Legacy +30*
+**Chapter 12 · *The names read out*** · art `scene.parliament`
+*Step 1.* The roll of the chamber, and a clerk with a pen. "Name as it is to be entered." The unit's list is in your coat. The clerk is waiting.
+- A · *Your name, and ask for the forty to be read after it* (hint: *Forty names on the record, once.* `forty-read`) · B · *Your name* (hint: *The forty are in the list. Yours is on the roll.* `one-name`)
+*Step 2 · The maiden speech.* A deputy's first words in the chamber, and the memorials bill is on the order paper: every stone in the republic, every name a town buried, lodged or paid. Sixty seats, three parties and a gallery with the Herald in it.
+- *Read the forty names, standing, to the chamber* (Charisma and Intelligence) · *Write them into a question on the memorials bill* (Intelligence) · *Legwork. Read them first in every branch, so the chamber has heard them before you stand* (best)
+*Step 3.* Success — *On the record* — The chamber hears the forty and the record has them, every one, with the town's name beside each. The Herald prints the list. The clerk hands you the black ribbon the chamber wears for names read out, and you wear it. · Partial — *In the question* — The question is on the order paper with the forty names in it, which the clerk says is the record too. The ribbon is yours. · Failure — *Next speaker* — Your name is called and the chamber is loud and the list stays in your coat. The ribbon is yours anyway. You'll stand again; there's a term.
+- Knock-on: *Keepsake: The memorial ribbon · wear it from the Me tab* · *The Names on the Stone: completed · Legacy +30*
 
 ### 16.2 The two due chapters
 
-**_Clear His Name_ · chapter 2 · *The night foreman*** · requirement Level 6 · difficulty 14 · 15 Energy · 300 / 80 / 150 · keepsake `keep.foremans-name` · art `scene.factory-gate` · Letters row *From the prison letter's margin*
-*Step 1.* The prison letter names nobody, but the margin does, in pencil, in another hand: *Brandauer, nights*. The mill still runs nights. The gate lists the foremen on a board you can read from the road.
-- A · *Read the board and go in* (hint: *Twenty years of foremen.* `read-board`) · B · *Ask the union clerk who Brandauer was* (hint: *A name for a name.* `asked-clerk`)
-*Step 2 · Nights.* Brandauer kept the night book for the mill in '19 and the night book is in the gatehouse, under the new one. The watchman is the kind who can be talked to, or walked past.
-- *Talk the watchman into an hour with the book* (Charisma and Intelligence) · *Read the shift times off the board and go in when the gate is empty* (Agility; **Heat +6, whatever happens**) · *Legwork. Carry nights for a week and read the book on the break* (best)
-*Step 3.* Success — *The night book* — March '19, the night of the fire: Brandauer signed in, your father didn't; he was on the day book. The page goes in your pocket. Brandauer went to the capital in '22 and did well. · Partial — *A page torn out* — The night of the fire is torn out, which is a kind of evidence. Brandauer's name is on the pages either side. The watchman says the book's been like that for years. · Failure — *The new book* — The old book is gone to the company's archive in the capital. The board says Brandauer, nights, '18 to '20. That's the name; the proof is in Irongate.
-- Knock-on: *Keepsake: The foreman's name* · *Dossier: an entry on Konrad Brandauer · political* · *Chapter 3, "The archive": from {date}, after your first Case File*
+**_Who Sold the Homes_ · chapter 2 · *The night caretaker*** · requirement Level 6 · difficulty 14 · 15 Energy · 300 / 80 / 150 · keepsake `keep.foremans-name` (*The caretaker's name*) · art `scene.street` (the block from the road; was `scene.factory-gate`) · Letters row *From the register's margin*
+*Step 1.* The order's signature is a man who is rising, but the register's margin named the one who held the keys, in pencil: *Brandauer, nights*. The block still has a night caretaker. The lobby board lists them, readable from the street.
+- A · *Read the board and go in* (hint: *Twenty years of caretakers.* `read-board`) · B · *Ask the housing office's clerk who Brandauer is* (hint: *A name for a name.* `asked-clerk`)
+*Step 2 · Nights.* Brandauer kept the block's night book in the autumn, who came with keys and who paid for them, and the night book is in the lodge, under the new one. The day porter is the kind who can be talked to, or walked past.
+- *Talk the porter into an hour with the book* (Charisma and Intelligence) · *Read the rounds off the board and go in when the lodge is empty* (Agility; **Heat +6, whatever happens**) · *Legwork. Take the block's night shift for a week and read the book on the break* (best)
+*Step 3.* Success — *The night book* — The autumn's page: your flat's keys signed over by Brandauer to a clerk from the capital, against a receipt with a senator's office on it. The page goes in your pocket. Brandauer still does nights, and does well. · Partial — *A page torn out* — The autumn's page is torn out, which is a kind of evidence. Brandauer's name is on the pages either side. The porter says the book's been like that since the winter. · Failure — *The new book* — The old book is gone to the housing office's archive in the capital. The board says Brandauer, nights, since the autumn. That's the name; the proof is in Irongate.
+- Knock-on: *Keepsake: The caretaker's name* · *Dossier: an entry on Konrad Brandauer · political* · *Chapter 3, "The archive": from {date}, after your first Case File*
 
-**_Settle His Debts_ · chapter 3 · *The collector*** · requirement Rank 3 · difficulty 16 · 15 Energy · 350 / 90 / 200 · keepsake `keep.collectors-card` · art `scene.street` · Letters row *From under the door*
-*Step 1.* A card under the door: a name, a Clearwater address, and *Friday* underlined twice. The ledger page says the debt is four hundred. The branch says the collector drinks at the Anchor on Thursdays.
-- A · *Meet him at the Anchor* (hint: *A public house is a public place.* `met-him`) · B · *Pay a hundred on account and send the rest of the week away* (hint: *A hundred buys a week.* `paid-hundred`; **−100 Iron**) 
-*Step 2 · Thursday.* He's a small man with a big ledger and the branch's own barman keeps his glass full. He wants four hundred or a favour. The favour is a parcel to Clearwater, no questions.
-- *Talk the debt down to two hundred and a signature* (Charisma and Intelligence) · *Lift the ledger page with your father's name while he's at the bar* (Agility; **Heat +6, whatever happens**) · *Legwork. Find three men he's squeezed and bring them to the next table* (best)
-*Step 3.* Success — *Two hundred and a signature* — Two hundred, a signature, and his card torn in half on the table. The barman pours one on the house. The parcel is not mentioned again. · Partial — *A month* — A month's grace and his card kept, which is a month. He says the syndicate is patient with people who pay. You say you'll pay. · Failure — *The parcel* — He keeps the ledger, the debt and his glass. The parcel goes to Clearwater Friday, he says, with or without you. His card is on the table when he leaves.
+**_The Ration Ledger_ · chapter 3 · *The collector*** · requirement Rank 3 · difficulty 16 · 15 Energy · 350 / 90 / 200 · keepsake `keep.collectors-card` · art `scene.street` · Letters row *From under the door*
+*Step 1.* A card under the door: a name, a Clearwater address, and *Friday* underlined twice. The ring's page says what your silence is worth to them: four hundred, or the page back. The branch says the collector drinks at the Anchor on Thursdays.
+- A · *Meet him at the Anchor* (hint: *A public house is a public place.* `met-him`) · B · *Pay a hundred on account and send the rest of the week away* (hint: *A hundred buys a week.* `paid-hundred`; **−100 Iron**)
+*Step 2 · Thursday.* He's a small man with a big ledger and the branch's own barman keeps his glass full. He wants four hundred, or the page, or a favour. The favour is a parcel to Clearwater, no questions.
+- *Talk the price down to two hundred and a signature* (Charisma and Intelligence) · *Lift the ring's page with your family's name while he's at the bar* (Agility; **Heat +6, whatever happens**) · *Legwork. Find three people he's squeezed and bring them to the next table* (best)
+*Step 3.* Success — *Two hundred and a signature* — Two hundred, a signature, and his card torn in half on the table. The barman pours one on the house. The parcel is not mentioned again. · Partial — *A month* — A month's grace and his card kept, which is a month. He says the ring is patient with people who pay. You say you'll pay. · Failure — *The parcel* — He keeps the ledger, the price and his glass. The parcel goes to Clearwater Friday, he says, with or without you. His card is on the table when he leaves.
 - Knock-on: *Keepsake: The collector's card* · *Chapter 4, "The parcel": from {date}, at Level 16*
-
 ### 16.3 The Front's eight tier-1 actions (Clearwater; difficulty 10; outcome texts ≤ 240)
 
 | Id | Place | Title | Type · stat · Energy |
@@ -690,7 +689,7 @@ Outcome texts (Success / Partial):
 | §14.1 | The Front's four places open (Appendix C #71 closed) |
 | §14.12 | Recognition pinned; plain clothes; forged papers and the press pass; a recognised visitor is counted |
 | §16.2 | Presence: a recognised visitor counted as *1 from another party* |
-| §17.1 | Chapters 4–12 of *Finish His Work*; *The night foreman*; *The collector* |
+| §17.1 | Chapters 4–12 of *The Names on the Stone* (was *Finish His Work*); *The night caretaker* (was *The night foreman*); *The collector* |
 | §17.2 | Rewritten: the two MVP patrons; Favour sources and numbers; Requests; the perks by tier pinned |
 | §17.3 | New rows (Governor, deputy, exposé, Protégé, award); perk costs; the spend balance |
 | §17.4 | The MVP form: the room's +10, the flat's numbers, the rent that waits, one flat, moving |
@@ -743,7 +742,7 @@ Companion edit: `docs/economy.md` §22 (and §22.6's note on the rent cap).
 | 5 | `item.press-pass` | A card in a worn leather holder: *PRESS* in plain capitals, a stamp, a photograph corner; no masthead | item |
 | 6 | `item.fountain-pen` | A black fountain pen with a gold nib and a worn clip; Edith Crane's | item |
 | 7 | `item.cigarette-case` | A silver cigarette case, engine-turned, open to show the band; Julius Marr's | item |
-| 8 | `item.rosette` | A deputy's rosette: cream and ink ribbon, a plain centre, no device or colour of any party | item |
+| 8 | `item.rosette` | The memorial ribbon: a plain black ribbon folded once, no device, badge or colour of any party (review 5, 8 Oct 2026; was a deputy's cream-and-ink rosette) | item |
 | 9 | `scene.flat` | A rented flat at night: one room with a bed, a wardrobe with three coats on the door, a window over tram wires, a gas ring; a paper on the chair | scene 2688 × 1520 |
 | 10 | `scene.casino` | The Casino's long bar after midnight: the domed room, the tables beyond, a cashier's window, the Front's money in evening dress | scene |
 | 11 | `scene.lido` | The Lido on a Sunday: the pavilion, deckchairs to the water, the bandstand with a brass band, the lake behind | scene |
@@ -862,22 +861,22 @@ The architect's default stands wherever the answer below says **default**; the r
 
 | Id | Text |
 |---|---|
-| `keep.ward-book` | Two hundred names in his hand, a tick or a cross against each. The last page is dated the week he lost his seat. Three names have two ticks. |
-| `keep.prison-letter` | Eleven lines from the prison at Ashford, 1920. He says he didn't set it, and that the night book would show it. Somebody has pencilled a name in the margin. |
-| `keep.marker` | A card with four hundred written on it and a Clearwater address on the back. The syndicate's hand. It has been folded and unfolded a great many times. |
-| `keep.election-bill` | His election bill of '21: the name, the ward, three promises in big type. Somebody wrote *liar* across it and somebody else rubbed it out. |
-| `keep.ledger-page` | A page torn from his ledger: the debt, the dates, the interest in a neater hand than his. The last entry is the week he died. |
-| `keep.deposit-receipt` | Ten marks, received, for the council deposit of '21. Stamped RETURNED in red. The clerk's signature is the same as on yours. |
-| `keep.count-sheet` | The returning officer's sheet from the night you were counted. Two figures: yours, and under it, in chalk, his from '21. One of them was enough. |
-| `keep.minute-book` | The branch's minute book. His pages stop in March '21 at a motion for a public baths, crossed through. The next entry is in your hand. |
-| `keep.ballot-stub` | His ballot stub from the '21 election for Chair, never cast. On the back, in pencil, a question about the orders. It has been asked now. |
-| `keep.cutting` | *Councillor Loses Seat; Questions on Baths Fund.* March '21, the Herald, by a junior named E. Crane. A second cutting, twenty-five years later, is pinned to it. |
-| `keep.rule-draft` | A public baths for the Rows, costed in his hand to the last mark, with a line he never got to move. Under it, in yours, a date and a word. |
-| `keep.list-letter` | The list committee's letter of '20, inviting his name for Parliament. On the back, in his hand: *no. The ward first.* Under it, in yours, a second word. |
-| `keep.polling-card` | His polling card for the republic's vote of '21, unused. The ward book says *didn't go*. You have carried it to the Forecourt since. |
-| `keep.list-receipt` | The clerk's receipt for twenty-five Political Capital and a name on the party's list. The same form as the one in the tin, filled in this time. |
-| `acc.his-rosette` | The rosette the clerk hands new deputies. Cream and dark ribbon, nothing on the centre. You wore it the day your name went on the roll. |
-| `keep.foremans-name` | *Brandauer, nights.* Pencil, another hand, in the margin of the prison letter. The board at the mill gate says the same, '18 to '20. The proof is in the capital. |
+| `keep.ward-book` | Forty names in the quartermaster's hand, a home street against each. Three of the streets are yours now. The council's notice about the stone is folded inside. |
+| `keep.prison-letter` | The requisition order for the flat: the address, a date in the autumn, the word vacant typed where a family's name should be, and a signature you can read. Held to a lamp, it shows what the typewriter struck out. |
+| `keep.marker` | A page from a ration book in your family's name, drawn every month for a year after they were gone. A Clearwater stamp in the corner, small. It has been folded and unfolded a great many times. |
+| `keep.election-bill` | Your election bill, off the branch's press: your name in capitals on brown paper and the forty under it. Somebody wrote *lodgers* across it and somebody else rubbed it out. |
+| `keep.ledger-page` | The one page the ring didn't tear out: the names they drew rations in, yours among them, and what each page fetched, in a neater hand than the stamp. The last entry is the month the office held your post. |
+| `keep.deposit-receipt` | Ten marks, received, for the council deposit. Stamped. The clerk's signature is the same as on the council's notice about the stone. |
+| `keep.count-sheet` | The returning officer's sheet from the night you were counted. Two figures: yours, and under it, in chalk, forty. One of them was enough. |
+| `keep.minute-book` | The branch's minute book. The autumn's pages stop at a motion for the memorial, lost four to three. The next entry is in your hand. |
+| `keep.ballot-stub` | Your ballot stub from the election for Chair. On the back, in pencil, a question about the stone. It has been asked now. |
+| `keep.cutting` | *Council Trims Memorial List; "Not the Town's Own".* The autumn, the Herald, by E. Crane. A second cutting, with forty names in it, is pinned to it. |
+| `keep.rule-draft` | A memorial rule for the town, costed to the last mark: every name the town buried, lodged or paid. Under it, in your hand, a date and a word. |
+| `keep.list-letter` | The list committee's letter, inviting your name for Parliament. On the back, in your hand, one word; under it, in a docker's, a condition about the stone. |
+| `keep.polling-card` | Your polling card for the republic's vote, used. The register it came from still carried forty names that never voted. You have carried it to the Forecourt since. |
+| `keep.list-receipt` | The clerk's receipt for twenty-five Political Capital and a name on the party's list. On the back, one line for the list's printed sheet, in your hand. |
+| `acc.his-rosette` | The black ribbon the chamber wears when names are read out. Plain, folded once, nothing on it. You wore it the day the forty went on the record. |
+| `keep.foremans-name` | *Brandauer, nights.* Pencil, another hand, in the margin of the housing register. The board in the block's lobby says the same, since the autumn. The proof is in the capital. |
 | `keep.collectors-card` | A small man's card: a Clearwater address, *Friday* underlined twice. He drinks at the Anchor on Thursdays and keeps a big ledger. |
 | `acc.cranes-pen` | Edith Crane's own pen, given at Herald House. The nib is worn to her hand. "Write what you can prove," she said, "and sign it." |
 | `acc.marrs-case` | Julius Marr's cigarette case, engine-turned, the band inside it. "The bank's regards," he said. "It opens doors. So does money, but this is quieter." |

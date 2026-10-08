@@ -259,6 +259,8 @@ const NATION_FRAME_MARGIN = 0.06;
 /** GDD §1.2 pillar 7 (content §13.7, n9): an outcome text is at most 240 characters and 4 sentences. */
 const OUTCOME_TEXT_MAX_CHARS = 240;
 const OUTCOME_TEXT_MAX_SENTENCES = 4;
+/** Review 5 (answers §19.2): beat 1's narrative, whose last three sentences are the clerk's news. */
+const ORIGIN_COUNTER_MAX_SENTENCES = 5;
 
 /**
  * Review 4 (tech design §6.1, ADR 0075): the nation's routes. One leg per nation city other than the
@@ -603,17 +605,17 @@ export function parseContent(raw: unknown): Content {
   }
 
   // Story texts (tech design §4.3, §4.4): 240 characters, 4 sentences, story placeholders only.
-  const checkStory = (where: string, text: string) => {
+  const checkStory = (where: string, text: string, maxSentences = OUTCOME_TEXT_MAX_SENTENCES) => {
     if (text.length > OUTCOME_TEXT_MAX_CHARS)
       problems.push(`${where} is ${text.length} characters (at most 240)`);
     const n = sentenceCount(text);
-    if (n > OUTCOME_TEXT_MAX_SENTENCES) problems.push(`${where} has ${n} sentences (at most 4)`);
+    if (n > maxSentences) problems.push(`${where} has ${n} sentences (at most ${maxSentences})`);
     for (const p of placeholdersIn(text)) {
       if (!ALLOWED_STORY_PLACEHOLDERS.has(p)) problems.push(`${where}: unknown story placeholder {${p}}`);
     }
   };
 
-  // The origin (review 4: *The Last Train In*, ADR 0073, tech design §4.1).
+  // The origin (review 4, ADR 0073, tech design §4.1; review 5: *Coming home*, answers §19).
   const ambitionIds = new Set(content.ambitions.map((a) => a.id));
   const questions = content.origin.steps.flatMap((s) => s.questions);
   content.origin.steps.forEach((s, i) => {
@@ -621,7 +623,9 @@ export function parseContent(raw: unknown): Content {
     needAsset(`origin.steps[${i}].art`, s.art, 'scene');
     if (s.portrait !== null && s.portrait !== 'helper')
       needAsset(`origin.steps[${i}].portrait`, s.portrait, 'portrait');
-    checkStory(`origin.steps[${i}].narrative`, s.narrative);
+    // Review 5 (answers §19.2): the counter's three pieces of news are three short sentences in 237
+    // characters (*The mill is sold. The stamp is missing. The flat is gone.*), so beat 1 may run to five.
+    checkStory(`origin.steps[${i}].narrative`, s.narrative, i === 0 ? ORIGIN_COUNTER_MAX_SENTENCES : undefined);
     checkStory(`origin.steps[${i}].kicker`, s.kicker);
   });
   for (const q of questions) {
@@ -675,7 +679,7 @@ export function parseContent(raw: unknown): Content {
     if (st.length !== a.effects.length || values.join() !== '1,6' || new Set(st.map((e) => e.stat)).size !== 2)
       problems.push(`origin "${suitcase.id}" ${a.id}: needs +6 to one stat and +1 to another, nothing else`);
   }
-  // Beat 3: one Ambition each (three different), and his coat on everyone.
+  // Beat 3: one Ambition each (three different), and the demob suit on everyone.
   const promised = new Set<string>();
   for (const a of lining.answers) {
     const amb = a.effects.flatMap((e) => (e.kind === 'ambition' ? [e.ambitionId] : []));

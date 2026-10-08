@@ -104,7 +104,7 @@ describe('the welcome set by the best trained stat (GDD §13.7)', () => {
       locationId: 'duskwall.beacon-house',
       actionId: 'duskwall.beacon-house.favour',
     });
-    expect(paper.headlines[0]!.deck).toMatch(/Stahl's bundle goes out at Beacon House; start there\.$/);
+    expect(paper.headlines[0]!.deck).toMatch(/The League's letter waits at Beacon House; start there\.$/);
   });
 
   it('a STR-heavy Vanguard (STR 14, INT 5): the Fortress Gate canvass, and the committee checks STR', async () => {
@@ -113,7 +113,7 @@ describe('the welcome set by the best trained stat (GDD §13.7)', () => {
     expect(me.orders.items.map((o) => [o.id, o.title])).toEqual([
       ['dir.v.guard-change', 'Talk to the customs men at the Fortress Gate'],
       // Review 4 (answers §2.6): slot B of the welcome set is the favour from the platform.
-      ['dir.v.welcome-b', "Hand out Stahl's bundle at Beacon House"],
+      ['dir.v.welcome-b', "Get the stamp at Beacon House"],
       ['dir.v.take-a-job', 'Take a job at the Fortress Gate'],
     ]);
     expect(me.orders.items[0]!.pin?.locationId).toBe('duskwall.garrison-gate');

@@ -6,7 +6,8 @@ import { arrive, callerFor, gameData, newUser, originAnswers, setupDb, teardownD
 
 /**
  * Slice-2 tech design §14 "Server — arrival" and "Server — cities", rewritten for review 4's three
- * beats (*The Last Train In*, ADR 0073, tech design docs/tech/review-4.md §4.4).
+ * beats (ADR 0073, tech design docs/tech/review-4.md §4.4), restrung by review 5 as *Coming home*
+ * (docs/design/review-5-answers.md §19; ids unchanged).
  */
 beforeAll(async () => {
   await setupDb('arrival-test');
@@ -44,34 +45,34 @@ describe('arrival: the face and the three beats (ADR 0011, 0073)', () => {
     expect(await refusal(caller.arrival.answer(REF[0]!))).toMatchObject({ game: { reason: 'NO_FACE' } });
   });
 
-  it('beat 1, the platform: three rows with a portrait, two lines and a confirm; the note', async () => {
+  it('beat 1, the counter: three rows with a portrait, two lines and a confirm; the note', async () => {
     const { caller } = fresh();
     const v = await caller.arrival.start({ avatarId: 'avatar.man-40s' });
     expect(v.phase).toBe('story');
     expect(v.questionId).toBe('origin.platform');
     expect(v.screen).toMatchObject({
-      kicker: 'Irongate · Central Station · the last train in',
-      title: 'The platform',
+      kicker: 'Irongate · the demobilisation office · the second morning home',
+      title: 'The counter',
       echo: null,
       prompt: null,
       portrait: null,
       progress: { step: 1, of: 3 },
-      art: { kind: 'scene', asset: { id: 'scene.station' } },
-      note: 'Whoever you help, you go with. Permanent: a Faction Reset token is the only way back.',
+      art: { kind: 'scene', asset: { id: 'scene.demob-office' } },
+      note: "One of these today. The other two will keep, or they won't. Whoever you go with, you go with: a Faction Reset token is the only way back.",
     });
     expect(
       v.screen?.choices.map((c) => [c.id, c.portrait?.id, c.lines?.[0], c.confirm]),
     ).toEqual([
-      ['holm', 'portrait.holm', 'Petra Holm · union organiser · Coalport', "Help Holm · the six o'clock to Coalport"],
-      ['stahl', 'portrait.stahl', 'Viktor Stahl · steward · Duskwall', "Help Stahl · the six o'clock to Duskwall"],
-      ['grey', 'portrait.grey', 'Thomas Grey · agent · Ashford', "Help Grey · the six o'clock to Ashford"],
+      ['holm', 'portrait.holm', 'Petra Holm · union organiser · at the bench by the door, signing up men off the trains', "Go for the work · the six o'clock to Coalport"],
+      ['stahl', 'portrait.stahl', "Viktor Stahl · the Duskwall League's welfare desk · stamps, pensions and a bed for men coming home", "Go for the stamp · the six o'clock to Duskwall"],
+      ['grey', 'portrait.grey', 'Thomas Grey · legal-aid lawyer · at the end of the counter, taking housing cases', "Go for the flat · the six o'clock to Ashford"],
     ]);
   });
 
   it.each([
-    ['holm', 'Coalport', 'Holm', 'She', "You carried Holm's parcel."],
-    ['stahl', 'Duskwall', 'Stahl', 'He', "You took Stahl's bundle."],
-    ['grey', 'Ashford', 'Grey', 'He', "You witnessed a tenant's signature for Grey."],
+    ['holm', 'Coalport', 'Holm', 'She', "You went for the work."],
+    ['stahl', 'Duskwall', 'Stahl', 'He', "You went for the stamp."],
+    ['grey', 'Ashford', 'Grey', 'He', "You went for the flat."],
   ] as const)(
     'beat 2 after helping %s: the six o’clock to %s, the helper beside the text, the echo; resumes on reload',
     async (helper, city, surname, pronoun, echo) => {
@@ -83,7 +84,7 @@ describe('arrival: the face and the three beats (ADR 0011, 0073)', () => {
       expect(again.questionId).toBe('origin.suitcase');
       expect(again.screen).toMatchObject({
         kicker: `The six o'clock to ${city} · the compartment`,
-        title: 'The suitcase',
+        title: 'The kitbag',
         echo,
         prompt: null,
         portrait: { id: `portrait.${helper}` },
@@ -91,29 +92,30 @@ describe('arrival: the face and the three beats (ADR 0011, 0073)', () => {
         progress: { step: 2, of: 3 },
       });
       expect(again.screen?.narrative).toBe(
-        `${surname} is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. ${pronoun} comes back to ask what a person carries to a new town.`,
+        `The six o'clock, the kitbag on the rack. Everything you own is in it, and it still isn't heavy. ${surname} asks what a person brings home from four years.`,
       );
+      expect(pronoun).toMatch(/^(She|He)$/);
       // No number on beats 2 and 3 (§7.1); the rows' lines on beat 1 carry the party's bonus.
       expect(JSON.stringify(again.screen?.choices)).not.toMatch(/\d/);
     },
   );
 
-  it('beat 3, the lining: the echo of the suitcase, three keepsakes with their hints; then ready', async () => {
+  it('beat 3, the post: the echo of the kitbag, three keepsakes with their hints; then ready', async () => {
     const { caller } = fresh();
     await caller.arrival.start({ avatarId: 'avatar.man-40s' });
     await caller.arrival.answer(REF[0]!);
     const v = await caller.arrival.answer(REF[1]!);
     expect(v.screen).toMatchObject({
-      kicker: 'The same compartment · under the lining',
-      title: 'The lining',
-      echo: 'You carry books.',
+      kicker: "The same compartment · the office's post",
+      title: 'The post',
+      echo: 'You brought books.',
       portrait: null,
       progress: { step: 3, of: 3 },
     });
     expect(v.screen?.choices.map((c) => [c.text, c.hint])).toEqual([
-      ['His ward book.', 'Two hundred names in his hand, and the seat he lost.'],
-      ['His letter from prison.', "The Mill Fire of '19, and the word innocent, underlined twice."],
-      ['The marker.', 'What he owed, to whom, and the Clearwater address.'],
+      ["The unit's list.", "Forty names in your hand, and the town's memorial being cut without them."],
+      ['The requisition order.', 'The flat, the date, and a signature you can read.'],
+      ['The ration page.', "A year of rations drawn in your family's name after they were gone. Somebody ate them."],
     ]);
     const ready = await caller.arrival.answer(REF[2]!);
     expect(ready).toMatchObject({ phase: 'ready', screen: null, questionId: null, landing: null });
@@ -244,7 +246,7 @@ describe('arrival.join (ADR 0011, 0012, 0073)', () => {
       'The Duskwall Sentinel',
       [
         'Talk to the customs men at the Fortress Gate',
-        "Hand out Stahl's bundle at Beacon House",
+        "Get the stamp at Beacon House",
         'Take a job at the Fortress Gate',
       ],
       'Viktor Stahl',
@@ -260,7 +262,7 @@ describe('arrival.join (ADR 0011, 0012, 0073)', () => {
       'The Coalport Clarion',
       [
         'Talk to the workers at the Mill Gate',
-        "Deliver Holm's parcel at the Union Hall",
+        "Sign on at the Union Hall",
         'Take a job at the Mill Gate',
       ],
       'Petra Holm',
@@ -276,7 +278,7 @@ describe('arrival.join (ADR 0011, 0012, 0073)', () => {
       'The Ashford Gazette',
       [
         'Talk to the printers at Gazette House',
-        'Witness the signature at the Assembly Rooms',
+        'File the appeal at the Assembly Rooms',
         'Take a job at Gazette House',
       ],
       'Thomas Grey',
@@ -299,7 +301,7 @@ describe('arrival.join (ADR 0011, 0012, 0073)', () => {
         chaBase: 0,
         iron: 0,
         fxp: 0,
-        wearing: { name: "Your father's coat", cha: 5 },
+        wearing: { name: 'The demob suit', cha: 5 },
         avatar: { id: 'avatar.woman-30s' },
         ambition: { id: 'finish-his-work', chapter: 1, status: 'ready' },
         lettersWaiting: 1,

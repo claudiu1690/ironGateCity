@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { ANSWERS, PLATFORM_ROWS, answer, signUpOnly } from './helpers';
+import { ANSWERS, platformRow, answer, signUpOnly } from './helpers';
 
 /**
- * Slice 2's question (tech design §14), review 4's *The Last Train In* (GDD §7.1, §7.5; ADR 0073):
- * does a brand-new player understand what to do in the first ten minutes? Sign-up with a face → the
- * platform (whom you help is your party: a row, then the confirm) → the suitcase (reloaded) → the
- * lining → the welcome edition → the HQ's open sheet with the favour highlighted → the favour → the
+ * Slice 2's question (tech design §14), review 5's *Coming home* (GDD §7.1, §7.5; answers §19; ADR
+ * 0073): does a brand-new player understand what to do in the first ten minutes? Sign-up with a face
+ * → the counter (the problem you chase is your party: a row, then the confirm) → the kitbag
+ * (reloaded) → the post → the welcome edition → the HQ's open sheet with the favour highlighted → the favour → the
  * modal. Eight taps from sign-up to the first result. Once per party, on every project (phone, small
  * phone, desktop), with the §12.3 layout checks and the first-session art budget (ADR 0015: at most
  * 1 MB of art on a phone).
@@ -21,10 +21,11 @@ const CASES = [
     welcome: 'Welcome to Duskwall',
     arrival: 'Kaspar Lind Arrives at Duskwall Station',
     secretary: '— V.S.',
-    echo: "You took Stahl's bundle.",
+    echo: 'You went for the stamp.',
+    confirm: "Go for the stamp · the six o'clock to Duskwall",
     hq: /^\d+\. Beacon House$/,
-    favour: 'Hand out the bundle',
-    order: "Hand out Stahl's bundle at Beacon House",
+    favour: 'Get the stamp',
+    order: 'Get the stamp at Beacon House',
   },
   {
     faction: 'collective' as const,
@@ -35,10 +36,11 @@ const CASES = [
     welcome: 'Welcome to Coalport',
     arrival: 'Kaspar Lind Steps Off the Irongate Train',
     secretary: '— P.H.',
-    echo: "You carried Holm's parcel.",
+    echo: 'You went for the work.',
+    confirm: "Go for the work · the six o'clock to Coalport",
     hq: /^\d+\. Union Hall$/,
-    favour: 'Deliver the parcel',
-    order: "Deliver Holm's parcel at the Union Hall",
+    favour: 'Sign on',
+    order: 'Sign on at the Union Hall',
   },
   {
     faction: 'alliance' as const,
@@ -49,10 +51,11 @@ const CASES = [
     welcome: 'Welcome to Ashford',
     arrival: 'Kaspar Lind Arrives on the Irongate Train',
     secretary: '— T.G.',
-    echo: "You witnessed a tenant's signature for Grey.",
+    echo: 'You went for the flat.',
+    confirm: "Go for the flat · the six o'clock to Ashford",
     hq: /^\d+\. Assembly Rooms$/,
-    favour: 'Witness the signature',
-    order: 'Witness the signature at the Assembly Rooms',
+    favour: 'File the appeal',
+    order: 'File the appeal at the Assembly Rooms',
   },
 ];
 
@@ -63,7 +66,7 @@ async function noSideScroll(page: Page) {
 }
 
 for (const c of CASES) {
-  test(`arrival helping ${c.helper}: sign-up → platform → suitcase (reload) → lining → welcome edition → the favour`, async ({
+  test(`arrival with ${c.helper}: sign-up → counter → kitbag (reload) → post → welcome edition → the favour`, async ({
     page,
   }, info) => {
     const phone = info.project.name !== 'desktop';
@@ -79,30 +82,30 @@ for (const c of CASES) {
     taps += 2; // the face, and Sign up (the name is typed)
     await noSideScroll(page);
 
-    // Beat 1, the platform: three rows (a portrait, the ask, two lines), the note, the confirm.
-    await expect(page.getByRole('heading', { name: 'The platform' })).toBeVisible();
+    // Beat 1, the counter: three rows (a portrait, the ask, two lines), the note, the confirm.
+    await expect(page.getByRole('heading', { name: 'The counter' })).toBeVisible();
     const rows = page.getByRole('radio');
     await expect(rows).toHaveCount(3);
     await expect(page.getByTestId('story-note')).toHaveText(
-      'Whoever you help, you go with. Permanent: a Faction Reset token is the only way back.',
+      "One of these today. The other two will keep, or they won't. Whoever you go with, you go with: a Faction Reset token is the only way back.",
     );
     const confirm = page.getByTestId('story-confirm');
     await expect(confirm).toBeDisabled();
     await expect(confirm).toBeInViewport();
     await expect(page.getByTestId('story-waits')).toContainText('This waits for you · Step 1 of 3');
-    const row = page.getByRole('radio', { name: PLATFORM_ROWS[c.faction] });
+    const row = platformRow(page, c.faction);
     await row.scrollIntoViewIfNeeded();
     await row.click();
     taps += 1;
-    await expect(confirm).toHaveText(`Help ${c.helper} · the six o'clock to ${c.town}`);
+    await expect(confirm).toHaveText(c.confirm);
     await noSideScroll(page);
     await confirm.click();
     taps += 1;
 
-    // Beat 2, the suitcase, on the train to the helper's town; closing the tab keeps the place.
-    await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+    // Beat 2, the kitbag, on the train to the helper's town; closing the tab keeps the place.
+    await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
     await expect(page.getByTestId('story-echo')).toHaveText(c.echo);
     await expect(page.getByText(`The six o'clock to ${c.town} · the compartment`)).toBeVisible();
     const choices = page.getByTestId('story-choice');
@@ -110,13 +113,13 @@ for (const c of CASES) {
     for (const ch of await choices.all()) await expect(ch).toBeInViewport();
     // No number on beats 2 and 3 (§7.1): the text and the choices (the footer counts the steps).
     for (const ch of await choices.all()) await expect(ch).not.toContainText(/\d/);
-    await expect(page.getByText(/down the corridor arguing with the guard/)).not.toContainText(/\d/);
+    await expect(page.getByText(new RegExp(`${c.helper} asks what a person brings home`))).toBeVisible();
     await answer(page, ANSWERS.reference[0]!);
     taps += 1;
 
-    // Beat 3, the lining.
-    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
-    await expect(page.getByTestId('story-echo')).toHaveText('You carry books.');
+    // Beat 3, the post.
+    await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
+    await expect(page.getByTestId('story-echo')).toHaveText('You brought books.');
     await answer(page, ANSWERS.reference[1]!);
     taps += 1;
 
@@ -134,7 +137,7 @@ for (const c of CASES) {
     await expect(orders.last()).toContainText('Take a job');
     await expect(page.getByText(c.secretary)).toBeVisible();
     await expect(page.getByTestId('letters-row')).toContainText('Chapter 1 is ready · 10 Energy');
-    await expect(page.getByTestId('desk')).toContainText("Your father's coat");
+    await expect(page.getByTestId('desk')).toContainText('The demob suit');
     await noSideScroll(page);
 
     // To the city: the HQ's sheet is open with the favour first and highlighted.

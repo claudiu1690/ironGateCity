@@ -30,6 +30,7 @@ import { opponents } from '../src/data/opponents';
 import { orderTemplates } from '../src/data/orders';
 import { reworded } from './review4';
 import { playerStrings, systemTermHits } from './vocabulary';
+import { restrung } from './review5';
 
 const hl = HeadlineTemplateSchema.array().parse(riskHeadlines);
 const byId = new Map(hl.map((h) => [h.id, h]));
@@ -231,8 +232,10 @@ describe('the new UI copy, word for word against slice-5-screens.md §11', () =>
   const listed = italics(section(SCREENS, '## 11. Copy', 'British English, no exclamation'))
     // "{n} mark{s}" is a plural; the copy prints "1 mark" and "{n} marks" (checked below).
     .map((s) => s.replace('{n} mark{s}', '{n} marks'))
-    // Review 4: the strings the review reworded are compared as reworded (./review4.ts).
-    .map(reworded);
+    // Review 4: the strings the review reworded are compared as reworded (./review4.ts); review 5's
+    // *Coming home* re-strung the riverside house's (./review5.ts).
+    .map(reworded)
+    .map(restrung);
   const ledger = ambitions.find((a) => a.id === 'settle-his-debts')!.chapters[1]!;
   const produced: string[] = [
     r.missions,

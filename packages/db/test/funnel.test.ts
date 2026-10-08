@@ -65,7 +65,7 @@ describe('the arrival funnel (tech design §14.1)', () => {
       accounts: 3,
       face: 3,
       // Review 4: three beats.
-      'beat 3 (the lining)': 3,
+      'beat 3 (the post)': 3,
       joined: 2,
       'first action': 2,
       'welcome orders 3 / 3 on day 1': 1,

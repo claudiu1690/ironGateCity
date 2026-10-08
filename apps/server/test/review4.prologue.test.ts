@@ -1,5 +1,5 @@
 /**
- * Review 4 #2 (*The Last Train In*; GDD §7.1, §7.5, §13.7; ADR 0073; tech design
+ * Review 4 #2 (the opening, since review 5 *Coming home*; GDD §7.1, §7.5, §13.7; ADR 0073; tech design
  * docs/tech/review-4.md §4.4, T26): the join from beat 1's party, the favour as a once-only welcome
  * ticket gated by its open order inside the keyed transaction (NOT_OFFERED, ONCE_ONLY), the landing on
  * the HQ with the favour, the welcome deck's place, and migration 008's reset of old drafts.
@@ -42,9 +42,9 @@ describe('the join from beat 1 (ADR 0073)', () => {
     expect(r.character.stats).toEqual({ str: 8, int: 12, agi: 5, cha: 5 });
     const me = await caller.character.me();
     expect(me.orders.items.map((o) => o.id)).toEqual(['dir.shift-change', 'dir.welcome-b', 'dir.take-a-job']);
-    expect(me.orders.items[1]).toMatchObject({ title: "Deliver Holm's parcel at the Union Hall", target: 1 });
+    expect(me.orders.items[1]).toMatchObject({ title: "Sign on at the Union Hall", target: 1 });
     const paper = await caller.paper.today();
-    expect(paper.headlines[0]!.deck).toMatch(/Holm's parcel wants delivering at the Union Hall; start there\.$/);
+    expect(paper.headlines[0]!.deck).toMatch(/The rehiring sheet wants your name at the Union Hall; start there\.$/);
     expect(r.landing).toEqual({ cityId: 'coalport', ...FAVOUR });
     expect(paper.landing).toEqual({ cityId: 'coalport', ...FAVOUR });
   });
@@ -67,7 +67,7 @@ describe('the favour: a once-only welcome ticket (ADR 0073 §3)', () => {
     const hall = city.locations.find((l) => l.id === FAVOUR.locationId)!;
     expect(hall.actions[0]).toMatchObject({
       id: FAVOUR.actionId,
-      name: 'Deliver the parcel',
+      name: 'Sign on',
       kind: 'checked',
       energy: 10,
       energy3: null,
@@ -172,7 +172,7 @@ describe('migration 008: an old draft starts again at the platform', () => {
     const v = await caller.arrival.get();
     expect(v).toMatchObject({ phase: 'story', questionId: 'origin.platform', name: 'Old Draft' });
     expect(v.avatar?.id).toBe('avatar.man-40s');
-    expect(v.screen?.title).toBe('The platform');
+    expect(v.screen?.title).toBe('The counter');
     for (const a of originAnswers('alliance')) await caller.arrival.answer(a);
     expect((await caller.arrival.join({})).character.factionId).toBe('alliance');
   });

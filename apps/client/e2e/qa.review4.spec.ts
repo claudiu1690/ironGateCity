@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { ANSWERS, PLATFORM_ROWS, answer, arrive, signUpOnly } from './helpers';
+import { ANSWERS, platformRow, answer, arrive, signUpOnly } from './helpers';
 import type { FactionKey } from './helpers';
 
 /**
@@ -84,40 +84,39 @@ const overlap = (a: { x: number; y: number; width: number; height: number }, b: 
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
 // ---------------------------------------------------------------------------------------------------
-// #2 The Last Train In, for the two parties review4.spec.ts does not walk (answers §2.3–§2.6).
+// #2 The opening (review 5: *Coming home*, answers §19), for the two parties review4.spec.ts does not walk.
 // ---------------------------------------------------------------------------------------------------
 
 const OPENING = {
   vanguard: {
-    confirm: "Help Stahl · the six o'clock to Duskwall",
-    echo: "You took Stahl's bundle.",
+    confirm: "Go for the stamp · the six o'clock to Duskwall",
+    echo: 'You went for the stamp.',
     kicker: "The six o'clock to Duskwall · the compartment",
-    suitcase: "Tools, mostly. I'm better with my hands than my mouth.",
-    echo3: 'You carry tools.',
-    deck: /Stahl's bundle goes out at Beacon House; start there\./,
-    orderB: "Hand out Stahl's bundle at Beacon House",
+    suitcase: "Tools. I kept the workshop's kit when the workshop went.",
+    echo3: 'You brought tools.',
+    deck: /The League's letter waits at Beacon House; start there\./,
+    orderB: 'Get the stamp at Beacon House',
     city: 'duskwall',
     landing: /\?loc=duskwall\.beacon-house&act=duskwall\.beacon-house\.favour$/,
     favour: 'duskwall.beacon-house.favour',
-    once: 'Hand out the bundle, once, 10 Energy',
-    bodies: [/^Twenty flyers go into twenty hands/, /^The steps are empty at that hour/],
+    once: 'Get the stamp, once, 10 Energy',
+    bodies: [/^The clerk reads your papers/, /^The clerk wants a form the camp never issued/],
     sign: '— V.S.',
     stats: { str: 14, int: 6, agi: 5, cha: 5 },
   },
   alliance: {
-    confirm: "Help Grey · the six o'clock to Ashford",
-    echo: "You witnessed a tenant's signature for Grey.",
+    confirm: "Go for the flat · the six o'clock to Ashford",
+    echo: 'You went for the flat.',
     kicker: "The six o'clock to Ashford · the compartment",
-    suitcase: 'Books. His, and a few of mine.',
-    echo3: 'You carry books.',
-    // Answers §30.2: *Grey's tenant* (R4-QA-10, below).
-    deck: /Grey's tenant wants a witness at the Assembly Rooms; start there\./,
-    orderB: 'Witness the signature at the Assembly Rooms',
+    suitcase: 'Books, from the camp library. They let us keep those.',
+    echo3: 'You brought books.',
+    deck: /The appeal wants your signature at the Assembly Rooms; start there\./,
+    orderB: 'File the appeal at the Assembly Rooms',
     city: 'ashford',
     landing: /\?loc=ashford\.assembly-rooms&act=ashford\.assembly-rooms\.favour$/,
     favour: 'ashford.assembly-rooms.favour',
-    once: 'Witness the signature, once, 10 Energy',
-    bodies: [/^The tenant signs, you sign/, /^The tenant is late and nervous/],
+    once: 'File the appeal, once, 10 Energy',
+    bodies: [/^Grey reads the order twice/, /^The order's second copy is in an office/],
     sign: '— T.G.',
     stats: { str: 6, int: 14, agi: 5, cha: 5 },
   },
@@ -138,28 +137,28 @@ test.describe('#2 the opening for the Vanguard and the Alliance', () => {
       await expect(page.getByTestId('story-screen').locator('img[src*="portrait.stahl"]')).toHaveCount(1);
       await expect(page.getByTestId('story-screen').locator('img[src*="portrait.grey"]')).toHaveCount(1);
       await expect(page.getByTestId('story-confirm')).toBeDisabled();
-      await expect(page.getByTestId('story-confirm')).toHaveText(/Choose whom to help/i);
-      const row = page.getByRole('radio', { name: PLATFORM_ROWS[faction] });
+      await expect(page.getByTestId('story-confirm')).toHaveText(/Choose one of the three/i);
+      const row = platformRow(page, faction);
       await row.click();
       await expect(page.getByTestId('story-confirm')).toHaveText(new RegExp(`^${o.confirm}$`, 'i'));
-      // A selected row is not a party: a reload before the confirm is still the platform, nothing checked.
+      // A selected row is not a party: a reload before the confirm is still the counter, nothing checked.
       await page.reload();
-      await expect(page.getByRole('heading', { name: 'The platform' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'The counter' })).toBeVisible();
       await expect(page.getByRole('radio', { checked: true })).toHaveCount(0);
-      await page.getByRole('radio', { name: PLATFORM_ROWS[faction] }).click();
+      await platformRow(page, faction).click();
       await page.getByTestId('story-confirm').click();
-      // Beat 2, then a reload: it resumes at the suitcase with the echo.
-      await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+      // Beat 2, then a reload: it resumes at the kitbag with the echo.
+      await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
       await page.reload();
-      await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
       await expect(page.getByTestId('story-echo')).toHaveText(o.echo);
       await expect(page.getByTestId('story-screen')).toContainText(new RegExp(o.kicker, 'i'));
-      await plainWords(page, `${faction}: the suitcase`);
+      await plainWords(page, `${faction}: the kitbag`);
       await answer(page, o.suitcase);
-      await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
       await expect(page.getByTestId('story-echo')).toHaveText(o.echo3);
       await page.reload();
-      await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
       await answer(page, ANSWERS.reference[1]!);
 
       // The welcome edition: the deck names the favour; the secretary signs the three orders.
@@ -204,36 +203,36 @@ test.describe('#2 the opening for the Vanguard and the Alliance', () => {
     });
   }
 
-  test("R4-QA-10: Grey's welcome deck names the tenant, not Grey's signature (answers §30.2)", async ({
+  test("R4-QA-10: Grey's welcome deck names the favour, not Grey's signature (answers §30.2; review 5 §19.5)", async ({
     page,
   }) => {
     // R4-QA-10: fixed in the QA fix round (was an expected failure).
     await newMember(page, 'alliance', 'Qa Witness');
     await expect(page.getByTestId('headline').first()).toContainText(
-      "Grey's tenant wants a witness at the Assembly Rooms; start there.",
+      'The appeal wants your signature at the Assembly Rooms; start there.',
     );
   });
 
   test('R4-QA-08: beat 2 does not tell of the helper dozing by the window (the compartment picture shows no one asleep)', async ({
     page,
   }) => {
-    // Answers §30.3 (after the build): the helper is "down the corridor arguing with the guard"; the
-    // picture (scene.train-compartment) is the empty compartment.
+    // Answers §30.3 (after the build): the picture (scene.train-compartment) is the empty compartment;
+    // review 5's beat 2 (answers §19.3) has the helper ask, not doze.
     // R4-QA-08: fixed in the QA fix round (was an expected failure).
     await signUpOnly(page, 'Qa Compartment', 2);
-    await page.getByRole('radio', { name: PLATFORM_ROWS.collective }).click();
+    await platformRow(page, 'collective').click();
     await page.getByTestId('story-confirm').click();
-    await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
     await expect(page.getByTestId('story-screen')).not.toContainText('dozes against the window');
     await expect(page.getByTestId('story-screen')).toContainText(
-      "Holm is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. She comes back to ask what a person carries to a new town.",
+      "The six o'clock, the kitbag on the rack. Everything you own is in it, and it still isn't heavy. Holm asks what a person brings home from four years.",
     );
   });
 
   test('R4-QA-09: the compartment picture carries its alt text (answers §29.3, §30.3)', async ({ page }) => {
     // R4-QA-09: fixed in the QA fix round (was an expected failure).
     await signUpOnly(page, 'Qa Alt', 2);
-    await page.getByRole('radio', { name: PLATFORM_ROWS.collective }).click();
+    await platformRow(page, 'collective').click();
     await page.getByTestId('story-confirm').click();
     const art = page.getByTestId('story-screen').locator('img[src*="scene.train-compartment"]');
     await expect(art).toHaveCount(1);
@@ -992,17 +991,17 @@ for (const [w, h] of AUDIT_SIZES) {
     });
     const page = await context.newPage();
 
-    // The Last Train In: the platform, the compartment, the lining (answers §2).
+    // Coming home (review 5, answers §19): the counter, the kitbag, the post.
     await signUpOnly(page, `Audit ${w}x${h}`);
-    await expect(page.getByRole('radio', { name: PLATFORM_ROWS.collective })).toBeVisible();
-    await auditScreen(page, 'beat 1, the platform');
-    await page.getByRole('radio', { name: PLATFORM_ROWS.collective }).click();
+    await expect(platformRow(page, 'collective')).toBeVisible();
+    await auditScreen(page, 'beat 1, the counter');
+    await platformRow(page, 'collective').click();
     await page.getByTestId('story-confirm').click();
-    await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
     await auditScreen(page, 'beat 2, the compartment');
     await answer(page, ANSWERS.slice1[0]!);
-    await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
-    await auditScreen(page, 'beat 3, the lining');
+    await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
+    await auditScreen(page, 'beat 3, the post');
     await answer(page, ANSWERS.slice1[1]!);
     await expect(page).toHaveURL(/\/paper$/);
     await auditScreen(page, 'the welcome edition');

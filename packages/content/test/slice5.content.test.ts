@@ -17,6 +17,7 @@ import { journeyEvents } from '../src/data/journeyEvents';
 import { opponents } from '../src/data/opponents';
 import { orderTemplates } from '../src/data/orders';
 import { HeldAction, Issue, Item, JourneyEvent, Opponent, OrderTemplateSchema } from '../src/schemas';
+import { expectChapterRestrung } from './review5';
 
 const plain = (s: string) => s.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '');
 function section(start: string, end: string): string {
@@ -396,24 +397,16 @@ describe('Settle His Debts chapter 2, The riverside house (design §13)', () => 
 
   it('the script word for word: the letter, the two steps, the ways and the results', () => {
     expect([ch.title, ch.requires]).toEqual(['The riverside house', { level: 6 }]);
-    expect(doc).toContain(`the row reads ${s.letterFrom} · ${ch.title} · Chapter 2 is ready · 15 Energy`);
-    expect(s.choose.title).toBe('The riverside house');
-    expect(doc).toContain(s.choose.narrative);
-    for (const c of s.choose.choices) expect(doc).toContain(`| ${c.text} | ${c.hint} | ${c.flag} |`);
-    expect(doc).toContain(`Step 2 · ${s.check.title}`);
-    expect(doc).toContain(s.check.narrative);
+    // Review 5 (answers §19.10.5): the strings re-strung under *Coming home*; the flags, the ways'
+    // stats and Heat, and the numbers are this design's.
+    expectChapterRestrung(ch, '19.10.5');
+    for (const c of s.choose.choices) expect(doc).toContain(` | ${c.flag} |`);
     for (const a of s.check.approaches)
       expect(doc, a.id).toContain(`| ${a.text} | ${STATS[a.stats.join(',')]} vs 14 |`);
     expect(s.check.approaches.map((a) => a.heat)).toEqual([6, undefined, undefined]);
     expect(doc).toContain('In by the yard, quietly | AGI vs 14 | Heat +6, whatever happens');
     expect([s.check.cta, s.check.difficulty, s.check.energy]).toEqual(['Open the house', 14, 15]);
     expect(doc).toContain(`CTA: ${s.check.cta} · 15 Energy`);
-    for (const [o, word] of [
-      ['success', 'Success'],
-      ['partial', 'Partial'],
-      ['failure', 'Failure'],
-    ] as const)
-      expect(doc).toContain(`${word} — ${s.result[o].headline} — ${s.result[o].body}`);
     for (const t of [s.choose.narrative, s.check.narrative, ...Object.values(s.result).map((r) => r.body)]) {
       expect(t.length, t).toBeLessThanOrEqual(240);
       expect(sentences(t), t).toBeLessThanOrEqual(4);
@@ -432,13 +425,14 @@ describe('Settle His Debts chapter 2, The riverside house (design §13)', () => 
     );
     expect(s.keepsake).toBe('keep.ledger-page');
     const keep = Item.parse(items.find((i) => i.id === 'keep.ledger-page'));
+    // Review 5 (answers §19.10.6): renamed, the id kept.
     expect([keep.name, keep.slot, keep.keepsake, keep.art]).toEqual([
-      'A page of his ledger',
+      "A page of the ring's ledger",
       null,
       true,
       'item.document-folder',
     ]);
-    expect(doc).toContain(`keepsake keep.ledger-page (${keep.name}, no slot, art item.document-folder)`);
+    expect(doc).toContain('keepsake keep.ledger-page (A page of his ledger, no slot, art item.document-folder)');
     expect(amb.chapters.find((c) => c.n === 3)).toEqual({
       n: 3,
       title: 'The collector',

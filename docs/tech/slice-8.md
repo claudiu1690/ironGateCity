@@ -1703,6 +1703,15 @@ Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–00
 - Shops are place cards in the slot.
 - The residence card's second line is *Where you sleep* only; lodgings are the place card.
 
+## Review 5 knock-on: *Coming home* (dated note, 8 Oct 2026)
+
+The opening is *Coming home* (GDD §7.1; `docs/design/review-5-answers.md` §19) and the Ambitions are re-anchored without the father (GDD §17.1): *The Names on the Stone* (`finish-his-work`), *Who Sold the Homes* (`clear-his-name`), *The Ration Ledger* (`settle-his-debts`). For this slice, **strings only changed; no number, requirement, reward, difficulty, Energy, Heat or id moved**:
+
+- Design §8 and §16.1: chapters 4–12 re-strung (titles *The count* · *Your seat* · *The hall* · *The cutting* · *The stone's rule* · *The list* · *The republic votes* · *Twenty-five marks* · *The names read out*; keepsakes *The count sheet*, *The minute book*, *Your ballot stub*, *The cutting*, *The rule, in draft*, *The letter from the list*, *Your polling card*, *The list's receipt*, *The memorial ribbon*). Flag ids renamed where they said *his*: `forty-total`, `sent-ahead` / `kept-for-floor`, `stone-rule`, `stone-first`, `closed-names` / `left-names`, `forty-read`.
+- Design §16.2: *The night caretaker* (was *The night foreman*; `keep.foremans-name` is now named *The caretaker's name*; art `scene.street`, was `scene.factory-gate`; Brandauer stays a dossier-only `extraNames` row in Coalport, now the block's night caretaker) and *The collector* (the ring's page, not the father's debt).
+- Design §3.9 and §21.3: `acc.his-rosette` is *The memorial ribbon*; the `item.rosette` brief is a **plain black ribbon** (regenerate the item picture if the cream-and-ink rosette was already made); every keepsake's *Read* text re-strung.
+- The content test for *father* (`review5.opening.test.ts`) must cover this slice's chapters and keepsakes when built.
+
 ## Deviations (as built)
 
 *Filled in by T25.*

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { ANSWERS, PLATFORM_ROWS, answer, pinsOutOfReach, signUp, signUpOnly, sheetSettled } from './helpers';
+import { ANSWERS, platformRow, answer, pinsOutOfReach, signUp, signUpOnly, sheetSettled } from './helpers';
 
 /**
  * Review 2 #3: a phone held sideways (812 × 375, 667 × 375) is playable. The arrival, the paper,
@@ -46,7 +46,7 @@ for (const vp of [
       // sideways scroll.
       await signUpOnly(page, 'Anna Roth', 1);
       await noSideScroll(page);
-      await page.getByRole('radio', { name: PLATFORM_ROWS.collective }).click();
+      await platformRow(page, 'collective').click();
       const confirm = page.getByTestId('story-confirm');
       await confirm.scrollIntoViewIfNeeded();
       await expect(confirm).toBeInViewport({ ratio: 1 });

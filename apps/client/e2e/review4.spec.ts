@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { ANSWERS, PLATFORM_ROWS, answer, signUpOnly } from './helpers';
+import { ANSWERS, platformRow, answer, signUpOnly } from './helpers';
 
 /**
  * Review 4 (tech design docs/tech/review-4.md §18.2–§18.3, T28): a walk through the notes a browser
@@ -42,23 +42,23 @@ test('review 4: the notes a new member meets, in order, in plain words', async (
   await expect(page.getByRole('group', { name: 'Your face' }).getByTestId('avatar-tile')).toHaveCount(18);
   await signUpOnly(page, 'Vera Kallas', 4);
 
-  // #2: *The Last Train In*. The platform: three people; whom you help is your party.
-  await expect(page.getByRole('heading', { name: 'The platform' })).toBeVisible();
-  await plainWords(page, 'the platform');
-  await page.getByRole('radio', { name: PLATFORM_ROWS.collective }).click();
+  // #2: the opening (review 5: *Coming home*). The counter: three problems; the one you chase is your party.
+  await expect(page.getByRole('heading', { name: 'The counter' })).toBeVisible();
+  await plainWords(page, 'the counter');
+  await platformRow(page, 'collective').click();
   await page.getByTestId('story-confirm').click();
-  await expect(page.getByRole('heading', { name: 'The suitcase' })).toBeVisible();
-  await expect(page.getByTestId('story-echo')).toHaveText("You carried Holm's parcel.");
-  await plainWords(page, 'the suitcase');
+  await expect(page.getByRole('heading', { name: 'The kitbag' })).toBeVisible();
+  await expect(page.getByTestId('story-echo')).toHaveText('You went for the work.');
+  await plainWords(page, 'the kitbag');
   await answer(page, ANSWERS.reference[0]!);
-  await expect(page.getByRole('heading', { name: 'The lining' })).toBeVisible();
-  await plainWords(page, 'the lining');
+  await expect(page.getByRole('heading', { name: 'The post' })).toBeVisible();
+  await plainWords(page, 'the post');
   await answer(page, ANSWERS.reference[1]!);
 
   // The welcome edition: the deck names the favour; Holm signs the orders.
   await expect(page).toHaveURL(/\/paper$/);
-  await expect(page.getByTestId('headline').first()).toContainText("Holm's parcel wants delivering at the Union Hall");
-  await expect(page.getByTestId('orders').getByTestId('order').nth(1)).toContainText("Deliver Holm's parcel");
+  await expect(page.getByTestId('headline').first()).toContainText('The rehiring sheet wants your name at the Union Hall');
+  await expect(page.getByTestId('orders').getByTestId('order').nth(1)).toContainText('Sign on at the Union Hall');
   await plainWords(page, 'the welcome edition');
   // #4: the clock in the top bar.
   await expect(page.getByTestId('hud-clock')).toHaveText(/^\d\d:\d\d$/);
@@ -87,7 +87,7 @@ test('review 4: the notes a new member meets, in order, in plain words', async (
   const favour = sheet.getByTestId('ticket-coalport.union-hall.favour');
   await expect(favour).toHaveAttribute('data-highlight', 'true');
   await plainWords(page, 'the Union Hall');
-  await favour.getByRole('button', { name: 'Deliver the parcel, once, 10 Energy' }).click();
+  await favour.getByRole('button', { name: 'Sign on, once, 10 Energy' }).click();
   const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
   await expect(modal.getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);
   await expect(modal.getByTestId('effect-order-signed')).toContainText('— P.H.');

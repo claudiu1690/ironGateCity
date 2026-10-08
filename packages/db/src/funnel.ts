@@ -44,7 +44,7 @@ export interface FunnelCharacter {
 }
 
 /** Review 4: the prologue's three beats, as funnel steps. */
-export const BEAT_STEPS = ['beat 1 (the platform)', 'beat 2 (the suitcase)', 'beat 3 (the lining)'] as const;
+export const BEAT_STEPS = ['beat 1 (the counter)', 'beat 2 (the kitbag)', 'beat 3 (the post)'] as const;
 
 export interface FunnelStep {
   step: string;

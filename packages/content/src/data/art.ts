@@ -355,6 +355,13 @@ export const assets: Asset[] = [
     'Inside a glass-roofed station: the departure board and clock, porters with trunks on trolleys, passengers in coats, a locomotive letting off steam.',
     { x: 0.45, y: 0.6 },
   ),
+  // Review 5 (answers §19.7 and its art note, 8 Oct): beat 1 of *Coming home*, the demobilisation
+  // office. The focus holds the counter and the head of the queue on a tall phone panel.
+  scene(
+    'demob-office',
+    'The demobilisation office: clerks stamping papers at a long counter, a queue of men with kitbags, a woman with a clipboard on the bench by the door.',
+    { x: 0.42, y: 0.45 },
+  ),
   // Review 4 (answers §2.9, §30.3; ADR 0073): beats 2 and 3 of *The Last Train In*. The source (7 Oct,
   // the empty compartment) is the scenes' 2688 × 1520 already, so nothing is cut. The desktop's tall
   // panel centres on the rack and the window's left half, so the suitcase stays in the picture.
@@ -498,7 +505,8 @@ export const assets: Asset[] = [
   item('item.work-jacket', 'work-jacket-cap.jpg', 'A work jacket and a flat cap.'),
   item('item.mill-coat', 'collective-work-coat.jpg', 'A heavy mill work coat.'),
   item('item.worn-overcoat', 'wool-overcoat.jpg', 'A worn wool overcoat.'),
-  item('item.winter-coat', 'winter-coat.jpg', "Your father's good wool coat."),
+  // Review 5 (answers §19.10.6): the demob suit's picture.
+  item('item.winter-coat', 'winter-coat.jpg', 'A plain wool overcoat, the kind issued with a demob suit.'),
   item('item.document-folder', 'document-folder.jpg', 'A folder of papers tied with string.'),
   crest('vanguard', 'Iron Vanguard crest: an iron gate beneath a lantern.'),
   crest('collective', 'Red Collective crest: a hammer raised through a gear wheel.'),

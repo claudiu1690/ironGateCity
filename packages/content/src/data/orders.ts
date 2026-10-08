@@ -79,13 +79,13 @@ export const orderTemplates: OrderTemplate[] = [
     target: 1,
     counts: 'attempts',
   },
-  // Review 4 (answers §2.6, ADR 0073): slot B of the welcome set, the favour from the platform.
+  // Review 5 (answers §19.5; review 4 §2.6, ADR 0073): slot B of the welcome set, the favour.
   {
     id: 'dir.welcome-b',
     factionId: 'collective',
     slot: 'B',
-    title: "Deliver Holm's parcel at the Union Hall",
-    line: "The parcel, to the hall, to whoever's on the door. Then come and find me; there's tea.",
+    title: 'Sign on at the Union Hall',
+    line: "The rehiring sheet, at the hall, before Monday's gate. Your name, your trade, the years. Then tea.",
     match: { actionIds: ['coalport.union-hall.favour'] },
     target: 1,
     counts: 'attempts',
@@ -251,13 +251,13 @@ export const orderTemplates: OrderTemplate[] = [
     target: 1,
     counts: 'attempts',
   },
-  // Review 4 (answers §2.6, ADR 0073): slot B of the welcome set, the favour from the platform.
+  // Review 5 (answers §19.5; review 4 §2.6, ADR 0073): slot B of the welcome set, the favour.
   {
     id: 'dir.v.welcome-b',
     factionId: 'vanguard',
     slot: 'B',
-    title: "Hand out Stahl's bundle at Beacon House",
-    line: 'The rest of the bundle on my desk by noon; the first handful to whoever is at the door. Names, if you can.',
+    title: 'Get the stamp at Beacon House',
+    line: "Your discharge papers on the clerk's desk by ten. The League's letter goes with them to the office at eleven; the stamp comes back Thursday.",
     match: { actionIds: ['duskwall.beacon-house.favour'] },
     target: 1,
     counts: 'attempts',
@@ -434,13 +434,13 @@ export const orderTemplates: OrderTemplate[] = [
     target: 1,
     counts: 'attempts',
   },
-  // Review 4 (answers §2.6, ADR 0073): slot B of the welcome set, the favour from the platform.
+  // Review 5 (answers §19.5; review 4 §2.6, ADR 0073): slot B of the welcome set, the favour.
   {
     id: 'dir.a.welcome-b',
     factionId: 'alliance',
     slot: 'B',
-    title: 'Witness the signature at the Assembly Rooms',
-    line: "Mr Albrecht's lease, the reading room, the pen on the desk. Your name under his, and the date right.",
+    title: 'File the appeal at the Assembly Rooms',
+    line: "The requisition order, your papers, the flat's address, the reading room's desk. Read it; then your name, and the date right.",
     match: { actionIds: ['ashford.assembly-rooms.favour'] },
     target: 1,
     counts: 'attempts',

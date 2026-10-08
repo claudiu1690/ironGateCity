@@ -81,8 +81,9 @@ describe('QA · NPC marking (GDD §15.10, design §17 Q4)', () => {
 });
 
 describe('QA · Ambition chapter 2 against GDD §17.1', () => {
-  it('difficulty 14, 15 Energy, 300/80/150 · 150/40/75 · 50/0/0, His election bill, after the first ballot', () => {
-    const text = GDD.slice(GDD.indexOf('**Chapter 2 of *Finish His Work* (slice 3)'));
+  it('difficulty 14, 15 Energy, 300/80/150 · 150/40/75 · 50/0/0, Your election bill, after the first ballot', () => {
+    // Review 5 (answers §19.6): *Finish His Work* is *The Names on the Stone* (the id kept).
+    const text = GDD.slice(GDD.indexOf('**Chapter 2 of *The Names on the Stone* (slice 3)'));
     expect(text).toMatch(/\*\*Difficulty 14, 15 Energy\*\*/);
     expect(text).toMatch(
       /Success \*\*300 XP \/ 80 FXP \/ 150 Iron\*\*, Partial \*\*150 \/ 40 \/ 75\*\*, Failure \*\*50 \/ 0 \/ 0\*\*/,
@@ -97,8 +98,8 @@ describe('QA · Ambition chapter 2 against GDD §17.1', () => {
       failure: { xp: 50, fxp: 0, iron: 0 },
     });
     expect(ch.requires).toMatchObject({ ballotCast: true });
-    expect(content.item(ch.story!.keepsake!)?.name).toBe('His election bill');
-    expect(ch.story!.letterFrom).toBe('From the back of the ward book');
+    expect(content.item(ch.story!.keepsake!)?.name).toBe('Your election bill');
+    expect(ch.story!.letterFrom).toBe("From the branch's press");
   });
 });
 

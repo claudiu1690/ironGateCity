@@ -149,10 +149,10 @@ export const ashford: City = {
       quarterId: 'ashford.college',
       actions: [
         {
-          // Review 4 (answers §2.6, §29.2; ADR 0073): the favour from the platform, the first action.
+          // Review 5 (answers §19.5; review 4 §2.6, §29.2, ADR 0073): the favour, the first action.
           // Slot B of the welcome set; offered only while that order is open, once only.
           id: 'ashford.assembly-rooms.favour',
-          name: 'Witness the signature',
+          name: 'File the appeal',
           tier: 1,
           type: 'council',
           stats: ['best'],
@@ -162,12 +162,12 @@ export const ashford: City = {
           use: 'welcome',
           text: {
             success: {
-              headline: "\"That'll hold\"",
-              body: "The tenant signs, you sign, Grey blots it and holds it to the light. \"That'll hold.\" The reading room has your name on a tenancy now, which is how the Rooms start people.",
+              headline: 'Filed',
+              body: "Grey reads the order twice, writes the appeal in a hand that counts words, and you sign it under his. \"Thursday,\" he says, \"and they'll hate it.\" The Rooms' book has your name under housing.",
             },
             partial: {
-              headline: 'The second copy counts',
-              body: "The tenant is late and nervous and signs on the wrong line; the second copy is the one that counts. Grey files it without comment and writes your name in the Rooms' book.",
+              headline: 'A copy is missing',
+              body: "The order's second copy is in an office that shuts at four, and the appeal goes in with a gap where it should be. Grey files it anyway and writes your name in the Rooms' book, in pencil.",
             },
           },
         },

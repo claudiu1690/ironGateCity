@@ -1100,7 +1100,7 @@ export interface ActionResult {
     orders: OrderEffect[];
     ordersAllDone: { pc: number } | null;
     stat: { stat: TrainableStat; before: number; after: number } | null;
-    /** A chapter's keepsake ("Keepsake: his ward book"). */
+    /** A chapter's keepsake ("Keepsake: The unit's list"). */
     item: { itemId: string; name: string; keepsake: boolean; art: AssetView } | null;
     /** Next-chapter hooks, already worded. */
     hooks: string[];
@@ -1188,16 +1188,16 @@ export interface DeskView {
   /** Without a job (else []): where the home city's jobs are ("the Fortress Gate, the Customs Market or the Goods Yard"). */
   jobPlaces: string[];
   standing: NamedStandingView;
-  /** "Wearing: Your father's coat · CHA 5" (slice-2 tech design §10). */
+  /** "Wearing: The demob suit · CHA 5" (slice-2 tech design §10). */
   wearing: { name: string; cha: number } | null;
 }
 
 /** A Letters row (§3.3 v2): an Ambition chapter that is ready or waiting mid-way. */
 export interface LetterView {
   kind: 'chapter';
-  /** "From your father's things". */
+  /** "From the office's post". */
   from: string;
-  /** "His ward book". */
+  /** "The unit's list". */
   title: string;
   /** The chapter number ("Chapter 1 is ready"). */
   chapter: number;
@@ -1388,7 +1388,7 @@ export interface StoryScreenView {
   art:
     | { kind: 'scene'; asset: AssetView; focus: { x: number; y: number } | null }
     | { kind: 'map-crop'; asset: AssetView; x: number; y: number };
-  /** The speaker beside the question (the father), or null. */
+  /** The speaker beside the question (the person you went with), or null. */
   portrait: AssetView | null;
   /** The answer just given, as one line in Courier ("You went fishing with him."), or null. */
   echo: string | null;

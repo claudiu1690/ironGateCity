@@ -67,7 +67,7 @@ describe('character.me v2', () => {
     expect(first.orders.items.map((o) => [o.id, o.title, o.target])).toEqual([
       ['dir.shift-change', 'Talk to the workers at the Mill Gate', 2],
       // Review 4 (answers §2.6): slot B is the favour from the platform.
-      ['dir.welcome-b', "Deliver Holm's parcel at the Union Hall", 1],
+      ['dir.welcome-b', "Sign on at the Union Hall", 1],
       ['dir.take-a-job', 'Take a job at the Mill Gate', 1],
     ]);
     expect(first.orders.issuer).toMatchObject({

@@ -838,3 +838,161 @@ The war is the past and is named once as *four years* and *the camp*; nothing in
 
 
 **Art, 8 Oct 2026:** `scene.demob-office` is generated and saved as `mvp/scenes/demob-office.png` (2688 × 1520). It shows a counter with clerks stamping papers, a queue of men in demob suits with kitbags and cases, a woman with a clipboard on the bench by the door, and a lawyer writing at a desk. There is no uniform, insignia or flag. Beat 1 uses it instead of `scene.ministry`. Alt text: *The demobilisation office: clerks stamping papers at a long counter, a queue of men with kitbags, a woman with a clipboard on the bench by the door.*
+
+### 19.10 The built chapters, re-strung (for the build; 8 Oct 2026)
+
+The five built chapters of `packages/content/src/data/ambitions.ts`, every player-facing string rewritten under *Coming home*. **No father, and no *his* that points at one** (a *his* about the man in the good coat is fine). Ids, stats, difficulty, energy, rewards, flags, heat and keepsake ids are exactly as built; only strings move. Caps checked: titles and ctas ≤ 40, Letters rows ≤ 60, choice text ≤ 80, hints and approach texts ≤ 100, every narrative and body ≤ 240 characters and ≤ 4 sentences. Placeholders used: `{secretary}`, `{hq}`, `{city}` only. The three Ambitions' `title`s: **The Names on the Stone** (`finish-his-work`), **Who Sold the Homes** (`clear-his-name`), **The Ration Ledger** (`settle-his-debts`).
+
+Where the story now sits: the player opened one envelope of the office's post on the train (§19.4); chapter 1 is that envelope read properly at the HQ. *Legwork* stays the third approach on the best stat. The memorial, the council and the register are {city}'s. The Mill Fire of '19 is gone; Brandauer is the block's night caretaker, a Coalport name with no party, which sets up chapter 2 *The night caretaker* (teaser title only, `requires: { level: 6 }` as built).
+
+#### 19.10.1 `finish-his-work` chapter 1 — *The unit's list* (was *His ward book*)
+
+| Field | String |
+|---|---|
+| `title` | The unit's list |
+| `letterFrom` | From the office's post |
+| `choose.title` | The unit's list |
+| `choose.narrative` | The list, opened properly for the first time on the hall's table: forty names in the quartermaster's hand, a home street against each, and the council's notice beside it. The memorial is being cut. Their names aren't on it. |
+| choice `show` · text | Show it to {secretary} |
+| choice `show` · hint | The branch will know what you carry. |
+| choice `keep` · text | Keep it to yourself for now |
+| choice `keep` · hint | Some things you do alone first. |
+| `check.title` | Three families |
+| `check.narrative` | Three of the forty had people in {city}: the list gives a street for each. Twenty minutes' walk. You have the flyers, the list and your own name; it's a question of how you use them. |
+| approach `knock` (cha, int) | Knock the three doors and say you were in the same unit |
+| approach `sort` (int) | Sort the list by street first, then knock |
+| approach `legwork` (best) | Legwork. Walk the three streets yourself, list in hand, and knock until the names answer. |
+| `cta` | Knock the three doors |
+| `success.headline` | Two of the three ask you in |
+| `success.body` | One cries, one puts the kettle on, one shuts the door and then opens it again. All three take a flyer. The third asks, on the step, whether you'll be standing. You say not yet. |
+| `partial.headline` | One door opens |
+| `partial.body` | New tenants at two of the three; the third knew the name and not much else. She takes a flyer for the landing. It's a start, and the list is still forty names long. |
+| `failure.headline` | Nobody home |
+| `failure.body` | No one answers at any of the three. You leave a flyer with the name written on each and walk back through the streets in the rain. The list goes back in the kitbag, for now. |
+
+#### 19.10.2 `finish-his-work` chapter 2 — *Stand for the stone* (was *Stand where he stood*; `requires: { ballotCast: true }`)
+
+The bill is now the player's own, off the branch's press, so the Letters row is *From the branch's press* (the old *From the back of the ward book* had nothing left to point at).
+
+| Field | String |
+|---|---|
+| `title` | Stand for the stone |
+| `letterFrom` | From the branch's press |
+| `choose.title` | Your election bill |
+| `choose.narrative` | Off the branch's press this morning: your name in capitals on brown paper, the forty names under it, and the corner by {hq} where the council's man speaks at six. You've cast a vote here now. The bill asks what comes next. |
+| choice `branch` · text | Tell {secretary} you'll speak at the corner |
+| choice `branch` · hint | The branch can bring a crowd, and will want a say in what you tell it. |
+| choice `alone` · text | Go at six, alone, and see who stops |
+| choice `alone` · hint | Whoever comes, comes for the names. |
+| `check.title` | Six o'clock |
+| `check.narrative` | Same corner, same hour, the council's man gone home. People slow because a stranger is standing where somebody usually does. You have forty names, your own, the bill in your pocket and about five minutes before they walk on. |
+| approach `step` (cha, int) | Speak from the step: the forty names first, then yours |
+| approach `edge` (int) | Work the edge of the crowd one at a time, the bill in your hand |
+| `cta` | Stand for the stone |
+| `success.headline` | They stopped |
+| `success.body` | Thirty by the end, and an old woman in the front row who reads the forty aloud and finds her nephew. She asks if you're standing. You say: when the branch lets me. She says she'll hold you to it. |
+| `partial.headline` | A few stopped |
+| `partial.body` | Nine, two of them because they took it for a tram queue. One old man knew one of the forty and says so, loudly, which helps more than the speech. You get through it. The corner is yours if you want it. |
+| `failure.headline` | A corner is only a corner |
+| `failure.body` | Rain at six, and the square empties before you've read a name. A boy asks who you're talking to. You finish the list anyway, to nobody, and walk home with the bill under your coat. Same corner tomorrow, if the rain lets you. |
+
+#### 19.10.3 `clear-his-name` chapter 1 — *The requisition order* (was *The prison letter*)
+
+| Field | String |
+|---|---|
+| `title` | The requisition order |
+| `letterFrom` | From the office's post |
+| `choose.title` | The requisition order |
+| `choose.narrative` | The order, read again in daylight: the flat's address, a date in the autumn, the word vacant typed where your family's name should be, and a signature you can read. |
+| choice `lamp` · text | Hold the order up to the lamp |
+| choice `lamp` · hint | See what the typewriter struck out. |
+| choice `branch` · text | Take it to {secretary} as it is |
+| choice `branch` · hint | The branch has long memories. |
+| `check.title` | The housing office's register |
+| `check.narrative` | Every requisition in {city} went through one register, and the register names who got each flat and what they paid. The housing office keeps it; the caretakers of the blocks remember it. Pick your door. |
+| approach `report` (int) | Find your flat's entry in the housing office's register |
+| approach `market` (cha, int) | Ask the block's tenants who moved in, and who let them |
+| approach `legwork` (best) | Legwork. Walk the block at the shift change and find who holds the keys at night. |
+| `cta` | Start asking |
+| `success.headline` | A name comes back |
+| `success.body` | The register has your flat under a new name, and the hand that entered it is Brandauer: the block's night caretaker now, drawing a second wage from a senator's office. You write the name down twice, in case. |
+| `partial.headline` | A name in pencil |
+| `partial.body` | The register's page is torn at your flat, but someone has written a name in the margin in pencil: Brandauer, caretaker. Nobody in the block will say the name out loud. That tells you something too. |
+| `failure.headline` | Out on loan |
+| `failure.body` | The register is out on loan to a ministry, and the tenants go quiet when you say the flat's number. You leave your name with the clerk, which may have been a mistake. |
+
+Chapter 2 teaser: `title: 'The night caretaker'` (was *The night foreman*).
+
+#### 19.10.4 `settle-his-debts` chapter 1 — *The ration page* (was *The marker*)
+
+| Field | String |
+|---|---|
+| `title` | The ration page |
+| `letterFrom` | From the office's post |
+| `choose.title` | The ration page |
+| `choose.narrative` | The page, flat on the table: a year of rations drawn in your family's name, every month after they were gone, and a Clearwater stamp in the corner, small, as if that made it less. |
+| choice `ask` · text | Ask the branch who in Clearwater stamps paper like this |
+| choice `ask` · hint | A name is worth more than a month. |
+| choice `silent` · text | Say nothing to anyone, and put it back in the kitbag |
+| choice `silent` · hint | Let them come to you, if they come. |
+| `check.title` | The man in the good coat |
+| `check.narrative` | He finds you on the third evening, on the stairs, with a copy of the page and a good coat. The Clearwater people know which train you took. He has a price for your silence. You have a minute, and it's a question of how you use it. |
+| approach `date` (cha, str) | Look him in the eye and name a date |
+| approach `read` (int) | Read the page properly before you answer |
+| approach `legwork` (best) | Legwork. Walk the riverside road first and see whose house he goes back to. |
+| `cta` | Answer him |
+| `success.headline` | A month, and a name |
+| `success.body` | The stamp in the corner is a house on the Clearwater riverside. He shrugs: a month to bring the page back, then they'll want something instead of silence. A month is a long time in politics. You write the house down. |
+| `partial.headline` | A month, no name |
+| `partial.body` | You get a month, not a name. He takes the stairs two at a time, whistling, and leaves his copy of the page on the banister. You'll see him again; you'd both rather it was later. |
+| `failure.headline` | A fortnight |
+| `failure.body` | He gives you a fortnight and no name, and looks round the room as if pricing it. The stairwell is very quiet after he's gone. You put the page back in the kitbag, under everything else. |
+
+#### 19.10.5 `settle-his-debts` chapter 2 — *The riverside house* (title kept; `requires: { level: 6 }`; `yard` keeps `heat: 6`)
+
+| Field | String |
+|---|---|
+| `title` | The riverside house |
+| `letterFrom` | From the page's other side |
+| `choose.title` | The riverside house |
+| `choose.narrative` | The man in the good coat is at the door this time, with a figure on a card and no hurry. The page has an address on its other side you never noticed: a house on the river road, in a clerk's hand, and three words. What they want. |
+| choice `friday` · text | Tell him you'll have it by Friday |
+| choice `friday` · hint | A week bought with a lie. He'll be back on Friday, and so will you, with whatever's in that house. |
+| choice `shut` · text | Shut the door on him |
+| choice `shut` · hint | He takes it well, which is worse. The street has seen him now. |
+| `check.title` | The riverside house |
+| `check.narrative` | A boarded house on the river road, a clerk's brass plate still by the bell. The yard gate is loose, the housekeeper next door has a key and a memory, and the whole street has seen the man in the good coat go by twice. |
+| approach `yard` (agi, heat 6) | In by the yard, quietly |
+| approach `key` (cha, int) | Ask the housekeeper for the key |
+| approach `neighbours` (best) | The neighbours first, then the door |
+| `cta` | Open the house |
+| `success.headline` | A page of the ring's ledger |
+| `success.body` | Under the back-room floor, a biscuit tin: a ledger with every page torn out but one. On it, in a clerk's hand, the names the ring drew rations in, yours among them, and what each fetched. You put the tin back and the page in your coat. |
+| `partial.headline` | A tin, and a page torn in half |
+| `partial.body` | The tin is where the page said, and empty but for half a page: the sums, no names. Somebody has been here first, or the ring tore it itself. Half a page is half an argument. You take it. |
+| `failure.headline` | A boarded house is a boarded house |
+| `failure.body` | The back room has been stripped to the boards and the boards to the joists. Whatever was here went before you came. You stand in the dust with the ration page until the housekeeper's light goes on next door. You take the page home. |
+
+#### 19.10.6 Items and keepsakes (`items.ts`, `art.ts`)
+
+| Id | `name` | `note` (≤ 120) |
+|---|---|---|
+| `outfit.fathers-coat` (Tier I, clothing, CHA 5, art `item.winter-coat`) | The demob suit | The office's suit and the coat that came with it. Nobody mistakes it for anything else. |
+| `outfit.fathers-coat-promised` (legacy keepsake copy from the slice-2 promise) | The demob suit | The office's suit, and your word. |
+| `keep.ward-book` | The unit's list | Forty names in the quartermaster's hand, a home street against each. |
+| `keep.prison-letter` | The requisition order | The flat, the date, and a signature you can read. |
+| `keep.marker` | The ration page | A year of rations drawn in your family's name after they were gone. |
+| `keep.election-bill` | Your election bill | Your name in capitals on brown paper, and the forty names under it. |
+| `keep.ledger-page` | A page of the ring's ledger | The one page they didn't tear out: the names the ring drew rations in, and what each fetched. |
+
+Art alt text for `item.winter-coat` (was *Your father's good wool coat.*): **A plain wool overcoat, the kind issued with a demob suit.**
+
+#### 19.10.7 The welcome edition's first sentence (`headlines.ts`, the three `firstEdition` welcome decks)
+
+Was *Three orders from Secretary Holm below, and a letter from your father's things.* Now:
+
+- Collective: **Three orders from Secretary Holm below, and the envelope you opened on the train.**
+- Vanguard: **Three orders from Organiser Stahl below, and the envelope you opened on the train.**
+- Alliance: **Three orders from Mr Grey below, and the envelope you opened on the train.**
+
+The rest of each deck (the Energy line and the §19.5 *start there* sentence) is as §19.5, **except the Vanguard's last sentence**, which with this first sentence ran to 202 characters against the deck's 200 cap (the developer's count, 8 Oct 2026). Decision: keep the first sentence identical across the three parties and shorten the Vanguard's last sentence to ***The League's letter waits at {place}; start there.*** (the full template is 192). §19.5's Vanguard deck line reads so from now on.

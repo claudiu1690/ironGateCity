@@ -195,10 +195,10 @@ export const duskwall: City = {
       quarterId: 'duskwall.fortress',
       actions: [
         {
-          // Review 4 (answers §2.6, §29.2; ADR 0073): the favour from the platform, the first action.
+          // Review 5 (answers §19.5; review 4 §2.6, §29.2, ADR 0073): the favour, the first action.
           // Slot B of the welcome set; offered only while that order is open, once only.
           id: 'duskwall.beacon-house.favour',
-          name: 'Hand out the bundle',
+          name: 'Get the stamp',
           tier: 1,
           type: 'council',
           stats: ['best'],
@@ -208,12 +208,12 @@ export const duskwall: City = {
           use: 'welcome',
           text: {
             success: {
-              headline: 'Twenty hands on the steps',
-              body: 'Twenty flyers go into twenty hands on the steps of Beacon House, and the clerk inside takes the rest with a nod that is nearly approval. Your name goes on the list under Thursday.',
+              headline: 'Thursday, stamped',
+              body: "The clerk reads your papers, writes the League's letter in a fair hand and pins the two together. \"Thursday,\" he says, \"and the pension office after.\" Your name goes in the League's book under the word stamp.",
             },
             partial: {
-              headline: 'Thursday, twice',
-              body: 'The steps are empty at that hour and most of the bundle goes to the clerk unread. He enters your name in the day book and says Thursday, twice.',
+              headline: 'A form the camp never gave you',
+              body: 'The clerk wants a form the camp never issued, and writes to say so. Thursday becomes next week. He enters your name in the day book and says the bed is yours till then.',
             },
           },
         },

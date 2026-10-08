@@ -114,7 +114,7 @@ export async function getPaper(deps: {
           {
             kind: 'chapter',
             from: chapter.story.letterFrom,
-            // The Letters row names what is in the letter (design §17.7: "His election bill").
+            // The Letters row names what is in the letter (design §17.7; review 5: "Your election bill").
             title: chapter.story.choose.title,
             chapter: chapter.n,
             status: status.kind,

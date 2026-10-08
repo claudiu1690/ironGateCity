@@ -6,18 +6,18 @@ import { signUp } from './helpers';
  * approach and the CTA → the modal with the keepsake and the hook → Continue → the keepsake on the
  * Me tab → after a reload the Letters row is gone.
  */
-test('Letters → choose → approach → Walk his streets → keepsake and hook → Me → the row is gone', async ({
+test('Letters → choose → approach → Knock the three doors → keepsake and hook → Me → the row is gone', async ({
   page,
 }) => {
   await signUp(page, 'Lotte Kern');
   const row = page.getByTestId('letters-row');
-  await expect(row).toContainText("From your father's things");
-  await expect(row).toContainText('His ward book');
+  await expect(row).toContainText("From the office's post");
+  await expect(row).toContainText("The unit's list");
   await row.click();
   await expect(page).toHaveURL(/\/story\/ambition/);
 
   const screen = page.getByTestId('story-screen');
-  await expect(screen).toContainText('Ambition · Finish His Work · Chapter 1 of 12');
+  await expect(screen).toContainText('Ambition · The Names on the Stone · Chapter 1 of 12');
   await page.getByRole('button', { name: /^Show it to Secretary Holm/ }).click();
 
   // Step 2: three approaches with their odds (review 1: Legwork on the best stat, and First day
@@ -40,11 +40,11 @@ test('Letters → choose → approach → Walk his streets → keepsake and hook
   await cta.click();
   const modal = page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
   await expect(modal.getByTestId('stamp')).toHaveText(/^(Success|Partial|Failure)$/);
-  await expect(modal.getByTestId('reward-item')).toContainText('Keepsake · His ward book');
-  await expect(modal.getByTestId('effect-item')).toHaveText('Keepsake: His ward book');
+  await expect(modal.getByTestId('reward-item')).toContainText("Keepsake · The unit's list");
+  await expect(modal.getByTestId('effect-item')).toHaveText("Keepsake: The unit's list");
   await expect(modal.getByTestId('effect-hook')).toHaveText(
     // Slice 3 (design §17 Q21): chapter 2 opens after the first vote.
-    /^Chapter 2, "Stand where he stood": from [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first vote$/,
+    /^Chapter 2, "Stand for the stone": from [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first vote$/,
   );
   await expect(modal.getByTestId('effect-energy')).toHaveText('100 → 90');
   await expect(modal.getByTestId('result-buttons').getByRole('button')).toHaveText(['Continue']);
@@ -52,7 +52,7 @@ test('Letters → choose → approach → Walk his streets → keepsake and hook
   await expect(page).toHaveURL(/\/paper$/);
 
   await page.getByRole('link', { name: /^Me/ }).click();
-  await expect(page.getByTestId('me-keepsakes')).toContainText('Keepsake: His ward book');
+  await expect(page.getByTestId('me-keepsakes')).toContainText("Keepsake: The unit's list");
   await expect(page.getByTestId('me-party-card')).toContainText('Red Collective · Recruit · member since');
   await page.reload();
   await page.getByRole('link', { name: /^Paper/ }).click();
@@ -61,7 +61,7 @@ test('Letters → choose → approach → Walk his streets → keepsake and hook
 
   // n13: the chapter screen now shows the hook instead of an empty chapter, and leads back.
   await page.goto('/story/ambition');
-  await expect(page.getByRole('heading', { name: 'Stand where he stood' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Stand for the stone' })).toBeVisible();
   await expect(page.getByTestId('chapter-waits')).toHaveText(
     /^From [A-Z][a-z]+day \d{1,2} [A-Z][a-z]+, after your first vote$/,
   );

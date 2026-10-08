@@ -637,8 +637,9 @@ export const Item = z.strictObject({
 export const StoryText = z.string().min(1).max(240);
 
 /**
- * Review 4 (GDD §7.1, ADR 0073, tech design §4.1): *The Last Train In*. Beat 1's answer carries the
- * party (`faction`, with the person helped); beat 2's +6 and +1; beat 3's Ambition and his coat.
+ * Review 4 (GDD §7.1, ADR 0073, tech design §4.1), restrung by review 5 as *Coming home*. Beat 1's
+ * answer carries the party (`faction`, with the person); beat 2's +6 and +1; beat 3's Ambition and
+ * the demob suit (`outfit.fathers-coat`, id kept).
  * `chaBase`, `iron` and `wish` are gone with the deathbed scene.
  */
 export const OriginEffect = z.discriminatedUnion('kind', [
@@ -655,16 +656,16 @@ export const OriginEffect = z.discriminatedUnion('kind', [
 export const OriginAnswer = z.strictObject({
   /** `holm`, `tools`, `ward-book`. */
   id: Id,
-  /** Beat 1's asks run to about 110 characters. */
-  text: z.string().min(1).max(140),
+  /** Beat 1's asks: review 5's *Coming home* runs to 221 characters (answers §19.2), so a story text's 240. */
+  text: z.string().min(1).max(240),
   /** Beat 1's two Courier lines under the ask (who, and what their party wants). */
   lines: z.tuple([z.string().min(1).max(110), z.string().min(1).max(110)]).optional(),
   /** Beat 1's row portrait (40 px). */
   portrait: AssetId.optional(),
   /** Beat 1: a row selects, this button commits (*Help Holm · the six o'clock to Coalport*). */
   confirm: z.string().min(1).max(60).optional(),
-  /** Words under the button (beat 3); never a number. */
-  hint: z.string().min(1).max(80).optional(),
+  /** Words under the button (beat 3); never a number. Review 5: 100 (the ration page's is 86). */
+  hint: z.string().min(1).max(100).optional(),
   /** Shown in Courier at the top of the next step (*You carried Holm's parcel.*). */
   echo: z.string().min(1).max(80).optional(),
   effects: z.array(OriginEffect).min(1),
@@ -685,14 +686,14 @@ export const OriginStep = z.strictObject({
   art: AssetId,
   /** Beside the text: a portrait, `'helper'` (the person helped on the platform), or none. */
   portrait: z.union([AssetId, z.literal('helper')]).nullable(),
-  /** Beat 1: the Courier line under the rows (*Whoever you help, you go with…*). */
-  note: z.string().min(1).max(120).optional(),
+  /** Beat 1: the Courier line under the rows (*One of these today…*; review 5: 137 characters). */
+  note: z.string().min(1).max(160).optional(),
   questions: z.tuple([OriginQuestion]),
 });
 
 export const Origin = z.strictObject({
   steps: z.tuple([OriginStep, OriginStep, OriginStep]),
-  /** §8.5: the reference recruit's answers (tests, migration 002): Holm · books · his ward book. */
+  /** §8.5: the reference recruit's answers (tests, migration 002): Holm · books · the unit's list. */
   reference: z.array(z.strictObject({ questionId: Id, answerId: z.string() })).length(3),
 });
 
@@ -716,7 +717,7 @@ export const Chapter = z.strictObject({
     .optional(),
   story: z
     .strictObject({
-      /** "From your father's things": the Letters row. */
+      /** "From the office's post": the Letters row. */
       letterFrom: z.string().min(1).max(60),
       choose: z.strictObject({
         title: z.string().min(1).max(40),

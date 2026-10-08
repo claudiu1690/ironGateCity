@@ -1769,6 +1769,10 @@ Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–00
 - `Ordinance.plainLine` is required on any new ordinance. `BATTLEGROUND_COUNCILS` feeds `TownHallView.seatCount`/`passVotes`.
 - The *From the capital* lines join `composeHeadlines` after the residence's city lines (a parameter, not a new rule).
 
+## Review 5 knock-on: *Coming home* (dated note, 8 Oct 2026)
+
+The opening is *Coming home* (GDD §7.1; `docs/design/review-5-answers.md` §19) and the Ambitions are re-anchored without the father (GDD §17.1). For this slice: **chapter 3 is *The deposit* of *The Names on the Stone*** (id `finish-his-work`, unchanged); its strings, Letters row (*From the families' tin*), choice hints and keepsake name (*Your deposit receipt*, `keep.deposit-receipt`) are re-strung in design §13; the flag ids are now `fund-marks` / `own-marks`. **No number moved**: Rank 3, seven days, difficulty 16, 15 Energy, 350 / 90 / 200 · 175 / 45 / 100 · 60 / 0 / 0, the keepsake on every outcome. The content test for *father* (`review5.opening.test.ts`) covers this chapter when it is built.
+
 ## Deviations (as built)
 
 *Filled in by T31.*

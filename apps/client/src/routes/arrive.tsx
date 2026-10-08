@@ -11,8 +11,9 @@ import { isNetworkError, trpc } from '../lib/trpc';
 
 /**
  * The arrival (GDD §7.1–7.3, slice-2 tech design §12; review 4, ADR 0073): the face if sign-up did
- * not save one, then *The Last Train In*: three beats, each saved as tapped, so a closed tab resumes
- * at the next one. Beat 1's rows select and its button commits (whom you help is your party). Once
+ * not save one, then the opening (review 5: *Coming home*): three beats, each saved as tapped, so a
+ * closed tab resumes at the next one. Beat 1's rows select and its button commits (the problem you
+ * chase is your party). Once
  * the three are in (`ready`) the join is sent at once, and again on any later visit (it is idempotent
  * on the user). Full screen: no HUD, no tab bar.
  */

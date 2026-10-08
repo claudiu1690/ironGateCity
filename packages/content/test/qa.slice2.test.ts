@@ -29,7 +29,7 @@ function outcome(answers: OriginAnswerRef[]) {
 }
 const withAnswer = (questionId: string, answerId: string): OriginAnswerRef[] =>
   REF.map((a) => (a.questionId === questionId ? { questionId, answerId } : { ...a }));
-/** The platform's row for each party (whom you help is your party). */
+/** The counter's row for each party (the problem you chase is your party). */
 const HELPS: Record<FactionId, string> = { vanguard: 'stahl', collective: 'holm', alliance: 'grey' };
 const joining = (f: FactionId, answers: OriginAnswerRef[] = REF) =>
   answers.map((a) => (a.questionId === 'origin.platform' ? { ...a, answerId: HELPS[f] } : { ...a }));
@@ -53,8 +53,8 @@ function wornOf(o: ReturnType<typeof outcome>, factionId: FactionId) {
   return { doc, cha: wornCha(doc.stats.chaBase, equipped), equipped: equipped.map((i) => i.id) };
 }
 
-describe('GDD §7.1: the three beats of *The Last Train In*, and each answer’s effect through the resolver', () => {
-  const table = gddSection('### 7.1 *The Last Train In*', '### 7.2')
+describe('GDD §7.1: the three beats of *Coming home*, and each answer’s effect through the resolver', () => {
+  const table = gddSection('### 7.1 *Coming home*', '### 7.2')
     .split('\n')
     .filter((l) => /^\| [123] \*/.test(l))
     .map((l) =>
@@ -70,15 +70,16 @@ describe('GDD §7.1: the three beats of *The Last Train In*, and each answer’s
     table.forEach((row, i) => {
       const step = steps[i]!;
       expect(row[0], step.id).toBe(`${i + 1} *${step.title}*`);
-      expect(row[1]!.split(' (`')[0], step.id).toBe(step.kicker);
+      // The GDD may add a clause after the kicker (beat 3: *…, held in your name since the autumn*).
+      expect(row[1]!.split(' (`')[0]!.startsWith(step.kicker), step.id).toBe(true);
       if (row[1]!.includes('(`')) expect(row[1], step.id).toContain(`(\`${step.art}\`)`);
       expect(step.questions).toHaveLength(1);
     });
   });
 
-  it('beat 1: Holm, Stahl and Grey, each their party’s secretary; whom you help is your party', () => {
-    expect(table[0]![2]).toMatch(/^Holm's parcel · Stahl's bundle · Grey's signature;/);
-    expect(table[0]![2]).toContain("*Help Holm · the six o'clock to Coalport*");
+  it('beat 1: Holm, Stahl and Grey, each their party’s secretary; the problem you chase is your party', () => {
+    expect(table[0]![2]).toMatch(/^Holm's rehiring sheet \(.+\) · Stahl's list \(.+\) · Grey's appeal \(.+\);/);
+    expect(table[0]![2]).toContain("*Go for the work · the six o'clock to Coalport*");
     const platform = steps[0].questions[0];
     expect(platform.answers.map((a) => a.id)).toEqual(['holm', 'stahl', 'grey']);
     for (const a of platform.answers) {
@@ -87,20 +88,21 @@ describe('GDD §7.1: the three beats of *The Last Train In*, and each answer’s
       if (f.kind !== 'faction') continue;
       expect(content.faction(f.factionId).secretary.npcId, a.id).toBe(a.id);
       expect(f.person).toBe(a.id);
-      expect(a.confirm).toBe(
-        `Help ${content.npc(a.id)!.name.split(' ')[1]} · the six o'clock to ${content.city(content.faction(f.factionId).homeCityId)!.name}`,
+      // Review 5 (answers §19.2): the confirm names the problem chased, then the train.
+      expect(a.confirm).toMatch(
+        new RegExp(`^Go for the (work|stamp|flat) · the six o'clock to ${content.city(content.faction(f.factionId).homeCityId)!.name}$`),
       );
       // The party, and so the home city (§7.4), through the real resolver.
       expect(outcome(joining(f.factionId)).factionId).toBe(f.factionId);
     }
     // §7.1: the GDD names the three people with their parties.
-    const intro = gddSection('### 7.1 *The Last Train In*', '| Beat |');
+    const intro = gddSection('### 7.1 *Coming home*', '| Beat |');
     expect(intro).toContain('**Petra Holm**, the Collective');
     expect(intro).toContain('**Viktor Stahl**, the Vanguard');
     expect(intro).toContain('**Thomas Grey**, the Alliance');
   });
 
-  it('beat 2: the suitcase’s answers and their +6 / +1 change exactly what the GDD says', () => {
+  it('beat 2: the kitbag’s answers and their +6 / +1 change exactly what the GDD says', () => {
     const cell = table[1]![2]!;
     const parsed = [...cell.matchAll(/\*([^*]+)\* \(\+6 (STR|INT|AGI), \+1 (STR|INT|AGI)\)/g)].map((m) => ({
       text: m[1]!.replace(/…$/, ''),
@@ -125,28 +127,28 @@ describe('GDD §7.1: the three beats of *The Last Train In*, and each answer’s
     });
   });
 
-  it('beat 3: the lining chooses the Ambition (§17.1), and his coat is worn by everyone', () => {
-    expect(table[2]![2]).toBe('*His ward book* · *His letter from prison* · *The marker*');
+  it('beat 3: the post chooses the Ambition (§17.1), and the demob suit is worn by everyone', () => {
+    expect(table[2]![2]).toBe("*The unit's list* · *The requisition order* · *The ration page*");
     const ambitions = { 'ward-book': 'finish-his-work', letter: 'clear-his-name', marker: 'settle-his-debts' };
     const answers = steps[2].questions[0].answers;
-    expect(answers.map((a) => a.text.replace(/\.$/, ''))).toEqual(['His ward book', 'His letter from prison', 'The marker']);
+    expect(answers.map((a) => a.text.replace(/\.$/, ''))).toEqual(["The unit's list", 'The requisition order', 'The ration page']);
     for (const [aid, amb] of Object.entries(ambitions)) {
       for (const f of FACTIONS) {
         const o = outcome(joining(f, withAnswer('origin.lining', aid)));
         expect(o.ambitionId).toBe(amb);
         const w = wornOf(o, f);
-        // §7.1, §8.5: his coat (Tier I, CHA 5) worn from here on; the party's outfit kept.
+        // §7.1, §8.5: the demob suit (Tier I, CHA 5) worn from here on; the party's outfit kept.
         expect(w.cha, `${f} ${aid}`).toBe(5);
         expect(w.equipped).toEqual(['outfit.fathers-coat', 'doc.party-card']);
         expect(w.doc.inventory.map((e) => e.itemId)).toContain(content.faction(f).kit.outfit);
       }
     }
-    expect(table[2]![3]).toMatch(/\*\*his coat\*\*, worn from here on \(Tier I, CHA 5\)/);
+    expect(table[2]![3]).toMatch(/\*\*the demob suit\*\*, worn from here on \(Tier I, CHA 5\)/);
     expect(content.item('outfit.fathers-coat')?.keepsake).toBe(false);
   });
 
   it('no Iron and no FXP seed any more (the wish and the refused coat are gone)', () => {
-    expect(gddSection('### 7.1 *The Last Train In*', '### 7.2')).toMatch(/the father's \*wish\* \(\+50 FXP\) are gone/);
+    expect(gddSection('### 7.1 *Coming home*', '### 7.2')).toMatch(/no street scene, no faction cards and no wish/);
     for (const f of FACTIONS) {
       const o = outcome(joining(f));
       expect([o.iron, o.fxp, o.stats.chaBase]).toEqual([0, 0, 0]);
@@ -232,10 +234,11 @@ describe('GDD §17.1: chapter 1 of every Ambition', () => {
       /Success \*\*150 XP \/ 40 FXP \/ 100 Iron\*\*, Partial \*\*75 \/ 20 \/ 50\*\*, Failure \*\*25 \/ 0 \/ 0\*\*/,
     );
     const titles = {
-      // Slice 3 (design §17 Q21): Finish His Work chapter 2 is written and opens after the first ballot.
-      'finish-his-work': ['His ward book', { ballotCast: true }, 'keep.ward-book'],
-      'clear-his-name': ['The prison letter', { level: 6 }, 'keep.prison-letter'],
-      'settle-his-debts': ['The marker', { level: 6 }, 'keep.marker'],
+      // Slice 3 (design §17 Q21): chapter 2 of *The Names on the Stone* is written and opens after the
+      // first ballot. Review 5 (answers §19.10): the chapter-1 titles re-strung, the ids kept.
+      'finish-his-work': ["The unit's list", { ballotCast: true }, 'keep.ward-book'],
+      'clear-his-name': ['The requisition order', { level: 6 }, 'keep.prison-letter'],
+      'settle-his-debts': ['The ration page', { level: 6 }, 'keep.marker'],
     } as const;
     for (const [id, [title, req, keepsake]] of Object.entries(titles)) {
       const amb = content.ambition(id)!;
@@ -346,10 +349,11 @@ describe('Content policy (CLAUDE.md rules 2 and 6; content-policy review §7 che
     const v = content.faction('vanguard');
     expect(v.card.signatureEvent).toBe('the Grand Rally');
     expect(v.card.blurb).not.toMatch(/soldier|garrison|nation above all/i);
-    // Review 4: a steward, a meeting and a bundle of flyers; no uniform, march, symbol or slogan.
+    // Review 5 (answers §19.8): the League's welfare desk (stamps, pensions, a hostel bed); no
+    // uniform, rank, march, symbol or slogan.
     const stahl = content.origin.steps[0].questions[0].answers.find((a) => a.id === 'stahl')!;
     expect(stahl.lines).toEqual([
-      'Viktor Stahl · steward · Duskwall',
+      "Viktor Stahl · the Duskwall League's welfare desk · stamps, pensions and a bed for men coming home",
       'Iron Vanguard · order, discipline and a strong hand · +3 Strength',
     ]);
     expect(`${stahl.text} ${stahl.lines!.join(' ')}`).not.toMatch(/uniform|march|salute|veteran|soldier|banner/i);

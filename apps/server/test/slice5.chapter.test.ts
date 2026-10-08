@@ -68,7 +68,7 @@ describe('Settle His Debts, chapter 2: The riverside house', () => {
     const p = await member(clock, { name: 'Odo Quiet', level: 6 });
     await atTheHouse(p.id, clock.now());
     const view = await p.caller.ambition.get();
-    expect(view).toMatchObject({ chapter: 2, status: 'midway', letterFrom: "From the marker's other side" });
+    expect(view).toMatchObject({ chapter: 2, status: 'midway', letterFrom: "From the page's other side" });
     const chance = view.screen!.approaches.find((a) => a.id === 'yard')!.check.chance;
     expect(chance + CHECK.partialWindow).toBeLessThan(100);
     const seeds = {

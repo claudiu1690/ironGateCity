@@ -1,32 +1,42 @@
 import { expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 /**
- * Review 4 (*The Last Train In*, GDD §7.1, ADR 0073): the answers to beats 2 and 3 by button text;
- * beat 1 (whom you help) is the party, picked by `arrive`'s `faction`. The reference recruit (GDD
- * §8.5): Holm · books · his ward book, STR 8 / INT 12 / AGI 5, his coat CHA 5, no Iron.
+ * Review 5 (*Coming home*, GDD §7.1, answers §19; ADR 0073): the answers to beats 2 and 3 by their
+ * content ids, so a restrung opening never breaks a spec; beat 1 (the problem you chase) is the
+ * party, picked by `arrive`'s `faction`. The reference recruit (GDD §8.5): Holm · books · the unit's
+ * list, STR 8 / INT 12 / AGI 5, the demob suit CHA 5, no Iron.
  */
 export const ANSWERS = {
-  reference: ['Books. His, and a few of mine.', 'His ward book.'],
+  reference: ['books', 'ward-book'],
   /** The slice-1 specs' numbers: INT 12 (66 % INT at home), as the reference. */
-  slice1: ['Books. His, and a few of mine.', 'His ward book.'],
+  slice1: ['books', 'ward-book'],
 };
 /** GDD §8.5: the Vanguard's tuning character carries tools (STR 14 / INT 6), the others books. */
-const TOOLS = "Tools, mostly. I'm better with my hands than my mouth.";
+const TOOLS = 'tools';
 
 export type FactionKey = 'vanguard' | 'collective' | 'alliance';
-/** Beat 1's row for each party: the person you help (their ask's first words). */
-export const PLATFORM_ROWS: Record<FactionKey, RegExp> = {
-  collective: /Carry this parcel/,
-  vanguard: /Take a bundle/,
-  alliance: /Witness a signature/,
+/** Beat 1's row for each party: the person's content id (the row's `data-choice`). */
+export const PLATFORM_ROWS: Record<FactionKey, string> = {
+  collective: 'holm',
+  vanguard: 'stahl',
+  alliance: 'grey',
 };
+
+/** Beat 1's row of a party, by its content id (a `role="radio"` button). */
+export const platformRow = (page: Page, faction: FactionKey): Locator =>
+  page.locator(`[data-testid="story-row"][data-choice="${PLATFORM_ROWS[faction]}"]`);
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** Tap one origin answer (its button also carries the hint line). */
-export async function answer(page: Page, text: string): Promise<void> {
-  const button = page.getByRole('button', { name: new RegExp(`^${escape(text)}`) });
+/**
+ * Tap one origin answer: by its content id (`books`, `ward-book`), or by the start of its text (the
+ * button also carries the hint line).
+ */
+export async function answer(page: Page, idOrText: string): Promise<void> {
+  const button = /^[a-z][a-z-]*$/.test(idOrText)
+    ? page.locator(`[data-testid="story-choice"][data-choice="${idOrText}"]`)
+    : page.getByRole('button', { name: new RegExp(`^${escape(idOrText)}`) });
   await button.click();
   await expect(button).toBeHidden();
 }
@@ -48,18 +58,18 @@ export async function signUpOnly(page: Page, name = 'Mara Lenk', face = 3): Prom
   return email;
 }
 
-/** Beat 1, the platform: select the party's row, then the confirm (*Help Holm · …*) commits it. */
+/** Beat 1, the counter: select the party's row, then the confirm (*Go for the work · …*) commits it. */
 export async function helpOnPlatform(page: Page, faction: FactionKey = 'collective'): Promise<void> {
-  const row = page.getByRole('radio', { name: PLATFORM_ROWS[faction] });
+  const row = platformRow(page, faction);
   await row.click();
   await expect(row).toHaveAttribute('aria-checked', 'true');
   const confirm = page.getByTestId('story-confirm');
-  await expect(confirm).toHaveText(/^Help /);
+  await expect(confirm).toHaveText(/^Go for the (work|stamp|flat) · /);
   await confirm.click();
   await expect(row).toBeHidden();
 }
 
-/** The three beats (the platform, the suitcase, the lining): lands on the welcome edition. */
+/** The three beats (the counter, the kitbag, the post): lands on the welcome edition. */
 export async function arrive(
   page: Page,
   opts: { answers?: string[]; faction?: FactionKey } = {},

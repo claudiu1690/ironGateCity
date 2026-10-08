@@ -677,34 +677,34 @@ The Courier carries the Herald's city set with *Clearwater* for the capital and 
 
 ---
 
-## 13. Ambition, chapter 3 of *Finish His Work*: *The deposit* (GDD §17.1)
+## 13. Ambition, chapter 3 of *The Names on the Stone*: *The deposit* (GDD §17.1; re-strung for *Coming home*, 8 Oct 2026: no number moved)
 
-Due since slice 3 ("written with the slice that follows"); the office slice is its home. **Requirement: Rank 3**, plus seven City Days since chapter 2 (about day 15 for the reference recruit, around the first candidacy). Letters row: *From the tin on the shelf* · *His deposit receipt* · *Chapter 3 is ready · 15 Energy*. Three steps, one check, never fails, no encounter (set at home), no opinion, Rested applies. **Difficulty 16, 15 Energy**; Success **350 XP / 90 FXP / 200 Iron**, Partial **175 / 45 / 100**, Failure **60 / 0 / 0**; keepsake `keep.deposit-receipt` (*His deposit receipt*, no slot, no effect) on every outcome.
+Due since slice 3 ("written with the slice that follows"); the office slice is its home. **Requirement: Rank 3**, plus seven City Days since chapter 2 (about day 15 for the reference recruit, around the first candidacy). Letters row: *From the families' tin* · *Your deposit receipt* · *Chapter 3 is ready · 15 Energy*. Three steps, one check, never fails, no encounter (set at home), no opinion, Rested applies. **Difficulty 16, 15 Energy**; Success **350 XP / 90 FXP / 200 Iron**, Partial **175 / 45 / 100**, Failure **60 / 0 / 0**; keepsake `keep.deposit-receipt` (*Your deposit receipt*, no slot, no effect) on every outcome.
 
-**Step 1** · kicker *Ambition · Finish His Work · Chapter 3 of 12* · art: `home-hq`
-In the tin on the shelf, under the ration book: his receipt for ten marks, the council deposit of '21, stamped RETURNED. He never found his two names. The branch is asking for yours by Tuesday, and the tin has ten marks in it still.
+**Step 1** · kicker *Ambition · The Names on the Stone · Chapter 3 of 12* · art: `home-hq`
+The families' tin on the hall's shelf: what three streets collected for the stone before the council said no, the forty names on the lid. The branch wants your name on the ballot by Tuesday. The deposit is ten marks; the tin has ten.
 
 | | Choice | Hint | Flag |
 |---|---|---|---|
-| A | Pay the deposit from his tin | His ten marks, twenty-five years late. The branch will know whose they are. | `his-marks` |
-| B | Leave the tin and pay your own | The name is yours now. The tin stays shut. | `own-marks` |
+| A | Pay the deposit from the families' tin | Their ten marks, for a seat that puts the names up. The branch will know whose they are. | `fund-marks` |
+| B | Leave the tin and pay your own | The name on the ballot is yours. The tin stays shut. | `own-marks` |
 
 **Step 2** · *Two names by Tuesday*
-Two names. He never got them; the ward book says why, in his hand: *talked to the hall, not to the ward*. You have the book, the branch's meeting at six, and a street that knew him.
+Two names to back you. The branch's last candidate lost on the hall's votes alone; the minute book says why: *talked to the hall, not to the streets*. You have the list, the branch's meeting at six, and three streets that knew the forty.
 
 | Approach | Check | Chance for the reference recruit (day 15: INT ~34, CHA 5) |
 |---|---|---|
 | Ask the branch meeting for its names, from the floor | CHA+INT vs 16 | about 62 % |
-| Write the platform line he never wrote, and show it round | INT vs 16 | 95 % (the clamp) |
-| Walk the ward with his book and ask the doors that knew him | best vs 16 | 95 % |
+| Write the platform line, *the names on the stone*, and show it round | INT vs 16 | 95 % (the clamp) |
+| Walk the three streets with the list and ask the doors that knew the forty | best vs 16 | 95 % |
 
 CTA: **Find the two names · 15 Energy**
 
 **Step 3** · the result
-- Success — *Two names, and a third* — Two names by nine and a third by ten, an old docker who signed for him in '21 and says so. The branch secretary stamps the receipt without looking up. Somebody has to say his name was on it too, so you do.
-- Partial — *One name, and the branch's* — One name from the street and the branch's own, which the secretary says counts, this once. The receipt is stamped. The ward book gets a new line in your hand: *talked to the ward. Mostly.*
-- Failure — *The hall, not the ward* — The meeting argues about the canteen for an hour and nobody signs anything. You walk home with his receipt and your own in the same pocket, both unstamped. Tuesday is still Tuesday. The doors are still there.
-- Knock-on lines: *Keepsake: His deposit receipt* · *Chapter 4, "The count": from {date}, after your first council seat*
+- Success — *Two names, and a third* — Two names by nine and a third by ten, an old docker whose boy is on the list and says so. The branch secretary stamps the receipt without looking up. Somebody has to say what the seat is for, so you do.
+- Partial — *One name, and the branch's* — One name from the street and the branch's own, which the secretary says counts, this once. The receipt is stamped. The list gets a new line in your hand: *talked to the streets. Mostly.*
+- Failure — *The hall, not the streets* — The meeting argues about the canteen for an hour and nobody signs anything. You walk home with the receipt unstamped and ten marks in the same pocket. Tuesday is still Tuesday. The doors are still there.
+- Knock-on lines: *Keepsake: Your deposit receipt* · *Chapter 4, "The count": from {date}, after your first council seat*
 
 Every text is under 240 characters and four sentences. Chapter 4 requires a completed council term and is written with slice 8.
 
@@ -807,7 +807,7 @@ Nothing requires a player at a set time; every window is at least two full City 
 | §15.10 | NPC fill at the top: the party's own figures, the local deputies (eight named each) and their chain; the Clearwater slate; the secretary's bills |
 | §16.2 | The Officers channel |
 | §16.3 | The Town Hall pinned (roles, 1.2, signatures) |
-| §17.1 | Chapter 3 of *Finish His Work*, *The deposit* |
+| §17.1 | Chapter 3 of *The Names on the Stone* (was *Finish His Work*), *The deposit* |
 | §17.3 | President 40; the Chancellor row removed |
 | §18.3 | A room in Clearwater |
 | §21.4 | `keep.deposit-receipt` |

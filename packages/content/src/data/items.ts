@@ -36,24 +36,25 @@ export const items: Item[] = [
     note: 'The Alliance starting outfit.',
   },
   {
+    // Review 5 (answers §19.4): the demob suit (the id kept from review 4's coat).
     id: 'outfit.fathers-coat',
-    name: "Your father's coat",
+    name: 'The demob suit',
     slot: 'clothing',
     tier: 1,
     cha: 5,
     keepsake: false,
     art: 'item.winter-coat',
-    note: 'A good wool coat.',
+    note: "The office's suit and the coat that came with it. Nobody mistakes it for anything else.",
   },
   {
     id: 'outfit.fathers-coat-promised',
-    name: "Your father's coat",
+    name: 'The demob suit',
     slot: 'clothing',
     tier: 1,
     cha: 5,
     keepsake: true,
     art: 'item.winter-coat',
-    note: 'His coat, and your word.',
+    note: "The office's suit, and your word.",
   },
   {
     id: 'doc.party-card',
@@ -67,51 +68,57 @@ export const items: Item[] = [
   },
   {
     id: 'keep.ward-book',
-    name: 'His ward book',
+    name: "The unit's list",
     slot: null,
     tier: null,
     cha: 0,
     keepsake: true,
     art: 'item.document-folder',
+    note: "Forty names in the quartermaster's hand, a home street against each.",
   },
   {
     id: 'keep.prison-letter',
-    name: 'The prison letter',
+    name: 'The requisition order',
     slot: null,
     tier: null,
     cha: 0,
     keepsake: true,
     art: 'item.document-folder',
+    note: 'The flat, the date, and a signature you can read.',
   },
   {
     id: 'keep.marker',
-    name: 'The marker',
+    name: 'The ration page',
     slot: null,
     tier: null,
     cha: 0,
     keepsake: true,
     art: 'item.document-folder',
+    note: "A year of rations drawn in your family's name after they were gone.",
   },
-  // GDD §21.4: Finish His Work chapter 2's keepsake. Its chapter is slice 3; the item is catalogued
-  // now because the GDD's table lists it.
+  // GDD §21.4: The Names on the Stone's (`finish-his-work`) chapter 2 keepsake. Its chapter is
+  // slice 3; the item is catalogued now because the GDD's table lists it.
   {
     id: 'keep.election-bill',
-    name: 'His election bill',
+    name: 'Your election bill',
     slot: null,
     tier: null,
     cha: 0,
     keepsake: true,
     art: 'item.document-folder',
+    note: 'Your name in capitals on brown paper, and the forty names under it.',
   },
-  // GDD §21.4: Settle His Debts chapter 2's keepsake (*The riverside house*, slice 5,
-  // docs/design/slice-5-risk.md §13: no slot, the document folder's art), on every outcome.
+  // GDD §21.4: The Ration Ledger's (`settle-his-debts`) chapter 2 keepsake (*The riverside house*,
+  // slice 5, docs/design/slice-5-risk.md §13: no slot, the document folder's art), on every outcome.
+  // Review 5 (answers §19.10.6): the notes of the suit and the keepsakes.
   {
     id: 'keep.ledger-page',
-    name: 'A page of his ledger',
+    name: "A page of the ring's ledger",
     slot: null,
     tier: null,
     cha: 0,
     keepsake: true,
     art: 'item.document-folder',
+    note: "The one page they didn't tear out: the names the ring drew rations in, and what each fetched.",
   },
 ];

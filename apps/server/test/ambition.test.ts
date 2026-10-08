@@ -34,16 +34,16 @@ describe('ambition.get and choose', () => {
     const v = await caller.ambition.get();
     expect(v).toMatchObject({
       id: 'finish-his-work',
-      title: 'Finish His Work',
+      title: 'The Names on the Stone',
       chapter: 1,
       of: 12,
-      chapterTitle: 'His ward book',
+      chapterTitle: "The unit's list",
       status: 'ready',
-      letterFrom: "From your father's things",
+      letterFrom: "From the office's post",
     });
     expect(v.screen).toMatchObject({
-      kicker: 'Ambition · Finish His Work · Chapter 1 of 12',
-      title: 'His ward book',
+      kicker: 'Ambition · The Names on the Stone · Chapter 1 of 12',
+      title: "The unit's list",
       art: { kind: 'map-crop', x: 0.42, y: 0.35 },
       progress: { step: 1, of: 3 },
     });
@@ -87,7 +87,7 @@ describe('ambition.get and choose', () => {
       ['legwork', 76],
     ]);
     expect(v.screen?.approaches[2]?.check).toMatchObject({ stats: ['int'], best: true });
-    expect(v.screen?.cta).toEqual({ label: 'Walk his streets', energy: 10, readyAt: null });
+    expect(v.screen?.cta).toEqual({ label: 'Knock the three doors', energy: 10, readyAt: null });
     expect((await caller.character.me()).lettersWaiting).toBe(0);
     expect((await caller.paper.today()).letters[0]?.status).toBe('midway');
   });
@@ -139,9 +139,9 @@ describe('ambition.attempt', () => {
 
     expect(r).toMatchObject({
       kind: 'chapter',
-      action: { id: 'finish-his-work.1', name: 'His ward book', type: 'chapter', tier: 3, times: 1 },
+      action: { id: 'finish-his-work.1', name: "The unit's list", type: 'chapter', tier: 3, times: 1 },
       story: {
-        ambitionTitle: 'Finish His Work',
+        ambitionTitle: 'The Names on the Stone',
         chapter: 1,
         of: 12,
         approachId: 'sort',
@@ -151,9 +151,9 @@ describe('ambition.attempt', () => {
       art: { rung: 'map-crop' },
       again: null,
       effects: {
-        item: { itemId: 'keep.ward-book', name: 'His ward book', keepsake: true },
+        item: { itemId: 'keep.ward-book', name: "The unit's list", keepsake: true },
         // Slice 3 (design §17 Q21): chapter 2 opens after the first ballot.
-        hooks: ['Chapter 2, "Stand where he stood": from Tuesday 6 October, after your first vote'],
+        hooks: ['Chapter 2, "Stand for the stone": from Tuesday 6 October, after your first vote'],
         opinion: null,
         standing: null,
         orders: [],
@@ -181,12 +181,12 @@ describe('ambition.attempt', () => {
     // ballot), the keepsake on Me.
     const me = await caller.character.me();
     expect(me.ambition.status).toBe('waiting');
-    expect(me.keepsakes.map((k) => k.name)).toEqual(['His ward book']);
+    expect(me.keepsakes.map((k) => k.name)).toEqual(["The unit's list"]);
     expect((await caller.paper.today()).letters).toEqual([]);
     // n13: the chapter screen now shows the hook, the same as the modal's, and no choices.
     expect(await caller.ambition.get()).toMatchObject({
       chapter: 2,
-      chapterTitle: 'Stand where he stood',
+      chapterTitle: 'Stand for the stone',
       screen: null,
       waitsUntil: 'From Tuesday 6 October, after your first vote',
     });

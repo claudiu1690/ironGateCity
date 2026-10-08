@@ -190,7 +190,7 @@ export const characterViewFixture: CharacterView = {
   wearing: { itemId: 'outfit.mill-coat', name: 'Mill work coat', cha: 2 },
   partyCard: { factionName: 'Red Collective', rankTitle: 'Recruit', memberSince: T0 },
   keepsakes: [],
-  ambition: { id: 'finish-his-work', title: 'Finish His Work', chapter: 1, status: 'ready', readyFrom: null },
+  ambition: { id: 'finish-his-work', title: 'The Names on the Stone', chapter: 1, status: 'ready', readyFrom: null },
   lettersWaiting: 1,
   office: null,
   politicsWaiting: 0,
@@ -550,8 +550,8 @@ export const paperViewFixture: PaperView = {
   letters: [
     {
       kind: 'chapter',
-      from: "From your father's things",
-      title: 'His ward book',
+      from: "From the office's post",
+      title: "The unit's list",
       chapter: 1,
       status: 'ready',
       energy: 10,
@@ -572,60 +572,63 @@ const compartment = {
   ...assetFixture('scene.train-compartment', 2688, 1520, [640, 1280]),
   focus: null,
 };
-const station = { ...assetFixture('scene.station', 2688, 1520, [640, 1280]), focus: null };
+const demobOffice = { ...assetFixture('scene.demob-office', 2688, 1520, [640, 1280]), focus: null };
 
-/** Review 4, beat 2 (the suitcase): the helper's portrait, the echo of beat 1, one tap commits. */
+/** Review 5, beat 2 (the kitbag): the helper's portrait, the echo of beat 1, one tap commits. */
 export const originScreenFixture: StoryScreenView = {
   kicker: "The six o'clock to Coalport · the compartment",
-  title: 'The suitcase',
+  title: 'The kitbag',
   narrative:
-    "Holm is down the corridor arguing with the guard. The compartment is yours, and the suitcase's, up on the rack and heavier than it should be. She comes back to ask what a person carries to a new town.",
+    "The six o'clock, the kitbag on the rack. Everything you own is in it, and it still isn't heavy. Holm asks what a person brings home from four years.",
   art: { kind: 'scene', asset: compartment, focus: { x: 0.5, y: 0.5 } },
   portrait: assetFixture('portrait.holm', 760, 950, [256, 512]),
-  echo: "You carried Holm's parcel.",
+  echo: 'You went for the work.',
   prompt: null,
   choices: [
-    { id: 'tools', text: "Tools, mostly. I'm better with my hands than my mouth.", hint: null },
-    { id: 'books', text: 'Books. His, and a few of mine.', hint: null },
-    { id: 'light', text: 'Not much. I travel light, and I run when I have to.', hint: null },
+    { id: 'tools', text: "Tools. I kept the workshop's kit when the workshop went.", hint: null },
+    { id: 'books', text: 'Books, from the camp library. They let us keep those.', hint: null },
+    { id: 'light', text: 'The boots I walked out in. Two hundred miles, and they still fit.', hint: null },
   ],
   approaches: [],
   cta: null,
   progress: { step: 2, of: 3 },
 };
 
-/** Review 4, beat 1 (the platform): three rows with a portrait and two lines; a row selects. */
+/** Review 5, beat 1 (the counter): three rows with a portrait and two lines; a row selects. */
 export const platformScreenFixture: StoryScreenView = {
-  kicker: 'Irongate · Central Station · the last train in',
-  title: 'The platform',
+  kicker: 'Irongate · the demobilisation office · the second morning home',
+  title: 'The counter',
   narrative:
-    'The night train empties onto a platform that smells of coal smoke and wet wool. One suitcase, nobody waiting. Three people are, in their way, and each wants two minutes of you.',
-  art: { kind: 'scene', asset: station, focus: { x: 0.5, y: 0.5 } },
+    'The demobilisation office, the second morning home. You reach the counter at eleven with a kitbag and your papers, and the clerk gives you three pieces of news without looking up. The mill is sold. The stamp is missing. The flat is gone.',
+  art: { kind: 'scene', asset: demobOffice, focus: { x: 0.42, y: 0.45 } },
   portrait: null,
   echo: null,
   prompt: null,
   choices: [
     {
       id: 'holm',
-      text: "\"Carry this parcel for me as far as the Coalport train. My hands are full and the porter's been bought.\"",
+      text: "\"Your mill's sold, but Coalport's rehires on Monday, union men first. Put your name on my sheet now and you've a place at the gate and a bed at the union hostel tonight. The six o'clock to Coalport.\"",
       hint: null,
       portrait: assetFixture('portrait.holm', 760, 950, [256, 512]),
       lines: [
-        'Petra Holm · union organiser · Coalport',
+        'Petra Holm · union organiser · at the bench by the door, signing up men off the trains',
         'Red Collective · the mill and the docks against the men who own them · +2 Strength, +1 Intelligence',
       ],
-      confirm: "Help Holm · the six o'clock to Coalport",
+      confirm: "Go for the work · the six o'clock to Coalport",
     },
     {
       id: 'stahl',
-      text: '"Take a bundle. Hand them out on your way down the platform. The meeting is Thursday and this town forgets."',
+      text: "\"No stamp, no pay, and this office takes six weeks. The League in Duskwall sees to its men: the stamp by Thursday, the pension after, and a bed at the League's hostel till then. The six o'clock; I'll put you on the list.\"",
       hint: null,
       portrait: assetFixture('portrait.stahl', 760, 950, [256, 512]),
-      lines: ['Viktor Stahl · steward · Duskwall', 'Iron Vanguard · order, discipline and a strong hand · +3 Strength'],
-      confirm: "Help Stahl · the six o'clock to Duskwall",
+      lines: [
+        "Viktor Stahl · the Duskwall League's welfare desk · stamps, pensions and a bed for men coming home",
+        'Iron Vanguard · order, discipline and a strong hand · +3 Strength',
+      ],
+      confirm: "Go for the stamp · the six o'clock to Duskwall",
     },
   ],
-  note: 'Whoever you help, you go with. Permanent: a Faction Reset token is the only way back.',
+  note: "One of these today. The other two will keep, or they won't. Whoever you go with, you go with: a Faction Reset token is the only way back.",
   approaches: [],
   cta: null,
   progress: { step: 1, of: 3 },
@@ -633,10 +636,10 @@ export const platformScreenFixture: StoryScreenView = {
 
 /** Chapter 1, step 2: two approaches with odds, the CTA short of Energy. */
 export const chapterCheckScreenFixture: StoryScreenView = {
-  kicker: 'Ambition · Finish His Work · Chapter 1 of 12',
-  title: 'Three names',
+  kicker: 'Ambition · The Names on the Stone · Chapter 1 of 12',
+  title: 'Three families',
   narrative:
-    "Three names in the book have two ticks: the ones who came out for him in the rain. Their street is twenty minutes' walk.",
+    "Three of the forty had people in Coalport: the list gives a street for each. Twenty minutes' walk.",
   art: { kind: 'map-crop', asset: mapDay, x: 0.42, y: 0.35 },
   portrait: null,
   echo: null,
@@ -645,7 +648,7 @@ export const chapterCheckScreenFixture: StoryScreenView = {
   approaches: [
     {
       id: 'knock',
-      text: 'Knock the three doors and say whose child you are',
+      text: 'Knock the three doors and say you were in the same unit',
       check: {
         ...checkFixture,
         stats: ['cha', 'int'],
@@ -656,9 +659,9 @@ export const chapterCheckScreenFixture: StoryScreenView = {
         chance: 46,
       },
     },
-    { id: 'sort', text: 'Sort the book by street first, then knock', check: checkFixture },
+    { id: 'sort', text: 'Sort the list by street first, then knock', check: checkFixture },
   ],
-  cta: { label: 'Walk his ward', energy: 10, readyAt: T0 + 600_000 },
+  cta: { label: 'Knock the three doors', energy: 10, readyAt: T0 + 600_000 },
   progress: { step: 2, of: 3 },
 };
 
@@ -673,7 +676,7 @@ export const chapterResultFixture: ActionResult = {
     kind: 'faction-hq',
   },
   kind: 'chapter',
-  action: { id: 'finish-his-work.1', name: 'His ward book', type: 'chapter', tier: 3, times: 1 },
+  action: { id: 'finish-his-work.1', name: "The unit's list", type: 'chapter', tier: 3, times: 1 },
   stamp: 'failure',
   successes: 0,
   headline: 'Nobody home',
@@ -710,16 +713,16 @@ export const chapterResultFixture: ActionResult = {
     standing: null,
     item: {
       itemId: 'keep.ward-book',
-      name: 'His ward book',
+      name: "The unit's list",
       keepsake: true,
       art: assetFixture('item.document-folder', 512, 512, [128, 256]),
     },
-    hooks: ['Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2'],
+    hooks: ['Chapter 2, "Stand for the stone": from Tuesday 6 October, at Rank 2'],
   },
   again: null,
   story: {
     ambitionId: 'finish-his-work',
-    ambitionTitle: 'Finish His Work',
+    ambitionTitle: 'The Names on the Stone',
     chapter: 1,
     of: 12,
     approachId: 'sort',

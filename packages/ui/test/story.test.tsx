@@ -32,15 +32,15 @@ describe('StoryScreen (ADR 0013)', () => {
     const user = userEvent.setup();
     const onChoose = vi.fn();
     render(<StoryScreen view={originScreenFixture} onChoose={onChoose} />);
-    expect(screen.getByRole('heading', { name: 'The suitcase' })).toBeInTheDocument();
-    expect(screen.getByTestId('story-echo')).toHaveTextContent("You carried Holm's parcel.");
+    expect(screen.getByRole('heading', { name: 'The kitbag' })).toBeInTheDocument();
+    expect(screen.getByTestId('story-echo')).toHaveTextContent('You went for the work.');
     expect(screen.queryByTestId('story-prompt')).toBeNull();
     // The art and the helper's portrait.
     expect(document.querySelectorAll('img')).toHaveLength(2);
     expect(screen.getAllByTestId('story-choice')).toHaveLength(3);
     expect(screen.queryByTestId('story-confirm')).toBeNull();
     await settled();
-    await user.click(screen.getByRole('button', { name: 'Books. His, and a few of mine.' }));
+    await user.click(screen.getByRole('button', { name: 'Books, from the camp library. They let us keep those.' }));
     expect(onChoose).toHaveBeenCalledWith('books', expect.any(String));
     expect(screen.getByTestId('story-waits')).toHaveTextContent('This waits for you · Step 2 of 3');
     // The art panel crops at the focus point (ADR 0015).
@@ -53,19 +53,19 @@ describe('StoryScreen (ADR 0013)', () => {
     render(<StoryScreen view={platformScreenFixture} onChoose={onChoose} />);
     const rows = screen.getAllByRole('radio');
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveTextContent('Petra Holm · union organiser · Coalport');
+    expect(rows[0]).toHaveTextContent('Petra Holm · union organiser · at the bench by the door');
     expect(rows[0]!.querySelector('img')).not.toBeNull();
-    expect(screen.getByTestId('story-note')).toHaveTextContent('Whoever you help, you go with.');
+    expect(screen.getByTestId('story-note')).toHaveTextContent('One of these today.');
     const confirm = screen.getByTestId('story-confirm');
     expect(confirm).toBeDisabled();
-    expect(confirm).toHaveTextContent('Choose whom to help');
+    expect(confirm).toHaveTextContent('Choose one of the three');
     await settled();
     await user.click(rows[1]!);
     expect(rows[1]).toHaveAttribute('aria-checked', 'true');
     expect(onChoose).not.toHaveBeenCalled();
-    expect(confirm).toHaveTextContent("Help Stahl · the six o'clock to Duskwall");
+    expect(confirm).toHaveTextContent("Go for the stamp · the six o'clock to Duskwall");
     await user.click(rows[0]!);
-    expect(confirm).toHaveTextContent("Help Holm · the six o'clock to Coalport");
+    expect(confirm).toHaveTextContent("Go for the work · the six o'clock to Coalport");
     await user.click(confirm);
     expect(onChoose).toHaveBeenCalledWith('holm', expect.any(String));
   });
@@ -117,12 +117,12 @@ describe('StoryScreen (ADR 0013)', () => {
     const onCta = vi.fn();
     rerender(
       <StoryScreen
-        view={{ ...chapterCheckScreenFixture, cta: { label: 'Walk his ward', energy: 10, readyAt: null } }}
+        view={{ ...chapterCheckScreenFixture, cta: { label: 'Knock the three doors', energy: 10, readyAt: null } }}
         selectedApproach="sort"
         onCta={onCta}
       />,
     );
-    expect(screen.getByRole('radio', { checked: true })).toHaveTextContent('Sort the book by street first');
+    expect(screen.getByRole('radio', { checked: true })).toHaveTextContent('Sort the list by street first');
     await user.click(screen.getByTestId('story-cta'));
     expect(onCta).toHaveBeenCalled();
   });
@@ -131,13 +131,14 @@ describe('StoryScreen (ADR 0013)', () => {
 describe('StoryScreen: a double tap never reaches a screen the player has not read (QA M1)', () => {
   const next = {
     ...originScreenFixture,
-    title: 'The lining',
-    echo: 'You carry books.',
-    prompt: 'What did he leave you?',
+    title: 'The post',
+    echo: 'You brought books.',
+    // A test prompt: the focus test needs a question heading (the post itself has none).
+    prompt: 'Which envelope first?',
     choices: [
-      { id: 'ward-book', text: 'His ward book.', hint: null },
-      { id: 'letter', text: 'His letter from prison.', hint: null },
-      { id: 'marker', text: 'The marker.', hint: null },
+      { id: 'ward-book', text: "The unit's list.", hint: null },
+      { id: 'letter', text: 'The requisition order.', hint: null },
+      { id: 'marker', text: 'The ration page.', hint: null },
     ],
   };
 
@@ -148,7 +149,7 @@ describe('StoryScreen: a double tap never reaches a screen the player has not re
       const { rerender } = render(
         <StoryScreen view={originScreenFixture} screenKey="q2" settleOnMount onChoose={onChoose} />,
       );
-      const first = screen.getByRole('button', { name: "Tools, mostly. I'm better with my hands than my mouth." });
+      const first = screen.getByRole('button', { name: "Tools. I kept the workshop's kit when the workshop went." });
       expect(first).toHaveAttribute('aria-disabled', 'true');
       fireEvent.click(first, { detail: 1 });
       expect(onChoose).not.toHaveBeenCalled();
@@ -160,7 +161,7 @@ describe('StoryScreen: a double tap never reaches a screen the player has not re
       // The answer is back: the next question takes the same place. Its choices are new buttons,
       // and the second tap of the double tap, 200 ms later, does nothing.
       rerender(<StoryScreen view={next} screenKey="q3" onChoose={onChoose} />);
-      const again = screen.getByRole('button', { name: /^His ward book/ });
+      const again = screen.getByRole('button', { name: /^The unit's list/ });
       expect(again).not.toBe(first);
       act(() => vi.advanceTimersByTime(200));
       fireEvent.click(again, { detail: 1 });
@@ -180,7 +181,7 @@ describe('StoryScreen: a double tap never reaches a screen the player has not re
       const { rerender } = render(
         <StoryScreen view={originScreenFixture} screenKey="q2" settleOnMount onChoose={onChoose} />,
       );
-      const first = screen.getByRole('button', { name: 'Books. His, and a few of mine.' });
+      const first = screen.getByRole('button', { name: 'Books, from the camp library. They let us keep those.' });
       first.focus();
       // A key press (click detail 0) works at once: the player chose the button with the keyboard.
       fireEvent.click(first, { detail: 0 });
@@ -222,7 +223,7 @@ describe('StoryScreen: a double tap never reaches a screen the player has not re
     try {
       const onChoose = vi.fn();
       render(<StoryScreen view={originScreenFixture} screenKey="q2" onChoose={onChoose} />);
-      const first = screen.getByRole('button', { name: "Tools, mostly. I'm better with my hands than my mouth." });
+      const first = screen.getByRole('button', { name: "Tools. I kept the workshop's kit when the workshop went." });
       expect(first).not.toHaveAttribute('aria-disabled');
       fireEvent.click(first, { detail: 1 });
       expect(onChoose).toHaveBeenCalledWith('tools', 'q2');
@@ -255,7 +256,7 @@ describe('the paper and the HUD, slice 2', () => {
     const onOpen = vi.fn();
     render(<LettersRow letter={paperViewFixture.letters[0]!} onOpen={onOpen} />);
     const row = screen.getByTestId('letters-row');
-    expect(row).toHaveTextContent("From your father's things");
+    expect(row).toHaveTextContent("From the office's post");
     expect(row).toHaveTextContent('Chapter 1 is ready · 10 Energy');
     await user.click(row);
     expect(onOpen).toHaveBeenCalled();
@@ -275,13 +276,13 @@ describe('ResultModal, a chapter (§9.1)', () => {
   it('stamps Failure, shows the keepsake tile and the hook, Continue only', () => {
     render(<ResultModal result={chapterResultFixture} open onOpenChange={() => undefined} />);
     expect(screen.getByTestId('stamp')).toHaveTextContent('Failure');
-    expect(screen.getByText('Ambition · Finish His Work · Chapter 1 of 12')).toBeInTheDocument();
+    expect(screen.getByText('Ambition · The Names on the Stone · Chapter 1 of 12')).toBeInTheDocument();
     // Review 3: the keepsake is a receipt line with its picture; no opinion line on a chapter.
-    expect(screen.getByTestId('reward-item')).toHaveTextContent('Keepsake · His ward book');
+    expect(screen.getByTestId('reward-item')).toHaveTextContent("Keepsake · The unit's list");
     expect(screen.queryByTestId('reward-opinion')).toBeNull();
-    expect(screen.getByTestId('effect-item')).toHaveTextContent('Keepsake: His ward book');
+    expect(screen.getByTestId('effect-item')).toHaveTextContent("Keepsake: The unit's list");
     expect(screen.getByTestId('effect-hook')).toHaveTextContent(
-      'Chapter 2, "Stand where he stood": from Tuesday 6 October, at Rank 2',
+      'Chapter 2, "Stand for the stone": from Tuesday 6 October, at Rank 2',
     );
     const buttons = within(screen.getByTestId('result-buttons')).getAllByRole('button');
     expect(buttons.map((b) => b.textContent)).toEqual(['Continue']);

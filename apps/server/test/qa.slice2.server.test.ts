@@ -185,7 +185,7 @@ describe('permissions and validation (tech design §7.1)', () => {
       iron: 0,
       fxp: 0,
       homeCityId: 'coalport',
-      wearing: { name: "Your father's coat" },
+      wearing: { name: 'The demob suit' },
     });
     // The chapter's roll is the server's: a client seed is ignored and the stored seed replays.
     await caller.ambition.choose({ chapter: 1, choiceId: 'keep' });
@@ -414,7 +414,7 @@ describe('the kit and worn CHA (GDD §8.2, §21.4, ADR 0014)', () => {
         iron: 0,
         chaBase: 0,
         stats: { cha: 5 },
-        wearing: { name: "Your father's coat", cha: 5 },
+        wearing: { name: 'The demob suit', cha: 5 },
       });
       expect(me.keepsakes).toEqual([]);
       expect(me.partyCard).toMatchObject({
@@ -422,7 +422,7 @@ describe('the kit and worn CHA (GDD §8.2, §21.4, ADR 0014)', () => {
         rankTitle: content.faction(f).rankTitles[0],
       });
       const paper = await caller.paper.today();
-      expect(paper.desk.wearing).toEqual({ name: "Your father's coat", cha: 5 });
+      expect(paper.desk.wearing).toEqual({ name: 'The demob suit', cha: 5 });
     },
   );
 
@@ -505,13 +505,13 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
       .chapter('finish-his-work', 1)!
       .story!.choose.choices.find((c) => c.id === choice)!.text;
     expect(amb.screen?.echo).toBe(text.replace('{secretary}', 'Secretary Holm'));
-    expect(amb.screen?.cta).toEqual({ label: 'Walk his streets', energy: 10, readyAt: null });
+    expect(amb.screen?.cta).toEqual({ label: 'Knock the three doors', energy: 10, readyAt: null });
     const paper = await other.paper.today();
     expect(paper.letters).toEqual([
       {
         kind: 'chapter',
-        from: "From your father's things",
-        title: 'His ward book',
+        from: "From the office's post",
+        title: "The unit's list",
         chapter: 1,
         status: 'midway',
         energy: 10,
@@ -627,7 +627,7 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
       idempotencyKey: randomUUID(),
     });
     expect(ra.effects.hooks).toEqual([
-      'Chapter 2, "Stand where he stood": from Saturday 10 October, after your first vote',
+      'Chapter 2, "Stand for the stone": from Saturday 10 October, after your first vote',
     ]);
     const b = await chosen({ promise: 'a' });
     const rb = await b.caller.ambition.attempt({
@@ -635,10 +635,10 @@ describe('Ambition chapter 1 (GDD §17.1, ADR 0013)', () => {
       approachId: 'report',
       idempotencyKey: randomUUID(),
     });
-    expect(rb.effects.hooks).toEqual(['Chapter 2, "The night foreman": from Tuesday 6 October, at Level 6']);
+    expect(rb.effects.hooks).toEqual(['Chapter 2, "The night caretaker": from Tuesday 6 October, at Level 6']);
     expect(rb.effects.item).toMatchObject({
       itemId: 'keep.prison-letter',
-      name: 'The prison letter',
+      name: 'The requisition order',
       keepsake: true,
     });
     // After the chapter: no Letter, nothing open; chapter 2 is not playable.

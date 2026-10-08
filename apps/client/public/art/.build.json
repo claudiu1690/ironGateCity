@@ -1612,5 +1612,23 @@
     "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
     "bytes": 44492
+  },
+  "scene.demob-office-640.avif": {
+    "sourceHash": "9b5efce807184ec65a85960f30de611e3dab0cb3f5b4312982771f7baeded592",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 36125
+  },
+  "scene.demob-office-1280.avif": {
+    "sourceHash": "9b5efce807184ec65a85960f30de611e3dab0cb3f5b4312982771f7baeded592",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 134525
+  },
+  "scene.demob-office-640.webp": {
+    "sourceHash": "9b5efce807184ec65a85960f30de611e3dab0cb3f5b4312982771f7baeded592",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 52794
   }
 }

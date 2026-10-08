@@ -8,13 +8,13 @@ import { emptyTally } from './tally';
 import type { DailyTally, FactionId, TrainableStat } from './types';
 
 /**
- * The origin (GDD §7.1, review 4: *The Last Train In*, ADR 0073): three beats of one question each,
- * every answer with effects in this closed DSL. Beat 1's answer carries the party (`faction`), beat 2
- * the stats (+6 and +1), beat 3 the Ambition and his coat (`wear`). Content is validated against these
+ * The origin (GDD §7.1, review 4, ADR 0073; review 5's *Coming home*): three beats of one question
+ * each, every answer with effects in this closed DSL. Beat 1's answer carries the party (`faction`),
+ * beat 2 the stats (+6 and +1), beat 3 the Ambition and the demob suit (`wear`). Content is validated against these
  * types (`satisfies`); the rules resolve them. No CHA base, no Iron and no FXP seed any more.
  */
 export type OriginEffect =
-  /** Beat 1: whom you help is your party; `person` is that party's secretary (the {helper}). */
+  /** Beat 1: the problem you chase is your party; `person` is that party's secretary (the {helper}). */
   | { kind: 'faction'; factionId: FactionId; person: string }
   | { kind: 'stat'; stat: TrainableStat; value: number }
   /** Worn in place of the faction outfit; the outfit is kept (§21.4). */

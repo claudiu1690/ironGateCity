@@ -9,6 +9,7 @@ import POL from '../../../docs/design/slice-3-politics.md?raw';
 import { ContentError, loadContent, parseContent, rawContent } from '../src';
 import type { ContentInput } from '../src';
 import { R2_CLARION, R2_ORDERS, R2_ORDINANCES, R2_POLITICS, plainPolitical, plainProse } from './review2';
+import { expectChapterRestrung } from './review5';
 
 const content = loadContent();
 const deepCopy = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
@@ -180,34 +181,22 @@ describe('the real content, slice 3', () => {
   });
 });
 
-describe('Finish His Work chapter 2 (design §17.7)', () => {
+describe('Finish His Work chapter 2 (design §17.7; review 5: *Stand for the stone*, answers §19.10.2)', () => {
   it('the script word for word, its numbers, its requirement and the chapter-3 teaser', () => {
-    // Review 2 (answers §1.13): "cast a vote".
+    // Review 2 (answers §1.13): "cast a vote". Review 5: the strings are §19.10.2's; the flags, the
+    // approaches' stats and the numbers stay the slice-3 design's.
     const doc = plainProse(section(POL, '### 17.7', 'END-OF-DOCUMENT'));
     const ch = content.chapter('finish-his-work', 2)!;
     const s = ch.story!;
     expect(ch.requires).toEqual({ ballotCast: true });
-    expect(s.letterFrom).toBe('From the back of the ward book');
-    expect(s.choose.title).toBe('His election bill');
-    expect(doc).toContain(s.choose.narrative);
-    for (const c of s.choose.choices) {
-      expect(doc).toContain(`| ${c.text} | ${c.hint} | \`${c.flag}\` |`);
-    }
-    expect(doc).toContain(`*${s.check.title}*`);
-    expect(doc).toContain(s.check.narrative);
-    for (const a of s.check.approaches) expect(doc).toContain(`| ${a.text} |`);
-    expect([s.check.difficulty, s.check.energy, s.check.cta]).toEqual([14, 15, 'Stand where he stood']);
+    expectChapterRestrung(ch, '19.10.2');
+    for (const c of s.choose.choices) expect(doc).toContain(`| \`${c.flag}\` |`);
+    expect([s.check.difficulty, s.check.energy]).toEqual([14, 15]);
     expect(s.rewards).toEqual({
       success: { xp: 300, fxp: 80, iron: 150 },
       partial: { xp: 150, fxp: 40, iron: 75 },
       failure: { xp: 50, fxp: 0, iron: 0 },
     });
-    for (const o of ['success', 'partial', 'failure'] as const) {
-      expect(doc).toContain(`*${s.result[o].headline}*`);
-      // The Success text reads "in the front row" for "at the front" (the content-policy sweep
-      // allows "front" only as a row or a building; a deviation for the designer to confirm).
-      expect(doc.replace('at the front who', 'in the front row who')).toContain(s.result[o].body);
-    }
     expect(s.keepsake).toBe('keep.election-bill');
     expect(content.chapter('finish-his-work', 3)).toMatchObject({
       title: 'The deposit',

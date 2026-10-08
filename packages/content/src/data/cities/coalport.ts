@@ -180,10 +180,10 @@ export const coalport: City = {
       quarterId: 'coalport.mill',
       actions: [
         {
-          // Review 4 (answers §2.6, §29.2; ADR 0073): the favour from the platform, the first action.
+          // Review 5 (answers §19.5; review 4 §2.6, §29.2, ADR 0073): the favour, the first action.
           // Slot B of the welcome set; offered only while that order is open, once only.
           id: 'coalport.union-hall.favour',
-          name: 'Deliver the parcel',
+          name: 'Sign on',
           tier: 1,
           type: 'council',
           stats: ['best'],
@@ -193,12 +193,12 @@ export const coalport: City = {
           use: 'welcome',
           text: {
             success: {
-              headline: 'The parcel, counted in',
-              body: "The parcel is flyers, five hundred of them, and the man on the door counts them while you wait. \"She said you'd come.\" He writes your name in the book under hers.",
+              headline: 'Union men first',
+              body: "The sheet is a school exercise book and your name goes in it under forty others, with the trade and the years. \"Monday, seven, the gate,\" says the man at the table. \"Union men first.\" There's tea.",
             },
             partial: {
-              headline: 'Counted twice, in pencil',
-              body: "The man on the door is out and the parcel waits on a bench till he's back. He counts them twice and asks your name three times. It goes in the book, in pencil.",
+              headline: 'The second page',
+              body: "The first page is full and the second is for men without a card, which is you till Monday. He writes you in pencil and says come early. The tea is cold.",
             },
           },
         },

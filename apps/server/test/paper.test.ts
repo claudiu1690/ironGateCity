@@ -42,7 +42,7 @@ describe('paper.today (§3.3)', () => {
       group: 'personal',
       headline: 'Welcome to Coalport',
       // Review 4 (answers §2.6): the deck names the favour and the HQ.
-      deck: "Three orders from Secretary Holm below, and a letter from your father's things. Energy refills on its own, five points every ten minutes. Holm's parcel wants delivering at the Union Hall; start there.",
+      deck: "Three orders from Secretary Holm below, and the envelope you opened on the train. Energy refills on its own, five points every ten minutes. The rehiring sheet wants your name at the Union Hall; start there.",
     });
     expect(p.headlines[1]).toEqual({
       group: 'city',
@@ -54,8 +54,8 @@ describe('paper.today (§3.3)', () => {
     expect(p.letters).toEqual([
       {
         kind: 'chapter',
-        from: "From your father's things",
-        title: 'His ward book',
+        from: "From the office's post",
+        title: "The unit's list",
         chapter: 1,
         status: 'ready',
         energy: 10,
@@ -68,7 +68,7 @@ describe('paper.today (§3.3)', () => {
       actionId: 'coalport.union-hall.favour',
     });
     // Review 4 (GDD §7.1): every recruit wears his coat.
-    expect(p.desk.wearing).toEqual({ name: "Your father's coat", cha: 5 });
+    expect(p.desk.wearing).toEqual({ name: 'The demob suit', cha: 5 });
     expect(p.orders.issuer?.signature).toBe('— P.H.');
     expect(p.orders.items).toHaveLength(3);
     expect(p.desk).toMatchObject({

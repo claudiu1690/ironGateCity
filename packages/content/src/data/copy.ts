@@ -687,11 +687,12 @@ export const copy = {
   storyWaits: 'This waits for you',
   storyProgress: (step: number, of: number) => `Step ${step} of ${of}`,
   /**
-   * Review 4 (ADR 0073): the platform's confirm before a row is chosen (the row's own confirm, *Help
-   * Holm · the six o'clock to Coalport*, is content), and the line while the join is sent.
+   * Review 4 (ADR 0073): the counter's confirm before a row is chosen (the row's own confirm, *Go for
+   * the work · the six o'clock to Coalport*, is content), and the line while the join is sent. Review
+   * 5 (answers §19.2): nobody is helped at the counter now; one of the three problems is chosen.
    */
   arrival: {
-    chooseSomeone: 'Choose whom to help',
+    chooseSomeone: 'Choose one of the three',
     boarding: "The six o'clock is boarding…",
   },
   /** "+2 Strength, +1 Intelligence". */
