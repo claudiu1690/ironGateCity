@@ -218,9 +218,10 @@ describe('stat points: three stats and a reason (answers §7)', () => {
       // Review 2 (answers §1.2): the stat in full in a sentence; the codes stay on the buttons.
       'Most of the work in Duskwall uses Intelligence: 9 of 15 actions. Your best is Strength 13.',
     );
-    expect(screen.getByRole('button', { name: 'AGI 8 → 9' })).toBeInTheDocument();
+    // Review 5 (answers §3.2): a card per stat, named in full; its line under the name.
+    expect(screen.getByRole('button', { name: 'Agility 8 → 9' })).toBeInTheDocument();
     expect(screen.getByTestId('stat-line-str')).toHaveTextContent(
-      'Strength. Shift changes, loaders, posters, the gate steps: 4 of 15 actions here.',
+      /^Shift changes, loaders, posters, the gate steps: 4 of 15 actions here./,
     );
     expect(
       screen.getByText("Charisma isn't trained. It's worn: your coat, your suit, your party outfit."),

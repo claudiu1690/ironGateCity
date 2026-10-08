@@ -127,7 +127,7 @@ test.describe('phone 375×812', () => {
     if (await level.isVisible()) {
       // Review 5 (answers §4.1): *Place it* opens the picker as a sheet over the modal.
       await level.getByRole('button', { name: 'Place it' }).click();
-      await page.getByRole('dialog', { name: /^Level \d+ · one point to place$/ }).getByRole('button', { name: /^INT \d+ → \d+$/ }).click();
+      await page.getByRole('dialog', { name: /^Level \d+ · one point to place$/ }).getByRole('button', { name: /^Intelligence \d+ → \d+/ }).click();
       await expect(page.getByTestId('hud-points')).toHaveCount(0);
       // Review 4 #5 (answers §5): the line follows the placed point, with the stat in full.
       await expect(level).toContainText(/Level \d+ · Intelligence \d+ → \d+/);
@@ -269,8 +269,8 @@ test.describe('phone 375×812', () => {
     }
     await sheet.getByRole('button', { name: /^Close/ }).click();
     await page.getByTestId('hud-points').click();
-    // Review 4 (GDD §8.5): the reference recruit's STR is 8.
-    await page.getByRole('button', { name: 'STR 8 → 9' }).click();
+    // Review 4 (GDD §8.5): the reference recruit's STR is 8; review 5 (answers §3.2): its card.
+    await page.getByRole('button', { name: 'Strength 8 → 9' }).click();
     await expect(page.getByTestId('hud-points')).toHaveCount(0);
     await page.getByRole('link', { name: /^Me/ }).click();
     await expect(page.getByTestId('stat-str')).toHaveText('9');

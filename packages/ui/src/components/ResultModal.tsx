@@ -824,7 +824,12 @@ function ResultBody({
             stacked
             open={picking}
             onOpenChange={setPicking}
-            title={copy.levelUpLine(e.levelUp.to, statPoints.pending)}
+            // Review 5 (answers §3.2): *Level 5 · one more to place* once a first point is in.
+            title={copy.levelPointsToPlace(
+              e.levelUp.to,
+              statPoints.pending,
+              placedStats(seen.r === r ? seen.stats : null, statPoints.stats).length > 0,
+            )}
           >
             <StatPointsPanel
               pending={statPoints.pending}
@@ -834,7 +839,7 @@ function ResultBody({
               onPlace={onPlaceStat}
               placing={placing}
               onLater={() => setPicking(false)}
-              title={copy.pointsToPlace(statPoints.pending)}
+              title={null}
             />
           </BottomSheet>
         )}

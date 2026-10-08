@@ -165,6 +165,8 @@ for (const c of CASES) {
     // Review 5 (answers §17.2 item 6): a done order is its signed line (the progress row goes).
     await expect(modal.getByTestId('effect-order-signed')).toBeVisible();
     await expect(modal.getByTestId('effect-order')).toHaveCount(0);
+    // Review 5 fix round: the favour is once only, so its result offers no *Once more* / *Three more*.
+    await expect(modal.getByTestId('result-buttons').getByRole('button')).toHaveText(['Continue']);
     counting = false;
     // GDD §7.5: eight taps from sign-up to the first result.
     expect(taps).toBe(8);

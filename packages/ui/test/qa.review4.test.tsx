@@ -35,7 +35,7 @@ describe('the level-up line after the point is placed (note #5)', () => {
     render(<Harness pending0={1} />);
     // Review 5 (answers §4.1): the picker opens from *Place it*, as a sheet over the modal.
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Place it' }));
-    await userEvent.click(screen.getByRole('button', { name: /INT 12 → 13/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Intelligence 12 → 13/ }));
     expect(screen.getByTestId('effect-level')).not.toHaveTextContent('place your point');
   });
 
@@ -45,7 +45,7 @@ describe('the level-up line after the point is placed (note #5)', () => {
     render(<Harness pending0={1} />);
     // Review 5 (answers §4.1): the picker opens from *Place it*, as a sheet over the modal.
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Place it' }));
-    await userEvent.click(screen.getByRole('button', { name: /INT 12 → 13/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Intelligence 12 → 13/ }));
     expect(screen.getByTestId('effect-level')).toHaveTextContent('Level 2 · Intelligence 12 → 13');
   });
 

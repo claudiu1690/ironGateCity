@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { mapAtRest, openLocation, signUp, toTheCard, toTheCity } from './helpers';
+import { arrive, mapAtRest, openLocation, signUp, signUpOnly, toTheCard, toTheCity } from './helpers';
 
 /**
  * Design Review 2 (docs/review/2026-10-08-review-5.md; answers in docs/design/review-5-answers.md),
@@ -213,7 +213,8 @@ test('#4 results: the compact modal fits; only the middle scrolls; the level-up 
   });
   // Placing the point closes the sheet and the line names the stat.
   await level.getByTestId('place-it').dispatchEvent('click');
-  await picker.getByRole('button', { name: /^STR \d+ → \d+$/ }).click();
+  // Review 5 (answers §3.2): a paper card per stat, named in full.
+  await picker.getByRole('button', { name: /^Strength \d+ → \d+/ }).click();
   await expect(picker).toHaveCount(0);
   await expect(level).toHaveText(/^Level 7 · Strength \d+ → \d+$/);
 
@@ -368,5 +369,102 @@ test('#11 the six-hour day: the map turns at dusk without a reload; the plate sa
     await shot(page.getByTestId('city-plate').locator('..').locator('..'), 'phase1-plate-night');
   } finally {
     await page.request.post('/api/test/night', { data: { mode: 'day' } });
+  }
+});
+
+/**
+ * Review 5 #2 (answers §2): by day three main clouds and two wisps, every one large, and no puff; the
+ * map at the three sizes. Seven sprites drift (two mist bands low, three clouds in the middle, two wisps
+ * high); at 1440 × 900 none is narrower than a third of the screen.
+ */
+test('#2 the clouds: three big clouds and two wisps by day, no puff', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 390, height: 740 });
+  await signUp(page, 'Nell Ferris');
+  await toTheCity(page);
+  const clouds = page.getByTestId('map-clouds');
+  await expect(clouds).toHaveAttribute('data-time', 'day');
+  const sprites = clouds.locator('[data-cloud]');
+  for (const [w, h] of SIZES) {
+    await page.setViewportSize({ width: w, height: h });
+    await mapAtRest(page);
+    // The high wisps come last (their depth's delay).
+    await expect(sprites).toHaveCount(7);
+    const srcs = await sprites.evaluateAll((els) => els.map((e) => e.getAttribute('data-cloud') ?? ''));
+    expect(srcs.filter((s) => /puff/.test(s)), 'no puff by day').toEqual([]);
+    expect(srcs.filter((s) => /\/(bigcloud|cloud)-day-/.test(s))).toHaveLength(3);
+    expect(srcs.filter((s) => /wisp-day-/.test(s))).toHaveLength(2);
+    expect(await clouds.locator('[data-cloud-shadow]').count(), 'a shadow under each main cloud').toBe(3);
+    const widths = await sprites.evaluateAll((els) => els.map((e) => (e as HTMLElement).offsetWidth));
+    console.log(`clouds at ${w} × ${h}: ${widths.join(', ')} px`);
+    if (w === 1440)
+      for (const px of widths) expect(px, 'no cloud narrower than a third of the screen').toBeGreaterThanOrEqual(1440 / 3);
+    await shot(page, `clouds-map-${w}x${h}`);
+  }
+});
+
+/**
+ * Review 5 fix round: beat 1's asks as a title and a smaller line (answers §19; plan §23, phase 10
+ * deviation 2), so the three people show with the confirm on a 390 × 844 phone; and the welcome
+ * favour's result offers no *Once more* / *Three more* (it is once only), at the three sizes.
+ */
+test('fixes: beat 1 shows the three people with the confirm; the favour offers no again', async ({ page }) => {
+  test.setTimeout(150_000);
+  /**
+   * Each person shown above the sticky confirm's bar: the row's portrait whole and its title's first
+   * line (the ask's opening words). How far each title runs is logged.
+   */
+  const peopleShown = async () => {
+    const footer = (await page.getByTestId('story-footer').boundingBox())!;
+    const rows = page.getByTestId('story-row');
+    await expect(rows).toHaveCount(3);
+    const out: boolean[] = [];
+    const runs: number[] = [];
+    for (const r of await rows.all()) {
+      const title = (await r.getByTestId('story-row-title').boundingBox())!;
+      const face = (await r.locator('img').first().boundingBox())!;
+      out.push(Math.max(title.y + 21, face.y + face.height) <= footer.y + 0.5);
+      runs.push(Math.round(title.y + title.height - footer.y));
+    }
+    console.log(`  the titles end ${runs.join(', ')} px from the confirm's bar (negative: above it)`);
+    return out;
+  };
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signUpOnly(page, 'Mira Hale', 2);
+  await expect(page.getByRole('heading', { name: 'The counter' })).toBeVisible();
+  await expect(page.getByTestId('story-row-title').first()).toHaveText(
+    `"Your mill's sold, but Coalport's rehires on Monday, union men first."`,
+  );
+  await expect(page.getByTestId('story-row-rest').first()).toHaveText(
+    `"Put your name on my sheet now and you've a place at the gate and a bed at the union hostel tonight. The six o'clock to Coalport."`,
+  );
+  for (const [w, h] of [...SIZES, [375, 667]] as const) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(150);
+    const shown = await peopleShown();
+    console.log(`beat 1 at ${w} × ${h}: the three people shown with the confirm: ${shown.join(', ')}`);
+    if (h >= 844) expect(shown, `beat 1 at ${w} × ${h}`).toEqual([true, true, true]);
+    if (w !== 375) await shot(page, `beat1-${w}x${h}`);
+    else await shot(page, 'beat1-375x667');
+  }
+
+  // The favour: once only, so its result says Continue and nothing more.
+  await page.setViewportSize({ width: 390, height: 740 });
+  await arrive(page);
+  await page.getByRole('button', { name: 'To the city' }).click();
+  const sheet = page.getByRole('dialog');
+  const favour = sheet.locator('[data-testid^="ticket-"][data-highlight="true"]');
+  await expect(favour).toHaveCount(1);
+  await favour.getByRole('button', { name: /, once, 10 Energy$/ }).click();
+  const result = page.locator('[role=dialog]').filter({ has: page.getByTestId('result-buttons') });
+  await expect(result.getByTestId('stamp')).toHaveText(/^(Success|Partial)$/);
+  await settled(page);
+  await expect(result.getByTestId('again-once')).toHaveCount(0);
+  await expect(result.getByTestId('again-three')).toHaveCount(0);
+  await expect(result.getByTestId('result-buttons').getByRole('button')).toHaveText(['Continue']);
+  for (const [w, h] of SIZES) {
+    await page.setViewportSize({ width: w, height: h });
+    await settled(page);
+    await shot(page, `favour-result-${w}x${h}`);
   }
 });

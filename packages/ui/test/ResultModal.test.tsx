@@ -76,7 +76,7 @@ describe('ResultModal v2', () => {
     expect(d.getByRole('button', { name: 'Continue' })).toBeEnabled();
   });
 
-  it('a ×3 batch: "2 of 3", three rows, Rested and order tags, the order line, level-up with STR / INT', async () => {
+  it('a ×3 batch: "2 of 3", three rows, Rested and order tags, the order line, level-up with the stat cards', async () => {
     const user = userEvent.setup();
     const { dialog, onPlaceStat } = renderModal(batchResultFixture, {
       value: 25,
@@ -103,7 +103,7 @@ describe('ResultModal v2', () => {
     expect(d.getByTestId('effect-level')).toHaveTextContent('Level 2 · one point to place');
     // Review 5 (answers §4.1): *Place it* opens the picker as a sheet over the modal.
     await user.click(d.getByRole('button', { name: 'Place it' }));
-    await user.click(screen.getByRole('button', { name: 'STR 10 → 11' }));
+    await user.click(screen.getByRole('button', { name: 'Strength 10 → 11' }));
     expect(onPlaceStat).toHaveBeenCalledWith('str');
     await user.keyboard('{Escape}');
     // 25 Energy: once is fine, three need 30; the disabled button keeps its label and cost.

@@ -18,6 +18,7 @@ import {
   STORY_SETTLE_MS,
   StoryScreen,
 } from '../src';
+import { splitAsk } from '../src/components/Story';
 
 /** A new screen's choices take taps once they have settled on screen (QA M1). */
 const settled = () =>
@@ -68,6 +69,25 @@ describe('StoryScreen (ADR 0013)', () => {
     expect(confirm).toHaveTextContent("Go for the work · the six o'clock to Coalport");
     await user.click(confirm);
     expect(onChoose).toHaveBeenCalledWith('holm', expect.any(String));
+  });
+
+  it('beat 1 (review 5, answers §19): a long ask is its first sentence as the title, the rest a smaller line', async () => {
+    const user = userEvent.setup();
+    render(<StoryScreen view={platformScreenFixture} onChoose={() => undefined} />);
+    const [holm] = screen.getAllByRole('radio');
+    expect(within(holm!).getByTestId('story-row-title')).toHaveTextContent(
+      /^"Your mill's sold, but Coalport's rehires on Monday, union men first\."$/,
+    );
+    expect(within(holm!).getByTestId('story-row-rest')).toHaveTextContent(
+      /^"Put your name on my sheet now and you've a place at the gate and a bed at the union hostel tonight\. The six o'clock to Coalport\."$/,
+    );
+    // One line until the row is picked, then whole.
+    expect(within(holm!).getByTestId('story-row-rest')).toHaveClass('text-[13px]', 'line-clamp-1');
+    await settled();
+    await user.click(holm!);
+    expect(within(holm!).getByTestId('story-row-rest')).not.toHaveClass('line-clamp-1');
+    expect(splitAsk('Tools. I kept the kit.')).toEqual({ title: 'Tools.', rest: 'I kept the kit.' });
+    expect(splitAsk('One sentence only.')).toEqual({ title: 'One sentence only.', rest: null });
   });
 
   it('beat 1: the arrow keys move through the rows and pick one, as a radio group does', async () => {

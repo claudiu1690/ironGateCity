@@ -167,12 +167,12 @@ describe('#4 the level-up in the result modal (answers §4.1)', () => {
     const line = within(modal).getByTestId('effect-level');
     expect(line).toHaveTextContent('Level 2 · one point to place');
     // Not inline: no stat button in the modal until *Place it*.
-    expect(within(modal).queryByRole('button', { name: 'STR 10 → 11' })).toBeNull();
+    expect(within(modal).queryByRole('button', { name: 'Strength 10 → 11' })).toBeNull();
     expect(modal).toHaveClass('overflow-hidden');
     expect(within(modal).getByTestId('result-middle')).toHaveClass('overflow-y-auto', 'overscroll-contain');
     await user.click(within(line).getByRole('button', { name: 'Place it' }));
     const picker = screen.getByRole('dialog', { name: 'Level 2 · one point to place' });
-    await user.click(within(picker).getByRole('button', { name: 'STR 10 → 11' }));
+    await user.click(within(picker).getByRole('button', { name: 'Strength 10 → 11' }));
     expect(onPlaceStat).toHaveBeenCalledWith('str');
   });
 });

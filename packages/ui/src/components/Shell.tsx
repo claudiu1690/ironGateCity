@@ -1,5 +1,6 @@
 import { copy } from '@irongate/content/copy';
 import type { CharacterView, StatPointTarget } from '@irongate/rules';
+import { useId, useState } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import { cx } from '../format';
 
@@ -128,21 +129,33 @@ export interface StatPointsPanelProps {
   pending: number;
   level: number;
   stats: { str: number; int: number; agi: number };
-  /** Review 1 (§5.3): the counts behind the lead line and the stat lines; absent: buttons only. */
+  /** Review 1 (§5.3): the counts behind the lead line and the stat lines; absent: the cards alone. */
   guide?: CharacterView['statGuide'];
   onPlace: (stat: StatPointTarget) => void;
   placing?: StatPointTarget | null;
   onLater?: () => void;
-  /** The heading line; defaults to "Level 4 · 1 stat point to place". */
-  title?: string;
+  /**
+   * The heading line; defaults to *Level 4 · one point to place* (*one more to place* after a
+   * placement). Null leaves it out (a sheet whose title says it).
+   */
+  title?: string | null;
   tone?: 'paper' | 'ink';
+  /**
+   * Review 5 (answers §3.2): the last point placed, for *Strength 9 · +1*. Absent: the panel notes
+   * it itself, from the stat that rose while it was open.
+   */
+  placed?: { stat: StatPointTarget; value: number } | null;
 }
 
+const PICK = ['str', 'int', 'agi'] as const;
+type Pick3 = (typeof PICK)[number];
+
 /**
- * §5.3 (review 1, answers §7): one tap per point, on STR, INT or AGI. The choice explains itself:
- * a lead line from the residence city's actions (*Most of the work in Duskwall uses INT: 9 of 15
- * actions. Your best is STR 13.*), one line per stat, and the CHA footer. Each tap is its own
- * idempotency key (caller).
+ * §5.3 (review 1, answers §7; review 5, answers §3): one tap per point, on a paper card per stat in
+ * the ticket's style. The choice explains itself: a lead line from the residence city's actions, each
+ * card's own line (which actions here use it, what it opens later) and its tags (*Most used here*,
+ * *Your best*), and the Charisma footer. Each tap is its own idempotency key (caller). On an ink
+ * surface (`tone: 'ink'`) the cards stay paper, the ticket-on-modal pattern.
  */
 export function StatPointsPanel({
   pending,
@@ -154,16 +167,30 @@ export function StatPointsPanel({
   onLater,
   title,
   tone = 'paper',
+  placed: placedProp,
 }: StatPointsPanelProps) {
+  // The stat that rose while the panel was open: *Strength 9 · +1* (answers §3.2, the Placed state).
+  const now = `${stats.str}|${stats.int}|${stats.agi}`;
+  const [seen, setSeen] = useState({ now, stats });
+  const [rose, setRose] = useState<{ stat: Pick3; value: number } | null>(null);
+  if (seen.now !== now) {
+    const up = PICK.find((s) => stats[s] > seen.stats[s]);
+    setRose(up ? { stat: up, value: stats[up] } : null);
+    setSeen({ now, stats });
+  }
+  const placed = placedProp === undefined ? rose : placedProp;
   if (pending <= 0) return null;
   const ink = tone === 'ink';
   const sc = copy.statChoice;
   const muted = ink ? 'text-dim' : 'text-text-2';
+  const heading = title === undefined ? copy.levelPointsToPlace(level, pending, !!placed) : title;
   return (
-    <div className="flex flex-col gap-1.5" data-testid="stat-points">
-      <span className={cx('font-label text-[13px]', ink ? 'text-paper' : 'text-ink')}>
-        {title ?? copy.levelPointsToPlace(level, pending)}
-      </span>
+    <div className="flex flex-col gap-2" data-testid="stat-points">
+      {heading && (
+        <span className={cx('font-body text-[15px] font-semibold', ink ? 'text-paper' : 'text-ink')}>
+          {heading}
+        </span>
+      )}
       {guide && (
         <p
           className={cx('font-body text-[13px] leading-snug', ink ? 'text-paper' : 'text-ink')}
@@ -180,31 +207,32 @@ export function StatPointsPanel({
           )}
         </p>
       )}
-      <div className="flex flex-col gap-1.5">
-        {(['str', 'int', 'agi'] as const).map((s) => (
-          <div key={s} className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-            <button
-              type="button"
-              onClick={() => onPlace(s)}
-              disabled={!!placing}
-              aria-busy={placing === s || undefined}
-              className={cx(
-                'label-caps min-h-11 shrink-0 cursor-pointer self-start px-3 text-[12px] disabled:cursor-not-allowed disabled:opacity-60',
-                ink ? 'bg-paper text-ink hover:bg-paper-2' : 'bg-ink text-paper hover:bg-ink-2',
-              )}
-            >
-              {copy.statButton(s.toUpperCase(), stats[s])}
-            </button>
-            {guide && (
-              <span
-                className={cx('font-body text-[12px] leading-snug', muted)}
-                data-testid={`stat-line-${s}`}
-              >
-                {sc[s](guide.counts[s], guide.total)}
-              </span>
-            )}
-          </div>
-        ))}
+      <div className="flex flex-col gap-2" role="group" aria-label={copy.statChoice.cards}>
+        {PICK.map((s) => {
+          const tags: Array<'mostUsed' | 'best'> = [];
+          if (guide?.lead === s) tags.push('mostUsed');
+          if (guide?.best.stat === s) tags.push('best');
+          return (
+            <StatCard
+              key={s}
+              stat={s}
+              value={stats[s]}
+              line={guide ? sc[s](guide.counts[s], guide.total) : undefined}
+              tags={tags}
+              state={
+                placing === s
+                  ? 'placing'
+                  : placing
+                    ? 'dimmed'
+                    : placed?.stat === s && placed.value === stats[s]
+                      ? 'placed'
+                      : 'ready'
+              }
+              onPlace={() => onPlace(s)}
+              onInk={ink}
+            />
+          );
+        })}
       </div>
       {guide && <p className={cx('font-body text-[12px] italic', muted)}>{sc.footer}</p>}
       {onLater && (
@@ -212,13 +240,93 @@ export function StatPointsPanel({
           type="button"
           onClick={onLater}
           className={cx(
-            'label-caps min-h-11 cursor-pointer self-start border-[1.5px] px-3 text-[12px]',
-            ink ? 'border-dim text-dim' : 'border-ink text-ink',
+            'min-h-11 cursor-pointer self-start font-body text-[13px] underline decoration-dotted underline-offset-[3px]',
+            ink ? 'text-dim' : 'text-text-2',
           )}
         >
-          {copy.later}
+          {copy.statChoice.later}
         </button>
       )}
     </div>
+  );
+}
+
+export interface StatCardProps {
+  stat: Pick3;
+  /** The stat before the point. */
+  value: number;
+  /** `copy.statChoice[stat](…)`, when the guide is known. */
+  line?: string;
+  tags: Array<'mostUsed' | 'best'>;
+  state: 'ready' | 'placing' | 'dimmed' | 'placed';
+  onPlace: () => void;
+  /** On an ink surface the card is paper (the ticket-on-modal pattern); on paper it has no fill. */
+  onInk?: boolean;
+}
+
+/**
+ * Review 5 (answers §3.2): one stat's paper card, the whole card the tap (56 px at least, a 1.5 px ink
+ * rule, no fill, square corners). Left, the stat in full and its Courier line; right, *8 → 9* in
+ * Playfair and the tags. It inverts on press; while its call is in flight it stays inverted
+ * (`aria-busy`) and the others drop to 60 %; placed, it reads *Strength 9* with a Courier *+1*.
+ */
+export function StatCard({ stat, value, line, tags, state, onPlace, onInk = false }: StatCardProps) {
+  const name = copy.statNames[stat];
+  const lineId = useId();
+  const busy = state === 'placing';
+  return (
+    <button
+      type="button"
+      onClick={onPlace}
+      disabled={busy || state === 'dimmed'}
+      aria-busy={busy || undefined}
+      aria-label={state === 'placed' ? `${name} ${value} · +1` : `${name} ${value} → ${value + 1}`}
+      aria-describedby={line ? lineId : undefined}
+      className={cx(
+        'group relative grid min-h-14 w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-[1.5px] border-ink px-3 py-2 text-left text-ink transition-colors',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol',
+        'active:bg-ink active:text-paper disabled:cursor-default',
+        busy ? 'bg-ink text-paper' : onInk ? 'bg-paper' : 'bg-transparent',
+        state === 'dimmed' && 'opacity-60',
+      )}
+      data-testid={`stat-card-${stat}`}
+      data-state={state}
+    >
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="font-body text-[15px] leading-snug font-semibold">{name}</span>
+        {line && (
+          <span
+            id={lineId}
+            className="font-mono text-[11.5px] leading-snug opacity-85"
+            data-testid={`stat-line-${stat}`}
+          >
+            {line}
+          </span>
+        )}
+      </span>
+      {/* The number on the right: under the tags when there are any, so the line keeps its width. */}
+      <span className={cx('flex shrink-0 justify-end', tags.length > 0 ? 'self-end' : 'self-start pt-0.5')}>
+        {state === 'placed' ? (
+          <span
+            className="font-display text-[20px] leading-none font-black"
+            data-testid={`stat-placed-${stat}`}
+          >
+            {value} <span className="font-mono text-[12px] font-normal text-success">+1</span>
+          </span>
+        ) : (
+          <span className="font-display text-[20px] leading-none font-black whitespace-nowrap">
+            {value} → {value + 1}
+          </span>
+        )}
+      </span>
+      {tags.length > 0 && (
+        <span
+          className="label-caps absolute top-2.5 right-3 text-right text-[10px] leading-tight text-petrol group-active:text-paper"
+          data-testid={`stat-tags-${stat}`}
+        >
+          {tags.map((t) => copy.statChoice.tags[t]).join(' · ')}
+        </span>
+      )}
+    </button>
   );
 }

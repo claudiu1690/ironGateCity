@@ -70,7 +70,43 @@ describe('the sky: three depths', () => {
       const paths = CLOUDS[time].flatMap((d) => cloudPaths(d, box, 600, opts));
       expect(paths.length + paths.filter((p) => p.shadow).length).toBe(spriteCount(CLOUDS[time]));
     }
-    expect(spriteCount(CLOUDS.day)).toBeGreaterThanOrEqual(12);
+    // Review 5 (answers §2): fewer and larger: 10 by day (2 mist, 3 clouds and their shadows, 2
+    // wisps), 8 by night.
+    expect(spriteCount(CLOUDS.day)).toBe(10);
+    expect(spriteCount(CLOUDS.night)).toBe(8);
+  });
+
+  it('review 5 (answers §2): three main clouds from the five big and original sprites, two wisps, no puff', () => {
+    const mid = depth('day', 'middle').kinds;
+    expect(mid.map((k) => k.count)).toEqual([2, 1]);
+    expect(mid.map((k) => k.size)).toEqual([
+      [0.48, 0.62],
+      [0.36, 0.46],
+    ]);
+    for (const k of mid) {
+      expect(k.sprites.map((s) => s.src.split('/').pop()!.replace(/\..*$/, '')).sort()).toEqual([
+        'bigcloud-day-1',
+        'bigcloud-day-2',
+        'cloud-day-1',
+        'cloud-day-2',
+        'cloud-day-3',
+      ]);
+      expect(k.shadow).toEqual({ opacity: 0.22, dx: 0.1, dy: 0.18, blur: 14 });
+    }
+    const high = depth('day', 'high').kinds;
+    expect(high).toHaveLength(1);
+    expect(high[0]).toMatchObject({ count: 2, size: [0.34, 0.46], minPx: 260, maxShare: 0.6, opacity: [0.5, 0.7] });
+    const day = CLOUDS.day.flatMap((d) => d.kinds);
+    expect(day.flatMap((k) => k.sprites).some((s) => /puff/.test(s.src))).toBe(false);
+    // No day kind but the low mist under a third of the picture; none under 260 px.
+    for (const k of day) {
+      if (k.sprites.some((s) => /mist/.test(s.src))) continue;
+      expect(k.size[0]).toBeGreaterThanOrEqual(0.34);
+    }
+    for (const k of day) expect(k.minPx).toBeGreaterThanOrEqual(260);
+    // By night the middle's curls: two at 0.26–0.36, at least 220 px.
+    const curls = depth('night', 'middle').kinds[1]!;
+    expect(curls).toMatchObject({ count: 2, size: [0.26, 0.36], minPx: 220 });
   });
 
   it('higher is faster and has more parallax; the high wisps load last; shadows in the middle only', () => {

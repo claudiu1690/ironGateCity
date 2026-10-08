@@ -355,19 +355,28 @@ export const copy = {
     tomorrow: "Tomorrow's orders are in the morning paper",
     carryOn: 'Carry on',
   },
-  /** Review 1 (answers §7): the stat-point choice screen. */
+  /**
+   * Review 1 (answers §7): the stat-point choice screen. Review 5 (answers §3.2): each stat is a paper
+   * card; its line is the stat's own words under the name (the name is the card's title).
+   */
   statChoice: {
     lead: (city: string, stat: string, n: number, m: number, best: string, v: number, same: boolean) =>
       same
         ? `Most of the work in ${city} uses ${stat}: ${n} of ${m} actions, and it is your best, at ${v}.`
         : `Most of the work in ${city} uses ${stat}: ${n} of ${m} actions. Your best is ${best} ${v}.`,
     str: (n: number, m: number) =>
-      `Strength. Shift changes, loaders, posters, the gate steps: ${n} of ${m} actions here. Later, security work, marches and holding your own.`,
+      `Shift changes, loaders, posters, the gate steps: ${n} of ${m} actions here. Later, security work, marches and holding your own.`,
     int: (n: number, m: number) =>
-      `Intelligence. Queues, clerks, meetings, the records: ${n} of ${m} actions here. Later, espionage, exposés and the better-paid desks.`,
+      `Queues, clerks, meetings, the records: ${n} of ${m} actions here. Later, espionage, exposés and the better-paid desks.`,
     agi: (n: number, m: number) =>
-      `Agility. Flyers, chalk, the paper round: ${n} of ${m} actions here. Later, stealth work and getting away clean.`,
+      `Flyers, chalk, the paper round: ${n} of ${m} actions here. Later, stealth work and getting away clean.`,
     footer: "Charisma isn't trained. It's worn: your coat, your suit, your party outfit.",
+    /** The cards' tags (answers §3.2): the city's lead stat, the player's highest. */
+    tags: { mostUsed: 'Most used here', best: 'Your best' },
+    /** The cards' group, for a screen reader. */
+    cards: 'Where the point goes',
+    /** The text button under the cards (answers §3.2). */
+    later: 'Choose later · nothing is lost',
   },
   /**
    * Review 2 (answers §2, GDD §8.4): the odds are a word, never a number; a result that isn't a
@@ -594,9 +603,14 @@ export const copy = {
   /** The waiting badge (answers §7): "1 point to place · nothing is lost by choosing later". */
   pointsToPlace: (n: number) =>
     `${n} ${n === 1 ? 'point' : 'points'} to place · nothing is lost by choosing later`,
-  levelPointsToPlace: (level: number, n: number) =>
-    `Level ${level} · ${n} stat ${n === 1 ? 'point' : 'points'} to place`,
-  statButton: (stat: string, from: number) => `${stat} ${from} → ${from + 1}`,
+  /**
+   * Review 5 (answers §3.2): the picker's heading, *Level 4 · one point to place* / *Level 5 · two
+   * points to place*; after a point is placed with another waiting, *Level 5 · one more to place*.
+   */
+  levelPointsToPlace: (level: number, n: number, more = false) =>
+    more && n === 1
+      ? `Level ${level} · one more to place`
+      : `Level ${level} · ${countWord(n)} ${n === 1 ? 'point' : 'points'} to place`,
   /**
    * Review 5 (answers §4.1, §3.2): the result modal's level-up line, *Level 4 · one point to place*;
    * with two waiting, *Level 5 · two points to place*. Beside it, *Place it* opens the picker.

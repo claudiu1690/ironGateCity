@@ -100,7 +100,8 @@ const s = (name: string, w: number, h: number, mask?: string): CloudSprite => ({
 const CLOUD = [s('cloud-day-1', 1024, 538), s('cloud-day-2', 1024, 614), s('cloud-day-3', 1024, 456)];
 /** The two large billowing clouds. */
 const BIG = [s('bigcloud-day-1', 1100, 659), s('bigcloud-day-2', 1100, 841)];
-const PUFF = [1, 2, 3, 4, 5, 6].map((n) => s(`puff-day-${n}`, 640, [291, 449, 375, 357, 375, 363][n - 1]!));
+/** Review 5 (answers §2): the main clouds' pool, the big and the original sprites (the puffs left the sky). */
+const MAIN = [...BIG, ...CLOUD];
 const WISP = [
   s('wisp-day-1', 1200, 541),
   s('wisp-day-2', 1040, 672),
@@ -118,14 +119,15 @@ const CURL = [
   s('mistcurl-night-5', 800, 489),
 ];
 
-const SHADOW = { opacity: 0.25, dx: 0.12, dy: 0.2, blur: 8 };
+/** Review 5 (answers §2): a bigger cloud casts a softer shadow. */
+const SHADOW = { opacity: 0.22, dx: 0.1, dy: 0.18, blur: 14 };
 const NIGHT_TINT = { color: [196, 208, 222] as const, keep: 0.35, alpha: 2.6 };
 const CURL_TINT = { color: [196, 208, 222] as const, keep: 0.35, alpha: 2.2 };
 
 /**
- * At most 14 images a time of day, shadows included (phones stay smooth): by day 2 mist bands low,
- * 4 clouds (a big one, an original, two puffs) with their 4 shadows in the middle, 3 wisps and a small
- * puff high; by night 3 fog patches and a mist curl low, 2 fog patches and 3 curls in the middle.
+ * Review 5 (answers §2): fewer and larger. By day 10 images, shadows included: 2 mist bands low, 3
+ * clouds from the big and original sprites with their 3 shadows in the middle, 2 wisps high (no
+ * puff); by night 8: 3 fog patches and a mist curl low, 2 fog patches and 2 curls in the middle.
  */
 export const CLOUDS: CloudConfig = {
   day: [
@@ -154,12 +156,13 @@ export const CLOUDS: CloudConfig = {
       delayMs: 0,
       kinds: [
         {
-          sprites: BIG,
-          count: 1,
-          size: [0.42, 0.5],
-          minPx: 260,
-          maxShare: 0.6,
-          cross: [130, 170],
+          // Review 5 (answers §2): the two main clouds, from the five big and original sprites.
+          sprites: MAIN,
+          count: 2,
+          size: [0.48, 0.62],
+          minPx: 420,
+          maxShare: 0.8,
+          cross: [140, 190],
           heading: [-6, 8],
           opacity: [0.5, 0.6],
           band: [0.05, 0.95],
@@ -167,27 +170,15 @@ export const CLOUDS: CloudConfig = {
           shadow: SHADOW,
         },
         {
-          sprites: CLOUD,
+          // The third cloud, from the same pool, a size down.
+          sprites: MAIN,
           count: 1,
-          size: [0.3, 0.38],
-          minPx: 200,
-          maxShare: 0.48,
-          cross: [100, 150],
+          size: [0.36, 0.46],
+          minPx: 320,
+          maxShare: 0.6,
+          cross: [110, 150],
           heading: [-8, 8],
           opacity: [0.5, 0.6],
-          band: [0.05, 0.95],
-          mirror: 0.5,
-          shadow: SHADOW,
-        },
-        {
-          sprites: PUFF,
-          count: 2,
-          size: [0.13, 0.2],
-          minPx: 110,
-          maxShare: 0.26,
-          cross: [90, 130],
-          heading: [-8, 10],
-          opacity: [0.45, 0.58],
           band: [0.05, 0.95],
           mirror: 0.5,
           shadow: SHADOW,
@@ -201,26 +192,14 @@ export const CLOUDS: CloudConfig = {
       kinds: [
         {
           sprites: WISP,
-          count: 3,
-          size: [0.22, 0.34],
-          minPx: 150,
-          maxShare: 0.45,
+          count: 2,
+          size: [0.34, 0.46],
+          minPx: 260,
+          maxShare: 0.6,
           cross: [40, 80],
           heading: [-2, 14],
-          opacity: [0.6, 0.8],
+          opacity: [0.5, 0.7],
           band: [0, 1],
-          mirror: 0.5,
-        },
-        {
-          sprites: PUFF,
-          count: 1,
-          size: [0.07, 0.1],
-          minPx: 70,
-          maxShare: 0.14,
-          cross: [50, 70],
-          heading: [0, 12],
-          opacity: [0.45, 0.55],
-          band: [0.1, 0.9],
           mirror: 0.5,
         },
       ],
@@ -283,9 +262,9 @@ export const CLOUDS: CloudConfig = {
         },
         {
           sprites: CURL,
-          count: 3,
-          size: [0.18, 0.28],
-          minPx: 140,
+          count: 2,
+          size: [0.26, 0.36],
+          minPx: 220,
           maxShare: 0.4,
           cross: [100, 150],
           heading: [-6, 8],

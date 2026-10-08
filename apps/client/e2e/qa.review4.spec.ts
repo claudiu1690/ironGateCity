@@ -792,7 +792,7 @@ test('R4-QA-01: after placing the point the line reads "Level 2 · Strength 8 �
   // Review 5 (answers §4.1): the line and *Place it*; the picker is a sheet over the modal.
   await expect(line).toContainText('Level 2 · one point to place');
   await line.getByRole('button', { name: 'Place it' }).click();
-  await page.getByRole('dialog', { name: 'Level 2 · one point to place' }).getByRole('button', { name: 'STR 8 → 9' }).click();
+  await page.getByRole('dialog', { name: 'Level 2 · one point to place' }).getByRole('button', { name: 'Strength 8 → 9' }).click();
   await expect(line).not.toContainText('to place');
   await expect(line).toContainText('Level 2 · Strength 8 → 9');
 });

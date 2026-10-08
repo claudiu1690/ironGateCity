@@ -1,4 +1,5 @@
 import { copy } from '@irongate/content/copy';
+import { isWelcomeAction } from '@irongate/content';
 import type { GameContent, LocatedAction } from '@irongate/content';
 import type { CharacterDoc, CityDoc } from '@irongate/db';
 import {
@@ -9,6 +10,8 @@ import {
   FIRED_UP,
   NO_MODIFIERS,
   actionEnergy,
+  barredByRecord,
+  dayKey,
   itemSpec,
   orderDoneFxp,
   projectEnergy,
@@ -36,7 +39,8 @@ import type {
   TrainingResolution,
 } from '@irongate/rules';
 import { pickArt } from './art';
-import { namedStanding, orderText, orderVars, rankTitle, toCharacterView } from './views';
+import { recordLevelOf } from './risk';
+import { namedStanding, orderText, orderVars, rankTitle, toCharacterView, welcomeOffered } from './views';
 
 const NONE: RewardLine = { base: 0, bonus: 0, total: 0 };
 
@@ -104,6 +108,23 @@ function orderEffects(content: GameContent, c: Common): OrderEffect[] {
         fxp: done ? orderDoneFxp(t) : 0,
       },
     ];
+  });
+}
+
+/**
+ * Review 5 (fix round, the favour's *Once more*): would a repeat of this ticket be refused? A
+ * welcome favour is once only (ADR 0073); any welcome ticket is gone once its order is done; and a
+ * record that this act made Notorious bars the place from here (`RECORD_BARRED`). Such a result
+ * offers no *Once more* / *Three more*, only *Continue*.
+ */
+function repeatRefused(i: ResultInput): boolean {
+  const { content, located, after, now } = i;
+  if (isWelcomeAction(located.action)) return true;
+  const today = dayKey(now);
+  if (!welcomeOffered(content, after, located.action, today)) return true;
+  return barredByRecord(recordLevelOf(after, today), {
+    kind: located.location.kind,
+    ...(located.location.factionId ? { factionId: located.location.factionId } : {}),
   });
 }
 
@@ -219,8 +240,8 @@ export function buildActionResult(i: ResultInput): ActionResult {
       };
     }
     const cost = 'energy' in action ? actionEnergy(action.energy, action.type, m) : 0;
-    // Slice 5 (design §11.2): ×1 only on rival ground.
-    again = { cost1: cost, cost3: i.street ? null : cost * 3 };
+    // Slice 5 (design §11.2): ×1 only on rival ground. Review 5: none where a repeat is refused.
+    again = repeatRefused(i) ? null : { cost1: cost, cost3: i.street ? null : cost * 3 };
   } else {
     const r = i.resolution;
     stamp = 'trained';
@@ -237,11 +258,13 @@ export function buildActionResult(i: ResultInput): ActionResult {
       if (src.effects.some((e) => e.kind === 'trainingEnergyPct'))
         bonusTags.push({ id: src.id, label: src.name, note: `${r.energy.cost} Energy` });
     // ×1 only (§8.5); review 3: the repeat button names the action's verb ("Study again · 46 Energy").
-    again = {
-      cost1: trainingEnergy(trainingCost(r.stat.after), m),
-      cost3: null,
-      ...('verb' in action ? { verb: action.verb } : {}),
-    };
+    again = repeatRefused(i)
+      ? null
+      : {
+          cost1: trainingEnergy(trainingCost(r.stat.after), m),
+          cost3: null,
+          ...('verb' in action ? { verb: action.verb } : {}),
+        };
   }
 
   const g = i.gains;

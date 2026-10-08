@@ -305,8 +305,12 @@ describe('content vs docs/design/slice-1-content.md', () => {
       '1 point to place · nothing is lost by choosing later',
       '2 points to place · nothing is lost by choosing later',
     ]);
-    expect(copy.levelPointsToPlace(4, 1)).toBe('Level 4 · 1 stat point to place');
-    expect(copy.statButton('STR', 10)).toBe('STR 10 → 11');
+    // Review 5 (answers §3.2): the picker's heading in words; the stat buttons are cards now.
+    expect(copy.levelPointsToPlace(4, 1)).toBe('Level 4 · one point to place');
+    expect(copy.levelPointsToPlace(5, 2)).toBe('Level 5 · two points to place');
+    expect(copy.levelPointsToPlace(5, 1, true)).toBe('Level 5 · one more to place');
+    expect(copy.statChoice.later).toBe('Choose later · nothing is lost');
+    expect(copy.statChoice.tags).toEqual({ mostUsed: 'Most used here', best: 'Your best' });
     // Review 5 (answers §4.1, §3.2): *Level 5 · two points to place*.
     expect(copy.levelUpLine(5, 2)).toBe('Level 5 · two points to place');
     expect(copy.levelUpLine(2, 1)).toBe('Level 2 · one point to place');

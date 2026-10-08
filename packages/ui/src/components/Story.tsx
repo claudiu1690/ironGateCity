@@ -98,6 +98,24 @@ function useSettled(key: string, settleMs: number, settleOnMount: boolean): bool
   return settleMs <= 0 || settledKey === key;
 }
 
+/**
+ * Review 5 (answers §19; plan §23, phase 10 deviation 2): a beat-1 row's ask as a title and a line.
+ * The first sentence is the title, the rest the line; a quoted ask keeps its quotes on both (the
+ * speech goes on). A one-sentence text is all title.
+ */
+export function splitAsk(text: string): { title: string; rest: string | null } {
+  const t = text.trim();
+  const open = t.startsWith('"') ? '"' : t.startsWith('“') ? '“' : '';
+  const close = open === '"' ? '"' : open ? '”' : '';
+  const inner = open && t.endsWith(close) ? t.slice(open.length, t.length - close.length) : t.slice(open.length);
+  const end = inner.search(/[.?!](?=\s)/);
+  if (end < 0) return { title: t, rest: null };
+  const first = inner.slice(0, end + 1).trim();
+  const rest = inner.slice(end + 1).trim();
+  if (!rest) return { title: t, rest: null };
+  return { title: `${open}${first}${close}`, rest: `${open}${rest}${close}` };
+}
+
 export interface StoryScreenProps {
   view: StoryScreenView;
   /**
@@ -288,6 +306,7 @@ export function StoryScreen({
               >
                 {view.choices.map((c) => {
                   const on = selected?.id === c.id;
+                  const ask = splitAsk(c.text);
                   return (
                     <button
                       key={`${key}:${c.id}`}
@@ -302,7 +321,7 @@ export function StoryScreen({
                       }}
                       onKeyDown={onRadioArrowKey}
                       className={cx(
-                        'flex min-h-14 w-full scroll-mb-36 items-start gap-3 border-[1.5px] border-ink px-3 py-2.5 text-left',
+                        'flex min-h-14 w-full scroll-mb-36 items-start gap-3 border-[1.5px] border-ink px-3 py-2 text-left',
                         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol',
                         on ? 'bg-ink text-paper' : 'bg-paper-card hover:bg-paper',
                         settled ? 'cursor-pointer' : 'cursor-default',
@@ -319,8 +338,22 @@ export function StoryScreen({
                           className="mt-0.5 size-10 shrink-0 rounded-full border-[1.5px] border-current object-cover object-top"
                         />
                       )}
-                      <span className="flex min-w-0 flex-1 flex-col gap-1">
-                        <span className="font-body text-[15px] leading-snug font-semibold">{c.text}</span>
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        {/* Review 5 (answers §19, plan §23 phase 10 deviation 2): a long ask prints its
+                            first sentence as the row's title and the rest as a smaller line (one line
+                            until the row is picked, then whole), so the three people show on a phone
+                            with the confirm. */}
+                        <span className="font-body text-[15px] leading-snug font-semibold" data-testid="story-row-title">
+                          {ask.title}
+                        </span>
+                        {ask.rest && (
+                          <span
+                            className={cx('font-body text-[13px] leading-snug opacity-85', !on && 'line-clamp-1')}
+                            data-testid="story-row-rest"
+                          >
+                            {ask.rest}
+                          </span>
+                        )}
                         {c.lines?.map((line) => (
                           <span key={line} className="font-mono text-[11.5px] leading-snug opacity-85">
                             {line}

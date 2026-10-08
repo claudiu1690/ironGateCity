@@ -611,7 +611,7 @@ describe('HudBar v2', () => {
     await user.click(
       screen.getByRole('button', { name: '1 point to place · nothing is lost by choosing later' }),
     );
-    await user.click(screen.getByRole('button', { name: 'INT 12 → 13' }));
+    await user.click(screen.getByRole('button', { name: 'Intelligence 12 → 13' }));
     expect(onPlaceStat).toHaveBeenCalledWith('int');
   });
 
