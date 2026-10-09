@@ -1,4 +1,4 @@
-import { HEALTH } from './constants';
+import { HEALTH, TREATMENT } from './constants';
 
 /**
  * Health (GDD §6.1, design §9.1, ADR 0033): max 100 + 5 a Level after the first, +10 every ten minutes from the
@@ -43,4 +43,30 @@ export function healthFullAt(t: HealthTimer, now: number): number | null {
   const p = projectHealth(t, now);
   if (p.damage <= 0) return null;
   return p.at + Math.ceil(p.damage / HEALTH.regen) * HEALTH.tickMs;
+}
+
+/** Review 5 (answers §8): the treatment's price for `missing` points: 0 when none, else 1 a point, at least 10. */
+export function treatmentPrice(missing: number): number {
+  if (missing <= 0) return 0;
+  return Math.max(TREATMENT.minIron, Math.ceil(missing) * TREATMENT.perPoint);
+}
+
+/**
+ * Review 5 (answers §8, tech design §6.2): *Get patched up* now. The price comes from Health
+ * projected at `now` (a regen tick lowers it); the timer after is full (damage 0 at `now`).
+ */
+export function treat(i: {
+  health: HealthTimer;
+  level: number;
+  iron: number;
+  now: number;
+}):
+  | { ok: true; price: number; before: number; after: number; health: HealthTimer }
+  | { ok: false; reason: 'FULL_HEALTH' | 'NOT_ENOUGH_IRON'; price: number } {
+  const max = healthMax(i.level);
+  const before = healthNow(i.health, i.now, i.level);
+  const price = treatmentPrice(max - before);
+  if (price === 0) return { ok: false, reason: 'FULL_HEALTH', price: 0 };
+  if (i.iron < price) return { ok: false, reason: 'NOT_ENOUGH_IRON', price };
+  return { ok: true, price, before, after: max, health: { damage: 0, at: i.now } };
 }

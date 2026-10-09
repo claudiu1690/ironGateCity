@@ -127,7 +127,7 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
  * words the reason from it, and computes nothing else. Full-screen on phones.
  */
 /** Slice 5: the cells', the infirmary's and the record's results: a card, not a half-empty screen. */
-const CARD_ACTS = new Set(['bail', 'released', 'deported', 'walkOut', 'discharged', 'strike']);
+const CARD_ACTS = new Set(['bail', 'released', 'deported', 'walkOut', 'discharged', 'strike', 'treated']);
 
 export function ResultModal(props: ResultModalProps) {
   const { result, open, onOpenChange } = props;
@@ -262,7 +262,7 @@ function PoliticalBody({
       text:
         r.act === 'bail'
           ? copy.risk.bailPaid(spent)
-          : r.act === 'walkOut'
+          : r.act === 'walkOut' || r.act === 'treated'
             ? copy.risk.wardPaid(spent)
             : copy.ironLeft(spent, formatNumber(k.iron.after)),
     });

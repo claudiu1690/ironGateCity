@@ -378,6 +378,12 @@ export const HEALTH = {
   discharge: { energy: 5, share: 0.5 },
 } as const;
 
+/**
+ * Review 5 (answers §8, GDD §19.1, §18.3): *Get patched up* at any infirmary, a walk-in: one Iron a
+ * point of Health missing, at least 10; no Energy; Health to its maximum at once.
+ */
+export const TREATMENT = { perPoint: 1, minIron: 10 } as const;
+
 /** §19.2 (design §8.2): the sentence and bail. */
 export const CELLS = {
   /** Review 4 #20 (GDD §19.2, ADR 0078): was 10. */

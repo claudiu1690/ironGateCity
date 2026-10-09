@@ -652,6 +652,10 @@ export async function getCityView(
         ...(content.servicesOf(city.id)?.cells.location.id === location.id ? { cellsHere: true } : {}),
         // Review 4 (ADR 0077): the council's hall carries the council's blocks (`council.hall`).
         ...(city.council?.hall.locationId === location.id ? { hall: true } : {}),
+        // Review 5 (answers §8): an infirmary's Treatment card; none while held (the ward's ways out).
+        ...(location.treatment
+          ? { treatment: c.held && c.held.state === 'in' ? null : { carer: location.treatment.carer } }
+          : {}),
         // Review 4 #9 (answers §9.3): the Lodgings card (Tram Junction).
         ...(location.lodgings
           ? { lodgings: lodgingsView(content, c, location, today, { city: state, residence: residenceDoc }) }

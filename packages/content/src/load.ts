@@ -9,6 +9,7 @@ import {
   STORY_PLACEHOLDERS,
   TIME_TOKENS,
   isPoliticalCondition,
+  jobPay,
   isPoliticalTemplate,
   placeholdersIn,
   LOCAL_CONDITION_KINDS,
@@ -416,6 +417,11 @@ export function parseContent(raw: unknown): Content {
       problems.push(`location "${lodgings[0]!.id}": lodgings only in ${ROOM.cityId} (the room's rule)`);
     city.locations.forEach((location, i) => {
       unique('location', location.id);
+      // Review 5 (answers §8, tech design §6.2): every infirmary carries the Treatment card, and only they.
+      if (location.kind === 'hospital' && !location.treatment)
+        problems.push(`location "${location.id}": a hospital needs its treatment (the carer)`);
+      if (location.kind !== 'hospital' && location.treatment)
+        problems.push(`location "${location.id}": treatment only at a hospital`);
       const quarter = quarterById.get(location.quarterId);
       if (!quarter) {
         problems.push(
@@ -495,6 +501,7 @@ export function parseContent(raw: unknown): Content {
     if (!locationById.has(job.locationId))
       problems.push(`job "${job.id}": unknown location "${job.locationId}"`);
   }
+  problems.push(...jobLadderProblems(content.jobs, (id) => locationById.get(id)?.city.id ?? null));
 
   // NPCs.
   const npcById = new Map<string, Npc>();
@@ -1464,3 +1471,30 @@ export function getContent(): GameContent {
 }
 
 export { isCheckedAction };
+
+/**
+ * Review 5 (answers §5.2, GDD §9.2): *a job that asks more pays more*. In each city a job's rung is
+ * `[unlock.level, its highest stat requirement]`, compared in that order; a job on a higher rung pays
+ * at least a tenth more than the best pay (the member's fifth counted) of every job on a lower rung.
+ * Rungs are set by the requirement, never by the city. Exported for the content checks.
+ */
+export function jobLadderProblems(
+  jobs: readonly Job[],
+  cityOf: (locationId: string) => string | null,
+): string[] {
+  const rung = (j: Job): [number, number] => [j.unlock.level, Math.max(0, ...Object.values(j.unlock.stats ?? {}))];
+  const above = (a: [number, number], b: [number, number]) => a[0] > b[0] || (a[0] === b[0] && a[1] > b[1]);
+  const bestPay = (j: Job) => Math.max(...FACTION_IDS.map((f) => jobPay(j, f)));
+  const out: string[] = [];
+  for (const b of jobs)
+    for (const a of jobs) {
+      const city = cityOf(a.locationId);
+      if (a === b || city === null || city !== cityOf(b.locationId) || !above(rung(b), rung(a))) continue;
+      const floor = 1.1 * bestPay(a);
+      if (b.dailyPay < floor)
+        out.push(
+          `job "${b.id}" pays ${b.dailyPay}, under a tenth over "${a.id}" (${bestPay(a)}, the rung below): at least ${Math.ceil(floor)} (GDD §9.2)`,
+        );
+    }
+  return out;
+}

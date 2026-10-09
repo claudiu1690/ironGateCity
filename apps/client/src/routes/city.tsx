@@ -30,6 +30,7 @@ import {
   RegisterSheet,
   ResidenceCard,
   ResultModal,
+  TreatmentCard,
   ScoreboardLine,
   Ticket,
   TodayStrip,
@@ -531,6 +532,9 @@ export function CityPage() {
   // Review 4 #9 (answers §9.3): the bed is taken at the place with the Lodgings card.
   const takeRoom = (locationId: string) =>
     void act.run('room', (k) => trpcClient.residence.room.mutate({ locationId, idempotencyKey: k }));
+  // Review 5 (answers §8): *Get patched up* at an infirmary; the server charges its own price.
+  const treat = (locationId: string) =>
+    void act.run('treat', (k) => trpcClient.character.treat.mutate({ locationId, idempotencyKey: k }));
   const residenceFull = (className?: string) =>
     residenceCard ? (
       <ResidenceCard
@@ -1163,6 +1167,19 @@ export function CityPage() {
             ) : null,
             sheetPlace.cellsHere ? (
               <CellsNow key="cells-now" locationId={sheetPlace.id} open={sheetOpen} factionNames={names} />
+            ) : null,
+            // Review 5 (tech design §3.5): Jobs · Lodgings · *In the cells now* · Treatment · the hall.
+            sheetPlace.treatment ? (
+              <TreatmentCard
+                key="treatment"
+                carer={sheetPlace.treatment.carer}
+                health={character.health}
+                iron={character.iron}
+                now={now}
+                onTreat={() => treat(sheetPlace.id)}
+                pending={act.pending === 'treat'}
+                notice={act.pending === null && act.error !== null ? noticeFor(act.error) : null}
+              />
             ) : null,
             // Review 4 (answers §11.2, ADR 0077): the Town Hall's blocks after its ticket.
             sheetPlace.hall ? (

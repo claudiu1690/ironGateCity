@@ -610,6 +610,8 @@ export const duskwall: City = {
       // The survey pin (mapPins.ts), pin 11.
       map: { x: 0.88, y: 0.4 },
       quarterId: 'duskwall.pass',
+      // Review 5 (answers §8, §18 Q14): *Get patched up* on the sheet; the carer's word.
+      treatment: { carer: 'matron' },
       actions: [
         {
           ...canvass,

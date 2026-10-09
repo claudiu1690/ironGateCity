@@ -313,6 +313,11 @@ export const Location = z.strictObject({
    * until slice 7 (the Rows in Clearwater).
    */
   lodgings: z.strictObject({ line: z.string().min(1).max(60) }).optional(),
+  /**
+   * Review 5 (answers §8, §18 Q14; tech design §6.2): *Get patched up* on the place's sheet, said by
+   * its carer (*See the matron*). Only on `hospital` places, and required on every one.
+   */
+  treatment: z.strictObject({ carer: z.enum(['matron', 'sister', 'nurse']) }).optional(),
 });
 
 export const City = z.strictObject({

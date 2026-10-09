@@ -551,6 +551,8 @@ export const irongate: City = {
       // Pin 10: the survey pin (mapPins.irongate).
       map: { x: 0.37, y: 0.31 },
       quarterId: 'irongate.old-town',
+      // Review 5 (answers §8, §18 Q14): *Get patched up* on the sheet; the carer's word.
+      treatment: { carer: 'sister' },
       actions: [
         {
           ...canvass,

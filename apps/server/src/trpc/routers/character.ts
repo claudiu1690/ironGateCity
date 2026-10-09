@@ -4,6 +4,7 @@ import { setAvatar } from '../../services/avatarService';
 import { seeOrdersNote } from '../../services/ordersService';
 import { fullCharacterView } from '../../services/meView';
 import { placeStatPoint } from '../../services/statService';
+import { treatAt } from '../../services/treatmentService';
 import { protectedProcedure, router } from '../trpc';
 
 export const characterRouter = router({
@@ -21,6 +22,11 @@ export const characterRouter = router({
     .mutation(({ ctx, input }) =>
       placeStatPoint({ user: ctx.user, content: ctx.content, now: ctx.now, input }),
     ),
+
+  /** Review 5 (answers §8, tech design §6.2): *Get patched up · n Iron* at an infirmary (request-keyed). */
+  treat: protectedProcedure
+    .input(z.object({ locationId: z.string().min(1), idempotencyKey: z.uuid() }))
+    .mutation(({ ctx, input }) => treatAt({ user: ctx.user, content: ctx.content, now: ctx.now, input })),
 
   /** Review 1 (§13.7): the orders-complete note was seen (Carry on); idempotent, today only. */
   seeOrdersNote: protectedProcedure.mutation(({ ctx }) =>

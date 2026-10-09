@@ -523,6 +523,8 @@ export const coalport: City = {
       // The survey pin (mapPins.ts), pin 9.
       map: { x: 0.17, y: 0.5 },
       quarterId: 'coalport.harbour',
+      // Review 5 (answers §8, §18 Q14): *Get patched up* on the sheet; the carer's word.
+      treatment: { carer: 'matron' },
       actions: [
         {
           ...canvass,

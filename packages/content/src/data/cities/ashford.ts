@@ -587,6 +587,8 @@ export const ashford: City = {
       // The survey pin (mapPins.ts), pin 10.
       map: { x: 0.2, y: 0.47 },
       quarterId: 'ashford.wharf',
+      // Review 5 (answers §8, §18 Q14): *Get patched up* on the sheet; the carer's word.
+      treatment: { carer: 'matron' },
       actions: [
         {
           ...canvass,

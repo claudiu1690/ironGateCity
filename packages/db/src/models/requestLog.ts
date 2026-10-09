@@ -22,6 +22,8 @@ export const REQUEST_KINDS = [
   'held.walkOut',
   'held.discharge',
   'record.strike',
+  // Review 5 (tech design §6.2): *Get patched up*.
+  'character.treat',
 ] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 

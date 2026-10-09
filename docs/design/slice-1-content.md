@@ -214,7 +214,7 @@ Three jobs are placed in slice 1. Daily pay is pinned to one figure each (the §
 | **Factory worker** | Mill Gate, *Work your shift at the mill* | Level 1, STR 5 | 4 | **180**, **216 for Collective members** (+20 %) | The job every Coalport recruit should take on day 1 |
 | **Driver** | Harbour Quays, *Drive the dock lorry* | Level 3, AGI 10 | 4 | **240** (was 200 until review 5) | Visible and locked for the recruit (AGI 5): the first thing training AGI unlocks |
 
-Market trader (Level 3, INT 8) has a mini-game and is deferred with it.
+Market trader (Level 3, INT 8; **review 5: Intelligence 10 and 240 a day** when placed, GDD §9.2, `docs/design/review-5-answers.md` §5.2) has a mini-game and is deferred with it.
 
 **Blurbs** (one line on the Jobs card, ≤ 160 characters; final text, §13 item 6):
 

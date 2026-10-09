@@ -411,8 +411,8 @@ test('#2 the clouds: three big clouds and two wisps by day, no puff', async ({ p
 test('fixes: beat 1 shows the three people with the confirm; the favour offers no again', async ({ page }) => {
   test.setTimeout(150_000);
   /**
-   * Each person shown above the sticky confirm's bar: the row's portrait whole and its title's first
-   * line (the ask's opening words). How far each title runs is logged.
+   * Phase 5 carry-over: each row shows the portrait, the name and the ask's whole first sentence
+   * above the sticky confirm's bar; the rest of the ask waits for the pick. How far each runs is logged.
    */
   const peopleShown = async () => {
     const footer = (await page.getByTestId('story-footer').boundingBox())!;
@@ -422,31 +422,47 @@ test('fixes: beat 1 shows the three people with the confirm; the favour offers n
     const runs: number[] = [];
     for (const r of await rows.all()) {
       const title = (await r.getByTestId('story-row-title').boundingBox())!;
+      const name = (await r.getByTestId('story-row-name').boundingBox())!;
       const face = (await r.locator('img').first().boundingBox())!;
-      out.push(Math.max(title.y + 21, face.y + face.height) <= footer.y + 0.5);
-      runs.push(Math.round(title.y + title.height - footer.y));
+      const bottom = Math.max(title.y + title.height, name.y + name.height, face.y + face.height);
+      out.push(bottom <= footer.y + 0.5 && title.y >= 0 && face.y >= 0);
+      runs.push(Math.round(bottom - footer.y));
     }
-    console.log(`  the titles end ${runs.join(', ')} px from the confirm's bar (negative: above it)`);
+    console.log(`  the rows end ${runs.join(', ')} px from the confirm's bar (negative: above it)`);
     return out;
   };
   await page.setViewportSize({ width: 390, height: 844 });
   await signUpOnly(page, 'Mira Hale', 2);
   await expect(page.getByRole('heading', { name: 'The counter' })).toBeVisible();
+  await expect(page.getByTestId('story-row-name')).toHaveText(['Petra Holm', 'Viktor Stahl', 'Thomas Grey']);
   await expect(page.getByTestId('story-row-title').first()).toHaveText(
     `"Your mill's sold, but Coalport's rehires on Monday, union men first."`,
   );
-  await expect(page.getByTestId('story-row-rest').first()).toHaveText(
-    `"Put your name on my sheet now and you've a place at the gate and a bed at the union hostel tonight. The six o'clock to Coalport."`,
-  );
-  for (const [w, h] of [...SIZES, [375, 667]] as const) {
+  await expect(page.getByTestId('story-row-rest')).toHaveCount(0);
+  for (const [w, h] of [
+    [390, 844],
+    [390, 740],
+    [375, 667],
+  ] as const) {
     await page.setViewportSize({ width: w, height: h });
     await page.waitForTimeout(150);
     const shown = await peopleShown();
     console.log(`beat 1 at ${w} × ${h}: the three people shown with the confirm: ${shown.join(', ')}`);
-    if (h >= 844) expect(shown, `beat 1 at ${w} × ${h}`).toEqual([true, true, true]);
-    if (w !== 375) await shot(page, `beat1-${w}x${h}`);
-    else await shot(page, 'beat1-375x667');
+    expect(shown, `beat 1 at ${w} × ${h}`).toEqual([true, true, true]);
+    await shot(page, `beat1-${w}x${h}`);
   }
+  // A pick expands the row: the rest of the ask, who they are and the party.
+  const holm = page.locator('[data-testid="story-row"][data-choice="holm"]');
+  await holm.click();
+  await expect(holm.getByTestId('story-row-rest')).toHaveText(
+    `"Put your name on my sheet now and you've a place at the gate and a bed at the union hostel tonight. The six o'clock to Coalport."`,
+  );
+  await expect(holm.getByTestId('story-row-name')).toHaveText(
+    'Petra Holm · union organiser · at the bench by the door, signing up men off the trains',
+  );
+  await expect(holm).toContainText('Red Collective · the mill and the docks');
+  await expect(page.getByTestId('story-row-rest')).toHaveCount(1);
+  await shot(page, 'beat1-375x667-picked');
 
   // The favour: once only, so its result says Continue and nothing more.
   await page.setViewportSize({ width: 390, height: 740 });
@@ -467,4 +483,83 @@ test('fixes: beat 1 shows the three people with the confirm; the favour offers n
     await settled(page);
     await shot(page, `favour-result-${w}x${h}`);
   }
+});
+
+/**
+ * Review 5 #8 (answers §8, tech design §6.2): *Get patched up · n Iron* at any infirmary. The price
+ * is live (one Iron a point missing, at least 10), the server charges at the tap, the modal reads
+ * *Patched up* with the Health line, and the card then says there is nothing to treat.
+ */
+test('#8 the infirmary patches you up for Iron', async ({ page }) => {
+  test.setTimeout(150_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signUp(page, 'Hanna Vogt');
+  await lift(page, { level: 6, iron: 40, health: 64 });
+  await page.goto('/city/coalport');
+  await mapAtRest(page);
+  let sheet = await openLocation(page, '9. The Infirmary');
+  const card = sheet.getByTestId('treatment');
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.getByTestId('treatment-line')).toHaveText('See the matron · Health 64 / 125');
+  await expect(card.getByTestId('treatment-price')).toHaveText(
+    'One Iron a point: 61 Iron to be whole now. It comes back on its own, ten every ten minutes.',
+  );
+  // Short of Iron: the button says what it needs and does nothing.
+  await expect(card.getByTestId('treatment-take')).toHaveText('Needs 61 Iron');
+  await expect(card.getByTestId('treatment-take')).toBeDisabled();
+
+  // Ten minutes on, ten points back: the price falls with Health.
+  await lift(page, { iron: 900, health: 64 });
+  const moved = await page.request.post('/api/test/clock', { data: { advanceMs: 10 * 60_000 + 1_000 } });
+  expect(moved.ok()).toBe(true);
+  await page.goto('/city/coalport');
+  await mapAtRest(page);
+  sheet = await openLocation(page, '9. The Infirmary');
+  const live = sheet.getByTestId('treatment');
+  await live.scrollIntoViewIfNeeded();
+  await expect(live.getByTestId('treatment-line')).toHaveText('See the matron · Health 74 / 125');
+  await expect(live.getByTestId('treatment-take')).toHaveText('Get patched up · 51 Iron');
+  await expect(page.getByTestId('hud-health-value')).toContainText('74 / 125');
+  await shot(live, 'infirmary-card');
+
+  await live.getByTestId('treatment-take').click();
+  const result = page.locator('[role=dialog]').filter({ has: page.getByTestId('result-buttons') });
+  await expect(result.getByTestId('stamp')).toHaveText('Patched up');
+  await expect(result.getByRole('heading', { name: 'Whole again' })).toBeVisible();
+  await expect(result).toContainText('"Politics," says the matron, and doesn\'t ask which.');
+  await expect(result.getByTestId('political-health')).toHaveText('Health 74 → 125');
+  await expect(result.getByTestId('political-iron')).toHaveText('−51 Iron · the ward');
+  await settled(page);
+  await shot(page, 'infirmary-result');
+  await result.getByRole('button', { name: 'Continue' }).click();
+  await expect(result).toHaveCount(0);
+  await expect(page.getByTestId('hud-health-value')).toContainText('125 / 125');
+  await expect(sheet.getByTestId('treatment-well')).toHaveText("You're well · nothing to treat");
+  await expect(sheet.getByTestId('treatment-take')).toHaveCount(0);
+
+  // The server decides, whatever the client sends (tech design §6.2's refusals; no Vitest this round).
+  const treatApi = (locationId: string, key: string = crypto.randomUUID()) =>
+    page.request.post('/api/trpc/character.treat', { data: { locationId, idempotencyKey: key } });
+  const refusal = async (r: Awaited<ReturnType<typeof treatApi>>) => {
+    expect(r.ok()).toBe(false);
+    return ((await r.json()) as { error: { data: { game?: { reason: string; why?: string } } } }).error.data.game;
+  };
+  expect((await refusal(await treatApi('coalport.infirmary')))?.reason).toBe('FULL_HEALTH');
+  await lift(page, { iron: 30, health: 64 });
+  expect(await refusal(await treatApi('coalport.infirmary'))).toMatchObject({ reason: 'CANNOT_PAY', why: 'NOT_ENOUGH_IRON' });
+  expect((await refusal(await treatApi('duskwall.infirmary')))?.reason).toBe('NOT_HERE');
+  expect((await refusal(await treatApi('coalport.union-hall')))?.reason).toBe('UNKNOWN_LOCATION');
+  // One key twice: one charge, the same result.
+  await lift(page, { iron: 900, health: 64 });
+  const key = crypto.randomUUID();
+  const [a, b] = await Promise.all([treatApi('coalport.infirmary', key), treatApi('coalport.infirmary', key)]);
+  const ra = (await a.json()) as { result: { data: { character: { iron: number }; performedAt: string } } };
+  const rb = (await b.json()) as { result: { data: { character: { iron: number }; performedAt: string } } };
+  expect(ra.result.data.character.iron).toBe(839);
+  expect(rb.result.data).toEqual(ra.result.data);
+  const me = (await (await page.request.get('/api/trpc/character.me')).json()) as {
+    result: { data: { iron: number; health: { value: number; max: number } } };
+  };
+  expect(me.result.data.iron).toBe(839);
+  expect(me.result.data.health.value).toBe(125);
 });

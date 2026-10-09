@@ -899,6 +899,12 @@ export interface LocationView {
   lodgings?: LodgingsView | null;
   /** Review 4 (ADR 0077): the city's council hall: its sheet carries the council's blocks (`council.hall`). */
   hall?: boolean;
+  /**
+   * Review 5 (answers §8, tech design §6.2): an infirmary's Treatment card, said by its carer; null
+   * while held (the ward's own ways out stand); absent at other places. The price is the client's
+   * (from the Health timer), the charge the server's.
+   */
+  treatment?: { carer: 'matron' | 'sister' | 'nurse' } | null;
 }
 
 /**
@@ -1869,7 +1875,9 @@ export type PoliticalAct =
   | 'deported'
   | 'walkOut'
   | 'discharged'
-  | 'strike';
+  | 'strike'
+  // Review 5 (answers §8, tech design §6.2): *Get patched up* at an infirmary.
+  | 'treated';
 export const POLITICAL_ACTS = [
   'ballot',
   'declare',
@@ -1886,12 +1894,13 @@ export const POLITICAL_ACTS = [
   'walkOut',
   'discharged',
   'strike',
+  'treated',
 ] as const;
 
 /** Slice 5: the cells', the infirmary's and the record's acts (their texts are copy, not `politics`). */
 export type RiskAct = 'bail' | 'released' | 'deported' | 'walkOut' | 'discharged' | 'strike';
 /** The acts whose texts live in content's `politics.results` (slices 3–4). */
-export type CouncilAct = Exclude<PoliticalAct, RiskAct>;
+export type CouncilAct = Exclude<PoliticalAct, RiskAct | 'treated'>;
 
 /** The political result modal (screens §9, tech design §10.1), stored in requestLogs.result. */
 export interface PoliticalResult {
@@ -1946,7 +1955,9 @@ export interface PoliticalResult {
     | { kind: 'residence'; residence: ResidenceCardView; election: PoliticsSummaryView | null }
     // Slice 5 (tech design §10.3): out of the cells or the infirmary (where Continue lands), the record.
     | { kind: 'held'; landing: Landing | { journey: true } | null }
-    | { kind: 'record'; record: CharacterViewV6['record'] };
+    | { kind: 'record'; record: CharacterViewV6['record'] }
+    // Review 5 (tech design §6.2): *Get patched up*; Continue returns to the place's sheet.
+    | { kind: 'place'; locationId: string };
 }
 
 // ---------------------------------------------------------------------------------------------

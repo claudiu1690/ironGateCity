@@ -234,7 +234,14 @@ export function StoryScreen({
         data-testid="story-screen"
       >
         {/* The art: a 16:9 top band on phones (at most 40 dvh), a 420 px panel on desktop. */}
-        <div className="relative aspect-video max-h-[34dvh] w-full shrink-0 overflow-hidden bg-ink lg:aspect-auto lg:h-auto lg:max-h-none lg:w-[420px]">
+        {/* Review 5 (phase 5 carry-over): with rows to choose from, a short phone (≤ 700 px tall) gives
+            the band 21 dvh, so the three people and their first sentences show above the confirm. */}
+        <div
+          className={cx(
+            'relative aspect-video max-h-[34dvh] w-full shrink-0 overflow-hidden bg-ink lg:aspect-auto lg:h-auto lg:max-h-none lg:w-[420px]',
+            rows && '[@media(max-height:700px)]:max-h-[21dvh]',
+          )}
+        >
           <StoryArt view={view} />
           <div
             className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.92)_0%,rgb(21_24_26/0.15)_60%)] lg:bg-none"
@@ -307,6 +314,8 @@ export function StoryScreen({
                 {view.choices.map((c) => {
                   const on = selected?.id === c.id;
                   const ask = splitAsk(c.text);
+                  // The first line's first part is the person's name (*Petra Holm · union organiser · …*).
+                  const name = c.lines?.[0]?.split(' · ')[0] ?? null;
                   return (
                     <button
                       key={`${key}:${c.id}`}
@@ -339,26 +348,30 @@ export function StoryScreen({
                         />
                       )}
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        {/* Review 5 (answers §19, plan §23 phase 10 deviation 2): a long ask prints its
-                            first sentence as the row's title and the rest as a smaller line (one line
-                            until the row is picked, then whole), so the three people show on a phone
-                            with the confirm. */}
+                        {/* Review 5 (answers §19; plan §23 phase 10 deviation 2, phase 5 carry-over): a
+                            row shows the person's name and the ask's first sentence; the rest of the
+                            ask, and the two lines (who they are, the party), show once the row is
+                            picked, so the three people and their first sentences fit above the
+                            confirm on a 375 × 667 phone. */}
+                        {name && (
+                          <span className="font-mono text-[11.5px] leading-snug opacity-85" data-testid="story-row-name">
+                            {on ? c.lines![0] : name}
+                          </span>
+                        )}
                         <span className="font-body text-[15px] leading-snug font-semibold" data-testid="story-row-title">
                           {ask.title}
                         </span>
-                        {ask.rest && (
-                          <span
-                            className={cx('font-body text-[13px] leading-snug opacity-85', !on && 'line-clamp-1')}
-                            data-testid="story-row-rest"
-                          >
+                        {on && ask.rest && (
+                          <span className="font-body text-[13px] leading-snug opacity-85" data-testid="story-row-rest">
                             {ask.rest}
                           </span>
                         )}
-                        {c.lines?.map((line) => (
-                          <span key={line} className="font-mono text-[11.5px] leading-snug opacity-85">
-                            {line}
-                          </span>
-                        ))}
+                        {on &&
+                          c.lines?.slice(name ? 1 : 0).map((line) => (
+                            <span key={line} className="font-mono text-[11.5px] leading-snug opacity-85">
+                              {line}
+                            </span>
+                          ))}
                       </span>
                     </button>
                   );

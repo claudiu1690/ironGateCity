@@ -155,6 +155,9 @@ export {
   runInReason,
 } from './components/Street';
 export type { EncounterModalProps, EncounterRowProps, RiskRowsProps, RunInChoice } from './components/Street';
+// Review 5 (answers §8): the infirmary's Treatment card.
+export { TreatmentCard } from './components/Treatment';
+export type { TreatmentCardProps } from './components/Treatment';
 export { CellsNowCard, HeldScreen, heldVoiceLine, minutesLeft } from './components/Held';
 export type { CellsNowCardProps, HeldPending, HeldScreenProps } from './components/Held';
 export type { StampProps, StampTone } from './components/Stamp';

@@ -491,6 +491,14 @@ export const copy = {
       'Lodgings',
       'A paid bed for a week. While you have one, Rested banks to 250 instead of 200. Nothing else; your vote and your orders have nothing to do with it.',
     ],
+    /**
+     * Review 5 (answers §8.2): the Treatment card's note, word for word; St Agnes's says *sister*,
+     * Clearwater's Sanatorium *nurse* (§18 Q14).
+     */
+    treatment: (carer: 'matron' | 'sister' | 'nurse' = 'matron') => [
+      'Treatment',
+      `The ${carer} will make you whole now for one Iron a point. Health comes back on its own, ten every ten minutes; this is only for the impatient. Nothing else about you changes.`,
+    ],
     /** Review 4 #23 (answers §23.3): the masthead's edition line. */
     edition: () => [
       'Local edition',
@@ -1284,6 +1292,28 @@ export const copy = {
     /** The result's stamp and headline (content: `politics.results.room`). */
     stamp: 'Taken',
     headline: 'A bed in Irongate',
+  },
+  /**
+   * Review 5 (answers §8.2, §18 Q14; tech design §6.2): *Get patched up* at any infirmary, the
+   * `JobsCard` pattern on the place's sheet, and its modal. Word for word.
+   */
+  treatment: {
+    kicker: 'Treatment',
+    /** *See the matron · Health 64 / 125* (St Agnes: the sister; Clearwater: the nurse). */
+    line: (carer: 'matron' | 'sister' | 'nurse', hp: number, max: number) => `See the ${carer} · Health ${hp} / ${max}`,
+    /** The Courier line under it. */
+    price: (iron: number) =>
+      `One Iron a point: ${iron} Iron to be whole now. It comes back on its own, ten every ten minutes.`,
+    button: (iron: number) => `Get patched up · ${iron} Iron`,
+    needs: (iron: number) => `Needs ${iron} Iron`,
+    well: "You're well · nothing to treat",
+    stamp: 'Patched up',
+    headline: 'Whole again',
+    body: {
+      matron: `"Politics," says the matron, and doesn't ask which. Ten minutes' work and she charges for twenty. Mind the step.`,
+      sister: 'The sister does it without a word and the porter takes the money. Mind the step.',
+      nurse: 'The nurse does it in ten minutes and the clerk charges for twenty. Mind the step.',
+    },
   },
   /** The Issues section of the paper (screens §7.1). */
   issues: {

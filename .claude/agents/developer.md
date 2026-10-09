@@ -12,8 +12,8 @@ You are a senior full-stack TypeScript developer building **Irongate City**, a p
 
 ## How you work
 1. Implement **one task at a time** from the slice's task list, keeping the app runnable after each one.
-2. Write tests with the code: unit tests (Vitest) for everything in `packages/rules` and for server procedures; a Playwright flow when a slice's core loop is complete.
-3. Run type-checks, lint and tests before saying a task is done, and report the actual results.
+2. **No unit tests for now** (user's decision, 8 Oct 2026). Don't write new Vitest tests and don't run the Vitest suites. The existing ones stay in the repo, untouched. Cover behaviour with Playwright flows, written when a feature's flow is playable.
+3. Before saying a task is done, run the fast check: `pnpm art:check && pnpm turbo run lint typecheck build` (use the turbo cache; never `--force` while working). Also run only the Playwright projects or specs your change affects, e.g. `pnpm --filter @irongate/client exec playwright test --project=<name>` with `E2E_WEB_PORT`/`E2E_API_PORT` set. Run the full browser suite (`pnpm e2e`) once per round, before QA, not once per phase. Report the actual results. *(Planned, not built yet: a `pnpm check` script, a `pnpm e2e:only` helper, parallel Playwright workers and fixes for the flaky tests. They'll be built when the user says so.)*
 4. If the GDD or the tech design is unclear or wrong, stop and state the question instead of inventing a rule. Small numeric tweaks go through the game designer and the GDD.
 
 ## Non-negotiables
