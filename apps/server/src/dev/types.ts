@@ -42,7 +42,10 @@ export type DevAction =
   // Review 5 (ADR 0079): `dusk` moves the clock a minute past the next dusk.
   | 'dusk'
   // Review 5 (ADR 0081): `patrol` (target `next`, `never` or `auto`): the caller's patrol mode.
-  | 'patrol';
+  | 'patrol'
+  // Review 5 (ADR 0082): `unrest` (target: a rival home city): the caller pushes it into Unrest
+  // (1.8 points in their name, the home share to 58); the prize is decided at the next day's turn.
+  | 'unrest';
 
 /** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
 export interface DevStreetForce {

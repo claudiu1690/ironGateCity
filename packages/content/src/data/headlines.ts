@@ -107,6 +107,16 @@ export const riskHeadlines: HeadlineInput[] = [
     headline: '{name} Put on the Train Home from {rivalCity}',
     deck: 'Released from the cells there and escorted to the station. {rivalCity} is barred for a day; Coalport is not. The branch has a chair.',
   },
+  // Review 5 (answers §18.3, ADR 0082): the Unrest prize, credited at this settlement.
+  {
+    id: 'hl.unrest-pushed',
+    cityId: 'coalport',
+    group: 'personal',
+    priority: 1,
+    when: [{ kind: 'unrestPushed' }],
+    headline: "{city} Wobbles: the Branch Pushed Hard",
+    deck: "The {party}'s share of its own town fell under 60 overnight. {top} did the heaviest carrying. The Collective's work there pays three quarters more while it lasts.",
+  },
   {
     id: 'hl.rival-pressure',
     cityId: 'coalport',
@@ -196,6 +206,16 @@ export const riskHeadlines: HeadlineInput[] = [
     when: [{ kind: 'deportedYesterday' }],
     headline: '{name} Put on the Train Home from {rivalCity}',
     deck: 'Released from the cells there and put on the train. {rivalCity} is barred for a day. Report to Beacon House on arrival.',
+  },
+  // Review 5 (answers §18.3, ADR 0082): the Unrest prize, credited at this settlement.
+  {
+    id: 'hl.v.unrest-pushed',
+    cityId: 'duskwall',
+    group: 'personal',
+    priority: 1,
+    when: [{ kind: 'unrestPushed' }],
+    headline: "{city} Under Sixty",
+    deck: "The {party}'s town is in Unrest this morning. {top} are named by the district office for their part. Work there pays more until the town settles, which it will not do on its own.",
   },
   {
     id: 'hl.v.rival-pressure',
@@ -287,6 +307,16 @@ export const riskHeadlines: HeadlineInput[] = [
     headline: '{name} Put on the Train Home from {rivalCity}',
     deck: 'Released from the cells there and put on the train. {rivalCity} is barred for a day. The Rooms have the kettle on.',
   },
+  // Review 5 (answers §18.3, ADR 0082): the Unrest prize, credited at this settlement.
+  {
+    id: 'hl.a.unrest-pushed',
+    cityId: 'ashford',
+    group: 'personal',
+    priority: 1,
+    when: [{ kind: 'unrestPushed' }],
+    headline: "{city} in Unrest: the Rooms' Callers Did It",
+    deck: "The {party}'s share of its home town fell under sixty. {top} knocked the most doors. Every Alliance act there pays three quarters more while it lasts.",
+  },
   {
     id: 'hl.a.rival-pressure',
     cityId: 'ashford',
@@ -367,6 +397,16 @@ export const riskHeadlines: HeadlineInput[] = [
     when: [{ kind: 'deportedYesterday' }],
     headline: '{name} Put on the Train Home from {rivalCity}',
     deck: 'Released from the cells in {rivalCity} and put on the train. Barred there for a day.',
+  },
+  // Review 5 (answers §18.3, ADR 0082): the Unrest prize, credited at this settlement.
+  {
+    id: 'hl.ig.unrest-pushed',
+    cityId: 'irongate',
+    group: 'personal',
+    priority: 1,
+    when: [{ kind: 'unrestPushed' }],
+    headline: "{pushingParty} Callers Push {city} into Unrest",
+    deck: "The town's share fell under 60 overnight. {top} did most of the pushing; the {party}'s branch has dropped everything to win it back.",
   },
 ];
 

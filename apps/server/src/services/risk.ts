@@ -16,6 +16,7 @@ import {
   projectHeat,
   recordLevel,
   recordView,
+  runInChance,
 } from '@irongate/rules';
 import type {
   CharacterViewV6,
@@ -28,6 +29,7 @@ import type {
 } from '@irongate/rules';
 import { GameError } from '../gameError';
 import { dayModifiers, rivalGroundAt } from './modifiers';
+import { nightAt } from './night';
 
 export { rivalGroundAt };
 
@@ -195,3 +197,28 @@ export function riskView(
 /** The live marks today (the bail's count). */
 export const liveMarkCount = (c: Pick<CharacterDoc, 'record'>, today: DayKey): number =>
   liveMarks(marksOf(c), today).length;
+
+/**
+ * Review 5 (ADR 0080, 0082): a tier-1 tap's run-in chance on rival ground in `cityId` at `now`: the
+ * Heat state (at the residence's cooling rate), the record, the day's flags there and the night
+ * through the seam. The plate's danger word and the dev status read it; the act computes its own.
+ */
+export function rivalTapChance(
+  c: CharacterDoc,
+  cityId: string,
+  now: number,
+  residenceCity: CityDoc | null,
+  content: GameContent,
+): number {
+  const today = dayKey(now);
+  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, residenceCity));
+  return runInChance({
+    base: 0,
+    tier: 1,
+    rivalGround: true,
+    heatState: heatState(heat.value),
+    record: recordLevelOf(c, today),
+    flags: flagsToday(c, cityId, today),
+    night: nightAt(now).night,
+  });
+}

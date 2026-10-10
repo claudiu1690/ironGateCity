@@ -441,5 +441,20 @@ export const RIVAL_GROUND = {
   cardDifficulty: 14,
 } as const;
 
+/**
+ * Review 5 (answers §10.3, GDD §14.11, ADR 0082): the Unrest prize. When a rival home city enters
+ * Unrest, every member of a pushing party who moved at least `minPushedK` thousandths there in the
+ * `windowDays` City Days before gets `fxp` Party XP; paid once per entry and at most once in
+ * `everyDays` per city. `legacy` waits for slice 8.
+ */
+export const UNREST_PRIZE = {
+  fxp: 50,
+  minPushedK: 500,
+  windowDays: 7,
+  everyDays: 7,
+  legacy: 2,
+  top: 3,
+} as const;
+
 /** §14.13: quarters open by Level, per character. */
 export const QUARTERS = { levels: [1, 6, 10] } as const;

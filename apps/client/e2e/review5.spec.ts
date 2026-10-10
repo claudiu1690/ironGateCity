@@ -826,3 +826,125 @@ test("#9 What's here: the Issues, the missions you can start, your orders here, 
   await settled(page);
   await shot(list, 'whats-here-district');
 });
+
+// Review 5 phase 8 (answers §10.2–§10.3, §16.1, ADR 0082). Last in the file: it moves the shared clock
+// a day (the prize is paid at the boundary).
+test('#10 rival ground: the push, the danger, the goal; pushed into Unrest pays +50 Party XP once', async ({ page }) => {
+  test.setTimeout(240_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signUp(page, 'Ottilie Brandt');
+  await lift(page, { level: 10, rank: 3, iron: 500, energy: 100, cityId: 'duskwall' });
+  const unrest = (data: Record<string, unknown>) =>
+    page.request.post('/api/test/unrest', { data: { cityId: 'duskwall', ...data } }).then(async (r) => {
+      expect(r.ok(), await r.text()).toBe(true);
+    });
+  const night = (mode: 'day' | 'night') =>
+    page.request.post('/api/test/night', { data: { mode } }).then((r) => expect(r.ok()).toBe(true));
+  // A steady town at 65 (the shared state of earlier projects may hold it in Unrest): a fresh entry later.
+  await unrest({ share: 65, pushed: 0 });
+
+  // 1. The three lines by day: the push bar, *Risky* (Cool, clean, by day: 15), the goal.
+  await page.goto('/city/duskwall');
+  await mapAtRest(page);
+  const plate = (id: string) => page.getByTestId(id).filter({ visible: true });
+  await expect(plate('plate-pressure')).toContainText(/Pushed today.* of 2( points| ·)/);
+  await expect(plate('plate-danger')).toHaveText(
+    'Risk here: Risky · every tap can bring a run-in · Heat counts double · the cells put you on the train home',
+  );
+  // On a phone the goal is one line; the whole sentence opens the Unrest note.
+  await expect(plate('plate-goal')).toHaveAttribute(
+    'data-goal',
+    /^The goal: Unrest\. Under 60 % the Vanguard's branch drops everything to win the town back, its deputies go quiet, and your work here pays three quarters more\. 5\.0 points to go · your party has pushed \d+(\.\d)? this week\.$/,
+  );
+  await expect(plate('plate-goal').locator('span').filter({ visible: true })).toHaveText(
+    /^The goal: Unrest · 5\.0 points to go · your party has pushed \d+(\.\d)? this week$/,
+  );
+  // The plate's notes: the push, rival ground (reworded) and Unrest.
+  await page.getByTestId('plate-help').click();
+  const notes = page.getByRole('dialog');
+  await expect(notes).toContainText('What the town will take from outsiders in a day');
+  await expect(notes).toContainText('the worst is the cells and the train home, and nothing you own is at risk');
+  await expect(notes).toContainText('A home town under 60 % is in Unrest');
+  await expect(notes).toContainText("The goal: Unrest. Under 60 % the Vanguard's branch drops everything");
+  await page.keyboard.press('Escape');
+  await expect(notes).toHaveCount(0);
+
+  // 2. A tap at the Fortress Gate pushes: the bar names the Collective.
+  await street(page, { runIn: 'never', checkRoll: 1 });
+  const gate = await openLocation(page, '1. Fortress Gate');
+  await gate.locator('div[data-testid^="ticket-duskwall."]').first().getByTestId('ticket-once').click();
+  const result = page.getByRole('dialog').filter({ has: page.getByTestId('result-buttons') });
+  await expect(result.getByTestId('reward-opinion')).toContainText('Opinion against the Vanguard');
+  await result.getByRole('button', { name: 'Continue' }).click();
+  await expect(result).toHaveCount(0);
+  await gate.getByRole('button', { name: /^Close/ }).click();
+  await mapAtRest(page);
+  await expect(plate('push-figure')).toContainText(/the Collective \d/);
+  await expect(page.getByTestId('push-bar').filter({ visible: true }).locator('[data-faction=collective]')).toHaveCount(1);
+  // Each of the three lines is one line on a phone (the plate is no taller than slice 5's two lines,
+  // whose *draws from* line wrapped to three).
+  for (const id of ['plate-pressure', 'plate-danger', 'plate-goal'])
+    expect((await plate(id).boundingBox())!.height).toBeLessThanOrEqual(18);
+  await settled(page);
+  await shot(page, 'phase8-9/rival-header-day');
+
+  // 3. At night the danger reads *Dangerous · patrols out*, in the failure colour.
+  try {
+    await night('night');
+    await page.reload();
+    await mapAtRest(page);
+    await expect(plate('plate-danger')).toHaveText(
+      'Risk here: Dangerous · patrols out · every tap can bring a run-in · Heat counts double · the cells put you on the train home',
+    );
+    await expect(plate('plate-danger')).toHaveAttribute('data-risk', 'dangerous');
+    await settled(page);
+    await shot(page, 'phase8-9/rival-header-night');
+  } finally {
+    await night('day');
+  }
+
+  // 4. The nation card: the goal's first sentence.
+  await page.goto('/nation');
+  await page.locator('[data-testid=hotspot][aria-label^="Duskwall"]').dispatchEvent('click');
+  await expect(page.getByTestId('city-card').getByTestId('city-goal')).toHaveText(/^The goal: Unrest · \d+\.\d points to go$/);
+
+  // 5. Pushed into Unrest (1.8 points in this member's name, the share to 58): *hold it*.
+  await unrest({});
+  await page.goto('/city/duskwall');
+  await mapAtRest(page);
+  await expect(plate('city-morale')).toHaveText('Unrest');
+  await expect(plate('plate-goal')).toHaveAttribute(
+    'data-goal',
+    'Duskwall is in Unrest · hold it: your work here pays +75 % Party XP · the Vanguard needs 60 to get out · 8.0 points above the floor.',
+  );
+  await expect(plate('plate-goal').locator('span').filter({ visible: true })).toHaveText(
+    'Duskwall is in Unrest · hold it · 8.0 points above the floor',
+  );
+  await settled(page);
+  await shot(page, 'phase8-9/town-in-unrest');
+
+  // 6. The day turns: the boundary pays, the settlement credits +50 Party XP, the paper prints both.
+  const fxp = async () =>
+    ((await (await page.request.get('/api/trpc/character.me')).json()) as { result: { data: { fxp: number } } })
+      .result.data.fxp;
+  const before = await fxp();
+  const day = await page.request.post('/api/test/dev/day');
+  expect(day.ok()).toBe(true);
+  await page.goto('/paper');
+  const award = page.getByTestId('desk-award').filter({ hasText: 'Duskwall in Unrest' });
+  await expect(award).toHaveText(/^Duskwall in Unrest · you pushed \d\.\d points this week · \+50 Party XP$/);
+  const headline = page.getByText('Duskwall Wobbles: the Branch Pushed Hard');
+  await expect(headline).toBeVisible();
+  await expect(page.getByText(/Ottilie Brandt( and [A-Z]|,)?.*did the heaviest carrying\./)).toBeVisible();
+  expect(await fxp()).toBe(before + 50);
+  await headline.scrollIntoViewIfNeeded();
+  await shot(page, 'phase8-9/prize-headline');
+  await award.scrollIntoViewIfNeeded();
+  await shot(page, 'phase8-9/prize-paper-line');
+
+  // 7. Once: another day in the same Unrest pays nothing more.
+  expect((await page.request.post('/api/test/dev/day')).ok()).toBe(true);
+  await page.goto('/paper');
+  await expect(page.getByTestId('dateline')).toBeVisible();
+  await expect(page.getByTestId('desk-award').filter({ hasText: 'Duskwall in Unrest' })).toHaveCount(0);
+});

@@ -260,7 +260,9 @@ test.describe('layout on a 375 × 667 phone (screens §10)', () => {
     await page.goto('/city/duskwall');
     await mapAtRest(page);
     await expect(page.getByTestId('plate-rival').filter({ visible: true })).toBeVisible();
-    await expect(page.getByTestId('plate-pressure').filter({ visible: true })).toContainText('draws from');
+    // Review 5 (answers §10.2): the push bar is that line now; the goal folds into its note.
+    await expect(page.getByTestId('plate-pressure').filter({ visible: true })).toContainText(/ of 2( points| ·)/);
+    await expect(page.getByTestId('plate-goal').filter({ visible: true })).toHaveCount(0);
   });
 });
 

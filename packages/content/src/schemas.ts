@@ -605,6 +605,8 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('recordRose') }),
   z.strictObject({ kind: z.literal('rivalGroundYesterday') }),
   z.strictObject({ kind: z.literal('deportedYesterday') }),
+  // Review 5 (ADR 0082): the Unrest prize (stored at the settlement that credits it).
+  z.strictObject({ kind: z.literal('unrestPushed') }),
   z.strictObject({ kind: z.literal('moraleLostToRivals'), min: z.number().min(0) }),
 ]) satisfies z.ZodType<HeadlineCondition>;
 

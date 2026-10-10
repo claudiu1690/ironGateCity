@@ -8,6 +8,7 @@ import type {
   MissionView,
   PatrolCardResult,
 } from '@irongate/rules';
+import { dayKey, dayStart } from '@irongate/rules';
 import {
   BottomSheet,
   Button,
@@ -50,11 +51,11 @@ import {
   formatWhen,
   formatShare,
   groundOf,
-  heatNow,
-  heatWord,
   helpMark,
   pyramidFor,
   residenceLines,
+  rivalHeaderLines,
+  RivalHeader,
 } from '@irongate/ui';
 import type { Ground, WhatsHereBlocks } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -77,7 +78,7 @@ import { useBoard } from '../features/travel/useBoard';
 import { setResultModalOpen } from '../lib/modalGate';
 import { gameErrorOf, isNetworkError, trpc, trpcClient } from '../lib/trpc';
 import { useNightTurn } from '../lib/useNightTurn';
-import { useLocationLayout, useNow } from '../lib/useNow';
+import { useLocationLayout, useMedia, useNow } from '../lib/useNow';
 
 /** The city column beside the map on a phone held sideways (review 2 #3). */
 const SIDE_W = 260;
@@ -143,7 +144,7 @@ export function CityPage() {
   const { loc, order: orderHl, places: placesSearch, act: actHl } = useSearch({ from: '/app/city/$cityId' });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { character, now: tick } = useCharacter();
+  const { character } = useCharacter();
   const city = useQuery(trpc.city.get.queryOptions({ cityId }));
   // Review 5 (ADR 0079): at dusk and dawn (+ up to 20 s) the view is read again: art, tickets, plate.
   useNightTurn(city.data?.night, [trpc.city.get.queryKey({ cityId })]);
@@ -152,6 +153,8 @@ export function CityPage() {
   // The Election card's countdown, on the server's clock (a wrong phone clock never miscounts).
   const now = useNow(60_000);
   const side = layout === 'side';
+  // Review 5 (answers §10.2): on a phone under 700 px tall the rival goal line folds into the push note.
+  const shortPhone = useMedia('(max-width: 639px) and (max-height: 700px)');
   // Review 3 (GDD §14.13): the location opens as the map starts its zoom into the pin (CityMap
   // `onArrive`), so the zoom, the dim and the sheet are one movement. `arrived`: a place is open (a
   // tap on another pin while one is open swaps the sheet's content, it does not close it);
@@ -400,7 +403,6 @@ export function CityPage() {
   const hallPlace = c.locations.find((l) => l.hall);
   // Slice 5 (screens §8.3): rival ground, the home faction whose morale your work draws from.
   const rival = c.rivalGround ?? null;
-  const heat = heatNow(character.heat, tick);
   const location: LocationView | undefined = shownLocations.find((l) => l.id === loc);
   /** What the sheet shows: the open place, or (closing) the last one. */
   const sheetPlace: LocationView | undefined = location ?? shownLocations.find((l) => l.id === lastPlace);
@@ -416,6 +418,19 @@ export function CityPage() {
   const share = c.homeFactionId ? c.opinion[c.homeFactionId] : c.opinion[character.factionId];
   // The plate's party: your own at home, the home party on rival ground (its morale).
   const plateFaction: FactionId = rival ? rival.homeFactionId : character.factionId;
+  // Review 5 (answers §10.2, ADR 0082): the rival header's words (the push, the danger, the goal).
+  const rivalInput = rival
+    ? {
+        rival,
+        cityName: c.name,
+        names,
+        mine: character.factionId,
+        now,
+        dayTurnAt: dayStart(dayKey(now) + 1),
+      }
+    : null;
+  const rivalLines = rivalInput ? rivalHeaderLines(rivalInput) : null;
+  const foldGoal = !side && shortPhone;
   const perform = (target: PerformTarget, times: 1 | 3) => {
     setLast(target);
     action.perform(target, times);
@@ -794,7 +809,20 @@ export function CityPage() {
               the share, the morale word and the ordinance line. */}
           <HelpButton
             notes={[
-              ...(rival ? [copy.risk.help.rivalGround()] : []),
+              // Review 5 (answers §10.2): the push, the danger and the goal's notes; on a short phone
+              // the goal line's words ride the push note.
+              // The push note opens with today's whole line (the split by party truncates on a phone).
+              ...(rival && rivalLines
+                ? [
+                    [
+                      copy.risk.help.push()[0]!,
+                      [rivalLines.push, copy.risk.help.push()[1], ...(foldGoal ? [rivalLines.goal] : [])].join('\n'),
+                    ],
+                    copy.risk.help.rivalGround(),
+                    // The goal's whole sentence opens the Unrest note (a phone's plate shows its short form).
+                    [copy.risk.help.unrest()[0]!, `${rivalLines.goal}\n${copy.risk.help.unrest()[1]}`],
+                  ]
+                : []),
               ...plateNotes,
               // Review 5: the dusk line's note, and after dark on rival ground the patrols'.
               duskNote(now),
@@ -854,26 +882,14 @@ export function CityPage() {
               {rival ? (names[plateFaction] ?? plateFaction) : character.factionName} {formatShare(share)} %
             </span>
           </span>
-          {/* Slice 5 (screens §8.3): what your work here draws from (at every size, QA m7), and Heat
-              (folded under 700 px tall: the HUD shows it). */}
-          {rival && (
-            <span className="font-mono text-[11px] text-text-2" data-testid="plate-pressure">
-              {copy.risk.rival.drawsFrom(
-                names[rival.homeFactionId] ?? rival.homeFactionId,
-                rival.pressure.left.toFixed(1),
-              )}
-            </span>
-          )}
-          {rival && (
-            <span
-              className={cx(
-                'font-mono text-[11px] text-text-2',
-                !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
-              )}
-              data-testid="plate-heat"
-            >
-              {copy.risk.heatLine(heat, heatWord(character.heat?.state ?? 'cool'))}
-            </span>
+          {/* Review 5 (answers §10.2, §16.1, ADR 0082): the rival header replaces slice 5's *draws from*
+              and Heat lines: the push bar (at every size, QA m7), the danger word (patrols at night) and
+              the goal, which folds into the push note on a phone under 700 px tall. */}
+          {rivalInput && (
+            <RivalHeader
+              input={rivalInput}
+              foldGoal={cx(!side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden')}
+            />
           )}
           {/* The ordinance in force, one line that never wraps. Only on a very short phone
               (360 × 640) it gives way to the map; the tickets carry its tags there. Review 4 (answers

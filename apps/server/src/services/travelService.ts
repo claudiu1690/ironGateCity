@@ -5,6 +5,7 @@ import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc, JourneyDoc } from '@
 import {
   ENERGY,
   JOURNEY_SET_ASIDE,
+  MORALE,
   TRAVEL,
   addHeat,
   addToTally,
@@ -28,6 +29,7 @@ import {
   legMinutes,
   legSpans,
   liveMarks,
+  moraleState,
   projectEnergy,
   projectHeat,
   resolveJourneyChoice,
@@ -289,6 +291,15 @@ export async function nationView(content: GameContent, c: CharacterDoc, now: num
       lockWord: state === 'barred' ? 'barred' : state === 'later' ? 'no service yet' : null,
       ...(until !== null ? { barredUntil: until } : {}),
       ...(rivalHome ? { rival: { homeFactionId: rivalHome } } : {}),
+      // Review 5 (answers §10.2): the card's *The goal: Unrest · 11.4 points to go*.
+      ...(rivalHome
+        ? {
+            goal: {
+              toUnrest: Math.round(Math.max(0, whoHolds[rivalHome] - MORALE.unrestBelow) * 1_000) / 1_000,
+              unrest: moraleState(whoHolds[rivalHome]) === 'unrest',
+            },
+          }
+        : {}),
       minutes:
         here && n.cityId !== here && n.service === 'open'
           ? legMinutes(here, n.cityId, minutesMap(content), capital)

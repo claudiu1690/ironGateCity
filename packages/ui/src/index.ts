@@ -158,6 +158,9 @@ export type { EncounterModalProps, EncounterRowProps, RiskRowsProps, RunInChoice
 // Review 5 (answers §8): the infirmary's Treatment card.
 export { TreatmentCard } from './components/Treatment';
 export type { TreatmentCardProps } from './components/Treatment';
+// Review 5 (answers §10.2, ADR 0082): the rival plate's header.
+export { PushBar, RivalHeader, pointsWord, rivalHeaderLines } from './components/RivalHeader';
+export type { RivalHeaderInput } from './components/RivalHeader';
 export { CellsNowCard, HeldScreen, heldVoiceLine, minutesLeft } from './components/Held';
 export type { CellsNowCardProps, HeldPending, HeldScreenProps } from './components/Held';
 export type { StampProps, StampTone } from './components/Stamp';

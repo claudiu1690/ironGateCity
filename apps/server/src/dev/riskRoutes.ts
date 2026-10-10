@@ -21,10 +21,12 @@ import {
   setStreet,
   zodLine,
 } from './risk';
+import { UnrestBody, pushIntoUnrest } from './unrest';
 
 /**
  * Slice 5 (tech design §8.5): the e2e risk hooks `POST /api/test/street`, `/held` and `/run-in`;
- * review 5 (ADR 0079): `POST /api/test/night`; (ADR 0081) `POST /api/test/patrol`.
+ * review 5 (ADR 0079): `POST /api/test/night`; (ADR 0081) `POST /api/test/patrol`; (ADR 0082)
+ * `POST /api/test/unrest`.
  * Registered only inside the E2E_TEST_HOOKS guard in app.ts (memory mode), which also turns the
  * street hooks on; anywhere else these routes do not exist and `streetHooks.take` returns null.
  */
@@ -76,6 +78,16 @@ export function registerRiskHooks(
       const { body, c } = await prepare(request, PatrolBody);
       patrolHooks.set(c._id.toHexString(), body.mode);
       return { mode: patrolHooks.mode(c._id.toHexString()) };
+    }),
+  );
+
+  // Review 5 (ADR 0082): the caller pushes a rival home city into Unrest (the next boundary decides
+  // the prize).
+  app.post(
+    '/api/test/unrest',
+    handle(async (request) => {
+      const { body, c } = await prepare(request, UnrestBody);
+      return await pushIntoUnrest(content, c, body, now());
     }),
   );
 

@@ -95,6 +95,12 @@ export function CityCard({ city: c, names, onBoard, boardPending, onSeeDistricts
           {copy.risk.rival.cardLine(names[c.rival.homeFactionId] ?? c.rival.homeFactionId)}
         </p>
       )}
+      {/* Review 5 (answers §10.2): the goal line's first sentence, *The goal: Unrest · 11.4 points to go*. */}
+      {c.rival && c.goal && (
+        <p className="font-mono text-[11.5px] text-text-2" data-testid="city-goal">
+          {c.goal.unrest ? copy.risk.rival.cardGoalHold(c.name) : copy.risk.rival.cardGoal(c.goal.toUnrest.toFixed(1))}
+        </p>
+      )}
       {note && (
         <p className="font-mono text-[12px] text-muted" data-testid="city-lock">
           {note}

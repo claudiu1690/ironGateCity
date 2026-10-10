@@ -6,6 +6,7 @@ import type { CouncilPhase } from './calendar';
 import type { CountRow, DeskNext } from './council';
 import type { DayKey } from './day';
 import type { MoraleState } from './morale';
+import type { RiskBand } from './missions';
 import type { OrdinanceTagView } from './ordinances';
 import type { HeatState } from './heat';
 import type { MissionType } from './constants';
@@ -268,7 +269,12 @@ export type RiskCondition =
   /** On rival ground yesterday (`rival-trip`, `{rivalCity}`). */
   | { kind: 'rivalGroundYesterday' }
   /** Put on the train home yesterday (`deported`, `{rivalCity}`, In Print). */
-  | { kind: 'deportedYesterday' };
+  | { kind: 'deportedYesterday' }
+  /**
+   * Review 5 (ADR 0082): an Unrest prize credited at this settlement (`unrest-pushed`, `{city}`,
+   * `{party}`, `{top}`, `{pushingParty}`).
+   */
+  | { kind: 'unrestPushed' };
 
 export const RISK_CONDITION_KINDS = [
   'missionFirstYesterday',
@@ -437,6 +443,14 @@ export const PLACEHOLDERS = [
   'district',
   'faction',
   'issue',
+  /**
+   * Review 5 (ADR 0082): the Unrest prize's headline: the town, its home party, the reader's party's
+   * top three pushers, and the reader's party.
+   */
+  'city',
+  'party',
+  'top',
+  'pushingParty',
 ] as const;
 export type Placeholder = (typeof PLACEHOLDERS)[number];
 
@@ -934,6 +948,22 @@ export interface NightView {
   changesAt: number | null;
 }
 
+/**
+ * Slice 5 (tech design §8.3), review 5 v2 (answers §10.2, ADR 0082): the rival plate's header. Points,
+ * not thousandths. `pressure.byFaction`: today's push by party (empty for a day stored before the
+ * split). `risk`: the band of the player's tier-1 run-in chance here now (Heat, the record, the day's
+ * flags, the night). `goal`: the home share, `toUnrest` (share − 60, at least 0), `aboveFloor`
+ * (share − 50) and `weekPushed` (the player's party over today and the six days before).
+ */
+export interface RivalGroundView {
+  homeFactionId: FactionId;
+  unrest: boolean;
+  pressure: { lost: number; cap: 2; left: number; byFaction: Partial<Record<FactionId, number>> };
+  risk: RiskBand;
+  night: boolean;
+  goal: { share: number; toUnrest: number; aboveFloor: number; weekPushed: number };
+}
+
 export interface CityView {
   id: string;
   name: string;
@@ -985,11 +1015,7 @@ export interface CityView {
    * Slice 5 (tech design §8.3): on rival ground, the home faction, Unrest and the day's pressure
    * (*1.3 of 2.0 points left today*); null elsewhere.
    */
-  rivalGround?: {
-    homeFactionId: FactionId;
-    unrest: boolean;
-    pressure: { lost: number; cap: 2; left: number };
-  } | null;
+  rivalGround?: RivalGroundView | null;
   /**
    * Review 5 (ADR 0081, tech design §8.3): a patrol card waiting in this city (the hostile deck's
    * shape, its put-aside row last) and its kicker (*A PATROL · RAMPART ROW*); null otherwise.
@@ -1169,6 +1195,18 @@ export interface ActionResult {
   character: CharacterView;
 }
 
+/**
+ * Slice 4 (ADR 0028): an award line on the desk. Review 5 (ADR 0082): the Unrest prize is
+ * `kind: 'unrest'` with its Party XP (`fxp`) and the whole line as `label`
+ * (*Duskwall in Unrest · you pushed 1.8 points this week · +50 Party XP*).
+ */
+export interface DeskAwardView {
+  kind: 'hero' | 'issue' | 'unrest';
+  label: string;
+  pc: number;
+  fxp?: number;
+}
+
 export interface DeskView {
   /**
    * Frozen at settlement (review 1: the wage). `perDay` is the daily pay with the member's fifth;
@@ -1193,7 +1231,7 @@ export interface DeskView {
   daysSinceLastPaper: number | null;
   yesterday: DailyTally | null;
   /** Slice 4 (ADR 0028): the hero and Issue Political Capital credited at this settlement. */
-  awards?: Array<{ kind: 'hero' | 'issue'; label: string; pc: number }> | null;
+  awards?: DeskAwardView[] | null;
   /** Slice 4: the room in Irongate while it runs (live at read). */
   room?: { untilDay: DayKey; cap: number } | null;
   /** Slice 5 (tech design §11.3): the held line, *Where you are*, Heat and the record. */
@@ -2021,6 +2059,8 @@ export interface NationCityView {
   barredUntil?: number;
   /** Slice 5 (screens §8.1): *Rival ground · Home city of the {faction}*. */
   rival?: { homeFactionId: FactionId };
+  /** Review 5 (answers §10.2): a rival home city's goal, *The goal: Unrest · 11.4 points to go*. */
+  goal?: { toUnrest: number; unrest: boolean };
   minutes: number | null;
   fare: PriceView | null;
   /** The capital: the average of its districts; Clearwater: its baseline. */

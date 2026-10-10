@@ -363,7 +363,8 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
         {/* Slice 4 (ADR 0028, screens §9.3): hero and Issue Political Capital credited, and the room. */}
         {(desk.awards ?? []).map((a) => (
           <Line key={`${a.kind}:${a.label}`} testId="desk-award">
-            {copy.deskAward(a.label, a.pc)}
+            {/* Review 5 (ADR 0082): the Unrest prize's line carries its own Party XP. */}
+            {a.kind === 'unrest' ? a.label : copy.deskAward(a.label, a.pc)}
           </Line>
         ))}
         {desk.room && (

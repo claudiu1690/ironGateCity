@@ -55,8 +55,10 @@ export function buildEdition(i: {
   deposits?: { count: number; pc: number } | null;
   /** Review 1 (§13.4): the PC One of Us paid at this settlement. */
   oneOfUsPc?: number;
-  /** Slice 4 (ADR 0028): hero and Issue awards credited at this settlement. */
-  awards?: Array<{ kind: 'hero' | 'issue'; label: string; pc: number }>;
+  /** Slice 4 (ADR 0028): hero and Issue awards credited at this settlement; review 5: the Unrest prize. */
+  awards?: Array<{ kind: 'hero' | 'issue' | 'unrest'; label: string; pc: number; fxp?: number }>;
+  /** Review 5 (ADR 0082): the Unrest prize credited at this settlement, for `unrest-pushed`. */
+  unrestPushed?: PaperFacts['unrestPushed'];
   /** Review 1: the seniority days the last boundary added (the Long Service Order's 2), else 1. */
   seniorityStepYesterday?: number;
   /** Slice 5 (tech design §11.2): the risk facts and their placeholders (`riskEdition`). */
@@ -96,6 +98,7 @@ export function buildEdition(i: {
     // Slice 4: `hl.*.train-open` the morning after the Level reached 10.
     ...(prev !== null ? { level: { before: prev.snapshot.level, after: c.level } } : {}),
     ...(i.risk ? { risk: i.risk.facts } : {}),
+    ...(i.unrestPushed ? { unrestPushed: i.unrestPushed } : {}),
   };
 
   const templates = content.headlinesOf(paperCityId);
@@ -133,6 +136,15 @@ export function buildEdition(i: {
     // Slice 4: the Herald's stored lines name the faction and the residence.
     faction: content.faction(c.factionId).shortName,
     district: residencePlaceName(content, c),
+    // Review 5 (ADR 0082): the Unrest prize's headline; `{top}` is the reader's party's top three.
+    ...(i.unrestPushed
+      ? {
+          city: i.unrestPushed.cityName,
+          party: i.unrestPushed.homeName,
+          pushingParty: i.unrestPushed.partyName,
+          top: namesLine(i.unrestPushed.top),
+        }
+      : {}),
   };
   // Slice 5: each risk headline's own fills (its `{missionTitle}` is the one its fact names).
   const varsFor = (t: HeadlineTemplate): Partial<Record<Placeholder | RiskPlaceholder, string>> =>
@@ -151,7 +163,7 @@ export function buildEdition(i: {
       // Slice 5 (T18): a risk deck held to 200 once filled (a long mission title and `{how}`);
       // the slice 1–4 decks are printed as they always were.
       ...(t.deck
-        ? { deck: isRisk(t) ? fitDeck(fillTemplate(t.deck, varsFor(t))) : fillTemplate(t.deck, varsFor(t)) }
+        ? { deck: isRisk(t) || t.when.some((w) => w.kind === 'unrestPushed') ? fitDeck(fillTemplate(t.deck, varsFor(t))) : fillTemplate(t.deck, varsFor(t)) }
         : {}),
     })),
     desk: {
@@ -177,6 +189,12 @@ export function buildEdition(i: {
     },
     snapshot: { level: c.level, rank: c.rank, standingLevel },
   };
+}
+
+/** *Ada Ross*, *Ada Ross and Ben Holt*, *Ada Ross, Ben Holt and Cora Lind*. */
+function namesLine(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
 /** The residence's place in a sentence: the district, or the city. */

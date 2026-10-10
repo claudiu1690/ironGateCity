@@ -5,7 +5,7 @@ import { mapAtRest, openLocation, signUp, toTheCard } from './helpers';
 /**
  * Slice 5's rival ground (tech design §15.1 `rival.spec.ts`; screens §8), on a phone: a Collective at
  * Level 10 boards for Duskwall from its nation card; the checkpoint's card waves them on; the arrival
- * warns once; the plate says *rival ground* and what the work draws from; a ticket has one button,
+ * warns once; the plate says *rival ground*, the day's push and the risk (review 5); a ticket has one button,
  * *Once*, and the rival tag; a tap there with a run-in left to luck; Hot and caught at Beacon House:
  * the cells with double bail; released, the train home; and Duskwall barred on the nation map.
  */
@@ -77,9 +77,9 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   await expect(page.getByTestId('plate-rival').filter({ visible: true })).toHaveText(
     'Duskwall · rival ground',
   );
-  await expect(page.getByTestId('plate-pressure').filter({ visible: true })).toContainText(
-    "Your work here draws from the Vanguard's morale",
-  );
+  // Review 5 (answers §10.2): the rival header (push, danger, goal) replaced *draws from*.
+  await expect(page.getByTestId('plate-pressure').filter({ visible: true })).toContainText(/Pushed today.* of 2( points| ·)/);
+  await expect(page.getByTestId('plate-danger').filter({ visible: true })).toContainText(/^Risk here: /);
   // Review 4 #13: away, the orders are one quiet line with the day's count.
   await expect(page.getByTestId('orders-away').filter({ visible: true }).first()).toHaveText(
     /^Your orders are in Coalport · \d of 3 done$/,

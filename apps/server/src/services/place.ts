@@ -164,7 +164,9 @@ export function moveOpinion(
       { factionId: target, swing: -op.taken },
     ];
     contribution = op.toActor;
-    if (capped && op.taken > 0) pressure = addPressure(cityState?.rivalPressure ?? null, today, toThousandths(op.taken));
+    // Review 5 (ADR 0082): the push by party rides the same write.
+    if (capped && op.taken > 0)
+      pressure = addPressure(cityState?.rivalPressure ?? null, today, toThousandths(op.taken), i.actor);
   }
   // ADR 0022: a threshold crossed by this act writes the morale record and a knock-on line.
   const before = home ? moraleState(shares[home]) : null;

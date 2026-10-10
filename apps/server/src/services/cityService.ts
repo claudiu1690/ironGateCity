@@ -11,12 +11,17 @@ import type {
 } from '@irongate/db';
 import {
   FACTION_IDS,
+  MORALE,
+  OPINION_FLOORS,
   RIVAL_GROUND,
   actionEnergy,
   averageShares,
   barredByRecord,
   placeOf,
+  pressureByFaction,
   pressureLostToday,
+  pushedThisWeek,
+  riskBand,
   rivalGroundIn,
   suggestedWay,
   computeCheck,
@@ -70,7 +75,7 @@ import { pickArt } from './art';
 import { politicsSummary } from './politicsService';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import { lodgingsView, residenceCardView } from './residenceService';
-import { recordLevelOf } from './risk';
+import { recordLevelOf, rivalTapChance } from './risk';
 import { trainsFrom } from './travelService';
 import {
   assetView,
@@ -299,6 +304,51 @@ async function scoreboardOf(
   return { mine: line, table };
 }
 
+/** Points from thousandths, to three decimals. */
+const pointsOf = (k: number) => Math.round(k) / 1_000;
+const round3 = (x: number) => Math.round(x * 1_000) / 1_000;
+
+/**
+ * Review 5 (answers §10.2, ADR 0082): the rival plate's header. The push bar's split is today's
+ * `rivalPressure.byFaction`; the danger word is the band of a tier-1 tap's run-in chance here now;
+ * the goal reads the home share against 60 and the party's push over the last seven days.
+ */
+function rivalHeaderView(
+  content: GameContent,
+  c: CharacterDoc,
+  cityId: string,
+  rival: { homeFactionId: FactionId; unrest: boolean; pressureLeft: number },
+  state: CityDoc | null,
+  opinion: OpinionShares,
+  residenceDoc: CityDoc | null,
+  now: number,
+): NonNullable<CityView['rivalGround']> {
+  const today = dayKey(now);
+  const p = state?.rivalPressure ?? null;
+  const byFaction: Partial<Record<FactionId, number>> = {};
+  for (const [f, k] of Object.entries(pressureByFaction(p, today)) as Array<[FactionId, number]>)
+    if (k > 0) byFaction[f] = pointsOf(k);
+  const share = opinion[rival.homeFactionId];
+  return {
+    homeFactionId: rival.homeFactionId,
+    unrest: rival.unrest,
+    pressure: {
+      lost: Math.min(RIVAL_GROUND.pressureCapPerDay, pressureLostToday(p, today) / 1_000),
+      cap: RIVAL_GROUND.pressureCapPerDay,
+      left: rival.pressureLeft,
+      byFaction,
+    },
+    risk: riskBand(rivalTapChance(c, cityId, now, residenceDoc, content)),
+    night: nightAt(now).night,
+    goal: {
+      share,
+      toUnrest: round3(Math.max(0, share - MORALE.unrestBelow)),
+      aboveFloor: round3(Math.max(0, share - OPINION_FLOORS.homeFaction)),
+      weekPushed: pointsOf(pushedThisWeek(p, today, c.factionId)),
+    },
+  };
+}
+
 /**
  * Content city + live state + this character's odds, costs, orders and jobs (ADR 0003). Slice 3:
  * live costs, the Open Doors bonus and the ticket tags under the ordinance in force (ADR 0021), the
@@ -493,18 +543,9 @@ export async function getCityView(
       atHome || rival
         ? await residenceCardView(content, c, { cityId: city.id, districtId: null }, today)
         : null,
-    // Slice 5 (screens §8.3): the plate's *1.3 of 2.0 points left today*.
-    rivalGround: rival
-      ? {
-          homeFactionId: rival.homeFactionId,
-          unrest: rival.unrest,
-          pressure: {
-            lost: Math.min(RIVAL_GROUND.pressureCapPerDay, pressureLostToday(state?.rivalPressure, today) / 1_000),
-            cap: RIVAL_GROUND.pressureCapPerDay,
-            left: rival.pressureLeft,
-          },
-        }
-      : null,
+    // Slice 5 (screens §8.3), review 5 (answers §10.2, ADR 0082): the rival header's push bar, danger
+    // word and goal, all from the city document already read and the character.
+    rivalGround: rival ? rivalHeaderView(content, c, city.id, rival, state, opinion, residenceDoc, now) : null,
     // Review 5 (ADR 0081): the patrol card waiting here, if any.
     patrol: patrolCityView(content, c, city.id),
     locations: city.locations.map((location, index) => {

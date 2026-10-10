@@ -1,4 +1,4 @@
-import { MORALE, OPINION_FLOORS } from './constants';
+import { MORALE, OPINION_FLOORS, UNREST_PRIZE } from './constants';
 import type { DayKey } from './day';
 import type { FactionId, OpinionShares } from './types';
 
@@ -88,4 +88,40 @@ export function moraleTransition(
   const state = moraleState(share);
   if (prev && prev.state === state) return null;
   return { state, since: day, previous: prev?.state ?? null };
+}
+
+/**
+ * Review 5 (answers §10.3, ADR 0082): the Unrest prize's step at a home city's boundary `day`, from
+ * the morale record after the boundary's own transition and the city's `unrestPrize`. An entry is
+ * the record's `since` while in Unrest; each entry is considered once, and it pays when nothing was
+ * paid in the `everyDays` before. Pure.
+ */
+export function unrestEntry(i: {
+  morale: MoraleRecord | null | undefined;
+  prize: { entry: DayKey | null; paidDay: DayKey | null } | null | undefined;
+  day: DayKey;
+}): { consider: false } | { consider: true; entry: DayKey; pay: boolean } {
+  const m = i.morale;
+  if (!m || m.state !== 'unrest') return { consider: false };
+  if (i.prize?.entry === m.since) return { consider: false };
+  const paid = i.prize?.paidDay ?? null;
+  return { consider: true, entry: m.since, pay: paid === null || i.day - paid >= UNREST_PRIZE.everyDays };
+}
+
+/**
+ * Review 5 (ADR 0082): who is paid. The pushers of other parties with at least `minPushedK`
+ * thousandths; `topByFaction` names each party's top three (by push, then name) for the headline.
+ */
+export function prizeWinners<
+  R extends { characterId: string; name: string; factionId: FactionId; pushedK: number },
+>(rows: readonly R[], home: FactionId): { winners: R[]; topByFaction: Partial<Record<FactionId, string[]>> } {
+  const winners = rows
+    .filter((r) => r.factionId !== home && r.pushedK >= UNREST_PRIZE.minPushedK)
+    .sort((a, b) => b.pushedK - a.pushedK || a.name.localeCompare(b.name));
+  const topByFaction: Partial<Record<FactionId, string[]>> = {};
+  for (const w of winners) {
+    const list = (topByFaction[w.factionId] ??= []);
+    if (list.length < UNREST_PRIZE.top) list.push(w.name);
+  }
+  return { winners, topByFaction };
 }

@@ -1,4 +1,5 @@
 import type { GameContent } from '@irongate/content';
+import { copy } from '@irongate/content/copy';
 import { ActionLog, Award, Candidacy, Character, City, Encounter, OfficeTerm, PaperEntry, Stay, isDuplicateKeyError } from '@irongate/db';
 import type {
   AwardDoc,
@@ -154,14 +155,41 @@ export function computeSettlement(
   // Slice 4 (ADR 0028): the awards the city days wrote since the last settlement.
   const awards = read.awards ?? [];
   const awardsPc = awards.reduce((sum, a) => sum + a.pc, 0);
-  const awardLines = awards.map((a) => ({
-    kind: a.kind,
-    label:
-      a.kind === 'hero'
-        ? (a.title?.label ?? 'Hero')
-        : `Your work on ${content.issue(a.ref.split(':').slice(2).join(':'))?.short ?? 'the Issue'}`,
-    pc: a.pc,
-  }));
+  // Review 5 (ADR 0082): the Unrest prize's Party XP, credited like the stipend's (the rank follows).
+  const awardsFxp = awards.reduce((sum, a) => sum + (a.fxp ?? 0), 0);
+  const awardLines = awards.map((a) =>
+    a.kind === 'unrest'
+      ? {
+          kind: a.kind,
+          label: copy.unrestPrize(
+            content.city(a.cityId)?.name ?? a.cityId,
+            ((a.meta?.pushedK ?? a.amount ?? 0) / 1_000).toFixed(1),
+            a.fxp ?? 0,
+          ),
+          pc: a.pc,
+          fxp: a.fxp ?? 0,
+        }
+      : {
+          kind: a.kind,
+          label:
+            a.kind === 'hero'
+              ? (a.title?.label ?? 'Hero')
+              : `Your work on ${content.issue(a.ref.split(':').slice(2).join(':'))?.short ?? 'the Issue'}`,
+          pc: a.pc,
+        },
+  );
+  // The headline names the first prize credited (two towns entering Unrest the same night is rare).
+  const prize = awards.find((a) => a.kind === 'unrest');
+  const prizeCity = prize ? content.city(prize.cityId) : undefined;
+  const unrestPushed =
+    prize && prizeCity?.homeFactionId
+      ? {
+          cityName: prizeCity.name,
+          homeName: content.faction(prizeCity.homeFactionId).shortName,
+          partyName: content.faction(c.factionId).shortName,
+          top: prize.meta?.top ?? [],
+        }
+      : null;
   const stipend = { pc: boundaries * COUNCIL.stipend.pc, fxp: boundaries * COUNCIL.stipend.fxp };
   const refundPc = due.length * COUNCIL.cost.declare;
   // Review 1 (§13.4): One of Us pays 1 PC a day per city where it is held, for the boundaries
@@ -172,7 +200,7 @@ export function computeSettlement(
   const oneOfUsPc = oneOfUsCities * paidBoundaries * STANDING.oneOfUsPcPerDay;
   const gains = applyGains(
     { xp: c.xp, level: c.level, fxp: c.fxp, rank: c.rank, pc: c.pc, statPointsPending: c.statPointsPending },
-    { xp: 0, fxp: stipend.fxp, pc: stipend.pc + refundPc + oneOfUsPc + awardsPc },
+    { xp: 0, fxp: stipend.fxp + awardsFxp, pc: stipend.pc + refundPc + oneOfUsPc + awardsPc },
   );
   const offices = terms
     .filter((t) => t.fromDay <= today && today < t.toDay && (t.vacatedDay ?? null) === null)
@@ -255,6 +283,7 @@ export function computeSettlement(
     deposits: due.length > 0 ? { count: due.length, pc: refundPc } : null,
     oneOfUsPc,
     awards: awardLines,
+    unrestPushed,
     seniorityStepYesterday: seniorityStep(dayModifiers(content, wageCity, today - 1)),
     // Slice 5 (tech design §11.2): the risk facts, with the Heat projected at the settlement.
     risk: riskEdition(content, c, today, projectHeat(heatTimerOf(c), now, heatRateOn(content, city)).value, read.risk ?? null),

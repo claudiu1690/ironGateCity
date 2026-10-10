@@ -84,7 +84,7 @@ export type {
   StoredTally,
 } from './models/character';
 export { City, cityOpinion } from './models/city';
-export type { CityDoc, HomeCityDoc, MoraleRecordDoc, RivalPressureDoc } from './models/city';
+export type { CityDoc, HomeCityDoc, MoraleRecordDoc, RivalPressureDoc, UnrestPrizeDoc } from './models/city';
 export { ACTION_LOG_KINDS, ACTION_LOG_OUTCOMES, ActionLog } from './models/actionLog';
 export type { ActionLogDoc, ActionLogKind, ActionLogOutcome } from './models/actionLog';
 export { PaperEntry } from './models/paperEntry';

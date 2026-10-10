@@ -871,6 +871,9 @@ export const copy = {
   pcLeft: (spent: number, left: number) => `−${spent} Political Capital · ${left} left`,
   /** Slice 4 (ADR 0028): a desk line, "District Hero · +25 Political Capital". */
   deskAward: (label: string, pc: number) => `${label} · +${pc} Political Capital`,
+  /** Review 5 (answers §10.3, ADR 0082): the Unrest prize's desk line. `pushed` is one decimal. */
+  unrestPrize: (city: string, pushed: string, fxp: number) =>
+    `${city} in Unrest · you pushed ${pushed} points this week · +${fxp} Party XP`,
   /** Slice 4 (screens §6.3): "−500 Iron · 3,910 left". */
   ironLeft: (spent: number, left: string) => `−${spent} Iron · ${left} left`,
   moraleKnockOn: (city: string, delta: string, after: string) => `${city} morale ${delta} → ${after} %`,
@@ -1839,6 +1842,31 @@ export const copy = {
       placeLine: (city: string) => `${city} · rival ground`,
       drawsFrom: (faction: string, left: string) =>
         `Your work here draws from the ${faction}'s morale · ${left} of 2.0 points left today`,
+      // Review 5 (answers §10.2, §16.1, ADR 0082): the rival header's three lines.
+      /** The push bar's label. */
+      pushedToday: 'Pushed today',
+      /** *0.7 of 2 points · the Collective 0.5 · the Alliance 0.2* (points as `pointsWord`). */
+      pushFigure: (total: string, parts: Array<{ party: string; points: string }>) =>
+        [`${total} of 2 points`, ...parts.map((p) => `the ${p.party} ${p.points}`)].join(' · '),
+      /** At the cap: *The town has had enough today · 2 of 2 · more from tomorrow 01:00*. */
+      pushFull: (at: string) => `The town has had enough today · 2 of 2 · more from ${at}`,
+      /** The danger line; at night with the patrols (answers §16.1). */
+      danger: (word: string, night: boolean) =>
+        `Risk here: ${word}${night ? ' · patrols out' : ''} · every tap can bring a run-in · Heat counts double · the cells put you on the train home`,
+      /** The goal line, out of Unrest. */
+      goal: (home: string, toGo: string, week: string) =>
+        `The goal: Unrest. Under 60 % the ${home}'s branch drops everything to win the town back, its deputies go quiet, and your work here pays three quarters more. ${toGo} points to go · your party has pushed ${week} this week.`,
+      /** The goal line in Unrest. */
+      goalHold: (city: string, home: string, above: string) =>
+        `${city} is in Unrest · hold it: your work here pays +75 % Party XP · the ${home} needs 60 to get out · ${above} points above the floor.`,
+      /** On a phone the goal is one line (the whole sentence is in its note): *The goal: Unrest · 5.0 points to go · your party has pushed 4.2 this week*. */
+      goalShort: (toGo: string, week: string) =>
+        `The goal: Unrest · ${toGo} points to go · your party has pushed ${week} this week`,
+      goalHoldShort: (city: string, above: string) =>
+        `${city} is in Unrest · hold it · ${above} points above the floor`,
+      /** The nation card's line (the goal line's first sentence). */
+      cardGoal: (toGo: string) => `The goal: Unrest · ${toGo} points to go`,
+      cardGoalHold: (city: string) => `${city} is in Unrest · hold it`,
       arrivalWarning:
         'Rival ground: Heat doubles here, every tap can bring a run-in, and nothing you own is at risk.',
     },
@@ -1898,9 +1926,20 @@ export const copy = {
         'Missions',
         'The harder work: a briefing, two or three ways to do it, one tap. It can fail, which pays a little XP. The game remembers your way, so the second time is one tap.',
       ],
+      // Review 5 (answers §10.2): reworded to end on the worst and on what is never at risk.
       rivalGround: () => [
         'Rival ground',
-        "The other side's home town. Everything is harder, Heat doubles, every tap can bring a run-in, and party work pays half again. Nothing you own is at risk; the worst is a night in the cells and the train home.",
+        "The other side's home town. Everything is harder, Heat doubles, every tap can bring a run-in, and party work pays half again; the worst is the cells and the train home, and nothing you own is at risk.",
+      ],
+      /** Review 5 (answers §10.2): the push bar's note. */
+      push: () => [
+        'Pushed today',
+        "What the town will take from outsiders in a day: two points off the home party's share, between the other two parties. After that your work here still pays XP, Party XP and Iron and moves nothing until the day turns.",
+      ],
+      /** Review 5 (answers §10.2): the goal line's note. */
+      unrest: () => [
+        'Unrest',
+        `A home town under 60 % is in Unrest: its branch's orders become "restore the base", the town counts half for its party in the republic, its deputies abstain in Parliament, and visitors' party work there pays three quarters more. It ends when the home party is back at 60.`,
       ],
       infirmary: () => [
         'The infirmary',

@@ -1,8 +1,10 @@
 import type { GameContent } from '@irongate/content';
 import {
+  Award,
   Candidacy,
   Character,
   City,
+  InfluenceLedger,
   Election,
   OfficeTerm,
   OrderPaper,
@@ -15,10 +17,12 @@ import type {
   CityDoc,
   ElectionDoc,
   OrderPaperDoc,
+  UnrestPrizeDoc,
 } from '@irongate/db';
 import {
   COUNCIL,
   MORALE,
+  UNREST_PRIZE,
   applyDrift,
   applyMoraleLoss,
   applyPersuasion,
@@ -35,9 +39,12 @@ import {
   isMonday,
   moraleState,
   moraleTransition,
+  prizeWinners,
+  unrestEntry,
   weekOf,
 } from '@irongate/rules';
-import type { DayKey, NpcSlateEntry, OpinionShares } from '@irongate/rules';
+import type { DayKey, FactionId, NpcSlateEntry, OpinionShares } from '@irongate/rules';
+import { Types } from 'mongoose';
 import type { ClientSession } from 'mongoose';
 import { captureException } from '../sentry';
 import { bootstrapCapital, processCapitalBoundary } from './capitalDay';
@@ -51,7 +58,7 @@ import {
   turnoutOf,
 } from './cityDayCore';
 import { bootstrapIssues, drawWeek, heroesStep, issuesStep } from './issuesDay';
-import { writeLedger } from './ledger';
+import { cycleKeyOf, writeLedger } from './ledger';
 import type { LedgerRowInput } from './ledger';
 import { placesOf } from './residence';
 import { inTransaction } from './txn';
@@ -591,6 +598,14 @@ async function processBoundary(
   await writeLedger(content, ledger, session);
   const share = shares[home];
   const m = moraleTransition(city.morale ?? null, share, d);
+  // Review 5 (ADR 0082): the Unrest prize, decided on the morale record after this boundary's own
+  // transition and written by this guarded update (a re-run throws AlreadySettled before it).
+  const prize = await unrestPrizeStep(
+    content,
+    { cityId, home, city, morale: m ?? city.morale ?? null, d },
+    session,
+  );
+  if (prize) set.unrestPrize = prize;
   const done = await City.updateOne(
     { _id: cityId, 'world.settledDay': d - 1 },
     {
@@ -603,6 +618,101 @@ async function processBoundary(
     { session },
   );
   if (done.matchedCount === 0) throw new AlreadySettled();
+}
+
+/**
+ * Review 5 (answers §10.3, ADR 0082): a home city's Unrest entry seen at boundary `d`. Each entry is
+ * considered once (`unrestPrize.entry`); when it pays (nothing paid in the seven days before), the
+ * pushers are the home party's negative action legs at the city in the seven City Days before `d`,
+ * summed by character from the influence ledger (the `{ placeId, cycleKey }` index); members of
+ * other parties with half a point or more get an `unrest` award of 50 Party XP, upserted on the
+ * award's unique `{ kind, ref, characterId }` and credited by their own settlement. Null when the
+ * boundary sees no new entry.
+ */
+async function unrestPrizeStep(
+  content: GameContent,
+  i: {
+    cityId: string;
+    home: FactionId;
+    city: CityDoc;
+    morale: CityDoc['morale'] | null;
+    d: DayKey;
+  },
+  session: ClientSession,
+): Promise<UnrestPrizeDoc | null> {
+  const prev = i.city.unrestPrize ?? null;
+  const step = unrestEntry({ morale: i.morale, prize: prev, day: i.d });
+  if (!step.consider) return null;
+  let paid = false;
+  if (step.pay) {
+    const days = Array.from({ length: UNREST_PRIZE.windowDays }, (_, k) => i.d - UNREST_PRIZE.windowDays + k);
+    const cycleKeys = [...new Set(days.map((x) => cycleKeyOf(content, i.cityId, i.cityId, x)))];
+    const sums = await InfluenceLedger.aggregate<{ _id: Types.ObjectId; pushedK: number }>([
+      {
+        $match: {
+          placeId: i.cityId,
+          cycleKey: { $in: cycleKeys },
+          day: { $gte: i.d - UNREST_PRIZE.windowDays, $lt: i.d },
+          factionId: i.home,
+          kind: 'action',
+          swing: { $lt: 0 },
+          'source.kind': 'character',
+        },
+      },
+      { $group: { _id: '$source.characterId', pushedK: { $sum: { $multiply: ['$swing', -1] } } } },
+    ]).session(session);
+    const pushers = sums.filter((x) => x.pushedK >= UNREST_PRIZE.minPushedK);
+    const people =
+      pushers.length > 0
+        ? await Character.find(
+            { _id: { $in: pushers.map((x) => x._id) }, factionId: { $ne: i.home } },
+            { name: 1, factionId: 1 },
+          )
+            .session(session)
+            .lean<Array<Pick<CharacterDoc, '_id' | 'name' | 'factionId'>>>()
+        : [];
+    const byId = new Map(people.map((p) => [p._id.toHexString(), p]));
+    const { winners, topByFaction } = prizeWinners(
+      pushers.flatMap((x) => {
+        const p = byId.get(x._id.toHexString());
+        return p
+          ? [{ characterId: x._id.toHexString(), name: p.name, factionId: p.factionId, pushedK: x.pushedK }]
+          : [];
+      }),
+      i.home,
+    );
+    if (winners.length > 0) {
+      const ref = `unrest|${i.cityId}|${step.entry}`;
+      await Award.bulkWrite(
+        winners.map((w) => ({
+          updateOne: {
+            filter: { kind: 'unrest', ref, characterId: new Types.ObjectId(w.characterId) },
+            update: {
+              $setOnInsert: {
+                kind: 'unrest',
+                ref,
+                characterId: new Types.ObjectId(w.characterId),
+                cityId: i.cityId,
+                placeId: i.cityId,
+                pc: 0,
+                fxp: UNREST_PRIZE.fxp,
+                amount: w.pushedK,
+                meta: { pushedK: w.pushedK, top: topByFaction[w.factionId] ?? [] },
+                title: null,
+                bracket: null,
+                day: i.d,
+                creditedAt: null,
+              },
+            },
+            upsert: true,
+          },
+        })),
+        { session },
+      );
+      paid = true;
+    }
+  }
+  return { entry: step.entry, paidDay: paid ? i.d : (prev?.paidDay ?? null) };
 }
 
 const isConflict = (err: unknown) =>

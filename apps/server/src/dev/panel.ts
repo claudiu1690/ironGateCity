@@ -47,6 +47,7 @@ import {
   tapRunInChance,
 } from './risk';
 import type { DevAction, DevActionResult, DevHomeCity, DevStatus } from './types';
+import { UnrestBody, pushIntoUnrest } from './unrest';
 
 /**
  * The dev time-skip panel's routes (README "Reviewing with the dev panel"). Registered only inside
@@ -98,6 +99,8 @@ const DEV_ACTIONS: readonly DevAction[] = [
   // Review 5 (ADR 0079, 0081).
   'dusk',
   'patrol',
+  // Review 5 (ADR 0082).
+  'unrest',
 ];
 /** Slice 5 (tech design §8.6): the panel's *Level 6* and *Rank 3*. */
 const DEV_LEVEL = 6;
@@ -555,6 +558,22 @@ async function runAction(
           : mode === 'never'
             ? 'No patrol rolls for you'
             : 'Patrols roll as the game does';
+      break;
+    }
+    case 'unrest': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const target = rivalHomes(content, doc).find((x) => x.cityId === String(body.target ?? ''));
+      if (!target) throw new DevRefusal(400, 'target is a rival home city id');
+      // A town already in Unrest is lifted out first, so this is always a fresh entry.
+      await pushIntoUnrest(
+        content,
+        doc,
+        UnrestBody.parse({ cityId: target.cityId, share: 65, pushed: 0 }),
+        clock.now(),
+      );
+      const r = await pushIntoUnrest(content, doc, UnrestBody.parse({ cityId: target.cityId }), clock.now());
+      did = `${r.cityName} pushed into Unrest (${r.share.toFixed(1)} %, ${r.pushed} points in your name): the prize is decided at the next day's turn`;
       break;
     }
     case 'unbar': {

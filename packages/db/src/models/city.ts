@@ -17,6 +17,19 @@ export interface RivalPressureDoc {
   /** Thousandths of a point. */
   lost: number;
   prev: { day: DayKey; lost: number } | null;
+  /** Review 5 (ADR 0082): today's thousandths by the party that took them; absent before the round. */
+  byFaction?: Partial<Record<FactionId, number>>;
+  /** Review 5 (ADR 0082): the six City Days before `day` with a push, newest first. */
+  week?: Array<{ day: DayKey; byFaction: Partial<Record<FactionId, number>> }>;
+}
+
+/**
+ * Review 5 (ADR 0082): the Unrest prize on a home city. `entry`: the last Unrest entry considered
+ * (the morale record's `since`); `paidDay`: the boundary that last paid. Absent = never.
+ */
+export interface UnrestPrizeDoc {
+  entry: DayKey | null;
+  paidDay: DayKey | null;
 }
 
 /**
@@ -70,6 +83,8 @@ export interface CityDoc {
    * Absent or null until the first such act.
    */
   rivalPressure?: RivalPressureDoc | null;
+  /** Review 5 (ADR 0082): written by the boundary that considers an Unrest entry. */
+  unrestPrize?: UnrestPrizeDoc | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -105,6 +120,8 @@ const citySchema = new Schema<CityDoc>(
     issues: { type: Schema.Types.Mixed, default: undefined },
     // Slice 5: home cities only, written on the first visitor's act against the home faction.
     rivalPressure: { type: Schema.Types.Mixed, default: undefined },
+    // Review 5 (ADR 0082): home cities only, written at the boundary that sees an Unrest entry.
+    unrestPrize: { type: Schema.Types.Mixed, default: undefined },
   },
   { collection: 'cities', strict: true, timestamps: true, versionKey: false },
 );

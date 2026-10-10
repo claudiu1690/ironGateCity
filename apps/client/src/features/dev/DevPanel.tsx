@@ -700,6 +700,17 @@ function RiskControls({
           Go
         </Button>
       </label>
+      {/* Review 5 (ADR 0082): the chosen rival town pushed into Unrest in your name; Skip a day pays. */}
+      <Button
+        variant="outline"
+        className={cx(small, 'col-span-2')}
+        disabled={disabled || !gotoTarget}
+        pending={busy('unrest')}
+        onClick={() => run('unrest', gotoTarget)}
+        data-testid="dev-btn-unrest"
+      >
+        Push it into Unrest
+      </Button>
       <Button
         variant="outline"
         className={cx(small, 'col-span-2')}

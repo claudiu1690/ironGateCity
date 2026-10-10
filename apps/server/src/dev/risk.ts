@@ -1,11 +1,10 @@
 import type { GameContent } from '@irongate/content';
 import { Character, City, Encounter } from '@irongate/db';
 import type { CharacterDoc, CityDoc, EncounterDoc } from '@irongate/db';
-import { RIVAL_GROUND, dayKey, dayStart, pressureLostToday, runInChance } from '@irongate/rules';
+import { RIVAL_GROUND, dayKey, dayStart, pressureLostToday } from '@irongate/rules';
 import { z } from 'zod';
 import { releaseHeldNow, sendToHeld } from '../services/heldService';
-import { nightAt } from '../services/night';
-import { riskView } from '../services/risk';
+import { isRivalGround, rivalTapChance, riskView } from '../services/risk';
 import { streetHooks } from '../services/streetHooks';
 import type { StreetForce } from '../services/streetHooks';
 import { formatUtc } from './clock';
@@ -169,17 +168,8 @@ export function tapRunInChance(
   residenceCity: CityDoc | null,
   now: number,
 ): number | null {
-  const v = riskView(content, c, now, residenceCity);
-  if (!v.here.rivalGround) return null;
-  return runInChance({
-    base: 0,
-    tier: 1,
-    rivalGround: true,
-    heatState: v.heat.state,
-    record: v.record.level,
-    flags: { watched: v.here.flags.includes('watched'), warned: v.here.flags.includes('warned') },
-    night: nightAt(now).night,
-  });
+  if (!isRivalGround(content, c, c.cityId)) return null;
+  return rivalTapChance(c, c.cityId, now, residenceCity, content);
 }
 
 /** The status's risk block (tech design §8.6), read from the stored character without settling it. */

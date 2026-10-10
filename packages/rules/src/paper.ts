@@ -45,6 +45,11 @@ export interface PaperFacts {
   level?: { before: number; after: number };
   /** Slice 5 (tech design §11.2): the risk facts of the settlement; absent = none holds. */
   risk?: RiskFacts;
+  /**
+   * Review 5 (ADR 0082): an Unrest prize credited at this settlement: the town, its home party, the
+   * reader's party and its top three pushers; absent or null = none.
+   */
+  unrestPushed?: { cityName: string; homeName: string; partyName: string; top: string[] } | null;
 }
 
 /** Slice 5: what the settlement knows of yesterday's risks (design §14). */
@@ -116,6 +121,8 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
       return f.risk?.rivalGroundYesterday === true;
     case 'deportedYesterday':
       return f.risk?.deportedYesterday === true;
+    case 'unrestPushed':
+      return !!f.unrestPushed;
     default:
       // Political conditions are selected live at read (ADR 0023), never at settlement.
       return false;
