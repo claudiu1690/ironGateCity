@@ -217,7 +217,7 @@ export async function openPlace(page: Page, label: string) {
   if ((await unclearPins(page)).includes(label)) {
     await page.getByTestId('places-button').filter({ visible: true }).click();
     await page
-      .getByRole('dialog', { name: /^Places in / })
+      .getByRole('dialog', { name: / · what's here$/ })
       .getByRole('button', { name: new RegExp(`^${escape(label)}`) })
       .click();
   } else {

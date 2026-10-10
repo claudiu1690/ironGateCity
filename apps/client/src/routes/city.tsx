@@ -31,6 +31,10 @@ import {
   OutOfEnergyCard,
   PlacesList,
   RegisterSheet,
+  missionLabel,
+  missionLockText,
+  missionRiskWord,
+  ticketWay,
   ResidenceCard,
   ResultModal,
   TreatmentCard,
@@ -52,7 +56,7 @@ import {
   pyramidFor,
   residenceLines,
 } from '@irongate/ui';
-import type { Ground } from '@irongate/ui';
+import type { Ground, WhatsHereBlocks } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -322,8 +326,11 @@ export function CityPage() {
       void navigate({ to: '/city/$cityId', params: { cityId: character.cityId }, replace: true });
   }, [refusal, character, navigate]);
 
-  /** Open a pin's sheet; from a Party order (review 1), its matching tickets are marked. */
-  const select = (id: string | null, orderId?: string) => {
+  /**
+   * Open a pin's sheet; from a Party order (review 1), its matching tickets are marked; review 5
+   * (*What's here*): `act`, the ticket or mission the row named, highlighted and scrolled to.
+   */
+  const select = (id: string | null, orderId?: string, act?: string) => {
     setJobMessage(null);
     action.reset();
     // The capital shows one district's places (the user's lock): an order's pin for a place in another
@@ -334,13 +341,13 @@ export function CityPage() {
       void navigate({
         to: '/city/$cityId/$quarterId',
         params: { cityId, quarterId: into },
-        search: { loc: id!, ...(orderId ? { order: orderId } : {}) },
+        search: { loc: id!, ...(orderId ? { order: orderId } : {}), ...(act ? { act } : {}) },
       });
       return;
     }
     void navigate({
       to: '.',
-      search: id ? { loc: id, ...(orderId ? { order: orderId } : {}) } : {},
+      search: id ? { loc: id, ...(orderId ? { order: orderId } : {}), ...(act ? { act } : {}) } : {},
       replace: true,
     });
   };
@@ -484,6 +491,81 @@ export function CityPage() {
             .map((x) => ({ id: x.id, n: 0, name: x.name, blurb: '', locked: copy.map.lockedPlace(x.lock) })),
         ],
       }));
+  // Review 5 (answers §9.2, tech design §9.2): *What's here* above the places, for the city (or the
+  // capital's district the list is opened on): its Issues, the missions to start, the orders here.
+  const hereIds = new Set(shownLocations.map((l) => l.id));
+  const issueRows = district
+    ? district.issues.map((i) => ({ ...i, id: i.issueId }))
+    : (c.issues ?? []).map((i) => ({ ...i, id: i.issueId }));
+  const wh = district?.whatsHere ?? (districts ? undefined : c.whatsHere);
+  const missionsHere = (wh?.missions ?? []).flatMap((row) => {
+    const place = shownLocations.find((l) => l.id === row.locationId);
+    const m = place?.missions?.find((x) => x.id === row.missionId);
+    if (!place || !m) return [];
+    const way = ticketWay(m);
+    const label = missionLabel(m, names).replace(/^Mission · /, '');
+    const odds = way ? copy.odds.band(way.preview.chance) : '';
+    const risk = m.risk.runInChance > 0 ? missionRiskWord(m.risk.runInChance).word : null;
+    return [
+      {
+        id: m.id,
+        title: m.name,
+        line: copy.whatsHere.missionLine(label, place.name, odds, risk, m.energy),
+        lock: row.night ? missionLockText(m) : null,
+        onPick: () => select(place.id, undefined, m.id),
+      },
+    ];
+  });
+  const moreGroups = wh?.more ?? [];
+  const firstLevel = moreGroups.find((g) => g.gate === 'level')?.need ?? null;
+  const moreLine =
+    missionsHere.length > 0
+      ? moreGroups.length > 0
+        ? copy.whatsHere.more(moreGroups)
+        : null
+      : firstLevel !== null
+        ? copy.whatsHere.none(firstLevel)
+        : moreGroups.length > 0
+          ? copy.whatsHere.more(moreGroups)
+          : copy.whatsHere.none(null);
+  const ordersHere = character.orders.items.filter((o) => !o.done && o.pin && hereIds.has(o.pin.locationId));
+  const whatsHere: WhatsHereBlocks | undefined = overview
+    ? undefined
+    : {
+        issues: issueRows.map((i) => {
+          // The first place the Issue tags, its first tagged ticket highlighted (the order-pin pattern).
+          const place = shownLocations.find((l) => l.issueIds?.includes(i.issueId));
+          const act = place?.actions.find((a) =>
+            (a.placeTags ?? []).some((t) => t.kind === 'issue' && t.issueId === i.issueId),
+          );
+          const top = i.leader ? (i.momentum[i.leader] ?? 0) : 0;
+          return {
+            id: i.issueId,
+            name: i.name,
+            line: copy.whatsHere.issueLine(i.leader ? (names[i.leader] ?? i.leader) : null, top),
+            onPick: place ? () => select(place.id, undefined, act?.id) : null,
+          };
+        }),
+        missions: missionsHere,
+        moreLine,
+        orders: character.orders.off
+          ? { line: copy.orders.off }
+          : character.orders.away
+            ? { line: copy.orders.away(character.orders.away.cityName, character.orders.away.done, character.orders.away.of) }
+            : character.orders.allDone
+              ? { line: copy.whatsHere.allDone }
+              : ordersHere.length > 0
+                ? {
+                    rows: ordersHere.map((o) => ({
+                      id: o.id,
+                      title: o.title,
+                      line: copy.whatsHere.orderLine(o.progress, o.target),
+                      onPick: () => select(o.pin!.locationId, o.id),
+                    })),
+                  }
+                : { line: copy.whatsHere.noOrders },
+      };
+
   /**
    * The Places button (on the overview: *Districts*): a small pill in a corner of the map, clear of the
    * plate and the dock, marked as an overlay so the map's first view keeps the pins clear of it. It
@@ -516,7 +598,7 @@ export function CityPage() {
           <circle cx="3.5" cy="12" r="1.2" fill="currentColor" />
           <circle cx="3.5" cy="18" r="1.2" fill="currentColor" />
         </svg>
-        {overview ? copy.capital.districts : 'Places'}
+        {overview ? copy.capital.districts : copy.whatsHere.button}
       </button>
     );
   // Slice 4: *City | Nation* (the Map tab's control); City is where you stand (here).
@@ -1264,7 +1346,7 @@ export function CityPage() {
                   mission={m}
                   energy={energy}
                   names={names}
-                  highlight={!!orderHl && m.order?.id === orderHl}
+                  highlight={(!!orderHl && m.order?.id === orderHl) || m.id === actHl}
                   onChoose={() => {
                     missionStart.reset();
                     setBriefing({ mission: m, locationId: sheetPlace.id, placeName: sheetPlace.name });
@@ -1338,6 +1420,7 @@ export function CityPage() {
         cityName={district?.name ?? c.name}
         places={places}
         groups={placeGroups}
+        whatsHere={whatsHere}
         // Exactly a tap on the pin: the map zooms to it, then its sheet opens (and `?loc=` is set); a
         // greyed one opens its short sheet.
         onPick={(id) => (lockedPins.some((x) => x.id === id) ? setLockedId(id) : select(id))}

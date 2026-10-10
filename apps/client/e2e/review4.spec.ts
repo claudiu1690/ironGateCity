@@ -108,6 +108,6 @@ test('review 4: the notes a new member meets, in order, in plain words', async (
   await plainWords(page, 'Coalport');
   // #18: Reputation said in plain words on the Places list, and #14: the Issue chip when one is drawn.
   await page.getByTestId('places-button').filter({ visible: true }).click();
-  await expect(page.getByRole('dialog', { name: /^Places in / })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: / · what's here$/ })).toBeVisible();
   await plainWords(page, 'the Places list');
 });

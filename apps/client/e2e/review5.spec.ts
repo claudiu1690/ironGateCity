@@ -739,3 +739,90 @@ test('#12 the patrol: a stop on rival ground at night holds the street until a r
     await page.request.post('/api/test/patrol', { data: { mode: 'never' } });
   }
 });
+
+test("#9 What's here: the Issues, the missions you can start, your orders here, then the places", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signUp(page, 'Liesl Marr');
+  await lift(page, { level: 8, rank: 1, energy: 100 });
+  const open = async (title: string) => {
+    const button = page.getByTestId('places-button').filter({ visible: true });
+    await expect(button).toHaveText("What's here");
+    await button.click();
+    const list = page.getByRole('dialog', { name: title });
+    await expect(list).toBeVisible();
+    await expect(list.getByTestId('wh-issues-kicker')).toContainText('Issues this week');
+    await expect(list.getByTestId('wh-missions-kicker')).toHaveText('Missions you can start');
+    await expect(list.getByTestId('wh-orders-kicker')).toHaveText('Your orders here');
+    await expect(list.getByTestId('wh-places')).toHaveText('Places');
+    await expect(list.getByTestId('place-row').first()).toBeAttached();
+    return list;
+  };
+  const issueLine = /^(the \w+ leads · \d+ momentum|nobody yet)$/;
+  const missionLine = /^[A-Z][^·]+ · [^·]+ · [A-Z][a-z ]+( · [A-Z][a-z ]+)? · \d+ Energy$/;
+
+  // 1. A home city at Level 8: its Issues, the missions (the lorry by day with its lock line), the
+  // more line, the welcome day's orders as rows.
+  await page.goto('/city/coalport');
+  await mapAtRest(page);
+  let list = await open("Coalport · what's here");
+  await expect(list.getByTestId('wh-issue').first().getByTestId('wh-line')).toHaveText(issueLine);
+  const missions = list.getByTestId('wh-mission');
+  expect(await missions.count()).toBeGreaterThan(0);
+  await expect(missions.first().getByTestId('wh-line')).toHaveText(missionLine);
+  await expect(list.getByTestId('wh-lock').first()).toHaveText(/^Opens at nightfall · dusk /);
+  await expect(list.getByTestId('wh-more')).toHaveText(/^\d+ more from (Level|Rank) \d+( · \d+ from (Level|Rank) \d+)?$/);
+  expect(await list.getByTestId('wh-order').count()).toBeGreaterThan(0);
+  await settled(page);
+  await shot(list, 'whats-here-home');
+  // A mission row opens its place's sheet at the ticket.
+  const firstTitle = (await missions.first().locator('span').first().textContent())!;
+  await missions.first().click();
+  await expect(list).toBeHidden();
+  const sheet = page.locator('[role=dialog][data-layout]');
+  await expect(sheet).toBeVisible();
+  await expect(sheet.locator('[data-mission][data-highlight]')).toContainText(firstTitle);
+  await expect(page).toHaveURL(/[?&]act=/);
+
+  // 2. Rival ground (Level 10 in Duskwall): the visitor's missions, the orders' collapsed line.
+  await lift(page, { level: 10, rank: 1, cityId: 'duskwall' });
+  await page.goto('/city/duskwall');
+  await mapAtRest(page);
+  list = await open("Duskwall · what's here");
+  await expect(list.getByTestId('wh-orders-line')).toHaveText(/^Your orders are in Coalport · \d of \d done$/);
+  expect(await list.getByTestId('wh-mission').count()).toBeGreaterThan(0);
+  await expect(list.getByTestId('wh-mission').first().getByTestId('wh-line')).toHaveText(missionLine);
+  await settled(page);
+  await shot(list, 'whats-here-rival');
+  // An Issue row opens the first place it tags.
+  const issue = list.locator('button[data-testid=wh-issue]').first();
+  if ((await issue.count()) > 0) {
+    await issue.click();
+    await expect(list).toBeHidden();
+    await expect(page.locator('[role=dialog][data-layout]')).toBeVisible();
+  } else {
+    await page.keyboard.press('Escape');
+  }
+
+  // 3. The capital: scoped to the district the list is opened on.
+  await lift(page, { level: 10, rank: 1, cityId: 'irongate' });
+  await page.goto('/city/irongate/irongate.station-market');
+  await expect(page.getByTestId('district-name').filter({ visible: true })).toHaveText('Station & Market');
+  list = await open("Station & Market · what's here");
+  await expect(list.getByTestId('wh-orders-line')).toHaveText(/^Your orders are in Coalport · \d of \d done$/);
+  // Only this district's missions (the capital's four are all at Station & Market's places).
+  const rows = list.getByTestId('wh-mission');
+  expect(await rows.count()).toBeGreaterThan(0);
+  for (const line of await rows.getByTestId('wh-line').allTextContents()) expect(line).toMatch(missionLine);
+  // Another district lists none of them.
+  await page.keyboard.press('Escape');
+  await page.goto('/city/irongate/irongate.eastside');
+  await expect(page.getByTestId('district-name').filter({ visible: true })).toHaveText('Eastside');
+  const east = await open("Eastside · what's here");
+  await expect(east.getByTestId('wh-mission')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await page.goto('/city/irongate/irongate.station-market');
+  list = await open("Station & Market · what's here");
+  await settled(page);
+  await shot(list, 'whats-here-district');
+});

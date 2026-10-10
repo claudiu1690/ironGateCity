@@ -84,7 +84,7 @@ export type { OrdersCompleteProps } from './components/OrdersComplete';
 export { Picture, artUrl } from './components/Picture';
 export type { PictureProps } from './components/Picture';
 export { IssueChip, PlacesList } from './components/Places';
-export type { PlaceRow, PlacesListProps } from './components/Places';
+export type { PlaceRow, PlacesListProps, WhatsHereBlocks } from './components/Places';
 export { Plate } from './components/Plate';
 export type { PlateProps } from './components/Plate';
 export { ProgressBar } from './components/ProgressBar';

@@ -502,7 +502,7 @@ test.describe('#8, #21, #11: the maps and the halls', () => {
     await expect(lockedSheet).toContainText('Level 6 opens it; you are Level 1.');
     await page.keyboard.press('Escape');
     await page.getByTestId('places-button').filter({ visible: true }).click();
-    const places = page.getByRole('dialog', { name: /^Places in / });
+    const places = page.getByRole('dialog', { name: / · what's here$/ });
     const groups = places.getByTestId('place-group');
     await expect(groups).toHaveCount(3);
     const firstRows = await groups.first().getByTestId('place-row').allInnerTexts();

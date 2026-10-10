@@ -207,7 +207,7 @@ test.describe('free zoom on the city map (answers §1)', () => {
     // A place from the Places list (the zoom may have taken its pin off screen), and back.
     await page.getByTestId('places-button').filter({ visible: true }).click();
     await page
-      .getByRole('dialog', { name: /^Places in / })
+      .getByRole('dialog', { name: / · what's here$/ })
       .getByRole('button', { name: /^3\. Union Hall/ })
       .click();
     const sheet = page.getByRole('dialog').filter({ hasText: 'Union Hall' });

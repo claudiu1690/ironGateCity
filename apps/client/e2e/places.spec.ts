@@ -10,7 +10,7 @@ import { mapAtRest, signUp, toTheCity } from './helpers';
 
 async function openFromList(page: Page, row: RegExp) {
   await page.getByTestId('places-button').filter({ visible: true }).click();
-  const list = page.getByRole('dialog', { name: 'Places in Coalport' });
+  const list = page.getByRole('dialog', { name: "Coalport · what's here" });
   await expect(list).toBeVisible();
   // Review 4 (answers §21.2): grouped by quarter; the open places first (the Mill's six in pin order,
   // then its Town Hall), the Harbour's and the Sidings' greyed after them.
@@ -74,7 +74,7 @@ test.describe('the Places list (review 3)', () => {
     await toTheCity(page);
     const button = page.getByTestId('places-button').filter({ visible: true });
     await button.click();
-    const list = page.getByRole('dialog', { name: 'Places in Coalport' });
+    const list = page.getByRole('dialog', { name: "Coalport · what's here" });
     await expect(list).toBeVisible();
     // A bottom sheet on a phone: it runs to the screen's bottom edge, the full width.
     const b = (await list.boundingBox())!;
@@ -97,7 +97,7 @@ test.describe('the Places list (review 3)', () => {
       const button = page.getByTestId('places-button').filter({ visible: true });
       await expect(button).toBeVisible();
       await button.click();
-      const list = page.getByRole('dialog', { name: 'Places in Coalport' });
+      const list = page.getByRole('dialog', { name: "Coalport · what's here" });
       const b = (await list.boundingBox())!;
       expect(b.width).toBeLessThanOrEqual(400);
       expect(b.x + b.width).toBeGreaterThan(1440 - 40);

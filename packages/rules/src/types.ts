@@ -2309,6 +2309,8 @@ export interface DistrictView {
   scoreboard: { mine: { swing: number; rank: number; of: number } | null; table: ScoreboardTableView[] };
   residence: ResidenceCardView;
   you: { resident: boolean };
+  /** Review 5 (answers §9, §18 Q13): *What's here* in this district (the sheet opened on it). */
+  whatsHere?: WhatsHereView;
 }
 
 /** The paper's and the city's Issue rows (screens §7.1). */

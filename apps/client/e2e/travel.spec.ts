@@ -199,7 +199,7 @@ test('the first trip: nation → board → the journey card → arrival → the 
 
   // 10. Central Station's trains home: board, arrive, Continue → Coalport.
   await page.getByTestId('places-button').filter({ visible: true }).click();
-  await page.getByRole('dialog', { name: /^Places in / }).getByRole('button', { name: /^15\. Central Station/ }).click();
+  await page.getByRole('dialog', { name: / · what's here$/ }).getByRole('button', { name: /^15\. Central Station/ }).click();
   const station = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Central Station' }) });
   await expect(station).toBeVisible();
   // Slice 5: the Trains card also lists the rival homes (open at Level 10); home is Coalport.

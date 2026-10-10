@@ -976,10 +976,12 @@ export const copy = {
     missionLine: (label: string, place: string, odds: string, risk: string | null, energy: number) =>
       [label, place, odds, ...(risk ? [risk] : []), `${energy} Energy`].join(' · '),
     /** *2 more from Level 8 · 3 from Rank 3* (two groups at most, the lowest needs). */
-    more: (groups: ReadonlyArray<{ gate: 'level' | 'rank' | 'standing'; need: number; count: number; name?: string }>) =>
+    more: (groups: ReadonlyArray<{ gate: 'level' | 'rank' | 'standing'; need: number; count: number }>) =>
       groups
         .map((g, i) => {
-          const from = g.gate === 'level' ? `Level ${g.need}` : g.gate === 'rank' ? `Rank ${g.need}` : (g.name ?? `Reputation ${g.need}`);
+          // §18 Q4: Reputation as *from Known here*.
+          const rep = ['Stranger', 'Familiar', 'Known', 'Trusted', 'One of Us'][g.need] ?? 'Known';
+          const from = g.gate === 'level' ? `Level ${g.need}` : g.gate === 'rank' ? `Rank ${g.need}` : `${rep} here`;
           return `${g.count}${i === 0 ? ' more' : ''} from ${from}`;
         })
         .join(' · '),
@@ -987,10 +989,9 @@ export const copy = {
     none: (level: number | null) => (level === null ? 'None here' : `None yet · the first opens at Level ${level}`),
     orders: 'Your orders here',
     noOrders: 'No order points here today',
-    /** Away from the residence: *Your orders are in Coalport · 1 of 3 done*. */
-    ordersAway: (city: string, done: number, of: number) => `Your orders are in ${city} · ${done} of ${of} done`,
+    /** An order's row: *1 of 3* under its title (away and off read `copy.orders`). */
+    orderLine: (progress: number, target: number) => `${Math.min(progress, target)} of ${target}`,
     allDone: "All three done · tomorrow's are in the paper",
-    ordersOff: 'Orders off today',
     places: 'Places',
   },
   places: {

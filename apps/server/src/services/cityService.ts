@@ -442,7 +442,7 @@ export async function getCityView(
       ? trainsFrom(content, c, state, today, now)
       : null;
 
-  return {
+  const view: CityView = {
     id: city.id,
     name: city.name,
     role: city.role,
@@ -687,6 +687,72 @@ export async function getCityView(
       // not offered (pin numbers keep their content order); it is in `lockedPins` instead.
       .filter((_, index) => placeOpenFor(content, c, city.locations[index]!).open),
   };
+  // Review 5 (answers §9, tech design §9.1): *What's here*, from the tickets just built (the same
+  // gates); in the capital each district's too (§18 Q13: the sheet is the district's).
+  view.whatsHere = whatsHereOf(content, c, city, view.locations);
+  for (const d of view.districts ?? []) d.whatsHere = whatsHereOf(content, c, city, view.locations, d.id);
+  return view;
+}
+
+const MORE_ORDER = { level: 0, rank: 1, standing: 2 } as const;
+
+/**
+ * Review 5 (answers §9.2, §18 Q4; tech design §9.1): the missions here whose gates the player passes
+ * today, Energy aside (a night mission by day keeps its lock line), and the rest counted by the first
+ * gate that fails: a quarter still locked counts its missions at the quarter's Level; a members-only
+ * place, a mission against the player's own party (hidden) and a record bar are never counted. The
+ * groups go lowest need first, one per gate before a second of any, two at most.
+ */
+export function whatsHereOf(
+  content: GameContent,
+  c: CharacterDoc,
+  city: NonNullable<ReturnType<GameContent['city']>>,
+  locations: CityView['locations'],
+  quarterId?: string,
+): NonNullable<CityView['whatsHere']> {
+  const inScope = (q: string | undefined) => quarterId === undefined || q === quarterId;
+  const missions: NonNullable<CityView['whatsHere']>['missions'] = [];
+  const counts = new Map<string, { gate: 'level' | 'rank' | 'standing'; need: number; count: number }>();
+  const count = (gate: 'level' | 'rank' | 'standing', need: number) => {
+    const k = `${gate}:${need}`;
+    const g = counts.get(k) ?? { gate, need, count: 0 };
+    g.count++;
+    counts.set(k, g);
+  };
+  for (const l of locations) {
+    if (!inScope(l.quarterId)) continue;
+    if (l.factionId && l.factionId !== c.factionId) continue;
+    for (const m of l.missions ?? []) {
+      const lock = m.locked;
+      if (!lock || lock.reason === 'NIGHT')
+        missions.push({
+          locationId: l.id,
+          missionId: m.id,
+          n: l.n,
+          night: lock?.reason === 'NIGHT' && lock.opensAt !== undefined ? { opensAt: lock.opensAt } : null,
+        });
+      else if (lock.reason === 'LEVEL') count('level', lock.need);
+      else if (lock.reason === 'RANK') count('rank', lock.need);
+      else if (lock.reason === 'STANDING') count('standing', lock.need);
+    }
+  }
+  // The places a quarter still keeps closed: their missions at the quarter's Level.
+  for (const l of city.locations) {
+    if (!inScope(l.quarterId)) continue;
+    const open = placeOpenFor(content, c, l);
+    if (open.open || open.lock?.kind !== 'level') continue;
+    if (l.factionId && l.factionId !== c.factionId) continue;
+    for (const m of content.missionsAt(l.id)) {
+      if (m.target !== undefined && m.target !== 'leader' && m.target === c.factionId) continue;
+      count('level', Math.max(open.lock.level, m.level));
+    }
+  }
+  const groups = [...counts.values()].sort((a, b) => MORE_ORDER[a.gate] - MORE_ORDER[b.gate] || a.need - b.need);
+  const firsts = groups.filter((g, i) => i === 0 || groups[i - 1]!.gate !== g.gate);
+  const more = [...firsts, ...groups.filter((g) => !firsts.includes(g))]
+    .slice(0, 2)
+    .sort((a, b) => MORE_ORDER[a.gate] - MORE_ORDER[b.gate] || a.need - b.need);
+  return { missions, more };
 }
 
 /**

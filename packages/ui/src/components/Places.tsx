@@ -39,6 +39,21 @@ export interface PlaceGroup {
   places: PlaceRow[];
 }
 
+/**
+ * Review 5 (answers §9.2, GDD §14.13): *What's here*, the blocks above the places. Each row's tap is
+ * the page's (the list closes first, then it runs), as a tap on the pin or the order's pin.
+ */
+export interface WhatsHereBlocks {
+  /** *Issues this week*: the name, then *the Collective leads · 48 momentum*; null tap: no place. */
+  issues: Array<{ id: string; name: string; line: string; onPick: (() => void) | null }>;
+  /** *Missions you can start*: the title, the Courier line, a night mission's lock line by day. */
+  missions: Array<{ id: string; title: string; line: string; lock: string | null; onPick: () => void }>;
+  /** *2 more from Level 8 · 3 from Rank 3*, or the empty line when no row. */
+  moreLine: string | null;
+  /** *Your orders here*: rows, or one quiet line (away, all done, off, none here). */
+  orders: { rows: Array<{ id: string; title: string; line: string; onPick: () => void }> } | { line: string };
+}
+
 export interface PlacesListProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,6 +68,8 @@ export interface PlacesListProps {
   onPick: (id: string) => void;
   /** Where the focus goes back to when the list closes without a pick (the Places button). */
   returnFocusTo?: () => HTMLElement | null;
+  /** Review 5: the *What's here* blocks; absent, the list is the places alone (*Places in …*). */
+  whatsHere?: WhatsHereBlocks;
 }
 
 /**
@@ -62,13 +79,28 @@ export interface PlacesListProps {
  * upright; a small panel at the right from 640 px and on a phone held sideways. Radix Dialog: Escape
  * and the Close button close it, focus moves in and comes back to the Places button.
  */
-export function PlacesList({ open, onOpenChange, cityName, places, groups, onPick, returnFocusTo }: PlacesListProps) {
+export function PlacesList({
+  open,
+  onOpenChange,
+  cityName,
+  places,
+  groups,
+  onPick,
+  returnFocusTo,
+  whatsHere,
+}: PlacesListProps) {
   // A pick zooms the map and opens the place's own sheet, which takes the focus: none goes back to
   // the Places button (it steps aside while a place is open).
   const picked = useRef(false);
   const ids = useId();
   const rows = [...places].sort((a, b) => a.n - b.n);
   const [blurbOf, setBlurbOf] = useState<string | null>(null);
+  /** A block's row: the list closes first, then the page does what the row says. */
+  const pick = (run: () => void) => {
+    picked.current = true;
+    onOpenChange(false);
+    run();
+  };
   const row = (p: PlaceRow): ReactNode => (
     <li key={p.id} className="border-b border-dotted border-faint last:border-b-0">
       <button
@@ -163,14 +195,17 @@ export function PlacesList({ open, onOpenChange, cityName, places, groups, onPic
         >
           <div className="flex items-center gap-3 border-b-2 border-ink py-1.5 pr-2 pl-4">
             <Dialog.Title className="min-w-0 flex-1 font-display text-[20px] leading-tight font-black">
-              Places in {cityName}
+              {whatsHere ? copy.whatsHere.title(cityName) : `Places in ${cityName}`}
             </Dialog.Title>
             <Dialog.Close className="label-caps min-h-11 min-w-11 cursor-pointer border-[1.5px] border-ink px-2 text-[11px] hover:bg-ink hover:text-paper">
               Close
             </Dialog.Close>
           </div>
+          <div className="flex flex-col overflow-y-auto overscroll-contain" data-testid="places-scroll">
+          {whatsHere && <WhatsHere blocks={whatsHere} pick={pick} />}
+          {whatsHere && <Kicker testId="wh-places">{copy.whatsHere.places}</Kicker>}
           {groups ? (
-            <div className="flex flex-col overflow-y-auto overscroll-contain" data-testid="place-groups">
+            <div className="flex flex-col" data-testid="place-groups">
               {groups.map((g) => (
                 <section key={g.id} aria-label={g.title} data-testid="place-group">
                   <h3 className="border-b-2 border-ink bg-paper-2">
@@ -200,11 +235,150 @@ export function PlacesList({ open, onOpenChange, cityName, places, groups, onPic
               ))}
             </div>
           ) : (
-            <ul className="flex flex-col overflow-y-auto overscroll-contain">{rows.map(row)}</ul>
+            <ul className="flex flex-col">{rows.map(row)}</ul>
           )}
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+/** A block's kicker on a double rule (answers §9.2). */
+function Kicker({ children, testId, help }: { children: ReactNode; testId: string; help?: ReactNode }) {
+  return (
+    <div className="flex min-h-9 items-center gap-2 border-t-[3px] border-double border-ink px-4 pt-1" data-testid={testId}>
+      <span className="label-caps flex-1 text-[11px] font-semibold">{children}</span>
+      {help}
+    </div>
+  );
+}
+
+/** A row of a block: the title in body 600, its Courier line under it; a tap when it goes somewhere. */
+function BlockRow({
+  title,
+  line,
+  lock,
+  onClick,
+  testId,
+}: {
+  title: string;
+  line: string;
+  lock?: string | null;
+  onClick: (() => void) | null;
+  testId: string;
+}) {
+  const inner = (
+    <>
+      <span className="font-body text-[15px] leading-snug font-semibold">{title}</span>
+      <span className="font-mono text-[11.5px] leading-snug text-text-2" data-testid="wh-line">
+        {line}
+      </span>
+      {lock && (
+        <span className="font-mono text-[11.5px] leading-snug text-muted" data-testid="wh-lock">
+          {lock}
+        </span>
+      )}
+    </>
+  );
+  const cls = 'flex min-h-11 w-full flex-col items-start justify-center gap-0.5 px-4 py-1.5 text-left';
+  return (
+    <li className="border-b border-dotted border-faint last:border-b-0">
+      {onClick ? (
+        <button
+          type="button"
+          onClick={onClick}
+          data-testid={testId}
+          className={cx(
+            cls,
+            'cursor-pointer hover:bg-paper-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink',
+          )}
+        >
+          {inner}
+        </button>
+      ) : (
+        <div className={cls} data-testid={testId}>
+          {inner}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** Review 5 (answers §9.2): the three blocks above the places, each with its empty line. */
+function WhatsHere({ blocks, pick }: { blocks: WhatsHereBlocks; pick: (run: () => void) => void }) {
+  const quiet = (text: string, testId: string) => (
+    <p className="px-4 pt-1 pb-2 font-mono text-[11.5px] leading-snug text-muted" data-testid={testId}>
+      {text}
+    </p>
+  );
+  return (
+    <div className="flex flex-col" data-testid="whats-here">
+      <section aria-label={copy.whatsHere.issues} data-testid="wh-issues">
+        <Kicker
+          testId="wh-issues-kicker"
+          help={
+            <HelpButton
+              notes={[copy.help.issue()]}
+              label={`${copy.whatsHere.issues}: what an Issue is`}
+              className="flex min-h-11 min-w-11 items-center justify-end"
+            >
+              <span className={cx('label-caps text-[10px] text-muted', helpMark)}>What is it</span>
+            </HelpButton>
+          }
+        >
+          {copy.whatsHere.issues}
+        </Kicker>
+        {blocks.issues.length > 0 ? (
+          <ul className="flex flex-col">
+            {blocks.issues.map((i) => {
+              const go = i.onPick;
+              return (
+                <BlockRow
+                  key={i.id}
+                  title={i.name}
+                  line={i.line}
+                  onClick={go ? () => pick(go) : null}
+                  testId="wh-issue"
+                />
+              );
+            })}
+          </ul>
+        ) : (
+          quiet(copy.whatsHere.noIssues, 'wh-issues-empty')
+        )}
+      </section>
+      <section aria-label={copy.whatsHere.missions} data-testid="wh-missions">
+        <Kicker testId="wh-missions-kicker">{copy.whatsHere.missions}</Kicker>
+        {blocks.missions.length > 0 && (
+          <ul className="flex flex-col">
+            {blocks.missions.map((m) => (
+              <BlockRow
+                key={m.id}
+                title={m.title}
+                line={m.line}
+                lock={m.lock}
+                onClick={() => pick(m.onPick)}
+                testId="wh-mission"
+              />
+            ))}
+          </ul>
+        )}
+        {blocks.moreLine && quiet(blocks.moreLine, 'wh-more')}
+      </section>
+      <section aria-label={copy.whatsHere.orders} data-testid="wh-orders">
+        <Kicker testId="wh-orders-kicker">{copy.whatsHere.orders}</Kicker>
+        {'rows' in blocks.orders ? (
+          <ul className="flex flex-col">
+            {blocks.orders.rows.map((o) => (
+              <BlockRow key={o.id} title={o.title} line={o.line} onClick={() => pick(o.onPick)} testId="wh-order" />
+            ))}
+          </ul>
+        ) : (
+          quiet(blocks.orders.line, 'wh-orders-line')
+        )}
+      </section>
+    </div>
   );
 }
 
