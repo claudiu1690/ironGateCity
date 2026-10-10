@@ -40,7 +40,9 @@ export type DevAction =
   | 'goto'
   | 'unbar'
   // Review 5 (ADR 0079): `dusk` moves the clock a minute past the next dusk.
-  | 'dusk';
+  | 'dusk'
+  // Review 5 (ADR 0081): `patrol` (target `next`, `never` or `auto`): the caller's patrol mode.
+  | 'patrol';
 
 /** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
 export interface DevStreetForce {
@@ -134,6 +136,19 @@ export interface DevStatus {
     /** Review 5 (ADR 0080): a tier-1 tap's run-in chance here and now on rival ground; null elsewhere. */
     tapRunIn: number | null;
   };
+  /**
+   * Review 5 (ADR 0081): the night patrol where the character stands: the mode, the chance of a roll
+   * (null off rival ground), the last bucket rolled here tonight, the stops, the quiet and the card.
+   */
+  patrol?: {
+    mode: string;
+    chance: number | null;
+    lastRollAt: number | null;
+    stops: number;
+    quietUntil: number | null;
+    quietUntilUtc: string | null;
+    card: string | null;
+  } | null;
   /** The signed-in player's character, or null (signed out, or still arriving). */
   character: { name: string; rank: number; pc: number; energy: number; energyMax: number } | null;
   home: DevHomeCity | null;

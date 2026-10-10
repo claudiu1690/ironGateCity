@@ -6,11 +6,13 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { z } from 'zod';
 import type { Auth } from '../auth';
 import { nightAt, nightHooks } from '../services/night';
+import { patrolHooks } from '../services/patrolHooks';
 import { streetHooks } from '../services/streetHooks';
 import {
   DevRefusal,
   HeldBody,
   NightBody,
+  PatrolBody,
   RunInBody,
   StreetBody,
   decideNow,
@@ -22,7 +24,7 @@ import {
 
 /**
  * Slice 5 (tech design §8.5): the e2e risk hooks `POST /api/test/street`, `/held` and `/run-in`;
- * review 5 (ADR 0079): `POST /api/test/night`.
+ * review 5 (ADR 0079): `POST /api/test/night`; (ADR 0081) `POST /api/test/patrol`.
  * Registered only inside the E2E_TEST_HOOKS guard in app.ts (memory mode), which also turns the
  * street hooks on; anywhere else these routes do not exist and `streetHooks.take` returns null.
  */
@@ -65,6 +67,17 @@ export function registerRiskHooks(
     nightHooks.mode = parsed.data.mode;
     return { ok: true, mode: nightHooks.mode, night: nightAt(now()) };
   });
+
+  // Review 5 (ADR 0081): the caller's patrol: `next` forces the next eligible roll to stop them
+  // (consumed by it), `never` skips every roll, `auto` rolls as the game does.
+  app.post(
+    '/api/test/patrol',
+    handle(async (request) => {
+      const { body, c } = await prepare(request, PatrolBody);
+      patrolHooks.set(c._id.toHexString(), body.mode);
+      return { mode: patrolHooks.mode(c._id.toHexString()) };
+    }),
+  );
 
   // What the caller's next act (a mission or a tap on rival ground) uses; consumed once.
   app.post(

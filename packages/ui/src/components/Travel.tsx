@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { copy } from '@irongate/content/copy';
-import type { JourneyCardResult, JourneyCardView, NationCityView, LocationView } from '@irongate/rules';
+import type { CardOutcome, JourneyCardView, NationCityView, LocationView } from '@irongate/rules';
 import { useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { cx, formatClock, formatOpinionDelta, formatUntil, formatWhen, renderTimeTokens } from '../format';
@@ -275,6 +275,11 @@ export interface JourneyCardProps {
   pendingChoiceId?: string | null;
   /** The arrival modal's compact card. */
   compact?: boolean;
+  /**
+   * Review 5 (ADR 0081): the patrol card's kicker (*A patrol · Rampart Row*, in caps) in place of
+   * *On the way · Optional*: the card is not optional, it waits for a row.
+   */
+  kicker?: string;
 }
 
 /**
@@ -284,8 +289,8 @@ export interface JourneyCardProps {
  * the explicit put-aside row, *Sleep through it* · *Nothing happens.* or *Let it pass* with its
  * consequence (the server's last choice, `setAside`); its outcome is the card's ignore text, no stamp.
  */
-export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = false }: JourneyCardProps) {
-  const chosen: JourneyCardResult | null = card.chosen;
+export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = false, kicker }: JourneyCardProps) {
+  const chosen: CardOutcome | null = card.chosen;
   const pick = chosen?.choiceId ?? pendingChoiceId;
   const all = pick ? card.choices.filter((c) => c.id === pick) : card.choices;
   const rows = all.filter((c) => !c.setAside);
@@ -298,10 +303,16 @@ export function JourneyCard({ card, onChoose, pendingChoiceId = null, compact = 
       data-testid="journey-card"
       data-chosen={chosen ? chosen.choiceId : undefined}
     >
-      <div className="flex items-center justify-between">
-        <span className="label-caps text-[10px] font-semibold">{copy.travel.onTheWay}</span>
-        <span className="label-caps border border-ink px-1.5 text-[9.5px]">{copy.travel.optional}</span>
-      </div>
+      {kicker ? (
+        <span className="label-caps text-[10px] font-semibold text-failure" data-testid="card-kicker">
+          {kicker}
+        </span>
+      ) : (
+        <div className="flex items-center justify-between">
+          <span className="label-caps text-[10px] font-semibold">{copy.travel.onTheWay}</span>
+          <span className="label-caps border border-ink px-1.5 text-[9.5px]">{copy.travel.optional}</span>
+        </div>
+      )}
       <h2 className={cx('font-display leading-tight font-bold', compact ? 'text-[17px]' : 'text-[20px]')}>
         {card.title}
       </h2>
@@ -453,6 +464,9 @@ export interface JourneyCardSheetProps {
   children: ReactNode;
   /** Once the card is answered: its Close button, and a tap on the dim closes it. Absent: neither. */
   onClose?: () => void;
+  /** Review 5 (ADR 0081): the button's word (the patrol's *Continue*); default *Close*. */
+  closeLabel?: string;
+  testId?: string;
 }
 
 /**
@@ -462,7 +476,7 @@ export interface JourneyCardSheetProps {
  * usable (the Paper, Me and Council tabs work; the Map tab comes back to the card). A bottom sheet on
  * a phone, a centred card from 640 px. Focus moves into it when it opens.
  */
-export function JourneyCardSheet({ title, children, onClose }: JourneyCardSheetProps) {
+export function JourneyCardSheet({ title, children, onClose, closeLabel = 'Close', testId = 'journey-card-sheet' }: JourneyCardSheetProps) {
   const titleId = useId();
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -483,7 +497,7 @@ export function JourneyCardSheet({ title, children, onClose }: JourneyCardSheetP
         aria-labelledby={titleId}
         tabIndex={-1}
         data-state="open"
-        data-testid="journey-card-sheet"
+        data-testid={testId}
         onKeyDown={onClose ? (e) => e.key === 'Escape' && onClose() : undefined}
         className="ease-sheet absolute inset-x-0 bottom-0 z-40 flex max-h-[85%] flex-col gap-3 overflow-y-auto overscroll-contain bg-paper p-4 text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.45)] outline-none sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100%-32px)] sm:w-[520px] sm:max-w-[calc(100%-32px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:shadow-[0_0_0_1px_var(--color-ink),0_24px_60px_rgb(0_0_0/0.5)]"
       >
@@ -496,8 +510,9 @@ export function JourneyCardSheet({ title, children, onClose }: JourneyCardSheetP
             type="button"
             onClick={onClose}
             className="label-caps min-h-11 cursor-pointer border-[1.5px] border-ink px-4 text-[13px] hover:bg-ink hover:text-paper"
+            data-testid="card-sheet-close"
           >
-            Close
+            {closeLabel}
           </button>
         )}
       </section>

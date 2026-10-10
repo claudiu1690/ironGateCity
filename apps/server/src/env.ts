@@ -78,6 +78,11 @@ const EnvSchema = z
      * with E2E_TEST_HOOKS. Playwright runs with `day`; `pnpm dev:mem` leaves it unset (the clock).
      */
     E2E_NIGHT: z.enum(['clock', 'day', 'night']).optional(),
+    /**
+     * Review 5 (ADR 0081): the patrol's test mode at start-up (`never` or `auto`); read only with
+     * E2E_TEST_HOOKS. Playwright runs with `never`; `pnpm dev:mem` leaves it unset (`auto`).
+     */
+    E2E_PATROL: z.enum(['never', 'auto']).optional(),
   })
   .superRefine((env, ctx) => {
     if (env.DB_MODE === 'uri' && !env.MONGODB_URI) {

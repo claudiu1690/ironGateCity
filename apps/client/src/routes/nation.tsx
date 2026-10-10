@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { MapSwitch } from '../components/MapSwitch';
 import { env } from '../env';
 import { noticeFor } from '../features/game/errors';
+import { PatrolLink } from '../features/game/PatrolLink';
 import { useCharacter } from '../features/game/hooks';
 import { useBoard } from '../features/travel/useBoard';
 import { trpc } from '../lib/trpc';
@@ -201,6 +202,7 @@ export function NationPage() {
               {noticeFor(travel.error)}
             </p>
           )}
+          {travel.error && <PatrolLink error={travel.error} />}
         </LocationSheet>
       )}
       <CitiesList

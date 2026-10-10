@@ -132,6 +132,8 @@ export const DESIGN_ORDINANCE_IDS = [
 
 /** Slice 4 (design §8.5): the eleventh rule, on every menu (the capital's is the ten plus it). */
 export const TRAM_SUBSIDY_ID = 'ord.tram-subsidy';
+/** Review 5 (ADR 0081): the night patrol's card on rival ground. */
+export const PATROL_EVENT_ID = 'patrol.stop';
 
 /** Slice 4 (design §12, tech design §4.2): the slice-4 templates every home paper carries. */
 export const CAPITAL_HOME_HEADLINE_NAMES = [
@@ -1048,6 +1050,10 @@ function slice4Problems(
     const firsts = content.journeyEvents.filter((j) => j.deck === deck && j.first);
     if (firsts.length !== 1) problems.push(`journeyEvents: exactly one ${deck} card is drawn first`);
   }
+  // Review 5 (ADR 0081): exactly one patrol card, `patrol.stop`, with what it does when let pass.
+  const patrols = content.journeyEvents.filter((j) => j.deck === 'patrol');
+  if (patrols.length !== 1 || patrols[0]!.id !== PATROL_EVENT_ID || !patrols[0]!.ignoreEffects)
+    problems.push(`journeyEvents: exactly one patrol card, "${PATROL_EVENT_ID}", with ignoreEffects`);
   const story = (where: string, text: string) => {
     if (text.length > 240) problems.push(`${where} is ${text.length} characters (at most 240)`);
     // A card's quoted speech counts as part of its sentence (the setups are dialogue; 240 is the bound).
@@ -1057,7 +1063,9 @@ function slice4Problems(
   };
   const jevIds = new Set<string>();
   for (const j of content.journeyEvents) {
-    if (!j.id.startsWith('jev.')) problems.push(`journey event "${j.id}" must be jev.*`);
+    // Review 5 (ADR 0081): the patrol's card is `patrol.*`, every train card `jev.*`.
+    if (j.deck === 'patrol' ? !j.id.startsWith('patrol.') : !j.id.startsWith('jev.'))
+      problems.push(`journey event "${j.id}" must be ${j.deck === 'patrol' ? 'patrol' : 'jev'}.*`);
     if (jevIds.has(j.id)) problems.push(`duplicate journey event "${j.id}"`);
     jevIds.add(j.id);
     story(`${j.id}.setup`, j.setup);

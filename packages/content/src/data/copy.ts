@@ -959,6 +959,40 @@ export const copy = {
     lockedPinLabel: (name: string, line: string) => `${name}, ${line.charAt(0).toLowerCase()}${line.slice(1)}`,
   },
   /** The Places list grouped by quarter (answers §21.2). */
+  /**
+   * Review 5 (answers §9.2, GDD §14.13): *What's here*, the Places list's blocks above the places. The
+   * plate's button and the sheet's title (*Coalport · what's here*).
+   */
+  whatsHere: {
+    button: "What's here",
+    title: (place: string) => `${place} · what's here`,
+    issues: 'Issues this week',
+    noIssues: 'No Issue this week',
+    /** *the Collective leads · 48 momentum* / *nobody yet*. */
+    issueLine: (leader: string | null, momentum: number) =>
+      leader ? `the ${leader} leads · ${momentum} momentum` : 'nobody yet',
+    missions: 'Missions you can start',
+    /** *Watch and listen · Customs House · Fair odds · 12 Energy* (the risk word after the odds). */
+    missionLine: (label: string, place: string, odds: string, risk: string | null, energy: number) =>
+      [label, place, odds, ...(risk ? [risk] : []), `${energy} Energy`].join(' · '),
+    /** *2 more from Level 8 · 3 from Rank 3* (two groups at most, the lowest needs). */
+    more: (groups: ReadonlyArray<{ gate: 'level' | 'rank' | 'standing'; need: number; count: number; name?: string }>) =>
+      groups
+        .map((g, i) => {
+          const from = g.gate === 'level' ? `Level ${g.need}` : g.gate === 'rank' ? `Rank ${g.need}` : (g.name ?? `Reputation ${g.need}`);
+          return `${g.count}${i === 0 ? ' more' : ''} from ${from}`;
+        })
+        .join(' · '),
+    /** Empty: *None yet · the first opens at Level 6*. */
+    none: (level: number | null) => (level === null ? 'None here' : `None yet · the first opens at Level ${level}`),
+    orders: 'Your orders here',
+    noOrders: 'No order points here today',
+    /** Away from the residence: *Your orders are in Coalport · 1 of 3 done*. */
+    ordersAway: (city: string, done: number, of: number) => `Your orders are in ${city} · ${done} of ${of} done`,
+    allDone: "All three done · tomorrow's are in the paper",
+    ordersOff: 'Orders off today',
+    places: 'Places',
+  },
   places: {
     group: (quarter: string, lock: { kind: 'level'; level: number } | { kind: 'edition' } | null) =>
       lock === null
@@ -1109,6 +1143,15 @@ export const copy = {
     followYourPin: 'Follow your pin',
     /** Review 4: the plate's row back to an unanswered card after its sheet was closed. */
     backToTheCard: (title: string) => `On the way · ${title}`,
+  },
+  /** Review 5 (answers §12.2, §18.1; ADR 0081): the night patrol's card on rival ground. */
+  patrol: {
+    /** *A patrol · Rampart Row* (printed in caps). */
+    kicker: (street: string) => `A patrol · ${street}`,
+    sheetTitle: (city: string) => `Stopped in ${city}`,
+    continue: 'Continue',
+    /** The link under a refusal (`PATROL_PENDING`) to the city the card waits in. */
+    toTheCard: 'To the map',
   },
   /** Slice 4: refusals, worded (the server's reason decides). */
   errors: {

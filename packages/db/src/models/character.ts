@@ -255,6 +255,11 @@ export interface CharacterDoc {
   hostileDeck?: { seen: string[] };
   rivalTrips?: number;
   firsts?: StoredFirsts;
+  /**
+   * Review 5 (ADR 0081): the night patrol on rival ground. Absent reads as no nights, no quiet and no
+   * card; written only by the city read's roll, the answer, and the quiet writers' `$max`.
+   */
+  patrol?: StoredPatrol;
   /** Optimistic guard, +1 per game write (ADR 0002). */
   version: number;
   createdAt: Date;
@@ -262,6 +267,51 @@ export interface CharacterDoc {
 }
 
 const int = { type: Number, required: true, validate: Number.isInteger } as const;
+
+/** Review 5 (ADR 0081): one city's night (the last bucket rolled, the stops). */
+export interface StoredPatrolNight {
+  cityId: string;
+  night: number;
+  bucket: number;
+  stops: number;
+}
+export interface StoredPatrolCard {
+  id: Types.ObjectId;
+  cityId: string;
+  night: number;
+  bucket: number;
+  at: Date;
+  seed: string;
+}
+export interface StoredPatrol {
+  nights?: StoredPatrolNight[];
+  quietUntil?: Date | null;
+  card?: StoredPatrolCard | null;
+}
+
+const patrolNightSchema = new Schema<StoredPatrolNight>(
+  { cityId: { type: String, required: true }, night: int, bucket: int, stops: int },
+  { _id: false },
+);
+const patrolCardSchema = new Schema<StoredPatrolCard>(
+  {
+    id: { type: Schema.Types.ObjectId, required: true },
+    cityId: { type: String, required: true },
+    night: int,
+    bucket: int,
+    at: { type: Date, required: true },
+    seed: { type: String, required: true },
+  },
+  { _id: false },
+);
+const patrolSchema = new Schema<StoredPatrol>(
+  {
+    nights: { type: [patrolNightSchema], default: undefined },
+    quietUntil: { type: Date, default: undefined },
+    card: { type: patrolCardSchema, default: undefined },
+  },
+  { _id: false },
+);
 
 const orderItemSchema = new Schema<StoredOrderItem>(
   {
@@ -599,6 +649,8 @@ const characterSchema = new Schema<CharacterDoc>(
     },
     rivalTrips: { type: Number, default: 0, min: 0 },
     firsts: { type: firstsSchema, default: () => ({}) },
+    // Review 5 (ADR 0081): absent until the first roll (no migration).
+    patrol: { type: patrolSchema, default: undefined },
     version: { type: Number, required: true, min: 0 },
   },
   { collection: 'characters', strict: true, timestamps: true, versionKey: false, minimize: false },

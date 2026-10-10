@@ -94,11 +94,12 @@ export function isRivalGround(content: GameContent, c: Pick<CharacterDoc, 'facti
 }
 
 /**
- * Tech design §7.2: the refusal for a character in the cells or on the ward (`HELD`), or with a
- * run-in waiting for a choice (`RUN_IN_PENDING`); null when free. Callers throw it (`toTRPC()`
+ * Tech design §7.2: the refusal for a character in the cells or on the ward (`HELD`), with a
+ * run-in waiting for a choice (`RUN_IN_PENDING`), or (review 5) a patrol card waiting
+ * (`PATROL_PENDING`); null when free. Callers throw it (`toTRPC()`
  * before the key, as is inside the transaction).
  */
-export function notFree(c: Pick<CharacterDoc, 'held' | 'runIn'>): GameError | null {
+export function notFree(c: Pick<CharacterDoc, 'held' | 'runIn' | 'patrol'>): GameError | null {
   if (c.held && c.held.state === 'in') {
     return new GameError('HELD', { kind: c.held.kind, until: new Date(c.held.until).getTime() });
   }
@@ -108,11 +109,14 @@ export function notFree(c: Pick<CharacterDoc, 'held' | 'runIn'>): GameError | nu
       decideBy: new Date(c.runIn.decideBy).getTime(),
     });
   }
+  // Review 5 (ADR 0081, §21.1 Q8): a patrol card waits: Energy acts, boarding, residence acts and
+  // treatment wait one tap (votes, the paper and reads do not call this).
+  if (c.patrol?.card) return new GameError('PATROL_PENDING', { cityId: c.patrol.card.cityId });
   return null;
 }
 
 /** `notFree` as a tRPC refusal (before the key). */
-export function assertFree(c: Pick<CharacterDoc, 'held' | 'runIn'>): void {
+export function assertFree(c: Pick<CharacterDoc, 'held' | 'runIn' | 'patrol'>): void {
   const e = notFree(c);
   if (e) throw e.toTRPC();
 }

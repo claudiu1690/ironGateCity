@@ -89,6 +89,7 @@ import {
   wornStats,
 } from './views';
 import { nightAt } from './night';
+import { patrolCityView } from './patrol';
 
 /**
  * The order a tap here would advance (open first), or a done one it matched, for the ticket tag.
@@ -504,6 +505,8 @@ export async function getCityView(
           },
         }
       : null,
+    // Review 5 (ADR 0081): the patrol card waiting here, if any.
+    patrol: patrolCityView(content, c, city.id),
     locations: city.locations.map((location, index) => {
       const m = modsAt(location.quarterId);
       const place = m.place;

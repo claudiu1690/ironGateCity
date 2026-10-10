@@ -10,6 +10,7 @@ import { heldRouter, recordRouter } from './routers/held';
 import { jobRouter } from './routers/job';
 import { missionRouter } from './routers/mission';
 import { paperRouter } from './routers/paper';
+import { patrolRouter } from './routers/patrol';
 import { residenceRouter } from './routers/residence';
 import { travelRouter } from './routers/travel';
 import { createCallerFactory, router } from './trpc';
@@ -32,6 +33,8 @@ export const appRouter = router({
   encounter: encounterRouter,
   held: heldRouter,
   record: recordRouter,
+  // Review 5 (ADR 0081).
+  patrol: patrolRouter,
 });
 
 export type AppRouter = typeof appRouter;

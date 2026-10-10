@@ -42,3 +42,4 @@ export * from './runIn';
 export * from './held';
 export * from './missions';
 export * from './quarters';
+export * from './patrol';

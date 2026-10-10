@@ -63,6 +63,9 @@ export const StreetBody = z
 /** Review 5 (ADR 0079): `POST /api/test/night`, the night seam's test mode. */
 export const NightBody = z.object({ mode: z.enum(['clock', 'day', 'night']) }).strict();
 
+/** Review 5 (ADR 0081): `POST /api/test/patrol`, the caller's patrol mode. */
+export const PatrolBody = z.object({ mode: z.enum(['next', 'never', 'auto']) }).strict();
+
 /** `POST /api/test/held`: one of the two. */
 export const HeldBody = z.union([
   z.object({ send: z.enum(['cells', 'infirmary']) }).strict(),

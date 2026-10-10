@@ -1,6 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { Character, Journey } from '@irongate/db';
 import type { CharacterDoc, JourneyDoc } from '@irongate/db';
+import { PATROL } from '@irongate/rules';
 import { inTransaction } from './txn';
 
 /**
@@ -31,6 +32,8 @@ export async function settleArrival(content: GameContent, journeyId: string, now
           ...(first ? { firstCapitalArrivalAt: j.arrivesAt } : {}),
         },
         $inc: { version: 1 },
+        // Review 5 (ADR 0081): no patrol stop within ten minutes of arriving by train.
+        $max: { 'patrol.quietUntil': new Date(j.arrivesAt.getTime() + PATROL.quietAfterArrivalMs) },
       },
       { session },
     );

@@ -654,3 +654,88 @@ test('#12 night windows: locked by day, open at night, the night rate', async ({
     await page.request.post('/api/test/night', { data: { mode: 'day' } });
   }
 });
+
+test('#12 the patrol: a stop on rival ground at night holds the street until a row is tapped', async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signUp(page, 'Henrike Pohl');
+  await lift(page, { level: 10, rank: 3, iron: 500, energy: 100, cityId: 'duskwall' });
+  const patrol = (mode: 'next' | 'never' | 'auto') =>
+    page.request.post('/api/test/patrol', { data: { mode } }).then((r) => expect(r.ok()).toBe(true));
+  const sheet = page.getByTestId('patrol-sheet');
+  try {
+    // By day nothing rolls, even forced.
+    await patrol('next');
+    await page.goto('/city/duskwall');
+    await mapAtRest(page);
+    await expect(sheet).toHaveCount(0);
+
+    // At night on rival ground: the card, over the map.
+    expect((await page.request.post('/api/test/night', { data: { mode: 'night' } })).ok()).toBe(true);
+    await page.goto('/city/duskwall');
+    await expect(sheet).toBeVisible();
+    const card = sheet.getByTestId('journey-card');
+    await expect(card.getByTestId('card-kicker')).toHaveText('A patrol · Rampart Row');
+    await expect(card.getByRole('heading', { name: 'A patrol' })).toBeVisible();
+    await expect(card.getByTestId('journey-choice')).toHaveText([
+      /^Show your papers/,
+      /^Talk your way past/,
+      /^Slip down a side street/,
+    ]);
+    await expect(card.getByTestId('journey-set-aside')).toContainText('Let it pass');
+    await expect(sheet.getByTestId('card-sheet-close')).toHaveCount(0);
+    await settled(page);
+    await shot(page, 'patrol-card');
+
+    // The map behind it and Escape do nothing; a reload brings the same card back (no second roll).
+    await page.getByTestId('card-dim').click({ position: { x: 20, y: 20 }, force: true });
+    await page.keyboard.press('Escape');
+    await expect(sheet).toBeVisible();
+    await page.reload();
+    await expect(sheet).toBeVisible();
+
+    // The pending card holds boarding (with the way back to it), not the paper.
+    const board = await page.request.post('/api/trpc/travel.board', {
+      data: { to: 'coalport', idempotencyKey: crypto.randomUUID() },
+    });
+    expect(await board.text()).toContain('"reason":"PATROL_PENDING"');
+    await page.goto('/paper');
+    await expect(page.getByTestId('dateline')).toBeVisible();
+    await page.goto('/nation');
+    // Coalport's pin may sit off a phone's first view of the republic: the tap is dispatched.
+    await page.locator('[data-testid=hotspot][aria-label^="Coalport"]').dispatchEvent('click');
+    const cityCard = page.getByTestId('city-card');
+    await cityCard.getByTestId('city-board').click();
+    await expect(page.getByTestId('board-notice')).toHaveText('A patrol has stopped you · answer it on the map');
+    await settled(page);
+    await shot(page, 'patrol-pending-board');
+    await page.getByTestId('patrol-link').click();
+    await expect(page).toHaveURL(/\/city\/duskwall/);
+    await expect(sheet).toBeVisible();
+
+    // The answer: *Talk your way past* (Charisma at 14, never failing), its outcome in the card.
+    await card.getByTestId('journey-choice').filter({ hasText: 'Talk your way past' }).click();
+    const outcome = card.getByTestId('journey-outcome');
+    await expect(outcome).toBeVisible();
+    await expect(outcome.getByRole('heading')).toHaveText(/^(A lodger, late back|Half believed)$/);
+    await expect(card.getByTestId('journey-choice')).toHaveCount(1);
+    await settled(page);
+    await shot(page, 'patrol-result');
+    await sheet.getByTestId('card-sheet-close').click();
+    await expect(sheet).toHaveCount(0);
+
+    // Free again: the street's tickets carry *Night · patrols out*; no second card in the bucket.
+    await page.goto('/city/duskwall?loc=duskwall.rampart-row');
+    const place = page.locator('[role=dialog][data-layout]');
+    await expect(place).toBeVisible();
+    await expect(place.getByTestId('ticket-tags').first()).toContainText('Night · patrols out');
+    await expect(sheet).toHaveCount(0);
+    const again = await page.request.post('/api/trpc/patrol.answer', {
+      data: { choiceId: 'talk', idempotencyKey: crypto.randomUUID() },
+    });
+    expect(await again.text()).toContain('"reason":"NO_PATROL"');
+  } finally {
+    await page.request.post('/api/test/night', { data: { mode: 'day' } });
+    await page.request.post('/api/test/patrol', { data: { mode: 'never' } });
+  }
+});

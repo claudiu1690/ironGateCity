@@ -530,4 +530,77 @@ export const journeyEvents: ContentInput['journeyEvents'] = [
     // Slept through: the line only, nothing happens (§23.2).
     ignore: 'You nod and forget it. The platform by the barrier is watched.',
   },
+  // Review 5 (answers §12.2, §16.1, §18.1; ADR 0081): the night patrol on rival ground. Never drawn on
+  // a train (the journey draws filter by `ordinary` and `hostile`); rolled on a read of the city view.
+  // Checks at 14, never failing; the Heat is final (no rival ×2, §18 Q7).
+  {
+    id: 'patrol.stop',
+    title: 'A patrol',
+    deck: 'patrol',
+    setup: 'Two of them under the corner lamp, with the walk of men paid by the hour. "Late to be out. Papers."',
+    choices: [
+      {
+        id: 'papers',
+        title: 'Show your papers',
+        detail: 'Your party card · it depends on your Heat and your record',
+        gate: 'coolAndClean',
+        success: {
+          rewards: {},
+          text: {
+            headline: 'Waved on',
+            body: 'He reads the card by the lamp, then your face, and hands it back. "Mind how you go." They walk on, slowly, so that you have to walk the other way.',
+          },
+        },
+        partial: {
+          rewards: { heat: 10, flag: 'watched' },
+          text: {
+            headline: 'They write your name down',
+            body: 'He reads the card twice and writes something in a book, slowly, so you can see him do it. "Visiting, are we." The lamp stays on you to the corner.',
+          },
+        },
+      },
+      {
+        id: 'talk',
+        title: 'Talk your way past',
+        detail: 'Charisma',
+        stats: ['cha'],
+        success: {
+          rewards: {},
+          text: {
+            headline: 'A lodger, late back',
+            body: "You've a room at the inn and a landlady who locks the door at twelve, and you say so as if it's their fault. The taller one laughs. They let you by.",
+          },
+        },
+        partial: {
+          rewards: { heat: 5 },
+          text: {
+            headline: 'Half believed',
+            body: 'They take the story, the accent and the hour, and the shorter one writes your name down anyway, to be safe. "Straight home, then."',
+          },
+        },
+      },
+      {
+        id: 'slip',
+        title: 'Slip down a side street',
+        detail: 'Agility',
+        stats: ['agi'],
+        success: {
+          rewards: {},
+          text: {
+            headline: 'A door closing',
+            body: 'You know the lane behind the lamp better than they do, or you walk as if you do. By the time the lamp swings round the corner you are a door closing.',
+          },
+        },
+        partial: {
+          rewards: { heat: 5, flag: 'watched' },
+          text: {
+            headline: 'A yard with a wall',
+            body: 'The lane is a yard with a wall. You get over it with the lamp on your back and a name shouted after you, which means they have it.',
+          },
+        },
+      },
+    ],
+    ignore: 'You stand still and say nothing. They write your name down anyway, and the lamp follows you to the corner.',
+    ignoreEffects: { heat: 10, flag: 'watched' },
+  },
 ];

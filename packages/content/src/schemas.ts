@@ -966,7 +966,7 @@ export const JourneyEvent = z.strictObject({
   /** The first journey always draws this card (first in its own deck: the passenger, the checkpoint). */
   first: z.literal(true).optional(),
   /** Slice 5 (design §11.4): the ordinary deck, or the hostile one drawn on the way to rival ground. */
-  deck: z.enum(['ordinary', 'hostile']).default('ordinary'),
+  deck: z.enum(['ordinary', 'hostile', 'patrol']).default('ordinary'),
   /** Slice 5: *Your name is on a list* replaces the hostile draw from this Heat. */
   heatAtLeast: z.number().int().min(1).max(100).optional(),
   /** Slice 5: what an unanswered card does when its window ends (*slept through*). */
@@ -1076,8 +1076,8 @@ export const Content = z.strictObject({
   politics: PoliticalTexts,
   // Slice 4.
   nation: Nation,
-  /** Slice 4: seven ordinary cards; slice 5: four hostile ones (the loader counts each deck). */
-  journeyEvents: z.array(JourneyEvent).length(11),
+  /** Slice 4: seven ordinary cards; slice 5: four hostile ones; review 5: the patrol (the loader counts each deck). */
+  journeyEvents: z.array(JourneyEvent).length(12),
   issues: z.array(Issue),
   // Slice 5.
   opponents: z.array(Opponent).length(6),

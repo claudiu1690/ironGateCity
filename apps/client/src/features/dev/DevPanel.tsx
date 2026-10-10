@@ -155,6 +155,21 @@ function DevPanelOn({ status }: { status: DevStatus }) {
       `${status.night.night ? `night · dawn ${status.night.nextDawnUtc}` : `day · dusk ${status.night.nextDuskUtc}`}${status.night.mode === 'clock' ? '' : ` · pinned ${status.night.mode}`}${status.night.tapRunIn !== null ? ` · tap run-in ${status.night.tapRunIn} %` : ''}`,
       'dev-night',
     ]);
+  // Review 5 (ADR 0081): the night patrol where the character stands.
+  const patrol = status.patrol;
+  if (patrol)
+    rows.push([
+      'Patrol',
+      [
+        patrol.mode,
+        patrol.chance !== null ? `${patrol.chance} % a roll` : 'not rival ground',
+        patrol.lastRollAt !== null ? `rolled ${utcLine(patrol.lastRollAt).slice(-9)}` : 'no roll tonight',
+        `${patrol.stops} stop${patrol.stops === 1 ? '' : 's'}`,
+        ...(patrol.quietUntilUtc && patrol.quietUntil !== null && patrol.quietUntil > now ? [`quiet to ${patrol.quietUntilUtc}`] : []),
+        ...(patrol.card ? [`card waiting in ${patrol.card}`] : []),
+      ].join(' · '),
+      'dev-patrol',
+    ]);
   // Slice 4 (tech design §8.7): where the character is, where they live, the capital and the Issues.
   const where = status.where;
   const onTrain = !!where && 'train' in where;
@@ -517,6 +532,19 @@ function RiskControls({
         disabled={disabled}
         busy={(v) => busy('heat', v)}
         onPick={(v) => run('heat', v)}
+      />
+      {/* Review 5 (ADR 0081): the patrol's roll (`next` stops the next read at night on rival ground). */}
+      <ChoiceRow
+        label="Patrol"
+        testId="dev-patrol"
+        choices={[
+          { value: 'next', label: 'Next' },
+          { value: 'never', label: 'Never' },
+          { value: 'auto', label: 'Auto' },
+        ]}
+        disabled={disabled}
+        busy={(v) => busy('patrol', v)}
+        onPick={(v) => run('patrol', v)}
       />
       <ChoiceRow
         label="Health"

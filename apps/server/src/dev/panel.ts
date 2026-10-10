@@ -29,6 +29,8 @@ import { moraleOf, ordinanceIdOn, restedCapToday } from '../services/modifiers';
 import { residenceCityId, residenceOf } from '../services/residence';
 import { groundswellOn } from '../services/modifiers';
 import { nightAt, nightHooks } from '../services/night';
+import { patrolStatus } from '../services/patrol';
+import { patrolHooks } from '../services/patrolHooks';
 import { energyState } from '../services/views';
 import type { SessionUser } from '../trpc/context';
 import { applyCharacterSeed } from './characterSeed';
@@ -93,8 +95,9 @@ const DEV_ACTIONS: readonly DevAction[] = [
   'rank3',
   'goto',
   'unbar',
-  // Review 5 (ADR 0079).
+  // Review 5 (ADR 0079, 0081).
   'dusk',
+  'patrol',
 ];
 /** Slice 5 (tech design §8.6): the panel's *Level 6* and *Rank 3*. */
 const DEV_LEVEL = 6;
@@ -234,6 +237,12 @@ async function statusFor(
           tapRunIn: c ? tapRunInChance(content, c, city, now) : null,
         };
       })(),
+      patrol: c
+        ? (() => {
+            const p = patrolStatus(content, c, now, city);
+            return { ...p, quietUntilUtc: p.quietUntil !== null ? formatUtc(p.quietUntil) : null };
+          })()
+        : null,
       character:
         c && energy
           ? { name: c.name, rank: c.rank, pc: c.pc, energy: energy.value, energyMax: energy.max }
@@ -532,6 +541,20 @@ async function runAction(
       if (doc.held?.state === 'in') throw new DevRefusal(409, `in the ${doc.held.kind}`);
       await applyCharacterSeed(doc, { cityId: target.cityId }, clock.now());
       did = `Now in ${target.cityName} (rival ground)`;
+      break;
+    }
+    case 'patrol': {
+      const { home } = needCharacter();
+      const mode = String(body.target ?? '');
+      if (mode !== 'next' && mode !== 'never' && mode !== 'auto')
+        throw new DevRefusal(400, 'target is next, never or auto');
+      patrolHooks.set(home._id.toHexString(), mode);
+      did =
+        mode === 'next'
+          ? 'The next read of a rival town at night stops you'
+          : mode === 'never'
+            ? 'No patrol rolls for you'
+            : 'Patrols roll as the game does';
       break;
     }
     case 'unbar': {

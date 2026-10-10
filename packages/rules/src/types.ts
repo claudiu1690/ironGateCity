@@ -990,6 +990,23 @@ export interface CityView {
     unrest: boolean;
     pressure: { lost: number; cap: 2; left: number };
   } | null;
+  /**
+   * Review 5 (ADR 0081, tech design §8.3): a patrol card waiting in this city (the hostile deck's
+   * shape, its put-aside row last) and its kicker (*A PATROL · RAMPART ROW*); null otherwise.
+   */
+  patrol?: { card: JourneyCardView; kicker: string } | null;
+  /** Review 5 (answers §9, tech design §9.1): *What's here*; in the capital, this district's. */
+  whatsHere?: WhatsHereView;
+}
+
+/**
+ * Review 5 (answers §9, GDD §14.13): the missions the player passes the gates of here today, Energy
+ * aside (their tickets carry the words: joined by `missionId`), and the rest counted by the first gate
+ * that fails, grouped by gate and need (the two lowest needs).
+ */
+export interface WhatsHereView {
+  missions: Array<{ locationId: string; missionId: string; n: number; night: { opensAt: number } | null }>;
+  more: Array<{ gate: 'level' | 'rank' | 'standing'; need: number; count: number }>;
 }
 
 export interface BonusTag {
@@ -2051,9 +2068,40 @@ export interface JourneyCardView {
   setup: string;
   ignore: string;
   choices: JourneyChoiceView[];
-  chosen: JourneyCardResult | null;
-  /** Slice 5: the hostile deck's card (no opinion or points on it). */
-  deck?: 'ordinary' | 'hostile';
+  chosen: JourneyCardResult | PatrolCardResult | null;
+  /** Slice 5: the hostile deck's card (no opinion or points on it); review 5: the patrol's. */
+  deck?: 'ordinary' | 'hostile' | 'patrol';
+}
+
+/** What a card's outcome prints (a journey card's or, review 5, a patrol card's). */
+export interface CardOutcome {
+  eventId: string;
+  choiceId: string;
+  /** null for an unchecked choice. */
+  stamp: 'success' | 'partial' | null;
+  headline: string;
+  body: string;
+  reason: string | null;
+  rewards: Array<{
+    id: 'xp' | 'fxp' | 'iron' | 'opinion' | 'points' | 'rested' | 'heat';
+    amount: number;
+    note?: string;
+  }>;
+  flag?: { flag: 'watched' | 'warned'; line: string; until: number };
+}
+
+/**
+ * Review 5 (ADR 0081, tech design §8.3): `patrol.answer`'s result, stored in `requestLogs`: the card's
+ * outcome in the city it stopped the player in, the Heat it moved and the day's flags there.
+ */
+export interface PatrolCardResult extends CardOutcome {
+  kind: 'patrolCard';
+  cityId: string;
+  heat: { before: number; after: number } | null;
+  flags: Array<'watched' | 'warned'>;
+  performedAt: string;
+  idempotencyKey: string;
+  character: CharacterView;
 }
 
 export interface JourneyView {

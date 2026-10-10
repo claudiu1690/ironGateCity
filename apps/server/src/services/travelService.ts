@@ -739,7 +739,7 @@ export async function getJourney(
 // ---------------------------------------------------------------------------------------------
 
 /** The weakest of a choice's stats, for a Partial's one-line reason. */
-function partialReason(
+export function partialReason(
   content: GameContent,
   cityId: string,
   stats: readonly StatKey[],
@@ -1129,7 +1129,7 @@ export async function choose(deps: {
 // ---------------------------------------------------------------------------------------------
 
 /** `flags[]` pruned to today, with `flag` in `cityId` today (once). */
-function withFlag(
+export function withFlag(
   c: Pick<CharacterDoc, 'flags'>,
   cityId: string,
   today: number,

@@ -186,6 +186,8 @@ export default defineConfig({
         // Review 5 (ADR 0079): the town held at day, so a third of all times being night never makes
         // a spec flaky; night specs switch it with POST /api/test/night and restore it.
         E2E_NIGHT: 'day',
+        // Review 5 (ADR 0081): no patrol rolls unless a spec asks (POST /api/test/patrol).
+        E2E_PATROL: 'never',
       },
     },
     {

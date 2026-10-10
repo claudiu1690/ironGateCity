@@ -194,7 +194,8 @@ export function slice5Problems(
     if (j.deck === 'ordinary' && (j.heatAtLeast !== undefined || j.ignoreEffects))
       problems.push(`${j.id}: only a hostile card has heatAtLeast or ignoreEffects`);
     for (const c of j.choices) {
-      if (c.gate && j.deck !== 'hostile') problems.push(`${j.id}.${c.id}: a gate is on the hostile deck`);
+      // Review 5 (ADR 0081): the patrol's card is in the hostile deck's shape, its papers gated too.
+      if (c.gate && j.deck === 'ordinary') problems.push(`${j.id}.${c.id}: a gate is on the hostile deck`);
       if (c.cost && !c.stats && c.partial && !c.gate) problems.push(`${j.id}.${c.id}: a paid unchecked choice has no partial`);
     }
   }

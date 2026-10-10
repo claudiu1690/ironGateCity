@@ -7,6 +7,7 @@ import {
   HEALTH,
   HEAT,
   PAID_OFF_PART,
+  PATROL,
   RUN_IN,
   RUN_IN_PART,
   addHeat,
@@ -152,6 +153,8 @@ export async function startRunInInTx(
         runIn: { encounterId, state: 'pending', day: ctx.today, decideBy, cityId: ctx.city.id },
       },
       $inc: { version: 1 },
+      // Review 5 (ADR 0081): the street is quiet for fifteen minutes after a run-in.
+      $max: { 'patrol.quietUntil': new Date(now + PATROL.quietAfterRunInMs) },
     },
     { session, returnDocument: 'after', lean: true },
   );

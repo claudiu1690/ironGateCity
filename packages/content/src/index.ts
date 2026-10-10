@@ -5,6 +5,7 @@ export {
   indexContent,
   loadContent,
   parseContent,
+  PATROL_EVENT_ID,
   inPolygon,
   rawContent,
   routeProblems,

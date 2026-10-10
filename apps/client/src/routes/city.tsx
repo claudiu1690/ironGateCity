@@ -6,6 +6,7 @@ import type {
   FactionId,
   LocationView,
   MissionView,
+  PatrolCardResult,
 } from '@irongate/rules';
 import {
   BottomSheet,
@@ -18,6 +19,8 @@ import {
   HelpButton,
   IssueChip,
   JobsCard,
+  JourneyCard,
+  JourneyCardSheet,
   LodgingsCard,
   LocationSheet,
   LockedPinSheet,
@@ -235,6 +238,37 @@ export function CityPage() {
     },
   });
 
+  // Review 5 (ADR 0081): the night patrol's card. It waits over the map until a row is tapped; its
+  // outcome stays (from the answer, while the view no longer carries the card) until *Continue*.
+  const [patrolDone, setPatrolDone] = useState<PatrolCardResult | null>(null);
+  const lastPatrol = useRef<NonNullable<CityView['patrol']> | null>(null);
+  if (city.data?.patrol) lastPatrol.current = city.data.patrol;
+  const patrolBusy = useRef(false);
+  const patrol = useMutation({
+    ...trpc.patrol.answer.mutationOptions(),
+    retry: (n, e) => n < 2 && isNetworkError(e),
+    onSuccess: (r) => {
+      queryClient.setQueryData(trpc.character.me.queryKey(), r.character);
+      setPatrolDone(r);
+    },
+    // NO_PATROL: answered in another window; the view is read again and the card goes.
+    onError: () => void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() }),
+    onSettled: () => {
+      patrolBusy.current = false;
+    },
+  });
+  const answerPatrol = (choiceId: string) => {
+    if (patrolBusy.current) return;
+    patrolBusy.current = true;
+    patrol.mutate({ choiceId, idempotencyKey: crypto.randomUUID() });
+  };
+  const closePatrol = () => {
+    setPatrolDone(null);
+    patrol.reset();
+    void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
+    void queryClient.invalidateQueries({ queryKey: trpc.character.me.queryKey() });
+  };
+
   const c0 = city.data;
   const districts = c0?.districts && c0.districts.length > 0 ? c0.districts : null;
   const district: DistrictView | null =
@@ -363,7 +397,10 @@ export function CityPage() {
   const location: LocationView | undefined = shownLocations.find((l) => l.id === loc);
   /** What the sheet shows: the open place, or (closing) the last one. */
   const sheetPlace: LocationView | undefined = location ?? shownLocations.find((l) => l.id === lastPlace);
-  const sheetOpen = !!location && arrived !== null && !(character.orders.complete && !modalOpen);
+  // Review 5 (ADR 0081): the patrol's card shown (waiting, or answered until Continue).
+  const patrolShown = c.patrol ?? (patrolDone ? lastPatrol.current : null);
+  const sheetOpen =
+    !!location && arrived !== null && !(character.orders.complete && !modalOpen) && !patrolShown;
   // ADR 0024: the map as tiles where a tile origin is set (dev: the local cache), else the stills.
   const dayTiles = pyramidFor(c.map.day, env.tilesOrigin);
   const nightTiles = pyramidFor(c.map.night, env.tilesOrigin);
@@ -1273,6 +1310,28 @@ export function CityPage() {
         </LocationSheet>
       )}
 
+      {patrolShown && (
+        // Review 5 (ADR 0081, tech design §8.4): no dim-tap, Escape or Close while it waits; the tab
+        // bar still works and the Map tab comes back to it. Answered: the outcome and *Continue*.
+        <JourneyCardSheet
+          title={copy.patrol.sheetTitle(c.name)}
+          onClose={patrolDone ? closePatrol : undefined}
+          closeLabel={copy.patrol.continue}
+          testId="patrol-sheet"
+        >
+          <JourneyCard
+            card={{ ...patrolShown.card, chosen: patrolDone }}
+            kicker={patrolShown.kicker}
+            onChoose={answerPatrol}
+            pendingChoiceId={patrol.isPending ? (patrol.variables?.choiceId ?? null) : null}
+          />
+          {patrol.error && (
+            <p role="status" className="font-body text-[13px] text-collective">
+              {noticeFor(patrol.error)}
+            </p>
+          )}
+        </JourneyCardSheet>
+      )}
       <PlacesList
         open={placesOpen && !overview}
         onOpenChange={setPlacesOpen}

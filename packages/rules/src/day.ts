@@ -64,7 +64,7 @@ const GAME_DAY_MS = GAME_DAY_HOURS * HOUR_MS;
 const DUSK_INTO_MS = (GAME_DAY_HOURS - NIGHT_HOURS) * HOUR_MS;
 
 /** The town's day index: whole six-hour blocks since the epoch, on the City Day's offset. */
-const gameDayIndex = (now: number): number => Math.floor((now + CITY_DAY.utcOffsetMs) / GAME_DAY_MS);
+export const gameDayIndex = (now: number): number => Math.floor((now + CITY_DAY.utcOffsetMs) / GAME_DAY_MS);
 
 /**
  * §2.2 (review 5, ADR 0079): the start (a dawn) of the six-hour block holding `now`, aligned to the
