@@ -33,7 +33,11 @@ async function tap(page: Page, name: string, line: RegExp): Promise<void> {
 async function skipTo(page: Page, phase: RegExp): Promise<void> {
   const panel = await openPanel(page);
   for (let i = 0; i < 3 && !phase.test((await panel.getByTestId('dev-phase').textContent()) ?? ''); i++) {
+    // Review 5 phase 9: wait for this skip's own line. The line before (*+1 hour*'s *Now … UTC*) already
+    // matched, so the loop read the old phase and skipped twice when the clock started in the polls.
+    const before = (await panel.getByTestId('dev-line').textContent()) ?? '';
     await panel.getByRole('button', { name: 'Skip to next phase' }).click();
+    await expect(panel.getByTestId('dev-line')).not.toHaveText(before);
     await expect(panel.getByTestId('dev-line')).toHaveText(/^Now .* UTC/);
   }
   await expect(panel.getByTestId('dev-phase')).toHaveText(phase);

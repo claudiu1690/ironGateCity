@@ -1340,6 +1340,14 @@ Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–00
 - The Faction tab's orders show `off`.
 - Events and the HQ card go into the place card slot (§3.1), not new sheet code.
 
+## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
+
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- *Visit · 3 Energy* and the event sign-ups are Energy acts, so `notFree` refuses them while a patrol card is pending. *Post bail* is Iron from anywhere and is not refused.
+- The Members status shows nothing for a pending card.
+- The Unrest prize's award line appears with the branch's *Restore the base* orders in the paper.
+
 ## Deviations (as built)
 
 *Filled in by T25.*

@@ -1482,6 +1482,16 @@ Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–00
 - The performance and axe checks add `/journey` (the map) and the hall's sheet.
 - *While you were away* uses `copy.when`.
 
+## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
+
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- `settings.night: 'clock' | 'day'` (*Map at night*) applies to the art on top of the view's `night` block. It never changes a rule, a lock or a patrol.
+- **Telemetry** gains `patrol.roll`, `patrol.stop`, `patrol.answer`, `treatment.bought` and `unrest.prize`.
+- **The performance budget** for `city.get` counts the patrol write (at most one per ten minutes per player at night on rival ground).
+- **The axe matrix** adds the patrol sheet, the Treatment card, *What's here* and the rival header.
+- *While you were away* lists the Unrest prize line.
+
 ## Deviations (as built)
 
 *Filled in by T26.*

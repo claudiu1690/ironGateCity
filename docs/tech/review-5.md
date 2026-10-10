@@ -1408,3 +1408,18 @@ Phase 10 (lane O, when the user picks D, E or G): the opening — depends on not
 10. **The nation card's goal line** shows for a rival home in any state (also while you are there), not only when boardable.
 11. **`weekPushed`** is read from the push ring (`pushedThisWeek`, today and the six days before), as ADR 0082 decides; answers §10.2's *(the ledger)* is the same figure without an aggregate on a read.
 12. **Specs run:** `rival`, `qa-risk` and `review5` (all 12) green, `--no-deps`.
+
+### Phase 9 (integration), built 10 Oct 2026
+
+1. **The full e2e run** (`pnpm e2e`, `E2E_WEB_PORT=4273 E2E_API_PORT=3301`): **170 passed, 0 failed** in 17.6 min, at the first run after phase 8. The one `x` in the list is `qa.slice4.spec.ts`'s *five names above the CTA*, a `test.fail` kept as an expected failure since slice 4 (QA_SHOW_BUGS shows it); it counts as passed. T23's *three times in a row* is not done: the user's rule this round is one full run before QA.
+2. **The `dev-panel` red was not a regression of this round.** Run alone (`--no-deps`), the first test failed at step 5 on the current code. The server agreed with itself: read through the status route and `paper.today` after each *Skip to next phase*, the panel's phase and the paper's Election block matched every time. The fault was in the spec's `skipTo` (since `3829e02`, 30 Sept): after a click it waited for the line to read *Now … UTC*, but the line from the step before (*+1 hour*) already read so. The loop then saw the old phase and clicked again, two skips in all, which put the clock in the polls (*Voting is open · 3 days left*). It shows only when the shared clock starts step 5 in the polls, which depends on the real date and on the earlier projects (10 Oct starts on cycle day 4). `skipTo` now waits for the line to change before reading the phase. The fix is in the spec only; no game code changed.
+3. **ADRs 0079–0082 are accepted** (built 8–10 Oct 2026). ADR 0082 has an *As built* note.
+4. **The §18 knock-ons** are copied into `slice-6.md` to `slice-9.md` as dated notes (10 Oct 2026). `IMPLEMENTATION_PLAN.md` §5 has a review-5 row. The §22 notes were fixed in place by the designer (answers §18.4).
+5. **The README** walk-throughs are refreshed: *Coming home* replaces *The Last Train In*; the rival trip's plate; *Getting patched up*; *The town's night*, *A patrol*, *What's here* and *Pushed into Unrest*; the dev panel's *To dusk*, *Patrol* and *Push it into Unrest*; and review 5's test hooks. `docs/review/review-5-build-notes.md` is the user's note-by-note summary before Design Review 3.
+
+### Final notes (for QA and the next round)
+
+- **Not covered by any test this round** (no Vitest, the user's decision of 8 Oct): the rules and server cases in §3–§10's test lists. The per-phase *Not covered* lines above list what the e2e walk does not reach. The largest gaps are the prize's farming cases (§10.4), the patrol's write count and quiet, and the night edges at 21:59 / 22:01.
+- **Older Vitest files** were left untouched and were not run. Some will be red against this round: they count the journey cards (12 now), read the 200 Driver, use `addPressure` without a split, call the pre-night views, and hold the content-policy regex (phase 6 deviation 10). QA should run them once, and they should be updated with the tests the round deferred.
+- **Open words for the designer:** the phone forms of the goal line, the *What's here* empty lines, *Choose one of the three*, and `{top}` with one name in the plural decks (phase 7 deviation 4, phase 8 deviations 3 and 6, phase 10 deviation 5).
+- **Legacy +2** for the Unrest prize is slice 8's (§18).

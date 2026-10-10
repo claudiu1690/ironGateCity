@@ -1,6 +1,6 @@
 # ADR 0081 — The patrol stop: a seeded roll per ten-minute bucket on the city read, embedded state, a pending card that holds the street
 
-**Status:** proposed (review 5 fix round) · **Date:** 2026-10-08
+**Status:** accepted, built 8–10 Oct 2026 (review 5 fix round) · **Date:** 2026-10-08
 
 ## Context
 

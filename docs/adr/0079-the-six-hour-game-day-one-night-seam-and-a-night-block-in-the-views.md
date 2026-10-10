@@ -1,6 +1,6 @@
 # ADR 0079 — The six-hour game day: one night seam on the server, a night block in the views
 
-**Status:** proposed (review 5 fix round; replaces the night window of GDD §2.2 slice 1, amends ADR 0005 for night only) · **Date:** 2026-10-08
+**Status:** accepted, built 8–10 Oct 2026 (review 5 fix round; replaces the night window of GDD §2.2 slice 1, amends ADR 0005 for night only) · **Date:** 2026-10-08
 
 ## Context
 

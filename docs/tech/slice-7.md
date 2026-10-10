@@ -1773,6 +1773,22 @@ Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–00
 
 The opening is *Coming home* (GDD §7.1; `docs/design/review-5-answers.md` §19) and the Ambitions are re-anchored without the father (GDD §17.1). For this slice: **chapter 3 is *The deposit* of *The Names on the Stone*** (id `finish-his-work`, unchanged); its strings, Letters row (*From the families' tin*), choice hints and keepsake name (*Your deposit receipt*, `keep.deposit-receipt`) are re-strung in design §13; the flag ids are now `fund-marks` / `own-marks`. **No number moved**: Rank 3, seven days, difficulty 16, 15 Energy, 350 / 90 / 200 · 175 / 45 / 100 · 60 / 0 / 0, the keepsake on every outcome. The content test for *father* (`review5.opening.test.ts`) covers this chapter when it is built.
 
+## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
+
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- **The Curfew's night** (§170, §579, §735) reads `nightAt(now).night` at the act; `isNight`'s 20:00–06:00 comment goes.
+  - The ticket's *until 06:00* (§1226) is *until {nextDawn}* through `copy.when`.
+  - The tests' *×2 at 20:00 and not at 19:59* (§849, §1368) become **22:00 and 21:59**.
+  - Q21's window (§1665) is the six-hour one.
+- **The Curfew doubles the night run-in** after the night base: tier 1 25 → 50, before the 90 clamp. It also doubles **the patrol chance**: `patrolChance({ curfew: true })`, read from the same law source at the read.
+- **Clearwater:**
+  - is a battleground: no patrols, and no night run-in rule;
+  - its Tram conductor is `dailyPay: 240` (the rung test covers it when it lands);
+  - its Sanatorium (`hospital`) carries `treatment: { carer: 'sister' }` or `'matron'` (the designer).
+- **Unrest's national weight** and the deputies' abstention are unchanged. The goal line's *its deputies go quiet* becomes literally true here.
+- The designed chapter strings change with the opening (§12), and no number does.
+
 ## Deviations (as built)
 
 *Filled in by T31.*

@@ -700,7 +700,7 @@ function RiskControls({
           Go
         </Button>
       </label>
-      {/* Review 5 (ADR 0082): the chosen rival town pushed into Unrest in your name; Skip a day pays. */}
+      {/* Review 5 (ADR 0082): the chosen rival town pushed into Unrest in your name; Next day pays. */}
       <Button
         variant="outline"
         className={cx(small, 'col-span-2')}

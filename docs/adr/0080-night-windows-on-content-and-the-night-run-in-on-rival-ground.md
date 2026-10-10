@@ -1,6 +1,6 @@
 # ADR 0080 — Night windows on content, the night rate, and the night run-in on rival ground
 
-**Status:** proposed (review 5 fix round; extends ADR 0031 and 0032) · **Date:** 2026-10-08
+**Status:** accepted, built 8–10 Oct 2026 (review 5 fix round; extends ADR 0031 and 0032) · **Date:** 2026-10-08
 
 ## Context
 

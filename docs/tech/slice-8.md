@@ -1712,6 +1712,16 @@ The opening is *Coming home* (GDD §7.1; `docs/design/review-5-answers.md` §19)
 - Design §3.9 and §21.3: `acc.his-rosette` is *The memorial ribbon*; the `item.rosette` brief is a **plain black ribbon** (regenerate the item picture if the cream-and-ink rosette was already made); every keepsake's *Read* text re-strung.
 - The content test for *father* (`review5.opening.test.ts`) must cover this slice's chapters and keepsakes when built.
 
+## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
+
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+
+- **Recognition at night** reads `nightAt` at the act. Its test times *at 20:00 and 19:59* (§1356) become 22:00 and 21:59.
+- **Legacy +2** for the Unrest prize: a legacy entry by the natural ref `unrest|{cityId}|{entry}` (ADR 0057), credited in the settlement that credits the award.
+- **The Market trader**, when placed, is Level 3 · Intelligence 10 · 240. The Level-6 rung is 320 when the Wardrobe places it (the rung test covers each).
+- The designed chapters are re-strung with the opening.
+- **As built (phase 8):** the Unrest award is `{ kind: 'unrest', ref: 'unrest|{cityId}|{entry}', fxp: 50, meta: { pushedK, top } }` in `awards`; the member's settlement credits its FXP (`awardsFxp`). Legacy is credited from the same row when `legacyEntries` lands.
+
 ## Deviations (as built)
 
 *Filled in by T25.*

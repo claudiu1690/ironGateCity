@@ -1,6 +1,6 @@
 # ADR 0082 — The push by party on the city's pressure, and the Unrest prize as an award paid by the boundary
 
-**Status:** proposed (review 5 fix round; extends ADR 0022, 0028 and 0034) · **Date:** 2026-10-08
+**Status:** accepted, built 8–10 Oct 2026 (review 5 fix round; extends ADR 0022, 0028 and 0034) · **Date:** 2026-10-08
 
 ## Context
 
@@ -57,3 +57,10 @@ Awards (ADR 0028) are written by city days with a unique `{ kind, ref, character
 - A member with two rival home cities can earn the prize in both, so up to 100 Party XP a week. This follows the rule as written per city; it is a question for the designer.
 - **Pressure written before this round** has no split. The bar shows that day's total without the two colours, and the week ring starts empty (local databases only, so nothing is backfilled).
 - An award written after a member's settlement that day is credited at the next settlement. This is the hero award's existing behaviour, and the line says when it was earned.
+
+## As built (10 Oct 2026, review 5 phase 8)
+
+- The headline is a **stored** fact of the settlement that credits the award (`PaperFacts.unrestPushed`, condition `unrestPushed`), not composed at read: the settlement already holds the award, so the edition prints it once.
+- `addPressure`'s actor is optional in the signature (older rules tests call it with three arguments); every act passes it.
+- Legacy +2 waits for slice 8 (Legacy does not exist yet); the award's ref `unrest|{cityId}|{entry}` is its natural ref.
+- The deviations are listed in `docs/tech/review-5.md` §23, phase 8.
