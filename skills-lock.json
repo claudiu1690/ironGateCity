@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "design-game-design-fundamentals": {
+      "source": "fcsouza/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/game-design-fundamentals/SKILL.md",
+      "computedHash": "98e2844537d5d94a22193d904c65a163e52c92a6826be836d2575fc2addded8e"
+    },
+    "design-game-economy-design": {
+      "source": "fcsouza/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/game-economy-design/SKILL.md",
+      "computedHash": "213a8db1ba869d34d71cdc5fdc1e09f1d479149f5dc9baef5da2ed9c339a1182"
+    },
+    "design-skill-progression-trees": {
+      "source": "fcsouza/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-progression-trees/SKILL.md",
+      "computedHash": "e1e21bba91a23d679a1d085313c38167eca44dabedb238120f8cdc47f729dbca"
+    },
+    "engineering-gameplay-analytics": {
+      "source": "fcsouza/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gameplay-analytics/SKILL.md",
+      "computedHash": "9a9619f7905dc5939781910e9a75b3bcb15b9a9513796b6ac9c127e972b9f435"
+    }
+  }
+}
