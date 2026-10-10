@@ -1,6 +1,8 @@
 export * from './schemas';
 export {
+  APPENDIX_A_BALLOTS,
   ContentError,
+  ballotFillProblems,
   getContent,
   indexContent,
   loadContent,

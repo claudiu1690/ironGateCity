@@ -163,9 +163,88 @@ export function countElection(
 }
 
 /** The votes a row was short of the seventh seat (0 when seated or level on a tie-break). */
-export function marginToSeat(row: Pick<CountRow, 'total'>, r: { rows: readonly CountRow[] }): number {
+export function marginToSeat(
+  row: Pick<CountRow, 'total'>,
+  r: { rows: ReadonlyArray<Pick<CountRow, 'total' | 'seated'>> },
+): number {
   const last = r.rows.filter((x) => x.seated).at(-1);
   return last ? Math.max(0, last.total - row.total) : 0;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Voting rework (docs/tech/voting-rework.md §4.1, ADR 0084): seats by reputation and backers. Added
+// beside the old count in phase 1; the `…V2` names drop their suffix when phase 2 removes the old
+// ones (`countElection`, `closeNominations`, `CountLine`, `CountRow`, `CountResult`).
+// ---------------------------------------------------------------------------------------------
+
+/** ADR 0084: members' backings plus the branch's, uncapped (the tie-break uses them all). */
+export const backersOf = (c: { members: number; branch: boolean }): number =>
+  Math.max(0, c.members) + (c.branch ? 1 : 0);
+
+export interface CountLineV2 {
+  /** 'p:<characterId>' | 'n:<npcId>'. */
+  key: string;
+  kind: 'player' | 'npc';
+  name: string;
+  wardVote: number;
+  /** Local Standing Successes; NPC: profile × 5. */
+  successes: number;
+  /** All backers, the branch's included (`backersOf`); at most five count. */
+  backers: number;
+  /** List order: players by filing, then NPCs by profile. */
+  order: number;
+}
+
+export interface CountRowV2 extends CountLineV2 {
+  backersCounted: number;
+  total: number;
+  /** 1-based finishing place. */
+  place: number;
+  seated: boolean;
+}
+
+export interface CountResultV2 {
+  rows: CountRowV2[];
+  seated: CountRowV2[];
+  npcSeats: number;
+  topKey: string;
+  lastSeatKey: string;
+}
+
+/**
+ * Design §3.5, ADR 0084: total = ward vote + 3 × min(backers, 5); the `seats` highest are seated
+ * (seven at home). Ties: more backers, then Standing Successes, then list order (earlier filing,
+ * locals after every player). Members' votes are not part of the seat count.
+ */
+export function countSeats(lines: readonly CountLineV2[], seats: number = COUNCIL.seats): CountResultV2 {
+  const scored = lines.map((l) => {
+    const backersCounted = Math.min(Math.max(0, l.backers), COUNCIL.endorsementsCounted);
+    return { ...l, backersCounted, total: l.wardVote + COUNCIL.endorsementWeight * backersCounted };
+  });
+  scored.sort(
+    (a, b) => b.total - a.total || b.backers - a.backers || b.successes - a.successes || a.order - b.order,
+  );
+  const rows: CountRowV2[] = scored.map((s, idx) => ({ ...s, place: idx + 1, seated: idx < seats }));
+  const seated = rows.filter((r) => r.seated);
+  return {
+    rows,
+    seated,
+    npcSeats: seated.filter((r) => r.kind === 'npc').length,
+    topKey: rows[0]?.key ?? '',
+    lastSeatKey: seated.at(-1)?.key ?? '',
+  };
+}
+
+/**
+ * ADR 0084 §2: the set (the boundary into cycle day 2) freezes the list: every standing player by
+ * filing, then the slate's top `9 − p` locals. No strike, no doubling.
+ */
+export function freezeList(i: {
+  standing: ReadonlyArray<{ id: string; filedAt: number }>;
+  npcSlate: ReadonlyArray<{ npcId: string }>;
+}): { standing: string[]; ballotNpcs: string[] } {
+  const standing = [...i.standing].sort((a, b) => a.filedAt - b.filedAt).map((s) => s.id);
+  return { standing, ballotNpcs: i.npcSlate.slice(0, npcsStanding(standing.length)).map((n) => n.npcId) };
 }
 
 export interface DivisionItem {

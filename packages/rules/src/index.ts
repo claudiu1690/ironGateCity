@@ -30,6 +30,8 @@ export * from './week';
 export * from './travel';
 export * from './district';
 export * from './capitalCount';
+// The voting rework (docs/tech/voting-rework.md §4.2).
+export * from './ruleBallot';
 export * from './issues';
 export * from './ledger';
 export * from './residence';

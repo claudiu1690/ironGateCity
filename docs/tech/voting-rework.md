@@ -961,3 +961,93 @@ All four answered in design §8.5 (10 Oct 2026):
 - GDD §15.3's *Seat allocation in battlegrounds* should say a shared card's ballots split (Q1), once settled. **Done: *split equally*.**
 
 *Baseline (phase 0) and Deviations are recorded below as the phases are built.*
+
+---
+
+## Deviations
+
+### Phase 1 — Foundations (10 Oct 2026)
+
+Built additively: nothing visible changes. The old functions, types, fields and copy all stay until phase 2 (back end) and phases 3–5 (screens). Phase 0's *Baseline* was not recorded in this file before phase 1 started; phase 1 ran `council` and `capital` green (below).
+
+**Rules (`packages/rules`)**
+
+- **Names that collide with the old model carry a `V2` suffix** until phase 2 removes the old ones and drops it: `CountLineV2`, `CountRowV2`, `CountResultV2` (the plan's `CountLine` / `CountRow` / `CountResult` v4); `countDistrictV2`, `DistrictCountLineV2`, `DistrictCountRowV2`, `DistrictCountV2` (§4.3's `countDistrict` v2); `ElectionCardStateV2`, `ElectionCardViewV2` (§4.4). New names without a collision are as planned: `ruleBallot.ts` (`CardBy`, `RuleCard`, `SeatRule`, `homeBallot`, `partyCardOf`, `capitalBallot`, `RuleTally`, `RuleHow`, `RuleDecision`, `decideHomeRule`, `ruleWindowFrom`), `backersOf`, `countSeats`, `freezeList`, `cardBallots`, `decideCapitalRule`, `RuleCardView`, `RuleBallotView`, `RuleResultView`, `COUNCIL.ballotCards`.
+- **The calendar** keeps `council.voting`, `council.divideDay` and `ordinanceWindow` beside the new `council.ruleOpen`, `council.setDay`, `ruleWindow` and `nextRuleWindow`; `boundaryWork` returns `{ count, close, divide, set }`. `ruleBallotKey = councilKey`.
+- **`marginToSeat`** takes any rows with `total` and `seated`, so it serves the v2 rows too.
+- **`homeBallot`'s `fill`** is ids only (as planned); a card from it is shown as the party's pick (`by` = the party's), since a fill card has no seated person. Never reached with Appendix A.
+- **`CardBy`'s party form** gains an optional `npcId` (the secretary's).
+- **`capitalBallot`:** a party missing from `order` (no seat on the council) comes after the ordered ones.
+- **`decideCapitalRule`'s `how`** is `draw` only when the top two cards are level on seats, votes and opinion; otherwise `seats`.
+- **`ruleDecided` gains an optional `drawn`** (the Herald's `hl.ig.rule-drawn`, design §8.4); absent matches either. `PoliticalFacts` gains an optional `rule: RuleFacts` and `until.ruleEnds?`; the selector's cases for the four new kinds are in place and hold only once phase 5 fills `rule`. `untilFor`: `voteOpen` and `ruleOnBallot` name the vote's close; `ruleDecided` and `votedRule` the end of the rule's five days. `voteOpen` is **day 2 only** (design §8.1 Q12).
+- **Placeholders** (design §8.4's tokens): `rule`, `line`, `of`, `winnerVotes`, `winnerSeats`, `seats` and `parties` join `POLITICAL_PLACEHOLDERS`. `PoliticalAct` gains `setRule`; `PoliticalResult.knockOns` gains an optional `backers` beside `endorsements`; `GameErrorReason` gains `NOT_ON_BALLOT` and `RULE_WINDOW_CLOSED`.
+- **Not added in phase 1:** `StandCardView` and `CouncilRowView` (§4.4 names them without a shape; phase 2 defines them with their view builders), and the changed views (`PoliticsSummaryView`, `ElectionView`, `CountView`, …), which change with their builders in phase 2.
+
+**Content (`packages/content`)**
+
+- **`NpcCandidate.rule`** (optional in the schema) and the 27 Appendix A rules in `data/candidates.ts`. **`ballotFillProblems`** (exported; run by the loader):
+  - a home local must name a rule on the menu, and a non-home local must not;
+  - each home city's ballot with no player (the branch's card and the seven top locals by profile) gives three distinct cards **without the fill**, in Unrest too;
+  - and it equals Appendix A's line (`APPENDIX_A_BALLOTS`).
+
+  Checked by script: the content loads with no problem, and a fixture with `npc.c.weiss`'s rule removed is refused by name (*candidate "npc.c.weiss" (a home local of coalport) has no rule*, plus the Coalport ballot line).
+- **The modals:** `politics.results.setRule` (*Changed*) is new. The new texts of the vote, the stand and the backing (design §4.8) are in a **`politics.resultsV2`** block beside the old `results.ballot/declare/endorse`; phase 2 moves them into `results` and drops the block. The loader's length, sentence and placeholder checks cover both blocks. `setRule`'s body uses `{line}` (filled capitalised) and `{weekday}` = the vote's last day.
+- **Headlines** (`data/ruleHeadlines.ts`, new): the design's §8.4 strings in all four voices. The designer settled §20.1 Q15 during the phase, so there are **no stand-ins** and no start-up list. `hl.ig.rule-drawn` replaces the Herald's fallback. The Herald's on-ballot headline is written `{parties}'s Card`, because the design's `{parties}' Card` would print *the Vanguard' Card*: **for the designer to confirm.** `hl.filed` and `hl.nominations` are reworded in place in phase 5 (not additive).
+- **Copy:** new blocks and keys beside the old ones. Where a design name collides with a live key, the new one is renamed until its phase swaps it:
+  - `election.v2.*`: the seven states, the kickers, `firstTime`, and the result lines by `how` from design §8.2 (`result`, `resultTie`, `resultFallback`, `resultFallbackUnrest`, `resultSeats`, `resultSharedSeats`, `resultDraw`, `resultCarried`);
+  - `help.ruleV2` (with the city's two voting weekdays as parameters, since *Wednesday to Saturday* differs by city), `help.ruleMore`, `help.pcV2`;
+  - `ruleResult.*` (the design's `result.*`; `copy.result` is the action result's block);
+  - `council.whatNow.rule.*` (the design's `council.whatNow.lines`);
+  - `capitalElection.ballotLineV2` and `.resultLineV2`; `paper.localElectionV2` (design §8.3).
+
+  The rest use the design's names:
+  - `election.seeTheBallot`, `.toYourDesk`, `.ruleNow`;
+  - `hall.nextWeeksRule`, `.ballotSetAt`, `.change`, `.yourRule`, `.nextInLine`, `.standForTheCouncil`, `.ruleOf`, `.pickerTitle`, and `.onTheBallot` (§8.1 Q10's *already on the ballot · yours would be skipped*);
+  - `council.deskNext.townVotes`, `.theResult`, `.pay`;
+  - `ballot.*`; `rule.whose.*`, `rule.effect`, `rule.how.*` (design §8.2; the hall's *how it won* words live here, not in `hall.*`); `seats.*`; `stand.*`; `plate.ruleChip`; `me.rule`;
+  - `capitalElection.question`, `.votesAndOpinion`, `.partyVotes`.
+
+  **Words the design does not give, written plainly for the designer to confirm:**
+  - `errors.notOnBallot`: *That rule isn't on this ballot.*;
+  - `errors.ruleWindowClosed`: *Councillors set their rule on the term's first two days · next {when}*;
+  - the head of `council.whatNow.rule.capitalChosen`: *Your rule is next in line*, as the player's rule is not the card;
+  - `capitalElection.partyVotes`'s *· shared* marker (Q1).
+
+**Database (`packages/db`)**
+
+- **No second Mongoose model on `ordinances` yet.** Two models on one collection would each drop the other's indexes at `syncIndexes`. Instead:
+  - the rule ballot's fields (`setDay`, `countDay`, `cards`, `unrest`, `changes`, `result`, `legacy`) are on the order paper's schema **with no defaults**, so old papers stay as they were;
+  - its `status` enum gains `set` and `counted`;
+  - the shape is exported as `RuleBallotDoc` / `RuleBallotResult`;
+  - the index `{ cityId: 1, countDay: -1 }` is added beside `{ cityId: 1, divideDay: -1 }`.
+
+  Phase 2 renames the model `RuleBallot` and removes `OrderPaper` and the old index.
+- **`votes`:** `ordinanceId?` and the index `{ electionId: 1, ordinanceId: 1 }`. `candidateKey` stays **required** until phase 2, which writes the first rule vote and adds the *exactly one of the two* validator.
+- **`candidacies`:** `rule?` is added; `platformId` stays required until phase 2. `BallotLine` gains `rule?`.
+- **`officeTerms`:** `rule?` and `ruleSetAt?`, with no defaults. **`cities`:** `world.voting?: 2`. **`requestLogs`:** the kind `council.setRule`.
+- **Migration 009** (`migrations/009-voting-rework.ts`: `refundDueDeposits`, `migrateVotingRework`) is written and exported from `@irongate/db`, **not wired** into `ensureIndexes`. It credits `COUNCIL.cost.declare` (10), capped at `PC.cap`, after the candidacy's `due → returned` flip, one transaction per candidacy.
+
+**§20.1** was settled by the designer during the phase (design §8). Phase 1 follows the settled answers:
+
+- Q1: `cardBallots` splits equally;
+- Q2: Unrest gives three councillor cards;
+- Q5: `partyCardOf` ranks by total, then seat;
+- Q7 and Q8: two-line results and `rule.how.*`;
+- Q10: the dimmed row's words; duplicates are skipped and the next in line fills;
+- Q11: `fill`;
+- Q12: `voteOpen` on day 2 only;
+- Q13: the loader refuses a rule on a non-home local;
+- Q14: `paper.localElectionV2`;
+- Q15: the four voices.
+
+**Checks**
+
+- `pnpm art:check && pnpm turbo run lint typecheck build` (cached): green, 14 of 14 tasks. The old Vitest files typecheck unchanged (nothing in phase 1 needed them edited).
+- `council` and `capital` with `--no-deps` (`E2E_WEB_PORT=4273 E2E_API_PORT=3301`): 3 of 3 passed, unchanged. Their server starts in memory mode with the new content, so the loader ran with no `ballotFillProblems`. The user's own `pnpm dev:mem` was left alone (not restarted).
+- A scratch script over the new rules functions (not a Vitest test) covered:
+  - the three Appendix A ballots;
+  - players filling cards 2–3, with a duplicate skipped;
+  - Unrest, the fill and the fallback;
+  - most votes, the 2–2 tie going to card 2, and a tie with card 1;
+  - the capital's merged card and split ballots, the largest bloc with shared seats, and the draw;
+  - `countSeats`' backers tie-break, `freezeList` and the calendar fields.

@@ -1,7 +1,8 @@
 import { CAPITAL_COUNCIL } from './constants';
-import { AGAINST_ALL, countElection } from './council';
-import type { CountLine, CountRow } from './council';
+import { AGAINST_ALL, countElection, countSeats } from './council';
+import type { CountLine, CountLineV2, CountRow, CountRowV2 } from './council';
 import type { Rng } from './rng';
+import type { RuleCard, RuleDecision, RuleHow } from './ruleBallot';
 import { FACTION_IDS } from './types';
 import type { FactionId, OpinionShares } from './types';
 
@@ -251,4 +252,134 @@ export function councilOrder(
       (Math.abs(opinion[b] - opinion[a]) > EPS ? opinion[b] - opinion[a] : 0) ||
       drawOrder.indexOf(a) - drawOrder.indexOf(b),
   );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Voting rework (docs/tech/voting-rework.md §4.3, ADR 0085): a party's ballots are the votes for
+// its card; the capital's rule is the largest bloc's. Added beside the old count in phase 1; the
+// `…V2` names drop their suffix when phase 2 removes `countDistrict` and `divideCapital`.
+// ---------------------------------------------------------------------------------------------
+
+/** ADR 0085 §3: a district's ballots by party from its card votes; a shared card's votes split equally. */
+export function cardBallots(
+  cards: readonly RuleCard[],
+  votes: Readonly<Record<string, number>>,
+): Record<FactionId, number> {
+  const out: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
+  for (const c of cards) {
+    const v = Math.max(0, votes[c.ordinanceId] ?? 0);
+    if (v === 0 || c.factionIds.length === 0) continue;
+    for (const f of c.factionIds) out[f] += v / c.factionIds.length;
+  }
+  return out;
+}
+
+export type DistrictCountLineV2 = CountLineV2 & { factionId: FactionId };
+export type DistrictCountRowV2 = CountRowV2 & { factionId: FactionId };
+
+export interface DistrictCountV2 {
+  factions: Array<FactionScore & { seats: number }>;
+  w: number;
+  ballots: number;
+  seatsByFaction: Record<FactionId, number>;
+  /** The two elected, in seat order (D'Hondt's). */
+  seated: DistrictCountRowV2[];
+  /** Every candidate, grouped by faction in faction order; `place` is the place within the faction. */
+  rows: DistrictCountRowV2[];
+  tie: 'draw' | null;
+  drawOrder: FactionId[];
+}
+
+/**
+ * §3.5 + slice 4 §6.5 (ADR 0085): within each party by `countSeats`' total and ties; across parties
+ * D'Hondt on the scores from `ballotsByFaction` (`cardBallots`, may be fractional). Lines carry
+ * backers, no votes.
+ */
+export function countDistrictV2(i: {
+  lines: readonly DistrictCountLineV2[];
+  ballotsByFaction: Record<FactionId, number>;
+  opinion: OpinionShares;
+  rng: Rng;
+}): DistrictCountV2 {
+  const drawOrder = drawOrderOf(i.rng);
+  const byFaction = new Map<FactionId, DistrictCountRowV2[]>();
+  for (const f of FACTION_IDS) {
+    const own = i.lines.filter((l) => l.factionId === f);
+    const counted = countSeats(own, own.length).rows.map((r, idx) => ({
+      ...r,
+      factionId: f,
+      place: idx + 1,
+      seated: false,
+    }));
+    byFaction.set(f, counted);
+  }
+  const scores = districtScores({ ballotsByFaction: i.ballotsByFaction, opinion: i.opinion });
+  const ballots = scores.reduce((sum, s) => sum + s.ballots, 0);
+  const { seats, drawn } = dhondt(
+    scores,
+    CAPITAL_COUNCIL.perDistrict,
+    drawOrder,
+    (f, won) => (byFaction.get(f)?.length ?? 0) > won,
+  );
+  const seatsByFaction: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
+  const seated: DistrictCountRowV2[] = [];
+  for (const f of seats) {
+    const row = byFaction.get(f)![seatsByFaction[f]]!;
+    row.seated = true;
+    seated.push(row);
+    seatsByFaction[f] += 1;
+  }
+  return {
+    factions: scores.map((s) => ({ ...s, seats: seatsByFaction[s.factionId] })),
+    w: turnoutWeight(ballots),
+    ballots,
+    seatsByFaction,
+    seated,
+    rows: FACTION_IDS.flatMap((f) => byFaction.get(f)!),
+    tie: drawn ? 'draw' : null,
+    drawOrder,
+  };
+}
+
+/**
+ * ADR 0085 §4: a card's seats = Σ its parties' seats; most seats wins; ties: the card's votes
+ * city-wide, then Σ its parties' opinion share (the city's average), then the earliest of its parties
+ * in `drawOrder`. `how`: `draw` when seats, votes and opinion were all level, else `seats`.
+ */
+export function decideCapitalRule(i: {
+  cards: readonly RuleCard[];
+  seatsByFaction: Partial<Record<FactionId, number>>;
+  votes: Readonly<Record<string, number>>;
+  opinion: OpinionShares;
+  drawOrder: readonly FactionId[];
+}): RuleDecision {
+  if (i.cards.length === 0) throw new Error('decideCapitalRule: a ballot has at least one card');
+  const rows = i.cards.map((c) => ({
+    ordinanceId: c.ordinanceId,
+    seats: c.factionIds.reduce((sum, f) => sum + (i.seatsByFaction[f] ?? 0), 0),
+    votes: Math.max(0, i.votes[c.ordinanceId] ?? 0),
+    opinion: c.factionIds.reduce((sum, f) => sum + i.opinion[f], 0),
+    draw: Math.min(
+      ...c.factionIds.map((f) => {
+        const at = i.drawOrder.indexOf(f);
+        return at === -1 ? Number.MAX_SAFE_INTEGER : at;
+      }),
+    ),
+  }));
+  const level = (a: (typeof rows)[number], b: (typeof rows)[number]) =>
+    a.seats === b.seats && a.votes === b.votes && Math.abs(a.opinion - b.opinion) <= EPS;
+  rows.sort(
+    (a, b) =>
+      b.seats - a.seats ||
+      b.votes - a.votes ||
+      (Math.abs(b.opinion - a.opinion) > EPS ? b.opinion - a.opinion : 0) ||
+      a.draw - b.draw,
+  );
+  const [first, second] = rows;
+  const how: RuleHow = second && level(first!, second) ? 'draw' : 'seats';
+  return {
+    winner: first!.ordinanceId,
+    how,
+    tallies: rows.map((r) => ({ ordinanceId: r.ordinanceId, votes: r.votes, seats: r.seats })),
+  };
 }

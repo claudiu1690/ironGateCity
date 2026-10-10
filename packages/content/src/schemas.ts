@@ -579,6 +579,11 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({ kind: z.literal('ordinanceFromToday') }),
   z.strictObject({ kind: z.literal('leftUnrest') }),
+  // The voting rework (tech design §4.4): live, selected at read.
+  z.strictObject({ kind: z.literal('ruleDecided'), fallback: z.boolean(), drawn: z.boolean().optional() }),
+  z.strictObject({ kind: z.literal('votedRule'), won: z.boolean() }),
+  z.strictObject({ kind: z.literal('ruleOnBallot') }),
+  z.strictObject({ kind: z.literal('voteOpen') }),
   // Slice 4 (tech design §11.3): stored, the train opens at Level 10.
   z.strictObject({ kind: z.literal('levelCrossed'), level: z.number().int().min(2) }),
   // Slice 4: live conditions of the capital, the Issues and travel (selected at read).
@@ -848,6 +853,11 @@ export const NpcCandidate = z.strictObject({
   line: z.string().min(1).max(90),
   /** Slice 4 (design §8.3): the district of a capital candidate (required for a city with districts). */
   districtId: Id.optional(),
+  /**
+   * The voting rework (design §3.3, Appendix A): the rule a home local puts on the ballot when seated.
+   * Required on a home slate, absent elsewhere (the loader's `ballotFillProblems`).
+   */
+  rule: OrdinanceId.optional(),
 });
 
 /** Screens §9, design §17.3: one political result modal's texts. */
@@ -873,6 +883,17 @@ export const PoliticalTexts = z.strictObject({
     room: PoliticalText,
     // Slice-4 fixes §6: the room's renewal.
     renew: PoliticalText,
+    // The voting rework (design §4.8): *Changed*, a councillor names their rule.
+    setRule: PoliticalText,
+  }),
+  /**
+   * The voting rework (design §4.8): the new texts of the vote, the stand and the backing, beside the
+   * old ones; phase 2 moves them into `results` and drops this block.
+   */
+  resultsV2: z.strictObject({
+    ballot: PoliticalText,
+    declare: PoliticalText,
+    endorse: PoliticalText,
   }),
 });
 

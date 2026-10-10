@@ -247,6 +247,8 @@ export interface PoliticalFacts {
   cycleDay: number;
   ordinanceFromToday: boolean;
   leftUnrest: boolean;
+  /** The voting rework (tech design §10): the rule ballot's live facts; absent = none holds. */
+  rule?: RuleFacts;
   /** Slice 4: the capital's, the Issues' and travel's live facts; absent = none holds. */
   capital?: CapitalFacts;
   /** Placeholder values, resolved on the server. */
@@ -258,8 +260,23 @@ export interface PoliticalFacts {
   varsByKind?: Partial<
     Record<PoliticalCondition['kind'], Partial<Record<PoliticalPlaceholder | CapitalPlaceholder, string>>>
   >;
-  /** Epoch ms of the boundaries `{until}` may name. */
-  until: { nominations: number; polls: number; divide: number };
+  /**
+   * Epoch ms of the boundaries `{until}` may name. The voting rework: `ruleEnds`, the boundary that
+   * ends the rule decided this morning (its five days).
+   */
+  until: { nominations: number; polls: number; divide: number; ruleEnds?: number };
+}
+
+/** The voting rework (tech design §10): what the live paper knows of the rule ballot this morning. */
+export interface RuleFacts {
+  /** Ballot k − 1 was counted this morning; `fallback` when no votes were cast, `drawn` on the capital's draw. */
+  decided: { fallback: boolean; drawn: boolean } | null;
+  /** The caller voted on that ballot; their card won or lost. */
+  voted: { won: boolean } | null;
+  /** Today is the set day and the caller's council rule is a card of the set ballot. */
+  onBallot: boolean;
+  /** Cycle day 2: the vote opened this morning (design §8.1 Q12). */
+  voteOpen: boolean;
 }
 
 /** Slice 4 (tech design §11.3): what the live paper knows of the capital, the Issues and travel. */
@@ -354,6 +371,18 @@ function politicalHolds(c: PoliticalCondition, f: PoliticalFacts): boolean {
       return f.ordinanceFromToday;
     case 'leftUnrest':
       return f.leftUnrest;
+    case 'ruleDecided':
+      return (
+        !!f.rule?.decided &&
+        f.rule.decided.fallback === c.fallback &&
+        (c.drawn === undefined || c.drawn === f.rule.decided.drawn)
+      );
+    case 'votedRule':
+      return !!f.rule?.voted && f.rule.voted.won === c.won;
+    case 'ruleOnBallot':
+      return f.rule?.onBallot ?? false;
+    case 'voteOpen':
+      return f.rule?.voteOpen ?? false;
     default:
       return false;
   }
@@ -368,6 +397,9 @@ function untilFor(t: HeadlineTemplate, f: PoliticalFacts): number | undefined {
     if (c.kind === 'filedYesterday') return f.until.nominations;
     if (c.kind === 'movedYesterday') return f.until.divide;
     if (c.kind === 'nominationsClosed') return f.until.polls;
+    // The voting rework: the vote closes at the count's boundary; a decided rule runs five days.
+    if (c.kind === 'voteOpen' || c.kind === 'ruleOnBallot') return f.until.polls;
+    if (c.kind === 'ruleDecided' || c.kind === 'votedRule') return f.until.ruleEnds;
     if (c.kind === 'phaseToday') return c.phase === 'nominations' ? f.until.nominations : f.until.polls;
   }
   return undefined;

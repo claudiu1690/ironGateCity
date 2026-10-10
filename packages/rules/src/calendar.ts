@@ -34,10 +34,30 @@ export interface CouncilDay {
   phase: CouncilPhase;
   /** The open election (cycle `cycle`). */
   election: { cycle: number; nominationsFrom: DayKey; pollsFrom: DayKey; countDay: DayKey };
-  /** The sitting council (cycle `cycle`); `voting` on cycle days 0–1. `toDay` is exclusive. */
-  council: { cycle: number; fromDay: DayKey; divideDay: DayKey; toDay: DayKey; voting: boolean };
-  /** The window of the sitting council's ordinance; `toDay` exclusive. */
+  /**
+   * The sitting council (cycle `cycle`); `voting` on cycle days 0–1. `toDay` is exclusive.
+   * Voting rework (ADR 0083): `ruleOpen` on days 0–1 (councillors set their rule); `setDay` =
+   * fromDay + 2, the boundary that freezes the list and the three cards. `voting` and `divideDay`
+   * are the old model's and go in phase 2.
+   */
+  council: {
+    cycle: number;
+    fromDay: DayKey;
+    divideDay: DayKey;
+    toDay: DayKey;
+    voting: boolean;
+    ruleOpen: boolean;
+    setDay: DayKey;
+  };
+  /** The window of the sitting council's ordinance; `toDay` exclusive. (Old model; goes in phase 2.) */
   ordinanceWindow: { fromDay: DayKey; toDay: DayKey };
+  /**
+   * Voting rework (ADR 0083): the rule in force this cycle (ballot k − 1's result, decided at the
+   * count into `fromDay`); `toDay` exclusive: `[start, start + 5)`.
+   */
+  ruleWindow: { fromDay: DayKey; toDay: DayKey };
+  /** What this cycle's vote decides, in force from the next count: `[start + 5, start + 10)`. */
+  nextRuleWindow: { fromDay: DayKey; toDay: DayKey };
 }
 
 export function councilDay(day: DayKey, offset: number): CouncilDay {
@@ -48,8 +68,18 @@ export function councilDay(day: DayKey, offset: number): CouncilDay {
     cycleDay,
     phase: cycleDay <= 1 ? 'nominations' : 'polling',
     election: { cycle, nominationsFrom: start, pollsFrom: start + 2, countDay: start + n },
-    council: { cycle, fromDay: start, divideDay: start + 2, toDay: start + n, voting: cycleDay <= 1 },
+    council: {
+      cycle,
+      fromDay: start,
+      divideDay: start + 2,
+      toDay: start + n,
+      voting: cycleDay <= 1,
+      ruleOpen: cycleDay <= 1,
+      setDay: start + 2,
+    },
     ordinanceWindow: { fromDay: start + 2, toDay: start + n + 2 },
+    ruleWindow: { fromDay: start, toDay: start + n },
+    nextRuleWindow: { fromDay: start + n, toDay: start + 2 * n },
   };
 }
 
@@ -57,6 +87,12 @@ export function councilDay(day: DayKey, offset: number): CouncilDay {
 export const electionKey = (cityId: string, cycle: number): string => `${cityId}:${cycle}`;
 /** `ordinances._id` and `officeTerms.councilKey`: "coalport:4146" (the cycle the council sits in). */
 export const councilKey = (cityId: string, cycle: number): string => `${cityId}:${cycle}`;
+
+/**
+ * Voting rework (ADR 0083): the rule ballot council k puts to the town, `ordinances._id`
+ * ("coalport:4146"), the same string as the council's key.
+ */
+export const ruleBallotKey = councilKey;
 
 /** The cycle number in a key made by `electionKey` / `councilKey`. */
 export function cycleOfKey(key: string): number {
@@ -66,14 +102,15 @@ export function cycleOfKey(key: string): number {
 /**
  * What the boundary into `day` does in a city (§3.2): into cycle day 0 the count (election k − 1,
  * seating council k, opening election k and its order paper); into day 2 the close of nominations
- * and the council's division. The drift runs at every boundary.
+ * and the council's division. The drift runs at every boundary. Voting rework (ADR 0083): `set`,
+ * into day 2, freezes the list and the three cards (`close` and `divide` go in phase 2).
  */
 export function boundaryWork(
   day: DayKey,
   offset: number,
-): { count: boolean; close: boolean; divide: boolean } {
+): { count: boolean; close: boolean; divide: boolean; set: boolean } {
   const { cycleDay } = cycleOf(day, offset);
-  return { count: cycleDay === 0, close: cycleDay === 2, divide: cycleDay === 2 };
+  return { count: cycleDay === 0, close: cycleDay === 2, divide: cycleDay === 2, set: cycleDay === 2 };
 }
 
 /** The next nominations day 0 strictly after `day` (`{weekday}` in the struck and withdraw texts). */

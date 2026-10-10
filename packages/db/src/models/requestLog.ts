@@ -11,6 +11,8 @@ export const REQUEST_KINDS = [
   'council.vote',
   'council.propose',
   'council.councilVote',
+  // The voting rework (tech design §5.1): a councillor names their rule.
+  'council.setRule',
   // Slice 4 (tech design §5.8).
   'travel.board',
   'travel.choose',

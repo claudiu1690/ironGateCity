@@ -12,6 +12,7 @@ import type { HeatState } from './heat';
 import type { MissionType } from './constants';
 import type { RecordLevel } from './record';
 import type { QuarterLock } from './quarters';
+import type { RuleHow } from './ruleBallot';
 
 export const FACTION_IDS = ['vanguard', 'collective', 'alliance'] as const;
 export type FactionId = (typeof FACTION_IDS)[number];
@@ -318,6 +319,18 @@ export type PoliticalCondition =
   | { kind: 'ordinanceFromToday' }
   /** Morale rose out of Unrest at last night's boundary. */
   | { kind: 'leftUnrest' }
+  /**
+   * Voting rework (tech design §4.4, §10): the count morning, ballot k − 1 counted today; `fallback`
+   * when no votes were cast (`hl.rule-won`, `hl.rule-fallback`); `drawn` (the capital, design §8.4)
+   * when the returning officer's draw decided it (`hl.ig.rule-drawn`). Absent `drawn` matches either.
+   */
+  | { kind: 'ruleDecided'; fallback: boolean; drawn?: boolean }
+  /** The caller voted on the ballot counted last night; their card won or lost (`hl.your-rule-*`). */
+  | { kind: 'votedRule'; won: boolean }
+  /** A councillor whose rule is a card of the ballot set last night (`hl.your-rule-on-ballot`). */
+  | { kind: 'ruleOnBallot' }
+  /** Cycle day 2, the morning the town's vote on its rule opens (`hl.vote-open`; design §8.1 Q12). */
+  | { kind: 'voteOpen' }
   | CapitalCondition;
 
 /**
@@ -373,6 +386,11 @@ export const POLITICAL_CONDITION_KINDS = [
   'phaseToday',
   'ordinanceFromToday',
   'leftUnrest',
+  // The voting rework (tech design §4.4): live.
+  'ruleDecided',
+  'votedRule',
+  'ruleOnBallot',
+  'voteOpen',
   // Slice 4: live, like the political ones.
   'registeredYesterday',
   'firstCapitalArrivalYesterday',
@@ -480,6 +498,18 @@ export const POLITICAL_PLACEHOLDERS = [
   /** Review 2 (answers §4.4): the *Next* lines' weekdays, voting opens and the council's result. */
   'pollsWeekday',
   'resultWeekday',
+  /**
+   * The voting rework (tech design §10, design §8.4): `{rule}` a rule's name, `{line}` its plain line,
+   * `{of}` the votes cast, `{winnerVotes}` / `{winnerSeats}` the winner's votes and seats, `{seats}`
+   * the seats behind `{rule}`, `{parties}` the card's party or parties.
+   */
+  'rule',
+  'line',
+  'of',
+  'winnerVotes',
+  'winnerSeats',
+  'seats',
+  'parties',
 ] as const;
 export type PoliticalPlaceholder = (typeof POLITICAL_PLACEHOLDERS)[number];
 
@@ -1427,7 +1457,12 @@ export type GameErrorReason =
   /** `patrol.answer` with no card pending (answered by another key, or none). */
   | 'NO_PATROL'
   /** Treatment asked for at full Health. */
-  | 'FULL_HEALTH';
+  | 'FULL_HEALTH'
+  // The voting rework (tech design §4.4).
+  /** `council.vote` for a rule that is not a card of the set ballot (`ordinanceId`). */
+  | 'NOT_ON_BALLOT'
+  /** `council.setRule` outside cycle days 0–1 of the term (`opensAt`, epoch ms). */
+  | 'RULE_WINDOW_CLOSED';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -1637,6 +1672,96 @@ export interface ElectionCardView {
   /** A councillor while the rule vote is open (days 0–1). */
   rule: { votedFor: string | null; divideAt: number } | null;
   /** The morning the player made Rank 2: the one-line note, once. */
+  firstTime: boolean;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The voting rework (docs/tech/voting-rework.md §4.4): the rule ballot's views. Added beside the old
+// ones in phase 1; `ElectionCardStateV2` and `ElectionCardViewV2` replace `ElectionCardState` and
+// `ElectionCardView` (and drop the suffix) in phase 2.
+// ---------------------------------------------------------------------------------------------
+
+/** Design §4.1: the Election card's seven states, plus the capital's `registered`. */
+export type ElectionCardStateV2 =
+  | 'belowRank'
+  | 'vote'
+  | 'voted'
+  | 'result'
+  | 'standing'
+  | 'councillor'
+  | 'nextInLine'
+  /** The capital's (design §4.1): living in a district, the first vote not yet open. */
+  | 'registered';
+
+/** One rule card as the screens show it (design §4.2). */
+export interface RuleCardView {
+  ordinanceId: string;
+  name: string;
+  plainLine: string;
+  effectLine: string;
+  whose:
+    /** "Secretary Holm" · "Councillor Varga"; two parties on a shared card. */
+    | { kind: 'party'; factionIds: FactionId[]; by: string }
+    | { kind: 'councillor'; name: string; local: boolean; you: boolean };
+  /** The caller's own vote, only (ADR 0019). */
+  yourVote: boolean;
+}
+
+export interface RuleBallotView {
+  key: string;
+  cityId: string;
+  cityName: string;
+  placeName: string;
+  capital: boolean;
+  /** Days 0–1: the cards as they stand; days 2–4: frozen at the set. */
+  status: 'provisional' | 'set';
+  /** A district's view orders them by its parties' shares. */
+  cards: RuleCardView[];
+  setAt: number;
+  pollsOpenAt: number;
+  countAt: number;
+  runsUntil: number;
+  myVote: { ordinanceId: string; name: string } | null;
+  canVote: boolean;
+  reason: GameErrorReason | null;
+  /** A councillor of this council: their rule, whether it is a card, and the change window. */
+  myRule: { ordinanceId: string; name: string; onBallot: boolean; changeUntil: number | null } | null;
+  /** "2 players and 7 local candidates for 7 seats". */
+  standing: { players: number; locals: number; seats: 7 | 2 };
+}
+
+export interface RuleResultView {
+  key: string;
+  countDay: DayKey;
+  weekday: string;
+  /** In finishing order. */
+  cards: Array<RuleCardView & { votes: number; seats: number | null; share: number; won: boolean }>;
+  how: RuleHow;
+  turnout: { voters: number; eligible: number } | null;
+  runsUntil: number;
+}
+
+export interface ElectionCardViewV2 {
+  state: ElectionCardStateV2;
+  closesAt: number;
+  pollsOpenAt: number;
+  countAt: number;
+  runsFrom: number;
+  fxp: number;
+  rank2Fxp: number;
+  canStand: boolean;
+  votedFor: string | null;
+  result: {
+    winner: string;
+    votes: number;
+    voters: number;
+    how: RuleHow;
+    runsUntil: number;
+    nextVoteAt: number;
+    capital?: { factionIds: FactionId[]; seats: number; districtSeats: FactionId[] };
+  } | null;
+  standing: { rule: string; backers: number; branchLine: boolean } | null;
+  councillor: { rule: string; onBallot: boolean; changeUntil: number } | null;
   firstTime: boolean;
 }
 
@@ -1932,7 +2057,9 @@ export type PoliticalAct =
   | 'discharged'
   | 'strike'
   // Review 5 (answers §8, tech design §6.2): *Get patched up* at an infirmary.
-  | 'treated';
+  | 'treated'
+  // The voting rework (tech design §8.1): a councillor names their rule.
+  | 'setRule';
 export const POLITICAL_ACTS = [
   'ballot',
   'declare',
@@ -1950,6 +2077,7 @@ export const POLITICAL_ACTS = [
   'discharged',
   'strike',
   'treated',
+  'setRule',
 ] as const;
 
 /** Slice 5: the cells', the infirmary's and the record's acts (their texts are copy, not `politics`). */
@@ -1983,6 +2111,8 @@ export interface PoliticalResult {
       stateAfter: MoraleState;
     } | null;
     endorsements: { name: string; n: number; needed: number } | null;
+    /** The voting rework (tech design §4.4): *{name} · {n} backers* (replaces `endorsements` in phase 2). */
+    backers?: { name: string; n: number } | null;
     /** Slice 4: a move or a room. */
     iron?: { before: number; after: number } | null;
     seatGivenUp?: { cityName: string } | null;

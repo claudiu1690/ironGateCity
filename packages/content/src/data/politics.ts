@@ -1,7 +1,7 @@
 import type { ContentInput } from '../schemas';
 
 /**
- * The six political result modals (docs/design/slice-3-screens.md §9; review 2: the words of
+ * The political result modals (docs/design/slice-3-screens.md §9; review 2: the words of
  * docs/design/review-2-answers.md §1.10 and the *Next* line of §4.4). `{paper}` is the paper's short
  * name with its article ("the Clarion"); `{until}` and `{at}` are rendered by the client in the
  * player's clock; `{weekday}` is the next nominations day 0 after today; `{countDay}` the count's
@@ -71,6 +71,38 @@ export const politics: ContentInput['politics'] = {
       headline: 'A bed in Irongate',
       body: 'Seven more nights on the tram line. Rested banks to {cap} until {weekday}.',
       next: 'Next: rest up. The room runs to {weekday}.',
+    },
+    // The voting rework (docs/design/voting-simplified.md §4.8): a councillor names their rule.
+    // `{rule}` the rule, `{line}` its plain line (filled with a capital, at a sentence start),
+    // `{pollsWeekday}` the weekday the vote opens (cycle day 2), `{weekday}` the last day of the vote.
+    setRule: {
+      stamp: 'Changed',
+      headline: 'Your rule is {rule}',
+      body: '{line}. On the ballot from {pollsWeekday}; the town votes until {weekday}.',
+      next: 'Next: the vote opens {pollsWeekday}.',
+    },
+  },
+  // The voting rework (design §4.8): the vote, the stand and the backing, beside the old texts until
+  // phase 2. `{rule}` the rule voted for or named; `{countDay}` the count's weekday (the result
+  // morning, and the day the winner starts); `{name}` the candidate backed.
+  resultsV2: {
+    ballot: {
+      stamp: 'Vote cast',
+      headline: 'Your vote is in',
+      body: '{rule}. Nobody can see who you chose. The result is in {paper} on {countDay} morning; if it wins, it runs from {countDay} for five days.',
+      next: 'Next: the result, {countDay} morning.',
+    },
+    declare: {
+      stamp: "You're standing",
+      headline: 'Your name is on the list',
+      body: "Your rule: {rule}. Seats are counted {countDay} morning: the seven best known here, counting backers. Do today's orders and the branch backs you.",
+      next: 'Next: the result, {countDay} morning.',
+    },
+    endorse: {
+      stamp: 'Backed',
+      headline: '{name} has your backing',
+      body: "Backing is public and final: three more to {name}'s count at {countDay}'s result.",
+      next: 'Next: the result, {countDay} morning.',
     },
   },
 };

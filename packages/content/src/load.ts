@@ -8,6 +8,7 @@ import {
   ROOM,
   STORY_PLACEHOLDERS,
   TIME_TOKENS,
+  homeBallot,
   isPoliticalCondition,
   jobPay,
   isPoliticalTemplate,
@@ -22,6 +23,7 @@ import type {
   ItemSpec,
   OrdinanceSpec,
   OriginSpec,
+  SeatRule,
 } from '@irongate/rules';
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
@@ -50,6 +52,7 @@ import { origin } from './data/origin';
 import { npcs, standingLevels } from './data/people';
 import { politicalHeadlines } from './data/politicalHeadlines';
 import { politics } from './data/politics';
+import { ruleHeadlines } from './data/ruleHeadlines';
 import tiles from './data/tiles.json';
 import { inPolygon } from './geometry';
 import { slice5Problems } from './slice5';
@@ -95,7 +98,15 @@ export const rawContent: unknown = {
   standingLevels,
   jobs: [...jobs, ...irongateJobs],
   orderTemplates,
-  headlines: [...headlines, ...politicalHeadlines, ...capitalHomeHeadlines, ...heraldHeadlines, ...localHeadlines],
+  headlines: [
+    ...headlines,
+    ...politicalHeadlines,
+    ...capitalHomeHeadlines,
+    ...heraldHeadlines,
+    ...localHeadlines,
+    // The voting rework (tech design §10): live, held back until phase 5 gives the paper their facts.
+    ...ruleHeadlines,
+  ],
   ordinances,
   candidates: [...candidates, ...irongateCandidates],
   politics,
@@ -915,8 +926,11 @@ export function parseContent(raw: unknown): Content {
 
   // Slice 3: the political result texts (screens §9): 240 characters, 4 sentences, the political
   // placeholders and the time tokens.
-  for (const [act, t] of Object.entries(content.politics.results)) {
-    const where = `politics.results.${act}`;
+  for (const [act, t] of [
+    ...Object.entries(content.politics.results).map(([a, x]) => [`results.${a}`, x] as const),
+    ...Object.entries(content.politics.resultsV2).map(([a, x]) => [`resultsV2.${a}`, x] as const),
+  ]) {
+    const where = `politics.${act}`;
     if (t.body.length > OUTCOME_TEXT_MAX_CHARS) problems.push(`${where} is ${t.body.length} characters`);
     const n = sentenceCount(t.body);
     if (n > OUTCOME_TEXT_MAX_SENTENCES) problems.push(`${where} has ${n} sentences (at most 4)`);
@@ -924,6 +938,8 @@ export function parseContent(raw: unknown): Content {
   }
 
   problems.push(...slice4Problems(content, { cityById, locationById, actionById, ordinanceIds }));
+  // The voting rework (tech design §11): every home local names a rule, and every home ballot has three cards.
+  problems.push(...ballotFillProblems(content));
   problems.push(...slice5Problems(content, { cityById, locationById, assetById, mapPins }));
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {
@@ -938,6 +954,80 @@ export function parseContent(raw: unknown): Content {
 }
 
 export { inPolygon } from './geometry';
+
+/**
+ * The voting rework (design Appendix A, tech design §11): each home city's ballot with no player
+ * councillor (the branch's card, then the seven top locals by profile). The loader checks the
+ * content gives exactly these.
+ */
+export const APPENDIX_A_BALLOTS: Readonly<Record<string, readonly [string, string, string]>> = {
+  coalport: ['ord.long-service', 'ord.public-works', 'ord.rally-permits'],
+  duskwall: ['ord.rally-permits', 'ord.public-works', 'ord.long-service'],
+  ashford: ['ord.reading-room', 'ord.public-meetings', 'ord.public-works'],
+};
+
+/**
+ * The voting rework (tech design §4.2, §11; design §3.3, Appendix A):
+ * - every home local names a `rule` that is an ordinance on the menu; a local elsewhere (the capital)
+ *   names none;
+ * - each home city's NPC-only ballot (the branch's card and the seven top locals by profile, as seated
+ *   with no jitter) gives three distinct cards **without the fill**, in Unrest as well, and those cards
+ *   are Appendix A's line (`APPENDIX_A_BALLOTS`).
+ */
+export function ballotFillProblems(
+  content: Pick<Content, 'cities' | 'candidates' | 'factions' | 'ordinances' | 'npcs'>,
+): string[] {
+  const out: string[] = [];
+  const menu = new Set(content.ordinances.map((o) => o.id));
+  const homeIds = new Set(
+    content.cities.filter((c) => c.council && !isDistricted(c)).map((c) => c.id),
+  );
+  for (const c of content.candidates) {
+    if (homeIds.has(c.cityId)) {
+      if (c.rule === undefined) out.push(`candidate "${c.id}" (a home local of ${c.cityId}) has no rule`);
+      else if (!menu.has(c.rule)) out.push(`candidate "${c.id}": rule "${c.rule}" is not an ordinance`);
+    } else if (c.rule !== undefined) {
+      out.push(`candidate "${c.id}": only a home city's locals name a rule (${c.cityId} has none)`);
+    }
+  }
+  for (const city of content.cities) {
+    if (!homeIds.has(city.id) || !city.homeFactionId) continue;
+    const faction = content.factions.find((f) => f.id === city.homeFactionId);
+    if (!faction) continue;
+    const secretary = content.npcs.find((n) => n.id === faction.secretary.npcId);
+    const slate = content.candidates.filter((c) => c.cityId === city.id);
+    const seats: SeatRule[] = slate.slice(0, city.council!.seats).map((c, i) => ({
+      seat: i + 1,
+      holder: 'npc',
+      name: c.name,
+      npcId: c.id,
+      factionId: c.factionId,
+      total: c.profile,
+      rule: c.rule ?? null,
+    }));
+    const party = {
+      ordinanceId: faction.branchMotion,
+      by: {
+        kind: 'party' as const,
+        factionId: faction.id,
+        via: 'secretary' as const,
+        name: secretary?.name ?? faction.secretary.addressedAs,
+        npcId: faction.secretary.npcId,
+      },
+    };
+    for (const unrest of [false, true]) {
+      const cards = homeBallot({ party, seats, fill: [], unrest }).map((c) => c.ordinanceId);
+      if (cards.length !== 3 || new Set(cards).size !== 3)
+        out.push(
+          `cities.${city.id}: the ballot with no player ${unrest ? 'in Unrest ' : ''}has ${new Set(cards).size} distinct cards, not 3 (${cards.join(', ')})`,
+        );
+      const want = APPENDIX_A_BALLOTS[city.id];
+      if (!unrest && want && cards.join(',') !== want.join(','))
+        out.push(`cities.${city.id}: the ballot with no player is ${cards.join(' · ')}, not ${want.join(' · ')}`);
+    }
+  }
+  return out;
+}
 
 /** A city with districts (the capital): its quarters carry `district` (ADR 0027). */
 const isDistricted = (city: City): boolean => city.quarters.some((q) => q.district !== undefined);

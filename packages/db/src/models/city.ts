@@ -47,8 +47,11 @@ export interface CityDoc {
    * districts (the capital), whose share is the average of its `districts` documents, on read.
    */
   opinion?: OpinionShares;
-  /** ADR 0017: the last boundary settled, and the day of the bootstrap. */
-  world?: { settledDay: DayKey; bootstrappedDay: DayKey };
+  /**
+   * ADR 0017: the last boundary settled, and the day of the bootstrap. The voting rework (ADR 0086):
+   * `voting: 2` once the city is converted to the rule vote (absent = not converted).
+   */
+  world?: { settledDay: DayKey; bootstrappedDay: DayKey; voting?: 2 };
   morale?: MoraleRecordDoc;
   /** The last 60 boundaries, for the playtest report. */
   moraleLog?: Array<{ day: DayKey; share: number; state: MoraleState }>;
@@ -103,7 +106,7 @@ const citySchema = new Schema<CityDoc>(
       default: undefined,
     },
     world: {
-      type: new Schema({ settledDay: Number, bootstrappedDay: Number }, { _id: false }),
+      type: new Schema({ settledDay: Number, bootstrappedDay: Number, voting: Number }, { _id: false }),
       default: undefined,
     },
     morale: {

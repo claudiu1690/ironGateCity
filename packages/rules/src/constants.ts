@@ -171,6 +171,8 @@ export const COUNCIL = {
   voteRank: 2,
   cost: { declare: 10, endorse: 10, propose: 20 },
   stipend: { pc: 10, fxp: 20 },
+  /** Voting rework (ADR 0083, design §3.3): the rule cards on a home ballot. */
+  ballotCards: 3,
 } as const;
 
 /** §14.11: morale states, the drift and the slice-3 inputs. */

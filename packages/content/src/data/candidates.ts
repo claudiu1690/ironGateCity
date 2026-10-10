@@ -6,6 +6,10 @@ type CandidateInput = ContentInput['candidates'][number];
  * The NPC slates, nine per home council in profile order (docs/design/slice-3-politics.md §5.2;
  * GDD §15.10). Profile order is file order; the profile is the ward vote before the jitter. No
  * portraits: the ballot shows the ward mark (design §5.4). Content-policy checked (design §16).
+ *
+ * The voting rework (docs/design/voting-simplified.md Appendix A): each home local carries the `rule`
+ * it puts on the town's ballot when seated (cards 2–3 fill from the seated locals in seat order,
+ * skipping duplicates). The capital's locals carry none: their party's card falls to the secretary.
  */
 export const candidates: CandidateInput[] = [
   // Coalport
@@ -15,6 +19,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 44,
+    rule: 'ord.public-works',
     line: 'Shop steward, rolling mill. "Sort the canteen first, then the world."',
   },
   {
@@ -23,6 +28,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 38,
+    rule: 'ord.rally-permits',
     line: 'Docker, Harbour Quays. "Every crane on the quay knows my voice."',
   },
   {
@@ -31,6 +37,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 33,
+    rule: 'ord.street-fund',
     line: 'Seamstress, Foundry Row. "Rent first. Everything else after."',
   },
   {
@@ -39,6 +46,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 29,
+    rule: 'ord.tram-subsidy',
     line: 'Crane driver. "Fewer speeches. More trams before six."',
   },
   {
@@ -47,6 +55,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 25,
+    rule: 'ord.long-service',
     line: 'Bakery, Market Row. "Bread at a price a mill wage can pay."',
   },
   {
@@ -55,6 +64,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 22,
+    rule: 'ord.public-meetings',
     line: 'Furnace man, twenty years. "The branch is the men who turn up."',
   },
   {
@@ -63,6 +73,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 19,
+    rule: 'ord.rest-day',
     line: 'Nurse, the infirmary. "A clinic at the Mill Gate, open nights."',
   },
   {
@@ -71,6 +82,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 17,
+    rule: 'ord.open-doors',
     line: 'Tram driver. "The depot has a hall. Let\'s use it."',
   },
   {
@@ -79,6 +91,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'collective',
     cityId: 'coalport',
     profile: 15,
+    rule: 'ord.street-permits',
     line: 'Printer, the party paper. "Print more, argue less."',
   },
   // Duskwall
@@ -88,6 +101,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 44,
+    rule: 'ord.public-works',
     line: 'Retired customs inspector. "A queue in order is a town in order."',
   },
   {
@@ -96,6 +110,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 38,
+    rule: 'ord.long-service',
     line: 'Clerk, the ration office. "One book, one household, no exceptions."',
   },
   {
@@ -104,6 +119,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 33,
+    rule: 'ord.rest-day',
     line: 'Storekeeper, Customs Market. "Fixed prices. Fixed hours. Fixed."',
   },
   {
@@ -112,6 +128,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 29,
+    rule: 'ord.tram-subsidy',
     line: 'Signalman, the goods yard. "Trains on time and the pass shut by dark."',
   },
   {
@@ -120,6 +137,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 25,
+    rule: 'ord.reading-room',
     line: 'Schoolmistress, Rampart Row. "Quiet streets by ten. The children need them."',
   },
   {
@@ -128,6 +146,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 22,
+    rule: 'ord.street-register',
     line: 'Clerk, the State Archives. "Everything on file, nothing in doubt."',
   },
   {
@@ -136,6 +155,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 19,
+    rule: 'ord.open-doors',
     line: 'Checker, the goods yard. "Count it twice. Then the movement can trust it."',
   },
   {
@@ -144,6 +164,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 17,
+    rule: 'ord.street-fund',
     line: 'Landlady, Rampart Row. "Rents paid on Friday and the stairs swept."',
   },
   {
@@ -152,6 +173,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'vanguard',
     cityId: 'duskwall',
     profile: 15,
+    rule: 'ord.street-permits',
     line: 'Market inspector\'s clerk. "Permits for everyone, or for no one."',
   },
   // Ashford
@@ -161,6 +183,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 44,
+    rule: 'ord.public-meetings',
     line: 'Lecturer in law, the college. "Read the bill before you vote on it."',
   },
   {
@@ -169,6 +192,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 38,
+    rule: 'ord.public-works',
     line: 'Solicitor, the Courts. "Fair rents, and a court that hears them."',
   },
   {
@@ -177,6 +201,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 33,
+    rule: 'ord.reading-room',
     line: 'Bookseller, Bridge Street. "Open the reading rooms. All of them."',
   },
   {
@@ -185,6 +210,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 29,
+    rule: 'ord.street-permits',
     line: 'Café owner, Bridge Street. "Licences by rule, not by favour."',
   },
   {
@@ -193,6 +219,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 25,
+    rule: 'ord.tram-subsidy',
     line: 'Student, the Debating Union. "Votes at twenty, and the tram fare down."',
   },
   {
@@ -201,6 +228,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 22,
+    rule: 'ord.street-fund',
     line: 'Compositor, the Gazette. "Print what you find. Then stand by it."',
   },
   {
@@ -209,6 +237,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 19,
+    rule: 'ord.rest-day',
     line: 'Tenants\' committee, Weavers\' Row. "A fire escape on every stair. This year."',
   },
   {
@@ -217,6 +246,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 17,
+    rule: 'ord.long-service',
     line: 'Magistrate\'s clerk. "The queue at the Courts is a scandal. Fix it."',
   },
   {
@@ -225,6 +255,7 @@ export const candidates: CandidateInput[] = [
     factionId: 'alliance',
     cityId: 'ashford',
     profile: 15,
+    rule: 'ord.open-doors',
     line: 'Lock-keeper, the wharf. "Dredge the lock. The barges pay the rates too."',
   },
 ];
