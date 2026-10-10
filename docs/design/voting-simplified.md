@@ -148,7 +148,7 @@ Faucets unchanged (§6.5): +5 a day for the orders, +10 a morning for a seat, ev
 | The capital's two tables, *votes count 15 % of the score*, the D'Hondt sentence, the returning officer's draw | One sentence (*votes and opinion together*); per district three party rows (crest · votes · seats); the formula in the help note for the curious |
 | Eleven (sixteen) Election card states | **Five** for everyone, two more for candidates and councillors (§4.1) |
 | Two help notes (*Backers*, *Local support*) and the five-line *How elections work* | One three-line note, *Council rule* (§4.9) |
-| `hl.filed`, `hl.on-ballot`, `hl.struck`, `hl.moved`, `hl.council-passed`, `hl.council-failed`, `hl.voted-won / lost / lost-tie` | `hl.filed` (reworded), `hl.rule-won`, `hl.your-rule-won`, `hl.your-rule-lost`, `hl.your-rule-on-ballot` (§4.8) |
+| `hl.filed`, `hl.on-ballot`, `hl.struck`, `hl.moved`, `hl.council-passed`, `hl.council-failed`, `hl.voted-won / lost / lost-tie`, `hl.polls-open`, `hl.ordinance-city` | `hl.filed` and `hl.nominations` (reworded), `hl.rule-won`, `hl.rule-fallback`, `hl.your-rule-won`, `hl.your-rule-lost`, `hl.your-rule-on-ballot`, `hl.vote-open` (replacing `hl.polls-open`, day 2 only) (§4.8, §8.4) |
 | The Election card at the hall | The hall's *Next week's rule* block is the card |
 
 ### 3.10 Trade-offs, stated
@@ -300,7 +300,7 @@ Nothing needs the player at a set time; every window is whole City Days; the cou
 | §15.1 | The Councillor row: powers *name a rule for the town's ballot (free, set at standing, changeable on cycle days 0–1) and draw pay*; who can stand: *Rank 3 · resident · Known · 10 PC*, no endorsements. The Governor row: *the Governor's rule* is **card 1** of the city's ballot; *local councillors with no player lead vote for it* removed |
 | §15.3 | **Nominations:** the deposit is spent; no two-endorsement rule, no striking, no withdrawal, no small-branch rule; the branch's endorsement is a +3 bonus; platform lines → the candidate's rule. **The ballot:** *single choice, one tap, secret, final* stands; **for a rule**, three cards, set as §3.3. **The count in home cities:** total = ward vote + 3 × endorsements (members' votes removed; ties: endorsements, Successes, filing). **Seat allocation in battlegrounds:** unchanged formula; `ballotShare` is the votes for the party's card. **The order paper, the division, the Irongate order paper, the chain for a local councillor, four *None of these*, Clearwater's *passes with four of seven*:** replaced by §3.3–3.4 of this document. **The home-city menu:** unchanged (the bonuses are the point); *renew* is simply choosing the same rule again. **What the player sees:** rewritten to §4 |
 | §15.4 | *The party's rule per city* = card 1 wherever no Governor sits; the Chair's own election loses the two-backer requirement (25 PC spent; backers optional, +3) |
-| §15.9 | A petition still dissolves the council and strikes the rule; the Governor's chair passes as before |
+| §15.9 | A petition still dissolves the council; **the rule in force runs out its window** (a city always has a rule; settled §8.1 Q16, was *strikes the rule*); the open ballot proceeds with the party's card and the locals' rules; the Governor's chair passes as before |
 | §15.10 | NPC councillors' voting rule removed; *local candidates carry a rule in content*; the ward vote stays the NPC electorate for seats |
 | Appendix C | #22 reworded (the weights without members' votes); #25 stands, flagged as the first lever; **#26 closed as moot** (no council vote); **#30 closed** (the capital's ballot is a party's card); **#44 closed** (the vote always decides the rule); new **#105** *members' votes are out of the seat count* (lever: a vote for a card counts one for each of its champions); **#106** *no backers needed to stand* (lever: raise the price to 15 before any gate); **#107** *the capital's rule is the largest bloc's* (lever: a six-of-ten bar behind one card, else the Mayor's rule) |
 
@@ -316,7 +316,7 @@ Nothing needs the player at a set time; every window is whole City Days; the cou
 ### 5.3 Content (`packages/content`): the developer's list
 
 **Schemas and data**
-- `people.ts`: every **home** local candidate gains `rule: OrdinanceId` (the 27 of Appendix A, by id). The capital's thirty (`npc.*.ig.*`) and Clearwater's nine need none: their party's card falls to the secretary. `schemas.ts`: `rule` required on a home slate's candidate, forbidden elsewhere; the loader checks the id exists in the city's menu.
+- `candidates.ts` (`packages/content/src/data/candidates.ts`; `people.ts` holds the secretaries, not the locals): every **home** local candidate gains `rule: OrdinanceId` (the 27 of Appendix A, by id). The capital's thirty (`npc.*.ig.*`) and Clearwater's nine need none: their party's card falls to the secretary. `schemas.ts`: `rule` required on a home slate's candidate, forbidden elsewhere; the loader checks the id exists in the city's menu.
 - `ordinances[]`: **unchanged** (`id`, `name`, `line`, `plainLine`, `effectLine`, `effects[]`, `bound`). Ids as built: `ord.public-works` · `ord.long-service` · `ord.street-permits` · `ord.rally-permits` · `ord.reading-room` · `ord.rest-day` · `ord.open-doors` · `ord.street-register` · `ord.street-fund` · `ord.public-meetings` · `ord.tram-subsidy`.
 - `factions.ts`: the candidates' `platforms` (three lines per faction) are **no longer offered on the stand card**; keep the field for the slice-7 Chair's platform lines if it is shared, else remove it. The secretaries' default rule per faction stays as it is (`ord.rally-permits` · `ord.long-service` · `ord.reading-room`).
 - `cities/irongate.ts` and `missions/irongate.ts` reference `platforms` (the grep in this change); check whether those are the council's or something else before removing.
@@ -331,8 +331,8 @@ Nothing needs the player at a set time; every window is whole City Days; the cou
 - **Add:** `rule.whose.branch(secretary)`, `rule.whose.councillor(name)`, `rule.whose.you`, `rule.whose.party(faction, who)`, `rule.whose.shared(a, b)`; `ballot.title`, `ballot.line(until, from)`, `ballot.voteFor(rule)`, `ballot.chooseARule`, `ballot.caption(at)`, `ballot.cast(weekday)`, `ballot.whoIsStanding(players, locals, seats)`; `seats.sentence(city, seats)` (*Seats go to the seven best known in {city}, counting their backers. Local candidates fill the rest.*), `seats.short(place, by)` (*8th · 4 short*), `seats.row(rank, standing, backers)`, `seats.rule(name)`; `stand.gives`, `stand.yourRule`, `stand.costs`, `stand.standing(rule, backers)`; `politics.results` → the four modals of §4.8 (`vote`, `stand`, `back`, `changeRule`); `plate.ruleChip(name, days)`; `me.rule(city, name, days)`.
 
 **Headlines** (`hl.*` for the Clarion, `hl.v.*` the Sentinel, `hl.a.*` the Gazette, `hl.ig.*` the Herald; the Courier's follow slice 7's pattern)
-- **Retire:** `hl.on-ballot`, `hl.struck`, `hl.moved`, `hl.council-passed`, `hl.council-failed`, `hl.voted-won`, `hl.voted-lost`, `hl.voted-lost-tie`, `hl.ordinance-city`, `hl.polls-open`, `hl.nominations` in all four voices (`hl.ig.*` includes these ids).
-- **Reword:** `hl.filed` → *{name} Stands for the Council* · *Rule: {rule}. Seats are counted {weekday} morning.*; `hl.seat-won`, `hl.seat-top`, `hl.seat-lost`, `hl.seat-lost-tie`, `hl.seat-ended`, `hl.count` keep their ids and lose *members' votes* from any tie-order sentence (the tie is backers, then reputation, then who stood first).
+- **Retire:** `hl.on-ballot`, `hl.struck`, `hl.moved`, `hl.council-passed`, `hl.council-failed`, `hl.voted-won`, `hl.voted-lost`, `hl.voted-lost-tie`, `hl.ordinance-city` in all four voices (`hl.ig.*` includes these ids). **Replace:** `hl.polls-open` → `hl.vote-open` (day 2 only; §8.1 Q12).
+- **Reword:** `hl.filed` → *{name} Stands for the Council* · *Rule: {rule}. Seats are counted {weekday} morning.*; `hl.nominations` **kept**, reworded as §8.4 (*Names Go In*: 10 Political Capital and a rule); `hl.seat-won`, `hl.seat-top`, `hl.seat-lost`, `hl.seat-lost-tie`, `hl.seat-ended`, `hl.count` keep their ids and lose *members' votes* from any tie-order sentence (the tie is backers, then reputation, then who stood first).
 - **Add:** `hl.rule-won` (city 0, the count morning: *{rule} Wins the Vote in {city}* · *{votes} of {cast} votes. In force until {weekday}: {plainLine}.*), `hl.rule-fallback` (city 0: *{city} Keeps the Branch's Rule* · *No votes were cast. {rule} runs until {weekday}.*), `hl.your-rule-won` (personal 2: *Your Vote Counted: {rule} Wins* · *{votes} of {cast}. In force until {weekday}.*), `hl.your-rule-lost` (personal 2: *Your Vote Counted: {rule} Falls Short* · *{winner} took it, {a} votes to {b}. In force until {weekday}.*), `hl.your-rule-on-ballot` (a councillor, personal 2, cycle day 2: *Councillor {name} Puts {rule} to the Town* · *{plainLine}. Voting opens today until {until}.*), `hl.vote-open` (city 0, days 2–4: *{city} Votes on Its Rule* · *Three rules on the ballot. Vote from the paper or the Town Hall until {until}.*). The capital's `hl.ig.rule-won` deck names the bloc: *The {party}'s, {n} seats of ten. In force until {weekday}: {plainLine}.*
 - Conditions: `ruleWon { ordinanceId, votes, cast, fallback }`, `yourRule { won: boolean, … }`, `yourRuleOnBallot`, `voteOpen`; the slice-1 priority scheme is unchanged.
 
@@ -375,7 +375,7 @@ Nothing needs the player at a set time; every window is whole City Days; the cou
 
 A rule per home local, matching their line, so that a branch of one always sees three different cards (card 1 is the branch's; cards 2–3 fill from the seated locals in seat order, skipping duplicates).
 
-`people.ts`, field `rule`, an ordinance id from the city's menu. **Collective (Coalport):** `npc.c.weiss` (44) `ord.public-works` · `npc.c.baum` (38) `ord.rally-permits` · `npc.c.kolar` (33) `ord.street-fund` · `npc.c.hauser` (29) `ord.tram-subsidy` · `npc.c.novak` (25) `ord.long-service` · `npc.c.dressler` (22) `ord.public-meetings` · `npc.c.pohl` (19) `ord.rest-day` · `npc.c.ruzicka` (17) `ord.open-doors` · `npc.c.lenz` (15) `ord.street-permits`. **Vanguard (Duskwall):** `npc.v.kessler` (44) `ord.public-works` · `npc.v.vogel` (38) `ord.long-service` · `npc.v.reinhardt` (33) `ord.rest-day` · `npc.v.lang` (29) `ord.tram-subsidy` · `npc.v.steiner` (25) `ord.reading-room` · `npc.v.ehrlich` (22) `ord.street-register` · `npc.v.weber` (19) `ord.open-doors` · `npc.v.marquardt` (17) `ord.street-fund` · `npc.v.fink` (15) `ord.street-permits`. **Alliance (Ashford):** `npc.a.auer` (44) `ord.public-meetings` · `npc.a.kranz` (38) `ord.public-works` · `npc.a.holl` (33) `ord.reading-room` · `npc.a.mayr` (29) `ord.street-permits` · `npc.a.dorn` (25) `ord.tram-subsidy` · `npc.a.frisch` (22) `ord.street-fund` · `npc.a.tauber` (19) `ord.rest-day` · `npc.a.pichler` (17) `ord.long-service` · `npc.a.brenner` (15) `ord.open-doors`.
+`packages/content/src/data/candidates.ts`, field `rule`, an ordinance id from the city's menu. **Collective (Coalport):** `npc.c.weiss` (44) `ord.public-works` · `npc.c.baum` (38) `ord.rally-permits` · `npc.c.kolar` (33) `ord.street-fund` · `npc.c.hauser` (29) `ord.tram-subsidy` · `npc.c.novak` (25) `ord.long-service` · `npc.c.dressler` (22) `ord.public-meetings` · `npc.c.pohl` (19) `ord.rest-day` · `npc.c.ruzicka` (17) `ord.open-doors` · `npc.c.lenz` (15) `ord.street-permits`. **Vanguard (Duskwall):** `npc.v.kessler` (44) `ord.public-works` · `npc.v.vogel` (38) `ord.long-service` · `npc.v.reinhardt` (33) `ord.rest-day` · `npc.v.lang` (29) `ord.tram-subsidy` · `npc.v.steiner` (25) `ord.reading-room` · `npc.v.ehrlich` (22) `ord.street-register` · `npc.v.weber` (19) `ord.open-doors` · `npc.v.marquardt` (17) `ord.street-fund` · `npc.v.fink` (15) `ord.street-permits`. **Alliance (Ashford):** `npc.a.auer` (44) `ord.public-meetings` · `npc.a.kranz` (38) `ord.public-works` · `npc.a.holl` (33) `ord.reading-room` · `npc.a.mayr` (29) `ord.street-permits` · `npc.a.dorn` (25) `ord.tram-subsidy` · `npc.a.frisch` (22) `ord.street-fund` · `npc.a.tauber` (19) `ord.rest-day` · `npc.a.pichler` (17) `ord.long-service` · `npc.a.brenner` (15) `ord.open-doors`.
 
 | Profile | Collective (Coalport) | Vanguard (Duskwall) | Alliance (Ashford) |
 |---|---|---|---|
@@ -396,3 +396,122 @@ With no player in Coalport the ballot reads *Long Service Order (the branch's) �
 ## Appendix B: what was checked and not changed
 
 The check formula (§8.4) is untouched: nothing here rolls. Combat is untouched. The ordinance menu, its bounds and its plain lines are untouched: the bonuses the user likes are the one thing this document keeps whole. The five-day stagger, the offsets, the day boundary and the count job are untouched. Faction names are untouched. No real-world symbol or slogan appears in any new string.
+
+---
+
+## 8. Settled with the architect (10 Oct 2026; `docs/tech/voting-rework.md` §20.1 and §21)
+
+Each of the plan's sixteen questions, with the default confirmed or changed and the reason. Strings are in full where the plan asked for them. "Confirmed" means the plan's default is the rule.
+
+### 8.1 The sixteen questions
+
+| # | Question | Settled | Why |
+|---|---|---|---|
+| 1 | A shared card's votes in a district's score | **Confirmed: split equally** between the sharing parties; the rows show the card's full votes with *shared*. | The player reads *parties sharing a card add up*; what they never see should be the plainest arithmetic. Splitting by opinion share would reward the bigger party twice (once in the split, once in the opinion half). GDD §15.3 and the slice-4 addendum now say *split equally* (they said *by their opinion shares*; corrected). |
+| 2 | The Unrest ballot | **Confirmed: three cards** from the councillors' chain (player councillors by seat, then locals), card 1 of those the fallback. | Three cards everywhere means one ballot shape and one help note. Two cards would be a visible state to explain. |
+| 3 | The branch's backing | **Confirmed: +3 once**, on any day 0–4 until the count on which the candidate does all three orders. | It is a bonus for touching the daily loop, not a second ladder; per-day would make the orders worth +15 to a candidate and nothing to anyone else. |
+| 4 | A candidate changing their rule after standing | **Confirmed: no.** The stand card's *Change ›* is before the tap; a councillor changes it on days 0–1 of the term. | One act fewer on the list screen, and the paper's *{name} Stands for the Council · Rule: …* stays true all week. |
+| 5 | The capital's "top-seated" player councillor | **Confirmed:** the highest count total, then the lower seat number. | The total is the count's own order; the seat number is the tie-break the player can see on the council rows. |
+| 6 | Where the rule chip sits | **Confirmed:** on a phone, right of the plate's kicker when the rule line is folded away (under 700 px), and in the place sheet's header row while a sheet covers the plate; a tap opens the hall. | The chip exists for the moment the player is pulling tickets, which is when the plate is covered. |
+| 7 | The card's `result` line for a fallback | **Changed: two lines, below.** | The default put three facts on one line; the card has two. |
+| 8 | The switch cycle's result line (`how: 'carried'`) | **Changed: two lines, below.** | Same. The player who was mid-cycle needs to know nothing was lost and when the first rule vote opens. |
+| 9 | The desktop card as the ballot | **Confirmed:** `ballotInline` in the city screen's side column from 640 px; the HQ sheet and the paper row keep the link. | The side column is where the card renders as a card; the paper's row is a row. |
+| 10 | A councillor choosing a rule already on the ballot | **Confirmed: allowed**; the sheet dims those rows with the note *already on the ballot · yours would be skipped* and does not disable them. | A councillor may want the branch's rule to be seen as theirs too; the skip costs the town nothing. |
+| 11 | The fill past the seated locals | **Confirmed:** the city's other locals by profile, then the menu's order. | Never reached with Appendix A; the loader check (`ballotFillProblems`) is the real guard. |
+| 12 | `hl.vote-open` on each of days 2–4 | **Changed: day 2 only** (the morning the vote opens). | The *Council rule* row already says *Which rule for Coalport next week?* every morning with the dot; three mornings of the same city headline is noise. The old `hl.polls-open` printed daily because the row did not yet carry the vote. |
+| 13 | The Clearwater and capital locals carry no rule | **Confirmed:** they never fill a card; `fill` is a home-city function and the capital's cards are one per party through the chain, which ends at the secretary. | A contested city's card is a party's, never a person's. |
+| 14 | The rival edition's local-election line | **Written below** (§8.3). | |
+| 15 | The other voices' strings | **Written below** (§8.4). | |
+| 16 | Slice 7's dissolution "strikes the rule" | **Changed, as the default says: the rule in force runs out its window**; the open ballot proceeds with the party's card and the seated locals' rules; every councillor's term ends *not completed*; the Governor's chair passes to the bloc's top local. | *A city always has a rule* (§3.4). What a petition takes from a council is its seats, its Governor and its rungs; the rule the town voted for is the town's. GDD §15.9, §5.1's row and the slice-7 addendum now say so. |
+
+### 8.2 Q7 and Q8: the card's result lines
+
+The `result` state (cycle days 0–1), line 1 (body 600) and line 2 (Courier), by `how`:
+
+| `how` | Line 1 | Line 2 |
+|---|---|---|
+| `votes` | **Street Fund won · 4 of 6 votes** | Runs until Thursday · the next vote opens Wednesday |
+| `tie` | **Street Fund won · 3 votes each, the first card takes a tie** | Runs until Thursday · the next vote opens Wednesday |
+| `fallback` (home) | **Long Service Order runs · the branch's rule** | No votes were cast · runs until Thursday · the next vote opens Wednesday |
+| `fallback` (Unrest; card 1 is a councillor's) | **Public Works Order runs · Councillor Weiss's rule** | No votes were cast · the branch had no card: Coalport is in Unrest · runs until Thursday |
+| `seats` (capital) | **Rally Permits won · the Vanguard's, 4 seats of 10** | Eastside: Vanguard, Collective · runs until Thursday · the next vote opens Wednesday |
+| `seats`, a shared card | **Reading Room Grant won · the Collective's and the Alliance's, 6 seats of 10** | Eastside: Collective, Alliance · runs until Thursday · the next vote opens Wednesday |
+| `draw` (capital) | **Rally Permits won · on the returning officer's draw** | Level on seats, votes and opinion · runs until Thursday · the next vote opens Wednesday |
+| `carried` (the switch cycle) | **Street Fund runs · carried over** | Runs until Thursday · the first vote on a rule opens Wednesday |
+
+The hall's *The rule in force* block prints the same fact under the days left: *won Sunday with 4 of 6 votes* · *won Sunday on a tie · 3 votes each* · *the branch's · no votes cast* · *Councillor Weiss's · no votes cast · the branch had no card* · *the Vanguard's · 4 seats of 10* · *the Collective's and the Alliance's · 6 seats of 10* · *the Vanguard's · on the returning officer's draw* · *carried over from the old council*. The result screen's winner card carries the same words under *PASSED*. `copy.rule.how.*`, one key per `how` plus `fallbackUnrest` and `sharedSeats`.
+
+### 8.3 Q14: the rival edition's local-election line (`copy.paper.localElection`)
+
+`localElection(city, phase, until)`: on days 2–4 (`polling`) `until` is the close of the vote; on days 0–1 (`nominations`) it is **the day voting opens** (the set day), not the close of names.
+
+- `polling`: ***Duskwall votes on its rule until Saturday midnight.***
+- `nominations`: ***Duskwall chooses next week's ballot · voting opens Wednesday.***
+
+A visitor cannot vote there (they do not live there), so the line is a notice, not a button; it keeps reading *rule*, never *council*, so that the capital's and the home cities' papers say the same thing about the same event.
+
+### 8.4 Q15: the headline strings in the other three voices
+
+Tokens as the plan's §10 (`{rule}`, `{winner}`, `{votes}`, `{of}`, `{until}`, `{line}` = the winner's `plainLine`, sentence case at a sentence's start), plus `{name}`, `{weekday}`, `{district}`, `{parties}` (*the Vanguard* / *the Collective and the Alliance*), `{seats}`, `{winnerVotes}`, `{winnerSeats}`. Decks ≤ 200 characters with the longest `{line}` (*actions pay a quarter more Iron, jobs a quarter less*). The Clarion's are §4.8; repeated here so the four voices sit together.
+
+**The Coalport Clarion (`hl.*`)**
+
+| Id | Headline | Deck |
+|---|---|---|
+| `hl.rule-won` | {rule} Wins the Vote in Coalport | {votes} of {of} votes. In force until {until}: {line}. |
+| `hl.rule-fallback` | Coalport Keeps the Branch's Rule | No votes were cast. {rule} runs until {until}. The Union Hall would like a word about that. |
+| `hl.your-rule-won` | Your Vote Counted: {rule} Wins | {votes} of {of}. In force until {until}. |
+| `hl.your-rule-lost` | Your Vote Counted: {rule} Falls Short | {winner} took it, {winnerVotes} votes to {votes}. In force until {until}. |
+| `hl.your-rule-on-ballot` | Councillor {name} Puts {rule} to the Town | {line}. Voting opens today until {until}. |
+| `hl.vote-open` (day 2) | Coalport Votes on Its Rule | Three rules on the ballot. Vote from the paper or the Town Hall until {until}. |
+| `hl.filed` (reworded) | {name} Stands for the Council | Rule: {rule}. Seats are counted {weekday} morning. |
+| `hl.nominations` (kept, reworded) | Coalport Council: Names Go In | Organisers who are Known here can stand at the Town Hall until {until}: 10 Political Capital, and the rule you would put to the town. |
+
+**The Duskwall Sentinel (`hl.v.*`)**, cold, the committee's voice
+
+| Id | Headline | Deck |
+|---|---|---|
+| `hl.v.rule-won` | {rule} Carries the Vote in Duskwall | {votes} of {of} votes. In force until {until}: {line}. The committee notes the result. |
+| `hl.v.rule-fallback` | Duskwall Keeps the Committee's Rule | No votes were cast. {rule} runs until {until}. Beacon House has noticed. |
+| `hl.v.your-rule-won` | Your Vote Counted: {rule} Carries | {votes} of {of}. In force until {until}. |
+| `hl.v.your-rule-lost` | Your Vote Counted: {rule} Falls Short | {winner} took it, {winnerVotes} votes to {votes}. In force until {until}. The minutes record it. |
+| `hl.v.your-rule-on-ballot` | Councillor {name} Puts {rule} to the Town | {line}. Voting opens today until {until}. The committee expects every member to vote. |
+| `hl.v.vote-open` (day 2) | Duskwall Votes on Its Rule | Three rules on the ballot. Vote from the paper or at the Town Hall until {until}. The committee expects a full turnout. |
+| `hl.v.filed` | {name} Stands for Duskwall Council | Rule: {rule}. Seats are counted {weekday} morning. The committee does not extend deadlines. |
+| `hl.v.nominations` | Duskwall Council: Names Go In | Bailiffs Known here may stand at the Town Hall until {until}: 10 Political Capital, and the rule they would put to the town. In order. |
+
+**The Ashford Gazette (`hl.a.*`)**, dry, a newspaper that checks
+
+| Id | Headline | Deck |
+|---|---|---|
+| `hl.a.rule-won` | {rule} Wins the Vote in Ashford | {votes} of {of} votes. In force until {until}: {line}. The Gazette has checked the count. |
+| `hl.a.rule-fallback` | Ashford Keeps the Branch's Rule, Unopposed | No votes were cast. {rule} runs until {until}. The leader column wonders why. |
+| `hl.a.your-rule-won` | Your Vote Counted: {rule} Wins | {votes} of {of}. In force until {until}. |
+| `hl.a.your-rule-lost` | Your Vote Counted: {rule} Falls Short | {winner} took it, {winnerVotes} votes to {votes}. In force until {until}. The Gazette prints the count in full. |
+| `hl.a.your-rule-on-ballot` | Councillor {name} Puts {rule} to the Town | {line}. Voting opens today until {until}. The Gazette wishes it luck, impartially. |
+| `hl.a.vote-open` (day 2) | Ashford Votes on Its Rule | Three rules on the ballot. Vote from the paper or at the Rooms until {until}. The Gazette has read all three. |
+| `hl.a.filed` | {name} Stands for Ashford Council | Rule: {rule}. Seats are counted {weekday} morning, says the returning officer, who means it. |
+| `hl.a.nominations` | Ashford Council: Names Go In | Agents Known here can stand at the Town Hall until {until}: 10 Political Capital, and the rule they would put to the town. |
+
+**The Irongate Herald (`hl.ig.*`)**, the capital's, wry; the capital has no fallback (`how` is `seats` or `draw`)
+
+| Id | Headline | Deck |
+|---|---|---|
+| `hl.ig.rule-won` (`seats`) | {rule} Wins the Capital | Backed by {parties}: {seats} seats of ten. In force until {until} in every district: {line}. |
+| `hl.ig.rule-drawn` (`draw`; the Herald's form of `rule-fallback`) | {rule} Wins the Capital on the Returning Officer's Draw | Level on seats, votes and opinion, so the hat decided. In force until {until}: {line}. |
+| `hl.ig.your-rule-won` | Your Vote Counted: {rule} Wins the Capital | {seats} seats of ten behind it. In force until {until}. |
+| `hl.ig.your-rule-lost` | Your Vote Counted: {rule} Falls Short | {winner} had {winnerSeats} seats of ten to {seats}. In force until {until}. |
+| `hl.ig.your-rule-on-ballot` | Councillor {name} Carries {parties}' Card: {rule} | {line}. Voting opens today in every district until {until}. |
+| `hl.ig.vote-open` (day 2) | The Capital Votes on Its Rule | One card a party, every district, until {until}. Your vote is secret; the seats follow it. |
+| `hl.ig.filed` | {name} Stands for the Council in {district} | Rule: {rule}. Two seats, counted {weekday} morning. |
+| `hl.ig.nominations` | Names Go In Across the Capital | Known in Irongate and Rank 3: stand in your district at the City Hall until {until}, 10 Political Capital and a rule. |
+
+`{parties}'` in the Herald's on-ballot headline reads *the Vanguard's Card* for one party; a shared card never has a single carrier, so the condition `ruleOnBallot` fires for the first party in the card's order and the headline names that party. The Herald's count line (`capitalPaper.ts`) reads *{rule} · {seats} seats of 10* beside the seats by party. The Clearwater Courier's set is written with slice 7's build in the Courier's voice (not now).
+
+### 8.5 The plan's §21 notes
+
+- **`people.ts` → `candidates.ts`:** corrected in §5.3 and Appendix A. `people.ts` holds the secretaries and the office figures; the 27 home locals are `packages/content/src/data/candidates.ts`.
+- **Eight states:** §4.1's table is seven plus the capital's `registered` (*You live in Eastside · you vote from Thursday*), as the plan's §6 reads it.
+- **`hl.polls-open` → `hl.vote-open`:** the mapping is now in §4.8 and §5.3; `hl.vote-open` prints on day 2 only (Q12). **`hl.nominations` is kept and reworded** (above), not retired as §5.3 first said: the plan's §10 is right that the city's standing window deserves one morning line, and it already exists in four voices.
+- **GDD §15.3, a shared card's ballots:** *split equally* (Q1), corrected from *by their opinion shares*.
+- **Ambition chapter 3, *The deposit*** (the plan's §17 item 9): the chapter's fiction (the ten marks handed over, the name on the list) stands, because the 10 PC is still paid and still printed on the list; only the refund is gone, which the chapter never promised. Re-read its strings when slice 7 strings it; no number moves.

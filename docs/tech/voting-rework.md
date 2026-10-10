@@ -924,22 +924,24 @@ Nothing visible changes in this phase. New code sits beside the old.
 
 ### 20.1 For the game designer (each has a default, so the build does not wait)
 
-1. **A shared card's votes in a district's score.** *Default:* split equally between the sharing parties (ADR 0085). The rows show the card's full votes with *shared*. Alternative: each party counts them in full.
-2. **The Unrest ballot.** *Default:* three cards from the councillors' chain (player councillors by seat, then locals), with card 1 of those as the fallback. Alternative: two cards.
-3. **The branch's backing.** *Default:* +3 **once**, on any day 0–4 until the count on which the candidate does all three orders. Alternative: +3 per such day (up to the five counted).
-4. **A candidate changing their rule after standing.** *Default:* no (the stand card's choice is final for the candidacy; they change it as a councillor on days 0–1).
-5. **The capital's "top-seated" player councillor.** *Default:* the highest count total, then the lower seat number (seat numbers are per district).
-6. **Where the rule chip sits** on *the folded plate*. *Default:* on a phone, right of the plate's kicker when the rule line is folded away (under 700 px tall), and in the place sheet's header while a sheet covers the plate.
-7. **The Election card's `result` line for a fallback.** *Default:* *Long Service Order runs · the branch's rule · no votes cast*.
-8. **The switch cycle's result line** (`how: 'carried'`, the first days after the conversion). *Default:* *Street Fund · carried over · runs until Thursday*.
-9. **The desktop card as the ballot.** *Default:* in the city screen's side column from 640 px. The HQ sheet and the paper row keep the link to the ballot.
-10. **A councillor choosing a rule already on the ballot.** *Default:* allowed (their card is skipped and the next in line fills it); the sheet dims those rows *on the ballot* but does not disable them.
-11. **The fill past the seated locals.** *Default:* the city's other locals by profile, then the menu's order (never reached with App. A).
-12. **`hl.vote-open` on each of days 2–4.** Taken as written (design §4.8), so the headline prints three mornings running. Confirm, or limit it to day 2.
-13. **The Clearwater and capital locals** carry no rule (the chain ends at the secretary). Confirm that they never fill a card.
-14. **The rival edition's *Duskwall elects its council* line** needs the rule wording.
-15. **The other voices' strings** (the Sentinel, the Gazette, the Herald) for §10's set, and the `local-election` line.
-16. **Slice 7: dissolution "strikes the rule"** contradicts *a city always has a rule*. *Default for slice 7:* the rule in force runs out its window, and the open ballot proceeds with the party chain and the locals.
+All sixteen settled by the game designer on 10 Oct 2026: `docs/design/voting-simplified.md` §8 (cited *design §8.n*).
+
+1. **A shared card's votes in a district's score.** *Default:* split equally between the sharing parties (ADR 0085). The rows show the card's full votes with *shared*. Alternative: each party counts them in full. **Settled: confirmed** (design §8.1).
+2. **The Unrest ballot.** *Default:* three cards from the councillors' chain (player councillors by seat, then locals), with card 1 of those as the fallback. Alternative: two cards. **Settled: confirmed.**
+3. **The branch's backing.** *Default:* +3 **once**, on any day 0–4 until the count on which the candidate does all three orders. Alternative: +3 per such day (up to the five counted). **Settled: confirmed.**
+4. **A candidate changing their rule after standing.** *Default:* no (the stand card's choice is final for the candidacy; they change it as a councillor on days 0–1). **Settled: confirmed.**
+5. **The capital's "top-seated" player councillor.** *Default:* the highest count total, then the lower seat number (seat numbers are per district). **Settled: confirmed.**
+6. **Where the rule chip sits** on *the folded plate*. *Default:* on a phone, right of the plate's kicker when the rule line is folded away (under 700 px tall), and in the place sheet's header while a sheet covers the plate. **Settled: confirmed.**
+7. **The Election card's `result` line for a fallback.** *Default:* *Long Service Order runs · the branch's rule · no votes cast*. **Settled: changed to two lines** (design §8.2: *Long Service Order runs · the branch's rule* / *No votes were cast · runs until Thursday · the next vote opens Wednesday*; the Unrest, tie, seats, shared and draw lines are there too, with the hall's *how it won* words, `copy.rule.how.*`).
+8. **The switch cycle's result line** (`how: 'carried'`, the first days after the conversion). *Default:* *Street Fund · carried over · runs until Thursday*. **Settled: changed to two lines** (design §8.2: *Street Fund runs · carried over* / *Runs until Thursday · the first vote on a rule opens Wednesday*).
+9. **The desktop card as the ballot.** *Default:* in the city screen's side column from 640 px. The HQ sheet and the paper row keep the link to the ballot. **Settled: confirmed.**
+10. **A councillor choosing a rule already on the ballot.** *Default:* allowed (their card is skipped and the next in line fills it); the sheet dims those rows *on the ballot* but does not disable them. **Settled: confirmed**; the dimmed note reads *already on the ballot · yours would be skipped*.
+11. **The fill past the seated locals.** *Default:* the city's other locals by profile, then the menu's order (never reached with App. A). **Settled: confirmed.**
+12. **`hl.vote-open` on each of days 2–4.** Taken as written (design §4.8), so the headline prints three mornings running. Confirm, or limit it to day 2. **Settled: day 2 only** (the *Council rule* row carries the vote every morning; design §8.1).
+13. **The Clearwater and capital locals** carry no rule (the chain ends at the secretary). Confirm that they never fill a card. **Settled: confirmed.**
+14. **The rival edition's *Duskwall elects its council* line** needs the rule wording. **Settled: written** (design §8.3: *Duskwall votes on its rule until {until}.* / *Duskwall chooses next week's ballot · voting opens {weekday}.*; on days 0–1 the helper's third argument is the set day).
+15. **The other voices' strings** (the Sentinel, the Gazette, the Herald) for §10's set, and the `local-election` line. **Settled: written** (design §8.4, all four voices with ids and tokens; `hl.nominations` is kept and reworded in each voice; the Herald's `how: 'draw'` form is `hl.ig.rule-drawn`; the Courier's set waits for slice 7).
+16. **Slice 7: dissolution "strikes the rule"** contradicts *a city always has a rule*. *Default for slice 7:* the rule in force runs out its window, and the open ballot proceeds with the party chain and the locals. **Settled: as the default** (GDD §15.9 and the slice-7 addendum now say so; §17 item 5's open point is closed).
 
 ### 20.2 For the user
 
@@ -951,9 +953,11 @@ None blocking. Note:
 
 ## 21. Notes on the design documents (for the designer)
 
-- Design App. A and §5.3 name `people.ts`. The local candidates live in `packages/content/src/data/candidates.ts`; `people.ts` holds the secretaries.
-- Design §4.1's state table lists seven rows; the capital's `registered` is the eighth, as §6 says.
-- Design §4.8 lists `hl.vote-open` as new but not `hl.polls-open` as removed. This design replaces `hl.polls-open` with it.
-- GDD §15.3's *Seat allocation in battlegrounds* should say a shared card's ballots split (Q1), once settled.
+All four answered in design §8.5 (10 Oct 2026):
+
+- Design App. A and §5.3 name `people.ts`. The local candidates live in `packages/content/src/data/candidates.ts`; `people.ts` holds the secretaries. **Corrected in the design.**
+- Design §4.1's state table lists seven rows; the capital's `registered` is the eighth, as §6 says. **Agreed; noted in design §8.5.**
+- Design §4.8 lists `hl.vote-open` as new but not `hl.polls-open` as removed. This design replaces `hl.polls-open` with it. **The mapping is now in design §4.8 and §5.3; `hl.nominations` stays (reworded in §8.4), which §10's table already assumed.**
+- GDD §15.3's *Seat allocation in battlegrounds* should say a shared card's ballots split (Q1), once settled. **Done: *split equally*.**
 
 *Baseline (phase 0) and Deviations are recorded below as the phases are built.*
