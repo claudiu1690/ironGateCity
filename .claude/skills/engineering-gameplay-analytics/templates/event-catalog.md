@@ -1,92 +1,70 @@
-# Event Catalog
+# Event Catalogue (Irongate City)
 
-Document all tracked gameplay events here. Share this with your entire team (engineering, design, product, QA) so everyone agrees on event names, triggers, and required properties.
+The closed list of telemetry kinds. **The source of truth is `docs/design/slice-9-launch.md` §2**; keep this file in step with it. Every kind has a Zod schema for its `props` in the server, and an event of an unknown kind is dropped.
 
-## Naming Convention
+## Naming
 
-All events use `noun_verb` format in `snake_case`. Examples: `level_completed`, `item_purchased`, `match_ended`.
+- `noun.verb`, lower case with a dot: `action.tap`, `mission.run`, `vote.cast`, `journey.boarded`.
+- Related kinds share the noun: `held.enter` / `held.leave`; `candidacy.filed` / `struck` / `seated`.
+- World events from the day job use the same form: `day.rollover`, `election.counted`, `issue.resolved`.
 
-**Rules:**
-- Noun first, verb second: `session_started`, not `started_session`
-- Past tense for completed actions: `level_completed`, not `level_complete`
-- Present tense for state changes: `item_equipped`, `quest_accepted`
-- No camelCase, no dots, no slashes
+## The envelope (filled by the server on every event)
 
-## Required Properties (Every Event)
-
-These fields are attached automatically by the `AnalyticsClient` and must be present on every event:
-
-| Field | Type | Description |
+| Field | Type | Notes |
 |---|---|---|
-| `userId` | `string` | Opaque player identifier (UUID) |
-| `sessionId` | `string` | Current session identifier (UUID) |
-| `timestamp` | `ISO 8601` | When the event occurred |
-| `version` | `string` | Game build version (e.g., `1.2.3`) |
-| `platform` | `string` | Platform identifier (e.g., `web`, `ios`, `android`, `steam`) |
+| `_id` | string | `{kind}:{idempotencyKey}` for keyed acts, `{kind}:{ref}` for world events, else `{kind}:{uuid}` |
+| `kind` | string | from this catalogue |
+| `at` | Date | server time |
+| `day` | string | the City Day key |
+| `userId`, `characterId` | string \| null | null only for the anonymous kinds |
+| `sid` | string \| null | the client's session id |
+| `client` | `{ platform, build }` | compact; never the user agent string |
+| `props` | object | enums, numbers, booleans and ids only |
 
-## Event Definitions
+## Never in telemetry
 
-### Session Events
+Chat text, names, emails, IPs, or **which faction a ballot chose** (ADR 0019). `vote.cast` carries the election kind and city only.
 
-| Event Name | Trigger | Required Properties | Optional Properties | Notes |
-|---|---|---|---|---|
-| `session_started` | Player connects / opens game | — | `referrer`, `deepLink` | Auto-tracked by `AnalyticsClient.trackSession('start')` |
-| `session_ended` | Player disconnects / closes game | `sessionId` | `reason` (`logout`, `timeout`, `crash`) | Auto-tracked by `AnalyticsClient.trackSession('end')` |
+## Kinds (from slice-9 §2; abridged; extend there first)
 
-### Level / Stage Events
+| Kind | Fires | Props | Feeds |
+|---|---|---|---|
+| `signup.form` | sign-up submitted (anonymous ok) | `ok`, `reason` | the funnel |
+| `origin.step` | each opening answer | `step`, `answer` | the funnel; builds |
+| `faction.joined` | faction confirmed | `factionId` | faction balance |
+| `paper.opened` | an edition opened | `edition`, `daysAway`, `rows` | sessions |
+| `screen.view` | a route or sheet opens | `screen`, `from` | dwell (first to sample) |
+| `action.tap` | a tier-1 or training tap | `actionType`, `count`, `energy`, `outcome`, `oddsBand`, `rested` | Energy per day, ×3 share |
+| `mission.run` | a mission result | `missionId`, `type`, `way`, `outcome`, `remembered`, `runIn`, `caught` | risk |
+| `encounter.choice` | a run-in answered | `choice`, `auto`, `won`, `opponentKind` | risk |
+| `held.enter` / `held.leave` | the cells or the ward | `kind`, `minutes`, `how` | risk; favours |
+| `order.done` / `orders.complete` | an order, all three | `slot`, `family` | Directives |
+| `stat.placed` | a level point placed | `stat`, `waited` | builds |
+| `standing.level` | a Reputation rung | `cityId`, `level` | pacing |
+| `job.taken`, `job.switched` | | `jobId` | income |
+| `vote.cast` | any ballot | `electionKind`, `cityId` | turnout (never the choice) |
+| `candidacy.filed` / `struck` / `seated` | | `office`, `cityId`, `dayInGame` | first seat |
+| `journey.boarded` / `arrived` | | `from`, `to`, `minutes`, `dwellSeconds`, `card` | travel |
+| `residence.moved` | | `from`, `to`, `dayInGame` | battlegrounds |
+| `help.opened` | a dotted label tapped | `label` | which notes are read |
+| `energy.empty` | the Out of Energy card | `restedLeft` | session end |
+| `error.client` (anonymous ok) | an uncaught client error | `route` | crash-free sessions |
+| `day.rollover` (world) | the day job | `durationMs`, `settled` | ops |
+| `election.counted` (world) | a count | `turnout`, `npcSeats`, `playerSeats`, `setAside` | politics |
 
-| Event Name | Trigger | Required Properties | Optional Properties | Notes |
-|---|---|---|---|---|
-| `level_started` | Player begins a level/stage | `levelId` | `difficulty`, `retryCount` | |
-| `level_completed` | Player finishes a level/stage | `levelId`, `score` | `timeSeconds`, `stars`, `deaths`, `itemsCollected` | |
-| `level_failed` | Player fails a level/stage | `levelId` | `failReason`, `timeSeconds`, `progress` | Track `failReason` to identify difficulty spikes |
+Later slices add their kinds the same way: events, chat (counts only), favours, dossier, patrons, shops, homes, Political Capital spent, feedback.
 
-### Economy Events
+## Adding a kind
 
-| Event Name | Trigger | Required Properties | Optional Properties | Notes |
-|---|---|---|---|---|
-| `item_purchased` | Player buys an item | `itemId`, `currency`, `amount` | `source` (`shop`, `bundle`, `reward`) | `amount` is the cost, not quantity |
-| `item_equipped` | Player equips an item | `itemId`, `slot` | `previousItemId` | |
-| `currency_earned` | Player receives currency | `currency`, `amount`, `source` | `questId`, `levelId` | `source`: `quest`, `drop`, `daily`, `iap` |
-| `currency_spent` | Player spends currency | `currency`, `amount`, `sink` | `itemId` | `sink`: `shop`, `upgrade`, `reroll` |
+1. Add it to `docs/design/slice-9-launch.md` §2 (the designer owns the list).
+2. Add its Zod props schema on the server.
+3. Fire it **after the commit**. Pass `key` for a keyed act or `ref` for a world event.
+4. Check it in `pnpm report:metrics` on a local playtest.
 
-### Progression Events
+### Checklist
 
-| Event Name | Trigger | Required Properties | Optional Properties | Notes |
-|---|---|---|---|---|
-| `achievement_unlocked` | Player earns an achievement | `achievementId` | `progress` | |
-| `tutorial_step_completed` | Player completes a tutorial step | `step` | `experimentId`, `variant` | Great A/B test candidate |
-| `quest_accepted` | Player picks up a quest | `questId` | `source` | |
-| `quest_completed` | Player finishes a quest | `questId` | `timeSeconds`, `rewards` | |
-
-### Match / Multiplayer Events
-
-| Event Name | Trigger | Required Properties | Optional Properties | Notes |
-|---|---|---|---|---|
-| `match_started` | Multiplayer match begins | `matchId`, `mode` | `playerCount`, `teamSize`, `mapId` | |
-| `match_ended` | Multiplayer match ends | `matchId`, `result` | `score`, `duration`, `kills`, `assists` | `result`: `win`, `loss`, `draw`, `abandon` |
-
-## Adding Custom Events
-
-1. **Choose a name** following the `noun_verb` convention
-2. **Define required properties** — the minimum data needed to make the event useful
-3. **Define optional properties** — extra context that enriches analysis but isn't always available
-4. **Add a row** to the appropriate category table above (or create a new category)
-5. **Notify the team** — update this document and announce in your team channel
-
-### Custom Event Template
-
-| Event Name | Trigger | Required Properties | Optional Properties | Notes |
-|---|---|---|---|---|
-| `{noun}_{verb}` | When does this fire? | What data is always present? | What data is sometimes present? | Any caveats? |
-
-## Validation Checklist
-
-Before shipping a new event:
-
-- [ ] Name follows `noun_verb` snake_case format
-- [ ] All required properties are documented
-- [ ] No PII (emails, IPs, real names) in properties
-- [ ] Event is tracked in the correct place (server-authoritative events on the server, client UX events on the client)
-- [ ] Event appears in local dev telemetry before deploying
-- [ ] Team has been notified of the new event
+- [ ] `noun.verb`, and in the catalogue
+- [ ] props are enums, numbers, booleans or ids only; no PII; no ballot choice
+- [ ] keyed acts pass the idempotency key; world events pass a stable ref
+- [ ] fired after the transaction, never inside it
+- [ ] shows up in the local report

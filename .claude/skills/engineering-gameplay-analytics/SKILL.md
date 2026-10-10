@@ -4,208 +4,170 @@ description: >-
   Use when tracking player events, implementing retention analytics, building engagement funnels, measuring D1/D7/D30 retention, or setting up gameplay telemetry. Triggers: analytics, telemetry, events, retention, D1 D7 D30, funnel, engagement, session tracking, player behavior.
 ---
 
-# Gameplay Analytics
+# Gameplay Analytics (Irongate City: MongoDB + Mongoose, no Redis)
+
+> **Adapted for Irongate City (10 Oct 2026).** The upstream skill (fcsouza/agent-skills) assumed PostgreSQL + Drizzle + Redis. This copy is rewritten for the project's stack and decisions: **MongoDB (replica set) + Mongoose**, **no Redis**, **Fastify + tRPC**, telemetry kept **first-party in our own database**.
+>
+> The project's source of truth is **ADR 0059** (`docs/adr/0059-telemetry-first-party-events-and-player-days.md`) and `docs/design/slice-9-launch.md` §2. Where this skill and those documents differ, follow them.
 
 ## Purpose
 
-Genre-agnostic gameplay analytics for tracking player events, measuring retention (D1/D7/D30), building engagement funnels, session analysis, and A/B testing hooks. Uses Drizzle ORM + PostgreSQL for storage and Redis for high-throughput event buffering.
+Track player events, measure retention (D1/D7/D30, classic and rolling), sessions, funnels and the GDD §27 metrics. Store them in MongoDB next to the game, with no third party and no extra infrastructure.
 
 ## When to Use
 
-Trigger: analytics, telemetry, player events, retention, D1/D7/D30, funnel analysis, engagement metrics, session tracking, player behavior, DAU, MAU, cohort analysis, A/B testing, event tracking
+Trigger: analytics, telemetry, player events, retention, D1/D7/D30, funnel analysis, engagement metrics, session tracking, DAU/MAU, cohort analysis, A/B tags, the `pnpm report:metrics` report, the dev panel's metrics.
 
 ## Prerequisites
 
-- `postgres-game-schema` for base database schema and Drizzle configuration
-- `redis-game-patterns` for Redis connection and buffering infrastructure
+- `packages/db`: the Mongoose connection and models live there. Add the telemetry models next to them (see `boilerplate/analytics-schema.ts`).
+- The request context in `apps/server`: authenticated `userId` / `characterId`, the client session id `sid` (sent by the client), the City Day key.
+- **No new dependencies.** Mongoose is already in the stack. Never add Redis, Kafka or a hosted analytics SDK without an ADR.
 
 ## Core Principles
 
-> Will Wright: "I'm a big believer in metrics. You can have the best intuition in the world, but if you're not measuring what players actually do, you're designing blind."
-> Raph Koster: "The game is not what the designer thinks it is. The game is what the player does."
-> Amy Jo Kim: "Retention is not a metric to optimize. It's a signal that players are finding sustained meaning in your system."
+1. **Use `noun.verb` kinds in a closed catalogue.** Examples: `action.tap`, `mission.run`, `vote.cast`, `journey.boarded`, `signup.form`. Each kind has a **Zod schema for its `props`**, holding only enums, numbers, booleans and ids. An unknown kind or invalid props is logged and dropped, never stored. See `templates/event-catalog.md`.
 
-1. **Use `noun_verb` naming for all events** — `level_completed`, `item_purchased`, `match_ended`. Consistent naming makes querying, filtering, and building dashboards trivial. Never use camelCase or free-form strings.
+2. **Every event carries the same envelope:**
+   - `kind`, `at` (Date);
+   - `day` (the City Day key);
+   - `userId`, `characterId`;
+   - `sid` (the client's session id);
+   - `client` (a compact descriptor: platform, build);
+   - `props`.
 
-2. **Every event carries required context** — `userId`, `sessionId`, `timestamp`, `version`, `platform`. Without these five fields, an event is unanalyzable. Enforce this at the client level, not as a DB constraint, so malformed events are logged rather than dropped.
+   The server fills the envelope; the client never chooses `userId`.
 
-3. **Buffer events in Redis before writing to PostgreSQL** — game clients produce high-frequency events; writing each one directly to the database creates unsustainable write pressure. LPUSH events to a Redis list, then drain the buffer in batches via a worker. See `boilerplate/analytics-client.ts`.
+3. **Write after the commit, never inside the game transaction.** `track()` pushes to an **in-process buffer**. The buffer flushes with an unordered `insertMany` every 2 s, at 100 events, and on shutdown. Nothing awaits it, and a failed flush is logged and dropped. Telemetry is observability, never game logic (CLAUDE.md engineering rule 2 stays about game state only). No Redis: one Node process with a small buffer is enough at our scale (ADR 0059).
 
-4. **Track sessions explicitly: start, heartbeat, end** — don't infer sessions from event gaps. Send a `session_started` event on connect, `session_heartbeat` every 30-60 seconds, and `session_ended` on disconnect. Use a server-side idle timeout (5 minutes) to close orphaned sessions.
+4. **Make events idempotent with natural `_id`s.** A retried tap must not count twice (every game action is keyed and idempotent, ADR 0002/0008):
+   - keyed acts use `_id = "{kind}:{idempotencyKey}"`;
+   - world events use `_id = "{kind}:{ref}"`, e.g. `election.counted:{electionId}` or `day.rollover:{day}`.
 
-5. **Compute retention as cohort analysis, not rolling windows** — D1/D7/D30 retention groups players by their registration date (cohort) and measures what fraction returned on day 1, 7, and 30. Rolling "how many players were active yesterday" is DAU, not retention. See `templates/retention-dashboard.md`.
+   A duplicate insert fails with E11000 inside the unordered `insertMany`, which is ignored on purpose. Other events get a generated id; a crash may lose a few seconds of them, but never duplicates them.
 
-6. **Define funnels as ordered step sequences with drop-off per step** — a funnel is a list of event names in order. For each step, count how many users from the previous step completed this step. Report both absolute counts and percentage drop-off. Never hard-code funnels; make them configurable.
+5. **Derive events from results, not from memory.** Level-ups, rank-ups, Reputation rungs and Political Capital spent are mapped from the returned result's knock-ons by **one pure function**, so no service has to remember to emit them.
 
-7. **Never block gameplay for analytics** — `track()` must be fire-and-forget. If Redis is down, log to a local buffer or drop the event. Never await a database write in the game loop. Analytics is observability, not game logic.
+6. **Activity is `playerDays` spans, not heartbeats.**
+   - A **player-day** is a City Day with at least one authenticated request; a **session** is a run of requests with no gap of 30 minutes or more.
+   - `playerDays` is keyed `{userId}:{day}`, and its `spans[]` hold `[start, end]` pairs at minute precision. A span is extended if the last one ended within 30 minutes; otherwise a new span opens.
+   - The request context touches it **at most once a minute per account** with one upsert, outside the request's critical path.
+   - No session heartbeat events: short sessions (a few minutes) would read as zero at coarser resolution.
 
-8. **Separate analytics tables from gameplay tables** — analytics data is append-only, high-volume, and queried differently. Keep `analytics_events`, `analytics_sessions`, and `analytics_retention_cohorts` in their own schema namespace. Don't pollute gameplay tables with telemetry columns.
+7. **Compute cohorts, don't store them.** There is no `cohorts` collection. Retention, sessions and every dashboard come from a **pure builder** (`packages/db/src/metrics.ts`) over `playerDays`, `user.createdAt`, `telemetry` and the domain collections. Exclusions (testers, moderators, boosted and test accounts) then apply retroactively, and no job can leave a stale row. Print **classic** (exactly day N) and **rolling** (day N or later) retention, with the cohort's size and band.
 
-9. **Plan for event volume from day one** — a game with 10K DAU generating 50 events/session produces 500K events/day. Add `createdAt` partitioning for time-range queries, archive events older than 90 days, and use materialized views or pre-aggregated tables for dashboards.
+8. **Privacy is a hard rule:**
+   - never put chat text, names, emails, IPs, or a ballot's choice in telemetry;
+   - `vote.cast` carries the election kind and city only. The cross-faction share is an aggregate computed from `votes` (ADR 0019);
+   - the client's anonymous kinds (the sign-up funnel, client errors) are the only ones accepted signed out.
 
-10. **A/B test by tagging events, not by forking code paths** — add an `experimentId` and `variant` to event properties. Query analytics by grouping on variant. This keeps game code clean and lets you analyze experiments retroactively from the event stream.
+9. **Plan the volume.**
+   - Expect about 150–250 events per player-day.
+   - `telemetry` has a **TTL index of 180 days** on `at`; `playerDays` is kept indefinitely.
+   - Sample `screen.view` before anything else if the hosted cluster struggles; never sample keyed game acts.
+   - API latency is recorded as 5-minute per-procedure histograms (`api.timings`), not one row per request.
+
+10. **Use A/B tags on events, not forks.** If an experiment ever runs, tag events with `experiment` and `variant` in `props` and group by them in the builder. Never fork the server-authoritative rules for an experiment without a GDD change.
 
 ## Step-by-Step Instructions
 
-### 1. Install Dependencies
+### 1. Models
 
-```bash
-bun add drizzle-orm @neondatabase/serverless ioredis
-bun add -d drizzle-kit
-```
+Copy `boilerplate/analytics-schema.ts` into `packages/db/src/models/`. It gives two models:
+- `Telemetry`: one document per event, with a TTL of 180 days and indexes for kind/day and user/day;
+- `PlayerDay`: `{userId}:{day}` with `spans[]`.
 
-### 2. Set Up the Analytics Schema
+Register the indexes in `ensureIndexes` with the rest; migrations follow the existing `packages/db/src/migrations` pattern.
 
-Copy `boilerplate/analytics-schema.ts` into your project's schema directory. This provides three tables:
+### 2. The buffer and `track()`
 
-- `analyticsEvents` — append-only event log with JSONB properties
-- `analyticsSessions` — session lifecycle tracking with heartbeat
-- `analyticsRetentionCohorts` — pre-computed cohort retention data
+Copy `boilerplate/analytics-client.ts` into `apps/server/src/services/telemetry.ts`. Start it once at server start:
+- `telemetry.start()`;
+- `telemetry.stop()` on shutdown, which flushes.
 
-Generate and run migrations:
+Call `track()` **after** a game transaction commits:
 
-```bash
-bunx drizzle-kit generate
-bunx drizzle-kit migrate
-```
-
-### 3. Initialize the Analytics Client
-
-Copy `boilerplate/analytics-client.ts` and configure it with your Redis and Drizzle instances:
-
-```typescript
-import { AnalyticsClient } from './analytics-client';
-import { redis } from './redis-client';
-import { db } from './db';
-
-const analytics = new AnalyticsClient({ redis, db });
-```
-
-### 4. Instrument Events in Game Code
-
-```typescript
-// Fire-and-forget — never await in game loop
-analytics.track('level_completed', {
-  levelId: 'level_12',
-  score: 4500,
-  timeSeconds: 127,
-  deaths: 3,
-});
-
-analytics.track('item_purchased', {
-  itemId: 'sword_rare_01',
-  currency: 'gold',
-  amount: 500,
+```ts
+// in a keyed action service, after the transaction resolved
+telemetry.track({
+  kind: 'action.tap',
+  ctx,                         // request context: userId, characterId, sid, day, client
+  key: input.idempotencyKey,   // makes _id = "action.tap:{key}"
+  props: { actionType: 'canvass', count: 1, energy: 10, outcome: 'success', oddsBand: 'good', rested: true },
 });
 ```
 
-### 5. Track Sessions
+World events (the day job, counts) pass `ref` instead of `key`, e.g. `{ kind: 'election.counted', ref: election._id }`.
 
-```typescript
-// On player connect
-analytics.trackSession('start');
+### 3. Activity spans
 
-// Every 30-60 seconds while connected
-analytics.trackSession('heartbeat');
+In the request context hook (Fastify `onRequest` for authenticated tRPC calls), call `telemetry.touch(ctx)`. It upserts `playerDays` at most once a minute per user and never blocks the request.
 
-// On player disconnect
-analytics.trackSession('end');
-```
+### 4. Client events
 
-### 6. Set Up the Buffer Worker
+Add `POST /api/telemetry` (a plain Fastify route, beacon-friendly) that accepts batches of 50 or fewer, validates each against its kind's Zod schema, and fills the envelope server-side. Signed out, it accepts only the anonymous kinds.
 
-The analytics client pushes events to a Redis list. Set up a worker (via `bullmq-game-queues` or a simple interval) to drain the buffer:
+### 5. The report
 
-```typescript
-// Run on a worker process, not the game server
-setInterval(async () => {
-  await analytics.flush();
-}, 5000);
-```
-
-### 7. Run Retention Queries
-
-See `templates/retention-dashboard.md` for pre-built Drizzle ORM queries for D1/D7/D30 retention, DAU/MAU, session duration distribution, top events, and funnel analysis.
-
-### 8. Build Your Event Catalog
-
-Use `templates/event-catalog.md` as a starting point to document all events in your game. Share this with your entire team so designers, producers, and engineers agree on event names and properties.
+Build the dashboards as **pure functions** over aggregation results in `packages/db/src/metrics.ts`, and print them with `pnpm report:metrics` (and the dev panel). The pipelines are in `templates/retention-dashboard.md`.
 
 ## Code Examples
 
-### Tracking with A/B test variant
+### Ignoring duplicate inserts (natural `_id`s)
 
-```typescript
-analytics.track('tutorial_step_completed', {
-  step: 3,
-  experimentId: 'onboarding_v2',
-  variant: 'shortened',
-});
-```
-
-### Querying events by player
-
-```typescript
-import { eq, and, gte } from 'drizzle-orm';
-import { analyticsEvents } from './analytics-schema';
-
-const recentEvents = await db
-  .select()
-  .from(analyticsEvents)
-  .where(
-    and(
-      eq(analyticsEvents.userId, 'player_123'),
-      gte(analyticsEvents.createdAt, new Date(Date.now() - 86400000)),
-    ),
-  )
-  .orderBy(analyticsEvents.createdAt);
-```
-
-### Batch insert from Redis buffer
-
-```typescript
-import { analyticsEvents } from './analytics-schema';
-
-const batch = await redis.lrange('analytics:events', 0, 499);
-if (batch.length > 0) {
-  const rows = batch.map((raw) => JSON.parse(raw));
-  await db.insert(analyticsEvents).values(rows);
-  await redis.ltrim('analytics:events', batch.length, -1);
+```ts
+try {
+  await Telemetry.insertMany(batch, { ordered: false });
+} catch (err) {
+  // E11000 = a replayed keyed act or a second world runner: expected, ignore.
+  // Anything else: log and drop. Telemetry never throws into game code.
+  if (!isOnlyDuplicateKeyErrors(err)) log.warn({ err }, 'telemetry flush failed');
 }
 ```
 
-See `boilerplate/analytics-client.ts` for the full implementation and `boilerplate/analytics-schema.ts` for table definitions.
+### Per-kind props validation
 
-## Cross-References
+```ts
+const PROPS = {
+  'vote.cast': z.object({ electionKind: z.enum(['council', 'capital', 'chair', 'national']), cityId: z.string() }),
+  'mission.run': z.object({ missionId: z.string(), type: z.string(), way: z.string(), outcome: z.enum(['success', 'partial', 'failure']), runIn: z.boolean(), caught: z.boolean() }),
+} as const;
+```
 
-- `postgres-game-schema` for base database schema, Drizzle config, and players table
-- `redis-game-patterns` for Redis connection, buffering, and pub/sub infrastructure
-- `bullmq-game-queues` for reliable async event processing and scheduled retention computation
+## Testing
+
+Follow the repo's current testing rules (`.claude/agents/developer.md`). As of 8 Oct 2026 there are **no new unit tests**, so verify through Playwright and `pnpm report:metrics` on a local playtest. The builder's figures are pure functions, so they're easy to unit-test once unit tests return.
 
 ## Pitfalls & Anti-Patterns
 
-- **Event explosion** — don't track every mouse move or frame tick. Define a finite event catalog (see `templates/event-catalog.md`) and stick to it. If you need high-frequency data (e.g., position tracking), sample at fixed intervals and batch.
-- **PII in events** — never put emails, IP addresses, or real names in event properties. Use opaque player IDs. If you need demographics, store them in a separate PII-protected table and join at query time.
-- **Missing session boundaries** — if you only track `session_started` but forget `session_ended` (common when players crash or lose connection), your session duration data is garbage. Always implement a server-side idle timeout that closes sessions after 5 minutes of no heartbeat.
-- **Confusing retention with DAU** — "50% of our players came back yesterday" is not D1 retention. D1 retention is "of the cohort that registered on day X, what percentage played on day X+1." These are fundamentally different metrics. Use cohort analysis.
-- **No sampling strategy** — at scale (100K+ DAU), storing every event is expensive. Implement sampling: track 100% of monetization events, 100% of session events, and sample gameplay events at 10-25% with a `sampled: true` flag.
-- **Writing analytics synchronously in the game loop** — if your `track()` call awaits a database write, a DB hiccup causes frame drops or timeout errors in-game. Always buffer through Redis and flush asynchronously.
-- **Hardcoding funnel steps** — funnels change as your game evolves. Store funnel definitions as configuration (JSON or DB), not as code. Let product managers update funnels without code deploys.
+- **Writing telemetry inside the game transaction.** A telemetry failure must never abort or slow a game action. Write only after the commit.
+- **Counting retries twice.** Always pass the idempotency key for keyed acts. A generated `_id` on a keyed act inflates every figure built from it.
+- **Storing derived tables.** A `cohorts` collection goes stale and can't apply new exclusions. Compute from `playerDays`.
+- **Confusing DAU with retention.** D1 is "of the cohort created on day X, the share active on day X+1", not "players active yesterday".
+- **Heartbeat sessions.** Infer sessions from `playerDays` spans with a 30-minute gap rule, not from client heartbeats.
+- **PII creep.** Any free text or name in `props` is a bug; the Zod schemas should make it impossible.
+- **Adding Redis "for buffering".** Not needed at this scale and not in the stack. The in-process buffer plus `insertMany` is the decision (ADR 0059).
+- **Hard-coding funnels.** Keep funnel definitions as data (a list of kinds and filters) beside the builder.
+
+## Cross-References
+
+- ADR 0059 (telemetry), ADR 0019 (ballot secrecy), ADR 0002/0008 (keyed, idempotent actions)
+- `docs/design/slice-9-launch.md` §2 (the event list, the dashboards, the §27 mapping)
+- GDD §27 (the metrics and the gates)
+- `design-game-economy-design` (the economy rows the dashboards measure)
 
 ## Designer Philosophy
 
-**Will Wright** (SimCity, The Sims): Analytics is the feedback loop that closes the gap between what you designed and what players experience. In The Sims, player behavior data revealed that people spent far more time decorating houses than managing relationships — a complete surprise that reshaped expansion pack priorities. Without telemetry, that insight would have taken years of guessing.
+**Will Wright** (SimCity, The Sims): analytics closes the gap between what you designed and what players experience. In The Sims, behaviour data showed players spending far more time decorating than managing relationships, and that reshaped the expansions.
 
-**Raph Koster** (Ultima Online, Star Wars Galaxies): In Ultima Online, emergent player behavior — like the entire ecosystem collapse from player-killed animals — was only understood in retrospect because we lacked event-level tracking. Modern games have no excuse. Every meaningful player action should produce a queryable event, because the most important design discoveries come from patterns you weren't looking for.
+**Raph Koster** (Ultima Online, Star Wars Galaxies): the most important design discoveries come from patterns you weren't looking for, so every meaningful player action should produce a queryable event.
 
-**Amy Jo Kim** (Community Design): Engagement is not about maximizing time-in-game. Healthy retention curves show players finding a sustainable rhythm. If your D1 is 40% but D30 is 2%, you have an onboarding cliff, not a content problem. Analytics should surface where meaning breaks down, not just where players leave.
+**Amy Jo Kim** (community design): engagement isn't maximising time in game. A high D1 with a collapsing D30 is an onboarding cliff, not a content problem. Analytics should show where meaning breaks down, not only where players leave.
 
 ## Sources
 
-- [Mixpanel Engineering Blog — Event Tracking Best Practices](https://mixpanel.com/blog/)
-- [Amplitude Engineering — Behavioral Analytics at Scale](https://amplitude.com/blog/engineering)
-- [GDC Vault — Player Metrics in Game Development](https://gdcvault.com)
-- [Delta DNA — Game Analytics Patterns](https://deltadna.com)
-- [GameAnalytics Documentation](https://docs.gameanalytics.com)
-- [Drizzle ORM Documentation](https://orm.drizzle.team)
-- [Redis LPUSH/LRANGE for Buffering](https://redis.io/commands/lpush/)
+- [MongoDB TTL indexes](https://www.mongodb.com/docs/manual/core/index-ttl/)
+- [MongoDB insertMany (unordered, duplicate keys)](https://www.mongodb.com/docs/manual/reference/method/db.collection.insertMany/)
+- [MongoDB aggregation pipeline](https://www.mongodb.com/docs/manual/aggregation/)
+- [Mongoose models and indexes](https://mongoosejs.com/docs/guide.html)
+- [GDC Vault: player metrics in game development](https://gdcvault.com)

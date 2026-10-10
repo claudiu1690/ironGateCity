@@ -1,206 +1,158 @@
-import { eq } from "drizzle-orm";
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import type Redis from "ioredis";
-import {
-	analyticsEvents,
-	analyticsSessions,
-	type NewAnalyticsEvent,
-} from "./analytics-schema";
+// Server-side telemetry for Irongate City: an in-process buffer flushed with
+// unordered insertMany, natural _ids for idempotency, and playerDays activity
+// spans touched at most once a minute per user. No Redis. ADR 0059.
+// Copy into apps/server/src/services/telemetry.ts.
 
-const REDIS_KEY = "analytics:events";
-const BATCH_SIZE = 500;
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 200;
+import { randomUUID } from "node:crypto";
+import { PlayerDay, Telemetry } from "./analytics-schema"; // packages/db models
 
-interface AnalyticsClientOptions {
-	redis: Redis;
-	db: PostgresJsDatabase;
-	userId: string;
-	platform: string;
-	version: string;
-	redisKey?: string;
-	batchSize?: number;
-	logger?: (level: "info" | "warn" | "error", message: string) => void;
+const FLUSH_EVERY_MS = 2_000;
+const FLUSH_AT = 100;
+const MAX_BUFFER = 5_000; // drop the oldest beyond this: telemetry never grows unbounded
+const SESSION_GAP_MIN = 30;
+const TOUCH_EVERY_MS = 60_000;
+
+export interface TelemetryCtx {
+	userId: string | null;
+	characterId: string | null;
+	sid: string | null;
+	day: string; // City Day key
+	client?: { platform?: string; build?: string };
 }
 
-export class AnalyticsClient {
-	private redis: Redis;
-	private db: PostgresJsDatabase;
-	private userId: string;
-	private platform: string;
-	private version: string;
-	private sessionId: string | null = null;
-	private redisKey: string;
-	private batchSize: number;
-	private log: (level: "info" | "warn" | "error", message: string) => void;
+export interface TrackInput {
+	kind: string; // "noun.verb", must exist in the catalogue
+	ctx: TelemetryCtx;
+	props?: Record<string, unknown>;
+	key?: string; // keyed act: _id = "{kind}:{key}"
+	ref?: string; // world event: _id = "{kind}:{ref}"
+	at?: Date;
+}
 
-	constructor(options: AnalyticsClientOptions) {
-		this.redis = options.redis;
-		this.db = options.db;
-		this.userId = options.userId;
-		this.platform = options.platform;
-		this.version = options.version;
-		this.redisKey = options.redisKey ?? REDIS_KEY;
-		this.batchSize = options.batchSize ?? BATCH_SIZE;
-		this.log =
-			options.logger ??
-			((level, message) => {
-				if (level === "error") console.error(`[analytics] ${message}`);
-				else console.log(`[analytics] ${message}`);
-			});
+type Logger = { warn: (o: unknown, m: string) => void; info: (o: unknown, m: string) => void };
+
+export class TelemetryBuffer {
+	private buffer: Record<string, unknown>[] = [];
+	private timer: NodeJS.Timeout | null = null;
+	private flushing = false;
+	private lastTouch = new Map<string, number>(); // userId → ms of the last playerDays upsert
+
+	constructor(
+		private readonly validate: (kind: string, props: unknown) => Record<string, unknown> | null,
+		private readonly log: Logger,
+	) {}
+
+	start(): void {
+		if (!this.timer) this.timer = setInterval(() => void this.flush(), FLUSH_EVERY_MS);
 	}
 
-	/**
-	 * Fire-and-forget event tracking. Buffers in Redis via LPUSH.
-	 * Never throws — logs errors silently.
-	 */
-	track(eventName: string, properties?: Record<string, unknown>): void {
-		const event: NewAnalyticsEvent = {
-			id: crypto.randomUUID(),
-			userId: this.userId,
-			sessionId: this.sessionId ?? "unknown",
-			eventName,
-			properties: properties ?? {},
-			platform: this.platform,
-			version: this.version,
-			createdAt: new Date(),
-		};
-
-		this.redis.lpush(this.redisKey, JSON.stringify(event)).catch((err) => {
-			this.log(
-				"error",
-				`Failed to buffer event "${eventName}": ${err.message}`,
-			);
-		});
+	async stop(): Promise<void> {
+		if (this.timer) clearInterval(this.timer);
+		this.timer = null;
+		await this.flush();
 	}
 
-	/**
-	 * Track session lifecycle events.
-	 * - 'start': creates a new session row, stores sessionId
-	 * - 'heartbeat': updates lastHeartbeatAt on the current session
-	 * - 'end': sets endedAt on the current session, clears sessionId
-	 */
-	trackSession(event: "start" | "heartbeat" | "end"): void {
+	/** Fire-and-forget. Call after the game transaction committed. Never throws. */
+	track(input: TrackInput): void {
 		try {
-			switch (event) {
-				case "start":
-					this.handleSessionStart();
-					break;
-				case "heartbeat":
-					this.handleSessionHeartbeat();
-					break;
-				case "end":
-					this.handleSessionEnd();
-					break;
+			const props = this.validate(input.kind, input.props ?? {});
+			if (!props) {
+				this.log.warn({ kind: input.kind }, "telemetry: unknown kind or invalid props, dropped");
+				return;
 			}
+			const id = input.key
+				? `${input.kind}:${input.key}`
+				: input.ref
+					? `${input.kind}:${input.ref}`
+					: `${input.kind}:${randomUUID()}`;
+			this.buffer.push({
+				_id: id,
+				kind: input.kind,
+				at: input.at ?? new Date(),
+				day: input.ctx.day,
+				userId: input.ctx.userId,
+				characterId: input.ctx.characterId,
+				sid: input.ctx.sid,
+				client: input.ctx.client ?? {},
+				props,
+			});
+			if (this.buffer.length > MAX_BUFFER) this.buffer.splice(0, this.buffer.length - MAX_BUFFER);
+			if (this.buffer.length >= FLUSH_AT) void this.flush();
 		} catch (err) {
-			const message = err instanceof Error ? err.message : String(err);
-			this.log("error", `Failed to track session "${event}": ${message}`);
+			this.log.warn({ err }, "telemetry: track failed, dropped");
+		}
+	}
+
+	/** Unordered insertMany; duplicate _ids (E11000) are expected and ignored. */
+	async flush(): Promise<void> {
+		if (this.flushing || this.buffer.length === 0) return;
+		this.flushing = true;
+		const batch = this.buffer.splice(0, this.buffer.length);
+		try {
+			await Telemetry.insertMany(batch, { ordered: false, lean: true });
+		} catch (err) {
+			if (!onlyDuplicateKeys(err)) this.log.warn({ err, size: batch.length }, "telemetry: flush failed, batch dropped");
+		} finally {
+			this.flushing = false;
 		}
 	}
 
 	/**
-	 * Drain the Redis event buffer into PostgreSQL in batches.
-	 * Call this from a worker process, not the game server.
+	 * Record activity for player-days and sessions. Call from the request
+	 * context for authenticated calls. At most one upsert a minute per user,
+	 * not awaited by the request.
 	 */
-	async flush(): Promise<void> {
-		let retries = 0;
+	touch(ctx: TelemetryCtx, now = new Date()): void {
+		if (!ctx.userId) return;
+		const ms = now.getTime();
+		const last = this.lastTouch.get(ctx.userId) ?? 0;
+		if (ms - last < TOUCH_EVERY_MS) return;
+		this.lastTouch.set(ctx.userId, ms);
+		const minute = Math.floor(ms / 60_000);
 
-		while (retries < MAX_RETRIES) {
-			try {
-				const batch = await this.redis.lrange(
-					this.redisKey,
-					-this.batchSize,
-					-1,
-				);
+		// One upsert with an update pipeline: extend the last span if it ended
+		// within SESSION_GAP_MIN minutes, otherwise open a new span.
+		void PlayerDay.updateOne(
+			{ _id: `${ctx.userId}:${ctx.day}` },
+			[
+				{
+					$set: {
+						userId: ctx.userId,
+						day: ctx.day,
+						firstAt: { $ifNull: ["$firstAt", now] },
+						lastAt: now,
+						spans: {
+							$let: {
+								vars: {
+									s: { $ifNull: ["$spans", []] },
+									lastEnd: { $arrayElemAt: [{ $arrayElemAt: [{ $ifNull: ["$spans", [[0, -1e12]]] }, -1] }, 1] },
+								},
+								in: {
+									$cond: [
+										{ $and: [{ $gt: [{ $size: "$$s" }, 0] }, { $gte: ["$$lastEnd", minute - SESSION_GAP_MIN] }] },
+										{
+											$concatArrays: [
+												{ $slice: ["$$s", { $subtract: [{ $size: "$$s" }, 1] }] },
+												[[{ $arrayElemAt: [{ $arrayElemAt: ["$$s", -1] }, 0] }, minute]],
+											],
+										},
+										{ $concatArrays: ["$$s", [[minute, minute]]] },
+									],
+								},
+							},
+						},
+					},
+				},
+			],
+			{ upsert: true },
+		).catch((err: unknown) => this.log.warn({ err }, "telemetry: playerDays touch failed"));
 
-				if (batch.length === 0) return;
-
-				const rows: NewAnalyticsEvent[] = batch.map((raw) => {
-					const parsed = JSON.parse(raw);
-					return {
-						...parsed,
-						createdAt: new Date(parsed.createdAt),
-					};
-				});
-
-				await this.db.insert(analyticsEvents).values(rows);
-				await this.redis.ltrim(this.redisKey, 0, -(batch.length + 1));
-
-				this.log("info", `Flushed ${rows.length} events to database`);
-				return;
-			} catch (err) {
-				retries++;
-				const message = err instanceof Error ? err.message : String(err);
-				this.log(
-					"warn",
-					`Flush attempt ${retries}/${MAX_RETRIES} failed: ${message}`,
-				);
-
-				if (retries < MAX_RETRIES) {
-					const delay = BASE_DELAY_MS * 2 ** (retries - 1);
-					await new Promise((resolve) => setTimeout(resolve, delay));
-				}
-			}
-		}
-
-		this.log(
-			"error",
-			`Flush failed after ${MAX_RETRIES} retries — events remain in Redis buffer`,
-		);
+		if (this.lastTouch.size > 50_000) this.lastTouch.clear(); // bounded memory
 	}
+}
 
-	// ─── Private Methods ──────────────────────────────────────────────────────
-
-	private handleSessionStart(): void {
-		const sessionId = crypto.randomUUID();
-		this.sessionId = sessionId;
-
-		this.db
-			.insert(analyticsSessions)
-			.values({
-				id: sessionId,
-				userId: this.userId,
-				platform: this.platform,
-				startedAt: new Date(),
-				lastHeartbeatAt: new Date(),
-			})
-			.then(() => {
-				this.track("session_started", { sessionId });
-			})
-			.catch((err) => {
-				this.log("error", `Failed to create session: ${err.message}`);
-			});
-	}
-
-	private handleSessionHeartbeat(): void {
-		if (!this.sessionId) return;
-
-		const now = new Date();
-		this.db
-			.update(analyticsSessions)
-			.set({ lastHeartbeatAt: now })
-			.where(eq(analyticsSessions.id, this.sessionId))
-			.catch((err) => {
-				this.log("error", `Failed to update heartbeat: ${err.message}`);
-			});
-	}
-
-	private handleSessionEnd(): void {
-		if (!this.sessionId) return;
-
-		const now = new Date();
-		const sessionId = this.sessionId;
-		this.sessionId = null;
-
-		this.track("session_ended", { sessionId });
-
-		this.db
-			.update(analyticsSessions)
-			.set({ endedAt: now })
-			.where(eq(analyticsSessions.id, sessionId))
-			.catch((err) => {
-				this.log("error", `Failed to end session: ${err.message}`);
-			});
-	}
+function onlyDuplicateKeys(err: unknown): boolean {
+	const e = err as { code?: number; writeErrors?: { code?: number }[] };
+	if (e?.code === 11000) return true;
+	return Array.isArray(e?.writeErrors) && e.writeErrors.length > 0 && e.writeErrors.every((w) => w.code === 11000);
 }

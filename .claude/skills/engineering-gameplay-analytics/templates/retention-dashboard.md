@@ -1,289 +1,123 @@
-# Retention Dashboard Queries
+# Retention and Engagement Queries (MongoDB aggregation)
 
-Pre-built Drizzle ORM queries for common analytics dashboards. Each query includes the raw SQL equivalent for reference and can be adapted to your reporting needs.
+The pipelines behind `pnpm report:metrics`. Wrap each in a **pure builder function** in `packages/db/src/metrics.ts` that takes the aggregation output and returns the figures. Nothing is stored: there's no cohorts collection (ADR 0059 §7).
 
-## Setup
+Collections:
+- `users` (`_id`, `createdAt`, the flags to exclude: `tester`, `role`, `boosted`, `testMember`);
+- `playerDays` (`_id = "{userId}:{day}"`, `userId`, `day`, `spans[[startMin, endMin]]`);
+- `telemetry`.
 
-```typescript
-import { db } from './db';
-import { sql, eq, gte, lte, and, desc, count, countDistinct } from 'drizzle-orm';
-import {
-  analyticsEvents,
-  analyticsSessions,
-  analyticsRetentionCohorts,
-} from './analytics-schema';
+`day` is the City Day key (`YYYY-MM-DD`), and a user's cohort day is the City Day of `users.createdAt`.
+
+## Exclusions (applied to every figure)
+
+```js
+const included = { tester: { $ne: true }, boosted: { $ne: true }, testMember: { $ne: true }, role: { $nin: ['moderator', 'admin'] } };
 ```
 
----
+## D1 / D7 / D30 retention (classic and rolling)
 
-## D1 / D7 / D30 Retention by Cohort
+- **Classic:** the share of the cohort active on exactly cohort day + N.
+- **Rolling:** the share active on cohort day + N or later.
 
-Cohort-based retention: for each registration date, what percentage of users returned on day 1, 7, and 30.
+Print the cohort's size, and flag cohorts under 20 people as noisy.
 
-This query assumes you have a `players` table with `createdAt` as the registration date. It computes retention by joining first-seen dates against subsequent session dates.
-
-```typescript
-const retentionByDay = async (dayOffset: number) => {
-  const result = await db.execute(sql`
-    WITH cohorts AS (
-      SELECT
-        user_id,
-        DATE(MIN(started_at)) AS cohort_date
-      FROM analytics_sessions
-      GROUP BY user_id
-    ),
-    returning_users AS (
-      SELECT DISTINCT
-        c.cohort_date,
-        s.user_id
-      FROM cohorts c
-      INNER JOIN analytics_sessions s ON s.user_id = c.user_id
-        AND DATE(s.started_at) = c.cohort_date + INTERVAL '${sql.raw(String(dayOffset))} days'
-    )
-    SELECT
-      c.cohort_date,
-      COUNT(DISTINCT c.user_id) AS total_users,
-      COUNT(DISTINCT r.user_id) AS retained_users,
-      ROUND(
-        COUNT(DISTINCT r.user_id)::numeric / NULLIF(COUNT(DISTINCT c.user_id), 0) * 100,
-        2
-      ) AS retention_pct
-    FROM cohorts c
-    LEFT JOIN returning_users r ON r.cohort_date = c.cohort_date
-    GROUP BY c.cohort_date
-    ORDER BY c.cohort_date DESC
-    LIMIT 30
-  `);
-
-  return result;
-};
-
-// Usage
-const d1 = await retentionByDay(1);
-const d7 = await retentionByDay(7);
-const d30 = await retentionByDay(30);
-```
-
-### Saving Pre-computed Cohorts
-
-Run this on a scheduled job (daily) to populate the `analyticsRetentionCohorts` table for fast dashboard reads:
-
-```typescript
-import { analyticsRetentionCohorts } from './analytics-schema';
-
-const computeAndStoreCohort = async (dayOffset: number) => {
-  const rows = await retentionByDay(dayOffset);
-
-  for (const row of rows) {
-    await db
-      .insert(analyticsRetentionCohorts)
-      .values({
-        cohortDate: row.cohort_date,
-        day: dayOffset,
-        totalUsers: Number(row.total_users),
-        retainedUsers: Number(row.retained_users),
-      })
-      .onConflictDoUpdate({
-        target: [analyticsRetentionCohorts.cohortDate, analyticsRetentionCohorts.day],
-        set: {
-          totalUsers: Number(row.total_users),
-          retainedUsers: Number(row.retained_users),
-        },
-      });
-  }
-};
-
-// Run daily via cron or BullMQ scheduled job
-await computeAndStoreCohort(1);
-await computeAndStoreCohort(7);
-await computeAndStoreCohort(30);
-```
-
----
-
-## Session Duration Distribution
-
-Understand how long players stay per session. Returns bucketed session durations.
-
-```typescript
-const sessionDurationDistribution = async () => {
-  const result = await db.execute(sql`
-    SELECT
-      CASE
-        WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) < 60 THEN '< 1 min'
-        WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) < 300 THEN '1-5 min'
-        WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) < 900 THEN '5-15 min'
-        WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) < 1800 THEN '15-30 min'
-        WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) < 3600 THEN '30-60 min'
-        ELSE '60+ min'
-      END AS duration_bucket,
-      COUNT(*) AS session_count,
-      ROUND(AVG(EXTRACT(EPOCH FROM (ended_at - started_at)))::numeric, 1) AS avg_seconds
-    FROM analytics_sessions
-    WHERE ended_at IS NOT NULL
-    GROUP BY duration_bucket
-    ORDER BY MIN(EXTRACT(EPOCH FROM (ended_at - started_at)))
-  `);
-
-  return result;
-};
-```
-
----
-
-## Top Events by Frequency
-
-Most common events over a given time window. Useful for verifying instrumentation and spotting anomalies.
-
-```typescript
-const topEvents = async (days = 7, limit = 20) => {
-  const since = new Date(Date.now() - days * 86400000);
-
-  const result = await db
-    .select({
-      eventName: analyticsEvents.eventName,
-      eventCount: count(),
-      uniqueUsers: countDistinct(analyticsEvents.userId),
-    })
-    .from(analyticsEvents)
-    .where(gte(analyticsEvents.createdAt, since))
-    .groupBy(analyticsEvents.eventName)
-    .orderBy(desc(count()))
-    .limit(limit);
-
-  return result;
-};
-```
-
----
-
-## Daily Active Users (DAU) / Monthly Active Users (MAU)
-
-```typescript
-const dauMau = async (days = 30) => {
-  const result = await db.execute(sql`
-    SELECT
-      DATE(started_at) AS day,
-      COUNT(DISTINCT user_id) AS dau
-    FROM analytics_sessions
-    WHERE started_at >= NOW() - INTERVAL '${sql.raw(String(days))} days'
-    GROUP BY DATE(started_at)
-    ORDER BY day DESC
-  `);
-
-  return result;
-};
-
-const mau = async () => {
-  const result = await db.execute(sql`
-    SELECT
-      COUNT(DISTINCT user_id) AS mau
-    FROM analytics_sessions
-    WHERE started_at >= NOW() - INTERVAL '30 days'
-  `);
-
-  return result;
-};
-
-// DAU/MAU ratio (stickiness)
-const stickiness = async () => {
-  const result = await db.execute(sql`
-    WITH daily AS (
-      SELECT
-        DATE(started_at) AS day,
-        COUNT(DISTINCT user_id) AS dau
-      FROM analytics_sessions
-      WHERE started_at >= NOW() - INTERVAL '30 days'
-      GROUP BY DATE(started_at)
-    ),
-    monthly AS (
-      SELECT COUNT(DISTINCT user_id) AS mau
-      FROM analytics_sessions
-      WHERE started_at >= NOW() - INTERVAL '30 days'
-    )
-    SELECT
-      ROUND(AVG(daily.dau)::numeric / NULLIF((SELECT mau FROM monthly), 0) * 100, 2) AS stickiness_pct
-    FROM daily
-  `);
-
-  return result;
-};
-```
-
----
-
-## Funnel Drop-off Analysis
-
-Configurable funnel: pass an ordered array of event names and get drop-off per step.
-
-```typescript
-const funnelAnalysis = async (
-  steps: string[],
-  days = 30,
-) => {
-  if (steps.length < 2) throw new Error('Funnel needs at least 2 steps');
-
-  const since = new Date(Date.now() - days * 86400000);
-
-  // Get unique users who completed each step
-  const stepCounts: { step: string; users: number; dropOff: number; dropOffPct: number }[] = [];
-
-  let previousUsers = 0;
-
-  for (let i = 0; i < steps.length; i++) {
-    const result = await db
-      .select({
-        uniqueUsers: countDistinct(analyticsEvents.userId),
-      })
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.eventName, steps[i]),
-          gte(analyticsEvents.createdAt, since),
-        ),
-      );
-
-    const users = Number(result[0]?.uniqueUsers ?? 0);
-    const dropOff = i === 0 ? 0 : previousUsers - users;
-    const dropOffPct = i === 0 ? 0 : previousUsers > 0
-      ? Math.round((dropOff / previousUsers) * 10000) / 100
-      : 100;
-
-    stepCounts.push({
-      step: steps[i],
-      users,
-      dropOff,
-      dropOffPct,
-    });
-
-    previousUsers = users;
-  }
-
-  return stepCounts;
-};
-
-// Usage: onboarding funnel
-const onboardingFunnel = await funnelAnalysis([
-  'session_started',
-  'tutorial_step_completed',
-  'level_started',
-  'level_completed',
-  'item_purchased',
+```js
+db.users.aggregate([
+  { $match: { ...included, createdAt: { $gte: from, $lt: to } } },
+  { $project: { cohortDay: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d', timezone: CITY_DAY_TZ } } } },
+  { $lookup: { from: 'playerDays', localField: '_id', foreignField: 'userId', as: 'days', pipeline: [{ $project: { _id: 0, day: 1 } }] } },
+  { $project: {
+      cohortDay: 1,
+      offsets: { $map: { input: '$days', as: 'd', in: {
+        $dateDiff: { startDate: { $dateFromString: { dateString: '$cohortDay' } }, endDate: { $dateFromString: { dateString: '$$d.day' } }, unit: 'day' } } } },
+  } },
+  { $group: {
+      _id: '$cohortDay',
+      size: { $sum: 1 },
+      d1: { $sum: { $cond: [{ $in: [1, '$offsets'] }, 1, 0] } },
+      d7: { $sum: { $cond: [{ $in: [7, '$offsets'] }, 1, 0] } },
+      d30: { $sum: { $cond: [{ $in: [30, '$offsets'] }, 1, 0] } },
+      d7plus: { $sum: { $cond: [{ $gt: [{ $size: { $filter: { input: '$offsets', cond: { $gte: ['$$this', 7] } } } }, 0] }, 1, 0] } },
+      d30plus: { $sum: { $cond: [{ $gt: [{ $size: { $filter: { input: '$offsets', cond: { $gte: ['$$this', 30] } } } }, 0] }, 1, 0] } },
+  } },
+  { $sort: { _id: 1 } },
 ]);
+// The builder turns counts into rates and leaves out offsets that haven't happened yet
+// (a cohort only 5 days old has no D7).
+```
 
-// Usage: match engagement funnel
-const matchFunnel = await funnelAnalysis([
-  'match_started',
-  'match_ended',
-  'match_started', // started a second match (re-engagement)
+## Sessions per player-day and session length
+
+A session is one span: a run of requests with no gap of 30 minutes or more.
+
+```js
+db.playerDays.aggregate([
+  { $match: { day: { $gte: fromDay, $lte: toDay } } },
+  { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'u', pipeline: [{ $match: included }, { $project: { _id: 1 } }] } },
+  { $match: { 'u.0': { $exists: true } } },
+  { $project: { day: 1, sessions: { $size: '$spans' },
+      minutes: { $map: { input: '$spans', as: 's', in: { $add: [{ $subtract: [{ $arrayElemAt: ['$$s', 1] }, { $arrayElemAt: ['$$s', 0] }] }, 1] } } } } },
+  { $group: { _id: '$day', playerDays: { $sum: 1 }, sessions: { $sum: '$sessions' }, minutes: { $push: '$minutes' } } },
+]);
+// The builder flattens minutes to give the median and p75 session length, plus sessions per player-day.
+```
+
+## DAU / MAU
+
+```js
+// DAU for a City Day = distinct included users with a playerDays doc that day
+db.playerDays.aggregate([
+  { $match: { day: { $gte: fromDay, $lte: toDay } } },
+  { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'u', pipeline: [{ $match: included }, { $project: { _id: 1 } }] } },
+  { $match: { 'u.0': { $exists: true } } },
+  { $group: { _id: '$day', dau: { $sum: 1 } } },
+  { $sort: { _id: 1 } },
+]);
+// MAU = distinct userId over the 30 City Days ending that day. The builder computes it from the
+// same per-day user lists to avoid a second scan; stickiness = DAU / MAU.
+```
+
+## Top kinds by volume (ops and sampling)
+
+```js
+db.telemetry.aggregate([
+  { $match: { day: { $gte: fromDay, $lte: toDay } } },
+  { $group: { _id: '$kind', count: { $sum: 1 }, users: { $addToSet: '$userId' } } },
+  { $project: { count: 1, users: { $size: '$users' } } },
+  { $sort: { count: -1 } },
+  { $limit: 30 },
 ]);
 ```
 
----
+## Funnels (defined as data)
+
+Each funnel is a list of steps, each a `kind` plus an optional `props` filter. A step counts a person only if it happened after their previous step. The first-session funnel, for example: `signup.form{ok:true}` → `origin.step{step:3}` → `faction.joined` → `action.tap` → `order.done`.
+
+```js
+const steps = [
+  { kind: 'signup.form', match: { 'props.ok': true } },
+  { kind: 'origin.step', match: { 'props.step': 3 } },
+  { kind: 'faction.joined' },
+  { kind: 'action.tap' },
+  { kind: 'order.done' },
+];
+
+db.telemetry.aggregate([
+  { $match: { $or: steps.map((s) => ({ kind: s.kind, ...(s.match ?? {}) })), at: { $gte: from, $lt: to } } },
+  // anonymous steps are tied to the account through sid
+  { $group: { _id: { $ifNull: ['$userId', '$sid'] }, events: { $push: { kind: '$kind', at: '$at', props: '$props' } } } },
+]);
+// The builder walks each person's events in time order against `steps` and counts
+// how far each got. Report absolute counts and the drop-off per step.
+```
 
 ## Notes
 
-- **Performance**: For large event tables (millions of rows), add `createdAt` range partitioning and create materialized views for dashboards that run on a schedule.
-- **Pre-aggregation**: Run the retention cohort computation and DAU/MAU as scheduled jobs (daily via BullMQ), then query the pre-computed `analyticsRetentionCohorts` table for instant dashboard loads.
-- **Time zones**: All timestamps should be stored in UTC. Convert to the user's timezone only at the presentation layer.
-- **Sampling**: If event volume is extreme, add a `WHERE properties->>'sampled' = 'true'` filter and scale counts by the inverse sampling rate.
+- Use the **City Day** key (`day`) for day maths, never the UTC date. The game's day turns at the City Day boundary. The six-hour game day (review 5) is only for night and the scenery, not for these metrics.
+- **Indexes** these pipelines rely on:
+  - `playerDays {day: 1}` and `{userId: 1, day: 1}`;
+  - `telemetry {kind: 1, day: 1}` and `{userId: 1, day: 1}`;
+  - `users {createdAt: 1}`.
+- **Run on a secondary** (`readPreference: 'secondaryPreferred'`) in production, so the report never competes with the game.
+- **The gates** (GDD §27, slice-9 §9): closed beta to open beta needs D1 ≥ 40 and D7 ≥ 30; open beta to launch needs D7 ≥ 35 and D30 ≥ 20. Print each gate next to its figure.
