@@ -36,6 +36,9 @@ export function placeTagText(t: PlaceTagView): string {
     // Review 5 (ADR 0080): on rival ground at night.
     case 'night':
       return copy.night.patrolsTag;
+    // Review 5 (answers §12.1, §18 Q1): *Night rate · +25 % Iron*.
+    case 'nightRate':
+      return copy.night.rateTag(t.ironPct);
   }
 }
 

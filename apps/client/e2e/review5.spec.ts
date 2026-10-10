@@ -563,3 +563,94 @@ test('#8 the infirmary patches you up for Iron', async ({ page }) => {
   expect(me.result.data.iron).toBe(839);
   expect(me.result.data.health.value).toBe(125);
 });
+
+/**
+ * Review 5 #12 (answers §12.1, tech design §7, ADR 0080): night windows. By day a night mission's
+ * ticket is shown with *Opens at nightfall · dusk …* and no button, and a night way is greyed in the
+ * briefing; the server refuses a start by day before the key is stored, so the same key plays at
+ * night. At night the mission plays at the night rate: the tag, and its Iron part in *Details*.
+ */
+test('#12 night windows: locked by day, open at night, the night rate', async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signUp(page, 'Ottilie Brandt');
+  await lift(page, { level: 8, rank: 3, iron: 500, energy: 100 });
+  const LORRY = 'coalport.customs-house.lorry';
+  const start = (key: string, wayId = 'int') =>
+    page.request.post('/api/trpc/mission.start', {
+      data: { locationId: 'coalport.customs-house', missionId: LORRY, wayId, idempotencyKey: key },
+    });
+  try {
+    // By day: the ticket and the briefing's night way.
+    await page.goto('/city/coalport?loc=coalport.customs-house');
+    let sheet = page.locator('[role=dialog][data-layout]');
+    await expect(sheet).toBeVisible();
+    const lorry = sheet.locator(`[data-mission="${LORRY}"]`);
+    await lorry.scrollIntoViewIfNeeded();
+    await expect(lorry.getByTestId('mission-lock')).toHaveText(
+      /^Opens at nightfall · dusk (at \d\d:\d\d|in \d+ min|tomorrow \d\d:\d\d|\w+day \d\d:\d\d)$/,
+    );
+    await expect(lorry.getByTestId('mission-choose')).toHaveCount(0);
+    await expect(lorry.getByTestId('mission-chips')).toContainText('Night rate · +25 % Iron');
+    await settled(page);
+    await shot(lorry, 'night-mission-by-day');
+    const watch = sheet.locator('[data-mission="coalport.customs-house.watch"]');
+    await watch.getByTestId('mission-choose').click();
+    const briefing = page.getByTestId('briefing');
+    const roofs = briefing.locator('[data-way="agi"]');
+    await expect(roofs).toBeDisabled();
+    await expect(roofs.getByTestId('way-night')).toHaveText(/^Opens at nightfall · dusk /);
+    await expect(briefing.locator('[data-way="int"]')).toBeEnabled();
+    await shot(briefing, 'night-way-by-day');
+    await page.keyboard.press('Escape');
+
+    // The server refuses by day, before the key is kept.
+    const key = crypto.randomUUID();
+    const refused = await start(key);
+    expect(refused.ok()).toBe(false);
+    const game = ((await refused.json()) as { error: { data: { game: Record<string, unknown> } } }).error.data.game;
+    expect(game).toMatchObject({ reason: 'MISSION_LOCKED', lock: 'NIGHT' });
+    expect(typeof game.opensAt).toBe('number');
+    const wayRefused = await page.request.post('/api/trpc/mission.start', {
+      data: { locationId: 'coalport.customs-house', missionId: 'coalport.customs-house.watch', wayId: 'agi', idempotencyKey: crypto.randomUUID() },
+    });
+    expect(await wayRefused.text()).toContain('"wayId":"agi"');
+
+    // At night: open, and it plays at the night rate.
+    expect((await page.request.post('/api/test/night', { data: { mode: 'night' } })).ok()).toBe(true);
+    await page.goto('/city/coalport?loc=coalport.customs-house');
+    sheet = page.locator('[role=dialog][data-layout]');
+    const open = sheet.locator(`[data-mission="${LORRY}"]`);
+    await open.scrollIntoViewIfNeeded();
+    await expect(open.getByTestId('mission-lock')).toHaveCount(0);
+    await expect(open.getByTestId('mission-chips')).toContainText('Night rate · +25 % Iron');
+    await settled(page);
+    await shot(open, 'night-mission-at-night');
+    await street(page, { runIn: 'never', checkRoll: 1 });
+    await open.getByTestId('mission-choose').click();
+    await page.getByTestId('briefing').locator('[data-way="int"]').click();
+    await page.getByTestId('briefing-confirm').click();
+    const result = page.locator('[role=dialog]').filter({ has: page.getByTestId('result-buttons') });
+    await expect(result.getByTestId('stamp')).toHaveText('Success');
+    await expect(result.getByRole('heading', { name: 'The yard behind the Anchor' })).toBeVisible();
+    await result.getByTestId('result-details').click();
+    await expect(result.getByTestId('result-details-list')).toContainText(/night rate \+\d+/);
+    await expect(result).toContainText('Night rate · +25 % Iron');
+    await expect(result.getByTestId('receipt')).not.toContainText(/Party XP/);
+    await settled(page);
+    await shot(page, 'night-mission-result');
+    await result.getByRole('button', { name: 'Continue' }).click();
+
+    // The key refused by day plays now.
+    await street(page, { runIn: 'never', checkRoll: 1 });
+    const played = await start(key);
+    expect(played.ok()).toBe(true);
+    const data = ((await played.json()) as {
+      result: { data: { rewards: { iron: { base: number; parts?: Array<{ id: string; amount: number }> } } } };
+    }).result.data;
+    const part = data.rewards.iron.parts?.find((p) => p.id === 'nightRate');
+    expect(part?.amount).toBe(Math.round(data.rewards.iron.base * 0.25));
+  } finally {
+    await page.request.post('/api/test/night', { data: { mode: 'day' } });
+  }
+});

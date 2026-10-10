@@ -1876,6 +1876,10 @@ export const copy = {
     opensAt: (at: string) => `Opens at nightfall · dusk ${at}`,
     /** The ticket tag on rival ground at night (answers §12.2). */
     patrolsTag: 'Night · patrols out',
+    /** A night mission's tag on its ticket (answers §12.1, §18 Q1): *Night rate · +25 % Iron*. */
+    rateTag: (pct: number) => `Night rate · +${pct} % Iron`,
+    /** Its part in the receipt's *Details*, in the risk parts' words: *night rate +15*. */
+    ratePart: (n: number) => `night rate +${n}`,
   },
 } as const;
 

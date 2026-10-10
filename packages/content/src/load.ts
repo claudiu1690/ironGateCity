@@ -479,6 +479,12 @@ export function parseContent(raw: unknown): Content {
           problems.push(`mission "${mission.id}" must be dotted under its location "${location.id}"`);
         if (sentenceCount(mission.briefing) > OUTCOME_TEXT_MAX_SENTENCES)
           problems.push(`mission "${mission.id}" briefing has more than 4 sentences`);
+        // Review 5 (tech design §7.1, ADR 0080): a night mission's ways carry no window; an ordinary
+        // mission keeps at least one way it can be done by day.
+        if (mission.window && mission.ways.some((w) => w.window))
+          problems.push(`mission "${mission.id}" has a window, so its ways cannot have one`);
+        if (!mission.window && mission.ways.every((w) => w.window))
+          problems.push(`mission "${mission.id}" needs at least one way without a window (the day's)`);
         const texts: Array<[string, string]> = Object.entries(mission.text).map(
           ([o, t]) => [`${o} text`, t.body] as [string, string],
         );
@@ -491,6 +497,15 @@ export function parseContent(raw: unknown): Content {
         }
       }
     });
+  }
+
+  // Review 5 (tech design §7.1): night content is extra, so every mission Level a city offers has a
+  // mission without a window there (the ladder is complete by day).
+  for (const city of content.cities) {
+    const missions = city.locations.flatMap((l) => l.missions ?? []);
+    for (const level of new Set(missions.map((m) => m.level)))
+      if (!missions.some((m) => m.level === level && !m.window))
+        problems.push(`cities.${city.id}: every Level-${level} mission is a night mission (the day's ladder needs one)`);
   }
 
   // Jobs (review 1: a wage, no shift action): each at a loaded location.

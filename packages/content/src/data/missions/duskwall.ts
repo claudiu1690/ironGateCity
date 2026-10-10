@@ -42,12 +42,36 @@ export const duskwallMissions: MissionsByPlace = {
       briefing: "The barrier comes down at eight and the customs men go to the inn, all but two. Between eight and midnight the road is quiet, and what goes up it goes up without a stamp. There's a rock above the barrier with a view of the hut, and a lamp on the hut that goes out when it suits them.",
       ways: [
         { id: 'int', title: 'From the rock, with a flask', stats: ['int'], hint: 'Sit still, count the lorries, write down the plates. Only the cold is against you.' },
-        { id: 'agi', title: 'Along the ditch to the hut', stats: ['agi'], hint: 'Close enough to hear the chits read. Close enough to be heard.' },
+        { id: 'agi', title: 'Along the ditch to the hut', stats: ['agi'], hint: 'Close enough to hear the chits read. Close enough to be heard.', window: 'night' },
       ],
       text: {
         success: { headline: 'What goes up at eleven', body: "At eleven the barrier lifts for a lorry with no lights and a man in the hut doesn't write anything down. Two plates, a name said twice, and the time. The notebook has a page the customs would pay for." },
         partial: { headline: 'The lamp goes out', body: "The lamp on the hut dies at ten and the road becomes engine noise and shapes. One plate before the dark. Something went up tonight without a stamp; you'll need another night to say whose." },
         failure: { headline: 'Nothing goes up', body: 'Four hours on the rock and the barrier stays down. A customs man walks the ditch twice with a lamp and finds your flask the second time. You go home with a cold and an empty page, and the hut has your face.' },
+      },
+    },
+    {
+      // Review 5 (answers §12.1, §18.2, §18.2a): a night mission, at the night rate.
+      id: 'duskwall.checkpoint.log',
+      name: "Lift the checkpoint's log after lights-out",
+      tier: 2,
+      type: 'theft',
+      energy: 15,
+      level: 10,
+      difficulty: 18,
+      requires: { rank: 3 },
+      target: 'vanguard',
+      pool: ['street-enforcer', 'city-police'],
+      window: 'night',
+      briefing: "The checkpoint's log says who crossed the Pass and when, in the night clerk's hand. The club reads it on Fridays. Anyone else who reads it first has a week of their business.",
+      ways: [
+        { id: 'agi', title: 'Through the window while the stove is lit', stats: ['agi'], hint: 'A lit stove keeps him in the back room. The book is on the table, and the window sticks.' },
+        { id: 'cha', title: 'Talk the night clerk into a smoke outside', stats: ['cha'], hint: 'He has a cold hut, a long night and nobody to talk to. Bring the tobacco.' },
+      ],
+      text: {
+        success: { headline: 'A week of the Pass', body: "The log is a school exercise book in the night clerk's hand, and a week of the Pass is in it: who crossed, when, who was turned back and why. It is in your coat before the stove needs feeding." },
+        partial: { headline: 'Three pages', body: 'The clerk comes back for his tobacco and you get three pages, torn clean, before the window. Thursday to Saturday, and a name the club will miss on Friday. The rest stays by the stove.' },
+        failure: { headline: 'The stove goes out', body: 'The stove goes out and the clerk comes to see why, with the lamp. You are gone by the time he reaches the window, and the book is where it was. The Pass has your face now.' },
       },
     },
   ],
@@ -65,7 +89,7 @@ export const duskwallMissions: MissionsByPlace = {
       pool: ['party-thug', 'city-police'],
       briefing: "The Alliance has papered the inn's long wall overnight, where every carter on the pass reads while he waits for the barrier. The landlord doesn't care who papers his wall; the customs men on the bench do. Whatever's on the wall when the first lorry comes down is what the pass reads today.",
       ways: [
-        { id: 'agi', title: 'Before first light, from the yard', stats: ['agi'], hint: 'Nobody about but the dog. One sheet at a time.' },
+        { id: 'agi', title: 'Before first light, from the yard', stats: ['agi'], hint: 'Nobody about but the dog. One sheet at a time.', window: 'night' },
         { id: 'str', title: "At the long table's dinner, before the whole bench", stats: ['str'], hint: 'Rip them down with the bench watching and let them say so.', runIn: 25 },
       ],
       text: {
@@ -114,7 +138,7 @@ export const duskwallMissions: MissionsByPlace = {
       pool: ['vanguard-doorman', 'city-police'],
       briefing: "The Vanguard's duplicator runs in the basement of Beacon House every night, and five hundred sheets come out of it by morning. The yard wall is high, the doorman's round is at eleven, and a tradesman with a box of parts walks in at the side door. One bent drum and the district is quiet for a week.",
       ways: [
-        { id: 'agi', title: 'Over the yard wall at night', stats: ['agi'], hint: 'The coal chute, the dark basement, the drum. In and out before the round.' },
+        { id: 'agi', title: 'Over the yard wall at night', stats: ['agi'], hint: 'The coal chute, the dark basement, the drum. In and out before the round.', window: 'night' },
         { id: 'cha-int', title: 'Walk in as a tradesman', stats: ['cha', 'int'], hint: 'A box, a cap, a grievance about the stencils. Nobody questions a man with a box.' },
         { id: 'int', title: "Learn the doorman's round first", stats: ['int'], hint: "Know the house's hours. Then the basement is yours for twenty minutes." },
       ],
@@ -137,7 +161,7 @@ export const duskwallMissions: MissionsByPlace = {
       pool: ['vanguard-doorman', 'city-police'],
       briefing: "Every Vanguard member in Duskwall is a line in a register on the clerk's desk at Beacon House: name, street, dues paid, in order. The clerk takes his dinner at one and leaves the window on the latch. Your branch would pay well for a copy, and Beacon House would pay more to know who took it.",
       ways: [
-        { id: 'agi', title: "The clerk's window at dinner time", stats: ['agi'], hint: 'Twelve minutes, a pencil, and the window he leaves on the latch.' },
+        { id: 'agi', title: "The clerk's window at dinner time", stats: ['agi'], hint: 'Twelve minutes, a pencil, and the window he leaves on the latch.', window: 'night' },
         { id: 'cha-int', title: 'Charm the clerk into a copy', stats: ['cha', 'int'], hint: "He's bored and underpaid and nobody at Beacon House ever asks him anything." },
       ],
       text: {

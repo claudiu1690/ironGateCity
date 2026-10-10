@@ -344,7 +344,7 @@ function firstPin(
  * §4.1), and no gate unmet (Level, Rank, reputation, record: `missionGate`). The capital's
  * `leader` missions always have a target other than the actor, so they are offered. Energy, Heat,
  * Health and the cells are left out: they pass within the day. The slot-B mission order is only drawn
- * when this is not empty, and its pin is the first of them.
+ * when this is not empty, and its pin is the first of them. Review 5: night missions are left out.
  */
 export function startableMissions(
   content: GameContent,
@@ -362,6 +362,9 @@ export function startableMissions(
     for (const mission of content.missionsAt(location.id)) {
       if (mission.target !== undefined && mission.target !== 'leader' && mission.target === doc.factionId)
         continue;
+      // Review 5 (tech design §7.3, answers §12.1: night work is extra): a night mission never makes
+      // the mission order offerable nor takes its pin. An ordinary mission keeps a way by day.
+      if (mission.window === 'night') continue;
       const hq = location.factionId ?? (location.kind === 'faction-hq' ? city.homeFactionId : undefined);
       const gate = missionGate({
         level: doc.level,

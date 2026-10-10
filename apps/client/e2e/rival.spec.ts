@@ -113,7 +113,8 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   const spike = page.locator('[data-mission="duskwall.beacon-house.spike"]');
   await spike.scrollIntoViewIfNeeded();
   await spike.getByTestId('mission-choose').click();
-  await page.getByTestId('briefing').getByTestId('way-row').first().click();
+  // Review 5 (ADR 0080): by day the Agility way is a night way; the first open way plays.
+  await page.getByTestId('briefing').locator('[data-testid=way-row]:not([disabled])').first().click();
   await page.getByTestId('briefing-confirm').click();
   const caught = resultModal(page);
   await expect(caught.getByTestId('stamp')).toHaveText('Taken in');

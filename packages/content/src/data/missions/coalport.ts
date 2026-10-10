@@ -42,12 +42,34 @@ export const coalportMissions: MissionsByPlace = {
       briefing: 'The customs sheds close at six and open again, for some people, at ten. The mole has a bollard with a view of both doors and a lamp that goes out at eleven. Whoever comes and goes after that has a reason, and so will the harbour police if they find you there.',
       ways: [
         { id: 'int', title: 'From the mole, with a flask', stats: ['int'], hint: 'Sit still, count, write it down. The cold is the only thing against you.' },
-        { id: 'agi', title: 'Along the shed roofs', stats: ['agi'], hint: 'Closer, quieter, and a long way down if the slates go.' },
+        { id: 'agi', title: 'Along the shed roofs', stats: ['agi'], hint: 'Closer, quieter, and a long way down if the slates go.', window: 'night' },
       ],
       text: {
         success: { headline: "The ten o'clock door", body: "At ten a shed door opens that was locked at six. Two lorries in without a stamp, one man out with a case, and a plate you've seen on the quays. It all goes in the notebook, with the times." },
         partial: { headline: 'A lamp goes out early', body: "The lamp dies at half past nine and the sheds become shapes. You get one lorry and one plate before the rest is guesswork. Something came in tonight; you'll need another night to say what." },
         failure: { headline: 'A long cold nothing', body: 'Four hours on the mole and the sheds stay shut. A harbour policeman walks past twice and looks at you the second time. You go home with a cold and an empty page, and the sheds have your face.' },
+      },
+    },
+    {
+      // Review 5 (answers §12.1, §18.2, §18.2a): a night mission, at the night rate.
+      id: 'coalport.customs-house.lorry',
+      name: "Follow the ten o'clock lorry",
+      tier: 2,
+      type: 'surveillance',
+      energy: 12,
+      level: 8,
+      difficulty: 16,
+      pool: ['city-police'],
+      window: 'night',
+      briefing: 'The shed door that opens at ten lets a lorry out at eleven, with no stamp and no lights. Somewhere in Coalport it unloads. The man who knows where owns the quay, and the man who finds out owns him.',
+      ways: [
+        { id: 'agi', title: 'On foot, by the back lanes', stats: ['agi'], hint: 'Lights in sight, face out of them. The swing bridge is the only thing against you.' },
+        { id: 'int', title: 'From the tram, a stop behind', stats: ['int'], hint: 'A window seat and a notebook. Nobody follows a lorry from a tram, which is the point.' },
+      ],
+      text: {
+        success: { headline: 'The yard behind the Anchor', body: "The lorry takes the long way round the basin and turns in at a yard behind the Anchor, where a man with a lantern counts it in. The yard, the man, the time: the notebook's best page. The quay's owner owns the Anchor too." },
+        partial: { headline: 'Lost at the bridge', body: 'You keep the lorry to the swing bridge, which opens for a barge and closes with you on the wrong side. One street name and the lights going north. Another night, from the bridge end.' },
+        failure: { headline: 'A lorry is a lorry', body: "It stops at the first corner and the driver gets out to look at you, long enough to be sure. Then it goes, unhurried, somewhere you aren't. You walk home by the lit streets. The sheds have your face." },
       },
     },
   ],
@@ -65,7 +87,7 @@ export const coalportMissions: MissionsByPlace = {
       pool: ['street-enforcer', 'city-police'],
       briefing: 'The Vanguard has papered the fish quay overnight: a poster on every pillar under the iron roof, ORDER AND BREAD above the gutting tables. The market opens at six and the beadle makes his round at seven. Whatever is on the pillars at eight is what the Far Bank reads today.',
       ways: [
-        { id: 'agi', title: 'Before the market, in the dark', stats: ['agi'], hint: 'Nobody about, nobody to see. One pillar at a time.' },
+        { id: 'agi', title: 'Before the market, in the dark', stats: ['agi'], hint: 'Nobody about, nobody to see. One pillar at a time.', window: 'night' },
         { id: 'str', title: 'At the busiest, in plain sight', stats: ['str'], hint: 'Rip them down with the quay watching and let them see you do it.', runIn: 25 },
       ],
       text: {
@@ -114,7 +136,7 @@ export const coalportMissions: MissionsByPlace = {
       pool: ['branch-inspector', 'city-police'],
       briefing: "The Collective's duplicator runs in the back room of the Union Hall at night, and five hundred flyers come out of it by morning. The yard wall is low, the caretaker's round is at eleven, and a tradesman with a box of parts walks in at the front door. One bent drum and the branch is quiet for a week.",
       ways: [
-        { id: 'agi', title: 'Over the yard wall at night', stats: ['agi'], hint: 'The back window, the dark room, the drum. In and out before the round.' },
+        { id: 'agi', title: 'Over the yard wall at night', stats: ['agi'], hint: 'The back window, the dark room, the drum. In and out before the round.', window: 'night' },
         { id: 'cha-int', title: 'Walk in as a tradesman', stats: ['cha', 'int'], hint: 'A box, a cap, a grievance about the stencils. Nobody questions a man with a box.' },
         { id: 'int', title: "Wait for the caretaker's round", stats: ['int'], hint: "Learn the hall's hours first. Then the room is yours for twenty minutes." },
       ],
@@ -137,7 +159,7 @@ export const coalportMissions: MissionsByPlace = {
       pool: ['branch-inspector', 'city-police'],
       briefing: "Every Collective member in Coalport is a line in a ledger on the clerk's desk at the Union Hall: name, street, dues paid. The clerk takes his dinner at one and leaves the window open. Your branch would pay well for a copy, and the Collective would pay more to know who took it.",
       ways: [
-        { id: 'agi', title: "The clerk's window at dinner time", stats: ['agi'], hint: 'Twelve minutes, a pencil, and the window he leaves open.' },
+        { id: 'agi', title: "The clerk's window at dinner time", stats: ['agi'], hint: 'Twelve minutes, a pencil, and the window he leaves open.', window: 'night' },
         { id: 'cha-int', title: 'Charm the clerk into a copy', stats: ['cha', 'int'], hint: "He's bored and underpaid and nobody ever asks him anything." },
       ],
       text: {

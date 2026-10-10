@@ -610,7 +610,8 @@ test('#19–#20 the cells: 20 + Heat ÷ 2, orders off, the station list from a s
   const t = page.locator('[data-mission="coalport.far-bank.posters"]');
   await t.scrollIntoViewIfNeeded();
   await t.getByTestId('mission-choose').click();
-  await page.getByTestId('briefing').getByTestId('way-row').first().click();
+  // Review 5 (ADR 0080): by day the Agility way is a night way; the first open way plays.
+  await page.getByTestId('briefing').locator('[data-testid=way-row]:not([disabled])').first().click();
   await page.getByTestId('briefing-confirm').click();
   const result = resultModal(page);
   await expect(result).toContainText('Your record: taken in · 1 mark · On file');

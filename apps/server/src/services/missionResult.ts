@@ -15,6 +15,8 @@ import {
   projectEnergy,
   rivalGroundIn,
   sourcesOf,
+  NIGHT_RATE,
+  NIGHT_RATE_PART,
 } from '@irongate/rules';
 import type {
   ActionResult,
@@ -139,6 +141,9 @@ export function buildMissionResult(i: {
   }
   if (f.rewards.fxp.parts?.some((p) => p.id === FIRED_UP.id))
     bonusTags.push({ id: FIRED_UP.id, label: FIRED_UP.label, note: '+10 % Party XP' });
+  // Review 5 (answers §12.1, §18 Q1): a night mission's rate, its part in the receipt's *Details*.
+  if (f.rewards.iron.parts?.some((p) => p.id === NIGHT_RATE_PART.id))
+    bonusTags.push({ id: NIGHT_RATE_PART.id, label: NIGHT_RATE_PART.label, note: `+${NIGHT_RATE.ironPct} % Iron` });
   const recordPart = f.rewards.iron.parts?.find((p) => p.id === 'record');
   if (recordPart) bonusTags.push({ id: 'record', label: 'Your record', note: `Iron ${recordPart.amount}` });
 

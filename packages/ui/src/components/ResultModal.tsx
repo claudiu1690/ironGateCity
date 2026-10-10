@@ -1274,6 +1274,8 @@ const RISK_PARTS: Record<string, (n: number) => string> = {
   fullStrength: (n) => copy.risk.parts.fullStrength(Math.abs(n)),
   paidOff: (n) => copy.risk.parts.paidOff(Math.abs(n)),
   record: (n) => copy.risk.yourRecordPart(Math.abs(n)),
+  // Review 5 (answers §18 Q1): a night mission's Iron part, *night rate +15*.
+  nightRate: (n) => copy.night.ratePart(Math.abs(n)),
 };
 
 function partsNote(line: RewardLine): string | null {

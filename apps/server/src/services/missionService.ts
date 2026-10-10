@@ -14,6 +14,7 @@ import {
   priceLines,
   resolveMission,
   standingView,
+  windowLock,
 } from '@irongate/rules';
 import type {
   ActionResult,
@@ -40,6 +41,7 @@ import { runKeyedAction } from './keyedAction';
 import { keySeed } from './keyGuard';
 import { missionCtx, missionInput } from './missionCtx';
 import { buildMissionResult } from './missionResult';
+import { nightAt } from './night';
 import type { RunInBlock } from './missionResult';
 import { moveOpinion, placeWrites, readPlace } from './place';
 import type { PlaceCtx } from './place';
@@ -113,6 +115,7 @@ function missionRefusal(
   located: LocatedMission,
   district: PlaceCtx['district'] | undefined,
   now: number,
+  way: { id: string; window?: 'night' },
 ): GameError | null {
   const blocked = notFree(c);
   if (blocked) return blocked;
@@ -149,6 +152,16 @@ function missionRefusal(
   });
   if (gate?.reason === 'RECORD') return new GameError('RECORD_BARRED', { locationId: located.location.id });
   if (gate) return new GameError('MISSION_LOCKED', { lock: gate.reason, need: gate.need });
+  // Review 5 (tech design §7.3, ADR 0080): a night window by day, refused before the key is stored
+  // (and again in the transaction, at the act's time), so the same key plays at dusk.
+  const night = windowLock({ mission: located.mission, way, night: nightAt(now) });
+  if (night) {
+    return new GameError('MISSION_LOCKED', {
+      lock: 'NIGHT',
+      opensAt: night.opensAt,
+      ...(located.mission.window ? {} : { wayId: way.id }),
+    });
+  }
   return null;
 }
 
@@ -171,7 +184,7 @@ export async function startMission(deps: {
   const stored = () => storedStart(content, c0._id, input, deps.now());
   const prior = await stored();
   if (prior) return prior;
-  const refusal = missionRefusal(content, c0, located, undefined, deps.now());
+  const refusal = missionRefusal(content, c0, located, undefined, deps.now(), way);
   if (refusal) throw refusal.toTRPC();
   const force = streetHooks.take(c0._id.toHexString(), input.idempotencyKey);
 
@@ -192,7 +205,7 @@ export async function startMission(deps: {
       // Slice 5 (tech design §8.2): an arrived journey here is closed first (its ignore effects).
       c = await closeArrivalHere(content, session, c, now);
       const ctx = await readPlace(content, session, c, located, today);
-      const refused = missionRefusal(content, c, located, ctx.district, now);
+      const refused = missionRefusal(content, c, located, ctx.district, now, way);
       if (refused) throw refused;
 
       // QA M1: one seed per key, so a re-run of this transaction draws the same rolls.

@@ -21,6 +21,15 @@ const resultModal = (page: Page) =>
   page.getByRole('dialog').filter({ has: page.getByTestId('result-buttons') });
 const mission = (page: Page, id: string) => page.locator(`[data-mission="${id}"]`);
 
+// Review 5 (tech design §7.5, ADR 0080): the poster's and the duplicator's Agility ways are night
+// ways, so these flows play at night (the seam's test mode) and the suite's day is restored after.
+test.beforeEach(async ({ request }) => {
+  expect((await request.post('/api/test/night', { data: { mode: 'night' } })).ok()).toBe(true);
+});
+test.afterEach(async ({ request }) => {
+  await request.post('/api/test/night', { data: { mode: 'day' } });
+});
+
 test('missions: the first, Again, a run-in paid off, the infirmary, the cells, luck, the record', async ({
   page,
   browser,

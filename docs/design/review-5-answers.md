@@ -415,7 +415,7 @@ Every rule with a day in it runs on the **real City Day** (00:00 UTC): the wage 
 | `coalport.customs-house.lorry` | **Follow the ten o'clock lorry** | Customs House (The Harbour) | surveillance · 12 · Level 8 · everyone · pool `city-police` | *On foot, by the back lanes* (Agility) · *From the tram, a stop behind* (Intelligence) | *The shed door that opens at ten lets a lorry out at eleven, with no stamp and no lights. Somewhere in Coalport it unloads. The man who knows where owns the quay, and the man who finds out owns him.* |
 | `duskwall.checkpoint.log` | **Lift the checkpoint's log after lights-out** | Frontier Checkpoint (The Pass) | theft · 15 · Level 10 · Rank 3 · target `vanguard` · pool `street-enforcer`, `city-police` | *Through the window while the stove is lit* (Agility) · *Talk the night clerk into a smoke outside* (Charisma) | *The checkpoint's log says who crossed the Pass and when, in the night clerk's hand. The club reads it on Fridays. Anyone else who reads it first has a week of their business.* |
 | `ashford.brewery.dawn-shift` | **Paste over the brewery gate before the dawn shift** | The Brewery (The Wharf) | vandalism · 10 · Level 6 · Rank 3 · target `alliance` · pool `party-thug`, `city-police` | *Lamp out, bucket and brush* (Agility) · *Two of you and a ladder, quickly* (Strength) | *The Alliance papers the brewery gate for the dawn shift, when four hundred men read whatever is there. The watchman does his round at four. What is on the gate at five is the morning's news.* |
-| `irongate.tram-junction.last-tram` | **Ride the last tram with the Eastside flyers** | Tram Junction (Station & Market) | propaganda · 10 · Level 10 · everyone · pool `street-enforcer`, `party-thug` | *A seat by the door, a flyer for every stop* (Charisma + Intelligence) · *The whole bundle on the rear platform, and off at the bridge* (Agility) | *The last tram to Eastside carries the late shift home, two hundred people with nothing to read. The conductor doesn't mind flyers; he minds trouble. Who gets off at the Iron Bridge decides which it is.* |
+| `irongate.tram-junction.last-tram` | **Ride the last tram with the Eastside flyers** | Tram Junction (Station & Market) | speech · 15 · Level 10 · everyone · pool `street-enforcer`, `party-thug` (was *propaganda · 10*; corrected §18.2a, 9 Oct 2026) | *A seat by the door, a flyer for every stop* (Charisma + Intelligence) · *The whole bundle on the rear platform, and off at the bridge* (Agility) | *The last tram to Eastside carries the late shift home, two hundred people with nothing to read. The conductor doesn't mind flyers; he minds trouble. Who gets off at the Iron Bridge decides which it is.* |
 
 Outcome texts (Success / Partial / Failure, ≤ 240 each) are written with the slice that builds them, in the §5 catalogue's shape.
 
@@ -434,7 +434,7 @@ Two rules, both only on rival ground, both only at night, neither touching an ab
 
 With option B the night is two hours in six, so a rival-ground visit is in the dark a third of the time and a night mission's window comes round four times a day. Without it (the UTC 20:00–06:00 night) the same rules apply ten hours in twenty-four, and a player's zone decides whether their evening is the game's night; the rules still hold, less fairly. §12 does not need §11, but reads better with it.
 
-**Numbers.** A thirty-tap rival-ground day spent wholly at night: 7.5 run-ins instead of 4.5 (economy §19.6), about +180 Iron of pay-offs or an infirmary stay more; the +50 % Party XP is unchanged, so the night pays the same and costs more, which is what *the night is dangerous* should mean (§25.4). Four night missions at +25 % Iron are at most +60 Iron a day.
+**Numbers.** A thirty-tap rival-ground day spent wholly at night: 7.5 run-ins instead of 4.5 (economy §19.6), about +180 Iron of pay-offs or an infirmary stay more; the +50 % Party XP is unchanged, so the night pays the same and costs more, which is what *the night is dangerous* should mean (§25.4). Four night missions at +25 % Iron are at most about +60 Iron a day (52 Energy at the tier-2 rate, the theft's ×2 included: ~290 Iron of base pay, +72 of night rate on a clean run; §18.2a).
 
 **Where (if taken):** `missions[].window` and `ways[].window` on the schema; `copy.night.*`; the run-in formula (`packages/rules`) and the night stop in the city read (idempotent per night key per city); the four missions and the *Patrol* card in content; `slice-5-risk.md` §10–§11 (addendum); GDD §13.1, §14.12, §20; Appendix C #101.
 
@@ -710,6 +710,25 @@ The streets: `coalport.patrol.street = 'Foundry Row'`, `duskwall … 'Rampart Ro
 | `irongate.tram-junction.last-tram` | **The whole car** · A flyer for every stop and a word for every face, and by the Iron Bridge the whole car is reading. The conductor takes one for his wife. Two hundred people get off in Eastside with your side in their pockets. | **Half a car** · The front half of the car takes flyers and the back half takes offence, and the conductor rings for the bridge before it comes to anything. A hundred flyers out and a hundred still in your coat. | **Off at the bridge** · A man in the back seat wants to know who printed it, loudly, and the car takes his side. The conductor stops at the bridge and says this is your stop. The flyers go out of the window behind you. |
 
 Outcome headlines for the paper's *In Print* line, where a mission prints one: the Success and Partial headlines above.
+
+### 18.2a The night missions' way hints, and the last tram's type (9 Oct 2026)
+
+**The hints** (`ways[].hint`, one line, ≤ 90 characters, the slice-5 house style: the thing you do, then the thing against you; no party named unless the briefing names it):
+
+| Mission | Way | Hint |
+|---|---|---|
+| `coalport.customs-house.lorry` | `agi` *On foot, by the back lanes* | Lights in sight, face out of them. The swing bridge is the only thing against you. |
+| `coalport.customs-house.lorry` | `int` *From the tram, a stop behind* | A window seat and a notebook. Nobody follows a lorry from a tram, which is the point. |
+| `duskwall.checkpoint.log` | `agi` *Through the window while the stove is lit* | A lit stove keeps him in the back room. The book is on the table, and the window sticks. |
+| `duskwall.checkpoint.log` | `cha` *Talk the night clerk into a smoke outside* | He has a cold hut, a long night and nobody to talk to. Bring the tobacco. |
+| `ashford.brewery.dawn-shift` | `agi` *Lamp out, bucket and brush* | Dark gate, cold paste, one sheet at a time. The watchman's round is at four. |
+| `ashford.brewery.dawn-shift` | `str` *Two of you and a ladder, quickly* | Top to bottom of the gate in ten minutes. Fast, loud, and the watchman has ears. |
+| `irongate.tram-junction.last-tram` | `cha-int` *A seat by the door, a flyer for every stop* | A word for every face that gets on. The conductor is with you while nobody shouts. |
+| `irongate.tram-junction.last-tram` | `agi` *The whole bundle on the rear platform, and off at the bridge* | Faster than anyone can object, then the step at the Iron Bridge. Don't miss it. |
+
+**The last tram's type.** §12.1 gave it *propaganda · 10*, which is a tier-1 type; a mission takes one of the six tier-2 types (GDD §13.3), and the loader holds its Energy to the type's. The last tram is **`speech` · 15 Energy**: legal, persuasion of everyone on the car, no `target`, no `requires.rank`, Party XP at the type's rate, run-in 5 % (+10 at night on rival ground, §12.2), no caught check, no mark; its card is the type's (`scene.mission-speech`) and the player reads it as *Mission · Speech*. Not `vandalism` (nothing is defaced, nobody is targeted) and not `surveillance` (it moves opinion). Difficulty 20 at Level 10 in the capital (18 + 2).
+
+**What the night rate is, said plainly.** The +25 % is on **Iron only**; a night mission's other rewards are its type's as anywhere (the speech's and the vandalism's Party XP, the theft's double Iron, the surveillance's nothing but Iron and XP). "Never Party XP" in §12.1, GDD §13.1 and economy §25.4 describes the bonus, not the mission. The four together are 52 Energy a day at most, about 32 Party XP from the three types that give it: inside the day's noise, so Rank pacing is as §25.4 says.
 
 ### 18.3 The prize decks (`hl.unrest-pushed`, `hl.v.unrest-pushed`, `hl.a.unrest-pushed`; `{city}`, `{party}` the home party, `{top}` the reader's party's top three; decks ≤ 200)
 

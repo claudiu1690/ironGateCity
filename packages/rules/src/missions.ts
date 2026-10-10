@@ -237,6 +237,27 @@ export function oddsBand(chance: number): OddsBand {
   return chance >= 70 ? 'good' : chance >= 50 ? 'fair' : 'long';
 }
 
+/** Review 5 (answers §12.1, ADR 0080): a mission's or a way's window. */
+export type ContentWindow = 'night';
+
+/**
+ * Review 5 (tech design §7.2, ADR 0080): a night window closed by day: the mission's own, else the
+ * way's. `opensAt` is the next dusk. Null at night, or with no window.
+ */
+export function windowLock(i: {
+  mission: { window?: ContentWindow };
+  way?: { window?: ContentWindow };
+  night: { night: boolean; nextDusk: number };
+}): { lock: 'NIGHT'; opensAt: number } | null {
+  if (i.night.night) return null;
+  if (i.mission.window === 'night' || i.way?.window === 'night') return { lock: 'NIGHT', opensAt: i.night.nextDusk };
+  return null;
+}
+
+/** Review 5 (answers §12.1, §18 Q1): a night mission's Iron +25 % of its base, never Party XP. */
+export const NIGHT_RATE = { ironPct: 25 } as const;
+export const NIGHT_RATE_PART = { id: 'nightRate', label: 'Night rate' } as const;
+
 /** The record's Iron line on a mission (design §7.3): *your record −6*. */
 export const RECORD_PART = { id: 'record', label: 'Your record' } as const;
 
@@ -257,10 +278,14 @@ export function tier2Rewards(i: {
   opinionFactors?: readonly SwingFactor[];
   /** The record's Iron penalty, −10 / −20 / −30 (0: none). */
   recordIronPct?: number;
+  /** Review 5 (ADR 0080): a night mission (its own window): the night rate on the Iron. */
+  nightRate?: boolean;
 }): Rewards {
   const spec = MISSION_TYPES[i.type];
   const ironShares = [
     ...(i.ironShares ?? []),
+    // Before the record's cut (tech design §7.2).
+    ...(i.nightRate ? [{ ...NIGHT_RATE_PART, share: NIGHT_RATE.ironPct / 100 }] : []),
     ...(i.recordIronPct ? [{ ...RECORD_PART, share: i.recordIronPct / 100 }] : []),
   ];
   return withAllParts(
@@ -353,6 +378,8 @@ export interface MissionInput {
   force?: { checkRoll?: number; runIn?: 'next' | 'never'; opponentId?: string };
   /** Review 5 (ADR 0080): night at the act; on rival ground the run-in +10 and the police half. */
   night?: boolean;
+  /** Review 5 (ADR 0080): the mission's own window is the night: the night rate on its Iron. */
+  nightRate?: boolean;
 }
 
 /** The pure start of a mission, stored in the encounter while a run-in is pending (ADR 0032). */
@@ -471,6 +498,7 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
     ironShares: shares.iron,
     opinionFactors: factors,
     recordIronPct,
+    ...(i.nightRate ? { nightRate: true } : {}),
   };
   const bonusFor = (a: OrdersAdvance) =>
     a.advanced !== null || !DIRECTIVES.bonusOnlyWhileOpen ? DIRECTIVES.matchFxpBonus : 0;

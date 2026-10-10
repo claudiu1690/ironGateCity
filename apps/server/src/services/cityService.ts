@@ -63,7 +63,7 @@ import type {
 import { gameError } from '../gameError';
 import { leaderOf } from './actionService';
 import { cycleKeyOf } from './ledger';
-import { agilityWay, missionCtx, rememberedWay, wayPreview, wayRisk } from './missionCtx';
+import { agilityWay, missionCtx, missionNightLock, rememberedWay, wayNightLock, wayPreview, wayRisk } from './missionCtx';
 import type { MissionCtx } from './missionCtx';
 import { issueEffectsOn, modifiersFor, ordinanceIdOn } from './modifiers';
 import { pickArt } from './art';
@@ -149,8 +149,20 @@ export function missionView(
   const { mission, typeSpec, rivalGround: rival } = ctx;
   const previews = mission.ways.map((w) => wayPreview(ctx, w));
   const risks = mission.ways.map((w) => wayRisk(ctx, w));
-  const remembered = rememberedWay(ctx, c);
-  const suggested = suggestedWay(mission.ways, previews);
+  // Review 5 (tech design §7.3, ADR 0080): a night way by day is shown, not tappable; a remembered
+  // one loses *Again* (the ticket reads *Choose a way*), and the ticket speaks for an open way.
+  const nightLocks = mission.ways.map((w) => wayNightLock(ctx, w));
+  const lastWay = rememberedWay(ctx, c);
+  const remembered = lastWay !== null && nightLocks[mission.ways.findIndex((w) => w.id === lastWay)] ? null : lastWay;
+  const open = mission.ways.flatMap((w, i) => (nightLocks[i] ? [] : [{ way: w, preview: previews[i]! }]));
+  const suggested =
+    open.length > 0
+      ? suggestedWay(
+          open.map((o) => o.way),
+          open.map((o) => o.preview),
+        )
+      : suggestedWay(mission.ways, previews);
+  const missionNight = missionNightLock(ctx);
   const ticketIdx = Math.max(
     0,
     mission.ways.findIndex((w) => w.id === (remembered ?? suggested)),
@@ -173,6 +185,8 @@ export function missionView(
   if (rival) placeTags.push({ kind: 'rivalGround', fxpPct: rival.unrest ? 75 : 50 });
   // Review 5 (ADR 0080): *Night · patrols out* on rival ground at night (the run-in's higher base).
   if (rival && ctx.night) placeTags.push({ kind: 'night' });
+  // Review 5 (answers §12.1, §18 Q1): a night mission's *Night rate · +25 % Iron*.
+  if (mission.window === 'night') placeTags.push({ kind: 'nightRate', ironPct: 25 });
   if (ctx.recordIronPct < 0) placeTags.push({ kind: 'record', ironPct: ctx.recordIronPct, level: ctx.record });
   // On rival ground a speech too draws from the home faction (design §11.2); a mission against
   // another visitor's party is not under the home faction's cap.
@@ -201,6 +215,7 @@ export function missionView(
         preview: previews[i]!,
         agility: agilityWay(w),
         risk: differs ? { heat: own.heat, runInChance: own.runInChance } : null,
+        night: nightLocks[i] ?? null,
       };
     }),
     remembered,
@@ -221,7 +236,10 @@ export function missionView(
           need: ctx.gate.need,
           ...(ctx.gate.reason === 'RANK' ? { rankTitle: rankTitle(content, c, ctx.gate.need) } : {}),
         }
-      : null,
+      : missionNight
+        ? { reason: 'NIGHT', need: 0, opensAt: missionNight.opensAt }
+        : null,
+    ...(mission.window ? { window: mission.window } : {}),
     art: { rung: 'scene', asset: assetView(content, mission.card ?? content.missionCard(mission.type)) },
   };
 }

@@ -2186,7 +2186,9 @@ export type PlaceTagView =
   // Review 4 #18 (answers §18): Familiar or better here, *Known here · better odds*.
   | { kind: 'known' }
   // Review 5 (ADR 0080): on rival ground at night, *Night · patrols out*.
-  | { kind: 'night' };
+  | { kind: 'night' }
+  // Review 5 (answers §12.1, §18 Q1): a night mission, *Night rate · +25 % Iron*.
+  | { kind: 'nightRate'; ironPct: 25 };
 
 /** Screens §6.1: the residence card's state, chosen on the server per district. */
 export interface ResidenceCardView {
@@ -2394,6 +2396,8 @@ export interface MissionView {
     agility: boolean;
     /** Only when it differs from the ticket's. */
     risk: { heat: number; runInChance: number } | null;
+    /** Review 5 (ADR 0080): a night way closed by day (not tappable; *Opens at nightfall*), else null. */
+    night?: { opensAt: number } | null;
   }>;
   remembered: string | null;
   suggested: string;
@@ -2402,7 +2406,18 @@ export interface MissionView {
   tags: OrdinanceTagView[];
   placeTags: PlaceTagView[];
   order: { id: string; title: string; progress: number; target: number } | null;
-  locked: { reason: 'LEVEL' | 'RANK' | 'STANDING' | 'RECORD'; need: number; rankTitle?: string } | null;
+  /**
+   * The first unmet gate; review 5 (ADR 0080): `NIGHT` for a night mission by day, with `opensAt`
+   * (the next dusk; a Level or Rank lock wins, as the longer wait).
+   */
+  locked: {
+    reason: 'LEVEL' | 'RANK' | 'STANDING' | 'RECORD' | 'NIGHT';
+    need: number;
+    rankTitle?: string;
+    opensAt?: number;
+  } | null;
+  /** Review 5: a night mission (its own window). */
+  window?: 'night';
   art: ResultArt;
 }
 

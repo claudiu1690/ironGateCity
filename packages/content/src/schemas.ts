@@ -256,6 +256,8 @@ export const Way = z.strictObject({
   hint: z.string().min(1).max(90),
   heat: z.number().int().min(0).max(30).optional(),
   runIn: z.number().int().min(0).max(90).optional(),
+  /** Review 5 (answers §12.1, ADR 0080): played only at night; by day shown with *Opens at nightfall*. */
+  window: z.literal('night').optional(),
 });
 
 /** Design §4–§5 (ADR 0031): a tier-2 mission at a place, after its tickets. */
@@ -289,6 +291,11 @@ export const Mission = z.strictObject({
   text: z.strictObject({ success: OutcomeText, partial: OutcomeText, failure: OutcomeText }),
   /** Overrides the type's mission card (§13.5 rung 4); a `scene`. */
   card: AssetId.optional(),
+  /**
+   * Review 5 (answers §12.1, ADR 0080): a night mission, played only at night, at the night rate
+   * (+25 % Iron). Its ways carry no window of their own.
+   */
+  window: z.literal('night').optional(),
 });
 
 export const Location = z.strictObject({

@@ -16,6 +16,7 @@ import {
   projectHeat,
   rivalGroundIn,
   standingView,
+  windowLock,
 } from '@irongate/rules';
 import type {
   ActionDescriptor,
@@ -105,6 +106,8 @@ export interface MissionCtx {
   flags: DayFlags;
   /** Review 5 (ADR 0080): night at `now` (the read's or the act's), from the one seam. */
   night: boolean;
+  /** The next dusk (a night window's `opensAt`). */
+  nextDusk: number;
   /** The descriptor a start would carry (kind `mission`, the seen-as type, its Issue tags). */
   descriptor: ActionDescriptor;
   /** The mission as `resolveMission` takes it. */
@@ -159,6 +162,7 @@ export function missionCtx(
 
   const rateOn = heatRateOn(content, docs.residence);
   const heat = heatTimerOf(c);
+  const nightView = nightAt(now);
 
   const untagged: ActionDescriptor = {
     kind: 'mission',
@@ -198,7 +202,8 @@ export function missionCtx(
     record,
     recordIronPct: RECORD.ironPct[record],
     flags: flagsToday(c, city.id, today),
-    night: nightAt(now).night,
+    night: nightView.night,
+    nextDusk: nightView.nextDusk,
     descriptor: tagged.length > 0 ? { ...untagged, issueIds: tagged.map((t) => t.issueId) } : untagged,
     spec: {
       id: mission.id,
@@ -212,6 +217,19 @@ export function missionCtx(
       pool: mission.pool,
     },
   };
+}
+
+/** Review 5 (ADR 0080): the way's night window closed now (the mission's own lock is the ticket's). */
+export function wayNightLock(ctx: MissionCtx, way: Way): { opensAt: number } | null {
+  if (ctx.mission.window) return null;
+  const l = windowLock({ mission: {}, way, night: { night: ctx.night, nextDusk: ctx.nextDusk } });
+  return l ? { opensAt: l.opensAt } : null;
+}
+
+/** Review 5 (ADR 0080): the mission's own night window closed now. */
+export function missionNightLock(ctx: MissionCtx): { opensAt: number } | null {
+  const l = windowLock({ mission: ctx.mission, night: { night: ctx.night, nextDusk: ctx.nextDusk } });
+  return l ? { opensAt: l.opensAt } : null;
 }
 
 /** A way of the mission by id, or undefined. */
@@ -291,6 +309,8 @@ export function missionInput(
     record: ctx.record,
     flags: ctx.flags,
     night: ctx.night,
+    // Review 5 (ADR 0080): the mission's own window, never a night way of an ordinary mission.
+    ...(ctx.mission.window === 'night' ? { nightRate: true } : {}),
     opponents: {
       sideOf: (id) => content.opponent(id)?.side ?? 'police',
       policeId: police?.id ?? '',

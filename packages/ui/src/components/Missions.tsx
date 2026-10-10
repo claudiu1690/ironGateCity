@@ -99,6 +99,9 @@ export function missionLockText(m: MissionView): string | null {
       return copy.needsReputation(l.need);
     case 'RECORD':
       return copy.risk.locked.record;
+    // Review 5 (answers §12.1, ADR 0080): *Opens at nightfall · dusk at 16:00*.
+    case 'NIGHT':
+      return copy.night.opensAt(formatWhen(l.opensAt ?? 0));
   }
 }
 
@@ -348,18 +351,22 @@ export interface WayRowProps {
  */
 export function WayRow({ way, selected, last, onSelect, disabled }: WayRowProps) {
   const own = way.risk ? missionRiskWord(way.risk.runInChance) : null;
+  // Review 5 (answers §12.1, ADR 0080): a night way by day is greyed with its lock line.
+  const night = way.night ?? null;
   return (
     <button
       type="button"
       role="radio"
       aria-checked={selected}
-      disabled={disabled}
+      disabled={disabled || night !== null}
+      data-night={night ? 'locked' : undefined}
       onClick={onSelect}
       className={cx(
         'flex min-h-14 w-full cursor-pointer flex-col items-start justify-center gap-0.5 border-[1.5px] border-ink px-3.5 py-2 text-left',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol',
         selected ? 'bg-ink text-paper' : 'bg-paper-card hover:bg-paper',
         'disabled:cursor-not-allowed',
+        night && 'border-faint opacity-60 hover:bg-paper-card',
       )}
       data-testid="way-row"
       data-way={way.id}
@@ -372,10 +379,16 @@ export function WayRow({ way, selected, last, onSelect, disabled }: WayRowProps)
           </span>
         )}
       </span>
-      <span className="font-mono text-[11px] opacity-85" data-testid="way-odds">
-        {ticketOdds(way.preview)}
-        {own ? ` · ${copy.risk.runInWord(own.word)}` : ''}
-      </span>
+      {night ? (
+        <span className="font-mono text-[11px] opacity-85" data-testid="way-night">
+          {copy.night.opensAt(formatWhen(night.opensAt))}
+        </span>
+      ) : (
+        <span className="font-mono text-[11px] opacity-85" data-testid="way-odds">
+          {ticketOdds(way.preview)}
+          {own ? ` · ${copy.risk.runInWord(own.word)}` : ''}
+        </span>
+      )}
       <span className="font-body text-[13px] leading-snug italic opacity-85">{way.hint}</span>
     </button>
   );

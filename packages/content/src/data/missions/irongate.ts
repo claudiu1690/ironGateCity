@@ -74,6 +74,28 @@ export const irongateMissions: MissionsByPlace = {
         failure: { headline: 'The paste is good', body: "Wet night, good paste, and posters that come off the glass in strips the size of your hand. You get one shelter done before the inspector's lamp comes down the platform. The posters stay, and the Junction has your face." },
       },
     },
+    {
+      // Review 5 (answers §12.1, §18.2, §18.2a: a speech, 15 Energy): a night mission, at the night rate.
+      id: 'irongate.tram-junction.last-tram',
+      name: 'Ride the last tram with the Eastside flyers',
+      tier: 2,
+      type: 'speech',
+      energy: 15,
+      level: 10,
+      difficulty: 20,
+      pool: ['street-enforcer', 'party-thug'],
+      window: 'night',
+      briefing: "The last tram to Eastside carries the late shift home, two hundred people with nothing to read. The conductor doesn't mind flyers; he minds trouble. Who gets off at the Iron Bridge decides which it is.",
+      ways: [
+        { id: 'cha-int', title: 'A seat by the door, a flyer for every stop', stats: ['cha', 'int'], hint: 'A word for every face that gets on. The conductor is with you while nobody shouts.' },
+        { id: 'agi', title: 'The whole bundle on the rear platform, and off at the bridge', stats: ['agi'], hint: "Faster than anyone can object, then the step at the Iron Bridge. Don't miss it." },
+      ],
+      text: {
+        success: { headline: 'The whole car', body: 'A flyer for every stop and a word for every face, and by the Iron Bridge the whole car is reading. The conductor takes one for his wife. Two hundred people get off in Eastside with your side in their pockets.' },
+        partial: { headline: 'Half a car', body: 'The front half of the car takes flyers and the back half takes offence, and the conductor rings for the bridge before it comes to anything. A hundred flyers out and a hundred still in your coat.' },
+        failure: { headline: 'Off at the bridge', body: 'A man in the back seat wants to know who printed it, loudly, and the car takes his side. The conductor stops at the bridge and says this is your stop. The flyers go out of the window behind you.' },
+      },
+    },
   ],
   'irongate.station-buffet': [
     {
