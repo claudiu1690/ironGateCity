@@ -314,11 +314,11 @@ Income is unchanged: **+5 PC a day** for completing all three Party orders (from
 |---|---|---|
 | Endorse a candidate | 10 | Day 2 (Rank 2), if both days' orders were done |
 | Declare for the council (deposit) | 10 | Day 10–14 (Rank 3) |
-| Move an ordinance | 20 | The first term (day 13–17) |
+| ~~Move an ordinance~~ | ~~20~~ | **Removed 10 Oct 2026 (voting simplified):** a councillor's rule on the city's ballot is free |
 
 A daily player who never misses the orders has 50 PC on day 10 and **about 45 allowing a missed day**: enough to file (10), endorse a colleague in the same cycle (10) and, once seated, move an ordinance (20), with a few left. A casual player who completes the orders four days in five has ~40 by day 14, which still covers file + endorse; the proposal waits for the stipend, which pays 10 a day from the seat. A sitting councillor earns 15 a day against a maximum spend of 40 per five-day cycle, so PC accumulates from the first term at about 35 a cycle towards the 1,000 cap; the Chair candidacy (25), petitions (10) and patron favours (15–40) arrive in slices 7–8 to spend it. **Nothing political costs Iron**, so the Iron balance keeps growing as in §5.2.
 
-The deposit is returned when a candidacy is struck for want of endorsements, so a player who files and is refused loses nothing; the small-branch rule (§15.3) means a lone player who does the day's orders is never struck.
+**Voting simplified (10 Oct 2026; `docs/design/voting-simplified.md` §3.8, approved by the user).** Slice 3's sinks are now **two**: stand (10, spent, never returned) and back (10, optional). The 20 PC proposal is gone because putting a rule forward is the seat's power, not a purchase. A sitting councillor therefore banks 15 a day against at most 20 a cycle, and PC accumulates **about 55 a cycle from the first seat (was 35)** until slice 7's sinks (25 / 50 / 100, §21.2) arrive. Acceptable: the 1,000 cap is the limit by design (§23.3), income is unchanged and no §5.2 milestone moves. The old refund rule (the deposit returned if struck for want of endorsements) and the small-branch rule are superseded: there is no gate to be struck by.
 
 ### 14.3 FXP: the stipend and the morale bonus
 
@@ -366,7 +366,7 @@ The old flag (#16) is closed: with the drift in, Coalport still pins near the ca
 
 ### 14.6 Session shape (pillar 7)
 
-On a polling day the morning adds two taps (the Polling Day row, the ballot) and one modal, about 20 seconds. Declaring is three taps once a cycle; endorsing one; the ordinance vote one tap plus one for a proposal. A councillor's whole political week is under a minute. Nothing in slice 3 needs the player at a set time: every window is one to three full City Days and closes at the boundary, the count happens without anyone present, and the paper carries the result whenever the player next opens it.
+On a polling day the morning adds two taps (the Polling Day row, the ballot) and one modal, about 20 seconds. Declaring is three taps once a cycle; endorsing one; the ordinance vote one tap plus one for a proposal. A councillor's whole political week is under a minute. **Voting simplified (10 Oct 2026):** a vote on the rule is three taps on a phone and two on desktop (the card is the ballot); standing is two; a councillor's rule is one tap; there is no council vote, so a councillor's political week is one tap and the pay. Nothing in slice 3 needs the player at a set time: every window is one to three full City Days and closes at the boundary, the count happens without anyone present, and the paper carries the result whenever the player next opens it.
 
 ### 14.7 Flags (GDD Appendix C #21–25)
 
@@ -760,7 +760,7 @@ An office is a reward for an election won, not a rate: a Chair's +40 a day over 
 
 | Sink | PC | Who, when |
 |---|---|---|
-| Stand for Chair (deposit) | 25 | Rank 4, term days 9–10 |
+| Stand for Chair (spent; no backers needed since 10 Oct 2026, voting simplified) | 25 | Rank 4, term days 9–10 |
 | Stand for the party's list | 25 | Rank 5, term days 19–20 |
 | Stand for President | 100 | Rank 6, term days 19–20 |
 | Back (Chair, the party's candidate or the list) | 10 | one per Chair election; one per term nationally |
@@ -768,7 +768,7 @@ An office is a reward for an election won, not a rate: a Chair's +40 a day over 
 | Open or sign a petition (the council, or on the Chair) | 10 | — |
 | Table a vote to remove the President | 50 | once a term |
 
-A reference player at day 30 has banked about 250 (5 a day from the orders, 1 from *One of Us*, 10 a day for the council seats held, 10–20 a day from events) and has spent 40–60 on deposits, backing and a proposal: the Chair's 25 is affordable the first time Rank 4 allows it. A Chair earns 20 a day and spends at most 85 a term (the deposit, a bill, a backing); a President 50 a day against the same: **office-holders reach the 1,000 cap in a season and the cap is the limit**, which is what §23.3 wants (Political Capital is a price for standing, never a store of power). Flag: if the cap reads as meaningless at the top, the lever is the President's 50 (to 30), never the sinks.
+A reference player at day 30 has banked about 250 (5 a day from the orders, 1 from *One of Us*, 10 a day for the council seats held, 10–20 a day from events) and has spent 20–40 on standing and backing (the proposal sink went on 10 Oct 2026): the Chair's 25 is affordable the first time Rank 4 allows it. A Chair earns 20 a day and spends at most 85 a term (the deposit, a bill, a backing); a President 50 a day against the same: **office-holders reach the 1,000 cap in a season and the cap is the limit**, which is what §23.3 wants (Political Capital is a price for standing, never a store of power). Flag: if the cap reads as meaningless at the top, the lever is the President's 50 (to 30), never the sinks.
 
 ### 21.3 The laws: what each is worth (reference player, per day, while in force)
 

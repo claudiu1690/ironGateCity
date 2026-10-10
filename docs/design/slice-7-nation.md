@@ -1074,3 +1074,17 @@ Every deck ≤ 200 characters with the longest tokens. The Courier's non-politic
 - **§9.4, the jobs:** the **Tram conductor pays 240** (was 200), by the rung rule of GDD §9.2 (`docs/design/review-5-answers.md` §5). The vendor (100) and the Cannery hand (180) are unchanged.
 - **§7.2, the Curfew Order:** its window is §2.2's night, which the user set on 8 Oct 2026 to **the last two hours of every six** (dusk at 04 / 10 / 16 / 22 UTC): a third of the day rather than ten hours in twenty-four. The bound (+100) is unchanged.
 - **§9.2, the Sanatorium:** carries the *Treatment* card like every `hospital` place (answers §8).
+
+## Added 10 Oct 2026 — voting simplified (approved by the user; `docs/design/voting-simplified.md`)
+
+The ladder, the Chair's orders, Parliament, the laws, the national election, Clearwater's places and the petitions are untouched. What moves is the council's vote underneath them.
+
+- **§3 (the ladder), the Councillor row:** won on **reputation + 3 × backers**; stands with **10 PC spent and a named rule**; the act is *your rule on the ballot* (free), not a proposal (20 PC) and a vote. **§3.1 (the Governor):** chosen at the count as before; **the Governor's rule is card 1 of the city's ballot** (the party's card), at no cost, chosen on cycle days 0–1; *local councillors who have no player lead vote for it* is gone, because nobody votes in the council. A Governor who sets nothing leaves card 1 to the Chair's rule, else the secretary's. The Address is unchanged.
+- **§4.1 (the Chair's election):** **25 PC, spent; no backers needed**; backing optional (+3); the secretary's backing a bonus; no striking or withdrawal. The count, the ballot (the secretary always on it) and the term are unchanged.
+- **§4.3 (the party line):** in Parliament unchanged. **In the councils:** the Chair's rule per city is **the party's card** wherever no Governor of the party sits; it is what the town votes on, not what the locals follow. The Appendix C #26 paragraph (four *None of these*) is moot: there is no council vote. Unrest: the party's card comes off the home ballot (§14.11); the local deputies' abstention on bills stands.
+- **§9 (Clearwater):** seven seats, three-way, offset 4; **one card per party** (the capital's chain); the rule is the largest bloc's; seats by D'Hondt on the scores; each party's seats to its candidates by **ward vote + 3 × backers**; the slate of three per party fills each list; *passes with four of seven* is retired. The Casino is the hall.
+- **§10.1 (a petition to dissolve the council):** unchanged; it strikes the rule in force and the locals sit until the next result.
+- **§12 (the result modals):** the council's `propose` and `councilVote` modals are retired; the Governor's *{rule} goes to the vote first* reads *{rule} is the party's card: the town votes {weekday} to {weekday}.*
+- **§14.1 (a Governor's week):** the count morning: *You're Governor · the party's card is yours* → one tap, the menu → *Public Works Order is the party's card* → the town votes days 2–4 → the paper: *Public Works Order Wins the Vote in Coalport*. Two taps and the Address.
+- **§15 (session shape):** *The party's rule · the Governor's rule* stay one tap each and settle **at the count**, not the division; the council's vote row is gone.
+- **§17 (GDD edits):** §15.1, §15.3, §15.4, §15.10 carry the 10 Oct 2026 wording.

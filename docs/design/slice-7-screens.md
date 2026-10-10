@@ -256,3 +256,12 @@ British English, no exclamation marks, no percentages for odds, times in the pla
 - **The chamber's bloc sheet** lists the eight named local deputies of design §23.5 with *Local deputy · {who}*.
 - **The five added modals** (design §23.7): `chairBack`, `fixture`, `presidentWithdraw`, `chairPetitionOpen`, `chairPetitionSign`; new copy for §15: *Backed · {name} has your backing* (the Chair's) · *Tomorrow's event in {city}* · *Your name is off the list for President* · *A vote on the Chair* (opened) · *Your name is on the petition* · *the secretary's line: {line}* · *the locals abstain* · *from {weekday}'s council* · *Clearwater branch* · *Veto · final: Parliament cannot vote it through before the term ends* · *at {venue}'s hall* · *Local deputy · {who}*.
 - **Alt texts** for the seven pictures: design §23.8.
+
+## Added 10 Oct 2026 — voting simplified (approved by the user)
+
+- **§4.1 (the Governor's page):** the power card reads *The party's card · Public Works Order · the town votes Wednesday to Saturday* with **Change ›** (the eleven-row sheet) on cycle days 0–1, else *set at {weekday} midnight*; the line *Local councillors vote for it* is gone.
+- **§5.2 (the Chair's desk, lines):** *The party's rule* per city is labelled *The party's card in {city}* with the note *what the town votes on where no Governor of ours sits*.
+- **§7.1 (the Chair's election):** the stand card's ticks lose *2 backers by {until}*; the Courier reads *Costs 25 Political Capital. Your name is on the list until the result.*; the candidate card reads *You're standing for Chair · {n} backers*; the *struck* state and *Withdraw* are gone. The Faction tab's card states: *Names in for Chair* (below Rank 4) · **Stand for Chair · 25 Political Capital** · *You're standing for Chair · {n} backers* · *Voting for Chair is open* · *You voted for {name}* · the result · no window.
+- **§9.1 (the petition card):** unchanged.
+- **§10 (Clearwater):** the Casino's council blocks are the Town Hall's five (`voting-simplified.md` §4.4) with one card per party.
+- **§12 (help notes):** *the party's rule* → *The party's card: the rule the party puts on a city's ballot. The town votes on it.*
