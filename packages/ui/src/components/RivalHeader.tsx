@@ -36,6 +36,7 @@ export function rivalHeaderLines(i: RivalHeaderInput): {
   pushTotal: string;
   pushSplit: string;
   danger: string;
+  dangerHead: string;
   goal: string;
   goalShort: string;
   full: boolean;
@@ -58,6 +59,7 @@ export function rivalHeaderLines(i: RivalHeaderInput): {
     pushTotal,
     pushSplit: push.slice(pushTotal.length),
     danger: copy.risk.rival.danger(copy.risk.riskWord[r.risk] ?? r.risk, r.night),
+    dangerHead: copy.risk.rival.dangerHead(copy.risk.riskWord[r.risk] ?? r.risk, r.night),
     goal: r.unrest
       ? copy.risk.rival.goalHold(i.cityName, home, r.goal.aboveFloor.toFixed(1))
       : copy.risk.rival.goal(home, r.goal.toUnrest.toFixed(1), pointsWord(r.goal.weekPushed)),
@@ -106,8 +108,18 @@ export function PushBar({ rival, mine }: { rival: RivalGroundView; mine: Faction
  * the split by party truncating), the danger and the goal. On a phone the goal is its short form (the
  * whole sentence is the Unrest note's first line); from 640 px wide it is the whole sentence.
  * `foldGoal`: classes that fold the goal away (a phone under 700 px tall: it rides the push note).
+ * `narrow` (a phone held sideways, the plate in the side column): the danger line prints its head only,
+ * *Risk here: Dangerous · patrols out*, wrapping rather than cutting the word (QA n1); the note has the rest.
  */
-export function RivalHeader({ input, foldGoal }: { input: RivalHeaderInput; foldGoal?: string }) {
+export function RivalHeader({
+  input,
+  foldGoal,
+  narrow = false,
+}: {
+  input: RivalHeaderInput;
+  foldGoal?: string;
+  narrow?: boolean;
+}) {
   const lines = rivalHeaderLines(input);
   const r = input.rival;
   return (
@@ -131,7 +143,8 @@ export function RivalHeader({ input, foldGoal }: { input: RivalHeaderInput; fold
       </span>
       <span
         className={cx(
-          'truncate font-mono text-[11px]',
+          'font-mono text-[11px]',
+          narrow ? 'leading-snug' : 'truncate',
           r.risk === 'dangerous' ? 'text-failure' : 'text-text-2',
         )}
         data-testid="plate-danger"
@@ -139,7 +152,7 @@ export function RivalHeader({ input, foldGoal }: { input: RivalHeaderInput; fold
         data-night={r.night}
         title={lines.danger}
       >
-        {lines.danger}
+        {narrow ? lines.dangerHead : lines.danger}
       </span>
       <span className={cx('min-w-0', foldGoal)} data-testid="plate-goal" data-goal={lines.goal}>
         <span className="block truncate font-mono text-[11px] text-ink sm:hidden">{lines.goalShort}</span>

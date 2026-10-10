@@ -13,7 +13,7 @@ export function noticeFor(error: unknown): string | undefined {
     }
     case 'JOB_LOCKED':
       return copy.jobNeeds([
-        game.stat ? `${String(game.stat).toUpperCase()} ${String(game.need)}` : `Level ${String(game.need)}`,
+        game.stat ? `${copy.statNames[String(game.stat) as keyof typeof copy.statNames] ?? String(game.stat)} ${String(game.need)}` : `Level ${String(game.need)}`,
       ]);
     case 'WRONG_CITY':
       return 'You are not in this city.';

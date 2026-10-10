@@ -98,14 +98,17 @@ test('#6 the top bar: Energy, Health, Heat, XP, Party XP on a phone, held sidewa
 
 /**
  * Review 5 (answers §17.3; tech design §4.3): the measured cases as assertions. How far a result's
- * middle may run past its box at 390 × 740, 390 × 844 and 1440 × 900; the picture's height at each.
+ * middle may run past its box at 390 × 740, 390 × 844 and 1440 × 900, and (QA m2, the fix round) on the
+ * two short phones, 375 × 667 and 360 × 640; the picture's height at each.
  */
 const SIZES = [
   [390, 740],
   [390, 844],
   [1440, 900],
+  [375, 667],
+  [360, 640],
 ] as const;
-const PICTURE: Record<number, number> = { 740: 112, 844: 136, 900: 150 };
+const PICTURE: Record<number, number> = { 740: 112, 844: 136, 900: 150, 667: 88, 640: 88 };
 
 test('#4 results: the compact modal fits; only the middle scrolls; the level-up is a line and Place it; one thin bar', async ({
   page,
@@ -122,7 +125,11 @@ test('#4 results: the compact modal fits; only the middle scrolls; the level-up 
   const middle = result.getByTestId('result-middle');
 
   /** The open result at each size: the modal never scrolls, the middle by at most `limits[i]`. */
-  const measure = async (name: string, limits: readonly [number, number, number], each?: (size: string) => Promise<void>) => {
+  const measure = async (
+    name: string,
+    limits: readonly [number, number, number, number, number],
+    each?: (size: string) => Promise<void>,
+  ) => {
     for (const [i, [w, h]] of SIZES.entries()) {
       await page.setViewportSize({ width: w, height: h });
       await settled(page);
@@ -156,7 +163,7 @@ test('#4 results: the compact modal fits; only the middle scrolls; the level-up 
   await tap([1], 'once');
   await expect(result.getByTestId('stamp')).toHaveText('Success');
   await expect(result.getByTestId('attempt-row')).toHaveCount(0);
-  await measure('result-ordinary', [0, 0, 0]);
+  await measure('result-ordinary', [0, 0, 0, 0, 0]);
 
   // A ×3 (2 of 3): one Courier line of the rows; a short scroll on a 740 px phone only.
   await tap([1, 99, 1], 'three times');
@@ -165,7 +172,7 @@ test('#4 results: the compact modal fits; only the middle scrolls; the level-up 
     'aria-label',
     /^1 · Success · \+\d+ · 2 · Partial · \+\d+ · 3 · Success · \+\d+$/,
   );
-  await measure('result-x3', [100, 0, 0]);
+  await measure('result-x3', [100, 0, 0, 100, 100]);
 
   // A ×1 Partial with its reason line: the same allowance.
   await tap([99], 'once');
@@ -180,7 +187,7 @@ test('#4 results: the compact modal fits; only the middle scrolls; the level-up 
   await expect(result.getByTestId('result-details-list')).toBeVisible();
   await details.click();
   await expect(result.getByTestId('result-details-list')).toBeHidden();
-  await measure('result-partial', [100, 0, 0]);
+  await measure('result-partial', [100, 0, 0, 100, 100]);
 
   // A mission with a level-up (one success from Level 7, 3,500 XP) never scrolls; its *Place it*
   // opens the picker as a sheet over the modal at every size.
@@ -201,7 +208,7 @@ test('#4 results: the compact modal fits; only the middle scrolls; the level-up 
   // Not inline: the stat buttons are behind *Place it*.
   await expect(result.getByTestId('stat-points')).toHaveCount(0);
   const picker = page.getByRole('dialog', { name: 'Level 7 · one point to place' });
-  await measure('levelup', [0, 0, 0], async (size) => {
+  await measure('levelup', [0, 0, 0, 0, 0], async (size) => {
     // A dispatched click: after a resize past 640 px the remounted place panel's dim lies over the
     // result for the pointer and holds the focus (a test-only state: nobody resizes with a result open).
     await level.getByTestId('place-it').dispatchEvent('click');

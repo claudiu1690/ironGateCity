@@ -104,7 +104,7 @@ Directives: about 60 of the political Energy matches an order (+25 % FXP on it);
 
 Checks against §18.2 (week 1: ~1,000–2,000 a day): the reference player lands at the **low end**; the regular player is inside. Acceptable for slice 1, where there is nothing to buy. Revisit when Rested from lodging and the first sinks land (slice 2).
 
-**Jobs are Iron for no Energy** (review 1): the Factory worker pays 216–259 a day at the boundary against 2 per Energy from a canvass, and costs nothing. That is the point of a job: steady income that doesn't depend on faction activity (§9). The Street vendor (100 a day) is the fallback; the Driver (200, AGI 10) is the recruit's first visible goal that training unlocks.
+**Jobs are Iron for no Energy** (review 1): the Factory worker pays 216–259 a day at the boundary against 2 per Energy from a canvass, and costs nothing. That is the point of a job: steady income that doesn't depend on faction activity (§9). The Street vendor (100 a day) is the fallback; the Driver (240 since review 5, was 200; Level 3, Agility 10) is the recruit's first visible goal that training unlocks.
 
 ### 5.2 Iron sinks in slice 1
 

@@ -1,5 +1,5 @@
 import type { GameContent } from '@irongate/content';
-import type { CharacterDoc, CityDoc } from '@irongate/db';
+import type { CharacterDoc, CityDoc, StoredRunIn } from '@irongate/db';
 import {
   HEAT,
   RECORD,
@@ -117,6 +117,14 @@ export function notFree(c: Pick<CharacterDoc, 'held' | 'runIn' | 'patrol'>): Gam
   return null;
 }
 
+/**
+ * The run-in the gate shows (QA m5): the pointer (pending, or resolved until closed), else the oldest
+ * resolved result that a newer run-in moved off the pointer before it was closed.
+ */
+export function gateRunIn(c: Pick<CharacterDoc, 'runIn' | 'runInUnseen'>): StoredRunIn | null {
+  return c.runIn ?? c.runInUnseen?.[0] ?? null;
+}
+
 /** `notFree` as a tRPC refusal (before the key). */
 export function assertFree(c: Pick<CharacterDoc, 'held' | 'runIn' | 'patrol'>): void {
   const e = notFree(c);
@@ -139,6 +147,7 @@ export function riskView(
   const hp = healthNow(hTimer, now, doc.level);
   const rec = recordView(marksOf(doc), today);
   const flags = flagsToday(doc, doc.cityId, today);
+  const gateRun = gateRunIn(doc);
   return {
     heat: {
       value: t.value,
@@ -174,11 +183,11 @@ export function riskView(
           cityId: doc.held.cityId,
         }
       : null,
-    runIn: doc.runIn
+    runIn: gateRun
       ? {
-          encounterId: doc.runIn.encounterId.toHexString(),
-          state: doc.runIn.state,
-          decideBy: new Date(doc.runIn.decideBy).getTime(),
+          encounterId: gateRun.encounterId.toHexString(),
+          state: gateRun.state,
+          decideBy: new Date(gateRun.decideBy).getTime(),
         }
       : null,
     agiQuarters: doc.stats.agiQuarters ?? 0,

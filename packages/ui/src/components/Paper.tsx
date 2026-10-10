@@ -427,7 +427,7 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
               : `${desk.standing.name} · ${desk.standing.successes} / ${desk.standing.next} to ${desk.standing.nextName}`
           }
         />
-        {desk.wearing && <Row label="Wearing" value={`${desk.wearing.name} · CHA ${desk.wearing.cha}`} />}
+        {desk.wearing && <Row label="Wearing" value={`${desk.wearing.name} · Charisma ${desk.wearing.cha}`} />}
         {y && (
           <Row
             label="Yesterday"

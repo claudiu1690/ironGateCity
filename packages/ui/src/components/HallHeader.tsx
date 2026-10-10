@@ -50,7 +50,7 @@ export function MapCrop({ asset, x, y, at = 0.5, className }: MapCropProps) {
 export interface HallHeaderProps {
   hall: HallView;
   cityName: string;
-  /** Night art from 20:00 to 06:00 UTC, the map's rule (GDD §2.2), on the server's clock. */
+  /** Night art in the town's night, the map's rule (GDD §2.2, review 5: the last two hours of each six-hour day), on the server's clock. */
   night: boolean;
   className?: string;
 }

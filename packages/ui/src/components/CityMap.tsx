@@ -60,7 +60,7 @@ export interface MapCover {
 
 export interface CityMapProps {
   map: { day: AssetView; night: AssetView };
-  /** Night art 20:00–06:00 UTC (GDD §2.2); crossfades when it flips. */
+  /** Night art in the town's night (GDD §2.2, review 5: the last two hours of each six-hour day); crossfades when it flips. */
   isNight: boolean;
   locations: MapHotspot[];
   selectedId: string | null;

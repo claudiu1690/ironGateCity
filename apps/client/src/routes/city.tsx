@@ -768,6 +768,12 @@ export function CityPage() {
     ) : null;
 
   /**
+   * QA m1 (fix round): on a phone under 700 px tall the rule's row folds to keep the map's pins clear,
+   * so the dusk line moves beside the plate's name, in two short lines (the plate keeps its height).
+   */
+  const stackedDusk = shortPhone && !side;
+
+  /**
    * Review 5 (answers §11.3): the town's dusk or dawn shares the rule's line (the rule truncates first),
    * so the plate grows by no line where a rule is in force and every pin stays clear.
    */
@@ -782,7 +788,8 @@ export function CityPage() {
     >
       {c.ordinance && ruleLine(testId, side ? 'max-w-full' : 'min-w-11 flex-1')}
       {c.ordinance && !side && <span aria-hidden="true">·</span>}
-      <DuskLine night={c.night} button={button} className="shrink-0" />
+      {/* QA m1: on a phone under 700 px tall the line is beside the plate's name instead (`stackedDusk`). */}
+      {!stackedDusk && <DuskLine night={c.night} button={button} className="shrink-0" />}
     </div>
   );
 
@@ -858,6 +865,7 @@ export function CityPage() {
                 {copy.moraleWord[c.morale.state]}
               </span>
             )}
+            {stackedDusk && <DuskLine night={c.night} button={false} stacked className="ml-auto self-center" />}
           </div>
           <span
             className={cx(
@@ -889,13 +897,14 @@ export function CityPage() {
             <RivalHeader
               input={rivalInput}
               foldGoal={cx(!side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden')}
+              narrow={side}
             />
           )}
           {/* The ordinance in force, one line that never wraps. Only on a very short phone
               (360 × 640) it gives way to the map; the tickets carry its tags there. Review 4 (answers
               §11.3): it says the effect, and a tap opens the Town Hall (above the plate's notes). */}
           {/* Review 5 (answers §11.3): the town's dusk or dawn after the rule, on its line; folded with
-              it on a very short phone (the HUD clock's note says it too). */}
+              it on a very short phone, where the dusk line moves beside the name (QA m1). */}
           {ruleAndDusk(
             'city-ordinance',
             false,
@@ -1034,9 +1043,14 @@ export function CityPage() {
         </div>
       )}
       <div className="flex flex-col gap-0.5 px-3 pt-1 pb-1.5">
-        <span className={cx('label-caps text-[8.5px] text-muted', helpMark)}>
-          {copy.capital.whoHolds(district.name)}
-        </span>
+        {/* QA m1: on a phone under 700 px tall the block with the rule folds; the dusk line rides on
+            the right of this row instead (the plate keeps its height). */}
+        <div className="flex items-baseline justify-between gap-x-2">
+          <span className={cx('label-caps min-w-0 truncate text-[8.5px] text-muted', helpMark)}>
+            {copy.capital.whoHolds(district.name)}
+          </span>
+          {stackedDusk && <DuskLine night={c.night} button={false} className="shrink-0" />}
+        </div>
         <OpinionBars values={district.opinion} names={names} />
         {/* Review 5 (answers §11.3): the town's dusk or dawn on the district's plate, on the rule's line. */}
         <div className="flex flex-col font-mono text-[11px] text-text-2 [@media(max-width:639px)_and_(max-height:700px)]:hidden">

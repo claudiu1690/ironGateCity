@@ -167,7 +167,7 @@ day 14 → next term's day 14
 | Office stipends | `officeTerms` (`fromDay`, `toDay`, `vacatedDay`) | the member's settlement, per boundary held | the term's end or `vacatedDay` |
 | Minor marks under the Rehabilitation Act | `record.marks` (slice 5) | `liveMarks(marks, today, fadeDaysOn)`: gone once any day since the latest mark met that day's fade | monotone: once gone, gone |
 | A journey under the Open Borders Act | `journeys.arrivesAt` | — | the minutes are fixed at boarding |
-| The Curfew's night | — | `isNight(now)` at the act | 06:00 UTC |
+| The Curfew's night | — | `nightAt(now).night` at the act (review 5; was `isNight`) | the next dawn, `nightAt(now).nextDawn` (review 5: night is the last two hours of each six-hour day; was 06:00 UTC) |
 | National Control | `nation.control`, `controlLog` (60) | the snapshot of the last boundary | the next boundary |
 | Petition and backer counts | `petitions.count`, `candidacies.endorsements` | live (public) | the close |
 | Ballots | `votes` (ADR 0019) | never before the count | the count |
@@ -576,7 +576,7 @@ export function nationWork(day: DayKey, bootstrappedDay: DayKey): {
 //  each window's step only when the window opened on or after `bootstrappedDay` (ADR 0043)
 export const canTableOn = (day: DayKey) => termOf(day).termDay <= TERM_DAYS.tableUntil;
 export const removalOpen = (day: DayKey) => boolean;                  // not term days 0–4 or 24–27
-export const isNight = (now: number) => boolean;                       // DAY_NIGHT: 20:00–06:00 UTC
+export const isNight = (now: number) => boolean;                       // review 5: superseded by nightAt (GDD §2.2, six-hour day); was 20:00–06:00 UTC
 export const nextDate = (day: DayKey, what: 'chairNames' | 'chairVotes' | 'chairCount' | 'nationNames' | 'pick'
   | 'votes' | 'count' | 'office') => DayKey;                           // every TermLine's and card's {weekday} / {date}
 ```
@@ -1223,7 +1223,7 @@ A law is a named source (ADR 0030), so it appears wherever its effect lands, wit
 | `energyDelta`, `missionEnergyDelta`, `trainingEnergyPct` | the ticket's cost tag and the Energy line: *Emergency Permits Act: 17 Energy* |
 | `journeyTimePct` | the train card and the journey modal: *Open Borders Act: 19 minutes* |
 | `infirmaryCostPct`, `bailPct` | the price line on the held screen: *Universal Care Act −50* |
-| `runInPct`, `caughtDelta`, `heatCoolPct` | the ticket's risk tag in words (*Curfew Order · run-ins ×2 until 06:00*) and the Heat line's cooling rate; never a digit of a chance |
+| `runInPct`, `caughtDelta`, `heatCoolPct` | the ticket's risk tag in words (*Curfew Order · run-ins ×2 until 18:00*, the next dawn through `copy.when`; review 5, was *until 06:00*) and the Heat line's cooling rate; never a digit of a chance |
 | control's Heat rule | the Heat line: *Held by the Collective: Heat +25 %* |
 
 ---
@@ -1433,7 +1433,7 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 | **Two council paths diverge** (home, capital, Clearwater) | One generalised count (`countBattleground`) and division (`divideBlocs`) with parameters; slice 3 and 4 tests pin the old behaviour |
 | **The local deputies' chain decides almost every bill at low population** | It is the design (§7.2 *what passes by itself*); the chamber says why each bloc voted; the report counts players vs locals |
 | **A law in force changes many functions at once** | Each new kind touches exactly one function (§6.6) with a test against economy §21.3; the loader keeps laws off Party XP and odds |
-| **Day-constant modifiers meet the Curfew's night window** | The window is an explicit flag read at the act's time (ADR 0044); the ticket shows *until 06:00* only at night |
+| **Day-constant modifiers meet the Curfew's night window** | The window is an explicit flag read at the act's time (ADR 0044); the ticket shows *until {nextDawn}* only at night (review 5; was *until 06:00*) |
 | **The removal's trigger and Unrest's half weight read ambiguously** | Built on defaults (§22.1 Q11, Q12) with tests at the edges; one constant each to change |
 | **Transcription volume**: Clearwater (9 places, 24 actions, 45 texts, 4 missions, 3 jobs, 9 candidates, 6 Issues, the Courier ~38 lines), 13 laws, 24 national and 22 × 5 personal lines, ~180 copy strings, 13 help notes, chapter 3 | Word-for-word tests against the design documents; the designer transcribes the personal lines' other voices (design §11.2) in the content change |
 | **Missing content blocks the loader** (the 24 local deputies, the Town Hall's and Clearwater's event venues, the push and Clearwater order templates) | §22.1 Q1–Q5 with defaults the developer can build against; the content task's *Done when* names them |
@@ -1662,7 +1662,7 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
    - the petition: the council petition's texts with *the Chair* for *the council*.
    Please write them.
 20. **The Governor's Address "once a term".** **Default:** once per Governor's term (the five-day council term); the President's once per national term.
-21. **The Curfew.** **Default:** it doubles the final run-in chance, before the 90 cap, for missions and for the rival-ground tier-1 tap alike, while it is night (20:00–06:00 UTC) at the act.
+21. **The Curfew.** **Default:** it doubles the final run-in chance, before the 90 cap, for missions and for the rival-ground tier-1 tap alike, while it is night at the act (GDD §2.2: the last two hours of each six-hour day since review 5; was 20:00–06:00 UTC).
 22. **A change of Chair.** **Default:** the standing orders, party rules and fixtures are cleared whenever the holder changes (a new Chair, a removal, a term ending with the secretary), so a new Chair starts from the secretary's.
 23. **The party's pick's ties "by backers received so far".** Backing opens on day 23, after the pick, so every candidate has none. **Default:** the ties go to completed terms, then filing. The alternative is to open national backing from day 19.
 24. **The Chair's route.** Screens §5 names `/faction/chair`; slice 6's Faction tab uses `/faction?tab=…`. **Default:** `/faction?tab=chair`, with `/office/chair` redirecting to it.

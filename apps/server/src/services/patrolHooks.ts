@@ -8,6 +8,8 @@
 export type PatrolMode = 'next' | 'never' | 'auto';
 
 const byCharacter = new Map<string, PatrolMode>();
+/** QA n2: characters whose forced stop has been written (a reader may hold the document from before it). */
+const spentFor = new Set<string>();
 
 export const patrolHooks = {
   enabled: false,
@@ -15,6 +17,7 @@ export const patrolHooks = {
   base: 'auto' as Exclude<PatrolMode, 'next'>,
   set(characterId: string, mode: PatrolMode): void {
     byCharacter.set(characterId, mode);
+    spentFor.delete(characterId);
   },
   mode(characterId: string): PatrolMode {
     if (!patrolHooks.enabled) return 'auto';
@@ -23,8 +26,14 @@ export const patrolHooks = {
   /** A forced roll landed: `next` is spent (the character goes back to the base mode). */
   spend(characterId: string): void {
     if (byCharacter.get(characterId) === 'next') byCharacter.delete(characterId);
+    spentFor.add(characterId);
+  },
+  /** A forced stop was written for the character since its mode was last set. */
+  spent(characterId: string): boolean {
+    return spentFor.has(characterId);
   },
   clear(): void {
     byCharacter.clear();
+    spentFor.clear();
   },
 };

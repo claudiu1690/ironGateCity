@@ -12,7 +12,7 @@ import type {
   RewardLine,
   StatPointTarget,
 } from '@irongate/rules';
-import { Fragment, useId, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   cx,
@@ -26,7 +26,7 @@ import {
   renderTimeTokens,
 } from '../format';
 import { batchReasons, statName } from '../odds';
-import { KNOCK_ONS_SHOWN, fitTagCount, howItWent, knockOnLines } from '../result';
+import { KNOCK_ONS_SHOWN, KNOCK_ONS_SHOWN_SHORT, SHORT_SCREEN, fitTagCount, howItWent, knockOnLines } from '../result';
 import type { KnockOnLine } from '../result';
 import type { TrainingPlaces } from '../odds';
 import { Button } from './Button';
@@ -178,10 +178,11 @@ function ArtHeader({
   ground?: Ground | null;
 }) {
   return (
-    // Review 5 (answers §17.2 item 1): 112 px under 800 px of height, 136 up to 900, 150 above.
+    // Review 5 (answers §17.2 item 1): 112 px under 800 px of height, 136 up to 900, 150 above; the
+    // QA fix round (m2, answers §17.3): 88 px on a phone under 700 px tall (375 × 667, 360 × 640).
     <ArtPanel
       art={art}
-      className="h-[112px] shrink-0 [@media(min-height:800px)]:h-[136px] [@media(min-height:900px)]:h-[150px]"
+      className="h-[112px] shrink-0 [@media(max-height:700px)]:h-[88px] [@media(min-height:800px)]:h-[136px] [@media(min-height:900px)]:h-[150px]"
     >
       <div
         className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.9)_0%,rgb(21_24_26/0)_55%)]"
@@ -194,8 +195,8 @@ function ArtHeader({
         )}
         data-testid="result-stamp"
       >
-        {/* The stamp at 80 % on the short crops. */}
-        <div className="scale-80 [@media(min-height:800px)]:scale-100">
+        {/* The stamp at 80 % on the short crops, 70 % on the shortest (under 700 px). */}
+        <div className="scale-80 [@media(max-height:700px)]:scale-70 [@media(min-height:800px)]:scale-100">
           <Stamp tone={stamp.tone} label={stamp.label} />
         </div>
       </div>
@@ -557,7 +558,7 @@ function TagsLine({
   return (
     <div
       ref={box}
-      className="relative flex h-4 min-w-0 items-center overflow-x-clip leading-4 whitespace-nowrap"
+      className="relative flex h-4 min-w-0 items-center overflow-x-clip leading-4 whitespace-nowrap [@media(max-height:700px)]:flex-1"
       data-testid="result-tags"
     >
       <ul className="flex min-w-0 items-baseline">
@@ -593,6 +594,22 @@ function TagsLine({
   );
 }
 
+/** True while a media query matches (re-rendering when it flips). */
+function useMedia(query: string): boolean {
+  const [match, setMatch] = useState(
+    () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(query);
+    const on = () => setMatch(mq.matches);
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, [query]);
+  return match;
+}
+
 function ResultBody({
   result: r,
   onAgain,
@@ -610,6 +627,7 @@ function ResultBody({
   const [picking, setPicking] = useState(false);
   const [details, setDetails] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const shortScreen = useMedia(SHORT_SCREEN);
   const [tagFit, setTagFit] = useState(r.bonusTags.length);
   const ids = useId();
   // Review 4 #5 (answers §5): the stats as this result found them, so the placed line can name the
@@ -681,8 +699,9 @@ function ResultBody({
 
   // Slice 4 (tech design §10.1): the points this work added to an Issue, and the scoreboard line.
   const lines = knockOnLines(r, { statPending: statPoints?.pending ?? e.levelUp?.statPoints ?? 0 });
-  const shown = lines.slice(0, KNOCK_ONS_SHOWN);
-  const rest = lines.slice(KNOCK_ONS_SHOWN);
+  const knockOnsShown = shortScreen ? KNOCK_ONS_SHOWN_SHORT : KNOCK_ONS_SHOWN;
+  const shown = lines.slice(0, knockOnsShown);
+  const rest = lines.slice(knockOnsShown);
   const knock = knockOnNodes(r, {
     names: names0,
     level: e.levelUp ? (
@@ -709,8 +728,9 @@ function ResultBody({
         ground={ground}
       />
       <div
-        // Review 5 (answers §17.2): under 800 px of height the kickers lose their 8 px top gap.
-        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pt-3 pb-3 [@media(max-height:799.98px)]:gap-2"
+        // Review 5 (answers §17.2): under 800 px of height the kickers lose their 8 px top gap; under
+        // 700 px (QA m2) the middle's own padding is 8 px.
+        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pt-3 pb-3 [@media(max-height:700px)]:py-2 [@media(max-height:799.98px)]:gap-2"
         data-testid="result-middle"
       >
         {/* Slice 5 (screens §4.3): the run-in first, when there was one (it is the thing that happened). */}
@@ -723,7 +743,8 @@ function ResultBody({
           <Dialog.Title className="font-display text-[22px] leading-tight font-black sm:text-[24px]">
             {r.headline}
           </Dialog.Title>
-          <Dialog.Description className="font-body text-[15px] leading-[22px] text-text-2">
+          {/* QA m2: Source Serif 14 / 20 on a phone under 700 px tall. */}
+          <Dialog.Description className="font-body text-[15px] leading-[22px] text-text-2 [@media(max-height:700px)]:text-[14px] [@media(max-height:700px)]:leading-[20px]">
             {r.body}
           </Dialog.Description>
           {how.kind === 'reason' && (
@@ -769,8 +790,12 @@ function ResultBody({
         </section>
 
         {/* 4. Rewards: the tags on one line, the receipt (four lines at most) and *Details*. */}
-        <section aria-labelledby={`${ids}-rewards`} className="flex flex-col gap-1">
-          <h3 id={`${ids}-rewards`} className="label-caps text-[10px] text-muted">
+        {/* QA m2: under 700 px of height the tags ride on the *Rewards* line itself. */}
+        <section
+          aria-labelledby={`${ids}-rewards`}
+          className="flex flex-col gap-1 [@media(max-height:700px)]:flex-row [@media(max-height:700px)]:flex-wrap [@media(max-height:700px)]:items-center [@media(max-height:700px)]:gap-x-3"
+        >
+          <h3 id={`${ids}-rewards`} className="label-caps shrink-0 text-[10px] text-muted">
             Rewards
           </h3>
           {r.bonusTags.length > 0 && (
@@ -1242,7 +1267,8 @@ function Receipt({
   const all = [...details, ...extra];
   if (rows.length === 0 && all.length === 0) return null;
   return (
-    <div className="flex flex-col">
+    // QA m2: a full row of its own when the tags share the *Rewards* line (under 700 px of height).
+    <div className="flex flex-col [@media(max-height:700px)]:basis-full">
       {rows.length > 0 && (
         <ul className="flex flex-col border-t border-dotted border-faint" data-testid="receipt">
           {rows}
@@ -1404,11 +1430,11 @@ function AgainButtons({
       pending={againPending === times}
       disabled={short || !!againPending}
       aria-label={full}
-      className="min-h-12 flex-col gap-0 px-2 sm:min-h-11 sm:flex-row sm:gap-1.5"
+      className="min-h-12 flex-col gap-0 px-2 sm:min-h-11 sm:flex-row sm:gap-1.5 [@media(max-height:799.98px)]:px-1"
       data-testid={testId}
     >
       {/* Phone: the label over its cost; from 640 px one line, "Once more · 10 Energy". */}
-      <span className="text-[12px] leading-tight sm:text-[13px]">{label}</span>
+      <span className="text-[12px] leading-tight whitespace-nowrap sm:text-[13px]">{label}</span>
       <span
         aria-hidden="true"
         className={cx(
@@ -1438,7 +1464,8 @@ function AgainButtons({
       <div
         className={cx(
           'grid gap-2',
-          again.cost3 === null ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3',
+          // QA m2: on a phone under 800 px tall the three sit in one row (the label over its cost).
+          again.cost3 === null ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 [@media(max-height:799.98px)]:grid-cols-3',
         )}
       >
         {repeat(1, once.full, once.label, again.cost1, short1, 'primary', 'again-once')}
@@ -1453,7 +1480,10 @@ function AgainButtons({
             'again-three',
           )}
         <Dialog.Close asChild>
-          <Button variant="outline" className={cx(again.cost3 !== null && 'col-span-2 sm:col-span-1')}>
+          <Button
+            variant="outline"
+            className={cx(again.cost3 !== null && 'col-span-2 sm:col-span-1 [@media(max-height:799.98px)]:col-span-1')}
+          >
             Continue
           </Button>
         </Dialog.Close>

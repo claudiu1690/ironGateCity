@@ -4,6 +4,7 @@ import type { LocationJobView, ResultArt } from '@irongate/rules';
 import { Fragment } from 'react';
 import type { ReactNode } from 'react';
 import { cx, formatWhen, nextDayTurn } from '../format';
+import { statName } from '../odds';
 import { GroundSash } from './GroundSash';
 import type { Ground } from './GroundSash';
 import { ArtPanel } from './HallHeader';
@@ -202,7 +203,7 @@ export interface JobsCardProps {
 
 function needsText(j: LocationJobView): string {
   return copy.jobNeeds(
-    j.unmet.map((u) => (u.reason === 'LEVEL' ? `Level ${u.need}` : `${u.stat!.toUpperCase()} ${u.need}`)),
+    j.unmet.map((u) => (u.reason === 'LEVEL' ? `Level ${u.need}` : `${statName(u.stat!)} ${u.need}`)),
   );
 }
 

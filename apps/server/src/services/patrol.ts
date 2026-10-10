@@ -112,7 +112,10 @@ export async function ensurePatrol(content: GameContent, loaded: LoadedCharacter
   let doc = loaded.doc;
   const id = doc._id.toHexString();
   const mode = patrolHooks.mode(id);
-  if (mode === 'never') return doc;
+  // QA n2: a reader that loaded the character just before the forced stop's write answers with the
+  // written document (with its card), as every reader does in `auto`.
+  if (mode === 'never')
+    return patrolHooks.spent(id) ? ((await Character.findById(doc._id).lean<CharacterDoc>()) ?? doc) : doc;
   for (let attempt = 1; attempt <= 2; attempt++) {
     const cityId = doc.cityId;
     const bucket = patrolBucket(now);

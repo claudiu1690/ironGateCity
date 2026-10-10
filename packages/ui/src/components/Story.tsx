@@ -621,7 +621,7 @@ export function LettersRow({ letter, onOpen }: { letter: LetterView; onOpen: () 
   );
 }
 
-/** "Wearing: The demob suit · CHA 5" (§8.2), optionally with the item's picture. */
+/** "Wearing: The demob suit · Charisma 5" (§8.2), optionally with the item's picture. */
 export function ItemLine({ name, cha, art }: { name: string; cha: number; art?: AssetView }) {
   return (
     <span className="flex items-center gap-2 font-body text-[14px]" data-testid="item-line">

@@ -65,6 +65,7 @@ import type { PlaceCtx } from './place';
 import { withRequestKey } from './requestKey';
 import {
   flagsPruned,
+  gateRunIn,
   healthDoc,
   healthTimerOf,
   heatDoc,
@@ -143,9 +144,14 @@ export async function startRunInInTx(
   const chances = runInChances(you, them);
   const encounterId = new Types.ObjectId();
   const decideBy = new Date(now + RUN_IN.decideMs);
+  // Review 5 fix round (QA m5): a resolved run-in whose result is still open (a second tab, a tab
+  // closed at the result) no longer blocks the next one: it moves to the unseen list and the gate
+  // shows it after this one. Only a pending run-in holds the street (`notFree`).
+  const unseen = c.runIn?.state === 'resolved' ? c.runIn : null;
   const updated = await Character.findOneAndUpdate(
-    { _id: c._id, version: c.version, 'day.settled': ctx.today, runIn: null },
+    { _id: c._id, version: c.version, 'day.settled': ctx.today, 'runIn.state': { $ne: 'pending' } },
     {
+      ...(unseen ? { $push: { runInUnseen: unseen } } : {}),
       $set: {
         ...i.set,
         lastActionAt: new Date(now),
@@ -598,8 +604,9 @@ export async function currentRunIn(deps: {
   const now = deps.now();
   const loaded = await loadCharacter(deps.user, deps.content, now);
   const c = loaded.doc;
-  if (!c.runIn) return null;
-  const enc = await Encounter.findById(c.runIn.encounterId).lean<EncounterDoc>();
+  const shown = gateRunIn(c);
+  if (!shown) return null;
+  const enc = await Encounter.findById(shown.encounterId).lean<EncounterDoc>();
   if (!enc) return null;
   if (enc.state === 'resolved') return { result: await storedEncounterResult(enc) };
   return { pending: pendingView(deps.content, enc, c, now, loaded.city) };
@@ -659,6 +666,11 @@ export async function closeRunIn(deps: {
   await Character.updateOne(
     { _id: loaded.doc._id, 'runIn.encounterId': encounterId, 'runIn.state': 'resolved' },
     { $set: { runIn: null }, $inc: { version: 1 } },
+  );
+  // QA m5: or one of the earlier results moved off the pointer by a newer run-in.
+  await Character.updateOne(
+    { _id: loaded.doc._id, 'runInUnseen.encounterId': encounterId },
+    { $pull: { runInUnseen: { encounterId } }, $inc: { version: 1 } },
   );
   const fresh = (await Character.findById(loaded.doc._id).lean<CharacterDoc>()) ?? loaded.doc;
   const result = enc.state === 'resolved' ? await storedEncounterResult(enc) : null;

@@ -282,7 +282,7 @@ export const copy = {
     `Seniority ${days} ${days === 1 ? 'day' : 'days'}: +${amount}`,
   /** Review 1 (§13.4): the desk row for One of Us's PC (wording confirmed 3 Oct 2026). */
   oneOfUsPaid: (pc: number) => `One of Us · +${pc} Political Capital from the town`,
-  /** "Needs Level 3, AGI 10": only the unmet requirements, level first. */
+  /** "Needs Level 3, Agility 10": only the unmet requirements, level first. */
   jobNeeds: (parts: string[]) => `Needs ${parts.join(', ')}`,
   jobTaken: (paid: string) => `Taken · paid ${paid}`,
   jobTakenOrder: (fxp: number) => `Taken · party order complete: +${fxp} Party XP`,
@@ -1853,6 +1853,8 @@ export const copy = {
       /** The danger line; at night with the patrols (answers §16.1). */
       danger: (word: string, night: boolean) =>
         `Risk here: ${word}${night ? ' · patrols out' : ''} · every tap can bring a run-in · Heat counts double · the cells put you on the train home`,
+      /** Its head, all a narrow column prints (QA n1: held sideways, never cut inside the risk word). */
+      dangerHead: (word: string, night: boolean) => `Risk here: ${word}${night ? ' · patrols out' : ''}`,
       /** The goal line, out of Unrest. */
       goal: (home: string, toGo: string, week: string) =>
         `The goal: Unrest. Under 60 % the ${home}'s branch drops everything to win the town back, its deputies go quiet, and your work here pays three quarters more. ${toGo} points to go · your party has pushed ${week} this week.`,
@@ -1955,6 +1957,9 @@ export const copy = {
     /** The plate's line: *Dusk in 40 min* / *Dusk at 16:00*; *Night · dawn in 25 min* / *Night · dawn at 18:00*. */
     plate: (n: { night: boolean; nextDusk: number; nextDawn: number }, now: number) =>
       n.night ? `Night · dawn ${when(n.nextDawn, now)}` : `Dusk ${when(n.nextDusk, now)}`,
+    /** The same line in its two parts (QA m1: stacked beside the name on a short phone): *Dusk* · *in 40 min*. */
+    plateParts: (n: { night: boolean; nextDusk: number; nextDawn: number }, now: number): [string, string] =>
+      n.night ? ['Night · dawn', when(n.nextDawn, now)] : ['Dusk', when(n.nextDusk, now)],
     /** A night window's lock line (answers §12.1): *Opens at nightfall · dusk at 16:00*. */
     opensAt: (at: string) => `Opens at nightfall · dusk ${at}`,
     /** The ticket tag on rival ground at night (answers §12.2). */

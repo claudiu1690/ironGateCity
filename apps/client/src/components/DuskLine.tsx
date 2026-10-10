@@ -14,19 +14,34 @@ export function duskNote(now: number): readonly string[] {
  * *Night · dawn at 18:00*, Courier 11, ticking every 30 s from the view's `night` block (never from
  * the browser's own idea of night). As a button it opens the clock's note; inside a plate whose
  * whole block is already one notes button, it is plain dotted text (`button={false}`).
+ *
+ * QA m1 (fix round): `stacked`, on a phone under 700 px tall, the line sits beside the plate's name in
+ * two short lines, *Night · dawn* over *at 18:00*, so the plate keeps its height and every pin its room.
  */
 export function DuskLine({
   night,
   button = true,
+  stacked = false,
   className,
 }: {
   night: NightView;
   button?: boolean;
+  stacked?: boolean;
   className?: string;
 }) {
   const now = useNow(30_000);
   const text = copy.night.plate(night, now);
-  const line = (
+  const [lead, at] = copy.night.plateParts(night, now);
+  const line = stacked ? (
+    <span
+      className={cx('flex flex-col items-end font-mono text-[10px] leading-[11px] whitespace-nowrap text-text-2', helpMark)}
+      data-testid="plate-dusk"
+      data-night={night.night}
+      data-stacked=""
+    >
+      <span>{lead}</span> <span>{at}</span>
+    </span>
+  ) : (
     <span className={cx('font-mono text-[11px] text-text-2', helpMark)} data-testid="plate-dusk" data-night={night.night}>
       {text}
     </span>

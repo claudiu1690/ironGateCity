@@ -100,6 +100,10 @@ export interface KnockOnLine {
 
 /** The first this many knock-ons print; the rest wait behind *n more ▾* (answers §17.2 item 6). */
 export const KNOCK_ONS_SHOWN = 3;
+/** QA m2 (answers §17.3): on a phone under 700 px tall, two. */
+export const KNOCK_ONS_SHOWN_SHORT = 2;
+/** The media query of a phone under 700 px tall (375 × 667, 360 × 640): the result's compact form. */
+export const SHORT_SCREEN = '(max-height: 700px)';
 
 /**
  * The priority (answers §17.2 item 6, settled in §18 Q3): a point to place; a rank-up, a Reputation

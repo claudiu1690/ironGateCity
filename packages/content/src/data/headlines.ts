@@ -215,7 +215,7 @@ export const riskHeadlines: HeadlineInput[] = [
     priority: 1,
     when: [{ kind: 'unrestPushed' }],
     headline: "{city} Under Sixty",
-    deck: "The {party}'s town is in Unrest this morning. {top} are named by the district office for their part. Work there pays more until the town settles, which it will not do on its own.",
+    deck: "The {party}'s town is in Unrest this morning. The district office names {top} for their part. Work there pays more until the town settles, which it will not do on its own.",
   },
   {
     id: 'hl.v.rival-pressure',

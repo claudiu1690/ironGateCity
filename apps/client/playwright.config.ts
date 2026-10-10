@@ -43,6 +43,7 @@ export default defineConfig({
         /review4\.spec\.ts/,
         /qa\.review4\.spec\.ts/,
         /review5\.spec\.ts/,
+        /qa\.review5\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -160,6 +161,15 @@ export default defineConfig({
       name: 'review5',
       testMatch: /(^|[\\/])review5\.spec\.ts$/,
       dependencies: ['qa-review4'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    // QA review 5 (docs/qa/review-5-report.md): the API halves (treatment, the patrol's buckets, quiet and
+    // cap, the Unrest prize's farming cases, the night windows at their edges) and the screens at the six
+    // sizes. Last: it moves the shared clock by weeks and sets the night seam (restored to day).
+    {
+      name: 'qa-review5',
+      testMatch: /qa\.review5\.spec\.ts/,
+      dependencies: ['review5'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
   ],

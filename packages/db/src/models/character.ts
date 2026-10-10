@@ -247,6 +247,12 @@ export interface CharacterDoc {
   record?: StoredRecord;
   held?: StoredHeld | null;
   runIn?: StoredRunIn | null;
+  /**
+   * Review 5 fix round (QA m5): resolved run-ins whose result has not been closed yet, oldest first,
+   * moved off the pointer when a new run-in starts (a second tab or device). Each stays on the gate,
+   * after the pointer's own, until `encounter.close` takes it off. Absent on older documents (= []).
+   */
+  runInUnseen?: StoredRunIn[];
   /** The way remembered per mission: the second time is one tap. */
   ways?: Array<{ missionId: string; wayId: string }>;
   flags?: StoredFlag[];
@@ -640,6 +646,7 @@ const characterSchema = new Schema<CharacterDoc>(
     record: { type: recordSchema, default: () => ({ marks: [], arrests: [] }) },
     held: { type: heldSchema, default: null },
     runIn: { type: runInSchema, default: null },
+    runInUnseen: { type: [runInSchema], default: [] },
     ways: { type: [waySchema], default: [] },
     flags: { type: [flagSchema], default: [] },
     barred: { type: [barSchema], default: [] },

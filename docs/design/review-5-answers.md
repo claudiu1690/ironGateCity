@@ -652,6 +652,7 @@ Phone budget at 390 × 740, ×1 Success: 112 + 172 + 0 + 20 + 180 + 88 + 108 + 4
 
 - **Never scrolls:** a ×1 Success, and a mission result with a level-up, at **390 × 740** and on **every desktop** (1440 × 900 has ~150 px to spare under the layout above; 1024 × 520 is a sideways phone and follows the phone rule).
 - **A short scroll is accepted on a 740 px phone** (at most **about 100 px** of the middle, the picture and the buttons fixed) for a **×3**, a result **with a reason line**, or a **run-in**; never on phones of 844 px and above. The thin bar of §4.2 shows it.
+- **Phones under 700 px tall** (375 × 667, 360 × 640; added in the QA fix round, 10 Oct 2026, QA m2): the same rule, a ×1 Success never scrolls and a ×3, a reason line or a run-in at most about 100 px. To get there: the picture is 88 px (the stamp at 70 %), the body Source Serif 14 / 20, the bonus tags on the *Rewards* line, two knock-on lines and *n more*, and (from 800 px of height down) the three buttons in one row, each label over its cost. Measured: a Success 0 px at both sizes, a ×3 3 px and 30–52 px, a Partial 0 px.
 - *Details* and *n more* may scroll the middle anywhere, by the player's own tap.
 
 **Where:** `ResultModal` (`packages/ui`), `Receipt` (the fold), the tags line, the knock-on cap; `copy.result.details`, `copy.result.more(n)`; no rule in the GDD changes (§13.1a gains one sentence); the slice-3 receipt design (`review-3-answers.md` §3) is superseded by §17.2's item 5 for the notes.
@@ -735,7 +736,7 @@ Outcome headlines for the paper's *In Print* line, where a mission prints one: t
 | Paper | Headline | Deck |
 |---|---|---|
 | The Clarion (Collective) | **{city} Wobbles: the Branch Pushed Hard** | The {party}'s share of its own town fell under 60 overnight. {top} did the heaviest carrying. The Collective's work there pays three quarters more while it lasts. |
-| The Sentinel (Vanguard) | **{city} Under Sixty** | The {party}'s town is in Unrest this morning. {top} are named by the district office for their part. Work there pays more until the town settles, which it will not do on its own. |
+| The Sentinel (Vanguard) | **{city} Under Sixty** | The {party}'s town is in Unrest this morning. The district office names {top} for their part. *(QA m4, fix round: was "{top} are named…", which read wrong with one name.)* Work there pays more until the town settles, which it will not do on its own. |
 | The Gazette (Alliance) | **{city} in Unrest: the Rooms' Callers Did It** | The {party}'s share of its home town fell under sixty. {top} knocked the most doors. Every Alliance act there pays three quarters more while it lasts. |
 | The Herald and the local line (neutral, `cityId: '*'`) | **{pushingParty} Callers Push {city} into Unrest** | The town's share fell under 60 overnight. {top} did most of the pushing; the {party}'s branch has dropped everything to win it back. |
 
