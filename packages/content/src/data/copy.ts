@@ -472,9 +472,10 @@ export const copy = {
       'Patrols',
       'After dark on rival ground the streets are watched: every tap is likelier to bring a run-in, and now and then a patrol stops you just for being out. A stop is papers, a word or a side street, never a fight; your name taken means more Heat. Nothing you own is at risk, and nothing happens while you are away.',
     ],
+    /** The voting rework (design §3.8, §8.9): reworded in place; the 20 PC proposal is gone. `pcV2` below is the same text and goes in phase 5. */
     pc: () => [
       'Political Capital',
-      'Your pull in the party. You earn it by doing all three Party orders (+5 a day) and by holding a council seat. You spend it to stand for the council (10), to back a candidate (10) or to put a rule to the council (20).',
+      'Your pull in the party. You earn it by doing all three Party orders (+5 a day) and by holding a council seat. You spend it to stand for the council (10) or to back a candidate (10).',
     ],
     /** Review 4 #18 (answers §18): the figure, said once; `steps` is the Reputation level here (0–4). */
     standing: (city: string, steps: number) => [
@@ -893,7 +894,8 @@ export const copy = {
     `Council rule: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
   councillorLine: (city: string, weekday: string) => `Councillor, ${city} · term ends ${weekday}`,
   noOffice: (rank3Title: string) => `No seat · ${rank3Title}s may stand for the council`,
-  pcSinks: (pc: number) => `Political Capital ${pc} · stand 10 · back a candidate 10 · put forward a rule 20`,
+  /** The Me tab's line (design §3.8, §8.9): two sinks; the 20 PC proposal is gone. */
+  pcSinks: (pc: number) => `Political Capital ${pc} · stand 10 · back a candidate 10`,
   moraleWord: { fired: 'Fired up', steady: 'Steady', unrest: 'Unrest' } as Record<string, string>,
   moraleCrossed: (city: string, state: string) =>
     state === 'fired'
@@ -1283,8 +1285,15 @@ export const copy = {
       branch: (secretary: string) => `the branch's rule · ${secretary}`,
       councillor: (name: string) => `Councillor ${name}'s rule`,
       you: 'your rule',
-      /** The capital: "the Vanguard's rule · Organiser Stahl" (`addressedAs`, as `branch`). */
+      /** The capital, the secretary's card: "the Vanguard's rule · Organiser Stahl" (`addressedAs`, as `branch`). */
       party: (faction: string, who: string) => `the ${faction}'s rule · ${who}`,
+      /**
+       * The capital, a councillor's card (design §8.9 Q2): "the Collective's rule · Councillor Jana
+       * Varga". `name` is the character's name as stored; nothing splits it (a councillor is a player
+       * the reader may not know, so the full name, as `councillor` above). The view's `whose.via`
+       * says which of the two to print.
+       */
+      partyCouncillor: (faction: string, name: string) => `the ${faction}'s rule · Councillor ${name}`,
       /** A shared card: "the Collective's and the Alliance's rule". */
       shared: (a: string, b: string) => `the ${a}'s and the ${b}'s rule`,
     },
@@ -1323,6 +1332,13 @@ export const copy = {
     /** "Seats go to the seven best known in Coalport, counting their backers. Local candidates fill the rest." */
     sentence: (city: string, seats: number) =>
       `Seats go to the ${countWord(seats)} best known in ${city}, counting their backers. Local candidates fill the rest.`,
+    /**
+     * The capital's form (design §8.9 Q1), under *Who's standing*'s title and the district's rows at
+     * the count: "Two seats in Eastside: votes and opinion decide how many each party takes; a party's
+     * seats go to its best known in Irongate, counting their backers. Local candidates fill the rest."
+     */
+    capitalSentence: (district: string) =>
+      `Two seats in ${district}: votes and opinion decide how many each party takes; a party's seats go to its best known in Irongate, counting their backers. Local candidates fill the rest.`,
     /** "8th · 4 short". */
     short: (place: string, by: number) => `${place} · ${by} short`,
     /** "Player · Organiser · One of Us · 3 backers". */
@@ -1402,6 +1418,11 @@ export const copy = {
           ? 'Stand and set rules (day 2 of 2)'
           : `The vote (day ${cycleDay - 1} of 3)`,
     next: { vote: 'The vote opens', count: 'The count' } as Record<'vote' | 'count', string>,
+    /** Phase 5's two actions (tech design §12; design §8.9): the buttons and their refusals. */
+    seatMe: 'Seat me',
+    townVotes: 'Votes for card 2 × 3',
+    alreadySeated: 'Already on the council here',
+    notTheVote: 'Only while the vote is on (days 2–4)',
   },
   // Slice 4, "the battleground" (docs/design/slice-4-screens.md §11 and its help notes). Times are
   // rendered by the caller in the player's clock (`until`: "Saturday midnight"; `time`: "14:32";
@@ -1781,9 +1802,20 @@ export const copy = {
     sixVotes: (at: string) => `Six votes of ten to pass. The council votes ${at}.`,
     // The voting rework (design §4.1–§4.3, capital): new keys beside the old ones (phase 4 swaps them).
     question: 'Which rule for Irongate next week?',
-    /** The ballot's line under the title. */
+    /**
+     * Retired by design §8.9 Q1 and Q3 (phase 5 removes it): the ballot's plate line is `voteLine`;
+     * *Who's standing*'s sentence is `seats.capitalSentence`; the long form lives in the help note.
+     */
     ballotLineV2: (district: string) =>
       `Each party puts up a rule. Votes and opinion in ${district} together decide: the party ahead takes the most seats, and its rule runs in every district.`,
+    /**
+     * The capital ballot's plate line (design §8.9 Q3): the home line's shape (one vote · until · the
+     * consequence), three Courier lines at most at 390 px so the hall header keeps its 150 px. "One vote
+     * · until Saturday midnight · votes and opinion in Eastside decide its seats · the party with the
+     * most seats city-wide gets its rule". The closed state (days 0–1) prints `ballot.votesFrom` as at home.
+     */
+    voteLine: (district: string, until: string) =>
+      `One vote · until ${until} · votes and opinion in ${district} decide its seats · the party with the most seats city-wide gets its rule`,
     /** The result's plate line: "Rally Permits won · 4 seats of 10 behind it · local candidates 7 of 10 · final". */
     resultLineV2: (rule: string, seats: number, npcSeats: number) =>
       `${rule} won · ${seats} seats of 10 behind it · local candidates ${npcSeats} of 10 · final`,
