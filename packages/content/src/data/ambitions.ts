@@ -154,8 +154,9 @@ export const ambitions: AmbitionInput[] = [
         },
       },
       // The teaser: written with slice 7 (slice-7-nation.md §13, re-strung for the rule ballot in
-      // voting-simplified.md §8.11: the ten marks are the price of standing, paid and gone).
-      { n: 3, title: 'The ten marks', requires: { rank: 3 } },
+      // voting-simplified.md §8.11 and §8.12: the price of standing is 10 Political Capital, not money,
+      // so the chapter is named for the list the name goes on, not for marks).
+      { n: 3, title: 'The list', requires: { rank: 3 } },
     ],
   },
   {

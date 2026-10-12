@@ -159,6 +159,8 @@ const countWord = (n: number): string => COUNT_WORDS[n] ?? String(n);
 /** The voting rework: "1 backer" / "2 backers", "1 day" / "3 days", "a" / "an". */
 const backersN = (n: number) => `${n} ${n === 1 ? 'backer' : 'backers'}`;
 const daysN = (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`;
+/** The fix round (design §8.12, QA m2): never *1 votes*. */
+const votesN = (n: number) => `${n} ${n === 1 ? 'vote' : 'votes'}`;
 const anA = (word: string) => (/^[aeiou]/i.test(word) ? 'an' : 'a');
 const capitalFirst = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
@@ -490,7 +492,7 @@ export const copy = {
     /** Review 4 #9 (answers §9.2): where you live, in plain words (the card's kicker). */
     residence: () => [
       'Where you live',
-      'The town whose council you vote for and stand for, whose paper comes first, and whose Party orders you get. Living somewhere else costs 500 Iron and a week between moves; everything you own comes with you.',
+      'The town whose rule you vote on and whose council you can stand for, whose paper comes first, and whose Party orders you get. Living somewhere else costs 500 Iron and a week between moves; everything you own comes with you.',
     ],
     /** Review 4 #9 (answers §9.3): the Lodgings card's note. */
     lodgings: () => [
@@ -652,7 +654,7 @@ export const copy = {
     kicker: (faction: string) => `The ${faction}'s ranks`,
     opens: {
       hall: "The party's hall and its chat; a pair of hands at any campaign event",
-      vote: 'The vote in every election; a named role at campaign events; backing a candidate',
+      vote: 'The vote on the rule every five days; a named role at campaign events; backing a candidate',
       stand: 'Standing for the council; calling campaign events; the harder missions',
       chair: 'Standing for Chair after a council term; the party strikes a mark off your record once a month',
       list: "The party's list for Parliament after a term as Governor or three on a council",
@@ -839,7 +841,7 @@ export const copy = {
       `Runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
     ],
     resultTie: (rule: string, each: number, untilWeekday: string, nextVoteWeekday: string) => [
-      `${rule} won · ${each} votes each, the first card takes a tie`,
+      `${rule} won · ${votesN(each)} each, the first card takes a tie`,
       `Runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
     ],
     resultFallback: (rule: string, untilWeekday: string, nextVoteWeekday: string) => [
@@ -874,6 +876,19 @@ export const copy = {
       nextVoteWeekday: string,
     ) => [
       `${rule} won · the ${a}'s and the ${b}'s, ${seats} seats of 10`,
+      `${district}: ${parties.join(', ')} · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
+    ],
+    /** A seat tie settled on votes (design §8.12): "Rally Permits won · the Vanguard's, level at 5 seats of 10, more votes". */
+    resultSeatsTie: (
+      rule: string,
+      party: string,
+      seats: number,
+      district: string,
+      parties: string[],
+      untilWeekday: string,
+      nextVoteWeekday: string,
+    ) => [
+      `${rule} won · the ${party}'s, level at ${seats} seats of 10, more votes`,
       `${district}: ${parties.join(', ')} · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
     ],
     resultDraw: (rule: string, untilWeekday: string, nextVoteWeekday: string) => [
@@ -1072,6 +1087,12 @@ export const copy = {
     lastResult: (weekday: string) => `Last result · ${weekday}`,
     /** Closed (days 0–1): "Coalport votes from Wednesday". */
     votesFrom: (city: string, weekday: string) => `${city} votes from ${weekday}`,
+    /**
+     * The fix round (design §8.12, QA m7): the ballot page for a Rank 1 member, in place of the
+     * vote line: "Recruits can't vote yet: 400 Party XP makes an Activist, and Activists vote."
+     */
+    belowRank: (rank1: string, rank2: string, fxp: number) =>
+      `${rank1}s can't vote yet: ${fxp} Party XP makes ${anA(rank2)} ${rank2}, and ${rank2}s vote.`,
   },
   /** Whose a card is (design §4.2), the Courier line under it. */
   rule: {
@@ -1109,10 +1130,14 @@ export const copy = {
      */
     how: {
       votes: (weekday: string, votes: number, cast: number) => `won ${weekday} with ${votes} of ${cast} votes`,
-      tie: (weekday: string, each: number) => `won ${weekday} on a tie · ${each} votes each`,
+      tie: (weekday: string, each: number) => `won ${weekday} on a tie · ${votesN(each)} each`,
       fallback: "the branch's · no votes cast",
       fallbackUnrest: (councillor: string) => `Councillor ${councillor}'s · no votes cast · the branch had no card`,
       seats: (party: string, seats: number) => `the ${party}'s · ${seats} seats of 10`,
+      /** A seat tie settled on votes (design §8.12; the server's `seatTie`): "the Vanguard's · level at 5 seats of 10 · more votes". */
+      seatsTie: (party: string, seats: number) => `the ${party}'s · level at ${seats} seats of 10 · more votes`,
+      sharedSeatsTie: (a: string, b: string, seats: number) =>
+        `the ${a}'s and the ${b}'s · level at ${seats} seats of 10 · more votes`,
       sharedSeats: (a: string, b: string, seats: number) => `the ${a}'s and the ${b}'s · ${seats} seats of 10`,
       draw: (party: string) => `the ${party}'s · on the returning officer's draw`,
       carried: 'carried over from the old council',
@@ -1338,8 +1363,8 @@ export const copy = {
     notInCity: 'You register where you stand: take the train there first.',
     moveCooldown: 'Seven days between moves: not yet.',
     alreadyResident: 'You already live here.',
-    notYetVoter: 'You vote here from the next election that opens.',
-    notYetCandidate: 'You can stand here from the next election that opens.',
+    notYetVoter: 'You vote here from the next vote that opens.',
+    notYetCandidate: 'You can stand here when names next go in for the council.',
     wrongFaction: 'Members back their own party’s candidates.',
     /** Slice-4 fixes §1, §6 (QA M2, m5). */
     // The design's "on the ballot" reworded: ballot is a system word (review 2 §1.13).
@@ -1473,6 +1498,15 @@ export const copy = {
       `${rank2}s can live in the capital. ${fxp} Party XP makes ${/^[aeiou]/i.test(rank2) ? 'an' : 'a'} ${rank2}.`,
     /** At home, resident elsewhere (row 7). */
     liveHereAgain: (city: string) => `Live in ${city} again: vote and stand at home.`,
+    /**
+     * The fix round (design §8.12, QA m5 and m6): the backing, standing and `NOT_POLLING` refusals,
+     * in the new model's words. `voteOpens` is `NOT_POLLING` on cycle days 0–1 (`when` the day and
+     * time the vote opens, in the player's clock); `votingClosed` is the same reason after the count.
+     */
+    alreadyBacking: (name: string) => `You're already backing ${name} for this council.`,
+    alreadyStanding: "You're already standing for this council.",
+    voteOpens: (when: string) => `The vote opens ${when}.`,
+    votingClosed: 'Voting has closed.',
     /** The result's stamp (content: `politics.results.register.stamp`). */
     movedIn: 'Moved in',
     newVoter: (district: string) => `${district} has a new voter`,
@@ -1482,7 +1516,7 @@ export const copy = {
     /** The sheet's five lines (screens §6.2), built on the server with the player's places. */
     sheet: {
       vote: (place: string, weekday: string) =>
-        `You vote and stand in ${place} from the next election that opens (${weekday}).`,
+        `You vote and stand in ${place} from the next vote that opens (${weekday}).`,
       giveUp: (old: string) =>
         `You stop being a ${old} candidate; your ${old} seat, if any, passes to the branch.`,
       orders: (capital: boolean) =>

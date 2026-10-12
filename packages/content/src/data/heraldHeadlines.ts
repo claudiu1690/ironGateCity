@@ -152,7 +152,7 @@ export const heraldHeadlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
     headline: '{name} Made {rank} by the {faction}',
-    deck: 'Party work made a {rank} of {name}. {rank}s vote, at home or, once registered, in the capital; the Election card says when.',
+    deck: 'Party work made a {rank} of {name}. {rank}s vote on the rule, at home or, once registered, in the capital; the Council rule card says when.',
   },
   {
     id: 'hl.ig.rank-up-3',

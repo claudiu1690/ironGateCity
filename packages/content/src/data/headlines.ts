@@ -443,7 +443,7 @@ export const headlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
     headline: '{name} Made Activist by the Branch',
-    deck: 'Recruits become Activists by doing party work. Activists vote: Coalport elects its council every five days, and the Election card says when.',
+    deck: 'Recruits become Activists by doing party work. Activists vote: Coalport picks its council rule every five days, and the Council rule card says when.',
   },
   {
     id: 'hl.rank-up-3',
@@ -626,7 +626,7 @@ export const headlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
     headline: '{name} Made Steward by the Vanguard',
-    deck: 'Initiates become Stewards on the strength of their work. Stewards vote: Duskwall elects its council every five days, and the Election card says when.',
+    deck: 'Initiates become Stewards on the strength of their work. Stewards vote: Duskwall picks its council rule every five days, and the Council rule card says when.',
   },
   {
     id: 'hl.v.rank-up-3',
@@ -805,7 +805,7 @@ export const headlines: HeadlineInput[] = [
     priority: 2,
     when: [{ kind: 'rankRose', values: [2] }],
     headline: '{name} Made Campaigner by the Alliance',
-    deck: 'Volunteers become Campaigners on the strength of their work. Campaigners vote: Ashford elects its council every five days, and the Election card says when.',
+    deck: 'Volunteers become Campaigners on the strength of their work. Campaigners vote: Ashford picks its council rule every five days, and the Council rule card says when.',
   },
   {
     id: 'hl.a.rank-up-3',

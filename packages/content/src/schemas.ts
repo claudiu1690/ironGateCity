@@ -572,8 +572,16 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('ruleFromToday') }),
   z.strictObject({ kind: z.literal('leftUnrest') }),
   // The voting rework (tech design §4.4): live, selected at read.
-  z.strictObject({ kind: z.literal('ruleDecided'), fallback: z.boolean(), drawn: z.boolean().optional() }),
-  z.strictObject({ kind: z.literal('votedRule'), won: z.boolean() }),
+  // The voting fix round (design §8.12): `tie` is a winner level on votes (home) or on seats (the
+  // capital, not drawn); `unrest` is a fallback to a councillor's card (the party's card was off).
+  z.strictObject({
+    kind: z.literal('ruleDecided'),
+    fallback: z.boolean(),
+    drawn: z.boolean().optional(),
+    tie: z.boolean().optional(),
+    unrest: z.boolean().optional(),
+  }),
+  z.strictObject({ kind: z.literal('votedRule'), won: z.boolean(), tie: z.boolean().optional() }),
   z.strictObject({ kind: z.literal('ruleOnBallot') }),
   z.strictObject({ kind: z.literal('voteOpen') }),
   // Slice 4 (tech design §11.3): stored, the train opens at Level 10.

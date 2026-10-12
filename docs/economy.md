@@ -313,7 +313,7 @@ Income is unchanged: **+5 PC a day** for completing all three Party orders (from
 | Sink | PC | Earliest use |
 |---|---|---|
 | Endorse a candidate | 10 | Day 2 (Rank 2), if both days' orders were done |
-| Declare for the council (deposit) | 10 | Day 10–14 (Rank 3) |
+| Stand for the council (10 PC, spent) | 10 | Day 10–14 (Rank 3) |
 | ~~Move an ordinance~~ | ~~20~~ | **Removed 10 Oct 2026 (voting simplified):** a councillor's rule on the city's ballot is free |
 
 A daily player who never misses the orders has 50 PC on day 10 and **about 45 allowing a missed day**: enough to file (10), endorse a colleague in the same cycle (10) and, once seated, move an ordinance (20), with a few left. A casual player who completes the orders four days in five has ~40 by day 14, which still covers file + endorse; the proposal waits for the stipend, which pays 10 a day from the seat. A sitting councillor earns 15 a day against a maximum spend of 40 per five-day cycle, so PC accumulates from the first term at about 35 a cycle towards the 1,000 cap; the Chair candidacy (25), petitions (10) and patron favours (15–40) arrive in slices 7–8 to spend it. **Nothing political costs Iron**, so the Iron balance keeps growing as in §5.2.
