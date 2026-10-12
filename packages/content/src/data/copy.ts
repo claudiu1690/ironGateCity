@@ -1573,13 +1573,16 @@ export const copy = {
     // The voting rework (design §4.1–§4.3, capital): new keys beside the old ones (phase 4 swaps them).
     question: 'Which rule for Irongate next week?',
     /**
-     * The capital ballot's plate line (design §8.9 Q3): the home line's shape (one vote · until · the
-     * consequence), three Courier lines at most at 390 px so the hall header keeps its 150 px. "One vote
-     * · until Saturday midnight · votes and opinion in Eastside decide its seats · the party with the
-     * most seats city-wide gets its rule". The closed state (days 0–1) prints `ballot.votesFrom` as at home.
+     * The capital ballot's plate line (design §8.9 Q3, shortened §8.10 Q1): the home line's shape (one
+     * vote · until · the consequence), three Courier lines at most at 390 px so the hall header keeps
+     * its 150 px. "One vote · until Saturday midnight · votes and opinion decide Eastside's seats · most
+     * seats city-wide wins the rule". The budget is 43 Courier characters a line (316 px of text at 12
+     * px); the longest case (*Government Quarter*, *Wednesday 02:00*) is 123 characters and wraps to
+     * three lines with one to spare, so neither the sentence nor a district's name may grow. The
+     * closed state (days 0–1) prints `ballot.votesFrom` as at home.
      */
     voteLine: (district: string, until: string) =>
-      `One vote · until ${until} · votes and opinion in ${district} decide its seats · the party with the most seats city-wide gets its rule`,
+      `One vote · until ${until} · votes and opinion decide ${district}'s seats · most seats city-wide wins the rule`,
     /** The result's plate line: "Rally Permits won · 4 seats of 10 behind it · local candidates 7 of 10 · final". */
     resultLineV2: (rule: string, seats: number, npcSeats: number) =>
       `${rule} won · ${seats} seats of 10 behind it · local candidates ${npcSeats} of 10 · final`,
