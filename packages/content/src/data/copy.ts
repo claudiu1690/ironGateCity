@@ -834,6 +834,7 @@ export const copy = {
   withdrawnLine: 'Withdrawn · the 10 Political Capital stayed with the branch',
   struckLine: 'Not enough backers · your 10 Political Capital is returned',
   onTheBallotLine: "You're a candidate",
+  /** Retired by the voting rework (design §8.8 Q3): `stand.plateLineVoting` replaces it; goes with phase 5's removals. */
   tooLateToStand: "Voting is open; it's too late to stand this time.",
   // Review 3 (answers §6.3, §7): the system in words on the election screens, never a formula.
   howDecided:
@@ -1273,10 +1274,14 @@ export const copy = {
   /** Whose a card is (design §4.2), the Courier line under it. */
   rule: {
     whose: {
+      /**
+       * `secretary` is the faction's `secretary.addressedAs` (design §8.8 Q4), never the full name:
+       * "the branch's rule · Secretary Holm" · "… · Organiser Stahl" · "… · Mr Grey".
+       */
       branch: (secretary: string) => `the branch's rule · ${secretary}`,
       councillor: (name: string) => `Councillor ${name}'s rule`,
       you: 'your rule',
-      /** The capital: "the Vanguard's rule · Secretary Stahl". */
+      /** The capital: "the Vanguard's rule · Organiser Stahl" (`addressedAs`, as `branch`). */
       party: (faction: string, who: string) => `the ${faction}'s rule · ${who}`,
       /** A shared card: "the Collective's and the Alliance's rule". */
       shared: (a: string, b: string) => `the ${a}'s and the ${b}'s rule`,
@@ -1335,6 +1340,13 @@ export const copy = {
     /** "Seven seats · counted Sunday morning · stand until Monday midnight". */
     plateLine: (seats: number, countWeekday: string, until: string) =>
       `${capitalFirst(countWord(seats))} seats · counted ${countWeekday} morning · stand until ${until}`,
+    /**
+     * The plate line on days 2–4 (design §8.8 Q3; replaces `tooLateToStand`): the names are in and the
+     * town is voting; the next window to stand opens on the count morning. "Seven seats · the vote is
+     * on · counted Sunday morning · names go in again from Sunday".
+     */
+    plateLineVoting: (seats: number, countWeekday: string) =>
+      `${capitalFirst(countWord(seats))} seats · the vote is on · counted ${countWeekday} morning · names go in again from ${countWeekday}`,
     /** "✓ Rank 3, Organiser". */
     tickRank: (rank: number, title: string) => `✓ Rank ${rank}, ${title}`,
     /** "✓ Known in Coalport (74 wins)". */
@@ -1342,11 +1354,13 @@ export const copy = {
     /** "Needs Rank 3 · 1,240 Party XP to go". */
     needsRank: (rank: number, fxp: number) => `Needs Rank ${rank} · ${fxp.toLocaleString('en-GB')} Party XP to go`,
     /**
-     * The voting rework, phase 3: the cross's line when the player is not yet Known here (design §4.5
-     * gives the rank's only; written plainly for the designer to confirm): "Needs to be Known in
-     * Coalport · 12 of 30 wins".
+     * The cross's line when the player is not yet Known here (design §8.8 Q1): the same shape as the
+     * rank's cross, a target and the gap. "Needs to be Known in Coalport · 18 wins to go".
      */
-    needsKnown: (city: string, wins: number, need: number) => `Needs to be Known in ${city} · ${wins} of ${need} wins`,
+    needsKnown: (city: string, wins: number, need: number) => {
+      const toGo = Math.max(0, need - wins);
+      return `Needs to be Known in ${city} · ${toGo} ${toGo === 1 ? 'win' : 'wins'} to go`;
+    },
     gives: "A seat is five days on the council: your rule on the town's ballot, and 10 Political Capital and 20 Party XP a morning.",
     yourRule: 'Your rule',
     costs: 'Costs 10 Political Capital. Your name is on the list until the count.',
