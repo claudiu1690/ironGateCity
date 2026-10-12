@@ -103,6 +103,7 @@ export async function townHallView(
                 next.cards.map((x) => ({ ordinanceId: x.ordinanceId, factionIds: [], by: [] })),
               )
             : [],
+          ...(next.myRule?.capital !== undefined ? { capital: next.myRule.capital } : {}),
         }
       : null;
 

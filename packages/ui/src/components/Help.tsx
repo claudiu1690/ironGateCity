@@ -37,6 +37,11 @@ export interface HelpButtonProps {
   onPick?: (index: number) => boolean;
   /** Review 4 #25: a button under a note (by its index in `notes`), e.g. *See the ranks*. */
   actions?: Readonly<Record<number, { label: string; onClick: () => void }>>;
+  /**
+   * The voting rework (design §4.9): a line behind *More* under the first note, for the curious (the
+   * capital's formula). Hidden until the button is tapped.
+   */
+  more?: string;
 }
 
 /** A label's box on screen, for `pickNoteAt`. */
@@ -94,8 +99,10 @@ export function HelpButton({
   firstAt,
   onPick,
   actions,
+  more,
 }: HelpButtonProps) {
   const own = useRef<HTMLButtonElement>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
   const ref = buttonRef ?? own;
   const [open, setOpen] = useState(false);
   const [first, setFirst] = useState<number | null>(null);
@@ -115,6 +122,7 @@ export function HelpButton({
           });
         }
         setOpen(o);
+        if (!o) setMoreOpen(false);
       }}
     >
       <Dialog.Trigger asChild>
@@ -177,6 +185,21 @@ export function HelpButton({
                   <Dialog.Description className="font-body text-[15px] leading-snug">
                     <NoteLines text={text!} />
                   </Dialog.Description>
+                  {more &&
+                    (moreOpen ? (
+                      <p className="mt-1.5 font-body text-[14px] leading-snug text-text-2" data-testid="help-more-line">
+                        {more}
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setMoreOpen(true)}
+                        className="-my-1 inline-flex min-h-11 cursor-pointer items-center self-start font-mono text-[13px] underline underline-offset-2"
+                        data-testid="help-more"
+                      >
+                        {copy.help.more}
+                      </button>
+                    ))}
                   {button}
                 </div>
               ) : (

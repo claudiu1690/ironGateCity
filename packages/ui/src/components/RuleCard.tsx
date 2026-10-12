@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { COUNCIL } from '@irongate/rules';
+import { CAPITAL_COUNCIL, COUNCIL } from '@irongate/rules';
 import type {
   CouncilRowView,
   FactionId,
@@ -30,13 +30,16 @@ type Names = Partial<Record<FactionId, string>>;
 const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
 const party = (names: Names, f: FactionId | undefined) => (f ? (names[f] ?? f) : '');
 
-/** Whose a card is, the Courier line under it (design §4.2). */
-export function whoseLine(card: RuleCardView, names: Names): string {
+/**
+ * Whose a card is, the Courier line under it (design §4.2): *the branch's rule · …* at home; in the
+ * capital (`capital`) *the Vanguard's rule · …*, or a shared card's two parties.
+ */
+export function whoseLine(card: RuleCardView, names: Names, capital = false): string {
   const w = card.whose;
   if (w.kind === 'councillor') return w.you ? copy.rule.whose.you : copy.rule.whose.councillor(w.name);
   const [a, b] = w.factionIds;
   if (a && b) return copy.rule.whose.shared(party(names, a), party(names, b));
-  return copy.rule.whose.branch(w.by);
+  return capital && a ? copy.rule.whose.party(party(names, a), w.by) : copy.rule.whose.branch(w.by);
 }
 
 /**
@@ -128,6 +131,8 @@ export interface RuleCardProps {
   extra?: ReactNode;
   /** Three columns from 960 px (the ballot's sheet): the card grows to 160 px. */
   row?: boolean;
+  /** The capital (design §4.2, §4.3): the party's whose line; at the result, seats as bars. */
+  capital?: boolean;
 }
 
 export function RuleCard({
@@ -141,12 +146,15 @@ export function RuleCard({
   winnerLines,
   extra,
   row,
+  capital = false,
 }: RuleCardProps) {
   const choosing = mode === 'vote' && !cast;
   const on = choosing && selected;
   const won = mode === 'result' && !!card.won;
   const crests = card.whose.kind === 'party' ? card.whose.factionIds : [];
   const count = mode === 'result' ? (card.seats ?? card.votes ?? 0) : null;
+  // The capital's result (design §4.3): the seats behind the card as bars, of ten.
+  const seats = mode === 'result' && card.seats != null ? card.seats : null;
   const body = (
     <>
       <span className="flex min-w-0 flex-1 flex-col gap-px">
@@ -161,7 +169,17 @@ export function RuleCard({
             />
           )}
         </span>
-        {mode === 'result' && (
+        {seats !== null ? (
+          <span className="flex gap-0.5" aria-hidden="true" data-testid="rule-card-seats">
+            {Array.from({ length: CAPITAL_COUNCIL.seats }, (_, i) => (
+              <span
+                key={i}
+                className={cx('inline-block h-3 w-1.5', i < seats ? 'bg-ink' : 'bg-track')}
+                data-testid={i < seats ? 'rule-card-seat' : undefined}
+              />
+            ))}
+          </span>
+        ) : mode === 'result' && (
           <span className="block h-[3px] w-full bg-track" aria-hidden="true">
             <span
               className="block h-full bg-ink"
@@ -181,7 +199,7 @@ export function RuleCard({
           {crests.map((f) => (
             <FactionCrest key={f} factionId={f} size={10} />
           ))}
-          <span>{whoseLine(card, names)}</span>
+          <span>{whoseLine(card, names, capital)}</span>
         </span>
         {card.yourVote && (cast || mode !== 'vote') && (
           <span className="font-mono text-[11px] text-petrol" data-testid="rule-card-your-vote">
@@ -264,6 +282,8 @@ export interface RuleCardsProps {
   winnerLines?: readonly string[];
   /** Show mode: a node under a card, by its rule. */
   extra?: Readonly<Record<string, ReactNode>>;
+  /** The capital's cards (one per party; seats at the result). */
+  capital?: boolean;
   className?: string;
 }
 
@@ -282,6 +302,7 @@ export function RuleCards({
   layout = 'stack',
   winnerLines,
   extra,
+  capital,
   className,
 }: RuleCardsProps) {
   const cast = mode === 'vote' && cards.some((c) => c.yourVote);
@@ -307,6 +328,7 @@ export function RuleCards({
             winnerLines={winnerLines}
             extra={extra?.[c.ordinanceId]}
             row={layout === 'auto'}
+            capital={capital}
           />
         );
         return choosing ? (
@@ -662,6 +684,7 @@ export function HowTheVoteWorks({ className, ...p }: HowTheVoteWorksProps) {
   return (
     <HelpButton
       notes={[councilRuleNote(p)]}
+      more={p.capital ? copy.help.ruleMore : undefined}
       label={copy.ballot.howTheVoteWorks}
       testId="how-the-vote-works"
       className={cx('-my-2 inline-flex items-center self-start font-mono text-[12px] text-ink', helpMark, className)}

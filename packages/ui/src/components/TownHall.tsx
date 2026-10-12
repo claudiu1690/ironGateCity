@@ -101,6 +101,7 @@ function RuleInForce({
     <section aria-label={copy.hall.ruleInForce} className="flex flex-col gap-1" data-testid="hall-rule">
       <HelpButton
         notes={[note]}
+        more={hall.seatCount === 10 ? copy.help.ruleMore : undefined}
         label={`${copy.hall.ruleInForce}: ${copy.ballot.howTheVoteWorks}`}
         className={cx(kicker, 'w-full text-left')}
       >
@@ -173,6 +174,7 @@ function NextWeeksRule({
         onSelect={acts?.onSelect}
         disabled={!!acts?.pending}
         extra={c?.onBallot && change ? { [c.rule.ordinanceId]: change } : undefined}
+        capital={b.capital}
       />
       {voting && !cast && acts && (
         <Button
@@ -192,7 +194,12 @@ function NextWeeksRule({
       )}
       {c && !c.onBallot && (
         <div className="flex flex-col gap-0.5" data-testid="hall-next-in-line">
-          <p className="font-mono text-[12px] text-text-2">{copy.hall.nextInLine}</p>
+          <p className="font-mono text-[12px] text-text-2">
+            {/* The capital: the party's one card, set by the bloc's top seat (design §8.6 Q4). */}
+            {c.capital && !c.capital.leadsBloc
+              ? copy.hall.partyCardSet(c.capital.by, names[c.capital.factionId] ?? c.capital.factionId, c.capital.rule)
+              : copy.hall.nextInLine}
+          </p>
           <p className="font-mono text-[12px]">
             {copy.stand.yourRule}: <span className="font-semibold">{c.rule.name}</span>
           </p>
@@ -319,7 +326,7 @@ export function WhatNowCard({ whatNow: w, hallName, names = {}, onDesk, classNam
   const first = w.capital
     ? w.capital.leadsBloc
       ? r.capitalLeads(party, w.rule.name)
-      : r.capitalChosen(w.capital.by, party, w.rule.name)
+      : r.capitalChosen(w.capital.by, party, w.capital.rule ?? w.rule.name)
     : w.rule.onBallot
       ? r.onBallot(w.rule.name, formatWeekday(w.pollsOpenAt), formatWeekday(w.countAt - 1), formatUntil(w.changeUntil))
       : r.nextInLine();

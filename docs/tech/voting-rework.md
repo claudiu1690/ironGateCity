@@ -1207,3 +1207,64 @@ The home cities' screens are built on the v2 views: the Election card, the ballo
 2. The ballot's plate line folds away under 700 px tall to keep the third card above the CTA; the caption still says *Secret and final. The result is at …*. Confirm, or name the line to shorten instead.
 3. Who's standing on days 2–4 still reads the old `tooLateToStand` (*Voting is open; it's too late to stand this time.*); the design gives that state no plate line.
 4. The party card shows the secretary's full name (*the branch's rule · Petra Holm*), as the view carries it; design §4.2's example is *Secretary Holm* (`addressedAs`). A server/view choice for phase 5 if the designer prefers the title.
+
+### Phase 4 — The capital's screens (12 Oct 2026)
+
+The capital's screens are built on the v2 views: the Election card's capital lines, the ballot (a card per party, shared cards, the district's order), the count (the rule and its seats, the cards with seat bars, three party rows per district with their candidates), the hall's and *What now*'s party-card line, and the help's *More* line. Every `TODO(phase 4)` is gone. The paper, the headlines, the help notes' rewording and the party card's `addressedAs` stay for phase 5.
+
+**Views and server (the one view change of the phase)**
+
+- **`CapitalPartyCardView`** (new, `packages/rules` `types.ts`): `{ factionId, rule, by, leadsBloc }`, a capital councillor's party card: its rule's name, the councillor who set it (the bloc's top seat, `partyCardOf`) and whether that is the reader. It is an optional field on `RuleBallotView.myRule.capital`, `ElectionCardView.councillor.capital` and `TownHallView.councillor.capital`. It is optional so the old fixtures and Vitest files compile unchanged. `WhatNowView.capital` gains an optional `rule` (the party card's rule; *What now* printed the councillor's own rule before).
+- **`capitalPartyCard`** (`politicsService.ts`) computes it from the ballot's raw cards. It is null when the party's card is the secretary's, so a secretary is never printed as *Councillor …*.
+- **In the capital, `myRule.onBallot` means *leads the bloc*.** Before, it meant the councillor's rule was any card, so a councillor whose rule happened to match another party's card read *your rule is on the ballot*. The Election card's state follows: `councillor` when leading, `nextInLine` otherwise. The client words the capital's `nextInLine` as `election.v2.partyCardSet(name, rule)`, with *To your desk* as the outline button. The hall's block 2 prints `hall.partyCardSet(name, party, rule)` where the home cities print *next in line*. `council.whatNow.rule.capitalChosen` takes the party card's rule.
+
+**Components (`packages/ui`)**
+
+- **`whoseLine(card, names, capital)`:** in the capital a one-party card reads `rule.whose.party` (*the Vanguard's rule · …*), and a shared card reads *the Collective's and the Alliance's rule* with two crests, as at home. `RuleCard` and `RuleCards` take a `capital` prop.
+- **The result with seats:** a card with `seats` shows ten seat cells, filled to its seats, in place of the share bar (`rule-card-seats`), with the seat count at the right. The winner's lines are `rule.how.seats` / `sharedSeats` / `draw` (phase 3's `howWords`).
+- **`PartyRow`** (new, exported): crest · the party · `capitalElection.partyVotes(n, shared)` · its two seat cells.
+- **`DistrictResultTable`** is rebuilt as three `PartyRow`s, most seats first. Each row has that party's candidates under it as `CouncilRows` (no kicker), then *Votes and opinion together · final*. The scoreboard stays. **An unseated capital row carries no *n short*:** seats go across the parties by D'Hondt on the scores, so a row's own margin to the last seat would mislead.
+- **`HelpButton` gains `more`:** a *More* button (`copy.help.more`, new: *More*) under the first note, which opens one line. It is used for `help.ruleMore` wherever the capital's *Council rule* note opens: the card's kicker, the hall's block 1 and *How the vote works*.
+
+**Routes (`apps/client`)**
+
+- **The Election card:** *Which rule for Irongate next week?* (`capitalElection.question`) in the capital's `vote` state; the `seats` result lines were already bound (design §8.2). The desktop ballot inline passes `capital`.
+- **The ballot:**
+  - in the capital the plate's Courier line is `capitalElection.ballotLineV2(district)` in place of `ballot.line`. Read as design §4.2's *line under the title*; it folds under 700 px as the home line does, and the sticky caption keeps the time;
+  - the closed state prints the same line under the plate;
+  - the cards' order is the server's, by the district's shares.
+  - **The hall header gives up 15 px on the capital's ballot:** `h-[120px]` on a phone between 701 and 900 px tall. The capital's line wraps to four Courier lines at 390 px, where the home line wraps to two, and the third card ended 6.5 px under the sticky bar at 390 × 844. A smaller font was tried first and did not save a line.
+- **The count:**
+  - the plate line `capitalElection.resultLineV2(rule, seats, npcSeats)`. An old count with no rule ballot keeps `resultLine` (the seats by party);
+  - then the cards with seats (`capital`), the `DistrictSwitcher`, and the district's `DistrictResultTable`.
+  - The order is §9.8's: the cards come before the switcher.
+- **Who's standing:**
+  - days 2–4 read `stand.plateLineVoting(seats, countWeekday)` (design §8.8 Q3; `tooLateToStand` is unused, and its key goes in phase 5);
+  - in the capital the sentence under the plate is `capitalElection.ballotLineV2(district)`, in place of the old `howSeatsAreWon` (the score formula). **For the designer:** see question 1.
+- `copy.stand.needsKnown` (*· 18 wins to go*): no e2e asserted the old *12 of 30 wins*, so nothing changed.
+
+**E2E (rewritten, not weakened)**
+
+- **`capital.spec.ts`:**
+  - register in Eastside;
+  - the card asks *Which rule for Irongate next week?*;
+  - the ballot's line in full; two or three cards with exactly three crests across them (one per party) and *the X's rule · …* / *the X's and the Y's rule* whose lines;
+  - the UI order equals `council.ballot`'s, and the API order is non-increasing in Eastside's best share (from `city.get`);
+  - *Vote for {card 1}* → *Vote cast* with **no** `political-morale` line;
+  - the count at 360 × 740: the plate line; one winner with *Passed*, *seats of 10* and filled seat cells; five chips with Eastside first; three party rows with *votes n*; at least six council rows; *Votes and opinion together · final*; no `votes-cast` and no *of the score*; *How the vote works* → *More* → *Until ten people have voted…*; the switcher keeps `?d=`; no side scroll; Monday's Issues.
+  - **New:** *the capital's councillors*. Two players take two local seats of one party (`/api/test/seat`, chosen from `council.hall`). Exactly one leads the bloc. The other's `myRule.capital` names the leader, and that player's *What now*, hall block 2 and Election card read *Your party's card is set* with *Councillor {leader} chose …*.
+- **`qa.slice4.spec.ts`, *the capital ballot on a short phone*:** one case replaces the old two (the first name above the CTA, and the expected-fail *five names at 375 × 667*). It checks every card and the CTA above the fold at 390 × 844, the last card's top edge above the CTA at 375 × 667 and 360 × 640, and one row at 1440 × 900.
+- `voting.spec.ts` has no capital-only cases; it ran green unchanged (10/10).
+
+**Checks**
+
+- `pnpm art:check && pnpm turbo run lint typecheck build` (cached): green, 14 of 14 tasks.
+- E2E with `--no-deps` (`E2E_WEB_PORT=4273 E2E_API_PORT=3301`): `council`, `qa-council`, `capital`, `qa-capital`, `rival` and `voting` in one run passed **31 of 31**. `qa-review4`'s #11 *the halls as a visitor* (the capital's hall reads the party whose lines now) passed 1 of 1.
+- The full e2e is phase 6's.
+
+**Questions for the designer (none blocking)**
+
+1. **Who's standing in the capital** has no sentence of its own in design §4.5. The page prints the ballot's line (*Each party puts up a rule. Votes and opinion in Eastside together decide: …*). The old one printed the score formula. A capital form of `seats.sentence` (within each party by reputation and backers, across parties by votes and opinion) may read better.
+2. **A capital card set by a councillor** reads *the Collective's rule · Jana Varga* (`rule.whose.party` with the councillor's name). Design §4.2 gives only the secretary's form (*· Organiser Stahl*). Should it be *· Councillor Varga*? This fits with phase 5's `addressedAs` change to `whose.by`.
+3. **The capital ballot's header** is 15 px shorter on phones 701–900 px tall (above), to keep three cards and the CTA in view under a four-line plate line. Alternatively, a shorter capital line would keep the header whole.
+4. **`copy.help.more`** (*More*) is a new key with the obvious word; please confirm.

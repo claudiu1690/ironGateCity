@@ -49,6 +49,10 @@ export function electionLines(
   const desk = { label: e.toYourDesk, route: '/council' as const };
   const ballot = (label: string) => ({ label, route: '/council/ballot' as const });
   const lines = (pair: readonly string[] | string[]) => ({ line1: pair[0]!, line2: pair[1]! });
+  // The capital (design §4.1, §9.8): a district's card asks about Irongate, and a councillor's party
+  // has one card, set by the bloc's top seat (design §8.6 Q4).
+  const capital = s.seats === 2;
+  const partyCard = k.councillor?.capital ?? null;
   switch (k.state) {
     case 'belowRank':
       return {
@@ -56,13 +60,15 @@ export function electionLines(
         primary: null,
         secondary: ballot(e.seeTheBallot),
       };
-    case 'vote':
-      // TODO(phase 4): the capital's card lines (*Which rule for Irongate next week?*, design §9.8).
+    case 'vote': {
+      const [line1, line2] = v.vote(s.cityName, formatUntil(k.closesAt, now), formatWeekday(k.runsFrom));
       return {
-        ...lines(v.vote(s.cityName, formatUntil(k.closesAt, now), formatWeekday(k.runsFrom))),
+        line1: capital ? copy.capitalElection.question : line1!,
+        line2: line2!,
         primary: ballot(e.voteNow),
         secondary: null,
       };
+    }
     case 'voted':
       return {
         ...lines(v.voted(k.votedFor ?? '', formatWeekday(k.countAt), s.paperShortName)),
@@ -90,7 +96,7 @@ export function electionLines(
                 ? v.resultCarried(r.winner, until, next)
                 : r.how === 'draw'
                   ? v.resultDraw(r.winner, until, next)
-                  : // `seats`: the capital (TODO(phase 4): the card's capital lines, design §9.8).
+                  : // `seats`: the capital (design §8.2): the bloc's party, or a shared card's two.
                     c && c.factionIds.length > 1
                     ? v.resultSharedSeats(
                         r.winner,
@@ -131,7 +137,6 @@ export function electionLines(
         secondary: slate(e.seeWhosStanding),
       };
     case 'councillor':
-      // TODO(phase 4): the capital's *your party's card is set* form (design §8.6 Q4).
       return {
         ...lines(
           v.councillor(
@@ -144,7 +149,12 @@ export function electionLines(
         secondary: null,
       };
     case 'nextInLine':
-      return { ...lines(v.nextInLine()), primary: null, secondary: desk };
+      // The capital: no line to be next in; the councillor who set the party's card (design §8.6 Q4).
+      return {
+        ...lines(partyCard && !partyCard.leadsBloc ? v.partyCardSet(partyCard.by, partyCard.rule) : v.nextInLine()),
+        primary: null,
+        secondary: desk,
+      };
     case 'registered':
       // Slice 4 (screens §7.2): registered in a district, the first vote not yet open.
       return {
@@ -312,6 +322,7 @@ export function ElectionCard({
             capital,
           }),
         ]}
+        more={capital ? copy.help.ruleMore : undefined}
         label={`${kicker}: ${copy.ballot.howTheVoteWorks}`}
         testId="election-help"
         className="-my-2 self-start"
@@ -339,6 +350,7 @@ export function ElectionCard({
             mode="vote"
             label={copy.ballot.title}
             names={factionNames}
+            capital={capital}
             selected={ballotInline.selected}
             onSelect={ballotInline.onSelect}
             disabled={ballotInline.pending}

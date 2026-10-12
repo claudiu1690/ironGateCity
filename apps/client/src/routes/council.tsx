@@ -60,6 +60,7 @@ function Page({
   hall,
   shortHall = false,
   wide = false,
+  capital = false,
 }: {
   children: ReactNode;
   hall?: { hall: HallView | null; cityName: string };
@@ -67,6 +68,11 @@ function Page({
   shortHall?: boolean;
   /** The ballot (design §4.2): a 720 px sheet from 960 px, the three cards in one row. */
   wide?: boolean;
+  /**
+   * The capital's ballot: its line under the title is twice the home one's, so on a phone under
+   * 900 px tall the header gives up 15 px and the third card stays above the CTA (390 × 844).
+   */
+  capital?: boolean;
 }) {
   // Review 5 (ADR 0079): the hall's art is the server's night; at dusk and dawn the screens read again.
   useNightTurn(hall?.hall?.night, COUNCIL_KEYS);
@@ -88,6 +94,7 @@ function Page({
               '-mx-4 -mt-4 -mb-3 sm:mx-0 sm:mt-0',
               shortHall &&
                 '[@media(max-height:700px)]:h-[64px] [@media(max-height:660px)]:hidden [@media(max-height:960px)]:sm:h-[96px]',
+              shortHall && capital && 'max-sm:[@media(min-height:701px)_and_(max-height:900px)]:h-[120px]',
             )}
           />
         )}
@@ -199,13 +206,13 @@ export function SlatePage() {
       <Plate kicker={copy.stand.plateKicker(city)} title={copy.stand.title}>
         <span className="font-mono text-[12px] text-dim" data-testid="slate-line">
           {polling
-            ? copy.tooLateToStand
+            ? copy.stand.plateLineVoting(e.seats === 2 ? 2 : COUNCIL.seats, formatWeekday(e.countAt))
             : copy.stand.plateLine(e.seats === 2 ? 2 : COUNCIL.seats, formatWeekday(e.countAt), formatUntil(e.nominationsCloseAt))}
         </span>
       </Plate>
       <p className="font-mono text-[11.5px] text-muted" data-testid="how-decided">
-        {/* TODO(phase 4): the capital's sentence (design §4.5, §9.8). */}
-        {district ? copy.capitalElection.howSeatsAreWon : copy.seats.sentence(city, COUNCIL.seats)}
+        {/* The capital (design §4.2, §9.8): each party puts up a rule; votes and opinion decide the seats. */}
+        {district ? copy.capitalElection.ballotLineV2(district) : copy.seats.sentence(city, COUNCIL.seats)}
       </p>
       <VoteLink cityName={e.cityName} from={formatWeekday(e.pollsOpenAt)} to={formatWeekday(e.countAt - 1)} />
       <LastResultLink />
@@ -259,7 +266,8 @@ export function SlatePage() {
 /**
  * The three cards, one tap to choose and *Vote for {rule}* in the sticky bar; *Who's standing ›*,
  * *How the vote works* and the last result scroll under the cards. Days 0–1: the cards as they
- * stand, with when the ballot is set. TODO(phase 4): the capital's line and order (§9.8).
+ * stand, with when the ballot is set. The capital (design §4.2, tech design §9.8): one card per party
+ * in the district's order (the server's), and the line *Each party puts up a rule…* under the title.
  */
 export function BallotPage() {
   const q = useQuery(trpc.council.ballot.queryOptions());
@@ -299,7 +307,19 @@ export function BallotPage() {
             {copy.ballot.votesFrom(b.placeName, formatWeekday(b.pollsOpenAt))}
           </span>
         </Plate>
-        <RuleCards cards={b.cards} mode="show" label={copy.ballot.title} names={names} layout="auto" />
+        {b.capital && (
+          <p className="font-mono text-[12px] leading-snug text-text-2" data-testid="ballot-capital-line">
+            {copy.capitalElection.ballotLineV2(b.placeName)}
+          </p>
+        )}
+        <RuleCards
+          cards={b.cards}
+          mode="show"
+          label={copy.ballot.title}
+          names={names}
+          layout="auto"
+          capital={b.capital}
+        />
         <p className="font-mono text-[12px] text-muted" data-testid="ballot-set-at">
           {copy.hall.ballotSetAt(formatUntil(b.setAt))}
         </p>
@@ -326,7 +346,7 @@ export function BallotPage() {
   const choosing = !cast && b.canVote;
   const chosen = b.cards.find((c) => c.ordinanceId === vote.selected);
   return (
-    <Page hall={hall} shortHall wide>
+    <Page hall={hall} shortHall wide capital={b.capital}>
       <Plate kicker={copy.ballot.kicker(city)} title={copy.ballot.title}>
         {/* A phone under 700 px tall keeps the third card's top edge above the CTA (design §4.2): the
             line folds away there, as the header does; the sticky caption says the same (secret,
@@ -335,7 +355,10 @@ export function BallotPage() {
           className="font-mono text-[12px] leading-snug text-dim [@media(max-height:700px)]:hidden"
           data-testid="ballot-line"
         >
-          {copy.ballot.line(formatUntil(b.countAt), formatWeekday(b.countAt))}
+          {/* The capital's line under the title (design §4.2): the same fold; the caption keeps the time. */}
+          {b.capital
+            ? copy.capitalElection.ballotLineV2(b.placeName)
+            : copy.ballot.line(formatUntil(b.countAt), formatWeekday(b.countAt))}
         </span>
       </Plate>
       <RuleCards
@@ -347,6 +370,7 @@ export function BallotPage() {
         onSelect={vote.select}
         disabled={!!act.pending}
         layout="auto"
+        capital={b.capital}
       />
       <Notice error={act.error} />
       {whosStanding}
@@ -441,8 +465,10 @@ export function CountPage() {
 }
 
 /**
- * Slice 4 (screens §8): the capital's result at `/council/count?d=`: the plate with the ten seats by
- * party, the district switcher (your district first), and the selected district's two tables.
+ * Slice 4 (screens §8); the voting rework (design §4.3, tech design §9.8): the capital's result at
+ * `/council/count?d=`: the plate line (the rule, its seats, the local candidates), the cards with
+ * their seats as bars, the district switcher (your district first), and the selected district's three
+ * party rows with their candidates under each.
  */
 function CapitalCount({ view, pending }: { view: CapitalCountView | null | undefined; pending: boolean }) {
   const { d } = useSearch({ from: '/app/council/count' });
@@ -463,6 +489,7 @@ function CapitalCount({ view, pending }: { view: CapitalCountView | null | undef
   const names: Partial<Record<FactionId, string>> =
     character?.factionNames ?? (character ? { [character.factionId]: character.factionName } : {});
   const selected = view.districts.find((x) => x.districtId === d) ?? view.districts[0]!;
+  const winner = view.rule?.cards.find((x) => x.won) ?? null;
   const parts = (Object.entries(view.seatsByFaction) as Array<[FactionId, number]>)
     .sort((a, b) => b[1] - a[1])
     .map(([f, n]) => `${names[f] ?? f} ${n}`);
@@ -470,15 +497,12 @@ function CapitalCount({ view, pending }: { view: CapitalCountView | null | undef
     <Page hall={{ hall: view.hall ?? null, cityName: 'Irongate' }}>
       <Plate kicker={copy.capitalElection.resultKicker} title={copy.capitalElection.resultSundays(weekdayOf(view.countDay))}>
         <span className="font-mono text-[12px] text-dim" data-testid="capital-count-header">
-          {copy.capitalElection.resultLine(parts, view.npcSeats)}
+          {/* An old count with no rule ballot keeps the seats by party. */}
+          {winner
+            ? copy.capitalElection.resultLineV2(winner.name, winner.seats ?? 0, view.npcSeats)
+            : copy.capitalElection.resultLine(parts, view.npcSeats)}
         </span>
       </Plate>
-      <DistrictSwitcher
-        districts={view.districts.map((x) => ({ districtId: x.districtId, name: x.name }))}
-        selected={selected.districtId}
-        onSelect={(id) => void navigate({ to: '/council/count', search: { d: id }, replace: true })}
-      />
-      {/* TODO(phase 4): the cards with seats and the district's party rows (tech design §9.8). */}
       {view.rule && (
         <RuleCards
           cards={view.rule.cards}
@@ -486,8 +510,14 @@ function CapitalCount({ view, pending }: { view: CapitalCountView | null | undef
           label={copy.ruleResult.title(view.rule.weekday)}
           names={names}
           winnerLines={ruleWinnerLines(view.rule, names)}
+          capital
         />
       )}
+      <DistrictSwitcher
+        districts={view.districts.map((x) => ({ districtId: x.districtId, name: x.name }))}
+        selected={selected.districtId}
+        onSelect={(id) => void navigate({ to: '/council/count', search: { d: id }, replace: true })}
+      />
       <DistrictResultTable district={selected} names={names} />
       <VoteLink cityName="Irongate" {...voteDaysAfter(view.countDay)} />
     </Page>

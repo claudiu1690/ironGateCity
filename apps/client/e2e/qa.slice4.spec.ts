@@ -209,21 +209,37 @@ test.describe('by keyboard, and in plain words (GDD §1.5, review 2)', () => {
   });
 });
 
-/** The capital ballot at a size: how many whole names sit above the CTA. */
-async function namesAboveCta(page: Page) {
+/**
+ * The capital ballot at a size (the voting rework, tech design §15.2): the cards' and the CTA's boxes,
+ * and whether the cards sit in one row (the 720 px sheet from 960 px).
+ */
+async function ballotAt(page: Page) {
   await page.goto('/council/ballot');
-  await expect(page.getByTestId('ballot-row').first()).toBeAttached();
+  await expect(page.getByTestId('rule-card').first()).toBeVisible();
+  await expect(page.getByTestId('council-cta')).toBeVisible();
   return page.evaluate(() => {
     const cta = document.querySelector('[data-testid=council-cta]')!.getBoundingClientRect();
-    return [...document.querySelectorAll('[data-testid=ballot-row]')].filter((r) => {
-      const b = r.getBoundingClientRect();
-      return b.top >= 0 && b.bottom <= cta.top;
-    }).length;
+    const cards = [...document.querySelectorAll('[data-testid=rule-card]')].map((r) => r.getBoundingClientRect());
+    return {
+      n: cards.length,
+      ctaTop: cta.top,
+      lastBottom: cards.length > 0 ? cards[cards.length - 1]!.bottom : 0,
+      firstTop: cards.length > 0 ? cards[0]!.top : 0,
+      ctaBottom: cta.bottom,
+      h: window.innerHeight,
+      /** Every card whole above the CTA. */
+      allAbove: cards.every((c) => c.top >= 0 && c.bottom <= cta.top + 1),
+      /** The last card's top edge above the CTA. */
+      lastTopAbove: cards.length > 0 && cards[cards.length - 1]!.top < cta.top,
+      oneRow: cards.length > 1 && cards.every((c) => Math.abs(c.top - cards[0]!.top) < 2),
+    };
   });
 }
 
-test.describe('the capital ballot on a short phone (screens §10; slice-3 QA m4)', () => {
-  test('fixed (m6): the first name shows whole above the vote button at 375 × 667, 360 × 640 and 1440 × 900', async ({ page }) => {
+test.describe('the capital ballot on a short phone (screens §10; slice-3 QA m4; the voting rework §15.2)', () => {
+  test('the cards and the CTA: all above the fold at 390 × 844, the last card’s top edge at 375 × 667 and 360 × 640, one row at 1440 × 900', async ({
+    page,
+  }) => {
     const res = await page.request.post('/api/test/clock', { data: { advanceTo: { cityId: 'irongate', cycleDay: 2 } } });
     expect(res.ok()).toBe(true);
     await signUp(page, 'First Name');
@@ -238,39 +254,24 @@ test.describe('the capital ballot on a short phone (screens §10; slice-3 QA m4)
     await page.goto('/paper');
     await expect(page.getByTestId('headline').first()).toBeVisible();
     await page.waitForLoadState('networkidle');
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const tall = await ballotAt(page);
+    expect(tall.n, 'one card per party').toBeGreaterThanOrEqual(2);
+    expect(tall.allAbove, `390 × 844: every card above the CTA (${JSON.stringify(tall)})`).toBe(true);
+    expect(tall.ctaBottom, '390 × 844: the CTA on screen').toBeLessThanOrEqual(tall.h + 1);
     for (const size of [
       { width: 375, height: 667 },
       { width: 360, height: 640 },
-      { width: 1440, height: 900 },
     ]) {
       await page.setViewportSize(size);
-      expect(await namesAboveCta(page), `${size.width} × ${size.height}`).toBeGreaterThanOrEqual(1);
+      const m = await ballotAt(page);
+      expect(m.lastTopAbove, `${size.width} × ${size.height}: the last card's top edge above the CTA`).toBe(true);
+      expect(m.ctaBottom, `${size.width} × ${size.height}: the CTA on screen`).toBeLessThanOrEqual(m.h + 1);
     }
-  });
-
-  // Screens §10 asks for five rows above the CTA on 375 × 667. A ballot row is 64 px or more (the
-  // name, the line, the quote), so five need 320 px of a content area of about 370 px under the HUD
-  // and the paper's banner: not reachable with the header and the plate. The fix round brings the
-  // first whole name above the CTA (the brief's bar, the test above); this stays an expected fail.
-  test('screens §10: on 375 × 667 the header and at least five names show above the CTA', async ({ page }) => {
-    test.fail(!process.env.QA_SHOW_BUGS, 'Screens §10 five rows: not reachable with 64 px rows (fix round: the first name shows, see above)');
-    const res = await page.request.post('/api/test/clock', { data: { advanceTo: { cityId: 'irongate', cycleDay: 2 } } });
-    expect(res.ok()).toBe(true);
-    await page.setViewportSize({ width: 375, height: 667 });
-    await signUp(page, 'Short Ballot');
-    await lift(page, {
-      level: 10,
-      fxp: 500,
-      cityId: 'irongate',
-      residence: { cityId: 'irongate', districtId: 'irongate.eastside' },
-    });
-    await page.goto('/council/ballot');
-    await expect(page.getByTestId('ballot-row').first()).toBeAttached();
-    const above = await page.evaluate(() => {
-      const cta = document.querySelector('[data-testid=council-cta]')!.getBoundingClientRect();
-      return [...document.querySelectorAll('[data-testid=ballot-row]')].filter((r) => r.getBoundingClientRect().bottom <= cta.top)
-        .length;
-    });
-    expect(above).toBeGreaterThanOrEqual(5);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const wide = await ballotAt(page);
+    expect(wide.oneRow, '1440 × 900: one row').toBe(true);
+    expect(wide.allAbove, '1440 × 900: the cards above the CTA').toBe(true);
   });
 });

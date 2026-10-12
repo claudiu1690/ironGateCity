@@ -890,37 +890,87 @@ export function DistrictSwitcher({ districts, selected, onSelect }: DistrictSwit
   );
 }
 
+export interface PartyRowProps {
+  factionId: FactionId;
+  names: FactionNames;
+  /** The district's votes for the party's card (a shared card's full votes, marked *shared*). */
+  votes: number;
+  shared: boolean;
+  /** Seats won in the district (of two). */
+  seats: number;
+  seatsOf: number;
+}
+
 /**
- * The voting rework, phase 2: a district's result as plain rows: the three parties (votes for the
- * party's card, seats), then each party's candidates as council rows.
- * TODO(phase 4): the `PartyRow`s with seat bars and *Votes and opinion together · final*, and the
- * council rows per party (tech design §9.8).
+ * The voting rework (design §4.3, tech design §9.8): a district's party row at the capital's count:
+ * crest · the party · *votes n* (· *shared*) · its seats as bars. No score, opinion or weight column:
+ * the formula lives in the help note's *More* line.
  */
-export function DistrictResultTable({ district: d, names }: { district: CapitalDistrictCount; names: FactionNames }) {
+export function PartyRow({ factionId, names, votes, shared, seats, seatsOf }: PartyRowProps) {
+  return (
+    <div
+      className="flex min-h-11 items-center gap-2 border-b border-ink py-1.5"
+      data-testid="party-row"
+      data-faction={factionId}
+    >
+      <FactionCrest factionId={factionId} size={12} />
+      <span className="min-w-0 flex-1 font-label text-[14px] tracking-wide uppercase">{nameOf(names, factionId)}</span>
+      <span className="shrink-0 font-mono text-[12px] text-text-2" data-testid="party-votes">
+        {copy.capitalElection.partyVotes(votes, shared)}
+      </span>
+      <span className="inline-flex shrink-0 gap-0.5" aria-label={`${seats} of ${seatsOf}`} data-testid="party-seats">
+        {Array.from({ length: seatsOf }, (_, i) => (
+          <span
+            key={i}
+            className={cx('inline-block h-3.5 w-2', i < seats ? 'bg-ink' : 'border border-ink')}
+            data-testid={i < seats ? 'seat-bar' : undefined}
+          />
+        ))}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The voting rework (design §4.3, tech design §9.8): a district's result at the capital's count: the
+ * three parties as `PartyRow`s (most seats first), each with its candidates under it as council rows,
+ * then the Courier *Votes and opinion together · final*. An unseated row carries no *n short*: seats
+ * go across the parties by their scores, not by a row's own total.
+ */
+export function DistrictResultTable({
+  district: d,
+  names,
+  seatsOf = 2,
+}: {
+  district: CapitalDistrictCount;
+  names: FactionNames;
+  seatsOf?: number;
+}) {
   const order = [...d.parties].sort((a, b) => b.seats - a.seats || b.votes - a.votes);
   return (
     <section className="flex flex-col gap-3" data-testid="district-result" data-district={d.districtId}>
-      <ul className="flex flex-col" data-testid="parties-table">
+      <div className="flex flex-col gap-3" data-testid="parties-table">
         {order.map((f) => (
-          <li
-            key={f.factionId}
-            className="flex min-h-11 items-center gap-2 border-b border-dotted border-faint py-1.5 font-label text-[13px]"
-            data-testid="party-row"
-          >
-            <FactionCrest factionId={f.factionId} size={10} />
-            <span className="flex-1">{nameOf(names, f.factionId)}</span>
-            <span>{copy.capitalElection.partyVotes(f.votes, f.shared)}</span>
-            <span className="inline-flex gap-0.5" aria-label={`${f.seats}`}>
-              {f.seats === 0
-                ? '0'
-                : Array.from({ length: f.seats }, (_, i) => (
-                    <span key={i} className="inline-block h-3 w-1.5 bg-ink" data-testid="seat-bar" />
-                  ))}
-            </span>
-          </li>
+          <div key={f.factionId} className="flex flex-col" data-testid="party-block">
+            <PartyRow
+              factionId={f.factionId}
+              names={names}
+              votes={f.votes}
+              shared={f.shared}
+              seats={f.seats}
+              seatsOf={seatsOf}
+            />
+            <CouncilRows
+              rows={d.council.filter((r) => r.factionId === f.factionId).map((r) => ({ ...r, short: null }))}
+              factionId={f.factionId}
+              kicker={false}
+            />
+          </div>
         ))}
-      </ul>
-      <CouncilRows rows={d.council} />
+      </div>
+      <p className="font-mono text-[11.5px] text-muted" data-testid="votes-and-opinion">
+        {copy.capitalElection.votesAndOpinion}
+      </p>
       {d.scoreboard.length > 0 && <ScoreboardTable table={d.scoreboard} districtName={d.name} names={names} />}
     </section>
   );

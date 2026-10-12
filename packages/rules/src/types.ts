@@ -1643,10 +1643,33 @@ export interface RuleBallotView {
   myVote: { ordinanceId: string; name: string } | null;
   canVote: boolean;
   reason: GameErrorReason | null;
-  /** A councillor of this council: their rule, whether it is a card, and the change window. */
-  myRule: { ordinanceId: string; name: string; onBallot: boolean; changeUntil: number | null } | null;
+  /**
+   * A councillor of this council: their rule, whether it is a card, and the change window. In the
+   * capital `onBallot` is whether they lead their party's bloc (their rule is the party's card), and
+   * `capital` names the party's card and who set it (design §8.6 Q4).
+   */
+  myRule: {
+    ordinanceId: string;
+    name: string;
+    onBallot: boolean;
+    changeUntil: number | null;
+    capital?: CapitalPartyCardView | null;
+  } | null;
   /** "2 players and 7 local candidates for 7 seats". */
   standing: { players: number; locals: number; seats: 7 | 2 };
+}
+
+/**
+ * The voting rework, phase 4 (design §8.6 Q4): a capital councillor's party card: its rule, the
+ * councillor who set it (the bloc's top seat), and whether that is the reader.
+ */
+export interface CapitalPartyCardView {
+  factionId: FactionId;
+  /** The card's rule name. */
+  rule: string;
+  /** The councillor who chose it ("Jana Varga"). */
+  by: string;
+  leadsBloc: boolean;
 }
 
 export interface RuleResultView {
@@ -1694,8 +1717,11 @@ export interface ElectionCardView {
   } | null;
   /** `standing`: the candidate's rule and backers. */
   standing: { rule: string; backers: number; branchLine: boolean } | null;
-  /** `councillor` / `nextInLine`: the councillor's rule, whether it is a card, the change window. */
-  councillor: { rule: string; onBallot: boolean; changeUntil: number } | null;
+  /**
+   * `councillor` / `nextInLine`: the councillor's rule, whether it is a card, the change window; in
+   * the capital, the party's card and who set it (*your party's card is set*, design §8.6 Q4).
+   */
+  councillor: { rule: string; onBallot: boolean; changeUntil: number; capital?: CapitalPartyCardView | null } | null;
   /** The morning the player made Rank 2: the one-line note, once. */
   firstTime: boolean;
 }
@@ -1870,8 +1896,11 @@ export interface WhatNowView {
   hall: { locationId: string; name: string };
   /** The councillor's rule and whether it is a card of the ballot as it stands. */
   rule: { name: string; onBallot: boolean };
-  /** The capital: whether the councillor's rule is their party's card, and whose it is. */
-  capital: { leadsBloc: boolean; by: string; factionId: FactionId } | null;
+  /**
+   * The capital: whether the councillor's rule is their party's card, and whose it is; `rule` the
+   * party card's rule name (phase 4: *Councillor Varga chose the Collective's card: Public Works Order*).
+   */
+  capital: { leadsBloc: boolean; by: string; factionId: FactionId; rule?: string } | null;
   /** The set: the rule can change until then. */
   changeUntil: number;
   pollsOpenAt: number;
@@ -1930,6 +1959,8 @@ export interface TownHallView {
     onBallot: boolean;
     changeUntil: number | null;
     menu: OrdinanceMenuItemView[];
+    /** The capital: the party's card and who set it (design §8.6 Q4). */
+    capital?: CapitalPartyCardView | null;
   } | null;
   whatNow: WhatNowView | null;
   serverNow: number;

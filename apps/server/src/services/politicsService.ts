@@ -37,6 +37,7 @@ import { RANK_FXP } from '@irongate/rules';
 import type {
   CandidateView,
   CapitalCountView,
+  CapitalPartyCardView,
   CountRow,
   CountView,
   CouncilRowView,
@@ -277,6 +278,8 @@ export async function ballotView(
     session,
   ).lean<OfficeTermDoc>();
   const myRuleId = term ? termRule(content, term, cityContent.homeFactionId ?? null) : null;
+  // The capital (design §8.6 Q4): the party has one card, set by the bloc's top seat.
+  const partyCard = capital && term ? capitalPartyCard(content, raw, term.factionId ?? null, c._id.toHexString()) : null;
   // "2 players and 7 local candidates for 7 seats".
   const e = await s(Election.findById(electionId, { ballot: 1, status: 1 }), session).lean<ElectionDoc>();
   let players: number;
@@ -315,12 +318,31 @@ export async function ballotView(
       ? {
           ordinanceId: myRuleId,
           name: ruleName(content, myRuleId),
-          onBallot: raw.some((x) => x.ordinanceId === myRuleId),
+          onBallot: partyCard ? partyCard.leadsBloc : raw.some((x) => x.ordinanceId === myRuleId),
           changeUntil: cal.council.ruleOpen ? dayStart(cal.council.setDay) : null,
+          ...(capital ? { capital: partyCard } : {}),
         }
       : null,
     standing: { players, locals, seats: place.kind === 'district' ? 2 : 7 },
   };
+}
+
+/**
+ * The voting rework, phase 4 (design §8.6 Q4): a capital councillor's party card: its rule, the
+ * councillor who set it (the bloc's top seat, `partyCardOf`) and whether that is the reader. Null when
+ * the party's card is the secretary's (no player councillor of the party names a rule).
+ */
+export function capitalPartyCard(
+  content: GameContent,
+  cards: readonly RuleCard[],
+  factionId: FactionId | null,
+  me: string,
+): CapitalPartyCardView | null {
+  if (!factionId) return null;
+  const card = cards.find((x) => x.factionIds.includes(factionId));
+  const by = card?.by.find((b) => b.kind === 'party' && b.factionId === factionId);
+  if (!card || !by || by.kind !== 'party' || by.via !== 'councillor') return null;
+  return { factionId, rule: ruleName(content, card.ordinanceId), by: by.name, leadsBloc: by.characterId === me };
 }
 
 /** A counted ballot's result for the screens (finishing order; the numbers stored at the count). */
@@ -573,7 +595,12 @@ async function electionCard(
         }
       : null,
     councillor: myRule
-      ? { rule: myRule.name, onBallot: myRule.onBallot, changeUntil: dayStart(cal.council.setDay) }
+      ? {
+          rule: myRule.name,
+          onBallot: myRule.onBallot,
+          changeUntil: dayStart(cal.council.setDay),
+          ...(myRule.capital !== undefined ? { capital: myRule.capital } : {}),
+        }
       : null,
     firstTime,
   };
@@ -1156,6 +1183,7 @@ export async function whatNowOf(
       leadsBloc: !!by && by.characterId === me,
       by: by?.name ?? '',
       factionId: term.factionId,
+      rule: card ? ruleName(content, card.ordinanceId) : '',
     };
   }
   return {

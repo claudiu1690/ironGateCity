@@ -635,6 +635,8 @@ export const copy = {
     /** The one first-time hint, on the plate on the welcome day. */
     firstHint: 'Anything underlined can be tapped for what it means.',
     close: 'Close',
+    /** The voting rework (design §4.9): the button that opens a note's fourth line (the capital's `ruleMore`). */
+    more: 'More',
   },
   /** The waiting badge (answers §7): "1 point to place · nothing is lost by choosing later". */
   pointsToPlace: (n: number) =>
