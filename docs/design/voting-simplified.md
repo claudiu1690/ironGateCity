@@ -529,3 +529,16 @@ Strings live in `packages/content/src/data/copy.ts` and `data/ruleHeadlines.ts`;
 | 5 | The *· shared* marker on a capital party row | **Kept, as *· shared*** (`capitalElection.partyVotes`: *votes 4 · shared*). The *More* line of the capital's help note gains one sentence: *Two parties that put up the same rule share one card and split its votes equally.* | One word on a row that is already crest · party · votes · seats; §8.1 Q1 chose the word. The reader who wonders why two rows show the same figure has the help note one tap away; the row is not the place to explain arithmetic. |
 
 Not a GDD change: wording only, no rule or number moves. The old §4.6 and §4.9 lines are updated above in place.
+
+### 8.7 Phase-2 strings keyed (12 Oct 2026; the developer's stand-ins from commit `a4a810d`)
+
+Four strings the phase-2 client printed inline. Each now has a key in `copy.ts`; phases 3–5 bind them where the stand-ins are (`ResultModal.tsx` twice, `Capital.tsx`, `DevPanel.tsx` and `apps/server/src/dev/clock.ts`).
+
+| # | Where | Key | Prints | Why |
+|---|---|---|---|---|
+| 1 | The *Backed* modal's knock-on line (`knockOns.backers`) | `copy.stand.backersKnock(name, n)` | *Anna Weiss · 3 backers* | The count after your backing, in the words the slate's rows and the council's rows already use (*· 3 backers*). The modal's body says what a backing is worth (*three more to {name}'s count*); the line says only the new figure. |
+| 2 | The action modal's effect line the day a standing candidate does all three orders (`effects.branch`) | `copy.branchBacksYou(n)` | *The branch backs you · 2 backers* | Capitalised like its neighbours (*All orders carried out · +5 Political Capital*). Two facts, no third: the stand card's *do today's orders and the branch backs you* has already promised this, and the figure counts the branch as one backer (ADR 0084). `branchEndorsesYou` (*All orders carried out · the branch backs you*) stays for the candidacy card's line. |
+| 3 | A district's party row at the capital's count | `copy.capitalElection.partyVotes(n, shared)` (existing) | *votes 4* / *votes 4 · shared* | No new key: the row's `shared` flag picks the form, so the plain row and the shared row are one string. The stand-in's *votes {n}* is the `false` branch. |
+| 4 | The dev panel's next-boundary label and phase line | `copy.dev.next.vote` · `copy.dev.next.count` · `copy.dev.phase(cycleDay)` | *The vote opens* · *The count* · *Result day · stand and set rules (day 1 of 2)* / *Stand and set rules (day 2 of 2)* / *The vote (day 1 of 3)* … *(day 3 of 3)* | Not player-facing, but the panel should name the windows as the cards do. **Confirmed against §3.2:** days 2–4 are *the vote* (the ballot's kicker is *THE VOTE*, the card reads *Vote until …*), the boundary into day 0 is *the count* (*Seats are counted Sunday morning*), and *The vote opens* is the card's own phrase (*the next vote opens Wednesday*). Days 0–1 say what the window holds in §3.2's two verbs, *stand* and *set rules*. The old *Polls open* and *Nominations* go with the person ballot. |
+
+Not a GDD change: wording only, no rule or number moves.

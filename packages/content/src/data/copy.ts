@@ -821,6 +821,12 @@ export const copy = {
   backedBy: (names: string) => `Backed by ${names}`,
   localSupport: (n: number) => `Local support ${n} · from your reputation here`,
   branchEndorsesYou: 'All orders carried out · the branch backs you',
+  /**
+   * The voting rework (design §8.7 n2): the action modal's effect line the day a standing candidate
+   * does all three orders (`effects.branch`): *The branch backs you · 2 backers*. The count includes
+   * the branch (ADR 0084: members plus the branch's, once).
+   */
+  branchBacksYou: (backers: number) => `The branch backs you · ${backersN(backers)}`,
   branchMakesUpTheNumber: 'The branch will make up the number',
   withdraw: 'Withdraw',
   depositStays: 'The 10 Political Capital stays with the branch',
@@ -1346,6 +1352,11 @@ export const copy = {
       `${rank} · ${standing} in ${city} · ${backersN(backers)}`,
     /** "rule: Public Works Order". */
     ruleOf: (name: string) => `rule: ${name}`,
+    /**
+     * The *Backed* modal's knock-on line (design §8.7 n1; `knockOns.backers`): the candidate's count
+     * after your backing, *Anna Weiss · 3 backers*.
+     */
+    backersKnock: (name: string, backers: number) => `${name} · ${backersN(backers)}`,
     localCandidates: 'Local candidates',
     localsLine:
       'Townspeople run by the game. They fill the list so there is always a council; a player who is better known here beats them.',
@@ -1354,6 +1365,21 @@ export const copy = {
   /** The Me tab's rule line (design §4.7): "Coalport · Street Fund · 3 days left". */
   me: {
     rule: (city: string, name: string, days: number) => `${city} · ${name} · ${daysN(days)} left`,
+  },
+  /**
+   * The dev time-skip panel's council words (design §8.7 n4; README "Reviewing with the dev panel").
+   * Not player-facing, but kept here so the panel says what the cards say: *the vote*, *the count*.
+   * `phase` is the panel's phase line by cycle day (§3.2's calendar); `next` the boundary it is
+   * counting down to.
+   */
+  dev: {
+    phase: (cycleDay: number) =>
+      cycleDay === 0
+        ? 'Result day · stand and set rules (day 1 of 2)'
+        : cycleDay === 1
+          ? 'Stand and set rules (day 2 of 2)'
+          : `The vote (day ${cycleDay - 1} of 3)`,
+    next: { vote: 'The vote opens', count: 'The count' } as Record<'vote' | 'count', string>,
   },
   // Slice 4, "the battleground" (docs/design/slice-4-screens.md §11 and its help notes). Times are
   // rendered by the caller in the player's clock (`until`: "Saturday midnight"; `time`: "14:32";
@@ -1740,7 +1766,11 @@ export const copy = {
     resultLineV2: (rule: string, seats: number, npcSeats: number) =>
       `${rule} won · ${seats} seats of 10 behind it · local candidates ${npcSeats} of 10 · final`,
     votesAndOpinion: 'Votes and opinion together · final',
-    /** A party row: "votes 4" (a shared card's votes marked *shared*, tech design §20 Q1). */
+    /**
+     * A district's party row: "votes 4"; a shared card's votes marked *shared* ("votes 4 · shared",
+     * tech design §20 Q1, design §8.6 Q5). The one key for both (design §8.7 n3): the row's `shared`
+     * flag picks the form.
+     */
     partyVotes: (n: number, shared: boolean) => `votes ${n}${shared ? ' · shared' : ''}`,
   },
   /** The scoreboard, the player's word for the ledger (screens §9), and In Print (§7.3). */
