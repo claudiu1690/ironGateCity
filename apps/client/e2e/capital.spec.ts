@@ -96,10 +96,11 @@ test('the capital: register in Eastside → vote on a rule, a card per party →
   expect(n).toBeLessThanOrEqual(3);
   // One card per party: three crests across the cards (a shared card carries two) on the whose lines.
   expect(await page.getByTestId('rule-card-whose').locator('svg').count()).toBe(3);
-  // Design §8.8 Q4, §8.9 Q2: a secretary's card by title (*Organiser Stahl*), a councillor's by title and name.
+  // Design §8.8 Q4, §8.9 Q2, §8.11 Q1: a secretary's card by title (*Vanguard · Organiser Stahl*), a councillor's by title and name
+  // (*Collective · Councillor Jana Varga*), a shared card *Collective and Alliance*; the capital's forms carry no *'s rule*.
   for (let i = 0; i < n; i++) {
     await expect(page.getByTestId('rule-card-whose').nth(i)).toHaveText(
-      /^the \w+'s (rule · (Organiser Stahl|Secretary Holm|Mr Grey|Councillor .+)|and the \w+'s rule)$/,
+      /^(\w+ · (Organiser Stahl|Secretary Holm|Mr Grey|Councillor .+)|\w+ and \w+)$/,
     );
   }
   // Eastside's order: by the card's parties' opinion shares in the district, the leader's first.
@@ -239,8 +240,8 @@ test("the capital's councillors: one card per party; the councillor below reads 
   );
   expect(partyCard.whose).toMatchObject({ via: 'councillor', by: leader });
   await p.goto('/council/ballot');
-  await expect(p.getByTestId('rule-card-whose').filter({ hasText: `the ${party}'s` }).first()).toHaveText(
-    `the ${party}'s rule · Councillor ${leader}`,
+  await expect(p.getByTestId('rule-card-whose').filter({ hasText: `${party} · Councillor` }).first()).toHaveText(
+    `${party} · Councillor ${leader}`,
   );
 
   // The hall: *What now* and the *Next week's rule* block.

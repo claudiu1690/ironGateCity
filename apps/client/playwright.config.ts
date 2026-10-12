@@ -46,6 +46,7 @@ export default defineConfig({
         /qa\.review5\.spec\.ts/,
         // The voting rework: its own serial project, last (it moves the shared clock by whole cycles).
         /(^|[\\/])voting\.spec\.ts$/,
+        /qa\.voting(\.screens|\.irongate)?\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -180,6 +181,14 @@ export default defineConfig({
       name: 'voting',
       testMatch: /(^|[\\/])voting\.spec\.ts$/,
       dependencies: ['qa-review5'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    // QA of the voting rework (docs/qa/voting-rework-report.md): the edge cases (double taps, key replay,
+    // windows, ties, Unrest, shared cards) and the screenshots. Serial and last, like `voting`.
+    {
+      name: 'qa-voting',
+      testMatch: /qa\.voting(\.screens|\.irongate)?\.spec\.ts/,
+      dependencies: ['voting'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
   ],
