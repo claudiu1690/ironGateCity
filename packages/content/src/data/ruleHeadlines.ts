@@ -161,7 +161,7 @@ export const ruleHeadlines: HeadlineInput[] = [
     group: 'personal',
     priority: 2,
     when: [{ kind: 'ruleOnBallot' }],
-    // The design's `{parties}' Card`, with the possessive spelled so one party reads "the Vanguard's Card".
+    // Design §8.6 Q1: every party's short name takes 's (the Vanguard's, the Collective's, the Alliance's Card).
     headline: "Councillor {name} Carries {parties}'s Card: {rule}",
     deck: '{line}. Voting opens today in every district until {until}.',
   },

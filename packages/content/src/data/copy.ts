@@ -622,7 +622,7 @@ export const copy = {
       ].join('\n'),
     ],
     ruleMore:
-      'Until ten people have voted in a district, opinion carries most of the weight; from ten, votes and opinion count half each.',
+      'Until ten people have voted in a district, opinion carries most of the weight; from ten, votes and opinion count half each. Two parties that put up the same rule share one card and split its votes equally.',
     /** The voting rework (design §3.8): *Political Capital* without the proposal (phase 5 replaces `pc`). */
     pcV2: () => [
       'Political Capital',
@@ -1073,6 +1073,11 @@ export const copy = {
         "You're on the council · your rule is next in line",
         'The two seats above yours chose first · pay every morning',
       ],
+      /** The capital (design §8.6 Q4): the party has one card and the bloc's top seat chose it. */
+      partyCardSet: (name: string, rule: string) => [
+        "You're on the council · your party's card is set",
+        `Councillor ${name} chose it: ${rule} · pay every morning`,
+      ],
     },
   },
   // Review 4 (answers §8, §10–§11, §21; tech design §8.1, §9.1): one map for each home city, the
@@ -1166,6 +1171,9 @@ export const copy = {
     change: 'Change ›',
     yourRule: 'your rule',
     nextInLine: 'Your rule is next in line: the two seats above yours chose first.',
+    /** The capital's form (design §8.6 Q4): "Your party's card is set: Councillor Varga chose the Collective's card, Public Works Order." */
+    partyCardSet: (name: string, party: string, rule: string) =>
+      `Your party's card is set: Councillor ${name} chose the ${party}'s card, ${rule}.`,
     // *How it won* under the rule in force: `rule.how.*` (design §8.2).
     standForTheCouncil: 'Stand for the council',
     /** A player councillor's row: "rule: Reading Room Grant". */
@@ -1207,9 +1215,9 @@ export const copy = {
         ],
         /** The capital, another councillor leads: "Councillor Varga chose the Collective's card: Public Works Order." */
         capitalChosen: (name: string, party: string, rule: string): [string, string] => [
-          // The design gives the line only; the head is *next in line*, as the player's rule is not the card.
-          'Your rule is next in line',
-          `Councillor ${name} chose the ${party}'s card: ${rule}.`,
+          // Design §8.6 Q4: the capital has no line to be next in; the party has one card and the bloc's top seat chose it.
+          "Your party's card is set",
+          `Councillor ${name} chose the ${party}'s card: ${rule}. The bloc's top seat chooses first.`,
         ],
         pay: (): [string, string] => [
           'Draw your pay',
@@ -1480,8 +1488,9 @@ export const copy = {
     fullHealth: "You're in full health: there's nothing to patch up.",
     /** The voting rework (tech design §4.4): the new refusals, worded. */
     notOnBallot: "That rule isn't on this ballot.",
-    /** `when`: a `when` phrase for the next term's first day. */
-    ruleWindowClosed: (when: string) => `Councillors set their rule on the term's first two days · next ${when}`,
+    /** `when`: a `when` phrase for the next term's first day (design §8.6 Q3). */
+    ruleWindowClosed: (when: string) =>
+      `Your rule is set for this term · councillors change it on a term's first two days · the next term starts ${when}`,
   },
   /**
    * The ground sash (slice-4 screens, 3 Oct 2026): whose ground a place is, on the big scene art.
