@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { COUNCIL, dayStart } from '@irongate/rules';
+import { COUNCIL, RANK_FXP, dayStart } from '@irongate/rules';
 import type { CapitalCountView, FactionId, HallView } from '@irongate/rules';
 import {
   Button,
@@ -127,7 +127,9 @@ const voteDaysAfter = (countDay: number) => ({
 function Sticky({ children }: { children: ReactNode }) {
   return (
     <div
-      className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-1 border-t border-track bg-paper px-4 pt-2 pb-[max(8px,env(safe-area-inset-bottom))] lg:bottom-[124px] lg:mx-0 lg:border lg:border-ink lg:p-2 lg:shadow-[0_8px_24px_rgb(0_0_0/0.35)]"
+      // QA M2 (the voting fix round): a tight bar (design §4.2 budgets 64 px), so a card whose plain
+      // line wraps still ends above it at 390 × 844.
+      className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-0.5 border-t border-track bg-paper px-4 pt-1.5 pb-[max(6px,env(safe-area-inset-bottom))] lg:bottom-[124px] lg:mx-0 lg:border lg:border-ink lg:p-2 lg:shadow-[0_8px_24px_rgb(0_0_0/0.35)]"
       data-testid="council-cta"
     >
       {children}
@@ -332,6 +334,8 @@ export function BallotPage() {
   }
   const cast = b.myVote;
   const choosing = !cast && b.canVote;
+  const belowRank = !cast && b.reason === 'RANK_TOO_LOW';
+  const ladder = character?.rank.ladder ?? [];
   const chosen = b.cards.find((c) => c.ordinanceId === vote.selected);
   return (
     <Page hall={hall} shortHall wide>
@@ -340,13 +344,20 @@ export function BallotPage() {
             line folds away there, as the header does; the sticky caption says the same (secret,
             final, the result's time). */}
         <span
-          className="font-mono text-[12px] leading-snug text-dim [@media(max-height:700px)]:hidden"
+          className={cx(
+            'font-mono text-[12px] leading-snug text-dim',
+            // A Recruit has no sticky bar, so their reason stays on a short phone.
+            !belowRank && '[@media(max-height:700px)]:hidden',
+          )}
           data-testid="ballot-line"
         >
-          {/* The capital's line (design §8.9 Q3): the home line's shape; the same fold; the caption keeps the time. */}
-          {b.capital
-            ? copy.capitalElection.voteLine(b.placeName, formatUntil(b.countAt))
-            : copy.ballot.line(formatUntil(b.countAt), formatWeekday(b.countAt))}
+          {/* The capital's line (design §8.9 Q3): the home line's shape; the same fold; the caption keeps the time.
+              A Rank 1 member reads why they cannot vote instead (design §8.12, QA m7). */}
+          {belowRank
+            ? copy.ballot.belowRank(ladder[0] ?? '', ladder[1] ?? '', RANK_FXP[COUNCIL.voteRank - 1] ?? 0)
+            : b.capital
+              ? copy.capitalElection.voteLine(b.placeName, formatUntil(b.countAt))
+              : copy.ballot.line(formatUntil(b.countAt), formatWeekday(b.countAt))}
         </span>
       </Plate>
       <RuleCards
@@ -359,6 +370,8 @@ export function BallotPage() {
         disabled={!!act.pending}
         layout="auto"
         capital={b.capital}
+        // QA M2: 8 px under the plate and 6 px between the cards (the page's 12 and 8 elsewhere).
+        className="-mt-1 gap-1.5! min-[960px]:mt-0 min-[960px]:gap-2!"
       />
       <Notice error={act.error} />
       {whosStanding}
@@ -372,10 +385,19 @@ export function BallotPage() {
             </p>
           ) : (
             <>
-              <Button className="w-full" disabled={!chosen} pending={vote.pending} onClick={vote.vote}>
+              {/* QA m9: *Choose a rule* is the page's instruction, so its disabled face reads at 4.3:1
+                  (muted on track) rather than the default 2.5:1 (paper on faint). */}
+              <Button
+                className="w-full disabled:bg-track! disabled:text-muted!"
+                disabled={!chosen}
+                pending={vote.pending}
+                onClick={vote.vote}
+              >
                 {chosen ? copy.ballot.voteFor(chosen.name) : copy.ballot.chooseARule}
               </Button>
-              <p className="text-center font-mono text-[11px] text-muted">{copy.ballot.caption(formatAt(b.countAt))}</p>
+              <p className="text-center font-mono text-[11px] leading-tight text-muted">
+                {copy.ballot.caption(formatAt(b.countAt))}
+              </p>
             </>
           )}
         </Sticky>
@@ -418,9 +440,12 @@ export function CountPage() {
   return (
     <Page hall={{ hall: c.hall, cityName: c.cityName }}>
       <Plate kicker={copy.ruleResult.kicker(city)} title={copy.ruleResult.title(c.weekday)}>
-        <span className="font-mono text-[12px] text-dim" data-testid="count-header">
-          {copy.ruleResult.turnout(c.turnout.voters, c.turnout.eligible)}
-        </span>
+        {/* QA m9: no "0 of 0 members voted" when nobody here could vote; the cards say how it was decided. */}
+        {c.turnout.eligible > 0 && (
+          <span className="font-mono text-[12px] text-dim" data-testid="count-header">
+            {copy.ruleResult.turnout(c.turnout.voters, c.turnout.eligible)}
+          </span>
+        )}
       </Plate>
       {r && (
         <RuleCards

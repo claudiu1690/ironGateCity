@@ -142,14 +142,10 @@ export interface ElectionsReport {
     election: string;
     cityId: string;
     countDay: number;
-    filed: number;
-    withdrawn: number;
-    struck: number;
     standing: number;
     npcsStanding: number;
     memberEndorsements: number;
     branchEndorsements: number;
-    smallBranchDoubles: number;
     turnout: string | null;
     npcBallotShare: number | null;
     playerSeats: number | null;
@@ -222,7 +218,6 @@ export interface ElectionsReport {
       frontPageSeenHours: number | null;
       frontPageSeenOnCountDay: number | null;
       actInChamberWithin30Min: number | null;
-      councilVoteRate: number | null;
       /** The voting rework: player terms in which the councillor set a rule, of all their terms. */
       ruleSetRate: number | null;
     }
@@ -274,14 +269,10 @@ export function buildElectionsReport(i: {
       election: e.id,
       cityId: e.cityId,
       countDay: e.countDay,
-      filed: cands.length,
-      withdrawn: cands.filter((c) => c.status === 'withdrawn').length,
-      struck: cands.filter((c) => c.status === 'struck').length,
       standing: cands.filter((c) => ['standing', 'elected', 'defeated'].includes(c.status)).length,
       npcsStanding: (e.ballot ?? []).filter((b) => b.kind === 'npc').length,
       memberEndorsements: cands.reduce((s, c) => s + c.members, 0),
       branchEndorsements: cands.filter((c) => c.branch).length,
-      smallBranchDoubles: cands.filter((c) => c.branch && c.smallBranch).length,
       turnout: e.result ? `${e.result.turnout.voters} of ${e.result.turnout.eligible}` : null,
       npcBallotShare: npcB && npcB.total > 0 ? round(ratio(npcB.npc, npcB.total)) : null,
       playerSeats: e.result ? seated.filter((r) => r.kind === 'player').length : null,
@@ -421,7 +412,6 @@ export function buildElectionsReport(i: {
     let seenTotal = 0;
     let quickAct = 0;
     let seats = 0;
-    let votesCast = 0;
     let rulesSet = 0;
     for (const c of people) {
       const cands = i.candidacies
@@ -434,7 +424,6 @@ export function buildElectionsReport(i: {
       seats += terms.length;
       for (const t of terms) {
         const p = i.papers.find((x) => x.id === t.councilKey);
-        if (p?.votes.some((v) => v.characterId === c.id)) votesCast += 1;
         if (t.ruleSetAt) rulesSet += 1;
         if (!t.frontPageSeenAt) continue;
         seenTotal += 1;
@@ -457,7 +446,6 @@ export function buildElectionsReport(i: {
       frontPageSeenHours: seen.length ? round(median(seen)!, 1) : null,
       frontPageSeenOnCountDay: seats ? round(ratio(seenOnCountDay, seats)) : null,
       actInChamberWithin30Min: seenTotal ? round(ratio(quickAct, seenTotal)) : null,
-      councilVoteRate: seats ? round(ratio(votesCast, seats)) : null,
       ruleSetRate: seats ? round(ratio(rulesSet, seats)) : null,
     };
   };

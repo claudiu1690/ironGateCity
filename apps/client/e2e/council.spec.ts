@@ -299,7 +299,7 @@ test('the first vote and the first seat: stand with a rule → backed → the vo
   await page.goto('/paper');
   const heads = page.getByTestId('headline');
   await expect(heads.filter({ hasText: 'Street Fund Wins the Vote in Coalport' })).toContainText(
-    /1 of 1 votes\. In force until .+: actions pay a quarter more Iron, jobs a quarter less\./,
+    /1 of 1 cast\. In force until .+: actions pay a quarter more Iron, jobs a quarter less\./,
   );
   await expect(heads.filter({ hasText: 'Your Vote Counted: Street Fund Wins' })).toHaveCount(1);
   const titles = await heads.allTextContents();

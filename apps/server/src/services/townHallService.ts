@@ -16,7 +16,7 @@ import { gameError } from '../gameError';
 import { ensureCityDay } from './cityDay';
 import { cityIssueRows } from './cityService';
 import { ordinanceIdOn } from './modifiers';
-import { ballotView, electionStandCard, hallView, ruleMenu, whatNowOf } from './politicsService';
+import { ballotView, electionStandCard, hallView, ruleMenu, seatTie, whatNowOf } from './politicsService';
 import { cardByName, termRule } from './ruleBallot';
 import { assetView, rankTitle } from './views';
 
@@ -84,6 +84,8 @@ export async function townHallView(
           seats: won ? (won.tallies.find((t) => t.ordinanceId === won.winner)?.seats ?? null) : null,
           factionIds: wonCard?.factionIds ?? [],
           by: wonCard?.by[0] ? cardByName(content, wonCard.by[0]) : null,
+          councillor: wonCard?.by[0]?.kind === 'councillor' ? wonCard.by[0].name : null,
+          seatTie: !!won && won.how === 'seats' && seatTie(won.tallies, won.winner),
         }
       : null;
 

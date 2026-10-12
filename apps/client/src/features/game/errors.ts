@@ -43,14 +43,18 @@ export function noticeFor(error: unknown): string | undefined {
       return copy.needsPc(Number(game.cost));
     case 'NOT_NOMINATIONS':
       return 'Too late to stand this time: names went in before voting opened.';
+    // The fix round (design §8.12, QA m6): before the vote opens (cycle days 0–1) the server sends
+    // when it opens; after the count, none.
     case 'NOT_POLLING':
-      return 'Voting has closed.';
+      return typeof game.opensAt === 'number'
+        ? copy.residence.voteOpens(formatWhen(game.opensAt))
+        : copy.residence.votingClosed;
     case 'ALREADY_VOTED':
       return `You have already voted${game.name ? ` for ${String(game.name)}` : ''}.`;
     case 'ALREADY_ENDORSED':
-      return `You're already backing ${String(game.name ?? 'a candidate')} this election.`;
+      return copy.residence.alreadyBacking(String(game.name ?? 'a candidate'));
     case 'ALREADY_FILED':
-      return "You're already standing in this election.";
+      return copy.residence.alreadyStanding;
     case 'CANDIDACY_CLOSED':
       return 'That name is no longer on the list.';
     // The voting rework (tech design §4.4).

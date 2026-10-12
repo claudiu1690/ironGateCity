@@ -86,6 +86,9 @@ function RuleInForce({
       voters: f.voters,
       factionIds: f.factionIds,
       seats: f.seats,
+      // QA M1: the Unrest fallback names the councillor whose card won, as the result screen does.
+      councillor: f.how === 'fallback' ? f.councillor : null,
+      seatTie: f.seatTie ?? false,
     },
     names,
   );

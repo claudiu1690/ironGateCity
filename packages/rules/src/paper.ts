@@ -264,9 +264,16 @@ export interface PoliticalFacts {
 /** The voting rework (tech design §10): what the live paper knows of the rule ballot this morning. */
 export interface RuleFacts {
   /** Ballot k − 1 was counted this morning; `fallback` when no votes were cast, `drawn` on the capital's draw. */
-  decided: { fallback: boolean; drawn: boolean } | null;
-  /** The caller voted on that ballot; their card won or lost. */
-  voted: { won: boolean } | null;
+  decided: {
+    fallback: boolean;
+    drawn: boolean;
+    /** The fix round (design §8.12): level on votes (home), or on seats without a draw (the capital). */
+    tie: boolean;
+    /** A fallback whose card 1 was a councillor's (`{name}` is that councillor). */
+    unrest: boolean;
+  } | null;
+  /** The caller voted on that ballot; their card won or lost; `tie` as `decided.tie`. */
+  voted: { won: boolean; tie: boolean } | null;
   /** Today is the set day and the caller's council rule is a card of the set ballot. */
   onBallot: boolean;
   /** Cycle day 2: the vote opened this morning (design §8.1 Q12). */
@@ -361,10 +368,14 @@ function politicalHolds(c: PoliticalCondition, f: PoliticalFacts): boolean {
       return (
         !!f.rule?.decided &&
         f.rule.decided.fallback === c.fallback &&
-        (c.drawn === undefined || c.drawn === f.rule.decided.drawn)
+        (c.drawn === undefined || c.drawn === f.rule.decided.drawn) &&
+        (c.tie === undefined || c.tie === f.rule.decided.tie) &&
+        (c.unrest === undefined || c.unrest === f.rule.decided.unrest)
       );
     case 'votedRule':
-      return !!f.rule?.voted && f.rule.voted.won === c.won;
+      return (
+        !!f.rule?.voted && f.rule.voted.won === c.won && (c.tie === undefined || c.tie === f.rule.voted.tie)
+      );
     case 'ruleOnBallot':
       return f.rule?.onBallot ?? false;
     case 'voteOpen':

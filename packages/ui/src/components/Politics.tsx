@@ -107,7 +107,7 @@ export function electionLines(
                         until,
                         next,
                       )
-                    : e.resultSeats(
+                    : (r.seatTie ? e.resultSeatsTie : e.resultSeats)(
                         r.winner,
                         c?.factionIds[0] ? fname(c.factionIds[0]) : '',
                         c?.seats ?? 0,

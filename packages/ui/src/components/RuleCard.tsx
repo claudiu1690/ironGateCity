@@ -59,6 +59,8 @@ export function howWords(
     seats: number | null;
     /** The Unrest fallback: the councillor whose card was card 1. */
     councillor?: string | null;
+    /** `seats` level with another card, settled on votes or opinion (design §8.12). */
+    seatTie?: boolean;
   },
   names: Names,
 ): string | null {
@@ -70,8 +72,12 @@ export function howWords(
     case 'fallback':
       return i.councillor ? copy.rule.how.fallbackUnrest(i.councillor) : copy.rule.how.fallback;
     case 'seats':
-      return i.factionIds.length > 1
-        ? copy.rule.how.sharedSeats(party(names, i.factionIds[0]), party(names, i.factionIds[1]), i.seats ?? 0)
+      if (i.factionIds.length > 1) {
+        const [a, b] = [party(names, i.factionIds[0]), party(names, i.factionIds[1])];
+        return i.seatTie ? copy.rule.how.sharedSeatsTie(a, b, i.seats ?? 0) : copy.rule.how.sharedSeats(a, b, i.seats ?? 0);
+      }
+      return i.seatTie
+        ? copy.rule.how.seatsTie(party(names, i.factionIds[0]), i.seats ?? 0)
         : copy.rule.how.seats(party(names, i.factionIds[0]), i.seats ?? 0);
     case 'draw':
       return copy.rule.how.draw(party(names, i.factionIds[0]));
@@ -97,6 +103,7 @@ export function ruleWinnerLines(r: RuleResultView, names: Names): string[] {
       factionIds: winner?.whose.kind === 'party' ? winner.whose.factionIds : [],
       seats: winner?.seats ?? null,
       councillor: r.how === 'fallback' && winner?.whose.kind === 'councillor' ? winner.whose.name : null,
+      seatTie: r.seatTie ?? false,
     },
     names,
   );
@@ -167,7 +174,9 @@ export function RuleCard({
               tone="success"
               label={copy.ruleResult.passed}
               animate={false}
-              className="border-2 px-1.5 py-0 text-[12px]"
+              // QA m9: the stamp's own size wins without `!` (cx does not merge classes), which set it
+              // at 26 px over the share bar; small, with room for its tilt.
+              className="my-1 border-2! px-1.5! py-0! text-[12px]! tracking-[0.1em]!"
             />
           )}
         </span>
@@ -703,6 +712,11 @@ export function HowTheVoteWorks({ className, ...p }: HowTheVoteWorksProps) {
 export interface RuleChipProps {
   name: string;
   daysLeft: number;
+  /**
+   * The plate's chip on a short phone (design §8.11 Q2): the rule's name alone; the aria-label keeps
+   * the days. The place sheet's chip keeps them on screen too.
+   */
+  short?: boolean;
   /** A tap opens the Town Hall. */
   onOpen?: () => void;
   className?: string;
@@ -715,7 +729,7 @@ export interface RuleChipProps {
  * while a sheet covers the plate. The pill is small; the button around it is a 44 px target whose
  * negative margins keep the row's height.
  */
-export function RuleChip({ name, daysLeft, onOpen, className, testId = 'rule-chip' }: RuleChipProps) {
+export function RuleChip({ name, daysLeft, short = false, onOpen, className, testId = 'rule-chip' }: RuleChipProps) {
   const text = copy.plate.ruleChip(name, daysLeft);
   return (
     <button
@@ -731,7 +745,7 @@ export function RuleChip({ name, daysLeft, onOpen, className, testId = 'rule-chi
       aria-label={`${text}. ${copy.hall.ruleInForce}`}
     >
       <span className="label-caps bg-paper-2 px-1.5 py-0.5 text-[9.5px] leading-none whitespace-nowrap text-ink">
-        {text}
+        {short ? copy.plate.ruleChip(name) : text}
       </span>
     </button>
   );

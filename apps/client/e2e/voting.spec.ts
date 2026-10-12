@@ -397,14 +397,16 @@ test("the rule always visible: the count's headlines, the folded plate's chip, t
   await page.goto('/paper');
   const heads = page.getByTestId('headline');
   await expect(heads.filter({ hasText: `${card2.name} Wins the Vote in Ashford` })).toContainText(
-    /\d+ of \d+ votes\. In force until .+\. The Gazette has checked the count\./,
+    /\d+ of \d+ cast\. In force until .+\. The Gazette has checked the count\./,
   );
   await expect(heads.filter({ hasText: `Your Vote Counted: ${card2.name} Wins` })).toHaveCount(1);
 
   // The folded plate (a phone under 700 px tall): the rule line gives way to the chip; a tap opens the hall.
   await page.goto('/city/ashford');
   const chip = page.getByTestId('plate-rule-chip').filter({ visible: true });
-  await expect(chip).toHaveText(new RegExp(`^${card2.name} · 5 days$`, 'i'));
+  // Design §8.11 Q2: the plate's chip prints the name alone on a short phone; its label keeps the days.
+  await expect(chip).toHaveText(new RegExp(`^${card2.name}$`, 'i'));
+  await expect(chip).toHaveAttribute('aria-label', new RegExp(`^${card2.name} · 5 days\\. The rule in force$`));
   await expect(page.getByTestId('city-ordinance')).toBeHidden();
   const box = (await chip.boundingBox())!;
   expect(box.height).toBeGreaterThan(0);
@@ -422,5 +424,35 @@ test("the rule always visible: the count's headlines, the folded plate's chip, t
   // The Me tab: *Ashford · {rule} · 5 days left* under the party card.
   await page.goto('/me');
   await expect(page.getByTestId('me-rule')).toHaveText(`Ashford · ${card2.name} · 5 days left`);
+  await ctx.close();
+});
+
+test('the short phone plate (design §8.11 Q2): with Long Service Order in force the kicker row is one caps line', async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const ctx = await memberContext(browser, 'holm', 'Rosa Reihe', { fxp: 400 });
+  const api = ctx.request;
+  await advanceTo(api, 'coalport', 2);
+  const b = await read(api, 'council.ballot');
+  const long = (b.data.cards as Array<{ ordinanceId: string }>).find((c) => c.ordinanceId === 'ord.long-service');
+  expect(long, 'the branch card, Long Service Order, is on the ballot').toBeTruthy();
+  await hook(api, 'rule-votes', { votes: { 'ord.long-service': 2 } });
+  await advanceTo(api, 'coalport', 0);
+  const page = await ctx.newPage();
+  for (const size of [
+    { width: 375, height: 667 },
+    { width: 360, height: 640 },
+  ]) {
+    await page.setViewportSize(size);
+    await page.goto('/city/coalport');
+    const chip = page.getByTestId('plate-rule-chip').filter({ visible: true });
+    await expect(chip).toHaveText(/^Long Service Order$/i);
+    const row = page.getByTestId('city-plate');
+    // innerText: the folded *Home city* span is display:none (textContent would still hold it).
+    expect(await row.innerText()).not.toMatch(/home city/i);
+    const h = (await row.boundingBox())!.height;
+    expect(h, `${size.width} × ${size.height}: the kicker row is one caps line (${h} px)`).toBeLessThanOrEqual(15.25);
+  }
   await ctx.close();
 });

@@ -205,12 +205,12 @@ async function cardShots(page: Page, name: string, city = 'coalport') {
 let rookie: BrowserContext;
 let voter: BrowserContext;
 let stander: BrowserContext;
-let cllrA: BrowserContext;
-let cllrB: BrowserContext;
-let cllrC: BrowserContext;
+let _cllrA: BrowserContext;
+let _cllrB: BrowserContext;
+let _cllrC: BrowserContext;
 let backer1: BrowserContext;
 let backer2: BrowserContext;
-let pages: Record<string, Page> = {};
+const pages: Record<string, Page> = {};
 
 test('day 0: the Election card in each state, the stand card, standing, the councillors', async ({ browser }) => {
   test.setTimeout(540_000);
@@ -291,9 +291,9 @@ test('day 0: three councillors: the council state, the change sheet, next in lin
   const a = await memberContext(browser, 'holm', 'Lotte Erste', { fxp: 2000, successes: 30 });
   const b = await memberContext(browser, 'holm', 'Jakob Zweite', { fxp: 2000, successes: 30 });
   const c = await memberContext(browser, 'holm', 'Grete Dritte', { fxp: 2000, successes: 30 });
-  cllrA = a;
-  cllrB = b;
-  cllrC = c;
+  _cllrA = a;
+  _cllrB = b;
+  _cllrC = c;
   const hall = await read(a.request, 'council.hall', { cityId: 'coalport' });
   const locals = (hall.data.seats as Array<{ seat: number; kind: string }>)
     .filter((x) => x.kind === 'npc')
@@ -407,6 +407,8 @@ test('day 2: the vote, on a phone and on a desktop; voted; the chip; who is stan
   await modalOf(p2).getByRole('button', { name: 'Continue' }).click();
   // Rank 1 and a councillor see the ballot without the vote? (the rookie reads it, a councillor votes).
   await snap(pages.rookie!, '/council/ballot', '30-ballot-rank1', { ready: (q) => expect(q.getByTestId('rule-card').first()).toBeVisible() });
+  // The fix round (design §8.12, QA m7): the Recruit reads why they cannot vote, not the vote line.
+  await expect(pages.rookie!.getByTestId('ballot-line')).toHaveText(/^\w+s can't vote yet: 400 Party XP makes an? \w+, and \w+s vote\.$/);
   await cardShots(pages.a!, '31-card-councillor-day2', 'coalport');
   texts['card-councillor-day2'] = await cardText(pages.a!);
   await cardShots(pages.stander!, '32-card-candidate-day2', 'coalport');
@@ -491,6 +493,9 @@ test('the ballot at 390 × 844 for a voter who has not opened the paper yet (the
   });
   texts['ballot-geometry-unread-paper-390x844'] = JSON.stringify({ strip, ...g });
   await p.screenshot({ path: join(OUT, '70-ballot-paper-unread-m.png') });
+  // The voting fix round (QA M2): the strip stays off the phone's ballot, and all three cards end above the bar.
+  expect(strip, 'the paper strip is not on the phone ballot').toBe(false);
+  for (const bottom of g.bottoms) expect(bottom, `paper unread: ${JSON.stringify(g)}`).toBeLessThanOrEqual(g.barTop + 1);
   // The same voter after opening the paper.
   await p.goto('/paper');
   await p.waitForTimeout(1500);
@@ -503,6 +508,7 @@ test('the ballot at 390 × 844 for a voter who has not opened the paper yet (the
     return { strip: document.body.innerText.includes('IS IN'), bottoms: cards.map((r) => Math.round(r.bottom * 10) / 10), barTop: Math.round(bar.top * 10) / 10 };
   });
   texts['ballot-geometry-paper-read-390x844'] = JSON.stringify(g2);
+  for (const bottom of g2.bottoms) expect(bottom, `paper read: ${JSON.stringify(g2)}`).toBeLessThanOrEqual(g2.barTop + 1);
   flush();
 });
 

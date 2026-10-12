@@ -777,7 +777,9 @@ export function CityPage() {
         onClick={() => hallPlace && select(hallPlace.id)}
         disabled={!hallPlace}
         className={cx(
-          "relative z-20 min-w-0 cursor-pointer truncate text-left font-mono text-[11px] whitespace-nowrap text-text-2 underline decoration-dotted underline-offset-2 after:absolute after:inset-x-0 after:-inset-y-[16px] after:content-[''] hover:text-ink disabled:cursor-default disabled:no-underline",
+          // QA m9: the truncation is the inner span's, so the button's `after:` box (its 44 px target)
+          // is not clipped by the button's own overflow.
+          "relative z-20 flex min-w-0 cursor-pointer text-left font-mono text-[11px] whitespace-nowrap text-text-2 underline decoration-dotted underline-offset-2 after:absolute after:inset-x-0 after:-inset-y-[16px] after:content-[''] hover:text-ink disabled:cursor-default disabled:no-underline",
           // A phone held sideways: the plate is in the scrolling side column; the line itself is 44 px.
           side && 'min-h-11 leading-[44px] after:hidden',
           className,
@@ -785,7 +787,9 @@ export function CityPage() {
         data-testid={testId}
         aria-label={`${copy.plate.rule(c.ordinance.name, c.ordinance.plainLine ?? c.ordinance.effectLine, c.ordinance.daysLeft)}. Open ${hallPlace?.ref ?? 'the Town Hall'}`}
       >
-        {copy.plate.rule(c.ordinance.name, c.ordinance.plainLine ?? c.ordinance.effectLine, c.ordinance.daysLeft)}
+        <span className="block min-w-0 truncate">
+          {copy.plate.rule(c.ordinance.name, c.ordinance.plainLine ?? c.ordinance.effectLine, c.ordinance.daysLeft)}
+        </span>
       </button>
     ) : null;
 
@@ -800,6 +804,8 @@ export function CityPage() {
       <RuleChip
         name={c.ordinance.name}
         daysLeft={c.ordinance.daysLeft}
+        // Design §8.11 Q2: the plate's chip (only shown on a short phone) prints the name alone.
+        short={folded}
         onOpen={hallPlace ? () => select(hallPlace.id) : undefined}
         testId={testId}
         className={folded ? 'ml-auto hidden [@media(max-width:639px)_and_(max-height:700px)]:inline-flex' : undefined}
@@ -919,10 +925,14 @@ export function CityPage() {
               )}
               data-testid="city-plate"
             >
-              <span>{c.role === 'home' ? 'Home city' : 'Close race'}</span>
+              {/* Design §8.11 Q2: on a short phone, beside the rule chip, the row drops *Home city ·*
+                  (*Close race ·*) and its dot, so it stays one caps line. */}
+              <span className="[@media(max-width:639px)_and_(max-height:700px)]:hidden">
+                {c.role === 'home' ? 'Home city' : 'Close race'}
+              </span>
               <span
                 className={cx(
-                  "relative flex items-center gap-1.5 before:absolute before:-left-[9px] before:content-['·']",
+                  "relative flex items-center gap-1.5 before:absolute before:-left-[9px] before:content-['·'] [@media(max-width:639px)_and_(max-height:700px)]:before:content-none",
                   helpMark,
                 )}
               >

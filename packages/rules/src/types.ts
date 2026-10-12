@@ -315,9 +315,20 @@ export type PoliticalCondition =
    * when no votes were cast (`hl.rule-won`, `hl.rule-fallback`); `drawn` (the capital, design §8.4)
    * when the returning officer's draw decided it (`hl.ig.rule-drawn`). Absent `drawn` matches either.
    */
-  | { kind: 'ruleDecided'; fallback: boolean; drawn?: boolean }
-  /** The caller voted on the ballot counted last night; their card won or lost (`hl.your-rule-*`). */
-  | { kind: 'votedRule'; won: boolean }
+  | {
+      kind: 'ruleDecided';
+      fallback: boolean;
+      drawn?: boolean;
+      /** The voting fix round (design §8.12): a winner level on votes (home) or on seats, not drawn (the capital). */
+      tie?: boolean;
+      /** A fallback to card 1 when card 1 was a councillor's (Unrest took the party's card off). */
+      unrest?: boolean;
+    }
+  /**
+   * The caller voted on the ballot counted last night; their card won or lost (`hl.your-rule-*`);
+   * `tie` as `ruleDecided`'s (design §8.12). Absent matches either.
+   */
+  | { kind: 'votedRule'; won: boolean; tie?: boolean }
   /** A councillor whose rule is a card of the ballot set last night (`hl.your-rule-on-ballot`). */
   | { kind: 'ruleOnBallot' }
   /** Cycle day 2, the morning the town's vote on its rule opens (`hl.vote-open`; design §8.1 Q12). */
@@ -1681,6 +1692,8 @@ export interface RuleResultView {
   /** In finishing order. */
   cards: Array<RuleCardView & { votes: number; seats: number | null; share: number; won: boolean }>;
   how: RuleHow;
+  /** The fix round (design §8.12): `seats` with the winner level on seats, settled on votes or opinion. */
+  seatTie?: boolean;
   turnout: { voters: number; eligible: number } | null;
   runsUntil: number;
 }
@@ -1716,6 +1729,8 @@ export interface ElectionCardView {
     /** Whether the winning card was the party's or a councillor's own (the Unrest fallback's line). */
     whose: 'party' | 'councillor' | null;
     capital?: { factionIds: FactionId[]; seats: number; districtSeats: FactionId[] };
+    /** The fix round (design §8.12): `seats` with the winner level on seats, settled on votes or opinion. */
+    seatTie?: boolean;
   } | null;
   /** `standing`: the candidate's rule and backers. */
   standing: { rule: string; backers: number; branchLine: boolean } | null;
@@ -1935,6 +1950,13 @@ export interface TownHallView {
     seats: number | null;
     factionIds: FactionId[];
     by: string | null;
+    /**
+     * The voting fix round (QA M1): the councillor whose card won, when the winning card is a
+     * councillor's (the Unrest fallback names them, design §8.2); null otherwise.
+     */
+    councillor: string | null;
+    /** The fix round (design §8.12): `seats` with the winner level on seats, settled on votes or opinion. */
+    seatTie?: boolean;
   } | null;
   /** Next week's rule: the ballot (provisional on days 0–1, set on days 2–4). */
   next: RuleBallotView;

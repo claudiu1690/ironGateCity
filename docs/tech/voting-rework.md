@@ -1487,3 +1487,19 @@ The e2e server ran against an in-memory replica set on 127.0.0.1:27118, so the r
    - Ambition chapter 3, *The deposit* (`ambitions.ts`, already in slice 7's note, item 9).
 
    The council no longer votes; the town does.
+
+### Fix round — code (12 Oct 2026; QA report `docs/qa/voting-rework-report.md`, wording in `0bf211a`, design §8.12)
+
+**QA M2, the ballot at 390 × 844** (`AppShell.tsx`, `council.tsx`): the *paper is in* strip is off the ballot below 1024 px (the Paper tab's dot still says it), and the ballot is tighter: 8 px from the plate to the cards and 6 px between them (12 and 8 elsewhere; the 960 px row unchanged), and the sticky bar 64-ish as §4.2 budgets (`pt-1.5`, `gap-0.5`, `pb max(6px, safe area)`, the caption `leading-tight`). The header keeps its 150 px and the 88 px card minimum stands. Measured on the capital ballot (`qa-capital`): the last card ends at 689 against the bar's 707.25, paper unread and read alike (it was 697 against 698.5, and the strip put it 42–53 px under). The ~18 px covers one wrapped plain line (Street Fund's, ~17.5 px). `qa.slice4` and `qa.voting.screens` now assert *every card above the bar* in both paper states.
+
+**QA M1, the Unrest fallback** (`townHallService.ts`, `TownHall.tsx`, `politicsService.ts`): the hall's `inForce` carries `councillor` (the winning card's councillor, else null), and `howWords('fallback')` gets it, as the result screen did. `ruleHeadlineFacts` sets `decided.tie`, `decided.unrest` and `voted.tie` on every count, and `{name}` (the councillor) for `hl.*rule-fallback-unrest`. `tie` is `how: 'tie'` at home, or `seats` with the winner level on seats with another card in the capital (`seatTie()`); the draw stays `drawn`. The rules package matches `tie?`/`unrest?` on `ruleDecided` and `tie?` on `votedRule` (absent matches either); `load.ts`'s name lists carry the five new ids.
+
+**The capital seat tie** (`seatTie?` on `RuleResultView`, the Election card's `result` and the hall's `inForce`): the card prints `election.resultSeatsTie` for one party (a shared card keeps `resultSharedSeats`, which has no tie form), and the hall and result card `rule.how.seatsTie` / `sharedSeatsTie`.
+
+**m1, the short-phone plate** (`RuleCard.tsx` `RuleChip short`, `city.tsx`): the plate's chip prints the name alone; the aria-label and the sheet's chip keep the days. *Home city* / *Close race* and the dot before the party fold under the same query. `voting.spec` asserts `^{name}$` on the plate chip, and (new test) one caps line for the kicker row with Long Service Order in force at 375 × 667 and 360 × 640.
+
+**m6, m7, m5 in the client:** `NOT_POLLING` reads `residence.voteOpens(when)` when the server sends `opensAt` (cycle days 0–1; it already did) and `votingClosed` otherwise; `ALREADY_ENDORSED`/`ALREADY_FILED` use `residence.alreadyBacking`/`alreadyStanding`. A Recruit's ballot line is `ballot.belowRank(rank1, rank2, 400)`, and it does not fold under 700 px (no sticky caption says it for them).
+
+**m9:** the *PASSED* stamp is set small with `!` (`cx` does not merge classes, so the stamp's own 26 px won) and a 4 px margin for its tilt; *0 of 0 members voted* is not printed when nobody could vote; the disabled *Choose a rule* is muted on track (4.35:1, was 2.52:1), on the ballot only; the plate's rule line truncates in an inner span, so the button's `after:` box (its 44 px target) is no longer clipped by its own overflow; the playtest report drops `filed`, `withdrawn`, `struck`, `smallBranchDoubles` and `councilVoteRate` (`packages/db/test/elections.test.ts` still names them; it is not run, per the no-Vitest rule).
+
+**Tests touched:** the reworded decks (`council.spec` 302, `voting.spec` 400: *of {of} cast*), `capital.spec` 70 (*the next vote that opens*), and QA's three new specs' lint errors (unused names) so `lint` is green.

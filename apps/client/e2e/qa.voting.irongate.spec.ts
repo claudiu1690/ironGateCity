@@ -100,7 +100,7 @@ let ilse: BrowserContext; // Collective, leads the bloc (top seat)
 let jana: BrowserContext; // Collective, second seat
 let kurt: BrowserContext; // Vanguard, names the same rule as Ilse: a shared card
 let eva: BrowserContext; // Alliance, Rank 2 in Eastside
-let districtOf = new Map<string, string>();
+const districtOf = new Map<string, string>();
 
 test('the capital, day 0: councillors of two parties name the same rule; the third reads the party card is set', async ({ browser }) => {
   test.setTimeout(300_000);
@@ -139,7 +139,7 @@ test('the capital, day 0: councillors of two parties name the same rule; the thi
     residence: { cityId: 'irongate', districtId: districtOf.get('Eastside') },
   });
   const one = await read(ilse.request, 'council.ballot', { cityId: 'irongate' });
-  const two = await read(jana.request, 'council.ballot', { cityId: 'irongate' });
+  await read(jana.request, 'council.ballot', { cityId: 'irongate' });
   const ilseLeads = one.data.myRule.onBallot as boolean;
   texts['ilse-leads'] = String(ilseLeads);
   // Both name Street Fund: the leader's rule is the party's card; the Vanguard's councillor names the same.

@@ -176,9 +176,11 @@ export const HERALD_HEADLINE_NAMES = [
   'nominations',
   // The voting rework (design §8.4): the rule's headlines.
   'rule-won',
+  'rule-seat-tie',
   'rule-drawn',
   'your-rule-won',
   'your-rule-lost',
+  'your-rule-lost-tie',
   'your-rule-on-ballot',
   'vote-open',
   'battleground',
@@ -232,9 +234,12 @@ export const POLITICAL_HEADLINE_NAMES = [
   'nominations',
   // The voting rework (design §4.8, §8.4): the rule's headlines.
   'rule-won',
+  'rule-tie',
   'rule-fallback',
+  'rule-fallback-unrest',
   'your-rule-won',
   'your-rule-lost',
+  'your-rule-lost-tie',
   'your-rule-on-ballot',
   'vote-open',
 ] as const;

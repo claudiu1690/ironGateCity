@@ -67,7 +67,7 @@ test('the capital: register in Eastside → vote on a rule, a card per party →
   await expect(sheet).toBeVisible();
   const lines = await sheet.getByTestId('register-lines').getByRole('listitem').allTextContents();
   expect(lines.length).toBeGreaterThanOrEqual(4);
-  expect(lines.join(' ')).toContain('You vote and stand in Eastside from the next election that opens');
+  expect(lines.join(' ')).toContain('You vote and stand in Eastside from the next vote that opens');
   expect(lines.join(' ')).toContain('Your job, reputation, Iron and rank are untouched.');
   await sheet.getByTestId('register-confirm').click();
   const registered = modalOf(page);

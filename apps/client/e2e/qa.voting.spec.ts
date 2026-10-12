@@ -126,7 +126,7 @@ test('stand: the refusals name the reason (rank, Known, Political Capital) and d
   expect(ok.data.knockOns.pc).toEqual({ before: 10, after: 0 });
 });
 
-test('stand: a double tap and a burst of five keys make one candidacy and one 10 PC charge', async ({ browser }) => {
+test('stand: a double tap and a burst of five keys make one candidacy and one 10 PC charge', async () => {
   await hook(stander, 'character', { fxp: 2000, successes: 30, pc: 45 });
   const key = uuid();
   const keys = [key, key, uuid(), uuid(), uuid(), uuid()];

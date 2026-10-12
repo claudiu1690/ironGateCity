@@ -381,6 +381,7 @@ export function ruleResultView(
       };
     }),
     how: r.how,
+    seatTie: r.how === 'seats' && seatTie(r.tallies, r.winner),
     turnout: r.turnout,
     runsUntil: dayStart(r.inForce.toDay),
   };
@@ -568,6 +569,7 @@ async function electionCard(
       by: card?.by[0] ? cardByName(content, card.by[0]) : null,
       whose: card?.by[0]?.kind ?? null,
       ...(capital ? { capital } : {}),
+      seatTie: r.how === 'seats' && seatTie(r.tallies, r.winner),
     };
   } else if (i.inForce && i.inForce.fromDay <= today && today < i.inForce.toDay) {
     // No count yet (a city bootstrapped this cycle): the rule in force is carried over (design §8.2).
@@ -1204,6 +1206,15 @@ export async function whatNowOf(
   };
 }
 
+/**
+ * The fix round (design §8.12): the capital's winner is level on seats with another card (settled on
+ * votes or opinion when `how` is `seats`).
+ */
+export const seatTie = (tallies: ReadonlyArray<{ ordinanceId: string; seats?: number | null }>, winner: string): boolean => {
+  const w = tallies.find((t) => t.ordinanceId === winner)?.seats;
+  return w != null && tallies.some((t) => t.ordinanceId !== winner && t.seats === w);
+};
+
 /** "the Vanguard" · "the Collective and the Alliance": a card's party or parties (design §8.4 `{parties}`). */
 const partiesOf = (content: GameContent, factionIds: readonly FactionId[]): string =>
   factionIds.map((f) => `the ${content.faction(f).shortName}`).join(' and ');
@@ -1235,14 +1246,21 @@ export async function ruleHeadlineFacts(
     const b = await RuleBallot.findById(councilKey(cityId, cal.cycle - 1)).lean<RuleBallotDoc>();
     const r = b?.status === 'counted' && b.countDay === today ? b.result : null;
     if (b && r) {
-      rule.decided = { fallback: r.how === 'fallback', drawn: r.how === 'draw' };
-      ruleEnds = dayStart(r.inForce.toDay);
       const cards = b.cards ?? [];
       const tallyOf = (id: string) => r.tallies.find((t) => t.ordinanceId === id);
       const won = tallyOf(r.winner);
       const of = r.turnout?.voters ?? r.tallies.reduce((n, t) => n + t.votes, 0);
       const winnerCard = cards.find((x) => x.ordinanceId === r.winner);
+      // The fix round (design §8.12): a tie is level on votes at home (`how: 'tie'`), or level on
+      // seats in the capital and settled on votes or opinion (not the draw); Unrest's fallback is
+      // card 1 being a councillor's (the party's card was off the ballot).
+      const tie = r.how === 'tie' || (r.how === 'seats' && seatTie(r.tallies, r.winner));
+      const by = winnerCard?.by[0];
+      const unrest = r.how === 'fallback' && by?.kind === 'councillor';
+      rule.decided = { fallback: r.how === 'fallback', drawn: r.how === 'draw', tie, unrest };
+      ruleEnds = dayStart(r.inForce.toDay);
       varsByKind.ruleDecided = {
+        ...(unrest && by?.kind === 'councillor' ? { name: by.name } : {}),
         rule: ruleName(content, r.winner),
         votes: String(won?.votes ?? 0),
         of: String(of),
@@ -1253,7 +1271,7 @@ export async function ruleHeadlineFacts(
       const mine = me ? await myRuleVote(me.c, [me.electionId]) : null;
       if (mine) {
         const t = tallyOf(mine);
-        rule.voted = { won: mine === r.winner };
+        rule.voted = { won: mine === r.winner, tie };
         varsByKind.votedRule = {
           rule: ruleName(content, mine),
           votes: String(t?.votes ?? 0),

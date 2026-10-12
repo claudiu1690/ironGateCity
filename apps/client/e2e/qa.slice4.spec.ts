@@ -249,13 +249,18 @@ test.describe('the capital ballot on a short phone (screens §10; slice-3 QA m4;
       cityId: 'irongate',
       residence: { cityId: 'irongate', districtId: 'irongate.eastside' },
     });
-    // The paper read first, so the *paper is in* banner does not take the ballot's room (review 4: the
-    // join lands on the welcome edition, whose read could still be on its way).
+    await page.setViewportSize({ width: 390, height: 844 });
+    // The voting fix round (QA M2): with the day's paper unopened, the *paper is in* strip stays off
+    // the phone's ballot (the Paper tab's dot says it), and every card sits whole above the sticky bar.
+    const unread = await ballotAt(page);
+    await expect(page.getByTestId('paper-banner')).toHaveCount(0);
+    expect(unread.allAbove, `390 × 844, paper unread: every card above the CTA (${JSON.stringify(unread)})`).toBe(true);
+    // Then the paper read (review 4: the join lands on the welcome edition, whose read could still be
+    // on its way).
     await page.goto('/paper');
     await expect(page.getByTestId('headline').first()).toBeVisible();
     await page.waitForLoadState('networkidle');
 
-    await page.setViewportSize({ width: 390, height: 844 });
     const tall = await ballotAt(page);
     // Design §8.10 Q1: the capital's own plate line (three Courier lines at 390 px), and the hall
     // header whole (150 px, no capital branch).
@@ -264,16 +269,13 @@ test.describe('the capital ballot on a short phone (screens §10; slice-3 QA m4;
     );
     expect((await page.getByTestId('hall-header').boundingBox())?.height).toBe(150);
     expect(tall.n, 'one card per party').toBeGreaterThanOrEqual(2);
-    // Design §8.10 Q1: at three lines the capital's plate is the home ballot's height. Every card sits
-    // whole above the sticky bar when each whose line is one line. A councillor's card (*the Alliance's
-    // rule · Councillor Ilse Brandt*, seated by capital.spec) wraps its whose line to two, and the third
-    // card ends ~5 px under the bar (tech design, Deviations phase 6). As §8.10 says, the header is not
-    // cut: the check is the last card's top edge, and the overshoot is recorded on the run.
+    // Design §8.10 Q1, §8.11 Q1: every card whole above the sticky bar at 390 × 844, the header whole
+    // (the voting fix round, QA M2: a wrapped plain line, Street Fund's, fits the compact ballot).
     test.info().annotations.push({
       type: '390 × 844',
-      description: `last card bottom ${tall.lastBottom} · CTA top ${tall.ctaTop} · every card above: ${tall.allAbove}`,
+      description: `last card bottom ${tall.lastBottom} · CTA top ${tall.ctaTop} · unread ${unread.lastBottom} / ${unread.ctaTop}`,
     });
-    expect(tall.lastTopAbove, `390 × 844: the last card's top edge above the CTA (${JSON.stringify(tall)})`).toBe(true);
+    expect(tall.allAbove, `390 × 844, paper read: every card above the CTA (${JSON.stringify(tall)})`).toBe(true);
     expect(tall.ctaBottom, '390 × 844: the CTA on screen').toBeLessThanOrEqual(tall.h + 1);
     for (const size of [
       { width: 375, height: 667 },

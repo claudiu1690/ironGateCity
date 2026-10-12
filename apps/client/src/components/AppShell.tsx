@@ -22,7 +22,10 @@ export function AppShell() {
   const { character, nextTickIn, now } = useCharacter();
   const stat = usePlaceStat();
   const wide = useMinWidth(1024);
-  const paperDue = !!character?.paperDue && !pathname.startsWith('/paper');
+  // QA M2 (voting fix round): not on a phone's ballot, whose three cards and sticky bar fill the
+  // screen (design §4.2); the Paper tab's dot still says the paper is in.
+  const paperDue =
+    !!character?.paperDue && !pathname.startsWith('/paper') && (wide || pathname !== '/council/ballot');
   // The ticker (wide screens) and the "paper is in" banner both need the paper's name.
   const paper = useQuery({ ...trpc.paper.today.queryOptions(), enabled: !!character && (wide || paperDue) });
   // Review 1 (GDD §13.7): the orders-complete note, once the completing result modal is closed; it
