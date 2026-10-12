@@ -189,7 +189,7 @@ export const issues: ContentInput['issues'] = [
     stances: {
       vanguard: 'Quiet streets by ten. The Hill sets the example for the town.',
       collective: 'The Esplanade belongs to the people who walk on it, at any hour.',
-      alliance: 'No curfew without a council vote, and the council has not voted.',
+      alliance: "No curfew without the town's vote, and the town has not voted for one.",
     },
   },
   {

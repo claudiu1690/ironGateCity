@@ -80,7 +80,7 @@ export const Faction = z.strictObject({
     /** With its article: "the General Strike" (onboarding §13.1). */
     signatureEvent: z.string().min(1).max(40),
   }),
-  /** Slice 3 (design §10.2): the branch's motion, item 1 on every order paper; the NPC default. */
+  /** Slice 3 (design §10.2; the voting rework): the branch's rule, card 1 on every ballot; the secretary's default. */
   branchMotion: Id,
   /** Slice 3 (design §11.3): the Unrest pair, slots A and B (`use: 'crisis'`, `doneFxp: 40`). */
   restoreOrders: z.tuple([Id, Id]),

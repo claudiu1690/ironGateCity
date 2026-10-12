@@ -153,8 +153,9 @@ export const ambitions: AmbitionInput[] = [
           art: 'home-hq',
         },
       },
-      // The teaser: written with the slice that follows (design §17.7).
-      { n: 3, title: 'The deposit', requires: { rank: 3 } },
+      // The teaser: written with slice 7 (slice-7-nation.md §13, re-strung for the rule ballot in
+      // voting-simplified.md §8.11: the ten marks are the price of standing, paid and gone).
+      { n: 3, title: 'The ten marks', requires: { rank: 3 } },
     ],
   },
   {

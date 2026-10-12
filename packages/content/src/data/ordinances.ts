@@ -4,7 +4,7 @@ type OrdinanceInput = ContentInput['ordinances'][number];
 
 /**
  * The ten home-city ordinances (docs/design/slice-3-politics.md §10.1, GDD §15.3; ADR 0021). Each
- * lasts five City Days, one in force per city. `effectLine` is the caps line on the order paper
+ * lasts five City Days, one in force per city. `effectLine` is the caps line on the ballot's card
  * and the menu (the UI adds "· 5 days"); the bold effect of the design's table, shortened. Review 4
  * (answers §11.3): `plainLine`, the effect in plain words on the city plate and at the Town Hall.
  */

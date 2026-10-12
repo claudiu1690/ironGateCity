@@ -524,7 +524,7 @@ export const irongateCandidates: CandidateInput[] = [
     cityId: 'irongate',
     districtId: 'irongate.garrison-hill',
     profile: 28,
-    line: 'Magistrate\'s clerk. "No curfew without a council vote."',
+    line: 'Magistrate\'s clerk. "No curfew without the town\'s vote."',
   },
   {
     id: 'npc.a.ig.adler',

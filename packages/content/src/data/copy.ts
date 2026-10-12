@@ -967,8 +967,13 @@ export const copy = {
     /** Answers §11.3: "Council rule: Reading Room Grant · studying costs a fifth less · 3 days left". */
     rule: (name: string, plainLine: string, days: number) =>
       `Council rule: ${name} · ${plainLine} · ${days} ${days === 1 ? 'day' : 'days'} left`,
-    /** The voting rework (design §4.7): the folded plate's chip, "Street Fund · 3 days" (caps in CSS). */
-    ruleChip: (name: string, days: number) => `${name} · ${daysN(days)}`,
+    /**
+     * The voting rework (design §4.7): the rule chip, "Street Fund · 3 days" (caps in CSS). On the
+     * folded plate (an upright phone under 700 px tall; design §8.11 Q2) the chip prints the name
+     * alone, "Street Fund", so the kicker row beside it keeps one line: pass no `days`. The place
+     * sheet's chip and the chip's aria-label keep the days.
+     */
+    ruleChip: (name: string, days?: number | null) => (days == null ? name : `${name} · ${daysN(days)}`),
   },
   /** The Town Hall's sheet (answers §11.2). */
   hall: {
@@ -1078,17 +1083,22 @@ export const copy = {
       branch: (secretary: string) => `the branch's rule · ${secretary}`,
       councillor: (name: string) => `Councillor ${name}'s rule`,
       you: 'your rule',
-      /** The capital, the secretary's card: "the Vanguard's rule · Organiser Stahl" (`addressedAs`, as `branch`). */
-      party: (faction: string, who: string) => `the ${faction}'s rule · ${who}`,
       /**
-       * The capital, a councillor's card (design §8.9 Q2): "the Collective's rule · Councillor Jana
+       * The capital's three forms (design §8.11 Q1) are the party's name and who set the card, with
+       * no "'s rule": every card on the capital's ballot is a party's, the crest is on the line, and
+       * the line must hold a councillor's full name in one Courier row at 390 px (42 characters).
+       * The secretary's card: "Vanguard · Organiser Stahl" (`addressedAs`, as `branch`).
+       */
+      party: (faction: string, who: string) => `${faction} · ${who}`,
+      /**
+       * The capital, a councillor's card (design §8.9 Q2, §8.11 Q1): "Collective · Councillor Jana
        * Varga". `name` is the character's name as stored; nothing splits it (a councillor is a player
        * the reader may not know, so the full name, as `councillor` above). The view's `whose.via`
        * says which of the two to print.
        */
-      partyCouncillor: (faction: string, name: string) => `the ${faction}'s rule · Councillor ${name}`,
-      /** A shared card: "the Collective's and the Alliance's rule". */
-      shared: (a: string, b: string) => `the ${a}'s and the ${b}'s rule`,
+      partyCouncillor: (faction: string, name: string) => `${faction} · Councillor ${name}`,
+      /** A shared card, two crests: "Collective and Alliance". */
+      shared: (a: string, b: string) => `${a} and ${b}`,
     },
     /** The card's effect line: "IRON FROM ACTIONS +25 % · JOB PAY −25 % · 5 DAYS" (caps in CSS). */
     effect: (effectLine: string, days: number) => `${effectLine} · ${daysN(days)}`,
