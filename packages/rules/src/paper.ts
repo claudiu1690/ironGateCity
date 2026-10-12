@@ -233,19 +233,13 @@ export const isPoliticalTemplate = (t: Pick<HeadlineTemplate, 'when'>): boolean 
 export interface PoliticalFacts {
   /** The caller stood at last night's count. */
   seat: { won: boolean; top: boolean; tie: boolean; bloc?: boolean } | null;
-  /** The caller voted at last night's count. */
-  voted: { won: boolean; tie: boolean } | null;
   filedYesterday: boolean;
-  /** The caller filed; the nominations closed last night. */
-  nominationsClosed: { struck: boolean } | null;
   termEnded: boolean;
-  /** The caller sat on the council that divided last night. */
-  divided: { passed: boolean } | null;
-  movedYesterday: boolean;
   countToday: boolean;
   phase: CouncilPhase;
   cycleDay: number;
-  ordinanceFromToday: boolean;
+  /** A rule took effect this morning at a count (not a bootstrap's). */
+  ruleFromToday: boolean;
   leftUnrest: boolean;
   /** The voting rework (tech design §10): the rule ballot's live facts; absent = none holds. */
   rule?: RuleFacts;
@@ -264,7 +258,7 @@ export interface PoliticalFacts {
    * Epoch ms of the boundaries `{until}` may name. The voting rework: `ruleEnds`, the boundary that
    * ends the rule decided this morning (its five days).
    */
-  until: { nominations: number; polls: number; divide: number; ruleEnds?: number };
+  until: { nominations: number; polls: number; ruleEnds?: number };
 }
 
 /** The voting rework (tech design §10): what the live paper knows of the rule ballot this morning. */
@@ -351,24 +345,16 @@ function politicalHolds(c: PoliticalCondition, f: PoliticalFacts): boolean {
         (c.tie === undefined || c.tie === f.seat.tie) &&
         (c.bloc === undefined || c.bloc === (f.seat.bloc ?? false))
       );
-    case 'votedFor':
-      return f.voted !== null && f.voted.won === c.won && (c.tie === undefined || c.tie === f.voted.tie);
     case 'filedYesterday':
       return f.filedYesterday && f.phase === 'nominations';
-    case 'nominationsClosed':
-      return f.nominationsClosed !== null && f.nominationsClosed.struck === c.struck;
     case 'termEnded':
       return f.termEnded;
-    case 'divided':
-      return f.divided !== null && f.divided.passed === c.passed;
-    case 'movedYesterday':
-      return f.movedYesterday;
     case 'countToday':
       return f.countToday;
     case 'phaseToday':
       return f.phase === c.phase && (c.cycleDay === undefined || c.cycleDay === f.cycleDay);
-    case 'ordinanceFromToday':
-      return f.ordinanceFromToday;
+    case 'ruleFromToday':
+      return f.ruleFromToday;
     case 'leftUnrest':
       return f.leftUnrest;
     case 'ruleDecided':
@@ -395,8 +381,6 @@ export const capitalise = (text: string): string => text.charAt(0).toUpperCase()
 function untilFor(t: HeadlineTemplate, f: PoliticalFacts): number | undefined {
   for (const c of t.when) {
     if (c.kind === 'filedYesterday') return f.until.nominations;
-    if (c.kind === 'movedYesterday') return f.until.divide;
-    if (c.kind === 'nominationsClosed') return f.until.polls;
     // The voting rework: the vote closes at the count's boundary; a decided rule runs five days.
     if (c.kind === 'voteOpen' || c.kind === 'ruleOnBallot') return f.until.polls;
     if (c.kind === 'ruleDecided' || c.kind === 'votedRule') return f.until.ruleEnds;
@@ -538,7 +522,7 @@ export interface LocalFacts {
   countToday: boolean;
   phase: CouncilPhase;
   cycleDay: number;
-  ordinanceFromToday: boolean;
+  ruleFromToday: boolean;
   /** Points the home party lost to rivals yesterday; null without a home party. */
   moraleLost: number | null;
   /** The home party's share of the city, in points; null without a home party. */
@@ -555,8 +539,8 @@ function localHolds(c: HeadlineCondition, f: LocalFacts): boolean {
       return f.countToday;
     case 'phaseToday':
       return f.phase === c.phase && (c.cycleDay === undefined || c.cycleDay === f.cycleDay);
-    case 'ordinanceFromToday':
-      return f.ordinanceFromToday;
+    case 'ruleFromToday':
+      return f.ruleFromToday;
     case 'moraleLostToRivals':
       return f.moraleLost !== null && f.moraleLost >= c.min;
     case 'homeShare':
@@ -574,7 +558,7 @@ function localHolds(c: HeadlineCondition, f: LocalFacts): boolean {
 export const LOCAL_CONDITION_KINDS = [
   'countToday',
   'phaseToday',
-  'ordinanceFromToday',
+  'ruleFromToday',
   'moraleLostToRivals',
   'homeShare',
 ] as const;

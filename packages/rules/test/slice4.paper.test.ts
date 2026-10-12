@@ -37,19 +37,15 @@ const capital: CapitalFacts = {
 
 const political: PoliticalFacts = {
   seat: null,
-  voted: null,
   filedYesterday: false,
-  nominationsClosed: null,
   termEnded: false,
-  divided: null,
-  movedYesterday: false,
   countToday: false,
   phase: 'nominations',
   cycleDay: 0,
-  ordinanceFromToday: false,
+  ruleFromToday: false,
   leftUnrest: false,
   vars: { name: 'Vera', district: 'Eastside', issueShort: 'the tram fares', faction: 'Collective' },
-  until: { nominations: 1, polls: 2, divide: 3 },
+  until: { nominations: 1, polls: 2 },
 };
 
 const t = (

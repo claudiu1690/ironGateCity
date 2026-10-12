@@ -854,8 +854,9 @@ test('#23 #13 rival ground: the Duskwall edition of your own paper, and the home
   await expect(page.getByRole('heading', { name: 'The Coalport Clarion' })).toBeVisible();
   await expect(page.getByTestId('edition-line')).toHaveText('· Duskwall edition');
   await expect(page.getByTestId('dateline')).toContainText(/· Duskwall$/);
+  // The voting rework (design §8.3): days 2–4 the vote's close; days 0–1 the day it opens.
   await expect(page.getByTestId('local-election')).toHaveText(
-    /^Duskwall elects its council: (names go in|voting) until /,
+    /^Duskwall (votes on its rule until .+|chooses next week's ballot · voting opens \w+day)\.$/,
   );
   await expect(page.getByTestId('issue-row').first()).toContainText(/^DUSKWALL/i);
   await page.getByTestId('edition-line').click();

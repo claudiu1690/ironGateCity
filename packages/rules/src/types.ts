@@ -299,23 +299,15 @@ export type PoliticalCondition =
    * `bloc` = in a capital district, the caller's party won no seat there.
    */
   | { kind: 'seatLost'; tie?: boolean; bloc?: boolean }
-  /** The candidate the player voted for at last night's count won or lost (`tie` as above). */
-  | { kind: 'votedFor'; won: boolean; tie?: boolean }
-  /** Declared yesterday, and today is still nominations. */
+  /** Stood yesterday, and today is still the standing window (`{rule}`, `{weekday}` the count's). */
   | { kind: 'filedYesterday' }
-  /** Filed; the nominations closed last night with the name on the ballot or struck. */
-  | { kind: 'nominationsClosed'; struck: boolean }
   /** A council term held ended at last night's count. */
   | { kind: 'termEnded' }
-  /** A councillor; the council divided last night. */
-  | { kind: 'divided'; passed: boolean }
-  /** Moved an ordinance yesterday. */
-  | { kind: 'movedYesterday' }
   /** The home election was counted last night. */
   | { kind: 'countToday' }
   | { kind: 'phaseToday'; phase: CouncilPhase; cycleDay?: number }
-  /** An ordinance took effect this morning. */
-  | { kind: 'ordinanceFromToday' }
+  /** A rule took effect this morning at a count (not a bootstrap's; the voting rework, tech design §10). */
+  | { kind: 'ruleFromToday' }
   /** Morale rose out of Unrest at last night's boundary. */
   | { kind: 'leftUnrest' }
   /**
@@ -375,15 +367,11 @@ export type CapitalCondition =
 export const POLITICAL_CONDITION_KINDS = [
   'seatWon',
   'seatLost',
-  'votedFor',
   'filedYesterday',
-  'nominationsClosed',
   'termEnded',
-  'divided',
-  'movedYesterday',
   'countToday',
   'phaseToday',
-  'ordinanceFromToday',
+  'ruleFromToday',
   'leftUnrest',
   // The voting rework (tech design §4.4): live.
   'ruleDecided',
@@ -485,12 +473,9 @@ export const POLITICAL_PLACEHOLDERS = [
   'margin',
   'winner',
   'last',
-  'voted',
   'turnout',
   'npcSeats',
   'ordinance',
-  'ordinanceLine',
-  'endorsements',
   'n',
   'weekday',
   'countDay',
@@ -807,6 +792,12 @@ export interface CharacterView {
   /** Slice 3: the seat held today ("Councillor, Coalport · term ends Thursday"), or null. */
   office: { cityId: string; cityName: string; seat: number; termEndsAt: number } | null;
   /**
+   * The voting rework (design §4.7, tech design §9.9): the rule in force where the character lives,
+   * for the Me tab's line (*Coalport · Street Fund · 3 days left*). Absent when the view was built
+   * without the residence city's document; null when no rule is in force there.
+   */
+  cityRule?: { cityName: string; name: string; daysLeft: number } | null;
+  /**
    * Slice 3: the Paper tab's dot for politics: 1 while a ballot can be cast and has not been, or a
    * councillor's ordinance vote is open and not cast; never for nominations.
    */
@@ -1029,6 +1020,12 @@ export interface CityView {
     /** Review 4 (answers §11.3): the plate's plain words ("studying costs a fifth less"). */
     plainLine?: string;
     daysLeft: number;
+    /**
+     * The voting rework, phase 5 (design §8.9.2 #11): the city's vote on its rule, for the plate's
+     * *Council rule* note (*from Wednesday to Saturday*): the vote's first day and the count's start.
+     */
+    pollsOpenAt?: number;
+    countAt?: number;
   } | null;
   /** Review 2: the home city's Election card (screens §1a); null elsewhere. */
   election: PoliticsSummaryView | null;
@@ -1619,8 +1616,13 @@ export interface RuleCardView {
   plainLine: string;
   effectLine: string;
   whose:
-    /** "Secretary Holm" · "Councillor Varga"; two parties on a shared card. */
-    | { kind: 'party'; factionIds: FactionId[]; by: string }
+    /**
+     * The party's card. `via: 'secretary'`: `by` is the secretary's `addressedAs` ("Secretary Holm",
+     * design §8.8 Q4); `via: 'councillor'` (the capital, a councillor leads the bloc): `by` is the
+     * councillor's stored name ("Jana Varga", design §8.9 Q2). Two parties on a shared card (`by`
+     * joined with " · "; `via` is the first party's).
+     */
+    | { kind: 'party'; factionIds: FactionId[]; by: string; via: 'secretary' | 'councillor' }
     | { kind: 'councillor'; name: string; local: boolean; you: boolean };
   /** The caller's own vote, only (ADR 0019). */
   yourVote: boolean;

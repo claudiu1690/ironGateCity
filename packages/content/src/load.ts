@@ -99,12 +99,13 @@ export const rawContent: unknown = {
   orderTemplates,
   headlines: [
     ...headlines,
+    // The voting rework (tech design §10, design §8.9.2 #1): live; before the other political sets so
+    // that on a priority tie (the count morning's city slot) the rule's headline leads.
+    ...ruleHeadlines,
     ...politicalHeadlines,
     ...capitalHomeHeadlines,
     ...heraldHeadlines,
     ...localHeadlines,
-    // The voting rework (tech design §10): live, held back until phase 5 gives the paper their facts.
-    ...ruleHeadlines,
   ],
   ordinances,
   candidates: [...candidates, ...irongateCandidates],
@@ -170,19 +171,16 @@ export const HERALD_HEADLINE_NAMES = [
   'seat-lost-bloc',
   'seat-lost-tie',
   'filed',
-  'on-ballot',
-  'struck',
-  'voted-won',
-  'voted-lost',
-  'voted-lost-tie',
-  'moved',
   'seat-ended',
-  'council-passed',
-  'council-failed',
   'count',
-  'polls-open',
   'nominations',
-  'ordinance-city',
+  // The voting rework (design §8.4): the rule's headlines.
+  'rule-won',
+  'rule-drawn',
+  'your-rule-won',
+  'your-rule-lost',
+  'your-rule-on-ballot',
+  'vote-open',
   'battleground',
   'battleground-new',
   'battleground-over',
@@ -221,27 +219,24 @@ export const JOURNEY_REWARD_CAPS = {
   iron: 100,
 } as const;
 
-/** Design §8, §17: the political templates every home paper carries (by id suffix). */
+/** Design §8, §17; the voting rework (design §8.4): the political templates every home paper carries (by id suffix). */
 export const POLITICAL_HEADLINE_NAMES = [
   'seat-won',
   'seat-top',
   'seat-lost',
   'seat-lost-tie',
   'filed',
-  'on-ballot',
-  'struck',
-  'voted-won',
-  'voted-lost',
-  'voted-lost-tie',
-  'moved',
   'seat-ended',
-  'council-passed',
-  'council-failed',
   'count',
   'stands-firm',
-  'ordinance-city',
-  'polls-open',
   'nominations',
+  // The voting rework (design §4.8, §8.4): the rule's headlines.
+  'rule-won',
+  'rule-fallback',
+  'your-rule-won',
+  'your-rule-lost',
+  'your-rule-on-ballot',
+  'vote-open',
 ] as const;
 
 export class ContentError extends Error {

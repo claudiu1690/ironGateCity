@@ -98,6 +98,7 @@ export {
   OrdinanceRow,
   RuleCard,
   RuleCards,
+  RuleChip,
   RulePicker,
   StandCard,
   councilRuleNote,
@@ -113,6 +114,7 @@ export type {
   RuleCardProps,
   RuleCardResult,
   RuleCardsProps,
+  RuleChipProps,
   RulePickerProps,
   StandCardProps,
 } from './components/RuleCard';

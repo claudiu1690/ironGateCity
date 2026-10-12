@@ -45,7 +45,11 @@ export type DevAction =
   | 'patrol'
   // Review 5 (ADR 0082): `unrest` (target: a rival home city): the caller pushes it into Unrest
   // (1.8 points in their name, the home share to 58); the prize is decided at the next day's turn.
-  | 'unrest';
+  | 'unrest'
+  // The voting rework (tech design §12): `seat` (*Seat me*: the lowest-ranked local seat of the
+  // residence's sitting council), `townVotes` (*Votes for card 2 × 3*, days 2–4).
+  | 'seat'
+  | 'townVotes';
 
 /** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
 export interface DevStreetForce {

@@ -672,6 +672,26 @@ export function lockedPinViews(
   return locked;
 }
 
+/**
+ * The voting rework (design §4.7): the rule in force in the residence city, for the Me tab's line;
+ * null when the document is another city's or no rule is in force.
+ */
+export function cityRuleView(
+  content: GameContent,
+  doc: CharacterDoc,
+  city: CityDoc | null,
+  today: DayKey,
+): CharacterView['cityRule'] {
+  const cityId = residenceCityId(doc);
+  const o = city && city._id === cityId ? city.ordinance : null;
+  if (!o || !(o.fromDay <= today && today < o.toDay)) return null;
+  return {
+    cityName: content.city(cityId)?.name ?? cityId,
+    name: content.ordinance(o.id)?.name ?? o.id,
+    daysLeft: o.toDay - today,
+  };
+}
+
 /** Slice 3: the seat held today, from the settlement's projection (ADR 0020). */
 export function officeView(content: GameContent, doc: CharacterDoc, today: DayKey): CharacterView['office'] {
   const o = (doc.offices ?? []).find((x) => x.fromDay <= today && today < x.toDay);
@@ -783,6 +803,7 @@ export function toCharacterView(
     // (onboarding §14.3 n7).
     lettersWaiting: status.kind === 'ready' ? 1 : 0,
     office: officeView(content, doc, today),
+    ...(ctx.city !== undefined ? { cityRule: cityRuleView(content, doc, ctx.city, today) } : {}),
     politicsWaiting: ctx.politicsWaiting ?? 0,
     restedCap,
     // Slice 4 (tech design §8.3): the journey, where you live, the room, the train.

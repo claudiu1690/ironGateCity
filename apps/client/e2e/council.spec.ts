@@ -252,9 +252,15 @@ test('the first vote and the first seat: stand with a rule → backed → the vo
   await expect(page.locator('[data-testid=rule-card][data-ordinance="ord.street-fund"]')).toContainText('your rule');
   await expect(page.getByTestId('what-now')).toHaveCount(0);
 
-  // 8. The next vote, in the hall's block: Street Fund.
+  // 8. The next vote, in the hall's block: Street Fund. The set morning's paper puts her card to the
+  //    town (design §8.4 `hl.your-rule-on-ballot`) and opens the vote (`hl.vote-open`, day 2 only).
   await advanceTo(page, 2);
   expect((await page.request.post('/api/test/city-day')).ok()).toBe(true);
+  await page.goto('/paper');
+  await expect(page.getByTestId('headline').filter({ hasText: 'Councillor Mara Lenk Puts Street Fund to the Town' })).toContainText(
+    /Actions pay a quarter more Iron, jobs a quarter less\. Voting opens today until .+\./,
+  );
+  await expect(page.getByTestId('headline').filter({ hasText: 'Coalport Votes on Its Rule' })).toHaveCount(1);
   await page.goto('/city/coalport?loc=coalport.town-hall');
   const vote = hall.getByTestId('hall-next');
   await expect(vote.getByTestId('rule-card')).toHaveCount(3);
@@ -289,5 +295,15 @@ test('the first vote and the first seat: stand with a rule → backed → the vo
   if (!(await tag.first().isVisible())) await modal.getByTestId('result-details').click();
   await expect(tag.first()).toBeVisible();
   await modal.getByRole('button', { name: 'Continue' }).click();
-  // The count morning's headline (`hl.rule-won`, *Street Fund Wins the Vote in Coalport*) is phase 5's.
+  // The count morning's headlines name the rule (design §8.4; §8.9.2 #1: the rule's leads the city slot).
+  await page.goto('/paper');
+  const heads = page.getByTestId('headline');
+  await expect(heads.filter({ hasText: 'Street Fund Wins the Vote in Coalport' })).toContainText(
+    /1 of 1 votes\. In force until .+: actions pay a quarter more Iron, jobs a quarter less\./,
+  );
+  await expect(heads.filter({ hasText: 'Your Vote Counted: Street Fund Wins' })).toHaveCount(1);
+  const titles = await heads.allTextContents();
+  const ruleAt = titles.findIndex((t) => t.includes('Street Fund Wins the Vote in Coalport'));
+  const countAt = titles.findIndex((t) => t.includes('Coalport Result:'));
+  if (countAt !== -1) expect(ruleAt).toBeLessThan(countAt);
 });

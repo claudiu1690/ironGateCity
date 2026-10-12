@@ -14,6 +14,7 @@ import {
 } from '@irongate/rules';
 import type { CountRow, DayKey, LiveHeadline, LocalFacts, PaperView, PoliticalFacts } from '@irongate/rules';
 import { capitalFacts, visitorFacts } from './capitalPaper';
+import { ruleHeadlineFacts } from './politicsService';
 
 /**
  * Review 4 (docs/tech/review-4.md §5.3, ADR 0074): a local edition's parts, composed at read for the
@@ -41,9 +42,12 @@ async function capitalLine(
   cf.facts.firstCapitalArrivalYesterday = residenceFirstArrival.fact;
   const capDoc = await City.findById(capital).lean<CityDoc>();
   const cal = councilDay(today, content.city(capital)!.council!.offset);
+  // The voting rework, phase 5: the capital's rule headlines (decided, the vote open) for a visitor too.
+  const rf = await ruleHeadlineFacts(content, capital, today, null);
   const facts: PoliticalFacts = {
     ...visitorFacts({ cycleDay: cal.cycleDay, phase: cal.phase }, cf.facts),
-    ordinanceFromToday: capDoc?.ordinance?.fromDay === today && capDoc.world?.bootstrappedDay !== today,
+    ruleFromToday: capDoc?.ordinance?.fromDay === today && capDoc.world?.bootstrappedDay !== today,
+    rule: rf.rule,
     // `{rank3}` too (the candidates line names who can stand); slice 4's visitor block left it out.
     vars: {
       ...cf.vars,
@@ -53,12 +57,13 @@ async function capitalLine(
     },
     varsByKind: {
       ...cf.varsByKind,
+      ...rf.varsByKind,
       ...(residenceFirstArrival.vars ? { firstCapitalArrivalYesterday: residenceFirstArrival.vars } : {}),
     },
     until: {
       nominations: dayStart(cal.election.pollsFrom),
       polls: dayStart(cal.election.countDay),
-      divide: dayStart(cal.council.setDay),
+      ...(rf.ruleEnds !== undefined ? { ruleEnds: rf.ruleEnds } : {}),
     },
   };
   return selectPoliticalHeadlines(content.politicalHeadlinesOf(capital), facts)[0] ?? null;
@@ -87,9 +92,9 @@ async function homeCityLine(
       vars.playerSeats = String(rows.filter((r) => r.seated).length - result.npcSeats);
     }
   }
-  const ordinanceFromToday =
+  const ruleFromToday =
     !!doc?.ordinance && doc.ordinance.fromDay === today && doc.world?.bootstrappedDay !== today;
-  if (ordinanceFromToday && doc?.ordinance) {
+  if (ruleFromToday && doc?.ordinance) {
     const o = content.ordinance(doc.ordinance.id);
     vars.ordinance = o?.name ?? '';
     vars.plainLine = o?.plainLine ?? '';
@@ -108,7 +113,7 @@ async function homeCityLine(
     countToday: countToday && vars.npcSeats !== undefined,
     phase: cal.phase,
     cycleDay: cal.cycleDay,
-    ordinanceFromToday,
+    ruleFromToday,
     moraleLost,
     homeShare,
     vars,

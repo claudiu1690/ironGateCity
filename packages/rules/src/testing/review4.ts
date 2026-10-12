@@ -38,7 +38,7 @@ export const townHallFixture: TownHallView = {
     voters: 6,
     seats: null,
     factionIds: ['collective'],
-    by: 'Petra Holm',
+    by: 'Secretary Holm',
   },
   next: { ...ruleBallotFixture, status: 'provisional', canVote: false, reason: 'NOT_POLLING' },
   seats: countViewFixture.council

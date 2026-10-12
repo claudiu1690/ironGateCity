@@ -154,6 +154,17 @@ export function MePage() {
               )}
             </span>
           )}
+          {/* The voting rework (design §4.7): the rule where you live, one line under the party card;
+              a tap opens the Town Hall. */}
+          {c.cityRule && (
+            <Link
+              to="/council"
+              className="flex min-h-11 items-center font-mono text-[12px] text-ink underline decoration-dotted underline-offset-2"
+              data-testid="me-rule"
+            >
+              {copy.me.rule(c.cityRule.cityName, c.cityRule.name, c.cityRule.daysLeft)}
+            </Link>
+          )}
           {/* Slice 5 (screens §2.4): Health, Heat and the record, under the party card. */}
           {c.record && c.health && (
             <RiskRows

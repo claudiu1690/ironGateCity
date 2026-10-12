@@ -174,7 +174,7 @@ describe('selectLocalLine (answers §29.1)', () => {
     L('count', 0, [{ kind: 'countToday' }], '{city} Has a New Council', '{playerSeats} went to players, {npcSeats} to local candidates.'),
     L('voting', 1, [{ kind: 'phaseToday', phase: 'polling', cycleDay: 2 }], 'Voting Open in {city}', '{city} elects its council until {until}.'),
     L('candidates', 1, [{ kind: 'phaseToday', phase: 'nominations', cycleDay: 0 }], '{city} Council: Candidates Wanted', 'Names go in until {until}.'),
-    L('rule', 2, [{ kind: 'ordinanceFromToday' }], '{ordinance} in Force in {city}', '{plainLine}.'),
+    L('rule', 2, [{ kind: 'ruleFromToday' }], '{ordinance} in Force in {city}', '{plainLine}.'),
     L('rival-pressure', 3, [{ kind: 'moraleLostToRivals', min: 1 }], "Callers from Other Parties on {city}'s Streets"),
     L('morale', 4, [{ kind: 'homeShare', min: 0 }], '{faction} Holds {city} at {share} %'),
   ];
@@ -182,7 +182,7 @@ describe('selectLocalLine (answers §29.1)', () => {
     countToday: false,
     phase: 'polling',
     cycleDay: 3,
-    ordinanceFromToday: false,
+    ruleFromToday: false,
     moraleLost: 0,
     homeShare: 70,
     vars: { city: 'Duskwall', faction: 'Vanguard', share: '70.0', playerSeats: '3', npcSeats: '4', ordinance: 'Open Doors', plainLine: 'Studying costs a fifth less' },
@@ -206,7 +206,7 @@ describe('selectLocalLine (answers §29.1)', () => {
       until: 2_000,
     });
     expect(selectLocalLine(templates, facts({ phase: 'nominations', cycleDay: 0 }))?.until).toBe(1_000);
-    expect(selectLocalLine(templates, facts({ ordinanceFromToday: true }))?.headline).toBe('Open Doors in Force in Duskwall');
+    expect(selectLocalLine(templates, facts({ ruleFromToday: true }))?.headline).toBe('Open Doors in Force in Duskwall');
     expect(selectLocalLine(templates, facts({ moraleLost: 1.5 }))?.templateId).toBe('hl.local.rival-pressure');
     expect(selectLocalLine(templates, facts())?.headline).toBe('Vanguard Holds Duskwall at 70.0 %');
   });

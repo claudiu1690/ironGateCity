@@ -561,19 +561,15 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   // Slice 3 (ADR 0023): political conditions, selected live at read.
   z.strictObject({ kind: z.literal('seatWon'), top: z.boolean().optional() }),
   z.strictObject({ kind: z.literal('seatLost'), tie: z.boolean().optional(), bloc: z.boolean().optional() }),
-  z.strictObject({ kind: z.literal('votedFor'), won: z.boolean(), tie: z.boolean().optional() }),
   z.strictObject({ kind: z.literal('filedYesterday') }),
-  z.strictObject({ kind: z.literal('nominationsClosed'), struck: z.boolean() }),
   z.strictObject({ kind: z.literal('termEnded') }),
-  z.strictObject({ kind: z.literal('divided'), passed: z.boolean() }),
-  z.strictObject({ kind: z.literal('movedYesterday') }),
   z.strictObject({ kind: z.literal('countToday') }),
   z.strictObject({
     kind: z.literal('phaseToday'),
     phase: z.enum(['nominations', 'polling']),
     cycleDay: z.number().int().min(0).max(4).optional(),
   }),
-  z.strictObject({ kind: z.literal('ordinanceFromToday') }),
+  z.strictObject({ kind: z.literal('ruleFromToday') }),
   z.strictObject({ kind: z.literal('leftUnrest') }),
   // The voting rework (tech design §4.4): live, selected at read.
   z.strictObject({ kind: z.literal('ruleDecided'), fallback: z.boolean(), drawn: z.boolean().optional() }),

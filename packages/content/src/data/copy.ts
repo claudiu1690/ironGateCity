@@ -472,7 +472,7 @@ export const copy = {
       'Patrols',
       'After dark on rival ground the streets are watched: every tap is likelier to bring a run-in, and now and then a patrol stops you just for being out. A stop is papers, a word or a side street, never a fight; your name taken means more Heat. Nothing you own is at risk, and nothing happens while you are away.',
     ],
-    /** The voting rework (design §3.8, §8.9): reworded in place; the 20 PC proposal is gone. `pcV2` below is the same text and goes in phase 5. */
+    /** The voting rework (design §3.8, §8.9): reworded in place; the 20 PC proposal is gone. */
     pc: () => [
       'Political Capital',
       'Your pull in the party. You earn it by doing all three Party orders (+5 a day) and by holding a council seat. You spend it to stand for the council (10) or to back a candidate (10).',
@@ -532,11 +532,6 @@ export const copy = {
       'Morale',
       "The home party's share is its morale. Fired up, 80 and over: party work here pays +10 % Party XP. Steady: nothing special. Unrest, under 60: the branch is in trouble and the orders change.",
     ],
-    /** QA m4: the majority per council: four of seven at home, six of ten in the capital (§15.3). */
-    ordinance: (passVotes: 4 | 6 = 4, seats: 7 | 10 = 7) => [
-      'Council rule',
-      `The council's rule for the town, in force for five days and for everyone here whatever their party. Passed by ${passVotes === 6 ? 'six' : 'four'} councillors of ${seats === 10 ? 'ten' : 'seven'}. The rule in force is on the city plate and at the Town Hall.`,
-    ],
     today: (at: string) => [
       'Today',
       `What you have done since the day turned. It turns again at ${at}, and this becomes Yesterday in the morning paper.`,
@@ -564,55 +559,13 @@ export const copy = {
       'Every day you keep the same job adds 2 % to its pay, up to 20 % after ten days. Switching jobs starts it again from nothing.',
     ],
     /**
-     * Review 3 (answers §6.4): *How elections work*, five short lines in one note (the lines joined
-     * by a newline and rendered as lines), opened from the Election card's kicker and from the link
-     * on every election screen.
+     * The voting rework (design §4.9, §8.9.2 #11): *Council rule*, three lines (the capital's second
+     * line when `capital`; the weekdays are the city's voting days, "Wednesday to Saturday"), opened
+     * from the card's kicker, the hall's block, *How the vote works* and the city plate's rule note;
+     * `ruleMore` is the line behind *More* (the capital). It replaced the old `election`,
+     * `capitalElection`, `backers`, `localSupport`, `rule` and `ordinance` notes.
      */
-    election: (city: string, rank2: string, rank3: string) => [
-      'How elections work',
-      [
-        `${city} elects seven councillors every five days: two days for names to go in, three days of voting, the result the next morning.`,
-        'The candidates are players who stand, and local candidates: townspeople run by the game, who fill the list so there is always an election.',
-        `${rank2}s vote once, in secret. ${rank3}s who are Known in ${city} can stand; it costs 10 Political Capital and takes two backers.`,
-        "The seven with the most support win. Support is the town's own vote for you (your reputation here), plus your backers, plus the votes.",
-        "A seat is five days on the council: a vote on the town's rule, and 10 Political Capital and 20 Party XP a day.",
-      ].join('\n'),
-    ],
-    /**
-     * Slice 4: the note in the capital, five lines in the home note's tone (GDD §15.3: two seats a
-     * district, players and local candidates, who votes and from when, who stands and what it takes,
-     * the score in words, what a seat gives). Final text: docs/design/slice-4-fixes.md §7.
-     */
-    capitalElection: (rank2: string, rank3: string) => [
-      'How elections work',
-      [
-        'Irongate elects ten councillors every five days, two in each of its five districts: two days for names to go in, three days of voting, the result the next morning.',
-        "The candidates are players who stand, and local candidates: townspeople run by the game, who fill every party's list so there is always a choice.",
-        `${rank2}s vote once, in secret, for any name on their district's list, from the first election that opens after they registered. ${rank3}s who are Known in Irongate can stand in their district; it costs 10 Political Capital and takes two backers of their party who live in the capital.`,
-        "Each party's score mixes its share of the votes with its share of opinion in the district. The top score takes the first seat; a party takes both only with more than twice the next.",
-        "A seat is five days on the council: a vote on the city's rule, which needs six votes of ten, and 10 Political Capital and 20 Party XP a day.",
-      ].join('\n'),
-    ],
-    /** QA m4: ten councillors in the capital. */
-    rule: (city: string, seats: 7 | 10 = 7) => [
-      'Council rule',
-      `The ${seats === 10 ? 'ten' : 'seven'} councillors pick one rule for the town each term. It changes a real number for everyone in ${city} for five days.`,
-    ],
-    backers: () => [
-      'Backers',
-      "A candidate needs two backers to stay on the list. Backing costs 10 Political Capital, is public, and can't be taken back. Do all three Party orders while you're standing and the branch backs you.",
-    ],
-    localSupport: () => [
-      'Local support',
-      "The town's own vote for a candidate: your reputation here, counted as wins ÷ 5. Every round of talking to voters raises it.",
-    ],
-    /**
-     * The voting rework (design §4.9): *Council rule*, three lines (the capital's second line when
-     * `capital`; the weekdays are the city's voting days, "Wednesday to Saturday"), opened from the card's kicker, the hall's block and *How the vote works*; `ruleMore`
-     * is the line behind *More* (the capital). Phase 5 replaces `election`, `capitalElection`,
-     * `backers`, `localSupport`, `rule` and `ordinance` with these.
-     */
-    ruleV2: (city: string, rank2: string, rank3: string, fromWeekday: string, toWeekday: string, capital = false) => [
+    rule: (city: string, rank2: string, rank3: string, fromWeekday: string, toWeekday: string, capital = false) => [
       'Council rule',
       [
         `Every five days ${city} votes on one rule for the town. Three are on the ballot: the branch's and the councillors'. The one with the most votes runs for five days, for everyone here whatever their party; no votes, the branch's.`,
@@ -624,11 +577,6 @@ export const copy = {
     ],
     ruleMore:
       'Until ten people have voted in a district, opinion carries most of the weight; from ten, votes and opinion count half each. Two parties that put up the same rule share one card and split its votes equally.',
-    /** The voting rework (design §3.8): *Political Capital* without the proposal (phase 5 replaces `pc`). */
-    pcV2: () => [
-      'Political Capital',
-      'Your pull in the party. You earn it by doing all three Party orders (+5 a day) and by holding a council seat. You spend it to stand for the council (10) or to back a candidate (10).',
-    ],
     orders: () => [
       'Party orders',
       'Three jobs from the branch every day. Each one done pays +20 Party XP; all three pay +5 Political Capital. Actions that match an order pay +25 % Party XP while it is open.',
@@ -801,28 +749,16 @@ export const copy = {
    */
   chapterWaitsUntil: (from: string, needs: string | null) => `From ${from}${needsPhrase(needs)}`,
   backToThePaper: 'Back to the paper',
-  // Slice 3, in plain words (review 2: docs/design/slice-3-screens.md §11, review-2-answers §1.2).
-  // Times are rendered by the caller in the player's clock (`until`: "Tuesday midnight"; `at`:
-  // "01:00 on Sunday"; `weekday`: "Sunday").
-  pollingDay: 'Election',
-  castYourBallot: 'Vote now',
-  castYourBallotFor: (name: string) => `Vote for ${name}`,
-  chooseAName: 'Choose a name',
-  /** `at`: a `when` phrase with its time, "The result is tomorrow 01:00." */
-  ballotCaption: (at: string) => `One vote, final. The result is ${at}.`,
-  ballotCastLine: (weekday: string) =>
-    `Vote cast · the result is in ${weekday}'s paper and on the Election card`,
-  youVotedFor: (name: string) => `You voted for ${name}`,
+  // Slice 3, in plain words (review 2: docs/design/slice-3-screens.md §11); the voting rework's own
+  // blocks (`ballot`, `rule`, `seats`, `stand`) follow `election`. Times are rendered by the caller in
+  // the player's clock.
   standForTheCouncil: (pc: number) => `Stand for the council · ${pc} Political Capital`,
   declare: (pc: number) => `Stand · ${pc} Political Capital`,
   needsPc: (pc: number) => `Needs ${pc} Political Capital`,
   endorse: (pc: number) => `Back · ${pc} Political Capital`,
   endorsed: 'Backed',
   youEndorsed: (name: string, pc: number) => `You're backing ${name} · −${pc} Political Capital`,
-  onTheSlate: (n: number, needed: number) => `You're standing · backers ${n} of ${needed}`,
-  backersOf: (n: number, needed: number) => `backers ${n} of ${needed}`,
   backedBy: (names: string) => `Backed by ${names}`,
-  localSupport: (n: number) => `Local support ${n} · from your reputation here`,
   branchEndorsesYou: 'All orders carried out · the branch backs you',
   /**
    * The voting rework (design §8.7 n2): the action modal's effect line the day a standing candidate
@@ -830,68 +766,16 @@ export const copy = {
    * the branch (ADR 0084: members plus the branch's, once).
    */
   branchBacksYou: (backers: number) => `The branch backs you · ${backersN(backers)}`,
-  branchMakesUpTheNumber: 'The branch will make up the number',
-  withdraw: 'Withdraw',
-  depositStays: 'The 10 Political Capital stays with the branch',
-  depositRule: "Costs 10 Political Capital. You get it back only if you don't find two backers.",
-  withdrawnLine: 'Withdrawn · the 10 Political Capital stayed with the branch',
-  struckLine: 'Not enough backers · your 10 Political Capital is returned',
-  onTheBallotLine: "You're a candidate",
-  /** Retired by the voting rework (design §8.8 Q3): `stand.plateLineVoting` replaces it; goes with phase 5's removals. */
-  tooLateToStand: "Voting is open; it's too late to stand this time.",
-  // Review 3 (answers §6.3, §7): the system in words on the election screens, never a formula.
-  howDecided:
-    "Seven seats. The seven with the most support take them. Support is the town's own vote for a candidate (their reputation here), plus their backers, plus members' votes.",
-  seatGives:
-    "A seat is five days on the council: a vote on the town's rule, and 10 Political Capital and 20 Party XP a day.",
-  voteAnyone: 'Vote for anyone on the list, a player or a local candidate.',
-  playersStanding: 'Players standing',
   noPlayersStanding: 'No player has put their name in yet. The local candidates below fill the list.',
-  localCandidatesLine:
-    'Townspeople run by the game. They fill the list so there is always an election; you can vote for them, and a player with enough support beats them.',
-  lastSeatClose: 'The last seat is usually close: a few votes decide it.',
-  howElectionsWork: 'How elections work',
   /** Over the election screens' map crop: "Coalport Council · the Town Hall" (set in caps). */
   hallKicker: (city: string, hallRef: string) => `${city} Council · ${hallRef}`,
   councilSittingAt: (city: string, hallRef: string) => `${city} Council · sitting at ${hallRef}`,
-  /** The result's header line: "6 of the 7 seats went to local candidates · 3 of 9 members voted · final". */
-  resultHeader: (npcSeats: number, seats: number, voters: number, eligible: number) =>
-    `${npcSeats} of the ${seats} seats went to local candidates · ${turnoutOf(voters, eligible)} members voted · final`,
-  namesGoIn: (until: string, weekday: string) => `Names go in until ${until} · voting opens ${weekday}`,
   seeWhosStanding: "See who's standing",
-  seeTheSlate: 'See the candidates',
   seeTheResult: 'See the result',
   lastResult: 'Last result',
-  wardCandidates: 'Local candidates',
-  /** Review 3 (§15.10): a local candidate's rank-title slot (was *local*, which could read as *from here*). */
-  ward: 'Local candidate',
   npcSeats: (n: number, of: number) => `Local seats ${n} / ${of}`,
-  turnout: (n: number, m: number) => (m === 0 ? 'Turnout nil' : `Turnout ${n} of ${m} members`),
-  theLine: 'the line',
-  electedMark: 'Elected',
-  yourVote: 'your vote',
   you: 'you',
   toTheCouncil: 'To the council',
-  theCouncilSits: "You're on the council · vote on the rule",
-  theOrderPaper: 'Up for a vote',
-  branchMotionBy: (secretary: string) => `the party's proposal · ${secretary}`,
-  movedBy: (name: string) => `put forward by ${name}`,
-  againstAll: 'None of these',
-  propose: (pc: number) => `Put forward a rule · ${pc} Political Capital`,
-  onThePaper: 'already up for a vote',
-  paperFull: 'No room for more proposals this term',
-  youMoved: (name: string) => `You put forward ${name}`,
-  voteFor: (name: string) => `Vote for ${name}`,
-  chooseAMotion: 'Choose a rule',
-  councilCaption: (at: string) => `One vote, final; the whole council sees it. The council votes ${at}.`,
-  voteRecorded: (weekday: string) =>
-    `Vote recorded · the result is in ${weekday}'s paper and on the Election card`,
-  passed: 'Passed',
-  roseWithoutMotion: "The council couldn't agree · no rule this term",
-  ordinanceLine: (name: string, days: number) =>
-    `Council rule: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
-  ordinanceInForce: (name: string, days: number) =>
-    `Council rule: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
   councillorLine: (city: string, weekday: string) => `Councillor, ${city} · term ends ${weekday}`,
   noOffice: (rank3Title: string) => `No seat · ${rank3Title}s may stand for the council`,
   /** The Me tab's line (design §3.8, §8.9): two sinks; the 20 PC proposal is gone. */
@@ -904,9 +788,6 @@ export const copy = {
   electedCaption: (name: string, rank: string, city: string) =>
     `${name}, ${rank}, elected to ${city} Council`,
   elected: 'ELECTED',
-  formula:
-    "The seven with the most support took the seats: the town's own vote for each candidate (their reputation here), plus their backers, plus members' votes. A tie goes to votes, then backers, then reputation, then who stood first.",
-  ballotSecretNote: 'Nobody can see who you chose',
   pcLeft: (spent: number, left: number) => `−${spent} Political Capital · ${left} left`,
   /** Slice 4 (ADR 0028): a desk line, "District Hero · +25 Political Capital". */
   deskAward: (label: string, pc: number) => `${label} · +${pc} Political Capital`,
@@ -916,180 +797,115 @@ export const copy = {
   /** Slice 4 (screens §6.3): "−500 Iron · 3,910 left". */
   ironLeft: (spent: number, left: string) => `−${spent} Iron · ${left} left`,
   moraleKnockOn: (city: string, delta: string, after: string) => `${city} morale ${delta} → ${after} %`,
-  /** The result table's columns (screens §5.2). */
-  resultColumns: ['#', 'Name', 'Local support', 'Backers', 'Votes', 'Support'] as const,
-  resultColumnsShort: ['#', 'Name', 'Local', 'Back.', 'Votes', 'Support'] as const,
   /**
-   * Review 2 (screens §1a, §2.1): the Election card on the city screen, the paper's row and the HQ
-   * sheet. Line 1, line 2 and the buttons of each state; the caller renders the times.
+   * Review 2 (screens §1a, §2.1); the voting rework (design §4.1, §8.2): the Election card on the
+   * city screen, the paper's row and the HQ sheet. Line 1, line 2 and the buttons of each state; the
+   * caller renders the times (`until`: "Saturday midnight").
    */
   election: {
-    kicker: (city: string) => `Election · ${city} Council`,
-    rowKicker: 'Election',
-    firstTime: (city: string, rank3: string) =>
-      `${city} elects its council every five days. You can vote now; ${rank3}s who are Known here can stand.`,
-    days: (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`,
-    belowRank: (city: string, countWeekday: string, rank2: string, fxp: number, have: number) => [
-      `${city} elects its council on ${countWeekday}`,
-      `${rank2}s vote · ${fxp} Party XP makes ${/^[aeiou]/i.test(rank2) ? 'an' : 'a'} ${rank2} · you have ${have}`,
-    ],
-    candidates: (pollsWeekday: string, days: string) => [
-      'Candidates are putting their names in',
-      `Voting opens ${pollsWeekday} · ${days} to stand or back someone`,
-    ],
-    standing: (n: number, needed: number, until: string) => [
-      `You're standing · backers ${n} of ${needed}`,
-      `Two backers before ${until} or your name comes off · do today's orders and the branch backs you`,
-    ],
-    backing: (name: string, pollsWeekday: string, days: string) => [
-      `You're backing ${name}`,
-      `Voting opens ${pollsWeekday} · ${days}`,
-    ],
     /** Slice 4 (screens §7.2): living in a district, the first vote not yet open (review 4: *You live in*, as *Live here*). */
     registered: (place: string, votesWeekday: string) => [
       `You live in ${place}`,
       `You vote from ${votesWeekday} · the result every fifth morning`,
     ],
-    /** "{n} days left" to the closing boundary, rounded up; `until` always prints its time (§23 Q6). */
-    voting: (until: string, days: number) => [
-      'Voting is open',
-      `Closes ${until} · ${days} ${days === 1 ? 'day' : 'days'} left · your vote is secret`,
-    ],
-    voted: (name: string, countWeekday: string, paper: string) => [
-      `You voted for ${name}`,
-      `Result ${countWeekday} morning, here and in the ${paper}`,
-    ],
-    candidateVoting: (until: string) => [
-      "You're a candidate · voting is open",
-      `Closes ${until} · you can vote for yourself`,
-    ],
-    result: (winner: string, yourLine: string | null, councilWeekday: string, namesUntil: string) => [
-      `Result: ${winner} topped the poll${yourLine ? ` · ${yourLine}` : ''}`,
-      `Seven seats · the new council sits until ${councilWeekday} · next election: names in until ${namesUntil}`,
-    ],
-    yourLine: {
-      elected: (ordinal: string) => `you: elected, ${ordinal} of 7`,
-      missed: (margin: number) => `you: missed the last seat by ${margin}`,
-      voteWon: (name: string) => `your vote: ${name} was elected`,
-      voteLost: (name: string) => `your vote: ${name} fell short`,
-    },
-    councilSits: (until: string, days: string) => [
-      "You're on the council · vote on the rule",
-      `The council votes ${until} · ${days}`,
-    ],
-    councilVoted: (rule: string, weekday: string) => [`You voted for ${rule}`, `Result ${weekday} morning`],
-    ruleLine: (name: string, days: number) =>
-      `Council rule: ${name} · ${days} ${days === 1 ? 'day' : 'days'} left`,
     seeWhosStanding: "See who's standing",
-    seeTheCandidates: 'See the candidates',
     seeTheResult: 'See the result',
-    seeTheCouncil: 'See the council',
     voteNow: 'Vote now',
-    voteOnTheRule: 'Vote on the rule',
-    noneOfThese: 'None of these',
-    // The voting rework (docs/design/voting-simplified.md §4.1, §5.3): new keys beside the old ones.
     seeTheBallot: 'See the ballot',
     toYourDesk: 'To your desk',
     /** Line 3, the rule in force: "Now: Street Fund · actions pay a quarter more Iron, jobs a quarter less · 3 days left". */
     ruleNow: (name: string, plainLine: string, days: number) => `Now: ${name} · ${plainLine} · ${daysN(days)} left`,
+    kicker: (city: string) => `Council rule · ${city}`,
+    capitalKicker: (district: string) => `Council rule · Irongate · ${district}`,
+    rowKicker: 'Council rule',
+    firstTime: (city: string, rank3: string) =>
+      `${city} picks a council rule every five days. You can vote on it now; ${rank3}s who are Known here can stand for the council.`,
+    vote: (city: string, until: string, fromWeekday: string) => [
+      `Which rule for ${city} next week?`,
+      `Vote until ${until} · the winner runs from ${fromWeekday} for five days`,
+    ],
+    voted: (rule: string, countWeekday: string, paper: string) => [
+      `You voted for ${rule}`,
+      `Result ${countWeekday} morning, here and in the ${paper}`,
+    ],
     /**
-     * The voting rework (design §4.1): the Election card's seven states (the capital's `registered`
-     * stays as above), lines 1 and 2; the caller renders the times (`until`: "Saturday midnight").
-     * Phase 3 replaces the old states with these and drops the `v2` level.
+     * The `result` state's two lines by `how` (design §8.2, settled 10 Oct 2026): `votes`, `tie`,
+     * `fallback`, `fallbackUnrest` (card 1 a councillor's), the capital's `seats`, `sharedSeats` and
+     * `draw`, and `carried` (the switch cycle). `untilWeekday` the rule's last day; `nextVoteWeekday`
+     * the day the next vote opens.
      */
-    v2: {
-      kicker: (city: string) => `Council rule · ${city}`,
-      capitalKicker: (district: string) => `Council rule · Irongate · ${district}`,
-      rowKicker: 'Council rule',
-      firstTime: (city: string, rank3: string) =>
-        `${city} picks a council rule every five days. You can vote on it now; ${rank3}s who are Known here can stand for the council.`,
-      vote: (city: string, until: string, fromWeekday: string) => [
-        `Which rule for ${city} next week?`,
-        `Vote until ${until} · the winner runs from ${fromWeekday} for five days`,
-      ],
-      voted: (rule: string, countWeekday: string, paper: string) => [
-        `You voted for ${rule}`,
-        `Result ${countWeekday} morning, here and in the ${paper}`,
-      ],
-      /**
-       * The `result` state's two lines by `how` (design §8.2, settled 10 Oct 2026): `votes`, `tie`,
-       * `fallback`, `fallbackUnrest` (card 1 a councillor's), the capital's `seats`, `sharedSeats` and
-       * `draw`, and `carried` (the switch cycle). `untilWeekday` the rule's last day; `nextVoteWeekday`
-       * the day the next vote opens.
-       */
-      result: (rule: string, votes: number, cast: number, untilWeekday: string, nextVoteWeekday: string) => [
-        `${rule} won · ${votes} of ${cast} votes`,
-        `Runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
-      ],
-      resultTie: (rule: string, each: number, untilWeekday: string, nextVoteWeekday: string) => [
-        `${rule} won · ${each} votes each, the first card takes a tie`,
-        `Runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
-      ],
-      resultFallback: (rule: string, untilWeekday: string, nextVoteWeekday: string) => [
-        `${rule} runs · the branch's rule`,
-        `No votes were cast · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
-      ],
-      resultFallbackUnrest: (rule: string, councillor: string, city: string, untilWeekday: string) => [
-        `${rule} runs · Councillor ${councillor}'s rule`,
-        `No votes were cast · the branch had no card: ${city} is in Unrest · runs until ${untilWeekday}`,
-      ],
-      /** The capital: "Rally Permits won · the Vanguard's, 4 seats of 10" / "Eastside: Vanguard, Collective · runs until …". */
-      resultSeats: (
-        rule: string,
-        party: string,
-        seats: number,
-        district: string,
-        parties: string[],
-        untilWeekday: string,
-        nextVoteWeekday: string,
-      ) => [
-        `${rule} won · the ${party}'s, ${seats} seats of 10`,
-        `${district}: ${parties.join(', ')} · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
-      ],
-      resultSharedSeats: (
-        rule: string,
-        a: string,
-        b: string,
-        seats: number,
-        district: string,
-        parties: string[],
-        untilWeekday: string,
-        nextVoteWeekday: string,
-      ) => [
-        `${rule} won · the ${a}'s and the ${b}'s, ${seats} seats of 10`,
-        `${district}: ${parties.join(', ')} · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
-      ],
-      resultDraw: (rule: string, untilWeekday: string, nextVoteWeekday: string) => [
-        `${rule} won · on the returning officer's draw`,
-        `Level on seats, votes and opinion · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
-      ],
-      resultCarried: (rule: string, untilWeekday: string, firstVoteWeekday: string) => [
-        `${rule} runs · carried over`,
-        `Runs until ${untilWeekday} · the first vote on a rule opens ${firstVoteWeekday}`,
-      ],
-      belowRank: (city: string, rank2: string, fxp: number, have: number) => [
-        `${city} votes on its rule every five days`,
-        `${rank2}s vote · ${fxp} Party XP makes ${anA(rank2)} ${rank2} · you have ${have}`,
-      ],
-      /** `orders`: the branch has not backed yet, so the orders line shows. */
-      standing: (rule: string, countWeekday: string, backers: number, orders: boolean) => [
-        `You're standing · your rule: ${rule}`,
-        `Seats are counted ${countWeekday} morning · ${backersN(backers)}${orders ? " · do today's orders and the branch backs you" : ''}`,
-      ],
-      councillor: (rule: string, changeUntil: string, pollsWeekday: string) => [
-        `You're on the council · your rule is on the ballot: ${rule}`,
-        `Change it until ${changeUntil} · the town votes from ${pollsWeekday}`,
-      ],
-      nextInLine: () => [
-        "You're on the council · your rule is next in line",
-        'The two seats above yours chose first · pay every morning',
-      ],
-      /** The capital (design §8.6 Q4): the party has one card and the bloc's top seat chose it. */
-      partyCardSet: (name: string, rule: string) => [
-        "You're on the council · your party's card is set",
-        `Councillor ${name} chose it: ${rule} · pay every morning`,
-      ],
-    },
+    result: (rule: string, votes: number, cast: number, untilWeekday: string, nextVoteWeekday: string) => [
+      `${rule} won · ${votes} of ${cast} votes`,
+      `Runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
+    ],
+    resultTie: (rule: string, each: number, untilWeekday: string, nextVoteWeekday: string) => [
+      `${rule} won · ${each} votes each, the first card takes a tie`,
+      `Runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
+    ],
+    resultFallback: (rule: string, untilWeekday: string, nextVoteWeekday: string) => [
+      `${rule} runs · the branch's rule`,
+      `No votes were cast · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
+    ],
+    resultFallbackUnrest: (rule: string, councillor: string, city: string, untilWeekday: string) => [
+      `${rule} runs · Councillor ${councillor}'s rule`,
+      `No votes were cast · the branch had no card: ${city} is in Unrest · runs until ${untilWeekday}`,
+    ],
+    /** The capital: "Rally Permits won · the Vanguard's, 4 seats of 10" / "Eastside: Vanguard, Collective · runs until …". */
+    resultSeats: (
+      rule: string,
+      party: string,
+      seats: number,
+      district: string,
+      parties: string[],
+      untilWeekday: string,
+      nextVoteWeekday: string,
+    ) => [
+      `${rule} won · the ${party}'s, ${seats} seats of 10`,
+      `${district}: ${parties.join(', ')} · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
+    ],
+    resultSharedSeats: (
+      rule: string,
+      a: string,
+      b: string,
+      seats: number,
+      district: string,
+      parties: string[],
+      untilWeekday: string,
+      nextVoteWeekday: string,
+    ) => [
+      `${rule} won · the ${a}'s and the ${b}'s, ${seats} seats of 10`,
+      `${district}: ${parties.join(', ')} · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
+    ],
+    resultDraw: (rule: string, untilWeekday: string, nextVoteWeekday: string) => [
+      `${rule} won · on the returning officer's draw`,
+      `Level on seats, votes and opinion · runs until ${untilWeekday} · the next vote opens ${nextVoteWeekday}`,
+    ],
+    resultCarried: (rule: string, untilWeekday: string, firstVoteWeekday: string) => [
+      `${rule} runs · carried over`,
+      `Runs until ${untilWeekday} · the first vote on a rule opens ${firstVoteWeekday}`,
+    ],
+    belowRank: (city: string, rank2: string, fxp: number, have: number) => [
+      `${city} votes on its rule every five days`,
+      `${rank2}s vote · ${fxp} Party XP makes ${anA(rank2)} ${rank2} · you have ${have}`,
+    ],
+    /** `orders`: the branch has not backed yet, so the orders line shows. */
+    standing: (rule: string, countWeekday: string, backers: number, orders: boolean) => [
+      `You're standing · your rule: ${rule}`,
+      `Seats are counted ${countWeekday} morning · ${backersN(backers)}${orders ? " · do today's orders and the branch backs you" : ''}`,
+    ],
+    councillor: (rule: string, changeUntil: string, pollsWeekday: string) => [
+      `You're on the council · your rule is on the ballot: ${rule}`,
+      `Change it until ${changeUntil} · the town votes from ${pollsWeekday}`,
+    ],
+    nextInLine: () => [
+      "You're on the council · your rule is next in line",
+      'The two seats above yours chose first · pay every morning',
+    ],
+    /** The capital (design §8.6 Q4): the party has one card and the bloc's top seat chose it. */
+    partyCardSet: (name: string, rule: string) => [
+      "You're on the council · your party's card is set",
+      `Councillor ${name} chose it: ${rule} · pay every morning`,
+    ],
   },
   // Review 4 (answers §8, §10–§11, §21; tech design §8.1, §9.1): one map for each home city, the
   // Town Hall's sheet, the councillor's desk, *What now*, and the plate's rule line.
@@ -1156,25 +972,15 @@ export const copy = {
   },
   /** The Town Hall's sheet (answers §11.2). */
   hall: {
-    yourDesk: 'Your desk',
     ruleInForce: 'The rule in force',
     council: 'The council',
-    upForAVote: 'Up for a vote',
     issues: "This week's Issues",
     /** "Studying costs a fifth less · 3 days left". */
     ruleLine: (plainLine: string, days: number) =>
       `${plainLine.charAt(0).toUpperCase()}${plainLine.slice(1)} · ${days} ${days === 1 ? 'day' : 'days'} left`,
-    noRuleDivided: "No rule in force · the council couldn't agree",
-    /** `when`: a `when` phrase with the time ("tomorrow 01:00"). */
-    noRuleVotes: (when: string) => `No rule in force · the council votes ${when}`,
     player: (rank: string) => `Player · ${rank}`,
     local: 'Local candidate · townspeople run by the game',
-    votedFor: (rule: string) => `voted for ${rule}`,
     termEnds: (weekday: string) => `Term ends ${weekday}`,
-    nextVote: (when: string) => `The council votes ${when}`,
-    voted: (weekday: string, rule: string, votes: number, seats: number) =>
-      `Voted ${weekday}: ${rule}, ${votes} of ${seats}`,
-    votedNothing: (weekday: string) => `Voted ${weekday}: the council couldn't agree`,
     // The voting rework (design §4.4, §5.3): the five blocks' new words, beside the old ones.
     nextWeeksRule: "Next week's rule",
     /** "the ballot is set at Tuesday midnight". */
@@ -1197,14 +1003,6 @@ export const copy = {
     /** Answers §10.1: once per term, on the front page and the first hall visit. */
     whatNow: {
       kicker: 'What now · your five days',
-      lines: (when: string, seats: 7 | 10, passVotes: 4 | 6): Array<[string, string]> => [
-        ['Put a rule forward', 'today or tomorrow, 20 Political Capital. Or back one already on the paper.'],
-        [
-          'Vote on the rule',
-          `one vote, before the council votes ${when}. The rule with ${passVotes === 6 ? 'six' : 'four'} of ${seats === 10 ? 'ten' : 'seven'} passes and runs for five days.`,
-        ],
-        ['Draw your pay', '10 Political Capital and 20 Party XP every morning you hold the seat, present or not.'],
-      ],
       button: (hall: string) => `To your desk at the ${hall}`,
       /**
        * The voting rework (design §4.6): line 1 by case, then `pay`; each a [bold, rest] pair as in
@@ -1238,11 +1036,6 @@ export const copy = {
     },
     /** Answers §10.2: the desk's *Next* line by cycle day. */
     deskNext: {
-      votes: (when: string) => `Next: the council votes ${when}.`,
-      voted: (rule: string) => `Your vote is in: ${rule}. The result is in tomorrow's paper.`,
-      runs: (rule: string, untilWeekday: string, namesWeekday: string) =>
-        `Next: ${rule} runs until ${untilWeekday}; candidates put their names in from ${namesWeekday}.`,
-      rose: (namesWeekday: string) => `Next: no rule this term; candidates put their names in from ${namesWeekday}.`,
       // The voting rework (design §4.4): the *Next week's rule* block's Courier line, by cycle day.
       townVotes: (fromWeekday: string, toWeekday: string, resultWeekday: string) =>
         `Next: the town votes ${fromWeekday} to ${toWeekday}; the result ${resultWeekday} morning.`,
@@ -1418,7 +1211,7 @@ export const copy = {
           ? 'Stand and set rules (day 2 of 2)'
           : `The vote (day ${cycleDay - 1} of 3)`,
     next: { vote: 'The vote opens', count: 'The count' } as Record<'vote' | 'count', string>,
-    /** Phase 5's two actions (tech design §12; design §8.9): the buttons and their refusals. */
+    /** The panel's two council actions (tech design §12; design §8.9.2 #15): the buttons and their refusals. */
     seatMe: 'Seat me',
     townVotes: 'Votes for card 2 × 3',
     alreadySeated: 'Already on the council here',
@@ -1761,53 +1554,24 @@ export const copy = {
   paper: {
     edition: (city: string) => `· ${city} edition`,
     editionLabel: (city: string) => `What the ${city} edition means`,
-    localElection: (city: string, phase: 'nominations' | 'polling', until: string) =>
-      phase === 'polling'
-        ? `${city} elects its council: voting until ${until}`
-        : `${city} elects its council: names go in until ${until}`,
     /**
-     * The voting rework (design §8.3): the rival edition's line; phase 5 replaces `localElection`.
+     * The voting rework (design §8.3): the rival edition's line, a notice (a visitor cannot vote there).
      * `until`: days 2–4 the close of the vote; days 0–1 the day voting opens (the set day).
      */
-    localElectionV2: (city: string, phase: 'nominations' | 'polling', until: string) =>
+    localElection: (city: string, phase: 'nominations' | 'polling', until: string) =>
       phase === 'polling'
         ? `${city} votes on its rule until ${until}.`
         : `${city} chooses next week's ballot · voting opens ${until}.`,
   },
   /** The Election card in the capital and the result (screens §7.2, §8); `election.registered` is line 1 and 2 of its first state. */
   capitalElection: {
-    votingIsOpenIn: (district: string) => `Voting is open in ${district}`,
-    twoSeats: (until: string) => `Two seats · any name · your vote is secret · until ${until}`,
-    /** The kicker in the capital: "Election · Irongate Council · Eastside". */
-    kicker: (district: string) => `Election · Irongate Council · ${district}`,
-    /** The result state (days 0–1): "Eastside went Collective, Vanguard · your vote: Jana Varga was elected". */
-    went: (district: string, parties: string[], yourLine: string | null) =>
-      `${district} went ${parties.join(', ')}${yourLine ? ` · ${yourLine}` : ''}`,
-    /** "Irongate: 4 Vanguard · 3 Collective · 3 Alliance · turnout 3 of 5 in Eastside". */
-    capitalSeats: (parts: string[], turnout: string, district: string) =>
-      `Irongate: ${parts.join(' · ')} · turnout ${turnout} in ${district}`,
     resultSundays: (weekday: string) => `${weekday}'s result`,
     /** The result's plate line: "Ten seats · Vanguard 4 · Collective 3 · Alliance 3 · local candidates 7 of 10 · final". */
     resultLine: (parts: string[], npcSeats: number) =>
       `Ten seats · ${parts.join(' · ')} · local candidates ${npcSeats} of 10 · final`,
     resultKicker: 'Irongate Council · The result',
-    partiesColumns: ['Party', 'Votes', 'Opinion', 'Score', 'Seats'] as const,
-    /** The ballot's line in a district. */
-    ballotLine: (until: string) => `Two seats · one vote · secret and final · closes ${until}`,
-    votesCast: (n: number, pct: number, pct2: number) =>
-      `${n} ${n === 1 ? 'vote' : 'votes'} cast · votes count ${pct} % of the score, opinion ${pct2} % (votes count in full from 10 cast)`,
-    howSeatsAreWon:
-      "Each party's score mixes its share of the votes with its share of opinion. The top score takes the first seat; a party takes both only with more than twice the next. Ties: votes, then opinion, then the returning officer's draw.",
-    factionProposal: (faction: string, secretary: string) => `the ${faction}'s proposal · ${secretary}`,
-    sixVotes: (at: string) => `Six votes of ten to pass. The council votes ${at}.`,
     // The voting rework (design §4.1–§4.3, capital): new keys beside the old ones (phase 4 swaps them).
     question: 'Which rule for Irongate next week?',
-    /**
-     * Retired by design §8.9 Q1 and Q3 (phase 5 removes it): the ballot's plate line is `voteLine`;
-     * *Who's standing*'s sentence is `seats.capitalSentence`; the long form lives in the help note.
-     */
-    ballotLineV2: (district: string) =>
-      `Each party puts up a rule. Votes and opinion in ${district} together decide: the party ahead takes the most seats, and its rule runs in every district.`,
     /**
      * The capital ballot's plate line (design §8.9 Q3): the home line's shape (one vote · until · the
      * consequence), three Courier lines at most at 390 px so the hall header keeps its 150 px. "One vote

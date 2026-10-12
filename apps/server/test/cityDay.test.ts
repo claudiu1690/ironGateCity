@@ -2,7 +2,7 @@
  * The city day (slice-3 tech design §7, §14; ADR 0017): the bootstrap on every cycle day, the job
  * and the request path racing, the worker down for twelve days, and the degrade path.
  */
-import { copy, getContent, turnoutOf } from '@irongate/content';
+import { getContent, turnoutOf } from '@irongate/content';
 import { Character, City, Election, OfficeTerm, PaperEntry, RuleBallot } from '@irongate/db';
 import { applyDrift, applyMoraleLoss, councilDay, dayKey, dayStart, moraleState } from '@irongate/rules';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
@@ -182,6 +182,5 @@ describe('turnout (ADR 0017, walk-through fix)', () => {
     expect(counted!.result!.turnout).toEqual({ voters: 0, eligible: 0 });
     expect(turnoutOf(0, 0)).toBe('nil');
     expect(turnoutOf(3, 4)).toBe('3 of 4');
-    expect(copy.turnout(0, 0)).toBe('Turnout nil');
   });
 });

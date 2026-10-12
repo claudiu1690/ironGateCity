@@ -5,8 +5,9 @@ type HeadlineInput = ContentInput['headlines'][number];
 /**
  * The voting rework (docs/design/voting-simplified.md §4.8 and §8.4, settled 10 Oct 2026; tech
  * design §10): the rule ballot's headlines in the four papers, word for word. Live conditions,
- * selected at read. Until phase 5 gives the paper the rule's facts (`PoliticalFacts.rule`), none of
- * them holds, so nothing prints yet. `hl.filed` and `hl.nominations` are reworded in place in phase 5.
+ * selected at read from the paper's rule facts (`PoliticalFacts.rule`, the server's
+ * `ruleHeadlineFacts`). `hl.filed` and `hl.nominations` are reworded in place in
+ * `politicalHeadlines.ts` / `heraldHeadlines.ts` (design §8.9.2).
  *
  * Tokens (design §8.4): `{rule}` the rule (the winner, the caller's card, or a councillor's rule),
  * `{winner}` the winning rule, `{votes}` the votes of `{rule}`, `{winnerVotes}` the winner's,

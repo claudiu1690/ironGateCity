@@ -42,7 +42,6 @@ export function electionLines(
 ): ElectionLines {
   const place = s.placeName ?? s.cityName;
   const e = copy.election;
-  const v = e.v2;
   const k = s.card;
   const stand = { label: copy.standForTheCouncil(s.standCost), route: '/council/slate' as const };
   const slate = (label: string) => ({ label, route: '/council/slate' as const });
@@ -56,12 +55,12 @@ export function electionLines(
   switch (k.state) {
     case 'belowRank':
       return {
-        ...lines(v.belowRank(s.cityName, s.rank2Title, k.rank2Fxp, k.fxp)),
+        ...lines(e.belowRank(s.cityName, s.rank2Title, k.rank2Fxp, k.fxp)),
         primary: null,
         secondary: ballot(e.seeTheBallot),
       };
     case 'vote': {
-      const [line1, line2] = v.vote(s.cityName, formatUntil(k.closesAt, now), formatWeekday(k.runsFrom));
+      const [line1, line2] = e.vote(s.cityName, formatUntil(k.closesAt, now), formatWeekday(k.runsFrom));
       return {
         line1: capital ? copy.capitalElection.question : line1!,
         line2: line2!,
@@ -71,34 +70,34 @@ export function electionLines(
     }
     case 'voted':
       return {
-        ...lines(v.voted(k.votedFor ?? '', formatWeekday(k.countAt), s.paperShortName)),
+        ...lines(e.voted(k.votedFor ?? '', formatWeekday(k.countAt), s.paperShortName)),
         primary: null,
         secondary: ballot(e.seeTheBallot),
       };
     case 'result': {
       const r = k.result;
       // A city with no rule in force and no count yet (test cities only): the kicker's question alone.
-      if (!r) return { line1: v.kicker(place), line2: '', primary: null, secondary: k.canStand ? stand : null };
+      if (!r) return { line1: e.kicker(place), line2: '', primary: null, secondary: k.canStand ? stand : null };
       const until = formatWeekday(r.runsUntil - 1);
       const next = formatWeekday(r.nextVoteAt);
       const fname = (f: FactionId) => names[f] ?? f;
       const c = r.capital;
       const pair =
         r.how === 'votes'
-          ? v.result(r.winner, r.votes, r.voters, until, next)
+          ? e.result(r.winner, r.votes, r.voters, until, next)
           : r.how === 'tie'
-            ? v.resultTie(r.winner, r.votes, until, next)
+            ? e.resultTie(r.winner, r.votes, until, next)
             : r.how === 'fallback'
               ? r.whose === 'councillor' && r.by
-                ? v.resultFallbackUnrest(r.winner, r.by, s.cityName, until)
-                : v.resultFallback(r.winner, until, next)
+                ? e.resultFallbackUnrest(r.winner, r.by, s.cityName, until)
+                : e.resultFallback(r.winner, until, next)
               : r.how === 'carried'
-                ? v.resultCarried(r.winner, until, next)
+                ? e.resultCarried(r.winner, until, next)
                 : r.how === 'draw'
-                  ? v.resultDraw(r.winner, until, next)
+                  ? e.resultDraw(r.winner, until, next)
                   : // `seats`: the capital (design §8.2): the bloc's party, or a shared card's two.
                     c && c.factionIds.length > 1
-                    ? v.resultSharedSeats(
+                    ? e.resultSharedSeats(
                         r.winner,
                         fname(c.factionIds[0]!),
                         fname(c.factionIds[1]!),
@@ -108,7 +107,7 @@ export function electionLines(
                         until,
                         next,
                       )
-                    : v.resultSeats(
+                    : e.resultSeats(
                         r.winner,
                         c?.factionIds[0] ? fname(c.factionIds[0]) : '',
                         c?.seats ?? 0,
@@ -126,7 +125,7 @@ export function electionLines(
     case 'standing':
       return {
         ...lines(
-          v.standing(
+          e.standing(
             k.standing?.rule ?? '',
             formatWeekday(k.countAt),
             k.standing?.backers ?? 0,
@@ -139,7 +138,7 @@ export function electionLines(
     case 'councillor':
       return {
         ...lines(
-          v.councillor(
+          e.councillor(
             k.councillor?.rule ?? '',
             formatUntil(k.councillor?.changeUntil ?? k.closesAt, now),
             formatWeekday(k.pollsOpenAt),
@@ -151,7 +150,7 @@ export function electionLines(
     case 'nextInLine':
       // The capital: no line to be next in; the councillor who set the party's card (design §8.6 Q4).
       return {
-        ...lines(partyCard && !partyCard.leadsBloc ? v.partyCardSet(partyCard.by, partyCard.rule) : v.nextInLine()),
+        ...lines(partyCard && !partyCard.leadsBloc ? e.partyCardSet(partyCard.by, partyCard.rule) : e.nextInLine()),
         primary: null,
         secondary: desk,
       };
@@ -208,7 +207,7 @@ export function ElectionCard({
   const l = electionLines(s, now, factionNames);
   const capital = s.seats === 2;
   // Slice 4 (screens §7.2): in the capital the kicker names the district.
-  const kicker = capital ? copy.election.v2.capitalKicker(s.placeName ?? s.cityName) : copy.election.v2.kicker(s.cityName);
+  const kicker = capital ? copy.election.capitalKicker(s.placeName ?? s.cityName) : copy.election.kicker(s.cityName);
   const k = s.card;
   const strong = k.state === 'vote' || k.state === 'councillor';
   // Tech design §9.2: line 3, the rule in force, in every state but `result`.
@@ -216,7 +215,7 @@ export function ElectionCard({
     s.inForce && k.state !== 'result'
       ? copy.election.ruleNow(s.inForce.name, s.inForce.plainLine, s.inForce.daysLeft)
       : null;
-  const firstTime = k.firstTime ? copy.election.v2.firstTime(s.cityName, s.rank3Title) : null;
+  const firstTime = k.firstTime ? copy.election.firstTime(s.cityName, s.rank3Title) : null;
   const target = l.primary ?? l.secondary;
   if (layout !== 'card') {
     const body = (
@@ -224,7 +223,7 @@ export function ElectionCard({
         <span className={cx('flex min-w-0', layout === 'compact' ? 'items-baseline gap-2' : 'flex-col')}>
           {layout === 'compact' && (
             <span className="label-caps shrink-0 text-[9.5px] font-semibold text-muted">
-              {copy.election.v2.rowKicker}
+              {copy.election.rowKicker}
             </span>
           )}
           {layout === 'row' && firstTime && (
@@ -267,7 +266,7 @@ export function ElectionCard({
       >
         {layout === 'row' && (
           <div className="label-caps border-t-[3px] border-b border-double border-ink py-1 text-[10px] font-semibold">
-            {copy.election.v2.rowKicker}
+            {copy.election.rowKicker}
           </div>
         )}
         {target ? (

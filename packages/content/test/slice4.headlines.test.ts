@@ -210,9 +210,7 @@ describe('the shape of the slice-4 headline templates', () => {
       'seat-lost-bloc': [{ kind: 'seatLost', tie: false, bloc: true }],
       'seat-lost-tie': [{ kind: 'seatLost', tie: true }],
       count: [{ kind: 'countToday' }],
-      'polls-open': [{ kind: 'phaseToday', phase: 'polling', cycleDay: 2 }],
       nominations: [{ kind: 'phaseToday', phase: 'nominations', cycleDay: 0 }],
-      'ordinance-city': [{ kind: 'ordinanceFromToday' }],
       battleground: [{ kind: 'districtBattleground' }],
       'battleground-new': [{ kind: 'districtBecameBattleground' }],
       'battleground-over': [{ kind: 'districtLeftBattleground' }],
@@ -338,7 +336,7 @@ describe('word for word against the design (slice-4-battleground.md §9.6, §12)
 const P = (name: string) => `{${name}}` as never;
 
 describe('the new UI copy, word for word against slice-4-screens.md §11', () => {
-  const { travel: t, capital: c, residence: r, issues: i, capitalElection: e, scoreboard: s } = copy;
+  const { travel: t, capital: c, residence: r, issues: i, scoreboard: s } = copy;
   const produced: string[] = [
     t.nation,
     t.city,
@@ -423,12 +421,6 @@ describe('the new UI copy, word for word against slice-4-screens.md §11', () =>
     i.whereToAct,
     // The lead's slice-4 Election state (screens §7.2), line 1.
     copy.election.registered(P('district'), 'Thursday')[0]!,
-    e.votingIsOpenIn(P('district')),
-    e.twoSeats(P('until')),
-    e.votesCast(P('n'), P('pct'), P('pct2')),
-    e.howSeatsAreWon,
-    e.factionProposal(P('faction'), P('secretary')),
-    e.sixVotes(P('at')),
     s.line(P('place'), P('swing'), P('faction'), P('rank'), P('n')),
     s.noOneElse,
     s.whoMoved(P('district')),

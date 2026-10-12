@@ -31,20 +31,30 @@ type Session = ClientSession | null;
 const s = <T extends { session: (x: ClientSession | null) => T }>(q: T, session: Session): T =>
   session ? q.session(session) : q;
 
-/** The secretary's default, the party's card wherever no office-holder or player councillor leads (slice 7 adds them). */
+/**
+ * The secretary's default, the party's card wherever no office-holder or player councillor leads
+ * (slice 7 adds them). The name is the secretary's `addressedAs` (design §8.8 Q4: *Secretary Holm*).
+ */
 export function secretaryCard(content: GameContent, factionId: FactionId): { ordinanceId: string; by: CardBy } {
   const faction = content.faction(factionId);
-  const secretary = content.npc(faction.secretary.npcId);
   return {
     ordinanceId: faction.branchMotion,
     by: {
       kind: 'party',
       factionId,
       via: 'secretary',
-      name: secretary?.name ?? faction.secretary.addressedAs,
+      name: faction.secretary.addressedAs,
       npcId: faction.secretary.npcId,
     },
   };
+}
+
+/**
+ * The name a card's `by` prints (design §8.8 Q4, §8.9 Q2): a secretary's `addressedAs` from content
+ * (a ballot set before phase 5 stored the full name), a councillor's stored name.
+ */
+export function cardByName(content: GameContent, by: CardBy): string {
+  return by.kind === 'party' && by.via === 'secretary' ? content.faction(by.factionId).secretary.addressedAs : by.name;
 }
 
 /**

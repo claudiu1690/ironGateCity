@@ -62,6 +62,9 @@ const BUTTONS: Array<{ action: DevAction; label: string; needsCharacter: boolean
   { action: 'monday', label: 'Next Monday', needsCharacter: false },
   { action: 'level10', label: 'Level 10', needsCharacter: true },
   { action: 'irongate', label: 'Take me to Irongate', needsCharacter: true },
+  // The voting rework (tech design §12, design §8.9.2 #15): a councillor and a card winning, alone.
+  { action: 'seat', label: copy.dev.seatMe, needsCharacter: true },
+  { action: 'townVotes', label: copy.dev.townVotes, needsCharacter: true },
 ];
 
 function DevPanelOn({ status }: { status: DevStatus }) {

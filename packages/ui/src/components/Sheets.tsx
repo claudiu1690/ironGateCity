@@ -41,6 +41,8 @@ export interface LocationSheetProps {
   ground?: Ground | null;
   /** Slice 4: a kicker other than "{n} · {kind}" (a district card: "District · 3 of 5"). */
   kicker?: string;
+  /** The voting rework (design §4.7, §8.1 Q6): beside the kicker, the rule chip while the sheet covers the plate. */
+  kickerAside?: ReactNode;
   /** Slice 4: the sheet's accessible name when it is not the place's (the district card). */
   testId?: string;
   children: ReactNode;
@@ -80,6 +82,7 @@ export function LocationSheet({
   art,
   ground,
   kicker,
+  kickerAside = null,
   testId,
   children,
   cards = [],
@@ -148,7 +151,14 @@ export function LocationSheet({
             )}
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="label-caps text-[10px] text-muted">{kicker ?? `${n} · ${kindLabel}`}</span>
+              {kickerAside ? (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="label-caps min-w-0 truncate text-[10px] text-muted">{kicker ?? `${n} · ${kindLabel}`}</span>
+                  {kickerAside}
+                </div>
+              ) : (
+                <span className="label-caps text-[10px] text-muted">{kicker ?? `${n} · ${kindLabel}`}</span>
+              )}
               <Dialog.Title
                 className={cx(
                   'font-display leading-[1.05] font-black',

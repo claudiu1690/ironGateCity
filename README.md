@@ -78,7 +78,7 @@ A five-day council cycle in minutes, by hand. Start the game with `pnpm dev:mem`
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **+1 hour**            | Moves the clock an hour                                                                                                                                                                                             |
 | **Next day**           | To 00:01 UTC of the next City Day, then runs the city day (the worker's job) and settles you: the new paper is in                                                                                                   |
-| **Skip to next phase** | Nominations → the polls → the count, in your home city: to 00:01 UTC of the next phase boundary, then as Next day                                                                                                   |
+| **Skip to next phase** | Result day and standing (days 0–1) → the vote (days 2–4) → the count, in the city you live in: to 00:01 UTC of the next phase boundary, then as Next day                                                            |
 | **Boost me**           | Rank 3, _One of Us_ at home (150 Successes, above the operator boost's _Known_ so a lone reviewer can win), at least 30 PC and a full bar. Never lowers anything, and never sets `playtest.boosted` (the playtest report's boosted / natural split is the `admin:boost` script's alone) |
 | **Refill Energy**      | A full bar                                                                                                                                                                                                          |
 | **Arrive now**         | (Slice 4, shown on a train) Your train arrives now: the journey screen turns into the arrival modal |
@@ -94,10 +94,12 @@ A five-day council cycle in minutes, by hand. Start the game with `pnpm dev:mem`
 | **To dusk** | (Review 5) A minute past the next dusk (04:00, 10:00, 16:00 or 22:00 UTC), then as Next day. The **Night** row shows the town's night, the next dusk and dawn, the seam's mode and a tier-1 tap's run-in chance where you stand |
 | **Patrol: Next / Never / Auto** | (Review 5) Your patrol roll: *Next* stops you on the next read of a rival town at night (used up by the stop), *Never* skips every roll, *Auto* rolls as the game does. The **Patrol** row shows the chance, the last bucket rolled, the stops tonight, the quiet and a waiting card |
 | **Push it into Unrest** | (Review 5) The rival town chosen in *Take me to* is pushed into Unrest in your name: 1.8 points on the ledger and the push bar, the home share to 58 (a town already in Unrest is lifted out first, so this is always a fresh entry). **Next day** then pays the prize |
+| **Seat me** | (The voting rework) You take the lowest-ranked local seat on the sitting council where you live (in the capital, of your district) for the rest of the term, with the branch's rule as yours. Refused when you already sit (*Already on the council here*) |
+| **Votes for card 2 × 3** | (The voting rework) Days 2–4: three votes from other townspeople for card 2 of your city's ballot, so a councillor's card can win without three accounts. Refused outside the vote (*Only while the vote is on (days 2–4)*) |
 
 Each action prints one line (_Now Thursday 1 Oct 00:01 UTC · polls open in Coalport_) and refreshes the HUD, the paper and the map. The clock is the server's **shared** test clock: it moves for everyone on this local server, and only forward (restart `pnpm dev:mem` to start again).
 
-The panel exists only in memory mode: its routes (`GET /api/test/dev/status`, `POST /api/test/dev/{hour,day,phase,boost,energy,arrive,monday,level10,irongate,live}` slice 5's `{heat,health,record,runIn,caught,cells,infirmary,release,decide,level6,rank3,goto,unbar}` and review 5's `{dusk,patrol,unrest}`) are registered with the other test hooks, behind `E2E_TEST_HOOKS`, which the server refuses outside `DB_MODE=memory`. Anywhere else the status route is a 404 and the client renders nothing, whatever the build.
+The panel exists only in memory mode: its routes (`GET /api/test/dev/status`, `POST /api/test/dev/{hour,day,phase,boost,energy,arrive,monday,level10,irongate,live}` slice 5's `{heat,health,record,runIn,caught,cells,infirmary,release,decide,level6,rank3,goto,unbar}` and review 5's `{dusk,patrol,unrest}` and the voting rework's `{seat,townVotes}`) are registered with the other test hooks, behind `E2E_TEST_HOOKS`, which the server refuses outside `DB_MODE=memory`. Anywhere else the status route is a 404 and the client renders nothing, whatever the build.
 
 **Coming home** (review 5, from a fresh `pnpm dev:mem`; eight taps from sign-up to the first result):
 
@@ -107,22 +109,24 @@ The panel exists only in memory mode: its routes (`GET /api/test/dev/status`, `P
 4. **The post** (*The same compartment · the office's post*): the unit's list, the requisition order or the ration page (your Ambition, *The Names on the Stone*); the demob suit goes on (Charisma 5). The join is sent at once, and the welcome edition opens: *The rehiring sheet wants your name at the Union Hall; start there.*, three orders signed *— P.H.* (slot A by your best stat, the favour *Sign on at the Union Hall*, *Take a job*).
 5. **To the city**: the Union Hall's sheet is open with ***Sign on*** first and ringed. **Once · 10 Energy** is the first result (*Union men first*, or *The second page* on a Partial): the order *1 / 1*, Holm's signed line. The favour then leaves the sheet. Closing the tab at any beat resumes there. No string mentions a father.
 
-**A suggested walk-through** (a Collective member in Coalport):
+**A suggested walk-through** (the voting rework; a Collective member in Coalport). The town votes on one rule every five days: three cards (the branch's and the councillors'), one secret vote each from Rank 2, the winner in force from the count for five days.
 
 1. **Boost me.** The HUD reads Organiser (Rank 3), PC 30.
-2. **Skip to next phase** until the sheet says _Count day_ or _Nominations_. The paper's Polling Day row offers _Stand for the council · 10 PC_.
-3. **Declare** from the slate. To stand at the close you need two endorsements: carry out the day's three Party orders while filed and the branch endorses you (Refill Energy as needed).
-4. **Your total.** A total is ward vote (Successes ÷ 5) + 3 per endorsement + ballots. Boosted to _One of Us_, a lone candidate totals 30 + 6 + 1 = 37 against about 17–21 for the seventh NPC seat, so you top the poll. (With the operator boost's _Known_ it would be 13, and you would lose; that is the real race.)
-5. **Skip to next phase**: the polls open. The row says _Cast your ballot_; cast it for yourself.
-6. **Skip to next phase**: the count. The paper's front page carries the ELECTED stamp; **To the council** opens the chamber.
-7. **Vote an ordinance** (or propose one, 20 PC) while the council votes (cycle days 0–1).
-8. **Next day** twice (or Skip to next phase once): the council divides at the boundary into the polls. The plate reads _Council rule: {name} · {what it does, in plain words} · 5 days left_ (a tap opens the Town Hall) and the tickets carry its tags.
-9. **Unrest:** keep skipping phases without casting a ballot. Every count with no home ballot costs the home share 3 points, and the daily drift back toward 70 is small, so after about four unvoted counts (eight skips) Coalport falls below 60: the plate reads _Unrest_, the _Restore the base_ orders appear and the NPC councillors abstain.
+2. **Skip to next phase** until the sheet says _Result day · stand and set rules (day 1 of 2)_. The paper's _Council rule_ row offers _Stand for the council · 10 Political Capital_.
+3. **Stand** from *Who's standing*: the stand card shows your two ticks, *Your rule* (the branch's; *Change ›* picks another) and **Stand · 10 Political Capital**. Carry out the day's three Party orders while standing and the branch backs you (+3 at the count; Refill Energy as needed).
+4. **Your total.** A total is your reputation here (Successes ÷ 5) + 3 per backer. Boosted to _One of Us_, a lone candidate totals 30 + 3 = 33 against about 17–21 for the seventh local seat, so you top the poll. (With the operator boost's _Known_ it would be 9, and you would lose; that is the real race.)
+5. **Skip to next phase**: the vote opens. The row asks _Which rule for Coalport next week?_; **Vote now** opens the three cards; one tap on a card, then **Vote for …**.
+6. **Skip to next phase**: the count. The front page carries the ELECTED stamp, the three result cards and ***What now***; the city headline is _{rule} Wins the Vote in Coalport_.
+7. **At your desk** (days 0–1): your rule is a card of next week's ballot (*Change ›* until the ballot is set). Pick **Street Fund**: the _Changed_ modal.
+8. **Skip to next phase**: the ballot is set and the vote opens; the paper says _Councillor {you} Puts Street Fund to the Town_. **Votes for card 2 × 3** adds three townspeople's votes for your card (card 2); vote for it yourself too.
+9. **Skip to next phase**: the count. Street Fund wins; the plate reads _Council rule: Street Fund · actions pay a quarter more Iron, jobs a quarter less · 5 days left_ (a tap opens the Town Hall), the tickets carry _Street Fund · +25 % Iron_ and the Me tab _Coalport · Street Fund · 5 days left_. On a phone under 700 px tall the plate's rule line folds into a chip (_STREET FUND · 5 DAYS_), which the place sheet's header carries too.
+10. **Seat me** is the short way past steps 2–6: you take the lowest local seat of the sitting council at once, with the branch's rule.
+11. **Unrest:** keep skipping phases without voting. Every count with no home vote costs the home share 3 points, and the daily drift back toward 70 is small, so after about four unvoted counts (eight skips) Coalport falls below 60: the plate reads _Unrest_, the _Restore the base_ orders appear and the branch's card comes off the ballot.
 
-**The Town Hall's desk** (review 4, after winning a seat in the walk-through above):
+**The Town Hall** (review 4; the voting rework's five blocks, after winning a seat in the walk-through above):
 
-1. The front page after the count carries ***What now***: what a councillor does and when, and **To your desk at the Town Hall**, which opens the hall's pin. It shows once there and once at the hall.
-2. The Town Hall's sheet: the desk (your vote and **Propose** while the council votes, the Next line by cycle day), the rule in force in plain words, the council's members (*Player* or *Local candidate*), the order paper, the week's Issues and the Election card. *Sit in the public gallery* is the hall's ticket, open to anyone at any Level.
+1. The front page after the count carries ***What now***: your rule on the ballot (or next in line) and your pay, and **To your desk at the Town Hall**, which opens the hall's pin. It shows once there and once at the hall.
+2. The Town Hall's sheet: the rule in force (and how it won), next week's rule (the ballot; your rule with *Change ›* on days 0–1), the council's seats with their rules (*Player* or *Local candidate*), standing for the council, and the week's Issues. *Sit in the public gallery* is the hall's ticket, open to anyone at any Level.
 3. The plate's rule line (*… · studying costs a fifth less*) is a button: it opens the hall. `/council` shows the same blocks for your home.
 
 **The first trip and a move** (slice 4, from a fresh `pnpm dev:mem`; a Collective member in Coalport; review 4: the journey on the map, *Live here*, a bed):

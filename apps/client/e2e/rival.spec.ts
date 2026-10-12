@@ -69,7 +69,10 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
   await expect(masthead).toContainText('The Coalport Clarion· Duskwall edition');
   await expect(page.getByTestId('edition-line')).toHaveText('· Duskwall edition');
   await expect(page.getByTestId('dateline')).toContainText('Duskwall');
-  await expect(page.getByTestId('local-election')).toContainText('Duskwall elects its council');
+  // The voting rework (design §8.3): the rival town's vote on its rule, a notice.
+  await expect(page.getByTestId('local-election')).toHaveText(
+    /^Duskwall (votes on its rule until .+|chooses next week's ballot · voting opens \w+day)\.$/,
+  );
   await page.goto('/city/duskwall');
   await mapAtRest(page);
 

@@ -69,7 +69,7 @@ import { gameError } from '../gameError';
 import { residenceCityId, residenceOf, residenceSpec } from './residence';
 import type { ResidenceSpec } from './residence';
 import { ordinanceIdOn } from './modifiers';
-import { ballotCards, termRule } from './ruleBallot';
+import { ballotCards, cardByName, termRule } from './ruleBallot';
 import { assetView, namedStanding, rankTitle, standingSuccesses } from './views';
 import { nightAt } from './night';
 
@@ -178,7 +178,13 @@ export function ruleCardView(
   const whose: RuleCardView['whose'] =
     first?.kind === 'councillor'
       ? { kind: 'councillor', name: first.name, local: first.holder === 'npc', you: first.characterId === me.characterId }
-      : { kind: 'party', factionIds: [...card.factionIds], by: card.by.map((b) => b.name).join(' · ') };
+      : {
+          kind: 'party',
+          factionIds: [...card.factionIds],
+          by: card.by.map((b) => cardByName(content, b)).join(' · '),
+          // Design §8.9 Q2: which form `by` takes; a shared card's is its first party's.
+          via: first?.kind === 'party' ? first.via : 'secretary',
+        };
   return {
     ordinanceId: card.ordinanceId,
     name: o?.name ?? card.ordinanceId,
@@ -559,7 +565,7 @@ async function electionCard(
       how: r.how,
       runsUntil: dayStart(r.inForce.toDay),
       nextVoteAt: dayStart(cal.election.pollsFrom),
-      by: card?.by[0]?.name ?? null,
+      by: card?.by[0] ? cardByName(content, card.by[0]) : null,
       whose: card?.by[0]?.kind ?? null,
       ...(capital ? { capital } : {}),
     };
@@ -1198,11 +1204,97 @@ export async function whatNowOf(
   };
 }
 
+/** "the Vanguard" · "the Collective and the Alliance": a card's party or parties (design §8.4 `{parties}`). */
+const partiesOf = (content: GameContent, factionIds: readonly FactionId[]): string =>
+  factionIds.map((f) => `the ${content.faction(f).shortName}`).join(' and ');
+
+/**
+ * The voting rework, phase 5 (tech design §10; design §8.4, §8.9.2): what the paper knows of a city's
+ * rule ballots this morning, with the templates' values. `ruleDecided` is ballot k − 1 counted today;
+ * `votedRule` the caller's own vote on it (`myVote`, by election; none for a visitor); `ruleOnBallot`
+ * the set morning, the caller's card among the set cards (in the capital, the first party's carrier
+ * of a shared card, design §8.4); `voteOpen` cycle day 2 (§8.1 Q12).
+ */
+export async function ruleHeadlineFacts(
+  content: GameContent,
+  cityId: string,
+  today: DayKey,
+  me: { c: CharacterDoc; electionId: string } | null,
+): Promise<{ rule: NonNullable<PoliticalFacts['rule']>; varsByKind: NonNullable<PoliticalFacts['varsByKind']>; ruleEnds?: number }> {
+  const cal = councilDay(today, content.city(cityId)?.council?.offset ?? 0);
+  const varsByKind: NonNullable<PoliticalFacts['varsByKind']> = {};
+  const rule: NonNullable<PoliticalFacts['rule']> = {
+    decided: null,
+    voted: null,
+    onBallot: false,
+    voteOpen: cal.cycleDay === 2,
+  };
+  let ruleEnds: number | undefined;
+  const plain = (id: string) => content.ordinance(id)?.plainLine ?? '';
+  if (cal.cycleDay === 0) {
+    const b = await RuleBallot.findById(councilKey(cityId, cal.cycle - 1)).lean<RuleBallotDoc>();
+    const r = b?.status === 'counted' && b.countDay === today ? b.result : null;
+    if (b && r) {
+      rule.decided = { fallback: r.how === 'fallback', drawn: r.how === 'draw' };
+      ruleEnds = dayStart(r.inForce.toDay);
+      const cards = b.cards ?? [];
+      const tallyOf = (id: string) => r.tallies.find((t) => t.ordinanceId === id);
+      const won = tallyOf(r.winner);
+      const of = r.turnout?.voters ?? r.tallies.reduce((n, t) => n + t.votes, 0);
+      const winnerCard = cards.find((x) => x.ordinanceId === r.winner);
+      varsByKind.ruleDecided = {
+        rule: ruleName(content, r.winner),
+        votes: String(won?.votes ?? 0),
+        of: String(of),
+        line: plain(r.winner),
+        seats: String(won?.seats ?? 0),
+        parties: partiesOf(content, winnerCard?.factionIds ?? []),
+      };
+      const mine = me ? await myRuleVote(me.c, [me.electionId]) : null;
+      if (mine) {
+        const t = tallyOf(mine);
+        rule.voted = { won: mine === r.winner };
+        varsByKind.votedRule = {
+          rule: ruleName(content, mine),
+          votes: String(t?.votes ?? 0),
+          seats: String(t?.seats ?? 0),
+          of: String(of),
+          winner: ruleName(content, r.winner),
+          winnerVotes: String(won?.votes ?? 0),
+          winnerSeats: String(won?.seats ?? 0),
+        };
+      }
+    }
+  }
+  if (cal.cycleDay === 2 && me) {
+    const meId = me.c._id.toHexString();
+    const b = await RuleBallot.findById(councilKey(cityId, cal.cycle)).lean<RuleBallotDoc>();
+    const capital = content.isDistricted(cityId);
+    const card =
+      b?.status === 'set' && b.setDay === today
+        ? (b.cards ?? []).find((x) =>
+            capital
+              ? x.by[0]?.kind === 'party' && x.by[0].via === 'councillor' && x.by[0].characterId === meId
+              : x.by[0]?.kind === 'councillor' && x.by[0].characterId === meId,
+          )
+        : undefined;
+    if (card) {
+      rule.onBallot = true;
+      varsByKind.ruleOnBallot = {
+        rule: ruleName(content, card.ordinanceId),
+        line: plain(card.ordinanceId),
+        parties: partiesOf(content, card.factionIds.slice(0, 1)),
+      };
+    }
+  }
+  return { rule, varsByKind, ...(ruleEnds !== undefined ? { ruleEnds } : {}) };
+}
+
 /**
  * The live political headlines of the caller's residence this morning (the home city's; in the
  * capital, the district's election and the capital's council, from the Herald's templates). The
- * voting rework: the person-ballot and order-paper facts (`voted`, `nominationsClosed`, `divided`,
- * `movedYesterday`) no longer hold; the rule facts are filled with the templates in phase 5.
+ * voting rework, phase 5: the rule ballot's facts (`ruleHeadlineFacts`); the person ballot's and the
+ * division's are gone with their templates.
  */
 export async function politicalHeadlines(
   content: GameContent,
@@ -1262,8 +1354,10 @@ export async function politicalHeadlines(
     }
   }
   if (cur?.status === 'standing') {
+    // Design §8.9.2 #2: the candidacy's rule by name; `{weekday}` the count morning's.
     byKind.filedYesterday = {
-      endorsements: String(backersOf({ members: cur.endorsements.length, branch: cur.branch !== null })),
+      rule: ruleName(content, cur.rule ?? content.faction(branchOf(spec, c)).branchMotion),
+      weekday: weekdayName(cal.election.countDay),
     };
   }
   const termEnded = countToday
@@ -1275,23 +1369,18 @@ export async function politicalHeadlines(
       })) !== null
     : false;
   // News only when a count put a rule in force this morning, not a bootstrap's.
-  const ordinanceFromToday = city?.ordinance?.fromDay === today && city.world?.bootstrappedDay !== today;
-  if (ordinanceFromToday && city?.ordinance) {
-    const o = content.ordinance(city.ordinance.id);
-    byKind.ordinanceFromToday = { ordinance: o?.name ?? '', ordinanceLine: o?.line ?? '' };
-  }
+  const ruleFromToday = city?.ordinance?.fromDay === today && city.world?.bootstrappedDay !== today;
+  const rf = await ruleHeadlineFacts(content, spec.city.id, today, { c, electionId: prevId });
+  Object.assign(byKind, rf.varsByKind);
   const facts: PoliticalFacts = {
     seat,
-    voted: null,
     filedYesterday: cur?.status === 'standing' && cur.filedDay === today - 1,
-    nominationsClosed: null,
     termEnded,
-    divided: null,
-    movedYesterday: false,
     countToday: counted !== null,
     phase: cal.phase,
     cycleDay: cal.cycleDay,
-    ordinanceFromToday,
+    ruleFromToday,
+    rule: rf.rule,
     leftUnrest: city?.morale?.previous === 'unrest' && city.morale.since === today,
     ...(extra?.capital ? { capital: extra.capital } : {}),
     vars,
@@ -1299,7 +1388,7 @@ export async function politicalHeadlines(
     until: {
       nominations: dayStart(cal.council.setDay),
       polls: dayStart(cal.election.countDay),
-      divide: dayStart(cal.council.setDay),
+      ...(rf.ruleEnds !== undefined ? { ruleEnds: rf.ruleEnds } : {}),
     },
   };
   return selectPoliticalHeadlines(content.politicalHeadlinesOf(extra?.templatesOf ?? spec.city.id), facts);

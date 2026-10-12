@@ -26,6 +26,7 @@ import {
   suggestedWay,
   computeCheck,
   councilDay,
+  dayStart,
   dayKey,
   findAdvancingItem,
   isPoliticalType,
@@ -419,6 +420,7 @@ export async function getCityView(
   const ordId = ordinanceIdOn(state, today);
   const ord = ordId ? content.ordinance(ordId) : undefined;
   const inForceTo = state?.ordinance?.id === ordId ? state?.ordinance?.toDay : undefined;
+  const voteCal = councilDay(today, city.council?.offset ?? 0);
 
   // ADR 0029: this week's Issues of the city (public: momentum and the leader).
   const issueRows = await cityIssueRows(content, city, state, today);
@@ -517,6 +519,9 @@ export async function getCityView(
             // Review 4 (answers §11.3): the plate's plain words.
             plainLine: ord.plainLine,
             daysLeft: inForceTo - today,
+            // The voting rework (design §8.9.2 #11): the vote's days, for the plate's rule note.
+            pollsOpenAt: dayStart(voteCal.election.pollsFrom),
+            countAt: dayStart(voteCal.election.countDay),
           }
         : null,
     map: { day: assetView(content, city.map.day), night: assetView(content, city.map.night) },

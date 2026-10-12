@@ -10,6 +10,8 @@ import {
   STANDING,
   TRAVEL,
   WEEKDAY_NAMES,
+  councilDay,
+  councilKey,
   cycleOf,
   dayKey,
   dayStart,
@@ -26,7 +28,7 @@ import type { Auth } from '../auth';
 import { ensureCityDay, runCityDay } from '../services/cityDay';
 import { loadCharacter } from '../services/dayService';
 import { moraleOf, ordinanceIdOn, restedCapToday } from '../services/modifiers';
-import { residenceCityId, residenceOf } from '../services/residence';
+import { residenceCityId, residenceOf, residenceSpec } from '../services/residence';
 import { ballotCards } from '../services/ruleBallot';
 import { groundswellOn } from '../services/modifiers';
 import { nightAt, nightHooks } from '../services/night';
@@ -49,6 +51,7 @@ import {
 } from './risk';
 import type { DevAction, DevActionResult, DevHomeCity, DevStatus } from './types';
 import { UnrestBody, pushIntoUnrest } from './unrest';
+import { addRuleVotes, seatMe } from './voting';
 
 /**
  * The dev time-skip panel's routes (README "Reviewing with the dev panel"). Registered only inside
@@ -102,6 +105,9 @@ const DEV_ACTIONS: readonly DevAction[] = [
   'patrol',
   // Review 5 (ADR 0082).
   'unrest',
+  // The voting rework (tech design §12, design §8.9.2 #15).
+  'seat',
+  'townVotes',
 ];
 /** Slice 5 (tech design §8.6): the panel's *Level 6* and *Rank 3*. */
 const DEV_LEVEL = 6;
@@ -596,6 +602,38 @@ async function runAction(
       );
       const r = await pushIntoUnrest(content, doc, UnrestBody.parse({ cityId: target.cityId }), clock.now());
       did = `${r.cityName} pushed into Unrest (${r.share.toFixed(1)} %, ${r.pushed} points in your name): the prize is decided at the next day's turn`;
+      break;
+    }
+    case 'seat': {
+      // The voting rework (tech design §12): the lowest-ranked local seat of the sitting council.
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      try {
+        const r = await seatMe(content, doc, {}, clock.now());
+        did = `Seat ${r.seat} on ${r.councilKey}: your rule is the branch's until you change it at your desk`;
+      } catch (err) {
+        if (err instanceof DevRefusal && err.message.startsWith('already seated'))
+          throw new DevRefusal(409, copy.dev.alreadySeated);
+        throw err;
+      }
+      settle = true;
+      break;
+    }
+    case 'townVotes': {
+      // Days 2–4: three synthetic votes for card 2 of the residence's set ballot (a councillor's card
+      // winning without three accounts).
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const spec = residenceSpec(content, doc);
+      const cal = councilDay(dayKey(clock.now()), spec.offset);
+      const b =
+        cal.cycleDay >= 2
+          ? await RuleBallot.findById(councilKey(spec.city.id, cal.cycle)).lean<RuleBallotDoc>()
+          : null;
+      const card = b?.status === 'set' ? b.cards?.[1] : undefined;
+      if (!card) throw new DevRefusal(409, copy.dev.notTheVote);
+      const r = await addRuleVotes(content, doc, { votes: { [card.ordinanceId]: 3 } }, clock.now());
+      did = `${r.added} votes for ${content.ordinance(card.ordinanceId)?.name ?? card.ordinanceId} (card 2) in ${r.electionId}`;
       break;
     }
     case 'unbar': {

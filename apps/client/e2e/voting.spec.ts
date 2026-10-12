@@ -370,3 +370,57 @@ test("next in line: three councillors' rules, two go on; the third reads next in
   await expect(sheet.getByRole('radio', { name: /^Open Doors/ })).not.toContainText('already on the ballot');
   for (const ctx of [a, b, c]) await ctx.close();
 });
+
+// ---------------------------------------------------------------------------------------------
+// Phase 5 (tech design §9.9, §10; design §4.7, §8.4, §8.9.2): the rule always visible and the paper.
+// ---------------------------------------------------------------------------------------------
+
+test("the rule always visible: the count's headlines, the folded plate's chip, the sheet's chip, the Me line", async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const ctx = await memberContext(browser, 'grey', 'Lena Saal', { fxp: 400 });
+  const api = ctx.request;
+  // A count with votes: hers and two townspeople's for card 2.
+  await advanceTo(api, 'ashford', 2);
+  const b = await read(api, 'council.ballot');
+  expect(b.data.status).toBe('set');
+  const card2 = b.data.cards[1] as { ordinanceId: string; name: string; plainLine: string };
+  const v = await mutate(api, 'council.vote', { ordinanceId: card2.ordinanceId, idempotencyKey: uuid() });
+  expect(v.ok, v.reason ?? '').toBe(true);
+  await hook(api, 'rule-votes', { votes: { [card2.ordinanceId]: 2 } });
+  await advanceTo(api, 'ashford', 0);
+
+  // The count morning (design §8.4): the Gazette's rule headline and her own; the rule's leads the city slot.
+  const page = await ctx.newPage();
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto('/paper');
+  const heads = page.getByTestId('headline');
+  await expect(heads.filter({ hasText: `${card2.name} Wins the Vote in Ashford` })).toContainText(
+    /\d+ of \d+ votes\. In force until .+\. The Gazette has checked the count\./,
+  );
+  await expect(heads.filter({ hasText: `Your Vote Counted: ${card2.name} Wins` })).toHaveCount(1);
+
+  // The folded plate (a phone under 700 px tall): the rule line gives way to the chip; a tap opens the hall.
+  await page.goto('/city/ashford');
+  const chip = page.getByTestId('plate-rule-chip').filter({ visible: true });
+  await expect(chip).toHaveText(new RegExp(`^${card2.name} · 5 days$`, 'i'));
+  await expect(page.getByTestId('city-ordinance')).toBeHidden();
+  const box = (await chip.boundingBox())!;
+  expect(box.height).toBeGreaterThan(0);
+  await chip.click();
+  await expect(page).toHaveURL(/\?loc=ashford\.town-hall/);
+  // While a place's sheet covers the plate, its header carries the chip.
+  await expect(page.getByRole('dialog').getByTestId('sheet-rule-chip')).toHaveText(new RegExp(`^${card2.name} · 5 days$`, 'i'));
+
+  // A taller phone keeps the plate's rule line and shows no chip on the plate.
+  await page.setViewportSize({ width: 412, height: 915 });
+  await page.goto('/city/ashford');
+  await expect(page.getByTestId('city-ordinance')).toBeVisible();
+  await expect(page.getByTestId('plate-rule-chip').filter({ visible: true })).toHaveCount(0);
+
+  // The Me tab: *Ashford · {rule} · 5 days left* under the party card.
+  await page.goto('/me');
+  await expect(page.getByTestId('me-rule')).toHaveText(`Ashford · ${card2.name} · 5 days left`);
+  await ctx.close();
+});

@@ -85,8 +85,9 @@ test('the capital: register in Eastside → vote on a rule, a card per party →
     'Which rule for Irongate next week?',
   );
   await page.goto('/council/ballot');
+  // Design §8.9 Q3: the home line's shape, the deadline back on the capital's plate.
   await expect(page.getByTestId('ballot-line')).toHaveText(
-    'Each party puts up a rule. Votes and opinion in Eastside together decide: the party ahead takes the most seats, and its rule runs in every district.',
+    /^One vote · until .+ · votes and opinion in Eastside decide its seats · the party with the most seats city-wide gets its rule$/,
   );
   const cards = page.getByTestId('rule-card');
   await expect(cards.first()).toBeVisible();
@@ -95,8 +96,11 @@ test('the capital: register in Eastside → vote on a rule, a card per party →
   expect(n).toBeLessThanOrEqual(3);
   // One card per party: three crests across the cards (a shared card carries two) on the whose lines.
   expect(await page.getByTestId('rule-card-whose').locator('svg').count()).toBe(3);
+  // Design §8.8 Q4, §8.9 Q2: a secretary's card by title (*Organiser Stahl*), a councillor's by title and name.
   for (let i = 0; i < n; i++) {
-    await expect(page.getByTestId('rule-card-whose').nth(i)).toHaveText(/^the \w+'s (rule · .+|and the \w+'s rule)$/);
+    await expect(page.getByTestId('rule-card-whose').nth(i)).toHaveText(
+      /^the \w+'s (rule · (Organiser Stahl|Secretary Holm|Mr Grey|Councillor .+)|and the \w+'s rule)$/,
+    );
   }
   // Eastside's order: by the card's parties' opinion shares in the district, the leader's first.
   const ballot = await read(page, 'council.ballot');
@@ -142,6 +146,10 @@ test('the capital: register in Eastside → vote on a rule, a card per party →
   await expect(page.getByTestId('party-votes').first()).toHaveText(/^votes \d+( · shared)?$/);
   expect(await page.getByTestId('council-row').count()).toBeGreaterThanOrEqual(6);
   await expect(page.getByTestId('votes-and-opinion')).toHaveText('Votes and opinion together · final');
+  // Design §8.9 Q1: the capital's seats sentence under the district's rows.
+  await expect(page.getByTestId('capital-seats-sentence')).toHaveText(
+    "Two seats in Eastside: votes and opinion decide how many each party takes; a party's seats go to its best known in Irongate, counting their backers. Local candidates fill the rest.",
+  );
   await expect(page.getByTestId('votes-cast')).toHaveCount(0);
   await expect(page.getByText(/of the score/)).toHaveCount(0);
   await noSideScroll(page);
@@ -225,6 +233,15 @@ test("the capital's councillors: one card per party; the councillor below reads 
   const rule = follower.myRule.capital.rule as string;
   const me = await read(p, 'character.me');
   const party = me.factionNames[follower.myRule.capital.factionId] as string;
+  // Design §8.9 Q2: the party's card names the councillor who set it, by title and name.
+  const partyCard = (follower.cards as any[]).find(
+    (c) => c.whose.kind === 'party' && c.whose.factionIds.includes(follower.myRule.capital.factionId),
+  );
+  expect(partyCard.whose).toMatchObject({ via: 'councillor', by: leader });
+  await p.goto('/council/ballot');
+  await expect(p.getByTestId('rule-card-whose').filter({ hasText: `the ${party}'s` }).first()).toHaveText(
+    `the ${party}'s rule · Councillor ${leader}`,
+  );
 
   // The hall: *What now* and the *Next week's rule* block.
   await p.goto('/council');

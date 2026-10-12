@@ -357,12 +357,8 @@ export function visitorFacts(
 ) {
   return {
     seat: null,
-    voted: null,
     filedYesterday: false,
-    nominationsClosed: null,
     termEnded: false,
-    divided: null,
-    movedYesterday: false,
     countToday: false,
     phase: base.phase,
     cycleDay: base.cycleDay,

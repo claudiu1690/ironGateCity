@@ -32,31 +32,9 @@ const TEMPLATES: HeadlineTemplate[] = [
   T('hl.seat-lost', 'personal', 1, [{ kind: 'seatLost', tie: false }], '{name} Misses by {margin}'),
   T('hl.seat-lost-tie', 'personal', 1, [{ kind: 'seatLost', tie: true }], '{name} Loses on the Tie-Break'),
   T('hl.filed', 'personal', 2, [{ kind: 'filedYesterday' }], '{name} Files', 'By {until}, or off.'),
-  T('hl.on-ballot', 'personal', 2, [{ kind: 'nominationsClosed', struck: false }], 'On', 'Until {until}.'),
-  T(
-    'hl.struck',
-    'personal',
-    2,
-    [{ kind: 'nominationsClosed', struck: true }],
-    'Struck',
-    'Again on {weekday}.',
-  ),
-  T('hl.voted-won', 'personal', 2, [{ kind: 'votedFor', won: true }], 'Your Vote: {voted} Wins'),
-  T(
-    'hl.voted-lost',
-    'personal',
-    2,
-    [{ kind: 'votedFor', won: false, tie: false }],
-    'Your Vote: {voted} Short',
-  ),
-  T('hl.voted-lost-tie', 'personal', 2, [{ kind: 'votedFor', won: false, tie: true }], 'Your Vote: tie'),
-  T('hl.moved', 'personal', 2, [{ kind: 'movedYesterday' }], 'Moves', 'Divides at {until}.'),
   T('hl.seat-ended', 'personal', 2, [{ kind: 'termEnded' }], 'Rises'),
-  T('hl.council-passed', 'personal', 2, [{ kind: 'divided', passed: true }], 'Passes {ordinance}'),
-  T('hl.council-failed', 'personal', 2, [{ kind: 'divided', passed: false }], 'No Motion'),
   T('hl.count', 'city', 0, [{ kind: 'countToday' }], 'Polls Close: {winner}'),
   T('hl.stands-firm', 'city', 0, [{ kind: 'leftUnrest' }], 'Stands Firm'),
-  T('hl.ordinance-city', 'city', 0, [{ kind: 'ordinanceFromToday' }], '{ordinance} in Force'),
   T('hl.polls-open', 'city', 0, [{ kind: 'phaseToday', phase: 'polling' }], 'Polls Open', 'Until {until}.'),
   T(
     'hl.nominations',
@@ -70,28 +48,23 @@ const TEMPLATES: HeadlineTemplate[] = [
 
 const facts = (over: Partial<PoliticalFacts> = {}): PoliticalFacts => ({
   seat: null,
-  voted: null,
   filedYesterday: false,
-  nominationsClosed: null,
   termEnded: false,
-  divided: null,
-  movedYesterday: false,
   countToday: false,
   phase: 'nominations',
   cycleDay: 0,
-  ordinanceFromToday: false,
+  ruleFromToday: false,
   leftUnrest: false,
   vars: {
     name: 'Mara Lenk',
     ordinal: 'first',
     votes: '47',
     margin: '3',
-    voted: 'Anna Weiss',
     winner: 'Weiss',
     ordinance: 'Open Doors',
     weekday: 'Tuesday',
   },
-  until: { nominations: 1000, polls: 2000, divide: 3000 },
+  until: { nominations: 1000, polls: 2000 },
   ...over,
 });
 
@@ -103,12 +76,10 @@ describe('political headlines (ADR 0023)', () => {
     const count = facts({
       countToday: true,
       seat: { won: false, top: false, tie: false },
-      voted: { won: true, tie: false },
       termEnded: true,
     });
     expect(ids(selectPoliticalHeadlines(TEMPLATES, count))).toEqual([
       'hl.seat-lost',
-      'hl.voted-won',
       'hl.seat-ended',
       'hl.count',
       'hl.nominations',
@@ -116,34 +87,12 @@ describe('political headlines (ADR 0023)', () => {
     const polls = facts({
       phase: 'polling',
       cycleDay: 2,
-      nominationsClosed: { struck: false },
-      divided: { passed: true },
-      ordinanceFromToday: true,
       leftUnrest: true,
     });
-    expect(ids(selectPoliticalHeadlines(TEMPLATES, polls))).toEqual([
-      'hl.on-ballot',
-      'hl.council-passed',
-      'hl.stands-firm',
-      'hl.ordinance-city',
-      'hl.polls-open',
-    ]);
-    expect(
-      ids(selectPoliticalHeadlines(TEMPLATES, facts({ nominationsClosed: { struck: true } }))),
-    ).toContain('hl.struck');
-    expect(ids(selectPoliticalHeadlines(TEMPLATES, facts({ divided: { passed: false } })))).toContain(
-      'hl.council-failed',
-    );
-    expect(ids(selectPoliticalHeadlines(TEMPLATES, facts({ movedYesterday: true })))).toContain('hl.moved');
+    expect(ids(selectPoliticalHeadlines(TEMPLATES, polls))).toEqual(['hl.stands-firm', 'hl.polls-open']);
     expect(
       ids(selectPoliticalHeadlines(TEMPLATES, facts({ seat: { won: false, top: false, tie: true } }))),
     ).toContain('hl.seat-lost-tie');
-    expect(ids(selectPoliticalHeadlines(TEMPLATES, facts({ voted: { won: false, tie: false } })))).toContain(
-      'hl.voted-lost',
-    );
-    expect(ids(selectPoliticalHeadlines(TEMPLATES, facts({ voted: { won: false, tie: true } })))).toContain(
-      'hl.voted-lost-tie',
-    );
   });
 
   it('seat-top excludes seat-won', () => {
@@ -176,10 +125,6 @@ describe('political headlines (ADR 0023)', () => {
       (h) => h.templateId === 'hl.filed',
     )!;
     expect(filed).toMatchObject({ deck: 'By {until}, or off.', until: 1000 });
-    const moved = selectPoliticalHeadlines(TEMPLATES, facts({ movedYesterday: true })).find(
-      (h) => h.templateId === 'hl.moved',
-    )!;
-    expect(moved.until).toBe(3000);
     const polls = selectPoliticalHeadlines(TEMPLATES, facts({ phase: 'polling', cycleDay: 3 })).at(-1)!;
     expect(polls).toMatchObject({ templateId: 'hl.polls-open', until: 2000 });
   });

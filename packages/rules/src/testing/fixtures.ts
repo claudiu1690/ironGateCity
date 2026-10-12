@@ -752,7 +752,7 @@ export const ruleCardsFixture: RuleCardView[] = [
     'Long Service Order',
     'Seniority builds two days a day.',
     'Seniority ×2',
-    { kind: 'party', factionIds: ['collective'], by: 'Petra Holm' },
+    { kind: 'party', factionIds: ['collective'], by: 'Secretary Holm', via: 'secretary' },
   ),
   ruleCard('ord.street-fund', 'Street Fund', 'Iron from shifts rises by a quarter.', 'Iron +25 %', {
     kind: 'councillor',

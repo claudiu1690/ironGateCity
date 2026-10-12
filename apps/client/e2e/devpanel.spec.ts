@@ -117,11 +117,17 @@ test('the dev panel: shown with the hooks, clear of the pins and the tab bar, an
     .toBeGreaterThanOrEqual(60);
   expect((minutesOf(await hudClock.textContent()) - clockBefore + 1440) % 1440).toBeLessThanOrEqual(62);
 
-  // 5. Skip to standing (days 0–1): the paper's *Council rule* row reads the last result.
+  // 5. Skip to standing (days 0–1): the paper's *Council rule* row reads the last result. The voting
+  //    rework (tech design §12, design §8.9.2 #15): *Seat me* takes a local's seat at once (again:
+  //    refused); *Votes for card 2 × 3* is refused outside the vote.
   await skipTo(page, /^(Result day|Stand and set rules)/);
   await page.getByTestId('dev-panel').getByRole('button', { name: 'Close' }).click();
   await page.goto('/paper');
   await expect(page.getByTestId('polling-day-row')).toHaveAttribute('data-state', 'result');
+  await tap(page, 'Seat me', /^Seat \d+ on coalport:\d+: your rule is the branch's/);
+  await tap(page, 'Seat me', /^Already on the council here$/);
+  await tap(page, 'Votes for card 2 × 3', /^Only while the vote is on \(days 2–4\)$/);
+  await expect(page.getByTestId('polling-day-row')).toHaveAttribute('data-state', /^(councillor|nextInLine)$/);
 
   // 6. Skip to the vote: the ballot is set, the line says so, and the paper row follows.
   await openPanel(page);
@@ -132,14 +138,19 @@ test('the dev panel: shown with the hooks, clear of the pins and the tab bar, an
   await expect(page.getByTestId('polling-day-row')).toHaveAttribute('data-state', 'vote');
   await expect(page.getByTestId('polling-day-row')).toContainText('Which rule for Coalport next week?');
 
+  // 6b. *Votes for card 2 × 3*: three townspeople's votes for the ballot's second card.
+  await tap(page, 'Votes for card 2 × 3', /^3 votes for .+ \(card 2\) in coalport:\d+$/);
+  const card2 = /^3 votes for (.+) \(card 2\)/.exec((await panel.getByTestId('dev-line').textContent()) ?? '')![1]!;
+
   // 7. Next day: 00:01 UTC, the next day's paper is in (the banner, or the paper itself).
   const day = Number(await panel.getByTestId('dev-city-day').textContent());
   await tap(page, 'Next day', /^Now \w+day \d{1,2} \w{3} 00:01 UTC · the vote \(day 2 of 3\) in Coalport/);
   await expect(panel.getByTestId('dev-city-day')).toHaveText(String(day + 1));
   await expect(panel.getByTestId('dev-utc')).toHaveText(/ 00:0\d UTC$/);
 
-  // 8. Skip to the count: the rule decided runs; Refill Energy fills the bar.
+  // 8. Skip to the count: card 2 (three votes) runs; Refill Energy fills the bar.
   await tap(page, 'Skip to next phase', /the count is in · .+ runs in Coalport/);
+  await expect(panel.getByTestId('dev-line')).toContainText(`the count is in · ${card2} runs in Coalport`);
   await expect(panel.getByTestId('dev-phase')).toHaveText(/^Result day · stand and set rules \(day 1 of 2\)/);
   await tap(page, 'Refill Energy', /^Energy 100 \/ 100$/);
   await expect(page.getByTestId('hud-energy')).toContainText('100');

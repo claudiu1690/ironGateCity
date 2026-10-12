@@ -267,7 +267,7 @@ function CouncilSeats({ hall, factionId }: { hall: TownHallView; factionId: Fact
           </li>
         ))}
       </ul>
-      <p className="pt-1.5 font-body text-[12.5px] text-text-2 italic">{copy.localCandidatesLine}</p>
+      <p className="pt-1.5 font-body text-[12.5px] text-text-2 italic">{copy.stand.localsLine}</p>
     </section>
   );
 }

@@ -60,7 +60,6 @@ function Page({
   hall,
   shortHall = false,
   wide = false,
-  capital = false,
 }: {
   children: ReactNode;
   hall?: { hall: HallView | null; cityName: string };
@@ -68,11 +67,6 @@ function Page({
   shortHall?: boolean;
   /** The ballot (design §4.2): a 720 px sheet from 960 px, the three cards in one row. */
   wide?: boolean;
-  /**
-   * The capital's ballot: its line under the title is twice the home one's, so on a phone under
-   * 900 px tall the header gives up 15 px and the third card stays above the CTA (390 × 844).
-   */
-  capital?: boolean;
 }) {
   // Review 5 (ADR 0079): the hall's art is the server's night; at dusk and dawn the screens read again.
   useNightTurn(hall?.hall?.night, COUNCIL_KEYS);
@@ -94,7 +88,6 @@ function Page({
               '-mx-4 -mt-4 -mb-3 sm:mx-0 sm:mt-0',
               shortHall &&
                 '[@media(max-height:700px)]:h-[64px] [@media(max-height:660px)]:hidden [@media(max-height:960px)]:sm:h-[96px]',
-              shortHall && capital && 'max-sm:[@media(min-height:701px)_and_(max-height:900px)]:h-[120px]',
             )}
           />
         )}
@@ -211,8 +204,8 @@ export function SlatePage() {
         </span>
       </Plate>
       <p className="font-mono text-[11.5px] text-muted" data-testid="how-decided">
-        {/* The capital (design §4.2, §9.8): each party puts up a rule; votes and opinion decide the seats. */}
-        {district ? copy.capitalElection.ballotLineV2(district) : copy.seats.sentence(city, COUNCIL.seats)}
+        {/* The capital's form (design §8.9 Q1): votes and opinion decide each party's seats. */}
+        {district ? copy.seats.capitalSentence(district) : copy.seats.sentence(city, COUNCIL.seats)}
       </p>
       <VoteLink cityName={e.cityName} from={formatWeekday(e.pollsOpenAt)} to={formatWeekday(e.countAt - 1)} />
       <LastResultLink />
@@ -266,8 +259,8 @@ export function SlatePage() {
 /**
  * The three cards, one tap to choose and *Vote for {rule}* in the sticky bar; *Who's standing ›*,
  * *How the vote works* and the last result scroll under the cards. Days 0–1: the cards as they
- * stand, with when the ballot is set. The capital (design §4.2, tech design §9.8): one card per party
- * in the district's order (the server's), and the line *Each party puts up a rule…* under the title.
+ * stand, with when the ballot is set. The capital (design §4.2, §8.9 Q3; tech design §9.8): one card per
+ * party in the district's order (the server's), and `capitalElection.voteLine` under the title.
  */
 export function BallotPage() {
   const q = useQuery(trpc.council.ballot.queryOptions());
@@ -307,11 +300,6 @@ export function BallotPage() {
             {copy.ballot.votesFrom(b.placeName, formatWeekday(b.pollsOpenAt))}
           </span>
         </Plate>
-        {b.capital && (
-          <p className="font-mono text-[12px] leading-snug text-text-2" data-testid="ballot-capital-line">
-            {copy.capitalElection.ballotLineV2(b.placeName)}
-          </p>
-        )}
         <RuleCards
           cards={b.cards}
           mode="show"
@@ -346,7 +334,7 @@ export function BallotPage() {
   const choosing = !cast && b.canVote;
   const chosen = b.cards.find((c) => c.ordinanceId === vote.selected);
   return (
-    <Page hall={hall} shortHall wide capital={b.capital}>
+    <Page hall={hall} shortHall wide>
       <Plate kicker={copy.ballot.kicker(city)} title={copy.ballot.title}>
         {/* A phone under 700 px tall keeps the third card's top edge above the CTA (design §4.2): the
             line folds away there, as the header does; the sticky caption says the same (secret,
@@ -355,9 +343,9 @@ export function BallotPage() {
           className="font-mono text-[12px] leading-snug text-dim [@media(max-height:700px)]:hidden"
           data-testid="ballot-line"
         >
-          {/* The capital's line under the title (design §4.2): the same fold; the caption keeps the time. */}
+          {/* The capital's line (design §8.9 Q3): the home line's shape; the same fold; the caption keeps the time. */}
           {b.capital
-            ? copy.capitalElection.ballotLineV2(b.placeName)
+            ? copy.capitalElection.voteLine(b.placeName, formatUntil(b.countAt))
             : copy.ballot.line(formatUntil(b.countAt), formatWeekday(b.countAt))}
         </span>
       </Plate>
@@ -519,6 +507,10 @@ function CapitalCount({ view, pending }: { view: CapitalCountView | null | undef
         onSelect={(id) => void navigate({ to: '/council/count', search: { d: id }, replace: true })}
       />
       <DistrictResultTable district={selected} names={names} />
+      {/* Design §8.9 Q1: the capital's seats sentence under the district's rows. */}
+      <p className="font-mono text-[11.5px] text-muted" data-testid="capital-seats-sentence">
+        {copy.seats.capitalSentence(selected.name)}
+      </p>
       <VoteLink cityName="Irongate" {...voteDaysAfter(view.countDay)} />
     </Page>
   );

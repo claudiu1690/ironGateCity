@@ -210,16 +210,12 @@ describe('the risk headlines (tech design §11.2)', () => {
     const live = [t('hl.rival-pressure', 1, [{ kind: 'moraleLostToRivals', min: 1 }], 'city')];
     const pf = (lost: number): PoliticalFacts => ({
       seat: null,
-      voted: null,
       filedYesterday: false,
-      nominationsClosed: null,
       termEnded: false,
-      divided: null,
-      movedYesterday: false,
       countToday: false,
       phase: 'nominations',
       cycleDay: 1,
-      ordinanceFromToday: false,
+      ruleFromToday: false,
       leftUnrest: false,
       capital: {
         registeredYesterday: false,
@@ -239,7 +235,7 @@ describe('the risk headlines (tech design §11.2)', () => {
         moraleLostToRivals: lost,
       },
       vars: { lost: lost.toFixed(1) },
-      until: { nominations: 0, polls: 0, divide: 0 },
+      until: { nominations: 0, polls: 0 },
     });
     expect(selectPoliticalHeadlines(live, pf(1.2)).map((h) => h.templateId)).toEqual(['hl.rival-pressure']);
     expect(selectPoliticalHeadlines(live, pf(0.9))).toEqual([]);

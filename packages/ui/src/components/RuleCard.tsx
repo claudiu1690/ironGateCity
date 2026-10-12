@@ -39,6 +39,8 @@ export function whoseLine(card: RuleCardView, names: Names, capital = false): st
   if (w.kind === 'councillor') return w.you ? copy.rule.whose.you : copy.rule.whose.councillor(w.name);
   const [a, b] = w.factionIds;
   if (a && b) return copy.rule.whose.shared(party(names, a), party(names, b));
+  // Design §8.9 Q2: a councillor leading the party's bloc by title and name; the secretary by `addressedAs`.
+  if (a && w.via === 'councillor') return copy.rule.whose.partyCouncillor(party(names, a), w.by);
   return capital && a ? copy.rule.whose.party(party(names, a), w.by) : copy.rule.whose.branch(w.by);
 }
 
@@ -677,7 +679,7 @@ export interface HowTheVoteWorksProps {
 }
 
 export function councilRuleNote(p: Omit<HowTheVoteWorksProps, 'className'>) {
-  return copy.help.ruleV2(p.cityName, p.rank2, p.rank3, p.fromWeekday, p.toWeekday, p.capital);
+  return copy.help.rule(p.cityName, p.rank2, p.rank3, p.fromWeekday, p.toWeekday, p.capital);
 }
 
 export function HowTheVoteWorks({ className, ...p }: HowTheVoteWorksProps) {
@@ -691,5 +693,46 @@ export function HowTheVoteWorks({ className, ...p }: HowTheVoteWorksProps) {
     >
       {copy.ballot.howTheVoteWorks}
     </HelpButton>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// The rule always visible (design §4.7, §8.1 Q6; tech design §9.9): the folded plate's chip.
+// ---------------------------------------------------------------------------------------------
+
+export interface RuleChipProps {
+  name: string;
+  daysLeft: number;
+  /** A tap opens the Town Hall. */
+  onOpen?: () => void;
+  className?: string;
+  testId?: string;
+}
+
+/**
+ * *STREET FUND · 3 DAYS*, Oswald caps on paper-2. On a phone it sits right of the plate's kicker
+ * when the plate's rule line is folded away (under 700 px tall), and in the place sheet's header
+ * while a sheet covers the plate. The pill is small; the button around it is a 44 px target whose
+ * negative margins keep the row's height.
+ */
+export function RuleChip({ name, daysLeft, onOpen, className, testId = 'rule-chip' }: RuleChipProps) {
+  const text = copy.plate.ruleChip(name, daysLeft);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      disabled={!onOpen}
+      className={cx(
+        'relative z-20 -my-[15px] min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center disabled:cursor-default',
+        // `className` may hide it (`hidden`, shown under a media query); shown, it is a flex box.
+        className ?? 'inline-flex',
+      )}
+      data-testid={testId}
+      aria-label={`${text}. ${copy.hall.ruleInForce}`}
+    >
+      <span className="label-caps bg-paper-2 px-1.5 py-0.5 text-[9.5px] leading-none whitespace-nowrap text-ink">
+        {text}
+      </span>
+    </button>
   );
 }

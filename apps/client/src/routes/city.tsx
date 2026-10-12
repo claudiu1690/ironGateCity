@@ -46,8 +46,10 @@ import {
   TramBar,
   bboxOf,
   comebackLine,
+  councilRuleNote,
   cx,
   districtStateWord,
+  formatWeekday,
   formatWhen,
   formatShare,
   groundOf,
@@ -56,6 +58,7 @@ import {
   residenceLines,
   rivalHeaderLines,
   RivalHeader,
+  RuleChip,
 } from '@irongate/ui';
 import type { Ground, WhatsHereBlocks } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -449,20 +452,29 @@ export function CityPage() {
   const waiting = character.orders.items
     .filter((o) => !o.done)
     .map((o) => `${o.title} ${o.progress} / ${o.target}`);
-  // Review 1 (answers §5): the plate's notes, the share first (its caption), then morale and the ordinance.
+  // Review 1 (answers §5): the plate's notes, the share first (its caption), then morale and the rule.
+  // The voting rework (design §8.9.2 #11): the rule's note is *Council rule* (`help.rule`) with the
+  // city's own voting days; the capital's second line on a district and on the capital's overview.
+  const ruleNote = c.ordinance
+    ? [
+        councilRuleNote({
+          cityName: c.name,
+          rank2: character.rank.ladder[1] ?? '',
+          rank3: character.rank.ladder[2] ?? '',
+          fromWeekday: c.ordinance.pollsOpenAt !== undefined ? formatWeekday(c.ordinance.pollsOpenAt) : '',
+          toWeekday: c.ordinance.countAt !== undefined ? formatWeekday(c.ordinance.countAt - 1) : '',
+          capital: !!district || !!districts,
+        }),
+      ]
+    : [];
   const plateNotes = district
     ? [
         copy.capital.help.whoHolds(district.name),
         copy.capital.help.closeRace(),
         ...(district.state.groundswell ? [copy.capital.help.comeback()] : []),
-        ...(c.ordinance ? [copy.help.ordinance(6, 10)] : []),
+        ...ruleNote,
       ]
-    : [
-        copy.help.share(c.name),
-        ...(c.morale ? [copy.help.morale()] : []),
-        // QA m4: the capital's overview passes a rule with six of ten too.
-        ...(c.ordinance ? [districts ? copy.help.ordinance(6, 10) : copy.help.ordinance(4, 7)] : []),
-      ];
+    : [copy.help.share(c.name), ...(c.morale ? [copy.help.morale()] : []), ...ruleNote];
 
   // Review 3: the Places list, in pin order, with a tag where an open Party order points (the same
   // pins the orders list links to); slice 4: and the Issue mark where work is tagged.
@@ -778,6 +790,23 @@ export function CityPage() {
     ) : null;
 
   /**
+   * The voting rework (design §4.7, §8.1 Q6; tech design §9.9): the rule chip, *STREET FUND · 3 DAYS*.
+   * On an upright phone under 700 px tall the plate's rule line folds away, so the chip shows right of
+   * the plate's kicker there (`folded`); the place sheet's header carries it while a sheet covers the
+   * plate. A tap opens the Town Hall, as the rule line does.
+   */
+  const ruleChip = (testId: string, folded: boolean) =>
+    c.ordinance && !side ? (
+      <RuleChip
+        name={c.ordinance.name}
+        daysLeft={c.ordinance.daysLeft}
+        onOpen={hallPlace ? () => select(hallPlace.id) : undefined}
+        testId={testId}
+        className={folded ? 'ml-auto hidden [@media(max-width:639px)_and_(max-height:700px)]:inline-flex' : undefined}
+      />
+    ) : null;
+
+  /**
    * QA m1 (fix round): on a phone under 700 px tall the rule's row folds to keep the map's pins clear,
    * so the dusk line moves beside the plate's name, in two short lines (the plate keeps its height).
    */
@@ -877,29 +906,32 @@ export function CityPage() {
             )}
             {stackedDusk && <DuskLine night={c.night} button={false} stacked className="ml-auto self-center" />}
           </div>
-          <span
-            className={cx(
-              // QA review 4 (nit): the dot between the two parts is drawn before the second, in the
-              // gap; when the line wraps the second part starts the new line and its dot is clipped
-              // off (no *HOME CITY ·* left dangling).
-              'label-caps flex flex-wrap items-center gap-x-3.5 gap-y-1 overflow-hidden text-[9.5px] text-muted',
-              // QA m7 (QA fixes §6): on rival ground under 700 px tall the morale line folds, not the
-              // pressure line.
-              rival && !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
-            )}
-            data-testid="city-plate"
-          >
-            <span>{c.role === 'home' ? 'Home city' : 'Close race'}</span>
+          <div className="flex items-center gap-2">
             <span
               className={cx(
-                "relative flex items-center gap-1.5 before:absolute before:-left-[9px] before:content-['·']",
-                helpMark,
+                // QA review 4 (nit): the dot between the two parts is drawn before the second, in the
+                // gap; when the line wraps the second part starts the new line and its dot is clipped
+                // off (no *HOME CITY ·* left dangling).
+                'label-caps flex min-w-0 flex-1 flex-wrap items-center gap-x-3.5 gap-y-1 overflow-hidden text-[9.5px] text-muted',
+                // QA m7 (QA fixes §6): on rival ground under 700 px tall the morale line folds, not the
+                // pressure line.
+                rival && !side && '[@media(max-width:639px)_and_(max-height:700px)]:hidden',
               )}
+              data-testid="city-plate"
             >
-              <FactionCrest factionId={plateFaction} size={8} />{' '}
-              {rival ? (names[plateFaction] ?? plateFaction) : character.factionName} {formatShare(share)} %
+              <span>{c.role === 'home' ? 'Home city' : 'Close race'}</span>
+              <span
+                className={cx(
+                  "relative flex items-center gap-1.5 before:absolute before:-left-[9px] before:content-['·']",
+                  helpMark,
+                )}
+              >
+                <FactionCrest factionId={plateFaction} size={8} />{' '}
+                {rival ? (names[plateFaction] ?? plateFaction) : character.factionName} {formatShare(share)} %
+              </span>
             </span>
-          </span>
+            {ruleChip('plate-rule-chip', true)}
+          </div>
           {/* Review 5 (answers §10.2, §16.1, ADR 0082): the rival header replaces slice 5's *draws from*
               and Heat lines: the push bar (at every size, QA m7), the danger word (patrols at night) and
               the goal, which folds into the push note on a phone under 700 px tall. */}
@@ -996,9 +1028,12 @@ export function CityPage() {
         testId="plate-help"
         className="absolute inset-0 z-10 w-full bg-transparent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
       />
-      <span className="label-caps text-[9px] text-muted" data-testid="district-kicker">
-        {district.you.resident ? copy.capital.youLiveHere : copy.capital.visiting}
-      </span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="label-caps text-[9px] text-muted" data-testid="district-kicker">
+          {district.you.resident ? copy.capital.youLiveHere : copy.capital.visiting}
+        </span>
+        {ruleChip('plate-rule-chip', true)}
+      </div>
       <div className="flex flex-wrap items-baseline gap-x-2">
         <h1 className="font-display text-[21px] leading-none font-black" data-testid="district-name">
           {district.name}
@@ -1291,6 +1326,8 @@ export function CityPage() {
           }}
           n={sheetPlace.n}
           kindLabel={copy.kindLabel(sheetPlace.kind)}
+          // The voting rework (design §8.1 Q6): the rule chip while the phone's sheet covers the plate.
+          kickerAside={layout === 'sheet' ? ruleChip('sheet-rule-chip', false) : null}
           name={sheetPlace.name}
           blurb={sheetPlace.blurb}
           art={sheetPlace.art}

@@ -1268,3 +1268,112 @@ The capital's screens are built on the v2 views: the Election card's capital lin
 2. **A capital card set by a councillor** reads *the Collective's rule · Jana Varga* (`rule.whose.party` with the councillor's name). Design §4.2 gives only the secretary's form (*· Organiser Stahl*). Should it be *· Councillor Varga*? This fits with phase 5's `addressedAs` change to `whose.by`.
 3. **The capital ballot's header** is 15 px shorter on phones 701–900 px tall (above), to keep three cards and the CTA in view under a four-line plate line. Alternatively, a shorter capital line would keep the header whole.
 4. **`copy.help.more`** (*More*) is a new key with the obvious word; please confirm.
+
+### Phase 5 — The paper, the chip, the help notes, the dev panel (12 Oct 2026)
+
+T11–T14 and the carry-overs of phases 3–4 (design §8.9.2). The old model's last words are gone from `copy.ts`, the headline sets and the paper's facts.
+
+**Server and views**
+
+- **`RuleCardView.whose` (party form) gains `via: 'secretary' | 'councillor'`** (design §8.9 Q2). `by` is `faction.secretary.addressedAs` for a secretary (*Secretary Holm*, *Organiser Stahl*, *Mr Grey*; §8.8 Q4) and the stored name for a councillor. `secretaryCard` now stores `addressedAs`. A new **`cardByName(content, by)`** (`services/ruleBallot.ts`) prints a secretary from content, so a ballot set before this phase (its `by.name` the full name) reads the title too; it also feeds `ElectionCardView.result.by` and `TownHallView.inForce.by`. On a shared card `via` is the first party's (the line names no one there). The fixtures follow (*Secretary Holm*; the slice-4 capital fixture's Vanguard card is a councillor's).
+- **The rule headlines fire.** `ruleHeadlineFacts(content, cityId, today, me)` (`politicsService.ts`) fills `PoliticalFacts.rule` and the templates' values (§10, design §8.4):
+  - `ruleDecided`: ballot k − 1 counted today (`fallback`, `drawn`);
+  - `votedRule`: the caller's own vote on it;
+  - `ruleOnBallot`: the set morning; at home the caller's councillor card, in the capital the card whose first `by` is the caller leading the bloc (so a shared card's headline goes to its first party, design §8.4);
+  - `voteOpen`: day 2.
+  - `{until}` is the rule's end (`until.ruleEnds`) or the vote's close.
+- The capital's visitor line (`localEdition.capitalLine`) gets the city facts too (no personal ones), so a visitor reads `hl.ig.rule-won` / `hl.ig.vote-open` where the old `hl.ig.ordinance-city` / `polls-open` printed.
+- `filedYesterday` gives `{rule}` (the candidacy's) and `{weekday}` (the count morning's) by kind; the global `{weekday}` is untouched.
+- `ordinanceFromToday` → **`ruleFromToday`** (the condition kind, `PoliticalFacts`, `LocalFacts`, `LOCAL_CONDITION_KINDS`, the schema). **Retired:** the condition kinds `votedFor`, `nominationsClosed`, `divided`, `movedYesterday`; the facts `voted`, `nominationsClosed`, `divided`, `movedYesterday` and `until.divide`; the placeholders `voted`, `ordinanceLine`, `endorsements`.
+- **New view fields** (not named by the plan, needed by T12 and T13):
+  - `CharacterView.cityRule { cityName, name, daysLeft }`, the Me line. It is set where the view is built with the residence city's document, and null when no rule is in force.
+  - `CityView.ordinance.pollsOpenAt` / `countAt`. The plate's *Council rule* note needs the city's voting days for any reader, a visitor included, whose `election` is null.
+
+**Content**
+
+- **Headlines** (design §8.4, §8.9.2):
+  - the person ballot's and the division's templates are removed in all four voices (`on-ballot`, `struck`, `voted-*`, `moved`, `council-*`, `ordinance-city`, `polls-open`);
+  - `filed` and `nominations` are reworded in four voices, and `hl.seat-lost-tie`'s deck is reworded;
+  - `hl.count`, `hl.v.count`, `hl.a.count` and `hl.ig.count` move to priority 1;
+  - the `hl.local.*` lines are reworded, and `hl.local.rule` reads `ruleFromToday`;
+  - the loader's required names (`POLITICAL_HEADLINE_NAMES`, `HERALD_HEADLINE_NAMES`) list the rule set instead.
+- **`ruleHeadlines` now loads before the other political sets.** A priority tie keeps file order, and `hl.stands-firm` (city 0) would otherwise lead the count morning's city slot over `hl.rule-won` (§8.9.2 #1: *the rule's headline leads*).
+- **`copy.ts`:**
+  - the renames: `election.v2.*` → `election.*`, `help.ruleV2` → `help.rule`, `paper.localElectionV2` → `paper.localElection`;
+  - §5.3's list and §8.9.2 #14's dead keys are removed;
+  - **also removed, unreferenced after the swap** (#14: *the grep is the arbiter*): the top-level `ward`, `wardCandidates`, `theLine`, `electedMark`, `yourVote`, `passed`, `playersStanding` and `ballotSecretNote`, and `election.days`, `election.ruleLine` and `election.seeTheCandidates`. Design §5.3 said to keep `election.days`, but nothing reads it;
+  - `localCandidatesLine` was still bound in the hall's seat block. It is rebound to `stand.localsLine` (*… so there is always a council*) and removed;
+  - `youEndorsed` and `backedBy` stay: they are bound, and still true of backing.
+
+**Client**
+
+- `whoseLine` prints `rule.whose.partyCouncillor` when `via === 'councillor'`.
+- Who's standing (capital) and the capital count (under the district's rows, `capital-seats-sentence`) print `seats.capitalSentence(district)`.
+- **The capital ballot:**
+  - the plate line is `capitalElection.voteLine(district, until)`;
+  - the closed state prints `ballot.votesFrom` only (the extra capital line is gone);
+  - `Page`'s `capital` prop and the `h-[120px]` branch are removed, so the header is 150 px everywhere.
+- The city plate's rule note (`plateNotes`) is `help.rule` via `councilRuleNote`. A district and the capital's overview get the capital's second line. The plate's note has no *More*.
+- The rival edition's line prints the weekday on days 0–1 (`formatWeekday`, design §8.3) and the vote's close on days 2–4.
+- **`RuleChip`** (`packages/ui`, in `RuleCard.tsx`) is a 44 px button with the paper-2 pill inside. Negative margins keep the plate's height; a smaller box failed review 4's target audit.
+  - It sits right of the home plate's *Home city · …* row (its kicker line) and of the district plate's kicker, and shows only on an upright phone under 700 px tall.
+  - It also sits in the place sheet's header (`LocationSheet.kickerAside`, new) on the phone's `sheet` layout.
+  - A tap opens the Town Hall.
+- **The Me tab:** `me.rule` under the party card, a link to `/council`.
+- **The dev panel (T14):**
+  - **Seat me** (`seat`, the server's `seatMe`) refuses with *Already on the council here* when the player is already seated;
+  - **Votes for card 2 × 3** (`townVotes`, `addRuleVotes` for the set ballot's stored card 2) refuses with *Only while the vote is on (days 2–4)* outside the vote;
+  - the README has the two buttons and the route list, and its walk-through and Town Hall steps are rewritten to the rule vote.
+
+**E2E (rewritten, not weakened)**
+
+- `council.spec.ts`: the set morning prints *Councillor Mara Lenk Puts Street Fund to the Town* and *Coalport Votes on Its Rule*. The count morning prints *Street Fund Wins the Vote in Coalport* (deck *1 of 1 votes. In force until …*) and *Your Vote Counted: Street Fund Wins*, ahead of *Coalport Result* when both print.
+- `capital.spec.ts`:
+  - the ballot's `voteLine`;
+  - the whose lines by title (*Organiser Stahl*, *Secretary Holm*, *Mr Grey*, or *Councillor …*);
+  - `capital-seats-sentence` at the count;
+  - the councillors' case checks `whose { via: 'councillor', by: leader }` and *the {party}'s rule · Councillor {leader}* on the ballot.
+- `qa.slice4.spec.ts`: the line and the header's 150 px at 390 × 844 (the third card is below).
+- `devpanel.spec.ts`: Seat me and its refusal. Votes for card 2 × 3 is refused on day 0; on day 2 it adds three votes for card 2, which wins the count.
+- `voting.spec.ts`: a new case, *the rule always visible*:
+  - the Gazette's rule headline and the personal one;
+  - the folded plate's chip at 375 × 667 (the rule line hidden; a tap opens the hall);
+  - the sheet's chip;
+  - no chip at 412 × 915;
+  - the Me line.
+- `rival.spec.ts`, `qa.review4.spec.ts`: the rival edition's new line.
+
+**The capital ballot at 390 × 844 (reported, not cut):** `voteLine` takes **four** Courier lines at 390 px, not three as design §8.9 Q3 counted. The deadline prints in the player's clock (*until Tuesday 02:00*). With the header back at 150 px the third card ends about 21 px under the sticky bar; its top edge is above it. As §8.9 Q3 says, the header was not cut again. Until this is settled, `qa.slice4`'s 390 × 844 check is the last card's top edge; the old *every card above* holds at 1440 × 900. See designer question 1.
+
+**The old Vitest files** (not run; trimmed to compile):
+
+- `packages/rules/test/political-headlines.test.ts`: the removed templates and facts;
+- `review4.editions.test.ts`, `slice4.paper.test.ts`, `slice5.travel.test.ts`: the facts' fields;
+- `packages/content/test/slice4.headlines.test.ts`: the removed `capitalElection` keys and the `polls-open` and `ordinance-city` rows;
+- `apps/server/test/cityDay.test.ts`: `copy.turnout`.
+
+**Grep**
+
+- The plan's grep, `divide\(|divideCapital|closeNominations|OrderPaper|AGAINST_ALL|councilVote|platformId`, finds nothing in `packages/rules/src`, `apps/server/src`, `packages/db/src/models`, `apps/client/src`, `packages/ui/src` or `packages/content/src`.
+- Nothing finds `votedFor'`, `nominationsClosed`, `movedYesterday`, `ordinanceFromToday`, `ballotLineV2`, `pcV2`, `localElectionV2`, `ruleV2` or `election.v2` either. `tooLateToStand` appears once, in a comment that names it as replaced.
+- `'divided'` remains only as an old order paper's stored status (`elections.ts`, the playtest report, the conversion check), which the legacy data still carries.
+
+**Checks**
+
+- `pnpm art:check && pnpm turbo run lint typecheck build` (cached): green, 14 of 14 tasks.
+- E2E with `--no-deps` (`E2E_WEB_PORT=4273 E2E_API_PORT=3301`):
+  - `council`, `qa-council`, `dev-panel`, `capital`, `qa-capital` and `rival`: 23 of 23;
+  - `voting` and `review4`: 12 of 12;
+  - `qa-review4`: 30 of 30. Four failed on the first chip (a 14 px box) and passed after the 44 px fix;
+  - `phone`'s `day.spec.ts` and `review3.spec.ts`: 8 of 8.
+- The full e2e is phase 6's.
+
+**Questions for the designer (none blocking)**
+
+1. **The capital ballot's line at 390 × 844** is four Courier lines (above), so the third card ends about 21 px under the sticky bar with the 150 px header. Options:
+   - a shorter line (for example without *city-wide*);
+   - accepting that only the third card's top edge shows;
+   - the 700 px fold rule extended to the capital's line under 900 px tall.
+2. **`election.days` and the other dead keys** listed above were removed, although §5.3 kept `days`. Please confirm.
+3. **The rule chip's place on the home plate** is the *Home city · {party} {share} %* row, the plate's only kicker-like line: the home plate has no kicker above the name. On rival ground that row's text folds under 700 px and the chip stays. Confirm, or name another row.
+4. **The capital visitor's paper** now prints the capital's rule headlines (`hl.ig.rule-won`, `hl.ig.vote-open`) as its local line, where it printed `hl.ig.ordinance-city` and `hl.ig.polls-open` before. Please confirm.
