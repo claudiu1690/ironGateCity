@@ -1722,6 +1722,10 @@ Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–00
 - The designed chapters are re-strung with the opening.
 - **As built (phase 8):** the Unrest award is `{ kind: 'unrest', ref: 'unrest|{cityId}|{entry}', fxp: 50, meta: { pushedK, top } }` in `awards`; the member's settlement credits its FXP (`awardsFxp`). Legacy is credited from the same row when `legacyEntries` lands.
 
+## Voting rework knock-on (dated note, 12 Oct 2026)
+
+From `docs/tech/voting-rework.md` §17 (ADRs 0083–0086): Legacy for a seat or a term is unchanged. A Legacy for a *rule that won* is not designed and is out of this slice.
+
 ## Deviations (as built)
 
 *Filled in by T25.*

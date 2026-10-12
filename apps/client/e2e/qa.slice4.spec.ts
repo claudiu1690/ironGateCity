@@ -257,16 +257,22 @@ test.describe('the capital ballot on a short phone (screens §10; slice-3 QA m4;
 
     await page.setViewportSize({ width: 390, height: 844 });
     const tall = await ballotAt(page);
-    // Design §8.9 Q3: the capital's own plate line, and the hall header whole (150 px, no capital branch).
+    // Design §8.10 Q1: the capital's own plate line (three Courier lines at 390 px), and the hall
+    // header whole (150 px, no capital branch).
     await expect(page.getByTestId('ballot-line')).toHaveText(
-      /^One vote · until .+ · votes and opinion in Eastside decide its seats · the party with the most seats city-wide gets its rule$/,
+      /^One vote · until .+ · votes and opinion decide Eastside's seats · most seats city-wide wins the rule$/,
     );
     expect((await page.getByTestId('hall-header').boundingBox())?.height).toBe(150);
     expect(tall.n, 'one card per party').toBeGreaterThanOrEqual(2);
-    // Design §8.9 Q3 counted three Courier lines for `capitalElection.voteLine` at 390 px; it takes four
-    // (*until Tuesday 02:00* in the player's clock), so the third card ends ~21 px under the sticky bar.
-    // The header stays whole as the design says (no capital branch); reported to the designer (tech
-    // design, Deviations phase 5). Until it is settled: the last card's top edge above the CTA.
+    // Design §8.10 Q1: at three lines the capital's plate is the home ballot's height. Every card sits
+    // whole above the sticky bar when each whose line is one line. A councillor's card (*the Alliance's
+    // rule · Councillor Ilse Brandt*, seated by capital.spec) wraps its whose line to two, and the third
+    // card ends ~5 px under the bar (tech design, Deviations phase 6). As §8.10 says, the header is not
+    // cut: the check is the last card's top edge, and the overshoot is recorded on the run.
+    test.info().annotations.push({
+      type: '390 × 844',
+      description: `last card bottom ${tall.lastBottom} · CTA top ${tall.ctaTop} · every card above: ${tall.allAbove}`,
+    });
     expect(tall.lastTopAbove, `390 × 844: the last card's top edge above the CTA (${JSON.stringify(tall)})`).toBe(true);
     expect(tall.ctaBottom, '390 × 844: the CTA on screen').toBeLessThanOrEqual(tall.h + 1);
     for (const size of [

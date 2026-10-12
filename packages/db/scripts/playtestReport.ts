@@ -10,7 +10,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { getContent, isWelcomeAction } from '@irongate/content';
 import { bestTrainedStat } from '@irongate/rules';
-import type { ActionResult } from '@irongate/rules';
+import type { ActionResult, CardBy } from '@irongate/rules';
 import {
   ActionLog,
   Arrival,
@@ -37,6 +37,7 @@ import {
 import { buildBattlegroundReport } from '../src/battleground';
 import type { Faction } from '../src/battleground';
 import { buildElectionsReport } from '../src/elections';
+import type { RuleCardKind } from '../src/elections';
 import { buildArrivalFunnels, formatShare, jobTakeRows } from '../src/funnel';
 import type { Funnel } from '../src/funnel';
 import { buildPlaytestReport } from '../src/report';
@@ -171,6 +172,8 @@ try {
   // Slice 3 (tech design §14.1): the elections, from the domain collections. Ballots are read
   // without their choice; the NPC share is aggregated per election (ADR 0019).
   const npcBallots = await Vote.aggregate<{ _id: string; npc: number; total: number }>([
+    // The old person ballots only: a rule vote (the voting rework) carries `ordinanceId`, not a name.
+    { $match: { candidateKey: { $exists: true } } },
     {
       $group: {
         _id: '$electionId',
@@ -179,6 +182,14 @@ try {
       },
     },
   ]);
+  const ruleBallotDocs = await RuleBallot.find({}).lean();
+  const cardKind = (by: CardBy[]): RuleCardKind => {
+    if (by.length > 1) return 'shared';
+    const b = by[0];
+    if (!b) return 'party';
+    if (b.kind === 'party') return b.via === 'councillor' ? 'party councillor' : 'party';
+    return b.holder === 'player' ? 'player councillor' : 'local';
+  };
   const elections = buildElectionsReport({
     elections: (await Election.find({}).lean()).map((e) => ({
       id: e._id,
@@ -226,10 +237,11 @@ try {
       toDay: t.toDay,
       playerId: t.holder.kind === 'player' ? t.holder.characterId.toHexString() : null,
       frontPageSeenAt: t.frontPageSeenAt,
+      ruleSetAt: t.ruleSetAt ?? null,
     })),
-    // The voting rework: the old order papers' items, votes and division live under `legacy`; a rule
-    // ballot reports its winner. The council section v2 (rule ballots) is phase 6's (tech design T15).
-    papers: (await RuleBallot.find({}).lean()).map((p) => ({
+    // The voting rework: the old order papers' items, votes and division live under `legacy` (the
+    // `councils` table); every rule ballot is a row of the council section v2 (tech design T15).
+    papers: ruleBallotDocs.filter((p) => p.legacy).map((p) => ({
       id: p._id,
       cityId: p.cityId,
       items: (p.legacy?.items ?? []).map((x) => ({
@@ -241,6 +253,18 @@ try {
       status: p.status === 'counted' ? ('divided' as const) : ('open' as const),
       passed: p.result?.winner ?? p.legacy?.division?.passed ?? null,
       inForce: p.result?.inForce ?? p.legacy?.division?.inForce ?? null,
+    })),
+    ruleBallots: ruleBallotDocs.map((p) => ({
+      id: p._id,
+      cityId: p.cityId,
+      countDay: p.countDay,
+      status: p.status,
+      cards: p.cards?.map((c) => ({ ordinanceId: c.ordinanceId, kind: cardKind(c.by) })) ?? null,
+      unrest: p.unrest ?? null,
+      changes: p.changes ?? 0,
+      result: p.result
+        ? { winner: p.result.winner, how: p.result.how, turnout: p.result.turnout ?? null }
+        : null,
     })),
     morale: (await City.find({}, { moraleLog: 1 }).lean()).map((c) => ({
       cityId: c._id,
@@ -347,15 +371,19 @@ try {
         tie: r.tie ?? null,
       };
     }),
-    councils: (await RuleBallot.find({ cityId: capitalId }).lean()).map((p) => {
+    councils: ruleBallotDocs.filter((p) => p.cityId === capitalId).map((p) => {
       const passed = p.result?.winner ?? p.legacy?.division?.passed ?? null;
       const npc =
         (p.legacy?.division as unknown as { npcChoices?: Partial<Record<Faction, string>> } | null)
           ?.npcChoices ?? {};
+      // The voting rework: the coalition is the parties behind the winning card (a shared card's two).
+      const card = passed ? p.cards?.find((c) => c.ordinanceId === passed) : undefined;
       return {
         councilKey: p._id,
         passed,
-        coalition: passed
+        coalition: card
+          ? (card.factionIds as Faction[])
+          : passed
           ? [
               ...(p.legacy?.votes ?? [])
                 .filter((v) => v.choice === passed)
@@ -581,8 +609,25 @@ try {
     console.log('\nDoes the first vote, and the first seat, feel like a big moment?\n');
     console.log('Elections');
     console.table(elections.elections);
-    console.log('Councils');
-    console.table(elections.councils);
+    if (elections.councils.length > 0) {
+      console.log('Councils before the voting rework (old order papers)');
+      console.table(elections.councils);
+    }
+    // The voting rework (tech design T15): the council section v2.
+    console.log('Rule ballots (the town votes on a rule)');
+    console.table(elections.ruleBallots);
+    const rs = elections.ruleSummary;
+    console.table({
+      'ballots set': rs.ballotsSet,
+      'ballots counted by a vote': rs.ballotsCounted,
+      'no votes: card 1 ran (fallback)': formatShare(rs.fallbackRate),
+      ...Object.fromEntries(Object.entries(rs.winnerKinds).map(([k, n]) => [`winning card: ${k}`, n])),
+      "councillors' rule changes": rs.ruleChanges,
+      'player councillors who set a rule': rs.councillorsWhoSetARule,
+      stands: rs.stands,
+      'member backings': rs.memberBackings,
+      'branch backings': rs.branchBackings,
+    });
     console.log('First vote (Rank 2 → first ballot, days)');
     console.table({
       ...elections.firstVote.distribution,

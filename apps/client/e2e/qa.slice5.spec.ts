@@ -252,7 +252,9 @@ test.describe('layout on a 375 × 667 phone (screens §10)', () => {
 
   // Was a bug (QA slice 5 m7, fixed in the fix round): on a phone under 700 px tall the rival plate hides
   // *Your work here draws from the Vanguard's morale…* (city.tsx), which screens §8.3 puts on the plate.
-  test('rival ground on 375 × 667: the plate shows what the work draws from', async ({ page }) => {
+  test('rival ground on 375 × 667: the plate shows what the work draws from; the rule chip keeps its row', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await signUp(page, 'Short Plate');
     await lift(page, { level: 10, rank: 3 });
@@ -263,6 +265,18 @@ test.describe('layout on a 375 × 667 phone (screens §10)', () => {
     // Review 5 (answers §10.2): the push bar is that line now; the goal folds into its note.
     await expect(page.getByTestId('plate-pressure').filter({ visible: true })).toContainText(/ of 2( points| ·)/);
     await expect(page.getByTestId('plate-goal').filter({ visible: true })).toHaveCount(0);
+    // The voting rework (design §8.10 Q3): the *Home city · …* row's text folds here, and the rule chip
+    // stays at its right. The folded row keeps one caps line's height (the 44 px chip's negative margins),
+    // so it neither collapses nor grows, and the rows under the name do not move.
+    const chip = page.getByTestId('plate-rule-chip').filter({ visible: true });
+    await expect(chip).toBeVisible();
+    await expect(page.getByTestId('city-plate')).toBeHidden();
+    const row = await chip.evaluate((el) => {
+      const r = el.parentElement!;
+      const text = r.querySelector('[data-testid=city-plate]')!;
+      return { h: r.getBoundingClientRect().height, line: parseFloat(getComputedStyle(text).lineHeight) };
+    });
+    expect(Math.abs(row.h - row.line), `the folded row ${row.h} px, a caps line ${row.line} px`).toBeLessThanOrEqual(1);
   });
 });
 

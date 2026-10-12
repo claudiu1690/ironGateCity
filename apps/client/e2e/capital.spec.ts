@@ -85,9 +85,9 @@ test('the capital: register in Eastside → vote on a rule, a card per party →
     'Which rule for Irongate next week?',
   );
   await page.goto('/council/ballot');
-  // Design §8.9 Q3: the home line's shape, the deadline back on the capital's plate.
+  // Design §8.9 Q3, shortened §8.10 Q1: the home line's shape, the deadline on the capital's plate.
   await expect(page.getByTestId('ballot-line')).toHaveText(
-    /^One vote · until .+ · votes and opinion in Eastside decide its seats · the party with the most seats city-wide gets its rule$/,
+    /^One vote · until .+ · votes and opinion decide Eastside's seats · most seats city-wide wins the rule$/,
   );
   const cards = page.getByTestId('rule-card');
   await expect(cards.first()).toBeVisible();

@@ -1,6 +1,6 @@
 # ADR 0083 — The town votes on a rule: three cards set at the boundary into day 2, one secret vote by rule, the winner in force from the count for five days
 
-**Status:** proposed (voting rework, `docs/tech/voting-rework.md`; supersedes the division of ADR 0017 §1, the propose and council-vote rows of ADR 0018, the `ordinances` row of ADR 0020 and the *Up for a vote* block of ADR 0077; amends ADR 0019 and ADR 0021 §2) · **Date:** 2026-10-10
+**Status:** accepted, built 10–12 Oct 2026 (voting rework, `docs/tech/voting-rework.md`; supersedes the division of ADR 0017 §1, the propose and council-vote rows of ADR 0018, the `ordinances` row of ADR 0020 and the *Up for a vote* block of ADR 0077; amends ADR 0019 and ADR 0021 §2) · **Date:** 2026-10-10
 
 ## Context
 

@@ -6,12 +6,12 @@ import type { CharacterDoc } from './models/character';
 /**
  * The playtest boost (an operator script, not an API route; the user's decision for the slice-3
  * playtest, tech design §20.2 Q2): chosen testers are lifted to Rank 3 and Known Local Standing in
- * their home city, so they can stand in the next nominations window without two weeks of play.
+ * their home city, so they can stand on the next cycle's days 0–1 without two weeks of play.
  * Never lowers anything, idempotent, and marks the character (`playtest.boosted`) so the report
  * can tell boosted testers from natural ones.
  */
 
-/** Rank 3 needs 2,000 FXP; Known needs 30 Successes; the deposit is 10 PC (GDD §5.4, §13.4, §15.3). */
+/** Rank 3 needs 2,000 FXP; Known needs 30 Successes; standing spends 10 PC (GDD §5.4, §13.4, §15.3; the voting rework). */
 export const BOOST = {
   fxp: RANK_FXP[COUNCIL.standRank - 1]!,
   successes: STANDING.thresholds[COUNCIL.knownLevel]!,
@@ -46,7 +46,7 @@ export function boostPlan(
     ];
     changes.push(`${c.homeCityId} Successes ${successes} → ${BOOST.successes} (Known)`);
   }
-  // Standing needs the deposit too: a tester with less than 10 PC could not file.
+  // Standing spends 10 PC too: a tester with less could not stand. (The operator line keeps its old word.)
   if (c.pc < BOOST.pc) {
     set.pc = BOOST.pc;
     changes.push(`PC ${c.pc} → ${BOOST.pc} (the deposit)`);

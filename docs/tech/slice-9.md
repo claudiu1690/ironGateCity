@@ -1492,6 +1492,15 @@ Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–00
 - **The axe matrix** adds the patrol sheet, the Treatment card, *What's here* and the rival header.
 - *While you were away* lists the Unrest prize line.
 
+## Voting rework knock-ons (dated note, 12 Oct 2026)
+
+From `docs/tech/voting-rework.md` §17 (ADRs 0083–0086):
+
+- Telemetry gains `rule.vote`, `rule.set`, `council.stand`, `council.back` and `rule.decided` (with `how`).
+- The axe matrix adds `RuleCard`, `StandCard`, the rule picker sheet and the hall's five blocks.
+- The audit (ADR 0061, *linked accounts count once*) applies to `votes` by `ordinanceId` the same way.
+- `pnpm report:playtest`'s council section is v2 (rule ballots: cards, turnout, how it won, the winning card's kind, councillors' rule changes, stands and backings).
+
 ## Deviations (as built)
 
 *Filled in by T26.*

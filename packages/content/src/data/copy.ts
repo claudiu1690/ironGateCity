@@ -1468,7 +1468,6 @@ export const copy = {
     newVoter: (district: string) => `${district} has a new voter`,
     /** A knock-on line: "Coalport seat given up". */
     seatGivenUp: (city: string) => `${city} seat given up`,
-    candidacyWithdrawn: 'Your name came off the list where you lived',
     nextVote: (district: string, weekday: string) => `Next: vote in ${district} from ${weekday}.`,
     /** The sheet's five lines (screens §6.2), built on the server with the player's places. */
     sheet: {

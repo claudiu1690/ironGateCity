@@ -1789,6 +1789,28 @@ Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–00
 - **Unrest's national weight** and the deputies' abstention are unchanged. The goal line's *its deputies go quiet* becomes literally true here.
 - The designed chapter strings change with the opening (§12), and no number does.
 
+## Voting rework knock-ons (dated note, 12 Oct 2026)
+
+Copied from `docs/tech/voting-rework.md` §17 when the voting rework was built (ADRs 0083–0086; design `docs/design/voting-simplified.md`). The town now votes on a rule: three cards set at day 2, one vote each on days 2–4, the count at day 5 (home: most votes, card 1 on a tie or no votes; contested cities: the largest bloc's card). There is no order paper and no council vote. Read these before this slice is built; where they disagree with the sections above, they win.
+
+1. **The Governor** (§2 *The Governor*, §6.8, §8.2 `governorService.setRule`, ADR 0048):
+   - the Governor's rule is **card 1** of the home ballot: `partyCardOf`'s chain head, ahead of the Chair and the secretary;
+   - `governor.setRule` writes the `governor` term's `rule` on cycle days 0–1, guarded by the ballot's `status: 'open'` (`$inc changes`) instead of the order paper's `$position: 0` push;
+   - `ALREADY_ON_PAPER` and *goes to the vote first* go, and the modal reads *card 1 on the town's ballot*;
+   - **the locals' chain and `divide` v3 are removed** (no council vote), and `orderPaperItems` is replaced by `partyCardOf` with `governorRule`.
+2. **The Mayor** (the capital): the head of their party's card chain. `governorOf`'s largest-bloc rule is unchanged.
+3. **The Chair's rule per city** (`factions.rules`, ADR 0046): read at **the set** (the boundary into day 2) of the next ballot, not written into the order paper at the count. It is the party's card wherever no Governor or Mayor of the party sits and no player councillor of the party leads (contested cities: Mayor → top-seated player councillor → Chair → secretary; home: Governor → Chair → secretary).
+4. **Clearwater** (ADR 0050):
+   - `countBattleground` with seven seats takes `ballotsByFaction` from `cardBallots`;
+   - **`divideBlocs` and the four-of-seven bar are removed**; the rule is `decideCapitalRule` generalised (`decideBlocRule`) on one meter;
+   - the Casino's hall shows the five blocks.
+5. **Petitions** (ADR 0049): the dissolve petition closes **before the set** (it was before the division). Dissolution vacates the terms, and the open ballot keeps or takes its cards from the party chain and the seats' locals. **Settled (voting-rework §20.1 Q16, GDD §15.9):** dissolution does not strike the rule in force; it runs out its window, and the open ballot proceeds.
+6. **The Chair's election** (§4.1, §8.2 `chairElectionService`): no two-backer gate (25 PC spent; backers +3, optional); no strike and no `deposit: 'due'`; the settlement's struck-Chair refund goes; `CHAIR.backers` goes.
+7. **ADR 0047:** `votes` rows carry `candidateKey` (Chair, pick) or `ordinanceId` (councils); the national vote's key is unchanged. `termBackings[]` is unchanged.
+8. **The tests listed** (§15): `governor.spec.ts` reads *card 1 on the ballot* and, with no votes, *Public Works Order runs from Sunday* (`hl.rule-fallback`), not *Council Passes*. The council and capital cases of §6.12 are rewritten against `homeBallot` and `decideCapitalRule`.
+9. **Ambition chapter 3, *The deposit*,** and `keep.deposit-receipt`: the deposit is no longer returned, so the designer re-reads the chapter.
+10. **Laws:** unchanged; the law book's rows read as council rules with the *LAW* kicker. Parliament's For / Against is unchanged.
+
 ## Deviations (as built)
 
 *Filled in by T31.*

@@ -1377,3 +1377,113 @@ T11–T14 and the carry-overs of phases 3–4 (design §8.9.2). The old model's 
 2. **`election.days` and the other dead keys** listed above were removed, although §5.3 kept `days`. Please confirm.
 3. **The rule chip's place on the home plate** is the *Home city · {party} {share} %* row, the plate's only kicker-like line: the home plate has no kicker above the name. On rival ground that row's text folds under 700 px and the chip stays. Confirm, or name another row.
 4. **The capital visitor's paper** now prints the capital's rule headlines (`hl.ig.rule-won`, `hl.ig.vote-open`) as its local line, where it printed `hl.ig.ordinance-city` and `hl.ig.polls-open` before. Please confirm.
+
+### Phase 6 — Integration (12 Oct 2026)
+
+The §8.10 bindings, T15 (the walk-through and the playtest report's council section v2) and T16 (the docs). No server, view or rules change; one client config fix; no number moved, so `docs/GDD.md` and `docs/economy.md` are untouched.
+
+**The §8.10 bindings (design §8.10)**
+
+- `capital.spec.ts` and `qa.slice4.spec.ts` assert the shortened line: `/^One vote · until .+ · votes and opinion decide Eastside's seats · most seats city-wide wins the rule$/`. It wraps to **three** Courier lines at 390 px (*One vote · until Tuesday 02:00 · votes and* / *opinion decide Eastside's seats · most* / *seats city-wide wins the rule*).
+- **`qa.slice4`'s 390 × 844 check keeps the last card's top edge** (as §8.10 Q1 allows), and the header stays at 150 px. The measured numbers:
+  - **with three secretaries' cards** (`qa-capital` alone): every card above the sticky bar, the third card's bottom at 697 px against the bar's top at 698.5 (1.5 px to spare);
+  - **with a councillor's card on the ballot** (after `capital.spec`, which seats *Ilse Brandt*): the whose line *the Alliance's rule · Councillor Ilse Brandt* wraps to two lines, and the third card ends **5 px under the bar** (703.5 against 698.5).
+
+  The test records both numbers as an annotation (`390 × 844`) on every run. See designer question 1.
+- **The rival-ground chip row (Q3, a check):** on rival ground at 375 × 667 the *Home city · …* row's text is hidden and the chip stays at its right. The folded row is **14 px**, against a caps line of 14.25 px: the 44 px chip's −15 px margins keep one line's height, so the row neither collapses nor grows. The name row's top does not move whether the row's text shows or folds (the plate grows downward). Asserted in `qa.slice5.spec.ts`'s m7 case (*… the rule chip keeps its row*): the folded row's height within 1 px of the caps line.
+
+**Integration fixes**
+
+- **`playwright.config.ts`: the `phone` project ran `voting.spec.ts` too.** Its `testIgnore` never listed the spec (phase 2 added the `voting` project), so a full `pnpm e2e` ran the eleven voting cases twice. The first copy ran early, inside `phone`, and moved the shared clock by whole cycles before `council`, `capital` and the rest. The spec is now ignored there and runs only in `voting`, last.
+- **`copy.residence.candidacyWithdrawn` is removed:** it was unreferenced since phase 2 dropped the knock-on (§8.9.2 #14: *the grep is the arbiter*).
+- **`packages/db/src/boost.ts` and `scripts/boostPlaytest.ts`:** the comments speak of standing's 10 PC and the cycle's days 0–1, not the deposit and the nominations window. The operator line `PC 5 → 10 (the deposit)` keeps its word, because two old Vitest files assert it.
+
+**T15: the playtest report's council section v2** (`packages/db/src/elections.ts`, `scripts/playtestReport.ts`)
+
+- **`ruleBallots`**, one row per rule ballot: the cards' kinds in order (`party`, `party councillor`, `player councillor`, `local`, `shared`), Unrest, player councillors, councillors' rule changes (`changes`), turnout, the winner, `how`, the winning card's kind, and actions and shifts in the rule's five days.
+- **`ruleSummary`**:
+  - ballots set, and ballots counted by a vote (the conversion's `carried` apart);
+  - the fallback rate;
+  - the winning cards by kind;
+  - rule changes, and *player councillors who set a rule* (`officeTerms.ruleSetAt`);
+  - stands, member backings and branch backings.
+- **`firstSeat`** gains `ruleSetRate`, and a councillor's `ruleSetAt` counts as an act for *acted within 30 minutes*.
+- The old `councils` table now prints only for old order papers (`legacy`).
+- The NPC ballot share reads person ballots only (`candidateKey` set); a rule vote carries none.
+- The capital's council coalition is the winning card's parties.
+- `ruleBallots` is optional in `buildElectionsReport`'s input, so `packages/db/test/elections.test.ts` compiles unchanged. No Vitest was run or written.
+
+**T15: the walk-through on a fresh boot** (scratch Playwright, not committed)
+
+The e2e server ran against an in-memory replica set on 127.0.0.1:27118, so the report could read the same database. The user's 27018 / 3001 / 5173 were not touched.
+
+- **Coalport, two cycles:**
+  - the fresh boot's rule (*Long Service Order*, 5 days) agrees across `city.get`, `character.me.cityRule`, the 375 × 667 plate chip and the Me line;
+  - Mara stands with Street Fund and Otto backs her. Both vote for card 3 (a local's *Rally Permits*), which wins by `votes`. The paper prints *Rally Permits Wins the Vote in Coalport* and *Your Vote Counted: Rally Permits Wins*, and the chip, the Me line and `cityRule` agree;
+  - Mara missed the last seat by 8 (*Mara Lenk Misses the Last Seat by 8*), so she was seated by the hook. She set Reading Room Grant, which went on as a player councillor's card and won 2–0. The paper, chip, Me line, `cityRule` and the hall's `inForce` all read Reading Room Grant.
+- **Irongate, two cycles:**
+  - with Ilse resident in Eastside, the rule in force agrees across the five places on the district plate;
+  - the first count (`seats`, 4–3–3) puts in force the card with the most seats, and the paper prints *Reading Room Grant Wins the Capital*;
+  - seated on a local seat of her party, she sets Reading Room Grant, and the party's card reads `{ via: 'councillor', by: 'Ilse Brandt' }`. The second count's winner agrees across the five places again.
+- **`pnpm report:playtest`** on that database prints the section:
+  - 23 ballots: 22 set, 19 counted by a vote;
+  - fallback 63 %;
+  - winning cards: party 16, party councillor 1, player councillor 1, local 1;
+  - 2 rule changes, 2 of 2 player councillors set a rule;
+  - 1 stand, 1 member backing.
+- `check:voting-conversion`: **601 of 601**.
+- On a fresh database the bootstraps write `world.voting: 2`, and migration 009 logs *refunds 0 matched / 0 modified*.
+
+**T16: the docs**
+
+- ADRs 0083–0086 are *accepted, built 10–12 Oct 2026*.
+- §17 is copied as dated notes into `slice-7.md`, with item 5 closed by Q16 (the rule in force runs out its window), and into `slice-8.md` and `slice-9.md`; slice 9's note adds the report's council section v2.
+- `docs/IMPLEMENTATION_PLAN.md` §5 has a *Voting rework* row.
+- **README:**
+  - the worker's line (no nominations' close or division) and the e2e line (stand → backing → the vote → the count → your rule on the next ballot → the rule in force);
+  - the boost's 10 PC and the panel's example line (*the vote opens in Coalport*);
+  - the capital walk-through's step 6 (*Which rule for Irongate next week?*, one card per party, seats decide).
+
+  The councillor walk-through's steps (phase 5) were followed by the walk-through above.
+
+**Grep**
+
+- `TODO(phase` finds nothing in `apps` or `packages`.
+- The plan's old-model grep, and `ordinanceWindow`, `divideDay`, `passVotes`, `smallBranch`, `candidacyWithdrawn`, `tooLateToStand`, `nominationsClosed`, `movedYesterday` and `ordinanceFromToday`, find only:
+  - stored legacy fields (`smallBranch` and `platformId` on old rows; the conversion's `$unset` of `divideDay`; the conversion check's fixtures);
+  - the views' `votedFor` (the card's name, new);
+  - `copy.council.deskNext` (the hall's new block);
+  - the comment that names `tooLateToStand` as replaced.
+- **The one `V2` left is `copy.capitalElection.resultLineV2`**, kept by the designer's choice (design §8.9.2 #13: `resultLine` stays for counts older than the rework).
+
+**Checks**
+
+- `pnpm art:check && pnpm turbo run lint typecheck build` (cached): green, 14 of 14 tasks.
+- **The full e2e** (`E2E_WEB_PORT=4273 E2E_API_PORT=3301`): **276 passed, 0 failed, 0 skipped, 0 flaky.** It ran as seven foreground chunks with `--no-deps`, in the suite's own project order, because one run (about 28 minutes of tests) is longer than the 10-minute cap on a foreground command. Each chunk starts a fresh server, so the shared clock does not carry over between chunks as it does in one `pnpm e2e`.
+
+  | Chunk | Projects | Result |
+  |---|---|---|
+  | 1 | `phone` (arrival, canvass, chapter, clouds, day, places), `small-phone`, `landscape`, `desktop` | 22 passed |
+  | 2 | `phone` (map, qa.slice2, qa, review1, review3, session, tiles) | 51 passed |
+  | 3 | `council`, `qa-council`, `dev-panel`, `travel`, `capital`, `qa-capital`, `home-map`, `missions`, `rival` | 36 passed |
+  | 4 | `qa-risk`, `review4`, `qa-review4` | 49 passed |
+  | 5 | `review5` | 12 passed |
+  | 6 | `qa-review5` | 95 passed |
+  | 7 | `voting` | 11 passed |
+
+**Questions for the designer (none blocking)**
+
+1. **The capital ballot at 390 × 844 with a councillor's card.** *Councillor Ilse Brandt*'s whose line wraps to two lines, so the third card ends 5 px under the sticky bar (with three secretaries every card fits, 1.5 px to spare). Options:
+   - accept it (the top edge shows);
+   - shorten the councillor form of `rule.whose.partyCouncillor`;
+   - let the whose line truncate.
+2. **The home plate's kicker row on a short phone (found in this phase, not asked by §8.10).** At 375 × 667 and 360 × 640 the chip *LONG SERVICE ORDER · 4 DAYS* is 155 px, which leaves *Home city · Collective 70.0 %* about 85 px. That text wraps to three lines (*HOME CITY* / *COLLECTIVE* / *70.0 %*), so the row is 46.75 px where one line is 14.25. The plate grows about 32 px on the phones the fold is meant to spare (the pins stayed clear in `qa-review4` and `qa-risk`). Options:
+   - the chip on its own line under the row (where the folded rule line was);
+   - a shorter chip (the days only, or the rule name truncated);
+   - the share dropped from the row while the chip shows.
+3. **Content that still speaks of a council vote:**
+   - `issues.ts` line 192: *No curfew without a council vote, and the council has not voted.*;
+   - `candidates.ts` line 527: *"No curfew without a council vote."*;
+   - Ambition chapter 3, *The deposit* (`ambitions.ts`, already in slice 7's note, item 9).
+
+   The council no longer votes; the town does.

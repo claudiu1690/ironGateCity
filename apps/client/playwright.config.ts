@@ -44,6 +44,8 @@ export default defineConfig({
         /qa\.review4\.spec\.ts/,
         /review5\.spec\.ts/,
         /qa\.review5\.spec\.ts/,
+        // The voting rework: its own serial project, last (it moves the shared clock by whole cycles).
+        /(^|[\\/])voting\.spec\.ts$/,
       ],
       use: { ...devices['Pixel 7'] },
     },

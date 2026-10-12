@@ -1,6 +1,6 @@
 # ADR 0084 — Seats by reputation and backers; standing is 10 PC spent with a rule; backing open until the count; the councillor's rule lives on the term
 
-**Status:** proposed (voting rework, `docs/tech/voting-rework.md`; amends ADR 0018's declare, withdraw and endorse rows and ADR 0020's deposit refund) · **Date:** 2026-10-10
+**Status:** accepted, built 10–12 Oct 2026 (voting rework, `docs/tech/voting-rework.md`; amends ADR 0018's declare, withdraw and endorse rows and ADR 0020's deposit refund) · **Date:** 2026-10-10
 
 ## Context
 

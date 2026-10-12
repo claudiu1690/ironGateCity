@@ -3,7 +3,9 @@
  * like a big moment?" Pure maths over rows read from the domain collections (never requestLogs,
  * whose TTL would lose data; QA slice 2 m2). Votes are read without their choice: the report never
  * puts a voter next to a candidate (ADR 0019). Boosted testers (the admin script) are separated
- * from natural ones.
+ * from natural ones. The voting rework (docs/tech/voting-rework.md T15) adds the council section v2:
+ * one row per rule ballot (cards, turnout, how it won, the winning card's kind, councillors' rule
+ * changes) and a summary with the fallback rate, stands and backings. Rule votes are never read.
  */
 
 const DAY_MS = 86_400_000;
@@ -67,6 +69,32 @@ export interface TermRow {
   toDay: number;
   playerId: string | null;
   frontPageSeenAt: Date | null;
+  /** The voting rework: when the councillor last set their rule (`council.setRule`); null if never. */
+  ruleSetAt?: Date | null;
+}
+
+/**
+ * The voting rework (tech design T15): whose a card is, for the report. `party` is the secretary's
+ * default, `party councillor` a councillor leading the party's bloc (the capital), `player councillor`
+ * and `local` a councillor's own rule; `shared` a capital card several parties put up.
+ */
+export type RuleCardKind = 'party' | 'party councillor' | 'player councillor' | 'local' | 'shared';
+
+/** One rule ballot (`ordinances`), without anyone's vote. */
+export interface RuleBallotRow {
+  id: string;
+  cityId: string;
+  countDay: number;
+  status: 'open' | 'set' | 'counted';
+  cards: Array<{ ordinanceId: string; kind: RuleCardKind }> | null;
+  unrest: boolean | null;
+  /** Councillors' rule changes while the ballot was open (`council.setRule`). */
+  changes: number;
+  result: {
+    winner: string;
+    how: 'votes' | 'tie' | 'fallback' | 'seats' | 'draw' | 'carried';
+    turnout: { voters: number; eligible: number } | null;
+  } | null;
 }
 
 export interface PaperRow {
@@ -130,6 +158,7 @@ export interface ElectionsReport {
     closestPlayerMargin: number | null;
     moraleAtCount: number | null;
   }>;
+  /** The old order papers (before the voting rework; their fields live under `legacy`). */
   councils: Array<{
     council: string;
     cityId: string;
@@ -140,6 +169,41 @@ export interface ElectionsReport {
     actionsWhileInForce: number;
     shiftsWhileInForce: number;
   }>;
+  /** The voting rework (tech design T15): the council section v2, one row per rule ballot. */
+  ruleBallots: Array<{
+    ballot: string;
+    cityId: string;
+    countDay: number;
+    status: 'open' | 'set' | 'counted';
+    /** The cards' kinds in ballot order, e.g. "party · player councillor · local"; null while open. */
+    cards: string | null;
+    unrest: boolean | null;
+    playerCouncillors: number;
+    ruleChanges: number;
+    turnout: string | null;
+    winner: string | null;
+    how: string | null;
+    winnerKind: RuleCardKind | null;
+    actionsWhileInForce: number;
+    shiftsWhileInForce: number;
+  }>;
+  ruleSummary: {
+    /** Ballots whose cards were set (`set` or `counted` with cards). */
+    ballotsSet: number;
+    /** Ballots counted by a vote (the conversion's `carried` ones apart). */
+    ballotsCounted: number;
+    /** No votes cast: card 1 ran. Over the counted ballots. */
+    fallbackRate: number | null;
+    winnerKinds: Record<RuleCardKind, number>;
+    /** Councillors' rule changes, summed over the ballots. */
+    ruleChanges: number;
+    /** Player councillors' terms in which they set a rule, of all player terms. */
+    councillorsWhoSetARule: string;
+    /** Candidacies that stood (standing, elected or defeated), and their backings. */
+    stands: number;
+    memberBackings: number;
+    branchBackings: number;
+  };
   firstVote: {
     /** Days from Rank 2 to the first ballot: 0 / 1 / 2 / more (target ≤ 2). */
     distribution: { d0: number; d1: number; d2: number; more: number };
@@ -159,6 +223,8 @@ export interface ElectionsReport {
       frontPageSeenOnCountDay: number | null;
       actInChamberWithin30Min: number | null;
       councilVoteRate: number | null;
+      /** The voting rework: player terms in which the councillor set a rule, of all their terms. */
+      ruleSetRate: number | null;
     }
   >;
   /** The morning after the count (countDay + 1): who came back. */
@@ -184,6 +250,8 @@ export function buildElectionsReport(i: {
   npcBallots: NpcBallots[];
   terms: TermRow[];
   papers: PaperRow[];
+  /** The voting rework: every rule ballot (optional so older callers still compile). */
+  ruleBallots?: RuleBallotRow[];
   morale: MoraleLogRow[];
   characters: ElectionCharacter[];
   actions: ElectionAction[];
@@ -253,6 +321,60 @@ export function buildElectionsReport(i: {
       };
     });
 
+  // The voting rework (tech design T15): the council section v2, read without anyone's vote.
+  const ruleBallots = [...(i.ruleBallots ?? [])]
+    .sort((a, b) => a.countDay - b.countDay || a.cityId.localeCompare(b.cityId))
+    .map((b) => {
+      const r = b.result;
+      // The rule a count decides runs from the count for five days (design §3.2).
+      const during = r
+        ? i.actions.filter(
+            (a) =>
+              a.cityId === b.cityId && dayOf(a.createdAt) >= b.countDay && dayOf(a.createdAt) < b.countDay + 5,
+          )
+        : [];
+      return {
+        ballot: b.id,
+        cityId: b.cityId,
+        countDay: b.countDay,
+        status: b.status,
+        cards: b.cards ? b.cards.map((c) => c.kind).join(' · ') : null,
+        unrest: b.unrest,
+        playerCouncillors: i.terms.filter((t) => t.councilKey === b.id && t.playerId !== null).length,
+        ruleChanges: b.changes,
+        turnout: r?.turnout ? `${r.turnout.voters} of ${r.turnout.eligible}` : null,
+        winner: r?.winner ?? null,
+        how: r?.how ?? null,
+        winnerKind: (r && b.cards?.find((c) => c.ordinanceId === r.winner)?.kind) ?? null,
+        actionsWhileInForce: during.filter((a) => a.kind !== 'shift').length,
+        shiftsWhileInForce: during.filter((a) => a.kind === 'shift').length,
+      };
+    });
+  const counted = ruleBallots.filter((b) => b.status === 'counted' && b.how !== 'carried');
+  const winnerKinds: Record<RuleCardKind, number> = {
+    party: 0,
+    'party councillor': 0,
+    'player councillor': 0,
+    local: 0,
+    shared: 0,
+  };
+  for (const b of counted) if (b.winnerKind) winnerKinds[b.winnerKind] += 1;
+  const playerTerms = i.terms.filter((t) => t.playerId !== null);
+  const stood = i.candidacies.filter((c) => ['standing', 'elected', 'defeated'].includes(c.status));
+  const ruleSummary = {
+    ballotsSet: ruleBallots.filter((b) => b.cards !== null).length,
+    ballotsCounted: counted.length,
+    fallbackRate: counted.length
+      ? round(ratio(counted.filter((b) => b.how === 'fallback').length, counted.length))
+      : null,
+    winnerKinds,
+    ruleChanges: ruleBallots.reduce((s, b) => s + b.ruleChanges, 0),
+    councillorsWhoSetARule: `${playerTerms.filter((t) => t.ruleSetAt).length} of ${playerTerms.length}`,
+    stands: stood.length,
+    memberBackings: stood.reduce((s, c) => s + c.members, 0),
+    branchBackings: stood.filter((c) => c.branch).length,
+  };
+
   // First vote: Rank 2 → the first ballot.
   const rankDay = (c: ElectionCharacter, rank: number): number | null => {
     const up = i.actions
@@ -300,6 +422,7 @@ export function buildElectionsReport(i: {
     let quickAct = 0;
     let seats = 0;
     let votesCast = 0;
+    let rulesSet = 0;
     for (const c of people) {
       const cands = i.candidacies
         .filter((x) => x.characterId === c.id)
@@ -312,6 +435,7 @@ export function buildElectionsReport(i: {
       for (const t of terms) {
         const p = i.papers.find((x) => x.id === t.councilKey);
         if (p?.votes.some((v) => v.characterId === c.id)) votesCast += 1;
+        if (t.ruleSetAt) rulesSet += 1;
         if (!t.frontPageSeenAt) continue;
         seenTotal += 1;
         seen.push((t.frontPageSeenAt.getTime() - t.fromDay * DAY_MS) / H);
@@ -319,6 +443,7 @@ export function buildElectionsReport(i: {
         const acts = [
           ...(p?.items.filter((x) => x.characterId === c.id).map((x) => x.at) ?? []),
           ...(p?.votes.filter((x) => x.characterId === c.id).map((x) => x.at) ?? []),
+          ...(t.ruleSetAt ? [t.ruleSetAt] : []),
         ].filter((at) => at >= t.frontPageSeenAt!);
         const firstAct = acts.sort((a, b) => a.getTime() - b.getTime())[0];
         if (firstAct && firstAct.getTime() - t.frontPageSeenAt.getTime() <= 30 * 60_000) quickAct += 1;
@@ -333,6 +458,7 @@ export function buildElectionsReport(i: {
       frontPageSeenOnCountDay: seats ? round(ratio(seenOnCountDay, seats)) : null,
       actInChamberWithin30Min: seenTotal ? round(ratio(quickAct, seenTotal)) : null,
       councilVoteRate: seats ? round(ratio(votesCast, seats)) : null,
+      ruleSetRate: seats ? round(ratio(rulesSet, seats)) : null,
     };
   };
 
@@ -382,6 +508,8 @@ export function buildElectionsReport(i: {
   return {
     elections: electionRows,
     councils,
+    ruleBallots,
+    ruleSummary,
     firstVote: {
       distribution: dist,
       medianMinutesFromPaper: fromPaper.length ? round(median(fromPaper)!, 1) : null,

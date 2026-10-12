@@ -1,6 +1,6 @@
 # ADR 0085 — A contested city's rule is the largest bloc's: one card per party, shared cards add up, a shared card's votes split for the score
 
-**Status:** proposed (voting rework, `docs/tech/voting-rework.md`; amends ADR 0027; slice 7 generalises it for Clearwater, ADR 0050) · **Date:** 2026-10-10
+**Status:** accepted, built 10–12 Oct 2026 (voting rework, `docs/tech/voting-rework.md`; amends ADR 0027; slice 7 generalises it for Clearwater, ADR 0050) · **Date:** 2026-10-10
 
 ## Context
 

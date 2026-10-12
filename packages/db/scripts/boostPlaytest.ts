@@ -1,8 +1,8 @@
 /**
  * `pnpm admin:boost --email <e> [--email <e> …] [--dry-run]`: an operator script for the slice-3
  * playtest (not an API route). Lifts the chosen testers' characters to Rank 3 (2,000 Faction XP)
- * and Known Local Standing in their home city (30 Successes), with the 10 PC deposit, so they can
- * stand in the next nominations window. Never lowers anything; running it again changes nothing.
+ * and Known Local Standing in their home city (30 Successes), with the 10 PC standing spends, so they can
+ * stand on the next cycle's days 0–1. Never lowers anything; running it again changes nothing.
  * Marks each boosted character `playtest.boosted` (with the time and the values before), so
  * `pnpm report:playtest` shows boosted and natural testers apart.
  *

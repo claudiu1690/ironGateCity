@@ -1,6 +1,6 @@
 # ADR 0086 — Converting a city to the rule vote: a guarded step of the city day, as of the city's settled day; deposits refunded once by migration 009
 
-**Status:** proposed (voting rework, `docs/tech/voting-rework.md`; follows ADR 0017's bootstrap and the slice-4 `needsIssues` pattern) · **Date:** 2026-10-10
+**Status:** accepted, built 10–12 Oct 2026 (voting rework, `docs/tech/voting-rework.md`; follows ADR 0017's bootstrap and the slice-4 `needsIssues` pattern) · **Date:** 2026-10-10
 
 ## Context
 
