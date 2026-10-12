@@ -253,7 +253,7 @@ function PoliticalBody({
   if (k.backers) {
     lines.push({
       id: 'backers',
-      text: `${k.backers.name} · ${k.backers.n} ${k.backers.n === 1 ? 'backer' : 'backers'}`,
+      text: copy.stand.backersKnock(k.backers.name, k.backers.n),
     });
   }
   // Slice 4 (screens §6.3): a move or a room: the Iron, a home seat given up.
@@ -1037,7 +1037,7 @@ function knockOnNodes(
         return e.branch
           ? line(
               l.id,
-              `${copy.branchEndorsesYou} · ${e.branch.backers} ${e.branch.backers === 1 ? 'backer' : 'backers'}`,
+              copy.branchBacksYou(e.branch.backers),
               'effect-branch',
             )
           : null;

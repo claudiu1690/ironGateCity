@@ -111,12 +111,13 @@ export function PaperPage() {
         <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-4 pb-8 lg:pb-[132px]">
           <Masthead paper={p} />
           {/* Slice 3 (screens §2.2): the front page the morning a seat is won. */}
-          {front && <FrontPage front={front} factionId={character?.factionId ?? 'collective'} />}
+          {front && <FrontPage front={front} names={names} />}
           {/* Review 4 (answers §10.1): *What now* under the headline, above *To the council*. */}
           {front?.whatNow && (
             <WhatNowCard
               whatNow={front.whatNow}
               hallName={front.whatNow.hall.name}
+              names={names}
               onDesk={() =>
                 void navigate({
                   to: '/city/$cityId',

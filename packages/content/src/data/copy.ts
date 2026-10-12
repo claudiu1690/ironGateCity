@@ -1341,6 +1341,12 @@ export const copy = {
     tickKnown: (city: string, wins: number) => `✓ Known in ${city} (${wins} wins)`,
     /** "Needs Rank 3 · 1,240 Party XP to go". */
     needsRank: (rank: number, fxp: number) => `Needs Rank ${rank} · ${fxp.toLocaleString('en-GB')} Party XP to go`,
+    /**
+     * The voting rework, phase 3: the cross's line when the player is not yet Known here (design §4.5
+     * gives the rank's only; written plainly for the designer to confirm): "Needs to be Known in
+     * Coalport · 12 of 30 wins".
+     */
+    needsKnown: (city: string, wins: number, need: number) => `Needs to be Known in ${city} · ${wins} of ${need} wins`,
     gives: "A seat is five days on the council: your rule on the town's ballot, and 10 Political Capital and 20 Party XP a morning.",
     yourRule: 'Your rule',
     costs: 'Costs 10 Political Capital. Your name is on the list until the count.',

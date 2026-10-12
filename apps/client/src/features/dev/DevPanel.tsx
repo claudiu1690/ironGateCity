@@ -1,3 +1,4 @@
+import { copy } from '@irongate/content/copy';
 import { MONTH_NAMES, WEEKDAY_NAMES, dayKey, weekday } from '@irongate/rules';
 import type { DevAction, DevRisk, DevStatus } from '@irongate/server/dev';
 import { Button, cx, formatShare } from '@irongate/ui';
@@ -258,9 +259,10 @@ function DevPanelOn({ status }: { status: DevStatus }) {
   }
   if (home) {
     if (council) {
-      rows.push([home.cityName, `${council.phaseLabel} · cycle day ${council.cycleDay}`, 'dev-phase']);
+      // Design §8.7 n4: the panel names the windows as the cards do (`copy.dev`).
+      rows.push([home.cityName, `${copy.dev.phase(council.cycleDay)} · cycle day ${council.cycleDay}`, 'dev-phase']);
       rows.push([
-        council.next.phase === 'vote' ? 'The vote opens' : 'The count',
+        copy.dev.next[council.next.phase],
         `in ${inWords(council.next.at - now)} · ${council.next.atUtc}`,
         'dev-next',
       ]);

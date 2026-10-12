@@ -68,6 +68,7 @@ import { env } from '../env';
 import { usePerformAction } from '../features/action/usePerformAction';
 import type { PerformTarget } from '../features/action/usePerformAction';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
+import { useRuleVote } from '../features/council/useRuleVote';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { CellsNow } from '../features/game/CellsNow';
@@ -187,6 +188,8 @@ export function CityPage() {
   });
   // Slice 4: where you live (screens §6) and the trains (§5.2).
   const act = usePoliticalAct();
+  // The voting rework (tech design §9.2): the side column's Election card is the ballot on days 2–4.
+  const ruleVote = useRuleVote(act);
   const [residenceOpen, setResidenceOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   useEffect(() => {
@@ -644,6 +647,13 @@ export function CityPage() {
         className={className}
         now={now}
         factionNames={names}
+        rankTitles={{ rank2: character.rank.ladder[1] ?? '', rank3: character.rank.ladder[2] ?? '' }}
+        // The side column and the plate's card from 640 px (design §8.1 Q9): a desktop vote is two taps.
+        ballotInline={
+          layout === 'card'
+            ? { selected: ruleVote.selected, onSelect: ruleVote.select, onVote: ruleVote.vote, pending: ruleVote.pending }
+            : undefined
+        }
       />
     ) : null;
   // Review 2 (answers §2.4): where each stat trains here, for a result's reason line.

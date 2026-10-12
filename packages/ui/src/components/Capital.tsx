@@ -19,7 +19,7 @@ import { cx, formatShare } from '../format';
 import { Button } from './Button';
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { HelpButton, helpMark } from './Help';
-import { CouncilRowList } from './Politics';
+import { CouncilRows } from './RuleCard';
 import { LockMark } from './LockMark';
 import { BottomSheet } from './Sheets';
 
@@ -909,7 +909,7 @@ export function DistrictResultTable({ district: d, names }: { district: CapitalD
           >
             <FactionCrest factionId={f.factionId} size={10} />
             <span className="flex-1">{nameOf(names, f.factionId)}</span>
-            <span>votes {f.votes}</span>
+            <span>{copy.capitalElection.partyVotes(f.votes, f.shared)}</span>
             <span className="inline-flex gap-0.5" aria-label={`${f.seats}`}>
               {f.seats === 0
                 ? '0'
@@ -920,7 +920,7 @@ export function DistrictResultTable({ district: d, names }: { district: CapitalD
           </li>
         ))}
       </ul>
-      <CouncilRowList rows={d.council} />
+      <CouncilRows rows={d.council} />
       {d.scoreboard.length > 0 && <ScoreboardTable table={d.scoreboard} districtName={d.name} names={names} />}
     </section>
   );

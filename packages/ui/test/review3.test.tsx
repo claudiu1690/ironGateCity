@@ -2,14 +2,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getContent } from '@irongate/content';
 import { cityViewFixture, hallFixture, mapFixture } from '@irongate/rules/testing';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CityMap,
   FREE_ZOOM_STEP,
   HallHeader,
-  HowElectionsWork,
   LocationSheet,
   TILE_MAX_DPR,
   ZOOM_MS,
@@ -348,23 +346,6 @@ describe('training verbs, ticket buttons and the election screens (answers ยง4โ€
     expect(img.style.top).toBe(`calc(55% - ${0.19 * 2048}px)`);
     rerender(<HallHeader hall={hallFixture} cityName="Coalport" night />);
     expect(screen.getByTestId('hall-header')).toHaveAttribute('data-art', 'map.coalport.night');
-  });
-
-  it('How elections work: one link, five short lines, the same note as the card', async () => {
-    render(<HowElectionsWork cityName="Coalport" rank2="Activist" rank3="Organiser" />);
-    await userEvent.setup().click(screen.getByRole('button', { name: 'How elections work' }));
-    const note = screen.getByTestId('help-note');
-    expect(note).toHaveTextContent('How elections work');
-    const lines = within(note)
-      .getAllByTestId('note-line')
-      .map((l) => l.textContent);
-    expect(lines).toEqual([
-      'Coalport elects seven councillors every five days: two days for names to go in, three days of voting, the result the next morning.',
-      'The candidates are players who stand, and local candidates: townspeople run by the game, who fill the list so there is always an election.',
-      'Activists vote once, in secret. Organisers who are Known in Coalport can stand; it costs 10 Political Capital and takes two backers.',
-      "The seven with the most support win. Support is the town's own vote for you (your reputation here), plus your backers, plus the votes.",
-      "A seat is five days on the council: a vote on the town's rule, and 10 Political Capital and 20 Party XP a day.",
-    ]);
   });
 });
 

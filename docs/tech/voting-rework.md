@@ -1158,3 +1158,52 @@ Plain stand-ins over the v2 views, each marked `TODO(phase 3)` or `TODO(phase 4)
 
 1. Strings the stand-ins print that copy does not hold yet: *{name} · {n} backers* (the backing modal's knock-on), *the branch backs you · {n} backers* (the action modal's effect), *votes {n}* (a district's party row) and the dev panel's *The vote opens*. Phase 3–5 want copy keys for them.
 2. The capital's `councillor` card state cannot print `election.v2.partyCardSet(name, rule)`: the card carries the councillor's own rule, not the name of whoever set the party's card. Phase 4 can add it to `ElectionCardView.councillor` (the server has it: `WhatNowView.capital.by`).
+
+
+### Phase 3 — The home screens (12 Oct 2026)
+
+The home cities' screens are built on the v2 views: the Election card, the ballot, the result, who's standing with the stand card, the Town Hall's five blocks and the rule picker. Every `TODO(phase 3)` is gone; the capital's `TODO(phase 4)` stand-ins stay. No server or view change in this phase.
+
+**Components (`packages/ui`)**
+
+- **`RuleCard.tsx`** (new) holds `RuleCard` / `RuleCards` (modes `vote`, `show` and `result`), `OrdinanceRow` (moved from `Politics.tsx`), `RulePicker`, `CouncilRows`, `StandCard`, `HowTheVoteWorks` and the helpers `whoseLine`, `howWords` (design §8.2's *how it won*, shared by the hall and the result) and `ruleWinnerLines` (the winner card's lines under *PASSED*). `PersonMark` moved to its own module so `Politics`, `RuleCard`, `TownHall` and `Capital` share it without an import cycle.
+- **Removed:** `HowElectionsWork`, `RuleResultList`, `CouncilRowList`, and `Slate` / `CandidateRow`'s ballot mode. `DistrictResultTable` stays for phase 4 (it now uses `CouncilRows` and `copy.capitalElection.partyVotes`).
+- **`RuleCards`' layout** is `stack` or `auto` (`auto` adds one row of three from 960 px, each card at least 160 px tall), not the plan's `stack` | `row` prop: the ballot passes `auto`, everything else stacks.
+- **`RuleCard`'s spacing** is tighter than §9.1 implies (`py-1.5`, 1 px between lines, leading-tight on the plain and whose lines; still at least 88 px tall). With the design's padding the third card at 390 × 844 ended 15 px under the sticky bar, because the plate title wraps to two lines and the sticky bar is 80 px (the design counted 80 and 64).
+- **The council row's popover** is a small boxed note opened under the row (`role="note"`, `aria-expanded` on the row), not a floating popover: no new dependency, and nothing is covered on a 360 px phone.
+- **The stand card's cross line** when the player is not yet Known: `copy.stand.needsKnown` (*Needs to be Known in Coalport · 12 of 30 wins*), new; design §4.5 words the rank's cross only. **For the designer to confirm.**
+- **The rule picker** dims a row on the ballot unless it is the picker owner's own rule (the councillor's own card is on the ballot too; it should not read *yours would be skipped*).
+- **The Town Hall:** block 2's *Change ›* sits on the councillor's card when their rule is on the ballot, under the *next in line* line otherwise. Block 3 adds *· rule: …* to player rows only (design §4.4); locals' rules are on the cards and on the result's rows. Block 4 shows the stand card only when both requirements are met (design §4.4: *Rank 3 and Known*); who's standing shows it with the cross for the rest. The *Council rule* note on block 1's kicker and the card's kicker is `help.ruleV2` (three lines); `help.rule` / `help.election` are retired from these screens (their keys go with phase 5's T13).
+
+**Routes (`apps/client`)**
+
+- **`useRuleVote(act)`** takes the page's political act (one modal per page) instead of creating its own: the city screen already has one act for the residence card and the trains.
+- **`/council/ballot`:** the plate, the three cards (`auto` layout in a 720 px sheet from 960 px), *Who's standing ›*, *How the vote works*, *Last result · {weekday}*, and the sticky *Vote for …* / *Choose a rule* with the caption. **Under 700 px tall the plate's Courier line folds away** (as the header does): at 375 × 667 the third card's top edge was 7 px under the sticky bar with it; the sticky caption keeps *secret and final* and the result's time. A reader who cannot vote (below Rank 2) sees the cards read-only and no bar. Closed (days 0–1): the provisional cards, *the ballot is set at …*, *See the result*, *See who's standing*.
+- **`/council/count`:** the cards in result mode (count, share bar, *PASSED*, *how it won*, *runs until …*, *your vote*), `CouncilRows` with *the line*, the sentence, *How the vote works* and the hall's name as the link to `/council`. The capital's count uses the same cards over its own tables (phase 4 replaces those).
+- **`/council/slate`:** the stand card (ticks or the cross, *Your rule* with *Change ›*, *Stand · 10 Political Capital*, the price line; after standing *You're standing · your rule: … · n backers* and the branch's line), the seats sentence, the players then the locals with their rules. On days 2–4 the plate line is the old `tooLateToStand` and a *Vote now* link follows the list (the design gives the list's days 2–4 no line of its own).
+- **The Election card:** the seven states of design §4.1 (outline buttons where the design's are in italics: *See the ballot*, *See who's standing*, *To your desk* when next in line), the Unrest fallback line (`resultFallbackUnrest`, by the card's `by`), line 3 on the paper's row too, and `ballotInline` on every `card` layout of the city screen (the side column and the plate's card from 640 px). The HQ sheet and the paper's row keep the link.
+- **The front page:** the photograph, ELECTED, the headline and the deck, then the three result cards (no council rows); the paper renders *What now* and *To your desk at the Town Hall* after it, as before.
+- **Strings bound** (design §8.7): `copy.stand.backersKnock` and `copy.branchBacksYou` in `ResultModal`, `copy.capitalElection.partyVotes(votes, shared)` in `Capital`, `copy.dev.phase` / `copy.dev.next` in `DevPanel`, and `clock.ts`'s `phaseLabel` now returns `copy.dev.phase` (the server's line and the panel's row are one string).
+
+**E2E (rewritten, not weakened)**
+
+- `council.spec.ts`: stand with a rule (two ticks, *Change ›* to Reading Room Grant, no backer line) → the third order's modal *The branch backs you · 1 backer* → the vote at 390 × 844 (the three Appendix A cards and the CTA above the fold, one tap) → the count, lazily → ELECTED, three result cards with PASSED and *your vote*, *What now* with two lines → the desk: her rule on the ballot, *Change ›* (the branch's card dimmed with its note) → Street Fund (*Changed*) → the next vote in the hall's block → the plate line, the ticket tag *Street Fund · +25 % Iron* and the result modal's tag. **Not asserted:** the headline *Street Fund Wins the Vote in Coalport* (`hl.rule-won` fires once phase 5 fills the rule facts).
+- `qa.slice3.spec.ts`: the double tap on a card and on the CTA (one call, one modal, no side scroll at 360); the keyboard (Tab into the cards, ArrowDown, Space, Tab, Enter); the 375 × 667 header band and third card; the result at 360 (cards, seven seated rows, the row's two numbers). The old `test.fail` m4 case (five name rows above the CTA) is replaced by the 375 × 667 case.
+- `review3.spec.ts`'s *the election screens*: the hall header, the seats sentence, the lists with rules, *How the vote works* with three lines.
+- `devpanel.spec.ts`: the new phase labels and lines; the paper row's `data-state` `result` / `vote`.
+- `voting.spec.ts` gains the screens of §19's phase 3: **the desktop card is the ballot** (1440 × 900, a card and *Vote for …*, one modal) and **next in line** (three councillors at the three top local seats, the third's card and hall read *next in line*; the first's picker dims the two other cards' rules, keeps them enabled, and leaves its own undimmed). The serial run wears Coalport's morale into Unrest by then (counts with no voters), so the case lifts it first with a rival's `/api/test/unrest` (`share: 80`, nothing pushed) and asserts card 1 is the party's.
+
+**The old Vitest files** (not run; trimmed to compile): `packages/ui/test/review3.test.tsx` loses *How elections work: one link, five short lines* (the component is removed); `packages/ui/test/vocabulary.test.tsx` loses *Slate, the vote* (the ballot mode is removed).
+
+**Checks**
+
+- `pnpm art:check && pnpm turbo run lint typecheck build` (cached): green, 14 of 14 tasks.
+- E2E with `--no-deps` (`E2E_WEB_PORT=4273 E2E_API_PORT=3301`): `council` 1/1, `qa-council` 4/4, `dev-panel` 2/2, `rival` 1/1, `voting` 10/10, `review3`'s *the election screens* (project `phone`) 1/1, and `qa-review4` #11 *the halls as a visitor* 1/1.
+- Still expected red until phase 4: `capital` and `qa-capital` (the capital's screens).
+
+**Questions for the designer (none blocking)**
+
+1. `copy.stand.needsKnown` (*Needs to be Known in Coalport · 12 of 30 wins*): new words for the stand card's second cross.
+2. The ballot's plate line folds away under 700 px tall to keep the third card above the CTA; the caption still says *Secret and final. The result is at …*. Confirm, or name the line to shorten instead.
+3. Who's standing on days 2–4 still reads the old `tooLateToStand` (*Voting is open; it's too late to stand this time.*); the design gives that state no plate line.
+4. The party card shows the secretary's full name (*the branch's rule · Petra Holm*), as the view carries it; design §4.2's example is *Secretary Holm* (`addressedAs`). A server/view choice for phase 5 if the designer prefers the title.

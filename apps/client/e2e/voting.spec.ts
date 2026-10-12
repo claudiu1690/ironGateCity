@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- the tests read untyped tRPC JSON (views of many shapes) */
 import { expect, test } from '@playwright/test';
-import type { APIRequestContext, Browser } from '@playwright/test';
+import type { APIRequestContext, Browser, BrowserContext, Page } from '@playwright/test';
 
 /**
  * The voting rework (docs/tech/voting-rework.md §15.2): the town votes on a rule. Phase 2's **API**
@@ -8,8 +8,9 @@ import type { APIRequestContext, Browser } from '@playwright/test';
  * `RULE_WINDOW_CLOSED`); the set; the vote (`NOT_ON_BALLOT`, a key replayed byte for byte, a second key
  * `ALREADY_VOTED`, Rank 1 refused); secrecy on the wire during the vote; backing on day 3 counted at the
  * count; a 2–2 tie to the earlier card; no votes → card 1 (the fallback); most votes wins (3–1); Unrest
- * takes the party's card off. The screens' cases join in phases 3–5. One serial project, last in the
- * chain: it moves the shared clock by cycles.
+ * takes the party's card off. The screens' cases (phase 3): the desktop card is the ballot (two taps);
+ * *next in line* (three councillors); the rule picker's *already on the ballot* rows. Phases 4–5 add
+ * theirs. One serial project, last in the chain: it moves the shared clock by cycles.
  */
 
 test.describe.configure({ mode: 'serial' });
@@ -64,8 +65,18 @@ async function member(
   name: string,
   seed: object = {},
 ): Promise<Api> {
+  return (await memberContext(browser, party, name, seed)).request;
+}
+
+/** The same, keeping the browser context (its pages share the session): the screens' cases. */
+async function memberContext(
+  browser: Browser,
+  party: 'holm' | 'stahl' | 'grey',
+  name: string,
+  seed: object = {},
+): Promise<BrowserContext> {
   const baseURL = test.info().project.use.baseURL as string;
-  const ctx = await browser.newContext({ baseURL });
+  const ctx = await browser.newContext({ baseURL, viewport: { width: 1440, height: 900 } });
   const api = ctx.request;
   const email = `vote-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`;
   const su = await api.post('/api/auth/sign-up/email', {
@@ -85,7 +96,7 @@ async function member(
   }
   expect((await mutate(api, 'arrival.join', {})).ok).toBe(true);
   if (Object.keys(seed).length > 0) await hook(api, 'character', seed);
-  return api;
+  return ctx;
 }
 
 const ids = (cards: Array<{ ordinanceId: string }>) => cards.map((c) => c.ordinanceId);
@@ -260,4 +271,102 @@ test("Unrest: the party's card comes off the ballot at the set (three councillor
   expect(b.data.cards.some((c: any) => c.whose.kind === 'party')).toBe(false);
   expect(b.data.canVote).toBe(false);
   expect(b.data.reason).toBe('NOT_RESIDENT');
+});
+
+// ---------------------------------------------------------------------------------------------
+// The screens (phase 3, tech design §15.2), on a 1440 × 900 desktop.
+// ---------------------------------------------------------------------------------------------
+
+const modalOf = (page: Page) => page.getByRole('dialog').filter({ has: page.getByTestId('stamp') });
+
+test('the desktop card is the ballot: a card and Vote for …, two taps, one modal', async ({ browser }) => {
+  const ctx = await memberContext(browser, 'holm', 'Vera Pult', { fxp: 400 });
+  await advanceTo(ctx.request, 'coalport', 2);
+  const page = await ctx.newPage();
+  await page.goto('/city/coalport');
+  const card = page.getByTestId('election-card').filter({ visible: true });
+  await expect(card).toHaveAttribute('data-state', 'vote');
+  await expect(card.getByTestId('election-line1')).toHaveText('Which rule for Coalport next week?');
+  const ballot = card.getByTestId('election-ballot');
+  await expect(ballot.getByTestId('rule-card')).toHaveCount(3);
+  await expect(ballot.getByRole('button', { name: 'Choose a rule' })).toBeDisabled();
+  // Tap 1: a card. Tap 2: the vote.
+  const second = ballot.getByTestId('rule-card').nth(1);
+  const chosen = (await second.getAttribute('data-ordinance'))!;
+  await second.click();
+  await ballot.getByRole('button', { name: /^Vote for / }).click();
+  await expect(modalOf(page).getByTestId('stamp')).toHaveText('Vote cast');
+  await modalOf(page).getByRole('button', { name: 'Continue' }).click();
+  await expect(card).toHaveAttribute('data-state', 'voted');
+  const b = await read(ctx.request, 'council.ballot');
+  expect(b.data.myVote.ordinanceId).toBe(chosen);
+  await ctx.close();
+});
+
+test("next in line: three councillors' rules, two go on; the third reads next in line; the picker dims the ballot's rules", async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const a = await memberContext(browser, 'holm', 'Lotte Erste', { fxp: 2000, successes: 30 });
+  await advanceTo(a.request, 'coalport', 0);
+  const hall = await read(a.request, 'council.hall', { cityId: 'coalport' });
+  expect(hall.ok, hall.reason ?? '').toBe(true);
+  const locals = (hall.data.seats as Array<{ seat: number; kind: string }>)
+    .filter((x) => x.kind === 'npc')
+    .map((x) => x.seat)
+    .sort((x, y) => x - y)
+    .slice(0, 3);
+  expect(locals).toHaveLength(3);
+  // Cycles with no voters have worn Coalport's morale down in this serial run: lift it out of Unrest
+  // (a rival's hook, nothing pushed), so the branch's card leads the ballot.
+  const rival = await member(browser, 'stahl', 'Otto Hebel');
+  await hook(rival, 'unrest', { cityId: 'coalport', share: 80, pushed: 0 });
+  const b = await memberContext(browser, 'holm', 'Jakob Zweite', { fxp: 2000, successes: 30 });
+  const c = await memberContext(browser, 'holm', 'Grete Dritte', { fxp: 2000, successes: 30 });
+  const rules = ['ord.street-fund', 'ord.rest-day', 'ord.open-doors'];
+  for (const [i, ctx] of [a, b, c].entries()) {
+    await hook(ctx.request, 'seat', { seat: locals[i] });
+    const set = await mutate(ctx.request, 'council.setRule', { ordinanceId: rules[i], idempotencyKey: uuid() });
+    expect(set.ok, set.reason ?? '').toBe(true);
+  }
+  const third = await read(c.request, 'council.ballot');
+  expect(third.data.myRule).toMatchObject({ ordinanceId: 'ord.open-doors', onBallot: false });
+  const first = await read(a.request, 'council.ballot');
+  expect(first.data.myRule).toMatchObject({ ordinanceId: 'ord.street-fund', onBallot: true });
+  expect(first.data.cards[0].whose.kind).toBe('party');
+
+  // The third councillor: the card and the hall say *next in line*.
+  const page = await c.newPage();
+  await page.goto('/city/coalport');
+  const card = page.getByTestId('election-card').filter({ visible: true });
+  await expect(card).toHaveAttribute('data-state', 'nextInLine');
+  await expect(card.getByTestId('election-line1')).toHaveText("You're on the council · your rule is next in line");
+  await page.goto('/city/coalport?loc=coalport.town-hall');
+  await expect(page.getByTestId('hall-next-in-line')).toContainText(
+    'Your rule is next in line: the two seats above yours chose first.',
+  );
+  await expect(page.getByTestId('hall-next-in-line')).toContainText('Open Doors');
+
+  // The first councillor: their card carries *your rule* and *Change ›*; the picker dims the rules
+  // already on the ballot (not their own) and keeps them choosable.
+  const pa = await a.newPage();
+  await pa.goto('/city/coalport?loc=coalport.town-hall');
+  const mine = pa.locator('[data-testid=hall-next] [data-testid=rule-card][data-ordinance="ord.street-fund"]');
+  await expect(mine).toContainText('your rule');
+  await mine.getByTestId('hall-change').click();
+  const sheet = pa.getByRole('dialog', { name: 'Your rule · choose one' });
+  await expect(sheet.getByTestId('ordinance-row')).toHaveCount(11);
+  const others = (first.data.cards as Array<{ ordinanceId: string; name: string }>).filter(
+    (x) => x.ordinanceId !== 'ord.street-fund',
+  );
+  expect(others).toHaveLength(2);
+  for (const x of others) {
+    const row = sheet.getByRole('radio', { name: new RegExp('^' + x.name) });
+    await expect(row).toContainText('already on the ballot · yours would be skipped');
+    await expect(row).toBeEnabled();
+  }
+  await expect(sheet.getByRole('radio', { name: /^Street Fund/ })).toHaveAttribute('aria-checked', 'true');
+  await expect(sheet.getByRole('radio', { name: /^Street Fund/ })).not.toContainText('already on the ballot');
+  await expect(sheet.getByRole('radio', { name: /^Open Doors/ })).not.toContainText('already on the ballot');
+  for (const ctx of [a, b, c]) await ctx.close();
 });

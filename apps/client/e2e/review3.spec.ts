@@ -326,8 +326,8 @@ test.describe('buttons that say what they cost, the verb (answers §4–§5)', (
   });
 });
 
-test.describe('the election screens (answers §6)', () => {
-  test("who's standing stands on the Town Hall, says who's who and how it works", async ({ page }) => {
+test.describe('the election screens (answers §6; the voting rework, tech design §15.2)', () => {
+  test("who's standing stands on the Town Hall, says who's who and how the vote works", async ({ page }) => {
     await signUp(page);
     await page.goto('/council/slate');
     const header = page.getByTestId('hall-header');
@@ -336,17 +336,17 @@ test.describe('the election screens (answers §6)', () => {
     await expect(page.getByTestId('hall-kicker')).toHaveText('Coalport Council · the Town Hall');
     await expect(header.locator('img')).toHaveJSProperty('complete', true);
     await expect(page.getByTestId('how-decided')).toHaveText(
-      "Seven seats. The seven with the most support take them. Support is the town's own vote for a candidate (their reputation here), plus their backers, plus members' votes.",
+      'Seats go to the seven best known in Coalport, counting their backers. Local candidates fill the rest.',
     );
-    // The list shows while names go in (the shared test clock decides the phase); during the vote it
-    // is the ballot's, checked in council.spec.ts.
-    if ((await page.getByTestId('players-standing').count()) > 0) {
-      await expect(page.getByTestId('players-standing')).toHaveText('Players standing');
-      await expect(page.getByTestId('local-candidates')).toHaveText('Local candidates');
-      await expect(page.getByTestId('local-candidates-line')).toBeVisible();
-      await expect(page.getByText(/^Local candidate · /).first()).toBeVisible();
-    }
-    await page.getByRole('button', { name: 'How elections work' }).click();
-    await expect(page.getByTestId('help-note').getByTestId('note-line')).toHaveCount(5);
+    await expect(page.getByTestId('players-standing')).toHaveText('Players standing');
+    await expect(page.getByTestId('local-candidates')).toHaveText('Local candidates');
+    await expect(page.getByTestId('local-candidates-line')).toBeVisible();
+    await expect(page.getByTestId('slate-row').filter({ hasText: /Local candidate · / }).first()).toBeVisible();
+    await expect(page.getByTestId('slate-rule').first()).toHaveText(/^rule: /);
+    await page.getByRole('button', { name: 'How the vote works' }).click();
+    const note = page.getByTestId('help-note');
+    await expect(note).toContainText('Council rule');
+    await expect(note.getByTestId('note-line')).toHaveCount(3);
+    await expect(note.getByTestId('note-line').first()).toContainText('Every five days Coalport votes on one rule for the town.');
   });
 });

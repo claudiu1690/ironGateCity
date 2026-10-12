@@ -122,11 +122,7 @@ describe('review 2 §1.13: no system term in what packages/ui prints', () => {
         onOpenChange={noop}
       />,
     ],
-    ['Slate', <Slate candidates={electionViewFixture.candidates} mode="slate" onEndorse={noop} />],
-    [
-      'Slate, the vote',
-      <Slate candidates={electionViewFixture.candidates} mode="ballot" castKey="n:npc.c.weiss" />,
-    ],
+    ['Slate', <Slate candidates={electionViewFixture.candidates} onEndorse={noop} />],
     ['FrontPage', <FrontPage front={frontPageFixture} />],
     [
       'LocationSheet',

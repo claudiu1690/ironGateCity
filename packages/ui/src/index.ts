@@ -90,27 +90,32 @@ export type { PlateProps } from './components/Plate';
 export { ProgressBar } from './components/ProgressBar';
 export type { ProgressBarProps } from './components/ProgressBar';
 export { ResultModal, ordinanceTagText, stampFor } from './components/ResultModal';
+export { CandidateRow, ElectionCard, FrontPage, PersonMark, Slate, electionLines } from './components/Politics';
+export type { BallotInline, CandidateRowProps, ElectionCardProps, ElectionLines, SlateProps } from './components/Politics';
 export {
-  CandidateRow,
-  CouncilRowList,
-  ElectionCard,
-  FrontPage,
-  HowElectionsWork,
+  CouncilRows,
+  HowTheVoteWorks,
   OrdinanceRow,
-  PersonMark,
-  RuleResultList,
-  Slate,
-  electionLines,
+  RuleCard,
+  RuleCards,
+  RulePicker,
+  StandCard,
+  councilRuleNote,
+  howWords,
+  ruleWinnerLines,
   whoseLine,
-} from './components/Politics';
+} from './components/RuleCard';
 export type {
-  CandidateRowProps,
-  ElectionCardProps,
-  ElectionLines,
-  HowElectionsWorkProps,
+  CouncilRowsProps,
+  HowTheVoteWorksProps,
   OrdinanceRowProps,
-  SlateProps,
-} from './components/Politics';
+  RuleCardMode,
+  RuleCardProps,
+  RuleCardResult,
+  RuleCardsProps,
+  RulePickerProps,
+  StandCardProps,
+} from './components/RuleCard';
 export type { JourneyArrivalResult, ResultModalProps } from './components/ResultModal';
 export { BottomSheet, JobsCard, LocationSheet, OutOfEnergyCard } from './components/Sheets';
 export type {

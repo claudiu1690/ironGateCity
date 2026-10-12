@@ -1,3 +1,4 @@
+import { copy } from '@irongate/content/copy';
 import { MONTH_NAMES, WEEKDAY_NAMES, councilDay, dayKey, dayStart, nextDusk, weekday } from '@irongate/rules';
 import type { CycleDay, DayKey } from '@irongate/rules';
 
@@ -64,14 +65,10 @@ export function formatUtc(ms: number): string {
   return `${WEEKDAY_NAMES[weekday(day)]} ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]!.slice(0, 3)} ${hh}:${mm} UTC`;
 }
 
-/** "The vote (day 2 of 3)" and the like, for the panel's phase line (tech design §12). */
+/**
+ * "The vote (day 2 of 3)" and the like, for the panel's phase line (tech design §12): the words are
+ * `copy.dev.phase` (design §8.7 n4), so the server's line and the panel's row match.
+ */
 export function phaseLabel(cycleDay: CycleDay): string {
-  switch (cycleDay) {
-    case 0:
-      return 'Result day · stand and set rules (day 1 of 2)';
-    case 1:
-      return 'Stand and set rules (day 2 of 2)';
-    default:
-      return `The vote (day ${cycleDay - 1} of 3)`;
-  }
+  return copy.dev.phase(cycleDay);
 }
