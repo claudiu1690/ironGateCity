@@ -11,13 +11,16 @@ export const HOUR_MS = 3_600_000;
 /** "Just past" a 00:00 UTC boundary: 00:01, the worker's own minute of margin (ADR 0017). */
 export const PAST_BOUNDARY_MS = 60_000;
 
-/** The three phases a home city's cycle reads as: the count morning, nominations, the polls. */
-export type DevPhase = 'count-day' | 'nominations' | 'polls';
-/** Where "Skip to next phase" goes: the polls opening, or the count (the next cycle's day 0). */
-export type NextPhase = 'polls' | 'count';
+/**
+ * The voting rework (tech design §12): the three phases a city's cycle reads as: the result morning
+ * (stand and set rules, day 1 of 2), standing (day 2 of 2), the vote (days 2–4).
+ */
+export type DevPhase = 'result-day' | 'standing' | 'vote';
+/** Where "Skip to next phase" goes: the vote opening, or the count (the next cycle's day 0). */
+export type NextPhase = 'vote' | 'count';
 
 export function phaseOf(cycleDay: CycleDay): DevPhase {
-  return cycleDay === 0 ? 'count-day' : cycleDay === 1 ? 'nominations' : 'polls';
+  return cycleDay === 0 ? 'result-day' : cycleDay === 1 ? 'standing' : 'vote';
 }
 
 /** 00:01 UTC on the next City Day. */
@@ -31,14 +34,14 @@ export function toDuskAt(now: number): number {
 }
 
 /**
- * The next phase boundary after `day` in a city with council `offset` (tech design §3.1):
- * nominations (cycle days 0–1) → the polls open on day 2; the polls (days 2–4) → the count at the
+ * The next phase boundary after `day` in a city with council `offset` (tech design §3.1): standing
+ * (cycle days 0–1) → the vote opens on day 2 (the set); the vote (days 2–4) → the count at the
  * boundary into the next cycle's day 0.
  */
 export function nextPhase(day: DayKey, offset: number): { phase: NextPhase; day: DayKey } {
   const { phase, election } = councilDay(day, offset);
   return phase === 'nominations'
-    ? { phase: 'polls', day: election.pollsFrom }
+    ? { phase: 'vote', day: election.pollsFrom }
     : { phase: 'count', day: election.countDay };
 }
 
@@ -61,14 +64,14 @@ export function formatUtc(ms: number): string {
   return `${WEEKDAY_NAMES[weekday(day)]} ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]!.slice(0, 3)} ${hh}:${mm} UTC`;
 }
 
-/** "Polls open · day 2 of 3" and the like, for the panel's phase line. */
+/** "The vote (day 2 of 3)" and the like, for the panel's phase line (tech design §12). */
 export function phaseLabel(cycleDay: CycleDay): string {
   switch (cycleDay) {
     case 0:
-      return 'Count day · nominations open (day 1 of 2)';
+      return 'Result day · stand and set rules (day 1 of 2)';
     case 1:
-      return 'Nominations (day 2 of 2, last day)';
+      return 'Stand and set rules (day 2 of 2)';
     default:
-      return `Polls open (day ${cycleDay - 1} of 3${cycleDay === 4 ? ', last day' : ''})`;
+      return `The vote (day ${cycleDay - 1} of 3)`;
   }
 }

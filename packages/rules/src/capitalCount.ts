@@ -1,6 +1,6 @@
 import { CAPITAL_COUNCIL } from './constants';
-import { AGAINST_ALL, countElection, countSeats } from './council';
-import type { CountLine, CountLineV2, CountRow, CountRowV2 } from './council';
+import { countSeats } from './council';
+import type { CountLine, CountRow } from './council';
 import type { Rng } from './rng';
 import type { RuleCard, RuleDecision, RuleHow } from './ruleBallot';
 import { FACTION_IDS } from './types';
@@ -8,8 +8,9 @@ import type { FactionId, OpinionShares } from './types';
 
 /**
  * The capital's three-way count and its council (slice-4 tech design §6.5, design §8, GDD §15.3,
- * ADR 0027): per district a turnout-weighted score mixing the ballots and opinion, two seats by
- * D'Hondt, NPCs filling each faction's list to two; one council of ten where six votes pass.
+ * ADR 0027; the voting rework, ADR 0085): per district a turnout-weighted score mixing the votes for
+ * each party's card and opinion, two seats by D'Hondt, NPCs filling each faction's list to two; the
+ * rule of the largest bloc across the ten seats.
  */
 
 const EPS = 1e-9;
@@ -103,141 +104,10 @@ export function drawOrderOf(rng: Rng): FactionId[] {
   return out;
 }
 
-export type DistrictCountLine = CountLine & { factionId: FactionId };
-export type DistrictCountRow = CountRow & { factionId: FactionId };
-
-export interface DistrictCount {
-  factions: Array<FactionScore & { seats: number }>;
-  w: number;
-  ballots: number;
-  seatsByFaction: Record<FactionId, number>;
-  /** The two elected, in seat order (D'Hondt's). */
-  seated: DistrictCountRow[];
-  /** Every candidate, grouped by faction in faction order; `place` is the place within the faction. */
-  rows: DistrictCountRow[];
-  /** 'draw' when the returning officer's draw decided a seat. */
-  tie: 'draw' | null;
-  drawOrder: FactionId[];
-}
-
 /**
- * Design §8.2: count one district. Ballots are votes for names; a faction's ballots are its
- * candidates' votes. Within a faction its seats go in the slice-3 order (total = ward vote + 3 ×
- * endorsements + votes; ties by votes, endorsements, Standing, ballot order), NPCs after players.
- */
-export function countDistrict(i: {
-  lines: readonly DistrictCountLine[];
-  votes: Readonly<Record<string, number>>;
-  opinion: OpinionShares;
-  rng: Rng;
-}): DistrictCount {
-  const drawOrder = drawOrderOf(i.rng);
-  const byFaction = new Map<FactionId, DistrictCountRow[]>();
-  for (const f of FACTION_IDS) {
-    const own = i.lines.filter((l) => l.factionId === f);
-    const counted = countElection(own, i.votes).rows.map((r, idx) => ({
-      ...r,
-      factionId: f,
-      place: idx + 1,
-      seated: false,
-    }));
-    byFaction.set(f, counted);
-  }
-  const ballotsByFaction = Object.fromEntries(
-    FACTION_IDS.map((f) => [f, byFaction.get(f)!.reduce((sum, r) => sum + r.votes, 0)]),
-  ) as Record<FactionId, number>;
-  const scores = districtScores({ ballotsByFaction, opinion: i.opinion });
-  const ballots = scores.reduce((sum, s) => sum + s.ballots, 0);
-  const { seats, drawn } = dhondt(
-    scores,
-    CAPITAL_COUNCIL.perDistrict,
-    drawOrder,
-    (f, won) => (byFaction.get(f)?.length ?? 0) > won,
-  );
-  const seatsByFaction: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
-  const seated: DistrictCountRow[] = [];
-  for (const f of seats) {
-    const row = byFaction.get(f)![seatsByFaction[f]]!;
-    row.seated = true;
-    seated.push(row);
-    seatsByFaction[f] += 1;
-  }
-  return {
-    factions: scores.map((s) => ({ ...s, seats: seatsByFaction[s.factionId] })),
-    w: turnoutWeight(ballots),
-    ballots,
-    seatsByFaction,
-    seated,
-    rows: FACTION_IDS.flatMap((f) => byFaction.get(f)!),
-    tie: drawn ? 'draw' : null,
-    drawOrder,
-  };
-}
-
-export interface CapitalDivisionItem {
-  ordinanceId: string;
-  /** The faction whose branch motion it is, or null for a proposal. */
-  branchOf: FactionId | null;
-  movedAt: number;
-}
-
-export interface CapitalDivision {
-  tallies: Array<{ choice: string; player: number; npc: number }>;
-  /** What each faction's NPC councillors voted for (factions with NPC seats). */
-  npcChoices: Partial<Record<FactionId, string>>;
-  /** The ordinance passed (six or more of ten), or null. */
-  passed: string | null;
-}
-
-/**
- * Design §8.4: each faction's NPC councillors vote for the item with the most votes from their own
- * faction's player councillors (ties: their branch's motion if among them, then the earliest moved);
- * with none of their players for an item, their branch's motion. Never Against all. An item passes
- * with six or more of ten.
- */
-export function divideCapital(i: {
-  items: readonly CapitalDivisionItem[];
-  playerVotes: ReadonlyArray<{ choice: string; factionId: FactionId }>;
-  npcSeats: Partial<Record<FactionId, number>>;
-}): CapitalDivision {
-  const npcChoices: Partial<Record<FactionId, string>> = {};
-  const npc = new Map<string, number>();
-  const earliest = <T extends { movedAt: number }>(xs: readonly T[]): T =>
-    xs.reduce((a, b) => (b.movedAt < a.movedAt ? b : a));
-  for (const f of FACTION_IDS) {
-    const seats = i.npcSeats[f] ?? 0;
-    if (seats <= 0 || i.items.length === 0) continue;
-    const own = new Map<string, number>();
-    for (const v of i.playerVotes) if (v.factionId === f) own.set(v.choice, (own.get(v.choice) ?? 0) + 1);
-    const best = Math.max(...i.items.map((it) => own.get(it.ordinanceId) ?? 0));
-    const branch = i.items.find((it) => it.branchOf === f);
-    let choice: CapitalDivisionItem;
-    if (best === 0) choice = branch ?? earliest(i.items);
-    else {
-      const leaders = i.items.filter((it) => (own.get(it.ordinanceId) ?? 0) === best);
-      choice = leaders.find((it) => it.branchOf === f) ?? earliest(leaders);
-    }
-    npcChoices[f] = choice.ordinanceId;
-    npc.set(choice.ordinanceId, (npc.get(choice.ordinanceId) ?? 0) + seats);
-  }
-  const player = new Map<string, number>();
-  for (const v of i.playerVotes) player.set(v.choice, (player.get(v.choice) ?? 0) + 1);
-  const tallies = [...i.items.map((it) => it.ordinanceId), AGAINST_ALL].map((choice) => ({
-    choice,
-    player: player.get(choice) ?? 0,
-    npc: npc.get(choice) ?? 0,
-  }));
-  let passed: string | null = null;
-  for (const t of tallies) {
-    if (t.choice !== AGAINST_ALL && t.player + t.npc >= CAPITAL_COUNCIL.passVotes) passed = t.choice;
-  }
-  return { tallies, npcChoices, passed };
-}
-
-/**
- * Design §8.4: the seated blocs' branch motions, items 1–3, in order of seats; ties by the
- * district count's rule city-wide (ballots, then opinion share, then the draw). Factions with no
- * seat move nothing.
+ * Design §8.4 (ADR 0085): the seated blocs in order of seats, the order of the capital's cards; ties
+ * by the district count's rule city-wide (ballots, then opinion share, then the draw). Factions with
+ * no seat come after (`capitalBallot`).
  */
 export function councilOrder(
   seats: Partial<Record<FactionId, number>>,
@@ -255,9 +125,8 @@ export function councilOrder(
 }
 
 // ---------------------------------------------------------------------------------------------
-// Voting rework (docs/tech/voting-rework.md §4.3, ADR 0085): a party's ballots are the votes for
-// its card; the capital's rule is the largest bloc's. Added beside the old count in phase 1; the
-// `…V2` names drop their suffix when phase 2 removes `countDistrict` and `divideCapital`.
+// The voting rework (docs/tech/voting-rework.md §4.3, ADR 0085): a party's ballots are the votes for
+// its card; the capital's rule is the largest bloc's.
 // ---------------------------------------------------------------------------------------------
 
 /** ADR 0085 §3: a district's ballots by party from its card votes; a shared card's votes split equally. */
@@ -274,18 +143,18 @@ export function cardBallots(
   return out;
 }
 
-export type DistrictCountLineV2 = CountLineV2 & { factionId: FactionId };
-export type DistrictCountRowV2 = CountRowV2 & { factionId: FactionId };
+export type DistrictCountLine = CountLine & { factionId: FactionId };
+export type DistrictCountRow = CountRow & { factionId: FactionId };
 
-export interface DistrictCountV2 {
+export interface DistrictCount {
   factions: Array<FactionScore & { seats: number }>;
   w: number;
   ballots: number;
   seatsByFaction: Record<FactionId, number>;
   /** The two elected, in seat order (D'Hondt's). */
-  seated: DistrictCountRowV2[];
+  seated: DistrictCountRow[];
   /** Every candidate, grouped by faction in faction order; `place` is the place within the faction. */
-  rows: DistrictCountRowV2[];
+  rows: DistrictCountRow[];
   tie: 'draw' | null;
   drawOrder: FactionId[];
 }
@@ -295,14 +164,14 @@ export interface DistrictCountV2 {
  * D'Hondt on the scores from `ballotsByFaction` (`cardBallots`, may be fractional). Lines carry
  * backers, no votes.
  */
-export function countDistrictV2(i: {
-  lines: readonly DistrictCountLineV2[];
+export function countDistrict(i: {
+  lines: readonly DistrictCountLine[];
   ballotsByFaction: Record<FactionId, number>;
   opinion: OpinionShares;
   rng: Rng;
-}): DistrictCountV2 {
+}): DistrictCount {
   const drawOrder = drawOrderOf(i.rng);
-  const byFaction = new Map<FactionId, DistrictCountRowV2[]>();
+  const byFaction = new Map<FactionId, DistrictCountRow[]>();
   for (const f of FACTION_IDS) {
     const own = i.lines.filter((l) => l.factionId === f);
     const counted = countSeats(own, own.length).rows.map((r, idx) => ({
@@ -322,7 +191,7 @@ export function countDistrictV2(i: {
     (f, won) => (byFaction.get(f)?.length ?? 0) > won,
   );
   const seatsByFaction: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
-  const seated: DistrictCountRowV2[] = [];
+  const seated: DistrictCountRow[] = [];
   for (const f of seats) {
     const row = byFaction.get(f)![seatsByFaction[f]]!;
     row.seated = true;

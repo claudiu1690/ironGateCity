@@ -193,11 +193,11 @@ describe('the desk is for one’s own council only (answers §10.2)', () => {
     );
     expect(r.matchedCount).toBe(1);
     const home = await p.caller.council.hall({ cityId: 'coalport' });
-    expect(home.desk).not.toBeNull();
+    expect(home.councillor).not.toBeNull();
     await Character.updateOne({ _id: p.id }, { $set: { cityId: 'duskwall' }, $inc: { version: 1 } });
     await p.caller.city.get({ cityId: 'duskwall' });
     const away = await p.caller.council.hall({ cityId: 'duskwall' });
-    expect([away.desk, away.whatNow]).toEqual([null, null]);
+    expect([away.councillor, away.whatNow]).toEqual([null, null]);
   });
 });
 

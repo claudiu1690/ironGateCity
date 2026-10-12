@@ -1,6 +1,6 @@
 import type { Content } from '@irongate/content';
 import { Character } from '../models/character';
-import { Candidacy, Election, OfficeTerm, OrderPaper } from '../models/politics';
+import { Candidacy, Election, OfficeTerm, RuleBallot } from '../models/politics';
 
 /**
  * Slice 4 (tech design §5.9, ADR 0025, 0026): the travel and residence fields. Idempotent: every
@@ -125,7 +125,7 @@ export async function migrateSlice4TravelResidence(content: Pick<Content, 'citie
   for (const [cityId, factionId] of homeFaction) {
     if (!factionId) continue;
     changed += (
-      await OrderPaper.collection.updateMany(
+      await RuleBallot.collection.updateMany(
         { cityId, items: { $elemMatch: { 'movedBy.factionId': { $exists: false } } } },
         [
           {

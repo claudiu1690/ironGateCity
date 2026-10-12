@@ -78,7 +78,6 @@ import type {
   Opponent,
   Ordinance,
   OrderTemplate,
-  Platform,
   Quarter,
   TilesEntry,
 } from './schemas';
@@ -901,11 +900,9 @@ export function parseContent(raw: unknown): Content {
     candidateNames.add(c.name);
   }
 
-  // Slice 3: factions' platforms, branch motions and the Unrest pair (design §6.4, §10.2, §11.3).
+  // Slice 3: factions' branch motions and the Unrest pair (design §10.2, §11.3).
   const crisisNamed = new Set<string>();
   for (const f of content.factions) {
-    if (new Set(f.platforms.map((p) => p.id)).size !== 3)
-      problems.push(`factions.${f.id}.platforms need three distinct ids`);
     if (!ordinanceIds.has(f.branchMotion))
       problems.push(`factions.${f.id}.branchMotion "${f.branchMotion}" is not an ordinance`);
     f.restoreOrders.forEach((id, i) => {
@@ -928,7 +925,6 @@ export function parseContent(raw: unknown): Content {
   // placeholders and the time tokens.
   for (const [act, t] of [
     ...Object.entries(content.politics.results).map(([a, x]) => [`results.${a}`, x] as const),
-    ...Object.entries(content.politics.resultsV2).map(([a, x]) => [`resultsV2.${a}`, x] as const),
   ]) {
     const where = `politics.${act}`;
     if (t.body.length > OUTCOME_TEXT_MAX_CHARS) problems.push(`${where} is ${t.body.length} characters`);
@@ -1329,7 +1325,6 @@ export interface GameContent extends Content {
   candidate(id: string): NpcCandidate | undefined;
   /** Cities with a council (the three home cities in slice 3). */
   councilCities(): City[];
-  platform(factionId: FactionId, id: string): Platform | undefined;
   /** One city's political headline templates (ADR 0023), in file order. */
   politicalHeadlinesOf(cityId: string): HeadlineTemplate[];
   // Slice 4 (tech design §4.1).
@@ -1513,7 +1508,6 @@ export function indexContent(content: Content): GameContent {
       ),
     candidate: (id) => candidatesById.get(id),
     councilCities: () => content.cities.filter((c) => c.council !== undefined),
-    platform: (factionId, id) => factions.get(factionId)?.platforms.find((p) => p.id === id),
     politicalHeadlinesOf: (cityId) =>
       content.headlines.filter((h) => h.cityId === cityId && isPoliticalTemplate(h)),
     nationCity: (cityId) => content.nation.cities.find((c) => c.cityId === cityId),

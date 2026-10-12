@@ -1051,3 +1051,110 @@ Built additively: nothing visible changes. The old functions, types, fields and 
   - most votes, the 2–2 tie going to card 2, and a tie with card 1;
   - the capital's merged card and split ballots, the largest bloc with shared seats, and the draw;
   - `countSeats`' backers tie-break, `freezeList` and the calendar fields.
+
+### Phase 2 — The back end switch (12 Oct 2026)
+
+The server now runs the rule vote end to end; the old model is gone from `packages/rules`, `packages/db`, `packages/content` (acts and platforms) and `apps/server`. The client compiles against the new views with plain stand-ins (phases 3–4 build the real screens).
+
+**Rules (`packages/rules`)**
+
+- The `V2` suffixes are dropped: `CountLine` / `CountRow` / `CountResult` (backers, no votes), `countDistrict` (`ballotsByFaction`), `DistrictCountLine` / `Row`, `ElectionCardState`, `ElectionCardView`. **Removed:** `isSmallBranch`, `effectiveEndorsements`, `closeNominations`, `countElection`, `divide`, `Division`, `DivisionItem`, `AGAINST_ALL`, `deskNext`, `DeskNext`, `divideCapital`, `CapitalDivision*`, the old `countDistrict`; `COUNCIL.passVotes`, `maxProposals`, `endorsementsNeeded`, `smallBranchBelow`, `cost.propose`; `CAPITAL_COUNCIL.passVotes`, `maxProposals`; the calendar's `council.voting`, `council.divideDay`, `ordinanceWindow`; `boundaryWork` returns `{ count, set }`.
+- **The views** (§4.4, §8.3) are defined here, since §4.4 named some without a shape:
+  - `StandCardView` (requirements rank and known, `defaultRule`, the eleven-row `menu`, cost, `canStand`, reason) and `CouncilRowView` (place, seated, ward vote, backers, total, `short`, the row's rule);
+  - `OrdinanceMenuItemView` gains `plainLine` and `onBallot`;
+  - `PoliticsSummaryView.state` **is the card's state** (the "smaller state"); `endorsements`, `branchLine`, `count`, `councillor` and `divideAt` go; `inForce` gains `how`, `votes`, `voters`;
+  - `ElectionCardView.result` gains `by` (the **name** of whoever put the winning card up; the client words it) and `whose` (`party` | `councillor`, for the Unrest fallback's line, design §8.2);
+  - `CapitalCountView` v2: `rule`, `weekday`, and per district `parties` (`votes`, `shared`, `seats`) and `council` rows; no `w`, score, opinion or ballot columns;
+  - `TownHallView` v2: `inForce` (with `how`, `countDay`, `votes`, `voters`, `seats`, `factionIds`, `by`), `next: RuleBallotView`, `seats[].rule`, `stand`, `councillor` (rule, `onBallot`, `changeUntil`, the picker's `menu` on days 0–1); `passVotes`, `noRule`, `paper`, `divideAt`, `nextVoteAt`, `election` and `desk` go;
+  - `WhatNowView` v2 as §8.3 (`rule`, `capital`, `changeUntil`, `pollsOpenAt`, `countAt`);
+  - `EndorsementsView` loses `needed` and `branchCounts`; `CandidateView` has `rule`, `backers`, `backedByYou`, `canBack` (no `platform`); `ElectionView` has `stand`, `candidacy { rule, backers, branchLine }`, `backed`, `seats` (no `declare`, `ballot`, `endorsed`);
+  - `PoliticalResult.view` gains `ballot` and `hall` and loses `council`; `knockOns.backers` replaces `endorsements`; `candidacyWithdrawn` goes; `ActionResult.effects.branch: { backers }` replaces `branchEndorsement`; `DeskView.deposits` goes.
+- **Headline conditions are not removed yet.** `votedFor`, `nominationsClosed`, `divided`, `movedYesterday` stay as kinds because the old templates in `politicalHeadlines.ts` / `heraldHeadlines.ts` / `localHeadlines.ts` still name them; the server now always gives them null/false, so they never fire. Phase 5 retires them with the templates and fills `rule` (`ruleDecided`, `votedRule`, `ruleOnBallot`, `voteOpen`). `ordinanceFromToday` keeps firing on a count morning (a rule now starts at the count).
+- The testing fixtures (`src/testing/*.ts`) are rewritten to the v2 shapes; `councilViewFixture` and `capitalCouncilFixture` go; `ruleBallotFixture` and `ruleCardsFixture` are new.
+
+**DB (`packages/db`)**
+
+- **`RuleBallot`** is the model of `ordinances` (`OrderPaper` is removed). The schema has only the ballot's fields; an old paper's `items`, `votes` and `division` live under `legacy` (types `LegacyPaperItem`, `CouncilVote`, `Division`). Migrations 004–006 read and write old papers through `RuleBallot.collection` (the driver), so they still find nothing to do on a converted database. The `{ cityId, divideDay }` index goes (`syncIndexes`).
+- `votes.candidateKey` is optional, with a `pre('validate')` hook: exactly one of `candidateKey` and `ordinanceId`.
+- `candidacies`: `platformId` is removed from the schema and the type (old rows keep it in the database, unread); `effective` and `smallBranch` are optional and never written; the partial index `{ characterId, deposit }` is dropped. `elections.smallBranch` is optional and never written; `BallotLine.platform` is optional (old lists only).
+- `requestLogs`: the kinds `council.withdraw`, `council.propose`, `council.councilVote` are removed.
+- **Migration 009 is wired** into `ensureIndexes` after 008; the start-up log prints *Migration 009: refunds m matched / n modified*. **A bug found by the conversion check:** Mongoose 9 refuses an update pipeline without `updatePipeline: true`, so the credit would have thrown on the first due deposit; fixed.
+- `scripts/playtestReport.ts` reads `RuleBallot` (the old papers' fields from `legacy`, a ballot's winner from `result`) so it still runs; the council section v2 is phase 6's (T15).
+
+**Content (`packages/content`)**
+
+- `politics.resultsV2` is merged into `results` (the vote, the stand and the backing now speak of the rule); `withdraw`, `propose` and `councilVote` are removed from the schema and the data.
+- `Faction.platforms`, the `Platform` schema, `content.platform()` and the loader's platform check are removed. (`cities/irongate.ts` and `missions/irongate.ts` say *platforms* of the tram, not the council's: untouched.)
+- **`copy.ts` is untouched** in this phase (the removals of design §5.3 are phase 5's T13). The client uses the designer's settled strings of 7376f5a (`copy.errors.ruleWindowClosed`, `copy.errors.notOnBallot`); `election.v2.partyCardSet` and `hall.partyCardSet` wait for phase 4.
+
+**Server (`apps/server`)**
+
+- **`services/ruleBallot.ts`** (§7.1) as planned, plus `secretaryCard`, `termRule` (a term's rule, with the fallbacks of §5.1), `homeCards` / `capitalCards`, `capitalCardOrder`, `cardsFor`, `openBallotDoc` and `ballotCards` (the view's provisional or set cards). `tally` is gone from `cityDayCore` (`tallyRules` replaces it); `countLines` reads backers from the candidacy at the count.
+- **The capital's card order uses a replayable draw**, `drawOrderOf(createRng("{cityId}:{k}:order"))`: the old code seeded it with `newSeed`, which is random outside tests, so the set and the views could disagree on ties.
+- **Bootstraps:** card 1 (home) or the largest bloc's card (capital) is in force for `[start, start + 5)` with `paperId: null` (no ballot decided it). Before the first count the Election card's `result` is synthesised as `how: 'carried'` from the rule in force (design §8.2's switch-cycle line), so a fresh city's card has a result line on days 0–1.
+- **A count with ballot k − 1 missing or still `open`** (data loss, or a set that never ran) computes the cards at the count and writes the ballot `counted`, as the old code did for a missing paper.
+- **`votingConversion.ts`** as §6.1; old papers are moved under `legacy` by an update pipeline on the driver (upserting the ballot in its target state). With `cityDayHooks.noBranchMotion` a city with no rule stays without one.
+- **The acts** as §8.1. `council.vote` takes the cards from the city's ballot (the capital's for a district's vote); `ALREADY_VOTED` carries `{ ordinanceId, name }` (an old person ballot carries its candidate key as `ordinanceId`). `council.setRule`'s modal fills `{line}` from the rule's plain line (capitalised, the full stop dropped), `{pollsWeekday}` the vote's first day and `{weekday}` its last; its view is the hall built **in the act's transaction** (`townHallView(…, { session, city })`), so it shows the new rule.
+- **`council.ballot`** refuses the vote with `NOT_RESIDENT` for a city that is not the caller's residence and `WRONG_FACTION` for a member of another party living in a home city (they could not vote before either: the summary is null for them).
+- **The dev panel (T7, §12):** the phases `result-day` | `standing` | `vote`, their labels and lines; `home.ballot { status, cards }` and `ordinance.how` in the status. The *Seat me* and *Votes for card 2 × 3* buttons are phase 5's.
+- **Test hooks:** `POST /api/test/rule-votes` and `POST /api/test/seat` (`apps/server/src/dev/voting.ts`).
+- **`apps/server/scripts/checkVotingConversion.ts`** and `pnpm --filter @irongate/server check:voting-conversion`: home cities and the capital at cycle days 0–4 (Duskwall and the capital with no rule on S), plus Coalport day 2 with no rule; the conversion twice and a direct call refused; §6.3's table, every settled day's rule unchanged, the councillor's proposal as their rule and a card, the next count (`fallback` at home, the largest bloc in the capital), ballot k + 1 open; migration 009 twice over two due deposits.
+
+**Client (`apps/client`, `packages/ui`) — the minimum to compile**
+
+Plain stand-ins over the v2 views, each marked `TODO(phase 3)` or `TODO(phase 4)`:
+
+- `Politics.tsx`: `electionLines` covers the eight states with `copy.election.v2.*`; the slate reads `rule`, `backers`, `canBack`; `CountTable`, `SeatGrid` / `SeatList`, `OrderPaper` and `OrdinanceMenu` are removed; `RuleResultList`, `CouncilRowList` and `whoseLine` stand in for `RuleCards` result mode and `CouncilRows`.
+- `TownHall.tsx`: the rule in force with its *how it won* line, next week's rule as radio rows (or the provisional cards), the councillor's rule with a picker sheet, seats with rules; `YourDesk`, `deskNextLine` and `UpForAVoteReadOnly` removed.
+- `Capital.tsx`: the district result as party rows and council rows.
+- `council.tsx`: the stand flow (`declare` with the default rule), the ballot page on `council.ballot`, the count on `RuleResultList` / `CouncilRowList`.
+- `usePoliticalAct` handles the `ballot` and `hall` views; `errors.ts` drops the removed reasons and words `NOT_ON_BALLOT` and `RULE_WINDOW_CLOSED`; the dev panel reads the new phase names.
+
+**The old Vitest files (§15.3; the user's decision of 12 Oct: delete and trim, write none; not run)**
+
+- **Deleted (6):**
+  - `packages/rules/test/council.test.ts`;
+  - `packages/rules/test/review4.hall.test.ts`;
+  - `apps/server/test/council.test.ts`;
+  - `apps/server/test/cycle.test.ts`;
+  - `packages/ui/test/politics.test.tsx`;
+  - `packages/ui/test/review4.fixround.test.tsx` (not in §15.3's list: both cases test *Passed by four of seven / six of ten*).
+- **Trimmed (the removed model's cases deleted; the rest made to compile against the new signatures, no new assertion):**
+  - `packages/rules/test/calendar.test.ts`: the *close/divide once per cycle* case; the `council.voting`, `divideDay` and `ordinanceWindow` assertions in two cases.
+  - `packages/rules/test/qa.slice3.rules.test.ts`: the GDD-numbers case (old §15.3 wording: passes, proposals, the small branch); the describes *the count as a property* (countElection, closeNominations, the small branch) and *the division as a property*; the calendar case's voting / ordinance-window / close-divide lines.
+  - `packages/rules/test/qa.slice4.rules.test.ts`: *six of ten pass*, *2,000 random district ballots* (votes for names), the describe *the capital division*.
+  - `packages/rules/test/slice4.capital.test.ts`: *NPC fill … the slice-3 order* (a member's vote in the total) and the four division cases; `endorsements` → `backers` and `votes` → `ballotsByFaction` in three count cases.
+  - `packages/db/test/{qa.slice4.db,review1.db,review2.db,slice4.db}.test.ts`: `OrderPaper.collection` → `RuleBallot.collection` (the raw old papers of migrations 004–006).
+  - `packages/db/test/slice3.db.test.ts`: the same, a `RuleBallot` in the transaction case, `platformId` → `rule`.
+  - `packages/content/test/slice3.content.test.ts`: *the platforms and the branch motions*; the `ordinanceWindow` assertion; the duplicate-platform `fails` line.
+  - `packages/content/test/qa.slice3.test.ts`: the vocabulary scan reads `branchMotion`, not `platforms`.
+  - `apps/server/test/helpers.ts`: `RuleBallot.deleteMany` in `resetCity`.
+  - `apps/server/test/{chapter2,qa.slice3.worker}.test.ts` and `cityDay.test.ts`'s turnout case: the vote is for a rule (`ordinanceId`); `cityDay.test.ts`'s bootstrap case loses the order-paper and old-window assertions, and its snapshot reads `RuleBallot`.
+  - `apps/server/test/devClock.test.ts`: the next phase is `vote` (was `polls`).
+  - `apps/server/test/qa.review4.server.test.ts`: `desk` → `councillor`.
+  - `apps/server/test/qa.slice3.server.test.ts`: 15 cases (the lazy catch-up's close and division; the two small-branch cases; the tie-break with votes; withdraw; the struck refund; propose ×2; declare vs the close; endorse vs the close; the council vote vs the division; the secret person ballot; the bootstrap's division; Unrest at the division; *on the ballot / comes off*; BUG m2's motion) and the two describes they emptied; declares name a rule.
+  - `apps/server/test/qa.slice4.capital.test.ts`: *who votes where* (names on a district's list); declares name the branch's rule; the turnout cases vote for the Alliance's card.
+  - `apps/server/test/{qa.slice4.residence,slice4.register}.test.ts`: declares name the branch's rule.
+  - `apps/server/test/qa.slice4.travel.test.ts`: the vote on the train reads `council.ballot` and votes for its first card.
+  - `apps/server/test/review4.hall.test.ts`: the visitor's paper, the councillor's desk, *six votes pass*, the front page's council vote.
+  - `apps/server/test/slice4.capital.test.ts`: the two district counts with person ballots, the capital council 7–3, the secrecy case (all replaced by `voting.spec.ts`); the windows case reads `council.ballot` and `knockOns.backers`.
+  - `apps/server/test/slice4.cityDay.test.ts`: the bootstrap's order paper and *no ordinance* assertions.
+  - `apps/server/test/slice4.integration.test.ts`: the capital week and the vote-at-the-boundary race.
+  - `packages/ui/test/review4.maps.test.tsx`: the describe *the Town Hall* (the paper, `noRule`, the desk, the Next line) and two *What now* cases (the old lines, six of ten).
+  - `packages/ui/test/slice4.test.tsx`: the parties' table, the ten-seat grid, the order paper.
+  - `packages/ui/test/vocabulary.test.tsx`: the `CountTable`, `SeatGrid`, `OrderPaper` and council-view entries; the election-states loop keeps `belowRank`, `standing`, `voted`, `result` on v2 fields; `endorsements` → `backers`.
+- **Compile but would fail if run** (old wording, not trimmed because their subject is not the removed model): `packages/ui/test/slice4.test.tsx` (*a move … a candidacy withdrawn*, the two capital Election-card cases), `vocabulary.test.tsx` (*Slate, the vote*), `apps/server/test/devClock.test.ts` (its `phaseLabel` case asserts the old labels).
+
+**Checks**
+
+- `pnpm art:check && pnpm turbo run lint typecheck build` (cached): green, 14 of 14 tasks.
+- `pnpm --filter @irongate/server check:voting-conversion`: **601 of 601** checks passed (after the migration 009 fix).
+- `voting.spec.ts` (new project `voting`, after `qa-review5`, desktop, serial), **the API block: 8 of 8 passed** with `--no-deps` (`E2E_WEB_PORT=4273 E2E_API_PORT=3301`): stand without backers (and `UNKNOWN_ORDINANCE`, `ALREADY_FILED`); the councillor's rule (`NOT_COUNCILLOR`, the key replayed byte for byte, `myRule.onBallot`); the set and the vote (`RULE_WINDOW_CLOSED`, three distinct cards, `NOT_ON_BALLOT`, one key twice, `ALREADY_VOTED { ordinanceId }`, Rank 1 `RANK_TOO_LOW`); secrecy on the wire (`council.ballot`, `council.hall`, `paper.today`, `city.get` carry no `tallies` and no `ballots` during the vote, and nobody else's choice); backing on day 3 counted +3 with a 2–2 tie to card 2; no votes → card 1 (`fallback`, five days); 3–1 for card 3 (`votes`); Unrest → no party card at the set.
+- `rival` and `qa-review4` (all 30, #11 *the halls as a visitor* included): green. A first run found a client crash on a fresh city's card (`result` null on days 0–1, before any count); fixed by the *carried over* result above and a guard in `electionLines`.
+- **Expected red until their phase rewrites them (§15.2), recorded:** `council` (the stand card's old lines), `qa-council` (the person ballot's rows; three serial cases not run), `capital` (*Which rule for Irongate next week?* where the old line was), `qa-capital` ×2 (the capital ballot's name rows), `dev-panel` (the phase label is now *The vote (day 1 of 3)*), `review3`'s *the election screens* (`how-decided` now reads *Seats go to the seven best known in Coalport…*). The rest of those projects passed.
+- The full e2e is phase 6's.
+
+**Questions for the designer (none blocking)**
+
+1. Strings the stand-ins print that copy does not hold yet: *{name} · {n} backers* (the backing modal's knock-on), *the branch backs you · {n} backers* (the action modal's effect), *votes {n}* (a district's party row) and the dev panel's *The vote opens*. Phase 3–5 want copy keys for them.
+2. The capital's `councillor` card state cannot print `election.v2.partyCardSet(name, rule)`: the card carries the councillor's own rule, not the name of whoever set the party's card. Phase 4 can add it to `ElectionCardView.councillor` (the server has it: `WhatNowView.capital.by`).

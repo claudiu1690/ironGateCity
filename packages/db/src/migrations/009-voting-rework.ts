@@ -10,9 +10,8 @@ import type { StepCounts } from './008-review4';
  * Capital, credited at the next settlement) is retired with the strike, so every deposit still due is
  * credited once here.
  *
- * Written in phase 1; phase 2 wires `migrateVotingRework` into `ensureIndexes` after 008 (and removes
- * the settlement's refund read in the same change). The indexes follow the schemas through
- * `syncIndexes`, which runs before the migrations.
+ * Run by `ensureIndexes` after 008 (the settlement's refund read is gone). The indexes follow the
+ * schemas through `syncIndexes`, which runs before the migrations.
  */
 
 /**
@@ -45,7 +44,8 @@ export async function refundDueDeposits(): Promise<StepCounts> {
               },
             },
           ],
-          { session },
+          // Mongoose 9 refuses an update pipeline unless it is asked for (found by the conversion check).
+          { session, updatePipeline: true },
         );
         credited = true;
       });
@@ -57,7 +57,7 @@ export async function refundDueDeposits(): Promise<StepCounts> {
   return { matched: due.length, modified };
 }
 
-/** Migration 009, in order; phase 2 calls it from `ensureIndexes` after 008 and logs the counts. */
+/** Migration 009, in order; `ensureIndexes` calls it after 008 and the start-up log prints the counts. */
 export async function migrateVotingRework(): Promise<{ refunds: StepCounts }> {
   return { refunds: await refundDueDeposits() };
 }

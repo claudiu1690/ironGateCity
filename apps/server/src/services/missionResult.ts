@@ -90,7 +90,7 @@ export function buildMissionResult(i: {
   issues: NonNullable<ActionResult['effects']['issues']>;
   scoreboard: ActionResult['effects']['scoreboard'];
   morale: ActionResult['effects']['morale'];
-  branchEndorsement: ActionResult['effects']['branchEndorsement'];
+  branch: ActionResult['effects']['branch'];
   rateOn: (day: DayKey) => number;
   firstMission: boolean;
   firstHeatState: boolean;
@@ -322,7 +322,7 @@ export function buildMissionResult(i: {
       item: null,
       hooks: [],
       morale: i.morale ?? null,
-      branchEndorsement: i.branchEndorsement ?? null,
+      branch: i.branch ?? null,
       ...(i.issues.length > 0 ? { issues: i.issues } : {}),
       ...(i.scoreboard ? { scoreboard: i.scoreboard } : {}),
     },

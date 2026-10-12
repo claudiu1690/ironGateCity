@@ -17,7 +17,7 @@ import {
   IssueModel,
   Journey,
   OfficeTerm,
-  OrderPaper,
+  RuleBallot,
   connectDb,
   contributionId,
   disconnectDb,
@@ -198,7 +198,7 @@ describe('migration 006 (tech design §5.9)', () => {
       toDay: 6,
       holder: { kind: 'npc', npcId: 'npc.a.x', name: 'X' },
     });
-    await OrderPaper.collection.insertOne({
+    await RuleBallot.collection.insertOne({
       _id: 'duskwall:4100' as unknown as never,
       cityId: 'duskwall',
       cycle: 4100,
@@ -245,7 +245,7 @@ describe('migration 006 (tech design §5.9)', () => {
       districtId: null,
       vacatedDay: null,
     });
-    expect(await OrderPaper.collection.findOne({ _id: 'duskwall:4100' as unknown as never })).toMatchObject({
+    expect(await RuleBallot.collection.findOne({ _id: 'duskwall:4100' as unknown as never })).toMatchObject({
       items: [{ movedBy: { kind: 'branch', factionId: 'vanguard' } }],
     });
 

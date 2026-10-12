@@ -87,7 +87,7 @@ describe('QA 12 · Ambition chapter 2', () => {
     const p = await player(clock, { fxp: 400 });
     await p.caller.ambition.choose({ chapter: 1, choiceId: 'keep' });
     await p.caller.ambition.attempt({ chapter: 1, approachId: 'sort', idempotencyKey: randomUUID() });
-    await p.caller.council.vote({ candidateKey: 'n:npc.c.weiss', idempotencyKey: key() });
+    await p.caller.council.vote({ ordinanceId: 'ord.long-service', idempotencyKey: key() });
     clock.set(at(D + 6));
     expect(await p.caller.ambition.get()).toMatchObject({ chapter: 2, status: 'waiting' });
     expect((await p.caller.paper.today()).letters).toEqual([]);

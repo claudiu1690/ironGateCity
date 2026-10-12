@@ -38,7 +38,7 @@ import type { ResultInput } from './actionResult';
 import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
 import { keySeed } from './keyGuard';
-import { branchEndorseIfFiled } from './councilService';
+import { branchBackIfStanding } from './councilService';
 import { moveOpinion, placeWrites, readPlace } from './place';
 import type { OpinionMove, PlaceCtx } from './place';
 import { policeIdOf } from './missionService';
@@ -617,8 +617,8 @@ export async function writeTier1(i: {
     lenientIssues: i.frozenOrders === true,
   });
   // Slice 3 (design §6.3): the third order done on a nominations day → the branch endorses.
-  const branchEndorsement = res.orders.allDone
-    ? await branchEndorseIfFiled(content, session, updated, today, now)
+  const branchBack = res.orders.allDone
+    ? await branchBackIfStanding(content, session, updated, today, now)
     : null;
 
   const built = buildActionResult({
@@ -630,7 +630,7 @@ export async function writeTier1(i: {
     restedCap: ctx.restedCap,
     place: { placeId: ctx.placeId, placeName: ctx.placeName },
     morale: move?.morale ?? null,
-    branchEndorsement,
+    branch: branchBack,
     issues: placeEffects.issues,
     scoreboard: placeEffects.scoreboard,
     ...(i.street ? { street: i.street } : ctx.rival ? { street: QUIET_STREET } : {}),
@@ -750,8 +750,8 @@ async function writeTraining(i: {
   );
   if (!updated) throw new VersionConflict();
   const logId = new Types.ObjectId();
-  const branchEndorsement = res.orders.allDone
-    ? await branchEndorseIfFiled(content, session, updated, today, now)
+  const branchBack = res.orders.allDone
+    ? await branchBackIfStanding(content, session, updated, today, now)
     : null;
   const built = buildActionResult({
     kind: 'training',
@@ -774,7 +774,7 @@ async function writeTraining(i: {
     restedCap: ctx.restedCap,
     place: { placeId: ctx.placeId, placeName: ctx.placeName },
     morale: null,
-    branchEndorsement,
+    branch: branchBack,
     issues: [],
     scoreboard: null,
   });

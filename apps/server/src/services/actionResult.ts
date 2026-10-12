@@ -71,7 +71,7 @@ interface Common {
   issues?: NonNullable<ActionResult['effects']['issues']>;
   scoreboard?: ActionResult['effects']['scoreboard'];
   morale?: ActionResult['effects']['morale'];
-  branchEndorsement?: ActionResult['effects']['branchEndorsement'];
+  branch?: ActionResult['effects']['branch'];
   /** Slice 5 (tech design §10.2): a rival-ground tap's street block. */
   street?: StreetView;
 }
@@ -322,7 +322,7 @@ export function buildActionResult(i: ResultInput): ActionResult {
       item: null,
       hooks: [],
       morale: i.morale ?? null,
-      branchEndorsement: i.branchEndorsement ?? null,
+      branch: i.branch ?? null,
       ...(i.issues && i.issues.length > 0 ? { issues: i.issues } : {}),
       ...(i.scoreboard ? { scoreboard: i.scoreboard } : {}),
     },

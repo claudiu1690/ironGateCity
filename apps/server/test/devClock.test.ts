@@ -40,13 +40,13 @@ describe('nextPhase: nominations → polls → the count', () => {
       for (let day = D - 10; day < D + 10; day++) {
         const n = nextPhase(day, offset);
         expect(n.day).toBeGreaterThan(day);
-        expect(cycleOf(n.day, offset).cycleDay).toBe(n.phase === 'polls' ? 2 : 0);
+        expect(cycleOf(n.day, offset).cycleDay).toBe(n.phase === 'vote' ? 2 : 0);
         // Every day before the landing day is still the phase we started in.
         const polling = (d: number) => cycleOf(d, offset).cycleDay >= 2;
         for (let d = day + 1; d < n.day; d++) expect(polling(d)).toBe(polling(day));
         // Two skips from nominations are one whole cycle: the next nominations.
         const twice = nextPhase(n.day, offset);
-        expect(twice.phase).toBe(n.phase === 'polls' ? 'count' : 'polls');
+        expect(twice.phase).toBe(n.phase === 'vote' ? 'count' : 'vote');
       }
     }
   });

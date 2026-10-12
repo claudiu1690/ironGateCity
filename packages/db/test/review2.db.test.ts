@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import {
   City,
-  OrderPaper,
+  RuleBallot,
   connectDb,
   disconnectDb,
   ensureIndexes,
@@ -35,7 +35,7 @@ describe('migration 005 (review 2: the Street Register and the Street Fund)', ()
         ordinanceHistory: [],
       },
     ]);
-    await OrderPaper.collection.insertMany([
+    await RuleBallot.collection.insertMany([
       {
         _id: 'coalport:2' as unknown as never,
         cityId: 'coalport',
@@ -121,7 +121,7 @@ describe('migration 005 (review 2: the Street Register and the Street Fund)', ()
         division: null,
       },
     ]);
-    const untouched = await OrderPaper.collection.findOne({ _id: 'duskwall:2' as unknown as never });
+    const untouched = await RuleBallot.collection.findOne({ _id: 'duskwall:2' as unknown as never });
 
     // Two cities hold nothing old but Coalport; three papers, two of them Coalport's.
     expect(await migrateReview2StreetOrdinances()).toBe(3);
@@ -140,7 +140,7 @@ describe('migration 005 (review 2: the Street Register and the Street Fund)', ()
     const duskwall = await City.collection.findOne({ _id: 'duskwall' as unknown as never });
     expect(duskwall?.ordinance.id).toBe('ord.rally-permits');
 
-    const divided = await OrderPaper.collection.findOne({ _id: 'coalport:2' as unknown as never });
+    const divided = await RuleBallot.collection.findOne({ _id: 'coalport:2' as unknown as never });
     expect(divided?.items.map((i: { ordinanceId: string }) => i.ordinanceId)).toEqual([
       'ord.long-service',
       'ord.street-fund',
@@ -157,10 +157,10 @@ describe('migration 005 (review 2: the Street Register and the Street Fund)', ()
       ],
       inForce: { fromDay: 20_705, toDay: 20_710 },
     });
-    const open = await OrderPaper.collection.findOne({ _id: 'coalport:3' as unknown as never });
+    const open = await RuleBallot.collection.findOne({ _id: 'coalport:3' as unknown as never });
     expect(open?.items[0].ordinanceId).toBe('ord.street-register');
     expect(open?.division).toBeNull();
-    expect(await OrderPaper.collection.findOne({ _id: 'duskwall:2' as unknown as never })).toEqual(untouched);
+    expect(await RuleBallot.collection.findOne({ _id: 'duskwall:2' as unknown as never })).toEqual(untouched);
 
     // Idempotent: a second run, and the start-up run, change nothing.
     expect(await migrateReview2StreetOrdinances()).toBe(0);

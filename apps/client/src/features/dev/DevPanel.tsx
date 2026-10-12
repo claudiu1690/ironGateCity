@@ -260,7 +260,7 @@ function DevPanelOn({ status }: { status: DevStatus }) {
     if (council) {
       rows.push([home.cityName, `${council.phaseLabel} · cycle day ${council.cycleDay}`, 'dev-phase']);
       rows.push([
-        council.next.phase === 'polls' ? 'Polls open' : 'The count',
+        council.next.phase === 'vote' ? 'The vote opens' : 'The count',
         `in ${inWords(council.next.at - now)} · ${council.next.atUtc}`,
         'dev-next',
       ]);

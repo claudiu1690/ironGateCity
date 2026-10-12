@@ -2,21 +2,23 @@ import { copy } from '@irongate/content/copy';
 import type { CapitalCountView, ElectionView, FactionId, HallView } from '@irongate/rules';
 import {
   Button,
-  CountTable,
+  CouncilRowList,
   DistrictResultTable,
   DistrictSwitcher,
   HallHeader,
   HowElectionsWork,
+  OrdinanceRow,
   PaperSheet,
   Plate,
-  ProgressBar,
   ResultModal,
+  RuleResultList,
   Slate,
   cx,
   formatAt,
   formatUntil,
   formatWeekday,
   weekdayOf,
+  whoseLine,
 } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
@@ -164,31 +166,35 @@ function LastResultLink() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The slate (screens §3).
+// The slate (screens §3; the voting rework, tech design §9.6).
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * The voting rework, phase 2: the stand card from `ElectionView.stand`, standing with the branch's
+ * default rule. TODO(phase 3): `StandCard` with *Your rule · Change ›* and the rule picker (§9.6).
+ */
 function DeclareCard({
   e,
   onDeclare,
   pending,
 }: {
   e: ElectionView;
-  onDeclare: (platformId: string) => void;
+  onDeclare: (ordinanceId: string) => void;
   pending: boolean;
 }) {
-  const d = e.declare!;
-  const [platform, setPlatform] = useState(d.platforms[0]?.id ?? '');
+  const d = e.stand!;
   const rank = d.requirements.find((r) => r.id === 'rank')!;
   const known = d.requirements.find((r) => r.id === 'known')!;
   const tick = (met: boolean) => (met ? '✓' : '✗');
   const eligible = rank.met && known.met;
+  const rule = d.menu.find((o) => o.ordinanceId === d.defaultRule);
   return (
     <section
-      aria-label="Stand for the council"
+      aria-label={copy.stand.kicker}
       className="flex flex-col gap-2 border-[1.5px] border-ink bg-paper-card p-3"
       data-testid="declare-card"
     >
-      <h2 className="label-caps text-[11px] font-semibold">Stand for the council</h2>
+      <h2 className="label-caps text-[11px] font-semibold">{copy.stand.kicker}</h2>
       <ul className="flex flex-col gap-0.5 font-mono text-[12px]">
         <li>
           {tick(rank.met)} Rank 3, {rank.rankTitle}
@@ -197,95 +203,45 @@ function DeclareCard({
         <li>
           {tick(known.met)} Known in {e.cityName} ({known.successes} wins)
         </li>
-        <li>2 backers before {formatUntil(e.nominationsCloseAt)}</li>
       </ul>
-      {/* Review 3 (answers §6.3): what a seat gives, in words. */}
       <p className="font-mono text-[12px] text-text-2" data-testid="seat-gives">
-        {copy.seatGives}
+        {copy.stand.gives}
       </p>
       {eligible && (
         <>
-          <fieldset className="flex flex-col gap-1">
-            <legend className="label-caps pb-1 text-[10px] text-muted">Your line</legend>
-            {d.platforms.map((p) => (
-              <label
-                key={p.id}
-                className="flex min-h-11 cursor-pointer items-center gap-2 border-b border-dotted border-faint font-body text-[14px] italic"
-              >
-                <input
-                  type="radio"
-                  name="platform"
-                  value={p.id}
-                  checked={platform === p.id}
-                  onChange={() => setPlatform(p.id)}
-                  className="size-5 accent-ink"
-                />
-                {p.line}
-              </label>
-            ))}
-          </fieldset>
+          {rule && (
+            <p className="font-body text-[14px]" data-testid="stand-rule">
+              {copy.stand.yourRule}: <strong className="font-semibold">{rule.name}</strong>
+            </p>
+          )}
           <Button
-            onClick={() => onDeclare(platform)}
+            onClick={() => onDeclare(d.defaultRule)}
             pending={pending}
-            disabled={!d.canDeclare}
+            disabled={!d.canStand}
             className="w-full"
           >
             {d.reason === 'NOT_ENOUGH_PC' ? copy.needsPc(d.cost) : copy.declare(d.cost)}
           </Button>
-          <p className="font-mono text-[11px] text-muted">{copy.depositRule}</p>
+          <p className="font-mono text-[11px] text-muted">{copy.stand.costs}</p>
         </>
       )}
     </section>
   );
 }
 
-function CandidacyCard({
-  e,
-  onWithdraw,
-  pending,
-}: {
-  e: ElectionView;
-  onWithdraw: () => void;
-  pending: boolean;
-}) {
+/** After standing: *You're standing · your rule: … · 1 backer*, and the branch's line. */
+function CandidacyCard({ e }: { e: ElectionView }) {
   const c = e.candidacy!;
-  const n = c.endorsements?.n ?? 0;
-  const needed = c.endorsements?.needed ?? 2;
   return (
     <section
       aria-label="You're standing"
       className="flex flex-col gap-2 border-[1.5px] border-ink bg-paper-card p-3"
       data-testid="candidacy-card"
     >
-      <h2 className="label-caps text-[11px] font-semibold">You're standing</h2>
-      {c.status === 'filed' ? (
-        <>
-          <p className="font-body text-[15px]" data-testid="candidacy-endorsements">
-            {copy.onTheSlate(n, needed)}
-          </p>
-          <ProgressBar label="Backers" value={n} max={needed} tone="ink" />
-          {c.branchLine && <p className="font-mono text-[12px] text-petrol">{copy.branchEndorsesYou}</p>}
-          {c.endorsements?.branchCounts === 2 && (
-            <p className="font-mono text-[12px] text-muted">{copy.branchMakesUpTheNumber}</p>
-          )}
-          {c.canWithdraw && (
-            <div className="flex items-center justify-end gap-2">
-              <span className="font-mono text-[11px] text-muted">{copy.depositStays}</span>
-              <Button variant="outline" onClick={onWithdraw} pending={pending}>
-                {copy.withdraw}
-              </Button>
-            </div>
-          )}
-        </>
-      ) : (
-        <p className="font-body text-[15px]">
-          {c.status === 'withdrawn'
-            ? copy.withdrawnLine
-            : c.status === 'struck'
-              ? copy.struckLine
-              : copy.onTheBallotLine}
-        </p>
-      )}
+      <p className="font-body text-[15px]" data-testid="candidacy-endorsements">
+        {copy.stand.standing(c.rule.name, c.backers.n)}
+      </p>
+      {c.branchLine && <p className="font-mono text-[12px] text-petrol">{copy.branchEndorsesYou}</p>}
     </section>
   );
 }
@@ -303,14 +259,10 @@ export function SlatePage() {
         <Plate kicker={kickerOf(e.cityName, 'Voting')} title="Who's standing">
           <span className="font-mono text-[12px] text-dim">{copy.tooLateToStand}</span>
         </Plate>
-        <p className="font-mono text-[11.5px] text-muted" data-testid="how-decided">
-          {copy.howDecided}
-        </p>
         <ElectionsLink cityName={e.cityName} />
         <LastResultLink />
-        {/* Review 2 #6: a candidate struck at the close (or printed on the ballot) saw nothing here
-            about it; the view carries the candidacy's status, so say it. */}
-        {e.candidacy && <CandidacyCard e={e} pending={false} onWithdraw={() => undefined} />}
+        {e.candidacy && <CandidacyCard e={e} />}
+        <Slate candidates={e.candidates} mode="slate" />
         <Link
           to="/council/ballot"
           className="label-caps inline-flex min-h-11 items-center justify-center bg-ink px-4 text-[13px] text-paper"
@@ -322,32 +274,26 @@ export function SlatePage() {
   }
   return (
     <Page hall={{ hall: e.hall, cityName: e.cityName }}>
-      <Plate kicker={kickerOf(e.cityName, 'Candidates')} title="Who's standing">
+      <Plate kicker={copy.stand.plateKicker(placeOf(e.cityName).city)} title={copy.stand.title}>
         <span className="font-mono text-[12px] text-dim">
-          {copy.namesGoIn(formatUntil(e.nominationsCloseAt), formatWeekday(e.pollsOpenAt))}
+          {copy.stand.plateLine(e.seats, formatWeekday(e.countAt), formatUntil(e.nominationsCloseAt))}
         </span>
       </Plate>
       <p className="font-mono text-[11.5px] text-muted" data-testid="how-decided">
-        {placeOf(e.cityName).district ? copy.capitalElection.howSeatsAreWon : copy.howDecided}
+        {placeOf(e.cityName).district
+          ? copy.capitalElection.howSeatsAreWon
+          : copy.seats.sentence(placeOf(e.cityName).city, e.seats)}
       </p>
       <ElectionsLink cityName={e.cityName} />
       <LastResultLink />
       {e.candidacy ? (
-        <CandidacyCard
-          e={e}
-          pending={act.pending === 'withdraw'}
-          onWithdraw={() =>
-            void act.run('withdraw', (k) => trpcClient.council.withdraw.mutate({ idempotencyKey: k }))
-          }
-        />
-      ) : e.declare ? (
+        <CandidacyCard e={e} />
+      ) : e.stand ? (
         <DeclareCard
           e={e}
           pending={act.pending === 'declare'}
-          onDeclare={(platformId) =>
-            void act.run('declare', (k) =>
-              trpcClient.council.declare.mutate({ platformId, idempotencyKey: k }),
-            )
+          onDeclare={(ordinanceId) =>
+            void act.run('declare', (k) => trpcClient.council.declare.mutate({ ordinanceId, idempotencyKey: k }))
           }
         />
       ) : null}
@@ -365,9 +311,9 @@ export function SlatePage() {
             .then(() => setEndorsedName(name));
         }}
       />
-      {endorsedName && e.endorsed && (
+      {endorsedName && e.backed && (
         <p className="font-mono text-[12px] text-petrol" role="status">
-          {copy.youEndorsed(e.endorsed.name, 10)}
+          {copy.youEndorsed(e.backed.name, 10)}
         </p>
       )}
       <ResultModal result={act.result} open={act.open} onOpenChange={act.setOpen} />
@@ -376,27 +322,48 @@ export function SlatePage() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The ballot (screens §4).
+// The ballot (the voting rework, tech design §9.3): which rule for next week.
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * The voting rework, phase 2: the rule ballot's cards as plain radio rows, then *Vote for {rule}*.
+ * TODO(phase 3): `BallotPage` with `RuleCards`, *Who's standing ›*, *How the vote works* and the
+ * above-the-fold layout (tech design §9.3). TODO(phase 4): the capital's line and order (§9.8).
+ */
 export function BallotPage() {
-  const q = useQuery(trpc.council.election.queryOptions());
+  const q = useQuery(trpc.council.ballot.queryOptions());
+  // The hall header rides on the election view (the ballot view carries no hall).
+  const eq = useQuery(trpc.council.election.queryOptions());
   const act = usePoliticalAct();
   const [selected, setSelected] = useState<string | null>(null);
-  const closed = !!q.data && (q.data.phase !== 'polling' || !q.data.ballot);
+  const closed = !!q.data && q.data.status !== 'set';
   // Review 2 #6: a voter coming back to the ballot after the polls found no word of the result.
   const count = useQuery({ ...trpc.council.count.queryOptions(), enabled: closed });
   if (q.isError) return <LoadError retry={() => void q.refetch()} />;
   if (!q.data) return <Loading what="Fetching the ballot…" />;
-  const e = q.data;
-  if (closed || !e.ballot) {
+  const b = q.data;
+  const hall = { hall: eq.data?.hall ?? null, cityName: b.cityName };
+  const names: Partial<Record<FactionId, string>> = {};
+  if (closed) {
     return (
-      <Page hall={{ hall: e.hall, cityName: e.cityName }}>
-        <Plate kicker={kickerOf(e.cityName)} title="Your vote">
+      <Page hall={hall}>
+        <Plate kicker={copy.ballot.kicker(b.cityName)} title={copy.ballot.title}>
           <span className="font-mono text-[12px] text-dim">
-            {e.cityName} votes from {formatWeekday(e.pollsOpenAt)}
+            {copy.ballot.votesFrom(b.placeName, formatWeekday(b.pollsOpenAt))}
           </span>
         </Plate>
+        <div className="flex flex-col" data-testid="ballot-cards">
+          {b.cards.map((c) => (
+            <OrdinanceRow
+              key={c.ordinanceId}
+              name={c.name}
+              line={c.plainLine}
+              effectLine={c.effectLine}
+              note={whoseLine(c, names)}
+            />
+          ))}
+        </div>
+        <p className="font-mono text-[12px] text-muted">{copy.hall.ballotSetAt(formatUntil(b.setAt))}</p>
         {count.data && (
           <Link
             to="/council/count"
@@ -415,58 +382,62 @@ export function BallotPage() {
       </Page>
     );
   }
-  const cast = e.ballot.cast;
-  const chosen = e.candidates.find((c) => c.key === selected);
+  const cast = b.myVote;
+  const choosing = !cast && b.canVote;
+  const chosen = b.cards.find((c) => c.ordinanceId === selected);
   return (
-    <Page hall={{ hall: e.hall, cityName: e.cityName }} shortHall>
-      <Plate kicker={kickerOf(e.cityName, 'Voting')} title="Your vote">
+    <Page hall={hall} shortHall>
+      <Plate kicker={copy.ballot.kicker(b.cityName)} title={copy.ballot.title}>
         <span className="font-mono text-[12px] text-dim" data-testid="ballot-line">
-          {placeOf(e.cityName).district
-            ? copy.capitalElection.ballotLine(formatUntil(e.countAt))
-            : `Seven seats · one vote · secret and final · closes ${formatUntil(e.countAt)}`}
-        </span>
-        {/* Review 3 (answers §6.3): who can be voted for, in words (on a short phone, under the names:
-            QA slice 4 m6). */}
-        <span className="font-mono text-[12px] text-dim [@media(max-height:700px)]:hidden" data-testid="vote-anyone">
-          {copy.voteAnyone}
+          {copy.ballot.line(formatUntil(b.countAt), formatWeekday(b.countAt))}
         </span>
       </Plate>
-      {/* QA slice 4 m6: the names come straight after the plate, so the first shows above the CTA on
-          a short phone; the help and the last result follow them. */}
-      <Slate
-        candidates={e.candidates}
-        mode="ballot"
-        selectedKey={selected}
-        castKey={cast?.key ?? null}
-        onSelect={setSelected}
-      />
+      <div className="flex flex-col" role={choosing ? 'radiogroup' : undefined} data-testid="ballot-cards">
+        {b.cards.map((c) => (
+          <OrdinanceRow
+            key={c.ordinanceId}
+            name={c.name}
+            line={c.plainLine}
+            effectLine={c.effectLine}
+            note={whoseLine(c, names)}
+            right={choosing ? 'radio' : c.yourVote ? 'mine' : null}
+            dimmed={!!cast && !c.yourVote}
+            selected={selected === c.ordinanceId}
+            onSelect={choosing ? () => setSelected(c.ordinanceId) : undefined}
+            disabled={!!act.pending}
+          />
+        ))}
+      </div>
       <Notice error={act.error} />
-      <p className="hidden font-mono text-[12px] text-muted [@media(max-height:700px)]:block">{copy.voteAnyone}</p>
-      <ElectionsLink cityName={e.cityName} />
+      <Link
+        to="/council/slate"
+        className="-my-2 inline-flex min-h-11 items-center self-start font-mono text-[12px] text-muted underline underline-offset-2"
+        data-testid="ballot-whos-standing"
+      >
+        {copy.ballot.whoIsStanding(b.standing.players, b.standing.locals, b.standing.seats)} ›
+      </Link>
       <LastResultLink />
       <Sticky>
         {cast ? (
           <p className="py-2 text-center font-mono text-[12px]" data-testid="ballot-cast-line">
-            {copy.ballotCastLine(formatWeekday(e.countAt))}
+            {copy.ballot.cast(formatWeekday(b.countAt))}
           </p>
         ) : (
           <>
             <Button
               className="w-full"
-              disabled={!chosen || !e.ballot.canVote}
+              disabled={!chosen || !b.canVote}
               pending={act.pending === 'vote'}
               onClick={() =>
                 chosen &&
                 void act.run('vote', (k) =>
-                  trpcClient.council.vote.mutate({ candidateKey: chosen.key, idempotencyKey: k }),
+                  trpcClient.council.vote.mutate({ ordinanceId: chosen.ordinanceId, idempotencyKey: k }),
                 )
               }
             >
-              {chosen ? copy.castYourBallotFor(chosen.name) : copy.chooseAName}
+              {chosen ? copy.ballot.voteFor(chosen.name) : copy.ballot.chooseARule}
             </Button>
-            <p className="text-center font-mono text-[11px] text-muted">
-              {copy.ballotCaption(formatAt(e.countAt))}
-            </p>
+            <p className="text-center font-mono text-[11px] text-muted">{copy.ballot.caption(formatAt(b.countAt))}</p>
           </>
         )}
       </Sticky>
@@ -476,7 +447,7 @@ export function BallotPage() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The count (screens §5).
+// The count (the voting rework, tech design §9.4): the rule decided, then the council.
 // ---------------------------------------------------------------------------------------------
 
 export function CountPage() {
@@ -502,12 +473,14 @@ export function CountPage() {
   }
   return (
     <Page hall={{ hall: c.hall, cityName: c.cityName }}>
-      <Plate kicker={`${c.cityName} Council · The result`} title={`${c.weekday}'s result`}>
+      <Plate kicker={copy.ruleResult.kicker(c.cityName)} title={copy.ruleResult.title(c.weekday)}>
         <span className="font-mono text-[12px] text-dim" data-testid="count-header">
-          {copy.resultHeader(c.npcSeats, c.seats, c.turnout.voters, c.turnout.eligible)}
+          {copy.ruleResult.turnout(c.turnout.voters, c.turnout.eligible)}
         </span>
       </Plate>
-      <CountTable rows={c.rows} factionId={character?.factionId ?? 'collective'} />
+      {/* TODO(phase 3): `RuleCards` in result mode and `CouncilRows` with the popover (tech design §9.4). */}
+      <RuleResultList rule={c.rule} />
+      <CouncilRowList rows={c.council} factionId={character?.factionId ?? 'collective'} />
       <ElectionsLink cityName={c.cityName} />
     </Page>
   );
@@ -551,6 +524,8 @@ function CapitalCount({ view, pending }: { view: CapitalCountView | null | undef
         selected={selected.districtId}
         onSelect={(id) => void navigate({ to: '/council/count', search: { d: id }, replace: true })}
       />
+      {/* TODO(phase 4): the cards with seats and the district's party rows (tech design §9.8). */}
+      <RuleResultList rule={view.rule} names={names} />
       <DistrictResultTable district={selected} names={names} />
       <ElectionsLink cityName="Irongate" />
     </Page>
@@ -563,9 +538,9 @@ function CapitalCount({ view, pending }: { view: CapitalCountView | null | undef
 
 /**
  * Review 4 (answers §11.2, ADR 0077): `/council` opens the Town Hall's blocks for the residence's city
- * on the paper ground, the same state as the hall's place sheet: *What now* once, the desk for a
- * councillor (the vote, *Put forward a rule*, the Next line), the rule in force, the seats as rows,
- * the order paper, the week's Issues and the Election card.
+ * on the paper ground, the same state as the hall's place sheet: *What now* once, the rule in force,
+ * next week's rule (the vote; a councillor's rule), the seats as rows, the stand block and the
+ * week's Issues (the voting rework, tech design §9.5).
  */
 export function CouncilPage() {
   const { character } = useCharacter();
@@ -583,7 +558,6 @@ export function CouncilPage() {
       <Plate kicker={copy.councilSittingAt(h.cityName, h.hall.ref)} title="The council">
         <span className="font-mono text-[12px] text-dim" data-testid="council-header">
           {copy.npcSeats(npcSeats, h.seatCount)}
-          {h.passVotes === 6 ? ` · ${copy.capitalElection.sixVotes(formatAt(h.divideAt))}` : ''}
         </span>
         {/* Review 2 (screens §6.1): the names never disappear: the last result, every day. */}
         <Link

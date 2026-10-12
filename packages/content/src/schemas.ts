@@ -36,8 +36,6 @@ export const AmbitionId = Id;
 const HexColour = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'a #RRGGBB colour');
 const Fraction = z.number().min(0).max(1);
 
-/** A candidate's platform line (design §6.4); printed beside the name, no effect. */
-export const Platform = z.strictObject({ id: Id, line: z.string().min(1).max(90) });
 
 export const Faction = z.strictObject({
   id: FactionId,
@@ -84,8 +82,6 @@ export const Faction = z.strictObject({
   }),
   /** Slice 3 (design §10.2): the branch's motion, item 1 on every order paper; the NPC default. */
   branchMotion: Id,
-  /** Slice 3 (design §6.4): the three platform lines a candidate picks from. */
-  platforms: z.tuple([Platform, Platform, Platform]),
   /** Slice 3 (design §11.3): the Unrest pair, slots A and B (`use: 'crisis'`, `doneFxp: 40`). */
   restoreOrders: z.tuple([Id, Id]),
 });
@@ -869,15 +865,12 @@ const PoliticalText = z.strictObject({
   next: z.string().min(1).max(80),
 });
 
-/** The six political result modals (POLITICAL_ACTS in rules). */
+/** The political result modals (POLITICAL_ACTS in rules; the voting rework, design §4.8). */
 export const PoliticalTexts = z.strictObject({
   results: z.strictObject({
     ballot: PoliticalText,
     declare: PoliticalText,
     endorse: PoliticalText,
-    withdraw: PoliticalText,
-    propose: PoliticalText,
-    councilVote: PoliticalText,
     // Slice 4 (screens §6.3): the residence's register and the room.
     register: PoliticalText,
     room: PoliticalText,
@@ -885,15 +878,6 @@ export const PoliticalTexts = z.strictObject({
     renew: PoliticalText,
     // The voting rework (design §4.8): *Changed*, a councillor names their rule.
     setRule: PoliticalText,
-  }),
-  /**
-   * The voting rework (design §4.8): the new texts of the vote, the stand and the backing, beside the
-   * old ones; phase 2 moves them into `results` and drops this block.
-   */
-  resultsV2: z.strictObject({
-    ballot: PoliticalText,
-    declare: PoliticalText,
-    endorse: PoliticalText,
   }),
 });
 
@@ -1134,7 +1118,6 @@ export type Job = z.infer<typeof Job>;
 export type Ordinance = z.infer<typeof Ordinance>;
 export type NpcCandidate = z.infer<typeof NpcCandidate>;
 export type PoliticalTexts = z.infer<typeof PoliticalTexts>;
-export type Platform = z.infer<typeof Platform>;
 export type Nation = z.infer<typeof Nation>;
 export type JourneyEvent = z.infer<typeof JourneyEvent>;
 export type JourneyChoice = z.infer<typeof JourneyChoice>;

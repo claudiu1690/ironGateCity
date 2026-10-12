@@ -92,25 +92,22 @@ export type { ProgressBarProps } from './components/ProgressBar';
 export { ResultModal, ordinanceTagText, stampFor } from './components/ResultModal';
 export {
   CandidateRow,
-  CountTable,
+  CouncilRowList,
   ElectionCard,
   FrontPage,
   HowElectionsWork,
-  OrderPaper,
-  OrdinanceMenu,
   OrdinanceRow,
   PersonMark,
-  SeatGrid,
+  RuleResultList,
   Slate,
   electionLines,
+  whoseLine,
 } from './components/Politics';
 export type {
   CandidateRowProps,
   ElectionCardProps,
   ElectionLines,
   HowElectionsWorkProps,
-  OrderPaperProps,
-  OrdinanceMenuProps,
   OrdinanceRowProps,
   SlateProps,
 } from './components/Politics';
@@ -241,5 +238,5 @@ export {
   StoryScreen,
 } from './components/Story';
 export type { AvatarPickerProps, StoryScreenProps } from './components/Story';
-export { TownHallBlocks, WhatNowCard, deskNextLine } from './components/TownHall';
+export { TownHallBlocks, WhatNowCard } from './components/TownHall';
 export type { DeskActs, TownHallBlocksProps, WhatNowCardProps } from './components/TownHall';

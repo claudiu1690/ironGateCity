@@ -1,28 +1,27 @@
 import type { GameContent } from '@irongate/content';
-import { Candidacy, Character, City, Election, OfficeTerm, OrderPaper, Vote } from '@irongate/db';
+import { Candidacy, Character, City, Election, OfficeTerm, RuleBallot, Vote } from '@irongate/db';
 import type {
   CandidacyDoc,
   CharacterDoc,
   CityDoc,
   ElectionDoc,
   OfficeTermDoc,
-  OrderPaperDoc,
   RequestKind,
+  RuleBallotDoc,
   VoteDoc,
 } from '@irongate/db';
 import {
-  AGAINST_ALL,
   COUNCIL,
   MORALE,
   RANK_FXP,
   applyPersuasion,
+  backersOf,
   councilDay,
   councilKey,
   dayKey,
   dayStart,
   electionKey,
   fillTemplate,
-  isSmallBranch,
   moraleState,
   moraleTransition,
   nextNominationsAfter,
@@ -33,20 +32,21 @@ import type { CouncilAct, DayKey, FactionId, PoliticalPlaceholder, PoliticalResu
 import type { ClientSession } from 'mongoose';
 import { GameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
-import { activeMembersFilter } from './cityDayCore';
 import { writeLedger } from './ledger';
 import { ensureSettled, loadCharacter } from './dayService';
-import { councilView, electionView, endorsementsOf, givenThisCycle, weekdayName } from './politicsService';
+import { ballotView, electionView, givenThisCycle, weekdayName } from './politicsService';
 import { residenceOf, residenceSpec } from './residence';
 import { withRequestKey } from './requestKey';
+import { townHallView } from './townHallService';
 import { DayChanged, VersionConflict } from './txn';
 import { toCharacterView } from './views';
 
 /**
- * The six political acts (tech design §8.2, ADR 0018): declare, withdraw, endorse, vote, propose
- * and the council vote. Each runs through an ADR 0008 request key (a retry returns the stored
- * modal), is guarded set-once on its natural key in the same transaction as any PC spend, and
- * writes the document the boundary closing its window writes, so no act commits after its window.
+ * The council's acts (tech design §8.2, ADR 0018; the voting rework, tech design §8.1): stand
+ * (`declare`), back (`endorse`), vote on the rule and, for a councillor, set the rule. Each runs
+ * through an ADR 0008 request key (a retry returns the stored modal), is guarded set-once on its
+ * natural key in the same transaction as any PC spend, and writes the document the boundary closing
+ * its window writes, so no act commits after its window.
  */
 
 interface ActCtx {
@@ -135,7 +135,7 @@ function buildPoliticalResult(
   return {
     kind: 'political',
     act: r.act,
-    stamp: { label: t.stamp, tone: r.act === 'withdraw' ? 'partial' : 'success' },
+    stamp: { label: t.stamp, tone: 'success' },
     paper: { name: paper.name, shortName: paper.shortName },
     place: { cityId: x.spec.city.id, cityName: x.spec.city.name },
     headline: fillTemplate(t.headline, vars),
@@ -144,7 +144,7 @@ function buildPoliticalResult(
     ...(t.next ? { next: fillTemplate(t.next, vars) } : {}),
     until: r.until ?? null,
     at: r.at ?? null,
-    knockOns: { pc: null, morale: null, endorsements: null, ...r.knockOns },
+    knockOns: { pc: null, morale: null, backers: null, ...r.knockOns },
     performedAt: new Date(x.now).toISOString(),
     idempotencyKey: r.idempotencyKey,
     character: toCharacterView(x.c, x.now, content, null, { city: x.city }),
@@ -155,17 +155,29 @@ function buildPoliticalResult(
 const notNominations = (x: ActCtx) =>
   new GameError('NOT_NOMINATIONS', { opensAt: dayStart(nextNominationsAfter(x.today, x.spec.offset)) });
 
+/** The city's menu (design §4.5): the capital's own, else the home menu. */
+const menuHas = (content: GameContent, cityId: string, ordinanceId: string) =>
+  (content.isDistricted(cityId) ? content.irongateMenu() : content.ordinancesMenu()).some(
+    (o) => o.id === ordinanceId,
+  );
+
 // ---------------------------------------------------------------------------------------------
-// Declare, withdraw, endorse (nominations).
+// Stand and back (ADR 0084).
 // ---------------------------------------------------------------------------------------------
 
-export function declare(deps: ActDeps<{ platformId: string }>): Promise<PoliticalResult> {
+/**
+ * `council.declare` (tech design §8.1): stand with a rule on cycle days 0–1 for 10 Political Capital,
+ * spent. Rank 3, Known here, not sitting; no backers needed. `ON_BALLOT` holds from here (a candidate
+ * cannot move until the result).
+ */
+export function declare(deps: ActDeps<{ ordinanceId: string }>): Promise<PoliticalResult> {
   const { content } = deps;
   return runAct(deps, 'council.declare', async (x) => {
     const { c, spec, cal, today, session } = x;
     if (cal.phase !== 'nominations') throw notNominations(x);
-    if (!content.platform(branchOf(x), deps.input.platformId)) {
-      throw new GameError('UNKNOWN_PLATFORM', { platformId: deps.input.platformId }, 'BAD_REQUEST');
+    const o = content.ordinance(deps.input.ordinanceId);
+    if (!o || !menuHas(content, spec.city.id, o.id)) {
+      throw new GameError('UNKNOWN_ORDINANCE', { ordinanceId: deps.input.ordinanceId }, 'BAD_REQUEST');
     }
     if (c.rank < COUNCIL.standRank) {
       throw new GameError('RANK_TOO_LOW', {
@@ -217,14 +229,14 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
           cycle: cal.cycle,
           characterId: c._id,
           name: c.name,
-          platformId: deps.input.platformId,
+          rule: o.id,
           filedAt: at,
           filedDay: today,
-          status: 'filed',
+          status: 'standing',
           endorsements: [],
-          // Design §17 Q2: orders done before filing → the branch endorses at filing.
+          // Design §3.6: orders done before standing → the branch backs at once (+3, once).
           branch: ordersAllDone(c, today) ? { day: today, at } : null,
-          deposit: 'held',
+          deposit: 'spent',
         },
       ],
       { session },
@@ -236,46 +248,23 @@ export function declare(deps: ActDeps<{ platformId: string }>): Promise<Politica
       {
         act: 'declare',
         idempotencyKey: deps.input.idempotencyKey,
-        vars: { name: c.name, pollsWeekday: weekdayName(cal.election.pollsFrom) },
-        until: dayStart(cal.election.pollsFrom),
+        vars: { name: c.name, rule: o.name, countDay: weekdayName(cal.election.countDay) },
+        at: dayStart(cal.election.countDay),
         knockOns: { pc: { before: c.pc, after: updated.pc } },
-        view: { kind: 'election', election: await electionView(content, updated, x.now, session) },
+        view: { kind: 'election', election: await electionView(content, updated, x.now, session, x.city) },
       },
     );
   });
 }
 
-export function withdraw(deps: ActDeps<object>): Promise<PoliticalResult> {
-  const { content } = deps;
-  return runAct(deps, 'council.withdraw', async (x) => {
-    const { c, spec, cal, today, session } = x;
-    if (cal.phase !== 'nominations') throw notNominations(x);
-    const key = electionOf(x);
-    const done = await Candidacy.findOneAndUpdate(
-      { electionId: key, characterId: c._id, status: 'filed' },
-      { $set: { status: 'withdrawn', deposit: 'kept' } },
-      { session, returnDocument: 'after', lean: true },
-    );
-    if (!done) {
-      const existing = await Candidacy.findOne({ electionId: key, characterId: c._id })
-        .session(session)
-        .lean<CandidacyDoc>();
-      throw new GameError('NOT_FILED', { status: existing?.status ?? null });
-    }
-    return buildPoliticalResult(content, x, {
-      act: 'withdraw',
-      idempotencyKey: deps.input.idempotencyKey,
-      vars: { weekday: weekdayName(nextNominationsAfter(today, spec.offset)) },
-      view: { kind: 'election', election: await electionView(content, c, x.now, session) },
-    });
-  });
-}
-
+/**
+ * `council.endorse` (back; tech design §8.1): +3 to a standing candidate of your own party, public and
+ * final, 10 Political Capital, one per member per cycle; open on cycle days 0–4, until the count.
+ */
 export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<PoliticalResult> {
   const { content } = deps;
   return runAct(deps, 'council.endorse', async (x) => {
     const { c, spec, cal, today, session } = x;
-    if (cal.phase !== 'nominations') throw notNominations(x);
     if (c.rank < COUNCIL.voteRank) throw new GameError('RANK_TOO_LOW', { need: COUNCIL.voteRank });
     const key = electionOf(x);
     const cand = await Candidacy.findById(deps.input.candidacyId).session(session).lean<CandidacyDoc>();
@@ -287,7 +276,7 @@ export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<Politic
       throw new GameError('UNKNOWN_CANDIDACY', { candidacyId: deps.input.candidacyId }, 'BAD_REQUEST');
     }
     if (cand.characterId.equals(c._id)) throw new GameError('CANNOT_ENDORSE_SELF', {}, 'BAD_REQUEST');
-    if (cand.status !== 'filed') throw new GameError('CANDIDACY_CLOSED', { status: cand.status });
+    if (cand.status !== 'standing') throw new GameError('CANDIDACY_CLOSED', { status: cand.status });
     const candFaction = cand.factionId ?? branchOf(x);
     if (candFaction !== c.factionId) throw new GameError('WRONG_FACTION', { factionId: candFaction });
     const given = givenThisCycle(c, spec, cal.cycle);
@@ -302,13 +291,13 @@ export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<Politic
       throw new GameError('NOT_ENOUGH_PC', { pc: c.pc, cost: COUNCIL.cost.endorse });
     const at = new Date(x.now);
     const pushed = await Candidacy.updateOne(
-      { _id: cand._id, status: 'filed', 'endorsements.characterId': { $ne: c._id } },
+      { _id: cand._id, status: 'standing', 'endorsements.characterId': { $ne: c._id } },
       { $push: { endorsements: { characterId: c._id, name: c.name, day: today, at } } },
       { session },
     );
     if (pushed.matchedCount === 0) {
       const now = await Candidacy.findById(cand._id).session(session).lean<CandidacyDoc>();
-      if (now && now.status !== 'filed') throw new GameError('CANDIDACY_CLOSED', { status: now.status });
+      if (now && now.status !== 'standing') throw new GameError('CANDIDACY_CLOSED', { status: now.status });
       throw new GameError(
         'ALREADY_ENDORSED',
         { candidacyId: cand._id.toHexString(), name: cand.name },
@@ -333,35 +322,34 @@ export function endorse(deps: ActDeps<{ candidacyId: string }>): Promise<Politic
         : { 'endorsementsGiven.electionId': { $ne: key } },
     );
     const after = await Candidacy.findById(cand._id).session(session).lean<CandidacyDoc>();
-    const others = await Character.countDocuments({
-      ...activeMembersFilter(spec.city.id, candFaction, today),
-      _id: { $ne: cand.characterId },
-    }).session(session);
-    const secretary = content.npc(content.faction(candFaction).secretary.npcId)?.name ?? '';
-    const n = endorsementsOf(content, after!, isSmallBranch(others), secretary).n;
+    const n = backersOf({ members: after!.endorsements.length, branch: after!.branch !== null });
     return buildPoliticalResult(
       content,
       { ...x, c: updated },
       {
         act: 'endorse',
         idempotencyKey: deps.input.idempotencyKey,
-        vars: { name: cand.name, n: String(n), pollsWeekday: weekdayName(cal.election.pollsFrom) },
-        until: dayStart(cal.election.pollsFrom),
+        vars: { name: cand.name, n: String(n), countDay: weekdayName(cal.election.countDay) },
+        at: dayStart(cal.election.countDay),
         knockOns: {
           pc: { before: c.pc, after: updated.pc },
-          endorsements: { name: cand.name, n, needed: COUNCIL.endorsementsNeeded },
+          backers: { name: cand.name, n },
         },
-        view: { kind: 'election', election: await electionView(content, updated, x.now, session) },
+        view: { kind: 'election', election: await electionView(content, updated, x.now, session, x.city) },
       },
     );
   });
 }
 
 // ---------------------------------------------------------------------------------------------
-// The ballot (polls open; ADR 0019).
+// The vote on the rule (cycle days 2–4; ADR 0083, ADR 0019).
 // ---------------------------------------------------------------------------------------------
 
-export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<PoliticalResult> {
+/**
+ * `council.vote` (tech design §8.1): one tap for one of the set ballot's cards, secret and final. At
+ * home +0.5 morale in the vote's transaction (ADR 0022); in the capital no opinion moves (design §8.6).
+ */
+export function vote(deps: ActDeps<{ ordinanceId: string }>): Promise<PoliticalResult> {
   const { content } = deps;
   return runAct(deps, 'council.vote', async (x) => {
     const { c, spec, cal, today, session } = x;
@@ -375,7 +363,7 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
       });
     }
     const key = electionOf(x);
-    const e = await Election.findById(key, { ballot: 1, status: 1, countDay: 1, pollsFrom: 1 })
+    const e = await Election.findById(key, { status: 1, countDay: 1, pollsFrom: 1 })
       .session(session)
       .lean<ElectionDoc>();
     if (!e || e.status === 'nominations') throw new GameError('ELECTION_NOT_READY', {}, 'CONFLICT');
@@ -387,13 +375,20 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
     if (votesFromDay > e.pollsFrom) {
       throw new GameError('NOT_YET_VOTER', { votesFromAt: dayStart(votesFromDay) });
     }
-    const line = (e.ballot ?? []).find((b) => b.key === deps.input.candidateKey);
-    if (!line)
-      throw new GameError('UNKNOWN_CANDIDATE', { candidateKey: deps.input.candidateKey }, 'BAD_REQUEST');
+    // The cards of the city's ballot k (the capital's for a district's vote).
+    const ballot = await RuleBallot.findById(councilKey(spec.city.id, cal.cycle), { status: 1, cards: 1 })
+      .session(session)
+      .lean<RuleBallotDoc>();
+    if (!ballot || ballot.status === 'open' || !ballot.cards) {
+      throw new GameError('ELECTION_NOT_READY', {}, 'CONFLICT');
+    }
+    const card = ballot.cards.find((cd) => cd.ordinanceId === deps.input.ordinanceId);
+    if (!card) throw new GameError('NOT_ON_BALLOT', { ordinanceId: deps.input.ordinanceId }, 'BAD_REQUEST');
+    const ruleNameOf = (id: string) => content.ordinance(id)?.name ?? id;
     const existing = await Vote.findOne({ electionId: key, voterId: c._id }).session(session).lean<VoteDoc>();
     if (existing) {
-      const name = (e.ballot ?? []).find((b) => b.key === existing.candidateKey)?.name ?? '';
-      throw new GameError('ALREADY_VOTED', { candidateKey: existing.candidateKey, name }, 'CONFLICT');
+      const id = existing.ordinanceId ?? existing.candidateKey ?? '';
+      throw new GameError('ALREADY_VOTED', { ordinanceId: id, name: ruleNameOf(id) }, 'CONFLICT');
     }
     const open = await Election.updateOne(
       { _id: key, status: 'polling' },
@@ -401,22 +396,28 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
       { session },
     );
     if (open.matchedCount === 0) throw new GameError('NOT_POLLING', {});
-    await Vote.create([{ electionId: key, voterId: c._id, candidateKey: line.key, day: today }], { session });
+    await Vote.create([{ electionId: key, voterId: c._id, ordinanceId: card.ordinanceId, day: today }], {
+      session,
+    });
     // The first ballot ever opens Finish His Work chapter 2 (design §17.7): set once, no other field.
     await Character.updateOne(
       { _id: c._id, firstBallotAt: null },
       { $set: { firstBallotAt: new Date(x.now) } },
       { session },
     );
+    const vars = { rule: ruleNameOf(card.ordinanceId), countDay: weekdayName(e.countDay) };
     // Design §8.6: a capital ballot never moves a district's opinion (and there is no morale).
     const home = spec.home;
     if (!home) {
       return buildPoliticalResult(content, x, {
         act: 'ballot',
         idempotencyKey: deps.input.idempotencyKey,
-        vars: { name: line.name, countDay: weekdayName(e.countDay) },
+        vars,
         at: dayStart(e.countDay),
-        view: { kind: 'election', election: await electionView(content, c, x.now, session) },
+        view: {
+          kind: 'ballot',
+          ballot: await ballotView(content, c, spec.city.id, x.city, x.now, session),
+        },
       });
     }
     // ADR 0022: +0.5 morale per ballot, in the ballot's transaction; a ledger row, not a contribution.
@@ -452,7 +453,7 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
       {
         act: 'ballot',
         idempotencyKey: deps.input.idempotencyKey,
-        vars: { name: line.name, countDay: weekdayName(e.countDay) },
+        vars,
         at: dayStart(e.countDay),
         knockOns: {
           morale: {
@@ -464,151 +465,83 @@ export function vote(deps: ActDeps<{ candidateKey: string }>): Promise<Political
             stateAfter: moraleState(op.shares[home]),
           },
         },
-        view: { kind: 'election', election: await electionView(content, c, x.now, session) },
+        view: { kind: 'ballot', ballot: await ballotView(content, c, spec.city.id, city, x.now, session) },
       },
     );
   });
 }
 
 // ---------------------------------------------------------------------------------------------
-// The chamber: propose and the council vote (council days 0–1).
-// ---------------------------------------------------------------------------------------------
-
-async function councillorTerm(x: ActCtx): Promise<OfficeTermDoc> {
-  const term = await OfficeTerm.findOne({
-    councilKey: councilKey(x.spec.city.id, x.cal.cycle),
-    'holder.kind': 'player',
-    'holder.characterId': x.c._id,
-    vacatedDay: null,
-  })
-    .session(x.session)
-    .lean<OfficeTermDoc>();
-  if (!term) throw new GameError('NOT_COUNCILLOR');
-  if (!x.cal.council.voting) {
-    throw new GameError('COUNCIL_CLOSED', {
-      divideAt: dayStart(x.cal.council.divideDay),
-      opensAt: dayStart(x.cal.council.toDay),
-    });
-  }
-  return term;
-}
-
-export function propose(deps: ActDeps<{ ordinanceId: string }>): Promise<PoliticalResult> {
-  const { content } = deps;
-  return runAct(deps, 'council.propose', async (x) => {
-    const { c, spec, cal, today, session } = x;
-    await councillorTerm(x);
-    const o = content.ordinance(deps.input.ordinanceId);
-    if (!o) throw new GameError('UNKNOWN_ORDINANCE', { ordinanceId: deps.input.ordinanceId }, 'BAD_REQUEST');
-    if (c.pc < COUNCIL.cost.propose)
-      throw new GameError('NOT_ENOUGH_PC', { pc: c.pc, cost: COUNCIL.cost.propose });
-    const key = councilKey(spec.city.id, cal.cycle);
-    const at = new Date(x.now);
-    // Up to three proposals after the branch motions (one at home, up to three in the capital).
-    const current = await OrderPaper.findById(key, { items: 1 }).session(session).lean<OrderPaperDoc>();
-    const branchItems = (current?.items ?? []).filter((i) => i.movedBy.kind === 'branch').length;
-    const pushed = await OrderPaper.updateOne(
-      {
-        _id: key,
-        status: 'open',
-        'items.ordinanceId': { $ne: o.id },
-        'items.movedBy.characterId': { $ne: c._id },
-        [`items.${Math.max(1, branchItems) + COUNCIL.maxProposals - 1}`]: { $exists: false },
-      },
-      {
-        $push: {
-          items: {
-            ordinanceId: o.id,
-            movedBy: { kind: 'player', characterId: c._id, name: c.name, factionId: c.factionId },
-            at,
-            day: today,
-          },
-        },
-      },
-      { session },
-    );
-    if (pushed.matchedCount === 0) {
-      const p = await OrderPaper.findById(key).session(session).lean<OrderPaperDoc>();
-      if (!p || p.status !== 'open')
-        throw new GameError('COUNCIL_CLOSED', { divideAt: dayStart(cal.council.divideDay) });
-      const mine = p.items.find((i) => i.movedBy.kind === 'player' && i.movedBy.characterId.equals(c._id));
-      if (mine) throw new GameError('ALREADY_PROPOSED', { ordinanceId: mine.ordinanceId }, 'CONFLICT');
-      if (p.items.some((i) => i.ordinanceId === o.id))
-        throw new GameError('ALREADY_ON_PAPER', { ordinanceId: o.id }, 'CONFLICT');
-      throw new GameError('PAPER_FULL');
-    }
-    const updated = await spendPc(x, COUNCIL.cost.propose);
-    return buildPoliticalResult(
-      content,
-      { ...x, c: updated },
-      {
-        act: 'propose',
-        idempotencyKey: deps.input.idempotencyKey,
-        vars: { ordinance: o.name, ordinanceLine: o.line },
-        at: dayStart(cal.council.divideDay),
-        knockOns: { pc: { before: c.pc, after: updated.pc } },
-        view: { kind: 'council', council: await councilView(content, updated, x.city, x.now, session) },
-      },
-    );
-  });
-}
-
-export function councilVote(deps: ActDeps<{ choice: string }>): Promise<PoliticalResult> {
-  const { content } = deps;
-  return runAct(deps, 'council.councilVote', async (x) => {
-    const { c, spec, cal, session } = x;
-    const term = await councillorTerm(x);
-    const key = councilKey(spec.city.id, cal.cycle);
-    const p = await OrderPaper.findById(key).session(session).lean<OrderPaperDoc>();
-    const choice = deps.input.choice;
-    if (!p || p.status !== 'open')
-      throw new GameError('COUNCIL_CLOSED', { divideAt: dayStart(cal.council.divideDay) });
-    if (choice !== AGAINST_ALL && !p.items.some((i) => i.ordinanceId === choice)) {
-      throw new GameError('NOT_ON_PAPER', { choice }, 'BAD_REQUEST');
-    }
-    const pushed = await OrderPaper.updateOne(
-      { _id: key, status: 'open', 'votes.characterId': { $ne: c._id } },
-      {
-        $push: { votes: { characterId: c._id, name: c.name, seat: term.seat, choice, at: new Date(x.now) } },
-      },
-      { session },
-    );
-    if (pushed.matchedCount === 0) {
-      const again = await OrderPaper.findById(key).session(session).lean<OrderPaperDoc>();
-      if (!again || again.status !== 'open') throw new GameError('COUNCIL_CLOSED', {});
-      const mine = again.votes.find((v) => v.characterId.equals(c._id));
-      throw new GameError('ALREADY_COUNCIL_VOTED', { choice: mine?.choice ?? null }, 'CONFLICT');
-    }
-    const o = content.ordinance(choice);
-    return buildPoliticalResult(content, x, {
-      act: 'councilVote',
-      idempotencyKey: deps.input.idempotencyKey,
-      vars: {
-        ordinance: o?.name ?? 'none of these',
-        ordinanceLine: o?.line ?? '',
-        resultWeekday: weekdayName(cal.council.divideDay),
-      },
-      at: dayStart(cal.council.divideDay),
-      view: { kind: 'council', council: await councilView(content, c, x.city, x.now, session) },
-    });
-  });
-}
-
-// ---------------------------------------------------------------------------------------------
-// The branch's endorsement in play (design §6.3), called from an action or a job take.
+// The councillor's rule (cycle days 0–1 of the term; ADR 0084).
 // ---------------------------------------------------------------------------------------------
 
 /**
- * When a write completes the day's third order on a nominations day, the branch endorses the
- * caller's filed candidacy (once). Returns the endorsement line for the result modal, or null.
+ * `council.setRule` (tech design §8.1): a player councillor names the rule they put to the town, free,
+ * one tap, on the term's first two days. A target-state `$set` on the term; serialised with the set
+ * by `$inc changes` on the open ballot (a miss: the set has run, `RULE_WINDOW_CLOSED`).
  */
-export async function branchEndorseIfFiled(
+export function setRule(deps: ActDeps<{ ordinanceId: string }>): Promise<PoliticalResult> {
+  const { content } = deps;
+  return runAct(deps, 'council.setRule', async (x) => {
+    const { c, spec, cal, session } = x;
+    const key = councilKey(spec.city.id, cal.cycle);
+    const term = await OfficeTerm.findOne({
+      councilKey: key,
+      'holder.kind': 'player',
+      'holder.characterId': c._id,
+      vacatedDay: null,
+    })
+      .session(session)
+      .lean<OfficeTermDoc>();
+    if (!term) throw new GameError('NOT_COUNCILLOR');
+    const o = content.ordinance(deps.input.ordinanceId);
+    if (!o || !menuHas(content, spec.city.id, o.id)) {
+      throw new GameError('UNKNOWN_ORDINANCE', { ordinanceId: deps.input.ordinanceId }, 'BAD_REQUEST');
+    }
+    const closed = () => new GameError('RULE_WINDOW_CLOSED', { opensAt: dayStart(cal.council.toDay) });
+    if (!cal.council.ruleOpen) throw closed();
+    const set = await OfficeTerm.updateOne(
+      { _id: term._id, 'holder.characterId': c._id, vacatedDay: null },
+      { $set: { rule: o.id, ruleSetAt: new Date(x.now) } },
+      { session },
+    );
+    if (set.matchedCount === 0) throw new GameError('NOT_COUNCILLOR');
+    const open = await RuleBallot.updateOne({ _id: key, status: 'open' }, { $inc: { changes: 1 } }, { session });
+    if (open.matchedCount === 0) throw closed();
+    const line = o.plainLine.replace(/\.$/, '');
+    return buildPoliticalResult(content, x, {
+      act: 'setRule',
+      idempotencyKey: deps.input.idempotencyKey,
+      vars: {
+        rule: o.name,
+        line: line.charAt(0).toUpperCase() + line.slice(1),
+        pollsWeekday: weekdayName(cal.election.pollsFrom),
+        weekday: weekdayName(cal.election.countDay - 1),
+      },
+      at: dayStart(cal.election.pollsFrom),
+      view: {
+        kind: 'hall',
+        hall: await townHallView(content, c, spec.city.id, x.now, { session, city: x.city }),
+      },
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------------------------
+// The branch's backing in play (design §3.6), called from an action, a job take or a mission.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * When a write completes the day's third order on cycle days 0–4, the branch backs the caller's
+ * standing candidacy (+3, once; §20.1 Q3). Returns the backers line for the result modal, or null.
+ */
+export async function branchBackIfStanding(
   content: GameContent,
   session: ClientSession,
   c: CharacterDoc,
   today: DayKey,
   now: number,
-): Promise<{ endorsements: number; needed: number; smallBranch: boolean } | null> {
+): Promise<{ backers: number } | null> {
   let spec: ReturnType<typeof residenceSpec>;
   try {
     spec = residenceSpec(content, c);
@@ -616,27 +549,13 @@ export async function branchEndorseIfFiled(
     return null;
   }
   if (spec.home !== null && spec.home !== c.factionId) return null;
-  const branch = spec.home ?? c.factionId;
   const cal = councilDay(today, spec.offset);
-  if (cal.phase !== 'nominations') return null;
   const key = electionKey(spec.place.id, cal.cycle);
   const cand = await Candidacy.findOneAndUpdate(
-    { electionId: key, characterId: c._id, status: 'filed', branch: null },
+    { electionId: key, characterId: c._id, status: 'standing', branch: null },
     { $set: { branch: { day: today, at: new Date(now) } } },
     { session, returnDocument: 'after', lean: true },
   );
   if (!cand) return null;
-  const others = await Character.countDocuments({
-    ...activeMembersFilter(spec.city.id, branch, today),
-    _id: { $ne: c._id },
-  }).session(session);
-  const small = isSmallBranch(others);
-  const faction = content.faction(branch);
-  const n = endorsementsOf(
-    content,
-    cand as CandidacyDoc,
-    small,
-    content.npc(faction.secretary.npcId)?.name ?? '',
-  ).n;
-  return { endorsements: n, needed: COUNCIL.endorsementsNeeded, smallBranch: small };
+  return { backers: backersOf({ members: cand.endorsements.length, branch: true }) };
 }

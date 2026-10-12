@@ -53,16 +53,11 @@ export function noticeFor(error: unknown): string | undefined {
       return "You're already standing in this election.";
     case 'CANDIDACY_CLOSED':
       return 'That name is no longer on the list.';
-    case 'COUNCIL_CLOSED':
-      return 'The council is not voting now.';
-    case 'ALREADY_COUNCIL_VOTED':
-      return 'Your vote is already recorded.';
-    case 'ALREADY_PROPOSED':
-      return 'You have already put forward a rule this term.';
-    case 'ALREADY_ON_PAPER':
-      return 'That rule is already up for a vote.';
-    case 'PAPER_FULL':
-      return copy.paperFull;
+    // The voting rework (tech design §4.4).
+    case 'NOT_ON_BALLOT':
+      return copy.errors.notOnBallot;
+    case 'RULE_WINDOW_CLOSED':
+      return copy.errors.ruleWindowClosed(formatWhen(typeof game.opensAt === 'number' ? game.opensAt : 0));
     case 'RANK_TOO_LOW':
       return `Needs Rank ${String(game.need)}.`;
     case 'NOT_KNOWN':

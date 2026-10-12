@@ -42,7 +42,6 @@ describe('the real content, slice 3', () => {
     const coalport = content.city('coalport')!.council!.offset;
     expect(councilDay(dayKey(Date.UTC(2026, 9, 1)), coalport)).toMatchObject({ cycle: 4145, cycleDay: 0 });
     expect(councilDay(dayKey(Date.UTC(2026, 9, 6)), coalport)).toMatchObject({ cycle: 4146, cycleDay: 0 });
-    expect(councilDay(dayKey(Date.UTC(2026, 9, 8)), coalport).ordinanceWindow.toDay).toBe(20739);
   });
 
   it('the ten ordinances word for word (design §10.1)', () => {
@@ -94,22 +93,6 @@ describe('the real content, slice 3', () => {
     );
     expect(content.slateOf('coalport').map((c) => c.profile)).toEqual([44, 38, 33, 29, 25, 22, 19, 17, 15]);
     expect(content.candidate('npc.v.kessler')?.cityId).toBe('duskwall');
-  });
-
-  it('the platforms (design §6.4) and the branch motions (§10.2)', () => {
-    // Review 2 (answers §1.10): every street, not every ward.
-    const text = plainProse(section(POL, '### 6.4 Platform lines', '### 6.5'));
-    for (const f of content.factions) {
-      for (const p of f.platforms) expect(text).toContain(`"${p.line}"`);
-    }
-    expect(Object.fromEntries(content.factions.map((f) => [f.id, f.branchMotion]))).toEqual({
-      vanguard: 'ord.rally-permits',
-      collective: 'ord.long-service',
-      alliance: 'ord.reading-room',
-    });
-    expect(content.platform('collective', 'plat.c.bread')?.line).toBe(
-      'Rent, bread and the tram. In that order.',
-    );
   });
 
   it('Restore the base word for word (design §17.4): crisis, +40, slots A and B', () => {
@@ -263,7 +246,6 @@ describe('slice-3 cross-checks (tech design §4.2): one failing fixture each', (
         ]),
       /crisis template no faction names/,
     );
-    fails((c) => (c.factions[0]!.platforms[1]!.id = c.factions[0]!.platforms[0]!.id), /three distinct ids/);
   });
 
   it('cities', () => {

@@ -14,7 +14,7 @@ import {
 import type { CharacterView, JobView } from '@irongate/rules';
 import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
-import { branchEndorseIfFiled } from './councilService';
+import { branchBackIfStanding } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { withRequestKey } from './requestKey';
 import { DayChanged, VersionConflict } from './txn';
@@ -25,8 +25,8 @@ export interface TakeJobResult {
   job: JobView;
   /** For the one line on the Jobs card (content §12.1). */
   outcome: { switched: boolean; orderCompleted: boolean; fxp: number; firstPayAt: number };
-  /** Slice 3: taking the job completed the third order and the branch endorsed the candidacy. */
-  branchEndorsement: { endorsements: number; needed: number; smallBranch: boolean } | null;
+  /** Taking the job completed the third order and the branch backed the candidacy (ADR 0084). */
+  branch: { backers: number } | null;
 }
 
 /**
@@ -115,11 +115,11 @@ export async function takeJob(deps: {
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
-      const branchEndorsement = adv.allDone
-        ? await branchEndorseIfFiled(content, session, updated, today, now)
+      const branchBack = adv.allDone
+        ? await branchBackIfStanding(content, session, updated, today, now)
         : null;
       return {
-        branchEndorsement,
+        branch: branchBack,
         // The HUD's Rested cap is the residence city's (ADR 0030 §5).
         character: toCharacterView(updated, now, content, loaded.editionReadAt, { city: loaded.city }),
         job: jobView(content, updated, today)!,

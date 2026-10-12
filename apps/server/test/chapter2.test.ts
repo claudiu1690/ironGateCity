@@ -36,7 +36,7 @@ describe('The Names on the Stone, chapter 2', () => {
     expect(a).toMatchObject({ chapter: 2, status: 'waiting', needs: { ballotCast: true }, screen: null });
     expect((await p.caller.paper.today()).letters).toEqual([]);
 
-    await p.caller.council.vote({ candidateKey: 'n:npc.c.weiss', idempotencyKey: key() });
+    await p.caller.council.vote({ ordinanceId: 'ord.long-service', idempotencyKey: key() });
     expect((await Character.findById(p.id).lean())!.firstBallotAt).toBeInstanceOf(Date);
     a = await p.caller.ambition.get();
     expect(a).toMatchObject({ chapter: 2, status: 'ready', letterFrom: "From the branch's press" });

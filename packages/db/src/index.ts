@@ -18,9 +18,9 @@ export { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-res
 export { migrateSlice5Risk } from './migrations/007-slice5-risk';
 export { CELLS_NOW_INDEX, cardAtForOpenJourneys, cellsNowIndex, migrateReview4, resetOldDrafts } from './migrations/008-review4';
 export type { Review4Counts, Review4Step, StepCounts } from './migrations/008-review4';
-// The voting rework (tech design §6.2): written in phase 1, wired into `ensureIndexes` in phase 2.
+// The voting rework (tech design §6.2): run by `ensureIndexes` after 008.
 export { migrateVotingRework, refundDueDeposits } from './migrations/009-voting-rework';
-export { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
+export { Candidacy, Election, OfficeTerm, RuleBallot, Vote } from './models/politics';
 // Slice 4 (tech design §5).
 export { Journey } from './models/journey';
 export type { JourneyDoc, JourneyKind, JourneyStatus } from './models/journey';
@@ -59,10 +59,8 @@ export type {
   ElectionDoc,
   ElectionResult,
   ElectionStatus,
-  MovedBy,
   OfficeTermDoc,
-  OrderPaperDoc,
-  OrderPaperItem,
+  LegacyPaperItem,
   RuleBallotDoc,
   RuleBallotResult,
   SeatHolder,

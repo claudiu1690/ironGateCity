@@ -126,7 +126,7 @@ describe('registering (residence.register)', () => {
     });
     // Coalport is on cycle day 0 (nominations): stand at home first.
     await p.caller.council.declare({
-      platformId: content.faction('collective').platforms[0]!.id,
+      ordinanceId: content.faction('collective').branchMotion,
       idempotencyKey: key(),
     });
     // …and hold seat 1 of the sitting Coalport council.

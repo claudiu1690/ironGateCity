@@ -1,9 +1,8 @@
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
-import { ActionLog, Award, Candidacy, Character, City, Encounter, OfficeTerm, PaperEntry, Stay, isDuplicateKeyError } from '@irongate/db';
+import { ActionLog, Award, Character, City, Encounter, OfficeTerm, PaperEntry, Stay, isDuplicateKeyError } from '@irongate/db';
 import type {
   AwardDoc,
-  CandidacyDoc,
   CharacterDoc,
   CityDoc,
   OfficeTermDoc,
@@ -56,7 +55,7 @@ import {
   welcomeOrderIds,
 } from './views';
 
-/** What a settlement writes: the character's `$set` and `$inc`, the edition, the refunds. */
+/** What a settlement writes: the character's `$set` and `$inc`, the edition, the awards. */
 export interface SettlementWrite {
   set: {
     'day.settled': number;
@@ -78,8 +77,6 @@ export interface SettlementWrite {
   };
   inc: { iron: number };
   edition: NewEdition;
-  /** Candidacies whose deposit this settlement returns (`due` → `returned`). */
-  refunds: CandidacyDoc['_id'][];
   /** Slice 4 (ADR 0028): the awards this settlement credits (`creditedAt` set once). */
   awards: AwardDoc['_id'][];
 }
@@ -87,8 +84,8 @@ export interface SettlementWrite {
 /**
  * The pure middle of a settlement (slice-2 tech design §7.2, slice-3 §8.4, review 1): settle the
  * boundaries crossed (each ended day's wage under that day's ordinance, seniority, One of Us PC),
- * the councillor's stipend and the
- * deposits returned (ADR 0020), today's offices, the Energy re-base when a Rested cap changed
+ * the councillor's stipend (ADR 0020; the voting rework retired the deposit's refund, migration
+ * 009 credited what was left), today's offices, the Energy re-base when a Rested cap changed
  * (ADR 0021), today's Party orders (the welcome set on the first City Day, the crisis pair in
  * Unrest) and today's paper. `c` need not be stored yet: the join settles a first day before
  * inserting it. Returns null when there is nothing to settle.
@@ -104,7 +101,6 @@ export function computeSettlement(
     /** Slice 4 (ADR 0030 §6): the job's city, for each ended day's wage; default `home`. */
     jobCity?: CityDoc | null;
     terms?: OfficeTermDoc[];
-    due?: CandidacyDoc[];
     /** Slice 4 (ADR 0028): hero and Issue awards not yet credited. */
     awards?: AwardDoc[];
     /** Slice 5 (tech design §8.4): yesterday's stays and the titles the risk headlines name. */
@@ -145,7 +141,6 @@ export function computeSettlement(
 
   // ADR 0020: the stipend for each boundary held since the last settlement, and refunds.
   const terms = read.terms ?? [];
-  const due = read.due ?? [];
   // Slice 4 (ADR 0026): a seat vacated at a move stops paying at the move.
   const boundaries = stipendBoundaries(
     terms.map((t) => ({ fromDay: t.fromDay, toDay: t.vacatedDay ?? t.toDay })),
@@ -191,7 +186,6 @@ export function computeSettlement(
         }
       : null;
   const stipend = { pc: boundaries * COUNCIL.stipend.pc, fxp: boundaries * COUNCIL.stipend.fxp };
-  const refundPc = due.length * COUNCIL.cost.declare;
   // Review 1 (§13.4): One of Us pays 1 PC a day per city where it is held, for the boundaries
   // crossed (at most 14, like the wage). Standing only rises when acting, and a settlement comes
   // before the day's first action, so today's level is the level each ended day had.
@@ -200,7 +194,7 @@ export function computeSettlement(
   const oneOfUsPc = oneOfUsCities * paidBoundaries * STANDING.oneOfUsPcPerDay;
   const gains = applyGains(
     { xp: c.xp, level: c.level, fxp: c.fxp, rank: c.rank, pc: c.pc, statPointsPending: c.statPointsPending },
-    { xp: 0, fxp: stipend.fxp + awardsFxp, pc: stipend.pc + refundPc + oneOfUsPc + awardsPc },
+    { xp: 0, fxp: stipend.fxp + awardsFxp, pc: stipend.pc + oneOfUsPc + awardsPc },
   );
   const offices = terms
     .filter((t) => t.fromDay <= today && today < t.toDay && (t.vacatedDay ?? null) === null)
@@ -280,7 +274,6 @@ export function computeSettlement(
             cityName: content.city(terms[0]?.cityId ?? residenceCityId(c))?.name ?? '',
           }
         : null,
-    deposits: due.length > 0 ? { count: due.length, pc: refundPc } : null,
     oneOfUsPc,
     awards: awardLines,
     unrestPushed,
@@ -316,7 +309,6 @@ export function computeSettlement(
     },
     inc: { iron: s.salary?.total ?? 0 },
     edition,
-    refunds: due.map((d) => d._id),
     awards: awards.map((a) => a._id),
   };
 }
@@ -370,9 +362,6 @@ export async function ensureSettled(
               })
                 .session(session)
                 .lean<OfficeTermDoc[]>();
-        const due = await Candidacy.find({ characterId: c._id, deposit: 'due' })
-          .session(session)
-          .lean<CandidacyDoc[]>();
         // A stable order on the desk (heroes, then Issues, each oldest first): an unsorted read came
         // back in either order under load.
         const awards = await Award.find({ characterId: c._id, creditedAt: null })
@@ -386,7 +375,6 @@ export async function ensureSettled(
           home,
           ...(jobCity !== undefined ? { jobCity } : {}),
           terms,
-          due,
           awards,
           risk,
         });
@@ -398,13 +386,6 @@ export async function ensureSettled(
           { session, returnDocument: 'after', lean: true },
         );
         if (!updated) throw new VersionConflict();
-        if (w.refunds.length > 0) {
-          await Candidacy.updateMany(
-            { _id: { $in: w.refunds }, deposit: 'due' },
-            { $set: { deposit: 'returned' } },
-            { session },
-          );
-        }
         if (w.awards.length > 0) {
           const credited = await Award.updateMany(
             { _id: { $in: w.awards }, creditedAt: null },

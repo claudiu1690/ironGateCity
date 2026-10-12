@@ -8,7 +8,8 @@ import { migrateReview2StreetOrdinances } from './migrations/005-review2-street-
 import { migrateSlice4TravelResidence } from './migrations/006-slice4-travel-residence';
 import { migrateSlice5Risk } from './migrations/007-slice5-risk';
 import { migrateReview4 } from './migrations/008-review4';
-import type { Review4Counts } from './migrations/008-review4';
+import type { Review4Counts, StepCounts } from './migrations/008-review4';
+import { migrateVotingRework } from './migrations/009-voting-rework';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
@@ -19,7 +20,7 @@ import { IssueModel } from './models/issue';
 import { Journey } from './models/journey';
 import { Award, Contribution, InfluenceLedger } from './models/ledger';
 import { PaperEntry } from './models/paperEntry';
-import { Candidacy, Election, OfficeTerm, OrderPaper, Vote } from './models/politics';
+import { Candidacy, Election, OfficeTerm, RuleBallot, Vote } from './models/politics';
 import { RequestLog } from './models/requestLog';
 import { Stay } from './models/stay';
 
@@ -35,7 +36,7 @@ export const models = [
   Candidacy,
   Vote,
   OfficeTerm,
-  OrderPaper,
+  RuleBallot,
   // Slice 4 (tech design §5): the six new collections.
   Journey,
   District,
@@ -55,7 +56,7 @@ export const models = [
  */
 export async function ensureIndexes(
   content: Pick<Content, 'origin' | 'factions' | 'cities'> = getContent(),
-): Promise<{ review4: Review4Counts }> {
+): Promise<{ review4: Review4Counts; votingRework: { refunds: StepCounts } }> {
   for (const m of models) {
     await m.createCollection();
     await m.syncIndexes();
@@ -75,5 +76,8 @@ export async function ensureIndexes(
   await migrateSlice5Risk();
   // Review 4 (tech design §14): one step per feature, filled phase by phase; after 007.
   // Review 4 (T29): the counts are returned for the start-up log (a second run modifies nothing).
-  return { review4: await migrateReview4(content) };
+  const review4 = await migrateReview4(content);
+  // The voting rework (tech design §6.2, ADR 0086): the deposits still due are credited once; after 008.
+  const votingRework = await migrateVotingRework();
+  return { review4, votingRework };
 }

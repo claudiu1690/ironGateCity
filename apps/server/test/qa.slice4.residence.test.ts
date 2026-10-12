@@ -80,7 +80,7 @@ describe('moving while the old candidacy is on the ballot (GDD §14.11, slice-4-
       cityId: 'irongate',
     });
     await p.caller.council.declare({
-      platformId: content.faction('collective').platforms[0]!.id,
+      ordinanceId: content.faction('collective').branchMotion,
       idempotencyKey: key(),
     });
     const cand = (await Candidacy.findOne({ characterId: p.id, electionId: 'coalport:4146' }).lean<CandidacyDoc>())!;

@@ -1,5 +1,5 @@
 import type { GameContent } from '@irongate/content';
-import { Candidacy, Character, City, District, Election, OfficeTerm, OrderPaper } from '@irongate/db';
+import { Candidacy, City, District, Election, OfficeTerm, RuleBallot } from '@irongate/db';
 import type {
   BallotLine,
   CandidacyDoc,
@@ -7,7 +7,7 @@ import type {
   DistrictDoc,
   ElectionDoc,
   OfficeTermDoc,
-  OrderPaperDoc,
+  RuleBallotDoc,
 } from '@irongate/db';
 import {
   CAPITAL_COUNCIL,
@@ -16,21 +16,22 @@ import {
   applyBaselineDrift,
   averageShares,
   boundaryWork,
-  closeNominations,
+  cardBallots,
   councilDay,
   councilKey,
   councilOrder,
   countDistrict,
   createRng,
   dayKey,
+  decideCapitalRule,
   districtLeader,
   districtState,
-  divideCapital,
   drawNpcSlate,
   drawOrderOf,
   electionKey,
   isMonday,
   npcFill,
+  ruleWindowFrom,
   weekOf,
 } from '@irongate/rules';
 import type {
@@ -39,28 +40,39 @@ import type {
   FactionId,
   NpcSlateEntry,
   OpinionShares,
+  RuleCard,
   ScoreboardTableView,
+  SeatRule,
 } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import {
   AlreadySettled,
-  activeMembersFilter,
   cityDayHooks,
   countLines,
   districtResidentsFilter,
   newSeed,
-  tally,
   turnoutOf,
 } from './cityDayCore';
 import { drawWeek, heroesStep, issuesStep } from './issuesDay';
 import { writeLedger } from './ledger';
 import type { LedgerRowInput } from './ledger';
+import {
+  capitalCardOrder,
+  capitalCards,
+  capitalDrawOrder,
+  cardsFor,
+  openBallotDoc,
+  seatRules,
+  setBallotStep,
+  tallyRules,
+} from './ruleBallot';
 
 /**
- * The capital's day (slice-4 tech design §7.2–§7.3, ADR 0027): one transaction per boundary over
- * the city document (calendar, council, ordinance, Issues) and its five district documents (the
- * meters and their states). Drift → Issues (Monday) → states → the five counts and the new council
- * (cycle day 0) → heroes → close (day 2) → divide (day 2). Ballots and seats never move opinion.
+ * The capital's day (slice-4 tech design §7.2–§7.3, ADR 0027; the voting rework, tech design §7.3,
+ * ADR 0085): one transaction per boundary over the city document (calendar, council, rule, Issues)
+ * and its five district documents (the meters and their states). Drift → Issues (Monday) → states →
+ * the five counts, the largest bloc's rule and the new council (cycle day 0) → heroes → the set (day
+ * 2: the five lists and one card per party). Ballots and seats never move opinion.
  */
 
 type SlateEntry = NpcSlateEntry & { factionId: FactionId };
@@ -108,34 +120,11 @@ function npcLines(
         kind: 'npc',
         npcId: s.npcId,
         name: c?.name ?? s.npcId,
-        platform: c?.line ?? '',
         order: first + out.length,
       });
     }
   }
   return out;
-}
-
-/** The branch motions of the seated blocs, items 1–3 (design §8.4). */
-function branchItems(
-  content: GameContent,
-  seats: Record<FactionId, number>,
-  ballots: Record<FactionId, number>,
-  opinion: OpinionShares,
-  drawOrder: FactionId[],
-  day: DayKey,
-  at: Date,
-) {
-  return councilOrder(seats, ballots, opinion, drawOrder).map((f) => {
-    const faction = content.faction(f);
-    const secretary = content.npc(faction.secretary.npcId)!;
-    return {
-      ordinanceId: faction.branchMotion,
-      movedBy: { kind: 'branch' as const, npcId: secretary.id, name: secretary.name, factionId: f },
-      at,
-      day,
-    };
-  });
 }
 
 const seatOf = (n: number, idx: number) => CAPITAL_COUNCIL.perDistrict * (n - 1) + idx + 1;
@@ -166,7 +155,6 @@ function districtElection(
     seed,
     npcSlate,
     filed: 0,
-    smallBranch: null,
     ballot: polling ? npcLines(content, npcSlate, 0, () => npcFill(0)) : null,
     ballots: 0,
     result: null,
@@ -176,10 +164,10 @@ function districtElection(
 }
 
 /**
- * §7.3: the capital with no `world` gets, in one transaction: the five districts at their
- * baselines, a sitting NPC council counted on the baselines, its order paper (divided on day 2+:
- * an NPC-only council passes nothing), the five elections in the phase of the day and the week's
- * Issues.
+ * §7.3; the voting rework (tech design §6.1): the capital with no `world` gets, in one transaction:
+ * the five districts at their baselines, a sitting NPC council counted on the baselines, rule ballot k
+ * (`open`, or `set` on day 2+ with one card per party), the largest bloc's card in force for the cycle,
+ * the five elections in the phase of the day and the week's Issues. Written converted (`world.voting: 2`).
  */
 export async function bootstrapCapital(
   content: GameContent,
@@ -222,7 +210,7 @@ export async function bootstrapCapital(
   );
 
   // The sitting council k: each district counted with no ballots on its baseline, over each
-  // faction's two NPCs at their profiles.
+  // faction's two locals at their profiles.
   const seats = zero();
   const terms: Array<Partial<OfficeTermDoc>> = [];
   for (const d of ds) {
@@ -233,13 +221,13 @@ export async function bootstrapCapital(
       name: s.name,
       wardVote: s.profile,
       successes: s.profile * 5,
-      endorsements: 0,
+      backers: 0,
       order: idx,
       factionId: s.factionId,
     }));
     const r = countDistrict({
       lines,
-      votes: {},
+      ballotsByFaction: zero(),
       opinion: d.baseline,
       rng: createRng(`${newSeed(d.id, k - 1)}:draw`),
     });
@@ -259,52 +247,33 @@ export async function bootstrapCapital(
         place: row.place,
         total: row.total,
         completed: false,
+        // ADR 0085: a capital local names no rule (the party's card falls to the secretary).
+        rule: null,
       });
     });
   }
   await OfficeTerm.insertMany(terms, { session });
 
+  // One card per party over the NPC council; the largest bloc's is in force for the cycle.
   const cityOpinion = averageShares(ds.map((d) => d.baseline));
-  const drawOrder = drawOrderOf(createRng(`${newSeed(cityId, k)}:order`));
-  const items = branchItems(content, seats, zero(), cityOpinion, drawOrder, today, at);
-  const divided = cal.cycleDay >= 2;
-  const division = divided
-    ? divideCapital({
-        items: items.map((it) => ({
-          ordinanceId: it.ordinanceId,
-          branchOf: it.movedBy.factionId,
-          movedAt: now,
-        })),
-        playerVotes: [],
-        npcSeats: seats,
-      })
-    : null;
-  const inForce = division?.passed ? { fromDay: c0 + 2, toDay: c0 + 2 + COUNCIL.ordinanceDays } : null;
-  await OrderPaper.create(
-    [
-      {
-        _id: councilKey(cityId, k),
-        cityId,
-        cycle: k,
-        fromDay: c0,
-        divideDay: c0 + 2,
-        status: divided ? 'divided' : 'open',
-        items,
-        votes: [],
-        division: division
-          ? {
-              tallies: division.tallies,
-              npcChoice: null,
-              npcChoices: division.npcChoices,
-              npcAbstained: false,
-              passed: division.passed,
-              inForce,
-            }
-          : null,
-      },
-    ],
+  const npcSeatRules: SeatRule[] = terms.map((t) => ({
+    seat: t.seat!,
+    holder: 'npc',
+    name: t.holder!.name,
+    npcId: t.holder!.npcId,
+    factionId: t.factionId!,
+    total: t.total!,
+    rule: null,
+  }));
+  const drawOrder = capitalDrawOrder(cityId, k);
+  const cards = capitalCards(content, npcSeatRules, councilOrder(seats, zero(), cityOpinion, drawOrder));
+  const set = cal.cycleDay >= 2;
+  await RuleBallot.create(
+    [{ ...openBallotDoc(cityId, k, c0), ...(set ? { status: 'set', cards } : {}) }],
     { session },
   );
+  const dec = decideCapitalRule({ cards, seatsByFaction: seats, votes: {}, opinion: cityOpinion, drawOrder });
+  const inForce = { fromDay: c0, toDay: c0 + COUNCIL.ordinanceDays };
 
   await Election.insertMany(
     ds.map((d) => districtElection(content, cityId, d, k, offset, cal.phase === 'polling', at)),
@@ -316,7 +285,7 @@ export async function bootstrapCapital(
     { _id: cityId, world: { $exists: false } },
     {
       $set: {
-        world: { settledDay: today, bootstrappedDay: today },
+        world: { settledDay: today, bootstrappedDay: today, voting: 2 },
         council: {
           key: councilKey(cityId, k),
           fromDay: c0,
@@ -325,11 +294,8 @@ export async function bootstrapCapital(
           seats: CAPITAL_COUNCIL.seats,
           npcSeatsByFaction: seats,
         },
-        ordinance:
-          division?.passed && inForce
-            ? { id: division.passed, ...inForce, paperId: councilKey(cityId, k) }
-            : null,
-        ordinanceHistory: division?.passed && inForce ? [{ id: division.passed, ...inForce }] : [],
+        ordinance: { id: dec.winner, ...inForce, paperId: null },
+        ordinanceHistory: [{ id: dec.winner, ...inForce }],
         issues: { weekDay: weekOf(today), live, effects: [] },
       },
       // ADR 0027: the capital's meters are its districts'; the city document keeps none.
@@ -352,7 +318,7 @@ export async function processCapitalBoundary(
   const spec = content.city(cityId)!;
   const offset = spec.council!.offset;
   const city = await City.findById(cityId).session(session).lean<CityDoc>();
-  if (!city?.world || city.world.settledDay !== d - 1) throw new AlreadySettled();
+  if (!city?.world || city.world.settledDay !== d - 1 || city.world.voting !== 2) throw new AlreadySettled();
   const work = boundaryWork(d, offset);
   const cal = councilDay(d, offset);
   const k = cal.cycle;
@@ -416,7 +382,7 @@ export async function processCapitalBoundary(
     }),
   );
 
-  // 4–5. The count, the new council and the heroes (cycle day 0).
+  // 4–5. The count (the seats and the largest bloc's rule), the new council and the heroes (day 0).
   if (work.count) {
     const scoreboards = await heroesStep({
       cityId,
@@ -426,20 +392,39 @@ export async function processCapitalBoundary(
       untilDay: d + COUNCIL.termDays,
       session,
     });
+    // Ballot k − 1's cards (ADR 0085): one per party, shared rules merged.
+    const ballotId = councilKey(cityId, k - 1);
+    const prevBallot = await RuleBallot.findById(ballotId).session(session).lean<RuleBallotDoc>();
+    if (prevBallot?.status === 'counted') throw new AlreadySettled();
+    const cards: RuleCard[] =
+      prevBallot?.cards && prevBallot.status === 'set'
+        ? prevBallot.cards
+        : await cardsFor(content, cityId, k - 1, { unrest: false, capital: true }, session);
+    const es: ElectionDoc[] = [];
+    for (const dist of ds) es.push(await prevElection(content, cityId, dist, k - 1, offset, d, at, session));
+    const votesBy = await tallyRules(
+      es.map((e) => e._id),
+      session,
+    );
     const seats = zero();
     const ballots = zero();
+    const cityVotes: Record<string, number> = {};
+    const turnout = { voters: 0, eligible: 0 };
     const terms: Array<Partial<OfficeTermDoc>> = [];
-    for (const dist of ds) {
-      const e = await prevElection(content, cityId, dist, k - 1, offset, d, at, session);
-      const votes = await tally(e._id, session);
+    for (const [i, dist] of ds.entries()) {
+      const e = es[i]!;
+      const votes = votesBy[e._id] ?? {};
+      for (const [id, n] of Object.entries(votes)) cityVotes[id] = (cityVotes[id] ?? 0) + n;
       const lines = (await countLines(e, cityId, session)) as DistrictCountLine[];
       const r = countDistrict({
         lines,
-        votes,
+        ballotsByFaction: cardBallots(cards, votes),
         opinion: shares.get(dist.id)!,
         rng: createRng(`${e.seed}:draw`),
       });
-      const turnout = await turnoutOf(e._id, districtResidentsFilter(cityId, dist.id, d), votes, session);
+      const t = await turnoutOf(e._id, districtResidentsFilter(cityId, dist.id, d), votes, session);
+      turnout.voters += t.voters;
+      turnout.eligible += t.eligible;
       const scoreboard: ScoreboardTableView[] = scoreboards.get(dist.id) ?? [];
       const counted = await Election.updateOne(
         { _id: e._id, status: 'polling' },
@@ -448,7 +433,7 @@ export async function processCapitalBoundary(
             status: 'counted',
             result: {
               rows: r.rows,
-              turnout,
+              turnout: t,
               npcSeats: r.seated.filter((x) => x.kind === 'npc').length,
               topKey: r.seated[0]?.key ?? '',
               lastSeatKey: r.seated.at(-1)?.key ?? '',
@@ -458,6 +443,8 @@ export async function processCapitalBoundary(
               tie: r.tie,
               seatsByFaction: r.seatsByFaction,
               drawOrder: r.drawOrder,
+              // The voting rework (tech design §8.3): the district's votes by card, for its party rows.
+              cardVotes: votes,
               scoreboard,
             },
             countedAt: at,
@@ -501,10 +488,41 @@ export async function processCapitalBoundary(
           place: row.place,
           total: row.total,
           completed: false,
+          // ADR 0084 §5: a player's rule from the candidacy; a capital local names none.
+          rule:
+            row.kind === 'player' ? (b.rule ?? content.faction(row.factionId).branchMotion) : null,
         });
       });
-      for (const s of r.factions) ballots[s.factionId] += s.ballots;
+      for (const f of r.factions) ballots[f.factionId] += f.ballots;
     }
+    // ADR 0085: the largest bloc's card wins; ties by votes, opinion, the cycle's draw.
+    const opinion = averageShares([...shares.values()]);
+    const dec = decideCapitalRule({
+      cards,
+      seatsByFaction: seats,
+      votes: cityVotes,
+      opinion,
+      drawOrder: drawOrderOf(createRng(`${es[0]?.seed ?? cityId}:rule`)),
+    });
+    const window = ruleWindowFrom(d);
+    const result = { ...dec, turnout, inForce: window };
+    if (prevBallot) {
+      const done = await RuleBallot.updateOne(
+        { _id: ballotId, status: { $in: ['open', 'set'] } },
+        { $set: { status: 'counted', cards, result } },
+        { session },
+      );
+      if (done.matchedCount === 0) throw new AlreadySettled();
+    } else {
+      const prev = councilDay(d - 1, offset);
+      await RuleBallot.create(
+        [{ ...openBallotDoc(cityId, k - 1, prev.council.fromDay), status: 'counted', cards, result }],
+        { session },
+      );
+    }
+    set.ordinance = { id: dec.winner, ...window, paperId: ballotId };
+    push.ordinanceHistory = { $each: [{ id: dec.winner, ...window }], $slice: -4 };
+
     // A seat vacated at a move is not a completed term (ADR 0026).
     await OfficeTerm.updateMany(
       { councilKey: councilKey(cityId, k - 1), vacatedDay: null },
@@ -516,22 +534,7 @@ export async function processCapitalBoundary(
       ds.map((dist) => districtElection(content, cityId, dist, k, offset, false, at)),
       { session },
     );
-    const drawOrder = drawOrderOf(createRng(`${newSeed(cityId, k)}:order`));
-    const opinion = averageShares([...shares.values()]);
-    await OrderPaper.create(
-      [
-        {
-          _id: councilKey(cityId, k),
-          cityId,
-          cycle: k,
-          fromDay: d,
-          divideDay: d + 2,
-          status: 'open',
-          items: branchItems(content, seats, ballots, opinion, drawOrder, d, at),
-        },
-      ],
-      { session },
-    );
+    await RuleBallot.create([openBallotDoc(cityId, k, d)], { session });
     const npcSeats = terms.filter((t) => t.holder?.kind === 'npc');
     const npcByFaction = zero();
     for (const t of npcSeats) npcByFaction[t.factionId!] += 1;
@@ -545,59 +548,23 @@ export async function processCapitalBoundary(
     };
   }
 
-  // 6. Close nominations (cycle day 2): per district, per faction.
-  if (work.close) {
-    for (const dist of ds) await closeDistrict(content, cityId, dist, k, d, at, session);
-  }
-
-  // 7. Divide (cycle day 2).
-  if (work.divide) {
-    const paperId = councilKey(cityId, k);
-    const p = await OrderPaper.findById(paperId).session(session).lean<OrderPaperDoc>();
-    if (p && p.status === 'open') {
-      const terms = await OfficeTerm.find({ councilKey: paperId, vacatedDay: null })
-        .session(session)
-        .lean<OfficeTermDoc[]>();
-      const npcSeats = zero();
-      for (const t of terms) if (t.holder.kind === 'npc' && t.factionId) npcSeats[t.factionId] += 1;
-      const v = divideCapital({
-        items: p.items.map((it) => ({
-          ordinanceId: it.ordinanceId,
-          branchOf: it.movedBy.kind === 'branch' ? (it.movedBy.factionId ?? null) : null,
-          movedAt: new Date(it.at).getTime(),
-        })),
-        playerVotes: p.votes.flatMap((v) => {
-          const t = terms.find(
-            (x) => x.holder.kind === 'player' && x.holder.characterId.equals(v.characterId),
-          );
-          return t?.factionId ? [{ choice: v.choice, factionId: t.factionId }] : [];
-        }),
-        npcSeats,
-      });
-      const inForce = v.passed ? { fromDay: d, toDay: d + COUNCIL.ordinanceDays } : null;
-      const divided = await OrderPaper.updateOne(
-        { _id: paperId, status: 'open' },
-        {
-          $set: {
-            status: 'divided',
-            division: {
-              tallies: v.tallies,
-              npcChoice: null,
-              npcChoices: v.npcChoices,
-              npcAbstained: false,
-              passed: v.passed,
-              inForce,
-            },
-          },
-        },
-        { session },
-      );
-      if (divided.matchedCount === 0) throw new AlreadySettled();
-      set.ordinance = v.passed && inForce ? { id: v.passed, ...inForce, paperId } : null;
-      if (v.passed && inForce) {
-        push.ordinanceHistory = { $each: [{ id: v.passed, ...inForce }], $slice: -4 };
-      }
-    }
+  // 6. The set (cycle day 2): the five lists freeze, then one card per party (ADR 0085).
+  if (work.set) {
+    for (const dist of ds) await freezeDistrict(content, cityId, dist, k, at, session);
+    const seatRows = await seatRules(content, cityId, k, session);
+    const order = await capitalCardOrder(
+      content,
+      cityId,
+      k,
+      seatRows,
+      session,
+      averageShares([...shares.values()]),
+    );
+    await setBallotStep(
+      content,
+      { cityId, k, fromDay: cal.council.fromDay, unrest: false, capital: true, order },
+      session,
+    );
   }
 
   // 8. Write the districts and settle the city.
@@ -635,7 +602,7 @@ export async function processCapitalBoundary(
     { session },
   );
   const done = await City.updateOne(
-    { _id: cityId, 'world.settledDay': d - 1 },
+    { _id: cityId, 'world.settledDay': d - 1, 'world.voting': 2 },
     { $set: { ...set, 'world.settledDay': d }, ...(Object.keys(push).length > 0 ? { $push: push } : {}) },
     { session },
   );
@@ -669,96 +636,42 @@ async function prevElection(
 }
 
 /**
- * Cycle day 2 in a district: each faction's filed candidacies stand with two endorsements (the
- * faction's Irongate residents are its branch) or are struck; NPCs fill each faction's list to two;
- * the ballot is frozen (players by filing, then NPCs by faction).
+ * Cycle day 2 in a district (ADR 0084 §2): every standing player by filing, then each faction's
+ * locals to two names; the list freezes. No strike, no doubling.
  */
-async function closeDistrict(
+async function freezeDistrict(
   content: GameContent,
   cityId: string,
   dist: DistrictSpec,
   k: number,
-  d: DayKey,
   at: Date,
   session: ClientSession,
 ): Promise<void> {
   const e = await Election.findById(electionKey(dist.id, k)).session(session).lean<ElectionDoc>();
   if (!e || e.status !== 'nominations') return;
-  const cands = await Candidacy.find({ electionId: e._id, status: 'filed' })
+  const cands = await Candidacy.find({ electionId: e._id, status: 'standing' })
     .sort({ filedAt: 1 })
     .session(session)
     .lean<CandidacyDoc[]>();
-  const standing = new Set<string>();
-  const effective: Record<string, number> = {};
-  const smallBranch: Record<string, boolean> = {};
   const fill: Record<FactionId, number> = zero();
-  let endorsers = 0;
-  for (const f of FACTION_IDS) {
-    const own = cands.filter((c) => c.factionId === f);
-    const filter = activeMembersFilter(cityId, f, d);
-    endorsers += await Character.countDocuments(filter).session(session);
-    const others: number[] = [];
-    for (const c of own) {
-      others.push(
-        await Character.countDocuments({ ...filter, _id: { $ne: c.characterId } }).session(session),
-      );
-    }
-    const close = closeNominations({
-      candidacies: own.map((c, i) => ({
-        id: c._id.toHexString(),
-        filedAt: c.filedAt.getTime(),
-        members: c.endorsements.length,
-        branch: c.branch !== null,
-        otherEndorsers: others[i]!,
-      })),
-      npcSlate: [],
-    });
-    for (const id of close.standing) standing.add(id);
-    Object.assign(effective, close.effective);
-    Object.assign(smallBranch, close.smallBranch);
-    fill[f] = npcFill(close.standing.length);
-  }
-  const players: BallotLine[] = cands
-    .filter((c) => standing.has(c._id.toHexString()))
-    .map((c, i) => ({
-      key: `p:${c.characterId.toHexString()}`,
-      factionId: c.factionId!,
-      kind: 'player',
-      characterId: c.characterId,
-      candidacyId: c._id,
-      name: c.name,
-      platform: content.platform(c.factionId!, c.platformId)?.line ?? '',
-      order: i,
-    }));
+  for (const f of FACTION_IDS) fill[f] = npcFill(cands.filter((c) => c.factionId === f).length);
+  const players: BallotLine[] = cands.map((c, i) => ({
+    key: `p:${c.characterId.toHexString()}`,
+    factionId: c.factionId!,
+    kind: 'player',
+    characterId: c.characterId,
+    candidacyId: c._id,
+    name: c.name,
+    rule: c.rule ?? content.faction(c.factionId!).branchMotion,
+    order: i,
+  }));
   const ballot = [
     ...players,
     ...npcLines(content, e.npcSlate as SlateEntry[], players.length, (f) => fill[f]),
   ];
-  if (cands.length > 0) {
-    await Candidacy.bulkWrite(
-      cands.map((c) => {
-        const id = c._id.toHexString();
-        const stands = standing.has(id);
-        return {
-          updateOne: {
-            filter: { _id: c._id, status: 'filed' },
-            update: {
-              $set: {
-                status: stands ? 'standing' : 'struck',
-                deposit: stands ? 'spent' : 'due',
-                effective: effective[id],
-                smallBranch: smallBranch[id],
-              },
-            },
-          },
-        };
-      }),
-      { session },
-    );
-  }
   const closed = await Election.updateOne(
     { _id: e._id, status: 'nominations' },
-    { $set: { status: 'polling', smallBranch: { endorsers }, ballot, closedAt: at } },
+    { $set: { status: 'polling', ballot, closedAt: at } },
     { session },
   );
   if (closed.matchedCount === 0) throw new AlreadySettled();

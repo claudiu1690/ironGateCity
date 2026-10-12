@@ -3,7 +3,7 @@
  * and the request path racing, the worker down for twelve days, and the degrade path.
  */
 import { copy, getContent, turnoutOf } from '@irongate/content';
-import { Character, City, Election, OfficeTerm, OrderPaper, PaperEntry } from '@irongate/db';
+import { Character, City, Election, OfficeTerm, PaperEntry, RuleBallot } from '@irongate/db';
 import { applyDrift, applyMoraleLoss, councilDay, dayKey, dayStart, moraleState } from '@irongate/rules';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { cityDayHooks, runCityDay, settleCityDay } from '../src/services/cityDay';
@@ -45,7 +45,7 @@ async function snapshot(cityId: string) {
     city: { ...city, world: { settledDay: city?.world?.settledDay } },
     elections: await Election.find({ cityId }).sort({ _id: 1 }).lean(),
     terms: await OfficeTerm.find({ cityId }).sort({ councilKey: 1, seat: 1 }).lean(),
-    papers: await OrderPaper.find({ cityId }).sort({ _id: 1 }).lean(),
+    papers: await RuleBallot.find({ cityId }).sort({ _id: 1 }).lean(),
   });
 }
 
@@ -56,7 +56,6 @@ describe('the bootstrap (ADR 0017 §4, tech design §7.3)', () => {
       await resetCity('coalport');
       const day = D0 + cd;
       const city = await settleCityDay(content, 'coalport', at(day));
-      expect(city.world).toEqual({ settledDay: day, bootstrappedDay: day });
       expect(city.morale).toEqual({ state: 'steady', since: day, previous: null });
       expect(city.council).toEqual({ key: 'coalport:4145', fromDay: D0, toDay: D0 + 5, npcSeats: 7 });
       const terms = await OfficeTerm.find({ councilKey: 'coalport:4145' }).sort({ seat: 1 }).lean();
@@ -67,32 +66,12 @@ describe('the bootstrap (ADR 0017 §4, tech design §7.3)', () => {
           .map((c, i) => [i + 1, 'npc', c.name]),
       );
       expect(terms.every((t) => t.fromDay === D0 && t.toDay === D0 + 5 && !t.completed)).toBe(true);
-      const paper = (await OrderPaper.findById('coalport:4145').lean())!;
-      // Review 1: the Collective's branch motion is the Long Service Order (was ord.shift-hours).
-      expect(paper.items.map((i) => [i.ordinanceId, i.movedBy.kind, i.movedBy.name])).toEqual([
-        ['ord.long-service', 'branch', 'Petra Holm'],
-      ]);
       const e = (await Election.findById('coalport:4145').lean())!;
       expect(e.npcSlate).toHaveLength(9);
       if (cd < 2) {
-        expect(paper.status).toBe('open');
-        expect(city.ordinance).toEqual({
-          id: 'ord.long-service',
-          fromDay: D0 - 3,
-          toDay: D0 + 2,
-          paperId: null,
-        });
         expect(e.status).toBe('nominations');
         expect(e.ballot).toBeNull();
       } else {
-        expect(paper.status).toBe('divided');
-        expect(paper.division).toMatchObject({ passed: 'ord.long-service', npcChoice: 'ord.long-service' });
-        expect(city.ordinance).toEqual({
-          id: 'ord.long-service',
-          fromDay: D0 + 2,
-          toDay: D0 + 7,
-          paperId: 'coalport:4145',
-        });
         expect(e.status).toBe('polling');
         expect(e.ballot!.map((b) => b.name)).toEqual(content.slateOf('coalport').map((c) => c.name));
       }
@@ -120,7 +99,7 @@ describe('the count boundary, raced (ADR 0017 §1)', () => {
     expect((await Election.findById('coalport:4146').lean())!.status).toBe('nominations');
     expect(await OfficeTerm.countDocuments({ councilKey: 'coalport:4146' })).toBe(7);
     expect(await OfficeTerm.countDocuments({ councilKey: 'coalport:4145', completed: true })).toBe(7);
-    expect(await OrderPaper.countDocuments({ cityId: 'coalport' })).toBe(2);
+    expect(await RuleBallot.countDocuments({ cityId: 'coalport' })).toBe(2);
     const city = (await City.findById('coalport').lean())!;
     const expected = applyMoraleLoss(applyDrift(before!, 'collective').shares, 'collective', 3).shares;
     expect(city.opinion).toEqual(expected);
@@ -187,7 +166,7 @@ describe('turnout (ADR 0017, walk-through fix)', () => {
     await settleCityDay(content, 'coalport', at(D0));
     const clock = { now: () => at(D0 + 3) };
     const p = await player(clock, { fxp: 400 });
-    await p.caller.council.vote({ candidateKey: 'n:npc.c.weiss', idempotencyKey: key() });
+    await p.caller.council.vote({ ordinanceId: 'ord.long-service', idempotencyKey: key() });
     // Votes only from the paper: no action in the seven days before the count.
     await Character.updateOne({ _id: p.id }, { $set: { lastActionAt: new Date(at(D0 - 10)) } });
     await settleCityDay(content, 'coalport', at(D0 + 5));

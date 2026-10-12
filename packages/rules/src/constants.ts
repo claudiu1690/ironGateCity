@@ -154,14 +154,10 @@ export const COUNCIL = {
   cycleDays: 5,
   seats: 7,
   slateSize: 9,
-  passVotes: 4,
-  maxProposals: 3,
-  endorsementsNeeded: 2,
   endorsementsCounted: 5,
   endorsementWeight: 3,
   wardDivisor: 5,
   npcJitter: 2,
-  smallBranchBelow: 3,
   activeEndorserDays: 7,
   termDays: 5,
   ordinanceDays: 5,
@@ -169,7 +165,8 @@ export const COUNCIL = {
   knownLevel: 2,
   standRank: 3,
   voteRank: 2,
-  cost: { declare: 10, endorse: 10, propose: 20 },
+  /** The voting rework (ADR 0084): standing is 10 PC spent; backing 10 PC. */
+  cost: { declare: 10, endorse: 10 },
   stipend: { pc: 10, fxp: 20 },
   /** Voting rework (ADR 0083, design §3.3): the rule cards on a home ballot. */
   ballotCards: 3,
@@ -259,8 +256,6 @@ export const ISSUES = {
 export const CAPITAL_COUNCIL = {
   seats: 10,
   perDistrict: 2,
-  passVotes: 6,
-  maxProposals: 3,
   fullTurnout: 10,
   ballotWeightMax: 50,
   npcPerFaction: 2,

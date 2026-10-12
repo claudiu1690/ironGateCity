@@ -14,7 +14,7 @@ import {
   InfluenceLedger,
   IssueModel,
   OfficeTerm,
-  OrderPaper,
+  RuleBallot,
   contributionId,
 } from '@irongate/db';
 import { applyBaselineDrift, applyPersuasion, councilDay, dayStart, isMonday, weekOf } from '@irongate/rules';
@@ -64,7 +64,7 @@ async function snapshot() {
     districts: await District.find({ cityId: 'irongate' }).sort({ _id: 1 }).lean(),
     elections: await Election.find({ cityId: 'irongate' }).sort({ _id: 1 }).lean(),
     terms: await OfficeTerm.find({ cityId: 'irongate' }).sort({ councilKey: 1, seat: 1 }).lean(),
-    papers: await OrderPaper.find({ cityId: 'irongate' }).sort({ _id: 1 }).lean(),
+    papers: await RuleBallot.find({ cityId: 'irongate' }).sort({ _id: 1 }).lean(),
     issues: await IssueModel.find({ cityId: 'irongate' }).sort({ _id: 1 }).lean(),
     ledger: await InfluenceLedger.find({ cityId: 'irongate' })
       .sort({ day: 1, placeId: 1, factionId: 1 })
@@ -89,7 +89,6 @@ describe('the capital bootstrap (tech design §7.3)', () => {
         npcSeats: 10,
         seats: 10,
       });
-      expect(city.ordinance).toBeNull();
       const ds = await District.find({ cityId: 'irongate' }).sort({ _id: 1 }).lean();
       expect(ds).toHaveLength(5);
       for (const d of ds) {
@@ -110,14 +109,6 @@ describe('the capital bootstrap (tech design §7.3)', () => {
         'collective',
         'collective',
       ]);
-      const paper = (await OrderPaper.findById('irongate:4146').lean())!;
-      expect(paper.items.length).toBeGreaterThanOrEqual(2);
-      expect(paper.items.every((i) => i.movedBy.kind === 'branch' && i.movedBy.factionId)).toBe(true);
-      if (cd >= 2) {
-        expect(paper.status).toBe('divided');
-        // An NPC-only council passes nothing (each bloc its own branch, none reaches six).
-        expect(paper.division!.passed).toBeNull();
-      } else expect(paper.status).toBe('open');
       const es = await Election.find({ cityId: 'irongate' }).sort({ _id: 1 }).lean();
       expect(es.map((e) => e._id)).toEqual(DISTRICTS.map((q) => `${q.id}:4146`).sort());
       for (const e of es) {
@@ -145,7 +136,7 @@ describe('the capital bootstrap (tech design §7.3)', () => {
     expect(await District.countDocuments({ cityId: 'irongate' })).toBe(5);
     expect(await OfficeTerm.countDocuments({ cityId: 'irongate' })).toBe(10);
     expect(await Election.countDocuments({ cityId: 'irongate' })).toBe(5);
-    expect(await OrderPaper.countDocuments({ cityId: 'irongate' })).toBe(1);
+    expect(await RuleBallot.countDocuments({ cityId: 'irongate' })).toBe(1);
     expect(await IssueModel.countDocuments({ cityId: 'irongate' })).toBe(2);
   });
 });

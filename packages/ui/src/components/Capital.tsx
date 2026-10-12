@@ -19,7 +19,7 @@ import { cx, formatShare } from '../format';
 import { Button } from './Button';
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { HelpButton, helpMark } from './Help';
-import { PersonMark } from './Politics';
+import { CouncilRowList } from './Politics';
 import { LockMark } from './LockMark';
 import { BottomSheet } from './Sheets';
 
@@ -891,125 +891,36 @@ export function DistrictSwitcher({ districts, selected, onSelect }: DistrictSwit
 }
 
 /**
- * Screens §8: a district's result: the parties' table (votes, opinion, score, seats), the candidates by
- * party with *the line* between the seats and the rest, the fixed lines in words, and who moved it.
+ * The voting rework, phase 2: a district's result as plain rows: the three parties (votes for the
+ * party's card, seats), then each party's candidates as council rows.
+ * TODO(phase 4): the `PartyRow`s with seat bars and *Votes and opinion together · final*, and the
+ * council rows per party (tech design §9.8).
  */
 export function DistrictResultTable({ district: d, names }: { district: CapitalDistrictCount; names: FactionNames }) {
-  const pct = Math.round(d.w);
-  const order = [...d.factions].sort((a, b) => b.score - a.score);
+  const order = [...d.parties].sort((a, b) => b.seats - a.seats || b.votes - a.votes);
   return (
     <section className="flex flex-col gap-3" data-testid="district-result" data-district={d.districtId}>
-      <table className="w-full border-collapse font-label text-[13px]" data-testid="parties-table">
-        <thead>
-          <tr className="label-caps border-b border-ink text-[10px] text-muted">
-            {copy.capitalElection.partiesColumns.map((c, i) => (
-              <th key={c} scope="col" className={cx('py-1 font-normal', i === 0 ? 'text-left' : 'text-right')}>
-                {c}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {order.map((f) => (
-            <tr key={f.factionId} className="border-b border-dotted border-faint" data-testid="party-row">
-              <td className="py-1.5">
-                <span className="flex items-center gap-1.5">
-                  <FactionCrest factionId={f.factionId} size={10} />
-                  {nameOf(names, f.factionId)}
-                </span>
-              </td>
-              <td className="py-1.5 text-right">{f.ballots}</td>
-              {/* The share of opinion among the three parties (a fraction from the count), in points. */}
-              <td className="py-1.5 text-right">{formatShare(f.opinionShare * 100)}</td>
-              <td className="py-1.5 text-right font-semibold">{formatShare(f.score)}</td>
-              <td className="py-1.5 text-right">
-                <span className="inline-flex gap-0.5" aria-label={`${f.seats}`}>
-                  {f.seats === 0
-                    ? '0'
-                    : Array.from({ length: f.seats }, (_, i) => (
-                        <span key={i} className="inline-block h-3 w-1.5 bg-ink" data-testid="seat-bar" />
-                      ))}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="font-mono text-[11px] text-muted" data-testid="votes-cast">
-        {copy.capitalElection.votesCast(d.ballots, pct, 100 - pct)}
-      </p>
-      <table className="w-full border-collapse text-[13px]" data-testid="capital-count-table">
-        <thead>
-          <tr className="label-caps border-b border-ink text-[10px] text-muted">
-            <th scope="col" className="w-6 py-1 text-left font-normal">
-              #
-            </th>
-            <th scope="col" className="py-1 text-left font-normal">
-              Name
-            </th>
-            <th scope="col" className="py-1 pl-2 text-right font-normal">
-              <span className="max-[400px]:hidden">{copy.resultColumns[2]}</span>
-              <span className="min-[401px]:hidden">{copy.resultColumnsShort[2]}</span>
-            </th>
-            <th scope="col" className="py-1 pl-2 text-right font-normal">
-              <span className="max-[400px]:hidden">{copy.resultColumns[3]}</span>
-              <span className="min-[401px]:hidden">{copy.resultColumnsShort[3]}</span>
-            </th>
-            <th scope="col" className="py-1 pl-2 text-right font-normal">
-              {copy.resultColumns[4]}
-            </th>
-            <th scope="col" className="py-1 pl-1 text-right font-normal">
-              {copy.resultColumns[5]}
-            </th>
-          </tr>
-        </thead>
-        {order.map((f) => {
-          const rows = d.rows.filter((r) => r.factionId === f.factionId);
-          const lastSeat = rows.filter((r) => r.seated).length;
-          return (
-            <tbody key={f.factionId} className="border-b border-ink">
-              <tr>
-                <th colSpan={6} scope="rowgroup" className="label-caps pt-1.5 text-left text-[10px] font-semibold">
-                  <span className="flex items-center gap-1.5">
-                    <FactionCrest factionId={f.factionId} size={9} />
-                    {nameOf(names, f.factionId)}
-                  </span>
-                </th>
-              </tr>
-              {rows.map((r, i) => (
-                <tr
-                  key={r.key}
-                  className={cx(
-                    'border-b border-dotted border-faint',
-                    r.you && 'bg-paper-2',
-                    i === lastSeat && lastSeat > 0 && 'border-t border-t-ink',
-                  )}
-                  data-testid="capital-count-row"
-                  data-seated={r.seated}
-                >
-                  <td className={cx('py-1.5 font-label', r.seated && 'border-l-[3px] border-l-ink pl-1')}>{i + 1}</td>
-                  <td className="py-1.5">
-                    <span className="flex flex-wrap items-center gap-x-1.5">
-                      <PersonMark avatar={r.avatar} factionId={r.factionId} size={20} />
-                      <span className="font-body">{r.name}</span>
-                      {r.local && <span className="label-caps text-[9px] text-muted">{copy.ward}</span>}
-                      {r.you && <span className="font-mono text-[11px] text-muted">{copy.you}</span>}
-                      {r.yourVote && <span className="font-mono text-[11px] text-petrol">{copy.yourVote}</span>}
-                    </span>
-                  </td>
-                  <td className="py-1.5 pl-2 text-right font-label">{r.wardVote}</td>
-                  <td className="py-1.5 pl-2 text-right font-label">{r.endorsements}</td>
-                  <td className="py-1.5 pl-2 text-right font-label">{r.votes}</td>
-                  <td className="py-1.5 pl-1 text-right font-label font-semibold">{r.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          );
-        })}
-      </table>
-      <p className="font-mono text-[11px] text-muted" data-testid="how-seats">
-        {copy.capitalElection.howSeatsAreWon}
-      </p>
+      <ul className="flex flex-col" data-testid="parties-table">
+        {order.map((f) => (
+          <li
+            key={f.factionId}
+            className="flex min-h-11 items-center gap-2 border-b border-dotted border-faint py-1.5 font-label text-[13px]"
+            data-testid="party-row"
+          >
+            <FactionCrest factionId={f.factionId} size={10} />
+            <span className="flex-1">{nameOf(names, f.factionId)}</span>
+            <span>votes {f.votes}</span>
+            <span className="inline-flex gap-0.5" aria-label={`${f.seats}`}>
+              {f.seats === 0
+                ? '0'
+                : Array.from({ length: f.seats }, (_, i) => (
+                    <span key={i} className="inline-block h-3 w-1.5 bg-ink" data-testid="seat-bar" />
+                  ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <CouncilRowList rows={d.council} />
       {d.scoreboard.length > 0 && <ScoreboardTable table={d.scoreboard} districtName={d.name} names={names} />}
     </section>
   );

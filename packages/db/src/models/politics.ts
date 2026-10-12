@@ -34,8 +34,9 @@ export interface BallotLine {
   npcId?: string;
   candidacyId?: Types.ObjectId;
   name: string;
-  platform: string;
-  /** The voting rework (ADR 0084): a player's rule on the frozen list (phase 2 drops `platform`). */
+  /** Old lists only (before the voting rework): the platform line. */
+  platform?: string;
+  /** The voting rework (ADR 0084): a player's rule on the frozen list. */
   rule?: string;
   /** Players by filing, then NPCs by profile. */
   order: number;
@@ -72,9 +73,9 @@ export interface ElectionDoc {
   npcSlate: Array<NpcSlateEntry & { factionId?: FactionId }>;
   /** `$inc` by declare: serialises a filing with the close (ADR 0018). */
   filed: number;
-  /** Decided at the close. */
-  smallBranch: { endorsers: number } | null;
-  /** Frozen at the close. */
+  /** Old elections only (the small-branch rule, retired by the voting rework). */
+  smallBranch?: { endorsers: number } | null;
+  /** The candidate list, frozen at the set (the name is kept from the person ballot). */
   ballot: BallotLine[] | null;
   /** `$inc` by each vote; never in a view before the count (ADR 0019). */
   ballots: number;
@@ -100,7 +101,7 @@ const electionSchema = new Schema<ElectionDoc>(
     seed: { type: String, required: true },
     npcSlate: { type: Schema.Types.Mixed, required: true },
     filed: { type: Number, default: 0 },
-    smallBranch: { type: Schema.Types.Mixed, default: null },
+    smallBranch: { type: Schema.Types.Mixed },
     ballot: { type: Schema.Types.Mixed, default: null },
     ballots: { type: Number, default: 0 },
     result: { type: Schema.Types.Mixed, default: null },
@@ -132,7 +133,6 @@ export interface CandidacyDoc {
   cycle: number;
   characterId: Types.ObjectId;
   name: string;
-  platformId: string;
   /** The voting rework (ADR 0084): the rule named at standing (absent on old rows: the faction's default). */
   rule?: string;
   filedAt: Date;
@@ -142,10 +142,9 @@ export interface CandidacyDoc {
   endorsements: Array<{ characterId: Types.ObjectId; name: string; day: DayKey; at: Date }>;
   /** The secretary's, once. */
   branch: { day: DayKey; at: Date } | null;
-  /** At the close: members + branch × (small ? 2 : 1). */
-  effective: number | null;
-  /** At the close: the small-branch rule applied. */
-  smallBranch: boolean | null;
+  /** Old candidacies only: the counted endorsements and the small-branch rule at the close. */
+  effective?: number | null;
+  smallBranch?: boolean | null;
   deposit: DepositState;
   place: number | null;
   createdAt: Date;
@@ -161,7 +160,6 @@ const candidacySchema = new Schema<CandidacyDoc>(
     cycle: int,
     characterId: { type: Schema.Types.ObjectId, required: true },
     name: { type: String, required: true },
-    platformId: { type: String, required: true },
     rule: { type: String },
     filedAt: { type: Date, required: true },
     filedDay: int,
@@ -188,8 +186,8 @@ const candidacySchema = new Schema<CandidacyDoc>(
       type: new Schema({ day: int, at: { type: Date, required: true } }, { _id: false }),
       default: null,
     },
-    effective: { type: Number, default: null },
-    smallBranch: { type: Boolean, default: null },
+    effective: { type: Number },
+    smallBranch: { type: Boolean },
     deposit: { type: String, enum: ['held', 'kept', 'spent', 'due', 'returned'], required: true },
     place: { type: Number, default: null },
   },
@@ -197,7 +195,6 @@ const candidacySchema = new Schema<CandidacyDoc>(
 );
 candidacySchema.index({ electionId: 1, characterId: 1 }, { unique: true });
 candidacySchema.index({ electionId: 1, filedAt: 1 });
-candidacySchema.index({ characterId: 1, deposit: 1 }, { partialFilterExpression: { deposit: 'due' } });
 
 export const Candidacy = model<CandidacyDoc>('Candidacy', candidacySchema);
 
@@ -209,11 +206,9 @@ export interface VoteDoc {
   _id: Types.ObjectId;
   electionId: string;
   voterId: Types.ObjectId;
-  candidateKey: string;
-  /**
-   * The voting rework (ADR 0083 §4): a vote for a rule. Phase 2 makes `candidateKey` optional (slice
-   * 7's person ballots) and validates that exactly one of the two is set.
-   */
+  /** A vote for a person (old rows; slice 7's person ballots). */
+  candidateKey?: string;
+  /** The voting rework (ADR 0083 §4): a vote for a rule. Exactly one of the two is set. */
   ordinanceId?: string;
   day: DayKey;
   createdAt: Date;
@@ -223,12 +218,18 @@ const voteSchema = new Schema<VoteDoc>(
   {
     electionId: { type: String, required: true },
     voterId: { type: Schema.Types.ObjectId, required: true },
-    candidateKey: { type: String, required: true },
+    candidateKey: { type: String },
     ordinanceId: { type: String },
     day: int,
   },
   { ...opts, collection: 'votes', timestamps: { createdAt: true, updatedAt: false } },
 );
+// The voting rework (tech design §5.1): a vote is for a person or for a rule, never both or neither.
+voteSchema.pre('validate', function () {
+  if ((this.candidateKey == null) === (this.ordinanceId == null)) {
+    throw new Error('a vote names exactly one of candidateKey and ordinanceId');
+  }
+});
 voteSchema.index({ electionId: 1, voterId: 1 }, { unique: true });
 voteSchema.index({ electionId: 1, candidateKey: 1 });
 // The voting rework (ADR 0083 §4): the count's `$group` by rule.
@@ -325,20 +326,20 @@ officeTermSchema.index(
 export const OfficeTerm = model<OfficeTermDoc>('OfficeTerm', officeTermSchema);
 
 // ---------------------------------------------------------------------------------------------
-// ordinances: the order paper, one per council term; `_id` = councilKey.
+// ordinances: the rule ballot, one per council term; `_id` = councilKey (the voting rework).
 // ---------------------------------------------------------------------------------------------
 
-export type MovedBy =
-  | { kind: 'branch'; npcId: string; name: string; characterId?: undefined; factionId?: FactionId }
-  | { kind: 'player'; characterId: Types.ObjectId; name: string; npcId?: undefined; factionId?: FactionId };
-
-export interface OrderPaperItem {
+/** The old order paper's item (kept under `legacy` by the conversion, ADR 0086). */
+export interface LegacyPaperItem {
   ordinanceId: string;
-  movedBy: MovedBy;
+  movedBy:
+    | { kind: 'branch'; npcId: string; name: string; characterId?: undefined; factionId?: FactionId }
+    | { kind: 'player'; characterId: Types.ObjectId; name: string; npcId?: undefined; factionId?: FactionId };
   at: Date;
   day: DayKey;
 }
 
+/** The old council's vote (under `legacy`). */
 export interface CouncilVote {
   characterId: Types.ObjectId;
   name: string;
@@ -348,6 +349,7 @@ export interface CouncilVote {
   at: Date;
 }
 
+/** The old division (under `legacy`). */
 export interface Division {
   tallies: Array<{ choice: string; player: number; npc: number }>;
   npcChoice: string | null;
@@ -367,11 +369,10 @@ export interface RuleBallotResult {
 }
 
 /**
- * The voting rework (ADR 0083 §2): an `ordinances` document as a **rule ballot**, the ballot council
+ * The voting rework (ADR 0083 §2): an `ordinances` document is a **rule ballot**, the ballot council
  * k puts to the town (`_id` = councilKey). Created `open` at the count that seats council k, `set` at
- * fromDay + 2 (the cards frozen), `counted` at fromDay + 5. An old order paper's fields move under
- * `legacy` at the conversion (ADR 0086). Phase 1 adds the fields to the order paper's schema (same
- * collection); phase 2 makes this the model (`RuleBallot`) and removes `OrderPaper`.
+ * fromDay + 2 (the cards frozen), `counted` at fromDay + 5. An old order paper's fields moved under
+ * `legacy` at the conversion (ADR 0086).
  */
 export interface RuleBallotDoc {
   _id: string;
@@ -388,100 +389,29 @@ export interface RuleBallotDoc {
   /** `$inc` by `council.setRule`, filtered on `status: 'open'`: serialises a change with the set. */
   changes: number;
   result: RuleBallotResult | null;
-  legacy?: { items: OrderPaperItem[]; votes: CouncilVote[]; division: Division | null };
+  legacy?: { items: LegacyPaperItem[]; votes: CouncilVote[]; division: Division | null };
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface OrderPaperDoc {
-  _id: string;
-  cityId: string;
-  cycle: number;
-  fromDay: DayKey;
-  divideDay: DayKey;
-  status: 'open' | 'divided';
-  /** Item 1 is the branch's motion; at most four (the capital: three branch motions, six). */
-  items: OrderPaperItem[];
-  /** Public inside the council. */
-  votes: CouncilVote[];
-  division: Division | null;
-  /** The voting rework (ADR 0083 §2): the rule ballot's fields (`RuleBallotDoc`), absent on old papers. */
-  setDay?: DayKey;
-  countDay?: DayKey;
-  cards?: RuleCard[] | null;
-  unrest?: boolean | null;
-  changes?: number;
-  result?: RuleBallotResult | null;
-  legacy?: RuleBallotDoc['legacy'];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const orderPaperSchema = new Schema<OrderPaperDoc>(
+const ruleBallotSchema = new Schema<RuleBallotDoc>(
   {
     _id: { type: String, required: true },
     cityId: { type: String, required: true },
     cycle: int,
     fromDay: int,
-    divideDay: int,
-    // The voting rework adds the rule ballot's `set` and `counted` (ADR 0083 §2).
-    status: { type: String, enum: ['open', 'divided', 'set', 'counted'], required: true },
-    items: {
-      type: [
-        new Schema(
-          {
-            ordinanceId: { type: String, required: true },
-            movedBy: {
-              type: new Schema(
-                {
-                  kind: { type: String, enum: ['branch', 'player'], required: true },
-                  factionId: { type: String, enum: FACTION_IDS },
-                  npcId: { type: String },
-                  characterId: { type: Schema.Types.ObjectId },
-                  name: { type: String, required: true },
-                },
-                { _id: false },
-              ),
-              required: true,
-            },
-            at: { type: Date, required: true },
-            day: int,
-          },
-          { _id: false },
-        ),
-      ],
-      default: [],
-    },
-    votes: {
-      type: [
-        new Schema(
-          {
-            characterId: { type: Schema.Types.ObjectId, required: true },
-            name: { type: String, required: true },
-            seat: int,
-            choice: { type: String, required: true },
-            at: { type: Date, required: true },
-          },
-          { _id: false },
-        ),
-      ],
-      default: [],
-    },
-    division: { type: Schema.Types.Mixed, default: null },
-    // The voting rework (ADR 0083 §2): the rule ballot's fields beside the order paper's, with no
-    // defaults, so papers written before phase 2 stay as they were.
-    setDay: { type: Number },
-    countDay: { type: Number },
-    cards: { type: Schema.Types.Mixed },
-    unrest: { type: Boolean },
-    changes: { type: Number },
-    result: { type: Schema.Types.Mixed },
+    setDay: int,
+    countDay: int,
+    status: { type: String, enum: ['open', 'set', 'counted'], required: true },
+    cards: { type: Schema.Types.Mixed, default: null },
+    unrest: { type: Boolean, default: null },
+    changes: { type: Number, default: 0 },
+    result: { type: Schema.Types.Mixed, default: null },
     legacy: { type: Schema.Types.Mixed },
   },
   { ...opts, collection: 'ordinances', timestamps: true },
 );
-orderPaperSchema.index({ cityId: 1, divideDay: -1 });
-// The voting rework (tech design §5.1): replaces the index above in phase 2.
-orderPaperSchema.index({ cityId: 1, countDay: -1 });
+// The voting rework (tech design §5.1): a city's latest ballots (replaces `{ cityId, divideDay }`).
+ruleBallotSchema.index({ cityId: 1, countDay: -1 });
 
-export const OrderPaper = model<OrderPaperDoc>('OrderPaper', orderPaperSchema);
+export const RuleBallot = model<RuleBallotDoc>('RuleBallot', ruleBallotSchema);

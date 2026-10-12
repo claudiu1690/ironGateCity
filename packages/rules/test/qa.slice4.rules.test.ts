@@ -8,9 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
-  AGAINST_ALL,
   BATTLEGROUND,
-  CAPITAL_COUNCIL,
   DISTRICT,
   HERO,
   ISSUES,
@@ -20,12 +18,10 @@ import {
   applyBaselineDrift,
   controller,
   councilDay,
-  countDistrict,
   createRng,
   dhondt,
   districtScores,
   districtState,
-  divideCapital,
   drawIssues,
   drawJourneyCard,
   fare,
@@ -34,14 +30,13 @@ import {
   isBattleground,
   levelBracket,
   moveWindows,
-  npcFill,
   pointsFor,
   resolveIssue,
   roomPrice,
   scoreboardLine,
   turnoutWeight,
 } from '../src';
-import type { DistrictCountLine, FactionId, OpinionShares, Rng } from '../src';
+import type { FactionId, OpinionShares, Rng } from '../src';
 
 const GDD = readFileSync(fileURLToPath(new URL('../../../docs/GDD.md', import.meta.url)), 'utf8');
 const section = (from: string, to: string) => GDD.slice(GDD.indexOf(from), GDD.indexOf(to, GDD.indexOf(from)));
@@ -115,12 +110,6 @@ describe('QA · the GDD numbers the slice-4 rules use', () => {
     expect(ISSUES).toMatchObject({ perCity: 2, swingPct: 50, ownerSwing: 3, topFive: 5, topPc: 4, effectDays: 7 });
   });
 
-  it('§15.3: w = 50 × min(1, ballots ÷ 10); two seats a district; six of ten pass', () => {
-    const s = section('### 15.3', '### 15.4');
-    expect(s).toContain('`w = 50 × min(1, ballots ÷ 10)`');
-    expect(s).toContain('**passes with six or more of ten**');
-    expect(CAPITAL_COUNCIL).toMatchObject({ seats: 10, perDistrict: 2, passVotes: 6, fullTurnout: 10, ballotWeightMax: 50, npcPerFaction: 2 });
-  });
 });
 
 describe('QA · the capital count as a property (GDD §15.3)', () => {
@@ -163,114 +152,6 @@ describe('QA · the capital count as a property (GDD §15.3)', () => {
     }
   });
 
-  it('2,000 random district ballots: two seated, each faction its own best by total, the list filled to two a faction', () => {
-    const rng = createRng('qa-count-district');
-    for (let n = 0; n < 2_000; n++) {
-      const lines: DistrictCountLine[] = [];
-      let order = 0;
-      for (const f of F) {
-        const players = rng.int(0, 3);
-        for (let p = 0; p < players; p++)
-          lines.push({
-            key: `p:${f}${p}`,
-            kind: 'player',
-            name: `${f} player ${p}`,
-            wardVote: rng.int(0, 40),
-            successes: rng.int(0, 200),
-            endorsements: rng.int(2, 6),
-            order: order++,
-            factionId: f,
-          });
-        for (let i = 0; i < npcFill(players); i++)
-          lines.push({
-            key: `n:${f}${i}`,
-            kind: 'npc',
-            name: `${f} local ${i}`,
-            wardVote: [28, 20][i]! + rng.int(-2, 2),
-            successes: [28, 20][i]! * 5,
-            endorsements: 0,
-            order: order++,
-            factionId: f,
-          });
-      }
-      expect(lines.length).toBeGreaterThanOrEqual(6);
-      for (const f of F) expect(lines.filter((l) => l.factionId === f).length).toBeGreaterThanOrEqual(2);
-      const votes: Record<string, number> = {};
-      for (const l of lines) if (rng.int(1, 3) === 1) votes[l.key] = rng.int(0, 6);
-      const r = countDistrict({ lines, votes, opinion: randomShares(rng), rng: createRng(`d${n}`) });
-      expect(r.seated).toHaveLength(2);
-      expect(F.reduce((s, f) => s + r.seatsByFaction[f], 0)).toBe(2);
-      for (const f of F) {
-        const own = r.rows.filter((x) => x.factionId === f);
-        // The faction's seats go to the first of its own order (the slice-3 total and ties).
-        expect(own.filter((x) => x.seated).map((x) => x.place)).toEqual(
-          own.slice(0, r.seatsByFaction[f]).map((x) => x.place),
-        );
-      }
-    }
-  });
-});
-
-describe('QA · the capital division as a property (GDD §15.3, design §8.4)', () => {
-  it('the design’s cases: ten locals 4 / 3 / 3 pass nothing; one player of the three-seat bloc crossing the floor passes 7–3', () => {
-    const items = [
-      { ordinanceId: 'ord.rally-permits', branchOf: 'vanguard' as const, movedAt: 1 },
-      { ordinanceId: 'ord.long-service', branchOf: 'collective' as const, movedAt: 2 },
-      { ordinanceId: 'ord.reading-room', branchOf: 'alliance' as const, movedAt: 3 },
-    ];
-    expect(divideCapital({ items, playerVotes: [], npcSeats: { vanguard: 4, collective: 3, alliance: 3 } }).passed).toBeNull();
-    const crossed = divideCapital({
-      items,
-      playerVotes: [{ choice: 'ord.rally-permits', factionId: 'collective' }],
-      npcSeats: { vanguard: 4, collective: 2, alliance: 3 },
-    });
-    expect(crossed.passed).toBe('ord.rally-permits');
-    expect(crossed.tallies.find((t) => t.choice === 'ord.rally-permits')).toMatchObject({ player: 1, npc: 6 });
-  });
-
-  it('5,000 random papers: passes exactly when an item has six of ten; locals follow their own players, never Against all', () => {
-    const rng = createRng('qa-divide');
-    for (let n = 0; n < 5_000; n++) {
-      const items = F.filter(() => rng.int(0, 3) > 0).map((f, i) => ({
-        ordinanceId: `ord.${f}`,
-        branchOf: f as FactionId | null,
-        movedAt: i,
-      }));
-      for (let p = 0; p < rng.int(0, 3); p++) items.push({ ordinanceId: `ord.prop${p}`, branchOf: null, movedAt: 10 + p });
-      if (items.length === 0) continue;
-      // Ten seats: each faction's players and locals.
-      const seats = F.map(() => 0);
-      for (let s = 0; s < 10; s++) seats[rng.int(0, 2)]! += 1;
-      const playerVotes: Array<{ choice: string; factionId: FactionId }> = [];
-      const npcSeats: Partial<Record<FactionId, number>> = {};
-      F.forEach((f, i) => {
-        const players = rng.int(0, seats[i]!);
-        npcSeats[f] = seats[i]! - players;
-        for (let p = 0; p < players; p++) {
-          const choice = rng.int(0, items.length) === items.length ? AGAINST_ALL : items[rng.int(0, items.length - 1)]!.ordinanceId;
-          playerVotes.push({ choice, factionId: f });
-        }
-      });
-      const d = divideCapital({ items, playerVotes, npcSeats });
-      const total = d.tallies.reduce((s, t) => s + t.player + t.npc, 0);
-      expect(total).toBe(playerVotes.length + Object.values(npcSeats).reduce((s, x) => s + (x ?? 0), 0));
-      expect(d.tallies.find((t) => t.choice === AGAINST_ALL)!.npc).toBe(0);
-      const six = d.tallies.filter((t) => t.choice !== AGAINST_ALL && t.player + t.npc >= 6);
-      expect(d.passed).toBe(six.length > 0 ? six.at(-1)!.choice : null);
-      for (const f of F) {
-        if (!npcSeats[f]) continue;
-        const own = playerVotes.filter((v) => v.factionId === f && v.choice !== AGAINST_ALL);
-        const counts = new Map<string, number>();
-        for (const v of own) counts.set(v.choice, (counts.get(v.choice) ?? 0) + 1);
-        const best = Math.max(0, ...counts.values());
-        const choice = d.npcChoices[f]!;
-        if (best === 0) {
-          const branch = items.find((it) => it.branchOf === f);
-          expect(choice).toBe(branch?.ordinanceId ?? items.reduce((a, b) => (b.movedAt < a.movedAt ? b : a)).ordinanceId);
-        } else expect(counts.get(choice)).toBe(best);
-      }
-    }
-  });
 });
 
 describe('QA · the district meter as a property (GDD §14.2–§14.4)', () => {

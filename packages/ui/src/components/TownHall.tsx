@@ -1,30 +1,34 @@
 import { copy } from '@irongate/content/copy';
 import type { FactionId, IssueRowView, TownHallView, WhatNowView } from '@irongate/rules';
 import { useState } from 'react';
-import type { ReactNode } from 'react';
-import { dayStart } from '@irongate/rules';
-import { cx, formatAt, formatUntil, formatWeekday } from '../format';
+import { cx, formatUntil, formatWeekday } from '../format';
 import { Button } from './Button';
-import { IssueRow } from './Capital';
+import { IssueRow, weekdayOf } from './Capital';
 import { HelpButton, helpMark } from './Help';
-import { OrderPaper, OrdinanceMenu, OrdinanceRow, PersonMark } from './Politics';
+import { OrdinanceRow, PersonMark, whoseLine } from './Politics';
+import { BottomSheet } from './Sheets';
 
 /**
- * Review 4 (answers §10–§11, ADR 0077): the Town Hall's sheet, the council's public face, in the
- * order of answers §11.2 after the ticket: *Your desk* for a councillor here, the rule in force, the
- * council as rows, the order paper read-only for everyone else, the week's Issues, and the Election
- * card (a slot: the page passes its own). Plain props; the acts are the page's.
+ * Review 4 (answers §10–§11, ADR 0077); the voting rework (tech design §9.5): the Town Hall's sheet,
+ * the council's public face: the rule in force, next week's rule (the ballot, with a councillor's own
+ * rule and its picker), the council as rows, the stand block and the week's Issues. Plain props; the
+ * acts are the page's.
+ *
+ * TODO(phase 3): `TownHallBlocks` v2 with `RuleCards`, the stand card and the rule picker sheet
+ * (tech design §9.5); these blocks render the v2 view with the existing rows.
  */
 
 const kicker = 'label-caps border-t-[3px] border-b border-double border-ink py-1.5 text-[11px] font-semibold';
 
 export interface DeskActs {
-  /** The chosen item while voting (an ordinance id or 'against'). */
+  /** The rule chosen on the ballot (not yet cast). */
   selected: string | null;
-  onSelect: (choice: string) => void;
+  onSelect: (ordinanceId: string) => void;
+  /** `council.vote` for the selected rule. */
   onVote: () => void;
-  onPropose: (ordinanceId: string) => void;
-  /** The act on its way ('councilVote' | 'propose'), from the page's political act. */
+  /** A councillor names their rule (`council.setRule`). */
+  onSetRule: (ordinanceId: string) => void;
+  /** The act on its way ('vote' | 'setRule'), from the page's political act. */
   pending: string | null;
   /** The refusal's words, if the last act was refused. */
   notice?: string | null;
@@ -33,149 +37,204 @@ export interface DeskActs {
 export interface TownHallBlocksProps {
   hall: TownHallView;
   names: Partial<Record<FactionId, string>>;
-  /** The reader's party (a local's crest; the order paper's branch). */
+  /** The reader's party (a local's crest). */
   factionId: FactionId;
   desk?: DeskActs;
-  /** The Election card, as the page builds it (the city screen's component). */
-  election?: ReactNode;
+  /** The stand block's button (to who's standing). */
+  onStand?: () => void;
   /** An Issue row's *Where to act* (the first tagged place). */
   onWhereToAct?: (row: IssueRowView) => void;
   className?: string;
 }
 
-export function TownHallBlocks({ hall, names, factionId, desk, election, onWhereToAct, className }: TownHallBlocksProps) {
+export function TownHallBlocks({ hall, names, factionId, desk, onStand, onWhereToAct, className }: TownHallBlocksProps) {
   return (
     <div className={cx('flex flex-col gap-3', className)} data-testid="town-hall">
-      {hall.desk && desk && <YourDesk hall={hall} names={names} acts={desk} />}
-      <RuleInForce hall={hall} />
+      <RuleInForce hall={hall} names={names} />
+      <NextWeeksRule hall={hall} names={names} acts={desk} />
       <CouncilRows hall={hall} factionId={factionId} />
-      {!hall.desk && <UpForAVoteReadOnly hall={hall} />}
+      {hall.stand && onStand && <StandBlock hall={hall} onStand={onStand} />}
       <HallIssues hall={hall} names={names} onWhereToAct={onWhereToAct} />
-      {election}
     </div>
   );
 }
 
-/** Answers §10.2: the councillor's desk: the vote, *Put forward a rule*, and the Next line. */
-function YourDesk({ hall, names, acts }: { hall: TownHallView; names: Partial<Record<FactionId, string>>; acts: DeskActs }) {
-  const d = hall.desk!;
-  const [menuOpen, setMenuOpen] = useState(false);
-  const voting = d.window.voting && d.you.councillor;
-  const secretary = d.paper.items.find((i) => i.movedBy.kind === 'branch')?.movedBy.name ?? '';
-  const chosen =
-    acts.selected === 'against' ? copy.againstAll : d.paper.items.find((i) => i.ordinanceId === acts.selected)?.name;
-  const proposed = d.you.proposed ? d.paper.items.find((i) => i.ordinanceId === d.you.proposed)?.name : null;
-  const full = d.paper.items.filter((i) => i.movedBy.kind === 'player').length >= 3;
-  return (
-    <section aria-label={copy.hall.yourDesk} className="flex flex-col gap-2" data-testid="hall-desk">
-      <div className={kicker}>{copy.hall.yourDesk}</div>
-      <OrderPaper
-        council={d}
-        factionNames={names}
-        secretary={secretary}
-        selected={acts.selected}
-        onSelect={voting ? acts.onSelect : undefined}
-        disabled={!!acts.pending}
-      />
-      {voting && d.you.voted === null && (
-        <Button
-          className="w-full"
-          disabled={!acts.selected}
-          pending={acts.pending === 'councilVote'}
-          onClick={acts.onVote}
-          data-testid="desk-vote"
-        >
-          {chosen ? copy.voteFor(chosen) : copy.chooseAMotion}
-        </Button>
-      )}
-      {voting && d.menu && (
-        <div className="flex flex-col gap-1">
-          {d.you.proposed ? (
-            <p className="font-mono text-[12px] text-muted">{copy.youMoved(proposed ?? '')}</p>
-          ) : full ? (
-            <p className="font-mono text-[12px] text-muted">{copy.paperFull}</p>
-          ) : (
-            <Button variant="outline" className="w-full" onClick={() => setMenuOpen(true)} data-testid="desk-propose">
-              {copy.propose(20)}
-            </Button>
-          )}
-          <OrdinanceMenu
-            open={menuOpen}
-            onOpenChange={setMenuOpen}
-            items={d.menu}
-            canAfford={d.you.pc >= 20}
-            pending={acts.pending === 'propose'}
-            onPropose={(id) => {
-              setMenuOpen(false);
-              acts.onPropose(id);
-            }}
-          />
-        </div>
-      )}
-      {acts.notice && (
-        <p role="status" className="font-body text-[13px] text-collective">
-          {acts.notice}
-        </p>
-      )}
-      <p className="font-mono text-[12px]" data-testid="desk-next">
-        {deskNextLine(hall)}
-      </p>
-    </section>
-  );
-}
-
-/** Answers §10.2: *Next: the council votes tomorrow 01:00.* and the other three by cycle day. */
-export function deskNextLine(hall: Pick<TownHallView, 'desk'>): string {
-  const n = hall.desk?.next;
-  if (!n) return '';
-  switch (n.kind) {
+/** How the rule in force won (design §8.2), or null when it was not decided by a rule ballot. */
+function howLine(f: NonNullable<TownHallView['inForce']>, names: Partial<Record<FactionId, string>>): string | null {
+  const party = (i: number) => {
+    const id = f.factionIds[i];
+    return id ? (names[id] ?? id) : '';
+  };
+  switch (f.how) {
     case 'votes':
-      return copy.council.deskNext.votes(formatAt(n.at));
-    case 'voted':
-      return copy.council.deskNext.voted(n.ordinance);
-    case 'runs':
-      return copy.council.deskNext.runs(
-        n.ordinance,
-        formatWeekday(dayStart(n.untilDay)),
-        formatWeekday(dayStart(n.nominationsFromDay)),
-      );
-    case 'rose':
-      return copy.council.deskNext.rose(formatWeekday(dayStart(n.nominationsFromDay)));
+      return f.countDay ? copy.rule.how.votes(weekdayOf(f.countDay), f.votes ?? 0, f.voters ?? 0) : null;
+    case 'tie':
+      return f.countDay ? copy.rule.how.tie(weekdayOf(f.countDay), f.votes ?? 0) : null;
+    case 'fallback':
+      return copy.rule.how.fallback;
+    case 'seats':
+      return f.factionIds.length > 1
+        ? copy.rule.how.sharedSeats(party(0), party(1), f.seats ?? 0)
+        : copy.rule.how.seats(party(0), f.seats ?? 0);
+    case 'draw':
+      return copy.rule.how.draw(party(0));
+    case 'carried':
+      return copy.rule.how.carried;
+    default:
+      return null;
   }
 }
 
-/** Answers §11.2 block 3: the rule in force, its plain effect and the days left; or why there is none. */
-function RuleInForce({ hall }: { hall: TownHallView }) {
+/** Block 1: the rule in force, its plain effect, the days left and how it won. */
+function RuleInForce({ hall, names }: { hall: TownHallView; names: Partial<Record<FactionId, string>> }) {
+  if (!hall.inForce) return null;
+  const how = howLine(hall.inForce, names);
   return (
     <section aria-label={copy.hall.ruleInForce} className="flex flex-col gap-1" data-testid="hall-rule">
       <HelpButton
-        notes={[copy.help.ordinance(hall.passVotes, hall.seatCount)]}
+        notes={[copy.help.rule(hall.cityName, hall.seatCount)]}
         label={`${copy.hall.ruleInForce}: what a council rule is`}
         className={cx(kicker, 'w-full text-left')}
       >
         <span className={helpMark}>{copy.hall.ruleInForce}</span>
       </HelpButton>
-      {hall.inForce ? (
-        <>
-          <span className="font-body text-[16px] font-semibold" data-testid="hall-rule-name">
-            {hall.inForce.name}
-          </span>
-          <span className="font-body text-[14px] text-text-2" data-testid="hall-rule-line">
-            {copy.hall.ruleLine(hall.inForce.plainLine, hall.inForce.daysLeft)}
-          </span>
-        </>
-      ) : (
-        <span className="font-body text-[14px] text-text-2" data-testid="hall-rule-line">
-          {hall.noRule?.why === 'beforeVote' && hall.noRule.at !== null
-            ? copy.hall.noRuleVotes(formatAt(hall.noRule.at))
-            : copy.hall.noRuleDivided}
+      <span className="font-body text-[16px] font-semibold" data-testid="hall-rule-name">
+        {hall.inForce.name}
+      </span>
+      <span className="font-body text-[14px] text-text-2" data-testid="hall-rule-line">
+        {copy.hall.ruleLine(hall.inForce.plainLine, hall.inForce.daysLeft)}
+      </span>
+      {how && (
+        <span className="font-mono text-[12px] text-muted" data-testid="hall-rule-how">
+          {how}
         </span>
       )}
     </section>
   );
 }
 
-/** Answers §11.2 block 4: the seats as rows, *Player · Organiser* or *Local candidate*, the term's end. */
+/**
+ * Block 2: next week's rule, the ballot (provisional on days 0–1, set on days 2–4): the vote in the
+ * block, a councillor's own rule and its picker, and the Next line.
+ */
+function NextWeeksRule({
+  hall,
+  names,
+  acts,
+}: {
+  hall: TownHallView;
+  names: Partial<Record<FactionId, string>>;
+  acts?: DeskActs;
+}) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const b = hall.next;
+  const c = hall.councillor;
+  const voting = !!acts && b.status === 'set' && b.canVote && !b.myVote;
+  const chosen = b.cards.find((x) => x.ordinanceId === acts?.selected);
+  const next =
+    b.status === 'provisional'
+      ? copy.council.deskNext.townVotes(
+          formatWeekday(b.pollsOpenAt),
+          formatWeekday(b.countAt - 1),
+          formatWeekday(b.countAt),
+        )
+      : copy.council.deskNext.theResult(formatWeekday(b.countAt));
+  return (
+    <section aria-label={copy.hall.nextWeeksRule} className="flex flex-col gap-2" data-testid="hall-next">
+      <div className={kicker}>{copy.hall.nextWeeksRule}</div>
+      <div role={voting ? 'radiogroup' : undefined} aria-label={copy.hall.nextWeeksRule}>
+        {b.cards.map((card) => (
+          <OrdinanceRow
+            key={card.ordinanceId}
+            name={card.name}
+            line={card.plainLine}
+            effectLine={card.effectLine}
+            note={whoseLine(card, names)}
+            right={voting ? 'radio' : card.yourVote ? 'mine' : null}
+            selected={acts?.selected === card.ordinanceId}
+            onSelect={voting ? () => acts.onSelect(card.ordinanceId) : undefined}
+            disabled={!!acts?.pending}
+          />
+        ))}
+      </div>
+      {voting && (
+        <Button
+          className="w-full"
+          disabled={!chosen}
+          pending={acts.pending === 'vote'}
+          onClick={acts.onVote}
+          data-testid="hall-vote"
+        >
+          {chosen ? copy.ballot.voteFor(chosen.name) : copy.ballot.chooseARule}
+        </Button>
+      )}
+      {b.status === 'provisional' && (
+        <p className="font-mono text-[12px] text-muted">{copy.hall.ballotSetAt(formatUntil(b.setAt))}</p>
+      )}
+      {c && (
+        <div className="flex flex-col gap-1" data-testid="hall-your-rule">
+          <p className="font-body text-[14px]">
+            {copy.stand.yourRule}: <strong className="font-semibold">{c.rule.name}</strong>
+          </p>
+          {!c.onBallot && <p className="font-mono text-[12px] text-muted">{copy.hall.nextInLine}</p>}
+          {acts && c.menu.length > 0 && (
+            <>
+              <Button variant="outline" className="w-full" onClick={() => setPickerOpen(true)} data-testid="hall-change">
+                {copy.hall.change}
+              </Button>
+              <BottomSheet open={pickerOpen} onOpenChange={setPickerOpen} title={copy.hall.pickerTitle}>
+                <div className="flex flex-col" data-testid="rule-picker">
+                  {c.menu.map((o) => (
+                    <OrdinanceRow
+                      key={o.ordinanceId}
+                      name={o.name}
+                      line={o.line}
+                      effectLine={o.effectLine}
+                      note={o.onBallot ? copy.hall.onTheBallot : undefined}
+                      dimmed={o.onBallot}
+                      right="radio"
+                      selected={o.ordinanceId === c.rule.ordinanceId}
+                      onSelect={() => {
+                        setPickerOpen(false);
+                        acts.onSetRule(o.ordinanceId);
+                      }}
+                      disabled={!!acts.pending}
+                    />
+                  ))}
+                </div>
+              </BottomSheet>
+            </>
+          )}
+        </div>
+      )}
+      {acts?.notice && (
+        <p role="status" className="font-body text-[13px] text-collective">
+          {acts.notice}
+        </p>
+      )}
+      <p className="font-mono text-[12px]" data-testid="hall-next-line">
+        {next}
+      </p>
+      {c && <p className="font-mono text-[12px] text-muted">{copy.council.deskNext.pay}</p>}
+    </section>
+  );
+}
+
+/** Block 4: stand for the council, days 0–1 for a resident who may stand here. */
+function StandBlock({ hall, onStand }: { hall: TownHallView; onStand: () => void }) {
+  const st = hall.stand!;
+  return (
+    <section aria-label={copy.hall.standForTheCouncil} className="flex flex-col gap-2" data-testid="hall-stand">
+      <div className={kicker}>{copy.hall.standForTheCouncil}</div>
+      <p className="font-mono text-[12px] text-text-2">{copy.stand.gives}</p>
+      <Button variant="outline" className="w-full" onClick={onStand}>
+        {copy.standForTheCouncil(st.cost)}
+      </Button>
+    </section>
+  );
+}
+
+/** Block 3: the seats as rows, *Player · Organiser* or *Local candidate*, the term's end. */
 function CouncilRows({ hall, factionId }: { hall: TownHallView; factionId: FactionId }) {
   return (
     <section aria-label={copy.hall.council} className="flex flex-col" data-testid="hall-council">
@@ -203,7 +262,7 @@ function CouncilRows({ hall, factionId }: { hall: TownHallView; factionId: Facti
                 {s.kind === 'player' ? copy.hall.player(s.rankTitle ?? '') : copy.hall.local}
                 {s.districtName ? ` · ${s.districtName}` : ''}
               </span>
-              {s.votedFor && <span className="font-mono text-[11px]">{copy.hall.votedFor(s.votedFor)}</span>}
+              {s.rule && <span className="font-mono text-[11px]">{copy.hall.ruleOf(s.rule)}</span>}
             </span>
           </li>
         ))}
@@ -213,40 +272,7 @@ function CouncilRows({ hall, factionId }: { hall: TownHallView; factionId: Facti
   );
 }
 
-/** Answers §11.2 block 5: the order paper read-only, and the next vote's moment or the result. */
-function UpForAVoteReadOnly({ hall }: { hall: TownHallView }) {
-  const divided = hall.paper.status === 'divided';
-  const passed = hall.paper.items.find((i) => i.passed);
-  return (
-    <section aria-label={copy.hall.upForAVote} className="flex flex-col" data-testid="hall-paper">
-      <div className={kicker}>{copy.hall.upForAVote}</div>
-      {hall.paper.items.map((it) => (
-        <OrdinanceRow
-          key={it.ordinanceId}
-          n={it.n}
-          name={it.name}
-          effectLine={it.effectLine}
-          note={
-            it.movedBy.kind === 'branch'
-              ? copy.branchMotionBy(it.movedBy.name)
-              : copy.movedBy(it.movedBy.you ? 'you' : it.movedBy.name)
-          }
-          right={divided ? it.votes : null}
-          passed={it.passed}
-        />
-      ))}
-      <p className="pt-1.5 font-mono text-[12px]" data-testid="hall-next-vote">
-        {hall.nextVoteAt !== null
-          ? copy.hall.nextVote(formatAt(hall.nextVoteAt))
-          : passed
-            ? copy.hall.voted(formatWeekday(hall.divideAt - 1), passed.name, passed.votes ?? 0, hall.seatCount)
-            : copy.hall.votedNothing(formatWeekday(hall.divideAt - 1))}
-      </p>
-    </section>
-  );
-}
-
-/** Answers §11.2 block 6: the city's two Issues as the paper's rows. */
+/** Block 5: the city's two Issues as the paper's rows. */
 function HallIssues({
   hall,
   names,
@@ -282,17 +308,29 @@ export interface WhatNowCardProps {
   whatNow: WhatNowView;
   /** The hall's name, for the button (*To your desk at the Town Hall*). */
   hallName: string;
+  /** Every party's short name (the capital's lines). */
+  names?: Partial<Record<FactionId, string>>;
   /** Absent at the hall itself (the desk is right below). */
   onDesk?: () => void;
   className?: string;
 }
 
 /**
- * Answers §10.1: *What now · your five days*, once per term: three numbered lines in the Standing
- * card's style, and *To your desk at the Town Hall*.
+ * Answers §10.1; the voting rework (design §4.6): *What now · your five days*, once per term: your
+ * rule on the ballot (or next in line; the capital's party card), the pay, and *To your desk at the
+ * Town Hall*. TODO(phase 3): `WhatNowCard` v2's final layout (tech design §9.7).
  */
-export function WhatNowCard({ whatNow, hallName, onDesk, className }: WhatNowCardProps) {
-  const lines = copy.council.whatNow.lines(formatAt(whatNow.divideAt), whatNow.seatCount, whatNow.passVotes);
+export function WhatNowCard({ whatNow: w, hallName, names = {}, onDesk, className }: WhatNowCardProps) {
+  const r = copy.council.whatNow.rule;
+  const party = w.capital ? (names[w.capital.factionId] ?? w.capital.factionId) : '';
+  const first = w.capital
+    ? w.capital.leadsBloc
+      ? r.capitalLeads(party, w.rule.name)
+      : r.capitalChosen(w.capital.by, party, w.rule.name)
+    : w.rule.onBallot
+      ? r.onBallot(w.rule.name, formatWeekday(w.pollsOpenAt), formatWeekday(w.countAt - 1), formatUntil(w.changeUntil))
+      : r.nextInLine();
+  const lines = [first, r.pay()];
   return (
     <section
       aria-label={copy.council.whatNow.kicker}

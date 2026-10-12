@@ -50,9 +50,8 @@ export function buildEdition(i: {
   home: Pick<CityDoc, 'opinion'> | null;
   today: DayKey;
   ordersToday: OrdersState;
-  /** Slice 3 (ADR 0020): the stipend and the deposits returned at this settlement. */
+  /** Slice 3 (ADR 0020): the stipend at this settlement. */
   stipend?: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
-  deposits?: { count: number; pc: number } | null;
   /** Review 1 (§13.4): the PC One of Us paid at this settlement. */
   oneOfUsPc?: number;
   /** Slice 4 (ADR 0028): hero and Issue awards credited at this settlement; review 5: the Unrest prize. */
@@ -180,7 +179,6 @@ export function buildEdition(i: {
             }
           : null,
       stipend: i.stipend ?? null,
-      deposits: i.deposits ?? null,
       oneOfUsPc: i.oneOfUsPc ?? 0,
       awards: i.awards && i.awards.length > 0 ? i.awards : null,
       restedBanked: s.restedBanked,

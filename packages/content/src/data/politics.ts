@@ -1,50 +1,33 @@
 import type { ContentInput } from '../schemas';
 
 /**
- * The political result modals (docs/design/slice-3-screens.md §9; review 2: the words of
- * docs/design/review-2-answers.md §1.10 and the *Next* line of §4.4). `{paper}` is the paper's short
- * name with its article ("the Clarion"); `{until}` and `{at}` are rendered by the client in the
- * player's clock; `{weekday}` is the next nominations day 0 after today; `{countDay}` the count's
- * weekday; `{pollsWeekday}` the weekday voting opens (cycle day 2); `{resultWeekday}` the weekday
- * the council's vote is printed; `{n}` the candidate's endorsements after yours.
+ * The political result modals (docs/design/slice-3-screens.md §9; review 2: the *Next* line of
+ * docs/design/review-2-answers.md §4.4; the voting rework, docs/design/voting-simplified.md §4.8).
+ * `{paper}` is the paper's short name with its article ("the Clarion"); `{until}` and `{at}` are
+ * rendered by the client in the player's clock; `{countDay}` the count's weekday; `{pollsWeekday}`
+ * the weekday voting opens (cycle day 2).
  */
 export const politics: ContentInput['politics'] = {
   results: {
+    // The voting rework (design §4.8): `{rule}` the rule voted for or named; `{countDay}` the count's
+    // weekday (the result morning, and the day the winner starts); `{name}` the candidate backed.
     ballot: {
       stamp: 'Vote cast',
       headline: 'Your vote is in',
-      body: 'You voted for {name}. Nobody can see who you chose. The result is in {paper} on {countDay} morning, and on the Election card.',
+      body: '{rule}. Nobody can see who you chose. The result is in {paper} on {countDay} morning; if it wins, it runs from {countDay} for five days.',
       next: 'Next: the result, {countDay} morning.',
     },
     declare: {
       stamp: "You're standing",
       headline: 'Your name is on the list',
-      body: "You need two backers by {until} or your name comes off. Do today's Party orders and the branch backs you.",
-      next: 'Next: find backers. Voting opens {pollsWeekday}.',
+      body: "Your rule: {rule}. Seats are counted {countDay} morning: the seven best known here, counting backers. Do today's orders and the branch backs you.",
+      next: 'Next: the result, {countDay} morning.',
     },
     endorse: {
       stamp: 'Backed',
       headline: '{name} has your backing',
-      body: 'Backing is public and final. {name} has {n} now; two by {until} keep the name on the list, and up to five count.',
-      next: 'Next: voting opens {pollsWeekday}.',
-    },
-    withdraw: {
-      stamp: 'Withdrawn',
-      headline: 'Your name comes off the list',
-      body: 'The 10 Political Capital stays with the branch. Candidates can put their names in again on {weekday}.',
-      next: 'Next: nothing until {weekday}.',
-    },
-    propose: {
-      stamp: 'Put forward',
-      headline: '{ordinance} is up for a vote',
-      body: '{ordinanceLine} The council votes at {at}.',
-      next: 'Next: vote for a rule before {at}.',
-    },
-    councilVote: {
-      stamp: 'Voted',
-      headline: 'Your vote is recorded',
-      body: "For {ordinance}. The whole council can see it, and it's final. The council votes at {at}; {paper} prints the result.",
-      next: 'Next: the result, {resultWeekday} morning.',
+      body: "Backing is public and final: three more to {name}'s count at {countDay}'s result.",
+      next: 'Next: the result, {countDay} morning.',
     },
     // Slice 4 (docs/design/slice-4-screens.md §6.3): `{district}` the new residence, `{weekday}` the
     // weekday its vote opens (register) or the room ends (room), `{hq}` the faction's capital HQ,
@@ -80,29 +63,6 @@ export const politics: ContentInput['politics'] = {
       headline: 'Your rule is {rule}',
       body: '{line}. On the ballot from {pollsWeekday}; the town votes until {weekday}.',
       next: 'Next: the vote opens {pollsWeekday}.',
-    },
-  },
-  // The voting rework (design §4.8): the vote, the stand and the backing, beside the old texts until
-  // phase 2. `{rule}` the rule voted for or named; `{countDay}` the count's weekday (the result
-  // morning, and the day the winner starts); `{name}` the candidate backed.
-  resultsV2: {
-    ballot: {
-      stamp: 'Vote cast',
-      headline: 'Your vote is in',
-      body: '{rule}. Nobody can see who you chose. The result is in {paper} on {countDay} morning; if it wins, it runs from {countDay} for five days.',
-      next: 'Next: the result, {countDay} morning.',
-    },
-    declare: {
-      stamp: "You're standing",
-      headline: 'Your name is on the list',
-      body: "Your rule: {rule}. Seats are counted {countDay} morning: the seven best known here, counting backers. Do today's orders and the branch backs you.",
-      next: 'Next: the result, {countDay} morning.',
-    },
-    endorse: {
-      stamp: 'Backed',
-      headline: '{name} has your backing',
-      body: "Backing is public and final: three more to {name}'s count at {countDay}'s result.",
-      next: 'Next: the result, {countDay} morning.',
     },
   },
 };

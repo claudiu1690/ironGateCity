@@ -1,4 +1,4 @@
-import type { HeatState, MoraleState, RecordLevel } from '@irongate/rules';
+import type { HeatState, MoraleState, RecordLevel, RuleHow } from '@irongate/rules';
 
 /**
  * The dev panel's wire types (memory mode only, behind E2E_TEST_HOOKS). The client imports them as
@@ -100,11 +100,11 @@ export interface DevHomeCity {
   /** Null for a city without a council (none in slice 3: every home city has one). */
   council: {
     cycleDay: number;
-    phase: 'count-day' | 'nominations' | 'polls';
-    /** "Polls open (day 2 of 3)". */
+    phase: 'result-day' | 'standing' | 'vote';
+    /** "The vote (day 2 of 3)". */
     phaseLabel: string;
     next: {
-      phase: 'polls' | 'count';
+      phase: 'vote' | 'count';
       /** The boundary, 00:00 UTC, epoch ms. */
       at: number;
       /** "Thursday 1 Oct 00:00 UTC". */
@@ -113,8 +113,10 @@ export interface DevHomeCity {
   } | null;
   /** The home faction's morale; null before the city is bootstrapped. */
   morale: { state: MoraleState; word: string; share: number } | null;
-  /** The ordinance in force today, if any. */
-  ordinance: { id: string; name: string; daysLeft: number | null } | null;
+  /** The rule in force today, if any, and how it won (null: not decided by a rule ballot). */
+  ordinance: { id: string; name: string; daysLeft: number | null; how: RuleHow | null } | null;
+  /** The voting rework (tech design §12): this cycle's ballot, its status and its cards (names). */
+  ballot: { status: 'open' | 'set' | 'counted'; cards: string[] } | null;
 }
 
 export interface DevStatus {

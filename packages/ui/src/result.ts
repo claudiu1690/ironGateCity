@@ -158,7 +158,7 @@ export function knockOnLines(r: ActionResult, o: { statPending: number }): Knock
   if (e.ordersAllDone) add('order', 'all-orders');
   if (e.morale) add('morale', 'morale');
   for (const x of e.issues ?? []) add('issue', `issue:${x.issueId}`);
-  if (e.branchEndorsement) add('branch', 'branch');
+  if (e.branch) add('branch', 'branch');
   if (e.pc) add('pc', 'pc');
   if (e.standing) add('standing', 'standing');
   if (e.scoreboard) add('ledger', 'scoreboard');

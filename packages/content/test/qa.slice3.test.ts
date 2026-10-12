@@ -111,7 +111,7 @@ describe('QA · slice-3 copy: campaign vocabulary, no war framing, no real-world
     content.headlines.filter((h) =>
       /seat|filed|ballot|voted|moved|council|count|polls|nominations|ordinance|stands-firm/.test(h.id),
     ),
-    content.factions.map((f) => [f.platforms, f.branchMotion]),
+    content.factions.map((f) => f.branchMotion),
     content.ambition('finish-his-work')!.chapters.find((c) => c.n === 2),
     Object.values(copy)
       .filter((v) => typeof v === 'string')

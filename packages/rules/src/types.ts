@@ -3,7 +3,6 @@
  * Kept in the rules package so every layer imports types from one place.
  */
 import type { CouncilPhase } from './calendar';
-import type { CountRow, DeskNext } from './council';
 import type { DayKey } from './day';
 import type { MoraleState } from './morale';
 import type { RiskBand } from './missions';
@@ -1185,8 +1184,11 @@ export interface ActionResult {
     hooks: string[];
     /** Slice 3: the action moved the home city across a morale threshold. */
     morale?: { cityId: string; cityName: string; before: MoraleState; after: MoraleState } | null;
-    /** Slice 3: completing the third order made the branch endorse the caller's candidacy. */
-    branchEndorsement?: { endorsements: number; needed: number; smallBranch: boolean } | null;
+    /**
+     * The voting rework (ADR 0084): completing the third order made the branch back the caller's
+     * candidacy (*the branch backs you · 2 backers*).
+     */
+    branch?: { backers: number } | null;
     /** Slice 4: the points this action added to each tagged Issue. */
     issues?: Array<{
       issueId: string;
@@ -1253,8 +1255,6 @@ export interface DeskView {
   } | null;
   /** Slice 3: the councillor's stipend credited at this settlement. */
   stipend: { boundaries: number; pc: number; fxp: number; cityName: string } | null;
-  /** Slice 3: deposits returned for struck candidacies. */
-  deposits: { count: number; pc: number } | null;
   /** Review 1 (§13.4): the PC One of Us paid at this settlement (0 when none). */
   oneOfUsPc: number;
   restedBanked: number;
@@ -1380,23 +1380,14 @@ export type GameErrorReason =
   | 'NOT_NOMINATIONS'
   | 'NOT_POLLING'
   | 'ALREADY_FILED'
-  | 'NOT_FILED'
-  | 'UNKNOWN_PLATFORM'
   | 'NOT_ENOUGH_PC'
   | 'UNKNOWN_CANDIDACY'
   | 'CANDIDACY_CLOSED'
   | 'CANNOT_ENDORSE_SELF'
   | 'ALREADY_ENDORSED'
-  | 'UNKNOWN_CANDIDATE'
   | 'ALREADY_VOTED'
   | 'NOT_COUNCILLOR'
-  | 'COUNCIL_CLOSED'
   | 'UNKNOWN_ORDINANCE'
-  | 'ALREADY_ON_PAPER'
-  | 'ALREADY_PROPOSED'
-  | 'PAPER_FULL'
-  | 'NOT_ON_PAPER'
-  | 'ALREADY_COUNCIL_VOTED'
   | 'UNKNOWN_ELECTION'
   | 'ELECTION_NOT_READY'
   // Slice 4 (tech design §6.9).
@@ -1555,38 +1546,35 @@ export interface AmbitionView {
 // before the count (ADR 0019).
 // ---------------------------------------------------------------------------------------------
 
-export type PoliticsState =
-  'belowRank' | 'ballot' | 'councilSits' | 'filed' | 'stand' | 'count' | 'voted' | 'nominations';
-
 /** The Polling Day row, the HQ council card and the Paper tab dot (one builder, screens §2.1, §7). */
 export interface PoliticsSummaryView {
   cityId: string;
   cityName: string;
   cycleDay: number;
   phase: 'nominations' | 'polling';
-  /** The first that applies, in this order (design §17 Q6). */
-  state: PoliticsState;
-  /** The boundary ending today's window (nominations or polls). */
+  /** The voting rework (tech design §8.3): the Election card's state (`card.state`). */
+  state: ElectionCardState;
+  /** The boundary ending today's window (the set on days 0–1, the count on days 2–4). */
   closesAt: number;
-  pollsOpenAt: number | null;
-  /** The next day the polls open, as a weekday ("Coalport votes from Thursday"). */
+  pollsOpenAt: number;
+  /** The next day the vote opens, as a weekday ("Coalport votes from Wednesday"). */
   pollsFromWeekday: string;
-  countAt: number | null;
-  divideAt: number | null;
-  /** 'filed': counted endorsements so far. */
-  endorsements: { n: number; needed: number; branchWillMakeUp: boolean } | null;
-  /** Filed, and today's three orders are done: "All orders carried out · the branch endorses you". */
-  branchLine: boolean;
+  countAt: number;
+  /** The voting rework: the rule voted for this cycle (days 2–4), the caller's own only. */
   votedFor: string | null;
-  /** The morning after a count. */
-  count: {
-    winner: string;
-    npcSeats: number;
-    seats: number;
-    turnout: { voters: number; eligible: number };
+  /**
+   * The rule in force; `how` and the numbers from the ballot that decided it (null when it was not a
+   * rule ballot, e.g. a bootstrap's). `plainLine` the rule's effect in plain words.
+   */
+  inForce: {
+    ordinanceId: string;
+    name: string;
+    daysLeft: number;
+    plainLine: string;
+    how: RuleHow | null;
+    votes: number | null;
+    voters: number | null;
   } | null;
-  /** QA review 4: `plainLine`, the rule's effect in plain words (answers §11.3), after its name. */
-  inForce: { ordinanceId: string; name: string; daysLeft: number; plainLine?: string } | null;
   rank2Title: string;
   /** Review 2: "Organisers who are Known here can stand" (the Election card's notes). */
   rank3Title: string;
@@ -1594,13 +1582,13 @@ export interface PoliticsSummaryView {
   paperShortName: string;
   fxpToRank2: number | null;
   standCost: number;
-  /** The caller is a councillor with the ordinance vote open. */
-  councillor: boolean;
   route: '/council/slate' | '/council/ballot' | '/council/count' | '/council' | null;
-  /** 'ballot' or 'councilSits'. */
+  /** State `vote`: the town's vote waits for the caller. */
   dot: boolean;
-  /** Review 2 (slice-3 screens §1a, §2.1): the Election card's state and what it prints. */
+  /** Review 2 (slice-3 screens §1a, §2.1); the voting rework (design §4.1): the Election card. */
   card: ElectionCardView;
+  /** The voting rework: the ballot on days 2–4 for Rank 2+ (the desktop card votes from it). */
+  ballot: RuleBallotView | null;
   /** Slice 4: the place voted in (a district or the home city) and its seats (2 or 7). */
   placeId?: string;
   placeName?: string;
@@ -1608,81 +1596,12 @@ export interface PoliticsSummaryView {
 }
 
 /**
- * The Election card's states (slice-3 screens §2.1, review 2), the first that applies: below Rank 2;
- * a councillor's rule vote (open, or cast); voting (a candidate who has not voted, not voted,
- * voted); candidates (standing, backing someone, the last result on days 0–1, else the call).
+ * The voting rework (design §4.1, tech design §4.4): the Election card's seven states, the first that
+ * applies: below Rank 2 → (days 2–4) `registered` if not yet a voter, else `vote` / `voted` → (days
+ * 0–1) `councillor` / `nextInLine` (a player term on council k) → `standing` (a candidacy) →
+ * `registered` (a district before the first vote) → `result`.
  */
 export type ElectionCardState =
-  | 'belowRank'
-  | 'councilSits'
-  | 'councilVoted'
-  | 'candidateVoting'
-  | 'voting'
-  | 'voted'
-  | 'standing'
-  | 'backing'
-  | 'result'
-  | 'candidates'
-  /** Slice 4 (screens §7.2): registered in a district, the first vote not yet open. */
-  | 'registered';
-
-/** What the player's result line says on the morning of a count (screens §2.1 `{your line}`). */
-export type ElectionYourLine =
-  | { kind: 'elected'; place: number }
-  | { kind: 'missed'; margin: number }
-  | { kind: 'voteWon'; name: string }
-  | { kind: 'voteLost'; name: string };
-
-export interface ElectionCardView {
-  state: ElectionCardState;
-  /** The boundary closing the window the card counts down to (names in, voting, the rule vote). */
-  closesAt: number;
-  /** The boundaries of this cycle: voting opens, the result (the next count). */
-  pollsOpenAt: number;
-  countAt: number;
-  /** Below Rank 2: "400 Party XP makes an Activist · you have 120". */
-  fxp: number;
-  rank2Fxp: number;
-  /** Rank 3 and Known here, not standing and not seated: the Stand button. */
-  canStand: boolean;
-  /** Standing: backers so far. */
-  backers: { n: number; needed: number; branchLine: boolean; branchWillMakeUp: boolean } | null;
-  /** The name the player backs this cycle. */
-  backing: string | null;
-  /** Voting: the name voted for. */
-  votedFor: string | null;
-  /** Cycle days 0–1: the last count. */
-  result: {
-    winner: string;
-    yourLine: ElectionYourLine | null;
-    /** The boundary ending the new council's term. */
-    councilUntil: number;
-    /** The boundary closing the next election's names. */
-    namesUntil: number;
-    /**
-     * Slice 4 (screens §7.2): a district's result line, *Eastside went Collective, Vanguard* and
-     * *Irongate: 4 Vanguard · 3 Collective · 3 Alliance · turnout 3 of 5 in Eastside*.
-     */
-    district?: {
-      seats: FactionId[];
-      capital: Record<FactionId, number>;
-      turnout: { voters: number; eligible: number };
-    } | null;
-  } | null;
-  /** A councillor while the rule vote is open (days 0–1). */
-  rule: { votedFor: string | null; divideAt: number } | null;
-  /** The morning the player made Rank 2: the one-line note, once. */
-  firstTime: boolean;
-}
-
-// ---------------------------------------------------------------------------------------------
-// The voting rework (docs/tech/voting-rework.md §4.4): the rule ballot's views. Added beside the old
-// ones in phase 1; `ElectionCardStateV2` and `ElectionCardViewV2` replace `ElectionCardState` and
-// `ElectionCardView` (and drop the suffix) in phase 2.
-// ---------------------------------------------------------------------------------------------
-
-/** Design §4.1: the Election card's seven states, plus the capital's `registered`. */
-export type ElectionCardStateV2 =
   | 'belowRank'
   | 'vote'
   | 'voted'
@@ -1741,16 +1660,22 @@ export interface RuleResultView {
   runsUntil: number;
 }
 
-export interface ElectionCardViewV2 {
-  state: ElectionCardStateV2;
+export interface ElectionCardView {
+  state: ElectionCardState;
+  /** The boundary closing the window the card counts down to (the set on days 0–1, the count on 2–4). */
   closesAt: number;
   pollsOpenAt: number;
   countAt: number;
+  /** The count that puts this cycle's winner in force ("the winner runs from Sunday"). */
   runsFrom: number;
+  /** Below Rank 2: "400 Party XP makes an Activist · you have 120". */
   fxp: number;
   rank2Fxp: number;
+  /** Rank 3 and Known here, not standing and not seated, days 0–1: the Stand button. */
   canStand: boolean;
+  /** `voted`: the rule voted for. */
   votedFor: string | null;
+  /** Days 0–1 (`result`): the last count (ballot k − 1). `winner` is the rule's name. */
   result: {
     winner: string;
     votes: number;
@@ -1758,19 +1683,27 @@ export interface ElectionCardViewV2 {
     how: RuleHow;
     runsUntil: number;
     nextVoteAt: number;
+    /**
+     * The name of whoever put the winning card up (the secretary, or the councillor: "Anna Weiss");
+     * the client words it (*the branch's*, *Councillor Weiss's*). Null when not known.
+     */
+    by: string | null;
+    /** Whether the winning card was the party's or a councillor's own (the Unrest fallback's line). */
+    whose: 'party' | 'councillor' | null;
     capital?: { factionIds: FactionId[]; seats: number; districtSeats: FactionId[] };
   } | null;
+  /** `standing`: the candidate's rule and backers. */
   standing: { rule: string; backers: number; branchLine: boolean } | null;
+  /** `councillor` / `nextInLine`: the councillor's rule, whether it is a card, the change window. */
   councillor: { rule: string; onBallot: boolean; changeUntil: number } | null;
+  /** The morning the player made Rank 2: the one-line note, once. */
   firstTime: boolean;
 }
 
 export interface EndorsementsView {
-  /** Counted so far: members, plus the branch (twice in a small branch). */
+  /** Backers so far: members, plus the branch (once). */
   n: number;
-  needed: number;
   branch: boolean;
-  branchCounts: 1 | 2;
   /** Up to five names, then `more`. */
   names: string[];
   more: number;
@@ -1792,11 +1725,13 @@ export interface CandidateView {
   rankTitle: string | null;
   standing: { name: string; cityName: string; successes: number };
   wardVote: number;
-  platform: string;
-  endorsements: EndorsementsView | null;
+  /** The voting rework (ADR 0084): the rule the candidate names (a capital local: null). */
+  rule: { ordinanceId: string; name: string } | null;
+  /** Players: their backers (a local: null). */
+  backers: EndorsementsView | null;
   you: boolean;
-  endorsedByYou: boolean;
-  canEndorse: { ok: true } | { ok: false; reason: EndorseRefusal } | null;
+  backedByYou: boolean;
+  canBack: { ok: true } | { ok: false; reason: EndorseRefusal } | null;
 }
 
 /**
@@ -1815,55 +1750,82 @@ export interface HallView {
   night: NightView;
 }
 
+/** The voting rework (design §4.5): a row of the rule picker (the eleven of the menu). */
+export interface OrdinanceMenuItemView {
+  ordinanceId: string;
+  name: string;
+  line: string;
+  plainLine: string;
+  effectLine: string;
+  /** On the ballot as it stands (dimmed: *already on the ballot · yours would be skipped*). */
+  onBallot: boolean;
+}
+
+/** The voting rework (design §4.5, ADR 0084): the stand card, days 0–1, not a candidate, not sitting. */
+export interface StandCardView {
+  requirements: Array<{
+    id: 'rank' | 'known';
+    met: boolean;
+    rankTitle?: string;
+    fxpToGo?: number;
+    successes?: number;
+    need?: number;
+  }>;
+  /** The branch's default rule (the picker's first row and the initial choice). */
+  defaultRule: string;
+  /** The rule picker: the branch's default first, then the menu. */
+  menu: OrdinanceMenuItemView[];
+  cost: number;
+  canStand: boolean;
+  reason: GameErrorReason | null;
+}
+
 export interface ElectionView {
   electionId: string;
   cityId: string;
   cityName: string;
   phase: 'nominations' | 'polling';
+  /** The set: the list freezes (stand until then). */
   nominationsCloseAt: number;
   pollsOpenAt: number;
   countAt: number;
-  /** Players by filing, then NPCs by profile (in nominations the provisional 9 − p). */
+  /** Players by filing, then locals by profile (days 0–1 the provisional 9 − p). */
   candidates: CandidateView[];
-  /** Nominations, and the caller has no candidacy this cycle. */
-  declare: {
-    requirements: Array<{
-      id: 'rank' | 'known' | 'endorsements';
-      met: boolean;
-      rankTitle?: string;
-      fxpToGo?: number;
-      successes?: number;
-      need?: number;
-    }>;
-    platforms: Array<{ id: string; line: string }>;
-    cost: number;
-    canDeclare: boolean;
-    reason: GameErrorReason | null;
-  } | null;
+  stand: StandCardView | null;
   candidacy: {
     candidacyId: string;
-    status: 'filed' | 'withdrawn' | 'struck' | 'standing';
-    endorsements: EndorsementsView | null;
+    rule: { ordinanceId: string; name: string };
+    backers: EndorsementsView;
     branchLine: boolean;
-    canWithdraw: boolean;
   } | null;
-  /** During the polls: the caller's own ballot, never anyone else's (ADR 0019). */
-  ballot: {
-    cast: { key: string; name: string } | null;
-    canVote: boolean;
-    reason: GameErrorReason | null;
-  } | null;
-  /** The caller's own endorsement this cycle, if any. */
-  endorsed: { candidacyId: string; name: string } | null;
+  /** The caller's own backing this cycle, if any. */
+  backed: { candidacyId: string; name: string } | null;
   pc: number;
+  seats: 7 | 2;
   /** Review 3: the council's hall, for the header crop; null for a city without one. */
   hall: HallView | null;
 }
 
-export interface CountRowView extends CountRow {
+/** The voting rework (design §4.3): a council row of the result (seated, then the unseated). */
+export interface CouncilRowView {
+  key: string;
+  kind: 'player' | 'npc';
+  name: string;
   avatar: AssetView | null;
+  rankTitle: string | null;
+  standingName: string;
+  factionId?: FactionId;
+  place: number;
+  seated: boolean;
+  /** The numbers behind a tap: local support and backers (total = support + 3 × backers counted). */
+  wardVote: number;
+  backers: number;
+  total: number;
+  /** The unseated: how far short of the last seat. */
+  short: number | null;
   you: boolean;
-  yourVote: boolean;
+  /** The rule the row named (a player), or a home local's rule from content. */
+  rule: { ordinanceId: string; name: string } | null;
 }
 
 export interface CountView {
@@ -1873,85 +1835,15 @@ export interface CountView {
   countDay: DayKey;
   /** The count's weekday ("Sunday's result"). */
   weekday: string;
-  rows: CountRowView[];
+  /** The rule decided at this count (null on an old count with no rule ballot). */
+  rule: RuleResultView | null;
+  /** The seated, then the unseated. */
+  council: CouncilRowView[];
   turnout: { voters: number; eligible: number };
   seats: number;
   npcSeats: number;
   /** Review 3: the council's hall, for the header crop. */
   hall: HallView | null;
-}
-
-export interface CouncilSeatView {
-  seat: number;
-  kind: 'player' | 'npc';
-  name: string;
-  avatar: AssetView | null;
-  rankTitle: string | null;
-  standingName: string;
-  you: boolean;
-  /** Players once cast; NPCs after the division. */
-  votedFor: string | null;
-  /** Slice 4 (the capital): the seat's party and district. */
-  factionId?: FactionId;
-  districtId?: string | null;
-  /** The district's name, for the seat grid's captions. */
-  districtName?: string | null;
-}
-
-export interface OrderPaperItemView {
-  n: number;
-  ordinanceId: string;
-  name: string;
-  line: string;
-  effectLine: string;
-  movedBy: { kind: 'branch' | 'player'; name: string; you: boolean };
-  /** Slice 4 (the capital): the party whose branch motion it is (null for a proposal). */
-  branchOf?: FactionId | null;
-  /** After the division. */
-  votes: number | null;
-  passed: boolean;
-}
-
-export interface OrdinanceMenuItemView {
-  ordinanceId: string;
-  name: string;
-  line: string;
-  effectLine: string;
-  onPaper: boolean;
-}
-
-export interface CouncilView {
-  councilKey: string;
-  cityId: string;
-  cityName: string;
-  termEndsAt: number;
-  npcSeats: number;
-  seats: CouncilSeatView[];
-  window: { voting: boolean; divideAt: number; opensAt: number | null };
-  paper: {
-    status: 'open' | 'divided';
-    items: OrderPaperItemView[];
-    /** After the division: the Against-all votes. */
-    against: number | null;
-    /** Divided with no motion passed. */
-    rose: boolean;
-  };
-  you: {
-    councillor: boolean;
-    voted: string | null;
-    proposed: string | null;
-    canPropose: boolean;
-    proposeReason: GameErrorReason | null;
-    pc: number;
-  };
-  /** Councillors while voting. */
-  menu: OrdinanceMenuItemView[] | null;
-  inForce: { ordinanceId: string; name: string; line: string; daysLeft: number } | null;
-  /** Review 3: the council's hall, for the header crop. */
-  hall: HallView | null;
-  /** Slice 4: the votes that pass a rule (4 of 7 at home, 6 of 10 in the capital) and the seat count. */
-  passVotes?: number;
-  seatCount?: number;
 }
 
 /** Screens §2.2: the morning a seat is won, the paper's front page is the winner's. */
@@ -1968,23 +1860,28 @@ export interface FrontPageView {
 }
 
 /**
- * Review 4 (answers §10.1, ADR 0077): the *What now* card, once per term (`officeTerms.whatNowSeenAt`):
- * put a rule forward, vote before the council votes at `divideAt`, draw the pay.
+ * Review 4 (answers §10.1, ADR 0077); the voting rework (design §4.6): the *What now* card, once per
+ * term (`officeTerms.whatNowSeenAt`): your rule on the ballot, change it until the set, the pay.
  */
 export interface WhatNowView {
   termId: string;
   cityId: string;
   /** The hall's place (`?loc=` for *To your desk at the Town Hall*) and its name. */
   hall: { locationId: string; name: string };
-  seatCount: 7 | 10;
-  passVotes: 4 | 6;
-  divideAt: number;
+  /** The councillor's rule and whether it is a card of the ballot as it stands. */
+  rule: { name: string; onBallot: boolean };
+  /** The capital: whether the councillor's rule is their party's card, and whose it is. */
+  capital: { leadsBloc: boolean; by: string; factionId: FactionId } | null;
+  /** The set: the rule can change until then. */
+  changeUntil: number;
+  pollsOpenAt: number;
+  countAt: number;
 }
 
 /**
- * Review 4 (answers §11.2, ADR 0077): the Town Hall's sheet, the council's public face for any city
- * with a council: the rule in force, the seats as rows, the order paper read-only, the week's Issues,
- * the Election card; `desk` only for a councillor of this council.
+ * Review 4 (answers §11.2, ADR 0077); the voting rework (design §4.4): the Town Hall's sheet, the
+ * council's public face for any city with a council: the rule in force, next week's rule (the
+ * ballot), the seats as rows, the stand card and the week's Issues.
  */
 export interface TownHallView {
   cityId: string;
@@ -1993,11 +1890,23 @@ export interface TownHallView {
   /** Review 5 (ADR 0079): the same block as `hall.night`. */
   night: NightView;
   seatCount: 7 | 10;
-  passVotes: 4 | 6;
   termEndsAt: number;
-  inForce: { ordinanceId: string; name: string; plainLine: string; daysLeft: number } | null;
-  /** No rule in force: the council couldn't agree, or it votes at `at`. */
-  noRule: { why: 'divided' | 'beforeVote'; at: number | null } | null;
+  inForce: {
+    ordinanceId: string;
+    name: string;
+    plainLine: string;
+    daysLeft: number;
+    /** How it won (null: not decided by a rule ballot) and the numbers its line prints. */
+    how: RuleHow | null;
+    countDay: DayKey | null;
+    votes: number | null;
+    voters: number | null;
+    seats: number | null;
+    factionIds: FactionId[];
+    by: string | null;
+  } | null;
+  /** Next week's rule: the ballot (provisional on days 0–1, set on days 2–4). */
+  next: RuleBallotView;
   seats: Array<{
     seat: number;
     kind: 'player' | 'npc';
@@ -2005,34 +1914,23 @@ export interface TownHallView {
     avatar: AssetView | null;
     rankTitle: string | null;
     you: boolean;
-    votedFor: string | null;
+    /** The voting rework: the rule the councillor names (a capital local: null). */
+    rule: string | null;
     factionId?: FactionId;
     districtName?: string | null;
   }>;
-  paper: {
-    status: 'open' | 'divided';
-    items: Array<{
-      n: number;
-      ordinanceId: string;
-      name: string;
-      plainLine: string;
-      effectLine: string;
-      movedBy: { kind: 'branch' | 'player'; name: string; you: boolean };
-      votes: number | null;
-      passed: boolean;
-    }>;
-    against: number | null;
-    rose: boolean;
-  };
-  /** The council's division (its vote), this term. */
-  divideAt: number;
-  /** The council's vote while the paper is open (null after it). */
-  nextVoteAt: number | null;
+  /** Days 0–1, a resident who may stand here. */
+  stand: StandCardView | null;
   issues: IssueRowView[];
   /** When this week's Issues settle (the next Monday's turn), for the rows' line. */
   issuesSettleAt: number;
-  election: PoliticsSummaryView | null;
-  desk: (CouncilView & { next: DeskNext }) | null;
+  /** A councillor of this council: their rule and the picker (`menu` on days 0–1, else []). */
+  councillor: {
+    rule: { ordinanceId: string; name: string };
+    onBallot: boolean;
+    changeUntil: number | null;
+    menu: OrdinanceMenuItemView[];
+  } | null;
   whatNow: WhatNowView | null;
   serverNow: number;
 }
@@ -2041,9 +1939,6 @@ export type PoliticalAct =
   | 'ballot'
   | 'declare'
   | 'endorse'
-  | 'withdraw'
-  | 'propose'
-  | 'councilVote'
   // Slice 4 (tech design §10.4).
   | 'register'
   | 'room'
@@ -2064,9 +1959,6 @@ export const POLITICAL_ACTS = [
   'ballot',
   'declare',
   'endorse',
-  'withdraw',
-  'propose',
-  'councilVote',
   'register',
   'room',
   'renew',
@@ -2110,13 +2002,11 @@ export interface PoliticalResult {
       stateBefore: MoraleState;
       stateAfter: MoraleState;
     } | null;
-    endorsements: { name: string; n: number; needed: number } | null;
-    /** The voting rework (tech design §4.4): *{name} · {n} backers* (replaces `endorsements` in phase 2). */
-    backers?: { name: string; n: number } | null;
+    /** The voting rework (tech design §4.4): *{name} · {n} backers*. */
+    backers: { name: string; n: number } | null;
     /** Slice 4: a move or a room. */
     iron?: { before: number; after: number } | null;
     seatGivenUp?: { cityName: string } | null;
-    candidacyWithdrawn?: boolean;
     /** Slice 5 (tech design §10.3): the cells, the infirmary and the record. */
     heat?: { before: number; after: number } | null;
     /**
@@ -2136,7 +2026,9 @@ export interface PoliticalResult {
   character: CharacterView;
   view:
     | { kind: 'election'; election: ElectionView }
-    | { kind: 'council'; council: CouncilView }
+    // The voting rework (tech design §8.4): after a vote, the ballot; after a rule change, the hall.
+    | { kind: 'ballot'; ballot: RuleBallotView }
+    | { kind: 'hall'; hall: TownHallView }
     | { kind: 'residence'; residence: ResidenceCardView; election: PoliticsSummaryView | null }
     // Slice 5 (tech design §10.3): out of the cells or the infirmary (where Continue lands), the record.
     | { kind: 'held'; landing: Landing | { journey: true } | null }
@@ -2529,22 +2421,21 @@ export interface CapitalCountView {
   councilKey: string;
   cycle: number;
   countDay: DayKey;
+  weekday: string;
+  /** The voting rework (ADR 0085): the cards with their seats, the largest bloc's first. */
+  rule: RuleResultView | null;
   seatsByFaction: Record<FactionId, number>;
   npcSeats: number;
   districts: Array<{
     districtId: string;
     name: string;
-    factions: Array<{
-      factionId: FactionId;
-      ballots: number;
-      ballotShare: number;
-      opinionShare: number;
-      score: number;
-      seats: number;
-    }>;
-    w: number;
-    ballots: number;
-    rows: Array<CountRowView & { factionId: FactionId; local: boolean }>;
+    /**
+     * The voting rework (tech design §8.3): three party rows; `votes` the district's votes for the
+     * party's card (a shared card's full votes, marked `shared`, §20 Q1).
+     */
+    parties: Array<{ factionId: FactionId; votes: number; shared: boolean; seats: number }>;
+    /** The party's candidates as council rows, seated first. */
+    council: CouncilRowView[];
     seats: Array<{ factionId: FactionId; name: string }>;
     turnout: { voters: number; eligible: number };
     scoreboard: ScoreboardTableView[];

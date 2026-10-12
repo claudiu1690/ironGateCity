@@ -249,13 +249,14 @@ function PoliticalBody({
     if (k.morale.stateAfter !== k.morale.stateBefore)
       lines.push({ id: 'morale-state', text: copy.moraleCrossed(k.morale.cityName, k.morale.stateAfter) });
   }
-  if (k.endorsements) {
+  // The voting rework (tech design §4.4): *{name} · {n} backers*.
+  if (k.backers) {
     lines.push({
-      id: 'endorsements',
-      text: `${k.endorsements.name}: ${copy.backersOf(k.endorsements.n, k.endorsements.needed)}`,
+      id: 'backers',
+      text: `${k.backers.name} · ${k.backers.n} ${k.backers.n === 1 ? 'backer' : 'backers'}`,
     });
   }
-  // Slice 4 (screens §6.3): a move or a room: the Iron, a home seat given up, a candidacy withdrawn.
+  // Slice 4 (screens §6.3): a move or a room: the Iron, a home seat given up.
   if (k.iron) {
     const spent = k.iron.before - k.iron.after;
     lines.push({
@@ -270,7 +271,6 @@ function PoliticalBody({
   }
   if (k.energy) lines.push({ id: 'energy', text: copy.risk.energyKnock(k.energy.before - k.energy.after) });
   if (k.seatGivenUp) lines.push({ id: 'seat', text: copy.residence.seatGivenUp(k.seatGivenUp.cityName) });
-  if (k.candidacyWithdrawn) lines.push({ id: 'candidacy', text: copy.residence.candidacyWithdrawn });
   const t = { until: r.until, at: r.at };
   // Review 2 (screens §9): every act ends with what comes next.
   if (r.next) lines.push({ id: 'next', text: renderTimeTokens(r.next, t) });
@@ -1034,8 +1034,12 @@ function knockOnNodes(
         );
       }
       case 'branch':
-        return e.branchEndorsement
-          ? line(l.id, `${copy.branchEndorsesYou} · ${e.branchEndorsement.endorsements} / ${e.branchEndorsement.needed}`, 'effect-branch')
+        return e.branch
+          ? line(
+              l.id,
+              `${copy.branchEndorsesYou} · ${e.branch.backers} ${e.branch.backers === 1 ? 'backer' : 'backers'}`,
+              'effect-branch',
+            )
           : null;
       case 'pc':
         return e.pc ? <Effect key={l.id} label="Political Capital" value={`${e.pc.before} → ${e.pc.after}`} /> : null;

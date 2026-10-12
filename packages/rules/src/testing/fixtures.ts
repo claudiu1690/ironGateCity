@@ -4,13 +4,14 @@ import type {
   HallView,
   CandidateView,
   CharacterView,
-  CouncilView,
-  CountRowView,
+  CouncilRowView,
   CountView,
   ElectionView,
   FrontPageView,
   PoliticalResult,
   PoliticsSummaryView,
+  RuleBallotView,
+  RuleCardView,
   CheckBreakdown,
   CityView,
   DailyTally,
@@ -533,7 +534,6 @@ export const paperViewFixture: PaperView = {
   desk: {
     salary: null,
     stipend: null,
-    deposits: null,
     oneOfUsPc: 0,
     restedBanked: 0,
     daysSinceLastPaper: null,
@@ -731,54 +731,108 @@ export const chapterResultFixture: ActionResult = {
 };
 
 // ---------------------------------------------------------------------------------------------
-// Slice 3: the political views (tech design §14 UI fixtures).
+// Slice 3: the political views (tech design §14 UI fixtures); the voting rework (tech design §4.4).
 // ---------------------------------------------------------------------------------------------
 
 const COUNT_DAY = DAY + 5;
 const MS = 86_400_000;
+
+const ruleCard = (
+  ordinanceId: string,
+  name: string,
+  plainLine: string,
+  effectLine: string,
+  whose: RuleCardView['whose'],
+): RuleCardView => ({ ordinanceId, name, plainLine, effectLine, whose, yourVote: false });
+
+/** Coalport's three cards (design App. A, with a player councillor's rule as card 2). */
+export const ruleCardsFixture: RuleCardView[] = [
+  ruleCard(
+    'ord.long-service',
+    'Long Service Order',
+    'Seniority builds two days a day.',
+    'Seniority ×2',
+    { kind: 'party', factionIds: ['collective'], by: 'Petra Holm' },
+  ),
+  ruleCard('ord.street-fund', 'Street Fund', 'Iron from shifts rises by a quarter.', 'Iron +25 %', {
+    kind: 'councillor',
+    name: 'Mara Lenk',
+    local: false,
+    you: true,
+  }),
+  ruleCard('ord.public-works', 'Public Works Order', 'Job pay up a tenth.', 'Job pay +10 %', {
+    kind: 'councillor',
+    name: 'Anna Weiss',
+    local: true,
+    you: false,
+  }),
+];
+
+export const ruleBallotFixture: RuleBallotView = {
+  key: 'coalport:4146',
+  cityId: 'coalport',
+  cityName: 'Coalport',
+  placeName: 'Coalport',
+  capital: false,
+  status: 'set',
+  cards: ruleCardsFixture,
+  setAt: (DAY - 1) * MS,
+  pollsOpenAt: (DAY - 1) * MS,
+  countAt: (DAY + 2) * MS,
+  runsUntil: (DAY + 7) * MS,
+  myVote: null,
+  canVote: true,
+  reason: null,
+  myRule: null,
+  standing: { players: 1, locals: 8, seats: 7 },
+};
 
 export const politicsSummaryFixture: PoliticsSummaryView = {
   cityId: 'coalport',
   cityName: 'Coalport',
   cycleDay: 3,
   phase: 'polling',
-  state: 'ballot',
+  state: 'vote',
   closesAt: (DAY + 2) * MS,
   pollsOpenAt: DAY * MS,
   pollsFromWeekday: 'Thursday',
   countAt: (DAY + 2) * MS,
-  divideAt: null,
-  endorsements: null,
-  branchLine: false,
   votedFor: null,
-  count: null,
-  inForce: { ordinanceId: 'ord.shift-hours', name: 'Shift Hours Order', daysLeft: 3 },
+  inForce: {
+    ordinanceId: 'ord.long-service',
+    name: 'Long Service Order',
+    daysLeft: 3,
+    plainLine: 'Seniority builds two days a day.',
+    how: 'fallback',
+    votes: 0,
+    voters: 0,
+  },
   rank2Title: 'Activist',
   rank3Title: 'Organiser',
   paperShortName: 'Clarion',
   fxpToRank2: null,
   standCost: 10,
-  councillor: false,
   route: '/council/ballot',
   dot: true,
   card: {
-    state: 'voting',
+    state: 'vote',
     closesAt: (DAY + 2) * MS,
     pollsOpenAt: DAY * MS,
     countAt: (DAY + 2) * MS,
+    runsFrom: (DAY + 2) * MS,
     fxp: 450,
     rank2Fxp: 400,
     canStand: false,
-    backers: null,
-    backing: null,
     votedFor: null,
     result: null,
-    rule: null,
+    standing: null,
+    councillor: null,
     firstTime: false,
   },
+  ballot: ruleBallotFixture,
 };
 
-const npcCandidate = (npcId: string, name: string, profile: number, line: string): CandidateView => ({
+const npcCandidate = (npcId: string, name: string, profile: number, rule: string | null): CandidateView => ({
   key: `n:${npcId}`,
   candidacyId: null,
   kind: 'npc',
@@ -792,11 +846,11 @@ const npcCandidate = (npcId: string, name: string, profile: number, line: string
     successes: profile * 5,
   },
   wardVote: profile,
-  platform: line,
-  endorsements: null,
+  rule: rule ? { ordinanceId: rule, name: rule } : null,
+  backers: null,
   you: false,
-  endorsedByYou: false,
-  canEndorse: null,
+  backedByYou: false,
+  canBack: null,
 });
 
 const playerCandidate: CandidateView = {
@@ -809,11 +863,11 @@ const playerCandidate: CandidateView = {
   rankTitle: 'Organiser',
   standing: { name: 'One of Us', cityName: 'Coalport', successes: 200 },
   wardVote: 40,
-  platform: 'The mill and the quays, before the men who own them.',
-  endorsements: { n: 1, needed: 2, branch: false, branchCounts: 2, names: ['Anton Weiss'], more: 0 },
+  rule: { ordinanceId: 'ord.street-fund', name: 'Street Fund' },
+  backers: { n: 1, branch: false, names: ['Anton Weiss'], more: 0 },
   you: false,
-  endorsedByYou: false,
-  canEndorse: { ok: true },
+  backedByYou: false,
+  canBack: { ok: true },
 };
 
 /** Review 3: Coalport's council hall on its picture, with the map's two stills. */
@@ -839,55 +893,66 @@ export const electionViewFixture: ElectionView = {
   countAt: COUNT_DAY * MS,
   candidates: [
     playerCandidate,
-    npcCandidate('npc.c.weiss', 'Anna Weiss', 44, 'Shop steward, rolling mill.'),
-    npcCandidate('npc.c.baum', 'Josef Baum', 38, 'Docker, Harbour Quays.'),
+    npcCandidate('npc.c.weiss', 'Anna Weiss', 44, 'ord.public-works'),
+    npcCandidate('npc.c.baum', 'Josef Baum', 38, 'ord.rally-permits'),
   ],
-  declare: {
+  stand: {
     requirements: [
       { id: 'rank', met: true, rankTitle: 'Organiser', fxpToGo: 0 },
       { id: 'known', met: true, successes: 74, need: 30 },
-      { id: 'endorsements', met: false, need: 2 },
     ],
-    platforms: [
-      { id: 'plat.c.mill', line: 'The mill and the quays, before the men who own them.' },
-      { id: 'plat.c.bread', line: 'Rent, bread and the tram. In that order.' },
-      { id: 'plat.c.wards', line: 'Every ward organised, every door knocked.' },
+    defaultRule: 'ord.long-service',
+    menu: [
+      {
+        ordinanceId: 'ord.long-service',
+        name: 'Long Service Order',
+        line: 'Long service counts double.',
+        plainLine: 'Seniority builds two days a day.',
+        effectLine: 'Seniority ×2',
+        onBallot: true,
+      },
+      {
+        ordinanceId: 'ord.street-fund',
+        name: 'Street Fund',
+        line: 'The council funds the streets.',
+        plainLine: 'Iron from shifts rises by a quarter.',
+        effectLine: 'Iron +25 %',
+        onBallot: false,
+      },
     ],
     cost: 10,
-    canDeclare: true,
+    canStand: true,
     reason: null,
   },
   candidacy: null,
-  ballot: null,
-  endorsed: null,
+  backed: null,
   pc: 45,
+  seats: 7,
   hall: hallFixture,
 };
 
-const countRow = (
+const councilRow = (
   place: number,
   name: string,
   kind: 'player' | 'npc',
   wardVote: number,
-  endorsements: number,
-  votes: number,
-  extra: Partial<CountRowView> = {},
-): CountRowView => ({
+  backers: number,
+  extra: Partial<CouncilRowView> = {},
+): CouncilRowView => ({
   key: kind === 'player' ? 'p:66f9a0000000000000000001' : `n:npc.${place}`,
   kind,
   name,
-  wardVote,
-  successes: wardVote * 5,
-  endorsements,
-  order: place,
-  endorsementsCounted: Math.min(5, endorsements),
-  votes,
-  total: wardVote + 3 * Math.min(5, endorsements) + votes,
+  avatar: null,
+  rankTitle: kind === 'player' ? 'Organiser' : null,
+  standingName: 'Trusted',
   place,
   seated: place <= 7,
-  avatar: null,
+  wardVote,
+  backers,
+  total: wardVote + 3 * Math.min(5, backers),
+  short: place <= 7 ? null : Math.max(0, 21 - wardVote),
   you: false,
-  yourVote: false,
+  rule: null,
   ...extra,
 });
 
@@ -897,18 +962,34 @@ export const countViewFixture: CountView = {
   cityName: 'Coalport',
   countDay: COUNT_DAY,
   weekday: 'Sunday',
-  rows: [
-    countRow(1, 'Mara Lenk', 'player', 40, 2, 2, { you: true, yourVote: true }),
-    countRow(2, 'Anna Weiss', 'npc', 45, 0, 1),
-    countRow(3, 'Josef Baum', 'npc', 37, 0, 0),
-    countRow(4, 'Marta Kolar', 'npc', 33, 0, 0),
-    countRow(5, 'Emil Hauser', 'npc', 29, 0, 0),
-    countRow(6, 'Lena Novak', 'npc', 26, 0, 0),
-    countRow(7, 'Karl Dressler', 'npc', 21, 0, 0),
-    countRow(8, 'Ida Pohl', 'npc', 19, 0, 0),
-    countRow(9, 'Tomas Ruzicka', 'npc', 17, 0, 0),
+  rule: {
+    key: 'coalport:4145',
+    countDay: COUNT_DAY,
+    weekday: 'Sunday',
+    cards: [
+      { ...ruleCardsFixture[1]!, votes: 4, seats: null, share: 4 / 6, won: true, yourVote: true },
+      { ...ruleCardsFixture[0]!, votes: 1, seats: null, share: 1 / 6, won: false },
+      { ...ruleCardsFixture[2]!, votes: 1, seats: null, share: 1 / 6, won: false },
+    ],
+    how: 'votes',
+    turnout: { voters: 6, eligible: 9 },
+    runsUntil: (COUNT_DAY + 5) * MS,
+  },
+  council: [
+    councilRow(1, 'Mara Lenk', 'player', 40, 2, {
+      you: true,
+      rule: { ordinanceId: 'ord.street-fund', name: 'Street Fund' },
+    }),
+    councilRow(2, 'Anna Weiss', 'npc', 45, 0),
+    councilRow(3, 'Josef Baum', 'npc', 37, 0),
+    councilRow(4, 'Marta Kolar', 'npc', 33, 0),
+    councilRow(5, 'Emil Hauser', 'npc', 29, 0),
+    councilRow(6, 'Lena Novak', 'npc', 26, 0),
+    councilRow(7, 'Karl Dressler', 'npc', 21, 0),
+    councilRow(8, 'Ida Pohl', 'npc', 19, 0),
+    councilRow(9, 'Tomas Ruzicka', 'npc', 17, 0),
   ],
-  turnout: { voters: 3, eligible: 9 },
+  turnout: { voters: 6, eligible: 9 },
   seats: 7,
   npcSeats: 6,
   hall: hallFixture,
@@ -919,99 +1000,18 @@ export const frontPageFixture: FrontPageView = {
   caption: { name: 'Mara Lenk', rankTitle: 'Organiser', cityName: 'Coalport' },
   animate: true,
   headline: 'Mara Lenk Tops the Poll in Coalport',
-  deck: 'First of seven with 48 votes. The Union Hall has a new name on the door.',
+  deck: 'First of seven with 46. The Union Hall has a new name on the door.',
   count: countViewFixture,
-};
-
-const npcSeat = (seat: number, name: string) => ({
-  seat,
-  kind: 'npc' as const,
-  name,
-  avatar: null,
-  rankTitle: null,
-  standingName: 'Trusted',
-  you: false,
-  votedFor: null,
-});
-
-export const councilViewFixture: CouncilView = {
-  councilKey: 'coalport:4146',
-  cityId: 'coalport',
-  cityName: 'Coalport',
-  termEndsAt: (DAY + 5) * MS,
-  npcSeats: 6,
-  seats: [
-    {
-      seat: 1,
-      kind: 'player',
-      name: 'Mara Lenk',
-      avatar: assetFixture('avatar.woman-30s', 760, 950, [128, 256]),
-      rankTitle: 'Organiser',
-      standingName: 'One of Us',
-      you: true,
-      votedFor: null,
-    },
-    npcSeat(2, 'Anna Weiss'),
-    npcSeat(3, 'Josef Baum'),
-    npcSeat(4, 'Marta Kolar'),
-    npcSeat(5, 'Emil Hauser'),
-    npcSeat(6, 'Lena Novak'),
-    npcSeat(7, 'Karl Dressler'),
-  ],
-  window: { voting: true, divideAt: (DAY + 2) * MS, opensAt: null },
-  paper: {
-    status: 'open',
-    items: [
-      {
-        n: 1,
-        ordinanceId: 'ord.shift-hours',
-        name: 'Shift Hours Order',
-        line: 'Shifts end an hour early, by order of the council, and count double towards the streak.',
-        effectLine: 'Job shifts −1 Energy · streak days ×2',
-        movedBy: { kind: 'branch', name: 'Petra Holm', you: false },
-        votes: null,
-        passed: false,
-      },
-      {
-        n: 2,
-        ordinanceId: 'ord.open-doors',
-        name: 'Open Doors',
-        line: 'The council asks every household to receive canvassers.',
-        effectLine: 'Canvass +4 % success chance',
-        movedBy: { kind: 'player', name: 'Mara Lenk', you: true },
-        votes: null,
-        passed: false,
-      },
-    ],
-    against: null,
-    rose: false,
-  },
-  you: {
-    councillor: true,
-    voted: null,
-    proposed: 'ord.open-doors',
-    canPropose: false,
-    proposeReason: 'ALREADY_PROPOSED',
-    pc: 25,
-  },
-  menu: null,
-  inForce: {
-    ordinanceId: 'ord.shift-hours',
-    name: 'Shift Hours Order',
-    line: 'Shifts end an hour early, by order of the council, and count double towards the streak.',
-    daysLeft: 3,
-  },
-  hall: hallFixture,
 };
 
 export const politicalResultFixture: PoliticalResult = {
   kind: 'political',
   act: 'ballot',
-  stamp: { label: 'Ballot cast', tone: 'success' },
+  stamp: { label: 'Vote cast', tone: 'success' },
   paper: { name: 'The Coalport Clarion', shortName: 'Clarion' },
   place: { cityId: 'coalport', cityName: 'Coalport' },
-  headline: 'Your ballot is in the box',
-  body: 'One vote for Anna Weiss. Nobody sees who you voted for. The count is in the Clarion on Sunday morning.',
+  headline: 'Your vote is in',
+  body: 'Street Fund. Nobody can see who you chose. The result is in the Clarion on Sunday morning; if it wins, it runs from Sunday for five days.',
   until: null,
   at: COUNT_DAY * MS,
   knockOns: {
@@ -1024,10 +1024,13 @@ export const politicalResultFixture: PoliticalResult = {
       stateBefore: 'fired',
       stateAfter: 'fired',
     },
-    endorsements: null,
+    backers: null,
   },
   performedAt: new Date(T0).toISOString(),
   idempotencyKey: '3b241101-e2bb-4255-8caf-4136c566a963',
   character: characterViewFixture,
-  view: { kind: 'election', election: { ...electionViewFixture, phase: 'polling' } },
+  view: {
+    kind: 'ballot',
+    ballot: { ...ruleBallotFixture, myVote: { ordinanceId: 'ord.street-fund', name: 'Street Fund' }, canVote: false, reason: 'ALREADY_VOTED' },
+  },
 };

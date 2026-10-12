@@ -34,7 +34,7 @@ import { Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { closeArrivalHere, progressOf, progressSet } from './actionService';
-import { branchEndorseIfFiled } from './councilService';
+import { branchBackIfStanding } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { createStayInTx, heldPlace } from './heldService';
 import { runKeyedAction } from './keyedAction';
@@ -523,7 +523,7 @@ export async function writeMissionFinal(i: {
     at: new Date(i.at),
     lenientIssues: i.frozenOrders === true,
   });
-  const branchEndorsement = orders.allDone ? await branchEndorseIfFiled(content, session, updated, today, i.now) : null;
+  const branchBack = orders.allDone ? await branchBackIfStanding(content, session, updated, today, i.now) : null;
 
   const built = buildMissionResult({
     content,
@@ -551,7 +551,7 @@ export async function writeMissionFinal(i: {
     issues: placeEffects.issues,
     scoreboard: placeEffects.scoreboard,
     morale: move?.morale ?? null,
-    branchEndorsement,
+    branch: branchBack,
     rateOn,
     firstMission,
     firstHeatState: firsts.heatFirst,

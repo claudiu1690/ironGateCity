@@ -90,7 +90,7 @@ export async function treatAt(deps: {
         knockOns: {
           pc: null,
           morale: null,
-          endorsements: null,
+          backers: null,
           health: { before: r.before, after: r.after, max: healthMax(updated.level) },
           iron: { before: c.iron, after: updated.iron },
         },

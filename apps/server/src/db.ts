@@ -40,6 +40,9 @@ export async function startDb(env: Env, log: (message: string) => void): Promise
       .map(([step, c]) => `${step} ${c.matched} matched / ${c.modified} modified`)
       .join(' · ')}`,
   );
+  // The voting rework (tech design §6.2): migration 009's refunds (0 once it has run).
+  const r = migrated.votingRework.refunds;
+  log(`Migration 009: refunds ${r.matched} matched / ${r.modified} modified`);
   // The seed is idempotent ($setOnInsert). Production runs `pnpm seed` once instead (tech design §12).
   if (env.DB_MODE === 'memory' || env.NODE_ENV !== 'production') await seed(getContent());
 

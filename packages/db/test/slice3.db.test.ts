@@ -6,7 +6,7 @@ import {
   City,
   Election,
   OfficeTerm,
-  OrderPaper,
+  RuleBallot,
   Vote,
   connectDb,
   disconnectDb,
@@ -86,7 +86,7 @@ describe('slice-3 collections (ADR 0019, 0020)', () => {
       cycle: 4145,
       characterId,
       name: 'Mara Lenk',
-      platformId: 'plat.c.mill',
+      rule: 'ord.long-service',
       filedAt: new Date(),
       filedDay: 1,
       status: 'filed' as const,
@@ -120,7 +120,7 @@ describe('slice-3 collections (ADR 0019, 0020)', () => {
             cycle: 4146,
             characterId: new Types.ObjectId(),
             name: 'A',
-            platformId: 'plat.c.mill',
+            rule: 'ord.long-service',
             filedAt: new Date(),
             filedDay: 1,
             status: 'filed',
@@ -149,8 +149,8 @@ describe('slice-3 collections (ADR 0019, 0020)', () => {
         ],
         { session },
       );
-      await OrderPaper.create(
-        [{ _id: 'coalport:4147', cityId: 'coalport', cycle: 4147, fromDay: 1, divideDay: 3, status: 'open' }],
+      await RuleBallot.create(
+        [{ _id: 'coalport:4147', cityId: 'coalport', cycle: 4147, fromDay: 1, setDay: 3, countDay: 6, status: 'open' }],
         { session },
       );
       await City.updateOne(
@@ -160,7 +160,7 @@ describe('slice-3 collections (ADR 0019, 0020)', () => {
       );
     });
     await session.endSession();
-    expect(await OrderPaper.findById('coalport:4147').lean()).toMatchObject({ status: 'open', items: [] });
+    expect(await RuleBallot.findById('coalport:4147').lean()).toMatchObject({ status: 'open' });
     expect((await City.findById('coalport').lean())!.world).toEqual({ settledDay: 1, bootstrappedDay: 1 });
     expect(await OfficeTerm.countDocuments({ 'holder.kind': 'player' })).toBe(1);
   });

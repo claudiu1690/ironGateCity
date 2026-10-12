@@ -179,7 +179,7 @@ function releaseResult(
     body: i.body,
     until: null,
     at: i.at,
-    knockOns: { pc: null, morale: null, endorsements: null, ...i.knockOns },
+    knockOns: { pc: null, morale: null, backers: null, ...i.knockOns },
     performedAt: new Date(i.at).toISOString(),
     idempotencyKey: i.idempotencyKey,
     character: toCharacterView(c, i.at, content, null, { city: i.residenceCity }),
@@ -720,7 +720,7 @@ export async function strikeMark(deps: {
         knockOns: {
           pc: { before: c.pc, after: updated.pc },
           morale: null,
-          endorsements: null,
+          backers: null,
           record: { before: { level: before.level, marks: before.marks }, after: { level: after.level, marks: after.marks } },
         },
         performedAt: new Date(now).toISOString(),

@@ -12,7 +12,7 @@ import {
   Character,
   Election,
   OfficeTerm,
-  OrderPaper,
+  RuleBallot,
   connectDb,
   disconnectDb,
   ensureIndexes,
@@ -128,7 +128,7 @@ describe('QA · migration 006 over a mixed database', () => {
         holder: { kind: 'npc', npcId: 'npc.c.ig.novak', name: 'Pavel Novak' },
       },
     ]);
-    await OrderPaper.collection.insertOne({
+    await RuleBallot.collection.insertOne({
       _id: 'irongate:4146' as never,
       cityId: 'irongate',
       cycle: 4146,

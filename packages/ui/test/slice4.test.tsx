@@ -3,7 +3,6 @@ import {
   capitalActionResultFixture,
   capitalCityViewFixture,
   capitalCountFixture,
-  capitalCouncilFixture,
   capitalPaperFixture,
   capitalResultSummaryFixture,
   capitalSummaryFixture,
@@ -35,14 +34,12 @@ import {
   JourneyProgress,
   LocationSheet,
   OpinionBars,
-  OrderPaper,
   RegisterSheet,
   LodgingsCard,
   ResidenceCard,
   ResultModal,
   ScoreboardLine,
   ScoreboardTable,
-  SeatGrid,
   Ticket,
   TrainsCard,
   TramBar,
@@ -576,26 +573,6 @@ describe('the Election card in the capital (screens §7.2)', () => {
 });
 
 describe('the result in the capital (screens §8)', () => {
-  const eastside = capitalCountFixture.districts[0]!;
-  it('the parties’ table, the votes line in words, the candidates by party, who moved it', () => {
-    render(<DistrictResultTable district={eastside} names={NAMES} />);
-    const parties = screen.getAllByTestId('party-row').map((r) => r.textContent);
-    // Votes 1, the share of opinion among the parties in points (63.4), the score.
-    expect(parties[0]).toMatch(/^Collective163\.448\.5/);
-    expect(screen.getAllByTestId('seat-bar')).toHaveLength(2);
-    expect(screen.getByTestId('votes-cast')).toHaveTextContent(
-      '3 votes cast · votes count 15 % of the score, opinion 85 % (votes count in full from 10 cast)',
-    );
-    const rows = screen.getAllByTestId('capital-count-row');
-    expect(rows).toHaveLength(7);
-    expect(rows[0]).toHaveTextContent('Jana Varga');
-    expect(rows[0]).toHaveTextContent('your vote');
-    expect(rows[0]).toHaveTextContent('Local candidate');
-    expect(rows.filter((r) => r.getAttribute('data-seated') === 'true')).toHaveLength(2);
-    expect(screen.getByTestId('how-seats')).toHaveTextContent("returning officer's draw");
-    expect(screen.getByTestId('scoreboard-table')).toBeInTheDocument();
-  });
-
   it('the district switcher: the server’s order, the selected chip pressed', () => {
     const onSelect = vi.fn();
     render(
@@ -610,27 +587,6 @@ describe('the result in the capital (screens §8)', () => {
     expect(chips[0]).toHaveAttribute('aria-selected', 'true');
     fireEvent.click(chips[1]!);
     expect(onSelect).toHaveBeenCalledWith('irongate.government-quarter');
-  });
-
-  it('the council: ten seats in five pairs, captioned by district', () => {
-    render(
-      <SeatGrid
-        seats={capitalCouncilFixture.seats}
-        factionId="collective"
-        groups={districtFixtures.map((d) => ({ id: d.id, name: d.name }))}
-      />,
-    );
-    const groups = screen.getAllByTestId('seat-group');
-    expect(groups).toHaveLength(5);
-    expect(groups.map((g) => within(g).getAllByTestId('seat')).every((s) => s.length === 2)).toBe(true);
-    expect(groups[3]).toHaveTextContent('Eastside');
-  });
-
-  it("the order paper names each party's own proposal", () => {
-    render(<OrderPaper council={capitalCouncilFixture} secretary="Petra Holm" selected={null} factionNames={NAMES} />);
-    const paper = screen.getByTestId('order-paper');
-    expect(paper).toHaveTextContent("the Collective's proposal · Petra Holm");
-    expect(paper).toHaveTextContent("the Vanguard's proposal · Viktor Hahn");
   });
 });
 

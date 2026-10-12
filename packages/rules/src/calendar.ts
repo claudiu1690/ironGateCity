@@ -10,9 +10,10 @@ import type { DayKey } from './day';
  * - cycle k starts on `start(k) = 5k + offset`;
  * - election k: nominations on cycle days 0–1, polls on days 2–4, counted at the boundary into
  *   `start(k + 1)`;
- * - council k (elected by election k − 1) sits from `start(k)` to `start(k + 1)`, votes on days
- *   0–1, divides at the boundary into `start(k) + 2`; its ordinance is in force for
- *   `[start(k) + 2, start(k + 1) + 2)`.
+ * - council k (elected by election k − 1) sits from `start(k)` to `start(k + 1)`; its councillors
+ *   set their rule on days 0–1, and the boundary into `start(k) + 2` (the set) freezes the list and
+ *   the three cards (the voting rework, ADR 0083);
+ * - the rule decided by ballot k − 1 is in force for `[start(k), start(k + 1))`.
  */
 export type CouncilPhase = 'nominations' | 'polling';
 export type CycleDay = 0 | 1 | 2 | 3 | 4;
@@ -35,22 +36,17 @@ export interface CouncilDay {
   /** The open election (cycle `cycle`). */
   election: { cycle: number; nominationsFrom: DayKey; pollsFrom: DayKey; countDay: DayKey };
   /**
-   * The sitting council (cycle `cycle`); `voting` on cycle days 0–1. `toDay` is exclusive.
-   * Voting rework (ADR 0083): `ruleOpen` on days 0–1 (councillors set their rule); `setDay` =
-   * fromDay + 2, the boundary that freezes the list and the three cards. `voting` and `divideDay`
-   * are the old model's and go in phase 2.
+   * The sitting council (cycle `cycle`); `toDay` is exclusive. The voting rework (ADR 0083):
+   * `ruleOpen` on days 0–1 (councillors set their rule); `setDay` = fromDay + 2, the boundary that
+   * freezes the list and the three cards.
    */
   council: {
     cycle: number;
     fromDay: DayKey;
-    divideDay: DayKey;
     toDay: DayKey;
-    voting: boolean;
     ruleOpen: boolean;
     setDay: DayKey;
   };
-  /** The window of the sitting council's ordinance; `toDay` exclusive. (Old model; goes in phase 2.) */
-  ordinanceWindow: { fromDay: DayKey; toDay: DayKey };
   /**
    * Voting rework (ADR 0083): the rule in force this cycle (ballot k − 1's result, decided at the
    * count into `fromDay`); `toDay` exclusive: `[start, start + 5)`.
@@ -71,13 +67,10 @@ export function councilDay(day: DayKey, offset: number): CouncilDay {
     council: {
       cycle,
       fromDay: start,
-      divideDay: start + 2,
       toDay: start + n,
-      voting: cycleDay <= 1,
       ruleOpen: cycleDay <= 1,
       setDay: start + 2,
     },
-    ordinanceWindow: { fromDay: start + 2, toDay: start + n + 2 },
     ruleWindow: { fromDay: start, toDay: start + n },
     nextRuleWindow: { fromDay: start + n, toDay: start + 2 * n },
   };
@@ -100,20 +93,16 @@ export function cycleOfKey(key: string): number {
 }
 
 /**
- * What the boundary into `day` does in a city (§3.2): into cycle day 0 the count (election k − 1,
- * seating council k, opening election k and its order paper); into day 2 the close of nominations
- * and the council's division. The drift runs at every boundary. Voting rework (ADR 0083): `set`,
- * into day 2, freezes the list and the three cards (`close` and `divide` go in phase 2).
+ * What the boundary into `day` does in a city (ADR 0083): into cycle day 0 the count (election k − 1's
+ * seats and ballot k − 1's rule, seating council k, opening election k and ballot k); into day 2 the
+ * set (the list and the three cards freeze). The drift runs at every boundary.
  */
-export function boundaryWork(
-  day: DayKey,
-  offset: number,
-): { count: boolean; close: boolean; divide: boolean; set: boolean } {
+export function boundaryWork(day: DayKey, offset: number): { count: boolean; set: boolean } {
   const { cycleDay } = cycleOf(day, offset);
-  return { count: cycleDay === 0, close: cycleDay === 2, divide: cycleDay === 2, set: cycleDay === 2 };
+  return { count: cycleDay === 0, set: cycleDay === 2 };
 }
 
-/** The next nominations day 0 strictly after `day` (`{weekday}` in the struck and withdraw texts). */
+/** The next nominations day 0 strictly after `day`. */
 export function nextNominationsAfter(day: DayKey, offset: number): DayKey {
   const { start } = cycleOf(day, offset);
   return start + COUNCIL.cycleDays;

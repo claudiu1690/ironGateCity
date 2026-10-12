@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
-import { BOOST, Character, District, IssueModel, Journey } from '@irongate/db';
-import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc } from '@irongate/db';
+import { BOOST, Character, District, IssueModel, Journey, RuleBallot } from '@irongate/db';
+import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc, RuleBallotDoc } from '@irongate/db';
 import {
   ENERGY,
   RANK_FXP,
@@ -27,6 +27,7 @@ import { ensureCityDay, runCityDay } from '../services/cityDay';
 import { loadCharacter } from '../services/dayService';
 import { moraleOf, ordinanceIdOn, restedCapToday } from '../services/modifiers';
 import { residenceCityId, residenceOf } from '../services/residence';
+import { ballotCards } from '../services/ruleBallot';
 import { groundswellOn } from '../services/modifiers';
 import { nightAt, nightHooks } from '../services/night';
 import { patrolStatus } from '../services/patrol';
@@ -118,7 +119,12 @@ async function sessionUser(auth: Auth, request: FastifyRequest): Promise<Session
   return session ? { id: session.user.id, name: session.user.name } : null;
 }
 
-function homeView(content: GameContent, cityId: string, city: CityDoc | null, now: number): DevHomeCity {
+async function homeView(
+  content: GameContent,
+  cityId: string,
+  city: CityDoc | null,
+  now: number,
+): Promise<DevHomeCity> {
   const spec = content.city(cityId);
   const today = dayKey(now);
   const offset = spec?.council?.offset;
@@ -137,6 +143,19 @@ function homeView(content: GameContent, cityId: string, city: CityDoc | null, no
   const home = spec?.homeFactionId;
   const ordId = ordinanceIdOn(city, today);
   const ord = ordId ? content.ordinance(ordId) : undefined;
+  // The voting rework (tech design §12): this cycle's ballot (its cards provisional on days 0–1) and
+  // how the rule in force won.
+  let ballot: DevHomeCity['ballot'] = null;
+  if (offset !== undefined) {
+    const k = cycleOf(today, offset).cycle;
+    const b = await ballotCards(content, cityId, k, city);
+    ballot = {
+      status: b.doc?.status ?? 'open',
+      cards: b.cards.map((x) => content.ordinance(x.ordinanceId)?.name ?? x.ordinanceId),
+    };
+  }
+  const paperId = city?.ordinance?.id === ordId ? city?.ordinance?.paperId : null;
+  const decided = paperId ? await RuleBallot.findById(paperId, { result: 1 }).lean<RuleBallotDoc>() : null;
   return {
     cityId,
     cityName: spec?.name ?? cityId,
@@ -150,8 +169,10 @@ function homeView(content: GameContent, cityId: string, city: CityDoc | null, no
           id: ord.id,
           name: ord.name,
           daysLeft: city?.ordinance?.id === ord.id ? city.ordinance.toDay - today : null,
+          how: decided?.result?.winner === ord.id ? decided.result.how : null,
         }
       : null,
+    ballot,
   };
 }
 
@@ -250,7 +271,7 @@ async function statusFor(
         c && energy
           ? { name: c.name, rank: c.rank, pc: c.pc, energy: energy.value, energyMax: energy.max }
           : null,
-      home: c ? homeView(content, residenceCityId(c), city, now) : null,
+      home: c ? await homeView(content, residenceCityId(c), city, now) : null,
       risk: c ? await riskStatus(content, c, city, now) : null,
     },
   };
@@ -267,8 +288,9 @@ function cityChanges(before: DevStatus, after: DevStatus): string[] {
   if (days > 0 && a.council) {
     // A new phase, or a whole cycle skipped (the same phase again, a cycle on).
     const entered = a.council.phase !== b?.council?.phase || days >= 5;
-    if (entered && a.council.phase === 'count-day') out.push(`the count is in · nominations open in ${city}`);
-    else if (entered && a.council.phase === 'polls') out.push(`polls open in ${city}`);
+    if (entered && a.council.phase === 'result-day')
+      out.push(`the count is in · ${a.ordinance?.name ?? 'no rule'} runs in ${city}`);
+    else if (entered && a.council.phase === 'vote') out.push(`the vote opens in ${city}`);
     else out.push(`${a.council.phaseLabel.toLowerCase()} in ${city}`);
   }
   if (days > 1) out.push(`${days} days on`);
@@ -276,7 +298,7 @@ function cityChanges(before: DevStatus, after: DevStatus): string[] {
     out.push(`${city} morale ${b.morale.word} → ${a.morale.word}`);
   }
   if ((a.ordinance?.id ?? null) !== (b?.ordinance?.id ?? null)) {
-    out.push(a.ordinance ? `${a.ordinance.name} in force` : 'no ordinance in force');
+    out.push(a.ordinance ? `${a.ordinance.name} in force` : 'no rule in force');
   }
   return out;
 }

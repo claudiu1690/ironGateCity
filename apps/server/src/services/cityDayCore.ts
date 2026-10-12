@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { Candidacy, Character, Vote } from '@irongate/db';
 import type { BallotLine, ElectionDoc } from '@irongate/db';
-import { COUNCIL, dayStart, wardVote } from '@irongate/rules';
+import { COUNCIL, backersOf, dayStart, wardVote } from '@irongate/rules';
 import type { CountLine, DayKey, FactionId } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 
@@ -25,8 +25,8 @@ export const cityDayHooks: {
   /** Called after every transaction attempt that lost to another runner (the report counts them). */
   onRetry?: (cityId: string, day: DayKey) => void;
   /**
-   * Cities whose order papers carry no branch's motion, so no ordinance is ever in force unless a
-   * player moves one: slice-1/2 tests that pin shift and training numbers across days.
+   * Cities that never put a rule in force (the count writes `ordinance: null`): slice-1/2 tests that
+   * pin shift and training numbers across days (the voting rework keeps the hook's meaning).
    */
   noBranchMotion?: Set<string>;
   /**
@@ -69,15 +69,6 @@ export function districtResidentsFilter(cityId: string, districtId: string, day:
   };
 }
 
-/** Every vote of an election, grouped by candidate (the count's `$group`, ADR 0019). */
-export async function tally(electionId: string, session: ClientSession): Promise<Record<string, number>> {
-  const rows = await Vote.aggregate<{ _id: string; n: number }>([
-    { $match: { electionId } },
-    { $group: { _id: '$candidateKey', n: { $sum: 1 } } },
-  ]).session(session);
-  return Object.fromEntries(rows.map((r) => [r._id, r.n]));
-}
-
 /** The voters and the eligible of a count (turnout): the active members plus every voter. */
 export async function turnoutOf(
   electionId: string,
@@ -96,8 +87,10 @@ export async function turnoutOf(
 }
 
 /**
- * The count lines of a frozen ballot: the player ward vote from Local Standing in `cityId` now
- * (design §17 Q1). Slice 4: each line carries its faction (a capital ballot names three parties).
+ * The count lines of a frozen list: the player ward vote from Local Standing in `cityId` now
+ * (design §17 Q1). Slice 4: each line carries its faction (a capital list names three parties). The
+ * voting rework (ADR 0084): a player's backers are read from the candidacy at the count (members plus
+ * the branch's, once).
  */
 export async function countLines(
   e: Pick<ElectionDoc, '_id' | 'ballot' | 'npcSlate'>,
@@ -111,7 +104,7 @@ export async function countLines(
     .lean();
   const cands = await Candidacy.find(
     { electionId: e._id, characterId: { $in: playerIds } },
-    { characterId: 1, effective: 1 },
+    { characterId: 1, endorsements: 1, branch: 1 },
   )
     .session(session)
     .lean();
@@ -127,7 +120,7 @@ export async function countLines(
         name: c?.name ?? b.name,
         wardVote: wardVote(successes),
         successes,
-        endorsements: cand?.effective ?? 0,
+        backers: cand ? backersOf({ members: cand.endorsements.length, branch: cand.branch !== null }) : 0,
         order: b.order,
         ...faction,
       };
@@ -140,7 +133,7 @@ export async function countLines(
       wardVote: npc?.wardVote ?? 0,
       // Design §17 Q5: an NPC's Standing Successes for the tie-break are profile × 5, before jitter.
       successes: (npc?.profile ?? 0) * 5,
-      endorsements: 0,
+      backers: 0,
       order: b.order,
       ...faction,
     };

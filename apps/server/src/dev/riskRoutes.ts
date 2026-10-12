@@ -22,11 +22,13 @@ import {
   zodLine,
 } from './risk';
 import { UnrestBody, pushIntoUnrest } from './unrest';
+import { RuleVotesBody, SeatBody, addRuleVotes, seatMe } from './voting';
 
 /**
  * Slice 5 (tech design §8.5): the e2e risk hooks `POST /api/test/street`, `/held` and `/run-in`;
  * review 5 (ADR 0079): `POST /api/test/night`; (ADR 0081) `POST /api/test/patrol`; (ADR 0082)
- * `POST /api/test/unrest`.
+ * `POST /api/test/unrest`; the voting rework (tech design §12): `POST /api/test/rule-votes` and
+ * `/seat`.
  * Registered only inside the E2E_TEST_HOOKS guard in app.ts (memory mode), which also turns the
  * street hooks on; anywhere else these routes do not exist and `streetHooks.take` returns null.
  */
@@ -88,6 +90,24 @@ export function registerRiskHooks(
     handle(async (request) => {
       const { body, c } = await prepare(request, UnrestBody);
       return await pushIntoUnrest(content, c, body, now());
+    }),
+  );
+
+  // The voting rework (tech design §12): synthetic votes for cards of the set ballot (other voters).
+  app.post(
+    '/api/test/rule-votes',
+    handle(async (request) => {
+      const { body, c } = await prepare(request, RuleVotesBody);
+      return await addRuleVotes(content, c, body, now());
+    }),
+  );
+
+  // The voting rework (tech design §12): the caller takes a local's seat on the sitting council.
+  app.post(
+    '/api/test/seat',
+    handle(async (request) => {
+      const { body, c } = await prepare(request, SeatBody);
+      return await seatMe(content, c, body, now());
     }),
   );
 

@@ -10,7 +10,7 @@ import {
   InfluenceLedger,
   IssueModel,
   OfficeTerm,
-  OrderPaper,
+  RuleBallot,
   Vote,
   connectDb,
   disconnectDb,
@@ -144,7 +144,7 @@ export async function resetCity(cityId: string): Promise<void> {
     Candidacy.deleteMany({ cityId }),
     Vote.deleteMany({ electionId: prefix }),
     OfficeTerm.deleteMany({ cityId }),
-    OrderPaper.deleteMany({ cityId }),
+    RuleBallot.deleteMany({ cityId }),
     // Slice 4: the Issues, the ledger, the totals, the awards and the capital's districts.
     IssueModel.deleteMany({ cityId }),
     InfluenceLedger.deleteMany({ cityId }),

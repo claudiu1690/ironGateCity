@@ -26,7 +26,7 @@ import {
   IssueModel,
   Journey,
   OfficeTerm,
-  OrderPaper,
+  RuleBallot,
   PaperEntry,
   RequestLog,
   Stay,
@@ -210,7 +210,7 @@ try {
       filedDay: c.filedDay,
       members: c.endorsements.length,
       branch: c.branch !== null,
-      smallBranch: c.smallBranch,
+      smallBranch: c.smallBranch ?? null,
     })),
     ballots: (await Vote.find({}, { electionId: 1, voterId: 1, day: 1, createdAt: 1 }).lean()).map((v) => ({
       electionId: v.electionId,
@@ -227,18 +227,20 @@ try {
       playerId: t.holder.kind === 'player' ? t.holder.characterId.toHexString() : null,
       frontPageSeenAt: t.frontPageSeenAt,
     })),
-    papers: (await OrderPaper.find({}).lean()).map((p) => ({
+    // The voting rework: the old order papers' items, votes and division live under `legacy`; a rule
+    // ballot reports its winner. The council section v2 (rule ballots) is phase 6's (tech design T15).
+    papers: (await RuleBallot.find({}).lean()).map((p) => ({
       id: p._id,
       cityId: p.cityId,
-      items: p.items.map((x) => ({
+      items: (p.legacy?.items ?? []).map((x) => ({
         kind: x.movedBy.kind,
         characterId: x.movedBy.kind === 'player' ? x.movedBy.characterId.toHexString() : null,
         at: x.at,
       })),
-      votes: p.votes.map((v) => ({ characterId: v.characterId.toHexString(), at: v.at })),
-      status: p.status,
-      passed: p.division?.passed ?? null,
-      inForce: p.division?.inForce ?? null,
+      votes: (p.legacy?.votes ?? []).map((v) => ({ characterId: v.characterId.toHexString(), at: v.at })),
+      status: p.status === 'counted' ? ('divided' as const) : ('open' as const),
+      passed: p.result?.winner ?? p.legacy?.division?.passed ?? null,
+      inForce: p.result?.inForce ?? p.legacy?.division?.inForce ?? null,
     })),
     morale: (await City.find({}, { moraleLog: 1 }).lean()).map((c) => ({
       cityId: c._id,
@@ -345,16 +347,17 @@ try {
         tie: r.tie ?? null,
       };
     }),
-    councils: (await OrderPaper.find({ cityId: capitalId }).lean()).map((p) => {
-      const passed = p.division?.passed ?? null;
+    councils: (await RuleBallot.find({ cityId: capitalId }).lean()).map((p) => {
+      const passed = p.result?.winner ?? p.legacy?.division?.passed ?? null;
       const npc =
-        (p.division as unknown as { npcChoices?: Partial<Record<Faction, string>> } | null)?.npcChoices ?? {};
+        (p.legacy?.division as unknown as { npcChoices?: Partial<Record<Faction, string>> } | null)
+          ?.npcChoices ?? {};
       return {
         councilKey: p._id,
         passed,
         coalition: passed
           ? [
-              ...p.votes
+              ...(p.legacy?.votes ?? [])
                 .filter((v) => v.choice === passed)
                 .flatMap((v) => {
                   const f = factionOf.get(v.characterId.toHexString());

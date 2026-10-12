@@ -171,7 +171,6 @@ export async function getPaper(deps: {
           }
         : null,
       stipend: entry.desk.stipend ?? null,
-      deposits: entry.desk.deposits ?? null,
       restedBanked: entry.desk.restedBanked,
       daysSinceLastPaper: entry.desk.daysSinceLastPaper,
       yesterday: entry.desk.yesterday,

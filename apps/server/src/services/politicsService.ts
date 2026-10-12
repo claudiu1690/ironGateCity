@@ -1,30 +1,29 @@
 import type { GameContent } from '@irongate/content';
 import { turnoutOf } from '@irongate/content';
-import { Candidacy, Character, Election, OfficeTerm, OrderPaper, PaperEntry, Vote } from '@irongate/db';
+import { Candidacy, Character, District, Election, OfficeTerm, PaperEntry, RuleBallot, Vote } from '@irongate/db';
 import type {
   CandidacyDoc,
   CharacterDoc,
   CityDoc,
+  DistrictDoc,
   ElectionDoc,
   OfficeTermDoc,
-  OrderPaperDoc,
+  RuleBallotDoc,
   VoteDoc,
 } from '@irongate/db';
 import {
-  AGAINST_ALL,
   CAPITAL_COUNCIL,
   COUNCIL,
   FACTION_IDS,
   ORDINALS,
   WEEKDAY_NAMES,
+  backersOf,
   councilDay,
   dayKey,
   councilKey,
   cycleOfKey,
   dayStart,
-  effectiveEndorsements,
   electionKey,
-  isSmallBranch,
   marginToSeat,
   nextNominationsAfter,
   nextPollsFrom,
@@ -38,9 +37,9 @@ import { RANK_FXP } from '@irongate/rules';
 import type {
   CandidateView,
   CapitalCountView,
-  CouncilView,
   CountRow,
   CountView,
+  CouncilRowView,
   DayKey,
   ElectionView,
   EndorsementsView,
@@ -50,32 +49,36 @@ import type {
   GameErrorReason,
   HallView,
   LiveHeadline,
+  OrdinanceMenuItemView,
   PoliticalFacts,
   PoliticalPlaceholder,
-  PoliticsState,
   PoliticsSummaryView,
   ElectionCardState,
   ElectionCardView,
-  ElectionYourLine,
+  RuleBallotView,
+  RuleCard,
+  RuleCardView,
+  RuleResultView,
   ScoreboardTableView,
+  StandCardView,
 } from '@irongate/rules';
 import { selectPoliticalHeadlines } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
-import { activeMembersFilter } from './cityDayCore';
-import { residenceOf, residenceSpec } from './residence';
+import { residenceCityId, residenceOf, residenceSpec } from './residence';
 import type { ResidenceSpec } from './residence';
 import { ordinanceIdOn } from './modifiers';
+import { ballotCards, termRule } from './ruleBallot';
 import { assetView, namedStanding, rankTitle, standingSuccesses } from './views';
 import { nightAt } from './night';
 
 /**
- * The political views (ADR 0023): the Polling Day row and the HQ council card (one summary), the
- * slate and the ballot, the count, the chamber, the front page and the live political headlines.
- * Built at read from the domain collections; no view carries another voter's choice, the ballot
- * count or any total before the count (ADR 0019). Slice 4 (ADR 0026, 0027): every view reads the
- * residence's place: the home city, or in the capital the district registered in, where every
- * faction stands and two seats are counted.
+ * The political views (ADR 0023; the voting rework, tech design §8.3): the Election card and the
+ * paper's row (one summary), the rule ballot, who's standing, the result (the rule and the council),
+ * the front page and the live political headlines. Built at read from the domain collections; no view
+ * carries another voter's choice, a ballot count or a tally before the ballot is counted (ADR 0019).
+ * Slice 4 (ADR 0026, 0027): every view reads the residence's place: the home city, or in the capital
+ * the district lived in, where every party stands and two seats are counted.
  */
 
 type Session = ClientSession | null;
@@ -104,8 +107,8 @@ const seatsOf = (spec: ResidenceSpec): 7 | 2 =>
   (isDistrict(spec) ? CAPITAL_COUNCIL.perDistrict : COUNCIL.seats) as 7 | 2;
 
 /**
- * The endorsement given this cycle: at home keyed by the election, in the capital by the city's
- * cycle (one per member per cycle in the city, whichever district's candidate; ADR 0027 §4).
+ * The backing given this cycle: at home keyed by the election, in the capital by the city's cycle
+ * (one per member per cycle in the city, whichever district's candidate; ADR 0027 §4).
  */
 export function givenThisCycle(c: CharacterDoc, spec: ResidenceSpec, cycle: number) {
   const given = c.endorsementsGiven ?? [];
@@ -136,41 +139,19 @@ export function hallView(content: GameContent, cityId: string, now: number): Hal
 const ordersAllDoneToday = (c: CharacterDoc, today: DayKey) =>
   c.orders.day === today && c.orders.allDoneAt !== null;
 
-/** Other eligible endorsers today (the small-branch rule, live; the close re-counts it). */
-async function otherEndorsers(
-  cityId: string,
-  faction: FactionId,
-  today: DayKey,
-  me: CharacterDoc['_id'],
-  session: Session = null,
-): Promise<number> {
-  return s(
-    Character.countDocuments({ ...activeMembersFilter(cityId, faction, today), _id: { $ne: me } }),
-    session,
-  );
-}
-
-/** The endorsements line of a filed or standing candidacy. */
+/** The backers line of a standing candidacy (ADR 0084: members plus the branch's, once). */
 export function endorsementsOf(
   content: GameContent,
-  cand: Pick<CandidacyDoc, 'endorsements' | 'branch' | 'effective' | 'smallBranch' | 'status'>,
-  small: boolean,
+  cand: Pick<CandidacyDoc, 'endorsements' | 'branch'>,
   secretaryName: string,
 ): EndorsementsView {
-  const closed = cand.status !== 'filed' && cand.effective !== null;
-  const smallBranch = closed ? (cand.smallBranch ?? small) : small;
-  const n = closed
-    ? cand.effective!
-    : effectiveEndorsements({ members: cand.endorsements.length, branch: cand.branch !== null, smallBranch });
   const names = [
     ...(cand.branch ? [`${secretaryName} (the branch)`] : []),
     ...cand.endorsements.map((e) => e.name),
   ];
   return {
-    n,
-    needed: COUNCIL.endorsementsNeeded,
+    n: backersOf({ members: cand.endorsements.length, branch: cand.branch !== null }),
     branch: cand.branch !== null,
-    branchCounts: smallBranch ? 2 : 1,
     names: names.slice(0, 5),
     more: Math.max(0, names.length - 5),
   };
@@ -178,6 +159,204 @@ export function endorsementsOf(
 
 const secretaryOf = (content: GameContent, f: FactionId) =>
   content.npc(content.faction(f).secretary.npcId)?.name ?? '';
+
+const ruleName = (content: GameContent, id: string) => content.ordinance(id)?.name ?? id;
+
+// ---------------------------------------------------------------------------------------------
+// The rule cards (the voting rework, tech design §8.3).
+// ---------------------------------------------------------------------------------------------
+
+/** One card as the screens show it; `yourVote` is the caller's own only (ADR 0019). */
+export function ruleCardView(
+  content: GameContent,
+  card: RuleCard,
+  me: { characterId: string; myVote: string | null },
+): RuleCardView {
+  const o = content.ordinance(card.ordinanceId);
+  const first = card.by[0];
+  const whose: RuleCardView['whose'] =
+    first?.kind === 'councillor'
+      ? { kind: 'councillor', name: first.name, local: first.holder === 'npc', you: first.characterId === me.characterId }
+      : { kind: 'party', factionIds: [...card.factionIds], by: card.by.map((b) => b.name).join(' · ') };
+  return {
+    ordinanceId: card.ordinanceId,
+    name: o?.name ?? card.ordinanceId,
+    plainLine: o?.plainLine ?? '',
+    effectLine: o?.effectLine ?? '',
+    whose,
+    yourVote: me.myVote === card.ordinanceId,
+  };
+}
+
+/** A district's cards by its parties' shares there (design §4.2, the capital). */
+function byDistrictShares(cards: RuleCard[], opinion: DistrictDoc['opinion'] | null): RuleCard[] {
+  if (!opinion) return cards;
+  const best = (c: RuleCard) => Math.max(0, ...c.factionIds.map((f) => opinion[f]));
+  return [...cards].sort((a, b) => best(b) - best(a));
+}
+
+/** The rule picker's rows (design §4.5): the branch's default first, then the city's menu. */
+export function ruleMenu(
+  content: GameContent,
+  cityId: string,
+  defaultRule: string,
+  cards: readonly RuleCard[],
+): OrdinanceMenuItemView[] {
+  const menu = content.isDistricted(cityId) ? content.irongateMenu() : content.ordinancesMenu();
+  const ordered = [...menu.filter((o) => o.id === defaultRule), ...menu.filter((o) => o.id !== defaultRule)];
+  return ordered.map((o) => ({
+    ordinanceId: o.id,
+    name: o.name,
+    line: o.line,
+    plainLine: o.plainLine,
+    effectLine: o.effectLine,
+    onBallot: cards.some((c) => c.ordinanceId === o.id),
+  }));
+}
+
+/** The election the caller votes in for a city: the residence's place, when the city is the residence. */
+function voterPlace(content: GameContent, c: CharacterDoc, cityId: string): ResidenceSpec | null {
+  if (residenceCityId(c) !== cityId) return null;
+  return specOf(content, c);
+}
+
+/**
+ * `council.ballot` (tech design §8.3): next week's rule for a city (default: the residence). Days
+ * 0–1 the provisional cards (no write), days 2–4 the set cards; the caller's own vote and rule only.
+ */
+export async function ballotView(
+  content: GameContent,
+  c: CharacterDoc,
+  cityId: string,
+  city: CityDoc | null,
+  now: number,
+  session: Session = null,
+): Promise<RuleBallotView> {
+  const cityContent = content.city(cityId);
+  if (!cityContent?.council) throw gameError('PRECONDITION_FAILED', 'NO_COUNCIL', { cityId });
+  const today = dayKey(now);
+  const offset = cityContent.council.offset;
+  const cal = councilDay(today, offset);
+  const k = cal.cycle;
+  const capital = content.isDistricted(cityId);
+  const spec = voterPlace(content, c, cityId);
+  const place = spec?.place ?? { id: cityId, name: cityContent.name, kind: 'home' as const };
+  const { cards: raw, status } = await ballotCards(content, cityId, k, city, session);
+  let cards = raw;
+  if (capital && place.kind === 'district') {
+    const d = await s(District.findById(place.id, { opinion: 1 }), session).lean<DistrictDoc>();
+    cards = byDistrictShares(raw, d?.opinion ?? null);
+  }
+  const electionId = electionKey(place.id, k);
+  const vote =
+    spec && cal.phase === 'polling'
+      ? await s(Vote.findOne({ electionId, voterId: c._id }, { ordinanceId: 1 }), session).lean<VoteDoc>()
+      : null;
+  const myVote = vote?.ordinanceId ?? null;
+  const r = residenceOf(c);
+  const reason: GameErrorReason | null = !spec
+    ? 'NOT_RESIDENT'
+    : spec.home !== null && spec.home !== c.factionId
+      ? 'WRONG_FACTION'
+      : c.rank < COUNCIL.voteRank
+        ? 'RANK_TOO_LOW'
+        : cal.phase !== 'polling'
+          ? 'NOT_POLLING'
+          : r.votesFromDay > cal.election.pollsFrom
+            ? 'NOT_YET_VOTER'
+            : myVote
+              ? 'ALREADY_VOTED'
+              : null;
+  const term = await s(
+    OfficeTerm.findOne({
+      councilKey: councilKey(cityId, k),
+      'holder.kind': 'player',
+      'holder.characterId': c._id,
+      vacatedDay: null,
+    }),
+    session,
+  ).lean<OfficeTermDoc>();
+  const myRuleId = term ? termRule(content, term, cityContent.homeFactionId ?? null) : null;
+  // "2 players and 7 local candidates for 7 seats".
+  const e = await s(Election.findById(electionId, { ballot: 1, status: 1 }), session).lean<ElectionDoc>();
+  let players: number;
+  let locals: number;
+  if (e?.ballot) {
+    players = e.ballot.filter((b) => b.kind === 'player').length;
+    locals = e.ballot.length - players;
+  } else {
+    const standing = await s(
+      Candidacy.find({ electionId, status: 'standing' }, { factionId: 1 }),
+      session,
+    ).lean<CandidacyDoc[]>();
+    players = standing.length;
+    locals =
+      place.kind === 'district'
+        ? FACTION_IDS.reduce((n, f) => n + npcFill(standing.filter((x) => x.factionId === f).length), 0)
+        : npcsStanding(players);
+  }
+  const me = { characterId: c._id.toHexString(), myVote };
+  return {
+    key: councilKey(cityId, k),
+    cityId,
+    cityName: cityContent.name,
+    placeName: place.name,
+    capital,
+    status,
+    cards: cards.map((x) => ruleCardView(content, x, me)),
+    setAt: dayStart(cal.council.setDay),
+    pollsOpenAt: dayStart(cal.election.pollsFrom),
+    countAt: dayStart(cal.election.countDay),
+    runsUntil: dayStart(cal.nextRuleWindow.toDay),
+    myVote: myVote ? { ordinanceId: myVote, name: ruleName(content, myVote) } : null,
+    canVote: reason === null,
+    reason,
+    myRule: myRuleId
+      ? {
+          ordinanceId: myRuleId,
+          name: ruleName(content, myRuleId),
+          onBallot: raw.some((x) => x.ordinanceId === myRuleId),
+          changeUntil: cal.council.ruleOpen ? dayStart(cal.council.setDay) : null,
+        }
+      : null,
+    standing: { players, locals, seats: place.kind === 'district' ? 2 : 7 },
+  };
+}
+
+/** A counted ballot's result for the screens (finishing order; the numbers stored at the count). */
+export function ruleResultView(
+  content: GameContent,
+  b: RuleBallotDoc,
+  me: { characterId: string; myVote: string | null },
+): RuleResultView | null {
+  const r = b.result;
+  if (b.status !== 'counted' || !r) return null;
+  const cards = b.cards ?? [];
+  const tallies = r.tallies.length > 0 ? r.tallies : [{ ordinanceId: r.winner, votes: 0 }];
+  const total = tallies.reduce((n, t) => n + t.votes, 0);
+  return {
+    key: b._id,
+    countDay: b.countDay,
+    weekday: weekdayName(b.countDay),
+    cards: tallies.map((t) => {
+      const card = cards.find((x) => x.ordinanceId === t.ordinanceId) ?? {
+        ordinanceId: t.ordinanceId,
+        factionIds: [],
+        by: [],
+      };
+      return {
+        ...ruleCardView(content, card, me),
+        votes: t.votes,
+        seats: t.seats ?? null,
+        share: total > 0 ? t.votes / total : 0,
+        won: t.ordinanceId === r.winner,
+      };
+    }),
+    how: r.how,
+    turnout: r.turnout,
+    runsUntil: dayStart(r.inForce.toDay),
+  };
+}
 
 // ---------------------------------------------------------------------------------------------
 // The summary: the Polling Day row, the HQ council card, the Paper tab dot.
@@ -197,34 +376,7 @@ export async function politicsSummary(
   const cityId = spec.city.id;
   const cal = councilDay(today, offset);
   const electionId = electionKey(spec.place.id, cal.cycle);
-  const e = await s(Election.findById(electionId), session).lean<ElectionDoc>();
   const cand = await s(Candidacy.findOne({ electionId, characterId: c._id }), session).lean<CandidacyDoc>();
-  const vote =
-    cal.phase === 'polling'
-      ? await s(Vote.findOne({ electionId, voterId: c._id }), session).lean<VoteDoc>()
-      : null;
-  const term = (c.offices ?? []).find((o) => o.councilKey === councilKey(cityId, cal.cycle));
-  const paper =
-    term && cal.council.voting
-      ? await s(
-          OrderPaper.findById(councilKey(cityId, cal.cycle), { votes: 1, status: 1, items: 1 }),
-          session,
-        ).lean<OrderPaperDoc>()
-      : null;
-  const councillorOpen =
-    !!term &&
-    cal.council.voting &&
-    paper?.status === 'open' &&
-    !paper.votes.some((v) => v.characterId.equals(c._id));
-  // The last count: the Polling Day state on the count morning; the Election card on days 0–1.
-  const lastCount =
-    cal.cycleDay <= 1
-      ? await s(
-          Election.findById(electionKey(spec.place.id, cal.cycle - 1), { result: 1, status: 1, kind: 1 }),
-          session,
-        ).lean<ElectionDoc>()
-      : null;
-  const prev = cal.cycleDay === 0 ? lastCount : null;
   const r = residenceOf(c);
   const successes = standingSuccesses(c, cityId);
   const sitting = (c.offices ?? []).some((o) => o.cityId === cityId && o.fromDay <= today && today < o.toDay);
@@ -235,40 +387,43 @@ export async function politicsSummary(
     r.standsFromDay <= today &&
     !sitting &&
     !cand;
-  // ADR 0026 §3: registered after this cycle's polls opened (or during them) votes from the next.
-  const notYetVoter = r.votesFromDay > cal.election.pollsFrom;
-
-  let state: PoliticsState;
-  if (c.rank < COUNCIL.voteRank) state = 'belowRank';
-  else if (cal.phase === 'polling' && !vote && !notYetVoter) state = 'ballot';
-  else if (councillorOpen) state = 'councilSits';
-  else if (cand?.status === 'filed') state = 'filed';
-  else if (canStand) state = 'stand';
-  else if (prev?.status === 'counted' && prev.result) state = 'count';
-  else if (cal.phase === 'polling') state = 'voted';
-  else state = 'nominations';
-
-  const branch = branchOf(spec, c);
-  let endorsements: PoliticsSummaryView['endorsements'] = null;
-  if (cand?.status === 'filed') {
-    const small = isSmallBranch(await otherEndorsers(cityId, branch, today, c._id, session));
-    const e2 = endorsementsOf(content, cand, small, secretaryOf(content, branch));
-    endorsements = { n: e2.n, needed: e2.needed, branchWillMakeUp: small };
-  }
-  const votedFor = vote ? (e?.ballot?.find((b) => b.key === vote.candidateKey)?.name ?? null) : null;
-  const top = prev?.result
-    ? (prev.result.rows.find((x) => x.key === prev.result!.topKey) ?? prev.result.rows[0])
-    : undefined;
+  const term = (c.offices ?? []).some((o) => o.councilKey === councilKey(cityId, cal.cycle));
+  const ballot =
+    c.rank >= COUNCIL.voteRank && (cal.phase === 'polling' || term)
+      ? await ballotView(content, c, cityId, city, now, session)
+      : null;
+  // The last count (ballot k − 1), for the card's result on days 0–1 and the rule in force's line.
+  const lastBallot = await s(RuleBallot.findById(councilKey(cityId, cal.cycle - 1)), session).lean<RuleBallotDoc>();
+  const card = await electionCard(content, c, {
+    cal,
+    spec,
+    cand,
+    ballot,
+    lastBallot,
+    inForce: city?.ordinance ?? null,
+    canStand,
+    notYetVoter: r.votesFromDay > cal.election.pollsFrom,
+    today,
+    session,
+  });
   const ordId = ordinanceIdOn(city, today);
   const ord = ordId ? content.ordinance(ordId) : undefined;
+  const decided =
+    city?.ordinance?.paperId && city.ordinance.paperId === lastBallot?._id
+      ? lastBallot
+      : city?.ordinance?.paperId
+        ? await s(RuleBallot.findById(city.ordinance.paperId), session).lean<RuleBallotDoc>()
+        : null;
+  const won = decided?.result?.winner === ordId ? decided.result : null;
+  const state = card.state;
   const route: PoliticsSummaryView['route'] =
     state === 'belowRank'
       ? null
-      : state === 'ballot' || state === 'voted'
+      : state === 'vote' || state === 'voted'
         ? '/council/ballot'
-        : state === 'councilSits'
+        : state === 'councillor' || state === 'nextInLine'
           ? '/council'
-          : state === 'count'
+          : state === 'result'
             ? '/council/count'
             : '/council/slate';
   return {
@@ -277,23 +432,11 @@ export async function politicsSummary(
     cycleDay: cal.cycleDay,
     phase: cal.phase,
     state,
-    closesAt: dayStart(cal.phase === 'nominations' ? cal.election.pollsFrom : cal.election.countDay),
+    closesAt: card.closesAt,
     pollsOpenAt: dayStart(cal.election.pollsFrom),
     pollsFromWeekday: weekdayName(Math.max(nextPollsFrom(today, offset), r.votesFromDay)),
     countAt: dayStart(cal.election.countDay),
-    divideAt: cal.council.voting ? dayStart(cal.council.divideDay) : null,
-    endorsements,
-    branchLine: cand?.status === 'filed' && cand.branch !== null && ordersAllDoneToday(c, today),
-    votedFor,
-    count:
-      prev?.result && top
-        ? {
-            winner: surname(top.name),
-            npcSeats: prev.result.npcSeats,
-            seats: seatsOf(spec),
-            turnout: prev.result.turnout,
-          }
-        : null,
+    votedFor: card.votedFor,
     inForce:
       ord && city?.ordinance && city.ordinance.id === ord.id
         ? {
@@ -301,6 +444,9 @@ export async function politicsSummary(
             name: ord.name,
             daysLeft: city.ordinance.toDay - today,
             plainLine: ord.plainLine,
+            how: won?.how ?? null,
+            votes: won ? (won.tallies.find((t) => t.ordinanceId === won.winner)?.votes ?? 0) : null,
+            voters: won?.turnout?.voters ?? null,
           }
         : null,
     rank2Title: faction.rankTitles[1]!,
@@ -308,24 +454,10 @@ export async function politicsSummary(
     paperShortName: spec.city.paper?.shortName ?? 'paper',
     fxpToRank2: c.rank < COUNCIL.voteRank ? Math.max(0, RANK_FXP[1]! - c.fxp) : null,
     standCost: COUNCIL.cost.declare,
-    councillor: councillorOpen,
     route,
-    dot: state === 'ballot' || state === 'councilSits',
-    card: await electionCard(content, c, {
-      cal,
-      spec,
-      cand,
-      vote: vote ? { key: vote.candidateKey, name: votedFor ?? '' } : null,
-      term: !!term,
-      paper,
-      lastCount,
-      canStand,
-      endorsements,
-      branchLine: cand?.status === 'filed' && cand.branch !== null && ordersAllDoneToday(c, today),
-      notYetVoter,
-      today,
-      session,
-    }),
+    dot: state === 'vote',
+    card,
+    ballot: cal.phase === 'polling' ? ballot : null,
     placeId: spec.place.id,
     placeName: spec.place.name,
     seats: seatsOf(spec),
@@ -333,9 +465,9 @@ export async function politicsSummary(
 }
 
 /**
- * Review 2 (slice-3 screens §1a, §2.1): the Election card, one view for the city screen, the paper's
- * row and the HQ sheet. The server picks the state; the client words it. Slice 4: *Registered* in
- * a district before the first vote there opens.
+ * Review 2 (slice-3 screens §1a, §2.1); the voting rework (design §4.1, tech design §8.3): the
+ * Election card, one view for the city screen, the paper's row and the HQ sheet. The server picks the
+ * state; the client words it.
  */
 async function electionCard(
   content: GameContent,
@@ -344,59 +476,26 @@ async function electionCard(
     cal: ReturnType<typeof councilDay>;
     spec: ResidenceSpec;
     cand: CandidacyDoc | null;
-    vote: { key: string; name: string } | null;
-    term: boolean;
-    paper: OrderPaperDoc | null;
-    lastCount: ElectionDoc | null;
+    ballot: RuleBallotView | null;
+    lastBallot: RuleBallotDoc | null;
+    /** The city's rule in force (a bootstrapped city has one before any count: *carried over*). */
+    inForce: CityDoc['ordinance'] | null;
     canStand: boolean;
-    endorsements: PoliticsSummaryView['endorsements'];
-    branchLine: boolean;
     notYetVoter: boolean;
     today: DayKey;
     session: Session;
   },
 ): Promise<ElectionCardView> {
-  const { cal, cand, vote, lastCount, today } = i;
-  const counted = lastCount?.status === 'counted' && lastCount.result ? lastCount.result : null;
-  const backingOf = givenThisCycle(c, i.spec, cal.cycle);
-  const myRuleVote = i.paper?.votes.find((v) => v.characterId.equals(c._id)) ?? null;
-  const ruleOpen = i.term && cal.council.voting && i.paper !== null;
-  let yourLine: ElectionYourLine | null = null;
-  if (counted) {
-    const rows = counted.rows as CountRow[];
-    const mine = rows.find((r) => r.key === `p:${c._id.toHexString()}`);
-    if (mine) {
-      yourLine = mine.seated
-        ? { kind: 'elected', place: mine.place }
-        : { kind: 'missed', margin: marginToSeat(mine, { rows }) };
-    } else {
-      const v = await s(
-        Vote.findOne({ electionId: electionKey(i.spec.place.id, cal.cycle - 1), voterId: c._id }),
-        i.session,
-      ).lean<VoteDoc>();
-      const theirs = v ? rows.find((r) => r.key === v.candidateKey) : undefined;
-      if (theirs)
-        yourLine = theirs.seated
-          ? { kind: 'voteWon', name: theirs.name }
-          : { kind: 'voteLost', name: theirs.name };
-    }
-  }
+  const { cal, cand, ballot, today } = i;
+  const standing = cand && cand.status === 'standing' ? cand : null;
+  const myRule = ballot?.myRule ?? null;
   let state: ElectionCardState;
   if (c.rank < COUNCIL.voteRank) state = 'belowRank';
-  else if (ruleOpen && i.paper!.status === 'open') state = myRuleVote ? 'councilVoted' : 'councilSits';
-  // Slice 4 (screens §7.2): registered, the first vote not yet open: a late registrant whose first
-  // polls are the next cycle's, or one registered before this cycle's polls open (days 0–1).
-  else if ((i.notYetVoter || today < residenceOf(c).votesFromDay) && !cand) state = 'registered';
-  else if (cal.phase === 'polling')
-    state = vote ? 'voted' : cand?.status === 'standing' ? 'candidateVoting' : 'voting';
-  else if (cand?.status === 'filed') state = 'standing';
-  else if (backingOf) state = 'backing';
-  else if (counted) state = 'result';
-  else state = 'candidates';
-  const closesAt =
-    state === 'councilSits' || state === 'councilVoted'
-      ? dayStart(cal.council.divideDay)
-      : dayStart(cal.phase === 'nominations' ? cal.election.pollsFrom : cal.election.countDay);
+  else if (cal.phase === 'polling') state = i.notYetVoter ? 'registered' : ballot?.myVote ? 'voted' : 'vote';
+  else if (myRule) state = myRule.onBallot ? 'councillor' : 'nextInLine';
+  else if (standing) state = 'standing';
+  else if (today < residenceOf(c).votesFromDay) state = 'registered';
+  else state = 'result';
   // The morning the rank-up to 2 is in the paper (the hl.*rank-up-2 headline): the note, once.
   const firstTime =
     c.rank >= COUNCIL.voteRank &&
@@ -408,67 +507,79 @@ async function electionCard(
       }),
       i.session,
     )) !== null;
-  const ruleName = (choice: string) =>
-    choice === 'against' ? null : (content.ordinance(choice)?.name ?? choice);
-  const winner = counted
-    ? ((counted.rows as CountRow[]).find((r) => r.key === counted.topKey) ?? (counted.rows as CountRow[])[0])
-    : undefined;
-  // Slice 4 (screens §7.2): in a district, the two seats' parties and the capital's ten by party.
-  let district: NonNullable<ElectionCardView['result']>['district'] = null;
-  if (counted && isDistrict(i.spec)) {
-    const seatsOf = (rows: CountRow[]) =>
-      (rows as Array<CountRow & { factionId?: FactionId }>)
-        .filter((r) => r.seated && r.factionId)
-        .sort((a, b) => a.place - b.place)
-        .map((r) => r.factionId!);
-    const ids = content.districtsOf(i.spec.city.id).map((d) => electionKey(d.id, cal.cycle - 1));
-    const all = await s(
-      Election.find({ _id: { $in: ids }, status: 'counted' }, { result: 1 }),
-      i.session,
-    ).lean<ElectionDoc[]>();
-    const capital: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
-    for (const e of all) for (const f of seatsOf((e.result?.rows ?? []) as CountRow[])) capital[f] += 1;
-    district = { seats: seatsOf(counted.rows as CountRow[]), capital, turnout: counted.turnout };
+
+  // The last count (days 0–1): the rule ballot k − 1's result.
+  let result: ElectionCardView['result'] = null;
+  const r = i.lastBallot?.status === 'counted' ? i.lastBallot.result : null;
+  if (r) {
+    const card = (i.lastBallot!.cards ?? []).find((x) => x.ordinanceId === r.winner);
+    const tally = r.tallies.find((t) => t.ordinanceId === r.winner);
+    let capital: NonNullable<ElectionCardView['result']>['capital'];
+    if (isDistrict(i.spec)) {
+      const prev = await s(
+        Election.findById(electionKey(i.spec.place.id, cal.cycle - 1), { result: 1 }),
+        i.session,
+      ).lean<ElectionDoc>();
+      const rows = (prev?.result?.rows ?? []) as Array<CountRow & { factionId?: FactionId }>;
+      capital = {
+        factionIds: card?.factionIds ?? [],
+        seats: tally?.seats ?? 0,
+        districtSeats: rows
+          .filter((x) => x.seated && x.factionId)
+          .sort((a, b) => a.place - b.place)
+          .map((x) => x.factionId!),
+      };
+    }
+    result = {
+      winner: ruleName(content, r.winner),
+      votes: tally?.votes ?? 0,
+      voters: r.turnout?.voters ?? r.tallies.reduce((n, t) => n + t.votes, 0),
+      how: r.how,
+      runsUntil: dayStart(r.inForce.toDay),
+      nextVoteAt: dayStart(cal.election.pollsFrom),
+      by: card?.by[0]?.name ?? null,
+      whose: card?.by[0]?.kind ?? null,
+      ...(capital ? { capital } : {}),
+    };
+  } else if (i.inForce && i.inForce.fromDay <= today && today < i.inForce.toDay) {
+    // No count yet (a city bootstrapped this cycle): the rule in force is carried over (design §8.2).
+    result = {
+      winner: ruleName(content, i.inForce.id),
+      votes: 0,
+      voters: 0,
+      how: 'carried',
+      runsUntil: dayStart(i.inForce.toDay),
+      nextVoteAt: dayStart(cal.election.pollsFrom),
+      by: null,
+      whose: null,
+    };
   }
   return {
     state,
-    closesAt,
+    closesAt: dayStart(cal.phase === 'nominations' ? cal.council.setDay : cal.election.countDay),
     pollsOpenAt: dayStart(cal.election.pollsFrom),
     countAt: dayStart(cal.election.countDay),
+    runsFrom: dayStart(cal.election.countDay),
     fxp: c.fxp,
     rank2Fxp: RANK_FXP[COUNCIL.voteRank - 1]!,
     canStand: i.canStand,
-    backers:
-      cand?.status === 'filed' && i.endorsements
-        ? {
-            n: i.endorsements.n,
-            needed: i.endorsements.needed,
-            branchLine: i.branchLine,
-            branchWillMakeUp: i.endorsements.branchWillMakeUp,
-          }
-        : null,
-    backing: backingOf?.name ?? null,
-    votedFor: vote?.name ?? null,
-    result: counted
+    votedFor: ballot?.myVote?.name ?? null,
+    result,
+    standing: standing
       ? {
-          winner: winner?.name ?? '',
-          yourLine,
-          councilUntil: dayStart(cal.council.toDay),
-          namesUntil: dayStart(cal.election.pollsFrom),
-          district,
+          rule: ruleName(content, standing.rule ?? content.faction(branchOf(i.spec, c)).branchMotion),
+          backers: backersOf({ members: standing.endorsements.length, branch: standing.branch !== null }),
+          branchLine: standing.branch !== null && ordersAllDoneToday(c, today),
         }
       : null,
-    rule: ruleOpen
-      ? {
-          votedFor: myRuleVote ? ruleName(myRuleVote.choice) : null,
-          divideAt: dayStart(cal.council.divideDay),
-        }
+    councillor: myRule
+      ? { rule: myRule.name, onBallot: myRule.onBallot, changeUntil: dayStart(cal.council.setDay) }
       : null,
     firstTime,
   };
 }
 
-/** The Paper tab's politics dot (tech design §11): a ballot or a council vote waiting. */
+/** The Paper tab's politics dot (tech design §11): the town's vote waiting for the caller. */
 export async function politicsWaiting(
   content: GameContent,
   c: CharacterDoc,
@@ -479,25 +590,100 @@ export async function politicsWaiting(
   const spec = specOf(content, c);
   if (!spec || c.rank < COUNCIL.voteRank) return 0;
   const cal = councilDay(today, spec.offset);
-  const term = (c.offices ?? []).some((o) => o.councilKey === councilKey(spec.city.id, cal.cycle));
-  if (cal.phase !== 'polling' && !(term && cal.council.voting)) return 0;
+  if (cal.phase !== 'polling') return 0;
   const summary = await politicsSummary(content, c, city, now, today);
   return summary?.dot ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------------------------
-// The slate and the ballot (council.election).
+// Who's standing (council.election).
 // ---------------------------------------------------------------------------------------------
+
+/** The stand card (design §4.5), or null when the caller is not one who could stand here today. */
+async function standCard(
+  content: GameContent,
+  c: CharacterDoc,
+  spec: ResidenceSpec,
+  cal: ReturnType<typeof councilDay>,
+  city: CityDoc | null,
+  today: DayKey,
+  session: Session,
+): Promise<StandCardView | null> {
+  if (cal.phase !== 'nominations') return null;
+  if (spec.home !== null && spec.home !== c.factionId) return null;
+  const sitting = (c.offices ?? []).some(
+    (o) => o.cityId === spec.city.id && o.fromDay <= today && today < o.toDay,
+  );
+  if (sitting) return null;
+  const successes = standingSuccesses(c, spec.city.id);
+  const rankOk = c.rank >= COUNCIL.standRank;
+  const knownOk = standingView(successes).level >= COUNCIL.knownLevel;
+  const r = residenceOf(c);
+  const reason: GameErrorReason | null = !rankOk
+    ? 'RANK_TOO_LOW'
+    : r.standsFromDay > today
+      ? 'NOT_YET_CANDIDATE'
+      : !knownOk
+        ? 'NOT_KNOWN'
+        : c.pc < COUNCIL.cost.declare
+          ? 'NOT_ENOUGH_PC'
+          : null;
+  const faction = content.faction(branchOf(spec, c));
+  const { cards } = await ballotCards(content, spec.city.id, cal.cycle, city, session);
+  return {
+    requirements: [
+      {
+        id: 'rank',
+        met: rankOk,
+        rankTitle: faction.rankTitles[COUNCIL.standRank - 1]!,
+        fxpToGo: Math.max(0, RANK_FXP[COUNCIL.standRank - 1]! - c.fxp),
+      },
+      { id: 'known', met: knownOk, successes, need: 30 },
+    ],
+    defaultRule: faction.branchMotion,
+    menu: ruleMenu(content, spec.city.id, faction.branchMotion, cards),
+    cost: COUNCIL.cost.declare,
+    canStand: reason === null,
+    reason,
+  };
+}
+
+/**
+ * The hall's stand card (tech design §9.5 block 4): the residence city only, days 0–1, for a resident
+ * who has no candidacy this cycle and is not sitting.
+ */
+export async function electionStandCard(
+  content: GameContent,
+  c: CharacterDoc,
+  cityId: string,
+  city: CityDoc | null,
+  now: number,
+  session: Session = null,
+): Promise<StandCardView | null> {
+  const spec = voterPlace(content, c, cityId);
+  if (!spec) return null;
+  const today = dayKey(now);
+  const cal = councilDay(today, spec.offset);
+  if (cal.phase !== 'nominations') return null;
+  const mine = await s(
+    Candidacy.exists({ electionId: electionKey(spec.place.id, cal.cycle), characterId: c._id }),
+    session,
+  );
+  if (mine) return null;
+  return standCard(content, c, spec, cal, city, today, session);
+}
 
 export async function electionView(
   content: GameContent,
   c: CharacterDoc,
   now: number,
   session: Session = null,
+  city: CityDoc | null = null,
 ): Promise<ElectionView> {
   const today = dayKey(now);
   const spec = residenceSpec(content, c);
-  const { city, offset } = spec;
+  const { offset } = spec;
+  const cityContent = spec.city;
   const cal = councilDay(today, offset);
   const id = electionKey(spec.place.id, cal.cycle);
   const e = await s(Election.findById(id), session).lean<ElectionDoc>();
@@ -506,38 +692,28 @@ export async function electionView(
     CandidacyDoc[]
   >();
   const mine = cands.find((x) => x.characterId.equals(c._id)) ?? null;
-  const vote =
-    e.status === 'polling'
-      ? await s(Vote.findOne({ electionId: id, voterId: c._id }), session).lean<VoteDoc>()
-      : null;
   const district = isDistrict(spec);
   const factionOfCand = (x: Pick<CandidacyDoc, 'factionId'>): FactionId => x.factionId ?? spec.home!;
-  // The small-branch rule per faction standing here (the viewer excluded, as at home).
-  const factions: FactionId[] = district ? [...FACTION_IDS] : [spec.home!];
-  const small = new Map<FactionId, boolean>();
-  for (const f of factions)
-    small.set(f, isSmallBranch(await otherEndorsers(city.id, f, today, c._id, session)));
-  const endorsedNow = givenThisCycle(c, spec, cal.cycle) ?? null;
-  const r = residenceOf(c);
+  const backedNow = givenThisCycle(c, spec, cal.cycle) ?? null;
+  const standingCands = cands.filter((x) => x.status === 'standing');
 
-  // Lines: players (by filing) then NPCs (by profile); in nominations the provisional fill (nine
-  // at home; two per faction in a district).
+  // Lines: players (by filing) then locals (by profile); on days 0–1 the provisional fill (nine at
+  // home; two per faction in a district).
   type NpcEntry = ElectionDoc['npcSlate'][number];
   type Line = { kind: 'player'; cand: CandidacyDoc } | { kind: 'npc'; npc: NpcEntry; factionId: FactionId };
   let lines: Line[];
   if (e.status === 'nominations') {
-    const filed = cands.filter((x) => x.status === 'filed');
     const npcs: Line[] = district
       ? FACTION_IDS.flatMap((f) =>
           e.npcSlate
             .filter((n) => n.factionId === f)
-            .slice(0, npcFill(filed.filter((x) => factionOfCand(x) === f).length))
+            .slice(0, npcFill(standingCands.filter((x) => factionOfCand(x) === f).length))
             .map((n) => ({ kind: 'npc' as const, npc: n, factionId: f })),
         )
       : e.npcSlate
-          .slice(0, npcsStanding(filed.length))
+          .slice(0, npcsStanding(standingCands.length))
           .map((n) => ({ kind: 'npc' as const, npc: n, factionId: spec.home! }));
-    lines = [...filed.map((cand) => ({ kind: 'player' as const, cand })), ...npcs];
+    lines = [...standingCands.map((cand) => ({ kind: 'player' as const, cand })), ...npcs];
   } else {
     lines = (e.ballot ?? []).flatMap((b): Line[] => {
       if (b.kind === 'player') {
@@ -556,6 +732,7 @@ export async function electionView(
     ),
     session,
   ).lean<CharacterDoc[]>();
+  const rule = (id: string) => ({ ordinanceId: id, name: ruleName(content, id) });
 
   const candidates: CandidateView[] = lines.map((l): CandidateView => {
     if (l.kind === 'npc') {
@@ -571,32 +748,32 @@ export async function electionView(
         rankTitle: null,
         standing: {
           name: content.standingNames[st.level] ?? '',
-          cityName: city.name,
+          cityName: cityContent.name,
           successes: st.successes,
         },
         wardVote: l.npc.wardVote ?? 0,
-        platform: npc?.line ?? '',
-        endorsements: null,
+        rule: !district && npc?.rule ? rule(npc.rule) : null,
+        backers: null,
         you: false,
-        endorsedByYou: false,
-        canEndorse: null,
+        backedByYou: false,
+        canBack: null,
       };
     }
     const f = factionOfCand(l.cand);
     const ch = chars.find((x) => x._id.equals(l.cand.characterId));
-    const successes = ch ? standingSuccesses(ch, city.id) : 0;
-    const named = namedStanding(content, city.id, successes);
+    const successes = ch ? standingSuccesses(ch, cityContent.id) : 0;
+    const named = namedStanding(content, cityContent.id, successes);
     const you = l.cand.characterId.equals(c._id);
-    const endorsedByYou = l.cand.endorsements.some((x) => x.characterId.equals(c._id));
-    let canEndorse: CandidateView['canEndorse'] = null;
-    if (e.status === 'nominations') {
-      if (you) canEndorse = { ok: false, reason: 'SELF' };
-      else if (l.cand.status !== 'filed') canEndorse = { ok: false, reason: 'CLOSED' };
-      else if (endorsedNow) canEndorse = { ok: false, reason: 'ALREADY' };
-      else if (c.rank < COUNCIL.voteRank) canEndorse = { ok: false, reason: 'RANK' };
-      else if (f !== c.factionId) canEndorse = { ok: false, reason: 'FACTION' };
-      else if (c.pc < COUNCIL.cost.endorse) canEndorse = { ok: false, reason: 'PC' };
-      else canEndorse = { ok: true };
+    const backedByYou = l.cand.endorsements.some((x) => x.characterId.equals(c._id));
+    let canBack: CandidateView['canBack'] = null;
+    if (e.status !== 'counted') {
+      if (you) canBack = { ok: false, reason: 'SELF' };
+      else if (l.cand.status !== 'standing') canBack = { ok: false, reason: 'CLOSED' };
+      else if (backedNow) canBack = { ok: false, reason: 'ALREADY' };
+      else if (c.rank < COUNCIL.voteRank) canBack = { ok: false, reason: 'RANK' };
+      else if (f !== c.factionId) canBack = { ok: false, reason: 'FACTION' };
+      else if (c.pc < COUNCIL.cost.endorse) canBack = { ok: false, reason: 'PC' };
+      else canBack = { ok: true };
     }
     return {
       key: `p:${l.cand.characterId.toHexString()}`,
@@ -606,135 +783,138 @@ export async function electionView(
       avatar: ch?.avatarId ? assetView(content, ch.avatarId) : null,
       factionId: f,
       rankTitle: ch ? rankTitle(content, ch, ch.rank) : null,
-      standing: { name: named.name, cityName: city.name, successes },
+      standing: { name: named.name, cityName: cityContent.name, successes },
       wardVote: wardVote(successes),
-      platform: content.platform(f, l.cand.platformId)?.line ?? '',
-      endorsements: endorsementsOf(content, l.cand, small.get(f) ?? false, secretaryOf(content, f)),
+      rule: rule(l.cand.rule ?? content.faction(f).branchMotion),
+      backers: endorsementsOf(content, l.cand, secretaryOf(content, f)),
       you,
-      endorsedByYou,
-      canEndorse,
+      backedByYou,
+      canBack,
     };
   });
 
-  const successes = standingSuccesses(c, city.id);
-  const sitting = (c.offices ?? []).some(
-    (o) => o.cityId === city.id && o.fromDay <= today && today < o.toDay,
-  );
-  let declare: ElectionView['declare'] = null;
-  const faction = content.faction(c.factionId);
-  if (e.status === 'nominations' && !mine) {
-    const rankOk = c.rank >= COUNCIL.standRank;
-    const knownOk = standingView(successes).level >= COUNCIL.knownLevel;
-    const reason: GameErrorReason | null = !rankOk
-      ? 'RANK_TOO_LOW'
-      : r.standsFromDay > today
-        ? 'NOT_YET_CANDIDATE'
-        : !knownOk
-          ? 'NOT_KNOWN'
-          : sitting
-            ? 'SITTING_COUNCILLOR'
-            : c.pc < COUNCIL.cost.declare
-              ? 'NOT_ENOUGH_PC'
-              : null;
-    declare = {
-      requirements: [
-        {
-          id: 'rank',
-          met: rankOk,
-          rankTitle: faction.rankTitles[COUNCIL.standRank - 1]!,
-          fxpToGo: Math.max(0, RANK_FXP[COUNCIL.standRank - 1]! - c.fxp),
-        },
-        { id: 'known', met: knownOk, successes, need: 30 },
-        { id: 'endorsements', met: false, need: COUNCIL.endorsementsNeeded },
-      ],
-      platforms: faction.platforms.map((p) => ({ id: p.id, line: p.line })),
-      cost: COUNCIL.cost.declare,
-      canDeclare: reason === null,
-      reason,
-    };
-  }
-
+  const stand = mine ? null : await standCard(content, c, spec, cal, city, today, session);
   const candidacy: ElectionView['candidacy'] =
-    mine && mine.status !== 'elected' && mine.status !== 'defeated'
+    mine && mine.status === 'standing'
       ? {
           candidacyId: mine._id.toHexString(),
-          status: mine.status,
-          endorsements:
-            mine.status === 'withdrawn'
-              ? null
-              : endorsementsOf(
-                  content,
-                  mine,
-                  small.get(factionOfCand(mine)) ?? false,
-                  secretaryOf(content, factionOfCand(mine)),
-                ),
-          branchLine: mine.status === 'filed' && mine.branch !== null && ordersAllDoneToday(c, today),
-          canWithdraw: mine.status === 'filed' && e.status === 'nominations',
+          rule: rule(mine.rule ?? content.faction(factionOfCand(mine)).branchMotion),
+          backers: endorsementsOf(content, mine, secretaryOf(content, factionOfCand(mine))),
+          branchLine: mine.branch !== null && ordersAllDoneToday(c, today),
         }
       : null;
-
-  const cast = vote
-    ? { key: vote.candidateKey, name: e.ballot?.find((b) => b.key === vote.candidateKey)?.name ?? '' }
-    : null;
-  const ballotReason: GameErrorReason | null =
-    c.rank < COUNCIL.voteRank
-      ? 'RANK_TOO_LOW'
-      : cast
-        ? 'ALREADY_VOTED'
-        : r.votesFromDay > e.pollsFrom
-          ? 'NOT_YET_VOTER'
-          : null;
   return {
     electionId: id,
-    cityId: city.id,
-    cityName: district ? `${city.name} · ${spec.place.name}` : city.name,
+    cityId: cityContent.id,
+    cityName: district ? `${cityContent.name} · ${spec.place.name}` : cityContent.name,
     phase: cal.phase,
-    nominationsCloseAt: dayStart(e.pollsFrom),
+    nominationsCloseAt: dayStart(cal.council.setDay),
     pollsOpenAt: dayStart(e.pollsFrom),
     countAt: dayStart(e.countDay),
     candidates,
-    declare,
+    stand,
     candidacy,
-    ballot: e.status === 'polling' ? { cast, canVote: ballotReason === null, reason: ballotReason } : null,
-    endorsed: endorsedNow
-      ? { candidacyId: endorsedNow.candidacyId.toHexString(), name: endorsedNow.name }
-      : null,
+    backed: backedNow ? { candidacyId: backedNow.candidacyId.toHexString(), name: backedNow.name } : null,
     pc: c.pc,
-    hall: hallView(content, city.id, now),
+    seats: seatsOf(spec),
+    hall: hallView(content, cityContent.id, now),
   };
 }
 
 // ---------------------------------------------------------------------------------------------
-// The count (council.count).
+// The result (council.count): the rule and the council.
 // ---------------------------------------------------------------------------------------------
+
+/** A stored count row read in the v2 shape (old rows carry `endorsements` and `votes`; tech design §8.3). */
+type StoredRow = CountRow & { endorsements?: number; factionId?: FactionId };
+const backersOfRow = (row: StoredRow) => row.backers ?? row.endorsements ?? 0;
+
+/** The council rows of a count: the seated, then the unseated with how far short they were. */
+async function councilRows(
+  content: GameContent,
+  c: CharacterDoc,
+  e: Pick<ElectionDoc, 'cityId' | 'ballot' | 'kind'>,
+  rows: StoredRow[],
+): Promise<CouncilRowView[]> {
+  const ids = rows.flatMap((row) => (row.kind === 'player' ? [row.key.slice(2)] : []));
+  const chars = await Character.find(
+    { _id: { $in: ids } },
+    { avatarId: 1, rank: 1, factionId: 1, localStanding: 1, name: 1 },
+  ).lean<CharacterDoc[]>();
+  const me = `p:${c._id.toHexString()}`;
+  const ordered = [...rows].sort((a, b) => a.place - b.place);
+  const all = { rows: ordered };
+  const capital = e.kind === 'district';
+  return ordered.map((row) => {
+    const line = (e.ballot ?? []).find((b) => b.key === row.key);
+    if (row.kind === 'npc') {
+      const npcId = row.key.slice(2);
+      const npc = content.candidate(npcId);
+      const st = standingView((npc?.profile ?? 0) * 5);
+      const ruleId = capital ? null : (npc?.rule ?? null);
+      return {
+        key: row.key,
+        kind: 'npc' as const,
+        name: row.name,
+        avatar: null,
+        rankTitle: null,
+        standingName: content.standingNames[st.level] ?? '',
+        ...(row.factionId ? { factionId: row.factionId } : {}),
+        place: row.place,
+        seated: row.seated,
+        wardVote: row.wardVote,
+        backers: backersOfRow(row),
+        total: row.total,
+        short: row.seated ? null : marginToSeat(row, all),
+        you: false,
+        rule: ruleId ? { ordinanceId: ruleId, name: ruleName(content, ruleId) } : null,
+      };
+    }
+    const ch = chars.find((x) => x._id.toHexString() === row.key.slice(2));
+    const ruleId = line?.rule ?? null;
+    return {
+      key: row.key,
+      kind: 'player' as const,
+      name: ch?.name ?? row.name,
+      avatar: ch?.avatarId ? assetView(content, ch.avatarId) : null,
+      rankTitle: ch ? rankTitle(content, ch, ch.rank) : null,
+      standingName: ch ? namedStanding(content, e.cityId, standingSuccesses(ch, e.cityId)).name : '',
+      ...(row.factionId ? { factionId: row.factionId } : {}),
+      place: row.place,
+      seated: row.seated,
+      wardVote: row.wardVote,
+      backers: backersOfRow(row),
+      total: row.total,
+      short: row.seated ? null : marginToSeat(row, all),
+      you: row.key === me,
+      rule: ruleId ? { ordinanceId: ruleId, name: ruleName(content, ruleId) } : null,
+    };
+  });
+}
+
+/** The caller's own vote on a counted election (their card marked on the result; ADR 0019). */
+async function myRuleVote(c: CharacterDoc, electionIds: string[]): Promise<string | null> {
+  const v = await Vote.findOne({ electionId: { $in: electionIds }, voterId: c._id }, { ordinanceId: 1 }).lean<VoteDoc>();
+  return v?.ordinanceId ?? null;
+}
 
 export async function countView(
   content: GameContent,
   c: CharacterDoc,
-  e: Pick<ElectionDoc, '_id' | 'cityId' | 'countDay' | 'result' | 'kind'>,
+  e: Pick<ElectionDoc, '_id' | 'cityId' | 'countDay' | 'result' | 'kind' | 'cycle' | 'ballot'>,
   now: number,
 ): Promise<CountView> {
   const r = e.result!;
-  const vote = await Vote.findOne({ electionId: e._id, voterId: c._id }, { candidateKey: 1 }).lean<VoteDoc>();
-  const ids = r.rows.flatMap((row) => (row.kind === 'player' ? [row.key.slice(2)] : []));
-  const chars = await Character.find({ _id: { $in: ids } }, { avatarId: 1 }).lean<CharacterDoc[]>();
-  const me = `p:${c._id.toHexString()}`;
+  const b = await RuleBallot.findById(councilKey(e.cityId, e.cycle)).lean<RuleBallotDoc>();
+  const myVote = await myRuleVote(c, [e._id]);
   return {
     electionId: e._id,
     cityId: e.cityId,
     cityName: content.city(e.cityId)?.name ?? e.cityId,
     countDay: e.countDay,
     weekday: weekdayName(e.countDay),
-    rows: r.rows.map((row) => {
-      const ch =
-        row.kind === 'player' ? chars.find((x) => x._id.toHexString() === row.key.slice(2)) : undefined;
-      return {
-        ...row,
-        avatar: ch?.avatarId ? assetView(content, ch.avatarId) : null,
-        you: row.key === me,
-        yourVote: vote?.candidateKey === row.key,
-      };
-    }),
+    rule: b ? ruleResultView(content, b, { characterId: c._id.toHexString(), myVote }) : null,
+    council: await councilRows(content, c, e, r.rows as StoredRow[]),
     turnout: r.turnout,
     seats: e.kind === 'district' ? CAPITAL_COUNCIL.perDistrict : COUNCIL.seats,
     npcSeats: r.npcSeats,
@@ -742,17 +922,18 @@ export async function countView(
   };
 }
 
-/** What a district election's result stores besides the slice-3 fields (capitalDay.ts). */
+/** What a district election's result stores besides the seats' fields (capitalDay.ts). */
 interface DistrictResultDoc {
-  factions: CapitalCountView['districts'][number]['factions'];
-  w: number;
-  ballots: number;
   scoreboard?: ScoreboardTableView[];
+  seatsByFaction?: Record<FactionId, number>;
+  /** The voting rework: the district's votes by card. */
+  cardVotes?: Record<string, number>;
 }
 
 /**
- * Tech design §10.5: the capital's count, five districts, built from the five counted elections of
- * a cycle: every number the two tables print, the player's own vote marked, nobody else's.
+ * Tech design §10.5; the voting rework (tech design §8.3): the capital's count, five districts, built
+ * from the five counted elections of a cycle and ballot k − 1: the cards with their seats, per
+ * district three party rows and the council rows; the player's own vote marked, nobody else's.
  */
 export async function capitalCountView(
   content: GameContent,
@@ -765,61 +946,56 @@ export async function capitalCountView(
   const ids = ds.map((d) => electionKey(d.id, cycle));
   const es = await Election.find({ _id: { $in: ids }, status: 'counted' }).lean<ElectionDoc[]>();
   if (es.length < ds.length) return null;
-  const votes = await Vote.find(
-    { electionId: { $in: ids }, voterId: c._id },
-    { candidateKey: 1, electionId: 1 },
-  ).lean<VoteDoc[]>();
-  const playerIds = es.flatMap((e) =>
-    e.result!.rows.flatMap((row) => (row.kind === 'player' ? [row.key.slice(2)] : [])),
-  );
-  const chars = await Character.find({ _id: { $in: playerIds } }, { avatarId: 1 }).lean<CharacterDoc[]>();
-  const me = `p:${c._id.toHexString()}`;
+  const b = await RuleBallot.findById(councilKey(cityId, cycle)).lean<RuleBallotDoc>();
+  const cards = b?.cards ?? [];
+  const myVote = await myRuleVote(c, ids);
   const mineFirst = residenceOf(c).districtId;
   const seatsByFaction: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
   let npcSeats = 0;
-  const districts = ds
-    .map((d) => {
-      const e = es.find((x) => x._id === electionKey(d.id, cycle))!;
-      const r = e.result!;
-      const extra = r as unknown as DistrictResultDoc;
-      const myVote = votes.find((v) => v.electionId === e._id)?.candidateKey;
-      const rows = (r.rows as Array<CountRow & { factionId: FactionId }>).map((row) => {
-        const ch =
-          row.kind === 'player' ? chars.find((x) => x._id.toHexString() === row.key.slice(2)) : undefined;
+  const districts = [];
+  for (const d of ds) {
+    const e = es.find((x) => x._id === electionKey(d.id, cycle))!;
+    const r = e.result!;
+    const extra = r as unknown as DistrictResultDoc;
+    const rows = r.rows as StoredRow[];
+    const seats = rows
+      .filter((x) => x.seated && x.factionId)
+      .sort((a, b2) => a.place - b2.place)
+      .map((x) => ({ factionId: x.factionId!, name: x.name }));
+    for (const seat of seats) seatsByFaction[seat.factionId] += 1;
+    npcSeats += r.npcSeats;
+    const council = await councilRows(content, c, e, rows);
+    districts.push({
+      districtId: d.id,
+      name: d.name,
+      parties: FACTION_IDS.map((f) => {
+        const card = cards.find((x) => x.factionIds.includes(f));
         return {
-          ...row,
-          avatar: ch?.avatarId ? assetView(content, ch.avatarId) : null,
-          you: row.key === me,
-          yourVote: myVote === row.key,
-          local: row.kind === 'npc',
+          factionId: f,
+          votes: card ? (extra.cardVotes?.[card.ordinanceId] ?? 0) : 0,
+          shared: (card?.factionIds.length ?? 0) > 1,
+          seats: seats.filter((x) => x.factionId === f).length,
         };
-      });
-      const seats = rows.filter((x) => x.seated).map((x) => ({ factionId: x.factionId, name: x.name }));
-      for (const seat of seats) seatsByFaction[seat.factionId] += 1;
-      npcSeats += r.npcSeats;
-      return {
-        districtId: d.id,
-        name: d.name,
-        factions: extra.factions ?? [],
-        w: extra.w ?? 0,
-        ballots: extra.ballots ?? 0,
-        rows,
-        seats,
-        turnout: r.turnout,
-        scoreboard: (extra.scoreboard ?? []).map((b) => ({
-          ...b,
-          rows: b.rows.map((x) => ({ ...x, you: x.characterId === c._id.toHexString() })),
-        })),
-      };
-    })
-    // The player's own district first.
-    .sort((a, b) => Number(b.districtId === mineFirst) - Number(a.districtId === mineFirst));
+      }),
+      council: [...council.filter((x) => x.seated), ...council.filter((x) => !x.seated)],
+      seats,
+      turnout: r.turnout,
+      scoreboard: (extra.scoreboard ?? []).map((sb) => ({
+        ...sb,
+        rows: sb.rows.map((x) => ({ ...x, you: x.characterId === c._id.toHexString() })),
+      })),
+    });
+  }
+  // The player's own district first.
+  districts.sort((a, b2) => Number(b2.districtId === mineFirst) - Number(a.districtId === mineFirst));
   return {
     kind: 'capital',
     hall: hallView(content, cityId, now),
     councilKey: councilKey(cityId, cycle + 1),
     cycle,
     countDay: es[0]!.countDay,
+    weekday: weekdayName(es[0]!.countDay),
+    rule: b ? ruleResultView(content, b, { characterId: c._id.toHexString(), myVote }) : null,
     seatsByFaction,
     npcSeats,
     districts,
@@ -877,196 +1053,6 @@ export async function getCapitalCount(
 }
 
 // ---------------------------------------------------------------------------------------------
-// The chamber (council.chamber).
-// ---------------------------------------------------------------------------------------------
-
-/** `council.chamber`: the residence's council (review 4: `councilViewFor` the residence city). */
-export async function councilView(
-  content: GameContent,
-  c: CharacterDoc,
-  city: CityDoc | null,
-  now: number,
-  session: Session = null,
-): Promise<CouncilView> {
-  return councilViewFor(content, c, residenceSpec(content, c).city.id, city, now, session);
-}
-
-/**
- * Review 4 (ADR 0077): a city's sitting council for the caller, the city and the capital flag taken
- * from `cityId` instead of the residence: the seats, the order paper, the window, the rule in force,
- * and `you` (a councillor only on this council). `city` is that city's document.
- */
-export async function councilViewFor(
-  content: GameContent,
-  c: CharacterDoc,
-  cityId: string,
-  city: CityDoc | null,
-  now: number,
-  session: Session = null,
-): Promise<CouncilView> {
-  const today = dayKey(now);
-  const cityContent = content.city(cityId);
-  if (!cityContent?.council) throw gameError('PRECONDITION_FAILED', 'NO_COUNCIL', { cityId });
-  const offset = cityContent.council.offset;
-  const capital = content.isDistricted(cityId);
-  const spec = { home: cityContent.homeFactionId ?? null };
-  const cal = councilDay(today, offset);
-  const key = councilKey(cityContent.id, cal.cycle);
-  // A seat vacated at a move shows its new holder (ADR 0026).
-  const terms = await s(
-    OfficeTerm.find({ councilKey: key, vacatedDay: null }).sort({ seat: 1 }),
-    session,
-  ).lean<OfficeTermDoc[]>();
-  const p = await s(OrderPaper.findById(key), session).lean<OrderPaperDoc>();
-  if (!p) throw gameError('PRECONDITION_FAILED', 'ELECTION_NOT_READY');
-  const playerIds = terms.flatMap((t) => (t.holder.kind === 'player' ? [t.holder.characterId] : []));
-  const chars = await s(
-    Character.find(
-      { _id: { $in: playerIds } },
-      { name: 1, avatarId: 1, rank: 1, factionId: 1, localStanding: 1 },
-    ),
-    session,
-  ).lean<CharacterDoc[]>();
-  const name = (id: string) => (id === AGAINST_ALL ? 'Against all' : (content.ordinance(id)?.name ?? id));
-  const divided = p.status === 'divided' && p.division;
-  const npcChoices =
-    (divided
-      ? (p.division as unknown as { npcChoices?: Partial<Record<FactionId, string>> }).npcChoices
-      : undefined) ?? {};
-  const myTerm = terms.find((t) => t.holder.kind === 'player' && t.holder.characterId.equals(c._id));
-  const myVote = p.votes.find((v) => v.characterId.equals(c._id));
-  const myProposal = p.items.find((i) => i.movedBy.kind === 'player' && i.movedBy.characterId.equals(c._id));
-  const proposals = p.items.filter((i) => i.movedBy.kind === 'player').length;
-  const voting = cal.council.voting && p.status === 'open';
-  const proposeReason: GameErrorReason | null = !myTerm
-    ? 'NOT_COUNCILLOR'
-    : !voting
-      ? 'COUNCIL_CLOSED'
-      : myProposal
-        ? 'ALREADY_PROPOSED'
-        : proposals >= COUNCIL.maxProposals
-          ? 'PAPER_FULL'
-          : c.pc < COUNCIL.cost.propose
-            ? 'NOT_ENOUGH_PC'
-            : null;
-  const tally = (choice: string) => {
-    const t = divided ? p.division!.tallies.find((x) => x.choice === choice) : undefined;
-    return t ? t.player + t.npc : divided ? 0 : null;
-  };
-  const ordId = ordinanceIdOn(city, today);
-  const ord = ordId ? content.ordinance(ordId) : undefined;
-  return {
-    councilKey: key,
-    cityId: cityContent.id,
-    cityName: cityContent.name,
-    termEndsAt: dayStart(cal.council.toDay),
-    npcSeats: terms.filter((t) => t.holder.kind === 'npc').length,
-    seats: terms.map((t) => {
-      const where = capital
-        ? {
-            factionId: t.factionId,
-            districtId: t.districtId ?? null,
-            districtName: t.districtId ? (content.district(t.districtId)?.quarter.name ?? null) : null,
-          }
-        : {};
-      if (t.holder.kind === 'npc') {
-        const npc = content.candidate(t.holder.npcId);
-        const st = standingView((npc?.profile ?? 0) * 5);
-        const npcChoice = capital
-          ? t.factionId
-            ? npcChoices[t.factionId]
-            : undefined
-          : p.division?.npcChoice;
-        return {
-          seat: t.seat,
-          kind: 'npc' as const,
-          name: t.holder.name,
-          avatar: null,
-          rankTitle: null,
-          standingName: content.standingNames[st.level] ?? '',
-          you: false,
-          votedFor: divided && npcChoice ? name(npcChoice) : null,
-          ...where,
-        };
-      }
-      const holder = t.holder;
-      const ch = chars.find((x) => x._id.equals(holder.characterId));
-      const v = p.votes.find((x) => x.characterId.equals(holder.characterId));
-      return {
-        seat: t.seat,
-        kind: 'player' as const,
-        name: ch?.name ?? holder.name,
-        avatar: ch?.avatarId ? assetView(content, ch.avatarId) : null,
-        rankTitle: ch ? rankTitle(content, ch, ch.rank) : null,
-        standingName: ch
-          ? namedStanding(content, cityContent.id, standingSuccesses(ch, cityContent.id)).name
-          : '',
-        you: holder.characterId.equals(c._id),
-        votedFor: v ? name(v.choice) : null,
-        ...where,
-      };
-    }),
-    window: {
-      voting,
-      divideAt: dayStart(cal.council.divideDay),
-      opensAt: voting ? null : dayStart(cal.council.toDay),
-    },
-    paper: {
-      status: p.status,
-      items: p.items.map((it, i) => {
-        const o = content.ordinance(it.ordinanceId);
-        const by = it.movedBy.kind === 'branch' ? (it.movedBy.factionId ?? spec.home) : null;
-        return {
-          n: i + 1,
-          ordinanceId: it.ordinanceId,
-          name: o?.name ?? it.ordinanceId,
-          line: o?.line ?? '',
-          effectLine: o?.effectLine ?? '',
-          movedBy:
-            it.movedBy.kind === 'branch'
-              ? {
-                  kind: 'branch' as const,
-                  name: by ? secretaryOf(content, by) || it.movedBy.name : it.movedBy.name,
-                  you: false,
-                }
-              : { kind: 'player' as const, name: it.movedBy.name, you: it.movedBy.characterId.equals(c._id) },
-          ...(capital ? { branchOf: by ?? null } : {}),
-          votes: tally(it.ordinanceId),
-          passed: !!divided && p.division!.passed === it.ordinanceId,
-        };
-      }),
-      against: tally(AGAINST_ALL),
-      rose: !!divided && p.division!.passed === null,
-    },
-    you: {
-      councillor: !!myTerm,
-      voted: myVote?.choice ?? null,
-      proposed: myProposal?.ordinanceId ?? null,
-      canPropose: proposeReason === null,
-      proposeReason,
-      pc: c.pc,
-    },
-    menu:
-      myTerm && voting
-        ? (capital ? content.irongateMenu() : content.ordinancesMenu()).map((o) => ({
-            ordinanceId: o.id,
-            name: o.name,
-            line: o.line,
-            effectLine: o.effectLine,
-            onPaper: p.items.some((i) => i.ordinanceId === o.id),
-          }))
-        : null,
-    inForce:
-      ord && city?.ordinance?.id === ord.id
-        ? { ordinanceId: ord.id, name: ord.name, line: ord.line, daysLeft: city.ordinance.toDay - today }
-        : null,
-    hall: hallView(content, cityContent.id, now),
-    passVotes: capital ? CAPITAL_COUNCIL.passVotes : COUNCIL.passVotes,
-    seatCount: capital ? CAPITAL_COUNCIL.seats : COUNCIL.seats,
-  };
-}
-
-// ---------------------------------------------------------------------------------------------
 // The paper: the front page and the live political headlines (ADR 0023).
 // ---------------------------------------------------------------------------------------------
 
@@ -1092,6 +1078,7 @@ export async function frontPageView(
   c: CharacterDoc,
   term: OfficeTermDoc,
   now: number,
+  city: CityDoc | null = null,
 ): Promise<FrontPageView | null> {
   const e = await Election.findById(term.electionId).lean<ElectionDoc>();
   if (!e?.result) return null;
@@ -1138,31 +1125,56 @@ export async function frontPageView(
     deck: t?.deck ? fill(t.deck) : '',
     count: await countView(content, c, e, now),
     // Review 4 (answers §10.1): *What now* rides on the front page (shown once by `frontPageSeenAt`).
-    whatNow: whatNowOf(content, term),
+    whatNow: await whatNowOf(content, term, city),
   };
 }
 
 /**
- * Review 4 (answers §10.1, ADR 0077): the *What now* card's fields for a player's term: the votes
- * that pass a rule, the seats, and the moment the council votes.
+ * Review 4 (answers §10.1, ADR 0077); the voting rework (design §4.6): the *What now* card's fields
+ * for a player's term: the councillor's rule and whether it is a card, the change window (until the
+ * set), the vote and the result; in the capital, whether their rule is their party's card.
  */
-export function whatNowOf(content: GameContent, term: Pick<OfficeTermDoc, '_id' | 'cityId' | 'fromDay'>): WhatNowView {
+export async function whatNowOf(
+  content: GameContent,
+  term: Pick<OfficeTermDoc, '_id' | 'cityId' | 'fromDay' | 'rule' | 'holder' | 'factionId' | 'districtId' | 'councilKey'>,
+  city: CityDoc | null,
+  session: Session = null,
+): Promise<WhatNowView> {
   const capital = content.isDistricted(term.cityId);
   const offset = content.city(term.cityId)?.council?.offset ?? 0;
+  const cal = councilDay(term.fromDay, offset);
   const hall = content.hallOf(term.cityId)?.location;
+  const home = content.city(term.cityId)?.homeFactionId ?? null;
+  const ruleId = termRule(content, term, home) ?? '';
+  const { cards } = await ballotCards(content, term.cityId, cycleOfKey(term.councilKey), city, session);
+  let capitalLine: WhatNowView['capital'] = null;
+  if (capital && term.factionId) {
+    const card = cards.find((x) => x.factionIds.includes(term.factionId!));
+    const by = card?.by.find((b) => b.kind === 'party' && b.factionId === term.factionId);
+    const me = term.holder.kind === 'player' ? term.holder.characterId.toHexString() : null;
+    capitalLine = {
+      leadsBloc: !!by && by.characterId === me,
+      by: by?.name ?? '',
+      factionId: term.factionId,
+    };
+  }
   return {
     termId: term._id.toHexString(),
     cityId: term.cityId,
     hall: { locationId: hall?.id ?? '', name: hall?.name ?? '' },
-    seatCount: capital ? CAPITAL_COUNCIL.seats : COUNCIL.seats,
-    passVotes: capital ? CAPITAL_COUNCIL.passVotes : COUNCIL.passVotes,
-    divideAt: dayStart(councilDay(term.fromDay, offset).council.divideDay),
+    rule: { name: ruleName(content, ruleId), onBallot: cards.some((x) => x.ordinanceId === ruleId) },
+    capital: capitalLine,
+    changeUntil: dayStart(cal.council.setDay),
+    pollsOpenAt: dayStart(cal.election.pollsFrom),
+    countAt: dayStart(cal.election.countDay),
   };
 }
 
 /**
  * The live political headlines of the caller's residence this morning (the home city's; in the
- * capital, the district's election and the capital's council, from the Herald's templates).
+ * capital, the district's election and the capital's council, from the Herald's templates). The
+ * voting rework: the person-ballot and order-paper facts (`voted`, `nominationsClosed`, `divided`,
+ * `movedYesterday`) no longer hold; the rule facts are filled with the templates in phase 5.
  */
 export async function politicalHeadlines(
   content: GameContent,
@@ -1178,7 +1190,6 @@ export async function politicalHeadlines(
 ): Promise<LiveHeadline[]> {
   const spec = specOf(content, c);
   if (!spec || (spec.home !== null && spec.home !== c.factionId)) return [];
-  const cityId = spec.city.id;
   const offset = spec.offset;
   const cal = councilDay(today, offset);
   const curId = electionKey(spec.place.id, cal.cycle);
@@ -1200,7 +1211,6 @@ export async function politicalHeadlines(
   };
   const byKind: NonNullable<PoliticalFacts['varsByKind']> = { ...extra?.varsByKind };
   let seat: PoliticalFacts['seat'] = null;
-  let voted: PoliticalFacts['voted'] = null;
   if (counted) {
     const rows = counted.rows as Array<CountRow & { factionId?: FactionId }>;
     const last = rows.find((r) => r.key === counted.lastSeatKey);
@@ -1222,32 +1232,10 @@ export async function politicalHeadlines(
       byKind.seatWon = v;
       byKind.seatLost = v;
     }
-    const vote = await Vote.findOne({ electionId: prevId, voterId: c._id }).lean<VoteDoc>();
-    const theirs = vote ? rows.find((r) => r.key === vote.candidateKey) : undefined;
-    if (theirs) {
-      const margin = marginToSeat(theirs, { rows });
-      voted = { won: theirs.seated, tie: !theirs.seated && margin === 0 };
-      byKind.votedFor = {
-        voted: theirs.name,
-        ordinal: ordinal(theirs.place),
-        votes: String(theirs.total),
-        margin: String(margin),
-        last: last?.name ?? '',
-        turnout: turnoutText(counted.turnout),
-      };
-    }
   }
-
-  let nominationsClosed: PoliticalFacts['nominationsClosed'] = null;
-  if (cal.cycleDay === 2 && cur && cur.status !== 'filed' && cur.status !== 'withdrawn') {
-    nominationsClosed = { struck: cur.status === 'struck' };
-    byKind.nominationsClosed = { endorsements: String(cur.effective ?? 0) };
-  }
-  if (cur?.status === 'filed') {
-    const branch = branchOf(spec, c);
-    const small = isSmallBranch(await otherEndorsers(cityId, branch, today, c._id));
+  if (cur?.status === 'standing') {
     byKind.filedYesterday = {
-      endorsements: String(endorsementsOf(content, cur, small, secretaryOf(content, branch)).n),
+      endorsements: String(backersOf({ members: cur.endorsements.length, branch: cur.branch !== null })),
     };
   }
   const termEnded = countToday
@@ -1258,23 +1246,7 @@ export async function politicalHeadlines(
         vacatedDay: null,
       })) !== null
     : false;
-  const key = councilKey(cityId, cal.cycle);
-  const sat = (c.offices ?? []).some((o) => o.councilKey === key);
-  const paper = await OrderPaper.findById(key).lean<OrderPaperDoc>();
-  let divided: PoliticalFacts['divided'] = null;
-  if (sat && cal.cycleDay === 2 && paper?.division) {
-    divided = { passed: paper.division.passed !== null };
-    const o = paper.division.passed ? content.ordinance(paper.division.passed) : undefined;
-    byKind.divided = { ordinance: o?.name ?? '', ordinanceLine: o?.line ?? '' };
-  }
-  const moved = paper?.items.find(
-    (i) => i.movedBy.kind === 'player' && i.movedBy.characterId.equals(c._id) && i.day === today - 1,
-  );
-  if (moved) {
-    const o = content.ordinance(moved.ordinanceId);
-    byKind.movedYesterday = { ordinance: o?.name ?? '', ordinanceLine: o?.line ?? '' };
-  }
-  // News only when a division passed it this morning, not a bootstrap's synthetic motion.
+  // News only when a count put a rule in force this morning, not a bootstrap's.
   const ordinanceFromToday = city?.ordinance?.fromDay === today && city.world?.bootstrappedDay !== today;
   if (ordinanceFromToday && city?.ordinance) {
     const o = content.ordinance(city.ordinance.id);
@@ -1282,12 +1254,12 @@ export async function politicalHeadlines(
   }
   const facts: PoliticalFacts = {
     seat,
-    voted,
-    filedYesterday: cur?.status === 'filed' && cur.filedDay === today - 1,
-    nominationsClosed,
+    voted: null,
+    filedYesterday: cur?.status === 'standing' && cur.filedDay === today - 1,
+    nominationsClosed: null,
     termEnded,
-    divided,
-    movedYesterday: moved !== undefined,
+    divided: null,
+    movedYesterday: false,
     countToday: counted !== null,
     phase: cal.phase,
     cycleDay: cal.cycleDay,
@@ -1297,10 +1269,10 @@ export async function politicalHeadlines(
     vars,
     varsByKind: byKind,
     until: {
-      nominations: dayStart(cal.election.pollsFrom),
+      nominations: dayStart(cal.council.setDay),
       polls: dayStart(cal.election.countDay),
-      divide: dayStart(cal.council.divideDay),
+      divide: dayStart(cal.council.setDay),
     },
   };
-  return selectPoliticalHeadlines(content.politicalHeadlinesOf(extra?.templatesOf ?? cityId), facts);
+  return selectPoliticalHeadlines(content.politicalHeadlinesOf(extra?.templatesOf ?? spec.city.id), facts);
 }

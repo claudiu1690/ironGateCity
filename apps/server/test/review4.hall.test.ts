@@ -6,10 +6,9 @@
  * now*, marked seen once (`council.whatNowSeen`).
  */
 import { ActionLog, Character, OfficeTerm } from '@irongate/db';
-import { CAPITAL_COUNCIL, councilDay, councilKey, dayStart } from '@irongate/rules';
+import { councilDay, councilKey} from '@irongate/rules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { settleCityDay } from '../src/services/cityDay';
-import { whatNowOf } from '../src/services/politicsService';
 import { gameData, resetCity, setupDb, teardownDb, testClock } from './helpers';
 import { nextCycleDay } from './politics.helpers';
 import type { Player } from './politics.helpers';
@@ -179,93 +178,6 @@ describe('a locked place is refused whatever the client sends (tech design §3.2
 });
 
 describe('the Town Hall sheet (answers §11.2, ADR 0077)', () => {
-  it("a Collective visitor reads Duskwall's hall: seven rows, the rule with its plain line, the paper read-only, no desk", async () => {
-    await resetCity('duskwall');
-    const D0 = nextCycleDay('duskwall', 0, 20900);
-    const clock = testClock(at(D0));
-    await settleCityDay(content, 'duskwall', clock.now());
-    const v = await member(clock, { name: 'Vis Itor', factionId: 'collective', cityId: 'duskwall', level: 10 });
-    const hall = await v.caller.council.hall({ cityId: 'duskwall' });
-    expect(hall).toMatchObject({
-      cityId: 'duskwall',
-      cityName: 'Duskwall',
-      hall: { name: 'Town Hall', ref: 'the Town Hall', x: 0.555, y: 0.55 },
-      seatCount: 7,
-      passVotes: 4,
-      desk: null,
-      whatNow: null,
-      election: null,
-    });
-    expect(hall.seats).toHaveLength(7);
-    for (const s of hall.seats) expect(s).toMatchObject({ kind: 'npc', you: false, rankTitle: null });
-    expect(hall.inForce).not.toBeNull();
-    expect(hall.inForce!.plainLine).toBe(content.ordinance(hall.inForce!.ordinanceId)!.plainLine);
-    expect(hall.noRule).toBeNull();
-    expect(hall.paper.status).toBe('open');
-    expect(hall.nextVoteAt).toBe(dayStart(councilDay(D0, content.city('duskwall')!.council!.offset).council.divideDay));
-    for (const i of hall.paper.items) expect(i.plainLine).toBe(content.ordinance(i.ordinanceId)!.plainLine);
-    expect(hall.termEndsAt).toBe(dayStart(D0 + 5));
-  });
-
-  it('a Duskwall councillor: the desk with the menu while voting, the Next line by cycle day', async () => {
-    await resetCity('duskwall');
-    const D0 = nextCycleDay('duskwall', 0, 20910);
-    const clock = testClock(at(D0));
-    await settleCityDay(content, 'duskwall', clock.now());
-    const cr = await member(clock, { name: 'Coun Cillor', factionId: 'vanguard', level: 10, rank: 3, pc: 45 });
-    await seat('duskwall', D0, 2, cr, 'Coun Cillor');
-    const offset = content.city('duskwall')!.council!.offset;
-    const cal = councilDay(D0, offset);
-
-    let hall = await cr.caller.council.hall({ cityId: 'duskwall' });
-    expect(hall.desk).not.toBeNull();
-    expect(hall.desk!.you.councillor).toBe(true);
-    expect(hall.desk!.menu!.length).toBeGreaterThan(0);
-    expect(hall.desk!.next).toEqual({ kind: 'votes', at: dayStart(cal.council.divideDay) });
-    // A resident's own hall carries their Election card.
-    expect(hall.election).not.toBeNull();
-    expect(hall.seats.find((s) => s.you)).toMatchObject({ kind: 'player', name: 'Coun Cillor', rankTitle: expect.any(String) });
-    // *What now* once per term: present until marked.
-    expect(hall.whatNow).toMatchObject({ seatCount: 7, passVotes: 4, divideAt: dayStart(cal.council.divideDay) });
-
-    const first = hall.paper.items[0]!;
-    await cr.caller.council.councilVote({ choice: first.ordinanceId, idempotencyKey: key() });
-    hall = await cr.caller.council.hall({ cityId: 'duskwall' });
-    expect(hall.desk!.next).toEqual({ kind: 'voted', ordinance: first.name });
-
-    // Days 2–4: the division passed the paper's rule; it runs, and names go in from the next cycle.
-    clock.set(at(D0 + 2));
-    await settleCityDay(content, 'duskwall', clock.now());
-    hall = await cr.caller.council.hall({ cityId: 'duskwall' });
-    expect(hall.paper.status).toBe('divided');
-    const passed = hall.paper.items.find((i) => i.passed);
-    if (passed) {
-      expect(hall.desk!.next).toEqual({
-        kind: 'runs',
-        ordinance: passed.name,
-        untilDay: cal.ordinanceWindow.toDay,
-        nominationsFromDay: D0 + 5,
-      });
-      expect(hall.desk!.menu).toBeNull();
-    } else {
-      expect(hall.desk!.next).toEqual({ kind: 'rose', nominationsFromDay: D0 + 5 });
-    }
-    expect(hall.nextVoteAt).toBeNull();
-  });
-
-  it('the capital: ten rows, six votes pass a rule', async () => {
-    await resetCity('irongate');
-    const D0 = nextCycleDay('irongate', 0, 20920);
-    const clock = testClock(at(D0));
-    await settleCityDay(content, 'irongate', clock.now());
-    const p = await member(clock, { name: 'Cap Visitor', level: 10, cityId: 'irongate' });
-    const hall = await p.caller.council.hall({ cityId: 'irongate' });
-    expect(hall).toMatchObject({ cityName: 'Irongate', seatCount: CAPITAL_COUNCIL.seats, passVotes: 6 });
-    expect(hall.seats).toHaveLength(10);
-    expect(hall.hall).toMatchObject({ name: 'City Hall', ref: 'the City Hall', x: 0.57, y: 0.345 });
-    for (const s of hall.seats) expect(s.districtName).toEqual(expect.any(String));
-  });
-
   it('an unknown city is NOT_FOUND', async () => {
     const clock = testClock(at(DAY));
     const p = await member(clock, { name: 'Lost Hall' });
@@ -299,17 +211,4 @@ describe('What now (answers §10.1)', () => {
     expect((await cr.caller.council.hall({ cityId: 'duskwall' })).whatNow).toBeNull();
   });
 
-  it("the front page's card: the term's seats, votes and the council's vote", async () => {
-    const term = await OfficeTerm.findOne({ cityId: 'duskwall', 'holder.kind': 'npc' }).lean();
-    expect(term).not.toBeNull();
-    const w = whatNowOf(content, term!);
-    expect(w).toEqual({
-      termId: term!._id.toHexString(),
-      cityId: 'duskwall',
-      hall: { locationId: 'duskwall.town-hall', name: 'Town Hall' },
-      seatCount: 7,
-      passVotes: 4,
-      divideAt: dayStart(councilDay(term!.fromDay, content.city('duskwall')!.council!.offset).council.divideDay),
-    });
-  });
 });

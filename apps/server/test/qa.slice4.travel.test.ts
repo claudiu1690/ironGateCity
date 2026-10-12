@@ -162,10 +162,10 @@ describe('closing the game mid-journey (GDD §14.10, design §2.4)', () => {
     expect(gameData(await p.caller.city.get({ cityId: 'coalport' }).catch((e: unknown) => e)).game?.reason).toBe(
       'IN_TRANSIT',
     );
-    const election = await p.caller.council.election();
-    expect(election.ballot?.canVote).toBe(true);
+    const ballot = await p.caller.council.ballot();
+    expect(ballot.canVote).toBe(true);
     const vote = await p.caller.council.vote({
-      candidateKey: election.candidates[0]!.key,
+      ordinanceId: ballot.cards[0]!.ordinanceId,
       idempotencyKey: key(),
     });
     expect(vote.act).toBe('ballot');

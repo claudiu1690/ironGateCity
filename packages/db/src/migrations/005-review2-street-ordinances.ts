@@ -1,5 +1,5 @@
 import { City } from '../models/city';
-import { OrderPaper } from '../models/politics';
+import { RuleBallot } from '../models/politics';
 
 /**
  * Review 2 (30 Sep 2026; docs/design/review-2-answers.md §1.10, §5.6; GDD §15.3): the Ward Register
@@ -44,7 +44,9 @@ export async function migrateReview2StreetOrdinances(): Promise<number> {
     changed += 1;
   }
 
-  const papers = await OrderPaper.find({
+  // The voting rework: old order papers are raw documents (their fields moved under `legacy` at the
+  // conversion), so they are read and written through the driver.
+  const papers = await RuleBallot.collection.find<OldPaper>({
     $or: [
       { 'items.ordinanceId': { $in: old } },
       { 'votes.choice': { $in: old } },
@@ -52,7 +54,7 @@ export async function migrateReview2StreetOrdinances(): Promise<number> {
       { 'division.npcChoice': { $in: old } },
       { 'division.tallies.choice': { $in: old } },
     ],
-  }).lean();
+  }).toArray();
   for (const p of papers) {
     const division = p.division
       ? {
@@ -62,8 +64,8 @@ export async function migrateReview2StreetOrdinances(): Promise<number> {
           tallies: p.division.tallies.map((t) => ({ ...t, choice: rename(t.choice) as string })),
         }
       : null;
-    await OrderPaper.updateOne(
-      { _id: p._id },
+    await RuleBallot.collection.updateOne(
+      { _id: p._id } as Record<string, unknown>,
       {
         $set: {
           items: p.items.map((i) => ({ ...i, ordinanceId: rename(i.ordinanceId) as string })),
@@ -71,9 +73,20 @@ export async function migrateReview2StreetOrdinances(): Promise<number> {
           division,
         },
       },
-      { timestamps: false },
     );
     changed += 1;
   }
   return changed;
+}
+
+/** An order paper as stored before the voting rework (migrations 004 and 005 rename its ids). */
+interface OldPaper {
+  _id: string;
+  items: Array<{ ordinanceId: string }>;
+  votes: Array<{ choice: string }>;
+  division: {
+    passed: string | null;
+    npcChoice: string | null;
+    tallies: Array<{ choice: string; player: number; npc: number }>;
+  } | null;
 }

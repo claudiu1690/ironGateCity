@@ -2,21 +2,17 @@ import { copy } from '@irongate/content/copy';
 import type {
   FactionId,
   CandidateView,
-  CountRowView,
-  CouncilSeatView,
-  CouncilView,
+  CouncilRowView,
   FrontPageView,
-  OrdinanceMenuItemView,
-  OrderPaperItemView,
   PoliticsSummaryView,
+  RuleCardView,
+  RuleResultView,
 } from '@irongate/rules';
 import { useState } from 'react';
-import { cx, formatAt, formatUntil, formatWeekday } from '../format';
+import { cx, formatUntil, formatWeekday } from '../format';
 import { HelpButton, helpMark } from './Help';
 import { FACTION_STYLE, FactionCrest } from './FactionCrest';
 import { Picture } from './Picture';
-import { ProgressBar } from './ProgressBar';
-import { BottomSheet } from './Sheets';
 import { Stamp } from './Stamp';
 
 /**
@@ -66,11 +62,7 @@ export function PersonMark({
 
 type ElectionRoute = NonNullable<PoliticsSummaryView['route']>;
 
-const DAY_MS = 86_400_000;
 const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
-
-/** Whole days to a boundary, rounded up (at least 1 while it is ahead). */
-const daysTo = (at: number, now: number) => Math.max(1, Math.ceil((at - now) / DAY_MS));
 
 export interface ElectionLines {
   line1: string;
@@ -79,119 +71,123 @@ export interface ElectionLines {
   secondary: { label: string; route: ElectionRoute } | null;
 }
 
-/** The card's lines and buttons for a summary (screens §2.1's table; slice 4 §7.2 in the capital). */
+/**
+ * The card's lines and buttons for a summary. The voting rework (tech design §9.2): the seven states
+ * of design §4.1 with the v2 copy; the capital's `registered` is kept.
+ */
 export function electionLines(
   s: PoliticsSummaryView,
   now: number = Date.now(),
   names: Partial<Record<FactionId, string>> = {},
 ): ElectionLines {
-  const capital = s.seats === 2;
   const place = s.placeName ?? s.cityName;
   const e = copy.election;
+  const v = e.v2;
   const k = s.card;
   const stand = { label: copy.standForTheCouncil(s.standCost), route: '/council/slate' as const };
   const slate = (label: string) => ({ label, route: '/council/slate' as const });
+  const desk = { label: e.toYourDesk, route: '/council' as const };
   const lines = (pair: readonly string[] | string[]) => ({ line1: pair[0]!, line2: pair[1]! });
   switch (k.state) {
     case 'belowRank':
       return {
-        ...lines(e.belowRank(s.cityName, formatWeekday(k.countAt), s.rank2Title, k.rank2Fxp, k.fxp)),
+        ...lines(v.belowRank(s.cityName, s.rank2Title, k.rank2Fxp, k.fxp)),
         primary: null,
         secondary: slate(e.seeWhosStanding),
       };
-    case 'candidates':
+    case 'vote':
+      // TODO(phase 4): the capital's card lines (*Which rule for Irongate next week?*, design §9.8).
       return {
-        ...lines(e.candidates(formatWeekday(k.pollsOpenAt), e.days(daysTo(k.closesAt, now)))),
-        primary: k.canStand ? stand : slate(e.seeWhosStanding),
-        secondary: k.canStand ? slate(e.seeWhosStanding) : null,
-      };
-    case 'standing':
-      return {
-        ...lines(e.standing(k.backers?.n ?? 0, k.backers?.needed ?? 2, formatUntil(k.closesAt, now))),
-        primary: slate(e.seeTheCandidates),
-        secondary: null,
-      };
-    case 'backing':
-      return {
-        ...lines(e.backing(k.backing ?? '', formatWeekday(k.pollsOpenAt), e.days(daysTo(k.closesAt, now)))),
-        primary: slate(e.seeWhosStanding),
-        secondary: null,
-      };
-    case 'voting':
-      if (capital)
-        // Slice 4 (screens §7.2): *Voting is open in Eastside* · *Two seats · any name · …*.
-        return {
-          line1: copy.capitalElection.votingIsOpenIn(place),
-          line2: copy.capitalElection.twoSeats(formatUntil(k.closesAt, now)),
-          primary: { label: e.voteNow, route: '/council/ballot' },
-          secondary: null,
-        };
-      return {
-        ...lines(e.voting(formatUntil(k.closesAt, now), daysTo(k.closesAt, now))),
-        primary: { label: e.voteNow, route: '/council/ballot' },
-        secondary: null,
-      };
-    case 'candidateVoting':
-      return {
-        ...lines(e.candidateVoting(formatUntil(k.closesAt, now))),
+        ...lines(v.vote(s.cityName, formatUntil(k.closesAt, now), formatWeekday(k.runsFrom))),
         primary: { label: e.voteNow, route: '/council/ballot' },
         secondary: null,
       };
     case 'voted':
       return {
-        ...lines(e.voted(k.votedFor ?? '', formatWeekday(k.countAt), s.paperShortName)),
-        primary: { label: e.seeTheCandidates, route: '/council/ballot' },
+        ...lines(v.voted(k.votedFor ?? '', formatWeekday(k.countAt), s.paperShortName)),
+        primary: { label: e.seeTheBallot, route: '/council/ballot' },
         secondary: null,
       };
     case 'result': {
-      const r = k.result!;
-      const y = r.yourLine;
-      const your = !y
-        ? null
-        : y.kind === 'elected'
-          ? e.yourLine.elected(ORDINALS[y.place - 1] ?? String(y.place))
-          : y.kind === 'missed'
-            ? e.yourLine.missed(y.margin)
-            : y.kind === 'voteWon'
-              ? e.yourLine.voteWon(y.name)
-              : e.yourLine.voteLost(y.name);
-      const d = r.district;
-      if (capital && d) {
-        // Slice 4 (screens §7.2): *Eastside went Collective, Vanguard · …* and the capital's ten.
-        const fname = (f: FactionId) => names[f] ?? f;
-        const parts = (Object.entries(d.capital) as Array<[FactionId, number]>)
-          .sort((a, b) => b[1] - a[1])
-          .map(([f, n]) => `${n} ${fname(f)}`);
-        return {
-          line1: copy.capitalElection.went(place, d.seats.map(fname), your),
-          line2: copy.capitalElection.capitalSeats(parts, `${d.turnout.voters} of ${d.turnout.eligible}`, place),
-          primary: { label: e.seeTheResult, route: '/council/count' },
-          secondary: k.canStand ? stand : null,
-        };
-      }
+      const r = k.result;
+      // A city with no rule in force and no count yet (test cities only): the kicker's question alone.
+      if (!r) return { line1: v.kicker(place), line2: '', primary: null, secondary: k.canStand ? stand : null };
+      const until = formatWeekday(r.runsUntil - 1);
+      const next = formatWeekday(r.nextVoteAt);
+      const fname = (f: FactionId) => names[f] ?? f;
+      const c = r.capital;
+      const pair =
+        r.how === 'votes'
+          ? v.result(r.winner, r.votes, r.voters, until, next)
+          : r.how === 'tie'
+            ? v.resultTie(r.winner, r.votes, until, next)
+            : r.how === 'fallback'
+              ? // TODO(phase 3): `resultFallbackUnrest` when card 1 was a councillor's (needs the name).
+                v.resultFallback(r.winner, until, next)
+              : r.how === 'carried'
+                ? v.resultCarried(r.winner, until, next)
+                : r.how === 'draw'
+                  ? v.resultDraw(r.winner, until, next)
+                  : // `seats`: the capital (TODO(phase 4): the card's capital lines, design §9.8).
+                    c && c.factionIds.length > 1
+                    ? v.resultSharedSeats(
+                        r.winner,
+                        fname(c.factionIds[0]!),
+                        fname(c.factionIds[1]!),
+                        c.seats,
+                        place,
+                        c.districtSeats.map(fname),
+                        until,
+                        next,
+                      )
+                    : v.resultSeats(
+                        r.winner,
+                        c?.factionIds[0] ? fname(c.factionIds[0]) : '',
+                        c?.seats ?? 0,
+                        place,
+                        (c?.districtSeats ?? []).map(fname),
+                        until,
+                        next,
+                      );
       return {
-        ...lines(e.result(r.winner, your, formatWeekday(r.councilUntil - 1), formatUntil(r.namesUntil, now))),
+        ...lines(pair),
         primary: { label: e.seeTheResult, route: '/council/count' },
         secondary: k.canStand ? stand : null,
       };
     }
-    case 'councilSits':
+    case 'standing':
       return {
-        ...lines(e.councilSits(formatAt(k.closesAt, now), e.days(daysTo(k.closesAt, now)))),
-        primary: { label: e.voteOnTheRule, route: '/council' },
+        ...lines(
+          v.standing(
+            k.standing?.rule ?? '',
+            formatWeekday(k.countAt),
+            k.standing?.backers ?? 0,
+            !(k.standing?.branchLine ?? false),
+          ),
+        ),
+        primary: slate(e.seeTheCandidates),
         secondary: null,
       };
-    case 'councilVoted':
+    case 'councillor':
+      // TODO(phase 4): the capital's *your party's card is set* form (design §8.6 Q4).
       return {
-        ...lines(e.councilVoted(k.rule?.votedFor ?? e.noneOfThese, formatWeekday(k.closesAt))),
-        primary: { label: e.seeTheCouncil, route: '/council' },
+        ...lines(
+          v.councillor(
+            k.councillor?.rule ?? '',
+            formatUntil(k.councillor?.changeUntil ?? k.closesAt, now),
+            formatWeekday(k.pollsOpenAt),
+          ),
+        ),
+        primary: desk,
         secondary: null,
       };
+    case 'nextInLine':
+      return { ...lines(v.nextInLine()), primary: desk, secondary: null };
     case 'registered':
       // Slice 4 (screens §7.2): registered in a district, the first vote not yet open.
       return {
         // The first polls this player votes in (the server's weekday: this cycle's or the next's).
-        ...lines(e.registered(s.placeName ?? s.cityName, s.pollsFromWeekday)),
+        ...lines(e.registered(place, s.pollsFromWeekday)),
         primary: slate(e.seeWhosStanding),
         secondary: null,
       };
@@ -209,6 +205,7 @@ export interface ElectionCardProps {
    * `compact`: one 44 px line, *ELECTION · line 1 ›*, under a phone's plate (the card folded).
    */
   layout?: 'card' | 'row' | 'compact';
+  // TODO(phase 3): `ballotInline`, the rule cards and *Vote for …* on the side column (tech design §9.2).
   now?: number;
   className?: string;
 }
@@ -223,16 +220,16 @@ export function ElectionCard({
 }: ElectionCardProps) {
   const l = electionLines(s, now, factionNames);
   // Slice 4 (screens §7.2): in the capital the kicker names the district.
-  const kicker = s.seats === 2 ? copy.capitalElection.kicker(s.placeName ?? s.cityName) : copy.election.kicker(s.cityName);
+  const kicker =
+    s.seats === 2 ? copy.election.v2.capitalKicker(s.placeName ?? s.cityName) : copy.election.v2.kicker(s.cityName);
   const k = s.card;
-  const strong = k.state === 'voting' || k.state === 'candidateVoting' || k.state === 'councilSits';
-  // QA review 4: the plain-words effect after the name, as on the plate.
-  const rule = s.inForce
-    ? s.inForce.plainLine
-      ? copy.plate.rule(s.inForce.name, s.inForce.plainLine, s.inForce.daysLeft)
-      : copy.election.ruleLine(s.inForce.name, s.inForce.daysLeft)
-    : null;
-  const firstTime = k.firstTime ? copy.election.firstTime(s.cityName, s.rank3Title) : null;
+  const strong = k.state === 'vote' || k.state === 'councillor';
+  // Tech design §9.2: line 3, the rule in force, in every state but `result`.
+  const rule =
+    s.inForce && k.state !== 'result'
+      ? copy.election.ruleNow(s.inForce.name, s.inForce.plainLine, s.inForce.daysLeft)
+      : null;
+  const firstTime = k.firstTime ? copy.election.v2.firstTime(s.cityName, s.rank3Title) : null;
   const target = l.primary ?? l.secondary;
   if (layout !== 'card') {
     const body = (
@@ -240,7 +237,7 @@ export function ElectionCard({
         <span className={cx('flex min-w-0', layout === 'compact' ? 'items-baseline gap-2' : 'flex-col')}>
           {layout === 'compact' && (
             <span className="label-caps shrink-0 text-[9.5px] font-semibold text-muted">
-              {copy.election.rowKicker}
+              {copy.election.v2.rowKicker}
             </span>
           )}
           {layout === 'row' && firstTime && (
@@ -278,7 +275,7 @@ export function ElectionCard({
       >
         {layout === 'row' && (
           <div className="label-caps border-t-[3px] border-b border-double border-ink py-1 text-[10px] font-semibold">
-            {copy.election.rowKicker}
+            {copy.election.v2.rowKicker}
           </div>
         )}
         {target ? (
@@ -343,18 +340,8 @@ export function ElectionCard({
       <p className="font-mono text-[11px] text-muted" data-testid="election-line2">
         {l.line2}
       </p>
-      {k.state === 'standing' && k.backers && (
-        <>
-          <ProgressBar
-            label={copy.election.kicker(s.cityName)}
-            value={k.backers.n}
-            max={k.backers.needed}
-            tone="ink"
-          />
-          {k.backers.branchLine && (
-            <p className="font-mono text-[12px] text-petrol">{copy.branchEndorsesYou}</p>
-          )}
-        </>
+      {k.state === 'standing' && k.standing?.branchLine && (
+        <p className="font-mono text-[12px] text-petrol">{copy.branchEndorsesYou}</p>
       )}
       {rule && (
         <p className="font-mono text-[11px] text-muted" data-testid="election-rule">
@@ -409,9 +396,8 @@ export interface CandidateRowProps {
 
 function standingLine(c: CandidateView): string {
   const rank = c.rankTitle ?? copy.ward;
-  const parts = [rank, `${c.standing.name} in ${c.standing.cityName}`];
-  if (c.endorsements) parts.push(copy.backersOf(c.endorsements.n, c.endorsements.needed));
-  return parts.join(' · ');
+  if (c.backers) return copy.stand.playerRow(rank, c.standing.name, c.standing.cityName, c.backers.n);
+  return [rank, `${c.standing.name} in ${c.standing.cityName}`].join(' · ');
 }
 
 export function CandidateRow({
@@ -436,7 +422,10 @@ export function CandidateRow({
           {c.you && <span className="ml-1.5 font-mono text-[11px] font-normal text-muted">{copy.you}</span>}
         </span>
         <span className="label-caps text-[10px] text-muted">{standingLine(c)}</span>
-        <span className="font-body text-[13px] leading-snug text-text-2 italic">{c.platform}</span>
+        {/* TODO(phase 3): the slate's rows as design §9.6 words them (StandCard and the list). */}
+        {c.rule && (
+          <span className="font-body text-[13px] leading-snug text-text-2 italic">{copy.stand.ruleOf(c.rule.name)}</span>
+        )}
       </span>
     </span>
   );
@@ -471,7 +460,7 @@ export function CandidateRow({
     );
   }
 
-  const e = c.endorsements;
+  const e = c.backers;
   return (
     <li
       className="flex flex-col border-b border-dotted border-faint py-2"
@@ -487,17 +476,17 @@ export function CandidateRow({
         >
           {main}
         </button>
-        {c.you ? null : c.endorsedByYou ? (
+        {c.you ? null : c.backedByYou ? (
           <span className="shrink-0 font-mono text-[12px] text-petrol">{copy.endorsed}</span>
-        ) : c.canEndorse && (c.canEndorse.ok || c.canEndorse.reason === 'PC') ? (
+        ) : c.canBack && (c.canBack.ok || c.canBack.reason === 'PC') ? (
           <button
             type="button"
             onClick={onEndorse}
-            disabled={!c.canEndorse.ok || busy}
+            disabled={!c.canBack.ok || busy}
             aria-busy={endorsePending || undefined}
             className="label-caps min-h-11 shrink-0 cursor-pointer border-[1.5px] border-ink px-2.5 text-[11px] hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:border-faint disabled:text-muted disabled:hover:bg-transparent"
           >
-            {endorsePending ? '…' : c.canEndorse.ok ? copy.endorse(10) : copy.needsPc(10)}
+            {endorsePending ? '…' : c.canBack.ok ? copy.endorse(10) : copy.needsPc(10)}
           </button>
         ) : null}
       </div>
@@ -624,77 +613,98 @@ export function HowElectionsWork({ cityName, rank2, rank3, className, capital }:
 // The count (screens §5.2).
 // ---------------------------------------------------------------------------------------------
 
-export function CountTable({
+/** Whose a card is, in the Courier line under it (design §4.2). */
+export function whoseLine(card: RuleCardView, names: Partial<Record<FactionId, string>>): string {
+  const w = card.whose;
+  if (w.kind === 'councillor') return w.you ? copy.rule.whose.you : copy.rule.whose.councillor(w.name);
+  const [a, b] = w.factionIds;
+  if (a && b) return copy.rule.whose.shared(names[a] ?? a, names[b] ?? b);
+  return copy.rule.whose.branch(w.by);
+}
+
+/**
+ * The voting rework, phase 2: the rule cards of a count as plain rows (name, votes, PASSED on the
+ * winner). TODO(phase 3): `RuleCards` in result mode (share bars, *runs until*, tech design §9.4).
+ */
+export function RuleResultList({
+  rule,
+  names = {},
+}: {
+  rule: RuleResultView | null;
+  names?: Partial<Record<FactionId, string>>;
+}) {
+  if (!rule) return null;
+  return (
+    <section aria-label={copy.ruleResult.title(rule.weekday)} className="flex flex-col" data-testid="rule-result">
+      {rule.cards.map((c) => (
+        <OrdinanceRow
+          key={c.ordinanceId}
+          name={c.name}
+          line={c.plainLine}
+          note={
+            c.won
+              ? `${whoseLine(c, names)} · ${copy.ruleResult.runsUntil(formatWeekday(rule.runsUntil - 1))}`
+              : whoseLine(c, names)
+          }
+          right={c.votes}
+          passed={c.won}
+        />
+      ))}
+    </section>
+  );
+}
+
+/**
+ * The voting rework, phase 2: the council of a count as plain rows, the seated then *the line* then
+ * the unseated. TODO(phase 3): `CouncilRows` with the popover (tech design §9.4).
+ */
+export function CouncilRowList({
   rows,
   factionId = 'collective',
 }: {
-  rows: CountRowView[];
+  rows: CouncilRowView[];
   factionId?: CandidateView['factionId'];
 }) {
+  const seated = rows.filter((r) => r.seated).length;
   return (
-    <div className="flex flex-col gap-1.5" data-testid="count-table">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr className="label-caps border-b border-ink text-[10px] text-muted">
-            <th scope="col" className="w-6 py-1 text-left font-normal">
-              #
-            </th>
-            <th scope="col" className="py-1 text-left font-normal">
-              Name
-            </th>
-            <th scope="col" className="py-1 pl-2 text-right font-normal">
-              <span className="max-[400px]:hidden">{copy.resultColumns[2]}</span>
-              <span className="min-[401px]:hidden">{copy.resultColumnsShort[2]}</span>
-            </th>
-            <th scope="col" className="py-1 pl-2 text-right font-normal">
-              <span className="max-[400px]:hidden">{copy.resultColumns[3]}</span>
-              <span className="min-[401px]:hidden">{copy.resultColumnsShort[3]}</span>
-            </th>
-            <th scope="col" className="py-1 pl-2 text-right font-normal">
-              {copy.resultColumns[4]}
-            </th>
-            <th scope="col" className="py-1 pl-1 text-right font-normal">
-              {copy.resultColumns[5]}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr
-              key={r.key}
-              className={cx(
-                'border-b border-dotted border-faint',
-                r.you && 'bg-paper-2',
-                r.place === 8 && 'border-t border-t-ink',
-              )}
-              data-testid="count-row"
-              data-seated={r.seated}
-            >
-              <td className={cx('py-1.5 font-label', r.seated && 'border-l-[3px] border-l-ink pl-1')}>
-                {r.place}
-              </td>
-              <td className="py-1.5">
-                <span className="flex items-center gap-1.5">
-                  {r.kind === 'npc' && <FactionCrest factionId={factionId} size={8} />}
-                  <span className="font-body">{r.name}</span>
-                  {r.kind === 'npc' && <span className="label-caps text-[9px] text-muted">{copy.ward}</span>}
-                  {r.you && <span className="font-mono text-[11px] text-muted">{copy.you}</span>}
-                  {r.yourVote && <span className="font-mono text-[11px] text-petrol">{copy.yourVote}</span>}
-                  {r.place === 7 && (
-                    <span className="font-mono text-[10px] text-muted">· {copy.theLine}</span>
-                  )}
-                </span>
-              </td>
-              <td className="py-1.5 pl-2 text-right font-label">{r.wardVote}</td>
-              <td className="py-1.5 pl-2 text-right font-label">{r.endorsements}</td>
-              <td className="py-1.5 pl-2 text-right font-label">{r.votes}</td>
-              <td className="py-1.5 pl-1 text-right font-label font-semibold">{r.total}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="font-mono text-[11px] text-muted">{copy.formula}</p>
-    </div>
+    <section aria-label={copy.ruleResult.council} className="flex flex-col" data-testid="council-rows">
+      <div className="label-caps border-t-[3px] border-b border-double border-ink py-1 text-[10px] font-semibold">
+        {copy.ruleResult.council}
+      </div>
+      <ul className="flex flex-col">
+        {rows.map((r, i) => (
+          <li
+            key={r.key}
+            className={cx(
+              'flex min-h-12 items-center gap-3 border-b border-dotted border-faint py-1.5',
+              r.you && 'bg-paper-2',
+              i === seated && seated > 0 && 'border-t border-t-ink',
+            )}
+            data-testid="council-row"
+            data-seated={r.seated}
+          >
+            <PersonMark avatar={r.avatar} factionId={r.factionId ?? factionId} size={28} />
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="font-body text-[15px] font-semibold">
+                {r.name}
+                {r.you && <span className="ml-1.5 font-mono text-[11px] font-normal text-muted">{copy.you}</span>}
+              </span>
+              <span className="font-mono text-[11px] text-muted">
+                {r.kind === 'player'
+                  ? copy.seats.row(r.rankTitle ?? '', r.standingName, r.backers)
+                  : copy.seats.localRow(r.standingName)}
+                {r.rule ? ` · ${r.you ? copy.seats.rule(r.rule.name) : copy.stand.ruleOf(r.rule.name)}` : ''}
+              </span>
+            </span>
+            {!r.seated && r.short !== null && (
+              <span className="shrink-0 font-mono text-[11px] text-muted">
+                {copy.seats.short(ORDINALS[r.place - 1] ?? String(r.place), r.short)}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -751,104 +761,16 @@ export function FrontPage({
           )}
         </div>
       </div>
-      <CountTable rows={front.count.rows} factionId={factionId} />
+      {/* TODO(phase 3): the three result cards and *What now* under the headline (tech design §10). */}
+      <RuleResultList rule={front.count.rule} />
+      <CouncilRowList rows={front.count.council} factionId={factionId} />
     </section>
   );
 }
 
 // ---------------------------------------------------------------------------------------------
-// The chamber (screens §6): seats, the order paper, the menu.
+// A rule as a row (the rule picker; phase 2's stand-ins for the cards).
 // ---------------------------------------------------------------------------------------------
-
-export function SeatGrid({
-  seats,
-  factionId,
-  groups,
-}: {
-  seats: CouncilSeatView[];
-  factionId: CandidateView['factionId'];
-  /** Slice 4 (screens §8): the capital's ten seats in five pairs, captioned by district. */
-  groups?: Array<{ id: string; name: string }>;
-}) {
-  const [open, setOpen] = useState<number | null>(null);
-  if (groups) {
-    return (
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-5" aria-label="Seats" data-testid="seat-grid">
-        {groups.map((g) => (
-          <section key={g.id} aria-label={g.name} className="flex flex-col gap-1" data-testid="seat-group">
-            <h3 className="label-caps truncate border-b border-ink text-[9.5px] font-semibold">{g.name}</h3>
-            <SeatList
-              seats={seats.filter((x) => x.districtId === g.id)}
-              factionId={factionId}
-              open={open}
-              setOpen={setOpen}
-              className="grid grid-cols-2 gap-1"
-            />
-          </section>
-        ))}
-      </div>
-    );
-  }
-  return (
-    <SeatList
-      seats={seats}
-      factionId={factionId}
-      open={open}
-      setOpen={setOpen}
-      className="grid grid-cols-4 gap-2 sm:grid-cols-7"
-      label="Seats"
-    />
-  );
-}
-
-function SeatList({
-  seats,
-  factionId,
-  open,
-  setOpen,
-  className,
-  label,
-}: {
-  seats: CouncilSeatView[];
-  factionId: CandidateView['factionId'];
-  open: number | null;
-  setOpen: (f: (o: number | null) => number | null) => void;
-  className: string;
-  label?: string;
-}) {
-  return (
-    <ul className={className} aria-label={label} data-testid={label ? 'seat-grid' : undefined}>
-      {seats.map((s) => (
-        <li key={s.seat} className="relative">
-          <button
-            type="button"
-            onClick={() => setOpen((o) => (o === s.seat ? null : s.seat))}
-            aria-expanded={open === s.seat}
-            className={cx(
-              'flex min-h-16 w-full cursor-pointer flex-col items-center gap-1 py-1',
-              s.you && 'outline-2 outline-ink',
-            )}
-            data-testid="seat"
-            data-kind={s.kind}
-          >
-            <PersonMark avatar={s.avatar} factionId={s.factionId ?? factionId} size={36} />
-            <span className="label-caps max-w-full truncate text-[9px]">{s.name}</span>
-            <span className="font-mono text-[9px] text-muted">{s.seat}</span>
-          </button>
-          {open === s.seat && (
-            <div className="absolute top-full left-1/2 z-10 w-44 -translate-x-1/2 border border-ink bg-paper p-2 text-[12px] shadow-[0_6px_16px_rgb(0_0_0/0.3)]">
-              <p className="font-body font-semibold">{s.name}</p>
-              <p className="font-mono text-[11px] text-muted">
-                {s.rankTitle ?? copy.ward} · {s.standingName}
-              </p>
-              {s.votedFor && <p className="font-mono text-[11px]">voted for {s.votedFor}</p>}
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 export interface OrdinanceRowProps {
   n?: number;
@@ -927,110 +849,5 @@ export function OrdinanceRow({
     <div className={cls} data-testid="ordinance-row">
       {content}
     </div>
-  );
-}
-
-export interface OrderPaperProps {
-  /** Slice 4: every party's short name (the capital's *the Collective's proposal · Petra Holm*). */
-  factionNames?: Partial<Record<FactionId, string>>;
-  council: CouncilView;
-  secretary: string;
-  selected: string | null;
-  onSelect?: (choice: string) => void;
-  disabled?: boolean;
-}
-
-/** The order paper (screens §6.3, §6.4): items, Against all, the division's counts after it. */
-export function OrderPaper({
-  council: c,
-  secretary,
-  selected,
-  onSelect,
-  disabled,
-  factionNames,
-}: OrderPaperProps) {
-  const choosing = c.window.voting && c.you.councillor && c.you.voted === null && !!onSelect;
-  const right = (id: string, votes: number | null): OrdinanceRowProps['right'] =>
-    c.paper.status === 'divided' ? votes : choosing ? 'radio' : c.you.voted === id ? 'mine' : null;
-  return (
-    <section aria-label={copy.theOrderPaper} className="flex flex-col" data-testid="order-paper">
-      <div className="label-caps border-t-[3px] border-b border-double border-ink py-1.5 text-[11px] font-semibold">
-        {copy.theOrderPaper}
-      </div>
-      <div role={choosing ? 'radiogroup' : undefined} aria-label={copy.theOrderPaper}>
-        {c.paper.items.map((it: OrderPaperItemView) => (
-          <OrdinanceRow
-            key={it.ordinanceId}
-            n={it.n}
-            name={it.name}
-            line={it.line}
-            effectLine={it.effectLine}
-            note={
-              it.movedBy.kind === 'branch'
-                ? // Slice 4 (screens §8): in the capital each party's branch moves its own proposal.
-                  it.branchOf
-                  ? copy.capitalElection.factionProposal(factionNames?.[it.branchOf] ?? it.branchOf, it.movedBy.name)
-                  : copy.branchMotionBy(secretary || it.movedBy.name)
-                : copy.movedBy(it.movedBy.you ? 'you' : it.movedBy.name)
-            }
-            right={right(it.ordinanceId, it.votes)}
-            selected={selected === it.ordinanceId}
-            passed={it.passed}
-            onSelect={choosing ? () => onSelect!(it.ordinanceId) : undefined}
-            disabled={disabled}
-          />
-        ))}
-        <OrdinanceRow
-          name={copy.againstAll}
-          right={right('against', c.paper.against)}
-          selected={selected === 'against'}
-          onSelect={choosing ? () => onSelect!('against') : undefined}
-          disabled={disabled}
-        />
-      </div>
-      {c.paper.rose && <p className="pt-1.5 font-mono text-[12px] text-failure">{copy.roseWithoutMotion}</p>}
-    </section>
-  );
-}
-
-export interface OrdinanceMenuProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  items: OrdinanceMenuItemView[];
-  canAfford: boolean;
-  onPropose: (ordinanceId: string) => void;
-  pending: boolean;
-}
-
-/** Propose an ordinance · 20 Political Capital: one tap proposes (screens §6.5). */
-export function OrdinanceMenu({
-  open,
-  onOpenChange,
-  items,
-  canAfford,
-  onPropose,
-  pending,
-}: OrdinanceMenuProps) {
-  return (
-    <BottomSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={canAfford ? copy.propose(20) : `${copy.propose(20).split(' · ')[0]} · ${copy.needsPc(20)}`}
-    >
-      <div className="flex flex-col" data-testid="ordinance-menu">
-        {items.map((o) => (
-          <OrdinanceRow
-            key={o.ordinanceId}
-            name={o.name}
-            line={o.line}
-            effectLine={o.effectLine}
-            note={o.onPaper ? copy.onThePaper : undefined}
-            dimmed={o.onPaper || !canAfford}
-            onSelect={() => onPropose(o.ordinanceId)}
-            disabled={o.onPaper || !canAfford || pending}
-          />
-        ))}
-      </div>
-    </BottomSheet>
   );
 }

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  boundaryWork,
   councilDay,
   councilKey,
   cycleOf,
@@ -32,13 +31,9 @@ describe('the council calendar (tech design §3.1)', () => {
     expect(tue).toBe(20732);
     const t = councilDay(tue, OFFSETS.coalport);
     expect(t).toMatchObject({ cycle: 4146, cycleDay: 0 });
-    expect(t.council).toEqual({ cycle: 4146, fromDay: 20732, divideDay: 20734, toDay: 20737, voting: true });
     expect(councilKey('coalport', t.cycle)).toBe('coalport:4146');
-    expect(councilDay(D(2026, 10, 7), OFFSETS.coalport).council.voting).toBe(true);
     const thu8 = councilDay(D(2026, 10, 8), OFFSETS.coalport);
     expect(thu8).toMatchObject({ cycleDay: 2 });
-    expect(thu8.council.voting).toBe(false);
-    expect(thu8.ordinanceWindow).toEqual({ fromDay: 20734, toDay: 20739 });
     expect(cycleOfKey('coalport:4146')).toBe(4146);
   });
 
@@ -52,8 +47,6 @@ describe('the council calendar (tech design §3.1)', () => {
         expect(c.election.cycle).toBe(c.council.cycle);
         expect(c.election.pollsFrom - c.election.nominationsFrom).toBeGreaterThanOrEqual(1);
         expect(c.election.countDay - c.election.pollsFrom).toBeGreaterThanOrEqual(1);
-        expect(c.council.divideDay - c.council.fromDay).toBeGreaterThanOrEqual(1);
-        expect(c.ordinanceWindow.toDay - c.ordinanceWindow.fromDay).toBe(5);
       }
     }
   });
@@ -62,23 +55,6 @@ describe('the council calendar (tech design §3.1)', () => {
     for (let d = 20727; d < 20757; d++) {
       const polling = Object.values(OFFSETS).filter((o) => councilDay(d, o).phase === 'polling');
       expect(polling.length).toBe(3);
-    }
-  });
-
-  it('boundaryWork fires the count and the close/divide exactly once per cycle', () => {
-    for (const offset of Object.values(OFFSETS)) {
-      const counts: number[] = [];
-      const closes: number[] = [];
-      for (let d = 20727; d < 20757; d++) {
-        const w = boundaryWork(d, offset);
-        expect(w.close).toBe(w.divide);
-        if (w.count) counts.push(cycleOf(d, offset).cycle);
-        if (w.close) closes.push(cycleOf(d, offset).cycle);
-      }
-      expect(new Set(counts).size).toBe(counts.length);
-      expect(new Set(closes).size).toBe(closes.length);
-      expect(counts.length).toBe(6);
-      expect(closes.length).toBe(6);
     }
   });
 

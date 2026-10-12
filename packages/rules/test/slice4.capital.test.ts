@@ -1,13 +1,11 @@
-/** Slice 4, T5 (tech design §6.10): the capital's count and division, the design's worked examples. */
+/** Slice 4, T5 (tech design §6.10): the capital's count, the design's worked examples. */
 import { describe, expect, it } from 'vitest';
 import {
-  AGAINST_ALL,
   councilOrder,
   countDistrict,
   createRng,
   dhondt,
   districtScores,
-  divideCapital,
   npcFill,
   turnoutWeight,
 } from '../src';
@@ -34,7 +32,7 @@ function lines(
       name: p.key,
       wardVote: p.wardVote ?? 6,
       successes: 30,
-      endorsements: 2,
+      backers: 2,
       order: order++,
       factionId: p.factionId,
     });
@@ -47,7 +45,7 @@ function lines(
         name: `${f}${i}`,
         wardVote: profile,
         successes: profile * 5,
-        endorsements: 0,
+        backers: 0,
         order: 100 + order++,
         factionId: f,
       }),
@@ -73,7 +71,7 @@ describe('the turnout weight and the score (design §8.2)', () => {
     ]);
     const r = countDistrict({
       lines: lines(),
-      votes: {},
+      ballotsByFaction: { vanguard: 0, collective: 0, alliance: 0 },
       opinion: S(15, 35, 15, 35),
       rng: createRng('east'),
     });
@@ -86,7 +84,7 @@ describe('the turnout weight and the score (design §8.2)', () => {
     const ls = lines();
     const r = countDistrict({
       lines: ls,
-      votes: { 'n:vanguard0': 2 },
+      ballotsByFaction: { vanguard: 2, collective: 0, alliance: 0 },
       opinion: S(15, 35, 15, 35),
       rng: createRng('east'),
     });
@@ -104,7 +102,7 @@ describe('the turnout weight and the score (design §8.2)', () => {
     expect(b).toEqual({ seats: ['alliance', 'vanguard'], drawn: true });
     const r = countDistrict({
       lines: lines(),
-      votes: { 'n:alliance0': 1 },
+      ballotsByFaction: { vanguard: 0, collective: 0, alliance: 1 },
       opinion: S(20, 20, 20, 40),
       rng: orderedRng,
     });
@@ -145,95 +143,9 @@ describe('the tie order and the forfeit', () => {
     ).toEqual(['collective', 'vanguard']);
   });
 
-  it('NPC fill keeps at least six names; within a faction the slice-3 order, NPCs after players', () => {
-    expect([0, 1, 2, 3].map(npcFill)).toEqual([2, 1, 0, 0]);
-    const ls = lines([{ key: 'p:a', factionId: 'collective', wardVote: 25 }]);
-    expect(ls).toHaveLength(6);
-    const r = countDistrict({
-      lines: ls,
-      votes: { 'p:a': 1 },
-      opinion: S(15, 35, 15, 35),
-      rng: createRng('x'),
-    });
-    expect(r.seated.map((x) => x.key)).toEqual(['p:a', 'n:collective0']);
-    // 25 + 3 × 2 + 1 = 32 beats the top NPC's 28 (design §8.3).
-    expect(r.seated[0]!.total).toBe(32);
-    expect(r.rows.filter((x) => x.factionId === 'collective').map((x) => [x.key, x.place])).toEqual([
-      ['p:a', 1],
-      ['n:collective0', 2],
-    ]);
-  });
 });
 
-describe('the division (design §8.4)', () => {
-  const items = [
-    { ordinanceId: 'ord.rally-permits', branchOf: 'vanguard' as const, movedAt: 1 },
-    { ordinanceId: 'ord.long-service', branchOf: 'collective' as const, movedAt: 2 },
-    { ordinanceId: 'ord.reading-room', branchOf: 'alliance' as const, movedAt: 3 },
-  ];
-
-  it('ten NPCs 4 / 3 / 3 pass nothing', () => {
-    const d = divideCapital({
-      items,
-      playerVotes: [],
-      npcSeats: { vanguard: 4, collective: 3, alliance: 3 },
-    });
-    expect(d.passed).toBeNull();
-    expect(d.npcChoices).toEqual({
-      vanguard: 'ord.rally-permits',
-      collective: 'ord.long-service',
-      alliance: 'ord.reading-room',
-    });
-  });
-
-  it("one player of a three-seat bloc voting another bloc's four-seat motion passes it 7–3", () => {
-    const d = divideCapital({
-      items,
-      playerVotes: [{ choice: 'ord.rally-permits', factionId: 'collective' }],
-      npcSeats: { vanguard: 4, collective: 2, alliance: 3 },
-    });
-    expect(d.passed).toBe('ord.rally-permits');
-    expect(d.tallies.find((t) => t.choice === 'ord.rally-permits')).toEqual({
-      choice: 'ord.rally-permits',
-      player: 1,
-      npc: 6,
-    });
-  });
-
-  it("a tie inside a bloc goes to the branch's motion", () => {
-    const d = divideCapital({
-      items,
-      playerVotes: [
-        { choice: 'ord.rally-permits', factionId: 'collective' },
-        { choice: 'ord.long-service', factionId: 'collective' },
-      ],
-      npcSeats: { vanguard: 4, collective: 1, alliance: 3 },
-    });
-    expect(d.npcChoices.collective).toBe('ord.long-service');
-  });
-
-  it('Against all by every player: each bloc’s NPCs vote their branch, never Against all', () => {
-    const d = divideCapital({
-      items,
-      playerVotes: [
-        { choice: AGAINST_ALL, factionId: 'vanguard' },
-        { choice: AGAINST_ALL, factionId: 'collective' },
-      ],
-      npcSeats: { vanguard: 3, collective: 2, alliance: 3 },
-    });
-    expect(d.npcChoices).toEqual({
-      vanguard: 'ord.rally-permits',
-      collective: 'ord.long-service',
-      alliance: 'ord.reading-room',
-    });
-    expect(d.tallies.find((t) => t.choice === AGAINST_ALL)).toEqual({
-      choice: AGAINST_ALL,
-      player: 2,
-      npc: 0,
-    });
-    expect(d.passed).toBeNull();
-  });
-
+describe('the order of the blocs (design §8.4)', () => {
   it('the branch motions in order of seats, then the tie rule', () => {
     expect(
       councilOrder({ vanguard: 3, collective: 4, alliance: 3 }, { alliance: 2 }, S(20, 20, 20, 40), [

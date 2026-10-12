@@ -172,6 +172,14 @@ export default defineConfig({
       dependencies: ['review5'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
+    // The voting rework (docs/tech/voting-rework.md §15.2): the rule vote, its API block first (phase 2),
+    // its screens with phases 3–5. Serial and last: it moves the shared clock by whole cycles.
+    {
+      name: 'voting',
+      testMatch: /(^|[\\/])voting\.spec\.ts$/,
+      dependencies: ['qa-review5'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
   ],
   webServer: [
     {

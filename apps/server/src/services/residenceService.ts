@@ -58,9 +58,9 @@ export function placeName(content: GameContent, cityId: string, districtId: stri
 }
 
 /**
- * The old place's open candidacy (filed), the seat held there today, and (slice-4 fixes §1, QA M2)
- * whether the member's name is on its ballot (standing while the polls are open), with the count
- * day, when they may move.
+ * The seat held at the old place today, and (slice-4 fixes §1; the voting rework, ADR 0084) whether
+ * the member is standing there this cycle (from the stand on any cycle day, until the result), with
+ * the count day, when they may move.
  */
 async function oldPlaceStakes(
   content: GameContent,
@@ -68,19 +68,18 @@ async function oldPlaceStakes(
   today: DayKey,
   session: ClientSession | null,
 ): Promise<{
-  candidacy: CandidacyDoc | null;
   term: OfficeTermDoc | null;
   onBallot: { countDay: DayKey } | null;
 }> {
   const r = residenceOf(c);
   const offset = content.city(r.cityId)?.council?.offset;
-  if (offset === undefined) return { candidacy: null, term: null, onBallot: null };
+  if (offset === undefined) return { term: null, onBallot: null };
   const cd = councilDay(today, offset);
   const key = electionKey(r.districtId ?? r.cityId, cd.cycle);
   const cq = Candidacy.findOne({
     electionId: key,
     characterId: c._id,
-    status: { $in: cd.phase === 'polling' ? ['filed', 'standing'] : ['filed'] },
+    status: 'standing',
   });
   const tq = OfficeTerm.findOne({
     cityId: r.cityId,
@@ -97,7 +96,6 @@ async function oldPlaceStakes(
   ]);
   const standing = found?.status === 'standing';
   return {
-    candidacy: standing ? null : found,
     term,
     onBallot: standing ? { countDay: cd.election.countDay } : null,
   };
@@ -187,7 +185,7 @@ export async function residenceCardView(
   const target_ = placeName(content, target.cityId, target.districtId);
   const lines = [
     { text: copy.residence.sheet.vote(target_, weekdayName(w.votesFromDay)), warn: false },
-    ...(stakes.candidacy || stakes.term
+    ...(stakes.term
       ? [{ text: copy.residence.sheet.giveUp(content.city(r.cityId)?.name ?? livesIn), warn: true }]
       : []),
     { text: copy.residence.sheet.orders(target.cityId === capital), warn: false },
@@ -325,7 +323,7 @@ function residenceResult(
     ...(t.next ? { next: fillTemplate(t.next, i.vars) } : {}),
     until: null,
     at: null,
-    knockOns: { pc: null, morale: null, endorsements: null, ...i.knockOns },
+    knockOns: { pc: null, morale: null, backers: null, ...i.knockOns },
     performedAt: new Date(i.now).toISOString(),
     idempotencyKey: i.idempotencyKey,
     character: toCharacterView(i.c, i.now, content, null, { city: i.residenceCity }),
@@ -429,15 +427,8 @@ export async function register(deps: {
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
-      // The old place: a filed candidacy is withdrawn (the deposit stays with the branch), a seat
-      // held there is vacated to the branch's next local.
-      if (stakes.candidacy) {
-        await Candidacy.updateOne(
-          { _id: stakes.candidacy._id, status: 'filed' },
-          { $set: { status: 'withdrawn', deposit: 'kept' } },
-          { session },
-        );
-      }
+      // The old place: a seat held there is vacated to the branch's next local (a candidate cannot
+      // move until the result: `ON_BALLOT`).
       if (stakes.term) await vacateSeat(content, stakes.term, today, session);
 
       const newCity = await City.findById(target.cityId).session(session).lean<CityDoc>();
@@ -453,7 +444,6 @@ export async function register(deps: {
         knockOns: {
           iron: { before: c.iron, after: updated.iron },
           seatGivenUp: stakes.term ? { cityName: content.city(stakes.term.cityId)?.name ?? '' } : null,
-          candidacyWithdrawn: !!stakes.candidacy,
         },
         residenceCity: newCity,
         view: {

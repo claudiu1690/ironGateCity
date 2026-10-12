@@ -39,17 +39,19 @@ export function usePoliticalAct() {
         queryClient.setQueryData(trpc.character.me.queryKey(), r.character);
         if (r.view.kind === 'election')
           queryClient.setQueryData(trpc.council.election.queryKey(), r.view.election);
-        else if (r.view.kind === 'council')
-          queryClient.setQueryData(trpc.council.chamber.queryKey(), r.view.council);
+        // The voting rework (tech design §8.4): after a vote, the ballot; after a rule change, the hall.
+        else if (r.view.kind === 'ballot') queryClient.setQueryData(trpc.council.ballot.queryKey(), r.view.ballot);
+        else if (r.view.kind === 'hall')
+          queryClient.setQueryData(trpc.council.hall.queryKey({ cityId: r.view.hall.cityId }), r.view.hall);
         void queryClient.invalidateQueries({ queryKey: trpc.paper.today.queryKey() });
         void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
-        // Review 4 (ADR 0077): the Town Hall's sheet shows the same council.
-        void queryClient.invalidateQueries({ queryKey: trpc.council.hall.queryKey() });
+        // Review 4 (ADR 0077): the Town Hall's sheet shows the same council (and the same ballot).
+        if (r.view.kind !== 'hall') void queryClient.invalidateQueries({ queryKey: trpc.council.hall.queryKey() });
+        if (r.view.kind !== 'ballot') void queryClient.invalidateQueries({ queryKey: trpc.council.ballot.queryKey() });
         // Slice 4: a move or a room changes the nation's cards and the election screens too.
         void queryClient.invalidateQueries({ queryKey: trpc.travel.nation.queryKey() });
         if (r.view.kind === 'residence') {
           void queryClient.invalidateQueries({ queryKey: trpc.council.election.queryKey() });
-          void queryClient.invalidateQueries({ queryKey: trpc.council.chamber.queryKey() });
           void queryClient.invalidateQueries({ queryKey: trpc.council.count.queryKey() });
         }
         setResult(r);
@@ -58,7 +60,7 @@ export function usePoliticalAct() {
         setError(e);
         // The refusal carries the settled state: refetch the screen so it shows it.
         void queryClient.invalidateQueries({ queryKey: trpc.council.election.queryKey() });
-        void queryClient.invalidateQueries({ queryKey: trpc.council.chamber.queryKey() });
+        void queryClient.invalidateQueries({ queryKey: trpc.council.ballot.queryKey() });
         void queryClient.invalidateQueries({ queryKey: trpc.council.hall.queryKey() });
       } finally {
         busy.current = false;

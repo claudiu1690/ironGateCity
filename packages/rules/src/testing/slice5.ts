@@ -362,7 +362,7 @@ export const releasedResultFixture: PoliticalResult = {
   knockOns: {
     pc: null,
     morale: null,
-    endorsements: null,
+    backers: null,
     iron: { before: 900, after: 750 },
     heat: { before: 58, after: 25 },
   },
@@ -386,7 +386,7 @@ export const deportedResultFixture: PoliticalResult = {
   knockOns: {
     pc: null,
     morale: null,
-    endorsements: null,
+    backers: null,
     heat: { before: 84, after: 25 },
     barred: { cityId: 'duskwall', cityName: 'Duskwall', until: T0 + 24 * 60 * MIN },
   },

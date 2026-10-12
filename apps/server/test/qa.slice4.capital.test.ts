@@ -49,53 +49,26 @@ beforeAll(async () => {
 });
 afterAll(teardownDb);
 
-describe('who votes where (GDD §15.3: Rank 2+ residents of the district, any name on its list)', () => {
-  it('a visitor votes at home; another district’s resident cannot use Eastside’s list; a Rank 1 resident cannot vote', async () => {
-    await resetCity('irongate');
-    // Thu 8 Oct: Irongate cycle day 4 and Coalport cycle day 2, both polling.
-    const clock = testClock(at(D0 + 4));
-    await settleCityDay(content, 'irongate', clock.now());
-    const visitor = await traveller(clock, { name: 'Visit Or', cityId: 'irongate' });
-    const view = await visitor.caller.council.election();
-    expect(view.cityId).toBe('coalport');
-    expect(view.phase).toBe('polling');
-    expect(await reason(visitor.caller.council.vote({ candidateKey: 'n:npc.c.ig.novak', idempotencyKey: key() }))).toBe(
-      'UNKNOWN_CANDIDATE',
-    );
-    const oldTown = await resident(clock, OT, 'collective', 'Olde Towne');
-    expect(await reason(oldTown.caller.council.vote({ candidateKey: 'n:npc.c.ig.novak', idempotencyKey: key() }))).toBe(
-      'UNKNOWN_CANDIDATE',
-    );
-    // Any party's name on its own list: a Collective member votes for a Vanguard local in Old Town.
-    const ok = await oldTown.caller.council.vote({ candidateKey: 'n:npc.v.ig.lechner', idempotencyKey: key() });
-    expect(ok.act).toBe('ballot');
-    const rank1 = await resident(clock, E, 'collective', 'Rank One', { fxp: 0 });
-    expect(await reason(rank1.caller.council.vote({ candidateKey: 'n:npc.c.ig.novak', idempotencyKey: key() }))).toBe(
-      'RANK_TOO_LOW',
-    );
-  });
-});
-
 describe('who stands (GDD §15.3: Rank 3, resident, Known in Irongate, not a sitting councillor)', () => {
   it('Known at home is not Known in the capital; 29 Successes there refused, 30 stands; the window and the seat refuse', async () => {
     await resetCity('irongate');
     const clock = testClock(at(D0));
     await settleCityDay(content, 'irongate', clock.now());
-    const platform = content.faction('collective').platforms[0]!.id;
+    const platform = content.faction('collective').branchMotion;
     const homeKnown = await resident(clock, E, 'collective', 'Home Known', {
       fxp: 2_000,
       pc: 40,
       successes: 400,
       irongateSuccesses: 29,
     });
-    expect(await reason(homeKnown.caller.council.declare({ platformId: platform, idempotencyKey: key() }))).toBe(
+    expect(await reason(homeKnown.caller.council.declare({ ordinanceId: platform, idempotencyKey: key() }))).toBe(
       'NOT_KNOWN',
     );
     await Character.updateOne(
       { _id: homeKnown.id },
       { $set: { localStanding: [{ cityId: 'irongate', successes: 30 }] }, $inc: { version: 1 } },
     );
-    const filed = await homeKnown.caller.council.declare({ platformId: platform, idempotencyKey: key() });
+    const filed = await homeKnown.caller.council.declare({ ordinanceId: platform, idempotencyKey: key() });
     expect(filed.act).toBe('declare');
     const late = await resident(clock, E, 'collective', 'Late Comer', {
       fxp: 2_000,
@@ -103,7 +76,7 @@ describe('who stands (GDD §15.3: Rank 3, resident, Known in Irongate, not a sit
       irongateSuccesses: 30,
       residence: { cityId: 'irongate', districtId: E, windows: { standsFromDay: D0 + 5 } },
     });
-    expect(await reason(late.caller.council.declare({ platformId: platform, idempotencyKey: key() }))).toBe(
+    expect(await reason(late.caller.council.declare({ ordinanceId: platform, idempotencyKey: key() }))).toBe(
       'NOT_YET_CANDIDATE',
     );
     const sitting = await resident(clock, OT, 'collective', 'Sits Already', {
@@ -116,7 +89,7 @@ describe('who stands (GDD §15.3: Rank 3, resident, Known in Irongate, not a sit
       { _id: seat._id },
       { $set: { holder: { kind: 'player', characterId: sitting.id, name: 'Sits Already' } } },
     );
-    expect(await reason(sitting.caller.council.declare({ platformId: platform, idempotencyKey: key() }))).toBe(
+    expect(await reason(sitting.caller.council.declare({ ordinanceId: platform, idempotencyKey: key() }))).toBe(
       'SITTING_COUNCILLOR',
     );
   });
@@ -125,10 +98,10 @@ describe('who stands (GDD §15.3: Rank 3, resident, Known in Irongate, not a sit
     await resetCity('irongate');
     const clock = testClock(at(D0));
     await settleCityDay(content, 'irongate', clock.now());
-    const platform = content.faction('collective').platforms[0]!.id;
+    const platform = content.faction('collective').branchMotion;
     const stand = async (districtId: string, name: string) => {
       const p = await resident(clock, districtId, 'collective', name, { fxp: 2_000, pc: 40, irongateSuccesses: 30 });
-      const r = await p.caller.council.declare({ platformId: platform, idempotencyKey: key() });
+      const r = await p.caller.council.declare({ ordinanceId: platform, idempotencyKey: key() });
       return r.view.kind === 'election' ? r.view.election.candidacy!.candidacyId : '';
     };
     const inEast = await stand(E, 'East Stander');
@@ -147,7 +120,7 @@ describe('who stands (GDD §15.3: Rank 3, resident, Known in Irongate, not a sit
     await settleCityDay(content, 'irongate', clock.now());
     const stander = await resident(clock, E, 'alliance', 'Ally Stander', { fxp: 2_000, pc: 40, irongateSuccesses: 30 });
     const r = await stander.caller.council.declare({
-      platformId: content.faction('alliance').platforms[0]!.id,
+      ordinanceId: content.faction('alliance').branchMotion,
       idempotencyKey: key(),
     });
     const candidacyId = r.view.kind === 'election' ? r.view.election.candidacy!.candidacyId : '';
@@ -165,10 +138,10 @@ describe('the ballot (GDD §15.10: NPCs fill each faction’s list to two names)
     await resetCity('irongate');
     const clock = testClock(at(D0));
     await settleCityDay(content, 'irongate', clock.now());
-    const platform = content.faction('collective').platforms[0]!.id;
+    const platform = content.faction('collective').branchMotion;
     const standIn = async (districtId: string, name: string) => {
       const p = await resident(clock, districtId, 'collective', name, { fxp: 2_000, pc: 40, irongateSuccesses: 30 });
-      await p.caller.council.declare({ platformId: platform, idempotencyKey: key() });
+      await p.caller.council.declare({ ordinanceId: platform, idempotencyKey: key() });
       const cand = (await Candidacy.findOne({ characterId: p.id }).lean<CandidacyDoc>())!;
       // Two members' endorsements, so the candidacy stands at the close.
       await Candidacy.updateOne(
@@ -213,7 +186,7 @@ describe('the count: the turnout weight (GDD §15.3: w = 50 × min(1, ballots ÷
     await settleCityDay(content, 'irongate', clock.now());
     for (let i = 0; i < ballots; i++) {
       const v = await resident(clock, E, 'alliance', `Voter ${i}`);
-      await v.caller.council.vote({ candidateKey: 'n:npc.a.ig.baumann', idempotencyKey: key() });
+      await v.caller.council.vote({ ordinanceId: content.faction('alliance').branchMotion, idempotencyKey: key() });
     }
     clock.set(at(D0 + 5));
     await settleCityDay(content, 'irongate', clock.now());

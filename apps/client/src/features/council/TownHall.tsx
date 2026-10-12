@@ -1,18 +1,18 @@
 import type { FactionId, IssueRowView, WhatNowView } from '@irongate/rules';
-import { ElectionCard, ResultModal, TownHallBlocks, WhatNowCard } from '@irongate/ui';
+import { ResultModal, TownHallBlocks, WhatNowCard } from '@irongate/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { noticeFor } from '../game/errors';
 import { gameErrorOf, trpc, trpcClient } from '../../lib/trpc';
-import { useNow } from '../../lib/useNow';
 import { usePoliticalAct } from './usePoliticalAct';
 
 /**
- * Review 4 (answers §10–§11, ADR 0077): the Town Hall's blocks for any city with a council, as the
- * hall's place sheet and `/council` show them: *What now* once per term (marked seen once it has
- * shown), the desk's acts (vote, put forward a rule) for a councillor here, and the public blocks.
- * The server decides every outcome; this wires the taps to the existing political acts.
+ * Review 4 (answers §10–§11, ADR 0077); the voting rework (tech design §9.5): the Town Hall's blocks
+ * for any city with a council, as the hall's place sheet and `/council` show them: *What now* once
+ * per term (marked seen once it has shown), the vote on next week's rule, a councillor's rule
+ * (`council.setRule`), and the public blocks. The server decides every outcome; this wires the taps
+ * to the political acts.
  */
 export function TownHall({
   cityId,
@@ -30,7 +30,6 @@ export function TownHall({
 }) {
   const q = useQuery({ ...trpc.council.hall.queryOptions({ cityId }), enabled });
   const navigate = useNavigate();
-  const now = useNow(60_000);
   const act = usePoliticalAct();
   const [selected, setSelected] = useState<string | null>(null);
   // *What now* stays on show for this visit once it has shown, though the term is marked seen.
@@ -64,7 +63,7 @@ export function TownHall({
   const hall = q.data;
   return (
     <div className="flex flex-col gap-3" data-testid="town-hall-section">
-      {whatNow && <WhatNowCard whatNow={whatNow} hallName={hall.hall.name} />}
+      {whatNow && <WhatNowCard whatNow={whatNow} hallName={hall.hall.name} names={names} />}
       <TownHallBlocks
         hall={hall}
         names={names}
@@ -77,22 +76,13 @@ export function TownHall({
           notice: act.pending === null && act.error !== null ? (noticeFor(act.error) ?? null) : null,
           onVote: () =>
             selected &&
-            void act.run('councilVote', (k) =>
-              trpcClient.council.councilVote.mutate({ choice: selected, idempotencyKey: k }),
+            void act.run('vote', (k) =>
+              trpcClient.council.vote.mutate({ ordinanceId: selected, idempotencyKey: k }),
             ),
-          onPropose: (ordinanceId) =>
-            void act.run('propose', (k) => trpcClient.council.propose.mutate({ ordinanceId, idempotencyKey: k })),
+          onSetRule: (ordinanceId) =>
+            void act.run('setRule', (k) => trpcClient.council.setRule.mutate({ ordinanceId, idempotencyKey: k })),
         }}
-        election={
-          hall.election ? (
-            <ElectionCard
-              summary={hall.election}
-              onOpen={(route) => void navigate({ to: route })}
-              now={now}
-              factionNames={names}
-            />
-          ) : null
-        }
+        onStand={() => void navigate({ to: '/council/slate' })}
       />
       <ResultModal result={act.result} open={act.open} onOpenChange={act.setOpen} />
     </div>

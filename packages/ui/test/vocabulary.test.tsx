@@ -4,7 +4,6 @@ import {
   chapterCheckScreenFixture,
   characterViewFixture,
   cityViewFixture,
-  councilViewFixture,
   countViewFixture,
   electionViewFixture,
   frontPageFixture,
@@ -19,7 +18,6 @@ import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { playerStrings, systemTermHits } from '../../content/test/vocabulary';
 import {
-  CountTable,
   DeskList,
   ElectionCard,
   FrontPage,
@@ -27,12 +25,10 @@ import {
   JobsCard,
   LocationSheet,
   Masthead,
-  OrderPaper,
   OrdersComplete,
   OrdersList,
   OutOfEnergyCard,
   ResultModal,
-  SeatGrid,
   Slate,
   StatPointsPanel,
   StoryScreen,
@@ -52,7 +48,6 @@ const FIXTURES: unknown[] = [
   trainingResultFixture,
   characterViewFixture,
   cityViewFixture,
-  councilViewFixture,
   countViewFixture,
   electionViewFixture,
   frontPageFixture,
@@ -120,7 +115,7 @@ describe('review 2 §1.13: no system term in what packages/ui prints', () => {
           knockOns: {
             ...politicalResultFixture.knockOns,
             pc: { before: 45, after: 35 },
-            endorsements: { name: 'Anna Weiss', n: 1, needed: 2 },
+            backers: { name: 'Anna Weiss', n: 1 },
           },
         }}
         open
@@ -132,13 +127,7 @@ describe('review 2 §1.13: no system term in what packages/ui prints', () => {
       'Slate, the vote',
       <Slate candidates={electionViewFixture.candidates} mode="ballot" castKey="n:npc.c.weiss" />,
     ],
-    ['CountTable', <CountTable rows={countViewFixture.rows} />],
     ['FrontPage', <FrontPage front={frontPageFixture} />],
-    ['SeatGrid', <SeatGrid seats={councilViewFixture.seats} factionId="collective" />],
-    [
-      'OrderPaper',
-      <OrderPaper council={councilViewFixture} secretary="Petra Holm" selected={null} onSelect={noop} />,
-    ],
     [
       'LocationSheet',
       <LocationSheet
@@ -186,18 +175,7 @@ describe('review 2 §1.13: no system term in what packages/ui prints', () => {
     ],
     ['StoryScreen', <StoryScreen view={chapterCheckScreenFixture} selectedApproach="sort" />],
   ];
-  const states: ElectionCardState[] = [
-    'belowRank',
-    'candidates',
-    'standing',
-    'backing',
-    'voting',
-    'voted',
-    'candidateVoting',
-    'result',
-    'councilSits',
-    'councilVoted',
-  ];
+  const states: ElectionCardState[] = ['belowRank', 'standing', 'voted', 'result'];
   for (const state of states) {
     const summary = {
       ...politicsSummaryFixture,
@@ -206,16 +184,18 @@ describe('review 2 §1.13: no system term in what packages/ui prints', () => {
         state,
         canStand: true,
         firstTime: true,
-        backers: { n: 1, needed: 2, branchLine: true, branchWillMakeUp: true },
-        backing: 'X',
+        standing: { rule: 'X', backers: 1, branchLine: true },
         votedFor: 'X',
         result: {
           winner: 'X',
-          yourLine: { kind: 'missed' as const, margin: 3 },
-          councilUntil: 0,
-          namesUntil: 0,
+          votes: 3,
+          voters: 5,
+          how: 'votes' as const,
+          runsUntil: 0,
+          nextVoteAt: 0,
+          by: null,
+          whose: null,
         },
-        rule: { votedFor: null, divideAt: 0 },
       },
     };
     cases.push([`ElectionCard ${state}`, <ElectionCard summary={summary} onOpen={noop} />]);

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import {
   Character,
   City,
-  OrderPaper,
+  RuleBallot,
   connectDb,
   disconnectDb,
   ensureIndexes,
@@ -46,7 +46,7 @@ describe('migration 004 (review 1: a job is a wage)', () => {
       ordinance: { id: 'ord.shift-hours', fromDay: 20_700, toDay: 20_705, paperId: 'coalport:1' },
       ordinanceHistory: [{ id: 'ord.shift-hours', fromDay: 20_700, toDay: 20_705 }],
     });
-    await OrderPaper.collection.insertOne({
+    await RuleBallot.collection.insertOne({
       _id: 'coalport:1' as unknown as never,
       cityId: 'coalport',
       cycle: 1,
@@ -88,7 +88,7 @@ describe('migration 004 (review 1: a job is a wage)', () => {
     const city = await City.collection.findOne({ _id: 'coalport' as unknown as never });
     expect(city?.ordinance.id).toBe('ord.long-service');
     expect(city?.ordinanceHistory[0].id).toBe('ord.long-service');
-    const paper = await OrderPaper.collection.findOne({ _id: 'coalport:1' as unknown as never });
+    const paper = await RuleBallot.collection.findOne({ _id: 'coalport:1' as unknown as never });
     expect(paper?.items[0].ordinanceId).toBe('ord.long-service');
     expect(paper?.division).toMatchObject({
       passed: 'ord.long-service',

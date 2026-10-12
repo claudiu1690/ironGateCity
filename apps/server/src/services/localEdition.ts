@@ -58,7 +58,7 @@ async function capitalLine(
     until: {
       nominations: dayStart(cal.election.pollsFrom),
       polls: dayStart(cal.election.countDay),
-      divide: dayStart(cal.council.divideDay),
+      divide: dayStart(cal.council.setDay),
     },
   };
   return selectPoliticalHeadlines(content.politicalHeadlinesOf(capital), facts)[0] ?? null;
