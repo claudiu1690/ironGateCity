@@ -102,6 +102,15 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 | 12 Oct | Delete and trim the old voting Vitest files | — | session notes | [[Checks and Testing]] |
 | 12 Oct | No designer wording stop between build phases; brief QA narrowly with a time box | Rounds took too long | session notes | [[Run a Design Review Round]] |
 
+## The wiki and the drift cleanup (14 Oct)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 14 Oct | **A project wiki** in `docs/wiki/`, with `docs/` as the Obsidian vault, modelled on zeus-brain; agents read it first and update it after every piece of work | One map of the project instead of re-reading the GDD | [[log]]; project `CLAUDE.md` | all |
+| 14 Oct | **Bodyguards, Legacy perks and bar buffs/services are in the MVP**, not built yet (placed in slice 8) | — | [[Drift Report]] B19–B21; GDD §25; plan | [[Bodyguards]], [[Legacy]], [[Buffs]], [[Bars]], [[Slice 8 A Life in the City]] |
+| 14 Oct | **Faction-only places** (Vanguard House gym, Underground Press, Alliance-only Press Club) are **built later**, after the MVP | — | [[Drift Report]] C4; GDD §16.1 | [[Iron Vanguard]], [[Red Collective]], [[Civic Alliance]] |
+| 14 Oct | **CLAUDE.md slimmed**: what the wiki covers (current state, stack details) became pointers; the rules every session needs stay | "If we don't need it because we have the brain, remove it" | project `CLAUDE.md` | — |
+
 ## Related
 
 - [[Open Questions]] · [[Drift Report]]

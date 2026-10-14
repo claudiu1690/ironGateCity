@@ -17,7 +17,7 @@ updated: 2026-10-14
 
 ## Goal and playtest question
 
-From [[IMPLEMENTATION_PLAN#Slice 4 — The battleground|the plan]]: the national map and timed train journeys with journey events, [[Irongate]] with five districts, district opinion, Battleground and Groundswell, moving residence, three-way council elections there, Issues of the Week, the influence ledger and District Hero.
+From [[IMPLEMENTATION_PLAN#Slice 4 — The battleground (built)|the plan]] as first written (since 14 Oct 2026 the plan's slice text says what was built, with the later changes named): the national map and timed train journeys with journey events, [[Irongate]] with five districts, district opinion, Battleground and Groundswell, moving residence, three-way council elections there, Issues of the Week, the influence ledger and District Hero.
 
 - **Question:** do players choose to move to the capital, and does the three-way fight feel alive?
 
@@ -49,8 +49,7 @@ From [[IMPLEMENTATION_PLAN#Slice 4 — The battleground|the plan]]: the national
 - The user asked the team to decide small points themselves ([[design/slice-4-battleground|design §19]]).
 - After QA M2: **a candidate on a ballot cannot move** until the result (GDD Appendix C #61).
 
-> [!warning] Drift
-> The plan's "three-way council elections" and "moving residence" were later reshaped: the capital's rule is now **the largest bloc's** ([[Voting Rework]]), *Register* became one **Live here** button, and the room became a **Lodgings** card at Tram Junction ([[Review 4]]). The journey now runs **on the nation map** with a moving pin (Review 4).
+Later reshaped (the plan names these since 14 Oct 2026): the capital's rule is **the largest bloc's card** ([[Voting Rework]]), *Register* became one **Live here** button, the room became a **Lodgings** card at Tram Junction, and the journey runs **on the nation map** with a moving pin ([[Review 4]]).
 
 ## QA and leftovers
 

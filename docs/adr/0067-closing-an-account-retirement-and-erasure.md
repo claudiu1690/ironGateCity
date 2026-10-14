@@ -1,6 +1,12 @@
 # ADR 0067 — Closing an account retires the character in one transaction; reopening within 30 days; a daily job erases personal data after 30
 
-**Status:** proposed (slice 9) · **Date:** 2026-10-04
+**Status:** proposed (slice 9); decision 1 amended 2026-10-14 for the voting rework (ADR 0084) · **Date:** 2026-10-04
+
+## Amendment (14 Oct 2026)
+
+Candidacies can't be withdrawn and carry no deposit since the voting rework (ADR 0084). In decision 1, "open candidacies are withdrawn (deposit kept)" now reads: **a standing candidacy stays on the list until the count** (the 10 PC was spent when the name was printed); the count skips a retired candidate (no seat is given to a retired character, and the next name on the list takes it). The same applies to the Chair's candidacy. A President's candidacy, whose 100 PC is returnable only by a withdrawal before the pick opens (GDD §15.5), is likewise left standing and skipped; nothing is refunded to a closed account.
+
+> Inference: "the count skips a retired candidate" is the architect's default so a closed account never takes a seat. The game-designer should confirm it, or say the name stays and the seat falls vacant (GDD §16.2 is being edited in parallel, drift row A10).
 
 ## Context
 

@@ -24,7 +24,7 @@ from slice 7, national laws.
 
 ## How it works
 
-- **The menu: eleven rules**, all available in every city today ([[GDD#15.3 City Councils|GDD §15.3]]; content `ordinances.ts`). Headline effects:
+- **The menu: eleven rules, one menu for every city** ([[GDD#15.3 City Councils|GDD §15.3]], which says so since 14 Oct 2026; content `ordinances.ts`). Headline effects:
   - *Public Works Order* job pay +10 % · *Long Service Order* seniority builds two days a day · *Street Permits* propaganda swing +15 % · *Rally Permits* speeches −2 Energy · *Reading Room Grant* training Energy −20 % · *Rest Day Order* Rested cap +50 · *Open Doors* canvass +4 % chance · *Street Register* every Success counts two for [[Local Standing]] · *Street Fund* Iron from checked actions +25 %, job pay −25 % · *Public Meetings Order* Party XP +25 % on actions · *Tram Subsidy* tickets from the city −50 % (floor 5 Iron).
 - **One in force per city**, from the count for five days. With no votes, card 1 (the party's rule) runs, so a city always has one.
 - **Cost rules change the cost only.** Rewards stay on the content Energy (a cheaper speech still pays as a full one).
@@ -42,7 +42,7 @@ from slice 7, national laws.
 
 ## Where it lives
 
-**Rules:** [[GDD#15.3 City Councils|GDD §15.3]] (the menu, *The home-city menu*) · [[GDD#15.8 Laws|GDD §15.8]] (laws on the same DSL) · [[design/slice-3-politics|slice 3 design §10]] · [[design/review-4-answers|review 4 answers §11]] (`plainLine`) · [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]] · [[adr/0030-modifier-sources-and-named-factors|ADR 0030]] · [[adr/0083-the-town-votes-on-a-rule-three-cards-set-at-day-2|ADR 0083]]
+**Rules:** [[GDD#15.3 City Councils|GDD §15.3]] (the menu, *The home-city menu*) · [[GDD#15.8 Laws|GDD §15.8]] (laws on the same DSL) · [[design/slice-3-politics|slice 3 design §10]] · [[design/review-4-answers|review 4 answers §11]] (`plainLine`) · [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]] (amended 14 Oct 2026: the eleven ids and the current effect kinds) · [[adr/0030-modifier-sources-and-named-factors|ADR 0030]] · [[adr/0083-the-town-votes-on-a-rule-three-cards-set-at-day-2|ADR 0083]]
 
 **Code:**
 - Rules: `packages/rules/src/ordinances.ts` (`OrdinanceEffect`, `ordinanceBoundProblem`, `cityModifiers`, `placeModifiers`, `actionEnergy`, `trainingEnergy`, `jobPayLines`, `swingMultiplier`, `standingPerSuccess`, `restedCapFor`, `priceLines`, `rewardShares`) · `ORDINANCE_BOUNDS` in `packages/rules/src/constants.ts`
@@ -61,17 +61,12 @@ from slice 7, national laws.
 - Review 2: *Ward Register* → **Street Register**, *Ward Fund* → **Street Fund**.
 - Review 4: `plainLine` added; `effectLine` keeps its caps role (with the architect, 6 Oct 2026).
 - Voting rework (10 Oct 2026): the menu, bounds and plain lines are untouched: "the bonuses the user likes are the one thing this document keeps whole" ([[design/voting-simplified|voting-simplified Appendix B]]).
+- 14 Oct 2026 (drift cleanup): GDD §15.3's menu table lists all eleven (Tram Subsidy row added; a home town may halve its own fares); [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]] now names the eleven ids and the kinds the code has (`seniorityDays`, `ticketPct`, `roomPct`, `heatCoolPct`, `bailPct`).
 
 ## Open questions / drift
 
 > [!warning] Drift
-> GDD §15.3 calls it a **ten**-rule home menu and the capital's "the home menu plus Tram Subsidy"; the code and the screens give **eleven** rules in every city. See [[City Council and the Rule Vote]].
-
-> [!warning] Drift
-> [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]] (status *implemented*) still lists the slice-3 names (*Ward Fund*, *Shift Hours Order*, *Ward Register*) and the kinds `shiftEnergyDelta` / `shiftStreakDays`. The code has `seniorityDays` instead, plus `ticketPct`, `roomPct`, `heatCoolPct`, `bailPct` (`packages/rules/src/ordinances.ts`). Its §2 says a rule runs "from a division boundary", which ADR 0083 amends.
-
-> [!warning] Drift
-> GDD §22.2 (slice 8 paragraph) says at rollover "every law and council rule in force ends (the councils' **next order papers** start the rules again)". Order papers no longer exist, and the voting rework's principle is that **a city always has a rule**. What runs in a city between the rollover and the next count is not settled. See [[Political Seasons]].
+> **Still open (the user, drift row A9).** GDD §22.2 (slice 8 paragraph) says at rollover "every law and council rule in force ends (the councils' **next order papers** start the rules again)". Order papers no longer exist, and the voting rework's principle is that **a city always has a rule**. What runs in a city between the rollover and the next count is not settled. See [[Political Seasons]].
 
 ## Related
 

@@ -67,7 +67,7 @@ export interface CityDoc {
     seats?: 7 | 10;
     npcSeatsByFaction?: Partial<Record<FactionId, number>>;
   } | null;
-  /** The ordinance in force; `toDay` exclusive. `paperId`: the order paper that passed it. */
+  /** The ordinance in force; `toDay` exclusive. `paperId`: the rule ballot that chose it (ADR 0083), null when no ballot did. */
   ordinance?: { id: string; fromDay: DayKey; toDay: DayKey; paperId: string | null } | null;
   /** The last four ordinances (ADR 0021): each ended day's pay and Rested cap. */
   ordinanceHistory?: Array<{ id: string; fromDay: DayKey; toDay: DayKey }>;

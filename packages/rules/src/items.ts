@@ -5,7 +5,7 @@ import type { DayKey } from './day';
  * instances and the equipped instance per slot. Worn CHA is computed on read, never stored.
  */
 
-/** §21.1: slice 2 uses two slots; weapon, utility and accessory come with the Wardrobe (slice 8). */
+/** §21.1: slice 2 uses two slots; the Wardrobe's four slots come in slice 8 (no weapon slot, §20.3). */
 export type ItemSlot = 'clothing' | 'document';
 export const ITEM_SLOTS = ['clothing', 'document'] as const satisfies readonly ItemSlot[];
 

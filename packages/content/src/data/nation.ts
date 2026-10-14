@@ -62,8 +62,9 @@ export const nation: ContentInput['nation'] = {
       service: 'later',
       line: 'Contested · no service yet',
       arrival: { x: 0.8, y: 0.5 },
-      // §14.11, design §6.7: shown on its card; no city document until slice 7.
-      baselineOpinion: { vanguard: 20, collective: 24, alliance: 24, neutral: 32 },
+      // §14.11, design §6.7: shown on its card; no city document until slice 7. Evened to
+      // 22 / 22 / 22 / 34 (GDD §14.8, §14.11, Appendix C #70; slice 7) so no party starts ahead.
+      baselineOpinion: { vanguard: 22, collective: 22, alliance: 22, neutral: 34 },
     },
   ],
   // Review 4 (answers §7.1, ADR 0075): the legs from the capital, traced along the painted rails of

@@ -25,7 +25,8 @@ of a check: it changes the run-in chance and the separate caught check.
 ### Heat ([[GDD#6.4 Heat (new)|GDD §6.4]])
 
 - **0–100, cools 5 an hour** (100 → 0 in about 20 h), continuously and lazily. The rate is the
-  **residence** city's (the *Customs Strike* Issue cools +50 %; safehouses later).
+  **residence** city's (the *Customs Strike* Issue cools +50 %; a safehouse cools it faster, later,
+  with the faction-only places). Not on the 10-minute tick ([[Time and the Game Day]]).
 - **Rises on every outcome** of an illegal or watching mission: surveillance +5, vandalism +6,
   disruption +8, theft +10, sabotage +12; **×2 on rival ground** ([[Hostile Ground]]). Also +10
   for a parcel card's Partial, a failed *Pay them off*, or a checkpoint that writes your name down.
@@ -39,7 +40,7 @@ of a check: it changes the run-in chance and the separate caught check.
 ### Getting caught ([[GDD#11.2 Getting caught|GDD §11.2]])
 
 - Rolled **once per illegal mission that did not come off clean** (Partial or Failure, never a
-  Success), after the run-in. Chance = base by type + Heat ÷ 2 + the state's bonus + 5 for a
+  Success), after the run-in, and **never after a run-in lost or a Run** (you got away and dropped the job; `caughtCheck` in `runIn.ts`). Chance = base by type + Heat ÷ 2 + the state's bonus + 5 for a
   *Repeat offender* − Agility ÷ 2, kept 2–95 %. Base and Heat doubled on rival ground.
 - **Caught while Cool or Noticed:** your name is taken (marks go on, the result stands).
   **Caught while Hot or Wanted:** the cells ([[Jail and the Cells]]).
@@ -61,8 +62,11 @@ of a check: it changes the run-in chance and the separate caught check.
 - **Time:** minor marks fade **14 City Days after the last offence** (built).
 - **Connections:** **30 Political Capital strikes any mark**, oldest first, one tap on the Me tab
   (built; stamp *Struck off*).
-- **Bribe** in a bar's back room, 500 / 1,000 / 2,000 Iron a mark by level (slice 8, not built);
-  **Political Protection** at Rank 4 (not built); the **Rehabilitation Act** (slice 7, not built).
+- **Bribe** in a bar's back room: **500 Iron a mark at *On file*, 1,000 at *Repeat offender*, 2,000
+  at *Notorious*** (the level at the tap; slice 8, not built). The v3.0 "depends on who controls
+  the city" is dropped: control gates nothing yet (Appendix C #109).
+- **Political Protection** at Rank 4 (not built); the **Rehabilitation Act** (slice 7, not built):
+  minor marks fade after 7 days and bail −25 % while it's in force.
 
 ## Where it lives
 
@@ -88,8 +92,9 @@ of a check: it changes the run-in chance and the separate caught check.
 ## Status
 
 Built in slice 5; review 4 made every arrest a mark and moved Heat to a body line. Not built: the
-bribe (slice 8), the shop surcharge and the *−5 % vote appeal* (slices 7–8), Political Protection,
-the Rehabilitation Act, safehouses.
+bribe (slice 8), the shop surcharge and the *−5 % vote appeal* (slice 8, one `appeal` term still to
+pin, Appendix C #108), Political Protection, the Rehabilitation Act, safehouses (later, with the
+faction-only places), the +25 % Heat for rivals of a controlling party (slice 7, Appendix C #109).
 
 ## Decisions
 
@@ -97,22 +102,14 @@ the Rehabilitation Act, safehouses.
   Failure (Appendix C #56); the record's Iron penalty is on missions only (#49); the cooling rate is
   the residence city's.
 - [[Review 4]] (6 Oct 2026): an arrest is always at least one mark.
+- 14 Oct 2026 (drift cleanup): GDD §11.2's opening now says the caught check comes only on a Partial
+  or a Failure and never after a lost run-in or a Run; §11.4 prices the bribe at *On file* /
+  *Repeat offender* / *Notorious*; §6.7's safehouse makes Heat cool faster (no more "Heat −20").
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **GDD §11.2 opening vs its slice-5 paragraph.** The opening line says *every illegal action
-> rolls a caught check* and *being caught while Hot or Wanted means arrest*. The slice-5 paragraph
-> (and the code) roll it only on a Partial or a Failure. The later paragraph wins; the older line
-> is still printed.
-
-> [!warning] Drift
-> **GDD §11.4 bullets vs §11.3.** The bribe bullet still says *500 IM per point at Known*; the level
-> is now *On file* and the slice-8 price list is 500 / 1,000 / 2,000.
-
-> [!warning] Drift
-> **GDD §6.7 vs §6.4.** The *Lodged* buff says a safehouse gives *Heat −20*; §6.4 says safehouses
-> cool Heat *faster*. Neither is built.
+- None open in the sources. Personal vote appeal (*Notorious* −5 %) waits for one `appeal` term,
+  [[GDD#Appendix C — Open questions|Appendix C #108]].
 
 ## Related
 

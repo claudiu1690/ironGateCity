@@ -93,15 +93,17 @@ Charisma from a wardrobe beyond the starting coats (slice 8), Charisma's vote ap
 ## Open questions / drift
 
 > [!warning] Drift
-> **GDD §8.2 vs §8.5.** §8.2 says Charisma is worn items *plus the origin's CHA base (0–4)*. §8.5
-> (review 4) says *there is no CHA base any more*. The code still stores `stats.chaBase` (history
-> for old characters, per ADR 0073) and `wornCha(chaBase, equipped)` still adds it.
+> **GDD §8 vs code (the CHA base).** Since 14 Oct 2026 GDD §8.1, §8.2 and §8.5 agree: **no origin
+> CHA base** since review 4, Charisma is only what you wear (+2 in a paid flat's city). The code still
+> stores `stats.chaBase` (history for old characters, per ADR 0073) and `wornCha(chaBase, equipped)`
+> still adds it; it is 0 for every character made since. A developer leftover (drift row B2).
 
 > [!warning] Drift
 > **GDD §8.1 vs build.** AGI's *Energy discounts at milestones* and *flee chance* are listed as what
 > it governs; milestones are not built and are expected to be retuned (Appendix C #34).
 
 - Appendix C #91 (the second stat's 42 % on day 1) is open.
+- Worn Charisma's +1 % vote appeal per 10 is one of three pieces of one `appeal` term for slice 8 ([[GDD#Appendix C — Open questions|Appendix C #108]]).
 
 ## Related
 

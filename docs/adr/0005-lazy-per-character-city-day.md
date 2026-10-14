@@ -1,6 +1,13 @@
 # ADR 0005 — The City Day is settled lazily, per character, on first touch
 
-**Status:** accepted (slice 1) · **Date:** 2026-09-29
+**Status:** accepted (slice 1); amended 2026-10-14 (the wage, review 1; the night, ADR 0079) · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+The lazy, per-character settlement on first touch stands. Two things it settles have changed:
+
+- **The job is a wage** (review 1, GDD §9): the full daily pay at every boundary crossed, with no shift, no Energy, no streak and no sick days. **Seniority** (+2 % a day held, to +20 %; reset only by switching) replaces the streak. So step 3's "half salary", "missed shifts spend sick days … or end the streak" and the Monday sick-day refill no longer apply; the settlement credits the wage and advances seniority per boundary instead.
+- **The night** is no longer 20:00–06:00 UTC. It is the last two hours of every six-hour game day (dusk at 04, 10, 16, 22 UTC), read through `nightAt(now)` on the server (ADR 0079). The last consequence's `isNight` line is superseded. The City Day itself, and every daily rule, still turns at 00:00 UTC.
 
 ## Context
 

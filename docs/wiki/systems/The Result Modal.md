@@ -39,9 +39,13 @@ Top to bottom ([[GDD#13.1a The result modal|GDD §13.1a]]):
    opinion (and an item on chapters). **A zero line is not printed.** XP and Party XP keep a thin bar
    and one note (*955 to Level 7*); everything else (base and bonus, Rested's share, the opinion
    meter) sits behind ***Details ▾***.
-6. **Knock-on effects:** **three lines** in a fixed priority (a point to place, a rank or Reputation
-   card, Heat, the order, Issue momentum, the election/ledger line, the chapter hook, Energy and
-   Rested, the first-mission line), the rest behind ***n more ▾***. Two lines on phones under 700 px.
+6. **Knock-on effects:** **three lines** in a fixed priority, as built (`PRIORITY` in
+   `packages/ui/src/result.ts`; GDD §13.1a says the same since 14 Oct 2026): a point to place · a
+   rank, Reputation or first-time Heat or record card · Heat · the record · the order's lines ·
+   the morale crossing · Issue momentum · the branch's backing · Political Capital · Reputation
+   progress · the ledger · the chapter hook · a trained stat · Energy and Rested · *Missions
+   remember*; a *Trained* result puts its stat first. The rest behind ***n more ▾***. Two lines on
+   phones under 700 px.
 7. **Buttons:** *Once more · 10 Energy* · *Three more · 30 Energy* · *Continue*. After training:
    *Study again · 46 Energy*. When a run-in follows, one button leads into it.
 
@@ -95,12 +99,6 @@ the under-700 px rules). Political acts and journeys use the same modal with the
 
 - Appendix C #104: if testers open *Details* on most results, the opinion meter line comes back
   out first; if *n more* hides the order's line too often, the order moves above Heat.
-
-> [!warning] Drift
-> **GDD §13.1a knock-on priority vs code.** The GDD lists *the election / ledger line* after Issue
-> momentum. The code's `PRIORITY` in `packages/ui/src/result.ts` puts the record next to Heat and
-> adds `morale`, `branch` (the branch's endorsement), `pc`, `standing` and `trained` between them;
-> the code comment cites review 5 answers §18 Q3. The GDD sentence summarises an older list.
 
 ## Related
 

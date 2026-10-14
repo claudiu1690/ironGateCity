@@ -71,11 +71,10 @@ Built: faction, Ashford, ranks, secretary, welcome set, branch rule, Unrest pair
 reviews 4–5 and the [[Voting Rework]]). Designed, not built: the Headline Story
 ([[Slice 6 Together]]), Chair and laws ([[Slice 7 The Nation]]), Case Files ([[Slice 8 A Life in the City]]).
 
-> [!warning] Drift
-> [[GDD#16.1 The three factions|GDD §16.1]] gives the Alliance the exclusive location **Press Club**
-> (unlisted jobs, journalist intel). In content, *The Press Club* in Old Town
-> (`irongate.press-club`) is an ordinary `bar` open to every party, and Ashford's *Press Club* is
-> only an unbuilt survey pin (`ashford.press-club`, Station Road quarter).
+**Later, after the MVP** (the user, 14 Oct 2026): an Alliance-only **Press Club** (unlisted jobs,
+journalist intel; [[GDD#16.1 The three factions|GDD §16.1]], now marked *planned*). Today *The Press
+Club* in Old Town (`irongate.press-club`) is an ordinary `bar` open to every party, and Ashford's
+*Press Club* is only an unbuilt survey pin (`ashford.press-club`, Station Road quarter).
 
 ## Related
 

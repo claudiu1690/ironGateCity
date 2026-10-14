@@ -1,6 +1,10 @@
 # ADR 0058 — The Political Season: three terms from the term epoch, a running score on `nation`, a finale at season day 0, and a rollover split by owner
 
-**Status:** proposed (slice 8; extends ADR 0043) · **Date:** 2026-10-04
+**Status:** proposed (slice 8; extends ADR 0043); decision 4 under review since the voting rework (ADR 0083), awaiting the user (drift row A9) · **Date:** 2026-10-04
+
+## Amendment (14 Oct 2026, partial)
+
+Decision 4 names "the count and division of that boundary". Councils have no division since the voting rework (ADR 0083): the boundary into season day 0 holds the count of the town's rule vote (and, on a set day, the set). Decision 4 also ends "its council rule in force on day 83", which conflicts with ADR 0083's "a city always has a rule". **Which wins (the rule runs out its window, the season ends it and card 1 / the fallback takes over, or something else) is the user's call** (drift row A9, GDD §22.2); this ADR is not changed until then.
 
 ## Context
 

@@ -1,6 +1,10 @@
 # ADR 0002 — Game actions: one transaction, one unique idempotency key, one version guard
 
-**Status:** accepted (slice 0) · **Date:** 2026-09-29
+**Status:** accepted (slice 0); amended 2026-10-14, see ADR 0087 · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+Step 2.3's "a fresh seed" is no longer how it works. Since the slice 5 fix round (QA M1) the seed is derived from the character and the request key by HMAC (`keySeed` in `apps/server/src/services/keyGuard.ts`), so a transaction re-run after a write conflict draws the same rolls. Every keyed transaction also looks its key up in `actionLogs`, `encounters` and `requestLogs` inside its snapshot before writing (`assertKeyFree`), because the unique index of step 2.5 covers only one collection. Both are recorded in **ADR 0087**. The rest of this ADR stands.
 
 ## Context
 

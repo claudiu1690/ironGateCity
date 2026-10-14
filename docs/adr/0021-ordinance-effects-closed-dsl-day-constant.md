@@ -1,6 +1,15 @@
 # ADR 0021 — Ordinance effects are a closed, bounded DSL owned by rules, applied as named modifiers that are constant for a City Day
 
-**Status:** accepted, implemented (slice 3) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3); amended 2026-10-14 (the menu and the kinds; see also ADR 0030 and ADR 0083 §2) · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+The closed, bounded DSL and the day-constant modifiers stand. The lists below were overtaken by later work; the code is the reference (`OrdinanceEffect` and `ORDINANCE_BOUNDS` in `packages/rules/src/ordinances.ts` and `constants.ts`, the menu in `packages/content/src/data/ordinances.ts`):
+
+- **The menu is eleven rules**, not ten: `ord.public-works`, `ord.long-service` (*Long Service Order*, was *Shift Hours Order*), `ord.street-permits`, `ord.rally-permits`, `ord.reading-room`, `ord.rest-day`, `ord.open-doors`, `ord.street-register` (*Street Register*, was *Ward Register*), `ord.street-fund` (*Street Fund*, was *Ward Fund*), `ord.public-meetings` and `ord.tram-subsidy` (*Tram Subsidy*, ticket price −50 %). Whether the GDD's menu table says ten or eleven is drift row A5 (the game-designer's).
+- **The kinds today:** `jobPayPct`, `seniorityDays` (1…2, Long Service: seniority counts double; replaces `shiftEnergyDelta` and `shiftStreakDays`, which went with the shift in review 1), `swingPct`, `energyDelta`, `trainingEnergyPct`, `restedCapDelta`, `chancePct`, `standingMultiplier`, `ironPct`, `fxpPct`, plus `ticketPct` and `roomPct` (slice 4, Issue effects, ADR 0030) and `heatCoolPct` and `bailPct` (slice 5).
+- `shiftEnergy` and `shiftStreakStep` in decision 2 no longer exist; the wage is credited per boundary with that day's `jobPayPct` (decision 4 stands).
+- **How a rule comes into force:** from the count of the town's rule vote, for five days (ADR 0083), not from a council's division. `cities.ordinance.paperId` is a name left from the order paper (drift row A16).
 
 ## Context
 

@@ -65,15 +65,7 @@ control, it **gives no multiplier**.
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **Clearwater's baseline in content.** `packages/content/src/data/nation.ts` still carries
-> `baselineOpinion: { vanguard: 20, collective: 24, alliance: 24, neutral: 32 }` for Clearwater
-> (shown on its nation card), against GDD §14.11's pinned **22 / 22 / 22 / 34**. Expected to be
-> fixed when slice 7 builds Clearwater, but the card shows the old figures today.
-
-> [!warning] Drift
-> **"Built" wording.** GDD §14.11's Unrest list says the half weight is "(slice 7, built: §14.8)".
-> Slice 7 is not built; the code has no National Control.
+- None open. Clearwater's card now shows **22 / 22 / 22 / 34** (`baselineOpinion` in `packages/content/src/data/nation.ts`, fixed 14 Oct 2026), and GDD §14.1 / §14.11 no longer call slice-7 items built.
 
 ## Related
 

@@ -199,7 +199,7 @@ async function build(): Promise<void> {
   if (failed || !check()) process.exit(1);
 }
 
-/** Every catalogue file present and within budget, every SVG safe; the whole set under 12 MB. */
+/** Every catalogue file present and within budget, every SVG safe; the whole set within TOTAL_BUDGET. */
 /**
  * ADR 0024 (maps v3): `tiles.json` parses and every catalogue map has its pyramid, at its size. (The
  * content loader validates each entry with Zod; the pyramids themselves are not in git:

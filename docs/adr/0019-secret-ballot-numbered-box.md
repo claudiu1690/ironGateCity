@@ -1,6 +1,16 @@
 # ADR 0019 — The secret ballot: one `votes` row per voter, secret at the API, linkable only for the audit
 
-**Status:** accepted, implemented (slice 3) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3); amended 2026-10-12 by ADR 0083 §4 (votes by rule); see also ADR 0084 · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+The numbered box and its secrecy stand. Since the voting rework the town votes for **a rule**, not a candidate (ADR 0083):
+
+- `votes` gains `ordinanceId`; `candidateKey` stays for slice 7's person ballots (the Chair, the pick). **Exactly one of the two is set.**
+- The count's `$group` index for council votes is `{ electionId, ordinanceId }`.
+- The voter's own receipt names the rule they chose, not a candidate. Seats are decided by local support and backers (ADR 0084), so a council count has no vote totals per candidate.
+
+Candidate ballots, deposits and order papers named elsewhere in slice 3's ADRs are gone; see ADR 0083 and 0084.
 
 ## Context
 

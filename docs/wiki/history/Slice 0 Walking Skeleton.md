@@ -17,7 +17,7 @@ updated: 2026-10-14
 
 ## Goal and playtest question
 
-From [[IMPLEMENTATION_PLAN#Slice 0 — Walking skeleton|the plan]]: the monorepo, the database, sign-up, the rules package v1 with the check formula, the UI package v1 with the result modal, and **one action that resolves on the server and shows the result modal**.
+From [[IMPLEMENTATION_PLAN#Slice 0 — Walking skeleton (built)|the plan]] as first written (since 14 Oct 2026 the plan's slice text says what was built, with the later changes named): the monorepo, the database, sign-up, the rules package v1 with the check formula, the UI package v1 with the result modal, and **one action that resolves on the server and shows the result modal**.
 
 - **Done when:** a deployed URL where you sign up, tap *Canvass* and see a real result modal.
 - **Question:** does the whole pipe work, from tap to database to modal?
@@ -47,11 +47,10 @@ From [[IMPLEMENTATION_PLAN#Slice 0 — Walking skeleton|the plan]]: the monorepo
 - Designer answers, pinned in the GDD the same day: rounding is nearest whole, halves up, per line; a roll **at or below** the chance succeeds; Rested is proportional per Energy point; opinion moves 0.005 points per Energy, drawn from Neutral first; levels 1–51 have a fixed XP table ([[GDD#5.3 Levels|GDD §5.3]]).
 - The reference recruit was a real set of origin answers, so slice 2 could replace it with the dialogue.
 
-> [!warning] Drift
-> The plan's *done when* asks for a **deployed URL**, preview deploys and Sentry. Nothing is deployed: the user later decided to work and playtest **locally until the end** of the project (the review-4 guide, §6). The deploy config exists (`vercel.json`, Sentry no-op without a DSN) but no service is live. Project `CLAUDE.md` still says every slice is "deployed".
-
 > [!note] Inference
 > The reference recruit's numbers were replaced in review 4 (STR 8 / INT 12 / AGI 5 / CHA 5). The slice-0 answers doc still shows the old figures as the record.
+
+Nothing is deployed: the user decided to work and playtest **locally until the end** of the project. The plan's *done when* now reads "locally, you sign up, tap Canvass and see a real result modal"; the deploy config exists (`vercel.json`, Sentry off without a DSN) for the hosting step after slice 9.
 
 ## QA and leftovers
 

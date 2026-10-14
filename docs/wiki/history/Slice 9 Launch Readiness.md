@@ -34,7 +34,7 @@ From [[IMPLEMENTATION_PLAN#Slice 9 — Launch readiness|the plan]]: a balance pa
 ## Documents
 
 - Design: [[design/slice-9-launch|design/slice-9-launch]] (§16 points for the user, §17 settled) and [[design/slice-9-screens|design/slice-9-screens]].
-- Tech design: [[tech/slice-9|tech/slice-9]].
+- Tech design: [[tech/slice-9|tech/slice-9]]. Updated 14 Oct 2026: the knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are applied (purpose screens among them); the planned migration is now `013-slice9-launch` (§5.14, was 011). [[adr/0062-the-national-audit-self-confirms-and-council-recounts|ADR 0062]] (a recount leaves the rule ballot and the rule untouched) and [[adr/0067-closing-an-account-retirement-and-erasure|ADR 0067]] (a standing candidacy stays on the list) were amended.
 - ADRs: [[adr/0059-telemetry-first-party-events-and-player-days|ADR 0059]] to [[adr/0072-production-topology-for-the-hosting-step|ADR 0072]].
 - GDD: [[GDD#27. Key metrics|GDD §27]], [[GDD#15.2 Integrity rules|GDD §15.2]], [[GDD#16.2 Faction chat and presence (moved into MVP)|GDD §16.2]].
 
@@ -44,8 +44,11 @@ From [[IMPLEMENTATION_PLAN#Slice 9 — Launch readiness|the plan]]: a balance pa
 - GDD Appendix C #7 (chat moderation) and #13 (opinion swing at scale) were **closed** by this design.
 - The second Appendix C #61 was renumbered **#89**.
 
+- The plan now ends slice 9 **locally** ("is the game ready to measure?"); the hosting step, the first deploy and the closed and open betas come after it, at the end of the project (14 Oct 2026).
+- Open (the user): ADR 0067's "the count skips a retired candidate" vs GDD §16.2's "the seat is vacated at once"; whether a recount may change a town's rule (default no). Designer: the `city` purpose line. See [[Moderation and Fair Play]].
+
 > [!warning] Drift
-> The plan puts the closed and open betas inside slice 9, which needs a hosted game; the user's "local until the end" decision moves hosting to the very end. Knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are recorded but **not yet applied** to [[tech/slice-9|tech/slice-9]]. Since 8 Oct the project runs **no Vitest** (Playwright only), while this tech design plans Vitest checks.
+> Since 8 Oct the project runs **no Vitest** (Playwright only), while this tech design still plans Vitest checks (§6.5). See [[Checks and Testing]].
 
 ## QA and leftovers
 
@@ -58,4 +61,4 @@ Not built, so no QA. Open defaults: GDD Appendix C #82–#88 (see [[Open Questio
 ## Related
 
 - Previous: [[Slice 8 A Life in the City]]
-- After the MVP (plan): ministers, bodyguards, first class and cars, more homes, Legacy perks, Season Twists, a premium track, more patrons, counter-demonstrations, trading. See [[Ministers]], [[Bodyguards]], [[Monetisation]].
+- After the MVP (plan, 14 Oct 2026): ministers, first class, cars and the night train, townhouses and villas, Season Twists, the premium track and Stripe, more patrons and Ambitions, counter-demonstrations, trading, and **faction-only places** (the Vanguard House gym, the Underground Press, the Alliance-only Press Club). Bodyguards and Legacy perks moved into slice 8. See [[Ministers]], [[Monetisation]], [[Iron Vanguard]].

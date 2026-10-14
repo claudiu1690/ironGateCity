@@ -20,7 +20,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Heat and Record]] — Heat 0–100 cools 5 an hour with four states; the caught check, marks, record levels, clearing a record.
 - [[Political Capital]] — Earned by political work, capped at 1,000, never bought; spent on standing, backing, striking marks.
 - [[Iron Marks and the Economy]] — Income above cost, no upkeep; earned from actions, missions and wages; optional sinks, built and planned.
-- [[Buffs]] — Well-Fed, Lodged, In Good Spirits, Weatherproof: designed bonuses replacing v3.0 neglect; none built.
+- [[Buffs]] — Well-Fed and In Good Spirits are MVP slice 8, not built yet; Lodged is replaced by the home; Weatherproof waits for weather.
 - [[Levels and Faction Rank]] — XP levels open content, Party XP ranks open political rights; level-up cards, reward rates per tier.
 - [[Stats and Checks]] — Three trained stats plus worn Charisma; the one check formula, shown to players only as odds words; training.
 - [[Jobs]] — A wage paid at the day boundary, seniority up to +20 %, a 14-day cap, the 'asks more, pays more' ladder.
@@ -34,16 +34,16 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Local Standing]] — Reputation per city: Stranger to One of Us at 10/30/70/150 wins, +3 % a level, never decays.
 - [[Party Orders]] — Three daily orders from the party secretary (welcome set, capital rotation, off in the cells); the Chair's orders are slice 7.
 - [[The Dossier]] — Intelligence entries on named people, Case Files, the exposé, sale and informants; slice 8, not built.
-- [[Bodyguards]] — Prepaid 7-day protection contracts (GDD §12); not built, in no slice; the GDD and the plan disagree on scope.
+- [[Bodyguards]] — Prepaid 7-day protection contracts (GDD §12); MVP, slice 8, not built yet; prices and shop are App C #110.
 - [[Run-ins and Combat]] — NPC-only, one choice (Fight, Run, Talk, Pay, luck); the held result, settled by luck after 5 min; slice 5.
 - [[Hospital and Treatment]] — The infirmary after a lost run-in (30 Health, 20 min) and Get patched up at 1 Iron a point.
 - [[Jail and the Cells]] — Arrest, a sentence of 20 + Heat ÷ 2 min, bail, orders off, always a mark, the In the cells now list.
-- [[Bars]] — Bar places with tier-1 tickets are built; bar services are not; the back room and its mark bribe are slice 8.
+- [[Bars]] — Bar places with tier-1 tickets are built; bar services, their buffs and the back room's mark bribe are MVP slice 8, not built yet.
 - [[Equipment and Wardrobe]] — Built: two slots, starting kit, keepsakes, Charisma from what you wear. Slice 8: the four-slot Wardrobe, outfits, shops.
 - [[Night and Patrols]] — Two-hour nights, night-only ways and missions (+25 % Iron), random patrol stops on rival ground; review 5.
 - [[Ambitions]] — Three 12-chapter personal stories, at most one chapter a week, never failing; chapters 1–2 partly built.
 - [[Patronage and Favours]] — Patrons Crane and Marr (slice 8), favours between party mates (slice 6), the welcome favour at the HQ (built).
-- [[Legacy]] — A permanent public record of political deeds plus eight small lasting perks; slice 8, not built.
+- [[Legacy]] — A permanent public record of political deeds plus eight small lasting perks; MVP, slice 8, not built yet.
 - [[Residence]] — Built: the political home (500 Iron, Rank 2, 7 days between moves) and Irongate lodgings. Slice 8: the room and the flat.
 
 ## Systems — the city and the map
@@ -78,9 +78,9 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 
 ## Entities
 
-- [[Iron Vanguard]] — Authoritarian party; home Duskwall (Beacon House), capital Vanguard House; Stahl, ranks, Grand Rally, crest, content-policy rules.
-- [[Red Collective]] — Workers' movement; home Coalport (Union Hall), capital Union House; Holm, ranks, General Strike, crest.
-- [[Civic Alliance]] — Centrist coalition; home Ashford (Assembly Rooms), capital Concord House; Grey, ranks, Headline Story, crest.
+- [[Iron Vanguard]] — Authoritarian party; home Duskwall (Beacon House), capital Vanguard House; Stahl, ranks, Grand Rally, crest; the Vanguard House gym comes later.
+- [[Red Collective]] — Workers' movement; home Coalport (Union Hall), capital Union House; Holm, ranks, General Strike, crest; the Underground Press comes later.
+- [[Civic Alliance]] — Centrist coalition; home Ashford (Assembly Rooms), capital Concord House; Grey, ranks, Headline Story, crest; the Alliance-only Press Club comes later.
 - [[Irongate]] — The capital battleground: five districts, 30 places, the 10-seat council at City Hall, missions, map art.
 - [[Ashford]] — Alliance home: College, Wharf and Station Road quarters, 12 places, 7 missions, the Gazette.
 - [[Coalport]] — Collective home and the first city built: Mill, Harbour and Sidings, 12 places, 7 missions, the Clarion.
@@ -95,9 +95,9 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Game Client]] — React/Vite client: routes, features, lib (trpc, query client, server clock, night turn), Tailwind tokens, packages/ui.
 - [[Rules Package]] — Pure game maths with no I/O: every module, the seeded RNG, seeds derived per request key.
 - [[Content Package]] — Zod-validated game data: the load and cross-check pipeline, the data files, maps and geometry helpers.
-- [[Database and Models]] — Mongoose models, embedded vs referenced, indexes, migrations 001–009, seed, playtest reports, in-memory replica set.
+- [[Database and Models]] — Mongoose models, embedded vs referenced, indexes, migrations 001–009 (010–013 planned), seed, playtest reports, in-memory replica set.
 - [[Scheduled Jobs]] — Agenda worker: the city-day job at 00:01 UTC, the journey-arrive tidy job, the lazy fallback; jobs planned for 6–9.
-- [[Atomic Actions and Idempotency]] — One key per tap, one transaction, a version guard, a stored result: runKeyedAction and withRequestKey.
+- [[Atomic Actions and Idempotency]] — One key per tap, one transaction, a version guard, a stored result; seeds derived from the key (ADR 0087).
 - [[Lazy Timers]] — Energy, Rested, Health, Heat, held time and journeys computed from value + timestamp; the read order in loadCharacter.
 - [[Modifiers]] — Named sources (rules, Issues, place factors), how they combine into result tags; laws and personal bonuses designed only.
 - [[Art and Maps Pipeline]] — art:build stills, art:tiles AVIF tiles, the art catalogue, source folders, the fallback ladder; R2 hosting deferred.
@@ -115,8 +115,8 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Slice 5 Risk]] — Built 5 Oct: 22 missions, Heat and record, the cells, the infirmary, run-ins, rival ground.
 - [[Slice 6 Together]] — Designed only: Campaign Events, the Faction tab, chat and presence, bail and visit favours.
 - [[Slice 7 The Nation]] — Designed only: terms, Governor/Chair/deputies/President, laws, Clearwater, National Control, petitions.
-- [[Slice 8 A Life in the City]] — Designed only: the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy, the Political Season.
-- [[Slice 9 Launch Readiness]] — Designed only: telemetry, the balance pass, anti-abuse, moderation, polish, the beta plan, hosting last.
+- [[Slice 8 A Life in the City]] — Designed only: the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy, the season; bodyguards and bar services added 14 Oct, to be designed.
+- [[Slice 9 Launch Readiness]] — Designed only: telemetry, the balance pass, anti-abuse, moderation, polish; ends locally, with hosting and the betas after it.
 - [[Review 1]] — 30 Sep, the first play-through: jobs become a wage, first day on your best stat, labels explained, orders-complete modal.
 - [[Review 2]] — 30 Sep: plain words for players, odds maths hidden, Political Capital in full, the Election card, map interaction.
 - [[Review 3]] — 2 Oct: free zoom back, the reward receipt, buttons that say their cost, training verbs, election screens.
@@ -137,4 +137,4 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 ## Questions
 
 - [[Open Questions]] — GDD Appendix C open items, defaults waiting for a playtest, QA and build leftovers after the voting rework.
-- [[Drift Report]] — Where the GDD, design docs, ADRs, the plan, content data and code disagree — found during the first build.
+- [[Drift Report]] — Where the GDD, design docs, ADRs, the plan, content data and code disagree; 6 rows open after the 14 Oct cleanup.

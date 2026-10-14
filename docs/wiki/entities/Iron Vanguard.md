@@ -85,13 +85,11 @@ Built: the faction, its home city, ranks, secretary, welcome set, branch rule an
 (slices 0–3, reworked by reviews 4–5 and the [[Voting Rework]]). Designed, not built: the Grand Rally
 ([[Slice 6 Together]]), the Chair, laws and party figure ([[Slice 7 The Nation]]).
 
-> [!warning] Drift
-> - [[GDD#16.1 The three factions|GDD §16.1]] names the exclusive location **Vanguard House, kind
->   `gym`** (faster training, cheaper bodyguards). In content, `irongate.vanguard-house` is kind
->   **`faction-hq`** and has no training perks.
-> - [[GDD#14.1 The five cities|GDD §14.1]] lists **Vanguard House** among Duskwall's key places.
->   Duskwall's HQ in content (and in GDD §13.5, §13.7) is **Beacon House**; Vanguard House is in
->   the capital.
+**Later, after the MVP** (the user, 14 Oct 2026): **Vanguard House as the movement's gym**
+(kind `gym`: faster STR/AGI training, cheaper bodyguards, a surplus market; [[GDD#16.1 The three factions|GDD §16.1]],
+now marked *planned*). Today `irongate.vanguard-house` is the party's capital HQ, kind
+**`faction-hq`**, with no training perks. [[GDD#14.1 The five cities|GDD §14.1]] now lists **Beacon
+House** as Duskwall's HQ (it said Vanguard House until 14 Oct 2026).
 
 ## Related
 

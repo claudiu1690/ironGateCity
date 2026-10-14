@@ -84,10 +84,10 @@ The Fortress Gate's kind changed from `barracks` to `ministry`.
 Built: The Fortress in slice 2; The Pass, missions, cells and infirmary in slice 5; one map and the
 Town Hall in review 4; the night theft in review 5. The Town is a later edition.
 
-> [!warning] Drift
-> [[GDD#14.1 The five cities|GDD §14.1]] lists **Vanguard House** as a Duskwall key place. In
-> content the Duskwall HQ is **Beacon House**; Vanguard House is the party's capital office in
-> Garrison Hill ([[Irongate]]).
+Duskwall's HQ is **Beacon House**. [[GDD#14.1 The five cities|GDD §14.1]] listed Vanguard House
+here until 14 Oct 2026; it now names Beacon House, the Fortress Gate, the State Archives, the
+Customs Market and the Goods Yard. Vanguard House is the party's capital office in Garrison Hill
+([[Irongate]]).
 
 ## Related
 

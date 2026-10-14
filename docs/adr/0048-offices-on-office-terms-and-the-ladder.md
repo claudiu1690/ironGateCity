@@ -1,6 +1,17 @@
 # ADR 0048 — Every office is an `officeTerms` row; the ladder is a count of completed terms; the Governor is chosen in the count's transaction
 
-**Status:** proposed (slice 7; extends ADR 0020) · **Date:** 2026-10-04
+**Status:** proposed (slice 7; extends ADR 0020); decision 6 superseded 2026-10-12 by ADR 0083 (the town votes on a rule) · **Date:** 2026-10-04
+
+## Amendment (14 Oct 2026)
+
+Decisions 1–5 stand. **Decision 6 is replaced.** There is no order paper, no council vote and no *None of these* any more (ADR 0083): the town votes on three rule cards, and the winner runs for five days from the count.
+
+- **The Governor's rule is card 1** of the home ballot: the head of `partyCardOf`'s chain (Governor → Chair → secretary), read at the set (the boundary into day 2).
+- `governor.setRule` writes the `governor` term's `rule` on cycle days 0–1, guarded by the rule ballot's `status: 'open'` (`$inc changes`), the same guard as `council.setRule` (ADR 0084 §5). There is no `$position: 0` push and no `ALREADY_ON_PAPER`.
+- **The locals' voting chain is removed**, and with it the four-*None of these* abstention (Unrest's removal of the party's card replaces it, ADR 0083 §6).
+- **The Mayor** (the capital) heads their party's card chain; contested cities read Mayor → top-seated player councillor → Chair → secretary. `governorOf`'s largest-bloc rule (decision 5) is unchanged.
+
+Where this lives now: ADR 0083, ADR 0085 (contested cities), and the voting-rework note in `docs/tech/slice-7.md`.
 
 ## Context
 

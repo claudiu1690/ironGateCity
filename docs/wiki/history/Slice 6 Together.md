@@ -33,7 +33,7 @@ From [[IMPLEMENTATION_PLAN#Slice 6 — Together|the plan]]: Campaign Events (sch
 ## Documents
 
 - Design: [[design/slice-6-together|design/slice-6-together]] (§19 points for the user, §20 settled, §21 review-4 addendum) and [[design/slice-6-screens|design/slice-6-screens]].
-- Tech design: [[tech/slice-6|tech/slice-6]].
+- Tech design: [[tech/slice-6|tech/slice-6]]. Updated 14 Oct 2026: the knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are applied (dated notes at the end); the planned migration is now `010-slice6-together` (§5.6, was 008). The ledger-for-losses choice from [[adr/0028-influence-ledger-contributions-and-awards|ADR 0028]]'s amendment is a slice-6 decision (§22.1).
 - ADRs: [[adr/0036-campaign-events-roster-signups-and-natural-limits|ADR 0036]] to [[adr/0042-faction-scoreboard-scoped-totals|ADR 0042]].
 - GDD: [[GDD#16.3 Campaign Events (new)|GDD §16.3]], [[GDD#16.2 Faction chat and presence (moved into MVP)|GDD §16.2]].
 - No QA yet.
@@ -44,7 +44,7 @@ From [[IMPLEMENTATION_PLAN#Slice 6 — Together|the plan]]: Campaign Events (sch
 - Settled with the architect (3 Oct): rolls seeded per event by a secret seed; the Grand Rally's *Steward* roles renamed *Ushers*; three chat channels per faction.
 
 > [!warning] Drift
-> Later rounds recorded **knock-ons for this tech doc that are not yet applied to it**: [[tech/review-4|tech/review-4]] §20 (Post bail on the cells list, orders `off`, the place card slot), [[tech/review-5|tech/review-5]] §18. The plan calls the screen "Faction HQ"; the design calls it the **Faction tab**.
+> The plan still calls the screen "Faction HQ"; the design calls it the **Faction tab**.
 
 ## QA and leftovers
 

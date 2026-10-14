@@ -57,8 +57,7 @@ What you wear is who you are in Irongate: **Charisma is worn** ([[Stats and Chec
 
 ## Open questions / drift
 
-> [!warning] Drift
-> `packages/rules/src/items.ts` (comment on `ItemSlot`): "weapon, utility and accessory come with the Wardrobe (slice 8)". GDD §21.1 and §20.3 say there is **no weapon slot**; the four slots are clothing, accessory, document and utility. Code comment only; no behaviour.
+- None open here. (The `ItemSlot` comment in `packages/rules/src/items.ts` that promised a weapon slot was corrected on 14 Oct 2026: four slots, no weapon slot.) Bodyguards, also slice 8, are on [[Bodyguards]].
 
 ## Related
 

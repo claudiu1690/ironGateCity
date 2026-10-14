@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Goal** | The ladder above the council, and a republic with a government on day one. **Governors and the Mayor** are chosen at the council count from councillors with a completed term; they set the rule voted on first and make one Address a term. **A Faction Chair** is elected every 28 days (the secretary is always on the ballot). The Chair sets **standing Party orders** with one **push** to a battleground and the party's target, **the party line** on every bill, **the party's rule** per council, tomorrow's fixtures and events in any open city. **Parliament** always sits: sixty seats, **local deputies** voting by a computed chain, bills on a three-day vote, **laws** as a third source of bounded effects (at most five in force), the veto and *vote it through anyway*. **The national election** runs every term: names in, the party's pick, the republic's vote, a score that is half ballots and half **who holds the republic** (National Control, 40 / 30 / 10 / 10 / 10), D'Hondt for sixty seats, the President. **Clearwater** opens as the second battleground (one meter, seven seats, three-way). **Petitions** dissolve a council; Parliament can **remove the President**; members can **remove the Chair**. Every act is one tap and settles at a boundary; nothing requires being online at a set time |
+| **Goal** | The ladder above the council, and a republic with a government on day one. **Governors and the Mayor** are chosen at the council count from councillors with a completed term; their rule is card 1 on the town's ballot (ADR 0083) and they make one Address a term. **A Faction Chair** is elected every 28 days (the secretary is always on the ballot). The Chair sets **standing Party orders** with one **push** to a battleground and the party's target, **the party line** on every bill, **the party's rule** per council, tomorrow's fixtures and events in any open city. **Parliament** always sits: sixty seats, **local deputies** voting by a computed chain, bills on a three-day vote, **laws** as a third source of bounded effects (at most five in force), the veto and *vote it through anyway*. **The national election** runs every term: names in, the party's pick, the republic's vote, a score that is half ballots and half **who holds the republic** (National Control, 40 / 30 / 10 / 10 / 10), D'Hondt for sixty seats, the President. **Clearwater** opens as the second battleground (one meter, seven seats, three-way). **Petitions** dissolve a council; Parliament can **remove the President**; members can **remove the Chair**. Every act is one tap and settles at a boundary; nothing requires being online at a set time |
 | **Question** | **Does holding office feel powerful, and does losing it make players want to fight back?** |
-| **Builds on** | Slices 0–4 as built on branch `slice-0` at `5d27adb` (the slice-4 fix round), **slice 5 as designed** in `docs/tech/slice-5.md` (being built now) and **slice 6 as designed** in `docs/tech/slice-6.md` (built next). Where this document leans on a slice-5 or slice-6 name (`heat`, `held`, `addHeat`, `runInChance`, `caughtChance`, `bailFor`, `walkOut`, `liveMarks`, `missionTarget`, `campaignEvents`, `eventSignups`, `ensureFixtures`, `fixtureFor`, `chatMessages`, `channelsOf`, `contributions` faction scopes), it is that design's name. If either slice's Deviations rename something, T11 follows the rename |
+| **Builds on** | Slices 0–4 as built on branch `slice-0` at `5d27adb` (the slice-4 fix round), **slice 5 as designed** in `docs/tech/slice-5.md` (being built now) and **slice 6 as designed** in `docs/tech/slice-6.md` (built next). Where this document leans on a slice-5 or slice-6 name (`heat`, `held`, `addHeat`, `runInChance`, `caughtChance`, `bailFor`, `walkOut`, `liveMarks`, `missionTarget`, `campaignEvents`, `eventSignups`, `ensureFixtures`, `fixtureFor`, `chatMessages`, `channelsOf`, `contributions` faction scopes), it is that design's name. If either slice's Deviations rename something, T11 follows the rename. **Reviews 4 and 5 and the voting rework** (ADR 0073–0086) are built; their knock-ons are applied to the sections below (14 Oct 2026) and kept as dated notes at the end |
 | **Design inputs** | `docs/design/slice-7-nation.md` (*design §n*) · `docs/design/slice-7-screens.md` (*screens §n*) · `docs/economy.md` §21 · GDD §1.5, §2, §3.3, §6.5, §13.7, §14.1, §14.4, §14.6, §14.8–§14.11, §15.1–§15.10, §16.2, §16.3, §17.1, §17.3, §18.3, §21.4, Appendix C #2, #8, #26, #40, #64–#73 · `docs/IMPLEMENTATION_PLAN.md` · ADR 0002, 0008, 0009, 0017–0023, 0026–0030, 0033, 0036, 0037, 0042 |
 | **ADRs** | [0043 the nation's day and the term](../adr/0043-nation-day-term-calendar-and-the-republic-document.md) · [0044 laws as a third source](../adr/0044-laws-a-third-modifier-source.md) · [0045 Parliament](../adr/0045-parliament-bills-slots-and-computed-local-deputies.md) · [0046 the faction document and the Chair's orders](../adr/0046-faction-document-chair-standing-orders-and-push.md) · [0047 elections above the council](../adr/0047-elections-above-the-council-reuse-the-box.md) · [0048 offices and the ladder](../adr/0048-offices-on-office-terms-and-the-ladder.md) · [0049 petitions and removals](../adr/0049-petitions-dissolution-and-removals.md) · [0050 Clearwater](../adr/0050-clearwater-single-meter-battleground.md) |
-| **Defaults taken** (design §21, pending the user) | **One office at the top, the President**, no Chancellor · **the secretary on every Chair ballot and the party's own figure on every pick** · petitions **dissolve** the council (no snap election) · **the secretaries table bills** for parties with no player Chair or deputy · Clearwater's baseline **evened to 22 / 22 / 22 / 34** · **The Front a teaser** · **several offices at once** allowed |
+| **Defaults taken** (design §21, pending the user) | **One office at the top, the President**, no Chancellor · **the secretary on every Chair ballot and the party's own figure on every pick** · petitions **dissolve** the council (no snap election) · **the secretaries table bills** for parties with no player Chair or deputy · Clearwater's baseline **evened to 22 / 22 / 22 / 34** · **The Front's four places later pins until slice 8** (review 4: Clearwater is a one-map city) · **several offices at once** allowed |
 | **Environment** | **Local only** until the end of the project. Everything is played in `pnpm dev:mem` with the dev panel (§8.7). A 28-day term is played on the test clock (`POST /api/test/term`, §8.6). No hosting work |
 
 Every number below is a GDD, design or economy number. Where the design leaves a point open, this document states a default and lists the question in §22.
@@ -19,9 +19,9 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 **In**
 
 - **The term calendar** (design §2): `termDay = (dayKey − TERM.epochDay) mod 28`, a pure function; the Chair's windows (days 9–14) and the national windows (days 19–27, office at day 0); the bootstrap government.
-- **The Governor and the Mayor** (design §3.1): chosen at the count (home, the capital, Clearwater), *Local* when nobody qualifies; **the Governor's rule** (days 0–1, at no cost) and **the Address** (+50 momentum, once a term); 20 PC and 30 FXP a boundary.
+- **The Governor and the Mayor** (design §3.1): chosen at the count (home, the capital, Clearwater), *Local* when nobody qualifies; **the Governor's rule**, card 1 of the town's ballot (days 0–1, at no cost), and **the Address** (+50 momentum, once a term); 20 PC and 30 FXP a boundary.
 - **The Faction Chair** (design §4):
-  - the election: names in, two backers (the secretary's backing as slice 3's), the vote with **the secretary on the ballot**, the count;
+  - the election: names in (**25 PC spent, no backers needed**; backing optional, +3 each; the branch's backing as the voting rework's), the vote with **the secretary on the ballot**, the count;
   - **standing orders** (three picks that repeat), **the push** to a battleground with **the party's target** (25 / 50 / 100) and its +10 Party XP;
   - **the party line** on every bill; **the party's rule** per council; **tomorrow's fixtures**; **calling events in any open city** without a role; **the Officers channel**;
   - **a vote on the Chair** (automatic on entering Unrest, or by petition); 20 PC and 40 FXP a boundary.
@@ -29,10 +29,10 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 - **Laws** (design §7): the catalogue of thirteen as content, a closed effect DSL with seven new kinds, `appliesTo`, the law book, *LAW* tags on tickets and lines in result modals.
 - **The national election** (design §6): names in (President with two pledges, the party's list), the party's pick with **the party's own figure** on the ballot, the republic's vote, backing, the score with its turnout weight at thirty ballots, D'Hondt for sixty seats, the lists, the provisional day, office at day 0, two terms in a row.
 - **National Control** (design §8): the weighted snapshot at every boundary, *leads the republic*, the nation map's bar; **control's Heat rule** (+25 % for rivals of the controlling party) in the capital's districts and Clearwater.
-- **Clearwater** (design §9): the city (three quarters, The Front a teaser), nine places, 24 tier-1 actions, three jobs, a room, four missions, the council of seven (D'Hondt, four of seven, the Casino), nine local candidates, six Issues, *The Clearwater Courier*, the train open.
+- **Clearwater** (design §9): the city (**one map**, no quarter frames, outlines or labels; The Front's four places later pins until slice 8; review 4, ADR 0076), nine places, 24 tier-1 actions, three jobs, lodgings on the Rows, four missions, the council of seven (D'Hondt for seats; **the rule is the largest bloc's card**, ADR 0085; the Casino is its hall), nine local candidates, six Issues, *The Clearwater Courier*, the train open. A battleground: no patrols and no night run-in rule.
 - **Petitions and removals** (design §10): a petition to dissolve a council; a vote to remove the President (a player's motion or the clerk's); a vote on the Chair; **the Town Hall** event (GDD §16.3's seventh) with its signatures.
-- **The paper** (design §11): *FROM THE CAPITAL* / *THE REPUBLIC*, personal lines, the Courier, the front pages for every office.
-- **Ambition chapter 3**, *The deposit*, and `keep.deposit-receipt` (design §13).
+- **The paper** (design §11): *FROM THE CAPITAL* / *THE REPUBLIC*, personal lines, the Courier (the lake resident's paper; ADR 0074), the front pages for every office.
+- **Ambition chapter 3** of *The Names on the Stone* and its keepsake (design §13; re-strung for *Coming home* in review 5, and to be re-read by the designer after the voting rework, since standing no longer has a deposit).
 - **Art**: three portraits and three scenes (new), `scene.parliament` catalogued (§13).
 - **The dev panel and test hooks** for a term on the test clock, and the playtest report's **nation** section.
 
@@ -60,17 +60,17 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 | Backing | Backers are public on the candidacy (`endorsements[]`); the one-per-election guard is a new `termBackings[]` on the character (separate from the council's `endorsementsGiven`, which is pruned too fast for a 28-day window) | ADR 0047 |
 | The national count and office | Two transactions on two days: **the count** at the boundary into term day 27 (scores from that boundary's control snapshot, D'Hondt, lists, provisional), and **taking office** at day 0 (the President's and the player deputies' `officeTerms`, the old bills lapsed) | ADR 0047 (Q3) |
 | Offices | `officeTerms.office` += `governor`, `chair`, `deputy`, `president` (absent = `council`), same `completed` and `vacatedDay`. **The ladder is a count of completed terms by office**; stipends generalise `stipendBoundaries` per office; the character's `offices[]` projection gains the kind | ADR 0048 (Q2) |
-| The Governor | Chosen **in the count's transaction** (`governorOf`, pure); a `governor` term with the council's key; `cities.council.governor` projection. The Governor's rule is **added as item 1** (ahead of the party's item, §22.1 Q7); locals of the Governor's party with no player lead vote for it | ADR 0048, §6.8 (Q9) |
-| The party's rule | `factions.rules[cityId]`, falling back to `faction.branchMotion`; written into **the next** order paper at its count (§22.1 Q8) | ADR 0046 (Q9) |
-| Petitions | **`petitions`** collection (dissolve and Chair kinds), signatures embedded with a set-once guard; the opening is unique per open petition; **closed by the city's boundary before the division** (dissolve) or by the nation's day (the Chair's) | ADR 0049 (Q10) |
-| Dissolution | The council's terms get `vacatedDay` (not completed), the order paper `dissolved` (no division), the rule in force struck (`toDay` cut), the Governor's chair to the bloc's top local; no new seats until the next count | ADR 0049 |
+| The Governor | Chosen **in the count's transaction** (`governorOf`, pure); a `governor` term with the council's key; `cities.council.governor` projection. **The Governor's rule is card 1** of the home ballot: the head of `partyCardOf`'s chain (Governor → Chair → secretary), read at the set. There is no council vote and no locals' chain (voting rework) | ADR 0048 (amended), 0083, §6.8 (Q9) |
+| The party's rule | `factions.rules[cityId]`, falling back to `faction.branchMotion`; **read at the set** (the boundary into day 2) of the next ballot, where it is the party's card unless a Governor or Mayor of the party sits or a player councillor of the party leads (contested cities: Mayor → top-seated player councillor → Chair → secretary; home: Governor → Chair → secretary) | ADR 0046, 0085 (Q9) |
+| Petitions | **`petitions`** collection (dissolve and Chair kinds), signatures embedded with a set-once guard; the opening is unique per open petition; **closed by the city's boundary before the set** (dissolve) or by the nation's day (the Chair's) | ADR 0049 (amended) (Q10) |
+| Dissolution | The council's terms get `vacatedDay` (not completed), the Governor's chair to the bloc's top local; **the rule in force runs out its window** (a city always has a rule; GDD §15.9); the open ballot proceeds, keeping or taking its cards from the party's chain and the seated locals; no new seats until the next count | ADR 0049 (amended) |
 | Removal of the President | A bill of kind `removal` (40 of 60); the clerk's automatic motion when **the party's control share** is under 25 % (§22.1 Q11); passing replaces the President **at the division** with the runner-up | ADR 0045, 0049 |
-| Clearwater | A **single-meter battleground on its `cities` document** (opinion, state, Groundswell, state log); the capital's count and division **generalised by parameters** (`countBattleground` with seats 7 and lists of three; `divideBlocs` with four of seven); `processBattlegroundBoundary` | ADR 0050 (Q7) |
+| Clearwater | A **single-meter battleground on its `cities` document** (opinion, state, Groundswell, state log); the capital's count **generalised by parameters** (`countBattleground` with seats 7 and lists of three, `ballotsByFaction` from `cardBallots`); **the rule by `decideBlocRule`** (`decideCapitalRule` generalised to one meter; no division, no four-of-seven bar); `processBattlegroundBoundary`. One map, the Casino its hall | ADR 0050, 0085 (Q7) |
 | Control's Heat rule | A place factor (not a law): `heatGainPct` +25 for a rival of the party controlling the district or Clearwater, on missions and events at the place | ADR 0050 (Q7) |
 | Town Hall | A seventh event type with `special: 'petitionSignatures'`; at resolution, the city's open dissolve petition gains 3 / 2 / 1 / 0 signatures in the same world transaction | §6.9 (Q11) |
 | The paper | National lines are **facts written by the nation's day** to `nation.news`, selected live (two a day); personal lines are stored at the settlement from the member's facts, as slices 3–6 | §11 |
 | Routes | `/parliament`, `/parliament/bill/$billId`, `/parliament/laws`, `/office/governor/$cityId`, `/office/president`, `/faction?tab=chair` (the desk; `/office/chair` redirects), `/faction/election…`, `/election/pick…`, `/election/national…`, `/council/petition` | §12.1 |
-| Jobs | `nation-day` (new); `city-day` extended (Clearwater, the Governor, the petition close, the divide chain, the Chair's fixtures and rules) | §9 |
+| Jobs | `nation-day` (new); `city-day` extended (Clearwater, the Governor, the petition close, the card chain at the set, the Chair's fixtures and rules) | §9 |
 
 ---
 
@@ -85,14 +85,14 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 | **every** | (1) the National Control snapshot from the five cities as settled for *d*; (2) the push results of day *d − 1* per faction; (3) petitions on the Chair closing at *d*; votes on the Chair counting at *d*; the automatic vote on the Chair when the home city entered Unrest at *d*; (4) divisions due at *d*; enactments due at *d* (signature day passed); (5) the term-day work below; (6) on a Monday: the President's slot for a party figure, then one secretary's bill; (7) the clerk's motion to remove the President when its trigger holds; (8) `nation.news` for *d*; `world.settledDay = d` |
 | **0** | **Take office**: the counted national election of term *n − 1* seats the President (`president` term) and the player deputies (`deputy` terms); the old President's and deputies' terms complete; open bills of term *n − 1* lapse; `nation.government` and `nation.term` move. With no counted election (bootstrap), the government carries over |
 | **9** | Open the three Chair elections (`factionElections` `chair:{f}:{n}`, status `names`) |
-| **11** | Close the Chair's names: candidacies without two counted backers are struck (deposit due back); the ballot is frozen (players + the secretary) → `voting`; no player standing → `void` |
+| **11** | Close the Chair's names: the ballot is frozen (every standing player by filing + the secretary; no strike, no refund) → `voting`; no player standing → `void` |
 | **14** | **The Chair's count**: the winner's `chair` term from day 14 to the next term's day 14; the previous Chair's term completes; `factions.chair` moves; a change of Chair clears the standing orders, rules and fixtures (§22.1 Q22) |
 | **19** | Open the national election (`nationalElections` `nation:{n}`, status `names`) |
 | **21** | Close names → open the three picks (each faction's ballot: its President candidates + its figure; no player candidate → the figure stands without a vote) |
 | **23** | Count the picks; freeze the three candidates → `voting` (ballots and backing open) |
 | **27** | **The national count** (provisional): scores, President and runner-up, D'Hondt for sixty, the lists, the seats; nothing changes in office until day 0 |
 
-The council's five-day cycle is unchanged (Clearwater's offset 4). The city's boundary keeps its order (ADR 0017, 0027) with three additions: **the petition close before the division**, **the Governor at the count**, and the Chair's rule and fixtures read from `factions`.
+The council's five-day cycle is the voting rework's (Clearwater's offset 4): candidates stand and councillors set their rule on days 0–1, **the set** freezes the list and the three cards at the boundary into day 2, the town votes on days 2–4, and **the count** decides the seats and the rule at the boundary into day 0 (ADR 0083). The city's boundary keeps its order (ADR 0017, 0027) with three additions: **the petition close before the set**, **the Governor at the count**, and the Chair's rule (at the set) and fixtures read from `factions`.
 
 ### 3.2 A bill's life
 
@@ -145,8 +145,8 @@ boundary into 0   take office (§3.1) → status 'seated'
 ### 3.4 The Chair's term
 
 ```
-day 9–10   chair.stand (25 PC) · chair.back (10 PC) · the secretary's backing when the member's orders are done
-boundary into 11  close: struck without two counted backers (deposit due back); ballot = players + the secretary
+day 9–10   chair.stand (25 PC, spent) · chair.back (10 PC, optional, +3) · the secretary's backing when the member's orders are done
+boundary into 11  close: ballot = every standing player by filing + the secretary (no strike, no refund)
 day 11–13  chair.vote (Rank 2+, from anywhere)                             → votes 'chair:{f}:{n}'
 boundary into 14  countChair → the Chair from day 14; factions.chair; the desk opens
 day 14 → next term's day 14
@@ -177,7 +177,7 @@ day 14 → next term's day 14
 1. `ensurePlaces` (slices 4–6), Clearwater included when it is the current, residence or job city.
 2. **`ensureNationDay`**: one read of `nation` by `_id`. When `world.settledDay < today`, it settles **every** city for today first (five reads when they are settled), then the nation's boundaries. The document is passed on (`LoadedCharacter.nation`): the laws for the modifiers, the term, the government.
 3. `ensureRunInSettled`, `ensureReleased`, `ensureEventsResolved` (slices 5–6).
-4. `ensureSettled` v7: on a new day, **one read of the member's `factions` document** (the standing orders and the push for the day, the push results to pay); the stipends of every office; refunds of struck Chair deposits; the personal national facts (§11.2).
+4. `ensureSettled` v7: on a new day, **one read of the member's `factions` document** (the standing orders and the push for the day, the push results to pay); the stipends of every office; the personal national facts (§11.2). (No refunds: the voting rework retired the deposit.)
 5. `ensureEventsCredited`, `ensureArrived`, `touchPresence` (slice 6).
 
 With no new day, slice 7 adds **one indexed read** to every request (`nation`), which replaces nothing but carries the laws every act needs. The faction document is read once a day per member, and by the views that show orders.
@@ -186,10 +186,10 @@ With no new day, slice 7 adds **one indexed read** to every request (`nation`), 
 
 | # | Screen (route) | Procedure | Writes |
 |---|---|---|---|
-| 0 | any screen | the read path (§3.6) | city days, **the nation's day**, the settlement (stipends, the push bonus, refunds) |
+| 0 | any screen | the read path (§3.6) | city days, **the nation's day**, the settlement (stipends, the push bonus) |
 | 1 | Nation map (`/map/nation`), the republic sheet | `nation.get` | — |
 | 2 | Me · Offices and the ladder | `office.mine` | — |
-| 3 | Governor / Mayor (`/office/governor/$cityId`) | `office.governor`, `governor.setRule`, `governor.address` | `ordinances` (order paper), `officeTerms`, `issues`, `contributions`, `characters`, `requestLogs` |
+| 3 | Governor / Mayor (`/office/governor/$cityId`) | `office.governor`, `governor.setRule`, `governor.address` | `officeTerms` (the term's `rule`), `ordinances` (the rule ballot's `changes`), `issues`, `contributions`, `characters`, `requestLogs` |
 | 4 | Faction · Chair (`/faction?tab=chair`) | `chair.desk`, `chair.setOrders`, `chair.setLine`, `chair.setRule`, `chair.setFixture`, `chair.callEvent` | `factions`, `bills`, `campaignEvents`, `requestLogs`, `chatMessages` |
 | 5 | Faction · the Chair's election (`/faction/election…`) | `chairElection.get`, `.stand`, `.back`, `.vote`, `.result` | `candidacies`, `votes`, `factionElections`, `characters` |
 | 6 | A vote on the Chair | `confidence.get`, `confidence.openPetition`, `.sign`, `.vote` | `petitions`, `votes`, `factionElections`, `characters` |
@@ -239,8 +239,13 @@ Faction += {
 City += {
   nationalWeight: z.number().positive().max(1),   // 0.40 · 0.30 · 0.10 (design §8)
   council.seats: 7 | 10 (unchanged), council.listSize?: z.int().min(2).max(3),   // three in Clearwater
+  council.hall: { locationId: Id },               // review 4 (ADR 0077): Clearwater's is 'clearwater.casino' (kind bar)
 };
-Quarter.opens.edition 'later' may have no location (The Front)
+// Review 4 (ADR 0076): Clearwater is a one-map city: no quarters with frames, outlines or labels. The Front's four
+// places are `laterPins` (shown, locked) until slice 8 opens them as locations.
+Location.lodgings (review 4): the Lodgings card on the Rows; allowed in every battleground city (ROOM.cityId is gone)
+Location.treatment (review 5): Clearwater's Sanatorium (`hospital`) carries { carer: 'sister' | 'matron' } (the designer picks)
+Ordinance.plainLine (review 4): required on any new ordinance
 
 OrderTemplate += {
   family: Id.optional(),                          // the Chair's menu entry this template serves (ADR 0046)
@@ -268,10 +273,10 @@ NationalLine = z.strictObject({ id: Id, priority: z.int().min(0).max(3), headlin
 - **Laws.** Thirteen, ids unique, each `factionId` names a party. Every effect is a kind in `LAW_BOUNDS` with its value inside the bound; **no `fxpPct`, no `chancePct`** (design §5.4). `appliesTo` only on laws (an ordinance or Issue effect with it is refused). A law is **factional** when any effect's `appliesTo` is not `all`, and the design's *Needs* column must agree (31 or 36: the loader computes it, the content test compares the design table). `caughtDelta` only with `appliesTo` absent or `others`. Effect lines ≤ 60, lines ≤ 120.
 - **Factions.** `preferredLaws` names laws; eight local deputies each; the figure's portrait is a `portrait`; `house.locationId` is the faction's capital house (`faction-hq` in Irongate).
 - **Cities.** The `nationalWeight`s sum to 1.00 (0.40 + 0.30 + 3 × 0.10); Clearwater is `battleground` with `council.offset` 4, `seats` 7, `listSize` 3; its baseline sums to 100 and is the design's 22 / 22 / 22 / 34; `nation.cities[clearwater]` is `service: 'open'` and carries no `baselineOpinion` of its own (the city has one).
-- **Quarters.** A quarter with `opens.edition` may have no location; every other quarter has at least one; **the landing** (the quarter holding the arrival pin's station) is not a teaser (§21 #6).
+- **Quarters.** Clearwater has none (a one-map city, review 4); The Front's four places are `laterPins`. The "teaser landing" rule of the first draft is gone.
 - **Orders.** Every faction has exactly one `push` template for slots A and B, with `match.cityId: 'push'` (and `districtId: 'push'` where it counts doors in a district) and a `{place}` in its title; push templates are never in the rotation. A `family` is shared by at most one template per (faction, slot, residence). Each faction has the Clearwater rotation (`residence: 'clearwater'`): slot A one, slot B two (design §9.1).
 - **Events.** Seven types; the Town Hall's roles, Energy (50 in all), base swing 1.2, difficulty 12 / 14, `special: 'petitionSignatures'`; venue rows for the Town Hall in each home city, each capital district and Clearwater, and for the three common events in Clearwater (§22.1 Q5).
-- **Clearwater.** Nine places, kinds from the closed list, each pin equal to `mapPins.clearwater`; 24 tier-1 actions (canvass 9, speech 3, propaganda 4, intelligence 5, training 3); three jobs; four missions with the slice-5 shape and `runInPool`; nine local candidates, three per party, profiles 28 / 22 / 16.
+- **Clearwater.** Nine places, kinds from the closed list, each pin equal to `mapPins.clearwater`; 24 tier-1 actions (canvass 9, speech 3, propaganda 4, intelligence 5, training 3); three jobs (the Tram conductor `dailyPay: 240`, review 5's ladder; the rung test covers it); four missions with the slice-5 shape and `runInPool`; nine local candidates, three per party, profiles 28 / 22 / 16 (no `rule`: in a contested city the rule is the largest bloc's party card, as the capital's locals, ADR 0084 §5, 0085); `council.hall` names the Casino; lodgings on the Rows; the Sanatorium's `treatment`. No patrol deck entry (a battleground has no patrols).
 - **Issues.** Thirty; six with a Clearwater `where`; `issue.tram-fares` gains its Clearwater entry.
 - **Headlines.** The national lines of design §11.1; the personal lines of §11.2 in all five papers; the Courier's political set (§11.3.1) and the rest of its city set; placeholders only from §4.3.
 - **Vocabulary.** Both QA guards over every new string. *Parliament, deputy, President, Chair, Governor, Mayor, law, veto, petition, term* pass; *whip, Directive, recall, Legislature, National Control, no-confidence, Chancellor* must not appear in a player string; **`The Front`** (Clearwater's quarter) joins the `front` allow-list beside *the front door* and *front page* (design §19).
@@ -288,7 +293,7 @@ NationalLine = z.strictObject({ id: Id, priority: z.int().min(0).max(3), headlin
 
 | File | Contents | Source |
 |---|---|---|
-| `data/cities/clearwater.ts` | the city, three quarters (frames, outlines, The Front's teaser line), nine places, 24 actions with 45 outcome texts, the Casino hall, the Courier, the council | design §9.1–§9.3 |
+| `data/cities/clearwater.ts` | the city (one map, review 4; The Front's four places as `laterPins`), nine places, 24 actions with 45 outcome texts, the Casino as `council.hall`, lodgings on the Rows, the Sanatorium's treatment, the Courier, the council | design §9.1–§9.3 |
 | `data/jobs.ts`, `data/missions.ts`, `data/candidates.ts` | three jobs; four missions (11 ways, 12 outcomes, `runInPool`); the nine Clearwater candidates | design §9.4–§9.5 |
 | `data/issues.ts` | six new Issues; `issue.tram-fares`'s Clearwater entry | design §9.6 |
 | `data/laws.ts` (new) | the thirteen laws (lines, effect lines, effects, days, secretaries' lines) | design §7.2 |
@@ -296,7 +301,7 @@ NationalLine = z.strictObject({ id: Id, priority: z.int().min(0).max(3), headlin
 | `data/orders.ts` | `family` on rotation templates; two push templates per faction; the Clearwater rotation | §22.1 Q1–Q2 |
 | `data/events.ts` | the Town Hall; the venue rows of §4.2 | design §10.4; §22.1 Q5 |
 | `data/headlines.ts`, `heraldHeadlines.ts`, `courierHeadlines.ts` (new), `nationalLines.ts` (new) | national lines; personal lines in five voices; the Courier's set | design §11 |
-| `data/ambitions.ts`, `data/items.ts` | chapter 3, *The deposit*; `keep.deposit-receipt` | design §13 |
+| `data/ambitions.ts`, `data/items.ts` | chapter 3 of *The Names on the Stone* and its keepsake (the strings as re-read by the designer after the voting rework: no deposit is returned) | design §13 |
 | `data/nation.ts` | Clearwater `service: 'open'`, line, no own baseline | design §9.1 |
 | `data/art.ts` | §13's seven entries; the Town Hall's `art` | design §20 |
 | `data/copy.ts` | screens §15's strings, the thirteen help notes, the slice-7 modal texts | screens §12, §15; design §12 |
@@ -377,7 +382,6 @@ StandingOrders = { fromDay: DayKey, picks: { A: string | null, B: string | null,
   seed: string,                        // 32 hex; the draw (never needed by the Chair's ties, kept for replay)
   filed: number,                       // $inc by stand (ADR 0018)
   ballots: number,                     // $inc by vote; never in a view before the count (ADR 0019)
-  smallFaction: { backers: number } | null,
   ballot: BallotLine[] | null,         // frozen at the close: players by filing, then 'n:secretary'
   chairTermId: ObjectId | null, trigger: 'unrest' | 'petition' | null,   // confidence only
   result: ChairCount | ConfidenceCount | null,
@@ -477,11 +481,12 @@ Indexes: `{ cityId: 1 }` **unique, partial** `{ status: 'open', kind: 'dissolve'
 ### 5.8 Changed collections
 
 - **`officeTerms`**: `office: 'council' | 'governor' | 'chair' | 'deputy' | 'president'` (absent = council); `factionId` on every new kind; `councilKey` per office (`governor:{city}:{cycle}`, `chair:{f}:{term}`, `deputy:{term}`, `president:{term}`); `seat` = 1 (the governor, the Chair, the President) or the list place (a deputy); `powers: { address?: { day, cityId, issueDocId }, veto?: { billId, day }, rule?: { ordinanceId, day } }` (set-once guards); `pledges?: Array<{ lawId, keptDay: DayKey | null }>`; `via?: 'election' | 'runnerUp'`. Index added: `{ office: 1, councilKey: 1 }`. The unique `{ councilKey, seat, fromDay }` serves every office (a runner-up's term starts on its own day).
-- **`candidacies`**: `kind: 'council' | 'chair' | 'president' | 'list'` (absent = council); `termIndex` (non-council); `cityId` and `cycle` optional for non-council kinds; `pledges: string[]`; `deposit` states as slice 3. The unique `{ electionId, characterId }` keeps a member to one national candidacy a term (President *or* the list).
-- **`votes`**: new `electionId` namespaces (`chair:…`, `pick:…`, `nation:…`, `confidence:…`); `candidateKey` is `p:{id}`, `n:secretary`, `n:{figureId}`, a faction id (the republic's vote) or `confidence` / `noConfidence`. ADR 0019 unchanged.
+- **`candidacies`**: `kind: 'council' | 'chair' | 'president' | 'list'` (absent = council); `termIndex` (non-council); `cityId` and `cycle` optional for non-council kinds; `pledges: string[]`; `deposit: 'spent'` for the Chair and the list (ADR 0084: no strike, no refund; the President's 100 PC is returned only by a withdrawal on days 19–20). The unique `{ electionId, characterId }` keeps a member to one national candidacy a term (President *or* the list).
+- **`votes`**: new `electionId` namespaces (`chair:…`, `pick:…`, `nation:…`, `confidence:…`); `candidateKey` is `p:{id}`, `n:secretary`, `n:{figureId}`, a faction id (the republic's vote) or `confidence` / `noConfidence`. Council votes carry `ordinanceId` instead (the voting rework, ADR 0083); exactly one of the two is set. ADR 0019 unchanged.
 - **`cities`**: Clearwater's `opinion`, `state` (a district's `DistrictStateDoc`), `groundswell`, `stateLog` (ADR 0050); every council city's `council.governor: { kind: 'player' | 'npc', characterId?, npcId?, name, factionId, termId: ObjectId | null, local: boolean } | null` and `council.dissolved: { day, petitionId } | null`.
 - **`elections`**: `kind` += `'battleground'` (Clearwater: one election per cycle for the city's seven seats).
-- **`ordinances`** (order papers): `items[].movedBy.kind` += `'governor' | 'chair'` (the party's rule set by a player Chair); `status` += `'dissolved'`.
+- **`ordinances`** (the rule ballots, model `RuleBallot`, ADR 0083): a card's `by` gains `CardBy.via` `'governor' | 'mayor' | 'chair'` for the party card; no new status (a dissolution leaves the open ballot to proceed).
+- **`officeTerms.rule`** (the voting rework) holds the Governor's rule on the `governor` term, as it holds a councillor's.
 - **`contributions`**: scope `push|{f}|{day}` (one row per member: the party's target).
 - **`campaignEvents`**: `calledBy.kind` += `'chair'`; **`eventSignups`** unchanged.
 - **`chatMessages`**: channel `officers:{f}`.
@@ -501,17 +506,17 @@ Indexes: `{ cityId: 1 }` **unique, partial** `{ status: 'open', kind: 'dissolve'
 }
 ```
 
-No new index on `characters`: the eligibility rolls use slice 3's `{ residence.cityId, residence.districtId, factionId, rank, lastActionAt }` and a new `{ factionId: 1, rank: 1, lastActionAt: -1 }` (the faction-wide rolls of the Chair's small-faction rule, the petition on the Chair and turnout).
+No new index on `characters`: the eligibility rolls use slice 3's `{ residence.cityId, residence.districtId, factionId, rank, lastActionAt }` and a new `{ factionId: 1, rank: 1, lastActionAt: -1 }` (the faction-wide rolls of the petition on the Chair and turnout).
 
-### 5.10 Migration `009-slice7-nation.ts`
+### 5.10 Migration `011-slice7-nation.ts`
 
-`ensureIndexes()` runs it after 008. Idempotent: each step filters on the field's absence.
+`ensureIndexes()` runs it after 010 (renumbered 14 Oct 2026: review 4 took 008 and the voting rework 009). Idempotent: each step filters on the field's absence.
 
 1. `officeTerms` without `office`: `office: 'council'`. `candidacies` without `kind`: `kind: 'council'`.
 2. Characters: `termBackings: []`; each `offices[]` entry gains `office: 'council'` and `key` from `councilKey`.
 3. Nothing else: the `nation` and `factions` documents are made by the nation's bootstrap, Clearwater's city document by its city day's bootstrap (ADR 0017's pattern), both on the worker's start or the first request.
 
-A test runs 009 twice (no change the second time).
+A test runs 011 twice (no change the second time).
 
 ---
 
@@ -528,7 +533,7 @@ export const TERM_DAYS = {
   removalClosed: [[0, 4], [24, 27]],
 } as const;                                                           // design §2, §5.2, §10.2
 export const GOVERNOR = { stipend: { pc: 20, fxp: 30 }, address: 50, ruleCycleDays: [0, 1] } as const;
-export const CHAIR = { rank: 4, tenureDays: 14, deposit: 25, backers: 2, backCost: 10, backersCounted: 5,
+export const CHAIR = { rank: 4, tenureDays: 14, deposit: 25 /* spent */, backCost: 10, backersCounted: 5,
                        backerWeight: 3, voteRank: 2, maxConsecutive: 2, stipend: { pc: 20, fxp: 40 } } as const;
 export const DEPUTY = { rank: 5, tenureDays: 14, deposit: 25, councilTerms: 3, billCost: 50,
                        stipend: { pc: 5, fxp: 30 } } as const;
@@ -544,10 +549,10 @@ export const PETITION = { openRank: 3, signRank: 2, cost: 10, openCycleDays: [0,
                           min: 3, share: 0.25, gapDays: 7 } as const;
 export const CONFIDENCE = { petitionRank: 3, cost: 10, min: 3, share: 0.25, closeAfter: 2, notFirstDays: 5,
                             notLastDays: 3, voteDays: 2, removeShare: 2 / 3, minNoVotes: 3 } as const;
-export const BATTLEGROUND_COUNCILS = {                                // ADR 0050: the capital's and Clearwater's
-  capital: { seats: 10, perPlace: 2, passVotes: 6, listSize: 2, fullTurnout: 10 },
-  clearwater: { seats: 7, perPlace: 7, passVotes: 4, listSize: 3, fullTurnout: 10 },
-} as const;
+export const BATTLEGROUND_COUNCILS = {                                // ADR 0050, 0085: the capital's and Clearwater's
+  capital: { seats: 10, perPlace: 2, listSize: 2, fullTurnout: 10 },  // no passVotes: the voting rework removed the division
+  clearwater: { seats: 7, perPlace: 7, listSize: 3, fullTurnout: 10 },
+} as const;                                                           // feeds TownHallView.seatCount (review 4)
 export const CONTROL = { rivalHeatGainPct: 25 } as const;            // design §8
 export const TOWN_HALL = { signatures: { triumph: 3, success: 2, mixed: 1, fiasco: 0 } } as const;
 export const LAW_BOUNDS = {                                           // ADR 0044; the catalogue is closed
@@ -558,7 +563,7 @@ export const LAW_BOUNDS = {                                           // ADR 004
 } as const;
 ```
 
-`CAPITAL_COUNCIL` stays as an alias of `BATTLEGROUND_COUNCILS.capital` for slice-4 callers. `ROOM.cityId` goes: the room is offered in every `battleground` city (the content role; design §9.1).
+`CAPITAL_COUNCIL` stays as an alias of `BATTLEGROUND_COUNCILS.capital` for slice-4 callers. `ROOM.cityId` goes: lodgings are `Location.lodgings` (review 4), and the loader allows them in every `battleground` city (design §9.1); `residence.room` already takes a `locationId`.
 
 ### 6.2 `term.ts`
 
@@ -641,7 +646,7 @@ export function countChair(i: { lines: ReadonlyArray<{ key: string; kind: 'playe
   termsWeight: number; order: number }>; votes: Readonly<Record<string, number>> }):
   { rows: ChairRow[]; winnerKey: string; secretaryKept: boolean; margin: number };
 //  total = votes + 3 × min(5, backers) (the secretary: votes); ties votes, backers, termsWeight, filing
-export const closeChairNames = closeNominations;                      // slice 3's, with the small rule faction-wide
+export const freezeChairList = freezeList;                            // the voting rework's: standing players by filing (no strike, no small rule), then 'n:secretary'
 export function confidenceResult(c: { confidence: number; noConfidence: number }): { removed: boolean };
 //  removed when noConfidence ≥ 2/3 of the votes cast and noConfidence ≥ 3 (§22.1 Q29)
 export const signaturesNeeded = (eligible: number, min = 3) => Math.max(min, Math.ceil(eligible / 4));
@@ -732,7 +737,7 @@ ModifierSource.kind += 'law';                                          // order:
 | `xpPct` | `rewardShares` gains `xp: BonusShare[]` (scope `missions` on tier 2, `actions` on tier 1); `tier2Rewards` and `computeRewards` add each as a part on the XP base | a part on base, halves up (ADR 0030's rule for pay, Iron and Party XP) |
 | `missionEnergyDelta` | `missionEnergy(base, seenAs, m) = max(1, base + Σ energyDelta(seenAs) + Σ missionEnergyDelta)` | rewards stay on the content Energy (ADR 0021 §3) |
 | `journeyTimePct` | `journeyMinutes(legMinutes, m) = max(1, roundHalfUp(minutes × Π(1 + p/100)))`, at boarding | 12 → 9, 25 → 19, 37 → 28 |
-| `runInPct` | `runInChance(… pcts)`: the chance × Π(1 + p/100), rounded half up, then the 0..90 clamp; `window: 'night'` only while `isNight(now)` | tier 2 and the rival-ground tier-1 15 (§22.1 Q21) |
+| `runInPct` | `runInChance(… pcts)`: the chance × Π(1 + p/100), rounded half up, then the 0..90 clamp; `window: 'night'` only while `nightAt(now).night` at the act (review 5, ADR 0079). **The Curfew applies after the night base** (review 5): the rival-ground tier-1 night run-in 25 → 50, before the 90 clamp. It also doubles **the patrol chance** (`patrolChance({ curfew: true })`, ADR 0081), read from the same law source at the read. Patrols and the night base exist only on rival ground, so in Clearwater and the capital the Curfew doubles the missions' run-in only | tier 2 and the rival-ground tier-1 15 by day, 25 at night (§22.1 Q21) |
 | `infirmaryCostPct` | `walkOut(… price: priceWith(100, priceLines(m, 'infirmaryCostPct')))` | 100 → 50 |
 | `markFadeDays` | `liveMarks(marks, today, fadeDaysOn: (day) => number)`: minor marks are gone once **any** day X with latest ≤ X ≤ today has X ≥ latest + fadeDaysOn(X) | monotone: a law that ends never brings a mark back; `fadeDaysOn` = the smallest `markFadeDays` in force on X, else 14 |
 | `caughtDelta` | `caughtChance(… deltas)`: + Σ value where the mission's target faction is the law's party | before the 2..95 clamp |
@@ -762,26 +767,30 @@ export function pushTitle(t: OrderTemplate, place: { cityName: string; districtN
 export const pushMet = (count: number, target: number) => count >= target;
 ```
 
-### 6.8 `council.ts` v3 and the battleground count (ADR 0048, 0050)
+### 6.8 The rule ballot's chain and the battleground count (ADR 0048, 0050, 0083, 0085)
+
+Rewritten for the voting rework (14 Oct 2026). There is no order paper, no division and no locals' chain: the town votes on three cards (`homeBallot`, `capitalBallot`) and the count decides (`decideHomeRule`, `decideCapitalRule`). Slice 7 only changes **who heads each party's card** and generalises the capital's decision to Clearwater.
 
 ```ts
-export interface DivisionItem { ordinanceId: string; role: 'governor' | 'party' | 'proposal';
-                                factionId: FactionId | null; movedAt: number }
-export function divide(i: { items: readonly DivisionItem[]; playerVotes: ReadonlyArray<{ choice: string }>;
-  npcSeats: number; unrest: boolean }): Division;
-//  locals: the item with most player votes (ties: the Governor's rule, the party's rule, the earliest);
-//  no player vote for any item → the Governor's rule → the party's rule; they abstain in Unrest or when four or
-//  more player councillors chose AGAINST_ALL (design §4.3); passes with 4
-export function divideBlocs(i: { items: readonly DivisionItem[]; playerVotes: ReadonlyArray<{ choice; factionId }>;
-  npcSeats: Partial<Record<FactionId, number>>; passVotes: number; governorFaction: FactionId | null }): CapitalDivision;
-//  each bloc's locals: their players' lead → the Governor's rule (the Governor's bloc only) → their party's rule
-export function countBattleground(i: { lines; votes; opinion; rng; seats: number; fullTurnout: number }): DistrictCount;
-//  slice 4's countDistrict with parameters: the capital 2 seats a district, Clearwater 7
-export function orderPaperItems(i: { governorRule: string | null; partyRules: ReadonlyArray<{ factionId; ordinanceId }>;
-  proposals: readonly DivisionItem[] }): DivisionItem[];               // the Governor's, the parties' in seat order, proposals
+/** The voting rework's partyCardOf, extended (ADR 0048 amended, 0085): the head of the party's chain.
+ *  home:       Governor (of the party) → the Chair's rule for the city → the secretary's default;
+ *  contested:  Mayor (of the party) → its top-seated player councillor with a rule → the Chair's rule → the secretary.
+ *  Read in the set's transaction (boundary into day 2) from officeTerms (governor rule), seats and factions.rules. */
+export function partyCardOf(i: { factionId: FactionId; defaultRule: string; secretary: { npcId: string; name: string };
+  seats: readonly SeatRule[]; governorRule?: { ordinanceId: string; name: string; characterId: string; title: 'Governor' | 'Mayor' } | null;
+  chairRule?: { ordinanceId: string; name: string; characterId: string } | null; contested: boolean }):
+  { ordinanceId: string; by: CardBy };                                 // CardBy.via += 'governor' | 'mayor' | 'chair'
 export const partyRuleOf = (rules: ReadonlyArray<{ cityId: string; ordinanceId: string }>, cityId: string,
-  branchMotion: string) => string;
+  branchMotion: string) => string;                                     // the Chair's rule for the city, else the branch's motion
+export function countBattleground(i: { lines; ballotsByFaction: Record<FactionId, number>; opinion; rng; seats: number;
+  fullTurnout: number }): DistrictCount;
+//  the voting rework's countDistrict with parameters: the capital 2 seats a district, Clearwater 7;
+//  ballotsByFaction from cardBallots(cards, votes)
+export const decideBlocRule = decideCapitalRule;                       // generalised to one meter (Clearwater): the largest
+                                                                       // bloc's card; ties: card votes, opinion share, the draw
 ```
+
+**Removed from the first draft:** `divide` v3, `divideBlocs`, `DivisionItem`, `orderPaperItems`, the four-of-seven bar and the four-*None of these* abstention (Unrest's removal of the party's card replaces it, ADR 0083 §6).
 
 ### 6.9 Events, petitions and the paper
 
@@ -814,7 +823,7 @@ selectHeadlines += NationalCondition (§11.2)
 | `runInChance`, `caughtChance`, `walkOut`, `liveMarks`, `bailFor` | §6.6 |
 | `addHeat` callers at a place | `heatGainAt` (control's +25 % for rivals) |
 | `ordersForDay`, `startOrders`, `orderMatches` | §6.7 |
-| `divide`, `divideCapital` → `divideBlocs`, `countDistrict` → `countBattleground` | §6.8; slice-3 and slice-4 tests pin the old behaviour with no Governor, no Chair's rule and the capital's parameters |
+| `partyCardOf` (the Governor, the Mayor and the Chair at the head), `countDistrict` → `countBattleground`, `decideCapitalRule` → `decideBlocRule` | §6.8; the voting rework's tests pin the behaviour with no Governor, no Chair's rule and the capital's parameters |
 | `destinationState` | Clearwater is `open` (its service is content) |
 | `districtState` | run on Clearwater's city meter too (unchanged) |
 | `fixtureFor` (slice 6) | a Chair's fixture for the day wins over the rotation; Clearwater posts all three factions' fixtures, no district |
@@ -829,7 +838,7 @@ selectHeadlines += NationalCondition (§11.2)
 All in `types.ts` (§8.3, §10). `GameErrorReason` gains:
 
 - the calendar: `NOT_NOW { phase, opensOn }`, `NATION_NOT_READY`;
-- offices: `NOT_GOVERNOR`, `NOT_CHAIR`, `NOT_DEPUTY`, `NOT_PRESIDENT`, `LOCAL_HOLDS`, `RULE_WINDOW_CLOSED`, `ALREADY_ON_PAPER`, `ADDRESS_USED`, `VETO_USED`, `NOT_VETOABLE`, `NOT_AN_ISSUE`;
+- offices: `NOT_GOVERNOR`, `NOT_CHAIR`, `NOT_DEPUTY`, `NOT_PRESIDENT`, `LOCAL_HOLDS`, `RULE_WINDOW_CLOSED` (the voting rework's), `ADDRESS_USED`, `VETO_USED`, `NOT_VETOABLE`, `NOT_AN_ISSUE`;
 - standing: `LADDER { rung, need }`, `TENURE { need }`, `TERM_LIMIT`, `ALREADY_STANDING`, `NOT_STANDING`, `ALREADY_BACKED { name }`, `CANNOT_BACK_SELF`, `NOT_ON_BALLOT`, `PLEDGES { need: 2 }`, `WITHDRAW_CLOSED`;
 - Parliament: §6.5's reasons, `BILL_NOT_FOUND`, `ALREADY_VOTED`, `BILL_CLOSED`;
 - the Chair's desk: `UNKNOWN_FAMILY`, `PUSH_PLACE`, `PUSH_SLOT`, `UNKNOWN_FIXTURE`;
@@ -844,11 +853,11 @@ All in `types.ts` (§8.3, §10). `GameErrorReason` gains:
 - **The Governor:** `governorOf` at home (a first-term top councillor is passed over for a second-termer), in the capital (the largest bloc; ties by ballots, opinion, the draw) and in Clearwater; a local when nobody qualifies.
 - **National Control:** the baselines give **23.5** each and Neutral 29.5; Unrest halves a home's weight; `controlShare` sums to 100; the leader and its ties.
 - **The national count:** design §6.3's worked examples to the decimal (33.3 each and 20 / 20 / 20 by the draw; one Collective ballot: 34.4 / 32.8 / 32.8; ten Vanguard and five Collective: 41.7 / 33.3 / 25.0 and **25 / 20 / 15**); backers capped at five; the President's ties; the runner-up; `partyList` and `seatList` (a losing player candidate first; backers; ties down to filing; locals fill).
-- **The picks and the Chair:** `countPick` (the figure last on ties), `countChair` (votes + 3 × backers ≤ 5; the secretary's votes only; the four tie levels), `closeChairNames` with the faction-wide small rule, `confidenceResult` at two thirds exactly and with two No votes.
+- **The picks and the Chair:** `countPick` (the figure last on ties), `countChair` (votes + 3 × backers ≤ 5; the secretary's votes only; the four tie levels), `freezeChairList` (every standing player, no strike), `confidenceResult` at two thirds exactly and with two No votes.
 - **Parliament:** `billDays`; every `tableGate` refusal; a renewal in the last week; `localVote` for each link of the chain, the tie fall-through, an explicit *free* and Unrest; `divideBill` for design §7.2's *what passes by itself* (People's Education, Universal Care, Rehabilitation and Public Assembly with 40 For; the rest fail; a Vanguard Chair's For on the Eight-Hour Day makes 40); the edges 30 / 31, 35 / 36, 39 / 40; `removalSecretaryLines`; `enact` (a renewal, a replacement, the cap's soonest-ending rule, a named law that has expired); `secretaryBill` over eight Mondays (the pointer, the skips, one a week, the largest bloc first); `overrideFits`.
-- **Laws:** every catalogue law against `LAW_BOUNDS` and the factional rule; `lawSource` for members, others and all; economy §21.3's numbers: Eight-Hour Day +22 Iron on 216; Free Market +10 % Iron; Open Borders 12 → 9 and 25 → 19; Universal Care 100 → 50; Emergency Permits 15 → 17 paying on 15; Public Assembly 12 → 10; Civic Education 44 → 35 for an Alliance member only; the Curfew ×2 at 20:00 and not at 19:59; Special Powers' caught 8 → 18 % against the Vanguard only, and Heat cooling 7.5 an hour for a Vanguard member only; `liveMarks` with a seven-day law that ends before and after the fade (monotone).
+- **Laws:** every catalogue law against `LAW_BOUNDS` and the factional rule; `lawSource` for members, others and all; economy §21.3's numbers: Eight-Hour Day +22 Iron on 216; Free Market +10 % Iron; Open Borders 12 → 9 and 25 → 19; Universal Care 100 → 50; Emergency Permits 15 → 17 paying on 15; Public Assembly 12 → 10; Civic Education 44 → 35 for an Alliance member only; the Curfew ×2 at 22:00 and not at 21:59 (review 5's night), the rival-ground night run-in 25 → 50 and the patrol chance doubled; Special Powers' caught 8 → 18 % against the Vanguard only, and Heat cooling 7.5 an hour for a Vanguard member only; `liveMarks` with a seven-day law that ends before and after the fade (monotone).
 - **Orders:** `standingOn` across `next.fromDay`; a pick served by a capital twin and one falling back to the rotation; the push at Level 9 and 10; the crisis pair and the welcome set still win; `pushCounts` only at the battleground.
-- **Councils:** `divide` with a Governor's rule and a Chair's rule through the chain; four *None of these* abstain and three do not; `divideBlocs` with four of seven; `countBattleground` reproduces every slice-4 district test with the capital's parameters, and a seven-seat Clearwater example (3 / 2 / 2 at level scores).
+- **Councils:** `partyCardOf` at home (the Governor's rule as card 1 ahead of the Chair's and the secretary's; no Governor → the Chair's; neither → the secretary's) and in a contested city (the Mayor → the top-seated player councillor → the Chair → the secretary); `homeBallot` with Unrest still dropping the party card when the Governor heads it; `countBattleground` reproduces every voting-rework district test with the capital's parameters, and a seven-seat Clearwater example (3 / 2 / 2 at level scores); `decideBlocRule` on Clearwater's one meter (the largest bloc's card, and each tie level).
 - **Events and petitions:** `townHallSignatures`; `chairCallGate`; `petitionGate`'s refusals at cycle days 2 and 3 and the seven-day rule; `signaturesNeeded` (3 for up to 12 eligible, 4 at 13); `chairPetitionGate` at the edges of five and three days.
 - **The paper:** `selectNationalLines` picks two by priority, faction lines only for the faction, `nl.target-met` only for contributors, the leader line alone.
 
@@ -868,7 +877,7 @@ The order is §3.6's. `LoadedCharacter` gains `nation` (the document) and, on a 
 
 | Procedure | Refuses |
 |---|---|
-| `governor.setRule` | `NOT_GOVERNOR` (the `governor` term re-read in the transaction), `LOCAL_HOLDS`, `RULE_WINDOW_CLOSED` (cycle days 0–1, the order paper `open`), `ALREADY_ON_PAPER`, `UNKNOWN_ORDINANCE` |
+| `governor.setRule` | `NOT_GOVERNOR` (the `governor` term re-read in the transaction), `LOCAL_HOLDS`, `RULE_WINDOW_CLOSED` (cycle days 0–1, the rule ballot `open`), `UNKNOWN_ORDINANCE` |
 | `governor.address`, `president.address` | `NOT_GOVERNOR` / `NOT_PRESIDENT`, `ADDRESS_USED`, `NOT_AN_ISSUE` (a live Issue of the Governor's city; of any open city for the President) |
 | `chair.setOrders` | `NOT_CHAIR`, `UNKNOWN_FAMILY`, `PUSH_SLOT` (C), `PUSH_PLACE` (not a capital district or Clearwater), a target other than 25 / 50 / 100 |
 | `chair.setLine` | `NOT_CHAIR`, `BILL_NOT_FOUND`, `BILL_CLOSED` |
@@ -961,7 +970,7 @@ petition.sign       ({ petitionId: z.string().min(1), idempotencyKey: Key }) →
 
 // Changed
 character.me → CharacterView v8 · city.get → CityView v7 · paper.today → PaperView v7 · travel.* (Clearwater open)
-· residence.* (Clearwater; the room in any battleground) · council.* (the Governor's line; Clearwater) · chat.channels
+· residence.* (Clearwater; lodgings on the Rows) · council.* (the Governor's line on `TownHallView`; Clearwater's hall at the Casino) · chat.channels
 (Officers, Clearwater's branch) · events.board (Clearwater; the Town Hall; *called by the Chair*)
 ```
 
@@ -1012,23 +1021,23 @@ for f: s = standingOn(factions[f].orders, d − 1); if s?.push:
 
 **`cityDay.ts` v3** (ADR 0017, 0027, 0048–0050):
 
-- `processHomeBoundary` and `processCapitalBoundary` gain, in this order: **the petition close** (before the division, §8.2 `petitionService.closeInTx`); at the count, **the Governor** (`governorOf`; a `governor` term for a player; `city.council.governor`) and the new order paper's items from `orderPaperItems` (the party's rule from `factions.rules` set on or before `d − 1`, else the branch's motion, `movedBy.kind: 'chair' | 'branch'`); the division with `divide` v3 or `divideBlocs`.
-- `processBattlegroundBoundary(content, 'clearwater', d, now, session)` (ADR 0050): the drift on the city's meter → Issues (Monday) → `districtState` on the city → the petition close → the count (`countBattleground` with 7 seats, `listSize` 3; seven terms with `factionId`) → the Governor (the largest bloc) → heroes (*City Hero of Clearwater*) → the next election and order paper (each seated bloc's party rule in seat order) → the close (day 2) → the division (`divideBlocs`, four of seven). `bootstrapBattleground` mirrors `bootstrapCapital` on one meter.
+- `processHomeBoundary` and `processCapitalBoundary` (the voting rework's city day v3) gain, in this order: **the petition close** (before the set, §8.2 `petitionService.closeInTx`); at the count, **the Governor** (`governorOf`; a `governor` term for a player; `city.council.governor`); at **the set**, the cards from `homeBallot` / `capitalBallot` with `partyCardOf` heading each party's card (the Governor's or Mayor's `rule`, then the Chair's rule from `factions.rules` set on or before `d − 1`, then the branch's motion).
+- `processBattlegroundBoundary(content, 'clearwater', d, now, session)` (ADR 0050, 0085): the drift on the city's meter → Issues (Monday) → `districtState` on the city → the petition close → the count (`countBattleground` with 7 seats, `listSize` 3, `ballotsByFaction` from `cardBallots`; seven terms with `factionId`; the rule by `decideBlocRule`) → the Governor (the largest bloc) → heroes (*City Hero of Clearwater*) → the next election and rule ballot (open) → the set (day 2: one card per party, `capitalBallot`'s shape). `bootstrapBattleground` mirrors `bootstrapCapital` on one meter. No patrol roll (a battleground).
 - **The fixture** (slice 6's `ensureFixtures`): a Chair's `factions.fixtures` row for (city, day) wins; Clearwater posts one per faction.
 
-**`governorService`**: `setRule`: in one transaction, the `governor` term (holder me, current, `powers.rule` absent), the order paper (`status: 'open'`, no `governor` item, the ordinance not on it) → `$push items { $each: [item], $position: 0 }`, `powers.rule`; request key. `address`: the term (`powers.address` absent), the Issue (`status: 'live'`, the Governor's city) → `$inc momentum.{f}: 50`, `addPoints` on `points|{docId}` for the Governor, `powers.address`; request key. `president.address` is the same with 100 and any open city.
+**`governorService`**: `setRule`: in one transaction, the `governor` term (holder me, current, not vacated) → `$set rule, ruleSetAt` on the term, and `$inc changes` on the city's rule ballot filtered on `status: 'open'` (the same guard as `council.setRule`, ADR 0084 §5), on cycle days 0–1; changeable within the window, free; request key. A change racing the set loses with a write conflict and is refused `RULE_WINDOW_CLOSED`. `address`: the term (`powers.address` absent), the Issue (`status: 'live'`, the Governor's city) → `$inc momentum.{f}: 50`, `addPoints` on `points|{docId}` for the Governor, `powers.address`; request key. `president.address` is the same with 100 and any open city.
 
 **`chairService`**: every act re-reads the Chair's `officeTerms` row in its transaction and writes `factions` filtered on `chair.holder.characterId: me`.
 
 - `setOrders`: `rollStanding` (the `next` that has started becomes `current`), then `orders.next = { fromDay: today + 1, picks, push, setBy, setAt }`.
 - `setLine`: `bills.updateOne({ _id, status: 'voting' }, { $set: { 'lines.{f}': … } })`.
-- `setRule`: `rules` for the city (`$pull` then `$push`), effective from the next order paper (§22.1 Q8); the modal names its weekday.
+- `setRule`: `rules` for the city (`$pull` then `$push`), read at the next ballot's set (the boundary into day 2); the modal names that weekday.
 - `setFixture`: `fixtures` for (city, today + 1).
 - `callEvent`: slice 6's `eventService.call` with `calledBy: { kind: 'chair', characterId, name }`, **no sign-up row** and no Energy; the place limits by natural keys; `withRequestKey('chair.call')` replays the modal; the resolve job scheduled after the commit.
 
-**`chairElectionService`** (ADR 0047): `stand` inserts the candidacy (`kind: 'chair'`, `electionId: chair:{f}:{n}`, deposit `held`), `$inc filed` on `factionElections` filtered `status: 'names'`, `pc − 25`. `back`: `candidacies.updateOne({ _id, status: 'filed', 'endorsements.characterId': { $ne: me } }, $push)` and the character (`termBackings.key: { $ne }`, `pc ≥ 10`, version). **The secretary's backing** is slice 3's: when a member's three orders complete in a window where they have a filed Chair candidacy, the same transaction sets `candidacy.branch` (once). `vote`: `votes` insert (unique) and `$inc ballots` filtered `status: 'voting'`.
+**`chairElectionService`** (ADR 0047, 0084): `stand` inserts the candidacy (`kind: 'chair'`, `electionId: chair:{f}:{n}`, `status: 'standing'`, `deposit: 'spent'`), `$inc filed` on `factionElections` filtered `status: 'names'`, `pc − 25` (never returned). No backer gate. `back` (optional, +3): `candidacies.updateOne({ _id, status: 'standing', 'endorsements.characterId': { $ne: me } }, $push)` and the character (`termBackings.key: { $ne }`, `pc ≥ 10`, version); open until the count. **The secretary's backing** is the voting rework's branch backing: when a member's three orders complete while they have a standing Chair candidacy, the same transaction sets `candidacy.branch` (once, filtered `branch: null`). `vote`: `votes` insert (unique) and `$inc ballots` filtered `status: 'voting'`.
 
-**`nationalElectionService`**: as the Chair's, with `standPresident` (Rank 6 gate; pledges two distinct catalogue laws; 100 PC; `kind: 'president'`), `withdrawPresident` (days 19–20; `status: 'filed' → 'withdrawn'`; 100 PC back, capped), `standList` (25 PC; `kind: 'list'`), `pickVote` (own faction's ballot, `$inc picks.{f}.ballots` filtered `status: 'pick'`), `vote` (`$inc ballots` filtered `status: 'voting'`), `back` (`president`: `$inc backers.{f}` filtered `status: 'voting'` and a player candidate's `endorsements`; `list`: a standing `list` candidacy of the member's faction).
+**`nationalElectionService`**: as the Chair's, with `standPresident` (Rank 6 gate; pledges two distinct catalogue laws; 100 PC; `kind: 'president'`), `withdrawPresident` (days 19–20; `status: 'standing' → 'withdrawn'`; 100 PC back, capped; the one candidacy that can be withdrawn), `standList` (25 PC; `kind: 'list'`), `pickVote` (own faction's ballot, `$inc picks.{f}.ballots` filtered `status: 'pick'`), `vote` (`$inc ballots` filtered `status: 'voting'`), `back` (`president`: `$inc backers.{f}` filtered `status: 'voting'` and a player candidate's `endorsements`; `list`: a standing `list` candidacy of the member's faction).
 
 **`parliamentService`** (ADR 0045):
 
@@ -1036,11 +1045,11 @@ for f: s = standingOn(factions[f].orders, d − 1); if s?.push:
 - `vote`: the `deputy` term re-read; `bills.updateOne({ _id, status: 'voting', 'votes.characterId': { $ne: me } }, { $push: { votes } })`; a miss re-reads and names the refusal.
 - `veto`: the `president` term (`powers.veto` absent) and the bill (`status: 'awaitingSignature'`, `vetoable: true`, `signatureDay: today`) → `vetoed`; the override bill (`slotKey: 'override:{billId}'`, needs 40, `vetoable: false`) when `overrideFits`; `powers.veto`.
 
-**`petitionService`** (ADR 0049): `open`: the residence city, `petitionGate` (the last close read in the session), `petitions.insert({ _id: 'dissolve:{city}:{today}', count: 1, signatures: [me], closesDay: today + 2 })` (E11000 on the open index → `ALREADY_OPEN`), `pc − 10`. `sign`: `$push signatures` filtered `status: 'open'`, `'signatures.characterId': { $ne: me }`, `$inc count`; `pc − 10`. `closeInTx(cityId, d)` (the city day): `needed = signaturesNeeded(the turnout roll)`; succeeded → `dissolve` (ADR 0049); either way `status`, `needed`, `closedAt`. `confidence.*` mirror it for the Chair (`_id: 'chair:{f}:{chairTermId}'`, Rank 3+, active Rank 3+ members' roll; closed by the nation's day).
+**`petitionService`** (ADR 0049): `open`: the residence city, `petitionGate` (the last close read in the session), `petitions.insert({ _id: 'dissolve:{city}:{today}', count: 1, signatures: [me], closesDay: today + 2 })` (E11000 on the open index → `ALREADY_OPEN`), `pc − 10`. `sign`: `$push signatures` filtered `status: 'open'`, `'signatures.characterId': { $ne: me }`, `$inc count`; `pc − 10`. `closeInTx(cityId, d)` (the city day, before the set): `needed = signaturesNeeded(the turnout roll)`; succeeded → `dissolve` (ADR 0049 as amended: the terms vacated, the Governor's chair to the bloc's top local, `council.dissolved`; **the rule in force is not touched** and the open ballot proceeds); either way `status`, `needed`, `closedAt`. `confidence.*` mirror it for the Chair (`_id: 'chair:{f}:{chairTermId}'`, Rank 3+, active Rank 3+ members' roll; closed by the nation's day).
 
 **`eventService.resolve`** (slice 6) gains the Town Hall: when the type's `special` is `petitionSignatures` and a dissolve petition of the city is `open`, `$inc count` and `townHall` by `townHallSignatures(band)` in the resolution's transaction.
 
-**Action, mission, travel and held services**: the modifiers carry the laws (§7.1); a matching attempt on a pushed item `$inc`s the member's `push|{f}|{day}` contribution (an upsert on the member's own row) in the action's transaction; `heatGainAt` at a controlled place; `journeyMinutes` at boarding; Clearwater's room and residence as the capital's.
+**Action, mission, travel and held services**: the modifiers carry the laws (§7.1); a matching attempt on a pushed item `$inc`s the member's `push|{f}|{day}` contribution (an upsert on the member's own row) in the action's transaction; `heatGainAt` at a controlled place; `journeyMinutes` at boarding; Clearwater's lodgings and residence as the capital's (*Live here*, the Lodgings card).
 
 ### 8.3 Views
 
@@ -1062,7 +1071,8 @@ interface GovernorPageView {
   holder: { kind: 'player' | 'npc'; name; avatarId: string | null; local: boolean; since: DayKey; until: DayKey } | null;
   you: boolean;
   rule: { set: { ordinanceId; name; at: number } | null; until: number | null; menu: RuleRowView[] | null;
-          decided: { ordinanceId; passed: boolean; day: DayKey } | null };
+          card: { onBallot: boolean; position: 1 } | null;                  // "card 1 on the town's ballot"
+          decided: { ordinanceId; won: boolean; how: RuleHow; day: DayKey } | null };   // the count's RuleDecision
   address: { used: { issueShort; day: DayKey } | null; issues: Array<{ docId; name; short; momentum: MomentumView }> };
   pay: { pc: 20; fxp: 30 };
 }
@@ -1072,7 +1082,9 @@ interface ChairDeskView {
             push: PushSpec | null; places: Array<{ cityId; districtId: string | null; name }>;
             fromDay: DayKey | null; today: OrdersView /* as members see them */; target: TargetBarView | null };
   lines: Array<{ billId; law: string; line: LineVote | null; at: number; players: number; localsFollow: 'you' | 'players' }>;
-  rules: Array<{ cityId; cityName; ordinanceId; name; fromCouncil: DayKey; menu: RuleRowView[] }>;
+  rules: Array<{ cityId; cityName; ordinanceId; name; fromSet: DayKey /* the next ballot's set */;
+                 headedBy: 'governor' | 'mayor' | 'councillor' | null /* who heads the card instead, if anyone */;
+                 menu: RuleRowView[] }>;
   bill: { used: { lawName; day } | null; cost: 50 };
   fixtures: Array<{ cityId; cityName; districtId: string | null; typeId; rotation: boolean; menu: Array<{ typeId; name }> }>;
   events: EventBoardView['here'][];                                    // every open city (slice 6's board per city)
@@ -1118,6 +1130,9 @@ interface PetitionView { city: { id; name; hall }; open: { id; count; needed: nu
 CharacterView v8 += { offices: Array<{ office; title }>; chairChip: boolean /* Rank 4+ */ }
 CityView v7 += { governor: { title: 'Governor' | 'Mayor'; name; local: boolean } | null; word; heldBy: FactionId | null;
                  petition: { count; needed; until } | null; dissolved: { until: DayKey } | null }
+//  Clearwater (review 4): no `landingQuarterId`; the arrival selects the Casino, the hall
+TownHallView += { governor: { title: 'Governor' | 'Mayor'; name; local: boolean } | null }   // review 4: the Governor's line
+//  seatCount from BATTLEGROUND_COUNCILS (7 in Clearwater); review 4's passVotes went with the voting rework
 OrdersView += { setBy: { name } | null; target: TargetBarView | null; items[].push?: { place: string } }
 ```
 
@@ -1125,7 +1140,7 @@ During a vote, no view carries another player's ballot or any count of a secret 
 
 ### 8.4 The settlement v7 (`computeSettlement`)
 
-1. **Reads added** (each by an index of §5): the member's `factions` document (on a new day); `officeTerms` of every office (the existing read by holder); the member's `push|{f}|{day}` rows for the ended days with a met push; struck Chair candidacies (`deposit: 'due'`, slice 3's read); the personal facts of §11.2.
+1. **Reads added** (each by an index of §5): the member's `factions` document (on a new day); `officeTerms` of every office (the existing read by holder); the member's `push|{f}|{day}` rows for the ended days with a met push; the personal facts of §11.2. (No refund read: the voting rework retired it, ADR 0084 §6.)
 2. **Stipends** per office per boundary held (`officeStipends`), each a desk line (*Stipend, Chair of the Collective · +20 PC · +40 FXP*), the PC cap applied once by `applyGains`.
 3. **The party's target**: +10 Party XP for each ended day whose push was met and where the member contributed (*The party's target, Eastside · +10 Party XP*).
 4. **Today's orders**: `startOrders` with `standingOn(faction.orders, today)`, the push templates, the residence kind and the Level; `orders.setBy` when a Chair set them.
@@ -1166,7 +1181,7 @@ Each new button calls a hook above, then the existing settle. The panel holds no
 | Job | When | Does | Idempotency |
 |---|---|---|---|
 | `nation-day` (new) | `every('2 0 * * *', { timezone: 'UTC' })` and at worker start | `ensureCityDay` for every council city, then `settleNationDay` | `nation.world.settledDay` guard; every derived document has a natural key (`chair:{f}:{n}`, `nation:{n}`, `{councilKey, seat, fromDay}`, `slotKey`); the lazy path (`ensureNationDay`) is the guarantee |
-| `city-day` (extended) | unchanged (00:01 and at start) | Clearwater; the petition close before the division; the Governor at the count; the order paper's party rules; the Chair's fixtures; it then calls `settleNationDay` too, so a worker that runs one job does both | `world.settledDay` guards |
+| `city-day` (extended) | unchanged (00:01 and at start) | Clearwater; the petition close before the set; the Governor at the count; the party cards' chain at the set; the Chair's fixtures; it then calls `settleNationDay` too, so a worker that runs one job does both | `world.settledDay` guards |
 | `campaign-event-resolve` (slice 6) | unchanged | the Town Hall's signatures in the same resolution | slice 6 |
 | `journey-arrive`, `chat-trim` | unchanged | — | — |
 
@@ -1182,15 +1197,15 @@ Built by each service in its transaction, stored with the request key (`requestL
 
 | Act | Stamp · headline | Knock-ons | `view` |
 |---|---|---|---|
-| `chairDeclare` | *You're standing* · *Your name is on the list for Chair* | `pc { before, after: −25 }`, backers 0 of 2 | `chairElection` |
-| `chairBack` | *Backed* · *{name} has your backing* (§22.1 Q19) | `pc −10`, the candidate's backers *n of 2* | `chairElection` |
+| `chairDeclare` | *You're standing* · *Your name is on the list for Chair* | `pc { before, after: −25 }` (spent; no backers needed) | `chairElection` |
+| `chairBack` | *Backed* · *{name} has your backing* (§22.1 Q19) | `pc −10`, the candidate's backers *n* (+3 each, five counted) | `chairElection` |
 | `chairVote` | *Vote cast* · *Your vote is in* | the count's day | `chairElection` |
 | `chairOrders` | *Set* · *The orders are yours* | the three titles, the push (*Eastside · target 50*), *from tomorrow* | `desk` |
 | `partyLine` | *Line set* · *The party line is {line}* | the locals who follow (*17 local deputies*), Parliament votes at | `bill` |
-| `partyRule` | *Set* · *{ordinance} is the party's rule in {city}* | from which council (*Thursday's council*) | `desk` |
+| `partyRule` | *Set* · *{ordinance} is the party's rule in {city}* | from which ballot (*on the town's ballot from Thursday*), or who heads the card instead (the Governor, the Mayor, a councillor) | `desk` |
 | `fixture` | *Set* · *Tomorrow's event in {city}* (§22.1 Q19) | the type, the district | `desk` |
 | `chairCall` | *Called* · slice 6's *call* text with *called by the Chair* | — (no Energy) | `event` |
-| `governorRule` | *Set* · *{ordinance} goes to the vote first* | item 1, the council votes at | `office` |
+| `governorRule` | *Set* · *{ordinance} is card 1 on the town's ballot* | the set's weekday, the vote's days, *changeable until {until}* | `office` |
 | `address` | *Spoken* · *The Address: {issueShort}* | `issue { name, added: 50 \| 100, momentum: before → after by party }`, *in your name* | `office` |
 | `presidentDeclare` | *You're standing* · *Your name is in for President* | `pc −100`, the two pledges | `nationalElection` |
 | `presidentWithdraw` | *Withdrawn* (§22.1 Q19) | `pc +100` | `nationalElection` |
@@ -1232,13 +1247,14 @@ A law is a named source (ADR 0030), so it appears wherever its effect lands, wit
 
 ### 11.1 Sections
 
-- ***FROM THE CAPITAL*** (home papers and the Courier) / ***THE REPUBLIC*** (the Herald), under the headlines, **live at read**: `selectNationalLines(nation.news, today, faction, me)` (at most two) and one Courier line for an open window (*The republic votes until {until} · Vote now* / *Names in for Chair until {until}*), a tap opening the screen.
+- ***FROM THE CAPITAL*** (home papers and the Courier) / ***THE REPUBLIC*** (the Herald), under the headlines (in `composeHeadlines`, after the residence city's lines: a parameter, not a new rule; review 4's local editions), **live at read**: `selectNationalLines(nation.news, today, faction, me)` (at most two) and one Courier line for an open window (*The republic votes until {until} · Vote now* / *Names in for Chair until {until}*), a tap opening the screen.
 - ***Election***: up to two rows (the council's first; the Chair's or the republic's second).
 - **The front page** for a Governor, a Chair, a deputy and the President: slice 3's, on the first edition the holder opens in the term (`officeTerms.frontPageSeenAt`, ADR 0023), the caption naming the office, the CTA *To the office* / *To Parliament*.
 - ***Your desk***: a line per office stipend paid; *Law: {name} {effect}* beside the council rule's on the wage and Rested rows; the party's target bonus.
 - ***Party orders***: *Set by the Chair, {name}*; the push's tag *the Chair's push · {place}* and the `TargetBar` (the live count).
 - ***In Print***: the Address, a bill passed with the member's name, a pledge kept, the Chair, a seat in Parliament, the Governor's chair.
-- **The Clearwater Courier**: the residents' paper, and a visitor's while in Clearwater (the Herald's rule).
+- **The Clearwater Courier**: the lake residents' paper. A visitor reads their own paper's Clearwater edition (review 4, ADR 0074: one stored paper, local parts at read).
+- **The rule** rows are the voting rework's (the Council rule card, `ruleDecided`, `votedRule`); a Governor's front page and lines name *card 1 on the town's ballot*, and a count with no votes reads *{rule} runs from {weekday}* (`hl.rule-fallback`), never *Council Passes*.
 
 ### 11.2 New headline conditions (design §11.2)
 
@@ -1287,7 +1303,8 @@ National lines (design §11.1) are written to `nation.news` by the nation's day 
 - The **Faction tab** gains its sixth chip, **Chair**, for Rank 4+ (`character.chairChip`); the Chat panel gains **Officers** for Rank 4+.
 - **Modal gate** unchanged: political acts return their modal directly; nothing national queues a modal (results are in the paper and on the pages).
 - After any mutation the client renders the returned view and invalidates `character.me`, `nation.get`, `office.*`, `chair.*`, `parliament.*`, `nation.election`, `petition.get`, `city.get`, `paper.today`.
-- **The city view's first quarter** comes from `CityView.landingQuarterId` (the station's quarter), not `quarters[0]` (`apps/client/src/routes/city.tsx:763` today), so Clearwater opens on The Harbour with The Front a teaser at index 0 (§21 #6).
+- **Clearwater is a one-map city** (review 4, ADR 0076): no frames, outlines or labels; no `CityView.landingQuarterId`; the arrival selects the Casino, the hall. The Front's four places show as later pins until slice 8.
+- **The Casino's sheet** gets the Town Hall's blocks (`TownHallBlocks`, review 4's place card slot) with the Governor's line; the hall shows the five blocks (the voting rework's seat bar on one meter).
 
 ### 12.2 `packages/ui` additions (plain props, no tRPC)
 
@@ -1329,7 +1346,7 @@ Screens §15's strings, the thirteen help notes and design §12's modal texts go
 - **Crops:** the portraits' head-and-shoulders top offset is chosen in the dev viewer (the slice-5 portraits use 20 or 40); the scenes keep the full frame with a `focus` where the subject is off-centre (the results board, the platform, the desk).
 - **Content policy:** checked against design §19–§20 when the pictures are wired: no badge, armband, flag, star, hammer or symbol on any coat, cap, wall, board or drape; the results board shows figures only. The art build's review list records it.
 - **Budget:** three portraits (~60 kB at two widths) and four scenes (~0.6 MB at two widths) on top of slice 6's measure; measured after `pnpm art:build` and recorded in the Deviations. No new ADR (ADR 0015's per-slice rule).
-- **Maps:** none new. Clearwater's day and night pictures and tiles exist (`map.clearwater.day` / `.night`); the developer draws the three quarter outlines in the dev viewer along the lake shore, the tram lines and the blocks (design §9.1).
+- **Maps:** none new. Clearwater's day and night pictures and tiles exist (`map.clearwater.day` / `.night`). It is a one-map city (review 4): no quarter outlines to draw.
 
 ---
 
@@ -1357,16 +1374,16 @@ Screens §15's strings, the thirteen help notes and design §12's modal texts go
 | Layer | What |
 |---|---|
 | Rules | §6.12 |
-| Content | The real data validates. A failing fixture for every §4.2 check: a law with `fxpPct`, a law outside its bound, a factional law marked 31, an ordinance with `appliesTo`, weights not summing to 1, a teaser landing, a push template in the rotation, two templates of one family for one residence, a Town Hall venue of the wrong kind, a Clearwater pin off its survey point. Word-for-word comparisons with both design documents (laws, figures, platforms, preferred laws, Clearwater's places, actions, texts, jobs, missions, slate, Issues, the national and personal lines, the Courier, the modals, the help notes, chapter 3). The vocabulary guards with *The Front* |
-| DB | The seven collections' indexes; migration 009 twice; the partial unique indexes refuse a second open petition, a second voting bill for one law, a fourth regular slot; a transaction over `nation`, `factions`, `bills`, `laws`, `officeTerms`, `nationalElections`, `candidacies`, `votes`, `characters` commits |
+| Content | The real data validates. A failing fixture for every §4.2 check: a law with `fxpPct`, a law outside its bound, a factional law marked 31, an ordinance with `appliesTo`, weights not summing to 1, lodgings outside a battleground city, a new ordinance without `plainLine`, a push template in the rotation, two templates of one family for one residence, a Town Hall venue of the wrong kind, a Clearwater pin off its survey point. Word-for-word comparisons with both design documents (laws, figures, platforms, preferred laws, Clearwater's places, actions, texts, jobs, missions, slate, Issues, the national and personal lines, the Courier, the modals, the help notes, chapter 3). The vocabulary guards with *The Front* |
+| DB | The seven collections' indexes; migration 011 twice; the partial unique indexes refuse a second open petition, a second voting bill for one law, a fourth regular slot; a transaction over `nation`, `factions`, `bills`, `laws`, `officeTerms`, `nationalElections`, `candidacies`, `votes`, `characters` commits |
 | Server — the nation's day | bootstrap on term days 0, 10, 20 (windows already open skipped); one boundary at a time with every city first; four runners in parallel settle each boundary once; the worker down for three days, caught up by a read; control's snapshot equals the rules' figure from the stored meters |
-| Server — the Governor | at a home count a second-termer beats a first-term top councillor; the capital's Mayor from the largest bloc; Clearwater's; a local; the rule as item 1 and the locals' chain at the division; four *None of these*; the Address once a term, attributed |
-| Server — the Chair | stand, back, the secretary's backing on orders done, the small rule, struck and refunded, the vote, the count with the secretary winning, a player winning; the term from day 14; standing orders read by a member's next settlement (and not today's); the push at Level 9 and 10; the target met and the +10 Party XP once per member per day; settings cleared at a change; the call from another city with no sign-up; the Officers room |
+| Server — the Governor | at a home count a second-termer beats a first-term top councillor; the capital's Mayor from the largest bloc; Clearwater's; a local; the Governor's rule as card 1 at the set, changed on day 1 and refused after the set (`RULE_WINDOW_CLOSED`); with no votes the Governor's card runs (`fallback`); Unrest drops it; the Address once a term, attributed |
+| Server — the Chair | stand (25 PC spent, no backers), optional backing, the secretary's backing on orders done, the vote, the count with the secretary winning, a player winning; the term from day 14; standing orders read by a member's next settlement (and not today's); the push at Level 9 and 10; the target met and the +10 Party XP once per member per day; settings cleared at a change; the call from another city with no sign-up; the Officers room |
 | Server — Parliament | table in each power (the President's week, a deputy's term, a Chair's term), the slot race (four tablers at once → three bills and `PAPER_FULL`), the law race (two bills for one law → one); votes; lines; the division with the chain, Unrest and *free*; the signature day and the veto racing the enactment at the boundary (one wins, never both); the override at 40; a strike; the cap with and without a named law; a renewal; the failed week; the lapse at day 0; the secretary's and the figure's Monday bills |
 | Server — the national election | names, withdraw with refund, the pick (with and without a vote), the vote (secret on the wire), backing, the count with the worked examples, lists and seats, provisional on day 27, office at day 0, two terms in a row, a figure President |
-| Server — removals and petitions | a removal passing with test deputies: the runner-up from the division, their deputy seat passing down; the clerk's motion at a control share of 24 % and not at 26 %; a petition opened on cycle day 1 that dissolves the council at day 3 (the passed rule struck, terms vacated, the Governor's chair to a local, no stipend after); a Town Hall adding 2; a petition on the Chair and the vote removing at two thirds; the automatic vote on entering Unrest once per Chair term |
-| Server — laws in play | each catalogue effect through the real services: a wage, a mission's cost and XP, a journey's minutes, a run-in at 20:00, a walk-out, a bail, a fade across a law's end, a caught check against the Vanguard, Heat cooling for a member; a factional law not touching non-members |
-| Server — Clearwater | the bootstrap; the boundary (drift, states, Issues, the count with seven seats, the Governor, the division with four); travel, residence, the room, jobs, missions with the pool, the Heat rule under control; the Courier |
+| Server — removals and petitions | a removal passing with test deputies: the runner-up from the division, their deputy seat passing down; the clerk's motion at a control share of 24 % and not at 26 %; a petition opened on cycle day 0 that dissolves the council at the set (the rule in force runs out its window, the open ballot proceeds with the party card and the locals' rules, terms vacated, the Governor's chair to a local, no stipend after); a Town Hall adding 2; a petition on the Chair and the vote removing at two thirds; the automatic vote on entering Unrest once per Chair term |
+| Server — laws in play | each catalogue effect through the real services: a wage, a mission's cost and XP, a journey's minutes, a run-in at 22:00 (review 5's night) and the patrol chance under the Curfew, a walk-out, a bail, a fade across a law's end, a caught check against the Vanguard, Heat cooling for a member; a factional law not touching non-members |
+| Server — Clearwater | the bootstrap; the boundary (drift, states, Issues, the count with seven seats, the Governor, the rule by `decideBlocRule`); travel, residence, lodgings, jobs (the Tram conductor at 240), missions with the pool, no patrol roll, the Heat rule under control; the Courier for residents and the visitor's own edition |
 | Server — the settlement and the paper | stipends for every office (and two at once), a vacated term, a local; the push bonus over a three-day absence; each §11.2 headline from its facts; the national section's two lines and the window line |
 | Server — integration (T22) | **a whole term on the test clock** with three players and test members: a Governor's week, a Chair's election and desk, a bill through the division and the signature day, the national names, pick, vote, count and day 0; a petition; a removal; with the worker off for a week in the middle. Run ten times in a row |
 | UI | fixtures for every new component and state (screens §13's empty states included) |
@@ -1374,9 +1391,9 @@ Screens §15's strings, the thirteen help notes and design §12's modal texts go
 
 ### 15.1 E2E specs (each in its own Playwright project after slice 6's, in this order; all on the test clock)
 
-**`governor.spec.ts`** (phone): a Collective councillor with a completed term (hook) at the Coalport count → the front page *ELECTED* · *elected Governor of Coalport*; the office page → **Choose the rule** → *Public Works Order* → *goes to the vote first*; the order paper shows it as item 1; **Speak on {issue}** → *Spoken*; the next boundary: *Council Passes Public Works Order*; the plate reads *Governor: {name}*.
+**`governor.spec.ts`** (phone): a Collective councillor with a completed term (hook) at the Coalport count → the front page *ELECTED* · *elected Governor of Coalport*; the office page → **Choose the rule** → *Public Works Order* → *card 1 on the town's ballot*; at the set the Council rule card shows it as card 1; **Speak on {issue}** → *Spoken*; with no votes, the count morning reads *Public Works Order runs from Sunday* (`hl.rule-fallback`), not *Council Passes*; the plate reads *Governor: {name}*.
 
-**`chair.spec.ts`** (phone): term day 9 (hook); a Rank 4 member with a council term **Stand for Chair · 25 Political Capital**; a test member backs; the member's orders done → *the branch backs you*; day 11 → **Vote now** (the secretary's row present); day 14 → *Chairs the Collective*; the desk: three picks, the push *Eastside · target 25*, **Set the orders** → *The orders are yours*; next day a Level 10 test member's Orders panel reads *Set by the Chair, {name}* and *Talk to voters in Eastside, Irongate*; test members' actions there fill the `TargetBar`; the boundary → +10 Party XP on the desk; *Coalport into Unrest* (hook) → *A Vote on the Chair* in the paper → test members vote No → *{secretary} acts until the next election*.
+**`chair.spec.ts`** (phone): term day 9 (hook); a Rank 4 member with a council term **Stand for Chair · 25 Political Capital** (no backers needed); a test member backs (+3); the member's orders done → *the branch backs you*; day 11 → **Vote now** (the secretary's row present); day 14 → *Chairs the Collective*; the desk: three picks, the push *Eastside · target 25*, **Set the orders** → *The orders are yours*; next day a Level 10 test member's Orders panel reads *Set by the Chair, {name}* and *Talk to voters in Eastside, Irongate*; test members' actions there fill the `TargetBar`; the boundary → +10 Party XP on the desk; *Coalport into Unrest* (hook) → *A Vote on the Chair* in the paper → test members vote No → *{secretary} acts until the next election*.
 
 **`nation.spec.ts`** (phone, then desktop): the ladder by hook; term day 19 → **Stand for Parliament** and (another context) **Stand for President** with two pledges; day 21 → the pick with the figure's row (*run by the game*) → **Choose**; day 23 → the three candidates, **Vote for {name}**, **Back · 10 Political Capital**; day 27 → the result *To be confirmed* with the `ScoreTable`; day 0 → *Final*, the front page, `/parliament` with the player deputy; **Put a law to Parliament** → *Eight-Hour Day Act* → *up for a vote*; the Chair sets the line *For*; three boundaries → *{name}'s Eight-Hour Day Act Passes*; the signature day; the next boundary → the law book shows it and the desk's wage line reads *Law: Eight-Hour Day Act +22*.
 
@@ -1384,7 +1401,7 @@ Screens §15's strings, the thirteen help notes and design §12's modal texts go
 
 **`petition.spec.ts`** (phone): Clearwater residents (test members); cycle day 1 → **Petition to dissolve the council · 10 Political Capital**; two sign; a Town Hall (hook: start now, forced Success) adds 2; the close → *Clearwater Council Dissolved by Petition*; a councillor's paper *Your seat ends today, the term uncompleted*; the plate *Dissolved: local candidates sit until {weekday}*.
 
-**`clearwater.spec.ts`** (phone): a Level 10 player boards (**Board · 20 Iron · 25 min**); the arrival → The Harbour with the station pin; The Front's lock line; **Register in Clearwater · 500 Iron**; a canvass at the fish quay (difficulty 10, odds words); a mission at the Tram Depot; the Courier on the paper tab; the count (term clock) with seven seats in the `DistrictResultTable`'s shape and *Governor: …* under it.
+**`clearwater.spec.ts`** (phone): a Level 10 player boards (**Board · 20 Iron · 25 min**, the journey on the nation map); the arrival → the one map with the Casino selected; The Front's later pins; **Live here · 500 Iron**; a canvass at the fish quay (difficulty 10, odds words); a mission at the Tram Depot; the Courier on the paper tab (a resident) and the visitor's own Clearwater edition (a second context); the count (term clock) with seven seats in the `DistrictResultTable`'s shape, the rule as the largest bloc's card and *Governor: …* in the Casino's hall blocks.
 
 ### 15.2 Playtest report: the nation (design §18 Q14)
 
@@ -1404,13 +1421,13 @@ Screens §15's strings, the thirteen help notes and design §12's modal texts go
 
 Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one faction where possible, test members for the rest.
 
-- [ ] **A Governor's week:** the front page; one tap for the rule; the Address; the council passes it; the plate and the wage show it. Three taps in five days.
-- [ ] **Standing for Chair:** the stand card's ticks; backers; the secretary's backing after the orders; the vote with the secretary on the ballot; the result.
+- [ ] **A Governor's week:** the front page; one tap for the rule; it is card 1 on the town's ballot; the Address; the count puts a rule in force; the plate and the wage show it. Three taps in five days.
+- [ ] **Standing for Chair:** the stand card's ticks (no backers needed); optional backing; the secretary's backing after the orders; the vote with the secretary on the ballot; the result.
 - [ ] **The Chair's desk:** five taps set the orders and the push; the next morning every member reads *Set by the Chair*; away for a week, the orders still repeat; the target met pays everyone who knocked.
 - [ ] **Parliament:** a deputy's bill in two taps; the party line in one; the count's reasons in words; the law on a ticket the morning it is in force; the veto on the signature day.
 - [ ] **The national election:** stand, the pick, the vote, the result *to be confirmed tomorrow*, office at day 0; nothing asks anyone to be online at a time.
 - [ ] **Losing it:** a seat lost, a Chair removed, a council dissolved, a President removed: every loss in the paper with the next thing to do.
-- [ ] **Clearwater:** the train, The Harbour, The Front's lock line, registering, a room, a mission, the Courier, the seven-seat count.
+- [ ] **Clearwater:** the train, the one map with the Casino, The Front's later pins, *Live here*, lodgings, a mission, the Courier, the seven-seat count and the bloc's rule.
 - [ ] **Locals and figures:** every list says who is run by the game; the chamber shows *Local deputies: n of 60*.
 - [ ] **Being away costs nothing:** a deputy, a Chair and a Governor away for a term keep their stipends and nothing is taken; their duties fall to the defaults.
 - [ ] **Vocabulary:** no *whip, Directive, recall, Legislature, National Control, Chancellor* anywhere; *The Front* reads as a lake front.
@@ -1430,7 +1447,7 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 | **The nation's boundary transaction** (control, divisions, enactments, counts, office) grows | Each boundary does at most one count; the largest is day 0 (≤ 61 term rows) or 27 (three lists). Measured in T22's worker-down run; the fallback splits the steps into guarded transactions with a step marker on `nation.world` |
 | **Ordering**: the nation must read every city after its boundary | `settleNationDay` calls `ensureCityDay` for every city first; the job runs at 00:02; a test settles cities in random order and checks the snapshot |
 | **The read path grows** (one more read per request; the faction document once a day) | `nation` is one `_id` read replacing nothing; measured in T11 (the p95 of `character.me` stays within 10 % of slice 6) |
-| **Two council paths diverge** (home, capital, Clearwater) | One generalised count (`countBattleground`) and division (`divideBlocs`) with parameters; slice 3 and 4 tests pin the old behaviour |
+| **Two council paths diverge** (home, capital, Clearwater) | One generalised count (`countBattleground`) and rule decision (`decideBlocRule`) with parameters; the voting rework's tests pin the old behaviour |
 | **The local deputies' chain decides almost every bill at low population** | It is the design (§7.2 *what passes by itself*); the chamber says why each bloc voted; the report counts players vs locals |
 | **A law in force changes many functions at once** | Each new kind touches exactly one function (§6.6) with a test against economy §21.3; the loader keeps laws off Party XP and odds |
 | **Day-constant modifiers meet the Curfew's night window** | The window is an explicit flag read at the act's time (ADR 0044); the ticket shows *until {nextDawn}* only at night (review 5; was *until 06:00*) |
@@ -1444,12 +1461,12 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 ## 18. Idempotency and atomicity summary
 
 - **Votes (the Chair, the pick, the republic, the vote on the Chair):** unique `votes {electionId, voterId}` + the election's counter `$inc` filtered on its open status, in one transaction with the request key (ADR 0018, 0019).
-- **Standing:** unique `candidacies {electionId, characterId}` + the election's `filed` counter filtered on `names` + `pc ≥ cost` and the version; withdraw: `filed → withdrawn` with the refund.
+- **Standing:** unique `candidacies {electionId, characterId}` + the election's `filed` counter filtered on `names` + `pc ≥ cost` and the version; the Chair's and the list's PC is spent; only the President's candidacy can be withdrawn (`standing → withdrawn` with the 100 PC refund, days 19–20).
 - **Backing:** the candidacy's `endorsements.characterId: { $ne }` and status + the character's `termBackings.key: { $ne }`, `pc ≥ 10`, the version.
 - **Tabling:** the bill's unique `slotKey` / `lawId` / `tablerKey` partial indexes + `pc ≥ 50` and the version; a removal also the `lastRemovalDay` guard on `nation`.
 - **Bill votes and lines:** `votes.characterId: { $ne }` and `status: 'voting'` on the bill; a line is a `$set` to a target state.
 - **The veto:** the term's `powers.veto` absent + the bill's `status: 'awaitingSignature'`, `vetoable`, `signatureDay: today`; the override's `slotKey` unique.
-- **The Governor's rule and the Addresses:** the term's `powers.rule` / `powers.address` absent; the order paper's `status: 'open'` and no `governor` item; the Issue's `status: 'live'`.
+- **The Governor's rule and the Addresses:** the rule is a `$set` on the term (current, not vacated) with `$inc changes` on the rule ballot filtered on `status: 'open'` (ADR 0084 §5's guard); the Address: the term's `powers.address` absent and the Issue's `status: 'live'`.
 - **The Chair's sets:** `$set`s to a target state on `factions` filtered on the Chair; the request key replays the modal.
 - **Petitions:** the open petition's unique partial index (dissolve) or natural `_id` (the Chair's) + `signatures.characterId: { $ne }`, `status: 'open'`, `pc ≥ 10`.
 - **Boundaries:** `nation.world.settledDay: d − 1` → `d` (and the cities' as ADR 0017); every derived document has a natural key; a second runner aborts and re-reads.
@@ -1491,7 +1508,7 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 
 **T1. Rules: the term and the ladder.** §6.1's constants, `term.ts`, `ladder.ts` (`standGate`, `ladderRows`, `termsWeight`, `stipendOf`, `officeStipends`, `governorOf`). *Done when:* §6.12's term, ladder and Governor tests pass, and term day 0 is a Monday for 200 terms.
 
-**T2. Rules: National Control and the counts.** `national.ts`: `nationalControl`, `nationalScores`, `countNation`, `partyList`, `seatList`, `countPick`, `countChair`, `closeChairNames`, `confidenceResult`, `signaturesNeeded`, `autoRemovalDue`. *Done when:*
+**T2. Rules: National Control and the counts.** `national.ts`: `nationalControl`, `nationalScores`, `countNation`, `partyList`, `seatList`, `countPick`, `countChair`, `freezeChairList`, `confidenceResult`, `signaturesNeeded`, `autoRemovalDue`. *Done when:*
 - the baselines give 23.5 each;
 - design §6.3's three worked examples pass to the decimal, including **25 / 20 / 15**;
 - the Chair's and the pick's tie levels each have a test.
@@ -1503,17 +1520,17 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 
 **T4. Rules: laws as effects.** `laws.ts` (the DSL, `LAW_BOUNDS`, `lawSource`, `lawSourcesOn`), `ModifierSource.kind: 'law'`, and the seven kinds in their functions (§6.6): `rewardShares.xp`, `missionEnergy`, `journeyMinutes`, `runInChance`, `walkOut`, `liveMarks(fadeDaysOn)`, `caughtChance`; the place factor `heatGainAt`; `ordinanceTags` for laws. *Done when:* every economy §21.3 number in §6.12 passes, the fade is monotone across a law's end, and every slice 3–5 rules test passes unchanged.
 
-**T5. Rules: councils, orders, events, the paper; types.** `divide` v3, `divideBlocs`, `countBattleground`, `orderPaperItems`, `partyRuleOf`; `orders.ts` v3 (`standingOn`, families, the push, `pushCounts`, `pushTitle`); `townHallSignatures`, `chairCallGate`, `petitionGate`, `chairPetitionGate`; `selectNationalLines` and the national conditions; §6.11's and §8.3's types and errors. *Done when:* the councils', orders', events' and paper's tests of §6.12 pass, slice 3 and 4 council tests pass through the generalised functions, and `pnpm typecheck` is green across the repo.
+**T5. Rules: councils, orders, events, the paper; types.** `partyCardOf` with the Governor, the Mayor and the Chair at the head, `countBattleground`, `decideBlocRule`, `partyRuleOf`; `orders.ts` v3 (`standingOn`, families, the push, `pushCounts`, `pushTitle`); `townHallSignatures`, `chairCallGate`, `petitionGate`, `chairPetitionGate`; `selectNationalLines` and the national conditions; §6.11's and §8.3's types and errors. *Done when:* the councils', orders', events' and paper's tests of §6.12 pass, the voting rework's council tests pass through the generalised functions, and `pnpm typecheck` is green across the repo.
 
 **T6. Content: schemas, accessors, cross-checks.** §4.1–§4.2, the `GameContent` accessors, a failing fixture for each check. *Done when:* every §4.2 check has a failing fixture and the existing content validates (the new arrays empty or defaulted until T7–T8).
 
-**T7. Content: Clearwater.** `data/cities/clearwater.ts` (three quarters with frames and The Front's teaser, nine places, 24 actions, 45 outcome texts, the Casino, the Courier), jobs, missions, the nine candidates, six Issues and `tram-fares`' entry, the Clearwater rotation of orders, `nation.ts` (open, line, no own baseline), the Courier's headlines (§11.3.1 and the rest of its set from the designer). *Done when:* the word-for-word tests against design §9 and §11.3 pass, every pin equals `mapPins.clearwater`, the baseline is 22 / 22 / 22 / 34 and the weights sum to 1.
+**T7. Content: Clearwater.** `data/cities/clearwater.ts` (one map; The Front's four places as later pins; nine places, 24 actions, 45 outcome texts, the Casino as `council.hall`, lodgings on the Rows, the Sanatorium's treatment, the Courier), the Tram conductor at 240, jobs, missions, the nine candidates, six Issues and `tram-fares`' entry, the Clearwater rotation of orders, `nation.ts` (open, line, no own baseline), the Courier's headlines (§11.3.1 and the rest of its set from the designer). *Done when:* the word-for-word tests against design §9 and §11.3 pass, every pin equals `mapPins.clearwater`, the baseline is 22 / 22 / 22 / 34 and the weights sum to 1.
 
-**T8. Content: the nation.** `data/laws.ts`; the factions' figures, pick names, Chair platforms, preferred laws, local deputies and houses; `family` on the rotation templates and the push templates; the Town Hall and the venue rows (§22.1 Q5); national lines; personal lines in five papers; design §12's modals and §22.1 Q19's; screens §15's copy and the thirteen help notes; chapter 3 and `keep.deposit-receipt`; the *The Front* allowance. *Done when:* the word-for-word tests against both design documents pass, the loader computes 31 / 36 as the design's *Needs* column, and both vocabulary guards pass.
+**T8. Content: the nation.** `data/laws.ts`; the factions' figures, pick names, Chair platforms, preferred laws, local deputies and houses; `family` on the rotation templates and the push templates; the Town Hall and the venue rows (§22.1 Q5); national lines; personal lines in five papers; design §12's modals and §22.1 Q19's; screens §15's copy and the thirteen help notes; chapter 3 and its keepsake as the designer re-strings them (no deposit); `plainLine` on every new ordinance; the *The Front* allowance. *Done when:* the word-for-word tests against both design documents pass, the loader computes 31 / 36 as the design's *Needs* column, and both vocabulary guards pass.
 
 **T9. Art.** The seven catalogue entries of §13 (three portraits, three new scenes, `scene.parliament`), `nationalFigure.portrait`, the Town Hall's `art`, `content.art.nationScenes`, `pnpm art:build`, the budget measured and recorded. *Done when:* `art:check` passes, the dev viewer shows all seven with their crops, and the designer has confirmed the alt texts and the content-policy read (no symbol on any coat, wall, board or drape).
 
-**T10. DB.** The seven models and their indexes (§5.1–§5.7), the changed fields and enums (`officeTerms`, `candidacies`, `cities`, `elections`, `ordinances`, `contributions`, `campaignEvents`, `chatMessages`, `requestLogs`, `characters`), migration 009. *Done when:* migration 009 run twice changes nothing the second time, each partial unique index refuses its duplicate in a DB test, and a transaction over every new collection commits on the memory replica set.
+**T10. DB.** The seven models and their indexes (§5.1–§5.7), the changed fields and enums (`officeTerms`, `candidacies`, `cities`, `elections`, `ordinances`, `contributions`, `campaignEvents`, `chatMessages`, `requestLogs`, `characters`), migration 011. *Done when:* migration 011 run twice changes nothing the second time, each partial unique index refuses its duplicate in a DB test, and a transaction over every new collection commits on the memory replica set.
 
 ### Phase B — the server
 
@@ -1523,11 +1540,11 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 - four runners settle a boundary once, and a three-day gap is caught up by one read;
 - a law inserted by a test reaches a ticket, a result modal and a wage the next day.
 
-**T12. Server: Clearwater.** `processBattlegroundBoundary`, `bootstrapBattleground`, `countBattleground` and `divideBlocs` in the city day (the capital switched to them), travel open, residence and the room, jobs, missions and the run-in pool, Issues, `heatGainAt` for districts and Clearwater, the Courier's paper, the fixtures and branch channel (§22.1 Q6). *Done when:* Clearwater's server tests of §15 pass, and the capital's slice-4 count tests pass through the generalised functions.
+**T12. Server: Clearwater.** `processBattlegroundBoundary`, `bootstrapBattleground`, `countBattleground` (with `cardBallots`) and `decideBlocRule` in the city day (the capital switched to them), travel open, *Live here* and lodgings, jobs, missions and the run-in pool, Issues, `heatGainAt` for districts and Clearwater, the Courier's paper, the fixtures and branch channel (§22.1 Q6). *Done when:* Clearwater's server tests of §15 pass, the capital's voting-rework count tests pass through the generalised functions, and no patrol is rolled in Clearwater.
 
-**T13. Server: the Governor and the councils v3.** `governorOf` in every count (home, capital, Clearwater), the `governor` term and `city.council.governor`, `governor.setRule`, `governor.address`, the order paper's items (`orderPaperItems` with the Chair's rules from `factions`), `divide` v3 and `divideBlocs` with the chain and four *None of these*, `office.governor`. *Done when:* the Governor's server tests of §15 pass, including a second-termer passed over a first-term top councillor and the locals voting the Governor's rule.
+**T13. Server: the Governor and the councils v3.** `governorOf` in every count (home, capital, Clearwater), the `governor` term and `city.council.governor`, `governor.setRule` (the term's `rule`, the ballot's `changes` guard), `governor.address`, the party cards at the set (`partyCardOf` with the Governor's or Mayor's rule and the Chair's rules from `factions`), `office.governor`, the Governor's line on `TownHallView`. *Done when:* the Governor's server tests of §15 pass, including a second-termer passed over a first-term top councillor and the Governor's rule as card 1.
 
-**T14. Server: the Chair's election.** `factionElections` opened, closed and counted by the nation's day; `chairElection.*`; the secretary's backing hook in the orders' completion; the small rule faction-wide; struck deposits; the `chair` term and `factions.chair`; settings cleared at a change. *Done when:* the Chair's election tests of §15 pass, including the secretary winning a tie of votes against a player with no backers counted, and the ballot's secrecy on the wire.
+**T14. Server: the Chair's election.** `factionElections` opened, closed and counted by the nation's day; `chairElection.*`; the secretary's backing hook in the orders' completion; no backer gate, no strike, no refund; the `chair` term and `factions.chair`; settings cleared at a change. *Done when:* the Chair's election tests of §15 pass, including the secretary winning a tie of votes against a player with no backers counted, and the ballot's secrecy on the wire.
 
 **T15. Server: Parliament and laws.** `parliament.*` (chamber, bill, catalogue, laws, bloc, table, vote), the divisions and enactments in the nation's day with the chain, Unrest and the lines read from the bills, strikes, the cap and renewals, the failed week, the lapse at day 0, the secretary's and the figure's Monday bills. *Done when:* Parliament's server tests of §15 pass, including four tablers racing for three slots and the law-in-play tests for all thirteen laws.
 
@@ -1537,9 +1554,9 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 
 **T18. Server: the President's powers and removals.** `office.president`, `president.address`, `parliament.veto` and the override, pledges kept, removal bills (a player's and the clerk's), `removePresident` with the runner-up and the deputy seat passing down. *Done when:* the veto racing the enactment resolves one way in ten runs, a removal at 40 seats the runner-up at the division, and the clerk's motion fires at 24 % and not at 26 %.
 
-**T19. Server: petitions, the Town Hall and the vote on the Chair.** `petition.*`, the close in the city day before the division and the dissolution, the Town Hall's signatures in `eventService.resolve`, `confidence.*`, the automatic vote on entering Unrest, the removal of a Chair. *Done when:* the petitions' and removals' tests of §15 pass, including a dissolution that strikes a passed rule and stops the councillors' stipends.
+**T19. Server: petitions, the Town Hall and the vote on the Chair.** `petition.*`, the close in the city day before the set and the dissolution (the rule in force untouched), the Town Hall's signatures in `eventService.resolve`, `confidence.*`, the automatic vote on entering Unrest, the removal of a Chair. *Done when:* the petitions' and removals' tests of §15 pass, including a dissolution that leaves the rule in force to run out its window and stops the councillors' stipends.
 
-**T20. Server: the settlement and the paper v7.** `officeStipends`, the push bonus, the struck Chair deposit, the `offices[]` projection, today's orders with `setBy` and the push; the national section and the window line; personal lines; front pages for every office; the Courier; the desk's lines; *In Print*. *Done when:* each §11.2 headline is produced from its facts in a test, a member away three days gets three days' stipends and push bonuses once, and the national section shows at most two lines.
+**T20. Server: the settlement and the paper v7.** `officeStipends`, the push bonus, the `offices[]` projection, today's orders with `setBy` and the push; the national section and the window line; personal lines; front pages for every office; the Courier (residents) and the visitor's own Clearwater edition; *From the capital* after the residence's city lines in `composeHeadlines`; the desk's lines; *In Print*. *Done when:* each §11.2 headline is produced from its facts in a test, a member away three days gets three days' stipends and push bonuses once, and the national section shows at most two lines.
 
 **T21. Server: test hooks and the dev panel.** §8.6–§8.7. *Done when:* `devPanel.test.ts` covers each new button and status field, and every hook is absent without `E2E_TEST_HOOKS`.
 
@@ -1549,7 +1566,7 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 
 **T23. UI package.** §12.2's components and changes with fixtures and smoke tests (screens §13's empty states included). *Done when:* each fixture test passes and the existing UI tests pass.
 
-**T24. Client: the nation map and Clearwater.** `NationBar`, `LawChips`, the pins' second line, the republic sheet, the city card's Governor line and plate word; Clearwater's city (the landing quarter, The Front's lock, outlines, the quarter bar, the Election card, residence and room, the Courier). *Done when:* `clearwater.spec.ts` passes and the nation map's layout check at 375 × 667 passes.
+**T24. Client: the nation map and Clearwater.** `NationBar`, `LawChips`, the pins' second line, the republic sheet, the city card's Governor line and plate word; Clearwater's city (one map, the arrival on the Casino, The Front's later pins, the Casino's hall blocks, the Election card, *Live here* and lodgings, the Courier). *Done when:* `clearwater.spec.ts` passes and the nation map's layout check at 375 × 667 passes.
 
 **T25. Client: the Me tab and the office pages.** `OfficeCard`, `LadderCard`, `/office/governor/$cityId`, `/office/president` (pledges, the week's law, the veto card, the Address sheet). *Done when:* `governor.spec.ts` passes and the office pages' layout checks pass.
 
@@ -1569,6 +1586,8 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 
 ## 21. Answers to the design's questions (design §18)
 
+*Recorded 4 Oct 2026. Answers 6, 7, 9 and 10 predate review 4 and the voting rework; where they differ, the sections above (updated 14 Oct 2026) win, and each is marked.*
+
 1. **The term epoch.** `TERM.epochDay = 20_458` in `packages/rules` (Monday 5 January 2026, the Issues' Monday epoch), **a code constant, not a deploy-time setting**: rules has no configuration, the term number keys stored documents, and a deploy that picked another Monday would renumber every term (ADR 0043). `termOf(day)` is pure, like `cycleOf`. There is no separate `nationalTerm` document: the current term lives on the one `nation` document (`term`, `government`), and per-term records are keyed by the term number (`nationalElections` `nation:{n}`, `factionElections` `chair:{f}:{n}`, `bills.termIndex`, `officeTerms` `deputy:{n}` / `president:{n}`). The Season (slice 8) is three terms from the same epoch.
 2. **Collections.** As suggested, with these changes:
    - `laws` as suggested (plus `endedDay` and `endedBy`), with a projection on `nation` for the read path;
@@ -1587,16 +1606,16 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
    - `markFadeDays` is monotone over the law's days, so a law that ends never brings a mark back;
    - control's +25 % Heat is a **place factor**, not a law kind.
    The other new kinds each touch one function (§6.6). `LAW_BOUNDS` is enforced by the loader, which also refuses `fxpPct` and `chancePct` on any law.
-6. **Clearwater's quarter order.** Keep the survey order (The Front 1, The Depot 2, The Harbour 3) and allow a teaser at index 0. The content test already holds each place's pin, so nothing is renumbered. Two changes make it work:
+6. **Clearwater's quarter order.** *(Superseded by review 4: Clearwater is a one-map city with no quarters; The Front's places are later pins; no landing quarter.)* Keep the survey order (The Front 1, The Depot 2, The Harbour 3) and allow a teaser at index 0. The content test already holds each place's pin, so nothing is renumbered. Two changes make it work:
    - the client opens a city on **its landing quarter** (the arrival station's), not `quarters[0]`; today `apps/client/src/routes/city.tsx:763` frames `c.quarters[0]`, and T24 replaces it with `CityView.landingQuarterId`;
    - the loader refuses a landing quarter that is a teaser.
    After the landing, the last-viewed rule applies as before.
-7. **Clearwater's city document** has a district's shape at city level, as suggested: `opinion`, `state`, `groundswell` and `stateLog` on its `cities` document. The council is at the city, with seven seats. The count is slice 4's district count generalised by parameters (`countBattleground`: seven seats, lists of three, the turnout weight at ten), and the division is `divideBlocs` with four of seven. Control's Heat rule is a place factor read by the Heat gain, for the capital's districts too (ADR 0050).
+7. **Clearwater's city document** has a district's shape at city level, as suggested: `opinion`, `state`, `groundswell` and `stateLog` on its `cities` document. The council is at the city, with seven seats. The count is slice 4's district count generalised by parameters (`countBattleground`: seven seats, lists of three, the turnout weight at ten), and the division *(superseded by the voting rework: the rule is `decideBlocRule`, the largest bloc's card)* is `divideBlocs` with four of seven. Control's Heat rule is a place factor read by the Heat gain, for the capital's districts too (ADR 0050).
 8. **The Chair's standing orders** are read where the rotation is read, as suggested, with two changes (ADR 0046):
    - the picks are **order families**, so a home resident and a capital or Clearwater resident each read their own town's order (§22.1 Q1);
    - the party's target is **not a counter on the faction document**: each matching attempt upserts the member's own `contributions` row (`push|{f}|{day}`) in the action's transaction, so no faction-wide hot document joins every action. The live bar is a `$group`; the nation's day stores the day's result; the member's settlement pays the +10 Party XP (the world never writes a character, ADR 0020).
-9. **The party's rule on councils** is `factions.rules[cityId]`, falling back to `faction.branchMotion`, as suggested. It is written into **the next** order paper at its count (§22.1 Q8). The Governor's rule is not a field on the election: it is an **item on the order paper** (`movedBy.kind: 'governor'`, at position 1), with a set-once `powers.rule` on the Governor's term (§22.1 Q7).
-10. **Petitions** are set-once rows as suggested: ADR 0018's pattern, with a unique open petition per city. `needed` is computed at the close from the turnout roll. The city's boundary closes a petition before the division, so a dissolved council's rule never comes into force (ADR 0049).
+9. **The party's rule on councils** is `factions.rules[cityId]`, falling back to `faction.branchMotion`, as suggested. *(Voting rework: it is read at the next ballot's set and heads the party's card after a Governor or Mayor; the Governor's rule is card 1, on the term's `rule`. The rest of this answer is history.)* It is written into **the next** order paper at its count (§22.1 Q8). The Governor's rule is not a field on the election: it is an **item on the order paper** (`movedBy.kind: 'governor'`, at position 1), with a set-once `powers.rule` on the Governor's term (§22.1 Q7).
+10. **Petitions** are set-once rows as suggested: ADR 0018's pattern, with a unique open petition per city. `needed` is computed at the close from the turnout roll. The city's boundary closes a petition before the set (it was before the division); the rule in force runs out its window (GDD §15.9; ADR 0049 as amended).
 11. **The Town Hall's signatures** are resolved into the open petition in the event's resolution transaction, as suggested. If the petition has closed, nothing happens. Slice 6's ordering resolves an earlier day's events before the boundary's close.
 12. **The veto's day** is as suggested, with three mechanics (ADR 0045):
    - the bill is `awaitingSignature` from the division to the next boundary;
@@ -1631,8 +1650,8 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 
 **Councils**
 
-7. **The Governor's rule "in place of" the party's item.** Councillors vote during cycle days 0–1, the same days the Governor chooses. A councillor may have voted for the party's item before the Governor replaces it. **Default:** the Governor's rule is **added as item 1, ahead of** the party's item, which stays. Locals with no player lead vote for the Governor's rule, so the outcome is the design's and no cast vote disappears.
-8. **When the Chair's rule for a city applies.** **Default:** from the next order paper (opened at the next count), never mid-paper, for the same reason as Q7. The modal names the council (*from Thursday's council*).
+7. *(Superseded by the voting rework: no order paper; the Governor's rule is card 1.)* **The Governor's rule "in place of" the party's item.** Councillors vote during cycle days 0–1, the same days the Governor chooses. A councillor may have voted for the party's item before the Governor replaces it. **Default:** the Governor's rule is **added as item 1, ahead of** the party's item, which stays. Locals with no player lead vote for the Governor's rule, so the outcome is the design's and no cast vote disappears.
+8. *(Voting rework: from the next ballot's set.)* **When the Chair's rule for a city applies.** **Default:** from the next order paper (opened at the next count), never mid-paper, for the same reason as Q7. The modal names the council (*from Thursday's council*).
 
 **Parliament**
 
@@ -1756,7 +1775,7 @@ None blocks the build. Defaults taken:
 
 ## Review 4 knock-ons (dated note, 7 Oct 2026)
 
-Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - **Clearwater is a one-map city** (ADR 0076):
   - no frames, outlines or labels on its quarters;
@@ -1775,7 +1794,7 @@ The opening is *Coming home* (GDD §7.1; `docs/design/review-5-answers.md` §19)
 
 ## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
 
-Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - **The Curfew's night** (§170, §579, §735) reads `nightAt(now).night` at the act; `isNight`'s 20:00–06:00 comment goes.
   - The ticket's *until 06:00* (§1226) is *until {nextDawn}* through `copy.when`.
@@ -1791,7 +1810,7 @@ Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–00
 
 ## Voting rework knock-ons (dated note, 12 Oct 2026)
 
-Copied from `docs/tech/voting-rework.md` §17 when the voting rework was built (ADRs 0083–0086; design `docs/design/voting-simplified.md`). The town now votes on a rule: three cards set at day 2, one vote each on days 2–4, the count at day 5 (home: most votes, card 1 on a tie or no votes; contested cities: the largest bloc's card). There is no order paper and no council vote. Read these before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/voting-rework.md` §17 when the voting rework was built (ADRs 0083–0086; design `docs/design/voting-simplified.md`). The town now votes on a rule: three cards set at day 2, one vote each on days 2–4, the count at day 5 (home: most votes, card 1 on a tie or no votes; contested cities: the largest bloc's card). There is no order paper and no council vote. **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 1. **The Governor** (§2 *The Governor*, §6.8, §8.2 `governorService.setRule`, ADR 0048):
    - the Governor's rule is **card 1** of the home ballot: `partyCardOf`'s chain head, ahead of the Chair and the secretary;

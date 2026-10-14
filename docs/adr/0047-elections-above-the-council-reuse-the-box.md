@@ -1,6 +1,17 @@
 # ADR 0047 — Elections above the council reuse slice 3's candidacies and numbered ballot box, with `factionElections` and `nationalElections` for the windows and the counts
 
-**Status:** proposed (slice 7; applies ADR 0018 and ADR 0019) · **Date:** 2026-10-04
+**Status:** proposed (slice 7; applies ADR 0018 and ADR 0019); amended 2026-10-14 for the voting rework, see ADR 0083 and ADR 0084 · **Date:** 2026-10-04
+
+## Amendment (14 Oct 2026)
+
+The reuse of `candidacies` and `votes`, the two window documents, `termBackings[]` and the pure counts stand. The voting rework (10–12 Oct; GDD §15.1, §15.4, App C #106) changed what slice 3 hands this ADR:
+
+- **No candidate needs backers.** The Chair's election has **no two-backer gate**: Rank 4, a completed council term, 14 days in the faction, **25 PC spent when the name is printed, never returned**. Backing stays **optional**: +3 to the Chair's total (10 PC, Rank 2+, one per member per Chair election, public). For the national vote backing is likewise optional (+1 to the party's score, at most +5; it orders the party's list).
+- **No deposits and no striking.** Slice 3's candidacies no longer carry a refundable deposit, a strike at the close or the small-branch rule (ADR 0084). So the Chair's candidacy has no `deposit: 'due'`, the settlement's struck-Chair refund goes, and `CHAIR.backers` goes. The President's 100 PC is the one stake still returned (only on a withdrawal before the party's pick opens, GDD §15.5).
+- **The secretary's backing** reuses the branch's backing as rebuilt by ADR 0084 (a free +3 on a day the candidate completes the three orders).
+- **`votes` rows** carry `candidateKey` for the Chair, the pick and a vote on the Chair, and `ordinanceId` for councils (ADR 0083 §4); exactly one is set. The national vote's key is unchanged.
+
+The Context above (two backers, deposits, the small-branch rule) is history. The slice-7 tech design's voting-rework note lists the build changes (`docs/tech/slice-7.md`).
 
 ## Context
 

@@ -1,6 +1,15 @@
 # ADR 0018 — Political acts: set-once on a natural key, replayed through a request key, and serialised with the boundary that closes their window
 
-**Status:** accepted, implemented (slice 3; applies ADR 0002 and ADR 0008) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3; applies ADR 0002 and ADR 0008); superseded in part 2026-10-12 by ADR 0083 and ADR 0084 (the voting rework) · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+The pattern stands: a natural key as the exactly-once guard, a request key that replays the answer, and every window-bound act writing the document its closing step writes. The acts themselves changed in the voting rework (ADR 0083, 0084; `docs/tech/voting-rework.md`):
+
+- **Removed:** *withdraw* (a standing candidate can't withdraw; `ON_BALLOT` blocks a move until the count), *propose* and the *council vote* (there is no order paper and no division).
+- **Changed:** *declare* is **stand** (10 PC spent, never returned, with the candidate's rule; the candidacy is `standing` from the declare); *endorse* is **back**, open on cycle days 0–4 and filtered on the candidacy's `status: 'standing'`, which the count flips; *vote* is a vote **for a rule** (`votes.ordinanceId`), still `$inc elections.ballots` filtered on `status: 'polling'`.
+- **Added:** **`council.setRule`**: a councillor names their rule on cycle days 0–1, guarded by the term (holder, current, not vacated) and `$inc changes` on the rule ballot filtered on `status: 'open'`, which the set (the boundary into day 2) writes.
+- **The request kinds today** (`REQUEST_KINDS` in `packages/db/src/models/requestLog.ts`): `council.declare`, `council.endorse`, `council.vote` and `council.setRule`. `council.withdraw`, `council.propose` and `council.councilVote` no longer exist.
 
 ## Context
 

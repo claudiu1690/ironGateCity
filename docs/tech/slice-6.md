@@ -4,7 +4,7 @@
 |---|---|
 | **Goal** | A branch plays together. **Campaign Events**: a Rank 3 member calls one at a fixed venue in the city they stand in, 1–12 hours ahead, and takes the first role; members sign up for named roles (Rank 2) or as **hands** (any Rank); **signing up is the commitment** (the Energy is spent at the tap; withdrawal until an hour before). At the start the server rolls every member-held role, fills the empty ones with **the branch's volunteers** at half strength, and turns the roles into **Triumph, Success, Mixed or Fiasco**: opinion, Party XP, Political Capital, Issue momentum and a headline. **The secretary's fixture** is posted every City Day in each faction's home city and in the capital, and settles at the next boundary. Around the events: **the Faction tab** (Orders, Events, Members, Scoreboard, Chat), **presence** (*Here now*), **faction chat** over WebSockets with mute and report, and **favours** (posting a mate's bail, visiting the ward, the nudge). Nothing requires being online at a set time |
 | **Question** | **Do players feel part of a team, and do they come back for the group's events?** |
-| **Builds on** | Slices 0–4 as built on branch `slice-0` at `a337c5c`, the slice-4 fix round, and **slice 5 as designed** in `docs/tech/slice-5.md` (built before slice 6): `heat`, `health`, `held`, `runIn` on the character, the `encounters` and `stays` collections, the read order of ADR 0033 §5, `applyAgainst`, `districts.state.leader`, `missionTarget`. Where this document leans on a slice-5 name it is that design's name; if slice 5's Deviations rename something, T8 follows the rename |
+| **Builds on** | Slices 0–4 as built on branch `slice-0` at `a337c5c`, the slice-4 fix round, and **slice 5 as designed** in `docs/tech/slice-5.md` (built before slice 6): `heat`, `health`, `held`, `runIn` on the character, the `encounters` and `stays` collections, the read order of ADR 0033 §5, `applyAgainst`, `districts.state.leader`, `missionTarget`. Where this document leans on a slice-5 name it is that design's name; if slice 5's Deviations rename something, T8 follows the rename. Slices 0–5, reviews 4–5 and the voting rework (ADR 0073–0086) are now built; their knock-ons were applied to this document on 14 Oct 2026 (dated notes at the end) |
 | **Design inputs** | `docs/design/slice-6-together.md` (*design §n*) · `docs/design/slice-6-screens.md` (*screens §n*) · `docs/economy.md` §20 · GDD §3.3, §5.2, §5.4, §6.2, §6.5, §13.7, §14.2, §14.4–§14.6, §14.11–§14.12, §15.4, §16.2, §16.3, §18.2, §19.1, §19.2, Appendix C #7, #57–#63 · `docs/IMPLEMENTATION_PLAN.md` · ADR 0001 (the proxy), 0002, 0008, 0017, 0025, 0028, 0030, 0032, 0033 |
 | **ADRs** | [0036 events, roster, sign-ups, limits](../adr/0036-campaign-events-roster-signups-and-natural-limits.md) · [0037 resolution and credit](../adr/0037-event-resolution-world-first-credit-on-read.md) · [0038 chat transport](../adr/0038-chat-socketio-push-trpc-writes-change-streams.md) · [0039 chat storage and lines](../adr/0039-chat-storage-limits-and-system-lines.md) · [0040 presence](../adr/0040-presence-embedded-unversioned.md) · [0041 favours](../adr/0041-favours-across-two-characters-one-release-path.md) · [0042 the faction scoreboard](../adr/0042-faction-scoreboard-scoped-totals.md) |
 | **Accepted defaults** (design §19, taken by the main session) | Rank 1 joins **as a hand** · the fixture resolves **at the boundary** · events pay **no Iron** · Political Capital **halves after the first event** of the day · visits **from anywhere but rival ground** · the Headline Story **without a Case File** · chat ships with **mute and report only** (moderation tools slice 9), hideable from the Me tab |
@@ -384,16 +384,16 @@ Indexes added: `{ factionId: 1, 'presence.seenAt': -1 }` (Members, the plate cou
 - **`requestLogs`**: `REQUEST_KINDS` += `events.withdraw`, `favours.postBail`, `favours.visit`.
 - **`paperEntries`**: the stored headlines gain the event set.
 
-### 5.6 Migration `008-slice6-together.ts`
+### 5.6 Migration `010-slice6-together.ts`
 
-`ensureIndexes()` runs it after 007. Idempotent: each step filters on the field's absence or uses natural keys.
+`ensureIndexes()` runs it after 009 (renumbered 14 Oct 2026: review 4 took 008 and the voting rework 009). Idempotent: each step filters on the field's absence or uses natural keys.
 
 1. **Characters** (`presence` absent): `presence: { locationId: null, seenAt: '$lastActionAt' }`, `events: { open: [], calls: [], unseen: [] }`, `chat: { hidden: false, seenAt: null }`, `mutes: []`, `nameWords` from `name` (a code loop: lower case, split on non-letters).
 2. **Faction scopes** (none exist): all-time totals per character per city and in all, from `contributions` of kind `influence`; this week's from `influenceLedger` rows of the week with a character source whose faction is the row's faction and `swing > 0`. `events: 0`. Bracket from the character's Level.
 3. **Today's fixtures** for every council city (`ensureFixtures`), so the deploy day has its event.
 4. `ensureIndexes` creates the five collections and the new indexes first (no new unique index is on a field the migration adds).
 
-A test runs 008 twice (no change the second time) and checks the backfilled week against a ledger fold.
+A test runs 010 twice (no change the second time) and checks the backfilled week against a ledger fold.
 
 ---
 
@@ -537,7 +537,10 @@ export type MemberStatus =
 export function memberStatus(i: { held; journey; cityId; homeCityOf: (cityId) => FactionId | null; factionId; now;
   deportationMinutes: (from, to) => number }): MemberStatus;
 //  projects slice 5's lazy release: `until ≤ now` reads as out, or as on the train home after a rival-ground arrest
+//  review 5: a pending patrol card shows nothing (it is not a status; the member is where they stand)
 ```
+
+The status line's words come from `copy.when` (review 4), as the cells and the journey do: *in the cells at Harbour Police · out in 24 min*, *on the train to Irongate · arrives in 8 min*. `minutes` is what `copy.when` words; no clock time is printed.
 
 ### 6.4 `chat.ts`
 
@@ -640,17 +643,17 @@ The order is §3.4's. `LoadedCharacter` gains `dueSignups` (the pointers due), s
 
 | Procedure | Refuses |
 |---|---|
-| `events.call` | `RANK { need: 3 }`, `HELD`, `IN_TRANSIT`, `RUN_IN_PENDING`, `RIVAL_GROUND`, `WRONG_CITY` (not an open city of the faction), `UNKNOWN_EVENT_TYPE`, `NOT_YOUR_EVENT`, `WRONG_DISTRICT`, `UNKNOWN_ROLE`, `NOT_ENOUGH_ENERGY`, `TOO_MANY_SIGNUPS`, `ONE_AT_A_TIME`, `BRANCH_HANDS_FULL` |
-| `events.signUp` | `EVENT_NOT_FOUND` (another faction's too), `EVENT_STARTED`, `EVENT_CLOSED`, `RANK { need: 2 }` (a named role), `WRONG_CITY`, `HELD`, `IN_TRANSIT`, `RUN_IN_PENDING`, `NOT_ENOUGH_ENERGY`, `ALREADY_ON_EVENT`, `TOO_MANY_SIGNUPS`, `ROLE_TAKEN`, `HANDS_FULL`, `UNKNOWN_ROLE` |
+| `events.call` | `RANK { need: 3 }`, `HELD`, `IN_TRANSIT`, `RUN_IN_PENDING`, `PATROL_PENDING`, `RIVAL_GROUND`, `WRONG_CITY` (not an open city of the faction), `UNKNOWN_EVENT_TYPE`, `NOT_YOUR_EVENT`, `WRONG_DISTRICT`, `UNKNOWN_ROLE`, `NOT_ENOUGH_ENERGY`, `TOO_MANY_SIGNUPS`, `ONE_AT_A_TIME`, `BRANCH_HANDS_FULL` |
+| `events.signUp` | `EVENT_NOT_FOUND` (another faction's too), `EVENT_STARTED`, `EVENT_CLOSED`, `RANK { need: 2 }` (a named role), `WRONG_CITY`, `HELD`, `IN_TRANSIT`, `RUN_IN_PENDING`, `PATROL_PENDING`, `NOT_ENOUGH_ENERGY`, `ALREADY_ON_EVENT`, `TOO_MANY_SIGNUPS`, `ROLE_TAKEN`, `HANDS_FULL`, `UNKNOWN_ROLE` |
 | `events.withdraw` | `NOT_SIGNED_UP`, `WITHDRAW_CLOSED { committedFrom }` |
 | `events.nudge` | `NUDGE_NOT_ALLOWED` (not on the event, the event started, not a mate, yourself, already on it), `NUDGE_NOTHING_OPEN` |
-| `favours.postBail` | `NOT_A_MATE`, `SELF`, `NOT_IN_CELLS`, `ALREADY_OUT`, `NOT_ENOUGH_IRON` (from anywhere: held, in transit and rival ground are allowed) |
-| `favours.visit` | `NOT_A_MATE`, `SELF`, `NOT_IN_INFIRMARY`, `ALREADY_OUT`, `ALREADY_VISITED`, `NOT_ENOUGH_ENERGY`, `HELD`, `IN_TRANSIT`, `RIVAL_GROUND`, `RUN_IN_PENDING` |
+| `favours.postBail` | `NOT_A_MATE`, `SELF`, `NOT_IN_CELLS`, `ALREADY_OUT`, `NOT_ENOUGH_IRON` (from anywhere: held, in transit, rival ground and a pending patrol card are allowed; it is Iron, not an Energy act) |
+| `favours.visit` | `NOT_A_MATE`, `SELF`, `NOT_IN_INFIRMARY`, `ALREADY_OUT`, `ALREADY_VISITED`, `NOT_ENOUGH_ENERGY`, `HELD`, `IN_TRANSIT`, `RIVAL_GROUND`, `RUN_IN_PENDING`, `PATROL_PENDING` |
 | `chat.post` | `CHAT_CHANNEL`, `CHAT_TEXT`, `CHAT_RATE` (works held, in transit and on rival ground) |
 | `chat.report` | `CANNOT_REPORT` (a system line, your own line, another faction's channel) |
 | `faction.profile` | `NOT_FOUND` unless a faction mate |
 
-Every guard is checked twice: before the key, so the client gets a clean refusal, and inside the transaction against the session's read.
+Every guard is checked twice: before the key, so the client gets a clean refusal, and inside the transaction against the session's read. `HELD`, `RUN_IN_PENDING` and `PATROL_PENDING` come from slice 5's `notFree` (`apps/server/src/services/risk.ts`; review 5 added the patrol card, ADR 0081): *Visit · 3 Energy*, a call and a sign-up are Energy acts and wait for the card's one tap; *Post bail* is Iron from anywhere and never calls `notFree`.
 
 ---
 
@@ -798,7 +801,7 @@ interface EventBoardView {
   mine: Array<EventCardView & { withdrawUntil: number; canWithdraw: boolean }>;
   results: Array<{ id; startsAt; name; venueName; band: EventBand | 'calledOff'; swing: number; members: number }>;
   call: { ok: true } | { ok: false; reason: 'RANK' | 'HANDS_FULL' | 'ONE_AT_A_TIME' | 'WHERE' | 'HELD' | 'IN_TRANSIT'
-          | 'RIVAL_GROUND' | 'RUN_IN_PENDING'; rank3Title: string; open?: { eventId; name; startsAt: number } };
+          | 'RIVAL_GROUND' | 'RUN_IN_PENDING' | 'PATROL_PENDING'; rank3Title: string; open?: { eventId; name; startsAt: number } };
 }
 interface EventPageView {
   id; kind; typeId; name; blurb; art: ResultArt; ground: GroundSashView;
@@ -810,7 +813,7 @@ interface EventPageView {
                  holder: { characterId; name; avatarId; rankTitle; you: boolean } | null;
                  forYou: { chance: number; stats: CheckStats /* best resolved */ } | null;   // open roles only
                  gate: { reason: 'RANK' | 'NOT_ENOUGH_ENERGY' | 'ALREADY_ON_EVENT' | 'WRONG_CITY' | 'TOO_MANY_SIGNUPS'
-                                 | 'HELD' | 'IN_TRANSIT'; need?: number } | null;
+                                 | 'HELD' | 'IN_TRANSIT' | 'PATROL_PENDING'; need?: number } | null;
                  result: { outcome: Outcome | 'volunteer' } | null }>;
   hands: { holders: Array<{ characterId; name; avatarId; you: boolean }>; max: 4; energy: 5; gate: … | null };
   mine: { signupId; slot; roleName; energy; canWithdraw: boolean; committedFrom: number } | null;
@@ -835,7 +838,8 @@ interface MemberRowView {
 }
 interface ProfileView extends MemberRowView { memberSince: number; standingHere: { level: string } | null; muted: boolean }
 interface FactionHqView { faction: { id; name }; rankTitle: string; members: number; hereNow: number;
-  orders: OrdersView; fixture: EventCardView | null }
+  orders: OrdersView;   // with review 4's `off` (the day's orders taken off by an arrest), shown as on the city plate
+  fixture: EventCardView | null }
 interface FactionScoreboardView { period: 'week' | 'all'; cityId: string | null; cities: Array<{ id; name }>;
   brackets: Array<{ bracket: 1 | 2 | 3; rows: Array<{ characterId; name; level; moved: number; events: number;
                     heroes: number; rosette: boolean; you: boolean }> }>;
@@ -960,6 +964,7 @@ No *Again* button. The client words odds and reasons from copy; no number of a c
 - **Events** (new, live at read, under *Party orders*): the faction's open events in the residence city (the fixture first), one row each with *you're the {role}* or **Join**; on the welcome edition *join as a hand · 5 Energy*; empty: *No event in {city} today*. `ensureFixtures` runs first.
 - **Your desk:** the *Signed up* row (from `events.open`, live).
 - **In Print:** the stored event, bail and visit headlines.
+- **The Unrest prize** (review 5, ADR 0082): when the branch's *Restore the base* orders are in the paper, the prize's award line sits with them (the award is review 5's `awards { kind: 'unrest' }`, credited by the settlement as today).
 
 ### 11.2 New headline conditions (design §10)
 
@@ -986,7 +991,10 @@ No *Again* button. The client words odds and reasons from copy; no number of a c
 | `/faction?tab=orders\|events\|members\|scoreboard\|chat` | the Faction tab (screens §2). The first visit opens Events; the tab is remembered for the session. Desktop (≥ 1024): two columns, Chat persistent at the right | `faction.hq`, `events.board`, `faction.members`, `faction.scoreboard`, `chat.*` |
 | `/faction/events/$eventId` | the event page (screens §3): open, signed up, committed, settling, resolved, called off | `events.get` (1 s tick for the countdown; refetch at `startsAt`) |
 | sheets on `/faction` | *Call an event* (three steps), the profile, the favour | `events.callSheet`, `faction.profile` |
-| `/paper`, `/me`, `/held`, `/city/…`, `/journey` | the *Events* row and desk row; *Chat* show/hide; the ward's visitors and the sign-up line; the venue ticket, *Here now*, the plate's count; *You and n others on this train* | as before, plus `presence.at` on a sheet's open |
+| `/paper`, `/me`, `/held`, `/city/…`, `/journey` | the *Events* row and desk row; *Chat* show/hide; the ward's visitors and the sign-up line; the venue ticket, *Here now*, the plate's count; *You and n others on this train*; *Post bail* on the own-party rows of *In the cells now* | as before, plus `presence.at` on a sheet's open |
+
+- **The place sheet's card slot** (review 4, `docs/tech/review-4.md` §3.1): the event tickets (`EventTicket`) and the HQ card go into the sheet's `cards` array, after the Town Hall's blocks, built in `apps/client/src/routes/city.tsx` from the `LocationView` flags. No new sheet code.
+- **`CellsNowCard`** (review 4, ADR 0078) gains *Post bail · {n} Iron* on the rows of the player's own party. It opens the same `FavourSheet` and calls the same `favours.postBail`; the rows come from `held.inCells` (the `held_cells_now` index), as today.
 
 - `AppShell`: the *Faction* tab enabled, with a **dot** (`character.factionDot`).
 - **The modal gate** (the `modalGate` pattern): the run-in (slice 5) first; then, while `character.events.unseen > 0`, `events.current` → `ResultModal kind="event"` (or the *Called off* political modal) → Continue → `events.seen`; then the orders-complete note.
@@ -994,7 +1002,7 @@ No *Again* button. The client words odds and reasons from copy; no number of a c
 
 ### 12.2 `packages/ui` additions (plain props, no tRPC)
 
-New: `FactionTabs`, `EventCard`, `EventPage`, `RoleRow` (a `StoryScreen` row), `HandsRow`, `CallEventSheet`, `TimeChips`, `EventResultRoles` (the *How it went* block), `MemberRow`, `MemberStatus`, `ProfileSheet`, `FavourSheet`, `ChatPanel`, `ChatLine`, `SystemLine`, `HereNowLine`, `EventTicket`. Changed: `ResultModal` (kind `event`), `ScoreboardTable` (period, city filter, top ten with three rosettes, your row), `Paper` (*Events* row, desk row), `HeldScreen` (visitors, the sign-up line, *posted by*), `Plate` (the count), `HudBar` / `Shell` (the dot). `oddsBand` and `presenceBand` words come from `copy.ts`.
+New: `FactionTabs`, `EventCard`, `EventPage`, `RoleRow` (a `StoryScreen` row), `HandsRow`, `CallEventSheet`, `TimeChips`, `EventResultRoles` (the *How it went* block), `MemberRow`, `MemberStatus`, `ProfileSheet`, `FavourSheet`, `ChatPanel`, `ChatLine`, `SystemLine`, `HereNowLine`, `EventTicket`. Changed: `ResultModal` (kind `event`), `CellsNowCard` (*Post bail* on own-party rows), `ScoreboardTable` (period, city filter, top ten with three rosettes, your row), `Paper` (*Events* row, desk row), `HeldScreen` (visitors, the sign-up line, *posted by*), `Plate` (the count), `HudBar` / `Shell` (the dot). `oddsBand` and `presenceBand` words come from `copy.ts`.
 
 ### 12.3 The socket client
 
@@ -1058,7 +1066,7 @@ Screens §11's strings, the help notes, the system-line templates and design §1
 |---|---|
 | Rules | §6.9 |
 | Content | The real data validates. A failing fixture for every §4.2 check: a venue of the wrong kind, a venue in a second quarter, two venues for one event and city, a signature event in two capital districts, a capital difficulty ≠ home + 2, a `best` role with two stats, an `event` kind beside another kind, an unknown art id. Word-for-word comparisons with both design documents. The vocabulary guards with *front page* |
-| DB | The five collections' indexes; migration 008 twice; the faction backfill against a ledger fold; a transaction over `characters`, `campaignEvents`, `eventSignups`, `cities`, `districts`, `influenceLedger`, `contributions`, `issues`, `chatMessages` commits; **a change stream on `chatMessages` delivers an insert committed in a transaction** on the memory replica set |
+| DB | The five collections' indexes; migration 010 twice; the faction backfill against a ledger fold; a transaction over `characters`, `campaignEvents`, `eventSignups`, `cities`, `districts`, `influenceLedger`, `contributions`, `issues`, `chatMessages` commits; **a change stream on `chatMessages` delivers an insert committed in a transaction** on the memory replica set |
 | Server — events | call: limits by natural keys (a third member start refused; two concurrent calls → one open), the district rule, the target frozen; sign-up: every gate, two members racing for one role → one holder, a fourth hand refused, a member on two slots refused; withdraw: refund (overflow rule), an hour before refused at the boundary millisecond, the caller's withdrawal keeps the event; the order advanced at the tap only by an `event` template |
 | Server — resolution | the job, the lazy event read, the participant's read and the city day each resolve once (four runners in parallel → one result); a sign-up racing the resolution at `startsAt` is either in the roster or refused `EVENT_STARTED`, never paid for nothing; called off; the fixture resolved before the boundary with its swing before the drift and its momentum before Monday's resolution; the Headline Story's legs; the Grand Rally's Heat only in a rival-held district; contributions and the four faction scopes |
 | Server — credit | each participant credited once (two parallel reads); `firstToday` across three events and the fixture (full, half, half); Heat as of the start for a member who comes back a day later; Standing win; level and rank up; the modal pointer; the called-off modal for a caller who withdrew |
@@ -1210,7 +1218,7 @@ Run on `pnpm dev:mem` with the dev panel; testers in one faction where possible,
 
 **T6. Art.** The two catalogue entries, the types' `art`, `pnpm art:build`, the budget measured and recorded. *Done when:* `art:check` passes, the dev viewer shows both scenes, and the designer has confirmed the alt texts and the content-policy read.
 
-**T7. DB.** The five models, the changed fields and enums (`characters`, `stays`, `contributions`, `influenceLedger`, `requestLogs`), the indexes of §5, migration 008. *Done when:* migration 008 run twice changes nothing the second time, the week's backfill equals a ledger fold, a transaction over every touched collection commits, and the change-stream smoke test passes on the memory replica set.
+**T7. DB.** The five models, the changed fields and enums (`characters`, `stays`, `contributions`, `influenceLedger`, `requestLogs`), the indexes of §5, migration 010. *Done when:* migration 008 run twice changes nothing the second time, the week's backfill equals a ledger fold, a transaction over every touched collection commits, and the change-stream smoke test passes on the memory replica set.
 
 ### Phase B — the server
 
@@ -1298,6 +1306,8 @@ Run on `pnpm dev:mem` with the dev panel; testers in one faction where possible,
 17. **A *Steward* role and the Vanguard's Rank 2 title *Steward*.** A Grand Rally role row can read *Steward · {name} · Steward*. **Default:** unchanged. If you rename the role, note that *Marshal* is banned by the QA guard; *Usher* is not. **Settled: renamed.** The two Grand Rally roles are **Usher** (ids `usher-1`, `usher-2`, name *Usher*); the texts say *ushers*; the Vanguard's description (*volunteers and stewards*) and the Collective's *Shop Steward* are unchanged.
 18. **Modal order on the first read.** **Default:** a run-in, then the held release, then event results oldest first, then the orders-complete note. **Settled: the default.**
 
+**An architecture decision to take before T7 (added 14 Oct 2026; QA slice 4 n3, drift row C9).** Persuasion writes an `influenceLedger` row only for the gaining party, so the rivals' losses when Neutral is at its floor have no row, and a fold of the ledger would not reproduce the meter (ADR 0028's amendment). Slice 6 is the first slice that reads the ledger for a screen (the faction ledger, the scoreboard). **Choose:** (a) write the losers' rows too (a system source, so contributions stay credited to the actor alone), which makes a fold exact and keeps it as the contention remedy; or (b) keep gaining rows only and record the ledger as an attribution log, not the meter's source. **Default:** (a) if a slice-6 screen shows losses per party, else (b). No code changes until then.
+
 ### 22.2 For the user
 
 None blocking. Points for awareness (defaults taken):
@@ -1333,7 +1343,7 @@ None blocking. Points for awareness (defaults taken):
 
 ## Review 4 knock-ons (dated note, 7 Oct 2026)
 
-Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - *Post bail* also sits on `CellsNowCard`'s own-party rows. It is the same `FavourSheet` and `favour.bail`, reading `held.inCells` (the same index).
 - The Members status line uses `copy.when` (*in the cells at Harbour Police · out in 24 min*).
@@ -1342,7 +1352,7 @@ Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–00
 
 ## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
 
-Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - *Visit · 3 Energy* and the event sign-ups are Energy acts, so `notFree` refuses them while a patrol card is pending. *Post bail* is Iron from anywhere and is not refused.
 - The Members status shows nothing for a pending card.

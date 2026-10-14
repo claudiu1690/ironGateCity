@@ -61,9 +61,7 @@ players, and the ratio is printed openly so a growing player base can watch itse
 
 ## Open questions / drift
 
-> [!warning] Drift
-> GDD §15.10 says the locals' rules live in **`people.ts`**; they are in `packages/content/src/data/candidates.ts` (`people.ts` has none).
-
+- GDD §15.10 now names `packages/content/src/data/candidates.ts` for the locals' rules (fixed 14 Oct 2026).
 - Appendix C #22 (the ward-vote weights) is revised for the voting rework but stays a retune lever after playtests.
 
 ## Related

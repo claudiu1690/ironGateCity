@@ -24,7 +24,7 @@ Every City Day each member gets **three Party orders**: the faction's agenda for
 - **Refresh at 00:00 UTC.** Unfinished orders are simply gone; nothing is taken.
 - **Tapping an order** opens its pin with the matching ticket highlighted; every matching ticket wears *Party order n / m*.
 - **Completion has a voice:** one order done is a signed line in the [[The Result Modal|result modal]]; all three is a modal in the secretary's voice (+5 PC · +60 Party XP), which waits if the tab closes.
-- **The welcome set** (ADR 0012, ADR 0073): on the **welcome day** (the City Day of creation, and the next one too if created after 22:00 UTC) the orders are fixed: **A** two attempts at a political action by your best stat; **B** **the favour from the platform** at your HQ (a one-off ticket, see [[Patronage and Favours]]); **C** *Take a job*, which completes when a job is taken (+20 Party XP). Together they pay the first +5 PC.
+- **The welcome set** (ADR 0012, ADR 0073): on the **welcome day** (the City Day of creation, and the next one too if created after 22:00 UTC) the orders are fixed: **A** two attempts at a political action by your best stat; **B** **the favour from the counter** at your HQ (*Sign on* · *Get the stamp* · *File the appeal*) (a one-off ticket, see [[Patronage and Favours]]); **C** *Take a job*, which completes when a job is taken (+20 Party XP). Together they pay the first +5 PC.
 - **By residence** (slice 4): a capital resident gets the capital rotation; slot C's shared templates read `{city}` as the residence city ([[Residence]]).
 - **The Unrest crisis pair** replaces slots A and B for members living in a home city in Unrest ([[Home Cities]]).
 - **Only doable orders** (review 4): a template is offered only if at least one matching ticket passes your gates today; night-only missions never make the mission order offerable.
@@ -51,17 +51,11 @@ Built: the secretary's rotation ([[Slice 1 The 5-Minute Session|slice 1]]), the 
 - Reviews 1–2: titles say what and where; tapping opens the pin.
 - Review 4 (6 Oct 2026): slot B of the welcome set is the favour; orders close in the cells (opportunity, not Party XP; Appendix C #94).
 - Appendix C #18: the welcome set is per character, extended to the next day after 22:00 UTC.
+- 14 Oct 2026 (drift cleanup): GDD §15.4 drops the secretary's "by 06:00" (a Chair's picks apply from the next boundary, no deadline); GDD §13.7 names the review-5 favours; [[adr/0012-welcome-set-first-city-day-orders|ADR 0012]] amended (slot A by best stat, slot B the favour).
 
 ## Open questions / drift
 
-> [!warning] Drift
-> [[GDD#15.4 Faction Chair and Party Directives|GDD §15.4]] still says the secretary steps in if "the Chair sets nothing **by 06:00**". The slice-7 paragraph in the same section (and ADR 0046) says standing orders apply from the next boundary and the secretary's rotation applies until a Chair first sets any. No 06:00 deadline exists in the slice-7 design.
-
-> [!warning] Drift
-> The welcome favour's titles: [[GDD#13.7 Party Directives (new)|GDD §13.7]] still lists the review-4 favours (*Deliver Holm's parcel at the Union Hall* · *Hand out Stahl's bundle at Beacon House* · *Witness the signature at the Assembly Rooms*). [[design/review-5-answers#19.5 The favours (slot B of the welcome set at the HQ; `use: 'welcome'`, type `council`, 10 Energy, difficulty 8; each follows from the beat-1 problem)|Review-5 answers §19.5]] and `orders.ts` / the city files have *Sign on at the Union Hall* · *Get the stamp at Beacon House* · *File the appeal at the Assembly Rooms*.
-
-> [!warning] Drift
-> [[adr/0012-welcome-set-first-city-day-orders|ADR 0012]] still describes slot A as "the first pin's canvass" and slot B as a committee session; reviews 1 and 4 changed both (best-stat action; the favour). ADR 0073 amends it, but ADR 0012's text is not marked superseded.
+- None open in the sources.
 
 ## Related
 

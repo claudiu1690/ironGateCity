@@ -1,6 +1,16 @@
 # ADR 0006 — ×3 is one request: one key, one transaction, one seed stream, all-or-nothing Energy
 
-**Status:** accepted (slice 1) · **Date:** 2026-09-29
+**Status:** accepted (slice 1); amended 2026-10-14 (the stamp, the narrative, training) · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+One request, one key, one seed stream and all-or-nothing Energy stand. Three details changed after this ADR (GDD §13.1, §8.5; `packages/rules/src/action.ts`):
+
+- **The stamp** of a run of more than one is `batch` with `successes` (*2 of 3*), not `mixed`. A single attempt is `success` or `partial`.
+- **The narrative** is the success text when **more than half** of the rows succeeded (`usesSuccessText`: `successes × 2 > times`), not when at least one did.
+- **Training is ×1 only** (`times: 1` in `packages/rules/src/training.ts`). The "three rising costs" for a training ×3 no longer apply.
+
+Job shifts no longer exist (the wage, review 1), so the "job shifts are ×1 only" line is moot.
 
 ## Context
 

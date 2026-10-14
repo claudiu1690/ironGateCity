@@ -17,7 +17,7 @@ updated: 2026-10-14
 
 ## Goal and playtest question
 
-From [[IMPLEMENTATION_PLAN#Slice 2 — Arrival|the plan]]: the origin story, the faction choice and a start in that faction's home city, the welcome edition of the paper and the day-1 unlock order, the starting kit, the first outfit (Charisma is worn), Ambition chapter 1, and a mobile layout.
+From [[IMPLEMENTATION_PLAN#Slice 2 — Arrival (built)|the plan]] as first written (since 14 Oct 2026 the plan's slice text says what was built, with the later changes named): the origin story, the faction choice and a start in that faction's home city, the welcome edition of the paper and the day-1 unlock order, the starting kit, the first outfit (Charisma is worn), Ambition chapter 1, and a mobile layout.
 
 - **Question:** does a brand-new player understand what to do in the first 10 minutes, without a tutorial screen?
 
@@ -48,8 +48,7 @@ From [[IMPLEMENTATION_PLAN#Slice 2 — Arrival|the plan]]: the origin story, the
 - The player's name is 2–40 characters after trimming. Political Capital shows in the HUD on every screen size once above 0.
 - The Alliance's Rank 3 title became *Agent* (it was *Councillor*, the office).
 
-> [!warning] Drift
-> The plan says the faction is a **choice** after the origin. Since [[Review 4]] the party is **whom you help** in the opening, and since [[Review 5]] the opening is [[Coming Home]] at the demobilisation office. GDD §7.2 keeps the old dialogue "for the record". The reference recruit is now STR 8 / INT 12 / AGI 5 / CHA 5.
+Since [[Review 4]] the party is **whom you help** in the opening, and since [[Review 5]] the opening is [[Coming Home]] at the demobilisation office; the plan says so since 14 Oct 2026. GDD §7.2 keeps the old dialogue "for the record". The reference recruit is now STR 8 / INT 12 / AGI 5 / CHA 5.
 
 ## QA and leftovers
 

@@ -99,15 +99,10 @@ picture with every pin ([[Quarters and the Map]]).
 - [[adr/0024-tiled-maps-and-quarters|ADR 0024]] — Deep Zoom tiles in our own `CityMap`. Revised for maps v3. **Decision 5, tiles on Cloudflare R2, is accepted but not built**: hosting waits for the end of the project.
 - [[adr/0035-home-quarters-outlines-and-overview|ADR 0035]], [[adr/0076-home-cities-one-map-capital-districts-tile-the-picture|ADR 0076]] — quarters and one map per home city.
 
-> [!warning] Drift
-> - `README.md` and the comment on `art:check` say the whole committed set is "at most 12 MB".
->   The code's cap is `TOTAL_BUDGET = 19.85 MB` (`scripts/art/build.ts`), raised slice by slice.
-> - `CLAUDE.md` names `maps-pen\` as the final maps. The game now builds every map from
->   `maps-v3\` (`art.ts`, `tiles.ts`).
-> - GDD §13.5 numbers the rungs 1 story · 2 place scene · 3 map crop · 4 mission-type card.
->   `missionArt()` tries the mission card **before** the place scene and map crop (it calls it
->   "rung 4"). *Inference:* either the GDD's numbers are not a priority order, or the code's order
->   differs — worth a designer check.
+Fixed in the 14 Oct 2026 drift cleanup: `README.md` and the `art:check` comment now say "within its
+budget" (the cap is `TOTAL_BUDGET` in `scripts/art/build.ts`, 19.85 MB), not 12 MB; the project
+`CLAUDE.md` points at `maps-v3\`; GDD §13.5 states the mission art order as built (a tier-2 mission
+shows its type card first, then the place scene, then the map crop).
 
 ## Related
 

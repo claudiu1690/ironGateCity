@@ -74,7 +74,8 @@ describe('the real content, slice 4', () => {
     }
     expect(content.nationCity('clearwater')).toMatchObject({
       service: 'later',
-      baselineOpinion: { vanguard: 20, collective: 24, alliance: 24, neutral: 32 },
+      // GDD §14.8, §14.11, Appendix C #70: evened so no party starts ahead on National Control.
+      baselineOpinion: { vanguard: 22, collective: 22, alliance: 22, neutral: 34 },
     });
     expect(content.capitalCity().id).toBe('irongate');
   });

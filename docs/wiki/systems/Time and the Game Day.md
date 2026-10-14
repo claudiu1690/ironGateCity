@@ -81,22 +81,14 @@ instant, whatever their time zone.
 - 8 Oct 2026, [[Review 5]]: option B, the six-hour game day; every daily rule stays on the real day.
   The lever if four nights a day feels busy is an eight-hour day with a three-hour night, never a
   per-player night or a shorter City Day (Appendix C #100).
+- 14 Oct 2026 (drift cleanup): GDD §2's units table says Heat cools **continuously** (5 an hour,
+  not on the tick) and the City Day row says a city "votes on its rule"; §3.2's pending example has
+  no clock time; [[adr/0005-lazy-per-character-city-day|ADR 0005]] amended (the wage; ADR 0079's
+  night).
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **GDD §2 vs GDD §6.4 / code.** The units table lists *Heat cooling* under the 10-minute tick.
-> Heat actually cools continuously, 5 an hour, one whole point at a time (`heatStepMs` in
-> `packages/rules/src/heat.ts`; [[GDD#6.4 Heat (new)|GDD §6.4]]). Not tick-based.
-
-> [!warning] Drift
-> **ADR 0005 vs ADR 0079 / GDD §2.2.** ADR 0005's consequences still say night is 20:00–06:00 UTC.
-> ADR 0079 superseded that on 8 Oct 2026; the code has no `DAY_NIGHT` any more.
-
-> [!warning] Drift
-> **GDD §3.2 vs §2 / §16.3.** The typical session says *a rally you signed up for starts at 19:00*.
-> No phase or event has a clock time; events settle at the boundary (review 5 answers §11.2 notes
-> this line as stale).
+- None open in the sources.
 
 ## Related
 

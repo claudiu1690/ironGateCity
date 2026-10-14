@@ -163,7 +163,7 @@ export const nationViewFixture: NationView = {
       lockWord: 'no service yet',
       minutes: null,
       fare: null,
-      whoHolds: { vanguard: 20, collective: 24, alliance: 24, neutral: 32 },
+      whoHolds: { vanguard: 22, collective: 22, alliance: 22, neutral: 34 },
       issues: [],
       election: null,
       canBoard: { ok: false, reason: 'DESTINATION_LOCKED' },

@@ -99,18 +99,11 @@ costs opportunity, never assets**.
 - [[Review 1]] (30 Sep 2026): a job is a wage, so no daily shift asks for a login; every rule label
   gets a note.
 - Pillar 7 ([[GDD#1.2 Design pillars|GDD §1.2]]): never require being online at a set time.
+- 14 Oct 2026 (drift cleanup): GDD §3.6 and §24 say Rank 3 stands **with no backers** (10 PC);
+  §4.2's 1-month row is now just the *While you were away* / *Welcome back* row and Rested to the cap
+  (ADR 0071), with the returning chapter post-MVP; §3.2's pending example has no clock time.
 
 ## Open questions / drift
-
-> [!warning] Drift
-> **GDD §3.6 vs §15.3 (voting simplified).** The first-week table still says Rank 3 lets you stand
-> *if you're Known locally and 2 faction members endorse you*. Since 10 Oct 2026 no backers are
-> needed to stand (Appendix C #106).
-
-> [!warning] Drift
-> **GDD §4.2 (1 month row) vs ADR 0071.** §4.2 lists a *returning-operative Ambition chapter* in the
-> Welcome Back package, then says it is post-MVP. ADR 0071 has no chapter. Consistent in effect,
-> but the row reads as if it were in the package.
 
 - Appendix C #17 (the 14-day pay cap may become a deliberate returning bonus) and #31 (seniority
   counts absent days) are open and touch this page.

@@ -17,7 +17,7 @@ updated: 2026-10-14
 
 ## Goal and playtest question
 
-From [[IMPLEMENTATION_PLAN#Slice 5 — Risk|the plan]]: tier-2 missions (briefings, approaches, the remembered approach, Success / Partial / Failure), Heat, the caught check, the criminal record, jail, hospital, encounters as one choice plus auto-resolve, and hostile ground.
+From [[IMPLEMENTATION_PLAN#Slice 5 — Risk (built)|the plan]] as first written (since 14 Oct 2026 the plan's slice text says what was built, with the later changes named): tier-2 missions (briefings, approaches, the remembered approach, Success / Partial / Failure), Heat, the caught check, the criminal record, jail, hospital, encounters as one choice plus auto-resolve, and hostile ground.
 
 - **Question:** is risk exciting rather than punishing?
 
@@ -51,8 +51,7 @@ Six points were put to the user with defaults ([[design/slice-5-risk|design §22
 - the caught check fires only on a Partial or a Failure;
 - the civic police have no ranks: *the duty officer*; a run-in waits five minutes.
 
-> [!warning] Drift
-> The plan names the encounter options *Fight, Flee, Bluff, Bribe* and the places *jail* and *hospital*; the build uses *Fight · Run · Talk your way out · Pay them off*, *the cells* and *the infirmary*. The home-city overview (ADR 0035) was **reversed** in [[Review 4]]: a home city is one map with locked pins ([[adr/0076-home-cities-one-map-capital-districts-tile-the-picture|ADR 0076]]).
+The build's words (the plan uses them since 14 Oct 2026): *Fight · Run · Talk your way out · Pay them off*, *the cells* and *the infirmary*. The home-city overview (ADR 0035) was **reversed** in [[Review 4]]: a home city is one map with locked pins ([[adr/0076-home-cities-one-map-capital-districts-tile-the-picture|ADR 0076]]).
 
 ## QA and leftovers
 

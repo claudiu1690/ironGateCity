@@ -57,7 +57,7 @@ newcomers compete on fair terms. Designed for slice 8, **not built**.
 ## Open questions / drift
 
 > [!warning] Drift
-> **Rollover vs "a city always has a rule".** GDD §22.2 says every council rule in force ends at rollover and "the councils' next **order papers** start the rules again"; [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] §4 says the city's rule ends and "the count and **division** of that boundary run first". Order papers and divisions no longer exist after the voting rework, whose rule is that a city always has a rule (ADR 0083). The slice-8 knock-on note in `docs/tech/slice-8.md` does not address this. What runs in a city between the rollover and its next count is unsettled.
+> **Rollover vs "a city always has a rule".** GDD §22.2 says every council rule in force ends at rollover and "the councils' next **order papers** start the rules again"; [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] §4 says the city's rule ends and "the count and **division** of that boundary run first". Order papers and divisions no longer exist after the voting rework, whose rule is that a city always has a rule (ADR 0083). Since 14 Oct 2026 ADR 0058 carries a partial amendment (no division; which wins is the user's call) and [[tech/slice-8|tech/slice-8]] marks the rule cut at rollover as pending that call. **Still open (the user, drift row A9):** does the rule run out its window, does the season end it with card 1 or the fallback taking over, or something else?
 
 - Reading note: §22.1's first bullet still says "plus 10 per national election won"; the slice-8 paragraph under it says "the 10 above is raised" to **100**. The later paragraph wins.
 

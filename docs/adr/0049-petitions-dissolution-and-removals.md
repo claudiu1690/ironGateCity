@@ -1,6 +1,15 @@
 # ADR 0049 — Petitions are set-once records closed at a boundary; dissolution vacates and strikes without new seats; removals act at the division
 
-**Status:** proposed (slice 7) · **Date:** 2026-10-04
+**Status:** proposed (slice 7); decision 2 amended 2026-10-14 (the rule runs out its window; GDD §15.9, ADR 0083) · **Date:** 2026-10-04
+
+## Amendment (14 Oct 2026)
+
+Decisions 1 and 3–5 stand. Decision 2 changes in two ways (GDD §15.9, settled 10 Oct 2026; `docs/tech/voting-rework.md` §20.1 Q16):
+
+- **The rule in force is not struck. It runs out its window.** A city always has a rule (ADR 0083), so a dissolution no longer cuts `cities.ordinance.toDay` or its history entry. The "rule this council passed has its `toDay` cut to *d*" step is gone.
+- **There is no order paper and no division.** The dissolve petition closes at the city's boundary **before the set** (the boundary into day 2), not before the division. On success the open rule ballot is not dissolved: it proceeds, keeping or taking its cards from the party's chain and the seated locals' rules.
+
+Unchanged: the terms (and the Governor's) get `vacatedDay = d`, the Governor's chair passes to the bloc's top local, `city.council.dissolved = { day, petitionId }`, no new seats and no snap election. The title's "strikes" and Context's "the rule struck" are history.
 
 ## Context
 

@@ -43,8 +43,8 @@ rewards**: control grants access, not multipliers.
 - **Attribution.** Every swing is a row in the [[Influence Ledger and City Hero|influence ledger]]
   (slice 4 on).
 - **Control grants access** ([[GDD#14.3 Control grants access, not multipliers|GDD §14.3]]):
-  *Contested* (no faction above 50) · *Control* (above 50: the faction's buildings open, prices
-  shift) · *Dominance* (above 70: exclusive high-tier missions, city dressing). **No reward
+  *Contested* (no faction above 50) · *Control* (above 50: the faction's own places open, prices
+  shift; designed, **no slice**, Appendix C #109) · *Dominance* (above 70: exclusive high-tier missions, city dressing). **No reward
   multiplier ever scales with control** (the anti-snowball rule).
 - **Damping at scale (slice 9, designed).** Swings from actions and events are multiplied by
   `clamp(20 ÷ active, 0.25, 1)`, where *active* is the seven-day mean of distinct contributors at
@@ -78,8 +78,9 @@ rewards**: control grants access, not multipliers.
   the rival-ground cap (slice 5).
 - **Not built:** the control effects of §14.3 beyond plate words (no building, price or mission is
   gated by control in the code: `controlledBy` is read only by the city view and the capital
-  boundary); the *Heat 25 % faster for rivals of the controlling party* rule (slice 7); damping
-  (slice 9).
+  boundary); the *Heat 25 % faster for rivals of the controlling party* rule (designed for slice 7,
+  not built); damping (slice 9). GDD §14.3 says since 14 Oct 2026 that control's access and price
+  effects are **designed, not scheduled**.
 
 ## Decisions
 
@@ -91,10 +92,12 @@ rewards**: control grants access, not multipliers.
 
 ## Open questions / drift
 
-> [!note] Inference
-> GDD §14.3 lists faction buildings opening under control (Vanguard House, Safehouse, Press Club).
-> In the code HQ actions are *members only*, not control-gated. This looks like an unbuilt rule,
-> not a contradiction; no slice doc pins when control-gated access arrives.
+- **Control-gated access has no slice** ([[GDD#Appendix C — Open questions|Appendix C #109]]).
+  Control would open a faction's own places and shift service prices; the faction-only places it
+  would open are themselves **later** (the user, 14 Oct 2026). Decide when those places are
+  scheduled whether control gates them or only discounts them, and which slice carries the +25 %
+  Heat for rivals and the hospital's and back room's price shifts. Today HQ actions are *members
+  only*, never control-gated.
 
 ## Related
 

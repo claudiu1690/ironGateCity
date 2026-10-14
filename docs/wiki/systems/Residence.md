@@ -6,7 +6,7 @@ tags: [city, politics, home]
 status: partly built
 slice: "4 (residence and the capital's lodgings); the flat designed for 8"
 gdd: ["§14.11", "§17.4", "§6.3"]
-adrs: ["0026", "0056"]
+adrs: ["0026", "0056", "0084"]
 updated: 2026-10-14
 ---
 
@@ -20,7 +20,7 @@ Two different "homes" matter. Your **residence** is your **political home**: whe
 
 **Residence, the political home** ([[GDD#14.11 Home cities and battlegrounds (new)|GDD §14.11]], "Residence (slice 4)"):
 - **Moving:** Rank 2 or above, standing in the district (or at home, for the way back), one tap on ***Live here · 500 Iron***, a sheet listing the consequences. **500 Iron both ways, seven days between moves.** Moving between two districts is a move like any other.
-- **What changes:** you vote in the new place from the first election that opens after the move; you may stand there from the next nominations (Rank 3, *Known* in Irongate); a seat you held at the old place is vacated to the branch's next NPC; your orders come from the capital rotation from the next City Day; the *Herald* is your paper.
+- **What changes:** you vote in the new place from the first vote that opens after the move; you may stand there from the next standing window (Rank 3, *Known* in Irongate, 10 PC, no backers needed); a standing candidate can't move until the count; a seat you held at the old place is vacated to the branch's next NPC; your orders come from the capital rotation from the next City Day; the *Herald* is your paper.
 - **What stays:** your job, [[Local Standing]] everywhere, Iron, XP, Level, Party XP, Rank, PC, items, the Ambition. `homeCityId` still means your faction's home (morale, *Fired up*, the Ambition).
 - **A candidate on a ballot stays put** (`ON_BALLOT`) until the result. **Residence has no rent.** Rival home cities can never be a residence.
 - **Lodgings in Irongate** (review 4: a ***Lodgings*** card at Tram Junction): *A bed on the tram line · 7 nights · 100 Iron*, Rested cap +50 while it runs (250 instead of 200). Renewal adds seven nights to the end, offered with seven or fewer left. Half price under the Evictions Issue.
@@ -52,11 +52,11 @@ Two different "homes" matter. Your **residence** is your **political home**: whe
 - 3 Oct 2026 (QA m5): a room renewal adds nights to the end, never a restart.
 - Review 4: *Register* became *Live here*; lodgings became their own card at Tram Junction.
 - Slice 8 design: the flat waits; no arrears (Appendix C #79).
+- 14 Oct 2026 (drift cleanup): GDD §14.11's residence paragraph now matches the voting rework ([[adr/0084-seats-by-reputation-and-backers-standing-is-spent-with-a-rule|ADR 0084]]): **no backers, no withdrawal, no deposit**; a **standing candidate stays put until the count** (`ON_BALLOT`); you vote from the first vote that opens after the move and may stand from the next standing window. GDD §7.4 now says **Rank 2** to move.
 
 ## Open questions / drift
 
-> [!warning] Drift
-> [[GDD#14.11 Home cities and battlegrounds (new)|GDD §14.11]] (Residence) still says "a candidacy **filed** at home (nominations still open) is **withdrawn** at the move (the deposit stays with the branch)", and the same for districts. The voting rework ([[adr/0084-seats-by-reputation-and-backers-standing-is-spent-with-a-rule|ADR 0084]] §1, GDD §15.3) removed withdrawal and the deposit: a candidacy is *standing* from the declare and blocks a move (`ON_BALLOT`) until the count, so "the move's withdraw path goes".
+- None open in the sources.
 
 ## Related
 

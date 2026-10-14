@@ -71,14 +71,12 @@ What exists in code today:
 
 Designed, not built (slice 7; [[Slice 7 The Nation]]). The Front waits for slice 8.
 
-> [!warning] Drift
-> - **Baseline:** `nation.ts` still carries the provisional **20 / 24 / 24 / 32** on Clearwater's
->   card; the GDD §14.11 pins **22 / 22 / 22 / 34**. Expected to change when slice 7 is built.
-> - **Wording:** [[GDD#14.1 The five cities|GDD §14.1]] says Clearwater is "built in slice 7",
->   which can read as already built. It is designed only.
-> - **The Casino:** the slice-7 design first said the hall is "a backdrop and a name, not a
->   location"; the review-4 addendum and GDD §13.5 make it a place (kind `bar`) carrying the
->   council's blocks. The addendum is the later word.
+- **Baseline:** the nation card now shows **22 / 22 / 22 / 34** (`baselineOpinion` in
+  `packages/content/src/data/nation.ts`, fixed 14 Oct 2026; it showed the provisional 20 / 24 / 24 /
+  32), and [[GDD#14.1 The five cities|GDD §14.1]] says Clearwater is "designed for slice 7, not built yet".
+- **The Casino:** the slice-7 design first said the hall is "a backdrop and a name, not a
+  location"; the review-4 addendum and GDD §13.5 make it a place (kind `bar`) carrying the
+  council's blocks. The addendum is the later word.
 
 ## Related
 

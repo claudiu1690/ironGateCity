@@ -78,10 +78,11 @@ Built: faction, Coalport, ranks, secretary, welcome set, branch rule, Unrest pai
 reviews 4–5 and the [[Voting Rework]]). Designed, not built: the General Strike
 ([[Slice 6 Together]]), Chair and laws ([[Slice 7 The Nation]]).
 
-> [!warning] Drift
-> [[GDD#16.1 The three factions|GDD §16.1]] gives the Collective the exclusive location
-> **Underground Press** (propaganda at double speed), and [[GDD#14.1 The five cities|§14.1]] lists
-> an "underground press" in Coalport. No such place exists in content or in Coalport's survey pins.
+**Later, after the MVP** (the user, 14 Oct 2026): the **Underground Press** in Coalport
+(propaganda at double speed, the union intelligence network; [[GDD#16.1 The three factions|GDD §16.1]],
+now marked *planned*). No such place exists in content or in Coalport's survey pins; the
+Collective's presses are the party store at the Union Hall. [[GDD#14.1 The five cities|§14.1]] no
+longer lists it among Coalport's places.
 
 ## Related
 

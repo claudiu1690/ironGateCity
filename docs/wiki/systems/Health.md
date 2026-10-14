@@ -59,7 +59,8 @@ gone.
 
 Built in slice 5. Review 4 made it always visible; review 5 moved it directly under Energy and added
 *Get patched up*. Faction mates' visits (+10 Health, 5 minutes off) are slice 6, not built. The
-other v3.0 hospital services (Antidote, Recovery Boost) are not built.
+v3.0 hospital services Antidote and Recovery Boost are **not in the MVP** (GDD §19.1 since 14 Oct
+2026: nothing poisons and nothing buffs a stat).
 
 ## Decisions
 
@@ -67,17 +68,14 @@ other v3.0 hospital services (Antidote, Recovery Boost) are not built.
   when it appeared).
 - [[Review 5]] (8 Oct 2026): Health directly under Energy; pay to heal at any infirmary, 1 Iron a
   point (Appendix C #97).
+- 14 Oct 2026 (drift cleanup): [[adr/0033-heat-health-record-held-lazy|ADR 0033]] amended (Health
+  always on the HUD); GDD §19.1's table rewritten as built: *Walk out well*, *Discharge yourself*,
+  *Talk to the ward*, *Get patched up*.
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **ADR 0033 vs GDD §6.1 / code.** ADR 0033's consequences say *the HUD shows … Health only below
-> full*. Review 4 changed that to always; the code (`HudBar.tsx`) shows it always. The ADR is stale.
-
-> [!warning] Drift
-> **GDD §19.1 table vs slice 5.** The v3.0 table still lists *Full Recovery*, *Early Discharge*,
-> *Antidote* and *Recovery Boost*, and the hospital's *talk to other patients, write to your
-> patrons* lines. Slice 5 built two ways out and one ward tap; the rest is not planned for a slice.
+- Well-Fed (slice 8) heals Health; whether it may go above max is [[GDD#Appendix C — Open questions|Appendix C #111]] (default: up to max only). See [[Buffs]].
+- Dropping the Antidote and the Recovery Boost from the MVP was the game-designer's call; the user has not confirmed it.
 
 ## Related
 

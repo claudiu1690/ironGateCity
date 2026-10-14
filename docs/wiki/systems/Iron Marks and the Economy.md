@@ -39,7 +39,8 @@ spend is part of the game.
   run-in **50–300**.
 - **Designed sinks:** clothing and equipment (slice 8, shops buy back at a tenth) · the flat
   (2,500 + 150 a week) · bribes to clear marks (500 / 1,000 / 2,000) · patron gifts (200) ·
-  bodyguards · posting a mate's bail (slice 6) · meals and lodging ([[Buffs]], later).
+  bodyguards and bar meals (MVP, slice 8, prices to check: Appendix C #110, #111; [[Bodyguards]],
+  [[Buffs]]) · posting a mate's bail (slice 6). Lodging is the home.
 - **Later (v1.2)** ([[GDD#18.4 Later (v1.2)|GDD §18.4]]): player trading, a faction treasury with
   caps and an audit log, market taxes.
 
@@ -64,8 +65,8 @@ the cells, §22 the Wardrobe's prices, §25 review 5)
 ## Status
 
 Iron is earned from slice 1. The first sinks arrived in slice 4 (tickets, the move, the room), then
-bail, walking out and pay-offs (slice 5), treatment (review 5). Shops, the flat, bribes, bodyguards
-and gifts are slice 8 and later; trading and the treasury are v1.2.
+bail, walking out and pay-offs (slice 5), treatment (review 5). Shops, the flat, bribes, bodyguards,
+bar services and gifts are slice 8; trading and the treasury are v1.2.
 
 ## Decisions
 
@@ -76,9 +77,10 @@ and gifts are slice 8 and later; trading and the treasury are v1.2.
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **GDD §18.2 vs §9.2.** The week-1 income row gives the job **80–300**, a v3.0 range. The job
-> ladder pays at least 100 (the street vendor) and 216 for a member's day-1 job.
+- GDD §18.2's week-1 row now gives the job **100–240** (the vendor to the Driver; a member's day-1 job
+  216), matching the job ladder (fixed 14 Oct 2026).
+- Bodyguard and bar prices were written for v3.0's economy and need checking against ~1,000 Iron a
+  day ([[GDD#Appendix C — Open questions|Appendix C #110, #111]]).
 
 > [!note] Inference
 > Until slice 8's shops land, a reference player banks most of their Iron (economy sheet §5.2:

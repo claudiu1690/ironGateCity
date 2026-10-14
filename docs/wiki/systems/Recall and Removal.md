@@ -57,12 +57,9 @@ nothing else. All three are designed for slice 7 and **not built**.
 - **A petition dissolves the council; no snap election** (Appendix C #68).
 - **The automatic removal uses the control share**, not raw National Control, because raw control is 23.5 for everyone at the baselines (settled 4 Oct 2026; Appendix C #67).
 - **Sitting councillors can't sign** their own council's petition (4 Oct 2026).
-- **The rule runs out its window** on dissolution (architect Q16, 10 Oct 2026).
+- **The rule runs out its window** on dissolution (architect Q16, 10 Oct 2026). Since 14 Oct 2026 every source says so: GDD §15.9 and Appendix C #68 (now: *the things worth taking are its Governor, its councillors' rung and their say over the next ballot's cards*), [[adr/0049-petitions-dissolution-and-removals|ADR 0049]] (amended: no `toDay` cut, no order paper; the petition closes before the set), slice-7 design §10.1 and [[design/voting-simplified|voting-simplified §3.10]].
 
 ## Open questions / drift
-
-> [!warning] Drift
-> **Does dissolution strike the rule?** GDD §15.9, the "Added 10 Oct 2026" section of `docs/design/slice-7-nation.md` and the dated note in `docs/tech/slice-7.md` say **it runs out its window**. Still saying **struck**: [[adr/0049-petitions-dissolution-and-removals|ADR 0049]] §2 ("the rule this council passed has its `toDay` cut"; "the open order paper becomes `dissolved`"), the body of slice-7 design §10.1, [[design/voting-simplified|voting-simplified §3.10]] ("Petitions still dissolve a council and strike its rule") and GDD Appendix C #68 ("the things worth taking from a council are its rule…").
 
 > [!note] Inference
 > With the rule no longer struck, a successful petition takes the Governor's chair and the councillors' ladder credit, and changes which cards a future ballot might hold, but not the rule in force. Whether that is still worth 10 PC a signature is a playtest question; Appendix C #68's levers (a fifth; two days' notice) predate this change.

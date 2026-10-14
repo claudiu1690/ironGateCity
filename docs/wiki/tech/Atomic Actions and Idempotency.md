@@ -6,7 +6,7 @@ tags: [tech, server, pattern]
 status: built
 slice: "0; extended in 1 (request keys), 3 (political acts), 5 (cross-collection key check)"
 gdd: ["§4.3"]
-adrs: ["0002", "0006", "0008", "0018"]
+adrs: ["0002", "0006", "0008", "0018", "0087"]
 updated: 2026-10-14
 ---
 
@@ -44,7 +44,8 @@ same input, so the same key. A second tap while one is in flight is ignored.
       (`actionLogs`, `encounters`, `requestLogs`) inside the snapshot. Taken → `KeyTaken`.
    2. Read the character. If its `day.settled` is not today → `DayChanged`.
    3. Project lazy timers and resolve with `packages/rules`, seeded by `keySeed(characterId, key)`
-      (HMAC), so a re-run draws the same rolls.
+      (HMAC with a per-process salt, [[adr/0087-roll-seeds-derived-from-the-request-key|ADR 0087]]),
+      so a re-run draws the same rolls and a client can't pick a key that rolls well.
    4. `Character.findOneAndUpdate({ _id, version, 'day.settled' }, { $set…, $inc: { …, version: 1 } })`.
       `null` → `VersionConflict`.
    5. Side writes (opinion, ledger, Issues), then insert the log row with the full result. The
@@ -95,15 +96,11 @@ conditional `findOneAndUpdate` inside it, because the key's log row is always a 
 
 ## Decisions (ADRs)
 
-- [[adr/0002-atomic-idempotent-actions|ADR 0002]] — one transaction, one key, one version guard.
-- [[adr/0006-repeat-actions-one-request|ADR 0006]] — ×3 in one request.
+- [[adr/0002-atomic-idempotent-actions|ADR 0002]] — one transaction, one key, one version guard (step 2.3 amended by ADR 0087, 14 Oct 2026).
+- [[adr/0087-roll-seeds-derived-from-the-request-key|ADR 0087]] — the seed is derived from the request key (`keySeed`, HMAC-SHA256 with a salt drawn once per process), and every keyed transaction checks its key in `actionLogs`, `encounters` and `requestLogs` inside the snapshot (`assertKeyFree`). Built in the slice-5 fix round (QA M1); recorded 14 Oct 2026.
+- [[adr/0006-repeat-actions-one-request|ADR 0006]] — ×3 in one request (amended 14 Oct 2026: stamp `batch`, success text when more than half succeed, training ×1 only).
 - [[adr/0008-idempotency-for-non-action-mutations|ADR 0008]] — `requestLogs` for other mutations.
-- [[adr/0018-political-acts-set-once-with-request-keys|ADR 0018]] — set-once on a natural key.
-- Slice 5 QA fix M1 (no ADR): the cross-collection key check and the HMAC seed.
-
-> [!note] Inference
-> ADR 0002 says a fresh seed per action; the code now derives it from the key (`keySeed`, slice-5
-> fix round) so a driver re-run cannot change branch. The seed is still stored with the result.
+- [[adr/0018-political-acts-set-once-with-request-keys|ADR 0018]] — set-once on a natural key (amended 14 Oct 2026: kinds `council.declare`, `.endorse`, `.vote`, `.setRule`).
 
 ## Related
 

@@ -54,9 +54,7 @@ updated: 2026-10-14
 
 ## Open questions / drift
 
-> [!warning] Drift
-> [[GDD#13.7 Party Directives (new)|GDD §13.7]] still names the review-4 favours (*Deliver Holm's parcel*, *Hand out Stahl's bundle*, *Witness the signature*); content and review-5 answers §19.5 have *Sign on*, *Get the stamp*, *File the appeal*.
-
+- GDD §13.7 now names the review-5 favours too (fixed 14 Oct 2026).
 - The GDD §17.2 tier table (Voss expunges a record point, Marr grants a loan, "+2 % council score") is the v3.1 text; the slice-8 paragraph below it is what will be built.
 
 ## Related

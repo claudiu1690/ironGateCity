@@ -74,7 +74,7 @@ that together cover the whole painted picture.
 
 - **Built:** slice 4 (districts, meters, states, ten-seat council, heroes, Issues by district);
   review 4 (the tiling, the drag limit, the City Hall as a place); voting rework (seats and rule).
-- **Not built:** *rivals of the controlling party gain Heat 25 % faster* (slice 7, ADR 0050 §4).
+- **Not built:** *rivals of the controlling party gain Heat 25 % faster* (designed for slice 7, ADR 0050 §4; GDD §14.9 no longer calls it built, and which slice carries control effects is [[GDD#Appendix C — Open questions|Appendix C #109]]).
 
 ## Decisions
 

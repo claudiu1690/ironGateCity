@@ -34,13 +34,13 @@ the content policy and the basic name rule are in the game today.
 - A linked set's **ballots, backings, petition signatures and event hands count once** (the earliest stands), set aside at the count. A linked bail pays no Party XP (and bail pays Party XP at most three times a day for anyone); a linked visit heals nothing.
 - **Never at the tap, never with a message.** The only public sign is one line: *{n} votes set aside after the audit.* Energy, Iron, XP, orders and the Dossier are untouched; nothing transfers between accounts.
 
-**The 24-hour audit:** at the national count (term day 27) the audit runs itself and the provisional result already carries the automatic set-asides. During the day a moderator may confirm, set aside a noted set, unlink, or **order a recount** of any council, district or Clearwater count made at that day's boundary. **At day 0 the count confirms itself** if nobody acted. Council results are final at the count; a recount that moves a seat passes it at once (the loser's term not completed; the rule in force stands).
+**The 24-hour audit:** at the national count (term day 27) the audit runs itself and the provisional result already carries the automatic set-asides. During the day a moderator may confirm, set aside a noted set, unlink, or **order a recount** of any council, district or Clearwater count made at that day's boundary. **At day 0 the count confirms itself** if nobody acted. Council results are final at the count; a recount that moves a seat passes it at once (the loser's term not completed; the rule ballot and the rule in force stand: a recount moves seats only, [[adr/0062-the-national-audit-self-confirms-and-council-recounts|ADR 0062]] as amended 14 Oct 2026).
 
 **Moderation** ([[GDD#16.2 Faction chat and presence (moved into MVP)|GDD §16.2]]):
 - **The policy** (20 lines, accepted at sign-up): no harassment, no real-world hate, **no real-world political slogans, symbols, parties or leaders as identity**, no doxxing, no spam or selling, **nothing offered for a vote, a backing or a signature**, no impersonation, no evading a mute.
 - **Reports** from a chat line or a profile, four reasons (*Abuse or harassment · Real-world politics or hate · Spam or selling · Something else*), **ten a day**. The reporter reads *Thanks. Someone will read it.* and later, if acted on, *A line you reported was dealt with.*
 - **The word filter** **refuses** (*That can't be said here.*, no echo) or **flags** to the queue. Its lists live outside content, and the game's own words (*strike*, *rally*, *gate*) always pass.
-- **The ladder:** a note from the editor (a Letters row) · **muted** 24 h, then 7 days · **suspended** 3 days, then 14 (nothing owned is touched; timers run; office duties fall to their defaults) · **closed** (the character retired; offices vacated by kind; personal data erased after 30 days). **Real-world hate goes straight to 14 days**, a second time to closure.
+- **The ladder:** a note from the editor (a Letters row) · **muted** 24 h, then 7 days · **suspended** 3 days, then 14 (nothing owned is touched; timers run; office duties fall to their defaults) · **closed** (the character retired; offices vacated by kind; **a council candidacy can't be withdrawn and runs to the count**; national candidacies and event sign-ups are withdrawn; personal data erased after 30 days). **Real-world hate goes straight to 14 days**, a second time to closure.
 - **Appeals:** one reply of 500 characters per decision, answered within a week.
 - **Names:** checked at sign-up and on every rename (folded against the refuse and impersonation lists); **one change every 30 days**; printed editions keep the old name unless a moderator forced the rename.
 - **The console** `/mod` (Queue, Audit, Accounts, Log; admins see Metrics). Moderators may play; a report on a moderator's own faction needs a second moderator. Beta gate: **median time to first action under 24 hours**.
@@ -72,10 +72,9 @@ the content policy and the basic name rule are in the game today.
 ## Open questions / drift
 
 > [!warning] Drift
-> [[adr/0067-closing-an-account-retirement-and-erasure|ADR 0067]] says retirement withdraws open candidacies "(deposit kept)", and GDD §16.2 says closure withdraws candidacies. Since the voting rework a council candidacy **cannot be withdrawn** and has **no deposit** (GDD §15.3, ADR 0084). Whether a closed account's name stays on the list until the count is not settled; the slice-9 knock-on note in `docs/tech/slice-9.md` does not cover it.
+> **A closed account's standing candidacy.** Both sources now agree the name **stays on the list until the count** (no withdrawal, no deposit, ADR 0084). They differ on what happens if it would win: GDD §16.2 says the seat it wins **is vacated at once, as by a move**; [[adr/0067-closing-an-account-retirement-and-erasure|ADR 0067]]'s amendment (14 Oct 2026) says **the count skips a retired candidate** and the next name takes the seat. The user's call.
 
-> [!warning] Drift
-> [[adr/0062-the-national-audit-self-confirms-and-council-recounts|ADR 0062]] §4 says a recount leaves "the **order paper** and the rule in force" untouched; order papers no longer exist (ADR 0083).
+- **Can a recount change the rule a town chose?** ADR 0062's amendment leaves it open for the slice-9 design; the default is **no** (the rule stands, GDD §15.2). Waiting for the user.
 
 ## Related
 

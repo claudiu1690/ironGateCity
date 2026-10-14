@@ -6,7 +6,7 @@ tags: [tech, server]
 status: built
 slice: "0; a router or more per slice to 5, review 5, voting rework"
 gdd: []
-adrs: ["0001", "0002", "0008", "0017", "0018", "0025"]
+adrs: ["0001", "0002", "0008", "0017", "0018", "0025", "0087"]
 updated: 2026-10-14
 ---
 
@@ -101,15 +101,10 @@ city day and the character day, a due journey arrival and a due release.
 ## Decisions (ADRs)
 
 - [[adr/0001-same-origin-api-via-proxy|ADR 0001]] — same-origin `/api` through a proxy (Vite in dev, a Vercel rewrite planned in production). [[adr/0072-production-topology-for-the-hosting-step|ADR 0072]] (proposed) would replace the production proxy with same-site subdomains.
-- [[adr/0002-atomic-idempotent-actions|ADR 0002]], [[adr/0008-idempotency-for-non-action-mutations|ADR 0008]], [[adr/0018-political-acts-set-once-with-request-keys|ADR 0018]] — keyed writes.
+- [[adr/0002-atomic-idempotent-actions|ADR 0002]], [[adr/0008-idempotency-for-non-action-mutations|ADR 0008]], [[adr/0018-political-acts-set-once-with-request-keys|ADR 0018]] — keyed writes. ADR 0018 was amended 14 Oct 2026 to the request kinds the code has (`council.declare`, `.endorse`, `.vote`, `.setRule`).
+- [[adr/0087-roll-seeds-derived-from-the-request-key|ADR 0087]] — `keySeed` and `assertKeyFree` in `apps/server/src/services/keyGuard.ts`, used by `runKeyedAction` and `withRequestKey` ([[Atomic Actions and Idempotency]]).
 - [[adr/0017-city-day-boundaries-lazy-first-job-primary|ADR 0017]], [[adr/0025-journeys-lazy-arrival-and-a-tidy-job|ADR 0025]] — the worker's jobs.
 - [[adr/0069-request-guards-in-process-rate-limits-and-maintenance|ADR 0069]] — rate limits and a maintenance flag: **proposed for slice 9, not built**. Today only Better Auth limits sign-in and sign-up.
-
-> [!warning] Drift
-> [[adr/0018-political-acts-set-once-with-request-keys|ADR 0018]] lists request kinds
-> `council.withdraw`, `council.propose` and `council.councilVote`. The code's `REQUEST_KINDS`
-> (`packages/db/src/models/requestLog.ts`) has none of them: the voting rework replaced them with
-> `council.setRule` ([[Voting Rework]]).
 
 ## Related
 

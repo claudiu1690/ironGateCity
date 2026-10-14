@@ -1,6 +1,14 @@
 # ADR 0020 — Council records live in their own collections; the character only embeds projections; world processing never writes a character
 
-**Status:** accepted, implemented (slice 3; follows plan §5 row 3) · **Date:** 2026-09-29
+**Status:** accepted, implemented (slice 3; follows plan §5 row 3); superseded in part 2026-10-12 by ADR 0083 (the `ordinances` row) and ADR 0084 (the deposit refund) · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+The split stands: council records in their own collections, projections on the character, and no world→character writes. Two rows changed in the voting rework:
+
+- **`ordinances` is the rule ballot**, not an order paper (ADR 0083 §2): model `RuleBallot`, one per council term, `_id = councilKey`, with `status: 'open' | 'set' | 'counted'`, the frozen `cards`, `unrest`, `changes` and `result`; an old order paper's items, votes and division sit under `legacy`. There is no division; the ordinance history is the ballots' results and `cities.ordinanceHistory`.
+- **The deposit refund is retired** (ADR 0084 §6). Standing is 10 PC spent and never returned. Migration 009 credited every remaining `deposit: 'due'` once (ADR 0086); the settlement's refund read and the desk's *Deposit returned* line are gone. The stipend is unchanged.
+- **`officeTerms` gains `rule`** (the councillor's rule, ADR 0084 §5) and `ruleSetAt`.
 
 ## Context
 

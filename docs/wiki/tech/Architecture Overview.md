@@ -6,7 +6,7 @@ tags: [tech, hub]
 status: built
 slice: "0; grown every slice to 5 and the review rounds"
 gdd: ["§13.1a"]
-adrs: ["0001", "0002", "0003", "0004", "0005", "0008", "0017", "0030", "0072"]
+adrs: ["0001", "0002", "0003", "0004", "0005", "0008", "0017", "0030", "0072", "0087"]
 updated: 2026-10-14
 ---
 
@@ -45,7 +45,7 @@ apps/client      React game client (routes, features, components, lib)
 apps/server      Fastify + tRPC API (src/index.ts) and the Agenda worker (src/worker.ts)
 packages/rules   Pure game maths: checks, rewards, timers, calendar, counts, run-ins
 packages/content Cities, places, actions, missions, Issues, papers, art catalogue (Zod-validated)
-packages/db      Mongoose models, indexes, migrations 001–009, seed, playtest reports
+packages/db      Mongoose models, indexes, migrations 001–009 (010–013 planned for slices 6–9), seed, playtest reports
 packages/ui      Tailwind tokens and shared components (HUD, ticket, stamp, result modal, maps)
 scripts/art      The art pipeline (pnpm art:build, art:check, art:tiles)
 ```
@@ -82,7 +82,8 @@ sequenceDiagram
    day ([[Scheduled Jobs]], [[Lazy Timers]]).
 4. Inside one MongoDB transaction it reads the character, projects the lazy timers, gathers the
    place's [[Modifiers]], and calls the pure resolver in [[Rules Package]] with a seed derived from
-   the key.
+   the key by HMAC ([[adr/0087-roll-seeds-derived-from-the-request-key|ADR 0087]]), so a retried
+   transaction draws the same rolls.
 5. It writes the character with a version guard, then the side writes (opinion, ledger, Issues),
    then the `actionLogs` row that holds the full result.
 6. The result is the whole breakdown the modal needs ([[GDD#13.1a The result modal|GDD §13.1a]]).
@@ -114,23 +115,21 @@ From `CLAUDE.md` and plan §2 "Architecture rules", all followed in the code tod
 ## Decisions (ADRs)
 
 - [[adr/0001-same-origin-api-via-proxy|ADR 0001]] — the browser only talks to its own origin; `/api` is proxied.
-- [[adr/0002-atomic-idempotent-actions|ADR 0002]] — one transaction, one key, one version guard.
+- [[adr/0002-atomic-idempotent-actions|ADR 0002]] — one transaction, one key, one version guard (amended 14 Oct 2026 by ADR 0087).
+- [[adr/0087-roll-seeds-derived-from-the-request-key|ADR 0087]] — roll seeds derived from the request key by HMAC (per-process salt), and `assertKeyFree` checks the key inside every keyed transaction.
 - [[adr/0003-city-documents-hold-state-not-content|ADR 0003]] — `cities` hold live state; places and actions stay in content.
 - [[adr/0004-in-memory-replica-set-for-tests-and-dev|ADR 0004]] — an in-memory replica set for tests and Docker-free dev.
 - [[adr/0005-lazy-per-character-city-day|ADR 0005]] and [[adr/0017-city-day-boundaries-lazy-first-job-primary|ADR 0017]] — the day, lazy per character and per city.
 - [[adr/0030-modifier-sources-and-named-factors|ADR 0030]] — modifiers as named sources.
 - [[adr/0072-production-topology-for-the-hosting-step|ADR 0072]] — the planned production setup (**proposed, not built**).
 
-> [!warning] Drift
-> - `CLAUDE.md` "Current state" still says the code is "being rebuilt from scratch… Next up:
->   slice 0". Slices 0–5, review rounds 1–5 and the voting rework are built; `apps/api` and
->   `apps/web` are gone.
-> - Plan §1 says every slice is **deployed**. Nothing is hosted: the user decided to work locally
->   until the end of the project. `apps/client/vercel.json` still has a `<api-host>` placeholder.
-> - Plan §2 repo layout shows a root `art/` folder. It does not exist: built art is in
->   `apps/client/public/art`, sources are outside the repo ([[Art and Maps Pipeline]]).
-> - Plan §2 lists Server-Sent Events as the first realtime tool. No SSE exists; nothing needed it
->   yet. Slice 6 plans Socket.IO for chat ([[adr/0038-chat-socketio-push-trpc-writes-change-streams|ADR 0038]], not built).
+**Local until the end.** Nothing is hosted or deployed until the project's end (the user's rule;
+the plan says so since 14 Oct 2026). The hosting step ([[adr/0072-production-topology-for-the-hosting-step|ADR 0072]]),
+any deploy and the betas come after slice 9; `apps/client/vercel.json` keeps an `<api-host>`
+placeholder until then. **Realtime** is refetch on focus (plus one refetch at dusk or dawn); Socket.IO
+arrives with chat in slice 6 ([[adr/0038-chat-socketio-push-trpc-writes-change-streams|ADR 0038]], not
+built); no Server-Sent Events. The plan's repo layout shows `scripts/art/`; art sources live outside
+the repo ([[Art and Maps Pipeline]]).
 
 ## Related
 

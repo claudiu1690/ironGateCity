@@ -80,16 +80,13 @@ The server stays authoritative: at `until` the client asks again.
 
 ## Decisions (ADRs)
 
-- [[adr/0005-lazy-per-character-city-day|ADR 0005]] — the character's day on first touch.
+- [[adr/0005-lazy-per-character-city-day|ADR 0005]] — the character's day on first touch (amended 14 Oct 2026: the wage, ADR 0079's night).
 - [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]], [[adr/0030-modifier-sources-and-named-factors|ADR 0030]] §5 — the Rested cap by day.
 - [[adr/0032-run-ins-pending-step-and-luck|ADR 0032]] — run-in luck on read.
-- [[adr/0033-heat-health-record-held-lazy|ADR 0033]] — Heat, Health, record, held; release on read; the read order.
-- [[adr/0079-the-six-hour-game-day-one-night-seam-and-a-night-block-in-the-views|ADR 0079]] — the night computed, never stored.
+- [[adr/0033-heat-health-record-held-lazy|ADR 0033]] — Heat, Health, record, held; release on read; the read order (amended 14 Oct 2026: Health always on the HUD).
 
-> [!warning] Drift
-> GDD §2 time table has one "Tick: 10 min" row for Energy regen, HP regen **and Heat cooling**. In the
-> code Heat cools continuously at 5 points an hour (`packages/rules/src/heat.ts`), not on 10-minute
-> ticks. Small, but the two sources say different things.
+GDD §2's units table now says Heat cools continuously, 5 an hour, not on the 10-minute tick, as `packages/rules/src/heat.ts` does (fixed 14 Oct 2026).
+- [[adr/0079-the-six-hour-game-day-one-night-seam-and-a-night-block-in-the-views|ADR 0079]] — the night computed, never stored.
 
 ## Related
 

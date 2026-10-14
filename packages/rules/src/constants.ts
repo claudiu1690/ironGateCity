@@ -252,7 +252,7 @@ export const ISSUES = {
   effectDays: 7,
 } as const;
 
-/** §15.3: the capital's council: ten seats, two a district, six to pass, the turnout weight. */
+/** §15.3: the capital's council: ten seats, two a district, the turnout weight (the largest bloc's rule, ADR 0085). */
 export const CAPITAL_COUNCIL = {
   seats: 10,
   perDistrict: 2,

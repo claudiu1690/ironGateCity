@@ -79,14 +79,12 @@ mini-game), Level 6–16 jobs and the Political aide.
 
 - Appendix C #17 (the 14-day cap may become a returning bonus), #31 (seniority counts absent days)
   and #96 (if Agility builds take the Driver and never look back, place the Level-6 rung) are open.
+- [[adr/0005-lazy-per-character-city-day|ADR 0005]] was amended on 14 Oct 2026: the wage (review 1)
+  replaces its half salary, work streak and sick days.
 
 > [!note] Inference
 > §4.2 (*pay stops accruing after 14 boundaries*) and §9.1 (*a return credits at most 14 days'
 > pay*) are one rule in two wordings; the code caps each settlement at `JOBS.salaryMaxDays = 14`.
-
-> [!warning] Drift
-> **ADR 0005 vs review 1.** ADR 0005 still describes half salary per boundary, the work streak and
-> sick days. Review 1 replaced them with the full wage; the code (`settleDays`) follows review 1.
 
 ## Related
 

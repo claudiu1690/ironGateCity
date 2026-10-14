@@ -78,7 +78,8 @@ on reading the city view. Full rules on [[Night and Patrols]].
 
 - **Built:** slice 5 (the whole slice-5 form); review 5 (header, push ring, prize, night patrols).
 - **Not built:** recognition by Charisma, office and Legacy, plain clothes, forged papers and the
-  press pass (slice 8); safehouses, bodyguards, night travel, the Secret Police, the opportunity
+  press pass, and bodyguards (slice 8; bodyguards decided 14 Oct 2026); safehouses (later, with the
+  faction-only places), night travel, the Secret Police, the opportunity
   encounters (the disillusioned local, the leaked document); missions only doable there; *rare
   Dossier entries*.
 

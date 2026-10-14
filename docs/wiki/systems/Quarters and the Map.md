@@ -37,7 +37,7 @@ gate, and the whole city is one map with locked places shown as greyed pins.
   bounding box. The five outlines **tile the whole picture**, checked by the loader.
 - **The Town Hall** (review 4): the council's hall is a place on every city map, kind
   `town-hall`, **open at every Level** whatever its quarter. Its sheet is the council's public face
-  (gallery ticket, your desk, the rule in force, seats, order paper, Issues, the Election card).
+  (gallery ticket, your desk, the rule in force, next week's rule, the council, standing, Issues).
   The map opens on it on arrival by train ([[City Council and the Rule Vote]]).
 - **Where the map opens:** the last pin viewed in that city; the Town Hall on arrival; the HQ with
   the first sheet open for a new character.
@@ -102,11 +102,7 @@ gate, and the whole city is one map with locked places shown as greyed pins.
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **Survey size.** GDD §14.13 (*Growth*) says "the survey has 89 pins over the five cities; the
-> content has 18 playable". `mapPins.ts` now holds **92** city pins (30 Irongate, 16 Coalport, 16
-> Duskwall, 17 Ashford, 13 Clearwater), and content has far more than 18 playable places. The GDD
-> figure predates the Town Halls and slice 5.
+- **Survey size** (GDD §14.13 *Growth*, fixed 14 Oct 2026): `mapPins.ts` holds **92 city pins** (Irongate 30 · Coalport 16 · Duskwall 16 · Ashford 17 · Clearwater 13) plus **5 nation pins**; **66 places are playable** (twelve in each home city with its Town Hall, thirty in the capital). The GDD said 89 and 18 until then.
 
 - GDD §14.13 keeps the superseded bullets about home-city frames, overviews and teasers (marked
   as superseded at the head of the section), which can mislead a quick reader.

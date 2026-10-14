@@ -64,15 +64,12 @@ present or not, and every duty has a default, so an absent holder never blocks a
 - **One office at the top, the President; no Chancellor** (slice 7; Appendix C #64).
 - **Several offices at once** (Appendix C #65).
 - **No backers needed to stand**, for councillor and Chair (user, 10 Oct 2026; Appendix C #106).
-- **The Governor's power is card 1**, not an order-paper item (voting rework, 10 Oct 2026; the slice-7 knock-on is in [[tech/slice-7|tech spec]] "Voting rework knock-ons").
+- **The Governor's power is card 1**, not an order-paper item (voting rework, 10 Oct 2026; [[tech/slice-7|tech/slice-7]] §6.8, rewritten 14 Oct 2026 around `partyCardOf`).
+- 14 Oct 2026 (drift cleanup): [[adr/0048-offices-on-office-terms-and-the-ladder|ADR 0048]] amended (decision 6 superseded: the Governor's rule is card 1, no council vote); the slice-7 design's ladder table now says no backers needed, and its old Governor's-rule bullet is marked superseded.
 
 ## Open questions / drift
 
-> [!warning] Drift
-> [[adr/0048-offices-on-office-terms-and-the-ladder|ADR 0048]] §6 still says *the Governor's rule is an item on the order paper* with a locals' voting chain and *None of these*. The GDD (§15.1, §15.3) and the dated note in `docs/tech/slice-7.md` say the Governor's rule is **card 1 of the town's ballot** and locals never vote. The ADR (status *proposed*) was not amended.
-
-> [!warning] Drift
-> `docs/design/slice-7-nation.md` §3 (the ladder table) still lists *two backers* for the councillor and the Chair. Its own "Added 10 Oct 2026" section and GDD §15.1/§15.4 say no backers are needed.
+- Open (designer): confirm slice 7's `partyCardOf` chain against the GDD wording (see [[City Council and the Rule Vote]]).
 
 ## Related
 

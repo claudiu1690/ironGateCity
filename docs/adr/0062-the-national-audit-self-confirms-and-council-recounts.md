@@ -1,6 +1,12 @@
 # ADR 0062 — The national audit: provisional with the automatic set-asides, confirmed by take-office if nobody acts; council recounts within the day from stored inputs
 
-**Status:** proposed (slice 9; extends ADR 0043, 0047) · **Date:** 2026-10-04
+**Status:** proposed (slice 9; extends ADR 0043, 0047); decision 4 amended 2026-10-14 for the voting rework (ADR 0083, 0084) · **Date:** 2026-10-04
+
+## Amendment (14 Oct 2026)
+
+Councils have no order paper since the voting rework (ADR 0083). In decision 4, "the order paper and the rule in force are untouched" now reads: **the rule ballot and the rule in force are untouched.** A recount moves seats only; the rule was decided by the town's vote, not by the seats.
+
+Also changed by ADR 0084: a council's seat count is `local support + 3 × backers`, with no members' votes, so the set-asides that can move a seat in a recount are **backings** by linked accounts. The linked-accounts rule (ADR 0061) applies to the rule votes (`votes` by `ordinanceId`) at the count itself (`docs/tech/voting-rework.md` §17). Whether a recount may also change the rule a town chose is open for the slice-9 design; the default is no (the rule stands, as GDD §15.2 says today).
 
 ## Context
 

@@ -94,17 +94,9 @@ not built.
 - [[Review 5]] (8 Oct 2026): two rounds of openings rejected (the father; three people waiting for
   a stranger); round 3, *Coming home*, confirmed by the user. The three people are the party
   secretaries (#90).
+- 14 Oct 2026 (drift cleanup): GDD §7.4 now says a move needs **Rank 2** (and Level 10), as §5.2 and the code do; GDD §21.4 now starts every character in **the demob suit**.
 
 ## Open questions / drift
-
-> [!warning] Drift
-> **GDD §7.4 vs §5.2 / §14.11 / code.** §7.4 says *from Rank 3 you can move* your residence. §5.2,
-> Appendix C #27 and the code (`RESIDENCE.rank = 2` in `packages/rules/src/constants.ts`) say
-> Rank 2 (and Level 10). §7.4 is stale.
-
-> [!warning] Drift
-> **GDD §21.4 vs §7.1.** The starting catalogue says a character gets *the origin coat if it was
-> taken*. Since review 4 every character wears the demob suit from beat 3; there is no refusing it.
 
 - Left open by [[qa/review-5-report|QA review 5]] for the user: one name for Stahl (*Viktor Stahl*
   at the counter, *Organiser Stahl* in the decks); the Vanguard's first edition says *Papers in

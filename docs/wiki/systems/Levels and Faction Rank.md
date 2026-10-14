@@ -85,11 +85,9 @@ are in the GDD only (no content at those Levels yet). Ranks 4–7 rights depend 
 
 - Appendix C #14 (heavy players level ~35 % faster) is open.
 - [[qa/review-5-report|QA review 5]] left the cards' square corners for the user to decide.
-
-> [!warning] Drift
-> **GDD §5.5 note vs content.** §5.5 says *the current seed data (about 6 XP and 1.2 FXP per
-> Energy) is too generous and needs to come down*. That sentence dates from the old v3.0 code; the
-> rebuilt rules use `TIER_RATES` (4.5 / 0.6 at tier 1). The note is stale.
+- GDD §5.5 now says the rates are built as written (`TIER_RATES`: 4.5 XP and 0.6 FXP per Energy at
+  tier 1); its stale "seed data too generous" note is gone (14 Oct 2026). GDD §7.4 now also says
+  **Rank 2** for a move ([[Residence]]).
 
 ## Related
 

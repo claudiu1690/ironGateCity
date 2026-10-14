@@ -51,16 +51,13 @@ at a set time. Designed for slice 6, **not built**.
 ## Decisions
 
 - **Hands at Rank 1** so the first event is day 1 (Appendix C #57).
-- **Three starts a city a day** as the scale lever (Appendix C #58), replacing the GDD's first "one per faction per city every 4 hours".
+- **Three starts a city a day** as the scale lever (Appendix C #58), replacing the GDD's first "one per faction per city every 4 hours". GDD §16.3's opening bullets now say the same (four chips 1 · 3 · 6 · 12 h, three starts with the fixture, three open sign-ups at once; fixed 14 Oct 2026).
 - **PC from events halves after the first of the day** (Appendix C #59).
 - **The fixture resolves at the City Day boundary** (Appendix C #60).
 - **Volunteers at half strength make a lone member's fixture a Success** (Appendix C #62).
 - The Vanguard's event is the **Grand Rally**; the *Torchlight March* is gone; its *Stewards* role became *Ushers* (3 Oct 2026) to avoid clashing with the Vanguard's Rank 2 title ([[design/content-policy-review|content-policy review]]).
 
 ## Open questions / drift
-
-> [!warning] Drift
-> GDD §16.3's opening bullets still say "**Rank 3+** members schedule… **1 to 12 hours ahead**… one per faction per city every 4 hours" and "Each player can sign up for **3 events per City Day**". The slice-6 paragraph below them re-expresses these as four chips (1 · 3 · 6 · 12 h), three starts a city a day, and **three open sign-ups at once** (no day counter). The slice-6 text is the later one.
 
 > [!note] Inference
 > With the voting rework, "the council rule for the event's type" in the swing means the ordinance chosen by the town's vote (e.g. *Street Permits* for a propaganda-matched event).

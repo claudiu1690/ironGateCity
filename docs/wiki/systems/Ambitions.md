@@ -53,10 +53,7 @@ An Ambition is a **personal storyline that runs for months**, separate from the 
 
 ## Open questions / drift
 
-- Chapter 3 of *The Names on the Stone* was briefly *The ten marks* ([[design/voting-simplified|voting-simplified]] §8.11.1); §8.12 row 7 renamed it *The list*, keepsake *Your line on the list*. GDD and `ambitions.ts` agree. Read §8.11.1 with §8.12's corrections.
-
-> [!warning] Drift
-> Chapter 4's requirement: [[design/voting-simplified|voting-simplified]] §8.11.1's knock-on line reads *Chapter 4, "The count": from {date}, **after your first council seat***, and §8.12 does not correct it. GDD §17.1 and the slice-8 design say chapter 4 needs **a completed council term**. Matters when chapter 3 is built (slice 7).
+- Chapter 3 of *The Names on the Stone* was briefly *The ten marks* ([[design/voting-simplified|voting-simplified]] §8.11.1); §8.12 row 7 renamed it *The list*, keepsake *Your line on the list*. GDD and `ambitions.ts` agree. §8.11.1 is now headed *The list* too, and its knock-on line says chapter 4 comes **after a completed council term**, as GDD §17.1 and the slice-8 design do (fixed 14 Oct 2026; it said *after your first council seat*). The slice-7 design's §13 is also headed *The list*.
 
 ## Related
 

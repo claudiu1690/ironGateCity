@@ -1,6 +1,14 @@
 # ADR 0012 — The welcome set: a character's first City Day uses fixed Party orders, frozen at creation
 
-**Status:** accepted (slice 2; amends ADR 0009) · **Date:** 2026-09-29
+**Status:** accepted (slice 2; amends ADR 0009); amended 2026-10-14, see review 1 and ADR 0073 · **Date:** 2026-09-29
+
+## Amendment (14 Oct 2026)
+
+The mechanism stands (welcome ids on the faction, `startOrders` with an optional welcome set, no new storage). The contents of the slots and the length of the welcome day changed (GDD §13.7):
+
+- **Slot A** is two attempts at a political action **chosen by the player's best trained stat** (per city and stat), not the first pin's canvass (review 1, `docs/design/review-1-answers.md` §2). `Faction.welcomeOrders` is keyed by stat in `packages/content/src/data/factions.ts`.
+- **Slot B** is **the favour from the platform** at the HQ, a welcome-only ticket (`use: 'welcome'`), not a committee session (review 4, **ADR 0073**). The first landing opens slot B's pin.
+- **The welcome day** is the City Day of creation, **and the next one too when the character is created after 22:00 UTC** (review 1; closes Appendix C #18). The "23:50 UTC keeps the welcome set for ten minutes" consequence no longer holds.
 
 ## Context
 

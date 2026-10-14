@@ -17,7 +17,7 @@ updated: 2026-10-14
 
 ## Goal and playtest question
 
-From [[IMPLEMENTATION_PLAN#Slice 3 — The first vote|the plan]]: the calendar with the City Day rollover and council elections in each home city, ranks and the councillor rung (Rank 3, *Known*, 2 endorsements), standing, endorsing, a one-tap ballot, results in the paper, home councils with NPC fill, a councillor's ordinance vote, and morale.
+From [[IMPLEMENTATION_PLAN#Slice 3 — The first vote (built; the voting reworked 10–12 Oct 2026)|the plan]] as first written (since 14 Oct 2026 the plan's slice text says what was built, with the later changes named): the calendar with the City Day rollover and council elections in each home city, ranks and the councillor rung (Rank 3, *Known*, 2 endorsements), standing, endorsing, a one-tap ballot, results in the paper, home councils with NPC fill, a councillor's ordinance vote, and morale.
 
 - **Question:** does the first vote, and the first seat, feel like a big moment?
 
@@ -46,9 +46,6 @@ From [[IMPLEMENTATION_PLAN#Slice 3 — The first vote|the plan]]: the calendar w
 - Tenure applies only after a faction switch; a new member votes at Rank 2.
 - *Fired up* is +10 % Party XP at home; *Unrest* swaps two orders for *Restore the base*.
 - **User decisions** (recorded in [[tech/slice-3|tech/slice-3]] and the session notes): `pnpm dev:mem` starts the worker; ballots are secret at the API but **linkable** for the slice-9 audit; the playtest uses an admin boost script (`pnpm admin:boost`).
-
-> [!warning] Drift
-> The plan still describes the slice-3 model: "Rank 3, *Known*, 2 endorsements", "a councillor's ordinance vote". Since 10 Oct 2026 the town **votes on a rule** (three cards), standing is **10 Political Capital, spent, no backers needed**, and seats go to reputation plus backers. See [[Voting Rework]] and [[Drift Report]].
 
 ## QA and leftovers
 

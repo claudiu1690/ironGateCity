@@ -53,11 +53,11 @@ Built in [[Slice 1 The 5-Minute Session|slice 1]]; places added in slices 2, 4 a
 - Review 2: no percentages or rolls shown; plain action titles, verb first.
 - Review 3: every Energy button names its action and cost; rewards are a receipt.
 - Designer answer §12 Q5: a batch uses the success text only when more than half the rows succeeded.
+- 14 Oct 2026 (drift cleanup): [[adr/0006-repeat-actions-one-request|ADR 0006]] amended to match the GDD and the code (stamp `batch`, success text when more than half succeed, training ×1 only).
 
 ## Open questions / drift
 
-> [!warning] Drift
-> [[adr/0006-repeat-actions-one-request|ADR 0006]] says a batch uses the success text "when at least one row succeeded" and stamps `mixed`, and that training ×3 trains three points. The GDD (§13.1, §8.5) and the code (`usesSuccessText`: more than half; stamp `batch`; training refused above ×1) agree with each other; the ADR is stale.
+- None open in the sources.
 
 ## Related
 

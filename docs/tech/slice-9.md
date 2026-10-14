@@ -4,7 +4,7 @@
 |---|---|
 | **Goal** | Make the game measurable, defensible and finished enough for a beta. **The instruments:** first-party telemetry (an event stream, player-days and a metrics report that reads GDD §27 the same way on a local playtest and on a beta). **The guards:** sign-up caps per device and network, a normalised email, **linked accounts** whose ballots, backings, signatures and hands count once at every count, **the 24-hour audit** on the national count that confirms itself, council recounts, **moderation** (four-reason reports, a server-only word filter, the ladder from a note to closure, renames, closing an account with erasure, the `/mod` console). **The polish:** a purpose line on every screen, an empty line on every list, every help note, *While you were away*, **Settings** (five lines), **WCAG 2.2 AA**, **performance budgets** checked locally. **One rule:** opinion damping at scale. **The plan:** the betas and their gates, and **Part B, the hosting step**, as a checklist that runs at the end of the project |
 | **Question** | **Are the day-7 and day-30 retention targets within reach?** Locally the slice answers *is the game ready to measure?*; the betas answer the question (design §2.4, §9) |
-| **Builds on** | Slices 0–4 as built on branch `slice-0`; **slice 5 as designed** in `docs/tech/slice-5.md` (being built); **slices 6, 7 and 8 as designed** in `docs/tech/slice-6.md`, `slice-7.md`, `slice-8.md` (not built). Where this document leans on a slice 5–8 name (`chatMessages`, `chatReports`, `chatLimits`, `chat.post`, `chat.report`, `chat.setHidden`, `ProfileSheet`, `eventSignups`, `resolveEvent`, `favours.postBail`, `favours.visit`, `presence`, `touchPresence`, `factionElections`, `nationalElections`, `countNation`, `countChair`, `countPick`, `countBattleground`, `processNationBoundary`, take-office, `petitions`, `termBackings`, `nation.news`, `officeTerms.office`, `contributions` scopes, `heroes`, `topByBracket`, the Letters builder, `legacyEntries`, `seasons`), it is that design's name. If a slice's Deviations rename something, the task that touches it follows the rename |
+| **Builds on** | Slices 0–4 as built on branch `slice-0`; **slice 5 as designed** in `docs/tech/slice-5.md` (being built); **slices 6, 7 and 8 as designed** in `docs/tech/slice-6.md`, `slice-7.md`, `slice-8.md` (not built). Where this document leans on a slice 5–8 name (`chatMessages`, `chatReports`, `chatLimits`, `chat.post`, `chat.report`, `chat.setHidden`, `ProfileSheet`, `eventSignups`, `resolveEvent`, `favours.postBail`, `favours.visit`, `presence`, `touchPresence`, `factionElections`, `nationalElections`, `countNation`, `countChair`, `countPick`, `countBattleground`, `processNationBoundary`, take-office, `petitions`, `termBackings`, `nation.news`, `officeTerms.office`, `contributions` scopes, `heroes`, `topByBracket`, the Letters builder, `legacyEntries`, `seasons`), it is that design's name. If a slice's Deviations rename something, the task that touches it follows the rename. Slices 0–5, reviews 4–5 and the voting rework (ADR 0073–0086) are now built; their knock-ons were applied to this document on 14 Oct 2026 (dated notes at the end) |
 | **Design inputs** | `docs/design/slice-9-launch.md` (*design §n*) · `docs/design/slice-9-screens.md` (*screens §n*) · `docs/design/content-policy-review.md` §7 · `docs/economy.md` · GDD §1.5, §3.3, §4.2, §5.2, §7.3, §7.5, §14.2, §15.1, §15.2, §16.2, §25, §26, §27, Appendix C #7, #13 · `docs/IMPLEMENTATION_PLAN.md` · ADR 0001, 0002, 0004, 0008, 0017–0020, 0022, 0023, 0030, 0036–0041, 0043, 0045, 0047–0049, 0053, 0057 |
 | **ADRs** | [0059 telemetry](../adr/0059-telemetry-first-party-events-and-player-days.md) · [0060 network sightings, the device cookie, sign-up caps](../adr/0060-network-sightings-device-cookie-and-signup-caps.md) · [0061 linked accounts count once](../adr/0061-linked-accounts-count-once-at-every-count.md) · [0062 the national audit and recounts](../adr/0062-the-national-audit-self-confirms-and-council-recounts.md) · [0063 moderation state, roles, the log](../adr/0063-moderation-state-on-the-user-roles-and-the-log.md) · [0064 `packages/moderation`](../adr/0064-packages-moderation-server-only-filter-and-names.md) · [0065 one report queue, editor notes, appeals](../adr/0065-one-report-queue-editor-notes-and-appeals.md) · [0066 renames through a snapshot registry](../adr/0066-renames-through-a-name-snapshot-registry.md) · [0067 closing an account](../adr/0067-closing-an-account-retirement-and-erasure.md) · [0068 opinion damping](../adr/0068-opinion-damping-from-a-seven-day-ring-on-the-place.md) · [0069 request guards](../adr/0069-request-guards-in-process-rate-limits-and-maintenance.md) · [0070 performance and accessibility checks](../adr/0070-performance-and-accessibility-checks-with-playwright-and-axe.md) · [0071 *While you were away*](../adr/0071-while-you-were-away-built-at-read.md) · [0072 the production topology](../adr/0072-production-topology-for-the-hosting-step.md) |
 | **Defaults taken** (design §16, pending the user) | **Telemetry in our own database** · **closed beta 150–300 invited accounts, six weeks, three waves** · **linked ballots set aside silently**, one aggregate line · **the audit confirms itself at day 0** · **damping built now** · **a name change every 30 days, free; printed editions keep the old name** · **the user as admin plus at least one moderator; a second pair of eyes for one's own faction** · **closure erases personal data after 30 days** · **16+** · **five Settings lines** · **the gates as written** · **no count-room scene** |
@@ -58,7 +58,7 @@ Every number below is a GDD or design number. Where the design leaves a point op
 | Notes from the editor | **`editorNotes`** (one row per character per `ref`): the rung's note, *A line you reported was dealt with*, the appeal's answer; read live by the Letters builder; never a write to the character | ADR 0065 |
 | Appeals | **`appeals`**, one per decision (unique `logId`), 500 characters; answered by an admin as an editor note (or an email for a closed account) | ADR 0065 |
 | Renames | **`account.rename`**: the 30-day gate (`characters.renamedDay`), the filter, then **`renameEverywhere`** rewrites every denormalised name snapshot listed in the **`NAME_SNAPSHOTS` registry** (a schema-walk test makes a new snapshot impossible to forget). **Printed editions are not rewritten** for one's own change. A forced rename writes *A Newcomer* through the same registry **and scrubs printed text** (§22.1 Q3) | ADR 0066 (Q8) |
-| Closure | **One transaction retires the character** (`retired`, offices vacated by kind, open candidacies withdrawn, open sign-ups withdrawn with their Energy kept spent, nothing else touched) and closes the account (`modState: 'closed'`, sessions revoked). **Reopen** within 30 days. The **`account-erase`** job (00:10 UTC) erases after 30 days: names through the registry to *A former member*, the email, credentials, sessions, sightings, appeal text, feedback lines | ADR 0067 (Q13) |
+| Closure | **One transaction retires the character** (`retired`, offices vacated by kind, standing candidacies left on the list and skipped by the count (they can't be withdrawn since the voting rework; ADR 0067 as amended), open sign-ups withdrawn with their Energy kept spent, nothing else touched) and closes the account (`modState: 'closed'`, sessions revoked). **Reopen** within 30 days. The **`account-erase`** job (00:10 UTC) erases after 30 days: names through the registry to *A former member*, the email, credentials, sessions, sightings, appeal text, feedback lines | ADR 0067 (Q13) |
 | Damping | **`active { days[≤7], mean }`** on each place document (home city, capital district, Clearwater), rolled by **the city's boundary** from the ledger's distinct contributors of the day before (lazy-safe, ADR 0017); the swing passed to `applyPersuasion` / `applyAgainst` × **`swingFactor(mean)`** in actions, missions and event resolutions; `influenceLedger.damped` records the factor; drift, Issue resolution, morale inputs and the exposé untouched | ADR 0068 (Q9) |
 | *While you were away* | **Built at read** from the world's records keyed by day (counts, laws, ordinances, Issues, events, seats, `nation.news`): **a character away has no editions for the missed days** (editions are printed at a settlement). The return edition stores `desk.away { days, from, banked }`; the settlement **fills Rested to the cap when its window is 30 days or more** (once, by the settlement's own guard) | ADR 0071 (Q10) |
 | Settings | **`characters.settings { motion, text, night, clouds, chat }`** (slice 6's `chat.hidden` moves here), written **without the version** (ADR 0040's pattern) by a set-to-state `settings.set`; applied by the client as `data-*` attributes on the root; the server reads none | §8.1 (Q11) |
@@ -147,12 +147,12 @@ at a tap (bail, visit):    one indexed read of the pair's row
 
 ```
 inside the count's existing transaction (ADR 0017, ADR 0043)
-  ballots   = Vote.find({ electionId }, { voterId, candidateKey, createdAt })
+  ballots   = Vote.find({ electionId }, { voterId, candidateKey, ordinanceId, createdAt })   (council votes are by rule since the voting rework)
   sets      = linkedSets(voters)                                   (accountLinks, active)
   { kept, setAside } = collapseBySet(ballots, sets)                 the earliest cast in a set stands
   votes     = tallyOf(kept);  turnout's voters = kept.length       (the ballot half's weight is never inflated by a ring)
-  backings  = countableBackings(candidacy.endorsements, sets)       (endorsements, the Chair's backers, the national backers)
-  … the slice 3–7 count with these inputs …
+  backings  = countableBackings(candidacy.endorsements, sets)       (council backers, which decide seats with local support (ADR 0084), the Chair's backers, the national backers)
+  … the slice 3–7 count with these inputs (a council: countSeats for seats from the backings, decideHomeRule / decideCapitalRule for the rule from tallyOf by ordinanceId) …
   result.setAside = setAside.length
   audits.insert { _id: electionId, kind, countedDay, status: 'final' | 'provisional', setAside[], notes[] }  when anything
   telemetry election.counted:{electionId} { turnout, npcSeats, playerSeats, setAside }
@@ -189,7 +189,7 @@ audit.recount({ electionId, idempotencyKey })  one transaction:
   each changed seat: loser's officeTerm vacatedDay = today, recounted: 'lost' (not completed: no ladder credit)
                      winner's officeTerm fromDay today → the term's toDay, recounted: 'won'
   the Governor recomputed (governorOf) · the council projection on the city · both characters' offices[] (version guard)
-  the order paper and the rule in force untouched
+  the rule ballot and the rule in force untouched (councils have no order paper since the voting rework; ADR 0062 as amended)
   moderationLog row; telemetry audit.recount
 the paper: a live political headline (ADR 0023) on recountedDay = today or yesterday: *{Name} Takes the Seat After a Recount*
 ```
@@ -239,7 +239,7 @@ the client: character.me.moderation.renameReason → the RenameSheet before any 
 ```
 account.close({ confirm: 'CLOSE', idempotencyKey })    or a moderator's 'close' (two moderators, or an admin)
   one transaction: retireCharacter(session, c, today)
-     offices: every live officeTerm vacated by kind (§22.1 Q2's defaults) · open candidacies withdrawn (deposit kept) ·
+     offices: every live officeTerm vacated by kind (§22.1 Q2's defaults) · standing candidacies stay, skipped at the count (no withdrawal, no deposit: ADR 0084, 0067 as amended) ·
      open event sign-ups withdrawn (Energy stays spent; a role falls to the volunteers) · characters.retired { day, by }
    user: modState 'closed', closedBy, closedDay = today · sessions deleted (signed out)
 retired characters are left out of live lists (Members, presence, search, turnout's eligible, the small-branch roll, nudges)
@@ -271,7 +271,7 @@ the settlement into today (window w = today − previous settled day)
 paper.today → away: AwayRowView | null    awaySummary(facts in [from, today)): ≤ 4 lines (days · republic · city · branch · yours)
 paper.away  → AwayDigestView              foldDigest(facts): by day, newest first, ≤ 6 rows a day, ≤ 30 days, read-only
 facts (AwayFact { day, scope, templateId, params, priority }) from indexed range reads on: elections counted, laws from,
-  ordinances from, Issues resolved, the faction's events resolved, officeTerms begun by members, nation.news (14 days)
+  ordinances from (the rule each count put in force), Issues resolved, the Unrest prize (review 5's `awards { kind: 'unrest' }`), the faction's events resolved, officeTerms begun by members, nation.news (14 days)
 ```
 
 ### 3.13 Time and the lazy state
@@ -325,9 +325,11 @@ Unchanged in order (slice 8 §3.11). The gate runs before, in the procedure's mi
 // copy.ts (screens §15): settings, report, rename, moderation, feedback, away, maintenance, closeAccount, purpose,
 // empty, audit, mod (the console), help (the four new notes, design §6.4).
 // Typed ids, so a missing string is a type error, not a QA finding:
-export const PURPOSE_SCREENS = ['cityQuarter', 'cityOverview', 'placeSheet', 'paper', 'me', 'factionOrders',
+export const PURPOSE_SCREENS = ['city', 'cityQuarter', 'cityOverview', 'placeSheet', 'paper', 'me', 'factionOrders',
   'factionEvents', 'factionMembers', 'factionScoreboard', 'factionChat', 'nation', 'council', 'parliament',
   'chairDesk', 'dossier', 'wardrobe', 'journey', 'held', 'event', 'settings'] as const;     // screens §11.1, twenty
+//  review 4 (ADR 0076): `cityQuarter` and `cityOverview` apply to the capital only; a home city (one map) is `city`.
+//  The designer writes the `city` line (twenty-one with it).
 export type PurposeScreen = (typeof PURPOSE_SCREENS)[number];
 copy.purpose: Record<PurposeScreen, string>      // ≤ 90 characters each (loader check)
 copy.empty: Record<EmptyList, string>             // EmptyList: every list id in the client (design §6.3 plus slices 6–8's)
@@ -393,7 +395,9 @@ Twelve new collections, each for a reason (plan rule 6), plus fields on Better A
 ```ts
 {
   _id: ObjectId | string,          // natural for keyed acts and world events: 'action.tap:{key}', 'election.counted:{id}'
-  kind: TelemetryKind,             // design §2.2's list plus api.timings, socket.reconnect, audit.recount
+  kind: TelemetryKind,             // design §2.2's list plus api.timings, socket.reconnect, audit.recount; review 5: patrol.roll,
+                                   // patrol.stop, patrol.answer, treatment.bought, unrest.prize; the voting rework: rule.vote,
+                                   // rule.set, council.stand, council.back, rule.decided { how }
   at: Date, day: DayKey,
   userId: string | null,           // null for anonymous kinds
   characterId: ObjectId | null,
@@ -555,7 +559,8 @@ Better Auth's `disabledPaths`: `/update-user` (names go through `account.rename`
 ```ts
 {
   ...slice 8,
-  settings: { motion: 'device' | 'reduced', text: 'standard' | 'large', night: 'clock' | 'day',
+  settings: { motion: 'device' | 'reduced', text: 'standard' | 'large', night: 'clock' | 'day' /* *Map at night*: the art only,
+              on top of the view's `night` block (review 5); never a rule, a lock or a patrol */,
               clouds: 'on' | 'off', chat: 'shown' | 'hidden' },          // unversioned (ADR 0040); chat.hidden moves here
   seen: { purpose: PurposeScreen[] },                                     // unversioned, ≤ 30
   renamedDay: DayKey | null,
@@ -582,9 +587,9 @@ Index added: `{ nameWords: 1 }` (the console's search across factions).
 
 A **schema-walk test** walks every Mongoose schema and fails on any path ending in `name` that sits beside a `characterId` (or inside an array of objects with one) and is neither in the registry nor in an explicit `NOT_A_PLAYER_NAME` list (NPC and place names).
 
-### 5.14 Migration `011-slice9-launch.ts`
+### 5.14 Migration `013-slice9-launch.ts`
 
-`ensureIndexes()` runs it after 010. Idempotent: each step filters on the field's absence.
+`ensureIndexes()` runs it after 012 (renumbered 14 Oct 2026). Idempotent: each step filters on the field's absence.
 
 1. **Characters**: `settings` from `chat.hidden` (`chat: hidden ? 'hidden' : 'shown'`, the rest the defaults), `$unset chat.hidden`; `seen.purpose: []`; `renamedDay: null`; `retired: null`; `today.bailsXp: 0`.
 2. **Reports**: each `chatReports` row → `reports` (`kind: 'line'`, `reason: 'other'`, `state: 'new'`, the context as stored); then `chatReports` is dropped once the counts match.
@@ -593,7 +598,7 @@ A **schema-walk test** walks every Mongoose schema and fails on any path ending 
 5. **Places**: `active: { days: [], mean: 0 }`.
 6. **The first admin**: `ADMIN_EMAIL`'s user, if present, gets `role: 'admin'` (also done at API start and at sign-up).
 
-A test runs 011 twice (no change the second time) on a seeded slice-8 database.
+A test runs 013 twice (no change the second time) on a seeded slice-8 database.
 
 ---
 
@@ -947,7 +952,7 @@ Slice 9 adds **no game result** and no new `ResultModal` kind; renames, reports,
 
 ## 11. The paper v9
 
-- ***While you were away*** (§3.12): the row above the headlines when `desk.away.days ≥ 2`; *WELCOME BACK* and *Rested: full* from 30; the chevron opens `paper.away`. Slice 8's season line (*a new season began*) becomes one of the republic's facts.
+- ***While you were away*** (§3.12): the row above the headlines when `desk.away.days ≥ 2`; *WELCOME BACK* and *Rested: full* from 30; the chevron opens `paper.away`. Slice 8's season line (*a new season began*) becomes one of the republic's facts. Every time in the row and the digest is worded by `copy.when` (review 4), never a clock time. The branch's facts include the Unrest prize line (review 5), and the city's include the rule each count put in force (the voting rework's `ruleDecided`).
 - ***Letters***, after slice 8's rows: **editor notes** (`EditorNoteRow`, kicker *FROM THE EDITOR*): the rung's note (tap → the policy; `paper.noteSeen`), *A line you reported was dealt with.* (no tap; shown from its day for the rest of the City Day after first shown), the appeal's answer; and **the weekly feedback row** on the player's days 7, 14, 21 and 28 and the morning after a first seat, while that week's form is not sent.
 - **The republic** (slice 7's national lines): `nl.count-provisional` on day 27 (as built), **`nl.count-confirmed`** on day 0 (*The count is confirmed.* / *…; {n} votes were set aside after the audit.*).
 - **A recount**: a live political headline (ADR 0023) on the recount's day and the morning after: *{Name} Takes the Seat After a Recount* / *{Name}'s Seat Goes to {Other} on the Recount*, in the city's voice.
@@ -991,13 +996,13 @@ New (screens §1): `SettingsSheet`, `SettingRow` (a radiogroup of chips), `Repor
 - **Keyboard:** reading-order tab stops; a 2 px ink focus ring with a paper gap (`:focus-visible`); sticky bars never cover the focused element (`scroll-padding`); the map's **Places list** as its keyboard route.
 - **Screen readers:** `lang="en-GB"`; alt texts as written; map art `aria-hidden`; the Today strip as a `<dl>`; count tables as `<table>` with headers; the result announced once.
 - **Targets:** 44 × 44 CSS px minimum, checked by a Playwright helper on every interactive element of every route on the matrix.
-- **Checks:** `@axe-core/playwright` on every route and sheet on the matrix (360 × 640, 375 × 667, 390 × 844, landscape, 1440 × 900), failing on serious or critical issues; the designer's manual VoiceOver and NVDA pass before the closed beta (lane D #15).
+- **Checks:** `@axe-core/playwright` on every route and sheet on the matrix, including `/journey` (the map) and the hall's sheet (review 4), the patrol sheet, the Treatment card, *What's here* and the rival header (review 5), and `RuleCard`, `StandCard`, the rule picker sheet and the hall's five blocks (the voting rework), (360 × 640, 375 × 667, 390 × 844, landscape, 1440 × 900), failing on serious or critical issues; the designer's manual VoiceOver and NVDA pass before the closed beta (lane D #15).
 
 ### 12.4 Performance work (design §8; ADR 0070)
 
 - **Code splitting:** the city and nation maps (with `react-zoom-pan-pinch` and the tile layer), the chat socket client (`socket.io-client` imported dynamically when chat mounts), the console, the dev panel and viewer, the away digest, the feedback sheet.
 - **Fonts:** import only the `latin` and `latin-ext` subsets (Fontsource per-subset CSS); Source Serif italic is fetched only when italic text renders; `font-display: swap`; preload the first route's two faces. Measured on 4 Oct 2026 (the slice-5 build): **one JS chunk of 229 KB gzipped** (the whole app; slices 6–8 will push it over the 250 KB *must* without splitting) and **207 KB of Latin fonts** (Playfair 38, Oswald 28, Source Serif 51 + 52 italic, Courier Prime 19 + 19): under the 220 KB *must*, over the 160 KB *target* until the italic is deferred.
-- **`pnpm report:perf`:** builds, prints gzip per chunk (first route; whole app), then the `perf` Playwright project on `vite preview` with the memory server: CDP `Network.emulateNetworkConditions` (165 ms RTT, 8.1 Mbit/s) and `Emulation.setCPUThrottlingRate(4)` on the Pixel 7 profile, and desktop 1440 × 900; LCP of the first view (the paper for a returning player, the sign-up form for a new one) by `PerformanceObserver`; tap-to-modal by the Event Timing API (the INP proxy); `/art/` and tile bytes (the existing counters); decoded image bytes (the mounted images' natural sizes × 4); the API p95 from a load run (`--load 50`: fifty scripted players tapping for two minutes); the day job for 1,000 characters and five cities on the memory replica set. Output: a table of *must* and *target* per budget, exit 1 over a *must*.
+- **`pnpm report:perf`:** builds, prints gzip per chunk (first route; whole app), then the `perf` Playwright project on `vite preview` with the memory server: CDP `Network.emulateNetworkConditions` (165 ms RTT, 8.1 Mbit/s) and `Emulation.setCPUThrottlingRate(4)` on the Pixel 7 profile, and desktop 1440 × 900; LCP of the first view (the paper for a returning player, the sign-up form for a new one) by `PerformanceObserver`; tap-to-modal by the Event Timing API (the INP proxy); `/art/` and tile bytes (the existing counters); decoded image bytes (the mounted images' natural sizes × 4); the API p95 from a load run (`--load 50`: fifty scripted players tapping for two minutes; `city.get`'s budget counts review 5's patrol write, at most one per ten minutes per player at night on rival ground); `/journey` (the map) and the hall's sheet among the measured routes (review 4); the day job for 1,000 characters and five cities on the memory replica set. Output: a table of *must* and *target* per budget, exit 1 over a *must*.
 
 ### 12.5 Layout checks (screens §14)
 
@@ -1024,8 +1029,8 @@ export function buildMetrics(i: MetricsInput, o: { from: DayKey; to: DayKey; fac
 |---|---|
 | Retention | `playerDays`, `user.createdAt`: classic and rolling D1 / D7 / D30 per sign-up day and in all, the cohort size and ±1.96 √(p(1−p)/n) |
 | Sessions | `playerDays.spans` (a session crossing midnight joined), `telemetry` `action.tap` / `mission.run` Energy, the model's 200 / 300 / 400 / 600 |
-| The funnel | `telemetry` `screen.view` (signup), `signup.form`, `origin.step`, `faction.joined`, `paper.opened` (welcome), the first `action.tap`, the second, `order.done` ×3, the chapter opened, `energy.empty`, a second span on day 1, day 1 |
-| Politics | `vote.cast`, `playerDays` (DAU), `election.counted`, `candidacy.seated`, the votes aggregate (cross-faction share) |
+| The funnel | `telemetry` `screen.view` (signup), `signup.form`, `origin.step` (three: *Coming home*'s beats, review 4–5), `faction.joined`, `paper.opened` (welcome), the first `action.tap`, the second, `order.done` ×3, the chapter opened, `energy.empty`, a second span on day 1, day 1; eight taps to the first result (review 4) |
+| Politics | `vote.cast`, `rule.vote`, `rule.set`, `council.stand`, `council.back`, `rule.decided` (with `how`: votes, tie, fallback, seats, draw), `playerDays` (DAU), `election.counted`, `candidacy.seated`, the votes aggregate (cross-faction share) |
 | Together | `event.*`, the hands, `playerDays` the day after a sign-up |
 | Pacing | `levelup`, `rankup` with `dayInGame`, bucketed by sessions per day, against `content.model` |
 | Factions | `characters.factionId`, `residence.moved`, DAU |
@@ -1093,7 +1098,7 @@ export function buildMetrics(i: MetricsInput, o: { from: DayKey; to: DayKey; fac
 |---|---|
 | Rules and moderation | §6.5 |
 | Content | The copy's typed ids complete; purpose lines ≤ 90; help notes two lines; `protectedNames()`; the model rows' checks; word-for-word comparisons with both design documents (Settings' rows and notes, the report's reasons, the rename and closure texts, the suspended and closed screens' lines, the editor's notes, the feedback statements, the purpose lines, the empty lines, the away row's lines, the maintenance screen, the policy); the vocabulary guards |
-| DB | Every new collection's indexes and TTLs; the `user` indexes; migration 011 twice; the schema-walk test of the name registry; `buildMetrics` on fixtures (retention classic and rolling with bands, a session across midnight, the funnel's steps, testers, boosted and moderators left out, the votes aggregate); `metrics.ts` never reads a voter's choice (a fixture without votes rows by voter) |
+| DB | Every new collection's indexes and TTLs; the `user` indexes; migration 013 twice; the schema-walk test of the name registry; `buildMetrics` on fixtures (retention classic and rolling with bands, a session across midnight, the funnel's steps, testers, boosted and moderators left out, the votes aggregate); `metrics.ts` never reads a voter's choice (a fixture without votes rows by voter) |
 | Server — plumbing | the device cookie once; the activity touch once a minute (memo) with a span extended and a new span after 30 minutes; loopback ignored; the test IP header only with hooks; the epoch's next hash in the last 14 days; rate limits at 60 and 61, and a refused tap spends nothing; maintenance on every route but `/healthz`; `NODE_ENV=production` with hooks refused |
 | Server — sign-up | each refusal (name filter, impersonation, normalised email, invite, device at the third, network at the fourth with the test IP); two parallel sign-ups of one normalised email → one account; the first admin by `ADMIN_EMAIL` |
 | Server — telemetry | every kind of design §2.2 produced by its real path once (a table-driven test); a keyed replay inserts nothing; a world event twice (job and lazy path) inserts once; anonymous kinds only when signed out; a free-text prop refused by the schema |
@@ -1243,8 +1248,8 @@ Run on `pnpm dev:mem` with the dev panel; a handful of testers over a few real d
 
 **T4. Content: copy, policy, the model rows, typed ids.** §4.1–§4.3: the copy keys with typed `PurposeScreen`, `EmptyList`, `HelpKey`, `ReasonId`; `policy.ts`; `legal.ts` placeholders; `model.ts` with the existing day 1–7 rows; `protectedNames()`. *Done when:* the word-for-word tests against both design documents pass, every loader check has a failing fixture, and both vocabulary guards pass (the console's separately).
 
-**T5. DB: models, indexes, the registry, migration 011.** §5.1–§5.13's collections, the `user` fields and indexes (the `createAuth` declaration is T8's; the indexes are created here), the changed fields, `NAME_SNAPSHOTS` with its schema-walk test, migration 011. *Done when:*
-- 011 run twice changes nothing the second time on a seeded slice-8 database;
+**T5. DB: models, indexes, the registry, migration 013.** §5.1–§5.13's collections, the `user` fields and indexes (the `createAuth` declaration is T8's; the indexes are created here), the changed fields, `NAME_SNAPSHOTS` with its schema-walk test, migration 011. *Done when:*
+- 013 run twice changes nothing the second time on a seeded slice-8 database;
 - the schema-walk test passes and fails when a fixture schema adds an unregistered `name` beside a `characterId`;
 - every TTL index exists with its period, and a transaction over `characters`, `elections`, `officeTerms`, `cities`, `audits`, `moderationLog` and `user` commits on the memory replica set.
 
@@ -1302,7 +1307,7 @@ Preconditions: lanes A–C done; §16's checklist passed locally; the user has t
 
 **D2. The domain** (#2). `play.`, `api.`, `tiles.` records. *Done when:* each name resolves with TLS.
 
-**D3. MongoDB Atlas** (#3). The cluster (sized for telemetry, §17: M10 unless sampling is chosen), change streams verified on the tier, a database user, the allow list, backups, `MONGODB_URI` with `retryWrites=true&w=majority`. *Done when:* `ensureIndexes()` and migrations 001–011 run against it and a change-stream smoke test passes from the API's region.
+**D3. MongoDB Atlas** (#3). The cluster (sized for telemetry, §17: M10 unless sampling is chosen), change streams verified on the tier, a database user, the allow list, backups, `MONGODB_URI` with `retryWrites=true&w=majority`. *Done when:* `ensureIndexes()` and migrations 001–013 run against it and a change-stream smoke test passes from the API's region.
 
 **D4. The API and the worker** (#4). Two services from `apps/server/Dockerfile`; the environment from `env.ts` (`NODE_ENV=production`, `DB_MODE=uri`, `BETTER_AUTH_SECRET`, `AUDIT_SECRET`, `PUBLIC_ORIGIN`, `CORS_ORIGINS`, `COOKIE_DOMAIN`, `SENTRY_DSN`, `ADMIN_EMAIL`, `SIGNUP_MODE=invite`, `TRUST_PROXY` per the platform); the health check. *Done when:* `/healthz` is 200 from outside, the worker's log shows `city-day`, `nation-day`, `links-refresh` and `account-erase` scheduled, and two networks' sign-in attempts are limited separately (the `TRUST_PROXY` check of `env.ts`).
 
@@ -1354,7 +1359,7 @@ Preconditions: lanes A–C done; §16's checklist passed locally; the user has t
 8. **Renames.** `renamedDay` as suggested. One change: **live views read denormalised name snapshots today** (candidacies, contributions, counts, rosters, chat), so the rename rewrites them through a **registry** guarded by a schema-walk test, rather than every view re-reading the character. Printed editions keep the old name. A forced rename writes *A Newcomer* through the same registry, and the client's root gate shows the sheet (ADR 0066).
 9. **Damping.** `swingFactor(active)` in rules and the factor on the ledger row, as suggested. The place stores a **ring of the last seven days' counts** (`active.days`) beside the mean, so a boundary re-run replaces its own day instead of averaging twice. The ring is written by each place's own boundary transaction (ADR 0068).
 10. **The digest.** Built at read, nothing stored, as suggested. One change: **a character away has no editions for the missed days** (an edition is printed only at a settlement), so the digest reads the world's own records by day (counts, laws, ordinances, Issues, events, seats, `nation.news`) and renders them with the existing templates. The Rested fill needs no `awayFilledDay`: the settlement's day guard makes it happen once (ADR 0071).
-11. **Settings.** As suggested: `characters.settings` (with `chat.hidden` moved in by migration 011), unversioned, applied as `data-*` attributes; the server reads none.
+11. **Settings.** As suggested: `characters.settings` (with `chat.hidden` moved in by migration 013), unversioned, applied as `data-*` attributes; the server reads none.
 12. **Performance and accessibility in CI.** axe through Playwright, as suggested. **No Lighthouse CI**: the same measurements (LCP, an INP proxy, bytes, image memory) come from Playwright with CDP throttling, already in the stack, and a bundle script. The only new dependency is `@axe-core/playwright` (dev). Locally the commands are `pnpm report:perf` and the `a11y` project; CI runs them from lane D's first task (ADR 0070).
 13. **Account closure.** As suggested: `account.close` with *CLOSE*, the day on the user (`closedDay`), and the erasure job after 30 days. The job replaces the name through the registry (snapshots and printed text), drops the email, credentials, sessions and sightings, and keeps the retired character for the world's integrity (ADR 0067).
 14. **The seeded testers.** As suggested. The existing `admin:boost` script already marks `playtest.boosted`. The metrics builder leaves boosted testers out of retention and pacing and keeps them in the political rows. Local testers can also be marked `user.tester` from the dev panel.
@@ -1475,7 +1480,7 @@ None blocks lanes A–C. Defaults taken:
 
 ## Review 4 knock-ons (dated note, 7 Oct 2026)
 
-Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - `PURPOSE_SCREENS`: `cityQuarter` and `cityOverview` apply to the capital only. A home city is `city`.
 - The funnel counts three `origin.step`s and eight taps to the first result.
@@ -1484,7 +1489,7 @@ Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–00
 
 ## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
 
-Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - `settings.night: 'clock' | 'day'` (*Map at night*) applies to the art on top of the view's `night` block. It never changes a rule, a lock or a patrol.
 - **Telemetry** gains `patrol.roll`, `patrol.stop`, `patrol.answer`, `treatment.bought` and `unrest.prize`.
@@ -1494,7 +1499,7 @@ Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–00
 
 ## Voting rework knock-ons (dated note, 12 Oct 2026)
 
-From `docs/tech/voting-rework.md` §17 (ADRs 0083–0086):
+From `docs/tech/voting-rework.md` §17 (ADRs 0083–0086). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - Telemetry gains `rule.vote`, `rule.set`, `council.stand`, `council.back` and `rule.decided` (with `how`).
 - The axe matrix adds `RuleCard`, `StandCard`, the rule picker sheet and the hall's five blocks.

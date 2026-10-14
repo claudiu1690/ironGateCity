@@ -17,7 +17,7 @@ updated: 2026-10-14
 
 ## Goal and playtest question
 
-From [[IMPLEMENTATION_PLAN#Slice 1 — The 5-minute session|the plan]]: one home city ([[Coalport]]) with 5–6 places, tier-1 actions with ×1 / ×3, Energy and Rested, Local Standing, jobs, the Morning Paper v1, Party Directives, levels and ranks, and the *Today* tally.
+From [[IMPLEMENTATION_PLAN#Slice 1 — The 5-minute session (built)|the plan]] as first written (since 14 Oct 2026 the plan's slice text says what was built, with the later changes named): one home city ([[Coalport]]) with 5–6 places, tier-1 actions with ×1 / ×3, Energy and Rested, Local Standing, jobs, the Morning Paper v1, Party Directives, levels and ranks, and the *Today* tally.
 
 - **Question:** is spending a bar of Energy fun, and do players want to come back in 3 hours?
 
@@ -50,9 +50,7 @@ From [[IMPLEMENTATION_PLAN#Slice 1 — The 5-minute session|the plan]]: one home
 - Back pay on return is capped at 14 days.
 - An outcome text is at most 240 characters and four sentences.
 - The Collective's Rank 5 title became *Delegate* (it was "Vanguard", a rival's name).
-
-> [!warning] Drift
-> The plan lists "Jobs: daily salary and shift, streak and sick days", and the plan's data-model row for slice 1 still names `job {streak, sickDays, lastShift}`. [[Review 1]] replaced all of that with a wage and seniority (GDD §9). See [[Drift Report]].
+- The first plan's "daily salary and shift, streak and sick days" was replaced by a wage and seniority in [[Review 1]] (GDD §9); the plan and its data-model row say so since 14 Oct 2026.
 
 ## QA and leftovers
 

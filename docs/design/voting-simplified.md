@@ -153,7 +153,7 @@ Faucets unchanged (§6.5): +5 a day for the orders, +10 a morning for a seat, ev
 
 ### 3.10 Trade-offs, stated
 
-- **Against slice 7's offices.** A Governor today, with six locals who follow, passes any rule outright; under this model the Governor **sets card 1** and wins it when nobody votes otherwise. In a branch of one that is the same thing; at scale the Governor sets the agenda and the town decides. That is the politics the game says it is about (*a political battle*), and the Address (+50 on an Issue) is untouched. The Chair's rule per city is card 1 wherever no Governor sits, as now. Parliament and the laws change nothing: a deputy's For / Against on a bill is already a vote on a rule, and the law book's rows read as council rules with the *LAW* kicker; the national ballot (a person with two pledged laws) should lead each row with the pledges, which it nearly does. Petitions still dissolve a council and strike its rule.
+- **Against slice 7's offices.** A Governor today, with six locals who follow, passes any rule outright; under this model the Governor **sets card 1** and wins it when nobody votes otherwise. In a branch of one that is the same thing; at scale the Governor sets the agenda and the town decides. That is the politics the game says it is about (*a political battle*), and the Address (+50 on an Issue) is untouched. The Chair's rule per city is card 1 wherever no Governor sits, as now. Parliament and the laws change nothing: a deputy's For / Against on a bill is already a vote on a rule, and the law book's rows read as council rules with the *LAW* kicker; the national ballot (a person with two pledged laws) should lead each row with the pledges, which it nearly does. Petitions still dissolve a council; **the rule in force runs out its window** (a city always has a rule; settled with the architect, §8.1 Q16, and GDD §15.9; this paragraph said *strike its rule* until 14 Oct 2026).
 - **Against the faction competition.** In the capital the rule follows seats, and seats follow votes and opinion, exactly as the slice-4 formula has it; what goes is *coalition or nothing* (a 4 / 3 / 3 council of locals passed no rule). Now the largest bloc's rule passes, and two Chairs who pick the same rule outvote it: a coalition is a choice, not a threshold. A rule always runs, which is what the user likes about the feature.
 - **Against the GDD's "a growing player base can see itself taking over".** Seats go to reputation and backers, not votes, so a branch of fifty cannot vote one member onto the council; it can back them (five count) and it can out-work the locals, which every player does by day ten (Appendix C #22). The *Local seats 6 / 7* line stays; players still replace locals, by work.
 - **Against secrecy (Appendix C #25).** The rule ballot would make running totals a strong *it's close, turn out* hook. Not taken here: the ballot stays secret until the count, so the model changes one thing at a time. It is the first lever to pull if turnout reads low.
@@ -639,7 +639,9 @@ Strings in `packages/content/src/data/copy.ts`, `issues.ts`, `candidates.ts` and
 
 Not a GDD change: wording only, no rule or number moves. The GDD's lines that name *The deposit* and *Your deposit receipt* (§0's change table, §17.1, §21.4, the keepsake row) follow at the next GDD pass; the GDD's rule for standing (§15.4) already says *10 PC, spent when the name is printed, never returned*.
 
-#### 8.11.1 Chapter 3 of *The Names on the Stone*, re-strung: *The ten marks*
+#### 8.11.1 Chapter 3 of *The Names on the Stone*, re-strung: *The list*
+
+*(Titled *The ten marks* from 12 Oct 2026 until the fix round the same day; §8.12 #7 renames the chapter *The list* and its keepsake *Your line on the list*, and rewrites step 1's last sentence, the two choices and the Failure's last line. The script below is otherwise the one that stands.)*
 
 Supersedes `slice-7-nation.md` §13's step 1, step 2 and the keepsake's name. Requirement, difficulty, Energy, rewards, flags (`fund-marks` / `own-marks`), the three ways and their checks, the art and the id all stand. Letters row: *From the families' tin* · *Your receipt for ten marks* · *Chapter 3 is ready · 15 Energy*.
 
@@ -666,7 +668,7 @@ CTA: **Find your backers · 15 Energy**
 - Success — *Two backers, and a third* — Two by nine and a third by ten, an old docker whose boy is on the list and says so. The branch secretary stamps the receipt without looking up. Somebody has to say what the seat is for, so you do.
 - Partial — *One backer, and the branch's* — One from the street and the branch's own, which the secretary says counts, this once. The receipt is stamped. The list gets a new line in your hand: *talked to the streets. Mostly.*
 - Failure — *The hall, not the streets* — The meeting argues about the canteen for an hour and nobody puts a name to yours. You walk home with the receipt unstamped and ten marks in the same pocket. Tuesday is still Tuesday. The doors are still there.
-- Knock-on lines: *Keepsake: Your receipt for ten marks* · *Chapter 4, "The count": from {date}, after your first council seat*
+- Knock-on lines: *Keepsake: Your line on the list* · *Chapter 4, "The count": from {date}, after a completed council term* (chapter 4's requirement is **a completed council term**, GDD §17.1 and `slice-8-life.md`; *after your first council seat* until 14 Oct 2026)
 
 Every text is under 240 characters and four sentences. The keepsake comes on every outcome, as before.
 

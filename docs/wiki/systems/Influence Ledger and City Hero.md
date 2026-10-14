@@ -40,7 +40,7 @@ count the biggest contributor in each level bracket becomes **City Hero** (in a 
 - **Issue awards** use the same machinery: the owning party's top five contributors by momentum get
   4 PC each ([[Issues of the Week]]).
 - **The faction scoreboard (slice 6, designed):** the Faction tab ranks members by *Moved* (positive
-  swings summed across cities) and *Events* joined, for **this week** (Monday to Monday) and **all
+  swings summed across cities), *Events* joined and *Heroes* (titles won in the period), for **this week** (Monday to Monday) and **all
   time** (*this season* from slice 8), per level bracket, with a city filter. Members only.
 
 ## Where it lives
@@ -81,14 +81,15 @@ count the biggest contributor in each level bracket becomes **City Hero** (in a 
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **Scoreboard columns.** GDD §14.5 names two columns, *Moved* and *Events*. ADR 0042 (§Context)
-> lists *Moved*, *Events* **and heroes**. Unbuilt, so nothing in code yet.
-
 - **Ledger rows for losses (QA slice 4, n3, still open):** persuasion writes a row only for the
   gaining party. When Neutral is at its floor and rivals lose share, their losses have no row, so a
-  fold of the ledger would not reproduce the meter. Harmless at today's numbers; the QA report asks
-  for one line in ADR 0028. See [[qa/slice-4-report|QA slice-4 report]].
+  fold of the ledger would not reproduce the meter. Harmless at today's numbers. Since 14 Oct 2026
+  [[adr/0028-influence-ledger-contributions-and-awards|ADR 0028]]'s amendment records the limit and
+  lists the choice as a **decision for slice 6** ([[tech/slice-6|tech/slice-6]] §22.1): (a) write the
+  losers' rows too, or (b) call the ledger an attribution log; default (a) if the slice-6 screens show
+  losses per party. See [[qa/slice-4-report|QA slice-4 report]].
+- The scoreboard's columns now agree: GDD §14.5 names *Moved*, *Events* and *Heroes*, as ADR 0042
+  does (fixed 14 Oct 2026).
 
 ## Related
 

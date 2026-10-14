@@ -88,14 +88,11 @@ the voice of the player's home city. One tap dismisses it; it can be reopened an
   on visitors to the capital.
 - [[Voting Rework]], 10 Oct 2026: the row becomes *Council rule*; the seat's front page shows the
   three rule cards, not the count table.
+- 14 Oct 2026 (drift cleanup): GDD §3.3's slice-4, slice-5 and slice-7 paragraphs now agree with
+  local editions (a visitor on rival ground or in Clearwater reads their own paper in that city's
+  edition; the Courier is the lake resident's paper).
 
 ## Open questions / drift
-
-> [!warning] Drift
-> **GDD §3.3 (slice 5 paragraph) vs review 4.** The slice-5 paragraph still says *a visitor on
-> rival ground reads their own home paper*, and the slice-4 text says capital visitors read the
-> Herald. The review-4 paragraph (local editions) says those sentences are superseded, but they
-> are still in the section.
 
 > [!note] Inference
 > The slice-1 `hl.away` deck says *Rested is full*. After two days away that is true for any

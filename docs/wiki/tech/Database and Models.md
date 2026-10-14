@@ -43,6 +43,8 @@ start. The server logs the counts of 008 and 009.
 | `008-review4` | Review-4 steps (old drafts reset, `card.at`, the `held_cells_now` index…) |
 | `009-voting-rework` | Deposits still due are refunded once |
 
+**Planned** (in the tech docs, renumbered 14 Oct 2026): `010-slice6-together` ([[tech/slice-6|tech/slice-6]] §5.6), `011-slice7-nation` ([[tech/slice-7|tech/slice-7]] §5.10), `012-slice8-life` ([[tech/slice-8|tech/slice-8]] §5.7, with the Legacy back-fill), `013-slice9-launch` ([[tech/slice-9|tech/slice-9]] §5.14). They were numbered 008–011 before review 4 and the voting rework took 008 and 009.
+
 **Seed** (`src/seed.ts`, `seed(content)`): one `cities` state document per content city with its
 baseline opinion, `$setOnInsert` only, so it never changes live state. The server seeds itself
 outside production; production would run `pnpm seed` once.
@@ -113,11 +115,10 @@ file its own database. Used by Vitest global setups, `DB_MODE=memory` and `pnpm 
 [[adr/0028-influence-ledger-contributions-and-awards|0028]] ledger ·
 [[adr/0032-run-ins-pending-step-and-luck|0032]], [[adr/0033-heat-health-record-held-lazy|0033]] risk state.
 
-> [!warning] Drift
-> Plan §5 lists collections the code never made: `directives` (orders are computed and embedded,
-> ADR 0009) and `items` (a content catalogue, ADR 0014); and `cities (locations embedded)`
-> (ADR 0003 keeps places in content). The rule ballot model is `RuleBallot` but its collection is
-> still named `ordinances` (by design, voting rework).
+> [!note] Naming
+> The rule ballot model is `RuleBallot` but its collection is still named `ordinances` (by design,
+> voting rework). Plan §5 now matches the code (no `directives` or `items` collection; cities hold
+> state only; fixed 14 Oct 2026).
 
 ## Related
 

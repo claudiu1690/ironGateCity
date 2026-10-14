@@ -6,7 +6,7 @@ tags: [politics, council, voting]
 status: built
 slice: "3 (home council); 4 (capital districts); review 4 (Town Hall); reworked in the voting rework (10–12 Oct 2026)"
 gdd: ["§2", "§15.1", "§15.3", "§15.10", "§14.11"]
-adrs: ["0019", "0020", "0077", "0083", "0084", "0085", "0086"]
+adrs: ["0018", "0019", "0020", "0021", "0077", "0083", "0084", "0085", "0086"]
 updated: 2026-10-14
 ---
 
@@ -59,7 +59,7 @@ rule (see *What it replaced* below).
 
 ## Where it lives
 
-**Rules:** [[GDD#15.3 City Councils|GDD §15.3]] · [[GDD#15.10 NPC fill: politics at any population|GDD §15.10]] · [[design/voting-simplified|design: voting simplified]] (§3 the model, §4 the screens, §8.6–§8.12 settled wording) · [[tech/voting-rework|tech: voting rework]] · [[qa/voting-rework-report|QA report]] · [[adr/0083-the-town-votes-on-a-rule-three-cards-set-at-day-2|ADR 0083]] (the rule vote, three cards set at day 2) · [[adr/0084-seats-by-reputation-and-backers-standing-is-spent-with-a-rule|ADR 0084]] (seats, standing, backing) · [[adr/0085-the-contested-citys-rule-is-the-largest-blocs|ADR 0085]] (the capital's largest bloc) · [[adr/0086-converting-a-city-to-the-rule-vote|ADR 0086]] (the conversion, migration 009) · [[adr/0019-secret-ballot-numbered-box|ADR 0019]] (one `votes` row per voter, secret at the API) · [[adr/0020-council-records-collections-and-projections|ADR 0020]] (council records in their own collections) · [[adr/0077-the-town-hall-an-always-open-place-and-the-councils-public-view|ADR 0077]] (the Town Hall). Older background: [[design/slice-3-politics|slice 3 design]], [[design/slice-4-battleground|slice 4 design §8]].
+**Rules:** [[GDD#15.3 City Councils|GDD §15.3]] · [[GDD#15.10 NPC fill: politics at any population|GDD §15.10]] · [[design/voting-simplified|design: voting simplified]] (§3 the model, §4 the screens, §8.6–§8.12 settled wording) · [[tech/voting-rework|tech: voting rework]] · [[qa/voting-rework-report|QA report]] · [[adr/0083-the-town-votes-on-a-rule-three-cards-set-at-day-2|ADR 0083]] (the rule vote, three cards set at day 2) · [[adr/0084-seats-by-reputation-and-backers-standing-is-spent-with-a-rule|ADR 0084]] (seats, standing, backing) · [[adr/0085-the-contested-citys-rule-is-the-largest-blocs|ADR 0085]] (the capital's largest bloc) · [[adr/0086-converting-a-city-to-the-rule-vote|ADR 0086]] (the conversion, migration 009) · [[adr/0018-political-acts-set-once-with-request-keys|ADR 0018]] (political acts set once; request kinds `council.declare`, `.endorse`, `.vote`, `.setRule`, amended 14 Oct 2026) · [[adr/0019-secret-ballot-numbered-box|ADR 0019]] (one `votes` row per voter, secret at the API; amended by ADR 0083 §4) · [[adr/0020-council-records-collections-and-projections|ADR 0020]] (council records in their own collections; superseded in part by ADR 0083/0084) · [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]] (the eleven ordinances' effects) · [[adr/0077-the-town-hall-an-always-open-place-and-the-councils-public-view|ADR 0077]] (the Town Hall). Older background: [[design/slice-3-politics|slice 3 design]], [[design/slice-4-battleground|slice 4 design §8]].
 
 **Code:**
 - Rules: `packages/rules/src/calendar.ts` (`councilDay`, `boundaryWork` → `{ count, set }`) · `ruleBallot.ts` (`homeBallot`, `partyCardOf`, `capitalBallot`, `decideHomeRule`) · `council.ts` (`countSeats`, `freezeList`, `wardVote`, `backersOf`) · `capitalCount.ts` (`districtScores`, `dhondt`, `cardBallots`, `decideCapitalRule`) · `COUNCIL`, `CAPITAL_COUNCIL` in `constants.ts`
@@ -81,17 +81,12 @@ rule (see *What it replaced* below).
 - **A shared card's votes split equally** for the score (with the architect, 10 Oct 2026).
 - **The count morning's order stays** (personal lines first) and the east-of-UTC strings stand (design §8.12, 12 Oct 2026).
 - **The ballot stays secret** (no running totals; Appendix C #25 is the first lever if turnout reads low).
+- **One menu of eleven rules for every city** (GDD §15.3, as built; the Tram Subsidy was the capital's extra row). The GDD's menu table, §2's City Day row, §14.11's residence paragraph, §15.10 (`candidates.ts`), Appendix C #24 (closed), the code comments and ADRs 0018–0021 were brought in line with the rework on 14 Oct 2026 (drift cleanup).
 
 ## Open questions / drift
 
-> [!warning] Drift
-> **The menu size.** GDD §15.3's home-city menu table lists **ten** ordinances and says Tram Subsidy "returns in slice 4"; its capital bullet says the capital's menu is "the home menu plus Tram Subsidy". But the stand card and rule sheet say **eleven rows**, and the code gives every city all eleven (`ordinancesMenu()` and `irongateMenu()` in `packages/content/src/load.ts` both return all of `ordinances.ts`; home locals carry `ord.tram-subsidy`).
-
-> [!warning] Drift
-> GDD §15.10 says each home local's rule is in **`people.ts`**; it is in `packages/content/src/data/candidates.ts` (`people.ts` has none). [[design/voting-simplified|voting-simplified Appendix A]] names `candidates.ts` correctly.
-
-> [!warning] Drift
-> Old-model words left in sources: GDD §2 (City Day row: "every day some city counts, seats a council or **divides on an ordinance**"); GDD §14.11 *Residence* ("two endorsements…", a filed candidacy "withdrawn at the move (the deposit stays with the branch)"); GDD Appendix C #24 (the small-branch endorsement rule, removed 10 Oct) still reads as live; code comments in `packages/rules/src/constants.ts` (`CAPITAL_COUNCIL`: "six to pass") and `packages/db/src/models/city.ts` (`paperId`: "the order paper that passed it"). [[adr/0019-secret-ballot-numbered-box|ADR 0019]] and [[adr/0020-council-records-collections-and-projections|ADR 0020]] still describe candidate ballots, deposits and order papers; ADR 0083/0084 amend them, but the old ADR texts carry no pointer.
+- Open (designer, 14 Oct 2026): confirm the party's chain as slice 7 builds it (`partyCardOf` in [[tech/slice-7|tech/slice-7]]: Governor → Chair → secretary at home; Mayor → top-seated player councillor → Chair → secretary in a contested city) against the GDD wording.
+- What rule runs between a season's rollover and the next count: see [[Political Seasons]].
 
 > [!note] Inference
 > The rule voted on in cycle k runs in cycle k + 1, while a different council sits. ADR 0083 states this as intended; nothing in play tests whether players read it as surprising.

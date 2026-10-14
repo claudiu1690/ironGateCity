@@ -6,7 +6,7 @@ tags: [tech, rules]
 status: built
 slice: "0; grown every slice to 5, review rounds, voting rework"
 gdd: ["§8.4", "§5.5", "§6"]
-adrs: ["0002", "0005", "0021", "0030", "0033"]
+adrs: ["0002", "0005", "0021", "0030", "0033", "0087"]
 updated: 2026-10-14
 ---
 
@@ -28,7 +28,8 @@ types the server builds and the client renders).
   `next()`, `int(min, max)`, `roll100()`. The same seed always gives the same rolls, so a stored
   seed can replay any result.
 - **Where seeds come from** (server): `keySeed(characterId, idempotencyKey)` in
-  `apps/server/src/services/keyGuard.ts` (HMAC-SHA256 with a per-process salt). A re-run of the
+  `apps/server/src/services/keyGuard.ts` (HMAC-SHA256 with a per-process salt;
+  [[adr/0087-roll-seeds-derived-from-the-request-key|ADR 0087]]). A re-run of the
   same request's transaction draws the same rolls. Named streams split one seed: `${seed}:runIn`,
   `:choice`, `:damage`, `:caught` (`runIn.ts`). World draws use their own seeds: the Issues' week
   `sha256("${cityId}:${weekDay}")` and an election's NPC jitter seed, stored with the election.
@@ -100,6 +101,8 @@ types the server builds and the client renders).
 ## Decisions (ADRs)
 
 - [[adr/0002-atomic-idempotent-actions|ADR 0002]] — results replayable from the stored seed.
+- [[adr/0087-roll-seeds-derived-from-the-request-key|ADR 0087]] — the seed derived from the request key by HMAC, never drawn fresh (amends ADR 0002).
+- [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]] was amended 14 Oct 2026 to the eleven ordinance ids and the effect kinds the code has.
 - [[adr/0021-ordinance-effects-closed-dsl-day-constant|ADR 0021]], [[adr/0030-modifier-sources-and-named-factors|ADR 0030]] — the effect DSL.
 - [[adr/0033-heat-health-record-held-lazy|ADR 0033]] — the lazy risk timers.
 - [[adr/0005-lazy-per-character-city-day|ADR 0005]], [[adr/0079-the-six-hour-game-day-one-night-seam-and-a-night-block-in-the-views|ADR 0079]] — day and night.

@@ -9,6 +9,16 @@ updated: 2026-10-14
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-14] update | Drift cleanup
+
+The user decided: bodyguards, Legacy perks and bar buffs/services are MVP (slice 8, not built yet);
+faction-only places come later; the project `CLAUDE.md` is slimmed to the rules plus wiki pointers.
+The game-designer fixed the GDD, design docs and Clearwater's content baseline (App C #108–#111
+added); the architect amended 16 ADRs, added ADR 0087, rewrote the plan as built (local until the
+end) and applied the knock-ons to tech/slice-6…9. 66 wiki pages updated to match; the
+[[Drift Report]] went from about 75 rows to 6 open; [[Decision Log]], [[Open Questions]] and
+[[index]] updated. Link check clean.
+
 ## [2026-10-14] build | The wiki is created
 
 The wiki was set up in `docs/wiki/`, with `docs/` as the Obsidian vault, modelled on the zeus-brain

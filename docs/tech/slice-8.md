@@ -4,11 +4,12 @@
 |---|---|
 | **Goal** | Goals for the next month, shown as **cards with clocks**. **The Wardrobe**: four slots (*Coat · On you · Papers · Tools*), two named outfits (*Town*, *Plain clothes*; a flat adds *Evening*), one tap to change, shops as cards on places, a catalogue of nineteen priced or earned items with three bounded effect kinds; **worn Charisma** opens society calls and gets you **recognised** on rival ground. **The Dossier** opens as the fourth tab: entries on the republic's named people, fresh for a week, three entries' worth on one name bind into a **Case File** (Level 16), and a Case File becomes **an exposé** (three steps at a newspaper), a sale at a station, or **an informant**. **Two patrons**, Edith Crane and Julius Marr: Favour 0–100 from Requests in the paper, gifts and society calls, perks at 10 / 30 / 60 / 90. **A flat**: 2,500 Iron and 150 a week prepaid, never repossessed. **Legacy**: a public, permanent record with small lasting perks. ***Finish His Work*** chapters 4–12, *Clear His Name* 2 and *Settle His Debts* 3. **The Political Season**: three terms, the Season Election, the Champion and four awards, the Hall of Fame, a rollover that resets the map halfway and nothing a player owns. **The Front** opens in Clearwater |
 | **Question** | **Do players have goals for the next month, not just the next session?** |
-| **Builds on** | Slices 0–4 as built on branch `slice-0`, **slice 5 as designed** in `docs/tech/slice-5.md` (phase B being built now), **slice 6 as designed** in `docs/tech/slice-6.md` and **slice 7 as designed** in `docs/tech/slice-7.md` (neither built). Where this document leans on a slice 5–7 name (`heat`, `held`, `runIn`, `runInChance`, `runInChances`, `yourPower`, `liveMarks`, `strikeOldest`, `missionTarget`, `MISSION_TYPES`, `resolveMission`, `encounters`, `stays`, `applyAgainst`, `rivalPressure`, `campaignEvents`, `eventSignups`, `eventService.call/withdraw/resolve`, `faction.profile`, `presence`, `contributions` faction scopes, `TERM`, `termOf`, `nation`, `settleNationDay`, `officeTerms.office`, `offices[]`, `nationalElections`, `laws`, `lawSourcesOn`, Clearwater's `cities` document), it is that design's name. If a slice's Deviations rename something, T9 follows the rename |
+| **Builds on** | Slices 0–4 as built on branch `slice-0`, **slice 5 as designed** in `docs/tech/slice-5.md` (phase B being built now), **slice 6 as designed** in `docs/tech/slice-6.md` and **slice 7 as designed** in `docs/tech/slice-7.md` (neither built). Where this document leans on a slice 5–7 name (`heat`, `held`, `runIn`, `runInChance`, `runInChances`, `yourPower`, `liveMarks`, `strikeOldest`, `missionTarget`, `MISSION_TYPES`, `resolveMission`, `encounters`, `stays`, `applyAgainst`, `rivalPressure`, `campaignEvents`, `eventSignups`, `eventService.call/withdraw/resolve`, `faction.profile`, `presence`, `contributions` faction scopes, `TERM`, `termOf`, `nation`, `settleNationDay`, `officeTerms.office`, `offices[]`, `nationalElections`, `laws`, `lawSourcesOn`, Clearwater's `cities` document), it is that design's name. If a slice's Deviations rename something, T9 follows the rename. Slices 0–5, reviews 4–5 and the voting rework (ADR 0073–0086) are now built; their knock-ons were applied to this document on 14 Oct 2026 (dated notes at the end) |
 | **Design inputs** | `docs/design/slice-8-life.md` (*design §n*) · `docs/design/slice-8-screens.md` (*screens §n*) · `docs/design/inventory-research.md` (*research §n*) · `docs/economy.md` §22 · GDD §1.5, §3.3, §6.3, §6.4, §6.7, §8.2, §8.4, §10, §11.3, §11.4, §13.1, §13.3, §13.6, §14.1, §14.12, §16.2, §17.1–§17.4, §18.3, §19.3, §20.3, §21, §22, Appendix C #63, #71, #74–#81 · `docs/IMPLEMENTATION_PLAN.md` · ADR 0002, 0008, 0009, 0013, 0014, 0017, 0020, 0021, 0025, 0028, 0030–0034, 0036, 0037, 0040, 0042–0044, 0048 |
 | **ADRs** | [0051 the Wardrobe](../adr/0051-wardrobe-four-slots-outfits-and-shops.md) · [0052 personal modifiers and recognition](../adr/0052-personal-modifiers-items-perks-and-recognition.md) · [0053 the Dossier](../adr/0053-dossier-entries-collection-counted-not-stored.md) · [0054 the exposé](../adr/0054-expose-a-story-at-the-press.md) · [0055 patrons](../adr/0055-patrons-favour-and-requests-by-the-calendar.md) · [0056 the flat](../adr/0056-the-flat-prepaid-rent-as-a-day-key.md) · [0057 Legacy](../adr/0057-legacy-entries-by-natural-ref-credited-in-character-transactions.md) · [0058 the season](../adr/0058-the-political-season-calendar-score-finale-and-rollover.md) |
 | **Defaults taken** (design §20, pending the user) | **No weapon slot and no weapon items** · **Crane and Marr** as the two patrons · **three fixed outfit names** · **an exposé's Failure keeps the Case File** · **the flat alone** as a priced home · **+100 per national election** in the season score · **no season track and no twist** in season 1 · **Blackmail and Denounce deferred** |
 | **Environment** | **Local only** until the end of the project. Everything is played in `pnpm dev:mem` with the dev panel (§8.7). An 84-day season is played on the test clock (`POST /api/test/season`, §8.6). No hosting work |
+| **Added scope (14 Oct 2026, the user's decision), still to be designed** | **Bodyguards** (prepaid contracts, GDD §12) and **bar services with the buffs they give** (*Buy a Round* → *In Good Spirits*, the bar meal → *Well-Fed*; GDD §6.7, §19.3) are MVP and join this slice. **Legacy perks** were already in it (§6.9). The game-designer updates the GDD and the slice-8 design; this document gains their models, procedures and tasks before the build (§1.1). Until then nothing below covers them |
 
 Every number below is a GDD, design or economy number. Where the design leaves a point open, this document states a default and lists the question in §22.
 
@@ -21,25 +22,36 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 - **The Wardrobe** (design §3, screens §2–§5):
   - four slots (`clothing`, `accessory`, `document`, `utility`); the Coat slot is never empty;
   - outfits *Town*, *Plain clothes* and *Evening* (the third with a paid flat), one tap to change, explicit saving, locked in the cells, the infirmary and on a train, with the journey's *Change into plain clothes* applied at arrival;
-  - worn Charisma = the origin's base + the coat + what is on you + 2 in the city of a paid flat;
+  - worn Charisma = the origin's base (0 for every character created since review 4; older characters keep theirs) + the coat (every new character wears it) + what is on you + 2 in the city of a paid flat;
   - the catalogue: nineteen wearable or usable items, ten keepsakes, three effect kinds (`chancePct`, `fxpPct`, `dossierChance`), bounds enforced by the loader;
   - **shops** as cards on places (the clothes stall, the party store, the tailor, the press, the back room), one of each item, the record's surcharge, buy-back at a tenth with a confirm;
   - **the back room's bribe** (500 / 1,000 / 2,000 a mark, one a day, half price under Marr's discretion);
   - **the coat in a run-in** (power and damage from the worn coat's armour) and **the Papers slot** at the checkpoint and in *Talk your way out*.
 - **Charisma cuts both ways** (design §3.6–§3.7): **society calls** (a tier-2 mission type `social`, the door ten under the figure), six calls; **recognition** on rival ground added to every run-in roll; a recognised visitor counted by the home faction's presence.
-- **The Front opens** (design §3.7, §16.3): four places, eight tier-1 actions, four calls, the back room at the Casino, the tailor and Marr at the Pier Hotel.
+- **The Front opens** (design §3.7, §16.3) by its places leaving Clearwater's `laterPins` and becoming locations (review 4: Clearwater is one map, no quarter view): four places, eight tier-1 actions, four calls, the back room at the Casino, the tailor and Marr at the Pier Hotel.
 - **The Dossier** (design §4): the tab; names; entries from eight sources; capacity by Intelligence and perks; freshness; **Case Files** at Level 16; **selling** at a station; **informants**; the **Headline Story** with a Case File attached.
 - **The exposé** (design §4.5): three steps at a `press` place, one a day, resumable; the swing against the name's party in the name's town; the front page with the author's name.
 - **Patrons** (design §5): Crane and Marr; Favour; **Requests** in the paper; gifts; the perks of four tiers (gossip, introductions and informants, the weekly favour, the endorsement and the patron's piece).
 - **The home** (design §6): the rented room's +10 Rested at every boundary for everyone; **the flat** (buy, rent, the lapse that waits, *Evening*, +25, the cap, +2 Charisma).
-- **Legacy** (design §7): the record (fourteen kinds of entry), the balance to spend, eight lasting perks.
+- **Legacy** (design §7): the record (fourteen kinds of entry, plus the Unrest prize's +2 from review 5), the balance to spend, eight lasting perks.
 - **Ambitions** (design §8): *Finish His Work* 4–12 and its completion; *Clear His Name* 2; *Settle His Debts* 3.
 - **The Political Season** (design §9): the calendar, the running score, the Season Election, the Champion, four awards, the Hall of Fame, the rollover.
 - **The paper** (design §10): seventeen personal lines, the Letters row (Requests, informants, gossip), the desk's Dossier, Patrons, Where you sleep and Ahead rows, the season's lines and front page, the exposé's public line.
 - **Art**: eighteen new item entries (eight new pictures; the standard coat reuses `item.winter-coat`), four scenes (`flat`, `casino`, `lido`, `front-page`), location scenes for the Casino and the Lido.
 - **The dev panel and test hooks** for the slice (§8.6–§8.7), and the playtest report's **life** section (§15.2).
 
-**Out** (§19): weapons; crafting; player trading; Blackmail and Denounce; the other three patrons; the townhouse, the villa, a second flat and the map marker; the season track and Season Twists (the twist multiplier is wired, no twist exists); the Well-Fed, *Lodged* and *Weatherproof* buffs; Charisma's vote appeal on the national score; Political Protection; players as Dossier names; hosting.
+**Out** (§19): weapons; crafting; player trading; Blackmail and Denounce; the other three patrons; the townhouse, the villa, a second flat and the map marker; the season track and Season Twists (the twist multiplier is wired, no twist exists); the *Lodged* and *Weatherproof* buffs (the Well-Fed buffs and *In Good Spirits* are added scope, §1.1); a Legacy for a rule that won (not designed; voting rework); Charisma's vote appeal on the national score; Political Protection; players as Dossier names; hosting.
+
+### 1.1 Added scope: bodyguards and bar services (14 Oct 2026, to be designed)
+
+The user moved three things from the plan's *After the MVP* list into this slice. Legacy perks are already designed here (§6.9, ADR 0057). The other two have **no technical design yet**; they need the game-designer's GDD and slice-8 design update first, then this section grows into full sections (content, data, rules, API, modal, tasks), and probably a short ADR each.
+
+| Added | GDD today | What the technical design will have to settle (architect, after the designer) |
+|---|---|---|
+| **Bodyguards** | §12 (prepaid 7-day contracts; hired at Vanguard House, safehouses or the back room) | Where a contract lives (an embedded `bodyguard { until, tier }` on the character is the likely shape: one at a time, read every run-in); how it enters the run-in (a named row in `runInChance` or in combat, as the coat's armour is); what *prepaid, never dismissed by absence* means for a lapse (a day key, as the flat's rent, ADR 0056); where they are hired now that Vanguard House's gym is after the MVP (the back room, the party store, a new shop kind) |
+| **Bar services and buffs** | §6.7 (Well-Fed tiers, *In Good Spirits*), §19.3 (Buy a Round, the bar meal, Bribe the Barman, Overhear, Stimulant, Recruitment) | Which services are in; a buff as lazy state (`buffs { wellFed: { tier, until }, spirits: { left } }` on the character, value + timestamp, no job); how a buff enters rewards (a named part, as items do through `PersonalModifiers`, ADR 0052); the bar's sheet as another place card (review 4's slot) |
+
+Nothing in §2–§20 below covers these two yet. The plan's §5 row for slice 8 notes them.
 
 ---
 
@@ -66,7 +78,7 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 | Legacy | **`legacyEntries` collection** with a unique `{ characterId, ref }` (`term:{id}`, `award:{id}`, `expose:{logId}`, `champion:{season}` …) and **embedded `legacy { total, spent, perks, seasonCredited }`**. Every entry is inserted in a character transaction (an act, or the settlement for terms, awards and seasons), so `total` and the rows never disagree | ADR 0057 (Q8) |
 | Chapter requirements | `characters.milestones` (first Chair vote, first national vote, first list, first Case File, completed terms by office, the first deputy term's day), kept by the acts and the settlement, so `chapterStatus` stays pure on the character | §5.9 |
 | The season | `seasonOf(day)` from `TERM.epochDay` (84 days); **the running score on `nation.season`** (one read every request already pays); **`seasons` documents** at the finale (the Hall of Fame). The Champion's and awards' Legacy is **credited lazily** by each member's settlement | ADR 0058 (Q9) |
-| The rollover | Split by owner: **each city's boundary into season day 0** moves its meters halfway and ends its council rule (last step, after the count); **the nation's day** seats the Season Election, adds its +100, writes the season, ends the laws; **Heat to 0 is lazy** (a Heat stamped before the season's start projects as 0 from it) | ADR 0058 (Q9) |
+| The rollover | Split by owner: **each city's boundary into season day 0** moves its meters halfway and ends its council rule (last step, after the count; **whether the rollover may end a rule at all is the user's call**, since the voting rework says a city always has a rule: drift row A9, ADR 0058's amendment); **the nation's day** seats the Season Election, adds its +100, writes the season, ends the laws; **Heat to 0 is lazy** (a Heat stamped before the season's start projects as 0 from it) | ADR 0058 (Q9) |
 | Awards | Read at the finale from what already exists: a new contributions scope `season|{s}` (Top of the ledger), `awards` (Hero titles), `eventSignups` (Triumphs as Speaker or Organiser), `dossierEntries.used` (the spymaster) | ADR 0058 |
 | The council counts | The Protégé's +2 and *A name they know*'s +1 a level join `CountLine.bonus` at home; the Protégé's +1 point of score a `scoreBonus` on the party in a battleground count. Read from the candidates' characters at the count (read only) | §6.11 |
 | Routes | `/dossier`, `/dossier/expose`, `/republic/hall`; the Me tab's blocks; sheets on places (shop, sell, station, patron) and on the Me tab (slot chooser, wardrobe) | §12.1 |
@@ -403,12 +415,13 @@ Content += {
 - **Items.** Ids unique; a `clothing` item has a tier; every `effects` entry inside `ITEM_EFFECT_BOUNDS` (`chancePct` 5–10, `fxpPct` 5, `dossierChance` 5–15), **at most one `chancePct` per `on`**, `against` only on `bluff`; **no item has an Energy, Iron, Rested or opinion effect** (the kinds do not exist); `price` only on non-keepsakes; the kit's items (`factions[].kit`), the origin's coat and every keepsake have no price; `keepsakeFrom` on every keepsake a chapter or patron grants; the CHA of each slot within its band (clothing 2–50, accessory 2–10, document and utility 0).
 - **Not catalogued:** no item id or art names the revolver or the truncheon (a content test greps `revolver`, `truncheon`, `weapon` in `items.ts` and `art.ts`).
 - **Shops.** A `clothesStall` on a `market`, a `partyStore` on a `faction-hq` and only that faction's items (or `members` items), a `tailor` on a `hotel` or a `bar`, a `press` on a `press`, a `backRoom` (with `bribe`) on a `bar`; every item a shop sells has a price; every priced item is sold by at least one shop; design §3.5's table reproduced place by place.
-- **The Front.** `clearwater.front` loses its teaser; four places with pins equal to `mapPins.clearwater`, kinds as slice 7's table (Promenade `square`, Casino `bar`, Lido `square`, Pier Hotel `hotel`), two tier-1 actions each at difficulty 10 (design §16.3) and the four calls; the Casino carries the back room, the Pier Hotel the tailor and `patronId: 'marr'`.
+- **The Front.** Its four places leave Clearwater's `laterPins` and become locations (review 4: no quarter); four places with pins equal to `mapPins.clearwater`, kinds as slice 7's table (Promenade `square`, Casino `bar`, Lido `square`, Pier Hotel `hotel`), two tier-1 actions each at difficulty 10 (design §16.3) and the four calls; the Casino carries the back room, the Pier Hotel the tailor and `patronId: 'marr'`.
 - **Society calls.** Six, type `social`, Energy 15, `difficulty = society.needs` (15, 20, 10, 15, 12, 20), no `pool`, Level 10, three ways (CHA · CHA+INT · best); *The late table* at the Casino with `needs` 25, `favour` 3, `entry: 'onSuccess'`, `requires.patron: marr/associate`; *The morgue file* at Herald House: surveillance, Level 10, difficulty 20, `dossier.subject: 'choose'`, `requires.patron: crane/associate`.
 - **Patrons.** Two; `locationId` a place of `cityId` carrying the same `patronId`; six Requests each (design §16.5 word for word); every Request's match parses with the extended fields and names real ids; `piece` a wearable keepsake with `keepsakeFrom.patronId`; `introduction` a mission with the matching `requires.patron`.
 - **Names.** Every drawn name has a party and a town; ids unique across candidates, secretaries, deputies, figures and `extraNames`; a capital name has a district (deputies and figures: `irongate.government-quarter`); every Request's `{district}` rotation has names in each of the five districts.
 - **Dossier lines.** Four per category; placeholders only from §4.3.
-- **Chapters.** *Finish His Work* 4–12 (difficulties 18–26, Energy 20–30, rewards as design §8's table, the keepsakes, ch 7's `favour`, ch 12's `completes` and `acc.his-rosette`), *Clear His Name* 2 (with `dossier: npc.brandauer / political`, the Agility way's Heat 6), *Settle His Debts* 3 (choice B `iron: 100`, the Agility way's Heat 6); every keepsake has `keepsakeFrom`.
+- **Chapters.** *Finish His Work* 4–12 (difficulties 18–26, Energy 20–30, rewards as design §8's table, the keepsakes, ch 7's `favour`, ch 12's `completes` and `acc.his-rosette`), *Clear His Name* 2 (with `dossier: npc.brandauer / political`, the Agility way's Heat 6), *Settle His Debts* 3 (choice B `iron: 100`, the Agility way's Heat 6); every keepsake has `keepsakeFrom`. The strings are review 5's (*The Names on the Stone*, *Who Sold the Homes*, *The Ration Ledger*; the dated note at the end lists them); ids are unchanged. `outfit.fathers-coat-promised` is no longer granted (review 4: every new character wears the coat), so the keepsakes list and the content check drop it.
+- **Jobs** (review 5's ladder). The Market trader, when the Wardrobe places it, is Level 3 · Intelligence 10 · `dailyPay: 240`; the Level-6 rung it adds is 320. The rung test covers each.
 - **Vocabulary.** Both QA guards over every new string; the slice's refused words (§12.4); *The Front* keeps its allowance.
 
 ### 4.3 Placeholders
@@ -493,7 +506,7 @@ Indexes:
   ref: string,                         // 'term:{termId}' · 'award:{awardId}' · 'pledge:{termId}:{lawId}'
                                        // 'survived:{electionId|billId}' · 'expose:{logId}' · 'protege:{patronId}'
                                        // 'ambition:{ambitionId}' · 'champion:{season}' · 'award:{season}:{kind}:{bracket}'
-                                       // 'backfill:…' (migration 010)
+                                       // 'backfill:…' (migration 012)
   kind: 'hero' | 'councilTerm' | 'issueTopFive' | 'pledge' | 'governorTerm' | 'deputyTerm' | 'chairTerm'
       | 'presidentTerm' | 'survived' | 'ambition' | 'expose' | 'protege' | 'champion' | 'seasonAward',
   points: number,
@@ -546,7 +559,7 @@ Written only by the nation's day (the running score at every boundary, the final
 - **`journeys`**: `dress: 'plain' | null`.
 - **`actionLogs`**: `kind` += `'expose'`; a mission log of type `social`; the Dossier knock-on in `result`.
 - **`influenceLedger`**: `kind` += `'expose'`, `'season'` (system source: the rollover).
-- **`cities`**, **`districts`**: no new fields (the rollover writes the meters and cuts the council's rule in force); Clearwater's Front is content.
+- **`cities`**, **`districts`**: no new fields (the rollover writes the meters and, pending the user's call on A9, cuts the council's rule in force); Clearwater's Front is content.
 - **`requestLogs`**: `REQUEST_KINDS` += §18's.
 - **`laws`**: `endedBy` += `'season'`.
 
@@ -593,16 +606,16 @@ Written only by the nation's day (the running score at every boundary, the final
 
 No new index on `characters`. The count's read of the candidates' `patrons.favour` and `legacy.perks.name` is by `_id`.
 
-### 5.7 Migration `010-slice8-life.ts`
+### 5.7 Migration `012-slice8-life.ts`
 
-`ensureIndexes()` runs it after 009. Idempotent: each step filters on the field's absence.
+`ensureIndexes()` runs it after 011 (renumbered 14 Oct 2026). Idempotent: each step filters on the field's absence.
 
 1. Characters without `outfits`: `equipment.accessory/utility: null`; `outfits.town` = the worn set; `outfits.plain` = `{ clothing: the kit outfit's uid, document: the party card's uid, accessory: null, utility: null }` (the kit's instances already in the inventory, ADR 0014); `outfits.evening: null`; `lastOutfit: 'town'`; `patrons: []`; `home: { flat: null }`; `legacy: { total: 0, spent: 0, perks: all 0, seasonCredited: null }`; `milestones` (below); `expose: null`; `dossierBurns: []`; `dossierLastAt: null`; `today.calls: []`, `gifts: []`, `expose: false`, `bribe: false`.
 2. **Milestones from history**: `chairVoteAt` and `nationalVoteAt` from `votes` (the first of each key space), `listAt` from `candidacies` (`kind: 'list'`), `completed` from `officeTerms` (`completed: true`, by office), `deputyFromDay` from the first `deputy` term.
 3. **The Legacy backfill** (§22.1 Q41): for each character, `legacyEntries` from completed `officeTerms` (council 3, governor 5, chair 10, deputy 5, president 40; `ref: term:{id}`) and from `awards` (hero 2, Issue top five 2; `ref: award:{id}`), with their days; `legacy.total` = the sum. Unique refs make a second run a no-op.
 4. `nation`: `season` from the current day (`first` = `index` when the season has not been counted, the running control from `controlLog` within the season), `lastSeason: null`.
 
-A test runs 010 twice (no change the second time) and checks a backfilled total against the ledger of a seeded history.
+A test runs 012 twice (no change the second time) and checks a backfilled total against the ledger of a seeded history.
 
 ---
 
@@ -718,6 +731,7 @@ export type HeldOffice = 'none' | 'council' | 'governor' | 'chair' | 'deputy' | 
 export const highestOffice = (offices: ReadonlyArray<{ office: Office }>) => HeldOffice;    // the projection: current only
 export interface Recognition { total: number; cha: number; office: number; legacy: number; night: boolean; plain: boolean }
 export function recognition(i: { wornCha: number; night: boolean; office: HeldOffice; legacy: number }): Recognition;
+//  night = nightAt(now).night at the act (review 5, ADR 0079: the last two hours of each six-hour day)
 //  cha = wornCha ≥ 30 ? 10 : wornCha ≥ 20 ? 5 : 0 · office = 5 / 10 / 10 / 15 / 15
 //  plain (wornCha < 10): cha = 0, office = floor(office / 2)
 //  total = (cha + office) × (night ? 2 : 1) + min(5, floor(legacy / 10))      (§22.1 Q14)
@@ -836,7 +850,9 @@ export function legacyFromWindow(i: {
   settled: DayKey; today: DayKey;
   terms: ReadonlyArray<{ id; office: Office; toDay: DayKey; completed: boolean; cityId: string | null;
                          pledges?: Array<{ lawId; keptDay: DayKey | null }> }>;
-  awards: ReadonlyArray<{ id; kind: 'hero' | 'issue'; day }>;              // credited by this settlement (ADR 0028)
+  awards: ReadonlyArray<{ id; kind: 'hero' | 'issue' | 'unrest'; ref?: string; day }>;   // credited by this settlement (ADR 0028)
+  //  review 5: the Unrest prize's award (`ref: 'unrest|{cityId}|{entry}'`) gives Legacy +2 under the same natural ref
+  //  (ADR 0057), credited in the settlement that credits the award (GDD §14.11; the entry's words are the designer's)
   survived: ReadonlyArray<{ ref: string; day }>;
 }): Array<{ ref; kind: LegacyKind; points; day; params }>;
 //  a term whose toDay is a boundary in the window and completed → its office's row; a pledge kept in the window;
@@ -920,7 +936,7 @@ All in `types.ts` (§8.3, §10). `GameErrorReason` gains:
 - **The exposé:** `exposeDifficulty` (3 → 18, 3.5 → 18, 4 → 16, 5 → 14, headline +1, the capital +2); `exposeSwing` (plain → Neutral entirely, headline half and half, ×1.5 tagged, 0 on a Failure); `applyToNeutral` at a home floor of 50; `exposeRewards` with Rested.
 - **Patrons:** `addFavour` with the perk (+6 → 7, +2 → 3, +1 → 2) and the cap; tiers crossed at 10 / 30 / 60 / 90; `patronDays` from a first visit over 30 days (arrivals every two days, never three open, expiry at the fourth boundary, the rotation with `req.crane.print` skipped below Level 16, gossip on Mondays from Acquaintance); a Request done on its last day paid at the next boundary; economy §22.5's three players' tier days (± a day); `requestMatches` for each of the twelve Requests' descriptors; `favourReady` at 6 and 7 days.
 - **The home:** `restAtBoundary` (10, 25, 10 the morning after it lapses, 25 the first night after paying); `flatCounts` when living elsewhere; `payRent` paid and lapsed (no arrears); the cap with a room and a flat (250, not 300), with the perk (300).
-- **Legacy:** `legacyFromWindow` for every kind in a three-day absence (terms ending inside and outside the window, a vacated term, two awards, a pledge); `seasonCredits` with 13 and 14 days of tenure; every `perkGate`; economy §22.7's model (15 by day 30).
+- **Legacy:** `legacyFromWindow` for every kind in a three-day absence (terms ending inside and outside the window, a vacated term, two awards, the Unrest prize's +2 under `unrest|{cityId}|{entry}` once, a pledge); `seasonCredits` with 13 and 14 days of tenure; every `perkGate`; economy §22.7's model (15 by day 30).
 - **The season:** `seasonOf` at the epoch, at 83 / 84 and before the epoch; season day 0 is a Monday and a term day 0 for 100 seasons; `seasonReset` (a district at 50 / 20 / 10 / 20 against 30 / 25 / 20 / 25 → 40 / 22.5 / 15 / 22.5; a home floor); `seasonScores` with economy §22.8's figures; `champion` ties at each level; `awardWinner` ties to the earlier; `heatAt` across a season's start.
 - **Counts:** `countElection` with a Protégé (+2) and *A name they know* ×3 (+3) changing the seventh seat; `districtScores` with `scoreBonus`.
 - **Settlement:** `settleDays` with the Monday perk inside and outside the 14 paid days; `projectEnergyThrough` with `restOn` over three boundaries (banked once each, capped).
@@ -1246,7 +1262,7 @@ No modal shows a percentage for odds; every count is a real number.
 | `/dossier` | the tab bar's fourth tab (*Soon* until now): the header, the chips **Names · Case Files · Informants** (`?tab=`) (§6) | `dossier.get`, `dossier.seen` on open |
 | `/dossier/expose` | the exposé's `StoryScreen`, steps 1–2, then the modal (§7) | `expose.get`, `.choose`, `.attempt` |
 | `/republic/hall` | the Hall of Fame (§11.2) | `season.hall` |
-| `/city/$cityId…` place sheets | `PatronCard` (first under the tickets where present), `ShopCard`(s), the back room's row, `SellSheet`, `StationSellCard` and its sheet, the press place's exposé ticket, society call tickets; the Front's four places (§4, §6.3, §8.1, §14) | `city.get`, `shop.*`, `dossier.sell`, `patron.*`, `mission.start` |
+| `/city/$cityId…` place sheets | every card below goes in the place sheet's card slot (`cards`, review 4's `docs/tech/review-4.md` §3.1; slice 8's shops were already named last in its order): `PatronCard` (first under the tickets where present), `ShopCard`(s), the back room's row, `SellSheet`, `StationSellCard` and its sheet, the press place's exposé ticket, society call tickets; the Front's four places (§4, §6.3, §8.1, §14) | `city.get`, `shop.*`, `dossier.sell`, `patron.*`, `mission.start` |
 | `/journey` | the *Change into plain clothes* line and the warning (§13) | `travel.journey`, `wardrobe.dressOnArrival` |
 | `/map/nation` | the republic sheet's `SeasonCard` with *The Hall of Fame* (§11.1) | `nation.get` |
 | `/paper` | Letters (Requests, informants, gossip), the desk's new rows and `ClockRow`, *In Print*, the season's front page (§12) | `paper.today` |
@@ -1259,7 +1275,7 @@ No modal shows a percentage for odds; every count is a real number.
 
 ### 12.2 `packages/ui` additions (plain props, no tRPC)
 
-New (screens §1): `WardrobeBlock`, `OutfitChips`, `SlotCard`, `SlotChooser`, `ItemCard`, `ShopCard`, `SellSheet`, `WardrobeSheet`, `DossierTab`, `NameCard`, `EntryRow`, `CaseFileCard`, `InformantRow`, `ExposeStory` (a `StoryScreen` with step 1's file picker), `StationSellCard`, `PatronCard`, `PatronClock`, `RequestRow`, `HomeCard`, `LegacyBlock`, `LegacyEntryRow`, `PerkRow`, `SeasonCard`, `HallOfFamePage`, `ClockRow` (the three-segment clock glyph shared by `NameCard`). Changed: `Ticket` (item tags, *Recognised · run-ins likelier* / *Plain clothes · unnoticed*, *MISSION · SOCIETY*, *Not dressed for it*), `Plate` (*RECOGNISED HERE*), `ResultModal` (the exposé's three stamps, the new knock-ons), `ProfileSheet` (*Legacy {n}*, titles), `Paper` (Letters rows, desk rows, the season front page), `ResidenceCard` (*Where you sleep*), `JourneyScreen` (the dress line), `TabBar` (*Dossier*). The item words (`chancePct` by `on` → *better odds watching and listening* …) live in `copy.ts` and are composed by the server into `ItemCardView.words`.
+New (screens §1): `WardrobeBlock`, `OutfitChips`, `SlotCard`, `SlotChooser`, `ItemCard`, `ShopCard`, `SellSheet`, `WardrobeSheet`, `DossierTab`, `NameCard`, `EntryRow`, `CaseFileCard`, `InformantRow`, `ExposeStory` (a `StoryScreen` with step 1's file picker), `StationSellCard`, `PatronCard`, `PatronClock`, `RequestRow`, `HomeCard`, `LegacyBlock`, `LegacyEntryRow`, `PerkRow`, `SeasonCard`, `HallOfFamePage`, `ClockRow` (the three-segment clock glyph shared by `NameCard`). Changed: `Ticket` (item tags, *Recognised · run-ins likelier* / *Plain clothes · unnoticed*, *MISSION · SOCIETY*, *Not dressed for it*), `Plate` (*RECOGNISED HERE*), `ResultModal` (the exposé's three stamps, the new knock-ons), `ProfileSheet` (*Legacy {n}*, titles), `Paper` (Letters rows, desk rows, the season front page), `ResidenceCard` (its second line is *Where you sleep* only; lodgings are their own place card since review 4), `JourneyScreen` (the dress line), `TabBar` (*Dossier*). The item words (`chancePct` by `on` → *better odds watching and listening* …) live in `copy.ts` and are composed by the server into `ItemCardView.words`.
 
 ### 12.3 Layout checks (screens §16)
 
@@ -1320,7 +1336,7 @@ The pictures are in `art-direction/mvp/` now: eight new item drawings (`items/*.
 - **Crops:** items are square and need none, except **the badge** (the disc sits left of centre with a stray object at the right edge: a `crop` on the asset to the disc's square, chosen in the dev viewer, or a redraw). Scenes keep the full frame with a `focus` where the subject is off-centre (the bed, the cashier's window, the bandstand, the pressman's hands).
 - **Content policy** (design §15, §19): checked when wired. The steward's jacket's redraw has a plain collar; the rosette has no device and only cream and dark ribbon; the press pass's *PRESS* is the one word the design allows; **the badge is blue**, which reads as one party's colour on a picture *drawn once* for all three (§22.1 Q34). The art build's review list records each.
 - **Budget:** eighteen items at two widths (~10–20 kB each in AVIF, ~0.5 MB in all) and four scenes (~0.6 MB), measured after `pnpm art:build` and recorded in the Deviations. No new ADR (ADR 0015's per-slice rule).
-- **Maps:** none new. The Front's four pins exist in `mapPins.clearwater`; its quarter outline is slice 7's; only its teaser line goes.
+- **Maps:** none new. The Front's four pins exist in `mapPins.clearwater`; they leave `laterPins` (review 4: Clearwater has no quarter outlines).
 
 ---
 
@@ -1350,10 +1366,10 @@ The pictures are in `art-direction/mvp/` now: eight new item drawings (`items/*.
 |---|---|
 | Rules | §6.13 |
 | Content | The real data validates. A failing fixture for every §4.2 check: an item at `chancePct 12`, two `chancePct` on one `on`, a priced keepsake, a kit item with a price, a priced item no shop sells, a back room on a `market`, a party store selling another party's coat, a social mission whose difficulty is not its `needs`, a Request with an unknown location, a drawn name without a party, a capital name without a district, a chapter keepsake without `keepsakeFrom`, a catalogued revolver. Word-for-word comparisons with both design documents (the catalogue, the shops, the Front's places, actions and texts, the calls, the patrons and Requests, the Dossier lines, the chapters, the lines, the modals, the help notes). The vocabulary guards |
-| DB | The three collections' indexes; migration 010 twice; the Legacy backfill against a seeded history; the unique `{ characterId, ref }` refuses a duplicate; a transaction over `characters`, `dossierEntries`, `legacyEntries`, `districts`, `influenceLedger`, `contributions`, `issues`, `actionLogs` commits |
+| DB | The three collections' indexes; migration 012 twice; the Legacy backfill against a seeded history; the unique `{ characterId, ref }` refuses a duplicate; a transaction over `characters`, `dossierEntries`, `legacyEntries`, `districts`, `influenceLedger`, `contributions`, `issues`, `actionLogs` commits |
 | Server — the Wardrobe | wear, take off, the three outfits, *Keep this as*, Evening locked after a lapse, locked in the cells and on a train; dressing on arrival by the lazy path and by the job; worn Charisma with the flat in and out of its city; a party coat's +5 % on an action's Party XP |
 | Server — shops | buy (each refusal, the surcharge at *Repeat offender* and *Notorious*, one of each), sell (a tenth; a saved coat falls back to the kit; worn refused), the bribe (the price by level, one a day, half under the discretion), the first coat's headline |
-| Server — rival ground | recognition in a run-in's chance (dev status) for a Governor in a greatcoat at 20:00 and 19:59, in plain clothes, with Legacy 50; the forged papers at the checkpoint and against the police; a recognised visitor counted by the home faction and invisible by name |
+| Server — rival ground | recognition in a run-in's chance (dev status) for a Governor in a greatcoat at 22:00 and 21:59 (review 5's night), in plain clothes, with Legacy 50; the forged papers at the checkpoint and against the police; a recognised visitor counted by the home faction and invisible by name |
 | Server — the Dossier | each of the eight sources lands an entry at its chance with the forced hook, and the press pass and camera raise the tap's chance; a full Dossier refuses; four parallel landings at 61 of 62 → one lands; binding (all on the name, the weight, one file per name); selling at a station; turning (the Associate rule, two at most); informant reports across a five-day absence (twice, once each); gossip on Mondays from Acquaintance; stale-tomorrow facts |
 | Server — the exposé | step 1 set-once; resuming after a reload; step 2 in each outcome: the swing in the name's district (the capital), Clearwater's meter, a home city with the 2-point cap; plain → Neutral; headline split; Rested; the Issue tag with a fixture feed; Legacy +2 once on a retry; the file kept on a Failure; one a day; the burn; the public line in another player's paper; the Headline Story with a file (+50 %, the name, spent at resolution; returned when the caller withdraws) |
 | Server — patrons and calls | the six calls (the door, once a day, the Favour, one entry in four, no run-in, no Heat, no Party XP); the late table and the morgue file behind Associate; visit, Requests arriving every two days over a twelve-day absence (never three, expired at four, paid once), every Request's matcher through its real act; gifts; the favours (the planted headline's momentum; the discretion's Heat 0 and half-price bribe); Protégé's piece and Legacy; the endorsement in a home count and a battleground count |
@@ -1456,7 +1472,8 @@ Run on `pnpm dev:mem` with the dev panel and the season hooks; testers across th
 | Voss, Draganov and Reinholt; halved Favour for a rival-leaning patron; "two active patrons" | GDD §17.2, §25: the next patron batch |
 | The townhouse, the villa, a second flat, the home's map marker | GDD §17.4, §25 |
 | The season track (free and premium), Season Twists | Appendix C #80; the twist's swing multiplier is a parameter with no source |
-| Well-Fed, *Lodged*, *Weatherproof*, *In Good Spirits* | GDD §6.7: not built |
+| *Lodged*, *Weatherproof* | GDD §6.7: not built (the Well-Fed buffs and *In Good Spirits* are added scope, §1.1) |
+| A Legacy entry for a rule that won | Not designed (voting rework §17) |
 | Charisma's and Legacy's appeal on the national score; Notorious's −5 % vote appeal; the Protégé's "+1 % national" | Not pinned for slice 8 (GDD §8.2 points it at slice 9) |
 | The society venues' record and Heat rules (*Wanted* barred, *On file* +5 Charisma) | Not pinned by the design (§22.1 Q11) |
 | Political Protection (Rank 4) | GDD §11.4 |
@@ -1498,7 +1515,7 @@ Run on `pnpm dev:mem` with the dev panel and the season hooks; testers across th
 
 **T7. Art.** §13's twenty-two catalogue entries, `Location.scene` on the Casino and the Lido, `content.art.lifeScenes`, the badge's crop, `pnpm art:build`, the budget measured and recorded. *Done when:* `art:check` passes, the dev viewer shows all twenty-two with their crops and focus points, and the designer has confirmed the alt texts and the content-policy read (the jacket's collar, the rosette, the badge's colour).
 
-**T8. DB.** The three new models and their indexes (§5.1–§5.3), the changed fields and enums (`nation`, `contributions`, `campaignEvents`, `journeys`, `actionLogs`, `influenceLedger`, `requestLogs`, `laws`, `characters`), migration 010 with the milestones and the Legacy backfill. *Done when:* migration 010 run twice changes nothing the second time, the backfill equals a seeded history's sum, the unique `{ characterId, ref }` refuses a duplicate, and a transaction over every touched collection commits on the memory replica set.
+**T8. DB.** The three new models and their indexes (§5.1–§5.3), the changed fields and enums (`nation`, `contributions`, `campaignEvents`, `journeys`, `actionLogs`, `influenceLedger`, `requestLogs`, `laws`, `characters`), migration 012 with the milestones and the Legacy backfill. *Done when:* migration 012 run twice changes nothing the second time, the backfill equals a seeded history's sum, the unique `{ characterId, ref }` refuses a duplicate, and a transaction over every touched collection commits on the memory replica set.
 
 ### Phase B — the server
 
@@ -1637,7 +1654,7 @@ Run on `pnpm dev:mem` with the dev panel and the season hooks; testers across th
 
 **Legacy and the season**
 
-41. **The backfill.** **Default:** migration 010 writes past entries from completed terms and Hero and Issue awards, with their days. **Settled** (design §21.1 #41).
+41. **The backfill.** **Default:** migration 012 writes past entries from completed terms and Hero and Issue awards, with their days. **Settled** (design §21.1 #41).
 42. **"In the faction for 14 days."** **Default:** the character is at least 14 days old at the confirmation (switching is not built). **Settled** (design §21.1 #42).
 43. **The Champion's ties.** **Default:** more national elections won in the season, then the higher control share at the last boundary, then the seeded draw. **Settled** (design §21.1 #43).
 44. ***A name they know* in a battleground count.** **Default:** home counts only, as the design pins it. **Settled** (design §21.1 #44).
@@ -1696,7 +1713,7 @@ None blocks the build. Defaults taken:
 
 ## Review 4 knock-ons (dated note, 7 Oct 2026)
 
-Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-4.md` §20 when review 4 was built (ADRs 0073–0078). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - Worn Charisma's "the origin's base" is 0 for every character from review 4 (old characters keep theirs). Every new character wears the coat. `outfit.fathers-coat-promised` is no longer granted (the keepsakes list and the content check).
 - **The Front opens** by its places leaving `laterPins` (they become locations); no quarter view.
@@ -1714,7 +1731,7 @@ The opening is *Coming home* (GDD §7.1; `docs/design/review-5-answers.md` §19)
 
 ## Review 5 knock-ons: the night, the patrol, the Unrest prize (dated note, 10 Oct 2026)
 
-Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). Read them before this slice is built; where they disagree with the sections above, they win.
+Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–0082). **Applied to the sections above on 14 Oct 2026** (drift row A17); kept here as the record.
 
 - **Recognition at night** reads `nightAt` at the act. Its test times *at 20:00 and 19:59* (§1356) become 22:00 and 21:59.
 - **Legacy +2** for the Unrest prize: a legacy entry by the natural ref `unrest|{cityId}|{entry}` (ADR 0057), credited in the settlement that credits the award.
@@ -1724,7 +1741,7 @@ Copied from `docs/tech/review-5.md` §18 when review 5 was built (ADRs 0079–00
 
 ## Voting rework knock-on (dated note, 12 Oct 2026)
 
-From `docs/tech/voting-rework.md` §17 (ADRs 0083–0086): Legacy for a seat or a term is unchanged. A Legacy for a *rule that won* is not designed and is out of this slice.
+From `docs/tech/voting-rework.md` §17 (ADRs 0083–0086; **applied to the sections above on 14 Oct 2026**): Legacy for a seat or a term is unchanged. A Legacy for a *rule that won* is not designed and is out of this slice.
 
 ## Deviations (as built)
 

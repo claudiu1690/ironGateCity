@@ -1,6 +1,10 @@
 # ADR 0033 — Heat, Health, the record, the cells and the infirmary: lazy state on the character, `stays` as history, release on read
 
-**Status:** accepted, built in slice 5 · **Date:** 2026-10-03
+**Status:** accepted, built in slice 5; amended 2026-10-14 (Health on the HUD) · **Date:** 2026-10-03
+
+## Amendment (14 Oct 2026)
+
+**Health is always shown on the HUD**, at full too (review 4, GDD §6.1; built in `packages/ui/src/components/HudBar.tsx`; review 5 set the order Energy · Health · Heat · XP · Party XP). The first consequence's "Health only below full" is superseded; Heat is still shown only above 0. Storing *damage* rather than value (decision 1) still stands for its other reason: a level-up never leaves a full-Health player below full.
 
 ## Context
 

@@ -39,7 +39,7 @@ The hospital (the player reads **the infirmary**) is where a lost [[Run-ins and 
 
 ## Status
 
-Built: the infirmary ([[Slice 5 Risk|slice 5]]) and *Get patched up* ([[Review 5]] fix round; QA found it atomic, [[qa/review-5-report|QA review 5]]). **Not built:** visits (slice 6); the Antidote and Recovery Boost (buffs, slice 8 or later); hospital storylets and ward Dossier entries (slice 8); price changes by who controls the city (slice 7).
+Built: the infirmary ([[Slice 5 Risk|slice 5]]) and *Get patched up* ([[Review 5]] fix round; QA found it atomic, [[qa/review-5-report|QA review 5]]). **Not built:** visits (slice 6); ward Dossier entries from *Talk to the ward* (slice 8); price changes by who controls the city (designed, **no slice**: [[GDD#Appendix C — Open questions|Appendix C #109]]). **Not in the MVP:** the Antidote and the Recovery Boost (GDD §19.1 since 14 Oct 2026); hospital storylets beyond the ward tap are not designed.
 
 ## Decisions
 
@@ -49,7 +49,7 @@ Built: the infirmary ([[Slice 5 Risk|slice 5]]) and *Get patched up* ([[Review 5
 ## Open questions / drift
 
 - None open. QA slice 5's n10 (the max-Health formula) is fixed: GDD §6.1 now reads 100 + 5 × (Level − 1), as the code does.
-- The GDD §19.1 table still lists the v3.0 rows (*Full Recovery*, *Early Discharge*, the Antidote, the Recovery Boost) and v3.0 control effects (Vanguard +25 % cost, Collective −50 %); the slice-5 paragraph is what is built.
+- GDD §19.1's table now matches what is built (fixed 14 Oct 2026): ***Walk out well*** (5 Energy, 100 Iron), ***Discharge yourself*** (5 Energy), ***Talk to the ward*** (3 Energy) and ***Get patched up***. The v3.0 control prices (Vanguard +25 %, Collective −50 %) are kept as a control effect with no slice (Appendix C #109). Dropping the Antidote and Recovery Boost was the game-designer's call; the user has not confirmed it.
 
 ## Related
 

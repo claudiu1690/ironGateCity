@@ -38,8 +38,7 @@ From [[design/review-2-answers|the design answers]] (GDD §0, *Added 30 Sep 2026
 - **An Election card** on the city screen and in the paper: the phase in plain words, what you can do now, a countdown, one button; every political act ends in a result and a next step. See [[City Council and the Rule Vote]].
 - The map rules (centred sheet on desktop, pan only when zoomed, no free zoom) went to the developer. **Free zoom was given back in [[Review 3]].**
 
-> [!warning] Drift
-> The answers proposed an edit to project `CLAUDE.md` design rule 2 ([[design/review-2-answers|answers §1.3]], "The user decides on the edit"). `CLAUDE.md` rule 2 still tells writers to use *canvass, rally, speech, exposé…*, which §1.5 now keeps off every screen. No record shows the user's answer.
+The answers proposed an edit to project `CLAUDE.md` design rule 2 ([[design/review-2-answers|answers §1.3]], "The user decides on the edit"). Since 14 Oct 2026 rule 2 says the design uses the campaign terms while **players read plain words** (GDD §1.5).
 
 ## What was built
 

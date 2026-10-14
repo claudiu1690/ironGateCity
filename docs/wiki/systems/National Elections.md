@@ -56,16 +56,12 @@ designed for slice 7 and **not built**.
 - **The weight at thirty ballots** answers Appendix C #2 nationally (the capital's rule at three times the scale).
 - **The list is ordered by backers** (Appendix C #72).
 - **Linked accounts count once, silently; the audit confirms itself at day 0** (Appendix C #82, #83; slice 9).
+- 14 Oct 2026 (drift cleanup): [[adr/0047-elections-above-the-council-reuse-the-box|ADR 0047]] amended (no backers, no deposits, no small-branch rule), matching GDD §15.4. Personal vote appeal gathered into one place in GDD §15.5.
 
 ## Open questions / drift
 
-> [!warning] Drift
-> [[adr/0047-elections-above-the-council-reuse-the-box|ADR 0047]] still describes the Chair's election with *two backers*, deposits and slice 3's *small-branch rule*. GDD §15.4 and the dated note in `docs/tech/slice-7.md` remove the two-backer gate and the deposit. The ADR was not amended.
-
 - Appendix C #2 (is 50 / 50 right at low population?) and #5 (season length) stay open.
-
-> [!warning] Drift
-> **Personal vote appeal.** GDD §15.5 says the candidate's CHA and Legacy appeal (up to +5) "arrives with the Wardrobe and Legacy (slice 8)". GDD §8 says "every 10 CHA gives +1 % to your personal vote appeal; slice 7's national score reads it from slice 9's audit work"; §11 gives *Notorious* "−5 % personal vote appeal"; §17.3 pins a Legacy perk as "+1 to the ward vote per level in a home count". The sources disagree on the slice, and the national score formula in §15.5 has no appeal term.
+- **Personal vote appeal** ([[GDD#Appendix C — Open questions|Appendix C #108]]): §8.2 (+1 % per 10 worn Charisma), §11.3 (*Notorious* −5 %) and §17.3 (*A name they know*) are now one term, `appeal`, that **slice 8 adds** to a candidate's own count (a home total, a battleground total, the President's ballot). Until then no formula has an appeal term and nothing built reads one. How the percentages become points on a total and on a party's score is pinned with slice 8.
 
 ## Related
 
