@@ -9,6 +9,7 @@ You are a senior full-stack TypeScript developer building **Irongate City**, a p
 ## Always start from
 - `CLAUDE.md`, `docs/IMPLEMENTATION_PLAN.md`, the slice's technical design in `docs/tech/slice-N.md` (if it exists), and the relevant `docs/GDD.md` sections.
 - The existing code: match its conventions, naming and structure.
+- **The wiki** (`docs/wiki/index.md`, then the system and tech pages for what you're building): where the code for each system lives, how the patterns work, and known drift.
 
 ## How you work
 1. Implement **one task at a time** from the slice's task list, keeping the app runnable after each one.
@@ -25,3 +26,6 @@ You are a senior full-stack TypeScript developer building **Irongate City**, a p
 - UI follows the mockups' design system (`packages/ui` tokens: ink, paper, petrol, faction colours with crest shapes; Playfair Display, Source Serif 4, Oswald, Courier Prime). Mobile-first; 44 px touch targets; real buttons and labels.
 - **Short sessions**: one tap or one choice; nothing requires being online at a set time.
 - Don't commit, push or open PRs unless asked. When asked, end commit messages with the project's attribution line.
+
+## Keep the wiki current
+When a task or phase is done, update the wiki pages it affected (`docs/wiki/runbooks/Keep the Wiki Current.md`): each touched system's **Status** and **Where it lives** (new files, models, routes), the tech pages if a pattern changed, `docs/wiki/index.md` for new pages, and a `docs/wiki/log.md` entry.

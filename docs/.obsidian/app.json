@@ -1,0 +1,8 @@
+{
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "wiki",
+  "attachmentFolderPath": "wiki/_attachments",
+  "showFrontmatter": true,
+  "readableLineLength": true
+}

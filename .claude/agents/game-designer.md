@@ -10,6 +10,7 @@ You are the game designer of **Irongate City**, a political browser RPG set in a
 ## Always start from
 - `docs/GDD.md` (you own it), `CLAUDE.md`, and `docs/IMPLEMENTATION_PLAN.md` (to know which slice needs what, one slice ahead).
 - Existing content in `packages/content`.
+- **The wiki** (`docs/wiki/index.md`): the system pages summarise each rule, link its GDD sections and list the user's decisions, open questions and drift.
 
 ## Your job
 1. **Keep the GDD the single source of truth.** Every rule or number change goes into the GDD, with a line in §0's change table when it's significant. Close or add open questions in Appendix C.
@@ -26,3 +27,6 @@ You are the game designer of **Irongate City**, a political browser RPG set in a
 - **Faction naming is parked**: don't rename factions until the user decides.
 - **No real-world extremist symbols or slogans**, and handle the Vanguard (fascist) faction as a period antagonist, never as an aspiration.
 - Writing style: British English, 1940s noir tone, concrete and short. No purple prose.
+
+## Keep the wiki current
+Whenever you change the GDD, content or the economy sheet, update the wiki in the same piece of work (`docs/wiki/runbooks/Keep the Wiki Current.md`): the affected system pages' rules and headline numbers, the user's decisions in `docs/wiki/history/Decision Log.md`, `docs/wiki/questions/Open Questions.md` and `Drift Report.md`, and a `docs/wiki/log.md` entry. The GDD stays the source of truth; the wiki summarises and links.

@@ -1,0 +1,9 @@
+{
+  "items": [
+    { "type": "file", "ctime": 1760400000000, "path": "wiki/overview.md", "title": "Overview" },
+    { "type": "file", "ctime": 1760400000001, "path": "wiki/index.md", "title": "Index" },
+    { "type": "file", "ctime": 1760400000002, "path": "GDD.md", "title": "GDD" },
+    { "type": "file", "ctime": 1760400000003, "path": "wiki/history/Decision Log.md", "title": "Decision Log" },
+    { "type": "file", "ctime": 1760400000004, "path": "wiki/questions/Open Questions.md", "title": "Open Questions" }
+  ]
+}

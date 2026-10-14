@@ -1,0 +1,31 @@
+{
+  "collapse-filter": false,
+  "search": "path:wiki -path:wiki/_templates",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    { "query": "path:wiki/systems", "color": { "a": 1, "rgb": 12088115 } },
+    { "query": "path:wiki/entities", "color": { "a": 1, "rgb": 3381555 } },
+    { "query": "path:wiki/tech", "color": { "a": 1, "rgb": 3364300 } },
+    { "query": "path:wiki/history", "color": { "a": 1, "rgb": 10066329 } },
+    { "query": "path:wiki/runbooks", "color": { "a": 1, "rgb": 13408512 } },
+    { "query": "path:wiki/questions", "color": { "a": 1, "rgb": 14431557 } },
+    { "query": "path:adr", "color": { "a": 1, "rgb": 6710937 } },
+    { "query": "file:GDD", "color": { "a": 1, "rgb": 16766720 } }
+  ],
+  "collapse-display": true,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": true,
+  "centerStrength": 0.5,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250,
+  "scale": 1,
+  "close": false
+}

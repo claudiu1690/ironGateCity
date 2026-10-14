@@ -16,3 +16,9 @@ blob-report/
 
 # Map tile pyramids (ADR 0024, pnpm art:tiles): generated, hundreds of MB, never committed
 .art-cache/
+
+# Obsidian (docs/ is the vault): per-machine UI state; the rest of docs/.obsidian is shared
+docs/.obsidian/workspace.json
+docs/.obsidian/workspace-mobile.json
+docs/.obsidian/cache
+docs/.trash/

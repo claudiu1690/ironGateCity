@@ -1,0 +1,64 @@
+---
+type: system
+title: Patronage and Favours
+aliases: [Patronage, Patrons, Patron, Favour, Favours, Requests, The welcome favour, Edith Crane, Julius Marr]
+tags: [story, long-term, slice-8]
+status: partly built
+slice: "the welcome favour built (review 4, re-strung review 5); mates' favours designed for 6; patrons designed for 8"
+gdd: ["§17.2", "§13.7", "§19.1", "§19.2"]
+adrs: ["0055", "0041", "0073"]
+updated: 2026-10-14
+---
+
+# Patronage and Favours
+
+## In one paragraph
+
+"Favour" means three different things in Irongate, and this page covers all three. **Patronage** is the slow one: each city has a powerful NPC **patron** you cultivate over real days, earning **Favour** (0–100) that unlocks gossip, introductions, a weekly favour and finally an endorsement. **Favours between faction mates** (slice 6) are posting a mate's bail and visiting a mate in the infirmary. **The welcome favour** is your very first action: the errand you agreed to in the opening, done at your party's HQ. Only the welcome favour is built.
+
+## How it works
+
+**Patronage** ([[GDD#17.2 Patronage (new)|GDD §17.2]]; designed for slice 8):
+- **Five patrons in the GDD, two in the MVP:** **Edith Crane**, owner of the *Irongate Herald* (Herald House), and **Julius Marr**, banker (the Pier Hotel, Clearwater). Both are neutral and in battlegrounds, so every faction courts them on the same terms. Voss, Draganov and Reinholt follow after the MVP.
+- **Favour never decays.** It comes from a **Request** done (**+6**; a letter in the paper's Letters row; one every second day after your first visit, two held at most, each expires at its fourth boundary), **a gift** (+2, 200 Iron, once a day), **a society call** in the patron's town (+2; [[Missions]]) and chapters that name the patron (+5). A devoted player gains 5–7 a day.
+- **Tiers:** **Acquaintance 10** (gossip: a free Dossier entry every Monday) · **Associate 30** (an introduction: Crane's *The morgue file*, Marr's *The late table*; informants, [[The Dossier]]) · **Confidant 60** (a favour once a week for Political Capital: Crane plants a headline, +50 momentum on an Issue; Marr's *discretion*: Heat to 0 and the back-room bribe half price for a week) · **Protégé 90** (an endorsement in council counts; the patron's piece, CHA 8; **Legacy +5**).
+- **Away:** Favour stands, Requests expire, informants keep reporting. Opportunity, never loss.
+
+**Favours between mates** (designed, slice 6; [[adr/0041-favours-across-two-characters-one-release-path|ADR 0041]]):
+- **Post bail** for a faction mate from anywhere: pay their own bail figure, they are out at once, you get +10 Party XP ([[Jail and the Cells]]).
+- **Visit** a mate in the infirmary (3 Energy): +10 Health and five minutes off their stay; three visits count; +10 Party XP ([[Hospital and Treatment]]).
+
+**The welcome favour** (built; [[adr/0073-the-last-train-in-faction-as-an-answer-and-a-welcome-only-favour|ADR 0073]]):
+- **Slot B of the welcome set** ([[Party Orders]]): a one-off ticket at your HQ, `use: 'welcome'`, type `council` (best-stat check), **10 Energy, difficulty 8**, with the committee session's rewards.
+- Since review 5 the three are ***Sign on*** at the Union Hall (Collective), ***Get the stamp*** at Beacon House (Vanguard) and ***File the appeal*** at the Assembly Rooms (Alliance), each following from the opening's first beat ([[Coming Home]]).
+- Offered only while today's welcome order is open; ×3 refused (`ONCE_ONLY`), otherwise `NOT_OFFERED`. The first landing opens the HQ's pin with the favour highlighted.
+
+## Where it lives
+
+**Rules:** [[GDD#17.2 Patronage (new)|GDD §17.2]] · [[GDD#13.7 Party Directives (new)|§13.7]] (the welcome set) · [[design/slice-8-life#5. Patrons (GDD §17.2, two for the MVP)|slice-8 design §5]] (and §16.5 Requests) · [[design/slice-6-together|slice-6 design §9]] · [[design/review-4-answers|review-4 answers §2.6]] · [[design/review-5-answers|review-5 answers §19.5]] · [[adr/0055-patrons-favour-and-requests-by-the-calendar|ADR 0055]] (proposed) · [[adr/0041-favours-across-two-characters-one-release-path|ADR 0041]] (proposed) · [[adr/0073-the-last-train-in-faction-as-an-answer-and-a-welcome-only-favour|ADR 0073]]
+
+**Code:**
+- Welcome favour: the `*.favour` tickets in `packages/content/src/data/cities/{coalport,duskwall,ashford}.ts`; the `welcome-b` templates in `orders.ts`; `use: 'welcome'` in `schemas.ts`; the offer check and `ONCE_ONLY` in `apps/server/src/services/actionService.ts`; `carriedWelcome` in `packages/rules/src/orders.ts`
+- Patrons (planned, ADR 0055): embedded `characters.patrons[]` (at most two), `patronDays` and `addFavour` in rules, Requests paid in the settlement. None exists yet.
+- Mates' favours (planned, ADR 0041): `favours.postBail`, `favours.visit`; `stays.bailPostedBy` and `visits`. None exists yet.
+
+## Status
+
+**Built:** the welcome favour ([[Review 4]] fix round, re-strung in [[Review 5]]). **Designed, not built:** mates' bail and visits ([[Slice 6 Together|slice 6]]); Crane and Marr ([[Slice 8 A Life in the City|slice 8]]). **Post-MVP:** the other three patrons, new patrons each season.
+
+## Decisions
+
+- Review 4 (6 Oct 2026): the favour you did in the opening becomes your first action.
+- Slice 8 design: two neutral patrons in battlegrounds for the MVP (Appendix C #77 on Favour's pace).
+- Appendix C #89: visits from anywhere but rival ground.
+
+## Open questions / drift
+
+> [!warning] Drift
+> [[GDD#13.7 Party Directives (new)|GDD §13.7]] still names the review-4 favours (*Deliver Holm's parcel*, *Hand out Stahl's bundle*, *Witness the signature*); content and review-5 answers §19.5 have *Sign on*, *Get the stamp*, *File the appeal*.
+
+- The GDD §17.2 tier table (Voss expunges a record point, Marr grants a loan, "+2 % council score") is the v3.1 text; the slice-8 paragraph below it is what will be built.
+
+## Related
+
+[[Party Orders]] · [[The Dossier]] · [[Legacy]] · [[Ambitions]] · [[Missions]] · [[Jail and the Cells]] · [[Hospital and Treatment]] · [[People of Irongate]] · [[Irongate]] · [[Clearwater]]

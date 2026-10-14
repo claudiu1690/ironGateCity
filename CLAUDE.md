@@ -6,6 +6,7 @@ A **political browser RPG** set in a fictional 1946 Central European republic. T
 
 | Document | What it is |
 |---|---|
+| `docs/wiki/index.md` | **The project wiki** — read first. One page per system, entity, slice and review round: how it works in plain words, where its rules (GDD §, ADRs) and code live, what's built, the user's decisions, open questions and drift. Operating manual: `docs/wiki/CLAUDE.md`. Open `docs/` as an Obsidian vault to browse it. |
 | `docs/GDD.md` | **Game Design Document v3.1** — the source of truth for every rule, number and system. Section numbers (§) are referenced everywhere. |
 | `docs/IMPLEMENTATION_PLAN.md` | **How we build it**: the stack, the repo layout, architecture rules, and slices 0–9 |
 | UI and art direction | Design canvas (mockups of every core screen): https://claude.ai/artifact/Huss4jaqe4JEs47YP3CaCy |
@@ -65,3 +66,9 @@ packages/ui      Design tokens and shared components (ticket, stamp, result moda
 | `qa` | Opus 5.5 | Verifying slices against the GDD and the plan: test plans, Vitest/Playwright tests, bug reports, playtest checklists |
 
 **Typical flow for a slice:** game-designer (content and numbers ready) → architect (technical design) → developer (build) → qa (verify, report) → developer (fix) → playtest question answered.
+
+## The wiki (`docs/wiki/`)
+
+- **Before answering a question or starting work** on a system, read `docs/wiki/index.md` and the pages it points to, then the GDD sections they link. The GDD wins on rules and numbers; the code wins on what is built.
+- **Every piece of work ends by updating the wiki** (`docs/wiki/runbooks/Keep the Wiki Current.md`): the touched system pages (status, code paths, decisions), the slice or round page, the Decision Log, Open Questions / Drift Report, `index.md` and a `log.md` entry.
+- Ask "lint the wiki" for a health check (drift between GDD, content, code and wiki; stale status; broken links).
