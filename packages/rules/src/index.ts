@@ -55,3 +55,7 @@ export * from './togetherTypes';
 // Slice 7 (docs/tech/slice-7.md §6).
 export * from './laws';
 export * from './nationTypes';
+export * from './term';
+export * from './ladder';
+export * from './national';
+export * from './parliament';
