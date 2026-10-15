@@ -148,7 +148,9 @@ export function slice5Problems(
           if (m.requires?.rank !== undefined) problems.push(`${where}: a legal mission needs no Rank`);
           if (m.target) problems.push(`${where}: a legal mission has no target`);
         }
-        if (m.target === 'leader' && !isDistricted(city)) problems.push(`${where}: \`leader\` only in a city with districts`);
+        // Slice 7: `leader` in any contested city (the capital's districts, Clearwater's one meter).
+        if (m.target === 'leader' && !isDistricted(city) && city.role !== 'battleground')
+          problems.push(`${where}: \`leader\` only in a contested city`);
         if (l.kind === 'faction-hq' && m.target && m.target !== l.factionId)
           problems.push(`${where}: a mission at an HQ targets that HQ's faction`);
         // The design's pools may be only the target's own people (the Collective's stewards at its
@@ -220,9 +222,10 @@ export function slice5Problems(
     const names = new Set(
       content.headlines.filter((h) => h.cityId === city.id).map((h) => h.id.slice(h.id.lastIndexOf('.') + 1)),
     );
-    const want = isDistricted(city) ? HERALD_RISK_HEADLINE_NAMES : RISK_HEADLINE_NAMES;
+    const contested = isDistricted(city) || city.role === 'battleground';
+    const want = contested ? HERALD_RISK_HEADLINE_NAMES : RISK_HEADLINE_NAMES;
     for (const n of want) if (!names.has(n)) problems.push(`cities.${city.id}: the paper has no "${n}" headline`);
-    if (isDistricted(city))
+    if (contested)
       for (const n of ['quarter-open', 'rival-pressure'])
         if (names.has(n)) problems.push(`cities.${city.id}: the Herald has no "${n}" headline`);
   }

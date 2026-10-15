@@ -133,6 +133,15 @@ export const NATION_PERSONAL_PLACEHOLDERS = [
   'yourScore',
   'pickName',
   'orderTitle',
+  // The designer's T8 lines (15 Oct 2026).
+  'lawLine',
+  'forVotes',
+  'needed',
+  'days',
+  'votes',
+  'signatures',
+  'target',
+  'reason',
   // Shared with the base set: the reader, the faction, the law named in a bill line, the time tokens.
   'name',
   'faction',
@@ -171,6 +180,7 @@ export const NATION_RESULT_PLACEHOLDERS = [
   'faction',
   'forVotes',
   'pickName',
+  'lawLine',
 ] as const;
 
 /** Slice 7's political acts (tech design §6.11); their texts are content (`politics.results`). */

@@ -512,6 +512,8 @@ export type Placeholder = (typeof PLACEHOLDERS)[number];
  * as epoch ms and are rendered in the player's clock.
  */
 export const POLITICAL_PLACEHOLDERS = [
+  /** Slice 7 (design §11.3.1): the Courier's count line names the Mayor. */
+  'governor',
   'name',
   'city',
   'paper',

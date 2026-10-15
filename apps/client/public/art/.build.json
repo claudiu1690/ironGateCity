@@ -1666,5 +1666,167 @@
     "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
     "bytes": 65370
+  },
+  "portrait.albrecht-256.avif": {
+    "sourceHash": "44f364e0ca9756ab6a69658cf6b05bb6bac4097aec04583a62d47fc34a73c73c",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 14091
+  },
+  "portrait.albrecht-512.avif": {
+    "sourceHash": "44f364e0ca9756ab6a69658cf6b05bb6bac4097aec04583a62d47fc34a73c73c",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 45,
+    "bytes": 40470
+  },
+  "portrait.albrecht-256.webp": {
+    "sourceHash": "44f364e0ca9756ab6a69658cf6b05bb6bac4097aec04583a62d47fc34a73c73c",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 19384
+  },
+  "portrait.brod-256.avif": {
+    "sourceHash": "98a313dece40c3c6e5acc9a8bfdfc7b5a03c95377313abeb757ecae76539e4e5",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 16029
+  },
+  "portrait.brod-512.avif": {
+    "sourceHash": "98a313dece40c3c6e5acc9a8bfdfc7b5a03c95377313abeb757ecae76539e4e5",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 40,
+    "bytes": 36497
+  },
+  "portrait.brod-256.webp": {
+    "sourceHash": "98a313dece40c3c6e5acc9a8bfdfc7b5a03c95377313abeb757ecae76539e4e5",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 22126
+  },
+  "portrait.faber-256.avif": {
+    "sourceHash": "c0e6b4fea20834f101ed99915e5ec08bda1efea88e7f39457ff3b0cfc93fe0d4",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 17261
+  },
+  "portrait.faber-512.avif": {
+    "sourceHash": "c0e6b4fea20834f101ed99915e5ec08bda1efea88e7f39457ff3b0cfc93fe0d4",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 40,
+    "bytes": 39558
+  },
+  "portrait.faber-256.webp": {
+    "sourceHash": "c0e6b4fea20834f101ed99915e5ec08bda1efea88e7f39457ff3b0cfc93fe0d4",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 24474
+  },
+  "scene.election-night-640.avif": {
+    "sourceHash": "193350ea8f3c63eefcffa9608d6cb351a4f9f29e907442e64ca2bed439234afa",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 37205
+  },
+  "scene.election-night-1280.avif": {
+    "sourceHash": "193350ea8f3c63eefcffa9608d6cb351a4f9f29e907442e64ca2bed439234afa",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 132376
+  },
+  "scene.election-night-640.webp": {
+    "sourceHash": "193350ea8f3c63eefcffa9608d6cb351a4f9f29e907442e64ca2bed439234afa",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 52668
+  },
+  "scene.event-town-hall-640.avif": {
+    "sourceHash": "e02ad155d0e15cfde1c272c4b245a599b35938f4a842db4c21114ae1e58caa65",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 34002
+  },
+  "scene.event-town-hall-1280.avif": {
+    "sourceHash": "e02ad155d0e15cfde1c272c4b245a599b35938f4a842db4c21114ae1e58caa65",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 120505
+  },
+  "scene.event-town-hall-640.webp": {
+    "sourceHash": "e02ad155d0e15cfde1c272c4b245a599b35938f4a842db4c21114ae1e58caa65",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 48418
+  },
+  "scene.presidents-study-640.avif": {
+    "sourceHash": "fb0418ebe77d78c804baa4b30c1c5f34f4be79bf3ea911eed383303001658663",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 29199
+  },
+  "scene.presidents-study-1280.avif": {
+    "sourceHash": "fb0418ebe77d78c804baa4b30c1c5f34f4be79bf3ea911eed383303001658663",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 114552
+  },
+  "scene.presidents-study-640.webp": {
+    "sourceHash": "fb0418ebe77d78c804baa4b30c1c5f34f4be79bf3ea911eed383303001658663",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 41804
+  },
+  "scene.parliament-640.avif": {
+    "sourceHash": "6e9babe389df02b074124edb8f3ee56d57b8b134dac412c1f64dcc00751a5f28",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 38043
+  },
+  "scene.parliament-1280.avif": {
+    "sourceHash": "6e9babe389df02b074124edb8f3ee56d57b8b134dac412c1f64dcc00751a5f28",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 120053
+  },
+  "scene.parliament-640.webp": {
+    "sourceHash": "6e9babe389df02b074124edb8f3ee56d57b8b134dac412c1f64dcc00751a5f28",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 53804
+  },
+  "map.clearwater.day-1024.avif": {
+    "sourceHash": "e0a8fd323b579a382787749b65639636198a774272cd4eb61d74706259b84c2a",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 45,
+    "bytes": 192897
+  },
+  "map.clearwater.day-2048.avif": {
+    "sourceHash": "e0a8fd323b579a382787749b65639636198a774272cd4eb61d74706259b84c2a",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 35,
+    "bytes": 533937
+  },
+  "map.clearwater.day-1024.webp": {
+    "sourceHash": "e0a8fd323b579a382787749b65639636198a774272cd4eb61d74706259b84c2a",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 48,
+    "bytes": 321910
+  },
+  "map.clearwater.night-1024.avif": {
+    "sourceHash": "80f7b9b6d8ae8a25de77c93b8729a882bbf7a084bed031ac0e5369666d312141",
+    "settings": "{\"width\":1024,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 50,
+    "bytes": 192619
+  },
+  "map.clearwater.night-2048.avif": {
+    "sourceHash": "80f7b9b6d8ae8a25de77c93b8729a882bbf7a084bed031ac0e5369666d312141",
+    "settings": "{\"width\":2048,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":35,\"step\":5}}",
+    "quality": 40,
+    "bytes": 531895
+  },
+  "map.clearwater.night-1024.webp": {
+    "sourceHash": "80f7b9b6d8ae8a25de77c93b8729a882bbf7a084bed031ac0e5369666d312141",
+    "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
+    "quality": 64,
+    "bytes": 320994
   }
 }

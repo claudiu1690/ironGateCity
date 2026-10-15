@@ -66,9 +66,11 @@ const VECTOR_BUDGET = 8 * KB;
  * Slice 5 (tech design §13): eight scenes (the five mission cards, the strike card, the infirmary and
  * the cells) and eight portraits (the opponents, the duty officer, the constable and the matron) take
  * the measured set to 18.77 MB, so 19.27 MB. Review 5 (answers §19.7): the demobilisation office's
- * scene takes the measured set to 19.35 MB, so 19.85 MB (the measured figure plus 0.5 MB).
+ * scene takes the measured set to 19.35 MB, so 19.85 MB (the measured figure plus 0.5 MB). Slice 7
+ * (tech design §13): the three figures' portraits (WebP at 256 only), four scenes and Clearwater's
+ * day and night stills (the city opens) take the measured set to 22.79 MB, so 23.29 MB.
  */
-const TOTAL_BUDGET = 19.85 * KB * KB;
+const TOTAL_BUDGET = 23.29 * KB * KB;
 
 interface ManifestEntry {
   sourceHash: string;

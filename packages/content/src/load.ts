@@ -15,6 +15,8 @@ import {
   placeholdersIn,
   LOCAL_CONDITION_KINDS,
   LOCAL_PLACEHOLDERS,
+  NATION_ACTS,
+  isNationTemplate,
 } from '@irongate/rules';
 import type {
   ChapterRules,
@@ -28,21 +30,26 @@ import type {
 } from '@irongate/rules';
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
-import { assets, avatars, missionCards, scenes } from './data/art';
-import { candidates, irongateCandidates } from './data/candidates';
+import { assets, avatars, missionCards, nationScenes, scenes } from './data/art';
+import { candidates, clearwaterCandidates, irongateCandidates } from './data/candidates';
 import { capitalHomeHeadlines } from './data/capitalHomeHeadlines';
 import { ashford } from './data/cities/ashford';
+import { clearwater } from './data/cities/clearwater';
 import { coalport } from './data/cities/coalport';
 import { duskwall } from './data/cities/duskwall';
 import { irongate } from './data/cities/irongate';
 import { factions } from './data/factions';
 import { headlines } from './data/headlines';
 import { localHeadlines } from './data/localHeadlines';
+import { courierHeadlines } from './data/courierHeadlines';
+import { laws } from './data/laws';
+import { nationHeadlines } from './data/nationHeadlines';
+import { nationalLines } from './data/nationalLines';
 import { held } from './data/held';
 import { heraldHeadlines } from './data/heraldHeadlines';
 import { issues } from './data/issues';
 import { items } from './data/items';
-import { irongateJobs, jobs } from './data/jobs';
+import { clearwaterJobs, irongateJobs, jobs } from './data/jobs';
 import { journeyEvents } from './data/journeyEvents';
 import { mapPins } from './data/mapPins';
 import { nation } from './data/nation';
@@ -94,8 +101,8 @@ import type { MissionType } from '@irongate/rules';
 /** Every data file, before validation. */
 export const rawContent: unknown = {
   factions,
-  cities: [coalport, duskwall, ashford, irongate],
-  art: { assets, scenes, missionCards },
+  cities: [coalport, duskwall, ashford, irongate, clearwater],
+  art: { assets, scenes, missionCards, nationScenes },
   tilePyramids: tiles,
   avatars,
   items,
@@ -103,7 +110,7 @@ export const rawContent: unknown = {
   ambitions,
   npcs,
   standingLevels,
-  jobs: [...jobs, ...irongateJobs],
+  jobs: [...jobs, ...irongateJobs, ...clearwaterJobs],
   orderTemplates,
   headlines: [
     ...headlines,
@@ -114,9 +121,12 @@ export const rawContent: unknown = {
     ...capitalHomeHeadlines,
     ...heraldHeadlines,
     ...localHeadlines,
+    // Slice 7 (tech design §11): the Courier's set and the personal national lines.
+    ...courierHeadlines,
+    ...nationHeadlines,
   ],
   ordinances,
-  candidates: [...candidates, ...irongateCandidates],
+  candidates: [...candidates, ...irongateCandidates, ...clearwaterCandidates],
   politics,
   nation,
   journeyEvents,
@@ -127,6 +137,9 @@ export const rawContent: unknown = {
   campaignEventTypes,
   eventVenues,
   fixtureRotation,
+  // Slice 7 (tech design §4.4).
+  laws,
+  nationalLines,
 };
 
 /**
@@ -823,7 +836,9 @@ export function parseContent(raw: unknown): Content {
     }
     if (h.id.startsWith('hl.local.')) problems.push(`headline "${h.id}": an hl.local.* line is for any city ('*')`);
     if (!cityById.has(h.cityId)) problems.push(`headline "${h.id}": city "${h.cityId}" is not loaded`);
-    if (isEventTemplate(h)) {
+    if (isNationTemplate(h)) {
+      // Slice 7: the personal national lines (their placeholders are checked in slice7Problems).
+    } else if (isEventTemplate(h)) {
       // Slice 6: the event set (its conditions are checked in slice6Problems).
       for (const p of placeholdersIn(`${h.headline} ${h.deck ?? ''}`))
         if (!ALLOWED_EVENT_PLACEHOLDERS.has(p)) problems.push(`headline "${h.id}": unknown event placeholder {${p}}`);
@@ -897,6 +912,21 @@ export function parseContent(raw: unknown): Content {
           if (!c.districtId || !city.quarters.some((q) => q.id === c.districtId))
             problems.push(`candidate "${c.id}" needs a districtId of ${city.id}`);
         }
+      } else if (city.role === 'battleground') {
+        // Slice 7 (design §9.5, ADR 0050): Clearwater, one meter: each party's list of `listSize`
+        // locals, no rule (the rule is the largest bloc's card), profiles descending per party.
+        if (city.council.seats !== 7) problems.push(`cities.${city.id}: a contested council on one meter has 7 seats`);
+        const size = city.council.listSize ?? 3;
+        for (const f of FACTION_IDS) {
+          const own = slate.filter((c) => c.factionId === f);
+          if (own.length !== size) problems.push(`cities.${city.id} has ${own.length} ${f} NPC candidates, not ${size}`);
+          own.forEach((c, i) => {
+            const prev = own[i - 1];
+            if (prev && c.profile >= prev.profile)
+              problems.push(`candidates of ${city.id} (${f}): profiles must strictly descend in file order (${c.id})`);
+          });
+        }
+        for (const c of slate) if (c.districtId !== undefined) problems.push(`candidate "${c.id}": ${city.id} has no districts`);
       } else {
         if (city.council.seats !== 7) problems.push(`cities.${city.id}: a home council has 7 seats`);
         if (slate.length !== 9) problems.push(`cities.${city.id} has ${slate.length} NPC candidates, not 9`);
@@ -946,11 +976,14 @@ export function parseContent(raw: unknown): Content {
   for (const [act, t] of [
     ...Object.entries(content.politics.results).map(([a, x]) => [`results.${a}`, x] as const),
   ]) {
+    if (!t) continue;
     const where = `politics.${act}`;
     if (t.body.length > OUTCOME_TEXT_MAX_CHARS) problems.push(`${where} is ${t.body.length} characters`);
     const n = sentenceCount(t.body);
     if (n > OUTCOME_TEXT_MAX_SENTENCES) problems.push(`${where} has ${n} sentences (at most 4)`);
-    checkPolitical(where, `${t.headline} ${t.body} ${t.next}`);
+    // Slice 7: the nation's modals have their own placeholders (slice7Problems checks them).
+    if (!(NATION_ACTS as readonly string[]).includes(act.slice('results.'.length)))
+      checkPolitical(where, `${t.headline} ${t.body} ${t.next}`);
   }
 
   problems.push(...slice4Problems(content, { cityById, locationById, actionById, ordinanceIds }));
@@ -998,7 +1031,7 @@ export function ballotFillProblems(
   const out: string[] = [];
   const menu = new Set(content.ordinances.map((o) => o.id));
   const homeIds = new Set(
-    content.cities.filter((c) => c.council && !isDistricted(c)).map((c) => c.id),
+    content.cities.filter((c) => c.council && c.role === 'home').map((c) => c.id),
   );
   for (const c of content.candidates) {
     if (homeIds.has(c.cityId)) {
@@ -1241,7 +1274,8 @@ function slice4Problems(
     }
   }
   // Slice 5 (design §12.1): the deck grows to 24.
-  if (content.issues.length !== 24) problems.push(`issues: the deck has ${content.issues.length}, not 24`);
+  // Slice 7 (design §9.6): six Clearwater Issues make the deck thirty.
+  if (content.issues.length !== 30) problems.push(`issues: the deck has ${content.issues.length}, not 30`);
   for (const city of content.cities) {
     if (!city.council) continue;
     const list = eligible.get(city.id) ?? [];
@@ -1305,9 +1339,11 @@ function slice4Problems(
     const names = new Set(
       content.headlines.filter((h) => h.cityId === city.id).map((h) => h.id.slice(h.id.lastIndexOf('.') + 1)),
     );
-    const want = isDistricted(city) ? HERALD_HEADLINE_NAMES : CAPITAL_HOME_HEADLINE_NAMES;
+    // Slice 7: Clearwater's Courier (a battleground paper) carries the Herald's set.
+    const want = isDistricted(city) || city.role === 'battleground' ? HERALD_HEADLINE_NAMES : CAPITAL_HOME_HEADLINE_NAMES;
     for (const name of want)
-      if (!names.has(name)) problems.push(`cities.${city.id}: the paper has no "${name}" headline`);
+      if (!names.has(name) && !(name === 'district-line' && !isDistricted(city)))
+        problems.push(`cities.${city.id}: the paper has no "${name}" headline`);
   }
   if (!idx.ordinanceIds.has(TRAM_SUBSIDY_ID)) problems.push(`ordinances: "${TRAM_SUBSIDY_ID}" is missing`);
   return problems;

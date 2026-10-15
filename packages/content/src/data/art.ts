@@ -59,6 +59,9 @@ function portrait(key: string, top: number, alt: string, file = key): Asset {
   };
 }
 
+/** Slice 7: an asset whose WebP fallback is written at fewer widths than its AVIF (`webpWidths`). */
+const withWebp = (a: Asset, widths: number[] = [256]): Asset => ({ ...a, webpWidths: widths });
+
 function item(id: string, file: string, alt: string): Asset {
   return { id, kind: 'item', source: `mvp/items/${file}`, width: 512, height: 512, widths: [128, 256], alt };
 }
@@ -175,6 +178,9 @@ export const assets: Asset[] = [
   cityMap('irongate', 'night', 11_520),
   cityMap('nation', 'day', 9_216),
   cityMap('nation', 'night', 9_216),
+  // Slice 7 (tech design §13, design §9.1): Clearwater opens, a one-map city (its tiles exist since maps v3).
+  cityMap('clearwater', 'day'),
+  cityMap('clearwater', 'night'),
   {
     id: 'scene.origin-deathbed',
     kind: 'scene',
@@ -513,6 +519,47 @@ export const assets: Asset[] = [
     "The matron: a woman in a white nurse's cap, dark hair pinned back, a dark cape over a white collar and apron, looking straight at you.",
     'nurse',
   ),
+  // Slice 7 (tech design §13, design §20): the parties' own figures and the nation's scenes, with the
+  // alt texts the designer checked against the pictures (design §23.8). The portraits' 512 px WebP is
+  // over budget at the q60 floor, so their fallback is written at 256 only (as the scenes' at 640).
+  // `scene.parliament` is catalogued for the chamber's pages, not bound to the `parliament` kind.
+  withWebp(
+    portrait(
+      'albrecht',
+      40,
+      "Dr Konrad Albrecht: a lean grey-haired man past sixty, a judge's severity, a dark overcoat with a velvet collar, a dark red tie, gloves in hand; columns behind.",
+    ),
+  ),
+  withWebp(
+    portrait(
+      'brod',
+      40,
+      "Hanna Brod: a woman of fifty with short grey hair, a red scarf over a dark coat, a tram conductor's cap held in both hands; a doorway behind her.",
+    ),
+  ),
+  withWebp(
+    portrait(
+      'faber',
+      40,
+      'Professor Emil Faber: a round-faced man of sixty with spectacles pushed up, a red bow tie, a tweed waistcoat, a gown on his shoulders and papers under his arm.',
+    ),
+  ),
+  scene(
+    'election-night',
+    "Market Square at night: a crowd in hats under a newspaper's lit windows, a man on a ladder chalking figures on a results board, a tram, a newsboy with papers.",
+  ),
+  scene(
+    'event-town-hall',
+    'A packed hall: a woman on her feet answering at a long table on a platform, two men seated, a jug and glasses, a man in a cap stands to ask, a reporter writing.',
+  ),
+  scene(
+    'presidents-study',
+    "A study at sunset: a tall window over the city's domes, a desk with papers and a pen under a green lamp, a wall map with five cities, a clerk at the door.",
+  ),
+  scene(
+    'parliament',
+    "The chamber under the dome: deputies on curved benches with their hands raised, galleries above, the chair and two clerks' desks below a clock.",
+  ),
   item('item.work-jacket', 'work-jacket-cap.jpg', 'A work jacket and a flat cap.'),
   item('item.mill-coat', 'collective-work-coat.jpg', 'A heavy mill work coat.'),
   item('item.worn-overcoat', 'wool-overcoat.jpg', 'A worn wool overcoat.'),
@@ -591,3 +638,13 @@ export const avatars: string[] = [
   'avatar.woman-30s',
   'avatar.man-20s-b',
 ];
+
+/**
+ * Slice 7 (tech design §13): the nation's scenes by use, so the client names no asset id: the
+ * republic's result (and the day-0 front page), the President's page header, the chamber's pages.
+ */
+export const nationScenes: NonNullable<Content['art']['nationScenes']> = {
+  result: 'scene.election-night',
+  president: 'scene.presidents-study',
+  chamber: 'scene.parliament',
+};
