@@ -253,7 +253,7 @@ export type { DeskActs, TownHallBlocksProps, WhatNowCardProps } from './componen
 export { FACTION_TABS, FactionTabs } from './components/FactionTabs';
 export type { FactionTab, FactionTabsProps } from './components/FactionTabs';
 // Slice 6 (lane B): Members, the profile, favours, the faction scoreboard, chat.
-export { FactionScoreboard, FavourSheet, MemberFace, MemberRow, ProfileSheet, favourLabel, memberStatusText } from './components/Members';
+export { FactionScoreboard, FavourSheet, MemberFace, MemberRow, ProfileSheet, Toast, favourLabel, inviteLabel, memberStatusText } from './components/Members';
 export type { FactionScoreboardProps, FavourSheetProps, MemberRowProps, ProfileSheetProps } from './components/Members';
 export { ChatLine, ChatPanel, SystemLine, chatLength, systemButtonLabel, systemLineText } from './components/Chat';
 export type { ChatPanelProps } from './components/Chat';

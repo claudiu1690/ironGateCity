@@ -41,7 +41,7 @@ test.describe.configure({ mode: 'serial' });
 let A_NAME = '';
 let B_NAME = '';
 
-test('bail from the chat line, out on the branch\'s Iron; a visit on the ward; Ask to join lands for you', async ({ browser }) => {
+test('bail from the chat line, out on the branch\'s Iron; a visit on the ward; the invite lands for you', async ({ browser }) => {
   test.setTimeout(240_000);
   // Unique per run (a repeated run shares the server's database, and names are unique).
   A_NAME = `Cara H${tag()}`;
@@ -132,19 +132,31 @@ test('bail from the chat line, out on the branch\'s Iron; a visit on the ward; A
   const out = b.page.getByRole('dialog');
   if (await out.isVisible().catch(() => false)) await out.getByRole('button', { name: 'Continue' }).click();
 
-  // 4. A on the fixture as a hand; *Ask to join* on B's row; B's chat shows the line *for you* with Join.
+  // 4. Review 7 #3: with nothing open, no invite at all on B's row (hidden, not greyed).
+  await a.page.goto('/faction?tab=members');
+  await expect(bRow).toBeVisible();
+  await expect(bRow.getByTestId('member-ask')).toHaveCount(0);
+  await expect(bRow.getByTestId('member-invited')).toHaveCount(0);
+
+  // A on the fixture as a hand; *Invite to the {event} · {time}* on B's row; B's chat shows the
+  // line *for you* with the venue and Join.
   const board = (await read(a.page, 'events.board')) as { ok: boolean; data: { here: { events: Array<{ id: string; kind: string }> } } };
   expect(board.ok).toBe(true);
   const fixture = board.data.here.events.find((e) => e.kind === 'fixture')!;
   expect(fixture).toBeTruthy();
   const hand = await mutate(a.page, 'events.signUp', { eventId: fixture.id, slot: 'hand', idempotencyKey: crypto.randomUUID() });
   expect(hand.ok, JSON.stringify(hand)).toBe(true);
+  const fixtureView = (await read(a.page, 'events.get', { eventId: fixture.id })) as { ok: boolean; data: { name: string; place: { venueName: string } } };
   await a.page.goto('/faction?tab=members');
-  const ask = a.page.getByTestId('member-row').filter({ hasText: `${B_NAME}` }).getByTestId('member-ask');
-  await expect(ask).toHaveText('Ask to join');
+  const ask = bRow.getByTestId('member-ask');
+  // The button names the event (its running name) and the card's time.
+  await expect(ask).toHaveText(/^Invite to the [a-z ]+ · \d{2}:\d{2}$/);
+  const eventWord = ((await ask.textContent()) ?? '').replace(/^Invite to the /, '').replace(/ · .*$/, '');
   await ask.click();
-  await expect(ask).toHaveText('Asked');
-  await expect(ask).toBeDisabled();
+  await expect(a.page.getByTestId('toast')).toHaveText(`Invited. ${B_NAME} will see it in the branch's chat.`);
+  // After the tap: plain text, not a disabled button.
+  await expect(bRow.getByTestId('member-invited')).toHaveText(`Invited to the ${eventWord}`);
+  await expect(bRow.getByTestId('member-ask')).toHaveCount(0);
 
   const bSocket = b.page.waitForEvent('websocket', { timeout: 15_000 });
   await b.page.goto('/faction?tab=chat');
@@ -152,7 +164,9 @@ test('bail from the chat line, out on the branch\'s Iron; a visit on the ward; A
   const nudge = b.page.locator('[data-testid="chat-system"][data-kind="nudge"][data-for-you="true"]');
   await expect(nudge).toHaveAttribute('data-for-you', 'true');
   await expect(nudge).toContainText('for you');
-  await expect(nudge).toContainText(`${A_NAME} asks ${B_NAME} for a pair of hands at the`);
+  await expect(nudge).toContainText(`${A_NAME} invites ${B_NAME} to the ${eventWord} at `);
+  if (fixtureView.ok) await expect(nudge).toContainText(fixtureView.data.place.venueName);
+  await expect(nudge).toContainText("a hand's place is open");
   await expect(nudge.getByTestId('chat-system-button')).toHaveText('Join');
 
   await a.ctx.close();

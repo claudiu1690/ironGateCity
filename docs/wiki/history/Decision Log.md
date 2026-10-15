@@ -132,7 +132,14 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 | 15 Oct | **A swing prints to two decimals trimmed (+0.83, +0.8, +1); a share to one decimal.** The event result stays; the paper's row trims | A hand's quarter point on a four-way split must still read | [[design/slice-6-together\|slice-6 design]] §22 #10; GDD §14.2 | [[Campaign Events]], [[Influence and Opinion]] |
 | 15 Oct | **Phase B's two defaults confirmed:** an event's swing does not write the morale record; *event-city* prints only for a reader on no event yesterday | At most a day's delay on an unprinted record; no two event lines in one paper | [[design/slice-6-together\|slice-6 design]] §22 #11–12 | [[Campaign Events]], [[The Morning Paper]] |
 
+## Review 7 (15 Oct, Notion Design Review 4)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 15 Oct | *asked:* **the word filter brought forward** from slice 9: slurs and real-world hate **refused** (*That can't be said here.*), ordinary swearing **masked** as *b—*; names refused on either tier; the lists on the server, never in content | "Chat needs a profanity filter" | [[Review 7]]; [[design/slice-6-together\|slice-6 design]] §23.1; GDD §16.2 | [[Chat and Presence]], [[Moderation and Fair Play]] |
+| 15 Oct | *asked:* **the invite names the event** (*Invite to the rally · 19:40*), hidden when there is nothing to ask; the chat line carries the venue | "Ask to join… ask to join what?" | [[Review 7]]; [[design/slice-6-together\|slice-6 design]] §23.2 | [[Chat and Presence]], [[Campaign Events]] |
+
 ## Related
 
 - [[Open Questions]] · [[Drift Report]]
-- Rounds: [[Review 1]] · [[Review 2]] · [[Review 3]] · [[Review 4]] · [[Review 5]] · [[Voting Rework]] · [[Review 6]]
+- Rounds: [[Review 1]] · [[Review 2]] · [[Review 3]] · [[Review 4]] · [[Review 5]] · [[Voting Rework]] · [[Review 6]] · [[Review 7]]

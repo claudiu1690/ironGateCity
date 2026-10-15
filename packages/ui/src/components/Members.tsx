@@ -1,11 +1,12 @@
 import { copy } from '@irongate/content/copy';
 import type { FactionId, FactionScoreboardView, MemberRowView, ProfileView } from '@irongate/rules';
+import { useEffect } from 'react';
 import { FACTION_STYLE } from './FactionCrest';
 import { Button } from './Button';
 import { Rosette } from './Capital';
 import { BottomSheet } from './Sheets';
 import { artUrl } from './Picture';
-import { cx } from '../format';
+import { cx, formatClock } from '../format';
 
 /**
  * Slice 6 (screens §2.3, §2.4, §7.1; tech design §12.2): the Faction tab's Members rows, the public
@@ -97,6 +98,33 @@ export function favourLabel(f: NonNullable<MemberRowView['favour']>, done: boole
   return done || f.visited ? t.favours.visited : t.favours.visit;
 }
 
+/** The invite's words (review 7 #3, design §23.2): *Invite to the rally · 19:40*, the card's time phrase. */
+export function inviteLabel(ask: NonNullable<MemberRowView['ask']>): string {
+  return t.members.invite(ask.eventName, formatClock(ask.startsAt));
+}
+
+/**
+ * A one-line toast (the invite's result, design §23.2: no modal, the cheapest social tap). It sits
+ * above the tab bar and goes after a few seconds.
+ */
+export function Toast({ text, onDone, ms = 4000 }: { text: string | null; onDone: () => void; ms?: number }) {
+  useEffect(() => {
+    if (!text) return;
+    const id = window.setTimeout(onDone, ms);
+    return () => window.clearTimeout(id);
+  }, [text, onDone, ms]);
+  if (!text) return null;
+  return (
+    <p
+      role="status"
+      className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-[420px] border-[1.5px] border-ink bg-ink px-3 py-2 font-mono text-[12px] text-paper shadow-[0_10px_30px_rgb(0_0_0/0.45)]"
+      data-testid="toast"
+    >
+      {text}
+    </p>
+  );
+}
+
 export interface MemberRowProps {
   row: MemberRowView;
   now: number;
@@ -114,8 +142,9 @@ export interface MemberRowProps {
 
 /**
  * `MemberRow` (screens §2.3): the avatar with the faction's ring, the name, *Organiser · Level 12*,
- * the status line, a hero's rosette, and at the right the favour (*Post bail*, *Visit*), the nudge
- * (*Ask to join*) or the week's figure. The row opens the profile; the right-hand button is its own.
+ * the status line, a hero's rosette, and at the right the favour (*Post bail*, *Visit*), the invite
+ * (*Invite to the rally · 19:40*, then *Invited to the rally* as plain text; review 7 #3) or the week's
+ * figure. The row opens the profile; the right-hand button is its own.
  */
 export function MemberRow({
   row,
@@ -177,16 +206,20 @@ export function MemberRow({
           >
             {favourLabel(favour, favourDone)}
           </Button>
+        ) : ask && (asked || ask.asked) ? (
+          <span className="px-2 text-right font-mono text-[11px] leading-snug text-muted" data-testid="member-invited">
+            {t.members.invited(ask.eventName)}
+          </span>
         ) : ask && onAsk ? (
           <button
             type="button"
-            className="label-caps min-h-11 cursor-pointer px-2 text-[12px] text-petrol underline underline-offset-2 disabled:cursor-default disabled:text-muted disabled:no-underline"
-            disabled={asked || ask.asked || askPending}
+            className="label-caps min-h-11 cursor-pointer px-2 text-right text-[12px] leading-tight text-petrol underline underline-offset-2 disabled:cursor-default disabled:text-muted disabled:no-underline"
+            disabled={askPending}
             aria-busy={askPending || undefined}
             onClick={() => onAsk(row)}
             data-testid="member-ask"
           >
-            {asked || ask.asked ? t.members.asked : t.members.askToJoin}
+            {inviteLabel(ask)}
           </button>
         ) : row.movedThisWeek > 0 ? (
           <span className="font-mono text-[11px] text-muted">{t.members.movedThisWeek(row.movedThisWeek.toFixed(1))}</span>
@@ -289,18 +322,21 @@ export function ProfileSheet({
                   {favourLabel(p.favour, !!favourDone)}
                 </Button>
               )}
-              {!p.favour && p.ask && (
+              {!p.favour && p.ask && (asked || p.ask.asked) ? (
+                <span className="flex min-h-11 flex-1 items-center justify-center font-mono text-[12px] text-muted" data-testid="profile-invited">
+                  {t.members.invited(p.ask.eventName)}
+                </span>
+              ) : !p.favour && p.ask ? (
                 <Button
                   variant="outline"
                   className="flex-1"
-                  disabled={asked || p.ask.asked}
                   pending={askPending}
                   onClick={() => onAsk(p)}
                   data-testid="profile-ask"
                 >
-                  {asked || p.ask.asked ? t.members.asked : t.members.askToJoin}
+                  {inviteLabel(p.ask)}
                 </Button>
-              )}
+              ) : null}
             </div>
           )}
           {!p.you && (

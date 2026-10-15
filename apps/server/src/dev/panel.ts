@@ -86,6 +86,8 @@ const DEV_ACTIONS: readonly DevAction[] = [
   'memberWard',
   'memberSays',
   'chatReset',
+  // Review 7.
+  'iron',
   'hour',
   'day',
   'phase',
@@ -122,6 +124,8 @@ const DEV_ACTIONS: readonly DevAction[] = [
 /** Slice 5 (tech design §8.6): the panel's *Level 6* and *Rank 3*. */
 const DEV_LEVEL = 6;
 const DEV_RANK = 3;
+/** Review 7: the panel's *Give 2,000 Iron*. */
+const DEV_IRON = 2_000;
 const weekdayOf = (day: number) => WEEKDAY_NAMES[weekday(day)];
 /**
  * Boost me: Rank 3 and One of Us at home, and PC for a declare and more. Higher Standing than the
@@ -653,6 +657,15 @@ async function runAction(
       const n = (doc.barred ?? []).length;
       if (n > 0) await Character.updateOne({ _id: doc._id }, { $set: { barred: [] }, $inc: { version: 1 } });
       did = n > 0 ? 'The bar is lifted' : 'No bar to lift';
+      break;
+    }
+    case 'iron': {
+      // Review 7: enough to post bail (and more) without the console.
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      await Character.updateOne({ _id: doc._id }, { $inc: { iron: DEV_IRON, version: 1 } });
+      did = `+${DEV_IRON.toLocaleString('en-GB')} Iron (now ${(doc.iron + DEV_IRON).toLocaleString('en-GB')})`;
+      settle = true;
       break;
     }
     case 'members':

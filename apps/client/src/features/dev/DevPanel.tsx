@@ -549,6 +549,7 @@ function TogetherControls({
       {btn('memberWard', 'A member to the ward')}
       {btn('memberSays', 'A member says something')}
       {btn('chatReset', 'Clear my chat limits')}
+      {btn('iron', 'Give 2,000 Iron')}
     </div>
   );
 }

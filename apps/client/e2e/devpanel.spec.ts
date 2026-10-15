@@ -127,6 +127,8 @@ test('the dev panel: shown with the hooks, clear of the pins and the tab bar, an
   await tap(page, 'Seat me', /^Seat \d+ on coalport:\d+: your rule is the branch's/);
   await tap(page, 'Seat me', /^Already on the council here$/);
   await tap(page, 'Votes for card 2 × 3', /^Only while the vote is on \(days 2–4\)$/);
+  // Review 7: *Give 2,000 Iron*, for testing bail without the console.
+  await tap(page, 'Give 2,000 Iron', /^\+2,000 Iron \(now [\d,]+\)$/);
   await expect(page.getByTestId('polling-day-row')).toHaveAttribute('data-state', /^(councillor|nextInLine)$/);
 
   // 6. Skip to the vote: the ballot is set, the line says so, and the paper row follows.

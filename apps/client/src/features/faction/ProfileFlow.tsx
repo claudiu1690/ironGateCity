@@ -1,8 +1,9 @@
 import type { ProfileView } from '@irongate/rules';
-import { ProfileSheet } from '@irongate/ui';
+import { copy } from '@irongate/content/copy';
+import { ProfileSheet, Toast } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { trpc } from '../../lib/trpc';
 import { useCharacter } from '../game/hooks';
 import { useHereCity } from './useHereCity';
@@ -14,7 +15,8 @@ import { togetherNotice } from './togetherErrors';
 /**
  * Slice 6 (screens §2.3; design §7.3): a member's public profile, opened from a Members row, a
  * scoreboard row or a name in chat. *Message* opens Chat with *@{name} * typed; the favour opens its
- * sheet; *Ask to join* is the nudge (one tap); *Mute* / *Unmute* at the foot.
+ * sheet; *Invite to the rally · 19:40* is the invite (one tap, a toast; review 7 #3, design §23.2;
+ * the server's `events.nudge`); *Mute* / *Unmute* at the foot.
  */
 export function ProfileFlow({ characterId, onClose }: { characterId: string | null; onClose: () => void }) {
   const queryClient = useQueryClient();
@@ -27,6 +29,8 @@ export function ProfileFlow({ characterId, onClose }: { characterId: string | nu
   const [favour, setFavour] = useState<FavourTarget | null>(null);
   const [asked, setAsked] = useState<Set<string>>(() => new Set());
   const [notice, setNotice] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
 
   const mute = useMutation({
     ...trpc.chat.mute.mutationOptions(),
@@ -42,6 +46,8 @@ export function ProfileFlow({ characterId, onClose }: { characterId: string | nu
     ...trpc.events.nudge.mutationOptions(),
     onSuccess: (_r, v) => {
       setAsked((s) => new Set(s).add(`${v.eventId}:${v.characterId}`));
+      const name = profile.data?.characterId === v.characterId ? profile.data.name : null;
+      if (name) setToast(copy.together.members.inviteDone(name));
       void queryClient.invalidateQueries({ queryKey: trpc.faction.members.queryKey() });
     },
     onError: (e) => setNotice(togetherNotice(e) ?? null),
@@ -93,6 +99,7 @@ export function ProfileFlow({ characterId, onClose }: { characterId: string | nu
           void profile.refetch();
         }}
       />
+      <Toast text={toast} onDone={clearToast} />
     </>
   );
 }

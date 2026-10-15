@@ -5,6 +5,7 @@ import { CHAT, PRESENCE, channelsOf, chatRateCheck, dayKey, normaliseChatText, p
 import type { ChatChannelsView, ChatLineButton, ChatLineView, ChatPageView, CharacterView } from '@irongate/rules';
 import { Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
+import { check } from '../moderation';
 import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
 import { residenceCityId } from './residence';
@@ -163,6 +164,9 @@ export async function chatHistory(deps: Deps & { input: { channel: string; befor
   };
 }
 
+/** A refused line (design §23.1): the limiter's write commits; nothing else is stored. */
+const REFUSED = Symbol('refused');
+
 /** `chat.post` (ADR 0039): the limiter and the insert in one transaction; a retried key returns the line. */
 export async function chatPost(
   deps: Deps & { input: { channel: string; text: string; idempotencyKey: string } },
@@ -182,7 +186,7 @@ export async function chatPost(
   const p = parseChannel(input.channel)!;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      return await inTransaction(async (session) => {
+      const done = await inTransaction(async (session): Promise<ChatLineView | typeof REFUSED> => {
         const now = deps.now();
         const lim = await ChatLimit.findById(c._id).session(session).lean<ChatLimitDoc>();
         const recent = (lim?.recent ?? []).map((d) => new Date(d).getTime());
@@ -190,6 +194,22 @@ export async function chatPost(
         const rate = chatRateCheck({ recent, last, hash: norm.hash, now });
         if (rate) throw new GameError('CHAT_RATE', { why: rate.reason, retryAt: rate.retryAt }, 'TOO_MANY_REQUESTS');
         const today = dayKey(now);
+        // Review 7 #2 (design §23.1): the limiter first, then the word filter. A refused line is
+        // not stored, but it still counts toward the rate limits, so a repeat attempt is bounded.
+        const filtered = check(norm.text);
+        if (filtered.refused) {
+          await ChatLimit.updateOne(
+            { _id: c._id },
+            {
+              $push: { recent: { $each: [new Date(now)], $slice: -CHAT.window.max } },
+              $set: { lastDay: today },
+              $inc: { days: lim?.lastDay === today ? 0 : 1 },
+              $setOnInsert: { firstAt: new Date(now), posts: 0 },
+            },
+            { session, upsert: true },
+          );
+          return REFUSED;
+        }
         await ChatLimit.updateOne(
           { _id: c._id },
           {
@@ -211,7 +231,7 @@ export async function chatPost(
               name: c.name,
               avatarId: c.avatarId ?? null,
               rank: c.rank,
-              text: norm.text,
+              text: filtered.text,
               system: null,
               idempotencyKey: input.idempotencyKey,
               at: new Date(now),
@@ -221,6 +241,8 @@ export async function chatPost(
         );
         return lineView(m!.toObject() as ChatMessageDoc);
       });
+      if (done === REFUSED) throw gameError('BAD_REQUEST', 'CHAT_REFUSED');
+      return done;
     } catch (err) {
       if (isDuplicateKeyError(err)) {
         const winner = await stored();

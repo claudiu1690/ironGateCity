@@ -7,7 +7,7 @@ status: designed
 slice: "9 (designed, not built); slice 6 basics (mute, report); content policy applied since slice 2"
 gdd: ["§15.2", "§16.2", "§26", "§7.3"]
 adrs: ["0060", "0061", "0062", "0063", "0064", "0065", "0066", "0067", "0069"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Moderation and Fair Play
@@ -39,7 +39,7 @@ the content policy and the basic name rule are in the game today.
 **Moderation** ([[GDD#16.2 Faction chat and presence (moved into MVP)|GDD §16.2]]):
 - **The policy** (20 lines, accepted at sign-up): no harassment, no real-world hate, **no real-world political slogans, symbols, parties or leaders as identity**, no doxxing, no spam or selling, **nothing offered for a vote, a backing or a signature**, no impersonation, no evading a mute.
 - **Reports** from a chat line or a profile, four reasons (*Abuse or harassment · Real-world politics or hate · Spam or selling · Something else*), **ten a day**. The reporter reads *Thanks. Someone will read it.* and later, if acted on, *A line you reported was dealt with.*
-- **The word filter** **refuses** (*That can't be said here.*, no echo) or **flags** to the queue. Its lists live outside content, and the game's own words (*strike*, *rally*, *gate*) always pass.
+- **The word filter** **refuses** (*That can't be said here.*, no echo) or **flags** to the queue. Its lists live outside content, and the game's own words (*strike*, *rally*, *gate*) always pass. **Brought forward in slice 6** (review 7, [[design/slice-6-together#23.1 The word filter (note #2: "chat needs a profanity filter")|design §23.1]]) in two tiers: **refuse** for slurs and real-world hate; **mask** for ordinary swearing, printed as its first letter and the editor's dash (*b—*), the way the period's papers did, and stored masked. A name is refused on either tier (*That name can't be used here. Try another.*). Mild period words (*bloody, damn, hell, sod*) pass.
 - **The ladder:** a note from the editor (a Letters row) · **muted** 24 h, then 7 days · **suspended** 3 days, then 14 (nothing owned is touched; timers run; office duties fall to their defaults) · **closed** (the character retired; offices vacated by kind; **a council candidacy can't be withdrawn and runs to the count**; national candidacies and event sign-ups are withdrawn; personal data erased after 30 days). **Real-world hate goes straight to 14 days**, a second time to closure.
 - **Appeals:** one reply of 500 characters per decision, answered within a week.
 - **Names:** checked at sign-up and on every rename (folded against the refuse and impersonation lists); **one change every 30 days**; printed editions keep the old name unless a moderator forced the rename.
@@ -59,7 +59,7 @@ the content policy and the basic name rule are in the game today.
 
 ## Status
 
-- **Designed, not built** (slice 9). Slice 6 brings the first pieces (mute, report a line, chat limits; [[Chat and Presence]]).
+- **Designed, not built** (slice 9). Slice 6 brings the first pieces (mute, report a line, chat limits; [[Chat and Presence]]), and review 7 (15 Oct 2026) the word filter's refuse and mask tiers: `apps/server/src/moderation/` (`check`, `nameAllowed`, on `obscenity` 0.4.6, the project lists in `moderation/lists/`), not yet the `packages/moderation` of [[adr/0064-packages-moderation-server-only-filter-and-names|ADR 0064]]; slice 9 moves or extends it (flags, the impersonation list, folding for names).
 - **Built:** the content policy (applied to content since 29 Sep 2026), the basic name rule, one character per account.
 - Hosting is deferred to the end of the project, so the production-only parts (salted IP hashes, maintenance) are local-only when built.
 

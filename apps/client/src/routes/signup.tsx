@@ -48,7 +48,9 @@ export function SignupPage() {
     });
     if (err) {
       setPending(false);
-      setError(err.message ?? 'Sign-up failed. Try again.');
+      // Review 7 #2 (design §23.1): the word filter's refusal sits under the name, with the others.
+      if (err.code === 'NAME_NOT_ALLOWED') setNameError(copy.nameNotAllowed);
+      else setError(err.message ?? 'Sign-up failed. Try again.');
       return;
     }
     await resetSession();

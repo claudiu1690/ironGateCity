@@ -198,7 +198,7 @@ export interface EventPageView {
   result: { band: EventBand; swing: number; members: number; volunteers: number } | null;
   /** *See your result*. */
   yourResult: { signupId: string } | null;
-  /** You may ask mates (you are on it, an open place exists). */
+  /** You may invite mates (you are on it, an open place exists): *Invite someone*. */
   nudge: boolean;
 }
 
@@ -236,7 +236,12 @@ export interface MemberRowView {
   heroes: string[];
   movedThisWeek: number;
   favour: FavourView | null;
-  ask: { eventId: string; roleName: string; asked: boolean } | null;
+  /**
+   * The invite (design §23.2): the soonest of your open events with a place this mate can take; null
+   * (the control hidden) when there is none, or they are held. `eventName` is the running name
+   * (*rally*), `startsAt` gives the card's time phrase; `asked`: already invited to it.
+   */
+  ask: { eventId: string; eventName: string; startsAt: number; roleName: string; asked: boolean } | null;
   you: boolean;
 }
 

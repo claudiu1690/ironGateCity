@@ -88,3 +88,7 @@ QA's findings ([[qa/slice-6-report|report]]) and the designer's code items (desi
 - **Clarity**: the board card's *settles at 19:40* opens a new *Settles at* note (then *Campaign event*); a Recruit's *Organisers and above can call events; anyone can join one.* opens *Campaign event* and *Hands*.
 - **The paper's swing** trims like `formatSwing` (*+1*, *+0.8*); the review-4 sweeps no longer allow *canvass drive*; the tech docs say 30 venues and the Doorstep Drive.
 - **Still open**: what QA did not cover ([[Open Questions]] S6-4) and the manual playtest question.
+
+## Review 7 (15 Oct 2026)
+
+The user's Design Review 4 notes on this build ([[Review 7]]): **the word filter** (refuse and mask tiers, design §23.1), **the invite** naming its event and hidden when there is nothing to ask (design §23.2), the event page's *Invite someone*, and the dev panel's **Give 2,000 Iron** for testing bail. The Faction tab's redesign (note #1) is with the designer.

@@ -17,7 +17,7 @@ Stopping `pnpm dev:mem` resets its database and the clock. The clock only moves 
 - **The branch's daily event.** The secretary posts one every day in each city. It settles at the day's turn, so a new player can join as a hand on day 1.
 - **Chat**, live between browsers: Party, the city branch and Irongate. Mute and report only. Me → *Hide chat* turns it off.
 - **Who is here now**: a venue or the event page shows who from your party was here in the last ten minutes.
-- **Favours**: post a mate's bail from chat, the Members list or *In the cells now* (Iron from you, +10 Party XP); visit a mate on the ward for 3 Energy (not from rival ground); *Ask to join* nudges a mate towards an event.
+- **Favours**: post a mate's bail from chat, the Members list or *In the cells now* (Iron from you, +10 Party XP); visit a mate on the ward for 3 Energy (not from rival ground); *Invite to the rally · 19:40* invites a mate to your soonest event with a place for them (review 7; was *Ask to join*).
 - **The fix round's changes**: an unseen release from the cells now shows on any screen, not only on the map. *settles at 19:40* on an event card and the board's *anyone can join one* line are dotted labels: tap them for a short note. The paper prints swings as *+1* or *+0.8*.
 
 ## The Together buttons (dev panel)
@@ -29,6 +29,7 @@ Stopping `pnpm dev:mem` resets its database and the clock. The clock only moves 
 | **Start my event now** | Your soonest open event starts now; the next screen read resolves it and its result modal follows |
 | **Rolls: All succeed / All fail / Random** | The rolls your soonest event uses when it starts (once) |
 | **A member to the cells / to the ward** | A test member is taken in or admitted, so *Post bail* and *Visit* appear |
+| **Give 2,000 Iron** | Review 7: Iron in your purse, enough to post bail |
 | **A member says something** | A test member posts a line in your branch's chat |
 | **Clear my chat limits** | Forgets the three-second and thirty-in-ten-minutes chat limits for you |
 
@@ -42,7 +43,7 @@ Other buttons you will use: **Rank 3** (or *Boost me*), **Next day**, **Refill E
 
 **3. Chat between two browsers (5 minutes).** Open a private window and sign up a second account. In the arrival, answer so you join the same party, and stay in the same city. Put both on Faction → **Chat**, city branch selected. A line sent in one appears in the other within a second or two, with no reload. A second line within three seconds shows the limit line under the composer (**Clear my chat limits** resets it). From the second account, open the first one's profile (Members) and **Mute**: their lines fold to *Muted · {name}*. Long-press a line on a phone (hover on a desktop) for **Report**.
 
-**4. Bail a mate (5 minutes).** A new character has no Iron and the panel has no Iron button, so first give yourself some from the browser's console (memory mode only): `fetch('/api/test/character', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ iron: 2000 }) })`, then reload. Or use an older character that has worked shifts. Then **A member to the cells**. The chat gets *{name} has been taken in at … · bail {n} Iron* with **Post bail**, and their Members row turns red with the same button. Tap it and confirm: *Bail posted · {name} is out*, the Iron leaves your purse, +10 Party XP. Then **A member to the ward** and **Visit · 3 Energy** from the Members list.
+**4. Bail a mate (5 minutes).** A new character has no Iron: tap **Give 2,000 Iron** in the dev panel's *Together* section first (review 7). Then **A member to the cells**. The chat gets *{name} has been taken in at … · bail {n} Iron* with **Post bail**, and their Members row turns red with the same button. Tap it and confirm: *Bail posted · {name} is out*, the Iron leaves your purse, +10 Party XP. Then **A member to the ward** and **Visit · 3 Energy** from the Members list.
 
 To see your own release (the fix round): in the panel tap **Cells now**, then **Release now**, then open <http://localhost:5173/faction> directly (or reload while on the Faction tab). The release modal shows there first, and any event results wait behind it.
 

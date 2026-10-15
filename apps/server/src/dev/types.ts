@@ -62,7 +62,9 @@ export type DevAction =
   | 'memberCells'
   | 'memberWard'
   | 'memberSays'
-  | 'chatReset';
+  | 'chatReset'
+  // Review 7: `iron` (*Give 2,000 Iron*), so bail can be tested without the console.
+  | 'iron';
 
 /** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
 export interface DevStreetForce {

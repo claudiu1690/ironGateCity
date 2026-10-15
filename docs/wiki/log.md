@@ -9,6 +9,10 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Review 7: the chat word filter, the invite, Give Iron
+
+The user's Design Review 4 notes #2 and #3 (design §23): the word filter on the server (`apps/server/src/moderation/`, `obscenity` 0.4.6; slurs and real-world hate refused, swearing masked as *b—*, names refused on either tier), the invite naming its event (*Invite to the rally · 19:40*, hidden when there is nothing to ask, the venue in the chat line, a toast), *Invite someone* on the event page, the help notes *The editor* and *Invite*, and the dev panel's *Give 2,000 Iron*. New [[Review 7]]; updated [[Chat and Presence]], [[Moderation and Fair Play]], [[Slice 6 Together]], [[Decision Log]], [[index]].
+
 ## [2026-10-15] build | Slice 6 fix round
 
 QA m1 (concurrent same-key *Join*: stored result, `eventSignups` in `assertKeyFree`), m2 (`HeldReleaseGate` in the shell: the release on every screen), m3 approved as built; the *Settles at* and *Campaign event* notes on the board; the paper's swing trimmed; the review-4 sweeps' *canvass* allowance removed; tech docs tidied (30 venues, the Doorstep Drive). Build notes for the user: [[review/slice-6-build-notes]]. Updated [[Slice 6 Together]], [[Campaign Events]], [[Open Questions]] (S6-1 to S6-3 closed).

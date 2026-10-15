@@ -13,7 +13,7 @@ export function togetherNotice(error: unknown): string | undefined {
   if (!error) return undefined;
   const g = gameErrorOf(error);
   if (!g) return noticeFor(error);
-  if (g.reason === 'CHAT_RATE' || g.reason === 'CHAT_TEXT') return chatLimitLine(error) ?? undefined;
+  if (g.reason === 'CHAT_RATE' || g.reason === 'CHAT_TEXT' || g.reason === 'CHAT_REFUSED') return chatLimitLine(error) ?? undefined;
   if (g.reason === 'NOT_ENOUGH_IRON') return e.NOT_ENOUGH_IRON(Number(g.need ?? g.cost ?? 0));
   if (g.reason === 'NOT_ENOUGH_ENERGY') return noticeFor(error);
   if ((g.reason as string) === 'ALREADY_VISITED') return e.VISITED;
@@ -23,12 +23,14 @@ export function togetherNotice(error: unknown): string | undefined {
 
 /**
  * The composer's limit line (screens §2.5), only when hit: *One message every three seconds* ·
- * *Thirty messages in ten minutes…; back in {n} minutes* · *Said that already*.
+ * *Thirty messages in ten minutes…; back in {n} minutes* · *Said that already* · *That can't be said here.*
  */
 export function chatLimitLine(error: unknown, now: number = Date.now()): string | null {
   const g = gameErrorOf(error);
   if (!g) return null;
   if (g.reason === 'CHAT_TEXT') return g.why === 'tooLong' ? limits.tooLong : limits.empty;
+  // Review 7 #2 (design §23.1): the word filter; the draft stays in the composer.
+  if (g.reason === 'CHAT_REFUSED') return limits.refused;
   if (g.reason !== 'CHAT_RATE') return null;
   if (g.why === 'tooMany') {
     const retryAt = typeof g.retryAt === 'number' ? g.retryAt : now + 60_000;

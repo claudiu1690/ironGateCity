@@ -208,3 +208,68 @@ test('chat live between two browsers, the limit line, report and mute; Members, 
   await a.ctx.close();
   await b.ctx.close();
 });
+
+test('the word filter: swearing masked with the dash, real-world hate refused and never posted, the game vocabulary untouched; a name refused (review 7 #2)', async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const t4 = tag();
+  const c = await member(browser, `Cora F${t4}`);
+  const resetLimits = async () => {
+    const r = await c.page.request.post('/api/test/dev/chatReset', { data: {} });
+    expect(r.ok(), await r.text()).toBe(true);
+  };
+  await openFaction(c.page, 'chat');
+  const input = c.page.getByTestId('chat-input');
+  const send = c.page.getByTestId('chat-send');
+
+  // Ordinary swearing: posted, masked as its first letter and the editor's dash.
+  await input.fill(`you bastard ${t4}`);
+  await send.click();
+  await expect(c.page.getByTestId('chat-text').filter({ hasText: `you b— ${t4}` })).toBeVisible();
+  await expect(c.page.getByTestId('chat-text').filter({ hasText: 'bastard' })).toHaveCount(0);
+  await expect(input).toHaveValue('');
+
+  // Real-world hate: refused; the composer keeps the draft and reads the refusal; nothing posted.
+  await resetLimits();
+  const lines = await c.page.getByTestId('chat-line').count();
+  await input.fill(`sieg heil ${t4}`);
+  await send.click();
+  await expect(c.page.getByTestId('chat-limit')).toHaveText("That can't be said here.");
+  await expect(input).toHaveValue(`sieg heil ${t4}`);
+  await expect(c.page.getByTestId('chat-line')).toHaveCount(lines);
+  const history = (await read(c.page, 'chat.history', { channel: 'city:collective:coalport' })) as {
+    ok: true;
+    data: { lines: Array<{ text?: string | null }> };
+  };
+  expect(history.data.lines.some((l) => (l.text ?? '').includes(t4) && /heil/i.test(l.text ?? ''))).toBe(false);
+  // A refusal still counts toward the limits: an immediate retry is *too fast*.
+  await send.click();
+  await expect(c.page.getByTestId('chat-limit')).toHaveText('One message every three seconds');
+
+  // The game's own vocabulary passes untouched.
+  await resetLimits();
+  const rally = `Rally at the Assembly Rooms tonight ${t4}`;
+  await input.fill(rally);
+  await send.click();
+  await expect(c.page.getByTestId('chat-text').filter({ hasText: rally })).toHaveText(rally);
+
+  // The editor's note behind the composer's label.
+  await c.page.getByTestId('chat-editor-help').click();
+  await expect(c.page.getByTestId('help-note')).toContainText("Swearing goes out with the editor's dash");
+  await c.page.keyboard.press('Escape');
+  await c.ctx.close();
+
+  // A name: both tiers refuse it, under the field.
+  const ctx = await browser.newContext(PHONE);
+  const page = await ctx.newPage();
+  await page.goto('/signup');
+  await page.getByLabel('Your name').fill(`Bastard ${t4}`);
+  await page.getByRole('group', { name: 'Your face' }).getByTestId('avatar-tile').nth(2).click();
+  await page.getByLabel('Email').fill(`e2e-${Date.now()}-${t4}@example.test`);
+  await page.getByLabel('Password').fill('e2e-password-123');
+  await page.getByRole('button', { name: 'Sign up' }).click();
+  await expect(page.getByText("That name can't be used here. Try another.")).toBeVisible({ timeout: 15_000 });
+  await expect(page).toHaveURL(/\/signup$/);
+  await ctx.close();
+});

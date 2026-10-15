@@ -684,7 +684,7 @@ export async function withdrawEvent(
   });
 }
 
-/** `events.nudge` (tech §22.1 Q9): a member on an open event asks a mate not on it, once per pair. */
+/** `events.nudge` (tech §22.1 Q9), *the invite* for players (design §23.2): a member on an open event invites a mate not on it, once per pair. */
 export async function nudgeEvent(
   deps: EventDeps & { input: { eventId: string; characterId: string } },
 ): Promise<{ asked: true; already: boolean }> {
@@ -725,6 +725,8 @@ export async function nudgeEvent(
         name: mate.name,
         eventId: ev._id.toHexString(),
         event: type.runningName,
+        // Review 7 #3 (design §23.2): the invite names the venue.
+        venue: venueOfEvent(content, ev).location.name,
         role: role ? role.name : null,
         hand: !role,
         time: ev.startsAt.getTime(),

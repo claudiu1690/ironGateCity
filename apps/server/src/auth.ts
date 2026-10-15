@@ -6,6 +6,7 @@ import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { APIError } from 'better-auth/api';
 import type { Db, MongoClient } from 'mongodb';
 import type { Env } from './env';
+import { nameAllowed } from './moderation';
 
 /** Set by the Fastify bridge from `request.ip` (app.ts); any client-sent value is replaced. */
 export const CLIENT_IP_HEADER = 'x-irongate-client-ip';
@@ -18,11 +19,14 @@ const NAME_REFUSAL: Record<NameProblem, { code: string; message: string }> = {
 
 /**
  * §7.3 (onboarding §14.2, slice-2 QA m3): the account's name is 2–40 characters once trimmed, with
- * inner runs of spaces collapsed; it is stored normalised. Refused with the sign-up form's copy.
+ * inner runs of spaces collapsed; it is stored normalised. Refused with the sign-up form's copy, and by
+ * the word filter (review 7 #2) with *That name can't be used here. Try another.*
  */
 export function acceptName(raw: unknown): string {
   const r = checkName(typeof raw === 'string' ? raw : '');
   if (!r.ok) throw new APIError('BAD_REQUEST', NAME_REFUSAL[r.reason]);
+  // Review 7 #2 (design §23.1): both tiers refuse a name; a swearing name is not masked.
+  if (!nameAllowed(r.name)) throw new APIError('BAD_REQUEST', { code: 'NAME_NOT_ALLOWED', message: copy.nameNotAllowed });
   return r.name;
 }
 

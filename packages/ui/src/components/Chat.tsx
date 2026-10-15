@@ -5,6 +5,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from './Button';
+import { HelpButton, helpMark } from './Help';
+import type { HelpNote } from './Help';
 import { MemberFace } from './Members';
 import { cx, formatClock } from '../format';
 
@@ -55,9 +57,10 @@ export function systemLineText(line: Pick<ChatLineView, 'system'>): string {
     case 'heroNamed':
       return t.system.heroNamed(str(p.name), str(p.title), str(p.place));
     case 'nudge':
+      // The invite (design §23.2): the venue is what makes "which rally" obvious.
       return p.role
-        ? t.system.nudgeRole(str(p.caller), str(p.name), str(p.role), str(p.event), time(p.time))
-        : t.system.nudgeHands(str(p.caller), str(p.name), str(p.event), time(p.time));
+        ? t.system.nudgeRole(str(p.caller), str(p.name), str(p.role), str(p.event), str(p.venue), time(p.time))
+        : t.system.nudgeHands(str(p.caller), str(p.name), str(p.event), str(p.venue), time(p.time));
     default:
       return '';
   }
@@ -331,15 +334,26 @@ export function ChatPanel(props: ChatPanelProps) {
             {t.chat.send}
           </Button>
         </div>
-        <div className="flex min-h-4 justify-between gap-2 pt-0.5">
+        <div className="flex min-h-4 items-center justify-between gap-2 pt-0.5">
           <span className="font-mono text-[11px] text-failure" role="status" data-testid="chat-limit">
             {tooLong ? t.chat.limits.tooLong : (limitLine ?? '')}
           </span>
-          {n >= CHAT_COUNTER_FROM && (
-            <span className={cx('font-mono text-[11px]', tooLong ? 'text-failure' : 'text-muted')} data-testid="chat-counter">
-              {t.chat.counter(n, CHAT.maxLength)}
-            </span>
-          )}
+          <span className="flex shrink-0 items-center gap-3">
+            {n >= CHAT_COUNTER_FROM && (
+              <span className={cx('font-mono text-[11px]', tooLong ? 'text-failure' : 'text-muted')} data-testid="chat-counter">
+                {t.chat.counter(n, CHAT.maxLength)}
+              </span>
+            )}
+            {/* Review 7 #2 (design §23.1): the editor's rule, behind its label. */}
+            <HelpButton
+              notes={[t.help.editor() as HelpNote, t.help.chat() as HelpNote]}
+              label={`What ${t.help.editor()[0] ?? ''} lets through`}
+              testId="chat-editor-help"
+              className="-my-3.5 px-1"
+            >
+              <span className={cx('font-mono text-[11px] text-muted', helpMark)}>{t.help.editor()[0]}</span>
+            </HelpButton>
+          </span>
         </div>
       </form>
       <Dialog.Root open={!!asking} onOpenChange={(o) => !o && setAsking(null)}>

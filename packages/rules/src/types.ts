@@ -1530,6 +1530,8 @@ export type GameErrorReason =
   // Slice 6: chat (`CHAT_RATE` carries `reason` and `retryAt`; `CHAT_TEXT` its `reason`).
   | 'CHAT_RATE'
   | 'CHAT_TEXT'
+  // Review 7 #2 (slice 6 design §23.1): the word filter refused the line; nothing is stored.
+  | 'CHAT_REFUSED'
   | 'CHAT_CHANNEL'
   | 'CANNOT_REPORT'
   | 'NUDGE_NOT_ALLOWED'

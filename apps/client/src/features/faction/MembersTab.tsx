@@ -1,8 +1,9 @@
 import { copy } from '@irongate/content/copy';
 import type { MemberRowView } from '@irongate/rules';
-import { Button, MemberRow } from '@irongate/ui';
+import { Button, HelpButton, MemberRow, Toast, helpMark } from '@irongate/ui';
+import type { HelpNote } from '@irongate/ui';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { trpc, trpcClient } from '../../lib/trpc';
 import { useCharacter } from '../game/hooks';
 import { useHereCity } from './useHereCity';
@@ -16,7 +17,8 @@ const t = copy.together;
 /**
  * Slice 6 (screens §2.3; design §6.3): the Faction tab's Members part. *Find a member*, then the
  * rows fifty a page (*Show more*), here now first; a row opens the profile; the favour (*Post bail*,
- * *Visit*) and the nudge (*Ask to join*) sit at the right, as the server's view says.
+ * *Visit*) and the invite (*Invite to the rally · 19:40*; review 7 #3, design §23.2; the server's
+ * `events.nudge`) sit at the right, as the server's view says. The invite's result is a toast.
  */
 export function MembersTab() {
   const queryClient = useQueryClient();
@@ -44,10 +46,14 @@ export function MembersTab() {
   const [done, setDone] = useState<Set<string>>(() => new Set());
   const [asked, setAsked] = useState<Set<string>>(() => new Set());
   const [notice, setNotice] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
   const nudge = useMutation({
     ...trpc.events.nudge.mutationOptions(),
     onSuccess: (_r, v) => {
       setAsked((s) => new Set(s).add(v.characterId));
+      const mate = members.data?.pages.flatMap((p) => p.rows).find((r) => r.characterId === v.characterId);
+      if (mate) setToast(t.members.inviteDone(mate.name));
       void queryClient.invalidateQueries({ queryKey: trpc.faction.members.queryKey() });
     },
     onError: (e) => setNotice(togetherNotice(e) ?? null),
@@ -71,6 +77,15 @@ export function MembersTab() {
           data-testid="members-search"
         />
       </label>
+      {/* Review 7 #3 (design §23.2): when the invite shows, behind its label. */}
+      <HelpButton
+        notes={[t.help.invite() as HelpNote]}
+        label={`When ${t.help.invite()[0] ?? ''} shows`}
+        testId="members-invite-help"
+        className="-my-2 self-end px-1"
+      >
+        <span className={`font-mono text-[11px] text-muted ${helpMark}`}>{t.help.invite()[0]}</span>
+      </HelpButton>
       {notice && (
         <p className="font-mono text-[12px] text-failure" role="alert">
           {notice}
@@ -120,6 +135,7 @@ export function MembersTab() {
           {t.members.showMore}
         </Button>
       )}
+      <Toast text={toast} onDone={clearToast} />
       <ProfileFlow characterId={profile} onClose={() => setProfile(null)} />
       <FavourFlow
         target={favour}

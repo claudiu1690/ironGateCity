@@ -73,19 +73,58 @@ export async function factionHq(deps: Deps): Promise<FactionHqView> {
   };
 }
 
-/** The viewer's open event (the first, soonest) and what a mate could take on it. */
+/**
+ * The viewer's open events, soonest first, and whom they have invited to each (review 7 #3, design
+ * §23.2: the invite picks the soonest event with a place for the mate).
+ */
 async function askContext(c: CharacterDoc, now: number) {
   const open = (c.events?.open ?? []).filter((p) => new Date(p.startsAt).getTime() > now);
   if (open.length === 0) return null;
-  const ev = await CampaignEvent.findOne({ _id: { $in: open.map((p) => p.eventId) }, status: 'open' })
+  const evs = await CampaignEvent.find({ _id: { $in: open.map((p) => p.eventId) }, status: 'open', startsAt: { $gt: new Date(now) } })
     .sort({ startsAt: 1 })
-    .lean<CampaignEventDoc>();
-  if (!ev) return null;
-  const asked = await ChatMessage.find(
-    { dedupeKey: { $regex: `^nudge:${ev._id.toHexString()}:${c._id.toHexString()}:` } },
+    .lean<CampaignEventDoc[]>();
+  if (evs.length === 0) return null;
+  const me = c._id.toHexString();
+  const keys = await ChatMessage.find(
+    { dedupeKey: { $in: evs.map((ev) => new RegExp(`^nudge:${ev._id.toHexString()}:${me}:`)) } },
     { dedupeKey: 1 },
   ).lean();
-  return { ev, asked: new Set(asked.map((a) => (a.dedupeKey ?? '').split(':')[3] ?? '')) };
+  // `nudge:{event}:{from}:{to}`: the pairs already invited.
+  const invited = new Set(keys.map((k) => { const p = (k.dedupeKey ?? '').split(':'); return `${p[1]}:${p[3]}`; }));
+  return { evs, invited };
+}
+
+/**
+ * The invite on a mate's row (design §23.2): the soonest of the viewer's open events that has a place
+ * this mate can take (an open named role at their rank, or a hand's place) and that they are not on.
+ * None for the viewer, or a mate in the cells or on the ward. `asked` when already invited to it: the
+ * row then reads *Invited to the rally*, plain text, until the event starts.
+ */
+function inviteFor(
+  content: GameContent,
+  ctx: Awaited<ReturnType<typeof askContext>>,
+  r: CharacterDoc,
+  now: number,
+): MemberRowView['ask'] {
+  if (!ctx) return null;
+  if (r.held && r.held.state === 'in' && new Date(r.held.until).getTime() > now) return null;
+  for (const ev of ctx.evs) {
+    const onIt = ev.roles.some((x) => x.holder?.characterId.equals(r._id)) || ev.hands.some((h) => h.characterId.equals(r._id));
+    if (onIt) continue;
+    const type = typeOf(content, ev.typeId);
+    const idx = r.rank >= EVENTS.namedRoleRank ? ev.roles.findIndex((x) => x.holder === null) : -1;
+    const roleName = idx >= 0 ? (type.roles[idx]?.name ?? '') : ev.hands.length < EVENTS.hands.max ? 'hand' : null;
+    if (roleName === null) continue;
+    const id = ev._id.toHexString();
+    return {
+      eventId: id,
+      eventName: type.runningName,
+      startsAt: ev.startsAt.getTime(),
+      roleName,
+      asked: ctx.invited.has(`${id}:${r._id.toHexString()}`),
+    };
+  }
+  return null;
 }
 
 /** One Members row (tech §8.3). */
@@ -149,23 +188,7 @@ async function memberRows(
               affordable: energy >= FAVOURS.visit.energy,
               visited: (stay!.visits ?? []).some((v) => v.characterId.equals(viewer._id)),
             };
-    let askRow: MemberRowView['ask'] = null;
-    if (ask && !you) {
-      const ev = ask.ev;
-      const onIt = ev.roles.some((x) => x.holder?.characterId.equals(r._id)) || ev.hands.some((h) => h.characterId.equals(r._id));
-      if (!onIt) {
-        const type = typeOf(content, ev.typeId);
-        const idx = ev.roles.findIndex((x) => x.holder === null);
-        const roleName =
-          idx >= 0 && r.rank >= EVENTS.namedRoleRank
-            ? (type.roles[idx]?.name ?? '')
-            : ev.hands.length < EVENTS.hands.max
-              ? 'hand'
-              : null;
-        if (roleName !== null)
-          askRow = { eventId: ev._id.toHexString(), roleName, asked: ask.asked.has(r._id.toHexString()) };
-      }
-    }
+    const askRow = you ? null : inviteFor(content, ask, r, now);
     const seen = r.presence?.seenAt ? new Date(r.presence.seenAt).getTime() : null;
     return {
       characterId: r._id.toHexString(),
