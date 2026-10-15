@@ -944,10 +944,12 @@ export function CityPage() {
             </span>
             {ruleChip('plate-rule-chip', true)}
           </div>
-          {/* Slice 6 (screens §6.1): own faction only; absent when it is only you. */}
+          {/* Slice 6 (screens §6.1): own faction only; absent when it is only you. From 640 px: on a phone the
+              plate has no line to spare (the pins must stay on the first view, QA M2); the Faction tab's
+              header carries the count there. */}
           {(c.factionHere ?? 0) > 1 && (
             <span
-              className="font-mono text-[10.5px] text-dim [@media(max-width:639px)_and_(max-height:700px)]:hidden"
+              className="hidden font-mono text-[10.5px] text-dim sm:block short:hidden"
               data-testid="plate-here"
             >
               {copy.together.hereNow.plate(c.factionHere ?? 0, character.factionName)}

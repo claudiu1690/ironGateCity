@@ -170,8 +170,10 @@ test('chat live between two browsers, the limit line, report and mute; Members, 
   await b.page.goto('/me');
   await b.page.getByTestId('me-chat-toggle').click();
   await expect(b.page.getByTestId('me-chat')).toHaveText('Hidden');
+  // Screens §2, §10 (phase C): with chat hidden there is no Chat chip; a link to it opens Events.
   await b.page.goto('/faction?tab=chat');
-  await expect(b.page.getByTestId('faction-chat')).toHaveAttribute('data-hidden', 'true');
+  await expect(b.page.getByTestId('faction-tab-chat')).toHaveCount(0);
+  await expect(b.page.getByTestId('faction-events')).toBeVisible();
   await expect(b.page.getByTestId('chat-panel')).toHaveCount(0);
 
   // 6. Desktop (1440 × 900): Chat is a persistent column beside Events; hidden, it is gone.

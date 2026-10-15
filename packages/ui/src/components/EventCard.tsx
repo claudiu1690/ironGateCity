@@ -5,7 +5,8 @@ import { cx, formatClock, formatWeekday } from '../format';
 import { Button } from './Button';
 import { formatSwing } from './Capital';
 import { FACTION_STYLE } from './FactionCrest';
-import { Picture, artUrl } from './Picture';
+import { MemberFace } from './Members';
+import { Picture } from './Picture';
 import type { StampTone } from './Stamp';
 
 /**
@@ -37,50 +38,35 @@ export function calledByText(c: EventCaller): string {
   return c.kind === 'secretary' ? copy.together.card.calledBySecretary(c.name) : copy.together.card.calledBy(c.name);
 }
 
-/** A member's face (the 128 px avatar), or a dashed circle with *?* for an open place. */
+/**
+ * A member's face (lane B's `MemberFace`, one avatar component for the slice), or a dashed circle
+ * with *?* for an open place.
+ */
 export function Face({
   avatarId,
   size,
   open = false,
-  ring,
   className,
 }: {
   avatarId: string | null;
   size: number;
   open?: boolean;
-  /** The faction's colour ring. */
-  ring?: string;
   className?: string;
 }) {
-  const box = { width: size, height: size };
-  if (open || !avatarId)
+  if (open)
     return (
       <span
         aria-hidden="true"
-        style={box}
+        style={{ width: size, height: size }}
         className={cx(
-          'flex shrink-0 items-center justify-center rounded-full font-label text-[13px] text-muted',
-          open ? 'border-[1.5px] border-dashed border-muted' : 'border-[1.5px] border-ink bg-paper-2',
+          'flex shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-muted font-label text-[13px] text-muted',
           className,
         )}
       >
-        {open ? '?' : ''}
+        ?
       </span>
     );
-  return (
-    <picture className={cx('shrink-0', className)} style={box}>
-      <source type="image/avif" srcSet={artUrl(avatarId, 128, 'avif')} />
-      <img
-        src={artUrl(avatarId, 128, 'webp')}
-        alt=""
-        loading="lazy"
-        width={size}
-        height={size}
-        style={{ ...box, ...(ring ? { borderColor: ring } : {}) }}
-        className="rounded-full border-2 border-ink object-cover object-top"
-      />
-    </picture>
-  );
+  return <MemberFace avatarId={avatarId} size={size} className={className} />;
 }
 
 export interface EventCardProps {

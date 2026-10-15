@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { FACTION_TABS, FactionCrest, FactionTabs } from '@irongate/ui';
+import { FACTION_TABS, FactionTabs, artUrl } from '@irongate/ui';
 import type { FactionTab } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -61,8 +61,11 @@ export function FactionPage() {
   useEffect(() => rememberTab(tab), [tab]);
 
   const go = (t: FactionTab) => void navigate({ to: '/faction', search: { tab: t }, replace: true });
-  // On a desktop Chat is the right-hand column, so the left keeps the last other part.
-  const left: FactionTab = wide && tab === 'chat' ? 'events' : tab;
+  const chatHidden = !!character?.chat?.hidden;
+  // Screens §10: on a desktop Chat is the right-hand column (four chips); with chat hidden from Me
+  // there is no Chat chip at all. Either way the left keeps another part.
+  const tabs = FACTION_TABS.filter((t) => t !== 'chat' || (!wide && !chatHidden));
+  const left: FactionTab = tab === 'chat' && (wide || chatHidden) ? 'events' : tab;
 
   const body = (t: FactionTab) => {
     switch (t) {
@@ -82,9 +85,19 @@ export function FactionPage() {
   const h = hq.data;
   return (
     <div className="flex min-h-full flex-col bg-paper text-ink" data-testid="faction-page">
-      <header className="relative flex min-h-[120px] shrink-0 items-end bg-ink px-4 pt-4 pb-3 text-paper">
+      <header className="relative flex shrink-0 items-center bg-ink px-4 py-3 text-paper">
         <div className="mx-auto flex w-full max-w-[1000px] items-center gap-3">
-          {character && <FactionCrest factionId={character.factionId} label={h?.faction.name ?? ''} size={40} />}
+          {/* The faction's crest (content's `crest.{faction}` SVG, ADR 0015), on paper so it reads on ink. */}
+          {character && (
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-paper p-1.5">
+              <img
+                src={artUrl(`crest.${character.factionId}`, 0, 'svg')}
+                alt={h?.faction.name ?? character.factionName}
+                className="size-full object-contain"
+                data-testid="faction-crest"
+              />
+            </span>
+          )}
           <div className="min-w-0">
             <h1 className="font-display text-[22px] leading-tight font-bold" data-testid="faction-name">
               {h?.faction.name ?? character?.factionName ?? copy.together.tabs.faction}
@@ -98,7 +111,8 @@ export function FactionPage() {
         </div>
       </header>
       <FactionTabs
-        current={wide && tab === 'chat' ? left : tab}
+        current={left}
+        tabs={tabs}
         onGo={go}
         dots={{ events: (character?.events?.unseen ?? 0) > 0, chat: !!character?.chat?.forYou }}
         className="sticky top-0 z-10"
@@ -113,7 +127,7 @@ export function FactionPage() {
           )}
         </div>
       ) : (
-        <div className="flex-1">{body(tab)}</div>
+        <div className="flex-1">{body(left)}</div>
       )}
     </div>
   );

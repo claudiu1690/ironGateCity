@@ -289,6 +289,9 @@ function PoliticalBody({
       text:
         r.act === 'bail'
           ? copy.risk.bailPaid(spent)
+          : // Slice 6 (design §11): the payer's line names the mate.
+            r.act === 'bailPosted' && r.view.kind === 'member'
+            ? copy.together.knock.bailFor(spent, r.view.member.name)
           : r.act === 'walkOut' || r.act === 'treated'
             ? copy.risk.wardPaid(spent)
             : copy.ironLeft(spent, formatNumber(k.iron.after)),

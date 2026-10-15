@@ -9,6 +9,11 @@ export interface FactionTabsProps {
   onGo: (tab: FactionTab) => void;
   /** A dot on a part (the Events tab while a result waits; Chat while a line is for you). */
   dots?: Partial<Record<FactionTab, boolean>>;
+  /**
+   * The parts shown (default all five). Desktop: four, Chat is the column at the right; chat hidden
+   * from Me: no Chat chip (screens §2, §10).
+   */
+  tabs?: readonly FactionTab[];
   className?: string;
 }
 
@@ -16,14 +21,15 @@ export interface FactionTabsProps {
  * Slice 6 (screens §2): the Faction tab's five parts as a `TramBar`-style strip, 44 px, Oswald caps
  * on ink; the current part inverted (paper on ink). Real buttons, one tap each.
  */
-export function FactionTabs({ current, onGo, dots, className }: FactionTabsProps) {
+export function FactionTabs({ current, onGo, dots, tabs = FACTION_TABS, className }: FactionTabsProps) {
   return (
     <nav
       aria-label={copy.together.tabs.faction}
-      className={cx('grid min-h-11 grid-cols-5 items-stretch gap-px bg-ink-2', className)}
+      className={cx('grid min-h-11 items-stretch gap-px bg-ink-2', className)}
+      style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
       data-testid="faction-tabs"
     >
-      {FACTION_TABS.map((t) => {
+      {tabs.map((t) => {
         const on = t === current;
         return (
           <button
@@ -32,7 +38,8 @@ export function FactionTabs({ current, onGo, dots, className }: FactionTabsProps
             onClick={() => onGo(t)}
             aria-current={on ? 'page' : undefined}
             className={cx(
-              'label-caps relative flex min-h-11 min-w-0 cursor-pointer items-center justify-center px-1 py-1 text-center text-[11px] leading-[1.15] break-words',
+              // Five chips at 360 px: *Scoreboard* keeps clear of its cell's edges with less tracking.
+              'label-caps relative flex min-h-11 min-w-0 cursor-pointer items-center justify-center px-0.5 py-1 text-center text-[10.5px] leading-[1.15] tracking-[0.04em]! break-words sm:text-[11px] sm:tracking-[0.08em]!',
               'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper',
               on ? 'bg-paper text-ink' : 'bg-ink text-paper hover:bg-ink-2',
             )}

@@ -74,7 +74,9 @@ const SYSTEM =
 const WAR =
   /\b(war|wars|battle|troops|army|militia|enemy|enemies|uprising|front line|frontline|siege|invasion|comrades?|uniforms?|salute)\b/i;
 async function plainWords(page: Page, screen: string) {
-  const text = await page.locator('body').innerText();
+  // Slice 6: content's Canvass Drive and its Canvassers allowed, as in review4.spec.ts (a question
+  // for the designer, tech slice-6 Deviations, phase C).
+  const text = (await page.locator('body').innerText()).replace(/\bcanvass drive\b|\bcanvassers?\b/gi, '');
   expect(text.match(SYSTEM)?.[0] ?? null, `${screen}: system term`).toBeNull();
   expect(text.match(WAR)?.[0] ?? null, `${screen}: war word`).toBeNull();
   expect(/close the game/i.test(text), `${screen}: close the game`).toBe(false);
