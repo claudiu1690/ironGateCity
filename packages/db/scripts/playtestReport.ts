@@ -13,6 +13,10 @@ import { bestTrainedStat } from '@irongate/rules';
 import type { ActionResult, CardBy } from '@irongate/rules';
 import {
   ActionLog,
+  CampaignEvent,
+  ChatMessage,
+  ChatReport,
+  EventSignup,
   Arrival,
   Award,
   Candidacy,
@@ -44,6 +48,7 @@ import { buildPlaytestReport } from '../src/report';
 import { buildRiskReport, riskTables } from '../src/risk';
 import type { RiskResult } from '../src/risk';
 import { buildReview4Report, review4Tables } from '../src/review4Report';
+import { buildTogetherReport, togetherTables } from '../src/together';
 
 const serverEnv = fileURLToPath(new URL('../../../apps/server/.env', import.meta.url));
 if (!process.env.MONGODB_URI && existsSync(serverEnv)) process.loadEnvFile(serverEnv);
@@ -562,8 +567,76 @@ try {
     galleryIds: allActions.filter((a) => a.id.endsWith('.gallery')).map((a) => a.id),
   });
 
+  // Slice 6 (tech design §15.2): together. Test members (userId 'test:…') and boosted testers left out.
+  const together = buildTogetherReport({
+    now: new Date(),
+    characters: (
+      await Character.find({}, { userId: 1, createdAt: 1, rank: 1, playtest: 1, 'chat.seenAt': 1, mutes: 1 }).lean()
+    ).map((c) => ({
+      id: c._id.toHexString(),
+      userId: String(c.userId),
+      createdAt: c.createdAt,
+      rank: c.rank ?? 1,
+      boosted: c.playtest?.boosted === true,
+      chatSeenAt: c.chat?.seenAt ?? null,
+      mutes: c.mutes?.length ?? 0,
+    })),
+    events: (
+      await CampaignEvent.find({}, { kind: 1, typeId: 1, day: 1, status: 1, roles: 1, hands: 1, 'result.band': 1, calledBy: 1 }).lean()
+    ).map((e) => ({
+      id: e._id.toHexString(),
+      kind: e.kind,
+      typeId: e.typeId,
+      day: e.day,
+      status: e.status,
+      roles: e.roles.map((r) => ({ roleId: r.roleId, filled: r.holder !== null })),
+      hands: e.hands.length,
+      band: (e.result as { band?: string } | null)?.band ?? null,
+      calledBy: e.calledBy.kind === 'member' ? e.calledBy.characterId.toHexString() : null,
+    })),
+    signups: (
+      await EventSignup.find(
+        {},
+        { eventId: 1, characterId: 1, slot: 1, caller: 1, day: 1, signedAt: 1, status: 1, orderBonus: 1, 'receipt.pc': 1 },
+      ).lean()
+    ).map((s) => ({
+      eventId: s.eventId.toHexString(),
+      characterId: s.characterId.toHexString(),
+      slot: s.slot,
+      caller: s.caller,
+      day: s.day,
+      signedAt: s.signedAt,
+      status: s.status,
+      orderBonus: s.orderBonus,
+      pc: s.receipt?.pc?.amount ?? 0,
+    })),
+    stays: (await Stay.find({}, { bailPostedBy: 1, visits: 1 }).lean()).map((s) => ({
+      bailPostedBy: s.bailPostedBy
+        ? { characterId: s.bailPostedBy.characterId.toHexString(), iron: s.bailPostedBy.iron }
+        : null,
+      visits: (s.visits ?? []).map((v) => ({ characterId: v.characterId.toHexString(), counted: v.counted })),
+    })),
+    chat: (
+      await ChatMessage.find({}, { kind: 1, characterId: 1, at: 1, 'system.kind': 1, 'system.to': 1, 'system.ref': 1 }).lean()
+    ).map((l) => ({
+      kind: l.kind,
+      characterId: l.characterId ? l.characterId.toHexString() : null,
+      at: l.at,
+      systemKind: l.system?.kind ?? null,
+      to: l.system?.to ? l.system.to.toHexString() : null,
+      eventId: l.system?.ref ?? null,
+    })),
+    reports: await ChatReport.countDocuments({}),
+    activity: (await ActionLog.find({}, { characterId: 1, createdAt: 1 }).lean()).map((a) => ({
+      characterId: a.characterId.toHexString(),
+      at: a.createdAt,
+    })),
+  });
+
   if (process.argv.includes('--json')) {
-    console.log(JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk, review4 }, null, 2));
+    console.log(
+      JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk, review4, together }, null, 2),
+    );
   } else {
     console.log('\nIs spending a bar of Energy fun, and do players want to come back in 3 hours?\n');
     console.table(
@@ -714,6 +787,15 @@ try {
     for (const t of review4Tables(review4)) {
       console.log(t.title);
       console.table(t.rows);
+    }
+
+    console.log(
+      `\nTogether: does doing it together bring players back? (${together.testers} testers; test members and boosted testers left out)\n`,
+    );
+    for (const t of togetherTables(together)) {
+      console.log(t.title);
+      if (t.rows.length > 0) console.table(t.rows);
+      else console.log('  none');
     }
   }
 } finally {
