@@ -69,6 +69,15 @@ export function districtResidentsFilter(cityId: string, districtId: string, day:
   };
 }
 
+/** Slice 7 (ADR 0050): Clearwater's eligible: Rank 2+ residents of the city, any faction, active. */
+export function cityResidentsFilter(cityId: string, day: DayKey) {
+  return {
+    'residence.cityId': cityId,
+    rank: { $gte: COUNCIL.voteRank },
+    lastActionAt: { $gte: activeSince(day) },
+  };
+}
+
 /** The voters and the eligible of a count (turnout): the active members plus every voter. */
 export async function turnoutOf(
   electionId: string,

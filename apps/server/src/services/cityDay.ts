@@ -16,6 +16,7 @@ import type {
   CharacterDoc,
   CityDoc,
   ElectionDoc,
+  OfficeTermDoc,
   RuleBallotDoc,
   UnrestPrizeDoc,
 } from '@irongate/db';
@@ -50,6 +51,7 @@ import { resolveOpenBefore } from './eventService';
 import { Types } from 'mongoose';
 import type { ClientSession } from 'mongoose';
 import { captureException } from '../sentry';
+import { bootstrapBattleground, isOneMeterBattleground, processBattlegroundBoundary } from './battlegroundDay';
 import { bootstrapCapital, processCapitalBoundary } from './capitalDay';
 import {
   AlreadySettled,
@@ -59,6 +61,7 @@ import {
   newSeed,
   turnoutOf,
 } from './cityDayCore';
+import { governorAtCount } from './governorService';
 import { bootstrapIssues, drawWeek, heroesStep, issuesStep } from './issuesDay';
 import { cycleKeyOf, writeLedger } from './ledger';
 import type { LedgerRowInput } from './ledger';
@@ -417,7 +420,7 @@ async function processBoundary(
       { $set: { completed: true } },
       { session },
     );
-    await OfficeTerm.insertMany(
+    const inserted = await OfficeTerm.insertMany(
       r.seated.map((row, i) => {
         const b = (e.ballot ?? []).find((x) => x.key === row.key)!;
         return {
@@ -488,11 +491,23 @@ async function processBoundary(
       { session },
     );
     await RuleBallot.create([openBallotDoc(cityId, cal.cycle, d)], { session });
+    // Slice 7 (ADR 0048): the Governor, from the whole council.
+    const governor = await governorAtCount(content, {
+      cityId,
+      k: cal.cycle,
+      d,
+      bloc: null,
+      seated: inserted.map((x) => x.toObject() as OfficeTermDoc),
+      rows: r.rows,
+      homeFactionId: home,
+      session,
+    });
     set.council = {
       key: councilKey(cityId, cal.cycle),
       fromDay: d,
       toDay: d + COUNCIL.termDays,
       npcSeats: r.npcSeats,
+      governor,
     };
   }
 
@@ -686,6 +701,8 @@ const isConflict = (err: unknown) =>
 export async function settleCityDay(content: GameContent, cityId: string, now: number): Promise<CityDoc> {
   const today = dayKey(now);
   const capital = content.isDistricted(cityId);
+  // Slice 7 (ADR 0050): Clearwater, a battleground on one meter.
+  const oneMeter = isOneMeterBattleground(content, cityId);
   for (let guard = 0; guard < 1_000; guard++) {
     // Review 4 (the deposit test's flake): read at majority. A concurrent settler's commit can be
     // visible to a plain (local) read a moment before it is in the majority snapshot that the
@@ -710,13 +727,17 @@ export async function settleCityDay(content: GameContent, cityId: string, now: n
         if (!city?.world) {
           return capital
             ? bootstrapCapital(content, cityId, now, session)
-            : bootstrap(content, cityId, now, session);
+            : oneMeter
+              ? bootstrapBattleground(content, cityId, now, session)
+              : bootstrap(content, cityId, now, session);
         }
         // Slice 6 (tech design §3.2): the boundary posts day d's fixtures in its transaction.
         return (
           capital
             ? processCapitalBoundary(content, cityId, d, now, session)
-            : processBoundary(content, cityId, d, now, session)
+            : oneMeter
+              ? processBattlegroundBoundary(content, cityId, d, now, session)
+              : processBoundary(content, cityId, d, now, session)
         ).then(() => ensureFixtures(content, cityId, d, session));
       });
     } catch (err) {
@@ -738,7 +759,7 @@ export async function ensureCityDay(
   now: number,
 ): Promise<CityDoc | null> {
   const spec = content.city(cityId);
-  if (!spec?.council || !cityDayBuilt(content, cityId)) return City.findById(cityId).lean<CityDoc>();
+  if (!spec?.council) return City.findById(cityId).lean<CityDoc>();
   try {
     return await settleCityDay(content, cityId, now);
   } catch (err) {
@@ -764,14 +785,6 @@ export async function ensurePlaces(
 }
 
 /**
- * Slice 7 phase A (docs/tech/slice-7.md, Deviations): Clearwater's content is bound, but its boundary
- * (`processBattlegroundBoundary`, a contested council on one meter) is phase B's T12. Until then its
- * city day is not run: the city has no stored document and every other city settles as before.
- */
-export const cityDayBuilt = (content: GameContent, cityId: string): boolean =>
-  content.city(cityId)?.role !== 'battleground' || content.isDistricted(cityId);
-
-/**
  * The worker's job and the e2e hook: every council city, the capital first (its count is the
  * biggest). A failure in one city does not stop the others; the run then fails so Agenda records it.
  */
@@ -782,7 +795,7 @@ export async function runCityDay(
   const settled: Array<{ cityId: string; settledDay: DayKey | null }> = [];
   const failed: string[] = [];
   const errors: unknown[] = [];
-  const cities = [...content.councilCities()].filter((c) => cityDayBuilt(content, c.id)).sort(
+  const cities = [...content.councilCities()].sort(
     (a, b) => Number(content.isDistricted(b.id)) - Number(content.isDistricted(a.id)),
   );
   for (const city of cities) {

@@ -37,6 +37,7 @@ import {
 import type {
   DayKey,
   DistrictCountLine,
+  DistrictCountRow,
   FactionId,
   NpcSlateEntry,
   OpinionShares,
@@ -53,6 +54,7 @@ import {
   newSeed,
   turnoutOf,
 } from './cityDayCore';
+import { governorAtCount } from './governorService';
 import { drawWeek, heroesStep, issuesStep } from './issuesDay';
 import { writeLedger } from './ledger';
 import type { LedgerRowInput } from './ledger';
@@ -411,6 +413,7 @@ export async function processCapitalBoundary(
     const cityVotes: Record<string, number> = {};
     const turnout = { voters: 0, eligible: 0 };
     const terms: Array<Partial<OfficeTermDoc>> = [];
+    const allRows: DistrictCountRow[] = [];
     for (const [i, dist] of ds.entries()) {
       const e = es[i]!;
       const votes = votesBy[e._id] ?? {};
@@ -453,6 +456,7 @@ export async function processCapitalBoundary(
         { session },
       );
       if (counted.matchedCount === 0) throw new AlreadySettled();
+      allRows.push(...r.rows);
       const standing = (e.ballot ?? []).filter((b) => b.kind === 'player' && b.candidacyId);
       if (standing.length > 0) {
         await Candidacy.bulkWrite(
@@ -529,7 +533,17 @@ export async function processCapitalBoundary(
       { $set: { completed: true } },
       { session },
     );
-    await OfficeTerm.insertMany(terms, { session });
+    const inserted = await OfficeTerm.insertMany(terms, { session });
+    // Slice 7 (ADR 0048): the Mayor, from the largest bloc (seats, then ballots, opinion, the draw).
+    const governor = await governorAtCount(content, {
+      cityId,
+      k,
+      d,
+      bloc: councilOrder(seats, ballots, opinion, drawOrderOf(createRng(`${es[0]?.seed ?? cityId}:rule`)))[0] ?? null,
+      seated: inserted.map((x) => x.toObject() as OfficeTermDoc),
+      rows: allRows,
+      session,
+    });
     await Election.insertMany(
       ds.map((dist) => districtElection(content, cityId, dist, k, offset, false, at)),
       { session },
@@ -545,6 +559,7 @@ export async function processCapitalBoundary(
       npcSeats: npcSeats.length,
       seats: CAPITAL_COUNCIL.seats,
       npcSeatsByFaction: npcByFaction,
+      governor,
     };
   }
 

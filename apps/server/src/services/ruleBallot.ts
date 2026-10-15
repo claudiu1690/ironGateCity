@@ -1,5 +1,5 @@
 import type { GameContent } from '@irongate/content';
-import { District, Election, OfficeTerm, RuleBallot, Vote } from '@irongate/db';
+import { City, District, Election, OfficeTerm, RuleBallot, Vote } from '@irongate/db';
 import type { CityDoc, DistrictDoc, ElectionDoc, OfficeTermDoc, RuleBallotDoc } from '@irongate/db';
 import {
   FACTION_IDS,
@@ -15,6 +15,7 @@ import {
   moraleState,
   partyCardOf,
 } from '@irongate/rules';
+import { isContested } from './residence';
 import type { CardBy, DayKey, FactionId, RuleCard, SeatRule } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { AlreadySettled } from './cityDayCore';
@@ -165,7 +166,9 @@ export async function capitalCardOrder(
 ): Promise<FactionId[]> {
   const bySeat: Record<FactionId, number> = { vanguard: 0, collective: 0, alliance: 0 };
   for (const x of seats) bySeat[x.factionId] += 1;
-  const ids = content.districtsOf(cityId).map((d) => electionKey(d.id, k - 1));
+  // Slice 7 (ADR 0050): Clearwater counts on one meter, the city itself.
+  const districted = content.isDistricted(cityId);
+  const ids = districted ? content.districtsOf(cityId).map((d) => electionKey(d.id, k - 1)) : [electionKey(cityId, k - 1)];
   const counted = await s(Election.find({ _id: { $in: ids }, status: 'counted' }, { result: 1 }), session).lean<
     ElectionDoc[]
   >();
@@ -176,6 +179,10 @@ export async function capitalCardOrder(
     for (const f of factions ?? []) ballots[f.factionId] += f.ballots;
   }
   let shares = opinion;
+  if (!shares && !districted) {
+    const city = await s(City.findById(cityId, { opinion: 1 }), session).lean<CityDoc>();
+    shares = city?.opinion ?? content.city(cityId)!.baselineOpinion;
+  }
   if (!shares) {
     const docs = await s(District.find({ cityId }, { opinion: 1 }), session).lean<DistrictDoc[]>();
     shares = averageShares(docs.map((d) => d.opinion));
@@ -274,7 +281,8 @@ export async function ballotCards(
 ): Promise<{ doc: RuleBallotDoc | null; cards: RuleCard[]; status: 'provisional' | 'set' }> {
   const doc = await s(RuleBallot.findById(councilKey(cityId, k)), session).lean<RuleBallotDoc>();
   if (doc?.cards && doc.status !== 'open') return { doc, cards: doc.cards, status: 'set' };
-  const capital = content.isDistricted(cityId);
+  // Slice 7: every battleground (the capital, Clearwater) puts one card per party.
+  const capital = isContested(content, cityId);
   const home = content.city(cityId)?.homeFactionId ?? null;
   const unrest = !capital && home && city?.opinion ? moraleState(city.opinion[home]) === 'unrest' : false;
   const cards = await cardsFor(content, cityId, k, { unrest: !!unrest, capital }, session);

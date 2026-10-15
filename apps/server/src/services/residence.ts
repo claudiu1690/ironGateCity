@@ -114,3 +114,10 @@ export function placesOf(
   const ids = [here, residenceCityId(c), jobCityOf(content, c)].filter((x): x is string => !!x);
   return [...new Set(ids)];
 }
+
+/**
+ * Slice 7 (ADR 0050): a contested council (the capital, Clearwater): one card per party, the
+ * largest bloc's rule, a Mayor. `isDistricted` stays the test for districts.
+ */
+export const isContested = (content: GameContent, cityId: string): boolean =>
+  content.city(cityId)?.role === 'battleground';

@@ -10,6 +10,7 @@ import {
   dayStart,
   nextMonday,
 } from '@irongate/rules';
+import { isContested } from './residence';
 import type { TownHallView } from '@irongate/rules';
 import type { ClientSession, Types } from 'mongoose';
 import { gameError } from '../gameError';
@@ -45,7 +46,7 @@ export async function townHallView(
   // QA n3: settle (and bootstrap) the city's day first, as `city.get` does, so the hall answers for a
   // city nobody has touched yet. One read by `_id` once it is settled.
   const doc = tx ? tx.city : await ensureCityDay(content, cityId, now);
-  const capital = content.isDistricted(cityId);
+  const capital = isContested(content, cityId);
   const home = city.homeFactionId ?? null;
   const cal = councilDay(today, city.council.offset);
   const key = councilKey(cityId, cal.cycle);

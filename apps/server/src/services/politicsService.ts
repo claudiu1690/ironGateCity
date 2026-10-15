@@ -66,7 +66,7 @@ import type {
 import { selectPoliticalHeadlines } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
-import { residenceCityId, residenceOf, residenceSpec } from './residence';
+import { isContested, residenceCityId, residenceOf, residenceSpec } from './residence';
 import type { ResidenceSpec } from './residence';
 import { ordinanceIdOn } from './modifiers';
 import { ballotCards, cardByName, termRule } from './ruleBallot';
@@ -1175,7 +1175,7 @@ export async function whatNowOf(
   city: CityDoc | null,
   session: Session = null,
 ): Promise<WhatNowView> {
-  const capital = content.isDistricted(term.cityId);
+  const capital = isContested(content, term.cityId);
   const offset = content.city(term.cityId)?.council?.offset ?? 0;
   const cal = councilDay(term.fromDay, offset);
   const hall = content.hallOf(term.cityId)?.location;
@@ -1287,7 +1287,7 @@ export async function ruleHeadlineFacts(
   if (cal.cycleDay === 2 && me) {
     const meId = me.c._id.toHexString();
     const b = await RuleBallot.findById(councilKey(cityId, cal.cycle)).lean<RuleBallotDoc>();
-    const capital = content.isDistricted(cityId);
+    const capital = isContested(content, cityId);
     const card =
       b?.status === 'set' && b.setDay === today
         ? (b.cards ?? []).find((x) =>
