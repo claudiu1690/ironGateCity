@@ -85,7 +85,9 @@ test('events: call a rally, sign up, withdraw, commit, the result for both; a ha
   await shot(a, 'call-sheet');
   await sheet.getByTestId('call-it').click();
   const called = a.getByRole('dialog').filter({ hasText: 'Called' });
-  await expect(called).toContainText('The branch has a rally at');
+  // The start in the player's clock: *at 19:40*, or *tomorrow 00:51* for a call after 21:00 (the
+  // three-hour chip crosses midnight), so the line does not depend on the time of day of the run.
+  await expect(called).toContainText(/The branch has a rally (at|tomorrow) \d\d:\d\d/);
   await called.getByTestId('political-continue').click();
   await expect(a).toHaveURL(/\/faction\/events\/[0-9a-f]{24}/);
   const eventId = a.url().match(/events\/([0-9a-f]{24})/)![1]!;
