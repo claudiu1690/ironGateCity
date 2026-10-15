@@ -16,6 +16,7 @@ import type {
   OriginEffect as OriginEffectRule,
 } from '@irongate/rules';
 import { z } from 'zod';
+import type { EventCondition } from './slice6';
 
 /** Internal faction ids. Display names are data (GDD: faction naming is parked). */
 export const FactionId = z.enum(FACTION_IDS);
@@ -614,7 +615,23 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   // Review 5 (ADR 0082): the Unrest prize (stored at the settlement that credits it).
   z.strictObject({ kind: z.literal('unrestPushed') }),
   z.strictObject({ kind: z.literal('moraleLostToRivals'), min: z.number().min(0) }),
-]) satisfies z.ZodType<HeadlineCondition>;
+  // Slice 6 (tech design §11.2, design §10): the event headlines; `eventOpenToday` live, the rest
+  // stored. The type lives in `slice6.ts` until the rules' `HeadlineCondition` carries it.
+  z.strictObject({ kind: z.literal('eventOpenToday') }),
+  z.strictObject({
+    kind: z.literal('eventResolvedYesterday'),
+    tookPart: z.boolean(),
+    outcome: z.enum(['triumph', 'success', 'mixed', 'fiasco']).optional(),
+  }),
+  z.strictObject({ kind: z.literal('eventCalledOffYesterday') }),
+  z.strictObject({ kind: z.literal('bailPostedForYesterday') }),
+  z.strictObject({ kind: z.literal('bailPostedByYesterday') }),
+  z.strictObject({ kind: z.literal('visitedYesterday') }),
+  // Until the rules' `HeadlineCondition` carries the six event kinds, the schema's *output* type
+  // is kept at the rules' type (every reader of a template, in tests and the server, is typed on
+  // it) and only the *input* type is widened so the data files accept them. Once the developer
+  // adds `EventCondition` to the rules this cast is a no-op and can go.
+]) as unknown as z.ZodType<HeadlineCondition, HeadlineCondition | EventCondition>;
 
 export const HeadlineTemplateSchema = z.strictObject({
   id: Id,

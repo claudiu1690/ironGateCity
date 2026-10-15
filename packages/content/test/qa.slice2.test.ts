@@ -335,10 +335,12 @@ describe('Content policy (CLAUDE.md rules 2 and 6; content-policy review §7 che
     // §23.7): *the front door* (the Union Hall briefing), a door in its everyday sense. Review 5
     // (answers §12.2, §13, §16.1; GDD §14.12, decided by the user 8 Oct 2026): the republic's police
     // on rival ground at night, never a party's: *Night · patrols out*, *A patrol has stopped you*,
-    // *The patrol has moved on* (the Vanguard still has no patrol).
+    // *The patrol has moved on* (the Vanguard still has no patrol). Slice 6 (design §17, §20.3,
+    // 15 Oct 2026): *front page* (a newspaper's, the Headline Story) and *Picket Captain* (a union
+    // picket's captain, the General Strike's role; a civic word, no rank).
     const allowed = hits.filter(
       (h) =>
-        !/General Strike|front row|out front|front room|front door|Garrison Hill|(since|by) the war|the war gutted|close ?race|patrols out|A patrol has stopped|The patrol has moved/i.test(
+        !/General Strike|front row|out front|front room|front door|front page|picket captain|Garrison Hill|(since|by) the war|the war gutted|close ?race|patrols out|A patrol has stopped|The patrol has moved/i.test(
           h,
         ),
     );

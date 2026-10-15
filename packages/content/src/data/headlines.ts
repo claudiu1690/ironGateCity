@@ -411,6 +411,204 @@ export const riskHeadlines: HeadlineInput[] = [
 ];
 
 /**
+ * Slice 6 (docs/design/slice-6-together.md §10; tech design §11.2): the ten event templates every
+ * paper carries, by id suffix: the conditions, groups and priorities are the same for the four
+ * papers; only the texts differ. `event-today` is live (the first open event of the faction in the
+ * residence city); the rest are stored from the settlement's facts. In Print, marked by id on the
+ * server (`EVENT_IN_PRINT_NAMES`): the reader's own result, bail posted for them, their visitors.
+ * `{event}` is the event's running name (*canvass drive*), `{outcome}` the stamp word, `{swing}`
+ * signed to two decimals, `{time}` the start in the player's clock (*midnight* for the fixture).
+ */
+type EventName =
+  | 'event-today'
+  | 'event-triumph'
+  | 'event-success'
+  | 'event-mixed'
+  | 'event-fiasco'
+  | 'event-city'
+  | 'event-called-off'
+  | 'bail-posted-for'
+  | 'bail-posted-by'
+  | 'visited';
+
+const EVENT_SET: Record<EventName, Pick<HeadlineInput, 'group' | 'priority' | 'when'>> = {
+  'event-today': { group: 'city', priority: 1, when: [{ kind: 'eventOpenToday' }] },
+  'event-triumph': {
+    group: 'personal',
+    priority: 0,
+    when: [{ kind: 'eventResolvedYesterday', tookPart: true, outcome: 'triumph' }],
+  },
+  'event-success': {
+    group: 'personal',
+    priority: 0,
+    when: [{ kind: 'eventResolvedYesterday', tookPart: true, outcome: 'success' }],
+  },
+  'event-mixed': {
+    group: 'personal',
+    priority: 1,
+    when: [{ kind: 'eventResolvedYesterday', tookPart: true, outcome: 'mixed' }],
+  },
+  'event-fiasco': {
+    group: 'personal',
+    priority: 1,
+    when: [{ kind: 'eventResolvedYesterday', tookPart: true, outcome: 'fiasco' }],
+  },
+  'event-city': { group: 'city', priority: 0, when: [{ kind: 'eventResolvedYesterday', tookPart: false }] },
+  'event-called-off': { group: 'personal', priority: 2, when: [{ kind: 'eventCalledOffYesterday' }] },
+  'bail-posted-for': { group: 'personal', priority: 0, when: [{ kind: 'bailPostedForYesterday' }] },
+  'bail-posted-by': { group: 'personal', priority: 2, when: [{ kind: 'bailPostedByYesterday' }] },
+  visited: { group: 'personal', priority: 2, when: [{ kind: 'visitedYesterday' }] },
+};
+
+/** One paper's ten: `prefix` is `hl.`, `hl.v.`, `hl.a.` or `hl.ig.`; texts are [headline, deck]. */
+export function eventPaper(
+  prefix: string,
+  cityId: string,
+  texts: Record<EventName, [headline: string, deck: string]>,
+): HeadlineInput[] {
+  return (Object.keys(EVENT_SET) as EventName[]).map((name) => ({
+    id: `${prefix}${name}`,
+    cityId,
+    ...EVENT_SET[name],
+    headline: texts[name][0],
+    deck: texts[name][1],
+  }));
+}
+
+/** The three home papers' event sets (design §10). The Herald's are in `heraldHeadlines.ts`. */
+export const eventHeadlines: HeadlineInput[] = [
+  // The Coalport Clarion, in full.
+  ...eventPaper('hl.', 'coalport', {
+    'event-today': [
+      "Today: the Branch's {event} at {venue}",
+      'Called by {caller}, settles at {time}. {open} of {roles} roles still open; sign up at the Union Hall, at {venue}, or on the Faction tab. You need not be there when it starts.',
+    ],
+    'event-triumph': [
+      '{name} and the Branch Carry {venue}',
+      'A triumph: every role came off. Opinion in Coalport moved {swing} for the Collective; {pc} Political Capital each. Secretary Holm: "Again tomorrow."',
+    ],
+    'event-success': [
+      "The Branch's {event} Comes Off at {venue}",
+      'Opinion moved {swing} for the Collective. {members} members took a role; {pc} Political Capital each. The branch notes who was there.',
+    ],
+    'event-mixed': [
+      'Half a Crowd at {venue}',
+      "Half and half: some roles came off and some didn't. Opinion moved {swing}; {pc} Political Capital. More of the branch on it next time, says the secretary.",
+    ],
+    'event-fiasco': [
+      "The Branch's {event} Falls Flat at {venue}",
+      "It didn't come off. Nothing moved; {pc} Political Capital for turning up. The Clarion prints it once and says no more.",
+    ],
+    'event-city': [
+      "The Branch's {event} at {venue}: {outcome}",
+      "{members} members took part and opinion moved {swing}. Today's event is below; a role or a pair of hands.",
+    ],
+    'event-called-off': [
+      'Called Off: the {event} at {venue}',
+      'Nobody signed up by the start, so nothing happened and nothing was spent. Call it again when the branch is about; the chat is the place to ask.',
+    ],
+    'bail-posted-for': [
+      '{payer} Posts Bail for {name}',
+      "Out of the cells at {place} on {payer}'s Iron ({iron}). The duty officer noted who paid. The branch remembers these things.",
+    ],
+    'bail-posted-by': [
+      '{name} Stands Bail for {prisoner}',
+      '{iron} Iron at the desk of {place}, and {prisoner} out before the duty officer finished the page. +10 Party XP.',
+    ],
+    visited: [
+      'Visitors for {name} on the Ward',
+      '{visitors} came by with grapes and the paper. Health up and five minutes off the stay for each of them.',
+    ],
+  }),
+  // The Duskwall Sentinel: *the Movement* for *the Branch*, *Beacon House* for *the Union Hall*.
+  ...eventPaper('hl.v.', 'duskwall', {
+    'event-today': [
+      "Today: the Movement's {event} at {venue}",
+      'Called by {caller}, settles at {time}. {open} of {roles} roles open. Beacon House expects the square filled; the Faction tab has the list.',
+    ],
+    'event-triumph': [
+      '{name} and the Movement Carry {venue}',
+      'A triumph. Opinion in Duskwall moved {swing} for the Vanguard; {pc} Political Capital each. Organiser Stahl: "Noted. Again."',
+    ],
+    'event-success': [
+      "The Movement's {event} Comes Off at {venue}",
+      'Opinion moved {swing} for the Vanguard. {members} members took a role; {pc} Political Capital each. The committee has the names.',
+    ],
+    'event-mixed': [
+      'Half a Crowd at {venue}',
+      'Some roles came off and some did not. Opinion moved {swing}; {pc} Political Capital. The committee expects a fuller square.',
+    ],
+    'event-fiasco': [
+      "The Movement's {event} Falls Flat at {venue}",
+      'It did not come off. Nothing moved; {pc} Political Capital for attendance. The Sentinel records it.',
+    ],
+    'event-city': [
+      "The Movement's {event} at {venue}: {outcome}",
+      "{members} members took part and opinion moved {swing}. Today's event is below. Attendance is expected.",
+    ],
+    'event-called-off': [
+      'Called Off: the {event} at {venue}',
+      'Nobody signed up by the start. Nothing happened and nothing was spent. The committee suggests the chat.',
+    ],
+    'bail-posted-for': [
+      '{payer} Posts Bail for {name}',
+      "Out of the cells at {place} on {payer}'s Iron ({iron}). The duty officer noted who paid. Beacon House has noted it too.",
+    ],
+    'bail-posted-by': [
+      '{name} Stands Bail for {prisoner}',
+      '{iron} Iron at the desk of {place}. +10 Party XP. The movement looks after its own, in order.',
+    ],
+    visited: [
+      'Visitors for {name} on the Ward',
+      '{visitors} came by with the paper and something from the market. Health up, five minutes off each.',
+    ],
+  }),
+  // The Ashford Gazette: *the Rooms* for *the Branch* and *the Union Hall*.
+  ...eventPaper('hl.a.', 'ashford', {
+    'event-today': [
+      "Today: the Rooms' {event} at {venue}",
+      'Called by {caller}, settles at {time}. {open} of {roles} roles open; the Rooms would be glad of a hand. You need not be there when it starts.',
+    ],
+    'event-triumph': [
+      '{name} and the Rooms Carry {venue}',
+      'A triumph, the Gazette is pleased to report. Opinion in Ashford moved {swing} for the Alliance; {pc} Political Capital each. Mr Grey: "Good. Keep at it."',
+    ],
+    'event-success': [
+      "The Rooms' {event} Comes Off at {venue}",
+      'Opinion moved {swing} for the Alliance. {members} members took a role; {pc} Political Capital each. The Rooms are pleased.',
+    ],
+    'event-mixed': [
+      'Half a Crowd at {venue}',
+      'Half and half. Opinion moved {swing}; {pc} Political Capital. Mr Grey counts the names and says nothing, which is his way of saying something.',
+    ],
+    'event-fiasco': [
+      "The Rooms' {event} Falls Flat at {venue}",
+      "It didn't come off. Nothing moved; {pc} Political Capital for turning up. The Gazette prints it once, more in sorrow than in anger.",
+    ],
+    'event-city': [
+      "The Rooms' {event} at {venue}: {outcome}",
+      "{members} members took part and opinion moved {swing}. Today's event is below; the Rooms would welcome you.",
+    ],
+    'event-called-off': [
+      'Called Off: the {event} at {venue}',
+      'Nobody signed up by the start; nothing happened and nothing was spent. The Rooms suggest asking in the chat first.',
+    ],
+    'bail-posted-for': [
+      '{payer} Posts Bail for {name}',
+      "Out of the cells at {place} on {payer}'s Iron ({iron}). Legal Aid had halved it, which {payer} will want to know. The Rooms remember.",
+    ],
+    'bail-posted-by': [
+      '{name} Stands Bail for {prisoner}',
+      '{iron} Iron at the desk of {place}. +10 Party XP. The Gazette approves.',
+    ],
+    visited: [
+      'Visitors for {name} on the Ward',
+      '{visitors} came by with grapes and a book. Health up and five minutes off for each.',
+    ],
+  }),
+];
+
+/**
  * The home papers' headline templates: the Coalport Clarion's (docs/design/slice-1-content.md §7.4 and §13), split as
  * the tech design §4.2 describes: `hl.streak` is two templates, `hl.morale` three share bands, the
  * ambient pool ten templates rotated by the day. Placeholders are resolved on the server.
@@ -959,4 +1157,5 @@ export const headlines: HeadlineInput[] = [
   cityAmbient('a', 'ashford', 8, 'Rain Stops Play at the College Ground'),
   cityAmbient('a', 'ashford', 9, 'Barges Queue at the Lock After the Rains'),
   ...riskHeadlines,
+  ...eventHeadlines,
 ];

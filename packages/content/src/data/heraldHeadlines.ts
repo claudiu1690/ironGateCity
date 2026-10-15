@@ -1,6 +1,48 @@
 import type { ContentInput } from '../schemas';
+import { eventPaper } from './headlines';
 
 type HeadlineInput = ContentInput['headlines'][number];
+
+/**
+ * Slice 6 (docs/design/slice-6-together.md §10): the Herald's event set, the capital branch's;
+ * *the {faction}* for *the Branch*, `{district}` where the Clarion says Coalport.
+ */
+export const heraldEventHeadlines: HeadlineInput[] = eventPaper('hl.ig.', 'irongate', {
+  'event-today': [
+    "Today: the {faction}'s {event} at {venue}",
+    'Called by {caller} in {district}, settles at {time}. {open} of {roles} roles open; the capital branch sits on the Faction tab. You need not be there when it starts.',
+  ],
+  'event-triumph': [
+    '{name} and the {faction} Carry {venue}',
+    'A triumph in {district}: every role came off. Opinion moved {swing} for the {faction}; {pc} Political Capital each. The Herald prints the names.',
+  ],
+  'event-success': [
+    "The {faction}'s {event} Comes Off at {venue}",
+    'Opinion in {district} moved {swing} for the {faction}. {members} members took a role; {pc} Political Capital each.',
+  ],
+  'event-mixed': ['Half a Crowd at {venue}', 'Half and half in {district}. Opinion moved {swing}; {pc} Political Capital.'],
+  'event-fiasco': [
+    "The {faction}'s {event} Falls Flat at {venue}",
+    "It didn't come off in {district}. Nothing moved; {pc} Political Capital for turning up. The Herald prints it once.",
+  ],
+  'event-city': [
+    "The {faction}'s {event} at {venue}: {outcome}",
+    "{members} members of the {faction} took part in {district} and opinion moved {swing}. Today's event is below.",
+  ],
+  'event-called-off': [
+    'Called Off: the {event} at {venue}',
+    'Nobody signed up by the start; nothing happened and nothing was spent.',
+  ],
+  'bail-posted-for': [
+    '{payer} Posts Bail for {name}',
+    "Out of the cells at Police Headquarters on {payer}'s Iron ({iron}). The Herald prints who paid.",
+  ],
+  'bail-posted-by': ['{name} Stands Bail for {prisoner}', '{iron} Iron at the desk of Police Headquarters. +10 Party XP.'],
+  visited: [
+    'Visitors for {name} on the Ward',
+    '{visitors} came by St Agnes with grapes. The sisters allowed it. Health up and five minutes off each.',
+  ],
+});
 
 const ambient = (n: number, headline: string): HeadlineInput => ({
   id: `hl.ig.ambient-${n}`,
@@ -388,4 +430,5 @@ export const heraldHeadlines: HeadlineInput[] = [
   // "the War" is the historical war of 1939–45 (design §18), not the game's contest.
   ambient(8, 'Station Clock Right for the First Time Since the War'),
   ambient(9, 'Market Column to Be Cleaned by Public Subscription'),
+  ...heraldEventHeadlines,
 ];

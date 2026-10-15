@@ -47,7 +47,7 @@ import { mapPins } from './data/mapPins';
 import { nation } from './data/nation';
 import { opponents } from './data/opponents';
 import { campaignEventTypes, eventVenues, fixtureRotation } from './data/events';
-import { eventIndex, slice6Problems } from './slice6';
+import { EVENT_PLACEHOLDERS, eventIndex, isEventTemplate, slice6Problems } from './slice6';
 import type { LocatedVenue } from './slice6';
 import { ordinances } from './data/ordinances';
 import { orderTemplates } from './data/orders';
@@ -275,6 +275,8 @@ const ALLOWED_POLITICAL_PLACEHOLDERS = new Set<string>([
 ]);
 /** Slice 4: a journey card's detail and texts. */
 const ALLOWED_JOURNEY_PLACEHOLDERS = new Set<string>(JOURNEY_PLACEHOLDERS);
+/** Slice 6 (tech design §4.3): the event headlines' placeholders, with the base set (`{name}`). */
+const ALLOWED_EVENT_PLACEHOLDERS = new Set<string>([...PLACEHOLDERS, ...EVENT_PLACEHOLDERS]);
 /** Slice 4 (design §4.2): the nation map's frame holds every city pin at least this far inside. */
 const NATION_FRAME_MARGIN = 0.06;
 /** GDD §1.2 pillar 7 (content §13.7, n9): an outcome text is at most 240 characters and 4 sentences. */
@@ -815,7 +817,11 @@ export function parseContent(raw: unknown): Content {
     }
     if (h.id.startsWith('hl.local.')) problems.push(`headline "${h.id}": an hl.local.* line is for any city ('*')`);
     if (!cityById.has(h.cityId)) problems.push(`headline "${h.id}": city "${h.cityId}" is not loaded`);
-    if (isPoliticalTemplate(h)) {
+    if (isEventTemplate(h)) {
+      // Slice 6: the event set (its conditions are checked in slice6Problems).
+      for (const p of placeholdersIn(`${h.headline} ${h.deck ?? ''}`))
+        if (!ALLOWED_EVENT_PLACEHOLDERS.has(p)) problems.push(`headline "${h.id}": unknown event placeholder {${p}}`);
+    } else if (isPoliticalTemplate(h)) {
       if (!h.when.every(isPoliticalCondition))
         problems.push(`headline "${h.id}" mixes political and slice-1 conditions`);
       checkPolitical(`headline "${h.id}"`, `${h.headline} ${h.deck ?? ''}`);
@@ -1262,9 +1268,11 @@ function slice4Problems(
         problems.push(`order "${t.id}": unknown placeholder {${ph}}`);
     if (t.slot === 'C' && t.use === 'rotation' && t.residence !== 'any')
       problems.push(`order "${t.id}": a slot C rotation order serves every residence`);
-    // Slice 5 (design §12.2): the slot-B mission order serves every residence too.
-    if (t.slot !== 'C' && t.residence === 'any' && !(t.slot === 'B' && t.minLevel !== undefined))
-      problems.push(`order "${t.id}": only slot C (and slot B's mission order) is for any residence`);
+    // Slice 5 (design §12.2): the slot-B mission order serves every residence too; slice 6 (design
+    // §5, tech design §4.2): so does the slot-B event order (`kinds: ['event']`, `cityId: 'home'`).
+    const eventOrder = t.slot === 'B' && t.match.kinds?.length === 1 && t.match.kinds[0] === 'event';
+    if (t.slot !== 'C' && t.residence === 'any' && !(t.slot === 'B' && t.minLevel !== undefined) && !eventOrder)
+      problems.push(`order "${t.id}": only slot C (and slot B's mission and event orders) is for any residence`);
     const d = t.match.districtId;
     if (
       d !== undefined &&

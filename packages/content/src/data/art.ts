@@ -451,14 +451,15 @@ export const assets: Asset[] = [
     crop: { left: 0, top: 40, width: 2048, height: 1158 },
   },
   // Slice 6 (tech design 13; design 18): the two event scenes. Content policy checked: posters
-  // blank, bunting plain stripes; no flag, symbol, torch or armband.
+  // show only abstract shapes, bunting plain stripes, placards blank; no flag, symbol, torch or
+  // armband. Alt texts checked against the pictures by the designer, 15 Oct 2026.
   scene(
     'event-poster-night',
-    "A poster crew at night at a long fence: a bucket, a brush, a stack of blank sheets under a street lamp, a printer's handcart.",
+    'A poster crew on a wet street at night: a man with bucket and brush, a woman smoothing a sheet onto a long fence, a handcart of rolled posters, a lookout.',
   ),
   scene(
     'event-grand-rally',
-    'A main square full at dusk under strings of lamps, seen from the back of the crowd: a timber stand, plain striped bunting, the fortress wall beyond.',
+    'A main square full at dusk under strings of lamps, seen over the crowd: blank placards, a timber stand with one small speaker, plain bunting, the fortress.',
   ),
   scene(
     'hospital',

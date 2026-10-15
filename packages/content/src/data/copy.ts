@@ -2187,6 +2187,509 @@ export const copy = {
     /** Its part in the receipt's *Details*, in the risk parts' words: *night rate +15*. */
     ratePart: (n: number) => `night rate +${n}`,
   },
+  /**
+   * Slice 6, "together" (docs/design/slice-6-screens.md §11 and its help notes §12; the modal texts
+   * of docs/design/slice-6-together.md §11; the system lines of design §8; tech design §12.5).
+   * Times are formatted by the caller in the player's clock (`time`: "19:40", or *midnight* for the
+   * branch's fixture; `out`, `arrives`: `when` phrases). Odds are words (`copy.odds`); no string here
+   * prints a chance, a roll or a percentage for odds. Rank titles are the faction's (`rank2`, `rank3`).
+   * Amounts come from the rules' constants (`EVENTS`, `CHAT`, `FAVOURS`).
+   */
+  together: {
+    /** The tab bar's word and the Faction tab's five parts. */
+    tabs: {
+      faction: 'Faction',
+      orders: 'Orders',
+      events: 'Events',
+      members: 'Members',
+      scoreboard: 'Scoreboard',
+      chat: 'Chat',
+    },
+    /** The header's Courier line: *Organiser · 12 members · 3 here now*. */
+    header: (rank: string, members: number, here: number) =>
+      `${rank} · ${members} ${members === 1 ? 'member' : 'members'} · ${here} here now`,
+    /** The Orders tab's kicker over the fixture's card (screens §2.1). */
+    fixtureKicker: "The branch's event today",
+    /** Review 4 addendum (design §21): the orders block while the member is in the cells. */
+    ordersOffCells: 'Orders off today · the branch heard about the cells',
+    /** The outcome stamps (design §2.6); the faction colour on Triumph, the failure colour on Fiasco. */
+    band: { triumph: 'Triumph', success: 'Success', mixed: 'Mixed', fiasco: 'Fiasco' } as Record<
+      'triumph' | 'success' | 'mixed' | 'fiasco',
+      string
+    >,
+    calledOffWord: 'Called off',
+
+    // The board (screens §2.2).
+    board: {
+      here: (city: string) => `Here · ${city}`,
+      /** The capital: *Eastside, Irongate*. */
+      hereDistrict: (district: string, city: string) => `${district}, ${city}`,
+      elsewhere: (n: number) => `Also open elsewhere · ${n}`,
+      joinFromThere: 'join from there',
+      mine: 'Your sign-ups',
+      results: (city: string) => `Results · ${city}`,
+      callAnEvent: 'Call an event',
+      whoCanCall: (rank3: string) => `${rank3}s and above can call events; anyone can join one.`,
+      handsFull: (city: string) => `The branch has its hands full in ${city} today`,
+      /** A result row: *Thursday 19:40 · rally at Market Row · Success · opinion +0.95 · 4 members*. */
+      resultRow: (weekday: string, time: string, event: string, venue: string, outcome: string, swing: string, n: number) =>
+        `${weekday} ${time} · ${event} at ${venue} · ${outcome} · opinion ${swing} · ${n} ${n === 1 ? 'member' : 'members'}`,
+      resultRowCalledOff: (weekday: string, time: string, event: string, venue: string) =>
+        `${weekday} ${time} · ${event} at ${venue} · Called off`,
+      /** Empty states (screens §9). */
+      empty: (city: string) => `No event in ${city} today.`,
+      emptyOthers: (rank3: string) => `${rank3}s and above can call one. The branch's event is posted every morning.`,
+      noResults: 'No results here yet. The first is tomorrow morning.',
+    },
+    /** `EventCard` (screens §2.2) and the venue's ticket (§6.2). */
+    card: {
+      /** *Market Row · settles at 19:40 · 2 of 4 roles · hands 1 of 4* (the hands part when any). */
+      line: (venue: string, time: string, filled: number, roles: number, hands: number | null = null) =>
+        `${venue} · settles at ${time} · ${filled} of ${roles} roles${hands !== null ? ` · hands ${hands} of 4` : ''}`,
+      calledBy: (name: string) => `called by ${name}`,
+      calledBySecretary: (name: string) => `called by ${name} · the branch's event`,
+      join: 'Join',
+      joinAsHand: 'Join as a hand',
+      yours: (role: string) => `You're the ${role}`,
+      full: 'Full',
+      settling: 'Settling…',
+      /** The ticket's kicker and title: *Campaign event*, *The rally · settles at 19:40*. */
+      kicker: 'Campaign event',
+      ticketTitle: (event: string, time: string) => `The ${event} · settles at ${time}`,
+      ticketTags: (filled: number, roles: number, name: string) => `${filled} of ${roles} roles · called by ${name}`,
+      tags: {
+        issue: (issue: string) => `Issue: ${issue} · opinion +50 %`,
+        closeRace: 'Close race · +25 %',
+        firedUp: 'Fired up · better volunteers',
+      },
+    },
+
+    // The event page (screens §3.1).
+    event: {
+      kicker: (city: string, venue: string) => `Campaign event · ${city} · ${venue}`,
+      /** *Thursday 19:40 · starts in 5 h 12 m · called by Jan Sorel*. */
+      whenLine: (weekday: string, time: string, h: number, m: number, name: string) =>
+        `${weekday} ${time} · starts in ${h} h ${m} m · called by ${name}`,
+      fixtureLine: "settles at midnight · the branch's event",
+      settling: 'started · settling',
+      pays: 'What it can pay',
+      tiles: { opinion: 'Opinion', fxp: 'Party XP', pc: 'Political Capital', paper: 'In the paper' },
+      /** The ceiling at a full roster: base × 1.5 × the day's lines, one decimal (design §2.5, 15 Oct 2026). */
+      opinionUpTo: (n: string) => `up to about +${n} here`,
+      opinionAgainst: (n: string, faction: string) => `up to about +${n} here · against the ${faction}`,
+      fxpTile: 'by the outcome',
+      pcTile: '3 to 15, by the outcome',
+      paperTile: 'your name, tomorrow morning',
+      rolesKicker: (filled: number, n: number) => `Roles · ${filled} of ${n} filled`,
+      everyRoleMatters: 'every role matters',
+      open: 'open',
+      /** A holder's line: *P. Holm · Charisma and Intelligence*. */
+      holderLine: (name: string, stats: string) => `${name} · ${stats}`,
+      /** The gates on an open role the member cannot take. */
+      rankGate: (rank2: string) => `${rank2}s and above`,
+      needsEnergy: (n: number) => `Needs ${n} Energy`,
+      hands: (k: number) => `Hands · ${k} of 4`,
+      handsLine: 'any Rank · 5 Energy · no check; your Energy counts toward the swing',
+      volunteersLine:
+        "Roles still empty at the start go to the branch's volunteers: townspeople run by the game, at half strength. You need not be here when it starts: the result waits for you in a modal and in the paper.",
+      /** The sticky button with a role selected: *Organiser · 10 Energy*. */
+      takeRole: (role: string, n: number) => `${role} · ${n} Energy`,
+      joinAsHand: 'Join as a hand · 5 Energy',
+      withdraw: (n: number) => `Withdraw · ${n} Energy back`,
+      committed: (time: string) => `Committed from ${time}: the branch is counting on you`,
+      askSomeone: 'Ask someone to join',
+      /** The resolved page's header line (screens §3.3). */
+      resolvedLine: (outcome: string, swing: string, n: number) =>
+        `${outcome} · opinion ${swing} · ${n} ${n === 1 ? 'member' : 'members'}`,
+      seeYourResult: 'See your result',
+      volunteer: 'Volunteer · townspeople run by the game',
+      volunteerHalf: 'Volunteer · townspeople run by the game · half strength',
+      calledOffLine: 'Nobody signed up by the start. Nothing happened and nothing was spent.',
+      /** The result's *Next* line (the server reads `event.next`). */
+      next: "Next: the branch's event tomorrow is on the Faction tab.",
+    },
+    /**
+     * The political modals the server builds (tech design §10.2; design §11; screens §3.2, §4):
+     * string templates on the paths the server reads (`modal.{act}.{stamp|headline|body|next}`),
+     * filled server-side with `{event}` (the running name), `{venue}`, `{role}` and `{name}`; `{at}`
+     * (the start) and `{until}` (the last moment to withdraw) are left for the client's clock, as
+     * every PoliticalResult does. `hand` is a hand's "role name" in these lines.
+     */
+    modal: {
+      hand: 'a pair of hands',
+      call: {
+        stamp: 'Called',
+        headline: 'The branch has a {event} at {at}',
+        body: "{venue}, {at}. You're the {role}. The branch's chat has the line; three more names and it's a {event}.",
+        next: 'Next: ask the branch. Roles still open at the start go to volunteers.',
+      },
+      signUp: {
+        stamp: 'Signed up',
+        headline: "You're the {role}",
+        body: "{venue}, {at}. The Energy is spent; the rest is the branch's. You need not be here when it starts: the result waits for you.",
+        next: 'Next: the result, {at}. Withdraw until {until} if you must.',
+      },
+      /** The caller's modal when nobody signed up (design §11). */
+      calledOff: {
+        stamp: 'Called off',
+        headline: 'Nobody came',
+        body: "No one signed up by the start, so the {event} at {venue} didn't happen. Nothing was spent. Ask in the chat before you call the next one.",
+        next: 'Next: call another from the Faction tab.',
+      },
+      /** The payer's modal (design §11). */
+      bailPosted: {
+        stamp: 'Bail posted',
+        headline: '{name} is out',
+        body: 'The duty officer took the Iron, looked at you once and opened the door. The branch remembers these things.',
+        next: "Next: they're at the station's pin; the chat knows.",
+      },
+      /** The visitor's modal (design §11); `bodyGrapes` when three visits have counted already (§9.2). */
+      visit: {
+        stamp: 'Visited',
+        headline: 'Grapes and the paper',
+        body: "Ten minutes on the ward, the matron pretending not to listen. {name} is sitting up. Five minutes off their stay and ten points of Health; the branch's runner took the parcel.",
+        bodyGrapes:
+          'Ten minutes on the ward, the matron pretending not to listen. {name} has had three visitors already, so this one is grapes and company; they are welcome all the same.',
+        next: 'Next: the chat knows you went.',
+      },
+      /** The prisoner's release when a mate posted bail (slice 5's modal with one line changed). */
+      releasedBail: {
+        stamp: 'Released',
+        headline: "Out, on the branch's Iron",
+        body: '{name} posted your bail at the desk. Heat is down to 25 and the duty officer has both your names. Say thank you in the chat.',
+      },
+    },
+    /** The knock-on lines the client words from the result's typed effects (tech design §10.2). */
+    knock: {
+      /** *Rested: 15 of 15 Energy, +50 % XP*. */
+      rested: (covered: number, energy: number) => `Rested: ${covered} of ${energy} Energy, +50 % XP`,
+      /** *−150 Iron · bail for Jan Sorel*. */
+      bailFor: (iron: number, name: string) => `−${iron} Iron · bail for ${name}`,
+      fxp: (n: number) => `+${n} Party XP`,
+      /** *Jan Sorel: Health +10, out five minutes sooner*. */
+      mate: (name: string) => `${name}: Health +10, out five minutes sooner`,
+      /** *Bail 150 Iron · posted by Jan Sorel* (the prisoner's release). */
+      postedBy: (iron: number, name: string) => `Bail ${iron} Iron · posted by ${name}`,
+    },
+    /** Withdrawing (design §2.4): one tap until an hour before. */
+    withdraw: {
+      stamp: 'Withdrawn',
+      headline: (role: string) => `You're no longer the ${role}`,
+      body: (n: number) => `${n} Energy back. The role is open again; the branch's chat still has the line.`,
+      closed: (time: string) => `Committed from ${time}: no withdrawing in the last hour`,
+    },
+    /** Calling an event (screens §4). */
+    call: {
+      kicker: (city: string) => `Call an event · ${city}`,
+      /** An option's Courier line: *Market Row · 4 roles · 45 Energy of roles · opinion up to about +2.3*. */
+      option: (venue: string, roles: number, energy: number, max: string) =>
+        `${venue} · ${roles} roles · ${energy} Energy of roles · opinion up to about +${max}`,
+      /** A signature event in another district: *at the Esplanade, Garrison Hill · go there to call it*. */
+      goThere: (venue: string, district: string) => `at ${venue}, ${district} · go there to call it`,
+      stepKicker: (event: string, venue: string) => `The ${event} · ${venue}`,
+      chips: { 1: 'In 1 hour', 3: 'In 3 hours', 6: 'In 6 hours', 12: 'In 12 hours' } as Record<1 | 3 | 6 | 12, string>,
+      button: (role: string, n: number) => `Call it · ${role} · ${n} Energy`,
+      /** Guards, in place of the button (screens §4). */
+      guards: {
+        oneAtATime: (event: string, time: string) => `One at a time: the branch's ${event} at ${time} is still open`,
+        handsFull: (city: string) => `The branch has its hands full in ${city} today`,
+        notFromTrain: 'Not from the train',
+        notFromCells: 'Not from the cells',
+        notOnRivalGround: 'Not on rival ground',
+        rank: (rank3: string) => `${rank3}s and above can call events`,
+        runIn: 'Answer the run-in first',
+        /** A pending night stop on rival ground (review 5); *patrol* stays off the copy (the guards). */
+        stop: 'Answer the stop first',
+      },
+    },
+    /** The event result modal (screens §5). */
+    result: {
+      kicker: (venue: string, city: string) => `Campaign event · ${venue} · ${city}`,
+      place: (venue: string, city: string, weekday: string, time: string) => `${venue} · ${city} · ${weekday} ${time}`,
+      howItWent: 'How it went',
+      you: 'you',
+      outcome: { success: 'Success', partial: 'Partial', failure: 'Failure', volunteer: 'half strength' } as Record<
+        'success' | 'partial' | 'failure' | 'volunteer',
+        string
+      >,
+      hands: (names: string) => `Hands · ${names}`,
+      /** *3 of 4 roles came off; 1 went to volunteers.* */
+      summary: (cameOff: number, roles: number, volunteers: number) =>
+        `${cameOff} of ${roles} roles came off${volunteers > 0 ? `; ${volunteers} went to volunteers` : ''}.`,
+      /** A Party XP part: *Triumph +6*, *Party order +3*, *Close race +3*, *Fired up +1*. */
+      part: (label: string, n: number) => `${label} +${n}`,
+      partLabels: { band: (band: string) => band, order: 'Party order', closeRace: 'Close race', firedUp: 'Fired up' },
+      pcFirst: 'first event today',
+      /** The second and third events of the day pay half (design §2.7). */
+      pcLater: (ordinal: 2 | 3) => `${ordinal === 2 ? 'second' : 'third'} event today, half`,
+      /** *+1.20 for the Collective in Coalport · your share +0.30*. */
+      opinion: (swing: string, faction: string, place: string, share: string) =>
+        `${swing} for the ${faction} in ${place} · your share ${share}`,
+      /** The Headline Story: *+1.20 against the Vanguard in Old Town · your share +0.30*. */
+      opinionAgainst: (swing: string, faction: string, place: string, share: string) =>
+        `${swing} against the ${faction} in ${place} · your share ${share}`,
+      issuePoints: 'Issue points',
+      issueLine: (n: number, issue: string) => `+${n} on ${issue}`,
+      /** On a Fiasco, the roster's cause under your row (design §11; no *roster* for the player). */
+      reasonVolunteers: (k: number) =>
+        `${['One', 'Two', 'Three', 'Four', 'Five'][k - 1] ?? k} ${k === 1 ? 'role' : 'roles'} went to volunteers. More of the branch on it next time.`,
+      standingWin: (city: string, n: number, next: number) => `Reputation in ${city} · a win · ${n} / ${next}`,
+      next: "Next: the branch's event tomorrow is on the Faction tab.",
+    },
+
+    // Who's here (screens §6; design §7).
+    hereNow: {
+      label: 'Here now',
+      /**
+       * *you, Jan Sorel, Mira Hale and 2 more · 1 from another party* / *you and 1 from another party* /
+       * *nobody else just now*. Own-faction names only; the other parties as a count.
+       */
+      line: (mine: string[], more: number, others: number): string => {
+        const names = Array.isArray(mine) ? mine : [];
+        const otherPart = others > 0 ? `${others} from ${others === 1 ? 'another party' : 'other parties'}` : '';
+        if (names.length === 0) return otherPart ? `you and ${otherPart}` : 'nobody else just now';
+        const own =
+          more > 0
+            ? `you, ${names.join(', ')} and ${more} more`
+            : `you, ${names.slice(0, -1).join(', ')}${names.length > 1 ? ' and ' : ''}${names.at(-1)}`;
+        return otherPart ? `${own} · ${otherPart}` : own;
+      },
+      nobody: 'nobody else just now',
+      /** The city plate's line, own faction only (absent when it is only you). */
+      plate: (n: number, faction: string) => `${n} of the ${faction} in town now`,
+      /** The journey screen (screens §6.3). */
+      train: (n: number) => `You and ${n} ${n === 1 ? 'other' : 'others'} on this train.`,
+    },
+    // Members (screens §2.3).
+    members: {
+      find: 'Find a member',
+      showMore: 'Show more',
+      rankLevel: (rank: string, level: number) => `${rank} · Level ${level}`,
+      /** The presence bands (`presenceBand`, rules). */
+      band: {
+        hereNow: (city: string) => `here now · ${city}`,
+        online: (place: string) => `online · ${place}`,
+        today: 'today',
+        thisWeek: 'this week',
+        away: 'away',
+      },
+      /** The state that matters, in the failure colour (`out`, `arrives`: `when` phrases). */
+      status: {
+        cells: (place: string, out: string) => `in the cells at ${place} · out ${out}`,
+        infirmary: (out: string) => `in the infirmary · out ${out}`,
+        train: (city: string, arrives: string) => `on the train to ${city} · arrives ${arrives}`,
+        rivalGround: (city: string) => `in ${city} · rival ground`,
+      },
+      movedThisWeek: (n: string) => `+${n} this week`,
+      askToJoin: 'Ask to join',
+      asked: 'Asked',
+      alone: "You're the branch for now. New members arrive at the station; the paper will say.",
+    },
+    /** The profile sheet (screens §2.3; design §7.3). */
+    profile: {
+      line: (faction: string, rank: string, level: number) => `${faction} · ${rank} · Level ${level}`,
+      livesIn: (place: string) => `Lives in ${place}`,
+      memberSince: (date: string) => `Member since ${date}`,
+      heroes: (list: string) => `Heroes: ${list}`,
+      noHeroes: 'Heroes: none yet',
+      reputationHere: (level: string) => `Reputation here: ${level}`,
+      message: 'Message',
+      mute: 'Mute',
+      unmute: 'Unmute',
+      muted: (name: string) => `Muted · ${name}`,
+    },
+    /** The faction scoreboard (screens §2.4; design §6.4). */
+    scoreboard: {
+      thisWeek: 'This week',
+      allTime: 'All time',
+      allCities: 'All cities',
+      kicker: (faction: string, period: string) => `Who moved the most for the ${faction} · ${period}`,
+      columns: ['#', 'Name', 'Level', 'Moved', 'Events'] as const,
+      note: 'Moved is opinion won in every city, added up. A District or City Hero is the top of a bracket in one place at the result.',
+      empty: 'Nobody has moved anything this week yet. Opinion won in any city counts here.',
+      you: 'you',
+    },
+
+    // Chat (screens §2.5; design §8).
+    chat: {
+      party: 'Party',
+      branch: (city: string) => `${city} branch`,
+      /** The header line: *3 here · Coalport branch*. */
+      header: (n: number, channel: string) => `${n} here · ${channel}`,
+      placeholder: 'Say something to the branch…',
+      send: 'Send',
+      /** The counter from 240 of 280. */
+      counter: (n: number, max: number) => `${n} of ${max}`,
+      forYou: 'for you',
+      newLines: 'New lines ↓',
+      reportAsk: "Report this message to the game's moderators?",
+      report: 'Report',
+      reported: 'Reported',
+      cancel: 'Cancel',
+      /** The limit lines under the composer, only when hit (`CHAT_RATE`, `CHAT_TEXT`). */
+      limits: {
+        tooFast: 'One message every three seconds',
+        tooMany: (minutes: number) =>
+          `Thirty messages in ten minutes is enough for anyone; back in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`,
+        repeat: 'Said that already',
+        tooLong: 'At most 280 characters',
+        empty: 'Nothing to send',
+      },
+      empty: "Nothing said yet. The branch's lines land here: events called, results, who needs bail.",
+      /** Me's *Chat* switch (design §8: the chat's one promise is that it can be switched off). */
+      me: {
+        label: 'Chat',
+        on: 'Shown on the Faction tab',
+        off: 'Hidden',
+        hide: 'Hide chat',
+        show: 'Show chat',
+        note: 'Hidden chat is still the branch\'s: events, results and favours reach you in the paper and in modals either way.',
+      },
+    },
+    /**
+     * The system lines (design §8), in the paper's voice, filled by the client from `system.payload`
+     * (times in the reader's clock). The buttons sit at the right of the line.
+     */
+    system: {
+      eventCalled: (name: string, event: string, venue: string, time: string, filled: number, roles: number) =>
+        `${name} has called a ${event} at ${venue} for ${time} · ${filled} of ${roles} roles`,
+      eventResult: (event: string, venue: string, outcome: string, swing: string) =>
+        `The branch's ${event} at ${venue}: ${outcome} · opinion ${swing}`,
+      takenIn: (name: string, place: string, iron: number) => `${name} has been taken in at ${place} · bail ${iron} Iron`,
+      /** `minutes`: a `count` phrase, *18 minutes*. */
+      admitted: (name: string, minutes: string) => `${name} is in the infirmary · ${minutes}`,
+      bailPosted: (name: string, prisoner: string) => `${name} posted ${prisoner}'s bail`,
+      /** The city day's seats and heroes (design §8). */
+      seatWon: (name: string, place: string) => `${name} has taken a seat on the ${place} council`,
+      seatTop: (name: string, place: string) => `${name} has topped the poll in ${place}`,
+      heroNamed: (name: string, title: string, place: string) => `${name} is named ${title} of ${place}`,
+      /** The nudge (design §9.3): the first open named role the mate may take, or a pair of hands. */
+      nudgeRole: (caller: string, name: string, role: string, event: string, time: string) =>
+        `${caller} asks ${name} to take the ${role} at the ${event} · ${time}`,
+      nudgeHands: (caller: string, name: string, event: string, time: string) =>
+        `${caller} asks ${name} for a pair of hands at the ${event} · ${time}`,
+      buttons: {
+        postBail: (iron: number) => `Post bail · ${iron} Iron`,
+        visit: 'Visit · 3 Energy',
+        join: 'Join',
+        seeResult: 'See result',
+      },
+    },
+
+    // Favours (screens §7; design §9, §11).
+    favours: {
+      postBail: (iron: number) => `Post bail · ${iron} Iron`,
+      visit: 'Visit · 3 Energy',
+      bailKicker: 'Post bail',
+      visitKicker: 'A visit',
+      /** `toGo`: a `count` phrase, *24 minutes*. */
+      bailBody: (name: string, place: string, toGo: string, iron: number) =>
+        `${name} is in the cells at ${place}, ${toGo} to go. Bail is ${iron} Iron; they walk out now and the duty officer notes who paid. You get +10 Party XP.`,
+      visitBody: (name: string, toGo: string) =>
+        `${name} is in the infirmary, ${toGo} to go. A visit is 3 Energy: Health +10 for them and five minutes off the stay. You get +10 Party XP.`,
+      /** The Courier guard on the sheet, when one applies. */
+      guards: {
+        bailDouble: 'Bail is double on rival ground',
+        legalAid: 'Legal Aid · the Alliance pays half your bail',
+        alreadyOut: 'Already out',
+        notFromRivalGround: 'Not from rival ground',
+        needsIron: (n: number) => `Needs ${n} Iron`,
+        needsEnergy: 'Needs 3 Energy',
+        visited: "You've visited this stay",
+        self: "That's your own bail: pay it from the cells",
+        notAMate: "That's not one of ours",
+        held: 'Not from the cells',
+        inTransit: 'Not from the train',
+      },
+      posted: 'Posted',
+      visited: 'Visited',
+    },
+    /** The held screens' new lines (screens §7.2). */
+    held: {
+      bailFromTab: "A faction mate can post it from the Faction tab; the branch's chat has been told.",
+      visitors: (names: string) => `Visitors: ${names}, Health +10 and five minutes off each`,
+      signedUp: (role: string, event: string, time: string) =>
+        `You're the ${role} at ${event}, ${time}. You were counted before you came in; the result waits for you.`,
+    },
+    /** The paper's *Events* row group and the desk's *Signed up* row (screens §8; tech §11.1). */
+    paper: {
+      kicker: 'Events',
+      /** *Today: the branch's canvass drive at Foundry Row · settles at midnight · 2 of 4 roles*. */
+      row: (event: string, venue: string, time: string, filled: number, roles: number) =>
+        `Today: the branch's ${event} at ${venue} · settles at ${time} · ${filled} of ${roles} roles`,
+      yours: (role: string) => `you're the ${role}`,
+      join: 'Join',
+      /** The welcome edition's row ends with this instead of a button. */
+      joinAsHand: 'join as a hand · 5 Energy',
+      empty: (city: string, rank3: string) => `No event in ${city} today. ${rank3}s can call one on the Faction tab.`,
+      signedUpLabel: 'Signed up',
+      signedUp: (event: string, venue: string, time: string, role: string) =>
+        `Signed up: the ${event} at ${venue}, ${time} · ${role}`,
+      /** The fixture's `{time}`. */
+      midnight: 'midnight',
+    },
+    /** Refusals, worded (tech design §6.8, §7.2; the server decides). */
+    errors: {
+      RANK: (rank: string) => `${rank}s and above`,
+      NOT_ENOUGH_ENERGY: (n: number) => `Needs ${n} Energy`,
+      WRONG_CITY: 'You have to be in the town to sign up.',
+      WRONG_DISTRICT: 'Go to that district to call it.',
+      HELD: 'Not from the cells or the ward.',
+      IN_TRANSIT: 'Not from the train.',
+      RIVAL_GROUND: 'Not on rival ground.',
+      RUN_IN_PENDING: 'Answer the run-in first.',
+      PATROL_PENDING: 'Answer the stop first.',
+      ALREADY_ON_EVENT: "You're on this one already.",
+      TOO_MANY_SIGNUPS: 'Three sign-ups at a time is the limit.',
+      ROLE_TAKEN: 'Someone took that role just now.',
+      HANDS_FULL: 'The hands are full.',
+      EVENT_STARTED: "It's started; the result is on its way.",
+      NOT_YOUR_EVENT: "That event is another party's.",
+      ONE_AT_A_TIME: "One at a time: the branch's last event is still open.",
+      WITHDRAW_CLOSED: 'Committed: no withdrawing in the last hour.',
+      NOT_A_MATE: "That's not one of ours.",
+      SELF: 'Pay your own bail from the cells.',
+      ALREADY_OUT: 'Already out.',
+      NOT_IN_CELLS: "They're not in the cells.",
+      NOT_ON_WARD: "They're not on the ward.",
+      NOT_ENOUGH_IRON: (n: number) => `Needs ${n} Iron`,
+      VISITED: "You've visited this stay.",
+      CHAT_RATE: 'Too fast; a moment.',
+      CHAT_TEXT: 'Nothing to send, or too long.',
+      CHAT_CHANNEL: "That's not your branch's room.",
+      CANNOT_REPORT: "That line can't be reported.",
+      NUDGE_NOT_ALLOWED: "They're on it already, or you asked them.",
+      NUDGE_NOTHING_OPEN: 'No place open to ask them to.',
+      moved: 'This moved on in another window. Reload to carry on.',
+    },
+    /** Help notes (screens §12; the review-1 pattern: [kicker, note]). */
+    help: {
+      campaignEvent: () => [
+        'Campaign event',
+        'An event the branch does together: a few roles, each on someone\'s stats, and one result for all of you. Sign up ahead; you need not be there when it starts.',
+      ],
+      volunteers: () => [
+        'Volunteers',
+        'Townspeople run by the game. They fill any role still empty at the start, at half strength, so an event always happens; a member in the role does better.',
+      ],
+      hereNow: () => [
+        'Here now',
+        "Who's been at this place in the last ten minutes. Your own party by name; the others as a count. Tap a name for who they are.",
+      ],
+      hands: () => [
+        'Hands',
+        "A place on any event for anyone, 5 Energy, no check. Your Energy counts toward how far the event moves opinion, and you're paid like everyone else.",
+      ],
+      scoreboard: () => [
+        'Scoreboard',
+        'Opinion won in every city, added up, for this week or for good. The top three of each Level bracket are marked.',
+      ],
+      chat: () => [
+        'Chat',
+        "The branch's room. Party is everyone; the city branch is who's here. Mute anyone from their profile; report a line with a long press. Hide chat from the Me tab if you'd rather.",
+      ],
+    },
+  },
 } as const;
 
 export type Copy = typeof copy;

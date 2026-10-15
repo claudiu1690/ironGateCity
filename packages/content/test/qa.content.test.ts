@@ -351,10 +351,12 @@ describe('CLAUDE.md design rules 2 and 6: vocabulary across all player-facing co
       .replace(/\b(since|by) the war\b/gi, '[history]')
       .replace(/\bthe war gutted\b/gi, '[history]');
     expect([...text.matchAll(war)].map((m) => m[0])).toEqual([]);
-    // "front" only as a building's front ("columns out front") or a row of seats ("the front row"),
-    // never as a political front.
+    // "front" only as a building's front ("columns out front"), a row of seats ("the front row") or,
+    // slice 6 (design §17, §20.3), a newspaper's front page (the Headline Story's Triumph); never as
+    // a political front.
     const fronts = [...text.matchAll(/.{0,20}\bfront\b.{0,20}/gi)].map((m) => m[0]);
-    for (const f of fronts) expect(f, f).toMatch(/out front|the front of|front door|front room|front row/i);
+    for (const f of fronts)
+      expect(f, f).toMatch(/out front|the front of|front door|front room|front row|front page/i);
   });
 
   it('the militia words fail in display text, and the legacy-id allowance is exact', () => {

@@ -5,6 +5,89 @@ import { FACTION_IDS } from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import type { Asset, CampaignEventType, City, Content, EventVenue, Location, Quarter } from './schemas';
 
+/**
+ * Slice 6 copy (15 Oct 2026; design §10, tech §4.1, §11.2): the event headlines' conditions. Held
+ * here until the developer adds them to the rules' `HeadlineCondition` (tech §4.1 says
+ * `HeadlineCondition += EventCondition`); once they are there this type collapses into it.
+ * `eventOpenToday` is live (selected at read); the rest are stored by the settlement.
+ */
+export type EventCondition =
+  | { kind: 'eventOpenToday' }
+  | { kind: 'eventResolvedYesterday'; tookPart: boolean; outcome?: 'triumph' | 'success' | 'mixed' | 'fiasco' }
+  | { kind: 'eventCalledOffYesterday' }
+  | { kind: 'bailPostedForYesterday' }
+  | { kind: 'bailPostedByYesterday' }
+  | { kind: 'visitedYesterday' };
+
+export const EVENT_CONDITION_KINDS = [
+  'eventOpenToday',
+  'eventResolvedYesterday',
+  'eventCalledOffYesterday',
+  'bailPostedForYesterday',
+  'bailPostedByYesterday',
+  'visitedYesterday',
+] as const satisfies ReadonlyArray<EventCondition['kind']>;
+
+const EVENT_KINDS = new Set<string>(EVENT_CONDITION_KINDS);
+
+/** A template with an event condition (design §10's forty). */
+export const isEventTemplate = (t: { when: ReadonlyArray<{ kind: string }> }): boolean =>
+  t.when.some((c) => EVENT_KINDS.has(c.kind));
+
+/**
+ * Tech §4.3: the placeholders the event headlines may use besides the base set, resolved on the
+ * server from the settlement's facts. `{time}` travels as epoch ms and is formatted by the client in
+ * the player's clock (*midnight* for the fixture), as `{until}` is. The developer may move this to
+ * the rules package (tech §4.3 names it `EVENT_PLACEHOLDERS` there).
+ */
+export const EVENT_PLACEHOLDERS = [
+  'event',
+  'venue',
+  'caller',
+  'time',
+  'open',
+  'roles',
+  'swing',
+  'pc',
+  'members',
+  'outcome',
+  'payer',
+  'prisoner',
+  'place',
+  'iron',
+  'visitors',
+  'district',
+  'faction',
+] as const;
+export type EventPlaceholder = (typeof EVENT_PLACEHOLDERS)[number];
+
+/** Design §10: the ten event templates every paper carries (by id suffix), the Herald included. */
+export const EVENT_HEADLINE_NAMES = [
+  'event-today',
+  'event-triumph',
+  'event-success',
+  'event-mixed',
+  'event-fiasco',
+  'event-city',
+  'event-called-off',
+  'bail-posted-for',
+  'bail-posted-by',
+  'visited',
+] as const;
+
+/**
+ * The ids the server marks *In Print* (as slice 4 marks `hero` and slice 5 `cells`): the reader's own
+ * event result, bail posted for them, their visitors.
+ */
+export const EVENT_IN_PRINT_NAMES = [
+  'event-triumph',
+  'event-success',
+  'event-mixed',
+  'event-fiasco',
+  'bail-posted-for',
+  'visited',
+] as const;
+
 /** Design §3: the named roles' Energy totals per type (hands add 5 each). */
 export const EVENT_ENERGY_TOTALS: Readonly<Record<string, number>> = {
   'event.rally': 45,
@@ -127,6 +210,21 @@ export function slice6Problems(
   for (const f of FACTION_IDS) {
     const n = capitalOf.get(SIGNATURE[f].id)?.size ?? 0;
     if (n !== 1) problems.push(`eventVenues: ${SIGNATURE[f].id} needs exactly one capital district (has ${n})`);
+  }
+
+  // The papers (design §10): every paper carries the ten event templates, with event conditions only.
+  for (const city of content.cities) {
+    if (!city.paper) continue;
+    const names = new Set(
+      content.headlines
+        .filter((h) => h.cityId === city.id && isEventTemplate(h))
+        .map((h) => h.id.slice(h.id.lastIndexOf('.') + 1)),
+    );
+    for (const n of EVENT_HEADLINE_NAMES) if (!names.has(n)) problems.push(`cities.${city.id}: the paper has no "${n}" headline`);
+  }
+  for (const h of content.headlines) {
+    if (isEventTemplate(h) && !h.when.every((c) => EVENT_KINDS.has(c.kind)))
+      problems.push(`headline "${h.id}" mixes event and other conditions`);
   }
 
   // The fixture's rotation names the three common events.
