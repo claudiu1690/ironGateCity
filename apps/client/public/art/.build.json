@@ -1630,5 +1630,41 @@
     "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
     "bytes": 52794
+  },
+  "scene.event-poster-night-640.avif": {
+    "sourceHash": "09f0987339e8452380e535ff7ffb47be2653917b1d86e893b7981a97f0efbbf1",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 35054
+  },
+  "scene.event-poster-night-1280.avif": {
+    "sourceHash": "09f0987339e8452380e535ff7ffb47be2653917b1d86e893b7981a97f0efbbf1",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 128390
+  },
+  "scene.event-poster-night-640.webp": {
+    "sourceHash": "09f0987339e8452380e535ff7ffb47be2653917b1d86e893b7981a97f0efbbf1",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 48882
+  },
+  "scene.event-grand-rally-640.avif": {
+    "sourceHash": "cad58eb6fb071b4eb72388ab4549e5a43fa5d9d5b81cacd5ec954440e01c8028",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 45924
+  },
+  "scene.event-grand-rally-1280.avif": {
+    "sourceHash": "cad58eb6fb071b4eb72388ab4549e5a43fa5d9d5b81cacd5ec954440e01c8028",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 50,
+    "bytes": 145001
+  },
+  "scene.event-grand-rally-640.webp": {
+    "sourceHash": "cad58eb6fb071b4eb72388ab4549e5a43fa5d9d5b81cacd5ec954440e01c8028",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 65370
   }
 }
