@@ -1,6 +1,13 @@
 import type { GameContent } from '@irongate/content';
 import { Candidacy, City, Election, OfficeTerm, RuleBallot } from '@irongate/db';
-import type { BallotLine, CandidacyDoc, CityDoc, ElectionDoc, OfficeTermDoc, RuleBallotDoc } from '@irongate/db';
+import type {
+  BallotLine,
+  CandidacyDoc,
+  CityDoc,
+  ElectionDoc,
+  OfficeTermDoc,
+  RuleBallotDoc,
+} from '@irongate/db';
 import {
   BATTLEGROUND_COUNCILS,
   COUNCIL,
@@ -34,7 +41,14 @@ import type {
   SeatRule,
 } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
-import { AlreadySettled, cityDayHooks, cityResidentsFilter, countLines, newSeed, turnoutOf } from './cityDayCore';
+import {
+  AlreadySettled,
+  cityDayHooks,
+  cityResidentsFilter,
+  countLines,
+  newSeed,
+  turnoutOf,
+} from './cityDayCore';
 import { governorAtCount } from './governorService';
 import { drawWeek, heroesStep, issuesStep } from './issuesDay';
 import { writeLedger } from './ledger';
@@ -94,13 +108,27 @@ function npcLines(
   for (const f of FACTION_IDS) {
     for (const s of slate.filter((x) => x.factionId === f).slice(0, perFaction(f))) {
       const c = content.candidate(s.npcId);
-      out.push({ key: `n:${s.npcId}`, factionId: f, kind: 'npc', npcId: s.npcId, name: c?.name ?? s.npcId, order: first + out.length });
+      out.push({
+        key: `n:${s.npcId}`,
+        factionId: f,
+        kind: 'npc',
+        npcId: s.npcId,
+        name: c?.name ?? s.npcId,
+        order: first + out.length,
+      });
     }
   }
   return out;
 }
 
-function electionDoc(content: GameContent, cityId: string, k: number, offset: number, polling: boolean, at: Date) {
+function electionDoc(
+  content: GameContent,
+  cityId: string,
+  k: number,
+  offset: number,
+  polling: boolean,
+  at: Date,
+) {
   const cal = councilDay(k * COUNCIL.cycleDays + offset, offset);
   const seed = cityDayHooks.seed?.(cityId, k) ?? newSeed(cityId, k);
   const npcSlate = slateOf(content, cityId, seed);
@@ -231,7 +259,12 @@ export async function bootstrapBattleground(
         world: { settledDay: today, bootstrappedDay: today, voting: 2 },
         opinion,
         battleground: {
-          state: stateDoc(today, st, { battleground: st.battleground, controlledBy: st.controlledBy }, opinion),
+          state: stateDoc(
+            today,
+            st,
+            { battleground: st.battleground, controlledBy: st.controlledBy },
+            opinion,
+          ),
           groundswell: null,
           stateLog: [],
         },
@@ -279,7 +312,16 @@ export async function processBattlegroundBoundary(
   const drift = applyBaselineDrift(city.opinion ?? spec.baselineOpinion, spec.baselineOpinion);
   shares.set(cityId, drift.shares);
   for (const [f, swing] of Object.entries(drift.moves)) {
-    ledger.push({ cityId, placeId: cityId, factionId: f as FactionId, swing: swing!, kind: 'drift', ref: `d:${d}`, day: d, at });
+    ledger.push({
+      cityId,
+      placeId: cityId,
+      factionId: f as FactionId,
+      swing: swing!,
+      kind: 'drift',
+      ref: `d:${d}`,
+      day: d,
+      at,
+    });
   }
   const set: Record<string, unknown> = {};
   const push: Record<string, unknown> = {};
@@ -416,9 +458,12 @@ export async function processBattlegroundBoundary(
       if (done.matchedCount === 0) throw new AlreadySettled();
     } else {
       const prev = councilDay(d - 1, offset);
-      await RuleBallot.create([{ ...openBallotDoc(cityId, k - 1, prev.council.fromDay), status: 'counted', cards, result }], {
-        session,
-      });
+      await RuleBallot.create(
+        [{ ...openBallotDoc(cityId, k - 1, prev.council.fromDay), status: 'counted', cards, result }],
+        {
+          session,
+        },
+      );
     }
     set.ordinance = { id: dec.winner, ...window, paperId: ballotId };
     push.ordinanceHistory = { $each: [{ id: dec.winner, ...window }], $slice: -4 };
@@ -458,12 +503,19 @@ export async function processBattlegroundBoundary(
     await freezeList(content, cityId, k, at, session);
     const seatRows = await seatRules(content, cityId, k, session);
     const order = await capitalCardOrder(content, cityId, k, seatRows, session, opinion);
-    await setBallotStep(content, { cityId, k, fromDay: cal.council.fromDay, unrest: false, capital: true, order }, session);
+    await setBallotStep(
+      content,
+      { cityId, k, fromDay: cal.council.fromDay, unrest: false, capital: true, order },
+      session,
+    );
   }
 
   // 7. Write the meter and settle the city.
   await writeLedger(content, ledger, session);
-  const prevPair = { battleground: prevState?.battleground ?? false, controlledBy: prevState?.controlledBy ?? null };
+  const prevPair = {
+    battleground: prevState?.battleground ?? false,
+    controlledBy: prevState?.controlledBy ?? null,
+  };
   const done = await City.updateOne(
     { _id: cityId, 'world.settledDay': d - 1, 'world.voting': 2 },
     {
@@ -511,7 +563,9 @@ async function prevElection(
   const id = electionKey(cityId, k);
   let e = await Election.findById(id).session(session).lean<ElectionDoc>();
   if (!e) {
-    await Election.create([{ ...electionDoc(content, cityId, k, offset, true, at), countDay: d }], { session });
+    await Election.create([{ ...electionDoc(content, cityId, k, offset, true, at), countDay: d }], {
+      session,
+    });
     e = await Election.findById(id).session(session).lean<ElectionDoc>();
   }
   if (!e || e.status !== 'polling') throw new AlreadySettled();
@@ -519,7 +573,13 @@ async function prevElection(
 }
 
 /** Cycle day 2: every standing player by filing, then each faction's locals to three names. */
-async function freezeList(content: GameContent, cityId: string, k: number, at: Date, session: ClientSession): Promise<void> {
+async function freezeList(
+  content: GameContent,
+  cityId: string,
+  k: number,
+  at: Date,
+  session: ClientSession,
+): Promise<void> {
   const e = await Election.findById(electionKey(cityId, k)).session(session).lean<ElectionDoc>();
   if (!e || e.status !== 'nominations') return;
   const cands = await Candidacy.find({ electionId: e._id, status: 'standing' })
@@ -538,7 +598,10 @@ async function freezeList(content: GameContent, cityId: string, k: number, at: D
     rule: c.rule ?? content.faction(c.factionId!).branchMotion,
     order: i,
   }));
-  const ballot = [...players, ...npcLines(content, e.npcSlate as SlateEntry[], players.length, (f) => fill[f])];
+  const ballot = [
+    ...players,
+    ...npcLines(content, e.npcSlate as SlateEntry[], players.length, (f) => fill[f]),
+  ];
   const closed = await Election.updateOne(
     { _id: e._id, status: 'nominations' },
     { $set: { status: 'polling', ballot, closedAt: at } },

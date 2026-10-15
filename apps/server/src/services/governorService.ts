@@ -35,7 +35,15 @@ export async function governorAtCount(
     bloc: FactionId | null;
     seated: readonly OfficeTermDoc[];
     /** The count's rows (seated and not); the unseated locals become the last fallback. */
-    rows: ReadonlyArray<{ key: string; kind: 'player' | 'npc'; name: string; total: number; place: number; seated: boolean; factionId?: FactionId }>;
+    rows: ReadonlyArray<{
+      key: string;
+      kind: 'player' | 'npc';
+      name: string;
+      total: number;
+      place: number;
+      seated: boolean;
+      factionId?: FactionId;
+    }>;
     /** At home every row is the home faction's. */
     homeFactionId?: FactionId;
     session: ClientSession;
@@ -54,7 +62,9 @@ export async function governorAtCount(
         .session(i.session)
         .lean<Array<Pick<OfficeTermDoc, 'holder'>>>()
     : [];
-  const completed = new Set(done.map((x) => (x.holder.kind === 'player' ? x.holder.characterId.toHexString() : '')));
+  const completed = new Set(
+    done.map((x) => (x.holder.kind === 'player' ? x.holder.characterId.toHexString() : '')),
+  );
   const factionOf = (t: { factionId?: FactionId }) => t.factionId ?? i.homeFactionId!;
   const seated: SeatedForGovernor[] = i.seated.map((t) => ({
     key: keyOf(t.holder),

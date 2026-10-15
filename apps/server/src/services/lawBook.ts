@@ -55,7 +55,11 @@ export function fadeDaysFor(actor: FactionId): ((day: DayKey) => number) | undef
 }
 
 /** The law sources in force on `day` for an actor of `actor` (ADR 0030's third source). */
-export function lawSourcesFor(content: GameContent, day: DayKey, actor: FactionId | undefined): ModifierSource[] {
+export function lawSourcesFor(
+  content: GameContent,
+  day: DayKey,
+  actor: FactionId | undefined,
+): ModifierSource[] {
   if (!actor || projection.length === 0) return [];
   return lawSourcesOn(projection, day, actor, (id) => content.lawSpec(id));
 }

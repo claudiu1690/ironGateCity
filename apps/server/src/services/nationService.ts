@@ -1,6 +1,15 @@
 import type { GameContent } from '@irongate/content';
 import type { NationDoc } from '@irongate/db';
-import { FACTION_IDS, TERM_DAYS, dayKey, dayStart, moraleState, nationalPhase, nextDate, termOf } from '@irongate/rules';
+import {
+  FACTION_IDS,
+  TERM_DAYS,
+  dayKey,
+  dayStart,
+  moraleState,
+  nationalPhase,
+  nextDate,
+  termOf,
+} from '@irongate/rules';
 import type {
   DayKey,
   FactionId,
@@ -80,13 +89,20 @@ export function republicView(content: GameContent, nation: NationDoc, now: numbe
           : null;
   return {
     bar: {
-      shares: Object.fromEntries(FACTION_IDS.map((f) => [f, one(ctl.controlShare[f])])) as Record<FactionId, number>,
+      shares: Object.fromEntries(FACTION_IDS.map((f) => [f, one(ctl.controlShare[f])])) as Record<
+        FactionId,
+        number
+      >,
       leader: ctl.leader,
       day: ctl.day,
     },
     laws: nation.laws.inForce
       .filter((l) => l.fromDay <= today && today < l.toDay)
-      .map((l) => ({ lawId: l.lawId, name: content.law(l.lawId)?.name ?? l.lawId, daysLeft: l.toDay - today })),
+      .map((l) => ({
+        lawId: l.lawId,
+        name: content.law(l.lawId)?.name ?? l.lawId,
+        daysLeft: l.toDay - today,
+      })),
     cities: ctl.cities.map((c) => ({
       cityId: c.cityId,
       name: content.city(c.cityId)?.name ?? c.cityId,
@@ -101,25 +117,44 @@ export function republicView(content: GameContent, nation: NationDoc, now: numbe
 }
 
 /** `nation.get`: the republic as settled for today (`NATION_NOT_READY` while it is not). */
-export async function getNation(i: { user: SessionUser; content: GameContent; now: number }): Promise<NationRepublicView> {
+export async function getNation(i: {
+  user: SessionUser;
+  content: GameContent;
+  now: number;
+}): Promise<NationRepublicView> {
   const loaded = await loadCharacter(i.user, i.content, i.now);
   if (!isNationReady(loaded.nation, i.now)) throw gameError('PRECONDITION_FAILED', 'NATION_NOT_READY');
   return republicView(i.content, loaded.nation, i.now);
 }
 
 /** `parliament.laws`: the law book (T15 adds the rows' tablers and divisions). */
-export async function getLawBook(i: { user: SessionUser; content: GameContent; now: number }): Promise<LawBookView> {
+export async function getLawBook(i: {
+  user: SessionUser;
+  content: GameContent;
+  now: number;
+}): Promise<LawBookView> {
   const loaded = await loadCharacter(i.user, i.content, i.now);
   if (!isNationReady(loaded.nation, i.now)) throw gameError('PRECONDITION_FAILED', 'NATION_NOT_READY');
   const today = dayKey(i.now);
   const row = (lawId: string) => {
     const l = i.content.law(lawId);
-    return { lawId, name: l?.name ?? lawId, factionId: l?.factionId ?? ('vanguard' as FactionId), line: l?.line ?? '', days: l?.days ?? 0 };
+    return {
+      lawId,
+      name: l?.name ?? lawId,
+      factionId: l?.factionId ?? ('vanguard' as FactionId),
+      line: l?.line ?? '',
+      days: l?.days ?? 0,
+    };
   };
   return {
     inForce: loaded.nation.laws.inForce
       .filter((l) => l.fromDay <= today && today < l.toDay)
-      .map((l) => ({ ...row(l.lawId), daysLeft: l.toDay - today, by: '', passed: { for: 0, against: 0, day: l.fromDay - 1 } })),
+      .map((l) => ({
+        ...row(l.lawId),
+        daysLeft: l.toDay - today,
+        by: '',
+        passed: { for: 0, against: 0, day: l.fromDay - 1 },
+      })),
     catalogue: i.content.laws.map((l) => row(l.id)),
     strike: null,
   };

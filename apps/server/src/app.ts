@@ -20,6 +20,7 @@ import { registerTogetherHooks } from './dev/together';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
 import { settleNationDay } from './services/nationDay';
+import { registerNationHooks } from './dev/nation';
 import { dayHooks } from './services/dayService';
 import { nightHooks } from './services/night';
 import { patrolHooks } from './services/patrolHooks';
@@ -247,6 +248,9 @@ export async function buildApp({
     registerRiskHooks(app, { auth, content, now });
     // Slice 6 (tech design §8.6): test members, events, chat and presence.
     registerTogetherHooks(app, { auth, content, now });
+
+    // Slice 7 (tech design §8.6): the term, the republic and the offices.
+    registerNationHooks(app, { auth, content, clock: { now, advance: advanceClock } });
 
     // The dev time-skip panel (README "Reviewing with the dev panel"): same guard, same clock.
     registerDevPanel(app, {

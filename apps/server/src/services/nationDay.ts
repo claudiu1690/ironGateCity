@@ -1,7 +1,14 @@
 import { createHash } from 'node:crypto';
 import type { GameContent } from '@irongate/content';
 import { City, District, FactionState, Nation, isDuplicateKeyError } from '@irongate/db';
-import type { CityDoc, DistrictDoc, FactionStateDoc, LawProjection, NationDoc, NationNewsItem } from '@irongate/db';
+import type {
+  CityDoc,
+  DistrictDoc,
+  FactionStateDoc,
+  LawProjection,
+  NationDoc,
+  NationNewsItem,
+} from '@irongate/db';
 import {
   FACTION_IDS,
   PARLIAMENT,
@@ -120,11 +127,17 @@ interface WorldRead {
 
 async function readWorld(content: GameContent, session: ClientSession): Promise<WorldRead> {
   const ids = content.councilCities().map((c) => c.id);
-  const docs = await City.find({ _id: { $in: ids } }).session(session).lean<CityDoc[]>();
-  const cities = new Map<string, CityDoc | null>(ids.map((id) => [id, docs.find((c) => c._id === id) ?? null]));
+  const docs = await City.find({ _id: { $in: ids } })
+    .session(session)
+    .lean<CityDoc[]>();
+  const cities = new Map<string, CityDoc | null>(
+    ids.map((id) => [id, docs.find((c) => c._id === id) ?? null]),
+  );
   const capitals = ids.filter((id) => content.isDistricted(id));
   const districts = capitals.length
-    ? await District.find({ cityId: { $in: capitals } }).session(session).lean<DistrictDoc[]>()
+    ? await District.find({ cityId: { $in: capitals } })
+        .session(session)
+        .lean<DistrictDoc[]>()
     : [];
   const fs = await FactionState.find({}).session(session).lean<FactionStateDoc[]>();
   const factions = Object.fromEntries(fs.map((f) => [f._id, f])) as Record<FactionId, FactionStateDoc>;
@@ -214,7 +227,9 @@ function expireLaws(ctx: NationBoundaryCtx): void {
     if (l.toDay <= ctx.d) {
       ctx.laws.history.push(l);
       const law = ctx.content.law(l.lawId);
-      ctx.news.push(newsItem(ctx.d, 'nl.law-expired', 2, null, { lawId: l.lawId, law: law?.name ?? l.lawId }));
+      ctx.news.push(
+        newsItem(ctx.d, 'nl.law-expired', 2, null, { lawId: l.lawId, law: law?.name ?? l.lawId }),
+      );
     } else keep.push(l);
   }
   ctx.laws.inForce = keep;
@@ -259,7 +274,13 @@ function controlNews(ctx: NationBoundaryCtx): void {
 }
 
 function controlDoc(ctl: NationalControl, d: DayKey): NationDoc['control'] {
-  return { day: d, shares: ctl.shares, controlShare: ctl.controlShare, leader: ctl.leader, cities: ctl.cities };
+  return {
+    day: d,
+    shares: ctl.shares,
+    controlShare: ctl.controlShare,
+    leader: ctl.leader,
+    cities: ctl.cities,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -273,7 +294,11 @@ function controlDoc(ctl: NationalControl, d: DayKey): NationDoc['control'] {
  * today`. Then the bootstrap day's own window work (a window opening today runs; one already open
  * is skipped by `nationWork`).
  */
-export async function bootstrapNation(content: GameContent, now: number, session: ClientSession): Promise<void> {
+export async function bootstrapNation(
+  content: GameContent,
+  now: number,
+  session: ClientSession,
+): Promise<void> {
   const today = dayKey(now);
   const existing = await Nation.findById(NATION_ID).session(session).lean<NationDoc>();
   if (existing) throw new AlreadySettled();
@@ -285,10 +310,9 @@ export async function bootstrapNation(content: GameContent, now: number, session
   const term = termOf(today);
   const first = drawOrderOf(createRng(nationSeed(today)))[0]!;
   const figure = content.figure(first);
-  const seats = Object.fromEntries(FACTION_IDS.map((f) => [f, PARLIAMENT.seats / FACTION_IDS.length])) as Record<
-    FactionId,
-    number
-  >;
+  const seats = Object.fromEntries(
+    FACTION_IDS.map((f) => [f, PARLIAMENT.seats / FACTION_IDS.length]),
+  ) as Record<FactionId, number>;
   const government: NationDoc['government'] = {
     president: {
       holder: {
@@ -397,9 +421,10 @@ export async function processNationBoundary(
         government: ctx.government,
         laws: ctx.laws,
         control: controlDoc(control, d),
-        controlLog: [...(nation.controlLog ?? []), { day: d, shares: control.shares, leader: control.leader }].slice(
-          -CONTROL_LOG,
-        ),
+        controlLog: [
+          ...(nation.controlLog ?? []),
+          { day: d, shares: control.shares, leader: control.leader },
+        ].slice(-CONTROL_LOG),
         news: [...keepNews, ...ctx.news],
         ...ctx.set,
       },
