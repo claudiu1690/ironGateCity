@@ -738,7 +738,7 @@ export async function ensureCityDay(
   now: number,
 ): Promise<CityDoc | null> {
   const spec = content.city(cityId);
-  if (!spec?.council) return City.findById(cityId).lean<CityDoc>();
+  if (!spec?.council || !cityDayBuilt(content, cityId)) return City.findById(cityId).lean<CityDoc>();
   try {
     return await settleCityDay(content, cityId, now);
   } catch (err) {
@@ -764,6 +764,14 @@ export async function ensurePlaces(
 }
 
 /**
+ * Slice 7 phase A (docs/tech/slice-7.md, Deviations): Clearwater's content is bound, but its boundary
+ * (`processBattlegroundBoundary`, a contested council on one meter) is phase B's T12. Until then its
+ * city day is not run: the city has no stored document and every other city settles as before.
+ */
+export const cityDayBuilt = (content: GameContent, cityId: string): boolean =>
+  content.city(cityId)?.role !== 'battleground' || content.isDistricted(cityId);
+
+/**
  * The worker's job and the e2e hook: every council city, the capital first (its count is the
  * biggest). A failure in one city does not stop the others; the run then fails so Agenda records it.
  */
@@ -774,7 +782,7 @@ export async function runCityDay(
   const settled: Array<{ cityId: string; settledDay: DayKey | null }> = [];
   const failed: string[] = [];
   const errors: unknown[] = [];
-  const cities = [...content.councilCities()].sort(
+  const cities = [...content.councilCities()].filter((c) => cityDayBuilt(content, c.id)).sort(
     (a, b) => Number(content.isDistricted(b.id)) - Number(content.isDistricted(a.id)),
   );
   for (const city of cities) {
