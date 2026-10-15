@@ -7,7 +7,7 @@ status: designed
 slice: "7 (designed, not built)"
 gdd: ["§2", "§15.6", "§15.8", "§22.2"]
 adrs: ["0043", "0044", "0045"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # The Legislature and Laws
@@ -47,6 +47,7 @@ law book fills from the first week even with no players. Designed for slice 7, *
 
 ## Where it lives
 
+- **Rules (built, slice 7 phase A):** `laws.ts` (the DSL, `LAW_BOUNDS`, `lawSource` by `appliesTo`, `lawSourcesOn`, `lawsOnDay`), `parliament.ts` (`tableGate`, `localVote`, `divideBill`, `enact`, `secretaryBill`, `figureBill`, the veto), each new kind's helper in `ordinances.ts` (`missionEnergy`, `journeyMinutes`, `runInPcts`, `infirmaryPrice`, `caughtDeltas`, `markFadeDaysOf`) with optional inputs on `runInChance`, `caughtChance`, `walkOut`, `liveMarks`, `computeRewards`. Content: `Law` / `LawEffectSchema` in `packages/content/src/schemas.ts`, checks in `slice7.ts`, the catalogue in `data/laws.ts`. Collections `bills` and `laws`. Phase B passes the laws into the actions.
 **Rules:** [[GDD#15.6 The Legislature|GDD §15.6]] · [[GDD#15.8 Laws|GDD §15.8]] · [[design/slice-7-nation#5. Parliament|slice 7 design §5]] · [[design/slice-7-nation#7. Laws|slice 7 design §7]] (the catalogue, lines, the secretaries' preferred laws) · [[tech/slice-7|slice 7 tech spec]] · [[adr/0043-nation-day-term-calendar-and-the-republic-document|ADR 0043]] · [[adr/0044-laws-a-third-modifier-source|ADR 0044]] · [[adr/0045-parliament-bills-slots-and-computed-local-deputies|ADR 0045]]
 
 **Code:** none yet. Planned: `packages/rules/src/parliament.ts` (`divideBill`, `localVote`, `enact`, `secretaryBill`, `vetoOpen`, `overrideFits`), `packages/rules/src/laws.ts` (`LAW_BOUNDS`, `lawSource`, `lawsOnDay`), content `packages/content/src/data/laws.ts`, collections `bills` and `laws`, the `nation` document. The modifier code it extends is built: `packages/rules/src/ordinances.ts` and `apps/server/src/services/modifiers.ts`.

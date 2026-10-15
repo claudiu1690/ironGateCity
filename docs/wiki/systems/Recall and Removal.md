@@ -7,7 +7,7 @@ status: designed
 slice: "7 (designed, not built)"
 gdd: ["§15.4", "§15.9", "§16.3"]
 adrs: ["0049", "0045", "0047"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Recall and Removal
@@ -43,6 +43,7 @@ nothing else. All three are designed for slice 7 and **not built**.
 
 ## Where it lives
 
+- **Rules (built, slice 7 phase A):** `nationEvents.ts` (`petitionGate`, `chairPetitionGate`, `townHallSignatures`), `national.ts` (`signaturesNeeded`, `confidenceResult`, `autoRemovalDue`), the removal bill in `parliament.ts`. Collection `petitions` (one open dissolve petition per city). Services are phase B.
 **Rules:** [[GDD#15.9 Recall, no-confidence and impeachment|GDD §15.9]] · [[GDD#15.4 Faction Chair and Party Directives|GDD §15.4]] · [[design/slice-7-nation#10. Petitions and removals|slice 7 design §10]] (and its "Added 10 Oct 2026" section) · [[tech/slice-7|slice 7 tech spec]] (`petitionService`) · [[adr/0049-petitions-dissolution-and-removals|ADR 0049]] (petitions as set-once records; removals act at the division) · [[adr/0045-parliament-bills-slots-and-computed-local-deputies|ADR 0045]] (the removal as a bill) · [[adr/0047-elections-above-the-council-reuse-the-box|ADR 0047]] (the vote on the Chair as a `factionElections` row)
 
 **Code:** none yet. Planned: a `petitions` collection (`dissolve:{city}:{openedDay}`, `chair:{faction}:{chairTermId}`), `petitionService` (`open`, `sign`, `closeInTx` in the city's boundary), the clerk's motion in the nation's day. A dissolution writes `vacatedDay` on the council's `officeTerms` rows (the field exists today, used for moves).

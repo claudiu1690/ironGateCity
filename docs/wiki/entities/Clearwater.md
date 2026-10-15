@@ -77,6 +77,7 @@ What exists in code today (slice 7, phase A, 15 Oct 2026):
 
 ## Status
 
+- **15 Oct 2026, phase A (developer):** the content is bound in the loader as a contested city on one meter (three locals a party, no rule; the Courier on the Herald's set; thirty Issues); its map stills are catalogued; `countBattleground` (seven seats) and `decideBlocRule` are in rules. Its city day is held back (`cityDayBuilt` in `apps/server/src/services/cityDay.ts`) until phase B's T12, so the city is not yet playable although the train shows it open.
 Content written 15 Oct 2026 (slice 7, phase A; [[Slice 7 The Nation]]); the loader's Clearwater
 rules and the art are the developer's, so the city is not yet playable. The Front's three society
 places wait for slice 8; the Casino is open now as the hall.

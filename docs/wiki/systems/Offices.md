@@ -7,7 +7,7 @@ status: partly built
 slice: "3 (councillor); 4 (capital seats); Governor, Chair, deputy, President designed for 7"
 gdd: ["§15.1", "§15.2", "§15.4", "§15.5"]
 adrs: ["0020", "0048", "0084"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Offices
@@ -43,6 +43,7 @@ present or not, and every duty has a default, so an absent holder never blocks a
 
 ## Where it lives
 
+- **Rules (built, slice 7 phase A):** `ladder.ts` (`standGate`, `ladderRows`, `officeStipends`, `governorOf`), `partyCardOf` with the Governor, the Mayor and the Chair at the head (`ruleBallot.ts`), the standing orders and the push (`orders.ts`). `officeTerms` gain `office`, `powers`, `pledges`, `via`; characters gain `offices[].office`, `termBackings`; the `factions` collection holds the Chair's settings. Migration `011-slice7-nation`.
 **Rules:** [[GDD#15.1 Offices|GDD §15.1]] · [[GDD#15.2 Integrity rules|GDD §15.2]] · [[design/slice-7-nation|slice 7 design §3]] · [[adr/0020-council-records-collections-and-projections|ADR 0020]] (council seats as `officeTerms`, stipends credited lazily) · [[adr/0048-offices-on-office-terms-and-the-ladder|ADR 0048]] (every office an `officeTerms` row; the ladder is a count) · [[adr/0084-seats-by-reputation-and-backers-standing-is-spent-with-a-rule|ADR 0084]] (the councillor's rule lives on the term)
 
 **Code (built: the councillor):**

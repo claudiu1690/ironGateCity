@@ -7,7 +7,7 @@ status: designed
 slice: "7 (designed, not built)"
 gdd: ["§14.8", "§15.5", "§22.1"]
 adrs: ["0042", "0043"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # National Control
@@ -42,6 +42,7 @@ control, it **gives no multiplier**.
 
 ## Where it lives
 
+- **Rules (built, slice 7 phase A):** `nationalControl` in `packages/rules/src/national.ts` (Unrest halves a home city for every party and Neutral), `TERM`, `NATIONAL`, `CONTROL` in `constants.ts`; the place factor `heatGainAt` in `heat.ts`. Stored on the `nation` document (`packages/db/src/models/nation.ts`). The nation's day that writes it is phase B.
 **Rules:** [[GDD#14.8 National Control|GDD §14.8]] ·
 [[design/slice-7-nation#8. National Control: who holds the republic|slice-7 design §8]] ·
 [[tech/slice-7|slice-7 tech spec §6.4]] (`national.ts`) ·

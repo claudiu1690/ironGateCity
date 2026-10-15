@@ -7,7 +7,7 @@ status: designed
 slice: "7 (designed, not built)"
 gdd: ["§2", "§15.2", "§15.5", "§15.10", "§22"]
 adrs: ["0043", "0047", "0062"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # National Elections
@@ -41,6 +41,7 @@ designed for slice 7 and **not built**.
 
 ## Where it lives
 
+- **Rules (built, slice 7 phase A):** `term.ts` (the windows, `nationWork`), `national.ts` (`nationalScores`, `countNation` with slice 4's `dhondt`, `partyList`, `seatList`, `countPick`, `countChair`, `freezeChairList`, `confidenceResult`), `ladder.ts` (`standGate`). Collections `nationalElections` and `factionElections` (`packages/db/src/models/nation.ts`); candidacies gain `kind`, `termIndex`, `pledges`, `platformId`. Services and screens are phase B and C.
 **Rules:** [[GDD#15.5 National elections|GDD §15.5]] · [[design/slice-7-nation#6. The national election|slice 7 design §6]] · [[tech/slice-7|slice 7 tech spec]] (§6.4 `national.ts`) · [[adr/0043-nation-day-term-calendar-and-the-republic-document|ADR 0043]] (the term calendar and the `nation` document) · [[adr/0047-elections-above-the-council-reuse-the-box|ADR 0047]] (reuse `candidacies` and the numbered ballot box; `nationalElections`) · [[adr/0062-the-national-audit-self-confirms-and-council-recounts|ADR 0062]] (the audit)
 
 **Code:** none yet. Planned: `packages/rules/src/term.ts` (`termOf`), `national.ts` (`nationalControl`, `nationalScores`, `countNation`, `partyList`, `countPick`), a `nationDay` settle step and `nation-day` Agenda job, a `nationalElections` collection, keys `pick:{faction}:{term}` and `nation:{term}` in the existing `votes` and `candidacies`. The client has a `/nation` route today, but it is the nation **map** (travel), not elections.

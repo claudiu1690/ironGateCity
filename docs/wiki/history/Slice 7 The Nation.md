@@ -58,12 +58,25 @@ the 26 result modals, chapter 3 *The list* and its keepsake, and `copy.nation` (
 help notes, the empty states). Departures from the design are listed in
 [[design/slice-7-nation#Added 15 Oct 2026 — the content written (T7 Clearwater, T8 the nation)|design §"Added 15 Oct 2026"]].
 
-**Bindings the developer owes before `loadContent()` passes** (a throwaway run on 15 Oct listed
-them): `load.ts` imports; the loader treating Clearwater as a battleground without districts (the
-slate, `leader`, the Courier's required headline names, the Issue count of thirty); the national
-templates and modals routed to the nation's placeholder sets, with eight tokens added to
-`NATION_PERSONAL_PLACEHOLDERS`, `lawLine` to the modal set and `governor` to the political set;
-the art (T9: the Clearwater map and tiles, `scene.event-town-hall`, three portraits).
+**Bound by the developer** (`7a5e514`): the loader imports, Clearwater as a contested city on one
+meter, the nation's placeholder sets, the art.
+
+## Phase A: rules, schemas, art, DB (T1–T6, T9, T10; 15 Oct 2026)
+
+- **Rules** (`packages/rules/src`): `term.ts`, `ladder.ts`, `national.ts`, `parliament.ts`, `laws.ts`,
+  `nationEvents.ts`, `nationTypes.ts`; the laws' kinds wired into their functions as optional inputs;
+  `partyCardOf` with the Governor, Mayor and Chair; `countBattleground` and `decideBlocRule`; orders v3
+  (standing orders, families, the push).
+- **Content** (`packages/content/src`): the schemas, `GameContent` accessors and `slice7.ts`'s checks.
+- **Art**: three figures' portraits, four scenes, Clearwater's map stills; the set is 22.79 MB.
+- **DB**: seven collections in `packages/db/src/models/nation.ts`, the changed fields, migration
+  `011-slice7-nation`.
+- **Stopgap**: Clearwater's city day waits for phase B (T12).
+- Checked with scratch scripts (no unit tests, the user's rule) and the council, capital and voting
+  Playwright projects. Everything else is in the tech design's
+  [[tech/slice-7#Phase A (15 Oct 2026; T1–T6, T9, T10; commits `94572ed`, `54b8951`, `d75c541`, `f07ea6b`, `7a5e514`, `aed0ec7`, `523ae99`)|Deviations (phase A)]].
+- **Questions for the designer:** design §6.3's second example gives 21 / 20 / 19 by D'Hondt, not
+  20 / 20 / 20; three alt texts of design §23.8 trimmed to 160 characters.
 
 ## QA and leftovers
 
@@ -71,7 +84,7 @@ Building; no QA yet. The designer's defaults among Appendix C #64–#73 that wer
 
 ## Commits
 
-`1f8172a` design, art done (4 Oct) · `ef6b697` tech design and ADRs 0043–0050 (4 Oct). Voting addenda in `9067c94` (10 Oct).
+`1f8172a` design, art done (4 Oct) · `ef6b697` tech design and ADRs 0043–0050 (4 Oct). Voting addenda in `9067c94` (10 Oct). Phase A: `94572ed` T6 schemas · `54b8951` T1–T3 · `d75c541` T4 · `f07ea6b` T5 · `c455d44` content (designer) · `7a5e514` T9 and the bindings · `aed0ec7` T10 · `523ae99` the Clearwater stopgap.
 
 ## Related
 

@@ -9,6 +9,14 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 7 phase A: rules, schemas, art, DB
+
+The developer's T1–T6, T9 and T10: the term, the ladder, National Control and the counts, Parliament,
+laws as effects, the councils' chain, orders v3, the petitions' gates; the content schemas and checks
+with the designer's content bound; the art; the seven collections and migration 011; Clearwater's city
+day held for phase B. Updated [[Slice 7 The Nation]], [[National Control]], [[National Elections]],
+[[The Legislature and Laws]], [[Recall and Removal]], [[Offices]], [[Clearwater]], [[index]].
+
 ## [2026-10-15] build | Review 7: the Faction tab as the Branch Office
 
 The user picked direction A for note #1: paper from the HUD down, the HQ scene as a 128 px plate
