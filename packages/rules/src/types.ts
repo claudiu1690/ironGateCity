@@ -13,7 +13,7 @@ import type { MissionType } from './constants';
 import type { RecordLevel } from './record';
 import type { QuarterLock } from './quarters';
 import type { CardBy, RuleHow } from './ruleBallot';
-import type { NationalCondition, NationAct } from './nationTypes';
+import type { GovernorPageView, NationalCondition, NationAct } from './nationTypes';
 import { NATION_ACTS } from './nationTypes';
 import type {
   BillPageView,
@@ -2085,6 +2085,8 @@ export interface TownHallView {
   /** Review 5 (ADR 0079): the same block as `hall.night`. */
   night: NightView;
   seatCount: 7 | 10;
+  /** Slice 7 (review 4, tech design §8.3): the Governor's line (the Mayor in the capital and Clearwater). */
+  governor: { title: 'Governor' | 'Mayor'; name: string; local: boolean } | null;
   termEndsAt: number;
   inForce: {
     ordinanceId: string;
@@ -2247,6 +2249,8 @@ export interface PoliticalResult {
     postedBy?: { name: string; iron: number } | null;
     /** Slice 6: the visit's line for the mate (*{name}: Health +10, out five minutes sooner*). */
     mate?: { name: string; health: number; minutes: number } | null;
+    /** Slice 7 (tech design §10.1): the Address, *{issue} · +50 · momentum before → after by party*. */
+    issue?: { name: string; added: number; before: Record<FactionId, number>; after: Record<FactionId, number> } | null;
   };
   performedAt: string;
   idempotencyKey: string;
@@ -2274,7 +2278,9 @@ export interface PoliticalResult {
     | { kind: 'nationalElection'; nationalElection: NationalElectionView }
     | { kind: 'president'; president: PresidentPageView }
     | { kind: 'petition'; petition: PetitionView }
-    | { kind: 'confidence'; confidence: ConfidenceView };
+    | { kind: 'confidence'; confidence: ConfidenceView }
+    // Slice 7 phase B, lane 1 (tech design §10.1): the Governor's rule and the Address, the office page.
+    | { kind: 'office'; office: GovernorPageView };
 }
 
 // ---------------------------------------------------------------------------------------------

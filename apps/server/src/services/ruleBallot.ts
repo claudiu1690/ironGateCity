@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
-import { City, District, Election, OfficeTerm, RuleBallot, Vote } from '@irongate/db';
-import type { CityDoc, DistrictDoc, ElectionDoc, OfficeTermDoc, RuleBallotDoc } from '@irongate/db';
+import { City, District, Election, FactionState, OfficeTerm, RuleBallot, Vote } from '@irongate/db';
+import type { CityDoc, DistrictDoc, ElectionDoc, FactionStateDoc, OfficeTermDoc, RuleBallotDoc } from '@irongate/db';
 import {
   FACTION_IDS,
   averageShares,
@@ -115,36 +115,114 @@ export function homeFill(content: GameContent, cityId: string, seats: readonly S
   return [...others, ...content.ordinancesMenu().map((o) => o.id)];
 }
 
+/**
+ * Slice 7 (ADR 0048 amended, tech design §8.2 `cityDay.ts` v3): who heads each party's card at the
+ * set, ahead of the councillors and the secretary: the Governor's or Mayor's rule (`officeTerms.rule`
+ * on the council's `governor` term, the Governor's party only) and the Chair's rule for the city
+ * (`factions.rules`, set before `asOf`: the set reads the rules set on or before the day before it).
+ */
+export interface CardHeads {
+  governor: {
+    factionId: FactionId;
+    ordinanceId: string;
+    name: string;
+    characterId: string;
+    title: 'Governor' | 'Mayor';
+  } | null;
+  chair: Partial<Record<FactionId, { ordinanceId: string; name: string; characterId: string }>>;
+}
+
+const NO_HEADS: CardHeads = { governor: null, chair: {} };
+
+/** The chain's heads for council k of a city (`asOf`: the set's day; omitted, the rules as they stand). */
+export async function cardHeads(
+  content: GameContent,
+  cityId: string,
+  k: number,
+  session: Session,
+  asOf: DayKey = Number.POSITIVE_INFINITY,
+): Promise<CardHeads> {
+  const gov = await s(
+    OfficeTerm.findOne({
+      councilKey: `governor:${cityId}:${k}`,
+      office: 'governor',
+      'holder.kind': 'player',
+      vacatedDay: null,
+      rule: { $ne: null },
+    }),
+    session,
+  ).lean<OfficeTermDoc>();
+  const factions = await s(FactionState.find({}, { chair: 1, rules: 1 }), session).lean<FactionStateDoc[]>();
+  const chair: CardHeads['chair'] = {};
+  for (const fs of factions) {
+    if (!fs.chair) continue;
+    const r = (fs.rules ?? []).find((x) => x.cityId === cityId && x.setDay < asOf);
+    if (r)
+      chair[fs._id] = {
+        ordinanceId: r.ordinanceId,
+        name: fs.chair.holder.name,
+        characterId: fs.chair.holder.characterId.toHexString(),
+      };
+  }
+  return {
+    governor:
+      gov?.rule && gov.holder.kind === 'player'
+        ? {
+            factionId: (gov.factionId ?? content.city(cityId)?.homeFactionId)!,
+            ordinanceId: gov.rule,
+            name: gov.holder.name,
+            characterId: gov.holder.characterId.toHexString(),
+            title: isContested(content, cityId) ? 'Mayor' : 'Governor',
+          }
+        : null,
+    chair,
+  };
+}
+
+/** One party's card through the chain (`partyCardOf`) with the heads read for the city. */
+function partyCard(
+  content: GameContent,
+  f: FactionId,
+  seats: readonly SeatRule[],
+  heads: CardHeads,
+  contested: boolean,
+): { ordinanceId: string; by: CardBy } {
+  const sec = secretaryCard(content, f);
+  const secretary = sec.by as Extract<CardBy, { kind: 'party' }>;
+  const gov = heads.governor && heads.governor.factionId === f ? heads.governor : null;
+  return partyCardOf({
+    factionId: f,
+    defaultRule: sec.ordinanceId,
+    secretary: { npcId: secretary.npcId ?? '', name: secretary.name },
+    seats,
+    governorRule: gov,
+    chairRule: heads.chair[f] ?? null,
+    contested,
+  });
+}
+
 /** The home city's three cards over council k's seats (design §3.3; Unrest takes the party's card off). */
 export function homeCards(
   content: GameContent,
   cityId: string,
   seats: readonly SeatRule[],
   unrest: boolean,
+  heads: CardHeads = NO_HEADS,
 ): RuleCard[] {
   const home = content.city(cityId)!.homeFactionId!;
-  return homeBallot({ party: secretaryCard(content, home), seats, fill: homeFill(content, cityId, seats), unrest });
+  // Slice 7: the Governor's rule, else the Chair's, else the secretary's heads the party's card.
+  const party = partyCard(content, home, seats, heads, false);
+  return homeBallot({ party, seats, fill: homeFill(content, cityId, seats), unrest });
 }
 
-/** The capital's cards (ADR 0085): one per party through the chain, shared rules merged, in `order`. */
+/** The capital's and Clearwater's cards (ADR 0085): one per party through the chain, shared rules merged, in `order`. */
 export function capitalCards(
   content: GameContent,
   seats: readonly SeatRule[],
   order: readonly FactionId[],
+  heads: CardHeads = NO_HEADS,
 ): RuleCard[] {
-  const parties = FACTION_IDS.map((f) => {
-    const sec = secretaryCard(content, f);
-    const secretary = sec.by as Extract<CardBy, { kind: 'party' }>;
-    return {
-      factionId: f,
-      ...partyCardOf({
-        factionId: f,
-        defaultRule: sec.ordinanceId,
-        secretary: { npcId: secretary.npcId ?? '', name: secretary.name },
-        seats,
-      }),
-    };
-  });
+  const parties = FACTION_IDS.map((f) => ({ factionId: f, ...partyCard(content, f, seats, heads, true) }));
   return capitalBallot({ parties, order });
 }
 
@@ -195,13 +273,14 @@ export async function cardsFor(
   content: GameContent,
   cityId: string,
   k: number,
-  i: { unrest: boolean; capital: boolean; order?: readonly FactionId[] },
+  i: { unrest: boolean; capital: boolean; order?: readonly FactionId[]; asOf?: DayKey },
   session: Session,
 ): Promise<RuleCard[]> {
   const seats = await seatRules(content, cityId, k, session);
-  if (!i.capital) return homeCards(content, cityId, seats, i.unrest);
+  const heads = await cardHeads(content, cityId, k, session, i.asOf);
+  if (!i.capital) return homeCards(content, cityId, seats, i.unrest, heads);
   const order = i.order ?? (await capitalCardOrder(content, cityId, k, seats, session));
-  return capitalCards(content, seats, order);
+  return capitalCards(content, seats, order, heads);
 }
 
 /** An open rule ballot document (created at the count that seats council k, or by a bootstrap). */
@@ -231,7 +310,8 @@ export async function setBallotStep(
   i: { cityId: string; k: number; fromDay: DayKey; unrest: boolean; capital: boolean; order?: FactionId[] },
   session: ClientSession,
 ): Promise<RuleCard[]> {
-  const cards = await cardsFor(content, i.cityId, i.k, i, session);
+  // Slice 7: the Chair's rules set on or before the day before the set (the set is fromDay + 2).
+  const cards = await cardsFor(content, i.cityId, i.k, { ...i, asOf: i.fromDay + 2 }, session);
   const unrest = i.capital ? null : i.unrest;
   const id = councilKey(i.cityId, i.k);
   const existing = await RuleBallot.findById(id, { status: 1 }).session(session).lean<RuleBallotDoc>();

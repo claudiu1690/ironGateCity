@@ -20,6 +20,7 @@ import { parliamentRouter } from './routers/parliament';
 import { chairRouter } from './routers/chair';
 import { chairElectionRouter } from './routers/chairElection';
 import { confidenceRouter } from './routers/confidence';
+import { governorRouter } from './routers/governor';
 import { officeRouter } from './routers/office';
 import { petitionRouter } from './routers/petition';
 import { presidentRouter } from './routers/president';
@@ -61,6 +62,8 @@ export const appRouter = router({
   office: officeRouter,
   president: presidentRouter,
   petition: petitionRouter,
+  // Slice 7 phase B, lane 1 (T13).
+  governor: governorRouter,
 });
 
 export type AppRouter = typeof appRouter;

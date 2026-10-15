@@ -115,7 +115,12 @@ export async function townHallView(
     cityName: city.name,
     hall,
     night: hall.night,
-    seatCount: capital ? CAPITAL_COUNCIL.seats : COUNCIL.seats,
+    // Slice 7: Clearwater sits seven (BATTLEGROUND_COUNCILS); the capital ten.
+    seatCount: capital && content.isDistricted(cityId) ? CAPITAL_COUNCIL.seats : COUNCIL.seats,
+    // Slice 7 (review 4): the Governor's (home) or the Mayor's (contested) line.
+    governor: doc?.council?.governor
+      ? { title: capital ? 'Mayor' : 'Governor', name: doc.council.governor.name, local: doc.council.governor.local }
+      : null,
     termEndsAt: dayStart(cal.council.toDay),
     inForce,
     next,

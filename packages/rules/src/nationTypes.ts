@@ -2,7 +2,8 @@ import type { DayKey } from './day';
 import type { Office } from './ladder';
 import type { MoraleState } from './morale';
 import type { NationalPhase, TermDate } from './term';
-import type { FactionId, OpinionShares } from './types';
+import type { RuleHow } from './ruleBallot';
+import type { FactionId, HallView, OpinionShares, OrdinanceMenuItemView } from './types';
 
 /**
  * Slice 7 (docs/tech/slice-7.md §4.3, §6.11, §11.2): the nation's headline conditions and
@@ -239,6 +240,41 @@ export interface OfficeCardView {
   consecutive?: 1 | 2;
   pay: { pc: number; fxp: number };
   route: string;
+}
+
+/**
+ * `office.governor` (tech design §8.3; screens §4): the Governor's (home) or the Mayor's (the capital,
+ * Clearwater) page: the holder, the rule that heads the party's card, the Address, the pay.
+ */
+export interface GovernorPageView {
+  city: { id: string; name: string; hall: HallView | null; title: 'Governor' | 'Mayor' };
+  holder: {
+    kind: 'player' | 'npc';
+    name: string;
+    factionId: FactionId;
+    avatarId: string | null;
+    /** A local holds the chair: marked *Local*, draws nothing and sets nothing. */
+    local: boolean;
+    since: DayKey;
+    until: DayKey;
+  } | null;
+  you: boolean;
+  rule: {
+    set: { ordinanceId: string; name: string; at: number } | null;
+    /** Epoch ms the rule can be changed until (the set), null outside cycle days 0–1. */
+    until: number | null;
+    /** The picker, for the Governor on days 0–1; else null. */
+    menu: OrdinanceMenuItemView[] | null;
+    /** *Card 1 on the town's ballot*: the Governor's rule heads the party's card. */
+    card: { onBallot: boolean; position: 1 } | null;
+    /** The council's ballot once counted. */
+    decided: { ordinanceId: string; name: string; won: boolean; how: RuleHow; day: DayKey } | null;
+  };
+  address: {
+    used: { issueShort: string; day: DayKey } | null;
+    issues: Array<{ docId: string; name: string; short: string; momentum: Record<FactionId, number> }>;
+  };
+  pay: { pc: number; fxp: number };
 }
 
 /** Me · the ladder's five rows (screens §3). */

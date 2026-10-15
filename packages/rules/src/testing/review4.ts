@@ -26,6 +26,7 @@ export const townHallFixture: TownHallView = {
   hall: hallFixture,
   night: nightFixture,
   seatCount: 7,
+  governor: null,
   termEndsAt,
   inForce: {
     ordinanceId: 'ord.reading-room',
