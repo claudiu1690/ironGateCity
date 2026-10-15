@@ -232,6 +232,17 @@ function DevPanelOn({ status }: { status: DevStatus }) {
       'dev-chat',
     ]);
   }
+  // Slice 7 (tech design §8.7): the term, the republic, the offices, the laws, the bills, the Chair.
+  const nation = status.nation;
+  if (nation) {
+    rows.push(['Term', `${nation.termIndex} · day ${nation.termDay} · ${nation.phase}`, 'dev-term']);
+    rows.push(['Republic', nation.leader, 'dev-republic']);
+    rows.push(['Government', nation.government, 'dev-government']);
+    rows.push(['Laws', nation.laws.length === 0 ? 'none in force' : nation.laws.join(' · '), 'dev-laws']);
+    if (nation.bills.length > 0) rows.push(['Bills', nation.bills.join(' · '), 'dev-bills']);
+    rows.push(['Chair', `${nation.chair ?? 'the secretary acts'}${nation.orders ? ` · orders ${nation.orders}` : ''}`, 'dev-chair']);
+    if (nation.offices.length > 0) rows.push(['Offices', nation.offices.join(' · '), 'dev-offices']);
+  }
   // Slice 5 (tech design §8.6): Heat, Health, the record, held, the run-in, flags, bars, pressure.
   const risk = status.risk;
   if (risk) {
@@ -472,6 +483,14 @@ function DevPanelOn({ status }: { status: DevStatus }) {
             />
           )}
 
+          {status.nation && status.character && (
+            <NationControls
+              disabled={act.isPending || !status.character}
+              busy={busy}
+              run={(action, target) => act.mutate(target === undefined ? action : { action, target })}
+            />
+          )}
+
           {status.together !== undefined && status.character && (
             <TogetherControls
               disabled={act.isPending || !status.character}
@@ -550,6 +569,57 @@ function TogetherControls({
       {btn('memberSays', 'A member says something')}
       {btn('chatReset', 'Clear my chat limits')}
       {btn('iron', 'Give 2,000 Iron')}
+    </div>
+  );
+}
+
+/**
+ * Slice 7 (tech design §8.7): the nation's buttons. Each calls a test hook's writer (the term day,
+ * an office, the ladder, the Monday bills, test deputies and their votes, the next control snapshot),
+ * then the existing settle. The panel holds no rule.
+ */
+function NationControls({
+  disabled,
+  busy,
+  run,
+}: {
+  disabled: boolean;
+  busy: (action: DevAction, target?: string) => boolean;
+  run: (action: DevAction, target?: string) => void;
+}) {
+  const btn = (action: DevAction, label: string, target?: string, testId?: string) => (
+    <Button
+      variant="outline"
+      className="px-2 text-[12px]"
+      disabled={disabled}
+      pending={busy(action, target)}
+      onClick={() => run(action, target)}
+      data-testid={testId ?? `dev-btn-${action}`}
+    >
+      {label}
+    </Button>
+  );
+  return (
+    <div className="grid grid-cols-2 gap-1.5 border-t border-paper-2 px-3 pt-2.5 pb-2" data-testid="dev-nation">
+      <h3 className="label-caps col-span-2 text-[10px] text-muted">The nation</h3>
+      <ChoiceRow
+        label="Term day"
+        testId="dev-term-day"
+        choices={['0', '9', '11', '14', '19', '21', '23', '27'].map((d) => ({ value: d, label: d }))}
+        disabled={disabled}
+        busy={(v) => busy('termDay', v)}
+        onPick={(v) => run('termDay', v)}
+      />
+      {btn('office', 'Make me Governor here', 'governor', 'dev-office-governor')}
+      {btn('office', 'Make me Chair', 'chair', 'dev-office-chair')}
+      {btn('office', 'Make me a deputy', 'deputy', 'dev-office-deputy')}
+      {btn('office', 'Make me President', 'president', 'dev-office-president')}
+      {btn('ladder', 'Give me the ladder')}
+      {btn('secretaryBill', "Table the secretary's bill now")}
+      {btn('deputies', 'Three test deputies')}
+      {btn('lead', 'My party leads by ten')}
+      {btn('deputiesVote', 'Test deputies vote For', 'for', 'dev-deputies-for')}
+      {btn('deputiesVote', 'Test deputies vote Against', 'against', 'dev-deputies-against')}
     </div>
   );
 }

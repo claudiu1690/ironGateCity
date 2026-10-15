@@ -202,6 +202,21 @@ export async function seatOffice(
         },
       },
     );
+    // Lane 2's note: a removal needs a runner-up; with none, another party's figure stands as one.
+    const other = FACTION_IDS.find((f) => f !== c.factionId)!;
+    const figure = content.faction(other).nationalFigure;
+    if (figure)
+      await Nation.updateOne(
+        { _id: 'republic', 'government.runnerUp': null },
+        {
+          $set: {
+            'government.runnerUp': {
+              holder: { kind: 'npc', npcId: figure.npcId, name: figure.name, factionId: other },
+              termId: null,
+            },
+          },
+        },
+      );
   } else {
     const n = await Nation.findById('republic').lean<NationDoc>();
     if (n) {

@@ -1,4 +1,5 @@
 import { togetherAction, togetherStatus } from './together';
+import { NATION_DEV_ACTIONS, nationAction, nationStatus } from './nationPanel';
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
 import { BOOST, Character, District, IssueModel, Journey, RuleBallot } from '@irongate/db';
@@ -77,6 +78,8 @@ export interface DevPanelDeps {
 }
 
 const DEV_ACTIONS: readonly DevAction[] = [
+  // Slice 7 (tech design §8.7).
+  ...NATION_DEV_ACTIONS,
   // Slice 6 (tech design §8.7).
   'members',
   'fillEvent',
@@ -294,6 +297,7 @@ async function statusFor(
       home: c ? await homeView(content, residenceCityId(c), city, now) : null,
       risk: c ? await riskStatus(content, c, city, now) : null,
       together: c ? await togetherStatus(c, now) : null,
+      nation: await nationStatus(content, c, now),
     },
   };
 }
@@ -666,6 +670,21 @@ async function runAction(
       await Character.updateOne({ _id: doc._id }, { $inc: { iron: DEV_IRON, version: 1 } });
       did = `+${DEV_IRON.toLocaleString('en-GB')} Iron (now ${(doc.iron + DEV_IRON).toLocaleString('en-GB')})`;
       settle = true;
+      break;
+    }
+    case 'termDay':
+    case 'office':
+    case 'ladder':
+    case 'secretaryBill':
+    case 'deputies':
+    case 'deputiesVote':
+    case 'lead': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      const r = await nationAction(content, doc, action, body.target, clock);
+      did = r.did;
+      if (r.moved) moved = true;
+      else settle = true;
       break;
     }
     case 'members':

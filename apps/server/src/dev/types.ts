@@ -64,7 +64,33 @@ export type DevAction =
   | 'memberSays'
   | 'chatReset'
   // Review 7: `iron` (*Give 2,000 Iron*), so bail can be tested without the console.
-  | 'iron';
+  | 'iron'
+  // Slice 7 (tech design §8.7): `termDay` (target 0, 9, 11, 14, 19, 21, 23, 27), `office` (target
+  // governor, chair, deputy, president), `ladder` (a council, a Governor's and a deputy's term
+  // completed), `secretaryBill` (the Monday bills now), `deputies` (three test deputies),
+  // `deputiesVote` (target for, against: the test deputies on the newest open bill), `lead` (the
+  // caller's party leads by ten at the next boundary).
+  | 'termDay'
+  | 'office'
+  | 'ladder'
+  | 'secretaryBill'
+  | 'deputies'
+  | 'deputiesVote'
+  | 'lead';
+
+/** Slice 7 (tech design §8.7): the status's nation block. */
+export interface DevNationStatus {
+  termIndex: number;
+  termDay: number;
+  phase: string;
+  leader: string;
+  government: string;
+  laws: string[];
+  bills: string[];
+  chair: string | null;
+  orders: string | null;
+  offices: string[];
+}
 
 /** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
 export interface DevStreetForce {
@@ -143,6 +169,8 @@ export interface DevStatus {
   hooks: true;
   /** Slice 6 (tech design §8.7): open sign-ups, events here, today's fixture, unseen results, chat, presence. */
   together?: DevTogetherStatus | null;
+  /** Slice 7 (tech design §8.7): the term, the republic, the offices, the laws, the bills (null before the bootstrap). */
+  nation?: DevNationStatus | null;
   /** The shared test clock, epoch ms. */
   now: number;
   /** "Thursday 1 Oct 00:01 UTC". */
