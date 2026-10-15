@@ -138,6 +138,15 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 |---|---|---|---|---|
 | 15 Oct | **The seven slice-7 defaults approved as written**: one office at the top, the President; the secretary always on the Chair's ballot and the party's own figure on every pick; a petition dissolves the council, no snap election; the secretaries table bills where no player sits; Clearwater's baseline evened to 22 / 22 / 22 / 34; The Front's four places as later pins until slice 8; several offices at once. No number moves; the build starts | — | [[design/slice-7-nation\|slice-7 design]] §21; GDD §0 (15 Oct), Appendix C #64, #65, #66, #68, #70 | [[Offices]], [[National Elections]], [[The Legislature and Laws]], [[Recall and Removal]], [[Clearwater]], [[NPC Fill]], [[Slice 7 The Nation]] |
 
+## Slice 7 phase A settled (15 Oct, the designer)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 15 Oct | **One Collective ballot at the baselines seats 21 / 20 / 19**, not 20 / 20 / 20: D'Hondt on the exact scores, the last seat on the draw; the build stands, the design example is corrected | the example was arithmetic, not a rule | [[design/slice-7-nation\|slice-7 design]] §6.3 and *Settled 15 Oct 2026 (phase A)* | [[National Elections]] |
+| 15 Oct | **A first-term councillor is never Governor**: a bloc with no qualified player and no seated local gives the chair to its top unseated local from the slate, marked *Local*; `governorOf`'s fallback to the top seated player is dropped | a Governor term qualifies for the list; the ladder would skip a rung | [[design/slice-7-nation\|slice-7 design]] §3.1, *Settled 15 Oct 2026 (phase A)* #3 | [[Offices]], [[Capital Districts]], [[Clearwater]] |
+| 15 Oct | The three trimmed alt texts (Albrecht, the Town Hall, the study) and the portrait crops (`top: 40`) and full-frame scenes confirmed against the pictures | — | *Settled 15 Oct 2026 (phase A)* #2, #4; `packages/content/src/data/art.ts` | [[Art and Maps Pipeline]] |
+| 15 Oct | The *The Front* and *ballot* vocabulary allowances go to the Playwright sweeps in T30; the Vitest guards stay unrun and untouched | the user's no-unit-test rule | *Settled 15 Oct 2026 (phase A)*, vocabulary note | [[Checks and Testing]] |
+
 ## Review 7 (15 Oct, Notion Design Review 4)
 
 | Date | Decision | Why (if stated) | Where recorded | Systems |

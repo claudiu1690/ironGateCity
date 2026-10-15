@@ -75,8 +75,13 @@ meter, the nation's placeholder sets, the art.
 - Checked with scratch scripts (no unit tests, the user's rule) and the council, capital and voting
   Playwright projects. Everything else is in the tech design's
   [[tech/slice-7#Phase A (15 Oct 2026; T1–T6, T9, T10; commits `94572ed`, `54b8951`, `d75c541`, `f07ea6b`, `7a5e514`, `aed0ec7`, `523ae99`)|Deviations (phase A)]].
-- **Questions for the designer:** design §6.3's second example gives 21 / 20 / 19 by D'Hondt, not
-  20 / 20 / 20; three alt texts of design §23.8 trimmed to 160 characters.
+- **The designer's four phase-A questions, settled 15 Oct** (design doc, *Settled 15 Oct 2026 (phase A)*):
+  §6.3's second example corrected to **21 / 20 / 19** (D'Hondt on the exact scores; the build was right);
+  the three trimmed alt texts stand; **`governorOf` changes**: a first-term councillor is never
+  Governor, so a bloc with no qualified player and no seated local gives the chair to its top
+  **unseated local** from the slate (marked *Local*), not its top seated player; the portrait crops
+  (`top: 40`) and the scenes' full frame confirmed. The *The Front* / *ballot* vocabulary allowances
+  go to the Playwright sweeps in T30 (the Vitest guards are unrun and untouched).
 
 ## QA and leftovers
 

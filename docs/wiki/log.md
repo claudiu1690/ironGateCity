@@ -9,6 +9,16 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] update | Slice 7 phase A: the designer's four questions settled
+
+The game-designer answered the developer's phase-A questions in `docs/design/slice-7-nation.md`
+(*Settled 15 Oct 2026 (phase A)*): §6.3's one-ballot example corrected to 21 / 20 / 19 (D'Hondt on
+the exact scores, the build was right; the GDD does not repeat the example); the three trimmed alt
+texts checked against the pictures and kept; `governorOf` changed so a first-term councillor is never
+Governor (the bloc's top unseated local holds the chair instead); the portrait crops and the scenes'
+full frame confirmed. The *The Front* / *ballot* allowances move to the T30 Playwright sweeps.
+Updated [[Slice 7 The Nation]], [[Decision Log]].
+
 ## [2026-10-15] build | Slice 7 phase A: rules, schemas, art, DB
 
 The developer's T1–T6, T9 and T10: the term, the ladder, National Control and the counts, Parliament,
