@@ -249,3 +249,6 @@ export {
 export type { AvatarPickerProps, StoryScreenProps } from './components/Story';
 export { TownHallBlocks, WhatNowCard } from './components/TownHall';
 export type { DeskActs, TownHallBlocksProps, WhatNowCardProps } from './components/TownHall';
+// Slice 6 (lane A): the Faction tab's strip, the events' cards, page parts, ticket and here-now line.
+export { FACTION_TABS, FactionTabs } from './components/FactionTabs';
+export type { FactionTab, FactionTabsProps } from './components/FactionTabs';

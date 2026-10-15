@@ -59,7 +59,13 @@ export function AppShell() {
     return () => ro.disconnect();
   }, []);
 
-  const active: TabId = pathname.startsWith('/paper') ? 'paper' : pathname.startsWith('/me') ? 'me' : 'map';
+  const active: TabId = pathname.startsWith('/paper')
+    ? 'paper'
+    : pathname.startsWith('/me')
+      ? 'me'
+      : pathname.startsWith('/faction')
+        ? 'faction'
+        : 'map';
   // Slice 4 (tech design §12.1): on a train the Map tab lands on the journey; in the capital, on the
   // last district viewed.
   const district = character ? lastDistrict(character.cityId) : null;
@@ -89,7 +95,13 @@ export function AppShell() {
         active !== 'paper',
     },
     { id: 'dossier', label: 'Dossier', href: '#', disabled: true },
-    { id: 'faction', label: 'Faction', href: '#', disabled: true },
+    {
+      id: 'faction',
+      label: copy.together.tabs.faction,
+      href: '/faction',
+      // Slice 6 (screens §2): a pending event result, or a chat line addressed to the member.
+      dot: !!character?.factionDot && active !== 'faction',
+    },
     {
       id: 'me',
       label: 'Me',

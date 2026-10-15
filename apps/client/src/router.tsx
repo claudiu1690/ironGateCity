@@ -22,6 +22,7 @@ import { LoginPage } from './routes/login';
 import { MePage } from './routes/me';
 import { PaperPage } from './routes/paper';
 import { HeldPage } from './routes/held';
+import { FactionPage, validateFactionSearch } from './routes/faction';
 import { SignupPage } from './routes/signup';
 
 interface RouterContext {
@@ -195,6 +196,14 @@ const paperRoute = createRoute({
   component: PaperPage,
 });
 
+/** Slice 6 (tech design §12.1): the Faction tab, its five parts by `?tab=`. */
+const factionRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/faction',
+  validateSearch: validateFactionSearch,
+  component: FactionPage,
+});
+
 const meRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/me',
@@ -265,6 +274,7 @@ const routeTree = rootRoute.addChildren([
     journeyRoute,
     heldRoute,
     paperRoute,
+    factionRoute,
     meRoute,
     ambitionRoute,
     councilRoute,
