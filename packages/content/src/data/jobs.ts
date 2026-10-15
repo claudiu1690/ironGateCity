@@ -126,3 +126,37 @@ export const irongateJobs: Job[] = [
       'The quay lorry between the cranes and the works, a full load each way. Needs a quick hand on the setts by the bridge.',
   },
 ];
+
+/**
+ * Slice 7: the three Clearwater jobs (docs/design/slice-7-nation.md §9.4; the capital's rule: no
+ * faction draws a fifth more on a battleground). The Tram conductor at 240 by review 5's rung rule
+ * (GDD §9.2). Merged into the content with the city (T6).
+ */
+export const clearwaterJobs: Job[] = [
+  {
+    id: 'clearwater-street-vendor',
+    name: 'Street vendor',
+    locationId: 'clearwater.back-lane-market',
+    unlock: { level: 1 },
+    dailyPay: 100,
+    blurb:
+      "Bootlaces, fish and yesterday's Courier from a barrow under the arches. Nobody asks for a permit, and nobody gets one.",
+  },
+  {
+    id: 'clearwater-cannery-hand',
+    name: 'Cannery hand',
+    locationId: 'clearwater.cannery',
+    unlock: { level: 1, stats: { str: 5 } },
+    dailyPay: 180,
+    blurb:
+      'Eight hours on the loading bank of the fish cannery. No party draws a fifth more here: the company pays everyone the same, which is the trouble.',
+  },
+  {
+    id: 'clearwater-tram-conductor',
+    name: 'Tram conductor',
+    locationId: 'clearwater.tram-depot',
+    unlock: { level: 3, stats: { agi: 10 } },
+    dailyPay: 240, // Review 5 (answers §5, GDD §9.2): was 200.
+    blurb: 'The fares on the lake line, up and down the hill all day. Needs a quick hand on a moving platform.',
+  },
+];

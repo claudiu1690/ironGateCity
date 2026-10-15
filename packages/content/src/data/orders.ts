@@ -12,6 +12,7 @@ export const orderTemplates: OrderTemplate[] = [
   // Secretary Holm (Coalport), answers §3.1.
   {
     id: 'dir.canvass-coalport',
+    family: 'canvass-anywhere',
     factionId: 'collective',
     slot: 'A',
     title: 'Talk to voters anywhere in Coalport',
@@ -22,6 +23,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.shift-change',
+    family: 'canvass-shift',
     factionId: 'collective',
     slot: 'A',
     title: 'Talk to the workers at the Mill Gate',
@@ -32,6 +34,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.foundry-row',
+    family: 'canvass-doors',
     factionId: 'collective',
     slot: 'A',
     title: 'Knock on doors in Foundry Row',
@@ -42,6 +45,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.noon-break',
+    family: 'canvass-crowd',
     factionId: 'collective',
     slot: 'A',
     title: 'Talk to the dockers at Harbour Quays',
@@ -52,6 +56,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.anchor',
+    family: 'canvass-regulars',
     factionId: 'collective',
     slot: 'A',
     title: 'Win over the regulars at The Anchor',
@@ -62,6 +67,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.paper-the-town',
+    family: 'propaganda-anywhere',
     factionId: 'collective',
     slot: 'B',
     title: 'Spread the word anywhere in Coalport',
@@ -72,6 +78,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.say-it',
+    family: 'speech-anywhere',
     factionId: 'collective',
     slot: 'B',
     title: 'Make a speech anywhere in Coalport',
@@ -94,6 +101,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.report',
+    family: 'committee',
     factionId: 'collective',
     slot: 'B',
     title: 'Go to the branch meeting at the Union Hall',
@@ -104,6 +112,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.ears-open',
+    family: 'intelligence-anywhere',
     factionId: 'collective',
     slot: 'B',
     title: 'Watch and listen anywhere in Coalport',
@@ -116,6 +125,7 @@ export const orderTemplates: OrderTemplate[] = [
   // from Level 6; `{city}` is the residence city, resolved at read.
   {
     id: 'dir.mission',
+    family: 'mission',
     factionId: 'collective',
     slot: 'B',
     title: 'Take on a mission anywhere in {city}',
@@ -128,6 +138,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.sharpen-up',
+    family: 'train',
     factionId: 'collective',
     slot: 'C',
     title: '{verbs} once in {city}',
@@ -139,6 +150,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.full-day',
+    family: 'six-wins',
     factionId: 'collective',
     slot: 'C',
     title: 'Six wins anywhere in {city}',
@@ -150,6 +162,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.five-in-the-book',
+    family: 'five-attempts',
     factionId: 'collective',
     slot: 'C',
     title: 'Five attempts anywhere in {city}',
@@ -184,6 +197,7 @@ export const orderTemplates: OrderTemplate[] = [
   // Organiser Stahl (Duskwall), answers §3.2.
   {
     id: 'dir.v.canvass-duskwall',
+    family: 'canvass-anywhere',
     factionId: 'vanguard',
     slot: 'A',
     title: 'Talk to voters anywhere in Duskwall',
@@ -194,6 +208,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.guard-change',
+    family: 'canvass-shift',
     factionId: 'vanguard',
     slot: 'A',
     title: 'Talk to the customs men at the Fortress Gate',
@@ -204,6 +219,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.rampart-row',
+    family: 'canvass-doors',
     factionId: 'vanguard',
     slot: 'A',
     title: 'Knock on doors in Rampart Row',
@@ -214,6 +230,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.loaders',
+    family: 'canvass-crowd',
     factionId: 'vanguard',
     slot: 'A',
     title: 'Talk to the loaders at the Goods Yard',
@@ -224,6 +241,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.clerks',
+    family: 'canvass-regulars',
     factionId: 'vanguard',
     slot: 'A',
     title: 'Talk to the clerks at the State Archives',
@@ -234,6 +252,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.paper-the-town',
+    family: 'propaganda-anywhere',
     factionId: 'vanguard',
     slot: 'B',
     title: 'Spread the word anywhere in Duskwall',
@@ -244,6 +263,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.say-it',
+    family: 'speech-anywhere',
     factionId: 'vanguard',
     slot: 'B',
     title: 'Make a speech anywhere in Duskwall',
@@ -266,6 +286,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.report',
+    family: 'committee',
     factionId: 'vanguard',
     slot: 'B',
     title: 'Go to the district meeting at Beacon House',
@@ -276,6 +297,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.eyes-open',
+    family: 'intelligence-anywhere',
     factionId: 'vanguard',
     slot: 'B',
     title: 'Watch and listen anywhere in Duskwall',
@@ -288,6 +310,7 @@ export const orderTemplates: OrderTemplate[] = [
   // from Level 6; `{city}` is the residence city, resolved at read.
   {
     id: 'dir.v.mission',
+    family: 'mission',
     factionId: 'vanguard',
     slot: 'B',
     title: 'Take on a mission anywhere in {city}',
@@ -300,6 +323,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.sharpen-up',
+    family: 'train',
     factionId: 'vanguard',
     slot: 'C',
     title: '{verbs} once in {city}',
@@ -311,6 +335,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.full-day',
+    family: 'six-wins',
     factionId: 'vanguard',
     slot: 'C',
     title: 'Six wins anywhere in {city}',
@@ -322,6 +347,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.five-in-the-book',
+    family: 'five-attempts',
     factionId: 'vanguard',
     slot: 'C',
     title: 'Five attempts anywhere in {city}',
@@ -367,6 +393,7 @@ export const orderTemplates: OrderTemplate[] = [
   // Mr Grey (Ashford), answers §3.3.
   {
     id: 'dir.a.canvass-ashford',
+    family: 'canvass-anywhere',
     factionId: 'alliance',
     slot: 'A',
     title: 'Talk to voters anywhere in Ashford',
@@ -377,6 +404,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.print-room',
+    family: 'canvass-shift',
     factionId: 'alliance',
     slot: 'A',
     title: 'Talk to the printers at Gazette House',
@@ -387,6 +415,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.weavers-row',
+    family: 'canvass-doors',
     factionId: 'alliance',
     slot: 'A',
     title: "Knock on doors in Weavers' Row",
@@ -397,6 +426,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.students',
+    family: 'canvass-crowd',
     factionId: 'alliance',
     slot: 'A',
     title: 'Talk to the students at the University Quad',
@@ -407,6 +437,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.court-queue',
+    family: 'canvass-regulars',
     factionId: 'alliance',
     slot: 'A',
     title: 'Talk to the queue at the Courts',
@@ -417,6 +448,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.paper-the-town',
+    family: 'propaganda-anywhere',
     factionId: 'alliance',
     slot: 'B',
     title: 'Spread the word anywhere in Ashford',
@@ -427,6 +459,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.say-it',
+    family: 'speech-anywhere',
     factionId: 'alliance',
     slot: 'B',
     title: 'Make a speech anywhere in Ashford',
@@ -449,6 +482,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.report',
+    family: 'committee',
     factionId: 'alliance',
     slot: 'B',
     title: 'Go to the meeting at the Assembly Rooms',
@@ -459,6 +493,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.ears-open',
+    family: 'intelligence-anywhere',
     factionId: 'alliance',
     slot: 'B',
     title: 'Watch and listen anywhere in Ashford',
@@ -471,6 +506,7 @@ export const orderTemplates: OrderTemplate[] = [
   // from Level 6; `{city}` is the residence city, resolved at read.
   {
     id: 'dir.a.mission',
+    family: 'mission',
     factionId: 'alliance',
     slot: 'B',
     title: 'Take on a mission anywhere in {city}',
@@ -483,6 +519,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.sharpen-up',
+    family: 'train',
     factionId: 'alliance',
     slot: 'C',
     title: '{verbs} once in {city}',
@@ -494,6 +531,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.full-day',
+    family: 'six-wins',
     factionId: 'alliance',
     slot: 'C',
     title: 'Six wins anywhere in {city}',
@@ -505,6 +543,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.five-in-the-book',
+    family: 'five-attempts',
     factionId: 'alliance',
     slot: 'C',
     title: 'Five attempts anywhere in {city}',
@@ -625,6 +664,7 @@ export const orderTemplates: OrderTemplate[] = [
   // city's first Issue, resolved at read.
   {
     id: 'dir.c.capital-canvass',
+    family: 'canvass-anywhere',
     factionId: 'collective',
     slot: 'A',
     title: 'Talk to voters in the capital',
@@ -636,6 +676,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.c.capital-district',
+    family: 'canvass-doors',
     factionId: 'collective',
     slot: 'A',
     title: 'Knock on doors in your district',
@@ -647,6 +688,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.c.capital-issue',
+    family: 'issue',
     factionId: 'collective',
     slot: 'B',
     title: "Speak on this week's Issue",
@@ -658,6 +700,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.c.capital-report',
+    family: 'committee',
     factionId: 'collective',
     slot: 'B',
     title: 'Go to the meeting at Union House',
@@ -669,6 +712,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.capital-canvass',
+    family: 'canvass-anywhere',
     factionId: 'vanguard',
     slot: 'A',
     title: 'Talk to voters in the capital',
@@ -680,6 +724,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.capital-district',
+    family: 'canvass-doors',
     factionId: 'vanguard',
     slot: 'A',
     title: 'Knock on doors in your district',
@@ -691,6 +736,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.capital-issue',
+    family: 'issue',
     factionId: 'vanguard',
     slot: 'B',
     title: "Speak on this week's Issue",
@@ -702,6 +748,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.v.capital-report',
+    family: 'committee',
     factionId: 'vanguard',
     slot: 'B',
     title: 'Go to the meeting at Vanguard House',
@@ -713,6 +760,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.capital-canvass',
+    family: 'canvass-anywhere',
     factionId: 'alliance',
     slot: 'A',
     title: 'Talk to voters in the capital',
@@ -724,6 +772,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.capital-district',
+    family: 'canvass-doors',
     factionId: 'alliance',
     slot: 'A',
     title: 'Knock on doors in your district',
@@ -735,6 +784,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.capital-issue',
+    family: 'issue',
     factionId: 'alliance',
     slot: 'B',
     title: "Speak on this week's Issue",
@@ -746,6 +796,7 @@ export const orderTemplates: OrderTemplate[] = [
   },
   {
     id: 'dir.a.capital-report',
+    family: 'committee',
     factionId: 'alliance',
     slot: 'B',
     title: 'Go to the meeting at Concord House',
@@ -758,4 +809,192 @@ export const orderTemplates: OrderTemplate[] = [
   // Slice 6 (design §5; tech design §4.4): the event order, one slot-B template per faction
   // (`kinds: ['event']`), transcribed in data/events.ts and wired here by phase B (T10).
   ...(eventOrderTemplates as OrderTemplate[]),
+  // Slice 7 (docs/design/slice-7-nation.md §4.2, §23.3; ADR 0046): the Chair's push, two templates
+  // per faction (`use: 'push'`, slots A and B), never in the rotation. `{place}` is the district's
+  // name or *Clearwater*; the match is the pushed place. Members at Level 10 and above read it; below,
+  // the family resolves to their residence (§14.10). The party's target counts every matching
+  // attempt at the pushed place by any member, a ×3 three.
+  {
+    id: 'dir.push-canvass',
+    factionId: 'collective',
+    slot: 'A',
+    title: 'Talk to voters in {place} · 3',
+    line: 'The Chair wants {place} and so does the branch. Three conversations there today; the tram is free and the train is cheap.',
+    match: { actionTypes: ['canvass'], cityId: 'push', districtId: 'push' },
+    target: 3,
+    counts: 'attempts',
+    use: 'push',
+    residence: 'any',
+  },
+  {
+    id: 'dir.push-posters',
+    factionId: 'collective',
+    slot: 'B',
+    title: 'Spread the word in {place} · 3',
+    line: 'Three lots of paper up in {place} before the lamps come on. The Chair has counted the fences.',
+    match: { actionTypes: ['propaganda'], cityId: 'push', districtId: 'push' },
+    target: 3,
+    counts: 'attempts',
+    use: 'push',
+    residence: 'any',
+  },
+  {
+    id: 'dir.v.push-canvass',
+    factionId: 'vanguard',
+    slot: 'A',
+    title: 'Talk to voters in {place} · 3',
+    line: 'The Chair has named {place}. Three reports from there on my desk by tonight, whatever the fare.',
+    match: { actionTypes: ['canvass'], cityId: 'push', districtId: 'push' },
+    target: 3,
+    counts: 'attempts',
+    use: 'push',
+    residence: 'any',
+  },
+  {
+    id: 'dir.v.push-posters',
+    factionId: 'vanguard',
+    slot: 'B',
+    title: 'Spread the word in {place} · 3',
+    line: '{place}, three runs of paper, straight and high. The Chair will walk it in the morning.',
+    match: { actionTypes: ['propaganda'], cityId: 'push', districtId: 'push' },
+    target: 3,
+    counts: 'attempts',
+    use: 'push',
+    residence: 'any',
+  },
+  {
+    id: 'dir.a.push-canvass',
+    factionId: 'alliance',
+    slot: 'A',
+    title: 'Talk to voters in {place} · 3',
+    line: 'The Chair has chosen {place} this week, so {place} it is. Three conversations there, and be polite; they vote.',
+    match: { actionTypes: ['canvass'], cityId: 'push', districtId: 'push' },
+    target: 3,
+    counts: 'attempts',
+    use: 'push',
+    residence: 'any',
+  },
+  {
+    id: 'dir.a.push-posters',
+    factionId: 'alliance',
+    slot: 'B',
+    title: 'Spread the word in {place} · 3',
+    line: "{place}, three rounds of posters, and spell the party's name right. The Chair reads the fences.",
+    match: { actionTypes: ['propaganda'], cityId: 'push', districtId: 'push' },
+    target: 3,
+    counts: 'attempts',
+    use: 'push',
+    residence: 'any',
+  },
+  // Slice 7 (design §9.1, §23.4): the Clearwater rotation for lake residents: slot A one, slot B two
+  // (B rotates over these and the shared mission and event orders, `B[day mod 4]`, as the capital's);
+  // slot C is the shared `{city}` set. `{issue}` is the lake's first Issue, resolved at read.
+  {
+    id: 'dir.c.lake-canvass',
+    factionId: 'collective',
+    slot: 'A',
+    family: 'canvass-anywhere',
+    title: 'Talk to voters anywhere in Clearwater',
+    line: 'The Rows, the quay, the cannery gate: three conversations on the lake before the last tram.',
+    match: { actionTypes: ['canvass'], cityId: 'clearwater' },
+    target: 3,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.c.lake-issue',
+    factionId: 'collective',
+    slot: 'B',
+    family: 'issue',
+    title: "Speak on this week's Issue",
+    line: 'The Courier says the lake is arguing about {issue}. Argue back, twice, from the Rows up.',
+    match: { issueTagged: true, cityId: 'clearwater' },
+    target: 2,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.c.lake-ears',
+    factionId: 'collective',
+    slot: 'B',
+    family: 'intelligence-anywhere',
+    title: 'Watch and listen anywhere in Clearwater',
+    line: 'The shed office, the café hatch under the arches, the mole after dark. Sit, watch, write it down.',
+    match: { actionTypes: ['intelligence'], cityId: 'clearwater' },
+    target: 2,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.v.lake-canvass',
+    factionId: 'vanguard',
+    slot: 'A',
+    family: 'canvass-anywhere',
+    title: 'Talk to voters anywhere in Clearwater',
+    line: 'Three streets of the working town. Three reports on my desk by tonight, lake or no lake.',
+    match: { actionTypes: ['canvass'], cityId: 'clearwater' },
+    target: 3,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.v.lake-issue',
+    factionId: 'vanguard',
+    slot: 'B',
+    family: 'issue',
+    title: "Speak on this week's Issue",
+    line: 'The lake is arguing about {issue}. The committee has a position. State it, twice, in order.',
+    match: { issueTagged: true, cityId: 'clearwater' },
+    target: 2,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.v.lake-eyes',
+    factionId: 'vanguard',
+    slot: 'B',
+    family: 'intelligence-anywhere',
+    title: 'Watch and listen anywhere in Clearwater',
+    line: "The shed office's sheets, the night boats, the station barrier. Watch, note, report. Names and times.",
+    match: { actionTypes: ['intelligence'], cityId: 'clearwater' },
+    target: 2,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.a.lake-canvass',
+    factionId: 'alliance',
+    slot: 'A',
+    family: 'canvass-anywhere',
+    title: 'Talk to voters anywhere in Clearwater',
+    line: 'Three conversations on the lake, and listen more than you talk; the Rows have heard promises before.',
+    match: { actionTypes: ['canvass'], cityId: 'clearwater' },
+    target: 3,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.a.lake-issue',
+    factionId: 'alliance',
+    slot: 'B',
+    family: 'issue',
+    title: "Speak on this week's Issue",
+    line: "The Courier's leader is about {issue}. We have a better one. Twice, please, and mind the sisters.",
+    match: { issueTagged: true, cityId: 'clearwater' },
+    target: 2,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
+  {
+    id: 'dir.a.lake-ears',
+    factionId: 'alliance',
+    slot: 'B',
+    family: 'intelligence-anywhere',
+    title: 'Watch and listen anywhere in Clearwater',
+    line: 'The station barrier, the café hatch, the shed office. Write it down and spell the names right.',
+    match: { actionTypes: ['intelligence'], cityId: 'clearwater' },
+    target: 2,
+    counts: 'attempts',
+    residence: 'clearwater',
+  },
 ];

@@ -9,6 +9,10 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 7 content: Clearwater and the nation (T7, T8)
+
+The game-designer's phase-A content: Clearwater's city file, missions, jobs, slate, six Issues and the lake rotation; the thirteen laws; the factions' figures, deputies, platforms and houses; families and the push; the Town Hall and its venues; the national lines, the personal lines in five voices and the Courier; the 26 modals; chapter 3 *The list*; `copy.nation`. The design doc gains an "Added 15 Oct 2026" note with the departures and the developer's bindings. Updated [[Clearwater]], [[Slice 7 The Nation]], [[Drift Report]] (C6), [[Open Questions]] (S7-C), [[index]].
+
 ## [2026-10-15] update | Slice 7 approved: the seven defaults, the build starts
 
 The user approved `docs/design/slice-7-nation.md` §21 as written (the President only; the secretary and the figure on every ballot; petitions dissolve; the secretaries' bills; Clearwater evened; The Front as later pins; several offices). GDD §0 row and Appendix C #64, #65, #66, #68, #70 marked; economy §21.7 noted. Updated [[Slice 7 The Nation]] (building), [[Decision Log]], [[Open Questions]], [[index]], [[overview]].

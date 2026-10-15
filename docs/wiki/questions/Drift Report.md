@@ -56,6 +56,7 @@ the user's call.
 | B22 | The Unrest prize's Legacy +2 had no Legacy entry | GD | §17.3 rows added |
 | B23, B24 | Wrong file name for the locals' rules; scoreboard columns | GD | `candidates.ts`; Moved, Events, Heroes |
 | C1 | Clearwater's baseline 20/24/24/32 in content | GD | `nation.ts`, its test and the rules fixture now 22/22/22/34, as the GDD says |
+| C6 | Slice-7 design lines over the schema's limits (Hofer 94, Brenn 91, the Special Powers Act 146 / 62, chapter 3's narratives 281 / 246); the Courier's council-vote lines predating the voting rework; `nl.council-dissolved` saying the rule is struck | GD | Trimmed and reworded in content on 15 Oct 2026; the design's "Added 15 Oct 2026" note marks the content as the current word |
 | C2, C3 | Survey and place-kind counts | GD | GDD: 92 city pins + 5 nation pins, 66 playable places; twenty-one kinds |
 | C4 | Faction-only places promised in GDD §16.1 | USER → GD + AR | **Built later**, after the MVP; GDD §14.1 now says Duskwall's HQ is Beacon House |
 | C5 | Control-gated access in §14.3 with no code | GD | Marked designed, no slice (App C #109) |

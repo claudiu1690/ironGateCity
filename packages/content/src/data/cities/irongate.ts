@@ -25,6 +25,8 @@ export const irongate: City = {
   baselineOpinion: { vanguard: 21, collective: 21, alliance: 21, neutral: 37 },
   map: { day: 'map.irongate.day', night: 'map.irongate.night' },
   clouds: true,
+  // Slice 7 (design §8, GDD §14.8): the capital's weight in who holds the republic.
+  nationalWeight: 0.4,
   // Design §4.1 (baselines, character), §4.2 (frames: the pins' box + 0.06, clamped); the overview
   // pins' anchors from slice-4-screens.md §5.1. The quarters are the five districts, in pin order.
   quarters: [

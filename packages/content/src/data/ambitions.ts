@@ -153,10 +153,78 @@ export const ambitions: AmbitionInput[] = [
           art: 'home-hq',
         },
       },
-      // The teaser: written with slice 7 (slice-7-nation.md §13, re-strung for the rule ballot in
-      // voting-simplified.md §8.11 and §8.12: the price of standing is 10 Political Capital, not money,
-      // so the chapter is named for the list the name goes on, not for marks).
-      { n: 3, title: 'The list', requires: { rank: 3 } },
+      // Slice 7 (slice-7-nation.md §13, re-strung for the rule ballot in voting-simplified.md §8.11.1
+      // as amended by §8.12 #7: standing costs 10 Political Capital, not money, so the chapter is named
+      // for the list the name goes on). Rank 3, seven days on; difficulty 16, 15 Energy; the keepsake
+      // on every outcome. The flags keep their ids (`fund-marks` / `own-marks`).
+      {
+        n: 3,
+        title: 'The list',
+        requires: { rank: 3 },
+        story: {
+          letterFrom: "From the families' tin",
+          choose: {
+            title: 'The list',
+            narrative:
+              // §8.12's sentence ran past a story text's 240; cut to fit, the sense kept.
+              "The families' tin: what three streets saved for the stone before the council said no, and the forty names on the lid. The branch wants your name on the list by Tuesday: ten Political Capital, spent and gone, for the names on the lid.",
+            choices: [
+              {
+                id: 'streets',
+                text: 'Let the three streets put your name forward',
+                hint: 'Their names behind yours, for a seat that puts theirs up. The branch will know whose idea it was.',
+                flag: 'fund-marks',
+              },
+              {
+                id: 'own',
+                text: 'Put your own name forward',
+                hint: 'The name on the list is yours alone. The tin stays shut.',
+                flag: 'own-marks',
+              },
+            ],
+          },
+          check: {
+            title: 'Who stands behind you',
+            narrative:
+              "Nobody has to back you; the branch's last candidate stood alone and lost the seat on backers. The minute book says why: talked to the hall, not the streets. You have the list, the meeting at six, and three streets that knew the forty.",
+            approaches: [
+              { id: 'floor', text: 'Ask the branch meeting to back you, from the floor', stats: ['cha', 'int'] },
+              { id: 'rule', text: 'Name your rule, say what the stone has to do with it, and show it round', stats: ['int'] },
+              {
+                id: 'legwork',
+                text: 'Walk the three streets with the list and ask the doors that knew the forty',
+                stats: ['best'],
+              },
+            ],
+            cta: 'Find your backers',
+            difficulty: 16,
+            energy: 15,
+          },
+          result: {
+            success: {
+              headline: 'Two backers, and a third',
+              body: 'Two by nine and a third by ten, an old docker whose boy is on the list and says so. The branch secretary stamps the receipt without looking up. Somebody has to say what the seat is for, so you do.',
+            },
+            partial: {
+              headline: "One backer, and the branch's",
+              body: "One from the street and the branch's own, which the secretary says counts, this once. The receipt is stamped. The list gets a new line in your hand: talked to the streets. Mostly.",
+            },
+            failure: {
+              headline: 'The hall, not the streets',
+              body: 'The meeting argues about the canteen for an hour and nobody puts a name to yours. You walk home with the receipt unstamped and the list unsigned. Tuesday is still Tuesday. The doors are still there.',
+            },
+          },
+          rewards: {
+            success: { xp: 350, fxp: 90, iron: 200 },
+            partial: { xp: 175, fxp: 45, iron: 100 },
+            failure: { xp: 60, fxp: 0, iron: 0 },
+          },
+          keepsake: 'keep.deposit-receipt',
+          art: 'home-hq',
+        },
+      },
+      // Chapter 4, *The count*, requires a completed council term (a requirement kind the chapter
+      // schema gains with slice 8, which writes it); until then no Letters row follows chapter 3.
     ],
   },
   {

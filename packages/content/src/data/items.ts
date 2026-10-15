@@ -121,4 +121,16 @@ export const items: Item[] = [
     art: 'item.document-folder',
     note: "The one page they didn't tear out: the names the ring drew rations in, and what each fetched.",
   },
+  // GDD §21.4: The Names on the Stone's chapter 3 keepsake (*The list*, slice 7; voting simplified
+  // §8.12 #7: the id is kept from *Your deposit receipt*, the name is the line on the branch's list).
+  {
+    id: 'keep.deposit-receipt',
+    name: 'Your line on the list',
+    slot: null,
+    tier: null,
+    cha: 0,
+    keepsake: true,
+    art: 'item.document-folder',
+    note: "The branch's printed list of names, and the line on it that is yours, in the secretary's hand.",
+  },
 ];

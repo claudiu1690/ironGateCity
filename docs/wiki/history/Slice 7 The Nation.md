@@ -47,6 +47,24 @@ From [[IMPLEMENTATION_PLAN#Slice 7 — The nation|the plan]]: the rest of the of
 - 14 Oct 2026 (drift cleanup): [[design/slice-7-nation|design §13]] is now headed ***The list*** (keepsake *Your line on the list*); the design's ladder table says no backers needed; its old Governor's-rule bullet is marked superseded; §10.1 lets a dissolved council's rule run out its window. The plan names petitions that dissolve a council and votes to remove the President. Clearwater's card shows 22 / 22 / 22 / 34.
 - Open (designer): confirm `partyCardOf`'s chain against the GDD wording ([[City Council and the Rule Vote]]).
 
+## Phase A: the content (T7, T8; 15 Oct 2026)
+
+Written by the game-designer against the T6 schemas (`94572ed`): [[Clearwater]] (the city, missions,
+jobs, candidates, six Issues, the lake rotation, the Courier), `laws.ts` (thirteen, within
+`LAW_BOUNDS`), the factions' figures, pick names, platforms, preferred laws, local deputies and
+houses, `family` on every rotation template and the six push templates, the Town Hall and its
+venue rows, `nationalLines.ts` (24), `nationHeadlines.ts` (21 personal lines in five voices),
+the 26 result modals, chapter 3 *The list* and its keepsake, and `copy.nation` (screens §15, the
+help notes, the empty states). Departures from the design are listed in
+[[design/slice-7-nation#Added 15 Oct 2026 — the content written (T7 Clearwater, T8 the nation)|design §"Added 15 Oct 2026"]].
+
+**Bindings the developer owes before `loadContent()` passes** (a throwaway run on 15 Oct listed
+them): `load.ts` imports; the loader treating Clearwater as a battleground without districts (the
+slate, `leader`, the Courier's required headline names, the Issue count of thirty); the national
+templates and modals routed to the nation's placeholder sets, with eight tokens added to
+`NATION_PERSONAL_PLACEHOLDERS`, `lawLine` to the modal set and `governor` to the political set;
+the art (T9: the Clearwater map and tiles, `scene.event-town-hall`, three portraits).
+
 ## QA and leftovers
 
 Building; no QA yet. The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).

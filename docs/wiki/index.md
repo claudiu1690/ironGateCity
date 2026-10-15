@@ -85,7 +85,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Ashford]] — Alliance home: College, Wharf and Station Road quarters, 12 places, 7 missions, the Gazette.
 - [[Coalport]] — Collective home and the first city built: Mill, Harbour and Sidings, 12 places, 7 missions, the Clarion.
 - [[Duskwall]] — Vanguard home, a frontier customs town: Fortress, Pass and Town, 12 places, 7 missions, the Sentinel.
-- [[Clearwater]] — The second battleground, designed for slice 7, not built: planned places, council and missions.
+- [[Clearwater]] — The second battleground: content written 15 Oct (places, council at the Casino, missions, Issues, the Courier), being wired in slice 7.
 - [[People of Irongate]] — Named NPCs: secretaries, 58 local candidates, opponents, carers; party figures and patrons; portrait files.
 
 ## Tech

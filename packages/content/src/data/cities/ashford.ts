@@ -24,6 +24,8 @@ export const ashford: City = {
   map: { day: 'map.ashford.day', night: 'map.ashford.night' },
   // Map atmosphere: clouds by day, fog by night over the map (on for the three home cities, 2 Oct 2026).
   clouds: true,
+  // Slice 7 (design §8, GDD §14.8): a home city's weight in who holds the republic.
+  nationalWeight: 0.1,
   // Slice 5 (design §2), review 4 (ADR 0076): three quarters, the Level gates of groups of places
   // (Level 1, Level 6, a later edition), read on the Places list. A home city is one map: no frames,
   // outlines or labels (the capital's only).

@@ -3,11 +3,11 @@ type: entity
 title: Clearwater
 aliases: [clearwater, the swing city, the lake town]
 tags: [city, battleground]
-status: designed
-slice: "7 (designed, not built)"
+status: partly built
+slice: "7 (content written 15 Oct 2026; being wired)"
 gdd: ["§14.1", "§14.11", "§14.13", "§17.2"]
 adrs: ["0050"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Clearwater
@@ -52,12 +52,20 @@ book*; six new Issues (deck to 30); a slate of three locals per party (nine).
 
 ## In the game
 
-What exists in code today:
-- `packages/content/src/data/nation.ts`: the nation card (`service: 'later'`, *Contested · no service
-  yet*, 25 min, arrival at the station pin) and a route from the capital.
-- `packages/content/src/data/mapPins.ts`: the 13 survey pins of the painted picture.
-- References in rules and tests (calendar offset 4, travel, paper) and the dev map viewer.
-- **No city document, places, council or missions** in `packages/content/src/data/cities/`.
+What exists in code today (slice 7, phase A, 15 Oct 2026):
+- `packages/content/src/data/cities/clearwater.ts`: the city document: one map, three open quarters
+  (The Front holds only the Casino; the Promenade, the Lido and the Pier Hotel are later pins), nine
+  working places plus **the Casino as the hall** (kind `bar`, a gallery ticket), 24 tier-1 actions,
+  the Courier, the council (offset 4, 7 seats, lists of 3), lodgings on the Rows, the Sanatorium's
+  sisters, `nationalWeight` 0.3, baseline 22 / 22 / 22 / 34.
+- `missions/clearwater.ts` (four missions), `jobs.ts` (`clearwaterJobs`), `candidates.ts`
+  (`clearwaterCandidates`, nine), `issues.ts` (six Issues; `tram-fares` gains the lake),
+  `orders.ts` (the lake rotation), `events.ts` (the venue rows), `courierHeadlines.ts` (the Courier's
+  set), `nation.ts` (`service: 'open'`, *Battleground · the lake town*).
+- `mapPins.ts`: the 13 survey pins; every place's pin equals its survey pin.
+- **Not yet wired:** `load.ts` does not import the city yet, and the loader's slate, mission and
+  paper rules still treat a non-districted city as a home city; the map assets and tiles are T9's.
+  See [[Slice 7 The Nation]] for the developer's bindings.
 
 ## Art
 
@@ -69,7 +77,9 @@ What exists in code today:
 
 ## Status
 
-Designed, not built (slice 7; [[Slice 7 The Nation]]). The Front waits for slice 8.
+Content written 15 Oct 2026 (slice 7, phase A; [[Slice 7 The Nation]]); the loader's Clearwater
+rules and the art are the developer's, so the city is not yet playable. The Front's three society
+places wait for slice 8; the Casino is open now as the hall.
 
 - **Baseline:** the nation card now shows **22 / 22 / 22 / 34** (`baselineOpinion` in
   `packages/content/src/data/nation.ts`, fixed 14 Oct 2026; it showed the provisional 20 / 24 / 24 /

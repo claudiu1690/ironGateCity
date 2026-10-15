@@ -26,6 +26,16 @@ export const issues: ContentInput['issues'] = [
           },
         ],
       },
+      // Slice 7 (design §9.6): the lake line's fares too; the same effect (tickets from the city).
+      {
+        cityId: 'clearwater',
+        feeds: [
+          {
+            actionTypes: ['canvass', 'speech', 'propaganda'],
+            locationIds: ['clearwater.tram-depot', 'clearwater.station'],
+          },
+        ],
+      },
     ],
     effects: [
       {
@@ -970,6 +980,131 @@ export const issues: ContentInput['issues'] = [
       vanguard: 'A second magistrate sitting daily, and the cells cleared in order.',
       collective: 'Bail at a wage a porter can pay, or no bail at all.',
       alliance: 'Every case before a magistrate within a day, by law, and the Herald told the names.',
+    },
+  },
+  // ----- Slice 7 (docs/design/slice-7-nation.md §9.6): Clearwater's six; the deck becomes thirty ---
+  {
+    id: 'issue.cannery-wage',
+    name: 'The Cannery Wage',
+    short: "the cannery's wage",
+    blurb:
+      'The cannery pays the same to everyone and less than the mill. The loading bank wants a penny an hour and the company wants a quiet season.',
+    where: [
+      {
+        cityId: 'clearwater',
+        feeds: [{ actionTypes: ['canvass', 'speech'], locationIds: ['clearwater.cannery', 'clearwater.harbour'] }],
+      },
+    ],
+    effects: [{ kind: 'jobPayPct', value: 10 }],
+    effectLine: 'Job pay +10 %',
+    stances: {
+      vanguard: 'Fixed rates, posted at the gate, and the hooter kept.',
+      collective: 'A penny an hour, or the bank stops at the first hooter.',
+      alliance: 'A wages board for the lake, with the books open.',
+    },
+  },
+  {
+    id: 'issue.rows-rents',
+    name: 'Rents in the Rows',
+    short: 'the rents',
+    blurb: "The Rows' landlord has sent his man round with a new book. The damp is the same; the rent is not.",
+    where: [
+      {
+        cityId: 'clearwater',
+        feeds: [
+          { actionTypes: ['canvass', 'propaganda'], locationIds: ['clearwater.rows', 'clearwater.back-lane-market'] },
+        ],
+      },
+    ],
+    effects: [{ kind: 'roomPct', value: -50 }],
+    effectLine: 'A room in Clearwater: half price',
+    stances: {
+      vanguard: 'Rents paid on Friday and the stairs swept; the book is the book.',
+      collective: 'Nobody pays the new book. A rent strike from the end house down.',
+      alliance: 'A rent tribunal for the lake towns, sitting at the Casino.',
+    },
+  },
+  {
+    id: 'issue.casino-licence',
+    name: "The Casino's Licence",
+    short: "the Casino's licence",
+    blurb:
+      "The casino company's licence is up for renewal and the town hall is its tenant. Somebody has to say so before the vote.",
+    where: [
+      {
+        cityId: 'clearwater',
+        feeds: [
+          { actionTypes: ['speech', 'canvass'], locationIds: ['clearwater.st-martins', 'clearwater.station'] },
+          { actionTypes: ['propaganda'] },
+        ],
+      },
+    ],
+    effects: [{ kind: 'ironPct', scope: 'checked', value: 15 }],
+    effectLine: 'Iron from actions +15 %',
+    stances: {
+      vanguard: 'Renew it, on condition the Front keeps its hours and the Rows their quiet.',
+      collective: 'Renew nothing until the company pays the town what it pays the town hall.',
+      alliance: 'Read the licence aloud in council and renew it in public.',
+    },
+  },
+  {
+    id: 'issue.harbour-dues',
+    name: 'The Harbour Dues',
+    short: 'the harbour dues',
+    blurb:
+      'The harbour board wants a shilling more on every crate across the quay. The fleet says it will land at night, and some of it already does.',
+    where: [
+      {
+        cityId: 'clearwater',
+        feeds: [
+          { actionTypes: ['canvass', 'intelligence'], locationIds: ['clearwater.harbour', 'clearwater.harbour-police'] },
+        ],
+      },
+    ],
+    effects: [{ kind: 'energyDelta', actionType: 'intelligence', value: -1 }],
+    effectLine: 'Watching and listening: −1 Energy',
+    stances: {
+      vanguard: 'The dues collected to the penny, with a lamp on the stage all night.',
+      collective: "The dues paid by the Front's yachts, not the fleet.",
+      alliance: "The board's accounts published before a penny changes.",
+    },
+  },
+  {
+    id: 'issue.sanatorium-beds',
+    name: 'Beds at the Sanatorium',
+    short: "the sanatorium's beds",
+    blurb: "The sanatorium has sixty beds and forty of them are paid for by the Front. The cannery's chest cases wait.",
+    where: [
+      {
+        cityId: 'clearwater',
+        feeds: [{ actionTypes: ['canvass'], locationIds: ['clearwater.sanatorium', 'clearwater.st-martins'] }],
+      },
+    ],
+    effects: [{ kind: 'restedCapDelta', value: 50 }],
+    effectLine: 'Rested banks to 250',
+    stances: {
+      vanguard: 'Beds by the book, the book kept by the board.',
+      collective: 'Forty beds for the Rows, and the Front can pay for the rest.',
+      alliance: 'A public ward, funded by the county and inspected.',
+    },
+  },
+  {
+    id: 'issue.lido-season',
+    name: 'The Lido Season',
+    short: 'the lido season',
+    blurb: 'The lido opens Saturday and the company wants the bandstand quiet for it. The parties want the bandstand.',
+    where: [
+      {
+        cityId: 'clearwater',
+        feeds: [{ actionTypes: ['speech'] }, { actionTypes: ['propaganda'], locationIds: ['clearwater.station'] }],
+      },
+    ],
+    effects: [{ kind: 'energyDelta', actionType: 'speech', value: -2 }],
+    effectLine: 'Speeches −2 Energy',
+    stances: {
+      vanguard: 'A permit for the bandstand, one party a Sunday, in order.',
+      collective: "The bandstand is the town's. Every Sunday, every party, no permit.",
+      alliance: 'A rota for the bandstand, drawn up in public.',
     },
   },
 ];

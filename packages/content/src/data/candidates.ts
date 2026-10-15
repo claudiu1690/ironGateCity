@@ -536,3 +536,89 @@ export const irongateCandidates: CandidateInput[] = [
     line: 'Bandmaster\'s daughter, the Esplanade. "Sundays on the Esplanade, at any hour."',
   },
 ];
+
+/**
+ * Slice 7: the Clearwater slate (docs/design/slice-7-nation.md §9.5; GDD §15.10): three per party,
+ * profiles 28 / 22 / 16 before the ±2 jitter, filling each party's list to three names. No `rule`
+ * and no district: in a contested city the rule is the largest bloc's card (ADR 0085). Merged into
+ * the content with the city (T6).
+ */
+export const clearwaterCandidates: CandidateInput[] = [
+  // Vanguard
+  {
+    id: 'npc.v.cw.pfister',
+    name: 'Hugo Pfister',
+    factionId: 'vanguard',
+    cityId: 'clearwater',
+    profile: 28,
+    line: 'Tram inspector. "Trams to the timetable, and the Rows quiet by ten."',
+  },
+  {
+    id: 'npc.v.cw.brenn',
+    name: 'Agathe Brenn',
+    factionId: 'vanguard',
+    cityId: 'clearwater',
+    profile: 22,
+    // Design §9.5's line ran to 91; trimmed to the ballot's 90.
+    line: 'Boarding-house keeper, the Front. "Rents on Friday, the promenade swept, no barrows."',
+  },
+  {
+    id: 'npc.v.cw.koller',
+    name: 'Franz Koller',
+    factionId: 'vanguard',
+    cityId: 'clearwater',
+    profile: 16,
+    line: 'Cannery timekeeper. "The hooter on time and every hand counted."',
+  },
+  // Collective
+  {
+    id: 'npc.c.cw.zelenka',
+    name: 'Petr Zelenka',
+    factionId: 'collective',
+    cityId: 'clearwater',
+    profile: 28,
+    line: 'Shop steward, the cannery. "The cannery\'s wage set by the cannery\'s hands."',
+  },
+  {
+    id: 'npc.c.cw.maly',
+    name: 'Dana Maly',
+    factionId: 'collective',
+    cityId: 'clearwater',
+    profile: 22,
+    line: 'Tram conductress. "The fare stays. The company can find its penny at the Casino."',
+  },
+  {
+    id: 'npc.c.cw.urban',
+    name: 'Tomas Urban',
+    factionId: 'collective',
+    cityId: 'clearwater',
+    profile: 16,
+    line: 'Tenants\' committee, the Rows. "A roof that keeps the lake out, this winter."',
+  },
+  // Alliance
+  {
+    id: 'npc.a.cw.wessel',
+    name: 'Dr Clara Wessel',
+    factionId: 'alliance',
+    cityId: 'clearwater',
+    profile: 28,
+    line: 'Physician, the Sanatorium. "Beds by need, not by the length of the bill."',
+  },
+  {
+    id: 'npc.a.cw.hofer',
+    name: 'Anton Hofer',
+    factionId: 'alliance',
+    cityId: 'clearwater',
+    profile: 22,
+    // Design §9.5's line ran to 94; trimmed to the ballot's 90 (the dues are the harbour's).
+    line: 'Harbourmaster\'s clerk. "The dues published, and the Casino\'s licence read aloud."',
+  },
+  {
+    id: 'npc.a.cw.renz',
+    name: 'Lotte Renz',
+    factionId: 'alliance',
+    cityId: 'clearwater',
+    profile: 16,
+    line: 'Schoolmistress, St Martin\'s. "A school that stays open when the season ends."',
+  },
+];

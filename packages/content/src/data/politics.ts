@@ -64,5 +64,173 @@ export const politics: ContentInput['politics'] = {
       body: '{line}. On the ballot from {pollsWeekday}; the town votes until {weekday}.',
       next: 'Next: the vote opens {pollsWeekday}.',
     },
+    // ----- Slice 7 (docs/design/slice-7-nation.md §12, §23.7; the 10 Oct addendum for the Governor's
+    // card): the nation's acts, one modal each (≤ 240, with a *Next* line). `{line}` is *For* /
+    // *Against* / *a free vote*; `{vote}` *For* / *Against* / *Confidence* / *No confidence*;
+    // `{pickName}` the party's word; `{countDay}` / `{resultWeekday}` the result's weekday.
+    // The Chair's election (§4.1; voting simplified: 25 PC spent, no backers needed, backing optional).
+    chairDeclare: {
+      stamp: "You're standing",
+      headline: 'Your name is on the list for Chair',
+      body: "25 Political Capital, spent. Your name is printed beside the secretary's until the result; backers add three each. Do today's orders and the branch backs you.",
+      next: 'Next: find backers. Voting opens {pollsWeekday}.',
+    },
+    chairBack: {
+      stamp: 'Backed',
+      headline: '{name} has your backing',
+      body: 'Backing is public and final, one a Chair election. {name} has {n} now; each backer is three on the count, and up to five count.',
+      next: 'Next: voting for Chair opens {pollsWeekday}.',
+    },
+    chairVote: {
+      stamp: 'Vote cast',
+      headline: 'Your vote is in',
+      body: 'You voted for {name}. Nobody can see who you chose. The result is on {countDay} morning, in every paper of the {faction}.',
+      next: 'Next: the result, {countDay} morning.',
+    },
+    // The Chair's desk (§4.2–§4.4).
+    chairOrders: {
+      stamp: 'Set',
+      headline: 'The orders are yours',
+      body: 'From tomorrow every member reads these three in the morning, until you change them. The secretary writes the lines; your name is under them.',
+      next: "Next: the party's target shows on the Orders tab tomorrow.",
+    },
+    partyLine: {
+      stamp: 'Line set',
+      headline: 'The party line is {line}',
+      body: 'Every {faction} deputy run by the game votes {line} on {law}. Player deputies vote as they please. Parliament votes at {at}.',
+      next: "Next: Parliament's vote, {resultWeekday} morning.",
+    },
+    partyRule: {
+      stamp: 'Set',
+      headline: "{ordinance} is the party's card in {city}",
+      body: "The party's card on every {city} ballot from {weekday}'s vote, wherever no Governor of ours sits: what the town votes on.",
+      next: 'Next: the town votes from {weekday}.',
+    },
+    fixture: {
+      stamp: 'Set',
+      headline: "Tomorrow's event in {city}",
+      body: "The branch's event tomorrow is {event} at {venue}: posted at midnight, settled at the next. Members join it from the Faction tab; roles still empty at the start go to volunteers.",
+      next: "Next: it's on the board from midnight.",
+    },
+    chairCall: {
+      stamp: 'Called',
+      headline: 'The {event} is called in {city}',
+      body: 'At {venue}, settles at {at}, called by the Chair with no role taken. Members in {city} join it from the Faction tab; roles still empty at the start go to volunteers.',
+      next: "Next: it's on the board now.",
+    },
+    // The Governor (§3.1; the 10 Oct addendum: the party's card).
+    governorRule: {
+      stamp: 'Set',
+      headline: "{ordinance} is the party's card",
+      body: "Card 1 on the town's ballot, at no cost. The town votes on it from {pollsWeekday} until {weekday}; the winner runs for five days.",
+      next: 'Next: the town votes from {pollsWeekday}.',
+    },
+    address: {
+      stamp: 'Spoken',
+      headline: 'The Address: {issueShort}',
+      body: 'Fifty points to the {faction} on {issueShort}, in your name. Once a term; this was it.',
+      next: 'Next: the Issue settles on Monday morning.',
+    },
+    // The national election (§6).
+    presidentDeclare: {
+      stamp: "You're standing",
+      headline: 'Your name is in for President',
+      body: "100 Political Capital, two pledges and your party's pick to win. The {pickName} sits on {weekday}; the party's own figure is on its ballot.",
+      next: "Next: the party's pick, {weekday}.",
+    },
+    presidentWithdraw: {
+      stamp: 'Withdrawn',
+      headline: 'Your name is off the list for President',
+      body: "The 100 Political Capital is back in your pocket, and your place at the top of the party's list goes with the candidacy. The party picks on {weekday} without you.",
+      next: "Next: nothing until the next term's names in.",
+    },
+    listDeclare: {
+      stamp: "You're standing",
+      headline: "Your name is on the {faction}'s list",
+      body: "The list is ordered by backers. Parliament's seats go down it on {weekday}, as many as the party's score wins.",
+      next: 'Next: find backers. The republic votes from {pollsWeekday}.',
+    },
+    pickVote: {
+      stamp: 'Vote cast',
+      headline: 'Your vote is in',
+      body: "You chose {name} to carry the {faction}. Nobody can see who you chose. The party's candidate is named on {weekday} morning.",
+      next: "Next: the party's candidate, {weekday}.",
+    },
+    nationalVote: {
+      stamp: 'Vote cast',
+      headline: 'Your vote is in',
+      body: 'You voted for {name} for President. Nobody can see who you chose. The result is on {countDay} morning, to be confirmed the day after.',
+      next: 'Next: the result, {countDay} morning.',
+    },
+    nationalBack: {
+      stamp: 'Backed',
+      headline: '{name} has your backing',
+      body: "Backing is public and final, one a term. {name}'s party scores a point more for it; up to five count.",
+      next: 'Next: the result, {countDay} morning.',
+    },
+    listBack: {
+      stamp: 'Backed',
+      headline: '{name} has your backing',
+      body: "Backing is public and final, one a term. {name} is now {ordinal} on the {faction}'s list.",
+      next: 'Next: the seats go down the list on {countDay}.',
+    },
+    // Parliament (§5).
+    tableBill: {
+      stamp: 'Put to Parliament',
+      headline: '{law} is up for a vote',
+      body: '{lawLine} Deputies vote until {until}; {needed} of sixty carry it.',
+      next: "Next: Parliament's vote, {resultWeekday} morning.",
+    },
+    tableRemoval: {
+      stamp: 'Put to Parliament',
+      headline: 'A vote to remove the President',
+      body: 'Forty of sixty remove {president}; the runner-up takes the rest of the term. Deputies vote until {until}.',
+      next: "Next: Parliament's vote, {resultWeekday} morning.",
+    },
+    billVote: {
+      stamp: 'Voted',
+      headline: 'Your vote is recorded',
+      body: "{vote} {law}. The whole chamber can see it, and it's final. Parliament votes at {at}; every paper prints the result.",
+      next: 'Next: the result, {resultWeekday} morning.',
+    },
+    veto: {
+      stamp: 'Vetoed',
+      headline: '{law} stops at your desk',
+      body: 'Passed by {forVotes}, and not in force. Parliament may vote it through anyway with forty; the vote is put up this morning.',
+      // Q14: when the second vote cannot settle before the term ends, the server's *Next* reads
+      // *Next: the veto is final; Parliament cannot vote it through before the term ends.*
+      next: "Next: Parliament's second vote, {resultWeekday} morning.",
+    },
+    // Petitions and removals (§10).
+    petitionOpen: {
+      stamp: 'Opened',
+      headline: 'A petition to dissolve {city} council',
+      body: 'Your name is the first of {needed}. Residents of any party sign until {until}, 10 Political Capital each; the council is dissolved if the names come in.',
+      next: 'Next: the count of names, {resultWeekday} morning.',
+    },
+    petitionSign: {
+      stamp: 'Signed',
+      headline: 'Your name is on the petition',
+      body: '{signatures} of {needed} by {until}. Signing is public and final.',
+      next: 'Next: the count of names, {resultWeekday} morning.',
+    },
+    chairPetitionOpen: {
+      stamp: 'Opened',
+      headline: 'A vote on the Chair',
+      body: 'Your name is the first of {needed}. Members of Rank 3 and above sign until {until}, 10 Political Capital each; if the names come in, every member votes for two days.',
+      next: 'Next: the count of names, {resultWeekday} morning.',
+    },
+    chairPetitionSign: {
+      stamp: 'Signed',
+      headline: 'Your name is on the petition',
+      body: '{signatures} of {needed} by {until}. Signing is public and final, and the Chair can see who signed.',
+      next: 'Next: the count of names, {resultWeekday} morning.',
+    },
+    confidenceVote: {
+      stamp: 'Vote cast',
+      headline: 'Your vote is in',
+      body: '{vote} in the Chair. Nobody can see who you chose. The result is on {countDay} morning.',
+      next: 'Next: the result, {countDay} morning.',
+    },
   },
 };

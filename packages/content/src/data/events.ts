@@ -230,6 +230,46 @@ export const campaignEventTypes: Content['campaignEventTypes'] = [
       },
     },
   },
+  // Slice 7 (docs/design/slice-7-nation.md §10.4, §23.6; GDD §16.3's seventh): the Town Hall, a
+  // common event; when a petition to dissolve the council is open in the city, it adds townspeople's
+  // signatures (Triumph 3 · Success 2 · Mixed 1 · Fiasco 0).
+  {
+    id: 'event.town-hall',
+    name: 'Town Hall',
+    runningName: 'town hall',
+    venueKinds: ['square', 'university', 'court', 'theatre', 'hotel', 'library', 'faction-hq'],
+    roles: [
+      { id: 'moderator', name: 'Moderator', stats: ['int'], energy: 10, hint: 'The questions in order and the heckler out of it.' },
+      { id: 'speaker-1', name: 'Speaker', stats: ['cha', 'int'], energy: 15, hint: 'The case, in five minutes, to people who came to argue.' },
+      { id: 'speaker-2', name: 'Speaker', stats: ['cha', 'int'], energy: 15, hint: 'The answers, to the questions the first speaker left.' },
+      { id: 'press', name: 'Press', stats: ['int'], energy: 10, hint: "The hall's own words in tomorrow's paper, spelt right." },
+    ],
+    baseSwing: 1.2,
+    difficulty: { home: 12, capital: 14 },
+    actionType: 'speech',
+    special: 'petitionSignatures',
+    art: 'scene.event-town-hall',
+    blurb:
+      'A hall, a platform with three chairs and a jug of water, and a town with questions. Two speakers, someone to keep order and someone to write it up. The event that turns a grievance into a petition.',
+    text: {
+      triumph: {
+        headline: 'The hall signed',
+        body: 'The hall was full before the chairs were out and stayed after the questions ran dry. Both speakers had the numbers and the moderator had the heckler. People queued at the table on the way out to put their names down.',
+      },
+      success: {
+        headline: 'A fair hearing',
+        body: 'A good hall, hard questions and answers that held. The press got the best line and the moderator got everyone home by ten. Names went down at the table, not many, enough.',
+      },
+      mixed: {
+        headline: 'Two halls in one',
+        body: 'The front rows came to listen and the back rows came to shout, and the moderator kept the two apart for most of an hour. One speaker was good. The paper printed the shouting.',
+      },
+      fiasco: {
+        headline: 'The jug went over',
+        body: 'The water jug went over in the first ten minutes and the meeting with it. A man with a grievance about drains held the floor until the caretaker put the lights out. The press left early, which was the kindest thing.',
+      },
+    },
+  },
 ];
 
 const row = (eventId: string, cityId: string, districtId: string | null, locationId: string) => ({
@@ -241,6 +281,7 @@ const row = (eventId: string, cityId: string, districtId: string | null, locatio
 const R = 'event.rally';
 const C = 'event.canvass-drive';
 const P = 'event.poster-night';
+const T = 'event.town-hall';
 
 /** Design §3.7: one venue per event per city; in the capital one per district (the common three) and one district each for the signature events. */
 export const eventVenues: Content['eventVenues'] = [
@@ -274,6 +315,21 @@ export const eventVenues: Content['eventVenues'] = [
   row(C, 'irongate', 'irongate.garrison-hill', 'irongate.villas'),
   row(P, 'irongate', 'irongate.garrison-hill', 'irongate.gate-tavern'),
   row('event.grand-rally', 'irongate', 'irongate.garrison-hill', 'irongate.esplanade'),
+  // Slice 7 (design §23.6): the Town Hall's hall in every city and district; the call sheet reads
+  // *at {venue}'s hall*.
+  row(T, 'coalport', null, 'coalport.union-hall'),
+  row(T, 'duskwall', null, 'duskwall.archives'),
+  row(T, 'ashford', null, 'ashford.university'),
+  row(T, 'irongate', 'irongate.government-quarter', 'irongate.opera'),
+  row(T, 'irongate', 'irongate.old-town', 'irongate.basilica-square'),
+  row(T, 'irongate', 'irongate.station-market', 'irongate.grand-hotel'),
+  row(T, 'irongate', 'irongate.eastside', 'irongate.iron-bridge'),
+  row(T, 'irongate', 'irongate.garrison-hill', 'irongate.esplanade'),
+  // Slice 7 (design §23.6): Clearwater's common events; no signature event on the lake in slice 7.
+  row(R, 'clearwater', null, 'clearwater.cannery'),
+  row(C, 'clearwater', null, 'clearwater.rows'),
+  row(P, 'clearwater', null, 'clearwater.tram-depot'),
+  row(T, 'clearwater', null, 'clearwater.st-martins'),
 ];
 
 /** Design §4: the fixture's rotation, `(day + factionIndex) mod 3` over these. */
@@ -289,6 +345,7 @@ export const fixtureRotation: Content['fixtureRotation'] = [C, R, P];
 export const eventOrderTemplates: ContentInput['orderTemplates'] = [
   {
     id: 'dir.event',
+    family: 'event',
     factionId: 'collective',
     slot: 'B',
     title: "Take part in the branch's event today",
@@ -300,6 +357,7 @@ export const eventOrderTemplates: ContentInput['orderTemplates'] = [
   },
   {
     id: 'dir.v.event',
+    family: 'event',
     factionId: 'vanguard',
     slot: 'B',
     title: "Take part in the branch's event today",
@@ -311,6 +369,7 @@ export const eventOrderTemplates: ContentInput['orderTemplates'] = [
   },
   {
     id: 'dir.a.event',
+    family: 'event',
     factionId: 'alliance',
     slot: 'B',
     title: "Take part in the branch's event today",

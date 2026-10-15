@@ -59,12 +59,11 @@ export const nation: ContentInput['nation'] = {
       x: 0.88,
       y: 0.85,
       minutes: 25,
-      service: 'later',
-      line: 'Contested · no service yet',
+      // Slice 7 (design §9.1): the lake line is open; the city carries its own baseline
+      // (22 / 22 / 22 / 34, evened; GDD §14.11, Appendix C #70), so none is kept here.
+      service: 'open',
+      line: 'Battleground · the lake town',
       arrival: { x: 0.8, y: 0.5 },
-      // §14.11, design §6.7: shown on its card; no city document until slice 7. Evened to
-      // 22 / 22 / 22 / 34 (GDD §14.8, §14.11, Appendix C #70; slice 7) so no party starts ahead.
-      baselineOpinion: { vanguard: 22, collective: 22, alliance: 22, neutral: 34 },
     },
   ],
   // Review 4 (answers §7.1, ADR 0075): the legs from the capital, traced along the painted rails of
