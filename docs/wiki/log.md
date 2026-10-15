@@ -9,6 +9,15 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 7 phase B, lane 2: the nation's acts
+
+The developer's T14–T19 on the server: the Chair's election, Parliament and laws, the Chair's desk
+and the party's target, the national election, the President's powers and removals, petitions and
+the vote on the Chair; their routers and the nation's day handlers; two fixes in shared code (the
+boundary's ObjectIds, the push on order items). Checked with scratch scripts; one question raised
+(the Chair's tie). Updated [[Slice 7 The Nation]], [[National Elections]], [[The Legislature and Laws]],
+[[Recall and Removal]], [[Offices]], [[Party Orders]], [[Open Questions]].
+
 ## [2026-10-15] update | Slice 7 phase A: the designer's four questions settled
 
 The game-designer answered the developer's phase-A questions in `docs/design/slice-7-nation.md`

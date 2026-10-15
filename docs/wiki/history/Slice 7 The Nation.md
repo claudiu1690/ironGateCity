@@ -83,13 +83,25 @@ meter, the nation's placeholder sets, the art.
   (`top: 40`) and the scenes' full frame confirmed. The *The Front* / *ballot* vocabulary allowances
   go to the Playwright sweeps in T30 (the Vitest guards are unrun and untouched).
 
+## Phase B, lane 2: the nation's acts (T14–T19; 15 Oct 2026)
+
+Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the settlement, the dev panel):
+- **T14 the Chair's election** ([[National Elections]]): stand (25 PC), back, vote with the secretary on the ballot, the count and the handover at term day 14.
+- **T15 Parliament and laws** ([[The Legislature and Laws]]): tabling, votes, divisions by the locals' chain, enactments, strikes, the Monday bills.
+- **T16 the Chair's desk** ([[Party Orders]], [[Offices]]): standing orders and the push, the party's target (each member's contribution in the action's transaction), the party line, the party's card, fixtures, the Chair's call from anywhere.
+- **T17 the national election**: names, picks, the vote and backing, the count, taking office at day 0.
+- **T18 the President**: the Address, the veto and the override, removals (a player's and the clerk's), the runner-up.
+- **T19 petitions and the vote on the Chair** ([[Recall and Removal]]): dissolution in every city day before the set, the Town Hall's signatures, the vote on the Chair.
+- Two fixes in shared code: the nation's boundary lost ObjectIds (`structuredClone`), and the orders dropped an item's push on every write.
+- Checked with scratch scripts on a memory replica set: four tablers for three slots, the veto racing the enactment ten times, a removal at 40 and 39, the clerk's motion at 24 % and 26 %, design §6.3's example end to end. Details, the test hooks lane 1 needs and what phase C reads: [[tech/slice-7|Deviations (phase B, lane 2)]]. One question: the Chair's tie ([[Open Questions]] S7-T14).
+
 ## QA and leftovers
 
 Building; no QA yet. The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
 
 ## Commits
 
-`1f8172a` design, art done (4 Oct) · `ef6b697` tech design and ADRs 0043–0050 (4 Oct). Voting addenda in `9067c94` (10 Oct). Phase A: `94572ed` T6 schemas · `54b8951` T1–T3 · `d75c541` T4 · `f07ea6b` T5 · `c455d44` content (designer) · `7a5e514` T9 and the bindings · `aed0ec7` T10 · `523ae99` the Clearwater stopgap.
+`1f8172a` design, art done (4 Oct) · `ef6b697` tech design and ADRs 0043–0050 (4 Oct). Voting addenda in `9067c94` (10 Oct). Phase A: `94572ed` T6 schemas · `54b8951` T1–T3 · `d75c541` T4 · `f07ea6b` T5 · `c455d44` content (designer) · `7a5e514` T9 and the bindings · `aed0ec7` T10 · `523ae99` the Clearwater stopgap. Phase B lane 2: `c971245` the views · `53ec4c9` T14–T19 · `136b50d` the boundary's ObjectIds · `2f542c4` the petition close and the push on order items · `cb9d2c6` the Chair's call · `237b3e6` the Monday bills now.
 
 ## Related
 

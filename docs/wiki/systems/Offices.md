@@ -52,12 +52,14 @@ present or not, and every duty has a default, so an absent holder never blocks a
 - Data: model `OfficeTerm` in `packages/db/src/models/politics.ts` (one row per seat per term, players and locals; `completed`, `vacatedDay`, `rule`, `whatNowSeenAt`); `offices[]` projection on the character
 - Client: the Town Hall's council rows and *What now* card (`packages/ui/src/components/TownHall.tsx`, `apps/client/src/features/council/TownHall.tsx`)
 
+**Built (slice 7 phase B, lane 2, 15 Oct 2026):** the Chair (`chairElectionService.ts`, the desk in `chairDeskService.ts`), the deputy and the President (`parliamentService.ts`, `nationalElectionService.ts`, `presidentService.ts`); national terms have `cityId: 'nation'`; `serviceRecord` in `apps/server/src/services/nationAct.ts` counts the ladder. The Governor is lane 1's (`governorService.ts`).
+
 **Planned (slice 7, [[tech/slice-7|tech spec]]):** `officeTerms.office` (`council | governor | chair | deputy | president`), `packages/rules/src/ladder.ts` (`standGate`, `ladderRows`, `officeStipends`, `governorOf`), `governorService`, `chairElectionService`.
 
 ## Status
 
 - **Built:** City Councillor (slice 3 at home, slice 4 in the capital), reworked in the [[Voting Rework]] (12 Oct 2026): standing is 10 PC spent with a named rule; the seat's power is the rule on the ballot.
-- **Designed, not built:** Governor/Mayor, Faction Chair, Deputy, President, the ladder's gates and `officeTerms.office` (slice 7). No `governor`, `chair` or `president` exists in the code yet.
+- **Server built (slice 7 phase B):** the Chair, the deputy and the President, with the ladder's gates (`standGate` through `serviceRecord`). The stipends at the settlement and the screens are still to come (T20, phase C).
 - **Post-MVP:** Minister, Speaker.
 
 ## Decisions

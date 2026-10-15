@@ -44,7 +44,7 @@ Every City Day each member gets **three Party orders**: the faction's agenda for
 
 ## Status
 
-Built: the secretary's rotation ([[Slice 1 The 5-Minute Session|slice 1]]), the welcome set (slice 2, reworked in [[Review 4]] and [[Review 5]]), the capital rotation and crisis pair ([[Slice 4 The Battleground|slice 4]]), the mission order ([[Slice 5 Risk|slice 5]]), orders off in the cells and the doable-only rule (review 4), the branch's backing ([[Voting Rework]]). **Not built:** the event order and the secretary's daily fixture (slice 6), the Chair's standing orders, push and target (slice 7).
+Built: the secretary's rotation ([[Slice 1 The 5-Minute Session|slice 1]]), the welcome set (slice 2, reworked in [[Review 4]] and [[Review 5]]), the capital rotation and crisis pair ([[Slice 4 The Battleground|slice 4]]), the mission order ([[Slice 5 Risk|slice 5]]), orders off in the cells and the doable-only rule (review 4), the branch's backing ([[Voting Rework]]). **Not built:** the event order and the secretary's daily fixture (slice 6). **Slice 7 phase B (15 Oct 2026):** the Chair's standing orders, the push and the party's target on the server (`apps/server/src/services/chairDeskService.ts`: `setOrders`, the member's `push|{f}|{day}` contribution in every action and mission transaction, the day's result in the nation's day); the settlement that turns them into a member's orders is T20, the screens phase C.
 
 ## Decisions
 

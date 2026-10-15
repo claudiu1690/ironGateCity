@@ -44,11 +44,13 @@ designed for slice 7 and **not built**.
 - **Rules (built, slice 7 phase A):** `term.ts` (the windows, `nationWork`), `national.ts` (`nationalScores`, `countNation` with slice 4's `dhondt`, `partyList`, `seatList`, `countPick`, `countChair`, `freezeChairList`, `confidenceResult`), `ladder.ts` (`standGate`). Collections `nationalElections` and `factionElections` (`packages/db/src/models/nation.ts`); candidacies gain `kind`, `termIndex`, `pledges`, `platformId`. Services and screens are phase B and C.
 **Rules:** [[GDD#15.5 National elections|GDD §15.5]] · [[design/slice-7-nation#6. The national election|slice 7 design §6]] · [[tech/slice-7|slice 7 tech spec]] (§6.4 `national.ts`) · [[adr/0043-nation-day-term-calendar-and-the-republic-document|ADR 0043]] (the term calendar and the `nation` document) · [[adr/0047-elections-above-the-council-reuse-the-box|ADR 0047]] (reuse `candidacies` and the numbered ballot box; `nationalElections`) · [[adr/0062-the-national-audit-self-confirms-and-council-recounts|ADR 0062]] (the audit)
 
-**Code:** none yet. Planned: `packages/rules/src/term.ts` (`termOf`), `national.ts` (`nationalControl`, `nationalScores`, `countNation`, `partyList`, `countPick`), a `nationDay` settle step and `nation-day` Agenda job, a `nationalElections` collection, keys `pick:{faction}:{term}` and `nation:{term}` in the existing `votes` and `candidacies`. The client has a `/nation` route today, but it is the nation **map** (travel), not elections.
+- **Server (built, slice 7 phase B lane 2, 15 Oct 2026):** `apps/server/src/services/nationalElectionService.ts` (stand for President or the list, withdraw, the pick, the vote, backing, the views, and the nation's day handlers: open at day 19, the picks at 21, counted at 23, the count at 27, taking office at day 0); the Chair's election in `chairElectionService.ts` (stand, back, vote, the secretary's backing, open / close / count and the handover at day 14). Routers `nation.*` and `chairElection.*`.
+
+**Code (as first planned):** `packages/rules/src/term.ts` (`termOf`), `national.ts` (`nationalControl`, `nationalScores`, `countNation`, `partyList`, `countPick`), a `nationDay` settle step and `nation-day` Agenda job, a `nationalElections` collection, keys `pick:{faction}:{term}` and `nation:{term}` in the existing `votes` and `candidacies`. The client has a `/nation` route today, but it is the nation **map** (travel), not elections.
 
 ## Status
 
-- **Designed, not built** (slice 7). No term calendar, `nation` document or national count exists in the code.
+- **Server built** (slice 7 phase B, 15 Oct 2026): the national election end to end (design §6.3's example: 41.7 / 33.3 / 25.0, 25 / 20 / 15) and the Chair's election. **Not built:** the screens (phase C). Open: the Chair's tie order cannot let the secretary win a tie of votes against a player with no backers ([[Open Questions]]).
 - The voting rework changed nothing here: the national ballot is still a vote for a person with two pledged laws ([[tech/voting-rework|tech §17]] item 7).
 
 ## Decisions

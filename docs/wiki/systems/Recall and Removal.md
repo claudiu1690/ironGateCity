@@ -46,11 +46,13 @@ nothing else. All three are designed for slice 7 and **not built**.
 - **Rules (built, slice 7 phase A):** `nationEvents.ts` (`petitionGate`, `chairPetitionGate`, `townHallSignatures`), `national.ts` (`signaturesNeeded`, `confidenceResult`, `autoRemovalDue`), the removal bill in `parliament.ts`. Collection `petitions` (one open dissolve petition per city). Services are phase B.
 **Rules:** [[GDD#15.9 Recall, no-confidence and impeachment|GDD §15.9]] · [[GDD#15.4 Faction Chair and Party Directives|GDD §15.4]] · [[design/slice-7-nation#10. Petitions and removals|slice 7 design §10]] (and its "Added 10 Oct 2026" section) · [[tech/slice-7|slice 7 tech spec]] (`petitionService`) · [[adr/0049-petitions-dissolution-and-removals|ADR 0049]] (petitions as set-once records; removals act at the division) · [[adr/0045-parliament-bills-slots-and-computed-local-deputies|ADR 0045]] (the removal as a bill) · [[adr/0047-elections-above-the-council-reuse-the-box|ADR 0047]] (the vote on the Chair as a `factionElections` row)
 
-**Code:** none yet. Planned: a `petitions` collection (`dissolve:{city}:{openedDay}`, `chair:{faction}:{chairTermId}`), `petitionService` (`open`, `sign`, `closeInTx` in the city's boundary), the clerk's motion in the nation's day. A dissolution writes `vacatedDay` on the council's `officeTerms` rows (the field exists today, used for moves).
+- **Server (built, slice 7 phase B lane 2, 15 Oct 2026):** `apps/server/src/services/petitionService.ts` (`open`, `sign`, the view, `closePetitionsInTx` called by every city day before the count and the set, `townHallSignaturesInTx` in `eventService.resolveInTx`), `confidenceService.ts` (the petition on the Chair, the vote, the automatic vote on Unrest, the removal), the President's removal in `parliamentService.ts`. Routers `petition.*`, `confidence.*`.
+
+**Code (as first planned):** a `petitions` collection (`dissolve:{city}:{openedDay}`, `chair:{faction}:{chairTermId}`), `petitionService` (`open`, `sign`, `closeInTx` in the city's boundary), the clerk's motion in the nation's day. A dissolution writes `vacatedDay` on the council's `officeTerms` rows (the field exists today, used for moves).
 
 ## Status
 
-- **Designed, not built** (slice 7).
+- **Server built** (slice 7 phase B, 15 Oct 2026): dissolution (the rule in force untouched, the terms vacated), the Town Hall's signatures, the vote on the Chair, the removal of the President at 40 and the clerk's motion at a 24 % control share. **Not built:** the screens (phase C).
 - The voting rework changed two things: the petition closes **before the set** (it was before the division), and dissolution **no longer strikes** the rule in force.
 
 ## Decisions
