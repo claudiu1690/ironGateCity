@@ -271,6 +271,30 @@ function controlNews(ctx: NationBoundaryCtx): void {
     );
   }
   ctx.news.push(newsItem(ctx.d, 'nl.leader-line', 3, null, facts));
+  clearwaterNews(ctx);
+}
+
+/**
+ * T12 (design §11.1): *The {faction} Takes Clearwater* / *Loses Clearwater*: a party above fifty on the
+ * lake's meter at this boundary's snapshot that was not at the last one (and the reverse), every
+ * battleground city without districts (the capital's districts have their own lines).
+ */
+function clearwaterNews(ctx: NationBoundaryCtx): void {
+  const prev = ctx.nation.control;
+  if (!prev) return;
+  const heldBy = (shares: OpinionShares | undefined): FactionId | null =>
+    shares ? (FACTION_IDS.find((f) => shares[f] > 50) ?? null) : null;
+  for (const c of ctx.control.cities) {
+    const spec = ctx.content.city(c.cityId);
+    if (!spec || spec.role !== 'battleground' || ctx.content.isDistricted(c.cityId)) continue;
+    const before = heldBy(prev.cities.find((x) => x.cityId === c.cityId)?.shares);
+    const now = heldBy(c.shares);
+    if (before === now) continue;
+    if (before)
+      ctx.news.push(newsItem(ctx.d, 'nl.clearwater-lost', 1, null, { faction: ctx.content.faction(before).name, city: spec.name }));
+    if (now)
+      ctx.news.push(newsItem(ctx.d, 'nl.clearwater-control', 1, null, { faction: ctx.content.faction(now).name, city: spec.name }));
+  }
 }
 
 function controlDoc(ctl: NationalControl, d: DayKey): NationDoc['control'] {

@@ -1,6 +1,6 @@
 import type { CampaignEventType, GameContent } from '@irongate/content';
-import { CampaignEvent, City as CityModel, District, isDuplicateKeyError } from '@irongate/db';
-import type { CampaignEventDoc, CityDoc, DistrictDoc } from '@irongate/db';
+import { CampaignEvent, City as CityModel, District, FactionState, isDuplicateKeyError } from '@irongate/db';
+import type { CampaignEventDoc, CityDoc, DistrictDoc, FactionStateDoc } from '@irongate/db';
 import { randomBytes } from 'node:crypto';
 import { FACTION_IDS, fixtureFor, fixtureStartsAt, dayStart, issueTags, missionTarget, placeOf } from '@irongate/rules';
 import type { ActionDescriptor, DayKey, FactionId, OpinionShares, PlaceModifiers } from '@irongate/rules';
@@ -127,9 +127,20 @@ export async function ensureFixtures(
   const city = content.city(cityId);
   if (!city?.council) return;
   const districts = districtsByN(content, cityId);
-  const factions: FactionId[] = districts ? [...FACTION_IDS] : city.homeFactionId ? [city.homeFactionId as FactionId] : [];
+  // Slice 7 (tech §8.2): every battleground posts one per party (the capital, Clearwater); a home city its own.
+  const factions: FactionId[] =
+    districts || city.role === 'battleground' ? [...FACTION_IDS] : city.homeFactionId ? [city.homeFactionId as FactionId] : [];
+  // Slice 7 (design §4.4): a Chair's fixture for (city, day) wins over the secretary's rotation.
+  const states = await (session
+    ? FactionState.find({ _id: { $in: factions } }, { chair: 1, fixtures: 1 }).session(session)
+    : FactionState.find({ _id: { $in: factions } }, { chair: 1, fixtures: 1 })
+  ).lean<FactionStateDoc[]>();
   for (const factionId of factions) {
-    const f = fixtureFor({ day, factionId, rotation: content.fixtureRotation, districts });
+    const fs = states.find((x) => x._id === factionId);
+    const set = fs?.chair ? (fs.fixtures ?? []).find((x) => x.cityId === cityId && x.day === day) : undefined;
+    const f = set
+      ? { typeId: set.typeId, districtId: districts ? set.districtId : null }
+      : fixtureFor({ day, factionId, rotation: content.fixtureRotation, districts });
     const venue = content.venueOf(f.typeId, cityId, f.districtId);
     if (!venue) continue;
     const type = typeOf(content, f.typeId);
@@ -145,7 +156,10 @@ export async function ensureFixtures(
       venueId: venue.location.id,
       day,
       dayIndex: 0,
-      calledBy: { kind: 'secretary', npcId: faction.secretary.npcId },
+      calledBy:
+        set && fs?.chair
+          ? { kind: 'chair', characterId: fs.chair.holder.characterId, name: fs.chair.holder.name }
+          : { kind: 'secretary', npcId: faction.secretary.npcId },
       calledAt: new Date(dayStart(day)),
       startsAt: new Date(fixtureStartsAt(day)),
       targetFactionId: null,
