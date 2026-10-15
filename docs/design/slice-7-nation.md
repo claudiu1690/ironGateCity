@@ -83,7 +83,7 @@ Not in slice 7: **ministers** and **the Speaker** (GDD §15.7, §25: launch + 60
 - **Who votes:** every Rank 2+ member of the faction (tenure after a switch: 7 days), from anywhere (a political act of the faction, not of a city: works in transit, in the cells, on rival ground). One tap, secret, final.
 - **Who stands:** Rank 4, a completed council term, 14 days in the faction since any switch, not a sitting Chair in the second of two terms (no limit on terms otherwise), **25 Political Capital**, spent when the name is printed, returned if struck. **Two backers** by the close of names (term day 11's boundary): members of the faction, Rank 2+, 10 PC, one backing per member per Chair election, public, irrevocable; **the secretary backs** any filed candidate on any day of the window on which the candidacy is filed and the member's three orders are done (the slice-3 rule); where fewer than three other eligible backers exist faction-wide (Rank 2+ members active in the last seven days), the secretary's backing counts as two. A candidate picks one of three platform lines the faction offers (§4.6; no effect).
 - **The ballot always carries the secretary.** The names are the player candidates and **the party secretary** (*Secretary Holm · keep the orders as they are*, marked *run by the game*): a player must beat the branch's own administrator to carry the party. The secretary's line on the ballot: *If the secretary wins, nothing changes: the orders, the party line and the fixture stay the branch's.* With no player candidate there is no vote and the secretary continues (the paper says so on day 14).
-- **The count** at the boundary into term day 14: each candidate's **total = members' votes + 3 × backers** (at most five backers count; the secretary has votes only); the highest total is Chair. Ties: more votes, then backers, then completed terms (a Governor term counts two, a council term one), then earlier filing. Turnout *n of m* (eligible: Rank 2+ members active in the last seven days). Final at the count.
+- **The count** at the boundary into term day 14: each candidate's **total = members' votes + 3 × backers** (at most five backers count; the secretary has votes only); the highest total is Chair. Ties: more votes, then **the secretary before any player** (an exact tie keeps the orders as they are: *beat* means strictly more; settled 15 Oct 2026, below), then backers, then completed terms (a Governor term counts two, a council term one), then earlier filing. Turnout *n of m* (eligible: Rank 2+ members active in the last seven days). Final at the count.
 - **The term:** term day 14 to the next term's day 14 (28 days). A Chair who is removed (§4.5) or who switches faction is replaced by the secretary until the next election. Stipend **20 PC and 40 FXP** at every boundary held, present or not.
 - **What a Chair gets, in words** (the stand card): *Twenty-eight days as Chair: you set the Party orders every member reads in the morning, the party line in Parliament and in every council, and the branch's event; 20 Political Capital and 40 Party XP a day.*
 
@@ -1117,3 +1117,29 @@ Answers to `docs/tech/slice-7.md`'s phase-A deviations (commit `c71039a`). The G
 4. **The crops are confirmed.** The three portraits (880 × 1168, crop `left 60, top 40, 760 × 950`) keep the whole head with margin: Albrecht's hair tops at about 70 px, Brod's at 80, Faber's spectacles at 85, all faces centred near 300; the bottom edge at 990 px takes only the lower hands and gloves, as the slice-5 portraits'. The four scenes are the full 2688 × 1520 frame with no `focus`, which suits them: each has its subject in the middle third (the table, the desk and window, the results board, the chair below the clock). No change.
 
 **Vocabulary.** The guards for *The Front* and *ballot* live in `packages/content/test` as Vitest files, which the user's no-unit-test rule (8 Oct 2026) leaves unrun and untouched. Those guards reject *front* (war framing) and *ballot* (a system term, GDD §1.5) in player text; slice 7 needs two allowances they do not have: **The Front** as the name of Clearwater's lakeside quarter (a place, not a war term) and **ballot** as the voting rework's player word for the city's one card vote (`voting-simplified.md`, 10 Oct 2026; already on screen in `copy.ts` and the national lines). Both allowances go into the Playwright vocabulary sweeps in **T30**, not into the Vitest files. The tests are not changed.
+
+## Settled 15 Oct 2026 (phase B): the Chair's tie
+
+Answer to `docs/tech/slice-7.md` §Deviations (phase B, lane 2) and the wiki's Open Questions S7-T14. T14's *Done when* asked for "the secretary winning a tie of votes against a player with no backers counted"; `countChair` as built (ties: votes, backers, completed terms, filing) could never give it, because every player who stands has a completed council term and the secretary has none.
+
+**Ruling: (a) the tie order changes; the check stands.** §21 #2, approved by the user on 15 Oct, says a player must *beat* the game's own figure, and *beat* means strictly more. An exact tie is a branch split down the middle between a candidate and *keep the orders as they are*; the standing default holds, as it does everywhere else the game weighs a change against the status quo (a vote on the Chair needs two thirds, §4.5). The candidate has two cheap levers against a tie: do the day's orders on a filing day and the secretary backs them (+3), or find one backer (10 PC, +3). A candidate who did neither has not carried the branch.
+
+- **The count (§4.1, GDD §15.4):** total = votes + 3 × backers (at most five; the secretary votes only); highest total is Chair. **Ties: more votes, then the secretary before any player, then backers, then completed terms, then earlier filing.** A total tie against the secretary is only ever an equal vote with no backers counted (with backers the player has fewer votes and loses on votes already), so the rule is one line to a player: *on an exact tie the secretary keeps the orders.*
+- **Between players nothing changes:** backers, then completed terms (a Governor term two), then filing.
+- **What the developer changes in `countChair` (`packages/rules/src/national.ts`), one comparator:** after `b.votes - a.votes` insert a kind step that puts the secretary first, before `b.backers - a.backers`:
+
+  ```ts
+  .sort(
+    (a, b) =>
+      b.total - a.total ||
+      b.votes - a.votes ||
+      (a.kind === 'secretary' ? -1 : b.kind === 'secretary' ? 1 : 0) ||
+      b.backers - a.backers ||
+      b.termsWeight - a.termsWeight ||
+      a.order - b.order,
+  )
+  ```
+
+  and the doc comment reads *Ties: votes, then the secretary, then backers, then completed terms, then filing.* `secretaryKept` and `margin` (0 on a tie) need no change; `freezeChairList` keeps the secretary last on the ballot (the order is for display and the player-to-player tie, not for the secretary). T14's check reads as written: 1–1 with no backers, the secretary wins.
+- **Player text:** no new line. The result and the day-14 paper use the secretary's existing win (*nothing changes: the orders, the party line and the fixture stay the branch's*). A tie-break loss gets its own headline only between players, as the council's does.
+- **The party's pick (§6.2, `countPick`)** has the same shape (the figure has no terms and goes last), and the same principle should apply: the party's own figure wins an exact tie. Not part of T14; the architect decides whether it goes into T16's check or waits for a playtest.

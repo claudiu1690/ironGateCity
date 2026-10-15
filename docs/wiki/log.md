@@ -9,6 +9,15 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] update | Slice 7: the Chair's tie settled (S7-T14)
+
+The game-designer ruled on the Chair's count: *beat the game's own figure* means strictly more, so
+the secretary wins an exact tie (ties: votes, then the secretary before any player, then backers,
+completed terms, filing). Recorded in `docs/design/slice-7-nation.md` (§4.1 and a new *Settled
+15 Oct 2026 (phase B)* section with the one-comparator change for `countChair`), GDD §15.4 and §0.
+Code not yet changed (a [[Drift Report]] row). Updated [[Open Questions]] (S7-T14 closed),
+[[National Elections]], [[Slice 7 The Nation]], the [[Decision Log]].
+
 ## [2026-10-15] build | Slice 7 phase B, lane 1: the nation's day, Clearwater, the Governor
 
 The developer's T11 (the nation's day, laws in every modifier, `nation.get`), T12 (Clearwater's

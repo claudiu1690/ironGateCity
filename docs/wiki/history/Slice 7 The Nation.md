@@ -93,7 +93,7 @@ Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the s
 - **T18 the President**: the Address, the veto and the override, removals (a player's and the clerk's), the runner-up.
 - **T19 petitions and the vote on the Chair** ([[Recall and Removal]]): dissolution in every city day before the set, the Town Hall's signatures, the vote on the Chair.
 - Two fixes in shared code: the nation's boundary lost ObjectIds (`structuredClone`), and the orders dropped an item's push on every write.
-- Checked with scratch scripts on a memory replica set: four tablers for three slots, the veto racing the enactment ten times, a removal at 40 and 39, the clerk's motion at 24 % and 26 %, design §6.3's example end to end. Details, the test hooks lane 1 needs and what phase C reads: [[tech/slice-7|Deviations (phase B, lane 2)]]. One question: the Chair's tie ([[Open Questions]] S7-T14).
+- Checked with scratch scripts on a memory replica set: four tablers for three slots, the veto racing the enactment ten times, a removal at 40 and 39, the clerk's motion at 24 % and 26 %, design §6.3's example end to end. Details, the test hooks lane 1 needs and what phase C reads: [[tech/slice-7|Deviations (phase B, lane 2)]]. One question, the Chair's tie (S7-T14), settled the same day: the secretary wins an exact tie, one comparator step in `countChair` for the developer ([[design/slice-7-nation|design, Settled 15 Oct (phase B)]]).
 
 ## Phase B, lane 1: the nation's day, Clearwater, the Governor (T11–T13, T20, T21 in part; 15 Oct 2026)
 

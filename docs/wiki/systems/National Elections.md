@@ -50,7 +50,7 @@ designed for slice 7 and **not built**.
 
 ## Status
 
-- **Server built** (slice 7 phase B, 15 Oct 2026): the national election end to end (design §6.3's example: 41.7 / 33.3 / 25.0, 25 / 20 / 15) and the Chair's election. **Not built:** the screens (phase C). Open: the Chair's tie order cannot let the secretary win a tie of votes against a player with no backers ([[Open Questions]]).
+- **Server built** (slice 7 phase B, 15 Oct 2026): the national election end to end (design §6.3's example: 41.7 / 33.3 / 25.0, 25 / 20 / 15) and the Chair's election. **Not built:** the screens (phase C). **Settled 15 Oct 2026:** on the Chair's ballot the secretary wins an exact tie (ties: votes, then the secretary before any player, then backers, completed terms, filing; [[GDD#15.4 Faction Chair and Party Directives|GDD §15.4]], [[design/slice-7-nation|design, Settled 15 Oct (phase B)]]); `countChair` gains one comparator step, not yet applied in code ([[Drift Report]]).
 - The voting rework changed nothing here: the national ballot is still a vote for a person with two pledged laws ([[tech/voting-rework|tech §17]] item 7).
 
 ## Decisions
