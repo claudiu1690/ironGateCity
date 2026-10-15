@@ -46,6 +46,9 @@ import { journeyEvents } from './data/journeyEvents';
 import { mapPins } from './data/mapPins';
 import { nation } from './data/nation';
 import { opponents } from './data/opponents';
+import { campaignEventTypes, eventVenues, fixtureRotation } from './data/events';
+import { eventIndex, slice6Problems } from './slice6';
+import type { LocatedVenue } from './slice6';
 import { ordinances } from './data/ordinances';
 import { orderTemplates } from './data/orders';
 import { origin } from './data/origin';
@@ -61,6 +64,7 @@ import type {
   Action,
   Ambition,
   Asset,
+  CampaignEventType,
   Chapter,
   City,
   Faction,
@@ -115,6 +119,10 @@ export const rawContent: unknown = {
   issues,
   opponents,
   held,
+  // Slice 6 (tech design §4.4).
+  campaignEventTypes,
+  eventVenues,
+  fixtureRotation,
 };
 
 /**
@@ -937,6 +945,7 @@ export function parseContent(raw: unknown): Content {
   // The voting rework (tech design §11): every home local names a rule, and every home ballot has three cards.
   problems.push(...ballotFillProblems(content));
   problems.push(...slice5Problems(content, { cityById, locationById, assetById, mapPins }));
+  problems.push(...slice6Problems(content, { cityById, locationById, assetById, sentenceCount }));
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {
       problems.push(`cities.${city.id} has a paper but no ambient headline`);
@@ -1378,6 +1387,16 @@ export interface GameContent extends Content {
   listedCard(): { id: string; heatAtLeast: number };
   /** The rung-4 mission card of a type (an asset id). */
   missionCard(type: MissionType): string;
+  // Slice 6 (tech design §4.1).
+  eventType(id: string): CampaignEventType | undefined;
+  eventTypes(): CampaignEventType[];
+  /** The three common events and the faction's own. */
+  eventTypesFor(factionId: FactionId): CampaignEventType[];
+  /** The located venue of an event in a city (a district in the capital). */
+  venueOf(eventId: string, cityId: string, districtId: string | null): LocatedVenue | undefined;
+  venuesAt(locationId: string): LocatedVenue[];
+  /** The open cities of the faction's chat channels: its home city and the capital (tech §22.1 Q11). */
+  chatCities(factionId: FactionId): string[];
 }
 
 /** Review 4 (ADR 0076): a surveyed place a later edition builds. */
@@ -1562,6 +1581,7 @@ export function indexContent(content: Content): GameContent {
       return { id: j.id, heatAtLeast: j.heatAtLeast! };
     },
     missionCard: (type) => content.art.missionCards.find((m) => m.missionType === type)!.assetId,
+    ...eventIndex(content, (id) => locations.get(id)),
   };
 }
 

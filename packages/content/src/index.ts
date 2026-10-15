@@ -24,3 +24,6 @@ export {
 export { polygonArea, tilingProblems } from './geometry';
 export { copy, turnoutOf } from './data/copy';
 export type { Copy } from './data/copy';
+export { EVENT_ENERGY_TOTALS, slice6Problems } from './slice6';
+export type { LocatedVenue } from './slice6';
+export { eventOrderTemplates } from './data/events';

@@ -1,5 +1,6 @@
 import {
   ACTION_KINDS,
+  EVENT_SPECIALS,
   FACTION_IDS,
   MISSION_TYPE_IDS,
   STAT_KEYS,
@@ -1061,6 +1062,54 @@ export const Issue = z.strictObject({
   stances: z.strictObject({ vanguard: Stance, collective: Stance, alliance: Stance }),
 });
 
+// ---------------------------------------------------------------------------------------------
+// Slice 6 (docs/tech/slice-6.md §4.1): Campaign Events. Bands, rates, hands and limits are rules
+// (`EVENTS`); the types, roles, texts, venues and the fixture's rotation are content.
+// ---------------------------------------------------------------------------------------------
+
+export const EventRole = z.strictObject({
+  /** 'speaker', 'canvasser-1', 'usher-2' (roles that share a name have their own ids). */
+  id: z.string().regex(/^[a-z]+(?:-[a-z0-9]+)*$/),
+  /** "Canvasser" (×3 share a name, not an id). */
+  name: z.string().min(1).max(30),
+  /** One stat, two averaged, or ['best']. */
+  stats: CheckStatsSchema,
+  energy: z.union([z.literal(10), z.literal(15)]),
+  hint: z.string().min(1).max(90),
+});
+
+export const EventSpecial = z.enum(EVENT_SPECIALS);
+
+export const CampaignEventType = z.strictObject({
+  /** 'event.rally'. */
+  id: Id,
+  name: z.string().min(1).max(40),
+  /** `{event}` in running text: "rally". */
+  runningName: z.string().min(1).max(40),
+  /** A signature event: only this faction calls it. */
+  factionId: FactionId.optional(),
+  venueKinds: z.array(LocationKind).min(1),
+  roles: z.array(EventRole).min(3).max(5),
+  /** 0.8 … 2.0. */
+  baseSwing: z.number().positive().max(3),
+  difficulty: z.strictObject({ home: z.int().min(8).max(20), capital: z.int().min(10).max(22) }),
+  actionType: z.enum(['canvass', 'speech', 'propaganda']),
+  special: EventSpecial.optional(),
+  /** A `scene`. */
+  art: AssetId,
+  blurb: z.string().min(1).max(200),
+  text: z.strictObject({ triumph: OutcomeText, success: OutcomeText, mixed: OutcomeText, fiasco: OutcomeText }),
+});
+
+/** One venue per event per city (per district in the capital), an existing location (design §3.7). */
+export const EventVenue = z.strictObject({
+  eventId: Id,
+  cityId: Id,
+  /** The capital's district (a quarter id), else null. */
+  districtId: Id.nullable(),
+  locationId: Id,
+});
+
 export const Content = z.strictObject({
   factions: z.array(Faction).length(FACTION_IDS.length),
   cities: z.array(City).min(1),
@@ -1093,6 +1142,11 @@ export const Content = z.strictObject({
   // Slice 5.
   opponents: z.array(Opponent).length(6),
   held: z.strictObject({ cells: HeldAction, infirmary: HeldAction }),
+  // Slice 6.
+  campaignEventTypes: z.array(CampaignEventType).length(6),
+  eventVenues: z.array(EventVenue),
+  /** The secretary's fixture: Canvass Drive · Rally · Poster Night (design §4). */
+  fixtureRotation: z.tuple([Id, Id, Id]),
 });
 
 export type Faction = z.infer<typeof Faction>;
@@ -1131,6 +1185,9 @@ export type Mission = z.infer<typeof Mission>;
 export type Way = z.infer<typeof Way>;
 export type Opponent = z.infer<typeof Opponent>;
 export type HeldAction = z.infer<typeof HeldAction>;
+export type EventRole = z.infer<typeof EventRole>;
+export type CampaignEventType = z.infer<typeof CampaignEventType>;
+export type EventVenue = z.infer<typeof EventVenue>;
 export type Content = z.infer<typeof Content>;
 /** Content as authored (defaults not yet applied). */
 export type ContentInput = z.input<typeof Content>;

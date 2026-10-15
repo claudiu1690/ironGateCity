@@ -450,6 +450,16 @@ export const assets: Asset[] = [
     height: 1158,
     crop: { left: 0, top: 40, width: 2048, height: 1158 },
   },
+  // Slice 6 (tech design 13; design 18): the two event scenes. Content policy checked: posters
+  // blank, bunting plain stripes; no flag, symbol, torch or armband.
+  scene(
+    'event-poster-night',
+    "A poster crew at night at a long fence: a bucket, a brush, a stack of blank sheets under a street lamp, a printer's handcart.",
+  ),
+  scene(
+    'event-grand-rally',
+    'A main square full at dusk under strings of lamps, seen from the back of the crowd: a timber stand, plain striped bunting, the fortress wall beyond.',
+  ),
   scene(
     'hospital',
     'An infirmary: men asleep in iron beds under tall arched windows, a nurse with a tray walking down the aisle, a doctor in a white coat reading a chart.',
