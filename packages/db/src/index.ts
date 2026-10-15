@@ -117,3 +117,21 @@ export type {
 export { ChatLimit, ChatMessage, ChatReport } from './models/chat';
 export type { ChatLimitDoc, ChatMessageDoc, ChatReportDoc } from './models/chat';
 export { addTogetherFields, backfillFactionScopes, migrateSlice6Together, nameWordsOf } from './migrations/010-slice6-together';
+// Slice 7 (tech design §5): the nation's collections; migration 011 runs from `ensureIndexes` after 010.
+export { BILL_STATUSES, Bill, FactionElection, FactionState, LawModel, Nation, NationalElection, Petition } from './models/nation';
+export type {
+  BillDoc,
+  BillStatus,
+  BillTabler,
+  FactionElectionDoc,
+  FactionStateDoc,
+  LawDoc,
+  LawProjection,
+  NationDoc,
+  NationNewsItem,
+  NationalElectionDoc,
+  NationalHolder,
+  PetitionDoc,
+  StandingOrdersDoc,
+} from './models/nation';
+export { addNationCharacterFields, markCouncilKinds, migrateSlice7Nation } from './migrations/011-slice7-nation';

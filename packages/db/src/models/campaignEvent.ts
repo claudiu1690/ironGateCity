@@ -23,7 +23,9 @@ export type EventKind = 'member' | 'fixture';
 export type EventStatus = 'open' | 'resolved' | 'calledOff';
 export type EventCalledBy =
   | { kind: 'member'; characterId: Types.ObjectId; name: string }
-  | { kind: 'secretary'; npcId: string };
+  | { kind: 'secretary'; npcId: string }
+  /** Slice 7 (design §4.4): the Chair calls from anywhere, with no role and no Energy. */
+  | { kind: 'chair'; characterId: Types.ObjectId; name: string };
 
 /** The resolution as stored on the event: the participants' rewards live on their sign-ups. */
 export type EventResolutionDoc = Omit<EventResolution, 'participants'> & {

@@ -25,6 +25,8 @@ export interface StoredOrderItem {
   target: number;
   progress: number;
   doneAt: Date | null;
+  /** Slice 7 (ADR 0046): the Chair's pushed place and whether the item's attempts count. */
+  push?: { cityId: string; districtId: string | null; counts: boolean };
 }
 
 export interface StoredOrders {
@@ -36,6 +38,8 @@ export interface StoredOrders {
    * object the settlement replaces each City Day, so it ends at the day's turn (absent = null).
    */
   off?: { at: Date; reason: 'cells' } | null;
+  /** Slice 7 (ADR 0046): "Set by the Chair, {name}" (absent or null: the secretary's). */
+  setBy?: { characterId: Types.ObjectId; name: string } | null;
 }
 
 /**
@@ -208,7 +212,15 @@ export interface CharacterDoc {
     seat: number;
     fromDay: DayKey;
     toDay: DayKey;
+    /** Slice 7 (ADR 0048): the office (absent on old entries: `council`); `key` the term's key. */
+    office?: 'council' | 'governor' | 'chair' | 'deputy' | 'president';
+    key?: string;
   }>;
+  /**
+   * Slice 7 (ADR 0047): one backing per Chair election and per national election; the current and
+   * the previous term's (≤ 6). Separate from the council's `endorsementsGiven` (pruned too fast).
+   */
+  termBackings?: Array<{ key: string; candidacyId: Types.ObjectId; name: string; day: DayKey }>;
   /**
    * Slice 3 (ADR 0018): the one-per-cycle endorsement guard; the last four, newest last. Slice 4:
    * `cityCycle` keys the guard per city and cycle ('irongate:4146'; at home the election id).
@@ -337,6 +349,14 @@ const orderItemSchema = new Schema<StoredOrderItem>(
     target: int,
     progress: int,
     doneAt: { type: Date, default: null },
+    // Slice 7 (ADR 0046): no default, so items written before it stay as they were.
+    push: {
+      type: new Schema(
+        { cityId: { type: String, required: true }, districtId: { type: String, default: null }, counts: { type: Boolean, required: true } },
+        { _id: false },
+      ),
+      default: undefined,
+    },
   },
   { _id: false },
 );
@@ -551,6 +571,13 @@ const characterSchema = new Schema<CharacterDoc>(
         ),
         default: undefined,
       },
+      setBy: {
+        type: new Schema(
+          { characterId: { type: Schema.Types.ObjectId, required: true }, name: { type: String, required: true } },
+          { _id: false },
+        ),
+        default: undefined,
+      },
     },
     ordersNoteSeenDay: { type: Number, default: null },
     today: { type: tallySchema, default: () => ({}) },
@@ -615,6 +642,24 @@ const characterSchema = new Schema<CharacterDoc>(
             seat: int,
             fromDay: int,
             toDay: int,
+            // Slice 7 (ADR 0048).
+            office: { type: String, enum: ['council', 'governor', 'chair', 'deputy', 'president'] },
+            key: { type: String },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+    // Slice 7 (ADR 0047): migration 011 sets [] on every character.
+    termBackings: {
+      type: [
+        new Schema(
+          {
+            key: { type: String, required: true },
+            candidacyId: { type: Schema.Types.ObjectId, required: true },
+            name: { type: String, required: true },
+            day: int,
           },
           { _id: false },
         ),
@@ -778,5 +823,7 @@ characterSchema.index(
   { partialFilterExpression: { 'presence.locationId': { $type: 'string' } }, name: 'presence_here' },
 );
 characterSchema.index({ factionId: 1, nameWords: 1 }, { name: 'name_words' });
+// Slice 7 (tech design §5.9): the faction-wide rolls (the petition on the Chair, turnout).
+characterSchema.index({ factionId: 1, rank: 1, lastActionAt: -1 }, { name: 'faction_rank_active' });
 
 export const Character = model<CharacterDoc>('Character', characterSchema);

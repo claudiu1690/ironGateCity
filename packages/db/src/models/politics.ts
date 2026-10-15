@@ -59,7 +59,8 @@ export interface ElectionDoc {
    * Slice 4 (ADR 0027): `home` (absent = home) or a capital `district`; `placeId` the city or the
    * district. A district election has no single faction.
    */
-  kind?: 'home' | 'district';
+  /** Slice 7 (ADR 0050): `battleground`, Clearwater's one election a cycle for its seven seats. */
+  kind?: 'home' | 'district' | 'battleground';
   placeId?: string;
   factionId?: FactionId;
   cycle: number;
@@ -90,7 +91,7 @@ const electionSchema = new Schema<ElectionDoc>(
   {
     _id: { type: String, required: true },
     cityId: { type: String, required: true },
-    kind: { type: String, enum: ['home', 'district'] },
+    kind: { type: String, enum: ['home', 'district', 'battleground'] },
     placeId: { type: String },
     factionId: { type: String, enum: FACTION_IDS },
     cycle: int,
@@ -126,6 +127,16 @@ export type DepositState = 'held' | 'kept' | 'spent' | 'due' | 'returned';
 export interface CandidacyDoc {
   _id: Types.ObjectId;
   electionId: string;
+  /**
+   * Slice 7 (ADR 0047): `chair`, `president` or `list` (absent: `council`). A non-council candidacy
+   * has no city or cycle (the schema requires them only for the council); `termIndex` instead.
+   */
+  kind?: 'council' | 'chair' | 'president' | 'list';
+  termIndex?: number;
+  /** Slice 7: the President's two pledges (law ids). */
+  pledges?: string[];
+  /** Slice 7: the Chair's or the President's platform line. */
+  platformId?: string | null;
   cityId: string;
   /** Slice 4: the candidate's faction and the place (the city or the district). */
   factionId?: FactionId;
@@ -151,13 +162,22 @@ export interface CandidacyDoc {
   updatedAt: Date;
 }
 
+/** Slice 7: a council candidacy (no `kind`, or `council`) needs its city and cycle; the others do not. */
+function councilOnly(this: { kind?: string }): boolean {
+  return (this.kind ?? 'council') === 'council';
+}
+
 const candidacySchema = new Schema<CandidacyDoc>(
   {
     electionId: { type: String, required: true },
-    cityId: { type: String, required: true },
+    kind: { type: String, enum: ['council', 'chair', 'president', 'list'] },
+    termIndex: { type: Number, validate: Number.isInteger },
+    pledges: { type: [String], default: undefined },
+    platformId: { type: String, default: undefined },
+    cityId: { type: String, required: councilOnly },
     factionId: { type: String, enum: FACTION_IDS },
     placeId: { type: String },
-    cycle: int,
+    cycle: { type: Number, required: councilOnly, validate: Number.isInteger },
     characterId: { type: Schema.Types.ObjectId, required: true },
     name: { type: String, required: true },
     rule: { type: String },
@@ -268,6 +288,20 @@ export interface OfficeTermDoc {
   /** Players: the front page's stamp animates until this is set (ADR 0023). */
   frontPageSeenAt: Date | null;
   /**
+   * Slice 7 (ADR 0048): the office (absent: `council`). `councilKey` per office: `governor:{city}:{cycle}`,
+   * `chair:{f}:{term}`, `deputy:{term}`, `president:{term}`; `seat` 1, or a deputy's list place.
+   */
+  office?: 'council' | 'governor' | 'chair' | 'deputy' | 'president';
+  /** Slice 7: the office's powers, each set once (the Address, the veto, the Governor's rule). */
+  powers?: {
+    address?: { day: DayKey; cityId: string; issueDocId: string };
+    veto?: { billId: Types.ObjectId; day: DayKey };
+  };
+  /** Slice 7: the President's pledges, kept when the law passes in the term. */
+  pledges?: Array<{ lawId: string; keptDay: DayKey | null }>;
+  /** Slice 7: how a President or a deputy took office. */
+  via?: 'election' | 'runnerUp';
+  /**
    * Review 4 (answers §10.1, ADR 0077): the *What now* card was shown at the hall (absent or null:
    * unseen). Set once by `council.whatNowSeen`, a conditional `$set`.
    */
@@ -313,11 +347,18 @@ const officeTermSchema = new Schema<OfficeTermDoc>(
     // The voting rework: no defaults, so terms written before phase 2 stay as they were.
     rule: { type: String },
     ruleSetAt: { type: Date },
+    // Slice 7 (ADR 0048): no defaults; migration 011 sets `office: 'council'` on the old terms.
+    office: { type: String, enum: ['council', 'governor', 'chair', 'deputy', 'president'] },
+    powers: { type: Schema.Types.Mixed, default: undefined },
+    pledges: { type: Schema.Types.Mixed, default: undefined },
+    via: { type: String, enum: ['election', 'runnerUp'] },
   },
   { ...opts, collection: 'officeTerms', timestamps: { createdAt: true, updatedAt: false } },
 );
 // Slice 4 (ADR 0026): a seat vacated at a move is re-filled from the move's day.
 officeTermSchema.index({ councilKey: 1, seat: 1, fromDay: 1 }, { unique: true });
+// Slice 7 (tech design §5.8): every office's terms by key (the powers' re-reads, take office).
+officeTermSchema.index({ office: 1, councilKey: 1 }, { name: 'term_office_key' });
 officeTermSchema.index(
   { 'holder.characterId': 1, toDay: -1 },
   { partialFilterExpression: { 'holder.kind': 'player' } },

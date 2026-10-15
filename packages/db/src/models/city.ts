@@ -1,4 +1,5 @@
-import type { DayKey, FactionId, MoraleState, OpinionShares } from '@irongate/rules';
+import type { DayKey, FactionId, Groundswell, MoraleState, OpinionShares } from '@irongate/rules';
+import type { DistrictDoc, DistrictStateDoc } from './district';
 import { Schema, model } from 'mongoose';
 
 /** ADR 0022: the morale state record, written only when a transaction crosses a threshold. */
@@ -53,6 +54,15 @@ export interface CityDoc {
    */
   world?: { settledDay: DayKey; bootstrappedDay: DayKey; voting?: 2 };
   morale?: MoraleRecordDoc;
+  /**
+   * Slice 7 (ADR 0050): Clearwater, a battleground on one meter, carries a district's state on its
+   * city document (`opinion` above is its meter). Absent on every other city.
+   */
+  battleground?: {
+    state: DistrictStateDoc;
+    groundswell: Groundswell | null;
+    stateLog: DistrictDoc['stateLog'];
+  };
   /** The last 60 boundaries, for the playtest report. */
   moraleLog?: Array<{ day: DayKey; share: number; state: MoraleState }>;
   /**
@@ -66,6 +76,18 @@ export interface CityDoc {
     npcSeats: number;
     seats?: 7 | 10;
     npcSeatsByFaction?: Partial<Record<FactionId, number>>;
+    /** Slice 7 (ADR 0048): the Governor (home) or the Mayor (contested), chosen at the count; display only. */
+    governor?: {
+      kind: 'player' | 'npc';
+      characterId?: string;
+      npcId?: string;
+      name: string;
+      factionId: FactionId;
+      termId: string | null;
+      local: boolean;
+    } | null;
+    /** Slice 7 (ADR 0049): the council dissolved by petition (until the next count). */
+    dissolved?: { day: DayKey; petitionId: string } | null;
   } | null;
   /** The ordinance in force; `toDay` exclusive. `paperId`: the rule ballot that chose it (ADR 0083), null when no ballot did. */
   ordinance?: { id: string; fromDay: DayKey; toDay: DayKey; paperId: string | null } | null;
@@ -117,6 +139,7 @@ const citySchema = new Schema<CityDoc>(
       default: undefined,
     },
     moraleLog: { type: Schema.Types.Mixed, default: undefined },
+    battleground: { type: Schema.Types.Mixed, default: undefined },
     council: { type: Schema.Types.Mixed, default: undefined },
     ordinance: { type: Schema.Types.Mixed, default: undefined },
     ordinanceHistory: { type: Schema.Types.Mixed, default: undefined },

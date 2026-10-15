@@ -11,6 +11,8 @@ import { migrateReview4 } from './migrations/008-review4';
 import type { Review4Counts, StepCounts } from './migrations/008-review4';
 import { migrateVotingRework } from './migrations/009-voting-rework';
 import { migrateSlice6Together } from './migrations/010-slice6-together';
+import { migrateSlice7Nation } from './migrations/011-slice7-nation';
+import { Bill, FactionElection, FactionState, LawModel, Nation, NationalElection, Petition } from './models/nation';
 import type { StepCounts as Slice6Counts } from './migrations/008-review4';
 import { CampaignEvent, EventSignup } from './models/campaignEvent';
 import { ChatLimit, ChatMessage, ChatReport } from './models/chat';
@@ -57,6 +59,14 @@ export const models = [
   ChatMessage,
   ChatReport,
   ChatLimit,
+  // Slice 7 (tech design §5): the nation's seven collections.
+  Nation,
+  FactionState,
+  FactionElection,
+  NationalElection,
+  Bill,
+  LawModel,
+  Petition,
 ] as const;
 
 /**
@@ -70,6 +80,7 @@ export async function ensureIndexes(
   review4: Review4Counts;
   votingRework: { refunds: StepCounts };
   slice6: { characters: Slice6Counts; factionScopes: Slice6Counts };
+  slice7: Awaited<ReturnType<typeof migrateSlice7Nation>>;
 }> {
   for (const m of models) {
     await m.createCollection();
@@ -95,5 +106,7 @@ export async function ensureIndexes(
   const votingRework = await migrateVotingRework();
   // Slice 6 (tech design §5.6): presence, events, chat and the scoreboard's faction scopes; after 009.
   const slice6 = await migrateSlice6Together();
-  return { review4, votingRework, slice6 };
+  // Slice 7 (tech design §5.10): office and candidacy kinds, term backings; after 010.
+  const slice7 = await migrateSlice7Nation();
+  return { review4, votingRework, slice6, slice7 };
 }
