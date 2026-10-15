@@ -30,6 +30,7 @@ import {
   standingView,
   carriedWelcome,
   startOrders,
+  officeStipends,
   stipendBoundaries,
 } from '@irongate/rules';
 import { fadeDaysFor } from './lawBook';
@@ -149,7 +150,24 @@ export function computeSettlement(
   if (!s) return null;
 
   // ADR 0020: the stipend for each boundary held since the last settlement, and refunds.
-  const terms = read.terms ?? [];
+  const allTerms = read.terms ?? [];
+  // Slice 7 (ADR 0048): the council's stipend as before; every other office through officeStipends.
+  const terms = allTerms.filter((t) => (t.office ?? 'council') === 'council');
+  const otherStipends = officeStipends(
+    allTerms
+      .filter((t) => (t.office ?? 'council') !== 'council')
+      .map((t) => ({
+        termId: t._id.toHexString(),
+        office: t.office!,
+        fromDay: t.fromDay,
+        toDay: t.toDay,
+        vacatedDay: t.vacatedDay ?? null,
+      })),
+    c.day.settled,
+    today,
+  );
+  const otherPc = otherStipends.reduce((n, x) => n + x.pc, 0);
+  const otherFxp = otherStipends.reduce((n, x) => n + x.fxp, 0);
   // Slice 4 (ADR 0026): a seat vacated at a move stops paying at the move.
   const boundaries = stipendBoundaries(
     terms.map((t) => ({ fromDay: t.fromDay, toDay: t.vacatedDay ?? t.toDay })),
@@ -203,9 +221,10 @@ export function computeSettlement(
   const oneOfUsPc = oneOfUsCities * paidBoundaries * STANDING.oneOfUsPcPerDay;
   const gains = applyGains(
     { xp: c.xp, level: c.level, fxp: c.fxp, rank: c.rank, pc: c.pc, statPointsPending: c.statPointsPending },
-    { xp: 0, fxp: stipend.fxp + awardsFxp, pc: stipend.pc + oneOfUsPc + awardsPc },
+    { xp: 0, fxp: stipend.fxp + awardsFxp + otherFxp, pc: stipend.pc + oneOfUsPc + awardsPc + otherPc },
   );
-  const offices = terms
+  // Slice 7 (§8.4 step 5): the projection of every current term, each with its office and key.
+  const offices = allTerms
     .filter((t) => t.fromDay <= today && today < t.toDay && (t.vacatedDay ?? null) === null)
     .map((t) => ({
       termId: t._id,
@@ -214,6 +233,8 @@ export function computeSettlement(
       seat: t.seat,
       fromDay: t.fromDay,
       toDay: t.toDay,
+      office: t.office ?? 'council',
+      key: t.councilKey,
     }));
 
   // ADR 0021 §4: re-base stored Energy to the boundary when a day since the last write had a
