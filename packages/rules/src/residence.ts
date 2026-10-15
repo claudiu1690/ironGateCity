@@ -49,9 +49,12 @@ export function registerRefusal(i: {
    * can move after the result. After the cooldown, before the Iron.
    */
   onBallot?: boolean;
+  /** Slice 7 (ADR 0050): the other cities anyone may live in (Clearwater, on one meter, no district). */
+  openIds?: readonly string[];
 }): GameErrorReason | null {
   if (i.inTransit) return 'IN_TRANSIT';
-  if (i.target.cityId !== i.capitalId && i.target.cityId !== i.homeCityId) return 'DESTINATION_LOCKED';
+  if (i.target.cityId !== i.capitalId && i.target.cityId !== i.homeCityId && !(i.openIds ?? []).includes(i.target.cityId))
+    return 'DESTINATION_LOCKED';
   if (i.here !== i.target.cityId) return 'NOT_IN_CITY';
   if (i.rank < RESIDENCE.rank) return 'RANK_TOO_LOW';
   if (i.today < i.canMoveFromDay) return 'MOVE_COOLDOWN';

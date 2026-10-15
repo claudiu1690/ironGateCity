@@ -68,6 +68,7 @@ import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
 import { isContested, residenceCityId, residenceOf, residenceSpec } from './residence';
 import type { ResidenceSpec } from './residence';
+import { battlegroundFill } from './battlegroundDay';
 import { ordinanceIdOn } from './modifiers';
 import { ballotCards, cardByName, termRule } from './ruleBallot';
 import { assetView, namedStanding, rankTitle, standingSuccesses } from './views';
@@ -105,7 +106,11 @@ const branchOf = (spec: ResidenceSpec, c: Pick<CharacterDoc, 'factionId'>): Fact
   spec.home ?? c.factionId;
 /** The seats a place elects. */
 const seatsOf = (spec: ResidenceSpec): 7 | 2 =>
-  (isDistrict(spec) ? CAPITAL_COUNCIL.perDistrict : COUNCIL.seats) as 7 | 2;
+  (isDistrict(spec) && !oneMeter(spec) ? CAPITAL_COUNCIL.perDistrict : COUNCIL.seats) as 7 | 2;
+/** Slice 7 (ADR 0050): Clearwater votes as one place (the city), lists of three. */
+const oneMeter = (spec: Pick<ResidenceSpec, 'place' | 'city'>) => spec.place.kind === 'district' && spec.place.id === spec.city.id;
+/** The locals a faction lists when `n` of its members stand: two in a district, three in Clearwater. */
+const fillOf = (spec: Pick<ResidenceSpec, 'place' | 'city'>, n: number) => (oneMeter(spec) ? battlegroundFill(n) : npcFill(n));
 
 /**
  * The backing given this cycle: at home keyed by the election, in the capital by the city's cycle
@@ -301,7 +306,7 @@ export async function ballotView(
     players = standing.length;
     locals =
       place.kind === 'district'
-        ? FACTION_IDS.reduce((n, f) => n + npcFill(standing.filter((x) => x.factionId === f).length), 0)
+        ? FACTION_IDS.reduce((n, f) => n + fillOf({ place, city: cityContent }, standing.filter((x) => x.factionId === f).length), 0)
         : npcsStanding(players);
   }
   const me = { characterId: c._id.toHexString(), myVote };
@@ -742,7 +747,7 @@ export async function electionView(
       ? FACTION_IDS.flatMap((f) =>
           e.npcSlate
             .filter((n) => n.factionId === f)
-            .slice(0, npcFill(standingCands.filter((x) => factionOfCand(x) === f).length))
+            .slice(0, fillOf(spec, standingCands.filter((x) => factionOfCand(x) === f).length))
             .map((n) => ({ kind: 'npc' as const, npc: n, factionId: f })),
         )
       : e.npcSlate
@@ -841,7 +846,7 @@ export async function electionView(
   return {
     electionId: id,
     cityId: cityContent.id,
-    cityName: district ? `${cityContent.name} · ${spec.place.name}` : cityContent.name,
+    cityName: district && !oneMeter(spec) ? `${cityContent.name} · ${spec.place.name}` : cityContent.name,
     phase: cal.phase,
     nominationsCloseAt: dayStart(cal.council.setDay),
     pollsOpenAt: dayStart(e.pollsFrom),
@@ -879,7 +884,7 @@ async function councilRows(
   const me = `p:${c._id.toHexString()}`;
   const ordered = [...rows].sort((a, b) => a.place - b.place);
   const all = { rows: ordered };
-  const capital = e.kind === 'district';
+  const capital = e.kind === 'district' || e.kind === 'battleground';
   return ordered.map((row) => {
     const line = (e.ballot ?? []).find((b) => b.key === row.key);
     if (row.kind === 'npc') {

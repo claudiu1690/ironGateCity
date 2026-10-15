@@ -74,6 +74,16 @@ export function residenceSpec(
       place: { id: r.districtId, name: district.quarter.name, kind: 'district' },
     };
   }
+  // Slice 7 (ADR 0050): Clearwater votes as one place, every faction standing (the capital's rules).
+  if (city?.council && city.role === 'battleground' && !content.isDistricted(city.id) && c.factionId) {
+    return {
+      city,
+      offset: city.council.offset,
+      home: null,
+      faction: content.faction(c.factionId),
+      place: { id: city.id, name: city.name, kind: 'district' },
+    };
+  }
   if (!city?.council || !city.homeFactionId) throw gameError('PRECONDITION_FAILED', 'ELECTION_NOT_READY');
   const faction = content.faction(city.homeFactionId);
   return {
@@ -121,3 +131,10 @@ export function placesOf(
  */
 export const isContested = (content: GameContent, cityId: string): boolean =>
   content.city(cityId)?.role === 'battleground';
+
+/** Slice 7 (ADR 0050): the cities beyond the capital and home that anyone may live in (Clearwater). */
+export const openResidences = (content: GameContent): string[] =>
+  content
+    .councilCities()
+    .filter((c) => c.role === 'battleground' && !content.isDistricted(c.id))
+    .map((c) => c.id);

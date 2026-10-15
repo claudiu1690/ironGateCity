@@ -85,6 +85,8 @@ export interface MissionCtx {
   rivalGround: RivalGroundState | null;
   /** The resolved target (`missionTarget`, `districts.state.leader` in the capital), or null. */
   target: FactionId | null;
+  /** Slice 7 (ADR 0050): the party controlling the place (a district, Clearwater), or null. */
+  controlledBy: FactionId | null;
   /** False for the target faction's own members: the mission is hidden from them (design §4.1). */
   offered: boolean;
   /** The first unmet gate (`missionGate`), or null. */
@@ -148,7 +150,12 @@ export function missionCtx(
   const target = missionTarget(
     mission.target,
     c.factionId,
-    docs.district ? { leader: docs.district.state.leader ?? null, shares: docs.district.opinion } : null,
+    docs.district
+      ? { leader: docs.district.state.leader ?? null, shares: docs.district.opinion }
+      : // Slice 7 (ADR 0050): Clearwater's meter.
+        docs.city?.battleground && docs.city.opinion
+        ? { leader: docs.city.battleground.state.leader ?? null, shares: docs.city.opinion }
+        : null,
   );
   const successes = standingSuccesses(c, city.id);
   const record = recordLevelOf(c, today);
@@ -189,6 +196,7 @@ export function missionCtx(
     modifiers: m,
     rivalGround,
     target,
+    controlledBy: docs.district?.state.controlledBy ?? docs.city?.battleground?.state.controlledBy ?? null,
     // Review 4 (ADR 0076): and only at a place the character can open.
     offered: offeredTo(target, c.factionId) && placeOpenFor(content, c, location).open,
     gate,
@@ -313,6 +321,8 @@ export function missionInput(
     record: ctx.record,
     flags: ctx.flags,
     night: ctx.night,
+    // Slice 7 (ADR 0050): the place's controller (a district, Clearwater): rivals gain Heat faster.
+    controlledBy: ctx.controlledBy,
     // Review 5 (ADR 0080): the mission's own window, never a night way of an ordinary mission.
     ...(ctx.mission.window === 'night' ? { nightRate: true } : {}),
     opponents: {

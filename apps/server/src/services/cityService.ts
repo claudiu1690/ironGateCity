@@ -76,7 +76,7 @@ import type { MissionCtx } from './missionCtx';
 import { issueEffectsOn, modifiersFor, ordinanceIdOn } from './modifiers';
 import { pickArt } from './art';
 import { politicsSummary } from './politicsService';
-import { residenceCityId, residenceCtx, residenceOf } from './residence';
+import { isContested, residenceCityId, residenceCtx, residenceOf } from './residence';
 import { lodgingsView, residenceCardView } from './residenceService';
 import { recordLevelOf, rivalTapChance } from './risk';
 import { trainsFrom } from './travelService';
@@ -546,8 +546,9 @@ export async function getCityView(
     issues: issueRows,
     effects,
     // Slice 5 (screens §8.3): on rival ground the card's one line, *You can't live or stand here*.
+    // Slice 7 (ADR 0050): Clearwater's *Live here* card (one meter, no district).
     residence:
-      atHome || rival
+      atHome || rival || (!districted && isContested(content, city.id))
         ? await residenceCardView(content, c, { cityId: city.id, districtId: null }, today)
         : null,
     // Slice 5 (screens §8.3), review 5 (answers §10.2, ADR 0082): the rival header's push bar, danger

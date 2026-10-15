@@ -36,7 +36,7 @@ import { assertFree, notFree } from './risk';
 import { dayModifiers, restedCapToday } from './modifiers';
 import { politicsSummary, weekdayName } from './politicsService';
 import { withRequestKey } from './requestKey';
-import { residenceCtx, residenceOf } from './residence';
+import { isContested, openResidences, residenceCtx, residenceOf } from './residence';
 import { DayChanged, VersionConflict } from './txn';
 import { energyState, toCharacterView } from './views';
 
@@ -149,7 +149,6 @@ export async function residenceCardView(
   today: DayKey,
 ): Promise<ResidenceCardView> {
   const r = residenceOf(c);
-  const capital = capitalOf(content);
   const livesIn = placeName(content, r.cityId, r.districtId);
   const here = r.cityId === target.cityId && r.districtId === target.districtId;
   // Review 4 #9 (answers §9.3): the room left the card; it is the Lodgings card at Tram Junction.
@@ -163,7 +162,7 @@ export async function residenceCardView(
   if (here) {
     return {
       ...base,
-      state: target.cityId === capital ? 'resident' : 'atHome',
+      state: isContested(content, target.cityId) ? 'resident' : 'atHome',
       registeredDay: r.sinceDay,
       votesFromDay: r.votesFromDay,
       canMoveFromDay: r.canMoveFromDay,
@@ -188,12 +187,12 @@ export async function residenceCardView(
     ...(stakes.term
       ? [{ text: copy.residence.sheet.giveUp(content.city(r.cityId)?.name ?? livesIn), warn: true }]
       : []),
-    { text: copy.residence.sheet.orders(target.cityId === capital), warn: false },
+    { text: copy.residence.sheet.orders(isContested(content, target.cityId)), warn: false },
     { text: copy.residence.sheet.untouched, warn: false },
     { text: copy.residence.sheet.moveAgain(weekdayName(w.canMoveFromDay)), warn: false },
   ];
   const state =
-    c.iron < RESIDENCE.cost ? 'noIron' : target.cityId === capital ? 'visitingMay' : 'homeElsewhere';
+    c.iron < RESIDENCE.cost ? 'noIron' : isContested(content, target.cityId) ? 'visitingMay' : 'homeElsewhere';
   return {
     ...base,
     state,
@@ -386,6 +385,7 @@ export async function register(deps: {
         capitalId: capital,
         inTransit: c.journey?.status === 'onTheWay',
         onBallot: !!stakes.onBallot,
+        openIds: openResidences(content),
       });
       if (refusal) {
         const data: Record<string, unknown> =
@@ -540,7 +540,13 @@ export async function takeRoom(deps: {
         residenceCity,
         view: {
           kind: 'residence',
-          residence: await residenceCardView(content, updated, { cityId: capital, districtId: district }, today),
+          residence: await residenceCardView(
+            content,
+            updated,
+            // Slice 7: Clearwater's lodgings show its own card.
+            content.isDistricted(roomCity) ? { cityId: capital, districtId: district } : { cityId: roomCity, districtId: null },
+            today,
+          ),
           election: await politicsSummary(content, updated, residenceCity, now, today, session),
         },
       });

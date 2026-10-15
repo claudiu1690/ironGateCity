@@ -289,10 +289,14 @@ export function eventIndex(
         (x) => x.venue.eventId === eventId && x.venue.cityId === cityId && x.venue.districtId === districtId,
       ),
     venuesAt: (locationId) => located.filter((x) => x.venue.locationId === locationId),
-    // Tech §22.1 Q11: the faction's home city and the capital.
+    // Tech §22.1 Q11: the faction's home city and the capital; slice 7 (§22.1 Q6): every faction's
+    // branch in Clearwater (a battleground on one meter, open to all three).
     chatCities: (f) => {
       const home = content.factions.find((x) => x.id === f)?.homeCityId;
-      return [...(home ? [home] : []), ...(capital ? [capital.id] : [])];
+      const lakes = content.cities.filter(
+        (c) => c.role === 'battleground' && c.council !== undefined && c.id !== capital?.id,
+      );
+      return [...(home ? [home] : []), ...(capital ? [capital.id] : []), ...lakes.map((c) => c.id)];
     },
   };
 }

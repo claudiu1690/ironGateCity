@@ -8,7 +8,7 @@ import { admit, arrest, bailFor, policeLossHealth } from './held';
 import type { HeldSpec } from './held';
 import { healthMax, healthNow } from './health';
 import type { HealthTimer } from './health';
-import { addHeat, heatState } from './heat';
+import { addHeat, heatGainAt, heatState } from './heat';
 import type { HeatChange, HeatTimer } from './heat';
 import { issueTags, pointsFor } from './issues';
 import {
@@ -387,6 +387,8 @@ export interface MissionInput {
   night?: boolean;
   /** Review 5 (ADR 0080): the mission's own window is the night: the night rate on its Iron. */
   nightRate?: boolean;
+  /** Slice 7 (design §8, ADR 0050): the party controlling the place (a district, Clearwater): rivals' Heat +25 %. */
+  controlledBy?: FactionId | null;
 }
 
 /** The pure start of a mission, stored in the encounter while a run-in is pending (ADR 0032). */
@@ -516,7 +518,11 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
   const dropped = tier2Rewards({ ...common, outcome: 'failure', fxpBonusShare: 0 });
 
   // Heat: the type's (or the way's), ×2 on rival ground, on every outcome (design §4.2).
-  const gain = (i.way.heat ?? spec.heat) * (rival ? RIVAL_GROUND.heatFactor : 1);
+  const gain = heatGainAt(
+    (i.way.heat ?? spec.heat) * (rival ? RIVAL_GROUND.heatFactor : 1),
+    i.controlledBy ?? null,
+    i.factionId,
+  );
   const heat = addHeat(i.heat, i.now, i.rateOn, gain);
 
   // Opinion (design §4.1, §11.2): persuasion, or against the target; on rival ground a speech too
