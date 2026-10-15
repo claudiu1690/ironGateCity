@@ -160,22 +160,26 @@ export interface SeatedForGovernor {
 }
 
 /**
- * Design §3.1 (ADR 0048): the Governor (home) or the Mayor (the capital, Clearwater), chosen at the
- * count. Among the bloc's seated (at home, the whole council's; `bloc` the largest bloc elsewhere),
- * the players with a completed council term by total, then the count's order; none → the bloc's top
- * local (`local: true`). A bloc with no local either falls back to its top seated (a first-term
- * player is passed over only for someone who qualifies).
+ * Design §3.1 (ADR 0048; the designer's ruling of 15 Oct 2026, commit 8a191c9): the Governor (home)
+ * or the Mayor (the capital, Clearwater), chosen at the count. Among the bloc's seated (at home, the
+ * whole council's; `bloc` the largest bloc elsewhere), the players with a completed council term by
+ * total, then the count's order; none → the bloc's top seated local (`local: true`); none → the
+ * bloc's top **unseated** local from the slate (the next local in the count's order, `unseated`),
+ * also `local: true`. A first-term councillor is never Governor. Null only when the pool is empty.
  */
 export function governorOf(i: {
   seated: readonly SeatedForGovernor[];
   bloc: FactionId | null;
+  /** The bloc's locals who were not seated, in the count's order (lower `order` first). */
+  unseated?: readonly SeatedForGovernor[];
 }): { key: string; local: boolean } | null {
-  const pool = i.seated.filter((s) => i.bloc === null || s.factionId === i.bloc);
+  const inBloc = (s: SeatedForGovernor) => i.bloc === null || s.factionId === i.bloc;
+  const pool = i.seated.filter(inBloc);
   const byCount = (a: SeatedForGovernor, b: SeatedForGovernor) => b.total - a.total || a.order - b.order;
   const qualified = pool.filter((s) => s.kind === 'player' && s.completedCouncil).sort(byCount)[0];
   if (qualified) return { key: qualified.key, local: false };
   const local = pool.filter((s) => s.kind === 'npc').sort(byCount)[0];
   if (local) return { key: local.key, local: true };
-  const top = [...pool].sort(byCount)[0];
-  return top ? { key: top.key, local: top.kind === 'npc' } : null;
+  const next = (i.unseated ?? []).filter((s) => inBloc(s) && s.kind === 'npc').sort((a, b) => a.order - b.order)[0];
+  return next ? { key: next.key, local: true } : null;
 }

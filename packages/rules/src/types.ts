@@ -1,3 +1,4 @@
+import type { NationRepublicView } from './nationTypes';
 /**
  * Shared vocabulary and DTOs. The server builds these; the client and `@irongate/ui` render them.
  * Kept in the rules package so every layer imports types from one place.
@@ -14,6 +15,16 @@ import type { QuarterLock } from './quarters';
 import type { CardBy, RuleHow } from './ruleBallot';
 import type { NationalCondition, NationAct } from './nationTypes';
 import { NATION_ACTS } from './nationTypes';
+import type {
+  BillPageView,
+  ChairDeskView,
+  ChairElectionView,
+  ConfidenceView,
+  NationalElectionView,
+  PetitionView,
+  PickView,
+  PresidentPageView,
+} from './nationViews';
 import type {
   CharacterViewV7,
   CityViewV6,
@@ -2253,7 +2264,17 @@ export interface PoliticalResult {
     | { kind: 'place'; locationId: string }
     // Slice 6 (tech design §6.8): after a call or a sign-up, the event; after a favour, the mate's row.
     | { kind: 'event'; event: EventPageView }
-    | { kind: 'member'; member: MemberRowView };
+    | { kind: 'member'; member: MemberRowView }
+    // Slice 7 phase B, lane 2 (tech design §10.1): the Chair's election, the desk, Parliament, the
+    // national election, the President, petitions and the vote on the Chair.
+    | { kind: 'chairElection'; chairElection: ChairElectionView }
+    | { kind: 'desk'; desk: ChairDeskView }
+    | { kind: 'bill'; bill: BillPageView }
+    | { kind: 'pick'; pick: PickView }
+    | { kind: 'nationalElection'; nationalElection: NationalElectionView }
+    | { kind: 'president'; president: PresidentPageView }
+    | { kind: 'petition'; petition: PetitionView }
+    | { kind: 'confidence'; confidence: ConfidenceView };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -2326,6 +2347,11 @@ export interface NationView {
   /** Level 10 or more. */
   trainOpen: boolean;
   cities: NationCityView[];
+  /**
+   * Slice 7 (tech design §8.3; phase A's `NationRepublicView` merged here): the republic's bar, law
+   * chips, the pins' second line and the term. Null while the nation's day is not ready.
+   */
+  republic?: NationRepublicView | null;
 }
 
 /** One choice row of a journey card; the client prints the odds word, never the number. */

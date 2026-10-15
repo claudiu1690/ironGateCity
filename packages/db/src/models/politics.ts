@@ -162,6 +162,18 @@ export interface CandidacyDoc {
   updatedAt: Date;
 }
 
+/**
+ * Slice 7 phase B (phase A's note): a national candidacy (`chair`, `president`, `list`) as written:
+ * no city, no cycle. `CandidacyDoc` keeps `cityId` and `cycle` required for the council's readers;
+ * the national services write and read this type.
+ */
+export type NationalCandidacyDoc = Omit<CandidacyDoc, 'cityId' | 'cycle' | 'kind'> & {
+  kind: 'chair' | 'president' | 'list';
+  cityId?: string;
+  cycle?: number;
+  termIndex: number;
+};
+
 /** Slice 7: a council candidacy (no `kind`, or `council`) needs its city and cycle; the others do not. */
 function councilOnly(this: { kind?: string }): boolean {
   return (this.kind ?? 'council') === 'council';

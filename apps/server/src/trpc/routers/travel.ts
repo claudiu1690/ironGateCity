@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { loadCharacter } from '../../services/dayService';
 import { board, choose, close, getJourney, nationView } from '../../services/travelService';
+import { isNationReady } from '../../services/nationDay';
+import { republicView } from '../../services/nationService';
 import { protectedProcedure, router } from '../trpc';
 
 const journeyId = z.string().regex(/^[0-9a-f]{24}$/);
@@ -13,8 +15,10 @@ const journeyId = z.string().regex(/^[0-9a-f]{24}$/);
 export const travelRouter = router({
   nation: protectedProcedure.query(async ({ ctx }) => {
     const now = ctx.now();
-    const { doc } = await loadCharacter(ctx.user, ctx.content, now);
-    return nationView(ctx.content, doc, now);
+    const { doc, nation } = await loadCharacter(ctx.user, ctx.content, now);
+    const view = await nationView(ctx.content, doc, now);
+    // Slice 7 (§8.3): the republic on the nation map.
+    return { ...view, republic: isNationReady(nation, now) ? republicView(ctx.content, nation, now) : null };
   }),
 
   board: protectedProcedure

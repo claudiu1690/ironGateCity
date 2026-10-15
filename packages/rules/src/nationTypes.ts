@@ -278,3 +278,22 @@ export interface NationRepublicView {
   term: TermLineView;
   act: { kind: 'vote' | 'candidates' | 'standList' | 'standPresident' | 'pick' } | null;
 }
+
+/** A law's row (the law book, the catalogue, the chips' sheet); phase B T11. */
+export interface LawRowView {
+  lawId: string;
+  name: string;
+  factionId: FactionId;
+  /** The one-line text. */
+  line: string;
+  days: number;
+}
+
+/** `parliament.laws` (tech design §8.3): the law book. Empty until the first enactment (T15). */
+export interface LawBookView {
+  inForce: Array<
+    LawRowView & { daysLeft: number; by: string; passed: { for: number; against: number; day: DayKey } }
+  >;
+  catalogue: LawRowView[];
+  strike: { cost: 50; ok: boolean } | null;
+}

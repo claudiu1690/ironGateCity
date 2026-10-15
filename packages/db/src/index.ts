@@ -52,6 +52,7 @@ export type { IssueDoc, IssueResultDoc, IssueStatus } from './models/issue';
 export type {
   BallotLine,
   CandidacyDoc,
+  NationalCandidacyDoc,
   CandidacyStatus,
   CouncilVote,
   DepositState,

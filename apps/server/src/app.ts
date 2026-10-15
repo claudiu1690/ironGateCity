@@ -19,6 +19,7 @@ import { registerRiskHooks } from './dev/riskRoutes';
 import { registerTogetherHooks } from './dev/together';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
+import { settleNationDay } from './services/nationDay';
 import { dayHooks } from './services/dayService';
 import { nightHooks } from './services/night';
 import { patrolHooks } from './services/patrolHooks';
@@ -139,7 +140,12 @@ export async function buildApp({
     });
 
     // What the worker's city-day job does, at the test clock (ADR 0017 §6).
-    app.post('/api/test/city-day', async () => runCityDay(content, now()));
+    // Slice 7 (§8.6): it also runs the nation's day.
+    app.post('/api/test/city-day', async () => {
+      const r = await runCityDay(content, now());
+      const n = await settleNationDay(content, now());
+      return { ...r, nation: { settledDay: n.world.settledDay } };
+    });
 
     // The session user's character: FXP (and the Rank it gives), home Local Standing, PC, Energy.
     app.post('/api/test/character', async (request, reply) => {

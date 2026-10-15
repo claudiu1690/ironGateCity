@@ -15,6 +15,8 @@ import { residenceRouter } from './routers/residence';
 import { travelRouter } from './routers/travel';
 import { eventsRouter } from './routers/events';
 import { chatRouter, factionRouter, favoursRouter, presenceRouter } from './routers/faction';
+import { nationRouter } from './routers/nation';
+import { parliamentRouter } from './routers/parliament';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -43,6 +45,9 @@ export const appRouter = router({
   favours: favoursRouter,
   presence: presenceRouter,
   chat: chatRouter,
+  // Slice 7.
+  nation: nationRouter,
+  parliament: parliamentRouter,
 });
 
 export type AppRouter = typeof appRouter;

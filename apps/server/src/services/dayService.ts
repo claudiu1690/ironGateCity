@@ -1,6 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
 import { ActionLog, Award, Character, City, Encounter, OfficeTerm, PaperEntry, Stay, isDuplicateKeyError } from '@irongate/db';
+import type { NationDoc } from '@irongate/db';
 import type {
   AwardDoc,
   CharacterDoc,
@@ -40,6 +41,7 @@ import { heatRateOn, heatTimerOf, isRivalGround, marksOf, rivalGroundAt } from '
 import { ensureRunInSettled } from './streetService';
 import type { SessionUser } from '../trpc/context';
 import { ensureCityDay, ensurePlaces } from './cityDay';
+import { ensureNationDay } from './nationDay';
 import { dueCities, ensureEventsCredited, ensureEventsResolved } from './eventService';
 import { touchPresence } from './presenceService';
 import { readTogether } from './togetherEdition';
@@ -516,6 +518,11 @@ export interface LoadedCharacter {
   rivalGround: RivalGroundState | null;
   /** Slice 5 (ADR 0033): in the cells or on the ward right now, or null. */
   heldNow: 'cells' | 'infirmary' | null;
+  /**
+   * Slice 7 (tech design §3.6, §7.1): the nation as settled for today (the laws, the term, the
+   * government), or null when the nation's day failed (national acts refuse `NATION_NOT_READY`).
+   */
+  nation: NationDoc | null;
 }
 
 /**
@@ -535,6 +542,8 @@ export async function loadCharacter(
   const found = await Character.findOne({ userId: user.id }).lean<CharacterDoc>();
   if (!found) throw gameError('PRECONDITION_FAILED', 'ARRIVAL_PENDING');
   const places = await ensurePlaces(content, found, now);
+  // Slice 7 (tech design §3.6 step 2): the nation's day after the places (it settles every city first).
+  const nation = await ensureNationDay(content, now);
   // Slice 6 (tech design §3.4 step 1): the cities of due sign-ups are settled too (their boundary
   // resolves an earlier day's events first). Nothing when no sign-up is due.
   for (const id of dueCities(found, now)) if (!places.has(id)) places.set(id, await ensureCityDay(content, id, now));
@@ -565,6 +574,7 @@ export async function loadCharacter(
     places,
     rivalGround: rival ? rivalGroundAt(content, doc.factionId, doc.cityId, here, dayKey(now)) : null,
     heldNow: held,
+    nation,
   };
 }
 

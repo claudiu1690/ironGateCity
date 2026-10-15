@@ -20,6 +20,7 @@ import { startDb } from './db';
 import { loadDotEnv, loadEnv } from './env';
 import { scheduleCityDay } from './jobs/cityDay';
 import { defineJourneyArrive } from './jobs/journeyArrive';
+import { scheduleNationDay } from './jobs/nationDay';
 import { defineEventResolve, scheduleChatTrim } from './jobs/together';
 import { flushSentry, initSentry } from './sentry';
 
@@ -40,6 +41,8 @@ defineJourneyArrive(agenda, getContent(), log);
 defineEventResolve(agenda, getContent(), log);
 await agenda.start();
 await scheduleCityDay(agenda, getContent(), log);
+// Slice 7 (§9): the nation's day after the cities'.
+await scheduleNationDay(agenda, getContent(), log);
 await scheduleChatTrim(agenda, getContent(), log);
 log(`started (version ${APP_VERSION}), polling every 30 seconds`);
 

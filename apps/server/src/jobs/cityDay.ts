@@ -1,6 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import type { Agenda } from 'agenda';
 import { runCityDay } from '../services/cityDay';
+import { settleNationDay } from '../services/nationDay';
 
 /** The Agenda job name (tech design §9). */
 export const CITY_DAY_JOB = 'city-day';
@@ -22,6 +23,9 @@ export async function scheduleCityDay(
     CITY_DAY_JOB,
     async () => {
       const r = await runCityDay(content, now());
+      // Slice 7 (§9): a worker that runs one job does both.
+      const n = await settleNationDay(content, now());
+      log(`nation day: settled ${n.world.settledDay}`);
       log(`city day: ${r.settled.map((s) => `${s.cityId}@${s.settledDay}`).join(', ')}`);
     },
     { concurrency: 1, lockLifetime: 10 * 60_000 },
