@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Irongate City · Faction tab redesign · three directions (review 7)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Oswald:wght@400;500;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Tokens, copied from packages/ui/src/tokens.css ─────────────────────── */
+  :root {
+    --ink: #15181a; --ink-2: #3a4043;
+    --paper: #efe6d2; --paper-card: #f6f0e1; --paper-2: #e2d6bb;
+    --text-2: #3d3a33; --muted: #5b564b; --faint: #9b917a; --dim: #b8b09f; --track: #d3c7ab;
+    --petrol: #1e4d52; --energy: #6fb3b0; --xp: #c39a3a; --failure: #8c2b23;
+    --vanguard: #c39a3a; --collective: #8c2b23; --alliance: #4b7394;
+    --vanguard-text: #7d5f18; --alliance-text: #3a5b78;
+    --display: 'Playfair Display', Georgia, serif;
+    --body: 'Source Serif 4', Georgia, serif;
+    --label: 'Oswald', 'Arial Narrow', sans-serif;
+    --mono: 'Courier Prime', 'Courier New', monospace;
+    /* The faction on show: the Red Collective. Swap the three lines to see another. */
+    --faction: var(--collective); --faction-text: var(--collective);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1c1a17; color: var(--paper); font-family: var(--body); padding: 24px; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: 28px; margin: 0 0 4px; }
+  .lede { font-family: var(--mono); font-size: 13px; color: var(--dim); margin: 0 0 20px; max-width: 1180px; line-height: 1.5; }
+  h2 { font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 13px; font-weight: 600; color: var(--dim); margin: 32px 0 12px; border-bottom: 1px solid var(--ink-2); padding-bottom: 6px; }
+  .row { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption { font-family: var(--mono); font-size: 12px; color: var(--dim); margin: 10px 0 0; width: 390px; line-height: 1.45; }
+  figcaption b { color: var(--paper); font-weight: 700; }
+  .caps { font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; }
+
+  /* ── The phone (390 × 844) ───────────────────────────────────────────────── */
+  .phone { width: 390px; height: 844px; background: var(--paper); color: var(--ink); display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 0 0 1px var(--ink), 0 24px 48px rgb(0 0 0 / .5); }
+  .phone .grain { background-image: radial-gradient(rgb(21 24 26 / .06) .8px, transparent 1px); background-size: 5px 5px; }
+  .scroll { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* The HUD and the tab bar as built (ink). They frame the problem: everything between them is the tab's. */
+  .hud { background: var(--ink); color: var(--paper); height: 92px; flex: none; padding: 8px 12px; display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; border-bottom: 1px solid var(--ink-2); }
+  .hud .face { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 1px solid var(--paper); box-shadow: 0 0 0 2px var(--faction); }
+  .hud .face img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .hud .name { font-family: var(--display); font-weight: 700; font-size: 15px; }
+  .hud .name small { font-family: var(--label); font-weight: 400; font-size: 9px; letter-spacing: .12em; color: var(--dim); margin-left: 6px; text-transform: uppercase; }
+  .hud .bars { display: grid; grid-template-columns: 54px 1fr auto; gap: 3px 8px; font-family: var(--label); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; align-items: center; }
+  .hud .bar { height: 5px; background: var(--ink-2); } .hud .bar i { display: block; height: 100%; }
+  .hud .n { font-family: var(--label); font-size: 11px; letter-spacing: 0; text-transform: none; }
+  .tabbar { background: var(--ink); color: var(--dim); height: 64px; flex: none; display: flex; border-top: 1px solid var(--ink-2); }
+  .tabbar span { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-family: var(--label); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+  .tabbar span.on { color: var(--paper); box-shadow: inset 0 3px 0 var(--paper); }
+  .tabbar svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+  /* ── Shared printed-matter bits ──────────────────────────────────────────── */
+  .kicker { font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 10px; font-weight: 600; border-top: 3px double var(--ink); border-bottom: 1px solid var(--ink); padding: 5px 0; margin: 14px 0 10px; }
+  .mono { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.45; }
+  .btn { font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 16px; background: var(--ink); color: var(--paper); }
+  .btn.outline { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+  .btn.wide { width: 100%; }
+  .evcard { display: flex; gap: 10px; border: 1.5px solid var(--ink); background: var(--paper-2); padding: 10px; align-items: flex-start; }
+  .evcard img { width: 56px; height: 56px; object-fit: cover; border: 1px solid var(--ink); flex: none; }
+  .evcard h3 { font-family: var(--display); font-size: 16px; margin: 0 0 2px; line-height: 1.15; }
+  .evcard .by { font-family: var(--body); font-size: 13px; color: var(--text-2); }
+  .evcard .btn { align-self: center; padding: 0 12px; font-size: 12px; }
+  .pad { padding: 0 16px; }
+  .chip { font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 12px; min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; border: 1.5px solid var(--ink); color: var(--ink); background: transparent; }
+  .chip.on { background: var(--ink); color: var(--paper); }
+  .member { display: flex; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1px dotted var(--faint); padding: 6px 4px; }
+  .member img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--ink); box-shadow: 0 0 0 2px var(--faction); flex: none; }
+  .member > div { min-width: 0; flex: 1; }
+  .member .nm { font-family: var(--body); font-weight: 600; font-size: 15px; }
+  .member .nm small { white-space: nowrap; font-family: var(--mono); font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 8px; }
+  .member .st { font-family: var(--mono); font-size: 11px; color: var(--muted); } .member .st.alert { color: var(--failure); }
+  .member .right { margin-left: auto; }
+  .line { display: flex; gap: 8px; padding: 8px 12px; border-bottom: 1px dotted var(--faint); }
+  .line img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--ink); box-shadow: 0 0 0 2px var(--faction); flex: none; margin-top: 2px; }
+  .line .who { font-family: var(--body); font-weight: 600; font-size: 14px; } .line .who small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .line .t { font-family: var(--body); font-size: 15px; line-height: 1.3; }
+  .line .at { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .line.mine { background: var(--paper-2); }
+  .sys { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 6px 12px; font-family: var(--mono); font-size: 12px; }
+  .sys .btn { margin-left: auto; padding: 0 10px; font-size: 12px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); min-height: 40px; }
+  .composer { border-top: 1.5px solid var(--ink); background: var(--paper); padding: 8px 12px; display: flex; gap: 8px; align-items: flex-end; }
+  .composer .field { flex: 1; min-height: 44px; border: 1.5px solid var(--ink); background: var(--paper-card); padding: 10px 8px; font-family: var(--body); font-size: 15px; color: var(--muted); }
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--failure); vertical-align: middle; margin-left: 5px; }
+
+  /* ── Direction A · The Branch Office ──────────────────────────────────────── */
+  .a .plate { position: relative; height: 128px; flex: none; background: var(--ink); border-bottom: 1px solid var(--ink); overflow: hidden; }
+  .a .plate img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; opacity: .92; display: block; }
+  .a .plate .scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgb(21 24 26 / .85) 0%, rgb(21 24 26 / 0) 48%); }
+  .a .plate .pk { position: absolute; left: 92px; bottom: 8px; font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 10px; color: var(--paper); }
+  .a .plate .pk b { color: var(--dim); font-weight: 400; }
+  .a .letterhead { position: relative; height: 52px; flex: none; display: flex; align-items: center; padding: 0 16px 0 92px; border-bottom: 1px solid var(--ink); background: var(--paper); }
+  .a .letterhead h1 { font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--ink); margin: 0; line-height: 1; }
+  .a .letterhead .mono { margin-top: 3px; }
+  .a .crest { position: absolute; left: 16px; top: -34px; width: 64px; height: 64px; display: block; background: var(--paper); border-radius: 50%; box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ink), 0 3px 8px rgb(0 0 0 / .35); z-index: 2; }
+  .a .crest img { width: 100%; height: 100%; display: block; }
+  /* The ruled strip: paper cells, 1 px ink rules, the selected cell carries three cues (fill, weight, a 3 px bar that touches the panel). */
+  .a .strip { display: grid; grid-template-columns: repeat(5, 1fr); flex: none; background: var(--paper); border-bottom: 1px solid var(--ink); position: sticky; top: 0; }
+  .a .strip span { min-height: 44px; display: flex; align-items: center; justify-content: center; font-family: var(--label); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--muted); border-right: 1px solid var(--faint); position: relative; }
+  .a .strip span:last-child { border-right: 0; }
+  .a .strip span.on { color: var(--ink); font-weight: 600; background: var(--paper-card); box-shadow: inset 0 -3px 0 var(--ink); margin-bottom: -1px; }
+  .a .strip span.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: 3px; height: 2px; background: var(--faction); }
+  .a .compact { display: flex; align-items: center; gap: 10px; height: 52px; flex: none; padding: 0 16px; border-bottom: 1px solid var(--ink); background: var(--paper); }
+  .a .compact img.c { width: 32px; height: 32px; }
+  .a .compact h1 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 0; }
+  .a .compact .mono { margin-left: auto; }
+  .a .chips { display: flex; gap: 8px; padding: 10px 16px 0; }
+  .a .chips .chip { font-size: 11px; padding: 0 10px; }
+
+  /* ── Direction B · The Noticeboard ────────────────────────────────────────── */
+  .b .plate { position: relative; height: 150px; flex: none; background: var(--ink); overflow: hidden; border-bottom: 1px solid var(--ink); }
+  .b .plate img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; opacity: .92; display: block; }
+  .b .plate .scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgb(21 24 26 / .92) 0%, rgb(21 24 26 / .2) 55%, rgb(21 24 26 / 0) 100%); }
+  .b .plate .mast { position: absolute; left: 16px; right: 16px; bottom: 10px; display: flex; align-items: flex-end; gap: 12px; color: var(--paper); }
+  .b .plate .mast img.c { width: 56px; height: 56px; flex: none; box-shadow: 0 0 0 2px var(--paper); border-radius: 50%; }
+  .b .plate .mast h1 { font-family: var(--display); font-weight: 700; font-size: 24px; margin: 0; line-height: 1; }
+  .b .plate .mast .mono { color: var(--dim); margin-top: 4px; }
+  .b .board { padding: 14px 16px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .b .notice { background: var(--paper-card); border: 1.5px solid var(--ink); padding: 10px 10px 8px; min-height: 108px; display: flex; flex-direction: column; position: relative; }
+  .b .notice .pin { position: absolute; top: -5px; left: 50%; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); transform: translateX(-50%); box-shadow: 0 0 0 1.5px var(--paper); }
+  .b .notice h3 { font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; font-weight: 600; margin: 2px 0 6px; border-bottom: 1px solid var(--ink); padding-bottom: 4px; }
+  .b .notice .big { font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+  .b .notice .mono { margin-top: auto; padding-top: 6px; }
+  .b .notice.chat { grid-column: 1 / -1; min-height: 0; }
+  .b .notice.chat .line { padding: 6px 0; } .b .notice.chat .line .t { font-size: 14px; }
+  .b .sub { display: flex; align-items: center; gap: 10px; height: 52px; flex: none; padding: 0 12px; border-bottom: 1px solid var(--ink); background: var(--paper); }
+  .b .sub .back { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .b .sub h1 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 0; }
+  .b .sub img.c { width: 28px; height: 28px; margin-left: auto; }
+
+  /* ── Direction C · The Masthead and the Room ──────────────────────────────── */
+  .c .plate { position: relative; height: 156px; flex: none; background: var(--ink); overflow: hidden; border-bottom: 1px solid var(--ink); }
+  .c .plate img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; opacity: .92; display: block; }
+  .c .plate .scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgb(21 24 26 / .94) 0%, rgb(21 24 26 / .35) 50%, rgb(21 24 26 / 0) 100%); }
+  .c .plate .mast { position: absolute; left: 16px; right: 16px; bottom: 10px; display: flex; align-items: flex-end; gap: 12px; color: var(--paper); }
+  .c .plate .mast img.c { width: 56px; height: 56px; flex: none; border-radius: 50%; box-shadow: 0 0 0 2px var(--paper); }
+  .c .plate .mast h1 { font-family: var(--display); font-weight: 700; font-size: 24px; margin: 0; line-height: 1; }
+  .c .plate .mast .mono { color: var(--dim); margin-top: 4px; }
+  .c .room { margin-left: auto; align-self: flex-end; width: 44px; height: 44px; border: 1.5px solid var(--paper); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--label); font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--paper); position: relative; gap: 2px; }
+  .c .room svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .c .room .dot { position: absolute; top: -4px; right: -4px; margin: 0; width: 9px; height: 9px; box-shadow: 0 0 0 2px var(--ink); }
+  .c .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 16px; flex: none; background: var(--paper); border-bottom: 1px solid var(--faint); position: sticky; top: 0; }
+  .c .seg span { min-height: 44px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--ink); font-family: var(--label); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; color: var(--ink); }
+  .c .seg span.on { background: var(--ink); color: var(--paper); font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 3px var(--ink); }
+  .c .sheet { position: absolute; left: 0; right: 0; bottom: 64px; height: 76%; background: var(--paper); border-top: 1.5px solid var(--ink); box-shadow: 0 -12px 40px rgb(0 0 0 / .45); display: flex; flex-direction: column; z-index: 5; }
+  .c .sheet .head { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 12px; border-bottom: 1px solid var(--ink); }
+  .c .sheet .head .k { font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; font-weight: 600; }
+  .c .sheet .head .x { margin-left: auto; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .c .dim { position: absolute; inset: 92px 0 64px; background: rgb(21 24 26 / .55); z-index: 4; }
+
+  /* ── Desktop frame (A), scaled ─────────────────────────────────────────────── */
+  .desk { width: 1100px; height: 640px; background: #1c1a17; position: relative; overflow: hidden; box-shadow: 0 0 0 1px var(--ink); zoom: .78; }
+  .desk .sheetbg { position: absolute; left: 50px; right: 50px; top: 24px; bottom: 0; background: var(--paper); color: var(--ink); border: 3px solid var(--paper-2); border-bottom: 0; box-shadow: 0 0 0 1px var(--ink), 0 24px 48px rgb(0 0 0 / .45); display: flex; flex-direction: column; }
+  .desk .plate { position: relative; height: 180px; background: var(--ink); overflow: hidden; border-bottom: 1px solid var(--ink); flex: none; }
+  .desk .plate img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; opacity: .92; display: block; }
+  .desk .plate .scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgb(21 24 26 / .85) 0%, rgb(21 24 26 / 0) 48%); }
+  .desk .plate .pk { position: absolute; left: 120px; bottom: 10px; font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; color: var(--paper); }
+  .desk .letterhead { position: relative; height: 56px; display: flex; align-items: center; padding: 0 24px 0 120px; border-bottom: 1px solid var(--ink); flex: none; }
+  .desk .letterhead h1 { font-family: var(--display); font-weight: 700; font-size: 26px; margin: 0; line-height: 1; }
+  .desk .crest { position: absolute; left: 24px; top: -40px; width: 80px; height: 80px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ink), 0 3px 8px rgb(0 0 0 / .35); z-index: 2; }
+  .desk .crest img { width: 100%; height: 100%; display: block; }
+  .desk .two { display: flex; flex: 1; min-height: 0; }
+  .desk .left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .desk .strip { display: flex; border-bottom: 1px solid var(--ink); flex: none; }
+  .desk .strip span { width: 150px; min-height: 44px; display: flex; align-items: center; justify-content: center; font-family: var(--label); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; color: var(--muted); border-right: 1px solid var(--faint); position: relative; }
+  .desk .strip span.on { color: var(--ink); font-weight: 600; background: var(--paper-card); box-shadow: inset 0 -3px 0 var(--ink); margin-bottom: -1px; }
+  .desk .strip span.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: 3px; height: 2px; background: var(--faction); }
+  .desk .chatcol { width: 360px; flex: none; border-left: 1.5px solid var(--ink); display: flex; flex-direction: column; }
+  .desk .chatcol .head { background: var(--paper-2); border-bottom: 1px solid var(--ink); min-height: 44px; display: flex; align-items: center; padding: 0 12px; font-family: var(--label); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; font-weight: 600; }
+  .desk .chatcol .head .mono { margin-left: auto; font-weight: 400; }
+  .desk .chips { display: flex; gap: 6px; padding: 8px 12px 0; } .desk .chips .chip { font-size: 10.5px; padding: 0 8px; min-height: 36px; }
+</style>
+</head>
+<body>
+
+<h1>The Faction tab · three directions</h1>
+<p class="lede">Review 7, 15 Oct 2026. Each phone is 390 × 844 with the real HUD and tab bar in ink, so the stacking is honest. Fonts and colours are the game's tokens; the art is the built art in <code>apps/client/public/art/</code> (open this file from the repo so the relative paths resolve). The faction on show is the Red Collective; the Vanguard and the Alliance swap the crest, the scene and the accent line only. The proposal and the research are in <code>faction-tab-redesign.md</code>.</p>
+
+<h2>Row 1 · The first screen (Events, the default part)</h2>
+<div class="row">
+
+<!-- ════════════════════════ A · The Branch Office ════════════════════════ -->
+<figure>
+<div class="phone a grain">
+  <div class="hud">
+    <div class="face"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""></div>
+    <div>
+      <div class="name">Anna Kessel <small>Organiser · Lv 1</small></div>
+      <div class="bars">
+        <span style="color:var(--energy)">Energy</span><span class="bar"><i style="width:100%;background:var(--energy)"></i></span><span class="n">100 / 100</span>
+        <span>Health</span><span class="bar"><i style="width:100%;background:var(--paper)"></i></span><span class="n">100 / 100</span>
+        <span style="color:var(--xp)">XP</span><span class="bar"><i style="width:30%;background:var(--xp)"></i></span><span class="n">45 · 105 to Level 2</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="plate">
+      <img src="../../apps/client/public/art/scene.union-hq-640.webp" alt="HQ scene">
+      <div class="scrim"></div>
+      <span class="pk">Coalport branch <b>· 9 here now</b></span>
+    </div>
+    <div class="letterhead">
+      <a class="crest"><img src="../../apps/client/public/art/crest.collective.svg" alt="Red Collective crest"></a>
+      <div>
+        <h1>Red Collective</h1>
+        <div class="mono">Organiser · 9 members</div>
+      </div>
+    </div>
+    <div class="strip">
+      <span>Orders</span><span class="on">Events</span><span>Members</span><span>Scoreboard</span><span>Chat<i class="dot"></i></span>
+    </div>
+    <div class="pad">
+      <div style="height:12px"></div>
+      <span class="btn wide">Call an event</span>
+      <div class="kicker">Here · Coalport</div>
+      <div class="evcard">
+        <img src="../../apps/client/public/art/scene.street-640.webp" alt="">
+        <div style="flex:1;min-width:0">
+          <h3>Canvass Drive</h3>
+          <div class="mono">Foundry Row · settles at 19:40 · 1 of 4 roles · hands 1 of 4</div>
+          <div class="by">called by Secretary Holm · the branch's event</div>
+        </div>
+        <span class="btn">Join</span>
+      </div>
+      <div class="caps" style="font-size:11px;color:var(--muted);margin:12px 0">Also open elsewhere · 1 ▾</div>
+      <div class="kicker">Results · Coalport</div>
+      <div class="mono" style="color:var(--collective)">Tue 19:40 · The rally at Market Row · <b>Triumph</b> · opinion +1.20 · 5 members</div>
+      <div class="mono" style="margin-top:6px">Mon 12:00 · Canvass Drive at Foundry Row · <b>Success</b> · opinion +0.65 · 3 members</div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <span><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/></svg>Map</span>
+    <span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8"/></svg>Paper</span>
+    <span><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Dossier</span>
+    <span class="on"><svg viewBox="0 0 24 24"><path d="M6 21V4h10l-2 4 2 4H6"/></svg>Faction</span>
+    <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Me</span>
+  </div>
+</div>
+<figcaption><b>A · The Branch Office</b> (recommended). Paper from the HUD down. The HQ scene is a 128 px plate; the real crest sits over the plate's edge like a seal on a letterhead; the name and the Courier line are ink on paper. The five parts are a ruled strip on paper: the current one is bold, on paper-card, and carries a 3 px ink bar that touches its panel (plus a 2 px line in the faction's colour). Three cues, none of them colour alone. The plate scrolls away; the strip stays.</figcaption>
+</figure>
+
+<!-- ════════════════════════ B · The Noticeboard ════════════════════════ -->
+<figure>
+<div class="phone b grain">
+  <div class="hud">
+    <div class="face"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""></div>
+    <div>
+      <div class="name">Anna Kessel <small>Organiser · Lv 1</small></div>
+      <div class="bars">
+        <span style="color:var(--energy)">Energy</span><span class="bar"><i style="width:100%;background:var(--energy)"></i></span><span class="n">100 / 100</span>
+        <span>Health</span><span class="bar"><i style="width:100%;background:var(--paper)"></i></span><span class="n">100 / 100</span>
+        <span style="color:var(--xp)">XP</span><span class="bar"><i style="width:30%;background:var(--xp)"></i></span><span class="n">45 · 105 to Level 2</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="plate">
+      <img src="../../apps/client/public/art/scene.union-hq-640.webp" alt="HQ scene">
+      <div class="scrim"></div>
+      <div class="mast">
+        <img class="c" src="../../apps/client/public/art/crest.collective.svg" alt="Red Collective crest">
+        <div><h1>Red Collective</h1><div class="mono">Organiser · 9 members · 9 here now · Coalport branch</div></div>
+      </div>
+    </div>
+    <div class="board">
+      <div class="notice"><i class="pin"></i><h3>Orders</h3><div class="big">2 of 3 carried out</div><div class="mono">Talk to the workers at the Mill Gate · 1 of 2</div></div>
+      <div class="notice"><i class="pin"></i><h3>Events <i class="dot"></i></h3><div class="big">Canvass Drive, 19:40</div><div class="mono">Foundry Row · 1 of 4 roles · <b style="color:var(--petrol)">Join</b></div></div>
+      <div class="notice"><i class="pin"></i><h3>Members</h3><div class="big">9 here now</div><div class="mono">of 9 · Jan Sorel in the cells · <b style="color:var(--failure)">bail 150</b></div></div>
+      <div class="notice"><i class="pin"></i><h3>Scoreboard</h3><div class="big">You're 4th this week</div><div class="mono">Mira Hale leads · +3.1 moved</div></div>
+      <div class="notice chat"><i class="pin"></i><h3>The room · Coalport branch · 5 here <i class="dot"></i></h3>
+        <div class="line"><img src="../../apps/client/public/art/avatar.man-40s-128.webp" alt=""><div><div class="who">Jan Sorel <small>Organiser</small></div><div class="t">who's on the rally tonight</div></div><span class="at">17:30</span></div>
+        <div class="sys">Secretary Holm has called a Canvass Drive · 1 of 4 roles <span class="btn">Join</span></div>
+        <div style="display:flex;gap:8px;align-items:center;padding-top:8px"><div class="composer" style="border:0;padding:0;flex:1"><div class="field">Say something to the branch…</div></div><span class="btn" style="padding:0 12px">Open the room</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <span><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/></svg>Map</span>
+    <span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8"/></svg>Paper</span>
+    <span><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Dossier</span>
+    <span class="on"><svg viewBox="0 0 24 24"><path d="M6 21V4h10l-2 4 2 4H6"/></svg>Faction</span>
+    <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Me</span>
+  </div>
+</div>
+<figcaption><b>B · The Noticeboard.</b> No tabs at the first level. The masthead is the scene with the crest and the name over an ink scrim; under it the five parts are notices pinned to a board, each with one live line and the thing to do. A tap opens the part as its own screen with a back arrow (row 2). The room's last lines sit at the foot with the composer, so a reply is one tap without leaving the board.</figcaption>
+</figure>
+
+<!-- ════════════════════════ C · The Masthead and the Room ════════════════════════ -->
+<figure>
+<div class="phone c grain">
+  <div class="hud">
+    <div class="face"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""></div>
+    <div>
+      <div class="name">Anna Kessel <small>Organiser · Lv 1</small></div>
+      <div class="bars">
+        <span style="color:var(--energy)">Energy</span><span class="bar"><i style="width:100%;background:var(--energy)"></i></span><span class="n">100 / 100</span>
+        <span>Health</span><span class="bar"><i style="width:100%;background:var(--paper)"></i></span><span class="n">100 / 100</span>
+        <span style="color:var(--xp)">XP</span><span class="bar"><i style="width:30%;background:var(--xp)"></i></span><span class="n">45 · 105 to Level 2</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="plate">
+      <img src="../../apps/client/public/art/scene.union-hq-640.webp" alt="HQ scene">
+      <div class="scrim"></div>
+      <div class="mast">
+        <img class="c" src="../../apps/client/public/art/crest.collective.svg" alt="Red Collective crest">
+        <div><h1>Red Collective</h1><div class="mono">Organiser · 9 members · 9 here now</div></div>
+        <span class="room"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Room<i class="dot"></i></span>
+      </div>
+    </div>
+    <div class="seg">
+      <span>Orders</span><span class="on">Events</span><span>Members</span><span>Scoreboard</span>
+    </div>
+    <div class="pad">
+      <span class="btn wide">Call an event</span>
+      <div class="kicker">Here · Coalport</div>
+      <div class="evcard">
+        <img src="../../apps/client/public/art/scene.street-640.webp" alt="">
+        <div style="flex:1;min-width:0">
+          <h3>Canvass Drive</h3>
+          <div class="mono">Foundry Row · settles at 19:40 · 1 of 4 roles · hands 1 of 4</div>
+          <div class="by">called by Secretary Holm · the branch's event</div>
+        </div>
+        <span class="btn">Join</span>
+      </div>
+      <div class="caps" style="font-size:11px;color:var(--muted);margin:12px 0">Also open elsewhere · 1 ▾</div>
+      <div class="kicker">Results · Coalport</div>
+      <div class="mono" style="color:var(--collective)">Tue 19:40 · The rally at Market Row · <b>Triumph</b> · opinion +1.20 · 5 members</div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <span><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/></svg>Map</span>
+    <span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8"/></svg>Paper</span>
+    <span><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Dossier</span>
+    <span class="on"><svg viewBox="0 0 24 24"><path d="M6 21V4h10l-2 4 2 4H6"/></svg>Faction</span>
+    <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Me</span>
+  </div>
+</div>
+<figcaption><b>C · The Masthead and the Room.</b> The scene is the masthead with the crest and the name over an ink scrim (the slice-6 spec's intent, done with a scrim that passes). Chat leaves the strip: it is <i>the Room</i>, a button on the masthead with the unread dot, and opens as a sheet over any part (row 2). Four parts fit as a segmented control of outlined cells; the current one is inverted with a keyline inside, so the cell is a different shape as well as a different colour.</figcaption>
+</figure>
+
+</div>
+
+<h2>Row 2 · Chat and a second part</h2>
+<div class="row">
+
+<!-- A · Chat tab -->
+<figure>
+<div class="phone a grain">
+  <div class="hud">
+    <div class="face"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""></div>
+    <div>
+      <div class="name">Anna Kessel <small>Organiser · Lv 1</small></div>
+      <div class="bars">
+        <span style="color:var(--energy)">Energy</span><span class="bar"><i style="width:100%;background:var(--energy)"></i></span><span class="n">100 / 100</span>
+        <span>Health</span><span class="bar"><i style="width:100%;background:var(--paper)"></i></span><span class="n">100 / 100</span>
+        <span style="color:var(--xp)">XP</span><span class="bar"><i style="width:30%;background:var(--xp)"></i></span><span class="n">45 · 105 to Level 2</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="compact">
+      <img class="c" src="../../apps/client/public/art/crest.collective.svg" alt="">
+      <h1>Red Collective</h1>
+      <div class="mono">Coalport branch · 5 here</div>
+    </div>
+    <div class="strip">
+      <span>Orders</span><span>Events</span><span>Members</span><span>Scoreboard</span><span class="on">Chat</span>
+    </div>
+    <div class="chips"><span class="chip">Party</span><span class="chip on">Coalport branch</span><span class="chip">Irongate branch</span></div>
+    <div class="mono pad" style="padding-top:6px;border-bottom:1px solid var(--ink);padding-bottom:6px">5 here · Coalport branch</div>
+    <div style="flex:1;min-height:0;overflow:hidden">
+      <div class="sys">Secretary Holm has called a Canvass Drive at Foundry Row for 19:40 · 1 of 4 roles <span class="btn">Join</span></div>
+      <div class="line"><img src="../../apps/client/public/art/avatar.man-40s-128.webp" alt=""><div><div class="who">Jan Sorel <small>Organiser</small></div><div class="t">who's on the rally tonight</div></div><span class="at">17:30</span></div>
+      <div class="line mine"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""><div><div class="who">Anna Kessel <small>Organiser</small></div><div class="t">me, if someone takes the door</div></div><span class="at">17:31</span></div>
+      <div class="sys" style="background:var(--paper-2)"><span class="caps" style="font-size:10px;color:var(--petrol)">for you</span>Jan Sorel asks you to take the Organiser at the rally · 19:40 <span class="btn">Join</span></div>
+      <div class="line"><img src="../../apps/client/public/art/avatar.woman-20s-128.webp" alt=""><div><div class="who">Mira Hale <small>Recruit</small></div><div class="t">I'll do the leaflets. Who has the tram money</div></div><span class="at">17:33</span></div>
+    </div>
+    <div class="composer"><div class="field">Say something to the branch…</div><span class="btn">Send</span></div>
+  </div>
+  <div class="tabbar">
+    <span><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/></svg>Map</span>
+    <span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8"/></svg>Paper</span>
+    <span><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Dossier</span>
+    <span class="on"><svg viewBox="0 0 24 24"><path d="M6 21V4h10l-2 4 2 4H6"/></svg>Faction</span>
+    <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Me</span>
+  </div>
+</div>
+<figcaption><b>A · Chat.</b> On Chat the plate folds to a one-line letterhead (crest at 32 px, the name, the branch and the count) so the lines get the screen. The channels are the game's existing paper chips, not a second ink strip. Nothing between the HUD and the composer is ink.</figcaption>
+</figure>
+
+<!-- B · Members sub-screen -->
+<figure>
+<div class="phone b grain">
+  <div class="hud">
+    <div class="face"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""></div>
+    <div>
+      <div class="name">Anna Kessel <small>Organiser · Lv 1</small></div>
+      <div class="bars">
+        <span style="color:var(--energy)">Energy</span><span class="bar"><i style="width:100%;background:var(--energy)"></i></span><span class="n">100 / 100</span>
+        <span>Health</span><span class="bar"><i style="width:100%;background:var(--paper)"></i></span><span class="n">100 / 100</span>
+        <span style="color:var(--xp)">XP</span><span class="bar"><i style="width:30%;background:var(--xp)"></i></span><span class="n">45 · 105 to Level 2</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="sub"><span class="back">‹</span><h1>Members</h1><img class="c" src="../../apps/client/public/art/crest.collective.svg" alt=""></div>
+    <div class="pad">
+      <div class="mono" style="padding:10px 0 6px">9 members · 9 here now · 1 in the cells</div>
+      <div class="composer" style="border:0;padding:0 0 8px"><div class="field">Find a member</div></div>
+      <div class="member"><img src="../../apps/client/public/art/avatar.man-40s-128.webp" alt=""><div><div class="nm">Jan Sorel <small>Organiser · Level 12</small></div><div class="st alert">in the cells at Harbour Police · out in 24 min</div></div><span class="btn outline right" style="padding:0 10px;font-size:12px">Post bail · 150 Iron</span></div>
+      <div class="member"><img src="../../apps/client/public/art/avatar.woman-20s-128.webp" alt=""><div><div class="nm">Mira Hale <small>Recruit · Level 3</small></div><div class="st">here now · Coalport</div></div><span class="mono right">+1.3 this week</span></div>
+      <div class="member"><img src="../../apps/client/public/art/avatar.man-30s-128.webp" alt=""><div><div class="nm">Ben Holt <small>Activist · Level 6</small></div><div class="st">online · Eastside, Irongate</div></div><span class="caps right" style="font-size:12px;color:var(--petrol);text-decoration:underline">Ask to join the rally</span></div>
+      <div class="member" style="background:var(--paper-2)"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""><div><div class="nm">Anna Kessel <small>Organiser · Level 1</small> <small class="caps" style="color:var(--petrol)">you</small></div><div class="st">here now · Coalport</div></div><span class="mono right">+0.1 this week</span></div>
+      <div class="member"><img src="../../apps/client/public/art/avatar.woman-40s-128.webp" alt=""><div><div class="nm">Cora Lind <small>Recruit · Level 1</small></div><div class="st">today</div></div></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <span><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/></svg>Map</span>
+    <span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8"/></svg>Paper</span>
+    <span><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Dossier</span>
+    <span class="on"><svg viewBox="0 0 24 24"><path d="M6 21V4h10l-2 4 2 4H6"/></svg>Faction</span>
+    <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Me</span>
+  </div>
+</div>
+<figcaption><b>B · Members, as its own screen.</b> A notice opens a plain sub-screen: back arrow, the part's name, the small crest. The cost of B is this second level: every part is a tap further than in A or C, and the board must be scrolled past to reach the room.</figcaption>
+</figure>
+
+<!-- C · Chat sheet over Members -->
+<figure>
+<div class="phone c grain">
+  <div class="hud">
+    <div class="face"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""></div>
+    <div>
+      <div class="name">Anna Kessel <small>Organiser · Lv 1</small></div>
+      <div class="bars">
+        <span style="color:var(--energy)">Energy</span><span class="bar"><i style="width:100%;background:var(--energy)"></i></span><span class="n">100 / 100</span>
+        <span>Health</span><span class="bar"><i style="width:100%;background:var(--paper)"></i></span><span class="n">100 / 100</span>
+        <span style="color:var(--xp)">XP</span><span class="bar"><i style="width:30%;background:var(--xp)"></i></span><span class="n">45 · 105 to Level 2</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="plate">
+      <img src="../../apps/client/public/art/scene.union-hq-640.webp" alt="HQ scene">
+      <div class="scrim"></div>
+      <div class="mast">
+        <img class="c" src="../../apps/client/public/art/crest.collective.svg" alt="">
+        <div><h1>Red Collective</h1><div class="mono">Organiser · 9 members · 9 here now</div></div>
+        <span class="room"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Room</span>
+      </div>
+    </div>
+    <div class="seg"><span>Orders</span><span>Events</span><span class="on">Members</span><span>Scoreboard</span></div>
+    <div class="pad">
+      <div class="composer" style="border:0;padding:0 0 8px"><div class="field">Find a member</div></div>
+      <div class="member"><img src="../../apps/client/public/art/avatar.man-40s-128.webp" alt=""><div><div class="nm">Jan Sorel <small>Organiser · Level 12</small></div><div class="st alert">in the cells at Harbour Police · out in 24 min</div></div><span class="btn outline right" style="padding:0 10px;font-size:12px">Post bail · 150 Iron</span></div>
+      <div class="member"><img src="../../apps/client/public/art/avatar.woman-20s-128.webp" alt=""><div><div class="nm">Mira Hale <small>Recruit · Level 3</small></div><div class="st">here now · Coalport</div></div></div>
+    </div>
+  </div>
+  <div class="dim"></div>
+  <div class="sheet">
+    <div class="head"><span class="k">The room</span><span class="mono">Coalport branch · 5 here</span><span class="x">×</span></div>
+    <div class="a chips" style="display:flex;gap:8px;padding:10px 12px 0"><span class="chip" style="font-size:11px;padding:0 10px">Party</span><span class="chip on" style="font-size:11px;padding:0 10px">Coalport branch</span><span class="chip" style="font-size:11px;padding:0 10px">Irongate branch</span></div>
+    <div style="flex:1;min-height:0;overflow:hidden;padding-top:6px">
+      <div class="sys">Secretary Holm has called a Canvass Drive at Foundry Row for 19:40 · 1 of 4 roles <span class="btn">Join</span></div>
+      <div class="line"><img src="../../apps/client/public/art/avatar.man-40s-128.webp" alt=""><div><div class="who">Jan Sorel <small>Organiser</small></div><div class="t">who's on the rally tonight</div></div><span class="at">17:30</span></div>
+      <div class="line mine"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""><div><div class="who">Anna Kessel <small>Organiser</small></div><div class="t">me, if someone takes the door</div></div><span class="at">17:31</span></div>
+      <div class="line"><img src="../../apps/client/public/art/avatar.woman-20s-128.webp" alt=""><div><div class="who">Mira Hale <small>Recruit</small></div><div class="t">I'll do the leaflets. Who has the tram money</div></div><span class="at">17:33</span></div>
+    </div>
+    <div class="composer"><div class="field">Say something to the branch…</div><span class="btn">Send</span></div>
+  </div>
+  <div class="tabbar">
+    <span><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/></svg>Map</span>
+    <span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8"/></svg>Paper</span>
+    <span><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Dossier</span>
+    <span class="on"><svg viewBox="0 0 24 24"><path d="M6 21V4h10l-2 4 2 4H6"/></svg>Faction</span>
+    <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Me</span>
+  </div>
+</div>
+<figcaption><b>C · The Room over Members.</b> One tap on <i>Room</i> raises the chat as a 76 % sheet over whatever part is open, with the part dimmed behind; the × or a swipe closes it. The members list keeps its place. The cost of C: chat has no tab of its own, so a member who lives in the chat opens a sheet each visit, and the sheet hides the part it was opened from.</figcaption>
+</figure>
+
+</div>
+
+<h2>Desktop (≥ 1024) · Direction A</h2>
+<div class="desk">
+  <div class="sheetbg">
+    <div class="plate">
+      <img src="../../apps/client/public/art/scene.union-hq-1280.webp" alt="HQ scene">
+      <div class="scrim"></div>
+      <span class="pk">Coalport branch · 9 here now</span>
+    </div>
+    <div class="letterhead">
+      <span class="crest"><img src="../../apps/client/public/art/crest.collective.svg" alt=""></span>
+      <div><h1>Red Collective</h1><div class="mono">Organiser · 9 members</div></div>
+    </div>
+    <div class="two">
+      <div class="left">
+        <div class="strip"><span>Orders</span><span class="on">Events</span><span>Members</span><span>Scoreboard</span></div>
+        <div class="pad" style="padding-top:12px">
+          <span class="btn wide">Call an event</span>
+          <div class="kicker">Here · Coalport</div>
+          <div class="evcard">
+            <img src="../../apps/client/public/art/scene.street-640.webp" alt="">
+            <div style="flex:1;min-width:0"><h3>Canvass Drive</h3><div class="mono">Foundry Row · settles at 19:40 · 1 of 4 roles · hands 1 of 4</div><div class="by">called by Secretary Holm · the branch's event</div></div>
+            <span class="btn">Join</span>
+          </div>
+        </div>
+      </div>
+      <div class="chatcol">
+        <div class="head">The room <span class="mono">Coalport branch · 5 here</span></div>
+        <div class="chips"><span class="chip">Party</span><span class="chip on">Coalport branch</span><span class="chip">Irongate branch</span></div>
+        <div style="flex:1;overflow:hidden;padding-top:6px">
+          <div class="line"><img src="../../apps/client/public/art/avatar.man-40s-128.webp" alt=""><div><div class="who">Jan Sorel <small>Organiser</small></div><div class="t">who's on the rally tonight</div></div><span class="at">17:30</span></div>
+          <div class="line mine"><img src="../../apps/client/public/art/avatar.woman-30s-128.webp" alt=""><div><div class="who">Anna Kessel <small>Organiser</small></div><div class="t">me, if someone takes the door</div></div><span class="at">17:31</span></div>
+        </div>
+        <div class="composer"><div class="field">Say something to the branch…</div><span class="btn">Send</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="lede" style="margin-top:12px">Desktop A: the plate at 180 px across the 720 px sheet (review 4's paper-on-a-desk), the crest at 80 px, four strip cells of 150 px at the left (not stretched across the width), and the room as the 360 px column under a paper-2 head. B on desktop: the board as a row of notices with the room column; C: the masthead, the four cells, the room column (the <i>Room</i> button disappears).</p>
+
+</body>
+</html>
