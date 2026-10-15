@@ -22,6 +22,7 @@ import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
 import { isEventInPrint, togetherPaper } from './togetherPaper';
 import { nationalSection } from './nationEdition';
+import { pushedHeadline } from './pushTarget';
 import { restedCapToday } from './modifiers';
 import { isRivalGround, riskView } from './risk';
 import { FRONT_PAGE_KIND, frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
@@ -73,7 +74,9 @@ export async function getPaper(deps: {
   });
   // Slice 6 (tech design §11.1): the *Events* rows, the desk's *Signed up* row, `event-today` (live).
   const together = await togetherPaper(content, c, now, { firstEdition: entry.firstEdition, paperCityId: entry.cityId });
-  const live = [...residenceLines, ...together.live].filter(
+  // Slice 7 (tech design §11.2): `hl.*.pushed`, live (the Chair's push the member can reach today).
+  const pushed = await pushedHeadline(content, c, entry.cityId, today);
+  const live = [...residenceLines, ...together.live, ...(pushed ? [pushed] : [])].filter(
     (h) =>
       !(
         frontPage &&
@@ -101,6 +104,8 @@ export async function getPaper(deps: {
       priority: h.priority ?? content.headlines.find((t) => t.id === h.templateId)?.priority ?? 0,
       headline: h.headline,
       ...(h.deck ? { deck: h.deck } : {}),
+      // Slice 7 (tech design §11.2): a stored national line's `{until}` (the vote on the Chair, a bill, a petition).
+      ...(h.until !== undefined ? { until: h.until } : {}),
     }));
   // The welcome edition keeps its welcome and arrival notice ahead of the phase line (and is never
   // composed away). Away: personal → the local line → the residence's city lines → the local ambient.

@@ -67,8 +67,16 @@ export function buildEdition(i: {
   risk?: RiskEdition | null;
   /** Slice 6 (tech design §11.2): yesterday's events and favours and their placeholders. */
   together?: TogetherEdition | null;
-  /** Slice 7 (tech design §11.2): the national facts and their fills. */
-  nation?: { kinds: readonly string[]; vars: Record<string, string> } | null;
+  /**
+   * Slice 7 (tech design §11.2): the national facts, the fills every line shares, each line's own
+   * (`varsByKind`) and the epoch of a line whose deck keeps `{until}`.
+   */
+  nation?: {
+    kinds: readonly string[];
+    vars: Record<string, string>;
+    varsByKind?: Partial<Record<string, Record<string, string>>>;
+    until?: Partial<Record<string, number>>;
+  } | null;
   /** Slice 7 (tech design §8.4): a desk line per office stipend; the party's target bonus. */
   offices?: NonNullable<PaperEntryDoc['desk']['offices']>;
   target?: Array<{ label: string; fxp: number }>;
@@ -164,8 +172,13 @@ export function buildEdition(i: {
       baseVars,
       ...t.when.map((w) => i.risk?.varsByKind[w.kind as RiskCondition['kind']] ?? {}),
       ...t.when.map((w) => i.together?.varsByKind[w.kind] ?? {}),
-      ...(i.nation && t.when.some((w) => i.nation!.kinds.includes(w.kind)) ? [i.nation.vars] : []),
+      ...(i.nation && t.when.some((w) => i.nation!.kinds.includes(w.kind))
+        ? [i.nation.vars, ...t.when.map((w) => i.nation!.varsByKind?.[w.kind] ?? {})]
+        : []),
     );
+  // Slice 7: a national line whose deck keeps `{until}` stores its epoch (the client renders it).
+  const untilOf = (t: HeadlineTemplate): number | undefined =>
+    t.when.map((w) => i.nation?.until?.[w.kind]).find((u): u is number => u !== undefined);
 
   return {
     characterId: c._id,
@@ -182,6 +195,7 @@ export function buildEdition(i: {
       ...(t.deck
         ? { deck: isRisk(t) || t.when.some((w) => w.kind === 'unrestPushed') ? fitDeck(fillTemplate(t.deck, varsFor(t))) : fillTemplate(t.deck, varsFor(t)) }
         : {}),
+      ...(untilOf(t) !== undefined ? { until: untilOf(t) } : {}),
     })),
     desk: {
       salary:

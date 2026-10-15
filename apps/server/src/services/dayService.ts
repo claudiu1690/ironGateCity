@@ -333,7 +333,9 @@ export function computeSettlement(
     // Slice 5 (tech design §11.2): the risk facts, with the Heat projected at the settlement.
     risk: riskEdition(content, c, today, projectHeat(heatTimerOf(c), now, heatRateOn(content, city, c.factionId)).value, read.risk ?? null),
     together: read.together ?? null,
-    nation: read.nation ? { kinds: read.nation.kinds, vars: read.nation.vars } : null,
+    nation: read.nation
+      ? { kinds: read.nation.kinds, vars: read.nation.vars, varsByKind: read.nation.varsByKind, until: read.nation.until }
+      : null,
     offices: officeLines,
     target,
   });
@@ -461,7 +463,7 @@ export async function ensureSettled(
         // Slice 6 (tech design §8.4): yesterday's events, bail and visits.
         const together = c.day.settled === null ? null : await readTogether(content, c, today, session);
         // Slice 7 (tech design §8.4): the faction, the party's target and the national facts.
-        const nation = await readNationSettlement(content, c, today, terms, session);
+        const nation = await readNationSettlement(content, c, today, terms, session, now);
         const w = computeSettlement(content, c, now, {
           together,
           nation,

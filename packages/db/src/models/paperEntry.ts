@@ -20,6 +20,8 @@ export interface PaperEntryDoc {
     headline: string;
     deck?: string;
     priority?: number;
+    /** Slice 7 (tech design §11.2): a stored line whose deck keeps `{until}`: its epoch ms, rendered by the client. */
+    until?: number;
   }>;
   desk: {
     salary: {

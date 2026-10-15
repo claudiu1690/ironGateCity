@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
-import { Bill, City, Contribution, FactionElection, FactionState, Nation, contributionId } from '@irongate/db';
-import type { BillDoc, CharacterDoc, CityDoc, FactionStateDoc, NationDoc, OfficeTermDoc } from '@irongate/db';
+import { Contribution, FactionState, Nation, contributionId } from '@irongate/db';
+import type { CharacterDoc, FactionStateDoc, NationDoc, OfficeTermDoc } from '@irongate/db';
 import {
   FACTION_IDS,
   PUSH,
@@ -13,9 +13,11 @@ import {
   termOf,
   TERM_DAYS,
 } from '@irongate/rules';
-import type { DayKey, FactionId, NationalCondition, NationalSectionView, Office, StandingInput } from '@irongate/rules';
+import type { DayKey, FactionId, NationalSectionView, Office, StandingInput } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { pushPlaceName } from './views';
+import { readPersonalLines } from './nationPersonal';
+import type { NationalKind, PersonalLines } from './nationPersonal';
 import { isContested, residenceOf } from './residence';
 
 /**
@@ -25,7 +27,7 @@ import { isContested, residenceOf } from './residence';
  * (`standingOn`, `selectNationalLines`); this file reads and words.
  */
 
-export type NationalKind = NationalCondition['kind'];
+export type { NationalKind } from './nationPersonal';
 
 export interface NationSettlementRead {
   faction: FactionStateDoc | null;
@@ -33,7 +35,12 @@ export interface NationSettlementRead {
   pushMet: Array<{ day: DayKey; place: string }>;
   /** The personal national lines' facts (tech §11.2), stored at the settlement, and their fills. */
   kinds: NationalKind[];
+  /** The fills every national line shares (the name, the party). */
   vars: Record<string, string>;
+  /** Each line's own fills (`readPersonalLines`). */
+  varsByKind: PersonalLines['varsByKind'];
+  /** Epoch ms for a line whose deck keeps `{until}`. */
+  until: PersonalLines['until'];
 }
 
 const ORDINALS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth'];
@@ -44,7 +51,6 @@ export function ordinalWord(n: number): string {
   const suffix = teen ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
   return `${n}${suffix}`;
 }
-const ordinal = ordinalWord;
 
 /** The settlement's nation reads, in its session (§8.4 step 1). */
 export async function readNationSettlement(
@@ -53,6 +59,8 @@ export async function readNationSettlement(
   today: DayKey,
   terms: readonly OfficeTermDoc[],
   session: ClientSession,
+  /** The settlement's clock (a petition's `{needed}` reads the turnout roll as of now). */
+  now: number = dayStart(today),
 ): Promise<NationSettlementRead> {
   const faction = await FactionState.findById(c.factionId).session(session).lean<FactionStateDoc>();
   const settled = c.day.settled;
@@ -70,68 +78,9 @@ export async function readNationSettlement(
           pushMet.push({ day: p.day, place: pushPlaceName(content, p) });
     }
   }
-  const kinds: NationalKind[] = [];
-  const vars: Record<string, string> = { name: c.name, faction: content.faction(c.factionId).name };
-  if (settled === null) return { faction, pushMet, kinds, vars };
-  const began = (t: OfficeTermDoc) => t.fromDay > settled && t.fromDay <= today && (t.vacatedDay ?? null) === null;
-  for (const t of terms) {
-    const office = t.office ?? 'council';
-    if (office === 'governor' && began(t)) {
-      kinds.push('governorTookOffice');
-      vars.city = content.city(t.cityId)?.name ?? t.cityId;
-    }
-    if (office === 'chair' && began(t)) kinds.push('chairElected');
-    if (office === 'deputy' && began(t)) {
-      kinds.push('deputySeated');
-      vars.ordinal = ordinal(t.place);
-    }
-    if (office === 'president' && began(t)) kinds.push('presidentSeated');
-    if ((office === 'governor' || office === 'president') && t.powers?.address?.day === today - 1) {
-      kinds.push('addressGiven');
-      const cityId = t.powers.address.cityId;
-      const hallId = content.city(cityId)?.council?.hall.locationId;
-      vars.hall = (hallId ? content.location(hallId)?.location.name : undefined) ?? content.city(cityId)?.name ?? cityId;
-    }
-    if (office === 'president' && (t.pledges ?? []).some((p) => p.keptDay === today)) {
-      kinds.push('pledgeKept');
-      const kept = t.pledges!.find((p) => p.keptDay === today)!;
-      vars.law = content.law(kept.lawId)?.name ?? kept.lawId;
-    }
-    // A local holds the chair of the council the member was seated on today (`hl.*.governor-local`).
-    if (office === 'council' && t.fromDay === today) {
-      const city = await City.findById(t.cityId, { council: 1 }).session(session).lean<CityDoc>();
-      const gov = city?.council?.governor;
-      if (gov?.local && gov.factionId === c.factionId) {
-        kinds.push('governorLocal');
-        vars.local = gov.name;
-      }
-    }
-  }
-  // The member's bills divided at this boundary (`hl.*.bill-passed` / `-failed`).
-  const bills = await Bill.find({ 'tabledBy.characterId': c._id, divideDay: today })
-    .session(session)
-    .lean<BillDoc[]>();
-  for (const b of bills) {
-    const law = b.lawId ? content.law(b.lawId) : undefined;
-    if (!law || !b.division) continue;
-    vars.law = law.name;
-    vars.forVotes = String(b.division.for);
-    vars.needed = String(b.needed);
-    vars.days = String(law.days);
-    if (b.status === 'failed') kinds.push('billFailed');
-    else if (['awaitingSignature', 'passed', 'inForce', 'vetoed'].includes(b.status)) kinds.push('billPassed');
-  }
-  // `{votes}` of the Chair's count: the winner's support as stored on the candidacy, else left out.
-  if (kinds.includes('chairElected')) {
-    const n = termOf(today).index;
-    const res = await FactionElection.findById(`chair:${c.factionId}:${n}`)
-      .session(session)
-      .lean<{ result?: { rows?: Array<{ key: string; votes?: number }> } }>();
-    const row = res?.result?.rows?.find((r) => r.key === `p:${c._id.toHexString()}`);
-    if (row?.votes !== undefined) vars.votes = String(row.votes);
-    else kinds.splice(kinds.indexOf('chairElected'), 1);
-  }
-  return { faction, pushMet, kinds, vars };
+  // The personal national lines (tech §11.2): their facts, each line's fills and its `{until}`.
+  const lines = await readPersonalLines(content, c, today, terms, session, now);
+  return { faction, pushMet, ...lines };
 }
 
 /** §8.4 step 4: the Chair's standing orders for today as `startOrders`' input, and who set them. */

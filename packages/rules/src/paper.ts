@@ -156,12 +156,23 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
     case 'governorTookOffice':
     case 'governorLocal':
     case 'addressGiven':
+    case 'chairFiled':
     case 'chairElected':
+    case 'chairLost':
+    case 'chairVoteOpened':
     case 'deputySeated':
+    case 'listMissed':
     case 'presidentSeated':
+    case 'presidentLost':
+    case 'pickWon':
+    case 'pickLost':
+    case 'billTabled':
     case 'pledgeKept':
     case 'billPassed':
     case 'billFailed':
+    case 'petitionOpened':
+    case 'petitionFailed':
+    case 'dissolvedCouncillor':
       return f.national?.kinds.includes(c.kind) === true;
     default:
       // Political conditions are selected live at read (ADR 0023), never at settlement.
