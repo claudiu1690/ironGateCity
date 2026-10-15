@@ -745,7 +745,8 @@ export async function getJourney(
   const j = await Journey.findById(c.journey.id).lean<JourneyDoc>();
   if (!j || j.status === 'closed') return null;
   // Slice 6 (ADR 0040): *You and n others on this train*.
-  return { ...journeyView(content, c, j, now, { city: loaded.city }), fellows: await fellowsOn(c) };
+  const view = await journeyView(content, c, j, now, { city: loaded.city });
+  return { ...view, fellows: await fellowsOn(c) };
 }
 
 // ---------------------------------------------------------------------------------------------
