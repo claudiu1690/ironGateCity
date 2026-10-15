@@ -739,6 +739,8 @@ export const copy = {
   nameBlank: "Your name can't be blank",
   nameTooShort: 'Your name needs at least 2 characters',
   nameTooLong: 'Your name can have at most 40 characters',
+  /** Review 7 #2 (slice 6 design §23.1): the word filter refuses a name; no echo of the word. */
+  nameNotAllowed: "That name can't be used here. Try another.",
   /** The name of an account made before the name rule with none (§14.2): neutral in every faction. */
   unnamed: 'A Newcomer',
   /** Me tab (§14.1): "Political Capital 5"; review 2 #5: the HUD spells it out too. */
@@ -2299,7 +2301,8 @@ export const copy = {
       joinAsHand: 'Join as a hand · 5 Energy',
       withdraw: (n: number) => `Withdraw · ${n} Energy back`,
       committed: (time: string) => `Committed from ${time}: the branch is counting on you`,
-      askSomeone: 'Ask someone to join',
+      /** The event screen's link to the Members tab (review 7 #3: the same word as the invite). */
+      askSomeone: 'Invite someone',
       /** The resolved page's header line (screens §3.3). */
       resolvedLine: (outcome: string, swing: string, n: number) =>
         `${outcome} · opinion ${swing} · ${n} ${n === 1 ? 'member' : 'members'}`,
@@ -2483,8 +2486,16 @@ export const copy = {
         rivalGround: (city: string) => `in ${city} · rival ground`,
       },
       movedThisWeek: (n: string) => `+${n} this week`,
-      askToJoin: 'Ask to join',
-      asked: 'Asked',
+      /**
+       * The invite (was "Ask to join"; review 7 #3, design §23.2). Shown only while you are on an open
+       * event with a place this mate can take; the soonest such event when there are several.
+       * `time` is the card's time phrase: *Invite to the rally · 19:40*.
+       */
+      invite: (event: string, time: string) => `Invite to the ${event} · ${time}`,
+      /** After the tap, plain text on the row until the event starts. */
+      invited: (event: string) => `Invited to the ${event}`,
+      /** The result line (a toast, no modal). */
+      inviteDone: (name: string) => `Invited. ${name} will see it in the branch's chat.`,
       alone: "You're the branch for now. New members arrive at the station; the paper will say.",
     },
     /** The profile sheet (screens §2.3; design §7.3). */
@@ -2536,7 +2547,14 @@ export const copy = {
         repeat: 'Said that already',
         tooLong: 'At most 280 characters',
         empty: 'Nothing to send',
+        /** The word filter's refusal (design §23.1; GDD §16.2's slice-9 string): the line is not posted, the word never echoed. */
+        refused: "That can't be said here.",
       },
+      /**
+       * A masked swear-word, as the period's papers printed one (design §23.1): its first letter and
+       * a dash, *b—*. The server stores the line masked; the author sees the same.
+       */
+      mask: (first: string) => `${first}—`,
       empty: "Nothing said yet. The branch's lines land here: events called, results, who needs bail.",
       /** Me's *Chat* switch (design §8: the chat's one promise is that it can be switched off). */
       me: {
@@ -2565,11 +2583,14 @@ export const copy = {
       seatWon: (name: string, place: string) => `${name} has taken a seat on the ${place} council`,
       seatTop: (name: string, place: string) => `${name} has topped the poll in ${place}`,
       heroNamed: (name: string, title: string, place: string) => `${name} is named ${title} of ${place}`,
-      /** The nudge (design §9.3): the first open named role the mate may take, or a pair of hands. */
-      nudgeRole: (caller: string, name: string, role: string, event: string, time: string) =>
-        `${caller} asks ${name} to take the ${role} at the ${event} · ${time}`,
-      nudgeHands: (caller: string, name: string, event: string, time: string) =>
-        `${caller} asks ${name} for a pair of hands at the ${event} · ${time}`,
+      /**
+       * The invite (design §9.3, §23.2): the first open named role the mate may take, or a hand's place.
+       * *Jan Sorel invites Mira Hale to the rally at Market Row, 19:40 · the Press is open*, with **Join**.
+       */
+      nudgeRole: (caller: string, name: string, role: string, event: string, venue: string, time: string) =>
+        `${caller} invites ${name} to the ${event} at ${venue}, ${time} · the ${role} is open`,
+      nudgeHands: (caller: string, name: string, event: string, venue: string, time: string) =>
+        `${caller} invites ${name} to the ${event} at ${venue}, ${time} · a hand's place is open`,
       buttons: {
         postBail: (iron: number) => `Post bail · ${iron} Iron`,
         visit: 'Visit · 3 Energy',
@@ -2659,9 +2680,11 @@ export const copy = {
       CHAT_RATE: 'Too fast; a moment.',
       CHAT_TEXT: 'Nothing to send, or too long.',
       CHAT_CHANNEL: "That's not your branch's room.",
+      /** The word filter (design §23.1): the same words as `chat.limits.refused`, under the composer. */
+      CHAT_REFUSED: "That can't be said here.",
       CANNOT_REPORT: "That line can't be reported.",
-      NUDGE_NOT_ALLOWED: "They're on it already, or you asked them.",
-      NUDGE_NOTHING_OPEN: 'No place open to ask them to.',
+      NUDGE_NOT_ALLOWED: "They're on it already, or you've invited them.",
+      NUDGE_NOTHING_OPEN: 'No place open for them on your events.',
       moved: 'This moved on in another window. Reload to carry on.',
     },
     /** Help notes (screens §12; the review-1 pattern: [kicker, note]). */
@@ -2694,6 +2717,16 @@ export const copy = {
       chat: () => [
         'Chat',
         "The branch's room. Party is everyone; the city branch is who's here. Mute anyone from their profile; report a line with a long press. Hide chat from the Me tab if you'd rather.",
+      ],
+      /** Review 7 #2 (design §23.1): the editor's rule, behind the composer's (i). */
+      editor: () => [
+        'The editor',
+        "Swearing goes out with the editor's dash, b— and the like. Slurs and real-world hate don't go out at all; the line comes back to you and nobody sees it. The same goes for names.",
+      ],
+      /** Review 7 #3 (design §23.2): behind the Members tab's (i), next to the invite. */
+      invite: () => [
+        'Invite',
+        "Shows when you're on an event with a place this mate could take. One tap puts a line in the branch's chat with a Join button; once per mate per event. No place is held for them.",
       ],
     },
   },

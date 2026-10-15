@@ -341,7 +341,7 @@ Avatar, name, faction and rank title, Level, where they live, member since, hero
 | **Rate limits** | One message every **3 seconds**; **30 in ten minutes**; an identical repeat within a minute is refused (*Said that already*) |
 | **System lines** | In the branch channel of the place (the residence city's branch when the place has no branch of the faction, as on rival ground), from the server, in the paper's voice: an event called (*{name} has called a rally at Market Row for 19:40 · 1 of 4 roles*), the result (*The branch's doorstep drive on Foundry Row: Success · opinion +0.95*), a mate taken in (*{name} has been taken in at Harbour Police · bail 150 Iron* with **Post bail**), admitted (*{name} is in the infirmary · 18 minutes* with **Visit · 3 Energy**), a seat won, a hero named, a nudge (§9.3). System lines carry the buttons; nothing else in chat is tappable but names |
 | **Transport** | WebSockets (the plan): live lines while the tab is open; otherwise the history on open. **Nothing depends on being connected** (a result lands in the modal and the paper whether or not the chat was open) |
-| **Moderation now** | **Mute** a member (one tap on the profile sheet; stored on the character; hides their lines for you); **Report** a message (one tap; writes a `chatReports` document with the message and the twenty lines around it; nothing automatic); the sign-up name rule; the length and rate limits above. The chat's one promise to the user is that it can be switched off: *Chat* can be hidden from the Me tab |
+| **Moderation now** | **Mute** a member (one tap on the profile sheet; stored on the character; hides their lines for you); **Report** a message (one tap; writes a `chatReports` document with the message and the twenty lines around it; nothing automatic); the sign-up name rule; the length and rate limits above. **Review 7 (§23.1):** the word filter, two tiers: slurs and real-world hate refused (*That can't be said here.*), swearing masked with the editor's dash (*b—*); names refused on either. The chat's one promise to the user is that it can be switched off: *Chat* can be hidden from the Me tab |
 | **Slice 9** | Moderator roles and tools, timeouts and bans, word filters, the audit of reports, appeals, the chat-moderation policy itself (Appendix C #7, still open) |
 
 The chat is **optional**: no rule, reward or event needs it. It exists so a branch can say *who's on the rally tonight*.
@@ -374,7 +374,7 @@ The chat is **optional**: no rule, reward or event needs it. It exists so a bran
 
 ### 9.3 The nudge (GDD §16.2's "give them a spot in your Campaign Event")
 
-One tap on a member's row or profile while **you are signed up to an open event with a free place and the mate is not on it**: **Ask {name} to join {event}** posts a system line in the branch channel addressed to them, naming the first open named role they may take (*{caller} asks {name} to take the Press at the rally · 19:40*) or a pair of hands when only a hand's place suits them (*{caller} asks {name} for a pair of hands at the rally · 19:40*), with the event's button. No reservation, no state beyond *once per pair per event*. It is the cheapest social tap in the game and the one that fills rosters.
+One tap on a member's row or profile while **you are signed up to an open event with a free place and the mate is not on it**: **Ask {name} to join {event}** posts a system line in the branch channel addressed to them, naming the first open named role they may take (*{caller} asks {name} to take the Press at the rally · 19:40*) or a pair of hands when only a hand's place suits them (*{caller} asks {name} for a pair of hands at the rally · 19:40*), with the event's button. No reservation, no state beyond *once per pair per event*. It is the cheapest social tap in the game and the one that fills rosters. **Review 7 (§23.2):** players read it as *the invite*; the button names the event (*Invite to the rally · 19:40*), is hidden when there is nothing to ask, picks the soonest event, and the line carries the venue.
 
 ---
 
@@ -613,3 +613,44 @@ Written into `packages/content` while phase B (the server) was built in parallel
 - **§6.1, Orders:** when the member is in the cells the orders block reads *Orders off today · the branch heard about the cells* (GDD §13.7, §19.2).
 - **§10, the paper:** the Events section lists the faction's events **in the city the member is in** first, which is also how the local edition reads (GDD §3.3); nothing else changes.
 - **The sentence** on the held screens no longer invites closing the game; §12.4's walkthrough reads accordingly.
+
+---
+
+## 23. Review 7 rulings (15 Oct 2026; the user's Design Review 4 notes #2 and #3)
+
+### 23.1 The word filter (note #2: "chat needs a profanity filter")
+
+Slice 9's filter (GDD §16.2, `docs/design/slice-9-launch.md` §5.6) is brought forward in its simplest shape. Two tiers, one function, on the server, before a line is stored:
+
+| | Slurs and real-world hate | Ordinary swearing |
+|---|---|---|
+| **In chat** | **Refused.** The line is not posted, nothing is stored, no report is written. The composer keeps the text and reads ***That can't be said here.*** under it (`together.chat.limits.refused`, error `CHAT_REFUSED`; the GDD's slice-9 string, no echo of the word). A refusal still counts toward the rate limits (one in three seconds, thirty in ten minutes), so a repeat attempt is bounded | **Masked and posted.** The word prints as its first letter and a dash, ***b—***, the way the period's papers printed swearing (`together.chat.mask`). The server stores the line masked; the author sees the same line everyone sees, which is the tell. No note, no modal: one tap, as before |
+| **In names** (sign-up now; the slice-9 rename) | **Refused**, ***That name can't be used here. Try another.*** (`copy.nameNotAllowed`, under the field with the blank / short / long lines) | **Refused**, the same line. A name is read a thousand times; a swearing name is not masked, it is not a name |
+
+Rules:
+
+- **What it must pass:** the game's own vocabulary (*rally, strike, picket, canvass, exposé, chalking, gate, hands*), every content name, and ordinary words that contain a bad substring (the Scunthorpe problem): the content already has *Assembly Rooms*, *The Pass*, *Ashford*, *Mass* and *night*. A false refusal in a political game's chat is worse than a missed swear.
+- **Leetspeak and symbol swaps** (*sh1t*, *s.h.i.t*, *$hit*, doubled letters) are caught; that is what the library is for.
+- **Help:** *The editor* (`together.help.editor`) behind the composer's (i): *Swearing goes out with the editor's dash, b— and the like. Slurs and real-world hate don't go out at all; the line comes back to you and nobody sees it. The same goes for names.* The chat help note is unchanged.
+- **Mild period words** (*bloody*, *damn*, *hell*, *sod*) are not swearing in a 1946 noir game and are **not** masked; the developer removes them from the library's dataset if it carries them.
+- **The lists live outside `packages/content`**, as the GDD's §0 change table and slice 9's §5.6 already rule (`packages/moderation/lists/`, or the server's `moderation/` folder if the architect prefers no new package yet): QA's vocabulary guards sweep every content string and must never read a slur list; and the list is not in this document for the same reason.
+
+**The library: `obscenity`** (npm, v0.4.6 of 18 Jan 2026, **MIT**, no dependencies, github.com/jo3-l/obscenity, releases through 2025–26). Why it and not a plain word list: its English dataset ships with transformers that resolve confusables, leetspeak, skipped symbols and doubled letters, and **with whitelisted terms** for the known false positives; its patterns carry word boundaries; `TextCensor` takes a custom strategy, so the dash mask is one line; each match names its `originalWord`, so a small set of those words marks the refuse tier. Paired with **a project list** of three parts: the **refuse** additions (the content-policy review's §7: real-world salutes, slogans, anthem lines, party names and leaders, in every spelling), the **tier** set (which of the dataset's words are slurs; everything else masks), and the **allow** additions (the game's vocabulary and every content name). The developer runs every content name through the matcher once and puts each hit on the allow list.
+
+**What this does not add:** the flag queue, the ladder, the console, the reports' reasons, the impersonation list (slice 9). Mute and report stay as §8. Appendix C #7 stays closed as it is; GDD §16.2's "Moderation in slice 6" line gains *and the word filter's refuse and mask tiers (slice 6 design §23.1)*.
+
+### 23.2 The invite (note #3: "Ask to join… ask to join what?")
+
+The nudge (§9.3) is renamed **the invite** for players and the button names the event. The rule is unchanged (tech §22.1 Q9); the wording and the showing are:
+
+- **The button:** ***Invite to the rally · 19:40*** (`together.members.invite(event, time)`; the event's running name and the card's time phrase). On a member's row in the Members tab and on the profile sheet.
+- **When it shows:** only while **you are signed up to an open event that has a place this mate can take** (an open named role they may take, or a hand's place) and **they are not on it** and **you have not invited them to it**. Otherwise **hidden**, not greyed: a row with no invite is a row with nothing to ask. A mate in the cells or on the ward is not shown the button either (they cannot sign up today; their status line says why).
+- **More than one event:** **the soonest** with a place for them; one button per row, never a choice. If the soonest has nothing for them, the next.
+- **After the tap:** the row reads ***Invited to the rally*** as plain text (`members.invited`) until the event starts, and the toast reads ***Invited. Mira Hale will see it in the branch's chat.*** (`members.inviteDone`). No modal: this is the cheapest social tap in the game. Nothing is reserved.
+- **The chat line the mate sees** (in their branch channel, marked *for you*, with **Join**): ***Jan Sorel invites Mira Hale to the rally at Market Row, 19:40 · the Press is open*** (`system.nudgeRole`), or ***… · a hand's place is open*** (`system.nudgeHands`). Both now carry the **venue**, which is what makes "which rally" obvious; the system line's payload gains `venue`.
+- **Refusals** (unchanged codes): `NUDGE_NOT_ALLOWED` *They're on it already, or you've invited them.*; `NUDGE_NOTHING_OPEN` *No place open for them on your events.*
+- **Help:** *Invite* (`together.help.invite`) behind the Members tab's (i): *Shows when you're on an event with a place this mate could take. One tap puts a line in the branch's chat with a Join button; once per mate per event. No place is held for them.*
+
+Known gap, left for slice 7: a mate who has hidden chat from the Me tab never reads the invite; the paper's *Events* row (with **Join**) is their fallback today. If the playtest shows invites going unread, the invite becomes a desk row as well.
+
+The ids (`events.nudge`, `nudge:{event}:{from}:{to}`, `SystemLineKind 'nudge'`) stay; ids are never read.
