@@ -60,3 +60,4 @@ export * from './ladder';
 export * from './national';
 export * from './parliament';
 export * from './nationEvents';
+export * from './nationViews';
