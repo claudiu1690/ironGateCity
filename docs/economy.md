@@ -804,6 +804,8 @@ Every national act is one or two taps; the Chair's whole term is five taps once 
 
 ### 21.7 Flags (GDD Appendix C #64–#73)
 
+The user approved the slice-7 design's seven defaults on 15 Oct 2026 (`slice-7-nation.md` §21): #64, #65, #66, #68 and #70 below are user decisions; #67, #69, #72 and #73 are the designer's defaults, kept as flags to watch in the playtest. No number moved.
+
 | # | Flag | Risk | Lever |
 |---|---|---|---|
 | 64 | One office at the top | A President with a tiny score reads as too strong | The veto needs a bloc of 20 |

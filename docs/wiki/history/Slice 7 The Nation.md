@@ -2,18 +2,18 @@
 type: history
 title: Slice 7 The Nation
 aliases: [Slice 7, The nation]
-tags: [slice, designed]
-status: designed
-dates: 2026-10-04 (designed); not built
+tags: [slice, building]
+status: building
+dates: 2026-10-04 (designed); 2026-10-15 (approved, building)
 commits: [1f8172a, ef6b697]
 gdd: ["§2", "§14.1", "§14.8", "§15.1", "§15.4", "§15.5", "§15.6", "§15.8", "§15.9", "§15.10", "§17.1"]
 adrs: ["0043", "0044", "0045", "0046", "0047", "0048", "0049", "0050"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Slice 7 The Nation
 
-**Status: designed only, not built.** Designed on 4 Oct 2026; amended by [[Review 4]], [[Review 5]] and the [[Voting Rework]].
+**Status: building** since 15 Oct 2026, when the user approved the design's seven defaults. Designed on 4 Oct 2026; amended by [[Review 4]], [[Review 5]] and the [[Voting Rework]]. Phase A runs in two lanes: the developer's rules, schemas and accessors (T1–T6, T9, T10) and the designer's content (T7 Clearwater, T8 the nation).
 
 ## Goal and playtest question
 
@@ -41,7 +41,7 @@ From [[IMPLEMENTATION_PLAN#Slice 7 — The nation|the plan]]: the rest of the of
 
 ## Decisions made
 
-- Seven **points for the user** with defaults (design §21): the President only; the secretary always on the Chair's ballot; petitions dissolve rather than call a snap election; the secretaries table bills for parties with no player in Parliament; Clearwater's start evened to 22 / 22 / 22 / 34; the Front a teaser until slice 8; several offices at once. The review-4 guide asked the user to check them; no explicit answer is recorded.
+- **15 Oct 2026, the user: the seven points of design §21 approved as written** and the build started: the President only (no Chancellor); the secretary always on the Chair's ballot and the party's own figure on every pick; petitions dissolve rather than call a snap election; the secretaries table bills for parties with no player in Parliament; Clearwater's start evened to 22 / 22 / 22 / 34; The Front's four places as later pins until slice 8; several offices at once. No number moved. Recorded in GDD §0 (15 Oct 2026) and Appendix C #64, #65, #66, #68, #70; [[Decision Log]].
 - **Voting simplified (user, 10 Oct 2026)** changed this slice's design: the Governor sets card 1; the Chair's rule is card 1 wherever no Governor sits; the Chair stands for **25 PC, spent, no backers needed**.
 
 - 14 Oct 2026 (drift cleanup): [[design/slice-7-nation|design §13]] is now headed ***The list*** (keepsake *Your line on the list*); the design's ladder table says no backers needed; its old Governor's-rule bullet is marked superseded; §10.1 lets a dissolved council's rule run out its window. The plan names petitions that dissolve a council and votes to remove the President. Clearwater's card shows 22 / 22 / 22 / 34.
@@ -49,7 +49,7 @@ From [[IMPLEMENTATION_PLAN#Slice 7 — The nation|the plan]]: the rest of the of
 
 ## QA and leftovers
 
-Not built, so no QA. Open defaults: GDD Appendix C #64–#73 (see [[Open Questions]]).
+Building; no QA yet. The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
 
 ## Commits
 

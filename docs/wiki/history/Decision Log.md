@@ -132,6 +132,12 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 | 15 Oct | **A swing prints to two decimals trimmed (+0.83, +0.8, +1); a share to one decimal.** The event result stays; the paper's row trims | A hand's quarter point on a four-way split must still read | [[design/slice-6-together\|slice-6 design]] §22 #10; GDD §14.2 | [[Campaign Events]], [[Influence and Opinion]] |
 | 15 Oct | **Phase B's two defaults confirmed:** an event's swing does not write the morale record; *event-city* prints only for a reader on no event yesterday | At most a day's delay on an unprinted record; no two event lines in one paper | [[design/slice-6-together\|slice-6 design]] §22 #11–12 | [[Campaign Events]], [[The Morning Paper]] |
 
+## Slice 7 go-ahead (15 Oct)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 15 Oct | **The seven slice-7 defaults approved as written**: one office at the top, the President; the secretary always on the Chair's ballot and the party's own figure on every pick; a petition dissolves the council, no snap election; the secretaries table bills where no player sits; Clearwater's baseline evened to 22 / 22 / 22 / 34; The Front's four places as later pins until slice 8; several offices at once. No number moves; the build starts | — | [[design/slice-7-nation\|slice-7 design]] §21; GDD §0 (15 Oct), Appendix C #64, #65, #66, #68, #70 | [[Offices]], [[National Elections]], [[The Legislature and Laws]], [[Recall and Removal]], [[Clearwater]], [[NPC Fill]], [[Slice 7 The Nation]] |
+
 ## Review 7 (15 Oct, Notion Design Review 4)
 
 | Date | Decision | Why (if stated) | Where recorded | Systems |

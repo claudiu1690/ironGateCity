@@ -869,6 +869,8 @@ Six pieces. The three national figures are the only new faces; the twenty-four l
 
 ## 21. Points for the user (each with the default this document takes)
 
+> **Approved by the user as written, 15 Oct 2026.** All seven defaults stand and the build starts from them (slice 7 is *building*). No rule or number moves. Recorded in the GDD's §0 change table (15 Oct 2026) and Appendix C #64, #65, #66, #68, #70 (#71 was closed by the slice-8 design on 4 Oct 2026; #2 below has no Appendix C number: it lives in §15.4 and §15.5), in `docs/economy.md` §21.7 and in the wiki's Decision Log.
+
 1. **One office at the top, called the President; no Chancellor** (§3, §6.3). The GDD had a 55 % line that made the winner a President or a Chancellor with a coalition rule. Default: **the President**, because it is one plain word, faction-neutral, and the coalition rule already exists in Parliament (31 of 60 with the local deputies following their Chairs). The alternative keeps the two titles and the 55 % line.
 2. **The secretary is always on the Chair's ballot, and the party's own figure on the party's pick** (§4.1, §6.2). Default: **yes**: a player must beat the game's own figure to carry the party, which protects a branch from a lone Rank 4 and makes the first Chair a real win. The alternative seats any lone candidate unopposed.
 3. **Petitions dissolve the council rather than calling a snap election** (§10.1). Default: **dissolve** (the rule struck, the Governor's chair to a local, the terms uncompleted; the ordinary election is never more than five days away). The alternative is the GDD's snap election, which breaks the pure calendar for a vote that would land on the ordinary one.

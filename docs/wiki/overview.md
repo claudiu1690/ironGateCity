@@ -23,8 +23,10 @@ rule and number. How the wiki is kept: [[CLAUDE|operating manual]]. Full catalog
 - **Built:** slices 0–5 ([[Slice 0 Walking Skeleton|walking skeleton]] → [[Slice 5 Risk|risk]]),
   the fix rounds of [[Review 1]]–[[Review 5]], the [[Voting Rework]] (12 Oct), and
   [[Slice 6 Together|slice 6]] (built 15 Oct, **in QA**).
-- **Designed, not built:** slices 7–9 ([[Slice 7 The Nation|the nation]],
-  [[Slice 8 A Life in the City|a life in the city]], [[Slice 9 Launch Readiness|launch readiness]]).
+- **Building:** [[Slice 7 The Nation|slice 7, the nation]] (the user approved its seven defaults on
+  15 Oct; rules, schemas and content in progress).
+- **Designed, not built:** slices 8–9 ([[Slice 8 A Life in the City|a life in the city]],
+  [[Slice 9 Launch Readiness|launch readiness]]).
 - **Running locally only** until the end of the project; no hosting yet.
 - What's unresolved: [[Open Questions]] · where sources disagree: [[Drift Report]] · the user's
   calls: [[Decision Log]].

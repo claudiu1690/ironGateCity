@@ -9,6 +9,10 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] update | Slice 7 approved: the seven defaults, the build starts
+
+The user approved `docs/design/slice-7-nation.md` §21 as written (the President only; the secretary and the figure on every ballot; petitions dissolve; the secretaries' bills; Clearwater evened; The Front as later pins; several offices). GDD §0 row and Appendix C #64, #65, #66, #68, #70 marked; economy §21.7 noted. Updated [[Slice 7 The Nation]] (building), [[Decision Log]], [[Open Questions]], [[index]], [[overview]].
+
 ## [2026-10-15] build | Review 7: the chat word filter, the invite, Give Iron
 
 The user's Design Review 4 notes #2 and #3 (design §23): the word filter on the server (`apps/server/src/moderation/`, `obscenity` 0.4.6; slurs and real-world hate refused, swearing masked as *b—*, names refused on either tier), the invite naming its event (*Invite to the rally · 19:40*, hidden when there is nothing to ask, the venue in the chat line, a toast), *Invite someone* on the event page, the help notes *The editor* and *Invite*, and the dev panel's *Give 2,000 Iron*. New [[Review 7]]; updated [[Chat and Presence]], [[Moderation and Fair Play]], [[Slice 6 Together]], [[Decision Log]], [[index]].
