@@ -128,12 +128,12 @@ export function lodgingsView(
     tap: tap.kind === 'paidAhead' ? 'notYet' : tap.kind,
     renewFromDay: tap.kind === 'paidAhead' ? tap.renewFromDay : null,
     cap: {
-      now: restedCapToday(content, docs.residence, today, c.room),
+      now: restedCapToday(content, docs.residence, today, c.room, c.factionId),
       with: restedCapToday(content, docs.residence, today, {
         cityId: ROOM.cityId,
         fromDay: today,
         untilDay: today + ROOM.days,
-      }),
+      }, c.factionId),
     },
   };
 }
@@ -215,7 +215,7 @@ function rebase(content: GameContent, c: CharacterDoc, city: CityDoc | null, now
     energyState(c),
     now,
     ENERGY.max,
-    restedCapToday(content, city, dayKey(now), c.room),
+    restedCapToday(content, city, dayKey(now), c.room, c.factionId),
   );
   return { 'energy.value': e.value, 'energy.updatedAt': new Date(e.updatedAt), rested: e.rested };
 }
@@ -534,7 +534,7 @@ export async function takeRoom(deps: {
         idempotencyKey: input.idempotencyKey,
         vars: {
           weekday: weekdayName(room.untilDay),
-          cap: String(restedCapToday(content, residenceCity, today, room)),
+          cap: String(restedCapToday(content, residenceCity, today, room, c.factionId)),
         },
         knockOns: { iron: { before: c.iron, after: updated.iron } },
         residenceCity,

@@ -62,7 +62,7 @@ export async function readPlace(
     district,
     modifiers,
     residenceCity,
-    restedCap: restedCapToday(content, residenceCity, today, c.room),
+    restedCap: restedCapToday(content, residenceCity, today, c.room, c.factionId),
     placeId: districtId ?? city.id,
     placeName: districtId ? (content.district(districtId)?.quarter.name ?? districtId) : city.name,
     rival: rivalGroundIn(modifiers),

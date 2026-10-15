@@ -2934,7 +2934,7 @@ export interface HeldView {
   /** *You again*: a second arrest in seven days, or a second stay. */
   again: boolean;
   bail: { total: number; lines: PriceLineView[]; affordable: boolean; legalAid: boolean } | null;
-  walkOut: { energy: 5; iron: 100; affordable: boolean } | null;
+  walkOut: { energy: 5; /** Slice 7 (ADR 0044): the price under the laws (Universal Care 50). */ iron: number; affordable: boolean } | null;
   discharge: { energy: 5; healthTo: number; affordable: boolean } | null;
   health: { value: number; max: number; fullAt: number | null };
   /** *Listen to the cells* / *Talk to the ward*. */

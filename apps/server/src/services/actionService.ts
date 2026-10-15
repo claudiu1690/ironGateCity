@@ -14,10 +14,12 @@ import {
   pickOpponent,
   projectHeat,
   resolveTier1Action,
-  runInChance,
   resolveTraining,
+  runInChance,
+  runInPcts,
   standingView,
 } from '@irongate/rules';
+import { lawModifiers } from './lawBook';
 import type {
   ActionDescriptor,
   ActionResult,
@@ -358,7 +360,7 @@ async function rivalRunIn(i: {
 }): Promise<RunInPending | null> {
   const { content, c, ctx, now } = i;
   const today = ctx.today;
-  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity));
+  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity, c.factionId));
   const state = heatState(heat.value);
   // Review 5 (ADR 0080): the night at the act (the tier-1 base 25, the police half the pool).
   const night = nightAt(now).night;
@@ -370,6 +372,8 @@ async function rivalRunIn(i: {
     record: recordLevelOf(c, today),
     flags: flagsToday(c, ctx.city.id, today),
     night,
+    // Slice 7 (ADR 0044): the laws' run-in percentages (the Curfew at night).
+    pcts: runInPcts(lawModifiers(content, today, c.factionId), night),
   });
   const street = createRng(`${i.seed}:runIn`);
   const roll = street.roll100();

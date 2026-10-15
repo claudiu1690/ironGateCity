@@ -4,10 +4,6 @@ import { copy } from '@irongate/content/copy';
 import { Character, City, District, IssueModel, Journey, PaperEntry } from '@irongate/db';
 import type { CharacterDoc, CityDoc, DistrictDoc, IssueDoc, JourneyDoc } from '@irongate/db';
 import {
-  ENERGY,
-  JOURNEY_SET_ASIDE,
-  MORALE,
-  TRAVEL,
   addHeat,
   addToTally,
   applyGains,
@@ -23,20 +19,26 @@ import {
   drawCardAt,
   drawHostileCard,
   drawJourneyCard,
+  ENERGY,
   fare,
   fillTemplate,
+  JOURNEY_SET_ASIDE,
   journeyChoiceCheck,
   journeyLegs,
+  journeyMinutes,
   legMinutes,
   legSpans,
   liveMarks,
+  MORALE,
   moraleState,
   projectEnergy,
   projectHeat,
   resolveJourneyChoice,
   standingBonus,
+  TRAVEL,
   weekOf,
 } from '@irongate/rules';
+import { fadeDaysFor, lawModifiers } from './lawBook';
 import type {
   BoardResult,
   CharacterView,
@@ -208,7 +210,10 @@ export function trainsFrom(
       .map((n) => ({
         cityId: n.cityId,
         name: n.name,
-        minutes: legMinutes(here, n.cityId, minutesMap(content), capitalOf(content)),
+        minutes: journeyMinutes(
+          legMinutes(here, n.cityId, minutesMap(content), capitalOf(content)),
+          lawModifiers(content, day, c.factionId),
+        ),
         fare: { base: f.base, lines: f.lines, total: f.total },
         canBoard: boardRefusal(content, c, n.cityId, f.total, now) === null,
       })),
@@ -303,7 +308,7 @@ export async function nationView(content: GameContent, c: CharacterDoc, now: num
         : {}),
       minutes:
         here && n.cityId !== here && n.service === 'open'
-          ? legMinutes(here, n.cityId, minutesMap(content), capital)
+          ? journeyMinutes(legMinutes(here, n.cityId, minutesMap(content), capital), lawModifiers(content, today, c.factionId))
           : null,
       fare: here && n.cityId !== here && !locked ? { base: f.base, lines: f.lines, total: f.total } : null,
       whoHolds,
@@ -388,7 +393,7 @@ export async function board(deps: {
       const inc: Record<string, number> = { iron: -f.total, version: 1, journeysMade: 1 };
       let card: { eventId: string; deck: 'ordinary' | 'hostile' } | null;
       if (rival) {
-        const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, loaded.city)).value;
+        const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, loaded.city, c.factionId)).value;
         const drawn = drawHostileCard({
           firstRival: (c.rivalTrips ?? 0) === 0,
           heat,
@@ -413,7 +418,11 @@ export async function board(deps: {
         card = drawn.eventId ? { eventId: drawn.eventId, deck: 'ordinary' } : null;
         set.journeyDeck = { seen: drawn.seen, firstDone: true };
       }
-      const minutes = legMinutes(c.cityId, input.to, minutesMap(content), capitalOf(content));
+      // Slice 7 (ADR 0044): the Open Borders Act's minutes, fixed at boarding.
+      const minutes = journeyMinutes(
+        legMinutes(c.cityId, input.to, minutesMap(content), capitalOf(content)),
+        lawModifiers(content, dayKey(now), c.factionId),
+      );
       const id = new Types.ObjectId();
       const boardedAt = new Date(now);
       const arrivesAt = new Date(now + minutes * MINUTE);
@@ -629,7 +638,7 @@ export async function journeyView(
     const stored = (j.choice as { heat?: { before: number; after: number } } | null)?.heat;
     let heat: { before: number; after: number } | undefined = stored ?? opts.heat ?? undefined;
     if (ignore?.heat) {
-      const change = addHeat(heatTimerOf(c), now, heatRateOn(content, opts.city), ignore.heat);
+      const change = addHeat(heatTimerOf(c), now, heatRateOn(content, opts.city, c.factionId), ignore.heat);
       heat = { before: change.before, after: change.after };
     }
     knockOns = {
@@ -799,7 +808,7 @@ async function setAsideInTx(a: {
   const destCity = await City.findById(j.to).session(session).lean<CityDoc>();
   const issue = await firstIssueOf(j.to, destCity, today, session);
   if (issue) vars.issue = content.issue(issue.issueId)?.short ?? vars.issue;
-  const heatChange = fx?.heat ? addHeat(heatTimerOf(c), now, heatRateOn(content, loaded.city), fx.heat) : null;
+  const heatChange = fx?.heat ? addHeat(heatTimerOf(c), now, heatRateOn(content, loaded.city, c.factionId), fx.heat) : null;
   const set: Record<string, unknown> = {};
   if (heatChange) set.heat = heatDoc(heatChange.timer);
   if (fx?.flag) set.flags = withFlag(c, j.to, today, fx.flag);
@@ -913,7 +922,7 @@ export async function choose(deps: {
       // Slice 5 (tech design §8.2): the hostile deck checks at 14; the checkpoint's gate is Cool and
       // Clean (Heat 0–24, no live mark); Heat at the residence city's rate.
       const hostile = ev.deck === 'hostile';
-      const rateOn = heatRateOn(content, loaded.city);
+      const rateOn = heatRateOn(content, loaded.city, c.factionId);
       const heatNow = projectHeat(heatTimerOf(c), now, rateOn).value;
       const spec: JourneyChoiceSpec = {
         id: ch.id,
@@ -929,7 +938,7 @@ export async function choose(deps: {
         standingBonus: bonus,
         rng: createRng(`${j.seed}:card`),
         difficulty: cardDifficulty(hostile ? 'hostile' : 'ordinary'),
-        ...(ch.gate ? { gateHolds: coolAndClean(heatNow, liveMarks(marksOf(c), today).length) } : {}),
+        ...(ch.gate ? { gateHolds: coolAndClean(heatNow, liveMarks(marksOf(c), today, fadeDaysFor(c.factionId)).length) } : {}),
       });
       const text = r.branch === 'stopped' || r.outcome === 'partial' ? ch.partial!.text : ch.success.text;
       const capital = capitalOf(content);
@@ -1027,7 +1036,7 @@ export async function choose(deps: {
       }
 
       // The character: the stake, XP and Party XP, Rested banked to the cap, the tally, the quote.
-      const cap = restedCapToday(content, loaded.city, today, c.room);
+      const cap = restedCapToday(content, loaded.city, today, c.room, c.factionId);
       const energy = projectEnergy(energyState(c), now, ENERGY.max, cap);
       const rested = Math.min(cap, energy.rested + (rw.rested ?? 0));
       const gains = applyGains(progressOf(c), { xp: rw.xp ?? 0, fxp: rw.fxp ?? 0, pc: 0 });
@@ -1192,7 +1201,7 @@ async function closeJourneyInTx(
         residenceCity !== undefined
           ? residenceCity
           : await City.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-      set.heat = heatDoc(addHeat(heatTimerOf(c), now, heatRateOn(content, city), fx.heat).timer);
+      set.heat = heatDoc(addHeat(heatTimerOf(c), now, heatRateOn(content, city, c.factionId), fx.heat).timer);
     }
     if (fx.flag) set.flags = withFlag(c, slept.to, today, fx.flag);
   }

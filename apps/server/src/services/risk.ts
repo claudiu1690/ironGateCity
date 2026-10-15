@@ -17,12 +17,15 @@ import {
   recordLevel,
   recordView,
   runInChance,
+  runInPcts,
 } from '@irongate/rules';
+import { fadeDaysFor, lawModifiers } from './lawBook';
 import type {
   CharacterViewV6,
   DayFlags,
   DayKey,
   HealthTimer,
+  FactionId,
   HeatTimer,
   Mark,
   RecordLevel,
@@ -43,8 +46,10 @@ export { rivalGroundAt };
 export function heatRateOn(
   content: GameContent,
   residenceCity: Pick<CityDoc, 'ordinance' | 'ordinanceHistory' | 'issues'> | null,
+  /** Slice 7 (ADR 0044): the actor, for a law's cooling (Special Powers: its members only). */
+  actor?: FactionId,
 ): (day: DayKey) => number {
-  return (day) => coolRate(heatCoolPcts(dayModifiers(content, residenceCity, day)));
+  return (day) => coolRate(heatCoolPcts(dayModifiers(content, residenceCity, day, actor)));
 }
 
 export const heatTimerOf = (c: Pick<CharacterDoc, 'heat'>): HeatTimer => ({
@@ -65,8 +70,9 @@ export const marksOf = (c: Pick<CharacterDoc, 'record'>): Mark[] =>
 
 export const arrestsOf = (c: Pick<CharacterDoc, 'record'>): DayKey[] => [...(c.record?.arrests ?? [])];
 
-export function recordLevelOf(c: Pick<CharacterDoc, 'record'>, today: DayKey): RecordLevel {
-  return recordLevel(liveMarks(marksOf(c), today).length);
+export function recordLevelOf(c: Pick<CharacterDoc, 'record'> & { factionId?: FactionId }, today: DayKey): RecordLevel {
+  // Slice 7 (ADR 0044): the Rehabilitation Act's fade (monotone across a law's end).
+  return recordLevel(liveMarks(marksOf(c), today, c.factionId ? fadeDaysFor(c.factionId) : undefined).length);
 }
 
 /** Today's *Watched* and *Warned* in a city (the hostile cards' day flags). */
@@ -139,7 +145,7 @@ export function riskView(
   residenceCity: CityDoc | null,
 ): CharacterViewV6 {
   const today = dayKey(now);
-  const rateOn = heatRateOn(content, residenceCity);
+  const rateOn = heatRateOn(content, residenceCity, doc.factionId);
   const t = projectHeat(heatTimerOf(doc), now, rateOn);
   const state = heatState(t.value);
   const hTimer = healthTimerOf(doc);
@@ -204,8 +210,8 @@ export function riskView(
 }
 
 /** The live marks today (the bail's count). */
-export const liveMarkCount = (c: Pick<CharacterDoc, 'record'>, today: DayKey): number =>
-  liveMarks(marksOf(c), today).length;
+export const liveMarkCount = (c: Pick<CharacterDoc, 'record' | 'factionId'>, today: DayKey): number =>
+  liveMarks(marksOf(c), today, fadeDaysFor(c.factionId)).length;
 
 /**
  * Review 5 (ADR 0080, 0082): a tier-1 tap's run-in chance on rival ground in `cityId` at `now`: the
@@ -220,7 +226,7 @@ export function rivalTapChance(
   content: GameContent,
 ): number {
   const today = dayKey(now);
-  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, residenceCity));
+  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, residenceCity, c.factionId));
   return runInChance({
     base: 0,
     tier: 1,
@@ -229,5 +235,7 @@ export function rivalTapChance(
     record: recordLevelOf(c, today),
     flags: flagsToday(c, cityId, today),
     night: nightAt(now).night,
+    // Slice 7 (ADR 0044): the laws' run-in percentages (the Curfew at night).
+    pcts: runInPcts(lawModifiers(content, today, c.factionId), nightAt(now).night),
   });
 }

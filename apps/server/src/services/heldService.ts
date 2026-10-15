@@ -4,8 +4,6 @@ import type { CheckedAction, GameContent, LocatedAction } from '@irongate/conten
 import { Character, City, Journey, Stay } from '@irongate/db';
 import type { CharacterDoc, CityDoc, StayDoc, StayReason, StoredHeld } from '@irongate/db';
 import {
-  HEALTH,
-  RECORD,
   admit,
   arrest,
   arrestOnRecord,
@@ -16,12 +14,15 @@ import {
   dayStart,
   deportation,
   dischargeSelf,
+  HEALTH,
   healthFullAt,
   healthMax,
   healthNow,
-  projectEnergy,
+  infirmaryPrice,
   priceLines,
+  projectEnergy,
   projectHeat,
+  RECORD,
   recordLevel,
   recordView,
   release,
@@ -31,6 +32,7 @@ import {
   tier1Difficulty,
   walkOut,
 } from '@irongate/rules';
+import { lawModifiers } from './lawBook';
 import type {
   ActionResult,
   ActionView,
@@ -230,7 +232,7 @@ export async function releaseInTx(
   // Slice 6 (ADR 0041): a mate posted the bail; the stay ends as of then, on the branch's Iron.
   const postedBy = i.how === 'served' && h.kind === 'cells' ? (stay.bailPostedBy ?? null) : null;
   const residenceCity = await City.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-  const rateOn = heatRateOn(content, residenceCity);
+  const rateOn = heatRateOn(content, residenceCity, c.factionId);
   const at = i.at;
   const max = healthMax(c.level);
   const set: Record<string, unknown> = { 'held.state': 'out' };
@@ -240,17 +242,19 @@ export async function releaseInTx(
   const heatBefore = projectHeat(heatTimerOf(c), at, rateOn).value;
   let ironPaid = 0;
   let healthAfter = healthBefore;
+  // Slice 7 (ADR 0044): *Walk out well* under the laws (Universal Care 100 → 50).
+  const walkOutPrice = infirmaryPrice(HEALTH.walkOut.iron, lawModifiers(content, dayKey(at), c.factionId));
   let heatAfter: number | null = null;
 
   if (i.how === 'walkOut' || i.how === 'discharge') {
     const energy = energyState(c);
     const r =
       i.how === 'walkOut'
-        ? walkOut({ energy, level: c.level, iron: c.iron, now: at })
+        ? walkOut({ energy, level: c.level, iron: c.iron, now: at, price: walkOutPrice })
         : dischargeSelf({ energy, level: c.level, health: healthTimerOf(c), now: at });
     if (!r.ok) {
       const p = projectEnergy(energy, at);
-      throw new GameError(r.reason, { energy: p.value, cost: HEALTH.walkOut.energy, iron: c.iron, price: HEALTH.walkOut.iron });
+      throw new GameError(r.reason, { energy: p.value, cost: HEALTH.walkOut.energy, iron: c.iron, price: walkOutPrice });
     }
     set['energy.value'] = r.energy.value;
     set['energy.updatedAt'] = new Date(r.energy.updatedAt);
@@ -258,7 +262,7 @@ export async function releaseInTx(
     set.health = healthDoc(r.health);
     healthAfter = healthNow(r.health, at, c.level);
     knockOns.energy = { before: projectEnergy(energy, at).value, after: r.energy.value };
-    if (i.how === 'walkOut') ironPaid = HEALTH.walkOut.iron;
+    if (i.how === 'walkOut') ironPaid = walkOutPrice;
   } else {
     const rel = release({ held: { kind: h.kind, rivalGround: h.rivalGround }, at, health: healthTimerOf(c) });
     if (rel.heat) {
@@ -583,6 +587,7 @@ export async function getHeld(deps: { user: SessionUser; content: GameContent; n
   const hp = healthNow(healthTimerOf(c), now, c.level);
   const energy = projectEnergy(energyState(c), now);
   const cells = h.kind === 'cells';
+  const walkOutPriceToday = infirmaryPrice(HEALTH.walkOut.iron, lawModifiers(content, dayKey(now), c.factionId));
   return {
     stayId: h.stayId.toHexString(),
     kind: h.kind,
@@ -609,8 +614,8 @@ export async function getHeld(deps: { user: SessionUser; content: GameContent; n
       ? null
       : {
           energy: HEALTH.walkOut.energy,
-          iron: HEALTH.walkOut.iron,
-          affordable: energy.value >= HEALTH.walkOut.energy && c.iron >= HEALTH.walkOut.iron,
+          iron: walkOutPriceToday,
+          affordable: energy.value >= HEALTH.walkOut.energy && c.iron >= walkOutPriceToday,
         },
     discharge: cells
       ? null
@@ -800,7 +805,7 @@ export async function sendToHeld(
     let heatAt: number | null = null;
     let added = 0;
     if (kind === 'cells') {
-      heatAt = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity)).value;
+      heatAt = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity, c.factionId)).value;
       // Review 4 #20 (ADR 0078): the hook writes what an arrest writes: the mark (one minor, or three
       // serious within seven days of an earlier arrest), the arrest's day, and the day's orders off.
       const rec = arrestOnRecord({ marks: marksOf(c), arrests: arrestsOf(c), today, logId: null });

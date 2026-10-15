@@ -236,7 +236,7 @@ export async function visitMate(deps: Deps & { input: { characterId: string; ide
       if (c.day.settled !== today) throw new DayChanged();
       if (c.patrol?.card) throw refuse('PATROL_PENDING', { cityId: c.patrol.card.cityId });
       const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-      const cap = restedCapToday(content, residenceCity, today, c.room);
+      const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId);
       const p = projectEnergy(energyState(c), now, ENERGY.max, cap);
       const stay = m.held ? await Stay.findById(m.held.stayId).session(session).lean<StayDoc>() : null;
       const gate = visitGate({

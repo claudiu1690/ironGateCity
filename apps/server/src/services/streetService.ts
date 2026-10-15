@@ -203,7 +203,7 @@ export function pendingView(
   const located = content.location(enc.locationId);
   const name =
     enc.kind === 'mission' ? (content.mission(enc.refId)?.mission.name ?? enc.refId) : (content.action(enc.refId)?.action.name ?? enc.refId);
-  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, residenceCity));
+  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, residenceCity, c.factionId));
   const pay = enc.opponent.payOff;
   return {
     kind: 'runIn',
@@ -396,7 +396,7 @@ async function resolveTier1InTx(
   const resolution: Tier1Resolution = { ...base, rewards: withRunInParts(base.rewards, o) };
   if (dropped) resolution.rewards = { ...resolution.rewards, opinion: resolution.rewards.opinion };
 
-  const rateOn = heatRateOn(content, ctx.residenceCity);
+  const rateOn = heatRateOn(content, ctx.residenceCity, c.factionId);
   const max = healthMax(c.level);
   const before = healthNow(healthTimerOf(c), i.asOf, c.level);
   let health: HealthTimer = o.healthAfter >= max ? { damage: 0, at: i.asOf } : { damage: max - o.healthAfter, at: i.asOf };

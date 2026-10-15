@@ -166,7 +166,7 @@ async function commitTap(
   const today = dayKey(now);
   if (c.day.settled !== today) throw new DayChanged();
   const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-  const cap = restedCapToday(content, residenceCity, today, c.room);
+  const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId);
   const p = projectEnergy(energyState(c), now, ENERGY.max, cap);
   const spent = spendEnergy({ value: p.value, rested: p.rested, updatedAt: p.updatedAt }, i.cost);
   if (!spent.ok) {
@@ -496,7 +496,7 @@ export async function signUpEvent(
     if (winner) return winner;
     throw gameError('PRECONDITION_FAILED', 'EVENT_CLOSED');
   }
-  const p = projectEnergy(energyState(c0), now0, ENERGY.max, restedCapToday(content, loaded.city, dayKey(now0), c0.room));
+  const p = projectEnergy(energyState(c0), now0, ENERGY.max, restedCapToday(content, loaded.city, dayKey(now0), c0.room, c0.factionId));
   const gate = signUpGate({
     slot: slotId,
     rank: c0.rank,
@@ -646,7 +646,7 @@ export async function withdrawEvent(
       );
       if (!ev) throw new GameError('NOT_SIGNED_UP');
       const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
-      const cap = restedCapToday(content, residenceCity, today, c.room);
+      const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId);
       const p = projectEnergy(energyState(c), now, ENERGY.max, cap);
       const back = refundEnergy(p, s.energy, s.restedCovered, cap);
       const refund = { energy: back.value - p.value, rested: back.rested - p.rested };
@@ -1044,7 +1044,7 @@ export async function creditSignup(
         const today = dayKey(now);
         const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
         const eventCity = ev.cityId === residenceCity?._id ? residenceCity : await CityModel.findById(ev.cityId).session(session).lean<CityDoc>();
-        const rateOn = heatRateOn(content, residenceCity);
+        const rateOn = heatRateOn(content, residenceCity, c.factionId);
         const place = await readEventPlace(content, ev, ev.day, session);
         const credit = eventCredit({
           result: s.result,

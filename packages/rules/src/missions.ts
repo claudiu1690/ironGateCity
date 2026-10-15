@@ -13,13 +13,14 @@ import type { HeatChange, HeatTimer } from './heat';
 import { issueTags, pointsFor } from './issues';
 import {
   NO_MODIFIERS,
-  actionEnergy,
+  missionEnergy,
   ordinanceCheckBonuses,
   placeCheckBonuses,
   placeOf,
   restedCapFor,
   rewardShares,
   rivalGroundIn,
+  runInPcts,
   standingPerSuccess,
   swingFactors,
 } from './ordinances';
@@ -205,6 +206,8 @@ export function missionRisk(i: {
   flags: DayFlags;
   /** Review 5 (ADR 0080): night at the read; on rival ground the run-in gains +10. */
   night?: boolean;
+  /** Slice 7 (ADR 0044): the laws' run-in percentages at the read (`runInPcts`). */
+  pcts?: readonly number[];
 }): { heat: number; runInChance: number; marks: 0 | 1 | 2 | 3 } {
   const spec = MISSION_TYPES[i.type];
   const heat = (i.way.heat ?? spec.heat) * (i.rivalGround ? RIVAL_GROUND.heatFactor : 1);
@@ -216,6 +219,7 @@ export function missionRisk(i: {
     record: i.record,
     flags: i.flags,
     ...(i.night !== undefined ? { night: i.night } : {}),
+    ...(i.pcts ? { pcts: i.pcts } : {}),
   });
   return { heat, runInChance: runIn, marks: spec.marks };
 }
@@ -450,7 +454,8 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
   const rival = rivalGroundIn(m);
   const before = projectEnergy(i.energy, i.now, undefined, i.restedCap ?? restedCapFor(m));
   // Design §23.1 #15: type-keyed rules apply by the type a mission is seen as (Rally Permits 15 → 13).
-  const cost = actionEnergy(i.mission.energy, seenAs, m);
+  // Slice 7 (ADR 0044): the laws' `missionEnergyDelta` (Emergency Permits 15 → 17), never below 1.
+  const cost = missionEnergy(i.mission.energy, seenAs, m);
   const spent = spendEnergy(before, cost);
   if (!spent.ok) return { ok: false, reason: 'NOT_ENOUGH_ENERGY', cost, energy: before };
 
@@ -489,7 +494,7 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
 
   const rolledOrders = advance(i.orders, i.orderTemplates, descriptor, outcome, ctx, i.now);
   const droppedOrders = advance(i.orders, i.orderTemplates, descriptor, 'failure', ctx, i.now);
-  const shares = rewardShares({ type: seenAs, givesFxp: spec.givesFxp, m });
+  const shares = rewardShares({ type: seenAs, givesFxp: spec.givesFxp, m, tier: 2 });
   const factors = place && spec.opinion !== null ? swingFactors(seenAs, i.factionId, m, tagged) : [];
   const recordIronPct = { clean: 0, onFile: -10, repeat: -20, notorious: -30 }[i.record];
   const common = {
@@ -499,6 +504,8 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
     costPaid: cost,
     fxpShares: shares.fxp,
     ironShares: shares.iron,
+    // Slice 7 (ADR 0044): a law's `xpPct` (scope missions).
+    ...(shares.xp.length > 0 ? { xpShares: shares.xp } : {}),
     opinionFactors: factors,
     recordIronPct,
     ...(i.nightRate ? { nightRate: true } : {}),
@@ -524,6 +531,7 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
 
   // The run-in, after the gain (design §4.6 step 2).
   const street = createRng(`${rng.seed}:runIn`);
+  const nightAtAct = i.night === true;
   const chance = runInChance({
     base: i.way.runIn ?? spec.runIn,
     tier: 2,
@@ -532,6 +540,8 @@ export function resolveMission(i: MissionInput, rng: Rng): MissionStartResult {
     record: i.record,
     flags: i.flags,
     ...(i.night !== undefined ? { night: i.night } : {}),
+    // Slice 7 (ADR 0044): the laws' run-in percentages (the Curfew's at night).
+    pcts: runInPcts(m, nightAtAct),
   });
   const runRoll = street.roll100();
   const fires = i.force?.runIn === 'next' ? true : i.force?.runIn === 'never' ? false : runRoll <= chance;

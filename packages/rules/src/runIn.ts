@@ -364,6 +364,8 @@ export function caughtCheck(i: {
   rng: Rng;
   /** Test hooks (tech design §8.5). */
   force?: 'always' | 'never';
+  /** Slice 7 (ADR 0044): the laws' `caughtDelta` for the mission's target (`caughtDeltas`). */
+  deltas?: readonly number[];
 }): CaughtResult {
   const spec = MISSION_TYPES[i.type];
   if (spec.caught === null || i.outcome === 'success' || i.street === 'lost' || i.street === 'ran') return NOT_CHECKED;
@@ -378,6 +380,7 @@ export function caughtCheck(i: {
     heatAfter: i.heatAfter,
     record: i.record,
     agi: i.agi,
+    ...(i.deltas ? { deltas: i.deltas } : {}),
   });
   const drawn = i.rng.roll100();
   const caught = i.force === 'always' ? true : i.force === 'never' ? false : drawn <= chance;

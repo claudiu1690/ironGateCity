@@ -283,7 +283,7 @@ export async function attemptChapter(deps: {
       // the residence city's rate. `first`: no Heat was ever had (no mission, no mark, no rival trip,
       // nothing stored); `firsts.noticed` is the Noticed card's and is left alone below 25.
       const approachHeat = chapter.story.check.approaches.find((a) => a.id === input.approachId)?.heat ?? 0;
-      const rateOn = heatRateOn(content, loaded.city);
+      const rateOn = heatRateOn(content, loaded.city, c.factionId);
       const heat = approachHeat > 0 ? addHeat(heatTimerOf(c), now, rateOn, approachHeat) : null;
       const firstHeat =
         !!heat &&

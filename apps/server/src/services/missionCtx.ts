@@ -1,20 +1,21 @@
 import type { City, GameContent, Location, Mission, Way } from '@irongate/content';
 import type { CharacterDoc, CityDoc, DistrictDoc } from '@irongate/db';
 import {
-  MISSION_TYPES,
-  RECORD,
-  actionEnergy,
   dayKey,
   isAgilityWay,
   issueTags,
+  MISSION_TYPES,
   missionCheck,
+  missionEnergy,
   missionGate,
   missionRisk,
   missionTarget,
   offeredTo,
   placeOf,
   projectHeat,
+  RECORD,
   rivalGroundIn,
+  runInPcts,
   standingView,
   windowLock,
 } from '@irongate/rules';
@@ -160,7 +161,7 @@ export function missionCtx(
     place: gatePlace(city, location),
   });
 
-  const rateOn = heatRateOn(content, docs.residence);
+  const rateOn = heatRateOn(content, docs.residence, c.factionId);
   const heat = heatTimerOf(c);
   const nightView = nightAt(now);
 
@@ -191,7 +192,8 @@ export function missionCtx(
     // Review 4 (ADR 0076): and only at a place the character can open.
     offered: offeredTo(target, c.factionId) && placeOpenFor(content, c, location).open,
     gate,
-    energy: actionEnergy(mission.energy, seenAs, m),
+    // Slice 7 (ADR 0044): the laws' missionEnergyDelta on the ticket.
+    energy: missionEnergy(mission.energy, seenAs, m),
     values: wornStats(c, content),
     prefer: preferredStat(content, c.factionId),
     standing: { successes, names: content.standingNames, cityName: city.name },
@@ -260,6 +262,8 @@ export function wayRisk(ctx: MissionCtx, way: Way): MissionRiskView {
     record: ctx.record,
     flags: ctx.flags,
     night: ctx.night,
+    // Slice 7 (ADR 0044): the laws' run-in percentages (ctx.modifiers carries the laws).
+    pcts: runInPcts(ctx.modifiers, ctx.night),
   });
 }
 
@@ -294,7 +298,7 @@ export function missionInput(
     prefer: ctx.prefer,
     energy: energyState(c),
     now,
-    restedCap: restedCapToday(content, docs.residence, ctx.today, c.room),
+    restedCap: restedCapToday(content, docs.residence, ctx.today, c.room, c.factionId),
     standing: ctx.standing,
     orders: toOrdersState(c.orders),
     orderTemplates: content.ordersOf(c.factionId),

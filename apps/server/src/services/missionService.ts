@@ -5,6 +5,7 @@ import {
   addToTally,
   applyGains,
   caughtCheck,
+  caughtDeltas,
   createRng,
   dayKey,
   finishMission,
@@ -16,6 +17,7 @@ import {
   standingView,
   windowLock,
 } from '@irongate/rules';
+import { lawModifiers } from './lawBook';
 import type {
   ActionResult,
   CaughtResult,
@@ -371,7 +373,7 @@ export async function writeMissionFinal(i: {
   const s = held.start;
   const { city, mission } = located;
   const today: DayKey = ctx.today;
-  const rateOn = heatRateOn(content, ctx.residenceCity);
+  const rateOn = heatRateOn(content, ctx.residenceCity, c.factionId);
   const logId = new Types.ObjectId();
   const r: RunInOutcome | null = i.runIn?.outcome ?? null;
 
@@ -385,6 +387,8 @@ export async function writeMissionFinal(i: {
     rivalGround: s.rivalGround,
     rng: createRng(`${s.seed}:caught`),
     ...(held.force?.caught ? { force: held.force.caught } : {}),
+    // Slice 7 (ADR 0044): Special Powers' +10 on a mission against its party.
+    deltas: caughtDeltas(lawModifiers(content, today, c.factionId), s.opinion.target),
   });
   // The bail: the place where the player would be held (the city's `bailPct` sources).
   const final: MissionFinal = finishMission({

@@ -32,6 +32,7 @@ import {
   startOrders,
   stipendBoundaries,
 } from '@irongate/rules';
+import { fadeDaysFor } from './lawBook';
 import type { DayKey, RivalGroundState } from '@irongate/rules';
 import { Types } from 'mongoose';
 import type { ClientSession } from 'mongoose';
@@ -121,7 +122,7 @@ export function computeSettlement(
   const contentJob = c.job ? content.job(c.job.id) : undefined;
   const pay = contentJob ? jobPay(contentJob, c.factionId) : null;
   // ADR 0030 §5: the residence city's sources and the room, wherever the character is.
-  const caps = capOn(content, city, c.room);
+  const caps = capOn(content, city, c.room, c.factionId);
   const s = settleDays({
     settled: c.day.settled,
     today,
@@ -134,7 +135,7 @@ export function computeSettlement(
     // Review 1 (§9.1): each ended day's ordinance line on the full wage, and its seniority step.
     wageOn: (ended) => {
       // ADR 0030 §6: the job's city's sources of that day (an ordinance, an Issue effect).
-      const m = dayModifiers(content, wageCity, ended);
+      const m = dayModifiers(content, wageCity, ended, c.factionId);
       const payAdjust = pay === null ? 0 : jobPayWith(pay, m) - pay;
       const names = effects(m, 'jobPayPct').map((x) => x.source.name);
       return {
@@ -285,14 +286,14 @@ export function computeSettlement(
     oneOfUsPc,
     awards: awardLines,
     unrestPushed,
-    seniorityStepYesterday: seniorityStep(dayModifiers(content, wageCity, today - 1)),
+    seniorityStepYesterday: seniorityStep(dayModifiers(content, wageCity, today - 1, c.factionId)),
     // Slice 5 (tech design §11.2): the risk facts, with the Heat projected at the settlement.
-    risk: riskEdition(content, c, today, projectHeat(heatTimerOf(c), now, heatRateOn(content, city)).value, read.risk ?? null),
+    risk: riskEdition(content, c, today, projectHeat(heatTimerOf(c), now, heatRateOn(content, city, c.factionId)).value, read.risk ?? null),
     together: read.together ?? null,
   });
   // Slice 5 (tech design §8.4): the marks that have faded are dropped from the stored record.
   const stored = marksOf(c);
-  const live = liveMarks(stored, today);
+  const live = liveMarks(stored, today, fadeDaysFor(c.factionId));
   return {
     set: {
       'day.settled': today,

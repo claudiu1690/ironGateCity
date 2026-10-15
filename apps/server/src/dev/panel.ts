@@ -207,7 +207,7 @@ async function statusFor(
   // Slice 4 (ADR 0026): the residence city, whose council and paper are the character's.
   const city = c ? await ensureCityDay(content, residenceCityId(c), now) : null;
   const energy = c
-    ? projectEnergy(energyState(c), now, ENERGY.max, restedCapToday(content, city, dayKey(now), c.room))
+    ? projectEnergy(energyState(c), now, ENERGY.max, restedCapToday(content, city, dayKey(now), c.room, c.factionId))
     : null;
   // Slice 4 (tech design §8.7): where, where you live, the capital's districts, the Issues.
   const capitalId = content.nation.capitalId;

@@ -17,6 +17,7 @@ import {
   selectHeadlines,
   standingView,
 } from '@irongate/rules';
+import { fadeDaysFor } from './lawBook';
 import type {
   DayKey,
   HeadlineTemplate,
@@ -282,10 +283,10 @@ export function riskEdition(
 
   // A mark yesterday (the latest one's mission), and the record's level at yesterday's start and end.
   const marks: Mark[] = (c.record?.marks ?? []).map((m) => ({ day: m.day, kind: m.kind, logId: m.logId ?? null }));
-  const marked = liveMarks(marks, today).filter((m) => m.day === y);
+  const marked = liveMarks(marks, today, fadeDaysFor(c.factionId)).filter((m) => m.day === y);
   const markTitle = [...marked].reverse().map((m) => titleOfLog(m.logId)).find((t) => t !== null) ?? null;
   if (markTitle) varsByKind.markYesterday = { missionTitle: markTitle };
-  const levelOn = (ms: Mark[]) => recordLevel(liveMarks(ms, y).length);
+  const levelOn = (ms: Mark[]) => recordLevel(liveMarks(ms, y, fadeDaysFor(c.factionId)).length);
   const before = levelOn(marks.filter((m) => m.day < y));
   const after = levelOn(marks.filter((m) => m.day <= y));
   const recordRose = LEVEL_ORDER[after] > LEVEL_ORDER[before];

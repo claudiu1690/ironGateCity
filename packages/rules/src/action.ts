@@ -243,6 +243,8 @@ export function resolveTier1Action(i: Tier1ActionInput, rng: Rng): ResolveResult
       fxpBonusShare: bonusApplies ? DIRECTIVES.matchFxpBonus : 0,
       fxpShares: shares.fxp,
       ironShares: shares.iron,
+      // Slice 7 (ADR 0044): a law's `xpPct` (scope actions) as a part on the XP base.
+      ...(shares.xp.length > 0 ? { xpShares: shares.xp } : {}),
       swingMultiplier: swing,
       ...(factors.length > 0 ? { opinionFactors: factors } : {}),
     });

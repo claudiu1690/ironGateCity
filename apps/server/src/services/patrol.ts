@@ -22,6 +22,7 @@ import {
   resolveJourneyChoice,
   standingBonus,
 } from '@irongate/rules';
+import { fadeDaysFor } from './lawBook';
 import type {
   CardOutcome,
   CheckStats,
@@ -99,7 +100,7 @@ export function patrolChanceFor(
   now: number,
   residenceCity: CityDoc | null,
 ): number {
-  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, residenceCity)).value;
+  const heat = projectHeat(heatTimerOf(c), now, heatRateOn(content, residenceCity, c.factionId)).value;
   // The Curfew Order (slice 7) doubles it; not in force anywhere yet.
   return patrolChance({ heatState: heatState(heat), flags: flagsToday(c, cityId, dayKey(now)), curfew: false });
 }
@@ -235,7 +236,7 @@ export async function answerPatrol(deps: {
       if (!card) throw new GameError('NO_PATROL');
       const ev = content.journeyEvent(PATROL_EVENT_ID)!;
       const cityId = card.cityId;
-      const rateOn = heatRateOn(content, loaded.city);
+      const rateOn = heatRateOn(content, loaded.city, c.factionId);
       const heatNow = projectHeat(heatTimerOf(c), now, rateOn).value;
 
       let outcome: Omit<CardOutcome, 'rewards' | 'flag'>;
@@ -267,7 +268,7 @@ export async function answerPatrol(deps: {
           standingBonus: bonus,
           rng: createRng(`${card.seed}:choice`),
           difficulty: PATROL.difficulty,
-          ...(ch.gate ? { gateHolds: coolAndClean(heatNow, liveMarks(marksOf(c), today).length) } : {}),
+          ...(ch.gate ? { gateHolds: coolAndClean(heatNow, liveMarks(marksOf(c), today, fadeDaysFor(c.factionId)).length) } : {}),
         });
         const text = r.branch === 'stopped' || r.outcome === 'partial' ? ch.partial!.text : ch.success.text;
         const statsUsed = ch.stats && ch.stats[0] !== 'best' ? (ch.stats as StatKey[]) : [];

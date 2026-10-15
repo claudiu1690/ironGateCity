@@ -717,7 +717,7 @@ export function toCharacterView(
   ctx: { city?: CityDoc | null; politicsWaiting?: 0 | 1 } = {},
 ): CharacterView {
   const today = dayKey(now);
-  const restedCap = restedCapToday(content, ctx.city ?? null, today, doc.room);
+  const restedCap = restedCapToday(content, ctx.city ?? null, today, doc.room, doc.factionId);
   const energy = projectEnergy(energyState(doc), now, ENERGY.max, restedCap);
   const bounds = rankBounds(doc.rank);
   const faction = content.faction(doc.factionId);

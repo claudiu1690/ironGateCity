@@ -156,7 +156,7 @@ export async function pageView(
     energyState(viewer),
     now,
     ENERGY.max,
-    restedCapToday(content, ctx.residenceCity ?? null, dayKey(now), viewer.room),
+    restedCapToday(content, ctx.residenceCity ?? null, dayKey(now), viewer.room, viewer.factionId),
   );
   const values = wornStats(viewer, content);
   const successes = standingSuccesses(viewer, ev.cityId);

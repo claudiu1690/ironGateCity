@@ -21,6 +21,7 @@ import type {
   PlaceState,
   RivalGroundState,
 } from '@irongate/rules';
+import { lawSourcesFor } from './lawBook';
 
 /**
  * The day-constant modifiers of a place (ADR 0021, 0022, 0030): the sources in force in the city
@@ -50,8 +51,16 @@ export function issueEffectsOn(
   return issueEffectsOnDay(city?.issues?.effects ?? [], day);
 }
 
-/** ADR 0030: the named sources in force in a city on a day: the ordinance first, then the Issue effects. */
-export function sourcesOn(content: GameContent, city: CityState | null, day: DayKey): ModifierSource[] {
+/**
+ * ADR 0030: the named sources in force in a city on a day: the ordinance first, then the Issue
+ * effects, then (slice 7, ADR 0044) the laws in force that day for `actor` (no actor: no laws).
+ */
+export function sourcesOn(
+  content: GameContent,
+  city: CityState | null,
+  day: DayKey,
+  actor?: FactionId,
+): ModifierSource[] {
   const out: ModifierSource[] = [];
   const ordId = ordinanceIdOn(city, day);
   const spec = ordId ? content.ordinanceSpec(content.ordinance(ordId)?.id ?? ordId) : undefined;
@@ -60,6 +69,7 @@ export function sourcesOn(content: GameContent, city: CityState | null, day: Day
     const issue = content.issue(e.issueId);
     if (issue) out.push({ id: issue.id, name: issue.name, kind: 'issue', effects: issue.effects });
   }
+  out.push(...lawSourcesFor(content, day, actor));
   return out;
 }
 
@@ -152,7 +162,7 @@ export function modifiersFor(
 ): PlaceModifiers {
   const cityId = i.cityId ?? city?._id ?? '';
   return placeModifiers({
-    sources: sourcesOn(content, city, day),
+    sources: sourcesOn(content, city, day, factionId),
     moraleState: moraleOf(content, city),
     actorIsHomeFaction: !!cityId && content.city(cityId)?.homeFactionId === factionId,
     place: placeStateOf(content, { cityId, city, district: i.district ?? null, day, factionId }),
@@ -160,8 +170,13 @@ export function modifiersFor(
 }
 
 /** A past day's sources alone (no morale, no place): each ended day's wage, its seniority, its cap. */
-export function dayModifiers(content: GameContent, city: CityState | null, day: DayKey): PlaceModifiers {
-  return { sources: sourcesOn(content, city, day), firedUp: false };
+export function dayModifiers(
+  content: GameContent,
+  city: CityState | null,
+  day: DayKey,
+  actor?: FactionId,
+): PlaceModifiers {
+  return { sources: sourcesOn(content, city, day, actor), firedUp: false };
 }
 
 /** A room runs `[fromDay, untilDay)` (ADR 0030 §5). */
@@ -176,8 +191,9 @@ export function capOn(
   content: GameContent,
   city: CityState | null,
   room?: CharacterDoc['room'],
+  actor?: FactionId,
 ): (day: DayKey) => number {
-  return (day) => restedCapFor(dayModifiers(content, city, day), roomRunsOn(room, day));
+  return (day) => restedCapFor(dayModifiers(content, city, day, actor), roomRunsOn(room, day));
 }
 
 /** Today's Rested cap (the residence city's sources and the room). */
@@ -186,6 +202,7 @@ export function restedCapToday(
   city: CityState | null,
   day: DayKey,
   room?: CharacterDoc['room'],
+  actor?: FactionId,
 ): number {
-  return capOn(content, city, room)(day);
+  return capOn(content, city, room, actor)(day);
 }

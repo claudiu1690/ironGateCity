@@ -414,7 +414,7 @@ export async function settleNationDay(content: GameContent, now: number): Promis
   for (let guard = 0; guard < 1_000; guard++) {
     const nation = await Nation.findById(NATION_ID).readConcern('majority').lean<NationDoc>();
     if (nation && nation.world.settledDay >= today) {
-      setLawBook(nation);
+      setLawBook(nation, content);
       return nation;
     }
     const d = nation ? nation.world.settledDay + 1 : today;
@@ -447,7 +447,7 @@ export async function ensureNationDay(content: GameContent, now: number): Promis
   const today = dayKey(now);
   const nation = await Nation.findById(NATION_ID).lean<NationDoc>();
   if (nation && nation.world.settledDay >= today) {
-    setLawBook(nation);
+    setLawBook(nation, content);
     return nation;
   }
   try {
@@ -457,7 +457,7 @@ export async function ensureNationDay(content: GameContent, now: number): Promis
     captureException(err, { where: 'ensureNationDay' });
     console.error(`[nation-day] ${(err as Error).message}`);
     const last = await Nation.findById(NATION_ID).lean<NationDoc>();
-    if (last) setLawBook(last);
+    if (last) setLawBook(last, content);
     return last;
   }
 }
