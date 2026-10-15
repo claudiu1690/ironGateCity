@@ -32,7 +32,7 @@ import {
   tier1Difficulty,
   walkOut,
 } from '@irongate/rules';
-import { lawModifiers } from './lawBook';
+import { fadeDaysFor, lawModifiers } from './lawBook';
 import type {
   ActionResult,
   ActionView,
@@ -285,7 +285,7 @@ export async function releaseInTx(
     // Review 4 #20 (answers §20.3, ADR 0078): *Your record: taken in · 1 mark · On file* (the marks
     // this arrest added, the live record after it) and *Orders off until the day turns*.
     if ((stay.marks ?? 0) > 0) {
-      const rec = recordView(marksOf(c), dayKey(at));
+      const rec = recordView(marksOf(c), dayKey(at), fadeDaysFor(c.factionId));
       knockOns.takenIn = { added: stay.marks, marks: rec.marks, level: rec.level };
     }
     if (ordersOffToday(c, dayKey(at))) knockOns.ordersOff = true;
@@ -741,17 +741,17 @@ export async function strikeMark(deps: {
       const today = dayKey(now);
       const c = await Character.findById(loaded.doc._id).session(session).lean<CharacterDoc>();
       if (!c) throw new Error('character disappeared');
-      const struck = strikeOldest(marksOf(c), today);
+      const struck = strikeOldest(marksOf(c), today, fadeDaysFor(c.factionId));
       if (!struck) throw new GameError('NO_MARKS');
       if (c.pc < RECORD.strikePc) throw new GameError('NOT_ENOUGH_PC', { pc: c.pc, cost: RECORD.strikePc });
-      const before = recordView(marksOf(c), today);
+      const before = recordView(marksOf(c), today, fadeDaysFor(c.factionId));
       const updated = await Character.findOneAndUpdate(
         { _id: c._id, version: c.version, pc: { $gte: RECORD.strikePc } },
         { $set: { 'record.marks': struck.marks }, $inc: { pc: -RECORD.strikePc, version: 1 } },
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
-      const after = recordView(struck.marks, today);
+      const after = recordView(struck.marks, today, fadeDaysFor(c.factionId));
       const residenceCity = await City.findById(residenceCityId(c)).session(session).lean<CityDoc>();
       const home = content.city(residenceCityId(c));
       const paper = home?.paper ?? { name: 'The paper', shortName: 'paper' };
@@ -808,7 +808,7 @@ export async function sendToHeld(
       heatAt = projectHeat(heatTimerOf(c), now, heatRateOn(content, ctx.residenceCity, c.factionId)).value;
       // Review 4 #20 (ADR 0078): the hook writes what an arrest writes: the mark (one minor, or three
       // serious within seven days of an earlier arrest), the arrest's day, and the day's orders off.
-      const rec = arrestOnRecord({ marks: marksOf(c), arrests: arrestsOf(c), today, logId: null });
+      const rec = arrestOnRecord({ marks: marksOf(c), arrests: arrestsOf(c), today, logId: null, fadeDaysOn: fadeDaysFor(c.factionId) });
       added = rec.added.length;
       set.record = { marks: rec.marks, arrests: rec.arrests };
       const orders = toOrdersState(c.orders);

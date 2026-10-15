@@ -76,6 +76,7 @@ import {
 } from './risk';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
+import { fadeDaysFor } from './lawBook';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import { assetView, landingAt, toCharacterView, toOrdersState, wornStats } from './views';
 
@@ -417,7 +418,13 @@ async function resolveTier1InTx(
     const kind = i.opponentSide === 'police' ? 'cells' : 'infirmary';
     let spec;
     if (kind === 'cells') {
-      const rec = arrestOnRecord({ marks: marksOf(c), arrests: arrestsOf(c), today: i.day, logId: logId.toHexString() });
+      const rec = arrestOnRecord({
+        marks: marksOf(c),
+        arrests: arrestsOf(c),
+        today: i.day,
+        logId: logId.toHexString(),
+        fadeDaysOn: fadeDaysFor(c.factionId),
+      });
       addedMarks = rec.added.length;
       extraSet.record = { marks: rec.marks, arrests: rec.arrests };
       const firsts = firstsAfter(

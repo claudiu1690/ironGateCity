@@ -17,7 +17,7 @@ import {
   standingView,
   windowLock,
 } from '@irongate/rules';
-import { lawModifiers } from './lawBook';
+import { fadeDaysFor, lawModifiers } from './lawBook';
 import type {
   ActionResult,
   CaughtResult,
@@ -398,6 +398,8 @@ export async function writeMissionFinal(i: {
     opponentSide: i.runIn?.opponentSide ?? null,
     caught,
     marks: marksOf(c),
+    // Slice 7 (ADR 0044): the Rehabilitation Act's fade on the marks before.
+    fadeDaysOn: fadeDaysFor(c.factionId),
     arrests: arrestsOf(c),
     agiQuarters: c.stats.agiQuarters ?? 0,
     health: healthTimerOf(c),

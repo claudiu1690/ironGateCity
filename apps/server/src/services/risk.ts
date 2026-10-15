@@ -151,7 +151,7 @@ export function riskView(
   const hTimer = healthTimerOf(doc);
   const max = healthMax(doc.level);
   const hp = healthNow(hTimer, now, doc.level);
-  const rec = recordView(marksOf(doc), today);
+  const rec = recordView(marksOf(doc), today, fadeDaysFor(doc.factionId));
   const flags = flagsToday(doc, doc.cityId, today);
   const gateRun = gateRunIn(doc);
   return {

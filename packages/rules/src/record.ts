@@ -41,6 +41,15 @@ export function liveMarks(
   return marks.filter((m) => !(faded && m.kind === 'minor')).map((m) => ({ ...m }));
 }
 
+/**
+ * Slice 7 (ADR 0044): the first day minor marks whose latest mark is `latest` are gone: the first X with
+ * X >= latest + fadeDaysOn(X) (`liveMarks`' rule), at the latest latest + 14.
+ */
+export function fadeDayOf(latest: DayKey, fadeDaysOn?: (day: DayKey) => number): DayKey {
+  if (fadeDaysOn) for (let x = latest; x < latest + RECORD.minorFadeDays; x++) if (x >= latest + fadeDaysOn(x)) return x;
+  return latest + RECORD.minorFadeDays;
+}
+
 /** 0 Clean · 1–2 On file · 3–5 Repeat offender · 6+ Notorious. */
 export function recordLevel(n: number): RecordLevel {
   if (n >= RECORD.levels.notorious) return 'notorious';
@@ -66,8 +75,13 @@ export interface RecordView {
   barred: boolean;
 }
 
-export function recordView(marks: readonly Mark[], today: DayKey): RecordView {
-  const live = liveMarks(marks, today);
+export function recordView(
+  marks: readonly Mark[],
+  today: DayKey,
+  /** Slice 7 (ADR 0044): the law's fade (`liveMarks`' `fadeDaysOn`); absent, 14. */
+  fadeDaysOn?: (day: DayKey) => number,
+): RecordView {
+  const live = liveMarks(marks, today, fadeDaysOn);
   const level = recordLevel(live.length);
   const minor = live.filter((m) => m.kind === 'minor');
   const latest = live.length > 0 ? Math.max(...live.map((m) => m.day)) : null;
@@ -75,7 +89,7 @@ export function recordView(marks: readonly Mark[], today: DayKey): RecordView {
   return {
     level,
     marks: live.length,
-    fadesOn: minor.length > 0 && latest !== null ? latest + RECORD.minorFadeDays : null,
+    fadesOn: minor.length > 0 && latest !== null ? fadeDayOf(latest, fadeDaysOn) : null,
     fading: minor.length,
     ironPct: RECORD.ironPct[level],
     repeatBonus: level === 'repeat' || notorious ? RECORD.repeatBonus : 0,
@@ -133,8 +147,10 @@ export function arrestOnRecord(i: {
   today: DayKey;
   logId: string | null;
   type?: MissionType | null;
+  /** Slice 7 (ADR 0044): the law's fade; absent, 14. */
+  fadeDaysOn?: (day: DayKey) => number;
 }): { added: Mark[]; escalated: boolean; before: RecordLevel; after: RecordLevel; marks: Mark[]; arrests: DayKey[] } {
-  const live = liveMarks(i.marks, i.today);
+  const live = liveMarks(i.marks, i.today, i.fadeDaysOn);
   const m = marksFor({ type: i.type ?? null, arrested: true, arrests: i.arrests, today: i.today, logId: i.logId });
   const marks = [...live, ...m.add];
   return {
@@ -154,8 +170,9 @@ export function arrestOnRecord(i: {
 export function strikeOldest(
   marks: readonly Mark[],
   today: DayKey,
+  fadeDaysOn?: (day: DayKey) => number,
 ): { marks: Mark[]; struck: Mark } | null {
-  const live = liveMarks(marks, today);
+  const live = liveMarks(marks, today, fadeDaysOn);
   if (live.length === 0) return null;
   let oldest = 0;
   live.forEach((m, i) => {

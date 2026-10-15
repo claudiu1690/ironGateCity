@@ -662,6 +662,8 @@ export function finishMission(i: {
   opponentSide: FactionId | 'police' | null;
   caught: CaughtResult | null;
   marks: readonly Mark[];
+  /** Slice 7 (ADR 0044): the law's fade on the marks before (`liveMarks`' `fadeDaysOn`); absent, 14. */
+  fadeDaysOn?: (day: DayKey) => number;
   arrests: readonly DayKey[];
   agiQuarters: number;
   /** The Health timer before the run-in. */
@@ -717,7 +719,7 @@ export function finishMission(i: {
 
   // The record and where the player is sent.
   const today = i.today;
-  const liveBefore = liveMarks(i.marks, today);
+  const liveBefore = liveMarks(i.marks, today, i.fadeDaysOn);
   const levelBefore = recordLevel(liveBefore.length);
   const policeLoss = r?.outcome === 'lost' && i.opponentSide === 'police';
   const caught = i.caught?.caught === true;

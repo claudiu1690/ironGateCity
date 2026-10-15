@@ -291,7 +291,7 @@ export function riskEdition(
   const after = levelOn(marks.filter((m) => m.day <= y));
   const recordRose = LEVEL_ORDER[after] > LEVEL_ORDER[before];
   if (recordRose) {
-    const rec = recordView(marks, today);
+    const rec = recordView(marks, today, fadeDaysFor(c.factionId));
     varsByKind.recordRose = {
       recordLevel: rec.level === 'clean' ? '' : copy.risk.paper.recordLevel[rec.level],
       marks: String(rec.marks),
