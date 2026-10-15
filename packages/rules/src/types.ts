@@ -11,8 +11,9 @@ import type { HeatState } from './heat';
 import type { MissionType } from './constants';
 import type { RecordLevel } from './record';
 import type { QuarterLock } from './quarters';
-import type { RuleHow } from './ruleBallot';
-import type { NationalCondition } from './nationTypes';
+import type { CardBy, RuleHow } from './ruleBallot';
+import type { NationalCondition, NationAct } from './nationTypes';
+import { NATION_ACTS } from './nationTypes';
 import type {
   CharacterViewV7,
   CityViewV6,
@@ -228,6 +229,11 @@ export interface OrderItem {
   templateId: string;
   /** `noJob` only on items stored before review 1 (the retired *Take a job* variant). */
   variant: 'main' | 'noJob';
+  /**
+   * Slice 7 (ADR 0046): the Chair's push on this item: the pushed place (the battleground from Level
+   * 10, the residence below) and whether its attempts count toward the party's target.
+   */
+  push?: { cityId: string; districtId: string | null; counts: boolean };
   target: number;
   progress: number;
   /** Epoch ms, or null while open. */
@@ -1544,7 +1550,53 @@ export type GameErrorReason =
   | 'CHAT_CHANNEL'
   | 'CANNOT_REPORT'
   | 'NUDGE_NOT_ALLOWED'
-  | 'NUDGE_NOTHING_OPEN';
+  | 'NUDGE_NOTHING_OPEN'
+  // Slice 7 (tech design §6.11): the calendar, offices, standing, Parliament, the Chair's desk,
+  // petitions and the vote on the Chair.
+  | 'NOT_NOW'
+  | 'NATION_NOT_READY'
+  | 'NOT_GOVERNOR'
+  | 'NOT_CHAIR'
+  | 'NOT_DEPUTY'
+  | 'NOT_PRESIDENT'
+  | 'LOCAL_HOLDS'
+  | 'ADDRESS_USED'
+  | 'VETO_USED'
+  | 'NOT_VETOABLE'
+  | 'NOT_AN_ISSUE'
+  | 'LADDER'
+  | 'TENURE'
+  | 'TERM_LIMIT'
+  | 'ALREADY_STANDING'
+  | 'NOT_STANDING'
+  | 'ALREADY_BACKED'
+  | 'CANNOT_BACK_SELF'
+  | 'PLEDGES'
+  | 'UNKNOWN_LAW'
+  | 'UNKNOWN_PLATFORM'
+  | 'PARLIAMENT_RISEN'
+  | 'ALREADY_TABLED'
+  | 'LAW_IN_FORCE'
+  | 'LAW_ON_PAPER'
+  | 'LAW_FAILED_RECENTLY'
+  | 'PAPER_FULL'
+  | 'NAME_REPLACEMENT'
+  | 'NOT_IN_FORCE'
+  | 'REMOVAL_CLOSED'
+  | 'REMOVAL_TOO_SOON'
+  | 'BILL_NOT_FOUND'
+  | 'BILL_CLOSED'
+  | 'UNKNOWN_FAMILY'
+  | 'PUSH_PLACE'
+  | 'PUSH_SLOT'
+  | 'UNKNOWN_FIXTURE'
+  | 'TOO_SOON'
+  | 'PETITION_CLOSED'
+  | 'ALREADY_OPEN'
+  | 'ALREADY_SIGNED'
+  | 'COUNCILLOR'
+  | 'NO_CHAIR'
+  | 'NO_VOTE_OPEN';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -1715,8 +1767,9 @@ export interface RuleCardView {
      * design §8.8 Q4); `via: 'councillor'` (the capital, a councillor leads the bloc): `by` is the
      * councillor's stored name ("Jana Varga", design §8.9 Q2). Two parties on a shared card (`by`
      * joined with " · "; `via` is the first party's).
+     * Slice 7 (ADR 0048): `governor`, `mayor` or `chair` when one heads the party's card.
      */
-    | { kind: 'party'; factionIds: FactionId[]; by: string; via: 'secretary' | 'councillor' }
+    | { kind: 'party'; factionIds: FactionId[]; by: string; via: Extract<CardBy, { kind: 'party' }>['via'] }
     | { kind: 'councillor'; name: string; local: boolean; you: boolean };
   /** The caller's own vote, only (ADR 0019). */
   yourVote: boolean;
@@ -2098,7 +2151,9 @@ export type PoliticalAct =
   | 'signUp'
   | 'bailPosted'
   | 'visit'
-  | 'calledOff';
+  | 'calledOff'
+  // Slice 7 (tech design §6.11, §10.1): the nation's acts; their texts are `politics.results`.
+  | NationAct;
 export const POLITICAL_ACTS = [
   'ballot',
   'declare',
@@ -2119,12 +2174,13 @@ export const POLITICAL_ACTS = [
   'bailPosted',
   'visit',
   'calledOff',
+  ...NATION_ACTS,
 ] as const;
 
 /** Slice 5: the cells', the infirmary's and the record's acts (their texts are copy, not `politics`). */
 export type RiskAct = 'bail' | 'released' | 'deported' | 'walkOut' | 'discharged' | 'strike';
 /** The acts whose texts live in content's `politics.results` (slices 3–4). */
-export type CouncilAct = Exclude<PoliticalAct, RiskAct | 'treated' | TogetherAct>;
+export type CouncilAct = Exclude<PoliticalAct, RiskAct | 'treated' | TogetherAct | NationAct>;
 /** Slice 6: the events' and favours' acts (their texts are copy). */
 export type TogetherAct = 'call' | 'signUp' | 'bailPosted' | 'visit' | 'calledOff';
 

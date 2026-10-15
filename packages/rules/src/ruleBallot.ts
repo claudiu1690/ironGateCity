@@ -14,7 +14,8 @@ export type CardBy =
   | {
       kind: 'party';
       factionId: FactionId;
-      via: 'secretary' | 'councillor';
+      /** Slice 7 (ADR 0048, 0085): the Governor (home), the Mayor (contested) or the Chair heads the card. */
+      via: 'secretary' | 'councillor' | 'governor' | 'mayor' | 'chair';
       name: string;
       characterId?: string;
       /** The secretary's NPC id when `via: 'secretary'`. */
@@ -106,15 +107,48 @@ export function homeBallot(i: {
 
 /**
  * ADR 0085: the party's card in a contested city: its top-seated player councillor with a rule
- * (highest count total, then the lower seat), else the secretary's default. Slice 7 prepends the
- * Governor or Mayor and inserts the Chair.
+ * (highest count total, then the lower seat), else the secretary's default. Slice 7 (ADR 0048
+ * amended, tech design §6.8): the head of the party's chain, read at the set.
+ * - home (`contested: false`): the Governor (of the party) -> the Chair's rule for the city -> the secretary;
+ * - contested (default, the voting rework's callers): the Mayor (of the party) -> its top-seated player
+ *   councillor with a rule -> the Chair's rule -> the secretary.
  */
 export function partyCardOf(i: {
   factionId: FactionId;
   defaultRule: string;
   secretary: { npcId: string; name: string };
   seats: readonly SeatRule[];
+  /** Slice 7: the party's Governor's or Mayor's rule (`officeTerms.rule` on the `governor` term). */
+  governorRule?: { ordinanceId: string; name: string; characterId: string; title: 'Governor' | 'Mayor' } | null;
+  /** Slice 7: the Chair's rule for the city (`factions.rules`, set on or before the day before the set). */
+  chairRule?: { ordinanceId: string; name: string; characterId: string } | null;
+  /** Default true (the capital, Clearwater); false at home, where no councillor heads the party's card. */
+  contested?: boolean;
 }): { ordinanceId: string; by: CardBy } {
+  if (i.governorRule)
+    return {
+      ordinanceId: i.governorRule.ordinanceId,
+      by: {
+        kind: 'party',
+        factionId: i.factionId,
+        via: i.governorRule.title === 'Mayor' ? 'mayor' : 'governor',
+        name: i.governorRule.name,
+        characterId: i.governorRule.characterId,
+      },
+    };
+  const chair = i.chairRule
+    ? {
+        ordinanceId: i.chairRule.ordinanceId,
+        by: {
+          kind: 'party' as const,
+          factionId: i.factionId,
+          via: 'chair' as const,
+          name: i.chairRule.name,
+          characterId: i.chairRule.characterId,
+        },
+      }
+    : null;
+  if ((i.contested ?? true) === false) return chair ?? secretaryCard(i);
   const lead = i.seats
     .filter((s) => s.factionId === i.factionId && s.holder === 'player' && s.rule !== null)
     .sort((a, b) => b.total - a.total || a.seat - b.seat)[0];
@@ -129,17 +163,24 @@ export function partyCardOf(i: {
         ...(lead.characterId !== undefined ? { characterId: lead.characterId } : {}),
       },
     };
-  return {
-    ordinanceId: i.defaultRule,
-    by: {
-      kind: 'party',
-      factionId: i.factionId,
-      via: 'secretary',
-      name: i.secretary.name,
-      npcId: i.secretary.npcId,
-    },
-  };
+  return chair ?? secretaryCard(i);
 }
+
+const secretaryCard = (i: {
+  factionId: FactionId;
+  defaultRule: string;
+  secretary: { npcId: string; name: string };
+}): { ordinanceId: string; by: CardBy } => ({
+  ordinanceId: i.defaultRule,
+  by: { kind: 'party', factionId: i.factionId, via: 'secretary', name: i.secretary.name, npcId: i.secretary.npcId },
+});
+
+/** ADR 0046: the Chair's rule for a city, else the branch's motion (the secretary's default). */
+export const partyRuleOf = (
+  rules: ReadonlyArray<{ cityId: string; ordinanceId: string }>,
+  cityId: string,
+  branchMotion: string,
+): string => rules.find((r) => r.cityId === cityId)?.ordinanceId ?? branchMotion;
 
 /**
  * ADR 0085: one card per party, equal rules merged (both crests, `by` concatenated), in `order`

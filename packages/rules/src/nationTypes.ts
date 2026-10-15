@@ -1,3 +1,9 @@
+import type { DayKey } from './day';
+import type { Office } from './ladder';
+import type { MoraleState } from './morale';
+import type { NationalPhase, TermDate } from './term';
+import type { FactionId, OpinionShares } from './types';
+
 /**
  * Slice 7 (docs/tech/slice-7.md §4.3, §6.11, §11.2): the nation's headline conditions and
  * placeholders. The views, results and errors of §8.3 and §10 are added here by T5 and filled by
@@ -197,3 +203,68 @@ export const NATION_ACTS = [
   'confidenceVote',
 ] as const;
 export type NationAct = (typeof NATION_ACTS)[number];
+
+// ---------------------------------------------------------------------------------------------
+// Tech design §8.3: the views phase A can pin (the calendar, the offices and the ladder, the party's
+// target). The views of the desk, Parliament, the elections and the petitions are added by phase B
+// with the services that build them.
+// ---------------------------------------------------------------------------------------------
+
+/** The term's line on every national screen: the phase, its end, the next date. */
+export interface TermLineView {
+  termIndex: number;
+  termDay: number;
+  phase: NationalPhase;
+  /** Epoch ms of the phase's end (rendered in the player's clock), or null. */
+  until: number | null;
+  next: { what: TermDate; day: DayKey };
+}
+
+/** Me · an office held (screens §3). */
+export interface OfficeCardView {
+  office: Office;
+  /** "Governor of Coalport". */
+  title: string;
+  until: DayKey;
+  consecutive?: 1 | 2;
+  pay: { pc: number; fxp: number };
+  route: string;
+}
+
+/** Me · the ladder's five rows (screens §3). */
+export interface LadderView {
+  rows: Array<{
+    office: Office;
+    done: boolean;
+    count?: number;
+    need?: string;
+    opensOn?: DayKey;
+  }>;
+}
+
+/** The party's target on the desk and the Orders panel (design §4.2). */
+export interface TargetBarView {
+  count: number;
+  target: 25 | 50 | 100;
+  /** "doors". */
+  unit: string;
+  place: string;
+  met: boolean;
+}
+
+/** The nation map's bar, the law chips, the pins' second line and the term (screens §2); phase B merges it into slice 4's `NationView`. */
+export interface NationRepublicView {
+  bar: { shares: Record<FactionId, number>; leader: FactionId; day: DayKey };
+  laws: Array<{ lawId: string; name: string; daysLeft: number }>;
+  cities: Array<{
+    cityId: string;
+    name: string;
+    weight: number;
+    unrest: boolean;
+    shares: OpinionShares;
+    word: 'held' | 'contested' | 'closeRace' | MoraleState;
+    heldBy: FactionId | null;
+  }>;
+  term: TermLineView;
+  act: { kind: 'vote' | 'candidates' | 'standList' | 'standPresident' | 'pick' } | null;
+}

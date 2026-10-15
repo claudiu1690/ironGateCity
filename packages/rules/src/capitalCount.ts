@@ -1,4 +1,4 @@
-import { CAPITAL_COUNCIL } from './constants';
+import { BATTLEGROUND_COUNCILS, CAPITAL_COUNCIL } from './constants';
 import { countSeats } from './council';
 import type { CountLine, CountRow } from './council';
 import type { Rng } from './rng';
@@ -16,8 +16,8 @@ import type { FactionId, OpinionShares } from './types';
 const EPS = 1e-9;
 
 /** §15.3: the ballot half is worth its full 50 from ten ballots; five points a ballot below. */
-export const turnoutWeight = (ballots: number): number =>
-  CAPITAL_COUNCIL.ballotWeightMax * Math.min(1, Math.max(0, ballots) / CAPITAL_COUNCIL.fullTurnout);
+export const turnoutWeight = (ballots: number, fullTurnout: number = CAPITAL_COUNCIL.fullTurnout): number =>
+  CAPITAL_COUNCIL.ballotWeightMax * Math.min(1, Math.max(0, ballots) / fullTurnout);
 
 export interface FactionScore {
   factionId: FactionId;
@@ -34,9 +34,11 @@ export interface FactionScore {
 export function districtScores(i: {
   ballotsByFaction: Partial<Record<FactionId, number>>;
   opinion: OpinionShares;
+  /** Slice 7: the ballots at which the turnout weight is full (default the capital's ten). */
+  fullTurnout?: number;
 }): FactionScore[] {
   const ballots = FACTION_IDS.reduce((sum, f) => sum + (i.ballotsByFaction[f] ?? 0), 0);
-  const w = turnoutWeight(ballots);
+  const w = turnoutWeight(ballots, i.fullTurnout);
   const factionTotal = FACTION_IDS.reduce((sum, f) => sum + i.opinion[f], 0);
   return FACTION_IDS.map((f) => {
     const b = i.ballotsByFaction[f] ?? 0;
@@ -170,6 +172,26 @@ export function countDistrict(i: {
   opinion: OpinionShares;
   rng: Rng;
 }): DistrictCount {
+  return countBattleground({
+    ...i,
+    seats: BATTLEGROUND_COUNCILS.capital.perPlace,
+    fullTurnout: BATTLEGROUND_COUNCILS.capital.fullTurnout,
+  });
+}
+
+/**
+ * Slice 7 (ADR 0050, 0085; tech design §6.8): the voting rework's district count with parameters:
+ * the capital's two seats a district, Clearwater's seven (lists of three). The turnout weight is
+ * full from `fullTurnout` ballots (ten in both).
+ */
+export function countBattleground(i: {
+  lines: readonly DistrictCountLine[];
+  ballotsByFaction: Record<FactionId, number>;
+  opinion: OpinionShares;
+  rng: Rng;
+  seats: number;
+  fullTurnout: number;
+}): DistrictCount {
   const drawOrder = drawOrderOf(i.rng);
   const byFaction = new Map<FactionId, DistrictCountRow[]>();
   for (const f of FACTION_IDS) {
@@ -182,11 +204,11 @@ export function countDistrict(i: {
     }));
     byFaction.set(f, counted);
   }
-  const scores = districtScores({ ballotsByFaction: i.ballotsByFaction, opinion: i.opinion });
+  const scores = districtScores({ ballotsByFaction: i.ballotsByFaction, opinion: i.opinion, fullTurnout: i.fullTurnout });
   const ballots = scores.reduce((sum, s) => sum + s.ballots, 0);
   const { seats, drawn } = dhondt(
     scores,
-    CAPITAL_COUNCIL.perDistrict,
+    i.seats,
     drawOrder,
     (f, won) => (byFaction.get(f)?.length ?? 0) > won,
   );
@@ -200,7 +222,7 @@ export function countDistrict(i: {
   }
   return {
     factions: scores.map((s) => ({ ...s, seats: seatsByFaction[s.factionId] })),
-    w: turnoutWeight(ballots),
+    w: turnoutWeight(ballots, i.fullTurnout),
     ballots,
     seatsByFaction,
     seated,
@@ -252,3 +274,9 @@ export function decideCapitalRule(i: {
     tallies: rows.map((r) => ({ ordinanceId: r.ordinanceId, votes: r.votes, seats: r.seats })),
   };
 }
+
+/**
+ * Slice 7 (ADR 0050, 0085): the rule of a contested council (the capital's ten seats, Clearwater's
+ * seven on one meter): the largest bloc's card; ties: card votes, opinion share, the draw.
+ */
+export const decideBlocRule = decideCapitalRule;

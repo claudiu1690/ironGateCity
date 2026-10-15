@@ -1,4 +1,4 @@
-import { DIRECTIVES } from './constants';
+import { DIRECTIVES, PUSH } from './constants';
 import { cityDayIndex, mod } from './day';
 import type { DayKey } from './day';
 import type {
@@ -22,7 +22,7 @@ const SLOTS: OrderSlot[] = ['A', 'B', 'C'];
 export function ordersForDay(
   templates: readonly OrderTemplate[],
   day: DayKey,
-  residence: 'home' | 'capital' = 'home',
+  residence: ResidenceKind = 'home',
   /**
    * Slice 5 (design §12.2): a template with `minLevel` enters a member's rotation from that Level
    * (orders are faction-wide among members who can do them). Absent: Level 1, so a caller that does
@@ -69,11 +69,13 @@ export function startOrders(
   welcome?: readonly [string, string, string],
   crisis?: readonly [string, string],
   now?: number,
-  residence: 'home' | 'capital' = 'home',
+  residence: ResidenceKind = 'home',
   /** Slice 5: the member's Level, for `minLevel` templates (default 1). */
   level = 1,
   /** Review 4 #22: `ordersForDay`'s filter (the mission order only with a mission to start). */
   offerable?: (t: OrderTemplate) => boolean,
+  /** Slice 7 (ADR 0046): the Chair's standing orders for the day; the crisis pair and the welcome set still win. */
+  standing?: StandingInput,
 ): OrdersState {
   const byId = (kind: string) => (id: string) => {
     const t = templates.find((x) => x.id === id);
@@ -83,7 +85,9 @@ export function startOrders(
   let picked: OrderTemplate[];
   if (welcome) picked = welcome.map(byId('welcome'));
   else {
-    picked = ordersForDay(templates, day, residence, level, offerable);
+    picked = standing
+      ? standingOrdersForDay(templates, day, residence, level, standing, offerable)
+      : ordersForDay(templates, day, residence, level, offerable);
     if (crisis && residence === 'home') {
       const [a, b] = crisis.map(byId('crisis'));
       picked = [a!, b!, ...picked.filter((t) => t.slot !== 'A' && t.slot !== 'B')];
@@ -91,7 +95,7 @@ export function startOrders(
   }
   return {
     day,
-    items: picked.map((t) => {
+    items: picked.map((t: OrderTemplate & { push?: OrderItem['push'] }) => {
       const already = hasJob && (t.match.kinds ?? []).includes('takeJob');
       return {
         templateId: t.id,
@@ -99,6 +103,7 @@ export function startOrders(
         target: t.target,
         progress: already ? t.target : 0,
         doneAt: already ? (now ?? 0) : null,
+        ...(t.push ? { push: { ...t.push } } : {}),
       };
     }),
     allDoneAt: null,
@@ -144,7 +149,13 @@ const ctxOf = (ctx: MatchCtx): ResidenceCtx =>
  * ADR 0009, slice 4 (ADR 0026): AND of the match's fields. `cityId: 'home'` is the residence city,
  * `districtId: 'home'` the residence district (never matches without one).
  */
-export function orderMatches(m: OrderMatch, a: ActionDescriptor, ctx: MatchCtx): boolean {
+export function orderMatches(
+  m: OrderMatch,
+  a: ActionDescriptor,
+  ctx: MatchCtx,
+  /** Slice 7 (ADR 0046): the item's pushed place, which `'push'` in a match resolves to. */
+  push?: { cityId: string; districtId: string | null },
+): boolean {
   const r = ctxOf(ctx);
   // Slice 5 (ADR 0034 §3): the orders are home's or the capital's; nothing on rival ground counts.
   if (r.rivalGround) return false;
@@ -157,11 +168,14 @@ export function orderMatches(m: OrderMatch, a: ActionDescriptor, ctx: MatchCtx):
   if (m.locationKinds && (a.locationKind === undefined || !m.locationKinds.includes(a.locationKind)))
     return false;
   if (m.cityId !== undefined) {
-    const city = m.cityId === 'home' ? r.cityId : m.cityId;
+    if (m.cityId === 'push' && !push) return false;
+    const city = m.cityId === 'home' ? r.cityId : m.cityId === 'push' ? push!.cityId : m.cityId;
     if (a.cityId !== city) return false;
   }
-  if (m.districtId !== undefined) {
-    const district = m.districtId === 'home' ? r.districtId : m.districtId;
+  // Slice 7: a push to a place with no district (Clearwater) leaves `districtId: 'push'` unconstrained.
+  if (m.districtId !== undefined && !(m.districtId === 'push' && push?.districtId === null)) {
+    if (m.districtId === 'push' && !push) return false;
+    const district = m.districtId === 'home' ? r.districtId : m.districtId === 'push' ? push!.districtId : m.districtId;
     if (district === null || a.districtId !== district) return false;
   }
   if (m.issueTagged && (a.issueIds ?? []).length === 0) return false;
@@ -287,3 +301,110 @@ export function orderRewards(
       : completed.reduce((sum, t) => sum + orderDoneFxp(t), 0);
   return { fxp, pc: allDone ? DIRECTIVES.allDonePc : 0 };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Slice 7 (docs/tech/slice-7.md §6.7, ADR 0046): the Chair's standing orders and the push.
+// ---------------------------------------------------------------------------------------------
+
+/** Whose rotation a member reads (slice 4's home and capital; slice 7's Clearwater). */
+export type ResidenceKind = 'home' | 'capital' | 'clearwater';
+
+/** The Chair's picks: a family id per slot, or null for the rotation. */
+export interface StandingPicks {
+  A: string | null;
+  B: string | null;
+  C: string | null;
+}
+
+/** The push: slot A or B to a capital district or Clearwater, with the party's target. */
+export interface PushSpec {
+  slot: 'A' | 'B';
+  cityId: string;
+  districtId: string | null;
+  target: 25 | 50 | 100;
+}
+
+/** One stored set of standing orders (`factions.orders.current` / `next`). */
+export interface StandingSpec {
+  fromDay: DayKey;
+  picks: StandingPicks;
+  push: PushSpec | null;
+}
+
+/** What `startOrders` needs of the Chair's orders for the day. */
+export interface StandingInput {
+  picks: StandingPicks;
+  push: PushSpec | null;
+  /** The faction's push templates (content's `pushTemplate`). */
+  pushTemplates: { A: OrderTemplate | undefined; B: OrderTemplate | undefined };
+  /** The member's residence place, where a member below Level 10 reads the push (counts: false). */
+  residencePlace: { cityId: string; districtId: string | null };
+}
+
+/** ADR 0046: the standing orders in force on `day`: `next` once it has started, else `current`. */
+export function standingOn<T extends { fromDay: DayKey }>(
+  o: { current: T | null; next: T | null },
+  day: DayKey,
+): T | null {
+  if (o.next && day >= o.next.fromDay) return o.next;
+  if (o.current && day >= o.current.fromDay) return o.current;
+  return null;
+}
+
+/**
+ * ADR 0046 (design §23.2): per slot, the pick's template for this residence (the same family; `any`
+ * serves every residence), else the rotation. The pushed slot is the faction's push template: at the
+ * battleground for Level 10+ (its attempts count), at the residence below (they do not).
+ */
+export function standingOrdersForDay(
+  templates: readonly OrderTemplate[],
+  day: DayKey,
+  residence: ResidenceKind,
+  level: number,
+  standing: StandingInput,
+  offerable: (t: OrderTemplate) => boolean = () => true,
+): Array<OrderTemplate & { push?: { cityId: string; districtId: string | null; counts: boolean } }> {
+  const rotation = ordersForDay(templates, day, residence, level, offerable);
+  const out: Array<OrderTemplate & { push?: { cityId: string; districtId: string | null; counts: boolean } }> = [];
+  for (const slot of SLOTS) {
+    const push = standing.push;
+    const pushT = push && push.slot === slot ? standing.pushTemplates[slot as 'A' | 'B'] : undefined;
+    if (push && pushT) {
+      const counts = level >= PUSH.level;
+      const place = counts ? { cityId: push.cityId, districtId: push.districtId } : standing.residencePlace;
+      out.push({ ...pushT, push: { ...place, counts } });
+      continue;
+    }
+    const family = standing.picks[slot];
+    const picked =
+      family === null
+        ? undefined
+        : templates.find(
+            (t) =>
+              t.slot === slot &&
+              t.family === family &&
+              (t.use ?? 'rotation') === 'rotation' &&
+              ((t.residence ?? 'home') === residence || t.residence === 'any') &&
+              (t.minLevel ?? 1) <= level &&
+              offerable(t),
+          );
+    const fallback = rotation.find((t) => t.slot === slot);
+    if (picked) out.push(picked);
+    else if (fallback) out.push(fallback);
+  }
+  return out;
+}
+
+/** ADR 0046: does this attempt count toward the party's target? The item's push counts and its match holds. */
+export function pushCounts(item: OrderItem, t: OrderTemplate, a: ActionDescriptor, ctx: MatchCtx): boolean {
+  return !!item.push?.counts && orderMatches(t.match, a, ctx, item.push);
+}
+
+/** Design §23.3: the push's title with its place: "Talk to voters in Eastside, Irongate". */
+export function pushTitle(t: Pick<OrderTemplate, 'title'>, place: { cityName: string; districtName: string | null }): string {
+  const name = place.districtName ? `${place.districtName}, ${place.cityName}` : place.cityName;
+  return t.title.replaceAll('{place}', name);
+}
+
+/** Design §4.2: the party's target is met. */
+export const pushMet = (count: number, target: number): boolean => count >= target;

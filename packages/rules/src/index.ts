@@ -59,3 +59,4 @@ export * from './term';
 export * from './ladder';
 export * from './national';
 export * from './parliament';
+export * from './nationEvents';
