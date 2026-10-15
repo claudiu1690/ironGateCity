@@ -399,6 +399,90 @@ export async function callEvent(
   return result;
 }
 
+/**
+ * Slice 7 T16 (design §4.4, tech §8.2 `chairService.callEvent`): the Chair's call, in the caller's
+ * transaction (the Chair's request key): slice 6's place limits by the same reads, the event with
+ * `calledBy: { kind: 'chair' }`, no role taken, no sign-up row, no Energy; the board's line. The
+ * caller schedules the resolution after the commit (`scheduleEventResolve`).
+ */
+export async function insertChairCallInTx(
+  content: GameContent,
+  session: ClientSession,
+  c: CharacterDoc,
+  i: { typeId: string; cityId: string; districtId: string | null; hours: EventHours },
+  now: number,
+): Promise<{ ev: CampaignEventDoc; view: EventPageView; venueName: string }> {
+  const type = content.eventType(i.typeId)!;
+  const venue = content.venueOf(type.id, i.cityId, i.districtId)!;
+  const placeId = placeIdOf(i.cityId, i.districtId);
+  const open = await CampaignEvent.findOne({ factionId: c.factionId, placeId, kind: 'member', status: 'open' })
+    .session(session)
+    .lean<CampaignEventDoc>();
+  if (open) throw new GameError('ONE_AT_A_TIME', { eventId: open._id.toHexString(), startsAt: open.startsAt.getTime() });
+  const startsAt = startsAtFor(now, i.hours);
+  const day = dayKey(startsAt);
+  const starts = await CampaignEvent.countDocuments({ factionId: c.factionId, placeId, day, kind: 'member' }).session(session);
+  if (starts >= EVENTS.perPlaceDay.memberStarts) throw new GameError('BRANCH_HANDS_FULL', { cityId: i.cityId });
+  const ev0 = { typeId: type.id, cityId: i.cityId, districtId: i.districtId, venueId: venue.location.id, factionId: c.factionId };
+  const place = await readEventPlace(content, ev0, day, session);
+  const eventId = new Types.ObjectId();
+  const ev: CampaignEventDoc = {
+    _id: eventId,
+    kind: 'member',
+    typeId: type.id,
+    factionId: c.factionId,
+    cityId: i.cityId,
+    districtId: i.districtId,
+    placeId,
+    venueId: venue.location.id,
+    day,
+    dayIndex: (starts + 1) as 1 | 2,
+    calledBy: { kind: 'chair', characterId: c._id, name: c.name },
+    calledAt: new Date(now),
+    startsAt: new Date(startsAt),
+    targetFactionId: type.special === 'againstLeader' ? headlineTarget(c.factionId, place) : null,
+    seed: randomBytes(16).toString('hex'),
+    roles: type.roles.map((r) => ({ roleId: r.id, holder: null })),
+    hands: [],
+    rev: 1,
+    status: 'open',
+    result: null,
+    resolvedAt: null,
+    createdAt: new Date(now),
+    updatedAt: new Date(now),
+  };
+  try {
+    await CampaignEvent.create([ev], { session });
+  } catch (err) {
+    if (isDuplicateKeyError(err)) throw new GameError('ONE_AT_A_TIME', { cityId: i.cityId });
+    throw err;
+  }
+  const ch = branchChannel(content, c, i.cityId);
+  await systemLine(session, {
+    channel: ch.channel,
+    factionId: c.factionId,
+    cityId: ch.cityId,
+    kind: 'eventCalled',
+    payload: {
+      name: c.name,
+      eventId: eventId.toHexString(),
+      event: type.runningName,
+      venue: venue.location.name,
+      time: startsAt,
+      filled: 0,
+      roles: type.roles.length,
+    },
+    ref: eventId.toHexString(),
+    dedupeKey: `called:${eventId.toHexString()}`,
+    at: new Date(now),
+  });
+  const view = await pageView(content, ev, c, now, { place, session });
+  return { ev, view, venueName: venue.location.name };
+}
+
+/** Schedule an event's resolution after its call committed (the Chair's call). */
+export const scheduleEventResolve = (eventId: string, at: Date): void => scheduleResolve({ eventId, at });
+
 function scheduleResolve(s: { eventId: string; at: Date }): void {
   void Promise.resolve()
     .then(() => eventScheduler().resolveAt(s.eventId, s.at))

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { getDesk, setFixture, setLine, setOrders, setRule } from '../../services/chairDeskService';
+import { callEvent, getDesk, setFixture, setLine, setOrders, setRule } from '../../services/chairDeskService';
 import { protectedProcedure, router } from '../trpc';
 
 const Family = z.string().min(1).nullable();
@@ -39,4 +39,15 @@ export const chairRouter = router({
       }),
     )
     .mutation(({ ctx, input }) => setFixture({ user: ctx.user, content: ctx.content, now: ctx.now, input })),
+  callEvent: protectedProcedure
+    .input(
+      z.object({
+        cityId: z.string().min(1),
+        districtId: z.string().min(1).nullable(),
+        typeId: z.string().min(1),
+        hours: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal(12)]),
+        idempotencyKey: z.uuid(),
+      }),
+    )
+    .mutation(({ ctx, input }) => callEvent({ user: ctx.user, content: ctx.content, now: ctx.now, input })),
 });

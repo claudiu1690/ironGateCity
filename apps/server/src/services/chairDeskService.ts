@@ -8,6 +8,7 @@ import {
   dayKey,
   dayStart,
   councilDay,
+  chairCallGate,
   localVote,
   pushCounts,
   pushMet,
@@ -24,6 +25,7 @@ import { newsItem } from './nationDay';
 import type { NationBoundaryCtx } from './nationDay';
 import { currentTerm, nationResult, runNationAct } from './nationAct';
 import type { NationActDeps, NationCtx } from './nationAct';
+import { insertChairCallInTx, scheduleEventResolve } from './eventService';
 import { billView } from './parliamentService';
 import { weekdayName } from './politicsService';
 import { residenceCtx } from './residence';
@@ -218,6 +220,48 @@ export function setFixture(
       view: { kind: 'desk', desk: await deskView(content, c, x.now, x.session) },
     });
   });
+}
+
+/**
+ * `chair.callEvent` (§7.2, design §4.4): an event in any open city from anywhere, no role, no Energy,
+ * *called by the Chair*; slice 6's place limits; not on a rival's home ground; in the capital a
+ * district. The resolution is scheduled after the commit.
+ */
+export async function callEvent(
+  deps: NationActDeps<{ cityId: string; districtId: string | null; typeId: string; hours: 1 | 3 | 6 | 12 }>,
+): Promise<PoliticalResult> {
+  const { content } = deps;
+  let scheduled: { eventId: string; at: Date } | null = null;
+  const result = await runNationAct(deps, 'chair.call', async (x) => {
+    const { c } = x;
+    await asChair(x);
+    const { cityId, typeId, hours } = deps.input;
+    const type = content.eventTypesFor(c.factionId).find((t) => t.id === typeId);
+    if (!type) throw new GameError('UNKNOWN_EVENT_TYPE', { typeId }, 'BAD_REQUEST');
+    const city = content.city(cityId);
+    const districted = content.isDistricted(cityId);
+    const districtId = districted ? deps.input.districtId : null;
+    const venue = districtId !== null || !districted ? content.venueOf(typeId, cityId, districtId) : undefined;
+    const gate = chairCallGate({
+      chair: true,
+      cityOpen: !!city?.council,
+      rivalHome: city?.role === 'home' && city.homeFactionId !== c.factionId,
+      districtOk: !!venue,
+    });
+    if (gate) throw new GameError(gate.reason, { cityId, districtId }, gate.reason === 'WRONG_DISTRICT' ? 'BAD_REQUEST' : 'PRECONDITION_FAILED');
+    const { ev, view, venueName } = await insertChairCallInTx(content, x.session, c, { typeId, cityId, districtId, hours }, x.now);
+    scheduled = { eventId: ev._id.toHexString(), at: ev.startsAt };
+    return nationResult(content, x, {
+      act: 'chairCall',
+      idempotencyKey: deps.input.idempotencyKey,
+      vars: { event: type.runningName, city: city!.name, venue: venueName },
+      at: ev.startsAt.getTime(),
+      view: { kind: 'event', event: view },
+    });
+  });
+  const s = scheduled as { eventId: string; at: Date } | null;
+  if (s) scheduleEventResolve(s.eventId, s.at);
+  return result;
 }
 
 // ---------------------------------------------------------------------------------------------
