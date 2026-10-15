@@ -152,7 +152,7 @@ export function RunInGate() {
     enabled: resultOpen && !!resultCityId,
   });
   useEffect(() => {
-    setResultModalOpen(resultOpen || encounterOpen);
+    setResultModalOpen(resultOpen || encounterOpen, 'runIn');
   }, [resultOpen, encounterOpen]);
 
   if (!character) return null;

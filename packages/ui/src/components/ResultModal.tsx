@@ -4,6 +4,7 @@ import { dayKey, dayStart, energyReadyAt, heatState, xpForLevel } from '@irongat
 import type {
   ActionResult,
   CharacterView,
+  EventResult,
   FactionId,
   JourneyView,
   NamedStandingView,
@@ -41,6 +42,7 @@ import { StatPointsPanel } from './Shell';
 import { Stamp } from './Stamp';
 import type { StampTone } from './Stamp';
 import { RunInBlock, heatWord, recordWord } from './Street';
+import { EventBody } from './EventResult';
 
 /**
  * Slice 4 (screens §4, tech design §10.2): the arrival modal, `ResultModal kind="journey"`: the
@@ -56,7 +58,7 @@ export interface ResultModalProps {
    * An action's result, or (slice 3) a political act's: `kind: 'political'`, screens §9; or (slice 4)
    * the arrival, `kind: 'journey'`.
    */
-  result: ActionResult | PoliticalResult | JourneyArrivalResult | null;
+  result: ActionResult | PoliticalResult | JourneyArrivalResult | EventResult | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Once more / Three more: the caller re-runs the action with a new idempotency key. */
@@ -127,14 +129,28 @@ export function stampFor(r: Pick<ActionResult, 'stamp' | 'successes' | 'action'>
  * words the reason from it, and computes nothing else. Full-screen on phones.
  */
 /** Slice 5: the cells', the infirmary's and the record's results: a card, not a half-empty screen. */
-const CARD_ACTS = new Set(['bail', 'released', 'deported', 'walkOut', 'discharged', 'strike', 'treated']);
+const CARD_ACTS = new Set([
+  'bail',
+  'released',
+  'deported',
+  'walkOut',
+  'discharged',
+  'strike',
+  'treated',
+  // Slice 6 (screens §3.2, §4, §7; design §11): the small political modals of events and favours.
+  'call',
+  'signUp',
+  'bailPosted',
+  'visit',
+  'calledOff',
+]);
 
 export function ResultModal(props: ResultModalProps) {
   const { result, open, onOpenChange } = props;
   const card = result?.kind === 'political' && CARD_ACTS.has(result.act);
   // Review 5 #4 (answers §4.1): an action's result scrolls only in its middle (the art and the stamp
   // stay at the top, the buttons at the bottom).
-  const action = !!result && result.kind !== 'political' && result.kind !== 'journey';
+  const action = !!result && result.kind !== 'political' && result.kind !== 'journey' && result.kind !== 'event';
   return (
     <Dialog.Root open={open && result !== null} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -150,6 +166,15 @@ export function ResultModal(props: ResultModalProps) {
         >
           {result && result.kind === 'political' ? (
             <PoliticalBody result={result} onContinue={props.onContinue} continuePending={props.continuePending} />
+          ) : result && result.kind === 'event' ? (
+            <EventBody
+              result={result}
+              ground={props.ground ?? null}
+              factionNames={props.factionNames}
+              trainingPlaces={props.trainingPlaces}
+              onContinue={props.onContinue}
+              continuePending={props.continuePending}
+            />
           ) : result && result.kind === 'journey' ? (
             <JourneyBody {...props} result={result} />
           ) : (
@@ -166,14 +191,14 @@ export function ResultModal(props: ResultModalProps) {
  * shared with the hall header), the stamp, the place line and (slice 4) the ground sash on its corner;
  * with a sash the stamp moves left, so the band never covers it.
  */
-function ArtHeader({
+export function ArtHeader({
   art,
   stamp,
   caption,
   ground,
 }: {
   art: ActionResult['art'];
-  stamp: { label: string; tone: StampTone };
+  stamp: { label: string; tone: StampTone; color?: string };
   caption: string;
   ground?: Ground | null;
 }) {
@@ -197,7 +222,7 @@ function ArtHeader({
       >
         {/* The stamp at 80 % on the short crops, 70 % on the shortest (under 700 px). */}
         <div className="scale-80 [@media(max-height:700px)]:scale-70 [@media(min-height:800px)]:scale-100">
-          <Stamp tone={stamp.tone} label={stamp.label} />
+          <Stamp tone={stamp.tone} label={stamp.label} color={stamp.color} />
         </div>
       </div>
       <span className="label-caps absolute bottom-2 left-3 text-[10px] text-dim">{caption}</span>
@@ -270,6 +295,16 @@ function PoliticalBody({
     });
   }
   if (k.energy) lines.push({ id: 'energy', text: copy.risk.energyKnock(k.energy.before - k.energy.after) });
+  // Slice 6 (tech design §10.2): Rested drawn by a call or a sign-up; Party XP from a favour or the
+  // order; the visit's line for the mate; the prisoner's *posted by*.
+  if (k.rested && k.energy) {
+    const covered = k.rested.before - k.rested.after;
+    if (covered > 0)
+      lines.push({ id: 'rested', text: copy.together.knock.rested(covered, k.energy.before - k.energy.after) });
+  }
+  if (k.fxp && k.fxp.added > 0) lines.push({ id: 'fxp', text: copy.together.knock.fxp(k.fxp.added) });
+  if (k.mate) lines.push({ id: 'mate', text: copy.together.knock.mate(k.mate.name) });
+  if (k.postedBy) lines.push({ id: 'posted-by', text: copy.together.knock.postedBy(k.postedBy.iron, k.postedBy.name) });
   if (k.seatGivenUp) lines.push({ id: 'seat', text: copy.residence.seatGivenUp(k.seatGivenUp.cityName) });
   const t = { until: r.until, at: r.at };
   // Review 2 (screens §9): every act ends with what comes next.
@@ -1321,7 +1356,7 @@ function partsNote(line: RewardLine): string | null {
   return null;
 }
 
-function ReceiptRow({
+export function ReceiptRow({
   label,
   value,
   valueClassName,

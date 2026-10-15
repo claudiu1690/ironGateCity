@@ -89,6 +89,12 @@ function JourneyPlate({
         arrivesAt={data.arrivesAt}
         now={Math.min(now, data.arrivesAt)}
       />
+      {/* Slice 6 (screens §6.3): one Courier line under the progress line when the count is cheap. */}
+      {(data.fellows ?? 0) > 0 && (
+        <p className="font-mono text-[11.5px] text-muted" data-testid="journey-fellows">
+          {copy.together.hereNow.train(data.fellows ?? 0)}
+        </p>
+      )}
       <p className="border-y border-ink py-2 font-body text-[14.5px] leading-snug italic" data-testid="journey-sentence">
         {copy.travel.eitherWay}
       </p>

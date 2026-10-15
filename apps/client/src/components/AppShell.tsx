@@ -6,6 +6,7 @@ import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-route
 import { useLayoutEffect, useRef } from 'react';
 import { DevPanel } from '../features/dev/DevPanel';
 import { RunInGate } from '../features/street/RunInGate';
+import { EventGate } from '../features/faction/EventGate';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { useResultModalOpen } from '../lib/modalGate';
 import { trpc } from '../lib/trpc';
@@ -186,6 +187,8 @@ export function AppShell() {
       )}
       {/* Slice 5 (tech design §12.1): the run-in modal and its result, above every screen. */}
       {character && <RunInGate />}
+      {/* Slice 6 (tech design §12.1): event results and *Called off*, after the run-in and the release. */}
+      {character && <EventGate />}
       {/* Memory mode only: renders nothing unless the server has its test hooks on. */}
       <DevPanel />
     </div>

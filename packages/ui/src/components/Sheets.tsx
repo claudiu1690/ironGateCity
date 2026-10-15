@@ -27,6 +27,8 @@ export interface LocationSheetProps {
   tags?: string[];
   /** Review 4 #14: tappable chips after the tags (the Issue chip, *Issue · Harbour Rates*). */
   chips?: ReactNode;
+  /** Slice 6 (screens §6.1): the *Here now* line under the blurb. */
+  hereNow?: ReactNode;
   layout?: LocationLayout;
   /**
    * A bottom sheet the full 60 dvh, however little it holds: the zoomed map's art stops short of the
@@ -77,6 +79,7 @@ export function LocationSheet({
   blurb,
   tags = [],
   chips = null,
+  hereNow = null,
   layout = 'sheet',
   fill = false,
   art,
@@ -168,6 +171,7 @@ export function LocationSheet({
                 {name}
               </Dialog.Title>
               {blurb && <p className="font-body text-[14px] leading-snug text-text-2">{blurb}</p>}
+              {hereNow}
               {tags.length > 0 && (
                 <ul className="flex flex-wrap gap-1.5 pt-1">
                   {tags.map((t) => (

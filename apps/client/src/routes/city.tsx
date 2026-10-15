@@ -41,6 +41,7 @@ import {
   TreatmentCard,
   ScoreboardLine,
   Ticket,
+  EventTicket,
   TodayStrip,
   TrainsCard,
   TramBar,
@@ -75,6 +76,7 @@ import { useRuleVote } from '../features/council/useRuleVote';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { CellsNow } from '../features/game/CellsNow';
+import { PlacePresence } from '../features/faction/PlacePresence';
 import { TownHall } from '../features/council/TownHall';
 import { trainingPlacesOf } from '../features/game/trainingPlaces';
 import { useMissionStart } from '../features/street/useMissionStart';
@@ -942,6 +944,15 @@ export function CityPage() {
             </span>
             {ruleChip('plate-rule-chip', true)}
           </div>
+          {/* Slice 6 (screens §6.1): own faction only; absent when it is only you. */}
+          {(c.factionHere ?? 0) > 1 && (
+            <span
+              className="font-mono text-[10.5px] text-dim [@media(max-width:639px)_and_(max-height:700px)]:hidden"
+              data-testid="plate-here"
+            >
+              {copy.together.hereNow.plate(c.factionHere ?? 0, character.factionName)}
+            </span>
+          )}
           {/* Review 5 (answers §10.2, §16.1, ADR 0082): the rival header replaces slice 5's *draws from*
               and Heat lines: the push bar (at every size, QA m7), the danger word (patrols at night) and
               the goal, which folds into the push note on a phone under 700 px tall. */}
@@ -1355,6 +1366,8 @@ export function CityPage() {
           kickerAside={layout === 'sheet' ? ruleChip('sheet-rule-chip', false) : null}
           name={sheetPlace.name}
           blurb={sheetPlace.blurb}
+          // Slice 6 (screens §6.1): who's been here in the last ten minutes.
+          hereNow={<PlacePresence locationId={sheetPlace.id} open={sheetOpen} />}
           art={sheetPlace.art}
           ground={sheetGround}
           tags={character.rested > 0 ? [`Rested ${character.rested} · +50 % XP and Iron`] : []}
@@ -1413,6 +1426,17 @@ export function CityPage() {
                 onWhereToAct={() => setPlacesOpen(true)}
               />
             ) : null,
+            // Slice 6 (screens §6.2, tech design §12.1): the faction's open events at this venue.
+            ...(sheetPlace.events ?? []).map((t) => (
+              <EventTicket
+                key={`event-${t.eventId}`}
+                ticket={t}
+                now={now}
+                onJoin={() =>
+                  void navigate({ to: '/faction/events/$eventId', params: { eventId: t.eventId }, search: { join: true } })
+                }
+              />
+            )),
           ]}
         >
           {energy.value < cheapest && <OutOfEnergyCard fullAt={character.energy.fullAt} waiting={waiting} />}

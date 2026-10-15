@@ -252,3 +252,13 @@ export type { DeskActs, TownHallBlocksProps, WhatNowCardProps } from './componen
 // Slice 6 (lane A): the Faction tab's strip, the events' cards, page parts, ticket and here-now line.
 export { FACTION_TABS, FactionTabs } from './components/FactionTabs';
 export type { FactionTab, FactionTabsProps } from './components/FactionTabs';
+export { EventCard, EventResultLine, bandStamp, calledByText, eventTagText } from './components/EventCard';
+export type { EventCardProps, EventResultLineProps } from './components/EventCard';
+export { EventHeader, HandsRow, PaysTiles, RoleRow, RolesKicker, VolunteersNote, roleGateText, roleOdds } from './components/EventPage';
+export type { EventHeaderProps, HandsRowProps, PaysTilesProps, RoleRowProps } from './components/EventPage';
+export { CallEventSheet, TimeChips, callGuardText } from './components/CallEventSheet';
+export type { CallEventSheetProps, TimeChipsProps } from './components/CallEventSheet';
+export { EventBody } from './components/EventResult';
+export type { EventBodyProps } from './components/EventResult';
+export { EventTicket, HereNowLine } from './components/EventTicket';
+export type { EventTicketProps, HereNowLineProps } from './components/EventTicket';

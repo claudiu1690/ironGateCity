@@ -10,10 +10,12 @@ export interface StampProps {
   className?: string;
   /** Animate in (default); false shows it settled (the front page reopened, screens §2.2). */
   animate?: boolean;
+  /** Slice 6 (design §2.6): a colour of its own (Triumph in the faction's colour), over the tone. */
+  color?: string;
 }
 
 /** A rotated rubber stamp. */
-export function Stamp({ tone, label, className, animate = true }: StampProps) {
+export function Stamp({ tone, label, className, animate = true, color }: StampProps) {
   const t =
     tone === 'success'
       ? 'text-success border-success'
@@ -23,6 +25,7 @@ export function Stamp({ tone, label, className, animate = true }: StampProps) {
   return (
     <span
       data-testid="stamp"
+      style={color ? { color, borderColor: color } : undefined}
       className={cx(
         'label-caps inline-block -rotate-8 border-4 border-double bg-paper/95 px-4 py-1 text-[26px] font-semibold tracking-[0.14em] whitespace-nowrap',
         animate && 'motion-safe:animate-stamp',

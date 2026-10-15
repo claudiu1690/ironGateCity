@@ -203,6 +203,35 @@ function DevPanelOn({ status }: { status: DevStatus }) {
       `${i.name} (${i.placeName}) · V ${i.momentum.vanguard} · C ${i.momentum.collective} · A ${i.momentum.alliance}`,
       `dev-issue-${i.name}`,
     ]);
+  // Slice 6 (tech design §8.7): sign-ups, events here, the fixture, unseen results, chat, presence.
+  const tg = status.together;
+  if (tg) {
+    const hhmm = (ms: number) => utcLine(ms).slice(-9);
+    rows.push([
+      'Sign-ups',
+      tg.signups.length === 0 ? 'none' : tg.signups.map((s) => `${s.slot} · starts ${hhmm(s.startsAt)}`).join(' · '),
+      'dev-signups',
+    ]);
+    rows.push([
+      'Events here',
+      tg.eventsHere.length === 0
+        ? 'none open'
+        : tg.eventsHere
+            .map((x) => `${x.kind === 'fixture' ? 'fixture ' : ''}${x.typeId} ${x.filled}/${x.roles}${x.hands ? ` +${x.hands}h` : ''} ${hhmm(x.startsAt)}`)
+            .join(' · '),
+      'dev-events-here',
+    ]);
+    rows.push([
+      'Results',
+      `${tg.unseenResults} unseen · fixture ${tg.fixtureToday ? 'posted' : 'none today'}`,
+      'dev-event-results',
+    ]);
+    rows.push([
+      'Chat',
+      `${tg.chat.recent} recent · ${tg.chat.forYou} for you${tg.presence.locationId ? ` · seen at ${tg.presence.locationId}` : ''}`,
+      'dev-chat',
+    ]);
+  }
   // Slice 5 (tech design §8.6): Heat, Health, the record, held, the run-in, flags, bars, pressure.
   const risk = status.risk;
   if (risk) {
@@ -443,6 +472,14 @@ function DevPanelOn({ status }: { status: DevStatus }) {
             />
           )}
 
+          {status.together !== undefined && status.character && (
+            <TogetherControls
+              disabled={act.isPending || !status.character}
+              busy={busy}
+              run={(action, target) => act.mutate(target === undefined ? action : { action, target })}
+            />
+          )}
+
           <p
             role="status"
             aria-live="polite"
@@ -459,6 +496,60 @@ function DevPanelOn({ status }: { status: DevStatus }) {
         </section>
       )}
     </>
+  );
+}
+
+/**
+ * Slice 6 (tech design §8.7): the together buttons. Each calls a test hook (members, an event filled,
+ * started, its next rolls; a test member to the cells or the ward, a line in chat; the chat limits
+ * cleared), then the existing settle. The panel holds no rule.
+ */
+function TogetherControls({
+  disabled,
+  busy,
+  run,
+}: {
+  disabled: boolean;
+  busy: (action: DevAction, target?: string) => boolean;
+  run: (action: DevAction, target?: string) => void;
+}) {
+  const small = 'px-2 text-[12px]';
+  const btn = (action: DevAction, label: string, target?: string, testId?: string) => (
+    <Button
+      variant="outline"
+      className={small}
+      disabled={disabled}
+      pending={busy(action, target)}
+      onClick={() => run(action, target)}
+      data-testid={testId ?? `dev-btn-${action}`}
+    >
+      {label}
+    </Button>
+  );
+  return (
+    <div className="grid grid-cols-2 gap-1.5 border-t border-paper-2 px-3 pt-2.5 pb-2" data-testid="dev-together">
+      <h3 className="label-caps col-span-2 text-[10px] text-muted">Together</h3>
+      {btn('members', 'Three test members here')}
+      {btn('fillEvent', 'Fill my event (roles)', 'roles', 'dev-btn-fillEvent')}
+      {btn('fillEvent', 'Fill my event (hands)', 'hands', 'dev-btn-fillHands')}
+      {btn('startEvent', 'Start my event now')}
+      <ChoiceRow
+        label="Rolls"
+        testId="dev-rolls"
+        choices={[
+          { value: 'success', label: 'All succeed' },
+          { value: 'failure', label: 'All fail' },
+          { value: 'random', label: 'Random' },
+        ]}
+        disabled={disabled}
+        busy={(v) => busy('rolls', v)}
+        onPick={(v) => run('rolls', v)}
+      />
+      {btn('memberCells', 'A member to the cells')}
+      {btn('memberWard', 'A member to the ward')}
+      {btn('memberSays', 'A member says something')}
+      {btn('chatReset', 'Clear my chat limits')}
+    </div>
   );
 }
 

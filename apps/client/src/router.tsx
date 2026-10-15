@@ -23,6 +23,7 @@ import { MePage } from './routes/me';
 import { PaperPage } from './routes/paper';
 import { HeldPage } from './routes/held';
 import { FactionPage, validateFactionSearch } from './routes/faction';
+import { EventPage, validateEventSearch } from './routes/event';
 import { SignupPage } from './routes/signup';
 
 interface RouterContext {
@@ -204,6 +205,14 @@ const factionRoute = createRoute({
   component: FactionPage,
 });
 
+/** Slice 6 (tech design §12.1): an event's page, in every state. */
+const eventRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/faction/events/$eventId',
+  validateSearch: validateEventSearch,
+  component: EventPage,
+});
+
 const meRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/me',
@@ -275,6 +284,7 @@ const routeTree = rootRoute.addChildren([
     heldRoute,
     paperRoute,
     factionRoute,
+    eventRoute,
     meRoute,
     ambitionRoute,
     councilRoute,
