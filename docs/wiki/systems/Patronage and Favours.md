@@ -40,7 +40,7 @@ updated: 2026-10-14
 **Code:**
 - Welcome favour: the `*.favour` tickets in `packages/content/src/data/cities/{coalport,duskwall,ashford}.ts`; the `welcome-b` templates in `orders.ts`; `use: 'welcome'` in `schemas.ts`; the offer check and `ONCE_ONLY` in `apps/server/src/services/actionService.ts`; `carriedWelcome` in `packages/rules/src/orders.ts`
 - Patrons (planned, ADR 0055): embedded `characters.patrons[]` (at most two), `patronDays` and `addFavour` in rules, Requests paid in the settlement. None exists yet.
-- Mates' favours (planned, ADR 0041): `favours.postBail`, `favours.visit`; `stays.bailPostedBy` and `visits`. None exists yet.
+- Mates' favours (ADR 0041): the gates and the visit's effect in `packages/rules/src/favours.ts`, `healHealth` in `health.ts`, `stays.bailPostedBy`, `visits` and `how: 'bailPosted'` in `packages/db/src/models/stay.ts` (slice 6 phase A, 15 Oct 2026). Not yet: `favours.postBail`, `favours.visit` (phase B).
 
 ## Status
 

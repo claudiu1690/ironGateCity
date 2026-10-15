@@ -259,6 +259,17 @@ export interface CharacterDoc {
   barred?: StoredBar[];
   /** The hostile deck's rotation (reset when all seen). */
   hostileDeck?: { seen: string[] };
+  // Slice 6 (tech design §5.4). Optional at the type level while older writers build characters
+  // without them; the schema's defaults and migration 010 set them on every document.
+  /** ADR 0040: where and when the character was last seen; touched without bumping `version`. */
+  presence?: StoredPresence;
+  /** ADR 0036, 0037: open sign-ups (≤ 3), calls withdrawn from, result modals not yet seen (≤ 10). */
+  events?: StoredEvents;
+  chat?: { hidden: boolean; seenAt: Date | null };
+  /** Muted characters (≤ 200). */
+  mutes?: Types.ObjectId[];
+  /** Lower-cased words of the name (the Members search). */
+  nameWords?: string[];
   rivalTrips?: number;
   firsts?: StoredFirsts;
   /**
@@ -425,6 +436,74 @@ const barSchema = new Schema<StoredBar>(
 // `minimize: false`: an empty `{}` is stored, the same as migration 007 writes.
 const firstsSchema = new Schema<StoredFirsts>(
   { mission: Date, noticed: Date, hot: Date, wanted: Date, mark: Date, onFile: Date, repeat: Date, notorious: Date },
+  { _id: false, minimize: false },
+);
+
+// Slice 6 (tech design §5.4).
+export interface StoredPresence {
+  locationId: string | null;
+  seenAt: Date | null;
+}
+export interface StoredEventOpen {
+  signupId: Types.ObjectId;
+  eventId: Types.ObjectId;
+  cityId: string;
+  startsAt: Date;
+  /** A role id, or 'hand'. */
+  slot: string;
+  energy: number;
+}
+export interface StoredEvents {
+  open: StoredEventOpen[];
+  calls: Array<{ eventId: Types.ObjectId; startsAt: Date }>;
+  unseen: Array<{ kind: 'result' | 'calledOff'; eventId: Types.ObjectId; signupId: Types.ObjectId | null }>;
+}
+
+const presenceSchema = new Schema<StoredPresence>(
+  { locationId: { type: String, default: null }, seenAt: { type: Date, default: null } },
+  { _id: false },
+);
+const eventsSchema = new Schema<StoredEvents>(
+  {
+    open: {
+      type: [
+        new Schema<StoredEventOpen>(
+          {
+            signupId: { type: Schema.Types.ObjectId, required: true },
+            eventId: { type: Schema.Types.ObjectId, required: true },
+            cityId: { type: String, required: true },
+            startsAt: { type: Date, required: true },
+            slot: { type: String, required: true },
+            energy: { type: Number, required: true, min: 0 },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+    calls: {
+      type: [
+        new Schema(
+          { eventId: { type: Schema.Types.ObjectId, required: true }, startsAt: { type: Date, required: true } },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+    unseen: {
+      type: [
+        new Schema(
+          {
+            kind: { type: String, enum: ['result', 'calledOff'], required: true },
+            eventId: { type: Schema.Types.ObjectId, required: true },
+            signupId: { type: Schema.Types.ObjectId, default: null },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+  },
   { _id: false, minimize: false },
 );
 
@@ -658,6 +737,15 @@ const characterSchema = new Schema<CharacterDoc>(
     firsts: { type: firstsSchema, default: () => ({}) },
     // Review 5 (ADR 0081): absent until the first roll (no migration).
     patrol: { type: patrolSchema, default: undefined },
+    // Slice 6 (tech design §5.4): the same defaults as migration 010.
+    presence: { type: presenceSchema, default: () => ({ locationId: null, seenAt: null }) },
+    events: { type: eventsSchema, default: () => ({ open: [], calls: [], unseen: [] }) },
+    chat: {
+      type: new Schema({ hidden: { type: Boolean, default: false }, seenAt: { type: Date, default: null } }, { _id: false }),
+      default: () => ({ hidden: false, seenAt: null }),
+    },
+    mutes: { type: [Schema.Types.ObjectId], default: [] },
+    nameWords: { type: [String], default: [] },
     version: { type: Number, required: true, min: 0 },
   },
   { collection: 'characters', strict: true, timestamps: true, versionKey: false, minimize: false },
@@ -681,5 +769,14 @@ characterSchema.index(
   { 'held.locationId': 1, 'held.until': 1 },
   { partialFilterExpression: { 'held.state': 'in', 'held.kind': 'cells' }, name: 'held_cells_now' },
 );
+
+// Slice 6 (tech design §5.4, ADR 0040): Members and the chat header by recency; *Here now* at a place;
+// the Members search.
+characterSchema.index({ factionId: 1, 'presence.seenAt': -1 }, { name: 'presence_faction' });
+characterSchema.index(
+  { 'presence.locationId': 1, 'presence.seenAt': -1 },
+  { partialFilterExpression: { 'presence.locationId': { $type: 'string' } }, name: 'presence_here' },
+);
+characterSchema.index({ factionId: 1, nameWords: 1 }, { name: 'name_words' });
 
 export const Character = model<CharacterDoc>('Character', characterSchema);

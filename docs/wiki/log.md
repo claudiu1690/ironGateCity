@@ -9,6 +9,13 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 6 phase A (rules, content, art, db)
+
+T1–T7 built: event maths, presence, chat, favours and the scoreboard's scopes in rules; six event
+types and 30 venues in content; the two event scenes; the five new collections and migration 010.
+The ledger choice is (b), an attribution log. Updated [[Slice 6 Together]], [[Campaign Events]],
+[[Chat and Presence]], [[Patronage and Favours]], [[Influence Ledger and City Hero]].
+
 ## [2026-10-15] build | Review 6 leftovers
 
 R6-1 (the journey held sideways: plate beside the map) and R6-2 (the city's map buttons stack from

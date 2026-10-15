@@ -34,7 +34,7 @@ export type {
   EncounterOutcome,
 } from './models/encounter';
 export { Stay } from './models/stay';
-export type { StayDoc, StayHow, StayKind, StayReason, StoredBail } from './models/stay';
+export type { StayBailPostedBy, StayDoc, StayHow, StayKind, StayReason, StayVisit, StoredBail } from './models/stay';
 export { District } from './models/district';
 export type { DistrictDoc, DistrictStateDoc } from './models/district';
 export { Award, Contribution, InfluenceLedger, LEDGER_KINDS, contributionId } from './models/ledger';
@@ -102,3 +102,18 @@ export type { BoostOutcome, BoostPlan } from './boost';
 export type { ElectionsReport } from './elections';
 export type { Funnel, FunnelAction, FunnelArrival, FunnelCharacter } from './funnel';
 export type { PlaytestReport, PlayerReport, ReportAction, ReportCharacter, ReportPaper } from './report';
+// Slice 6 (tech design §5): Campaign Events, sign-ups, chat; migration 010 runs from `ensureIndexes` after 009.
+export { CampaignEvent, EventSignup } from './models/campaignEvent';
+export type {
+  CampaignEventDoc,
+  EventCalledBy,
+  EventHolder,
+  EventKind,
+  EventResolutionDoc,
+  EventSignupDoc,
+  EventStatus,
+  SignupStatus,
+} from './models/campaignEvent';
+export { ChatLimit, ChatMessage, ChatReport } from './models/chat';
+export type { ChatLimitDoc, ChatMessageDoc, ChatReportDoc } from './models/chat';
+export { addTogetherFields, backfillFactionScopes, migrateSlice6Together, nameWordsOf } from './migrations/010-slice6-together';

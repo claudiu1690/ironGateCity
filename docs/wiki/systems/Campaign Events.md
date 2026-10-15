@@ -3,11 +3,11 @@ type: system
 title: Campaign Events
 aliases: [Campaign Event, Events, Rally, Canvass Drive, Poster Night, Grand Rally, General Strike, Headline Story, Town Hall event, The daily fixture, Volunteers, Hands]
 tags: [co-op, events, politics]
-status: designed
-slice: "6 (designed, not built); Town Hall and the Chair's events 7; Case File on the Headline Story 8"
+status: partly built
+slice: "6 (phase A built: rules, content, art, db; server and screens to come); Town Hall and the Chair's events 7; Case File on the Headline Story 8"
 gdd: ["§15.4", "§16.3", "§14.2", "§14.4"]
 adrs: ["0036", "0037", "0049"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Campaign Events
@@ -42,11 +42,19 @@ at a set time. Designed for slice 6, **not built**.
 
 **Rules:** [[GDD#16.3 Campaign Events (new)|GDD §16.3]] · [[GDD#15.4 Faction Chair and Party Directives|GDD §15.4]] (the fixture) · [[design/slice-6-together|slice 6 design §2–§4]] (texts for every event and outcome in §3) · [[design/slice-7-nation#10.4 The Town Hall (Campaign Event, GDD §16.3's seventh)|slice 7 design §10.4]] (Town Hall) · [[tech/slice-6|slice 6 tech spec]] · [[adr/0036-campaign-events-roster-signups-and-natural-limits|ADR 0036]] · [[adr/0037-event-resolution-world-first-credit-on-read|ADR 0037]] · [[adr/0049-petitions-dissolution-and-removals|ADR 0049]] (Town Hall signatures)
 
-**Code:** none yet. Planned: rules `events.ts` (`resolveCampaignEvent`), content `data/events.ts` (six types, 27 venues, the fixture rotation), `eventService` (`call`, `signUp`, `withdraw`, `resolve`, `credit`). The council rule's swing line already exists in `packages/rules/src/ordinances.ts` (`swingFactors`).
+**Code (slice 6 phase A, 15 Oct 2026):**
+- Rules: `packages/rules/src/events.ts` (`resolveCampaignEvent`, `eventRewards`, `eventCredit`, `bandFor`, `fillOf`, `eventSwing`, `splitEqually`, `fixtureFor`, `refundEnergy`, `callGate`, `signUpGate`, `roleCheck`, `addHeatAt`); `EVENTS` in `constants.ts`; the views in `togetherTypes.ts`; `orderMatches` and `feedMatches` accept an `event` descriptor. The swing's factors come from `swingFactors` in `ordinances.ts`.
+- Content: `packages/content/src/data/events.ts` (six types, **30** venue rows, the fixture rotation, the three event orders not yet in the rotation); checks and accessors in `packages/content/src/slice6.ts` (`eventType`, `eventTypesFor`, `venueOf`, `venuesAt`).
+- Art: `scene.event-poster-night`, `scene.event-grand-rally` in `data/art.ts`.
+- DB: `campaignEvents` and `eventSignups` (`packages/db/src/models/campaignEvent.ts`), `events` on the character, `LEDGER_KINDS += 'event'`, migration `010-slice6-together.ts`.
+- Not yet: `eventService` (`call`, `signUp`, `withdraw`, `resolve`, `credit`, `ensureFixtures`), the jobs, the Faction tab (phases B and C).
 
 ## Status
 
-- **Designed, not built** (slice 6). Town Hall and the Chair's faction-wide events: slice 7. The Case File on the Headline Story: slice 8. Counter-Demonstrations: v1.1.
+- **Phase A built** (rules, content, art, db; 15 Oct 2026). The server, the jobs and the screens are phases B and C of [[Slice 6 Together]]. Town Hall and the Chair's faction-wide events: slice 7. The Case File on the Headline Story: slice 8. Counter-Demonstrations: v1.1.
+
+> [!warning] Drift
+> Design §3.7 and the tech spec say *27 venues*; the table itself has **30** rows (12 home, 15 common in the capital, 3 signature in the capital). Built as the table; a question for the designer.
 
 ## Decisions
 

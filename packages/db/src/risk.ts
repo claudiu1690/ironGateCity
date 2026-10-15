@@ -128,7 +128,8 @@ export interface RiskStay {
   rivalGround: boolean;
   since: Date;
   releasedAt: Date | null;
-  how: 'served' | 'bail' | 'walkOut' | 'discharge' | null;
+  /** Slice 6: `bailPosted`, out on a faction mate's bail (ADR 0041). */
+  how: 'served' | 'bail' | 'walkOut' | 'discharge' | 'bailPosted' | null;
   ironPaid: number;
   heatAtArrest: number | null;
   heatAfter: number | null;

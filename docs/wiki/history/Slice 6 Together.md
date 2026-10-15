@@ -46,13 +46,21 @@ From [[IMPLEMENTATION_PLAN#Slice 6 — Together|the plan]]: Campaign Events (sch
 > [!warning] Drift
 > The plan still calls the screen "Faction HQ"; the design calls it the **Faction tab**.
 
+## Phase A built (15 Oct 2026)
+
+T1–T7 of [[tech/slice-6|the tech spec]] §20: the rules (events, presence, chat, favours, the scoreboard's scopes, the views and error reasons), the content (six event types, 30 venue rows, the fixture rotation, the loader's checks), the two event scenes, and the db (`campaignEvents`, `eventSignups`, `chatMessages`, `chatReports`, `chatLimits`, the character's new fields, migration `010-slice6-together`). Checked with throwaway scripts under the user's no-unit-test rule and the fast check; details and deviations in the tech spec's **Deviations**.
+
+- **Ledger choice: (b)**, the ledger stays an attribution log (no slice-6 screen shows losses per party); see [[Influence Ledger and City Hero]].
+- Moved to later phases: the three event orders join the rotation in T10; the paper's event headlines (T15) and the copy (T18–T23).
+- For the designer: the venue table has 30 rows where the text says 27; the alt texts of the two scenes still want a look against the pictures.
+
 ## QA and leftovers
 
 Building; no QA yet. The approved defaults and the design's other slice-6 defaults (three starts a day, volunteers at half strength, presence hidden on rival ground: Appendix C #58, #62, #63) are watch items in [[Open Questions]].
 
 ## Commits
 
-`b756c48` slice 6 design (with the slice 5 tech design, 3 Oct) · `8173e3e` tech design and ADRs 0036–0042 (3 Oct).
+`b756c48` slice 6 design (with the slice 5 tech design, 3 Oct) · `8173e3e` tech design and ADRs 0036–0042 (3 Oct) · `f7657d9` T1–T3 rules · `b58f48d` T4–T6 content and art · T7 db and the phase-A notes (15 Oct).
 
 ## Related
 

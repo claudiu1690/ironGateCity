@@ -81,13 +81,16 @@ count the biggest contributor in each level bracket becomes **City Hero** (in a 
 
 ## Open questions / drift
 
-- **Ledger rows for losses (QA slice 4, n3, still open):** persuasion writes a row only for the
-  gaining party. When Neutral is at its floor and rivals lose share, their losses have no row, so a
-  fold of the ledger would not reproduce the meter. Harmless at today's numbers. Since 14 Oct 2026
-  [[adr/0028-influence-ledger-contributions-and-awards|ADR 0028]]'s amendment records the limit and
-  lists the choice as a **decision for slice 6** ([[tech/slice-6|tech/slice-6]] §22.1): (a) write the
-  losers' rows too, or (b) call the ledger an attribution log; default (a) if the slice-6 screens show
-  losses per party. See [[qa/slice-4-report|QA slice-4 report]].
+- **Ledger rows for losses (QA slice 4, n3): settled 15 Oct 2026 as (b).** Persuasion writes a row
+  only for the gaining party, so a fold of the ledger does not reproduce the meter when rivals lose
+  share. [[tech/slice-6|tech/slice-6]] §22.1's rule was (a) only if a slice-6 screen shows losses per
+  party; none does (the scoreboard's *Moved* is positive swings only), so **the ledger is an
+  attribution log, not the meter's source** ([[adr/0028-influence-ledger-contributions-and-awards|ADR 0028]]'s
+  amendment stands). Recorded in the tech spec's Deviations. See [[qa/slice-4-report|QA slice-4 report]].
+- **Slice 6 phase A (15 Oct 2026):** `LEDGER_KINDS += 'event'`; `contributions` gained `kind:
+  'faction'`, `period`, `bracket`, `events` and the scoreboard index; migration 010 backfills the
+  faction scopes (all time from contributions, this week from the ledger). `addInfluence` writing
+  them is phase B.
 - The scoreboard's columns now agree: GDD §14.5 names *Moved*, *Events* and *Heroes*, as ADR 0042
   does (fixed 14 Oct 2026).
 

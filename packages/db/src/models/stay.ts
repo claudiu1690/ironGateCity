@@ -4,7 +4,24 @@ import type { Types } from 'mongoose';
 
 export type StayKind = 'cells' | 'infirmary';
 export type StayReason = 'caught' | 'wanted' | 'policeLoss' | 'runInLost' | 'dev';
-export type StayHow = 'served' | 'bail' | 'walkOut' | 'discharge';
+/** Slice 6 (ADR 0041): `bailPosted`, out on a faction mate's bail. */
+export type StayHow = 'served' | 'bail' | 'walkOut' | 'discharge' | 'bailPosted';
+
+/** Slice 6 (ADR 0041): the mate who posted the bail, and what they paid. */
+export interface StayBailPostedBy {
+  characterId: Types.ObjectId;
+  name: string;
+  at: Date;
+  iron: number;
+}
+
+/** Slice 6 (design §9.2): a visit on the ward; the first three of a stay count. */
+export interface StayVisit {
+  characterId: Types.ObjectId;
+  name: string;
+  at: Date;
+  counted: boolean;
+}
 
 /**
  * The bail asked at the arrest, with each source's line (ADR 0030); the same on the pointer.
@@ -73,10 +90,10 @@ export interface StayDoc {
   /** The release modal, stored once. */
   result: PoliticalResult | null;
   closedAt: Date | null;
-  /** Slice 6 (a faction mate's bail): always null in slice 5. */
-  bailPostedBy: null;
-  /** Slice 6 (visits): always empty in slice 5. */
-  visits: unknown[];
+  /** Slice 6 (ADR 0041): a faction mate's bail. */
+  bailPostedBy: StayBailPostedBy | null;
+  /** Slice 6 (design §9.2): visitors, once each per stay. */
+  visits: StayVisit[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -101,7 +118,7 @@ const staySchema = new Schema<StayDoc>(
     again: { type: Boolean, required: true },
     bail: { type: bailSchema, default: null },
     releasedAt: { type: Date, default: null },
-    how: { type: String, enum: ['served', 'bail', 'walkOut', 'discharge', null], default: null },
+    how: { type: String, enum: ['served', 'bail', 'walkOut', 'discharge', 'bailPosted', null], default: null },
     ironPaid: { type: Number, default: 0, min: 0 },
     heatAfter: nullableNum,
     healthAfter: nullableNum,
@@ -109,8 +126,32 @@ const staySchema = new Schema<StayDoc>(
     barredUntil: { type: Date, default: null },
     result: { type: Schema.Types.Mixed, default: null },
     closedAt: { type: Date, default: null },
-    bailPostedBy: { type: Schema.Types.Mixed, default: null },
-    visits: { type: [Schema.Types.Mixed], default: [] },
+    bailPostedBy: {
+      type: new Schema<StayBailPostedBy>(
+        {
+          characterId: { type: Schema.Types.ObjectId, required: true },
+          name: { type: String, required: true },
+          at: { type: Date, required: true },
+          iron: { type: Number, required: true, min: 0 },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
+    visits: {
+      type: [
+        new Schema<StayVisit>(
+          {
+            characterId: { type: Schema.Types.ObjectId, required: true },
+            name: { type: String, required: true },
+            at: { type: Date, required: true },
+            counted: { type: Boolean, required: true },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
   },
   { collection: 'stays', strict: true, timestamps: true, versionKey: false, minimize: false },
 );
@@ -119,5 +160,10 @@ const staySchema = new Schema<StayDoc>(
 staySchema.index({ characterId: 1, since: -1 });
 // The settlement's yesterday read: stays released yesterday.
 staySchema.index({ characterId: 1, releasedAt: -1 });
+// Slice 6 (tech design §5.5): the payer's paper (*bail posted by*).
+staySchema.index(
+  { 'bailPostedBy.characterId': 1, 'bailPostedBy.at': -1 },
+  { partialFilterExpression: { 'bailPostedBy.characterId': { $exists: true } }, name: 'stay_bail_posted_by' },
+);
 
 export const Stay = model<StayDoc>('Stay', staySchema);

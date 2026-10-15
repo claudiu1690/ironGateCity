@@ -3,11 +3,11 @@ type: system
 title: Chat and Presence
 aliases: [Chat, Faction chat, Presence, Here now, Members list, Favours between players, Posting bail, Visits, The nudge, Faction tab]
 tags: [social, co-op, chat]
-status: designed
-slice: "6 (designed, not built); officers' channel 7; recognition 8; moderation 9"
+status: partly built
+slice: "6 (phase A: rules and db; server, socket and screens to come); officers' channel 7; recognition 8; moderation 9"
 gdd: ["§16.2", "§19.1", "§19.2"]
 adrs: ["0038", "0039", "0040"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Chat and Presence
@@ -52,11 +52,11 @@ Designed, **not built**.
 
 **Rules:** [[GDD#16.2 Faction chat and presence (moved into MVP)|GDD §16.2]] · [[design/slice-6-together|slice 6 design §6–§9]] · [[design/slice-6-screens|slice 6 screens]] · [[tech/slice-6|slice 6 tech spec]] · [[adr/0038-chat-socketio-push-trpc-writes-change-streams|ADR 0038]] · [[adr/0039-chat-storage-limits-and-system-lines|ADR 0039]] · [[adr/0040-presence-embedded-unversioned|ADR 0040]]
 
-**Code:** none yet (no Socket.IO, `chatMessages` or `presence` in the code). Planned in the tech spec: rules `presence.ts`, `chat.ts`, `favours.ts`; services `chatService`, `presenceService`, `favourService`, `factionService`.
+**Code (slice 6 phase A, 15 Oct 2026):** rules `packages/rules/src/presence.ts` (`presenceBand`, `visibleTo`, `hereNowLine`, `memberStatus`), `chat.ts` (channels, `normaliseChatText`, `chatRateCheck`, `systemChannelFor`), `favours.ts` (`bailFavourGate`, `visitGate`, `visitEffect`), `PRESENCE`, `CHAT` and `FAVOURS` in `constants.ts`, the views in `togetherTypes.ts`; db `chatMessages`, `chatReports`, `chatLimits` (`packages/db/src/models/chat.ts`), `presence`, `chat`, `mutes`, `nameWords` on the character, `stays.bailPostedBy` and `visits`; `chatCities` in content. A change stream on `chatMessages` was checked on the memory replica set. Not yet: Socket.IO, `chatService`, `presenceService`, `favourService`, `factionService` and the screens.
 
 ## Status
 
-- **Designed, not built** (slice 6).
+- **Phase A built** (rules and db, 15 Oct 2026); the server, the socket and the screens are phases B and C of [[Slice 6 Together]].
 
 ## Decisions
 

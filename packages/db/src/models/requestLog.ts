@@ -25,6 +25,10 @@ export const REQUEST_KINDS = [
   'character.treat',
   // Review 5 (ADR 0081): the patrol card's answer.
   'patrol.answer',
+  // Slice 6 (tech design §5.5).
+  'events.withdraw',
+  'favours.postBail',
+  'favours.visit',
 ] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 

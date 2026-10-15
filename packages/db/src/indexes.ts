@@ -10,6 +10,10 @@ import { migrateSlice5Risk } from './migrations/007-slice5-risk';
 import { migrateReview4 } from './migrations/008-review4';
 import type { Review4Counts, StepCounts } from './migrations/008-review4';
 import { migrateVotingRework } from './migrations/009-voting-rework';
+import { migrateSlice6Together } from './migrations/010-slice6-together';
+import type { StepCounts as Slice6Counts } from './migrations/008-review4';
+import { CampaignEvent, EventSignup } from './models/campaignEvent';
+import { ChatLimit, ChatMessage, ChatReport } from './models/chat';
 import { ActionLog } from './models/actionLog';
 import { Arrival } from './models/arrival';
 import { Character } from './models/character';
@@ -47,6 +51,12 @@ export const models = [
   // Slice 5 (tech design §5.2, §5.3): run-ins and stays.
   Encounter,
   Stay,
+  // Slice 6 (tech design §5): events, sign-ups and chat.
+  CampaignEvent,
+  EventSignup,
+  ChatMessage,
+  ChatReport,
+  ChatLimit,
 ] as const;
 
 /**
@@ -56,7 +66,11 @@ export const models = [
  */
 export async function ensureIndexes(
   content: Pick<Content, 'origin' | 'factions' | 'cities'> = getContent(),
-): Promise<{ review4: Review4Counts; votingRework: { refunds: StepCounts } }> {
+): Promise<{
+  review4: Review4Counts;
+  votingRework: { refunds: StepCounts };
+  slice6: { characters: Slice6Counts; factionScopes: Slice6Counts };
+}> {
   for (const m of models) {
     await m.createCollection();
     await m.syncIndexes();
@@ -79,5 +93,7 @@ export async function ensureIndexes(
   const review4 = await migrateReview4(content);
   // The voting rework (tech design §6.2, ADR 0086): the deposits still due are credited once; after 008.
   const votingRework = await migrateVotingRework();
-  return { review4, votingRework };
+  // Slice 6 (tech design §5.6): presence, events, chat and the scoreboard's faction scopes; after 009.
+  const slice6 = await migrateSlice6Together();
+  return { review4, votingRework, slice6 };
 }

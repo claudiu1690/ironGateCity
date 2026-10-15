@@ -419,9 +419,10 @@ try {
     ledger: (
       await InfluenceLedger.find({ cityId: capitalId }, { placeId: 1, cycleKey: 1, kind: 1, swing: 1 }).lean()
     ).map((r) => ({ placeId: r.placeId, cycleKey: r.cycleKey, kind: r.kind, swing: r.swing })),
-    contributions: (await Contribution.find({ cityId: capitalId }, { placeId: 1, ref: 1, kind: 1 }).lean()).map(
-      (c) => ({ placeId: c.placeId, ref: c.ref, kind: c.kind }),
-    ),
+    // Slice 6: the scoreboard's faction scopes (ADR 0042) are not a place's contributions.
+    contributions: (
+      await Contribution.find({ cityId: capitalId, kind: { $ne: 'faction' } }, { placeId: 1, ref: 1, kind: 1 }).lean()
+    ).map((c) => ({ placeId: c.placeId, ref: c.ref, kind: c.kind as 'influence' | 'points' })),
     heroes: (await Award.find({ kind: 'hero' }, { placeId: 1, ref: 1, bracket: 1 }).lean()).map((a) => ({
       placeId: a.placeId,
       ref: a.ref,

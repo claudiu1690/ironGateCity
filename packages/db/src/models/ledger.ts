@@ -16,7 +16,8 @@ const int = { type: Number, required: true, validate: Number.isInteger } as cons
 // ---------------------------------------------------------------------------------------------
 
 export type LedgerKind = 'action' | 'journey' | 'issue' | 'drift' | 'ballot' | 'seat' | 'noVoter';
-export const LEDGER_KINDS = ['action', 'journey', 'issue', 'drift', 'ballot', 'seat', 'noVoter'] as const;
+/** Slice 6 (tech design §5.5): `event`, a Campaign Event's leg per member participant (`ref` = the event id). */
+export const LEDGER_KINDS = ['action', 'journey', 'issue', 'drift', 'ballot', 'seat', 'noVoter', 'event'] as const;
 
 export type LedgerSource = { kind: 'character'; characterId: Types.ObjectId } | { kind: 'system' };
 
@@ -74,7 +75,8 @@ export const InfluenceLedger = model<InfluenceLedgerDoc>('InfluenceLedger', infl
 // contributions: one per character per scope; `_id` = `${scope}|${characterId}`.
 // ---------------------------------------------------------------------------------------------
 
-export type ContributionKind = 'influence' | 'points';
+/** Slice 6 (ADR 0042): `faction`, the scoreboard's scoped totals (`faction|{f}|{period}|{city}`). */
+export type ContributionKind = 'influence' | 'points' | 'faction';
 
 export interface ContributionDoc {
   /** `${scope}|${characterId}`: the upsert's natural key. */
@@ -95,6 +97,11 @@ export interface ContributionDoc {
   amount: number;
   /** The tie-break: earlier to reach the total. */
   lastAt: Date;
+  /** Slice 6 (ADR 0042): faction scopes only. */
+  period?: 'week' | 'all';
+  bracket?: 1 | 2 | 3;
+  /** Events joined in the period. */
+  events?: number;
 }
 
 /** The natural key of a contribution. */
@@ -105,7 +112,7 @@ const contributionSchema = new Schema<ContributionDoc>(
   {
     _id: { type: String, required: true },
     scope: { type: String, required: true },
-    kind: { type: String, enum: ['influence', 'points'], required: true },
+    kind: { type: String, enum: ['influence', 'points', 'faction'], required: true },
     cityId: { type: String, required: true },
     placeId: { type: String, required: true },
     ref: { type: String, required: true },
@@ -115,11 +122,16 @@ const contributionSchema = new Schema<ContributionDoc>(
     level: int,
     amount: int,
     lastAt: { type: Date, required: true },
+    period: { type: String, enum: ['week', 'all'] },
+    bracket: { type: Number, enum: [1, 2, 3] },
+    events: { type: Number, min: 0 },
   },
   { collection: 'contributions', strict: true, versionKey: false, minimize: false },
 );
 contributionSchema.index({ scope: 1, amount: -1, lastAt: 1 });
 contributionSchema.index({ characterId: 1, kind: 1, ref: 1 });
+// Slice 6 (ADR 0042): each bracket's top ten on the scoreboard.
+contributionSchema.index({ scope: 1, bracket: 1, amount: -1, lastAt: 1 }, { name: 'contrib_scoreboard' });
 
 export const Contribution = model<ContributionDoc>('Contribution', contributionSchema);
 
