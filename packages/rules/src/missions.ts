@@ -275,6 +275,8 @@ export function tier2Rewards(i: {
   fxpBonusShare?: number;
   fxpShares?: readonly LineShare[];
   ironShares?: readonly LineShare[];
+  /** Slice 7 (ADR 0044): a law's `xpPct` (scope missions). */
+  xpShares?: readonly LineShare[];
   opinionFactors?: readonly SwingFactor[];
   /** The record's Iron penalty, −10 / −20 / −30 (0: none). */
   recordIronPct?: number;
@@ -300,6 +302,7 @@ export function tier2Rewards(i: {
       fxpBonusShare: i.fxpBonusShare ?? 0,
       fxpShares: i.fxpShares ?? [],
       ironShares,
+      ...(i.xpShares && i.xpShares.length > 0 ? { xpShares: i.xpShares } : {}),
       ...(i.opinionFactors && i.opinionFactors.length > 0 ? { opinionFactors: i.opinionFactors } : {}),
       ironMultiplier: spec.ironMult,
       opinionMultiplier: spec.opinionMult || 1,

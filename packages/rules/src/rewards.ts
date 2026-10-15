@@ -70,6 +70,8 @@ export function computeRewards(i: {
   fxpBonusShare?: number;
   /** Slice 3: Fired up and Public Meetings on FXP, Street Fund on Iron. */
   fxpShares?: readonly LineShare[];
+  /** Slice 7 (ADR 0044): a law's `xpPct` as a part on the XP base. */
+  xpShares?: readonly LineShare[];
   ironShares?: readonly LineShare[];
   /** Street Permits: × 1.15 on the opinion swing (slice 3's form of a single factor). */
   swingMultiplier?: number;
@@ -94,7 +96,7 @@ export function computeRewards(i: {
 
   const xp = line(
     rates.xpPerEnergy * i.energy,
-    [{ ...RESTED_PART, share: RESTED.xpBonus * restedShare }],
+    [{ ...RESTED_PART, share: RESTED.xpBonus * restedShare }, ...(i.xpShares ?? [])],
     i.outcome,
     xpFactor,
   );

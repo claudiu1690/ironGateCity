@@ -116,13 +116,21 @@ export function release(i: { held: Pick<HeldSpec, 'kind' | 'rivalGround'>; at: n
 }
 
 /** *Walk out well* (design §9.2): 5 Energy (Rested untouched), 100 Iron, Health to full, now. */
-export function walkOut(i: { energy: EnergyState; level: number; iron: number; now: number }):
+export function walkOut(i: {
+  energy: EnergyState;
+  level: number;
+  iron: number;
+  now: number;
+  /** Slice 7 (ADR 0044): the price under the laws (`infirmaryPrice`; Universal Care 50); default 100. */
+  price?: number;
+}):
   | { ok: true; energy: EnergyState; health: HealthTimer; iron: number }
   | { ok: false; reason: 'NOT_ENOUGH_ENERGY' | 'NOT_ENOUGH_IRON' } {
+  const price = i.price ?? HEALTH.walkOut.iron;
   const spent = spendEnergy(i.energy, HEALTH.walkOut.energy, { useRested: false });
   if (!spent.ok) return { ok: false, reason: 'NOT_ENOUGH_ENERGY' };
-  if (i.iron < HEALTH.walkOut.iron) return { ok: false, reason: 'NOT_ENOUGH_IRON' };
-  return { ok: true, energy: spent.state, health: { damage: 0, at: i.now }, iron: HEALTH.walkOut.iron };
+  if (i.iron < price) return { ok: false, reason: 'NOT_ENOUGH_IRON' };
+  return { ok: true, energy: spent.state, health: { damage: 0, at: i.now }, iron: price };
 }
 
 /** *Discharge yourself* (design §9.2): 5 Energy, out now at half of max Health or the current if higher. */

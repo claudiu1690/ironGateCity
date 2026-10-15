@@ -22,10 +22,22 @@ export interface Mark {
  * any kind) + 14; moderate and serious marks never fade in slice 5 (a theft mark on day 10 keeps
  * day-1 minor marks until day 24).
  */
-export function liveMarks(marks: readonly Mark[], today: DayKey): Mark[] {
+export function liveMarks(
+  marks: readonly Mark[],
+  today: DayKey,
+  /**
+   * Slice 7 (ADR 0044): the fade on a day (the smallest `markFadeDays` in force then, else 14). Minor
+   * marks are gone once any day X with latest <= X <= today has X >= latest + fadeDaysOn(X): monotone,
+   * so a law that ends never brings a mark back. Absent: 14 every day (slice 5).
+   */
+  fadeDaysOn?: (day: DayKey) => number,
+): Mark[] {
   if (marks.length === 0) return [];
   const latest = Math.max(...marks.map((m) => m.day));
-  const faded = today >= latest + RECORD.minorFadeDays;
+  let faded = today >= latest + RECORD.minorFadeDays;
+  if (!faded && fadeDaysOn) {
+    for (let x = latest; x <= today && !faded; x++) if (x >= latest + fadeDaysOn(x)) faded = true;
+  }
   return marks.filter((m) => !(faded && m.kind === 'minor')).map((m) => ({ ...m }));
 }
 

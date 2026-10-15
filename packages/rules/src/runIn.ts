@@ -43,6 +43,11 @@ export function runInChance(i: {
   record: RecordLevel;
   flags: DayFlags;
   night?: boolean;
+  /**
+   * Slice 7 (ADR 0044): the laws' `runInPct` in force at the act (`runInPcts`; the Curfew's +100 at
+   * night): the chance multiplied, halves up, before the 0-90 clamp.
+   */
+  pcts?: readonly number[];
 }): number {
   const night = i.rivalGround && i.night === true;
   let base: number;
@@ -56,7 +61,9 @@ export function runInChance(i: {
     recordBonus(i.record) +
     (i.flags.watched ? RUN_IN.watched : 0) +
     (i.flags.warned ? RUN_IN.warned : 0);
-  return clamp(raw, 0, RUN_IN.max);
+  const pcts = i.pcts ?? [];
+  const withLaws = pcts.length > 0 ? roundHalfUp(pcts.reduce((x, p) => x * (1 + p / 100), raw)) : raw;
+  return clamp(withLaws, 0, RUN_IN.max);
 }
 
 /**
@@ -307,8 +314,11 @@ export function caughtChance(i: {
   heatAfter: number;
   record: RecordLevel;
   agi: number;
+  /** Slice 7 (ADR 0044): the laws' `caughtDelta` for this mission's target (`caughtDeltas`), before the clamp. */
+  deltas?: readonly number[];
 }): number {
   const raw =
+    (i.deltas ?? []).reduce((s, d) => s + d, 0) +
     i.base * (i.rivalGround ? RIVAL_GROUND.caughtFactor : 1) +
     Math.floor(i.heatAfter / CAUGHT.heatDivisor) +
     heatBonus(heatState(i.heatAfter)) +

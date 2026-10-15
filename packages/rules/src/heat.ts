@@ -1,6 +1,8 @@
-import { HEAT } from './constants';
+import { CONTROL, HEAT } from './constants';
 import { dayKey, dayStart } from './day';
 import type { DayKey } from './day';
+import { roundHalfUp } from './rewards';
+import type { FactionId } from './types';
 
 /**
  * Heat (GDD §6.4, design §6, ADR 0033): 0–100, whole points, cooling lazily from a stored value and
@@ -145,3 +147,12 @@ export function heatEta(
 
 /** Milliseconds per point at a rate (the client's projection between reads). */
 export const heatStepMs = (rate: number): number => Math.ceil(UNITS_PER_POINT / unitsPerMs(rate));
+
+/**
+ * Slice 7 (design §8, ADR 0050): a place factor, not a law. A rival of the party controlling the
+ * district or Clearwater gains Heat 25 % faster there (missions and events at the place), halves up.
+ */
+export function heatGainAt(gain: number, controlledBy: FactionId | null, actor: FactionId): number {
+  if (gain <= 0 || controlledBy === null || controlledBy === actor) return gain;
+  return roundHalfUp(gain * (1 + CONTROL.rivalHeatGainPct / 100));
+}

@@ -286,12 +286,24 @@ export const isPoliticalType = (type: string): boolean =>
  * Iron, each source its own share. The Party-order bonus is added by the caller, since it depends
  * on the row.
  */
-export function rewardShares(i: { type: string; givesFxp: boolean; m?: Modifiers }): {
+export function rewardShares(i: {
+  type: string;
+  givesFxp: boolean;
+  m?: Modifiers;
+  /** Slice 7 (ADR 0044): which tier's XP a law's `xpPct` reaches (missions 2, actions 1); default 1. */
+  tier?: 1 | 2;
+}): {
   fxp: BonusShare[];
   iron: BonusShare[];
+  /** Slice 7: a law's `xpPct` as a part on the XP base (never on Party XP). */
+  xp: BonusShare[];
 } {
   const fxp: BonusShare[] = [];
   const iron: BonusShare[] = [];
+  const xp: BonusShare[] = [];
+  const scope = (i.tier ?? 1) === 2 ? 'missions' : 'actions';
+  for (const x of lawEffectsOf(i.m, 'xpPct'))
+    if (x.effect.scope === scope) xp.push({ id: x.source.id, label: x.source.name, share: x.effect.value / 100 });
   const place = placeOf(i.m);
   if (i.givesFxp && place?.battleground && isPoliticalType(i.type))
     fxp.push({ ...CLOSE_RACE, share: BATTLEGROUND.fxpShare });
@@ -304,7 +316,7 @@ export function rewardShares(i: { type: string; givesFxp: boolean; m?: Modifiers
   }
   for (const x of effects(i.m, 'ironPct'))
     iron.push({ id: x.source.id, label: x.source.name, share: x.effect.value / 100 });
-  return { fxp, iron };
+  return { fxp, iron, xp };
 }
 
 /** A named factor of the opinion swing (ADR 0030 §4): *Close race +25 %*. */
@@ -388,8 +400,8 @@ export interface OrdinanceTagView {
   kind: OrdinanceTagKind;
   /** The live cost for `energy`; a percentage for the others; ×n for `standing`. */
   value: number;
-  /** Slice 4 (ADR 0030): which kind of source made it; absent = an ordinance. */
-  source?: 'ordinance' | 'issue';
+  /** Slice 4 (ADR 0030): which kind of source made it; absent = an ordinance. Slice 7: a law. */
+  source?: 'ordinance' | 'issue' | 'law';
 }
 
 /** The tags a ticket carries under the sources in force (tech design §8.5), one per source. */
@@ -406,7 +418,7 @@ export function ordinanceTags(i: {
     name: s.name,
     kind,
     value,
-    ...(s.kind === 'issue' ? { source: 'issue' as const } : {}),
+    ...(s.kind === 'issue' ? { source: 'issue' as const } : s.kind === 'law' ? { source: 'law' as const } : {}),
   });
   for (const s of sourcesOf(i.m)) {
     const own = (kind: OrdinanceEffectKind, actionType?: string) =>
@@ -449,4 +461,68 @@ export function issueEffectsOnDay<T extends { fromDay: DayKey; toDay: DayKey }>(
   day: DayKey,
 ): T[] {
   return effectsList.filter((e) => e.fromDay <= day && day < e.toDay);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Slice 7 (docs/tech/slice-7.md §6.6, ADR 0044): the law-only kinds, each read by one function.
+// ---------------------------------------------------------------------------------------------
+
+/** Every law source's law-only effect of `kind`, with its source (already filtered by `appliesTo`). */
+export function lawEffectsOf<K extends LawOnlyEffect['kind']>(
+  m: Modifiers | undefined,
+  kind: K,
+): Array<{ source: ModifierSource; effect: Extract<LawOnlyEffect, { kind: K }> }> {
+  const out: Array<{ source: ModifierSource; effect: Extract<LawOnlyEffect, { kind: K }> }> = [];
+  for (const source of sourcesOf(m))
+    for (const e of source.lawEffects ?? [])
+      if (e.kind === kind) out.push({ source, effect: e as Extract<LawOnlyEffect, { kind: K }> });
+  return out;
+}
+
+/**
+ * ADR 0044 (§6.6): a mission's cost: the content Energy + the `energyDelta`s of the type it is seen
+ * as + the `missionEnergyDelta`s, never below 1 (Emergency Permits 15 -> 17). Rewards stay on the
+ * content Energy (ADR 0021 §3).
+ */
+export function missionEnergy(base: number, seenAs: string, m?: Modifiers): number {
+  const deltas = lawEffectsOf(m, 'missionEnergyDelta').map((x) => x.effect.value);
+  const cost = actionEnergy(base, seenAs, m);
+  return deltas.length > 0 ? Math.max(1, cost + sum(deltas)) : cost;
+}
+
+/** ADR 0044: a journey's minutes at boarding, multiplied and halved up, at least 1 (Open Borders 12 -> 9, 25 -> 19). */
+export function journeyMinutes(minutes: number, m?: Modifiers): number {
+  const pcts = lawEffectsOf(m, 'journeyTimePct').map((x) => x.effect.value);
+  return pcts.length > 0 && minutes > 0 ? Math.max(1, multiplied(minutes, pcts)) : minutes;
+}
+
+/** ADR 0044: the run-in percentages in force; a `window: 'night'` one only while it is night at the act. */
+export const runInPcts = (m: Modifiers | undefined, night: boolean): number[] =>
+  lawEffectsOf(m, 'runInPct')
+    .filter((x) => x.effect.window !== 'night' || night)
+    .map((x) => x.effect.value);
+
+/** ADR 0044, review 5 (ADR 0081): the Curfew doubles the patrol chance while it is night. */
+export const curfewInForce = (m: Modifiers | undefined, night: boolean): boolean =>
+  night && lawEffectsOf(m, 'runInPct').some((x) => x.effect.window === 'night' && x.effect.value > 0);
+
+/** ADR 0044: the infirmary's *Walk out well* price under the laws, halves up (Universal Care 100 -> 50). */
+export const infirmaryPrice = (base: number, m?: Modifiers): number =>
+  priceWith(
+    base,
+    lawEffectsOf(m, 'infirmaryCostPct').map((x) => ({ id: x.source.id, label: x.source.name, pct: x.effect.value })),
+  );
+
+/** ADR 0044: the caught check's deltas for a mission against `targetFaction` (Special Powers +10). */
+export const caughtDeltas = (m: Modifiers | undefined, targetFaction: FactionId | null): number[] =>
+  targetFaction === null
+    ? []
+    : lawEffectsOf(m, 'caughtDelta')
+        .filter((x) => x.source.factionId === targetFaction)
+        .map((x) => x.effect.value);
+
+/** ADR 0044: the smallest `markFadeDays` in force (the Rehabilitation Act's 7), or null. */
+export function markFadeDaysOf(m: Modifiers | undefined): number | null {
+  const v = lawEffectsOf(m, 'markFadeDays').map((x) => x.effect.value);
+  return v.length > 0 ? Math.min(...v) : null;
 }
