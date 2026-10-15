@@ -20,7 +20,8 @@ export interface TogetherEdition {
   varsByKind: TogetherVars;
 }
 
-const swingText = (x: number): string => `${x >= 0 ? '+' : ''}${x.toFixed(2)}`;
+/** As the UI's `formatSwing` (Capital.tsx): two decimals at most, trailing zeros trimmed (+1, +0.8, −0.25). */
+const swingText = (x: number): string => `${x < 0 ? '−' : '+'}${Math.abs(x).toFixed(2).replace(/\.?0+$/, '')}`;
 const bandRank = (b: EventBand) => EVENT_BANDS.indexOf(b);
 
 function eventVars(content: GameContent, ev: CampaignEventDoc): Record<string, string> {

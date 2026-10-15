@@ -19,7 +19,7 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 **In**
 
 - **Campaign Events** (design §2–§4):
-  - six event types in content (Rally, Canvass Drive, Poster Night, and the three signature events), 27 venue rows;
+  - six event types in content (Rally, Doorstep Drive, Poster Night, and the three signature events), 30 venue rows;
   - calling (Rank 3, three steps, four time chips), with the limits per faction per city (per district in the capital): one upcoming member-called event, two member-called starts a City Day, the fixture;
   - sign-up (named roles at Rank 2, four hands at any Rank), Energy and Rested at the tap, three open sign-ups per member, the event order at the tap;
   - withdrawal until an hour before the start, the caller's withdrawal, *called off*;
@@ -168,7 +168,7 @@ Each step reads only fields already on the loaded character and writes only when
 // Campaign events (design §3; GDD §16.3)
 EventRole = z.strictObject({
   id: Id,                                              // 'speaker', 'canvasser-1', 'paster-agi'
-  name: z.string().min(1).max(30),                     // "Canvasser" (×3 share a name, not an id)
+  name: z.string().min(1).max(30),                     // "Door-knocker" (×3 share a name, not an id)
   stats: CheckStatsSchema,                             // one, two averaged, or ['best']
   energy: z.union([z.literal(10), z.literal(15)]),
   hint: z.string().min(1).max(90),
@@ -243,7 +243,7 @@ HeadlineCondition += EventCondition;                   // eventOpenToday · even
 
 | File | Contents | Source |
 |---|---|---|
-| `data/events.ts` | six types (roles, hints, numbers, art, blurbs, the four outcome texts each, `runningName`); the 27 venue rows; the fixture rotation | design §3, §3.7, §4 |
+| `data/events.ts` | six types (roles, hints, numbers, art, blurbs, the four outcome texts each, `runningName`); the 30 venue rows; the fixture rotation | design §3, §3.7, §4 |
 | `data/orders.ts` | `dir.event`, `dir.v.event`, `dir.a.event` | design §5 |
 | `data/headlines.ts`, `heraldHeadlines.ts` | ten per paper (the Clarion in full; the Sentinel, the Gazette and the Herald with their decks and headline substitutions) | design §10 |
 | `data/art.ts` | the two new scenes; nothing else (the types carry their `art`) | design §18 |
@@ -591,7 +591,7 @@ export const scopeFor = (f: FactionId, period: 'week' | 'all', cityId: string | 
 | Function | Change |
 |---|---|
 | `ActionKind`, `ACTION_KINDS` | += `'event'` |
-| `orderMatches(m, a, ctx)` | an `event` descriptor matches only when `m.kinds` includes `'event'` (so *Canvass in Coalport* never counts a canvass drive; design §2.7 "the roles' types match nothing else") |
+| `orderMatches(m, a, ctx)` | an `event` descriptor matches only when `m.kinds` includes `'event'` (so *Canvass in Coalport* never counts a doorstep drive; design §2.7 "the roles' types match nothing else") |
 | `feedMatches(m, a)` | accepts `kind: 'event'` (type = `actionType`, the venue, its kind, district) |
 | `selectHeadlines` | the event conditions (§11.2) |
 | `computeRewards` neighbours | a shared `partsLine(base, shares)` (base and each part halves up on their own; no outcome factor) used by `eventRewards` |
@@ -1029,7 +1029,7 @@ Screens §11's strings, the help notes, the system-line templates and design §1
 |---|---|---|---|
 | `scene.event-poster-night` | `scenes/event-poster-night.png` (new, 2688 × 1520) | scene · 640, 1280 | Poster Night: the board card, the event page, the result |
 | `scene.event-grand-rally` | `scenes/event-grand-rally.png` (new, 2688 × 1520) | scene · 640, 1280 | the Grand Rally |
-| `scene.square` · `scene.street` · `scene.newsroom` · `scene.news-strike` | existing (`news-strike` catalogued by slice 5 at 2048 × 1360) | scene | the Rally · the Canvass Drive · the Headline Story · the General Strike |
+| `scene.square` · `scene.street` · `scene.newsroom` · `scene.news-strike` | existing (`news-strike` catalogued by slice 5 at 2048 × 1360) | scene | the Rally · the Doorstep Drive · the Headline Story · the General Strike |
 | `scene.union-hq` · `scene.vanguard-office` · `scene.alliance-hq` | existing | scene | the Faction tab's header per faction |
 | avatars (18), `portrait.holm`, `.stahl`, `.grey`, `.duty-officer` (slice 5's id for `sergeant.png`), `.matron` | existing | — | chat, members, the fixture's caller, the favours' modals |
 
@@ -1087,7 +1087,7 @@ Screens §11's strings, the help notes, the system-line templates and design §1
 3. B: the board shows the rally (*1 of 4 roles*); open it; *Organiser · Good odds · Intelligence* (no digit anywhere); select, **Organiser · 10 Energy** → *Signed up*. The button reads **Withdraw · 10 Energy back**: withdraw (the HUD's Energy returns), then sign up again.
 4. Clock + 2 h 30 min (hook): B's page reads *Committed from {time}* and no button. Hooks: rolls all succeed, start now. A reloads: the result modal (the band the roster gives: two Successes and two volunteers), *How it went* with both names and *2 went to volunteers*, the receipt; Continue. B reloads: the same event, B's own receipt.
 5. A fresh Rank 1 (C): the welcome edition's *Events* row *join as a hand · 5 Energy* → the fixture → **Join as a hand · 5 Energy**.
-6. `POST /api/test/clock` to the boundary, `POST /api/test/city-day`: C reloads → the fixture's result modal; the paper's *In Print* line (*The Branch's canvass drive Comes Off at Foundry Row*).
+6. `POST /api/test/clock` to the boundary, `POST /api/test/city-day`: C reloads → the fixture's result modal; the paper's *In Print* line (*The Branch's doorstep drive Comes Off at Foundry Row*).
 
 **`faction.spec.ts`** (phone, then desktop):
 
@@ -1153,7 +1153,7 @@ Run on `pnpm dev:mem` with the dev panel; testers in one faction where possible,
 | **Chat abuse before slice 9's tools** | Faction-only channels, the limits, mute, report with context, hide; a closed local playtest |
 | **Exploits:** the event order by sign-up and withdrawal; alts as hands; Energy banking | §22.1 Q3 with the report's count; Appendix C #57 with the report's account-age split; the overflow rule |
 | **Presence writes** on the hot character document | No version bump; once a minute; a transient conflict retries the action's transaction (driver) |
-| **Transcription volume**: 6 types (blurbs, 24 outcome texts, 25 role hints), 27 venues, 40 headlines with decks, ~190 copy strings | Word-for-word comparison tests against the design documents |
+| **Transcription volume**: 6 types (blurbs, 24 outcome texts, 25 role hints), 30 venues, 40 headlines with decks, ~190 copy strings | Word-for-word comparison tests against the design documents |
 | **E2E with two contexts and a socket** | The chat panel exposes `data-socket="connected"`; the spec waits for it before posting |
 
 ---
@@ -1214,7 +1214,7 @@ Run on `pnpm dev:mem` with the dev panel; testers in one faction where possible,
 
 **T4. Content: schemas, accessors, cross-checks.** §4.1–§4.2, the `GameContent` accessors, a failing fixture for each check. *Done when:* every §4.2 check has a failing fixture and the existing content validates (the new arrays empty until T5).
 
-**T5. Content: the data.** `data/events.ts` (six types, 27 venues, the rotation), the three orders, ten headlines per paper with decks, copy and help notes, the *front page* allowance. *Done when:* the word-for-word tests against both design documents pass, the venue-kind check passes with §22.1 Q1's default (or the designer's answer), and both vocabulary guards pass.
+**T5. Content: the data.** `data/events.ts` (six types, 30 venues, the rotation), the three orders, ten headlines per paper with decks, copy and help notes, the *front page* allowance. *Done when:* the word-for-word tests against both design documents pass, the venue-kind check passes with §22.1 Q1's default (or the designer's answer), and both vocabulary guards pass.
 
 **T6. Art.** The two catalogue entries, the types' `art`, `pnpm art:build`, the budget measured and recorded. *Done when:* `art:check` passes, the dev viewer shows both scenes, and the designer has confirmed the alt texts and the content-policy read.
 
@@ -1388,7 +1388,7 @@ Built on branch `slice-0` after the user approved design §19's seven defaults (
 - **No `fixtureRotation()` accessor.** `GameContent` extends `Content`, whose `fixtureRotation` is the tuple itself, so an accessor of that name would clash. Callers read `content.fixtureRotation`.
 - **The three event order templates are transcribed but not wired** (`eventOrderTemplates` in `data/events.ts`, exported from the package). In the slot-B rotation now, they would be orders nobody can carry out until phase B's sign-up exists, and they would shift the rotation the existing e2e specs read. **Phase B's T10 adds them to `orderTemplates`.** The loader already checks that an `event` kind stands alone and that a faction has at most one event template.
 - **Not transcribed in phase A:** the ten headlines per paper with their decks (§4.4, `headlines.ts`, `heraldHeadlines.ts`), screens §11's copy and help notes, design §11's modal texts and the system-line templates (`copy.ts`), and the *front page* allowance in the QA vocabulary guard. Only the server and client of phases B and C read them (the paper v6, the modals, chat), so they move to **T15 (headlines) and T18–T23 (copy)**. The user's testing rule replaces the word-for-word comparison tests: the event texts were copied from design §3 and checked by eye.
-- Role ids: Rally `speaker`, `organiser`, `security`, `press`; Canvass Drive `coordinator`, `canvasser-1` to `canvasser-3`; Poster Night `printer`, `paster-agi`, `paster-str`; Grand Rally `speaker`, `stand-builder`, `usher-1`, `usher-2`, `lookout`; General Strike `shop-steward`, `picket-captain`, `printer`, `runner`; Headline Story `reporter`, `editor`, `source-handler`, `lawyer`.
+- Role ids: Rally `speaker`, `organiser`, `security`, `press`; Doorstep Drive `coordinator`, `canvasser-1` to `canvasser-3`; Poster Night `printer`, `paster-agi`, `paster-str`; Grand Rally `speaker`, `stand-builder`, `usher-1`, `usher-2`, `lookout`; General Strike `shop-steward`, `picket-captain`, `printer`, `runner`; Headline Story `reporter`, `editor`, `source-handler`, `lawyer`.
 - **Art:** `scene.event-poster-night` and `scene.event-grand-rally` have §13's alt texts. `pnpm art:build` wrote six files, **+458 KB** (AVIF 34 + 125 KB and 45 + 142 KB; WebP at 640 only, 48 and 64 KB, as for every October scene). `art:check`: 81 assets, 19.79 MB. The designer's check of the alt texts against the pictures is still to do (T6's *Done when*); the content-policy read is recorded in `art.ts`.
 
 **DB (T7).**
@@ -1460,7 +1460,7 @@ The `/faction` shell (`ce0e52b`, first, so lane B could fill Members, Scoreboard
 - **`Stamp` takes a `color`** (Triumph in the faction's colour, design §2.6); the tone stays `success` underneath.
 - **The modal gate** (`apps/client/src/lib/modalGate.ts`) now counts its sources, so the run-in gate (`runIn`), the event gate (`event-gate`) and the event screens (`event-call`, `event-page`) each report their own modal and one closing never hides another. The event gate waits while a run-in is pending or the character is held (the release modal is the held screen's), then shows `events.current` one at a time, oldest first; Continue calls `events.seen`.
 - **The together political modals** (*Called*, *Signed up*, *Bail posted*, *Visited*, *Called off*) are small cards (`CARD_ACTS`), and `PoliticalBody` words the slice-6 knock-ons: Rested drawn, Party XP, the mate's line, *posted by*, and the payer's *−{n} Iron · bail for {name}*.
-- **Withdrawal** has no modal: the page prints *You're no longer the {role} · {n} Energy back. …* under the roles (copy's `withdraw.headline` and `body`), and the HUD shows the Energy back. Design §22.5 mentions a small *Withdrawn* modal; the line was kept as one tap with no Continue.
+- **Withdrawal** has no modal: the page prints *You're no longer the {role} · {n} Energy back. …* under the roles (copy's `withdraw.headline` and `body`), and the HUD shows the Energy back. Design §22.5 mentions a small *Withdrawn* modal; the line was kept as one tap with no Continue. **Approved by the user (15 Oct 2026, slice 6 fix round, QA m3):** one tap and a line fits short sessions; no modal.
 - **The call sheet** selects the first role the caller may take when an event is picked (one role is required), so the button always reads *Call it · {Role} · {n} Energy*.
 - **The board's** *Your sign-ups* card reads *Withdraw · {n} Energy back*, with the Energy from `character.events.open` (the board's `mine` rows carry no Energy).
 - **The venue's ticket** has the start time in its stub, not the event's art: `EventTicketView` (tech §8.3) carries no art, caller or tags. It reads *The rally · settles at 19:40*, *Roles · 1 of 4 filled*, **Join** / *You're the {role}* / *Settling…*.
@@ -1470,6 +1470,16 @@ The `/faction` shell (`ce0e52b`, first, so lane B could fill Members, Scoreboard
 - **The Faction header** is one compact band (no 120 px minimum: the empty strip above the crest went) with the faction's crest SVG (`crest.{faction}`) on a paper disc, not the HQ scene behind it (the hq view carries no scene). The five chips keep clear of their edges at 360 px with less tracking (10.5 px, 0.04 em); the copy is unchanged (*Scoreboard*). On a desktop the strip has four chips (Chat is the column); with chat hidden from Me there is no Chat chip, and `?tab=chat` opens Events (faction.spec follows).
 - **`HereNowLine`'s names** are buttons when the caller passes `onName`; `PlacePresence` takes one but the city sheet does not pass it yet (lane B's `ProfileFlow` could be wired there).
 - **The `events` Playwright project** is last (after `favours`), at 390 × 844, and moves the shared clock to the next City Day. Its screenshots are `docs/qa/slice-6/faction-events.png`, `call-sheet.png`, `event-page.png`, `event-result.png`.
-- **For the designer:** *Canvass Drive* and *Canvasser* are caught by the review-2 vocabulary guard (`packages/content/test/vocabulary.ts`'s *canvass*), and the welcome edition's *Events* row and the Duskwall edition now print them, so `review4.spec.ts` and `qa.review4.spec.ts` failed. Their sweeps allow *canvass drive* and *canvasser(s)* for now; every other *canvass* is still caught. Rename the event, or record the allowance in the guard.
+- **For the designer** *(resolved 15 Oct 2026: the event is now the Doorstep Drive and the role the Door-knocker, design §22 #9; the sweeps' allowance was removed in the slice 6 fix round)*: *Canvass Drive* and *Canvasser* were caught by the review-2 vocabulary guard (`packages/content/test/vocabulary.ts`'s *canvass*), and the welcome edition's *Events* row and the Duskwall edition now print them, so `review4.spec.ts` and `qa.review4.spec.ts` failed. Their sweeps allow *canvass drive* and *canvasser(s)* for now; every other *canvass* is still caught. Rename the event, or record the allowance in the guard.
 - **For QA:** `qa.voting.spec.ts`'s *the count … a three-way tie goes to card 1* failed once when run straight after `voting` in the same server (`how: 'votes'`, not `'tie'`) and passed when `qa-voting` ran with `review6` alone; `qa.slice5.spec.ts`'s *a mission ticket is at most four lines* failed once at sign-up and passed alone. Neither touches slice 6's code; worth a look for ordering or flakiness.
 - **A hand's sign-up modal** read *You're the a pair of hands* (the templates' *the {role}* with `modal.hand`); `eventService`'s political result now drops the *the* for a hand (*You're a pair of hands*), and `events.spec` asserts it. Server, one line.
+
+
+### Fix round (15 Oct 2026, QA report `docs/qa/slice-6-report.md`)
+
+- **m1, the concurrent same-key Join.** `signUpEvent`'s pre-checks read the event after the character, so a copy of the tap that committed in between made them refuse (`ALREADY_ON_EVENT`, or `NOT_ENOUGH_ENERGY` for the Energy it spent). Every pre-check refusal now looks up the stored tap first and answers with the winner's result. `assertKeyFree` (`keyGuard.ts`) also looks in `eventSignups`, so a call's or a sign-up's key is seen inside every keyed transaction. Checked with a scratch script: 20 bursts of three same-key sign-ups, one charge and identical bodies each time.
+- **m2, the release on any screen.** `HeldReleaseGate` (`apps/client/src/features/street/HeldReleaseGate.tsx`) sits in the shell between the run-in gate and the event gate: while `character.held.state` is `out` and the page is not `/held`, it shows the stay's release modal; Continue is `held.close`. A deportation lands on the journey, a city screen on the landing place; any other screen (the Faction tab) stays where it is. The order holds: run-in, release, event results, orders complete. Playwright: `favours.spec.ts`'s *a released stay deep-linked to /faction*.
+- **m3, withdrawal.** One tap and a line, as built; approved by the user.
+- **Clarity.** The board card's *settles at 19:40* is a dotted label with a new *Settles at* note (then the *Campaign event* note); a Recruit's *Organisers and above can call events; anyone can join one.* opens the *Campaign event* and *Hands* notes. New copy: `together.card.settlesAt`, `together.help.settles`.
+- **The paper's swing** (`togetherEdition.ts`'s `swingText`) trims like `formatSwing`: *+1*, *+0.8*, a minus sign for a loss (design §22 #10).
+- **The vocabulary sweeps** in `review4.spec.ts` and `qa.review4.spec.ts` no longer allow *canvass drive* or *canvasser(s)* (design §22 #9).

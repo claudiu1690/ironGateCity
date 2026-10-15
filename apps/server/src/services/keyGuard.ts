@@ -1,5 +1,5 @@
 import { createHmac, randomBytes } from 'node:crypto';
-import { ActionLog, Encounter, RequestLog } from '@irongate/db';
+import { ActionLog, Encounter, EventSignup, RequestLog } from '@irongate/db';
 import type { ClientSession, Types } from 'mongoose';
 import { KeyTaken } from './txn';
 
@@ -8,6 +8,7 @@ import { KeyTaken } from './txn';
  * lands in `actionLogs` (a final result) or `encounters` (a pending run-in); a request-keyed
  * mutation in `requestLogs`. Each is unique on `{ characterId, idempotencyKey }`, but no index sees
  * across them, so a keyed transaction looks in all three, in its own snapshot, before any write.
+ * Slice 6 fix round (QA m1): and `eventSignups` (a call or a sign-up of a Campaign Event).
  */
 export async function assertKeyFree(
   session: ClientSession,
@@ -19,6 +20,7 @@ export async function assertKeyFree(
   if (await ActionLog.exists(q).session(session)) throw new KeyTaken();
   if (await Encounter.exists(q).session(session)) throw new KeyTaken();
   if (await RequestLog.exists(q).session(session)) throw new KeyTaken();
+  if (await EventSignup.exists(q).session(session)) throw new KeyTaken();
 }
 
 /** Drawn once per process: a key's seed cannot be predicted from outside the server. */

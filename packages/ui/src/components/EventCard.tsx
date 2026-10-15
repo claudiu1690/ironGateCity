@@ -5,6 +5,8 @@ import { cx, formatClock, formatWeekday } from '../format';
 import { Button } from './Button';
 import { formatSwing } from './Capital';
 import { FACTION_STYLE } from './FactionCrest';
+import { HelpButton, helpMark } from './Help';
+import type { HelpNote } from './Help';
 import { MemberFace } from './Members';
 import { Picture } from './Picture';
 import type { StampTone } from './Stamp';
@@ -102,6 +104,9 @@ export function EventCard({ event: e, onOpen, onJoin, withdraw, className }: Eve
     e.roles,
     e.hands.k > 0 ? e.hands.k : null,
   );
+  const settles = copy.together.card.settlesAt(time);
+  const at = line.indexOf(settles);
+  const settlesParts = at >= 0 ? [line.slice(0, at), line.slice(at + settles.length)] : null;
   const elsewhere = e.action === 'elsewhere';
   let right: ReactNode = null;
   if (withdraw) {
@@ -170,10 +175,26 @@ export function EventCard({ event: e, onOpen, onJoin, withdraw, className }: Eve
             {e.name}
           </button>
         )}
-        <span className="font-mono text-[11px] text-text-2" data-testid="event-card-line">
-          {line}
-          {elsewhere ? ` · ${copy.together.board.joinFromThere}` : ''}
-        </span>
+        {/* Slice 6 fix round (QA clarity): *settles at 19:40* carries a note (it happens then, online or not). */}
+        <HelpButton
+          notes={[copy.together.help.settles() as HelpNote, copy.together.help.campaignEvent() as HelpNote]}
+          label={copy.together.help.settles()[0] ?? ''}
+          testId="event-card-settles-help"
+          className="-my-1 self-start"
+        >
+          <span className="font-mono text-[11px] text-text-2" data-testid="event-card-line">
+            {settlesParts ? (
+              <>
+                {settlesParts[0]}
+                <span className={helpMark}>{settles}</span>
+                {settlesParts[1]}
+              </>
+            ) : (
+              line
+            )}
+            {elsewhere ? ` · ${copy.together.board.joinFromThere}` : ''}
+          </span>
+        </HelpButton>
         <span className="font-body text-[13px] text-text-2" data-testid="event-card-caller">
           {calledByText(e.calledBy)}
         </span>

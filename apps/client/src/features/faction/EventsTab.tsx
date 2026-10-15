@@ -1,6 +1,7 @@
 import { copy } from '@irongate/content/copy';
 import type { EventCardView, EventHours } from '@irongate/rules';
-import { Button, CallEventSheet, EventCard, EventResultLine, ResultModal, callGuardText } from '@irongate/ui';
+import { Button, CallEventSheet, EventCard, EventResultLine, HelpButton, ResultModal, callGuardText, helpMark } from '@irongate/ui';
+import type { HelpNote } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
@@ -100,9 +101,17 @@ export function EventsTab() {
       );
     else if (b.call.reason === 'RANK')
       callBlock = (
-        <p className="font-mono text-[12px] text-text-2" data-testid="call-rank-line">
-          {copy.together.board.whoCanCall(b.call.rank3Title)}
-        </p>
+        // Slice 6 fix round (QA clarity): the board's one line on what an event is opens its note.
+        <HelpButton
+          notes={[copy.together.help.campaignEvent() as HelpNote, copy.together.help.hands() as HelpNote]}
+          label={copy.together.help.campaignEvent()[0] ?? ''}
+          testId="call-rank-help"
+          className="self-start"
+        >
+          <span className={`font-mono text-[12px] text-text-2 ${helpMark}`} data-testid="call-rank-line">
+            {copy.together.board.whoCanCall(b.call.rank3Title)}
+          </span>
+        </HelpButton>
       );
     else
       callBlock = (

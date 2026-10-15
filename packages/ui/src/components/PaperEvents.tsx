@@ -15,7 +15,7 @@ export interface PaperEventsProps {
 /**
  * Slice 6 (screens §8; tech design §11.1): the paper's *Events* rows under Party orders, the
  * `LettersRow` style. One row per open event of the faction in the residence city, fixture first:
- * *Today: the branch's canvass drive at Foundry Row · settles at midnight · 2 of 4 roles*, and at the
+ * *Today: the branch's doorstep drive at Foundry Row · settles at midnight · 2 of 4 roles*, and at the
  * right *you're the Coordinator*, or *Join* (the welcome edition: *join as a hand · 5 Energy*). A tap
  * opens the event page.
  */

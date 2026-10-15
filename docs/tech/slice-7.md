@@ -1645,7 +1645,7 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 **Missing content**
 
 4. **The twenty-four local deputies** (design §5.1, GDD §15.10: "eight named per party"). They are not listed anywhere. **Default:** none until you supply them; the chamber shows only *n Vanguard local deputies* until the names are in (T8's *Done when* waits on them).
-5. **Event venues.** The Town Hall needs a venue in each home city, each capital district and Clearwater, of a kind in *square, university, court, theatre, hotel*. Clearwater needs venues for the Canvass Drive, Rally and Poster Night. **Default:** per place, the first location in content order whose kind is in the type's list (for Clearwater: the Town Hall and the Rally at St Martin's, the Canvass Drive at the Rows, Poster Night at Back Lane Market). Please confirm or replace.
+5. **Event venues.** The Town Hall needs a venue in each home city, each capital district and Clearwater, of a kind in *square, university, court, theatre, hotel*. Clearwater needs venues for the Doorstep Drive, Rally and Poster Night. **Default:** per place, the first location in content order whose kind is in the type's list (for Clearwater: the Town Hall and the Rally at St Martin's, the Doorstep Drive at the Rows, Poster Night at Back Lane Market). Please confirm or replace.
 6. **Clearwater as a branch.** Design §4.4 gives the Chair a Clearwater fixture. **Default:** Clearwater is a branch for all three factions, like the capital: a daily fixture each, and a *Clearwater branch* chat channel.
 
 **Councils**
@@ -1705,7 +1705,7 @@ Run on `pnpm dev:mem` with the dev panel and the term hooks; testers in one fact
 | 2 | Default: two push templates per faction, written in design §23.3; every matching attempt at the pushed place by any member counts, a ×3 three |
 | 3 | Default: the Clearwater rotation, written in design §23.4 (`residence: 'clearwater'`) |
 | 4 | The twenty-four local deputies: design §23.5 (ids `npc.{v,c,a}.dep.{surname}`) |
-| 5 | **Changed:** the Town Hall's venue kinds gain `library` and `faction-hq`; venues set per place in design §23.6 (Clearwater: Town Hall at St Martin's, the Rally at the Cannery, the Canvass Drive at the Rows, Poster Night at the Tram Depot); **no signature event in Clearwater** in slice 7 |
+| 5 | **Changed:** the Town Hall's venue kinds gain `library` and `faction-hq`; venues set per place in design §23.6 (Clearwater: Town Hall at St Martin's, the Rally at the Cannery, the Doorstep Drive at the Rows, Poster Night at the Tram Depot); **no signature event in Clearwater** in slice 7 |
 | 6 | Default: Clearwater is a branch for every faction, with a fixture and a *Clearwater branch* channel |
 | 7 | Default: the Governor's rule is added as item 1 ahead of the party's item, which stays |
 | 8 | Default: the Chair's rule applies from the next order paper |

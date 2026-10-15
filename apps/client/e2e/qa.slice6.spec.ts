@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Browser, BrowserContext, Page } from '@playwright/test';
+import type { Browser, Page } from '@playwright/test';
 import { signUp } from './helpers';
 
 /**
@@ -88,9 +88,9 @@ test('1 replays and double taps; 3 numbers: refund, overflow, last hour, halving
   const slot = { roleId: 'security' };
   const taps = await Promise.all([1, 2, 3].map(() => mutate(q.page, 'events.signUp', { eventId, slot, idempotencyKey: sk })));
   console.log('QA concurrent same-key sign-ups', JSON.stringify(taps.map((t) => t.reason || 'ok')));
-  expect(taps.filter((t) => t.ok).length, 'at least one tap succeeds').toBeGreaterThanOrEqual(1);
-  // BUG m1 (QA slice 6): a concurrent replay of the same key can answer ALREADY_ON_EVENT instead of the stored result.
-  expect(taps.filter((t) => !t.ok).map((t) => t.reason).every((r) => r === 'ALREADY_ON_EVENT')).toBe(true);
+  // m1, fixed in the slice 6 fix round: every replay of the key answers with the first result.
+  expect(taps.every((t) => t.ok), 'every same-key tap gets the stored result').toBe(true);
+  expect(new Set(taps.map((t) => JSON.stringify(t.data))).size, 'identical bodies').toBe(1);
   const qSigned = await me(q.page);
   expect(qSigned.energy.value, 'Security 10 Energy once').toBeGreaterThanOrEqual(90 - 0);
   expect(qSigned.energy.value).toBeLessThanOrEqual(95);
@@ -271,8 +271,8 @@ test('2 away: three sign-ups settle while the player is gone; the modals come in
   console.log('QA away sequence', JSON.stringify(seq, null, 1));
   const eventModals = seq.filter((x) => x.startsWith('event:'));
   expect(eventModals.length, 'three event results, one modal each: ' + JSON.stringify(seq)).toBe(3);
-  // The canvass drive (an hour in) comes before both fixtures (the boundary).
-  expect(eventModals[0].toLowerCase()).toMatch(/street|foundry/);
+  // The doorstep drive (an hour in) comes before both fixtures (the boundary).
+  expect(eventModals[0]!.toLowerCase()).toMatch(/street|foundry/);
   const heldAt = seq.findIndex((x) => x.startsWith('other:'));
   const firstEvent = seq.findIndex((x) => x.startsWith('event:'));
   console.log('QA held modal index', heldAt, 'first event index', firstEvent);

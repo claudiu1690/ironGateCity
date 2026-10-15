@@ -199,7 +199,7 @@ The panel exists only in memory mode: its routes (`GET /api/test/dev/status`, `P
 
 **A first event as a hand** (slice 6, from a fresh `pnpm dev:mem`; a Collective recruit in Coalport):
 
-1. The welcome edition's **Events** row reads *Today: the branch's canvass drive at Foundry Row · settles at midnight · 0 of 4 roles · join as a hand · 5 Energy*. The **Faction** tab opens on **Events**: the branch's event (*called by Secretary Holm · the branch's event*) with **Join as a hand**.
+1. The welcome edition's **Events** row reads *Today: the branch's doorstep drive at Foundry Row · settles at midnight · 0 of 4 roles · join as a hand · 5 Energy*. The **Faction** tab opens on **Events**: the branch's event (*called by Secretary Holm · the branch's event*) with **Join as a hand**.
 2. **Join as a hand** opens the event page with *Hands · 0 of 4* selected; **Join as a hand · 5 Energy**: *Signed up · You're a pair of hands*. Nothing asks you to come back at a time.
 3. **Next day** (the panel): the boundary resolves the branch's event; the next read shows its result modal (the stamp, *How it went* with volunteers at half strength, your hands, the receipt), and the paper's *In Print* has the line.
 

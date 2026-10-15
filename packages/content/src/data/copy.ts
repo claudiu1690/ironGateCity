@@ -2246,6 +2246,8 @@ export const copy = {
       /** *Market Row · settles at 19:40 · 2 of 4 roles · hands 1 of 4* (the hands part when any). */
       line: (venue: string, time: string, filled: number, roles: number, hands: number | null = null) =>
         `${venue} · settles at ${time} · ${filled} of ${roles} roles${hands !== null ? ` · hands ${hands} of 4` : ''}`,
+      /** The part of the line with the *settles* note behind it (QA slice 6, clarity). */
+      settlesAt: (time: string) => `settles at ${time}`,
       calledBy: (name: string) => `called by ${name}`,
       calledBySecretary: (name: string) => `called by ${name} · the branch's event`,
       join: 'Join',
@@ -2667,6 +2669,11 @@ export const copy = {
       campaignEvent: () => [
         'Campaign event',
         'An event the branch does together: a few roles, each on someone\'s stats, and one result for all of you. Sign up ahead; you need not be there when it starts.',
+      ],
+      /** Slice 6 fix round (QA clarity): behind *settles at 19:40* on the board's card. */
+      settles: () => [
+        'Settles at',
+        "The time the event happens and its result is decided, whether you're online or not. Your result waits for you in a modal and in the paper.",
       ],
       volunteers: () => [
         'Volunteers',

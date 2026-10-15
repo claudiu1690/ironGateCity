@@ -158,3 +158,29 @@ test('bail from the chat line, out on the branch\'s Iron; a visit on the ward; A
   await a.ctx.close();
   await b.ctx.close();
 });
+
+test('a released stay not yet seen shows its release modal on a deep link to /faction (QA m2)', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const c = await member(browser, `Ema R${tag()}`);
+  await hook(c.page, 'held', { send: 'cells' });
+  await hook(c.page, 'held', { releaseNow: true });
+  // A bookmark or a reload on the Faction tab, not `/`: the shell's gate shows the release.
+  await c.page.goto('/faction?tab=events');
+  const release = c.page.getByRole('dialog');
+  await expect(release).toBeVisible();
+  const go = release.getByRole('button', { name: 'Continue' });
+  await expect(go).toBeVisible();
+  expect((await go.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await go.click();
+  await expect(release).toBeHidden();
+  // The player stays where they opened the game; the stay is closed.
+  expect(new URL(c.page.url()).pathname).toBe('/faction');
+  const me = (await read(c.page, 'character.me')) as { ok: boolean; data: { held: unknown } };
+  expect(me.ok).toBe(true);
+  expect(me.data.held).toBeNull();
+  // A reload shows nothing again.
+  await c.page.reload();
+  await expect(c.page.getByTestId('call-rank-line').or(c.page.getByTestId('call-an-event')).first()).toBeVisible();
+  await expect(c.page.getByRole('dialog')).toHaveCount(0);
+  await c.ctx.close();
+});

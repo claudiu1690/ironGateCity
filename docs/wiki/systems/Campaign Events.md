@@ -68,7 +68,7 @@ at a set time. Designed for slice 6, **not built**.
 
 ## Open questions / drift
 
-- **Settled 15 Oct 2026** (design §22 #9–12): the newcomer's event is the **Doorstep Drive** with three **Door-knockers** (was *Canvass Drive* / *Canvasser*, which §1.5 bans for players; ids unchanged). Swings print to two decimals trimmed, shares to one (GDD §14.2). An event's swing does not write the morale record, and *event-city* prints only for a reader who was on no event yesterday. Left for the developer: trim `togetherEdition.ts`'s `swingText`; drop the *canvass drive* allowance from the review-4 sweeps.
+- **Settled 15 Oct 2026** (design §22 #9–12): the newcomer's event is the **Doorstep Drive** with three **Door-knockers** (was *Canvass Drive* / *Canvasser*, which §1.5 bans for players; ids unchanged). Swings print to two decimals trimmed, shares to one (GDD §14.2). An event's swing does not write the morale record, and *event-city* prints only for a reader who was on no event yesterday. Both developer items done in the slice 6 fix round (the paper's `swingText` trimmed; the review-4 sweeps' allowance gone). The fix round also made a concurrent same-key sign-up answer with the stored result (QA m1) and put *Settles at* and *Campaign event* notes on the board.
 
 > [!note] Inference
 > With the voting rework, "the council rule for the event's type" in the swing means the ordinance chosen by the town's vote (e.g. *Street Permits* for a propaganda-matched event).

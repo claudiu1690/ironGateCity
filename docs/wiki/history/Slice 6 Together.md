@@ -3,8 +3,8 @@ type: history
 title: Slice 6 Together
 aliases: [Slice 6, Together]
 tags: [slice, qa]
-status: built, in QA
-dates: 2026-10-03 (designed); 2026-10-15 (defaults approved, built through phase C, QA started)
+status: built, QA'd, fixed
+dates: 2026-10-03 (designed); 2026-10-15 (defaults approved, built through phase C, QA'd, fix round)
 commits: [b756c48, 8173e3e]
 gdd: ["§3.3", "§6.5", "§13.7", "§14.5", "§16.2", "§16.3", "§19.1", "§19.2"]
 adrs: ["0036", "0037", "0038", "0039", "0040", "0041", "0042"]
@@ -13,7 +13,7 @@ updated: 2026-10-15
 
 # Slice 6 Together
 
-**Status: built, in QA.** Design and tech design were done on 3 Oct 2026, one slice ahead. On 15 Oct 2026 the user approved the seven defaults of design §19; phases A–C were built the same day (`3c34cc9` closes phase C) and QA is running. The designer's phase C rulings (the Doorstep Drive rename, swing precision, the two phase-B defaults) are in [[design/slice-6-together#22. Slice 6 copy (15 Oct 2026; phase A's questions answered)|design §22]] #9–12.
+**Status: built, QA'd, fixed.** Design and tech design were done on 3 Oct 2026, one slice ahead. On 15 Oct 2026 the user approved the seven defaults of design §19; phases A–C were built the same day (`3c34cc9` closes phase C), QA reported no blocker or major (`8c06e48`), and the fix round closed its findings the same day. How to play it: [[review/slice-6-build-notes|slice 6 build notes]]. The designer's phase C rulings (the Doorstep Drive rename, swing precision, the two phase-B defaults) are in [[design/slice-6-together#22. Slice 6 copy (15 Oct 2026; phase A's questions answered)|design §22]] #9–12.
 
 ## Goal and playtest question
 
@@ -77,3 +77,14 @@ QA run 15 Oct 2026 ([[qa/slice-6-report|report]]): **no blocker or major bug.** 
 ## Related
 
 - Previous: [[Slice 5 Risk]] · Next: [[Slice 7 The Nation]]
+
+## Fix round (15 Oct 2026)
+
+QA's findings ([[qa/slice-6-report|report]]) and the designer's code items (design §22 #9–10):
+
+- **m1, a concurrent same-key *Join*** answered `ALREADY_ON_EVENT` when a copy of the tap committed between the character read and the event read. `signUpEvent`'s pre-check refusals now return the winner's stored tap when there is one, and `assertKeyFree` (`apps/server/src/services/keyGuard.ts`) also looks in `eventSignups`. Reproduced on the old code with jittered bursts; on the new code 2 × 40 bursts of three gave one charge and identical bodies.
+- **m2, the release on `/faction`**: `HeldReleaseGate` (`apps/client/src/features/street/HeldReleaseGate.tsx`) in the shell shows an unseen release on every screen but `/held`, before the event results and the orders-complete note. Playwright: `favours.spec.ts`.
+- **m3, withdrawal**: one tap and a line, approved by the user (short sessions).
+- **Clarity**: the board card's *settles at 19:40* opens a new *Settles at* note (then *Campaign event*); a Recruit's *Organisers and above can call events; anyone can join one.* opens *Campaign event* and *Hands*.
+- **The paper's swing** trims like `formatSwing` (*+1*, *+0.8*); the review-4 sweeps no longer allow *canvass drive*; the tech docs say 30 venues and the Doorstep Drive.
+- **Still open**: what QA did not cover ([[Open Questions]] S6-4) and the manual playtest question.

@@ -491,7 +491,11 @@ export async function signUpEvent(
   if (roleIdx !== null && roleIdx < 0) throw gameError('BAD_REQUEST', 'UNKNOWN_ROLE', { roleId: slotId });
   const cost = roleIdx === null ? EVENTS.hands.energy : type.roles[roleIdx]!.energy;
   const now0 = deps.now();
-  if (ev0.status !== 'open') throw gameError('PRECONDITION_FAILED', 'EVENT_CLOSED');
+  if (ev0.status !== 'open') {
+    const winner = await storedTap(c0._id, input.idempotencyKey, same);
+    if (winner) return winner;
+    throw gameError('PRECONDITION_FAILED', 'EVENT_CLOSED');
+  }
   const p = projectEnergy(energyState(c0), now0, ENERGY.max, restedCapToday(content, loaded.city, dayKey(now0), c0.room));
   const gate = signUpGate({
     slot: slotId,
@@ -507,16 +511,26 @@ export async function signUpEvent(
     slotFree: roleIdx === null ? ev0.hands.length < EVENTS.hands.max : ev0.roles[roleIdx]?.holder === null,
     started: ev0.startsAt.getTime() <= now0,
   });
+  // Slice 6 fix round (QA m1): the pre-checks read the event after the character, so a copy of
+  // this tap that committed in between makes them refuse (ALREADY_ON_EVENT, or the Energy it
+  // spent). Before refusing, the winner's stored result is the answer, as in the transaction.
+  const refuse = async (err: Error): Promise<PoliticalResult> => {
+    const winner = await storedTap(c0._id, input.idempotencyKey, same);
+    if (winner) return winner;
+    throw err;
+  };
   if (gate) {
     const reason = gate.reason === 'TOO_MANY_SIGNUPS' ? 'TOO_MANY_SIGNUPS' : gate.reason;
-    throw gameError('PRECONDITION_FAILED', reason, {
-      ...(gate.need !== undefined ? { need: gate.need } : {}),
-      ...(gate.reason === 'NOT_ENOUGH_ENERGY' ? { energy: p.value, cost, nextTickAt: p.nextTickAt } : {}),
-      ...(gate.reason === 'TOO_MANY_SIGNUPS' ? { max: EVENTS.maxOpenSignups } : {}),
-    });
+    return refuse(
+      gameError('PRECONDITION_FAILED', reason, {
+        ...(gate.need !== undefined ? { need: gate.need } : {}),
+        ...(gate.reason === 'NOT_ENOUGH_ENERGY' ? { energy: p.value, cost, nextTickAt: p.nextTickAt } : {}),
+        ...(gate.reason === 'TOO_MANY_SIGNUPS' ? { max: EVENTS.maxOpenSignups } : {}),
+      }),
+    );
   }
   const busy = notFree(c0);
-  if (busy) throw busy.toTRPC();
+  if (busy) return refuse(busy.toTRPC());
 
   return runKeyedAction<PoliticalResult>({
     key: { characterId: c0._id, idempotencyKey: input.idempotencyKey },
