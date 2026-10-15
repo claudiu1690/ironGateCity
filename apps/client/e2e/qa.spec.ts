@@ -146,7 +146,7 @@ test.describe('phone 375×812', () => {
       'Your job · seniority 0 days · +0 %',
     );
     await expect(page.getByRole('region', { name: 'Job' })).toContainText(
-      /216 a day · paid (at|tomorrow) \d\d:\d\d/,
+      /216 a day · paid ((at|tomorrow) \d\d:\d\d|in \d+ min)/,
     );
     // Review 1 (answers §8): the full Faction XP row.
     await expect(page.getByTestId('me-rank')).toContainText(
@@ -223,7 +223,7 @@ test.describe('phone 375×812', () => {
     sheet = await openAny(page, '2. Market Row');
     await sheet.getByRole('button', { name: 'Switch · seniority resets' }).click();
     await expect(sheet.getByTestId('job-coalport-street-vendor')).toContainText(
-      /Switched · seniority reset · paid (at|tomorrow) \d\d:\d\d/,
+      /Switched · seniority reset · paid ((at|tomorrow) \d\d:\d\d|in \d+ min)/,
     );
     // Review 1: switching costs no Energy, and there is no shift to work.
     await expect(page.getByTestId('hud-energy')).toHaveText('100 / 100');

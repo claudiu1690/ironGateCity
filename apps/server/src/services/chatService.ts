@@ -1,7 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { CampaignEvent, Character, ChatLimit, ChatMessage, ChatReport, Stay, isDuplicateKeyError } from '@irongate/db';
 import type { CharacterDoc, ChatLimitDoc, ChatMessageDoc, StayDoc } from '@irongate/db';
-import { CHAT, PRESENCE, channelsOf, chatRateCheck, dayKey, normaliseChatText, parseChannel } from '@irongate/rules';
+import { CHAIR, CHAT, PRESENCE, allChannelsOf, channelsOf, chatRateCheck, dayKey, normaliseChatText, parseChannel } from '@irongate/rules';
 import type { ChatChannelsView, ChatLineButton, ChatLineView, ChatPageView, CharacterView } from '@irongate/rules';
 import { Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
@@ -43,9 +43,12 @@ export function lineView(m: ChatMessageDoc): ChatLineView {
   };
 }
 
-/** The channels a faction member reads (tech §22.1 Q11): Party, and one per chat city. */
-export function channelsFor(content: GameContent, c: Pick<CharacterDoc, 'factionId'>): string[] {
-  return channelsOf(c.factionId, content.chatCities(c.factionId));
+/**
+ * The channels a faction member reads (tech §22.1 Q11): Party, and one per chat city; slice 7
+ * (screens §5.4): *Officers* for Rank 4 and above.
+ */
+export function channelsFor(content: GameContent, c: Pick<CharacterDoc, 'factionId' | 'rank'>): string[] {
+  return channelsOf(c.factionId, content.chatCities(c.factionId), c.rank >= CHAIR.rank);
 }
 
 function assertChannel(content: GameContent, c: CharacterDoc, channel: string): void {
@@ -112,6 +115,7 @@ export async function chatChannels(deps: Deps): Promise<ChatChannelsView> {
         factionId: c.factionId,
         'presence.seenAt': { $gte: seenSince },
         ...(cityId ? { cityId } : {}),
+        ...(p.kind === 'officers' ? { rank: { $gte: CHAIR.rank } } : {}),
       });
       return {
         id,
@@ -154,6 +158,7 @@ export async function chatHistory(deps: Deps & { input: { channel: string; befor
     factionId: c.factionId,
     'presence.seenAt': { $gte: new Date(now - PRESENCE.hereNowMs) },
     ...(p?.kind === 'city' ? { cityId: p.cityId } : {}),
+    ...(p?.kind === 'officers' ? { rank: { $gte: CHAIR.rank } } : {}),
   });
   return {
     channel: input.channel,
@@ -328,7 +333,7 @@ export async function chatForYou(c: CharacterDoc): Promise<boolean> {
 export async function trimChat(content: GameContent): Promise<number> {
   let deleted = 0;
   for (const f of ['vanguard', 'collective', 'alliance'] as const) {
-    for (const channel of channelsOf(f, content.chatCities(f))) {
+    for (const channel of allChannelsOf(f, content.chatCities(f))) {
       const floor = await ChatMessage.find({ channel }, { at: 1 }).sort({ at: -1, _id: -1 }).skip(CHAT.keep - 1).limit(1).lean();
       if (!floor[0]) continue;
       const r = await ChatMessage.deleteMany({

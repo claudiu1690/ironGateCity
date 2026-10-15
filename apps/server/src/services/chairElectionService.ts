@@ -533,9 +533,12 @@ async function handOver(
 ): Promise<void> {
   const { session, d } = ctx;
   const term = termOf(d);
+  // Every Chair's term still open at the handover ends here, completed: the calendar's (ending at
+  // `d`) and one seated outside it (a test hook, or a term written with a later end), which used to
+  // stay open past day 14, neither vacated nor completed (phase B's T22 run).
   await OfficeTerm.updateMany(
-    { office: 'chair', factionId: f, toDay: d, vacatedDay: null, completed: false },
-    { $set: { completed: true } },
+    { office: 'chair', factionId: f, fromDay: { $lt: d }, toDay: { $gte: d }, vacatedDay: null, completed: false },
+    { $set: { completed: true, toDay: d } },
     { session },
   );
   let chair: FactionStateDoc['chair'] = null;

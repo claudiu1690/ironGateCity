@@ -620,6 +620,11 @@ function NationControls({
       {btn('lead', 'My party leads by ten')}
       {btn('deputiesVote', 'Test deputies vote For', 'for', 'dev-deputies-for')}
       {btn('deputiesVote', 'Test deputies vote Against', 'against', 'dev-deputies-against')}
+      {btn('residentsSign', 'Three test residents sign')}
+      {btn('chairBackers', 'Three test members back me for Chair')}
+      {btn('chairVotes', 'Three test members vote me Chair')}
+      {btn('nationVotes', 'Three test members vote my party')}
+      {btn('chairPetitionSign', 'Three test members sign on the Chair')}
     </div>
   );
 }

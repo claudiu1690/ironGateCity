@@ -76,7 +76,15 @@ export type DevAction =
   | 'secretaryBill'
   | 'deputies'
   | 'deputiesVote'
-  | 'lead';
+  | 'lead'
+  // Phase C, lane Y: three test members sign the residence's dissolve petition, back the caller for
+  // Chair, vote for the caller as Chair, vote for the caller's party for President, sign the petition
+  // on the Chair.
+  | 'residentsSign'
+  | 'chairBackers'
+  | 'chairVotes'
+  | 'nationVotes'
+  | 'chairPetitionSign';
 
 /** Slice 7 (tech design §8.7): the status's nation block. */
 export interface DevNationStatus {

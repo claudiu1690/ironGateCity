@@ -5,22 +5,35 @@ import { CHAT } from './constants';
 import { FACTION_IDS } from './types';
 import type { FactionId } from './types';
 
-export type ChatChannelKind = 'party' | 'city';
+export type ChatChannelKind = 'party' | 'city' | 'officers';
 export const partyChannel = (f: FactionId): string => `party:${f}`;
 export const cityChannel = (f: FactionId, cityId: string): string => `city:${f}:${cityId}`;
+/** Slice 7 (screens §5.4, §16): the party's officers, Rank 4 and above (`CHAIR.rank`). */
+export const officersChannel = (f: FactionId): string => `officers:${f}`;
 
-/** The faction's channels: *Party* and one branch per open city (its home city and the capital). */
-export function channelsOf(f: FactionId, chatCities: readonly string[]): string[] {
-  return [partyChannel(f), ...chatCities.map((c) => cityChannel(f, c))];
+/**
+ * The faction's channels: *Party*, one branch per open city (its home city, the capital and
+ * Clearwater) and, for Rank 4 and above (slice 7), *Officers*.
+ */
+export function channelsOf(f: FactionId, chatCities: readonly string[], officers = false): string[] {
+  return [partyChannel(f), ...chatCities.map((c) => cityChannel(f, c)), ...(officers ? [officersChannel(f)] : [])];
 }
+
+/** Every channel of a faction, the officers' included (the daily trim). */
+export const allChannelsOf = (f: FactionId, chatCities: readonly string[]): string[] => channelsOf(f, chatCities, true);
 
 export function parseChannel(
   id: string,
-): { kind: 'party'; factionId: FactionId } | { kind: 'city'; factionId: FactionId; cityId: string } | null {
+):
+  | { kind: 'party'; factionId: FactionId }
+  | { kind: 'officers'; factionId: FactionId }
+  | { kind: 'city'; factionId: FactionId; cityId: string }
+  | null {
   const parts = id.split(':');
   const f = parts[1] as FactionId;
   if (!(FACTION_IDS as readonly string[]).includes(f)) return null;
   if (parts[0] === 'party' && parts.length === 2) return { kind: 'party', factionId: f };
+  if (parts[0] === 'officers' && parts.length === 2) return { kind: 'officers', factionId: f };
   if (parts[0] === 'city' && parts.length === 3 && /^[a-z-]+$/.test(parts[2]!))
     return { kind: 'city', factionId: f, cityId: parts[2]! };
   return null;

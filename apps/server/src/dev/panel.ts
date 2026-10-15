@@ -678,6 +678,11 @@ async function runAction(
     case 'secretaryBill':
     case 'deputies':
     case 'deputiesVote':
+    case 'residentsSign':
+    case 'chairBackers':
+    case 'chairVotes':
+    case 'nationVotes':
+    case 'chairPetitionSign':
     case 'lead': {
       const { me } = needCharacter();
       const { doc } = await loadCharacter(me, content, clock.now());

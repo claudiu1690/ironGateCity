@@ -49,7 +49,9 @@ test('a new Vanguard: best-stat welcome, notes, the wage, signed lines and the o
   await expect(gate.getByTestId('ticket-tags')).toContainText('First day in Duskwall · better odds');
   // The job is a wage: no shift ticket; take it (free, no Energy) and Take a job is done.
   await expect(sheet.getByTestId('job-duskwall-stores-hand')).toContainText(
-    /216 a day · paid (at|tomorrow) \d\d:\d\d/,
+    // The pay-day phrase depends on the time of day (*at 01:00*, *tomorrow 01:00*, *in 58 min* in the
+    // last hour): any of them, so the spec passes at every hour.
+    /216 a day · paid ((at|tomorrow) \d\d:\d\d|in \d+ min)/,
   );
   await sheet.getByRole('button', { name: 'Take the job' }).click();
   await expect(sheet.getByTestId('job-duskwall-stores-hand')).toContainText(

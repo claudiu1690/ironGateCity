@@ -5,6 +5,7 @@ import {
   COUNCIL,
   FACTION_IDS,
   TERM,
+  TERM_DAYS,
   councilDay,
   councilKey,
   dayKey,
@@ -130,7 +131,11 @@ export async function seatOffice(
     city = 'nation';
     key = office === 'chair' ? `chair:${c.factionId}:${term.index}` : `${office}:${term.index}`;
     fromDay = office === 'chair' ? today : term.fromDay;
-    toDay = office === 'chair' ? today + TERM.days : term.toDay;
+    // A Chair's term ends at the calendar's next handover (the next term day 14), as an elected one's.
+    toDay =
+      office === 'chair'
+        ? term.fromDay + TERM_DAYS.chair.countDay + (term.termDay < TERM_DAYS.chair.countDay ? 0 : TERM.days)
+        : term.toDay;
     if (office === 'deputy') {
       const base = 100 * FACTION_IDS.indexOf(c.factionId);
       const mine = await OfficeTerm.countDocuments({ councilKey: key, seat: { $gt: base, $lt: base + 100 } });

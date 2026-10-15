@@ -20,6 +20,10 @@ import { cx, formatClock } from '../format';
 
 const t = copy.together;
 
+/** A channel's chip: *Party*, *{city} branch* or (slice 7, Rank 4+) *Officers*. */
+const channelLabel = (c: { kind: 'party' | 'city' | 'officers'; name: string }): string =>
+  c.kind === 'party' ? t.chat.party : c.kind === 'officers' ? copy.nation.chair.officers : t.chat.branch(c.name);
+
 /** Screens §2.5: the counter shows from 240 of 280. */
 const CHAT_COUNTER_FROM = 240;
 
@@ -148,7 +152,7 @@ export function ChatPanel(props: ChatPanelProps) {
     enterSends = false,
   } = props;
   const current = channels.find((c) => c.id === channel);
-  const here = t.chat.header(hereNow, current ? (current.kind === 'party' ? t.chat.party : t.chat.branch(current.name)) : '');
+  const here = t.chat.header(hereNow, current ? channelLabel(current) : '');
   const scroller = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
   const [fresh, setFresh] = useState(false);
@@ -231,7 +235,7 @@ export function ChatPanel(props: ChatPanelProps) {
       >
         {channels.map((c) => (
           <Chip key={c.id} tab on={c.id === channel} onClick={() => onChannel(c.id)} testId="chat-channel" small>
-            {c.kind === 'party' ? t.chat.party : t.chat.branch(c.name)}
+            {channelLabel(c)}
           </Chip>
         ))}
       </div>

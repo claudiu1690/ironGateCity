@@ -2,7 +2,7 @@ import type { GameContent } from '@irongate/content';
 import { Bill, IssueModel, Nation, OfficeTerm } from '@irongate/db';
 import type { BillDoc, IssueDoc, NationDoc, OfficeTermDoc } from '@irongate/db';
 import { PRESIDENT, dayKey, termOf, weekKey } from '@irongate/rules';
-import type { PoliticalResult, PresidentPageView } from '@irongate/rules';
+import type { FactionId, PoliticalResult, PresidentPageView } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { GameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
@@ -30,6 +30,7 @@ export function address(deps: NationActDeps<{ issueDocId: string }>): Promise<Po
     if (!issue || issue.status !== 'live' || !content.city(issue.cityId)?.council)
       throw new GameError('NOT_AN_ISSUE', { issueDocId: deps.input.issueDocId }, 'BAD_REQUEST');
     const f = c.factionId;
+    const before = { ...issue.momentum };
     const inc = await IssueModel.updateOne(
       { _id: issue._id, status: 'live' },
       { $inc: { [`momentum.${f}`]: PRESIDENT.address } },
@@ -51,11 +52,15 @@ export function address(deps: NationActDeps<{ issueDocId: string }>): Promise<Po
       at: new Date(x.now),
     });
     const spec = content.issue(issue.issueId);
+    const after = { ...before, [f]: (before[f] ?? 0) + PRESIDENT.address } as Record<FactionId, number>;
     return nationResult(content, x, {
       act: 'address',
       idempotencyKey: deps.input.idempotencyKey,
       vars: { issueShort: spec?.short ?? issue.issueId },
-      knockOns: {},
+      // Phase C, lane Y: the Address's knock-on, as the Governor's (before → after on the Issue).
+      knockOns: {
+        issue: { name: spec?.name ?? issue.issueId, added: PRESIDENT.address, before, after },
+      },
       view: { kind: 'president', president: await presidentView(content, c._id, x.now, session) },
     });
   });

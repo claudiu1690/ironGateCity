@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
-import { Bill, Character, FactionState, Nation, OfficeTerm } from '@irongate/db';
-import type { BillDoc, CharacterDoc, FactionStateDoc, NationDoc, OfficeTermDoc } from '@irongate/db';
+import { Bill, Candidacy, Character, FactionState, Nation, OfficeTerm, Petition } from '@irongate/db';
+import type { BillDoc, CandidacyDoc, CharacterDoc, FactionStateDoc, NationDoc, OfficeTermDoc, PetitionDoc } from '@irongate/db';
 import { FACTION_IDS, chairPhase, dayKey, dayStart, nationalPhase, termOf } from '@irongate/rules';
 import type { FactionId } from '@irongate/rules';
 import { randomUUID } from 'node:crypto';
@@ -20,7 +20,21 @@ import type { DevNationStatus } from './types';
  * `/parliament`), then the panel's settle. The panel holds no rule.
  */
 
-export type NationDevAction = 'termDay' | 'office' | 'ladder' | 'secretaryBill' | 'deputies' | 'deputiesVote' | 'lead';
+export type NationDevAction =
+  | 'termDay'
+  | 'office'
+  | 'ladder'
+  | 'secretaryBill'
+  | 'deputies'
+  | 'deputiesVote'
+  | 'lead'
+  // Phase C, lane Y: lane 2's ballots and petitions as buttons (three test members each, through the
+  // real procedures, as `/api/test/ballots` and `/api/test/petition`).
+  | 'residentsSign'
+  | 'chairBackers'
+  | 'chairVotes'
+  | 'nationVotes'
+  | 'chairPetitionSign';
 
 export const NATION_DEV_ACTIONS: readonly NationDevAction[] = [
   'termDay',
@@ -30,12 +44,45 @@ export const NATION_DEV_ACTIONS: readonly NationDevAction[] = [
   'deputies',
   'deputiesVote',
   'lead',
+  'residentsSign',
+  'chairBackers',
+  'chairVotes',
+  'nationVotes',
+  'chairPetitionSign',
 ];
 
 const TERM_DAYS_OFFERED = [0, 9, 11, 14, 19, 21, 23, 27];
 
 const callerAs = (content: GameContent, c: CharacterDoc, now: () => number) =>
   createCaller({ user: { id: c.userId, name: c.name }, content, now } as never);
+
+/**
+ * Three new test members (Rank 3, the caller's copies: same town, same residence) each run `act`;
+ * the result counts the acts that went through and names the first refusal.
+ */
+async function asTestMembers(
+  content: GameContent,
+  c: CharacterDoc,
+  n: number,
+  now: number,
+  act: (m: CharacterDoc) => Promise<unknown>,
+): Promise<string> {
+  const made = await createTestMembers(content, c, { n, rank: 3 } as never, now);
+  let ok = 0;
+  let refused: string | null = null;
+  for (const m of made) {
+    const doc = await Character.findById(m.characterId).lean<CharacterDoc>();
+    if (!doc) continue;
+    try {
+      await act(doc);
+      ok += 1;
+    } catch (err) {
+      const e = err as { cause?: { reason?: string }; message?: string };
+      refused ??= e.cause?.reason ?? e.message ?? 'refused';
+    }
+  }
+  return `${ok} of ${made.length}${refused ? ` (refused: ${refused})` : ''}`;
+}
 
 /** One nation button; `moved` asks the panel to run the days for the new clock. */
 export async function nationAction(
@@ -109,6 +156,47 @@ export async function nationAction(
         }
       }
       return { did: `${n} test deputies voted ${vote === 'for' ? 'For' : 'Against'}`, moved: false };
+    }
+    case 'residentsSign': {
+      // *Three test residents sign*: Rank 3 copies of the caller (so residents of the same town) sign
+      // the open petition to dissolve its council.
+      const cityId = residenceCityId(c);
+      const p = await Petition.findOne({ kind: 'dissolve', cityId, status: 'open' }).lean<PetitionDoc>();
+      if (!p) throw new DevRefusal(409, `No petition is open in ${content.city(cityId)?.name ?? cityId}`);
+      const r = await asTestMembers(content, c, 3, now, (m) =>
+        callerAs(content, m, clock.now).petition.sign({ petitionId: String(p._id), idempotencyKey: randomUUID() }),
+      );
+      return { did: `Test residents sign: ${r}`, moved: false };
+    }
+    case 'chairBackers': {
+      const cand = await Candidacy.findOne({
+        electionId: `chair:${c.factionId}:${termOf(today).index}`,
+        characterId: c._id,
+        status: 'standing',
+      }).lean<CandidacyDoc>();
+      if (!cand) throw new DevRefusal(409, 'You are not standing for Chair');
+      const r = await asTestMembers(content, c, 3, now, (m) =>
+        callerAs(content, m, clock.now).chairElection.back({ candidacyId: cand._id.toHexString(), idempotencyKey: randomUUID() }),
+      );
+      return { did: `Test members back you for Chair: ${r}`, moved: false };
+    }
+    case 'chairVotes': {
+      const r = await asTestMembers(content, c, 3, now, (m) =>
+        callerAs(content, m, clock.now).chairElection.vote({ key: `p:${c._id.toHexString()}`, idempotencyKey: randomUUID() }),
+      );
+      return { did: `Test members vote for you as Chair: ${r}`, moved: false };
+    }
+    case 'nationVotes': {
+      const r = await asTestMembers(content, c, 3, now, (m) =>
+        callerAs(content, m, clock.now).nation.vote({ factionId: c.factionId, idempotencyKey: randomUUID() }),
+      );
+      return { did: `Test members vote for the ${content.faction(c.factionId).shortName}: ${r}`, moved: false };
+    }
+    case 'chairPetitionSign': {
+      const r = await asTestMembers(content, c, 3, now, (m) =>
+        callerAs(content, m, clock.now).confidence.sign({ idempotencyKey: randomUUID() }),
+      );
+      return { did: `Test members sign the petition on the Chair: ${r}`, moved: false };
     }
     case 'lead': {
       const control = Object.fromEntries(FACTION_IDS.map((f) => [f, f === c.factionId ? 40 : 30])) as Record<FactionId, number>;

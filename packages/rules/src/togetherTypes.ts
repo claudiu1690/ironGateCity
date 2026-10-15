@@ -318,7 +318,7 @@ export interface ChatPageView {
 }
 
 export interface ChatChannelsView {
-  channels: Array<{ id: string; kind: 'party' | 'city'; cityId: string | null; name: string; hereNow: number }>;
+  channels: Array<{ id: string; kind: 'party' | 'city' | 'officers'; cityId: string | null; name: string; hereNow: number }>;
   current: string;
 }
 
