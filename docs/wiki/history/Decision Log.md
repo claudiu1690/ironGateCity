@@ -4,7 +4,7 @@ title: Decision Log
 aliases: [Decisions, User decisions]
 tags: [decisions]
 status: built
-dates: 2026-09-29 to 2026-10-12
+dates: 2026-09-29 to 2026-10-15
 commits: []
 updated: 2026-10-15
 ---
@@ -117,6 +117,12 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 |---|---|---|---|---|
 | 15 Oct | **The journey trail is a dotted line with rounded bends**; the pin rides the same path | "Make it dotted, without sharp turns" | [[review/2026-10-15-review-6\|review-6 notes]] #3 | [[Travel and Journeys]] |
 | 15 Oct | Fix the nation map held sideways so every city comes fully into view, **keeping the locked map** with zoom-to-place | Only a sliver of Clearwater or Ashford showed on an iPhone SE | [[review/2026-10-15-review-6\|review-6 notes]] #1 | [[Quarters and the Map]], [[Travel and Journeys]] |
+
+## Slice 6 go-ahead (15 Oct)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 15 Oct | **The seven slice-6 defaults approved as written**: hands at Rank 1; the fixture resolves at the day's turn; no Iron from events; event Political Capital halves after the first of the day; visits from anywhere but rival ground; the Headline Story without a Case File until slice 8; chat with mute and report only (full moderation in slice 9). No number moves; the build starts | — | [[design/slice-6-together\|slice-6 design]] §19; GDD §0 (15 Oct); Appendix C #57, #59, #60, #89 | [[Campaign Events]], [[Chat and Presence]], [[Patronage and Favours]], [[Political Capital]], [[Slice 6 Together]] |
 
 ## Related
 

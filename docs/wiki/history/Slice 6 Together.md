@@ -2,18 +2,18 @@
 type: history
 title: Slice 6 Together
 aliases: [Slice 6, Together]
-tags: [slice, designed]
-status: designed
-dates: 2026-10-03 (designed); not built
+tags: [slice, building]
+status: building
+dates: 2026-10-03 (designed); 2026-10-15 (defaults approved, build started)
 commits: [b756c48, 8173e3e]
 gdd: ["§3.3", "§6.5", "§13.7", "§14.5", "§16.2", "§16.3", "§19.1", "§19.2"]
 adrs: ["0036", "0037", "0038", "0039", "0040", "0041", "0042"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Slice 6 Together
 
-**Status: designed only, not built.** Design and tech design were done on 3 Oct 2026, one slice ahead. The build waits on the user's go.
+**Status: building.** Design and tech design were done on 3 Oct 2026, one slice ahead. On 15 Oct 2026 the user approved the seven defaults of design §19 and phase A of the build started.
 
 ## Goal and playtest question
 
@@ -40,7 +40,7 @@ From [[IMPLEMENTATION_PLAN#Slice 6 — Together|the plan]]: Campaign Events (sch
 
 ## Decisions made
 
-- Seven **points for the user** were written with defaults (design §19): hands at Rank 1, the fixture at the day's turn, no Iron from events, Political Capital halving, visits from anywhere, the Headline Story without a Case File, chat with mute and report only. The review-4 guide (§7) asked the user to check them. No explicit answer is recorded.
+- **15 Oct 2026, the user: all seven points for the user approved as written** (design §19): hands at Rank 1, the fixture at the day's turn, no Iron from events, Political Capital halving after the first event of the day, visits from anywhere but rival ground, the Headline Story without a Case File until slice 8, chat with mute and report only (full moderation in slice 9). No number moved. Recorded in GDD §0 (15 Oct) and Appendix C #57, #59, #60, #89; [[Decision Log]].
 - Settled with the architect (3 Oct): rolls seeded per event by a secret seed; the Grand Rally's *Steward* roles renamed *Ushers*; three chat channels per faction.
 
 > [!warning] Drift
@@ -48,7 +48,7 @@ From [[IMPLEMENTATION_PLAN#Slice 6 — Together|the plan]]: Campaign Events (sch
 
 ## QA and leftovers
 
-Not built, so no QA. Open defaults are in [[Open Questions]] (Appendix C #57–#63, #89).
+Building; no QA yet. The approved defaults and the design's other slice-6 defaults (three starts a day, volunteers at half strength, presence hidden on rival ground: Appendix C #58, #62, #63) are watch items in [[Open Questions]].
 
 ## Commits
 

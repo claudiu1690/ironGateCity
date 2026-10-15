@@ -9,6 +9,14 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] update | Slice 6: the seven defaults approved
+
+The user approved all seven defaults of the slice-6 design (§19) as written; no number moves and
+the build is under way. Marked in the design doc, GDD §0 (15 Oct) and Appendix C #57, #59, #60,
+#89; updated [[Slice 6 Together]] (status: building), [[Decision Log]], [[Open Questions]]
+(rows S7–S9, C#57/#59/#60/#89, C#58/#62/#63). Not touched (another agent's build is in flight):
+[[index]] and [[overview]] still call slice 6 "designed only".
+
 ## [2026-10-15] build | Review 6
 
 Three fixes from the user's Design Review 3: the nation map held sideways (no 420 px floor), the

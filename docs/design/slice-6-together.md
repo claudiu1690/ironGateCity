@@ -534,13 +534,15 @@ Nothing else: the Faction tab is paper and type; presence and chat use the avata
 
 ## 19. Points for the user (each with the default this document takes)
 
-1. **A Rank 1 member may join an event as a hand** (5 Energy, no roll) while named roles stay at Rank 2 (§2.3). Default: **yes**; it is how the GDD's "first Campaign Event on day 1" is met. The alternative is Rank 2 for everything, which puts the first event on day 2.
-2. **The branch's daily fixture resolves at the City Day boundary** with the orders (§4), not at an evening clock time. Default: **the boundary**; no clock time for anyone, and one morning paper carries the orders and the event. The alternative, 20:00 UTC, would read as "tonight" to Europeans and as noon to the Pacific.
-3. **Events pay no Iron** (§2.7). Default: **none**; opinion, Party XP and Political Capital are the co-op prize and Iron already runs ahead of its sinks (`economy.md` §19.11). The alternative is the tier-2 Iron rate, which would make a rally the best-paid thing in the game.
-4. **Political Capital from events halves after the first event of the day** (§2.7). Default: **halve**; three full-rate events a day would pay 30–45 against the orders' 5 and reach the 1,000 cap in a month. The alternative is two events a day instead of three.
-5. **A visit is 3 Energy from anywhere but rival ground** (§9.2), not only from the same city. Default: **anywhere**; at low population a same-city rule would mean no visit ever happens. The alternative keeps the fiction stricter.
-6. **The Headline Story runs without a Case File in slice 6** and gains +50 % with one from slice 8 (§3.6). Default: **yes**; the Alliance needs its signature event in the slice that answers "do players feel part of a team".
-7. **Chat ships with mute and report only; the moderation policy and tools are slice 9** (§8). Default: **yes**, and chat can be hidden from the Me tab. The alternative is to hold chat to slice 9, which loses the slice's question.
+**Approved by the user, 15 Oct 2026: all seven defaults stand as written.** Nothing below moves; the build (phase A, from 15 Oct) follows them. GDD §0 (15 Oct 2026) and Appendix C #57, #59, #60 and #89 record it.
+
+1. **A Rank 1 member may join an event as a hand** (5 Energy, no roll) while named roles stay at Rank 2 (§2.3). Default: **yes**; it is how the GDD's "first Campaign Event on day 1" is met. The alternative is Rank 2 for everything, which puts the first event on day 2. *Approved 15 Oct 2026.*
+2. **The branch's daily fixture resolves at the City Day boundary** with the orders (§4), not at an evening clock time. Default: **the boundary**; no clock time for anyone, and one morning paper carries the orders and the event. The alternative, 20:00 UTC, would read as "tonight" to Europeans and as noon to the Pacific. *Approved 15 Oct 2026.*
+3. **Events pay no Iron** (§2.7). Default: **none**; opinion, Party XP and Political Capital are the co-op prize and Iron already runs ahead of its sinks (`economy.md` §19.11). The alternative is the tier-2 Iron rate, which would make a rally the best-paid thing in the game. *Approved 15 Oct 2026.*
+4. **Political Capital from events halves after the first event of the day** (§2.7). Default: **halve**; three full-rate events a day would pay 30–45 against the orders' 5 and reach the 1,000 cap in a month. The alternative is two events a day instead of three. *Approved 15 Oct 2026.*
+5. **A visit is 3 Energy from anywhere but rival ground** (§9.2), not only from the same city. Default: **anywhere**; at low population a same-city rule would mean no visit ever happens. The alternative keeps the fiction stricter. *Approved 15 Oct 2026.*
+6. **The Headline Story runs without a Case File in slice 6** and gains +50 % with one from slice 8 (§3.6). Default: **yes**; the Alliance needs its signature event in the slice that answers "do players feel part of a team". *Approved 15 Oct 2026.*
+7. **Chat ships with mute and report only; the moderation policy and tools are slice 9** (§8). Default: **yes**, and chat can be hidden from the Me tab. The alternative is to hold chat to slice 9, which loses the slice's question. *Approved 15 Oct 2026.*
 
 ---
 
