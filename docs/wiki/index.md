@@ -1,7 +1,7 @@
 ---
 type: overview
 title: Index
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Index — the wiki catalog
@@ -123,6 +123,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Review 4]] — 6–7 Oct (Notion Design Review 1), 25 notes: The Last Train In, the clock, the journey on the map, the Town Hall, the cells.
 - [[Review 5]] — 8–10 Oct (Notion Design Review 2): Coming home, the six-hour day, night patrols, the Unrest prize, treatment, What's here.
 - [[Voting Rework]] — 10–12 Oct: the town votes on a rule (three cards), seats by reputation plus backers, the capital follows the largest bloc.
+- [[Review 6]] — 15 Oct (Notion Design Review 3): the nation map held sideways, the city's map buttons in one row, the dotted journey trail.
 - [[Decision Log]] — About 55 user decisions, 29 Sep–12 Oct, in date order, with the reason, where recorded and the systems touched.
 
 ## Runbooks

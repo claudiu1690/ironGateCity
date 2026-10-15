@@ -6,7 +6,7 @@ tags: [decisions]
 status: built
 dates: 2026-09-29 to 2026-10-12
 commits: []
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Decision Log
@@ -111,7 +111,14 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 | 14 Oct | **Faction-only places** (Vanguard House gym, Underground Press, Alliance-only Press Club) are **built later**, after the MVP | — | [[Drift Report]] C4; GDD §16.1 | [[Iron Vanguard]], [[Red Collective]], [[Civic Alliance]] |
 | 14 Oct | **CLAUDE.md slimmed**: what the wiki covers (current state, stack details) became pointers; the rules every session needs stay | "If we don't need it because we have the brain, remove it" | project `CLAUDE.md` | — |
 
+## Review 6 (15 Oct)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 15 Oct | **The journey trail is a dotted line with rounded bends**; the pin rides the same path | "Make it dotted, without sharp turns" | [[review/2026-10-15-review-6\|review-6 notes]] #3 | [[Travel and Journeys]] |
+| 15 Oct | Fix the nation map held sideways so every city comes fully into view, **keeping the locked map** with zoom-to-place | Only a sliver of Clearwater or Ashford showed on an iPhone SE | [[review/2026-10-15-review-6\|review-6 notes]] #1 | [[Quarters and the Map]], [[Travel and Journeys]] |
+
 ## Related
 
 - [[Open Questions]] · [[Drift Report]]
-- Rounds: [[Review 1]] · [[Review 2]] · [[Review 3]] · [[Review 4]] · [[Review 5]] · [[Voting Rework]]
+- Rounds: [[Review 1]] · [[Review 2]] · [[Review 3]] · [[Review 4]] · [[Review 5]] · [[Voting Rework]] · [[Review 6]]

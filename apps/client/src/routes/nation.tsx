@@ -123,7 +123,7 @@ export function NationPage() {
         aria-haspopup="dialog"
         onClick={() => setListOpen(true)}
         className={cx(
-          'label-caps pointer-events-auto absolute z-10 flex min-h-11 min-w-11 cursor-pointer items-center gap-1.5 bg-paper px-3 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)] hover:bg-paper-2',
+          'label-caps pointer-events-auto flex min-h-11 min-w-11 cursor-pointer items-center gap-1.5 bg-paper px-3 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)] hover:bg-paper-2',
           className,
         )}
       >
@@ -138,7 +138,9 @@ export function NationPage() {
     );
 
   return (
-    <div className="relative flex h-full min-h-[420px]" data-testid="nation">
+    // Review 6 #1: held sideways on a short screen the map takes the room it has (as the city does); a
+    // 420 px floor ran it past the screen's bottom, so the southern cities sat out of sight.
+    <div className={cx('relative flex h-full', !side && 'min-h-[420px]')} data-testid="nation">
       <CityMap
         className="h-full min-w-0 flex-1"
         map={n.map}
@@ -167,14 +169,17 @@ export function NationPage() {
           <span className="label-caps text-[9.5px] text-muted">{copy.travel.citiesOfTheRepublic}</span>
           <span className="font-mono text-[12px]">{subtitle}</span>
         </div>
-        {!selected && (
-          <MapSwitch
-            active="nation"
-            cityHref={cityHref}
-            className={side ? 'top-2.5 right-[124px]' : 'bottom-3 left-2.5 sm:top-2.5 sm:right-[124px] sm:bottom-auto sm:left-auto'}
-          />
-        )}
-        {citiesButton(side ? 'top-2.5 right-2.5' : 'right-2.5 bottom-3 sm:top-2.5 sm:bottom-auto')}
+        {/* Review 6 #2: the map switch and *Cities* in one row with a gap, so they never overlap: at
+            the top right sideways and from 640 px, at the bottom's two ends on an upright phone. */}
+        <div
+          className={cx(
+            'pointer-events-none absolute z-10 flex flex-row-reverse items-start gap-2',
+            side ? 'top-2.5 right-2.5' : 'inset-x-2.5 bottom-3 justify-between sm:top-2.5 sm:bottom-auto sm:left-auto sm:justify-start',
+          )}
+        >
+          {citiesButton('')}
+          {!selected && <MapSwitch active="nation" cityHref={cityHref} />}
+        </div>
       </CityMap>
       {sheetCity && (
         <LocationSheet

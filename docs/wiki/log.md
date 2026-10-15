@@ -1,13 +1,19 @@
 ---
 type: overview
 title: Log
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Log
 
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
+
+## [2026-10-15] build | Review 6
+
+Three fixes from the user's Design Review 3: the nation map held sideways (no 420 px floor), the
+city's map buttons in one row, the dotted and smoothed journey trail. New [[Review 6]]; updated
+[[Travel and Journeys]], [[Quarters and the Map]], [[Open Questions]] (R6-1, R6-2), [[Decision Log]], [[index]].
 
 ## [2026-10-14] update | Drift cleanup
 

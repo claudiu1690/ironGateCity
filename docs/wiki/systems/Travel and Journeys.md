@@ -4,10 +4,10 @@ title: Travel and Journeys
 aliases: [Travel, Journeys, Journey, Train, Nation map, Journey cards, Journey events]
 tags: [travel, map, nation]
 status: partly built
-slice: "4; hostile deck in 5; journey on the map in review 4; card stays in review 5"
+slice: "4; hostile deck in 5; journey on the map in review 4; card stays in review 5; dotted trail and the nation map held sideways in review 6"
 gdd: ["§14.10"]
 adrs: ["0025", "0075"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Travel and Journeys
@@ -46,6 +46,12 @@ reward. Travel costs a ticket and time, **never Energy**.
 - **The journey on the map** (review 4): both cities in view, the route traced along the painted
   rails, *your pin* where the clock puts it. The card's moment `cardAt` is drawn at boarding, uniform
   in **0.20–0.80** of the trip; the server refuses an answer before it.
+- **The trail** (review 6): a row of round ink dots ringed in paper, the same size on screen at any
+  zoom. The client smooths each traced leg (`smoothRoute`, Chaikin corner cutting) so its bends are
+  rounded, and moves the pin along the same smoothed points, so the pin stays on the line. The server's
+  route and `cardAt` are unchanged.
+- **Held sideways** (review 6): the nation screen takes the screen's height (no 420 px floor), so
+  every city can be dragged fully into view on a short phone.
 - **The card stays until a row is tapped** (review 5): no swipe-away. The ways out are a choice or
   the explicit *Sleep through it* (ordinary deck) / *Let it pass* (hostile deck). The arrival modal's
   *Continue* waits for one. Being away never loses the card.
@@ -66,7 +72,7 @@ reward. Travel costs a ticket and time, **never Energy**.
 **Code:**
 - Rules: `packages/rules/src/travel.ts` (`legMinutes`, `destinationState`, `fare`,
   `drawJourneyCard`, `drawHostileCard`, `resolveJourneyChoice`, `journeyProgress`, `journeyLegs`,
-  `trainAt`, `drawCardAt`, `CARD_AT`) · constant `TRAVEL`
+  `trainAt`, `smoothRoute`, `ROUTE_SMOOTHING_ROUNDS`, `drawCardAt`, `CARD_AT`) · constant `TRAVEL`
 - Server: `apps/server/src/services/travelService.ts` (`nationView`, `board`, `journeyView`,
   `choose`, `close`, `landingOf`) · `apps/server/src/services/journeyArrival.ts`
   (`settleArrival`, `ensureArrived`) · job `apps/server/src/jobs/journeyArrive.ts` · router
@@ -76,13 +82,15 @@ reward. Travel costs a ticket and time, **never Energy**.
   `packages/content/src/data/journeyEvents.ts` (7 ordinary cards, 4 hostile cards, the patrol card)
 - Client: `apps/client/src/routes/nation.tsx`, `apps/client/src/routes/journey.tsx`,
   `apps/client/src/features/travel/useBoard.ts` · `packages/ui/src/components/Travel.tsx`,
-  `TravelPin.tsx`
+  `TravelPin.tsx` · the trail's dots in `packages/ui/src/components/CityMap.tsx` (`ROUTE_DOT`,
+  `ROUTE_DOT_RING`, `ROUTE_DOT_GAP`) · e2e `apps/client/e2e/review6.spec.ts`
 
 ## Status
 
 - **Built:** slice 4 (third class, nation map, lazy arrival, tidy job, seven cards); slice 5
   (rival home cities, hostile deck, deportation); review 4 (route on the map, `cardAt`, Town Hall
-  landing); review 5 (the card stays until answered).
+  landing); review 5 (the card stays until answered); review 6 (the dotted, smoothed trail; the
+  nation map held sideways).
 - **Not built:** first class, the car, the night train; checkpoints into Vanguard-controlled
   cities; snow and the Open Borders law on journey time; Clearwater's service (slice 7); carriage
   chat and fellow travellers' presence (slice 6); the *leave by* time for Campaign Events (slice 6).
@@ -94,11 +102,14 @@ reward. Travel costs a ticket and time, **never Energy**.
 - The pin is a plain moving pin, not a train (user, 7 Oct 2026).
 - *You can close the game* removed from every screen (review 4).
 - The card cannot be put aside silently (review 5, Appendix C #98).
+- The trail is dotted, without sharp turns (user, 15 Oct 2026, [[Review 6]]).
 
 ## Open questions / drift
 
 - A curious player can see in the network response *when* a card will fire (ADR 0075,
   accepted and listed as a question).
+- The journey screen held sideways keeps a 420 px floor, so its map runs below a short screen
+  (review 6 leftover R6-1, [[Open Questions]]).
 
 ## Related
 

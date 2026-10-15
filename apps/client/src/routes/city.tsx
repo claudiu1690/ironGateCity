@@ -610,7 +610,7 @@ export function CityPage() {
         aria-haspopup="dialog"
         onClick={() => (overview ? setDistrictsOpen(true) : setPlacesOpen(true))}
         className={cx(
-          'label-caps pointer-events-auto absolute z-10 flex min-h-11 min-w-11 cursor-pointer items-center gap-1.5 bg-paper px-3 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)] hover:bg-paper-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
+          'label-caps pointer-events-auto flex min-h-11 min-w-11 cursor-pointer items-center gap-1.5 bg-paper px-3 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)] hover:bg-paper-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper',
           className,
         )}
       >
@@ -1224,8 +1224,19 @@ export function CityPage() {
       >
         {/* Sideways and from 640 px: the Places button in the map's top right corner (the plate is
             beside the map or in the top left one; the dock is at the bottom). */}
-        {placesButton(side ? 'top-2.5 right-2.5' : 'top-2.5 right-2.5 hidden sm:flex')}
-        {mapSwitch(side ? 'top-2.5 right-[124px]' : 'top-2.5 right-[124px] hidden sm:flex')}
+        {/* Review 6 #2: the two in one row with a gap, so *What's here* never runs over *Nation*
+            (it used to be placed a fixed 124 px from the edge, less than the button's width). */}
+        {!loc && (
+          <div
+            className={cx(
+              'pointer-events-none absolute top-2.5 right-2.5 z-10 flex-row-reverse items-start gap-2',
+              side ? 'flex' : 'hidden sm:flex',
+            )}
+          >
+            {placesButton('')}
+            {mapSwitch('')}
+          </div>
+        )}
         {!side && (
           <>
             {/* The city plate (the map's fitted view keeps every pin clear of it) */}
@@ -1275,8 +1286,8 @@ export function CityPage() {
             >
               {/* Phones held upright: the Places button just above the orders, at the right; the map
                   switch at the left. */}
-              {placesButton('right-0 bottom-full mb-2')}
-              {mapSwitch('left-0 bottom-full mb-2')}
+              {placesButton('absolute z-10 right-0 bottom-full mb-2')}
+              {mapSwitch('absolute z-10 left-0 bottom-full mb-2')}
               {tramBar('-mx-3 -mt-2 mb-1')}
               {/* QA slice 4 m7 (and M1 on a small phone): in the capital, a phone under 700 px tall
                   folds the orders to one line, so the map keeps a usable band between the plate and

@@ -1,0 +1,20 @@
+# Review 6: what changed in the build (15 Oct 2026)
+
+Your three notes from Design Review 3 (Notion), one by one: what the game does now, and where to look. Everything below is in the local build on branch `slice-0`. Start it with `pnpm dev:mem` and open <http://localhost:5173>. The dev panel (the dashed **Dev** button) gives Level 10, which opens the nation map and the train.
+
+| # | Your note | What the build does now | Where to see it |
+|---|---|---|---|
+| 1 | On a small phone held sideways I can't scroll the nation map to see Clearwater or Ashford | **Every city can be dragged fully into view**, its pin and its label, clear of the caption and the buttons. The cause was the page, not the drag: the nation screen kept a 420 px minimum height, so on a short screen held sideways the map ran past the bottom of the screen, and the drag stopped with the southern cities in that hidden strip. The map now takes the room the screen has, as the city screen already did. The map stays locked, with the same zoom and limits. Checked at 667 × 375, 568 × 320, 844 × 390 and 932 × 430, and upright at 375 × 667 and 390 × 844, where nothing changed. | Level 10, the Map tab, **Nation**, phone held sideways. Pictures: `review-6/before-nation-667x375-clearwater.png` → `review-6/after-nation-667x375-clearwater.png` (and `…-ashford.png`, `…-at-rest.png`) |
+| 2 | Inside the city, *What's here* slightly overlaps *Nation* | **The two buttons share one row with an 8 px gap**, so they can never overlap whatever the width of their words. Before, *City · Nation* was placed a fixed 124 px from the edge, less than the width of *What's here*, so it overlapped by 11 px. Upright phones keep the two at the two ends of the bar over the orders. The nation map's *City · Nation* and *Cities* buttons got the same row. Both stay 44 px tall. Checked at 14 sizes from 320 × 568 to 1440 × 900, both ways round. | Any city map, sideways or from 640 px wide. Pictures: `review-6/before-city-667x375-buttons.png` → `review-6/after-city-667x375-buttons.png` |
+| 3 | The trail between cities: dotted, without sharp turns | **The trail is a row of round ink dots, each ringed in paper**, 9 px apart on screen at any zoom, so it reads on the day and the night map. **Its bends are rounded**: the traced rail line is smoothed (corner cutting, four rounds), so the sharpest bend went from 89° to 14°, and the line stays within about 40 px of the painted rails on the 9,216 px map (about 3 px on a phone). **Your pin rides the same smoothed line**, so it never drifts off it. | Board a train (Level 10), for example Coalport to Ashford through the capital. Pictures: `review-6/before-journey-667x375-trail.png` → `review-6/after-journey-667x375-trail.png` |
+
+## Left as it was
+
+- **The journey screen held sideways** keeps its 420 px minimum height, so on a short phone held sideways the bottom of its map still runs below the screen, as the nation map's did. Removing it as well left the map too short under the journey's plate for the route and your pin (a QA check from review 4 failed), so it needs its own layout: the plate beside the map, as on a desktop. It is listed under Open Questions in the wiki.
+- **From 640 to about 700 px wide** (a small tablet upright), the city's 420 px corner card and the two map buttons are close at the top of the map. The checks measured the two buttons against each other, not against the card; worth a look on such a screen.
+
+## Checks run
+
+- `pnpm art:check && pnpm turbo run lint typecheck build`: 14 of 14 tasks pass.
+- New Playwright spec `apps/client/e2e/review6.spec.ts` (project `review6`): 8 of 8 pass (the four sideways sizes and two upright ones for #1, 14 sizes for #2, and the trail for #3).
+- Affected projects: `landscape`, `small-phone`, `travel` 11 of 11 pass; `qa-review4`, `home-map` 34 passed and 1 failed with the journey screen changed too (its pin ran under a shorter map at 667 × 375); with that change undone, the journey group of `qa-review4` passes 7 of 7; `phone` `map.spec` and `places.spec` 11 of 11 pass.

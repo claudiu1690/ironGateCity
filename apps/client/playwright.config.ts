@@ -47,6 +47,7 @@ export default defineConfig({
         // The voting rework: its own serial project, last (it moves the shared clock by whole cycles).
         /(^|[\\/])voting\.spec\.ts$/,
         /qa\.voting(\.screens|\.irongate)?\.spec\.ts/,
+        /(^|[\\/])review6\.spec\.ts$/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -190,6 +191,14 @@ export default defineConfig({
       testMatch: /qa\.voting(\.screens|\.irongate)?\.spec\.ts/,
       dependencies: ['voting'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    // Review 6 (docs/review/2026-10-15-review-6.md): the nation map held sideways, the city's two map
+    // buttons, the dotted journey trail. Each test sets its own size; last, it moves the shared clock.
+    {
+      name: 'review6',
+      testMatch: /(^|[\\/])review6\.spec\.ts$/,
+      dependencies: ['qa-voting'],
+      use: { ...devices['Pixel 7'] },
     },
   ],
   webServer: [

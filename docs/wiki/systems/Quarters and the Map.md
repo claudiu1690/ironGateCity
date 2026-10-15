@@ -4,10 +4,10 @@ title: Quarters and the Map
 aliases: [Quarters, Quarter, City map, Map, Tiled maps, Places list, What's here, Town Hall, Map pins, Survey]
 tags: [map, city, art]
 status: built
-slice: "maps v3 (1–2 Oct); 4 (districts, nation map); 5 (second quarters); review 3 (free zoom); review 4 (one map, tiling, Town Hall); review 5 (What's here)"
+slice: "maps v3 (1–2 Oct); 4 (districts, nation map); 5 (second quarters); review 3 (free zoom); review 4 (one map, tiling, Town Hall); review 5 (What's here); review 6 (map buttons in one row; nation map held sideways)"
 gdd: ["§14.13", "§14.9"]
 adrs: ["0024", "0035", "0076", "0077"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Quarters and the Map
@@ -48,6 +48,10 @@ gate, and the whole city is one map with locked places shown as greyed pins.
 - **What's here** (review 5): the plate's button opens a sheet with the city's two Issues, the
   missions you can start today, the orders here, then the places (grouped by quarter in a home city,
   the one place a quarter's name is read).
+- **The map's buttons** (review 6): *What's here* and *City · Nation* (on the nation map *Cities* and
+  *City · Nation*) share one row with an 8 px gap, at the top right sideways and from 640 px, at the
+  two ends of the orders bar on an upright phone; they never overlap. Held sideways on a short screen
+  the city and nation maps take the screen's height, with no 420 px floor.
 - **Tiles:** AVIF q55, 512 px Deep Zoom tiles cut by `pnpm art:tiles` into a git-ignored cache,
   listed in the committed manifest `tiles.json` (12 pictures: five cities and the nation, day and
   night). Dev serves them through a Vite middleware; committed 1024/2048 px stills are the fallback
@@ -79,7 +83,8 @@ gate, and the whole city is one map with locked places shown as greyed pins.
   `apps/server/src/trpc/routers/council.ts` (`council.hall`)
 - Client: `packages/ui/src/components/CityMap.tsx` (`panLimit`), `TileLayer.tsx`,
   `CloudLayer.tsx`, `Places.tsx`, `TownHall.tsx` · `apps/client/src/routes/city.tsx` ·
-  `apps/client/src/features/council/TownHall.tsx` · dev viewer
+  `apps/client/src/features/council/TownHall.tsx` · `apps/client/src/components/MapSwitch.tsx` ·
+  `apps/client/src/routes/nation.tsx` · dev viewer
   `apps/client/src/features/dev/MapViewer.tsx` (`/dev/maps`, with the route trace mode)
 - Scripts: `scripts/art/tiles.ts` (`pnpm art:tiles`), `scripts/art/build.ts` (`pnpm art:check`)
 
@@ -87,7 +92,8 @@ gate, and the whole city is one map with locked places shown as greyed pins.
 
 - **Built:** maps v3 pictures and AVIF tiles (1–2 Oct 2026); districts and the nation map
   (slice 4); second quarters (slice 5); free zoom (review 3); one map for home cities, the tiling,
-  the Town Hall (review 4); *What's here* (review 5).
+  the Town Hall (review 4); *What's here* (review 5); the buttons' row and the nation map held
+  sideways ([[Review 6]]).
 - **Not built:** R2 tile hosting (deferred to the hosting step); third quarters' places (later
   content); Clearwater's map in play (slice 7; its tiles already exist).
 

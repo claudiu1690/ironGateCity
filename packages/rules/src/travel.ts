@@ -322,6 +322,33 @@ function along(points: readonly Pt[], f: number, aspect: number): { x: number; y
   return { x: last[0], y: last[1], angle: 0 };
 }
 
+/** Review 6: how many times `smoothRoute` cuts the corners (each round about halves every bend). */
+export const ROUTE_SMOOTHING_ROUNDS = 4;
+
+/**
+ * Review 6 (the user, 15 Oct 2026: the trail without sharp turns): a leg's points with their bends
+ * rounded off by Chaikin's corner cutting. Each round replaces every corner with two points a quarter
+ * of the way along the segments on either side, so the line stays within the traced rails' bends and
+ * never turns sharply; its two ends stay where they are (the cities' pins). The client draws the
+ * trail and moves the pin (`trainAt`) along the same smoothed points, so the pin never leaves the line.
+ */
+export function smoothRoute(points: readonly Pt[], rounds = ROUTE_SMOOTHING_ROUNDS): Pt[] {
+  let pts: Pt[] = points.map((p) => [p[0], p[1]] as const);
+  for (let r = 0; r < rounds && pts.length > 2; r++) {
+    const last = pts.length - 2;
+    const next: Pt[] = [pts[0]!];
+    for (let i = 0; i <= last; i++) {
+      const a = pts[i]!;
+      const b = pts[i + 1]!;
+      if (i > 0) next.push([0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]]);
+      if (i < last) next.push([0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]]);
+    }
+    next.push(pts[pts.length - 1]!);
+    pts = next;
+  }
+  return pts;
+}
+
 /**
  * The traveller at `progress` (0–1 of the journey's time; ADR 0075 §2): each leg takes its minutes'
  * share of the time, and within a leg the pin moves by length. `aspect` is the picture's width over

@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { journeyProgress, trainAt } from '@irongate/rules';
+import { journeyProgress, smoothRoute, trainAt } from '@irongate/rules';
 import type { FactionId, JourneyCardResult, JourneyView, RouteLeg } from '@irongate/rules';
 import {
   CityMap,
@@ -282,8 +282,9 @@ export function JourneyPage() {
 
   // The map: the route, its frame, the pins and the traveller (all from the server's route).
   const route = data?.route;
+  // Review 6: the trail's bends rounded off (`smoothRoute`); the pin rides the same points.
   const legs = useMemo<RouteLeg[]>(
-    () => (route ? route.legs.map((l) => ({ points: l.points, minutes: l.toT - l.fromT })) : []),
+    () => (route ? route.legs.map((l) => ({ points: smoothRoute(l.points), minutes: l.toT - l.fromT })) : []),
     [route],
   );
   const factionId = character?.factionId;
@@ -368,7 +369,7 @@ export function JourneyPage() {
         onSelect={() => undefined}
         restFocus={ends}
         restPoints={allPoints.map(([x, y]) => ({ x, y }))}
-        paths={route.legs.map((l, i) => ({ id: `leg-${i}`, points: l.points }))}
+        paths={legs.map((l, i) => ({ id: `leg-${i}`, points: l.points }))}
         traveller={traveller}
         onUserMove={setMoved}
         recentre={recentre}

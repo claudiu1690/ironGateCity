@@ -147,8 +147,9 @@ export interface CityMapProps {
   panLimit?: MapRect;
   /**
    * Review 4 (tech design §6.5, ADR 0075): lines drawn on the picture, in fractions of it (a
-   * journey's route): a 2 px ink line over a 4 px paper halo, holding its width at any zoom. `trace`
-   * draws the dev viewer's line being traced (petrol).
+   * journey's route), holding their size at any zoom. Review 6: a route is a row of round ink dots
+   * ringed in paper (smooth its points first: `smoothRoute`); `trace` draws the dev viewer's line
+   * being traced (a solid petrol line).
    */
   paths?: ReadonlyArray<{ id: string; points: ReadonlyArray<readonly [number, number]>; tone?: 'route' | 'trace' }>;
   /** Review 4: the traveller's pin on the nation map, ticking on its own (`TravelPin`). */
@@ -1028,6 +1029,10 @@ export function restPanLimits(
 /** An SVG path of a polygon in fractions of the picture (the layer's 0..1 view box). */
 const polyPath = (pts: ReadonlyArray<readonly [number, number]>) =>
   `M${pts.map(([x, y]) => `${x} ${y}`).join('L')}Z`;
+/** Review 6 #3: the route's dots on screen: an ink dot this wide, its paper ring, and from one dot to the next. */
+export const ROUTE_DOT = 4;
+export const ROUTE_DOT_RING = 1.5;
+export const ROUTE_DOT_GAP = 9;
 /** Review 4: an open SVG path through points (a route). */
 const linePath = (pts: ReadonlyArray<readonly [number, number]>) => `M${pts.map(([x, y]) => `${x} ${y}`).join('L')}`;
 
@@ -2046,8 +2051,10 @@ export function CityMap({
             {/* The user's district lock (3 Oct 2026): the districts' shapes on the overview, and in a
                 district its edge with the picture dimmed outside it. In the layer, so they move with the
                 art; the stroke keeps about 2 px on screen at any zoom. */}
-            {/* Review 4 (tech design §6.5): a journey's route, a 2 px ink line over a 4 px paper halo, in
-                the layer so it moves with the art; the dev viewer's trace in petrol. */}
+            {/* Review 4 (tech design §6.5): a journey's route, in the layer so it moves with the art; the
+                dev viewer's trace a 2 px petrol line over a paper halo. Review 6 #3 (the user: a dotted
+                trail): the route is a row of round ink dots, each ringed in paper so it reads on the day
+                and the night art alike, ROUTE_DOT_GAP px apart on screen at any zoom. */}
             {paths && paths.length > 0 && view && (
               <svg
                 className="pointer-events-none absolute inset-0 z-50 size-full overflow-visible"
@@ -2062,7 +2069,8 @@ export function CityMap({
                     fill="none"
                     style={{ stroke: 'var(--color-paper)' }}
                     strokeOpacity={0.9}
-                    strokeWidth={6 / view.scale}
+                    strokeWidth={(p.tone === 'trace' ? 6 : ROUTE_DOT + 2 * ROUTE_DOT_RING) / view.scale}
+                    strokeDasharray={p.tone === 'trace' ? undefined : `0 ${ROUTE_DOT_GAP / view.scale}`}
                     vectorEffect="non-scaling-stroke"
                     strokeLinejoin="round"
                     strokeLinecap="round"
@@ -2074,7 +2082,8 @@ export function CityMap({
                     d={linePath(p.points)}
                     fill="none"
                     style={{ stroke: p.tone === 'trace' ? 'var(--color-petrol)' : 'var(--color-ink)' }}
-                    strokeWidth={2 / view.scale}
+                    strokeWidth={(p.tone === 'trace' ? 2 : ROUTE_DOT) / view.scale}
+                    strokeDasharray={p.tone === 'trace' ? undefined : `0 ${ROUTE_DOT_GAP / view.scale}`}
                     vectorEffect="non-scaling-stroke"
                     strokeLinejoin="round"
                     strokeLinecap="round"

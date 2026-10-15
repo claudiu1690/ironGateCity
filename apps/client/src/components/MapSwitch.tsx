@@ -6,7 +6,8 @@ import type { MouseEvent } from 'react';
 /**
  * Slice 4 (tech design §12.1, screens §2.1): the Map tab's *City | Nation* control, two segments in
  * Oswald caps, 44 px tall. It floats on the map (a block its first view keeps the pins clear of)
- * rather than in a bar of its own, so the map keeps its height on a phone.
+ * rather than in a bar of its own, so the map keeps its height on a phone. Review 6 #2: it is placed by
+ * its parent (a row it shares with *What's here* or *Cities*, with a gap), or by `className`.
  */
 export function MapSwitch({
   active,
@@ -35,7 +36,7 @@ export function MapSwitch({
       data-map-overlay="switch"
       data-testid="map-switch"
       className={cx(
-        'pointer-events-auto absolute z-10 flex shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)]',
+        'pointer-events-auto flex shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)]',
         className,
       )}
     >

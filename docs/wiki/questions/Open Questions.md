@@ -3,7 +3,7 @@ type: question
 title: Open Questions
 aliases: [Open questions, Leftovers]
 tags: [questions]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Open Questions
@@ -86,6 +86,8 @@ Each of these is a chosen number or rule with a named lever if the playtest disa
 | R5-L | The Unrest prize's **Legacy +2** waits for slice 8 | [[review/review-5-build-notes\|review-5 build notes]] | Waits on slice 8; now a row in GDD §17.3 (14 Oct 2026) |
 | KO | **Knock-ons** for the slice 6–9 tech docs recorded in later rounds | [[tech/review-4\|tech/review-4]] §20, [[tech/review-5\|tech/review-5]] §18, [[tech/voting-rework\|tech/voting-rework]] §17 | **Applied 14 Oct 2026** to [[tech/slice-6\|slice-6]]–[[tech/slice-9\|slice-9]] (migrations renumbered 010–013) |
 | T-1 | The older **Vitest suites are stale** since the 8 Oct no-unit-test rule; planned tooling (`pnpm check`, an `e2e:only` helper, parallel Playwright) is not built | [[qa/review-5-report\|review-5 QA]] "Rules of the round"; session notes | Open |
+| R6-1 | **The journey screen held sideways** keeps a 420 px floor, so its map runs below a short phone's screen (as the nation map's did). Dropping it left the map too short under the plate for the route and the pin (a review-4 QA check failed); it needs the plate beside the map | [[review/review-6-build-notes\|review-6 build notes]] | Open |
+| R6-2 | From 640 to about 700 px wide the city's 420 px corner card and the two map buttons are close at the top of the map; not measured | [[review/review-6-build-notes\|review-6 build notes]] | Open; check |
 | H-1 | **Hosting is deferred** to the end: map tiles on a CDN (R2), the art size cap, first-view data on phones | [[review/review-4-guide\|review-4 guide]] §6; [[adr/0072-production-topology-for-the-hosting-step\|ADR 0072]] | Deferred by the user |
 
 ## D. Raised while building the wiki (14 Oct 2026)
