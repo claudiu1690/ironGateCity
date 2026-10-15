@@ -9,6 +9,13 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] update | Slice 6 wording rulings (the Doorstep Drive, swing precision, phase B defaults)
+
+The designer's phase C rulings in design §22 #9–12: *Canvass Drive* / *Canvasser* renamed **Doorstep
+Drive** / **Door-knocker** in content, the GDD (§0, §16.3) and the slice-6 and slice-7 design docs;
+swings print to two decimals trimmed (GDD §14.2); the two phase-B defaults confirmed. Slice 6 marked
+built, in QA. Updated [[Campaign Events]], [[Slice 6 Together]], [[Decision Log]], [[overview]], [[index]].
+
 ## [2026-10-15] build | Slice 6 phase C, lane A (the Faction tab, events, presence, e2e, report)
 
 The `/faction` shell, Orders and Events, the event page in every state, the call sheet, the event

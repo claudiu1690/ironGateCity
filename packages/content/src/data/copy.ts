@@ -2614,7 +2614,7 @@ export const copy = {
     /** The paper's *Events* row group and the desk's *Signed up* row (screens §8; tech §11.1). */
     paper: {
       kicker: 'Events',
-      /** *Today: the branch's canvass drive at Foundry Row · settles at midnight · 2 of 4 roles*. */
+      /** *Today: the branch's doorstep drive at Foundry Row · settles at midnight · 2 of 4 roles*. */
       row: (event: string, venue: string, time: string, filled: number, roles: number) =>
         `Today: the branch's ${event} at ${venue} · settles at ${time} · ${filled} of ${roles} roles`,
       yours: (role: string) => `you're the ${role}`,

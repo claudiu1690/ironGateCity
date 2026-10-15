@@ -81,7 +81,7 @@ A `TramBar`-style strip of four parts under the Faction header: **Orders · Line
 
 ### 5.3 Events
 
-The slice-6 board for every city (not only the one the Chair stands in), with **Call an event** on each city's group (the Chair calls from anywhere; the call sheet's roles show *no role · called by the Chair*), and under the groups **`FixturePicker`**: three rows (home, Irongate with a district chip, Clearwater), each the fixture's event as a chip row (*Canvass Drive · Rally · Poster Night · {signature}*) with the rotation's choice marked *the rotation*; one tap sets tomorrow's.
+The slice-6 board for every city (not only the one the Chair stands in), with **Call an event** on each city's group (the Chair calls from anywhere; the call sheet's roles show *no role · called by the Chair*), and under the groups **`FixturePicker`**: three rows (home, Irongate with a district chip, Clearwater), each the fixture's event as a chip row (*Doorstep Drive · Rally · Poster Night · {signature}*) with the rotation's choice marked *the rotation*; one tap sets tomorrow's.
 
 ### 5.4 Members
 

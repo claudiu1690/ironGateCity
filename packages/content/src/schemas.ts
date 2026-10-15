@@ -1082,7 +1082,7 @@ export const Issue = z.strictObject({
 export const EventRole = z.strictObject({
   /** 'speaker', 'canvasser-1', 'usher-2' (roles that share a name have their own ids). */
   id: z.string().regex(/^[a-z]+(?:-[a-z0-9]+)*$/),
-  /** "Canvasser" (×3 share a name, not an id). */
+  /** "Door-knocker" (×3 share a name, not an id). */
   name: z.string().min(1).max(30),
   /** One stat, two averaged, or ['best']. */
   stats: CheckStatsSchema,
@@ -1157,7 +1157,7 @@ export const Content = z.strictObject({
   // Slice 6.
   campaignEventTypes: z.array(CampaignEventType).length(6),
   eventVenues: z.array(EventVenue),
-  /** The secretary's fixture: Canvass Drive · Rally · Poster Night (design §4). */
+  /** The secretary's fixture: Doorstep Drive · Rally · Poster Night (design §4). */
   fixtureRotation: z.tuple([Id, Id, Id]),
 });
 

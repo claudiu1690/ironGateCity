@@ -113,7 +113,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Slice 3 The First Vote]] — Built 30 Sep: the five-day council calendar, councils, NPC fill, ordinances, morale; its voting later reworked.
 - [[Slice 4 The Battleground]] — Built 3 Oct: trains, Irongate's five districts, residence, Issues, the ledger and District Hero, maps v3.
 - [[Slice 5 Risk]] — Built 5 Oct: 22 missions, Heat and record, the cells, the infirmary, run-ins, rival ground.
-- [[Slice 6 Together]] — Designed only: Campaign Events, the Faction tab, chat and presence, bail and visit favours.
+- [[Slice 6 Together]] — Built 15 Oct, in QA: Campaign Events (the Doorstep Drive, Rally, Poster Night, three signature events), the Faction tab, chat and presence, bail and visit favours.
 - [[Slice 7 The Nation]] — Designed only: terms, Governor/Chair/deputies/President, laws, Clearwater, National Control, petitions.
 - [[Slice 8 A Life in the City]] — Designed only: the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy, the season; bodyguards and bar services added 14 Oct, to be designed.
 - [[Slice 9 Launch Readiness]] — Designed only: telemetry, the balance pass, anti-abuse, moderation, polish; ends locally, with hosting and the betas after it.

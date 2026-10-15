@@ -1,10 +1,10 @@
 ---
 type: system
 title: Campaign Events
-aliases: [Campaign Event, Events, Rally, Canvass Drive, Poster Night, Grand Rally, General Strike, Headline Story, Town Hall event, The daily fixture, Volunteers, Hands]
+aliases: [Campaign Event, Events, Rally, Doorstep Drive, Poster Night, Grand Rally, General Strike, Headline Story, Town Hall event, The daily fixture, Volunteers, Hands]
 tags: [co-op, events, politics]
-status: partly built
-slice: "6 (phase A built: rules, content, art, db; server and screens to come); Town Hall and the Chair's events 7; Case File on the Headline Story 8"
+status: built
+slice: "6 (built 15 Oct 2026, in QA); Town Hall and the Chair's events 7; Case File on the Headline Story 8"
 gdd: ["§15.4", "§16.3", "§14.2", "§14.4"]
 adrs: ["0036", "0037", "0049"]
 updated: 2026-10-15
@@ -14,7 +14,7 @@ updated: 2026-10-15
 
 ## In one paragraph
 
-A campaign event is **co-op politics**: a short, scheduled event (a rally, a canvass drive, a
+A campaign event is **co-op politics**: a short, scheduled event (a rally, a doorstep drive, a
 poster night) that faction members fill together, each taking a role. **Signing up is the
 commitment**: the role's Energy is spent at the tap, and nothing afterwards is required. At the
 start time the event resolves on its own, empty roles go to volunteers run by the game, and every
@@ -23,7 +23,7 @@ at a set time. Designed for slice 6, **not built**.
 
 ## How it works
 
-- **The events** ([[GDD#16.3 Campaign Events (new)|GDD §16.3]]): **Rally**, **Canvass Drive** (the newcomer's event), **Poster Night** (slice 6), and one signature event per faction: **Grand Rally** (Vanguard; +5 Heat on rival-held ground), **General Strike** (Collective; double Issue momentum), **Headline Story** (Alliance; drawn from the leading rival; a Case File can be attached from slice 8 for +50 %). **Town Hall** (slice 7) adds signatures to an open dissolve petition ([[Recall and Removal]]). Roles, base swings and difficulties: GDD §16.3's table.
+- **The events** ([[GDD#16.3 Campaign Events (new)|GDD §16.3]]): **Rally**, **Doorstep Drive** (the newcomer's event), **Poster Night** (slice 6), and one signature event per faction: **Grand Rally** (Vanguard; +5 Heat on rival-held ground), **General Strike** (Collective; double Issue momentum), **Headline Story** (Alliance; drawn from the leading rival; a Case File can be attached from slice 8 for +50 %). **Town Hall** (slice 7) adds signatures to an open dissolve petition ([[Recall and Removal]]). Roles, base swings and difficulties: GDD §16.3's table.
 - **Callers:** Rank 3+, standing in an open city, not held or in transit, **never on rival ground**. The caller chooses the event; the venue is fixed in content. Start **in 1 · 3 · 6 · 12 hours**.
 - **The daily fixture:** at every City Day boundary the secretary calls one event per faction in its home city and one in Irongate, open all day and resolved at the next boundary ([[GDD#15.4 Faction Chair and Party Directives|GDD §15.4]]).
 - **Limits:** per faction per city (per district in the capital): **one upcoming member-called event, two member-called starts a day, three starts with the fixture**. Per member: **three open sign-ups** at once.
@@ -68,7 +68,7 @@ at a set time. Designed for slice 6, **not built**.
 
 ## Open questions / drift
 
-- **For the designer:** *Canvass Drive* and *Canvasser* (content's event and role names) are caught by the review-2 vocabulary guard (*canvass* banned for players), while CLAUDE.md rule 2 lists *canvass* as a campaign term. The review-4 e2e sweeps allow the two names for now (phase C Deviations).
+- **Settled 15 Oct 2026** (design §22 #9–12): the newcomer's event is the **Doorstep Drive** with three **Door-knockers** (was *Canvass Drive* / *Canvasser*, which §1.5 bans for players; ids unchanged). Swings print to two decimals trimmed, shares to one (GDD §14.2). An event's swing does not write the morale record, and *event-city* prints only for a reader who was on no event yesterday. Left for the developer: trim `togetherEdition.ts`'s `swingText`; drop the *canvass drive* allowance from the review-4 sweeps.
 
 > [!note] Inference
 > With the voting rework, "the council rule for the event's type" in the swing means the ordinance chosen by the town's vote (e.g. *Street Permits* for a propaganda-matched event).

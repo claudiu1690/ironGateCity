@@ -79,7 +79,7 @@ factors:       { issuePct: 0 | 50, battleground: boolean, groundswellPct, ordina
 seed:          a secret seed stored on the event (ADR 0036), one named stream per role
 ```
 
-**Per named role held by a member:** one §8.4 check, `chance = 50 + 4 × (stat − difficulty) + 3 × standingLevel + (battleground ? 5 : 0)`, 5–95, difficulty **by the event type, +2 in the capital** (§3; the tier-1 pattern of 8 → 10). One roll per role from the seed: at or below the chance **Success (1)**, up to 20 above **Partial (0.5)**, more than 20 above **Failure (0)**. A role on *best* takes the holder's highest of STR, INT and AGI (the Canvass Drive's canvassers: the coordinator gives you the doors you are fit for). CHA roles use worn CHA.
+**Per named role held by a member:** one §8.4 check, `chance = 50 + 4 × (stat − difficulty) + 3 × standingLevel + (battleground ? 5 : 0)`, 5–95, difficulty **by the event type, +2 in the capital** (§3; the tier-1 pattern of 8 → 10). One roll per role from the seed: at or below the chance **Success (1)**, up to 20 above **Partial (0.5)**, more than 20 above **Failure (0)**. A role on *best* takes the holder's highest of STR, INT and AGI (the Doorstep Drive's door-knockers: the coordinator gives you the doors you are fit for). CHA roles use worn CHA.
 
 **Per empty named role:** `volunteerScore`.
 
@@ -123,7 +123,7 @@ Rounding as §5.5: each line to the nearest whole, halves up, base and bonus sep
 1. **A result modal per participant** (`ResultModal kind="event"`, §screens 5), shown on their **next read** after the start (as the orders-complete modal waits), one per event, in the order resolved; it covers the map and says what happened, how every role went, the receipt and the knock-ons.
 2. **The Morning Paper** (§10): *In Print* for every participant; a city line for the branch; the next fixture under *Events*.
 3. **The board** keeps the last **ten** resolved events per faction per city with their outcome, roster and swing (§screens 2.2).
-4. **The chat**: one system line in the city channel (*The branch's canvass drive on Foundry Row: Success. Opinion +0.95.*).
+4. **The chat**: one system line in the city channel (*The branch's doorstep drive on Foundry Row: Success. Opinion +0.95.*).
 
 ### 2.9 Timers and the clock
 
@@ -153,16 +153,16 @@ Venue kinds `square`, `market`, `factory-gate`, `ministry` (a forecourt or steps
 - **Mixed** — *Half the square* — The speaker was good and the sound was bad. Half the square listened; the other half bought chestnuts. The organiser says next time bring a cart to stand on.
 - **Fiasco** — *Twenty people and a heckler* — Twenty people, a heckler who knew his business and a platform that gave at the first stamp. The press wrote it up, which was the worst of it. Nobody mentions it at the branch.
 
-### 3.2 Canvass Drive (every faction) · `event.canvass-drive`
+### 3.2 Doorstep Drive (every faction) · `event.canvass-drive`
 
-Venue kinds `street` · **base swing 1.0** · difficulty **10 · 12** · `canvass` · 40 Energy. **The newcomer's event:** the canvassers check the best stat, so every build has good odds on it from day 2, and it is the fixture most often (§4).
+Venue kinds `street` · **base swing 1.0** · difficulty **10 · 12** · `canvass` · 40 Energy. **The newcomer's event:** the door-knockers check the best stat, so every build has good odds on it from day 2, and it is the fixture most often (§4).
 
 *Crews on a street with a list and a coordinator who knows which doors to knock. Low risk, steady work, and the best first event for a new member.*
 
 | Role | Stat · Energy | Hint |
 |---|---|---|
 | Coordinator | INT · 10 | The list, the street and who takes which doors. |
-| Canvasser (×3) | best · 10 | A run of doors and a flyer for each that opens. You get the doors you're fit for. |
+| Door-knocker (×3) | best · 10 | A run of doors and a flyer for each that opens. You get the doors you're fit for. |
 
 - **Triumph** — *Every door on the street* — Four crews, one street, every door knocked before the lamps came on. The coordinator's list came back with more ticks than crosses and three names for the branch. The street will remember who came.
 - **Success** — *Most of the doors* — The crews worked the street in the light and finished in the dusk. Most doors opened; a few shut again, politely. The list is a good list.
@@ -244,7 +244,7 @@ Venue kinds `press` · **base swing 2.0 against the target** · difficulty **14 
 
 One venue per event per city; in the capital, one per district for the three common events and one district for each signature event: **30 rows** (12 in the home cities, 15 common in the capital's five districts, 3 signature in the capital; an earlier "27" was a miscount, corrected 15 Oct 2026). Ids are the content's. The developer checks each venue's kind against the event's list.
 
-| City · district | Rally | Canvass Drive | Poster Night | Signature |
+| City · district | Rally | Doorstep Drive | Poster Night | Signature |
 |---|---|---|---|---|
 | **Coalport** | `coalport.market-row` (the market cross) | `coalport.terraces` (Foundry Row) | `coalport.quays` (Harbour Quays) | General Strike: `coalport.mill-gate` |
 | **Duskwall** | `duskwall.garrison-gate` (the Fortress Gate steps) | `duskwall.rampart-row` | `duskwall.goods-yard` | Grand Rally: `duskwall.quartermaster-market` (the Customs Market under the walls) |
@@ -264,11 +264,11 @@ The second quarters (slice 5) are not venues in slice 6 (an event's venue should
 Until a Faction Chair exists (slice 7) and whenever no member has called one, **the secretary calls one event a day**, so that a branch of one has an event to join on day 1 and the board is never empty:
 
 - **Where:** for each faction, **its home city** and **Irongate** (the capital branch; signed by the same secretary). Two fixtures a day per faction.
-- **Which:** by the day key, `(dayKey + factionIndex) mod 3` over **Canvass Drive · Rally · Poster Night** (the signature events are the members'); in the capital the district is `dayKey mod 5` over the five, at that district's venue; **all three factions' capital fixtures share the day's district** (meant: the three branches meet on the same ground, which is the fight; a faction offset is the lever if it reads as a stalemate).
+- **Which:** by the day key, `(dayKey + factionIndex) mod 3` over **Doorstep Drive · Rally · Poster Night** (the signature events are the members'); in the capital the district is `dayKey mod 5` over the five, at that district's venue; **all three factions' capital fixtures share the day's district** (meant: the three branches meet on the same ground, which is the fight; a faction offset is the lever if it reads as a stalemate).
 - **When:** posted at the **City Day boundary** and **resolved at the next boundary** by the city-day job, so the fixture needs no clock time, is open all day, and its result is in the morning paper with the orders. Withdrawal until 23:00 UTC (an hour before).
 - **Who calls:** the secretary (*called by Secretary Holm*); a member may still call their own events alongside it (§2.2's limits).
 - **It is one of the day's three starts** in that city, and counts as its posting day's event: for *first event today* (§2.7) it is that day's **last**, since it starts at midnight; *first* is by start time among a member's committed sign-ups of the day.
-- **The welcome day:** the Events row of the welcome edition points a new member at it (*Today: the branch's canvass drive on Foundry Row · join as a hand · 5 Energy*), which is the §5.2 "first Campaign Event on day 1".
+- **The welcome day:** the Events row of the welcome edition points a new member at it (*Today: the branch's doorstep drive on Foundry Row · join as a hand · 5 Energy*), which is the §5.2 "first Campaign Event on day 1".
 
 ---
 
@@ -339,7 +339,7 @@ Avatar, name, faction and rank title, Level, where they live, member since, hero
 | **A message** | Plain text, **at most 280 characters**, no links rendered (a URL is printed as text), no images, no formatting. Author: avatar, name, rank title; the time in the local clock |
 | **History** | The last **200 messages or 7 days per channel**, whichever is less, kept; **50 loaded at a time**, older on scroll |
 | **Rate limits** | One message every **3 seconds**; **30 in ten minutes**; an identical repeat within a minute is refused (*Said that already*) |
-| **System lines** | In the branch channel of the place (the residence city's branch when the place has no branch of the faction, as on rival ground), from the server, in the paper's voice: an event called (*{name} has called a rally at Market Row for 19:40 · 1 of 4 roles*), the result (*The branch's canvass drive on Foundry Row: Success · opinion +0.95*), a mate taken in (*{name} has been taken in at Harbour Police · bail 150 Iron* with **Post bail**), admitted (*{name} is in the infirmary · 18 minutes* with **Visit · 3 Energy**), a seat won, a hero named, a nudge (§9.3). System lines carry the buttons; nothing else in chat is tappable but names |
+| **System lines** | In the branch channel of the place (the residence city's branch when the place has no branch of the faction, as on rival ground), from the server, in the paper's voice: an event called (*{name} has called a rally at Market Row for 19:40 · 1 of 4 roles*), the result (*The branch's doorstep drive on Foundry Row: Success · opinion +0.95*), a mate taken in (*{name} has been taken in at Harbour Police · bail 150 Iron* with **Post bail**), admitted (*{name} is in the infirmary · 18 minutes* with **Visit · 3 Energy**), a seat won, a hero named, a nudge (§9.3). System lines carry the buttons; nothing else in chat is tappable but names |
 | **Transport** | WebSockets (the plan): live lines while the tab is open; otherwise the history on open. **Nothing depends on being connected** (a result lands in the modal and the paper whether or not the chat was open) |
 | **Moderation now** | **Mute** a member (one tap on the profile sheet; stored on the character; hides their lines for you); **Report** a message (one tap; writes a `chatReports` document with the message and the twenty lines around it; nothing automatic); the sign-up name rule; the length and rate limits above. The chat's one promise to the user is that it can be switched off: *Chat* can be hidden from the Me tab |
 | **Slice 9** | Moderator roles and tools, timeouts and bans, word filters, the audit of reports, appeals, the chat-moderation policy itself (Appendix C #7, still open) |
@@ -380,7 +380,7 @@ One tap on a member's row or profile while **you are signed up to an open event 
 
 ## 10. The Morning Paper (GDD §3.3)
 
-**A new section, Events**, under Party orders: the fixture and any open event of the faction in the residence city, one row each (*Today: the branch's canvass drive on Foundry Row · settles at midnight · 2 of 4 roles · you're the Coordinator* / *· join*), a tap opening the event; live at read. **In Print** gains the event results, bail posted and visits. **Templates**, the Clarion in full; the Sentinel, Gazette and Herald with their own decks where the voice changes. New conditions: `eventOpenToday` (live), `eventResolvedYesterday { tookPart: boolean, outcome }`, `eventCalledOffYesterday`, `bailPostedForYesterday`, `bailPostedByYesterday`, `visitedYesterday`.
+**A new section, Events**, under Party orders: the fixture and any open event of the faction in the residence city, one row each (*Today: the branch's doorstep drive on Foundry Row · settles at midnight · 2 of 4 roles · you're the Coordinator* / *· join*), a tap opening the event; live at read. **In Print** gains the event results, bail posted and visits. **Templates**, the Clarion in full; the Sentinel, Gazette and Herald with their own decks where the voice changes. New conditions: `eventOpenToday` (live), `eventResolvedYesterday { tookPart: boolean, outcome }`, `eventCalledOffYesterday`, `bailPostedForYesterday`, `bailPostedByYesterday`, `visitedYesterday`.
 
 **The Coalport Clarion** (`hl.`):
 
@@ -397,7 +397,7 @@ One tap on a member's row or profile while **you are signed up to an open event 
 | `hl.bail-posted-by` | personal 2 | the reader posted bail yesterday | {name} Stands Bail for {prisoner} | {iron} Iron at the desk of {place}, and {prisoner} out before the duty officer finished the page. +10 Party XP. |
 | `hl.visited` | personal 2 | the reader was visited yesterday | Visitors for {name} on the Ward | {visitors} came by with grapes and the paper. Health up and five minutes off the stay for each of them. |
 
-`{event}` is the event's name in lower case in running text (*canvass drive*, *rally*, *poster night*, *general strike*, *grand rally*, *headline story*); `{outcome}` the stamp word; `{swing}` signed to two decimals; `{time}` the start in the player's clock (*midnight* for the fixture); `{visitors}` a list of names.
+`{event}` is the event's name in lower case in running text (*doorstep drive*, *rally*, *poster night*, *general strike*, *grand rally*, *headline story*); `{outcome}` the stamp word; `{swing}` signed to two decimals; `{time}` the start in the player's clock (*midnight* for the fixture); `{visitors}` a list of names.
 
 **The Duskwall Sentinel** (`hl.v.`), decks: *Called by {caller}, settles at {time}. {open} of {roles} roles open. Beacon House expects the square filled; the Faction tab has the list.* · *A triumph. Opinion in Duskwall moved {swing} for the Vanguard; {pc} Political Capital each. Organiser Stahl: "Noted. Again."* · *Opinion moved {swing} for the Vanguard. {members} members took a role; {pc} Political Capital each. The committee has the names.* · *Some roles came off and some did not. Opinion moved {swing}; {pc} Political Capital. The committee expects a fuller square.* · *It did not come off. Nothing moved; {pc} Political Capital for attendance. The Sentinel records it.* · *{members} members took part and opinion moved {swing}. Today's event is below. Attendance is expected.* · *Nobody signed up by the start. Nothing happened and nothing was spent. The committee suggests the chat.* · *Out of the cells at {place} on {payer}'s Iron ({iron}). The duty officer noted who paid. Beacon House has noted it too.* · *{iron} Iron at the desk of {place}. +10 Party XP. The movement looks after its own, in order.* · *{visitors} came by with the paper and something from the market. Health up, five minutes off each.* Headlines as the Clarion's with *the Movement* for *the Branch* and *Beacon House* for *the Union Hall*.
 
@@ -425,9 +425,9 @@ One tap on a member's row or profile while **you are signed up to an open event 
 
 ### 12.1 Day 1: a hand at the fixture (Rank 1)
 
-1. **The welcome edition**'s Events row: *Today: the branch's canvass drive on Foundry Row · join as a hand · 5 Energy*. Tap.
-2. **The event page:** the blurb, four roles (*Coordinator · open · Campaigners and above* dimmed for a Recruit; three *Canvasser* rows the same), *Hands · 0 of 4 · any Rank · 5 Energy*, the line *You need not be here: the result waits for you.* One tap: **Join as a hand · 5 Energy**. The order line: *Order carried out · +20 Party XP. Two remain. — P.H.* (if the event order is in the day's three; on the welcome day it is not).
-3. **The next morning:** the result modal on the first read: *Most of the doors*, Success, the roster (three volunteers and the member's name under *Hands*), the receipt (XP +25, Party XP +4, Political Capital +10, Opinion +0.25 for the Collective in Coalport · your share +0.25, with volunteers scoring half the roster). Continue. The Clarion: *The Branch's canvass drive Comes Off at Foundry Row*.
+1. **The welcome edition**'s Events row: *Today: the branch's doorstep drive on Foundry Row · join as a hand · 5 Energy*. Tap.
+2. **The event page:** the blurb, four roles (*Coordinator · open · Campaigners and above* dimmed for a Recruit; three *Door-knocker* rows the same), *Hands · 0 of 4 · any Rank · 5 Energy*, the line *You need not be here: the result waits for you.* One tap: **Join as a hand · 5 Energy**. The order line: *Order carried out · +20 Party XP. Two remain. — P.H.* (if the event order is in the day's three; on the welcome day it is not).
+3. **The next morning:** the result modal on the first read: *Most of the doors*, Success, the roster (three volunteers and the member's name under *Hands*), the receipt (XP +25, Party XP +4, Political Capital +10, Opinion +0.25 for the Collective in Coalport · your share +0.25, with volunteers scoring half the roster). Continue. The Clarion: *The Branch's doorstep drive Comes Off at Foundry Row*.
 
 ### 12.2 Day 2–3: a named role (Rank 2)
 
@@ -435,7 +435,7 @@ The Faction tab: *Events · Today: the branch's rally at Market Row · 1 of 4 ro
 
 ### 12.3 Day 10: calling one (Rank 3)
 
-*Call an event* on the board: (1) the list, *Rally · Market Row · 45 Energy of roles* / *Canvass Drive · Foundry Row* / *Poster Night · Harbour Quays* / *General Strike · the Mill Gate*; tap *Rally*. (2) The sheet: four time chips (*in 1 hour · 15:40* …), the four role rows; tap *in 6 hours* and *Speaker*. (3) **Call it · Speaker · 15 Energy**. The chat gets the line; the Members tab's rows gain *Ask {name} to join the rally*; three taps nudge three mates. At 21:40 the server rolls it; the four modals wait; the Clarion prints *{name} and the Branch Carry Market Row* if it was a Triumph.
+*Call an event* on the board: (1) the list, *Rally · Market Row · 45 Energy of roles* / *Doorstep Drive · Foundry Row* / *Poster Night · Harbour Quays* / *General Strike · the Mill Gate*; tap *Rally*. (2) The sheet: four time chips (*in 1 hour · 15:40* …), the four role rows; tap *in 6 hours* and *Speaker*. (3) **Call it · Speaker · 15 Energy**. The chat gets the line; the Members tab's rows gain *Ask {name} to join the rally*; three taps nudge three mates. At 21:40 the server rolls it; the four modals wait; the Clarion prints *{name} and the Branch Carry Market Row* if it was a Triumph.
 
 ### 12.4 A mate in the cells
 
@@ -486,7 +486,7 @@ The chat: *Jan Sorel has been taken in at Harbour Police · bail 150 Iron · **P
 | §18.2, §18.3 | Events pay no Iron in the MVP; *Bail posted for a faction mate* as a sink (the prisoner's figure) |
 | §19.1 | Visits pinned: 3 Energy, from anywhere but rival ground, +10 Health and five minutes off, once per visitor per stay, three count, +10 Party XP |
 | §19.2 | Bail posted pinned: the prisoner's figure, from anywhere, once, +10 Party XP, release at once |
-| §25 | Campaign Events at launch: Rally, Canvass Drive, Poster Night and the three signature events; Town Hall at +60 days |
+| §25 | Campaign Events at launch: Rally, Doorstep Drive, Poster Night and the three signature events; Town Hall at +60 days |
 | Appendix C | New **#57** (hands at Rank 1), **#58** (three starts a city a day as the scale lever), **#59** (Political Capital halving after the first event), **#60** (the fixture at the boundary, not a clock time), **#89** (visits from anywhere; renumbered 4 Oct 2026 from a duplicate #61), **#62** (volunteers at half strength make a lone member's fixture a Success), **#63** (presence invisible on rival ground); **#7** stays open for the chat-moderation policy (slice 9) |
 
 Companion edit: `docs/economy.md` §20.
@@ -519,7 +519,7 @@ Every string above was read against `content-policy-review.md` §7. The Grand Ra
 
 ## 18. Art needed (noir lithograph, `mvp/` style; checked against the folder first)
 
-**Already there and used by this slice:** `square.png` (the Rally: a speaker on a crate before a crowd; the result art and the board card), `street.png` (the Canvass Drive: a canvasser at a terrace door), `news-strike.png` (the General Strike: a speaker at a factory gate with blank placards; 2,048 × 1,360, catalogued at its own size), `newsroom.png` (the Headline Story), `union-hq.png`, `vanguard-office.png`, `alliance-hq.png` (the Faction tab's header per faction), `jail-cell.png` and `hospital.png` (the favours' modals), the six avatars (chat and the members list), `holm.png`, `stahl.png`, `grey.png` (the fixture's caller), `sergeant.png` (catalogued as `portrait.duty-officer`, slice 5's word for the civic police's desk), `nurse.png`. Missing:
+**Already there and used by this slice:** `square.png` (the Rally: a speaker on a crate before a crowd; the result art and the board card), `street.png` (the Doorstep Drive: a canvasser at a terrace door), `news-strike.png` (the General Strike: a speaker at a factory gate with blank placards; 2,048 × 1,360, catalogued at its own size), `newsroom.png` (the Headline Story), `union-hq.png`, `vanguard-office.png`, `alliance-hq.png` (the Faction tab's header per faction), `jail-cell.png` and `hospital.png` (the favours' modals), the six avatars (chat and the members list), `holm.png`, `stahl.png`, `grey.png` (the fixture's caller), `sergeant.png` (catalogued as `portrait.duty-officer`, slice 5's word for the civic police's desk), `nurse.png`. Missing:
 
 | # | Asset id | What it is | Format |
 |---|---|---|---|
@@ -590,13 +590,20 @@ The architect's defaults are accepted except two (Q6, Q17); Q13 is confirmed as 
 Written into `packages/content` while phase B (the server) was built in parallel. Decisions, each the GDD's or this document's rule restated for the build:
 
 1. **The venues are 30 rows, not 27** (§3.7): 12 home, 15 common in the capital, 3 signature in the capital. `docs/tech/slice-6.md` §1, §4.4 and the T5 row still say 27 and should read 30 (the architect's document); the wiki's *Campaign Events* page carries the same note.
-2. **"Opinion up to about +x" is the Triumph ceiling at a full roster**: `opinionUpTo = base × 1.5 × the day's lines`, one decimal (tech §6.2), so a Rally reads *+2.3*, a Canvass Drive *+1.5*, a Poster Night *+1.2*, the three signature events *+3.0*. §2.5's example read *+1.5* because it quoted the base; corrected. The developer changes nothing. Four hands can lift the real swing past the figure (the ×1.25 fill cap), which *about* covers.
+2. **"Opinion up to about +x" is the Triumph ceiling at a full roster**: `opinionUpTo = base × 1.5 × the day's lines`, one decimal (tech §6.2), so a Rally reads *+2.3*, a Doorstep Drive *+1.5*, a Poster Night *+1.2*, the three signature events *+3.0*. §2.5's example read *+1.5* because it quoted the base; corrected. The developer changes nothing. Four hands can lift the real swing past the figure (the ×1.25 fill cap), which *about* covers.
 3. **The two scenes' alt texts** were checked against the pictures and corrected in `data/art.ts`: the poster crew's sheets are *rolled on a handcart* (not stacked under the lamp), the fence's posters show only abstract shapes, a man in a hat keeps watch under the lamp; the Grand Rally's crowd holds *blank placards* and the fortress sits on its hill above the square. Both within 160 characters. Content policy holds: no flag, symbol, torch, armband or text anywhere in either.
 4. **Headlines** (§10): forty, in `data/headlines.ts` (the Clarion, the Sentinel, the Gazette) and `data/heraldHeadlines.ts` (the Herald), built from one table of conditions, groups and priorities (`eventPaper`). Two headlines changed for a title-case start: the city line is *The Branch's {event} at {venue}: {outcome}* (the Movement's / the Rooms' / the {faction}'s), and the called-off line *Called Off: the {event} at {venue}*. *Roster* left the Clarion's Mixed deck and the Gazette's (*More of the branch on it next time*; *counts the names*), as tech §12.5 asks. In Print, marked by id on the server: `event-triumph`, `-success`, `-mixed`, `-fiasco`, `bail-posted-for`, `visited`.
 5. **Copy** is one block, `copy.together`, with these families: `tabs`, `header`, `fixtureKicker`, `ordersOffCells`, `band`, `board`, `card`, `event`, `modal` (string templates on the server's paths: `call`, `signUp`, `calledOff`, `bailPosted`, `visit` with `bodyGrapes` for a fourth visit, `releasedBail`, and `hand`), `knock`, `withdraw`, `call`, `result`, `hereNow`, `members`, `profile`, `scoreboard`, `chat` (with `limits` and Me's `me` switch), `system` (the chat lines, the nudge in both forms, the buttons), `favours`, `held`, `paper`, `errors`, `help`. A withdrawal has its own small modal (*Withdrawn · You're no longer the {role}*), which §2.4's one tap implied and nothing had written.
 6. **Vocabulary:** *front page* joins both guards' `front` allow-lists; **Picket Captain** (the General Strike's role, a union picket's captain, no rank) joins the slice-2 guard's allow-list, since that guard bans *captains?* and §16 Q11 had not checked the word. No new string says *patrol* (the pending night stop reads *Answer the stop first*), *roster*, *resolve*, *schedule*, *presence* or *ledger*.
-7. **The paper's row says *at***: *Today: the branch's canvass drive at Foundry Row*, one preposition for every venue (§4, §10 and §12.1 wrote *on* for a street).
+7. **The paper's row says *at***: *Today: the branch's doorstep drive at Foundry Row*, one preposition for every venue (§4, §10 and §12.1 wrote *on* for a street).
 8. **For the developer:** the six event conditions and `EVENT_PLACEHOLDERS` are defined in `packages/content/src/slice6.ts` with the loader's checks (the papers' ten names, the placeholders, event conditions never mixed with others); the content schema accepts them as input while its output type stays the rules' `HeadlineCondition` through one documented cast, which becomes a no-op once `EventCondition` is added to the rules' `HeadlineCondition` (tech §4.1). `event-today` is live and must be selected at read (the rules' `isPoliticalTemplate` does not know it); `{time}` is a time token like `{until}`.
+
+**Phase C rulings (15 Oct 2026; the developer's and the e2e sweeps' questions, tech *Phase C, lane A* Deviations):**
+
+9. **The Doorstep Drive, with three Door-knockers** (was *Canvass Drive* · *Canvasser*). §1.5 bans *canvass* for players and review 2 already renamed the Alliance's Rank 2 *Canvasser* to *Campaigner* (GDD Appendix C #37); an event name is read more often than a rank title, so the exception is not made official. The running name is *doorstep drive* (*Today: the branch's doorstep drive at Foundry Row*); the Coordinator, the hint and the blurb are unchanged; the ids `event.canvass-drive` and `canvasser-1..3` stay (ids are never read). Changed in `data/events.ts`, GDD §16.3 and §0, this document and the slice-7 documents. **Developer:** no e2e asserts the old name (`events.spec` uses ids and the Rally); remove the *canvass drive · canvassers* allowance from `review4.spec.ts` and `qa.review4.spec.ts`'s sweeps so the guard is whole again. The tech spec's and QA screenshots' mentions are the architect's and QA's to tidy.
+10. **A swing prints to two decimals, trailing zeros trimmed; a share to one.** The event result's *+0.83 for the Collective in Coalport · your share +0.42* is right: it is a swing, the same quantity the action modal prints to three decimals trimmed (GDD §14.2's build note) and the board's rows print with `formatSwing`. One decimal would make a hand's quarter of a point on a four-way split read *+0.1* or *+0.0*. Shares (*70.1 → 70.9 %*) stay at one decimal. GDD §14.2's precision line now says so. **Developer:** the paper's row (`togetherEdition.ts`'s `swingText`, `toFixed(2)` untrimmed) should trim like `formatSwing`, so *+1.00* reads *+1* and *+0.80* *+0.8*; one line. Nothing else changes.
+11. **An event's swing does not write the morale record** (phase B default (a), **confirmed**). The meter moves at resolution; a threshold crossed is recorded by the day's drift or the next action in the city (ADR 0022), which is at most a day's delay on a record no screen prints yet. Revisit only if a playtest shows a missing headline.
+12. **`event-city` prints only when the reader took part in no event yesterday** (phase B default (b), **confirmed**). A participant already gets their own In Print line (*event-triumph* … *-fiasco*); two event lines in one paper would read as padding. The paper's *Events* row still lists today's events for everyone.
 
 ---
 

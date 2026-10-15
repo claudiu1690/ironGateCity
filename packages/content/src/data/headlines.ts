@@ -416,7 +416,7 @@ export const riskHeadlines: HeadlineInput[] = [
  * papers; only the texts differ. `event-today` is live (the first open event of the faction in the
  * residence city); the rest are stored from the settlement's facts. In Print, marked by id on the
  * server (`EVENT_IN_PRINT_NAMES`): the reader's own result, bail posted for them, their visitors.
- * `{event}` is the event's running name (*canvass drive*), `{outcome}` the stamp word, `{swing}`
+ * `{event}` is the event's running name (*doorstep drive*), `{outcome}` the stamp word, `{swing}`
  * signed to two decimals, `{time}` the start in the player's clock (*midnight* for the fixture).
  */
 type EventName =

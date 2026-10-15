@@ -124,6 +124,14 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 |---|---|---|---|---|
 | 15 Oct | **The seven slice-6 defaults approved as written**: hands at Rank 1; the fixture resolves at the day's turn; no Iron from events; event Political Capital halves after the first of the day; visits from anywhere but rival ground; the Headline Story without a Case File until slice 8; chat with mute and report only (full moderation in slice 9). No number moves; the build starts | — | [[design/slice-6-together\|slice-6 design]] §19; GDD §0 (15 Oct); Appendix C #57, #59, #60, #89 | [[Campaign Events]], [[Chat and Presence]], [[Patronage and Favours]], [[Political Capital]], [[Slice 6 Together]] |
 
+## Slice 6 wording rulings (15 Oct, the designer; the user's review-2 rule applied)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 15 Oct | **The Doorstep Drive with three Door-knockers** replaces *Canvass Drive* / *Canvasser*; ids unchanged; the e2e sweeps' allowance goes | §1.5 bans *canvass* for players; review 2's *Canvasser* → *Campaigner* is the precedent | [[design/slice-6-together\|slice-6 design]] §22 #9; GDD §0 (15 Oct), §16.3 | [[Campaign Events]], [[Slice 6 Together]] |
+| 15 Oct | **A swing prints to two decimals trimmed (+0.83, +0.8, +1); a share to one decimal.** The event result stays; the paper's row trims | A hand's quarter point on a four-way split must still read | [[design/slice-6-together\|slice-6 design]] §22 #10; GDD §14.2 | [[Campaign Events]], [[Influence and Opinion]] |
+| 15 Oct | **Phase B's two defaults confirmed:** an event's swing does not write the morale record; *event-city* prints only for a reader on no event yesterday | At most a day's delay on an unprinted record; no two event lines in one paper | [[design/slice-6-together\|slice-6 design]] §22 #11–12 | [[Campaign Events]], [[The Morning Paper]] |
+
 ## Related
 
 - [[Open Questions]] · [[Drift Report]]

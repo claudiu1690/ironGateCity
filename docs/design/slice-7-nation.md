@@ -106,7 +106,7 @@ Until a Chair exists the secretary's rotation sets the orders (§13.7). A Chair 
 ### 4.4 Events and the fixtures
 
 - The Chair may **call an event in any open city from anywhere** (the §16.3 limits apply per city: one upcoming member-called event, two member-called starts a day), taking no role (the Chair need not be there; the call reads *called by the Chair, {name}*).
-- The Chair sets **tomorrow's fixture** for each of the faction's branches (home, the capital, Clearwater): the event type (Canvass Drive · Rally · Poster Night · the signature event) and, in the capital, the district; default the slice-6 rotation. The fixture still resolves at the boundary (Appendix C #60's second fixture at the Chair's hour is not built: a Chair who wants an evening event calls one).
+- The Chair sets **tomorrow's fixture** for each of the faction's branches (home, the capital, Clearwater): the event type (Doorstep Drive · Rally · Poster Night · the signature event) and, in the capital, the district; default the slice-6 rotation. The fixture still resolves at the boundary (Appendix C #60's second fixture at the Chair's hour is not built: a Chair who wants an evening event calls one).
 - **The Officers channel** (`officers:{faction}`): a fourth chat chip for Rank 4 and above, the Chair's room; the slice-6 rules.
 
 ### 4.5 Removing a Chair: the vote on the Chair
@@ -910,7 +910,7 @@ The architect's defaults are accepted except Q5 (venue kinds widened; no signatu
 | 2 | **Two push templates per faction** (`use: 'push'`, slots A and B), written in §23.3. **What counts:** every matching attempt (a ×3 counts three) **at the pushed place by any member**, whether or not their own order is still open; a member who reads the order at home (below Level 10) counts only if they are at the place | §4.2, §23.3 |
 | 3 | **Clearwater's rotation:** per faction slot A one and slot B two, written in §23.4 | §9.1, §23.4 |
 | 4 | **The twenty-four local deputies:** §23.5 | §5.1, §23.5; GDD §15.10 |
-| 5 | **Venues.** The Town Hall's venue kinds gain **`library` and `faction-hq`** (a hall is a hall; the home cities' first quarters have no square, court, theatre or hotel); the venues are set per place in §23.6, not by content order. Clearwater's common events: the Rally at **the Cannery**, the Canvass Drive at **the Rows**, Poster Night at **the Tram Depot** (Back Lane Market is a `market`, not in Poster Night's kinds). **No signature event in Clearwater in slice 7**: the Headline Story needs a press and the lake has none, and the three parties should meet there on the same terms | §10.4, §23.6; GDD §16.3 |
+| 5 | **Venues.** The Town Hall's venue kinds gain **`library` and `faction-hq`** (a hall is a hall; the home cities' first quarters have no square, court, theatre or hotel); the venues are set per place in §23.6, not by content order. Clearwater's common events: the Rally at **the Cannery**, the Doorstep Drive at **the Rows**, Poster Night at **the Tram Depot** (Back Lane Market is a `market`, not in Poster Night's kinds). **No signature event in Clearwater in slice 7**: the Headline Story needs a press and the lake has none, and the three parties should meet there on the same terms | §10.4, §23.6; GDD §16.3 |
 | 6 | **Clearwater is a branch for all three factions**, like the capital: a daily fixture each (the secretary's, or the Chair's pick) and a ***Clearwater branch*** chat chip; five chips at most (Party, the home branch, the Irongate branch, the Clearwater branch, Officers) | §4.4; GDD §15.4, §16.2; screens §5.3 |
 | 7 | **The Governor's rule is added as item 1, ahead of the party's item, which stays**; locals with no player lead vote for the Governor's rule, so no cast vote disappears | §3.1; GDD §15.3 |
 | 8 | **The Chair's rule for a city applies from the next order paper**, never mid-paper; the modal says *from {weekday}'s council* | §4.3, §12; GDD §15.4 |
@@ -1000,7 +1000,7 @@ Ids `npc.v.dep.hennig`, `npc.c.dep.dvorak`, `npc.a.dep.sauer` … by surname, in
 
 ### 23.6 Q5: event venues
 
-| Place | Town Hall (kinds `square`, `university`, `court`, `theatre`, `hotel`, `library`, `faction-hq`) | Rally | Canvass Drive | Poster Night | Signature |
+| Place | Town Hall (kinds `square`, `university`, `court`, `theatre`, `hotel`, `library`, `faction-hq`) | Rally | Doorstep Drive | Poster Night | Signature |
 |---|---|---|---|---|---|
 | Coalport | `coalport.union-hall` (the hall upstairs) | slice 6 | slice 6 | slice 6 | slice 6 |
 | Duskwall | `duskwall.archives` (the Archives' lecture room) | slice 6 | slice 6 | slice 6 | slice 6 |
