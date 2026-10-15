@@ -515,3 +515,148 @@ export const FAVOURS = {
   bail: { fxp: 10 },
   visit: { energy: 3, health: 10, minutes: 5, counted: 3, minStayMinutes: 5, fxp: 10 },
 } as const;
+
+// ---------------------------------------------------------------------------------------------
+// Slice 7 (docs/tech/slice-7.md §6.1). Rules: docs/design/slice-7-nation.md (§23 settles the points
+// of the tech design's §22.1); GDD §2, §14.8, §15.1–§15.10; docs/economy.md §21; ADR 0043–0050.
+// ---------------------------------------------------------------------------------------------
+
+/** ADR 0043: a term is 28 City Days from Monday 5 January 2026 (`WEEK.mondayEpoch`); a code constant. */
+export const TERM = { days: 28, epochDay: 20_458 } as const;
+
+/** Design §2, §5.2, §10.2: the fixed windows of a term, as term days. */
+export const TERM_DAYS = {
+  chair: { namesFrom: 9, votesFrom: 11, countDay: 14 },
+  nation: { namesFrom: 19, pickFrom: 21, votesFrom: 23, countDay: 27 },
+  /** So every bill divides by the boundary into day 27 (design §23.1 Q14). */
+  tableUntil: 23,
+  /** A removal cannot be tabled on these term days (inclusive ranges). */
+  removalClosed: [
+    [0, 4],
+    [24, 27],
+  ],
+} as const;
+
+/** Design §3.1 (ADR 0048): the Governor and the Mayor. */
+export const GOVERNOR = { stipend: { pc: 20, fxp: 30 }, address: 50, ruleCycleDays: [0, 1] } as const;
+
+/** Design §4 (ADR 0046, 0084): the Faction Chair. 25 PC spent; backing optional, +3 each, five counted. */
+export const CHAIR = {
+  rank: 4,
+  tenureDays: 14,
+  deposit: 25,
+  backCost: 10,
+  backersCounted: 5,
+  backerWeight: 3,
+  voteRank: 2,
+  maxConsecutive: 2,
+  stipend: { pc: 20, fxp: 40 },
+} as const;
+
+/** Design §3, §5 (GDD §15.1): a deputy. Three completed council terms or one Governor's to stand. */
+export const DEPUTY = {
+  rank: 5,
+  tenureDays: 14,
+  deposit: 25,
+  councilTerms: 3,
+  billCost: 50,
+  stipend: { pc: 5, fxp: 30 },
+} as const;
+
+/** Design §6 (GDD §15.5): the President. */
+export const PRESIDENT = {
+  rank: 6,
+  tenureDays: 14,
+  deposit: 100,
+  pledges: 2,
+  maxConsecutive: 2,
+  address: 100,
+  stipend: { pc: 50, fxp: 60 },
+} as const;
+
+/** Design §5 (GDD §15.6, ADR 0045): sixty seats, 31 to pass, 36 for a factional law, 40 for two thirds. */
+export const PARLIAMENT = {
+  seats: 60,
+  pass: 31,
+  factional: 36,
+  twoThirds: 40,
+  regularSlots: 3,
+  voteDays: 3,
+  failedWaitDays: 7,
+  maxInForce: 5,
+  namedLocals: 8,
+  removal: { cost: 50, autoBelowShare: 25, gapDays: 7 },
+} as const;
+
+/** Design §6.3 (GDD §15.5): the national score's ballot half is worth its full 50 from thirty ballots. */
+export const NATIONAL = {
+  fullTurnout: 30,
+  ballotWeightMax: 50,
+  backersMax: 5,
+  backCost: 10,
+  voteRank: 2,
+  unrestFactor: 0.5,
+} as const;
+
+/** Design §4.2 (ADR 0046): the Chair's push, the party's target and its Party XP. */
+export const PUSH = { targets: [25, 50, 100], fxp: 10, level: 10 } as const;
+
+/** Design §10.1 (ADR 0049): a petition to dissolve a council. */
+export const PETITION = {
+  openRank: 3,
+  signRank: 2,
+  cost: 10,
+  openCycleDays: [0, 1, 2],
+  closeAfter: 2,
+  min: 3,
+  share: 0.25,
+  gapDays: 7,
+} as const;
+
+/** Design §4.5: a vote on the Chair (by petition, or on entering Unrest). */
+export const CONFIDENCE = {
+  petitionRank: 3,
+  cost: 10,
+  min: 3,
+  share: 0.25,
+  closeAfter: 2,
+  notFirstDays: 5,
+  notLastDays: 3,
+  voteDays: 2,
+  removeShare: 2 / 3,
+  minNoVotes: 3,
+} as const;
+
+/** ADR 0050, 0085: the contested councils' counts (the capital's and Clearwater's). */
+export const BATTLEGROUND_COUNCILS = {
+  capital: { seats: 10, perPlace: 2, listSize: 2, fullTurnout: 10 },
+  clearwater: { seats: 7, perPlace: 7, listSize: 3, fullTurnout: 10 },
+} as const;
+
+/** Design §8: rivals of the party controlling a district or Clearwater gain Heat 25 % faster there. */
+export const CONTROL = { rivalHeatGainPct: 25 } as const;
+
+/** Design §10.4: the townspeople's signatures a Town Hall adds to the city's open petition. */
+export const TOWN_HALL = { signatures: { triumph: 3, success: 2, mixed: 1, fiasco: 0 } } as const;
+
+/**
+ * Design §7.2 (ADR 0044): the law catalogue's bounds. The catalogue is closed: a kind absent here is
+ * refused on a law (so is `fxpPct`, `chancePct` and every other ordinance-only kind).
+ */
+export const LAW_BOUNDS = {
+  jobPayPct: [0, 15],
+  seniorityDays: [1, 2],
+  swingPct: [-25, 0],
+  energyDelta: [-2, 0],
+  trainingEnergyPct: [-20, 0],
+  ironPct: [0, 15],
+  bailPct: [-25, 0],
+  heatCoolPct: [0, 50],
+  xpPct: [-20, 20],
+  missionEnergyDelta: [-2, 2],
+  journeyTimePct: [-25, 25],
+  runInPct: [-50, 100],
+  infirmaryCostPct: [-50, 25],
+  markFadeDays: [7, 14],
+  caughtDelta: [0, 10],
+} as const;

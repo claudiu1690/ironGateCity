@@ -12,6 +12,7 @@ import type { MissionType } from './constants';
 import type { RecordLevel } from './record';
 import type { QuarterLock } from './quarters';
 import type { RuleHow } from './ruleBallot';
+import type { NationalCondition } from './nationTypes';
 import type {
   CharacterViewV7,
   CityViewV6,
@@ -202,14 +203,20 @@ export interface OrderTemplate {
    * templates (the welcome set's slot A by best stat, *Take a job*) are only ever welcome-day
    * orders. Default `rotation`.
    */
-  use?: 'rotation' | 'crisis' | 'welcome';
+  use?: 'rotation' | 'crisis' | 'welcome' | 'push';
+  /**
+   * Slice 7 (ADR 0046, design §23.2): the Chair's menu entry this template serves. A member reads
+   * their residence's template of the family the Chair picked, else their residence's rotation.
+   */
+  family?: string;
   /** FXP for completing it; default DIRECTIVES.orderDoneFxp (20). Restore the base pays 40. */
   doneFxp?: number;
   /**
    * Slice 4 (design §10): which residents' rotation it belongs to. `home` (default): the home
-   * set; `capital`: an Irongate resident's slots A and B; `any`: both (slot C).
+   * set; `capital`: an Irongate resident's slots A and B; `any`: both (slot C). Slice 7 (design
+   * §23.4): `clearwater`, a Clearwater resident's slots A and B.
    */
-  residence?: 'home' | 'capital' | 'any';
+  residence?: 'home' | 'capital' | 'clearwater' | 'any';
   /**
    * Slice 5 (design §12.2): enters a member's rotation from this Level (the slot-B mission order:
    * 6). Absent: every Level.
@@ -268,7 +275,9 @@ export type HeadlineCondition =
   /** Slice 4 (stored): the level reached `level` (or passed it) since the last paper (`train-open`). */
   | { kind: 'levelCrossed'; level: number }
   | RiskCondition
-  | PoliticalCondition;
+  | PoliticalCondition
+  /** Slice 7 (tech design §11.2): the personal national lines (stored, except `pushed`). */
+  | NationalCondition;
 
 /**
  * Slice 5 (tech design §11.2, design §14): the risk headlines' stored conditions, from the

@@ -100,6 +100,8 @@ export const EVENT_ENERGY_TOTALS: Readonly<Record<string, number>> = {
   'event.grand-rally': 55,
   'event.general-strike': 50,
   'event.headline-story': 45,
+  /** Slice 7 (design §10.4): the Town Hall, the seventh (its other numbers in slice7Problems). */
+  'event.town-hall': 50,
 };
 
 const SIGNATURE: Readonly<Record<FactionId, { id: string; special: CampaignEventType['special'] }>> = {
@@ -135,7 +137,9 @@ export function slice6Problems(
   }
   for (const t of types) {
     const where = `campaignEventTypes.${t.id}`;
-    if (t.factionId === undefined && t.special !== undefined) problems.push(`${where}: a common event has no special`);
+    // Slice 7 (design §10.4): the Town Hall is common and adds the townspeople's signatures.
+    if (t.factionId === undefined && t.special !== undefined && t.special !== 'petitionSignatures')
+      problems.push(`${where}: a common event has no special`);
     const roleIds = new Set(t.roles.map((r) => r.id));
     if (roleIds.size !== t.roles.length) problems.push(`${where}: duplicate role ids`);
     for (const r of t.roles)
@@ -143,7 +147,7 @@ export function slice6Problems(
         problems.push(`${where}.${r.id}: a best role has exactly ['best']`);
     const total = t.roles.reduce((s, r) => s + r.energy, 0);
     const want = EVENT_ENERGY_TOTALS[t.id];
-    if (want === undefined) problems.push(`${where}: not one of design §3's six events`);
+    if (want === undefined) problems.push(`${where}: not one of design §3's six events (or slice 7's Town Hall)`);
     else if (total !== want) problems.push(`${where}: the roles' Energy is ${total}, design §3 says ${want}`);
     if (t.difficulty.capital !== t.difficulty.home + 2) problems.push(`${where}: the capital's difficulty is the home's + 2`);
     const art = idx.assetById.get(t.art);

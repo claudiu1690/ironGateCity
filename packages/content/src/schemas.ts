@@ -3,13 +3,17 @@ import {
   EVENT_SPECIALS,
   FACTION_IDS,
   MISSION_TYPE_IDS,
+  NATIONAL_CONDITION_KINDS,
+  NATION_ACTS,
   STAT_KEYS,
   TRAINABLE_STATS,
+  lawBoundProblem,
   ordinanceBoundProblem,
 } from '@irongate/rules';
 import type {
   HeadlineCondition,
   HeadlineTemplate,
+  LawEffect as LawEffectRule,
   OrderMatch,
   OrderTemplate,
   OrdinanceEffect as OrdinanceEffectRule,
@@ -37,6 +41,9 @@ export const AmbitionId = Id;
 const HexColour = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'a #RRGGBB colour');
 const Fraction = z.number().min(0).max(1);
 
+
+/** Slice 7 (design §4.6): a platform line for Chair or President (≤ 90, no effect). */
+export const Platform = z.strictObject({ id: Id, line: z.string().min(1).max(90) });
 
 export const Faction = z.strictObject({
   id: FactionId,
@@ -85,6 +92,34 @@ export const Faction = z.strictObject({
   branchMotion: Id,
   /** Slice 3 (design §11.3): the Unrest pair, slots A and B (`use: 'crisis'`, `doneFxp: 40`). */
   restoreOrders: z.tuple([Id, Id]),
+  /**
+   * Slice 7 (design §6.5): the party's own figure, who stands for President when no player carries
+   * the party's pick and holds the office when nobody wins it (*run by the game*). Optional until the
+   * designer's T8 lands; the loader then requires the slice-7 fields on every faction together.
+   */
+  nationalFigure: z
+    .strictObject({
+      npcId: NpcId,
+      name: z.string().min(1).max(40),
+      who: z.string().min(1).max(90),
+      line: z.string().min(1).max(90),
+      /** A `portrait` asset. */
+      portrait: AssetId,
+    })
+    .optional(),
+  /** Slice 7 (design §6.2): the party's pick's word, "the Congress". */
+  pickName: z.string().min(1).max(30).optional(),
+  /** Slice 7 (design §4.6): three platform lines for Chair (and for President, §6.1); no effect. */
+  chairPlatforms: z.tuple([Platform, Platform, Platform]).optional(),
+  /** Slice 7 (design §7.3): the laws the secretary (and the figure as President) tables, in order. */
+  preferredLaws: z.array(Id).min(1).optional(),
+  /** Slice 7 (design §23.5, GDD §15.10): eight named local deputies (the crest mark, no portraits). */
+  localDeputies: z
+    .array(z.strictObject({ npcId: NpcId, name: z.string().min(1).max(40), who: z.string().min(1).max(60) }))
+    .length(8)
+    .optional(),
+  /** Slice 7 (screens §4.2): the party's house in the capital, the Chair's crop ("Union House"). */
+  house: z.strictObject({ name: z.string().min(1).max(40), locationId: Id }).optional(),
 });
 
 /** §13.5: the art key for the fallback ladder. Closed list; kinds may be added, never removed. */
@@ -313,8 +348,8 @@ export const Location = z.strictObject({
   missions: z.array(Mission).optional(),
   /**
    * Review 4 #9 (answers §9.3, tech design §10.1): the paid bed is a card at a place, said as a bed
-   * (*A bed on the tram line · 7 nights · 100 Iron*). At most one per city, and only in `ROOM.cityId`
-   * until slice 7 (the Rows in Clearwater).
+   * (*A bed on the tram line · 7 nights · 100 Iron*). At most one per city; slice 7 (design §9.1):
+   * in any battleground city (the capital's, the Rows in Clearwater).
    */
   lodgings: z.strictObject({ line: z.string().min(1).max(60) }).optional(),
   /**
@@ -370,8 +405,15 @@ export const City = z.strictObject({
       /** Seven at home; ten in the capital (two per district, GDD §15.3). */
       seats: z.union([z.literal(7), z.literal(10)]),
       hall: z.strictObject({ locationId: Id }),
+      /** Slice 7 (ADR 0050): the names on each party's list in a contested count (three in Clearwater). */
+      listSize: z.int().min(2).max(3).optional(),
     })
     .optional(),
+  /**
+   * Slice 7 (design §8, GDD §14.8): the city's weight in who holds the republic: Irongate 0.40,
+   * Clearwater 0.30, each home city 0.10 (the loader: they sum to 1 once every council city has one).
+   */
+  nationalWeight: z.number().positive().max(1).optional(),
   locations: z.array(Location),
   /**
    * Slice 5 (design §8.1, §9.2): where the game sends a player in this city: the cells (a `jail`
@@ -493,10 +535,11 @@ export const OrderMatchSchema = z
     actionTypes: z.array(ActionType).min(1).optional(),
     actionIds: z.array(Id).min(1).optional(),
     locationIds: z.array(Id).min(1).optional(),
-    cityId: z.union([z.literal('home'), Id]).optional(),
+    /** Slice 7 (ADR 0046): `'push'`, the place the Chair pushed (a push template's match). */
+    cityId: z.union([z.literal('home'), z.literal('push'), Id]).optional(),
     kinds: z.array(z.enum(ACTION_KINDS)).min(1).optional(),
     /** Slice 4 (design §10): a district id, or 'home' for the residence district. */
-    districtId: z.union([z.literal('home'), Id]).optional(),
+    districtId: z.union([z.literal('home'), z.literal('push'), Id]).optional(),
     /** Slice 4: any action tagged with a live Issue. */
     issueTagged: z.literal(true).optional(),
     /** Slice 4: location kinds. */
@@ -522,14 +565,19 @@ export const OrderTemplateSchema = z.strictObject({
    * Slice 3: `crisis` templates (Restore the base) never enter the rotation; review 1: nor do
    * `welcome` ones (the welcome set's slot A by best stat, *Take a job*).
    */
-  use: z.enum(['rotation', 'crisis', 'welcome']).default('rotation'),
+  use: z.enum(['rotation', 'crisis', 'welcome', 'push']).default('rotation'),
+  /**
+   * Slice 7 (ADR 0046, design §23.2): the Chair's menu entry this template serves (`canvass-anywhere`,
+   * `committee`, …). The welcome, crisis and push templates carry none.
+   */
+  family: Id.optional(),
   /** Slice 3: FXP when completed; default DIRECTIVES.orderDoneFxp (20). */
   doneFxp: z.number().int().min(1).optional(),
   /**
    * Slice 4 (design §10): whose rotation: home residents (default), capital residents (slots A and
    * B), or both (slot C).
    */
-  residence: z.enum(['home', 'capital', 'any']).default('home'),
+  residence: z.enum(['home', 'capital', 'clearwater', 'any']).default('home'),
   /** Slice 5 (design §12.2): enters a member's rotation from this Level. */
   minLevel: z.number().int().min(1).optional(),
 }) satisfies z.ZodType<OrderTemplate, unknown>;
@@ -626,6 +674,8 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('bailPostedForYesterday') }),
   z.strictObject({ kind: z.literal('bailPostedByYesterday') }),
   z.strictObject({ kind: z.literal('visitedYesterday') }),
+  // Slice 7 (tech design §11.2, design §11.2): the personal national lines; stored, except `pushed`.
+  ...NATIONAL_CONDITION_KINDS.map((kind) => z.strictObject({ kind: z.literal(kind) })),
 ]) satisfies z.ZodType<HeadlineCondition>;
 
 export const HeadlineTemplateSchema = z.strictObject({
@@ -895,6 +945,11 @@ export const PoliticalTexts = z.strictObject({
     renew: PoliticalText,
     // The voting rework (design §4.8): *Changed*, a councillor names their rule.
     setRule: PoliticalText,
+    // Slice 7 (design §12, §23.7; tech design §10.1): optional until the designer's T8 lands; the
+    // loader then requires all of them together (`slice7Problems`).
+    ...Object.fromEntries(NATION_ACTS.map((a) => [a, PoliticalText.optional()])) as {
+      [K in (typeof NATION_ACTS)[number]]: z.ZodOptional<typeof PoliticalText>;
+    },
   }),
 });
 
@@ -1122,6 +1177,79 @@ export const EventVenue = z.strictObject({
   locationId: Id,
 });
 
+// ---------------------------------------------------------------------------------------------
+// Slice 7 (docs/tech/slice-7.md §4.1): laws and the national lines. Kinds and bounds are rules
+// (`LAW_BOUNDS`, ADR 0044); the catalogue, its lines and the secretaries' lines are content.
+// ---------------------------------------------------------------------------------------------
+
+export const EffectAppliesTo = z.enum(['all', 'members', 'others']);
+
+const lawKind = <K extends string, T extends z.ZodRawShape>(kind: K, shape: T) =>
+  z.strictObject({ kind: z.literal(kind), ...shape, value: z.number().int(), appliesTo: EffectAppliesTo.optional() });
+
+/** ADR 0044: a law's effect: an ordinance kind in LAW_BOUNDS or a law-only kind, each with `appliesTo`. */
+export const LawEffectSchema = z
+  .discriminatedUnion('kind', [
+    lawKind('jobPayPct', {}),
+    lawKind('seniorityDays', {}),
+    lawKind('swingPct', { actionType: ActionType }),
+    lawKind('energyDelta', { actionType: ActionType }),
+    lawKind('trainingEnergyPct', {}),
+    lawKind('ironPct', { scope: z.literal('checked') }),
+    lawKind('bailPct', {}),
+    lawKind('heatCoolPct', {}),
+    lawKind('xpPct', { scope: z.enum(['missions', 'actions']) }),
+    lawKind('missionEnergyDelta', {}),
+    lawKind('journeyTimePct', {}),
+    lawKind('runInPct', { window: z.literal('night').optional() }),
+    lawKind('infirmaryCostPct', {}),
+    lawKind('markFadeDays', {}),
+    lawKind('caughtDelta', { scope: z.literal('againstFaction') }),
+  ])
+  .superRefine((e, ctx) => {
+    const problem = lawBoundProblem(e);
+    if (problem) ctx.addIssue({ code: 'custom', message: problem });
+    // Design §7.2: the caught check is about missions against the law's party, never its own members.
+    if (e.kind === 'caughtDelta' && e.appliesTo === 'members')
+      ctx.addIssue({ code: 'custom', message: 'caughtDelta applies to everyone or to others, never to members' });
+  }) satisfies z.ZodType<LawEffectRule>;
+
+/** Design §4.3, §7.2: a party's default vote on a law: for, against or free (abstain). */
+export const LineVote = z.enum(['for', 'against', 'free']);
+
+/** Design §7.2: one law of the catalogue. */
+export const Law = z
+  .strictObject({
+    /** 'law.eight-hour-day'. */
+    id: Id.refine((id) => id.startsWith('law.'), 'a law id starts with "law."'),
+    /** "Eight-Hour Day Act". */
+    name: z.string().min(1).max(40),
+    /** The party whose law it is. */
+    factionId: FactionId,
+    /** The one-line text. */
+    line: z.string().min(1).max(120),
+    /** "Job pay +10 % · seniority ×2": the caps line and the tags. */
+    effectLine: z.string().min(1).max(60),
+    effects: z.array(LawEffectSchema).min(1).max(2),
+    days: z.union([z.literal(7), z.literal(14), z.literal(21), z.literal(28)]),
+    /** Each party's secretary's line (the locals' default vote). */
+    secretaryLines: z.strictObject({ vanguard: LineVote, collective: LineVote, alliance: LineVote }),
+  })
+  .refine((l) => new Set(l.effects.map((e) => e.kind)).size === l.effects.length, {
+    message: 'at most one effect of each kind',
+  });
+
+/** Design §11.1: a national line, the same words in every paper (`nl.*`). */
+export const NationalLine = z.strictObject({
+  id: Id.refine((id) => id.startsWith('nl.'), 'a national line id starts with "nl."'),
+  /** 0 first. */
+  priority: z.int().min(0).max(3),
+  headline: z.string().min(1).max(80),
+  deck: z.string().min(1).max(200),
+  /** Who reads it: everyone, the faction it names, or (nl.target-met) the push's contributors. */
+  scope: z.enum(['all', 'faction', 'contributors']),
+});
+
 export const Content = z.strictObject({
   factions: z.array(Faction).length(FACTION_IDS.length),
   cities: z.array(City).min(1),
@@ -1130,6 +1258,11 @@ export const Content = z.strictObject({
     scenes: z.array(SceneBinding),
     /** Slice 5 (GDD §13.5 rung 4): the mission card of each type, a scene. */
     missionCards: z.array(z.strictObject({ missionType: MissionType, assetId: AssetId })),
+    /**
+     * Slice 7 (tech design §13): the nation's scenes by use, so no asset id is hard-coded in the
+     * client: the republic's result, the President's page, the chamber.
+     */
+    nationScenes: z.strictObject({ result: AssetId, president: AssetId, chamber: AssetId }).optional(),
   }),
   /** ADR 0024: the map tile pyramids (`data/tiles.json`, generated by `pnpm art:tiles`). */
   tilePyramids: TilesManifest,
@@ -1155,10 +1288,15 @@ export const Content = z.strictObject({
   opponents: z.array(Opponent).length(6),
   held: z.strictObject({ cells: HeldAction, infirmary: HeldAction }),
   // Slice 6.
-  campaignEventTypes: z.array(CampaignEventType).length(6),
+  /** Slice 6's six; slice 7 (design §10.4) adds the Town Hall, the seventh (the loader checks it). */
+  campaignEventTypes: z.array(CampaignEventType).min(6).max(7),
   eventVenues: z.array(EventVenue),
   /** The secretary's fixture: Doorstep Drive · Rally · Poster Night (design §4). */
   fixtureRotation: z.tuple([Id, Id, Id]),
+  // Slice 7 (tech design §4.1). Empty until the designer's T8 lands; the loader checks thirteen then.
+  laws: z.array(Law).default([]),
+  /** Design §11.1: the national lines, the same words in every paper. */
+  nationalLines: z.array(NationalLine).default([]),
 });
 
 export type Faction = z.infer<typeof Faction>;
@@ -1201,6 +1339,10 @@ export type EventRole = z.infer<typeof EventRole>;
 export type CampaignEventType = z.infer<typeof CampaignEventType>;
 export type EventVenue = z.infer<typeof EventVenue>;
 export type Content = z.infer<typeof Content>;
+export type Law = z.infer<typeof Law>;
+export type LawEffect = z.infer<typeof LawEffectSchema>;
+export type NationalLine = z.infer<typeof NationalLine>;
+export type Platform = z.infer<typeof Platform>;
 /** Content as authored (defaults not yet applied). */
 export type ContentInput = z.input<typeof Content>;
 export type { HeadlineTemplate, OrderTemplate };

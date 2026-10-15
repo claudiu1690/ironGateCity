@@ -4,6 +4,7 @@ import type { MoraleState } from './morale';
 import { roundHalfUp } from './rewards';
 import { RIVAL_ROW, rivalFxpShare } from './rivalGround';
 import type { RivalGroundState } from './rivalGround';
+import type { LawOnlyEffect } from './laws';
 import type { CheckBonus, FactionId, IssueMatch } from './types';
 
 /**
@@ -51,8 +52,13 @@ export interface OrdinanceSpec {
 export interface ModifierSource {
   id: string;
   name: string;
-  kind: 'ordinance' | 'issue';
+  /** Slice 7 (ADR 0044): `law`, the third source, after the ordinance and the Issues. */
+  kind: 'ordinance' | 'issue' | 'law';
   effects: readonly OrdinanceEffect[];
+  /** Slice 7: a law's own kinds (`laws.ts`), already filtered for the actor by `appliesTo`. */
+  lawEffects?: readonly LawOnlyEffect[];
+  /** Slice 7: the law's party (`caughtDelta` is about missions against it). */
+  factionId?: FactionId;
 }
 
 /** A live Issue of the place, with the feeds that tag an action (ADR 0029). */

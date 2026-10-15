@@ -34,8 +34,9 @@ import type {
 
 export type EventBand = 'triumph' | 'success' | 'mixed' | 'fiasco';
 export const EVENT_BANDS = ['triumph', 'success', 'mixed', 'fiasco'] as const;
-export type EventSpecial = 'heatInRivalHeld' | 'doubleMomentum' | 'againstLeader';
-export const EVENT_SPECIALS = ['heatInRivalHeld', 'doubleMomentum', 'againstLeader'] as const;
+/** Slice 7 (design §10.4): `petitionSignatures`, the Town Hall's townspeople signing the open petition. */
+export type EventSpecial = 'heatInRivalHeld' | 'doubleMomentum' | 'againstLeader' | 'petitionSignatures';
+export const EVENT_SPECIALS = ['heatInRivalHeld', 'doubleMomentum', 'againstLeader', 'petitionSignatures'] as const;
 export type EventHours = 1 | 3 | 6 | 12;
 
 /** What the rules need of a content event type (content's `CampaignEventType` satisfies it). */

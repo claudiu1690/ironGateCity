@@ -5,7 +5,7 @@ import {
   PLACEHOLDERS,
   POLITICAL_PLACEHOLDERS,
   RISK_PLACEHOLDERS,
-  ROOM,
+
   STORY_PLACEHOLDERS,
   TIME_TOKENS,
   homeBallot,
@@ -19,6 +19,7 @@ import {
 import type {
   ChapterRules,
   FactionId,
+  LawSpec,
   IssueMatch,
   ItemSpec,
   OrdinanceSpec,
@@ -59,6 +60,7 @@ import { ruleHeadlines } from './data/ruleHeadlines';
 import tiles from './data/tiles.json';
 import { inPolygon } from './geometry';
 import { slice5Problems } from './slice5';
+import { lawSpecOf, slice7Problems } from './slice7';
 import { Content, isCheckedAction } from './schemas';
 import type {
   Action,
@@ -74,9 +76,11 @@ import type {
   Item,
   Job,
   JourneyEvent,
+  Law,
   Location,
   Mission,
   Nation,
+  NationalLine,
   Npc,
   NpcCandidate,
   Opponent,
@@ -431,12 +435,13 @@ export function parseContent(raw: unknown): Content {
       }
     }
     // Review 4 #9 (tech design §10.1): at most one Lodgings card a city, and only where the room's
-    // rule holds (`ROOM.cityId`; slice 7 widens it to the battleground cities).
+    // rule holds.
     const lodgings = city.locations.filter((l) => l.lodgings);
     if (lodgings.length > 1)
       problems.push(`cities.${city.id} has ${lodgings.length} places with lodgings (at most one)`);
-    if (lodgings.length > 0 && city.id !== ROOM.cityId)
-      problems.push(`location "${lodgings[0]!.id}": lodgings only in ${ROOM.cityId} (the room's rule)`);
+    // Slice 7 (design §9.1, review 4): lodgings in any battleground city (the capital, the Rows).
+    if (lodgings.length > 0 && city.role !== 'battleground')
+      problems.push(`location "${lodgings[0]!.id}": lodgings only in a battleground city (the room's rule)`);
     city.locations.forEach((location, i) => {
       unique('location', location.id);
       // Review 5 (answers §8, tech design §6.2): every infirmary carries the Treatment card, and only they.
@@ -786,7 +791,8 @@ export function parseContent(raw: unknown): Content {
         if (!actionById.has(id)) problems.push(`order "${t.id}": unknown action "${id}"`);
       for (const id of m.locationIds ?? [])
         if (!locationById.has(id)) problems.push(`order "${t.id}": unknown location "${id}"`);
-      if (m.cityId && m.cityId !== 'home' && !cityById.has(m.cityId))
+      // Slice 7 (ADR 0046): 'push' is the Chair's pushed place (slice7Problems checks it).
+      if (m.cityId && m.cityId !== 'home' && m.cityId !== 'push' && !cityById.has(m.cityId))
         problems.push(`order "${t.id}": city "${m.cityId}" is not loaded`);
     }
     // Slice-4 fixes §2: an order's placeholders are its own set (`{issue}`, `{city}`, `{verbs}`),
@@ -952,6 +958,7 @@ export function parseContent(raw: unknown): Content {
   problems.push(...ballotFillProblems(content));
   problems.push(...slice5Problems(content, { cityById, locationById, assetById, mapPins }));
   problems.push(...slice6Problems(content, { cityById, locationById, assetById, sentenceCount }));
+  problems.push(...slice7Problems(content, { cityById, locationById, assetById }));
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {
       problems.push(`cities.${city.id} has a paper but no ambient headline`);
@@ -1263,20 +1270,30 @@ function slice4Problems(
     // QA review 4 (R4-QA-02): `{at}`, the day's next turn, in the line only; the paper renders it in
     // the player's clock (*tomorrow 03:00*).
     if (placeholdersIn(t.title).includes('at')) problems.push(`order "${t.id}": {at} only in the line`);
+    // Slice 7 (design §23.3): a push template names the pushed place, `{place}`.
+    const orderPlaceholders = t.use === 'push' ? ['issue', 'city', 'verbs', 'at', 'place'] : ['issue', 'city', 'verbs', 'at'];
     for (const ph of used)
-      if (!['issue', 'city', 'verbs', 'at'].includes(ph))
+      if (!orderPlaceholders.includes(ph))
         problems.push(`order "${t.id}": unknown placeholder {${ph}}`);
     if (t.slot === 'C' && t.use === 'rotation' && t.residence !== 'any')
       problems.push(`order "${t.id}": a slot C rotation order serves every residence`);
     // Slice 5 (design §12.2): the slot-B mission order serves every residence too; slice 6 (design
     // §5, tech design §4.2): so does the slot-B event order (`kinds: ['event']`, `cityId: 'home'`).
     const eventOrder = t.slot === 'B' && t.match.kinds?.length === 1 && t.match.kinds[0] === 'event';
-    if (t.slot !== 'C' && t.residence === 'any' && !(t.slot === 'B' && t.minLevel !== undefined) && !eventOrder)
+    // Slice 7 (ADR 0046): a push template serves whoever the Chair's push reaches (slice7Problems).
+    if (
+      t.slot !== 'C' &&
+      t.residence === 'any' &&
+      !(t.slot === 'B' && t.minLevel !== undefined) &&
+      !eventOrder &&
+      t.use !== 'push'
+    )
       problems.push(`order "${t.id}": only slot C (and slot B's mission and event orders) is for any residence`);
     const d = t.match.districtId;
     if (
       d !== undefined &&
       d !== 'home' &&
+      d !== 'push' &&
       !content.cities.some((c) => c.quarters.some((q) => q.id === d && q.district))
     )
       problems.push(`order "${t.id}": "${d}" is not a district`);
@@ -1395,6 +1412,23 @@ export interface GameContent extends Content {
   listedCard(): { id: string; heatAtLeast: number };
   /** The rung-4 mission card of a type (an asset id). */
   missionCard(type: MissionType): string;
+  // Slice 7 (tech design §4.1).
+  law(id: string): Law | undefined;
+  lawsOf(factionId: FactionId): Law[];
+  /** A law as the rules read it (`lawSourcesOn`'s catalogue). */
+  lawSpec(id: string): LawSpec | undefined;
+  /** The party's own figure (design §6.5); undefined until the designer's T8. */
+  figure(factionId: FactionId): NonNullable<Faction['nationalFigure']> | undefined;
+  localDeputies(factionId: FactionId): NonNullable<Faction['localDeputies']>;
+  /** Design §8: each council city's weight in who holds the republic (absent cities are left out). */
+  nationalWeights(): Record<string, number>;
+  /** ADR 0046: the faction's push template for slot A or B. */
+  pushTemplate(factionId: FactionId, slot: 'A' | 'B'): OrderTemplate | undefined;
+  /** Design §23.2: the Chair's menu for a slot, each family with its label (the home template's title). */
+  families(factionId: FactionId, slot: 'A' | 'B' | 'C'): Array<{ family: string; label: string }>;
+  /** The residence's template of a family (`any` templates serve every residence), else undefined. */
+  templateFor(factionId: FactionId, family: string, residence: 'home' | 'capital' | 'clearwater'): OrderTemplate | undefined;
+  nationalLine(id: string): NationalLine | undefined;
   // Slice 6 (tech design §4.1).
   eventType(id: string): CampaignEventType | undefined;
   eventTypes(): CampaignEventType[];
@@ -1450,6 +1484,10 @@ export function indexContent(content: Content): GameContent {
   }
   const jobs = new Map(content.jobs.map((j) => [j.id, j]));
   const npcs = new Map(content.npcs.map((n) => [n.id, n]));
+  // Slice 7.
+  const lawById = new Map(content.laws.map((l) => [l.id, l]));
+  const nationalLineById = new Map(content.nationalLines.map((l) => [l.id, l]));
+  const factionById = new Map(content.factions.map((f) => [f.id, f]));
   const assets = new Map(content.art.assets.map((a) => [a.id, a]));
   const items = new Map(content.items.map((i) => [i.id, i]));
   const ambitionsById = new Map(content.ambitions.map((a) => [a.id, a]));
@@ -1589,6 +1627,48 @@ export function indexContent(content: Content): GameContent {
       return { id: j.id, heatAtLeast: j.heatAtLeast! };
     },
     missionCard: (type) => content.art.missionCards.find((m) => m.missionType === type)!.assetId,
+    // Slice 7 (tech design §4.1).
+    law: (id) => lawById.get(id),
+    lawsOf: (factionId) => content.laws.filter((l) => l.factionId === factionId),
+    lawSpec: (id) => {
+      const l = lawById.get(id);
+      return l ? lawSpecOf(l) : undefined;
+    },
+    figure: (factionId) => factionById.get(factionId)?.nationalFigure,
+    localDeputies: (factionId) => [...(factionById.get(factionId)?.localDeputies ?? [])],
+    nationalWeights: () =>
+      Object.fromEntries(
+        content.cities.flatMap((c) => (c.nationalWeight !== undefined ? [[c.id, c.nationalWeight] as const] : [])),
+      ),
+    pushTemplate: (factionId, slot) =>
+      content.orderTemplates.find((t) => t.factionId === factionId && t.slot === slot && t.use === 'push'),
+    families: (factionId, slot) => {
+      const out: Array<{ family: string; label: string }> = [];
+      for (const t of content.orderTemplates) {
+        if (t.factionId !== factionId || t.slot !== slot || t.family === undefined) continue;
+        if (out.some((x) => x.family === t.family)) continue;
+        // The label is the home template's title (else the first in file order).
+        const home =
+          content.orderTemplates.find(
+            (x) =>
+              x.factionId === factionId &&
+              x.slot === slot &&
+              x.family === t.family &&
+              (x.residence === 'home' || x.residence === 'any'),
+          ) ?? t;
+        out.push({ family: t.family, label: home.title });
+      }
+      return out;
+    },
+    templateFor: (factionId, family, residence) =>
+      content.orderTemplates.find(
+        (t) =>
+          t.factionId === factionId &&
+          t.family === family &&
+          (t.use ?? 'rotation') === 'rotation' &&
+          (t.residence === residence || t.residence === 'any'),
+      ),
+    nationalLine: (id) => nationalLineById.get(id),
     ...eventIndex(content, (id) => locations.get(id)),
   };
 }

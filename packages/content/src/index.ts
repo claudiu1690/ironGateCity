@@ -27,3 +27,15 @@ export type { Copy } from './data/copy';
 export { EVENT_ENERGY_TOTALS, EVENT_HEADLINE_NAMES, EVENT_IN_PRINT_NAMES, EVENT_PLACEHOLDERS, slice6Problems } from './slice6';
 export type { LocatedVenue } from './slice6';
 export { eventOrderTemplates } from './data/events';
+export {
+  CLEARWATER_BASELINE,
+  LAW_COUNT,
+  NATIONAL_WEIGHTS,
+  TOWN_HALL_ID,
+  TOWN_HALL_SPEC,
+  TOWN_HALL_VENUE_KINDS,
+  isPushTemplate,
+  lawNeeds,
+  lawSpecOf,
+  slice7Problems,
+} from './slice7';

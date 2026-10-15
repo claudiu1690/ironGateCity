@@ -52,3 +52,6 @@ export * from './chat';
 export * from './favours';
 export * from './scoreboard';
 export * from './togetherTypes';
+// Slice 7 (docs/tech/slice-7.md §6).
+export * from './laws';
+export * from './nationTypes';
