@@ -47,11 +47,12 @@ at a set time. Designed for slice 6, **not built**.
 - Content: `packages/content/src/data/events.ts` (six types, **30** venue rows, the fixture rotation, the three event orders not yet in the rotation); checks and accessors in `packages/content/src/slice6.ts` (`eventType`, `eventTypesFor`, `venueOf`, `venuesAt`).
 - Art: `scene.event-poster-night`, `scene.event-grand-rally` in `data/art.ts`.
 - DB: `campaignEvents` and `eventSignups` (`packages/db/src/models/campaignEvent.ts`), `events` on the character, `LEDGER_KINDS += 'event'`, migration `010-slice6-together.ts`.
-- Not yet: `eventService` (`call`, `signUp`, `withdraw`, `resolve`, `credit`, `ensureFixtures`), the jobs, the Faction tab (phases B and C).
+- Server (slice 6 phase B, 15 Oct 2026, `21929a7`): `apps/server/src/services/eventService.ts` (`callEvent`, `signUpEvent`, `withdrawEvent`, `nudgeEvent`, `resolveEvent`/`resolveInTx`, `resolveOpenBefore`, `creditSignup`, the read path's `ensureEventsResolved`/`ensureEventsCredited`, `currentEvent`, `eventResult`, `seenEvent`, `eventHooks`); `eventPlace.ts` (`ensureFixtures`, `readEventPlace`, `eventDescriptor`, `headlineTarget`); `eventViews.ts` (board, page, call sheet, tickets, the receipt); `eventScheduler.ts`; the `campaign-event-resolve` job in `apps/server/src/jobs/together.ts`; the city day resolves an earlier day's events before each boundary and posts the fixtures in it (`cityDay.ts`). Router `apps/server/src/trpc/routers/events.ts`: **`events.callEvent`** (tRPC reserves `call`). The event orders are in the slot-B rotation (`data/orders.ts`). The paper: `togetherEdition.ts` (stored facts), `togetherPaper.ts` (the *Events* rows, `event-today` live).
+- Not yet: the Faction tab and the event screens (phase C).
 
 ## Status
 
-- **Phase A built** (rules, content, art, db; 15 Oct 2026). The server, the jobs and the screens are phases B and C of [[Slice 6 Together]]. Town Hall and the Chair's faction-wide events: slice 7. The Case File on the Headline Story: slice 8. Counter-Demonstrations: v1.1.
+- **Phases A and B built** (rules, content, art, db; the server and jobs, 15 Oct 2026). The screens are phase C of [[Slice 6 Together]]. Town Hall and the Chair's faction-wide events: slice 7. The Case File on the Headline Story: slice 8. Counter-Demonstrations: v1.1.
 
 > [!warning] Drift
 > Design §3.7 and the tech spec say *27 venues*; the table itself has **30** rows (12 home, 15 common in the capital, 3 signature in the capital). Built as the table; a question for the designer.

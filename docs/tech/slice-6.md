@@ -1405,3 +1405,28 @@ Built on branch `slice-0` after the user approved design §19's seven defaults (
 - Wire `eventOrderTemplates` into `orderTemplates` (T10); transcribe the headlines (T15) and the copy (T18–T23).
 - `resolveCampaignEvent` wants each participant's `standingLabel` (the *Known in Coalport* line) and `prefer`; `firstToday` is the server's (§8.2).
 - `addInfluence` writes the four faction scopes (`factionScopes`) with `kind: 'faction'`, `period`, `bracket` (`levelBracket`) and `events`.
+
+### Phase B (T8–T16, 15 Oct 2026)
+
+Built on branch `slice-0` as one commit, `21929a7` (the tasks share the read path and the services, so they were not split per task). The designer's copy landed in `55d14b7` while it was built and is bound (no fallbacks). **T17 (the integration suite) is a throwaway scratch script, as the user's testing rule asks; it was run and is not committed.**
+
+**Testing (the user's rule of 8 Oct 2026).** No Vitest was written or run.
+
+- **Scratch script on the memory replica set (58 checks, all pass):** the read path's presence touch without a version bump; the fixture on the board; the call sheet's four types at home; a call (Called, 15 Energy, a retried key returns the same tap, the *called* line in `city:collective:coalport`); `ONE_AT_A_TIME`; Rank 2 cannot call, Rank 1 cannot take a named role; the page's odds only on open roles and **the seed in no view**; withdraw returns the Energy and is refused in the last hour; two members racing for one role → one holder, the other `ROLE_TAKEN`; a member on two slots refused; a hand on the fixture; **four parallel runners resolve once**; one ledger row (`kind: 'event'`) per member participant; the four faction scopes with `events: 1`; the result line; the credit on the participant's read only, **two parallel reads credit once**, `events.current` → `seen`; the fixture resolved by the city day and the next one posted by the boundary; the paper's stored event headline, *Events* rows and *In Print*; the *taken in* line with a live *Post bail* button in history; bail by a mate (a second payer refused, the prisoner released on their read with `how: 'bailPosted'` and the payer named); a visit moves the stay, a second visit by the same mate refused; chat (a retried key → one line, a second line within 3 s `CHAT_RATE`, another faction's channel `CHAT_CHANNEL`, report once, mute, three channels); `faction.hq`, `members`, `scoreboard` (with your row), the profile without record, Heat or Iron; a caller who withdrew gets the *Called off* modal; **a change stream delivers the inserts**.
+- **The fast check:** `pnpm art:check && pnpm turbo run lint typecheck build` green (14 tasks).
+- **Playwright** (`E2E_WEB_PORT=4273 E2E_API_PORT=3301`, `--no-deps`): `phone` 64 passed (8.4 min). Further projects: see the round's report.
+
+**Deviations.**
+
+- **`events.call` is `events.callEvent`.** tRPC reserves `call` as a router key (the router throws at start-up). Phase C calls `trpc.events.callEvent`.
+- **The slot guard of a sign-up is `roles: { $elemMatch: { roleId, holder: null } }`** with `roles.$.holder`, not `roles.{i}.holder: null` (Mongoose's cast of that filter let a second racer overwrite the first; caught by the race check).
+- **Morale at resolution:** the resolution writes the meter but not the morale record of a home city crossing a threshold (ADR 0022); the city day's drift and the next action record it. Phase C/QA can add it if a playtest shows it.
+- **Members:** heroes are the hero awards of the last seven days; *here now* rows are sorted first within the page (not across pages). The cursor is an offset.
+- **`chat.history`'s buttons** read the stay from the line's `system.ref` (the stay id) and the event from `payload.eventId`.
+- **The socket:** `attachChat` refuses a cross-origin handshake (`allowRequest`), needs the session cookie, joins `channelsOf` rooms and `char:{id}`, and emits `chat:line` (and `chat:forYou` to the addressee). It runs in the API process only (`index.ts`); the e2e server (`node dist/index.js`) has it.
+- **Test hooks:** `POST /api/test/members`, `/api/test/events` (`startNow`, `fill`, `rolls`, `call`), `/api/test/chat`, `/api/test/presence`, and **`/api/test/member-held`** (a test member to the cells or the ward) instead of extending slice 5's `/api/test/held`. Test members have `userId: 'test:{uuid}'` (no `playtest.testMember` field; the report should filter by that prefix, T24). Dev panel actions: `members`, `fillEvent`, `startEvent`, `rolls`, `memberCells`, `memberWard`, `memberSays`, `chatReset`, and `status.together`; **the client's buttons are phase C's**.
+- **The paper:** `event-today` is built at read by `togetherPaper` (`{time}` left as a token with `until` = the start; *midnight* filled for the fixture); In Print by `EVENT_IN_PRINT_NAMES`. The settlement's facts are `PaperFacts.events` (`EventFacts`), read by `readTogether` in the settlement's transaction.
+- **The event order** (`eventOrderTemplates`) is appended to `orderTemplates` in `data/orders.ts` (the loader accepts its `residence: 'any'`, designer's 55d14b7). It shifts every faction's slot-B rotation.
+- `CharacterView.events.open`, `chat.forYou` and `factionDot` are full only from `character.me` (`fullCharacterView`); other views carry the counts with an empty `open`.
+
+**For phase C.** The client for every procedure above (`callEvent`), the dev panel's buttons, the socket client (`useChatSocket`, path `/api/socket.io`), `CellsNowCard`'s *Post bail*, the report's *together* section (test members by `userId` prefix), the e2e specs of §15.1.

@@ -9,6 +9,13 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 6 phase B (the server)
+
+T8–T16 built in `21929a7`: events (call, sign-up, withdraw, resolution, credit, fixtures), the Faction
+tab's reads, favours, chat with the Socket.IO push socket, presence, the paper's event parts, the
+test hooks; T17 as a scratch script. Updated [[Slice 6 Together]], [[Campaign Events]],
+[[Chat and Presence]], [[Patronage and Favours]].
+
 ## [2026-10-15] build | Slice 6 phase A (rules, content, art, db)
 
 T1–T7 built: event maths, presence, chat, favours and the scoreboard's scopes in rules; six event
