@@ -16,6 +16,7 @@ import { setWeekIssues } from './dev/issues';
 import { registerDevPanel } from './dev/panel';
 import { CharacterRiskBody, zodLine } from './dev/risk';
 import { registerRiskHooks } from './dev/riskRoutes';
+import { registerTogetherHooks } from './dev/together';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
 import { dayHooks } from './services/dayService';
@@ -238,6 +239,8 @@ export async function buildApp({
 
     // Slice 5 (tech design §8.5): the street, held and run-in hooks; turns the street hooks on.
     registerRiskHooks(app, { auth, content, now });
+    // Slice 6 (tech design §8.6): test members, events, chat and presence.
+    registerTogetherHooks(app, { auth, content, now });
 
     // The dev time-skip panel (README "Reviewing with the dev panel"): same guard, same clock.
     registerDevPanel(app, {

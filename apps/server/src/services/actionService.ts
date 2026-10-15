@@ -586,6 +586,9 @@ export async function writeTier1(i: {
     {
       $set: {
         lastActionAt: new Date(now),
+        // Slice 6 (ADR 0040): presence follows the act (no extra write).
+        'presence.locationId': located.location.id,
+        'presence.seenAt': new Date(now),
         localStanding: [...others, { cityId: city.id, successes: res.standing.after }],
         ...progressSet(gains),
         'energy.value': res.energy.after.value,
@@ -736,6 +739,8 @@ async function writeTraining(i: {
     {
       $set: {
         lastActionAt: new Date(now),
+        'presence.locationId': location.id,
+        'presence.seenAt': new Date(now),
         [`stats.${res.stat.stat}`]: res.stat.after,
         ...progressSet(gains),
         'energy.value': res.energy.after.value,

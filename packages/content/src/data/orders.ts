@@ -1,4 +1,5 @@
 import type { OrderTemplate } from '../schemas';
+import { eventOrderTemplates } from './events';
 
 /**
  * The Party orders of the three home factions, rewritten in review 1 (docs/design/review-1-answers.md
@@ -754,4 +755,7 @@ export const orderTemplates: OrderTemplate[] = [
     counts: 'attempts',
     residence: 'capital',
   },
+  // Slice 6 (design §5; tech design §4.4): the event order, one slot-B template per faction
+  // (`kinds: ['event']`), transcribed in data/events.ts and wired here by phase B (T10).
+  ...(eventOrderTemplates as OrderTemplate[]),
 ];

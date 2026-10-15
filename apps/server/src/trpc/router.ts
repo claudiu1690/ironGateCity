@@ -13,6 +13,8 @@ import { paperRouter } from './routers/paper';
 import { patrolRouter } from './routers/patrol';
 import { residenceRouter } from './routers/residence';
 import { travelRouter } from './routers/travel';
+import { eventsRouter } from './routers/events';
+import { chatRouter, factionRouter, favoursRouter, presenceRouter } from './routers/faction';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -35,6 +37,12 @@ export const appRouter = router({
   record: recordRouter,
   // Review 5 (ADR 0081).
   patrol: patrolRouter,
+  // Slice 6.
+  faction: factionRouter,
+  events: eventsRouter,
+  favours: favoursRouter,
+  presence: presenceRouter,
+  chat: chatRouter,
 });
 
 export type AppRouter = typeof appRouter;

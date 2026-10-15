@@ -20,6 +20,7 @@ import { capitalFacts, paperIssues } from './capitalPaper';
 import { localElection, localParts } from './localEdition';
 import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
+import { isEventInPrint, togetherPaper } from './togetherPaper';
 import { restedCapToday } from './modifiers';
 import { isRivalGround, riskView } from './risk';
 import { frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
@@ -67,7 +68,9 @@ export async function getPaper(deps: {
     vars: res.vars,
     varsByKind: res.varsByKind,
   });
-  const live = residenceLines.filter(
+  // Slice 6 (tech design §11.1): the *Events* rows, the desk's *Signed up* row, `event-today` (live).
+  const together = await togetherPaper(content, c, now, { firstEdition: entry.firstEdition, paperCityId: entry.cityId });
+  const live = [...residenceLines, ...together.live].filter(
     (h) =>
       !(
         frontPage &&
@@ -148,7 +151,7 @@ export async function getPaper(deps: {
       ...(h.until !== undefined ? { until: h.until } : {}),
       // Screens §7.3: the hero and the reporter's quote carry the In Print kicker; slice 5 (tech
       // design §11.3) adds the risk headlines Seen, the cells, the infirmary and the train home.
-      ...(IN_PRINT.test(h.templateId) ? { inPrint: true } : {}),
+      ...(IN_PRINT.test(h.templateId) || isEventInPrint(h.templateId) ? { inPrint: true } : {}),
       // The hero's headline carries the rosette (screens §7.3).
       ...(/.hero$/.test(h.templateId) ? { medal: true } : {}),
     })),
@@ -210,6 +213,8 @@ export async function getPaper(deps: {
     pollingDay: await politicsSummary(content, c, homeState, now, today),
     localElection: local !== null && local !== residenceId ? localElection(content, local, today) : null,
     frontPage,
+    events: together.parts.events,
+    signedUp: together.parts.signedUp,
   };
 }
 

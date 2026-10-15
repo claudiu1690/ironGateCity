@@ -1,3 +1,4 @@
+import { fellowsOn } from './presenceService';
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
 import { Character, City, District, IssueModel, Journey, PaperEntry } from '@irongate/db';
@@ -382,7 +383,8 @@ export async function board(deps: {
       // Slice 5 (tech design §8.2): rival ground always draws from the hostile deck; elsewhere the
       // ordinary deck, the passenger first on the first journey that is neither (`firstDone`).
       const rival = isRivalGround(content, c, input.to);
-      const set: Record<string, unknown> = {};
+      // Slice 6 (ADR 0040): on the train nobody is *here* at a place.
+      const set: Record<string, unknown> = { 'presence.locationId': null };
       const inc: Record<string, number> = { iron: -f.total, version: 1, journeysMade: 1 };
       let card: { eventId: string; deck: 'ordinary' | 'hostile' } | null;
       if (rival) {
@@ -742,7 +744,8 @@ export async function getJourney(
   if (!c.journey) return null;
   const j = await Journey.findById(c.journey.id).lean<JourneyDoc>();
   if (!j || j.status === 'closed') return null;
-  return journeyView(content, c, j, now, { city: loaded.city });
+  // Slice 6 (ADR 0040): *You and n others on this train*.
+  return { ...journeyView(content, c, j, now, { city: loaded.city }), fellows: await fellowsOn(c) };
 }
 
 // ---------------------------------------------------------------------------------------------

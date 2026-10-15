@@ -486,6 +486,9 @@ export async function writeMissionFinal(i: {
     {
       $set: {
         lastActionAt: new Date(i.now),
+        // Slice 6 (ADR 0040): presence follows the act.
+        'presence.locationId': ctx.location.id,
+        'presence.seenAt': new Date(i.now),
         localStanding: [...others, { cityId: city.id, successes: final.standing }],
         ...progressSet(gains),
         'energy.value': s.energy.after.value,

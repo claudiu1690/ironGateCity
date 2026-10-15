@@ -2,22 +2,26 @@
  * Slice 6 (docs/tech/slice-6.md §4.1–§4.2): the Campaign Events' loader cross-checks and accessors.
  */
 import { FACTION_IDS } from '@irongate/rules';
-import type { FactionId } from '@irongate/rules';
+import type { FactionId, HeadlineCondition } from '@irongate/rules';
 import type { Asset, CampaignEventType, City, Content, EventVenue, Location, Quarter } from './schemas';
 
 /**
- * Slice 6 copy (15 Oct 2026; design §10, tech §4.1, §11.2): the event headlines' conditions. Held
- * here until the developer adds them to the rules' `HeadlineCondition` (tech §4.1 says
- * `HeadlineCondition += EventCondition`); once they are there this type collapses into it.
- * `eventOpenToday` is live (selected at read); the rest are stored by the settlement.
+ * Slice 6 copy (15 Oct 2026; design §10, tech §4.1, §11.2): the event headlines' conditions, as the
+ * rules' `HeadlineCondition` carries them (phase B). `eventOpenToday` is live (selected at read);
+ * the rest are stored by the settlement.
  */
-export type EventCondition =
-  | { kind: 'eventOpenToday' }
-  | { kind: 'eventResolvedYesterday'; tookPart: boolean; outcome?: 'triumph' | 'success' | 'mixed' | 'fiasco' }
-  | { kind: 'eventCalledOffYesterday' }
-  | { kind: 'bailPostedForYesterday' }
-  | { kind: 'bailPostedByYesterday' }
-  | { kind: 'visitedYesterday' };
+export type EventCondition = Extract<
+  HeadlineCondition,
+  {
+    kind:
+      | 'eventOpenToday'
+      | 'eventResolvedYesterday'
+      | 'eventCalledOffYesterday'
+      | 'bailPostedForYesterday'
+      | 'bailPostedByYesterday'
+      | 'visitedYesterday';
+  }
+>;
 
 export const EVENT_CONDITION_KINDS = [
   'eventOpenToday',

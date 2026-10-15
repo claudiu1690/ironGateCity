@@ -59,6 +59,9 @@ import { arrestsOf, barsLive, healthDoc, healthTimerOf, heatDoc, heatRateOn, hea
 import { legMinutesBetween } from './travelService';
 import { DayChanged, MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
 import { pickArt } from './art';
+import { branchChannel, systemLine } from './chatOutbox';
+import { t6 } from './togetherCopy';
+import { signupLines } from './eventViews';
 import { assetView, energyState, landingAt, fromOrdersState, toCharacterView, toOrdersState, wornStats } from './views';
 
 /**
@@ -126,6 +129,28 @@ export async function createStayInTx(
     ],
     { session },
   );
+  // Slice 6 (ADR 0039): the *taken in* / *admitted* line in the branch's chat, in this transaction.
+  const who = c as Partial<CharacterDoc>;
+  if (who.name && who.factionId) {
+    const ch = branchChannel(content, who as CharacterDoc, i.cityId);
+    await systemLine(session, {
+      channel: ch.channel,
+      factionId: who.factionId,
+      cityId: ch.cityId,
+      kind: i.held.kind === 'cells' ? 'takenIn' : 'admitted',
+      payload: {
+        name: who.name,
+        characterId: c._id.toHexString(),
+        place: place.location.name,
+        iron: bail?.total ?? 0,
+        until: i.held.until,
+        n: i.held.minutes,
+      },
+      ref: stayId.toHexString(),
+      dedupeKey: `held:${stayId.toHexString()}`,
+      at: new Date(i.held.since),
+    });
+  }
   return {
     stayId,
     placeName: place.location.name,
@@ -202,6 +227,8 @@ export async function releaseInTx(
   if (!h || h.state !== 'in') throw new GameError('NOT_HELD');
   const stay = await Stay.findById(h.stayId).session(session).lean<StayDoc>();
   if (!stay || stay.releasedAt) throw new VersionConflict();
+  // Slice 6 (ADR 0041): a mate posted the bail; the stay ends as of then, on the branch's Iron.
+  const postedBy = i.how === 'served' && h.kind === 'cells' ? (stay.bailPostedBy ?? null) : null;
   const residenceCity = await City.findById(residenceCityId(c)).session(session).lean<CityDoc>();
   const rateOn = heatRateOn(content, residenceCity);
   const at = i.at;
@@ -249,6 +276,7 @@ export async function releaseInTx(
     knockOns.iron = { before: c.iron, after: c.iron - ironPaid };
   }
   if (h.kind === 'infirmary') knockOns.health = { before: healthBefore, after: healthAfter, max };
+  if (postedBy) knockOns.postedBy = { name: postedBy.name, iron: postedBy.iron };
   if (h.kind === 'cells') {
     // Review 4 #20 (answers §20.3, ADR 0078): *Your record: taken in · 1 mark · On file* (the marks
     // this arrest added, the live record after it) and *Orders off until the day turns*.
@@ -325,12 +353,19 @@ export async function releaseInTx(
     h.kind === 'cells'
       ? deport
         ? { act: 'deported' as const, stamp: r.deported.stamp, headline: r.deported.headline, body: r.deported.body(cityName) }
-        : {
-            act: i.how === 'bail' ? ('bail' as const) : ('released' as const),
-            stamp: r.released.stamp,
-            headline: r.released.headline,
-            body: r.released.body,
-          }
+        : postedBy
+          ? {
+              act: 'released' as const,
+              stamp: r.released.stamp,
+              headline: t6('modal.releasedBail.headline', { name: postedBy.name }),
+              body: t6('modal.releasedBail.body', { name: postedBy.name }),
+            }
+          : {
+              act: i.how === 'bail' ? ('bail' as const) : ('released' as const),
+              stamp: r.released.stamp,
+              headline: r.released.headline,
+              body: r.released.body,
+            }
       : {
           act: i.how === 'walkOut' ? ('walkOut' as const) : ('discharged' as const),
           stamp: r.discharged.stamp,
@@ -350,7 +385,7 @@ export async function releaseInTx(
     {
       $set: {
         releasedAt: new Date(at),
-        how: i.how,
+        how: postedBy ? 'bailPosted' : i.how,
         ironPaid,
         heatAfter,
         healthAfter,
@@ -593,6 +628,10 @@ export async function getHeld(deps: { user: SessionUser; content: GameContent; n
     election: null,
     paperUnread: loaded.editionReadAt === null ? 1 : 0,
     ...(cells ? { ordersOff: ordersOffToday(c, dayKey(now)) } : {}),
+    // Slice 6 (tech design §8.3): the ward's visitors, the mate who posted bail, the sign-ups held over.
+    visits: (stay?.visits ?? []).map((v) => ({ name: v.name, at: new Date(v.at).getTime() })),
+    postedBy: stay?.bailPostedBy ? { name: stay.bailPostedBy.name } : null,
+    signups: (await signupLines(content, c)).map((x) => ({ roleName: x.roleName, eventName: x.eventName, startsAt: x.startsAt })),
   };
 }
 

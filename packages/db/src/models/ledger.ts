@@ -15,7 +15,7 @@ const int = { type: Number, required: true, validate: Number.isInteger } as cons
 // influenceLedger: append-only.
 // ---------------------------------------------------------------------------------------------
 
-export type LedgerKind = 'action' | 'journey' | 'issue' | 'drift' | 'ballot' | 'seat' | 'noVoter';
+export type LedgerKind = (typeof LEDGER_KINDS)[number];
 /** Slice 6 (tech design §5.5): `event`, a Campaign Event's leg per member participant (`ref` = the event id). */
 export const LEDGER_KINDS = ['action', 'journey', 'issue', 'drift', 'ballot', 'seat', 'noVoter', 'event'] as const;
 

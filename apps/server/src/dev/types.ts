@@ -49,7 +49,20 @@ export type DevAction =
   // The voting rework (tech design §12): `seat` (*Seat me*: the lowest-ranked local seat of the
   // residence's sitting council), `townVotes` (*Votes for card 2 × 3*, days 2–4).
   | 'seat'
-  | 'townVotes';
+  | 'townVotes'
+  // Slice 6 (tech design §8.7): `members` (three test members here), `fillEvent` (target `roles` or
+  // `hands`: test members onto my soonest open event), `startEvent` (my soonest event starts now),
+  // `rolls` (target `success`, `failure` or `random`: my soonest event's next rolls),
+  // `memberCells` / `memberWard` (a test member sent), `memberSays` (a test member's chat line),
+  // `chatReset` (my chat limits cleared).
+  | 'members'
+  | 'fillEvent'
+  | 'startEvent'
+  | 'rolls'
+  | 'memberCells'
+  | 'memberWard'
+  | 'memberSays'
+  | 'chatReset';
 
 /** Slice 5 (tech design §8.6): the street force set for the caller's next act (`POST /api/test/street`). */
 export interface DevStreetForce {
@@ -126,6 +139,8 @@ export interface DevHomeCity {
 export interface DevStatus {
   /** Always true: the route does not exist otherwise. */
   hooks: true;
+  /** Slice 6 (tech design §8.7): open sign-ups, events here, today's fixture, unseen results, chat, presence. */
+  together?: DevTogetherStatus | null;
   /** The shared test clock, epoch ms. */
   now: number;
   /** "Thursday 1 Oct 00:01 UTC". */
@@ -196,4 +211,14 @@ export interface DevActionResult {
   /** One line for the panel: "Now Thursday 1 Oct 00:01 UTC · polls open in Coalport". */
   line: string;
   status: DevStatus;
+}
+
+/** Slice 6 (tech design §8.7): the dev panel's together lines. */
+export interface DevTogetherStatus {
+  signups: Array<{ eventId: string; slot: string; startsAt: number }>;
+  eventsHere: Array<{ id: string; kind: string; typeId: string; startsAt: number; filled: number; roles: number; hands: number }>;
+  fixtureToday: string | null;
+  unseenResults: number;
+  chat: { recent: number; lastAt: number | null; forYou: number };
+  presence: { seenAt: number | null; locationId: string | null };
 }

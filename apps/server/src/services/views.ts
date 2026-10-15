@@ -826,6 +826,11 @@ export function toCharacterView(
     statGuide: statGuideOf(content, doc),
     // Slice 5 (tech design §8.3): Heat, Health, the record, held, the run-in, where you stand.
     ...riskView(content, doc, now, ctx.city ?? null),
+    // Slice 6 (tech design §8.3): `events.open`'s names and `chat.forYou` need reads, so
+    // `fullCharacterView` fills them; here the counts the character carries.
+    events: { open: [], unseen: doc.events?.unseen?.length ?? 0 },
+    chat: { hidden: doc.chat?.hidden ?? false, forYou: false },
+    factionDot: (doc.events?.unseen?.length ?? 0) > 0,
   };
 }
 

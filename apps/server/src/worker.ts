@@ -20,6 +20,7 @@ import { startDb } from './db';
 import { loadDotEnv, loadEnv } from './env';
 import { scheduleCityDay } from './jobs/cityDay';
 import { defineJourneyArrive } from './jobs/journeyArrive';
+import { defineEventResolve, scheduleChatTrim } from './jobs/together';
 import { flushSentry, initSentry } from './sentry';
 
 loadDotEnv();
@@ -35,8 +36,11 @@ const agenda = new Agenda({
 });
 // Slice 4 (ADR 0025): defined before start so a due arrival is picked up at once.
 defineJourneyArrive(agenda, getContent(), log);
+// Slice 6 (ADR 0037, 0039): the event resolutions the API schedules, and the daily chat trim.
+defineEventResolve(agenda, getContent(), log);
 await agenda.start();
 await scheduleCityDay(agenda, getContent(), log);
+await scheduleChatTrim(agenda, getContent(), log);
 log(`started (version ${APP_VERSION}), polling every 30 seconds`);
 
 let closing = false;

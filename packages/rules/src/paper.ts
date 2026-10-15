@@ -50,6 +50,20 @@ export interface PaperFacts {
    * reader's party and its top three pushers; absent or null = none.
    */
   unrestPushed?: { cityName: string; homeName: string; partyName: string; top: string[] } | null;
+  /** Slice 6 (tech design §11.2): yesterday's events and favours; absent = none holds. */
+  events?: EventFacts;
+}
+
+/** Slice 6 (tech design §11.2): what the settlement knows of yesterday's events and favours. */
+export interface EventFacts {
+  /** The best band among the reader's sign-ups of yesterday's events (resolved), or null. */
+  tookPart: 'triumph' | 'success' | 'mixed' | 'fiasco' | null;
+  /** The faction resolved an event yesterday in the residence city that the reader was not on. */
+  city: boolean;
+  calledOff: boolean;
+  bailPostedFor: boolean;
+  bailPostedBy: boolean;
+  visited: boolean;
 }
 
 /** Slice 5: what the settlement knows of yesterday's risks (design §14). */
@@ -123,6 +137,19 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
       return f.risk?.deportedYesterday === true;
     case 'unrestPushed':
       return !!f.unrestPushed;
+    // Slice 6 (tech design §11.2): `eventOpenToday` is live (selected at read), the rest stored.
+    case 'eventResolvedYesterday':
+      return c.tookPart
+        ? f.events?.tookPart != null && (c.outcome === undefined || f.events.tookPart === c.outcome)
+        : f.events?.city === true;
+    case 'eventCalledOffYesterday':
+      return f.events?.calledOff === true;
+    case 'bailPostedForYesterday':
+      return f.events?.bailPostedFor === true;
+    case 'bailPostedByYesterday':
+      return f.events?.bailPostedBy === true;
+    case 'visitedYesterday':
+      return f.events?.visited === true;
     default:
       // Political conditions are selected live at read (ADR 0023), never at settlement.
       return false;

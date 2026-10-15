@@ -45,6 +45,8 @@ import {
   weekOf,
 } from '@irongate/rules';
 import type { DayKey, FactionId, NpcSlateEntry, OpinionShares, SeatRule } from '@irongate/rules';
+import { ensureFixtures } from './eventPlace';
+import { resolveOpenBefore } from './eventService';
 import { Types } from 'mongoose';
 import type { ClientSession } from 'mongoose';
 import { captureException } from '../sentry';
@@ -697,6 +699,10 @@ export async function settleCityDay(content: GameContent, cityId: string, now: n
     const needsIssues = !!city?.world && !city.issues;
     if (!needsVoting && !needsIssues && city?.world && city.world.settledDay >= today) return city;
     const d = city?.world ? city.world.settledDay + 1 : today;
+    // Slice 6 (tech design §3.2, ADR 0037): every open Campaign Event of an earlier day is resolved
+    // (each in its own transaction) before the boundary, so its swing, ledger and momentum land
+    // before the drift, the count and Monday's Issues.
+    if (city?.world && !needsVoting && !needsIssues) await resolveOpenBefore(content, cityId, d, now);
     try {
       await inTransaction((session) => {
         if (needsVoting) return convertCityVoting(content, cityId, city.world!.settledDay, session);
@@ -706,9 +712,12 @@ export async function settleCityDay(content: GameContent, cityId: string, now: n
             ? bootstrapCapital(content, cityId, now, session)
             : bootstrap(content, cityId, now, session);
         }
-        return capital
-          ? processCapitalBoundary(content, cityId, d, now, session)
-          : processBoundary(content, cityId, d, now, session);
+        // Slice 6 (tech design §3.2): the boundary posts day d's fixtures in its transaction.
+        return (
+          capital
+            ? processCapitalBoundary(content, cityId, d, now, session)
+            : processBoundary(content, cityId, d, now, session)
+        ).then(() => ensureFixtures(content, cityId, d, session));
       });
     } catch (err) {
       if (!isConflict(err)) throw err;

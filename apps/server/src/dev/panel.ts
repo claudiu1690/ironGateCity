@@ -1,3 +1,4 @@
+import { togetherAction, togetherStatus } from './together';
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
 import { BOOST, Character, District, IssueModel, Journey, RuleBallot } from '@irongate/db';
@@ -76,6 +77,15 @@ export interface DevPanelDeps {
 }
 
 const DEV_ACTIONS: readonly DevAction[] = [
+  // Slice 6 (tech design §8.7).
+  'members',
+  'fillEvent',
+  'startEvent',
+  'rolls',
+  'memberCells',
+  'memberWard',
+  'memberSays',
+  'chatReset',
   'hour',
   'day',
   'phase',
@@ -279,6 +289,7 @@ async function statusFor(
           : null,
       home: c ? await homeView(content, residenceCityId(c), city, now) : null,
       risk: c ? await riskStatus(content, c, city, now) : null,
+      together: c ? await togetherStatus(c, now) : null,
     },
   };
 }
@@ -642,6 +653,20 @@ async function runAction(
       const n = (doc.barred ?? []).length;
       if (n > 0) await Character.updateOne({ _id: doc._id }, { $set: { barred: [] }, $inc: { version: 1 } });
       did = n > 0 ? 'The bar is lifted' : 'No bar to lift';
+      break;
+    }
+    case 'members':
+    case 'fillEvent':
+    case 'startEvent':
+    case 'rolls':
+    case 'memberCells':
+    case 'memberWard':
+    case 'memberSays':
+    case 'chatReset': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      did = await togetherAction(content, doc, action, body.target, clock.now);
+      settle = true;
       break;
     }
   }

@@ -35,6 +35,8 @@ const RISK_KINDS = new Set<string>(RISK_CONDITION_KINDS);
 /** A slice-5 risk headline (its deck is held to 200 once filled). */
 const isRisk = (t: HeadlineTemplate) => t.when.some((w) => RISK_KINDS.has(w.kind));
 
+import type { TogetherEdition } from './togetherEdition';
+
 export type NewEdition =Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
 
 /**
@@ -62,6 +64,8 @@ export function buildEdition(i: {
   seniorityStepYesterday?: number;
   /** Slice 5 (tech design §11.2): the risk facts and their placeholders (`riskEdition`). */
   risk?: RiskEdition | null;
+  /** Slice 6 (tech design §11.2): yesterday's events and favours and their placeholders. */
+  together?: TogetherEdition | null;
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
@@ -98,6 +102,7 @@ export function buildEdition(i: {
     ...(prev !== null ? { level: { before: prev.snapshot.level, after: c.level } } : {}),
     ...(i.risk ? { risk: i.risk.facts } : {}),
     ...(i.unrestPushed ? { unrestPushed: i.unrestPushed } : {}),
+    ...(i.together ? { events: i.together.facts } : {}),
   };
 
   const templates = content.headlinesOf(paperCityId);
@@ -147,7 +152,12 @@ export function buildEdition(i: {
   };
   // Slice 5: each risk headline's own fills (its `{missionTitle}` is the one its fact names).
   const varsFor = (t: HeadlineTemplate): Partial<Record<Placeholder | RiskPlaceholder, string>> =>
-    Object.assign({}, baseVars, ...t.when.map((w) => i.risk?.varsByKind[w.kind as RiskCondition['kind']] ?? {}));
+    Object.assign(
+      {},
+      baseVars,
+      ...t.when.map((w) => i.risk?.varsByKind[w.kind as RiskCondition['kind']] ?? {}),
+      ...t.when.map((w) => i.together?.varsByKind[w.kind] ?? {}),
+    );
 
   return {
     characterId: c._id,

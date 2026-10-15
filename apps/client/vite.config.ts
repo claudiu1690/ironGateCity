@@ -12,7 +12,8 @@ import type { Connect, Plugin } from 'vite';
  * so Better Auth sees the public origin.
  */
 const apiTarget = process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:3001';
-const proxy = { '/api': { target: apiTarget, changeOrigin: false, xfwd: true } };
+// Slice 6 (ADR 0038): `ws: true` carries the chat socket (/api/socket.io) through the same-origin proxy.
+const proxy = { '/api': { target: apiTarget, changeOrigin: false, xfwd: true, ws: true } };
 
 /**
  * ADR 0024 (maps v3 §5.1): the map tiles `pnpm art:tiles` cut into <repo>/.art-cache/tiles are served

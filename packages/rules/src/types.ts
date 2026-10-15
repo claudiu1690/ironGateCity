@@ -12,7 +12,17 @@ import type { MissionType } from './constants';
 import type { RecordLevel } from './record';
 import type { QuarterLock } from './quarters';
 import type { RuleHow } from './ruleBallot';
-import type { EventPageView, MemberRowView } from './togetherTypes';
+import type {
+  CharacterViewV7,
+  CityViewV6,
+  EventPageView,
+  HeldViewV6,
+  JourneyViewV6,
+  LocationViewV6,
+  MemberRowView,
+  OrderViewV6,
+  PaperViewV6,
+} from './togetherTypes';
 
 export const FACTION_IDS = ['vanguard', 'collective', 'alliance'] as const;
 export type FactionId = (typeof FACTION_IDS)[number];
@@ -232,6 +242,13 @@ export type HeadlineGroup = 'personal' | 'city' | 'ambient';
 
 /** Counts in `min` / `max` conditions are inclusive, except `homeShare`'s max (see paper.ts). */
 export type HeadlineCondition =
+  /** Slice 6 (tech design §11.2, design §10): the event headlines; `eventOpenToday` live, the rest stored. */
+  | { kind: 'eventOpenToday' }
+  | { kind: 'eventResolvedYesterday'; tookPart: boolean; outcome?: 'triumph' | 'success' | 'mixed' | 'fiasco' }
+  | { kind: 'eventCalledOffYesterday' }
+  | { kind: 'bailPostedForYesterday' }
+  | { kind: 'bailPostedByYesterday' }
+  | { kind: 'visitedYesterday' }
   | { kind: 'firstEdition' }
   /** The rank rose since the last paper; optionally only to one of `values`, or to `min` or higher. */
   | { kind: 'rankRose'; values?: number[]; min?: number }
@@ -692,6 +709,8 @@ export interface JobView {
 }
 
 export interface OrderView {
+  /** Slice 6 (tech §8.3): where the order's work is (the event order). */
+  link?: OrderViewV6['link'];
   id: string;
   title: string;
   line: string;
@@ -836,6 +855,10 @@ export interface CharacterView {
   agiQuarters?: number;
   here?: CharacterViewV6['here'];
   barred?: CharacterViewV6['barred'];
+  /** Slice 6 (tech design §8.3): open sign-ups, unseen results, chat, the Faction tab's dot. */
+  events?: CharacterViewV7['events'];
+  chat?: CharacterViewV7['chat'];
+  factionDot?: boolean;
   /**
    * Review 1 (§8.4, §7.5): today is the welcome day (the creation day, and the next when created
    * after 22:00 UTC): the *First day* bonus and the plate's first-time hint.
@@ -908,6 +931,8 @@ export interface LocationJobView {
 }
 
 export interface LocationView {
+  /** Slice 6 (tech §8.3): open events of your faction at this venue. */
+  events?: LocationViewV6['events'];
   id: string;
   name: string;
   kind: string;
@@ -1000,6 +1025,8 @@ export interface RivalGroundView {
 }
 
 export interface CityView {
+  /** Slice 6 (tech §8.3): *{n} of the {faction} in town now*. */
+  factionHere?: CityViewV6['factionHere'];
   id: string;
   name: string;
   role: CityRole;
@@ -1309,6 +1336,9 @@ export interface LetterView {
 }
 
 export interface PaperView {
+  /** Slice 6 (tech §11.1): the *Events* row (live) and the desk's *Signed up* row. */
+  events?: PaperViewV6['events'];
+  signedUp?: PaperViewV6['signedUp'];
   day: DayKey;
   firstEdition: boolean;
   /** The paper's masthead: always the stored edition's (the residence's; ADR 0074). */
@@ -2130,6 +2160,13 @@ export interface PoliticalResult {
     energy?: { before: number; after: number } | null;
     barred?: { cityId: string; cityName: string; until: number } | null;
     record?: { before: { level: RecordLevel; marks: number }; after: { level: RecordLevel; marks: number } } | null;
+    /** Slice 6 (tech design §10.2): Rested drawn by a call or a sign-up, Party XP from a favour or the order. */
+    rested?: { before: number; after: number } | null;
+    fxp?: { added: number; order: number } | null;
+    /** Slice 6: *Bail {iron} Iron · posted by {name}* on the prisoner's release (ADR 0041). */
+    postedBy?: { name: string; iron: number } | null;
+    /** Slice 6: the visit's line for the mate (*{name}: Health +10, out five minutes sooner*). */
+    mate?: { name: string; health: number; minutes: number } | null;
   };
   performedAt: string;
   idempotencyKey: string;
@@ -2280,6 +2317,8 @@ export interface PatrolCardResult extends CardOutcome {
 }
 
 export interface JourneyView {
+  /** Slice 6 (tech §8.3): *You and n others on this train*. */
+  fellows?: JourneyViewV6['fellows'];
   id: string;
   from: { cityId: string; name: string };
   to: { cityId: string; name: string };
@@ -2777,6 +2816,10 @@ export interface CellsNowView {
 
 /** The cells or the infirmary (`/held`, tech design §8.3). */
 export interface HeldView {
+  /** Slice 6 (tech §8.3): the ward's visitors, the payer, the sign-ups held over. */
+  visits?: HeldViewV6['visits'];
+  postedBy?: HeldViewV6['postedBy'];
+  signups?: HeldViewV6['signups'];
   stayId: string;
   kind: 'cells' | 'infirmary';
   state: 'in' | 'out';

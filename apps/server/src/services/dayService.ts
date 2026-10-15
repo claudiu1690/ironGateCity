@@ -39,7 +39,11 @@ import { ensureReleased } from './heldService';
 import { heatRateOn, heatTimerOf, isRivalGround, marksOf, rivalGroundAt } from './risk';
 import { ensureRunInSettled } from './streetService';
 import type { SessionUser } from '../trpc/context';
-import { ensurePlaces } from './cityDay';
+import { ensureCityDay, ensurePlaces } from './cityDay';
+import { dueCities, ensureEventsCredited, ensureEventsResolved } from './eventService';
+import { touchPresence } from './presenceService';
+import { readTogether } from './togetherEdition';
+import type { TogetherEdition } from './togetherEdition';
 import { jobCityOf, residenceCityId } from './residence';
 import { buildEdition, riskEdition } from './edition';
 import { ensureArrived } from './journeyArrival';
@@ -105,6 +109,8 @@ export function computeSettlement(
     awards?: AwardDoc[];
     /** Slice 5 (tech design §8.4): yesterday's stays and the titles the risk headlines name. */
     risk?: RiskRead | null;
+    /** Slice 6 (tech design §8.4): yesterday's events and favours. */
+    together?: TogetherEdition | null;
   },
 ): SettlementWrite | null {
   const today = dayKey(now);
@@ -280,6 +286,7 @@ export function computeSettlement(
     seniorityStepYesterday: seniorityStep(dayModifiers(content, wageCity, today - 1)),
     // Slice 5 (tech design §11.2): the risk facts, with the Heat projected at the settlement.
     risk: riskEdition(content, c, today, projectHeat(heatTimerOf(c), now, heatRateOn(content, city)).value, read.risk ?? null),
+    together: read.together ?? null,
   });
   // Slice 5 (tech design §8.4): the marks that have faded are dropped from the stored record.
   const stored = marksOf(c);
@@ -402,7 +409,10 @@ export async function ensureSettled(
           .lean<AwardDoc[]>();
         // Slice 5 (tech design §8.4): yesterday's stays and what they and the marks were for.
         const risk = await readRisk(c, today, session);
+        // Slice 6 (tech design §8.4): yesterday's events, bail and visits.
+        const together = c.day.settled === null ? null : await readTogether(content, c, today, session);
         const w = computeSettlement(content, c, now, {
+          together,
           previous,
           home,
           ...(jobCity !== undefined ? { jobCity } : {}),
@@ -525,12 +535,21 @@ export async function loadCharacter(
   const found = await Character.findOne({ userId: user.id }).lean<CharacterDoc>();
   if (!found) throw gameError('PRECONDITION_FAILED', 'ARRIVAL_PENDING');
   const places = await ensurePlaces(content, found, now);
+  // Slice 6 (tech design §3.4 step 1): the cities of due sign-ups are settled too (their boundary
+  // resolves an earlier day's events first). Nothing when no sign-up is due.
+  for (const id of dueCities(found, now)) if (!places.has(id)) places.set(id, await ensureCityDay(content, id, now));
   const city = places.get(residenceCityId(found)) ?? null;
   const lucky = await ensureRunInSettled(content, found, now, opts.keepRunIn ?? null);
   const released = await ensureReleased(content, lucky, now);
+  // Slice 6 step 4 (ADR 0037): due events still open are resolved (the world only).
+  if (hasDueEvents(released, now)) await ensureEventsResolved(content, released, now);
   const settled = await ensureSettled(content, released, now, city, { read: true });
+  // Slice 6 step 6: due, resolved sign-ups are credited after the settlement (today's tally).
+  const credited = hasDueEvents(settled, now) ? await ensureEventsCredited(content, settled, now) : settled;
   // Slice 4 (ADR 0025 §4): a due journey arrives (lazily) once the day is settled.
-  const doc = await ensureArrived(content, settled, now);
+  const arrived = await ensureArrived(content, credited, now);
+  // Slice 6 step 8 (ADR 0040): presence, at most once a minute, no version bump.
+  const doc = await touchPresence(arrived, now);
   // The city the character is in (an arrival may have moved them since `ensurePlaces`).
   const rival = isRivalGround(content, doc, doc.cityId);
   const here = !rival
@@ -547,6 +566,12 @@ export async function loadCharacter(
     rivalGround: rival ? rivalGroundAt(content, doc.factionId, doc.cityId, here, dayKey(now)) : null,
     heldNow: held,
   };
+}
+
+/** Slice 6 (tech §3.4): a sign-up or a withdrawn call whose start has passed (no query otherwise). */
+export function hasDueEvents(c: Pick<CharacterDoc, 'events'>, now: number): boolean {
+  const due = (p: { startsAt: Date }) => new Date(p.startsAt).getTime() <= now;
+  return (c.events?.open ?? []).some(due) || (c.events?.calls ?? []).some(due);
 }
 
 export async function editionReadAt(doc: CharacterDoc, now: number): Promise<number | null> {

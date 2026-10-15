@@ -6,6 +6,8 @@ import { meExtras } from './cityService';
 import { loadCharacter } from './dayService';
 import { politicsWaiting } from './politicsService';
 import { toCharacterView } from './views';
+import { chatForYou } from './chatService';
+import { signupLines } from './eventViews';
 
 /**
  * The caller's full character view, as `character.me` reads it: the City Day settled, the residence
@@ -22,5 +24,15 @@ export async function fullCharacterView(
   const today = dayKey(now);
   const waiting = await politicsWaiting(content, doc, city, now, today);
   const view = toCharacterView(doc, now, content, editionReadAt, { city, politicsWaiting: waiting });
-  return { ...view, ...(await meExtras(content, doc, today)) };
+  // Slice 6 (tech design §8.3): the open sign-ups by name and the chat's *for you* dot.
+  const open = await signupLines(content, doc);
+  const forYou = doc.chat?.hidden ? false : await chatForYou(doc);
+  const unseen = doc.events?.unseen?.length ?? 0;
+  return {
+    ...view,
+    ...(await meExtras(content, doc, today)),
+    events: { open, unseen },
+    chat: { hidden: doc.chat?.hidden ?? false, forYou },
+    factionDot: unseen > 0 || forYou,
+  };
 }

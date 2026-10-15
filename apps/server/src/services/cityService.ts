@@ -1,3 +1,5 @@
+import { ticketsAt } from './eventViews';
+import { factionHereCount } from './presenceService';
 import { isCheckedAction } from '@irongate/content';
 import type { GameContent } from '@irongate/content';
 import { Award, City, Contribution, District, IssueModel, OfficeTerm, contributionId } from '@irongate/db';
@@ -737,6 +739,10 @@ export async function getCityView(
   // gates); in the capital each district's too (§18 Q13: the sheet is the district's).
   view.whatsHere = whatsHereOf(content, c, city, view.locations);
   for (const d of view.districts ?? []) d.whatsHere = whatsHereOf(content, c, city, view.locations, d.id);
+  // Slice 6 (tech design §8.3): the venue's event tickets and the plate's *n of the faction in town now*.
+  const tickets = await ticketsAt(content, c, city.id, now);
+  for (const l of view.locations) l.events = tickets.get(l.id) ?? [];
+  view.factionHere = await factionHereCount(c, city.id, now);
   return view;
 }
 
