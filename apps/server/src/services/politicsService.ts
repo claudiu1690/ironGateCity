@@ -1,6 +1,7 @@
 import type { GameContent } from '@irongate/content';
 import { turnoutOf } from '@irongate/content';
-import { Candidacy, Character, District, Election, OfficeTerm, PaperEntry, RuleBallot, Vote } from '@irongate/db';
+import { copy } from '@irongate/content/copy';
+import { Candidacy, Character, District, Election, FactionElection, OfficeTerm, PaperEntry, RuleBallot, Vote } from '@irongate/db';
 import type {
   CandidacyDoc,
   CharacterDoc,
@@ -66,7 +67,8 @@ import type {
 import { selectPoliticalHeadlines } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
-import { isContested, residenceCityId, residenceOf, residenceSpec } from './residence';
+import { isContested, paperCityOf, residenceCityId, residenceOf, residenceSpec } from './residence';
+import { ordinalWord } from './nationEdition';
 import type { ResidenceSpec } from './residence';
 import { battlegroundFill } from './battlegroundDay';
 import { ordinanceIdOn } from './modifiers';
@@ -1096,19 +1098,42 @@ export async function getCapitalCount(
 // The paper: the front page and the live political headlines (ADR 0023).
 // ---------------------------------------------------------------------------------------------
 
-/** The term the front page celebrates: held today, and first seen today or not yet. */
+/**
+ * The term the front page celebrates: held today, and first seen today or not yet. Slice 7 (tech
+ * design §11.1): of several, the highest office (President, Chair, deputy, Governor, then the council
+ * seat), so a Governor seated with a new council term reads the Governor's front page.
+ */
 export async function frontPageTerm(c: CharacterDoc, today: DayKey): Promise<OfficeTermDoc | null> {
-  const t = await OfficeTerm.findOne({
+  const held = await OfficeTerm.find({
     'holder.kind': 'player',
     'holder.characterId': c._id,
     fromDay: { $lte: today },
     toDay: { $gt: today },
     vacatedDay: null,
-  }).lean<OfficeTermDoc>();
-  if (!t) return null;
-  if (t.frontPageSeenAt && Math.floor(t.frontPageSeenAt.getTime() / 86_400_000) < today) return null;
-  return t;
+  }).lean<OfficeTermDoc[]>();
+  const unseen = held.filter(
+    (t) => !t.frontPageSeenAt || Math.floor(t.frontPageSeenAt.getTime() / 86_400_000) >= today,
+  );
+  unseen.sort((a, b) => FRONT_RANK[a.office ?? 'council'] - FRONT_RANK[b.office ?? 'council'] || a.fromDay - b.fromDay);
+  return unseen[0] ?? null;
 }
+
+/** Slice 7: which office's front page wins when several are unseen (lower first). */
+const FRONT_RANK: Record<NonNullable<OfficeTermDoc['office']>, number> = {
+  president: 0,
+  chair: 1,
+  deputy: 2,
+  governor: 3,
+  council: 4,
+};
+
+/** Slice 7 (tech design §11.2): the headline condition each office's front page prints. */
+export const FRONT_PAGE_KIND = {
+  governor: 'governorTookOffice',
+  chair: 'chairElected',
+  deputy: 'deputySeated',
+  president: 'presidentSeated',
+} as const satisfies Record<Exclude<NonNullable<OfficeTermDoc['office']>, 'council'>, string>;
 
 const ordinal = (place: number) => ORDINALS[place - 1] ?? String(place);
 const turnoutText = (t: { voters: number; eligible: number }) => turnoutOf(t.voters, t.eligible);
@@ -1119,7 +1144,11 @@ export async function frontPageView(
   term: OfficeTermDoc,
   now: number,
   city: CityDoc | null = null,
+  /** The edition's paper (its templates and voice); the residence's by default. */
+  paperCityId: string = paperCityOf(c),
 ): Promise<FrontPageView | null> {
+  const office = term.office ?? 'council';
+  if (office !== 'council') return officeFrontPage(content, c, { ...term, office }, now, paperCityId);
   const e = await Election.findById(term.electionId).lean<ElectionDoc>();
   if (!e?.result) return null;
   const me = `p:${c._id.toHexString()}`;
@@ -1166,6 +1195,78 @@ export async function frontPageView(
     count: await countView(content, c, e, now),
     // Review 4 (answers §10.1): *What now* rides on the front page (shown once by `frontPageSeenAt`).
     whatNow: await whatNowOf(content, term, city),
+  };
+}
+
+/**
+ * Slice 7 (tech design §11.1, design §11.2): the front page of a Governor, a Chair, a deputy and the
+ * President: the paper's own `hl.*.governor` / `chair-front` / `deputy-front` / `president-front`
+ * filled with the facts, the caption naming the office and the CTA. A Governor's carries the
+ * council's count (the term rides on it); the national offices' carry none. *What now* is the
+ * councillor's card (the rule on the ballot), so an office's front page has none.
+ */
+async function officeFrontPage(
+  content: GameContent,
+  c: CharacterDoc,
+  term: OfficeTermDoc & { office: keyof typeof FRONT_PAGE_KIND },
+  now: number,
+  paperCityId: string,
+): Promise<FrontPageView> {
+  const faction = content.faction(c.factionId);
+  const p = copy.nation.paper.captions;
+  const toOffice = copy.nation.election.toTheOffice;
+  const cityName = content.city(term.cityId)?.name ?? content.city(paperCityId)?.name ?? term.cityId;
+  const vars: Record<string, string> = { name: c.name, faction: faction.name };
+  let caption: string;
+  let cta: { label: string; route: string };
+  let count: CountView | null = null;
+  switch (term.office) {
+    case 'governor': {
+      vars.city = cityName;
+      caption = p.governor(c.name, cityName);
+      cta = { label: toOffice, route: `/office/governor/${term.cityId}` };
+      // The Governor's term rides on the council's count (the electionId it was seated from).
+      const e = await Election.findById(term.electionId).lean<ElectionDoc>();
+      count = e?.result ? await countView(content, c, e, now) : null;
+      break;
+    }
+    case 'chair': {
+      // `{votes}`: the member's votes at the Chair's count (the FactionElection the term names).
+      const fe = await FactionElection.findById(term.electionId).lean<{ result?: { rows?: Array<{ key: string; votes?: number }> } | null }>();
+      const row = fe?.result?.rows?.find((r) => r.key === `p:${c._id.toHexString()}`);
+      if (row?.votes !== undefined) vars.votes = String(row.votes);
+      caption = p.chair(c.name, faction.name);
+      cta = { label: toOffice, route: '/faction?tab=chair' };
+      break;
+    }
+    case 'deputy':
+      // A list place (≤ 60); the test hook stores the seat number (100 × the party's index + place).
+      vars.ordinal = ordinalWord(((term.place - 1) % 100) + 1);
+      caption = p.deputy(c.name, faction.shortName);
+      cta = { label: copy.nation.election.toParliament, route: '/parliament' };
+      break;
+    case 'president':
+      caption = p.president(c.name);
+      cta = { label: toOffice, route: '/office/president' };
+      break;
+  }
+  const kind = FRONT_PAGE_KIND[term.office];
+  const t = content.headlinesOf(paperCityId).find((h) => h.when.some((w) => w.kind === kind));
+  const fill = (x: string) => {
+    const out = x.replace(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g, (whole, k: string) => vars[k] ?? whole);
+    return out.charAt(0).toUpperCase() + out.slice(1);
+  };
+  // A deck whose fact is missing (a Chair seated by a test hook: no count) is left out, never printed with a `{token}`.
+  const deck = t?.deck ? fill(t.deck) : '';
+  return {
+    avatar: c.avatarId ? assetView(content, c.avatarId) : null,
+    caption: { name: c.name, rankTitle: rankTitle(content, c, c.rank), cityName },
+    animate: term.frontPageSeenAt === null,
+    headline: t ? fill(t.headline) : caption,
+    deck: /\{[a-zA-Z]/.test(deck) ? '' : deck,
+    count,
+    whatNow: null,
+    office: { office: term.office, caption, cta },
   };
 }
 

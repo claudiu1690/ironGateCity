@@ -24,7 +24,7 @@ import { isEventInPrint, togetherPaper } from './togetherPaper';
 import { nationalSection } from './nationEdition';
 import { restedCapToday } from './modifiers';
 import { isRivalGround, riskView } from './risk';
-import { frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
+import { FRONT_PAGE_KIND, frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
 import {
   ambitionStatus,
   energyState,
@@ -59,7 +59,9 @@ export async function getPaper(deps: {
   // ADR 0023: the political sections are live at read; the front page on a winner's first paper
   // of the term; political headlines merged into the stored edition by priority.
   const term = await frontPageTerm(c, today);
-  const frontPage = term ? await frontPageView(content, c, term, now) : null;
+  const frontPage = term ? await frontPageView(content, c, term, now, null, entry.cityId) : null;
+  // Slice 7 (tech design §11.1): the office's own stored line (`hl.*.chair-front`, …) is the front page.
+  const frontKind = frontPage?.office ? FRONT_PAGE_KIND[frontPage.office.office] : null;
   // Slice 4 (tech design §11.2): the residence's live lines (its election, Issues, the moves, heroes
   // and quotes).
   const residenceId = residenceCityId(c);
@@ -91,13 +93,15 @@ export async function getPaper(deps: {
           vars: res.varsByKind.firstCapitalArrivalYesterday,
         })
       : null;
-  const stored: LiveHeadline[] = entry.headlines.map((h) => ({
-    templateId: h.templateId,
-    group: h.group,
-    priority: h.priority ?? content.headlines.find((t) => t.id === h.templateId)?.priority ?? 0,
-    headline: h.headline,
-    ...(h.deck ? { deck: h.deck } : {}),
-  }));
+  const stored: LiveHeadline[] = entry.headlines
+    .filter((h) => !(frontKind && content.headlines.find((t) => t.id === h.templateId)?.when.some((w) => w.kind === frontKind)))
+    .map((h) => ({
+      templateId: h.templateId,
+      group: h.group,
+      priority: h.priority ?? content.headlines.find((t) => t.id === h.templateId)?.priority ?? 0,
+      headline: h.headline,
+      ...(h.deck ? { deck: h.deck } : {}),
+    }));
   // The welcome edition keeps its welcome and arrival notice ahead of the phase line (and is never
   // composed away). Away: personal → the local line → the residence's city lines → the local ambient.
   const headlines = composeHeadlines({

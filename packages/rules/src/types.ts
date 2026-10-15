@@ -2078,9 +2078,23 @@ export interface FrontPageView {
   animate: boolean;
   headline: string;
   deck: string;
-  count: CountView;
+  /**
+   * The council's count (a councillor's and a Governor's front page); null for the national offices
+   * (a Chair, a deputy, the President), whose count is on their own pages.
+   */
+  count: CountView | null;
   /** Review 4 (answers §10.1): the *What now* card under the headline, the morning of the win. */
   whatNow?: WhatNowView | null;
+  /**
+   * Slice 7 (tech design §11.1): the office the front page celebrates (absent or null: a council
+   * seat). `caption` names the office (*Anna Roth, elected Chair of the Red Collective*); `cta` is
+   * *To the office* or *To Parliament*.
+   */
+  office?: {
+    office: 'governor' | 'chair' | 'deputy' | 'president';
+    caption: string;
+    cta: { label: string; route: string };
+  } | null;
 }
 
 /**

@@ -37,7 +37,14 @@ export interface NationSettlementRead {
 }
 
 const ORDINALS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth'];
-const ordinal = (n: number) => ORDINALS[n - 1] ?? `${n}th`;
+/** A list place in words: *First* … *Tenth*, then *11th*, *21st*, *22nd*, *23rd*. */
+export function ordinalWord(n: number): string {
+  if (ORDINALS[n - 1]) return ORDINALS[n - 1]!;
+  const teen = n % 100 >= 11 && n % 100 <= 13;
+  const suffix = teen ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
+  return `${n}${suffix}`;
+}
+const ordinal = ordinalWord;
 
 /** The settlement's nation reads, in its session (§8.4 step 1). */
 export async function readNationSettlement(
