@@ -45,6 +45,7 @@ import { branchChannel, cityChannel, systemLine } from './chatOutbox';
 import { ensureSettled, loadCharacter } from './dayService';
 import type { LoadedCharacter } from './dayService';
 import { eventDescriptor, headlineTarget, placeIdOf, readEventPlace, typeOf, venueOfEvent } from './eventPlace';
+import { townHallSignaturesInTx } from './petitionService';
 import { eventScheduler } from './eventScheduler';
 import { buildReceipt, pageView } from './eventViews';
 import { addInfluence, addPoints, writeLedger } from './ledger';
@@ -858,6 +859,8 @@ export async function resolveInTx(
   );
   if (done.modifiedCount !== 1) throw new VersionConflict();
   if (r.calledOff) return true;
+  // Slice 7 T19 (design §10.4): a Town Hall adds townspeople's signatures to the city's open petition.
+  if (type.special === 'petitionSignatures') await townHallSignaturesInTx(session, ev.cityId, r.band);
 
   // The meter: the district's or the city's (ADR 0027), with the morale record on a home city.
   if (ev.districtId) {

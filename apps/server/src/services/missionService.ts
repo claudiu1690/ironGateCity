@@ -36,6 +36,7 @@ import { Types } from 'mongoose';
 import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { closeArrivalHere, progressOf, progressSet } from './actionService';
+import { placeDescriptor, recordPushInTx } from './chairDeskService';
 import { branchBackIfStanding } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { createStayInTx, heldPlace } from './heldService';
@@ -531,6 +532,8 @@ export async function writeMissionFinal(i: {
     lenientIssues: i.frozenOrders === true,
   });
   const branchBack = orders.allDone ? await branchBackIfStanding(content, session, updated, today, i.now) : null;
+  // Slice 7 T16 (ADR 0046): a mission at the Chair's pushed place counts one toward the party's target.
+  if (!i.frozenOrders) await recordPushInTx(content, session, updated, placeDescriptor(content, 'mission', { id: mission.id, type: mission.type }, located.location, city), 1, i.now);
 
   const built = buildMissionResult({
     content,

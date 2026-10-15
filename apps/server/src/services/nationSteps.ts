@@ -1,4 +1,10 @@
+import { chairDeskSteps } from './chairDeskService';
+import { chairElectionSteps } from './chairElectionService';
+import { confidenceSteps } from './confidenceService';
 import type { NationBoundaryCtx } from './nationDay';
+import { nationalElectionSteps } from './nationalElectionService';
+import { parliamentSteps } from './parliamentService';
+import { petitionSteps } from './petitionService';
 
 /**
  * Slice 7 (docs/tech/slice-7.md §3.1, §8.2): the nation's day's window handlers, by step, in the
@@ -19,19 +25,29 @@ export type NationStep = 'push' | 'chair' | 'divisions' | 'enactments' | 'termWo
 
 export type NationHandler = (ctx: NationBoundaryCtx) => Promise<void>;
 
+/**
+ * Lane 2's handlers are wrapped (`lazy`), so this table can be built while the services' modules are
+ * still initialising (they import the read path, which imports the nation's day, which imports this).
+ */
+const lazy =
+  (pick: () => readonly NationHandler[]): NationHandler =>
+  async (ctx) => {
+    for (const h of pick()) await h(ctx);
+  };
+
 export const NATION_STEPS: Record<NationStep, NationHandler[]> = {
   /** (2) The party's target of day d − 1 per faction (T16). */
-  push: [],
-  /** (3) Petitions on the Chair closing at d; votes on the Chair counting at d; the automatic vote (T19). */
-  chair: [],
+  push: [lazy(() => chairDeskSteps)],
+  /** (3) Petitions on the Chair closing at d; votes on the Chair counting at d; the automatic vote (T19); a dissolution's line. */
+  chair: [lazy(() => confidenceSteps), lazy(() => petitionSteps)],
   /** (4) Divisions due at d (T15, T18's removals). */
-  divisions: [],
+  divisions: [lazy(() => parliamentSteps.divisions)],
   /** (4) Enactments due at d (signature day passed) (T15). */
-  enactments: [],
+  enactments: [lazy(() => parliamentSteps.enactments)],
   /** (5) The term-day work: take office (0), the Chair's election (9, 11, 14), the nation's (19, 21, 23, 27) (T14, T17). */
-  termWork: [],
+  termWork: [lazy(() => nationalElectionSteps), lazy(() => chairElectionSteps)],
   /** (6) Monday: the President's slot for a party figure, then one secretary's bill (T15). */
-  monday: [],
+  monday: [lazy(() => parliamentSteps.monday)],
   /** (7) The clerk's motion to remove the President (T18). */
-  clerk: [],
+  clerk: [lazy(() => parliamentSteps.clerk)],
 };

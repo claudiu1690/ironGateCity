@@ -17,6 +17,12 @@ import { eventsRouter } from './routers/events';
 import { chatRouter, factionRouter, favoursRouter, presenceRouter } from './routers/faction';
 import { nationRouter } from './routers/nation';
 import { parliamentRouter } from './routers/parliament';
+import { chairRouter } from './routers/chair';
+import { chairElectionRouter } from './routers/chairElection';
+import { confidenceRouter } from './routers/confidence';
+import { officeRouter } from './routers/office';
+import { petitionRouter } from './routers/petition';
+import { presidentRouter } from './routers/president';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -48,6 +54,13 @@ export const appRouter = router({
   // Slice 7.
   nation: nationRouter,
   parliament: parliamentRouter,
+  // Slice 7 phase B, lane 2.
+  chairElection: chairElectionRouter,
+  chair: chairRouter,
+  confidence: confidenceRouter,
+  office: officeRouter,
+  president: presidentRouter,
+  petition: petitionRouter,
 });
 
 export type AppRouter = typeof appRouter;

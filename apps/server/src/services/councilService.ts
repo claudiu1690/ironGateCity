@@ -33,6 +33,7 @@ import type { ClientSession } from 'mongoose';
 import { GameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { writeLedger } from './ledger';
+import { chairBranchBackIfStanding } from './chairElectionService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { ballotView, electionView, givenThisCycle, weekdayName } from './politicsService';
 import { residenceOf, residenceSpec } from './residence';
@@ -542,6 +543,8 @@ export async function branchBackIfStanding(
   today: DayKey,
   now: number,
 ): Promise<{ backers: number } | null> {
+  // Slice 7 T14 (design §4.1): the secretary backs a standing candidate for Chair the same way.
+  await chairBranchBackIfStanding(session, c, today, now);
   let spec: ReturnType<typeof residenceSpec>;
   try {
     spec = residenceSpec(content, c);

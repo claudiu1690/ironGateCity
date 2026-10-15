@@ -40,6 +40,7 @@ import type { ResultInput } from './actionResult';
 import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
 import { keySeed } from './keyGuard';
+import { placeDescriptor, recordPushInTx } from './chairDeskService';
 import { branchBackIfStanding } from './councilService';
 import { moveOpinion, placeWrites, readPlace } from './place';
 import type { OpinionMove, PlaceCtx } from './place';
@@ -627,6 +628,9 @@ export async function writeTier1(i: {
   const branchBack = res.orders.allDone
     ? await branchBackIfStanding(content, session, updated, today, now)
     : null;
+  // Slice 7 T16 (ADR 0046): an attempt at the Chair's pushed place counts toward the party's target
+  // (the member's own contribution row, in this transaction; a ×3 counts three).
+  if (!i.frozenOrders) await recordPushInTx(content, session, updated, placeDescriptor(content, 'checked', action, located.location, city), res.times, now);
 
   const built = buildActionResult({
     ...result,
