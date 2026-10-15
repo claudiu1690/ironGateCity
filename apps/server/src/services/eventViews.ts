@@ -627,7 +627,7 @@ export async function buildReceipt(
 export async function signupLines(
   content: GameContent,
   c: CharacterDoc,
-): Promise<Array<{ eventId: string; signupId: string; name: string; eventName: string; venueName: string; cityId: string; startsAt: number; roleName: string; energy: number; withdrawUntil: number }>> {
+): Promise<Array<{ eventId: string; signupId: string; name: string; eventName: string; event: string; venueName: string; cityId: string; startsAt: number; roleName: string; energy: number; withdrawUntil: number }>> {
   const open = c.events?.open ?? [];
   if (open.length === 0) return [];
   const evs = await CampaignEvent.find({ _id: { $in: open.map((p) => p.eventId) } }).lean<CampaignEventDoc[]>();
@@ -642,6 +642,7 @@ export async function signupLines(
         signupId: p.signupId.toHexString(),
         name: type.name,
         eventName: type.name,
+        event: type.runningName,
         venueName: venueOfEvent(content, ev).location.name,
         cityId: ev.cityId,
         startsAt: ev.startsAt.getTime(),

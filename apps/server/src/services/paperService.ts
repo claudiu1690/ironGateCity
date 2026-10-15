@@ -153,7 +153,8 @@ export async function getPaper(deps: {
       // design §11.3) adds the risk headlines Seen, the cells, the infirmary and the train home.
       ...(IN_PRINT.test(h.templateId) || isEventInPrint(h.templateId) ? { inPrint: true } : {}),
       // The hero's headline carries the rosette (screens §7.3).
-      ...(/.hero$/.test(h.templateId) ? { medal: true } : {}),
+      // Slice 6 (screens §8): an event's Triumph In Print carries the rosette too.
+      ...(/.hero$/.test(h.templateId) || /event-triumph$/.test(h.templateId) ? { medal: true } : {}),
     })),
     issues: await paperIssues(content, c, today, { local }),
     orders: ordersView(content, c, today, firstIssueShort(content, homeState, today), homeState),

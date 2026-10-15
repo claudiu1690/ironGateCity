@@ -321,6 +321,11 @@ export interface ChatChannelsView {
 export interface EventRowView {
   eventId: string;
   name: string;
+  /** The event's name in running text (*canvass drive*), the fixture flag, and the roles filled (screens §8). */
+  event: string;
+  fixture: boolean;
+  filled: number;
+  roles: number;
   venueName: string;
   startsAt: number;
   calledBy: EventCaller;
@@ -352,14 +357,15 @@ export interface JourneyViewV6 {
 export interface HeldViewV6 {
   visits: Array<{ name: string; at: number }>;
   postedBy: { name: string } | null;
-  signups: Array<{ roleName: string; eventName: string; startsAt: number }>;
+  /** `event`: the running name (*rally*), for *You're the {role} at the {event}, {time}*. */
+  signups: Array<{ roleName: string; eventName: string; event: string; startsAt: number }>;
 }
 export interface OrderViewV6 {
   link?: { kind: 'event'; eventId: string } | { kind: 'board' };
 }
 export interface PaperViewV6 {
   events: EventRowView[];
-  signedUp: Array<{ eventName: string; venueName: string; startsAt: number; roleName: string }>;
+  signedUp: Array<{ eventName: string; event: string; venueName: string; startsAt: number; roleName: string }>;
 }
 
 /** The event result modal (tech §10.1; `ResultModal kind="event"`), stored as the sign-up's receipt. */

@@ -1,6 +1,6 @@
 import { copy } from '@irongate/content/copy';
 import type { GameContent } from '@irongate/content';
-import { Arrival, Character, City, PaperEntry, isDuplicateKeyError } from '@irongate/db';
+import { Arrival, Character, City, PaperEntry, isDuplicateKeyError, nameWordsOf } from '@irongate/db';
 import type { ArrivalDoc, CharacterDoc, CityDoc } from '@irongate/db';
 import { NAME, buildNewCharacter, checkName, originFaction, resolveOrigin } from '@irongate/rules';
 import type { ArrivalView, CharacterView, FactionId, StoryScreenView } from '@irongate/rules';
@@ -292,6 +292,8 @@ export async function joinArrival(content: GameContent, user: SessionUser, now: 
           [
             {
               ...doc,
+              // Slice 6 (tech design §5.4): the name's words, for the Members search.
+              nameWords: nameWordsOf(doc.name),
               day: { settled: w.set['day.settled'] },
               job: w.set.job,
               today: w.set.today,

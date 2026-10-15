@@ -40,11 +40,11 @@ updated: 2026-10-14
 **Code:**
 - Welcome favour: the `*.favour` tickets in `packages/content/src/data/cities/{coalport,duskwall,ashford}.ts`; the `welcome-b` templates in `orders.ts`; `use: 'welcome'` in `schemas.ts`; the offer check and `ONCE_ONLY` in `apps/server/src/services/actionService.ts`; `carriedWelcome` in `packages/rules/src/orders.ts`
 - Patrons (planned, ADR 0055): embedded `characters.patrons[]` (at most two), `patronDays` and `addFavour` in rules, Requests paid in the settlement. None exists yet.
-- Mates' favours (ADR 0041): the gates and the visit's effect in `packages/rules/src/favours.ts`, `healHealth` in `health.ts`, `stays.bailPostedBy`, `visits` and `how: 'bailPosted'` in `packages/db/src/models/stay.ts` (slice 6 phase A, 15 Oct 2026); `apps/server/src/services/favourService.ts` (`postBail`, `visitMate`), slice 5's `releaseInTx` naming the payer (`how: 'bailPosted'`), the held view's visitors and sign-ups (phase B, `21929a7`). Not yet: the screens (phase C).
+- Mates' favours (ADR 0041): the gates and the visit's effect in `packages/rules/src/favours.ts`, `healHealth` in `health.ts`, `stays.bailPostedBy`, `visits` and `how: 'bailPosted'` in `packages/db/src/models/stay.ts` (slice 6 phase A, 15 Oct 2026); `apps/server/src/services/favourService.ts` (`postBail`, `visitMate`), slice 5's `releaseInTx` naming the payer (`how: 'bailPosted'`), the held view's visitors and sign-ups (phase B, `21929a7`); the screens (phase C lane B): `FavourSheet` in `packages/ui/src/components/Members.tsx`, `apps/client/src/features/faction/FavourFlow.tsx` (from a Members row, a profile, a chat line and `CellsNow`'s *Post bail*), the held screens' lines in `Held.tsx`; e2e `apps/client/e2e/favours.spec.ts`.
 
 ## Status
 
-**Built:** the welcome favour ([[Review 4]] fix round, re-strung in [[Review 5]]). **Server built, screens to come:** mates' bail and visits ([[Slice 6 Together|slice 6]] phase B). **Designed, not built:** Crane and Marr ([[Slice 8 A Life in the City|slice 8]]). **Post-MVP:** the other three patrons, new patrons each season.
+**Built:** the welcome favour ([[Review 4]] fix round, re-strung in [[Review 5]]). **Built, QA to come:** mates' bail and visits ([[Slice 6 Together|slice 6]] phase B). **Designed, not built:** Crane and Marr ([[Slice 8 A Life in the City|slice 8]]). **Post-MVP:** the other three patrons, new patrons each season.
 
 ## Decisions
 

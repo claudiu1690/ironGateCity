@@ -49,6 +49,8 @@ export default defineConfig({
         /qa\.voting(\.screens|\.irongate)?\.spec\.ts/,
         /(^|[\\/])review6\.spec\.ts$/,
         // Slice 6 (tech design §15.1): each in its own project after slice 5's.
+        /(^|[\\/])faction\.spec\.ts$/,
+        /(^|[\\/])favours\.spec\.ts$/,
         /(^|[\\/])events\.spec\.ts$/,
       ],
       use: { ...devices['Pixel 7'] },
@@ -202,13 +204,27 @@ export default defineConfig({
       dependencies: ['qa-voting'],
       use: { ...devices['Pixel 7'] },
     },
+    // Slice 6 (tech design §15.1): the Faction tab with chat between two browsers, then favours. Each
+    // test opens its own contexts (two players; a phone and a desktop).
+    {
+      name: 'faction',
+      testMatch: /(^|[\\/])faction\.spec\.ts$/,
+      dependencies: ['review6'],
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'favours',
+      testMatch: /(^|[\\/])favours\.spec\.ts$/,
+      dependencies: ['faction'],
+      use: { ...devices['Pixel 7'] },
+    },
     // Slice 6 (tech design §15.1): Campaign Events on a phone at 390 × 844 (call, sign up, withdraw,
-    // commit, both results; a hand on the branch's event). It moves the shared clock to the next
+    // commit, both results; a hand on the branch's event). Last: it moves the shared clock to the next
     // City Day.
     {
       name: 'events',
       testMatch: /(^|[\\/])events\.spec\.ts$/,
-      dependencies: ['review6'],
+      dependencies: ['favours'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
   ],

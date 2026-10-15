@@ -62,6 +62,11 @@ export function MePage() {
   const { character: c, now } = useCharacter();
   // Slice 5 (screens §2.4): *Have a mark struck off*, one tap, the political modal.
   const strike = usePoliticalAct();
+  // Slice 6 (design §8): the chat's one promise, that it can be switched off.
+  const chatHidden = useMutation({
+    ...trpc.chat.setHidden.mutationOptions(),
+    onSuccess: (r) => queryClient.setQueryData(trpc.character.me.queryKey(), r.character),
+  });
   // Slice 4: the hero, the heroes and the scoreboard come only from `character.me` (an action's
   // character view carries none), so the Me tab reads it fresh before it renders.
   const fresh = useQuery({ ...trpc.character.me.queryOptions(), refetchOnMount: 'always' });
@@ -413,6 +418,24 @@ export function MePage() {
 
         <Card title="Today">
           <TodayStrip today={c.today} help={{ cityName: c.statGuide.cityName, turnsAt: c.day.endsAt }} />
+        </Card>
+
+        {/* Slice 6 (design §8; screens §2.5): *Chat* shown on the Faction tab, or hidden. */}
+        <Card title={copy.together.chat.me.label}>
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-[12px]" data-testid="me-chat">
+              {c.chat?.hidden ? copy.together.chat.me.off : copy.together.chat.me.on}
+            </span>
+            <Button
+              variant="outline"
+              pending={chatHidden.isPending}
+              onClick={() => chatHidden.mutate({ hidden: !c.chat?.hidden })}
+              data-testid="me-chat-toggle"
+            >
+              {c.chat?.hidden ? copy.together.chat.me.show : copy.together.chat.me.hide}
+            </Button>
+          </div>
+          <span className="font-mono text-[11.5px] text-muted">{copy.together.chat.me.note}</span>
         </Card>
 
         <Card title="Party orders">

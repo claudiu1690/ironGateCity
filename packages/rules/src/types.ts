@@ -2806,6 +2806,11 @@ export interface CellsNowRow {
   until: number;
   /** The viewer's own row reads *you*. */
   you: boolean;
+  /**
+   * Slice 6 (tech design §12.1, ADR 0078): a faction mate's row carries *Post bail · {iron} Iron*
+   * (the mate's own bail figure); null on any other party's row, on yours, and once posted.
+   */
+  mate?: { characterId: string; iron: number } | null;
 }
 
 /** `held.inCells`: the players held at a station now, soonest out first (at most 50). */

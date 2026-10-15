@@ -9,6 +9,12 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 6 phase C, lane B (Members, scoreboard, chat, favours)
+
+T21–T23: Members, the profile, the faction scoreboard, chat with the socket client, favours from
+every entry point, the paper's and held screens' lines; `faction` and `favours` e2e projects.
+Updated [[Slice 6 Together]], [[Chat and Presence]], [[Patronage and Favours]].
+
 ## [2026-10-15] build | Slice 6 phase B (the server)
 
 T8–T16 built in `21929a7`: events (call, sign-up, withdraw, resolution, credit, fixtures), the Faction

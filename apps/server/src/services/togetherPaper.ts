@@ -47,6 +47,10 @@ export async function togetherPaper(
   const events: EventRowView[] = fixtureFirst.map((ev) => ({
     eventId: ev._id.toHexString(),
     name: typeOf(content, ev.typeId).name,
+    event: typeOf(content, ev.typeId).runningName,
+    fixture: ev.kind === 'fixture',
+    filled: ev.roles.filter((r) => r.holder !== null).length,
+    roles: ev.roles.length,
     venueName: venueOfEvent(content, ev).location.name,
     startsAt: ev.startsAt.getTime(),
     calledBy: callerOf(content, ev),
@@ -55,6 +59,7 @@ export async function togetherPaper(
   }));
   const signedUp = (await signupLines(content, c)).map((x) => ({
     eventName: x.eventName,
+    event: x.event,
     venueName: x.venueName,
     startsAt: x.startsAt,
     roleName: x.roleName,

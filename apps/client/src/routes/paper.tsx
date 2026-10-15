@@ -10,8 +10,10 @@ import {
   LettersRow,
   Masthead,
   OrdersList,
+  PaperEvents,
   PaperSheet,
   Rosette,
+  SignedUpRows,
   formatUntil,
   formatWeekday,
   renderTimeTokens,
@@ -178,6 +180,15 @@ export function PaperPage() {
             />
           )}
           <OrdersList orders={p.orders} variant="paper" />
+          {/* Slice 6 (screens §8): the faction's open events in the residence city, under the orders. */}
+          {p.events && (
+            <PaperEvents
+              events={p.events}
+              cityName={character?.residence?.cityName ?? character?.standing.cityName ?? ''}
+              rank3Title={character?.rank.ladder[2] ?? ''}
+              onOpen={(eventId) => void navigate({ to: '/faction/events/$eventId' as never, params: { eventId } as never })}
+            />
+          )}
           {p.pollingDay && (
             <ElectionCard
               summary={p.pollingDay}
@@ -208,6 +219,8 @@ export function PaperPage() {
             />
           ))}
           <DeskList desk={p.desk} onHeld={() => void navigate({ to: '/held' })} />
+          {/* Slice 6 (screens §8): the desk's *Signed up* rows. */}
+          {p.signedUp && <SignedUpRows rows={p.signedUp} />}
           {/* Sticky, so "To the city" is on the first screen (§12.3). On wide screens it rides above
             the floating tab dock (QA n1), and the page's bottom padding lets the Letters row and the
             desk scroll clear of both. */}

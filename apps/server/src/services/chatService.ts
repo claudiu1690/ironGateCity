@@ -178,7 +178,7 @@ export async function chatPost(
   const existing = await stored();
   if (existing) return existing;
   const norm = normaliseChatText(input.text);
-  if (!norm.ok) throw gameError('BAD_REQUEST', 'CHAT_TEXT', { reason: norm.reason });
+  if (!norm.ok) throw gameError('BAD_REQUEST', 'CHAT_TEXT', { why: norm.reason });
   const p = parseChannel(input.channel)!;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
@@ -188,7 +188,7 @@ export async function chatPost(
         const recent = (lim?.recent ?? []).map((d) => new Date(d).getTime());
         const last = lim?.last ? { hash: lim.last.hash, at: new Date(lim.last.at).getTime() } : null;
         const rate = chatRateCheck({ recent, last, hash: norm.hash, now });
-        if (rate) throw new GameError('CHAT_RATE', { reason: rate.reason, retryAt: rate.retryAt }, 'TOO_MANY_REQUESTS');
+        if (rate) throw new GameError('CHAT_RATE', { why: rate.reason, retryAt: rate.retryAt }, 'TOO_MANY_REQUESTS');
         const today = dayKey(now);
         await ChatLimit.updateOne(
           { _id: c._id },

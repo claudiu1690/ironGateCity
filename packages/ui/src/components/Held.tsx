@@ -1,7 +1,7 @@
 import { copy } from '@irongate/content/copy';
 import type { CellsNowRow, FactionId, HeldView } from '@irongate/rules';
 import type { ReactNode } from 'react';
-import { cx, formatWhen } from '../format';
+import { cx, formatClock, formatWhen } from '../format';
 import { Button } from './Button';
 import { FactionCrest } from './FactionCrest';
 import { GroundSash } from './GroundSash';
@@ -179,6 +179,12 @@ export function HeldScreen({
               </span>
             )}
           </p>
+          {/* Slice 6 (screens §7.2): an open sign-up is counted before you came in. */}
+          {(h.signups ?? []).map((s) => (
+            <p key={`${s.eventName}-${s.startsAt}`} className="-mt-1 font-mono text-[11.5px] text-text-2" data-testid="held-signup">
+              {copy.together.held.signedUp(s.roleName, `the ${s.event ?? s.eventName.toLowerCase()}`, formatClock(s.startsAt))}
+            </p>
+          ))}
 
           {cells && h.bail && (
             <div className="flex flex-col gap-1">
@@ -213,6 +219,10 @@ export function HeldScreen({
                   </span>
                 </HelpButton>
               )}
+              {/* Slice 6 (screens §7.2): a faction mate can post it. */}
+              <span className="font-mono text-[11px] text-muted" data-testid="held-bail-mates">
+                {copy.together.held.bailFromTab}
+              </span>
             </div>
           )}
           {!cells && h.walkOut && h.discharge && (
@@ -242,6 +252,12 @@ export function HeldScreen({
                   ? copy.risk.infirmary.discharge(h.discharge.energy)
                   : copy.risk.needsEnergy(h.discharge.energy)}
               </Button>
+              {/* Slice 6 (screens §7.2): the ward's visitors, each Health +10 and five minutes off. */}
+              {(h.visits ?? []).length > 0 && (
+                <span className="font-mono text-[11.5px] text-text-2" data-testid="held-visitors">
+                  {copy.together.held.visitors((h.visits ?? []).map((v) => v.name).join(', '))}
+                </span>
+              )}
             </div>
           )}
           {notice && (
@@ -279,6 +295,10 @@ export interface CellsNowCardProps {
   now: number;
   factionNames: Partial<Record<FactionId, string>>;
   className?: string;
+  /** Slice 6 (ADR 0078, 0041): *Post bail · {n} Iron* on a faction mate's row opens the favour sheet. */
+  onPostBail?: (row: CellsNowRow & { mate: { characterId: string; iron: number } }) => void;
+  /** Mates whose bail this session posted (*Posted*). */
+  posted?: ReadonlySet<string>;
 }
 
 /**
@@ -287,7 +307,7 @@ export interface CellsNowCardProps {
  * mark and *out in 24 min*; the viewer's own row reads *you*. Empty: *Nobody. The duty officer is
  * reading.* Read-only until slice 6 (*Post bail* on a faction mate's row).
  */
-export function CellsNowCard({ rows, now, factionNames, className }: CellsNowCardProps) {
+export function CellsNowCard({ rows, now, factionNames, className, onPostBail, posted }: CellsNowCardProps) {
   const live = (rows ?? []).filter((r) => r.until > now);
   return (
     <section
@@ -330,8 +350,21 @@ export function CellsNowCard({ rows, now, factionNames, className }: CellsNowCar
                     </span>
                   )}
                 </span>
-                <span className="shrink-0 font-mono text-[11.5px] text-text-2">
-                  {out}
+                <span className="flex shrink-0 flex-col items-end">
+                  <span className="font-mono text-[11.5px] text-text-2">{out}</span>
+                  {r.mate && onPostBail && (
+                    <button
+                      type="button"
+                      disabled={posted?.has(r.mate.characterId)}
+                      onClick={() => onPostBail({ ...r, mate: r.mate! })}
+                      className="label-caps min-h-11 cursor-pointer border-[1.5px] border-ink px-2 text-[12px] whitespace-nowrap hover:bg-ink hover:text-paper disabled:cursor-default disabled:border-faint disabled:text-muted disabled:hover:bg-transparent"
+                      data-testid="cells-now-bail"
+                    >
+                      {posted?.has(r.mate.characterId)
+                        ? copy.together.favours.posted
+                        : copy.together.favours.postBail(r.mate.iron)}
+                    </button>
+                  )}
                 </span>
               </li>
             );

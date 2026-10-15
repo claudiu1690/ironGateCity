@@ -58,6 +58,10 @@ T1–T7 of [[tech/slice-6|the tech spec]] §20: the rules (events, presence, cha
 
 T8–T16 of [[tech/slice-6|the tech spec]] §20 in one commit, `21929a7`: the read path v6 (due events resolved and credited, presence), the Faction tab's reads and the faction scopes, calling, signing up and withdrawing, the resolution (job, lazy paths, the city day's catch-up and the fixtures), the credit and the modals, favours, chat with the Socket.IO push socket, the paper's event parts and headlines, the test hooks. The designer's copy (`55d14b7`) is bound. T17's integration suite is a throwaway scratch script (58 checks pass, not committed). Deviations in the tech spec: `events.callEvent` (tRPC reserves `call`), the slot guard by `$elemMatch`, no morale record at resolution, `/api/test/member-held`.
 
+## Phase C, lane B (15 Oct 2026)
+
+T21–T23 of [[tech/slice-6|the tech spec]]: the Members list (search, pages, bands and status, *Post bail*, *Visit*, *Ask to join*), the profile (mute, *Message*), the faction scoreboard (this week and all time, the city chips, the top ten per bracket with rosettes, your row), chat (three channels, live over the socket, the composer and its limit lines, system lines with buttons, report, mute, *New lines ↓*, the desktop column, Me's switch), *Post bail* on *In the cells now*, the paper's *Events* row and desk's *Signed up*, the held screens' visitors, bail and sign-up lines. Server fixes: the chat limit's detail (`why`), `nameWords` for new characters (search), the mate's bail on the cells' rows. E2E `faction` and `favours` pass. Deviations in the tech spec (*Phase C, lane B*).
+
 ## QA and leftovers
 
 Building; no QA yet. The approved defaults and the design's other slice-6 defaults (three starts a day, volunteers at half strength, presence hidden on rival ground: Appendix C #58, #62, #63) are watch items in [[Open Questions]].

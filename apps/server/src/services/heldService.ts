@@ -631,7 +631,7 @@ export async function getHeld(deps: { user: SessionUser; content: GameContent; n
     // Slice 6 (tech design §8.3): the ward's visitors, the mate who posted bail, the sign-ups held over.
     visits: (stay?.visits ?? []).map((v) => ({ name: v.name, at: new Date(v.at).getTime() })),
     postedBy: stay?.bailPostedBy ? { name: stay.bailPostedBy.name } : null,
-    signups: (await signupLines(content, c)).map((x) => ({ roleName: x.roleName, eventName: x.eventName, startsAt: x.startsAt })),
+    signups: (await signupLines(content, c)).map((x) => ({ roleName: x.roleName, eventName: x.eventName, event: x.event, startsAt: x.startsAt })),
   };
 }
 
@@ -661,7 +661,7 @@ export async function cellsNow(deps: {
       'held.locationId': deps.input.locationId,
       'held.until': { $gt: new Date(now) },
     },
-    { name: 1, avatarId: 1, factionId: 1, 'held.until': 1 },
+    { name: 1, avatarId: 1, factionId: 1, 'held.until': 1, 'held.bail': 1 },
   )
     .sort({ 'held.until': 1 })
     .limit(50)
@@ -674,6 +674,11 @@ export async function cellsNow(deps: {
       factionId: r.factionId,
       until: new Date(r.held!.until).getTime(),
       you: r._id.equals(loaded.doc._id),
+      // Slice 6 (ADR 0041): *Post bail* on a faction mate's row; a posted bail moved `until` to then.
+      mate:
+        r.factionId === loaded.doc.factionId && !r._id.equals(loaded.doc._id) && r.held?.bail
+          ? { characterId: r._id.toHexString(), iron: r.held.bail.total }
+          : null,
     })),
     serverNow: now,
   };
