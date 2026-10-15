@@ -52,6 +52,8 @@ export interface PaperFacts {
   unrestPushed?: { cityName: string; homeName: string; partyName: string; top: string[] } | null;
   /** Slice 6 (tech design §11.2): yesterday's events and favours; absent = none holds. */
   events?: EventFacts;
+  /** Slice 7 (tech design §11.2): the stored national conditions that hold at this settlement. */
+  national?: { kinds: readonly string[] };
 }
 
 /** Slice 6 (tech design §11.2): what the settlement knows of yesterday's events and favours. */
@@ -150,6 +152,17 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
       return f.events?.bailPostedBy === true;
     case 'visitedYesterday':
       return f.events?.visited === true;
+    // Slice 7 (tech design §11.2): the national kinds stored at the settlement (`pushed` is live).
+    case 'governorTookOffice':
+    case 'governorLocal':
+    case 'addressGiven':
+    case 'chairElected':
+    case 'deputySeated':
+    case 'presidentSeated':
+    case 'pledgeKept':
+    case 'billPassed':
+    case 'billFailed':
+      return f.national?.kinds.includes(c.kind) === true;
     default:
       // Political conditions are selected live at read (ADR 0023), never at settlement.
       return false;

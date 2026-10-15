@@ -47,6 +47,8 @@ import { ensureNationDay } from './nationDay';
 import { dueCities, ensureEventsCredited, ensureEventsResolved } from './eventService';
 import { touchPresence } from './presenceService';
 import { readTogether } from './togetherEdition';
+import { officeTitle, readNationSettlement, standingInputOf, targetLines } from './nationEdition';
+import type { NationSettlementRead } from './nationEdition';
 import type { TogetherEdition } from './togetherEdition';
 import { jobCityOf, residenceCityId } from './residence';
 import { buildEdition, riskEdition } from './edition';
@@ -115,6 +117,8 @@ export function computeSettlement(
     risk?: RiskRead | null;
     /** Slice 6 (tech design §8.4): yesterday's events and favours. */
     together?: TogetherEdition | null;
+    /** Slice 7 (tech design §8.4): the faction's document, the party's target days met, the national facts. */
+    nation?: NationSettlementRead | null;
   },
 ): SettlementWrite | null {
   const today = dayKey(now);
@@ -168,6 +172,20 @@ export function computeSettlement(
   );
   const otherPc = otherStipends.reduce((n, x) => n + x.pc, 0);
   const otherFxp = otherStipends.reduce((n, x) => n + x.fxp, 0);
+  // Slice 7 (§8.4 step 2): a desk line per office stipend (*Stipend, Chair of the Red Collective*).
+  const officeLines = otherStipends.map((x) => {
+    const t = allTerms.find((y) => y._id.toHexString() === x.termId);
+    return {
+      office: x.office,
+      label: `Stipend, ${officeTitle(content, x.office, t?.cityId ?? '', c.factionId)}`,
+      boundaries: x.boundaries,
+      pc: x.pc,
+      fxp: x.fxp,
+    };
+  });
+  // Slice 7 (§8.4 step 3, design §4.2): +10 Party XP for each ended day whose push was met where the member knocked.
+  const target = targetLines(read.nation?.pushMet ?? []);
+  const targetFxp = target.reduce((n, x) => n + x.fxp, 0);
   // Slice 4 (ADR 0026): a seat vacated at a move stops paying at the move.
   const boundaries = stipendBoundaries(
     terms.map((t) => ({ fromDay: t.fromDay, toDay: t.vacatedDay ?? t.toDay })),
@@ -221,7 +239,7 @@ export function computeSettlement(
   const oneOfUsPc = oneOfUsCities * paidBoundaries * STANDING.oneOfUsPcPerDay;
   const gains = applyGains(
     { xp: c.xp, level: c.level, fxp: c.fxp, rank: c.rank, pc: c.pc, statPointsPending: c.statPointsPending },
-    { xp: 0, fxp: stipend.fxp + awardsFxp + otherFxp, pc: stipend.pc + oneOfUsPc + awardsPc + otherPc },
+    { xp: 0, fxp: stipend.fxp + awardsFxp + otherFxp + targetFxp, pc: stipend.pc + oneOfUsPc + awardsPc + otherPc },
   );
   // Slice 7 (§8.4 step 5): the projection of every current term, each with its office and key.
   const offices = allTerms
@@ -274,7 +292,9 @@ export function computeSettlement(
       residenceCityId(c),
       today,
     ).length > 0;
-  const orders = carried && carried !== 'rotation' ? carried : startOrders(
+  // Slice 7 (§8.4 step 4, ADR 0046): the Chair's standing orders; the welcome set and the crisis pair still win.
+  const chairOrders = welcome ? null : standingInputOf(content, c, read.nation?.faction ?? null, today);
+  const dealt = carried && carried !== 'rotation' ? carried : startOrders(
     content.ordersOf(c.factionId),
     today,
     s.job !== null,
@@ -287,7 +307,9 @@ export function computeSettlement(
     // Review 4 #22: and only on a day the member has a mission they can start in the residence city
     // (its quarter open, offered to their party, no gate unmet); else slot B draws another order.
     (t) => !(t.match.kinds ?? []).includes('mission') || missionsOpen,
+    chairOrders?.standing,
   );
+  const orders = chairOrders && dealt !== carried ? { ...dealt, setBy: chairOrders.setBy } : dealt;
   const edition = buildEdition({
     content,
     character: c,
@@ -311,6 +333,9 @@ export function computeSettlement(
     // Slice 5 (tech design §11.2): the risk facts, with the Heat projected at the settlement.
     risk: riskEdition(content, c, today, projectHeat(heatTimerOf(c), now, heatRateOn(content, city, c.factionId)).value, read.risk ?? null),
     together: read.together ?? null,
+    nation: read.nation ? { kinds: read.nation.kinds, vars: read.nation.vars } : null,
+    offices: officeLines,
+    target,
   });
   // Slice 5 (tech design §8.4): the marks that have faded are dropped from the stored record.
   const stored = marksOf(c);
@@ -435,8 +460,11 @@ export async function ensureSettled(
         const risk = await readRisk(c, today, session);
         // Slice 6 (tech design §8.4): yesterday's events, bail and visits.
         const together = c.day.settled === null ? null : await readTogether(content, c, today, session);
+        // Slice 7 (tech design §8.4): the faction, the party's target and the national facts.
+        const nation = await readNationSettlement(content, c, today, terms, session);
         const w = computeSettlement(content, c, now, {
           together,
+          nation,
           previous,
           home,
           ...(jobCity !== undefined ? { jobCity } : {}),

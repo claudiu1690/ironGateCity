@@ -21,6 +21,7 @@ import { localElection, localParts } from './localEdition';
 import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
 import { isEventInPrint, togetherPaper } from './togetherPaper';
+import { nationalSection } from './nationEdition';
 import { restedCapToday } from './modifiers';
 import { isRivalGround, riskView } from './risk';
 import { frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
@@ -191,6 +192,9 @@ export async function getPaper(deps: {
       // Review 1: with no job, the home city's places with a Jobs card, in pin order.
       oneOfUsPc: entry.desk.oneOfUsPc ?? 0,
       awards: entry.desk.awards ?? null,
+      // Slice 7 (tech design §11.1): a line per office stipend; the party's target bonus.
+      offices: entry.desk.offices ?? null,
+      target: entry.desk.target ?? null,
       room:
         c.room && c.room.fromDay <= today && today < c.room.untilDay
           ? { untilDay: c.room.untilDay, cap }
@@ -216,11 +220,15 @@ export async function getPaper(deps: {
     frontPage,
     events: together.parts.events,
     signedUp: together.parts.signedUp,
+    // Slice 7 (tech design §11.1): *From the capital* / *The republic*, live at read.
+    national: await nationalSection(content, c, entry.cityId, now),
   };
 }
 
 /** The In Print headlines, by id (slice 4: the hero, the quote; slice 5: the risk four). */
-const IN_PRINT = /\.(hero|quoted|seen|cells|infirmary|deported)$/;
+// Slice 7 (tech design §11.1): the Address, the offices taken, a bill passed and a pledge kept.
+const IN_PRINT =
+  /\.(hero|quoted|seen|cells|infirmary|deported|address|governor|chair-front|deputy-front|president-front|pledge-kept|bill-passed)$/;
 
 /**
  * Slice 5 (tech design §11.3, screens §2.5): the desk's live rows. The held line while in the cells

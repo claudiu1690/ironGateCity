@@ -2,6 +2,7 @@ import { isCheckedAction, isWelcomeAction } from '@irongate/content';
 import type { Action, City, GameContent, Location, Quarter } from '@irongate/content';
 import { residenceCityId, residenceCtx, residenceOf } from './residence';
 import type { CharacterDoc, CityDoc, StoredOrders } from '@irongate/db';
+import { Types } from 'mongoose';
 import {
   DIRECTIVES,
   ENERGY,
@@ -401,6 +402,8 @@ export function toOrdersState(o: StoredOrders): OrdersState {
     allDoneAt: o.allDoneAt ? new Date(o.allDoneAt).getTime() : null,
     // Review 4 #20 (ADR 0078): the day's orders off since an arrest.
     ...(o.off ? { off: { at: new Date(o.off.at).getTime(), reason: o.off.reason } } : {}),
+    // Slice 7 (ADR 0046): *Set by the Chair*, kept on every write of the day's orders.
+    ...(o.setBy ? { setBy: { characterId: o.setBy.characterId.toHexString(), name: o.setBy.name } } : {}),
   };
 }
 
@@ -410,6 +413,7 @@ export function fromOrdersState(o: OrdersState): StoredOrders {
     items: o.items.map((i) => ({ ...i, doneAt: i.doneAt === null ? null : new Date(i.doneAt) })),
     allDoneAt: o.allDoneAt === null ? null : new Date(o.allDoneAt),
     ...(o.off ? { off: { at: new Date(o.off.at), reason: o.off.reason } } : {}),
+    ...(o.setBy ? { setBy: { characterId: new Types.ObjectId(o.setBy.characterId), name: o.setBy.name } } : {}),
   };
 }
 
@@ -502,6 +506,12 @@ export function firstIssueShort(
   return first ? (content.issue(first.issueId)?.short ?? null) : null;
 }
 
+/** Slice 7: a push's place in words (*Eastside*, *Clearwater*). */
+export function pushPlaceName(content: GameContent, p: { cityId: string; districtId: string | null }): string {
+  if (p.districtId) return content.district(p.districtId)?.quarter.name ?? p.districtId;
+  return content.city(p.cityId)?.name ?? p.cityId;
+}
+
 export function ordersView(
   content: GameContent,
   doc: CharacterDoc,
@@ -542,6 +552,8 @@ export function ordersView(
           target: item.target,
           done: item.doneAt !== null,
           pin: item.doneAt === null && !off ? orderPin(content, doc, item, t, live, today) : null,
+          // Slice 7 (tech design §8.3): the Chair's push names its place.
+          ...(item.push ? { push: { place: pushPlaceName(content, item.push), counts: item.push.counts } } : {}),
         },
       ];
     }),
@@ -577,6 +589,7 @@ export function ordersView(
           }
         : null,
     off: off ? { reason: 'cells' } : null,
+    setBy: state.day === today && state.setBy ? { name: state.setBy.name } : null,
   };
 }
 

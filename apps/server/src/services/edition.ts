@@ -67,6 +67,11 @@ export function buildEdition(i: {
   risk?: RiskEdition | null;
   /** Slice 6 (tech design §11.2): yesterday's events and favours and their placeholders. */
   together?: TogetherEdition | null;
+  /** Slice 7 (tech design §11.2): the national facts and their fills. */
+  nation?: { kinds: readonly string[]; vars: Record<string, string> } | null;
+  /** Slice 7 (tech design §8.4): a desk line per office stipend; the party's target bonus. */
+  offices?: NonNullable<PaperEntryDoc['desk']['offices']>;
+  target?: Array<{ label: string; fxp: number }>;
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
@@ -104,6 +109,7 @@ export function buildEdition(i: {
     ...(i.risk ? { risk: i.risk.facts } : {}),
     ...(i.unrestPushed ? { unrestPushed: i.unrestPushed } : {}),
     ...(i.together ? { events: i.together.facts } : {}),
+    ...(i.nation && i.nation.kinds.length > 0 ? { national: { kinds: i.nation.kinds } } : {}),
   };
 
   const templates = content.headlinesOf(paperCityId);
@@ -158,6 +164,7 @@ export function buildEdition(i: {
       baseVars,
       ...t.when.map((w) => i.risk?.varsByKind[w.kind as RiskCondition['kind']] ?? {}),
       ...t.when.map((w) => i.together?.varsByKind[w.kind] ?? {}),
+      ...(i.nation && t.when.some((w) => i.nation!.kinds.includes(w.kind)) ? [i.nation.vars] : []),
     );
 
   return {
@@ -192,6 +199,8 @@ export function buildEdition(i: {
       stipend: i.stipend ?? null,
       oneOfUsPc: i.oneOfUsPc ?? 0,
       awards: i.awards && i.awards.length > 0 ? i.awards : null,
+      offices: i.offices && i.offices.length > 0 ? i.offices : null,
+      target: i.target && i.target.length > 0 ? i.target : null,
       restedBanked: s.restedBanked,
       daysSinceLastPaper: facts.daysSinceLastPaper,
       yesterday: playedYesterday,

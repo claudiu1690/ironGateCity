@@ -260,6 +260,8 @@ export interface OrdersState {
    * while it is set; it ends with the settlement's new orders (absent = null).
    */
   off?: { at: number; reason: 'cells' } | null;
+  /** Slice 7 (ADR 0046): *Set by the Chair, {name}* (absent or null: the secretary's). */
+  setBy?: { characterId: string; name: string } | null;
 }
 
 export type HeadlineGroup = 'personal' | 'city' | 'ambient';
@@ -747,6 +749,8 @@ export interface OrderView {
   done: boolean;
   /** The home-city pin where a tap would advance this order (slice-2 tech design §7.3), or null. */
   pin: { locationId: string; n: number } | null;
+  /** Slice 7 (tech design §8.3): the Chair's push, *the Chair's push · {place}*. */
+  push?: { place: string; counts: boolean } | null;
 }
 
 export interface OrdersView {
@@ -773,6 +777,8 @@ export interface OrdersView {
    * the day's turn. Absent on views built before it.
    */
   off?: { reason: 'cells' } | null;
+  /** Slice 7 (tech design §8.3): *Set by the Chair, {name}*; null: the secretary's. */
+  setBy?: { name: string } | null;
 }
 
 /** Review 4 #25: what a Rank opens, a key of `copy.ranks.opens` (`RANK_OPENS`). */
@@ -1329,6 +1335,10 @@ export interface DeskView {
   yesterday: DailyTally | null;
   /** Slice 4 (ADR 0028): the hero and Issue Political Capital credited at this settlement. */
   awards?: DeskAwardView[] | null;
+  /** Slice 7 (tech design §8.4, §11.1): a line per office stipend paid (*Stipend, Chair of the Red Collective*). */
+  offices?: DeskOfficeLineView[] | null;
+  /** Slice 7: the party's target bonus (*The party's target, Eastside · +10 Party XP*). */
+  target?: Array<{ label: string; fxp: number }> | null;
   /** Slice 4: the room in Irongate while it runs (live at read). */
   room?: { untilDay: DayKey; cap: number } | null;
   /** Slice 5 (tech design §11.3): the held line, *Where you are*, Heat and the record. */
@@ -1413,6 +1423,28 @@ export interface PaperView {
   landing: { cityId: string; locationId: string; actionId?: string } | null;
   readAt: number | null;
   due: boolean;
+  /**
+   * Slice 7 (tech design §11.1): *From the capital* (home papers, the Courier) / *The republic* (the
+   * Herald), live at read: at most two national lines and the open window's line.
+   */
+  national?: NationalSectionView | null;
+}
+
+/** Slice 7: a desk line for one office's stipend at this settlement. */
+export interface DeskOfficeLineView {
+  office: 'council' | 'governor' | 'chair' | 'deputy' | 'president';
+  label: string;
+  boundaries: number;
+  pc: number;
+  fxp: number;
+}
+
+/** Slice 7 (tech design §11.1): the paper's national section. */
+export interface NationalSectionView {
+  title: string;
+  lines: Array<{ id: string; headline: string; deck: string }>;
+  /** *The republic votes until {until} · Vote now*; a tap opens `route`. */
+  window: { label: string; until: number | null; route: string } | null;
 }
 
 export type GameErrorReason =

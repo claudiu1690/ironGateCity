@@ -46,6 +46,16 @@ export interface PaperEntryDoc {
     yesterday: DailyTally | null;
     /** Slice 4 (ADR 0028): hero and Issue PC credited at this settlement. */
     awards?: Array<{ kind: 'hero' | 'issue' | 'unrest'; label: string; pc: number; fxp?: number }> | null;
+    /** Slice 7 (tech design §8.4): a line per office stipend paid at this settlement. */
+    offices?: Array<{
+      office: 'council' | 'governor' | 'chair' | 'deputy' | 'president';
+      label: string;
+      boundaries: number;
+      pc: number;
+      fxp: number;
+    }> | null;
+    /** Slice 7: the party's target bonus lines (+10 Party XP each). */
+    target?: Array<{ label: string; fxp: number }> | null;
   };
   snapshot: { level: number; rank: number; standingLevel: number };
   readAt: Date | null;
