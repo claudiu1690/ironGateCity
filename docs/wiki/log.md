@@ -9,6 +9,13 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 7 phase B, lane 1: the nation's day, Clearwater, the Governor
+
+The developer's T11 (the nation's day, laws in every modifier, `nation.get`), T12 (Clearwater's
+city day and the city playable), T13 in part (the Governor at every count), T20 in part (every
+office's stipend) and T21 in part (the term, nation and office hooks; the events spec's clock).
+Updated [[Slice 7 The Nation]], [[Clearwater]], [[National Control]], [[index]].
+
 ## [2026-10-15] build | Slice 7 phase B, lane 2: the nation's acts
 
 The developer's T14–T19 on the server: the Chair's election, Parliament and laws, the Chair's desk

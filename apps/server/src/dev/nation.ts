@@ -126,11 +126,16 @@ export async function seatOffice(
     fromDay = cal.council.fromDay;
     toDay = fromDay + COUNCIL.termDays;
   } else {
-    city = content.nation.capitalId;
+    // Lane 2's national terms: `cityId: 'nation'`; a deputy's seat is 100 × the faction's index + the place.
+    city = 'nation';
     key = office === 'chair' ? `chair:${c.factionId}:${term.index}` : `${office}:${term.index}`;
     fromDay = office === 'chair' ? today : term.fromDay;
     toDay = office === 'chair' ? today + TERM.days : term.toDay;
-    if (office === 'deputy') seat = (await OfficeTerm.countDocuments({ councilKey: key })) + 1;
+    if (office === 'deputy') {
+      const base = 100 * FACTION_IDS.indexOf(c.factionId);
+      const mine = await OfficeTerm.countDocuments({ councilKey: key, seat: { $gt: base, $lt: base + 100 } });
+      seat = base + mine + 1;
+    }
   }
   const _id = new Types.ObjectId();
   await OfficeTerm.updateOne(
@@ -236,7 +241,7 @@ export async function recordOffices(
         { councilKey: key, seat: 1, fromDay },
         {
           $setOnInsert: {
-            cityId: office === 'deputy' ? 'irongate' : home,
+            cityId: office === 'deputy' ? 'nation' : home,
             councilKey: key,
             electionId: `test:${key}`,
             ...(office === 'council' ? {} : { office }),

@@ -53,7 +53,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Influence Ledger and City Hero]] — A ledger row per opinion change, the plate's rank line, City and District Heroes; the slice-6 scoreboard.
 - [[Issues of the Week]] — Two Issues per city each Monday: +50 % on tagged work, momentum, Sunday ownership, week-long effects.
 - [[Weather]] — Per-city daily weather shifting odds ±10 %, never blocking; designed, not built, and no slice schedules it.
-- [[National Control]] — Each party's weighted share across the cities (40/30/10/10/10); half the national score. Slice 7, not built.
+- [[National Control]] — Each party's weighted share across the cities (40/30/10/10/10); half the national score. Slice 7: the server's snapshot built, the client's bar to come.
 - [[Capital Districts]] — Irongate's five districts: own meters, states, two seats and Issues; the outlines tile the picture.
 - [[Travel and Journeys]] — Timed trains from Level 10, third class 20 Iron, lazy arrival, journey cards, the route drawn on the map.
 - [[Home Cities]] — A party's home never drops below 50 %; morale, the rival-pressure cap, one map with locked pins.
@@ -85,7 +85,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Ashford]] — Alliance home: College, Wharf and Station Road quarters, 12 places, 7 missions, the Gazette.
 - [[Coalport]] — Collective home and the first city built: Mill, Harbour and Sidings, 12 places, 7 missions, the Clarion.
 - [[Duskwall]] — Vanguard home, a frontier customs town: Fortress, Pass and Town, 12 places, 7 missions, the Sentinel.
-- [[Clearwater]] — The second battleground: content written 15 Oct (places, council at the Casino, missions, Issues, the Courier), being wired in slice 7.
+- [[Clearwater]] — The second battleground: one meter, seven seats; playable on the server since 15 Oct (its city day, *Live here*, the Courier); the client's screens in slice 7 phase C.
 - [[People of Irongate]] — Named NPCs: secretaries, 58 local candidates, opponents, carers; party figures and patrons; portrait files.
 
 ## Tech

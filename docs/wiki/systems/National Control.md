@@ -3,7 +3,7 @@ type: system
 title: National Control
 aliases: [NC, Who holds the republic, Leads the republic, controlShare]
 tags: [nation, opinion]
-status: designed
+status: partly built
 slice: "7 (designed, not built)"
 gdd: ["§14.8", "§15.5", "§22.1"]
 adrs: ["0042", "0043"]
@@ -49,13 +49,16 @@ control, it **gives no multiplier**.
 [[adr/0043-nation-day-term-calendar-and-the-republic-document|ADR 0043]] (the republic document) ·
 [[adr/0042-faction-scoreboard-scoped-totals|ADR 0042]] (the member scoreboard, related)
 
-**Code (planned, per the tech spec):** `packages/rules/src/national.ts` (`nationalControl`,
-`nationalScores`, `countNation`) and a `nation` collection. **Neither exists yet.**
+**Code (built, slice 7 phase B lane 1):** the snapshot is taken at every boundary by
+`controlOf` in `apps/server/src/services/nationDay.ts` (the capital's district average, the other
+cities' meters, a home city in Unrest at half) and stored on `nation.control` with a 60-day
+`controlLog`; `nation.get` (`nationService.ts`) shows it as the bar. Test hook: `/api/test/nation`
+`{ control }` (the next snapshot).
 
 ## Status
 
-- **Designed, not built** (slice 7). Today the nation map shows each city's card and holder line,
-  but there is no NC figure, no bar and no *leads the republic* line.
+- **Built on the server** (slice 7 phase B, 15 Oct 2026): the snapshot, the log and the *leads the
+  republic* news lines. The client's bar is phase C.
 
 ## Decisions
 

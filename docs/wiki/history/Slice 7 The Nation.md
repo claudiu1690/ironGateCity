@@ -95,6 +95,15 @@ Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the s
 - Two fixes in shared code: the nation's boundary lost ObjectIds (`structuredClone`), and the orders dropped an item's push on every write.
 - Checked with scratch scripts on a memory replica set: four tablers for three slots, the veto racing the enactment ten times, a removal at 40 and 39, the clerk's motion at 24 % and 26 %, design §6.3's example end to end. Details, the test hooks lane 1 needs and what phase C reads: [[tech/slice-7|Deviations (phase B, lane 2)]]. One question: the Chair's tie ([[Open Questions]] S7-T14).
 
+## Phase B, lane 1: the nation's day, Clearwater, the Governor (T11–T13, T20, T21 in part; 15 Oct 2026)
+
+- **T11 the nation's day** ([[National Control]]): one `nation` document settled boundary by boundary after the five cities (`apps/server/src/services/nationDay.ts`); National Control, the laws' expiries and the news are lane 1's, every window is a handler in `nationSteps.ts` (lane 2's hook point). The read path settles it on every request (`ensureNationDay`), the `nation-day` job at 00:02. `nation.get` (the bar, the law chips, the term line; also on the nation map as `republic`) and `parliament.laws`.
+- **Laws in play** ([[The Legislature and Laws]]): every law in force is a named source in every action, mission, wage, journey, held price and Heat day (`lawBook.ts`), and the law-only kinds reach their functions (XP, mission Energy, journey minutes, run-ins, the caught check, the walk-out price, the record's fade).
+- **T12 Clearwater** ([[Clearwater]]): its own city day (`battlegroundDay.ts`: seven seats three ways, lists of three, one card per party, the largest bloc's rule), and playable: the train, *Live here*, the bed on the Rows, its election and ballot, the Courier, the branch channel, Heat +25 % for rivals of a place's controller. No patrol there.
+- **T13 the Governor** ([[Offices]]): chosen at every count (home: the whole council; contested: the largest bloc) by the designer's ruling (never a first-term councillor; the bloc's top unseated local last); a player's `governor` term and `city.council.governor`.
+- **T20** every office's stipend in the settlement and the `offices` projection; **T21** the hooks `/api/test/term`, `/api/test/nation`, `/api/test/office`, and the `events` spec no longer depends on the clock.
+- **Not yet built:** the Governor's rule and Address and the office pages; the party cards at the set through `partyCardOf`; the petition close in the home and capital days; the paper v7; the dev panel's slice-7 buttons; the integration run. Details: [[tech/slice-7|tech spec]], *Deviations, phase B, lane 1*.
+
 ## QA and leftovers
 
 Building; no QA yet. The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
