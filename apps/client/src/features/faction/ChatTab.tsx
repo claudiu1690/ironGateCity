@@ -139,13 +139,15 @@ export function ChatTab({ column = false }: ChatTabProps) {
     onSuccess: (r) => queryClient.setQueryData(trpc.character.me.queryKey(), r.character),
   });
 
-  // Desktop: the column ends above the floating tab dock and the ticker (~170 px), so the composer
-  // is never under them; a phone: above the tab bar (64 px).
+  // Review 7 #1 (the Branch Office). Desktop: the column sits under the plate (181) and the letterhead
+  // (57) and ends above the floating tab dock and the ticker (~170 px), so the composer is never under
+  // them; sticky at the top once the plate has scrolled away. A phone: under the compact letterhead
+  // (53) and the strip (45), above the tab bar (64 px); nothing between the HUD and the composer scrolls.
   const wrap = column
-    ? 'flex h-[calc(100dvh-var(--hud-h,76px)-164px-170px)] min-h-[420px] flex-col lg:sticky lg:top-11'
+    ? 'flex h-[calc(100dvh-var(--hud-h,76px)-238px-170px)] min-h-[420px] flex-col lg:sticky lg:top-0'
     : wide
-      ? 'mx-auto flex h-[calc(100dvh-var(--hud-h,76px)-164px-170px)] min-h-[420px] w-full max-w-[640px] flex-col'
-      : 'flex h-[calc(100dvh-var(--hud-h,76px)-164px-64px)] min-h-[320px] w-full flex-col';
+      ? 'mx-auto flex h-[calc(100dvh-var(--hud-h,76px)-238px-170px)] min-h-[420px] w-full max-w-[640px] flex-col'
+      : 'flex h-[calc(100dvh-var(--hud-h,76px)-98px-64px)] min-h-[320px] w-full flex-col';
 
   if (hidden) {
     return (

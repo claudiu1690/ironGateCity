@@ -124,7 +124,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Review 5]] — 8–10 Oct (Notion Design Review 2): Coming home, the six-hour day, night patrols, the Unrest prize, treatment, What's here.
 - [[Voting Rework]] — 10–12 Oct: the town votes on a rule (three cards), seats by reputation plus backers, the capital follows the largest bloc.
 - [[Review 6]] — 15 Oct (Notion Design Review 3): the nation map held sideways, the city's map buttons in one row, the dotted journey trail.
-- [[Review 7]] — 15 Oct (Notion Design Review 4): the chat word filter (refuse and mask), the invite that names its event, *Give 2,000 Iron*; the Faction tab redesign with the designer.
+- [[Review 7]] — 15 Oct (Notion Design Review 4): the chat word filter (refuse and mask), the invite that names its event, *Give 2,000 Iron*; the Faction tab as the Branch Office (direction A); *Reich* off the refuse list.
 - [[Decision Log]] — About 55 user decisions, 29 Sep–12 Oct, in date order, with the reason, where recorded and the systems touched.
 
 ## Runbooks

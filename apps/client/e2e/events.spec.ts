@@ -67,7 +67,7 @@ test('events: call a rally, sign up, withdraw, commit, the result for both; a ha
   // 2. A: Faction → Events (the first visit): the branch's event, then *Call an event*.
   await a.goto('/faction');
   await expect(a.getByTestId('faction-tab-events')).toHaveAttribute('aria-current', 'page');
-  await expect(a.getByTestId('faction-header-line')).toContainText('here now');
+  await expect(a.getByTestId('faction-plate-line')).toContainText('here now');
   await expect(a.locator('[data-testid=event-card][data-kind=fixture]').first()).toContainText(
     /called by .+ · the branch's event/,
   );

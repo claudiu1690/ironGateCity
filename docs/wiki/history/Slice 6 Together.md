@@ -46,6 +46,11 @@ From [[IMPLEMENTATION_PLAN#Slice 6 — Together|the plan]]: Campaign Events (sch
 > [!warning] Drift
 > The plan still calls the screen "Faction HQ"; the design calls it the **Faction tab**.
 
+> [!success] Drift closed (15 Oct 2026, review 7 #1)
+> Screens §2 asked for the HQ scene behind the header; the build had a plain ink band, three ink bands
+> under the HUD and 1.69:1 tab dividers. The Branch Office replaced it and
+> [[design/slice-6-screens#2. The Faction tab (route `/faction`)|screens §2]] now describes the build.
+
 ## Phase A built (15 Oct 2026)
 
 T1–T7 of [[tech/slice-6|the tech spec]] §20: the rules (events, presence, chat, favours, the scoreboard's scopes, the views and error reasons), the content (six event types, 30 venue rows, the fixture rotation, the loader's checks), the two event scenes, and the db (`campaignEvents`, `eventSignups`, `chatMessages`, `chatReports`, `chatLimits`, the character's new fields, migration `010-slice6-together`). Checked with throwaway scripts under the user's no-unit-test rule and the fast check; details and deviations in the tech spec's **Deviations**.
@@ -91,4 +96,4 @@ QA's findings ([[qa/slice-6-report|report]]) and the designer's code items (desi
 
 ## Review 7 (15 Oct 2026)
 
-The user's Design Review 4 notes on this build ([[Review 7]]): **the word filter** (refuse and mask tiers, design §23.1), **the invite** naming its event and hidden when there is nothing to ask (design §23.2), the event page's *Invite someone*, and the dev panel's **Give 2,000 Iron** for testing bail. The Faction tab's redesign (note #1) is with the designer.
+The user's Design Review 4 notes on this build ([[Review 7]]): **the word filter** (refuse and mask tiers, design §23.1), **the invite** naming its event and hidden when there is nothing to ask (design §23.2), the event page's *Invite someone*, and the dev panel's **Give 2,000 Iron** for testing bail. The Faction tab's redesign (note #1) is built as direction A, *the Branch Office* (paper from the HUD down, the HQ scene as a plate, the crest as a seal, a ruled strip with a three-cue current part, chat's channels as paper chips).

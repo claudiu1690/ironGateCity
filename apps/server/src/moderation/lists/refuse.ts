@@ -40,7 +40,6 @@ export const REFUSE_PHRASES: ReadonlyArray<{ word: string; patterns: readonly st
   { word: 'sieg heil', patterns: ['sieg heil', 'siegheil'] },
   { word: 'heil', patterns: ['|heil|'] },
   { word: 'white power', patterns: ['white power', 'whitepower'] },
-  { word: 'third reich', patterns: ['third reich', '|reich|'] },
   { word: 'ku klux klan', patterns: ['|kkk|', 'ku klux'] },
   { word: 'blood and soil', patterns: ['blood and soil'] },
 ];

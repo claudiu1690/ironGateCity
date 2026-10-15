@@ -144,6 +144,8 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 |---|---|---|---|---|
 | 15 Oct | *asked:* **the word filter brought forward** from slice 9: slurs and real-world hate **refused** (*That can't be said here.*), ordinary swearing **masked** as *b—*; names refused on either tier; the lists on the server, never in content | "Chat needs a profanity filter" | [[Review 7]]; [[design/slice-6-together\|slice-6 design]] §23.1; GDD §16.2 | [[Chat and Presence]], [[Moderation and Fair Play]] |
 | 15 Oct | *asked:* **the invite names the event** (*Invite to the rally · 19:40*), hidden when there is nothing to ask; the chat line carries the venue | "Ask to join… ask to join what?" | [[Review 7]]; [[design/slice-6-together\|slice-6 design]] §23.2 | [[Chat and Presence]], [[Campaign Events]] |
+| 15 Oct | **The Faction tab is direction A, *the Branch Office***, with the designer's defaults: the plate scrolls away and the strip stays sticky; words only; the faction colour an accent only; the rank title kept; the Vanguard plate `scene.vanguard-office`; sideways phones drop the plate | "Black on black, you can't tell the tabs apart" | [[Review 7]]; `design/faction-tab-redesign.md` §5; [[design/slice-6-screens\|screens]] §2 | [[Chat and Presence]], [[Campaign Events]] |
+| 15 Oct | **The refuse list: keep *dyke*, unblock *Reich* (whole word and *third reich*), add no communist-era names**; Hitler and the rest stay | — | [[Review 7]]; `apps/server/src/moderation/lists/refuse.ts` | [[Moderation and Fair Play]], [[Chat and Presence]] |
 
 ## Related
 

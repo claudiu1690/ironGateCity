@@ -2210,6 +2210,12 @@ export const copy = {
     /** The header's Courier line: *Organiser · 12 members · 3 here now*. */
     header: (rank: string, members: number, here: number) =>
       `${rank} · ${members} ${members === 1 ? 'member' : 'members'} · ${here} here now`,
+    /** Review 7 #1 (the Branch Office): the plate's caps line, *Coalport branch · 9 here now*. */
+    plateLine: (city: string, here: number) => `${city} branch · ${here} here now`,
+    /** The letterhead's Courier line under the name: *Organiser · 9 members*. */
+    letterhead: (rank: string, members: number) => `${rank} · ${members} ${members === 1 ? 'member' : 'members'}`,
+    /** The desktop chat column's head band (the Chat cell keeps *Chat*). */
+    room: 'The room',
     /** The Orders tab's kicker over the fixture's card (screens §2.1). */
     fixtureKicker: "The branch's event today",
     /** Review 4 addendum (design §21): the orders block while the member is in the cells. */

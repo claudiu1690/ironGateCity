@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from './Button';
+import { Chip } from './Chip';
 import { HelpButton, helpMark } from './Help';
 import type { HelpNote } from './Help';
 import { MemberFace } from './Members';
@@ -147,6 +148,7 @@ export function ChatPanel(props: ChatPanelProps) {
     enterSends = false,
   } = props;
   const current = channels.find((c) => c.id === channel);
+  const here = t.chat.header(hereNow, current ? (current.kind === 'party' ? t.chat.party : t.chat.branch(current.name)) : '');
   const scroller = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
   const [fresh, setFresh] = useState(false);
@@ -212,27 +214,32 @@ export function ChatPanel(props: ChatPanelProps) {
       aria-label={t.tabs.chat}
       data-testid="chat-panel"
     >
-      <div className="flex shrink-0 gap-px overflow-x-auto bg-ink-2" role="tablist" aria-label={t.tabs.chat}>
+      {/* Review 7 #1 (the Branch Office): the desktop column's paper-2 head band, *THE ROOM*. */}
+      {column && (
+        <div className="flex min-h-11 shrink-0 items-center gap-3 border-b border-ink bg-paper-2 px-3" data-testid="chat-room-head">
+          <h2 className="label-caps text-[11px] font-semibold">{t.room}</h2>
+          <p className="ml-auto min-w-0 truncate font-mono text-[11px] text-muted" data-testid="chat-header">
+            {here}
+          </p>
+        </div>
+      )}
+      {/* The channels as the game's paper chips (not a second ink strip). */}
+      <div
+        className={cx('flex shrink-0 gap-2 overflow-x-auto', column ? 'border-b border-ink px-3 py-2' : 'px-4 pt-2.5 pb-1')}
+        role="tablist"
+        aria-label={t.tabs.chat}
+      >
         {channels.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            role="tab"
-            aria-selected={c.id === channel}
-            onClick={() => onChannel(c.id)}
-            className={cx(
-              'label-caps min-h-11 min-w-0 flex-1 cursor-pointer px-2 text-[11px] whitespace-nowrap',
-              c.id === channel ? 'bg-paper text-ink' : 'bg-ink text-paper hover:bg-ink-2',
-            )}
-            data-testid="chat-channel"
-          >
+          <Chip key={c.id} tab on={c.id === channel} onClick={() => onChannel(c.id)} testId="chat-channel" small>
             {c.kind === 'party' ? t.chat.party : t.chat.branch(c.name)}
-          </button>
+          </Chip>
         ))}
       </div>
-      <p className="shrink-0 border-b border-ink px-3 py-1 font-mono text-[11px] text-muted" data-testid="chat-header">
-        {t.chat.header(hereNow, current ? (current.kind === 'party' ? t.chat.party : t.chat.branch(current.name)) : '')}
-      </p>
+      {!column && (
+        <p className="shrink-0 border-b border-ink px-4 pb-1 font-mono text-[11px] text-muted" data-testid="chat-header">
+          {here}
+        </p>
+      )}
       <div className="relative min-h-0 flex-1">
         <div
           ref={scroller}

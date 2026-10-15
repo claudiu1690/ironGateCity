@@ -3,6 +3,7 @@ import type { FactionId, FactionScoreboardView, MemberRowView, ProfileView } fro
 import { useEffect } from 'react';
 import { FACTION_STYLE } from './FactionCrest';
 import { Button } from './Button';
+import { Chip } from './Chip';
 import { Rosette } from './Capital';
 import { BottomSheet } from './Sheets';
 import { artUrl } from './Picture';
@@ -460,23 +461,6 @@ export interface FactionScoreboardProps {
   onPeriod: (period: 'week' | 'all') => void;
   onCity: (cityId: string | null) => void;
   onOpen: (characterId: string) => void;
-}
-
-function Chip({ on, onClick, children, testId }: { on: boolean; onClick: () => void; children: React.ReactNode; testId?: string }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
-      className={cx(
-        'label-caps min-h-11 shrink-0 cursor-pointer border-[1.5px] border-ink px-3 text-[12px]',
-        on ? 'bg-ink text-paper' : 'bg-transparent text-ink hover:bg-paper-card',
-      )}
-      data-testid={testId}
-    >
-      {children}
-    </button>
-  );
 }
 
 /**

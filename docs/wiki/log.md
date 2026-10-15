@@ -9,6 +9,16 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Review 7: the Faction tab as the Branch Office
+
+The user picked direction A for note #1: paper from the HUD down, the HQ scene as a 128 px plate
+(180 on desktop) with *{City} branch · {n} here now*, the crest SVG as a seal over its edge, the name
+and *{rank} · {n} members* on paper, a ruled strip whose current part has three cues, the compact
+letterhead and paper chips on Chat, *The room* head on the desktop column. Also *Reich* off the
+refuse list (the user: keep *dyke*, add nothing). Screens §2 rewritten to the build. Updated
+[[Review 7]], [[Slice 6 Together]] (drift closed), [[Chat and Presence]], [[Campaign Events]],
+[[Moderation and Fair Play]], [[Decision Log]].
+
 ## [2026-10-15] build | Slice 7 content: Clearwater and the nation (T7, T8)
 
 The game-designer's phase-A content: Clearwater's city file, missions, jobs, slate, six Issues and the lake rotation; the thirteen laws; the factions' figures, deputies, platforms and houses; families and the push; the Town Hall and its venues; the national lines, the personal lines in five voices and the Courier; the 26 modals; chapter 3 *The list*; `copy.nation`. The design doc gains an "Added 15 Oct 2026" note with the departures and the developer's bindings. Updated [[Clearwater]], [[Slice 7 The Nation]], [[Drift Report]] (C6), [[Open Questions]] (S7-C), [[index]].

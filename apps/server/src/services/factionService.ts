@@ -14,6 +14,7 @@ import {
   scopeFor,
 } from '@irongate/rules';
 import type {
+  AssetView,
   FactionHqView,
   FactionScoreboardView,
   MemberRowView,
@@ -28,7 +29,7 @@ import { cardView, todaysFixture } from './eventViews';
 import { typeOf } from './eventPlace';
 import { residenceOf, residenceCityId } from './residence';
 import { legMinutesBetween } from './travelService';
-import { energyState, namedStanding, rankTitle, standingSuccesses, toCharacterView } from './views';
+import { assetView, energyState, namedStanding, rankTitle, standingSuccesses, toCharacterView } from './views';
 
 /**
  * Slice 6 (tech design §8.2–§8.3; ADR 0040, 0042): the Faction tab's reads. Members are the
@@ -42,8 +43,20 @@ interface Deps {
   now: () => number;
 }
 
+/**
+ * Review 7 #1 (direction A, *The Branch Office*): the header's plate is the faction's HQ scene and its
+ * caps line names the member's branch. Server-side only, so `FactionHqView` in `packages/rules` is
+ * unchanged; tRPC carries the extra fields to the client.
+ */
+export type FactionHqPageView = FactionHqView & {
+  /** The branch: the member's residence city. */
+  branch: { cityId: string; name: string };
+  /** The faction's HQ scene (`scene.union-hq` / `scene.vanguard-office` / `scene.alliance-hq`). */
+  plate: AssetView | null;
+};
+
 /** The Faction tab's header and Orders (tech §8.3 `FactionHqView`). */
-export async function factionHq(deps: Deps): Promise<FactionHqView> {
+export async function factionHq(deps: Deps): Promise<FactionHqPageView> {
   const { content } = deps;
   const now = deps.now();
   const loaded = await loadCharacter(deps.user, content, now);
@@ -63,8 +76,12 @@ export async function factionHq(deps: Deps): Promise<FactionHqView> {
     Character.countDocuments({ factionId: c.factionId }),
     Character.countDocuments({ factionId: c.factionId, 'presence.seenAt': { $gte: new Date(now - PRESENCE.hereNowMs) } }),
   ]);
+  const branchId = residenceCityId(c);
+  const scene = content.art.scenes.find((s) => s.locationKind === 'faction-hq' && s.factionId === c.factionId);
   return {
     faction: { id: c.factionId, name: content.faction(c.factionId).name },
+    branch: { cityId: branchId, name: content.city(branchId)?.name ?? branchId },
+    plate: scene ? assetView(content, scene.assetId) : null,
     rankTitle: rankTitle(content, c, c.rank),
     members,
     hereNow,

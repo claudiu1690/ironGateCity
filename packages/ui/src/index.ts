@@ -252,6 +252,10 @@ export type { DeskActs, TownHallBlocksProps, WhatNowCardProps } from './componen
 // Slice 6 (lane A): the Faction tab's strip, the events' cards, page parts, ticket and here-now line.
 export { FACTION_TABS, FactionTabs } from './components/FactionTabs';
 export type { FactionTab, FactionTabsProps } from './components/FactionTabs';
+export { FactionHeader } from './components/FactionHeader';
+export type { FactionHeaderProps } from './components/FactionHeader';
+export { Chip } from './components/Chip';
+export type { ChipProps } from './components/Chip';
 // Slice 6 (lane B): Members, the profile, favours, the faction scoreboard, chat.
 export { FactionScoreboard, FavourSheet, MemberFace, MemberRow, ProfileSheet, Toast, favourLabel, inviteLabel, memberStatusText } from './components/Members';
 export type { FactionScoreboardProps, FavourSheetProps, MemberRowProps, ProfileSheetProps } from './components/Members';

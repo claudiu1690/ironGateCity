@@ -98,7 +98,8 @@ test('chat live between two browsers, the limit line, report and mute; Members, 
   // 2. B reports A's line (a long press on a phone shows *Report*), once.
   const line = b.page.getByTestId('chat-line').filter({ hasText: RALLY });
   await line.dispatchEvent('contextmenu');
-  await line.getByTestId('chat-report').click();
+  // The dev panel's toggle (test builds only) sits at the right edge mid-screen, over this line's Report.
+  await line.getByTestId('chat-report').dispatchEvent('click');
   await b.page.getByTestId('chat-report-confirm').click();
   await expect(line.getByTestId('chat-reported')).toHaveText('Reported');
   await expect(line.getByTestId('chat-report')).toHaveCount(0);
@@ -254,6 +255,13 @@ test('the word filter: swearing masked with the dash, real-world hate refused an
   await send.click();
   await expect(c.page.getByTestId('chat-text').filter({ hasText: rally })).toHaveText(rally);
 
+  // 15 Oct (the user): *Reich* is not blocked; the rest of the list stays.
+  await resetLimits();
+  const reich = `the Reich is over ${t4}`;
+  await input.fill(reich);
+  await send.click();
+  await expect(c.page.getByTestId('chat-text').filter({ hasText: reich })).toHaveText(reich);
+
   // The editor's note behind the composer's label.
   await c.page.getByTestId('chat-editor-help').click();
   await expect(c.page.getByTestId('help-note')).toContainText("Swearing goes out with the editor's dash");
@@ -272,4 +280,184 @@ test('the word filter: swearing masked with the dash, real-world hate refused an
   await expect(page.getByText("That name can't be used here. Try another.")).toBeVisible({ timeout: 15_000 });
   await expect(page).toHaveURL(/\/signup$/);
   await ctx.close();
+});
+
+/** WCAG relative luminance contrast of two `rgb()`/`rgba()` colours (alpha ignored: both opaque here). */
+function contrast(a: string, b: string): number {
+  const lum = (c: string) => {
+    const [r, g, bl] = (c.match(/[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).map(Number).map((v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * bl!;
+  };
+  const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+  return (x! + 0.05) / (y! + 0.05);
+}
+
+test('review 7 #1, the Branch Office: paper under the HUD, a three-cue tab, 3:1 dividers, the crest an SVG seal (390 × 844, 375 × 667, desktop)', async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const a = await member(browser, `Lena B${tag()}`, { ...PHONE, viewport: { width: 390, height: 844 } });
+  // Two lines in the branch's room for the screenshots.
+  const made = (await hook(a.page, 'members', { n: 2 })) as { members: Array<{ characterId: string }> };
+  const [m1, m2] = made.members;
+  await hook(a.page, 'chat', { as: m1!.characterId, channel: 'city:collective:coalport', text: "who's on the rally tonight" });
+  await hook(a.page, 'chat', { as: m2!.characterId, channel: 'city:collective:coalport', text: "I'll do the leaflets. Who has the tram money" });
+
+  const DIR = '../../docs/design/faction-tab-redesign';
+  for (const size of [
+    { width: 390, height: 844 },
+    { width: 375, height: 667 },
+  ]) {
+    const p = a.page;
+    await p.setViewportSize(size);
+    await openFaction(p, 'events');
+    await expect(p.getByTestId('faction-plate-line')).toContainText('branch · ');
+    await expect(p.getByTestId('faction-header-line')).toContainText('member');
+
+    // The crest is the real SVG, its own shape (no round paper disc behind it).
+    const crest = p.getByTestId('faction-crest');
+    await expect(crest).toHaveAttribute('src', /\/art\/crest\.collective\.svg$/);
+    const crestBox = await crest.evaluate((el) => {
+      const img = el as HTMLImageElement;
+      const cs = getComputedStyle(img);
+      const parent = getComputedStyle(img.parentElement!);
+      return { loaded: img.complete && img.naturalWidth > 0, w: img.getBoundingClientRect().width, radius: cs.borderRadius, parentRadius: parent.borderRadius };
+    });
+    expect(crestBox.loaded).toBe(true);
+    expect(Math.round(crestBox.w)).toBe(64);
+    expect(crestBox.radius).toBe('0px');
+    expect(crestBox.parentRadius).toBe('0px');
+
+    // No ink band under the HUD: the letterhead and the strip are paper; the plate is the only dark.
+    const paper = 'rgb(239, 230, 210)';
+    const bg = (id: string) => p.getByTestId(id).evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(await bg('faction-header')).toBe(paper);
+    expect(await bg('faction-tabs')).toBe(paper);
+    const plate = p.getByTestId('faction-plate');
+    expect(Math.round((await plate.boundingBox())!.height)).toBe(128);
+    await expect(plate.locator('img')).toHaveAttribute('src', /scene\.union-hq/);
+
+    // The selected cell: aria-current, weight 600, the paper-card fill, a 3 px ink bar touching the
+    // panel (its foot at the strip's foot), the faction's 2 px line above it.
+    const on = p.getByTestId('faction-tab-events');
+    await expect(on).toHaveAttribute('aria-current', 'page');
+    const cell = await on.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      const barEl = el.querySelector('[data-testid=faction-tab-bar]')!;
+      const bar = barEl.getBoundingClientRect();
+      const strip = el.parentElement!.getBoundingClientRect();
+      return {
+        weight: Number(cs.fontWeight),
+        bg: cs.backgroundColor,
+        color: cs.color,
+        barH: bar.height,
+        barBg: getComputedStyle(barEl).backgroundColor,
+        barFoot: bar.bottom,
+        stripFoot: strip.bottom,
+        accent: !!el.querySelector('[data-testid=faction-tab-accent]'),
+      };
+    });
+    expect(cell.weight).toBeGreaterThanOrEqual(600);
+    expect(cell.bg).toBe('rgb(246, 240, 225)');
+    expect(cell.barH).toBe(3);
+    expect(contrast(cell.barBg, paper)).toBeGreaterThanOrEqual(14);
+    expect(Math.abs(cell.barFoot - cell.stripFoot)).toBeLessThanOrEqual(0.5);
+    expect(cell.accent).toBe(true);
+    const off = await p.getByTestId('faction-tab-orders').evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return {
+        weight: Number(cs.fontWeight),
+        color: cs.color,
+        divider: cs.borderRightColor,
+        dividerW: cs.borderRightWidth,
+        rule: getComputedStyle(el.parentElement!).borderBottomColor,
+      };
+    });
+    expect(off.weight).toBeLessThan(600);
+    // Every divider at 3:1 or more against the paper; the labels at 4.5:1.
+    const ratios = { divider: contrast(off.divider, paper), rule: contrast(off.rule, paper), label: contrast(off.color, paper), selected: contrast(cell.color, cell.bg) };
+    console.log(`Branch Office ${size.width}x${size.height}`, JSON.stringify(Object.fromEntries(Object.entries(ratios).map(([k, v]) => [k, v.toFixed(2)]))));
+    expect(off.dividerW).toBe('1px');
+    expect(ratios.divider).toBeGreaterThanOrEqual(3);
+    expect(ratios.rule).toBeGreaterThanOrEqual(3);
+    expect(ratios.label).toBeGreaterThanOrEqual(4.5);
+    // Every cell is a 44 px target; five fit without a scrolling row.
+    for (const t of ['orders', 'events', 'members', 'scoreboard', 'chat']) {
+      const b = (await p.getByTestId(`faction-tab-${t}`).boundingBox())!;
+      expect(b.height).toBeGreaterThanOrEqual(44);
+    }
+    expect(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+    // The plate's caps line: the worst (lightest) pixel under it, text hidden, against paper text.
+    const line = p.getByTestId('faction-plate-line');
+    await line.evaluate((el) => ((el as HTMLElement).style.color = 'transparent'));
+    const png = (await line.screenshot()).toString('base64');
+    await line.evaluate((el) => ((el as HTMLElement).style.color = ''));
+    const worst = await p.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const cv = document.createElement('canvas');
+      cv.width = img.width;
+      cv.height = img.height;
+      const ctx = cv.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      const lin = (v: number) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      };
+      let max = 0;
+      for (let i = 0; i < d.length; i += 4) max = Math.max(max, 0.2126 * lin(d[i]!) + 0.7152 * lin(d[i + 1]!) + 0.0722 * lin(d[i + 2]!));
+      const paperL = 0.2126 * lin(239) + 0.7152 * lin(230) + 0.0722 * lin(210);
+      return (paperL + 0.05) / (max + 0.05);
+    }, png);
+    console.log(`Branch Office ${size.width}x${size.height} plate line, worst pixel`, worst.toFixed(2));
+    expect(worst).toBeGreaterThanOrEqual(4.5);
+    if (size.height === 844) await p.screenshot({ path: `${DIR}/built-events-390.png` });
+
+    // Chat: the compact letterhead, the channels as paper chips, nothing ink between HUD and composer.
+    await openFaction(p, 'chat');
+    await expect(p.getByTestId('faction-header')).toHaveAttribute('data-compact', 'true');
+    await expect(p.getByTestId('faction-plate')).toHaveCount(0);
+    expect(Math.round((await p.getByTestId('faction-letterhead-compact').boundingBox())!.height)).toBe(52);
+    const chips = p.getByTestId('chat-channel');
+    expect(await chips.count()).toBe(3);
+    for (let i = 0; i < 3; i++) {
+      const c = await chips.nth(i).evaluate((el) => ({ sel: el.getAttribute('aria-selected'), bg: getComputedStyle(el).backgroundColor, h: el.getBoundingClientRect().height }));
+      expect(c.h).toBeGreaterThanOrEqual(44);
+      expect(c.bg).toBe(c.sel === 'true' ? 'rgb(21, 24, 26)' : 'rgba(0, 0, 0, 0)');
+    }
+    expect(await p.getByRole('tablist', { name: 'Chat' }).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+    await expect(p.getByTestId('chat-composer')).toBeInViewport();
+    expect(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    if (size.height === 844) await p.screenshot({ path: `${DIR}/built-chat-390.png` });
+  }
+
+  // Desktop: the plate across the sheet, four 150 px cells left-aligned, *The room* over the column.
+  const desk = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await desk.addCookies(await a.ctx.cookies());
+  const d = await desk.newPage();
+  await d.goto('/faction?tab=events');
+  await expect(d.getByTestId('faction-events')).toBeVisible();
+  expect(Math.round((await d.getByTestId('faction-plate').boundingBox())!.height)).toBe(180);
+  expect(Math.round((await d.getByTestId('faction-crest').boundingBox())!.width)).toBe(80);
+  await expect(d.getByTestId('faction-tab-chat')).toHaveCount(0);
+  const cells = d.getByTestId('faction-tabs').getByRole('button');
+  expect(await cells.count()).toBe(4);
+  const first = (await cells.nth(0).boundingBox())!;
+  const strip = (await d.getByTestId('faction-tabs').boundingBox())!;
+  expect(Math.round(first.width)).toBe(150);
+  expect(Math.round(first.x)).toBe(Math.round(strip.x));
+  const column = d.getByRole('complementary', { name: 'Chat' });
+  await expect(column.getByTestId('chat-room-head')).toContainText('The room');
+  expect(await column.getByTestId('chat-room-head').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(226, 214, 187)');
+  await expect(column.getByTestId('chat-composer')).toBeInViewport();
+  await d.waitForTimeout(500);
+  await d.screenshot({ path: `${DIR}/built-desktop.png` });
+  await desk.close();
+  await a.ctx.close();
 });

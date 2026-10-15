@@ -1,5 +1,5 @@
 import { copy } from '@irongate/content/copy';
-import { FACTION_TABS, FactionTabs, artUrl } from '@irongate/ui';
+import { FACTION_TABS, FactionHeader, FactionTabs } from '@irongate/ui';
 import type { FactionTab } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -46,9 +46,12 @@ function rememberTab(tab: FactionTab) {
 }
 
 /**
- * Slice 6 (screens §2, tech design §12.1): the Faction tab. A header band (crest, the faction's name,
- * *{rank} · {n} members · {m} here now*), the five parts as a strip, and the open part's body. On a
- * desktop (≥ 1024) Chat stays in a column at the right and the strip's Chat opens it there.
+ * Slice 6 (screens §2, tech design §12.1), redrawn for review 7 #1 as direction A, *The Branch
+ * Office*: paper from the HUD down. The HQ scene as a plate with *{City} branch · {n} here now*, the
+ * crest as a seal over its edge, the name and *{rank} · {n} members* on paper; then the five parts as
+ * a ruled strip (sticky; the plate scrolls away), and the open part. On Chat (phone) the header folds
+ * to the compact letterhead. On a desktop (≥ 1024) the strip's four cells sit left-aligned over the
+ * left column and Chat is the right-hand column under *The room*.
  */
 export function FactionPage() {
   const navigate = useNavigate();
@@ -83,52 +86,51 @@ export function FactionPage() {
   };
 
   const h = hq.data;
+  const factionId = h?.faction.id ?? character?.factionId;
+  const name = h?.faction.name ?? character?.factionName ?? copy.together.tabs.faction;
+  const header = factionId && (
+    <FactionHeader
+      factionId={factionId}
+      name={name}
+      plate={h?.plate ?? null}
+      plateLine={h ? copy.together.plateLine(h.branch.name, h.hereNow) : undefined}
+      line={h ? copy.together.letterhead(h.rankTitle, h.members) : undefined}
+      compact={left === 'chat'}
+    />
+  );
+  const strip = (
+    <FactionTabs
+      current={left}
+      tabs={tabs}
+      onGo={go}
+      factionId={factionId}
+      dots={{ events: (character?.events?.unseen ?? 0) > 0, chat: !!character?.chat?.forYou }}
+      className="sticky top-0 z-10"
+    />
+  );
   return (
     <div className="flex min-h-full flex-col bg-paper text-ink" data-testid="faction-page">
-      <header className="relative flex shrink-0 items-center bg-ink px-4 py-3 text-paper">
-        <div className="mx-auto flex w-full max-w-[1000px] items-center gap-3">
-          {/* The faction's crest (content's `crest.{faction}` SVG, ADR 0015), on paper so it reads on ink. */}
-          {character && (
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-paper p-1.5">
-              <img
-                src={artUrl(`crest.${character.factionId}`, 0, 'svg')}
-                alt={h?.faction.name ?? character.factionName}
-                className="size-full object-contain"
-                data-testid="faction-crest"
-              />
-            </span>
-          )}
-          <div className="min-w-0">
-            <h1 className="font-display text-[22px] leading-tight font-bold" data-testid="faction-name">
-              {h?.faction.name ?? character?.factionName ?? copy.together.tabs.faction}
-            </h1>
-            {h && (
-              <p className="font-mono text-[12px] text-paper-2" data-testid="faction-header-line">
-                {copy.together.header(h.rankTitle, h.members, h.hereNow)}
-              </p>
+      <div className="mx-auto flex w-full max-w-[1000px] flex-1 flex-col">
+        {header}
+        {wide ? (
+          <div className="flex w-full flex-1 items-stretch">
+            <div className="min-w-0 flex-1">
+              {strip}
+              {body(left)}
+            </div>
+            {!character?.chat?.hidden && (
+              <aside className="w-[360px] shrink-0 border-l-[1.5px] border-ink" aria-label={copy.together.tabs.chat}>
+                <ChatTab column />
+              </aside>
             )}
           </div>
-        </div>
-      </header>
-      <FactionTabs
-        current={left}
-        tabs={tabs}
-        onGo={go}
-        dots={{ events: (character?.events?.unseen ?? 0) > 0, chat: !!character?.chat?.forYou }}
-        className="sticky top-0 z-10"
-      />
-      {wide ? (
-        <div className="mx-auto flex w-full max-w-[1000px] flex-1 items-stretch">
-          <div className="min-w-0 flex-1">{body(left)}</div>
-          {!character?.chat?.hidden && (
-            <aside className="w-[360px] shrink-0 border-l-[1.5px] border-ink" aria-label={copy.together.tabs.chat}>
-              <ChatTab column />
-            </aside>
-          )}
-        </div>
-      ) : (
-        <div className="flex-1">{body(left)}</div>
-      )}
+        ) : (
+          <>
+            {strip}
+            <div className="flex-1">{body(left)}</div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
