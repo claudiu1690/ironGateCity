@@ -1931,7 +1931,7 @@ Copied from `docs/tech/voting-rework.md` §17 when the voting rework was built (
 
 **Not built (for the rest of phase B and for phase C).**
 - T13: `governor.setRule`, `governor.address`, `president.address`, `office.governor`, `office.mine`, the Governor's line on `TownHallView`, and **the party cards at the set read through `partyCardOf`** (the Governor's or Mayor's rule, then the Chair's rule from `factions.rules`).
-- T12: the petition close in the home and capital boundaries (Clearwater has the hook `battlegroundHooks.petitionClose`), the Chair's fixtures in `ensureFixtures`, the `nl.clearwater-control` / `nl.clearwater-lost` news.
+- T12: the Chair's fixtures in `ensureFixtures`, the `nl.clearwater-control` / `nl.clearwater-lost` news. (The petition close runs in every city day: lane 2's `closePetitionsInTx`, `2f542c4`; `battlegroundHooks.petitionClose` is an unused seam.)
 - T20: the desk lines for the new stipends, the push bonus (+10 Party XP), today's orders with `setBy` and the push, the national section and the window line in `composeHeadlines`, personal lines and front pages for every office, *In Print*.
 - T21: the dev panel's buttons and status fields (§8.7); `/api/test/parliament`, `members.deputies` and `nation.secretaryBill` (on lane 2's services).
 - T22: the integration run (a whole term on the test clock with the worker off for a week).

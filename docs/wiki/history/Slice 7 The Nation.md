@@ -102,7 +102,7 @@ Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the s
 - **T12 Clearwater** ([[Clearwater]]): its own city day (`battlegroundDay.ts`: seven seats three ways, lists of three, one card per party, the largest bloc's rule), and playable: the train, *Live here*, the bed on the Rows, its election and ballot, the Courier, the branch channel, Heat +25 % for rivals of a place's controller. No patrol there.
 - **T13 the Governor** ([[Offices]]): chosen at every count (home: the whole council; contested: the largest bloc) by the designer's ruling (never a first-term councillor; the bloc's top unseated local last); a player's `governor` term and `city.council.governor`.
 - **T20** every office's stipend in the settlement and the `offices` projection; **T21** the hooks `/api/test/term`, `/api/test/nation`, `/api/test/office`, and the `events` spec no longer depends on the clock.
-- **Not yet built:** the Governor's rule and Address and the office pages; the party cards at the set through `partyCardOf`; the petition close in the home and capital days; the paper v7; the dev panel's slice-7 buttons; the integration run. Details: [[tech/slice-7|tech spec]], *Deviations, phase B, lane 1*.
+- **Not yet built:** the Governor's rule and Address and the office pages; the party cards at the set through `partyCardOf`; the paper v7; the dev panel's slice-7 buttons; the integration run. Details: [[tech/slice-7|tech spec]], *Deviations, phase B, lane 1*.
 
 ## QA and leftovers
 
