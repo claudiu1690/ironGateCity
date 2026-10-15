@@ -44,7 +44,8 @@ export function drawIssues(i: {
  * tagged by the same feeds as the type it is seen as (the illegal types are kept out by the caller).
  */
 export function feedMatches(m: IssueMatch, a: ActionDescriptor): boolean {
-  if (a.kind !== 'checked' && a.kind !== 'mission') return false;
+  // Slice 6 (tech 6.7): an event is tagged as an action of its `actionType` at its venue.
+  if (a.kind !== 'checked' && a.kind !== 'mission' && a.kind !== 'event') return false;
   if (m.actionTypes && (a.type === undefined || !m.actionTypes.includes(a.type))) return false;
   if (m.locationIds && (a.locationId === undefined || !m.locationIds.includes(a.locationId))) return false;
   if (m.locationKinds && (a.locationKind === undefined || !m.locationKinds.includes(a.locationKind)))

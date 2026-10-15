@@ -70,3 +70,9 @@ export function treat(i: {
   if (i.iron < price) return { ok: false, reason: 'NOT_ENOUGH_IRON', price };
   return { ok: true, price, before, after: max, health: { damage: 0, at: i.now } };
 }
+
+/** Slice 6 (design §9.2): a visit heals `amount`; `at` stays on the tick grid. */
+export function healHealth(t: HealthTimer, now: number, amount: number): HealthTimer {
+  const p = projectHealth(t, now);
+  return { damage: Math.max(0, p.damage - Math.max(0, amount)), at: p.at };
+}

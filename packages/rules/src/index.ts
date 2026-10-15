@@ -45,3 +45,10 @@ export * from './held';
 export * from './missions';
 export * from './quarters';
 export * from './patrol';
+// Slice 6 (docs/tech/slice-6.md §6).
+export * from './events';
+export * from './presence';
+export * from './chat';
+export * from './favours';
+export * from './scoreboard';
+export * from './togetherTypes';

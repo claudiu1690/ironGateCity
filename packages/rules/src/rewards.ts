@@ -166,3 +166,19 @@ export function mergeParts(a: readonly RewardPart[], b: readonly RewardPart[]): 
   }
   return out;
 }
+
+/**
+ * Slice 6 (tech §6.7): a line worked out in full precision with no outcome factor (the caller has
+ * already applied one), its base and each named part halved up on their own (§5.5, ADR 0021). Used
+ * by the Campaign Events' rewards.
+ */
+export function partsLine(full: number, shares: readonly LineShare[]): RewardLine {
+  const base = roundHalfUp(full);
+  const parts = shares
+    .filter((s) => s.share !== 0)
+    .map((s) => ({ id: s.id, label: s.label, amount: roundHalfUp(full * s.share) }));
+  const bonus = parts.reduce((sum, p) => sum + p.amount, 0);
+  const out: RewardLine = { base, bonus, total: base + bonus };
+  if (parts.some((p) => !CLASSIC_PARTS.has(p.id))) out.parts = parts.filter((p) => p.amount !== 0);
+  return out;
+}

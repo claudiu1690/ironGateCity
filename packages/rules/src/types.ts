@@ -12,6 +12,7 @@ import type { MissionType } from './constants';
 import type { RecordLevel } from './record';
 import type { QuarterLock } from './quarters';
 import type { RuleHow } from './ruleBallot';
+import type { EventPageView, MemberRowView } from './togetherTypes';
 
 export const FACTION_IDS = ['vanguard', 'collective', 'alliance'] as const;
 export type FactionId = (typeof FACTION_IDS)[number];
@@ -119,9 +120,12 @@ export interface EnergyView {
 // Rules-owned DSLs that content is validated against (Party orders, headlines).
 // ---------------------------------------------------------------------------------------------
 
-/** What a performed thing was, for order matching (ADR 0009). Slice 5 (ADR 0031 §4): `mission`. */
-export type ActionKind = 'checked' | 'training' | 'takeJob' | 'mission';
-export const ACTION_KINDS = ['checked', 'training', 'takeJob', 'mission'] as const;
+/**
+ * What a performed thing was, for order matching (ADR 0009). Slice 5 (ADR 0031 §4): `mission`.
+ * Slice 6 (tech §6.7): `event`, a Campaign Event sign-up; it matches only templates naming it.
+ */
+export type ActionKind = 'checked' | 'training' | 'takeJob' | 'mission' | 'event';
+export const ACTION_KINDS = ['checked', 'training', 'takeJob', 'mission', 'event'] as const;
 
 export interface ActionDescriptor {
   kind: ActionKind;
@@ -1461,7 +1465,43 @@ export type GameErrorReason =
   /** `council.vote` for a rule that is not a card of the set ballot (`ordinanceId`). */
   | 'NOT_ON_BALLOT'
   /** `council.setRule` outside cycle days 0–1 of the term (`opensAt`, epoch ms). */
-  | 'RULE_WINDOW_CLOSED';
+  | 'RULE_WINDOW_CLOSED'
+  // Slice 6 (tech design §6.8): Campaign Events.
+  | 'EVENT_NOT_FOUND'
+  | 'EVENT_STARTED'
+  | 'EVENT_CLOSED'
+  | 'ROLE_TAKEN'
+  | 'HANDS_FULL'
+  | 'ALREADY_ON_EVENT'
+  /** `max`: 3. */
+  | 'TOO_MANY_SIGNUPS'
+  /** `need`: the Rank. */
+  | 'RANK'
+  | 'NOT_YOUR_EVENT'
+  /** `districtId`: the venue's district. */
+  | 'WRONG_DISTRICT'
+  /** `eventId`, `startsAt`: the branch's open member-called event here. */
+  | 'ONE_AT_A_TIME'
+  /** `cityId`: the place has had its starts today. */
+  | 'BRANCH_HANDS_FULL'
+  /** `committedFrom` (epoch ms). */
+  | 'WITHDRAW_CLOSED'
+  | 'NOT_SIGNED_UP'
+  | 'UNKNOWN_EVENT_TYPE'
+  | 'UNKNOWN_ROLE'
+  | 'RIVAL_GROUND'
+  // Slice 6: favours.
+  | 'NOT_A_MATE'
+  | 'SELF'
+  | 'ALREADY_OUT'
+  | 'ALREADY_VISITED'
+  // Slice 6: chat (`CHAT_RATE` carries `reason` and `retryAt`; `CHAT_TEXT` its `reason`).
+  | 'CHAT_RATE'
+  | 'CHAT_TEXT'
+  | 'CHAT_CHANNEL'
+  | 'CANNOT_REPORT'
+  | 'NUDGE_NOT_ALLOWED'
+  | 'NUDGE_NOTHING_OPEN';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -2009,7 +2049,13 @@ export type PoliticalAct =
   // Review 5 (answers §8, tech design §6.2): *Get patched up* at an infirmary.
   | 'treated'
   // The voting rework (tech design §8.1): a councillor names their rule.
-  | 'setRule';
+  | 'setRule'
+  // Slice 6 (tech design §10.2): calling, signing up, a mate's bail, a visit, a call called off.
+  | 'call'
+  | 'signUp'
+  | 'bailPosted'
+  | 'visit'
+  | 'calledOff';
 export const POLITICAL_ACTS = [
   'ballot',
   'declare',
@@ -2025,12 +2071,19 @@ export const POLITICAL_ACTS = [
   'strike',
   'treated',
   'setRule',
+  'call',
+  'signUp',
+  'bailPosted',
+  'visit',
+  'calledOff',
 ] as const;
 
 /** Slice 5: the cells', the infirmary's and the record's acts (their texts are copy, not `politics`). */
 export type RiskAct = 'bail' | 'released' | 'deported' | 'walkOut' | 'discharged' | 'strike';
 /** The acts whose texts live in content's `politics.results` (slices 3–4). */
-export type CouncilAct = Exclude<PoliticalAct, RiskAct | 'treated'>;
+export type CouncilAct = Exclude<PoliticalAct, RiskAct | 'treated' | TogetherAct>;
+/** Slice 6: the events' and favours' acts (their texts are copy). */
+export type TogetherAct = 'call' | 'signUp' | 'bailPosted' | 'visit' | 'calledOff';
 
 /** The political result modal (screens §9, tech design §10.1), stored in requestLogs.result. */
 export interface PoliticalResult {
@@ -2089,7 +2142,10 @@ export interface PoliticalResult {
     | { kind: 'held'; landing: Landing | { journey: true } | null }
     | { kind: 'record'; record: CharacterViewV6['record'] }
     // Review 5 (tech design §6.2): *Get patched up*; Continue returns to the place's sheet.
-    | { kind: 'place'; locationId: string };
+    | { kind: 'place'; locationId: string }
+    // Slice 6 (tech design §6.8): after a call or a sign-up, the event; after a favour, the mate's row.
+    | { kind: 'event'; event: EventPageView }
+    | { kind: 'member'; member: MemberRowView };
 }
 
 // ---------------------------------------------------------------------------------------------

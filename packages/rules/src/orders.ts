@@ -149,6 +149,8 @@ export function orderMatches(m: OrderMatch, a: ActionDescriptor, ctx: MatchCtx):
   // Slice 5 (ADR 0034 §3): the orders are home's or the capital's; nothing on rival ground counts.
   if (r.rivalGround) return false;
   if (m.kinds && !m.kinds.includes(a.kind)) return false;
+  // Slice 6 (design 2.7): an event sign-up counts only for a template naming `event` (the roles' types match nothing else).
+  if (a.kind === 'event' && !m.kinds?.includes('event')) return false;
   if (m.actionTypes && (a.type === undefined || !m.actionTypes.includes(a.type))) return false;
   if (m.actionIds && (a.actionId === undefined || !m.actionIds.includes(a.actionId))) return false;
   if (m.locationIds && (a.locationId === undefined || !m.locationIds.includes(a.locationId))) return false;

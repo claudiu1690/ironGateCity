@@ -455,3 +455,63 @@ export const UNREST_PRIZE = {
 
 /** §14.13: quarters open by Level, per character. */
 export const QUARTERS = { levels: [1, 6, 10] } as const;
+
+// ---------------------------------------------------------------------------------------------
+// Slice 6 (docs/tech/slice-6.md §6.1). Rules: docs/design/slice-6-together.md §2, §9; GDD §16.2,
+// §16.3, §19.1; docs/economy.md §20.
+// ---------------------------------------------------------------------------------------------
+
+/** Design §2 (GDD §16.3): Campaign Events. Bands, rates, volunteers, hands and the limits. */
+export const EVENTS = {
+  startsInHours: [1, 3, 6, 12],
+  withdrawBeforeMs: 3_600_000,
+  hands: { max: 4, energy: 5 },
+  namedRoleRank: 2,
+  callRank: 3,
+  maxOpenSignups: 3,
+  /** + the fixture = three starts a place a City Day. */
+  perPlaceDay: { memberStarts: 2, memberOpen: 1 },
+  volunteer: { score: 0.5, firedUp: 0.75 },
+  bands: [
+    { min: 0.875, band: 'triumph', m: 1.5 },
+    { min: 0.625, band: 'success', m: 1 },
+    { min: 0.375, band: 'mixed', m: 0.5 },
+    { min: 0, band: 'fiasco', m: 0 },
+  ],
+  roleScore: { success: 1, partial: 0.5, failure: 0 },
+  fillCap: 1.25,
+  xp: {
+    perEnergy: 5,
+    byRoll: { success: 1, partial: 0.5, failure: 0.2 },
+    handByBand: { triumph: 1, success: 1, mixed: 0.5, fiasco: 0.2 },
+  },
+  fxp: { perEnergy: 0.8, byBand: { triumph: 1.5, success: 1, mixed: 0.5, fiasco: 0.25 } },
+  /** Halves up after the first event of the member's City Day: 8 / 5 / 3 / 2 (economy §20.4). */
+  pc: { triumph: 15, success: 10, mixed: 6, fiasco: 3, laterShare: 0.5 },
+  momentumByBand: { triumph: 1, success: 1, mixed: 0.5, fiasco: 0 },
+  doubleMomentum: 2,
+  grandRallyHeat: 5,
+  rivalHeldAbove: 50,
+  resultsKept: 10,
+} as const;
+
+/** Design §7 (ADR 0040): *here now* is seen in the last ten minutes; the touch at most once a minute. */
+export const PRESENCE = { hereNowMs: 600_000, touchEveryMs: 60_000, trainWindowMs: 600_000, namesShown: 2 } as const;
+
+/** Design §8 (ADR 0039): 280 characters, 200 lines or 7 days, the three rate limits. */
+export const CHAT = {
+  maxLength: 280,
+  keep: 200,
+  page: 50,
+  ttlDays: 7,
+  minGapMs: 3_000,
+  window: { ms: 600_000, max: 30 },
+  repeatMs: 60_000,
+  maxMutes: 200,
+} as const;
+
+/** Design §9 (GDD §19.1, §19.2): a mate's bail and a visit on the ward. */
+export const FAVOURS = {
+  bail: { fxp: 10 },
+  visit: { energy: 3, health: 10, minutes: 5, counted: 3, minStayMinutes: 5, fxp: 10 },
+} as const;
