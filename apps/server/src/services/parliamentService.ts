@@ -55,6 +55,7 @@ import type { NationBoundaryCtx } from './nationDay';
 import { currentTerm, nationOf, nationResult, refusal, runNationAct, spendPc } from './nationAct';
 import type { NationActDeps } from './nationAct';
 import { weekdayName } from './politicsService';
+import { inTransaction } from './txn';
 
 /**
  * Slice 7 T15 and T18 (docs/tech/slice-7.md §3.2, §8.2 `parliamentService`; ADR 0045, 0049; design
@@ -956,10 +957,39 @@ async function mondayBills(ctx: NationBoundaryCtx): Promise<void> {
 }
 
 /**
- * Test seam for the dev panel (§8.6 `secretaryBill: true`): table the secretary's bill now, outside
- * Monday. Runs the same rule in its own transaction.
+ * Test seam for the dev panel (§8.6 `POST /api/test/nation { secretaryBill: true }`, lane 1's T21):
+ * the Monday bills now, outside a Monday, in their own transaction against the nation as settled
+ * (a figure President's bill when the President's slot is free this week, then a secretary's bill
+ * by the same rule). Returns the bills tabled.
  */
-export const parliamentHooks: { forceMonday: boolean } = { forceMonday: false };
+export async function mondayBillsNow(content: GameContent, now: number): Promise<number> {
+  return inTransaction(async (session) => {
+    const nation = await Nation.findById('republic').session(session).lean<NationDoc>();
+    if (!nation) throw new GameError('NATION_NOT_READY', {}, 'CONFLICT');
+    const before = await Bill.countDocuments({ status: 'voting' }).session(session);
+    const d = dayKey(now);
+    const ctx = {
+      content,
+      d,
+      now,
+      session,
+      nation,
+      factions: {} as NationBoundaryCtx['factions'],
+      cities: new Map(),
+      districts: [],
+      control: nation.control as unknown as NationBoundaryCtx['control'],
+      work: { monday: true } as NationBoundaryCtx['work'],
+      bootstrap: false,
+      government: nation.government,
+      laws: nation.laws,
+      set: {},
+      news: [],
+    } as NationBoundaryCtx;
+    await mondayBills(ctx);
+    if (ctx.news.length) await Nation.updateOne({ _id: 'republic' }, { $push: { news: { $each: ctx.news } } }, { session });
+    return (await Bill.countDocuments({ status: 'voting' }).session(session)) - before;
+  });
+}
 
 /** Step 'clerk' (T18; design §10.2, §22.1 Q11): the clerk's motion when the President's party's control share is under 25 %. */
 async function clerkMotion(ctx: NationBoundaryCtx): Promise<void> {
