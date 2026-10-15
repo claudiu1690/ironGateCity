@@ -52,14 +52,14 @@ present or not, and every duty has a default, so an absent holder never blocks a
 - Data: model `OfficeTerm` in `packages/db/src/models/politics.ts` (one row per seat per term, players and locals; `completed`, `vacatedDay`, `rule`, `whatNowSeenAt`); `offices[]` projection on the character
 - Client: the Town Hall's council rows and *What now* card (`packages/ui/src/components/TownHall.tsx`, `apps/client/src/features/council/TownHall.tsx`)
 
-**Built (slice 7 phase B, lane 2, 15 Oct 2026):** the Chair (`chairElectionService.ts`, the desk in `chairDeskService.ts`), the deputy and the President (`parliamentService.ts`, `nationalElectionService.ts`, `presidentService.ts`); national terms have `cityId: 'nation'`; `serviceRecord` in `apps/server/src/services/nationAct.ts` counts the ladder. The Governor is lane 1's (`governorService.ts`).
+**Built (slice 7 phase B, lane 2, 15 Oct 2026):** the Chair (`chairElectionService.ts`, the desk in `chairDeskService.ts`), the deputy and the President (`parliamentService.ts`, `nationalElectionService.ts`, `presidentService.ts`); national terms have `cityId: 'nation'`; `serviceRecord` in `apps/server/src/services/nationAct.ts` counts the ladder. The Governor is lane 1's: chosen at every count (`governorService.ts`), its rule and Address and the page (`governorOffice.ts`: `governor.setRule`, `governor.address`, `office.governor`), the Me tab's cards and ladder (`officeService.ts`: `office.mine`), the Governor's or Mayor's rule heading the party's card at the set (`cardHeads` in `apps/server/src/services/ruleBallot.ts`), the hall's Governor line.
 
 **Planned (slice 7, [[tech/slice-7|tech spec]]):** `officeTerms.office` (`council | governor | chair | deputy | president`), `packages/rules/src/ladder.ts` (`standGate`, `ladderRows`, `officeStipends`, `governorOf`), `governorService`, `chairElectionService`.
 
 ## Status
 
 - **Built:** City Councillor (slice 3 at home, slice 4 in the capital), reworked in the [[Voting Rework]] (12 Oct 2026): standing is 10 PC spent with a named rule; the seat's power is the rule on the ballot.
-- **Server built (slice 7 phase B):** the Chair, the deputy and the President, with the ladder's gates (`standGate` through `serviceRecord`). The stipends at the settlement and the screens are still to come (T20, phase C).
+- **Server built (slice 7 phase B, 15 Oct 2026):** the Governor (Mayor), the Chair, the deputy and the President, with the ladder's gates (`standGate` through `serviceRecord`); every office's stipend at the settlement with a desk line each; the Governor's rule as card 1 and the Address (50). The screens and the office front pages are phase C.
 - **Post-MVP:** Minister, Speaker.
 
 ## Decisions

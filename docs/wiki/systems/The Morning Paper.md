@@ -7,7 +7,7 @@ status: partly built
 slice: "1 (v1); 2 (welcome edition, Letters); 3 (Election row, In Print); 4 (Issues, Herald); 5 (Heat, record); review 4 (local editions); voting rework (Council rule row)"
 gdd: ["§3.3"]
 adrs: ["0005", "0023", "0071", "0074"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # The Morning Paper
@@ -77,7 +77,13 @@ the voice of the player's home city. One tap dismisses it; it can be reopened an
 - **Built:** v1–v5 (slices 1–5), local editions (review 4 fix round, 7 Oct 2026), the *Council
   rule* row and the rule headlines (voting rework, 12 Oct 2026). A slice-1 *While You Were Away*
   personal headline exists (`hl.away`, `hl.away-no-job`: days of pay banked).
-- **Designed, not built:** v6 Events (slice 6), v7 *From the capital* and the republic (slice 7),
+- **Server built (slice 7 phase B, 15 Oct 2026):** v7's national section (`Paper.national`: *From
+  the capital* / *The republic*, two lines at most and the open window's line, live at read;
+  `apps/server/src/services/nationEdition.ts`), nine personal national lines stored at the settlement
+  (the offices taken, a local's chair, the Address, a pledge kept, a bill passed or failed), the
+  desk's office stipend and party-target lines, *In Print* for them. Not yet: the office front pages,
+  eleven more personal lines, the screens (phase C).
+- **Designed, not built:** v6 Events (slice 6), the rest of v7 (slice 7),
   v8 patron Letters, the Dossier and *Ahead* rows (slice 8), v9 the *While you were away* row with
   its digest and *From the editor* (slice 9, [[adr/0071-while-you-were-away-built-at-read|ADR 0071]]).
 

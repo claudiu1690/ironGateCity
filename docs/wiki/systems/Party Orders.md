@@ -7,7 +7,7 @@ status: partly built
 slice: "1; welcome set 2; capital rotation 4; mission order 5; orders off in the cells review 4; Chair's standing orders designed for 7"
 gdd: ["§13.7", "§15.4"]
 adrs: ["0009", "0012", "0046", "0073", "0078"]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Party Orders
@@ -44,7 +44,7 @@ Every City Day each member gets **three Party orders**: the faction's agenda for
 
 ## Status
 
-Built: the secretary's rotation ([[Slice 1 The 5-Minute Session|slice 1]]), the welcome set (slice 2, reworked in [[Review 4]] and [[Review 5]]), the capital rotation and crisis pair ([[Slice 4 The Battleground|slice 4]]), the mission order ([[Slice 5 Risk|slice 5]]), orders off in the cells and the doable-only rule (review 4), the branch's backing ([[Voting Rework]]). **Not built:** the event order and the secretary's daily fixture (slice 6). **Slice 7 phase B (15 Oct 2026):** the Chair's standing orders, the push and the party's target on the server (`apps/server/src/services/chairDeskService.ts`: `setOrders`, the member's `push|{f}|{day}` contribution in every action and mission transaction, the day's result in the nation's day); the settlement that turns them into a member's orders is T20, the screens phase C.
+Built: the secretary's rotation ([[Slice 1 The 5-Minute Session|slice 1]]), the welcome set (slice 2, reworked in [[Review 4]] and [[Review 5]]), the capital rotation and crisis pair ([[Slice 4 The Battleground|slice 4]]), the mission order ([[Slice 5 Risk|slice 5]]), orders off in the cells and the doable-only rule (review 4), the branch's backing ([[Voting Rework]]). **Not built:** the event order and the secretary's daily fixture (slice 6). **Slice 7 phase B (15 Oct 2026):** the Chair's standing orders, the push and the party's target on the server (`apps/server/src/services/chairDeskService.ts`: `setOrders`, the member's `push|{f}|{day}` contribution in every action and mission transaction, the day's result in the nation's day); the settlement turns them into each member's orders, marked *Set by the Chair, {name}*, with the push item naming its place, and pays +10 Party XP for each met day the member knocked (`apps/server/src/services/nationEdition.ts`, `dayService.ts`; `orders.setBy` on the character). The welcome set and the crisis pair still win. The screens and the orders' target bar are phase C.
 
 ## Decisions
 

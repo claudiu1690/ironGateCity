@@ -9,6 +9,13 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 7 phase B, lane 1 finished
+
+The Governor's rule and Address, the office pages' reads, the party cards at the set through
+`partyCardOf`, the Chair's fixtures, the record's law fade everywhere, the settlement and paper v7, the
+dev panel's nation block, the Chair's tie (H1 closed). Updated [[Slice 7 The Nation]], [[Offices]],
+[[Party Orders]], [[The Morning Paper]], [[Dev Panel and Local Setup]], [[Drift Report]].
+
 ## [2026-10-15] update | Slice 7: the Chair's tie settled (S7-T14)
 
 The game-designer ruled on the Chair's count: *beat the game's own figure* means strictly more, so

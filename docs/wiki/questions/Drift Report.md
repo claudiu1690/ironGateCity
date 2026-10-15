@@ -3,7 +3,7 @@ type: question
 title: Drift Report
 aliases: [Drift, Inconsistencies]
 tags: [lint, drift]
-updated: 2026-10-14
+updated: 2026-10-15
 ---
 
 # Drift Report
@@ -30,7 +30,6 @@ the user's call.
 | F2 | `apps/client/playwright.config.ts` | `workers: 1`, `fullyParallel: false`: the planned parallel group isn't built | USER (with F1) |
 | F3 | `.github/workflows/ci.yml`; README | CI still runs every Vitest suite (`turbo … test`) and the README lists `pnpm test`, against the 8 Oct "no unit tests for now" rule | USER |
 | G2 | `packages/content/src/data/art.ts` | `portrait.father` and `scene.origin-deathbed` are still catalogued though the opening no longer uses them (a test lists them as retired) | DEV |
-| H1 | `packages/rules/src/national.ts` `countChair`; tech/slice-7 T14 | The Chair's tie was settled 15 Oct 2026 (GDD §15.4: votes, **then the secretary before any player**, then backers, completed terms, filing); the code still breaks ties by votes, backers, terms, filing, so a player wins an exact tie. One comparator step, spelled out in `docs/design/slice-7-nation.md` *Settled 15 Oct 2026 (phase B)* | DEV |
 
 **Notes (not drift, worth knowing):**
 - The model `RuleBallot` is stored in the `ordinances` collection. This is intentional but easy to misread.
@@ -38,6 +37,12 @@ the user's call.
 - `design/slice-0-answers.md` keeps the first reference recruit (STR 10 / INT 12 / AGI 5 / CHA 2) as a historical record. The current one is STR 8 / INT 12 / AGI 5 / CHA 5.
 - `apps/client/vercel.json` still has an `<api-host>` placeholder; it waits for hosting at the end of the project.
 - Review 5's patrol street: the design put it in content (`cities[].patrol.street`); the server derives it from the city's street-kind place (`streetOf()` in `patrol.ts`). The strings are the same today.
+
+## Resolved — 15 Oct 2026 (slice 7, phase B)
+
+| Rows | What was wrong | Fixed by | How |
+|---|---|---|---|
+| H1 | `countChair` broke an exact tie of votes by backers, terms and filing, so a player beat the secretary | DEV | `dc36985`: votes, then the secretary, then backers, terms, filing (GDD §15.4); `countPick` puts the party's figure first the same way (design §21 #2) |
 
 ## Resolved — 14 Oct 2026 cleanup
 
