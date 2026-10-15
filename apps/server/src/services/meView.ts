@@ -6,6 +6,7 @@ import { meExtras } from './cityService';
 import { loadCharacter } from './dayService';
 import { politicsWaiting } from './politicsService';
 import { toCharacterView } from './views';
+import { ordersTargetOf } from './pushTarget';
 import { chatForYou } from './chatService';
 import { signupLines } from './eventViews';
 
@@ -30,6 +31,8 @@ export async function fullCharacterView(
   const unseen = doc.events?.unseen?.length ?? 0;
   return {
     ...view,
+    // Slice 7 (tech design §11.1): the party's target bar under today's orders, live.
+    orders: { ...view.orders, target: await ordersTargetOf(content, doc, today) },
     ...(await meExtras(content, doc, today)),
     events: { open, unseen },
     chat: { hidden: doc.chat?.hidden ?? false, forYou },

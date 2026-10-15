@@ -1,15 +1,48 @@
 import type { GameContent } from '@irongate/content';
-import { FactionState } from '@irongate/db';
+import { Contribution, FactionState } from '@irongate/db';
 import type { CharacterDoc, FactionStateDoc } from '@irongate/db';
-import { fillTemplate, itemSpec, standingOn } from '@irongate/rules';
-import type { DayKey, LiveHeadline } from '@irongate/rules';
+import { fillTemplate, itemSpec, pushMet, standingOn } from '@irongate/rules';
+import type { DayKey, FactionId, LiveHeadline, TargetBarView } from '@irongate/rules';
+import type { ClientSession } from 'mongoose';
 import { orderText, orderVars, pushPlaceName, toOrdersState } from './views';
 
 /**
  * Slice 7 (docs/tech/slice-7.md §11.1–§11.2; design §4.2, §11.2; ADR 0046): the Chair's push as the
  * member reads it, live: `hl.*.pushed` (*The Chair Wants Eastside*) while today's orders hold the
- * pushed item and it counts (the member can reach the place: Level 10+).
+ * pushed item and it counts (the member can reach the place: Level 10+), and the orders' target bar
+ * (`OrdersView.target`, the party's attempts at the place today against the target).
  */
+
+/** The party's attempts at the pushed place on `day`: every member's own `push|{f}|{day}` row summed (ADR 0046). */
+export async function pushCountOf(f: FactionId, day: DayKey, session: ClientSession | null = null): Promise<number> {
+  const agg = Contribution.aggregate<{ n: number }>([
+    { $match: { scope: `push|${f}|${day}` } },
+    { $group: { _id: null, n: { $sum: '$amount' } } },
+  ]);
+  const rows = await (session ? agg.session(session) : agg);
+  return rows[0]?.n ?? 0;
+}
+
+/**
+ * `OrdersView.target` (tech design §11.1 *Party orders*, screens §5.1 item 5): while today's standing
+ * orders carry a push and the member's orders today hold the pushed item (below Level 10 too: the bar
+ * is the party's), the live count, the target, *doors* and the place. Null otherwise (no push, the
+ * welcome or crisis set, the orders off after an arrest).
+ */
+export async function ordersTargetOf(
+  content: GameContent,
+  c: CharacterDoc,
+  today: DayKey,
+  faction?: FactionStateDoc | null,
+): Promise<TargetBarView | null> {
+  if (c.orders?.day !== today || c.orders.off) return null;
+  if (!toOrdersState(c.orders).items.some((i) => i.push)) return null;
+  const fs = faction === undefined ? await FactionState.findById(c.factionId).lean<FactionStateDoc>() : faction;
+  const push = fs ? standingOn(fs.orders, today)?.push : null;
+  if (!push) return null;
+  const count = await pushCountOf(c.factionId, today);
+  return { count, target: push.target, unit: 'doors', place: pushPlaceName(content, push), met: pushMet(count, push.target) };
+}
 
 /** Today's pushed item, when it counts, with the standing orders' push (its target) behind it. */
 async function pushToday(c: CharacterDoc, today: DayKey, faction?: FactionStateDoc | null) {

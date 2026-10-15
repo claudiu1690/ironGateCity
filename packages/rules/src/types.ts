@@ -13,7 +13,7 @@ import type { MissionType } from './constants';
 import type { RecordLevel } from './record';
 import type { QuarterLock } from './quarters';
 import type { CardBy, RuleHow } from './ruleBallot';
-import type { GovernorPageView, NationalCondition, NationAct } from './nationTypes';
+import type { GovernorPageView, NationalCondition, NationAct, TargetBarView } from './nationTypes';
 import { NATION_ACTS } from './nationTypes';
 import type {
   BillPageView,
@@ -779,6 +779,13 @@ export interface OrdersView {
   off?: { reason: 'cells' } | null;
   /** Slice 7 (tech design §8.3): *Set by the Chair, {name}*; null: the secretary's. */
   setBy?: { name: string } | null;
+  /**
+   * Slice 7 (tech design §11.1 *Party orders*, screens §5.1 item 5): the party's target bar, live,
+   * while today's standing orders carry a push and the member's orders hold the pushed item: the
+   * faction's attempts at the place today, the target, the place. Null otherwise; absent on the
+   * partial views an act returns (`character.me` and the paper carry it).
+   */
+  target?: TargetBarView | null;
 }
 
 /** Review 4 #25: what a Rank opens, a key of `copy.ranks.opens` (`RANK_OPENS`). */

@@ -542,12 +542,14 @@ export function ordersView(
       const t = templates.find((x) => x.id === item.templateId);
       if (!t) return [];
       const spec = itemSpec(item, t);
+      // Slice 7 (design §4.2): a pushed order's `{place}` is the push's (the residence below Level 10).
+      const place = (x: string) => (item.push ? x.replaceAll('{place}', pushPlaceName(content, item.push)) : x);
       return [
         {
           id: item.templateId,
           // Slice 4 (design §10), slice-4 fixes §2: `{issue}`, `{city}`, `{verbs}`, resolved at read.
-          title: orderText(spec.title, vars),
-          line: orderText(spec.line, vars),
+          title: place(orderText(spec.title, vars)),
+          line: place(orderText(spec.line, vars)),
           progress: Math.min(item.progress, item.target),
           target: item.target,
           done: item.doneAt !== null,

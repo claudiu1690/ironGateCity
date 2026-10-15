@@ -22,7 +22,7 @@ import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
 import { isEventInPrint, togetherPaper } from './togetherPaper';
 import { nationalSection } from './nationEdition';
-import { pushedHeadline } from './pushTarget';
+import { ordersTargetOf, pushedHeadline } from './pushTarget';
 import { restedCapToday } from './modifiers';
 import { isRivalGround, riskView } from './risk';
 import { FRONT_PAGE_KIND, frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
@@ -167,7 +167,11 @@ export async function getPaper(deps: {
       ...(/.hero$/.test(h.templateId) || /event-triumph$/.test(h.templateId) ? { medal: true } : {}),
     })),
     issues: await paperIssues(content, c, today, { local }),
-    orders: ordersView(content, c, today, firstIssueShort(content, homeState, today), homeState),
+    orders: {
+      ...ordersView(content, c, today, firstIssueShort(content, homeState, today), homeState),
+      // Slice 7 (tech design §11.1 *Party orders*): the party's target bar, live.
+      target: await ordersTargetOf(content, c, today),
+    },
     desk: {
       salary: entry.desk.salary
         ? {
