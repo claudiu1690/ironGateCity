@@ -9,6 +9,10 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] note | Slice 6 QA
+
+QA of slice 6 on the risk areas: no blocker or major; two minor findings (m1 concurrent same-key *Join*, m2 `/faction` while a release is unseen) and one known deviation (no withdrawal modal). The `qa-voting` tie failure was a race in the test (fixed). Report [[qa/slice-6-report]]; new e2e project `qa-together`. Updated [[Slice 6 Together]], [[Open Questions]].
+
 ## [2026-10-15] update | Slice 6 wording rulings (the Doorstep Drive, swing precision, phase B defaults)
 
 The designer's phase C rulings in design §22 #9–12: *Canvass Drive* / *Canvasser* renamed **Doorstep

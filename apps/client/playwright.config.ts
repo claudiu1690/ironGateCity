@@ -52,6 +52,7 @@ export default defineConfig({
         /(^|[\\/])faction\.spec\.ts$/,
         /(^|[\\/])favours\.spec\.ts$/,
         /(^|[\\/])events\.spec\.ts$/,
+        /qa\.slice6\.spec\.ts/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -226,6 +227,14 @@ export default defineConfig({
       testMatch: /(^|[\\/])events\.spec\.ts$/,
       dependencies: ['favours'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    // QA slice 6 (docs/qa/slice-6-report.md): replays, away resolution, the numbers, favours, chat
+    // limits and layout; last (it moves the shared clock).
+    {
+      name: 'qa-together',
+      testMatch: /qa\.slice6\.spec\.ts/,
+      dependencies: ['events'],
+      use: { ...devices['Pixel 7'], viewport: { width: 375, height: 667 } },
     },
   ],
   webServer: [

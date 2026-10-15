@@ -36,7 +36,7 @@ From [[IMPLEMENTATION_PLAN#Slice 6 — Together|the plan]]: Campaign Events (sch
 - Tech design: [[tech/slice-6|tech/slice-6]]. Updated 14 Oct 2026: the knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are applied (dated notes at the end); the planned migration is now `010-slice6-together` (§5.6, was 008). The ledger-for-losses choice from [[adr/0028-influence-ledger-contributions-and-awards|ADR 0028]]'s amendment is a slice-6 decision (§22.1).
 - ADRs: [[adr/0036-campaign-events-roster-signups-and-natural-limits|ADR 0036]] to [[adr/0042-faction-scoreboard-scoped-totals|ADR 0042]].
 - GDD: [[GDD#16.3 Campaign Events (new)|GDD §16.3]], [[GDD#16.2 Faction chat and presence (moved into MVP)|GDD §16.2]].
-- No QA yet.
+- QA: [[qa/slice-6-report|qa/slice-6-report]].
 
 ## Decisions made
 
@@ -68,7 +68,7 @@ The `/faction` shell (commit `ce0e52b`, first, so lane B could fill its parts), 
 
 ## QA and leftovers
 
-Building; no QA yet. The approved defaults and the design's other slice-6 defaults (three starts a day, volunteers at half strength, presence hidden on rival ground: Appendix C #58, #62, #63) are watch items in [[Open Questions]].
+QA run 15 Oct 2026 ([[qa/slice-6-report|report]]): **no blocker or major bug.** The numbers match (Party XP and Political Capital by band, the second event of the day at half, no Iron, a hand's 5 Energy, the withdraw refund and its overflow into Rested, the last hour refused); three events settled while away came back in start order after the release modal; double taps on Call it, Withdraw, Post bail, Visit and chat are one effect. Minor: **m1** a concurrent same-key *Join* can answer *already on this event*; **m2** `/faction` shows no release modal while a released stay is unseen (the results wait; only `/` redirects to the held screen). The `qa-voting` tie test was a race in the test (fixed), not a bug. New e2e project `qa-together`. The approved defaults and the design's other slice-6 defaults (three starts a day, volunteers at half strength, presence hidden on rival ground: Appendix C #58, #62, #63) are watch items in [[Open Questions]].
 
 ## Commits
 

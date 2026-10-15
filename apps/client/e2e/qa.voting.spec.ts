@@ -246,6 +246,7 @@ test('windows: no vote on days 0–1 (NOT_POLLING); on day 2 no standing, no rul
 // The vote: a double tap, a burst, a three-way tie.
 // ---------------------------------------------------------------------------------------------
 
+let burstWinner = '';
 test('vote: a burst of six keys over three cards is one vote; the same key twice is one body', async ({ browser }) => {
   const v1 = await member(browser, 'holm', 'Viktor Eins', { fxp: 400 });
   const burst = await Promise.all(
@@ -254,6 +255,8 @@ test('vote: a burst of six keys over three cards is one vote; the same key twice
   expect(burst.filter((r) => r.ok), JSON.stringify(burst.map((r) => r.reason))).toHaveLength(1);
   for (const r of burst.filter((x) => !x.ok)) expect(['ALREADY_VOTED', 'VERSION_CONFLICT', 'CONFLICT']).toContain(r.reason);
   const chosen = burst.find((r) => r.ok)!.data.view.ballot.myVote.ordinanceId as string;
+  // QA slice 6: which key of the burst wins is a race; the count test below follows the winner.
+  burstWinner = chosen;
   // The morale moved once (+0.5), whatever the burst.
   expect(burst.filter((r) => r.ok && r.data.knockOns.morale)).toHaveLength(1);
   const key = uuid();
@@ -284,8 +287,11 @@ test('the count: seats = local support + 3 × at most five backers; a three-way 
   expect(row.wardVote).toBe(Math.floor(30 / 5));
   expect(row.total).toBe(row.wardVote + 3 * 5);
   expect(row.backers).toBe(7);
-  expect(count.data.rule.how).toBe('tie');
-  expect(count.data.rule.cards[0].ordinanceId, 'the first card takes a tie').toBe(cards[0]);
+  // QA slice 6: the earlier burst's winning key is a race. If it was card 3, v1 and v2 both voted card 3
+  // (two votes against one): card 3 wins on votes. Otherwise it is a three-way tie, and card 1 takes it.
+  const wonByCard3 = burstWinner === cards[2];
+  expect(count.data.rule.how).toBe(wonByCard3 ? 'votes' : 'tie');
+  if (!wonByCard3) expect(count.data.rule.cards[0].ordinanceId, 'the first card takes a tie').toBe(cards[0]);
   expect(count.data.rule.turnout.voters).toBe(3);
   // The rule runs five days: 5 on the count morning, then 4, 3, 2, 1.
   const left: number[] = [];
@@ -293,7 +299,7 @@ test('the count: seats = local support + 3 × at most five backers; a three-way 
     if (d > 0) await advanceTo(stander, 'coalport', d);
     const c = await read(stander, 'city.get', { cityId: 'coalport' });
     left.push(c.data.election.inForce.daysLeft);
-    expect(c.data.election.inForce.ordinanceId).toBe(cards[0]);
+    expect(c.data.election.inForce.ordinanceId).toBe(wonByCard3 ? cards[2] : cards[0]);
   }
   expect(left).toEqual([5, 4, 3, 2, 1]);
   // After the window the vote of that cycle has been counted and a new rule is in force.
