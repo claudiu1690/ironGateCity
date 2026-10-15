@@ -82,6 +82,19 @@ export interface NationBoundaryCtx {
   news: NationNewsItem[];
 }
 
+/**
+ * A deep copy of a stored shape that keeps ObjectIds and Dates as they are (lane 2's fix:
+ * `structuredClone` turns a BSON ObjectId into a plain object, which the boundary then wrote back as
+ * garbage in `government.president.termId` and `laws.inForce[].docId`).
+ */
+function cloneDoc<T>(x: T): T {
+  if (Array.isArray(x)) return x.map((v) => cloneDoc(v)) as T;
+  if (x && typeof x === 'object' && Object.getPrototypeOf(x) === Object.prototype) {
+    return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, cloneDoc(v)])) as T;
+  }
+  return x;
+}
+
 /** A news line for the boundary. */
 export const newsItem = (
   d: DayKey,
@@ -321,7 +334,7 @@ export async function bootstrapNation(content: GameContent, now: number, session
     control: ctl,
     work: nationWork(today, today),
     bootstrap: true,
-    government: structuredClone(government),
+    government: cloneDoc(government),
     laws: { inForce: [], history: [] },
     set: {},
     news: [],
@@ -362,8 +375,8 @@ export async function processNationBoundary(
     control,
     work: nationWork(d, nation.world.bootstrappedDay),
     bootstrap: false,
-    government: structuredClone(nation.government),
-    laws: structuredClone(nation.laws),
+    government: cloneDoc(nation.government),
+    laws: cloneDoc(nation.laws),
     set: {},
     news: [],
   };
