@@ -199,8 +199,9 @@ export interface PickRow extends PickLine {
 }
 
 /**
- * Design §6.2 (§23.1 Q23): the party's pick. Most votes; ties: backers (none before the pick opens),
- * completed terms, then ballot order (the figure last).
+ * Design §6.2 (§23.1 Q23): the party's pick. Most votes; ties: the party's figure (design §21 #2, the
+ * designer's ruling of 15 Oct 2026, phase B), then backers (none before the pick opens), completed
+ * terms, then ballot order (the figure last).
  */
 export function countPick(i: { ballot: readonly PickLine[]; votes: Readonly<Record<string, number>> }): {
   winnerKey: string;
@@ -208,11 +209,22 @@ export function countPick(i: { ballot: readonly PickLine[]; votes: Readonly<Reco
 } {
   const rows = i.ballot
     .map((l) => ({ ...l, votes: Math.max(0, i.votes[l.key] ?? 0), place: 0 }))
-    .sort((a, b) => b.votes - a.votes || b.backers - a.backers || b.termsWeight - a.termsWeight || a.order - b.order)
+    .sort(
+      (a, b) =>
+        b.votes - a.votes ||
+        // The designer's ruling (15 Oct 2026, phase B): on an exact tie of votes the party's figure wins.
+        (isFigure(a) ? -1 : isFigure(b) ? 1 : 0) ||
+        b.backers - a.backers ||
+        b.termsWeight - a.termsWeight ||
+        a.order - b.order,
+    )
     .map((r, idx) => ({ ...r, place: idx + 1 }));
   if (rows.length === 0) throw new Error('countPick: a ballot has at least the figure');
   return { winnerKey: rows[0]!.key, rows };
 }
+
+/** A pick's figure: an npc key (`n:{npcId}`); a player's is `p:{characterId}`. */
+const isFigure = (l: Pick<PickLine, 'key'>): boolean => l.key.startsWith('n:');
 
 export interface ChairLine {
   key: string;
@@ -233,7 +245,8 @@ export interface ChairRow extends ChairLine {
 
 /**
  * Design §4.1 (ADR 0084): the Chair's count. Support = votes + 3 × min(5, backers); the secretary has
- * votes only. Ties: votes, then backers, then completed terms, then filing (the secretary last).
+ * votes only. Ties: votes, then the secretary, then backers, then completed terms, then filing (the
+ * designer's ruling of 15 Oct 2026, phase B; GDD §15.4).
  */
 export function countChair(i: { lines: readonly ChairLine[]; votes: Readonly<Record<string, number>> }): {
   rows: ChairRow[];
@@ -249,7 +262,12 @@ export function countChair(i: { lines: readonly ChairLine[]; votes: Readonly<Rec
     })
     .sort(
       (a, b) =>
-        b.total - a.total || b.votes - a.votes || b.backers - a.backers || b.termsWeight - a.termsWeight || a.order - b.order,
+        b.total - a.total ||
+        b.votes - a.votes ||
+        (a.kind === 'secretary' ? -1 : b.kind === 'secretary' ? 1 : 0) ||
+        b.backers - a.backers ||
+        b.termsWeight - a.termsWeight ||
+        a.order - b.order,
     )
     .map((r, idx) => ({ ...r, place: idx + 1 }));
   if (rows.length === 0) throw new Error('countChair: a ballot has at least the secretary');
