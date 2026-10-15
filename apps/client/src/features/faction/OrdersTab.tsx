@@ -1,4 +1,5 @@
 import { copy } from '@irongate/content/copy';
+import { ChairElectionCard, ConfidenceCard } from '../chair/ChairElection';
 import { EventCard, OrdersList } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
@@ -40,6 +41,12 @@ export function OrdersTab() {
           }
         />
       )}
+      {/* Slice 7 (screens §5.1, §11): the Chair's name under the orders when a Chair set them. */}
+      {!orders.off && orders.setBy && (
+        <p className="-mt-2 font-mono text-[12px] text-muted" data-testid="orders-set-by">
+          {copy.nation.chair.setByName(orders.setBy.name)}
+        </p>
+      )}
       {eventOrder?.link && (
         <button
           type="button"
@@ -62,6 +69,9 @@ export function OrdersTab() {
           <EventCard event={fixture} onOpen={() => openEvent(fixture.id)} />
         </section>
       )}
+      {/* Slice 7 (screens §7.1, §9.3): the Chair's election and the vote on the Chair, for every member. */}
+      <ChairElectionCard />
+      <ConfidenceCard />
     </section>
   );
 }

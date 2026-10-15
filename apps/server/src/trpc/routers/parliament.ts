@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { getLawBook } from '../../services/nationService';
 import { blocView, catalogueView, chamberView, getBill, table, veto, vote } from '../../services/parliamentService';
+import { assetView } from '../../services/views';
 import { protectedProcedure, router } from '../trpc';
 
 const Oid = z.string().regex(/^[0-9a-f]{24}$/);
@@ -11,6 +12,21 @@ const LawId = z.string().regex(/^law\.[a-z-]+$/);
  * `table`, `vote` (T15) and `veto` (T18). Bill votes are public by design (the chamber is not a ballot).
  */
 export const parliamentRouter = router({
+  /**
+   * Phase C (lane X): the nation's three scenes as asset views (`content.art.nationScenes`), so the
+   * chamber, the President's page and the republic's result stand on their pictures without the
+   * client naming an asset id. Null when the content has none.
+   */
+  art: protectedProcedure.query(({ ctx }) => {
+    const ns = ctx.content.art.nationScenes;
+    return ns
+      ? {
+          chamber: assetView(ctx.content, ns.chamber),
+          president: assetView(ctx.content, ns.president),
+          result: assetView(ctx.content, ns.result),
+        }
+      : null;
+  }),
   laws: protectedProcedure.query(({ ctx }) => getLawBook({ user: ctx.user, content: ctx.content, now: ctx.now() })),
   chamber: protectedProcedure.query(({ ctx }) => chamberView({ user: ctx.user, content: ctx.content, now: ctx.now })),
   bill: protectedProcedure

@@ -4,6 +4,7 @@ import type { FactionTab } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect } from 'react';
+import { ChairTab } from '../features/chair/ChairTab';
 import { ChatTab } from '../features/faction/ChatTab';
 import { EventsTab } from '../features/faction/EventsTab';
 import { MembersTab } from '../features/faction/MembersTab';
@@ -67,8 +68,11 @@ export function FactionPage() {
   const chatHidden = !!character?.chat?.hidden;
   // Screens §10: on a desktop Chat is the right-hand column (four chips); with chat hidden from Me
   // there is no Chat chip at all. Either way the left keeps another part.
-  const tabs = FACTION_TABS.filter((t) => t !== 'chat' || (!wide && !chatHidden));
-  const left: FactionTab = tab === 'chat' && (wide || chatHidden) ? 'events' : tab;
+  // Slice 7 (screens §5): the Chair part for Rank 4 and above.
+  const chairChip = (character?.rank.value ?? 0) >= 4;
+  const tabs = FACTION_TABS.filter((t) => (t !== 'chat' || (!wide && !chatHidden)) && (t !== 'chair' || chairChip));
+  const left: FactionTab =
+    tab === 'chat' && (wide || chatHidden) ? 'events' : tab === 'chair' && character && !chairChip ? 'events' : tab;
 
   const body = (t: FactionTab) => {
     switch (t) {
@@ -80,6 +84,8 @@ export function FactionPage() {
         return <MembersTab />;
       case 'scoreboard':
         return <ScoreboardTab />;
+      case 'chair':
+        return <ChairTab />;
       case 'chat':
         return <ChatTab />;
     }

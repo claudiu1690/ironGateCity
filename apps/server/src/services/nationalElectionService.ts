@@ -382,6 +382,8 @@ export async function nationalElectionView(
         cost: PRESIDENT.deposit,
         standing: mine?.kind === 'president' && mine.status === 'standing',
         canWithdraw: mine?.kind === 'president' && mine.status === 'standing',
+        // Phase C (lane X): the platform line picker on the stand card.
+        platforms: (content.faction(c.factionId).chairPlatforms ?? []).map((p) => ({ id: p.id, line: p.line })),
       },
     };
   }

@@ -72,6 +72,7 @@ import { env } from '../env';
 import { usePerformAction } from '../features/action/usePerformAction';
 import type { PerformTarget } from '../features/action/usePerformAction';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
+import { usePetitionCard } from '../features/nation/usePetitionCard';
 import { useRuleVote } from '../features/council/useRuleVote';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
@@ -195,6 +196,8 @@ export function CityPage() {
   const act = usePoliticalAct();
   // The voting rework (tech design §9.2): the side column's Election card is the ballot on days 2–4.
   const ruleVote = useRuleVote(act);
+  // Slice 7 (screens §9.1): the petition's line and button on the council's Election card.
+  const petition = usePetitionCard(city.data?.election ? city.data.id : null);
   const [residenceOpen, setResidenceOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   useEffect(() => {
@@ -655,6 +658,7 @@ export function CityPage() {
   const election = (layout: 'card' | 'row' | 'compact', className?: string) =>
     c.election ? (
       <ElectionCard
+        petition={layout === 'card' ? petition : null}
         summary={c.election}
         onOpen={openElection}
         layout={layout}
@@ -1497,6 +1501,7 @@ export function CityPage() {
           )}
           {sheetPlace.council && (
             <ElectionCard
+              petition={petition}
               summary={sheetPlace.council}
               onOpen={(route) => void navigate({ to: route })}
               now={now}

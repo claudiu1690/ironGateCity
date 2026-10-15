@@ -192,6 +192,12 @@ export interface ElectionCardProps {
   rankTitles?: { rank2: string; rank3: string };
   now?: number;
   className?: string;
+  /**
+   * Slice 7 (screens §9.1): the petition to dissolve the council: the third line while one is open
+   * (*A petition to dissolve the council: 2 of 4 names by …*) and the button to its page
+   * (*Petition to dissolve the council · 10 Political Capital*, *Sign · 10 Political Capital*, *Signed*).
+   */
+  petition?: { line: string | null; label: string; onOpen: () => void } | null;
 }
 
 export function ElectionCard({
@@ -203,6 +209,7 @@ export function ElectionCard({
   now,
   className,
   factionNames,
+  petition,
 }: ElectionCardProps) {
   const l = electionLines(s, now, factionNames);
   const capital = s.seats === 2;
@@ -389,6 +396,19 @@ export function ElectionCard({
             )}
           </div>
         )
+      )}
+      {petition && (
+        <div className="flex flex-col gap-1 border-t border-dotted border-faint pt-1.5" data-testid="election-petition">
+          {petition.line && <p className="font-mono text-[11.5px] text-failure">{petition.line}</p>}
+          <button
+            type="button"
+            onClick={petition.onOpen}
+            className="label-caps min-h-11 cursor-pointer border-[1.5px] border-ink px-3 text-[12px] text-ink hover:bg-ink hover:text-paper"
+            data-testid="election-petition-open"
+          >
+            {petition.label}
+          </button>
+        </div>
       )}
     </section>
   );

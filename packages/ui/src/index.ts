@@ -273,3 +273,29 @@ export { EventBody } from './components/EventResult';
 export type { EventBodyProps } from './components/EventResult';
 export { EventTicket, HereNowLine } from './components/EventTicket';
 export type { EventTicketProps, HereNowLineProps } from './components/EventTicket';
+// Slice 7 phase C, lane X (tech design §12.2): Parliament, the Chair's desk, the elections, petitions.
+export { NationHeader, PowerCard, SectionKicker } from './components/NationHeader';
+export type { NationHeaderProps } from './components/NationHeader';
+export {
+  BillCount,
+  BillRow,
+  BlocBar,
+  LawRow,
+  LineChips,
+  StickyBar,
+  TextLink,
+  billTag,
+  billTitle,
+  dayDate,
+  dayWeekday,
+  lineWord,
+  localsLine,
+  nameOf,
+  tablerLine,
+} from './components/Parliament';
+export type { BillRowProps, BlocBarProps, LawRowProps } from './components/Parliament';
+export { BallotChoice, NationalBallot, PledgeChips, ScoreTable, Tick } from './components/NationalBallot';
+export type { BallotChoiceProps, NationalBallotProps } from './components/NationalBallot';
+export { OrderPicker, PushRow, SLOT_LABELS, TargetBar, ToggleChip } from './components/ChairDesk';
+export type { OrderPickerProps, PushRowProps, PushValue } from './components/ChairDesk';
+export { SignatureBar } from './components/Petition';

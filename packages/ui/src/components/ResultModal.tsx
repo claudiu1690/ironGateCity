@@ -309,6 +309,22 @@ function PoliticalBody({
   if (k.mate) lines.push({ id: 'mate', text: copy.together.knock.mate(k.mate.name) });
   if (k.postedBy) lines.push({ id: 'posted-by', text: copy.together.knock.postedBy(k.postedBy.iron, k.postedBy.name) });
   if (k.seatGivenUp) lines.push({ id: 'seat', text: copy.residence.seatGivenUp(k.seatGivenUp.cityName) });
+  // Slice 7 (tech design §10.1): the Address, *{issue}: {party} +100 points (leads 230 to 85)*.
+  if (k.issue) {
+    const mine = r.character.factionId;
+    const after = Object.entries(k.issue.after).sort((a, b) => b[1] - a[1]);
+    const lead = after[0]?.[1] === after[1]?.[1] ? null : (after[0]?.[0] ?? null);
+    const who = lead === null ? null : lead === mine ? '' : (r.character.factionNames?.[lead as FactionId] ?? lead);
+    lines.push({
+      id: 'issue',
+      text: copy.capital.issuePoints(
+        k.issue.name,
+        r.character.factionName,
+        k.issue.added,
+        copy.capital.leadsBy(who, after[0]?.[1] ?? 0, after[1]?.[1] ?? 0),
+      ),
+    });
+  }
   const t = { until: r.until, at: r.at };
   // Review 2 (screens §9): every act ends with what comes next.
   if (r.next) lines.push({ id: 'next', text: renderTimeTokens(r.next, t) });
@@ -472,6 +488,12 @@ function JourneyBody({
  * odds", "Street Fund · +25 % Iron". Never a percentage of chance.
  */
 export function ordinanceTagText(t: OrdinanceTagView): string {
+  // Slice 7 (screens §8): a law's tag reads *LAW · Public Assembly Act: 10 Energy* (the kicker, the
+  // council rule's pattern), so a ticket says which line of the law book moved its number.
+  if (t.source === 'law') {
+    const text = ordinanceTagText({ ...t, source: 'ordinance' });
+    return `${copy.nation.parliament.lawKicker.toUpperCase()} · ${text.replace(`${t.name} · `, `${t.name}: `)}`;
+  }
   const pct = `${t.value >= 0 ? '+' : '−'}${Math.abs(t.value)} %`;
   switch (t.kind) {
     case 'energy':

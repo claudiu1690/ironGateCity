@@ -25,6 +25,11 @@ import { HeldPage } from './routes/held';
 import { FactionPage, validateFactionSearch } from './routes/faction';
 import { EventPage, validateEventSearch } from './routes/event';
 import { SignupPage } from './routes/signup';
+import { BillPage, LawBookPage, ParliamentPage } from './routes/parliament';
+import { NationalPage, NationalResultPage, PickPage } from './routes/election';
+import { PresidentPage } from './routes/president';
+import { PetitionPage } from './routes/petition';
+import { ChairElectionPage, ChairResultPage, ChairVotePage, ConfidencePage } from './features/chair/ChairElection';
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -258,6 +263,35 @@ const countRoute = createRoute({
 });
 
 /**
+ * Slice 7 phase C, lane X (tech design §12.1): Parliament, a bill, the law book; the Chair's election
+ * and the vote on the Chair; the party's pick and the republic's election; the President's page; the
+ * petition. `/office/chair` is the Faction tab's Chair part (§22.1 Q24).
+ */
+const nationLaneX = [
+  createRoute({ getParentRoute: () => appRoute, path: '/parliament', component: ParliamentPage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/parliament/bill/$billId', component: BillPage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/parliament/laws', component: LawBookPage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/faction/election', component: ChairElectionPage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/faction/election/vote', component: ChairVotePage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/faction/election/result', component: ChairResultPage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/faction/confidence', component: ConfidencePage }),
+  createRoute({
+    getParentRoute: () => appRoute,
+    path: '/office/chair',
+    beforeLoad: () => {
+      throw redirect({ to: '/faction', search: { tab: 'chair' } });
+    },
+  }),
+  createRoute({ getParentRoute: () => appRoute, path: '/office/president', component: PresidentPage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/election/pick', component: () => <PickPage /> }),
+  createRoute({ getParentRoute: () => appRoute, path: '/election/pick/vote', component: () => <PickPage vote /> }),
+  createRoute({ getParentRoute: () => appRoute, path: '/election/national', component: () => <NationalPage /> }),
+  createRoute({ getParentRoute: () => appRoute, path: '/election/national/vote', component: () => <NationalPage vote /> }),
+  createRoute({ getParentRoute: () => appRoute, path: '/election/national/result', component: NationalResultPage }),
+  createRoute({ getParentRoute: () => appRoute, path: '/council/petition', component: PetitionPage }),
+];
+
+/**
  * Maps v3 §6: the dev map viewer, every tiled picture with every surveyed pin. Dev builds only (the
  * branch is dropped from a production build, with its chunk), outside the sign-in guard.
  */
@@ -291,6 +325,7 @@ const routeTree = rootRoute.addChildren([
     slateRoute,
     ballotRoute,
     countRoute,
+    ...nationLaneX,
   ]),
 ]);
 

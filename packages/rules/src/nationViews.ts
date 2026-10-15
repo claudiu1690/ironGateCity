@@ -276,7 +276,7 @@ export interface NationalElectionView {
   /** Your party's list, live (backers public). */
   list: Array<{ candidacyId: string; name: string; backers: number; place: number; you: boolean; canBack: boolean }>;
   presidentCandidates: Array<{ candidacyId: string; name: string; pledges: string[]; you: boolean }>;
-  stand: { list: ActGate & { cost: number; standing: boolean }; president: ActGate & { cost: number; standing: boolean; canWithdraw: boolean } } | null;
+  stand: { list: ActGate & { cost: number; standing: boolean }; president: ActGate & { cost: number; standing: boolean; canWithdraw: boolean; platforms?: Array<{ id: string; line: string }> } } | null;
   canVote: ActGate;
   yourVote: { factionId: FactionId } | null;
   yourBacking: { name: string } | null;

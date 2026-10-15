@@ -3,8 +3,9 @@ import type { FactionId } from '@irongate/rules';
 import { cx } from '../format';
 import { FACTION_STYLE } from './FactionCrest';
 
-export type FactionTab = 'orders' | 'events' | 'members' | 'scoreboard' | 'chat';
-export const FACTION_TABS: readonly FactionTab[] = ['orders', 'events', 'members', 'scoreboard', 'chat'];
+export type FactionTab = 'orders' | 'events' | 'members' | 'scoreboard' | 'chair' | 'chat';
+/** Slice 7 (screens §5, tech design §12.1): the sixth part, **Chair**, for Rank 4 and above (the caller filters). */
+export const FACTION_TABS: readonly FactionTab[] = ['orders', 'events', 'members', 'scoreboard', 'chair', 'chat'];
 
 export interface FactionTabsProps {
   current: FactionTab;
@@ -55,7 +56,7 @@ export function FactionTabs({ current, onGo, dots, tabs = FACTION_TABS, factionI
             data-testid={`faction-tab-${t}`}
             data-on={on ? 'true' : undefined}
           >
-            {copy.together.tabs[t]}
+            {t === 'chair' ? copy.nation.chair.tab : copy.together.tabs[t]}
             {dots?.[t] && !on && (
               <span
                 className="ml-1 inline-block size-1.5 shrink-0 rounded-full bg-failure"
