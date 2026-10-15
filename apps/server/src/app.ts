@@ -11,12 +11,14 @@ import pkg from '../package.json' with { type: 'json' };
 import { CLIENT_IP_HEADER } from './auth';
 import type { Auth } from './auth';
 import { applyCharacterSeed } from './dev/characterSeed';
+import { loadClockOffset, saveClockOffset } from './dev/clockStore';
 import { setWeekIssues } from './dev/issues';
 import { registerDevPanel } from './dev/panel';
 import { CharacterRiskBody, zodLine } from './dev/risk';
 import { registerRiskHooks } from './dev/riskRoutes';
 import type { Env } from './env';
 import { runCityDay } from './services/cityDay';
+import { dayHooks } from './services/dayService';
 import { nightHooks } from './services/night';
 import { patrolHooks } from './services/patrolHooks';
 import { captureException } from './sentry';
@@ -48,9 +50,17 @@ export async function buildApp({
   content,
   now: baseNow = Date.now,
 }: AppDeps): Promise<FastifyInstance> {
-  // Tech design §7.8: a process-wide clock offset that only Playwright can move.
-  let clockOffsetMs = 0;
+  // Tech design §7.8: a process-wide clock offset that only Playwright and the dev panel can move.
+  // Review 6 leftovers: under the test hooks it is kept in the database (dev/clockStore.ts) and read
+  // back here, so `pnpm dev:mem`'s reload on a saved file never puts the clock back.
+  let clockOffsetMs = env.E2E_TEST_HOOKS ? await loadClockOffset() : 0;
   const now = () => baseNow() + clockOffsetMs;
+  /** Forward only (QA n11), and kept. */
+  const advanceClock = async (ms: number) => {
+    if (!(ms >= 0)) throw new Error('the test clock only moves forward');
+    clockOffsetMs += ms;
+    await saveClockOffset(clockOffsetMs);
+  };
   const app = Fastify({
     logger: env.NODE_ENV === 'test' ? false : { level: env.LOG_LEVEL },
     // QA m7: trust only the proxy hops of the deployment (env.ts TRUST_PROXY), so request.ip is
@@ -70,6 +80,8 @@ export async function buildApp({
     if (env.E2E_NIGHT) nightHooks.mode = env.E2E_NIGHT;
     // Review 5 (ADR 0081): the patrol's hooks (Playwright: never; dev:mem: auto).
     patrolHooks.enabled = true;
+    // Review 6 leftovers: a character settled ahead of the test clock gets a clear dev error.
+    dayHooks.devClock = true;
     if (env.E2E_PATROL) patrolHooks.base = env.E2E_PATROL;
     // Memory mode only (env.ts refuses E2E_TEST_HOOKS otherwise). The clock moves forward only
     // (QA n11): lazy time assumes it never runs back past a settled day.
@@ -90,7 +102,7 @@ export async function buildApp({
         for (let d = dayKey(t0); ; d++) {
           const t = dayStart(d) + hour * 3_600_000;
           if (t > t0 && isMonday(d)) {
-            clockOffsetMs += t - t0;
+            await advanceClock(t - t0);
             break;
           }
         }
@@ -111,7 +123,7 @@ export async function buildApp({
         for (let d = dayKey(t0); ; d++) {
           const t = dayStart(d) + hour * 3_600_000;
           if (t > t0 && cycleOf(d, offset).cycleDay === cycleDay) {
-            clockOffsetMs += t - t0;
+            await advanceClock(t - t0);
             break;
           }
         }
@@ -121,7 +133,7 @@ export async function buildApp({
       if (!Number.isFinite(advanceMs) || advanceMs < 0) {
         return reply.code(400).send({ error: 'advanceMs must be a number ≥ 0' });
       }
-      clockOffsetMs += advanceMs;
+      await advanceClock(advanceMs);
       return { offsetMs: clockOffsetMs, now: now() };
     });
 
@@ -234,10 +246,7 @@ export async function buildApp({
       clock: {
         now,
         offsetMs: () => clockOffsetMs,
-        advance: (ms) => {
-          if (!(ms >= 0)) throw new Error('the test clock only moves forward');
-          clockOffsetMs += ms;
-        },
+        advance: advanceClock,
       },
     });
   }

@@ -1364,6 +1364,8 @@ export type GameErrorReason =
   | 'UNKNOWN_ACTION'
   | 'UNKNOWN_LOCATION'
   | 'ACTION_CONFLICT'
+  // Review 6 leftovers: dev only (memory mode), the test clock is behind the character's settled day.
+  | 'CLOCK_BEHIND'
   | 'ACTION_LOCKED'
   | 'KEY_REUSED'
   | 'NO_STAT_POINTS'

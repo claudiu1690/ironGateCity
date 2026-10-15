@@ -65,8 +65,8 @@ import { addRuleVotes, seatMe } from './voting';
 export interface DevClock {
   now: () => number;
   offsetMs: () => number;
-  /** Forward only (QA n11). */
-  advance: (ms: number) => void;
+  /** Forward only (QA n11); kept in the database (review 6 leftovers, dev/clockStore.ts). */
+  advance: (ms: number) => Promise<void>;
 }
 
 export interface DevPanelDeps {
@@ -329,15 +329,15 @@ async function runAction(
   let settle = false;
   switch (action) {
     case 'hour':
-      clock.advance(HOUR_MS);
+      await clock.advance(HOUR_MS);
       moved = true;
       break;
     case 'day':
-      clock.advance(nextDayAt(clock.now()) - clock.now());
+      await clock.advance(nextDayAt(clock.now()) - clock.now());
       moved = true;
       break;
     case 'dusk':
-      clock.advance(toDuskAt(clock.now()) - clock.now());
+      await clock.advance(toDuskAt(clock.now()) - clock.now());
       moved = true;
       break;
     case 'phase': {
@@ -345,7 +345,7 @@ async function runAction(
       const residence = residenceCityId(home);
       const offset = content.city(residence)?.council?.offset;
       if (offset === undefined) throw new DevRefusal(409, `${residence} has no council`);
-      clock.advance(nextPhaseAt(clock.now(), offset).landAt - clock.now());
+      await clock.advance(nextPhaseAt(clock.now(), offset).landAt - clock.now());
       moved = true;
       break;
     }
@@ -404,7 +404,7 @@ async function runAction(
       const t0 = clock.now();
       let d = dayKey(t0) + 1;
       while (!isMonday(d)) d += 1;
-      clock.advance(dayStart(d) + 60_000 - t0);
+      await clock.advance(dayStart(d) + 60_000 - t0);
       moved = true;
       break;
     }

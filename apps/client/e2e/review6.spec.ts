@@ -255,3 +255,191 @@ test('review 6 #3: the journey trail is dotted with rounded bends, and the pin r
   // The pin on the line (fractions of the picture; 0.002 is about 18 px of the 9,216 px art).
   expect(trail.nearest).toBeLessThan(0.002);
 });
+
+// ---------------------------------------------------------------------------------------------------
+// Review 6 leftovers (docs/review/review-6-build-notes.md "Left as it was").
+// ---------------------------------------------------------------------------------------------------
+
+/** Level 10, on the train from Coalport to Ashford (through the capital), some way along. */
+async function onTheTrain(page: Page, name: string, minutes = 7) {
+  await signUp(page, name);
+  expect((await page.request.post('/api/test/character', { data: { level: 10, fxp: 500, iron: 600 } })).ok()).toBe(true);
+  await page.goto('/nation?city=ashford');
+  const board = page.getByTestId('city-sheet').getByTestId('city-board');
+  await expect(board).toBeVisible();
+  await board.click();
+  await expect(page).toHaveURL(/\/journey$/);
+  await expect(page.getByTestId('travel-pin-mark')).toBeVisible();
+  if (minutes > 0) {
+    expect((await page.request.post('/api/test/clock', { data: { advanceMs: minutes * 60_000 } })).ok()).toBe(true);
+    await page.reload();
+    await expect(page.getByTestId('travel-pin-mark')).toBeVisible();
+  }
+  // The card may open at its moment: put it out of the way.
+  const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('journey-card') });
+  if (await sheet.isVisible().catch(() => false)) await page.keyboard.press('Escape');
+  await page.waitForTimeout(600);
+}
+
+type Box = { left: number; top: number; right: number; bottom: number };
+const inside = (r: Box, b: Box) =>
+  r.left >= b.left - 0.5 && r.top >= b.top - 0.5 && r.right <= b.right + 0.5 && r.bottom <= b.bottom + 0.5;
+
+test.describe('review 6 leftovers R6-1: the journey screen held sideways', () => {
+  for (const vp of [
+    { width: 667, height: 375, side: true },
+    { width: 568, height: 320, side: true },
+    { width: 844, height: 390, side: true },
+    { width: 932, height: 430, side: true },
+    // Upright and desktop: unchanged (the plate above the map; the 480 px side sheet).
+    { width: 375, height: 667, side: false },
+    { width: 1440, height: 900, side: false },
+  ]) {
+    test(`${vp.width} × ${vp.height}: the map fits the screen, the pin and its trail in view`, async ({ page }) => {
+      test.setTimeout(120_000);
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await onTheTrain(page, 'Lena Sorrel');
+      const at = `${vp.width}×${vp.height}`;
+      if (vp.width === 667) await shot(page, 'journey-667x375-layout');
+      const m = await page.evaluate(() => {
+        const r = (el: Element) => {
+          const b = el.getBoundingClientRect();
+          return { left: b.left, top: b.top, right: b.right, bottom: b.bottom, width: b.width, height: b.height };
+        };
+        const q = (sel: string) => r(document.querySelector(sel)!);
+        return {
+          w: window.innerWidth,
+          h: window.innerHeight,
+          map: q('[data-testid=city-map]'),
+          plate: q('[data-testid=journey-plate]'),
+          mark: q('[data-testid=travel-pin-mark]'),
+          label: q('[data-testid=travel-pin-label]'),
+          // The trail's points on screen (300 a leg), to see how much of it is in view.
+          trail: [...document.querySelectorAll<SVGPathElement>('[data-testid=map-path]')].flatMap((p) => {
+            const ctm = p.getScreenCTM()!;
+            const len = p.getTotalLength();
+            return Array.from({ length: 301 }, (_, i) => {
+              const q = p.getPointAtLength((len * i) / 300);
+              const s = new DOMPoint(q.x, q.y).matrixTransform(ctm);
+              return [s.x, s.y] as [number, number];
+            });
+          }),
+        };
+      });
+      console.log(`[r6-1] ${at} ${JSON.stringify({ map: m.map, plate: m.plate, mark: m.mark })}`);
+      const win = { left: 0, top: 0, right: m.w, bottom: m.h };
+      if (vp.side) {
+        // The plate beside the map, on its left, as tall as the map; the map inside the screen.
+        expect(m.plate.right, at).toBeLessThanOrEqual(m.map.left + 0.5);
+        expect(Math.abs(m.plate.height - m.map.height), at).toBeLessThanOrEqual(1);
+        expect(inside(m.map, win), `${at}: the map inside the screen`).toBe(true);
+      } else if (vp.width < 1024) {
+        expect(m.plate.bottom, at).toBeLessThanOrEqual(m.map.top + 0.5);
+      } else {
+        expect(Math.round(m.plate.width), at).toBe(480);
+      }
+      // The trail: around the pin always in view; on the two short phones (667 × 375, 568 × 320) all of
+      // it. On the wider ones (342 and 382 px of map height) the fit keeps two city pins' targets apart
+      // (review 3's floor on the zoom), so the start of a long line behind the pin may be a drag away.
+      const pc = [(m.mark.left + m.mark.right) / 2, (m.mark.top + m.mark.bottom) / 2];
+      const on = (q: [number, number]) => q[0] >= m.map.left && q[0] <= m.map.right && q[1] >= m.map.top && q[1] <= m.map.bottom;
+      const near = m.trail.filter((q) => Math.hypot(q[0] - pc[0]!, q[1] - pc[1]!) <= 60);
+      const shown = m.trail.filter(on).length / m.trail.length;
+      console.log(`[r6-1] ${at} trail in view: ${(shown * 100).toFixed(0)} %`);
+      expect(near.length, `${at}: the trail by the pin`).toBeGreaterThan(0);
+      expect(near.every(on), `${at}: the trail by the pin in view`).toBe(true);
+      if (vp.side && vp.height <= 375) expect(shown, `${at}: the whole trail in view`).toBeGreaterThanOrEqual(0.999);
+      for (const [id, r] of [['pin', m.mark], ['label', m.label]] as const) {
+        expect(inside(r, m.map), `${at}: the ${id} on the map`).toBe(true);
+        expect(inside(r, win), `${at}: the ${id} on the screen`).toBe(true);
+      }
+    });
+  }
+});
+
+/** The city's corner card (from 640 px) and the *What's here* / *City · Nation* buttons in the map's top right. */
+async function cardGap(page: Page) {
+  return page.evaluate(() => {
+    const vis = (el: Element | undefined | null) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden' ? r : null;
+    };
+    const card = vis(document.querySelector('[data-map-overlay=top]'));
+    const places = vis([...document.querySelectorAll('[data-testid=places-button]')].find((e) => vis(e)));
+    const sw = vis([...document.querySelectorAll('[data-testid=map-switch]')].find((e) => vis(e)));
+    if (!card || !places || !sw) return { gap: null, card: !!card, places: !!places, sw: !!sw };
+    const row = {
+      left: Math.min(places.left, sw.left),
+      top: Math.min(places.top, sw.top),
+      right: Math.max(places.right, sw.right),
+      bottom: Math.max(places.bottom, sw.bottom),
+    };
+    const gx = Math.max(row.left - card.right, card.left - row.right);
+    const gy = Math.max(row.top - card.bottom, card.top - row.bottom);
+    return { gap: Math.max(gx, gy), card: { left: card.left, right: card.right, bottom: card.bottom }, row };
+  });
+}
+
+test("review 6 leftovers R6-2: from 640 to 720 px the city's corner card and the map buttons keep a gap", async ({ page }) => {
+  test.setTimeout(180_000);
+  await signUp(page, 'Ida Marsh');
+  expect((await page.request.post('/api/test/character', { data: { level: 10 } })).ok()).toBe(true);
+  const sizes = [
+    // Upright (a small tablet).
+    { width: 640, height: 900 },
+    { width: 667, height: 960 },
+    { width: 700, height: 1000 },
+    { width: 720, height: 1024 },
+    // Sideways but taller than 500 px (not the phone's side column), where the corner card applies.
+    { width: 640, height: 560 },
+    { width: 667, height: 560 },
+    { width: 700, height: 600 },
+    { width: 720, height: 600 },
+    // Either side of the range.
+    { width: 768, height: 1024 },
+    { width: 1024, height: 768 },
+  ];
+  const misses: string[] = [];
+  for (const vp of sizes) {
+    await page.setViewportSize(vp);
+    await page.goto('/city/coalport');
+    await mapAtRest(page);
+    const at = `${vp.width}×${vp.height}`;
+    if (vp.width === 640 && vp.height === 900) await shot(page, 'city-640x900-card');
+    const g = await cardGap(page);
+    console.log(`[r6-2] ${at} ${JSON.stringify(g)}`);
+    if (g.gap === null || g.gap < 8) misses.push(`${at}: ${g.gap === null ? 'missing' : g.gap.toFixed(1)}`);
+    // The two buttons still keep their own gap (review 6 #2).
+    const b = await buttonsGap(page);
+    expect(b, at).not.toBeNull();
+    expect(b!.gap, at).toBeGreaterThanOrEqual(6);
+    expect(Math.min(...b!.heights), at).toBeGreaterThanOrEqual(44);
+    expect(b!.inWindow, at).toBe(true);
+  }
+  expect(misses).toEqual([]);
+});
+
+test('review 6 leftovers: the dotted trail on the night map', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 667, height: 375 });
+  expect((await page.request.post('/api/test/night', { data: { mode: 'night' } })).ok()).toBe(true);
+  try {
+    await onTheTrain(page, 'Nils Harrow');
+    await expect(page.getByTestId('city-map')).toHaveAttribute('data-night', 'true');
+    await shot(page, 'journey-667x375-night-trail');
+    const look = await page.evaluate(() => {
+      const dot = document.querySelector<SVGPathElement>('[data-testid=map-path]')!;
+      const ring = document.querySelector<SVGPathElement>('[data-testid=map-path-ring]');
+      return {
+        dot: getComputedStyle(dot).stroke,
+        ring: ring ? getComputedStyle(ring).stroke : null,
+        ringWidth: ring ? getComputedStyle(ring).strokeWidth : null,
+      };
+    });
+    console.log(`[r6-night] ${JSON.stringify(look)}`);
+    expect(look.ring).not.toBeNull();
+  } finally {
+    await page.request.post('/api/test/night', { data: { mode: 'day' } });
+  }
+});

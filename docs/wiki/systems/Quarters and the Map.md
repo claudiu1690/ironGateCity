@@ -50,7 +50,9 @@ gate, and the whole city is one map with locked places shown as greyed pins.
   the one place a quarter's name is read).
 - **The map's buttons** (review 6): *What's here* and *City · Nation* (on the nation map *Cities* and
   *City · Nation*) share one row with an 8 px gap, at the top right sideways and from 640 px, at the
-  two ends of the orders bar on an upright phone; they never overlap. Held sideways on a short screen
+  two ends of the orders bar on an upright phone; they never overlap. From 640 to 767 px wide the
+  two stack (*What's here* over *City · Nation*), so they keep clear of the 420 px corner card (the
+  row used to run under it by up to 44 px; review 6 leftovers, R6-2). Held sideways on a short screen
   the city and nation maps take the screen's height, with no 420 px floor.
 - **Tiles:** AVIF q55, 512 px Deep Zoom tiles cut by `pnpm art:tiles` into a git-ignored cache,
   listed in the committed manifest `tiles.json` (12 pictures: five cities and the nation, day and

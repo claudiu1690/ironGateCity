@@ -1947,6 +1947,7 @@ export function CityMap({
       data-zoomed={selected ? 'true' : 'false'}
       data-moving={moving ? 'true' : 'false'}
       data-fit={fit}
+      data-night={isNight ? 'true' : 'false'}
       data-art={pyramids ? 'tiles' : 'still'}
       data-view={view ? `${view.x.toFixed(1)},${view.y.toFixed(1)},${view.scale.toFixed(4)}` : ''}
       data-zoom-limits={
@@ -2066,6 +2067,7 @@ export function CityMap({
                   <path
                     key={`${p.id}:halo`}
                     d={linePath(p.points)}
+                    data-testid="map-path-ring"
                     fill="none"
                     style={{ stroke: 'var(--color-paper)' }}
                     strokeOpacity={0.9}

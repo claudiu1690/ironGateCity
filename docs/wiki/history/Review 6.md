@@ -58,11 +58,17 @@ screenshots before and after at 667 × 375 in `docs/review/review-6/` · spec
   11 of 11; `qa-review4` and `home-map` 34 of 35 with the journey screen changed as well, then the
   journey group 7 of 7 with that change undone; `phone`'s `map.spec` and `places.spec` 11 of 11. The
   full e2e was not run this round.
-- **Leftover R6-1:** the journey screen held sideways keeps its 420 px floor, so its map runs below
-  a short screen too. Dropping it made the map too short under the journey plate (a review-4 QA
-  check failed); it needs the plate beside the map. In [[Open Questions]].
-- **Leftover R6-2:** from 640 to about 700 px wide the city's 420 px corner card and the two map
-  buttons are close; not measured.
+- **Leftover R6-1** (closed 15 Oct 2026): the journey screen held sideways kept its 420 px floor.
+  Now the plate is a 260 px column beside the map (as the city's), and the map takes the screen's
+  height; the pin on the map at the four sideways sizes, the whole trail in view at 667 × 375 and
+  568 × 320 (93–94 % at 844 × 390 and 932 × 430, where the pin-gap floor stops the zoom).
+- **Leftover R6-2** (closed 15 Oct 2026): measured, the map buttons' row ran under the 420 px corner
+  card by 44 px at 640 wide, 42 at 667, 9 at 700. From 640 to 767 px the two buttons stack (gap 64–144 px).
+- **Leftovers, also fixed:** the dev clock's offset is kept in the database (`dev/clockStore.ts`) so
+  `dev:mem`'s reload never puts it back; a character settled ahead of the clock gets a clear dev
+  error (`CLOCK_BEHIND`) on an act instead of a 409 loop. The night trail was checked: legible, unchanged.
+- Leftover checks: the fast check 14 of 14; `review6` 16 of 16; `landscape`, `small-phone`, `travel`,
+  `dev-panel` with it 29 of 29; `qa-review4`, `home-map` 35 of 35.
 
 ## Related
 

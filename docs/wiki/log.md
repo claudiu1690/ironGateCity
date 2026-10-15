@@ -9,6 +9,14 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Review 6 leftovers
+
+R6-1 (the journey held sideways: plate beside the map) and R6-2 (the city's map buttons stack from
+640 to 767 px, measured) closed; the dev clock's offset kept in the database across API restarts,
+and a clear `CLOCK_BEHIND` dev error instead of a 409 loop; the night trail checked (unchanged).
+Updated [[Review 6]], [[Open Questions]] (R6-1, R6-2 closed), [[Dev Panel and Local Setup]],
+[[Travel and Journeys]], [[Quarters and the Map]].
+
 ## [2026-10-15] update | Slice 6: the seven defaults approved
 
 The user approved all seven defaults of the slice-6 design (§19) as written; no number moves and

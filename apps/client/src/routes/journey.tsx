@@ -18,13 +18,14 @@ import type { MapHotspot, MapRect, MapTraveller } from '@irongate/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { env } from '../env';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter } from '../features/game/hooks';
 import { setResultModalOpen } from '../lib/modalGate';
 import { isNetworkError, trpc } from '../lib/trpc';
 import { useNightTurn } from '../lib/useNightTurn';
-import { noteServerNow, serverNow, useMinWidth, useNow } from '../lib/useNow';
+import { noteServerNow, serverNow, useLocationLayout, useMinWidth, useNow } from '../lib/useNow';
 
 /** The journey with a card's outcome folded in (the result's own journey view carries none). */
 function withChosen(r: JourneyCardResult): JourneyView {
@@ -33,6 +34,8 @@ function withChosen(r: JourneyCardResult): JourneyView {
 
 /** Review 4 (tech design §6.5): the map's frame, the route and its two ends grown by 0.08. */
 const FRAME_GROW = 0.08;
+/** Review 6 leftovers (R6-1): the plate's column beside the map held sideways (the city's width). */
+const SIDE_W = 260;
 /** QA review 4 (R4-QA-05): the card's sheet opens once the pin's 700 ms pulse is seen. */
 const PULSE_BEFORE_SHEET_MS = 800;
 function frameOf(points: ReadonlyArray<readonly [number, number]>): MapRect {
@@ -57,17 +60,20 @@ function JourneyPlate({
   names,
   onOpenCard,
   className,
+  style,
 }: {
   data: JourneyView;
   names: Partial<Record<FactionId, string>>;
   onOpenCard: (() => void) | null;
   className?: string;
+  style?: CSSProperties;
 }) {
   const navigate = useNavigate();
   const now = useNow(1_000);
   return (
     <article
       className={cx('paper-grain flex flex-col gap-2.5 bg-paper px-4 pt-3 pb-3 text-ink', className)}
+      style={style}
       data-testid="journey-plate"
     >
       <header className="flex flex-col gap-0.5">
@@ -135,7 +141,8 @@ function JourneyPlate({
  * nation map. The map is fitted to the line between the two cities, the route traced over the painted
  * rails, the other cities muted, and **your pin** (the user, 7 Oct 2026: a plain moving pin, not a
  * train) where the clock puts it, ticking once a second. After a drag, *Follow your pin* brings the
- * view back. The plate sits on top on a phone and as a 480 px side sheet from 1024 px. The card (when
+ * view back. The plate sits on top on a phone, in a 260 px column beside the map on a phone held
+ * sideways (review 6 leftovers), and as a 480 px side sheet from 1024 px. The card (when
  * the journey drew one) opens as a sheet at its moment, the pin pulsing once, and is open again on
  * return while it can be answered. At `arrivesAt` the server is asked again and the arrival modal
  * opens over the map; its *Continue* lands on the station district in the capital, or the city's Town
@@ -147,6 +154,10 @@ export function JourneyPage() {
   const { character } = useCharacter();
   const j = useQuery({ ...trpc.travel.journey.queryOptions(), refetchOnWindowFocus: true });
   const wide = useMinWidth(1024);
+  // Review 6 leftovers (R6-1): a phone held sideways puts the plate in a column beside the map, which
+  // keeps the screen's full height (no 420 px floor), as the city screen does. From 1024 px the plate
+  // stays the side sheet over the map.
+  const side = useLocationLayout() === 'side' && !wide;
   const data = j.data;
   // Review 5 (ADR 0079): the map's day or night is the view's, read again at dusk and dawn.
   useNightTurn(data?.night, [trpc.travel.journey.queryKey()]);
@@ -345,21 +356,28 @@ export function JourneyPage() {
       data={data}
       names={names}
       onOpenCard={answerable && !sheetOpen ? () => setSheetOpen(true) : null}
-      className={wide ? 'max-h-full overflow-y-auto shadow-[0_0_0_1px_var(--color-ink),0_8px_24px_rgb(0_0_0/0.45)]' : 'max-h-[46%] shrink-0 overflow-y-auto border-b border-ink'}
+      className={
+        wide
+          ? 'max-h-full overflow-y-auto shadow-[0_0_0_1px_var(--color-ink),0_8px_24px_rgb(0_0_0/0.45)]'
+          : side
+            ? 'h-full shrink-0 overflow-y-auto overscroll-contain border-r-2 border-ink'
+            : 'max-h-[46%] shrink-0 overflow-y-auto border-b border-ink'
+      }
+      style={side ? { width: SIDE_W } : undefined}
     />
   );
 
   return (
     <div
       // `isolate`: the card's dim and sheet stay under the app's tab bar and top bar (review 5 #7).
-      className="relative isolate flex h-full min-h-[420px] flex-col bg-ink"
+      className={cx('relative isolate flex h-full bg-ink', side ? 'flex-row' : 'min-h-[420px] flex-col')}
       data-testid="journey"
       data-card-at={data.cardAt ?? undefined}
       data-status={data.status}
     >
       {!wide && plate}
       <CityMap
-        className="min-h-[200px] min-w-0 flex-1"
+        className={side ? 'h-full min-w-0 flex-1' : 'min-h-[200px] min-w-0 flex-1'}
         map={data.map}
         tiles={tiles}
         frame={frame}

@@ -68,13 +68,20 @@ arrive now, next Monday, Level 10, Level 6, Rank 3, take me to Irongate / a riva
 district, Heat / Health / record presets, next run-in and caught, cells / infirmary now, release,
 decide now, lift the bar, patrol next/never/auto, push a town into Unrest, seat me, three votes for
 card 2. Each prints one line and refreshes the HUD, paper and map. The clock is **shared** by
-everyone on the local server and only moves forward (restart `dev:mem` to reset).
+everyone on the local server and only moves forward. **It survives an API restart** (review 6
+leftovers): the offset is kept in the database (`dev_meta`, `_id: 'clock'`, written with `$max`) and
+read back at start-up, so `dev:mem`'s reload on a saved file never puts the clock back. Stopping the
+whole `pnpm dev:mem` (its database too) resets it; every Playwright run starts a fresh database, so
+nothing carries between runs. If a character is ever settled on a later day than the clock, an act
+gets a clear dev error (`CLOCK_BEHIND`, with the day to skip to) instead of looping to 409
+`ACTION_CONFLICT`; reads carry on with the character as stored.
 
 Server dev files (`apps/server/src/dev/`):
 
 | File | Does |
 |---|---|
 | `clock.ts` | Pure maths for where the clock should move (a minute past a boundary) |
+| `clockStore.ts` | The clock offset kept in `dev_meta` and loaded at start-up (review 6 leftovers) |
 | `panel.ts` | The panel's routes, status and actions |
 | `characterSeed.ts` | `applyCharacterSeed`, the `/api/test/character` write |
 | `risk.ts`, `riskRoutes.ts` | Heat, Health, marks, cells, run-ins, night and patrol hooks |

@@ -19,6 +19,9 @@ export function noticeFor(error: unknown): string | undefined {
       return 'You are not in this city.';
     case 'ACTION_CONFLICT':
       return 'Too many things at once. Tap again.';
+    // Review 6 leftovers: dev only (memory mode); the server words it, with the day to skip to.
+    case 'CLOCK_BEHIND':
+      return typeof game.message === 'string' ? game.message : 'Dev clock is behind this character. Skip it forward.';
     case 'NO_STAT_POINTS':
       return 'No points to place.';
     // Slice 2: the arrival and the Ambition chapters.

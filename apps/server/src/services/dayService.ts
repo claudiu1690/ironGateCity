@@ -314,6 +314,33 @@ export function computeSettlement(
 }
 
 /**
+ * Review 6 leftovers: under the test hooks (memory mode, `pnpm dev:mem` and Playwright) app.ts sets
+ * `devClock`, so a character settled on a later day than the server's clock gets a clear dev error
+ * (`CLOCK_BEHIND`) instead of an act that retries to ACTION_CONFLICT. Production never sets it.
+ */
+export const dayHooks: { devClock: boolean } = { devClock: false };
+
+/**
+ * Review 6 leftovers: the character's settled day is ahead of `today`. Only the test clock can do
+ * that (it was put back, e.g. an API restart before the offset was kept), or, in production, a
+ * second's clock skew between two servers at midnight. It is not treated as settled: every act's
+ * write is guarded on `'day.settled': today` and the day's counters belong to the later day, so an
+ * act would only lose its guard. A read carries on with the character as stored; an act's retry
+ * (the DayChanged → resettle path) is refused at once rather than looping to ACTION_CONFLICT.
+ */
+function refuseAhead(settled: number, today: number): never {
+  if (dayHooks.devClock) {
+    throw gameError('CONFLICT', 'CLOCK_BEHIND', {
+      settledDay: settled,
+      today,
+      message: `Dev clock is behind this character: settled on day ${settled}, the server is on day ${today}. Skip the clock forward (Dev panel: Next day) until day ${settled}.`,
+    });
+  }
+  // Production: a skew of seconds, gone on the next tap.
+  throw gameError('CONFLICT', 'ACTION_CONFLICT', { attempts: 0 });
+}
+
+/**
  * ADR 0005: settle every City Day boundary crossed since `day.settled`, on first touch, in one
  * transaction: the wage and seniority, the tally, the stipend and refunds, today's Party
  * orders and today's paper. ADR 0017: the home city's day is settled first, so no character acts
@@ -325,9 +352,14 @@ export async function ensureSettled(
   c0: CharacterDoc,
   now: number,
   city?: CityDoc | null,
+  opts: { read?: boolean } = {},
 ): Promise<CharacterDoc> {
   const today = dayKey(now);
   if (c0.day.settled === today) return c0;
+  if (c0.day.settled !== null && c0.day.settled > today) {
+    if (opts.read) return c0;
+    refuseAhead(c0.day.settled, today);
+  }
   if (city === undefined) await ensurePlaces(content, c0, now);
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -496,7 +528,7 @@ export async function loadCharacter(
   const city = places.get(residenceCityId(found)) ?? null;
   const lucky = await ensureRunInSettled(content, found, now, opts.keepRunIn ?? null);
   const released = await ensureReleased(content, lucky, now);
-  const settled = await ensureSettled(content, released, now, city);
+  const settled = await ensureSettled(content, released, now, city, { read: true });
   // Slice 4 (ADR 0025 §4): a due journey arrives (lazily) once the day is settled.
   const doc = await ensureArrived(content, settled, now);
   // The city the character is in (an arrival may have moved them since `ensurePlaces`).

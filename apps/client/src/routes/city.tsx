@@ -1220,18 +1220,22 @@ export function CityPage() {
         // Review 3: the player's zoom and drag are kept for the session, per city (per district).
         memoryKey={district ? district.id : c.id}
         // Review 3: + / − under the Places button, on a desktop (a phone pinches and double-taps).
-        zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex'}
+        // Review 6 leftovers (R6-2): under the stacked map buttons from 640 to 767 px.
+        zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex sm:max-md:top-[114px]'}
       >
         {/* Sideways and from 640 px: the Places button in the map's top right corner (the plate is
             beside the map or in the top left one; the dock is at the bottom). */}
         {/* Review 6 #2: the two in one row with a gap, so *What's here* never runs over *Nation*
             (it used to be placed a fixed 124 px from the edge, less than the button's width). */}
+        {/* Review 6 leftovers (R6-2): from 640 to 767 px the row (269 px) ran under the 420 px corner
+            card by up to 44 px, so there the two stack, *What's here* over *City · Nation*. */}
         {!loc && (
           <div
             className={cx(
               'pointer-events-none absolute top-2.5 right-2.5 z-10 flex-row-reverse items-start gap-2',
-              side ? 'flex' : 'hidden sm:flex',
+              side ? 'flex' : 'hidden sm:flex sm:max-md:flex-col sm:max-md:items-end',
             )}
+            data-testid="map-buttons"
           >
             {placesButton('')}
             {mapSwitch('')}

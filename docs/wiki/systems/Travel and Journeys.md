@@ -4,7 +4,7 @@ title: Travel and Journeys
 aliases: [Travel, Journeys, Journey, Train, Nation map, Journey cards, Journey events]
 tags: [travel, map, nation]
 status: partly built
-slice: "4; hostile deck in 5; journey on the map in review 4; card stays in review 5; dotted trail and the nation map held sideways in review 6"
+slice: "4; hostile deck in 5; journey on the map in review 4; card stays in review 5; dotted trail and the nation map held sideways in review 6; the journey held sideways in its leftovers"
 gdd: ["§14.10"]
 adrs: ["0025", "0075"]
 updated: 2026-10-15
@@ -51,7 +51,10 @@ reward. Travel costs a ticket and time, **never Energy**.
   rounded, and moves the pin along the same smoothed points, so the pin stays on the line. The server's
   route and `cardAt` are unchanged.
 - **Held sideways** (review 6): the nation screen takes the screen's height (no 420 px floor), so
-  every city can be dragged fully into view on a short phone.
+  every city can be dragged fully into view on a short phone. The journey screen too (review 6
+  leftovers): its plate is a 260 px column on the left and the map fills the rest of the height, so
+  the pin and the trail around it are always in view (the whole trail at 667 × 375 and 568 × 320).
+  Upright the plate stays on top; from 1024 px it is the 480 px side sheet.
 - **The card stays until a row is tapped** (review 5): no swipe-away. The ways out are a choice or
   the explicit *Sleep through it* (ordinary deck) / *Let it pass* (hostile deck). The arrival modal's
   *Continue* waits for one. Being away never loses the card.
@@ -108,8 +111,9 @@ reward. Travel costs a ticket and time, **never Energy**.
 
 - A curious player can see in the network response *when* a card will fire (ADR 0075,
   accepted and listed as a question).
-- The journey screen held sideways keeps a 420 px floor, so its map runs below a short screen
-  (review 6 leftover R6-1, [[Open Questions]]).
+- On wide but short screens held sideways (844 × 390, 932 × 430) 93–94 % of a long trail is in view
+  at rest: the start behind the pin is a drag away, since the fit keeps two cities' pins apart
+  (review 3's floor). R6-1 itself is closed.
 
 ## Related
 
