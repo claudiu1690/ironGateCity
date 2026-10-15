@@ -69,6 +69,7 @@ import { placesOf } from './residence';
 import { cardsFor, homeCards, openBallotDoc, setBallotStep, tallyRules } from './ruleBallot';
 import { inTransaction } from './txn';
 import { convertCityVoting } from './votingConversion';
+import { closePetitionsInTx } from './petitionService';
 
 export { AlreadySettled, activeMembersFilter, cityDayHooks } from './cityDayCore';
 
@@ -294,6 +295,9 @@ async function processBoundary(
     });
     shares = byPlace.get(cityId)!;
   }
+
+  // Slice 7 T19 (ADR 0049 as amended): the city's petition closing at d, before the count and the set.
+  await closePetitionsInTx(cityId, d, now, session);
 
   if (work.count) {
     // Election k − 1 → council k; ballot k − 1 → the rule for [d, d + 5).

@@ -58,6 +58,7 @@ import { governorAtCount } from './governorService';
 import { drawWeek, heroesStep, issuesStep } from './issuesDay';
 import { writeLedger } from './ledger';
 import type { LedgerRowInput } from './ledger';
+import { closePetitionsInTx } from './petitionService';
 import {
   capitalCardOrder,
   capitalCards,
@@ -383,6 +384,9 @@ export async function processCapitalBoundary(
       ];
     }),
   );
+
+  // Slice 7 T19 (ADR 0049 as amended): the city's petition closing at d, before the count and the set.
+  await closePetitionsInTx(cityId, d, now, session);
 
   // 4–5. The count (the seats and the largest bloc's rule), the new council and the heroes (day 0).
   if (work.count) {

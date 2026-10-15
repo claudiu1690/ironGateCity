@@ -392,6 +392,8 @@ export function toOrdersState(o: StoredOrders): OrdersState {
     items: o.items.map((i) => ({
       templateId: i.templateId,
       variant: i.variant,
+      // Slice 7 T16 (ADR 0046): the Chair's push rides on the item (its match and the party's target).
+      ...(i.push ? { push: i.push } : {}),
       target: i.target,
       progress: i.progress,
       doneAt: i.doneAt ? new Date(i.doneAt).getTime() : null,

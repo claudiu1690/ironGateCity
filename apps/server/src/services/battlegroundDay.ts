@@ -39,6 +39,7 @@ import { governorAtCount } from './governorService';
 import { drawWeek, heroesStep, issuesStep } from './issuesDay';
 import { writeLedger } from './ledger';
 import type { LedgerRowInput } from './ledger';
+import { closePetitionsInTx } from './petitionService';
 import {
   capitalCardOrder,
   capitalCards,
@@ -297,6 +298,7 @@ export async function processBattlegroundBoundary(
   );
 
   // 3b. The petition close, before the set (T19).
+  await closePetitionsInTx(cityId, d, now, session);
   await battlegroundHooks.petitionClose?.(content, cityId, d, session);
 
   // 4–5. The count, the new council, the Mayor and the heroes (day 0).
