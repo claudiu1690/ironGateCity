@@ -1,6 +1,6 @@
 # ADR 0041 — Favours: one transaction over the two characters and the stay; a mate's bail ends the stay now and slice 5's release path releases on read
 
-**Status:** proposed (slice 6) · **Date:** 2026-10-03
+**Status:** accepted (slice 6, built 15 Oct 2026) · **Date:** 2026-10-03
 
 ## Context
 

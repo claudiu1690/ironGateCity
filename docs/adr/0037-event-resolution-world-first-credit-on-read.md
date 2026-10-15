@@ -1,6 +1,6 @@
 # ADR 0037 — Event resolution: a job and lazy paths write the world; each participant credits their own rewards on their next read
 
-**Status:** proposed (slice 6) · **Date:** 2026-10-03
+**Status:** accepted (slice 6, built 15 Oct 2026) · **Date:** 2026-10-03
 
 ## Context
 

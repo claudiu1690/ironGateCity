@@ -1,6 +1,6 @@
 # ADR 0036 — Campaign events: the roster embedded in the event, sign-ups in their own collection, limits by natural keys, a secret seed
 
-**Status:** proposed (slice 6) · **Date:** 2026-10-03
+**Status:** accepted (slice 6, built 15 Oct 2026) · **Date:** 2026-10-03
 
 ## Context
 

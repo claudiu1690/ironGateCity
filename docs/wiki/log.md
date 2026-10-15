@@ -9,6 +9,14 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-15] build | Slice 6 phase C, lane A (the Faction tab, events, presence, e2e, report)
+
+The `/faction` shell, Orders and Events, the event page in every state, the call sheet, the event
+result modal and its gate, the venue's tickets, *Here now*, the plate's count, the dev panel's
+*Together* buttons (T18–T20); `events.spec.ts`, the slice-6 word sweep and the report's *together*
+section (T24); the README, the Deviations and ADRs 0036–0042 accepted (T25). Updated
+[[Slice 6 Together]], [[Campaign Events]], [[Chat and Presence]].
+
 ## [2026-10-15] build | Slice 6 phase C, lane B (Members, scoreboard, chat, favours)
 
 T21–T23: Members, the profile, the faction scoreboard, chat with the socket client, favours from

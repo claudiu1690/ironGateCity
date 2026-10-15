@@ -1,6 +1,6 @@
 # ADR 0042 — The faction scoreboard: faction-scoped contribution totals written with every opinion row, events counted at resolution
 
-**Status:** proposed (slice 6) · **Date:** 2026-10-03
+**Status:** accepted (slice 6, built 15 Oct 2026) · **Date:** 2026-10-03
 
 ## Context
 

@@ -155,7 +155,9 @@ test('events: call a rally, sign up, withdraw, commit, the result for both; a ha
   await fx.getByTestId('event-card-join').click();
   await expect(c.getByTestId('event-signup')).toHaveText('Join as a hand · 5 Energy');
   await c.getByTestId('event-signup').click();
-  await c.getByRole('dialog').filter({ hasText: 'Signed up' }).getByTestId('political-continue').click();
+  const handModal = c.getByRole('dialog').filter({ hasText: 'Signed up' });
+  await expect(handModal).toContainText("You're a pair of hands");
+  await handModal.getByTestId('political-continue').click();
   await expect(c.getByTestId('hands-row')).toContainText('Clara Vos');
 
   // 6. The boundary and the city day: C's result modal for the branch's event.

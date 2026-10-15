@@ -1,6 +1,6 @@
 # ADR 0040 — Presence: `presence { locationId, seenAt }` on the character, touched without the version, read by index, invisible on rival ground
 
-**Status:** proposed (slice 6) · **Date:** 2026-10-03
+**Status:** accepted (slice 6, built 15 Oct 2026) · **Date:** 2026-10-03
 
 ## Context
 

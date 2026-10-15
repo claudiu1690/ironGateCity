@@ -1,6 +1,6 @@
 # ADR 0038 — Chat transport: Socket.IO as a push-only channel behind the same-origin proxy, writes over tRPC, fan-out by MongoDB change streams
 
-**Status:** proposed (slice 6) · **Date:** 2026-10-03
+**Status:** accepted (slice 6, built 15 Oct 2026) · **Date:** 2026-10-03
 
 ## Context
 

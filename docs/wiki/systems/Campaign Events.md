@@ -48,11 +48,11 @@ at a set time. Designed for slice 6, **not built**.
 - Art: `scene.event-poster-night`, `scene.event-grand-rally` in `data/art.ts`.
 - DB: `campaignEvents` and `eventSignups` (`packages/db/src/models/campaignEvent.ts`), `events` on the character, `LEDGER_KINDS += 'event'`, migration `010-slice6-together.ts`.
 - Server (slice 6 phase B, 15 Oct 2026, `21929a7`): `apps/server/src/services/eventService.ts` (`callEvent`, `signUpEvent`, `withdrawEvent`, `nudgeEvent`, `resolveEvent`/`resolveInTx`, `resolveOpenBefore`, `creditSignup`, the read path's `ensureEventsResolved`/`ensureEventsCredited`, `currentEvent`, `eventResult`, `seenEvent`, `eventHooks`); `eventPlace.ts` (`ensureFixtures`, `readEventPlace`, `eventDescriptor`, `headlineTarget`); `eventViews.ts` (board, page, call sheet, tickets, the receipt); `eventScheduler.ts`; the `campaign-event-resolve` job in `apps/server/src/jobs/together.ts`; the city day resolves an earlier day's events before each boundary and posts the fixtures in it (`cityDay.ts`). Router `apps/server/src/trpc/routers/events.ts`: **`events.callEvent`** (tRPC reserves `call`). The event orders are in the slot-B rotation (`data/orders.ts`). The paper: `togetherEdition.ts` (stored facts), `togetherPaper.ts` (the *Events* rows, `event-today` live).
-- Not yet: the Faction tab and the event screens (phase C).
+- Client (slice 6 phase C lane A, 15 Oct 2026): `packages/ui/src/components/EventCard.tsx` (`EventCard`, `EventResultLine`, `bandStamp`), `EventPage.tsx` (`EventHeader`, `PaysTiles`, `RoleRow`, `HandsRow`, `roleGateText`, `roleOdds`), `CallEventSheet.tsx` (with `TimeChips`), `EventResult.tsx` (`ResultModal kind="event"`), `EventTicket.tsx` (`EventTicket`, `HereNowLine`), `FactionTabs.tsx`; `apps/client/src/routes/faction.tsx` (the `/faction` shell and its five parts), `routes/event.tsx` (`/faction/events/$eventId`), `features/faction/OrdersTab.tsx`, `EventsTab.tsx`, `EventGate.tsx` (results and *Called off* in the shell), `eventActs.ts`, `PlacePresence.tsx`; the venue's tickets, *Here now* and the plate's count in `routes/city.tsx`. The dev panel's *Together* buttons. E2E `apps/client/e2e/events.spec.ts` (project `events`); the playtest report's *together* section in `packages/db/src/together.ts`.
 
 ## Status
 
-- **Phases A and B built** (rules, content, art, db; the server and jobs, 15 Oct 2026). The screens are phase C of [[Slice 6 Together]]. Town Hall and the Chair's faction-wide events: slice 7. The Case File on the Headline Story: slice 8. Counter-Demonstrations: v1.1.
+- **Built end to end** (15 Oct 2026): rules, content, art, db (phase A), the server and jobs (phase B), the Faction tab, the board, the event page, the call sheet and the result modal (phase C, lane A). QA next, in [[Slice 6 Together]]. Town Hall and the Chair's faction-wide events: slice 7. The Case File on the Headline Story: slice 8. Counter-Demonstrations: v1.1.
 
 > [!warning] Drift
 > Design §3.7 and the tech spec say *27 venues*; the table itself has **30** rows (12 home, 15 common in the capital, 3 signature in the capital). Built as the table; a question for the designer.
@@ -67,6 +67,8 @@ at a set time. Designed for slice 6, **not built**.
 - The Vanguard's event is the **Grand Rally**; the *Torchlight March* is gone; its *Stewards* role became *Ushers* (3 Oct 2026) to avoid clashing with the Vanguard's Rank 2 title ([[design/content-policy-review|content-policy review]]).
 
 ## Open questions / drift
+
+- **For the designer:** *Canvass Drive* and *Canvasser* (content's event and role names) are caught by the review-2 vocabulary guard (*canvass* banned for players), while CLAUDE.md rule 2 lists *canvass* as a campaign term. The review-4 e2e sweeps allow the two names for now (phase C Deviations).
 
 > [!note] Inference
 > With the voting rework, "the council rule for the event's type" in the swing means the ordinance chosen by the town's vote (e.g. *Street Permits* for a propaganda-matched event).

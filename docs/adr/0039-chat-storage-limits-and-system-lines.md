@@ -1,6 +1,6 @@
 # ADR 0039 — Chat storage: a TTL collection capped on read, an atomic limiter per poster, system lines as outbox inserts
 
-**Status:** proposed (slice 6) · **Date:** 2026-10-03
+**Status:** accepted (slice 6, built 15 Oct 2026) · **Date:** 2026-10-03
 
 ## Context
 

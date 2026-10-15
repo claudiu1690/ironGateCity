@@ -62,13 +62,17 @@ T8–T16 of [[tech/slice-6|the tech spec]] §20 in one commit, `21929a7`: the re
 
 T21–T23 of [[tech/slice-6|the tech spec]]: the Members list (search, pages, bands and status, *Post bail*, *Visit*, *Ask to join*), the profile (mute, *Message*), the faction scoreboard (this week and all time, the city chips, the top ten per bracket with rosettes, your row), chat (three channels, live over the socket, the composer and its limit lines, system lines with buttons, report, mute, *New lines ↓*, the desktop column, Me's switch), *Post bail* on *In the cells now*, the paper's *Events* row and desk's *Signed up*, the held screens' visitors, bail and sign-up lines. Server fixes: the chat limit's detail (`why`), `nameWords` for new characters (search), the mate's bail on the cells' rows. E2E `faction` and `favours` pass. Deviations in the tech spec (*Phase C, lane B*).
 
+## Phase C, lane A (15 Oct 2026)
+
+The `/faction` shell (commit `ce0e52b`, first, so lane B could fill its parts), then T18–T20 (`fc5065d`): the event components in `packages/ui`, Orders with the branch's event, the Events board, the event page in every state, the call sheet's three steps, withdrawal, the event gate in the shell (results and *Called off*), the venue's tickets, *Here now*, the plate's count, the journey's fellows line and the dev panel's *Together* buttons. T24 (`801514f`, `97fe0db`): `events.spec.ts` in its own project, an on-screen sweep for the slice-6 words, the playtest report's *together* section (test members left out by the `test:` prefix), the full e2e run and its fixes. Deviations in the tech spec (*Phase C, lane A*). Screenshots in `docs/qa/slice-6/`.
+
 ## QA and leftovers
 
 Building; no QA yet. The approved defaults and the design's other slice-6 defaults (three starts a day, volunteers at half strength, presence hidden on rival ground: Appendix C #58, #62, #63) are watch items in [[Open Questions]].
 
 ## Commits
 
-`b756c48` slice 6 design (with the slice 5 tech design, 3 Oct) · `8173e3e` tech design and ADRs 0036–0042 (3 Oct) · `f7657d9` T1–T3 rules · `b58f48d` T4–T6 content and art · `9ad2b25` T7 db and the phase-A notes (15 Oct) · `55d14b7` the designer's copy · `21929a7` T8–T16 the server.
+`b756c48` slice 6 design (with the slice 5 tech design, 3 Oct) · `8173e3e` tech design and ADRs 0036–0042 (3 Oct) · `f7657d9` T1–T3 rules · `b58f48d` T4–T6 content and art · `9ad2b25` T7 db and the phase-A notes (15 Oct) · `55d14b7` the designer's copy · `21929a7` T8–T16 the server · `ce0e52b` T19a the Faction tab shell · `fc5065d` T18–T20 events on the client · `27b4c26` T21–T23 lane B · `801514f`, `97fe0db` T24 e2e and the report.
 
 ## Related
 

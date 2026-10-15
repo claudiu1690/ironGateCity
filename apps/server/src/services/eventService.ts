@@ -115,15 +115,17 @@ function tapResult(
   const home = content.city(residenceCityId(i.c));
   const paper = home?.paper ?? { name: 'The paper', shortName: 'paper' };
   const key = i.act === 'call' ? 'call' : 'signUp';
+  // A hand's "role" is *a pair of hands*: the templates' *You're the {role}* would read "the a pair".
+  const hand = (text: string) => (i.slot === 'hand' ? text.replace(/the (a pair of hands)/g, '$1') : text);
   return {
     kind: 'political',
     act: i.act,
     stamp: { label: t6(`modal.${key}.stamp`), tone: 'success' },
     paper: { name: paper.name, shortName: paper.shortName },
     place: { cityId: i.ev.cityId, cityName: content.city(i.ev.cityId)?.name ?? i.ev.cityId },
-    headline: t6(`modal.${key}.headline`, vars),
-    body: t6(`modal.${key}.body`, vars),
-    next: t6(`modal.${key}.next`, vars),
+    headline: hand(t6(`modal.${key}.headline`, vars)),
+    body: hand(t6(`modal.${key}.body`, vars)),
+    next: hand(t6(`modal.${key}.next`, vars)),
     at: i.ev.startsAt.getTime(),
     until: withdrawUntil(i.ev.startsAt.getTime()),
     knockOns: {
