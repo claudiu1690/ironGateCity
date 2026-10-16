@@ -36,3 +36,44 @@ export const LIVE_LIFE_CONDITION_KINDS = ['requestArrived'] as const satisfies r
 export interface RequestMatch extends OrderMatch {
   missionTypes?: MissionType[];
 }
+
+/** Tech design §6.12: a life in the city's political result modals (their texts are copy). */
+export const LIFE_ACTS = [
+  'bought',
+  'sold',
+  'markBought',
+  'caseFile',
+  'dossierSold',
+  'informant',
+  'gift',
+  'patronFavour',
+  'flatBought',
+  'rentPaid',
+  'perk',
+] as const;
+export type LifeAct = (typeof LIFE_ACTS)[number];
+
+/** Tech design §10.3: the knock-on lines a life in the city adds to existing modals. */
+export const LIFE_KNOCK_ON_KINDS = ['dossier', 'favour', 'legacy', 'keepsake', 'recognised'] as const;
+export type LifeKnockOnKind = (typeof LIFE_KNOCK_ON_KINDS)[number];
+
+/** Tech design §10.2: the exposé's stamp on the story modal. */
+export type ExposeStamp = 'printed' | 'pageThree' | 'spiked';
+
+/** Tech design §5.1: where an entry came from. */
+export const DOSSIER_SOURCES = [
+  'intelligence',
+  'surveillance',
+  'theft',
+  'informer',
+  'cells',
+  'ward',
+  'society',
+  'gossip',
+  'informant',
+  'chapter',
+  'morgue',
+  'test',
+] as const;
+export type DossierSource = (typeof DOSSIER_SOURCES)[number];
+export type DossierStatus = 'held' | 'bound' | 'attached' | 'informant' | 'spent' | 'sold';

@@ -1,5 +1,6 @@
 import type { NationRepublicView } from './nationTypes';
-import type { LifeCondition } from './lifeTypes';
+import { LIFE_ACTS } from './lifeTypes';
+import type { LifeAct, LifeCondition } from './lifeTypes';
 /**
  * Shared vocabulary and DTOs. The server builds these; the client and `@irongate/ui` render them.
  * Kept in the rules package so every layer imports types from one place.
@@ -1652,7 +1653,54 @@ export type GameErrorReason =
   | 'ALREADY_SIGNED'
   | 'COUNCILLOR'
   | 'NO_CHAIR'
-  | 'NO_VOTE_OPEN';
+  | 'NO_VOTE_OPEN'
+  // Slice 8 (tech design §6.12): the Wardrobe, shops, the Dossier, the exposé, society calls,
+  // patrons, the home and Legacy (the season's are deferred).
+  | 'CHANGE_LOCKED'
+  | 'NOT_OWNED'
+  | 'NOT_WEARABLE'
+  | 'OUTFIT_LOCKED'
+  | 'COAT_REQUIRED'
+  | 'NO_SHOP'
+  | 'NOT_SOLD_HERE'
+  | 'ALREADY_OWNED'
+  | 'NOT_SELLABLE'
+  | 'BRIBED_TODAY'
+  | 'LEVEL'
+  | 'IN_STORY'
+  | 'CASE_FILES_LEVEL'
+  | 'NOT_ENOUGH_ENTRIES'
+  | 'FILE_HELD'
+  | 'FILE_NOT_FOUND'
+  | 'NOT_A_STATION'
+  | 'NEEDS_PATTERN'
+  | 'NEEDS_ASSOCIATE'
+  | 'INFORMANTS_FULL'
+  | 'NO_PATRON_HERE'
+  | 'NOT_A_PRESS'
+  | 'NO_PRINTABLE_FILE'
+  | 'OWN_PARTY'
+  | 'NO_PARTY'
+  | 'BURNED'
+  | 'PRINTED_TODAY'
+  | 'NO_STORY'
+  | 'STORY_ELSEWHERE'
+  | 'NOT_DRESSED'
+  | 'CALLED_TODAY'
+  | 'SUBJECT_REQUIRED'
+  | 'PATRON_LEVEL'
+  | 'NOT_A_PATRON_PLACE'
+  | 'GIVEN_TODAY'
+  | 'NOT_CONFIDANT'
+  | 'FAVOUR_USED'
+  | 'FLAT_LEVEL'
+  | 'NOT_IN_RESIDENCE_CITY'
+  | 'FLAT_OWNED'
+  | 'NO_FLAT'
+  | 'PAID_AHEAD'
+  | 'BAD_WEEKS'
+  | 'PERK_MAX'
+  | 'NOT_ENOUGH_LEGACY';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -2225,7 +2273,9 @@ export type PoliticalAct =
   | 'visit'
   | 'calledOff'
   // Slice 7 (tech design §6.11, §10.1): the nation's acts; their texts are `politics.results`.
-  | NationAct;
+  | NationAct
+  // Slice 8 (tech design §6.12, §10.1): a life in the city's acts; their texts are copy.
+  | LifeAct;
 export const POLITICAL_ACTS = [
   'ballot',
   'declare',
@@ -2247,12 +2297,13 @@ export const POLITICAL_ACTS = [
   'visit',
   'calledOff',
   ...NATION_ACTS,
+  ...LIFE_ACTS,
 ] as const;
 
 /** Slice 5: the cells', the infirmary's and the record's acts (their texts are copy, not `politics`). */
 export type RiskAct = 'bail' | 'released' | 'deported' | 'walkOut' | 'discharged' | 'strike';
 /** The acts whose texts live in content's `politics.results` (slices 3–4). */
-export type CouncilAct = Exclude<PoliticalAct, RiskAct | 'treated' | TogetherAct | NationAct>;
+export type CouncilAct = Exclude<PoliticalAct, RiskAct | 'treated' | TogetherAct | NationAct | LifeAct>;
 /** Slice 6: the events' and favours' acts (their texts are copy). */
 export type TogetherAct = 'call' | 'signUp' | 'bailPosted' | 'visit' | 'calledOff';
 
