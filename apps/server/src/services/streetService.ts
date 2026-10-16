@@ -498,7 +498,8 @@ async function resolveTier1InTx(
         ...(i.showRolls ? { chance: x.chance, roll: x.roll } : {}),
       })),
       outcome: o.outcome,
-      line: spec.lines[o.outcome] ?? spec.lines.won,
+      // Slice 8 (ADR 0088): no run-in carries a bodyguard before phase B; then his `works` line.
+      line: (o.outcome === 'minded' ? spec.lines.talked : spec.lines[o.outcome]) ?? spec.lines.won,
       cause: o.cause,
       health: { before, after: afterHealth, max, fullAt: afterHealth >= max ? null : i.asOf + Math.ceil((max - afterHealth) / HEALTH.regen) * HEALTH.tickMs },
       ironPaid: o.ironPaid,

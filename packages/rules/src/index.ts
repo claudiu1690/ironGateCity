@@ -70,3 +70,5 @@ export * from './dossier';
 export * from './patrons';
 export * from './home';
 export * from './legacy';
+export * from './bodyguard';
+export * from './buffs';

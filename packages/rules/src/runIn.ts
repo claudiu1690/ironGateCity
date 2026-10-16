@@ -14,8 +14,9 @@ import type { FactionId, Outcome } from './types';
  * `:damage`, `:caught`).
  */
 
-export type RunInChoice = 'fight' | 'run' | 'talk' | 'pay';
-export type RunInOutcomeKind = 'won' | 'lost' | 'ran' | 'talked' | 'paid';
+/** Slice 8 (tech design §24.5, ADR 0088): `minder`, *Let {Name} handle it*; `minded`, he did. */
+export type RunInChoice = 'fight' | 'run' | 'talk' | 'pay' | 'minder';
+export type RunInOutcomeKind = 'won' | 'lost' | 'ran' | 'talked' | 'paid' | 'minded';
 
 /** Day flags from the hostile journey cards, in the city the act is in, today. */
 export interface DayFlags {
@@ -146,6 +147,8 @@ export interface RunInChances {
   talk: number;
   /** null: won't be bought. */
   pay: number | null;
+  /** Slice 8 (ADR 0088): the bodyguard's row; null or absent with no contract or against the police. */
+  minder?: number | null;
 }
 
 /**
@@ -160,9 +163,13 @@ export interface RunInChances {
 export function runInChances(
   you: { power: number; agi: number; cha: number; talkPct?: number },
   them: ScaledOpponent,
+  /** Slice 8 (ADR 0088): the contract's power at the run-in; null when blocked (the police) or none. */
+  minder?: { power: number; blocked: boolean } | null,
 ): RunInChances {
   const c = (x: number) => clamp(roundHalfUp(x), CLAMP_MIN, CLAMP_MAX);
+  const minderRow = minder && !minder.blocked ? { minder: minderChance(minder.power, them) } : {};
   return {
+    ...minderRow,
     fight: c(RUN_IN.fight.base + RUN_IN.fight.perPower * (you.power - them.power) + them.fightPct),
     run: c((you.agi / Math.max(1, them.agi)) * RUN_IN.run.factor),
     talk: c(RUN_IN.talk.base + RUN_IN.talk.perPoint * (you.cha - them.wits) + (you.talkPct ?? 0)),
@@ -170,8 +177,23 @@ export function runInChances(
   };
 }
 
-/** Design §10.4: *Leave it to luck* takes the free row with the best odds; ties fight > run > talk. */
-export function luckChoice(c: Pick<RunInChances, 'fight' | 'run' | 'talk'>): 'fight' | 'run' | 'talk' {
+/** Tech design §24.5 (ADR 0088): the bodyguard's Fight row at his own power, kept 5–95. */
+export const minderChance = (power: number, them: ScaledOpponent): number =>
+  clamp(
+    roundHalfUp(RUN_IN.fight.base + RUN_IN.fight.perPower * (power - them.power) + them.fightPct),
+    CLAMP_MIN,
+    CLAMP_MAX,
+  );
+
+/**
+ * Design §10.4: *Leave it to luck* takes the free row with the best odds; ties fight > run > talk.
+ * Slice 8 (ADR 0088): the bodyguard's row when there is one, first on a tie.
+ */
+export function luckChoice(
+  c: Pick<RunInChances, 'fight' | 'run' | 'talk'> & { minder?: number | null },
+): 'fight' | 'run' | 'talk' | 'minder' {
+  const m = c.minder;
+  if (m !== undefined && m !== null && m >= c.fight && m >= c.run && m >= c.talk) return 'minder';
   if (c.fight >= c.run && c.fight >= c.talk) return 'fight';
   if (c.run >= c.talk) return 'run';
   return 'talk';
@@ -199,7 +221,8 @@ export interface RunInOutcome {
   /** Won at full Health: +10 % on the mission's XP and Party XP. */
   fullStrength: boolean;
   /** The first row that did not come off (the reason line), or null. */
-  cause: 'power' | 'agi' | 'cha' | 'luck' | null;
+  /** Slice 8: `minder`, *{Name} was pushed aside*. */
+  cause: 'power' | 'agi' | 'cha' | 'luck' | 'minder' | null;
 }
 
 /** A won fight's damage: their power × 0.8 × U[0.8, 1.2], rounded, less your armour, at least 0. */
@@ -286,6 +309,20 @@ export function resolveRunIn(i: {
       }
       break;
     }
+    // Slice 8 (ADR 0088): he steps in; no Health lost. Pushed aside: the fight at −10, as a failed Talk.
+    case 'minder': {
+      const chance = i.chances.minder;
+      if (chance === undefined || chance === null) throw new RangeError('no bodyguard on this run-in');
+      const r = roll();
+      const ok = r <= chance;
+      steps.push({ row: 'minder', chance, roll: r, ok });
+      if (ok) outcome = 'minded';
+      else {
+        cause = 'minder';
+        outcome = fight(followUp(RUN_IN.followUpPct));
+      }
+      break;
+    }
     case 'pay': {
       const chance = i.chances.pay;
       const price = i.them.payOff;
@@ -305,7 +342,13 @@ export function resolveRunIn(i: {
     }
   }
   if (outcome === 'lost') health = 0;
-  const xp = outcome === 'won' ? RUN_IN.xp.won : outcome === 'ran' || outcome === 'talked' ? RUN_IN.xp.away : 0;
+  // Slice 8: `minded` counts as a talk (the act paid as rolled, +10 XP).
+  const xp =
+    outcome === 'won'
+      ? RUN_IN.xp.won
+      : outcome === 'ran' || outcome === 'talked' || outcome === 'minded'
+        ? RUN_IN.xp.away
+        : 0;
   return {
     choice: i.choice,
     steps,

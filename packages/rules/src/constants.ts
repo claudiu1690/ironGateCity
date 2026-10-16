@@ -848,3 +848,26 @@ export const LEGACY = {
   },
   effects: { fxpPct: 5, restedCap: 50, canvassEnergy: -1, heatCoolPct: 10, favourFactor: 1.1 },
 } as const;
+
+/**
+ * Tech design §24.5 (ADR 0088; design §24.2): bodyguards, a prepaid week at the party store. Never
+ * against the police (design §24.7 #1).
+ */
+export const BODYGUARD = {
+  tiers: {
+    1: { level: 6, rank: null, week: 400, power: 28 },
+    2: { level: null, rank: 3, week: 1_200, power: 36 },
+    3: { level: 16, rank: null, week: 3_000, power: 44 },
+  },
+  weekDays: 7,
+  aheadWeeks: 4,
+  confirmOver: 1_000,
+} as const;
+
+/** Tech design §24.5 (design §24.3): the bar's round and plate and the hotel's dinner. */
+export const BAR = {
+  energy: 2,
+  round: { iron: 30, perDay: 3, missions: 3, max: 9, xpPct: 10 },
+  plate: { iron: 100, hours: 4, xpPct: 10, ironPct: 0, health: 15 },
+  dinner: { iron: 400, hours: 6, cha: 10, xpPct: 10, ironPct: 10, health: 25 },
+} as const;

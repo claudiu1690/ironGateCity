@@ -187,7 +187,8 @@ export function buildMissionResult(i: {
               ...(i.showRolls ? { chance: x.chance, roll: x.roll } : {}),
             })),
             outcome: r.outcome,
-            line: opp.lines[r.outcome] ?? opp.lines.won,
+            // Slice 8 (ADR 0088): no run-in carries a bodyguard before phase B; then his `works` line.
+            line: (r.outcome === 'minded' ? opp.lines.talked : opp.lines[r.outcome]) ?? opp.lines.won,
             cause: r.cause,
             health: f.health
               ? {

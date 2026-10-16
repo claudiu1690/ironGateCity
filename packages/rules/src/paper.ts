@@ -54,6 +54,11 @@ export interface PaperFacts {
   events?: EventFacts;
   /** Slice 7 (tech design §11.2): the stored national conditions that hold at this settlement. */
   national?: { kinds: readonly string[] };
+  /**
+   * Slice 8 (tech design §11.2, §24.5): the life conditions that hold at this settlement (stored),
+   * and `requestArrived` at the read (live).
+   */
+  life?: { kinds: readonly string[] };
 }
 
 /** Slice 6 (tech design §11.2): what the settlement knows of yesterday's events and favours. */
@@ -174,6 +179,25 @@ function holds(c: HeadlineCondition, f: PaperFacts, noPersonal: boolean): boolea
     case 'petitionFailed':
     case 'dissolvedCouncillor':
       return f.national?.kinds.includes(c.kind) === true;
+    // Slice 8 (tech design §11.2, §24.5): a life in the city.
+    case 'coatBought':
+    case 'exposePrinted':
+    case 'exposeP3':
+    case 'exposeSpiked':
+    case 'caseFileMade':
+    case 'staleTomorrow':
+    case 'requestArrived':
+    case 'requestThanks':
+    case 'patronTier':
+    case 'informantReport':
+    case 'flatBought':
+    case 'flatDue':
+    case 'flatWaiting':
+    case 'legacyEntry':
+    case 'recognised':
+    case 'bodyguardLast':
+    case 'bodyguardGone':
+      return f.life?.kinds.includes(c.kind) === true;
     default:
       // Political conditions are selected live at read (ADR 0023), never at settlement.
       return false;

@@ -24,6 +24,9 @@ export const LIFE_CONDITION_KINDS = [
   'flatWaiting',
   'legacyEntry',
   'recognised',
+  // Tech design §24.5 (ADR 0088): the bodyguard's last day, and gone this morning.
+  'bodyguardLast',
+  'bodyguardGone',
 ] as const;
 export type LifeConditionKind = (typeof LIFE_CONDITION_KINDS)[number];
 export type LifeCondition = { kind: LifeConditionKind };
@@ -50,6 +53,12 @@ export const LIFE_ACTS = [
   'flatBought',
   'rentPaid',
   'perk',
+  // Tech design §24.7 (ADR 0088): bodyguards and the bar.
+  'hired',
+  'renewed',
+  'round',
+  'meal',
+  'dinner',
 ] as const;
 export type LifeAct = (typeof LIFE_ACTS)[number];
 

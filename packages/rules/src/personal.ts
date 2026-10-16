@@ -1,4 +1,6 @@
-import { LEGACY } from './constants';
+import { BAR, LEGACY } from './constants';
+import { wellFedAt } from './buffs';
+import type { Buffs } from './buffs';
 import type { ItemSpec, ItemSpecialWork } from './items';
 import type { LineShare } from './rewards';
 import type { CheckBonus } from './types';
@@ -38,6 +40,8 @@ export interface PersonalModifiers {
   perks: LegacyPerks;
   /** The catalogue name of an item (the row's label, *Press pass · better odds*). */
   names: (id: string) => string;
+  /** Slice 8 (tech design §24.5, ADR 0088): the bar's buffs; absent is none. */
+  buffs?: Buffs;
 }
 
 export const NO_PERSONAL: PersonalModifiers = { worn: [], perks: NO_PERKS, names: (id) => id };
@@ -117,3 +121,34 @@ export const perkHomeVotes = (p: LegacyPerks): number => p.name;
 
 /** Design §7.2: *A bonus at the end of the week*, a day's pay at the Monday boundary. */
 export const perkMondayPay = (p: LegacyPerks): boolean => p.monday > 0;
+
+export const WELL_FED_PART = { id: 'buff:wellFed', label: 'Well fed' } as const;
+export const SPIRITS_PART_ID = 'buff:spirits';
+
+/**
+ * Tech design §24.5 (ADR 0088): the bar's shares, where the coat's Party XP part applies (tier-1
+ * actions and missions; never training, chapters, event roles or the exposé). Well fed at `at`: XP
+ * +10 %, and on a dinner Iron +10 %; in good spirits on a mission: XP +10 % (*{n} left* after it).
+ */
+export function buffShares(
+  p: PersonalModifiers,
+  kind: 'action' | 'mission',
+  at: number,
+): { xp: LineShare[]; iron: LineShare[] } {
+  const xp: LineShare[] = [];
+  const iron: LineShare[] = [];
+  const b = p.buffs;
+  if (!b) return { xp, iron };
+  const meal = wellFedAt(b, at);
+  if (meal) {
+    xp.push({ ...WELL_FED_PART, share: BAR[meal].xpPct / 100 });
+    if (BAR[meal].ironPct > 0) iron.push({ ...WELL_FED_PART, share: BAR[meal].ironPct / 100 });
+  }
+  if (kind === 'mission' && b.spirits > 0)
+    xp.push({ id: SPIRITS_PART_ID, label: `In good spirits · ${b.spirits - 1} left`, share: BAR.round.xpPct / 100 });
+  return { xp, iron };
+}
+
+/** §24.10 Q3: a mission that reaches its rewards spends one; a tier-1 action none. */
+export const spendSpirits = (b: Buffs, kind: 'action' | 'mission'): Buffs =>
+  kind === 'mission' && b.spirits > 0 ? { ...b, spirits: b.spirits - 1 } : b;

@@ -1700,7 +1700,18 @@ export type GameErrorReason =
   | 'PAID_AHEAD'
   | 'BAD_WEEKS'
   | 'PERK_MAX'
-  | 'NOT_ENOUGH_LEGACY';
+  | 'NOT_ENOUGH_LEGACY'
+  // Tech design §24.6 (ADR 0088): bodyguards and the bar.
+  | 'NO_HIRE'
+  | 'WITH_YOU'
+  | 'NO_CONTRACT'
+  | 'NO_MINDER'
+  | 'NOT_AGAINST_POLICE'
+  | 'ROUNDS_TODAY'
+  | 'SPIRITS_FULL'
+  | 'WELL_FED'
+  | 'NO_BAR'
+  | 'NO_DINING';
 
 /** `error.data.game` on a tRPC error: a reason the client can switch on, plus its numbers. */
 export interface GameErrorData {
@@ -2918,7 +2929,8 @@ export interface RunInPending {
     pay: { chance: number; price: number; affordable: boolean } | null;
   };
   /** The *best free odds* tag. */
-  luck: 'fight' | 'run' | 'talk';
+  /** Slice 8 (ADR 0088): `minder` when the bodyguard's row has the best odds. */
+  luck: 'fight' | 'run' | 'talk' | 'minder';
   character: CharacterView;
 }
 
@@ -2937,23 +2949,24 @@ export interface StreetView {
   runIn: {
     /** `pronoun`: the did line's *he* / *they* (QA fixes §7.3); absent on results stored before it (*he*). */
     opponent: { id: string; label: string; portrait: AssetView; pronoun?: 'he' | 'they' };
-    choice: 'fight' | 'run' | 'talk' | 'pay';
+    /** Slice 8 (ADR 0088): `minder`, the bodyguard's row. */
+    choice: 'fight' | 'run' | 'talk' | 'pay' | 'minder';
     by: 'player' | 'luck' | 'auto';
     /**
      * `band`: the row's odds word (QA fixes n12: a row that didn't come off gives its reason by band);
      * `chance` and `roll` for dev and QA only.
      */
     steps: Array<{
-      row: 'fight' | 'run' | 'talk' | 'pay';
+      row: 'fight' | 'run' | 'talk' | 'pay' | 'minder';
       ok: boolean;
       band?: 'good' | 'fair' | 'long';
       chance?: number;
       roll?: number;
     }>;
-    outcome: 'won' | 'lost' | 'ran' | 'talked' | 'paid';
+    outcome: 'won' | 'lost' | 'ran' | 'talked' | 'paid' | 'minded';
     /** The opponent's line for the outcome. */
     line: string;
-    cause: 'power' | 'agi' | 'cha' | 'luck' | null;
+    cause: 'power' | 'agi' | 'cha' | 'luck' | 'minder' | null;
     health: { before: number; after: number; max: number; fullAt: number | null } | null;
     ironPaid: number;
     heatAdded: number;

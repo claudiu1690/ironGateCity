@@ -262,6 +262,13 @@ export function RiskRows({
 
 export type RunInChoice = 'fight' | 'run' | 'talk' | 'pay' | 'luck';
 
+/**
+ * Slice 8 (ADR 0088): the bodyguard's row reads as a talk in the did line until the designer's T27
+ * copy gives it words (no run-in carries one before phase B).
+ */
+const didSteps = (steps: ReadonlyArray<{ row: 'fight' | 'run' | 'talk' | 'pay' | 'minder'; ok: boolean }>) =>
+  steps.map((s) => ({ ...s, row: s.row === 'minder' ? ('talk' as const) : s.row }));
+
 export interface EncounterRowProps {
   title: string;
   line: string;
@@ -493,7 +500,7 @@ export function RunInBlock({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="label-caps text-[10px] font-semibold">{r.opponent.label}</span>
         <p className="font-body text-[13.5px] leading-snug" data-testid="run-in-did">
-          {copy.risk.didLine(r.by, r.steps, r.opponent.pronoun)} <span className="text-text-2">{r.line}</span>
+          {copy.risk.didLine(r.by, didSteps(r.steps), r.opponent.pronoun)} <span className="text-text-2">{r.line}</span>
         </p>
         {hp && (
           <p className="font-mono text-[11.5px]" data-testid="run-in-health">
