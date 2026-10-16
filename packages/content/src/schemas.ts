@@ -380,6 +380,8 @@ export const Shop = z.strictObject({
   buys: z.enum(['any', 'own']).nullable(),
   /** The back room's *Have a mark struck off* (design §3.8). */
   bribe: z.literal(true).optional(),
+  /** Tech design §24.3 (ADR 0088): the bodyguards' hire card, only on a `partyStore`. */
+  hire: z.literal(true).optional(),
 });
 
 export const Location = z.strictObject({
@@ -415,6 +417,10 @@ export const Location = z.strictObject({
   scene: AssetId.optional(),
   /** Slice 8 (design §5.1): the patron received here (Herald House: Crane; the Pier Hotel: Marr). */
   patronId: PatronId.optional(),
+  /** Tech design §24.3 (ADR 0088): the bar's card (a round, a plate); on every `bar`-kind place. */
+  bar: z.literal(true).optional(),
+  /** Tech design §24.3: the dining room (dinner): the Grand Hotel, the Pier Hotel, the Mountain Inn. */
+  dining: z.literal(true).optional(),
 });
 
 export const City = z.strictObject({
@@ -1462,6 +1468,23 @@ export const DossierName = z.strictObject({
   drawn: z.boolean(),
 });
 
+/**
+ * Tech design §24.3 (ADR 0088; design §24.2): a bodyguard tier's words and face. Rules own the
+ * prices, gates and power (`BODYGUARD`); content owns the names and lines.
+ */
+export const BodyguardTier = z.strictObject({
+  tier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  said: z.enum(['doorman', 'steward', 'minder']),
+  /** Ruda · Big Anton · Ferko … */
+  names: z.array(z.string().min(1).max(30)).length(3),
+  /** `portrait.doorman` / `.steward` / `.minder`. */
+  portrait: AssetId,
+  /** The run-in's line when he steps in; `{Name}`. */
+  works: z.string().min(1).max(200),
+  /** When he is pushed aside. */
+  fails: z.string().min(1).max(200),
+});
+
 export const Content = z.strictObject({
   factions: z.array(Faction).length(FACTION_IDS.length),
   cities: z.array(City).min(1),
@@ -1529,6 +1552,8 @@ export const Content = z.strictObject({
   dossierLines: DossierLines.optional(),
   /** `people.ts`'s dossier-only names (Brandauer). */
   extraNames: z.array(DossierName).default([]),
+  /** Tech design §24.3 (`data/bodyguards.ts`): the three tiers, once the designer writes them. */
+  bodyguards: z.array(BodyguardTier).default([]),
 });
 
 export type Faction = z.infer<typeof Faction>;
@@ -1582,6 +1607,7 @@ export type PatronRequest = z.infer<typeof PatronRequest>;
 export type RequestMatchContent = z.infer<typeof RequestMatchSchema>;
 export type DossierName = z.infer<typeof DossierName>;
 export type DossierLines = z.infer<typeof DossierLines>;
+export type BodyguardTier = z.infer<typeof BodyguardTier>;
 export type Platform = z.infer<typeof Platform>;
 /** Content as authored (defaults not yet applied). */
 export type ContentInput = z.input<typeof Content>;

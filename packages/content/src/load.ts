@@ -30,6 +30,7 @@ import type {
 } from '@irongate/rules';
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
+import { bodyguards } from './data/bodyguards';
 import { assets, avatars, lifeScenes, missionCards, nationScenes, scenes } from './data/art';
 import { candidates, clearwaterCandidates, irongateCandidates } from './data/candidates';
 import { capitalHomeHeadlines } from './data/capitalHomeHeadlines';
@@ -142,6 +143,8 @@ export const rawContent: unknown = {
   // Slice 7 (tech design §4.4).
   laws,
   nationalLines,
+  // Slice 8 (tech design §24.3): empty until the designer's T27.
+  bodyguards,
 };
 
 /**

@@ -500,5 +500,73 @@ export function slice8Problems(
         problems.push(`location "${location.id}": its scene must be a scene asset`);
     }
 
+  problems.push(...barProblems(content, idx));
+  return problems;
+}
+
+/** Tech design §24.3 (design §24.3): the three places with a dining room. */
+export const DINING_PLACES = [
+  'irongate.grand-hotel',
+  'clearwater.pier-hotel',
+  'duskwall.mountain-inn',
+] as const;
+
+/** Tech design §24.3: the bodyguards' and the bar's art, catalogued with T28. */
+export const BODYGUARD_ART = [
+  'portrait.doorman',
+  'portrait.steward',
+  'portrait.minder',
+  'item.round',
+  'item.bar-plate',
+] as const;
+
+/**
+ * Tech design §24.3 (ADR 0088): the bodyguards and the bar. Each set applies once its data is present
+ * (the designer's T27): the tiers when written, the hire card on every party store once any shop
+ * hires, the bar card on every `bar` place once any carries it, dining on exactly its three places.
+ */
+export function barProblems(
+  content: Content,
+  idx: { locationById: Map<string, { city: City; location: Location }>; assetById: Map<string, Asset> },
+): string[] {
+  const problems: string[] = [];
+  const places = [...idx.locationById.values()].map((x) => x.location);
+  if (content.bodyguards.length > 0) {
+    const tiers = content.bodyguards.map((b) => b.tier).sort();
+    if (tiers.join() !== '1,2,3') problems.push('bodyguards: tiers 1, 2 and 3, once each');
+    const said = { 1: 'doorman', 2: 'steward', 3: 'minder' } as const;
+    for (const b of content.bodyguards) {
+      if (b.said !== said[b.tier]) problems.push(`bodyguards.${b.tier}: is said as "${said[b.tier]}"`);
+      const a = idx.assetById.get(b.portrait);
+      if (!a || a.kind !== 'portrait')
+        problems.push(`bodyguards.${b.tier}: its portrait must be a portrait asset`);
+      if (new Set(b.names).size !== b.names.length)
+        problems.push(`bodyguards.${b.tier}: three different names`);
+    }
+    for (const id of BODYGUARD_ART)
+      if (!idx.assetById.has(id)) problems.push(`art: "${id}" is not catalogued`);
+  }
+  const hires = places.some((l) => (l.shops ?? []).some((s) => s.hire));
+  for (const l of places)
+    for (const shop of l.shops ?? []) {
+      if (shop.hire && shop.kind !== 'partyStore')
+        problems.push(`location "${l.id}": only a party store hires`);
+      if (hires && shop.kind === 'partyStore' && !shop.hire)
+        problems.push(`location "${l.id}": every party store hires`);
+    }
+  if (hires && content.bodyguards.length === 0)
+    problems.push('bodyguards: a party store hires before the tiers are written');
+  if (places.some((l) => l.bar))
+    for (const l of places) {
+      if (l.kind === 'bar' && !l.bar) problems.push(`location "${l.id}": every bar carries the bar's card`);
+      if (l.bar && l.kind !== 'bar') problems.push(`location "${l.id}": the bar's card is only on a bar`);
+    }
+  if (places.some((l) => l.dining))
+    for (const id of DINING_PLACES)
+      if (idx.locationById.has(id) && !idx.locationById.get(id)!.location.dining)
+        problems.push(`location "${id}": has the dining room`);
+  for (const l of places)
+    if (l.dining && !(DINING_PLACES as readonly string[]).includes(l.id))
+      problems.push(`location "${l.id}": a dining room only at ${DINING_PLACES.join(', ')}`);
   return problems;
 }
