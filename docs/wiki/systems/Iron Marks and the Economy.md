@@ -39,8 +39,9 @@ spend is part of the game.
   run-in **50–300**.
 - **Designed sinks:** clothing and equipment (slice 8, shops buy back at a tenth) · the flat
   (2,500 + 150 a week) · bribes to clear marks (500 / 1,000 / 2,000) · patron gifts (200) ·
-  bodyguards and bar meals (MVP, slice 8, prices to check: Appendix C #110, #111; [[Bodyguards]],
-  [[Buffs]]) · posting a mate's bail (slice 6). Lodging is the home.
+  bodyguards (a doorman 400, a steward 1,200, a minder 3,000 a week; [[Bodyguards]]) and the bar
+  (a round 30, a plate 100, dinner 400; [[Buffs]]; designed 16 Oct 2026, economy §22.11) · posting a
+  mate's bail (slice 6). Lodging is the home.
 - **Later (v1.2)** ([[GDD#18.4 Later (v1.2)|GDD §18.4]]): player trading, a faction treasury with
   caps and an audit log, market taxes.
 
@@ -79,8 +80,8 @@ bar services and gifts are slice 8; trading and the treasury are v1.2.
 
 - GDD §18.2's week-1 row now gives the job **100–240** (the vendor to the Driver; a member's day-1 job
   216), matching the job ladder (fixed 14 Oct 2026).
-- Bodyguard and bar prices were written for v3.0's economy and need checking against ~1,000 Iron a
-  day ([[GDD#Appendix C — Open questions|Appendix C #110, #111]]).
+- Bodyguard and bar prices were re-set against ~1,000 Iron a day on 16 Oct 2026 (Appendix C #110,
+  #111 closed; the levers in #113, #114 and economy §22.10).
 
 > [!note] Inference
 > Until slice 8's shops land, a reference player banks most of their Iron (economy sheet §5.2:

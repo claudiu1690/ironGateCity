@@ -20,7 +20,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Heat and Record]] — Heat 0–100 cools 5 an hour with four states; the caught check, marks, record levels, clearing a record.
 - [[Political Capital]] — Earned by political work, capped at 1,000, never bought; spent on standing, backing, striking marks.
 - [[Iron Marks and the Economy]] — Income above cost, no upkeep; earned from actions, missions and wages; optional sinks, built and planned.
-- [[Buffs]] — Well-Fed and In Good Spirits are MVP slice 8, not built yet; Lodged is replaced by the home; Weatherproof waits for weather.
+- [[Buffs]] — Well fed (a plate 100, dinner 400) and In good spirits (a round 30): +10 % XP for hours or missions, Health up to max; slice 8, designed 16 Oct; Lodged is the home; Weatherproof waits.
 - [[Levels and Faction Rank]] — XP levels open content, Party XP ranks open political rights; level-up cards, reward rates per tier.
 - [[Stats and Checks]] — Three trained stats plus worn Charisma; the one check formula, shown to players only as odds words; training.
 - [[Jobs]] — A wage paid at the day boundary, seniority up to +20 %, a 14-day cap, the 'asks more, pays more' ladder.
@@ -34,11 +34,11 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Local Standing]] — Reputation per city: Stranger to One of Us at 10/30/70/150 wins, +3 % a level, never decays.
 - [[Party Orders]] — Three daily orders from the party secretary (welcome set, capital rotation, off in the cells); the Chair's orders are slice 7.
 - [[The Dossier]] — Intelligence entries on named people, Case Files, the exposé, sale and informants; slice 8, not built.
-- [[Bodyguards]] — Prepaid 7-day protection contracts (GDD §12); MVP, slice 8, not built yet; prices and shop are App C #110.
+- [[Bodyguards]] — Someone to walk with you: a doorman, a steward, a minder (400 / 1,200 / 3,000 a week) at the party store; a visible row at a run-in, never against the police; slice 8, designed 16 Oct.
 - [[Run-ins and Combat]] — NPC-only, one choice (Fight, Run, Talk, Pay, luck); the held result, settled by luck after 5 min; slice 5.
 - [[Hospital and Treatment]] — The infirmary after a lost run-in (30 Health, 20 min) and Get patched up at 1 Iron a point.
 - [[Jail and the Cells]] — Arrest, a sentence of 20 + Heat ÷ 2 min, bail, orders off, always a mark, the In the cells now list.
-- [[Bars]] — Bar places with tier-1 tickets are built; bar services, their buffs and the back room's mark bribe are MVP slice 8, not built yet.
+- [[Bars]] — Bar places with tickets are built; the bar's card (a round, a plate), the hotel's dining room and the back room's bribe are slice 8, designed 16 Oct.
 - [[Equipment and Wardrobe]] — Built: two slots, starting kit, keepsakes, Charisma from what you wear. Slice 8: the four-slot Wardrobe, outfits, shops.
 - [[Night and Patrols]] — Two-hour nights, night-only ways and missions (+25 % Iron), random patrol stops on rival ground; review 5.
 - [[Ambitions]] — Three 12-chapter personal stories, at most one chapter a week, never failing; chapters 1–2 partly built.
@@ -115,7 +115,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Slice 5 Risk]] — Built 5 Oct: 22 missions, Heat and record, the cells, the infirmary, run-ins, rival ground.
 - [[Slice 6 Together]] — Built, QA'd and fixed 15 Oct ([[review/slice-6-build-notes|build notes]]): Campaign Events (the Doorstep Drive, Rally, Poster Night, three signature events), the Faction tab, chat and presence, bail and visit favours.
 - [[Slice 7 The Nation]] — Built, QA'd and fixed 16 Oct ([[review/slice-7-build-notes|build notes]]): terms, Governor/Chair/deputies/President, laws, Clearwater, National Control, petitions.
-- [[Slice 8 A Life in the City]] — Phase A started 16 Oct: the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy; bodyguards and bar services added 14 Oct, being designed; the season deferred 16 Oct.
+- [[Slice 8 A Life in the City]] — Approved and building (phase A, 16 Oct): the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy, bodyguards and the bar (designed 16 Oct); the season deferred.
 - [[Slice 9 Launch Readiness]] — Designed only: telemetry, the balance pass, anti-abuse, moderation, polish; ends locally, with hosting and the betas after it.
 - [[Review 1]] — 30 Sep, the first play-through: jobs become a wage, first day on your best stat, labels explained, orders-complete modal.
 - [[Review 2]] — 30 Sep: plain words for players, odds maths hidden, Political Capital in full, the Election card, map interaction.

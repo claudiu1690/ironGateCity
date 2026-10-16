@@ -1,69 +1,56 @@
 ---
 type: system
 title: Buffs
-aliases: [Well-Fed, Lodged, In Good Spirits, Weatherproof, Physical Neglect]
+aliases: [Well-Fed, Well fed, Lodged, In Good Spirits, In good spirits, Weatherproof, Physical Neglect]
 tags: [resource, economy]
 status: designed
-slice: "Well-Fed and In Good Spirits MVP, slice 8, not built yet (decided 14 Oct 2026); Lodged replaced by the home (slice 8); Weatherproof waits for weather"
-gdd: ["§6.7", "§19.3", "§25"]
-adrs: []
-updated: 2026-10-14
+slice: "Well fed and In good spirits: 8 (designed 16 Oct 2026; building); Lodged replaced by the home; Weatherproof waits for weather"
+gdd: ["§6.7", "§19.3", "§18.3", "§25"]
+adrs: ["0052"]
+updated: 2026-10-16
 ---
 
 # Buffs
 
 ## In one paragraph
 
-Buffs are short bonuses bought with Iron: a meal, a night's lodging, a round at the bar, the right
-coat for the weather. They replace v3.0's hunger, fatigue and exposure, which drained the player
-for not eating or sleeping. In v3.1 food and lodging only ever *add* something, so skipping them
-costs nothing (project rule: being away costs opportunity, never assets). None of them is built yet; **Well-Fed and *In Good Spirits* are MVP, slice 8** (the user, 14 Oct 2026).
+Buffs are short bonuses bought with Iron at a bar or a hotel: a round, a plate, a dinner. They replace v3.0's hunger, fatigue and exposure, which drained the player for not eating or sleeping; in v3.1 food only ever *adds* something, so skipping it costs nothing. The player never reads *buff*: the words are ***well fed***, ***well fed, properly*** and ***in good spirits***. Two are built in [[Slice 8 A Life in the City|slice 8]] (designed 16 Oct 2026); *Lodged* became the home and *Weatherproof* waits for weather.
 
 ## How it works
 
-The designed set ([[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]]; see the § for the full
-table):
+Per [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] and [[design/slice-8-life#24.3 The bar and its buffs (GDD §6.7, §19.3)|design §24.3]]:
 
-- **Well-Fed** (four grades): street food 50 Iron (+5 % XP, 3 h) up to a high-society dinner 1,500
-  Iron at Charisma 25+ (+15 % XP and one exclusive political mission, 8 h). **Only one Well-Fed is
-  active at a time**; the strongest applies.
-- **Lodged:** basic lodging 100 / hotel 500 / safehouse free at Rank 3+, for +25 / +75 / +40
-  [[Rested]]; the hotel restores full Health; a safehouse makes **Heat cool faster** there ([[Heat and Record]]; it said Heat −20 until 14 Oct 2026).
-- **In Good Spirits:** the bar's *Buy a Round*, +10 % XP on the next 3 missions ([[Bars]]).
-- **Weatherproof:** seasonal outerwear ignores weather penalties on outdoor missions while worn
-  ([[Weather]], [[Equipment and Wardrobe]]).
+- **Well fed** (*A plate of something* at any bar, 100 Iron, 2 Energy): **+10 % XP** on tier-1 actions and missions (society calls included; not training, chapters, event roles or the exposé's fixed rewards) and **Health +15 now, up to max**, for **four hours**.
+- **Well fed, properly** (*Dinner* at a hotel's dining room, 400 Iron, 2 Energy, worn Charisma 10): **+10 % XP and +10 % Iron** on the same, **Health +25 up to max**, for **six hours**.
+- **In good spirits** (*Buy a round*, 30 Iron, 2 Energy, three a day): **+10 % XP on the next three missions**; a second round adds three more, **nine in hand at most**.
+- **One meal at a time, the better one:** a dinner replaces a plate; a plate over a dinner, or the same tier over itself, is dimmed (*Well fed until 19:40*). **Health never goes above max** (Appendix C #111 closed).
+- **Lazy state** on the character (the meal's tier and end time; the rounds a count), no job. Each buff is **a line of its own on the receipt** (*Well fed · +10 % XP* · *In good spirits · +10 % XP · 2 left*), beside Rested and the party coat's +5 %, rounded per line ([[The Result Modal]]).
+- **Away:** a meal's clock runs out whether or not you play (a timer that is a choice); rounds in hand wait. Nothing is taken.
+- **Not built:** street food (+5 % is below what the receipt prints), the society dinner (needs its mission), the stimulant (cut: Health is free and *Get patched up* sells it), *Lodged* (the home is the lodging, [[Residence]]), *Weatherproof* ([[Weather]]).
 
 ## Where it lives
 
-**Rules:** [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] ·
-[[GDD#18.3 Sinks|GDD §18.3]] (meals and lodging as a sink) ·
-[[design/slice-8-life|slice-8 design]] (the home replaces lodging) · [[tech/slice-8|tech/slice-8]] §1.1 (added scope: a buff as lazy state on the character, a named part in rewards; to be designed) · [[GDD#25. Scope and roadmap|GDD §25]]
+**Rules:** [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] · [[GDD#19.3 Bars|§19.3]] · [[GDD#18.3 Sinks|§18.3]] · [[design/slice-8-life|slice-8 design §24.3]] · [[design/slice-8-screens|screens §18.4–§18.5]] · [[economy|economy sheet]] §22.11 · [[adr/0052-personal-modifiers-items-perks-and-recognition|ADR 0052]] (a buff's percentage as a personal modifier) · [[tech/slice-8|tech/slice-8]] §1.1
 
-**Code:** none. There is no buff state on the character and no buff content
-(`packages/db/src/models/character.ts`, `packages/content/src/data/items.ts` checked).
+**Code:** none yet (no buff state on the character, no buff content).
 
 ## Status
 
-**Not built.** **The Well-Fed buffs and *In Good Spirits* (with the bar services) are MVP, slice 8
-(A Life in the City), not built yet** (the user, 14 Oct 2026; GDD §6.7, §25); still to be designed in
-the slice-8 docs. *Lodged* is not built as a buff: the home (§17.4, [[Residence]]) is the lodging,
-and its Rested arrives at the boundary (+10 a room, +25 a paid flat); the safehouse row waits for the
-faction-only places (later). *Weatherproof* waits for weather ([[Weather]]).
+**Designed 16 Oct 2026, building in slice 8.** *Lodged* and *Weatherproof* stay out for now (a question to the user is pending).
 
 ## Decisions
 
-- v3.1: the v3.0 "Physical Neglect" mechanics are removed; food, lodging and outerwear give
-  bonuses instead of preventing penalties.
+- v3.1: the v3.0 "Physical Neglect" mechanics are removed; food gives bonuses instead of preventing penalties.
 - Slice 8 (designed): lodging becomes the home.
-- **14 Oct 2026 (the user, drift cleanup):** Well-Fed, *In Good Spirits* and the bar services are MVP, slice 8. Lodged and Weatherproof stay out for now (a question to the user is pending).
+- **14 Oct 2026 (the user):** Well fed, In good spirits and the bar services are MVP, slice 8.
+- **16 Oct 2026 (the designer):** two meal tiers and the round, priced 100 / 400 / 30; Health up to max only; the clocks four and six hours; nine missions in hand at most; separate receipt lines.
 
 ## Open questions / drift
 
-- [[GDD#Appendix C — Open questions|Appendix C #111]]: may Well-Fed's Health part (+5 to +30) take
-  Health above max? Default: **up to max only**. Also the meal prices against today's economy.
+- Appendix C #114: the buffs' sizes. If three meals a day become mandatory, the lever is the plate's price (100 → 150) and then the hours, never the percentage. Economy §22.11: about +12 % XP for 390 Iron a day; no §5.2 milestone moves by more than a day.
+- Designer default for the user (design §24.7 #5): no Health above max.
 - Open (the user): are *Lodged* and *Weatherproof* in or out of the MVP?
 
 ## Related
 
-[[Rested]] · [[Health]] · [[Bars]] · [[Residence]] · [[Weather]] · [[Equipment and Wardrobe]] ·
-[[Iron Marks and the Economy]]
+[[Rested]] · [[Health]] · [[Bars]] · [[Residence]] · [[Weather]] · [[Equipment and Wardrobe]] · [[Iron Marks and the Economy]] · [[The Result Modal]]

@@ -74,7 +74,7 @@ the user's call.
 | A16 | Old voting in code comments (`CAPITAL_COUNCIL`, `city.ordinance.paperId`) | hand | Comments updated |
 | A17 | Knock-ons from later rounds never applied to tech/slice-6…9 | AR | All applied in the body; planned migrations renumbered 010–013 |
 | B1, B3–B18 | Old text next to newer rules inside the GDD (Rank 3, Heat tick, caught check, bribes, safehouse, job income, seed note, paper, coat, clock times, hospital table, Welcome back, welcome favour titles, 06:00, event limits, "built" slice-7 items, vote appeal) | GD | The newer, decided rule kept and the old text removed; §19.1 hospital is now the four built ways (Antidote and Recovery Boost are out of the MVP); vote appeal is one future term (App C #108) |
-| B19–B21 | Bodyguards, Legacy perks and bar buffs: in the MVP or not | USER → GD + AR | **MVP, slice 8, not built yet** (GDD §6.7, §12, §17.3, §19.3, §25; plan slice 8; tech/slice-8 §1.1); prices and details in App C #110, #111 |
+| B19–B21 | Bodyguards, Legacy perks and bar buffs: in the MVP or not | USER → GD + AR | **MVP, slice 8** (GDD §6.7, §12, §17.3, §19.3, §25; plan slice 8); **designed 16 Oct 2026** (design §24; App C #110, #111 closed); the architect's tech design to follow |
 | B22 | The Unrest prize's Legacy +2 had no Legacy entry | GD | §17.3 rows added |
 | B23, B24 | Wrong file name for the locals' rules; scoreboard columns | GD | `candidates.ts`; Moved, Events, Heroes |
 | C1 | Clearwater's baseline 20/24/24/32 in content | GD | `nation.ts`, its test and the rules fixture now 22/22/22/34, as the GDD says |

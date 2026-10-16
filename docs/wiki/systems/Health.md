@@ -74,7 +74,7 @@ v3.0 hospital services Antidote and Recovery Boost are **not in the MVP** (GDD �
 
 ## Open questions / drift
 
-- Well-Fed (slice 8) heals Health; whether it may go above max is [[GDD#Appendix C — Open questions|Appendix C #111]] (default: up to max only). See [[Buffs]].
+- *Well fed* (slice 8, designed 16 Oct 2026) gives Health +15 (a plate) or +25 (dinner) **up to max, never above** ([[GDD#Appendix C — Open questions|Appendix C #111]] closed). See [[Buffs]].
 - Dropping the Antidote and the Recovery Boost from the MVP was the game-designer's call; the user has not confirmed it.
 
 ## Related

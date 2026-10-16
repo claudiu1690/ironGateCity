@@ -170,6 +170,14 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 |---|---|---|---|---|
 | 16 Oct | **"Let's leave the seasons for later"**: the Political Season (the 84-day season, the score, the Season Election, the Champion, the awards, the Hall of Fame, the rollover, the finale) is **deferred out of slice 8** to a later slice, not yet placed. **The other design §20 defaults are approved**: no weapons; Crane and Marr; three fixed outfit names; a failed exposé keeps its file; the flat alone; Blackmail and Denounce deferred (the +100 election bonus and *no track or twist* wait with the season) | not stated | [[tech/slice-8|tech/slice-8]] *Seasons deferred (16 Oct 2026)*; [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] *Deferred*; the plan's slice 8 | [[Political Seasons]], [[Legacy]], [[Slice 8 A Life in the City]] |
 
+## Slice 8 added scope designed (16 Oct, the designer)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 16 Oct | **Bodyguards:** three tiers at the party store (a doorman 400, a steward 1,200, a minder 3,000 a week), one at a time, one price, no auto-renew, four weeks ahead at most; **a visible row at the run-in** (*{Name} steps in*, the Fight formula with his power 28 / 36 / 44) replacing the v3.0 modifiers; **never against the police**; a lapse ends the row and nothing else | a doorman costs a week of pay-offs (a real choice); one row, no hidden dice; Heat and the bribe keep their reasons; rule 4 (no Iron spent while away) | GDD §0 (16 Oct), §12, §20.1, §18.3, Appendix C #110 closed, #113; [[design/slice-8-life\|design §24.2]]; economy §22.11 | [[Bodyguards]], [[Run-ins and Combat]] |
+| 16 Oct | **The bar:** a round (30), a plate (100), the hotel's dinner (400, Charisma 10) and the back room; *well fed* +10 % XP for 4 h (dinner: +10 % XP and Iron for 6 h), Health up to max; *in good spirits* +10 % XP on three missions, nine in hand at most; the barman's report, the stimulant and recruitment cut; overhearing is the bar's existing ticket | priced against ~1,000 Iron a day; the stimulant's overdose was a punishment; the report sold what the plate shows | GDD §0 (16 Oct), §6.7, §19.3, §18.3, Appendix C #111 closed, #114; design §24.3; economy §22.11 | [[Bars]], [[Buffs]], [[Health]] |
+| 16 Oct | Five designer defaults put to the user (design §24.7): never against the police; the party store for all tiers; no mid-week replacement; three services; no Health above max | — | design §24.7 | [[Bodyguards]], [[Bars]], [[Buffs]] |
+
 ## Related
 
 - [[Open Questions]] · [[Drift Report]]

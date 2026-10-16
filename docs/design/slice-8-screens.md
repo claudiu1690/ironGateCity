@@ -1,5 +1,7 @@
 # Slice 8 — "A life in the city": the screens
 
+**16 Oct 2026: approved; Political Seasons deferred out of the slice** (design §23): §11 (the season card, the Hall of Fame, the new season's front page), the *Champion of Season n* titles in §10, the season clock in §12's *Ahead*, §15's Hall of Fame row and §16's season-card note are **not built**; the `SeasonCard`, `HallOfFamePage` components and the season strings in §17 wait. **Added:** §18, the bodyguard card and the bar's card (design §24).
+
 Game designer, 4 Oct 2026. The screen-by-screen spec for slice 8: the Wardrobe block on the Me tab, the item card, the slot chooser and the outfit chips, shops as cards on places, the full wardrobe sheet, the Dossier tab with its name cards and Case Files, the exposé flow (three steps), selling at a station, the two patron cards and the Me tab's patron clocks, the flat on the residence card and the Me tab, the Legacy record and its perks, the season card, the Hall of Fame, the paper's new rows, empty states, phone and desktop, and what sits above the fold. Rules and numbers are in `docs/design/slice-8-life.md` (cited as *design §n*); the research behind the Wardrobe is `docs/design/inventory-research.md` (*research §n*). Where a slice-1 to slice-7 screen already does the job it is named and only the change is given.
 
 **Phone first** (375 wide, supported from 360), desktop as the existing screens. **Every string a player reads is in everyday words** (GDD §1.5, design §1.1): no *inventory*, *equipment*, *slot*, *tier*, *armour*, *CHA*, *utility*, *loadout*, *Black Market*, *NPC*; the only numbers on an item card are its Charisma and its price; no percentage for odds anywhere.
@@ -127,7 +129,7 @@ Kicker *LEGACY · your record in the republic* (dotted: the `legacy` note), the 
 
 ---
 
-## 11. The season
+## 11. The season — **deferred out of slice 8 (16 Oct 2026; design §23)**
 
 ### 11.1 The republic sheet's season card (`SeasonCard`; slice 7 §2.1, changed)
 
@@ -237,3 +239,31 @@ British English, no exclamation marks, no percentages for odds, times in the pla
 
 - **§9.1, the residence card:** the first line and button are *Live here · 500 Iron* (slice 4 §6.1 as revised by review 4); the second line is *Where you sleep* with the free room / the flat; **no paid room row** (the Lodgings card is at Tram Junction / the Rows).
 - **§13, the journey:** the nation map in journey mode; *Change into plain clothes* is a chip on the journey plate.
+
+---
+
+## 18. Someone to walk with you, and the bar (added 16 Oct 2026; design §24)
+
+### 18.1 The party store's hire card (`HireCard`, three `HireRow`s)
+
+On the party store's sheet under the shop card (shop above hire above jobs), kicker *SOMEONE TO WALK WITH YOU* (dotted: the `bodyguard` note). Each row: the tier's portrait at 64 px (`portrait.doorman` / `portrait.steward` / `portrait.minder`), *A doorman · 400 a week* in body 600, the Courier line *Steps in first at a run-in · his strength: {odds word}* with *against a street enforcer, at home* under it, and the button **Hire · 400 Iron** (a confirm sheet over 1,000: *Hire {Name} for a week, 1,200 Iron?* · **Hire** / *Not now*). States: *From Level 6* / *From Rank 3* / *From Level 16* (dimmed), *{Name} is with you until {weekday}* (dimmed, the other two rows while one runs), and on the running row **Another week · 400** / *Paid four weeks ahead*. The name is drawn at hire and shown from then on. One tap → the `hired` or `renewed` modal (design §24.2). Phone: the row is 88 px; three rows and the kicker fit one screen under the shop card's fold.
+
+### 18.2 The Me tab's row (`MinderRow`)
+
+Under *Where you sleep*: kicker *WALKING WITH YOU*, the portrait at 40 px, *{Name}, a doorman · until {weekday}*, **Another week · 400**. Empty: *Nobody · a doorman from the party store, 400 a week* with no button (the card is at the store). Collapsed to its kicker and one line like Patrons (§16).
+
+### 18.3 The run-in sheet (slice 5 §8, changed)
+
+While a contract runs the first row is ***{Name} steps in · {odds word} · his strength***, his portrait at 40 px to the left of the row, the opponent's portrait where it was. Against the police the row is present but dimmed: *Not against the police*. *Leave it to luck* reads his row as a free one. The result modal: the stamp *Got away* with his line as the body when it works; when it fails, his fail line then the fight's text as slice 5 prints it, the reason line *{Name} was pushed aside*.
+
+### 18.4 The bar's card (`BarCard`) and the dining room
+
+On every `bar`'s sheet, above the back room and below the tickets: kicker *THE BAR · {place}*; two rows with the item picture at 64 px (`item.round`, `item.bar-plate`), the name in body 600 (*Buy a round* · *A plate of something*), the Courier line (*In good spirits: a tenth more XP on your next three missions* · *Well fed: a tenth more XP for four hours, and some Health back*), *30 Iron · 2 Energy* / *100 Iron · 2 Energy*, and **Buy**. States: *Three rounds a day · more tomorrow* · *Nine missions in hand already* · *Well fed until {time}*. On a `hotel` (and the Mountain Inn): kicker *THE DINING ROOM · {hotel}*, one row (`scene.hotel` crop at 64 px): *Dinner* · *Well fed, properly: a tenth more XP and a tenth more Iron for six hours; Health back* · *400 Iron · 2 Energy · needs Charisma 10* · **Buy**; barred: *Not dressed for the dining room · needs Charisma 10*. One tap → `round` / `meal` / `dinner` (design §24.3).
+
+### 18.5 Where a buff shows
+
+The Me tab, one Courier line under the stats block while either runs: *Well fed until 19:40 · In good spirits, 2 missions* (the `wellFed` and `goodSpirits` notes on the words). The receipt: *Well fed · +10 % XP* · *Well fed · +10 % Iron* · *In good spirits · +10 % XP · 2 left* as lines of their own, as a council rule's line is. Nothing on the HUD.
+
+### 18.6 Copy added to §17
+
+*Someone to walk with you* · *A doorman* · *A steward* · *A minder* · *{n} a week* · *Steps in first at a run-in · his strength* · *against a street enforcer, at home* · *Hire · {n} Iron* · *Hire {Name} for a week, {n} Iron?* · *{Name} is with you until {weekday}* · *Walking with you* · *{Name}, a doorman · until {weekday}* · *Another week · {n}* · *Four weeks · {n}* · *Paid four weeks ahead* · *Nobody · a doorman from the party store, 400 a week* · *{Name} steps in* · *his strength* · *Not against the police* · *{Name} was pushed aside* · *{Name}'s last day {weekday}* · *Hired* · *{Name} walks with you* · *{Name} · another week* · *Got away* · *The bar* · *The dining room* · *Buy a round* · *A plate of something* · *Dinner* · *needs Charisma 10* · *Not dressed for the dining room · needs Charisma 10* · *Three rounds a day · more tomorrow* · *Well fed until {time}* · *Nine missions in hand already* · *Well fed until {time} · In good spirits, {n} missions* · *Well fed · +10 % XP* · *Well fed · +10 % Iron* · *In good spirits · +10 % XP · {n} left* · *Your round* · *Fed* · *A round for the bar* · *A plate of something hot* · *Dinner at the {hotel}* · *Health +{n}*. Removed from §17 with the season: every string from *Champion of Season {n}* to *No twist this season* that names the season, the Champion, the Hall of Fame or the awards.

@@ -825,9 +825,9 @@ The user approved the slice-7 design's seven defaults on 15 Oct 2026 (`slice-7-n
 
 ---
 
-## 22. Slice 8: the Wardrobe, the Dossier, patrons, the flat, Legacy and the season
+## 22. Slice 8: the Wardrobe, the Dossier, patrons, the flat, Legacy, bodyguards and the bar (the season deferred)
 
-Rules: `docs/design/slice-8-life.md`; GDD §8.2, §10, §13.6, §14.12, §17.1–§17.4, §18.3, §20.3, §21, §22. Slice 8 adds **one tier-2 type** (the society call, at the tier-2 rate), **one tier-3 story** (the exposé) and the game's first **big Iron sinks**. **Two GDD numbers were changed** and both are here: the season score's election bonus (10 → **100**, Appendix C #81) and the social missions' v3.0 rewards (replaced by the tier-2 rate); everything else is a pin.
+Rules: `docs/design/slice-8-life.md`; GDD §6.7, §8.2, §10, §12, §13.6, §14.12, §17.1–§17.4, §18.3, §19.3, §20.1, §20.3, §21. Slice 8 adds **one tier-2 type** (the society call, at the tier-2 rate), **one tier-3 story** (the exposé) and the game's first **big Iron sinks**. **Two GDD numbers were changed** and both are here: the season score's election bonus (10 → **100**, Appendix C #81; **the season itself is deferred out of the slice, the user, 16 Oct 2026: §22.8 waits with it**) and the social missions' v3.0 rewards (replaced by the tier-2 rate); everything else is a pin. **Added 16 Oct 2026:** bodyguards and the bar's buffs, §22.11 (the GDD's v3.0 prices replaced; §18.3's rows).
 
 ### 22.1 Income the sinks are priced against
 
@@ -889,15 +889,15 @@ The flat's 2,500 is two days' Iron at day 15 and the rent 150 a week is 1 % of w
 
 ### 22.7 Legacy
 
-The model's record at day 30: three council terms (9), one District Hero (2), two Issues in the top five (4) = **15**, about one perk. At day 84: six terms (18), a Governor's term (5), three heroes (6), six Issues (12), an exposé or two (4), Champion or an award (5) = **about 50**: three or four perks. The largest perk (+5 % FXP, 15) is worth about +12 FXP a day: a reward for a season, not a rate.
+The model's record at day 30: three council terms (9), one District Hero (2), two Issues in the top five (4) = **15**, about one perk. At day 84: six terms (18), a Governor's term (5), three heroes (6), six Issues (12), an exposé or two (4) = **about 45** (the Champion's or an award's 5 waits with the deferred season, 16 Oct 2026): three perks. The largest perk (+5 % FXP, 15) is worth about +12 FXP a day: a reward for a season, not a rate.
 
-### 22.8 The season score (Appendix C #81)
+### 22.8 The season score (Appendix C #81) — deferred with the season (16 Oct 2026); kept for the slice that builds it
 
 A party's control share is ~33.3 a day in a level republic, so a season's daily sum is about **2,800 per party**. A four-point lead held for 84 days is +336; at the GDD's 10 per election three wins were +30 (a tenth of the lead), so the Champion was the daily sum alone. At **100 per election** three wins are +300, about the lead's worth: the Champion is the party that held the republic *and* won it, which is what a season's prize should say.
 
 ### 22.9 Session shape (pillar 7)
 
-Dressing is one tap; a shop is one tap on a place the player is at; a Case File is one tap and an exposé three; a Request is read in the paper and done by ordinary play; the flat is two taps and the rent one; a perk one; the season asks nothing. Nothing in slice 8 needs the player at a set hour.
+Dressing is one tap; a shop is one tap on a place the player is at; a Case File is one tap and an exposé three; a Request is read in the paper and done by ordinary play; the flat is two taps and the rent one; a perk one; a bodyguard one (two over 1,000 Iron) and his row at a run-in is the one choice the run-in already was; a round or a plate one. Nothing in slice 8 needs the player at a set hour; a meal's four hours is a choice, not a threat.
 
 ### 22.10 Flags (GDD Appendix C #74–#81)
 
@@ -908,9 +908,28 @@ Dressing is one tap; a shop is one tap on a place the player is at; a Case File 
 | 76 | The exposé's −1.0 / −0.5 | Exposés dominate a town at scale | The burn (28 days) or a daily cap per town |
 | 77 | Favour's pace | Protégé in a fortnight, or Acquaintance in a week | The gift's +2 |
 | 79 | The flat waits | Reads as free | A re-entry fee after a month unpaid |
-| 80 | No track, no twist | The clocks are not enough | Build the free track |
-| 81 | +100 per election | The Champion is always the party with the most Presidents | 50; or 200 if elections never move it |
+| 80 | No track, no twist (deferred with the season) | The clocks are not enough | Build the free track |
+| 81 | +100 per election (deferred with the season) | The Champion is always the party with the most Presidents | 50; or 200 if elections never move it |
 | — | Dossier sales as income (100–300 a day) | Iron inflates for a seller who never exposes | Halve the entry price (25 / 12); never the file's |
+| 113 | A bodyguard never steps in against the police | The minder is useless to a *Notorious* player at night | His odds against the police at a flat 50 %; never the pool's share |
+| 114 | The buffs' sizes (+10 % XP; 30 / 100 / 400) | Three meals a day become mandatory, or nobody buys | The plate 100 → 150, then the hours 4 → 3; or the plate to six hours; never the percentage |
+| — | Bodyguards at 400 / 1,200 / 3,000 a week | Rival ground becomes a walk for 1,200 a week | His power (−4 a tier) or the police's share; never the price |
+
+### 22.11 Bodyguards and the bar (added 16 Oct 2026; GDD §6.7, §12, §19.3, §20.1; design §24)
+
+**Income the prices are set against** (§22.1): ~1,000 Iron a day in week 1, 1,500–2,000 by week 3, 2,500–3,500 in month 2. **What a run-in costs today** (§19.5): the day-10 illegal player meets ~1.5 a day, mostly street enforcers at 60 to pay off; the rival-ground specialist ~7 a day, half of them the police at night; the auto-resolver loses ~4 minutes, 12 Iron, 13 XP a mission in expectation; the payer ~18 Iron a disruption at *Cool*.
+
+| Tier | A week | Days of income at the time | Who buys him | What he saves a week (the model) |
+|---|---|---|---|---|
+| A doorman (Level 6; power 28: 62 % against a street enforcer at home, 50 % on rival ground) | **400** | 0.4 (day 6) | the new player who cannot fight (29 %) and would rather keep the Iron for bail | ~6 of 10 pay-offs (360) and the infirmary's twenty minutes; **even** with paying as you go, which is the choice |
+| A steward (Rank 3; power 36: 86 / 74 %) | **1,200** | 0.7 (day 10) · 0.5 (week 3) | the illegal road at Rank 3; the rival-ground specialist | ~22 of the specialist's ~30 non-police run-ins (~1,500 of pay-offs) and most of two or three infirmary stays: **pays for itself** |
+| A minder (Level 16; power 44: 95 % against anything but the Vanguard doorman and the police) | **3,000** | 2 (day 20) · 1 (month 2) | the *Notorious* player on rival ground at night who wants to come home; a month-1 goal | safety, not Iron: the police are still half of every night pool and he never steps in for them |
+
+**The decision is real at every tier:** a doorman is a week of pay-offs paid in advance; a steward is a day's Iron; a minder is two. The GDD's v3.0 figures (hire 500 / 2,000 / 8,000 plus 350 / 1,400 / 5,600 a week) are replaced: the hire fee is gone (one price, one tap), and 5,600 + 8,000 a week was eight days' Iron at day 20, out of reach of the month-1 goal #110 asked for. Four weeks ahead parks at most 1,600 / 4,800 / 12,000, less than the three-piece suit. **No rate moves**; the run-in's expected cost falls for the player who pays for it to fall, which is a sink of 400–3,000 a week for the illegal road and nothing for the legal one. If rival ground becomes a walk, the lever is his power (−4 a tier, about −12 % a tier) or the police's share of the pool, never the price.
+
+**The buffs.** A plate (100, 4 h, +10 % XP) at the start of each of three sessions is 300 a day for about +190 XP on the model's ~1,900; three rounds (90) are +10 % on nine missions, about +70 XP; together **about +12 % XP for 390 Iron a day** (40 % of a week-1 day, 20 % of a week-3 day). The §5.2 milestones: Level 10 day 5 → about 4.5, Level 16 day 12 → about 11; **no milestone moves by more than a day**, and the buffs sit inside the heavy player's +35 % envelope with Rested (which is +50 % per Rested point and already the bigger lever). The dinner (400, 6 h, +10 % XP and Iron at Charisma 10) returns about 100 Iron of its 400 on a full day: never a profit, a comfort for the player with a good coat. Health +15 / +25 up to max is worth about 1.5–2.5 minutes of regen (§6.1), which is why it is a line and not a price. Rested, Well fed, In good spirits and the party coat's +5 % are **separate lines on the receipt**, each rounded, so the modal shows where every point came from.
+
+**Flags:** #113 and #114, and the bodyguard row above.
 
 ---
 

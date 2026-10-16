@@ -44,7 +44,7 @@ Combat in Irongate is a **hazard, not the core of the game**, and it is **NPC-on
 
 ## Status
 
-Built in [[Slice 5 Risk|slice 5]] (with the slice-5 fix round's key guard for double starts). Night chances and police share added in the [[Review 5]] fix round. **Not built:** recognition on rival ground (slice 8), [[Bodyguards]] (MVP, slice 8, decided 14 Oct 2026; their +5 power and +5 % Run per tier are 0 until then), the Secret Police (Level 20+), named NPC opponents, opportunity encounters.
+Built in [[Slice 5 Risk|slice 5]] (with the slice-5 fix round's key guard for double starts). Night chances and police share added in the [[Review 5]] fix round. **Not built:** recognition on rival ground (slice 8), [[Bodyguards]] (slice 8, designed 16 Oct 2026: a fifth row, *{Name} steps in*, at the Fight formula with his power 28 / 36 / 44, never against the police; the v3.0 +5 power and +5 % Run per tier are replaced by the row and never built), the Secret Police (Level 20+), named NPC opponents, opportunity encounters.
 
 ## Decisions
 

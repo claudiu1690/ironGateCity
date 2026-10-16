@@ -1,4 +1,6 @@
-# Slice 8 — "A life in the city": the Wardrobe, the Dossier and exposés, two patrons, a flat, the Legacy record, Ambition #1 complete, the Political Season
+# Slice 8 — "A life in the city": the Wardrobe, the Dossier and exposés, two patrons, a flat, the Legacy record, Ambition #1 complete, bodyguards and the bar
+
+**Status (16 Oct 2026): approved by the user (§20's eight defaults as written); building. Political Seasons are deferred out of the slice (§23); bodyguards and the bar services with their buffs are designed in §24.** The title's *Political Season* is gone from the slice; §9 is kept as the design for a later slice.
 
 Game designer, 4 Oct 2026. Companion to `docs/design/slice-8-screens.md` (the screens) and `docs/design/inventory-research.md` (the research behind the Wardrobe); `docs/economy.md` §22 has the sums. The architect writes the slice-8 tech design from these; every rule and number here is also in the GDD (edits listed in §17). Builds on slices 5 (Heat, missions, rival ground), 6 (the Faction tab, profiles, favours) and 7 (offices, terms, Clearwater, laws).
 
@@ -28,8 +30,10 @@ What you wear is your **Charisma**, and from this slice it is also a decision: t
 | Patron · Favour · Request · tier | **patron** (kept) · **Favour** (kept, capital F) · **a Request** · **Acquaintance / Associate / Confidant / Protégé** |
 | Home · lodging · prepaid | **where you sleep** · **a rented room / a flat** · **paid until {date}** |
 | Legacy · Legacy points · perks | **your record in the republic** (the kicker *LEGACY*) · **Legacy** (the number) · **a lasting perk** |
-| Season · Season Score · Season Champion · rollover | **the season** · **the season's score** · **Champion of the season** · **the new season** |
+| Season · Season Score · Season Champion · rollover | **the season** · **the season's score** · **Champion of the season** · **the new season** (*deferred with the season, §23*) |
 | Black Market | **the back room** (of a bar) |
+| Bodyguard · contract · tier I–III | **someone to walk with you** · **a week, paid** · **a doorman / a steward / a minder** (§24.1) |
+| Buff · Well-Fed · In Good Spirits | (never *buff*) · **well fed** / **well fed, properly** · **in good spirits** (§24.1) |
 | Social mission · high-society venue · dress check | **a society call** (*Mission · Society*) · **the money side of town** · **not dressed for it** |
 
 Kept with a help note on the label: Charisma, the Wardrobe, the Dossier, a Case File, Favour, Legacy, the season.
@@ -47,7 +51,9 @@ Kept with a help note on the label: Charisma, the Wardrobe, the Dossier, a Case 
 | A flat | Level 10, a residence | the residence card |
 | Legacy (the record) | Level 1 (empty until the first entry) | the Me tab; the profile |
 | Society calls and the money side of town | the Wardrobe: by worn Charisma | the Opera, the Grand Hotel, the Front's four places |
-| The season | day 0 of the first season (the deploy's epoch) | the republic sheet; the paper |
+| ~~The season~~ | deferred out of the slice (§23) | — |
+| Someone to walk with you (a bodyguard) | Level 6, a member (a doorman); Rank 3 (a steward); Level 16 (a minder) | the party store's card (§24.2) |
+| The bar's card (a round, a plate) and the dining room (dinner, Charisma 10) | Level 1 at any bar; a hotel's dining room from the Wardrobe's Charisma 10 | the place card (§24.3) |
 
 ---
 
@@ -359,7 +365,9 @@ Chapter 12's requirement is the GDD's ending (a seat in Parliament, and the fort
 
 ---
 
-## 9. The Political Season (GDD §22, the skeleton)
+## 9. The Political Season (GDD §22, the skeleton) — **deferred out of slice 8 (the user, 16 Oct 2026; §23)**
+
+Kept as the design for the slice that builds seasons. Nothing below is built in slice 8; the defaults #6 and #7 of §20 apply when it is.
 
 ### 9.1 The calendar
 
@@ -414,8 +422,8 @@ At the day-0 boundary of the new season, after the government is seated:
 | `flat-due` | the last paid day | Rent Due on {street} | Your flat is paid until tonight. Pay a week on the Me tab, or let it wait: nothing is lost either way. |
 | `flat-waiting` | the morning after it lapses | The Flat Waits | The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do. |
 | `legacy-entry` | a Legacy entry | For the Record: {entry} | Legacy {total}. {toSpend} to spend on a lasting perk. |
-| `season-week` (From the capital) | season day 77 | A Week to the Season Election | The third term's vote decides the season. {leader} leads the season's score by {margin}. |
-| `season-front` (front page, day 0) | the new season | THE {FACTION} ARE CHAMPIONS OF SEASON {n} | Score {score} to {second}. {awards}. The map settles halfway, the law book empties, and the new season begins. |
+| ~~`season-week`~~, ~~`season-front`~~ | deferred with the season (§23) | | |
+| `bodyguard-last` · `bodyguard-gone` | §24.2 | | |
 | `recognised` | the first run-in with recognition on rival ground | {name} Recognised in {city} | A {office} in a {coat} does not pass for a stranger. Plain clothes and a quiet night would. |
 
 ### 10.2 The Letters row
@@ -424,7 +432,7 @@ Carries, in order: Ambition chapters (slice 2), **patron Requests** (one row eac
 
 ### 10.3 Your desk
 
-New rows when they apply, after *Your record*: **Dossier** · *{n} entries · {m} go stale {when}* · **Patrons** · *Crane: Associate 41 · Marr: Acquaintance 12* · **Where you sleep** · *A flat in Coalport · paid until Thursday* / *A rented room* · **Ahead** · up to three clocks in Courier (*Chapter 5 from Tuesday · Crane: Confidant at 60 · the Season Election in 12 days*).
+New rows when they apply, after *Your record*: **Dossier** · *{n} entries · {m} go stale {when}* · **Patrons** · *Crane: Associate 41 · Marr: Acquaintance 12* · **Where you sleep** · *A flat in Coalport · paid until Thursday* / *A rented room* · **Ahead** · up to three clocks in Courier (*Chapter 5 from Tuesday · Crane: Confidant at 60 · Ruda's last day Thursday*; the Season Election's clock is deferred with the season, §23) · **Walking with you** · *Ruda, a doorman · until Thursday* (§24.2).
 
 ---
 
@@ -485,7 +493,9 @@ Confidant with Crane (a headline planted for 25 PC, once a week); the greatcoat 
 | A Request | 1 to read; done by ordinary play; paid at the boundary | no |
 | Buy the flat / pay rent | 2 / 1 | no; the rent waits |
 | A perk | 1 | no |
-| The season | nothing to do; the awards arrive | no |
+| ~~The season~~ | deferred (§23) | — |
+| Hire or renew a bodyguard | 1 (2 over 1,000 Iron) | no; the week waits for nobody and takes nothing |
+| A round, a plate, a dinner | 1 | no; the clock is a choice |
 
 Nothing in slice 8 requires a tap at a set hour; every clock pays at a boundary and waits otherwise.
 
@@ -706,8 +716,9 @@ Outcome texts (Success / Partial):
 | Appendix C | #71 closed; new #74 (no weapon slot), #75 (recognition sizes), #76 (the exposé's swing), #77 (Favour pace), #78 (Blackmail and Denounce deferred), #79 (the flat waits), #80 (no track or twist in season 1), #81 (the season score's +100) |
 
 | §0, §6.4, §10.4, §11.3, §14.12, §17.4, §18.3, §21.1 (settled, 4 Oct 2026) | *Wanted* bars society calls; the *On file* +5 dropped; the press places and stations named; the exposé's refusals; forged papers as a check at 14; the flat's row corrected and the rent's eight-week cap; *Lodgings in {city}*; the party store's press pass and camera; the stall's buy-back rule |
+| §0, §4.1, §6.7, §12, §14.12, §17.3, §18.3, §19.3, §20.1, §22, §25, Appendix C (16 Oct 2026; §23, §24) | Slice 8 approved; **seasons deferred** (§22's status, §25's row, §17.3's two rows *with seasons*, #5, #80, #81 deferred, A9 with them); **bodyguards** (three tiers at the party store, 400 / 1,200 / 3,000 a week, the *steps in* row with his power in the Fight formula, never against the police, no auto-renew, four weeks ahead at most; §20.1's per-tier terms replaced); **the bar** (a round 30, a plate 100, the hotel's dinner 400 at Charisma 10; *well fed* +10 % XP for 4 h / +10 % XP and Iron for 6 h, Health up to max; *in good spirits* +10 % XP on three missions, nine in hand at most; the barman, the stimulant and recruitment cut); #110 and #111 closed; new #113 (not against the police), #114 (the buffs' levers) |
 
-Companion edit: `docs/economy.md` §22 (and §22.6's note on the rent cap).
+Companion edit: `docs/economy.md` §22 (and §22.6's note on the rent cap; §22.11 for bodyguards and the bar, 16 Oct 2026).
 
 ---
 
@@ -754,7 +765,7 @@ Twelve pieces (eleven with the optional). The crest rule holds: nothing on any c
 
 ---
 
-## 20. Points for the user (each with the default this document takes)
+## 20. Points for the user (each with the default this document takes) — **approved as written, 16 Oct 2026** (#6 and #7 apply when seasons are built; §23)
 
 1. **No weapon slot, no weapons as items** (§3.1, GDD §21.1, §20.3). Default: **none**: a run-in is Strength and a coat with some weight to it; the revolver and truncheon pictures are left uncatalogued. The alternative keeps §20.3's weapon tiers as items, which makes a political game look armed.
 2. **The two MVP patrons are Edith Crane and Julius Marr** (§5.1), both neutral, both in battlegrounds. Default: **Crane and Marr**, so every faction courts them on the same terms and the patron pages stand on Herald House and the Pier Hotel. The alternative gives each faction its home patron (Draganov, Reinholt, Voss), which is three patrons and one each.
@@ -908,3 +919,177 @@ The seven slice-5 risk headline decks changed on 4 Oct 2026 (`hl.cells`, `hl.a.c
 - **§3.6, recognition:** unchanged; the journey screen it names is the nation map in journey mode (GDD §14.10), where *Change into plain clothes* is a chip on the plate.
 - **§10, the paper:** the patron's Request, the informant's report and the clocks follow the player (the paper's own parts, GDD §3.3); the city's lines are the edition's.
 - **The reference recruit** for every price check is STR 8 / INT 12 / AGI 5 / CHA 5 (`docs/economy.md` §24.1); §22.2's Wardrobe prices against the days do not move (they are Iron against income).
+
+---
+
+## 23. Approved; the season deferred (the user, 16 Oct 2026)
+
+**§20's eight defaults are approved as written** (no number moves). **Political Seasons are deferred out of slice 8**: the 84-day season, the season's score, the Season Election, the Champion, the four awards, the Hall of Fame and the rollover wait for a later slice, and the rollover question (what rule runs after it, the wiki's drift row A9) waits with them. Defaults #6 (+100 a season score per election) and #7 (no track, no twist) stand and apply when seasons are built. §9 above is kept as the design for that slice and is not built now.
+
+**What in this slice leaned on the season, and what happens to it:**
+
+| Leaned on the season | Now |
+|---|---|
+| Legacy's two rows *Champion faction* (+5) and *a season award* (+5) (§7.1) | **Wait.** The rows stay in the GDD table marked *with seasons*; nothing credits them. The reference player's day-30 Legacy (15) is unchanged; the day-84 figure in `docs/economy.md` §22.7 drops from about 50 to about 45 |
+| §4.6 *The spymaster* (Case Files used, counted per season) | **Waits.** Nothing is counted; the ledger keeps what it keeps |
+| The paper's `season-week` and `season-front` lines (§10.1), *No twist this season*, the desk's *Ahead* clock *the Season Election in 12 days* (§10.3) | **Removed.** *Ahead* shows up to three of: the next chapter's date, a patron's next tier, the flat's rent, a bodyguard's last day (§24) |
+| The republic sheet's season card, the Hall of Fame, the Me tab's and profile's *Champion of Season n* titles (`slice-8-screens.md` §10, §11) | **Wait** with the season |
+| The help note `season` and the words *the season*, *Champion*, *the season's score*, *the new season* (§1.1) | **Wait**; the QA vocabulary test (§18 #13) no longer needs *season* or *Champion* |
+| *Every law and council rule in force ends* at the rollover (§9.3; settled #45–#48) | **Nothing ends a law or a rule at a season.** Laws and rules run as slice 7 built them (a law until repealed or replaced; a city's rule for its five days, and a city always has a rule). Drift row A9 is deferred with the season |
+| §13's row *The season: nothing to do* and §12.4's *the Season Election at day 83* | A reference player's month 2 is the Confidant's favour, the greatcoat, recognition on rival ground and a bodyguard (§24) |
+| The *Free Press Spring* multiplier on the exposé's swing (§4.5) | A constant 1 until a twist exists; the architect may drop the wiring |
+| Chapter 12's note *for most players it lands in season 2* (§8) | Read as *in the third month*; no number moves |
+
+The slice's question (goals for the next month) is answered by the clocks that remain: a Case File, a patron's next tier, a Request's Thursday, the flat's rent, the next chapter's date, and from §24 a bodyguard's week.
+
+---
+
+## 24. Bodyguards and the bar (added scope, designed 16 Oct 2026)
+
+The user put bodyguards and the bar services with their buffs into the slice on 14 Oct 2026 (GDD §0). This section is their design; the numbers are in GDD §6.7, §12, §19.3, §20.1 and §18.3, and the sums in `docs/economy.md` §22.11. Both obey the slice's rules (the opening of this document): one tap, one modal with visible numbers, nothing taken by absence, campaign vocabulary, the check formula untouched, combat one choice, no symbol, plain words.
+
+### 24.1 Plain words (GDD §1.5)
+
+| System term | The player reads |
+|---|---|
+| Bodyguard · contract · tier I–III | **someone to walk with you** (the card's kicker) · **a week, paid** · **a doorman / a steward / a minder** (the tier said as what he is; no numeral) |
+| Buff · Well-Fed (Bar) · Well-Fed (Fine) · In Good Spirits | (never *buff*) · **well fed** · **well fed, properly** (dinner) · **in good spirits** |
+| Bar services · Stimulant · Black Market | **the bar** (the card's kicker) · (not built) · **the back room** (as before) |
+
+Never *guard*, *escort*, *muscle*, *enforcer* (the opponent's word), *protection* or *hired hand* in a player string: a bodyguard is a minder or a steward, a civilian who walks with you, never a soldier.
+
+### 24.2 Bodyguards (GDD §12, §20.1)
+
+**What he is.** A named man on a **prepaid seven-day contract**, one at a time, who **steps in first** at a run-in. The card is on **the party store** (every HQ and capital house, members only; the slice's shop card, §3.5), under the kicker *SOMEONE TO WALK WITH YOU*: three rows, one per tier, each with a portrait, a name drawn at hire from the tier's three, the price and the odds line. One tap hires for a week (a confirm sheet over 1,000 Iron, as any purchase); the modal `hired`.
+
+| Tier | Said as | Needs | A week | His strength (power) | Against a street enforcer at home / on rival ground | Names (drawn at hire) | Portrait |
+|---|---|---|---|---|---|---|---|
+| I | **a doorman** | Level 6, a member | **400** | 28 | 62 % / 50 % | Ruda · Big Anton · Ferko | `portrait.doorman` (new, §24.6) |
+| II | **a steward** | Rank 3 | **1,200** | 36 | 86 % / 74 % | Weiss · Dušek · Holub | `portrait.steward` (new) |
+| III | **a minder** | Level 16 | **3,000** | 44 | 95 % / 95 % | Mr Halm · Mr Varga · Mr Olbrich | `portrait.minder` (new) |
+
+**Why these prices** (`docs/economy.md` §22.11): a doorman costs about what a week of paying off enforcers costs the day-10 illegal player (ten run-ins at 60), so *pay as you go* or *a doorman for the week* is a real choice; a steward is a day's Iron in week 2–3 and pays for itself for the rival-ground specialist; a minder is two days' Iron around day 20, a month-1 goal, bought for safety rather than Iron. The GDD's hire fee is dropped (one price, the week); the Black Market's +25 % is dropped (nothing to be relative to); Vanguard House's cheaper bodyguards wait for the gym (§16.1, later) as a discount on the same card.
+
+**In a run-in: a row, not a modifier.** The run-in sheet (slice 5: *Fight · Run · Talk your way out · Pay them off · Leave it to luck*) gains, while a contract runs, a fifth row at the top: ***{Name} steps in · {odds word} · his strength***. Its odds are **§20.1's Fight formula with his power in place of yours** (50 % + 3 % × (his power − theirs), 5–95; the opponent scaled as for you: ×1.1 on a mission, +4 on rival ground; the branch inspector's −10 applies). **If it works**, the run-in ends as *Talk your way out* does: the act's result is paid as rolled, you lose no Health, **+10 XP** (you got away), the caught check runs as normal. **If it fails**, he is down and **the fight goes ahead at your own Fight odds −10**, as after a failed Talk. **Never against the police:** the row is dimmed with *Not against the police* (a doorman does not argue with a constable; Heat keeps its bite, and so does the bribe). *Leave it to luck* counts his row among the free ones and takes it when its odds are best. The GDD's +5 power and +5 % Run per tier, the damage reduction, the hospital-avoidance chance and the intercepted ambush are **replaced by the row**: one visible number, no hidden dice.
+
+**His two lines** (content, by tier; ≤ 200 characters): the modal's body when he steps in, and the reason line when he is pushed aside.
+
+| Tier | It works | It fails |
+|---|---|---|
+| doorman | *{Name} puts himself in the way and says nothing. They look at the width of him and go.* | *{Name} goes down in the first rush. It's you now.* |
+| steward | *{Name} steps between you with his notebook open and asks for their names. Nobody gives one. They go.* | *{Name} is shouldered aside and the notebook goes in the gutter. It's you now.* |
+| minder | *{Name} says a name, quietly, to the biggest of them. The biggest of them remembers an appointment.* | *{Name}'s name means nothing to these. He's down, and it's you.* |
+
+**The contract.** `bodyguard { tier, name, paidThroughDay }`, read lazily like the flat's rent: the row exists while `paidThroughDay ≥ today`. **Renewing** is one tap on the Me tab's row or the card (*Another week · 400* / *Four weeks · 1,600*), **at most four weeks ahead** (the rent's rule, shorter: 12,000 Iron parked for a minder is enough). **One at a time:** while a contract runs the other two rows are dimmed with *{Name} is with you until {weekday}*; a different tier is hired when the week is up. **No auto-renew** (the GDD's option is dropped: it would spend an absent player's Iron, which rule 4 forbids). **A lapse ends the contract and nothing else:** the morning after, the paper says he has gone back to the door; the row is gone; Iron, record, everything stands; the card hires him again at the same price. The last paid morning the desk reads *{Name} · last day · another week on the party store's card*. A bodyguard is not an item: never in the Wardrobe, never sold, never worn.
+
+**Where he goes.** Everywhere you go: home, the capital, rival ground, the train (nothing happens on the train). Not into the cells (the row is absent there, as every row is) and not into a journey card or a patrol stop (cards, not fights).
+
+**What the player sees.**
+
+- **The party store's card**, kicker *SOMEONE TO WALK WITH YOU*, under the items: three `HireRow`s (the portrait at 64 px, *A doorman · 400 a week*, the line *Steps in first at a run-in · his strength {odds word against a street enforcer}*, the button **Hire · 400 Iron** / *From Level 6* / *From Rank 3* / *From Level 16* / *{Name} is with you until {weekday}*). The odds word on the card is against a street enforcer at home, said so in Courier (*against a street enforcer, at home*).
+- **The Me tab**, a row under *Where you sleep*: kicker *WALKING WITH YOU* (dotted: the `bodyguard` note): *{Name}, a doorman · until {weekday}* and **Another week · 400** / *Paid four weeks ahead*; empty: *Nobody · a doorman from the party store, 400 a week*.
+- **The run-in sheet**: the row first, with his portrait at 40 px beside the opponent's.
+- **The desk**: *Ahead* carries *{Name}'s last day {weekday}* when it is within three days.
+
+**Modals** (`ResultModal kind: 'political'`, body ≤ 240):
+
+| Act | Stamp | Headline | Body | Knock-on |
+|---|---|---|---|---|
+| `hired` | Hired | {Name} walks with you | A week, paid. He meets you at the door and goes where you go. In a run-in he steps in first; if they push past him, it's you. | −{price} Iron · until {weekday} |
+| `renewed` | Paid | {Name} · another week | He nods and says nothing. Until {weekday}. | −{price} Iron · until {weekday} |
+| the run-in's modal (slice 5) | Got away / the fight's stamp | as slice 5 | his line (above), then the fight's text if it went ahead | +10 XP · {the act's result as rolled} |
+
+**Paper lines** (every paper; the Herald's wording; ≤ 90 / ≤ 200):
+
+| Id | When | Headline | Deck |
+|---|---|---|---|
+| `bodyguard-last` | the last paid morning | {Name}'s Week Is Up Tonight | Paid until tonight. Another week on the party store's card, or he goes back to the door. Nothing else changes. |
+| `bodyguard-gone` | the morning after a lapse | {Name} Has Gone Back to the Door | The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store. |
+
+**Help note** `bodyguard` (two lines, the review-1 pattern): *Someone to walk with you* · *A week at a time, paid in advance. In a run-in he steps in first, with his own odds; if they push past him the fight is yours. He never argues with the police. When the week is up he goes; nothing else changes.*
+
+**Copy** (new strings for `copy.ts`): *Someone to walk with you* · *A doorman* · *A steward* · *A minder* · *{n} a week* · *Steps in first at a run-in · his strength* · *against a street enforcer, at home* · *Hire · {n} Iron* · *Hire {Name} for a week, {n} Iron?* · *{Name} is with you until {weekday}* · *Walking with you* · *{Name}, a doorman · until {weekday}* · *Another week · {n}* · *Four weeks · {n}* · *Paid four weeks ahead* · *Nobody · a doorman from the party store, 400 a week* · *{Name} steps in* · *his strength* · *Not against the police* · *{Name}'s last day {weekday}* · *Hired* · *{Name} walks with you* · *{Name} · another week* · *Got away*.
+
+**Content-policy check.** A doorman, a steward and a minder are civilians; the portraits carry no uniform, badge, armband or weapon (§24.6); the stewards' word is the rally's (*stewards* keep order at a meeting); the minder *says a name*, he does not draw anything. The row is *steps in*, never *fights for you*; the fail line is *it's you now*.
+
+### 24.3 The bar and its buffs (GDD §6.7, §19.3)
+
+**Which services are in.** Of §19.3's seven, **three** are built, and the rest are either already there or cut with a reason:
+
+| §19.3 | In slice 8? | Why |
+|---|---|---|
+| **Buy a Round** | **In** · *Buy a round* · 2 Energy · **30 Iron** · *In good spirits* · three a day | the social sink the GDD wanted; priced (it had no Iron) |
+| **Bar meal** | **In** · *A plate of something* · 2 Energy · **100 Iron** · *Well fed* for four hours | the GDD's band (100–150) at its floor, since a session buys one |
+| (§6.7 Well-Fed (Fine)) | **In**, at a `hotel` · *Dinner* · 2 Energy · **400 Iron** · worn Charisma 10 · *Well fed, properly* for six hours | the hotels already carry a card (the tailor); the Charisma gate is the Wardrobe's first reward outside society calls |
+| **Black Market Contact** | In, as **the back room** (§3.5, §3.8) | already designed |
+| Overhear Conversation | **Already there**: every bar's intelligence ticket (*Listen at the bar*, *Listen to the porters*…) is this, and from this slice it carries the 10 % Dossier chance (§4.2) | a second ticket for the same thing would be two words for one act |
+| Bribe the Barman | **Cut** | it would sell what the plate and the Faction tab already show (opinion, battlegrounds, the fixture); when there is something a barman knows that the paper does not, it comes back |
+| Stimulant | **Cut** | Health comes back free and *Get patched up* (review 5) already sells it at 1 Iron a point; the overdose is a punishment (§4.3 rule 5) |
+| Faction Recruitment | **Cut** | *recruit an NPC* is Party XP for Energy, which the orders and every tier-1 tap already are; NPC fill makes the recruit meaningless |
+| (§6.7 Well-Fed (Street), (Society)) | **Not built** | street food's +5 % is below what the receipt prints; the society dinner needs its exclusive mission (later, with the Grand Hotel's events) |
+
+**The two buffs** are **lazy state on the character** (value + timestamp; no job): `buffs.wellFed { tier: 'plate' | 'dinner', until }` and `buffs.spirits { left }`.
+
+| Buff | From | Price · Energy | Needs | What it does | Lasts | Limit |
+|---|---|---|---|---|---|---|
+| **Well fed** | a plate at any bar | 100 · 2 | — | **+10 % XP** on tier-1 actions and missions (society calls included; not training, chapters, event roles or the exposé's fixed rewards, §21 #50's rule) · **Health +15 now, up to max** | **4 hours** from the tap | one meal at a time |
+| **Well fed, properly** | dinner at a hotel (the Grand Hotel, the Pier Hotel, the Mountain Inn's dining room) | 400 · 2 | worn Charisma 10 | **+10 % XP and +10 % Iron** on the same · **Health +25, up to max** | **6 hours** | one meal at a time |
+| **In good spirits** | a round at any bar | 30 · 2 | — | **+10 % XP on the next three missions** (tier 2, society calls included) | three missions; a second round adds three more, **nine at most** | **three rounds a day** |
+
+- **One meal at a time, the better one** (Appendix C #111 settled): a dinner may be bought over a plate (it replaces it: new tier, new clock); a plate over a dinner is dimmed (*Well fed until {time}*); the same tier over itself is dimmed too (no topping up: the clock is the clock). **Health never goes above max** (default taken: §6.1's max is a Level figure and a buff above it would print a second ceiling). Health's own regen is untouched.
+- **The percentages are lines of their own** on the receipt, added as the council rules' percentages are (ADR 0052's personal modifiers): *Well fed · +10 % XP* · *In good spirits · +10 % XP · 2 left*. Rested, the party coat's +5 % Party XP and a rule's percentage sit beside them; whole numbers, halves up, per line (§5.5).
+- **Away:** a meal's clock runs out whether or not you play (a timer that is a choice, §4.3 rule 5); *in good spirits* waits (a count, not a clock). Nothing is taken; nothing is owed.
+- **The bar's card** (every `bar`, review 4's card slot; above the back room, below the tickets), kicker *THE BAR · {place}*: two rows with an item picture at 64 px, the name, the Courier line, the price and **Buy · {n} Iron** (one tap; no confirm under 1,000): *Buy a round · 30 Iron · 2 Energy* · *In good spirits: a tenth more XP on your next three missions* · *A plate of something · 100 Iron · 2 Energy* · *Well fed: a tenth more XP for four hours, and some Health back*. States: *Three rounds a day · more tomorrow* · *Well fed until {time}* · *Nine missions in hand already*. **The hotel's card**, kicker *THE DINING ROOM · {hotel}*: *Dinner · 400 Iron · 2 Energy · needs Charisma 10* · *Well fed, properly: a tenth more XP and a tenth more Iron for six hours; Health back*; barred: *Not dressed for the dining room · needs Charisma 10*. The Mountain Inn (a `bar` with rooms) carries both cards, as it carries the tailor and the back room (§21.2 note 6).
+- **The Me tab and the HUD:** a line under the stats block while a buff runs: *Well fed until 19:40 · In good spirits, 2 missions* (the `wellFed` and `goodSpirits` notes); nothing on the HUD bar (it is full).
+- **The desk:** no row (a four-hour clock is a session's, not a morning's).
+
+**Modals** (`political`, body ≤ 240):
+
+| Act | Stamp | Headline | Body | Knock-on |
+|---|---|---|---|---|
+| `round` | Your round | A round for the bar | The barman lines them up and the bar remembers your name for an hour. You're in good spirits. | −30 Iron · −2 Energy · In good spirits · your next 3 missions |
+| `meal` | Fed | A plate of something hot | Dumplings, gravy, and bread to mop it. The day looks better from here. | −100 Iron · −2 Energy · Well fed until {time} · Health +15 |
+| `dinner` | Fed | Dinner at the {hotel} | A white tablecloth, a waiter who has seen everything, and the Front's prices. Worth it, tonight. | −400 Iron · −2 Energy · Well fed, properly, until {time} · Health +25 |
+
+**Help notes:** `wellFed` · *Well fed* · *A plate at a bar or dinner at a hotel: a tenth more XP for a few hours, and some Health back, up to full. One meal counts at a time, the better one.* · `goodSpirits` · *In good spirits* · *A round at the bar: a tenth more XP on your next three missions. Three rounds a day, nine missions in hand at most.*
+
+**Copy** (new strings): *The bar* · *The dining room* · *Buy a round* · *A plate of something* · *Dinner* · *In good spirits: a tenth more XP on your next three missions* · *Well fed: a tenth more XP for four hours, and some Health back* · *Well fed, properly: a tenth more XP and a tenth more Iron for six hours; Health back* · *needs Charisma 10* · *Not dressed for the dining room · needs Charisma 10* · *Three rounds a day · more tomorrow* · *Well fed until {time}* · *Nine missions in hand already* · *Well fed until {time} · In good spirits, {n} missions* · *Well fed · +10 % XP* · *Well fed · +10 % Iron* · *In good spirits · +10 % XP · {n} left* · *Your round* · *Fed* · *A round for the bar* · *A plate of something hot* · *Dinner at the {hotel}* · *Health +{n}*.
+
+**Content-policy check.** A round, a plate and a dinner; no drunkenness mechanic, no stimulant, nothing a player is punished for not buying; the dining room's Charisma gate is the Wardrobe's rule and reads *not dressed for it*, as the society calls do.
+
+### 24.4 Economy (`docs/economy.md` §22.11)
+
+- **Bodyguards:** 400 / 1,200 / 3,000 a week against about 1,000 Iron a day in week 1, 1,500–2,000 by week 3 and 2,500–3,500 in month 2. The day-10 illegal player (1.5 run-ins a day, mostly enforcers at 60) spends about 600 a week on pay-offs; a doorman at 400 handles six of ten and keeps the Iron for bail: even. The rival-ground specialist (seven run-ins a day, about thirty a week that are not the police) saves ~1,500 of pay-offs and most infirmary stays with a steward at 1,200, which is why the steward is Rank 3's. A minder at 3,000 is for the player who is *Notorious* on rival ground at night and wants to come home. **Nothing here changes a rate**; the run-in's expected cost (§19.5) falls for the player who pays for it to fall. Verdict: the sinks band of §18.3 gains a weekly sink of 400–3,000 for the illegal road and nothing for the legal one.
+- **Buffs:** a meal every session (300 a day) and three rounds (90) buy about **+12 % XP** for the model (190 + 70 XP on ~1,900), inside the heavy player's +35 % envelope (§5.2): Level 10 moves from day 5 to about 4.5, Level 16 from day 12 to about 11; **no §5.2 milestone moves by more than a day**. The week-1 player who buys everything spends about 40 % of a day's Iron on it, which is the point of a week-1 surplus. The dinner's +10 % Iron is about 100 a day for 400: never a profit.
+- **Flags (Appendix C #113, #114):** if everyone buys three meals a day, the lever is the price (100 → 150) and then the hours (4 → 3), never the percentage; if bodyguards make rival ground a walk, the lever is his power (−4 a tier) or the police's share of the pool, never the price.
+
+### 24.5 Questions for the architect (each with a default)
+
+1. **The contract** is `bodyguard: { tier, name, paidThroughDay } | null` embedded (ADR 0056's day-key shape); the row's presence is `paidThroughDay ≥ today` at the run-in's read; a lapse needs no job. Default: yes; the paper's two lines are conditions on the day's read like the flat's.
+2. **The row** is a fifth `RunInChoice` (`minder`) with its chance from `runInChances` given his power; `resolveRunIn` treats a success as `talked` (outcome kind `minded`, +10 XP) and a failure as Talk's (the fight at −10). The opponent's `sideOf === 'police'` dims it. Default: yes; the six opponent lines gain nothing (his two lines are his).
+3. **Buffs** are `buffs: { wellFed?: { tier, until }, spirits?: { left } }` embedded; the modifiers enter `PersonalModifiers` (ADR 0052) as named parts; `spirits.left` is decremented in the mission's transaction after the rewards are computed. Default: yes.
+4. **The bar card and the dining-room card** are content on the location (`bar?: { rounds: true, meal: true }`, `dining?: { price, cha }`), like `shop`; the prices are rules constants (`BAR`, `BODYGUARD`). Default: yes; a bar without the card is a bar as today.
+5. **Test hooks:** force a contract (tier, days left); step the day to lapse it; set a buff; force the run-in's row. The e2e: hire → a run-in with the row → he steps in → +10 XP and the act paid as rolled; the week lapses → the paper's line → the row is gone and Iron stands; a plate → a mission → *Well fed · +10 % XP* on the receipt → the clock runs out.
+6. **The playtest report** gains: contracts by tier and day; the row's share of run-in choices and its success rate; lapses and renewals; meals and rounds a day; the share of XP from buffs.
+
+### 24.6 Art needed (Noir Lithograph; checked against the folder)
+
+Three portraits and two item pictures. Portraits are drawn as the existing ones (`mvp/portraits`: a head and shoulders on a plain ground, ink line with a muted wash, no text, no symbol); items as the twenty existing (`mvp/items`: one object on cream paper, 512 × 512, a soft shadow, no scene). **No flag, badge, armband, pin, stripe or insignia on anyone; no weapon in any hand; no uniform.** Minders and stewards, not soldiers.
+
+| # | Asset id | Kind | Prompt |
+|---|---|---|---|
+| 1 | `portrait.doorman` | portrait | *Noir lithograph portrait, 1946 Central Europe, head and shoulders: a bar doorman in his forties, broad, a heavy wool coat buttoned to the neck over a collarless shirt, a flat cap, a boxer's nose, patient eyes, a day's beard. Ink line with a muted sepia and slate wash on a plain ground. No text, no badge, no symbol, no weapon.* |
+| 2 | `portrait.steward` | portrait | *Noir lithograph portrait, 1946 Central Europe, head and shoulders: a party steward in his thirties, lean, a worn dark suit and a plain tie, a notebook held against his chest with a pencil behind one ear, hair combed flat, an alert, reasonable face. Ink line with a muted wash on a plain ground. No armband, no rosette, no badge, no symbol, no text.* |
+| 3 | `portrait.minder` | portrait | *Noir lithograph portrait, 1946 Central Europe, head and shoulders: a minder in his fifties, a good dark overcoat with the collar up, a felt hat with the brim down, a silk scarf, a calm, unreadable face lit from one side, a cigarette unlit. Ink line with a muted wash on a plain ground. No text, no symbol, no weapon.* |
+| 4 | `item.bar-plate` | item 512 × 512 | *Noir lithograph still life on cream paper: a tin plate of bread dumplings and gravy with a slice of dark bread, a bent fork, a half glass of beer beside it, soft shadow, ink line with a muted two-colour wash. No text.* |
+| 5 | `item.round` | item 512 × 512 | *Noir lithograph still life on cream paper: a tin tray with four glasses of beer, foam at the rims, one glass raised slightly off the tray, wet rings on the tray, soft shadow, ink line with a muted amber and slate wash. No text.* |
+
+The hotel's dinner uses `scene.hotel` (exists) on its modal and the card. The run-in's modal keeps the opponent's portrait and adds the bodyguard's at 40 px.
+
+### 24.7 Points for the user (each with the default this document takes)
+
+1. **A bodyguard never steps in against the police** (§24.2). Default: **never**, so Heat keeps its bite and the back room's bribe keeps its reason. The alternative lets the minder (tier III) argue with a constable at his odds, which makes *Notorious* on rival ground a walk for 3,000 a week.
+2. **All three tiers are hired at the party store** (§24.2), none at the back room. Default: **the party store** (one card, one place kind, the branch's own stewards; the gym's discount later sits on the same card). The alternative puts the minder in the back room (Rank 3, any faction), which is flavour for a second card.
+3. **One contract at a time, a different tier when the week is up**; no replacing mid-week. Default: **wait**, so no tap ever forfeits paid days. The alternative is *Replace him* with a confirm sheet and the days forfeit.
+4. **Three services** (a round, a plate, the hotel's dinner) **and the back room**; the barman's report, the stimulant and recruitment are cut (§24.3). Default: **three**. The alternative builds *Bribe the barman* as a 4-Energy, 20-Iron row that tells you who was in the bar yesterday (the presence log), which is the one thing a barman knows that the plate does not.
+5. **Well fed does not take Health above max** (Appendix C #111). Default: **up to max**. The alternative is a short overheal to max + 15 that fades with the meal, a second ceiling on the HUD.

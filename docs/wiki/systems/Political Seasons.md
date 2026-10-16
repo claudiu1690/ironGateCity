@@ -39,7 +39,9 @@ newcomers compete on fair terms. Designed for slice 8, then **deferred on 16 Oct
 
 ## Where it lives
 
-**Rules:** [[GDD#22. Political Seasons (new)|GDD §22]] · [[design/slice-8-life|slice 8 design §9]] · [[tech/slice-8|slice 8 tech spec]] (§6.10 `season.ts`, `seasonService`) · [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] · [[adr/0043-nation-day-term-calendar-and-the-republic-document|ADR 0043]] (the term epoch)
+**What the deferral changes in slice 8** ([[design/slice-8-life#23. Approved; the season deferred (the user, 16 Oct 2026)|design §23]]): the two Legacy rows (Champion, an award) wait; the season's paper lines, the desk's season clock, the republic sheet's season card, the Hall of Fame and the *Champion of Season n* titles are not built; **nothing ends a law or a council rule at a season** (they run as slice 7 built them); the spymaster's count waits; the QA vocabulary test drops *season* and *Champion*; the exposé's twist multiplier is a constant 1. GDD §22 carries the status at its top; §17.3's two rows read *with seasons, deferred*; §25's row moved to *launch + 60 days*; Appendix C #5, #80 and #81 are marked deferred.
+
+**Rules:** [[GDD#22. Political Seasons (new)|GDD §22]] (status note, 16 Oct 2026) · [[design/slice-8-life|slice 8 design §9 (kept), §23 (deferred)]] · [[tech/slice-8|slice 8 tech spec]] (§6.10 `season.ts`, `seasonService`) · [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] · [[adr/0043-nation-day-term-calendar-and-the-republic-document|ADR 0043]] (the term epoch)
 
 **Code:** none. Deferred design: `packages/rules/src/season.ts`, `seasonService` (`seasonFinaleInTx`), a `seasons` collection, `nation.season` on the `nation` document (itself slice 7). What slice 8 keeps so it can be added later without a data migration is in [[tech/slice-8|tech/slice-8]] *Seasons deferred (16 Oct 2026)* (the season stays a pure function of the term epoch; the Legacy refs `champion:{s}` and `award:{s}:…` are reserved; Heat is read through one projection that `heatAt` can wrap).
 
