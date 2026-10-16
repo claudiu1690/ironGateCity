@@ -1,5 +1,6 @@
 import type { NationRepublicView } from './nationTypes';
 import type { MissionGateReason } from './missions';
+import type { MinderView } from './wardrobeViews';
 import { LIFE_ACTS } from './lifeTypes';
 import type { LifeAct, LifeCondition } from './lifeTypes';
 /**
@@ -2371,6 +2372,7 @@ export interface PoliticalResult {
     mate?: { name: string; health: number; minutes: number } | null;
     /** Slice 7 (tech design §10.1): the Address, *{issue} · +50 · momentum before → after by party*. */
     issue?: { name: string; added: number; before: Record<FactionId, number>; after: Record<FactionId, number> } | null;
+    life?: string[];
   };
   performedAt: string;
   idempotencyKey: string;
@@ -2400,7 +2402,9 @@ export interface PoliticalResult {
     | { kind: 'petition'; petition: PetitionView }
     | { kind: 'confidence'; confidence: ConfidenceView }
     // Slice 7 phase B, lane 1 (tech design §10.1): the Governor's rule and the Address, the office page.
-    | { kind: 'office'; office: GovernorPageView };
+    | { kind: 'office'; office: GovernorPageView }
+    // Slice 8 phase B, lane 1 (T30): after a renewal, the Me tab's *Walking with you* row.
+    | { kind: 'minder'; minder: MinderView | null };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -2899,6 +2903,8 @@ export interface MissionView {
     reason: MissionGateReason | 'NIGHT';
     need: number;
     rankTitle?: string;
+    /** Slice 8 (T9): `NEEDS_ASSOCIATE`'s patron, by name (*Associate with Julius Marr first*). */
+    patron?: string;
     opensAt?: number;
   } | null;
   /** Review 5: a night mission (its own window). */
@@ -2929,6 +2935,11 @@ export interface RunInPending {
     talk: { chance: number };
     /** null: the opponent cannot be bought. */
     pay: { chance: number; price: number; affordable: boolean } | null;
+    /**
+     * Slice 8 (T30, ADR 0088): the bodyguard's row, first; `blocked` against the police (no chance).
+     * Absent or null: no contract counts today.
+     */
+    minder?: { name: string; portrait: AssetView; chance: number | null; blocked: 'police' | null } | null;
   };
   /** The *best free odds* tag. */
   /** Slice 8 (ADR 0088): `minder` when the bodyguard's row has the best odds. */

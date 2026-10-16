@@ -75,6 +75,7 @@ import {
   marksOf,
 } from './risk';
 import { personalOf, talkPctOf } from './personal';
+import { minderAtRunIn, minderLine } from './bodyguardService';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { fadeDaysFor } from './lawBook';
@@ -145,7 +146,10 @@ export async function startRunInInTx(
   };
   // Slice 8 (T9, design §3.6): *Talk your way out* reads the Papers slot (forged papers vs the police).
   const talkPct = talkPctOf(personalOf(c, content), spec.side);
-  const chances = runInChances({ ...you, talkPct }, them);
+  // Slice 8 (T30, ADR 0088): his row, written with the encounter (never against the police).
+  const minder = minderAtRunIn(c, ctx.today, spec.side);
+  const rolled = runInChances({ ...you, talkPct }, them, minder ? { power: minder.power, blocked: minder.blocked !== null } : null);
+  const chances = { ...rolled, minder: rolled.minder ?? null };
   const encounterId = new Types.ObjectId();
   const decideBy = new Date(now + RUN_IN.decideMs);
   // Review 5 fix round (QA m5): a resolved run-in whose result is still open (a second tab, a tab
@@ -185,6 +189,7 @@ export async function startRunInInTx(
         opponent: them,
         you,
         chances,
+        minder,
         held: i.held,
         state: 'pending',
         decideBy,
@@ -238,6 +243,15 @@ export function pendingView(
         pay === null || enc.chances.pay === null
           ? null
           : { chance: enc.chances.pay, price: pay, affordable: c.iron >= pay },
+      // Slice 8 (T30, ADR 0088): his row first, or dimmed *Not against the police*.
+      minder: enc.minder
+        ? {
+            name: enc.minder.name,
+            portrait: assetView(content, content.bodyguards.find((b) => b.tier === enc.minder!.tier)!.portrait),
+            chance: enc.chances.minder ?? null,
+            blocked: enc.minder.blocked,
+          }
+        : null,
     },
     luck: luckChoice(enc.chances),
     character: toCharacterView(c, now, content, null, { city: residenceCity }),
@@ -302,6 +316,12 @@ export async function resolveInTx(
   if (c.runIn?.state !== 'pending' || !c.runIn.encounterId.equals(enc._id)) throw new VersionConflict();
 
   const choice: RunInChoice = i.choice === 'luck' ? luckChoice(enc.chances) : i.choice;
+  // Slice 8 (T30, tech design §24.6): his row only when he is on this run-in and not against the police.
+  if (choice === 'minder') {
+    if (!enc.minder) throw new GameError('NO_MINDER', {}, 'BAD_REQUEST');
+    if (enc.minder.blocked || enc.chances.minder === null || enc.chances.minder === undefined)
+      throw new GameError('NOT_AGAINST_POLICE', {}, 'BAD_REQUEST');
+  }
   if (choice === 'pay') {
     if (enc.opponent.payOff === null || enc.chances.pay === null)
       throw new GameError('CANNOT_PAY', { why: 'NOT_BRIBABLE' });
@@ -340,7 +360,7 @@ export async function resolveInTx(
       ctx,
       located,
       held: enc.held,
-      runIn: { outcome, opponentId: enc.opponent.id, by: i.by, showRolls, encounterId: enc._id, opponentSide },
+      runIn: { outcome, opponentId: enc.opponent.id, by: i.by, showRolls, encounterId: enc._id, opponentSide, minder: enc.minder ?? null },
       at: i.asOf,
       now: i.now,
       idempotencyKey: enc.idempotencyKey,
@@ -501,8 +521,8 @@ async function resolveTier1InTx(
         ...(i.showRolls ? { chance: x.chance, roll: x.roll } : {}),
       })),
       outcome: o.outcome,
-      // Slice 8 (ADR 0088): no run-in carries a bodyguard before phase B; then his `works` line.
-      line: (o.outcome === 'minded' ? spec.lines.talked : spec.lines[o.outcome]) ?? spec.lines.won,
+      // Slice 8 (T30, ADR 0088): his `works` line when he steps in; his `fails` line before the fight's.
+      line: minderLine(content, enc.minder, o, (o.outcome === 'minded' ? spec.lines.talked : spec.lines[o.outcome]) ?? spec.lines.won),
       cause: o.cause,
       health: { before, after: afterHealth, max, fullAt: afterHealth >= max ? null : i.asOf + Math.ceil((max - afterHealth) / HEALTH.regen) * HEALTH.tickMs },
       ironPaid: o.ironPaid,

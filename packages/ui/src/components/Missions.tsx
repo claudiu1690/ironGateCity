@@ -102,6 +102,15 @@ export function missionLockText(m: MissionView): string | null {
     // Review 5 (answers §12.1, ADR 0080): *Opens at nightfall · dusk at 16:00*.
     case 'NIGHT':
       return copy.night.opensAt(formatWhen(l.opensAt ?? 0));
+    // Slice 8 (T9, design §3.7, §5.4): a society call's door and a patron's introduction.
+    case 'NOT_DRESSED':
+      return copy.life.errors.notDressed(l.need);
+    case 'WANTED':
+      return copy.life.errors.wanted;
+    case 'CALLED_TODAY':
+      return copy.life.errors.onceADay;
+    case 'NEEDS_ASSOCIATE':
+      return copy.life.errors.needsAssociate(l.patron ?? '');
   }
 }
 

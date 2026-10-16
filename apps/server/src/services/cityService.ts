@@ -248,6 +248,10 @@ export function missionView(
           reason: ctx.gate.reason,
           need: ctx.gate.need,
           ...(ctx.gate.reason === 'RANK' ? { rankTitle: rankTitle(content, c, ctx.gate.need) } : {}),
+          // Slice 8 (T9): the introduction's patron, by name.
+          ...(ctx.gate.reason === 'NEEDS_ASSOCIATE' && mission.requires?.patron
+            ? { patron: content.patron(mission.requires.patron.id)?.name ?? '' }
+            : {}),
         }
       : missionNight
         ? { reason: 'NIGHT', need: 0, opensAt: missionNight.opensAt }

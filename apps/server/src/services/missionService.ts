@@ -255,6 +255,12 @@ export async function startMission(deps: {
         start,
         force: force ? { ...(force.choiceRoll ? { choiceRoll: force.choiceRoll } : {}), ...(force.caught ? { caught: force.caught } : {}) } : null,
       };
+      // Slice 8 (T31, §24.10 Q3–Q4): a mission that reaches its rewards spends one round in hand, at
+      // the start (its receipt's line); T9: the first run-in while recognised (the paper's line).
+      const lifeSet: Record<string, unknown> = {
+        ...((c.buffs?.spirits?.left ?? 0) > 0 ? { 'buffs.spirits.left': c.buffs!.spirits.left - 1 } : {}),
+        ...(start.runIn.fires && mctx.recognition > 0 && !c.firsts?.recognised ? { 'firsts.recognised': new Date(now) } : {}),
+      };
       if (start.runIn.fires && start.runIn.opponentId) {
         return startRunInInTx(content, session, {
           c,
@@ -274,6 +280,7 @@ export async function startMission(deps: {
             rested: start.energy.after.rested,
             heat: heatDoc(start.heat.timer),
             ways: waysWith(c, located.mission.id, way.id),
+            ...lifeSet,
           },
         });
       }
@@ -291,6 +298,7 @@ export async function startMission(deps: {
         editionReadAt: loaded.editionReadAt,
         txAttempts,
         showRolls: streetHooks.enabled,
+        ...(Object.keys(lifeSet).length > 0 ? { extraSet: lifeSet } : {}),
       });
     },
   });

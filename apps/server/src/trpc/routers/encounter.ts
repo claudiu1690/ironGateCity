@@ -13,7 +13,8 @@ export const encounterRouter = router({
     .input(
       z.object({
         encounterId: EncounterId,
-        choice: z.enum(['fight', 'run', 'talk', 'pay', 'luck']),
+        // Slice 8 (T30, ADR 0088): his row.
+        choice: z.enum(['fight', 'run', 'talk', 'pay', 'minder', 'luck']),
         idempotencyKey: z.uuid(),
       }),
     )

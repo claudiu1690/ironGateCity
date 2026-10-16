@@ -34,6 +34,7 @@ import type {
   StreetView,
 } from '@irongate/rules';
 import { pickArt } from './art';
+import { minderLine } from './bodyguardService';
 import type { OpinionMove } from './place';
 import { assetView, namedStanding, orderText, orderVars, rankTitle, toCharacterView } from './views';
 
@@ -58,6 +59,8 @@ export interface RunInBlock {
   by: 'player' | 'luck' | 'auto';
   /** Dev and QA see the chances and rolls. */
   showRolls: boolean;
+  /** Slice 8 (T30, ADR 0088): the bodyguard's row on this run-in, for his line. */
+  minder?: { tier: 1 | 2 | 3; name: string } | null;
 }
 
 /**
@@ -187,8 +190,8 @@ export function buildMissionResult(i: {
               ...(i.showRolls ? { chance: x.chance, roll: x.roll } : {}),
             })),
             outcome: r.outcome,
-            // Slice 8 (ADR 0088): no run-in carries a bodyguard before phase B; then his `works` line.
-            line: (r.outcome === 'minded' ? opp.lines.talked : opp.lines[r.outcome]) ?? opp.lines.won,
+            // Slice 8 (T30, ADR 0088): his `works` line when he steps in; his `fails` line before the fight's.
+            line: minderLine(content, i.runIn.minder, r, (r.outcome === 'minded' ? opp.lines.talked : opp.lines[r.outcome]) ?? opp.lines.won),
             cause: r.cause,
             health: f.health
               ? {

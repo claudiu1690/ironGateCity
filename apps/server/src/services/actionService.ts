@@ -367,6 +367,8 @@ async function rivalRunIn(i: {
   const state = heatState(heat.value);
   // Review 5 (ADR 0080): the night at the act (the tier-1 base 25, the police half the pool).
   const night = nightAt(now).night;
+  // Slice 8 (T9, design §3.6): recognised on rival ground.
+  const recognised = recognitionOf(c, wornStats(c, content, now).cha, now).total;
   const chance = runInChance({
     base: 0,
     tier: 1,
@@ -377,8 +379,7 @@ async function rivalRunIn(i: {
     night,
     // Slice 7 (ADR 0044): the laws' run-in percentages (the Curfew at night).
     pcts: runInPcts(lawModifiers(content, today, c.factionId), night),
-    // Slice 8 (T9, design §3.6): recognised on rival ground.
-    recognition: recognitionOf(c, wornStats(c, content, now).cha, now).total,
+    recognition: recognised,
   });
   const street = createRng(`${i.seed}:runIn`);
   const roll = street.roll100();
@@ -433,6 +434,8 @@ async function rivalRunIn(i: {
       'energy.value': i.res.energy.after.value,
       'energy.updatedAt': new Date(i.res.energy.after.updatedAt),
       rested: i.res.energy.after.rested,
+      // The paper's *recognised* line: the first run-in while recognised.
+      ...(recognised > 0 && !c.firsts?.recognised ? { 'firsts.recognised': new Date(now) } : {}),
     },
   });
 }

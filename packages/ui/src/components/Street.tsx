@@ -260,7 +260,8 @@ export function RiskRows({
 // The run-in modal (screens §5).
 // ---------------------------------------------------------------------------------------------
 
-export type RunInChoice = 'fight' | 'run' | 'talk' | 'pay' | 'luck';
+/** Slice 8 (T30, ADR 0088): `minder`, his row (rendered from phase C, T32). */
+export type RunInChoice = 'fight' | 'run' | 'talk' | 'pay' | 'minder' | 'luck';
 
 /**
  * Slice 8 (ADR 0088): the bodyguard's row reads as a talk in the did line until the designer's T27
