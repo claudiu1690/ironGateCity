@@ -7,7 +7,7 @@ status: partly built
 slice: "3 (councillor); 4 (capital seats); Governor, Chair, deputy, President designed for 7"
 gdd: ["§15.1", "§15.2", "§15.4", "§15.5"]
 adrs: ["0020", "0048", "0084"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Offices
@@ -58,6 +58,7 @@ present or not, and every duty has a default, so an absent holder never blocks a
 
 ## Status
 
+- **Phase C, lane Y (16 Oct 2026):** the Me tab's office cards and ladder (`packages/ui/src/components/Office.tsx`, `apps/client/src/features/nation/MeOffices.tsx`); the Governor's or Mayor's page `/office/governor/$cityId` (`apps/client/src/routes/governor.tsx`: the party's card, the Address); the office front pages (`politicsService.officeFrontPage`); the Chair's handover ends a term seated outside the calendar at day 14. Spec `governor.spec.ts`.
 - **Built:** City Councillor (slice 3 at home, slice 4 in the capital), reworked in the [[Voting Rework]] (12 Oct 2026): standing is 10 PC spent with a named rule; the seat's power is the rule on the ballot.
 - **Server built (slice 7 phase B, 15 Oct 2026):** the Governor (Mayor), the Chair, the deputy and the President, with the ladder's gates (`standGate` through `serviceRecord`); every office's stipend at the settlement with a desk line each; the Governor's rule as card 1 and the Address (50). The screens and the office front pages are phase C.
 - **Post-MVP:** Minister, Speaker.

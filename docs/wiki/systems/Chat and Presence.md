@@ -7,7 +7,7 @@ status: partly built
 slice: "6 (phase A: rules and db; server, socket and screens to come); officers' channel 7; recognition 8; moderation 9"
 gdd: ["§16.2", "§19.1", "§19.2"]
 adrs: ["0038", "0039", "0040"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Chat and Presence
@@ -56,6 +56,7 @@ Designed, **not built**.
 
 ## Status
 
+- **Slice 7, lane Y (16 Oct 2026):** the *Officers* channel `officers:{faction}` for Rank 4 and above (`channelsOf(f, cities, officers)` in `packages/rules/src/chat.ts`, `channelsFor` in `chatService.ts`, the socket's rooms, the trim, the chip). With Clearwater's branch a member reads four chips, five from Rank 4.
 - **Built end to end** (15 Oct 2026): rules, db, the server and the socket (phases A–B), the Members list, profile, scoreboard and chat screens with the socket client (phase C, lane B). QA to come.
 - **Review 7** (15 Oct 2026): the word filter (refuse and mask tiers) and the invite naming its event, built; e2e in `faction.spec.ts` (the filter, a refused name) and `favours.spec.ts` (the invite hidden, then named, the toast, the venue in the line).
 - **The Branch Office** (review 7 #1, 15 Oct 2026): the channels as paper chips, the compact letterhead over Chat on a phone, *The room* head on the desktop column. The old drift (the *Chat* chip on a desktop and with chat hidden) is closed: the strip has no Chat cell in either case.

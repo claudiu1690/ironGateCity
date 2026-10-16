@@ -1,13 +1,22 @@
 ---
 type: overview
 title: Log
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Log
 
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
+
+## [2026-10-16] build | Slice 7 phase C, lane Y: the nation map, Clearwater, the Governor, the paper
+
+The nation map's bar, law chips, pins' second line and republic sheet; Clearwater's screens; the Me
+tab's office cards and ladder; the Governor's page; the paper's national section, second Election
+row, desk lines, orders' target bar and office front pages; the Officers channel, the dev panel's
+ballot and petition buttons, the Chair's handover fix, the eleven personal lines. Specs `clearwater`
+and `governor`. Updated [[Slice 7 The Nation]], [[Offices]], [[National Control]], [[Clearwater]],
+[[The Morning Paper]], [[Party Orders]], [[Chat and Presence]], [[Dev Panel and Local Setup]].
 
 ## [2026-10-16] build | Slice 7 phase C, lane X: Parliament, the Chair, the elections, petitions
 

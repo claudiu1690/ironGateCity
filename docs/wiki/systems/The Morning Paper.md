@@ -7,7 +7,7 @@ status: partly built
 slice: "1 (v1); 2 (welcome edition, Letters); 3 (Election row, In Print); 4 (Issues, Herald); 5 (Heat, record); review 4 (local editions); voting rework (Council rule row)"
 gdd: ["§3.3"]
 adrs: ["0005", "0023", "0071", "0074"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # The Morning Paper
@@ -74,6 +74,7 @@ the voice of the player's home city. One tap dismisses it; it can be reopened an
 
 ## Status
 
+- **Phase C, lane Y (16 Oct 2026):** *From the capital* / *The republic* and the Election row's second row on screen (`NationalSection`, `ElectionWindowRow`); the desk's office and target lines; the office front pages (caption, *To the office* / *To Parliament*); the eleven personal national lines and the live `pushed` (`apps/server/src/services/nationPersonal.ts`, `pushTarget.ts`), `{until}` stored with its epoch.
 - **Built:** v1–v5 (slices 1–5), local editions (review 4 fix round, 7 Oct 2026), the *Council
   rule* row and the rule headlines (voting rework, 12 Oct 2026). A slice-1 *While You Were Away*
   personal headline exists (`hl.away`, `hl.away-no-job`: days of pay banked).

@@ -7,7 +7,7 @@ status: partly built
 slice: "7 (designed, not built)"
 gdd: ["§14.8", "§15.5", "§22.1"]
 adrs: ["0042", "0043"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # National Control
@@ -57,6 +57,7 @@ cities' meters, a home city in Unrest at half) and stored on `nation.control` wi
 
 ## Status
 
+- **Phase C, lane Y (16 Oct 2026):** on screen: the nation map's `NationBar` and `LawChips`, the pins' second line, the republic sheet (`packages/ui/src/components/Republic.tsx`, `apps/client/src/routes/nation.tsx`); `NationRepublicView.cities[].governor` (`nationService.governorsByCity`). Spec `clearwater.spec.ts` (the layout at 375 × 667).
 - **Built on the server** (slice 7 phase B, 15 Oct 2026): the snapshot, the log and the *leads the
   republic* news lines. The client's bar is phase C.
 

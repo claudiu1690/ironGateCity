@@ -111,7 +111,7 @@ a second process, tiles on R2, mail over HTTP — with that direct mode built an
 - `package.json` (root scripts), `docker-compose.yml`, `apps/server/.env.example`, `apps/client/.env.example`
 - `apps/server/src/env.ts`, `src/db.ts` (`startDb`), `src/app.ts` (hooks), `src/dev/*`
 - `apps/client/src/features/dev/DevPanel.tsx`, `devApi.ts`, `MapViewer.tsx`
-- Slice 7: `apps/server/src/dev/nation.ts` (`/api/test/term`, `/nation`, `/office`), `nation2.ts` (lane 2: `/parliament`, `/ballots`, `/petition`), `nationPanel.ts` (the panel's *The nation* block: term day, Make me Governor / Chair / deputy / President, the ladder, the secretary's bill, test deputies and their votes, *My party leads by ten*; the status's term, republic, government, laws, bills, Chair and offices)
+- Slice 7: `apps/server/src/dev/nation.ts` (`/api/test/term`, `/nation`, `/office`), `nation2.ts` (lane 2: `/parliament`, `/ballots`, `/petition`), `nationPanel.ts` (the panel's *The nation* block: term day, Make me Governor / Chair / deputy / President, the ladder, the secretary's bill, test deputies and their votes, *My party leads by ten*; lane Y, 16 Oct: *Three test residents sign*, *Three test members back me for Chair / vote me Chair / vote my party / sign on the Chair*; the status's term, republic, government, laws, bills, Chair and offices)
 - `packages/db/scripts/memMongo.ts`, `README.md` ("Reviewing with the dev panel" and walk-throughs)
 
 ## Rules to follow
