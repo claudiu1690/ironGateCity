@@ -9,6 +9,17 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 7 phase C rulings: Parliament's stall, four strings, six alt texts
+
+The designer settled the quiet-month stall (every home in Unrest, a bill lost 1–0–59): the −3 at an
+unvoted count was the cause; in Unrest the locals now vote the secretary's line and the −3 needs an
+eligible voter (GDD §0, §14.11, §15.6, Appendix C #112; economy §21.6a; design *Settled 16 Oct 2026
+(phase C)* with the code changes for the developer). Content: the first journey card is
+destination-neutral, `nl.leader-line` opens with words, the Governor headlines and copy use `{title}`
+or *Mayor*; six final alt texts in design §23.8 with a flag on the law book's window. Updated
+[[The Legislature and Laws]], [[Home Cities]], [[Slice 7 The Nation]], [[Decision Log]],
+[[Open Questions]] (S7-C1 closed, C#112 added), [[Drift Report]] (D-S7C-1 open, code pending).
+
 ## [2026-10-16] build | Slice 7 phase C, lane Y: the nation map, Clearwater, the Governor, the paper
 
 The nation map's bar, law chips, pins' second line and republic sheet; Clearwater's screens; the Me

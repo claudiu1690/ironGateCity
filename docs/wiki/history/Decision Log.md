@@ -6,7 +6,7 @@ tags: [decisions]
 status: built
 dates: 2026-09-29 to 2026-10-15
 commits: []
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Decision Log
@@ -156,6 +156,13 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 | 15 Oct | **The Faction tab is direction A, *the Branch Office***, with the designer's defaults: the plate scrolls away and the strip stays sticky; words only; the faction colour an accent only; the rank title kept; the Vanguard plate `scene.vanguard-office`; sideways phones drop the plate | "Black on black, you can't tell the tabs apart" | [[Review 7]]; `design/faction-tab-redesign.md` §5; [[design/slice-6-screens\|screens]] §2 | [[Chat and Presence]], [[Campaign Events]] |
 | 15 Oct | **The refuse list: keep *dyke*, unblock *Reich* (whole word and *third reich*), add no communist-era names**; Hitler and the rest stay | — | [[Review 7]]; `apps/server/src/moderation/lists/refuse.ts` | [[Moderation and Fair Play]], [[Chat and Presence]] |
 | 15 Oct | *designer ruling under the approved §21 #2:* **the secretary wins an exact tie on the Chair's ballot** (ties: votes, then the secretary before any player, then backers, completed terms, filing); *beat the game's own figure* means strictly more | The user approved "a player must beat the game's own figure" (15 Oct); a split branch keeps the standing default, as the vote on the Chair does | `docs/design/slice-7-nation.md` *Settled 15 Oct 2026 (phase B)*; GDD §15.4, §0 | [[National Elections]], [[Offices]] |
+
+## Slice 7 phase C settled (16 Oct, the designer)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 16 Oct | **In Unrest a party's local deputies vote the secretary's line** instead of abstaining (the chain's first two steps skipped); **the −3 for a count nobody voted in needs at least one eligible voter** in the branch. 31 of 60 stands; passing on the votes cast rejected | a quiet test month put every home in Unrest (the −3 every five days against a drift of +0.1 to +0.3 a day) and a bill fell 1–0–59; one empty faction in play would do the same to its bloc for a season; the cost should fall on the party that lost its town, not on the republic | GDD §0 (16 Oct), §14.11, §15.6, Appendix C #112; [[design/slice-7-nation\|slice-7 design]] *Settled 16 Oct 2026 (phase C)* #1; economy §21.6a | [[The Legislature and Laws]], [[Home Cities]], [[Offices]], [[Slice 7 The Nation]] |
+| 16 Oct | The first journey card is destination-neutral (no *capital*, no *five districts*); `nl.leader-line` opens with words; the Governor headlines and copy use **`{title}`** or the right word (*Mayor* in Irongate and Clearwater); six final alt texts in design §23.8, with a flag that the law book's window resembles Budapest's Parliament | — | *Settled 16 Oct 2026 (phase C)* #2–#5; `packages/content` | [[Travel and Journeys]], [[The Morning Paper]], [[Offices]], [[Art and Maps Pipeline]] |
 
 ## Related
 

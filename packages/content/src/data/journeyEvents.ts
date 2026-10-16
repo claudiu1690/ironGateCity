@@ -17,7 +17,7 @@ export const journeyEvents: ContentInput['journeyEvents'] = [
     title: 'A talkative passenger',
     first: true,
     setup:
-      'The man opposite has a Herald, a flask and no intention of reading. "Capital, is it? Five districts, three parties, and a tram that goes round in circles. Which are you?" He has already guessed.',
+      'The man opposite has a Herald, a flask and no intention of reading. "Party business, is it? Three parties, five towns, and a tram in every one that goes round in circles. Which are you?" He has already guessed.',
     choices: [
       {
         id: 'talk',
@@ -46,8 +46,8 @@ export const journeyEvents: ContentInput['journeyEvents'] = [
         success: {
           rewards: { xp: 14 },
           text: {
-            headline: 'Five districts, explained',
-            body: 'You let him run. Who holds the Hill, which paper the Quays read, why nothing ever passes in the Government Quarter. By the last bridge you know the capital better than most people who live in it.',
+            headline: 'The republic, explained',
+            body: 'You let him run. Who holds which town, which paper each one reads, why nothing ever passes in Parliament. By the last stop you know the republic better than most people who live in it.',
           },
         },
       },

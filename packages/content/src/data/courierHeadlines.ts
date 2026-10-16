@@ -316,7 +316,7 @@ export const courierHeadlines: HeadlineInput[] = [
     1,
     [{ kind: 'countToday' }],
     'Clearwater Result: {seatsV} Vanguard, {seatsC} Collective, {seatsA} Alliance',
-    '{winner} topped the poll. Turnout {turnout}; {npcSeats} of seven seats to local candidates. Governor: {governor}.',
+    '{winner} topped the poll. Turnout {turnout}; {npcSeats} of seven seats to local candidates. Mayor: {governor}.',
   ),
   h(
     'nominations',

@@ -32,7 +32,10 @@ council seats are contested between members of the same party.
   Twist *The Upset* lets a home be contested for one season ([[Political Seasons]]).
 - **Morale** is the home share: *Fired up* 80+, *Steady* 60–79, *Unrest* 50–59. It drifts toward
   **70** at 2 % of the distance a day and moves with actions, ballots (+0.5), seats (+2) and a count
-  with no voter (−3). Details, Unrest consequences and the Unrest prize:
+  with no voter (−3, **only when the branch had at least one eligible voter**: an empty branch is
+  absent, not neglected; settled 16 Oct 2026 after a quiet test month put every home in Unrest).
+  In Unrest the party's local deputies vote the secretary's line in Parliament (16 Oct 2026; they
+  abstained until then). Details, Unrest consequences and the Unrest prize:
   [[Battleground and Groundswell]].
 - **Baselines:** each home starts at **70** for its party, 15 Neutral, the two rivals 9 / 6 (the
   stronger rival chosen for the fiction; [[GDD#14.11 Home cities and battlegrounds (new)|§14.11

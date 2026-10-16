@@ -657,7 +657,7 @@ export const copy = {
       vote: 'The vote on the rule every five days; a named role at campaign events; backing a candidate',
       stand: 'Standing for the council; calling campaign events; the harder missions',
       chair: 'Standing for Chair after a council term; the party strikes a mark off your record once a month',
-      list: "The party's list for Parliament after a term as Governor or three on a council",
+      list: "The party's list for Parliament after a term as Governor or Mayor, or three on a council",
       president: 'Standing for President after a term in Parliament',
       life: "The title for life, and a line in the party's history",
     } as Record<'hall' | 'vote' | 'stand' | 'chair' | 'list' | 'president' | 'life', string>,
@@ -2079,7 +2079,7 @@ export const copy = {
       dangerHead: (word: string, night: boolean) => `Risk here: ${word}${night ? ' · patrols out' : ''}`,
       /** The goal line, out of Unrest. */
       goal: (home: string, toGo: string, week: string) =>
-        `The goal: Unrest. Under 60 % the ${home}'s branch drops everything to win the town back, its deputies go quiet, and your work here pays three quarters more. ${toGo} points to go · your party has pushed ${week} this week.`,
+        `The goal: Unrest. Under 60 % the ${home}'s branch drops everything to win the town back, its deputies stop taking the Chair's line, and your work here pays three quarters more. ${toGo} points to go · your party has pushed ${week} this week.`,
       /** The goal line in Unrest. */
       goalHold: (city: string, home: string, above: string) =>
         `${city} is in Unrest · hold it: your work here pays +75 % Party XP · the ${home} needs 60 to get out · ${above} points above the floor.`,
@@ -2163,7 +2163,7 @@ export const copy = {
       /** Review 5 (answers §10.2): the goal line's note. */
       unrest: () => [
         'Unrest',
-        `A home town under 60 % is in Unrest: its branch's orders become "restore the base", the town counts half for its party in the republic, its deputies abstain in Parliament, and visitors' party work there pays three quarters more. It ends when the home party is back at 60.`,
+        `A home town under 60 % is in Unrest: its branch's orders become "restore the base", the town counts half for its party in the republic, its local deputies vote the party office's line in Parliament whatever the Chair says, and visitors' party work there pays three quarters more. It ends when the home party is back at 60.`,
       ],
       infirmary: () => [
         'The infirmary',
@@ -2787,7 +2787,7 @@ export const copy = {
       standNextCount: 'stand at the next count',
       chairRung: 'Chair · Rank 4 and a council term',
       namesFrom: (date: string) => `names in from ${date}`,
-      parliamentRung: "Parliament · Rank 5 and a Governor's term or three council terms",
+      parliamentRung: "Parliament · Rank 5 and a Governor's or Mayor's term, or three council terms",
       presidentRung: 'President · Rank 6 and a term in Parliament',
       pay: (pc: number, fxp: number) => `Pay: ${pc} Political Capital and ${fxp} Party XP a day, present or not`,
     },
@@ -2857,6 +2857,9 @@ export const copy = {
       freeVote: 'Free vote',
       secretarysLine: (line: string) => `the secretary's line: ${line}`,
       localsAbstain: 'the locals abstain',
+      /** Settled 16 Oct 2026 (phase C): in Unrest the locals take the secretary's line, whatever the Chair sets. */
+      localsUnrest: (locals: number, line: string) =>
+        `the home city is in Unrest: ${locals} local deputies follow the secretary's line (${line}) until the branch wins the town back`,
       followYourLine: (players: number, locals: number) =>
         `${players} player ${players === 1 ? 'deputy has' : 'deputies have'} voted; ${locals} local deputies follow your line`,
       followPlayers: (locals: number) => `${locals} local deputies follow the player deputies`,
@@ -2999,7 +3002,7 @@ export const copy = {
       thenLocals: 'then local deputies',
       listNote: "Seats go down the list, as many as the party's score wins. Backing a name moves it up.",
       standList: 'Stand for Parliament · 25 Political Capital',
-      listRung: "a Governor's term or three council terms",
+      listRung: "a Governor's or Mayor's term, or three council terms",
       standPresident: 'Stand for President · 100 Political Capital',
       twoPledges: 'Two pledges',
       oneVote: (at: string) =>
@@ -3048,7 +3051,7 @@ export const copy = {
       kicker: (city: string) => `${city} council · a petition`,
       count: (n: number, needed: number) => `${n} of ${needed} residents`,
       note: (needed: number, until: string, weekday: string) =>
-        `If ${needed} residents of any party sign by ${until}, the council is dissolved: the rule in force runs its days out, the Governor's chair goes to a local, and the councillors' terms end uncompleted. Local candidates sit until ${weekday}'s result.`,
+        `If ${needed} residents of any party sign by ${until}, the council is dissolved: the rule in force runs its days out, the council's chair goes to a local, and the councillors' terms end uncompleted. Local candidates sit until ${weekday}'s result.`,
       openIt: 'Open it · 10 Political Capital',
       councillorsCant: "You're a councillor; councillors can't sign",
       townHall: "A Town Hall event in the town adds townspeople's names: Triumph 3, Success 2, Mixed 1",
@@ -3080,7 +3083,7 @@ export const copy = {
       hallKicker: 'Clearwater council · the Casino',
       howCounted:
         "Seven seats. Each party's score mixes its share of the votes with its share of opinion on the lake. The top score takes the first seat, the next the second, and so on; within a party, seats go by support.",
-      governorLine: (name: string) => `Governor: ${name} · the largest bloc's top councillor with a completed term`,
+      governorLine: (name: string) => `Mayor: ${name} · the largest bloc's top councillor with a completed term`,
       registeredVotesFrom: (weekday: string) => `Registered in Clearwater · you vote from ${weekday}`,
       lakeBranch: 'the lake branch',
     },
@@ -3090,7 +3093,7 @@ export const copy = {
       theRepublic: 'The republic',
       voteNow: (until: string) => `The republic votes until ${until} · Vote now`,
       namesInChair: (until: string) => `Names in for Chair until ${until}`,
-      stipend: (city: string) => `Governor of ${city} · 20 Political Capital and 30 Party XP paid`,
+      stipend: (title: string, city: string) => `${title} of ${city} · 20 Political Capital and 30 Party XP paid`,
       /** Phase C: the desk's line per office (any office; the stipend's label from the server). */
       officePaid: (label: string, pc: number, fxp: number) => `${label} · ${pc} Political Capital and ${fxp} Party XP paid`,
       targetPaid: (label: string, fxp: number) => `${label} · +${fxp} Party XP`,
@@ -3129,8 +3132,8 @@ export const copy = {
         "The party's elected head, every four weeks. Sets the Party orders every member reads, the party line in Parliament and the party's card in the councils, and the branch's events.",
       ],
       governor: () => [
-        'Governor',
-        "The top councillor with a completed term, when the council is seated. Chooses the party's card on the town's ballot and makes one Address a term.",
+        'Governor or Mayor',
+        "The top councillor with a completed term, when the council is seated: the Governor at home, the Mayor in Irongate and Clearwater. Chooses the party's card on the town's ballot and makes one Address a term.",
       ],
       deputy: () => [
         'Deputy',
@@ -3143,11 +3146,11 @@ export const copy = {
       ],
       partyLine: () => [
         'The party line',
-        "How the party's local deputies vote. The player deputies' majority first; else the Chair's line; else the secretary's.",
+        "How the party's local deputies vote. The player deputies' majority first; else the Chair's line; else the secretary's. While the home city is in Unrest, the secretary's line, whatever the Chair says.",
       ],
       partyCard: () => [
         "The party's card",
-        "The rule the party puts on a city's ballot: the Governor's choice where one of ours sits, else the Chair's, else the secretary's. The town votes on it.",
+        "The rule the party puts on a city's ballot: the Governor's or Mayor's choice where one of ours sits, else the Chair's, else the secretary's. The town votes on it.",
       ],
       lawBook: () => [
         'The law book',
@@ -3171,7 +3174,7 @@ export const copy = {
       ],
       ladder: () => [
         'The ladder',
-        'Every office needs a completed term in the one below: a council seat, then Governor, then Parliament, then the Presidency. The Chair needs a council term and Rank 4.',
+        'Every office needs a completed term in the one below: a council seat, then Governor or Mayor, then Parliament, then the Presidency. The Chair needs a council term and Rank 4.',
       ],
       /** Screens §10: *How elections work* for Clearwater, in the capital note's pattern. */
       clearwaterElection: (rank2: string, rank3: string) => [
@@ -3180,7 +3183,7 @@ export const copy = {
           'Clearwater elects seven councillors every five days: the players who stand, and local candidates run by the game who fill each party’s list to three names.',
           `${rank2}s vote for any name on the list from the first election after they registered; ${rank3}s who are Known on the lake can stand for 10 Political Capital, naming a rule.`,
           "Each party's score mixes its share of the votes with its share of opinion. The top score takes the first seat, the next the second, and so on; within a party, seats go by support.",
-          "A seat is five days at the Casino: the largest party's card is the town's rule, and 10 Political Capital and 20 Party XP a day. The top councillor of the largest party with a completed term is Governor.",
+          "A seat is five days at the Casino: the largest party's card is the town's rule, and 10 Political Capital and 20 Party XP a day. The top councillor of the largest party with a completed term is Mayor.",
         ].join('\n'),
       ],
     },

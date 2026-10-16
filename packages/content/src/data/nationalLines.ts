@@ -96,7 +96,7 @@ export const nationalLines: NationalLineInput[] = [
     priority: 1,
     scope: 'all',
     headline: 'Names In for President and Parliament',
-    deck: 'Two days for candidates. A President needs a term as deputy; a deputy needs a term as Governor or three on a council. The parties pick on {weekdayPick}.',
+    deck: 'Two days for candidates. A President needs a term as deputy; a deputy needs a term as Governor or Mayor, or three on a council. The parties pick on {weekdayPick}.',
   },
   {
     id: 'nl.party-pick',
@@ -125,7 +125,7 @@ export const nationalLines: NationalLineInput[] = [
     priority: 3,
     scope: 'all',
     headline: 'The {leader} Leads the Republic',
-    deck: '{leaderShare} · {second} {secondShare} · {third} {thirdShare}. Laws in force: {lawsCount} of five.',
+    deck: 'The {leader} hold {leaderShare} per cent of the republic, the {second} {secondShare}, the {third} {thirdShare}. Laws in force: {lawsCount} of five.',
   },
   {
     id: 'nl.clearwater-control',
@@ -147,7 +147,7 @@ export const nationalLines: NationalLineInput[] = [
     priority: 1,
     scope: 'all',
     headline: '{city} Council Dissolved by Petition',
-    deck: "{signatures} residents signed. The rule in force runs out its days, the Governor's chair is empty, and local candidates sit until {weekday}'s result.",
+    deck: "{signatures} residents signed. The rule in force runs out its days, the council's chair goes to a local, and local candidates sit until {weekday}'s result.",
   },
   // ----- The Chair (the faction's members) ------------------------------------------------------
   {

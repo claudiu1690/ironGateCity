@@ -802,6 +802,10 @@ As the capital (§15.3 of this sheet): difficulty 10 (odds a point or two under 
 
 Every national act is one or two taps; the Chair's whole term is five taps once and one tap per bill; a deputy's a tap a few times a week; a President's a tap a week. Every window is two to four full City Days and closes at a boundary; the count, the divisions and the party's target settle without anyone present; an absent holder's duties fall to defaults. Nothing in slice 7 needs the player at a set time.
 
+### 21.6a The quiet month (16 Oct 2026, phase C)
+
+A month on the test clock with no players put every home city in Unrest: the only negative input on a quiet clock is the **−3 at every count nobody voted in** (every five days), and the drift back toward 70 is only 2 % of the distance a day (+0.06 to +0.2), so a home goes 70 → 67 → 64.3 → 61.9 → 59.7 and sits near 55–58 for good; with every bloc abstaining, a bill fell 1–0–59. **Two rulings, no rate moved** (GDD §0 of 16 Oct, §14.11, §15.6; design *Settled 16 Oct 2026 (phase C)*): in Unrest a party's local deputies vote the secretary's line instead of abstaining (the party that lost its town loses the bloc; the republic loses nothing), and the −3 needs at least one eligible voter in the branch. The quiet-month baseline of §21.3 (the four agreed laws pass, the rest fail) now holds whatever the homes' state, and an empty home sits at 70, Steady. No milestone, stipend or law value changes.
+
 ### 21.7 Flags (GDD Appendix C #64–#73)
 
 The user approved the slice-7 design's seven defaults on 15 Oct 2026 (`slice-7-nation.md` §21): #64, #65, #66, #68 and #70 below are user decisions; #67, #69, #72 and #73 are the designer's defaults, kept as flags to watch in the playtest. No number moved.

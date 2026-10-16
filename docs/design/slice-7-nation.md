@@ -101,7 +101,7 @@ Until a Chair exists the secretary's rotation sets the orders (§13.7). A Chair 
 - **In Parliament:** on every bill the Chair may set the party line, one tap: **For · Against · Free vote**. The faction's **local deputies** vote: (1) with the majority of the faction's **player deputies** who voted (a tie is no majority); (2) else the Chair's line (an **unset** line falls through; an explicit *Free vote* makes the locals abstain); (3) else the **secretary's line** on that law (content, §7.3; a secretary's *free* is an abstention). The desk shows *the secretary's line: For* until the Chair sets one (settled 4 Oct 2026). A player Chair's line therefore carries the whole local bloc when no player deputy votes, which is the Chair's national power at low population; with player deputies, they lead.
 - **In the councils:** the Chair sets **the party's rule** per city (home, the capital, Clearwater), one pick each from the menu, default the secretary's (Vanguard *Rally Permits*, Collective *Long Service Order*, Alliance *Reading Room Grant*), **applying from the next order paper** (never mid-paper). It is the party's item on every order paper and what the locals vote for when neither a player councillor nor a Governor of their faction leads (§3.1).
 - **Appendix C #26, closed:** local councillors **abstain** when **four or more player councillors** of a home council vote *None of these* (a real majority of seven), so the council rises without a rule; below four the party's rule passes as before (one seat cannot leave a city without a rule out of spite). In the capital and Clearwater the bloc rule already lets players block, and nothing changes.
-- **Unrest** (GDD §14.11): while the faction's home city is in Unrest, **its local deputies abstain on every bill** (the "defection"): the bloc goes quiet until the branch wins the town back. The Chair's line still binds nothing then; the player deputies vote as they like.
+- **Unrest** (GDD §14.11; *changed 16 Oct 2026, phase C*): while the faction's home city is in Unrest, **its local deputies vote the secretary's line on every bill**, skipping the player deputies' majority and the Chair's line: the party office takes the bloc from the branch until it wins the town back. The Chair's line binds nothing then; the player deputies vote as they like. *(Until 16 Oct the locals abstained, which let Parliament stall when every home was in Unrest; see *Settled 16 Oct 2026 (phase C)*.)*
 
 ### 4.4 Events and the fixtures
 
@@ -1039,6 +1039,14 @@ The `partyRule` modal (§12) gains the day: body *The party's item on every {cit
 | `scene.event-town-hall` | A packed hall: a woman on her feet answering at a long table on a platform, two men seated, a jug and glasses, a man in a cap standing to ask, a reporter writing. |
 | `scene.presidents-study` | A study at sunset: a tall window over the city's domes, a desk with stacks of papers and a pen under a green lamp, a wall map with five cities, a clerk at the door. |
 | `scene.parliament` | The chamber under the dome: deputies on curved benches with their hands raised, galleries above, the chair and two clerks' desks below a clock. |
+| `scene.polling-station` | A polling room: two clerks at a table with the register, a man in a hat posting his paper in a wooden box, a queue in coats, two curtained booths, a clock. |
+| `scene.law-book` | A ledger open under a green lamp: numbered volumes behind, an inkwell, spectacles, a date stamp, a bundle of papers; a domed building through the window. |
+| `scene.tram-depot` | A tram shed: four green trams on wet rails under an iron roof, crews with mugs at a rail, a man at the ticket window, the lake and a spire through the doors. |
+| `scene.governors-office` | A tall window on a square and a red tram: a man at a broad desk reading a ledger under a lamp, a city map on the wall, a clerk with a folder at the door. |
+| `scene.lake-harbour` | A quay: men in caps unloading crates of fish, a woman in red writing in a ledger, a lighthouse on the mole, a white steamer at the pier, mountains behind. |
+| `scene.casino` | A casino at night: a woman in red at the bar, a roulette wheel and card tables under chandeliers, men in dinner jackets, the lit lakeside town in the windows. |
+
+**The six scenes (added 16 Oct 2026, phase C; finals, checked against the pictures; the developer's drafts stand in `art.ts` until these are passed on).** Content policy: nothing on any wall, board, curtain or coat in the six. **One flag for the user:** the law book's window shows a riverside parliament with a central dome and gothic spires that **closely resembles a real building (Budapest's Parliament)**; the user may want the window redrawn (a generic dome, or the chamber's own dome from `scene.parliament`). The alt text says *a domed building* and names nothing.
 
 The architect's drafts were right in substance; four details are corrected from the pictures (Albrecht holds his gloves and wears a dark red tie, no wing collar; Faber's bow tie is red and the gown is on his shoulders; the results board shows figures only; the study's lamp is green and the window shows sunset). Content policy: nothing on any coat, cap, wall, board or drape.
 
@@ -1143,3 +1151,59 @@ Answer to `docs/tech/slice-7.md` §Deviations (phase B, lane 2) and the wiki's O
   and the doc comment reads *Ties: votes, then the secretary, then backers, then completed terms, then filing.* `secretaryKept` and `margin` (0 on a tie) need no change; `freezeChairList` keeps the secretary last on the ballot (the order is for display and the player-to-player tie, not for the secretary). T14's check reads as written: 1–1 with no backers, the secretary wins.
 - **Player text:** no new line. The result and the day-14 paper use the secretary's existing win (*nothing changes: the orders, the party line and the fixture stay the branch's*). A tie-break loss gets its own headline only between players, as the council's does.
 - **The party's pick (§6.2, `countPick`)** has the same shape (the figure has no terms and goes last), and the same principle should apply: the party's own figure wins an exact tie. Not part of T14; the architect decides whether it goes into T16's check or waits for a playtest.
+
+## Settled 16 Oct 2026 (phase C): Parliament's stall, four strings, six alt texts
+
+Answers to `docs/tech/slice-7.md` §Deviations (phase C, lanes X and Y) and the wiki's *Slice 7 The Nation* findings. Time-boxed; the GDD carries the two rule changes (§0 row of 16 Oct, §14.11, §15.6, Appendix C #112).
+
+### 1. Parliament can stall: why, and the ruling
+
+**What happened.** After about a month on the test clock every home city was in Unrest; every bloc's locals abstained (§4.3's Unrest rule as built); a division went 1 For, 0 Against, 59 abstaining, and the bill fell against 31.
+
+**Why every home ends in Unrest.** Not the drift: it pulls *toward* 70 (2 % of the distance a day, `applyDrift`). The only negative input on a quiet clock is **the −3 at every count in which no player voted** (`MORALE.noVoterPenalty`, applied in `cityDay.ts` when `turnout.voters === 0`), every five days. From 70: 67 at the first count; the drift gives back only +0.06 to +0.2 a day, so 64.3 → 61.9 → 59.7 at the fourth count, **Unrest on about day 20**, and the town settles near 55–58 for good (each count −3, each cycle about +1.3 back). **Real play does the same for any party with no eligible voter in its home city** (no Rank 2+ resident active in the last seven days): one empty faction at low population puts twenty seats into permanent abstention, and the other two parties then need 31 of 40 (78 %) to pass anything. So it is not only the test clock: the clock showed all three at once; play would show one at a time, with the same effect on the chamber.
+
+**The options.** (a) *Pass on the votes cast*: rejected. It breaks "31 of 60" (§15.5, §15.6) and lets one deputy write the republic's laws on a quiet week; a quorum variant (31 cast) only moves the stall. (c) *Make Unrest rarer* by softening the −3: not on its own, since Unrest is meant to be reachable by neglect and by rival pushing (the Unrest prize depends on it). (b) *The locals follow the secretary's line*: taken, with one narrow piece of (c) for the cause.
+
+**Ruling (two parts, no number moves).**
+
+1. **In Unrest a party's local deputies vote the secretary's line**, skipping the player deputies' majority and the Chair's line (a secretary's *free* still abstains, as it does when nothing else is set). Political reading: *the party office takes the bloc from the branch until it wins the town back*. The cost lands on the right party (its Chair and deputies lose the bloc's twenty-odd votes; a player Chair also faces the automatic vote on the Chair, §4.5), never on the other two parties or on the republic. With no players the secretaries' lines pass the four laws two parties agree on (§7.3, economy §21.3) whether or not the homes are in Unrest, which is the designed quiet-month baseline. Parliament cannot stall by abstention any more; a bill still fails when the secretaries disagree, which is the catalogue's design.
+2. **The −3 applies only when the branch had someone to vote**: `turnout.eligible > 0` (the turnout roll: Rank 2+ residents of the home faction active in the last seven days). GDD §14.11 already says *neglect, not absence, is what the state measures*; an empty branch is absent. A branch of one that goes inactive for a week dodges the −3 by design: the drift holds the town at 70, and nothing a player owns is touched (§4.3 rule 4). The test clock now holds every home at 70, Steady.
+
+**What the developer changes.**
+
+- `packages/rules/src/parliament.ts`, `localVote`: move the `asVote` helper above the Unrest check and make the Unrest branch return the secretary's line with `why: 'unrest'` (the reason stays so the desk and the division can say why):
+
+  ```ts
+  const asVote = (l: LineVote) => (l === 'free' ? 'abstain' : l);
+  if (i.unrest) return { vote: asVote(i.secretaryLine), why: 'unrest' };
+  if (i.players.for !== i.players.against) ...
+  ```
+
+  and the doc comment: *Unrest at home → the secretary's line (the party office's; free abstains); else the players' majority; else the Chair's line; else the secretary's line.* `divideBill` needs no change. `LocalWhy` keeps `'unrest'`.
+- `apps/server/src/services/cityDay.ts` (the home count, about line 467): `if (turnout.voters === 0 && turnout.eligible > 0)` before `applyMoraleLoss`. The ledger row `noVoter` is unchanged.
+- `apps/client/src/features/chair/ChairTab.tsx` (about line 249): the `localsFollow === 'unrest'` case currently falls into `followYourLine`; show the new `copy.nation.chair.localsUnrest(locals, lineWord(secretaryLine))` instead (*the home city is in Unrest: 20 local deputies follow the secretary's line (For) until the branch wins the town back*). The bill page's division breakdown, if it names a reason, reads *Unrest: the secretary's line* for `why: 'unrest'`.
+- Checks: any chair-spec Unrest case expects the locals to vote the secretary's line, not abstain; the `nation` runs on a quiet clock expect Steady homes at 70.
+
+**Strings already changed in content** (`copy.ts`): the Parliament help (*While the home city is in Unrest, the secretary's line, whatever the Chair says*), the Unrest help, the rival-ground goal line (*its deputies stop taking the Chair's line*), and the new `chair.localsUnrest`.
+
+### 2. The lake train's journey card
+
+`jev.passenger` (the first journey's card, every destination) addressed the capital (*"Capital, is it? Five districts…"*; *Five districts, explained*; *you know the capital better…*). The card is drawn on the lake train and on the way to any town, so it is now destination-neutral: *"Party business, is it? Three parties, five towns, and a tram in every one that goes round in circles. Which are you?"*; the listen outcome is *The republic, explained*: *Who holds which town, which paper each one reads, why nothing ever passes in Parliament. By the last stop you know the republic better than most people who live in it.* No number moved.
+
+### 3. `nl.leader-line`
+
+The deck opened with a bare number (*41.7 · Collective 33.3 · …*). Now: *The {leader} hold {leaderShare} per cent of the republic, the {second} {secondShare}, the {third} {thirdShare}. Laws in force: {lawsCount} of five.* (`{leaderShare}` is the control share to one decimal, `nationDay.ts`.)
+
+### 4. Governor and Mayor
+
+The office is **Governor** in the three home cities and **Mayor** in Irongate and Clearwater (§3). Strings fixed in content:
+
+- `nationHeadlines.ts`: the three Governor lines take **`{title}`**: *{name} Is {title} of {city}*, *A Local Holds the {title}'s Chair*, *{title} {name} Speaks on {issueShort}*; the Sentinel's and Gazette's decks say *the {title}'s*; the Courier's deck says *the Mayor's to choose at the Casino*. **The developer passes `title` in the facts** of `governorTookOffice`, `governorLocal` and `addressGiven` in `nationPersonal.ts` (`isContested(content, cityId) ? 'Mayor' : 'Governor'`, as `nationEdition.ts` already does); the filler prints a missing key as literal `{title}`, so a forgotten fact is visible.
+- `courierHeadlines.ts`, the Clearwater count: *Mayor: {governor}*.
+- `nationalLines.ts`: the names-in deck (*a term as Governor or Mayor, or three on a council*); the council-dissolved deck (*the council's chair goes to a local*).
+- `copy.ts`: `nation.clearwater.governorLine` (*Mayor: …*); `nation.petition.note` (*the council's chair goes to a local*); `nation.paper.stipend` now takes `(title, city)` (unused by the client today); the ladder and list rungs (*a Governor's or Mayor's term*); the help notes for the Governor (*Governor or Mayor*), the party's card, the ladder and Clearwater's elections (*is Mayor*). `nation.paper.captions.governor` is **left as is**: the developer is fixing the front-page caption in code and may change its signature.
+- Already right: `nation.office.*` and `nation.governor.*` have separate Governor and Mayor strings; `@irongate/ui`'s `governorLine` picks by `g.title`.
+
+### 5. Six alt texts
+
+In §23.8's table (finals, ≤ 160, checked against the pictures), with the law-book flag for the user: its window shows a building that closely resembles Budapest's Parliament.

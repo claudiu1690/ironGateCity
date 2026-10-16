@@ -3,7 +3,7 @@ type: question
 title: Open Questions
 aliases: [Open questions, Leftovers]
 tags: [questions]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Open Questions
@@ -18,6 +18,8 @@ What is still undecided or unfinished, as of 14 Oct 2026. Three parts: **A** the
 | C#4 | **Counter-demonstrations**: the first faction-vs-faction contest. MVP or v1.1? | Appendix C #4; the plan lists them after the MVP | Open |
 | C#5 | **Season length**: 12 weeks, or 8? (Slice 8's design uses 84 days, three terms) | Appendix C #5; [[Slice 8 A Life in the City]] | Open |
 | S7-T14 | **The Chair's tie**: T14's check asks for the secretary winning a tie of votes against a player with no backers, but `countChair` breaks ties by votes, backers, completed terms, then filing, and every player standing has a completed council term, so the player wins (1–1, no backers). Put the secretary first on a full tie, or change the check? | [[tech/slice-7\|tech §Deviations (phase B, lane 2)]]; [[National Elections]] | **Closed 15 Oct 2026 (designer, under the user's approved §21 #2):** the tie order changes, the check stands. Ties: votes, **then the secretary before any player**, then backers, completed terms, filing; *beat* means strictly more. One comparator step in `countChair` for the developer; GDD §15.4 and §0 updated; `docs/design/slice-7-nation.md` *Settled 15 Oct 2026 (phase B)*. The party's pick (`countPick`) has the same shape, left to the architect |
+| S7-C1 | **Parliament stalls**: after a quiet month every home city is in Unrest, every bloc's locals abstain and a bill falls 1–0–59 | [[Slice 7 The Nation]] phase C findings; [[tech/slice-7\|tech §Deviations (phase C, lane X)]] | **Closed 16 Oct 2026 (designer):** the −3 at an unvoted count was the cause (every five days against a drift of +0.1 to +0.3); in play one empty faction would do it to its bloc. In Unrest the locals now vote the secretary's line; the −3 needs an eligible voter. GDD §14.11, §15.6, Appendix C #112; design *Settled 16 Oct 2026 (phase C)* #1 with the three code changes (`localVote`, `cityDay.ts`, `ChairTab.tsx`). Code not yet changed: a [[Drift Report]] row |
+| C#112 | **Unrest in Parliament, to watch at the playtest**: does losing the Chair's line read as a real cost to the party in Unrest (the reserve is abstention with a quorum of 31 cast); the eligible-voter gate lets a branch of one dodge the −3 by going inactive, by design | Appendix C #112 | Watch at the first playtest |
 | C#11 | **Who starts where at low population**: start new players in a battleground so they meet rivals sooner? | Appendix C #11 | Open |
 | C#17 | The **14-day back-pay cap** is a judgement; revisit with a Welcome Back package | Appendix C #17 | Open |
 | C#39 | Under the stitched maps: first-view letterboxing on wide screens (Duskwall's Goods Yard), and whether a later quarter's frame is its own box | Appendix C #39 | Open |

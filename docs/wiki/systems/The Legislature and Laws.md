@@ -7,7 +7,7 @@ status: designed
 slice: "7 (designed, not built)"
 gdd: ["§2", "§15.6", "§15.8", "§22.2"]
 adrs: ["0043", "0044", "0045"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # The Legislature and Laws
@@ -28,7 +28,7 @@ law book fills from the first week even with no players. Designed for slice 7, *
 - **Sixty seats** by D'Hondt on the national scores ([[National Elections]]); a party's seats go down its list, the rest are local deputies (eight named per party, then counted). The ratio is shown openly.
 - **The order paper:** at most **three bills plus the President's**. A bill is one law, a bill **to strike out** a law, or **a vote to remove the President** ([[Recall and Removal]]).
 - **Who tables:** the **President** once a week, free, in a slot of its own · a **deputy** once a term, **50 PC** · a **Chair** once a term, 50 PC · **the secretary** of a party with no player Chair and no player deputy, at a Monday boundary when fewer than two bills are open (at most one a week).
-- **The vote:** open from the tabling to the boundary into **tabling day + 4**; every deputy one tap, public, final. Local deputies vote by the chain: their party's player deputies' majority → the Chair's line → the secretary's line; they **abstain while the party's home city is in Unrest**. **31 For passes; a factional law needs 36; a removal or a veto override needs 40.**
+- **The vote:** open from the tabling to the boundary into **tabling day + 4**; every deputy one tap, public, final. Local deputies vote by the chain: their party's player deputies' majority → the Chair's line → the secretary's line; **while the party's home city is in Unrest they vote the secretary's line**, whatever the Chair sets (settled 16 Oct 2026; they abstained until then, which let Parliament stall when every home was in Unrest). **31 For passes; a factional law needs 36; a removal or a veto override needs 40.**
 - **In force** from the boundary after the **signature day** (the veto's day). A failed bill can't return for seven days; open bills lapse at term day 0.
 - **The veto:** once a term; Parliament can override with 40 of 60 in a second three-day vote.
 - **The cap:** at most **five laws in force, one of each**; a bill at the cap names the law it replaces.
