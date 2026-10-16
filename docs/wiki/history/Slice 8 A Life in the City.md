@@ -92,9 +92,17 @@ What landed (details in [[tech/slice-8#Deviations (as built)|the tech design's D
 - **T31, the bar:** a round, a plate, dinner; the buffs on the receipts; a round in hand spent at a mission's start.
 - **Not built:** T13 (society calls through `missionService`, `patronService`), forged papers at the checkpoint, `presence.recognised`. A place's cards and the Me tab's line are queries of their own (`life.place`, `life.me`). Details: [[tech/slice-8|tech/slice-8]] *Deviations, Phase B, lane 1*.
 
+
+## Phase B, lane 2 as built (16 Oct 2026, the developer)
+
+- **T11 the Dossier:** `landEntry` and its sources (tier-1 intelligence, the cells and the ward, surveillance and theft, the informer card, a chapter, informants and Monday's gossip), Case Files, selling at a station, informants. **T12 the exposé** (one keyed act, the swing in the name's town, the burn, Legacy +2, a Failure keeps the file) and the Headline Story's *Attach a Case File* (+50 %).
+- **T14:** the settlement's patrons, informants, Legacy (terms, awards, the Unrest prize's +2) and milestones; the Monday perk; the flat; Legacy's perks; the chapters' requirements, Iron, Favour, entry and completion. **T16:** the paper's life lines, desk rows, Letters and the public exposé line. **T17:** the life hooks and nineteen dev-panel buttons (lane 1's included).
+- **T18:** a month on the test clock in a scratch script (the settlement after a week away: 48 ms). The canvass spec's pin 3 was a sub-pixel fit from slice 7's fix round (`1115447`); the spec now allows a thousandth.
+- **Not built:** survivals and pledges in Legacy, *While You Were Away*'s life lines, the exposé's item and rival-ground rows. Details: [[tech/slice-8|tech/slice-8]] *Deviations, Phase B, lane 2*.
+
 ## QA and leftovers
 
-Phase A built 16 Oct 2026; no QA yet. Leftovers: `canvass.spec.ts` *all six pins on the first view* fails on `phone` (pin 3's viewport ratio is 0.9999998). **Settled by the designer, 16 Oct 2026 (design §24.9):** a Request counts a Success or a Partial and never a Failure (as built; GDD §15.4's party-orders rule); the seven alt texts are final in design §19 and §24.6 (the doorman, the steward and the minder corrected; the developer passes them into `art.ts`); the `social` mission card stays `scene.hotel`, and the Casino's two calls should carry `card: 'scene.casino'` ([[Drift Report]] S8-4; **done `310a86f`**, with the final alt texts). New in phase B: `qa-risk`'s *360 × 640 / 812 × 375: the quarter* fails on the plate's share bar (360 × 6 under the 44 px rule), and `clearwater` was flaky once. To watch: GDD Appendix C #74–#79 (approved defaults), #113, #114, and design §24.7's five (see [[Open Questions]]).
+Phase A built 16 Oct 2026; no QA yet. Leftovers: `canvass.spec.ts` *all six pins on the first view* (pin 3's viewport ratio 0.9999998) is fixed (`2d5ffd2`: a sub-pixel fit from slice 7's fix round). **Settled by the designer, 16 Oct 2026 (design §24.9):** a Request counts a Success or a Partial and never a Failure (as built; GDD §15.4's party-orders rule); the seven alt texts are final in design §19 and §24.6 (the doorman, the steward and the minder corrected; the developer passes them into `art.ts`); the `social` mission card stays `scene.hotel`, and the Casino's two calls should carry `card: 'scene.casino'` ([[Drift Report]] S8-4; **done `310a86f`**, with the final alt texts). New in phase B: `qa-risk`'s *360 × 640 / 812 × 375: the quarter* fails on the plate's share bar (360 × 6 under the 44 px rule), and `clearwater` was flaky once. To watch: GDD Appendix C #74–#79 (approved defaults), #113, #114, and design §24.7's five (see [[Open Questions]]).
 
 ## Commits
 

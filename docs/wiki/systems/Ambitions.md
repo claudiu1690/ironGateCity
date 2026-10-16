@@ -42,6 +42,8 @@ An Ambition is a **personal storyline that runs for months**, separate from the 
 
 ## Status
 
+**Slice 8 phase B, lane 2 (16 Oct 2026):** the chapters' new requirements read the milestones (a Case File, the first Chair and national votes, a list place, completed terms, a deputy term); a chapter's step-1 choice pays its Iron, its Dossier entry lands by hand, its Favour goes to the patron, and the last chapter adds Legacy +30 (`apps/server/src/services/chapterLife.ts`).
+
 **Built:** chapter 1 of all three ([[Slice 2 Arrival|slice 2]]); *Stand for the stone* ([[Slice 3 The First Vote|slice 3]]); *The riverside house* ([[Slice 5 Risk|slice 5]]); all re-strung in [[Review 5]]. Content also holds the titles of the next chapters as teasers (*The list*, *The night caretaker*, *The collector*). **Content written, server to come (slice 8):** *The Names on the Stone* 4–12 (the keepsakes, chapter 7's Favour +5, chapter 12's completion and the ribbon), *The night caretaker* (Brandauer's entry by hand) and *The collector* (choice B pays 100 Iron), T6, 16 Oct 2026; their requirement kinds read `characters.milestones` (rules T3). *The list* (chapter 3) was built with slice 7.
 
 ## Decisions

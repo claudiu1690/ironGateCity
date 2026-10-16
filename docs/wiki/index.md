@@ -33,7 +33,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Missions]] — Tier 2: a briefing and two or three ways, risk in words, check → run-in → caught check; 26 built, night windows.
 - [[Local Standing]] — Reputation per city: Stranger to One of Us at 10/30/70/150 wins, +3 % a level, never decays.
 - [[Party Orders]] — Three daily orders from the party secretary (welcome set, capital rotation, off in the cells); the Chair's orders are slice 7.
-- [[The Dossier]] — Intelligence entries on named people, Case Files, the exposé, sale and informants; slice 8: rules and content in (16 Oct), server and tab to come.
+- [[The Dossier]] — Intelligence entries on named people, Case Files, the exposé, sale and informants; slice 8: rules, content and server built (16 Oct), the tab in phase C.
 - [[Bodyguards]] — Someone to walk with you: a doorman, a steward, a minder (400 / 1,200 / 3,000 a week) at the party store; a visible row at a run-in, never against the police; slice 8: the server is built (16 Oct, phase B), the client is phase C.
 - [[Run-ins and Combat]] — NPC-only, one choice (Fight, Run, Talk, Pay, luck); the held result, settled by luck after 5 min; slice 5.
 - [[Hospital and Treatment]] — The infirmary after a lost run-in (30 Health, 20 min) and Get patched up at 1 Iron a point.
@@ -43,7 +43,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Night and Patrols]] — Two-hour nights, night-only ways and missions (+25 % Iron), random patrol stops on rival ground; review 5.
 - [[Ambitions]] — Three 12-chapter personal stories, at most one chapter a week, never failing; chapters 1–2 partly built.
 - [[Patronage and Favours]] — Patrons Crane and Marr (slice 8: rules and content in, 16 Oct), favours between party mates (slice 6), the welcome favour at the HQ (built).
-- [[Legacy]] — A permanent public record of political deeds plus eight small lasting perks; MVP, slice 8, not built yet.
+- [[Legacy]] — A permanent public record of political deeds plus eight small lasting perks; slice 8: server built (16 Oct), the Me tab in phase C.
 - [[Residence]] — Built: the political home (500 Iron, Rank 2, 7 days between moves) and Irongate lodgings. Slice 8: the room and the flat.
 
 ## Systems — the city and the map

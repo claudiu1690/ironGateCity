@@ -3,8 +3,8 @@ type: system
 title: The Dossier
 aliases: [Dossier, Case Files, Case File, Exposé, Expose, Informants, Dossier entries]
 tags: [intelligence, slice-8]
-status: designed
-slice: "8 (designed, not built)"
+status: partly built
+slice: "8 (server built 16 Oct 2026; client in phase C)"
 gdd: ["§10", "§10.1", "§10.2", "§10.3", "§10.4", "§10.5"]
 adrs: ["0053", "0054", "0052"]
 updated: 2026-10-16
@@ -37,14 +37,18 @@ The Dossier is the player's **private intelligence journal** on the republic's n
 
 ## Where it lives
 
-**Rules:** [[GDD#10. The Dossier|GDD §10]] · [[design/slice-8-life#4. The Dossier (GDD §10, pinned)|slice-8 design §4]] (and §16.4 lines, §16.6 exposé texts) · [[adr/0053-dossier-entries-collection-counted-not-stored|ADR 0053]] · [[adr/0054-expose-a-story-at-the-press|ADR 0054]] · [[adr/0052-personal-modifiers-items-perks-and-recognition|ADR 0052]] (item `dossierChance`) · [[tech/slice-8|tech spec slice 8]]
+**Rules:** [[GDD#10. The Dossier|GDD §10]] · [[design/slice-8-life#4. The Dossier (GDD §10, pinned)|slice-8 design §4]] (and §16.4 lines, §16.6 exposé texts) · [[adr/0053-dossier-entries-collection-counted-not-stored|ADR 0053]] · [[adr/0054-expose-a-story-at-the-press|ADR 0054]] · [[adr/0052-personal-modifiers-items-perks-and-recognition|ADR 0052]] (item `dossierChance`) · [[tech/slice-8|tech spec slice 8]] (Deviations, phase B lane 2)
 
-**Code (planned, per the ADRs; none exists yet):**
-- A `dossierEntries` collection (entries, Case Files, informants; slot count counted in the transaction, never stored); `landEntry` helper; `characters.expose { fileId, angle, locationId, day }` pointer; `dossierBurns[]`
-- Content (T6, 16 Oct 2026): the twenty lines in `packages/content/src/data/dossier.ts`; Brandauer in `people.ts` (`extraNames`); the `dossier` payloads on `held.ts` (the cells criminal, the ward neutral, 25 %), the informer's *Feed him a story* in `journeyEvents.ts` and the morgue file; `expose` feeds on *The Cells Are Full* and *The Casino's Licence* in `issues.ts`; the tab's, the station's and the exposé's copy and modal texts in `copy.ts` (`copy.life.dossier`, `.expose`); the paper's lines in `lifeHeadlines.ts`. **Not yet bound:** `load.ts` does not pass `dossierLines`, `extraNames` or `lifeHeadlines` into `rawContent` (the developer's binding).
-- Today: only the disabled tab, `apps/client/src/components/AppShell.tsx` (`{ id: 'dossier', disabled: true }`) and the icon in `packages/ui/src/components/Shell.tsx`
+**Code:**
+- Rules: `packages/rules/src/dossier.ts` (capacity, freshness, `pickName`, `rollEntry`, binding, selling, turning, informant reports, the exposé's gate, difficulty, swing and rewards); views in `packages/rules/src/lifeViews.ts`.
+- Data: the `dossierEntries` collection (`packages/db/src/models/dossier.ts`; entries, Case Files and informants, one row each); `characters.expose`, `dossierBurns`, `dossierLastAt` / `dossierSeenAt`.
+- Server: `apps/server/src/services/dossierService.ts` (`landEntry`, the one helper every source calls in its own transaction; `dossier.get/seen/station/bind/sell/turn`; the Headline Story's attach / detach / spend); `exposeService.ts` (`expose.get/choose/attempt`); the settlement's informants and gossip in `lifeSettlement.ts`; router `apps/server/src/trpc/routers/dossier.ts`. Sources wired: tier-1 intelligence (`actionService.writeTier1`), the cells' and ward's taps, surveillance and theft (`missionService.writeMissionFinal`), *Feed him a story* (`travelService.choose`), a chapter's entry (`chapterLife.ts`). Society calls and the morgue file come with T13.
+- Content: the twenty lines in `packages/content/src/data/dossier.ts`; Brandauer in `people.ts`; the copy in `copy.ts` (`copy.life.dossier`, `.expose`); the paper's lines in `lifeHeadlines.ts`.
+- Client: only the disabled tab so far (`apps/client/src/components/AppShell.tsx`); the tab, the station sheet and the exposé are phase C (T21).
 
 ## Status
+
+**Phase B, lane 2 (16 Oct 2026): the server is built** (T11, T12): entries from every source but society calls, Case Files, selling at a station, informants, the exposé with its swing in the name's town, the burn and Legacy +2, and the Headline Story's *Attach a Case File* (+50 % on the swing). The tab is phase C.
 
 **Slice 8, building:** the rules (T2) and the content (T6) are in since 16 Oct 2026; the collection, the server and the tab are not. Slice-5 surveillance and theft missions and the cells' and ward's taps already exist; they gain their Dossier payloads in slice 8. Safe intelligence taps pay XP and Iron only until then.
 

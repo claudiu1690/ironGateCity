@@ -9,6 +9,13 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 8 phase B, lane 2
+
+The server for the Dossier, the exposé (and the Headline Story's Case File), the flat, Legacy, the
+chapters' new steps and the paper's life lines; lane 1's test hooks and dev-panel buttons; the
+canvass spec's sub-pixel pin (from slice 7's fix round). Updated [[The Dossier]], [[Legacy]],
+[[Residence]], [[The Morning Paper]], [[Ambitions]], [[Slice 8 A Life in the City]], [[index]].
+
 ## [2026-10-16] build | Slice 8 phase B, lane 1
 
 The server for the Wardrobe and personal modifiers (T9), shops (T10), bodyguards (T30) and the bar

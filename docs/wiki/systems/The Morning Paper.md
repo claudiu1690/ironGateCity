@@ -74,6 +74,8 @@ the voice of the player's home city. One tap dismisses it; it can be reopened an
 
 ## Status
 
+- **Slice 8 phase B, lane 2 (16 Oct 2026):** the life lines stored at the settlement (`lifeSettlement.ts`: the exposé's front page, a Case File, entries going stale, a patron's thanks and tier, the flat's three, Legacy, the coat, recognised, the bodyguard's two); `PaperView.life` (`lifePaper.ts`): the desk's Dossier, Patrons, Where you sleep, Legacy and Ahead rows, the Letters' Requests, informants' reports and Monday's gossip, and yesterday's exposé live in every other reader's paper. On screen in phase C (T23).
+
 - **Phase C, lane Y (16 Oct 2026):** *From the capital* / *The republic* and the Election row's second row on screen (`NationalSection`, `ElectionWindowRow`); the desk's office and target lines; the office front pages (caption, *To the office* / *To Parliament*); the eleven personal national lines and the live `pushed` (`apps/server/src/services/nationPersonal.ts`, `pushTarget.ts`), `{until}` stored with its epoch.
 - **Built:** v1–v5 (slices 1–5), local editions (review 4 fix round, 7 Oct 2026), the *Council
   rule* row and the rule headlines (voting rework, 12 Oct 2026). A slice-1 *While You Were Away*

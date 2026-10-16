@@ -3,8 +3,8 @@ type: system
 title: Legacy
 aliases: [Legacy points, Lasting perks, Legacy perks, The record in the republic]
 tags: [long-term, progression, slice-8]
-status: designed
-slice: "MVP, slice 8, not built yet (record and perks; decided 14 Oct 2026)"
+status: partly built
+slice: "8 (server built 16 Oct 2026; client in phase C)"
 gdd: ["§17.3", "§14.11", "§10.4"]
 adrs: ["0057", "0052"]
 updated: 2026-10-16
@@ -34,14 +34,17 @@ Legacy is your **permanent, public political record**, shown on your profile (*L
 
 ## Where it lives
 
-**Rules:** [[GDD#17.3 Legacy (new)|GDD §17.3]] · [[design/slice-8-life#7. Legacy (GDD §17.3, pinned)|slice-8 design §7]] · [[adr/0057-legacy-entries-by-natural-ref-credited-in-character-transactions|ADR 0057]] (proposed) · [[adr/0052-personal-modifiers-items-perks-and-recognition|ADR 0052]] (perks as personal modifiers) · [[tech/slice-8|tech spec slice 8]]
+**Rules:** [[GDD#17.3 Legacy (new)|GDD §17.3]] · [[design/slice-8-life#7. Legacy (GDD §17.3, pinned)|slice-8 design §7]] · [[adr/0057-legacy-entries-by-natural-ref-credited-in-character-transactions|ADR 0057]] · [[adr/0052-personal-modifiers-items-perks-and-recognition|ADR 0052]] (perks as personal modifiers) · [[tech/slice-8|tech spec slice 8]]
 
-**Code (planned, per ADR 0057; none exists yet):**
-- A `legacyEntries` collection with a unique `{ characterId, ref }` (`term:…`, `award:…`, `expose:…`, `ambition:…`); embedded `legacy { total, spent, perks }`; `legacyFromWindow` in the settlement (`seasonCredited`, `seasonCredits` and the refs `champion:…`, `award:{season}:…` deferred with the season, the refs reserved); migration `012-slice8-life` back-fills past terms and awards (renumbered from 010 on 14 Oct 2026).
-- Content (T6, 16 Oct 2026): the entries' words, the eight perks' names and lines, the Me tab's block and the `perk` modal in `packages/content/src/data/copy.ts` (`copy.life.legacy`); the paper's *For the Record* line in `lifeHeadlines.ts`.
-- Rules: `packages/rules/src/legacy.ts` (T3, 16 Oct 2026). Before that only `UNREST_PRIZE.legacy: 2` in `constants.ts`. (Other `legacy` hits in the code are the voting rework's kept old order paper, unrelated.)
+**Code:**
+- Rules: `packages/rules/src/legacy.ts` (`perkGate`, `legacyFromWindow`, the acts' rows, milestones).
+- Data: `legacyEntries` (`packages/db/src/models/legacy.ts`, unique `{ characterId, ref }`); embedded `legacy { total, spent, perks }`; migration `012-slice8-life` back-fills past terms and awards.
+- Server: `apps/server/src/services/legacyService.ts` (`addLegacyInTx`, which inserts only new refs and moves `legacy.total` in the same transaction; `legacy.get/takePerk`); the settlement's terms, awards and the Unrest prize's +2 in `lifeSettlement.ts`; the exposé's +2 in `exposeService.ts`; Protégé and an Ambition's completion (+30) in `chapterLife.ts`; router `apps/server/src/trpc/routers/dossier.ts` (`legacy`).
+- Content: `copy.life.legacy` in `copy.ts`; *For the Record* in `lifeHeadlines.ts`.
 
 ## Status
+
+**Phase B, lane 2 (16 Oct 2026): the server is built** (T14): the record from terms, awards, the Unrest prize, an exposé, Protégé and an Ambition, the perks to buy, the paper's line. Not yet: survivals of a vote on the Chair or a removal, a pledged law (not read by the settlement), the Me tab and the profile (phase C).
 
 **MVP, slice 8, not built yet.** Planned for [[Slice 8 A Life in the City|slice 8]], record and perks together. The events it records (council terms, heroes, Issue awards) are already stored by slices 3–4, and ADR 0057 plans a back-fill so they count.
 
