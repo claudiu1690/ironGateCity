@@ -40,7 +40,7 @@ Per [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] and [[design/slice
 
 ## Status
 
-**Server built (slice 8 phase B, 16 Oct 2026):** the buffs on every tier-1 action's and mission's receipt. The Me tab's line is `life.me`; the client is T32. *Lodged* and *Weatherproof* stay out for now (a question to the user is pending).
+**Server built (slice 8 phase B, 16 Oct 2026):** the buffs on every tier-1 action's and mission's receipt. The Me tab's line is `life.me`. **The client is built (T32, phase C lane P, `2af2468`):** `BuffLine` (`packages/ui/src/components/Bar.tsx`, `MeBuffs` on the Me tab) and the receipt's buff lines (`buffReceiptLines` in `packages/ui/src/lifeLines.ts`, drawn by `ResultModal`). *Lodged* and *Weatherproof* stay out for now (a question to the user is pending).
 
 ## Decisions
 

@@ -9,6 +9,15 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 8 phase C, lane P (the Wardrobe, shops, bodyguards, the bar)
+
+The client screens on lane 1's server: the Me tab's Wardrobe block, chooser and full sheet; shop cards,
+the sell sheet and the back room's row on place sheets; the journey's dress line; the hire card,
+*Walking with you* and his row on the run-in sheet; the bar's and the dining room's cards; the buff
+line and the receipts' buff lines; `ResultModal`'s life lines (`2af2468`, `6bb7ff8`). Three new
+e2e projects (`wardrobe`, `bodyguard`, `bar`), all passing. Updated [[Equipment and Wardrobe]],
+[[Bodyguards]], [[Bars]], [[Buffs]], [[Slice 8 A Life in the City]].
+
 ## [2026-10-16] build | Slice 8 phase B, lane 1, continued (T13)
 
 Society calls through the mission service, the morgue file's chosen name, the patron service (the

@@ -36,13 +36,13 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 - Data: `characters.bodyguard { tier, name, paidThroughDay }` (a day key, like the flat's rent; kept after a lapse so a re-hire keeps his name); `encounters.minder` and `chances.minder`, frozen when the run-in fires.
 - Content (**written, T27 data, 16 Oct 2026**): `packages/content/src/data/bodyguards.ts` (the three tiers' names, portraits and run-in lines); `hire: true` on all six party stores in `cities/*.ts`; the card's, the Me tab's, the run-in row's, the modals' and the help note's words in `copy.ts` (`copy.life.minder`), with the two paper lines in five voices waiting there for the `bodyguardLast` / `bodyguardGone` conditions.
 - Server: `bodyguardService` (`bodyguard.hire` at your party store, `bodyguard.renew` from anywhere); the row in `encounterService`; the paper's `bodyguard-last` / `bodyguard-gone` from the settlement. No job.
-- Client: `HireCard`, `HireRow`, `MinderRow`, the run-in sheet's first row; `bodyguard.spec.ts`.
+- Client (**built, T32, phase C lane P, 16 Oct 2026**): `packages/ui/src/components/Minder.tsx` (`HireCard`, `HireConfirm`, `MinderRow`, `MinderEncounterRow` as the run-in sheet's first row in `Street.tsx`, `MinderResultRow` for the renewal's modal); `apps/client/src/features/life/PlaceLife.tsx` (the card at the party store), `MeLife.tsx` (`MeMinder`, *Walking with you*); `StreetView.runIn.minder { name }` for *{Name} was pushed aside*; e2e `apps/client/e2e/bodyguard.spec.ts` (project `bodyguard`).
 
 **Art needed** (design §24.6): `portrait.doorman`, `portrait.steward`, `portrait.minder` (Noir Lithograph; no uniform, badge, armband or weapon).
 
 ## Status
 
-**Server built (slice 8 phase B, 16 Oct 2026):** the hire, the renewal, the card, his row at every run-in, *minded* with his line. Waiting: the paper's two lines (lane 2's paper, T16), the dev hooks (T17), the client (T32). The user moved bodyguards into the MVP on 14 Oct 2026; the design above replaces GDD §12's v3.0 contract (hire fee, two at a time, auto-renew, three hidden modifiers).
+**Server built (slice 8 phase B, 16 Oct 2026):** the hire, the renewal, the card, his row at every run-in, *minded* with his line. Waiting: the paper's two lines (lane 2's paper, T16), the dev hooks (T17, built `908d996`). **The client is built (T32, `2af2468`, `6bb7ff8`):** the hire card, *Walking with you*, his run-in row (dimmed against the police) and the result's lines. The user moved bodyguards into the MVP on 14 Oct 2026; the design above replaces GDD §12's v3.0 contract (hire fee, two at a time, auto-renew, three hidden modifiers).
 
 ## Decisions
 

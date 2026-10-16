@@ -39,7 +39,7 @@ Bars are places of kind `bar` where the town talks: dockers' bars, a press club,
 
 ## Status
 
-**Partly built:** the bar places and their tickets (slices 1–5, 7). **Server built (slice 8 phase B, 16 Oct 2026):** the bar's card, the dining room, the back room and its bribe. The client is phase C (T32).
+**Partly built:** the bar places and their tickets (slices 1–5, 7). **Server built (slice 8 phase B, 16 Oct 2026):** the bar's card, the dining room, the back room and its bribe. **The client is built (T32, phase C lane P, `2af2468`):** `packages/ui/src/components/Bar.tsx` (`BarCard`, `DiningCard`) in the place sheet through `apps/client/src/features/life/PlaceLife.tsx`; the back room's card from Rank 3 only; e2e `apps/client/e2e/bar.spec.ts` (project `bar`).
 
 ## Decisions
 
