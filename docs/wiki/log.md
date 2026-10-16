@@ -9,6 +9,10 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 8 phase A (rules, content schemas, art, DB)
+
+The developer built slice 8's phase A without the season: the rules (the Wardrobe, shops, personal modifiers, recognition, the Dossier and the exposé, patrons, the flat, Legacy, the chapters' milestones, the counts' endorsement, bodyguards and the bar's buffs), the content schemas, accessors and cross-checks (and bound the designer's data), the art (nothing missing; 25.38 MB), and the DB with migration 012. Updated [[Slice 8 A Life in the City]] (phase A, commits, leftovers). The details are in `docs/tech/slice-8.md`'s Deviations, phase A.
+
 ## [2026-10-16] update | Slice 8 content (T6, T27 data)
 
 The designer wrote slice 8's content into `packages/content`: the 41-item catalogue with `keepsakeFrom` and *Read* texts, shops on twenty places (hire, bar and dining flags), the Front's four places with eight actions and seven society calls (the late table and the morgue file among them), Crane and Marr with twelve Requests, the Dossier's lines and Brandauer, chapters 4–12 of *The Names on the Stone* and the two due chapters, fifteen personal lines in five voices, the bodyguards' tiers, and a `copy.life` block (the modals, help notes, bodyguards and the bar). GDD §12.1 and §19.3 and design §24.8 record the answers to tech §24.10 (the card shows a mission's odds). Updated [[Equipment and Wardrobe]], [[The Dossier]], [[Patronage and Favours]], [[Legacy]], [[Residence]], [[Ambitions]], [[Bodyguards]], [[Bars]], [[Buffs]], [[Clearwater]], [[People of Irongate]], [[Content Package]], [[Slice 8 A Life in the City]], [[Decision Log]], [[Open Questions]] (S8-T6), [[Drift Report]] (S8-1–S8-3), [[index]].

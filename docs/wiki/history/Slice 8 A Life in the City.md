@@ -64,15 +64,33 @@ Written in `packages/content` (lint, typecheck and a throwaway `loadContent()` r
 - `data/copy.ts`: a `life` block (the Wardrobe, shops, the Dossier, the exposé's texts, patrons, the flat, Legacy's words and perks, the desk's clocks, recognition, society calls, the modals and knock-ons, refusals, the twelve help notes, bodyguards and the bar).
 - GDD §12.1 (*on a mission*; four weeks ahead) and §19.3 (the rounds' and meals' rules) carry the designer's answers to tech §24.10; design §24.8 records them.
 
-**To bind (the developer):** `load.ts` (`patrons`, `dossierLines`, `extraNames`, `lifeHeadlines`; the life placeholders), `art.ts` (`portrait.crane`, `portrait.marr`, a `social` mission card), the bodyguard lines' condition kinds. See [[Open Questions]] S8-T6 and the [[Drift Report]] S8-1–S8-3.
+**Bound (the developer, `91f1503`):** `load.ts` carries `patrons`, `dossierLines`, `extraNames` and `lifeHeadlines` and allows `LIFE_PLACEHOLDERS`. `art.ts` adds `portrait.crane`, `portrait.marr` and a `social` mission card (`scene.hotel`). The bodyguards' two lines are now headline rows on T26's conditions, with his name as `{minder}`. See [[Open Questions]] S8-T6 and the [[Drift Report]] S8-1–S8-3.
+
+## Phase A as built (16 Oct 2026, the developer)
+
+What landed (details in [[tech/slice-8#Deviations (as built)|the tech design's Deviations, phase A]]):
+
+- **Rules:**
+  - `items.ts` v2: four slots, outfits, `wearGate`, the effect bounds;
+  - `shop.ts`, `personal.ts` (item rows, Party XP parts, the perk effects, the bar's `buffShares`) and `recognition.ts`;
+  - `dossier.ts` (entries, Case Files, informants, the exposé), `applyToNeutral`, and `feedMatches` for `expose`;
+  - `patrons.ts` (`patronDays` by the calendar), `home.ts` (the flat's rent as a day key), `legacy.ts` (with review 5's Unrest prize +2), and the chapters' milestones;
+  - `CountLine.bonus` and `scoreBonus`; Rested at the boundary; the Monday perk;
+  - `bodyguard.ts`, `buffs.ts` and the run-in's minder row (`minded`);
+  - `lifeTypes.ts`: conditions, acts, errors and placeholders.
+- **Content** (`slice8.ts`): the schemas, the accessors (`shopsAt`, `names`, `patronOf`, `societyCalls`…) and the cross-checks, including `barProblems`. The designer's data is bound and loads through every check.
+- **Art:** eighteen Wardrobe items, three scenes, the bar's two items, the three bodyguards and the two patrons. Nothing was missing from the art folder. The set is 25.38 MB.
+- **DB:** `dossierEntries`, `legacyEntries`, the life fields on `characters` (and the bodyguard and buffs), the encounter's minder, and migration 012 steps 1–3 with the Legacy backfill.
+- **Not built:** the season (deferred) and the §8.3 views (phase B).
+- **Testing:** scratch scripts only, under the user's rule. The fast check is green. The `missions`, `rival`, `travel`, `capital`, `home-map` and `clearwater` Playwright projects pass. One `phone` test (`canvass.spec.ts`, a sub-pixel pin ratio) fails and is left for QA.
 
 ## QA and leftovers
 
-Not built yet (phase A started 16 Oct 2026), so no QA. To watch: GDD Appendix C #74–#79 (approved defaults), #113, #114, and design §24.7's five (see [[Open Questions]]).
+Phase A built 16 Oct 2026; no QA yet. Leftovers: `canvass.spec.ts` *all six pins on the first view* fails on `phone` (pin 3's viewport ratio is 0.9999998). A question for the designer: should a Partial count towards a Request? (Built: Successes and Partials both count.) To watch: GDD Appendix C #74–#79 (approved defaults), #113, #114, and design §24.7's five (see [[Open Questions]]).
 
 ## Commits
 
-`a350253` design (4 Oct) · `3e04e18` tech design, ADRs 0051–0058 and the inventory research (4 Oct).
+`a350253` design (4 Oct) · `3e04e18` tech design, ADRs 0051–0058 and the inventory research (4 Oct) · phase A (16 Oct): `2bcd5d1` T1 · `11d2c41` T5 · `bcc6cef` T2 · `7798bc8` T7/T28 · `065ad16` T3 · `cf934e2` T27 schema · `6d43735` T4 · `bc4a8f6` T8/T29 · `2e346df` T26 · `91f1503` T6 binding · `18ef217` the Clearwater spec · `6d3787c` Deviations.
 
 ## Related
 
