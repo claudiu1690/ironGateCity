@@ -172,7 +172,7 @@ Each slice lists what's built, the content it needs, and the **question its play
 
 Five review rounds and the voting rework changed what slices 0–5 built: the wage (review 1), the opening and local editions (review 4), the six-hour game day, night windows and the patrol stop (review 5), and the town's rule vote (10–12 Oct). Their tech docs are `docs/tech/review-4.md`, `review-5.md` and `voting-rework.md`; each lists its knock-ons on slices 6–9, which are applied to those tech docs.
 
-### Slice 6 — Together
+### Slice 6 — Together (built)
 
 **Build:**
 - **Campaign Events**: scheduling, roles, sign-up as commitment, automatic resolution, results in the modal and the paper
@@ -182,7 +182,7 @@ Five review rounds and the voting rework changed what slices 0–5 built: the wa
 
 **Question:** **do players feel part of a team, and do they come back for the group's events?**
 
-### Slice 7 — The nation
+### Slice 7 — The nation (built)
 
 **Build:**
 - The rest of the ladder: **Governor/Mayor** (their rule is card 1 on the town's ballot), **Faction Chair** (who sets real Directives), **Parliament** (the Legislature), **national elections**, **the President** (one office at the top; design `docs/design/slice-7-nation.md`)
@@ -240,7 +240,7 @@ Ministers · first class, cars and the night train · townhouses and villas · S
 | Review 5 | none new, no migration (every new field reads absent as its default); changed: `cities` (`rivalPressure.byFaction` and `week`, the push by party; `unrestPrize { entry, paidDay }`), `awards` (`kind: 'unrest'`, `fxp`, `meta`), `requestLogs` (`character.treat`, `patrol.answer`); content: `Way.window` and `Mission.window` (`'night'`), `Location.treatment`, the patrol deck (ADR 0079–0082) | `patrol { nights[], quietUntil, card }` (the night patrol's buckets, its quiet and a waiting card) |
 | Voting rework | none new; `ordinances` is the **rule ballot** (model `RuleBallot`: `setDay`, `countDay`, `status: 'open' \| 'set' \| 'counted'`, `cards`, `unrest`, `changes`, `result`; an old order paper's fields under `legacy`; index `{ cityId, countDay }`); changed: `votes` (`ordinanceId`; exactly one of it and `candidateKey`), `candidacies` (`rule`; `platformId` gone), `officeTerms` (`rule`, `ruleSetAt`), `cities` (`world.voting: 2`, the conversion's guard), `requestLogs` (`council.setRule`); migration 009 refunds due deposits once; a city converts itself at its next settlement (ADR 0083–0086, `docs/tech/voting-rework.md`) | none (`endorsementsGiven[]` unchanged: one backing per election) |
 | 6 | `campaignEvents` (roster embedded), `eventSignups`, `chatMessages`, `chatReports`, chat rate documents, faction scoreboard totals | `presence` (unversioned, ADR 0040), open sign-up pointers (ADR 0036) |
-| 7 | `nation` (the term, the republic's shares, the President), `factions` (the Chair, standing orders, the push, lines, rules, fixtures), `factionElections`, `nationalElections`, `bills`, `laws`, `petitions`; changed: `officeTerms` (office kinds), `candidacies` (kinds), `votes` (new keys), `cities` (Clearwater's meter, the Governor, dissolved), `ordinances`, `contributions` (push scope) (ADR 0043–0050) | `termBackings[]`, the office kind on `offices[]`, the push on order items |
+| 7 | `nation` (the term, the republic's shares, the President), `factions` (the Chair, standing orders, the push, lines, rules, fixtures), `factionElections`, `nationalElections`, `bills`, `laws`, `petitions`; changed: `officeTerms` (office kinds), `candidacies` (kinds), `votes` (new keys), `cities` (Clearwater's meter under `battleground { state, groundswell, stateLog }`, `council.governor`, `council.dissolved`), `ordinances`, `contributions` (the push's `push|{f}|{day}` rows), `chatMessages` (the Officers channel); the laws in force projected on `nation` for the read path (ADR 0043–0050; as built, docs/tech/slice-7.md Deviations) | `termBackings[]`, the office kind on `offices[]`, the push and `setBy` on the day's orders |
 | 8 | `dossierEntries` (entries, Case Files, informants), `legacyEntries`, `seasons` (the Hall of Fame); changed: `nation` (the running season), `contributions` (`season\|{s}`), `campaignEvents` (the attached file), `journeys` (`dress`), `laws` (`endedBy: 'season'`), `cities` (the Front's places, shops) (ADR 0051–0058) | `equipment` (four slots), `outfits`, `lastOutfit`, `patrons[]`, `home.flat`, `legacy { total, spent, perks, seasonCredited }`, `milestones`, `expose`, `dossierBurns`, the day's limits on `today`. **Added 14 Oct 2026, to be designed:** bodyguard contracts and the bar buffs (likely small embedded fields: a prepaid contract's `until`, a buff's `until` or uses left) |
 | 9 | `telemetry`, `playerDays`, `networkSightings`, `signupCaps`, `inviteCodes`, `accountLinks`, `audits`, `reports` (replacing `chatReports`), `editorNotes`, `appeals`, `feedback`, `moderationLog`, `modProposals`; on Better Auth's `user`: the role, the moderation state, the normalised email, the closure, the tester flag; changed: `cities` and `districts` (`active`), `influenceLedger` (`damped`), the election collections (`setAside`, recounts), `officeTerms` (`recounted`, `vacatedBy`), `chatLimits` (reports), `paperEntries` (`desk.away`) (ADR 0059–0072) | `settings`, `seen.purpose`, `renamedDay`, `retired`, `today.bailsXp` |
 

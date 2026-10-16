@@ -3,7 +3,7 @@ type: entity
 title: Clearwater
 aliases: [clearwater, the swing city, the lake town]
 tags: [city, battleground]
-status: partly built
+status: built
 slice: "7 (content written 15 Oct 2026; being wired)"
 gdd: ["§14.1", "§14.11", "§14.13", "§17.2"]
 adrs: ["0050"]
@@ -77,6 +77,7 @@ What exists in code today (slice 7, phase A, 15 Oct 2026):
 
 ## Status
 
+- **Built** (16 Oct 2026, the integration): the Casino, the Tram Depot and the Harbour have their own scenes (`scene.casino`, `scene.tram-depot`, `scene.lake-harbour`, bound by place with `SceneBinding.locationId` ahead of the kinds' scenes); the hall's office reads *Mayor* on the front page too. [[tech/slice-7|tech spec]], *Deviations, Integration*.
 - **Phase C, lane Y (16 Oct 2026):** played end to end on a phone (`apps/client/e2e/clearwater.spec.ts`): the board from the nation map, *You're on the lake*, the Casino selected, The Front's three later pins, *Live here* (the sheet names the lake branch and the Courier), a canvass at the fish quay, the Tram Depot's mission, a bed in the Rows, a visitor's Clearwater edition, the Courier, seven seats and the Mayor in the Casino's hall blocks.
 - **15 Oct 2026, phase B lane 1 (developer):** playable. Its city day is `apps/server/src/services/battlegroundDay.ts` (`bootstrapBattleground`, `processBattlegroundBoundary`: drift on one meter, Monday's Issues, the meter's state on `cities.battleground`, the count of seven seats by `countBattleground` with lists of three, the rule by `decideBlocRule`, a Mayor from the largest bloc, the set with one card per party); `cityDayBuilt` is gone. Travel, *Live here* (`registerRefusal`'s `openIds`), the bed on the Rows, its election and ballot (one place, kind `district`, id `clearwater`), the Courier, every party's branch channel and Heat +25 % for rivals of its controller work; no patrol is rolled there. Not yet: the Chair's fixtures, the *Takes Clearwater* news.
 

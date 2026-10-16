@@ -3,17 +3,17 @@ type: history
 title: Slice 7 The Nation
 aliases: [Slice 7, The nation]
 tags: [slice, building]
-status: building
-dates: 2026-10-04 (designed); 2026-10-15 (approved, building)
+status: built
+dates: 2026-10-04 (designed); 2026-10-15 (approved, building); 2026-10-16 (built, integrated)
 commits: [1f8172a, ef6b697]
 gdd: ["§2", "§14.1", "§14.8", "§15.1", "§15.4", "§15.5", "§15.6", "§15.8", "§15.9", "§15.10", "§17.1"]
 adrs: ["0043", "0044", "0045", "0046", "0047", "0048", "0049", "0050"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Slice 7 The Nation
 
-**Status: building** since 15 Oct 2026, when the user approved the design's seven defaults. Designed on 4 Oct 2026; amended by [[Review 4]], [[Review 5]] and the [[Voting Rework]]. Phase A runs in two lanes: the developer's rules, schemas and accessors (T1–T6, T9, T10) and the designer's content (T7 Clearwater, T8 the nation).
+**Status: built** (16 Oct 2026: both phase C lanes, then the integration: the new art, T30's sweeps and report, the full e2e green, T31's docs); **QA next**. Building began 15 Oct 2026, when the user approved the design's seven defaults. Designed on 4 Oct 2026; amended by [[Review 4]], [[Review 5]] and the [[Voting Rework]]. Phase A runs in two lanes: the developer's rules, schemas and accessors (T1–T6, T9, T10) and the designer's content (T7 Clearwater, T8 the nation).
 
 ## Goal and playtest question
 
@@ -109,7 +109,7 @@ Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the s
 
 - **Built:** the Faction tab's sixth chip **Chair** (Rank 4+): the Chair's desk (Orders with the three pickers and the push, Lines with the party line and the party's cards and the Chair's bill, Events with a call from anywhere and tomorrow's fixtures, Members) and the read-only page; the Chair's election (`/faction/election`, `/vote`, `/result`) and the vote on the Chair (`/faction/confidence`); Parliament (`/parliament`, a bill's page with the count and the veto card, the catalogue and bloc sheets, the law book `/parliament/laws`, *LAW* tags on tickets); the party's pick and the republic's election (`/election/pick`, `/election/national`, the result's `ScoreTable` with *To be confirmed* / *Final*); the President's page (`/office/president`); the petition page (`/council/petition`) and the Election card's petition line. Code: `packages/ui` (`NationHeader`, `Parliament`, `NationalBallot`, `ChairDesk`, `Petition`), `apps/client/src/routes/{parliament,election,president,petition}.tsx`, `features/chair/`, `features/nation/`.
 - **Specs:** `chair`, `nation` (the Parliament and election half), `removal`, `petition`, each its own Playwright project after slice 6's; all four pass.
-- **Findings:** after a quiet month every home city is in Unrest and every bloc's locals abstain, so nothing passes Parliament (**settled 16 Oct**: the −3 at an unvoted count was the cause; in Unrest the locals now vote the secretary's line and the −3 needs an eligible voter; GDD §14.11, §15.6; [[design/slice-7-nation|design, Settled 16 Oct (phase C)]]; code pending, [[Drift Report]] D-S7C-1); the control override did not show in the count's seats; the record hook's rows are shared between characters on one day. Details and deviations: [[tech/slice-7|tech spec]], *Deviations, phase C, lane X*.
+- **Findings:** after a quiet month every home city is in Unrest and every bloc's locals abstain, so nothing passes Parliament (**settled 16 Oct**: the −3 at an unvoted count was the cause; in Unrest the locals now vote the secretary's line and the −3 needs an eligible voter; GDD §14.11, §15.6; [[design/slice-7-nation|design, Settled 16 Oct (phase C)]]; built in the integration, [[Drift Report]] D-S7C-1 resolved); the control override did not show in the count's seats; the record hook's rows are shared between characters on one day. Details and deviations: [[tech/slice-7|tech spec]], *Deviations, phase C, lane X*.
 
 ## Phase C, lane Y: the nation map, Clearwater, the Governor, the paper (T24, T25 in part, T29 in part; 16 Oct 2026)
 
@@ -118,13 +118,23 @@ Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the s
 - **Specs:** `clearwater` (the nation map's layout at 375 × 667 and the lake end to end) and `governor`, each its own Playwright project after lane X's; both pass, with `travel`, `review6`, `landscape`, `council`, `voting`, `faction`, `events` green beside them.
 - **For QA:** `review1` fails after other phone specs when a rule is in force in Duskwall (the plate's two hit areas overlap); the journey card on the lake train still talks about the capital (fixed in content 16 Oct); the Governor's front page says *Governor* where the office is *Mayor* (the headlines and copy now use `{title}` or the right word, 16 Oct; the caption is the developer's). Details: [[tech/slice-7|tech spec]], *Deviations, phase C, lane Y*.
 
+## Integration: the art, T30, T31 (16 Oct 2026)
+
+- **Art:** six scenes catalogued: the Casino (in the folder since October) and five painted for the nation at 1344 × 752 (the polling station, the law book, the tram depot, the Governor's office, the lake harbour), with the designer's final alt texts. A scene can be bound to one place (`SceneBinding.locationId`, checked first by `pickArt`): Clearwater's Casino, tram depot and harbour. The pick's and the republic's pages stand on the polling station, the bills and the law book on the law book, the Governor's page on the Governor's office. The set is 24.02 MB; the budget 24.52 MB ([[Art and Maps Pipeline]]).
+- **The designer's phase C rulings built:** in Unrest the locals vote the secretary's line; the −3 needs an eligible voter; `{title}` (Governor or Mayor) in the Governor's headlines and the office front page, whose caption reads *Mayor* in Irongate and Clearwater. In the full run a bill now passes 41–19 where lane X saw 1–0–59.
+- **Lane Y's issues fixed:** the target bar rides on an action's and a mission's result; specs that matched a nation pin's whole name; `review1`'s overlap (the home plate's rule line keeps 44 px but reaches down, so the plate's notes keep a 44 px band).
+- **A layout change:** on an upright phone 700 px tall or less the nation map's law chips give way to the map (review 6's every-pin check failed at 375 × 667 with the paper's banner up); a designer flag ([[Drift Report]] D-S7I-2).
+- **T30:** the slice-7 vocabulary sweep (refuses *whip, Directive, recall, Legislature, National Control, no-confidence, Chancellor* and the war words; allows *ballot* and *The Front*, *front door*, *front page*) on every slice-7 spec's screens; `pnpm report:playtest` prints *The nation* (§15.2) from a pure builder, `packages/db/src/nation.ts`.
+- **The full e2e:** every project green after the fixes (phone 64, the slice 2–6 and review projects, the six slice-7 projects); one flake (`qa-review5` m5) passed on its re-run. Counts and fixes: [[tech/slice-7|tech spec]], *Deviations, Integration*.
+- **T31:** the README's slice-7 hooks, dev panel buttons and six walk-throughs; ADRs 0043–0050 accepted; the plan marks slices 6 and 7 built.
+
 ## QA and leftovers
 
-Building; no QA yet. The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
+Built; QA next (the integration Deviations list what to look at first). The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
 
 ## Commits
 
-`1f8172a` design, art done (4 Oct) · `ef6b697` tech design and ADRs 0043–0050 (4 Oct). Voting addenda in `9067c94` (10 Oct). Phase A: `94572ed` T6 schemas · `54b8951` T1–T3 · `d75c541` T4 · `f07ea6b` T5 · `c455d44` content (designer) · `7a5e514` T9 and the bindings · `aed0ec7` T10 · `523ae99` the Clearwater stopgap. Phase B lane 2: `c971245` the views · `53ec4c9` T14–T19 · `136b50d` the boundary's ObjectIds · `2f542c4` the petition close and the push on order items · `cb9d2c6` the Chair's call · `237b3e6` the Monday bills now.
+`1f8172a` design, art done (4 Oct) · `ef6b697` tech design and ADRs 0043–0050 (4 Oct). Voting addenda in `9067c94` (10 Oct). Phase A: `94572ed` T6 schemas · `54b8951` T1–T3 · `d75c541` T4 · `f07ea6b` T5 · `c455d44` content (designer) · `7a5e514` T9 and the bindings · `aed0ec7` T10 · `523ae99` the Clearwater stopgap. Phase B lane 2: `c971245` the views · `53ec4c9` T14–T19 · `136b50d` the boundary's ObjectIds · `2f542c4` the petition close and the push on order items · `cb9d2c6` the Chair's call · `237b3e6` the Monday bills now. Integration: `0a6615e` the six scenes · `095b568` the final alt texts · `e710550` the rulings and the e2e fixes · `1819650` T30 · the T31 docs commit.
 
 ## Related
 

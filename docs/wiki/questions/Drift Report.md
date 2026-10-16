@@ -24,7 +24,9 @@ the user's call.
 
 | # | Where | Conflict | Owner |
 |---|---|---|---|
-| D-S7C-1 | `packages/rules/src/parliament.ts` `localVote`; `apps/server/src/services/cityDay.ts` (the −3); `apps/client/src/features/chair/ChairTab.tsx`; `apps/server/src/services/nationPersonal.ts` (`{title}` facts) | GDD §14.11 and §15.6 (16 Oct 2026) say the locals vote the secretary's line in Unrest and the −3 needs an eligible voter; the code still abstains and penalises an empty branch. The three Governor headlines now carry `{title}`, which the facts do not pass yet; `ChairTab` shows *follow your line* for `localsFollow: 'unrest'`. Exact changes: design *Settled 16 Oct 2026 (phase C)* #1 and #4 | DEV |
+| D-S7I-1 | `packages/content/src/data/events.ts` (the branch fixture's line) | *There's a canvass tonight …* prints on the paper's front page; *canvass* is a system term (GDD §1.5, review 4's sweep). Found by the slice-7 sweep, which leaves review 4's system terms to review 4's own spec | GD |
+| D-S7I-2 | `apps/client/src/routes/nation.tsx` (the law chips); design `slice-7-screens.md` §14 | Screens §14 draws the bar and the chips (44 + 36 px) at 375 × 667; as built (16 Oct, integration) the chips give way to the map on an upright phone 700 px tall or less, so review 6's every-pin check holds with the paper's banner up. Confirm or place the chips elsewhere | GD |
+| D-S7I-3 | `copy.nation.paper.captions.governor` | The office front page's caption says *Mayor* in Irongate and Clearwater from `officeTitle` in code (16 Oct, integration); a `captions.mayor` (or a `{title}`) string in copy would put the words back in content | GD |
 | A9 | GDD §22.2; ADR 0058 (status note added 14 Oct); tech/slice-8 | Season rollover "starts the rules again", but since the voting rework **a city always has a rule** (ADR 0083). May the rollover end a council rule, and what runs until the next count? | USER |
 | B2 | `stats.chaBase` in the character model; `wornCha()` in `packages/rules` | The GDD (§8.1, §8.2, §8.5, fixed 14 Oct) says there has been no Charisma base since review 4; the code still stores one and adds it (0 for new characters) | DEV |
 | F1 | `package.json` | `pnpm check` and `pnpm e2e:only` are named in the 8 Oct workflow but don't exist (the developer agent file marks them "planned") | USER |
@@ -38,6 +40,12 @@ the user's call.
 - `design/slice-0-answers.md` keeps the first reference recruit (STR 10 / INT 12 / AGI 5 / CHA 2) as a historical record. The current one is STR 8 / INT 12 / AGI 5 / CHA 5.
 - `apps/client/vercel.json` still has an `<api-host>` placeholder; it waits for hosting at the end of the project.
 - Review 5's patrol street: the design put it in content (`cities[].patrol.street`); the server derives it from the city's street-kind place (`streetOf()` in `patrol.ts`). The strings are the same today.
+
+## Resolved — 16 Oct 2026 (slice 7, integration)
+
+| Rows | What was wrong | Fixed by | How |
+|---|---|---|---|
+| D-S7C-1 | The code abstained in Unrest, penalised an empty branch with the −3, showed *follow your line* for `localsFollow: 'unrest'`, and passed no `{title}` to the Governor headlines | DEV | `e710550`: `localVote` votes the secretary's line in Unrest; the −3 needs `turnout.eligible > 0`; the Chair's Lines show `localsUnrest`; `title` filled for `governorTookOffice`, `governorLocal`, `addressGiven` and the office front page (and allowed in `NATION_PERSONAL_PLACEHOLDERS`) |
 
 ## Resolved — 15 Oct 2026 (slice 7, phase B)
 

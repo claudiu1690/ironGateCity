@@ -1,7 +1,7 @@
 ---
 type: overview
 title: Index
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Index — the wiki catalog
@@ -53,7 +53,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Influence Ledger and City Hero]] — A ledger row per opinion change, the plate's rank line, City and District Heroes; the slice-6 scoreboard.
 - [[Issues of the Week]] — Two Issues per city each Monday: +50 % on tagged work, momentum, Sunday ownership, week-long effects.
 - [[Weather]] — Per-city daily weather shifting odds ±10 %, never blocking; designed, not built, and no slice schedules it.
-- [[National Control]] — Each party's weighted share across the cities (40/30/10/10/10); half the national score. Slice 7: the server's snapshot built, the client's bar to come.
+- [[National Control]] — Each party's weighted share across the cities (40/30/10/10/10); half the national score. Slice 7: built (the snapshot, the bar and law chips over the nation map).
 - [[Capital Districts]] — Irongate's five districts: own meters, states, two seats and Issues; the outlines tile the picture.
 - [[Travel and Journeys]] — Timed trains from Level 10, third class 20 Iron, lazy arrival, journey cards, the route drawn on the map.
 - [[Home Cities]] — A party's home never drops below 50 %; morale, the rival-pressure cap, one map with locked pins.
@@ -65,10 +65,10 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Offices]] — The office ladder (councillor → Governor → Chair → deputy → President), pay and gates; only councillor is built.
 - [[City Council and the Rule Vote]] — Towns vote every five days on one of three rule cards; seats by reputation plus backers. Reworked 12 Oct.
 - [[Ordinances]] — The eleven bounded council rules, the closed effects language, and how the rule vote picks the one in force.
-- [[National Elections]] — Each 28-day term elects a President and Parliament's 60 seats by D'Hondt. Slice 7, designed only.
-- [[The Legislature and Laws]] — Parliament's bills, votes and veto; 13 bounded laws as a third modifier source. Slice 7, designed only.
+- [[National Elections]] — Each 28-day term elects a President and Parliament's 60 seats by D'Hondt. Built in slice 7.
+- [[The Legislature and Laws]] — Parliament's bills, votes and veto; 13 bounded laws as a third modifier source. Built in slice 7 (in Unrest the locals vote the secretary's line).
 - [[Ministers]] — Weekly bounded settings per ministry; post-MVP and parked, with little design detail.
-- [[Recall and Removal]] — Petitions to dissolve a council, votes to remove the President or the Chair; no snap elections. Slice 7.
+- [[Recall and Removal]] — Petitions to dissolve a council, votes to remove the President or the Chair; no snap elections. Built in slice 7.
 - [[NPC Fill]] — Local candidates, secretaries, local deputies and party figures fill every list; councils built, national slice 7.
 - [[Chat and Presence]] — Party chat channels, 'here now' presence, bail/visit/nudge favours. Slice 6, built.
 - [[Campaign Events]] — Co-op events: signing up is the commitment, volunteers fill empty roles, results by modal. Slice 6, built.
@@ -85,7 +85,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Ashford]] — Alliance home: College, Wharf and Station Road quarters, 12 places, 7 missions, the Gazette.
 - [[Coalport]] — Collective home and the first city built: Mill, Harbour and Sidings, 12 places, 7 missions, the Clarion.
 - [[Duskwall]] — Vanguard home, a frontier customs town: Fortress, Pass and Town, 12 places, 7 missions, the Sentinel.
-- [[Clearwater]] — The second battleground: one meter, seven seats; playable on the server since 15 Oct (its city day, *Live here*, the Courier); the client's screens in slice 7 phase C.
+- [[Clearwater]] — The second battleground: one meter, seven seats; playable on the server since 15 Oct (its city day, *Live here*, the Courier); its screens built in slice 7 phase C (the Casino, tram depot and harbour have their own scenes).
 - [[People of Irongate]] — Named NPCs: secretaries, 58 local candidates, opponents, carers; party figures and patrons; portrait files.
 
 ## Tech
@@ -114,7 +114,7 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Slice 4 The Battleground]] — Built 3 Oct: trains, Irongate's five districts, residence, Issues, the ledger and District Hero, maps v3.
 - [[Slice 5 Risk]] — Built 5 Oct: 22 missions, Heat and record, the cells, the infirmary, run-ins, rival ground.
 - [[Slice 6 Together]] — Built, QA'd and fixed 15 Oct ([[review/slice-6-build-notes|build notes]]): Campaign Events (the Doorstep Drive, Rally, Poster Night, three signature events), the Faction tab, chat and presence, bail and visit favours.
-- [[Slice 7 The Nation]] — Approved 15 Oct, building (phase A done: rules, schemas, content, art, DB): terms, Governor/Chair/deputies/President, laws, Clearwater, National Control, petitions.
+- [[Slice 7 The Nation]] — Built 16 Oct (phases A–C and the integration; full e2e green), QA next: terms, Governor/Chair/deputies/President, laws, Clearwater, National Control, petitions.
 - [[Slice 8 A Life in the City]] — Designed only: the Wardrobe, Dossier and exposés, two patrons, the flat, Legacy, the season; bodyguards and bar services added 14 Oct, to be designed.
 - [[Slice 9 Launch Readiness]] — Designed only: telemetry, the balance pass, anti-abuse, moderation, polish; ends locally, with hosting and the betas after it.
 - [[Review 1]] — 30 Sep, the first play-through: jobs become a wage, first day on your best stat, labels explained, orders-complete modal.

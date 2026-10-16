@@ -1,6 +1,6 @@
 # ADR 0043 — The nation's day: a term calendar from a code epoch, one `nation` document, settled after every city by a job and by the first request
 
-**Status:** proposed (slice 7) · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations) · **Date:** 2026-10-04
 
 ## Context
 

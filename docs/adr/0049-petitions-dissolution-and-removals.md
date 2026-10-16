@@ -1,6 +1,6 @@
 # ADR 0049 — Petitions are set-once records closed at a boundary; dissolution vacates and strikes without new seats; removals act at the division
 
-**Status:** proposed (slice 7); decision 2 amended 2026-10-14 (the rule runs out its window; GDD §15.9, ADR 0083) · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations); decision 2 amended 2026-10-14 (the rule runs out its window; GDD §15.9, ADR 0083) · **Date:** 2026-10-04
 
 ## Amendment (14 Oct 2026)
 

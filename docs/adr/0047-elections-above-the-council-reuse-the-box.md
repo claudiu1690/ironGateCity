@@ -1,6 +1,6 @@
 # ADR 0047 — Elections above the council reuse slice 3's candidacies and numbered ballot box, with `factionElections` and `nationalElections` for the windows and the counts
 
-**Status:** proposed (slice 7; applies ADR 0018 and ADR 0019); amended 2026-10-14 for the voting rework, see ADR 0083 and ADR 0084 · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations; applies ADR 0018 and ADR 0019); amended 2026-10-14 for the voting rework, see ADR 0083 and ADR 0084 · **Date:** 2026-10-04
 
 ## Amendment (14 Oct 2026)
 

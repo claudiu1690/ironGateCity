@@ -3,11 +3,11 @@ type: system
 title: National Elections
 aliases: [National election, Season Election, The republic's vote, The party's pick, President election, Acclamation, Congress, Convention]
 tags: [politics, nation, elections]
-status: designed
+status: built
 slice: "7 (designed, not built)"
 gdd: ["§2", "§15.2", "§15.5", "§15.10", "§22"]
 adrs: ["0043", "0047", "0062"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # National Elections
@@ -50,6 +50,7 @@ designed for slice 7 and **not built**.
 
 ## Status
 
+- **Built** (slice 7, 16 Oct 2026): the screens (lane X) and the full e2e; the pick's and the republic's pages stand on the polling station's scene (`nationScenes.ballot`). [[tech/slice-7|tech spec]], *Deviations, Integration*.
 - **Server built** (slice 7 phase B, 15 Oct 2026): the national election end to end (design §6.3's example: 41.7 / 33.3 / 25.0, 25 / 20 / 15) and the Chair's election. **Not built:** the screens (phase C). **Settled 15 Oct 2026:** on the Chair's ballot the secretary wins an exact tie (ties: votes, then the secretary before any player, then backers, completed terms, filing; [[GDD#15.4 Faction Chair and Party Directives|GDD §15.4]], [[design/slice-7-nation|design, Settled 15 Oct (phase B)]]); `countChair` gains one comparator step, not yet applied in code ([[Drift Report]]).
 - The voting rework changed nothing here: the national ballot is still a vote for a person with two pledged laws ([[tech/voting-rework|tech §17]] item 7).
 

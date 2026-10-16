@@ -1,6 +1,6 @@
 # ADR 0050 — Clearwater: a single-meter battleground on its city document, counted and divided by the capital's functions with parameters
 
-**Status:** proposed (slice 7; extends ADR 0027) · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations; extends ADR 0027) · **Date:** 2026-10-04
 
 ## Context
 

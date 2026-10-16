@@ -3,7 +3,7 @@ type: system
 title: The Legislature and Laws
 aliases: [Legislature, Parliament, Laws, Law book, Bills, The veto, Deputies, Local deputies]
 tags: [politics, nation, parliament, laws, modifiers]
-status: designed
+status: built
 slice: "7 (designed, not built)"
 gdd: ["§2", "§15.6", "§15.8", "§22.2"]
 adrs: ["0043", "0044", "0045"]
@@ -56,6 +56,7 @@ law book fills from the first week even with no players. Designed for slice 7, *
 
 ## Status
 
+- **Built** (slice 7, 16 Oct 2026, the integration): on screen and in the full e2e. The designer's ruling is in the code: in Unrest a bloc's locals vote the **secretary's line** ahead of the players and the Chair (`localVote`, `why: 'unrest'`; the Chair's Lines say so), so a quiet month no longer stalls Parliament (the nation spec's bill passed 41–19). A bill's page and the law book stand on the law book's scene (`content.art.nationScenes.laws`). [[tech/slice-7|tech spec]], *Deviations, Integration*.
 - **Server built** (slice 7 phase B, 15 Oct 2026): tabling, votes, divisions, enactments, strikes, the veto and the override, removals, the Monday bills; checked with scratch scripts (four tablers racing three slots, the veto racing the enactment ten times, the thirteen laws in play). **Not built:** the screens (phase C).
 - The voting rework left Parliament unchanged: "a deputy's For / Against on a bill is already a vote on a rule" ([[design/voting-simplified|voting-simplified §3.10]]).
 

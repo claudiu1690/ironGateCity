@@ -7,7 +7,7 @@ status: built
 slice: "0 (local DB); 3 (dev panel); a button set per slice to 5, review 5, voting rework"
 gdd: []
 adrs: ["0001", "0004", "0072"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Dev Panel and Local Setup
@@ -94,7 +94,10 @@ None of these hold a game rule: they stand in for time passing or other players,
 does the rest.
 
 **Operator scripts** against any `MONGODB_URI`: `pnpm admin:boost --email … [--dry-run]`,
-`pnpm report:playtest [--json]` (run within a week of a playtest: request logs expire).
+`pnpm report:playtest [--json]` (run within a week of a playtest: request logs expire; slice 7
+adds *The nation*, from `packages/db/src/nation.ts`). The README has the slice-7 term hooks, the
+panel's nation buttons and six walk-throughs (a Governor's week, the Chair, a bill, a national
+election on the test clock, a petition, Clearwater).
 
 **Dev-only client route**: `/dev/maps`, the map viewer.
 

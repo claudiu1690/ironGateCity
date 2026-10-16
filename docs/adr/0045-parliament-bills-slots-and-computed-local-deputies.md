@@ -1,6 +1,6 @@
 # ADR 0045 — Parliament: bills in their own collection with embedded votes, slots by natural keys, local deputies computed at the division, a signature day that serialises with the veto
 
-**Status:** proposed (slice 7) · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations); the Unrest link amended 2026-10-16 (the secretary's line) · **Date:** 2026-10-04
 
 ## Context
 
@@ -15,7 +15,7 @@ Parliament always sits (design §5, GDD §15.6). Sixty seats are split by the na
 **The vote:**
 
 - three days; deputies vote For or Against, publicly;
-- local deputies follow a chain: the player deputies' majority → the Chair's line → the secretary's line, and abstain while the party's home city is in Unrest;
+- local deputies follow a chain: the player deputies' majority → the Chair's line → the secretary's line; while the party's home city is in Unrest they vote the secretary's line ahead of the chain (amended 16 Oct 2026, phase C: they abstained, and a quiet month stalled Parliament; GDD §15.6);
 - the thresholds: 31, 36 for a factional law, 40 for a removal or an override.
 
 **After a pass:**

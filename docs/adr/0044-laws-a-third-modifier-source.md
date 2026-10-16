@@ -1,6 +1,6 @@
 # ADR 0044 — Laws are a third modifier source with per-effect `appliesTo`, bounded by `LAW_BOUNDS`, read from a day-keyed projection
 
-**Status:** proposed (slice 7; extends ADR 0021 and ADR 0030) · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations; extends ADR 0021 and ADR 0030) · **Date:** 2026-10-04
 
 ## Context
 

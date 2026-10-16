@@ -9,6 +9,17 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 7 integration: the six scenes, T30, T31, the full e2e green
+
+Six scenes wired (the Casino, the polling station, the law book, the tram depot, the Governor's
+office, the lake harbour; scenes bound by place; the art set 24.02 MB, budget 24.52); the
+designer's phase C rulings built (D-S7C-1 resolved); lane Y's issues fixed; the vocabulary sweeps
+and the playtest report's *nation* section; every Playwright project green. Updated
+[[Slice 7 The Nation]] (built, QA next), [[The Legislature and Laws]], [[National Control]],
+[[National Elections]], [[Recall and Removal]], [[Offices]], [[Party Orders]], [[Clearwater]],
+[[Art and Maps Pipeline]], [[Checks and Testing]], [[Dev Panel and Local Setup]], [[Drift Report]]
+(D-S7I-1 to D-S7I-3 added), `index.md`.
+
 ## [2026-10-16] update | Slice 7 phase C rulings: Parliament's stall, four strings, six alt texts
 
 The designer settled the quiet-month stall (every home in Unrest, a bill lost 1–0–59): the −3 at an

@@ -1,6 +1,6 @@
 # ADR 0048 — Every office is an `officeTerms` row; the ladder is a count of completed terms; the Governor is chosen in the count's transaction
 
-**Status:** proposed (slice 7; extends ADR 0020); decision 6 superseded 2026-10-12 by ADR 0083 (the town votes on a rule) · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations; extends ADR 0020); decision 6 superseded 2026-10-12 by ADR 0083 (the town votes on a rule) · **Date:** 2026-10-04
 
 ## Amendment (14 Oct 2026)
 

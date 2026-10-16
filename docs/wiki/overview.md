@@ -2,7 +2,7 @@
 type: overview
 title: overview
 aliases: [Overview, Home]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Irongate City — the wiki
@@ -18,13 +18,13 @@ This wiki is the **map** of the project: how each system works in plain words, w
 code live, what is built, and what was decided. The [[GDD]] stays the source of truth for every
 rule and number. How the wiki is kept: [[CLAUDE|operating manual]]. Full catalog: [[index]].
 
-## Where the project stands (15 Oct 2026)
+## Where the project stands (16 Oct 2026)
 
 - **Built:** slices 0–5 ([[Slice 0 Walking Skeleton|walking skeleton]] → [[Slice 5 Risk|risk]]),
   the fix rounds of [[Review 1]]–[[Review 5]], the [[Voting Rework]] (12 Oct), and
   [[Slice 6 Together|slice 6]] (built 15 Oct, **in QA**).
-- **Building:** [[Slice 7 The Nation|slice 7, the nation]] (the user approved its seven defaults on
-  15 Oct; rules, schemas and content in progress).
+- **Built, QA next:** [[Slice 7 The Nation|slice 7, the nation]] (approved 15 Oct; phases A–C and the
+  integration done 16 Oct, every Playwright project green).
 - **Designed, not built:** slices 8–9 ([[Slice 8 A Life in the City|a life in the city]],
   [[Slice 9 Launch Readiness|launch readiness]]).
 - **Running locally only** until the end of the project; no hosting yet.

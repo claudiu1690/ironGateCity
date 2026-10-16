@@ -3,11 +3,11 @@ type: system
 title: Recall and Removal
 aliases: [Recall, Petition, Petition to dissolve, Dissolution, No confidence, Vote to remove the President, Vote on the Chair, Impeachment]
 tags: [politics, petitions, nation]
-status: designed
+status: built
 slice: "7 (designed, not built)"
 gdd: ["§15.4", "§15.9", "§16.3"]
 adrs: ["0049", "0045", "0047"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Recall and Removal
@@ -52,6 +52,7 @@ nothing else. All three are designed for slice 7 and **not built**.
 
 ## Status
 
+- **Built** (slice 7, 16 Oct 2026): the petition and removal screens (lane X) and the full e2e. [[tech/slice-7|tech spec]], *Deviations, Integration*.
 - **Server built** (slice 7 phase B, 15 Oct 2026): dissolution (the rule in force untouched, the terms vacated), the Town Hall's signatures, the vote on the Chair, the removal of the President at 40 and the clerk's motion at a 24 % control share. **Not built:** the screens (phase C).
 - The voting rework changed two things: the petition closes **before the set** (it was before the division), and dissolution **no longer strikes** the rule in force.
 

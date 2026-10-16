@@ -1,6 +1,6 @@
 # ADR 0046 — The faction document: what a Chair sets, standing orders by family with a push, the party's target from members' own rows
 
-**Status:** proposed (slice 7; amends ADR 0009) · **Date:** 2026-10-04
+**Status:** accepted (slice 7, built 16 Oct 2026; as built: docs/tech/slice-7.md, Deviations; amends ADR 0009) · **Date:** 2026-10-04
 
 ## Context
 

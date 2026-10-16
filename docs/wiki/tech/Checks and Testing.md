@@ -7,7 +7,7 @@ status: built
 slice: "0; e2e projects added per slice and round; Vitest frozen 8 Oct 2026"
 gdd: []
 adrs: ["0004", "0070"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Checks and Testing
@@ -63,10 +63,16 @@ Package extras: `pnpm --filter @irongate/server check:voting-conversion`,
   specs run as serial projects, each depending on the one before: `phone` (most specs, Pixel 7),
   `small-phone`, `landscape`, `desktop` → `council` → `qa-council` → `dev-panel` → `travel` →
   `capital` → `qa-capital` → `home-map` → `missions` → `rival` → `qa-risk` → `review4` →
-  `qa-review4` → `review5` → `qa-review5` → `voting` → `qa-voting`.
+  `qa-review4` → `review5` → `qa-review5` → `voting` → `qa-voting` → `review6` → `faction` →
+  `favours` → `events` → `qa-together` → `chair` → `nation` → `removal` → `petition` →
+  `clearwater` → `governor`. Run in chunks under ten minutes with `--no-deps` (each chunk a fresh
+  server); slice 7's integration ran every project green that way (16 Oct 2026).
 - About 30 spec files: per slice (`canvass`, `session`, `day`, `arrival`, `council`, `travel`,
   `capital`, `missions`, `rival`, `voting`…), per review round, and QA's (`qa.*.spec.ts`). The
-  `review4` spec also sweeps screens for system terms and war words. `QA_SHOW_BUGS=1` shows known
+  `review4` spec also sweeps screens for system terms and war words; slice 7's specs sweep theirs
+  with `nationKit.sweep` (the refused words *whip, Directive, recall, Legislature, National Control,
+  no-confidence, Chancellor*, the war words, and *front* except *The Front*, *front door*, *front
+  page*; *ballot* allowed). `QA_SHOW_BUGS=1` shows known
   bugs kept as expected failures.
 - First run: `pnpm --filter @irongate/client exec playwright install chromium`.
 

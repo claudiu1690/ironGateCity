@@ -7,7 +7,7 @@ status: partly built
 slice: "1 (pipeline); 2 (kinds, budgets); maps v3 tiles 1–2 Oct; R2 hosting deferred"
 gdd: ["§13.5"]
 adrs: ["0007", "0015", "0024", "0035", "0076"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Art and Maps Pipeline
@@ -100,7 +100,7 @@ picture with every pin ([[Quarters and the Map]]).
 - [[adr/0035-home-quarters-outlines-and-overview|ADR 0035]], [[adr/0076-home-cities-one-map-capital-districts-tile-the-picture|ADR 0076]] — quarters and one map per home city.
 
 Fixed in the 14 Oct 2026 drift cleanup: `README.md` and the `art:check` comment now say "within its
-budget" (the cap is `TOTAL_BUDGET` in `scripts/art/build.ts`, 19.85 MB), not 12 MB; the project
+budget" (the cap is `TOTAL_BUDGET` in `scripts/art/build.ts`, 24.52 MB since slice 7's integration: 24.02 MB measured), not 12 MB; the project
 `CLAUDE.md` points at `maps-v3\`; GDD §13.5 states the mission art order as built (a tier-2 mission
 shows its type card first, then the place scene, then the map crop).
 
