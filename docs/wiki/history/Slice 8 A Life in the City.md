@@ -90,7 +90,8 @@ What landed (details in [[tech/slice-8#Deviations (as built)|the tech design's D
 - **T10, shops:** buy, sell and the back room's bribe, each one keyed transaction; the record's surcharge; a sale leaves every outfit.
 - **T30, bodyguards:** hire and renew, the card, his row at every run-in (never against the police), *minded* with his own line.
 - **T31, the bar:** a round, a plate, dinner; the buffs on the receipts; a round in hand spent at a mission's start.
-- **Not built:** T13 (society calls through `missionService`, `patronService`), forged papers at the checkpoint, `presence.recognised`. A place's cards and the Me tab's line are queries of their own (`life.place`, `life.me`). Details: [[tech/slice-8|tech/slice-8]] *Deviations, Phase B, lane 1*.
+- A place's cards and the Me tab's line are queries of their own (`life.place`, `life.me`). Details: [[tech/slice-8|tech/slice-8]] *Deviations, Phase B, lane 1*.
+- **T13 (continued, 16 Oct 2026, `b34c740`):** society calls through `missionService` (once a day per place, Favour, the entry one in four), the morgue file's chosen name, `patronService` (the card, the first visit, the gift, the Confidant's favours, `crossInTx` with Protégé's piece and Legacy), Request progress from every act and every landed entry (a Failure never counts), the endorsement in the counts (+2 at home, +1 in a battleground); forged papers at the checkpoint; `presence.recognised`; `/api/test/patron` and seven panel buttons. Details: *Deviations, Phase B, lane 1, continued*.
 
 
 ## Phase B, lane 2 as built (16 Oct 2026, the developer)
@@ -106,7 +107,7 @@ Phase A built 16 Oct 2026; no QA yet. Leftovers: `canvass.spec.ts` *all six pins
 
 ## Commits
 
-`a350253` design (4 Oct) · `3e04e18` tech design, ADRs 0051–0058 and the inventory research (4 Oct) · phase A (16 Oct): `2bcd5d1` T1 · `11d2c41` T5 · `bcc6cef` T2 · `7798bc8` T7/T28 · `065ad16` T3 · `cf934e2` T27 schema · `6d43735` T4 · `bc4a8f6` T8/T29 · `2e346df` T26 · `91f1503` T6 binding · `18ef217` the Clearwater spec · `6d3787c` Deviations · phase B lane 1 (16 Oct): `310a86f` the designer's alt texts and the Casino's cards · `bc29e2d` T9 · `96d8c20` T10, T30, T31.
+`a350253` design (4 Oct) · `3e04e18` tech design, ADRs 0051–0058 and the inventory research (4 Oct) · phase A (16 Oct): `2bcd5d1` T1 · `11d2c41` T5 · `bcc6cef` T2 · `7798bc8` T7/T28 · `065ad16` T3 · `cf934e2` T27 schema · `6d43735` T4 · `bc4a8f6` T8/T29 · `2e346df` T26 · `91f1503` T6 binding · `18ef217` the Clearwater spec · `6d3787c` Deviations · phase B lane 1 (16 Oct): `310a86f` the designer's alt texts and the Casino's cards · `bc29e2d` T9 · `96d8c20` T10, T30, T31 · `b34c740` T13, forged papers, `presence.recognised`.
 
 ## Related
 

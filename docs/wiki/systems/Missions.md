@@ -7,7 +7,7 @@ status: partly built
 slice: "5; night windows and four night missions in the review-5 fix round; society calls designed for 8"
 gdd: ["§13.1", "§13.2", "§13.3", "§13.5", "§13.6", "§8.4"]
 adrs: ["0031", "0032", "0080"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Missions
@@ -44,7 +44,8 @@ A mission is **tier 2** of play (about 15 % of content): a ticket under a *Missi
 ## Status
 
 - **Built** in [[Slice 5 Risk|slice 5]]: 22 missions at 21 places. [[Review 5]] added night windows and four night missions, so content now holds **26** (5 speech, 5 surveillance, 5 vandalism, 4 disruption, 4 theft, 3 sabotage) with **16** night windows.
-- **Designed, not built:** society calls and the patron introductions (slice 8); Dossier payloads on surveillance and theft (slice 8); Operations (tier 3, Rank 5+).
+- **Slice 8, server built (16 Oct 2026):** society calls through `writeMissionFinal` in `apps/server/src/services/missionService.ts` (`today.calls` once a day per place, Favour with the town's patron, the entry one time in four through `landEntry`; T13, `b34c740`), the patron introductions (*The morgue file* takes `mission.start`'s `subjectId`, `SUBJECT_REQUIRED`; *The late table*), the ticket's `MissionView.society` and `.subject`; Dossier entries on surveillance and theft (lane 2). The screens are phase C.
+- **Designed, not built:** Operations (tier 3, Rank 5+).
 
 ## Decisions
 

@@ -7,7 +7,7 @@ status: partly built
 slice: "4; hostile deck in 5; journey on the map in review 4; card stays in review 5; dotted trail and the nation map held sideways in review 6; the journey held sideways in its leftovers"
 gdd: ["§14.10"]
 adrs: ["0025", "0075"]
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Travel and Journeys
@@ -94,6 +94,10 @@ reward. Travel costs a ticket and time, **never Energy**.
   (rival home cities, hostile deck, deportation); review 4 (route on the map, `cardAt`, Town Hall
   landing); review 5 (the card stays until answered); review 6 (the dotted, smoothed trail; the
   nation map held sideways).
+- **Slice 8 (T13, 16 Oct 2026):** forged papers on the checkpoint card: *Show your papers* becomes a
+  Charisma check at 14 with the papers' +10 (its Partial the gate's), and *Talk your way through*
+  gets the +10 (`resolveJourneyChoice({ bonuses })`, `PAPERS_CHECK` in `packages/rules/src/travel.ts`;
+  `travelService.ts`). Design §21.1 #8.
 - **Not built:** first class, the car, the night train; checkpoints into Vanguard-controlled
   cities; snow and the Open Borders law on journey time; Clearwater's service (slice 7); carriage
   chat and fellow travellers' presence (slice 6); the *leave by* time for Campaign Events (slice 6).

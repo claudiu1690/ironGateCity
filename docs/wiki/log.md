@@ -9,6 +9,16 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 8 phase B, lane 1, continued (T13)
+
+Society calls through the mission service, the morgue file's chosen name, the patron service (the
+card, the first visit, gifts, the Confidant's favours, Protégé's piece and Legacy), Request progress
+from every act and every landed entry, the endorsement in the counts, forged papers at the
+checkpoint, `presence.recognised`, and `/api/test/patron` with seven panel buttons (`b34c740`).
+Updated [[Patronage and Favours]], [[Missions]], [[Chat and Presence]], [[Travel and Journeys]],
+[[Slice 8 A Life in the City]]; a new open question S8-R1 (Rested above the cap after a lapse) in
+[[Open Questions]].
+
 ## [2026-10-16] update | Slice 8 life headlines: plural and priorities
 
 The designer fixed the counted life lines so a count of one reads right (*Stale Tomorrow: 1 in the
