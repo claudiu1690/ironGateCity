@@ -188,7 +188,7 @@ export function buildNewCharacter(i: {
 }): NewCharacterState {
   const day = dayKey(i.now);
   const inventory: InventoryEntry[] = [];
-  const equipment: Equipment = { clothing: null, document: null };
+  const equipment: Equipment = { clothing: null, accessory: null, document: null, utility: null };
   for (const item of i.outcome.items) {
     const uid = i.uid();
     inventory.push({ uid, itemId: item.itemId, day, source: item.source });

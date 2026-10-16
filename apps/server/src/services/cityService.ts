@@ -141,6 +141,8 @@ const MISSION_LABEL: Record<MissionType, MissionView['label']> = {
   disruption: 'against',
   sabotage: 'against',
   theft: 'against',
+  // Slice 8 (design §3.7): a society call's ticket; no call is in content until T6.
+  social: 'society',
 };
 
 /**

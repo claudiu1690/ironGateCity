@@ -299,6 +299,8 @@ export const MISSION_TYPE_IDS = [
   'disruption',
   'sabotage',
   'theft',
+  // Slice 8 (design §3.7, ADR 0052): the society call, legal, no run-in, no Heat, no Party XP.
+  'social',
 ] as const;
 export type MissionType = (typeof MISSION_TYPE_IDS)[number];
 
@@ -332,6 +334,7 @@ export const MISSION_TYPES: Readonly<Record<MissionType, MissionTypeSpec>> = {
   disruption: { energy: 15, heat: 8, runIn: 30, caught: 10, marks: 1, markKind: 'minor', givesFxp: true, opinion: 'against', opinionMult: 2, ironMult: 1, seenAs: 'disruption', illegal: true },
   sabotage: { energy: 20, heat: 12, runIn: 25, caught: 20, marks: 3, markKind: 'serious', givesFxp: true, opinion: 'against', opinionMult: 2, ironMult: 1, seenAs: 'sabotage', illegal: true },
   theft: { energy: 15, heat: 10, runIn: 25, caught: 15, marks: 2, markKind: 'moderate', givesFxp: true, opinion: null, opinionMult: 0, ironMult: 2, seenAs: 'theft', illegal: true },
+  social: { energy: 15, heat: 0, runIn: 0, caught: null, marks: 0, markKind: null, givesFxp: false, opinion: 'persuade', opinionMult: 1, ironMult: 1, seenAs: 'social', illegal: false },
 };
 
 /** §6.4 (design §6): Heat 0–100, cooling 5 an hour; the four states; 25 after a release. */
@@ -659,4 +662,189 @@ export const LAW_BOUNDS = {
   infirmaryCostPct: [-50, 25],
   markFadeDays: [7, 14],
   caughtDelta: [0, 10],
+} as const;
+
+// ---------------------------------------------------------------------------------------------
+// Slice 8, a life in the city (docs/tech/slice-8.md §6.1; design docs/design/slice-8-life.md).
+// The Political Season's constants are deferred with the season (16 Oct 2026, the user).
+// ---------------------------------------------------------------------------------------------
+
+/** Design §3.2 (ADR 0051): the item effect kinds and their bounds; the loader enforces them. */
+export const ITEM_EFFECT_BOUNDS = { chancePct: [5, 10], fxpPct: [5, 5], dossierChance: [5, 15] } as const;
+export type ItemEffectKind = keyof typeof ITEM_EFFECT_BOUNDS;
+
+/** Design §3.1: the Charisma band of each slot. */
+export const SLOT_CHA = { clothing: [2, 50], accessory: [2, 10], document: [0, 0], utility: [0, 0] } as const;
+
+/** Design §3.5: the confirm over 1,000 Iron, buy-back at a tenth, the record's surcharge. */
+export const SHOP = {
+  confirmOver: 1_000,
+  sellShare: 0.1,
+  surchargePct: { clean: 0, onFile: 0, repeat: 15, notorious: 30 },
+} as const;
+
+/** Design §3.8: the back room's bribe, a mark at a time, from Rank 3; Marr's discretion halves it. */
+export const BRIBE = {
+  rank: 3,
+  perMark: { onFile: 500, repeat: 1_000, notorious: 2_000 },
+  discretionShare: 0.5,
+} as const;
+
+/** Design §3.3, §3.6: plain clothes are worn Charisma under 10. */
+export const PLAIN_CLOTHES = { under: 10 } as const;
+
+/** Design §3.6 (ADR 0052, §22.1 Q14): recognition on rival ground. */
+export const RECOGNITION = {
+  /** [Charisma at least, the part], highest first. */
+  cha: [
+    [30, 10],
+    [20, 5],
+  ],
+  office: { council: 5, governor: 10, chair: 10, deputy: 15, president: 15 },
+  legacyPer: 10,
+  legacyMax: 5,
+  nightFactor: 2,
+} as const;
+
+/** Design §3.7 (§21.1 Q9–Q11): society calls. */
+export const SOCIETY = {
+  energy: 15,
+  doorBelow: 10,
+  entryOneIn: 4,
+  favour: { success: 2, partial: 1 },
+  level: 10,
+} as const;
+
+/** Design §4 (GDD §10, ADR 0053): the Dossier. */
+export const DOSSIER_CATEGORIES = ['political', 'criminal', 'pattern', 'asset', 'neutral'] as const;
+export type DossierCategory = (typeof DOSSIER_CATEGORIES)[number];
+export const DOSSIER = {
+  /** [Intelligence at least, slots], highest first (GDD §10.1). */
+  capacity: [
+    [51, 60],
+    [36, 40],
+    [21, 25],
+    [11, 15],
+    [1, 10],
+  ],
+  freshDays: 7,
+  staleWeight: 0.5,
+  fileWeight: 3,
+  caseFileLevel: 16,
+  burnDays: 14,
+  maxInformants: 2,
+  informant: { days: 14, every: 2 },
+  /** Percent; surveillance and theft land by outcome. */
+  chance: { intelligence: 10, cells: 25, ward: 25, society: 25 },
+  rivalShare: 2 / 3,
+  sell: { file: 200, fresh: 50, stale: 25 },
+  categoryByKind: {
+    press: 'political',
+    'faction-hq': 'political',
+    parliament: 'political',
+    ministry: 'political',
+    jail: 'criminal',
+    court: 'criminal',
+    station: 'pattern',
+    bar: 'pattern',
+    street: 'pattern',
+    docks: 'pattern',
+    hotel: 'asset',
+    market: 'asset',
+    theatre: 'asset',
+  } as Readonly<Record<string, DossierCategory>>,
+} as const;
+
+/** Design §4.5 (ADR 0054): the exposé. */
+export const EXPOSE = {
+  energy: 20,
+  /** [weight at least, difficulty], highest first; below the last: the last. */
+  difficulty: [
+    [5, 14],
+    [4, 16],
+    [3, 18],
+  ],
+  headline: 1,
+  battleground: 2,
+  swing: { success: 1.0, partial: 0.5 },
+  rewards: {
+    success: { xp: 150, fxp: 40, iron: 100 },
+    partial: { xp: 75, fxp: 20, iron: 50 },
+    failure: { xp: 30, fxp: 0, iron: 0 },
+  },
+  pc: 5,
+  legacy: 2,
+} as const;
+
+/** Design §5 (ADR 0055): patrons. */
+export const PATRON_IDS = ['crane', 'marr'] as const;
+export type PatronId = (typeof PATRON_IDS)[number];
+export const PATRON_TIERS = ['acquaintance', 'associate', 'confidant', 'protege'] as const;
+export type PatronTier = (typeof PATRON_TIERS)[number];
+export const PATRON = {
+  tiers: [
+    ['acquaintance', 10],
+    ['associate', 30],
+    ['confidant', 60],
+    ['protege', 90],
+  ] as ReadonlyArray<readonly [PatronTier, number]>,
+  max: 100,
+  level: 10,
+  request: { favour: 6, everyDays: 2, held: 2, openDays: 4 },
+  gift: { iron: 200, favour: 2 },
+  chapter: 5,
+  perkFactor: 1.1,
+  favourEveryDays: 7,
+  discretionDays: 7,
+  plantMomentum: 50,
+  endorsement: { homeTotal: 2, battlegroundScore: 1 },
+} as const;
+
+/** Design §6 (ADR 0056, §21.1 Q4): the flat; rent at most eight weeks ahead. */
+export const FLAT = {
+  level: 10,
+  price: 2_500,
+  week: 150,
+  weeks: [1, 4],
+  cap: 50,
+  rest: 25,
+  cha: 2,
+  aheadDays: 55,
+} as const;
+
+/** Design §6: the rented room everyone sleeps in: +10 Rested at every boundary. */
+export const ROOM_REST = 10;
+
+/**
+ * Design §7 (ADR 0057): Legacy's entries, perks and their effects. Review 5: the Unrest prize +2. The
+ * season's `champion` and `seasonAward` kinds are deferred with the season (16 Oct 2026; their refs
+ * `champion:{s}` and `award:{s}:…` are reserved, nothing writes them).
+ */
+export const LEGACY = {
+  points: {
+    hero: 2,
+    councilTerm: 3,
+    issueTopFive: 2,
+    unrest: 2,
+    pledge: 10,
+    governorTerm: 5,
+    deputyTerm: 5,
+    chairTerm: 10,
+    presidentTerm: 40,
+    survived: 10,
+    ambition: 30,
+    expose: 2,
+    protege: 5,
+  },
+  perks: {
+    party: { cost: 15, max: 1 },
+    dossier: { cost: 5, max: 2 },
+    sleep: { cost: 10, max: 1 },
+    walk: { cost: 15, max: 1 },
+    name: { cost: 10, max: 3 },
+    monday: { cost: 10, max: 1 },
+    friends: { cost: 10, max: 1 },
+    quiet: { cost: 10, max: 1 },
+  },
+  effects: { fxpPct: 5, restedCap: 50, canvassEnergy: -1, heatCoolPct: 10, favourFactor: 1.1 },
 } as const;

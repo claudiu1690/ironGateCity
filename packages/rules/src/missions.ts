@@ -1,6 +1,15 @@
 import { computeCheck, outcomeForRoll } from './check';
-import { DIRECTIVES, HEALTH, MISSION_LADDER, MISSION_TYPES, RIVAL_GROUND } from './constants';
-import type { MissionType } from './constants';
+import {
+  DIRECTIVES,
+  HEALTH,
+  MISSION_LADDER,
+  MISSION_TYPES,
+  PATRON,
+  PATRON_TIERS,
+  RIVAL_GROUND,
+  SOCIETY,
+} from './constants';
+import type { MissionType, PatronTier } from './constants';
 import type { DayKey } from './day';
 import { projectEnergy, spendEnergy } from './energy';
 import type { EnergyProjection, EnergyState } from './energy';
@@ -98,25 +107,61 @@ export interface MissionGateInput {
   rank: number;
   standingLevel: number;
   record: RecordLevel;
-  mission: { level: number; requires?: { rank?: number; standing?: number } };
+  mission: {
+    level: number;
+    requires?: { rank?: number; standing?: number; patron?: { id: string; tier: 'associate' } };
+    /** Slice 8 (design §3.7): a society call's Charisma figure. */
+    society?: { needs: number };
+  };
   place: { kind: string; factionId?: FactionId };
+  /** Slice 8 (design §3.7, §21.1 Q11): a society call's door, read at the tap. */
+  social?: { wornCha: number; calledToday: boolean; wanted: boolean };
+  /** Slice 8 (design §5.4): the actor's tier with the introduction's patron (null: none yet). */
+  patronTier?: PatronTier | null;
 }
+
+/** Slice 5's four, then slice 8's: a patron's introduction and a society call's door. */
+export type MissionGateReason =
+  | 'LEVEL'
+  | 'RANK'
+  | 'STANDING'
+  | 'RECORD'
+  | 'NEEDS_ASSOCIATE'
+  | 'WANTED'
+  | 'NOT_DRESSED'
+  | 'CALLED_TODAY';
 
 /**
  * Design §4.1, §4.7: the first unmet gate (*From Level 8* · *Organisers and above* · *Needs a Known
- * reputation here* · *Not with your record*), or null.
+ * reputation here* · *Not with your record*), or null. Slice 8: a patron's introduction needs
+ * Associate (`NEEDS_ASSOCIATE`, `need` the Favour); a society call is barred while Wanted, below its
+ * figure minus 10 (`NOT_DRESSED`, `need` the door) and once a day per place (`CALLED_TODAY`).
  */
-export function missionGate(
-  i: MissionGateInput,
-): { reason: 'LEVEL' | 'RANK' | 'STANDING' | 'RECORD'; need: number } | null {
+export function missionGate(i: MissionGateInput): { reason: MissionGateReason; need: number } | null {
   if (i.level < i.mission.level) return { reason: 'LEVEL', need: i.mission.level };
   const rank = i.mission.requires?.rank;
   if (rank !== undefined && i.rank < rank) return { reason: 'RANK', need: rank };
   const standing = i.mission.requires?.standing;
   if (standing !== undefined && i.standingLevel < standing) return { reason: 'STANDING', need: standing };
   if (barredByRecord(i.record, i.place)) return { reason: 'RECORD', need: 0 };
+  const patron = i.mission.requires?.patron;
+  if (patron && !tierAtLeast(i.patronTier ?? null, patron.tier))
+    return { reason: 'NEEDS_ASSOCIATE', need: tierFavour(patron.tier) };
+  if (i.mission.society && i.social) {
+    if (i.social.wanted) return { reason: 'WANTED', need: 0 };
+    const door = societyDoor(i.mission.society.needs);
+    if (i.social.wornCha < door) return { reason: 'NOT_DRESSED', need: door };
+    if (i.social.calledToday) return { reason: 'CALLED_TODAY', need: 0 };
+  }
   return null;
 }
+
+/** Design §3.6: a society call's door, ten under its Charisma figure (*needs Charisma 10 at the door*). */
+export const societyDoor = (needs: number): number => Math.max(0, needs - SOCIETY.doorBelow);
+
+const tierFavour = (t: PatronTier): number => PATRON.tiers.find(([id]) => id === t)?.[1] ?? 0;
+const tierAtLeast = (has: PatronTier | null, need: PatronTier): boolean =>
+  has !== null && PATRON_TIERS.indexOf(has) >= PATRON_TIERS.indexOf(need);
 
 /** A way to do a mission (content `Way`): its stat, and a louder way's own Heat or run-in base. */
 export interface WaySpec {

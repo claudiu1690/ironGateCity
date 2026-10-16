@@ -166,7 +166,8 @@ export function missionCtx(
     record,
     mission,
     place: gatePlace(city, location),
-  });
+    // Slice 8 phase A: no society or patron input is passed yet, so only slice 5's four can come back.
+  }) as MissionCtx['gate'];
 
   const rateOn = heatRateOn(content, docs.residence, c.factionId);
   const heat = heatTimerOf(c);

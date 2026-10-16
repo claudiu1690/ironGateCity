@@ -187,9 +187,14 @@ export function effect<K extends OrdinanceEffectKind>(
 
 const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
 
-/** Rally Permits: speech 12 → 10 (never below 1). Energy deltas of several sources add. */
-export function actionEnergy(base: number, type: string, m?: Modifiers): number {
+/**
+ * Rally Permits: speech 12 → 10 (never below 1). Energy deltas of several sources add. Slice 8
+ * (design §7.2): `personalDelta` is the perk *A shorter walk* (`perkCanvassEnergy`); rewards stay on
+ * the content Energy.
+ */
+export function actionEnergy(base: number, type: string, m?: Modifiers, personalDelta = 0): number {
   const deltas = effects(m, 'energyDelta', type).map((x) => x.effect.value);
+  if (personalDelta) deltas.push(personalDelta);
   return deltas.length > 0 ? Math.max(1, base + sum(deltas)) : base;
 }
 

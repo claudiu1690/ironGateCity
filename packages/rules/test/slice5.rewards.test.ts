@@ -29,6 +29,8 @@ const TABLE: Record<MissionType, { xp: number[]; fxp: number[]; iron: number[]; 
   disruption: { xp: [75, 38, 15], fxp: [12, 6, 0], iron: [60, 30, 0], opinion: [0.3, 0.15, 0] },
   sabotage: { xp: [100, 50, 20], fxp: [16, 8, 0], iron: [80, 40, 0], opinion: [0.4, 0.2, 0] },
   theft: { xp: [75, 38, 15], fxp: [12, 6, 0], iron: [120, 60, 0], opinion: [0, 0, 0] },
+  // Slice 8 (design §3.7): the society call, at the tier-2 rate with no Party XP (type-only addition).
+  social: { xp: [75, 38, 15], fxp: [0, 0, 0], iron: [60, 30, 0], opinion: [0.15, 0.075, 0] },
 };
 const OUTCOMES = ['success', 'partial', 'failure'] as const;
 

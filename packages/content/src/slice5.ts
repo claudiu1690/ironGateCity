@@ -231,7 +231,9 @@ export function slice5Problems(
   }
 
   // Art: every type's mission card, the services' kinds bound.
+  // Slice 8 (design §3.7): a society call shows its place's scene, so `social` has no card.
   for (const type of MISSION_TYPE_IDS) {
+    if (type === 'social') continue;
     const card = content.art.missionCards.filter((m) => m.missionType === type);
     if (card.length !== 1) problems.push(`art.missionCards: ${type} needs exactly one card`);
     else {

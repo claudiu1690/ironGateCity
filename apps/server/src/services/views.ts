@@ -65,7 +65,7 @@ import type {
   TrainableStat,
 } from '@irongate/rules';
 
-const NO_EQUIPMENT: Equipment = { clothing: null, document: null };
+const NO_EQUIPMENT: Equipment = { clothing: null, accessory: null, document: null, utility: null };
 
 /**
  * Stats as a check sees them (ADR 0014): CHA is worn, the origin's CHA base plus what is equipped,

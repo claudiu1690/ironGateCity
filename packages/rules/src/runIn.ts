@@ -48,6 +48,11 @@ export function runInChance(i: {
    * night): the chance multiplied, halves up, before the 0-90 clamp.
    */
   pcts?: readonly number[];
+  /**
+   * Slice 8 (design §3.6, ADR 0052): `recognition().total`, added on rival ground after the laws'
+   * percentages and before the 0-90 clamp (ignored off rival ground).
+   */
+  recognition?: number;
 }): number {
   const night = i.rivalGround && i.night === true;
   let base: number;
@@ -63,7 +68,8 @@ export function runInChance(i: {
     (i.flags.warned ? RUN_IN.warned : 0);
   const pcts = i.pcts ?? [];
   const withLaws = pcts.length > 0 ? roundHalfUp(pcts.reduce((x, p) => x * (1 + p / 100), raw)) : raw;
-  return clamp(withLaws, 0, RUN_IN.max);
+  const recognised = i.rivalGround ? Math.max(0, i.recognition ?? 0) : 0;
+  return clamp(withLaws + recognised, 0, RUN_IN.max);
 }
 
 /**
@@ -94,7 +100,10 @@ export function pickOpponent(i: {
   return allowed[i.rng.int(0, allowed.length - 1)]!;
 }
 
-/** §20.1: your power = STR × 1.5 + armour ÷ 2 (Tier I clothing is armour 4), rounded. */
+/**
+ * §20.1: your power = STR × 1.5 + armour ÷ 2 (Tier I clothing is armour 4), rounded. Slice 8 (design
+ * §3.10): `clothingTier` is the worn coat's (`coatTier`); a won fight's damage is less its armour.
+ */
 export function yourPower(str: number, clothingTier: number | null): number {
   return roundHalfUp(str * 1.5 + armourOf(clothingTier) / 2);
 }
@@ -144,12 +153,19 @@ export interface RunInChances {
  * theirs × 60; Talk 50 + 4 × (worn CHA − their Wits); Pay 90 when they can be bought. Each whole,
  * kept 5–95.
  */
-export function runInChances(you: { power: number; agi: number; cha: number }, them: ScaledOpponent): RunInChances {
+/**
+ * Slice 8 (design §3.6, ADR 0052): `you.talkPct` is the sum of `itemBonuses(…, { special: 'bluff' },
+ * their side)`: Marr's case always, forged papers against the police; added to Talk before the clamp.
+ */
+export function runInChances(
+  you: { power: number; agi: number; cha: number; talkPct?: number },
+  them: ScaledOpponent,
+): RunInChances {
   const c = (x: number) => clamp(roundHalfUp(x), CLAMP_MIN, CLAMP_MAX);
   return {
     fight: c(RUN_IN.fight.base + RUN_IN.fight.perPower * (you.power - them.power) + them.fightPct),
     run: c((you.agi / Math.max(1, them.agi)) * RUN_IN.run.factor),
-    talk: c(RUN_IN.talk.base + RUN_IN.talk.perPoint * (you.cha - them.wits)),
+    talk: c(RUN_IN.talk.base + RUN_IN.talk.perPoint * (you.cha - them.wits) + (you.talkPct ?? 0)),
     pay: them.payOff === null ? null : RUN_IN.pay.chance,
   };
 }

@@ -2801,7 +2801,7 @@ export interface MissionView {
   name: string;
   type: MissionType;
   /** *Mission · Speech* / *Mission · Watch and listen* / *Mission · Against the {faction}*. */
-  label: 'speech' | 'watch' | 'against';
+  label: 'speech' | 'watch' | 'against' | 'society';
   targetFactionId: FactionId | null;
   energy: number;
   briefing: string;
@@ -2871,7 +2871,7 @@ export interface RunInPending {
 export interface MissionResultView {
   id: string;
   type: MissionType;
-  label: 'speech' | 'watch' | 'against';
+  label: 'speech' | 'watch' | 'against' | 'society';
   targetFactionId: FactionId | null;
   way: { id: string; title: string; stats: CheckStatSpec; agility: boolean };
   firstTime: boolean;

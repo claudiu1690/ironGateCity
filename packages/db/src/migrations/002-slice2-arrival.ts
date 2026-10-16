@@ -80,7 +80,7 @@ export async function migrateSlice2Arrival(
             },
             'stats.chaBase': 0,
             inventory,
-            equipment: { clothing: outfit, document: card },
+            equipment: { clothing: outfit, accessory: null, document: card, utility: null },
             ambition,
           },
         },

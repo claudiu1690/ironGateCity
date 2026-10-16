@@ -61,3 +61,7 @@ export * from './national';
 export * from './parliament';
 export * from './nationEvents';
 export * from './nationViews';
+// Slice 8 (docs/tech/slice-8.md §6; the Political Season deferred, 16 Oct 2026).
+export * from './shop';
+export * from './personal';
+export * from './recognition';
