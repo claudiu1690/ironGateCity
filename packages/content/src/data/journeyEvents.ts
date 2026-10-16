@@ -423,7 +423,8 @@ export const journeyEvents: ContentInput['journeyEvents'] = [
         detail: 'Intelligence · +6 Party XP',
         stats: ['int'],
         success: {
-          rewards: { fxp: 6 },
+          // Slice 8 (design §4.2): the promise kept: a political entry on a name of the rival home city.
+          rewards: { fxp: 6, dossier: { category: 'political', city: 'destination' } },
           text: {
             headline: 'A wild goose',
             body: "You give him a name, a street and a meeting at eight that doesn't exist. He gets off a stop early to be there. Somebody will wait a long time tonight.",

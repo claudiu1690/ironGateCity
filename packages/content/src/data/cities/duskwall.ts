@@ -125,6 +125,8 @@ export const duskwall: City = {
     },
     {
       id: 'duskwall.quartermaster-market',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'clothesStall', items: ['outfit.standard-coat', 'acc.good-hat'], buys: 'any' }],
       name: 'Customs Market',
       ref: 'the Customs Market',
       kind: 'market',
@@ -186,6 +188,8 @@ export const duskwall: City = {
     },
     {
       id: 'duskwall.beacon-house',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'partyStore', items: ['outfit.stewards-jacket', 'acc.party-badge', 'tool.paste-and-brush', 'doc.press-pass', 'tool.press-camera'], buys: 'own', hire: true }],
       name: 'Beacon House',
       kind: 'faction-hq',
       // Slice 4 (design §4.3): an HQ's tickets are for its own faction's members.
@@ -488,6 +492,13 @@ export const duskwall: City = {
     },
     {
       id: 'duskwall.mountain-inn',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [
+        { kind: 'tailor', items: ['outfit.greatcoat', 'outfit.evening-dress', 'acc.wristwatch'], buys: 'own' },
+        { kind: 'backRoom', items: ['doc.forged-papers', 'tool.wire-cutters'], buys: 'own', bribe: true },
+      ],
+      dining: true,
+      bar: true,
       name: 'Mountain Inn',
       ref: 'the Mountain Inn',
       kind: 'bar',

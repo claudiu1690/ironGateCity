@@ -412,6 +412,9 @@ export const irongate: City = {
     },
     {
       id: 'irongate.herald-house',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'press', items: ['doc.press-pass', 'tool.press-camera'], buys: 'own' }],
+      patronId: 'crane',
       name: 'Herald House',
       kind: 'press',
       blurb:
@@ -457,6 +460,8 @@ export const irongate: City = {
     },
     {
       id: 'irongate.concord-house',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'partyStore', items: ['outfit.campaign-suit', 'acc.party-badge', 'tool.paste-and-brush', 'doc.press-pass', 'tool.press-camera'], buys: 'own', hire: true }],
       name: 'Concord House',
       kind: 'faction-hq',
       blurb:
@@ -634,6 +639,8 @@ export const irongate: City = {
     },
     {
       id: 'irongate.press-club',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      bar: true,
       name: 'The Press Club',
       ref: 'the Press Club',
       kind: 'bar',
@@ -680,6 +687,8 @@ export const irongate: City = {
     },
     {
       id: 'irongate.market-square',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'clothesStall', items: ['outfit.standard-coat', 'acc.good-hat'], buys: 'any' }],
       name: 'Market Square',
       kind: 'market',
       blurb:
@@ -846,6 +855,9 @@ export const irongate: City = {
     },
     {
       id: 'irongate.grand-hotel',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'tailor', items: ['outfit.greatcoat', 'outfit.evening-dress', 'acc.wristwatch', 'outfit.three-piece'], buys: 'own' }],
+      dining: true,
       name: 'The Grand Hotel',
       ref: 'the Grand Hotel',
       kind: 'hotel',
@@ -920,6 +932,8 @@ export const irongate: City = {
     },
     {
       id: 'irongate.station-buffet',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      bar: true,
       name: 'The Station Buffet',
       ref: 'the Station Buffet',
       kind: 'bar',
@@ -966,6 +980,8 @@ export const irongate: City = {
     },
     {
       id: 'irongate.union-house',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'partyStore', items: ['outfit.convenors-coat', 'acc.party-badge', 'tool.paste-and-brush', 'doc.press-pass', 'tool.press-camera'], buys: 'own', hire: true }],
       name: 'Union House',
       kind: 'faction-hq',
       blurb:
@@ -1117,6 +1133,9 @@ export const irongate: City = {
     },
     {
       id: 'irongate.red-lantern',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'backRoom', items: ['doc.forged-papers', 'tool.wire-cutters'], buys: 'own', bribe: true }],
+      bar: true,
       name: 'The Red Lantern',
       ref: 'the Red Lantern',
       kind: 'bar',
@@ -1234,6 +1253,8 @@ export const irongate: City = {
     },
     {
       id: 'irongate.vanguard-house',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'partyStore', items: ['outfit.stewards-jacket', 'acc.party-badge', 'tool.paste-and-brush', 'doc.press-pass', 'tool.press-camera'], buys: 'own', hire: true }],
       name: 'Vanguard House',
       kind: 'faction-hq',
       blurb:
@@ -1428,6 +1449,9 @@ export const irongate: City = {
     },
     {
       id: 'irongate.gate-tavern',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'backRoom', items: ['doc.forged-papers', 'tool.wire-cutters'], buys: 'own', bribe: true }],
+      bar: true,
       name: 'The Gate Tavern',
       ref: 'the Gate Tavern',
       kind: 'bar',

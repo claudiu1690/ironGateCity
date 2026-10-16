@@ -12,6 +12,8 @@ export const held: { cells: HeldAction; infirmary: HeldAction } = {
     type: 'intelligence',
     stats: ['int'],
     energy: 3,
+    // Slice 8 (design §4.2): 25 % on a Success, a criminal entry on a name of the city.
+    dossier: { chance: 25, category: 'criminal' },
     text: {
       success: {
         headline: 'Two cells, three stories',
@@ -29,6 +31,8 @@ export const held: { cells: HeldAction; infirmary: HeldAction } = {
     type: 'intelligence',
     stats: ['int'],
     energy: 3,
+    // Slice 8 (design §4.2): 25 % on a Success, the small stuff on a name of the city.
+    dossier: { chance: 25, category: 'neutral' },
     text: {
       success: {
         headline: 'The bed by the window',

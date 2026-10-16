@@ -63,6 +63,8 @@ export const ashford: City = {
   locations: withMissions([
     {
       id: 'ashford.gazette-house',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'press', items: ['doc.press-pass', 'tool.press-camera', 'outfit.correspondents-suit'], buys: 'own' }],
       name: 'Gazette House',
       kind: 'press',
       blurb:
@@ -138,6 +140,8 @@ export const ashford: City = {
     },
     {
       id: 'ashford.assembly-rooms',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'partyStore', items: ['outfit.campaign-suit', 'acc.party-badge', 'tool.paste-and-brush', 'doc.press-pass', 'tool.press-camera'], buys: 'own', hire: true }],
       name: 'Assembly Rooms',
       // Review 4: the welcome deck's {place} (answers §2.6: *at the Union Hall*).
       ref: 'the Assembly Rooms',
@@ -348,6 +352,8 @@ export const ashford: City = {
     },
     {
       id: 'ashford.bridge-street',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'clothesStall', items: ['outfit.standard-coat', 'acc.good-hat'], buys: 'any' }],
       name: 'Bridge Street',
       kind: 'market',
       blurb:

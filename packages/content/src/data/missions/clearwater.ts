@@ -6,7 +6,120 @@ import type { MissionsByPlace } from './attach';
  * battleground, 22 at Level 12); the loader holds them. Way ids are the way's stat. The illegal pair
  * targets *the leading rival in Clearwater at the last boundary* (`target: 'leader'`, as the capital's).
  */
+/**
+ * Slice 8 (docs/design/slice-8-life.md §3.7): a society call is a tier-2 mission of type `social`:
+ * legal, 15 Energy, Level 10, no run-in, no Heat, no Party XP; its difficulty is its Charisma
+ * figure and the door is ten under it (rules). Three ways: Charisma, Charisma and Intelligence, best.
+ */
+const call = { tier: 2, type: 'social', energy: 15, level: 10, pool: [] as string[] } as const;
+
 export const clearwaterMissions: MissionsByPlace = {
+  // ----- The Front's society calls (design §3.7) ------------------------------------------------
+  'clearwater.promenade': [
+    {
+      ...call,
+      id: 'clearwater.promenade.four-oclock',
+      name: "The four o'clock promenade",
+      difficulty: 10,
+      society: { needs: 10 },
+      briefing:
+        "At four the money side of town walks the mile from the bandstand to the pier and back, two abreast, and who walks with whom is the week's news. A good coat gets you a nod; a word gets you a turn of the mile. The Courier's man watches from a bench.",
+      ways: [
+        { id: 'cha', title: 'Fall in beside the tram director', stats: ['cha'], hint: 'He walks alone on Thursdays and likes to be agreed with.' },
+        { id: 'cha-int', title: 'Take the widow’s arm and the widow’s opinions', stats: ['cha', 'int'], hint: 'She knows every hat on the mile and what it owes.' },
+        { id: 'best', title: 'Legwork. Walk the mile twice, listening', stats: ['best'], hint: 'Nobody notices the third man on a bench.' },
+      ],
+      text: {
+        success: { headline: 'A turn of the mile', body: "A turn of the mile with the director and a second with the widow, and by the pier the Front knows your name and thinks it always has. The Courier's man writes down the hat." },
+        partial: { headline: 'A nod from the bandstand', body: "A nod, a name, and the widow's view of the trams at length. The director walks on. The Front has seen you; it hasn't decided." },
+        failure: { headline: 'The wrong side of the mile', body: 'You fall in a step too late and walk the mile on the lake side, where the wind is. The talk stays two abreast and you stay outside it. Tomorrow at four.' },
+      },
+    },
+  ],
+  'clearwater.pier-hotel': [
+    {
+      ...call,
+      id: 'clearwater.pier-hotel.tea',
+      name: 'Tea on the terrace',
+      difficulty: 15,
+      society: { needs: 15 },
+      briefing:
+        "Tea at four on the Pier Hotel's terrace: a retired magistrate, two tram shareholders, the sanatorium's sister in her afternoon off, and Julius Marr at his table by the window, reading. The waiter seats by coat. A table on the terrace is the Front's good opinion, poured.",
+      ways: [
+        { id: 'cha', title: 'Take a table on the terrace as if it were yours', stats: ['cha'], hint: 'The waiter looks at the coat first and the face second.' },
+        { id: 'cha-int', title: 'Ask the magistrate about the licence, and listen', stats: ['cha', 'int'], hint: 'He has views, and the table next to him has the shareholders.' },
+        { id: 'best', title: "Legwork. The tradesmen's door, the kitchen, the terrace", stats: ['best'], hint: 'The kitchen knows who takes sugar and who takes the bank’s money.' },
+      ],
+      text: {
+        success: { headline: 'A second pot', body: "The magistrate orders a second pot and the shareholders move their chairs. By five the terrace has your view of the licence and Marr has looked up from his paper once, which the waiter says is twice more than usual." },
+        partial: { headline: 'One cup', body: 'One cup at the end table and the magistrate’s opinion of the trams, which is long. The shareholders leave before you reach them. The waiter remembers your name, or your coat.' },
+        failure: { headline: 'The inside room', body: "The waiter seats you in the inside room, by the stairs, where the tea is the same and the company is a commercial traveller. Marr's table is through the glass. Another coat, another afternoon." },
+      },
+    },
+  ],
+  'clearwater.lido': [
+    {
+      ...call,
+      id: 'clearwater.lido.sunday',
+      name: "The lido's Sunday",
+      difficulty: 12,
+      society: { needs: 12 },
+      briefing:
+        "Sunday at the Lido: the band on the stand, two hundred deckchairs to the water, the pavilion's tea and the Courier under every arm. The front row is the town's money and its wives; the back rows are the Rows on their day off. A deckchair in the front row is a word in every ear by the second waltz.",
+      ways: [
+        { id: 'cha', title: 'A deckchair in the front row, and the band to talk over', stats: ['cha'], hint: 'The front row looks at your shoes.' },
+        { id: 'cha-int', title: 'Hire the chairs beside the casino manager’s wife', stats: ['cha', 'int'], hint: 'She knows the licence vote by heart and says so between numbers.' },
+        { id: 'best', title: 'Legwork. Carry the pavilion’s tea tray down the rows', stats: ['best'], hint: 'A tray goes anywhere. So does the man carrying it.' },
+      ],
+      text: {
+        success: { headline: 'The second waltz', body: "By the second waltz the front row has your name and the manager's wife has your view of the licence, loudly, with the band as cover. Three deckchairs ask when you're speaking. You say Sunday." },
+        partial: { headline: 'The interval', body: 'The interval is ten minutes and you get two chairs’ worth of them. The manager’s wife approves of your hat and reserves judgement on the rest. The band comes back.' },
+        failure: { headline: 'The back rows', body: 'Every front-row chair is taken by eleven and the attendant looks at your coat and points to the back. The Rows are friendly and already yours. The band plays the same waltz for everyone.' },
+      },
+    },
+  ],
+  'clearwater.casino': [
+    {
+      ...call,
+      id: 'clearwater.casino.midnight',
+      name: 'The tables after midnight',
+      difficulty: 20,
+      society: { needs: 20 },
+      briefing:
+        "After midnight the Casino's committee room is a card room and the men who run the Front play in it: the company's manager, the tram director, a councillor or two off duty, the bank's man. The door is the doorman's and the doorman reads coats. A chair at the long table is worth a week of benches.",
+      ways: [
+        { id: 'cha', title: 'Through the door on the strength of the coat', stats: ['cha'], hint: 'The doorman has seen every coat on the Front. Yours had better be new to him.' },
+        { id: 'cha-int', title: 'Lose a little at the tables and be invited upstairs', stats: ['cha', 'int'], hint: 'The manager likes a man who loses gracefully and talks sense.' },
+        { id: 'best', title: "Legwork. The cashier's window, the stairs, the card room", stats: ['best'], hint: 'The cashier signs you in if you know whose chips you’re carrying.' },
+      ],
+      text: {
+        success: { headline: 'A chair at the long table', body: 'A chair at the long table until two, a hand you lose on purpose and a conversation about the licence you win. The director says the Front could use a man like you. The bank’s man says nothing and looks at your coat.' },
+        partial: { headline: 'The doorway', body: 'The doorway, and twenty minutes of the card room from it before the manager asks if you’re playing. You aren’t. The director nods on his way to the stairs, which the doorman notices.' },
+        failure: { headline: 'The doorman reads coats', body: 'The doorman reads your coat, looks at your shoes and says the committee room is closed, sir. Downstairs the tables click. You lose ten at roulette for the look of it and go home.' },
+      },
+    },
+    {
+      // Design §5.4: Marr's introduction, from Associate; Favour +3 and an asset entry on a Success.
+      ...call,
+      id: 'clearwater.casino.late-table',
+      name: 'The late table',
+      difficulty: 25,
+      society: { needs: 25, favour: 3, entry: 'onSuccess' },
+      requires: { patron: { id: 'marr', tier: 'associate' } },
+      briefing:
+        "Marr's late table in the card room: four chairs, one of them his, and a card for you with the bank's crest on the back. The stakes are the Front's leases and who holds them. Nobody at the table plays for the money. Dress for it.",
+      ways: [
+        { id: 'cha', title: "Take Marr's card to the door and the chair he's left", stats: ['cha'], hint: "The card opens the door. The chair is yours only if the table agrees." },
+        { id: 'cha-int', title: 'Play the hand Marr deals you and read the others’ faces', stats: ['cha', 'int'], hint: 'He deals to see what you do with it.' },
+        { id: 'best', title: 'Legwork. Learn the three other players before you sit', stats: ['best'], hint: 'Who owes the bank, who owns the lease, who is bluffing.' },
+      ],
+      text: {
+        success: { headline: "Marr's chair", body: 'You take the chair, play the hand and say the one thing about the lease that nobody at the table wanted said. Marr folds, smiling. At two he walks you to the door and says the bank will remember.' },
+        partial: { headline: 'A hand, then the door', body: 'One hand and a glass, and the table closes over your chair like water. Marr says nothing against you, which is something. The card goes back in your coat for next week.' },
+        failure: { headline: 'The card, declined', body: 'The doorman reads the card, reads you, and says the table is full tonight, sir. Through the door Marr does not look up. Another night, better dressed.' },
+      },
+    },
+  ],
   'clearwater.st-martins': [
     {
       id: 'clearwater.st-martins.supper',

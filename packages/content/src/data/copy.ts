@@ -3192,6 +3192,725 @@ export const copy = {
       ],
     },
   },
+  /**
+   * Slice 8 (docs/design/slice-8-screens.md §17, §18.6; design §1.1, §11, §16.7, §24): a life in
+   * the city. System terms never reach a screen: the player reads *the Wardrobe*, *Coat / On you /
+   * Papers / Tools*, *work clothes / a good coat / a tailor's suit / a society wardrobe*, *the
+   * Dossier*, *a Case File*, *an exposé*, *Favour*, *Legacy*, *the back room*, *a society call*,
+   * *someone to walk with you*, *well fed*, *in good spirits*. No string prints a chance, a roll,
+   * a recognition figure or a coat's weight as a number; the only numbers on an item card are its
+   * Charisma and its price. Times and weekdays are rendered by the caller in the player's clock;
+   * amounts come from the rules' constants where a caller passes them. The season's strings are
+   * deferred with it (design §23).
+   */
+  life: {
+    // ----- The Wardrobe (screens §2, §2.1, §3, §5) ------------------------------------------------
+    wardrobe: {
+      kicker: 'Wardrobe',
+      charisma: (n: number) => `Charisma ${n}`,
+      outfits: { town: 'Town', plain: 'Plain clothes', evening: 'Evening' } as Record<'town' | 'plain' | 'evening', string>,
+      /** The chip's second line by outfit: *Town · Charisma 17 · recognised on rival ground*. */
+      chipTown: (n: number) => `Town · Charisma ${n} · recognised on rival ground`,
+      chipPlain: (n: number) => `Plain clothes · Charisma ${n} · unnoticed on rival ground`,
+      chipEvening: (n: number) => `Evening · Charisma ${n} · dressed for the Casino`,
+      /** The Evening chip while the rent is out. */
+      eveningWaits: 'Evening · pay the rent to wear it as a set',
+      payTheRent: 'pay the rent',
+      keepAs: (outfit: string) => `Keep this as ${outfit}`,
+      /** The chip row in the cells or the infirmary, and on a train. */
+      changeWhenOut: "Change when you're out",
+      changeWhenArrive: 'Change when you arrive',
+      slots: { clothing: 'Coat', accessory: 'On you', document: 'Papers', utility: 'Tools' } as Record<
+        'clothing' | 'accessory' | 'document' | 'utility',
+        string
+      >,
+      wearing: 'Wearing',
+      nothingTap: 'Nothing · tap to choose',
+      keepsake: 'Keepsake',
+      everythingYouOwn: (n: number) => `Everything you own · ${n}`,
+      everything: 'Everything you own',
+      wearingLine: (item: string, n: number) => `Wearing: ${item} · Charisma ${n}`,
+      nothingOn: 'Nothing on',
+      wear: 'Wear',
+      takeOff: 'Take it off',
+      charismaChange: (a: number, b: number) => `Charisma ${a} → ${b}`,
+      /** The tier, said as what it is (never a numeral). */
+      tierWord: { 1: 'work clothes', 2: 'a good coat', 3: "a tailor's suit", 4: 'a society wardrobe', 5: 'a society wardrobe' } as Record<
+        1 | 2 | 3 | 4 | 5,
+        string
+      >,
+      holdsUp: 'holds up in a run-in',
+      recognisedOnRival: 'recognised on rival ground',
+      /** The item words (`ItemCardView.words`), composed by the server from the effects. */
+      words: {
+        propaganda: 'better odds putting up posters',
+        intelligence: 'better odds watching and listening',
+        surveillance: 'better odds watching and listening',
+        rough: 'better odds on the rough work',
+        checkpoint: 'better odds at a checkpoint',
+        checkpointRisk: 'a mark and +10 Heat if they look twice',
+        bluff: 'better odds talking your way out',
+        expose: 'better odds at the paper',
+        fxp: '+5 % Party XP',
+        dossier: 'a Dossier entry now and then',
+        showsAtCheckpoint: 'Shows at a checkpoint',
+      },
+      fromChapter: (n: number, title: string) => `From chapter ${n}, "${title}"`,
+      fromPatron: (patron: string) => `From ${patron}`,
+      read: 'Read',
+      owned: 'Owned',
+      needsIron: (n: number) => `Needs ${n} Iron`,
+      fromLevel: (n: number) => `From Level ${n}`,
+      membersOnly: 'Members only',
+      fromRank3: 'From Rank 3',
+      /** The wardrobe sheet's groups and empty states (screens §5, §15). */
+      coats: 'Coats',
+      keepsakes: 'Keepsakes',
+      sellsAtMarket: (n: number) => `Sells at a market: ${n} things`,
+      nothingYet: (hint: string) => `Nothing yet · ${hint}`,
+      hints: {
+        accessory: 'The market sells a hat',
+        utility: 'The party store sells paste and brush',
+        document: 'The press sells a pass',
+        keepsakes: 'The chapters leave things here.',
+      },
+      nothingNewHere: 'Nothing new here',
+    },
+    // ----- Shops, selling and the back room (screens §4) ------------------------------------------
+    shop: {
+      forSale: (shop: string) => `For sale · ${shop}`,
+      names: {
+        clothesStall: 'The clothes stall',
+        partyStore: 'The party store',
+        tailor: 'The tailor',
+        press: 'The press',
+        backRoom: 'The back room',
+      } as Record<'clothesStall' | 'partyStore' | 'tailor' | 'press' | 'backRoom', string>,
+      /** The Courier line under the kicker, by kind. */
+      lines: {
+        clothesStall: "The stall buys too: a coat you don't want, at a tenth",
+        partyStore: "Members only; the party's prices",
+        tailor: 'Three fittings and no questions about the bill',
+        press: 'A pass and a camera, for the trade',
+        backRoom: 'Cash, and no questions',
+      } as Record<'clothesStall' | 'partyStore' | 'tailor' | 'press' | 'backRoom', string>,
+      yourRecord: (pct: number) => `Your record: +${pct} %`,
+      sellsFor: (n: number) => `Sells for ${n} Iron at a market`,
+      sellSomething: 'Sell something',
+      buy: (n: number) => `Buy · ${n} Iron`,
+      buyConfirm: (item: string, n: number) => `Buy ${item} for ${n} Iron?`,
+      notNow: 'Not now',
+      wearItNow: 'Wear it now',
+      /** The back room's row (design §3.8). */
+      strikeOff: (n: number) => `Have a mark struck off · ${n} Iron`,
+      strikeLine: (level: string, price: number) => `${level}: ${price} a mark, the oldest first, one a day`,
+      cleanNothing: 'Clean · nothing to strike',
+      halfPrice: "Half price this week · Marr's discretion",
+      struckToday: 'One a day · struck off today',
+      /** The sell sheet (screens §4). */
+      sellTo: (shop: string) => `Sell to ${shop}`,
+      takeItOffFirst: 'Take it off first',
+      sell: 'Sell',
+      sellConfirm: (item: string, n: number) => `Sell ${item} for ${n} Iron?`,
+      keepIt: 'Keep it',
+      nothingToSell: 'Nothing to sell here.',
+      /** §21.1 Q2: an item saved in an outfit (two outfits: both named). */
+      inOutfit: (outfit: string) => `It's in your ${outfit} outfit; selling takes it out.`,
+      inOutfits: (a: string, b: string) => `It's in your ${a} and ${b} outfits; selling takes it out of both.`,
+      takenOut: (outfit: string) => `Taken out of your ${outfit} outfit`,
+      takenOutBoth: (a: string, b: string) => `Taken out of your ${a} and ${b} outfits`,
+    },
+    // ----- The Dossier (screens §6, §6.3) ---------------------------------------------------------
+    dossier: {
+      title: 'The Dossier',
+      tab: 'Dossier',
+      header: (used: number, cap: number, fresh: number, stale: number, files: number) =>
+        `${used} of ${cap} · ${fresh} fresh · ${stale} stale · ${files} Case ${files === 1 ? 'File' : 'Files'}`,
+      full: 'Full · sell or use something before the next entry',
+      chips: { names: 'Names', files: 'Case Files', informants: 'Informants' },
+      nameLine: (n: number, weight: string) => `${n} ${n === 1 ? 'entry' : 'entries'} · ${weight} toward a Case File`,
+      category: {
+        political: 'Political',
+        criminal: 'Criminal',
+        pattern: 'Pattern',
+        asset: 'Asset',
+        neutral: 'The small stuff',
+      } as Record<'political' | 'criminal' | 'pattern' | 'asset' | 'neutral', string>,
+      entryLine: (source: string, weekday: string) => `${source} · ${weekday} · fresh`,
+      stale: 'stale',
+      andMore: (n: number) => `and ${n} more`,
+      makeCaseFile: 'Make a Case File',
+      makeCaseFileN: (n: number) => `Make a Case File · ${n} entries`,
+      /** A burned name's line (§21.1 Q19): entries still land; no exposé for {n} days. */
+      burned: (weekday: string, n: number) => `in the paper ${weekday} · nothing new for ${n} days`,
+      takeToPaper: 'Take it to the paper',
+      atPress: (press: string, street: string) => `at ${press}, ${street}`,
+      atHeraldHouse: 'at Herald House, Old Town',
+      whereToPrint: 'At a newspaper: Herald House in the capital, or Gazette House in Ashford',
+      sellFile: 'Sell · 200 Iron',
+      atAStation: 'at a station',
+      recruit: 'Recruit as an informant',
+      needsPattern: 'Needs a pattern line',
+      needsAssociate: (patron: string) => `Needs Associate with ${patron}`,
+      informantLine: (n: number, weekday: string) => `${n} days of reports left · next ${weekday}`,
+      twoAtMost: 'Two at most',
+      /** §21.1 Q17: a file that cannot be printed. */
+      notOwnParty: 'Not against your own party',
+      notOwnPartyLine: (paper: string, party: string) =>
+        `The ${paper} prints nothing against the ${party}'s own. Sell the file at a station, or turn it.`,
+      noParty: 'Nobody to print it against',
+      noPartyLine: (name: string) => `${name} belongs to no party. Sell the file at a station, or turn it.`,
+      /** The knock-on lines (design §4.2, §4.3). */
+      knockEntry: (name: string, category: string, weekday: string) =>
+        `Dossier: an entry on ${name} · ${category} · goes stale ${weekday}`,
+      knockFull: 'Dossier full · an entry went begging',
+      knockFile: (name: string, kinds: string) => `Dossier: Case File on ${name} · ${kinds}`,
+      knockSlots: (used: number, cap: number) => `Dossier ${used} of ${cap}`,
+      /** The station's card (screens §6.3). */
+      station: {
+        kicker: 'The man by the left-luggage',
+        line: 'Buys what you know. A Case File 200, a fresh entry 50, a stale one 25. Nobody prints it.',
+        sell: 'Sell something from the Dossier',
+        nothing: 'Nothing in the Dossier to sell',
+        sellRow: (n: number) => `Sell · ${n} Iron`,
+      },
+      /** The paper's rows. */
+      paper: {
+        fromInformant: 'From your informant',
+        gossip: (patron: string, name: string) => `From ${patron}: a word about ${name}`,
+        desk: (n: number, m: number, when: string) => `${n} entries · ${m} go stale ${when}`,
+        deskNone: (n: number) => `${n} ${n === 1 ? 'entry' : 'entries'}`,
+      },
+    },
+    // ----- The exposé (screens §7; design §4.5, §16.6) --------------------------------------------
+    expose: {
+      ticket: 'Take a Case File to the paper · 20 Energy',
+      tag: 'Exposé · one a day',
+      noFile: 'No Case File with something to print',
+      printedToday: 'Printed today; tomorrow',
+      notWhileWanted: "Not while you're Wanted · the doorman has the list",
+      kicker: (paper: string, n: number) => `Exposé · ${paper} · step ${n} of 3`,
+      step1: 'The file and the angle',
+      lines: (n: number) => `${n} lines`,
+      plainly: 'The facts, plainly',
+      plainlyHint: "Every line checked. It runs on page three. Nothing to your party's name.",
+      headline: 'The story, with a headline',
+      headlineHint: 'Page one, if the editor bites. A point harder.',
+      step2: "The editor's desk",
+      ways: {
+        straight: 'Write it straight',
+        talk: 'Talk the editor into it',
+        legwork: 'Legwork: check every line twice',
+      },
+      cta: 'Take it to the editor · 20 Energy',
+      stamps: { success: 'Printed', partial: 'Page three', failure: 'Spiked' } as Record<'success' | 'partial' | 'failure', string>,
+      fileSpent: 'Case File spent',
+      fileKept: 'Case File kept · the editor wants more',
+      inTomorrows: (name: string) => `${name} is in tomorrow's paper`,
+      opinion: (city: string, party: string, n: string) => `Opinion in ${city}: ${party} −${n}`,
+      /** The outcome texts by angle (design §16.6). */
+      text: {
+        plainly: {
+          success: (party: string) => ({
+            headline: 'Page three, every line',
+            body: `Every line checked, every line printed, no adjectives. The ${party}'s office rings the editor at nine. The editor says it's all true, which it is.`,
+          }),
+          partial: (party: string) => ({
+            headline: 'Three of five lines',
+            body: `Three lines survive the lawyer and run on page three. The ${party} calls it gossip. Two of the five are still true.`,
+          }),
+          failure: () => ({
+            headline: 'Spiked',
+            body: "The editor wants a second source on the second line and won't run the rest without it. The file goes back in your coat.",
+          }),
+        },
+        headline: {
+          success: (party: string, subject: string) => ({
+            headline: 'Page one',
+            body: `The front page, your name under the headline, ${subject}'s face from the morgue. By noon the ${party}'s office has issued a denial that repeats the story.`,
+          }),
+          partial: (party: string) => ({
+            headline: 'Page three, with a headline',
+            body: `A headline on page three and your name under it. The editor says page one wanted one more line. The ${party} says nothing at all.`,
+          }),
+          failure: () => ({
+            headline: 'Spiked',
+            body: 'The editor reads it twice and says the front page is for things that stand up. The file goes back in your coat; so does the headline.',
+          }),
+        },
+      },
+      /** The Headline Story's call sheet row (design §4.3). */
+      attachFile: 'Attach a Case File',
+      attached: (name: string) => `${name}'s file attached · the swing half again · the name in the headline`,
+    },
+    // ----- Patrons (screens §8) -------------------------------------------------------------------
+    patron: {
+      kicker: (name: string) => `Patron · ${name}`,
+      line: (tier: string, n: number, nextTier: string, next: number) => `${tier} · Favour ${n} · ${nextTier} at ${next}`,
+      lineTop: (tier: string, n: number) => `${tier} · Favour ${n}`,
+      tiers: {
+        none: 'A stranger',
+        acquaintance: 'Acquaintance',
+        associate: 'Associate',
+        confidant: 'Confidant',
+        protege: 'Protégé',
+      } as Record<'none' | 'acquaintance' | 'associate' | 'confidant' | 'protege', string>,
+      gift: 'Gift · 200 Iron',
+      givenToday: 'Given today',
+      by: (weekday: string) => `by ${weekday}`,
+      progress: (a: number, b: number) => `${a} of ${b}`,
+      plantHeadline: 'Plant a headline · 25 Political Capital',
+      discretion: "The bank's discretion · 20 Political Capital",
+      calledIn: (weekday: string) => `Called in · again from ${weekday}`,
+      perks: {
+        acquaintance: "Acquaintance: gossip in Monday's paper",
+        associate: 'Associate: an introduction and informants',
+        confidant: 'Confidant at 60: a favour once a week',
+        protegeCrane: 'Protégé at 90: an endorsement and the pen',
+        protegeMarr: 'Protégé at 90: an endorsement and the case',
+      },
+      firstVisit: 'A letter comes the morning after next.',
+      meKicker: 'Patrons',
+      meEmpty: 'Patrons · from Level 10, in the capital and on the lake',
+      meLine: (patron: string, tier: string, n: number) => `${patron} · ${tier} · ${n}`,
+      nextAt: (next: string, n: number) => `${next} at ${n}`,
+      /** The paper (screens §8.3, §12). */
+      from: (patron: string) => `From ${patron}`,
+      requestTag: (weekday: string) => `by ${weekday} · Favour +6`,
+      thanks: (patron: string) => `${patron}'s thanks`,
+      deskLine: (crane: string, marr: string) => `Crane: ${crane} · Marr: ${marr}`,
+      /** The society call's tag (§21.1 Q9). */
+      callTag: (patron: string) => `no Party XP · +2 Favour with ${patron}`,
+      favourKnock: (patron: string, a: number, b: number) => `Favour with ${patron} ${a} → ${b}`,
+    },
+    // ----- Where you sleep (screens §9) ------------------------------------------------------------
+    home: {
+      kicker: 'Where you sleep',
+      room: 'a rented room · +10 Rested a night',
+      flatOffer: (city: string) => `A flat in ${city} · 2,500 Iron`,
+      flatFromLevel: 'A flat from Level 10',
+      flatGives: (city: string) => `+25 Rested a night · Rested cap +50 · a third outfit, Evening · +2 Charisma in ${city}`,
+      flatTerms: '2,500 Iron, then 150 a week. If the rent runs out the flat waits; nothing is taken.',
+      buy: 'Buy · 2,500 Iron',
+      buyConfirm: (city: string) => `Buy the flat in ${city} for 2,500 Iron?`,
+      flatLine: (city: string, weekday: string) => `a flat in ${city} · paid until ${weekday}`,
+      payWeek: 'Pay a week · 150',
+      payFour: 'Pay four weeks · 600',
+      /** §21.1 Q4: at most eight weeks ahead. */
+      paidAhead: 'Paid eight weeks ahead',
+      waits: 'Your flat waits · pay a week to sleep there',
+      elsewhere: (city: string, place: string) => `A flat in ${city} · you live in ${place} · its comforts wait for you there`,
+      /** The paper's desk rows. */
+      deskFlat: (city: string, weekday: string) => `A flat in ${city} · paid until ${weekday}`,
+      deskRoom: 'A rented room',
+      deskWaits: (city: string) => `A flat in ${city} · the rent is out`,
+    },
+    // ----- Legacy (screens §10) -------------------------------------------------------------------
+    legacy: {
+      kicker: 'Legacy · your record in the republic',
+      legacy: (n: number) => `Legacy ${n}`,
+      toSpend: (n: number) => `${n} to spend`,
+      total: (n: number, toSpend: number) => `Legacy ${n} · ${toSpend} to spend`,
+      perksKicker: 'Lasting perks',
+      take: (n: number) => `Take it · ${n} Legacy`,
+      needs: (n: number) => `Needs ${n} Legacy`,
+      taken: 'Taken ✓',
+      takenOf: (a: number, b: number) => `Taken ${a} of ${b}`,
+      empty: "Nothing on the record yet. A council term, a hero's title or an exposé goes here, for good.",
+      /** The entries' words (design §7.1), by kind. */
+      entries: {
+        hero: (place: string) => `Hero of ${place}`,
+        councilTerm: (city: string) => `A council term completed in ${city}`,
+        issueTop: (issue: string) => `${issue} resolved with you in its top five`,
+        pledge: (law: string) => `A pledged law passed: ${law}`,
+        governorTerm: (city: string) => `A term as Governor of ${city}`,
+        mayorTerm: (city: string) => `A term as Mayor of ${city}`,
+        deputyTerm: 'A term as a deputy',
+        chairTerm: (faction: string) => `A term as Chair of the ${faction}`,
+        presidentTerm: 'A term as President of the Republic',
+        survivedChair: 'Survived a vote on the Chair',
+        survivedRemoval: 'Survived a vote to remove the President',
+        ambition: (title: string) => `${title}: completed`,
+        expose: (subject: string) => `An exposé printed: ${subject}`,
+        protege: (patron: string) => `Protégé of ${patron}`,
+        unrestPrize: (city: string) => `${city} out of Unrest with you in the lead`,
+      },
+      /** The eight perks: the name and the line (design §7.2). */
+      perks: {
+        fxp: { name: 'A fifth more from the party', line: '+5 % Party XP on every action and mission' },
+        dossier: { name: 'A bigger Dossier', line: 'One more entry in the Dossier · twice at most' },
+        sleep: { name: "A better night's sleep", line: 'Rested banks 50 higher' },
+        walk: { name: 'A shorter walk', line: 'Talking to voters costs one Energy less' },
+        name: { name: 'A name they know', line: 'One more vote in every home count · three times at most' },
+        bonus: { name: 'A bonus at the end of the week', line: "An extra day's pay every Monday" },
+        friends: { name: 'A friend of friends', line: 'Every Favour you earn, a tenth more' },
+        station: { name: 'A quiet word at the station', line: 'Heat cools a tenth faster' },
+      } as Record<
+        'fxp' | 'dossier' | 'sleep' | 'walk' | 'name' | 'bonus' | 'friends' | 'station',
+        { name: string; line: string }
+      >,
+      /** The paper's desk row and the profile. */
+      deskLine: (n: number, toSpend: number) => `Legacy ${n} · ${toSpend} to spend`,
+      profile: (n: number) => `Legacy ${n}`,
+    },
+    // ----- The desk's clocks (design §10.3) --------------------------------------------------------
+    ahead: {
+      kicker: 'Ahead',
+      chapter: (n: number, weekday: string) => `Chapter ${n} from ${weekday}`,
+      patronTier: (patron: string, tier: string, n: number) => `${patron}: ${tier} at ${n}`,
+      rent: (weekday: string) => `Rent due ${weekday}`,
+      fileShort: (name: string) => `${name}: one entry short of a Case File`,
+      minderLast: (name: string, weekday: string) => `${name}'s last day ${weekday}`,
+    },
+    // ----- Rival ground, the journey and society calls (screens §13, §14) --------------------------
+    recognition: {
+      changeIntoPlain: 'Change into plain clothes',
+      plainOnArrival: 'Plain clothes on arrival ✓',
+      youAreInPlain: "You're in plain clothes",
+      warning: (city: string) => `In this coat you'll be recognised in ${city}`,
+      plateKicker: (city: string) => `${city} · rival ground · recognised here`,
+      ticketRecognised: 'Recognised · run-ins likelier',
+      ticketPlain: 'Plain clothes · unnoticed',
+      showPapers: (papers: string) => `Show your papers · ${papers}`,
+      showForged: 'Show your papers · forged papers',
+      /** `{office}` reads *visitor* for a player with none (§21.4). */
+      visitor: 'visitor',
+    },
+    society: {
+      label: 'Mission · Society',
+      needs: (n: number, door: number) => `needs Charisma ${n} · the door is at ${door}`,
+      favourTag: (patron: string) => `+2 Favour with ${patron}`,
+      call: 'Call · 15 Energy',
+      notDressed: (door: number) => `Not dressed for it · needs Charisma ${door} at the door · a good coat would do it`,
+      notWhileWanted: "Not while you're Wanted · the doorman has the list",
+      theFront: 'The Front',
+      frontOpen: 'The promenade, the casino and the lido: the money side of town',
+      /** The morgue file's name picker (§21.1 Q12). */
+      pickName: 'Whose envelope?',
+    },
+    // ----- The result modals (design §11; body ≤ 240) ---------------------------------------------
+    stamps: {
+      bought: 'Bought',
+      sold: 'Sold',
+      caseFile: 'Bound',
+      informant: 'Turned',
+      gift: 'Given',
+      patronFavour: 'Called in',
+      flatBought: 'Yours',
+      rentPaid: 'Paid',
+      markBought: 'Struck off',
+      perk: 'Lasting',
+      dossierSold: 'Sold',
+    },
+    modals: {
+      bought: (item: string, flavour: string, effectLine: string) => ({
+        headline: item,
+        body: `${flavour}. ${effectLine}. It's in your wardrobe; wear it from the Me tab or now.`,
+      }),
+      sold: (item: string) => ({
+        headline: item,
+        body: 'The stallholder counts it out without looking up.',
+      }),
+      caseFile: (subject: string, n: number, kinds: string) => ({
+        headline: `A Case File on ${subject}`,
+        body: `${n} entries bound into one file: ${kinds}. It won't go stale. Take it to a paper, sell it at a station, or turn it.`,
+      }),
+      dossierSold: () => ({
+        headline: 'A word by the left-luggage',
+        body: 'He reads it, folds it, pays. Nobody will ever know it was yours.',
+      }),
+      informant: (city: string, subject: string) => ({
+        headline: `An informant in ${city}`,
+        body: `${subject}'s file bought you a pair of ears. A report every second morning for fourteen days, in the Letters.`,
+      }),
+      gift: (patron: string, giftLine: string) => ({
+        headline: `A gift for ${patron}`,
+        body: giftLine,
+      }),
+      /** The gift's lines by patron (the body). */
+      giftLines: {
+        crane: 'A bottle for the proprietor and a word about the Rows. She takes the bottle and the word, and says nothing about either, which is how the Herald says thank you.',
+        marr: "The bank's regards, returned with a box of the Pier Hotel's cigars. He opens it, takes one, and asks after your town's licence. The bank remembers.",
+      },
+      patronFavour: {
+        plantHeadline: () => ({
+          headline: 'A headline planted',
+          body: "Crane takes the line and puts it on page one, above the fold, where the Issue is argued. Fifty points to the party's side of it, under your name.",
+        }),
+        discretion: () => ({
+          headline: "The bank's discretion",
+          body: 'Marr makes a telephone call and your name comes out of a book. Heat gone, and the back room at half price for a week. The bank does not say which book.',
+        }),
+      },
+      flatBought: (city: string, flatLine: string, until: string) => ({
+        headline: `A flat in ${city}`,
+        body: `${flatLine}. Rent 150 a week, paid until ${until}. Evening is a third outfit now.`,
+      }),
+      /** The flat's line (`{flatLine}`), by city feel. */
+      flatLine: 'One room, a wardrobe, a window over the tram wires and a gas ring that works',
+      rentPaid: (until: string) => ({
+        headline: `Rent until ${until}`,
+        body: 'The landlady writes it in the book.',
+      }),
+      markBought: (n: number) => ({
+        headline: 'One mark fewer',
+        body: `The man in the back room has a friend at the station. The oldest mark on your record is gone. ${n} left.`,
+      }),
+      perk: (perk: string, perkLine: string) => ({
+        headline: perk,
+        body: `${perkLine}. It's yours for good.`,
+      }),
+    },
+    knock: {
+      iron: (n: number) => `−${n} Iron`,
+      ironGained: (n: number) => `+${n} Iron`,
+      favour: (a: number, b: number) => `Favour ${a} → ${b}`,
+      pc: (n: number) => `−${n} Political Capital · once a week`,
+      rested: 'Rested +25 a night · Rested cap +50',
+      legacy: (cost: number, toSpend: number) => `−${cost} Legacy · ${toSpend} to spend`,
+      legacyGained: (n: number) => `Legacy +${n}`,
+      pcGained: (n: number) => `+${n} Political Capital`,
+      fileSpent: 'Case File spent',
+      twoInformants: '2 informants at most',
+      untilWeekday: (weekday: string) => `until ${weekday}`,
+    },
+    // ----- Refusals, worded (the server decides) --------------------------------------------------
+    errors: {
+      changeLocked: "Change when you're out: not in the cells, the infirmary or on a train.",
+      notOwned: "That isn't yours.",
+      notWearable: "That isn't worn; it's kept.",
+      coatRequired: 'A coat stays on. Choose another instead.',
+      outfitLocked: 'Evening is a set while the rent is paid. Pay a week, or wear its things one by one.',
+      noShop: 'Nothing is sold here.',
+      notSoldHere: "This shop doesn't sell that.",
+      membersOnly: "Members only: the party store sells to the party's own.",
+      level: (n: number) => `From Level ${n}.`,
+      rank: (rank3: string) => `${rank3}s and above.`,
+      alreadyOwned: 'You own one already; the shop sells one of each.',
+      notEnoughIron: 'Not enough Iron.',
+      notSellable: {
+        keepsake: 'A keepsake is never sold.',
+        kit: "The party's kit is never sold.",
+        worn: 'Take it off first.',
+        noPrice: 'Nobody buys that.',
+      },
+      inStory: "It's in a story you haven't finished.",
+      bribedToday: 'One a day; the back room has done its favour for today.',
+      noMarks: 'Your record is clean.',
+      noFile: 'No Case File on that name.',
+      fileHeld: 'A name has one Case File at a time.',
+      tooFew: "Not three entries' worth yet.",
+      notFresh: 'That entry has gone already.',
+      notAtStation: 'The man by the left-luggage is at a station: Central Station, the Goods Yard or Clearwater Station.',
+      noPattern: 'An informant needs a pattern line in the file.',
+      needsAssociate: (patron: string) => `Associate with ${patron} first.`,
+      twoInformants: 'Two informants at most. Wait for one to run out.',
+      burned: (n: number) => `That name is in the paper already; nothing new for ${n} days.`,
+      ownParty: 'Not against your own party.',
+      noParty: 'Nobody to print it against.',
+      printedToday: 'Printed today; tomorrow.',
+      notAtPress: 'An exposé is written at a newspaper: Herald House or Gazette House.',
+      noPatronHere: 'No patron receives here.',
+      giftGiven: 'Given today; again tomorrow.',
+      favourNotReady: (weekday: string) => `Once a week: again from ${weekday}.`,
+      notConfidant: 'A Confidant can ask that. Not yet.',
+      notResidence: 'A flat is bought where you live: go home first.',
+      hasFlat: 'One flat in the republic, for now.',
+      rentAhead: 'Paid eight weeks ahead already.',
+      perkTaken: 'Taken already.',
+      perkFull: "That perk's levels are all taken.",
+      notEnoughLegacy: (n: number) => `Needs ${n} Legacy.`,
+      notDressed: (door: number) => `Not dressed for it: Charisma ${door} at the door.`,
+      wanted: "Not while you're Wanted.",
+      onceADay: 'Once a day here; tomorrow.',
+    },
+    // ----- Someone to walk with you (design §24.2; screens §18.1–§18.3) ---------------------------
+    minder: {
+      kicker: 'Someone to walk with you',
+      said: { doorman: 'a doorman', steward: 'a steward', minder: 'a minder' } as Record<'doorman' | 'steward' | 'minder', string>,
+      saidCap: { doorman: 'A doorman', steward: 'A steward', minder: 'A minder' } as Record<'doorman' | 'steward' | 'minder', string>,
+      aWeek: (n: number) => `${n} a week`,
+      row: (said: string, n: number) => `${said} · ${n} a week`,
+      stepsInFirst: 'Steps in first at a run-in · his strength',
+      stepsInLine: (odds: string) => `Steps in first at a run-in · his strength: ${odds}`,
+      /** §24.8 #7: the card's figure is a mission's. */
+      against: 'against a street enforcer, on a mission at home',
+      hire: (n: number) => `Hire · ${n} Iron`,
+      hireConfirm: (name: string, n: number) => `Hire ${name} for a week, ${n} Iron?`,
+      hireButton: 'Hire',
+      withYouUntil: (name: string, weekday: string) => `${name} is with you until ${weekday}`,
+      fromLevel: (n: number) => `From Level ${n}`,
+      fromRank3: 'From Rank 3',
+      /** The Me tab's row (screens §18.2). */
+      meKicker: 'Walking with you',
+      meLine: (name: string, said: string, weekday: string) => `${name}, ${said} · until ${weekday}`,
+      anotherWeek: (n: number) => `Another week · ${n}`,
+      fourWeeks: (n: number) => `Four weeks · ${n}`,
+      paidAhead: 'Paid four weeks ahead',
+      nobody: 'Nobody · a doorman from the party store, 400 a week',
+      /** The run-in sheet's row (screens §18.3). */
+      stepsIn: (name: string) => `${name} steps in`,
+      hisStrength: 'his strength',
+      notAgainstPolice: 'Not against the police',
+      pushedAside: (name: string) => `${name} was pushed aside`,
+      lastDay: (name: string, weekday: string) => `${name}'s last day ${weekday}`,
+      /** The modals (design §24.2). */
+      stamps: { hired: 'Hired', renewed: 'Paid', gotAway: 'Got away' },
+      hired: (name: string) => ({
+        headline: `${name} walks with you`,
+        body: "A week, paid. He meets you at the door and goes where you go. In a run-in he steps in first; if they push past him, it's you.",
+      }),
+      renewed: (name: string, weekday: string) => ({
+        headline: `${name} · another week`,
+        body: `He nods and says nothing. Until ${weekday}.`,
+      }),
+      gotAwayKnock: '+10 XP · got away',
+      /** The desk's row. */
+      deskLine: (name: string, said: string, weekday: string) => `${name}, ${said} · until ${weekday}`,
+      deskLast: (name: string) => `${name} · last day · another week on the party store's card`,
+      /**
+       * The two paper lines in five voices (design §24.2; the Herald's wording, the others §21.4's
+       * pattern). They move to `lifeHeadlines.ts` when the rules' conditions `bodyguardLast` and
+       * `bodyguardGone` exist (T26). `{name}` the man's, `{price}` the week's.
+       */
+      paper: {
+        last: {
+          headline: "{name}'s Week Is Up Tonight",
+          herald: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Nothing else changes.",
+          clarion: 'Paid until tonight. Another week on the party store\'s card, or he goes back to the door. Holm: "The quays will miss the width of him."',
+          sentinel: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The committee notes the date.",
+          gazette: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Mr Grey has the receipt ready.",
+          courier: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The lake has seen him coming.",
+        },
+        gone: {
+          headline: '{name} Has Gone Back to the Door',
+          herald: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store.",
+          clarion: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Union Hall. Holm says he was never on the books.",
+          sentinel: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at Beacon House. The committee expects you to manage.",
+          gazette: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Rooms. Mr Grey wishes him well.",
+          courier: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store. The Front walks alone, mostly.",
+        },
+      },
+      errors: {
+        hasOne: (name: string, weekday: string) => `${name} is with you until ${weekday}. A different man when the week is up.`,
+        notMember: "Members only: the party store's card.",
+        paidAhead: 'Paid four weeks ahead already.',
+        notAgainstPolice: 'He never argues with the police.',
+      },
+    },
+    // ----- The bar and the dining room (design §24.3; screens §18.4–§18.5) -----------------------
+    bar: {
+      kicker: (place: string) => `The bar · ${place}`,
+      diningKicker: (hotel: string) => `The dining room · ${hotel}`,
+      round: 'Buy a round',
+      roundLine: 'In good spirits: a tenth more XP on your next three missions',
+      roundPrice: '30 Iron · 2 Energy',
+      plate: 'A plate of something',
+      plateLine: 'Well fed: a tenth more XP for four hours, and some Health back',
+      platePrice: '100 Iron · 2 Energy',
+      dinner: 'Dinner',
+      dinnerLine: 'Well fed, properly: a tenth more XP and a tenth more Iron for six hours; Health back',
+      dinnerPrice: '400 Iron · 2 Energy · needs Charisma 10',
+      needsCharisma: 'needs Charisma 10',
+      notDressed: 'Not dressed for the dining room · needs Charisma 10',
+      buy: (n: number) => `Buy · ${n} Iron`,
+      threeADay: 'Three rounds a day · more tomorrow',
+      wellFedUntil: (time: string) => `Well fed until ${time}`,
+      nineInHand: 'Nine missions in hand already',
+      /** The Me tab's line under the stats (screens §18.5). */
+      meLine: (time: string | null, missions: number | null) =>
+        [time ? `Well fed until ${time}` : null, missions !== null ? `In good spirits, ${missions} ${missions === 1 ? 'mission' : 'missions'}` : null]
+          .filter(Boolean)
+          .join(' · '),
+      /** The receipt's lines. */
+      receipt: {
+        wellFedXp: 'Well fed · +10 % XP',
+        wellFedIron: 'Well fed · +10 % Iron',
+        spirits: (n: number) => `In good spirits · +10 % XP · ${n} left`,
+      },
+      stamps: { round: 'Your round', meal: 'Fed', dinner: 'Fed' },
+      modals: {
+        round: () => ({
+          headline: 'A round for the bar',
+          body: "The barman lines them up and the bar remembers your name for an hour. You're in good spirits.",
+        }),
+        meal: () => ({
+          headline: 'A plate of something hot',
+          body: 'Dumplings, gravy, and bread to mop it. The day looks better from here.',
+        }),
+        dinner: (hotel: string) => ({
+          headline: `Dinner at ${hotel}`,
+          body: "A white tablecloth, a waiter who has seen everything, and the Front's prices. Worth it, tonight.",
+        }),
+      },
+      knock: {
+        spirits: 'In good spirits · your next 3 missions',
+        wellFed: (time: string) => `Well fed until ${time}`,
+        wellFedProperly: (time: string) => `Well fed, properly, until ${time}`,
+        health: (n: number) => `Health +${n}`,
+        energy: '−2 Energy',
+      },
+      errors: {
+        threeADay: 'Three rounds a day; more tomorrow.',
+        nineInHand: 'Nine missions in hand already.',
+        wellFed: (time: string) => `Well fed until ${time}: one meal at a time, the better one.`,
+        notDressed: 'Not dressed for the dining room: Charisma 10.',
+        notABar: 'The bar is at a bar.',
+        noDining: 'The dining room is at a hotel.',
+      },
+    },
+    // ----- Help notes (design §16.7, §24; the review-1 pattern: [kicker, note]) -------------------
+    help: {
+      charisma: () => [
+        'Charisma',
+        "What you wear. Your coat, what's on you and a flat in town add up to it. It opens society doors and gets you recognised on rival ground.",
+      ],
+      wardrobe: () => [
+        'The Wardrobe',
+        'Four things you wear: Coat, On you, Papers, Tools. Two outfits, Town and Plain clothes, one tap to change. Shops are cards on the places that sell things.',
+      ],
+      plainClothes: () => [
+        'Plain clothes',
+        'Charisma under 10. On rival ground nobody looks twice at work clothes; an office or a famous name still carries, half as far.',
+      ],
+      dossier: () => [
+        'The Dossier',
+        "What you know about the republic's named people. Entries come from watching and listening; they go stale in a week and count half after. Three on one name make a Case File.",
+      ],
+      caseFile: () => [
+        'A Case File',
+        "Three entries' worth on one name, bound. Take it to a newspaper for an exposé, sell it at a station, or turn it into an informant with a patron's help.",
+      ],
+      favour: () => [
+        'Favour',
+        'How much a patron thinks of you, 0 to 100. Requests, gifts and society calls raise it; nothing lowers it. Acquaintance at 10, Associate 30, Confidant 60, Protégé 90.',
+      ],
+      legacy: () => [
+        'Legacy',
+        'Your record in the republic: terms, titles, exposés, a completed Ambition. Public and permanent. Points buy small lasting perks and are never lost.',
+      ],
+      home: () => [
+        'Where you sleep',
+        'A rented room gives +10 Rested a night. A flat gives +25, a bigger Rested cap, a third outfit and +2 Charisma in its town, for 150 a week. If the rent runs out the flat waits.',
+      ],
+      society: () => [
+        'A society call',
+        "A mission that needs Charisma: the door is ten under the figure, and the figure is the difficulty. It pays Favour with the town's patron and sometimes a Dossier entry.",
+      ],
+      bodyguard: () => [
+        'Someone to walk with you',
+        'A week at a time, paid in advance. In a run-in he steps in first, with his own odds; if they push past him the fight is yours. He never argues with the police. When the week is up he goes; nothing else changes.',
+      ],
+      wellFed: () => [
+        'Well fed',
+        'A plate at a bar or dinner at a hotel: a tenth more XP for a few hours, and some Health back, up to full. One meal counts at a time, the better one.',
+      ],
+      goodSpirits: () => [
+        'In good spirits',
+        'A round at the bar: a tenth more XP on your next three missions. Three rounds a day, nine missions in hand at most.',
+      ],
+    },
+  },
 } as const;
 
 export type Copy = typeof copy;

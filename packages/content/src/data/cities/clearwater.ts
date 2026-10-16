@@ -7,10 +7,11 @@ import { clearwaterMissions } from '../missions/clearwater';
  * §14.11, §15.3; ADR 0050). One meter, seven seats three ways, cycle offset 4, 30 % of the republic.
  * Places, actions and texts: design §9.2–§9.3, word for word; every pin is the survey's
  * (`mapPins.clearwater`). Review 4 (ADR 0076): a one-map city, no frames, outlines or labels; the
- * Places list groups by quarter. The Front's other three places (the Promenade, the Lido, the Pier
- * Hotel) are later pins until slice 8; the Casino is here as the council's hall (ADR 0077: the hall
- * is a place; kind `bar`, one gallery ticket like every town hall's). Difficulty 10 on tier 1 and 20
- * on missions are the rules' (a battleground), never data.
+ * Places list groups by quarter. The Casino is the council's hall (ADR 0077: the hall is a place;
+ * kind `bar`, one gallery ticket like every town hall's). Slice 8 (docs/design/slice-8-life.md
+ * §3.7, §16.3): the Front opens, the Promenade, the Lido and the Pier Hotel leaving the later pins,
+ * each with two tier-1 actions and a society call (missions/clearwater.ts). Difficulty 10 on tier 1
+ * and 20 on missions are the rules' (a battleground), never data.
  */
 
 const canvass = { tier: 1, type: 'canvass', energy: 10, givesFxp: true, givesOpinion: true } as const;
@@ -29,8 +30,8 @@ export const clearwater: City = {
   // Design §8 (GDD §14.8): the city's weight in who holds the republic.
   nationalWeight: 0.3,
   // The survey's quarter order (The Front 1, The Depot 2, The Harbour 3; design §9.1, §17 Q6). All
-  // three are open: nobody reaches the lake below Level 10, and The Front's three society places
-  // are greyed pins (*Opens with a later edition*) until slice 8 while the Casino, its hall, is here.
+  // three are open: nobody reaches the lake below Level 10; the Front's four places are playable
+  // from slice 8 (society calls need worn Charisma, not a Level).
   quarters: [
     {
       id: 'clearwater.front',
@@ -131,6 +132,8 @@ export const clearwater: City = {
           'Barrows under the railway arches behind the depot: fish, bootlaces, things without a receipt. A café with a hatch, and men who watch who buys what.',
         map: { x: 0.45, y: 0.4 },
         quarterId: 'clearwater.depot',
+        // Slice 8 (design §3.5): the clothes stall; it buys anything sellable at a tenth.
+        shops: [{ kind: 'clothesStall', items: ['outfit.standard-coat', 'acc.good-hat'], buys: 'any' }],
         actions: [
           {
             ...canvass,
@@ -557,16 +560,54 @@ export const clearwater: City = {
         ],
       },
       // ----- The Front: the council's hall (ADR 0077), appended last so no pin renumbers ---------
+      // Slice 8 (design §3.7, §16.3): the Front opens. The Casino gains its two tier-1 actions, the
+      // back room (§3.5), the bar's card (§24.3) and its own scene; the other three places follow.
       {
         id: 'clearwater.casino',
         name: 'The Casino',
         ref: 'the Casino',
         kind: 'bar',
         blurb:
-          "The casino company's house above the terraces: tables for the Front downstairs, and a committee room upstairs it lends the town council five days at a time. The town's hall, whatever the sign says.",
+          "The company's domed palace: a long bar, the tables after midnight, and the committee room upstairs it lends the council. The cashier sees everything.",
         map: { x: 0.33, y: 0.6 },
         quarterId: 'clearwater.front',
+        scene: 'scene.casino',
+        shops: [{ kind: 'backRoom', items: ['doc.forged-papers', 'tool.wire-cutters'], buys: 'own', bribe: true }],
+        bar: true,
         actions: [
+          {
+            ...canvass,
+            id: 'clearwater.casino.bar',
+            name: 'Talk to people at the long bar',
+            stats: ['cha', 'int'],
+            text: {
+              success: {
+                headline: "The bar's view",
+                body: 'The long bar talks licence, trams and who\'s buying. Three of them will vote, one of them for you.',
+              },
+              partial: {
+                headline: "A round you didn't buy",
+                body: "Somebody else's round and the talk stays on the tables. One name, one maybe.",
+              },
+            },
+          },
+          {
+            ...intelligence,
+            energy: 3,
+            id: 'clearwater.casino.listen',
+            name: "Listen at the cashier's window",
+            stats: ['int'],
+            text: {
+              success: {
+                headline: "The cashier's arithmetic",
+                body: "Chips out, chips in, and who signs for them. The cashier's book is a ledger of the Front. One line worth remembering.",
+              },
+              partial: {
+                headline: 'A busy night',
+                body: 'Too busy to overhear anything but the sums. The sums are large.',
+              },
+            },
+          },
           {
             ...intelligence,
             energy: 6,
@@ -581,6 +622,146 @@ export const clearwater: City = {
               partial: {
                 headline: 'The room is cleared',
                 body: "The company's man clears the room for a closed session after twenty minutes and the croupiers watch you go down. You get the seating plan and a cold. The rest is in the Courier tomorrow, if it's anywhere.",
+              },
+            },
+          },
+        ],
+      },
+      // Slice 8 (design §16.3): the Front's other three places, on their survey pins (mapPins.clearwater).
+      {
+        id: 'clearwater.promenade',
+        name: 'The Promenade',
+        ref: 'the Promenade',
+        kind: 'square',
+        blurb:
+          'A mile of benches, a bandstand and the people who have time for both. The money side of town walks here at four and talks about the other side.',
+        map: { x: 0.2, y: 0.69 },
+        quarterId: 'clearwater.front',
+        actions: [
+          {
+            ...canvass,
+            id: 'clearwater.promenade.canvass',
+            name: 'Talk to people on the benches',
+            stats: ['cha', 'int'],
+            text: {
+              success: {
+                headline: 'A bench a vote',
+                body: "Four benches, four conversations, one of them a councillor's widow who has opinions about the trams. She'll tell her bridge table.",
+              },
+              partial: {
+                headline: 'The band starts',
+                body: 'Two benches before the band starts and nobody can hear the trams argument. The widow waves.',
+              },
+            },
+          },
+          {
+            ...intelligence,
+            energy: 4,
+            id: 'clearwater.promenade.watch',
+            name: 'Watch who walks with whom',
+            stats: ['int'],
+            text: {
+              success: {
+                headline: "Four o'clock, as usual",
+                body: "The tram director walks with the casino's manager, as usual, and today with a third man who isn't. You note the hat.",
+              },
+              partial: {
+                headline: 'A hat',
+                body: "Rain at four and the walkers under the bandstand. One hat you'd know again.",
+              },
+            },
+          },
+        ],
+      },
+      {
+        id: 'clearwater.lido',
+        name: 'The Lido',
+        ref: 'the Lido',
+        kind: 'square',
+        blurb:
+          "The lake's pavilion and its deckchairs, the bandstand the parties fight over, a Sunday crowd that reads the Courier and votes.",
+        map: { x: 0.42, y: 0.88 },
+        quarterId: 'clearwater.front',
+        scene: 'scene.lido',
+        actions: [
+          {
+            ...canvass,
+            id: 'clearwater.lido.deckchairs',
+            name: 'Talk to people in the deckchairs',
+            stats: ['cha', 'int'],
+            text: {
+              success: {
+                headline: "A Sunday's worth",
+                body: "The deckchairs vote and say so: the bandstand, the licence, the Rows' water. Three conversations, one convert.",
+              },
+              partial: {
+                headline: 'Sunburn',
+                body: 'Two deckchairs and a child with a bucket. One of the two is yours.',
+              },
+            },
+          },
+          {
+            ...speech,
+            id: 'clearwater.lido.bandstand',
+            name: 'Speak from the bandstand',
+            stats: ['cha', 'int'],
+            text: {
+              success: {
+                headline: "The bandstand's ours",
+                body: "Twenty minutes before the band, two hundred deckchairs, and the lake carries a voice. They clap because it's Sunday; some of them mean it.",
+              },
+              partial: {
+                headline: "The band's early",
+                body: 'Ten minutes and the brass. A knot by the pavilion stays to argue, which is the point.',
+              },
+            },
+          },
+        ],
+      },
+      {
+        id: 'clearwater.pier-hotel',
+        name: 'The Pier Hotel',
+        ref: 'the Pier Hotel',
+        kind: 'hotel',
+        blurb:
+          "Terraces over the water, tea at four, a lounge where the bank's business is done quietly. Julius Marr keeps a table by the window.",
+        map: { x: 0.56, y: 0.82 },
+        quarterId: 'clearwater.front',
+        // Design §3.5, §5.1, §24.3: the tailor, Marr's table and the dining room.
+        shops: [{ kind: 'tailor', items: ['outfit.greatcoat', 'outfit.evening-dress', 'acc.wristwatch'], buys: 'own' }],
+        patronId: 'marr',
+        dining: true,
+        actions: [
+          {
+            ...canvass,
+            id: 'clearwater.pier-hotel.lounge',
+            name: 'Talk to people in the lounge',
+            stats: ['cha', 'int'],
+            text: {
+              success: {
+                headline: 'Tea and a vote',
+                body: 'The lounge talks quietly and votes loudly. A retired magistrate, a tram shareholder, a sister from the sanatorium: three views, one yours.',
+              },
+              partial: {
+                headline: "The waiter's eye",
+                body: "The waiter has opinions about who sits where. Two conversations before you're moved.",
+              },
+            },
+          },
+          {
+            ...intelligence,
+            energy: 3,
+            id: 'clearwater.pier-hotel.porters',
+            name: 'Listen to the porters',
+            stats: ['int'],
+            text: {
+              success: {
+                headline: 'What the porters carry',
+                body: "Who arrived, who paid cash, who had the banker's table. Porters know the Front by its luggage.",
+              },
+              partial: {
+                headline: 'Luggage only',
+                body: "Trunks, a dog, a crate marked fragile. The dog's name is Max.",
               },
             },
           },

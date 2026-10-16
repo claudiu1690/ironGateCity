@@ -966,6 +966,8 @@ export const issues: ContentInput['issues'] = [
             actionTypes: ['canvass'],
             locationIds: ['irongate.villas'],
           },
+          // Slice 8 (design §4.5, §21.1 Q29): an exposé on a Hill name is tagged while the Issue runs.
+          { actionTypes: ['expose'] },
         ],
       },
     ],
@@ -1036,6 +1038,8 @@ export const issues: ContentInput['issues'] = [
         feeds: [
           { actionTypes: ['speech', 'canvass'], locationIds: ['clearwater.st-martins', 'clearwater.station'] },
           { actionTypes: ['propaganda'] },
+          // Slice 8 (design §4.5, §21.1 Q29): an exposé on a lake name is tagged while the Issue runs.
+          { actionTypes: ['expose'] },
         ],
       },
     ],

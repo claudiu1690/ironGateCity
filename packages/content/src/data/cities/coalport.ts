@@ -109,6 +109,8 @@ export const coalport: City = {
     },
     {
       id: 'coalport.market-row',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'clothesStall', items: ['outfit.standard-coat', 'acc.good-hat'], buys: 'any' }],
       name: 'Market Row',
       kind: 'market',
       blurb:
@@ -169,6 +171,8 @@ export const coalport: City = {
     },
     {
       id: 'coalport.union-hall',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'partyStore', items: ['outfit.convenors-coat', 'acc.party-badge', 'tool.paste-and-brush', 'doc.press-pass', 'tool.press-camera'], buys: 'own', hire: true }],
       name: 'Union Hall',
       // Review 4: the welcome deck's {place} (answers §2.6: *at the Union Hall*).
       ref: 'the Union Hall',
@@ -391,6 +395,9 @@ export const coalport: City = {
     },
     {
       id: 'coalport.anchor',
+      // Slice 8 (design §3.5, §5.1, §24.3): the place's cards.
+      shops: [{ kind: 'backRoom', items: ['doc.forged-papers', 'tool.wire-cutters'], buys: 'own', bribe: true }],
+      bar: true,
       name: 'The Anchor',
       kind: 'bar',
       blurb:

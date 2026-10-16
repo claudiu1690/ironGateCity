@@ -1,6 +1,10 @@
-import type { Npc } from '../schemas';
+import type { DossierName, Npc } from '../schemas';
 
-/** Named NPCs: the three party secretaries (slice-1 content §6.1, slice-2 cities §1.4, §2.4). */
+/**
+ * Named NPCs: the three party secretaries (slice-1 content §6.1, slice-2 cities §1.4, §2.4) and,
+ * from slice 8 (docs/design/slice-8-life.md §5.1), the two patrons. Neither patron has a party:
+ * every faction courts them on the same terms.
+ */
 export const npcs: Npc[] = [
   {
     id: 'holm',
@@ -34,6 +38,32 @@ export const npcs: Npc[] = [
     // Review 4: the story's {helperPronoun} on the train (answers §29.3).
     pronoun: 'he',
   },
+  // Slice 8 (design §5.1): the two patrons, received at Herald House and the Pier Hotel.
+  {
+    id: 'crane',
+    name: 'Edith Crane',
+    title: 'Proprietor of the Irongate Herald',
+    cityId: 'irongate',
+    portrait: 'portrait.crane',
+    pronoun: 'she',
+  },
+  {
+    id: 'marr',
+    name: 'Julius Marr',
+    title: 'Banker, Clearwater',
+    cityId: 'clearwater',
+    portrait: 'portrait.marr',
+    pronoun: 'he',
+  },
+];
+
+/**
+ * Slice 8 (tech design §4.1, §23 #16): names the Dossier can hold that are not `Npc`s (no
+ * portrait). Konrad Brandauer, the block's night caretaker of *Who Sold the Homes*: no party, in
+ * Coalport, never drawn at random; chapter 2 lands his entry by hand.
+ */
+export const extraNames: DossierName[] = [
+  { id: 'npc.brandauer', name: 'Konrad Brandauer', cityId: 'coalport', factionId: null, drawn: false },
 ];
 
 /** §13.4: Local Standing names, level 0..4 (thresholds 10 / 30 / 70 / 150 are in rules). */
