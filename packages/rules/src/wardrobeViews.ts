@@ -120,12 +120,16 @@ export interface HireCardView {
 
 export interface BarCardView {
   place: string;
+  /** Phase C, lane P: the two rows' pictures (`item.round`, `item.bar-plate`). */
+  art?: { round: AssetView; plate: AssetView };
   round: { state: 'ok' | 'today' | 'full' | 'needsIron' | 'needsEnergy'; left: number };
   plate: { state: 'ok' | 'fed' | 'needsIron' | 'needsEnergy'; until: number | null };
 }
 
 export interface DiningCardView {
   hotel: string;
+  /** Phase C, lane P: the row's picture (`scene.hotel`, cropped to 64 px). */
+  art?: AssetView;
   state: 'ok' | 'notDressed' | 'fed' | 'needsIron' | 'needsEnergy';
   until: number | null;
   cha: 10;

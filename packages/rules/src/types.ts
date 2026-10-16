@@ -3004,6 +3004,8 @@ export interface StreetView {
     /** The opponent's line for the outcome. */
     line: string;
     cause: 'power' | 'agi' | 'cha' | 'luck' | 'minder' | null;
+    /** Slice 8 phase C (screens §18.3): the man walking with you, for *{Name} was pushed aside*. */
+    minder?: { name: string } | null;
     health: { before: number; after: number; max: number; fullAt: number | null } | null;
     ironPaid: number;
     heatAdded: number;

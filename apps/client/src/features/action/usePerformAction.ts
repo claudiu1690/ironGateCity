@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 import { isNetworkError, trpc } from '../../lib/trpc';
 import { noteServerNow } from '../../lib/useNow';
+import { invalidateLife } from '../life/invalidate';
 
 export interface PerformTarget {
   actionId: string;
@@ -25,6 +26,8 @@ export function usePerformAction(onResult: (result: ActionResult) => void) {
       noteServerNow(result.character.serverNow);
       queryClient.setQueryData(trpc.character.me.queryKey(), result.character);
       void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
+      // Slice 8: a meal's or a round's lines, his row, the Me tab's buffs.
+      invalidateLife(queryClient);
       // Slice 5: a tap on rival ground may start a run-in; its modal is the run-in gate's (the shell).
       if (result.kind === 'runIn') {
         queryClient.setQueryData(trpc.encounter.current.queryKey(), { pending: result } as never);

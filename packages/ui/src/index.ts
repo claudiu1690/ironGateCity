@@ -304,3 +304,21 @@ export { ElectionWindowRow, LawChips, NationBar, NationalSection, RepublicSheetB
 export type { LawChipsProps, NationBarProps, NationalSectionProps, RepublicSheetBodyProps } from './components/Republic';
 export { LadderCard, OfficeCard, OfficeHeader, officeCardLine, officeDate, officeWeekday } from './components/Office';
 export type { LadderCardProps, OfficeCardProps, OfficeHeaderProps } from './components/Office';
+// Slice 8, phase C lane P (screens §2–§5, §18): the Wardrobe, shops, someone to walk with you, the bar.
+export {
+  ItemCard,
+  OutfitChips,
+  SlotCard,
+  SlotChooser,
+  WARDROBE_SLOTS,
+  WardrobeBlock,
+  WardrobeSheet,
+  itemEffectLine,
+} from './components/Wardrobe';
+export type { ItemCardAction, ItemCardProps, OutfitChipsProps, SlotChooserProps, WardrobeBlockProps, WardrobeSheetProps } from './components/Wardrobe';
+export { BuyConfirm, SellSheet, ShopCard } from './components/Shop';
+export type { BuyConfirmProps, SellSheetProps, ShopCardProps } from './components/Shop';
+export { HireCard, HireConfirm, MinderEncounterRow, MinderResultRow, MinderRow, oddsWordOf } from './components/Minder';
+export type { HireCardProps, HireConfirmProps, MinderEncounterRowProps, MinderRowProps } from './components/Minder';
+export { BarCard, BuffLine, DiningCard } from './components/Bar';
+export type { BarCardProps, DiningCardProps } from './components/Bar';

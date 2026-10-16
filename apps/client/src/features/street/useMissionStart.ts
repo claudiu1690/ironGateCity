@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 import { isNetworkError, trpc } from '../../lib/trpc';
 import { noteServerNow } from '../../lib/useNow';
+import { invalidateLife } from '../life/invalidate';
 
 export interface MissionTarget {
   locationId: string;
@@ -26,6 +27,8 @@ export function useMissionStart(onResult: (result: ActionResult) => void) {
       noteServerNow(result.character.serverNow);
       queryClient.setQueryData(trpc.character.me.queryKey(), result.character);
       void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
+      // Slice 8: a round in hand is spent at the start; the Me tab's buffs follow.
+      invalidateLife(queryClient);
       if (result.kind === 'runIn') {
         queryClient.setQueryData(trpc.encounter.current.queryKey(), { pending: result } as never);
         return;

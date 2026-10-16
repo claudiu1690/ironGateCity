@@ -5,7 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { usePerformAction } from '../action/usePerformAction';
-import { noticeFor } from '../game/errors';
+import { invalidateLife } from '../life/invalidate';
+import { lifeNotice } from '../life/lifeErrors';
 import { useCharacter, usePlaceStat } from '../game/hooks';
 import { trainingPlacesOf } from '../game/trainingPlaces';
 import { setResultModalOpen } from '../../lib/modalGate';
@@ -76,6 +77,7 @@ export function RunInGate() {
     queryClient.setQueryData(trpc.character.me.queryKey(), c);
     for (const key of [trpc.city.get.queryKey(), trpc.held.get.queryKey(), trpc.paper.today.queryKey()])
       void queryClient.invalidateQueries({ queryKey: key });
+    invalidateLife(queryClient);
   };
 
   // The one choice: one key per tap; every row is disabled from the tap until the result renders.
@@ -166,7 +168,7 @@ export function RunInGate() {
         open={encounterOpen}
         onChoose={onChoose}
         choosing={choose.isPending ? (choose.variables?.choice ?? null) : null}
-        notice={choose.error ? noticeFor(choose.error) : null}
+        notice={choose.error ? lifeNotice(choose.error) : null}
       />
       <ResultModal
         result={shown}

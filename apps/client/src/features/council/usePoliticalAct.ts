@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 import { isNetworkError, trpc } from '../../lib/trpc';
 import { noteServerNow } from '../../lib/useNow';
+import { invalidateLife } from '../life/invalidate';
 
 /**
  * Slice 3: one political act per tap (ADR 0018). The key is created once in the tap handler, a
@@ -45,6 +46,8 @@ export function usePoliticalAct() {
           queryClient.setQueryData(trpc.council.hall.queryKey({ cityId: r.view.hall.cityId }), r.view.hall);
         void queryClient.invalidateQueries({ queryKey: trpc.paper.today.queryKey() });
         void queryClient.invalidateQueries({ queryKey: trpc.city.get.queryKey() });
+        // Slice 8 (tech design §24.6): the life cards and the Me tab's life line with the character.
+        invalidateLife(queryClient);
         // Review 4 (ADR 0077): the Town Hall's sheet shows the same council (and the same ballot).
         if (r.view.kind !== 'hall') void queryClient.invalidateQueries({ queryKey: trpc.council.hall.queryKey() });
         if (r.view.kind !== 'ballot') void queryClient.invalidateQueries({ queryKey: trpc.council.ballot.queryKey() });

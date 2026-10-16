@@ -36,6 +36,8 @@ import { FACTION_STYLE } from './FactionCrest';
 import { GroundSash } from './GroundSash';
 import type { Ground } from './GroundSash';
 import { ArtPanel } from './HallHeader';
+import { buffReceiptLines, lifeLines } from '../lifeLines';
+import { MinderResultRow } from './Minder';
 import { Picture } from './Picture';
 import { BottomSheet } from './Sheets';
 import { StatPointsPanel } from './Shell';
@@ -246,6 +248,9 @@ function PoliticalBody({
 }) {
   const k = r.knockOns;
   const lines: Array<{ id: string; text: string }> = [];
+  // Slice 8 (tech design §24.7): a life act's own lines; the generic Iron, Energy and Health lines
+  // give way where they already say it.
+  const life = lifeLines(r);
   // Slice 5 (tech design §10.3): out of the cells or the infirmary, the record struck.
   if (k.heat)
     lines.push({ id: 'heat', text: copy.risk.heatKnock(k.heat.before, k.heat.after, heatWord(heatState(k.heat.after))) });
@@ -253,7 +258,8 @@ function PoliticalBody({
   if (k.takenIn)
     lines.push({ id: 'taken-in', text: copy.risk.takenInKnock(k.takenIn.added, recordWord(k.takenIn.level)) });
   if (k.ordersOff) lines.push({ id: 'orders-off', text: copy.risk.ordersOffKnock });
-  if (k.health) lines.push({ id: 'health', text: copy.risk.healthKnock(k.health.before, k.health.after) });
+  if (k.health && !life.skip.has('health'))
+    lines.push({ id: 'health', text: copy.risk.healthKnock(k.health.before, k.health.after) });
   if (k.record)
     lines.push({ id: 'record', text: copy.risk.recordKnock(recordWord(k.record.after.level), k.record.after.marks) });
   if (k.barred)
@@ -282,7 +288,7 @@ function PoliticalBody({
     });
   }
   // Slice 4 (screens §6.3): a move or a room: the Iron, a home seat given up.
-  if (k.iron) {
+  if (k.iron && !life.skip.has('iron')) {
     const spent = k.iron.before - k.iron.after;
     lines.push({
       id: 'iron',
@@ -297,7 +303,8 @@ function PoliticalBody({
             : copy.ironLeft(spent, formatNumber(k.iron.after)),
     });
   }
-  if (k.energy) lines.push({ id: 'energy', text: copy.risk.energyKnock(k.energy.before - k.energy.after) });
+  if (k.energy && !life.skip.has('energy'))
+    lines.push({ id: 'energy', text: copy.risk.energyKnock(k.energy.before - k.energy.after) });
   // Slice 6 (tech design §10.2): Rested drawn by a call or a sign-up; Party XP from a favour or the
   // order; the visit's line for the mate; the prisoner's *posted by*.
   if (k.rested && k.energy) {
@@ -325,6 +332,7 @@ function PoliticalBody({
       ),
     });
   }
+  lines.push(...life.lines);
   const t = { until: r.until, at: r.at };
   // Review 2 (screens §9): every act ends with what comes next.
   if (r.next) lines.push({ id: 'next', text: renderTimeTokens(r.next, t) });
@@ -348,6 +356,7 @@ function PoliticalBody({
           <Dialog.Description className="font-body text-[14px] leading-normal text-text-2">
             {renderTimeTokens(r.body, t)}
           </Dialog.Description>
+          {r.view.kind === 'minder' && r.view.minder && <MinderResultRow minder={r.view.minder} />}
         </section>
         {lines.length > 0 && (
           <section aria-labelledby="political-effects">
@@ -1326,6 +1335,13 @@ function Receipt({
           {item.keepsake ? copy.reward.keepsake : copy.reward.item} ·{' '}
           <span className="font-display font-bold">{item.name}</span>
         </span>
+      </li>,
+    );
+  // Slice 8 (screens §18.5): a buff's part as a line of its own (*Well fed · +10 % XP*).
+  for (const [i, text] of buffReceiptLines(r.rewards).entries())
+    rows.push(
+      <li key={`buff-${i}`} className="flex min-h-7 items-center border-b border-dotted border-faint py-[3px] font-mono text-[11px]" data-testid="receipt-buff">
+        {text}
       </li>,
     );
   const all = [...details, ...extra];

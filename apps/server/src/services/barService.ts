@@ -26,7 +26,7 @@ import { homeCapOf, restedCapToday } from './modifiers';
 import { buffsOf } from './personal';
 import { healthDoc, healthTimerOf } from './risk';
 import { VersionConflict } from './txn';
-import { energyState, wornStats } from './views';
+import { assetView, energyState, wornStats } from './views';
 
 /**
  * Slice 8 phase B, lane 1 (T31; tech design §24, ADR 0088): the bar's card (a round, a plate) and
@@ -60,6 +60,7 @@ export function barCard(content: GameContent, c: CharacterDoc, locationId: strin
     r === 'ROUNDS_TODAY' ? 'today' : r === 'SPIRITS_FULL' ? 'full' : r === 'NOT_ENOUGH_IRON' ? 'needsIron' : 'needsEnergy';
   return {
     place: l.location.name,
+    art: { round: assetView(content, 'item.round'), plate: assetView(content, 'item.bar-plate') },
     round: { state: rg ? (word(rg.reason) as BarCardView['round']['state']) : 'ok', left: Math.max(0, BAR.round.perDay - rounds) },
     plate: {
       state: pg ? (pg.reason === 'WELL_FED' ? 'fed' : pg.reason === 'NOT_ENOUGH_IRON' ? 'needsIron' : 'needsEnergy') : 'ok',
@@ -84,6 +85,7 @@ export function diningCard(content: GameContent, c: CharacterDoc, locationId: st
   });
   return {
     hotel: l.location.name,
+    art: assetView(content, 'scene.hotel'),
     state: g
       ? g.reason === 'WELL_FED'
         ? 'fed'

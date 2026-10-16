@@ -72,6 +72,7 @@ import { env } from '../env';
 import { usePerformAction } from '../features/action/usePerformAction';
 import type { PerformTarget } from '../features/action/usePerformAction';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
+import { PlaceLifeCards } from '../features/life/PlaceLife';
 import { usePetitionCard } from '../features/nation/usePetitionCard';
 import { useRuleVote } from '../features/council/useRuleVote';
 import { noticeFor } from '../features/game/errors';
@@ -1408,6 +1409,8 @@ export function CityPage() {
           // Review 4 (tech design §3.1): the place's cards, in the slot's fixed order. Jobs first; the
           // Lodgings, *In the cells now* and the Town Hall's blocks follow in their phases.
           cards={[
+            // Slice 8 (screens §4, §18): shops, someone to walk with you, the bar, the back room; above Jobs.
+            <PlaceLifeCards key="life" locationId={sheetPlace.id} open={sheetOpen} act={act} />,
             <JobsCard
               key="jobs"
               jobs={sheetPlace.jobs}

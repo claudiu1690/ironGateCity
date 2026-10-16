@@ -193,6 +193,7 @@ export function buildMissionResult(i: {
             // Slice 8 (T30, ADR 0088): his `works` line when he steps in; his `fails` line before the fight's.
             line: minderLine(content, i.runIn.minder, r, (r.outcome === 'minded' ? opp.lines.talked : opp.lines[r.outcome]) ?? opp.lines.won),
             cause: r.cause,
+            minder: i.runIn.minder ? { name: i.runIn.minder.name } : null,
             health: f.health
               ? {
                   before: f.health.before,

@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { env } from '../env';
 import { noticeFor } from '../features/game/errors';
+import { DressLine } from '../features/life/DressLine';
 import { useCharacter } from '../features/game/hooks';
 import { setResultModalOpen } from '../lib/modalGate';
 import { isNetworkError, trpc } from '../lib/trpc';
@@ -98,6 +99,8 @@ function JourneyPlate({
       <p className="border-y border-ink py-2 font-body text-[14.5px] leading-snug italic" data-testid="journey-sentence">
         {copy.travel.eitherWay}
       </p>
+      {/* Slice 8 (screens §13, §19): *Change into plain clothes* on the way to rival ground. */}
+      <DressLine journey={data} />
       {onOpenCard && data.card && (
         <button
           type="button"

@@ -7,6 +7,7 @@ import { statName } from '../odds';
 import type { TrainingPlaces } from '../odds';
 import { Button } from './Button';
 import { HelpButton, helpMark } from './Help';
+import { MinderEncounterRow } from './Minder';
 import { Picture } from './Picture';
 
 /**
@@ -264,11 +265,12 @@ export function RiskRows({
 export type RunInChoice = 'fight' | 'run' | 'talk' | 'pay' | 'minder' | 'luck';
 
 /**
- * Slice 8 (ADR 0088): the bodyguard's row reads as a talk in the did line until the designer's T27
- * copy gives it words (no run-in carries one before phase B).
+ * Slice 8 (ADR 0088; screens §18.3): his row is not in the did line. When he steps in, his `works`
+ * line is the whole account; when he is pushed aside, the did line is the fight that followed, as the
+ * player's (his `fails` line leads the opponent's line).
  */
 const didSteps = (steps: ReadonlyArray<{ row: 'fight' | 'run' | 'talk' | 'pay' | 'minder'; ok: boolean }>) =>
-  steps.map((s) => ({ ...s, row: s.row === 'minder' ? ('talk' as const) : s.row }));
+  steps.flatMap((s) => (s.row === 'minder' ? [] : [{ ...s, row: s.row as 'fight' | 'run' | 'talk' | 'pay' }]));
 
 export interface EncounterRowProps {
   title: string;
@@ -378,6 +380,16 @@ export function EncounterModal({ pending: p, open, onChoose, choosing, notice }:
               {copy.risk.you(p.you.health, p.you.healthMax, p.you.heat, heatWord(p.you.heatState))}
             </p>
             <div className="flex flex-col gap-2" role="group" aria-label={p.opponent.label}>
+              {/* Slice 8 (screens §18.3): while a contract runs, his row first; dimmed against the police. */}
+              {p.rows.minder && (
+                <MinderEncounterRow
+                  minder={p.rows.minder}
+                  best={p.luck === 'minder'}
+                  disabled={busy}
+                  pending={choosing === 'minder'}
+                  onChoose={() => onChoose('minder')}
+                />
+              )}
               <EncounterRow
                 title={copy.risk.rows.fight}
                 line={odds(p.rows.fight.chance, 'str')}
@@ -481,7 +493,9 @@ export function RunInBlock({
   runIn: NonNullable<StreetView['runIn']>;
   places?: TrainingPlaces;
 }) {
-  const reason = runInReason(r, places);
+  const reason = r.cause === 'minder' && r.minder ? copy.life.minder.pushedAside(r.minder.name) : runInReason(r, places);
+  const mindered = r.steps[0]?.row === 'minder';
+  const did = r.outcome === 'minded' ? '' : copy.risk.didLine(mindered ? 'player' : r.by, didSteps(r.steps), r.opponent.pronoun);
   const hp = r.health && r.health.after !== r.health.before ? r.health : null;
   return (
     <section
@@ -501,7 +515,7 @@ export function RunInBlock({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="label-caps text-[10px] font-semibold">{r.opponent.label}</span>
         <p className="font-body text-[13.5px] leading-snug" data-testid="run-in-did">
-          {copy.risk.didLine(r.by, didSteps(r.steps), r.opponent.pronoun)} <span className="text-text-2">{r.line}</span>
+          {did && `${did} `}<span className="text-text-2">{r.line}</span>
         </p>
         {hp && (
           <p className="font-mono text-[11.5px]" data-testid="run-in-health">

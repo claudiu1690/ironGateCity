@@ -7,7 +7,6 @@ import {
   FACTION_STYLE,
   FactionCrest,
   HelpButton,
-  ItemLine,
   OrdersList,
   Picture,
   ProgressBar,
@@ -33,6 +32,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
+import { MeBuffs, MeMinder, MeWardrobe } from '../features/life/MeLife';
 import { MeOffices } from '../features/nation/MeOffices';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
@@ -150,7 +150,7 @@ export function MePage() {
         </header>
 
         <Card title="Wearing and papers">
-          {c.wearing && <ItemLine name={c.wearing.name} cha={c.wearing.cha} />}
+          {/* Slice 8 (screens §2): the Wardrobe block below replaces slice 2's *Wearing* row. */}
           {c.partyCard && (
             <span className="font-mono text-[12px]" data-testid="me-party-card">
               {copy.partyCard(
@@ -187,6 +187,8 @@ export function MePage() {
               notice={strike.error ? noticeFor(strike.error) : null}
             />
           )}
+          {/* Slice 8 (screens §18.5): *Well fed until 19:40 · In good spirits, 2 missions*. */}
+          <MeBuffs now={now} />
           {/* Slice 3 (screens §8): the office line under the party card. */}
           {c.office ? (
             <Link
@@ -245,6 +247,11 @@ export function MePage() {
             </ul>
           )}
         </Card>
+
+        {/* Slice 8 (screens §2, §16): the Wardrobe; then Patrons and Where you sleep (lane 2's), then
+            *Walking with you* (screens §18.2), then Legacy (lane 2's). */}
+        <MeWardrobe />
+        <MeMinder />
 
         {c.ambition.id && (
           <Card title="Ambition">

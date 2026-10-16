@@ -524,6 +524,7 @@ async function resolveTier1InTx(
       // Slice 8 (T30, ADR 0088): his `works` line when he steps in; his `fails` line before the fight's.
       line: minderLine(content, enc.minder, o, (o.outcome === 'minded' ? spec.lines.talked : spec.lines[o.outcome]) ?? spec.lines.won),
       cause: o.cause,
+      minder: enc.minder ? { name: enc.minder.name } : null,
       health: { before, after: afterHealth, max, fullAt: afterHealth >= max ? null : i.asOf + Math.ceil((max - afterHealth) / HEALTH.regen) * HEALTH.tickMs },
       ironPaid: o.ironPaid,
       heatAdded: o.heatAdded,
