@@ -3,6 +3,8 @@ import type { FactionId, IssueRowView } from '@irongate/rules';
 import {
   Button,
   DeskList,
+  ElectionWindowRow,
+  NationalSection,
   ElectionCard,
   FrontPage,
   WhatNowCard,
@@ -114,7 +116,9 @@ export function PaperPage() {
         <div className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pt-4 pb-8 lg:pb-[132px]">
           <Masthead paper={p} />
           {/* Slice 3 (screens §2.2): the front page the morning a seat is won. */}
-          {front && <FrontPage front={front} names={names} />}
+          {front && (
+            <FrontPage front={front} names={names} onOffice={(route) => void navigate({ to: route })} />
+          )}
           {/* Review 4 (answers §10.1): *What now* under the headline, above *To the council*. */}
           {front?.whatNow && (
             <WhatNowCard
@@ -170,6 +174,10 @@ export function PaperPage() {
               ))}
             </div>
           )}
+          {/* Slice 7 (screens §11): *From the capital* / *The republic*, under the headlines. */}
+          {p.national && (
+            <NationalSection section={p.national} onOpen={(route) => void navigate({ to: route })} />
+          )}
           {/* Slice 4 (screens §7.1): the Issues, between the headlines and the Election row. */}
           {p.issues && (
             <IssuesSection
@@ -197,6 +205,10 @@ export function PaperPage() {
               factionNames={names}
               onOpen={(route) => void navigate({ to: route })}
             />
+          )}
+          {/* Slice 7 (screens §11): the Election row's second row, the Chair's or the republic's window. */}
+          {p.national?.window && (
+            <ElectionWindowRow window={p.national.window} onOpen={(route) => void navigate({ to: route })} />
           )}
           {/* Review 4 (answers §23.2): the local city's vote on its rule, a Courier line, not actionable.
               The voting rework (design §8.3): days 2–4 the vote's close; days 0–1 the day it opens. */}

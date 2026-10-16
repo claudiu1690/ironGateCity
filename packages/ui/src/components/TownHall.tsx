@@ -270,6 +270,15 @@ function CouncilSeats({ hall, factionId }: { hall: TownHallView; factionId: Fact
           </li>
         ))}
       </ul>
+      {/* Slice 7 (screens §2, §10): who holds the chair, *Governor: {name}* / *Mayor: {name}*. */}
+      {hall.governor && (
+        <p className="pt-1.5 font-mono text-[12px] text-ink" data-testid="hall-governor">
+          {hall.governor.title === 'Mayor'
+            ? copy.nation.bar.mayor(hall.governor.name)
+            : copy.nation.bar.governor(hall.governor.name)}
+          {hall.governor.local ? ` · ${copy.nation.bar.localHolds}` : ''}
+        </p>
+      )}
       <p className="pt-1.5 font-body text-[12.5px] text-text-2 italic">{copy.stand.localsLine}</p>
     </section>
   );
@@ -361,4 +370,3 @@ export function WhatNowCard({ whatNow: w, hallName, names = {}, onDesk, classNam
     </section>
   );
 }
-

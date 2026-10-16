@@ -28,6 +28,7 @@ import { SignupPage } from './routes/signup';
 import { BillPage, LawBookPage, ParliamentPage } from './routes/parliament';
 import { NationalPage, NationalResultPage, PickPage } from './routes/election';
 import { PresidentPage } from './routes/president';
+import { GovernorPage } from './routes/governor';
 import { PetitionPage } from './routes/petition';
 import { ChairElectionPage, ChairResultPage, ChairVotePage, ConfidencePage } from './features/chair/ChairElection';
 
@@ -326,6 +327,8 @@ const routeTree = rootRoute.addChildren([
     ballotRoute,
     countRoute,
     ...nationLaneX,
+    // Slice 7 phase C, lane Y (screens §4.1): the Governor's or the Mayor's page.
+    createRoute({ getParentRoute: () => appRoute, path: '/office/governor/$cityId', component: GovernorPage }),
   ]),
 ]);
 

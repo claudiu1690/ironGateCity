@@ -430,6 +430,8 @@ export interface RulePickerProps {
   own?: string | null;
   onPick: (ordinanceId: string) => void;
   disabled?: boolean;
+  /** Slice 7 (screens §4.1): the sheet's title (*The Governor's rule · at no cost*); default the hall's. */
+  title?: string;
 }
 
 /**
@@ -437,9 +439,9 @@ export interface RulePickerProps {
  * already on the ballot is dimmed with *already on the ballot · yours would be skipped*, not disabled
  * (design §8.1 Q10).
  */
-export function RulePicker({ open, onOpenChange, menu, current, own, onPick, disabled }: RulePickerProps) {
+export function RulePicker({ open, onOpenChange, menu, current, own, onPick, disabled, title }: RulePickerProps) {
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange} title={copy.hall.pickerTitle}>
+    <BottomSheet open={open} onOpenChange={onOpenChange} title={title ?? copy.hall.pickerTitle}>
       <div role="radiogroup" aria-label={copy.hall.pickerTitle} className="flex flex-col" data-testid="rule-picker">
         {menu.map((o) => {
           const skipped = o.onBallot && o.ordinanceId !== own;

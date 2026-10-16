@@ -722,7 +722,10 @@ export async function journeyView(
                 : // eslint-disable-next-line no-restricted-properties -- the faction's home
                   j.to === c.homeCityId
                   ? 'Home'
-                  : city!.name,
+                  : // Slice 7 (screens §10): the lake's first arrival (no success there yet).
+                    city!.role === 'battleground' && successes === 0
+                    ? copy.nation.clearwater.onTheLake
+                    : city!.name,
             // Slice-4 fixes §8 (QA n2): never "Nothing happened" above a card still to answer.
             body: j.choice
               ? choiceLine(j.choice.result)

@@ -15,6 +15,7 @@ import {
 import { HelpButton, helpMark } from './Help';
 import type { HelpNote } from './Help';
 import { Picture } from './Picture';
+import { TargetBar } from './ChairDesk';
 
 /**
  * The Today tally strip (§3.7): "Today: 30 Energy · 3 attempts · 2 wins · +135 XP · …". Review 1
@@ -128,6 +129,15 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
           <span className="font-normal">from {orders.issuer.name}</span>
         </div>
       )}
+      {/* Slice 7 (screens §11): *Set by the Chair, {name}* under the kicker. */}
+      {paper && orders.setBy && (
+        <p
+          className="border-b border-dotted border-faint py-1 font-mono text-[12px] text-ink"
+          data-testid="orders-set-by"
+        >
+          {copy.nation.chair.setByName(orders.setBy.name)}
+        </p>
+      )}
       {paper && (
         <div className="flex items-center gap-3 border-b border-dotted border-faint py-2">
           <Picture
@@ -207,6 +217,12 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
                 {o.progress} / {o.target}
               </span>
             </div>
+            {/* Slice 7 (screens §5.1, §11): the push's order carries *the Chair's push · {place}*. */}
+            {o.push && (
+              <span className="pl-6 font-mono text-[11px] text-petrol" data-testid="order-push">
+                {copy.nation.chair.pushTag(o.push.place)}
+              </span>
+            )}
             {/* QA review 4 R4-QA-02: `{at}` (the wage's first day turn) in the player's clock. */}
             {paper && (
               <span className="pl-6 font-body text-[13px] text-text-2 italic">
@@ -216,6 +232,12 @@ export function OrdersList({ orders, variant = 'compact', className, onPin }: Or
           </li>
         ))}
       </ul>
+      {/* Slice 7 (screens §5.1): the party's target today, the live count under the three. */}
+      {orders.target && (
+        <div className="pt-1.5">
+          <TargetBar target={orders.target} />
+        </div>
+      )}
       {orders.allDone && (
         <p className="pt-1.5 font-label text-[13px] text-petrol">
           {copy.allOrdersDone(orders.rewards.allDonePc)}
@@ -360,6 +382,18 @@ export function DeskList({ desk, onHeld }: { desk: DeskView; onHeld?: () => void
           <Line testId="desk-no-job">{copy.deskNoJob(desk.jobPlaces)}</Line>
         )}
         {desk.oneOfUsPc > 0 && <Line testId="desk-one-of-us">{copy.oneOfUsPaid(desk.oneOfUsPc)}</Line>}
+        {/* Slice 7 (screens §11): a line per office held (*Governor of Coalport · 20 Political Capital
+            and 30 Party XP paid*), and the party's target met. */}
+        {(desk.offices ?? []).map((o) => (
+          <Line key={`${o.office}:${o.label}`} testId="desk-office">
+            {copy.nation.paper.officePaid(o.label, o.pc, o.fxp)}
+          </Line>
+        ))}
+        {(desk.target ?? []).map((t) => (
+          <Line key={t.label} testId="desk-target">
+            {copy.nation.paper.targetPaid(t.label, t.fxp)}
+          </Line>
+        ))}
         {/* Slice 4 (ADR 0028, screens §9.3): hero and Issue Political Capital credited, and the room. */}
         {(desk.awards ?? []).map((a) => (
           <Line key={`${a.kind}:${a.label}`} testId="desk-award">

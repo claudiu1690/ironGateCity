@@ -310,6 +310,11 @@ export interface NationRepublicView {
     shares: OpinionShares;
     word: 'held' | 'contested' | 'closeRace' | MoraleState;
     heldBy: FactionId | null;
+    /**
+     * Phase C (screens §2): the city card's *Governor: {name}* / *Mayor: {name}* / *a local holds
+     * the chair*; null while nobody holds it.
+     */
+    governor?: { title: 'Governor' | 'Mayor'; name: string; local: boolean; factionId: FactionId } | null;
   }>;
   term: TermLineView;
   act: { kind: 'vote' | 'candidates' | 'standList' | 'standPresident' | 'pick' } | null;

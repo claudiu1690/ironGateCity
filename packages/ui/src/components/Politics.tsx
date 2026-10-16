@@ -538,13 +538,22 @@ export function Slate({ candidates, onEndorse, endorsingId }: SlateProps) {
 export function FrontPage({
   front,
   names = {},
+  onOffice,
 }: {
   front: FrontPageView;
   names?: Partial<Record<FactionId, string>>;
+  /** Slice 7 (tech §11.1): an office's front page carries *To the office* / *To Parliament*. */
+  onOffice?: (route: string) => void;
 }) {
-  const r = front.count.rule;
+  const r = front.count?.rule ?? null;
+  const office = front.office ?? null;
   return (
-    <section className="flex flex-col gap-3 border-b border-ink pb-3" data-testid="front-page" aria-label="The seat won">
+    <section
+      className="flex flex-col gap-3 border-b border-ink pb-3"
+      data-testid="front-page"
+      data-office={office?.office}
+      aria-label={office ? office.caption : 'The seat won'}
+    >
       <div className="flex flex-col items-center gap-3 lg:flex-row lg:items-start lg:gap-5">
         <figure className="flex shrink-0 flex-col items-center gap-1">
           <div className="relative w-[160px] lg:w-[200px]">
@@ -564,7 +573,9 @@ export function FrontPage({
             </div>
           </div>
           <figcaption className="text-center font-mono text-[11px]" data-testid="front-page-caption">
-            {copy.electedCaption(front.caption.name, front.caption.rankTitle, front.caption.cityName)}
+            {office
+              ? office.caption
+              : copy.electedCaption(front.caption.name, front.caption.rankTitle, front.caption.cityName)}
           </figcaption>
         </figure>
         <div className="flex flex-col gap-2">
@@ -578,6 +589,11 @@ export function FrontPage({
           )}
         </div>
       </div>
+      {office && onOffice && (
+        <Button className="w-full" onClick={() => onOffice(office.cta.route)} data-testid="front-page-office">
+          {office.cta.label}
+        </Button>
+      )}
       {r && (
         <div className="flex flex-col gap-1.5" data-testid="front-page-result">
           <h3 className="label-caps border-t-[3px] border-b border-double border-ink py-1 text-[10px] font-semibold">

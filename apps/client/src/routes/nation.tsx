@@ -1,6 +1,19 @@
 import { copy } from '@irongate/content/copy';
 import type { FactionId, NationCityView } from '@irongate/rules';
-import { CitiesList, CityCard, CityMap, LocationSheet, cx, pyramidFor } from '@irongate/ui';
+import {
+  BottomSheet,
+  CitiesList,
+  CityCard,
+  CityMap,
+  LawChips,
+  LocationSheet,
+  NationBar,
+  RepublicSheetBody,
+  cityWord,
+  cx,
+  governorLine,
+  pyramidFor,
+} from '@irongate/ui';
 import type { MapHotspot } from '@irongate/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -20,7 +33,7 @@ import { lastDistrict } from './city';
 const SIDE_W = 260;
 
 /** The pin's label: *Coalport · home · 12 min*, *Irongate · 12 min*; locked: the name, the lock word under it. */
-function pinOf(c: NationCityView, homeCityId: string): MapHotspot['pin'] {
+function pinOf(c: NationCityView, homeCityId: string, word: string | null): MapHotspot['pin'] {
   const tags = [
     ...(c.cityId === homeCityId ? [copy.travel.home] : []),
     // Slice 5 (screens §8.1): *Duskwall · rival ground · 15 min* from Level 10.
@@ -30,7 +43,9 @@ function pinOf(c: NationCityView, homeCityId: string): MapHotspot['pin'] {
   return {
     style: 'label',
     label: copy.travel.pinLabel(c.name, tags),
-    sub: c.state === 'here' ? copy.travel.youAreHere : (c.lockWord ?? undefined),
+    // Slice 7 (screens §2): the second line says who holds the city (*held by the Alliance*,
+    // *close race today*, *Vanguard · Fired up*); *you are here* and a lock word still win.
+    sub: c.state === 'here' ? copy.travel.youAreHere : (c.lockWord ?? word ?? undefined),
     marks: [...(c.state === 'here' ? (['here'] as const) : []), ...(c.lockWord ? (['muted'] as const) : [])],
   };
 }
@@ -58,6 +73,7 @@ export function NationPage() {
   const [arrived, setArrived] = useState<string | null>(null);
   const [lastCity, setLastCity] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(false);
+  const [republicOpen, setRepublicOpen] = useState(false);
   const travel = useBoard();
   useEffect(() => {
     if (!selected) setArrived(null);
@@ -88,13 +104,18 @@ export function NationPage() {
   // At rest: your city and the capital; on a train the two ends of the line (screens §2.1).
   const capitalId = n.cities.find((c) => c.n === 1)?.cityId ?? 'irongate';
   const restFocus = line ? [line.from, line.to] : [here ?? homeCityId, capitalId];
-  const pins: MapHotspot[] = n.cities.map((c) => ({
-    id: c.cityId,
-    n: c.n,
-    name: c.name,
-    map: { x: c.x, y: c.y },
-    pin: pinOf(c, homeCityId),
-  }));
+  const republic = n.republic ?? null;
+  const rc = (cityId: string) => republic?.cities.find((x) => x.cityId === cityId) ?? null;
+  const pins: MapHotspot[] = n.cities.map((c) => {
+    const r = rc(c.cityId);
+    return {
+      id: c.cityId,
+      n: c.n,
+      name: c.name,
+      map: { x: c.x, y: c.y },
+      pin: pinOf(c, homeCityId, r ? cityWord(r, names) : null),
+    };
+  });
   const card = n.cities.find((c) => c.cityId === selected) ?? null;
   const sheetCity = card ?? n.cities.find((c) => c.cityId === lastCity) ?? null;
   const open = !!card && arrived !== null;
@@ -140,47 +161,71 @@ export function NationPage() {
   return (
     // Review 6 #1: held sideways on a short screen the map takes the room it has (as the city does); a
     // 420 px floor ran it past the screen's bottom, so the southern cities sat out of sight.
-    <div className={cx('relative flex h-full', !side && 'min-h-[420px]')} data-testid="nation">
-      <CityMap
-        className="h-full min-w-0 flex-1"
-        map={n.map}
-        tiles={tiles}
-        frame={n.frame}
-        clouds={n.clouds}
-        isNight={n.night.night}
-        locations={pins}
-        selectedId={selected}
-        onSelect={(id) => setSelected(id)}
-        restFocus={restFocus}
-        cover={cover}
-        onArrive={(id) => {
-          setArrived(id);
-          setLastCity(id);
-        }}
-        memoryKey="nation"
-        zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex'}
-      >
-        {/* The top caption: where you are (screens §2.1: the top bar's subtitle). */}
+    <div className={cx('relative flex h-full flex-col', !side && 'min-h-[420px]')} data-testid="nation">
+      {/* Slice 7 (screens §2, §14): the republic's bar (44 px) and the law chips (36 px) over the map,
+          which still covers what is left; held sideways, the two share one 44 px row. */}
+      {republic && (
         <div
-          className="pointer-events-none absolute top-2.5 left-2.5 z-10 flex flex-col bg-paper px-3 py-1.5 text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)]"
-          data-map-overlay="caption"
-          data-testid="nation-caption"
+          className={cx('relative z-10 flex shrink-0', side ? 'flex-row' : 'flex-col')}
+          data-testid="nation-strip"
         >
-          <span className="label-caps text-[9.5px] text-muted">{copy.travel.citiesOfTheRepublic}</span>
-          <span className="font-mono text-[12px]">{subtitle}</span>
+          <NationBar
+            bar={republic.bar}
+            names={names}
+            onOpen={() => setRepublicOpen(true)}
+            className={side ? 'w-1/2 border-r' : undefined}
+          />
+          <LawChips
+            laws={republic.laws}
+            onOpen={() => void navigate({ to: '/parliament/laws' })}
+            className={side ? 'h-11 min-w-0 flex-1' : undefined}
+          />
         </div>
-        {/* Review 6 #2: the map switch and *Cities* in one row with a gap, so they never overlap: at
+      )}
+      <div className="relative flex min-h-0 flex-1">
+        <CityMap
+          className="h-full min-w-0 flex-1"
+          map={n.map}
+          tiles={tiles}
+          frame={n.frame}
+          clouds={n.clouds}
+          isNight={n.night.night}
+          locations={pins}
+          selectedId={selected}
+          onSelect={(id) => setSelected(id)}
+          restFocus={restFocus}
+          cover={cover}
+          onArrive={(id) => {
+            setArrived(id);
+            setLastCity(id);
+          }}
+          memoryKey="nation"
+          zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex'}
+        >
+          {/* The top caption: where you are (screens §2.1: the top bar's subtitle). */}
+          <div
+            className="pointer-events-none absolute top-2.5 left-2.5 z-10 flex flex-col bg-paper px-3 py-1.5 text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)]"
+            data-map-overlay="caption"
+            data-testid="nation-caption"
+          >
+            <span className="label-caps text-[9.5px] text-muted">{copy.travel.citiesOfTheRepublic}</span>
+            <span className="font-mono text-[12px]">{subtitle}</span>
+          </div>
+          {/* Review 6 #2: the map switch and *Cities* in one row with a gap, so they never overlap: at
             the top right sideways and from 640 px, at the bottom's two ends on an upright phone. */}
-        <div
-          className={cx(
-            'pointer-events-none absolute z-10 flex flex-row-reverse items-start gap-2',
-            side ? 'top-2.5 right-2.5' : 'inset-x-2.5 bottom-3 justify-between sm:top-2.5 sm:bottom-auto sm:left-auto sm:justify-start',
-          )}
-        >
-          {citiesButton('')}
-          {!selected && <MapSwitch active="nation" cityHref={cityHref} />}
-        </div>
-      </CityMap>
+          <div
+            className={cx(
+              'pointer-events-none absolute z-10 flex flex-row-reverse items-start gap-2',
+              side
+                ? 'top-2.5 right-2.5'
+                : 'inset-x-2.5 bottom-3 justify-between sm:top-2.5 sm:bottom-auto sm:left-auto sm:justify-start',
+            )}
+          >
+            {citiesButton('')}
+            {!selected && <MapSwitch active="nation" cityHref={cityHref} />}
+          </div>
+        </CityMap>
+      </div>
       {sheetCity && (
         <LocationSheet
           layout={layout}
@@ -198,6 +243,8 @@ export function NationPage() {
           <CityCard
             city={sheetCity}
             names={names}
+            plateWord={rc(sheetCity.cityId) ? cityWord(rc(sheetCity.cityId)!, names) : null}
+            governor={governorLine(rc(sheetCity.cityId)?.governor ?? null)}
             onBoard={() => travel.board(sheetCity.cityId)}
             boardPending={travel.pendingTo === sheetCity.cityId}
             onSeeDistricts={() => void navigate({ to: '/city/$cityId', params: { cityId: sheetCity.cityId } })}
@@ -210,10 +257,23 @@ export function NationPage() {
           {travel.error && <PatrolLink error={travel.error} />}
         </LocationSheet>
       )}
+      {republic && (
+        <BottomSheet open={republicOpen} onOpenChange={setRepublicOpen} title={copy.nation.bar.sheetTitle}>
+          <RepublicSheetBody
+            republic={republic}
+            names={names}
+            onGo={(route) => {
+              setRepublicOpen(false);
+              void navigate({ to: route });
+            }}
+          />
+        </BottomSheet>
+      )}
       <CitiesList
         open={listOpen}
         onOpenChange={setListOpen}
         cities={n.cities}
+        words={Object.fromEntries((republic?.cities ?? []).map((x) => [x.cityId, cityWord(x, names)]))}
         onPick={(id) => setSelected(id)}
         returnFocusTo={() =>
           [...document.querySelectorAll<HTMLElement>('[data-testid="cities-button"]')].find(

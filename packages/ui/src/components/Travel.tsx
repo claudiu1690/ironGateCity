@@ -48,6 +48,10 @@ export interface CityCardProps {
   onBoard: () => void;
   boardPending?: boolean;
   onSeeDistricts?: () => void;
+  /** Slice 7 (screens §2): *Held by the Alliance* / *Contested* / *Close race today*. */
+  plateWord?: string | null;
+  /** Slice 7 (screens §2): *Governor: {name}* / *Mayor: {name}* / *a local holds the chair*. */
+  governor?: string | null;
 }
 
 /**
@@ -55,7 +59,15 @@ export interface CityCardProps {
  * holds it, this week's Issues, the election line, and one button: *Board · 20 Iron · 12 min*, *See
  * the five districts* in the capital, or the lock line and no button.
  */
-export function CityCard({ city: c, names, onBoard, boardPending, onSeeDistricts }: CityCardProps) {
+export function CityCard({
+  city: c,
+  names,
+  onBoard,
+  boardPending,
+  onSeeDistricts,
+  plateWord,
+  governor,
+}: CityCardProps) {
   const board = boardButton(c);
   const note = cityCardNote(c);
   const election = c.election?.line
@@ -75,6 +87,19 @@ export function CityCard({ city: c, names, onBoard, boardPending, onSeeDistricts
         </span>
       </HelpButton>
       <OpinionBars values={c.whoHolds} names={names} />
+      {(plateWord || governor) && (
+        <p
+          className="flex flex-wrap items-baseline gap-x-2 font-mono text-[11.5px] text-text-2"
+          data-testid="city-plate-word"
+        >
+          {plateWord && (
+            <span className="label-caps text-[10.5px] font-semibold text-ink" data-testid="city-word">
+              {plateWord.charAt(0).toUpperCase() + plateWord.slice(1)}
+            </span>
+          )}
+          {governor && <span data-testid="city-governor">{governor}</span>}
+        </p>
+      )}
       {c.issues.length > 0 && (
         <ul className="flex flex-wrap gap-1.5" data-testid="city-issues">
           {c.issues.map((i) => (
@@ -141,10 +166,12 @@ export interface CitiesListProps {
   cities: NationCityView[];
   onPick: (cityId: string) => void;
   returnFocusTo?: () => HTMLElement | null;
+  /** Slice 7 (screens §2): the plate word per row (*held by the Alliance*, *close race today*). */
+  words?: Record<string, string>;
 }
 
 /** Screens §2.1: *Cities of the republic*, five rows in the server's order; a row does what the pin does. */
-export function CitiesList({ open, onOpenChange, cities, onPick, returnFocusTo }: CitiesListProps) {
+export function CitiesList({ open, onOpenChange, cities, onPick, returnFocusTo, words }: CitiesListProps) {
   const picked = useRef(false);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -202,7 +229,10 @@ export function CitiesList({ open, onOpenChange, cities, onPick, returnFocusTo }
                       <span className="font-display text-[16px] leading-tight font-bold">{c.name}</span>
                       <span className="font-mono text-[11.5px] text-muted">{cityRowLine(c)}</span>
                     </span>
-                    <span className="font-mono text-[11px] text-text-2">{c.line}</span>
+                    <span className="font-mono text-[11px] text-text-2">
+                      {c.line}
+                      {words?.[c.cityId] ? ` · ${words[c.cityId]}` : ''}
+                    </span>
                   </button>
                 </li>
               ))}

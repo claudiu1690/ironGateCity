@@ -1521,10 +1521,12 @@ export const copy = {
         `You vote and stand in ${place} from the next vote that opens (${weekday}).`,
       giveUp: (old: string) =>
         `You stop being a ${old} candidate; your ${old} seat, if any, passes to the branch.`,
-      orders: (capital: boolean) =>
-        capital
-          ? 'Party orders come from the capital from tomorrow. The Herald is your paper.'
-          : 'Party orders come from home from tomorrow. The home paper is yours again.',
+      orders: (capital: boolean, lake = false) =>
+        lake
+          ? 'Party orders come from the lake branch from tomorrow. The Courier is your paper.'
+          : capital
+            ? 'Party orders come from the capital from tomorrow. The Herald is your paper.'
+            : 'Party orders come from home from tomorrow. The home paper is yours again.',
       untouched: 'Your job, reputation, Iron and rank are untouched.',
       moveAgain: (weekday: string) => `Moving again: from ${weekday}.`,
     },
@@ -2764,6 +2766,11 @@ export const copy = {
       resultIn: 'The result is in: to be confirmed tomorrow',
       parliament: 'Parliament',
       office: 'Office',
+      /** Phase C (screens §2): the law chips with none in force, and the sheet's act. */
+      noLaw: 'No law in force · Parliament sits',
+      seeCandidates: 'See the candidates',
+      /** The republic sheet's title. */
+      sheetTitle: 'The republic',
     },
     // The Me tab: offices and the ladder (screens §3).
     me: {
@@ -2806,6 +2813,10 @@ export const copy = {
       speakOn: (issue: string) => `Speak on ${issue}`,
       speak: 'Speak',
       addressSpent: (issueShort: string, weekday: string) => `The Address is spent for the term · ${issueShort}, ${weekday}`,
+      /** Phase C (governor.spec): the Governor's rule heads the party's card. */
+      card1: "Card 1 on the town's ballot",
+      whatDoes: (title: string) => `What the ${title} does`,
+      mayorOf: (city: string, hall: string) => `Mayor of ${city} · ${hall}`,
     },
     // The Chair's page and desk (screens §4.2, §5; the route is /faction?tab=chair).
     chair: {
@@ -3080,6 +3091,10 @@ export const copy = {
       voteNow: (until: string) => `The republic votes until ${until} · Vote now`,
       namesInChair: (until: string) => `Names in for Chair until ${until}`,
       stipend: (city: string) => `Governor of ${city} · 20 Political Capital and 30 Party XP paid`,
+      /** Phase C: the desk's line per office (any office; the stipend's label from the server). */
+      officePaid: (label: string, pc: number, fxp: number) => `${label} · ${pc} Political Capital and ${fxp} Party XP paid`,
+      targetPaid: (label: string, fxp: number) => `${label} · +${fxp} Party XP`,
+      electionKicker: 'Election',
       captions: {
         governor: (name: string, city: string) => `${name}, elected Governor of ${city}`,
         chair: (name: string, faction: string) => `${name}, elected Chair of the ${faction}`,

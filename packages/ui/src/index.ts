@@ -299,3 +299,8 @@ export type { BallotChoiceProps, NationalBallotProps } from './components/Nation
 export { OrderPicker, PushRow, SLOT_LABELS, TargetBar, ToggleChip } from './components/ChairDesk';
 export type { OrderPickerProps, PushRowProps, PushValue } from './components/ChairDesk';
 export { SignatureBar } from './components/Petition';
+// Slice 7 phase C, lane Y: the nation map's layer (screens §2).
+export { ElectionWindowRow, LawChips, NationBar, NationalSection, RepublicSheetBody, cityWord, governorLine, republicAct, termLineText } from './components/Republic';
+export type { LawChipsProps, NationBarProps, NationalSectionProps, RepublicSheetBodyProps } from './components/Republic';
+export { LadderCard, OfficeCard, OfficeHeader, officeCardLine, officeDate, officeWeekday } from './components/Office';
+export type { LadderCardProps, OfficeCardProps, OfficeHeaderProps } from './components/Office';

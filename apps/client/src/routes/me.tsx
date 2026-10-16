@@ -33,6 +33,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { usePoliticalAct } from '../features/council/usePoliticalAct';
+import { MeOffices } from '../features/nation/MeOffices';
 import { noticeFor } from '../features/game/errors';
 import { useCharacter, usePlaceStat } from '../features/game/hooks';
 import { authClient, resetSession } from '../lib/auth';
@@ -332,6 +333,9 @@ export function MePage() {
             {copy.scoreboard.pcSources(HERO.pc, ISSUES.topPc)}
           </span>
         </Card>
+
+        {/* Slice 7 (screens §3): the offices held and the ladder. */}
+        <MeOffices />
 
         <Card title="Level">
           <div className="flex justify-between font-label text-[14px]">

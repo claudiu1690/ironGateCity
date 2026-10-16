@@ -187,7 +187,7 @@ export async function residenceCardView(
     ...(stakes.term
       ? [{ text: copy.residence.sheet.giveUp(content.city(r.cityId)?.name ?? livesIn), warn: true }]
       : []),
-    { text: copy.residence.sheet.orders(isContested(content, target.cityId)), warn: false },
+    { text: copy.residence.sheet.orders(isContested(content, target.cityId), target.cityId !== content.nation.capitalId && isContested(content, target.cityId)), warn: false },
     { text: copy.residence.sheet.untouched, warn: false },
     { text: copy.residence.sheet.moveAgain(weekdayName(w.canMoveFromDay)), warn: false },
   ];

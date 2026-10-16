@@ -1,5 +1,6 @@
 import type { GameContent } from '@irongate/content';
-import type { NationDoc } from '@irongate/db';
+import { City } from '@irongate/db';
+import type { CityDoc, NationDoc } from '@irongate/db';
 import {
   FACTION_IDS,
   TERM_DAYS,
@@ -23,6 +24,7 @@ import type {
 import { gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
+import { isContested } from './residence';
 import { isNationReady } from './nationDay';
 
 /**
@@ -75,7 +77,18 @@ function cityWord(
   return { word: 'contested', heldBy: null };
 }
 
-export function republicView(content: GameContent, nation: NationDoc, now: number): NationRepublicView {
+/** Phase C (screens §2): who holds each council city's chair, for the city card's Governor line. */
+export async function governorsByCity(): Promise<Map<string, NonNullable<CityDoc['council']>['governor']>> {
+  const docs = await City.find({}, { 'council.governor': 1 }).lean<Array<Pick<CityDoc, '_id' | 'council'>>>();
+  return new Map(docs.map((d) => [String(d._id), d.council?.governor ?? null]));
+}
+
+export function republicView(
+  content: GameContent,
+  nation: NationDoc,
+  now: number,
+  governors: Map<string, NonNullable<CityDoc['council']>['governor']> = new Map(),
+): NationRepublicView {
   const today = dayKey(now);
   const ctl = nation.control;
   const phase = nationalPhase(today);
@@ -110,6 +123,16 @@ export function republicView(content: GameContent, nation: NationDoc, now: numbe
       unrest: c.unrest,
       shares: c.shares,
       ...cityWord(content, c.cityId, c.shares),
+      governor: (() => {
+        const g = governors.get(c.cityId);
+        if (!g) return null;
+        return {
+          title: isContested(content, c.cityId) ? ('Mayor' as const) : ('Governor' as const),
+          name: g.name,
+          local: !!g.local,
+          factionId: g.factionId,
+        };
+      })(),
     })),
     term: termLineOf(today),
     act,
@@ -124,7 +147,7 @@ export async function getNation(i: {
 }): Promise<NationRepublicView> {
   const loaded = await loadCharacter(i.user, i.content, i.now);
   if (!isNationReady(loaded.nation, i.now)) throw gameError('PRECONDITION_FAILED', 'NATION_NOT_READY');
-  return republicView(i.content, loaded.nation, i.now);
+  return republicView(i.content, loaded.nation, i.now, await governorsByCity());
 }
 
 /** `parliament.laws`: the law book (T15 adds the rows' tablers and divisions). */
