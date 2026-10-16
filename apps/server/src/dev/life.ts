@@ -1,17 +1,22 @@
 import type { GameContent } from '@irongate/content';
 import { Character, DossierEntry } from '@irongate/db';
 import type { CharacterDoc } from '@irongate/db';
-import { DOSSIER_CATEGORIES, FACTION_IDS, dayKey, flatCounts, flatState, toSpend } from '@irongate/rules';
+import { DOSSIER_CATEGORIES, FACTION_IDS, createRng, dayKey, flatCounts, flatState, grantItem, hire, minderPower, toSpend } from '@irongate/rules';
 import type { DossierCategory } from '@irongate/rules';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
+import { Types } from 'mongoose';
 import { z } from 'zod';
 import type { Auth } from '../auth';
 import { bindInTx, capacityOf, dossierHooks, landEntry, slotsUsed, turnInTx } from '../services/dossierService';
 import { testHome } from '../services/homeService';
 import { testLegacy } from '../services/legacyService';
 import { residenceCityId } from '../services/residence';
+import { recognitionOf } from '../services/personal';
+import { streetHooks } from '../services/streetHooks';
+import { wornStats } from '../services/views';
+import { createCaller } from '../trpc/router';
 import { inTransaction } from '../services/txn';
 import { DevRefusal, zodLine } from './risk';
 import type { DevLifeStatus } from './types';
@@ -42,6 +47,104 @@ export const HomeBody = z.strictObject({
   buy: z.boolean().optional(),
 });
 export const LegacyBody = z.strictObject({ points: z.number().int().min(1).max(200) });
+// Lane 1's hooks (tech design §8.6, §24.9; relayed in Deviations, phase B lane 1).
+export const WardrobeBody = z.strictObject({
+  grant: z.array(z.string().min(1)).max(10).optional(),
+  wear: z.array(z.string().min(1)).max(10).optional(),
+});
+export const BodyguardBody = z.union([
+  z.strictObject({ tier: z.union([z.literal(1), z.literal(2), z.literal(3)]), daysLeft: z.number().int().min(0).max(34).optional() }),
+  z.strictObject({ lapse: z.literal(true) }),
+]);
+export const BuffsBody = z.strictObject({
+  wellFed: z.strictObject({ tier: z.enum(['plate', 'dinner']), minutesLeft: z.number().int().min(0).max(24 * 60) }).nullable().optional(),
+  spirits: z.number().int().min(0).max(9).optional(),
+  rounds: z.number().int().min(0).max(3).optional(),
+});
+export const ForceBody = z.strictObject({
+  dossier: z.enum(['land', 'never']).optional(),
+  runIn: z.string().min(1).optional(),
+  minder: z.enum(['works', 'fails']).optional(),
+});
+
+const callerAs = (content: GameContent, c: CharacterDoc, now: () => number) =>
+  createCaller({ user: { id: c.userId, name: c.name }, content, now } as never);
+
+/** Items into the inventory (source `test`), then worn through `wardrobe.wear` (the service's own writer). */
+export async function testWardrobe(
+  content: GameContent,
+  c: CharacterDoc,
+  body: { grant?: string[] | undefined; wear?: string[] | undefined },
+  now: () => number,
+): Promise<{ granted: string[]; worn: string[] }> {
+  const granted: string[] = [];
+  for (const id of body.grant ?? []) {
+    const spec = content.itemSpec(id);
+    if (!spec) throw new DevRefusal(400, `no item "${id}"`);
+    const fresh = (await Character.findById(c._id).lean<CharacterDoc>())!;
+    if ((fresh.inventory ?? []).some((e) => e.itemId === id)) continue;
+    const r = grantItem(fresh.inventory ?? [], spec, { uid: new Types.ObjectId().toHexString(), day: dayKey(now()), source: 'test' } as never);
+    await Character.updateOne({ _id: c._id, version: fresh.version }, { $set: { inventory: r.inventory }, $inc: { version: 1 } });
+    granted.push(id);
+  }
+  const worn: string[] = [];
+  for (const id of body.wear ?? []) {
+    const fresh = (await Character.findById(c._id).lean<CharacterDoc>())!;
+    const e = (fresh.inventory ?? []).find((x) => x.itemId === id);
+    if (!e) throw new DevRefusal(400, `not owned: "${id}"`);
+    await callerAs(content, fresh, now).wardrobe.wear({ uid: e.uid });
+    worn.push(id);
+  }
+  return { granted, worn };
+}
+
+/** The contract (the name drawn as a hire would), or moved to yesterday (a lapse). */
+export async function testBodyguard(
+  content: GameContent,
+  c: CharacterDoc,
+  body: { tier: 1 | 2 | 3; daysLeft?: number | undefined } | { lapse: true },
+  now: number,
+) {
+  const today = dayKey(now);
+  if ('lapse' in body) {
+    if (!c.bodyguard) throw new DevRefusal(409, 'nobody walking with you');
+    await Character.updateOne({ _id: c._id }, { $set: { 'bodyguard.paidThroughDay': today - 1 }, $inc: { version: 1 } });
+    return { bodyguard: { ...c.bodyguard, paidThroughDay: today - 1 } };
+  }
+  const names = content.bodyguards.find((b) => b.tier === body.tier)?.names ?? [];
+  const contract = hire({ tier: body.tier, contract: c.bodyguard ?? null, names, today, rng: createRng(randomUUID()) });
+  const set = body.daysLeft !== undefined ? { ...contract, paidThroughDay: today + body.daysLeft } : contract;
+  await Character.updateOne({ _id: c._id }, { $set: { bodyguard: set }, $inc: { version: 1 } });
+  return { bodyguard: set, power: minderPower(body.tier) };
+}
+
+/** The bar's buffs and today's rounds. */
+export async function testBuffs(
+  c: CharacterDoc,
+  body: { wellFed?: { tier: 'plate' | 'dinner'; minutesLeft: number } | null | undefined; spirits?: number | undefined; rounds?: number | undefined },
+  now: number,
+) {
+  const set: Record<string, unknown> = {};
+  if (body.wellFed !== undefined)
+    set['buffs.wellFed'] = body.wellFed ? { tier: body.wellFed.tier, until: new Date(now + body.wellFed.minutesLeft * 60_000) } : null;
+  if (body.spirits !== undefined) set['buffs.spirits'] = { left: body.spirits };
+  if (body.rounds !== undefined) set['today.rounds'] = body.rounds;
+  await Character.updateOne({ _id: c._id }, { $set: set, $inc: { version: 1 } });
+  return { set: Object.keys(set) };
+}
+
+/** The caller's next act: a Dossier landing, a run-in (an opponent id) and his row's roll. */
+export function testForce(c: CharacterDoc, body: { dossier?: 'land' | 'never' | undefined; runIn?: string | undefined; minder?: 'works' | 'fails' | undefined }) {
+  const id = c._id.toHexString();
+  if (body.dossier) dossierHooks.set(id, body.dossier);
+  if (body.runIn || body.minder)
+    streetHooks.set(id, {
+      runIn: 'next',
+      ...(body.runIn && body.runIn !== 'random' ? { opponentId: body.runIn } : {}),
+      ...(body.minder ? { choiceRoll: body.minder === 'works' ? 1 : 100 } : {}),
+    });
+  return { force: body };
+}
 
 /** A rival party's drawn name in the character's city (the panel's *Three entries on a rival name*). */
 export function rivalNameHere(content: GameContent, c: CharacterDoc): string {
@@ -135,12 +238,22 @@ export async function makeStale(c: CharacterDoc): Promise<number> {
 }
 
 /** The dev panel's life block (tech design §8.7, lane 2's part). */
-export async function lifeStatus(c: CharacterDoc | null, now: number): Promise<DevLifeStatus | null> {
+export async function lifeStatus(content: GameContent, c: CharacterDoc | null, now: number): Promise<DevLifeStatus | null> {
   if (!c) return null;
   const today = dayKey(now);
   const flat = c.home?.flat ?? null;
   const last = dossierHooks.last.get(c._id.toHexString()) ?? null;
+  const cha = wornStats(c, content, now).cha;
+  const rec = recognitionOf(c, cha, now);
+  const bg = c.bodyguard ?? null;
   return {
+    worn: { cha, chaBase: c.stats.chaBase, recognition: rec as unknown as Record<string, unknown> },
+    bodyguard: bg ? { tier: bg.tier, name: bg.name, paidThroughDay: bg.paidThroughDay, power: minderPower(bg.tier) } : null,
+    buffs: {
+      wellFed: c.buffs?.wellFed ? { tier: c.buffs.wellFed.tier, minutesLeft: Math.max(0, Math.round((new Date(c.buffs.wellFed.until).getTime() - now) / 60_000)) } : null,
+      spirits: c.buffs?.spirits?.left ?? 0,
+      rounds: c.today?.day === today ? (c.today.rounds ?? 0) : 0,
+    },
     dossier: { used: await slotsUsed(c._id), cap: capacityOf(c), lastRoll: last },
     flat: flat
       ? { cityId: flat.cityId, paidThroughDay: flat.paidThroughDay, state: flatState(flat, today), counts: flatCounts(flat, residenceCityId(c), today) }
@@ -187,6 +300,10 @@ export function registerLifeHooks(app: FastifyInstance, deps: { auth: Auth; cont
       flat: await testHome(c._id, { paidThroughDay: body.paidThroughDay, ...(body.buy ? { buy: true } : {}) }, now()),
     })),
   );
+  app.post('/api/test/wardrobe', handle(WardrobeBody, async (body, c) => testWardrobe(content, c, body, now)));
+  app.post('/api/test/bodyguard', handle(BodyguardBody, async (body, c) => testBodyguard(content, c, body, now())));
+  app.post('/api/test/buffs', handle(BuffsBody, async (body, c) => testBuffs(c, body, now())));
+  app.post('/api/test/force', handle(ForceBody, async (body, c) => testForce(c, body)));
   app.post(
     '/api/test/legacy',
     handle(LegacyBody, async (body, c) => {
@@ -198,7 +315,27 @@ export function registerLifeHooks(app: FastifyInstance, deps: { auth: Auth; cont
 }
 
 /** The panel's life buttons (lane 2's): each calls a hook's writer above, then the panel settles. */
-export type LifeDevAction = 'dossierThree' | 'dossierStale' | 'dossierNext' | 'dossierFile' | 'rentToday' | 'rentOut' | 'legacy20';
+export type LifeDevAction =
+  | 'dossierThree'
+  | 'dossierStale'
+  | 'dossierNext'
+  | 'dossierFile'
+  | 'rentToday'
+  | 'rentOut'
+  | 'legacy20'
+  // Lane 1's (tech design §8.7, §24.9): the Wardrobe, someone to walk with you, the bar.
+  | 'partyCoat'
+  | 'greatcoatHat'
+  | 'pressKit'
+  | 'forgedPapers'
+  | 'doorman'
+  | 'steward'
+  | 'minder'
+  | 'minderLastDay'
+  | 'minderLapse'
+  | 'wellFed5'
+  | 'spirits9'
+  | 'roundsUsed';
 export const LIFE_DEV_ACTIONS: readonly LifeDevAction[] = [
   'dossierThree',
   'dossierStale',
@@ -207,10 +344,63 @@ export const LIFE_DEV_ACTIONS: readonly LifeDevAction[] = [
   'rentToday',
   'rentOut',
   'legacy20',
+  'partyCoat',
+  'greatcoatHat',
+  'pressKit',
+  'forgedPapers',
+  'doorman',
+  'steward',
+  'minder',
+  'minderLastDay',
+  'minderLapse',
+  'wellFed5',
+  'spirits9',
+  'roundsUsed',
 ];
 
 export async function lifeAction(content: GameContent, c: CharacterDoc, action: LifeDevAction, now: number): Promise<string> {
+  const at = () => now;
+  const items = (ids: string[]) => testWardrobe(content, c, { grant: ids, wear: ids }, at);
   switch (action) {
+    case 'partyCoat': {
+      const coat = content.items.find((i) => i.slot === 'clothing' && i.factionId === c.factionId && (i.price ?? 0) > 0);
+      if (!coat) throw new DevRefusal(409, 'no party coat for this party');
+      await items([coat.id]);
+      return `Wearing ${coat.name}`;
+    }
+    case 'greatcoatHat':
+      await items(['outfit.greatcoat', 'acc.good-hat']);
+      return 'Wearing the greatcoat and the hat';
+    case 'pressKit':
+      await items(['doc.press-pass', 'tool.press-camera']);
+      return 'Wearing the press pass and the camera';
+    case 'forgedPapers':
+      await items(['doc.forged-papers']);
+      return 'Carrying forged papers';
+    case 'doorman':
+    case 'steward':
+    case 'minder': {
+      const tier = action === 'doorman' ? 1 : action === 'steward' ? 2 : 3;
+      const r = await testBodyguard(content, c, { tier }, now);
+      return `${r.bodyguard.name} walks with you for a week`;
+    }
+    case 'minderLastDay': {
+      if (!c.bodyguard) throw new DevRefusal(409, 'nobody walking with you');
+      await testBodyguard(content, c, { tier: c.bodyguard.tier, daysLeft: 0 }, now);
+      return `${c.bodyguard.name}'s last day`;
+    }
+    case 'minderLapse':
+      await testBodyguard(content, c, { lapse: true }, now);
+      return 'Sent him home (the week ran out yesterday)';
+    case 'wellFed5':
+      await testBuffs(c, { wellFed: { tier: 'plate', minutesLeft: 5 } }, now);
+      return 'Well fed, five minutes left';
+    case 'spirits9':
+      await testBuffs(c, { spirits: 9 }, now);
+      return 'Nine missions in good spirits';
+    case 'roundsUsed':
+      await testBuffs(c, { rounds: 3 }, now);
+      return "Today's three rounds used";
     case 'dossierThree': {
       const subjectId = rivalNameHere(content, c);
       const r = await landTestEntries(content, c, [{ subjectId }, { subjectId, category: 'pattern' }, { subjectId, category: 'criminal' }], now);

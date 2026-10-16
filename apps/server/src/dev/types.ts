@@ -93,10 +93,27 @@ export type DevAction =
   | 'dossierFile'
   | 'rentToday'
   | 'rentOut'
-  | 'legacy20';
+  | 'legacy20'
+  // Lane 1's (tech design §8.7, §24.9): the Wardrobe, someone to walk with you, the bar.
+  | 'partyCoat'
+  | 'greatcoatHat'
+  | 'pressKit'
+  | 'forgedPapers'
+  | 'doorman'
+  | 'steward'
+  | 'minder'
+  | 'minderLastDay'
+  | 'minderLapse'
+  | 'wellFed5'
+  | 'spirits9'
+  | 'roundsUsed';
 
 /** Slice 8 phase B, lane 2 (tech design §8.7): the Dossier's used / cap and the last roll, the flat, Legacy. */
 export interface DevLifeStatus {
+  /** Worn Charisma (with the flat's +2 here) and recognition here (the figure and its parts). */
+  worn: { cha: number; chaBase: number; recognition: Record<string, unknown> };
+  bodyguard: { tier: 1 | 2 | 3; name: string; paidThroughDay: number; power: number } | null;
+  buffs: { wellFed: { tier: 'plate' | 'dinner'; minutesLeft: number } | null; spirits: number; rounds: number };
   dossier: { used: number; cap: number; lastRoll: { chance: number; roll: number; landed: boolean; source: string; at: number } | null };
   flat: { cityId: string; paidThroughDay: number; state: 'paid' | 'due' | 'waiting'; counts: boolean } | null;
   legacy: { total: number; toSpend: number };

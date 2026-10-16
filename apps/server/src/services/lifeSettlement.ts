@@ -10,7 +10,9 @@ import {
   dayKey,
   dayStart,
   flatCounts,
+  goneToday,
   informantReports,
+  lastDay,
   legacyFromWindow,
   milestonesAfter,
   nextTier,
@@ -381,10 +383,10 @@ async function lifeEdition(
   // A bodyguard's last day, and gone this morning (§24.5; lane 1's contract).
   const bg = c.bodyguard ?? null;
   if (bg) {
-    if (bg.paidThroughDay === today) {
+    if (lastDay(bg, today)) {
       kinds.push('bodyguardLast');
       v.bodyguardLast = { minder: bg.name };
-    } else if (bg.paidThroughDay === yesterday) {
+    } else if (goneToday(bg, today)) {
       kinds.push('bodyguardGone');
       v.bodyguardGone = { minder: bg.name, price: String(weekPrice(bg.tier)) };
     }

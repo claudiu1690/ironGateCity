@@ -301,7 +301,7 @@ async function statusFor(
       risk: c ? await riskStatus(content, c, city, now) : null,
       together: c ? await togetherStatus(c, now) : null,
       nation: await nationStatus(content, c, now),
-      life: await lifeStatus(c, now),
+      life: await lifeStatus(content, c, now),
     },
   };
 }
@@ -682,7 +682,19 @@ async function runAction(
     case 'dossierFile':
     case 'rentToday':
     case 'rentOut':
-    case 'legacy20': {
+    case 'legacy20':
+    case 'partyCoat':
+    case 'greatcoatHat':
+    case 'pressKit':
+    case 'forgedPapers':
+    case 'doorman':
+    case 'steward':
+    case 'minder':
+    case 'minderLastDay':
+    case 'minderLapse':
+    case 'wellFed5':
+    case 'spirits9':
+    case 'roundsUsed': {
       const { me } = needCharacter();
       const { doc } = await loadCharacter(me, content, clock.now());
       did = await lifeAction(content, doc, action, clock.now());
