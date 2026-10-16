@@ -13,6 +13,13 @@ type HeadlineInput = ContentInput['headlines'][number];
  *
  * The bodyguards' two lines (`bodyguard-last`, `bodyguard-gone`) joined with T26's condition kinds;
  * `{minder}` is his name and `{price}` the week.
+ *
+ * Priorities (design §24.9 #4; the paper prints two personal lines a day, lowest number first, and
+ * the selector's sort is stable, so the order of this array breaks ties): 0 the front page; 1 a
+ * deadline tonight, a lapse that landed at midnight, or a once-only fact told nowhere else; 2 news
+ * of the player's own doing that a modal already showed; 3 lines the desk rows or the Letters row
+ * repeat word for word, safe to lose. Counts (`{n}`, `{daysLeft}`) are bare numerals from the
+ * server, so they sit after a colon, where "1" reads right.
  */
 
 type Paper = { prefix: string; cityId: string };
@@ -37,20 +44,15 @@ interface Line {
 }
 
 const LINES: Line[] = [
-  // ----- The Wardrobe -------------------------------------------------------------------------
+  // ----- 0: the front page ----------------------------------------------------------------------
   {
-    name: 'wardrobe-first',
-    priority: 2,
-    when: [{ kind: 'coatBought' }],
-    headline: 'A New Coat on {name}',
-    deck: "{item}, {charisma} Charisma, seen on {street} yesterday. The {paper} notes that the party's work pays.",
-    voices: {
-      clarion: '{item}, {charisma} Charisma, seen on {street} yesterday. Holm: "Mind it on the picket line."',
-      sentinel: '{item}, {charisma} Charisma, seen on {street} yesterday. The committee approves of a tidy coat.',
-      gazette: '{item}, {charisma} Charisma, seen on {street} yesterday. Mr Grey asks who the tailor is.',
-      courier: '{item}, {charisma} Charisma, seen on {street} yesterday. The Front has noticed; the Rows have not.',
-    },
+    name: 'expose-front',
+    priority: 0,
+    when: [{ kind: 'exposePrinted' }],
+    headline: '{subject} EXPOSED: {headlineLine}',
+    deck: 'By {name}. {line1} {line2} The {party} has not replied. Opinion in {city}: {party} −1.0.',
   },
+  // ----- 1: must reach the player (a deadline tonight, a lapse at midnight, a once-only fact) ----
   {
     name: 'recognised',
     priority: 1,
@@ -64,17 +66,65 @@ const LINES: Line[] = [
       courier: 'A {office} in a {coat} does not pass for a stranger in {city}. The lake dresses down for a reason.',
     },
   },
-  // ----- The Dossier and the exposé -----------------------------------------------------------
   {
-    name: 'expose-front',
-    priority: 0,
-    when: [{ kind: 'exposePrinted' }],
-    headline: '{subject} EXPOSED: {headlineLine}',
-    deck: 'By {name}. {line1} {line2} The {party} has not replied. Opinion in {city}: {party} −1.0.',
+    name: 'flat-due',
+    priority: 1,
+    when: [{ kind: 'flatDue' }],
+    headline: 'Rent Due on {street}',
+    deck: 'Your flat is paid until tonight. Pay a week on the Me tab, or let it wait: nothing is lost either way.',
+  },
+  // Someone to walk with you (tech design §24.5; moved from copy.life.minder.paper with T26).
+  // `{minder}` is the man's name (the copy's `{name}`, renamed so it never reads as the player's).
+  {
+    name: 'bodyguard-last',
+    priority: 1,
+    when: [{ kind: 'bodyguardLast' }],
+    headline: "{minder}'s Week Is Up Tonight",
+    deck: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Nothing else changes.",
+    voices: {
+      clarion: 'Paid until tonight. Another week on the party store\'s card, or he goes back to the door. Holm: "The quays will miss the width of him."',
+      sentinel: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The committee notes the date.",
+      gazette: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Mr Grey has the receipt ready.",
+      courier: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The lake has seen him coming.",
+    },
   },
   {
-    name: 'expose-p3',
+    name: 'bodyguard-gone',
     priority: 1,
+    when: [{ kind: 'bodyguardGone' }],
+    headline: '{minder} Has Gone Back to the Door',
+    deck: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store.",
+    voices: {
+      clarion: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Union Hall. Holm says he was never on the books.",
+      sentinel: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at Beacon House. The committee expects you to manage.",
+      gazette: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Rooms. Mr Grey wishes him well.",
+      courier: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store. The Front walks alone, mostly.",
+    },
+  },
+  {
+    name: 'flat-waiting',
+    priority: 1,
+    when: [{ kind: 'flatWaiting' }],
+    headline: 'The Flat Waits',
+    deck: 'The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do.',
+    voices: {
+      clarion: 'The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do. Holm says the landlady is patient.',
+      sentinel: 'The rent ran out at midnight. A rented room until you pay a week; the flat waits. The committee expects the matter settled.',
+      gazette: 'The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do. No arrears, the Gazette confirms.',
+      courier: 'The rent ran out at midnight. A rented room until you pay a week; the flat waits, lake view and all.',
+    },
+  },
+  {
+    name: 'patron-tier',
+    priority: 1,
+    when: [{ kind: 'patronTier' }],
+    headline: '{name}, {tier} of {patron}',
+    deck: '{perkLine}',
+  },
+  // ----- 2: the player's own doing, already shown in a modal ------------------------------------
+  {
+    name: 'expose-p3',
+    priority: 2,
     when: [{ kind: 'exposeP3' }],
     headline: '{subject}: Questions on Page Three',
     deck: 'By {name}. {line1} The {party} calls it gossip. Opinion in {city}: {party} −0.5.',
@@ -94,21 +144,6 @@ const LINES: Line[] = [
     deck: "Three fresh entries make a Case File. Take it to a newspaper, sell it at the station, or turn it with a patron's help.",
   },
   {
-    name: 'dossier-stale',
-    priority: 3,
-    when: [{ kind: 'staleTomorrow' }],
-    headline: '{n} Entries Go Stale Tomorrow',
-    deck: 'Stale entries count half toward a Case File and sell for half. Nothing is lost; it just gets old.',
-  },
-  // ----- Patrons (the Letters row and the desk) -----------------------------------------------
-  {
-    name: 'patron-letter',
-    priority: 1,
-    when: [{ kind: 'requestArrived' }],
-    headline: 'From {patron}: {request}',
-    deck: "By {until}. Favour +6 when it's done.",
-  },
-  {
     name: 'patron-thanks',
     priority: 2,
     when: [{ kind: 'requestThanks' }],
@@ -116,23 +151,15 @@ const LINES: Line[] = [
     deck: '{request}, done. Favour {favour}; {tier} at {next}.',
   },
   {
-    name: 'patron-tier',
-    priority: 1,
-    when: [{ kind: 'patronTier' }],
-    headline: '{name}, {tier} of {patron}',
-    deck: '{perkLine}',
-  },
-  {
-    name: 'informant',
+    name: 'patron-letter',
     priority: 2,
-    when: [{ kind: 'informantReport' }],
-    headline: 'From your informant',
-    deck: '{line} · {subject} · {category}. {daysLeft} days of reports left.',
+    when: [{ kind: 'requestArrived' }],
+    headline: 'From {patron}: {request}',
+    deck: "By {until}. Favour +6 when it's done.",
   },
-  // ----- The flat -----------------------------------------------------------------------------
   {
     name: 'flat-bought',
-    priority: 1,
+    priority: 2,
     when: [{ kind: 'flatBought' }],
     headline: '{name} Takes a Flat in {city}',
     deck: "{restedLine}. Rent 150 a week, paid until {until}. The {paper}'s housing column approves.",
@@ -144,60 +171,39 @@ const LINES: Line[] = [
     },
   },
   {
-    name: 'flat-due',
+    name: 'wardrobe-first',
     priority: 2,
-    when: [{ kind: 'flatDue' }],
-    headline: 'Rent Due on {street}',
-    deck: 'Your flat is paid until tonight. Pay a week on the Me tab, or let it wait: nothing is lost either way.',
-  },
-  {
-    name: 'flat-waiting',
-    priority: 2,
-    when: [{ kind: 'flatWaiting' }],
-    headline: 'The Flat Waits',
-    deck: 'The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do.',
+    when: [{ kind: 'coatBought' }],
+    headline: 'A New Coat on {name}',
+    deck: "{item}, {charisma} Charisma, seen on {street} yesterday. The {paper} notes that the party's work pays.",
     voices: {
-      clarion: 'The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do. Holm says the landlady is patient.',
-      sentinel: 'The rent ran out at midnight. A rented room until you pay a week; the flat waits. The committee expects the matter settled.',
-      gazette: 'The rent ran out at midnight. A rented room until you pay a week; the flat is yours whenever you do. No arrears, the Gazette confirms.',
-      courier: 'The rent ran out at midnight. A rented room until you pay a week; the flat waits, lake view and all.',
+      clarion: '{item}, {charisma} Charisma, seen on {street} yesterday. Holm: "Mind it on the picket line."',
+      sentinel: '{item}, {charisma} Charisma, seen on {street} yesterday. The committee approves of a tidy coat.',
+      gazette: '{item}, {charisma} Charisma, seen on {street} yesterday. Mr Grey asks who the tailor is.',
+      courier: '{item}, {charisma} Charisma, seen on {street} yesterday. The Front has noticed; the Rows have not.',
     },
   },
-  // ----- Legacy -------------------------------------------------------------------------------
+  // ----- 3: repeated word for word on the desk or in the Letters row; safe to lose --------------
   {
     name: 'legacy-entry',
-    priority: 2,
+    priority: 3,
     when: [{ kind: 'legacyEntry' }],
     headline: 'For the Record: {entry}',
     deck: 'Legacy {total}. {toSpend} to spend on a lasting perk.',
   },
-  // ----- Someone to walk with you (tech design §24.5; moved from copy.life.minder.paper with T26) --
-  // `{minder}` is the man's name (the copy's `{name}`, renamed so it never reads as the player's).
   {
-    name: 'bodyguard-last',
-    priority: 2,
-    when: [{ kind: 'bodyguardLast' }],
-    headline: "{minder}'s Week Is Up Tonight",
-    deck: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Nothing else changes.",
-    voices: {
-      clarion: 'Paid until tonight. Another week on the party store\'s card, or he goes back to the door. Holm: "The quays will miss the width of him."',
-      sentinel: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The committee notes the date.",
-      gazette: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Mr Grey has the receipt ready.",
-      courier: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The lake has seen him coming.",
-    },
+    name: 'informant',
+    priority: 3,
+    when: [{ kind: 'informantReport' }],
+    headline: 'From your informant',
+    deck: '{line} · {subject} · {category}. Days of reports left: {daysLeft}.',
   },
   {
-    name: 'bodyguard-gone',
-    priority: 2,
-    when: [{ kind: 'bodyguardGone' }],
-    headline: '{minder} Has Gone Back to the Door',
-    deck: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store.",
-    voices: {
-      clarion: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Union Hall. Holm says he was never on the books.",
-      sentinel: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at Beacon House. The committee expects you to manage.",
-      gazette: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Rooms. Mr Grey wishes him well.",
-      courier: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store. The Front walks alone, mostly.",
-    },
+    name: 'dossier-stale',
+    priority: 3,
+    when: [{ kind: 'staleTomorrow' }],
+    headline: 'Stale Tomorrow: {n} in the Dossier',
+    deck: 'Stale entries count half toward a Case File and sell for half. Nothing is lost; it just gets old.',
   },
 ];
 

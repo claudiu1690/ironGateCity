@@ -9,6 +9,17 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 8 life headlines: plural and priorities
+
+The designer fixed the counted life lines so a count of one reads right (*Stale Tomorrow: 1 in the
+Dossier*; *Days of reports left: 1*) and reranked the seventeen life lines for the paper's two
+personal slots: lines the player must act on or has just lost (rent due, the minder's last day or
+his lapse, the flat waiting, a new patron tier) at 1; the player's own acts at 2; lines the desk
+rows or the Letters row repeat (Legacy, the informant's report, stale entries) at 3. Reasoning in
+`design/slice-8-life.md` §24.9 #4; two plural faults outside content flagged there for the
+developer. Pages: [[The Morning Paper]] and [[Slice 8 A Life in the City]] to pick this up at the
+lane's wiki pass.
+
 ## [2026-10-16] build | Slice 8 phase B, lane 2
 
 The server for the Dossier, the exposé (and the Headline Story's Case File), the flat, Legacy, the
