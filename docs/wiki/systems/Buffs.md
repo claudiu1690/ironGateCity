@@ -32,7 +32,7 @@ Per [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] and [[design/slice
 
 **Rules:** [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] · [[GDD#19.3 Bars|§19.3]] · [[GDD#18.3 Sinks|§18.3]] · [[design/slice-8-life|slice-8 design §24.3]] · [[design/slice-8-screens|screens §18.4–§18.5]] · [[economy|economy sheet]] §22.11 · [[adr/0052-personal-modifiers-items-perks-and-recognition|ADR 0052]] (a buff's percentage as a personal modifier) · [[tech/slice-8#24. Bodyguards and the bar (technical design, 16 Oct 2026; ADR 0088)|tech/slice-8 §24]] · [[adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers|ADR 0088]] (lazy state read as personal modifiers)
 
-**Code:** none yet. Planned (tech §24, tasks T26, T29, T31):
+**Code** (rules T26, server T31 built 16 Oct 2026): `services/barService.ts` (the meals and rounds, `buffsView`); `buffsOf` in `services/personal.ts`; the shares through `personalShares` into tier-1 actions and missions (`Tier1ActionInput.personal`, `MissionInput.personal`); a round in hand is spent at the mission's start (`services/missionService.ts`). Planned at design time:
 - `characters.buffs { wellFed { tier, until }, spirits { left } }` and `today.rounds` (lazy: a meal is an end time, never written when it ends; rounds are a count);
 - `packages/rules/src/buffs.ts` (the gates, `afterMeal`, `afterRound`); `PersonalModifiers.buffs` and `buffShares` in `personal.ts`, giving named XP and Iron parts (`buff:wellFed`, `buff:spirits`), one receipt line each;
 - a round is used up in the mission's own transaction (`spendSpirits`); Health through `healHealth`, so never above max.
@@ -40,7 +40,7 @@ Per [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] and [[design/slice
 
 ## Status
 
-**Designed 16 Oct 2026, building in slice 8.** *Lodged* and *Weatherproof* stay out for now (a question to the user is pending).
+**Server built (slice 8 phase B, 16 Oct 2026):** the buffs on every tier-1 action's and mission's receipt. The Me tab's line is `life.me`; the client is T32. *Lodged* and *Weatherproof* stay out for now (a question to the user is pending).
 
 ## Decisions
 

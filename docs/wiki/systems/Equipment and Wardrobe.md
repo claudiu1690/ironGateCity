@@ -41,13 +41,13 @@ What you wear is who you are in Irongate: **Charisma is worn** ([[Stats and Chec
 
 **Code:**
 - Rules: `packages/rules/src/items.ts` (`ItemSlot = 'clothing' | 'document'`, `equippedItems`, `wornCha`, `grantItem`); `armourOf` in `runIn.ts`; `ARMOUR_BY_TIER` in `constants.ts`
-- Server: `wornStats` in `apps/server/src/services/views.ts` (the one place checks and views get Charisma)
+- Server: `wornStats(doc, content, now)` in `apps/server/src/services/views.ts` (the one place checks and views get Charisma; the flat's +2 at `now`); `services/personal.ts` (`personalOf`: worn items, Legacy perks, buffs; `itemRows`, `talkPctOf`, `recognitionOf`, `flatChaOf`), `LoadedCharacter.personal`; `services/wardrobeService.ts` (`wardrobe.get/wear/takeOff/outfit/keep`, `dressOnArrival`; router `trpc/routers/wardrobe.ts`); `services/itemCards.ts` (the item card, `outfitsOf`); `services/shopService.ts` (`shop.buy/sell/bribe`, the shop cards); `services/placeCards.ts` (`life.place`, `life.me`); the join builds `outfits` (`arrivalService`), `settleArrival` dresses in Plain clothes (`journeyArrival.ts`); views in `packages/rules/src/wardrobeViews.ts`
 - Data: catalogue `packages/content/src/data/items.ts` (**41 items since T6, 16 Oct 2026**: the kit, the demob suit, the party card, nineteen priced or earned items, twenty keepsakes with `keepsakeFrom` and a *Read* text each); `shops` on twenty places in `cities/*.ts` (the stall, the party store, the tailor, the press, the back room); the item words, the Wardrobe's, the shops' and the help notes in `copy.ts` (`copy.life.wardrobe`, `.shop`, `.help`); `ItemSlot` in `schemas.ts`; embedded `characters.inventory [{ uid, itemId, day, source }]` and `characters.equipment { clothing, document }`
 - Client: the Me tab (`apps/client/src/routes/me.tsx`)
 
 ## Status
 
-**Partly built.** Two slots, the starting kit and the keepsakes since [[Slice 2 Arrival|slice 2]]; armour used by run-ins since slice 5; review 5 renamed items (*Your father's coat* → *The demob suit*; ids kept). **Slice 8, building:** the rules (T1, 16 Oct 2026) and the **content** (T6, 16 Oct 2026: the catalogue, the shops, the copy) are in; the server and client are not. **Post-MVP:** Tier V, crafting, drops, trading.
+**Partly built.** Two slots, the starting kit and the keepsakes since [[Slice 2 Arrival|slice 2]]; armour used by run-ins since slice 5; review 5 renamed items (*Your father's coat* → *The demob suit*; ids kept). **Slice 8, building:** the rules (T1, 16 Oct 2026) and the **content** (T6, 16 Oct 2026: the catalogue, the shops, the copy) are in; **the server (T9, T10, 16 Oct 2026, phase B lane 1):** worn Charisma with the flat, item rows on every check, Party XP parts, the Wardrobe's procedures, dressing for arrival, outfits at the join, shops (buy, sell, the back room's bribe) with the record's surcharge, and the cards (`life.place`); the client is phase C (T20). Not yet: forged papers at the checkpoint (the card's Charisma check). **Post-MVP:** Tier V, crafting, drops, trading.
 
 ## Decisions
 

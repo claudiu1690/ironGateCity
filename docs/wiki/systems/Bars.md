@@ -33,13 +33,13 @@ Bars are places of kind `bar` where the town talks: dockers' bars, a press club,
 **Code:**
 - Content: the bar places in `packages/content/src/data/cities/*.ts` (`kind: 'bar'`)
 - Content (T27 data, 16 Oct 2026): `bar: true` on all seven bars and `dining: true` on the Grand Hotel, the Pier Hotel and the Mountain Inn in `cities/*.ts`; the back room (`shops: [{ kind: 'backRoom', bribe: true }]`) on the Anchor, the Gate Tavern, the Red Lantern, the Mountain Inn and the Casino; the cards' words, the modals and the help notes in `copy.ts` (`copy.life.bar`, `.shop`).
-- Services: none yet. Planned (tech §24, tasks T31, T32): `Location.bar` / `Location.dining` are checked by the loader (`barProblems`); `BAR` prices in `packages/rules/src/constants.ts` and the gates in `packages/rules/src/buffs.ts`; `barService` (`bar.round`, `bar.meal`, `bar.dinner`, each one keyed character update); the `BarCard` and `DiningCard` in the place sheet's card slot; `bar.spec.ts`.
+- Services (T10, T31, 16 Oct 2026): `services/barService.ts` (`bar.round`, `bar.meal`, `bar.dinner`, each one keyed character update; `barCard`, `diningCard`); the back room's bribe in `services/shopService.ts` (`shop.bribe`); the cards through `life.place` (`services/placeCards.ts`). Planned at design time: `Location.bar` / `Location.dining` are checked by the loader (`barProblems`); `BAR` prices in `packages/rules/src/constants.ts` and the gates in `packages/rules/src/buffs.ts`; `barService` (`bar.round`, `bar.meal`, `bar.dinner`, each one keyed character update); the `BarCard` and `DiningCard` in the place sheet's card slot; `bar.spec.ts`.
 
 **Art** (design §24.6): `item.round`, `item.bar-plate` and the three bodyguards' portraits are in the folder and catalogued (16 Oct 2026); the designer's final alt texts are in design §24.6 (three corrected from the developer's drafts: the doorman, the steward, the minder). The dining room uses `scene.hotel`.
 
 ## Status
 
-**Partly built:** the bar places and their tickets (slices 1–5, 7). **Designed 16 Oct 2026, building:** the bar's card, the dining room, the back room and its bribe (slice 8).
+**Partly built:** the bar places and their tickets (slices 1–5, 7). **Server built (slice 8 phase B, 16 Oct 2026):** the bar's card, the dining room, the back room and its bribe. The client is phase C (T32).
 
 ## Decisions
 

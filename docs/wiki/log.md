@@ -9,6 +9,13 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 8 phase B, lane 1
+
+The server for the Wardrobe and personal modifiers (T9), shops (T10), bodyguards (T30) and the bar
+(T31), with the designer's final alt texts and the Casino's society cards (Drift S8-4 closed).
+Updated [[Equipment and Wardrobe]], [[Bodyguards]], [[Bars]], [[Buffs]], [[Slice 8 A Life in the City]],
+[[Drift Report]]. T13 (society calls and patrons) is not built yet.
+
 ## [2026-10-16] update | Slice 8 phase A questions settled
 
 The designer answered the developer's three phase-A questions in `design/slice-8-life.md` §24.9: a patron Request counts a Success or a Partial and never a Failure (as built; the party orders' rule of GDD §15.4; pinned in design §5.3 and §16.5); the seven slice-8 alt texts checked against the pictures and made final in design §19 (Crane, Marr) and §24.6 (the doorman, steward, minder, plate and round; three corrected, all under 160 characters; the developer passes them into `art.ts`); the `social` mission card stays `scene.hotel`, with the Casino's two calls to carry `card: 'scene.casino'`. Wiki: [[Patronage and Favours]], [[Bars]], [[Slice 8 A Life in the City]], [[Open Questions]] S8-T6, [[Drift Report]] S8-2 and a new S8-4.

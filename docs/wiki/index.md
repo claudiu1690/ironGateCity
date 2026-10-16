@@ -34,12 +34,12 @@ open the pages. Rules: [[CLAUDE|operating manual]]. Start here if you're new: [[
 - [[Local Standing]] — Reputation per city: Stranger to One of Us at 10/30/70/150 wins, +3 % a level, never decays.
 - [[Party Orders]] — Three daily orders from the party secretary (welcome set, capital rotation, off in the cells); the Chair's orders are slice 7.
 - [[The Dossier]] — Intelligence entries on named people, Case Files, the exposé, sale and informants; slice 8: rules and content in (16 Oct), server and tab to come.
-- [[Bodyguards]] — Someone to walk with you: a doorman, a steward, a minder (400 / 1,200 / 3,000 a week) at the party store; a visible row at a run-in, never against the police; slice 8, designed 16 Oct.
+- [[Bodyguards]] — Someone to walk with you: a doorman, a steward, a minder (400 / 1,200 / 3,000 a week) at the party store; a visible row at a run-in, never against the police; slice 8: the server is built (16 Oct, phase B), the client is phase C.
 - [[Run-ins and Combat]] — NPC-only, one choice (Fight, Run, Talk, Pay, luck); the held result, settled by luck after 5 min; slice 5.
 - [[Hospital and Treatment]] — The infirmary after a lost run-in (30 Health, 20 min) and Get patched up at 1 Iron a point.
 - [[Jail and the Cells]] — Arrest, a sentence of 20 + Heat ÷ 2 min, bail, orders off, always a mark, the In the cells now list.
-- [[Bars]] — Bar places with tickets are built; the bar's card (a round, a plate), the hotel's dining room and the back room's bribe are slice 8, designed 16 Oct.
-- [[Equipment and Wardrobe]] — Built: two slots, starting kit, keepsakes, Charisma from what you wear. Slice 8: the four-slot Wardrobe, outfits, shops; the 41-item catalogue and twenty shops are in content (16 Oct).
+- [[Bars]] — Bar places with tickets are built; the bar's card (a round, a plate), the hotel's dining room and the back room's bribe are slice 8: the server is built (16 Oct, phase B), the client is phase C.
+- [[Equipment and Wardrobe]] — Built: two slots, starting kit, keepsakes, Charisma from what you wear. Slice 8: the four-slot Wardrobe, outfits, shops; the 41-item catalogue and twenty shops are in content (16 Oct); the server (worn Charisma with the flat, item rows, the Wardrobe's procedures, shops) is built (16 Oct, phase B).
 - [[Night and Patrols]] — Two-hour nights, night-only ways and missions (+25 % Iron), random patrol stops on rival ground; review 5.
 - [[Ambitions]] — Three 12-chapter personal stories, at most one chapter a week, never failing; chapters 1–2 partly built.
 - [[Patronage and Favours]] — Patrons Crane and Marr (slice 8: rules and content in, 16 Oct), favours between party mates (slice 6), the welcome favour at the HQ (built).

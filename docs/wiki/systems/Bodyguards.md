@@ -31,7 +31,7 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 
 **Rules:** [[GDD#12. Bodyguards|GDD §12]] · [[GDD#20. Combat (NPC-only in MVP)|GDD §20]] · [[GDD#18.3 Sinks|§18.3]] · [[design/slice-8-life#24. Bodyguards and the bar (added scope, designed 16 Oct 2026)|slice-8 design §24]] (§24.2 rules and copy, §24.4 economy, §24.6 art, §24.7 points for the user) · [[design/slice-8-screens|screens §18]] · [[economy|economy sheet]] §22.11 · [[tech/slice-8#24. Bodyguards and the bar (technical design, 16 Oct 2026; ADR 0088)|tech/slice-8 §24]] (technical design, 16 Oct 2026) · [[adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers|ADR 0088]] (a run-in row on a day-key contract)
 
-**Code:** none yet. Planned (tech §24, tasks T26, T27, T29, T30, T32):
+**Code** (rules T26, server T30 built 16 Oct 2026; the client is T32): `services/bodyguardService.ts` (`bodyguard.hire` / `.renew` in `trpc/routers/life.ts`, `hireCard`, `minderView`, `minderAtRunIn`, `minderLine`); his row written in `startRunInInTx` (`services/streetService.ts`, every run-in path), `encounter.choose('minder')` refused `NO_MINDER` / `NOT_AGAINST_POLICE`; `RunInPending.rows.minder`. Planned at design time:
 - Rules: `BODYGUARD` in `packages/rules/src/constants.ts`; `packages/rules/src/bodyguard.ts` (`contractCounts`, `hireGate`, `hire`, `renewed`, `canRenew`); `runIn.ts` gains the choice `minder`, the outcome `minded` and `minderChance` (the v3.0 +5 power and +5 % Run per tier are never built).
 - Data: `characters.bodyguard { tier, name, paidThroughDay }` (a day key, like the flat's rent; kept after a lapse so a re-hire keeps his name); `encounters.minder` and `chances.minder`, frozen when the run-in fires.
 - Content (**written, T27 data, 16 Oct 2026**): `packages/content/src/data/bodyguards.ts` (the three tiers' names, portraits and run-in lines); `hire: true` on all six party stores in `cities/*.ts`; the card's, the Me tab's, the run-in row's, the modals' and the help note's words in `copy.ts` (`copy.life.minder`), with the two paper lines in five voices waiting there for the `bodyguardLast` / `bodyguardGone` conditions.
@@ -42,7 +42,7 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 
 ## Status
 
-**Designed 16 Oct 2026, building in slice 8.** The user moved bodyguards into the MVP on 14 Oct 2026; the design above replaces GDD §12's v3.0 contract (hire fee, two at a time, auto-renew, three hidden modifiers).
+**Server built (slice 8 phase B, 16 Oct 2026):** the hire, the renewal, the card, his row at every run-in, *minded* with his line. Waiting: the paper's two lines (lane 2's paper, T16), the dev hooks (T17), the client (T32). The user moved bodyguards into the MVP on 14 Oct 2026; the design above replaces GDD §12's v3.0 contract (hire fee, two at a time, auto-renew, three hidden modifiers).
 
 ## Decisions
 
