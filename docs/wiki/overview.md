@@ -23,8 +23,9 @@ rule and number. How the wiki is kept: [[CLAUDE|operating manual]]. Full catalog
 - **Built:** slices 0–5 ([[Slice 0 Walking Skeleton|walking skeleton]] → [[Slice 5 Risk|risk]]),
   the fix rounds of [[Review 1]]–[[Review 5]], the [[Voting Rework]] (12 Oct), and
   [[Slice 6 Together|slice 6]] (built 15 Oct, **in QA**).
-- **Built, QA next:** [[Slice 7 The Nation|slice 7, the nation]] (approved 15 Oct; phases A–C and the
-  integration done 16 Oct, every Playwright project green).
+- **Built, QA'd and fixed:** [[Slice 7 The Nation|slice 7, the nation]] (approved 15 Oct; built,
+  QA'd and fixed 16 Oct; for the user to play: [[review/slice-7-build-notes|build notes]]; a human
+  playtest of Parliament's clarity still to do).
 - **Designed, not built:** slices 8–9 ([[Slice 8 A Life in the City|a life in the city]],
   [[Slice 9 Launch Readiness|launch readiness]]).
 - **Running locally only** until the end of the project; no hosting yet.

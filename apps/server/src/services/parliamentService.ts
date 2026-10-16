@@ -806,7 +806,12 @@ async function enactmentsDue(ctx: NationBoundaryCtx): Promise<void> {
     } catch (err) {
       if (!isDuplicateKeyError(err)) throw err;
     }
-    ctx.laws.inForce.push({ docId: lawDocId, ...start });
+    ctx.laws.inForce.push({
+      docId: lawDocId,
+      ...start,
+      by: b.tabledBy.name,
+      passed: { for: b.division?.for ?? 0, against: b.division?.against ?? 0, day: b.divideDay },
+    });
     // The President's pledges kept (design §6.1).
     const pres = ctx.government.president;
     if (pres.termId) {

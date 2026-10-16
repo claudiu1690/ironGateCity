@@ -244,7 +244,21 @@ test("2 Parliament: table, vote, the veto and the President's Address under race
   await expect(row).toBeVisible();
   const rowText = (await row.innerText()).replace(/\s+/g, ' ');
   console.log('QA law book row', JSON.stringify(rowText));
-  if (/passed \w+ 0–0/.test(rowText)) await a.page.screenshot({ path: '../../docs/qa/slice-7/qa-law-book-row.png' });
+  // M1 (fix round): every row names its tabler and its real division, never a blank name or 0–0.
+  const rowTexts = (await a.page.getByTestId('law-in-force').allInnerTexts()).map((t) => t.replace(/\s+/g, ' '));
+  for (const t of rowTexts) {
+    expect.soft(t, 'a law book row names its tabler').not.toMatch(/put to Parliament by\s*·/);
+    expect.soft(t, 'a law book row shows its division').not.toMatch(/passed \w+ 0–0/);
+  }
+  if (dA.state !== 'failed' && dA.state !== 'vetoed') {
+    const mine = (book.inForce as any[]).find((l) => l.lawId === lawA);
+    expect(mine, 'the passed law has a row').toBeTruthy();
+    expect(mine.by, "the row names the bill's tabler").toBe('Qa Rosa');
+    expect(mine.passed, 'the row carries the division and its day').toEqual({ for: dA.division.for, against: dA.division.against, day: bA.divideDay });
+    const mineText = rowTexts.find((t) => t.includes(nameOf(lawA)));
+    expect(mineText, 'the row reads the tabler and the count').toContain(`put to Parliament by Qa Rosa · passed`);
+    expect(mineText).toContain(`${dA.division.for}–${dA.division.against}`);
+  }
   const after = await speechOf(a.api);
   console.log('QA speech ticket after', JSON.stringify({ energy: after?.energy, tags: after?.tags ?? after?.ordinances }));
   if (dA.state !== 'failed') expect(JSON.stringify(book), 'the passed law is in the book').toContain(nameOf(lawA));
@@ -483,11 +497,24 @@ test('5 Layout and wording: the desk and the bill at 375 x 667, a Mayor of Irong
   const bar = (await pl.page.getByTestId('share-bar').boundingBox())!;
   const rule = await pl.page.getByTestId('plate-rule-chip').boundingBox();
   console.log('QA share bar', JSON.stringify(bar), 'rule line', JSON.stringify(rule));
+  // m1 (fix round): the bar is a labelled button; its left quarter opens the plate's notes, and the
+  // rule line's 44 px target ends at the bar's top.
+  await expect(pl.page.getByRole('button', { name: /^Who holds Coalport/ })).toBeVisible();
+  const ruleTarget = await pl.page.evaluate(() => {
+    const el = document.querySelector('[data-testid=city-ordinance]');
+    if (!el || !(el as HTMLElement).offsetParent) return null;
+    const b = el.getBoundingClientRect();
+    const a = getComputedStyle(el, '::after');
+    return { top: b.top + parseFloat(a.top), bottom: b.bottom - parseFloat(a.bottom) };
+  });
+  console.log('QA rule target', JSON.stringify(ruleTarget));
+  if (ruleTarget) {
+    expect(ruleTarget.bottom - ruleTarget.top, "the rule line's target is 44 px").toBeGreaterThanOrEqual(44);
+    expect(ruleTarget.bottom, 'the rule target stops at the share bar').toBeLessThanOrEqual(bar.y + 0.5);
+  }
   await pl.page.mouse.click(bar.x + bar.width * 0.25, bar.y + bar.height / 2);
-  await pl.page.waitForTimeout(500);
-  const leftOpened = await pl.page.getByRole('dialog').first().innerText().catch(() => '(nothing)');
-  console.log('QA left half of the share bar opens:', JSON.stringify(leftOpened.slice(0, 80)));
-  if (/Town Hall|Council|Hall/i.test(leftOpened)) await pl.page.screenshot({ path: '../../docs/qa/slice-7/qa-plate-share-bar-375x812.png' });
+  await expect(pl.page.getByTestId('help-note'), 'the bar opens the plate notes').toContainText('Who holds Coalport');
+  await pl.page.getByTestId('help-note').getByRole('button', { name: 'Close' }).click();
   for (const x of [ch, dep, m, pl]) await x.ctx.close();
 });
 

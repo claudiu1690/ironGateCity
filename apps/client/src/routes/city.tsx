@@ -744,12 +744,16 @@ export function CityPage() {
       />
     ) : null;
 
-  /** The share bar, captioned; a tap opens the plate's notes. */
+  /**
+   * The share bar, captioned; a tap opens the plate's notes. Slice 7 fix round (QA m1): a real button
+   * (keyboard-reachable, labelled), clear of the rule line's 44 px target, which ends at its top.
+   */
   const shareBar = (
-    <div
-      className="flex cursor-pointer items-center gap-1.5 px-1 py-0.5 [@media(max-width:639px)_and_(max-height:700px)]:py-0"
-      aria-hidden="true"
+    <button
+      type="button"
+      className="flex w-full cursor-pointer items-center gap-1.5 px-1 py-0.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink [@media(max-width:639px)_and_(max-height:700px)]:py-0"
       onClick={() => plateHelp.current?.click()}
+      aria-label={`${copy.help.shareCaption(c.name)}: the plate's notes`}
       data-testid="share-bar"
     >
       <span
@@ -768,7 +772,7 @@ export function CityPage() {
         ))}
         <span style={{ width: `${c.opinion.neutral}%` }} className="bg-neutral" />
       </span>
-    </div>
+    </button>
   );
 
   /**
@@ -845,9 +849,11 @@ export function CityPage() {
             : cx(
                 'min-w-11 flex-1',
                 // Slice 7 integration (lane Y's review1 finding): on the home plate the rule's 44 px
-                // target reaches down (6 px up, 27 px down), so the plate's notes keep a 44 px band
-                // over the name; centred, it covered the plate's middle at 375 × 812.
-                testId === 'city-ordinance' && 'after:-top-[6px] after:-bottom-[27px]',
+                // target reaches down (6 px up, 22 px down), so the plate's notes keep a 44 px band
+                // over the name; centred, it covered the plate's middle at 375 × 812. Fix round (QA
+                // m1): it ends at the share bar's top (the plate's 20 px foot below, `ruleRoom`), so
+                // the bar opens the plate's notes again.
+                testId === 'city-ordinance' && 'after:-top-[6px] after:-bottom-[22px]',
               ),
         )}
       {c.ordinance && !side && <span aria-hidden="true">·</span>}
@@ -874,7 +880,14 @@ export function CityPage() {
         </p>
       )}
       <div className="flex items-stretch border-b-2 border-ink">
-        <div className="relative flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2">
+        <div
+          className={cx(
+            'relative flex min-w-0 flex-1 flex-col gap-0.5 px-3 py-2',
+            // Fix round (QA m1): with the rule line last on an upright plate, a 20 px foot holds the
+            // rule's 44 px target above the share bar. A phone under 700 px tall folds the line away.
+            c.ordinance && !side && !c.scoreboard?.mine && 'pb-5 [@media(max-width:639px)_and_(max-height:700px)]:pb-2',
+          )}
+        >
           {/* One tap target over the block (the heading stays a heading): the notes behind
               the share, the morale word and the ordinance line. */}
           <HelpButton

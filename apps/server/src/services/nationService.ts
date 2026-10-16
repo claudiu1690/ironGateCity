@@ -1,6 +1,6 @@
 import type { GameContent } from '@irongate/content';
-import { City } from '@irongate/db';
-import type { CityDoc, NationDoc } from '@irongate/db';
+import { Bill, City } from '@irongate/db';
+import type { BillDoc, CityDoc, NationDoc } from '@irongate/db';
 import {
   FACTION_IDS,
   TERM_DAYS,
@@ -150,7 +150,7 @@ export async function getNation(i: {
   return republicView(i.content, loaded.nation, i.now, await governorsByCity());
 }
 
-/** `parliament.laws`: the law book (T15 adds the rows' tablers and divisions). */
+/** `parliament.laws`: the law book, each row with its tabler and its division. */
 export async function getLawBook(i: {
   user: SessionUser;
   content: GameContent;
@@ -169,15 +169,29 @@ export async function getLawBook(i: {
       days: l?.days ?? 0,
     };
   };
+  const current = loaded.nation.laws.inForce.filter((l) => l.fromDay <= today && today < l.toDay);
+  // Rows enacted before the tabler and the division were stored on the projection: read their bill.
+  const missing = current.filter((l) => !l.by || !l.passed).map((l) => l.docId);
+  const bills = missing.length
+    ? await Bill.find({ lawDocId: { $in: missing } }, { lawDocId: 1, tabledBy: 1, division: 1, divideDay: 1 }).lean<
+        Pick<BillDoc, 'lawDocId' | 'tabledBy' | 'division' | 'divideDay'>[]
+      >()
+    : [];
+  const billOf = new Map(bills.map((b) => [String(b.lawDocId), b]));
   return {
-    inForce: loaded.nation.laws.inForce
-      .filter((l) => l.fromDay <= today && today < l.toDay)
-      .map((l) => ({
+    inForce: current.map((l) => {
+      const b = billOf.get(String(l.docId));
+      return {
         ...row(l.lawId),
         daysLeft: l.toDay - today,
-        by: '',
-        passed: { for: 0, against: 0, day: l.fromDay - 1 },
-      })),
+        by: l.by ?? b?.tabledBy.name ?? '',
+        passed: l.passed ?? {
+          for: b?.division?.for ?? 0,
+          against: b?.division?.against ?? 0,
+          day: b?.divideDay ?? l.fromDay - 1,
+        },
+      };
+    }),
     catalogue: i.content.laws.map((l) => row(l.id)),
     strike: null,
   };

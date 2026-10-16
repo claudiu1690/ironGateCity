@@ -24,8 +24,6 @@ the user's call.
 
 | # | Where | Conflict | Owner |
 |---|---|---|---|
-| D-S7I-3b | `apps/server/src/services/politicsService.ts`, `officeFrontPage` (the `governor` case) | The designer's `copy.nation.paper.captions.governorOrMayor(name, title, city)` is in content (16 Oct); the server still builds the Mayor's caption from `officeTitle` and calls the deprecated `captions.governor`. Bind the new string, then delete the old one ([[design/slice-7-nation|design, Settled 16 Oct (phase C)]] §6) | DEV |
-| D-S7Q-1 | `apps/server/src/services/nationService.ts` `getLawBook`: `by: ''` and `passed: {for: 0, against: 0}` are placeholders; tech §6.11 and GDD §15.6 say the book names the tabler and the division ([[qa/slice-7-report|QA M1]]) | DEV |
 | A9 | GDD §22.2; ADR 0058 (status note added 14 Oct); tech/slice-8 | Season rollover "starts the rules again", but since the voting rework **a city always has a rule** (ADR 0083). May the rollover end a council rule, and what runs until the next count? | USER |
 | B2 | `stats.chaBase` in the character model; `wornCha()` in `packages/rules` | The GDD (§8.1, §8.2, §8.5, fixed 14 Oct) says there has been no Charisma base since review 4; the code still stores one and adds it (0 for new characters) | DEV |
 | F1 | `package.json` | `pnpm check` and `pnpm e2e:only` are named in the 8 Oct workflow but don't exist (the developer agent file marks them "planned") | USER |
@@ -39,6 +37,13 @@ the user's call.
 - `design/slice-0-answers.md` keeps the first reference recruit (STR 10 / INT 12 / AGI 5 / CHA 2) as a historical record. The current one is STR 8 / INT 12 / AGI 5 / CHA 5.
 - `apps/client/vercel.json` still has an `<api-host>` placeholder; it waits for hosting at the end of the project.
 - Review 5's patrol street: the design put it in content (`cities[].patrol.street`); the server derives it from the city's street-kind place (`streetOf()` in `patrol.ts`). The strings are the same today.
+
+## Resolved — 16 Oct 2026 (slice 7, fix round)
+
+| Rows | What was wrong | Fixed by | How |
+|---|---|---|---|
+| D-S7I-3b | `officeFrontPage` built the Mayor's caption from `officeTitle` and called the deprecated `captions.governor` | DEV | The `governor` case reads `p.governorOrMayor(c.name, vars.title, cityName)`; the `officeTitle` import is gone from `politicsService.ts` and `captions.governor` is deleted from `copy.ts` |
+| D-S7Q-1 | `getLawBook` returned `by: ''` and `passed: {for: 0, against: 0, day: fromDay − 1}` ([[qa/slice-7-report\|QA M1]]) | DEV | The enactment stores `by` and `passed: {for, against, day}` on `nation.laws.inForce`; `getLawBook` reads them, falling back to the bill (`lawDocId`: `tabledBy`, `division`, `divideDay`) for older rows; checked in `qa.slice7.spec.ts` |
 
 ## Resolved — 16 Oct 2026 (slice 7, integration)
 

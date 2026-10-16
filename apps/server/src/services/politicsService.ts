@@ -68,7 +68,7 @@ import { selectPoliticalHeadlines } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
 import { gameError } from '../gameError';
 import { isContested, paperCityOf, residenceCityId, residenceOf, residenceSpec } from './residence';
-import { governorTitle, ordinalWord, officeTitle } from './nationEdition';
+import { governorTitle, ordinalWord } from './nationEdition';
 import type { ResidenceSpec } from './residence';
 import { battlegroundFill } from './battlegroundDay';
 import { ordinanceIdOn } from './modifiers';
@@ -1223,10 +1223,9 @@ async function officeFrontPage(
   switch (term.office) {
     case 'governor': {
       vars.city = cityName;
-      // *Mayor* in Irongate and Clearwater (the headline's `{title}`; the caption as `officeTitle`).
+      // *Mayor* in Irongate and Clearwater (the headline's `{title}` and the caption's; D-S7I-3b).
       vars.title = governorTitle(content, term.cityId);
-      caption =
-        vars.title === 'Mayor' ? `${c.name}, elected ${officeTitle(content, 'governor', term.cityId, c.factionId)}` : p.governor(c.name, cityName);
+      caption = p.governorOrMayor(c.name, vars.title, cityName);
       cta = { label: toOffice, route: `/office/governor/${term.cityId}` };
       // The Governor's term rides on the council's count (the electionId it was seated from).
       const e = await Election.findById(term.electionId).lean<ElectionDoc>();

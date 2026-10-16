@@ -9,6 +9,10 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 7 fix round
+
+QA's M1 and m1 fixed, D-S7I-3b bound, the Chair's turnout clamped. The law book's rows name the tabler and the real division (stored on `nation.laws.inForce` at enactment, with a fallback to the bill); the share bar under the home plate is a labelled button for the plate's notes again, and the rule line's 44 px target ends at its top (the plate 12 px taller where the rule line is last); the Mayor's caption reads `captions.governorOrMayor` (the old `captions.governor` deleted); the Chair's result never shows more voters than the roll. Playwright `qa-nation` 7/7 (new checks for the law book and the bar), `chair`, `nation`, `clearwater`, `governor`, `review6` and `review1` (phone) green. [[review/slice-7-build-notes|Build notes]] for the user. Updated [[Slice 7 The Nation]], [[The Legislature and Laws]], [[Drift Report]] (D-S7I-3b and D-S7Q-1 resolved), [[Open Questions]], `index.md`.
+
 ## [2026-10-16] update | Slice 7 QA m2: one bill a term is tabling only
 
 The designer confirmed the build's reading of GDD §15.6: a member tables one bill a term (from whichever office) and votes on every bill. Wording fixed in §15.6, a §0 row added, `design/slice-7-nation.md` §5.2 and its settled-table row 16 matched; `copy.nation.help.deputy` already said it. No numbers moved. Closed item (3) of the slice-7 QA list in [[Open Questions]].

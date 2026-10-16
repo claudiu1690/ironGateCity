@@ -3100,11 +3100,6 @@ export const copy = {
       electionKicker: 'Election',
       captions: {
         /**
-         * @deprecated D-S7I-3 (16 Oct 2026): says *Governor* everywhere; the front page binds
-         * `governorOrMayor` instead and deletes this one at the binding.
-         */
-        governor: (name: string, city: string) => `${name}, elected Governor of ${city}`,
-        /**
          * D-S7I-3 (16 Oct 2026): `title` is *Governor* at home, *Mayor* in Irongate and Clearwater
          * (`governorTitle`), so the words stay in content: *Anna Roth, elected Governor of Coalport*.
          */

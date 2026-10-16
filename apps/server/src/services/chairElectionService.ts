@@ -341,7 +341,10 @@ function resultOf(content: GameContent, e: FactionElectionDoc): ChairResultView 
   }
   const r = e.result as unknown as Omit<ChairResultView, 'termIndex' | 'factionId' | 'status'> | null;
   if (!r) return null;
-  return { termIndex: e.termIndex, factionId: e.factionId, status: 'counted', ...r };
+  // Fix round (QA observation): the roll is read at the count over a 7-day window, so a jumped clock
+  // can leave fewer members on it than voted; the view never says *18 of 16*.
+  const turnout = { voters: Math.min(r.turnout.voters, r.turnout.eligible), eligible: r.turnout.eligible };
+  return { termIndex: e.termIndex, factionId: e.factionId, status: 'counted', ...r, turnout };
 }
 
 /** `chairElection.result`: the count of a term (default: the latest counted or void). */

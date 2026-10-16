@@ -21,6 +21,10 @@ export type NationalHolder = SeatHolder & { factionId: FactionId };
 
 export interface LawProjection extends LawInForce {
   docId: Types.ObjectId;
+  /** The tabler's name and the division, stored at enactment for the law book (rows written before the
+   * slice-7 fix round lack them; the book falls back to the bill). */
+  by?: string;
+  passed?: { for: number; against: number; day: DayKey };
 }
 
 export interface NationNewsItem {

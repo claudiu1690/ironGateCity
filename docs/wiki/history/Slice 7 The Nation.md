@@ -4,7 +4,7 @@ title: Slice 7 The Nation
 aliases: [Slice 7, The nation]
 tags: [slice, building]
 status: built
-dates: 2026-10-04 (designed); 2026-10-15 (approved, building); 2026-10-16 (built, integrated)
+dates: 2026-10-04 (designed); 2026-10-15 (approved, building); 2026-10-16 (built, integrated, QA'd, fixed)
 commits: [1f8172a, ef6b697]
 gdd: ["§2", "§14.1", "§14.8", "§15.1", "§15.4", "§15.5", "§15.6", "§15.8", "§15.9", "§15.10", "§17.1"]
 adrs: ["0043", "0044", "0045", "0046", "0047", "0048", "0049", "0050"]
@@ -13,7 +13,7 @@ updated: 2026-10-16
 
 # Slice 7 The Nation
 
-**Status: built** (16 Oct 2026: both phase C lanes, then the integration: the new art, T30's sweeps and report, the full e2e green, T31's docs); **QA next**. Building began 15 Oct 2026, when the user approved the design's seven defaults. Designed on 4 Oct 2026; amended by [[Review 4]], [[Review 5]] and the [[Voting Rework]]. Phase A runs in two lanes: the developer's rules, schemas and accessors (T1–T6, T9, T10) and the designer's content (T7 Clearwater, T8 the nation).
+**Status: built, QA'd and fixed** (16 Oct 2026: both phase C lanes, the integration, QA, then the fix round below). **Next:** the user plays it ([[review/slice-7-build-notes|build notes]]); a human playtest is still needed for whether Parliament reads clearly. Building began 15 Oct 2026, when the user approved the design's seven defaults. Designed on 4 Oct 2026; amended by [[Review 4]], [[Review 5]] and the [[Voting Rework]]. Phase A runs in two lanes: the developer's rules, schemas and accessors (T1–T6, T9, T10) and the designer's content (T7 Clearwater, T8 the nation).
 
 ## Goal and playtest question
 
@@ -132,6 +132,15 @@ Built in parallel with lane 1 (the nation's day, Clearwater, the Governor, the s
 ## QA and leftovers
 
 **QA 16 Oct 2026** ([[qa/slice-7-report|QA report]]; the `qa-nation` project, 7 tests, all pass): no blocker; **one major** (M1: the law book's rows read *put to Parliament by · passed … 0–0*, `getLawBook` placeholders in `nationService.ts`), one minor (the plate's share bar's left half opens the Town Hall, m1) and one wording question for the designer (*one bill per member per term*, m2). Races on stand, back, vote, table, vote on a bill, veto, the Governor's rule and Address, the President's Address and petitions: one effect and one charge each; the numbers, the Unrest ruling, a week away and the Mayor's wording hold. Not covered: the national election's and the Chair desk's keys, the cap, overrides, Rehabilitation's fade, a human clarity playtest. The integration Deviations still list what to look at first. The designer's defaults among Appendix C #64–#73 that were not the user's seven (#67 the removal at 25 %, #69 standing orders repeat, #72 the list by backers, #73 the push below Level 10) stay as flags to watch (see [[Open Questions]]).
+
+## Fix round (16 Oct 2026)
+
+- **M1, the law book:** each row names its tabler and its real division and day (*put to Parliament by Organiser Stahl · passed Friday 40–0*). The enactment (`parliamentService.ts` `enactmentsDue`) stores `by` and `passed` on the `nation.laws.inForce` row; `getLawBook` reads them, and a row from before the fix falls back to its bill by `lawDocId`. [[Drift Report]] D-S7Q-1 resolved.
+- **m1, the share bar:** a tap anywhere on the bar under the home plate opens the plate's notes again. The bar is a real button (*Who holds Coalport: the plate's notes*, keyboard-reachable). The rule line's 44 px target now ends at the bar's top: on an upright plate whose last line is the rule, the plate has a 20 px foot (12 px taller than before; a phone 700 px tall or less folds the rule line away and keeps the old height). Measured at 375 × 812: the rule's target 44.5 px, ending exactly at the bar.
+- **D-S7I-3b:** the Governor's (Mayor's) front-page caption is `captions.governorOrMayor(name, title, city)`; the deprecated `captions.governor` and the server's `officeTitle` import are gone.
+- **The Chair's turnout:** the result view clamps the voters to the roll, so it never reads *18 of 16* (the roll is read at the count over seven days; only the test clock can leave it short).
+- **Checks:** lint, typecheck and build green; Playwright `qa-nation` 7/7 (with the new law book and share bar checks), `chair` 1/1, `nation` 1/1, `clearwater` 2/2, `governor` 1/1, `review6` 16/16, `review1` on `phone` 1/1.
+- **Build notes for the user:** [[review/slice-7-build-notes|slice-7 build notes]] (how to start, the dev panel's nation buttons, a 30-minute walk-through, what an existing account sees, the known limits).
 
 ## Commits
 
