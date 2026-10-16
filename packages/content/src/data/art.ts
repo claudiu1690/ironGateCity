@@ -570,35 +570,35 @@ export const assets: Asset[] = [
   // design §23.8.
   scene(
     'casino',
-    "The Casino's long bar after midnight: the domed room, the tables beyond, a cashier's window, the Front in evening dress.",
+    'A casino at night: a woman in red at the bar, a roulette wheel and card tables under chandeliers, men in dinner jackets, the lit lakeside town in the windows.',
   ),
   scene(
     'polling-station',
-    'A polling station in a school hall: a returning officer at a trestle table, a wooden ballot box, a queue in coats and hats, two curtained booths.',
+    'A polling room: two clerks at a table with the register, a man in a hat posting his paper in a wooden box, a queue in coats, two curtained booths, a clock.',
     undefined,
     NATION_SCENE,
   ),
   scene(
     'law-book',
-    "The clerks' room behind the chamber: a ledger of statutes open under a green lamp, numbered volumes to the ceiling, a bill tied with tape, the dome beyond.",
+    'A ledger open under a green lamp: numbered volumes behind, an inkwell, spectacles, a date stamp, a bundle of papers; a domed building through the window.',
     undefined,
     NATION_SCENE,
   ),
   scene(
     'tram-depot',
-    'The tram sheds at six: cream-and-green trams under a glass roof, crews with tea at the gate, a flyer at the timeclock, the lake and a spire through the doors.',
+    'A tram shed: four green trams on wet rails under an iron roof, crews with mugs at a rail, a man at the ticket window, the lake and a spire through the doors.',
     undefined,
     NATION_SCENE,
   ),
   scene(
     'governors-office',
-    "A Governor's panelled parlour: a broad desk with the minute book and the paper, a town plan on the wall, a tram passing the square, a clerk at the door.",
+    'A tall window on a square and a red tram: a man at a broad desk reading a ledger under a lamp, a city map on the wall, a clerk with a folder at the door.',
     undefined,
     NATION_SCENE,
   ),
   scene(
     'lake-harbour',
-    "Clearwater's harbour at the fish sale: crates on the quay, a woman with a ledger, a small lighthouse, the lake steamer at its stage, the casino dome beyond.",
+    'A quay: men in caps unloading crates of fish, a woman in red writing in a ledger, a lighthouse on the mole, a white steamer at the pier, mountains behind.',
     undefined,
     NATION_SCENE,
   ),
