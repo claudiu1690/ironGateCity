@@ -110,6 +110,8 @@ test('nation: stand, the pick, the vote, the result; a law put to Parliament bec
   const billId = b.page.url().match(/bill\/([0-9a-f]{24})/)![1]!;
   await expect(b.page.getByTestId('bill-title')).toHaveText(lawName);
   await expect(b.page.getByTestId('bill-page')).toHaveAttribute('data-state', 'voting');
+  // Slice 7 integration: a bill stands on the law book's scene (the chamber keeps the chamber's).
+  await expect(b.page.getByTestId('bill-header')).toHaveAttribute('data-art', 'scene.law-book');
   await b.page.getByTestId('bill-pick-for').click();
   await expect(b.page.getByTestId('bill-vote')).toHaveText(`Vote For ${lawName}`);
   await sweep(b.page, 'the bill');

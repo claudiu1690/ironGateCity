@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { signUp } from './helpers';
+import { sweep } from './nationKit';
 
 /**
  * Slice 7 (tech design §15.1 `governor.spec.ts`; screens §3, §4.1, §11), on a phone at 390 × 844: a
@@ -39,6 +40,7 @@ test("a Governor's week: the front page, the Me tab, the party's card, the Addre
   await expect(front).toHaveAttribute('data-office', 'governor');
   await expect(front.getByTestId('front-page-caption')).toHaveText('Anna Roth, elected Governor of Coalport');
   await expect(front).toContainText('Anna Roth Is Governor of Coalport');
+  await sweep(page, 'the front page');
 
   // 2. The Me tab: the office card and the ladder (a council term ticked).
   await page.goto('/me');
@@ -48,6 +50,8 @@ test("a Governor's week: the front page, the Me tab, the party's card, the Addre
   await expect(ladder.getByTestId('ladder-row')).toHaveCount(5);
   await expect(ladder.locator('[data-office=council]')).toHaveAttribute('data-done', 'true');
   await card.scrollIntoViewIfNeeded();
+  await sweep(page, 'me office cards');
+
   await page.screenshot({ path: `${SHOTS}/me-office-cards-390x844.png` });
   await card.click();
   await expect(page).toHaveURL(/\/office\/governor\/coalport$/);
@@ -56,6 +60,8 @@ test("a Governor's week: the front page, the Me tab, the party's card, the Addre
   const header = page.getByTestId('governor-header');
   await expect(header).toContainText('Governor of Coalport');
   await expect(header).toContainText('Anna Roth');
+  // Slice 7 integration: the header stands on the Governor's own scene, not the hall's map crop.
+  await expect(header).toHaveAttribute('data-art', 'scene.governors-office');
   const choose = page.getByTestId('governor-choose');
   await expect(choose).toHaveText("Choose the rule");
   const cb = (await choose.boundingBox())!;
@@ -67,6 +73,8 @@ test("a Governor's week: the front page, the Me tab, the party's card, the Addre
       { timeout: 5_000 },
     )
     .catch(() => {});
+  await sweep(page, 'governor page');
+
   await page.screenshot({ path: `${SHOTS}/governor-page-390x844.png` });
   await choose.click();
   const picker = page.getByRole('dialog', { name: "The Governor's rule · at no cost" });
@@ -93,6 +101,7 @@ test("a Governor's week: the front page, the Me tab, the party's card, the Addre
   await post(page, '/api/test/city-day', {});
   await page.goto('/council/ballot');
   await expect(page.getByTestId('rule-card').first()).toContainText('Public Works Order');
+  await sweep(page, 'the ballot');
 
   // 7. Nobody votes; the count's morning reads the rule that runs, never *Council Passes*.
   await post(page, '/api/test/clock', { advanceTo: { cityId: 'coalport', cycleDay: 0 } });
@@ -101,4 +110,5 @@ test("a Governor's week: the front page, the Me tab, the party's card, the Addre
   const headlines = page.getByTestId('headline');
   await expect(headlines.filter({ hasText: 'Public Works Order' }).first()).toBeVisible();
   await expect(headlines.filter({ hasText: /Council Passes/ })).toHaveCount(0);
+  await sweep(page, 'the count morning');
 });

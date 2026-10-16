@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { arrivalContinue, signUp } from './helpers';
+import { sweep } from './nationKit';
 
 /**
  * Slice 7 (tech design §15.1 `clearwater.spec.ts`; screens §2, §10), on a phone: the nation map's new
@@ -53,18 +54,29 @@ test('the nation map: the bar and the law chips over a covering map at 375 × 66
   await expect(bar).toBeVisible();
   await expect(bar).toContainText('Who holds the republic');
   await expect(bar).toContainText(/the (Vanguard|Collective|Alliance) leads/);
-  await expect(chips.getByTestId('law-chip').first()).toHaveText(/No law in force · Parliament sits|· \d+ days?$/);
-  // Screens §14: 44 px and 36 px, under the top bar, over the map, which fills what is left.
+  // Slice 7 integration: at 375 × 667 (an upright phone 700 px tall or less) the law chips give way
+  // to the map, as the city's rule line does, so review 6's every-pin check holds with the paper's
+  // banner up; the bar (44 px) stays over the map, which fills what is left.
+  await expect(chips).toBeHidden();
   const b = (await bar.boundingBox())!;
-  const c = (await chips.boundingBox())!;
-  const m = (await map(page).boundingBox())!;
+  let m = (await map(page).boundingBox())!;
   expect(Math.round(b.height)).toBe(44);
-  expect(Math.round(c.height)).toBe(36);
-  expect(c.y).toBeGreaterThanOrEqual(b.y + b.height - 1);
-  expect(m.y).toBeGreaterThanOrEqual(c.y + c.height - 1);
-  const nav = (await page.getByRole('navigation').last().boundingBox())!;
+  expect(m.y).toBeGreaterThanOrEqual(b.y + b.height - 1);
+  let nav = (await page.getByRole('navigation').last().boundingBox())!;
   expect(m.y + m.height).toBeGreaterThanOrEqual(nav.y - 2);
   expect(m.height).toBeGreaterThan(300);
+  // Screens §14 on a taller phone: the bar (44 px) and the chips (36 px), under the top bar, over the map.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(chips.getByTestId('law-chip').first()).toHaveText(/No law in force · Parliament sits|· \d+ days?$/);
+  const b2 = (await bar.boundingBox())!;
+  const c = (await chips.boundingBox())!;
+  m = (await map(page).boundingBox())!;
+  expect(Math.round(c.height)).toBe(36);
+  expect(c.y).toBeGreaterThanOrEqual(b2.y + b2.height - 1);
+  expect(m.y).toBeGreaterThanOrEqual(c.y + c.height - 1);
+  nav = (await page.getByRole('navigation').last().boundingBox())!;
+  expect(m.y + m.height).toBeGreaterThanOrEqual(nav.y - 2);
+  await page.setViewportSize({ width: 375, height: 667 });
   // The pins' second line: who holds each city (the capital and the lake are contested).
   const irongate = page.locator('[data-testid=hotspot][aria-label^="Irongate"]');
   await expect(irongate).toHaveAttribute('aria-label', /, (close race today|contested|held by the \w+)$/);
@@ -91,9 +103,13 @@ test('the nation map: the bar and the law chips over a covering map at 375 × 66
   await expect(national).toContainText('From the capital');
   await expect(national.getByTestId('national-line').first()).toBeVisible();
   await national.scrollIntoViewIfNeeded();
+  await sweep(page, 'paper republic');
+
   await page.screenshot({ path: `${SHOTS}/paper-republic-390x844.png` });
   await page.goto('/nation');
   await expect(map(page)).toHaveAttribute('data-moving', 'false');
+  await sweep(page, 'nation map bar');
+
   await page.screenshot({ path: `${SHOTS}/nation-map-bar-390x844.png` });
 });
 
@@ -118,6 +134,8 @@ test('Clearwater: board, the one map on the Casino, Live here, a canvass, a miss
   // One map: no districts; The Front's three places are the later pins.
   await expect(page).toHaveURL(/\/city\/clearwater$/);
   await expect(page.getByTestId('locked-pin')).toHaveCount(3);
+  await sweep(page, 'clearwater');
+
   await page.screenshot({ path: `${SHOTS}/clearwater-390x844.png` });
 
   // 2. Live here · 500 Iron, from the residence card.
@@ -170,6 +188,7 @@ test('Clearwater: board, the one map on the Casino, Live here, a canvass, a miss
   await v.goto('/paper');
   await expect(v.getByRole('heading', { level: 1 }).first()).toContainText('The Coalport Clarion');
   await expect(v.getByTestId('edition-line')).toContainText('Clearwater');
+  await sweep(v, "the visitor's Clearwater edition");
   await visitor.close();
 
   // 7. The next morning the resident's paper is the Courier.
@@ -177,6 +196,7 @@ test('Clearwater: board, the one map on the Casino, Live here, a canvass, a miss
   expect((await page.request.post('/api/test/city-day')).ok()).toBe(true);
   await page.goto('/paper');
   await expect(page.getByRole('heading', { level: 1 }).first()).toContainText('The Clearwater Courier');
+  await sweep(page, 'the Courier');
 
   // 8. The count (the council's cycle day 0): seven seats at the Casino and who holds the chair.
   expect(
@@ -187,4 +207,5 @@ test('Clearwater: board, the one map on the Casino, Live here, a canvass, a miss
   const hall = page.getByRole('dialog').getByTestId('hall-council');
   await expect(hall.getByTestId('hall-seat')).toHaveCount(7);
   await expect(page.getByRole('dialog').getByTestId('hall-governor')).toHaveText(/^Mayor: .+/);
+  await sweep(page, 'the Casino at the count');
 });

@@ -4,7 +4,8 @@
  * arrival funnel (slice 2), the elections section (slice 3, tech design §14.1), the battleground (slice
  * 4), risk (slice 5, tech design §15.2) and review 4 (tech design docs/tech/review-4.md §18.3: the
  * prologue, the favour, the journey's cards, the Town Hall, the cells' marks and orders off), boosted
- * testers apart where a section says so. Add `--json` for machine-readable output.
+ * testers apart where a section says so, together (slice 6) and the nation (slice 7, tech design
+ * docs/tech/slice-7.md §15.2). Add `--json` for machine-readable output.
  */
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +36,12 @@ import {
   RequestLog,
   Stay,
   Vote,
+  Bill,
+  FactionElection,
+  FactionState,
+  LawModel,
+  NationalElection,
+  Petition,
   connectDb,
   disconnectDb,
 } from '../src';
@@ -49,6 +56,8 @@ import { buildRiskReport, riskTables } from '../src/risk';
 import type { RiskResult } from '../src/risk';
 import { buildReview4Report, review4Tables } from '../src/review4Report';
 import { buildTogetherReport, togetherTables } from '../src/together';
+import { buildNationReport, nationTables } from '../src/nation';
+import type { NationCandidacyRow, NationFactionElectionRow, Office } from '../src/nation';
 
 const serverEnv = fileURLToPath(new URL('../../../apps/server/.env', import.meta.url));
 if (!process.env.MONGODB_URI && existsSync(serverEnv)) process.loadEnvFile(serverEnv);
@@ -633,9 +642,121 @@ try {
     })),
   });
 
+  // Slice 7 (tech design §15.2): the nation. Test members and boosted testers left out of the players.
+  const cwElections = await Election.find({ cityId: 'clearwater' }, { cycle: 1 }).lean();
+  const cwVotes = await Vote.aggregate<{ _id: string; n: number }>([
+    { $match: { electionId: { $in: cwElections.map((e) => e._id) } } },
+    { $group: { _id: '$electionId', n: { $sum: 1 } } },
+  ]);
+  const cwCity = await City.findById('clearwater', { battleground: 1 }).lean();
+  const nation = buildNationReport({
+    now: new Date(),
+    characters: (
+      await Character.find({}, { userId: 1, playtest: 1, factionId: 1, 'residence.cityId': 1 }).lean()
+    ).map((c) => ({
+      id: c._id.toHexString(),
+      userId: String(c.userId),
+      boosted: c.playtest?.boosted === true,
+      factionId: c.factionId,
+      residenceCityId: c.residence?.cityId ?? null,
+    })),
+    terms: (
+      await OfficeTerm.find({}, { holder: 1, office: 1, cityId: 1, fromDay: 1, toDay: 1, vacatedDay: 1, completed: 1 }).lean()
+    ).map((t) => ({
+      characterId: t.holder.kind === 'player' ? t.holder.characterId.toHexString() : null,
+      office: (t.office ?? 'council') as Office,
+      cityId: t.cityId,
+      fromDay: t.fromDay,
+      toDay: t.toDay,
+      vacatedDay: t.vacatedDay ?? null,
+      completed: t.completed,
+    })),
+    candidacies: (
+      await Candidacy.find({}, { characterId: 1, kind: 1, factionId: 1, filedDay: 1, status: 1, endorsements: 1 }).lean()
+    ).map((c) => ({
+      characterId: c.characterId.toHexString(),
+      kind: (c.kind ?? 'council') as NationCandidacyRow['kind'],
+      factionId: c.factionId ?? null,
+      filedDay: c.filedDay,
+      status: c.status,
+      backers: c.endorsements?.length ?? 0,
+    })),
+    factionElections: (await FactionElection.find({}).lean()).map((e) => {
+      const r = (e.result ?? null) as {
+        turnout?: { voters: number; eligible: number };
+        secretaryKept?: boolean;
+        removed?: boolean;
+      } | null;
+      return {
+        kind: e.kind,
+        factionId: e.factionId,
+        termIndex: e.termIndex,
+        status: e.status,
+        trigger: e.trigger,
+        voters: r?.turnout?.voters ?? (e.status === 'counted' ? e.ballots : null),
+        eligible: r?.turnout?.eligible ?? null,
+        secretaryKept: r?.secretaryKept ?? null,
+        removed: r?.removed ?? null,
+      } satisfies NationFactionElectionRow;
+    }),
+    nationalElections: (await NationalElection.find({}).lean()).map((e) => {
+      const r = (e.result ?? null) as {
+        w?: number;
+        turnout?: { voters: number; eligible: number };
+        scores?: Array<{ factionId: 'vanguard' | 'collective' | 'alliance'; ballotShare: number; controlShare: number; backers: number; score: number }>;
+      } | null;
+      return {
+        termIndex: e.termIndex,
+        status: e.status,
+        picks: Object.fromEntries(Object.entries(e.picks ?? {}).map(([f, p]) => [f, { ballots: p.ballots, voted: p.voted }])),
+        ballots: e.ballots,
+        eligible: r?.turnout?.eligible ?? null,
+        w: r?.w ?? null,
+        backers: e.backers ?? {},
+        scores: r?.scores ?? [],
+      };
+    }),
+    bills: (await Bill.find({}, { termIndex: 1, kind: 1, tabledBy: 1, needed: 1, status: 1, lines: 1 }).lean()).map((b) => ({
+      termIndex: b.termIndex,
+      kind: b.kind,
+      tabler: b.tabledBy.kind,
+      needed: b.needed,
+      status: b.status,
+      lines: Object.keys(b.lines ?? {}).length,
+    })),
+    laws: (await LawModel.find({}, { fromDay: 1, toDay: 1, endedDay: 1 }).lean()).map((l) => ({
+      fromDay: l.fromDay,
+      toDay: l.toDay,
+      endedDay: l.endedDay ?? null,
+    })),
+    factions: (await FactionState.find({}, { pushDays: 1, 'orders.current': 1 }).lean()).map((f) => ({
+      id: f._id,
+      pushDays: (f.pushDays ?? []).map((p) => ({ day: p.day, target: p.target, count: p.count, met: p.met })),
+      standingFromDay: f.orders?.current?.fromDay ?? null,
+    })),
+    petitions: (await Petition.find({}, { kind: 1, status: 1, signatures: 1, townHall: 1 }).lean()).map((p) => ({
+      kind: p.kind,
+      status: p.status,
+      signatures: p.signatures?.length ?? 0,
+      townHall: p.townHall ?? 0,
+    })),
+    clearwater: {
+      stateLog: (cwCity?.battleground?.stateLog ?? []).map((s) => ({
+        day: s.day,
+        battleground: s.battleground,
+        controlledBy: s.controlledBy,
+      })),
+      ballotsByCycle: cwElections.map((e) => ({ cycle: e.cycle, ballots: cwVotes.find((v) => v._id === e._id)?.n ?? 0 })),
+    },
+    activity: (await ActionLog.find({}, { characterId: 1, createdAt: 1 }).lean()).map((a) => ({
+      characterId: a.characterId.toHexString(),
+      at: a.createdAt,
+    })),
+  });
+
   if (process.argv.includes('--json')) {
     console.log(
-      JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk, review4, together }, null, 2),
+      JSON.stringify({ ...report, arrival: funnels, elections, battleground, risk, review4, together, nation }, null, 2),
     );
   } else {
     console.log('\nIs spending a bar of Energy fun, and do players want to come back in 3 hours?\n');
@@ -793,6 +914,15 @@ try {
       `\nTogether: does doing it together bring players back? (${together.testers} testers; test members and boosted testers left out)\n`,
     );
     for (const t of togetherTables(together)) {
+      console.log(t.title);
+      if (t.rows.length > 0) console.table(t.rows);
+      else console.log('  none');
+    }
+
+    console.log(
+      `\nThe nation: does holding office feel powerful, and does losing it make players want to fight back? (${nation.testers} testers; test members and boosted testers left out)\n`,
+    );
+    for (const t of nationTables(nation)) {
       console.log(t.title);
       if (t.rows.length > 0) console.table(t.rows);
       else console.log('  none');

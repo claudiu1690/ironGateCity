@@ -109,13 +109,36 @@ export async function closeModal(page: Page, text?: string | RegExp): Promise<vo
 }
 
 /**
- * Screens §1, §12.4: no player-facing string on a nation screen says the system's words, a roll, or a
- * percentage for odds. (*The Front* is allowed.)
+ * Screens §1, §12.4; tech design §20 T30: no player-facing string on a nation screen says the
+ * system's words, a war word or a word the slice refuses (*whip, Directive, recall, Legislature,
+ * National Control, no-confidence, Chancellor*). Allowed: *ballot*, and *front* only as Clearwater's
+ * *The Front* (the lake front), *the front door* and *front page*.
  */
 const REFUSED = /\b(?:whip|Directive|recall|Legislature|National Control|no-confidence|Chancellor|NPC|stand-in|D'Hondt)\b/i;
+/** Review 4's war words (CLAUDE.md rule 2). The system terms stay review 4's own sweep: slice 6's event
+ * lines on the paper say *canvass* (events.ts), which is not slice 7's to change. */
+const WAR =
+  /\b(war|wars|battle|troops|army|militia|enemy|enemies|uprising|front line|frontline|siege|invasion|comrades?|uniforms?|salute)\b/i;
+/** *front* other than *The Front* (capital F), *front door* or *front page*. */
+const FRONT = /\bfront\b(?![ -](?:door|page))/gi;
+
+/** The *front*s a text uses that are not Clearwater's lake front, a front door or a front page. */
+export function strayFronts(text: string): string[] {
+  const out: string[] = [];
+  for (const m of text.matchAll(FRONT)) {
+    const at = m.index ?? 0;
+    // *The Front* (or THE FRONT under a caps label); a lower-case *the front* is not the place's name.
+    if (m[0] !== 'front' && /(?:^|\W)the $/i.test(text.slice(Math.max(0, at - 5), at))) continue;
+    out.push(text.slice(Math.max(0, at - 20), at + 20));
+  }
+  return out;
+}
+
 export async function sweep(page: Page, where: string): Promise<void> {
   const text = await page.locator('body').innerText();
-  expect(text.match(REFUSED)?.[0] ?? null, `${where}: a system word`).toBeNull();
+  expect(text.match(REFUSED)?.[0] ?? null, `${where}: a refused word`).toBeNull();
+  expect(text.match(WAR)?.[0] ?? null, `${where}: a war word`).toBeNull();
+  expect(strayFronts(text), `${where}: *front* outside The Front, a front door or a front page`).toEqual([]);
 }
 
 /** The selected chip's three cues (review 7 #1): ink 600 text, the paper-card fill, the 3 px ink bar. */
