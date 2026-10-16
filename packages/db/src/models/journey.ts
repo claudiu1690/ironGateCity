@@ -47,6 +47,8 @@ export interface JourneyDoc {
     result: JourneyCardResult;
   } | null;
   status: JourneyStatus;
+  /** Slice 8 (ADR 0051): *Change into plain clothes*, applied at arrival. */
+  dress?: 'plain' | null;
   /** When the arrival was settled (lazily or by the job). */
   arrivedAt: Date | null;
   /** The arrival modal closed; a card left unanswered was slept through. */
@@ -74,6 +76,7 @@ const journeySchema = new Schema<JourneyDoc>(
     card: { type: Schema.Types.Mixed, default: null },
     choice: { type: Schema.Types.Mixed, default: null },
     status: { type: String, enum: ['onTheWay', 'arrived', 'closed'], required: true },
+    dress: { type: String, enum: ['plain', null], default: null },
     arrivedAt: { type: Date, default: null },
     closedAt: { type: Date, default: null },
     sleptThrough: { type: Boolean, default: false },

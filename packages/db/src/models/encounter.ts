@@ -3,11 +3,12 @@ import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
 
 /** Slice 5 (ADR 0032): the four answers to a run-in. */
-export const ENCOUNTER_CHOICES = ['fight', 'run', 'talk', 'pay'] as const;
+/** Slice 8 (tech design §24.4, ADR 0088): *Let {Name} handle it*, a bodyguard's row. */
+export const ENCOUNTER_CHOICES = ['fight', 'run', 'talk', 'pay', 'minder'] as const;
 export type EncounterChoice = (typeof ENCOUNTER_CHOICES)[number];
 /** `luck`: the player's *Leave it to luck*; `auto`: luck by the read path (ADR 0032 §5). */
 export type EncounterBy = 'player' | 'luck' | 'auto';
-export type EncounterOutcome = 'won' | 'lost' | 'ran' | 'talked' | 'paid';
+export type EncounterOutcome = 'won' | 'lost' | 'ran' | 'talked' | 'paid' | 'minded';
 export type EncounterState = 'pending' | 'resolved';
 
 /**
@@ -46,7 +47,10 @@ export interface EncounterDoc<Held = unknown> {
     fightPct: number;
   };
   you: { power: number; agi: number; cha: number; armour: number; health: number; healthMax: number };
-  chances: { fight: number; run: number; talk: number; pay: number | null };
+  /** Slice 8 (§24.4): `minder` null with no contract or against the police; absent on older rows. */
+  chances: { fight: number; run: number; talk: number; pay: number | null; minder?: number | null };
+  /** Slice 8 (§24.4, ADR 0088): the bodyguard at the run-in, frozen; absent reads as null. */
+  minder?: { tier: 1 | 2 | 3; name: string; power: number; blocked: 'police' | null } | null;
   held: Held;
   state: EncounterState;
   /** start + `RUN_IN.decideMs`; after it any read resolves the run-in by luck. */
@@ -99,15 +103,27 @@ const encounterSchema = new Schema<EncounterDoc>(
       required: true,
     },
     chances: {
-      type: new Schema({ fight: num, run: num, talk: num, pay: nullableNum }, { _id: false }),
+      type: new Schema({ fight: num, run: num, talk: num, pay: nullableNum, minder: nullableNum }, { _id: false }),
       required: true,
+    },
+    minder: {
+      type: new Schema(
+        {
+          tier: { type: Number, enum: [1, 2, 3], required: true },
+          name: { type: String, required: true },
+          power: num,
+          blocked: { type: String, enum: ['police', null], default: null },
+        },
+        { _id: false },
+      ),
+      default: null,
     },
     held: { type: Schema.Types.Mixed, required: true },
     state: { type: String, enum: ['pending', 'resolved'], required: true },
     decideBy: { type: Date, required: true },
     choice: { type: String, enum: [...ENCOUNTER_CHOICES, null], default: null },
     by: { type: String, enum: ['player', 'luck', 'auto', null], default: null },
-    outcome: { type: String, enum: ['won', 'lost', 'ran', 'talked', 'paid', null], default: null },
+    outcome: { type: String, enum: ['won', 'lost', 'ran', 'talked', 'paid', 'minded', null], default: null },
     logId: { type: Schema.Types.ObjectId, default: null },
     resolvedAt: { type: Date, default: null },
     resolvedAsOf: { type: Date, default: null },

@@ -62,6 +62,8 @@ export interface CampaignEventDoc {
   status: EventStatus;
   result: EventResolutionDoc | null;
   resolvedAt: Date | null;
+  /** Slice 8 (tech design §5.5): the Case File attached to a Headline Story at the call. */
+  caseFile?: { fileId: Types.ObjectId; subjectId: string; name: string } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -104,6 +106,17 @@ const campaignEventSchema = new Schema<CampaignEventDoc>(
     status: { type: String, enum: ['open', 'resolved', 'calledOff'], required: true },
     result: { type: Schema.Types.Mixed, default: null },
     resolvedAt: { type: Date, default: null },
+    caseFile: {
+      type: new Schema(
+        {
+          fileId: { type: Schema.Types.ObjectId, required: true },
+          subjectId: { type: String, required: true },
+          name: { type: String, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
   },
   { collection: 'campaignEvents', strict: true, timestamps: true, versionKey: false, minimize: false },
 );

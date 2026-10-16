@@ -6,6 +6,9 @@ import type {
   Equipment,
   FactionId,
   InventoryEntry,
+  OutfitId,
+  PatronId,
+  PatronTier,
 } from '@irongate/rules';
 import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
@@ -63,13 +66,98 @@ export interface StoredJourney {
   boardedAt: Date;
   arrivesAt: Date;
   status: 'onTheWay' | 'arrived';
+  /** Slice 8 (ADR 0051): *Change into plain clothes*, applied by `settleArrival`. */
+  dress?: 'plain' | null;
 }
 
 /** Slice 5: the day's tally gains the missions and the rival city acted in today (tech design §5.1). */
 export type StoredTally = DailyTally & {
   missions?: number;
   rivalCityId?: string | null;
+  // Slice 8 (tech design §5.6, §24.4): the day's limits.
+  /** Society calls made today, by place. */
+  calls?: string[];
+  /** Gifts given today, by patron. */
+  gifts?: PatronId[];
+  /** The day's one exposé (step 2 attempted). */
+  expose?: boolean;
+  /** The back room's one bribe a day. */
+  bribe?: boolean;
+  /** Rounds bought today (0–3). */
+  rounds?: number;
 };
+
+// Slice 8 (tech design §5.6; ADR 0051, 0053–0057). Optional at the type level while older writers
+// build characters without them; the schema's defaults and migration 012 set them on every document.
+
+export interface StoredOutfits {
+  town: Equipment;
+  plain: Equipment;
+  /** Null until a flat is bought. */
+  evening: Equipment | null;
+}
+
+export interface StoredPatronRequest {
+  id: string;
+  arrivedDay: DayKey;
+  untilDay: DayKey;
+  target: number;
+  progress: number;
+  doneAt: Date | null;
+  params: { districtId?: string; issueId?: string };
+}
+
+export interface StoredPatron {
+  id: PatronId;
+  /** 0–100, never falls. */
+  favour: number;
+  firstVisitDay: DayKey | null;
+  /** At most two open. */
+  requests: StoredPatronRequest[];
+  /** The rotation pointer. */
+  next: number;
+  tierDays: Partial<Record<PatronTier, DayKey>>;
+  /** The weekly favour last called. */
+  favourDay: DayKey | null;
+  /** Marr's: the bribe at half price through this day. */
+  discretionUntil: DayKey | null;
+  /** The last boundary's paid Requests (the paper), at most four. */
+  thanks: Array<{ requestId: string; day: DayKey }>;
+}
+
+export interface StoredLegacy {
+  total: number;
+  spent: number;
+  perks: { party: number; dossier: number; sleep: number; walk: number; name: number; monday: number; friends: number; quiet: number };
+}
+
+export interface StoredMilestones {
+  caseFileAt: Date | null;
+  chairVoteAt: Date | null;
+  nationalVoteAt: Date | null;
+  listAt: Date | null;
+  deputyFromDay: DayKey | null;
+  completed: { council: number; governor: number; chair: number; deputy: number; president: number };
+}
+
+export interface StoredExpose {
+  fileId: Types.ObjectId;
+  angle: 'plain' | 'headline';
+  locationId: string;
+  day: DayKey;
+}
+
+/** Tech design §24.4 (ADR 0088): one contract at a time, kept after a lapse (his name for a re-hire). */
+export interface StoredBodyguard {
+  tier: 1 | 2 | 3;
+  name: string;
+  paidThroughDay: DayKey;
+}
+
+export interface StoredBuffs {
+  wellFed: { tier: 'plate' | 'dinner'; until: Date } | null;
+  spirits: { left: number };
+}
 
 /** Slice 5 (ADR 0033): one unit on the record; the level and the fading are computed on read. */
 export interface StoredMark {
@@ -125,6 +213,9 @@ export interface StoredBar {
 
 /** Slice 5: when each one-time card was shown (`hl.*.mission-first` and the like). */
 export interface StoredFirsts {
+  /** Slice 8: the first coat bought (`wardrobe-first`) and the first time recognised. */
+  coat?: Date;
+  recognised?: Date;
   mission?: Date;
   noticed?: Date;
   hot?: Date;
@@ -289,6 +380,23 @@ export interface CharacterDoc {
    * card; written only by the city read's roll, the answer, and the quiet writers' `$max`.
    */
   patrol?: StoredPatrol;
+  // Slice 8 (tech design §5.6, §24.4).
+  outfits?: StoredOutfits;
+  lastOutfit?: OutfitId;
+  patrons?: StoredPatron[];
+  home?: { flat: { cityId: string; boughtDay: DayKey; paidThroughDay: DayKey } | null };
+  legacy?: StoredLegacy;
+  milestones?: StoredMilestones;
+  /** The exposé's step 1, set once; null between stories. */
+  expose?: StoredExpose | null;
+  /** Names burned for this player (14 days), pruned at every write. */
+  dossierBurns?: Array<{ subjectId: string; until: DayKey }>;
+  /** The Dossier tab's dot: an entry landed since … */
+  dossierLastAt?: Date | null;
+  /** Unversioned (ADR 0040's pattern): the tab opened. */
+  dossierSeenAt?: Date | null;
+  bodyguard?: StoredBodyguard | null;
+  buffs?: StoredBuffs;
   /** Optimistic guard, +1 per game write (ADR 0002). */
   version: number;
   createdAt: Date;
@@ -386,6 +494,143 @@ const tallySchema = new Schema<StoredTally>(
     // Slice 5 (tech design §5.1).
     missions: { type: Number, default: 0 },
     rivalCityId: { type: String, default: null },
+    // Slice 8 (tech design §5.6, §24.4).
+    calls: { type: [String], default: [] },
+    gifts: { type: [String], default: [] },
+    expose: { type: Boolean, default: false },
+    bribe: { type: Boolean, default: false },
+    rounds: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false },
+);
+
+// Slice 8 (tech design §5.6): the Wardrobe's sets, patrons, the home, Legacy and the milestones.
+const equipmentSchema = new Schema<Equipment>(
+  {
+    clothing: { type: String, default: null },
+    accessory: { type: String, default: null },
+    document: { type: String, default: null },
+    utility: { type: String, default: null },
+  },
+  { _id: false },
+);
+const outfitsSchema = new Schema<StoredOutfits>(
+  {
+    town: { type: equipmentSchema, required: true },
+    plain: { type: equipmentSchema, required: true },
+    evening: { type: equipmentSchema, default: null },
+  },
+  { _id: false },
+);
+const patronRequestSchema = new Schema<StoredPatronRequest>(
+  {
+    id: { type: String, required: true },
+    arrivedDay: int,
+    untilDay: int,
+    target: int,
+    progress: int,
+    doneAt: { type: Date, default: null },
+    params: { type: new Schema({ districtId: String, issueId: String }, { _id: false }), default: () => ({}) },
+  },
+  { _id: false },
+);
+const patronSchema = new Schema<StoredPatron>(
+  {
+    id: { type: String, enum: ['crane', 'marr'], required: true },
+    favour: { type: Number, required: true, min: 0, max: 100 },
+    firstVisitDay: { type: Number, default: null },
+    requests: { type: [patronRequestSchema], default: [] },
+    next: { type: Number, default: 0, min: 0 },
+    tierDays: {
+      type: new Schema(
+        { acquaintance: Number, associate: Number, confidant: Number, protege: Number },
+        { _id: false, minimize: false },
+      ),
+      default: () => ({}),
+    },
+    favourDay: { type: Number, default: null },
+    discretionUntil: { type: Number, default: null },
+    thanks: {
+      type: [new Schema({ requestId: { type: String, required: true }, day: int }, { _id: false })],
+      default: [],
+    },
+  },
+  { _id: false },
+);
+const perksDefault = () => ({ party: 0, dossier: 0, sleep: 0, walk: 0, name: 0, monday: 0, friends: 0, quiet: 0 });
+const legacySchema = new Schema<StoredLegacy>(
+  {
+    total: { type: Number, default: 0, min: 0 },
+    spent: { type: Number, default: 0, min: 0 },
+    perks: {
+      type: new Schema(
+        {
+          party: { type: Number, default: 0 },
+          dossier: { type: Number, default: 0 },
+          sleep: { type: Number, default: 0 },
+          walk: { type: Number, default: 0 },
+          name: { type: Number, default: 0 },
+          monday: { type: Number, default: 0 },
+          friends: { type: Number, default: 0 },
+          quiet: { type: Number, default: 0 },
+        },
+        { _id: false },
+      ),
+      default: perksDefault,
+    },
+  },
+  { _id: false },
+);
+const completedDefault = () => ({ council: 0, governor: 0, chair: 0, deputy: 0, president: 0 });
+const milestonesSchema = new Schema<StoredMilestones>(
+  {
+    caseFileAt: { type: Date, default: null },
+    chairVoteAt: { type: Date, default: null },
+    nationalVoteAt: { type: Date, default: null },
+    listAt: { type: Date, default: null },
+    deputyFromDay: { type: Number, default: null },
+    completed: {
+      type: new Schema(
+        {
+          council: { type: Number, default: 0 },
+          governor: { type: Number, default: 0 },
+          chair: { type: Number, default: 0 },
+          deputy: { type: Number, default: 0 },
+          president: { type: Number, default: 0 },
+        },
+        { _id: false },
+      ),
+      default: completedDefault,
+    },
+  },
+  { _id: false },
+);
+const exposeSchema = new Schema<StoredExpose>(
+  {
+    fileId: { type: Schema.Types.ObjectId, required: true },
+    angle: { type: String, enum: ['plain', 'headline'], required: true },
+    locationId: { type: String, required: true },
+    day: int,
+  },
+  { _id: false },
+);
+const bodyguardSchema = new Schema<StoredBodyguard>(
+  { tier: { type: Number, enum: [1, 2, 3], required: true }, name: { type: String, required: true }, paidThroughDay: int },
+  { _id: false },
+);
+const buffsSchema = new Schema<StoredBuffs>(
+  {
+    wellFed: {
+      type: new Schema(
+        { tier: { type: String, enum: ['plate', 'dinner'], required: true }, until: { type: Date, required: true } },
+        { _id: false },
+      ),
+      default: null,
+    },
+    spirits: {
+      type: new Schema({ left: { type: Number, default: 0, min: 0, max: 9 } }, { _id: false }),
+      default: () => ({ left: 0 }),
+    },
   },
   { _id: false },
 );
@@ -455,7 +700,19 @@ const barSchema = new Schema<StoredBar>(
 
 // `minimize: false`: an empty `{}` is stored, the same as migration 007 writes.
 const firstsSchema = new Schema<StoredFirsts>(
-  { mission: Date, noticed: Date, hot: Date, wanted: Date, mark: Date, onFile: Date, repeat: Date, notorious: Date },
+  {
+    mission: Date,
+    noticed: Date,
+    hot: Date,
+    wanted: Date,
+    mark: Date,
+    onFile: Date,
+    repeat: Date,
+    notorious: Date,
+    // Slice 8.
+    coat: Date,
+    recognised: Date,
+  },
   { _id: false, minimize: false },
 );
 
@@ -463,6 +720,8 @@ const firstsSchema = new Schema<StoredFirsts>(
 export interface StoredPresence {
   locationId: string | null;
   seenAt: Date | null;
+  /** Slice 8 (ADR 0052): unversioned; a recognised visitor is counted by the home faction. */
+  recognised?: boolean;
 }
 export interface StoredEventOpen {
   signupId: Types.ObjectId;
@@ -480,7 +739,11 @@ export interface StoredEvents {
 }
 
 const presenceSchema = new Schema<StoredPresence>(
-  { locationId: { type: String, default: null }, seenAt: { type: Date, default: null } },
+  {
+    locationId: { type: String, default: null },
+    seenAt: { type: Date, default: null },
+    recognised: { type: Boolean, default: undefined },
+  },
   { _id: false },
 );
 const eventsSchema = new Schema<StoredEvents>(
@@ -621,7 +884,12 @@ const characterSchema = new Schema<CharacterDoc>(
             uid: { type: String, required: true },
             itemId: { type: String, required: true },
             day: { type: Number, required: true },
-            source: { type: String, enum: ['kit', 'origin', 'chapter', 'migration'], required: true },
+            source: {
+              type: String,
+              // Slice 8: bought at a shop, or a patron's piece.
+              enum: ['kit', 'origin', 'chapter', 'migration', 'shop', 'patron'],
+              required: true,
+            },
           },
           { _id: false },
         ),
@@ -630,7 +898,10 @@ const characterSchema = new Schema<CharacterDoc>(
     },
     equipment: {
       clothing: { type: String, default: null },
+      // Slice 8 (ADR 0051): the four slots (migration 012 sets the two new ones to null).
+      accessory: { type: String, default: null },
       document: { type: String, default: null },
+      utility: { type: String, default: null },
     },
     offices: {
       type: [
@@ -718,6 +989,8 @@ const characterSchema = new Schema<CharacterDoc>(
           boardedAt: { type: Date, required: true },
           arrivesAt: { type: Date, required: true },
           status: { type: String, enum: ['onTheWay', 'arrived'], required: true },
+          // Slice 8 (ADR 0051): dressed for arrival.
+          dress: { type: String, enum: ['plain', null], default: null },
         },
         { _id: false },
       ),
@@ -791,6 +1064,44 @@ const characterSchema = new Schema<CharacterDoc>(
     },
     mutes: { type: [Schema.Types.ObjectId], default: [] },
     nameWords: { type: [String], default: [] },
+    // Slice 8 (tech design §5.6, §24.4): the same defaults as migration 012. `outfits` has none: the
+    // join and migration 012 build it from the kit (`defaultOutfits`).
+    outfits: { type: outfitsSchema, default: undefined },
+    lastOutfit: { type: String, enum: ['town', 'plain', 'evening'], default: 'town' },
+    patrons: { type: [patronSchema], default: [] },
+    home: {
+      type: new Schema(
+        {
+          flat: {
+            type: new Schema({ cityId: { type: String, required: true }, boughtDay: int, paidThroughDay: int }, { _id: false }),
+            default: null,
+          },
+        },
+        { _id: false },
+      ),
+      default: () => ({ flat: null }),
+    },
+    legacy: { type: legacySchema, default: () => ({ total: 0, spent: 0, perks: perksDefault() }) },
+    milestones: {
+      type: milestonesSchema,
+      default: () => ({
+        caseFileAt: null,
+        chairVoteAt: null,
+        nationalVoteAt: null,
+        listAt: null,
+        deputyFromDay: null,
+        completed: completedDefault(),
+      }),
+    },
+    expose: { type: exposeSchema, default: null },
+    dossierBurns: {
+      type: [new Schema({ subjectId: { type: String, required: true }, until: int }, { _id: false })],
+      default: [],
+    },
+    dossierLastAt: { type: Date, default: null },
+    dossierSeenAt: { type: Date, default: null },
+    bodyguard: { type: bodyguardSchema, default: null },
+    buffs: { type: buffsSchema, default: () => ({ wellFed: null, spirits: { left: 0 } }) },
     version: { type: Number, required: true, min: 0 },
   },
   { collection: 'characters', strict: true, timestamps: true, versionKey: false, minimize: false },

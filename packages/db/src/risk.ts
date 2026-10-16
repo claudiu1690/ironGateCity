@@ -113,9 +113,9 @@ export interface RiskEncounter {
   day: DayKey;
   rivalGround: boolean;
   state: 'pending' | 'resolved';
-  choice: 'fight' | 'run' | 'talk' | 'pay' | null;
+  choice: 'fight' | 'run' | 'talk' | 'pay' | 'minder' | null;
   by: 'player' | 'luck' | 'auto' | null;
-  outcome: 'won' | 'lost' | 'ran' | 'talked' | 'paid' | null;
+  outcome: 'won' | 'lost' | 'ran' | 'talked' | 'paid' | 'minded' | null;
   /** The opponent's price (the Iron paid off when the resolving row is missing). */
   payOff: number | null;
   createdAt: Date;

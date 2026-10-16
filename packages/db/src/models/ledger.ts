@@ -17,7 +17,8 @@ const int = { type: Number, required: true, validate: Number.isInteger } as cons
 
 export type LedgerKind = (typeof LEDGER_KINDS)[number];
 /** Slice 6 (tech design §5.5): `event`, a Campaign Event's leg per member participant (`ref` = the event id). */
-export const LEDGER_KINDS = ['action', 'journey', 'issue', 'drift', 'ballot', 'seat', 'noVoter', 'event'] as const;
+/** Slice 8: `expose`, an exposé's swing (the season's `season` kind is deferred). */
+export const LEDGER_KINDS = ['action', 'journey', 'issue', 'drift', 'ballot', 'seat', 'noVoter', 'event', 'expose'] as const;
 
 export type LedgerSource = { kind: 'character'; characterId: Types.ObjectId } | { kind: 'system' };
 

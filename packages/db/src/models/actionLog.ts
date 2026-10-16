@@ -3,7 +3,8 @@ import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
 
 /** Slice 5 (tech design §5.4): `mission` joins the kinds. */
-export const ACTION_LOG_KINDS = ['checked', 'training', 'shift', 'chapter', 'mission'] as const;
+/** Slice 8 (ADR 0054): `expose`, the exposé's step 2. */
+export const ACTION_LOG_KINDS = ['checked', 'training', 'shift', 'chapter', 'mission', 'expose'] as const;
 export type ActionLogKind = ActionResultKind | (typeof ACTION_LOG_KINDS)[number];
 
 /** `worked`: slice-1 shifts. Slice 5: `takenIn` (the cells), `carriedOff` (the infirmary). */

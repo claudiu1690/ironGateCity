@@ -55,6 +55,23 @@ export const REQUEST_KINDS = [
   'nation.back',
   'petition.open',
   'petition.sign',
+  // Slice 8 (tech design §18, §24.8).
+  'shop.buy',
+  'shop.sell',
+  'shop.bribe',
+  'dossier.bind',
+  'dossier.sell',
+  'dossier.turn',
+  'patron.gift',
+  'patron.favour',
+  'home.buyFlat',
+  'home.payRent',
+  'legacy.takePerk',
+  'bodyguard.hire',
+  'bodyguard.renew',
+  'bar.round',
+  'bar.meal',
+  'bar.dinner',
 ] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 

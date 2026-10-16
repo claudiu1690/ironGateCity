@@ -85,6 +85,15 @@ export type {
   StoredResidence,
   StoredRunIn,
   StoredTally,
+  // Slice 8.
+  StoredBodyguard,
+  StoredBuffs,
+  StoredExpose,
+  StoredLegacy,
+  StoredMilestones,
+  StoredOutfits,
+  StoredPatron,
+  StoredPatronRequest,
 } from './models/character';
 export { City, cityOpinion } from './models/city';
 export type { CityDoc, HomeCityDoc, MoraleRecordDoc, RivalPressureDoc, UnrestPrizeDoc } from './models/city';
@@ -136,3 +145,9 @@ export type {
   StandingOrdersDoc,
 } from './models/nation';
 export { addNationCharacterFields, markCouncilKinds, migrateSlice7Nation } from './migrations/011-slice7-nation';
+// Slice 8 (tech design §5).
+export { addLifeCharacterFields, addMilestones, backfillLegacy, migrateSlice8Life } from './migrations/012-slice8-life';
+export { DossierEntry } from './models/dossier';
+export type { DossierEntryDoc, DossierLineDoc } from './models/dossier';
+export { LEGACY_KINDS, LegacyEntry } from './models/legacy';
+export type { LegacyEntryDoc } from './models/legacy';

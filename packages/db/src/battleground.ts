@@ -97,7 +97,7 @@ export interface BgIssue {
 export interface BgLedgerRow {
   placeId: string;
   cycleKey: string;
-  kind: 'action' | 'journey' | 'issue' | 'drift' | 'ballot' | 'seat' | 'noVoter' | 'event';
+  kind: 'action' | 'journey' | 'issue' | 'drift' | 'ballot' | 'seat' | 'noVoter' | 'event' | 'expose';
   /** Thousandths of a point, signed. */
   swing: number;
 }

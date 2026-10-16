@@ -22,7 +22,7 @@ export interface FunnelAction {
    * `job`: a job taken (a `job.take` request log, not an action log; QA m2). It completes the
    * "Take a job" order, but it is not a tap on a ticket, so it is never the first or second action.
    */
-  kind: 'checked' | 'training' | 'shift' | 'chapter' | 'mission' | 'job';
+  kind: 'checked' | 'training' | 'shift' | 'chapter' | 'mission' | 'expose' | 'job';
   /** The action, or the job for `job`. */
   actionId: string;
   /** Party orders this action completed. */

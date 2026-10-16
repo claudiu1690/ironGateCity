@@ -12,6 +12,9 @@ import type { Review4Counts, StepCounts } from './migrations/008-review4';
 import { migrateVotingRework } from './migrations/009-voting-rework';
 import { migrateSlice6Together } from './migrations/010-slice6-together';
 import { migrateSlice7Nation } from './migrations/011-slice7-nation';
+import { migrateSlice8Life } from './migrations/012-slice8-life';
+import { DossierEntry } from './models/dossier';
+import { LegacyEntry } from './models/legacy';
 import { Bill, FactionElection, FactionState, LawModel, Nation, NationalElection, Petition } from './models/nation';
 import type { StepCounts as Slice6Counts } from './migrations/008-review4';
 import { CampaignEvent, EventSignup } from './models/campaignEvent';
@@ -67,6 +70,9 @@ export const models = [
   Bill,
   LawModel,
   Petition,
+  // Slice 8 (tech design §5): the Dossier and Legacy (the season's collection is deferred).
+  DossierEntry,
+  LegacyEntry,
 ] as const;
 
 /**
@@ -81,6 +87,7 @@ export async function ensureIndexes(
   votingRework: { refunds: StepCounts };
   slice6: { characters: Slice6Counts; factionScopes: Slice6Counts };
   slice7: Awaited<ReturnType<typeof migrateSlice7Nation>>;
+  slice8: Awaited<ReturnType<typeof migrateSlice8Life>>;
 }> {
   for (const m of models) {
     await m.createCollection();
@@ -108,5 +115,8 @@ export async function ensureIndexes(
   const slice6 = await migrateSlice6Together();
   // Slice 7 (tech design §5.10): office and candidacy kinds, term backings; after 010.
   const slice7 = await migrateSlice7Nation();
-  return { review4, votingRework, slice6, slice7 };
+  // Slice 8 (tech design §5.7, §24.4): the Wardrobe's sets and the life fields, milestones, the
+  // Legacy backfill; after 011.
+  const slice8 = await migrateSlice8Life(content);
+  return { review4, votingRework, slice6, slice7, slice8 };
 }
