@@ -131,9 +131,9 @@ test('Clearwater: board, the one map on the Casino, Live here, a canvass, a miss
   await expect(casino.getByTestId('hall-council')).toBeVisible();
   await casino.getByRole('button', { name: /^Close/ }).first().click();
   await expect(map(page)).toHaveAttribute('data-zoomed', 'false');
-  // One map: no districts; The Front's three places are the later pins.
+  // One map: no districts. Slice 8 (design §16.3): The Front's three places are open, so no later pins.
   await expect(page).toHaveURL(/\/city\/clearwater$/);
-  await expect(page.getByTestId('locked-pin')).toHaveCount(3);
+  await expect(page.getByTestId('locked-pin')).toHaveCount(0);
   await sweep(page, 'clearwater');
 
   await page.screenshot({ path: `${SHOTS}/clearwater-390x844.png` });
