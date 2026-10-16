@@ -86,7 +86,7 @@ What landed (details in [[tech/slice-8#Deviations (as built)|the tech design's D
 
 ## QA and leftovers
 
-Phase A built 16 Oct 2026; no QA yet. Leftovers: `canvass.spec.ts` *all six pins on the first view* fails on `phone` (pin 3's viewport ratio is 0.9999998). A question for the designer: should a Partial count towards a Request? (Built: Successes and Partials both count.) To watch: GDD Appendix C #74–#79 (approved defaults), #113, #114, and design §24.7's five (see [[Open Questions]]).
+Phase A built 16 Oct 2026; no QA yet. Leftovers: `canvass.spec.ts` *all six pins on the first view* fails on `phone` (pin 3's viewport ratio is 0.9999998). **Settled by the designer, 16 Oct 2026 (design §24.9):** a Request counts a Success or a Partial and never a Failure (as built; GDD §15.4's party-orders rule); the seven alt texts are final in design §19 and §24.6 (the doorman, the steward and the minder corrected; the developer passes them into `art.ts`); the `social` mission card stays `scene.hotel`, and the Casino's two calls should carry `card: 'scene.casino'` ([[Drift Report]] S8-4). To watch: GDD Appendix C #74–#79 (approved defaults), #113, #114, and design §24.7's five (see [[Open Questions]]).
 
 ## Commits
 

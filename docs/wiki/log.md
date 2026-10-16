@@ -9,6 +9,10 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 8 phase A questions settled
+
+The designer answered the developer's three phase-A questions in `design/slice-8-life.md` §24.9: a patron Request counts a Success or a Partial and never a Failure (as built; the party orders' rule of GDD §15.4; pinned in design §5.3 and §16.5); the seven slice-8 alt texts checked against the pictures and made final in design §19 (Crane, Marr) and §24.6 (the doorman, steward, minder, plate and round; three corrected, all under 160 characters; the developer passes them into `art.ts`); the `social` mission card stays `scene.hotel`, with the Casino's two calls to carry `card: 'scene.casino'`. Wiki: [[Patronage and Favours]], [[Bars]], [[Slice 8 A Life in the City]], [[Open Questions]] S8-T6, [[Drift Report]] S8-2 and a new S8-4.
+
 ## [2026-10-16] build | Slice 8 phase A (rules, content schemas, art, DB)
 
 The developer built slice 8's phase A without the season: the rules (the Wardrobe, shops, personal modifiers, recognition, the Dossier and the exposé, patrons, the flat, Legacy, the chapters' milestones, the counts' endorsement, bodyguards and the bar's buffs), the content schemas, accessors and cross-checks (and bound the designer's data), the art (nothing missing; 25.38 MB), and the DB with migration 012. Updated [[Slice 8 A Life in the City]] (phase A, commits, leftovers). The details are in `docs/tech/slice-8.md`'s Deviations, phase A.

@@ -265,7 +265,7 @@ A devoted player gains about 5–7 a day; a player who does the Requests and not
 
 ### 5.3 Requests: a letter in the paper
 
-A Request is **an order from a patron**: a line in the paper's Letters row (*From Edith Crane: two entries for my files from Garrison Hill · by Thursday*), a matcher in the orders' DSL (`match`, `counts`, `target`), progress on the patron's card, and **+6 Favour** at the boundary when it is done (the paper prints *Crane's thanks*). Arrives every second boundary after the first visit to the patron's place; two may be held; an unanswered one **expires** at its fourth boundary (*the letter is in the bin*; nothing else). Each patron has **six** Requests, drawn in rotation (§16.5):
+A Request is **an order from a patron**: a line in the paper's Letters row (*From Edith Crane: two entries for my files from Garrison Hill · by Thursday*), a matcher in the orders' DSL (`match`, `counts`, `target`), progress on the patron's card, and **+6 Favour** at the boundary when it is done (the paper prints *Crane's thanks*). Arrives every second boundary after the first visit to the patron's place; two may be held; an unanswered one **expires** at its fourth boundary (*the letter is in the bin*; nothing else). **What counts (settled 16 Oct 2026, §24.9):** a **Success or a Partial** on a matching action or mission; **a Failure never** (the party orders' rule, GDD §15.4); a Request that asks for entries counts entries from any source (§21.1 #20). Each patron has **six** Requests, drawn in rotation (§16.5):
 
 - **Crane:** *Two entries for my files from {district}* (2 Dossier entries on capital names) · *A speech on the Herald's Issue* (1 speech tagged with a capital Issue) · *Watch the boxes for me* (1 surveillance mission in Irongate) · *Three posters where the Hill can read them* (3 propaganda in Garrison Hill) · *A word at the Press Club* (1 intelligence tap at the Press Club) · *Something I can print* (1 exposé, Level 16+; else the next in rotation).
 - **Marr:** *A watch on the cannery gate* (1 surveillance mission in Clearwater) · *A word at the tables* (the Casino's society call) · *Three conversations in the Rows* (3 canvasses in Clearwater) · *Who comes off the ferry* (2 intelligence taps at the Harbour) · *A speech the Courier will quote* (1 speech in Clearwater) · *Tea, Thursday* (the Pier Hotel's society call).
@@ -656,6 +656,8 @@ Outcome texts (Success / Partial):
 | `req.marr.courier` | Marr | A speech the Courier will quote | The Courier quotes anyone who speaks on the lake. Give it a sentence about the bank's patience. | speech, `cityId: clearwater` · 1 |
 | `req.marr.tea` | Marr | Tea, Thursday | My table by the window, four o'clock. Come dressed. | social mission, `locationId: clearwater.pier-hotel` · 1 |
 
+**`counts` (settled 16 Oct 2026, §24.9):** every Request is a count-type order and counts **attempts, Success or Partial**, as GDD §15.4 counts them; **a Failure never counts** and never costs progress. A tier-1 action (canvass, propaganda, speech) never fails, so every attempt counts; a mission's (surveillance, social, intelligence, the exposé) counts on a Success or a Partial only, which is what *Something I can print* already says (§21.1 #26). `req.crane.files` counts Dossier entries landed, from any source (§21.1 #20). Nothing in the DSL needs a per-Request `counts`; the one rule applies to the twelve.
+
 ### 16.6 The exposé's texts (step 3; per angle)
 
 - **Plainly** · Success — *Page three, every line* — Every line checked, every line printed, no adjectives. The {party}'s office rings the editor at nine. The editor says it's all true, which it is. · Partial — *Three of five lines* — Three lines survive the lawyer and run on page three. The {party} calls it gossip. Two of the five are still true. · Failure — *Spiked* — The editor wants a second source on the second line and won't run the rest without it. The file goes back in your coat.
@@ -762,6 +764,11 @@ Companion edit: `docs/economy.md` §22 (and §22.6's note on the rent cap; §22.
 **Done 4 Oct 2026:** all twelve generated in the noir style and saved: `mvp/items/{stewards-jacket,convenors-coat,correspondents-suit,good-hat,press-pass,fountain-pen,cigarette-case,rosette}.jpg` (512 × 512, like the existing items) and `mvp/scenes/{flat,casino,lido,front-page}.png` (2688 × 1520). Checked: the steward's jacket has a plain collar (no tabs), the rosette is cream and ink with a blank centre, the press pass says only PRESS, the front page's headline band is blank; no symbol anywhere.
 
 Twelve pieces (eleven with the optional). The crest rule holds: nothing on any coat, cap, hat, badge, rosette or wall.
+
+**The patrons' alt texts (final, 16 Oct 2026; checked against `mvp/portraits/{crane,marr}.png`; ≤ 160 characters):**
+
+- `portrait.crane` · *Edith Crane, owner of the Herald: a silver-haired woman in a dark suit and a wine-red blouse, pearl earrings and a brooch, a cigarette holder raised.* (149)
+- `portrait.marr` · *Julius Marr, banker: slicked dark hair, a thin moustache and a half-smile, a pinstriped double-breasted suit, a red tie and pocket square, a watch chain.* (153)
 
 ---
 
@@ -1086,6 +1093,18 @@ Three portraits and two item pictures. Portraits are drawn as the existing ones 
 
 The hotel's dinner uses `scene.hotel` (exists) on its modal and the card. The run-in's modal keeps the opponent's portrait and adds the bodyguard's at 40 px.
 
+**Done 16 Oct 2026:** all five are in the folder (`mvp/portraits/{doorman,steward,minder}.png`, `mvp/items/{bar-plate,round}.png`). Checked: no badge, armband, pin or weapon on any of the three; the minder's cigarette is unlit; the plate and the tray carry no text. **Alt texts (final; ≤ 160 characters; §24.9):**
+
+| Asset id | Alt text | Length |
+|---|---|---|
+| `portrait.doorman` | A bar doorman in his forties: broad, a flat cap, a heavy dark wool coat buttoned to the neck, a day's beard, a lined face, patient eyes. | 136 |
+| `portrait.steward` | A party steward in his thirties: lean, wavy hair combed back, a worn dark suit and a dark red tie, a pencil behind one ear, a notebook held to his chest. | 153 |
+| `portrait.minder` | A minder in his fifties: a felt hat, a dark overcoat with the collar up, a red silk scarf, an unlit cigarette in the corner of his mouth, a hard, calm face. | 156 |
+| `item.bar-plate` | A tin plate of three bread dumplings in gravy with a slice of dark bread, a fork, and a glass of beer beside it. | 112 |
+| `item.round` | A tin tray with handles and four glasses of beer, foam at the rims, one glass lifted off the tray, wet rings below. | 115 |
+
+**The `social` mission card is `scene.hotel`** (confirmed 16 Oct 2026): a society call's archetype is a hotel lobby (the Grand Hotel, the Pier Hotel), and the card is the type's fallback only. A mission's own `card` comes first (`mission.card ?? missionCard(type)`, slice 5), so **the Casino's two calls** (*A word at the tables*, *The late table*) **should carry `card: 'scene.casino'`** in `missions/clearwater.ts`; otherwise the late table's result shows a lobby. The Lido has its own scene on the place (`scene.lido`) and a call there may carry it the same way. No new picture is needed.
+
 ### 24.7 Points for the user (each with the default this document takes)
 
 1. **A bodyguard never steps in against the police** (§24.2). Default: **never**, so Heat keeps its bite and the back room's bribe keeps its reason. The alternative lets the minder (tier III) argue with a constable at his odds, which makes *Notorious* on rival ground a walk for 3,000 a week.
@@ -1103,3 +1122,11 @@ The hotel's dinner uses `scene.hotel` (exists) on its modal and the card. The ru
 5. **Re-hiring after a lapse: default.** The same tier brings back the same man and his name; a different tier draws a new one.
 6. **The record's surcharge on a hire: none** (default). One price, the week.
 7. **Which odds the card shows: the mission's.** §24.2's 62 / 50 and 86 / 74 were written against the street enforcer **on a mission** (power 22 × 1.1 = 24), and that is the figure to show: a mission is where the Iron goes and where the row is read most. Against a tier-1 tap's run-in he is 68 / 56 and 92 / 80, which the card does not print (one number, one place). The card's Courier line reads ***against a street enforcer, on a mission at home***; §24.2's table column and GDD §12.1's say *on a mission*.
+
+### 24.9 Settled 16 Oct 2026 (phase A): the developer's questions
+
+Answered during phase B's build; recorded here and in the sections they belong to.
+
+1. **A Request counts a Success or a Partial; a Failure never counts.** Confirmed as built. It is the party orders' rule (GDD §15.4: count-type orders count attempts, Success or Partial) and the one a player already knows from the secretary's orders; a patron's letter is an order from a different desk. A Failure takes nothing from the count (opportunity, never assets). Pinned in §5.3 and §16.5; GDD §17.2 reads *done by ordinary play* and needs no number. The exposé's *Something I can print* already said it (§21.1 #26).
+2. **Alt texts.** The seven checked against the pictures. Crane, Marr, the plate and the round stand as drafted (the round gains *with handles*; Marr his half-smile). Three corrected: the **doorman** has no boxer's nose (a lined face); the **steward's** tie is dark red and his hair wavy; the **minder's** cigarette is **unlit** (as §24.6's prompt asked) and his face is *hard, calm* rather than *calm, unreadable*. Finals: §19 (the patrons) and §24.6 (the five). All under 160 characters. The developer passes them into `art.ts`.
+3. **The `social` mission card is `scene.hotel`**: fine. The Casino's two calls should carry `card: 'scene.casino'` so the late table shows the tables, not a lobby (§24.6). A content line each, no code.
