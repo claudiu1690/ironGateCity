@@ -9,6 +9,10 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 7 QA m2: one bill a term is tabling only
+
+The designer confirmed the build's reading of GDD §15.6: a member tables one bill a term (from whichever office) and votes on every bill. Wording fixed in §15.6, a §0 row added, `design/slice-7-nation.md` §5.2 and its settled-table row 16 matched; `copy.nation.help.deputy` already said it. No numbers moved. Closed item (3) of the slice-7 QA list in [[Open Questions]].
+
 ## [2026-10-16] note | Slice 7 QA report
 
 [[qa/slice-7-report|QA report]]: the `qa-nation` project (7 tests) passes; one major (the law book's tabler and division are placeholders), one minor (the plate's share bar), one wording question (*one bill per member per term*). Updated [[Slice 7 The Nation]], [[Open Questions]], [[Drift Report]].
