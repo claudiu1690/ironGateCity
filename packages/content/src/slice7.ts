@@ -278,6 +278,14 @@ export function slice7Problems(
       if (!a) problems.push(`art.nationScenes.${use}: unknown asset "${id}"`);
       else if (a.kind !== 'scene') problems.push(`art.nationScenes.${use}: "${id}" is a ${a.kind}, not a scene`);
     }
+  // Slice 7 integration: a scene bound to one place names a real place of its kind.
+  for (const s of content.art.scenes) {
+    if (s.locationId === undefined) continue;
+    const hit = idx.locationById.get(s.locationId);
+    if (!hit) problems.push(`art.scenes: unknown location "${s.locationId}"`);
+    else if (hit.location.kind !== s.locationKind)
+      problems.push(`art.scenes: "${s.locationId}" is a ${hit.location.kind}, not a ${s.locationKind}`);
+  }
 
   return problems;
 }

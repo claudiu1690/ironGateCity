@@ -14,7 +14,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { useState } from 'react';
-import { LoadError, Loading, NationFrame, Notice, useFactionNames } from '../features/nation/frame';
+import { LoadError, Loading, NationFrame, Notice, useFactionNames, useNationArt } from '../features/nation/frame';
 import { useNationAct } from '../features/nation/useNationAct';
 import { trpc, trpcClient } from '../lib/trpc';
 
@@ -32,6 +32,7 @@ export function GovernorPage() {
   const { cityId } = useParams({ strict: false }) as { cityId: string };
   const q = useQuery(trpc.office.governor.queryOptions({ cityId }));
   const names = useFactionNames();
+  const art = useNationArt();
   const act = useNationAct();
   const [picker, setPicker] = useState(false);
   if (q.isError) return <LoadError retry={() => void q.refetch()} />;
@@ -61,6 +62,7 @@ export function GovernorPage() {
       header={
         <OfficeHeader
           crop={crop}
+          scene={art?.governor ?? null}
           kicker={kicker}
           name={h?.name ?? null}
           line={line}

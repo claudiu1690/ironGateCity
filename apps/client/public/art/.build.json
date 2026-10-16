@@ -1828,5 +1828,113 @@
     "settings": "{\"width\":1024,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":44,\"step\":4}}",
     "quality": 64,
     "bytes": 320994
+  },
+  "scene.casino-640.avif": {
+    "sourceHash": "d855ea281e1b91f91d6a9c860baa413a59b3893285e0e1c3a6fd6d931128f3fe",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 42545
+  },
+  "scene.casino-1280.avif": {
+    "sourceHash": "d855ea281e1b91f91d6a9c860baa413a59b3893285e0e1c3a6fd6d931128f3fe",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 151563
+  },
+  "scene.casino-640.webp": {
+    "sourceHash": "d855ea281e1b91f91d6a9c860baa413a59b3893285e0e1c3a6fd6d931128f3fe",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 58936
+  },
+  "scene.polling-station-640.avif": {
+    "sourceHash": "85895ad1c5107a2b2886fd3e8bae0e2d9792711b7534c59c8f731b98a7a339c4",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 30072
+  },
+  "scene.polling-station-1280.avif": {
+    "sourceHash": "85895ad1c5107a2b2886fd3e8bae0e2d9792711b7534c59c8f731b98a7a339c4",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 107234
+  },
+  "scene.polling-station-640.webp": {
+    "sourceHash": "85895ad1c5107a2b2886fd3e8bae0e2d9792711b7534c59c8f731b98a7a339c4",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 43734
+  },
+  "scene.law-book-640.avif": {
+    "sourceHash": "cf0485d23d7c4ae38e3827517de3b97b7e9477a94d2b6fe5ea45faf46e0ea727",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 34731
+  },
+  "scene.law-book-1280.avif": {
+    "sourceHash": "cf0485d23d7c4ae38e3827517de3b97b7e9477a94d2b6fe5ea45faf46e0ea727",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 113755
+  },
+  "scene.law-book-640.webp": {
+    "sourceHash": "cf0485d23d7c4ae38e3827517de3b97b7e9477a94d2b6fe5ea45faf46e0ea727",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 53546
+  },
+  "scene.tram-depot-640.avif": {
+    "sourceHash": "563819b759e4768723a61f8954f089505025dbf8f89562b9026d74006b2bb655",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 39435
+  },
+  "scene.tram-depot-1280.avif": {
+    "sourceHash": "563819b759e4768723a61f8954f089505025dbf8f89562b9026d74006b2bb655",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 132093
+  },
+  "scene.tram-depot-640.webp": {
+    "sourceHash": "563819b759e4768723a61f8954f089505025dbf8f89562b9026d74006b2bb655",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 57210
+  },
+  "scene.governors-office-640.avif": {
+    "sourceHash": "d048c3e52d8764c438ab712a2048f25dcdcbe2174d1eae248f7d635242eee8e0",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 26538
+  },
+  "scene.governors-office-1280.avif": {
+    "sourceHash": "d048c3e52d8764c438ab712a2048f25dcdcbe2174d1eae248f7d635242eee8e0",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 90473
+  },
+  "scene.governors-office-640.webp": {
+    "sourceHash": "d048c3e52d8764c438ab712a2048f25dcdcbe2174d1eae248f7d635242eee8e0",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 38164
+  },
+  "scene.lake-harbour-640.avif": {
+    "sourceHash": "79dda7eb56fb0ab5ab4da7c9106c6fcbf74f12dba9eb22dc628fc477300f5923",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 44863
+  },
+  "scene.lake-harbour-1280.avif": {
+    "sourceHash": "79dda7eb56fb0ab5ab4da7c9106c6fcbf74f12dba9eb22dc628fc477300f5923",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 151699
+  },
+  "scene.lake-harbour-640.webp": {
+    "sourceHash": "79dda7eb56fb0ab5ab4da7c9106c6fcbf74f12dba9eb22dc628fc477300f5923",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 64322
   }
 }

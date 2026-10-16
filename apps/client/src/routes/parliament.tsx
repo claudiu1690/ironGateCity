@@ -406,7 +406,7 @@ export function BillPage() {
   const stamp = STAMPS[b.state] ?? null;
   const canVote = b.you.canVote && !b.you.vote;
   return (
-    <NationFrame header={<NationHeader asset={art?.chamber} kicker={P.header} stamp={stamp} testId="bill-header" />}>
+    <NationFrame header={<NationHeader asset={art?.laws} kicker={P.header} stamp={stamp} testId="bill-header" />}>
       <div className="flex flex-col gap-3" data-testid="bill-page" data-state={b.state} data-kind={b.kind}>
         <h1 className="font-display text-[26px] leading-tight font-black" data-testid="bill-title">
           {title}
@@ -525,7 +525,7 @@ export function LawBookPage() {
     <NationFrame
       header={
         <NationHeader
-          asset={art?.chamber}
+          asset={art?.laws}
           kicker={P.lawBook}
           title={P.lawsInForce}
           line={P.lawsCount(book.inForce.length)}

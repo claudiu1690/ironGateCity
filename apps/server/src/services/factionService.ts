@@ -77,7 +77,9 @@ export async function factionHq(deps: Deps): Promise<FactionHqPageView> {
     Character.countDocuments({ factionId: c.factionId, 'presence.seenAt': { $gte: new Date(now - PRESENCE.hereNowMs) } }),
   ]);
   const branchId = residenceCityId(c);
-  const scene = content.art.scenes.find((s) => s.locationKind === 'faction-hq' && s.factionId === c.factionId);
+  const scene = content.art.scenes.find(
+    (s) => s.locationKind === 'faction-hq' && s.locationId === undefined && s.factionId === c.factionId,
+  );
   return {
     faction: { id: c.factionId, name: content.faction(c.factionId).name },
     branch: { cityId: branchId, name: content.city(branchId)?.name ?? branchId },

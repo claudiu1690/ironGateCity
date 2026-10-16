@@ -77,7 +77,7 @@ export function PickPage({ vote = false }: { vote?: boolean }) {
     <NationFrame
       header={
         <NationHeader
-          asset={art?.chamber}
+          asset={art?.ballot}
           kicker={E.pickKicker(faction, p.pickName)}
           title={E.thePick}
           line={E.pickNote(untilDay(termOf(dayKey(clockNow())).fromDay + TERM_DAYS.nation.votesFrom))}
@@ -169,7 +169,7 @@ export function NationalPage({ vote = false }: { vote?: boolean }) {
     <NationFrame
       header={
         <NationHeader
-          asset={art?.chamber}
+          asset={art?.ballot}
           kicker={E.republicKicker}
           title={E.whoStands}
           line={E.threeCandidates(dayWeekday(e.days.votesFrom), untilDay(e.days.countDay))}

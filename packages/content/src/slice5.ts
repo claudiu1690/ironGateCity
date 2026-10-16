@@ -240,7 +240,8 @@ export function slice5Problems(
     }
   }
   for (const kind of ['hospital', 'jail'] as const)
-    if (!content.art.scenes.some((s) => s.locationKind === kind)) problems.push(`art.scenes: "${kind}" needs a scene`);
+    if (!content.art.scenes.some((s) => s.locationKind === kind && s.locationId === undefined))
+      problems.push(`art.scenes: "${kind}" needs a scene`);
 
   return problems;
 }

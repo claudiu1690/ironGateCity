@@ -26,14 +26,19 @@ function avatar(key: string, top: number, alt: string): Asset {
  * The October scenes are painted denser than slice 1's: six of the fourteen 1280 px WebPs stay over
  * their 200 KB budget at the q60 floor (207–255 KB). As for the maps (maps v3), the WebP fallback is
  * written at 640 px only; every supported browser takes the AVIF, at both widths and within budget.
+ *
+ * Slice 7 integration (16 Oct 2026): the nation's later scenes are painted at 1344 × 752
+ * (`NATION_SCENE`), enough for both widths.
  */
-function scene(key: string, alt: string, focus?: { x: number; y: number }): Asset {
+const SCENE_SIZE = { width: 2688, height: 1520 };
+const NATION_SCENE = { width: 1344, height: 752 };
+function scene(key: string, alt: string, focus?: { x: number; y: number }, size = SCENE_SIZE): Asset {
   return {
     id: `scene.${key}`,
     kind: 'scene',
     source: `mvp/scenes/${key}.png`,
-    width: 2688,
-    height: 1520,
+    width: size.width,
+    height: size.height,
     widths: [640, 1280],
     webpWidths: [640],
     ...(focus ? { focus } : {}),
@@ -560,6 +565,43 @@ export const assets: Asset[] = [
     'parliament',
     "The chamber under the dome: deputies on curved benches with their hands raised, galleries above, the chair and two clerks' desks below a clock.",
   ),
+  // Slice 7 integration (16 Oct 2026): the Casino (in the folder since October, never catalogued) and
+  // five scenes painted for the nation. Alt texts are drafts; the designer's final ones go in
+  // design §23.8.
+  scene(
+    'casino',
+    "The Casino's long bar after midnight: the domed room, the tables beyond, a cashier's window, the Front in evening dress.",
+  ),
+  scene(
+    'polling-station',
+    'A polling station in a school hall: a returning officer at a trestle table, a wooden ballot box, a queue in coats and hats, two curtained booths.',
+    undefined,
+    NATION_SCENE,
+  ),
+  scene(
+    'law-book',
+    "The clerks' room behind the chamber: a ledger of statutes open under a green lamp, numbered volumes to the ceiling, a bill tied with tape, the dome beyond.",
+    undefined,
+    NATION_SCENE,
+  ),
+  scene(
+    'tram-depot',
+    'The tram sheds at six: cream-and-green trams under a glass roof, crews with tea at the gate, a flyer at the timeclock, the lake and a spire through the doors.',
+    undefined,
+    NATION_SCENE,
+  ),
+  scene(
+    'governors-office',
+    "A Governor's panelled parlour: a broad desk with the minute book and the paper, a town plan on the wall, a tram passing the square, a clerk at the door.",
+    undefined,
+    NATION_SCENE,
+  ),
+  scene(
+    'lake-harbour',
+    "Clearwater's harbour at the fish sale: crates on the quay, a woman with a ledger, a small lighthouse, the lake steamer at its stage, the casino dome beyond.",
+    undefined,
+    NATION_SCENE,
+  ),
   item('item.work-jacket', 'work-jacket-cap.jpg', 'A work jacket and a flat cap.'),
   item('item.mill-coat', 'collective-work-coat.jpg', 'A heavy mill work coat.'),
   item('item.worn-overcoat', 'wool-overcoat.jpg', 'A worn wool overcoat.'),
@@ -612,6 +654,10 @@ export const scenes: SceneBinding[] = [
   { locationKind: 'jail', assetId: 'scene.jail-cell' },
   // Review 4 (answers §28 art 1): the Town Halls.
   { locationKind: 'town-hall', assetId: 'scene.town-hall' },
+  // Slice 7 integration: Clearwater's own places, bound by location ahead of their kind's scene.
+  { locationKind: 'bar', locationId: 'clearwater.casino', assetId: 'scene.casino' },
+  { locationKind: 'station', locationId: 'clearwater.tram-depot', assetId: 'scene.tram-depot' },
+  { locationKind: 'docks', locationId: 'clearwater.harbour', assetId: 'scene.lake-harbour' },
 ];
 
 /**
@@ -647,4 +693,9 @@ export const nationScenes: NonNullable<Content['art']['nationScenes']> = {
   result: 'scene.election-night',
   president: 'scene.presidents-study',
   chamber: 'scene.parliament',
+  // Slice 7 integration: the pick's and the republic's ballots, the bills and the law book, the
+  // Governor's page.
+  ballot: 'scene.polling-station',
+  laws: 'scene.law-book',
+  governor: 'scene.governors-office',
 };

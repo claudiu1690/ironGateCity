@@ -6,6 +6,7 @@ import { cx } from '../format';
 import { HelpButton, helpMark } from './Help';
 import { MapCrop } from './HallHeader';
 import { PersonMark } from './PersonMark';
+import { Picture } from './Picture';
 
 /**
  * Slice 7 (docs/design/slice-7-screens.md §3, §4.1): the Me tab's `OfficeCard`s and `LadderCard`, and
@@ -146,6 +147,8 @@ export function LadderCard({ ladder }: LadderCardProps) {
 export interface OfficeHeaderProps {
   /** The hall crop: the city picture at the hall (day or night, the server's). */
   crop: { asset: AssetView; x: number; y: number } | null;
+  /** Slice 7 integration: the office's own scene (the Governor's parlour), shown in place of the crop. */
+  scene?: AssetView | null;
   kicker: string;
   /** The holder's name (Playfair 22 px), or null with nobody holding it. */
   name: string | null;
@@ -157,6 +160,7 @@ export interface OfficeHeaderProps {
 /** Screens §4.1: the office page's header, the hall crop at 150 / 180 px with the holder over the gradient. */
 export function OfficeHeader({
   crop,
+  scene,
   kicker,
   name,
   line,
@@ -167,8 +171,19 @@ export function OfficeHeader({
     <header
       className="relative min-h-[150px] shrink-0 overflow-hidden bg-ink text-paper sm:min-h-[180px]"
       data-testid={testId}
+      data-art={scene?.id}
     >
-      {crop && <MapCrop asset={crop.asset} x={crop.x} y={crop.y} at={0.45} className="opacity-80" />}
+      {scene ? (
+        <Picture
+          asset={scene}
+          sizes="640px"
+          decorative
+          loading="eager"
+          className="absolute inset-0 size-full object-cover opacity-80"
+        />
+      ) : (
+        crop && <MapCrop asset={crop.asset} x={crop.x} y={crop.y} at={0.45} className="opacity-80" />
+      )}
       <div
         className="absolute inset-0 bg-[linear-gradient(0deg,rgb(21_24_26/0.95)_0%,rgb(21_24_26/0.55)_55%,rgb(21_24_26/0.1)_100%)]"
         aria-hidden="true"

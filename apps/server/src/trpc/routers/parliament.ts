@@ -24,6 +24,10 @@ export const parliamentRouter = router({
           chamber: assetView(ctx.content, ns.chamber),
           president: assetView(ctx.content, ns.president),
           result: assetView(ctx.content, ns.result),
+          // Slice 7 integration: the ballots, the bills and the law book, the Governor's page.
+          ballot: assetView(ctx.content, ns.ballot),
+          laws: assetView(ctx.content, ns.laws),
+          governor: assetView(ctx.content, ns.governor),
         }
       : null;
   }),

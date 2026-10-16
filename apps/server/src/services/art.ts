@@ -10,9 +10,15 @@ import { assetView } from './views';
  */
 export function pickArt(content: GameContent, city: City, location: Location, now: number): ResultArt {
   const faction = location.kind === 'faction-hq' ? (location.factionId ?? city.homeFactionId) : undefined;
-  const scene = content.art.scenes.find(
-    (s) => s.locationKind === location.kind && (s.factionId === undefined || s.factionId === faction),
-  );
+  // Slice 7 integration: a scene bound to this very place (Clearwater's Casino, depot, harbour) first.
+  const scene =
+    content.art.scenes.find((s) => s.locationId === location.id) ??
+    content.art.scenes.find(
+      (s) =>
+        s.locationId === undefined &&
+        s.locationKind === location.kind &&
+        (s.factionId === undefined || s.factionId === faction),
+    );
   if (scene) return { rung: 'scene', asset: assetView(content, scene.assetId) };
   return {
     rung: 'map-crop',

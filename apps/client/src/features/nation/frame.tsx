@@ -93,7 +93,7 @@ export function useFactionNames(): FactionNames {
   return character?.factionNames ?? (character ? ({ [character.factionId]: character.factionName } as Partial<Record<FactionId, string>>) : {});
 }
 
-/** The nation's three scenes (`parliament.art`), cached for the session. */
+/** The nation's scenes (`parliament.art`: chamber, president, result, ballot, laws, governor), cached for the session. */
 export function useNationArt() {
   return useQuery({ ...trpc.parliament.art.queryOptions(), staleTime: Infinity }).data ?? null;
 }
