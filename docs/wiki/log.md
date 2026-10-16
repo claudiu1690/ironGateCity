@@ -9,6 +9,12 @@ updated: 2026-10-15
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] build | Slice 7 phase C, lane X: Parliament, the Chair, the elections, petitions
+
+The Chair's desk and chip, the Chair's election and the vote on the Chair, Parliament and the law
+book, the party's pick and the republic's election and result, the President's page, the petition
+page; the chair, nation, removal and petition specs. Updated [[Slice 7 The Nation]].
+
 ## [2026-10-15] build | Slice 7 phase B, lane 1 finished
 
 The Governor's rule and Address, the office pages' reads, the party cards at the set through
