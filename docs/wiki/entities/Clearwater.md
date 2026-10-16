@@ -41,7 +41,7 @@ with the Places list grouped by quarter:
 
 | Quarter | Places (designed) |
 |---|---|
-| **The Front** (later edition, opens with slice 8) | The Promenade · The Casino (`bar`; the council's hall) · The Lido · The Pier Hotel |
+| **The Front** (open in content since T6, 16 Oct 2026) | The Promenade `square` · The Casino (`bar`; the council's hall; the back room, the bar's card) · The Lido `square` · The Pier Hotel `hotel` (the tailor, Marr's table, the dining room) |
 | **The Depot** | Tram Depot `station` · Back Lane Market `market` · The Rows `street` · St Martin's `square` · The Sanatorium `hospital` |
 | **The Harbour** (the station's quarter) | The Harbour `docks` · The Cannery `factory-gate` · Clearwater Station `station` · Harbour Police `jail` |
 
@@ -51,6 +51,8 @@ Cannery), Tram conductor (Tram Depot); four missions: *Address the harvest suppe
 book*; six new Issues (deck to 30); a slate of three locals per party (nine).
 
 ## In the game
+
+**Slice 8 content (T6, 16 Oct 2026):** the Front's three later pins are places, each with two tier-1 actions (design §16.3) and a society call (*The four o'clock promenade* 10, *Tea on the terrace* 15, *The lido's Sunday* 12, *The tables after midnight* 20) plus Marr's *The late table* (25, Associate); the Casino gains its two actions, the back room, the bar's card and `scene.casino`; the Lido `scene.lido`; Back Lane Market the clothes stall; the Pier Hotel the tailor, `patronId: 'marr'` and the dining room. Marr's Requests are in `patrons.ts`. Playable once slice 8's server lands.
 
 What exists in code today (slice 7, phase A, 15 Oct 2026):
 - `packages/content/src/data/cities/clearwater.ts`: the city document: one map, three open quarters

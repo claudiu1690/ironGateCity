@@ -25,6 +25,9 @@ the user's call.
 | # | Where | Conflict | Owner |
 |---|---|---|---|
 | A9 | GDD §22.2; ADR 0058 (status note added 14 Oct); tech/slice-8 | Season rollover "starts the rules again", but since the voting rework **a city always has a rule** (ADR 0083). May the rollover end a council rule, and what runs until the next count? **Parked 16 Oct 2026: the season is deferred out of slice 8** (ADR 0058 *Deferred*); decide when it returns | USER (parked) |
+| S8-1 | `packages/content/src/data/{patrons,dossier,people,lifeHeadlines}.ts` vs `src/load.ts` | The slice-8 data (patrons, the Dossier's lines, `extraNames`, the fifteen personal lines) exists but `rawContent` does not include it, and the headline placeholder whitelist lacks the life lines' tokens; `content.patrons` reads `[]` until the developer binds them | DEV |
+| S8-2 | `patrons.ts`, `people.ts` vs `art.ts` | `portrait.crane` and `portrait.marr` are referenced and the files exist in `mvp/portraits/`, but the catalogue has no entry; the loader refuses the patrons until T7 adds them. `missionCards` has no `social` card (the society call's ticket art) | DEV |
+| S8-3 | `copy.life.minder.paper` vs `lifeHeadlines.ts` | The bodyguards' two paper lines are strings in copy until rules carry `bodyguardLast` / `bodyguardGone` (T26); then they move to headline templates | DEV |
 | B2 | `stats.chaBase` in the character model; `wornCha()` in `packages/rules` | The GDD (§8.1, §8.2, §8.5, fixed 14 Oct) says there has been no Charisma base since review 4; the code still stores one and adds it (0 for new characters) | DEV |
 | F1 | `package.json` | `pnpm check` and `pnpm e2e:only` are named in the 8 Oct workflow but don't exist (the developer agent file marks them "planned") | USER |
 | F2 | `apps/client/playwright.config.ts` | `workers: 1`, `fullyParallel: false`: the planned parallel group isn't built | USER (with F1) |

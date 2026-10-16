@@ -32,7 +32,8 @@ Bars are places of kind `bar` where the town talks: dockers' bars, a press club,
 
 **Code:**
 - Content: the bar places in `packages/content/src/data/cities/*.ts` (`kind: 'bar'`)
-- Services: none yet. Planned (tech §24, tasks T27, T31, T32): `Location.bar` on every bar and `Location.dining` on the three dining rooms (content, checked by the loader); `BAR` prices in `packages/rules/src/constants.ts` and the gates in `packages/rules/src/buffs.ts`; `barService` (`bar.round`, `bar.meal`, `bar.dinner`, each one keyed character update); the `BarCard` and `DiningCard` in the place sheet's card slot; `bar.spec.ts`.
+- Content (T27 data, 16 Oct 2026): `bar: true` on all seven bars and `dining: true` on the Grand Hotel, the Pier Hotel and the Mountain Inn in `cities/*.ts`; the back room (`shops: [{ kind: 'backRoom', bribe: true }]`) on the Anchor, the Gate Tavern, the Red Lantern, the Mountain Inn and the Casino; the cards' words, the modals and the help notes in `copy.ts` (`copy.life.bar`, `.shop`).
+- Services: none yet. Planned (tech §24, tasks T31, T32): `Location.bar` / `Location.dining` are checked by the loader (`barProblems`); `BAR` prices in `packages/rules/src/constants.ts` and the gates in `packages/rules/src/buffs.ts`; `barService` (`bar.round`, `bar.meal`, `bar.dinner`, each one keyed character update); the `BarCard` and `DiningCard` in the place sheet's card slot; `bar.spec.ts`.
 
 **Art needed** (design §24.6): `item.round`, `item.bar-plate`; the dining room uses `scene.hotel`.
 

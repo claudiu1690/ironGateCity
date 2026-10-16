@@ -9,6 +9,10 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 8 content (T6, T27 data)
+
+The designer wrote slice 8's content into `packages/content`: the 41-item catalogue with `keepsakeFrom` and *Read* texts, shops on twenty places (hire, bar and dining flags), the Front's four places with eight actions and seven society calls (the late table and the morgue file among them), Crane and Marr with twelve Requests, the Dossier's lines and Brandauer, chapters 4–12 of *The Names on the Stone* and the two due chapters, fifteen personal lines in five voices, the bodyguards' tiers, and a `copy.life` block (the modals, help notes, bodyguards and the bar). GDD §12.1 and §19.3 and design §24.8 record the answers to tech §24.10 (the card shows a mission's odds). Updated [[Equipment and Wardrobe]], [[The Dossier]], [[Patronage and Favours]], [[Legacy]], [[Residence]], [[Ambitions]], [[Bodyguards]], [[Bars]], [[Buffs]], [[Clearwater]], [[People of Irongate]], [[Content Package]], [[Slice 8 A Life in the City]], [[Decision Log]], [[Open Questions]] (S8-T6), [[Drift Report]] (S8-1–S8-3), [[index]].
+
 ## [2026-10-16] update | Slice 8 tech: bodyguards and the bar
 
 [[tech/slice-8|tech/slice-8]] §24 is the technical design for the designer's §24: the contract `bodyguard { tier, name, paidThroughDay }` (a day key; no job, no auto-renew); his run-in row `minder`, frozen on the encounter and never against the police; `bar.round`, `bar.meal`, `bar.dinner`; the buffs as lazy state read as named parts through `PersonalModifiers`. It also covers content, migration 012's additions, test hooks, the modals and seven questions for the designer (Q7: the card's 62 % is a mission's figure). Tasks T26–T29 (phase A), T30–T31 (phase B), T32 (phase C); *Done when* is a scratch script or Playwright. New [[adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers|ADR 0088]]. Updated [[Bodyguards]], [[Bars]], [[Buffs]], [[Slice 8 A Life in the City]].

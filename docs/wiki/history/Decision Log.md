@@ -178,6 +178,13 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 | 16 Oct | **The bar:** a round (30), a plate (100), the hotel's dinner (400, Charisma 10) and the back room; *well fed* +10 % XP for 4 h (dinner: +10 % XP and Iron for 6 h), Health up to max; *in good spirits* +10 % XP on three missions, nine in hand at most; the barman's report, the stimulant and recruitment cut; overhearing is the bar's existing ticket | priced against ~1,000 Iron a day; the stimulant's overdose was a punishment; the report sold what the plate shows | GDD §0 (16 Oct), §6.7, §19.3, §18.3, Appendix C #111 closed, #114; design §24.3; economy §22.11 | [[Bars]], [[Buffs]], [[Health]] |
 | 16 Oct | Five designer defaults put to the user (design §24.7): never against the police; the party store for all tiers; no mid-week replacement; three services; no Health above max | — | design §24.7 | [[Bodyguards]], [[Bars]], [[Buffs]] |
 
+## Slice 8 content (16 Oct, the designer; T6 and T27's data)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 16 Oct | **The architect's seven questions settled** (tech §24.10): *four weeks ahead* is four beyond the running week; a round at seven or eight tops up to nine; every mission that reaches its rewards uses one round; a meal counts at the mission's start; the same tier re-hired keeps his name; no record surcharge on a hire; **the hire card shows the mission's odds** (62 / 50, 86 / 74), said as *against a street enforcer, on a mission at home* | a mission is where the Iron goes and where the row is read; one number, one place | GDD §0 (16 Oct), §12.1, §19.3; [[design/slice-8-life\|design §24.8]] | [[Bodyguards]], [[Buffs]], [[Bars]] |
+| 16 Oct | Content defaults taken with T6: the help note *The Wardrobe* says *four things you wear* (the design's *four slots* used a refused word); `keep.deposit-receipt`'s *Read* re-strung for the voting rework (no deposit); the existing surveillance and theft missions name no Dossier figure (§21.1 Q12); the morgue file keeps a one-opponent pool (the loader's rule for a non-social mission); chapter 12's note reads *the third month*; slice 4's *Lodgings* copy left as review 4 worded it (*Take a bed*) | the vocabulary guard; the voting rework; the loader | design §16.7, §21.3, §8; `packages/content` | [[Equipment and Wardrobe]], [[Ambitions]], [[The Dossier]], [[Residence]] |
+
 ## Related
 
 - [[Open Questions]] · [[Drift Report]]

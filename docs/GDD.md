@@ -6,7 +6,7 @@
 |---|---|
 | **Version** | 3.1 (draft) |
 | **Supersedes** | v3.0 (`Irongate_City_GDD_v3.docx`, 13 Mar 2026) |
-| **Last updated** | 14 Oct 2026 |
+| **Last updated** | 16 Oct 2026 |
 | **Status** | For internal development use |
 
 ---
@@ -371,6 +371,7 @@ v3.0 described many systems but never the experience of playing them. v3.1 desig
 |---|---|---|
 | Slice 8's eight defaults (`slice-8-life.md` §20) waited for the user; the Political Season's skeleton sat in the slice with an open rollover question (what rule runs after it, now that a city always has a rule) | **Decided by the user (16 Oct 2026): the eight defaults are approved as written; Political Seasons are deferred out of slice 8** ("let's leave the seasons for later"): the 84-day season, the season's score, the Season Election, the Champion, the awards, the Hall of Fame and the rollover wait for a later slice, with the rollover question. Defaults #6 (+100 a score per election) and #7 (no track, no twist) stand for when seasons are built. Nothing ends a law or a council rule at a season: they run as slice 7 built them. The two Legacy rows that needed a season wait with it | §4.1, §17.3, §22, §25, Appendix C #5, #80, #81 |
 | Bodyguards (§12) had v3.0's prices, a hire fee plus a week, auto-renew, two at a time, and three hidden modifiers (damage, Run, the hospital); nowhere to be hired | **Three tiers, one at a time, at the party store: a doorman (Level 6, 400 a week), a steward (Rank 3, 1,200), a minder (Level 16, 3,000)**, each with a name and a portrait; **in a run-in a visible row, *{Name} steps in*, at the Fight formula with his power (28 / 36 / 44) in place of yours**; works: the act paid as rolled, +10 XP, no Health lost; fails: the fight at your odds −10; **never against the police**; prepaid, renewed by hand only (no auto-renew: it would spend an absent player's Iron), at most four weeks ahead; a lapse ends the row and nothing else. §20.1's +5 power and +5 % Run per tier are replaced by the row | §12, §14.12, §18.3, §20.1, Appendix C #110 closed, #113 |
+| The architect's four defaults and the hire card's odds (`docs/tech/slice-8.md` §24.10) waited for the designer | **Settled (16 Oct 2026, `slice-8-life.md` §24.8):** the hire card's 62 / 50 and 86 / 74 are **a mission's figures** and the card shows them (*against a street enforcer, on a mission at home*); *four weeks ahead* is four beyond the running week; a round at seven or eight in hand tops up to nine; every mission that reaches its rewards uses up one round; a meal counts at the mission's start. The same tier re-hired brings back the same man; no record surcharge on a hire | §12.1, §19.3 |
 | The bar's seven services (§19.3) and four Well-Fed grades (§6.7) were v3.0's, unpriced against today's income, with a stimulant whose overdose was a punishment | **Three services and two buffs:** *Buy a round* (30 Iron, 2 Energy, three a day) → *in good spirits*, +10 % XP on the next three missions, nine in hand at most; *A plate of something* (100, 2) → *well fed*, +10 % XP for four hours and Health +15 up to max; *Dinner* at a hotel (400, 2, worn Charisma 10) → *well fed, properly*, +10 % XP and +10 % Iron for six hours and Health +25. One meal at a time, the better one; **Health never above max**. Overhearing is the bar's existing intelligence ticket; **the barman's report, the stimulant and recruitment are cut**; street food and the society dinner are not built. The back room as designed | §6.7, §18.3, §19.3, Appendix C #111 closed, #114 |
 
 **New in 3.1:** Issues of the Week, Heat, Political Capital, Patronage, Legacy, Ambitions, Political Seasons, Jail, Home City, NPC fill, Capital Districts, Journeys, Mission tiers, Local Standing, the Office Ladder, Home cities and battlegrounds, Hostile ground, Homes, Quarters.
@@ -1218,15 +1219,17 @@ In MVP, bodyguards only protect. Eliminate mode is a v1.5 PvP feature.
 
 A bodyguard is a **named man on a prepaid seven-day contract, one at a time**, hired on **the party store's card** (every HQ and capital house; members only), one tap (a confirm sheet over 1,000 Iron). **One price, the week** (the hire fee is gone); the name is drawn at hire from the tier's three and stays.
 
-| Tier | Said as | Needs | A week (Iron) | His strength (power) | Against a street enforcer, at home / on rival ground |
+| Tier | Said as | Needs | A week (Iron) | His strength (power) | Against a street enforcer **on a mission**, at home / on rival ground |
 |---|---|---|---|---|---|
 | I | a doorman | Level 6, a member | **400** | 28 | 62 % / 50 % |
 | II | a steward | Rank 3 | **1,200** | 36 | 86 % / 74 % |
 | III | a minder | Level 16 | **3,000** | 44 | 95 % / 95 % |
 
+The figures are a **mission's** (the enforcer's power 22 × 1.1 = 24; settled 16 Oct 2026, `slice-8-life.md` §24.8): against a tier-1 tap's run-in he is 68 / 56 and 92 / 80. **The card shows the mission figure**, said so in Courier (*against a street enforcer, on a mission at home*), because a mission is where the Iron goes and where the row is most often read.
+
 **In a run-in he is a row, not a modifier (§20.1):** while a contract runs the sheet's first row is ***{Name} steps in · {odds word} · his strength***, at the Fight formula with **his power in place of yours** (the opponent scaled as for you). It works: the run-in ends as *Talk your way out* does (the act paid as rolled, no Health lost, +10 XP, the caught check as normal). It fails: he is down and the fight goes ahead at your own Fight odds −10. **Never against the police** (the row dimmed: *Not against the police*; Heat and the bribe keep their reasons; Appendix C #113). *Leave it to luck* counts the row among the free ones.
 
-**Renewing** is by hand, **at most four weeks ahead**; **no auto-renew** (it would spend an absent player's Iron: §4.3). While a contract runs the other tiers wait for the week's end. **When the week is up he goes and nothing else changes**: the row is gone, the paper says so (*{Name} Has Gone Back to the Door*), Iron and the record stand, and the card hires him again at the same price. He goes everywhere you go (home, the capital, rival ground); not into the cells, a journey card or a patrol stop (cards, not fights). He is not an item: never in the Wardrobe, never sold.
+**Renewing** is by hand, **at most four weeks ahead** (four renewal weeks beyond the running one: *Four weeks* is offered only when it fits, else *Another week* until *Paid four weeks ahead*; settled 16 Oct 2026); **no auto-renew** (it would spend an absent player's Iron: §4.3). While a contract runs the other tiers wait for the week's end. **When the week is up he goes and nothing else changes**: the row is gone, the paper says so (*{Name} Has Gone Back to the Door*), Iron and the record stand, and the card hires him again at the same price. He goes everywhere you go (home, the capital, rival ground); not into the cells, a journey card or a patrol stop (cards, not fights). He is not an item: never in the Wardrobe, never sold.
 
 The v3.0 damage reduction, Run bonus, hospital avoidance and intercepted ambush are **replaced by the row**: one visible number, no hidden dice. Vanguard House's cheaper bodyguards wait for the gym (§16.1, later) as a discount on the same card; the Black Market's +25 % is dropped. Prices against income: `docs/economy.md` §22.11.
 
@@ -2209,8 +2212,8 @@ You're arrested when caught while Hot or Wanted, or on an escalated record.
 
 | Activity (the player's words) | Energy · Iron | Effect | Limit |
 |---|---|---|---|
-| **Buy a round** | 2 · **30** | *In good spirits*: +10 % XP on the next 3 missions; a second round adds three more, nine in hand at most (§6.7) | **3 a day** |
-| **A plate of something** (the bar meal) | 2 · **100** | *Well fed* for 4 h: +10 % XP, Health +15 up to max (§6.7) | one meal at a time |
+| **Buy a round** | 2 · **30** | *In good spirits*: +10 % XP on the next 3 missions; a second round adds three more, nine in hand at most (a round at seven or eight in hand tops up to nine; refused only at nine). **Every mission that reaches its rewards uses one up**, whatever the outcome; a mission refused at the gate does not (§6.7; settled 16 Oct 2026) | **3 a day** |
+| **A plate of something** (the bar meal) | 2 · **100** | *Well fed* for 4 h: +10 % XP, Health +15 up to max (§6.7). **A meal counts at the mission's start**: the receipt does not change if the clock runs out while a run-in waits | one meal at a time |
 | **Dinner** (at a hotel's dining room: the Grand Hotel, the Pier Hotel, the Mountain Inn; worn Charisma 10) | 2 · **400** | *Well fed, properly* for 6 h: +10 % XP, +10 % Iron, Health +25 up to max (§6.7) | one meal at a time, the better one |
 | **The back room** (the v3.0 Black Market Contact; from Rank 3, on bars that have one) | — | forged papers, wire cutters, the bribe that clears a mark (§11.4); no random item | — |
 | Overhear Conversation | — | **Already the bar's intelligence ticket** (*Listen at the bar*, *Listen to the porters*…), which from slice 8 carries the 10 % Dossier chance (§10.2); no second ticket | — |

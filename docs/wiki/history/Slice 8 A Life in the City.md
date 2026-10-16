@@ -5,7 +5,7 @@ aliases: [Slice 8, A life in the city]
 tags: [slice, building]
 status: building
 dates: 2026-10-04 (designed); 2026-10-16 (approved; the season deferred; bodyguards and the bar designed; phase A started)
-commits: [a350253, 3e04e18]
+commits: [a350253, 3e04e18, 2bcd5d1, bcc6cef, 11d2c41, 065ad16, cf934e2]
 gdd: ["§6.7", "§8.2", "§10", "§12", "§14.12", "§17.1", "§17.2", "§17.3", "§17.4", "§19.3", "§21", "§22"]
 adrs: ["0051", "0052", "0053", "0054", "0055", "0056", "0057", "0058", "0088"]
 updated: 2026-10-16
@@ -50,6 +50,21 @@ From [[IMPLEMENTATION_PLAN#Slice 8 — A life in the city|the plan]]: the Dossie
 
 - The plan now lists the flat only (the room is built, as slice 4's Lodgings card).
 - Parked with the season (drift row A9): what rule runs between the season's rollover and the next count ([[Political Seasons]]).
+
+## Content (T6 and T27's data, 16 Oct 2026, the designer)
+
+Written in `packages/content` (lint, typecheck and a throwaway `loadContent()` run are green with the unbound data spliced in):
+
+- `data/items.ts`: the nineteen items (coats 200–20,000, the badge, the hat, the watch, the pen, the case, the ribbon, forged papers, the press pass, paste and brush, the camera, wire cutters) and ten new keepsakes; every keepsake has `keepsakeFrom` and a *Read* text (design §21.3; the list's receipt re-strung for the voting rework).
+- `shops` on twenty places: five clothes stalls, six party stores (`hire: true`), three tailors (the Grand Hotel adds the three-piece suit), two press shops (Gazette House adds the correspondent's suit), five back rooms (`bribe: true`); `bar: true` on the seven bars, `dining: true` on the three dining rooms.
+- **The Front** (`cities/clearwater.ts`): the Promenade, the Lido and the Pier Hotel as places on their survey pins with eight tier-1 actions and the blurbs of design §16.3; the Casino's two actions, back room and scene; the Pier Hotel's tailor, `patronId: 'marr'` and dining room. Society calls (`missions/clearwater.ts`, `missions/irongate.ts`): the six of design §3.7 plus *The late table* (Marr) and *The morgue file* (Crane, surveillance, `dossier.subject: 'choose'`).
+- `data/patrons.ts` (new): Crane and Marr, twelve Requests word for word; `people.ts`: the two NPCs and `extraNames` (Brandauer); `data/dossier.ts` (new): the twenty lines; `held.ts`, `journeyEvents.ts`, `issues.ts`: the Dossier payloads and the two Issues that feed exposés.
+- `data/ambitions.ts`: *The Names on the Stone* 4–12 (chapter 7's Favour, chapter 12's `completes` and the ribbon), *The night caretaker* (Brandauer's entry), *The collector* (choice B 100 Iron), teasers for *The archive* and *The parcel*.
+- `data/lifeHeadlines.ts` (new): fifteen personal lines in five voices; `data/bodyguards.ts`: the three tiers.
+- `data/copy.ts`: a `life` block (the Wardrobe, shops, the Dossier, the exposé's texts, patrons, the flat, Legacy's words and perks, the desk's clocks, recognition, society calls, the modals and knock-ons, refusals, the twelve help notes, bodyguards and the bar).
+- GDD §12.1 (*on a mission*; four weeks ahead) and §19.3 (the rounds' and meals' rules) carry the designer's answers to tech §24.10; design §24.8 records them.
+
+**To bind (the developer):** `load.ts` (`patrons`, `dossierLines`, `extraNames`, `lifeHeadlines`; the life placeholders), `art.ts` (`portrait.crane`, `portrait.marr`, a `social` mission card), the bodyguard lines' condition kinds. See [[Open Questions]] S8-T6 and the [[Drift Report]] S8-1–S8-3.
 
 ## QA and leftovers
 

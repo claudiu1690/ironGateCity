@@ -7,7 +7,7 @@ status: partly built
 slice: "the welcome favour built (review 4, re-strung review 5); mates' favours designed for 6; patrons designed for 8"
 gdd: ["§17.2", "§13.7", "§19.1", "§19.2"]
 adrs: ["0055", "0041", "0073"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Patronage and Favours
@@ -39,12 +39,12 @@ updated: 2026-10-14
 
 **Code:**
 - Welcome favour: the `*.favour` tickets in `packages/content/src/data/cities/{coalport,duskwall,ashford}.ts`; the `welcome-b` templates in `orders.ts`; `use: 'welcome'` in `schemas.ts`; the offer check and `ONCE_ONLY` in `apps/server/src/services/actionService.ts`; `carriedWelcome` in `packages/rules/src/orders.ts`
-- Patrons (planned, ADR 0055): embedded `characters.patrons[]` (at most two), `patronDays` and `addFavour` in rules, Requests paid in the settlement. None exists yet.
+- Patrons: rules in `packages/rules/src/patrons.ts` (T3, 16 Oct 2026); **content** (T6, 16 Oct 2026) in `packages/content/src/data/patrons.ts` (Crane and Marr, six Requests each, word for word from design §16.5), the two NPCs in `people.ts`, `patronId` on Herald House and the Pier Hotel, the introductions *The morgue file* (`missions/irongate.ts`) and *The late table* (`missions/clearwater.ts`), the six society calls, the pen and the case in `items.ts`, the card's and the paper's words and the gift and favour modals in `copy.ts` (`copy.life.patron`, `.modals`). **Not yet bound:** `load.ts` does not pass `patrons` into `rawContent`; `portrait.crane` and `portrait.marr` are not in `art.ts` (the files exist). Server: planned (embedded `characters.patrons[]`, Requests paid in the settlement).
 - Mates' favours (ADR 0041): the gates and the visit's effect in `packages/rules/src/favours.ts`, `healHealth` in `health.ts`, `stays.bailPostedBy`, `visits` and `how: 'bailPosted'` in `packages/db/src/models/stay.ts` (slice 6 phase A, 15 Oct 2026); `apps/server/src/services/favourService.ts` (`postBail`, `visitMate`), slice 5's `releaseInTx` naming the payer (`how: 'bailPosted'`), the held view's visitors and sign-ups (phase B, `21929a7`); the screens (phase C lane B): `FavourSheet` in `packages/ui/src/components/Members.tsx`, `apps/client/src/features/faction/FavourFlow.tsx` (from a Members row, a profile, a chat line and `CellsNow`'s *Post bail*), the held screens' lines in `Held.tsx`; e2e `apps/client/e2e/favours.spec.ts`.
 
 ## Status
 
-**Built:** the welcome favour ([[Review 4]] fix round, re-strung in [[Review 5]]). **Built, QA to come:** mates' bail and visits ([[Slice 6 Together|slice 6]] phase B). **Designed, not built:** Crane and Marr ([[Slice 8 A Life in the City|slice 8]]). **Post-MVP:** the other three patrons, new patrons each season.
+**Built:** the welcome favour ([[Review 4]] fix round, re-strung in [[Review 5]]). **Built, QA to come:** mates' bail and visits ([[Slice 6 Together|slice 6]] phase B). **Slice 8, building:** Crane and Marr's rules and content are in (16 Oct 2026); the server and the card are not ([[Slice 8 A Life in the City|slice 8]]). **Post-MVP:** the other three patrons, new patrons each season.
 
 ## Decisions
 

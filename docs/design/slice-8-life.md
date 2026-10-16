@@ -359,7 +359,7 @@ The chapter rules are §17.1's: three steps, one check with three ways (two writ
 | 11 | *Twenty-five marks* | *From the clerk's receipt* | on the party's list for Parliament | day 70 | 24 · 25 | 600 / 160 / 400 · half · 90 / 0 / 0 | `keep.list-receipt` *The list's receipt* |
 | 12 | *The names read out* | *From the roll of the chamber* | a term as a deputy begun (the seat taken at a term's day 0) | day 84+ | 26 · 30 | 1,000 / 300 / 1,000 · 500 / 150 / 500 · 150 / 0 / 0 | `acc.his-rosette` *The memorial ribbon* (wearable, §3.9; a plain black ribbon, no device); **Ambition completed: Legacy 30** |
 
-Chapter 12's requirement is the GDD's ending (a seat in Parliament, and the forty names read out there). For most players it lands in season 2; that is the design (§17.1: "runs for months"). The *Chapter n of 12* kicker is honest from this slice. The spine across the nine chapters is the council's memorial rule (*the town's own*): the motion that lost (5), the party's position (6), the proof the forty were on the town's rates (7), the rule replaced (8), and a memorials law for the republic (12). Flags renamed where they said *his* (`forty-total`, `sent-ahead` / `kept-for-floor`, `stone-rule`, `stone-first`, `closed-names` / `left-names`, `forty-read`); nothing is built on them yet.
+Chapter 12's requirement is the GDD's ending (a seat in Parliament, and the forty names read out there). For most players it lands in the third month (§23; was *season 2*); that is the design (§17.1: "runs for months"). The *Chapter n of 12* kicker is honest from this slice. The spine across the nine chapters is the council's memorial rule (*the town's own*): the motion that lost (5), the party's position (6), the proof the forty were on the town's rates (7), the rule replaced (8), and a memorials law for the republic (12). Flags renamed where they said *his* (`forty-total`, `sent-ahead` / `kept-for-floor`, `stone-rule`, `stone-first`, `closed-names` / `left-names`, `forty-read`); nothing is built on them yet.
 
 **The two due chapters:** ***Who Sold the Homes* chapter 2, *The night caretaker*** (requirement Level 6, Dossier work; difficulty 14, 15 Energy; 300 / 80 / 150; keepsake `keep.foremans-name` *The caretaker's name*; it gives the player's first Dossier entry by hand: a political line on Brandauer, the block's night caretaker, a name added to `people.ts` with no party and the city Coalport, so the chapter and the Dossier meet) and ***The Ration Ledger* chapter 3, *The collector*** (Rank 3; difficulty 16, 15 Energy; 350 / 90 / 200; keepsake `keep.collectors-card` *The collector's card*; the Agility way carries Heat +6 as chapter 2 did). Scripts: §16.2. Chapter 3 of *Who Sold the Homes* and chapter 4 of *The Ration Ledger* are written with the next slice that touches them (§25: four chapters each by launch).
 
@@ -666,7 +666,7 @@ Outcome texts (Success / Partial):
 | Key | Kicker | Note |
 |---|---|---|
 | `charisma` | Charisma | What you wear. Your coat, what's on you and a flat in town add up to it. It opens society doors and gets you recognised on rival ground. |
-| `wardrobe` | The Wardrobe | Four slots: Coat, On you, Papers, Tools. Two outfits, Town and Plain clothes, one tap to change. Shops are cards on the places that sell things. |
+| `wardrobe` | The Wardrobe | Four things you wear: Coat, On you, Papers, Tools. Two outfits, Town and Plain clothes, one tap to change. Shops are cards on the places that sell things. (*slots* is a refused word, §12.4 of the tech design; re-worded 16 Oct 2026) |
 | `plainClothes` | Plain clothes | Charisma under 10. On rival ground nobody looks twice at work clothes; an office or a famous name still carries, half as far. |
 | `dossier` | The Dossier | What you know about the republic's named people. Entries come from watching and listening; they go stale in a week and count half after. Three on one name make a Case File. |
 | `caseFile` | A Case File | Three entries' worth on one name, bound. Take it to a newspaper for an exposé, sell it at a station, or turn it into an informant with a patron's help. |
@@ -877,7 +877,7 @@ The architect's default stands wherever the answer below says **default**; the r
 | `keep.marker` | A page from a ration book in your family's name, drawn every month for a year after they were gone. A Clearwater stamp in the corner, small. It has been folded and unfolded a great many times. |
 | `keep.election-bill` | Your election bill, off the branch's press: your name in capitals on brown paper and the forty under it. Somebody wrote *lodgers* across it and somebody else rubbed it out. |
 | `keep.ledger-page` | The one page the ring didn't tear out: the names they drew rations in, yours among them, and what each page fetched, in a neater hand than the stamp. The last entry is the month the office held your post. |
-| `keep.deposit-receipt` | Ten marks, received, for the council deposit. Stamped. The clerk's signature is the same as on the council's notice about the stone. |
+| `keep.deposit-receipt` | The branch's printed list, and your line on it in the secretary's hand: ten Political Capital, spent and gone. The signature beside it is the same as on the council's notice about the stone. (re-strung 16 Oct 2026 for the voting rework: no deposit) |
 | `keep.count-sheet` | The returning officer's sheet from the night you were counted. Two figures: yours, and under it, in chalk, forty. One of them was enough. |
 | `keep.minute-book` | The branch's minute book. The autumn's pages stop at a motion for the memorial, lost four to three. The next entry is in your hand. |
 | `keep.ballot-stub` | Your ballot stub from the election for Chair. On the back, in pencil, a question about the stone. It has been asked now. |
@@ -962,7 +962,7 @@ Never *guard*, *escort*, *muscle*, *enforcer* (the opponent's word), *protection
 
 **What he is.** A named man on a **prepaid seven-day contract**, one at a time, who **steps in first** at a run-in. The card is on **the party store** (every HQ and capital house, members only; the slice's shop card, §3.5), under the kicker *SOMEONE TO WALK WITH YOU*: three rows, one per tier, each with a portrait, a name drawn at hire from the tier's three, the price and the odds line. One tap hires for a week (a confirm sheet over 1,000 Iron, as any purchase); the modal `hired`.
 
-| Tier | Said as | Needs | A week | His strength (power) | Against a street enforcer at home / on rival ground | Names (drawn at hire) | Portrait |
+| Tier | Said as | Needs | A week | His strength (power) | Against a street enforcer on a mission, at home / on rival ground (§24.8 #7) | Names (drawn at hire) | Portrait |
 |---|---|---|---|---|---|---|---|
 | I | **a doorman** | Level 6, a member | **400** | 28 | 62 % / 50 % | Ruda · Big Anton · Ferko | `portrait.doorman` (new, §24.6) |
 | II | **a steward** | Rank 3 | **1,200** | 36 | 86 % / 74 % | Weiss · Dušek · Holub | `portrait.steward` (new) |
@@ -986,7 +986,7 @@ Never *guard*, *escort*, *muscle*, *enforcer* (the opponent's word), *protection
 
 **What the player sees.**
 
-- **The party store's card**, kicker *SOMEONE TO WALK WITH YOU*, under the items: three `HireRow`s (the portrait at 64 px, *A doorman · 400 a week*, the line *Steps in first at a run-in · his strength {odds word against a street enforcer}*, the button **Hire · 400 Iron** / *From Level 6* / *From Rank 3* / *From Level 16* / *{Name} is with you until {weekday}*). The odds word on the card is against a street enforcer at home, said so in Courier (*against a street enforcer, at home*).
+- **The party store's card**, kicker *SOMEONE TO WALK WITH YOU*, under the items: three `HireRow`s (the portrait at 64 px, *A doorman · 400 a week*, the line *Steps in first at a run-in · his strength {odds word against a street enforcer}*, the button **Hire · 400 Iron** / *From Level 6* / *From Rank 3* / *From Level 16* / *{Name} is with you until {weekday}*). The odds word on the card is against a street enforcer on a mission at home, said so in Courier (*against a street enforcer, on a mission at home*; §24.8 #7).
 - **The Me tab**, a row under *Where you sleep*: kicker *WALKING WITH YOU* (dotted: the `bodyguard` note): *{Name}, a doorman · until {weekday}* and **Another week · 400** / *Paid four weeks ahead*; empty: *Nobody · a doorman from the party store, 400 a week*.
 - **The run-in sheet**: the row first, with his portrait at 40 px beside the opponent's.
 - **The desk**: *Ahead* carries *{Name}'s last day {weekday}* when it is within three days.
@@ -1008,7 +1008,7 @@ Never *guard*, *escort*, *muscle*, *enforcer* (the opponent's word), *protection
 
 **Help note** `bodyguard` (two lines, the review-1 pattern): *Someone to walk with you* · *A week at a time, paid in advance. In a run-in he steps in first, with his own odds; if they push past him the fight is yours. He never argues with the police. When the week is up he goes; nothing else changes.*
 
-**Copy** (new strings for `copy.ts`): *Someone to walk with you* · *A doorman* · *A steward* · *A minder* · *{n} a week* · *Steps in first at a run-in · his strength* · *against a street enforcer, at home* · *Hire · {n} Iron* · *Hire {Name} for a week, {n} Iron?* · *{Name} is with you until {weekday}* · *Walking with you* · *{Name}, a doorman · until {weekday}* · *Another week · {n}* · *Four weeks · {n}* · *Paid four weeks ahead* · *Nobody · a doorman from the party store, 400 a week* · *{Name} steps in* · *his strength* · *Not against the police* · *{Name}'s last day {weekday}* · *Hired* · *{Name} walks with you* · *{Name} · another week* · *Got away*.
+**Copy** (new strings for `copy.ts`): *Someone to walk with you* · *A doorman* · *A steward* · *A minder* · *{n} a week* · *Steps in first at a run-in · his strength* · *against a street enforcer, on a mission at home* · *Hire · {n} Iron* · *Hire {Name} for a week, {n} Iron?* · *{Name} is with you until {weekday}* · *Walking with you* · *{Name}, a doorman · until {weekday}* · *Another week · {n}* · *Four weeks · {n}* · *Paid four weeks ahead* · *Nobody · a doorman from the party store, 400 a week* · *{Name} steps in* · *his strength* · *Not against the police* · *{Name}'s last day {weekday}* · *Hired* · *{Name} walks with you* · *{Name} · another week* · *Got away*.
 
 **Content-policy check.** A doorman, a steward and a minder are civilians; the portraits carry no uniform, badge, armband or weapon (§24.6); the stewards' word is the rally's (*stewards* keep order at a meeting); the minder *says a name*, he does not draw anything. The row is *steps in*, never *fights for you*; the fail line is *it's you now*.
 
@@ -1093,3 +1093,13 @@ The hotel's dinner uses `scene.hotel` (exists) on its modal and the card. The ru
 3. **One contract at a time, a different tier when the week is up**; no replacing mid-week. Default: **wait**, so no tap ever forfeits paid days. The alternative is *Replace him* with a confirm sheet and the days forfeit.
 4. **Three services** (a round, a plate, the hotel's dinner) **and the back room**; the barman's report, the stimulant and recruitment are cut (§24.3). Default: **three**. The alternative builds *Bribe the barman* as a 4-Energy, 20-Iron row that tells you who was in the bar yesterday (the presence log), which is the one thing a barman knows that the plate does not.
 5. **Well fed does not take Health above max** (Appendix C #111). Default: **up to max**. The alternative is a short overheal to max + 15 that fades with the meal, a second ceiling on the HUD.
+
+### 24.8 Settled for the build (16 Oct 2026; answers to `docs/tech/slice-8.md` §24.10)
+
+1. **"At most four weeks ahead": default.** Four renewal weeks beyond the running one (`paidThroughDay ≤ today + 34`); *Four weeks* is offered only when it fits, else *Another week* until *Paid four weeks ahead*. GDD §12.1 says so.
+2. **A round at seven or eight in hand: default.** Allowed; it tops up to nine and the extra is lost (the player read *nine at most* on the card); refused only at nine (*Nine missions in hand already*).
+3. **Which missions use up a round: default.** Every mission that reaches its rewards, whatever the outcome; the receipt shows the line. A mission refused at the gate does not.
+4. **A meal and a waiting run-in: default.** The meal counts at the mission's start, so the receipt is the receipt whenever the run-in is answered.
+5. **Re-hiring after a lapse: default.** The same tier brings back the same man and his name; a different tier draws a new one.
+6. **The record's surcharge on a hire: none** (default). One price, the week.
+7. **Which odds the card shows: the mission's.** §24.2's 62 / 50 and 86 / 74 were written against the street enforcer **on a mission** (power 22 × 1.1 = 24), and that is the figure to show: a mission is where the Iron goes and where the row is read most. Against a tier-1 tap's run-in he is 68 / 56 and 92 / 80, which the card does not print (one number, one place). The card's Courier line reads ***against a street enforcer, on a mission at home***; §24.2's table column and GDD §12.1's say *on a mission*.

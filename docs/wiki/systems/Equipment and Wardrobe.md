@@ -7,7 +7,7 @@ status: partly built
 slice: "2 (two slots, starting kit, keepsakes); the Wardrobe designed for 8"
 gdd: ["§21", "§21.1", "§21.2", "§21.3", "§21.4", "§8.2", "§20.3"]
 adrs: ["0014", "0051", "0052"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Equipment and Wardrobe
@@ -42,12 +42,12 @@ What you wear is who you are in Irongate: **Charisma is worn** ([[Stats and Chec
 **Code:**
 - Rules: `packages/rules/src/items.ts` (`ItemSlot = 'clothing' | 'document'`, `equippedItems`, `wornCha`, `grantItem`); `armourOf` in `runIn.ts`; `ARMOUR_BY_TIER` in `constants.ts`
 - Server: `wornStats` in `apps/server/src/services/views.ts` (the one place checks and views get Charisma)
-- Data: catalogue `packages/content/src/data/items.ts` (11 items today); `ItemSlot` in `schemas.ts`; embedded `characters.inventory [{ uid, itemId, day, source }]` and `characters.equipment { clothing, document }`
+- Data: catalogue `packages/content/src/data/items.ts` (**41 items since T6, 16 Oct 2026**: the kit, the demob suit, the party card, nineteen priced or earned items, twenty keepsakes with `keepsakeFrom` and a *Read* text each); `shops` on twenty places in `cities/*.ts` (the stall, the party store, the tailor, the press, the back room); the item words, the Wardrobe's, the shops' and the help notes in `copy.ts` (`copy.life.wardrobe`, `.shop`, `.help`); `ItemSlot` in `schemas.ts`; embedded `characters.inventory [{ uid, itemId, day, source }]` and `characters.equipment { clothing, document }`
 - Client: the Me tab (`apps/client/src/routes/me.tsx`)
 
 ## Status
 
-**Partly built.** Two slots, the starting kit and the keepsakes since [[Slice 2 Arrival|slice 2]]; armour used by run-ins since slice 5; review 5 renamed items (*Your father's coat* → *The demob suit*; ids kept). **Designed, not built:** the Wardrobe, shops, outfits, item effects, recognition (slice 8). **Post-MVP:** Tier V, crafting, drops, trading.
+**Partly built.** Two slots, the starting kit and the keepsakes since [[Slice 2 Arrival|slice 2]]; armour used by run-ins since slice 5; review 5 renamed items (*Your father's coat* → *The demob suit*; ids kept). **Slice 8, building:** the rules (T1, 16 Oct 2026) and the **content** (T6, 16 Oct 2026: the catalogue, the shops, the copy) are in; the server and client are not. **Post-MVP:** Tier V, crafting, drops, trading.
 
 ## Decisions
 

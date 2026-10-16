@@ -7,7 +7,7 @@ status: designed
 slice: "8 (designed, not built)"
 gdd: ["§10", "§10.1", "§10.2", "§10.3", "§10.4", "§10.5"]
 adrs: ["0053", "0054", "0052"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # The Dossier
@@ -41,11 +41,12 @@ The Dossier is the player's **private intelligence journal** on the republic's n
 
 **Code (planned, per the ADRs; none exists yet):**
 - A `dossierEntries` collection (entries, Case Files, informants; slot count counted in the transaction, never stored); `landEntry` helper; `characters.expose { fileId, angle, locationId, day }` pointer; `dossierBurns[]`
+- Content (T6, 16 Oct 2026): the twenty lines in `packages/content/src/data/dossier.ts`; Brandauer in `people.ts` (`extraNames`); the `dossier` payloads on `held.ts` (the cells criminal, the ward neutral, 25 %), the informer's *Feed him a story* in `journeyEvents.ts` and the morgue file; `expose` feeds on *The Cells Are Full* and *The Casino's Licence* in `issues.ts`; the tab's, the station's and the exposé's copy and modal texts in `copy.ts` (`copy.life.dossier`, `.expose`); the paper's lines in `lifeHeadlines.ts`. **Not yet bound:** `load.ts` does not pass `dossierLines`, `extraNames` or `lifeHeadlines` into `rawContent` (the developer's binding).
 - Today: only the disabled tab, `apps/client/src/components/AppShell.tsx` (`{ id: 'dossier', disabled: true }`) and the icon in `packages/ui/src/components/Shell.tsx`
 
 ## Status
 
-**Designed, not built.** Planned for [[Slice 8 A Life in the City|slice 8]]. Slice-5 surveillance and theft missions and the cells' and ward's taps already exist; they gain their Dossier payloads in slice 8. Safe intelligence taps pay XP and Iron only until then.
+**Slice 8, building:** the rules (T2) and the content (T6) are in since 16 Oct 2026; the collection, the server and the tab are not. Slice-5 surveillance and theft missions and the cells' and ward's taps already exist; they gain their Dossier payloads in slice 8. Safe intelligence taps pay XP and Iron only until then.
 
 ## Decisions
 

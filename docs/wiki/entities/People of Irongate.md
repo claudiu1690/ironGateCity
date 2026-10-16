@@ -7,7 +7,7 @@ status: partly built
 slice: "1–2 (secretaries); 3–4 (local candidates); 5 (opponents, carers); review 5 (the opening); 7–8 designed (party figures, patrons)"
 gdd: ["§7.1", "§13.7", "§15.10", "§17.2", "§20.2"]
 adrs: []
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # People of Irongate
@@ -60,8 +60,10 @@ The loader refuses a candidate who shares a name with a secretary or another can
 | **Professor Emil Faber** | Chairman of the Alliance, a constitutional lawyer | national | 7 · same |
 | 8 local deputies per party | clerks, inspectors, a nurse, a compositor… | Parliament | 7 · [[The Legislature and Laws]] |
 | 9 Clearwater locals | three per party | [[Clearwater]] | 7 · council list |
-| **Edith Crane** | Owner of the *Irongate Herald* | Herald House, Irongate | 8 · [[Patronage and Favours]] (MVP patron) |
-| **Julius Marr** | Banker | the Pier Hotel, Clearwater | 8 · MVP patron |
+| **Edith Crane** (she) | Proprietor of the *Irongate Herald* | Herald House, Irongate | 8 · [[Patronage and Favours]] (MVP patron); **in `people.ts` and `patrons.ts` since T6, 16 Oct 2026** |
+| **Julius Marr** (he) | Banker | the Pier Hotel, Clearwater | 8 · MVP patron; in content since T6 |
+| **Konrad Brandauer** | The block's night caretaker (no party; a Dossier name never drawn at random) | Coalport | 8 · [[The Dossier]], *Who Sold the Homes* 2; `extraNames` in `people.ts` |
+| **Ruda, Big Anton, Ferko** · **Weiss, Dušek, Holub** · **Mr Halm, Mr Varga, Mr Olbrich** | a doorman, a steward, a minder (names drawn at hire) | the party store | 8 · [[Bodyguards]]; `bodyguards.ts` since 16 Oct 2026 |
 | **Senator Aurelia Voss** | Law, courts, respectability (Alliance) | Ashford | after the MVP · patron |
 | **Mikhail "Misha" Draganov** | Dockworkers' union boss (Collective) | Coalport | after the MVP · patron |
 | **Commissioner Anton Reinholt** | Frontier commissioner, customs and checkpoints (Vanguard) | Duskwall | after the MVP · patron |
@@ -97,7 +99,9 @@ Portraits in `art-direction/mvp/portraits/` (4:5, noir lithograph):
 | `nurse.png` | the matron (`portrait.matron`) | yes |
 | `father.png` | the father of the old opening | yes, but **retired** with `scene.origin-deathbed` |
 | `albrecht.png`, `brod.png`, `faber.png` | party figures (slice 7) | not yet |
-| `crane.png`, `marr.png`, `voss.png`, `draganov.png`, `reinholt.png` | patrons | not yet |
+| `crane.png`, `marr.png` | the two MVP patrons (`portrait.crane`, `portrait.marr`, referenced by `patrons.ts` and `people.ts`) | **not yet: to catalogue (T7)** |
+| `voss.png`, `draganov.png`, `reinholt.png` | the later patrons | not yet |
+| `doorman.png`, `steward.png`, `minder.png` | a doorman, a steward, a minder ([[Bodyguards]]) | yes (T28, 16 Oct 2026) |
 | `adler.png` | reserved for a *Gazette* reporter in slice 8's Dossier content (slice-2 cities §2.4) | not yet |
 | `barman.png` | not found in any design doc | not yet |
 

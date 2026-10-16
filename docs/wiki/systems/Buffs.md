@@ -36,7 +36,7 @@ Per [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] and [[design/slice
 - `characters.buffs { wellFed { tier, until }, spirits { left } }` and `today.rounds` (lazy: a meal is an end time, never written when it ends; rounds are a count);
 - `packages/rules/src/buffs.ts` (the gates, `afterMeal`, `afterRound`); `PersonalModifiers.buffs` and `buffShares` in `personal.ts`, giving named XP and Iron parts (`buff:wellFed`, `buff:spirits`), one receipt line each;
 - a round is used up in the mission's own transaction (`spendSpirits`); Health through `healHealth`, so never above max.
-- Open defaults (tech §24.10): a round at seven or eight tops up to nine; every mission that reaches its rewards uses one; a meal counts at the mission's start.
+- Settled 16 Oct 2026 (design §24.8, GDD §19.3): a round at seven or eight tops up to nine; every mission that reaches its rewards uses one; a meal counts at the mission's start. The receipt labels and the buff line are in `copy.ts` (`copy.life.bar.receipt`, `.meLine`; T6/T27, 16 Oct 2026).
 
 ## Status
 

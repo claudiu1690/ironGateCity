@@ -7,7 +7,7 @@ status: partly built
 slice: "4 (residence and the capital's lodgings); the flat designed for 8"
 gdd: ["§14.11", "§17.4", "§6.3"]
 adrs: ["0026", "0056", "0084"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Residence
@@ -40,7 +40,7 @@ Two different "homes" matter. Your **residence** is your **political home**: whe
 - Rules: `packages/rules/src/residence.ts` (`moveWindows`, `registerRefusal`, `roomPrice`, `roomTap`); `RESIDENCE { rank: 2, cost: 500, cooldownDays: 7 }`, `ROOM { cost: 100, days: 7, restedBonus: 50 }` in `constants.ts`
 - Server: `apps/server/src/services/residence.ts` (`residenceOf`, `residenceSpec`, `paperCityOf` — the one seam for "where I vote, read and take orders"), `residenceService.ts` (`residenceCardView`, `lodgingsView`, `register`, `takeRoom`) · router `apps/server/src/trpc/routers/residence.ts` (`register`, `room`)
 - Data: embedded `characters.residence { cityId, districtId, sinceDay, votesFromDay, standsFromDay, canMoveFromDay }` (migration 006); a lint rule limits reads of `homeCityId`
-- Planned (ADR 0056): `home.flat { cityId, boughtDay, paidThroughDay }`; Rested added at each boundary in the settlement's Energy projection
+- Planned (ADR 0056): `home.flat { cityId, boughtDay, paidThroughDay }`; Rested added at each boundary in the settlement's Energy projection. Rules in `packages/rules/src/home.ts` (T3, 16 Oct 2026); the flat's copy, modals and paper lines in `copy.ts` (`copy.life.home`) and `lifeHeadlines.ts` (T6, 16 Oct 2026)
 
 ## Status
 

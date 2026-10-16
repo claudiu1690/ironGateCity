@@ -7,7 +7,7 @@ status: built
 slice: "0; a city or content set per slice to 5, review rounds, voting rework"
 gdd: []
 adrs: ["0003", "0007", "0014", "0021", "0024", "0029", "0031"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Content Package
@@ -48,7 +48,11 @@ Rewards are mostly **not** data: they follow from an action's type and Energy at
 | `cities/townHall.ts` | The Town Hall place appended to every city |
 | `missions/*.ts`, `missions/attach.ts` | Each city's missions, attached to their places ([[Missions]]) |
 | `factions.ts` | The three factions, crests, rank titles, secretaries ([[Iron Vanguard]], [[Red Collective]], [[Civic Alliance]]) |
-| `people.ts` | Named NPCs (the party secretaries) and Local Standing level names |
+| `people.ts` | Named NPCs (the party secretaries, the two patrons), `extraNames` (Brandauer, a Dossier-only name) and Local Standing level names |
+| `patrons.ts` | Crane and Marr: Favour's act, the introduction, the piece, six Requests each ([[Patronage and Favours]]) · slice 8 |
+| `dossier.ts` | The Dossier's twenty lines by category ([[The Dossier]]) · slice 8 |
+| `bodyguards.ts` | The three tiers' names, portraits and run-in lines ([[Bodyguards]]) · slice 8 |
+| `lifeHeadlines.ts` | Slice 8's fifteen personal lines in five voices ([[The Morning Paper]]) |
 | `candidates.ts` | NPC council slates per home city and the capital |
 | `jobs.ts` | The nine jobs ([[Jobs]]) |
 | `orders.ts` | Party order templates by slot ([[Party Orders]]) |
@@ -61,9 +65,9 @@ Rewards are mostly **not** data: they follow from an action's type and Energy at
 | `mapPins.ts` | The survey pins of the painted maps (from `maps-v3/pins/pins.json`) |
 | `tiles.json` | The tile manifest written by `pnpm art:tiles` (size, levels, `rev`, bytes per map) |
 | `art.ts` | The art catalogue: every image id, kind, source, widths, alt text ([[Art and Maps Pipeline]]) |
-| `items.ts` | The item catalogue (clothing, documents, keepsakes) ([[Equipment and Wardrobe]]) |
+| `items.ts` | The item catalogue: 41 items, the Wardrobe's nineteen and twenty keepsakes with `keepsakeFrom` and a *Read* text ([[Equipment and Wardrobe]]) |
 | `origin.ts` | The three-beat opening ([[Coming Home]]) |
-| `ambitions.ts` | Three Ambitions with chapter 1 ([[Ambitions]]) |
+| `ambitions.ts` | Three Ambitions: *The Names on the Stone* 1–12, the others to chapters 2 and 3 with a teaser each ([[Ambitions]]) |
 | `headlines.ts`, `localHeadlines.ts`, `heraldHeadlines.ts`, `capitalHomeHeadlines.ts`, `politicalHeadlines.ts`, `ruleHeadlines.ts` | The papers' headline templates ([[The Morning Paper]]) |
 | `politics.ts` | Political result modal texts |
 | `copy.ts` | Short UI copy, British English; safe to import in the client (`@irongate/content/copy`) |

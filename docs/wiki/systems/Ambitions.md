@@ -7,7 +7,7 @@ status: partly built
 slice: "2 (chapter 1s); 3 and 5 (two chapter 2s); re-anchored in review 5; more chapters designed for 7 and 8"
 gdd: ["§17.1", "§13.1"]
 adrs: ["0013"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Ambitions
@@ -37,12 +37,12 @@ An Ambition is a **personal storyline that runs for months**, separate from the 
 **Code:**
 - Rules: `packages/rules/src/ambition.ts`; `AMBITION { daysBetweenChapters: 7, chaptersPlanned: 12 }`, `CHAPTER` in `constants.ts`
 - Server: `apps/server/src/services/ambitionService.ts` (`ambitionView`, `getAmbition`, `chooseChapter`, `attemptChapter`), `story.ts` · router `apps/server/src/trpc/routers/ambition.ts` (`get`, `choose`, `attempt`)
-- Data: content `packages/content/src/data/ambitions.ts`; keepsakes in `items.ts`; embedded `characters.ambition`
+- Data: content `packages/content/src/data/ambitions.ts` (since T6, 16 Oct 2026: *The Names on the Stone* 1–12 complete, *Who Sold the Homes* 1–2 with *The archive* as a teaser, *The Ration Ledger* 1–3 with *The parcel* as a teaser); keepsakes in `items.ts` (every one with `keepsakeFrom` and a *Read* text); embedded `characters.ambition`
 - Client: `apps/client/src/routes/ambition.tsx` · `packages/ui/src/components/Story.tsx`
 
 ## Status
 
-**Built:** chapter 1 of all three ([[Slice 2 Arrival|slice 2]]); *Stand for the stone* ([[Slice 3 The First Vote|slice 3]]); *The riverside house* ([[Slice 5 Risk|slice 5]]); all re-strung in [[Review 5]]. Content also holds the titles of the next chapters as teasers (*The list*, *The night caretaker*, *The collector*). **Designed, not built:** *The list* (slice 7), *The Names on the Stone* 4–12, *The night caretaker* and *The collector* (slice 8).
+**Built:** chapter 1 of all three ([[Slice 2 Arrival|slice 2]]); *Stand for the stone* ([[Slice 3 The First Vote|slice 3]]); *The riverside house* ([[Slice 5 Risk|slice 5]]); all re-strung in [[Review 5]]. Content also holds the titles of the next chapters as teasers (*The list*, *The night caretaker*, *The collector*). **Content written, server to come (slice 8):** *The Names on the Stone* 4–12 (the keepsakes, chapter 7's Favour +5, chapter 12's completion and the ribbon), *The night caretaker* (Brandauer's entry by hand) and *The collector* (choice B pays 100 Iron), T6, 16 Oct 2026; their requirement kinds read `characters.milestones` (rules T3). *The list* (chapter 3) was built with slice 7.
 
 ## Decisions
 

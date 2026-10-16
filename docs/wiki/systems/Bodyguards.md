@@ -34,7 +34,7 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 **Code:** none yet. Planned (tech §24, tasks T26, T27, T29, T30, T32):
 - Rules: `BODYGUARD` in `packages/rules/src/constants.ts`; `packages/rules/src/bodyguard.ts` (`contractCounts`, `hireGate`, `hire`, `renewed`, `canRenew`); `runIn.ts` gains the choice `minder`, the outcome `minded` and `minderChance` (the v3.0 +5 power and +5 % Run per tier are never built).
 - Data: `characters.bodyguard { tier, name, paidThroughDay }` (a day key, like the flat's rent; kept after a lapse so a re-hire keeps his name); `encounters.minder` and `chances.minder`, frozen when the run-in fires.
-- Content: `packages/content/src/data/bodyguards.ts` (names, lines, portraits); `Shop.hire` on every party store.
+- Content (**written, T27 data, 16 Oct 2026**): `packages/content/src/data/bodyguards.ts` (the three tiers' names, portraits and run-in lines); `hire: true` on all six party stores in `cities/*.ts`; the card's, the Me tab's, the run-in row's, the modals' and the help note's words in `copy.ts` (`copy.life.minder`), with the two paper lines in five voices waiting there for the `bodyguardLast` / `bodyguardGone` conditions.
 - Server: `bodyguardService` (`bodyguard.hire` at your party store, `bodyguard.renew` from anywhere); the row in `encounterService`; the paper's `bodyguard-last` / `bodyguard-gone` from the settlement. No job.
 - Client: `HireCard`, `HireRow`, `MinderRow`, the run-in sheet's first row; `bodyguard.spec.ts`.
 
@@ -52,7 +52,7 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 
 ## Open questions / drift
 
-- Architect's questions to the designer (tech §24.10, each with a default): "four weeks ahead" read as four weeks beyond the running one; re-hiring the same tier keeps his name; no record surcharge; **the card's 62 % / 86 % are a mission's figures** (the street enforcer's power 22 × 1.1), a tier-1 tap's run-in is 68 / 92.
+- ~~Architect's questions to the designer (tech §24.10)~~ **settled 16 Oct 2026 (design §24.8):** four weeks ahead is four beyond the running week; re-hiring the same tier keeps his name; no record surcharge; **the card shows the mission's figure** (62 / 50, 86 / 74; *against a street enforcer, on a mission at home*); GDD §12.1 says *on a mission*.
 - Designer defaults for the user (design §24.7): never against the police; the party store for all three tiers; one at a time with no mid-week replacement. Levers: Appendix C #113 and economy §22.10's bodyguard row (his power or the police's share, never the price).
 - The slice-5 design and tech spec still call bodyguards *after the MVP* (written before 14 Oct 2026).
 

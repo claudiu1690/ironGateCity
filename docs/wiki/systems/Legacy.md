@@ -38,7 +38,8 @@ Legacy is your **permanent, public political record**, shown on your profile (*L
 
 **Code (planned, per ADR 0057; none exists yet):**
 - A `legacyEntries` collection with a unique `{ characterId, ref }` (`term:…`, `award:…`, `expose:…`, `ambition:…`); embedded `legacy { total, spent, perks }`; `legacyFromWindow` in the settlement (`seasonCredited`, `seasonCredits` and the refs `champion:…`, `award:{season}:…` deferred with the season, the refs reserved); migration `012-slice8-life` back-fills past terms and awards (renumbered from 010 on 14 Oct 2026).
-- Today: only `UNREST_PRIZE.legacy: 2` in `packages/rules/src/constants.ts`, marked "waits for slice 8". (Other `legacy` hits in the code are the voting rework's kept old order paper, unrelated.)
+- Content (T6, 16 Oct 2026): the entries' words, the eight perks' names and lines, the Me tab's block and the `perk` modal in `packages/content/src/data/copy.ts` (`copy.life.legacy`); the paper's *For the Record* line in `lifeHeadlines.ts`.
+- Rules: `packages/rules/src/legacy.ts` (T3, 16 Oct 2026). Before that only `UNREST_PRIZE.legacy: 2` in `constants.ts`. (Other `legacy` hits in the code are the voting rework's kept old order paper, unrelated.)
 
 ## Status
 
