@@ -57,7 +57,7 @@ cities' meters, a home city in Unrest at half) and stored on `nation.control` wi
 
 ## Status
 
-- **Built** (16 Oct 2026, the integration): on an upright phone 700 px tall or less the law chips give way to the map (the bar stays), so review 6's every-pin check holds at 375 × 667 with the paper's banner up; a designer flag ([[Drift Report]] D-S7I-2). [[tech/slice-7|tech spec]], *Deviations, Integration*.
+- **Built** (16 Oct 2026, the integration): on an upright phone 700 px tall or less the law chips give way to the map (the bar stays), so review 6's every-pin check holds at 375 × 667 with the paper's banner up. **Confirmed by the designer the same day** (D-S7I-2, resolved): the map is the screen's job; the bar still opens the republic sheet; the laws stay on the tickets' *LAW* tags and in the law book ([[design/slice-7-screens|screens §14]]; [[design/slice-7-nation|design, Settled 16 Oct (phase C)]] §6). [[tech/slice-7|tech spec]], *Deviations, Integration*.
 - **Phase C, lane Y (16 Oct 2026):** on screen: the nation map's `NationBar` and `LawChips`, the pins' second line, the republic sheet (`packages/ui/src/components/Republic.tsx`, `apps/client/src/routes/nation.tsx`); `NationRepublicView.cities[].governor` (`nationService.governorsByCity`). Spec `clearwater.spec.ts` (the layout at 375 × 667).
 - **Built on the server** (slice 7 phase B, 15 Oct 2026): the snapshot, the log and the *leads the
   republic* news lines. The client's bar is phase C.

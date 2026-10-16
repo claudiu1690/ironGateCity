@@ -1207,3 +1207,20 @@ The office is **Governor** in the three home cities and **Mayor** in Irongate an
 ### 5. Six alt texts
 
 In §23.8's table (finals, ≤ 160, checked against the pictures), with the law-book flag for the user: its window shows a building that closely resembles Budapest's Parliament.
+
+### 6. The integration's three flags (D-S7I-1 to D-S7I-3; 16 Oct 2026)
+
+Answers to the wiki's *Drift Report* rows from the integration (8cc7b27). No rule or number moves; the GDD is unchanged.
+
+**D-S7I-1, the Collective's event line.** `dir.event` (`packages/content/src/data/events.ts`, slice 6 design §12's table) read *There's a canvass tonight and a list with your name on it…* and prints on the paper's front page; *canvass* is a system term (GDD §1.5). Now: **"The branch is on the doorsteps tonight, and there's a list with your name on it. Take a role, or take a bucket."** The Vanguard's and the Alliance's lines were already plain. The grep of `packages/content` finds no other player-facing *canvass*: the rest are ids (`coalport.mill-gate.canvass`), the `type` and `actionTypes` enums, the copy key `actions.canvass: 'Talk to voters'` (the §1.5 mapping itself) and the test fixtures (`review2.ts` old-to-new pairs, `qa.vocabulary.test.ts`'s deliberate hit). Why the content check missed it: `test/vocabulary.ts` would have caught the line, but Vitest has not run since the 8 Oct rule; the Playwright sweeps read screens, and the line only reaches one when the event order is in the rotation. No developer work.
+
+**D-S7I-2, the law chips on a short upright phone.** **Confirmed as built**: on an upright phone 700 px tall or less the `LawChips` row gives way to the map; the `NationBar` stays. The map is the screen's job (review 6's every-pin check at 375 × 667 with the paper's banner up outranks a second strip); the bar still says who holds the republic and opens the sheet (the five cities, the term line, the act, Parliament); the laws in force stay one glance away on the tickets' *LAW* tags and one tap away in the law book. No other placement for the chips: a third row under the map or a chip in the sheet would be a second copy of the law book. Screens §14 now says so. Watch in the playtest: if a tester on a 667 px phone asks "which laws are on?" from the map, the answer is a *Laws: {n} of five* line in the republic sheet, not the chips back.
+
+**D-S7I-3, the Governor's front-page caption.** The caption is now content: **`copy.nation.paper.captions.governorOrMayor(name, title, city)`** → *{name}, elected {title} of {city}*, with `title` *Governor* at home and *Mayor* in Irongate and Clearwater (phase C §4's rule, §3). It sits beside the old `captions.governor(name, city)` (marked `@deprecated`) rather than replacing it, so the server keeps running until the binding: changing the old one's arity in content alone would have printed *…, elected Coalport of undefined* on every Governor's front page while QA runs. **What the developer binds** (`apps/server/src/services/politicsService.ts`, `officeFrontPage`, the `governor` case): replace the ternary
+
+```ts
+caption =
+  vars.title === 'Mayor' ? `${c.name}, elected ${officeTitle(content, 'governor', term.cityId, c.factionId)}` : p.governor(c.name, cityName);
+```
+
+with `caption = p.governorOrMayor(c.name, vars.title, cityName);` (`vars.title` is already `governorTitle(content, term.cityId)` two lines above), drop `officeTitle` from that file's import if nothing else there uses it (today nothing does), then **delete `captions.governor`** from `copy.ts` (its only caller was this line). The output is unchanged for both offices (*Anna Roth, elected Governor of Coalport*; *…, elected Mayor of Irongate*), so `governor.spec`'s caption check stands; the vocabulary check reads the copy function with placeholder arguments, as before.

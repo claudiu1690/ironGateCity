@@ -24,9 +24,7 @@ the user's call.
 
 | # | Where | Conflict | Owner |
 |---|---|---|---|
-| D-S7I-1 | `packages/content/src/data/events.ts` (the branch fixture's line) | *There's a canvass tonight …* prints on the paper's front page; *canvass* is a system term (GDD §1.5, review 4's sweep). Found by the slice-7 sweep, which leaves review 4's system terms to review 4's own spec | GD |
-| D-S7I-2 | `apps/client/src/routes/nation.tsx` (the law chips); design `slice-7-screens.md` §14 | Screens §14 draws the bar and the chips (44 + 36 px) at 375 × 667; as built (16 Oct, integration) the chips give way to the map on an upright phone 700 px tall or less, so review 6's every-pin check holds with the paper's banner up. Confirm or place the chips elsewhere | GD |
-| D-S7I-3 | `copy.nation.paper.captions.governor` | The office front page's caption says *Mayor* in Irongate and Clearwater from `officeTitle` in code (16 Oct, integration); a `captions.mayor` (or a `{title}`) string in copy would put the words back in content | GD |
+| D-S7I-3b | `apps/server/src/services/politicsService.ts`, `officeFrontPage` (the `governor` case) | The designer's `copy.nation.paper.captions.governorOrMayor(name, title, city)` is in content (16 Oct); the server still builds the Mayor's caption from `officeTitle` and calls the deprecated `captions.governor`. Bind the new string, then delete the old one ([[design/slice-7-nation|design, Settled 16 Oct (phase C)]] §6) | DEV |
 | A9 | GDD §22.2; ADR 0058 (status note added 14 Oct); tech/slice-8 | Season rollover "starts the rules again", but since the voting rework **a city always has a rule** (ADR 0083). May the rollover end a council rule, and what runs until the next count? | USER |
 | B2 | `stats.chaBase` in the character model; `wornCha()` in `packages/rules` | The GDD (§8.1, §8.2, §8.5, fixed 14 Oct) says there has been no Charisma base since review 4; the code still stores one and adds it (0 for new characters) | DEV |
 | F1 | `package.json` | `pnpm check` and `pnpm e2e:only` are named in the 8 Oct workflow but don't exist (the developer agent file marks them "planned") | USER |
@@ -45,6 +43,9 @@ the user's call.
 
 | Rows | What was wrong | Fixed by | How |
 |---|---|---|---|
+| D-S7I-1 | The Collective's event order line (`dir.event`) said *canvass* on the front page | GD | *The branch is on the doorsteps tonight, and there's a list with your name on it. Take a role, or take a bucket.* No other player-facing *canvass* in `packages/content` (ids, enums, the §1.5 copy key and test fixtures only); slice 6 design §12's table updated |
+| D-S7I-2 | Screens §14 drew the bar and the law chips at 375 × 667; the build hides the chips on an upright phone 700 px tall or less | GD | Confirmed as built: the map is the screen's job; the bar still opens the republic sheet; the laws stay on the tickets' *LAW* tags and in the law book. Screens §14 rewritten ([[design/slice-7-nation|design, Settled 16 Oct (phase C)]] §6) |
+| D-S7I-3 | The Mayor's front-page caption was built in code from `officeTitle` | GD | `copy.nation.paper.captions.governorOrMayor(name, title, city)` added beside the deprecated `governor(name, city)`; the binding is D-S7I-3b (DEV) |
 | D-S7C-1 | The code abstained in Unrest, penalised an empty branch with the −3, showed *follow your line* for `localsFollow: 'unrest'`, and passed no `{title}` to the Governor headlines | DEV | `e710550`: `localVote` votes the secretary's line in Unrest; the −3 needs `turnout.eligible > 0`; the Chair's Lines show `localsUnrest`; `title` filled for `governorTookOffice`, `governorLocal`, `addressGiven` and the office front page (and allowed in `NATION_PERSONAL_PLACEHOLDERS`) |
 
 ## Resolved — 15 Oct 2026 (slice 7, phase B)

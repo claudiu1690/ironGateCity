@@ -225,7 +225,7 @@ A `BillRow` on the order paper with the tag *a vote to remove the President · n
 
 ## 14. Phone and desktop layouts; above the fold
 
-- **The nation map on 375 × 667:** the `NationBar` (44 px) and the `LawChips` row (36 px) sit under the top bar and over the map; the map still fills the screen beneath them (the covering scale is computed for the remaining height); the Cities pill as before.
+- **The nation map on 375 × 667:** the `NationBar` (44 px) sits under the top bar and over the map; the map still fills the screen beneath it (the covering scale is computed for the remaining height); the Cities pill as before. **The `LawChips` row (36 px) shows only where the screen has the room**: on an upright phone 700 px tall or less it is hidden (confirmed 16 Oct 2026, D-S7I-2, `slice-7-nation.md` *Settled 16 Oct (phase C)* §6), so review 6's every-pin check holds with the paper's banner up. There the laws in force are read from the tickets' *LAW* tags and the law book (Parliament, reached from the bar's republic sheet); taller upright phones and every sideways or desktop layout keep the chips (sideways: the bar and the chips share one 44 px row).
 - **The office pages:** the header (150 px), the first power card and its button above the fold; the footer scrolls.
 - **The Chair's desk:** the strip (44 px), the kicker and the first two `OrderPicker` rows above the fold; the sticky **Set the orders** above the tab bar at all times; the pickers' sheets at 70 dvh with the current pick in view.
 - **Parliament:** the chamber header (150 px), the `BlocBar` (24 px), the `TermLine` and the first `BillRow` (min 88 px; the For · Against pair at the right never wraps: 2 × 44 px) above the fold; the sticky vote button for a deputy with a row selected.

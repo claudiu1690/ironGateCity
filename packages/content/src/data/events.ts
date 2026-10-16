@@ -349,7 +349,8 @@ export const eventOrderTemplates: ContentInput['orderTemplates'] = [
     factionId: 'collective',
     slot: 'B',
     title: "Take part in the branch's event today",
-    line: "There's a canvass tonight and a list with your name on it. Take a role, or take a bucket.",
+    // D-S7I-1 (16 Oct 2026): prints on the front page; *canvass* is a system term (GDD §1.5).
+    line: "The branch is on the doorsteps tonight, and there's a list with your name on it. Take a role, or take a bucket.",
     match: { kinds: ['event'], cityId: 'home' },
     target: 1,
     counts: 'attempts',

@@ -278,7 +278,7 @@ The secretary still sets the three orders (the Chair is slice 7). **One template
 
 | Id | Faction | Title | Match | Target | Line |
 |---|---|---|---|---|---|
-| `dir.event` | Collective | Take part in the branch's event today | an event sign-up in the residence city (`cityId: 'home'`, `kinds: ['event']`) | 1 | There's a canvass tonight and a list with your name on it. Take a role, or take a bucket. |
+| `dir.event` | Collective | Take part in the branch's event today | an event sign-up in the residence city (`cityId: 'home'`, `kinds: ['event']`) | 1 | The branch is on the doorsteps tonight, and there's a list with your name on it. Take a role, or take a bucket. *(reworded 16 Oct 2026, D-S7I-1: the line prints on the front page and* canvass *is a system term, GDD §1.5)* |
 | `dir.v.event` | Vanguard | Take part in the branch's event today | the same | 1 | The movement is in the square tonight. Take a role. Numbers are the point. |
 | `dir.a.event` | Alliance | Take part in the branch's event today | the same | 1 | The Rooms have something on this evening. A role if you can, a pair of hands if you can't. |
 

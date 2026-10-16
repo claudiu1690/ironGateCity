@@ -3099,7 +3099,16 @@ export const copy = {
       targetPaid: (label: string, fxp: number) => `${label} · +${fxp} Party XP`,
       electionKicker: 'Election',
       captions: {
+        /**
+         * @deprecated D-S7I-3 (16 Oct 2026): says *Governor* everywhere; the front page binds
+         * `governorOrMayor` instead and deletes this one at the binding.
+         */
         governor: (name: string, city: string) => `${name}, elected Governor of ${city}`,
+        /**
+         * D-S7I-3 (16 Oct 2026): `title` is *Governor* at home, *Mayor* in Irongate and Clearwater
+         * (`governorTitle`), so the words stay in content: *Anna Roth, elected Governor of Coalport*.
+         */
+        governorOrMayor: (name: string, title: string, city: string) => `${name}, elected ${title} of ${city}`,
         chair: (name: string, faction: string) => `${name}, elected Chair of the ${faction}`,
         deputy: (name: string, faction: string) => `${name}, elected deputy for the ${faction}`,
         president: (name: string) => `${name}, President of the Republic`,

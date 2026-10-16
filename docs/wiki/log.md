@@ -9,6 +9,16 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 7 integration flags D-S7I-1 to D-S7I-3 settled by the designer
+
+The Collective's event order line reworded (*on the doorsteps tonight*; no other player-facing
+*canvass* in content); the law chips hidden on upright phones ≤ 700 px confirmed and screens §14
+rewritten; `copy.nation.paper.captions.governorOrMayor(name, title, city)` added for the Mayor's
+front-page caption, with the binding left to the developer (new row D-S7I-3b). Design
+`slice-7-nation.md` *Settled 16 Oct (phase C)* §6, `slice-6-together.md` §12's table. Updated
+[[Drift Report]] (three rows resolved, one added), [[National Control]], [[Offices]],
+[[Slice 7 The Nation]].
+
 ## [2026-10-16] update | Slice 7 integration: the six scenes, T30, T31, the full e2e green
 
 Six scenes wired (the Casino, the polling station, the law book, the tram depot, the Governor's
