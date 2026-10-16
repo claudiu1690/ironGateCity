@@ -871,6 +871,10 @@ export function toCharacterView(
     events: { open: [], unseen: doc.events?.unseen?.length ?? 0 },
     chat: { hidden: doc.chat?.hidden ?? false, forYou: false },
     factionDot: (doc.events?.unseen?.length ?? 0) > 0,
+    // Slice 8 (tech design §12.1): the Dossier tab's dot (`dossier.seen` clears it).
+    dossierDot:
+      !!doc.dossierLastAt &&
+      (!doc.dossierSeenAt || new Date(doc.dossierLastAt).getTime() > new Date(doc.dossierSeenAt).getTime()),
   };
 }
 

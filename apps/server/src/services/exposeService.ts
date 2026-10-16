@@ -45,6 +45,7 @@ import { progressOf, progressSet } from './actionService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
 import { keySeed } from './keyGuard';
+import { streetHooks } from './streetHooks';
 import { toThousandths, writeLedger, addInfluence } from './ledger';
 import { entryLine } from './dossierService';
 import { addLegacyInTx, legacyKnock } from './legacyService';
@@ -123,6 +124,8 @@ export async function exposeViewFor(
     ways: [],
     cta: null,
     refusal: null,
+    art: assetView(content, 'scene.newsroom'),
+    narrative: e ? copy.life.expose.deskNarrative : copy.life.expose.fileNarrative,
   };
   if (!at) return { ...base, refusal: copy.life.expose.noFile };
   if (!e) {
@@ -330,7 +333,8 @@ export async function attemptExpose(deps: Deps<{ wayId: WayId; idempotencyKey: s
         difficulty,
         prefer: preferredStat(content, c.factionId),
       });
-      const roll = rng.roll100();
+      // Slice 8 phase C, lane Q: the test hooks' row roll (`POST /api/test/street { rolls }`), else the seed's.
+      const roll = streetHooks.takeRolls(c._id.toHexString(), input.idempotencyKey)?.rolls?.[0] ?? rng.roll100();
       const outcome: Outcome = outcomeForRoll(roll, check.chance, 3);
       const rewards = exposeRewards(outcome, spent.restedUsed);
       const logId = new Types.ObjectId();

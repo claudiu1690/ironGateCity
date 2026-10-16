@@ -2,7 +2,7 @@ import type { DossierCategory, PatronId } from './constants';
 import type { DayKey } from './day';
 import type { ExposeStamp } from './lifeTypes';
 import type { PerkId } from './legacy';
-import type { FactionId, Outcome } from './types';
+import type { AssetView, FactionId, Outcome } from './types';
 
 /**
  * Slice 8 phase B, lane 2 (docs/tech/slice-8.md §8.3, §10): the Dossier's, the exposé's, the home's
@@ -98,6 +98,8 @@ export interface DossierView {
   informants: DossierInformantView[];
   /** The tab's dot (an entry landed since the tab was last opened). */
   dot: boolean;
+  /** Lane Q (screens §6.1): the header band's picture (`scene.newsroom`). */
+  art?: AssetView;
 }
 
 /** A station's card (screens §6.3): what can be sold here. */
@@ -123,6 +125,9 @@ export interface ExposeView {
   cta: { label: string; energy: number; ok: boolean; why: string | null } | null;
   /** A refusal for the whole screen (no file, printed today, own party …), worded. */
   refusal: string | null;
+  /** Lane Q (screens §7): the press's scene and the step's text. */
+  art?: AssetView;
+  narrative?: string;
 }
 
 /** The exposé's part of an `ActionResult` (tech design §10.2). */

@@ -50,6 +50,7 @@ import { ensureSettled, loadCharacter } from './dayService';
 import { lifePolitical, weekdayName } from './lifeResult';
 import { withRequestKey } from './requestKey';
 import { VersionConflict } from './txn';
+import { assetView } from './views';
 
 /**
  * Slice 8 phase B, lane 2 (T11; tech design §3.4–§3.5, §8.2; ADR 0053): the Dossier. Entries,
@@ -399,6 +400,7 @@ export function dossierViewOf(
       };
     }),
     dot: !!c.dossierLastAt && (!c.dossierSeenAt || new Date(c.dossierLastAt).getTime() > new Date(c.dossierSeenAt).getTime()),
+    art: assetView(content, 'scene.newsroom'),
   };
 }
 

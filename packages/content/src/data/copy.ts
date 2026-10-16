@@ -3381,6 +3381,19 @@ export const copy = {
         desk: (n: number, m: number, when: string) => `${n} entries · ${m} go stale ${when}`,
         deskNone: (n: number) => `${n} ${n === 1 ? 'entry' : 'entries'}`,
       },
+      /** The tab's empty states (screens §15). */
+      empty: {
+        names: 'Nothing yet. Listen at a bar, read the notices, watch a platform: one time in ten, a name goes in here.',
+        filesEarly: 'Three entries on one name make a Case File. From Level 16.',
+        files: 'No Case File yet. Three entries on one name.',
+        informants: 'No informant yet. Turn a Case File with a pattern line in a town whose patron is your Associate.',
+      },
+      /** A Case File chosen for a story or attached to an event (it waits there). */
+      inUse: 'In a story or an event · it waits there',
+      /** The station sheet's one-line confirm (screens §6.3). */
+      sellConfirm: (what: string, n: number) => `Sell ${what} for ${n} Iron?`,
+      fileRow: (name: string) => `Case File · ${name}`,
+      keepIt: 'Keep it',
     },
     // ----- The exposé (screens §7; design §4.5, §16.6) --------------------------------------------
     expose: {
@@ -3442,6 +3455,14 @@ export const copy = {
       /** The Headline Story's call sheet row (design §4.3). */
       attachFile: 'Attach a Case File',
       attached: (name: string) => `${name}'s file attached · the swing half again · the name in the headline`,
+      /** Lane Q (screens §7): step 2's text, the editor unnamed (the paper is the place). */
+      deskNarrative: `The editor reads the first line and the last. "Who's your second source?" You have the file, the morning, and three ways to answer.`,
+      /** Step 1's text. */
+      fileNarrative: 'A desk by the window, the morning edition still warm. Which file, and how loud?',
+      attachNone: 'No file on the other party',
+      attachClear: 'No file',
+      /** The paper's public line (tech design §11.1) and the front page's kicker. */
+      frontKicker: 'Exposé',
     },
     // ----- Patrons (screens §8) -------------------------------------------------------------------
     patron: {
@@ -3561,6 +3582,13 @@ export const copy = {
       rent: (weekday: string) => `Rent due ${weekday}`,
       fileShort: (name: string) => `${name}: one entry short of a Case File`,
       minderLast: (name: string, weekday: string) => `${name}'s last day ${weekday}`,
+    },
+    /** Lane Q (design §10.3): the desk's life rows' labels. */
+    desk: {
+      dossier: 'Dossier',
+      patrons: 'Patrons',
+      sleep: 'Where you sleep',
+      legacy: 'Legacy',
     },
     // ----- Rival ground, the journey and society calls (screens §13, §14) --------------------------
     recognition: {

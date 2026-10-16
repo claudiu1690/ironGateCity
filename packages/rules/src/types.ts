@@ -908,6 +908,8 @@ export interface CharacterView {
   events?: CharacterViewV7['events'];
   chat?: CharacterViewV7['chat'];
   factionDot?: boolean;
+  /** Slice 8 (tech design §8.3, §12.1): an entry landed since the Dossier tab was last opened. */
+  dossierDot?: boolean;
   /**
    * Review 1 (§8.4, §7.5): today is the welcome day (the creation day, and the next when created
    * after 22:00 UTC): the *First day* bonus and the plate's first-time hint.
@@ -1417,6 +1419,10 @@ export interface PaperView {
     inPrint?: boolean;
     /** The hero's In Print headline: the small rosette before the name. */
     medal?: boolean;
+    /** Slice 8 (tech design §11.1): the exposé's front page (the slice-3 front page's shape). */
+    front?: 'expose';
+    /** The front page's picture (`scene.front-page`). */
+    art?: AssetView;
   }>;
   /**
    * Slice 4 (screens §7.1): the Issues section, live: the residence city's two, then the capital's

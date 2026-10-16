@@ -29,6 +29,7 @@ import { isRivalGround, riskView } from './risk';
 import { FRONT_PAGE_KIND, frontPageTerm, frontPageView, politicalHeadlines, politicsSummary } from './politicsService';
 import {
   ambitionStatus,
+  assetView,
   energyState,
   jobView,
   locationRef,
@@ -166,6 +167,8 @@ export async function getPaper(deps: {
       // The hero's headline carries the rosette (screens §7.3).
       // Slice 6 (screens §8): an event's Triumph In Print carries the rosette too.
       ...(/.hero$/.test(h.templateId) || /event-triumph$/.test(h.templateId) ? { medal: true } : {}),
+      // Slice 8 (tech design §11.1): the exposé's front page.
+      ...(/\.expose-front$/.test(h.templateId) ? { front: 'expose' as const, art: assetView(content, 'scene.front-page') } : {}),
     })),
     issues: await paperIssues(content, c, today, { local }),
     orders: {
@@ -244,7 +247,7 @@ export async function getPaper(deps: {
 /** The In Print headlines, by id (slice 4: the hero, the quote; slice 5: the risk four). */
 // Slice 7 (tech design §11.1): the Address, the offices taken, a bill passed and a pledge kept.
 const IN_PRINT =
-  /\.(hero|quoted|seen|cells|infirmary|deported|address|governor|chair-front|deputy-front|president-front|pledge-kept|bill-passed)$/;
+  /\.(hero|quoted|seen|cells|infirmary|deported|address|governor|chair-front|deputy-front|president-front|pledge-kept|bill-passed|expose-p3|wardrobe-first|recognised|flat-bought|legacy-entry)$/;
 
 /**
  * Slice 5 (tech design §11.3, screens §2.5): the desk's live rows. The held line while in the cells
