@@ -1,4 +1,5 @@
 import type { NationRepublicView } from './nationTypes';
+import type { LifeCondition } from './lifeTypes';
 /**
  * Shared vocabulary and DTOs. The server builds these; the client and `@irongate/ui` render them.
  * Kept in the rules package so every layer imports types from one place.
@@ -147,8 +148,9 @@ export interface EnergyView {
  * What a performed thing was, for order matching (ADR 0009). Slice 5 (ADR 0031 §4): `mission`.
  * Slice 6 (tech §6.7): `event`, a Campaign Event sign-up; it matches only templates naming it.
  */
-export type ActionKind = 'checked' | 'training' | 'takeJob' | 'mission' | 'event';
-export const ACTION_KINDS = ['checked', 'training', 'takeJob', 'mission', 'event'] as const;
+export type ActionKind = 'checked' | 'training' | 'takeJob' | 'mission' | 'event' | 'dossierEntry' | 'expose';
+/** Slice 8 (tech design §6.11): a Dossier entry landed and an exposé printed count for patrons' Requests. */
+export const ACTION_KINDS = ['checked', 'training', 'takeJob', 'mission', 'event', 'dossierEntry', 'expose'] as const;
 
 export interface ActionDescriptor {
   kind: ActionKind;
@@ -296,7 +298,9 @@ export type HeadlineCondition =
   | RiskCondition
   | PoliticalCondition
   /** Slice 7 (tech design §11.2): the personal national lines (stored, except `pushed`). */
-  | NationalCondition;
+  | NationalCondition
+  /** Slice 8 (tech design §11.2): a life in the city's personal lines (stored, except `requestArrived`). */
+  | LifeCondition;
 
 /**
  * Slice 5 (tech design §11.2, design §14): the risk headlines' stored conditions, from the

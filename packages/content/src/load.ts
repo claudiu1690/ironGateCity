@@ -68,6 +68,8 @@ import tiles from './data/tiles.json';
 import { inPolygon } from './geometry';
 import { slice5Problems } from './slice5';
 import { lawSpecOf, slice7Problems } from './slice7';
+import { lifeAccessors, slice8Problems } from './slice8';
+import type { LifeAccessors } from './slice8';
 import { Content, isCheckedAction } from './schemas';
 import type {
   Action,
@@ -992,6 +994,7 @@ export function parseContent(raw: unknown): Content {
   problems.push(...slice5Problems(content, { cityById, locationById, assetById, mapPins }));
   problems.push(...slice6Problems(content, { cityById, locationById, assetById, sentenceCount }));
   problems.push(...slice7Problems(content, { cityById, locationById, assetById }));
+  problems.push(...slice8Problems(content, { cityById, locationById, assetById, mapPins, sentenceCount }));
   for (const city of content.cities) {
     if (city.paper && !content.headlines.some((h) => h.cityId === city.id && h.group === 'ambient')) {
       problems.push(`cities.${city.id} has a paper but no ambient headline`);
@@ -1356,7 +1359,8 @@ export interface LocatedAction {
 }
 
 /** Content plus id lookups. Built once; content is immutable at runtime. */
-export interface GameContent extends Content {
+/** Slice 8 (tech design §4.1): the Wardrobe's, the Dossier's and the patrons' accessors are `LifeAccessors`. */
+export interface GameContent extends Content, LifeAccessors {
   faction(id: FactionId): Faction;
   city(id: string): City | undefined;
   location(id: string): { city: City; location: Location } | undefined;
@@ -1536,10 +1540,25 @@ export function indexContent(content: Content): GameContent {
     ambitionsById.get(ambitionId)?.chapters.find((c) => c.n === n);
   return {
     ...content,
+    ...lifeAccessors(content),
     item: (id) => items.get(id),
     itemSpec: (id) => {
       const i = items.get(id);
-      return i ? { id: i.id, slot: i.slot, cha: i.cha, keepsake: i.keepsake } : undefined;
+      if (!i) return undefined;
+      // Slice 8 (ADR 0051): the tier, effects, price and gates travel with the spec.
+      return {
+        id: i.id,
+        slot: i.slot,
+        cha: i.cha,
+        keepsake: i.keepsake,
+        tier: i.tier,
+        effects: i.effects ?? [],
+        ...(i.price !== undefined ? { price: i.price } : {}),
+        ...(i.level !== undefined ? { level: i.level } : {}),
+        ...(i.rank !== undefined ? { rank: i.rank } : {}),
+        ...(i.factionId !== undefined ? { factionId: i.factionId } : {}),
+        ...(i.members ? { members: true } : {}),
+      };
     },
     ambition: (id) => ambitionsById.get(id),
     chapter,

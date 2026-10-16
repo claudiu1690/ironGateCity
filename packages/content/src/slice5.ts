@@ -140,7 +140,8 @@ export function slice5Problems(
         const spec = MISSION_TYPES[m.type];
         if (m.energy !== spec.energy) problems.push(`${where}: Energy ${m.energy} is not the type's ${spec.energy}`);
         const diff = missionDifficulty(m.level, city.role);
-        if (m.difficulty !== diff) problems.push(`${where}: difficulty ${m.difficulty} is not the ladder's ${diff}`);
+        // Slice 8: a society call's difficulty is its Charisma figure (slice8Problems checks it).
+        if (m.type !== 'social' && m.difficulty !== diff) problems.push(`${where}: difficulty ${m.difficulty} is not the ladder's ${diff}`);
         if (spec.illegal) {
           if (m.requires?.rank !== 3) problems.push(`${where}: an illegal mission needs Rank 3`);
           if (!m.target) problems.push(`${where}: an illegal mission needs a target`);

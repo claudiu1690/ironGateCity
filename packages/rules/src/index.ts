@@ -65,3 +65,4 @@ export * from './nationViews';
 export * from './shop';
 export * from './personal';
 export * from './recognition';
+export * from './lifeTypes';

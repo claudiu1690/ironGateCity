@@ -1,18 +1,24 @@
 import {
   ACTION_KINDS,
+  DOSSIER_CATEGORIES,
   EVENT_SPECIALS,
   FACTION_IDS,
+  ITEM_SPECIAL_WORK,
+  LIFE_CONDITION_KINDS,
   MISSION_TYPE_IDS,
+  PATRON_IDS,
   NATIONAL_CONDITION_KINDS,
   NATION_ACTS,
   STAT_KEYS,
   TRAINABLE_STATS,
+  itemEffectBoundProblem,
   lawBoundProblem,
   ordinanceBoundProblem,
 } from '@irongate/rules';
 import type {
   HeadlineCondition,
   HeadlineTemplate,
+  ItemEffect as ItemEffectRule,
   LawEffect as LawEffectRule,
   OrderMatch,
   OrderTemplate,
@@ -37,6 +43,10 @@ export const NpcId = Id;
 export const JobId = Id;
 export const ItemId = Id;
 export const AmbitionId = Id;
+/** Slice 8 (design §5, ADR 0055): the two patrons of the MVP. */
+export const PatronId = z.enum(PATRON_IDS);
+/** Slice 8 (design §4.1, GDD §10.3): the Dossier's five categories. */
+export const DossierCategory = z.enum(DOSSIER_CATEGORIES);
 
 const HexColour = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'a #RRGGBB colour');
 const Fraction = z.number().min(0).max(1);
@@ -301,18 +311,27 @@ export const Mission = z.strictObject({
   /** = MISSION_TYPES[type].energy (the loader holds it). */
   energy: z.number().int().min(1),
   level: z.union([z.literal(6), z.literal(8), z.literal(10), z.literal(12)]),
-  /** = missionDifficulty(level, city.role) (the loader holds it; design §23.1 #1). */
-  difficulty: z.number().int().min(14).max(22),
+  /**
+   * = missionDifficulty(level, city.role) (the loader holds it; design §23.1 #1). Slice 8 (tech design
+   * §23 #13): a society call's is its `society.needs` (10–40), so the floor is 10 here and 14 for the
+   * other types in the loader.
+   */
+  difficulty: z.number().int().min(10).max(40),
   requires: z
     .strictObject({
       rank: z.literal(3).optional(),
       standing: z.number().int().min(0).max(4).optional(),
+      /** Slice 8 (design §5.4): a patron's introduction, open from Associate. */
+      patron: z.strictObject({ id: PatronId, tier: z.literal('associate') }).optional(),
     })
     .optional(),
   /** An illegal type's target: a faction, or (the capital) the district's leader. */
   target: z.union([FactionId, z.literal('leader')]).optional(),
-  /** The opponents a run-in draws from (design §10.2). */
-  pool: z.array(Id).min(1).max(4),
+  /**
+   * The opponents a run-in draws from (design §10.2). Slice 8: a society call has none (no run-in),
+   * so the array may be empty; the loader requires one or more on every other type.
+   */
+  pool: z.array(Id).max(4).default([]),
   /**
    * Design §4.4: where you are, the job, what could go wrong. Held to 300 characters and four
    * sentences (design/slice-5-fixes.md §2, QA m2: the title, the text and two ways above the button
@@ -328,6 +347,39 @@ export const Mission = z.strictObject({
    * (+25 % Iron). Its ways carry no window of their own.
    */
   window: z.literal('night').optional(),
+  /**
+   * Slice 8 (design §3.7): a society call's Charisma figure (= its difficulty), its Favour on a
+   * Success (default `SOCIETY.favour`; the late table's 3) and its entry rule (default one in four).
+   * Required iff the type is `social`.
+   */
+  society: z
+    .strictObject({
+      needs: z.number().int().min(10).max(40),
+      favour: z.number().int().min(1).max(5).optional(),
+      entry: z.enum(['oneInFour', 'onSuccess']).optional(),
+    })
+    .optional(),
+  /**
+   * Slice 8 (design §4.2, §5.4): the Dossier entry a surveillance or theft mission lands: its
+   * category (default by type in rules) and a named figure, or `'choose'` (the morgue file's picker).
+   */
+  dossier: z
+    .strictObject({
+      category: DossierCategory.optional(),
+      subject: z.union([NpcId, z.literal('choose')]).optional(),
+    })
+    .optional(),
+});
+
+/** Slice 8 (design §3.5, ADR 0051): the shops, by kind; kickers and Courier lines are copy. */
+export const ShopKind = z.enum(['clothesStall', 'partyStore', 'tailor', 'press', 'backRoom']);
+export const Shop = z.strictObject({
+  kind: ShopKind,
+  items: z.array(ItemId).min(1).max(6),
+  /** §21.1 Q1: the stall buys anything sellable (`'any'`); the others what they sell (`'own'`). */
+  buys: z.enum(['any', 'own']).nullable(),
+  /** The back room's *Have a mark struck off* (design §3.8). */
+  bribe: z.literal(true).optional(),
 });
 
 export const Location = z.strictObject({
@@ -357,6 +409,12 @@ export const Location = z.strictObject({
    * its carer (*See the matron*). Only on `hospital` places, and required on every one.
    */
   treatment: z.strictObject({ carer: z.enum(['matron', 'sister', 'nurse']) }).optional(),
+  /** Slice 8 (design §3.5): at most two shops (the Mountain Inn: the tailor and the back room). */
+  shops: z.array(Shop).max(2).optional(),
+  /** Slice 8 (tech design §13): the place's own scene before its kind's (the Casino, the Lido). */
+  scene: AssetId.optional(),
+  /** Slice 8 (design §5.1): the patron received here (Herald House: Crane; the Pier Hotel: Marr). */
+  patronId: PatronId.optional(),
 });
 
 export const City = z.strictObject({
@@ -555,6 +613,24 @@ export const OrderMatchSchema = z
     'a match needs at least one field',
   ) satisfies z.ZodType<OrderMatch>;
 
+/**
+ * Slice 8 (design §5.3, §16.5; ADR 0055): a patron's Request matches with the orders' DSL plus mission
+ * types; `districtId: 'rotate'` is the Request's own district (its stored params).
+ */
+export const RequestMatchSchema = z
+  .strictObject({
+    actionTypes: z.array(ActionType).min(1).optional(),
+    actionIds: z.array(Id).min(1).optional(),
+    locationIds: z.array(Id).min(1).optional(),
+    cityId: z.union([z.literal('home'), Id]).optional(),
+    kinds: z.array(z.enum(ACTION_KINDS)).min(1).optional(),
+    districtId: z.union([z.literal('home'), z.literal('rotate'), Id]).optional(),
+    issueTagged: z.literal(true).optional(),
+    locationKinds: z.array(LocationKind).min(1).optional(),
+    missionTypes: z.array(MissionType).min(1).optional(),
+  })
+  .refine((m) => Object.keys(m).length > 0, 'a match needs at least one field');
+
 export const OrderTemplateSchema = z.strictObject({
   id: Id,
   factionId: FactionId,
@@ -681,6 +757,8 @@ export const HeadlineConditionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('visitedYesterday') }),
   // Slice 7 (tech design §11.2, design §11.2): the personal national lines; stored, except `pushed`.
   ...NATIONAL_CONDITION_KINDS.map((kind) => z.strictObject({ kind: z.literal(kind) })),
+  // Slice 8 (tech design §11.2): a life in the city's personal lines; stored, except `requestArrived`.
+  ...LIFE_CONDITION_KINDS.map((kind) => z.strictObject({ kind: z.literal(kind) })),
 ]) satisfies z.ZodType<HeadlineCondition>;
 
 export const HeadlineTemplateSchema = z.strictObject({
@@ -704,10 +782,34 @@ export const HeadlineTemplateSchema = z.strictObject({
 // Slice 2 (docs/tech/slice-2.md §4.2): items, the origin, Ambitions.
 // ---------------------------------------------------------------------------------------------
 
-/** §21.1: slice 2's slots; weapon, utility and accessory come with the Wardrobe (slice 8). */
-export const ItemSlot = z.enum(['clothing', 'document']);
+/** Slice 8 (design §3.1): four slots, *Coat · On you · Papers · Tools*. No weapon slot. */
+export const ItemSlot = z.enum(['clothing', 'accessory', 'document', 'utility']);
 
-/** §21.4, ADR 0014. `slot: null` is a keepsake with no slot. */
+/** Story texts: at most 240 characters (and, checked by the loader, 4 sentences; GDD §1.2). */
+export const StoryText = z.string().min(1).max(240);
+
+/** Slice 8 (design §3.2): what an item's `chancePct` may name. */
+export const ItemWork = z.enum([...ActionType.options, ...MISSION_TYPE_IDS, ...ITEM_SPECIAL_WORK]);
+
+/** Slice 8 (design §3.2, ADR 0051): the closed effect list; the bounds are rules' (`ITEM_EFFECT_BOUNDS`). */
+export const ItemEffectSchema = z
+  .discriminatedUnion('kind', [
+    z.strictObject({
+      kind: z.literal('chancePct'),
+      on: ItemWork,
+      value: z.number().int(),
+      /** Forged papers' bluff: the city police only. */
+      against: z.literal('police').optional(),
+    }),
+    z.strictObject({ kind: z.literal('fxpPct'), value: z.number().int() }),
+    z.strictObject({ kind: z.literal('dossierChance'), value: z.number().int() }),
+  ])
+  .superRefine((e, ctx) => {
+    const problem = itemEffectBoundProblem(e);
+    if (problem) ctx.addIssue({ code: 'custom', message: problem });
+  }) satisfies z.ZodType<ItemEffectRule>;
+
+/** §21.4, ADR 0014, 0051. `slot: null` is a keepsake with no slot; a keepsake with a slot is wearable. */
 export const Item = z.strictObject({
   id: ItemId,
   name: z.string().min(1),
@@ -718,10 +820,26 @@ export const Item = z.strictObject({
   /** An `item` or `vector` asset, or the holder's faction crest (the party card). */
   art: z.union([AssetId, z.literal('faction-crest')]),
   note: z.string().max(120).optional(),
+  /** Slice 8 (design §3.2): at most three effects. */
+  effects: z.array(ItemEffectSchema).max(3).optional(),
+  /** Slice 8: absent is never bought or sold (the kit, the origin's coat, keepsakes). */
+  price: z.number().int().positive().optional(),
+  level: z.number().int().min(1).optional(),
+  rank: z.number().int().min(1).max(7).optional(),
+  /** The party coats, the correspondent's suit. */
+  factionId: FactionId.optional(),
+  /** The badge, paste and brush: any member, at their own party store. */
+  members: z.literal(true).optional(),
+  /** *KEEPSAKE · FROM CHAPTER 4*, or a patron's piece. */
+  keepsakeFrom: z
+    .union([
+      z.strictObject({ ambitionId: AmbitionId, chapter: z.number().int().min(1).max(12) }),
+      z.strictObject({ patronId: PatronId }),
+    ])
+    .optional(),
+  /** Design §21.3: the keepsake's text behind *Read*. */
+  read: StoryText.optional(),
 });
-
-/** Story texts: at most 240 characters (and, checked by the loader, 4 sentences; GDD §1.2). */
-export const StoryText = z.string().min(1).max(240);
 
 /**
  * Review 4 (GDD §7.1, ADR 0073, tech design §4.1), restrung by review 5 as *Coming home*. Beat 1's
@@ -800,6 +918,21 @@ export const Chapter = z.strictObject({
       level: z.number().int().min(1).optional(),
       /** Slice 3 (design §17 Q21): opens after the player's first ballot. */
       ballotCast: z.literal(true).optional(),
+      // Slice 8 (design §8): read from `characters.milestones` (`chapterStatus`).
+      /** Ch 4: a council term completed. */
+      councilTerms: z.number().int().min(1).max(3).optional(),
+      /** Ch 8: a Governor's or Mayor's term, or three council terms. */
+      governorOrCouncilTerms: z.literal(3).optional(),
+      /** Ch 6: voted in a Chair election. */
+      chairVote: z.literal(true).optional(),
+      /** Ch 7: a Case File made. */
+      caseFile: z.literal(true).optional(),
+      /** Ch 10: voted in a national election. */
+      nationalVote: z.literal(true).optional(),
+      /** Ch 11: on the party's list. */
+      onList: z.literal(true).optional(),
+      /** Ch 12: a deputy's term begun. */
+      deputyTerm: z.literal(true).optional(),
     })
     .optional(),
   story: z
@@ -819,6 +952,8 @@ export const Chapter = z.strictObject({
               hint: z.string().min(1).max(100),
               /** Remembered for later chapters. */
               flag: Id,
+              /** Slice 8 (design §16.2): *The Ration Ledger* 3's choice B pays 100 Iron. */
+              iron: z.number().int().min(1).max(500).optional(),
             }),
           )
           .length(2),
@@ -845,8 +980,17 @@ export const Chapter = z.strictObject({
       result: z.strictObject({ success: OutcomeText, partial: OutcomeText, failure: OutcomeText }),
       rewards: z.strictObject({ success: ChapterReward, partial: ChapterReward, failure: ChapterReward }),
       keepsake: ItemId,
-      /** §13.5 rung 3: a crop of the home map around the faction HQ. */
-      art: z.literal('home-hq'),
+      /**
+       * §13.5 rung 3: a crop of the home map around the faction HQ. Slice 8: the faction's HQ or
+       * house scene, or a named scene (chapters set in the capital).
+       */
+      art: z.union([z.literal('home-hq'), z.literal('faction-hq'), z.literal('faction-house'), AssetId]),
+      /** Slice 8 (design §8): Favour with a patron on every outcome (ch 7: Crane +5). */
+      favour: z.strictObject({ patronId: PatronId, value: z.number().int().min(1).max(10) }).optional(),
+      /** Slice 8 (design §16.2): an entry by hand (*Who Sold the Homes* 2: Brandauer, political). */
+      dossier: z.strictObject({ subjectId: NpcId, category: DossierCategory }).optional(),
+      /** Slice 8 (design §8): the Ambition's last chapter (Legacy 30). */
+      completes: z.literal(true).optional(),
     })
     .optional(),
 });
@@ -1019,6 +1163,8 @@ export const JourneyRewards = z.strictObject({
   /** Slice 5 (design §11.4): Heat ±n and a day flag in the destination. */
   heat: z.number().int().min(-20).max(20).optional(),
   flag: z.enum(['watched', 'warned']).optional(),
+  /** Slice 8 (design §4.2): *Feed him a story*'s entry, on a name of the destination. */
+  dossier: z.strictObject({ category: DossierCategory, city: z.literal('destination') }).optional(),
 });
 
 export const JourneyChoice = z.strictObject({
@@ -1097,12 +1243,15 @@ export const HeldAction = z.strictObject({
   stats: CheckStatsSchema,
   energy: z.literal(3),
   text: z.strictObject({ success: OutcomeText, partial: OutcomeText }),
+  /** Slice 8 (design §4.2): 25 % on a Success, an entry on a name of the city. */
+  dossier: z.strictObject({ chance: z.literal(25), category: DossierCategory }).optional(),
 });
 
 /** ADR 0029: what tags an action with an Issue (AND of the fields; at least one). */
 export const IssueMatchSchema = z
   .strictObject({
-    actionTypes: z.array(ActionType).min(1).optional(),
+    /** Slice 8 (design §4.5, §21.1 Q29): an Issue may feed exposés. */
+    actionTypes: z.array(z.union([ActionType, z.literal('expose')])).min(1).optional(),
     locationIds: z.array(Id).min(1).optional(),
     locationKinds: z.array(LocationKind).min(1).optional(),
     districtId: Id.optional(),
@@ -1255,6 +1404,64 @@ export const NationalLine = z.strictObject({
   scope: z.enum(['all', 'faction', 'contributors']),
 });
 
+// ---------------------------------------------------------------------------------------------
+// Slice 8 (docs/tech/slice-8.md §4.1): patrons, the Dossier's lines and names. The Political
+// Season's lines are deferred (16 Oct 2026).
+// ---------------------------------------------------------------------------------------------
+
+/** Design §16.5: one of a patron's six Requests. */
+export const PatronRequest = z.strictObject({
+  id: Id,
+  /** May carry `{district}`. */
+  title: z.string().min(1).max(60),
+  /** The letter; `{until}` `{district}` `{issue}`. */
+  line: z.string().min(1).max(200),
+  match: RequestMatchSchema,
+  target: z.number().int().min(1).max(5),
+  /** `req.crane.print`: 16 (else the next in rotation). */
+  minLevel: z.number().int().min(1).optional(),
+});
+
+/** Design §5 (ADR 0055): a patron. */
+export const Patron = z.strictObject({
+  id: PatronId,
+  npcId: NpcId,
+  name: z.string().min(1),
+  cityId: Id,
+  locationId: Id,
+  portrait: AssetId,
+  /** The card's italic line. */
+  voice: z.string().min(1).max(90),
+  /** Crane political, Marr asset. */
+  gossip: DossierCategory,
+  /** The Associate's mission (the morgue file, the late table). */
+  introduction: Id,
+  favour: z.strictObject({ act: z.enum(['plantHeadline', 'discretion']), pc: z.number().int().min(1) }),
+  /** The Protégé's keepsake. */
+  piece: ItemId,
+  requests: z.array(PatronRequest).length(6),
+});
+
+/** Design §16.4: four lines per category; `{name}` `{party}` `{place}` `{weekday}` `{city}`. */
+export const DossierLines = z.strictObject(
+  Object.fromEntries(DOSSIER_CATEGORIES.map((c) => [c, z.array(z.string().min(1).max(120)).length(4)])) as {
+    [K in (typeof DOSSIER_CATEGORIES)[number]]: z.ZodArray<z.ZodString>;
+  },
+);
+
+/**
+ * Tech design §4.1 (§23 #16): a name the Dossier can hold that is not an `Npc` (no portrait): Konrad
+ * Brandauer, no party and never drawn at random.
+ */
+export const DossierName = z.strictObject({
+  id: NpcId,
+  name: z.string().min(1),
+  cityId: Id,
+  districtId: Id.optional(),
+  factionId: FactionId.nullable(),
+  drawn: z.boolean(),
+});
+
 export const Content = z.strictObject({
   factions: z.array(Faction).length(FACTION_IDS.length),
   cities: z.array(City).min(1),
@@ -1278,6 +1485,8 @@ export const Content = z.strictObject({
         governor: AssetId,
       })
       .optional(),
+    /** Slice 8 (tech design §13): the flat's scene and the exposé's front page, by use. */
+    lifeScenes: z.strictObject({ flat: AssetId, frontPage: AssetId }).optional(),
   }),
   /** ADR 0024: the map tile pyramids (`data/tiles.json`, generated by `pnpm art:tiles`). */
   tilePyramids: TilesManifest,
@@ -1312,6 +1521,14 @@ export const Content = z.strictObject({
   laws: z.array(Law).default([]),
   /** Design §11.1: the national lines, the same words in every paper. */
   nationalLines: z.array(NationalLine).default([]),
+  // Slice 8 (tech design §4.1). Empty until the designer's T6 lands; the loader checks each set
+  // once it is present (`slice8Problems`).
+  /** Design §5: Crane and Marr (two once written). */
+  patrons: z.array(Patron).default([]),
+  /** Design §16.4: the twenty lines. */
+  dossierLines: DossierLines.optional(),
+  /** `people.ts`'s dossier-only names (Brandauer). */
+  extraNames: z.array(DossierName).default([]),
 });
 
 export type Faction = z.infer<typeof Faction>;
@@ -1357,6 +1574,14 @@ export type Content = z.infer<typeof Content>;
 export type Law = z.infer<typeof Law>;
 export type LawEffect = z.infer<typeof LawEffectSchema>;
 export type NationalLine = z.infer<typeof NationalLine>;
+export type Shop = z.infer<typeof Shop>;
+export type ShopKind = z.infer<typeof ShopKind>;
+export type ItemEffect = z.infer<typeof ItemEffectSchema>;
+export type Patron = z.infer<typeof Patron>;
+export type PatronRequest = z.infer<typeof PatronRequest>;
+export type RequestMatchContent = z.infer<typeof RequestMatchSchema>;
+export type DossierName = z.infer<typeof DossierName>;
+export type DossierLines = z.infer<typeof DossierLines>;
 export type Platform = z.infer<typeof Platform>;
 /** Content as authored (defaults not yet applied). */
 export type ContentInput = z.input<typeof Content>;
