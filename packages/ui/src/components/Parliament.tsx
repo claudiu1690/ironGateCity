@@ -154,7 +154,7 @@ export function BillRow({ bill: b, names, presidents, link, selected, onSelect }
                 aria-checked={selected === v}
                 onClick={() => onSelect?.(v)}
                 className={cx(
-                  'label-caps min-h-11 w-11 cursor-pointer border-[1.5px] border-ink text-[11px] first:border-r-0',
+                  'label-caps min-h-11 min-w-11 cursor-pointer border-[1.5px] border-ink px-1.5 text-[11px] first:border-r-0',
                   selected === v ? 'bg-ink text-paper' : 'bg-paper-card text-ink',
                 )}
                 data-testid={`bill-pick-${v}`}

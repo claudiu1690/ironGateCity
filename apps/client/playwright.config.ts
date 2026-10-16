@@ -53,6 +53,11 @@ export default defineConfig({
         /(^|[\\/])favours\.spec\.ts$/,
         /(^|[\\/])events\.spec\.ts$/,
         /qa\.slice6\.spec\.ts/,
+        // Slice 7 (tech design §15.1): each in its own project after slice 6's.
+        /(^|[\\/])chair\.spec\.ts$/,
+        /(^|[\\/])nation\.spec\.ts$/,
+        /(^|[\\/])removal\.spec\.ts$/,
+        /(^|[\\/])petition\.spec\.ts$/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -235,6 +240,32 @@ export default defineConfig({
       testMatch: /qa\.slice6\.spec\.ts/,
       dependencies: ['events'],
       use: { ...devices['Pixel 7'], viewport: { width: 375, height: 667 } },
+    },
+    // Slice 7 (tech design §15.1): the Chair, the republic's election and Parliament, a removal and a
+    // petition, each in its own project after slice 6's, all on the test clock (they move it by terms).
+    {
+      name: 'chair',
+      testMatch: /(^|[\\/])chair\.spec\.ts$/,
+      dependencies: ['qa-together'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'nation',
+      testMatch: /(^|[\\/])nation\.spec\.ts$/,
+      dependencies: ['chair'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'removal',
+      testMatch: /(^|[\\/])removal\.spec\.ts$/,
+      dependencies: ['nation'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'petition',
+      testMatch: /(^|[\\/])petition\.spec\.ts$/,
+      dependencies: ['removal'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
   ],
   webServer: [

@@ -31,6 +31,8 @@ const MembersBody = z.strictObject({
   level: z.number().int().min(1).max(60).optional(),
   cityId: z.string().min(1).optional(),
   energy: z.number().int().min(0).max(100).optional(),
+  /** Slice 7 phase C (lane X): Political Capital, so test members can back, sign and stand. */
+  pc: z.number().int().min(0).max(10_000).optional(),
 });
 const EventsBody = z.union([
   z.strictObject({ startNow: z.union([Oid, z.literal('mine')]) }),
@@ -108,7 +110,7 @@ export async function createTestMembers(
         fxp: RANK_FXP[Math.max(0, rank - 1)] ?? 0,
         level: levelForXp(xp) || level,
         xp,
-        pc: 0,
+        pc: body.pc ?? 0,
         iron: 500,
         energy: { value: body.energy ?? 100, updatedAt: at },
         rested: 0,

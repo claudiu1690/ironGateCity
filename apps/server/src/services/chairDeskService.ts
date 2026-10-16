@@ -29,6 +29,7 @@ import { insertChairCallInTx, scheduleEventResolve } from './eventService';
 import { billView } from './parliamentService';
 import { weekdayName } from './politicsService';
 import { residenceCtx } from './residence';
+import { orderText, orderVars } from './views';
 
 /**
  * Slice 7 T16 (docs/tech/slice-7.md §8.2 `chairService`; ADR 0046; design §4.2–§4.4): the Chair's
@@ -291,7 +292,10 @@ export async function deskView(
   const nation = await s(Nation.findById('republic')).lean<NationDoc>();
   const standing = fs ? standingOn(fs.orders, today) : null;
   const shown = fs?.orders.next ?? standing;
-  const families = (slot: 'A' | 'B' | 'C') => content.families(f, slot).map((m) => ({ family: m.family, label: m.label }));
+  // Phase C (lane X): the menu's titles read as the Chair would read them (`{city}`, `{verbs}` resolved).
+  const vars = orderVars(content, c, null);
+  const families = (slot: 'A' | 'B' | 'C') =>
+    content.families(f, slot).map((m) => ({ family: m.family, label: orderText(m.label, vars) }));
   const places = pushPlaces(content);
   const target = standing?.push
     ? {

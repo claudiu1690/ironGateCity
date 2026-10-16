@@ -41,12 +41,6 @@ export function OrdersTab() {
           }
         />
       )}
-      {/* Slice 7 (screens §5.1, §11): the Chair's name under the orders when a Chair set them. */}
-      {!orders.off && orders.setBy && (
-        <p className="-mt-2 font-mono text-[12px] text-muted" data-testid="orders-set-by">
-          {copy.nation.chair.setByName(orders.setBy.name)}
-        </p>
-      )}
       {eventOrder?.link && (
         <button
           type="button"

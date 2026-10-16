@@ -271,6 +271,7 @@ export function TableBillSheet({
   const names = useFactionNames();
   const act = useNationAct();
   const [replaces, setReplaces] = useState<string | null>(null);
+  const [tabled, setTabled] = useState<string | null>(null);
   const c: CatalogueView | undefined = q.data;
   const cost = c?.as === 'president' ? 'free · this week' : `${c?.cost ?? 50} Political Capital`;
   const put = (kind: 'law' | 'strike' | 'removal', lawId: string | null) =>
@@ -279,9 +280,11 @@ export function TableBillSheet({
         trpcClient.parliament.table.mutate({ kind, lawId, replacesLawId: kind === 'law' ? replaces : null, idempotencyKey: k }),
       )
       .then((r) => {
+        // The sheet closes; the modal shows; Continue goes to the bill's page.
         if (r && r.view.kind === 'bill') {
           setReplaces(null);
-          onTabled(r.view.bill.billId);
+          setTabled(r.view.bill.billId);
+          onOpenChange(false);
         }
       });
   const needReplace = !!c?.atCap && !replaces;
@@ -361,7 +364,15 @@ export function TableBillSheet({
           </div>
         )}
       </BottomSheet>
-      <ResultModal result={act.result} open={act.open} onOpenChange={act.setOpen} />
+      <ResultModal
+        result={act.result}
+        open={act.open}
+        onOpenChange={act.setOpen}
+        onContinue={() => {
+          act.setOpen(false);
+          if (tabled) onTabled(tabled);
+        }}
+      />
     </>
   );
 }

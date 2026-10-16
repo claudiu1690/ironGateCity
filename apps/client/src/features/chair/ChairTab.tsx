@@ -29,7 +29,7 @@ import { MembersTab } from '../faction/MembersTab';
 import { LoadError, Loading, Notice } from '../nation/frame';
 import { useNationAct } from '../nation/useNationAct';
 import { TableBillSheet } from '../../routes/parliament';
-import { ConfidenceCard } from './ChairElection';
+import { ChairElectionCard, ConfidenceCard } from './ChairElection';
 
 const C = copy.nation.chair;
 type Part = 'orders' | 'lines' | 'events' | 'members';
@@ -80,6 +80,7 @@ function ChairPage({ d }: { d: ChairDeskView }) {
   return (
     <div className="flex flex-col gap-3 px-4 py-3" data-testid="chair-page">
       <ChairLine d={d} />
+      <ChairElectionCard />
       <ConfidenceCard />
       <Link to="/faction/confidence" className="inline-flex min-h-11 items-center self-start font-mono text-[12px] underline underline-offset-2" data-testid="to-confidence">
         {C.voteOnChair}

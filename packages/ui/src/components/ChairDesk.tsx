@@ -161,7 +161,7 @@ export function PushRow({ value, places, onChange }: PushRowProps) {
                 onClick={() => onChange({ ...value, cityId: p.cityId, districtId: p.districtId })}
                 testId="push-place"
               >
-                {p.districtId ? C.pushIrongate(p.name) : p.name}
+                {p.districtId ? C.pushIrongate(p.name.replace(/, Irongate$/, '')) : p.name}
               </ToggleChip>
             ))}
           </div>

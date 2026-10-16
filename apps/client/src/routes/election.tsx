@@ -53,7 +53,8 @@ export function PickPage({ vote = false }: { vote?: boolean }) {
   const ballot = p.ballot ?? [];
   const players = ballot.filter((b) => b.kind === 'player');
   const figure = ballot.find((b) => b.kind === 'npc');
-  const canVote = p.canVote.ok && !p.voted;
+  // `voted`: the pick is a vote (a player stands); the caller's own vote is `yourVote`.
+  const canVote = p.canVote.ok && !p.yourVote;
   const chosen = ballot.find((b) => b.key === pick) ?? null;
   const row = (b: (typeof ballot)[number]) => (
     <BallotChoice
@@ -119,7 +120,7 @@ export function PickPage({ vote = false }: { vote?: boolean }) {
             {copy.election.voteNow}
           </Link>
         )}
-        {!canVote && !p.voted && p.canVote.why && (
+        {!canVote && !p.yourVote && p.canVote.why && (
           <p className="font-mono text-[12px] text-muted">{gateWords(p.canVote.why)}</p>
         )}
         <Link to="/election/national" className={linkClass}>
@@ -262,7 +263,7 @@ export function NationalPage({ vote = false }: { vote?: boolean }) {
               <p className="font-mono text-[11px] text-muted">{E.thenLocals}</p>
               <p className="font-mono text-[11.5px] text-muted">{E.listNote}</p>
             </section>
-            {e.stand && (
+            {e.stand && !e.stand.president.standing && (
               <PowerCard kicker="Stand" testId="national-stand">
                 <ul>
                   <Tick ok={e.stand.list.ok || e.stand.list.standing}>{E.listRung}</Tick>
@@ -281,9 +282,7 @@ export function NationalPage({ vote = false }: { vote?: boolean }) {
                   </Button>
                 )}
                 {!e.stand.list.ok && !e.stand.list.standing && <span className="font-mono text-[11px] text-muted">{gateWords(e.stand.list.why)}</span>}
-                {e.stand.president.standing ? (
-                  <span className="font-mono text-[12px] text-petrol" data-testid="standing-president">Standing for President</span>
-                ) : (
+                {e.stand.president.standing ? null : (
                   <Button
                     variant="outline"
                     disabled={!e.stand.president.ok}
@@ -299,6 +298,11 @@ export function NationalPage({ vote = false }: { vote?: boolean }) {
               </PowerCard>
             )}
           </>
+        )}
+        {e.stand?.president.standing && (
+          <p className="font-mono text-[12px] text-petrol" data-testid="standing-president">
+            Standing for President
+          </p>
         )}
         <Link to="/parliament" className={linkClass}>
           {copy.nation.bar.parliament}

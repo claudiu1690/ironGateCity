@@ -300,6 +300,8 @@ export async function chairElectionView(
       const p = players.find((pl) => pl._id.equals(x.characterId));
       return {
         candidacyId: x._id.toHexString(),
+        // Phase C (lane X): the ballot's key, so the vote names the row it shows.
+        key: `p:${x.characterId.toHexString()}`,
         name: x.name,
         avatarId: p?.avatarId ?? null,
         rank: p?.rank ?? 1,

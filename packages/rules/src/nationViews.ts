@@ -28,6 +28,8 @@ export interface ActGate {
 
 export interface ChairCandidateView {
   candidacyId: string;
+  /** The ballot's key (`p:{characterId}`), for the vote. */
+  key: string;
   name: string;
   avatarId: string | null;
   rank: number;

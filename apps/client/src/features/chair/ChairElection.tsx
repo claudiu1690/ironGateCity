@@ -196,6 +196,7 @@ export function ChairElectionPage() {
             {e.candidates.map((c) => (
               <BallotChoice
                 key={c.candidacyId}
+                choiceKey={c.candidacyId}
                 name={c.name}
                 selected={false}
                 testId="chair-candidate"
@@ -264,7 +265,7 @@ export function ChairVotePage() {
   const e = q.data;
   const canVote = e.canVote.ok && !e.yourVote;
   const rows = [
-    ...e.candidates.map((c) => ({ key: `p:${c.candidacyId}`, name: c.name, line: c.platform ?? '' })),
+    ...e.candidates.map((c) => ({ key: c.key, name: c.name, line: c.platform ?? '' })),
     { key: 'n:secretary', name: e.secretary.name, line: CE.secretaryRow(e.secretary.addressedAs) },
   ];
   return (
