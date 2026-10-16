@@ -93,7 +93,8 @@ export function PlaceLifeCards({ locationId, open, act }: { locationId: string; 
           notice={notice('dining')}
         />
       )}
-      {data.shops.filter((s) => s.kind === 'backRoom').map(shopCard)}
+      {/* Screens §4: below Rank 3 the back room is not on the sheet at all (the bar is a bar). */}
+      {data.shops.filter((s) => s.kind === 'backRoom' && s.bribe?.state !== 'rank').map(shopCard)}
       <BuyConfirm
         item={asking}
         onOpenChange={(o) => !o && setAsking(null)}

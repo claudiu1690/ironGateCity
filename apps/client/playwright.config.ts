@@ -61,6 +61,10 @@ export default defineConfig({
         /(^|[\\/])nation\.spec\.ts$/,
         /(^|[\\/])removal\.spec\.ts$/,
         /(^|[\\/])petition\.spec\.ts$/,
+        // Slice 8, lane P (tech design §15.1, §24.11): each in its own project after slice 7's.
+        /(^|[\\/])wardrobe\.spec\.ts$/,
+        /(^|[\\/])bodyguard\.spec\.ts$/,
+        /(^|[\\/])bar\.spec\.ts$/,
       ],
       use: { ...devices['Pixel 7'] },
     },
@@ -289,6 +293,27 @@ export default defineConfig({
       name: 'qa-nation',
       testMatch: /qa\.slice7\.spec\.ts/,
       dependencies: ['governor'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    // Slice 8, lane P (tech design §15.1, §24.11): the Wardrobe and shops, someone to walk with you,
+    // the bar; each in its own project after slice 7's, on a phone at 390 × 844 (the bar's moves the
+    // shared clock past a meal).
+    {
+      name: 'wardrobe',
+      testMatch: /(^|[\\/])wardrobe\.spec\.ts$/,
+      dependencies: ['qa-nation'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'bodyguard',
+      testMatch: /(^|[\\/])bodyguard\.spec\.ts$/,
+      dependencies: ['wardrobe'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'bar',
+      testMatch: /(^|[\\/])bar\.spec\.ts$/,
+      dependencies: ['bodyguard'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
   ],
