@@ -598,7 +598,7 @@ export const assets: Asset[] = [
     portrait(
       'marr',
       40,
-      'Julius Marr, banker: a man with slicked dark hair and a thin moustache, a pinstriped double-breasted suit, a red tie and pocket square, a watch chain.',
+      'Julius Marr, banker: slicked dark hair, a thin moustache and a half-smile, a pinstriped double-breasted suit, a red tie and pocket square, a watch chain.',
     ),
   ),
   // Slice 8 (design §24.6): the bodyguards, civilians (no uniform, badge or weapon). Alt texts are
@@ -607,21 +607,21 @@ export const assets: Asset[] = [
     portrait(
       'doorman',
       20,
-      'A bar doorman in his forties: broad, a flat cap, a heavy dark wool coat buttoned to the neck, a boxer\'s nose, a day\'s beard, patient eyes.',
+      "A bar doorman in his forties: broad, a flat cap, a heavy dark wool coat buttoned to the neck, a day's beard, a lined face, patient eyes.",
     ),
   ),
   withWebp(
     portrait(
       'steward',
       20,
-      'A party steward in his thirties: lean, hair combed back, a worn dark suit and a plain red tie, a pencil behind one ear, a notebook held to his chest.',
+      'A party steward in his thirties: lean, wavy hair combed back, a worn dark suit and a dark red tie, a pencil behind one ear, a notebook held to his chest.',
     ),
   ),
   withWebp(
     portrait(
       'minder',
       20,
-      'A minder in his fifties: a felt hat, a dark overcoat with the collar up, a red silk scarf, a lit cigarette in the corner of his mouth, a calm, unreadable face.',
+      'A minder in his fifties: a felt hat, a dark overcoat with the collar up, a red silk scarf, an unlit cigarette in the corner of his mouth, a hard, calm face.',
     ),
   ),
   scene(
@@ -711,7 +711,7 @@ export const assets: Asset[] = [
   item(
     'item.round',
     'round.png',
-    'A tin tray with four glasses of beer, foam at the rims, one glass lifted off the tray, wet rings below.',
+    'A tin tray with handles and four glasses of beer, foam at the rims, one glass lifted off the tray, wet rings below.',
     1024,
   ),
   crest('vanguard', 'Iron Vanguard crest: an iron gate beneath a lantern.'),

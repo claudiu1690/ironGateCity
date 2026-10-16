@@ -84,6 +84,7 @@ export const clearwaterMissions: MissionsByPlace = {
       id: 'clearwater.casino.midnight',
       name: 'The tables after midnight',
       difficulty: 20,
+      card: 'scene.casino',
       society: { needs: 20 },
       briefing:
         "After midnight the Casino's committee room is a card room and the men who run the Front play in it: the company's manager, the tram director, a councillor or two off duty, the bank's man. The door is the doorman's and the doorman reads coats. A chair at the long table is worth a week of benches.",
@@ -104,6 +105,7 @@ export const clearwaterMissions: MissionsByPlace = {
       id: 'clearwater.casino.late-table',
       name: 'The late table',
       difficulty: 25,
+      card: 'scene.casino',
       society: { needs: 25, favour: 3, entry: 'onSuccess' },
       requires: { patron: { id: 'marr', tier: 'associate' } },
       briefing:
