@@ -5,6 +5,7 @@ import {
   PLACEHOLDERS,
   POLITICAL_PLACEHOLDERS,
   RISK_PLACEHOLDERS,
+  LIFE_PLACEHOLDERS,
 
   STORY_PLACEHOLDERS,
   TIME_TOKENS,
@@ -31,6 +32,9 @@ import type {
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
 import { bodyguards } from './data/bodyguards';
+import { dossierLines } from './data/dossier';
+import { lifeHeadlines } from './data/lifeHeadlines';
+import { patrons } from './data/patrons';
 import { assets, avatars, lifeScenes, missionCards, nationScenes, scenes } from './data/art';
 import { candidates, clearwaterCandidates, irongateCandidates } from './data/candidates';
 import { capitalHomeHeadlines } from './data/capitalHomeHeadlines';
@@ -61,7 +65,7 @@ import type { LocatedVenue } from './slice6';
 import { ordinances } from './data/ordinances';
 import { orderTemplates } from './data/orders';
 import { origin } from './data/origin';
-import { npcs, standingLevels } from './data/people';
+import { extraNames, npcs, standingLevels } from './data/people';
 import { politicalHeadlines } from './data/politicalHeadlines';
 import { politics } from './data/politics';
 import { ruleHeadlines } from './data/ruleHeadlines';
@@ -127,6 +131,8 @@ export const rawContent: unknown = {
     // Slice 7 (tech design §11): the Courier's set and the personal national lines.
     ...courierHeadlines,
     ...nationHeadlines,
+    // Slice 8 (tech design §11): a life in the city's personal lines, every paper.
+    ...lifeHeadlines,
   ],
   ordinances,
   candidates: [...candidates, ...irongateCandidates, ...clearwaterCandidates],
@@ -143,7 +149,10 @@ export const rawContent: unknown = {
   // Slice 7 (tech design §4.4).
   laws,
   nationalLines,
-  // Slice 8 (tech design §24.3): empty until the designer's T27.
+  // Slice 8 (tech design §4.4, §24.3).
+  patrons,
+  dossierLines,
+  extraNames,
   bodyguards,
 };
 
@@ -283,7 +292,8 @@ const MIN_HOTSPOT_DISTANCE = 0.03;
 /** Maps v3 §2: a pin lies at least this far inside its district's frame (the capital's only). */
 const FRAME_MARGIN = 0.02;
 /** Slice 5 (tech design §4.3): the risk headlines' placeholders join the stored and the live sets. */
-const ALLOWED_PLACEHOLDERS = new Set<string>([...PLACEHOLDERS, ...RISK_PLACEHOLDERS]);
+// Slice 8 (tech design §4.3): the life lines' tokens.
+const ALLOWED_PLACEHOLDERS = new Set<string>([...PLACEHOLDERS, ...RISK_PLACEHOLDERS, ...LIFE_PLACEHOLDERS]);
 /** Tech design §4.4: story texts have their own, separate list. */
 const ALLOWED_STORY_PLACEHOLDERS = new Set<string>(STORY_PLACEHOLDERS);
 /** Slice-3 tech design §4.3: political texts have their own list plus the client's time tokens. */

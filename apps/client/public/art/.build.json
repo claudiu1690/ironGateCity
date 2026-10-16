@@ -2524,5 +2524,41 @@
     "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
     "bytes": 13552
+  },
+  "portrait.crane-256.avif": {
+    "sourceHash": "b4b330aa811c757ae4ceb5f19d249c687fd3bee04f7cfcf8fb5f517a5a64567b",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 10879
+  },
+  "portrait.crane-512.avif": {
+    "sourceHash": "b4b330aa811c757ae4ceb5f19d249c687fd3bee04f7cfcf8fb5f517a5a64567b",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 36212
+  },
+  "portrait.crane-256.webp": {
+    "sourceHash": "b4b330aa811c757ae4ceb5f19d249c687fd3bee04f7cfcf8fb5f517a5a64567b",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 15174
+  },
+  "portrait.marr-256.avif": {
+    "sourceHash": "c66ab358a2039864a3612261fed4550d7b958528cd96bfe70c60325679dd393a",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 9530
+  },
+  "portrait.marr-512.avif": {
+    "sourceHash": "c66ab358a2039864a3612261fed4550d7b958528cd96bfe70c60325679dd393a",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 33698
+  },
+  "portrait.marr-256.webp": {
+    "sourceHash": "c66ab358a2039864a3612261fed4550d7b958528cd96bfe70c60325679dd393a",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":40,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 12640
   }
 }

@@ -586,6 +586,21 @@ export const assets: Asset[] = [
     'front-page',
     "A newspaper's front page coming off the press under a pressman's hands, the headline band blank.",
   ),
+  // Slice 8 (design §5.1): the two patrons (their files have been in the folder since October).
+  withWebp(
+    portrait(
+      'crane',
+      40,
+      'Edith Crane, owner of the Herald: a silver-haired woman in a dark suit and a wine-red blouse, pearl earrings and a brooch, a cigarette holder raised.',
+    ),
+  ),
+  withWebp(
+    portrait(
+      'marr',
+      40,
+      'Julius Marr, banker: a man with slicked dark hair and a thin moustache, a pinstriped double-breasted suit, a red tie and pocket square, a watch chain.',
+    ),
+  ),
   // Slice 8 (design §24.6): the bodyguards, civilians (no uniform, badge or weapon). Alt texts are
   // drafts from the pictures; their 512 px WebP is written at 256 only, as slice 7's portraits.
   withWebp(
@@ -606,7 +621,7 @@ export const assets: Asset[] = [
     portrait(
       'minder',
       20,
-      'A minder in his fifties: a felt hat with the brim down, a dark overcoat with the collar up over a red silk scarf, a cigarette, a calm, unreadable face.',
+      'A minder in his fifties: a felt hat, a dark overcoat with the collar up, a red silk scarf, a lit cigarette in the corner of his mouth, a calm, unreadable face.',
     ),
   ),
   scene(
@@ -720,6 +735,9 @@ export const missionCards: Content['art']['missionCards'] = [
   { missionType: 'disruption', assetId: 'scene.news-strike' },
   { missionType: 'sabotage', assetId: 'scene.mission-sabotage' },
   { missionType: 'theft', assetId: 'scene.mission-theft' },
+  // Slice 8 (design §3.7): a society call's card is the hotel's (the calls' places carry their own
+  // scenes first: the Casino, the Lido).
+  { missionType: 'social', assetId: 'scene.hotel' },
 ];
 
 export const scenes: SceneBinding[] = [

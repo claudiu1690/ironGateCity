@@ -11,8 +11,8 @@ type HeadlineInput = ContentInput['headlines'][number];
  * Every deck is at most 200 characters with the longest tokens; `{office}` reads *visitor* for a
  * player with none and `{coat}` is the coat's name in lower case.
  *
- * The bodyguards' two lines (`bodyguard-last`, `bodyguard-gone`) wait in `copy.life.minder.paper`
- * for their condition kinds (T26); they join this file when the kinds exist.
+ * The bodyguards' two lines (`bodyguard-last`, `bodyguard-gone`) joined with T26's condition kinds;
+ * `{minder}` is his name and `{price}` the week.
  */
 
 type Paper = { prefix: string; cityId: string };
@@ -171,6 +171,34 @@ const LINES: Line[] = [
     headline: 'For the Record: {entry}',
     deck: 'Legacy {total}. {toSpend} to spend on a lasting perk.',
   },
+  // ----- Someone to walk with you (tech design §24.5; moved from copy.life.minder.paper with T26) --
+  // `{minder}` is the man's name (the copy's `{name}`, renamed so it never reads as the player's).
+  {
+    name: 'bodyguard-last',
+    priority: 2,
+    when: [{ kind: 'bodyguardLast' }],
+    headline: "{minder}'s Week Is Up Tonight",
+    deck: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Nothing else changes.",
+    voices: {
+      clarion: 'Paid until tonight. Another week on the party store\'s card, or he goes back to the door. Holm: "The quays will miss the width of him."',
+      sentinel: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The committee notes the date.",
+      gazette: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Mr Grey has the receipt ready.",
+      courier: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The lake has seen him coming.",
+    },
+  },
+  {
+    name: 'bodyguard-gone',
+    priority: 2,
+    when: [{ kind: 'bodyguardGone' }],
+    headline: '{minder} Has Gone Back to the Door',
+    deck: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store.",
+    voices: {
+      clarion: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Union Hall. Holm says he was never on the books.",
+      sentinel: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at Beacon House. The committee expects you to manage.",
+      gazette: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Rooms. Mr Grey wishes him well.",
+      courier: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store. The Front walks alone, mostly.",
+    },
+  },
 ];
 
 const paperLines = (key: PaperKey): HeadlineInput[] => {
@@ -186,7 +214,7 @@ const paperLines = (key: PaperKey): HeadlineInput[] => {
   }));
 };
 
-/** The fifteen lines in each of the five papers (the Herald's deck where the voice adds nothing). */
+/** The seventeen lines in each of the five papers (the Herald's deck where the voice adds nothing). */
 export const lifeHeadlines: HeadlineInput[] = [
   ...paperLines('clarion'),
   ...paperLines('sentinel'),

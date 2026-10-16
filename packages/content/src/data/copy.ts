@@ -3768,29 +3768,6 @@ export const copy = {
       /** The desk's row. */
       deskLine: (name: string, said: string, weekday: string) => `${name}, ${said} · until ${weekday}`,
       deskLast: (name: string) => `${name} · last day · another week on the party store's card`,
-      /**
-       * The two paper lines in five voices (design §24.2; the Herald's wording, the others §21.4's
-       * pattern). They move to `lifeHeadlines.ts` when the rules' conditions `bodyguardLast` and
-       * `bodyguardGone` exist (T26). `{name}` the man's, `{price}` the week's.
-       */
-      paper: {
-        last: {
-          headline: "{name}'s Week Is Up Tonight",
-          herald: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Nothing else changes.",
-          clarion: 'Paid until tonight. Another week on the party store\'s card, or he goes back to the door. Holm: "The quays will miss the width of him."',
-          sentinel: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The committee notes the date.",
-          gazette: "Paid until tonight. Another week on the party store's card, or he goes back to the door. Mr Grey has the receipt ready.",
-          courier: "Paid until tonight. Another week on the party store's card, or he goes back to the door. The lake has seen him coming.",
-        },
-        gone: {
-          headline: '{name} Has Gone Back to the Door',
-          herald: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store.",
-          clarion: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Union Hall. Holm says he was never on the books.",
-          sentinel: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at Beacon House. The committee expects you to manage.",
-          gazette: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the Rooms. Mr Grey wishes him well.",
-          courier: "The week ran out at midnight. He'll walk with you again for {price} a week; the card is at the party store. The Front walks alone, mostly.",
-        },
-      },
       errors: {
         hasOne: (name: string, weekday: string) => `${name} is with you until ${weekday}. A different man when the week is up.`,
         notMember: "Members only: the party store's card.",

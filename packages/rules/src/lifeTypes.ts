@@ -86,3 +86,40 @@ export const DOSSIER_SOURCES = [
 ] as const;
 export type DossierSource = (typeof DOSSIER_SOURCES)[number];
 export type DossierStatus = 'held' | 'bound' | 'attached' | 'informant' | 'spent' | 'sold';
+
+/**
+ * Tech design §4.3 (design §10.1, §24.2): the life lines' placeholders, resolved on the server from
+ * the settlement's facts. `{minder}` and `{price}` are the bodyguard's name and the week.
+ */
+export const LIFE_PLACEHOLDERS = [
+  'item',
+  'charisma',
+  'street',
+  'paper',
+  'office',
+  'coat',
+  'subject',
+  'headlineLine',
+  'line1',
+  'line2',
+  'party',
+  'city',
+  'n',
+  'patron',
+  'request',
+  'until',
+  'favour',
+  'tier',
+  'next',
+  'perkLine',
+  'line',
+  'category',
+  'daysLeft',
+  'restedLine',
+  'entry',
+  'total',
+  'toSpend',
+  'minder',
+  'price',
+] as const;
+export type LifePlaceholder = (typeof LIFE_PLACEHOLDERS)[number];
