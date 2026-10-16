@@ -3,11 +3,11 @@ type: system
 title: Political Seasons
 aliases: [Season, Political Season, Season Election, Season Champion, Rollover, Season rollover, Hall of Fame, Season Twists, Season track, Season Standing]
 tags: [seasons, nation, retention]
-status: designed
-slice: "8 (designed, not built); track and twists later"
+status: parked
+slice: "deferred out of slice 8 on 16 Oct 2026 (a later slice, not yet placed); track and twists later"
 gdd: ["§2", "§2.1", "§22", "§25"]
 adrs: ["0058", "0043"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Political Seasons
@@ -19,7 +19,7 @@ in the **Season Election**. Each party builds a **season's score** from how much
 holds each day plus national elections won; the top party is the **Champion**. At the turn of the
 season the map **settles halfway back** to its starting balance, laws and council rules end and
 Heat goes to zero, but everything a player owns stays. Seasons give the game structure and let
-newcomers compete on fair terms. Designed for slice 8, **not built**.
+newcomers compete on fair terms. Designed for slice 8, then **deferred on 16 Oct 2026** (the user: "let's leave the seasons for later"): not built, and not yet placed in a later slice.
 
 ## How it works
 
@@ -41,15 +41,16 @@ newcomers compete on fair terms. Designed for slice 8, **not built**.
 
 **Rules:** [[GDD#22. Political Seasons (new)|GDD §22]] · [[design/slice-8-life|slice 8 design §9]] · [[tech/slice-8|slice 8 tech spec]] (§6.10 `season.ts`, `seasonService`) · [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] · [[adr/0043-nation-day-term-calendar-and-the-republic-document|ADR 0043]] (the term epoch)
 
-**Code:** none yet. Planned: `packages/rules/src/season.ts`, `seasonService` (`seasonFinaleInTx`), a `seasons` collection, `nation.season` on the `nation` document (itself slice 7).
+**Code:** none. Deferred design: `packages/rules/src/season.ts`, `seasonService` (`seasonFinaleInTx`), a `seasons` collection, `nation.season` on the `nation` document (itself slice 7). What slice 8 keeps so it can be added later without a data migration is in [[tech/slice-8|tech/slice-8]] *Seasons deferred (16 Oct 2026)* (the season stays a pure function of the term epoch; the Legacy refs `champion:{s}` and `award:{s}:…` are reserved; Heat is read through one projection that `heatAt` can wrap).
 
 ## Status
 
-- **Designed, not built** (slice 8). It depends on slice 7's term calendar and `nation` document.
+- **Deferred (16 Oct 2026)**, designed but not built; it was slice 8. It depends on slice 7's term calendar and `nation` document (built). [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] is *Deferred*.
 - The free and premium tracks are launch + 60 days; twists from later seasons ([[GDD#25. Scope and roadmap|GDD §25]]).
 
 ## Decisions
 
+- **16 Oct 2026, the user: "let's leave the seasons for later".** Out of slice 8; the rest of slice 8 is built without it.
 - **No season track and no twist in season 1** (Appendix C #80): the slice's question is whether players have month-long goals, which the Dossier, patrons, the flat and the Ambition answer.
 - **The election bonus is 100, not 10** (Appendix C #81): at 10 an election was a third of one day's lead.
 - Twist renames from the content-policy review: *The Uprising* → **The Upset**; *Martial Law in Duskwall* → **Direct Rule in Duskwall**.
@@ -57,7 +58,7 @@ newcomers compete on fair terms. Designed for slice 8, **not built**.
 ## Open questions / drift
 
 > [!warning] Drift
-> **Rollover vs "a city always has a rule".** GDD §22.2 says every council rule in force ends at rollover and "the councils' next **order papers** start the rules again"; [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] §4 says the city's rule ends and "the count and **division** of that boundary run first". Order papers and divisions no longer exist after the voting rework, whose rule is that a city always has a rule (ADR 0083). Since 14 Oct 2026 ADR 0058 carries a partial amendment (no division; which wins is the user's call) and [[tech/slice-8|tech/slice-8]] marks the rule cut at rollover as pending that call. **Still open (the user, drift row A9):** does the rule run out its window, does the season end it with card 1 or the fallback taking over, or something else?
+> **Rollover vs "a city always has a rule".** GDD §22.2 says every council rule in force ends at rollover and "the councils' next **order papers** start the rules again"; [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] §4 says the city's rule ends and "the count and **division** of that boundary run first". Order papers and divisions no longer exist after the voting rework, whose rule is that a city always has a rule (ADR 0083). Since 14 Oct 2026 ADR 0058 carries a partial amendment (no division; which wins is the user's call) and [[tech/slice-8|tech/slice-8]] marks the rule cut at rollover as pending that call. **Parked with the season (drift row A9, 16 Oct 2026):** does the rule run out its window, does the season end it with card 1 or the fallback taking over, or something else?
 
 - Reading note: §22.1's first bullet still says "plus 10 per national election won"; the slice-8 paragraph under it says "the 10 above is raised" to **100**. The later paragraph wins.
 

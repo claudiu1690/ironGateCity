@@ -7,7 +7,7 @@ status: partly built
 slice: "1 (City Day, lazy); 3 (the city's day job); review 5 (six-hour game day)"
 gdd: ["§2", "§2.1", "§2.2"]
 adrs: ["0005", "0017", "0079"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Time and the Game Day
@@ -73,7 +73,7 @@ instant, whatever their time zone.
   [[adr/0017-city-day-boundaries-lazy-first-job-primary|ADR 0017]]); the six-hour game day and its
   night rules (review 5 fix round, 8–10 Oct 2026).
 - **Designed, not built:** the 28-day term calendar (slice 7, ADR 0043) and the season calendar
-  (slice 8, ADR 0058). See [[Slice 7 The Nation]], [[Slice 8 A Life in the City]].
+  (was slice 8, ADR 0058; **deferred 16 Oct 2026**). See [[Slice 7 The Nation]], [[Slice 8 A Life in the City]].
 
 ## Decisions
 

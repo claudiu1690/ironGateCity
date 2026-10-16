@@ -9,6 +9,10 @@ updated: 2026-10-16
 Append-only record of every change to the wiki. Newest first. Each entry header is
 `## [YYYY-MM-DD] <op> | <title>` (op: build, update, ingest, query, lint, note).
 
+## [2026-10-16] update | Slice 8 tech: seasons deferred
+
+The user: "let's leave the seasons for later"; the other design §20 defaults approved. [[tech/slice-8|tech/slice-8]] gains a dated *Seasons deferred* note (what moves to a later slice, what is kept and why: the counts' Protégé and perk bonuses, the Heat perk, `used.day`; the forward-compatibility rules), every season line marked deferred, §20's tasks rewritten (T15 deferred, T3 takes the counts' bonuses, T18 plays a month, `season.spec.ts` dropped). [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] *Deferred*; ADR 0057 notes its season parts. The plan's slice 8 entries. Updated [[Slice 8 A Life in the City]], [[Political Seasons]], [[Legacy]], [[Time and the Game Day]], [[Decision Log]], [[Drift Report]] (A9 parked), [[Open Questions]] (W-1, C#5 parked; C#74–#81 approved), `index.md`, `overview.md`.
+
 ## [2026-10-16] build | Slice 7 fix round
 
 QA's M1 and m1 fixed, D-S7I-3b bound, the Chair's turnout clamped. The law book's rows name the tabler and the real division (stored on `nation.laws.inForce` at enactment, with a fallback to the bill); the share bar under the home plate is a labelled button for the plate's notes again, and the rule line's 44 px target ends at its top (the plate 12 px taller where the rule line is last); the Mayor's caption reads `captions.governorOrMayor` (the old `captions.governor` deleted); the Chair's result never shows more voters than the roll. Playwright `qa-nation` 7/7 (new checks for the law book and the bar), `chair`, `nation`, `clearwater`, `governor`, `review6` and `review1` (phone) green. [[review/slice-7-build-notes|Build notes]] for the user. Updated [[Slice 7 The Nation]], [[The Legislature and Laws]], [[Drift Report]] (D-S7I-3b and D-S7Q-1 resolved), [[Open Questions]], `index.md`.

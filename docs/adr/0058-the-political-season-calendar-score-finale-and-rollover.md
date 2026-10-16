@@ -1,6 +1,10 @@
 # ADR 0058 — The Political Season: three terms from the term epoch, a running score on `nation`, a finale at season day 0, and a rollover split by owner
 
-**Status:** proposed (slice 8; extends ADR 0043); decision 4 under review since the voting rework (ADR 0083), awaiting the user (drift row A9) · **Date:** 2026-10-04
+**Status:** **Deferred** (16 Oct 2026; was proposed for slice 8; extends ADR 0043) · **Date:** 2026-10-04
+
+## Deferred (16 Oct 2026)
+
+The user's decision: "let's leave the seasons for later". Nothing in this ADR is built in slice 8: no `season.ts`, no `nation.season` or `seasons` collection, no `contributions` scope `season|{s}`, no finale or rollover on the nation's or the cities' days, no `heatAt`, no Legacy from seasons. The decision below stands as the design to pick up in a later slice (not yet placed in the plan), together with decision 4's open question (drift row A9), which waits with it. `docs/tech/slice-8.md`'s note *Seasons deferred (16 Oct 2026)* lists what moved and the forward-compatibility rules slice 8 keeps so this can be added without a data migration: the season stays a pure function of `TERM.epochDay`; the Legacy refs `champion:{s}` and `award:{s}:{kind}:{bracket}` are reserved; Heat is read through one projection that `heatAt` can wrap; `addInfluence`'s scopes stay a list; `dossierEntries.used.day` is written on every use; the enums gain values additively. The first season will be the one in progress when it ships (partial, as decision 1 says of the bootstrap season).
 
 ## Amendment (14 Oct 2026, partial)
 

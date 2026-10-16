@@ -2,6 +2,8 @@
 
 **Status:** proposed (slice 8; applies ADR 0020 and 0028) · **Date:** 2026-10-04
 
+> **16 Oct 2026: the season's parts are deferred with ADR 0058** (the user: "let's leave the seasons for later"). Slice 8 builds this ADR without `legacy.seasonCredited`, `seasonCredits` and the kinds `champion` and `seasonAward`; the refs `champion:{season}` and `award:{season}:{kind}:{bracket}` are reserved for them. An absent `seasonCredited` will read as *nothing credited yet*, so adding them later needs no migration. Everything else below stands.
+
 ## Context
 
 GDD §17.3 and design §7: **Legacy** is the public, permanent record (City or District Hero 2, a council term 3, an Issue's top five 2, a pledged law 10, a Governor's or deputy's term 5, a Chair's 10, a President's 40, surviving a vote 10, an Ambition 30, an exposé 2, Protégé 5, the Champion faction 5, a season award 5). Small **lasting perks** spend a balance kept beside the total, which never falls. The design suggests `legacy { entries[], spent, perks[] }` embedded.

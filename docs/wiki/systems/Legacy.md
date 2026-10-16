@@ -7,7 +7,7 @@ status: designed
 slice: "MVP, slice 8, not built yet (record and perks; decided 14 Oct 2026)"
 gdd: ["§17.3", "§14.11", "§10.4"]
 adrs: ["0057", "0052"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Legacy
@@ -18,7 +18,7 @@ Legacy is your **permanent, public political record**, shown on your profile (*L
 
 ## How it works
 
-- **Entries and points** ([[GDD#17.3 Legacy (new)|GDD §17.3]]; headline values): City or District Hero **2** · a council term completed **3** · an Issue resolved in its top five **2** · a Governor's, Mayor's or deputy's term **5** · a Chair's, Minister's or Speaker's term **10** · a pledged law passed **10** · surviving a no-confidence vote **10** · an Ambition completed **30** · a President's term **40** · an exposé printed **2** · Protégé of a patron **5** · the Champion faction **5** · a season award **5** · pushed a rival home town into Unrest **2** (the review-5 prize, `UNREST_PRIZE.legacy`) · helped win your home town back from Unrest **2** (pinned 14 Oct 2026 to match).
+- **Entries and points** ([[GDD#17.3 Legacy (new)|GDD §17.3]]; headline values): City or District Hero **2** · a council term completed **3** · an Issue resolved in its top five **2** · a Governor's, Mayor's or deputy's term **5** · a Chair's, Minister's or Speaker's term **10** · a pledged law passed **10** · surviving a no-confidence vote **10** · an Ambition completed **30** · a President's term **40** · an exposé printed **2** · Protégé of a patron **5** · the Champion faction **5** and a season award **5** (both **deferred with [[Political Seasons]], 16 Oct 2026**) · pushed a rival home town into Unrest **2** (the review-5 prize, `UNREST_PRIZE.legacy`) · helped win your home town back from Unrest **2** (pinned 14 Oct 2026 to match).
 - **Lasting perks** (the player's words; one tap each on the Me tab; permanent and small):
   - *A fifth more from the party* (15): +5 % Party XP on every action and mission;
   - *A bigger Dossier* (5, twice): +1 slot ([[The Dossier]]);
@@ -30,14 +30,14 @@ Legacy is your **permanent, public political record**, shown on your profile (*L
   - *A quiet word at the station* (10): Heat cools 10 % faster.
 - **Pace:** the reference player has about **15 Legacy by day 30**: one perk, chosen. Legacy is never spent on anything else and **cannot be bought** ([[Monetisation]]).
 - **Fame is dangerous:** +1 recognition per 10 Legacy (at most +5) on rival ground ([[Hostile Ground]]).
-- **Absence:** an entry earned by the world (a term ending, a season award) is credited at your next settlement; nothing is missed.
+- **Absence:** an entry earned by the world (a term ending, an award) is credited at your next settlement; nothing is missed.
 
 ## Where it lives
 
 **Rules:** [[GDD#17.3 Legacy (new)|GDD §17.3]] · [[design/slice-8-life#7. Legacy (GDD §17.3, pinned)|slice-8 design §7]] · [[adr/0057-legacy-entries-by-natural-ref-credited-in-character-transactions|ADR 0057]] (proposed) · [[adr/0052-personal-modifiers-items-perks-and-recognition|ADR 0052]] (perks as personal modifiers) · [[tech/slice-8|tech spec slice 8]]
 
 **Code (planned, per ADR 0057; none exists yet):**
-- A `legacyEntries` collection with a unique `{ characterId, ref }` (`term:…`, `award:…`, `expose:…`, `ambition:…`); embedded `legacy { total, spent, perks, seasonCredited }`; `legacyFromWindow` and `seasonCredits` in the settlement; migration `012-slice8-life` back-fills past terms and awards (renumbered from 010 on 14 Oct 2026).
+- A `legacyEntries` collection with a unique `{ characterId, ref }` (`term:…`, `award:…`, `expose:…`, `ambition:…`); embedded `legacy { total, spent, perks }`; `legacyFromWindow` in the settlement (`seasonCredited`, `seasonCredits` and the refs `champion:…`, `award:{season}:…` deferred with the season, the refs reserved); migration `012-slice8-life` back-fills past terms and awards (renumbered from 010 on 14 Oct 2026).
 - Today: only `UNREST_PRIZE.legacy: 2` in `packages/rules/src/constants.ts`, marked "waits for slice 8". (Other `legacy` hits in the code are the voting rework's kept old order paper, unrelated.)
 
 ## Status

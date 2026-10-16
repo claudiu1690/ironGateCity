@@ -8,7 +8,7 @@ dates: 2026-10-04 (designed); not built
 commits: [a350253, 3e04e18]
 gdd: ["§6.7", "§8.2", "§10", "§12", "§14.12", "§17.1", "§17.2", "§17.3", "§17.4", "§19.3", "§21", "§22"]
 adrs: ["0051", "0052", "0053", "0054", "0055", "0056", "0057", "0058"]
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 # Slice 8 A Life in the City
@@ -17,7 +17,7 @@ updated: 2026-10-14
 
 ## Goal and playtest question
 
-From [[IMPLEMENTATION_PLAN#Slice 8 — A life in the city|the plan]]: the Dossier, Case Files and exposés; two patrons; wardrobe and equipment (tiers, Charisma, plain clothes for hostile ground); homes (rented room and flat); Legacy and Ambition #1 complete; the Political Season skeleton.
+From [[IMPLEMENTATION_PLAN#Slice 8 — A life in the city|the plan]]: the Dossier, Case Files and exposés; two patrons; wardrobe and equipment (tiers, Charisma, plain clothes for hostile ground); homes (rented room and flat); Legacy and Ambition #1 complete. ~~The Political Season skeleton~~: **deferred on 16 Oct 2026** (below).
 
 - **Question:** do players have goals for the next month, not just the next session?
 
@@ -29,28 +29,28 @@ From [[IMPLEMENTATION_PLAN#Slice 8 — A life in the city|the plan]]: the Dossie
 - [[Residence|A home]]: **the flat** (2,500 Iron, 150 a week); rent that runs out makes the flat wait, never taken ([[adr/0056-the-flat-prepaid-rent-as-a-day-key|ADR 0056]]).
 - [[Legacy]]: a lasting record with perks to spend (MVP, confirmed 14 Oct 2026) ([[adr/0057-legacy-entries-by-natural-ref-credited-in-character-transactions|ADR 0057]]). The Unrest prize's Legacy +2 ([[Review 5]]) waits for this slice.
 - [[Ambitions]]: *The Names on the Stone* chapters 4–12; the due chapters of the other two.
-- [[Political Seasons]]: 84 days (three terms), a season score, the Season Election, the Champion, awards, the rollover; no track and no twist in season 1 ([[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]]).
+- ~~[[Political Seasons]]~~ **deferred (the user, 16 Oct 2026)**: the 84-day season, the score, the Season Election, the Champion, the awards, the Hall of Fame, the rollover and the finale move to a later slice ([[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] *Deferred*).
 - Clearwater's Front opens (four places, society calls).
 - **Added 14 Oct 2026, to be designed:** [[Bodyguards]] (prepaid contracts) and bar services with their buffs ([[Bars]], [[Buffs]]: *Well-Fed*, *In Good Spirits*).
 
 ## Documents
 
 - Design: [[design/slice-8-life|design/slice-8-life]] (§20 points for the user, §21 settled, §22 review-4 addendum), [[design/slice-8-screens|design/slice-8-screens]], [[design/inventory-research|design/inventory-research]].
-- Tech design: [[tech/slice-8|tech/slice-8]]. Updated 14 Oct 2026: the knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are applied; **§1.1 *Added scope*** lists bodyguards and bar services / buffs, still to be designed; the planned migration is now `012-slice8-life` (§5.7, was 010).
+- Tech design: [[tech/slice-8|tech/slice-8]]. **Updated 16 Oct 2026: seasons cut out** (a dated note at the top lists what moved, what is kept and the forward-compatibility rules; §20's tasks rewritten, T15 deferred, T18 plays a month instead of a season, `season.spec.ts` dropped). Updated 14 Oct 2026: the knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are applied; **§1.1 *Added scope*** lists bodyguards and bar services / buffs, still to be designed; the planned migration is now `012-slice8-life` (§5.7, was 010).
 - ADRs: [[adr/0051-wardrobe-four-slots-outfits-and-shops|ADR 0051]] to [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]].
 
 ## Decisions made
 
-- Eight **points for the user** with defaults (design §20): no weapons; Crane and Marr; fixed outfit names; a failed exposé keeps its file; the flat is the only paid home; +100 season score per election won (not 10); no track or twist in season 1; Blackmail and Denounce held back. The review-4 guide asked the user to check them; no explicit answer is recorded.
+- **16 Oct 2026 (the user): "let's leave the seasons for later".** The Political Season is deferred out of slice 8; the other design §20 defaults are **approved**: no weapons; Crane and Marr; fixed outfit names; a failed exposé keeps its file; the flat is the only paid home; Blackmail and Denounce held back (and the two season rules, +100 per election and no track or twist in season 1, wait with the season). [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] is *Deferred*; [[tech/slice-8|tech/slice-8]] *Seasons deferred (16 Oct 2026)* lists what moved. Phase A starts the same day.
 - [[Review 5]] (8 Oct) re-strung the Ambitions away from the father: *The Names on the Stone*, *Who Sold the Homes*, *The Ration Ledger*; the coat is **the demob suit**. No number moved.
 - **14 Oct 2026 (the user, drift cleanup): [[Bodyguards]], [[Legacy]] perks and the bar services with their buffs ([[Bars]], [[Buffs]]) are MVP and join this slice**, not built yet. Legacy perks were already designed here; bodyguards and bar services still need the game-designer's slice-8 design update, then the architect's technical design. Open details: [[GDD#Appendix C — Open questions|Appendix C #110]] (bodyguard prices, where they're hired) and #111 (Well-Fed above max, prices). *Lodged* and *Weatherproof* stay out for now (pending the user).
 
 - The plan now lists the flat only (the room is built, as slice 4's Lodgings card).
-- Still open (the user, drift row A9): what rule runs between the season's rollover and the next count ([[Political Seasons]]).
+- Parked with the season (drift row A9): what rule runs between the season's rollover and the next count ([[Political Seasons]]).
 
 ## QA and leftovers
 
-Not built, so no QA. Open defaults: GDD Appendix C #74–#81 (see [[Open Questions]]).
+Not built yet (phase A started 16 Oct 2026), so no QA. Open defaults: GDD Appendix C #74–#81 (see [[Open Questions]]).
 
 ## Commits
 

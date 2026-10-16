@@ -24,7 +24,7 @@ the user's call.
 
 | # | Where | Conflict | Owner |
 |---|---|---|---|
-| A9 | GDD §22.2; ADR 0058 (status note added 14 Oct); tech/slice-8 | Season rollover "starts the rules again", but since the voting rework **a city always has a rule** (ADR 0083). May the rollover end a council rule, and what runs until the next count? | USER |
+| A9 | GDD §22.2; ADR 0058 (status note added 14 Oct); tech/slice-8 | Season rollover "starts the rules again", but since the voting rework **a city always has a rule** (ADR 0083). May the rollover end a council rule, and what runs until the next count? **Parked 16 Oct 2026: the season is deferred out of slice 8** (ADR 0058 *Deferred*); decide when it returns | USER (parked) |
 | B2 | `stats.chaBase` in the character model; `wornCha()` in `packages/rules` | The GDD (§8.1, §8.2, §8.5, fixed 14 Oct) says there has been no Charisma base since review 4; the code still stores one and adds it (0 for new characters) | DEV |
 | F1 | `package.json` | `pnpm check` and `pnpm e2e:only` are named in the 8 Oct workflow but don't exist (the developer agent file marks them "planned") | USER |
 | F2 | `apps/client/playwright.config.ts` | `workers: 1`, `fullyParallel: false`: the planned parallel group isn't built | USER (with F1) |

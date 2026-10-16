@@ -4,7 +4,7 @@ title: Decision Log
 aliases: [Decisions, User decisions]
 tags: [decisions]
 status: built
-dates: 2026-09-29 to 2026-10-15
+dates: 2026-09-29 to 2026-10-16
 commits: []
 updated: 2026-10-16
 ---
@@ -163,6 +163,12 @@ The **user's** decisions, oldest first. Designer and architect answers that the 
 |---|---|---|---|---|
 | 16 Oct | **In Unrest a party's local deputies vote the secretary's line** instead of abstaining (the chain's first two steps skipped); **the −3 for a count nobody voted in needs at least one eligible voter** in the branch. 31 of 60 stands; passing on the votes cast rejected | a quiet test month put every home in Unrest (the −3 every five days against a drift of +0.1 to +0.3 a day) and a bill fell 1–0–59; one empty faction in play would do the same to its bloc for a season; the cost should fall on the party that lost its town, not on the republic | GDD §0 (16 Oct), §14.11, §15.6, Appendix C #112; [[design/slice-7-nation\|slice-7 design]] *Settled 16 Oct 2026 (phase C)* #1; economy §21.6a | [[The Legislature and Laws]], [[Home Cities]], [[Offices]], [[Slice 7 The Nation]] |
 | 16 Oct | The first journey card is destination-neutral (no *capital*, no *five districts*); `nl.leader-line` opens with words; the Governor headlines and copy use **`{title}`** or the right word (*Mayor* in Irongate and Clearwater); six final alt texts in design §23.8, with a flag that the law book's window resembles Budapest's Parliament | — | *Settled 16 Oct 2026 (phase C)* #2–#5; `packages/content` | [[Travel and Journeys]], [[The Morning Paper]], [[Offices]], [[Art and Maps Pipeline]] |
+
+## Slice 8 go-ahead (16 Oct)
+
+| Date | Decision | Why (if stated) | Where recorded | Systems |
+|---|---|---|---|---|
+| 16 Oct | **"Let's leave the seasons for later"**: the Political Season (the 84-day season, the score, the Season Election, the Champion, the awards, the Hall of Fame, the rollover, the finale) is **deferred out of slice 8** to a later slice, not yet placed. **The other design §20 defaults are approved**: no weapons; Crane and Marr; three fixed outfit names; a failed exposé keeps its file; the flat alone; Blackmail and Denounce deferred (the +100 election bonus and *no track or twist* wait with the season) | not stated | [[tech/slice-8|tech/slice-8]] *Seasons deferred (16 Oct 2026)*; [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]] *Deferred*; the plan's slice 8 | [[Political Seasons]], [[Legacy]], [[Slice 8 A Life in the City]] |
 
 ## Related
 
