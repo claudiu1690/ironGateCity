@@ -54,13 +54,33 @@ export interface ChapterRequires {
   rank?: number;
   level?: number;
   ballotCast?: boolean;
+  // Slice 8 (design §8, tech design §5.9): read from `characters.milestones`.
+  councilTerms?: number;
+  governorOrCouncilTerms?: 3;
+  chairVote?: true;
+  caseFile?: true;
+  nationalVote?: true;
+  onList?: true;
+  deputyTerm?: true;
+}
+
+/** Slice 8 (tech design §5.6): what `chapterStatus` reads of `characters.milestones`. */
+export interface ChapterMilestones {
+  caseFile: boolean;
+  chairVote: boolean;
+  nationalVote: boolean;
+  onList: boolean;
+  /** A deputy's term begun (`deputyFromDay` set). */
+  deputyTerm: boolean;
+  completed: { council: number; governor: number };
 }
 
 export interface ChapterRules {
   n: number;
   requires?: ChapterRequires;
   playable: boolean;
-  choices: Array<{ id: string; flag: string }>;
+  /** Slice 8 (design §16.2): a choice may pay Iron (*The Ration Ledger* 3's 100). */
+  choices: Array<{ id: string; flag: string; iron?: number }>;
   approaches: Array<{ id: string; stats: CheckStatSpec }>;
   difficulty: number;
   energy: number;
@@ -85,7 +105,7 @@ export const chapterStatusKind = (s: ChapterStatus): ChapterStatusKind => s.kind
 export function chapterStatus(
   s: AmbitionState,
   spec: ChapterRules | undefined,
-  c: { rank: number; level: number; ballotCast?: boolean },
+  c: { rank: number; level: number; ballotCast?: boolean; milestones?: ChapterMilestones },
   today: DayKey,
 ): ChapterStatus {
   if (!spec || !spec.playable) return { kind: 'none' };
@@ -97,10 +117,30 @@ export function chapterStatus(
     (req?.rank === undefined || c.rank >= req.rank) &&
     (req?.level === undefined || c.level >= req.level) &&
     // Slice 3 (design §17 Q21): Finish His Work chapter 2 opens after the first ballot.
-    (req?.ballotCast !== true || c.ballotCast === true);
+    (req?.ballotCast !== true || c.ballotCast === true) &&
+    milestonesMet(req, c.milestones);
   if (today >= readyFrom && met) return { kind: 'ready' };
   return { kind: 'waiting', readyFrom, needs: req ?? null };
 }
+
+/** Slice 8 (design §8): the new requirement kinds against the milestones (none absent: unmet). */
+function milestonesMet(req: ChapterRequires | undefined, m: ChapterMilestones | undefined): boolean {
+  if (!req) return true;
+  const council = m?.completed.council ?? 0;
+  if (req.councilTerms !== undefined && council < req.councilTerms) return false;
+  if (req.governorOrCouncilTerms !== undefined && (m?.completed.governor ?? 0) < 1 && council < req.governorOrCouncilTerms)
+    return false;
+  if (req.chairVote && !m?.chairVote) return false;
+  if (req.caseFile && !m?.caseFile) return false;
+  if (req.nationalVote && !m?.nationalVote) return false;
+  if (req.onList && !m?.onList) return false;
+  if (req.deputyTerm && !m?.deputyTerm) return false;
+  return true;
+}
+
+/** Slice 8 (design §16.2): the Iron a chapter's step-1 choice pays (0 for none). */
+export const choiceIron = (spec: ChapterRules, choiceId: string | null): number =>
+  spec.choices.find((c) => c.id === choiceId)?.iron ?? 0;
 
 export type ChooseResult =
   | { ok: true; state: AmbitionState; changed: boolean }

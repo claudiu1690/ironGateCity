@@ -67,3 +67,6 @@ export * from './personal';
 export * from './recognition';
 export * from './lifeTypes';
 export * from './dossier';
+export * from './patrons';
+export * from './home';
+export * from './legacy';

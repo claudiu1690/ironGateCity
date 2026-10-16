@@ -65,6 +65,11 @@ export interface CountLine {
   backers: number;
   /** List order: players by filing, then NPCs by profile. */
   order: number;
+  /**
+   * Slice 8 (design §5.4, §7.2): points added to a player's total at a home count: the Protégé's
+   * endorsement (+2) and *A name they know* (+1 a level). Absent is 0; never on a local.
+   */
+  bonus?: number;
 }
 
 export interface CountRow extends CountLine {
@@ -84,14 +89,15 @@ export interface CountResult {
 }
 
 /**
- * Design §3.5, ADR 0084: total = ward vote + 3 × min(backers, 5); the `seats` highest are seated
+ * Design §3.5, ADR 0084: total = ward vote + 3 × min(backers, 5) (+ slice 8's `bonus`); the `seats` highest are seated
  * (seven at home). Ties: more backers, then Standing Successes, then list order (earlier filing,
  * locals after every player). Members' votes are not part of the seat count.
  */
 export function countSeats(lines: readonly CountLine[], seats: number = COUNCIL.seats): CountResult {
   const scored = lines.map((l) => {
     const backersCounted = Math.min(Math.max(0, l.backers), COUNCIL.endorsementsCounted);
-    return { ...l, backersCounted, total: l.wardVote + COUNCIL.endorsementWeight * backersCounted };
+    const total = l.wardVote + COUNCIL.endorsementWeight * backersCounted + Math.max(0, l.bonus ?? 0);
+    return { ...l, backersCounted, total };
   });
   scored.sort(
     (a, b) => b.total - a.total || b.backers - a.backers || b.successes - a.successes || a.order - b.order,

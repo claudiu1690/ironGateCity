@@ -1571,7 +1571,7 @@ export function indexContent(content: Content): GameContent {
         n: ch.n,
         ...(ch.requires ? { requires: { ...ch.requires } } : {}),
         playable: s !== undefined,
-        choices: s ? s.choose.choices.map((c) => ({ id: c.id, flag: c.flag })) : [],
+        choices: s ? s.choose.choices.map((c) => ({ id: c.id, flag: c.flag, ...(c.iron ? { iron: c.iron } : {}) })) : [],
         approaches: s ? s.check.approaches.map((a) => ({ id: a.id, stats: a.stats })) : [],
         difficulty: s?.check.difficulty ?? 0,
         energy: s?.check.energy ?? 0,

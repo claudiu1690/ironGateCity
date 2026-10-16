@@ -36,6 +36,11 @@ export function districtScores(i: {
   opinion: OpinionShares;
   /** Slice 7: the ballots at which the turnout weight is full (default the capital's ten). */
   fullTurnout?: number;
+  /**
+   * Slice 8 (design §5.4, §21.1 Q38): points of score added before D'Hondt, +1 for a party with a
+   * Protégé standing (once, not one per Protégé).
+   */
+  scoreBonus?: Partial<Record<FactionId, number>>;
 }): FactionScore[] {
   const ballots = FACTION_IDS.reduce((sum, f) => sum + (i.ballotsByFaction[f] ?? 0), 0);
   const w = turnoutWeight(ballots, i.fullTurnout);
@@ -49,7 +54,7 @@ export function districtScores(i: {
       ballots: b,
       ballotShare,
       opinionShare,
-      score: w * ballotShare + (100 - w) * opinionShare,
+      score: w * ballotShare + (100 - w) * opinionShare + Math.max(0, i.scoreBonus?.[f] ?? 0),
     };
   });
 }
@@ -171,6 +176,7 @@ export function countDistrict(i: {
   ballotsByFaction: Record<FactionId, number>;
   opinion: OpinionShares;
   rng: Rng;
+  scoreBonus?: Partial<Record<FactionId, number>>;
 }): DistrictCount {
   return countBattleground({
     ...i,
@@ -191,6 +197,8 @@ export function countBattleground(i: {
   rng: Rng;
   seats: number;
   fullTurnout: number;
+  /** Slice 8: the Protégé's +1 point of score (`districtScores`). */
+  scoreBonus?: Partial<Record<FactionId, number>>;
 }): DistrictCount {
   const drawOrder = drawOrderOf(i.rng);
   const byFaction = new Map<FactionId, DistrictCountRow[]>();
@@ -204,7 +212,12 @@ export function countBattleground(i: {
     }));
     byFaction.set(f, counted);
   }
-  const scores = districtScores({ ballotsByFaction: i.ballotsByFaction, opinion: i.opinion, fullTurnout: i.fullTurnout });
+  const scores = districtScores({
+    ballotsByFaction: i.ballotsByFaction,
+    opinion: i.opinion,
+    fullTurnout: i.fullTurnout,
+    ...(i.scoreBonus ? { scoreBonus: i.scoreBonus } : {}),
+  });
   const ballots = scores.reduce((sum, s) => sum + s.ballots, 0);
   const { seats, drawn } = dhondt(
     scores,

@@ -94,12 +94,19 @@ export function projectEnergyThrough(
   until: number,
   capOn: (day: DayKey) => number,
   max: number = ENERGY.max,
+  /**
+   * Slice 8 (design §6, ADR 0056): Rested added at the boundary into each day crossed (the room's 10,
+   * the flat's 25), capped at that day's cap. Banked once: the caller re-bases on the result.
+   */
+  restOn?: (boundaryDay: DayKey) => number,
 ): EnergyProjection {
   let s: EnergyState = { ...state };
   let day = dayKey(s.updatedAt);
   while (dayStart(day + 1) <= until) {
     const p = projectEnergy(s, dayStart(day + 1), max, capOn(day));
-    s = { value: p.value, rested: p.rested, updatedAt: p.updatedAt };
+    const rest = restOn ? Math.max(0, restOn(day + 1)) : 0;
+    const rested = rest > 0 ? Math.max(p.rested, Math.min(capOn(day + 1), p.rested + rest)) : p.rested;
+    s = { value: p.value, rested, updatedAt: p.updatedAt };
     day += 1;
   }
   return projectEnergy(s, until, max, capOn(day));

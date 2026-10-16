@@ -1,4 +1,5 @@
 import { JOBS } from './constants';
+import { isMonday } from './week';
 import type { DayKey } from './day';
 import { projectEnergy, projectEnergyThrough } from './energy';
 import type { EnergyState } from './energy';
@@ -74,6 +75,8 @@ export interface Settlement {
     seniority: { days: number; amount: number };
     total: number;
     ordinance?: { label: string; amount: number };
+    /** Slice 8 (design §7.2): *A bonus at the end of the week*, a day's pay at each Monday boundary paid. */
+    monday?: { days: number; amount: number };
   } | null;
   job: JobState | null;
   /** Seniority before and after the boundaries crossed, or null without a job. */
@@ -114,9 +117,18 @@ export function settleDays(i: {
   wageOn?: (endedDay: DayKey) => WageDay;
   /** Slice 3: each day's Rested cap (Rest Day Order); absent = RESTED.cap. */
   capOn?: (day: DayKey) => number;
+  /**
+   * Slice 8 (design §6, ADR 0056): Rested banked at the boundary into each day (the room's 10, the
+   * flat's 25), up to that day's cap. Needs `capOn`.
+   */
+  restOn?: (boundaryDay: DayKey) => number;
+  /** Slice 8 (design §7.2): the perk *A bonus at the end of the week*. */
+  mondayPay?: boolean;
 }): Settlement | null {
   if (i.settled !== null && i.settled >= i.today) return null;
-  const projected = i.capOn ? projectEnergyThrough(i.energy, i.now, i.capOn) : projectEnergy(i.energy, i.now);
+  const projected = i.capOn
+    ? projectEnergyThrough(i.energy, i.now, i.capOn, undefined, i.restOn)
+    : projectEnergy(i.energy, i.now);
   const restedBanked = Math.max(0, projected.rested - i.energy.rested);
 
   if (i.settled === null) {
@@ -140,6 +152,7 @@ export function settleDays(i: {
   let days = 0;
   let seniorityAmount = 0;
   let adjustment = 0;
+  let mondays = 0;
   const labels: string[] = [];
   for (let ended = i.settled; ended < i.today; ended++) {
     const w = i.wageOn?.(ended) ?? { payAdjust: 0, label: null, seniorityStep: 1 };
@@ -147,6 +160,7 @@ export function settleDays(i: {
     seniority += w.seniorityStep;
     if (i.pay === null || ended < firstPaid) continue;
     days += 1;
+    if (i.mondayPay && isMonday(ended + 1)) mondays += 1;
     seniorityAmount += seniorityBonus(i.pay, seniority);
     if (w.payAdjust !== 0) {
       adjustment += w.payAdjust;
@@ -160,8 +174,9 @@ export function settleDays(i: {
           days,
           perDay: i.pay,
           seniority: { days: seniority, amount: seniorityAmount },
-          total: days * i.pay + seniorityAmount + adjustment,
+          total: days * i.pay + seniorityAmount + adjustment + mondays * i.pay,
           ...(adjustment !== 0 ? { ordinance: { label: labels.join(' · '), amount: adjustment } } : {}),
+          ...(mondays > 0 ? { monday: { days: mondays, amount: mondays * i.pay } } : {}),
         }
       : null;
   return {

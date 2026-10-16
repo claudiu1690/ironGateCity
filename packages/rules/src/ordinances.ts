@@ -1,4 +1,4 @@
-import { BATTLEGROUND, MORALE, ORDINANCE_BOUNDS, RESTED, ROOM } from './constants';
+import { BATTLEGROUND, FLAT, LEGACY, MORALE, ORDINANCE_BOUNDS, RESTED, ROOM } from './constants';
 import type { DayKey } from './day';
 import type { MoraleState } from './morale';
 import { roundHalfUp } from './rewards';
@@ -261,9 +261,18 @@ export function standingPerSuccess(m?: Modifiers): number {
  * Rest Day Order: the Rested cap 200 → 250. Deltas of several sources add; a room in Irongate adds
  * +50 while it runs (ADR 0030 §5).
  */
-export function restedCapFor(m?: Modifiers, room = false): number {
+export function restedCapFor(
+  m?: Modifiers,
+  home: boolean | { room?: boolean; flat?: boolean; perkSleep?: number } = false,
+): number {
+  // Slice 8 (design §6, §7.2; ADR 0056): the larger of a room and a flat (never both), and the perk.
+  const h = typeof home === 'boolean' ? { room: home } : home;
+  const lodging = h.room || h.flat ? Math.max(h.room ? ROOM.restedBonus : 0, h.flat ? FLAT.cap : 0) : 0;
   return (
-    RESTED.cap + sum(effects(m, 'restedCapDelta').map((x) => x.effect.value)) + (room ? ROOM.restedBonus : 0)
+    RESTED.cap +
+    sum(effects(m, 'restedCapDelta').map((x) => x.effect.value)) +
+    lodging +
+    LEGACY.effects.restedCap * Math.max(0, h.perkSleep ?? 0)
   );
 }
 
