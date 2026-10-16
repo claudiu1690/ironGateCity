@@ -53,6 +53,9 @@ export default defineConfig({
         /(^|[\\/])favours\.spec\.ts$/,
         /(^|[\\/])events\.spec\.ts$/,
         /qa\.slice6\.spec\.ts/,
+        // Slice 7, lane Y (tech design §15.1): Clearwater and the Governor, each in its own project.
+        /(^|[\\/])clearwater\.spec\.ts$/,
+        /(^|[\\/])governor\.spec\.ts$/,
         // Slice 7 (tech design §15.1): each in its own project after slice 6's.
         /(^|[\\/])chair\.spec\.ts$/,
         /(^|[\\/])nation\.spec\.ts$/,
@@ -265,6 +268,20 @@ export default defineConfig({
       name: 'petition',
       testMatch: /(^|[\\/])petition\.spec\.ts$/,
       dependencies: ['removal'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    // Slice 7, lane Y (tech design §15.1): the nation map's layer and Clearwater, then a Governor's
+    // week; after lane X's slice-7 projects (both move the shared clock to Clearwater's and Coalport's council days).
+    {
+      name: 'clearwater',
+      testMatch: /(^|[\\/])clearwater\.spec\.ts$/,
+      dependencies: ['petition'],
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'governor',
+      testMatch: /(^|[\\/])governor\.spec\.ts$/,
+      dependencies: ['clearwater'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
   ],

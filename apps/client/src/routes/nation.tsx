@@ -202,9 +202,14 @@ export function NationPage() {
           memoryKey="nation"
           zoomButtons={side ? undefined : 'top-[62px] right-2.5 hidden sm:pointer-fine:flex'}
         >
-          {/* The top caption: where you are (screens §2.1: the top bar's subtitle). */}
+          {/* The top caption: where you are (screens §2.1: the top bar's subtitle). Slice 7: on an
+              upright phone shorter than 760 px the republic's strip takes its room (the *you are here*
+              pin still says where you are), so every pin can still be dragged clear (review 6 #1). */}
           <div
-            className="pointer-events-none absolute top-2.5 left-2.5 z-10 flex flex-col bg-paper px-3 py-1.5 text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)]"
+            className={cx(
+              'pointer-events-none absolute top-2.5 left-2.5 z-10 flex flex-col bg-paper px-3 py-1.5 text-ink shadow-[0_0_0_1px_var(--color-ink),0_4px_12px_rgb(0_0_0/0.4)]',
+              republic && !side && '[@media(max-height:759px)]:hidden',
+            )}
             data-map-overlay="caption"
             data-testid="nation-caption"
           >

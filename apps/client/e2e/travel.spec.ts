@@ -65,7 +65,8 @@ test('the first trip: nation → board → the journey card → arrival → the 
   await atRest(page);
   const unclear = await unclearPins(page);
   expect(unclear).not.toContain('Coalport, you are here');
-  expect(unclear).not.toContain('Irongate · 12 min');
+  // Slice 7 (screens §2): the pin's second line says who holds the city (*Irongate · 12 min, close race today*).
+  expect(unclear.filter((l) => l.startsWith('Irongate · 12 min'))).toEqual([]);
   // Slice 5 (design §11.1): rival ground opens at Level 10, so Ashford is a destination, not muted.
   const ashford = page.locator('[data-testid=hotspot][aria-label^="Ashford"]');
   await expect(ashford).toHaveCount(1);
@@ -77,7 +78,7 @@ test('the first trip: nation → board → the journey card → arrival → the 
   await cities.getByRole('button', { name: 'Close' }).click();
 
   // 2. The capital's card: Board · 20 Iron · 12 min, one tap.
-  await page.locator('[data-testid=hotspot][aria-label="Irongate · 12 min"]').click();
+  await page.locator('[data-testid=hotspot][aria-label^="Irongate · 12 min"]').click();
   const card = page.getByTestId('city-sheet');
   await expect(card).toBeVisible();
   await expect(card).toContainText('Capital · 5 districts');
@@ -234,7 +235,7 @@ test('the nation map covers the screen at every size, your city and the capital 
     await atRest(page);
     const unclear = await unclearPins(page);
     expect(unclear, `${size.width}×${size.height}`).not.toContain('Coalport, you are here');
-    expect(unclear, `${size.width}×${size.height}`).not.toContain('Irongate · 12 min');
+    expect(unclear.filter((l) => l.startsWith('Irongate · 12 min')), `${size.width}×${size.height}`).toEqual([]);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   }

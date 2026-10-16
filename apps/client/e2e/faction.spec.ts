@@ -425,8 +425,9 @@ test('review 7 #1, the Branch Office: paper under the HUD, a three-cue tab, 3:1 
     await expect(p.getByTestId('faction-plate')).toHaveCount(0);
     expect(Math.round((await p.getByTestId('faction-letterhead-compact').boundingBox())!.height)).toBe(52);
     const chips = p.getByTestId('chat-channel');
-    expect(await chips.count()).toBe(3);
-    for (let i = 0; i < 3; i++) {
+    // Slice 7 (screens §16): Party, the home branch, Irongate's and Clearwater's (Officers from Rank 4).
+    expect(await chips.count()).toBe(4);
+    for (let i = 0; i < 4; i++) {
       const c = await chips.nth(i).evaluate((el) => ({ sel: el.getAttribute('aria-selected'), bg: getComputedStyle(el).backgroundColor, h: el.getBoundingClientRect().height }));
       expect(c.h).toBeGreaterThanOrEqual(44);
       expect(c.bg).toBe(c.sel === 'true' ? 'rgb(21, 24, 26)' : 'rgba(0, 0, 0, 0)');
