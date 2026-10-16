@@ -1,5 +1,6 @@
 import { togetherAction, togetherStatus } from './together';
 import { NATION_DEV_ACTIONS, nationAction, nationStatus } from './nationPanel';
+import { LIFE_DEV_ACTIONS, lifeAction, lifeStatus } from './life';
 import type { GameContent } from '@irongate/content';
 import { copy } from '@irongate/content/copy';
 import { BOOST, Character, District, IssueModel, Journey, RuleBallot } from '@irongate/db';
@@ -80,6 +81,8 @@ export interface DevPanelDeps {
 const DEV_ACTIONS: readonly DevAction[] = [
   // Slice 7 (tech design §8.7).
   ...NATION_DEV_ACTIONS,
+  // Slice 8 phase B, lane 2 (tech design §8.7).
+  ...LIFE_DEV_ACTIONS,
   // Slice 6 (tech design §8.7).
   'members',
   'fillEvent',
@@ -298,6 +301,7 @@ async function statusFor(
       risk: c ? await riskStatus(content, c, city, now) : null,
       together: c ? await togetherStatus(c, now) : null,
       nation: await nationStatus(content, c, now),
+      life: await lifeStatus(c, now),
     },
   };
 }
@@ -669,6 +673,19 @@ async function runAction(
       const { doc } = await loadCharacter(me, content, clock.now());
       await Character.updateOne({ _id: doc._id }, { $inc: { iron: DEV_IRON, version: 1 } });
       did = `+${DEV_IRON.toLocaleString('en-GB')} Iron (now ${(doc.iron + DEV_IRON).toLocaleString('en-GB')})`;
+      settle = true;
+      break;
+    }
+    case 'dossierThree':
+    case 'dossierStale':
+    case 'dossierNext':
+    case 'dossierFile':
+    case 'rentToday':
+    case 'rentOut':
+    case 'legacy20': {
+      const { me } = needCharacter();
+      const { doc } = await loadCharacter(me, content, clock.now());
+      did = await lifeAction(content, doc, action, clock.now());
       settle = true;
       break;
     }

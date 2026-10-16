@@ -3,6 +3,7 @@ import type { MissionGateReason } from './missions';
 import type { MinderView } from './wardrobeViews';
 import { LIFE_ACTS } from './lifeTypes';
 import type { LifeAct, LifeCondition } from './lifeTypes';
+import type { DossierKnock, DossierView, ExposeOutcome, HomeView, LegacyKnock, LegacyView, LifeDesk, LifeLetter } from './lifeViews';
 /**
  * Shared vocabulary and DTOs. The server builds these; the client and `@irongate/ui` render them.
  * Kept in the rules package so every layer imports types from one place.
@@ -1169,7 +1170,7 @@ export type ResultStamp =
   | 'carriedOff';
 
 /** What a result is: a tier-1 action kind, or an Ambition chapter (slice-2 tech design §9). */
-export type ActionResultKind = ActionViewKind | 'chapter' | 'mission';
+export type ActionResultKind = ActionViewKind | 'chapter' | 'mission' | 'expose';
 
 export interface ResultAttempt extends ActionAttempt {
   rewards: Rewards;
@@ -1292,6 +1293,10 @@ export interface ActionResult {
      * `first` when it is the character's first Heat ever.
      */
     heat?: StreetView['heat'];
+    /** Slice 8 (tech design §10.3): the Dossier's entries landed (or refused) by this act. */
+    dossier?: DossierKnock[];
+    /** Slice 8 (tech design §10.2): the exposé's own lines (the story modal). */
+    expose?: ExposeOutcome | null;
   };
   /** The Today tally after this tap. */
   today: DailyTally;
@@ -1428,6 +1433,8 @@ export interface PaperView {
    * the reader's own Election row (not actionable); null at home or without a council.
    */
   localElection: { cityName: string; phase: 'nominations' | 'polling'; until: number } | null;
+  /** Slice 8 (tech design §11.1): the desk's life rows, the Letters' life rows, and yesterday's exposé in every paper. */
+  life?: { desk: LifeDesk | null; letters: LifeLetter[]; publicExpose: { headline: string; deck: string } | null };
   /** Slice 3: the front page, on the first edition a winner opens during the term. */
   frontPage: FrontPageView | null;
   /**
@@ -1703,6 +1710,8 @@ export type GameErrorReason =
   | 'BAD_WEEKS'
   | 'PERK_MAX'
   | 'NOT_ENOUGH_LEGACY'
+  // Slice 8 phase B, lane 2 (tech design §7.2): the Headline Story's file names another party.
+  | 'WRONG_PARTY'
   // Tech design §24.6 (ADR 0088): bodyguards and the bar.
   | 'NO_HIRE'
   | 'WITH_YOU'
@@ -2372,6 +2381,9 @@ export interface PoliticalResult {
     mate?: { name: string; health: number; minutes: number } | null;
     /** Slice 7 (tech design §10.1): the Address, *{issue} · +50 · momentum before → after by party*. */
     issue?: { name: string; added: number; before: Record<FactionId, number>; after: Record<FactionId, number> } | null;
+    /** Slice 8 (tech design §10.1, §10.3): the Dossier's and Legacy's lines, worded by the server. */
+    dossier?: { line: string; used: number; cap: number } | null;
+    legacy?: LegacyKnock | null;
     life?: string[];
   };
   performedAt: string;
@@ -2404,7 +2416,11 @@ export interface PoliticalResult {
     // Slice 7 phase B, lane 1 (tech design §10.1): the Governor's rule and the Address, the office page.
     | { kind: 'office'; office: GovernorPageView }
     // Slice 8 phase B, lane 1 (T30): after a renewal, the Me tab's *Walking with you* row.
-    | { kind: 'minder'; minder: MinderView | null };
+    | { kind: 'minder'; minder: MinderView | null }
+    // Slice 8 phase B, lane 2 (tech design §10.1): the Dossier, the home, Legacy.
+    | { kind: 'dossier'; dossier: DossierView }
+    | { kind: 'home'; home: HomeView }
+    | { kind: 'legacy'; legacy: LegacyView };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -2624,6 +2640,8 @@ export interface JourneyCardResult {
    * day's turn, in the player's clock). Absent when the card set none.
    */
   flag?: { flag: 'watched' | 'warned'; line: string; until: number };
+  /** Slice 8 (tech design §10.3): *Feed him a story*'s Dossier entry. */
+  dossier?: DossierKnock[];
   performedAt: string;
   idempotencyKey: string;
   character: CharacterView;

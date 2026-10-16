@@ -12,7 +12,9 @@ import {
   fillTemplate,
   MONTH_NAMES,
   bestTrainedStat,
+  chapterMilestones,
   chapterStatus,
+  NO_MILESTONES,
   currentTally,
   dayKey,
   dayStart,
@@ -251,7 +253,20 @@ export function ambitionStatus(content: GameContent, doc: CharacterDoc, today: D
   return chapterStatus(
     doc.ambition,
     content.chapterRules(doc.ambition.id, doc.ambition.chapter),
-    { rank: doc.rank, level: doc.level, ballotCast: !!doc.firstBallotAt },
+    {
+      rank: doc.rank,
+      level: doc.level,
+      ballotCast: !!doc.firstBallotAt,
+      // Slice 8 (T14, design §8): the chapters' new requirements, read from the milestones.
+      milestones: chapterMilestones({
+        caseFileAt: doc.milestones?.caseFileAt ? 1 : null,
+        chairVoteAt: doc.milestones?.chairVoteAt ? 1 : null,
+        nationalVoteAt: doc.milestones?.nationalVoteAt ? 1 : null,
+        listAt: doc.milestones?.listAt ? 1 : null,
+        deputyFromDay: doc.milestones?.deputyFromDay ?? null,
+        completed: { ...NO_MILESTONES.completed, ...(doc.milestones?.completed ?? {}) },
+      }),
+    },
     today,
   );
 }

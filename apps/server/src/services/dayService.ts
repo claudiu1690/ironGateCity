@@ -24,6 +24,8 @@ import {
   jobPayWith,
   liveMarks,
   projectEnergyThrough,
+  perkMondayPay,
+  NO_PERKS,
   restAtBoundary,
   projectHeat,
   seniorityStep,
@@ -58,6 +60,8 @@ import { ensureArrived } from './journeyArrival';
 import type { NewEdition, RiskRead } from './edition';
 import { capOn, dayModifiers, homeCapOf, moraleOf } from './modifiers';
 import { MAX_ATTEMPTS, VersionConflict, inTransaction } from './txn';
+import { settleLifeInTx } from './lifeSettlement';
+import type { LifeEdition } from './lifeSettlement';
 import {
   energyState,
   fromOrdersState,
@@ -122,6 +126,8 @@ export function computeSettlement(
     together?: TogetherEdition | null;
     /** Slice 7 (tech design §8.4): the faction's document, the party's target days met, the national facts. */
     nation?: NationSettlementRead | null;
+    /** Slice 8 (tech design §8.2 step 8, §11): the life lines, desk rows and Letters (`settleLifeInTx`). */
+    life?: LifeEdition | null;
   },
 ): SettlementWrite | null {
   const today = dayKey(now);
@@ -157,6 +163,8 @@ export function computeSettlement(
     },
     capOn: caps,
     restOn,
+    // Slice 8 (T14, design §7.2): *A bonus at the end of the week*, a day's pay at a Monday boundary.
+    mondayPay: perkMondayPay(c.legacy?.perks ?? NO_PERKS),
   });
   if (!s) return null;
 
@@ -346,6 +354,7 @@ export function computeSettlement(
       : null,
     offices: officeLines,
     target,
+    life: read.life ?? null,
   });
   // Slice 5 (tech design §8.4): the marks that have faded are dropped from the stored record.
   const stored = marksOf(c);
@@ -472,7 +481,10 @@ export async function ensureSettled(
         const together = c.day.settled === null ? null : await readTogether(content, c, today, session);
         // Slice 7 (tech design §8.4): the faction, the party's target and the national facts.
         const nation = await readNationSettlement(content, c, today, terms, session, now);
+        // Slice 8 (T14): patrons, informants, gossip, Legacy and milestones, in this transaction.
+        const life = c.day.settled === null ? null : await settleLifeInTx(session, content, c, now, { terms, awards });
         const w = computeSettlement(content, c, now, {
+          life: life?.edition ?? null,
           together,
           nation,
           previous,
@@ -486,7 +498,7 @@ export async function ensureSettled(
 
         const updated = await Character.findOneAndUpdate(
           { _id: c._id, version: c.version, 'day.settled': c.day.settled },
-          { $set: w.set, $inc: { iron: w.inc.iron, version: 1 } },
+          { $set: { ...w.set, ...(life?.set ?? {}) }, $inc: { iron: w.inc.iron, version: 1 } },
           { session, returnDocument: 'after', lean: true },
         );
         if (!updated) throw new VersionConflict();

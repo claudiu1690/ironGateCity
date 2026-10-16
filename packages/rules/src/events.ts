@@ -311,6 +311,8 @@ export interface ResolveEventInput {
   targetFactionId: FactionId | null;
   /** Test hooks only (§8.6): a forced roll per role id. */
   forcedRolls?: Readonly<Record<string, number>>;
+  /** Slice 8 (design §4.3, ADR 0054): the Headline Story's attached Case File, +50 % on the swing. */
+  extraFactors?: readonly SwingFactor[];
 }
 
 export interface EventRoleResult {
@@ -421,7 +423,7 @@ export function resolveCampaignEvent(i: ResolveEventInput, stream: (name: string
   const hands = i.participants.filter((p) => p.slot === 'hand');
   const ordered = [...roleIds.flatMap((id) => (byRole.has(id) ? [byRole.get(id)!] : [])), ...hands];
   const vScore = volunteerScore(i.cityRole === 'home' && i.modifiers.firedUp);
-  const factors = swingFactors(i.type.actionType, i.factionId, i.modifiers, i.tagged);
+  const factors = [...swingFactors(i.type.actionType, i.factionId, i.modifiers, i.tagged), ...(i.extraFactors ?? [])];
   const swingBase = { base: i.type.baseSwing, factors };
 
   if (ordered.length === 0) {

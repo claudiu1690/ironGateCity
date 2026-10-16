@@ -85,5 +85,10 @@ const actionLogSchema = new Schema<ActionLogDoc>(
 actionLogSchema.index({ characterId: 1, idempotencyKey: 1 }, { unique: true });
 // History, and slice 1's "Today" tally.
 actionLogSchema.index({ characterId: 1, createdAt: -1 });
+// Slice 8 (tech design §11.1, §22.1 Q28): the public exposé line, yesterday's most recent printed one.
+actionLogSchema.index(
+  { kind: 1, outcome: 1, createdAt: -1 },
+  { partialFilterExpression: { kind: 'expose' }, name: 'expose_by_day' },
+);
 
 export const ActionLog = model<ActionLogDoc>('ActionLog', actionLogSchema);

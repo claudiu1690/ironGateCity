@@ -84,7 +84,23 @@ export type DevAction =
   | 'chairBackers'
   | 'chairVotes'
   | 'nationVotes'
-  | 'chairPetitionSign';
+  | 'chairPetitionSign'
+  // Slice 8 phase B, lane 2 (tech design §8.7): *Three entries on a rival name*, *Make it stale*,
+  // *Next tap lands an entry*, *A Case File now*, *Rent due today*, *Rent ran out*, *Give me 20 Legacy*.
+  | 'dossierThree'
+  | 'dossierStale'
+  | 'dossierNext'
+  | 'dossierFile'
+  | 'rentToday'
+  | 'rentOut'
+  | 'legacy20';
+
+/** Slice 8 phase B, lane 2 (tech design §8.7): the Dossier's used / cap and the last roll, the flat, Legacy. */
+export interface DevLifeStatus {
+  dossier: { used: number; cap: number; lastRoll: { chance: number; roll: number; landed: boolean; source: string; at: number } | null };
+  flat: { cityId: string; paidThroughDay: number; state: 'paid' | 'due' | 'waiting'; counts: boolean } | null;
+  legacy: { total: number; toSpend: number };
+}
 
 /** Slice 7 (tech design §8.7): the status's nation block. */
 export interface DevNationStatus {
@@ -179,6 +195,8 @@ export interface DevStatus {
   together?: DevTogetherStatus | null;
   /** Slice 7 (tech design §8.7): the term, the republic, the offices, the laws, the bills (null before the bootstrap). */
   nation?: DevNationStatus | null;
+  /** Slice 8 (tech design §8.7): a life in the city (lane 2's part). */
+  life?: DevLifeStatus | null;
   /** The shared test clock, epoch ms. */
   now: number;
   /** "Thursday 1 Oct 00:01 UTC". */

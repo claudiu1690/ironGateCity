@@ -14,6 +14,8 @@ import {
   orderRewards,
   priceLines,
   projectHeat,
+  missionCategory,
+  missionEntryChance,
   resolveMission,
   standingView,
   windowLock,
@@ -41,6 +43,7 @@ import { placeDescriptor, recordPushInTx } from './chairDeskService';
 import { ordersTargetOf } from './pushTarget';
 import { branchBackIfStanding } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
+import { landEntry } from './dossierService';
 import { createStayInTx, heldPlace } from './heldService';
 import { runKeyedAction } from './keyedAction';
 import { keySeed } from './keyGuard';
@@ -592,6 +595,24 @@ export async function writeMissionFinal(i: {
   });
   // Slice 7 integration: the party's target bar rides on the act's view (it was gone until the next `me`).
   built.character.orders.target = await ordersTargetOf(content, updated, today, undefined, session);
+  // Slice 8 (T11, design §4.2): surveillance lands an entry on a Success (one time in two on a
+  // Partial), theft on a Success; on the mission's named figure, else a name of the target party.
+  const entryChance = final.dropped ? 0 : missionEntryChance(mission.type, final.outcome);
+  const subject = mission.dossier?.subject && mission.dossier.subject !== 'choose' ? mission.dossier.subject : undefined;
+  if (entryChance > 0) {
+    const landed = await landEntry(session, content, updated, {
+      source: mission.type === 'theft' ? 'theft' : 'surveillance',
+      category: missionCategory(mission.type, mission.dossier?.category),
+      cityId: city.id,
+      ...(subject ? { subjectId: subject } : {}),
+      ...(s.opinion.target ? { party: s.opinion.target } : {}),
+      chancePct: entryChance,
+      seed: s.seed,
+      row: 'mission',
+      now: i.now,
+    });
+    if (landed.knock) built.effects.dossier = [landed.knock];
+  }
   await ActionLog.create(
     [
       {

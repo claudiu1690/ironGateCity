@@ -52,6 +52,7 @@ import { addInfluence, addPoints, writeLedger } from './ledger';
 import { heatDoc, heatRateOn, heatTimerOf, isRivalGround, notFree } from './risk';
 import { residenceCityId, residenceCtx } from './residence';
 import { homeCapOf, restedCapToday } from './modifiers';
+import { CASE_FILE_FACTOR, attachCaseFileInTx, detachCaseFileInTx, spendCaseFileInTx } from './dossierService';
 import { runKeyedAction } from './keyedAction';
 import { withRequestKey } from './requestKey';
 import { t6 } from './togetherCopy';
@@ -242,7 +243,15 @@ async function resolveDueAt(content: GameContent, factionId: FactionId, placeId:
 /** `events.call` (tech §8.2): the caller's tap is the event's first sign-up. */
 export async function callEvent(
   deps: EventDeps & {
-    input: { typeId: string; hours: EventHours; roleId: string; districtId: string | null; idempotencyKey: string };
+    input: {
+      typeId: string;
+      hours: EventHours;
+      roleId: string;
+      districtId: string | null;
+      idempotencyKey: string;
+      /** Slice 8 (design §4.3): the Headline Story's *Attach a Case File*. */
+      caseFileId?: string | undefined;
+    };
   },
 ): Promise<PoliticalResult> {
   const { content, input } = deps;
@@ -338,6 +347,11 @@ export async function callEvent(
         createdAt: new Date(now),
         updatedAt: new Date(now),
       };
+      // Slice 8 (design §4.3, T12): the Headline Story's Case File, attached at the call (burned now).
+      if (input.caseFileId) {
+        if (type.special !== 'againstLeader') throw new GameError('NO_PRINTABLE_FILE');
+        ev.caseFile = await attachCaseFileInTx(session, content, c, oid(input.caseFileId), ev, now);
+      }
       try {
         await CampaignEvent.create([ev], { session });
       } catch (err) {
@@ -730,6 +744,11 @@ export async function withdrawEvent(
         { session, returnDocument: 'after', lean: true },
       );
       if (!ev) throw new GameError('NOT_SIGNED_UP');
+      // Slice 8 (T12): the caller's withdrawal returns the attached file and lifts the burn.
+      if (s.caller && ev.caseFile) {
+        await detachCaseFileInTx(session, c._id, ev.caseFile);
+        await CampaignEvent.updateOne({ _id: ev._id }, { $set: { caseFile: null } }, { session });
+      }
       const residenceCity = await CityModel.findById(residenceCityId(c)).session(session).lean<CityDoc>();
       const cap = restedCapToday(content, residenceCity, today, c.room, c.factionId, homeCapOf(c));
       const p = projectEnergy(energyState(c), now, ENERGY.max, cap);
@@ -925,6 +944,8 @@ export async function resolveInTx(
       tagged: place.tagged,
       shares: place.shares,
       targetFactionId: ev.targetFactionId,
+      // Slice 8 (design §4.3): an attached Case File, +50 % on the swing.
+      ...(ev.caseFile ? { extraFactors: [CASE_FILE_FACTOR] } : {}),
       ...withForced(ev._id.toHexString(), type.roles.map((x) => x.id)),
     },
     (name) => createRng(`${ev.seed}:${name}`),
@@ -942,6 +963,12 @@ export async function resolveInTx(
     { session },
   );
   if (done.modifiedCount !== 1) throw new VersionConflict();
+  // Slice 8 (T12): the attached file is spent at the resolution; nobody came, it goes back.
+  if (ev.caseFile) {
+    const caller = ev.calledBy.kind === 'member' ? ev.calledBy.characterId : null;
+    if (r.calledOff && caller) await detachCaseFileInTx(session, caller, ev.caseFile);
+    else await spendCaseFileInTx(session, ev.caseFile, ev._id, ev.day);
+  }
   if (r.calledOff) return true;
   // Slice 7 T19 (design §10.4): a Town Hall adds townspeople's signatures to the city's open petition.
   if (type.special === 'petitionSignatures') await townHallSignaturesInTx(session, ev.cityId, r.band);

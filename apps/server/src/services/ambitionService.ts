@@ -19,6 +19,7 @@ import {
   grantItem,
   heatEta,
   projectEnergy,
+  choiceIron,
   resolveChapterCheck,
   weekday,
 } from '@irongate/rules';
@@ -45,6 +46,7 @@ import {
   wornStats,
 } from './views';
 import { nightAt } from './night';
+import { chapterLifeInTx } from './chapterLife';
 
 /**
  * Ambition chapters (GDD §17.1, ADR 0013): step 1 is a set-once choice, step 2 a check paid in
@@ -339,11 +341,19 @@ export async function attemptChapter(deps: {
             lastActionAt: new Date(now),
             ...(heat ? { heat: heatDoc(heat.timer) } : {}),
           },
-          $inc: { iron: res.rewards.iron.total, version: 1 },
+          $inc: { iron: res.rewards.iron.total + choiceIron(spec, c.ambition.choiceId), version: 1 },
         },
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
+      // Slice 8 (T14, design §8, §16.2): a chapter's Dossier entry by hand, its Favour with a patron
+      // (every outcome) and the Ambition's completion (Legacy +30), in this transaction.
+      const life = await chapterLifeInTx(session, content, updated, chapter.story, {
+        seed,
+        now,
+        today,
+        ambitionId: c.ambition.id,
+      });
 
       const { city, location } = content.hqOf(c.factionId);
       const amb = content.ambition(c.ambition.id)!;
@@ -458,8 +468,10 @@ export async function attemptChapter(deps: {
         },
         today: tally,
         again: null,
-        character: toCharacterView(updated, now, content, loaded.editionReadAt),
+        character: toCharacterView(life.after ?? updated, now, content, loaded.editionReadAt),
       };
+      if (life.dossier) result.effects.dossier = [life.dossier];
+      if (life.lines.length > 0) result.effects.hooks = [...life.lines, ...result.effects.hooks];
       await ActionLog.create(
         [
           {

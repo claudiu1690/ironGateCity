@@ -22,6 +22,7 @@ import type { SessionUser } from '../trpc/context';
 import { loadCharacter } from './dayService';
 import { isEventInPrint, togetherPaper } from './togetherPaper';
 import { nationalSection } from './nationEdition';
+import { lifePaper } from './lifePaper';
 import { ordersTargetOf, pushedHeadline } from './pushTarget';
 import { homeCapOf, restedCapToday } from './modifiers';
 import { isRivalGround, riskView } from './risk';
@@ -235,6 +236,8 @@ export async function getPaper(deps: {
     signedUp: together.parts.signedUp,
     // Slice 7 (tech design §11.1): *From the capital* / *The republic*, live at read.
     national: await nationalSection(content, c, entry.cityId, now),
+    // Slice 8 (T16): the desk's life rows, the Letters' life rows, yesterday's exposé.
+    life: await lifePaper(content, c, entry, today),
   };
 }
 

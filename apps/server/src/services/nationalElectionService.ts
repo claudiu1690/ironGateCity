@@ -240,6 +240,8 @@ export function vote(deps: NationActDeps<{ factionId: FactionId }>): Promise<Pol
     const open = await NationalElection.updateOne({ _id: e._id, status: 'voting' }, { $inc: { ballots: 1 } }, { session });
     if (open.matchedCount === 0) throw notNow(today);
     await Vote.create([{ electionId: e._id, voterId: c._id, candidateKey: cand.factionId, day: today }], { session });
+    // Slice 8 (T14, design §8): the first vote of its kind is a chapter's milestone (set once).
+    await Character.updateOne({ _id: c._id, 'milestones.nationalVoteAt': null }, { $set: { 'milestones.nationalVoteAt': new Date(x.now) } }, { session });
     return nationResult(content, x, {
       act: 'nationalVote',
       idempotencyKey: deps.input.idempotencyKey,

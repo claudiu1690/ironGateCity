@@ -22,6 +22,7 @@ import { runCityDay } from './services/cityDay';
 import { settleNationDay } from './services/nationDay';
 import { registerNationHooks } from './dev/nation';
 import { registerNationHooks2 } from './dev/nation2';
+import { registerLifeHooks } from './dev/life';
 import { dayHooks } from './services/dayService';
 import { nightHooks } from './services/night';
 import { patrolHooks } from './services/patrolHooks';
@@ -254,6 +255,8 @@ export async function buildApp({
     registerNationHooks(app, { auth, content, clock: { now, advance: advanceClock } });
     // Slice 7 lane 2 (§8.6): Parliament, the ballots above the council and the petitions.
     registerNationHooks2(app, { auth, content, now });
+    // Slice 8 phase B, lane 2 (tech design §8.6): the Dossier, the flat and Legacy.
+    registerLifeHooks(app, { auth, content, now });
 
     // The dev time-skip panel (README "Reviewing with the dev panel"): same guard, same clock.
     registerDevPanel(app, {

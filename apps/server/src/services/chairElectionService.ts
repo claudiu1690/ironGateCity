@@ -192,6 +192,8 @@ export function vote(deps: NationActDeps<{ key: string }>): Promise<PoliticalRes
     const open = await FactionElection.updateOne({ _id: e._id, status: 'voting' }, { $inc: { ballots: 1 } }, { session });
     if (open.matchedCount === 0) throw new GameError('NOT_NOW', { phase: chairPhase(today) });
     await Vote.create([{ electionId: e._id, voterId: c._id, candidateKey: line.key, day: today }], { session });
+    // Slice 8 (T14, design §8): the first vote of its kind is a chapter's milestone (set once).
+    await Character.updateOne({ _id: c._id, 'milestones.chairVoteAt': null }, { $set: { 'milestones.chairVoteAt': new Date(x.now) } }, { session });
     return nationResult(content, x, {
       act: 'chairVote',
       idempotencyKey: deps.input.idempotencyKey,

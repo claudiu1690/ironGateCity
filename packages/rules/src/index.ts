@@ -72,5 +72,7 @@ export * from './home';
 export * from './legacy';
 export * from './bodyguard';
 export * from './buffs';
+// Slice 8 phase B, lane 2: the Dossier's, the exposé's, the home's and Legacy's views.
+export * from './lifeViews';
 // Slice 8 phase B, lane 1: the Wardrobe's, the shops', the patrons', the bodyguard's and the bar's views.
 export * from './wardrobeViews';

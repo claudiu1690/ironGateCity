@@ -41,6 +41,7 @@ import {
 import { fadeDaysFor, lawModifiers } from './lawBook';
 import type {
   BoardResult,
+  DossierCategory,
   CharacterView,
   CheckStats,
   DestinationState,
@@ -81,6 +82,7 @@ import {
 import type { LoadedCharacter } from './dayService';
 import { addInfluence, addPoints, writeLedger } from './ledger';
 import { dayModifiers, homeCapOf, restedCapToday } from './modifiers';
+import { landEntry } from './dossierService';
 import { politicsSummary } from './politicsService';
 import { keySeed } from './keyGuard';
 import { withRequestKey } from './requestKey';
@@ -1077,6 +1079,23 @@ export async function choose(deps: {
         { session, returnDocument: 'after', lean: true },
       );
       if (!updated) throw new VersionConflict();
+      // Slice 8 (T11, design §4.2): *Feed him a story* lands an entry on a name of the destination
+      // on the card's Success.
+      const cardEntry = (rw as { dossier?: { category: DossierCategory; city: 'destination' } }).dossier;
+      const dossierKnock =
+        cardEntry && r.outcome === 'success'
+          ? (
+              await landEntry(session, content, updated, {
+                source: 'informer',
+                category: cardEntry.category,
+                cityId: j.to,
+                chancePct: 100,
+                seed: j.seed,
+                row: 'card',
+                now,
+              })
+            ).knock
+          : null;
 
       const rewards: JourneyCardResult['rewards'] = [];
       if (rw.xp) rewards.push({ id: 'xp', amount: rw.xp });
@@ -1104,6 +1123,7 @@ export async function choose(deps: {
         opinion,
         points,
         quoted: !!rw.quoted,
+        ...(dossierKnock ? { dossier: [dossierKnock] } : {}),
         ...(rw.flag
           ? {
               flag: {

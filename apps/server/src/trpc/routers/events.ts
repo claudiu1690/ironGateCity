@@ -32,6 +32,8 @@ export const eventsRouter = router({
         roleId: z.string().min(1),
         districtId: z.string().min(1).nullable(),
         idempotencyKey: z.uuid(),
+        /** Slice 8 (tech design §8.1): the Headline Story's *Attach a Case File*. */
+        caseFileId: z.string().regex(/^[0-9a-f]{24}$/).optional(),
       }),
     )
     .mutation(({ ctx, input }) => callEvent({ user: ctx.user, content: ctx.content, now: ctx.now, input })),

@@ -1,4 +1,4 @@
-import type { DailyTally, DayKey, HeadlineGroup } from '@irongate/rules';
+import type { DailyTally, DayKey, HeadlineGroup, LifeDesk, LifeLetter } from '@irongate/rules';
 import { Schema, model } from 'mongoose';
 import type { Types } from 'mongoose';
 
@@ -58,6 +58,8 @@ export interface PaperEntryDoc {
     }> | null;
     /** Slice 7: the party's target bonus lines (+10 Party XP each). */
     target?: Array<{ label: string; fxp: number }> | null;
+    /** Slice 8 (tech design §11.1): the desk's life rows and the Letters' Requests, reports and gossip. */
+    life?: { desk: LifeDesk; letters: LifeLetter[] } | null;
   };
   snapshot: { level: number; rank: number; standingLevel: number };
   readAt: Date | null;

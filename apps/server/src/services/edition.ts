@@ -37,6 +37,7 @@ const RISK_KINDS = new Set<string>(RISK_CONDITION_KINDS);
 const isRisk = (t: HeadlineTemplate) => t.when.some((w) => RISK_KINDS.has(w.kind));
 
 import type { TogetherEdition } from './togetherEdition';
+import type { LifeEdition } from './lifeSettlement';
 
 export type NewEdition =Omit<PaperEntryDoc, '_id' | 'createdAt' | 'readAt'>;
 
@@ -80,6 +81,8 @@ export function buildEdition(i: {
   /** Slice 7 (tech design §8.4): a desk line per office stipend; the party's target bonus. */
   offices?: NonNullable<PaperEntryDoc['desk']['offices']>;
   target?: Array<{ label: string; fxp: number }>;
+  /** Slice 8 (tech design §11.1–§11.2): the life lines' facts and fills, the desk rows and the Letters. */
+  life?: LifeEdition | null;
 }): NewEdition {
   const { content, character: c, settlement: s, previous: prev, today } = i;
   const yesterday = today - 1;
@@ -118,6 +121,7 @@ export function buildEdition(i: {
     ...(i.unrestPushed ? { unrestPushed: i.unrestPushed } : {}),
     ...(i.together ? { events: i.together.facts } : {}),
     ...(i.nation && i.nation.kinds.length > 0 ? { national: { kinds: i.nation.kinds } } : {}),
+    ...(i.life && i.life.kinds.length > 0 ? { life: { kinds: i.life.kinds } } : {}),
   };
 
   const templates = content.headlinesOf(paperCityId);
@@ -172,6 +176,7 @@ export function buildEdition(i: {
       baseVars,
       ...t.when.map((w) => i.risk?.varsByKind[w.kind as RiskCondition['kind']] ?? {}),
       ...t.when.map((w) => i.together?.varsByKind[w.kind] ?? {}),
+      ...t.when.map((w) => i.life?.varsByKind[w.kind] ?? {}),
       ...(i.nation && t.when.some((w) => i.nation!.kinds.includes(w.kind))
         ? [i.nation.vars, ...t.when.map((w) => i.nation!.varsByKind?.[w.kind] ?? {})]
         : []),
@@ -215,6 +220,7 @@ export function buildEdition(i: {
       awards: i.awards && i.awards.length > 0 ? i.awards : null,
       offices: i.offices && i.offices.length > 0 ? i.offices : null,
       target: i.target && i.target.length > 0 ? i.target : null,
+      life: i.life ? { desk: i.life.desk, letters: i.life.letters } : null,
       restedBanked: s.restedBanked,
       daysSinceLastPaper: facts.daysSinceLastPaper,
       yesterday: playedYesterday,

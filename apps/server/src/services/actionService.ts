@@ -4,10 +4,13 @@ import { residenceCityId, residenceCtx } from './residence';
 import { ActionLog, Character, Encounter } from '@irongate/db';
 import type { CharacterDoc, EncounterDoc } from '@irongate/db';
 import {
+  DOSSIER,
   addToTally,
   applyGains,
   barredByRecord,
+  categoryOfKind,
   createRng,
+  dossierChanceOf,
   dayKey,
   heatState,
   orderRewards,
@@ -23,6 +26,8 @@ import { lawModifiers } from './lawBook';
 import type {
   ActionDescriptor,
   ActionResult,
+  DossierCategory,
+  DossierKnock,
   GainsResult,
   OrderTemplate,
   Progress,
@@ -51,6 +56,7 @@ import { pendingView, startRunInInTx, storedEncounterResult } from './streetServ
 import type { HeldAction } from './streetService';
 import { nightAt } from './night';
 import { itemRows, personalOf, recognitionOf } from './personal';
+import { landEntry } from './dossierService';
 import { streetHooks } from './streetHooks';
 import type { StreetForce } from './streetHooks';
 import { closeArrivalInTx } from './travelService';
@@ -661,6 +667,29 @@ export async function writeTier1(i: {
   });
   // Slice 7 integration: the party's target bar rides on the act's view (it was gone until the next `me`).
   built.character.orders.target = await ordersTargetOf(content, updated, today, undefined, session);
+  // Slice 8 (T11, design §4.2): each Success of a tier-1 intelligence tap may land a Dossier entry,
+  // one roll per row on its own stream (10 % + the worn press pass, camera or pen).
+  // The cells' and the ward's taps (`held.cells`, `held.ward`) land on their own 25 % and category.
+  const heldTap = action.id === 'held.cells' || action.id === 'held.ward';
+  const heldSpec = heldTap ? (action as { dossier?: { chance: number; category: DossierCategory } }).dossier : undefined;
+  if (action.type === 'intelligence' && (!heldTap || heldSpec)) {
+    const chance = heldSpec ? heldSpec.chance : DOSSIER.chance.intelligence + dossierChanceOf(personalOf(c, content));
+    const knocks: DossierKnock[] = [];
+    for (const [n, row] of res.attempts.entries()) {
+      if (row.outcome !== 'success') continue;
+      const landed = await landEntry(session, content, updated, {
+        source: heldSpec ? (action.id === 'held.cells' ? 'cells' : 'ward') : 'intelligence',
+        category: heldSpec ? heldSpec.category : categoryOfKind(located.location.kind),
+        cityId: city.id,
+        chancePct: chance,
+        seed: i.seed,
+        row: n,
+        now,
+      });
+      if (landed.knock) knocks.push(landed.knock);
+    }
+    if (knocks.length > 0) built.effects.dossier = knocks;
+  }
   await ActionLog.create(
     [
       {
