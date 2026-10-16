@@ -1936,5 +1936,593 @@
     "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
     "quality": 72,
     "bytes": 64322
+  },
+  "scene.flat-640.avif": {
+    "sourceHash": "1f4c72bdb65c97723c93521449a3ba601cf86f5d375267632b464c40c68f8c18",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 28628
+  },
+  "scene.flat-1280.avif": {
+    "sourceHash": "1f4c72bdb65c97723c93521449a3ba601cf86f5d375267632b464c40c68f8c18",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 110482
+  },
+  "scene.flat-640.webp": {
+    "sourceHash": "1f4c72bdb65c97723c93521449a3ba601cf86f5d375267632b464c40c68f8c18",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 41108
+  },
+  "scene.lido-640.avif": {
+    "sourceHash": "241acef5b9b68e4643116f0cc822023620add77172cc4af59b8a53ddf960683f",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 54592
+  },
+  "scene.lido-1280.avif": {
+    "sourceHash": "241acef5b9b68e4643116f0cc822023620add77172cc4af59b8a53ddf960683f",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 45,
+    "bytes": 146017
+  },
+  "scene.lido-640.webp": {
+    "sourceHash": "241acef5b9b68e4643116f0cc822023620add77172cc4af59b8a53ddf960683f",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 78574
+  },
+  "scene.front-page-640.avif": {
+    "sourceHash": "3c9eb706663dcfe24f8564fc684a66526f8c740e1404cfd9acaee3f696d79250",
+    "settings": "{\"width\":640,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 42719
+  },
+  "scene.front-page-1280.avif": {
+    "sourceHash": "3c9eb706663dcfe24f8564fc684a66526f8c740e1404cfd9acaee3f696d79250",
+    "settings": "{\"width\":1280,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 152962
+  },
+  "scene.front-page-640.webp": {
+    "sourceHash": "3c9eb706663dcfe24f8564fc684a66526f8c740e1404cfd9acaee3f696d79250",
+    "settings": "{\"width\":640,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 65144
+  },
+  "portrait.doorman-256.avif": {
+    "sourceHash": "f3ea89af5fe6ba235dfe62c6ed33e12bcc7035847a386ba482c32ca9d0e71461",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 12011
+  },
+  "portrait.doorman-512.avif": {
+    "sourceHash": "f3ea89af5fe6ba235dfe62c6ed33e12bcc7035847a386ba482c32ca9d0e71461",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 42472
+  },
+  "portrait.doorman-256.webp": {
+    "sourceHash": "f3ea89af5fe6ba235dfe62c6ed33e12bcc7035847a386ba482c32ca9d0e71461",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 14538
+  },
+  "portrait.steward-256.avif": {
+    "sourceHash": "20a7b123d452f56483516190a66fe011949874058147171ac8b4ac694bce9cd1",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 9092
+  },
+  "portrait.steward-512.avif": {
+    "sourceHash": "20a7b123d452f56483516190a66fe011949874058147171ac8b4ac694bce9cd1",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 34306
+  },
+  "portrait.steward-256.webp": {
+    "sourceHash": "20a7b123d452f56483516190a66fe011949874058147171ac8b4ac694bce9cd1",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 12006
+  },
+  "portrait.minder-256.avif": {
+    "sourceHash": "dac60626587912972009bac416fdbaea889361a2d2e9ba47d0a553ab1e50082a",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 10295
+  },
+  "portrait.minder-512.avif": {
+    "sourceHash": "dac60626587912972009bac416fdbaea889361a2d2e9ba47d0a553ab1e50082a",
+    "settings": "{\"width\":512,\"format\":\"avif\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 37611
+  },
+  "portrait.minder-256.webp": {
+    "sourceHash": "dac60626587912972009bac416fdbaea889361a2d2e9ba47d0a553ab1e50082a",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":{\"left\":60,\"top\":20,\"width\":760,\"height\":950},\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 13634
+  },
+  "item.stewards-jacket-128.avif": {
+    "sourceHash": "e9c3c8778be5273a491946e17bd5abb81be118bb0baea32395d63d656b20b9b4",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1956
+  },
+  "item.stewards-jacket-256.avif": {
+    "sourceHash": "e9c3c8778be5273a491946e17bd5abb81be118bb0baea32395d63d656b20b9b4",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 7597
+  },
+  "item.stewards-jacket-128.webp": {
+    "sourceHash": "e9c3c8778be5273a491946e17bd5abb81be118bb0baea32395d63d656b20b9b4",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2242
+  },
+  "item.stewards-jacket-256.webp": {
+    "sourceHash": "e9c3c8778be5273a491946e17bd5abb81be118bb0baea32395d63d656b20b9b4",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 9470
+  },
+  "item.convenors-coat-128.avif": {
+    "sourceHash": "3b3fe12e489404c5ead1a273e80a76cd7241f64f8521a4578d680eca14947796",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2018
+  },
+  "item.convenors-coat-256.avif": {
+    "sourceHash": "3b3fe12e489404c5ead1a273e80a76cd7241f64f8521a4578d680eca14947796",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 6622
+  },
+  "item.convenors-coat-128.webp": {
+    "sourceHash": "3b3fe12e489404c5ead1a273e80a76cd7241f64f8521a4578d680eca14947796",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2044
+  },
+  "item.convenors-coat-256.webp": {
+    "sourceHash": "3b3fe12e489404c5ead1a273e80a76cd7241f64f8521a4578d680eca14947796",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 8192
+  },
+  "item.campaign-suit-128.avif": {
+    "sourceHash": "b3833188ed0f8a4d27fef98467eecaa5d28e93b30a13be8d36ec0b1222fef762",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1887
+  },
+  "item.campaign-suit-256.avif": {
+    "sourceHash": "b3833188ed0f8a4d27fef98467eecaa5d28e93b30a13be8d36ec0b1222fef762",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 6998
+  },
+  "item.campaign-suit-128.webp": {
+    "sourceHash": "b3833188ed0f8a4d27fef98467eecaa5d28e93b30a13be8d36ec0b1222fef762",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2040
+  },
+  "item.campaign-suit-256.webp": {
+    "sourceHash": "b3833188ed0f8a4d27fef98467eecaa5d28e93b30a13be8d36ec0b1222fef762",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 9492
+  },
+  "item.greatcoat-128.avif": {
+    "sourceHash": "47574778e1d2bbd316c470ac949b0a538e2143c93a33a46236ef8063f6fd92d0",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1621
+  },
+  "item.greatcoat-256.avif": {
+    "sourceHash": "47574778e1d2bbd316c470ac949b0a538e2143c93a33a46236ef8063f6fd92d0",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3887
+  },
+  "item.greatcoat-128.webp": {
+    "sourceHash": "47574778e1d2bbd316c470ac949b0a538e2143c93a33a46236ef8063f6fd92d0",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 1534
+  },
+  "item.greatcoat-256.webp": {
+    "sourceHash": "47574778e1d2bbd316c470ac949b0a538e2143c93a33a46236ef8063f6fd92d0",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4292
+  },
+  "item.evening-dress-128.avif": {
+    "sourceHash": "8dd1d302c23b737c27fc7a8ad0fc6684587c9aed046f015a647d013944737f53",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2133
+  },
+  "item.evening-dress-256.avif": {
+    "sourceHash": "8dd1d302c23b737c27fc7a8ad0fc6684587c9aed046f015a647d013944737f53",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 6671
+  },
+  "item.evening-dress-128.webp": {
+    "sourceHash": "8dd1d302c23b737c27fc7a8ad0fc6684587c9aed046f015a647d013944737f53",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2454
+  },
+  "item.evening-dress-256.webp": {
+    "sourceHash": "8dd1d302c23b737c27fc7a8ad0fc6684587c9aed046f015a647d013944737f53",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 8180
+  },
+  "item.correspondents-suit-128.avif": {
+    "sourceHash": "6262c5e66179612514166cca7cc98eee2884e91b50c4872f6b55875b7390aa20",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2168
+  },
+  "item.correspondents-suit-256.avif": {
+    "sourceHash": "6262c5e66179612514166cca7cc98eee2884e91b50c4872f6b55875b7390aa20",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 9610
+  },
+  "item.correspondents-suit-128.webp": {
+    "sourceHash": "6262c5e66179612514166cca7cc98eee2884e91b50c4872f6b55875b7390aa20",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2730
+  },
+  "item.correspondents-suit-256.webp": {
+    "sourceHash": "6262c5e66179612514166cca7cc98eee2884e91b50c4872f6b55875b7390aa20",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 12034
+  },
+  "item.three-piece-128.avif": {
+    "sourceHash": "395797c38e77d7e3ba5ede1b16e763617c68a058bf144b8ac1a81be837880071",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2142
+  },
+  "item.three-piece-256.avif": {
+    "sourceHash": "395797c38e77d7e3ba5ede1b16e763617c68a058bf144b8ac1a81be837880071",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 6390
+  },
+  "item.three-piece-128.webp": {
+    "sourceHash": "395797c38e77d7e3ba5ede1b16e763617c68a058bf144b8ac1a81be837880071",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2854
+  },
+  "item.three-piece-256.webp": {
+    "sourceHash": "395797c38e77d7e3ba5ede1b16e763617c68a058bf144b8ac1a81be837880071",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 9110
+  },
+  "item.lapel-badge-128.avif": {
+    "sourceHash": "0841f6221a6e0224be8e1c0ce8fffb74ae7947d47f672297161e04f24d93b507",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1273
+  },
+  "item.lapel-badge-256.avif": {
+    "sourceHash": "0841f6221a6e0224be8e1c0ce8fffb74ae7947d47f672297161e04f24d93b507",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2438
+  },
+  "item.lapel-badge-128.webp": {
+    "sourceHash": "0841f6221a6e0224be8e1c0ce8fffb74ae7947d47f672297161e04f24d93b507",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 940
+  },
+  "item.lapel-badge-256.webp": {
+    "sourceHash": "0841f6221a6e0224be8e1c0ce8fffb74ae7947d47f672297161e04f24d93b507",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3074
+  },
+  "item.good-hat-128.avif": {
+    "sourceHash": "b24e39e173bfe4ae7771fb3025425d0fccf2d87a2191f597d7bd1f2d3c6c78c2",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1751
+  },
+  "item.good-hat-256.avif": {
+    "sourceHash": "b24e39e173bfe4ae7771fb3025425d0fccf2d87a2191f597d7bd1f2d3c6c78c2",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 6001
+  },
+  "item.good-hat-128.webp": {
+    "sourceHash": "b24e39e173bfe4ae7771fb3025425d0fccf2d87a2191f597d7bd1f2d3c6c78c2",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 1586
+  },
+  "item.good-hat-256.webp": {
+    "sourceHash": "b24e39e173bfe4ae7771fb3025425d0fccf2d87a2191f597d7bd1f2d3c6c78c2",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 7448
+  },
+  "item.wristwatch-128.avif": {
+    "sourceHash": "f36bc6ec9fd09fcc13ce011411bbade6e9a56b961d212e7084a9de79659594df",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2562
+  },
+  "item.wristwatch-256.avif": {
+    "sourceHash": "f36bc6ec9fd09fcc13ce011411bbade6e9a56b961d212e7084a9de79659594df",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 6964
+  },
+  "item.wristwatch-128.webp": {
+    "sourceHash": "f36bc6ec9fd09fcc13ce011411bbade6e9a56b961d212e7084a9de79659594df",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2672
+  },
+  "item.wristwatch-256.webp": {
+    "sourceHash": "f36bc6ec9fd09fcc13ce011411bbade6e9a56b961d212e7084a9de79659594df",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 8556
+  },
+  "item.fountain-pen-128.avif": {
+    "sourceHash": "77d57d86a8f641b7d2116afed3b8f3c9a216b48fb2acbfca89fea8f068a252ca",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1714
+  },
+  "item.fountain-pen-256.avif": {
+    "sourceHash": "77d57d86a8f641b7d2116afed3b8f3c9a216b48fb2acbfca89fea8f068a252ca",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 4999
+  },
+  "item.fountain-pen-128.webp": {
+    "sourceHash": "77d57d86a8f641b7d2116afed3b8f3c9a216b48fb2acbfca89fea8f068a252ca",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 1802
+  },
+  "item.fountain-pen-256.webp": {
+    "sourceHash": "77d57d86a8f641b7d2116afed3b8f3c9a216b48fb2acbfca89fea8f068a252ca",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 6086
+  },
+  "item.cigarette-case-128.avif": {
+    "sourceHash": "b08de19d358a212e96d316959d476f5654204e6cd2207abdcc1048edfa42fcb2",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2352
+  },
+  "item.cigarette-case-256.avif": {
+    "sourceHash": "b08de19d358a212e96d316959d476f5654204e6cd2207abdcc1048edfa42fcb2",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 8335
+  },
+  "item.cigarette-case-128.webp": {
+    "sourceHash": "b08de19d358a212e96d316959d476f5654204e6cd2207abdcc1048edfa42fcb2",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2900
+  },
+  "item.cigarette-case-256.webp": {
+    "sourceHash": "b08de19d358a212e96d316959d476f5654204e6cd2207abdcc1048edfa42fcb2",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 11132
+  },
+  "item.rosette-128.avif": {
+    "sourceHash": "334b29a7b7880329e621df5d72bea286277977cbd5b3a0853bbb13341c2d056c",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1356
+  },
+  "item.rosette-256.avif": {
+    "sourceHash": "334b29a7b7880329e621df5d72bea286277977cbd5b3a0853bbb13341c2d056c",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3776
+  },
+  "item.rosette-128.webp": {
+    "sourceHash": "334b29a7b7880329e621df5d72bea286277977cbd5b3a0853bbb13341c2d056c",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 1028
+  },
+  "item.rosette-256.webp": {
+    "sourceHash": "334b29a7b7880329e621df5d72bea286277977cbd5b3a0853bbb13341c2d056c",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 4342
+  },
+  "item.forged-papers-128.avif": {
+    "sourceHash": "7119110cf1c4b5d671d0c55ea7a7e232117e4018b38ef81d7b2738ecd55645da",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2189
+  },
+  "item.forged-papers-256.avif": {
+    "sourceHash": "7119110cf1c4b5d671d0c55ea7a7e232117e4018b38ef81d7b2738ecd55645da",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 7299
+  },
+  "item.forged-papers-128.webp": {
+    "sourceHash": "7119110cf1c4b5d671d0c55ea7a7e232117e4018b38ef81d7b2738ecd55645da",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2552
+  },
+  "item.forged-papers-256.webp": {
+    "sourceHash": "7119110cf1c4b5d671d0c55ea7a7e232117e4018b38ef81d7b2738ecd55645da",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 9306
+  },
+  "item.press-pass-128.avif": {
+    "sourceHash": "e6f37d8017f0909577a12a8176c5d4fee4f434ef49bd476242b65ac794f82125",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2152
+  },
+  "item.press-pass-256.avif": {
+    "sourceHash": "e6f37d8017f0909577a12a8176c5d4fee4f434ef49bd476242b65ac794f82125",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 7105
+  },
+  "item.press-pass-128.webp": {
+    "sourceHash": "e6f37d8017f0909577a12a8176c5d4fee4f434ef49bd476242b65ac794f82125",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2414
+  },
+  "item.press-pass-256.webp": {
+    "sourceHash": "e6f37d8017f0909577a12a8176c5d4fee4f434ef49bd476242b65ac794f82125",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 8738
+  },
+  "item.propaganda-kit-128.avif": {
+    "sourceHash": "4cd874286cfe980aefed9fc326c5babd8af156a3068c7ba5f2f8e880c2c05fd0",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3001
+  },
+  "item.propaganda-kit-256.avif": {
+    "sourceHash": "4cd874286cfe980aefed9fc326c5babd8af156a3068c7ba5f2f8e880c2c05fd0",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 9367
+  },
+  "item.propaganda-kit-128.webp": {
+    "sourceHash": "4cd874286cfe980aefed9fc326c5babd8af156a3068c7ba5f2f8e880c2c05fd0",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3666
+  },
+  "item.propaganda-kit-256.webp": {
+    "sourceHash": "4cd874286cfe980aefed9fc326c5babd8af156a3068c7ba5f2f8e880c2c05fd0",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 12106
+  },
+  "item.press-camera-128.avif": {
+    "sourceHash": "c3fcefada034cec611f0f21cd2289097d339e98c345d7e7fe950458d3647aa0d",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3000
+  },
+  "item.press-camera-256.avif": {
+    "sourceHash": "c3fcefada034cec611f0f21cd2289097d339e98c345d7e7fe950458d3647aa0d",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 9332
+  },
+  "item.press-camera-128.webp": {
+    "sourceHash": "c3fcefada034cec611f0f21cd2289097d339e98c345d7e7fe950458d3647aa0d",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3700
+  },
+  "item.press-camera-256.webp": {
+    "sourceHash": "c3fcefada034cec611f0f21cd2289097d339e98c345d7e7fe950458d3647aa0d",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 11676
+  },
+  "item.wire-cutters-128.avif": {
+    "sourceHash": "433db9f51b614b51166a9c8d50b341265f12468e05033274ee1dfcde56c63711",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 1988
+  },
+  "item.wire-cutters-256.avif": {
+    "sourceHash": "433db9f51b614b51166a9c8d50b341265f12468e05033274ee1dfcde56c63711",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 4965
+  },
+  "item.wire-cutters-128.webp": {
+    "sourceHash": "433db9f51b614b51166a9c8d50b341265f12468e05033274ee1dfcde56c63711",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 2218
+  },
+  "item.wire-cutters-256.webp": {
+    "sourceHash": "433db9f51b614b51166a9c8d50b341265f12468e05033274ee1dfcde56c63711",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 6156
+  },
+  "item.bar-plate-128.avif": {
+    "sourceHash": "f6a3d3cf819c2ae7e6b295320ec20e0babae9813ac7b18c68e7090b6002601c3",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 2850
+  },
+  "item.bar-plate-256.avif": {
+    "sourceHash": "f6a3d3cf819c2ae7e6b295320ec20e0babae9813ac7b18c68e7090b6002601c3",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 9460
+  },
+  "item.bar-plate-128.webp": {
+    "sourceHash": "f6a3d3cf819c2ae7e6b295320ec20e0babae9813ac7b18c68e7090b6002601c3",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3292
+  },
+  "item.bar-plate-256.webp": {
+    "sourceHash": "f6a3d3cf819c2ae7e6b295320ec20e0babae9813ac7b18c68e7090b6002601c3",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 11344
+  },
+  "item.round-128.avif": {
+    "sourceHash": "5be0d558e39b758084194e303c26ad797abb43b6719a83e38b9bc5d35b7688fa",
+    "settings": "{\"width\":128,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 3060
+  },
+  "item.round-256.avif": {
+    "sourceHash": "5be0d558e39b758084194e303c26ad797abb43b6719a83e38b9bc5d35b7688fa",
+    "settings": "{\"width\":256,\"format\":\"avif\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":55,\"floor\":40,\"step\":5}}",
+    "quality": 55,
+    "bytes": 11211
+  },
+  "item.round-128.webp": {
+    "sourceHash": "5be0d558e39b758084194e303c26ad797abb43b6719a83e38b9bc5d35b7688fa",
+    "settings": "{\"width\":128,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 3762
+  },
+  "item.round-256.webp": {
+    "sourceHash": "5be0d558e39b758084194e303c26ad797abb43b6719a83e38b9bc5d35b7688fa",
+    "settings": "{\"width\":256,\"format\":\"webp\",\"crop\":null,\"flatten\":null,\"q\":{\"start\":72,\"floor\":60,\"step\":4}}",
+    "quality": 72,
+    "bytes": 13552
   }
 }

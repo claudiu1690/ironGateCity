@@ -30,7 +30,7 @@ import type {
 } from '@irongate/rules';
 import { z } from 'zod';
 import { ambitions } from './data/ambitions';
-import { assets, avatars, missionCards, nationScenes, scenes } from './data/art';
+import { assets, avatars, lifeScenes, missionCards, nationScenes, scenes } from './data/art';
 import { candidates, clearwaterCandidates, irongateCandidates } from './data/candidates';
 import { capitalHomeHeadlines } from './data/capitalHomeHeadlines';
 import { ashford } from './data/cities/ashford';
@@ -104,7 +104,7 @@ import type { MissionType } from '@irongate/rules';
 export const rawContent: unknown = {
   factions,
   cities: [coalport, duskwall, ashford, irongate, clearwater],
-  art: { assets, scenes, missionCards, nationScenes },
+  art: { assets, scenes, missionCards, nationScenes, lifeScenes },
   tilePyramids: tiles,
   avatars,
   items,

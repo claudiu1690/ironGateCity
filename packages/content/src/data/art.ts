@@ -67,8 +67,12 @@ function portrait(key: string, top: number, alt: string, file = key): Asset {
 /** Slice 7: an asset whose WebP fallback is written at fewer widths than its AVIF (`webpWidths`). */
 const withWebp = (a: Asset, widths: number[] = [256]): Asset => ({ ...a, webpWidths: widths });
 
-function item(id: string, file: string, alt: string): Asset {
-  return { id, kind: 'item', source: `mvp/items/${file}`, width: 512, height: 512, widths: [128, 256], alt };
+/**
+ * An item picture, square. `size`: the source's side (512 for the JPGs; slice 8's bar pictures are
+ * 1024 px PNGs, which the art build reads by their file and resizes like the others).
+ */
+function item(id: string, file: string, alt: string, size = 512): Asset {
+  return { id, kind: 'item', source: `mvp/items/${file}`, width: size, height: size, widths: [128, 256], alt };
 }
 
 /** Vectors are copied, not encoded (ADR 0015): /art/<id>.svg. */
@@ -568,6 +572,43 @@ export const assets: Asset[] = [
   // Slice 7 integration (16 Oct 2026): the Casino (in the folder since October, never catalogued) and
   // five scenes painted for the nation. Alt texts are drafts; the designer's final ones go in
   // design §23.8.
+  // Slice 8 (tech design §13): the flat, the Lido and the exposé's front page (the Casino is above
+  // since slice 7). Alt texts are §13's drafts; the focus points wait for the dev viewer.
+  scene(
+    'flat',
+    'A rented room at night: a bed, a wardrobe with coats on the door, a gas ring, a paper on the chair, tram wires outside.',
+  ),
+  scene(
+    'lido',
+    'The lido on a Sunday: the pavilion, deckchairs down to the water, a brass band on the bandstand.',
+  ),
+  scene(
+    'front-page',
+    "A newspaper's front page coming off the press under a pressman's hands, the headline band blank.",
+  ),
+  // Slice 8 (design §24.6): the bodyguards, civilians (no uniform, badge or weapon). Alt texts are
+  // drafts from the pictures; their 512 px WebP is written at 256 only, as slice 7's portraits.
+  withWebp(
+    portrait(
+      'doorman',
+      20,
+      'A bar doorman in his forties: broad, a flat cap, a heavy dark wool coat buttoned to the neck, a boxer\'s nose, a day\'s beard, patient eyes.',
+    ),
+  ),
+  withWebp(
+    portrait(
+      'steward',
+      20,
+      'A party steward in his thirties: lean, hair combed back, a worn dark suit and a plain red tie, a pencil behind one ear, a notebook held to his chest.',
+    ),
+  ),
+  withWebp(
+    portrait(
+      'minder',
+      20,
+      'A minder in his fifties: a felt hat with the brim down, a dark overcoat with the collar up over a red silk scarf, a cigarette, a calm, unreadable face.',
+    ),
+  ),
   scene(
     'casino',
     'A casino at night: a woman in red at the bar, a roulette wheel and card tables under chandeliers, men in dinner jackets, the lit lakeside town in the windows.',
@@ -608,6 +649,56 @@ export const assets: Asset[] = [
   // Review 5 (answers §19.10.6): the demob suit's picture.
   item('item.winter-coat', 'winter-coat.jpg', 'A plain wool overcoat, the kind issued with a demob suit.'),
   item('item.document-folder', 'document-folder.jpg', 'A folder of papers tied with string.'),
+  // Slice 8 (tech design §13): the Wardrobe's eighteen pictures (the standard coat reuses
+  // `item.winter-coat`). Alt texts: §13's drafts, checked against the pictures; the badge is the
+  // user's neutral redraw (design §21.1 Q34: centred, no crop) and the ribbon review 5's black one.
+  item(
+    'item.stewards-jacket',
+    'stewards-jacket.jpg',
+    'A belted dark grey wool jacket with four pockets, horn buttons and a plain collar.',
+  ),
+  item(
+    'item.convenors-coat',
+    'convenors-coat.jpg',
+    'A long dark-brown wool coat with a wide collar and a red scarf folded inside it.',
+  ),
+  item('item.campaign-suit', 'alliance-campaign-suit.jpg', 'A dark campaign suit.'),
+  item('item.greatcoat', 'officer-overcoat.jpg', "A long officer's-cut dress greatcoat."),
+  item('item.evening-dress', 'evening-dress.jpg', 'An evening gown on a stand.'),
+  item(
+    'item.correspondents-suit',
+    'correspondents-suit.jpg',
+    'A grey herringbone suit with a waistcoat, a press card in the breast pocket and a folded newspaper.',
+  ),
+  item('item.three-piece', 'three-piece-suit.jpg', 'A three-piece suit on a hanger.'),
+  item('item.lapel-badge', 'lapel-badge.jpg', 'A plain round enamel lapel badge, cream with a dark ink rim, on a pin.'),
+  item('item.good-hat', 'good-hat.jpg', 'A dark felt hat with a grosgrain band, the brim turned down at the front.'),
+  item('item.wristwatch', 'gold-wristwatch.jpg', 'A gold wristwatch.'),
+  item('item.fountain-pen', 'fountain-pen.jpg', 'A black fountain pen with a gold nib and a worn clip.'),
+  item('item.cigarette-case', 'cigarette-case.jpg', 'An engine-turned silver cigarette case, open to show the band.'),
+  item('item.rosette', 'memorial-ribbon.jpg', 'A plain black memorial ribbon, looped and pinned.'),
+  item('item.forged-papers', 'forged-papers.jpg', 'A folded set of forged papers.'),
+  item(
+    'item.press-pass',
+    'press-pass.jpg',
+    "A press card in a worn leather holder, PRESS in plain capitals, a stamp and a photograph's corner.",
+  ),
+  item('item.propaganda-kit', 'propaganda-kit.jpg', 'A paste pot and brush with posters.'),
+  item('item.press-camera', 'press-camera.jpg', 'A folding press camera.'),
+  item('item.wire-cutters', 'wire-cutters.jpg', 'A pair of wire cutters.'),
+  // Slice 8 (design §24.6): the bar's two services, 1024 px PNGs. Alt texts are drafts from the pictures.
+  item(
+    'item.bar-plate',
+    'bar-plate.png',
+    'A tin plate of three bread dumplings in gravy with a slice of dark bread, a fork, and a glass of beer beside it.',
+    1024,
+  ),
+  item(
+    'item.round',
+    'round.png',
+    'A tin tray with four glasses of beer, foam at the rims, one glass lifted off the tray, wet rings below.',
+    1024,
+  ),
   crest('vanguard', 'Iron Vanguard crest: an iron gate beneath a lantern.'),
   crest('collective', 'Red Collective crest: a hammer raised through a gear wheel.'),
   crest('alliance', 'Civic Alliance crest: a domed hall rising over a voting slot.'),
@@ -698,4 +789,10 @@ export const nationScenes: NonNullable<Content['art']['nationScenes']> = {
   ballot: 'scene.polling-station',
   laws: 'scene.law-book',
   governor: 'scene.governors-office',
+};
+
+/** Slice 8 (tech design §13): the flat's scene and the exposé's front page, by use. */
+export const lifeScenes: NonNullable<Content['art']['lifeScenes']> = {
+  flat: 'scene.flat',
+  frontPage: 'scene.front-page',
 };

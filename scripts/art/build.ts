@@ -70,9 +70,10 @@ const VECTOR_BUDGET = 8 * KB;
  * (tech design §13): the three figures' portraits (WebP at 256 only), four scenes and Clearwater's
  * day and night stills (the city opens) take the measured set to 22.79 MB, so 23.29 MB. Slice 7
  * integration: the Casino and five nation scenes (1344 × 752 sources; WebP at 640 only) take it to
- * 24.02 MB, so 24.52 MB.
+ * 24.02 MB, so 24.52 MB. Slice 8 (tech design §13, design §24.6): eighteen Wardrobe items, two bar
+ * items, three scenes and three portraits (WebP at 256 only) take it to 25.27 MB, so 25.77 MB.
  */
-const TOTAL_BUDGET = 24.52 * KB * KB;
+const TOTAL_BUDGET = 25.77 * KB * KB;
 
 interface ManifestEntry {
   sourceHash: string;
