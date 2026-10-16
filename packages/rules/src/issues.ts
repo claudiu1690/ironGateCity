@@ -45,7 +45,10 @@ export function drawIssues(i: {
  */
 export function feedMatches(m: IssueMatch, a: ActionDescriptor): boolean {
   // Slice 6 (tech 6.7): an event is tagged as an action of its `actionType` at its venue.
-  if (a.kind !== 'checked' && a.kind !== 'mission' && a.kind !== 'event') return false;
+  // Slice 8 (design §4.5, §21.1 Q29): an exposé is tagged only by a feed naming `expose`.
+  if (a.kind === 'expose') {
+    if (!m.actionTypes?.includes('expose')) return false;
+  } else if (a.kind !== 'checked' && a.kind !== 'mission' && a.kind !== 'event') return false;
   if (m.actionTypes && (a.type === undefined || !m.actionTypes.includes(a.type))) return false;
   if (m.locationIds && (a.locationId === undefined || !m.locationIds.includes(a.locationId))) return false;
   if (m.locationKinds && (a.locationKind === undefined || !m.locationKinds.includes(a.locationKind)))

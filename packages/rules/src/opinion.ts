@@ -113,3 +113,35 @@ export function applyAgainst(
     toNeutral: fromK(done ? toNeutral : 0),
   };
 }
+
+/**
+ * Slice 8 (design §4.5, ADR 0054): *the facts, plainly*: the target's loss goes wholly to Neutral,
+ * down to its floor (50 for a home faction in its home city) and to the remaining cap (§14.11's 2
+ * points a City Day on rival ground). Nothing goes to any party, so the actor's ledger is credited
+ * nothing (ADR 0034, §21.1 Q27). Integer thousandths.
+ */
+export function applyToNeutral(
+  shares: OpinionShares,
+  i: { target: FactionId; amount: number; homeFactionId?: FactionId; cap?: number | null },
+): { shares: OpinionShares; taken: number } {
+  const s: Record<FactionId | 'neutral', number> = {
+    vanguard: toK(shares.vanguard),
+    collective: toK(shares.collective),
+    alliance: toK(shares.alliance),
+    neutral: toK(shares.neutral),
+  };
+  const floor = i.target === i.homeFactionId ? OPINION_FLOORS.homeFaction * K : 0;
+  const cap = i.cap === undefined || i.cap === null ? Infinity : Math.max(0, toK(i.cap));
+  const taken = Math.max(0, Math.min(toK(i.amount), s[i.target] - floor, cap));
+  s[i.target] -= taken;
+  s.neutral += taken;
+  return {
+    shares: {
+      vanguard: fromK(s.vanguard),
+      collective: fromK(s.collective),
+      alliance: fromK(s.alliance),
+      neutral: fromK(s.neutral),
+    },
+    taken: fromK(taken),
+  };
+}
