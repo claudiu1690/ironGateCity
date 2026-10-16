@@ -6,7 +6,7 @@ tags: [city-services]
 status: partly built
 slice: "bar places since 1; the bar's card, the dining room and the back room designed for 8 (16 Oct 2026; building)"
 gdd: ["§19.3", "§6.7", "§11.4", "§25"]
-adrs: ["0051"]
+adrs: ["0051", "0088"]
 updated: 2026-10-16
 ---
 
@@ -28,11 +28,11 @@ Bars are places of kind `bar` where the town talks: dockers' bars, a press club,
 
 ## Where it lives
 
-**Rules:** [[GDD#19.3 Bars|GDD §19.3]] · [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] · [[GDD#11.4 Clearing a record|§11.4]] · [[GDD#25. Scope and roadmap|§25]] · [[design/slice-8-life|slice-8 design §3.5, §3.8 (the back room), §24.3 (the card, the buffs, copy, modals)]] · [[design/slice-8-screens|screens §18.4]] · [[economy|economy sheet]] §22.11 · [[adr/0051-wardrobe-four-slots-outfits-and-shops|ADR 0051]] (shops as cards on places) · [[tech/slice-8|tech/slice-8]] §1.1 (the architect's design to follow)
+**Rules:** [[GDD#19.3 Bars|GDD §19.3]] · [[GDD#6.7 Buffs (replaces "Physical Neglect")|GDD §6.7]] · [[GDD#11.4 Clearing a record|§11.4]] · [[GDD#25. Scope and roadmap|§25]] · [[design/slice-8-life|slice-8 design §3.5, §3.8 (the back room), §24.3 (the card, the buffs, copy, modals)]] · [[design/slice-8-screens|screens §18.4]] · [[economy|economy sheet]] §22.11 · [[adr/0051-wardrobe-four-slots-outfits-and-shops|ADR 0051]] (shops as cards on places) · [[tech/slice-8#24. Bodyguards and the bar (technical design, 16 Oct 2026; ADR 0088)|tech/slice-8 §24]] · [[adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers|ADR 0088]]
 
 **Code:**
 - Content: the bar places in `packages/content/src/data/cities/*.ts` (`kind: 'bar'`)
-- Services: none yet.
+- Services: none yet. Planned (tech §24, tasks T27, T31, T32): `Location.bar` on every bar and `Location.dining` on the three dining rooms (content, checked by the loader); `BAR` prices in `packages/rules/src/constants.ts` and the gates in `packages/rules/src/buffs.ts`; `barService` (`bar.round`, `bar.meal`, `bar.dinner`, each one keyed character update); the `BarCard` and `DiningCard` in the place sheet's card slot; `bar.spec.ts`.
 
 **Art needed** (design §24.6): `item.round`, `item.bar-plate`; the dining room uses `scene.hotel`.
 

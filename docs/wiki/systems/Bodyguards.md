@@ -6,7 +6,7 @@ tags: [risk]
 status: designed
 slice: "8 (designed 16 Oct 2026; building)"
 gdd: ["§12", "§12.1", "§20.1", "§18.3", "§1.5", "§25"]
-adrs: []
+adrs: ["0088", "0056", "0032"]
 updated: 2026-10-16
 ---
 
@@ -29,9 +29,14 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 
 ## Where it lives
 
-**Rules:** [[GDD#12. Bodyguards|GDD §12]] · [[GDD#20. Combat (NPC-only in MVP)|GDD §20]] · [[GDD#18.3 Sinks|§18.3]] · [[design/slice-8-life#24. Bodyguards and the bar (added scope, designed 16 Oct 2026)|slice-8 design §24]] (§24.2 rules and copy, §24.4 economy, §24.6 art, §24.7 points for the user) · [[design/slice-8-screens|screens §18]] · [[economy|economy sheet]] §22.11 · [[tech/slice-8|tech/slice-8]] §1.1 (the architect's design to follow)
+**Rules:** [[GDD#12. Bodyguards|GDD §12]] · [[GDD#20. Combat (NPC-only in MVP)|GDD §20]] · [[GDD#18.3 Sinks|§18.3]] · [[design/slice-8-life#24. Bodyguards and the bar (added scope, designed 16 Oct 2026)|slice-8 design §24]] (§24.2 rules and copy, §24.4 economy, §24.6 art, §24.7 points for the user) · [[design/slice-8-screens|screens §18]] · [[economy|economy sheet]] §22.11 · [[tech/slice-8#24. Bodyguards and the bar (technical design, 16 Oct 2026; ADR 0088)|tech/slice-8 §24]] (technical design, 16 Oct 2026) · [[adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers|ADR 0088]] (a run-in row on a day-key contract)
 
-**Code:** none yet. `packages/rules/src/runIn.ts` has no bodyguard term (the v3.0 +5 power and +5 % Run per tier are replaced by the row and never built).
+**Code:** none yet. Planned (tech §24, tasks T26, T27, T29, T30, T32):
+- Rules: `BODYGUARD` in `packages/rules/src/constants.ts`; `packages/rules/src/bodyguard.ts` (`contractCounts`, `hireGate`, `hire`, `renewed`, `canRenew`); `runIn.ts` gains the choice `minder`, the outcome `minded` and `minderChance` (the v3.0 +5 power and +5 % Run per tier are never built).
+- Data: `characters.bodyguard { tier, name, paidThroughDay }` (a day key, like the flat's rent; kept after a lapse so a re-hire keeps his name); `encounters.minder` and `chances.minder`, frozen when the run-in fires.
+- Content: `packages/content/src/data/bodyguards.ts` (names, lines, portraits); `Shop.hire` on every party store.
+- Server: `bodyguardService` (`bodyguard.hire` at your party store, `bodyguard.renew` from anywhere); the row in `encounterService`; the paper's `bodyguard-last` / `bodyguard-gone` from the settlement. No job.
+- Client: `HireCard`, `HireRow`, `MinderRow`, the run-in sheet's first row; `bodyguard.spec.ts`.
 
 **Art needed** (design §24.6): `portrait.doorman`, `portrait.steward`, `portrait.minder` (Noir Lithograph; no uniform, badge, armband or weapon).
 
@@ -47,6 +52,7 @@ Per [[GDD#12.1 Contracts (slice 8, pinned)|GDD §12.1]] and [[design/slice-8-lif
 
 ## Open questions / drift
 
+- Architect's questions to the designer (tech §24.10, each with a default): "four weeks ahead" read as four weeks beyond the running one; re-hiring the same tier keeps his name; no record surcharge; **the card's 62 % / 86 % are a mission's figures** (the street enforcer's power 22 × 1.1), a tier-1 tap's run-in is 68 / 92.
 - Designer defaults for the user (design §24.7): never against the police; the party store for all three tiers; one at a time with no mid-week replacement. Levers: Appendix C #113 and economy §22.10's bodyguard row (his power or the police's share, never the price).
 - The slice-5 design and tech spec still call bodyguards *after the MVP* (written before 14 Oct 2026).
 

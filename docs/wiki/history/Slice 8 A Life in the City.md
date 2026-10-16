@@ -7,7 +7,7 @@ status: building
 dates: 2026-10-04 (designed); 2026-10-16 (approved; the season deferred; bodyguards and the bar designed; phase A started)
 commits: [a350253, 3e04e18]
 gdd: ["§6.7", "§8.2", "§10", "§12", "§14.12", "§17.1", "§17.2", "§17.3", "§17.4", "§19.3", "§21", "§22"]
-adrs: ["0051", "0052", "0053", "0054", "0055", "0056", "0057", "0058"]
+adrs: ["0051", "0052", "0053", "0054", "0055", "0056", "0057", "0058", "0088"]
 updated: 2026-10-16
 ---
 
@@ -38,7 +38,7 @@ From [[IMPLEMENTATION_PLAN#Slice 8 — A life in the city|the plan]]: the Dossie
 ## Documents
 
 - Design: [[design/slice-8-life|design/slice-8-life]] (§20 approved, §21 settled, §22 review-4 addendum, **§23 the season deferred and what it changes, §24 bodyguards and the bar**: rules, copy, modals, paper lines, help notes, economy, art, five points for the user in §24.7), [[design/slice-8-screens|design/slice-8-screens]] (§11 deferred; **§18 the hire card, the bar's card, the dining room**), [[design/inventory-research|design/inventory-research]]. Economy: [[economy|economy sheet]] §22 (§22.8 deferred; **§22.11 bodyguards and the bar**). GDD: §0 (16 Oct), §6.7, §12, §19.3, §20.1, §18.3, §22's status, §25; Appendix C #110 and #111 closed, **#113** (never against the police) and **#114** (the buffs' levers) added.
-- Tech design: [[tech/slice-8|tech/slice-8]]. **Updated 16 Oct 2026: seasons cut out** (a dated note at the top lists what moved, what is kept and the forward-compatibility rules; §20's tasks rewritten, T15 deferred, T18 plays a month instead of a season, `season.spec.ts` dropped). Updated 14 Oct 2026: the knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are applied; **§1.1 *Added scope*** lists bodyguards and bar services / buffs, still to be designed; the planned migration is now `012-slice8-life` (§5.7, was 010).
+- Tech design: [[tech/slice-8|tech/slice-8]]. **16 Oct 2026: §24 bodyguards and the bar** ([[adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers|ADR 0088]]; tasks T26–T29 in phase A, T30–T31 in phase B, T32 in phase C). **Updated 16 Oct 2026: seasons cut out** (a dated note at the top lists what moved, what is kept and the forward-compatibility rules; §20's tasks rewritten, T15 deferred, T18 plays a month instead of a season, `season.spec.ts` dropped). Updated 14 Oct 2026: the knock-ons from [[tech/review-4|tech/review-4]] §20, [[tech/review-5|tech/review-5]] §18 and [[tech/voting-rework|tech/voting-rework]] §17 are applied; **§1.1 *Added scope*** lists bodyguards and bar services / buffs, still to be designed; the planned migration is now `012-slice8-life` (§5.7, was 010).
 - ADRs: [[adr/0051-wardrobe-four-slots-outfits-and-shops|ADR 0051]] to [[adr/0058-the-political-season-calendar-score-finale-and-rollover|ADR 0058]].
 
 ## Decisions made

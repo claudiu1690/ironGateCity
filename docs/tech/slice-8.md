@@ -6,10 +6,10 @@
 | **Question** | **Do players have goals for the next month, not just the next session?** |
 | **Builds on** | Slices 0–4 as built on branch `slice-0`, **slice 5 as designed** in `docs/tech/slice-5.md` (phase B being built now), **slice 6 as designed** in `docs/tech/slice-6.md` and **slice 7 as designed** in `docs/tech/slice-7.md` (neither built). Where this document leans on a slice 5–7 name (`heat`, `held`, `runIn`, `runInChance`, `runInChances`, `yourPower`, `liveMarks`, `strikeOldest`, `missionTarget`, `MISSION_TYPES`, `resolveMission`, `encounters`, `stays`, `applyAgainst`, `rivalPressure`, `campaignEvents`, `eventSignups`, `eventService.call/withdraw/resolve`, `faction.profile`, `presence`, `contributions` faction scopes, `TERM`, `termOf`, `nation`, `settleNationDay`, `officeTerms.office`, `offices[]`, `nationalElections`, `laws`, `lawSourcesOn`, Clearwater's `cities` document), it is that design's name. If a slice's Deviations rename something, T9 follows the rename. Slices 0–5, reviews 4–5 and the voting rework (ADR 0073–0086) are now built; their knock-ons were applied to this document on 14 Oct 2026 (dated notes at the end) |
 | **Design inputs** | `docs/design/slice-8-life.md` (*design §n*) · `docs/design/slice-8-screens.md` (*screens §n*) · `docs/design/inventory-research.md` (*research §n*) · `docs/economy.md` §22 · GDD §1.5, §3.3, §6.3, §6.4, §6.7, §8.2, §8.4, §10, §11.3, §11.4, §13.1, §13.3, §13.6, §14.1, §14.12, §16.2, §17.1–§17.4, §18.3, §19.3, §20.3, §21, §22, Appendix C #63, #71, #74–#81 · `docs/IMPLEMENTATION_PLAN.md` · ADR 0002, 0008, 0009, 0013, 0014, 0017, 0020, 0021, 0025, 0028, 0030–0034, 0036, 0037, 0040, 0042–0044, 0048 |
-| **ADRs** | [0051 the Wardrobe](../adr/0051-wardrobe-four-slots-outfits-and-shops.md) · [0052 personal modifiers and recognition](../adr/0052-personal-modifiers-items-perks-and-recognition.md) · [0053 the Dossier](../adr/0053-dossier-entries-collection-counted-not-stored.md) · [0054 the exposé](../adr/0054-expose-a-story-at-the-press.md) · [0055 patrons](../adr/0055-patrons-favour-and-requests-by-the-calendar.md) · [0056 the flat](../adr/0056-the-flat-prepaid-rent-as-a-day-key.md) · [0057 Legacy](../adr/0057-legacy-entries-by-natural-ref-credited-in-character-transactions.md) · [0058 the season](../adr/0058-the-political-season-calendar-score-finale-and-rollover.md) (**deferred**, 16 Oct 2026) |
+| **ADRs** | [0051 the Wardrobe](../adr/0051-wardrobe-four-slots-outfits-and-shops.md) · [0052 personal modifiers and recognition](../adr/0052-personal-modifiers-items-perks-and-recognition.md) · [0053 the Dossier](../adr/0053-dossier-entries-collection-counted-not-stored.md) · [0054 the exposé](../adr/0054-expose-a-story-at-the-press.md) · [0055 patrons](../adr/0055-patrons-favour-and-requests-by-the-calendar.md) · [0056 the flat](../adr/0056-the-flat-prepaid-rent-as-a-day-key.md) · [0057 Legacy](../adr/0057-legacy-entries-by-natural-ref-credited-in-character-transactions.md) · [0058 the season](../adr/0058-the-political-season-calendar-score-finale-and-rollover.md) (**deferred**, 16 Oct 2026) · [0088 bodyguards and the bar](../adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers.md) |
 | **Defaults** (design §20, **approved by the user 16 Oct 2026**) | **No weapon slot and no weapon items** · **Crane and Marr** as the two patrons · **three fixed outfit names** · **an exposé's Failure keeps the Case File** · **the flat alone** as a priced home · **Blackmail and Denounce deferred** · and two season rules that wait with the season: **+100 per national election** in the season score, **no season track and no twist** in season 1 |
 | **Environment** | **Local only** until the end of the project. Everything is played in `pnpm dev:mem` with the dev panel (§8.7). A month of play runs on the test clock (`POST /api/test/clock`, `/term`, `/city-day`, §8.6). No hosting work |
-| **Added scope (14 Oct 2026, the user's decision), still to be designed** | **Bodyguards** (prepaid contracts, GDD §12) and **bar services with the buffs they give** (*Buy a Round* → *In Good Spirits*, the bar meal → *Well-Fed*; GDD §6.7, §19.3) are MVP and join this slice. **Legacy perks** were already in it (§6.9). The game-designer updates the GDD and the slice-8 design; this document gains their models, procedures and tasks before the build (§1.1). Until then nothing below covers them |
+| **Added scope (14 Oct 2026, the user's decision; designed 16 Oct 2026)** | **Bodyguards** (*someone to walk with you*: a prepaid week, a run-in row) and **the bar's services with their buffs** (*Buy a round* → *in good spirits*, *A plate of something* → *well fed*, the hotel's *Dinner* → *well fed, properly*) join this slice: **§24** and ADR 0088, tasks T26–T32. The five user points of design §24.7 are built on their defaults. **Legacy perks** were already in it (§6.9) |
 
 Every number below is a GDD, design or economy number. Where the design leaves a point open, this document states a default and lists the question in §22.
 
@@ -79,16 +79,16 @@ Every number below is a GDD, design or economy number. Where the design leaves a
 
 **Out** (§19): **the Political Season** (the user, 16 Oct 2026: the note at the top); weapons; crafting; player trading; Blackmail and Denounce; the other three patrons; the townhouse, the villa, a second flat and the map marker; the season track and Season Twists (the twist multiplier is wired, no twist exists); the *Lodged* and *Weatherproof* buffs (the Well-Fed buffs and *In Good Spirits* are added scope, §1.1); a Legacy for a rule that won (not designed; voting rework); Charisma's vote appeal on the national score; Political Protection; players as Dossier names; hosting.
 
-### 1.1 Added scope: bodyguards and bar services (14 Oct 2026, to be designed)
+### 1.1 Added scope: bodyguards and bar services (14 Oct 2026; designed 16 Oct 2026, §24)
 
-The user moved three things from the plan's *After the MVP* list into this slice. Legacy perks are already designed here (§6.9, ADR 0057). The other two have **no technical design yet**; they need the game-designer's GDD and slice-8 design update first, then this section grows into full sections (content, data, rules, API, modal, tasks), and probably a short ADR each.
+The user moved bodyguards and the bar's services with their buffs into this slice (14 Oct 2026); the designer's design is `docs/design/slice-8-life.md` §24 (16 Oct 2026). **Their technical design is §24 below** ([ADR 0088](../adr/0088-bodyguards-a-run-in-row-on-a-day-key-contract-and-bar-buffs-as-lazy-personal-modifiers.md)):
 
-| Added | GDD today | What the technical design will have to settle (architect, after the designer) |
-|---|---|---|
-| **Bodyguards** | §12 (prepaid 7-day contracts; hired at Vanguard House, safehouses or the back room) | Where a contract lives (an embedded `bodyguard { until, tier }` on the character is the likely shape: one at a time, read every run-in); how it enters the run-in (a named row in `runInChance` or in combat, as the coat's armour is); what *prepaid, never dismissed by absence* means for a lapse (a day key, as the flat's rent, ADR 0056); where they are hired now that Vanguard House's gym is after the MVP (the back room, the party store, a new shop kind) |
-| **Bar services and buffs** | §6.7 (Well-Fed tiers, *In Good Spirits*), §19.3 (Buy a Round, the bar meal, Bribe the Barman, Overhear, Stimulant, Recruitment) | Which services are in; a buff as lazy state (`buffs { wellFed: { tier, until }, spirits: { left } }` on the character, value + timestamp, no job); how a buff enters rewards (a named part, as items do through `PersonalModifiers`, ADR 0052); the bar's sheet as another place card (review 4's slot) |
+- a prepaid day-key contract `bodyguard { tier, name, paidThroughDay }` hired at the party store;
+- a fifth run-in row (`minder`), frozen on the encounter, never against the police;
+- the bar's round and plate and the hotel's dinner;
+- the buffs as lazy state `buffs { wellFed { tier, until }, spirits { left } }`, read as named parts through `PersonalModifiers`.
 
-Nothing in §2–§20 below covers these two yet. The plan's §5 row for slice 8 notes them.
+Its tasks are T26–T32 in §20. Legacy perks were already here (§6.9).
 
 ---
 
@@ -118,6 +118,8 @@ Nothing in §2–§20 below covers these two yet. The plan's §5 row for slice 8
 | ~~The rollover~~ **Deferred** | Split by owner: **each city's boundary into season day 0** moves its meters halfway and ends its council rule (last step, after the count; **whether the rollover may end a rule at all is the user's call**, since the voting rework says a city always has a rule: drift row A9, ADR 0058's amendment); **the nation's day** seats the Season Election, adds its +100, writes the season, ends the laws; **Heat to 0 is lazy** (a Heat stamped before the season's start projects as 0 from it) | ADR 0058 (Q9) |
 | ~~Awards~~ **Deferred** | Read at the finale from what already exists: a new contributions scope `season|{s}` (Top of the ledger), `awards` (Hero titles), `eventSignups` (Triumphs as Speaker or Organiser), `dossierEntries.used` (the spymaster) | ADR 0058 |
 | The council counts (**kept**) | The Protégé's +2 and *A name they know*'s +1 a level join `CountLine.bonus` at home (`countSeats`, ADR 0084); the Protégé's +1 point of score a `scoreBonus` on the party in a battleground count. Read from the candidates' characters at the count (read only). Patrons and Legacy, not the season | §6.11 |
+| Bodyguards (§24) | `bodyguard { tier, name, paidThroughDay }` embedded, **a day key** (ADR 0056's shape): no job, no auto-renew, a lapse writes nothing. In a run-in **a fifth row** (`minder`) at the Fight formula with his power, **frozen on the encounter**; never against the police | ADR 0088 |
+| The bar's buffs (§24) | `buffs { wellFed { tier, until }, spirits { left } }` embedded, lazy; their percentages are **named parts through `PersonalModifiers`** (`buffShares`), a line each on the receipt; a round is used up in the mission's transaction | ADR 0088, 0052 |
 | Routes | `/dossier`, `/dossier/expose` (~~`/republic/hall`~~ deferred); the Me tab's blocks; sheets on places (shop, sell, station, patron) and on the Me tab (slot chooser, wardrobe) | §12.1 |
 | Jobs | **None new, and none extended.** Rent, Requests, informants, gossip and Heat are lazy; `nation-day` and `city-day` run as slice 7 built them (the season's finale and resets on them are deferred) | §9 |
 
@@ -612,6 +614,7 @@ Written only by the nation's day (the running score at every boundary, the final
 {
   ...slice 7,
   equipment: { clothing: string, accessory: string | null, document: string | null, utility: string | null },
+  // §24.4: bodyguard { tier, name, paidThroughDay } | null · buffs { wellFed, spirits } · today.rounds
   outfits: { town: Equipment, plain: Equipment, evening: Equipment | null },
   lastOutfit: 'town' | 'plain' | 'evening',
   inventory[].source += 'shop' | 'patron',
@@ -1217,7 +1220,7 @@ Each new button calls a hook above, then the existing settle. The panel holds no
 | `journey-arrive` (slice 4) | unchanged | `settleArrival` now also dresses for arrival | the journey's `status: 'onTheWay'` guard |
 | `campaign-event-resolve` (slice 6) | unchanged | the Headline Story spends its attached file | the event's status guard |
 
-**No new job, and no job extended** beyond `settleArrival`'s dress and the Headline Story's file. Rent, Requests, informants, gossip, freshness and burns are computed from day keys on read (the rollover's Heat and the season's boundary work are deferred). Each still has its lazy path (`ensureNationDay`, `ensureCityDay`, `ensureArrived`) as the guarantee and the job as the tidy runner, as slices 4–7.
+**No new job, and no job extended** beyond `settleArrival`'s dress and the Headline Story's file (a bodyguard's lapse and a meal's end are lazy too, §24.2). Rent, Requests, informants, gossip, freshness and burns are computed from day keys on read (the rollover's Heat and the season's boundary work are deferred). Each still has its lazy path (`ensureNationDay`, `ensureCityDay`, `ensureArrived`) as the guarantee and the job as the tidy runner, as slices 4–7.
 
 ---
 
@@ -1425,6 +1428,8 @@ The pictures are in `art-direction/mvp/` now: eight new item drawings (`items/*.
 
 ### 15.1 E2E specs (each its own Playwright project after slice 7's, in this order; all on the test clock)
 
+Plus §24.11's `bodyguard.spec.ts` and `bar.spec.ts` (T32), after `flat.spec.ts`.
+
 **`wardrobe.spec.ts`** (phone): a Level 6 member at the party store → **Buy · 800 Iron** → *Bought* → **Wear it now**; the Me tab's Coat card and *Charisma 5 → 12*; *Keep this as Town*; **PLAIN CLOTHES** one tap → *Charisma 2 · unnoticed on rival ground*; back to Town. The market's stall → **Sell something** → the standard coat → *Sell the standard coat for 20 Iron?* → *Sold*. Level 10 (hook) in Clearwater: the Promenade's call *needs Charisma 10* → **Call · 15 Energy** → the mission modal with *Favour: Julius Marr +2*.
 
 **`dossier.spec.ts`** (phone, then desktop): a Level 16 player; *Three entries on a rival name* (hook) → the Dossier tab's dot → the `NameCard` with a full clock → **Make a Case File** → *Bound*; Herald House → **Take a Case File to the paper · 20 Energy** → the file and *The story, with a headline* → *Write it straight* (forced Success) → *Printed* with *Opinion in Eastside: {party} −1.0 · … · Legacy +2*; the next boundary → the front page with the player's name, and a second context's paper with the public line; the name card reads *in the paper*. A second file → Central Station → **Sell · 200 Iron** → *Sold*.
@@ -1502,7 +1507,7 @@ Run on `pnpm dev:mem` with the dev panel and the clock hooks; testers across the
 - **Requests and Favour from the calendar:** inside the settlement's guard; a Request is removed when paid, so it is paid once.
 - **Legacy rows:** the unique `{ characterId, ref }`; `legacy.total` moves only in the same transaction as an insert.
 - ~~**The season:** `seasons._id` unique; `nation.season.index` filtered on the old index; the cities' reset inside each boundary's `world.settledDay` transaction.~~ Deferred (seasons).
-- **Request kinds** added: `shop.buy`, `shop.sell`, `shop.bribe`, `dossier.bind`, `dossier.sell`, `dossier.turn`, `patron.gift`, `patron.favour`, `home.buyFlat`, `home.payRent`, `legacy.takePerk`. Action kinds: `expose`.
+- **Request kinds** added: `shop.buy`, `shop.sell`, `shop.bribe`, `dossier.bind`, `dossier.sell`, `dossier.turn`, `patron.gift`, `patron.favour`, `home.buyFlat`, `home.payRent`, `legacy.takePerk`, and §24's `bodyguard.hire`, `bodyguard.renew`, `bar.round`, `bar.meal`, `bar.dinner` (§24.8). Action kinds: `expose`.
 
 ---
 
@@ -1510,6 +1515,7 @@ Run on `pnpm dev:mem` with the dev panel and the clock hooks; testers across the
 
 | Left out | Why / where |
 |---|---|
+| The v3.0 bodyguard modifiers, auto-renew, the barman's report, the stimulant, recruitment, street food, the society dinner | §24.12 |
 | **The Political Season**: the 84-day calendar, the score, the Season Election's +100, the Champion, four awards, the Hall of Fame, the rollover (meters halfway, laws and council rules ended, Heat to 0, the deck reshuffled), Legacy from seasons, the season's paper lines, its hooks and spec | The user, 16 Oct 2026: "let's leave the seasons for later". ADR 0058 *Deferred*; the list and the forward-compatibility rules are in the note at the top |
 | Weapons as items, a weapon slot | Design §3.1, GDD §20.3, Appendix C #74 (the user's point 1) |
 | Crafting, mission drops, player trading | GDD §21.3, §18.4: post-MVP |
@@ -1538,9 +1544,9 @@ Run on `pnpm dev:mem` with the dev panel and the clock hooks; testers across the
 
 **Parallel lanes.**
 
-- **Phase A:** T1 first. T2, T3 and T4 need T1 and run in parallel. T5 needs T1–T4's types. T6 needs T5. T7 runs alongside T5–T6 (it needs only the asset ids). T8 needs T5's types and runs alongside T6–T7.
-- **Phase B:** T9 first. T10 and T11 start after T9, in parallel. T12 needs T11. T13 needs T9 and T11. T14 needs T9 and T13 (the settlement's patrons). ~~T15~~ (deferred). T16 needs T11–T14. T17 starts with T9 and grows with each task. T18 last.
-- **Phase C:** UI T19 can start after T5, on fixtures, alongside phase B. T20 needs T9, T10 and T14; T21 needs T11 and T12; T22 needs T13; T23 needs T16. Then T24 and T25.
+- **Phase A:** T1 first. T2, T3 and T4 need T1 and run in parallel. T5 needs T1–T4's types. T6 needs T5. T7 runs alongside T5–T6 (it needs only the asset ids). T8 needs T5's types and runs alongside T6–T7. **Added 16 Oct (§24):** T26 (rules) needs T1 and can start now; T27 (content) needs T5 and T26's types; T28 (art) rides T7; T29 (db) rides T8.
+- **Phase B:** T9 first. T10 and T11 start after T9, in parallel. T12 needs T11. T13 needs T9 and T11. T14 needs T9 and T13 (the settlement's patrons). ~~T15~~ (deferred). T16 needs T11–T14. T17 starts with T9 and grows with each task. **Added (§24):** T30 needs T9, T10 (the party store's card) and T29; T31 needs T9 and T29; T30 and T31 run in parallel and before T16 (the paper's two lines and the *Ahead* clock). T18 last.
+- **Phase C:** UI T19 can start after T5, on fixtures, alongside phase B. T20 needs T9, T10 and T14; T21 needs T11 and T12; T22 needs T13; T23 needs T16; **T32 (§24) needs T19's patterns, T30 and T31**. Then T24 and T25.
 
 ### Phase A — rules, content, art, db
 
@@ -1564,6 +1570,16 @@ Run on `pnpm dev:mem` with the dev panel and the clock hooks; testers across the
 
 **T8. DB.** The two new models and their indexes (§5.1–§5.2; not the spymaster's partial index), the changed fields and enums (`campaignEvents`, `journeys`, `actionLogs`, `influenceLedger` `expose`, `requestLogs`, `characters` without `legacy.seasonCredited`), migration 012 with the milestones and the Legacy backfill (steps 1–3; ~~step 4, `nation`~~ deferred). ~~`seasons`, `nation`, `contributions` `season|{s}`, `laws.endedBy: 'season'`~~: deferred. *Done when:* migration 012 run twice changes nothing the second time, the backfill equals a seeded history's sum, the unique `{ characterId, ref }` refuses a duplicate, and a transaction over every touched collection commits on the memory replica set.
 
+**Added 16 Oct 2026 (§24, ADR 0088): bodyguards and the bar, phase A.** *Done when* means a scratch script or a Playwright spec (§24 opening), not a new unit test.
+
+**T26. Rules: bodyguards and the buffs (phase A).** `BODYGUARD`, `BAR`; `bodyguard.ts` (`contractCounts`, `lastDay`, `goneToday`, `hireGate`, `hire`, `renewGate`, `renewed`, `canRenew`); `runIn.ts` (`minder` and `minded`, `minderChance`, `runInChances`' third argument, `luckChoice`, `resolveRunIn`, `cause: 'minder'`); every `'talked'` reader in `packages/rules` also takes `'minded'`; `buffs.ts` (`wellFedAt`, `roundGate`, `mealGate`, `afterRound`, `afterMeal`, `mealHealth`); `PersonalModifiers.buffs`, `buffShares`, `spendSpirits`; the `bodyguardLast` and `bodyguardGone` conditions; §24.6's views, the result acts `hired`, `renewed`, `round`, `meal`, `dinner` and the new error reasons in `types.ts`. *Done when:* a scratch script prints §24.11's rules checks (the odds table, luck, both run-in branches, the renew limit, every gate, the buff shares at the clock's edge, rounds to nine, Health to max) matching the design, and `pnpm typecheck` is green.
+
+**T27. Content: the hire card, the bar, the dining room, the words (phase A).** `data/bodyguards.ts`; `Shop.hire` on every party store; `Location.bar` on every bar and `dining` on the three dining rooms; §24.3's cross-checks; the copy, help notes, modal texts, receipt labels and the two headlines in five voices (the designer's four other voices in the same change). *Done when:* the content loads in `pnpm check`, and a scratch script feeding one broken fixture per new cross-check prints each refusal.
+
+**T28. Art: three portraits and two items (phase A, with T7).** `portrait.doorman`, `portrait.steward`, `portrait.minder`, `item.round`, `item.bar-plate` from `art-direction/mvp/`; `pnpm art:build`; the budget and the content-policy read recorded. *Done when:* `art:check` passes and the dev viewer shows the five.
+
+**T29. DB: the contract, the buffs, the encounter (phase A, with T8).** §24.4's fields on `characters` and `encounters`, the enums, the request kinds, migration 012's additions. *Done when:* a scratch script on the memory replica set runs 012 twice (no change the second time) and reads an old encounter with `minder: null`.
+
 ### Phase B — the server
 
 **T9. Server: the Wardrobe and personal modifiers.** `wornStats` v2 (four slots, the flat), `personal` on `LoadedCharacter`, `wardrobe.*`, `dressOnArrival` and `settleArrival`, item rows and Party XP parts in every action and mission, `coatTier` in run-ins, recognition on rival ground (and `presence.recognised`), the Papers slot at the checkpoint and in *Talk your way out*. *Done when:* the Wardrobe and rival-ground server tests of §15 pass, and every slice 1–7 server test and e2e spec passes unchanged.
@@ -1584,6 +1600,12 @@ Run on `pnpm dev:mem` with the dev panel and the clock hooks; testers across the
 
 **T17. Server: test hooks and the dev panel.** §8.6–§8.7 without the season (no `POST /api/test/season`, no *Season* buttons or status fields). *Done when:* `devPanel.test.ts` covers each new button and status field, and every hook is absent without `E2E_TEST_HOOKS`.
 
+**Added (§24): bodyguards and the bar, phase B.**
+
+**T30. Server: bodyguards (phase B).** `bodyguardService` (`hire`, `renew`); the hire card on `CityView`; `CharacterView.minder`; the run-in row written with every encounter (tier-1 taps and missions), `encounter.choose`'s `minder`, the auto path; the run-in's modal and `RunInView` with his lines and portrait; every `'talked'` reader in `apps/server` takes `'minded'`; the settlement's `bodyguard-last` / `bodyguard-gone` headlines and the *Ahead* clock (with T16); §24.9's hooks and dev-panel buttons (with T17). *Done when:* a scratch script against `pnpm dev:mem` (the hooks) hires a doorman, fires a forced mission run-in with his row working (+10 XP, the mission paid) and failing (the fight at −10), sees the row dimmed against the police, lapses him and reads the paper's line with Iron unchanged, and replays a hire with the same key to the same modal.
+
+**T31. Server: the bar and the buffs (phase B).** `barService` (`round`, `meal`, `dinner`); the bar and dining-room cards on `CityView`; `CharacterView.buffs`; `buffShares` in every tier-1 action and mission (the encounter's `createdAt` after a run-in), `spendSpirits` in the mission's update; §24.9's buff hooks. *Done when:* a scratch script against `pnpm dev:mem` buys a plate (Health +15 up to max), shows *Well fed · +10 % XP* on a forced mission's receipt, buys three rounds and sees *In good spirits · 2 left* then 1 then 0, is refused a fourth round and a plate over a dinner, and sees the line gone after the clock passes `until`.
+
 **T18. Server: the integration suite.** §15's **month on the test clock** (28 days, one term; three players and test members: the Wardrobe, the Dossier, an exposé, a patron to Associate, a flat lapsing and paid, a chapter by its milestone, a completed council term's Legacy) with the worker off for a week in the middle. *Done when:* it passes ten times in a row and the settlement's time after the week away is recorded in the Deviations.
 
 ### Phase C — the client, e2e, report, docs
@@ -1598,9 +1620,11 @@ Run on `pnpm dev:mem` with the dev panel and the clock hooks; testers across the
 
 **T23. Client: the paper.** The paper's new rows, `ClockRow`, the exposé's front page and page-three line, the Legacy block's perk. ~~The season card, `/republic/hall`, the season's front page~~: deferred. *Done when:* `chapter12.spec.ts` passes (with the perk step moved from `season.spec.ts`), and the paper's rows render in `dossier.spec.ts` and `patron.spec.ts`.
 
-**T24. E2E, vocabulary, report.** The five Playwright projects after slice 7's (`wardrobe`, `dossier`, `patron`, `flat`, `chapter12`; ~~`season`~~ deferred); the vocabulary test over slice-8 strings; §15.2's *life* section with a pure builder. *Done when:* the whole e2e suite is green locally and a report run after it prints every *life* line.
+**Added (§24): T32. UI and client: the hire card, the run-in row, the bar (phase C).** `packages/ui`: `HireCard`, `HireRow`, `MinderRow`, `BarCard`, `DiningCard`, the run-in sheet's first row with his portrait, the buff line under the stats, `ResultModal`'s five new acts and the *Got away* stamp with his line (screens §18). `apps/client`: the cards in the place sheet's slot (the party store: shop above hire; a bar: the bar's card above the back room), the Me tab's *Walking with you* row and buff line, the invalidations (`character.me`, `city.get`). *Done when:* `bodyguard.spec.ts` and `bar.spec.ts` (§24.11) pass on phone, and the run-in sheet with five rows and the party store's sheet pass the layout check at 360 × 640.
 
-**T25. Docs.** The README (the new buttons; walk-throughs: dressing for rival ground, a Case File to the front page, a patron to Associate, a flat that lapses, **a month in an afternoon on the test clock**; ~~a season in an afternoon~~ deferred), the **Deviations** section at the end of this file, ADR statuses (0058 stays *Deferred*), the plan's §5 row for slice 8 (§23 #5), the GDD edits for any answered §22.1 question that changes a number. *Done when:* the README's steps reproduce each walk-through from a fresh `pnpm dev:mem`.
+**T24. E2E, vocabulary, report.** The seven Playwright projects after slice 7's (`wardrobe`, `dossier`, `patron`, `flat`, `bodyguard`, `bar`, `chapter12`; ~~`season`~~ deferred); §24.11's report lines; the vocabulary test over slice-8 strings; §15.2's *life* section with a pure builder. *Done when:* the whole e2e suite is green locally and a report run after it prints every *life* line.
+
+**T25. Docs.** The README (the new buttons; walk-throughs: dressing for rival ground, a Case File to the front page, a patron to Associate, a flat that lapses, a doorman who steps in and then goes home, a plate and a round on the receipt, **a month in an afternoon on the test clock**; ~~a season in an afternoon~~ deferred), the **Deviations** section at the end of this file, ADR statuses (0058 stays *Deferred*), the plan's §5 row for slice 8 (§23 #5), the GDD edits for any answered §22.1 question that changes a number. *Done when:* the README's steps reproduce each walk-through from a fresh `pnpm dev:mem`.
 
 ---
 
@@ -1755,6 +1779,348 @@ None blocks the build. Defaults taken:
 19. **`lapel-badge.jpg`**'s composition and colour (§22.1 Q34).
 20. **The personal lines** (§10.1) are in the Herald's wording only; T6 needs the four other voices in the same content change, as slice 7's.
 21. **Economy §22.3's "a call pays none"** is the only statement on the calls' Party XP (§22.1 Q9).
+
+---
+
+## 24. Bodyguards and the bar (technical design, 16 Oct 2026; ADR 0088)
+
+Design inputs: `docs/design/slice-8-life.md` §24 (*design §24.n*), screens §18, GDD §6.7, §12.1, §19.3, §20.1, economy §22.11, Appendix C #113, #114. **The five user points of design §24.7 are built on their defaults** unless the user says otherwise:
+
+- never against the police;
+- all three tiers at the party store;
+- one contract at a time, a different tier when the week is up;
+- three services (a round, a plate, dinner) and the back room;
+- Health up to max only.
+
+Testing follows the user's rule (8 Oct 2026): **no new unit tests**. Each task's *Done when* is a scratch script (run with `pnpm exec tsx`, kept out of the repo, its printed output pasted into the task's commit message) or a Playwright spec.
+
+### 24.1 The order of play
+
+```
+bodyguard.hire({ locationId, tier, key })     at your own party store (a `partyStore` shop with `hire`)
+  refuse: IN_TRANSIT · WRONG_CITY · NO_HIRE (no hire card here) · MEMBERS_ONLY (not your party's store)
+          · LEVEL / RANK (the tier's gate) · WITH_YOU { name, until } (a contract counts today)
+          · NOT_ENOUGH_IRON
+  name = same tier as the stored (lapsed) contract ? its name : drawName(tier, rng(key))
+  character: iron − week (filter iron ≥ week, version); bodyguard = { tier, name, paidThroughDay: today + 6 }
+  → PoliticalResult act 'hired'
+
+bodyguard.renew({ weeks: 1 | 4, key })        from anywhere (the Me tab's row, the card)
+  refuse: NO_CONTRACT (none counts today: hire him again at the store) · PAID_AHEAD { until } · NOT_ENOUGH_IRON
+  paidThroughDay = max(paidThroughDay, today − 1) + 7 × weeks, at most today + 6 + 28 (§24.10 Q1)
+  → PoliticalResult act 'renewed'
+
+a run-in fires (tier-1 tap or mission, slice 5)  the encounter is created as today, plus:
+  contractCounts(bodyguard, today) → encounter.minder = { tier, name, power, blocked: side === 'police' ? 'police' : null }
+                                     chances.minder = blocked ? null : minderChance(power, scaled opponent)
+encounter.choose({ choice: 'minder' })  or luck (player or auto) picking it
+  roll ≤ chances.minder → outcome 'minded': no Health lost, +10 XP, the act paid as rolled, the caught check as normal
+  else                  → the fight at followUp(−10), as a failed Talk
+
+bar.round({ locationId, key })    a place with `bar`; 2 Energy · 30 Iron; today.rounds < 3; spirits.left < 9
+  spirits.left = min(9, left + 3); today.rounds += 1                       → 'round'
+bar.meal({ locationId, key })     a place with `bar`; 2 Energy · 100 Iron; no meal counting now
+  wellFed = { tier: 'plate', until: now + 4 h }; health = healHealth(+15)   → 'meal'
+bar.dinner({ locationId, key })   a place with `dining`; 2 Energy · 400 Iron; worn Charisma ≥ 10; no dinner counting now
+  wellFed = { tier: 'dinner', until: now + 6 h } (replaces a plate); health = healHealth(+25)   → 'dinner'
+
+any tier-1 action or mission                    rewards += buffShares(personal, kind, act's at)
+  a mission that reaches its rewards with spirits.left > 0 → left − 1 in the same transaction
+```
+
+### 24.2 Time and the lazy state
+
+| State | Stored | Read | Ends |
+|---|---|---|---|
+| The contract | `bodyguard { tier, name, paidThroughDay }` | `contractCounts(b, day) = !!b && day ≤ b.paidThroughDay` | the row is gone from the day after; nothing is written; the record stays (his name for a re-hire) |
+| His row at a run-in | `encounter.minder`, `chances.minder` | the encounter (frozen at the run-in) | with the encounter |
+| Well fed | `buffs.wellFed { tier, until }` | `wellFedAt(b, at) = until > at` | at `until`, whether or not you play |
+| In good spirits | `buffs.spirits.left` | `> 0` | one per resolved mission; waits while away |
+| Rounds today | `today.rounds` | the day's tally (reset with `today`, slice 1) | the City Day |
+
+Without a new day, nothing here adds a read: the contract and the buffs are on the character.
+
+### 24.3 Content (`packages/content`)
+
+```ts
+// data/bodyguards.ts (new). Rules own prices, gates and power (BODYGUARD); content owns words and faces.
+BodyguardTier = z.strictObject({
+  tier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  said: z.enum(['doorman', 'steward', 'minder']),
+  names: z.array(z.string().min(1).max(30)).length(3),   // Ruda · Big Anton · Ferko …
+  portrait: AssetId,                                      // portrait.doorman / .steward / .minder
+  works: z.string().min(1).max(200),                      // {Name}
+  fails: z.string().min(1).max(200),
+});
+Content += { bodyguards: z.array(BodyguardTier).length(3) };
+Shop += { hire: z.literal(true).optional() };             // the hire card, only on a `partyStore`
+Location += {
+  bar: z.literal(true).optional(),                        // the bar's card (a round, a plate)
+  dining: z.literal(true).optional(),                     // the dining room (dinner)
+};
+```
+
+**Loader cross-checks:**
+
+- three tiers, 1 to 3, with design §24.2's names and lines word for word;
+- every `partyStore` carries `hire`, and nothing else does;
+- **every `bar`-kind place carries `bar`**;
+- `dining` only on the Grand Hotel, the Pier Hotel and the Mountain Inn (design §24.3), and on all three;
+- the three portraits and `item.round`, `item.bar-plate` in the art catalogue;
+- the vocabulary guards refuse *bodyguard, guard, escort, muscle, protection, hired hand, buff, stimulant* in a player string (*enforcer* stays the opponent's word only).
+
+**Copy** (`copy.ts`):
+
+- design §24.2's and §24.3's strings and modal texts;
+- the help notes `bodyguard`, `wellFed`, `goodSpirits`;
+- the receipt labels *Well fed* and *In good spirits · {n} left*;
+- the headlines `bodyguard-last` and `bodyguard-gone` in the five voices (Herald's wording in the design; the designer writes the other four with T27, as §23 #20).
+
+**Art** (T28, ADR 0015; the pictures are in `art-direction/mvp/`):
+
+- `portrait.doorman` (`portraits/doorman.png`), `portrait.steward`, `portrait.minder`;
+- `item.round` (`items/round.png`), `item.bar-plate`;
+- the dining room uses `scene.hotel`;
+- `portraits/vanguard-doorman.png` is not catalogued (the gym's, later).
+- The content-policy read (no uniform, badge, armband or weapon) is recorded in the art build's review list.
+
+### 24.4 Data (`packages/db`)
+
+```ts
+characters += {
+  bodyguard: { tier: 1 | 2 | 3; name: string; paidThroughDay: DayKey } | null,   // kept after a lapse
+  buffs: { wellFed: { tier: 'plate' | 'dinner'; until: Date } | null; spirits: { left: number /* 0–9 */ } },
+  today += { rounds: number },                                                    // 0–3
+}
+encounters += {
+  minder: { tier: 1 | 2 | 3; name: string; power: number; blocked: 'police' | null } | null,
+  chances.minder: number | null,                       // null: no contract, or the police
+  choice: ENCOUNTER_CHOICES += 'minder',
+  result.outcome += 'minded',
+}
+requestLogs: REQUEST_KINDS += 'bodyguard.hire', 'bodyguard.renew', 'bar.round', 'bar.meal', 'bar.dinner'
+actionLogs: the run-in's stored outcome may be 'minded' (the mission and tier-1 logs carry it as today)
+```
+
+No new collection and no new index: the contract and the buffs are read with the character; a contract is one at a time (embed what is read together, plan rule 6).
+
+**Migration 012 additions** (step 1, filtered on the field's absence): `bodyguard: null`, `buffs: { wellFed: null, spirits: { left: 0 } }`, `today.rounds: 0`. Encounters need none: an absent `minder` or `chances.minder` reads as `null`.
+
+### 24.5 Rules (`packages/rules`, pure)
+
+```ts
+// constants.ts
+export const BODYGUARD = {
+  tiers: { 1: { level: 6, rank: null, week: 400, power: 28 },
+           2: { level: null, rank: 3, week: 1_200, power: 36 },
+           3: { level: 16, rank: null, week: 3_000, power: 44 } },
+  weekDays: 7, aheadWeeks: 4, confirmOver: 1_000,
+} as const;
+export const BAR = {
+  energy: 2,
+  round: { iron: 30, perDay: 3, missions: 3, max: 9, xpPct: 10 },
+  plate: { iron: 100, hours: 4, xpPct: 10, ironPct: 0, health: 15 },
+  dinner: { iron: 400, hours: 6, cha: 10, xpPct: 10, ironPct: 10, health: 25 },
+} as const;
+
+// bodyguard.ts (new)
+export type BodyguardTier = 1 | 2 | 3;
+export interface Contract { tier: BodyguardTier; name: string; paidThroughDay: DayKey }
+export const contractCounts = (c: Contract | null, day: DayKey) => !!c && day <= c.paidThroughDay;
+export const lastDay = (c: Contract | null, today: DayKey) => contractCounts(c, today) && c!.paidThroughDay === today;
+export const goneToday = (c: Contract | null, today: DayKey) => !!c && c.paidThroughDay === today - 1;
+export function hireGate(i: { tier: BodyguardTier; level: number; rank: number; member: boolean;
+  contract: Contract | null; today: DayKey; iron: number }):
+  null | { reason: 'MEMBERS_ONLY' | 'LEVEL' | 'RANK' | 'WITH_YOU' | 'NOT_ENOUGH_IRON'; need?: number; name?: string; until?: DayKey };
+export function hire(i: { tier; contract: Contract | null; names: readonly string[]; today; rng: Rng }): Contract;
+//  same tier as the stored contract: his name; else names[rng.int(3)]; paidThroughDay = today + 6
+export function renewGate(i: { contract: Contract | null; weeks: 1 | 4; today; iron }):
+  null | { reason: 'NO_CONTRACT' | 'PAID_AHEAD' | 'NOT_ENOUGH_IRON'; until?: DayKey; need?: number };
+export const renewed = (c: Contract, weeks: 1 | 4, today: DayKey): Contract =>
+  ({ ...c, paidThroughDay: Math.max(c.paidThroughDay, today - 1) + 7 * weeks });
+export const aheadLimit = (today: DayKey) => today + 6 + 7 * BODYGUARD.aheadWeeks;   // §24.10 Q1
+export const canRenew = (c, weeks, today) => renewed(c, weeks, today).paidThroughDay <= aheadLimit(today);
+
+// runIn.ts (changed)
+export type RunInChoice = 'fight' | 'run' | 'talk' | 'pay' | 'minder';
+export type RunInOutcomeKind = 'won' | 'lost' | 'ran' | 'talked' | 'paid' | 'minded';
+export interface RunInChances { fight; run; talk; pay: number | null; minder?: number | null }
+export const minderChance = (power: number, them: ScaledOpponent) =>
+  clamp(roundHalfUp(RUN_IN.fight.base + RUN_IN.fight.perPower * (power - them.power) + them.fightPct), 5, 95);
+runInChances(you, them, minder?: { power: number; blocked: boolean } | null)   // minder: null when blocked or none
+luckChoice(c)            // the free rows with the best odds; ties minder > fight > run > talk
+resolveRunIn             // case 'minder': ok → 'minded' (xp RUN_IN.xp.away, no Health lost);
+                         //   not ok → cause 'minder', fight(followUp(RUN_IN.followUpPct))
+// RunInOutcome.cause += 'minder' (the reason line *{Name} was pushed aside*)
+// Every reader of `outcome === 'talked'` (missions.ts, the action path, the caught check, the views)
+// treats 'minded' the same: the act is paid as rolled.
+
+// buffs.ts (new)
+export type MealTier = 'plate' | 'dinner';
+export interface Buffs { wellFed: { tier: MealTier; until: number } | null; spirits: number }
+export const wellFedAt = (b: Buffs, at: number) => b.wellFed !== null && at < b.wellFed.until ? b.wellFed.tier : null;
+export function roundGate(i: { rounds: number; spirits: number; energy: number; iron: number }):
+  null | { reason: 'ROUNDS_TODAY' | 'SPIRITS_FULL' | 'NOT_ENOUGH_ENERGY' | 'NOT_ENOUGH_IRON' };
+export function mealGate(i: { tier: MealTier; current: MealTier | null; until: number | null; wornCha: number;
+  energy: number; iron: number }): null | { reason: 'WELL_FED' | 'NOT_DRESSED' | 'NOT_ENOUGH_ENERGY' | 'NOT_ENOUGH_IRON';
+  until?: number; need?: number };
+//  a plate: refused while any meal counts; dinner: refused while a dinner counts (replaces a plate), needs CHA 10
+export const afterRound = (b: Buffs): Buffs => ({ ...b, spirits: Math.min(BAR.round.max, b.spirits + BAR.round.missions) });
+export const afterMeal = (b: Buffs, tier: MealTier, now: number): Buffs =>
+  ({ ...b, wellFed: { tier, until: now + BAR[tier].hours * 3_600_000 } });
+export const mealHealth = (tier: MealTier) => BAR[tier].health;           // through healHealth: never above max
+
+// personal.ts (changed, ADR 0052)
+PersonalModifiers += { buffs: Buffs };
+export function buffShares(p: PersonalModifiers, kind: 'action' | 'mission', at: number):
+  { xp: LineShare[]; iron: LineShare[] };
+//  well fed at `at`: xp { id: 'buff:wellFed', label: 'Well fed', share: 0.10 }, and on a dinner
+//    iron { id: 'buff:wellFed', label: 'Well fed', share: 0.10 };
+//  kind 'mission' and spirits > 0: xp { id: 'buff:spirits', label: 'In good spirits · {spirits − 1} left', share: 0.10 }
+export const spendSpirits = (b: Buffs, kind: 'action' | 'mission') => kind === 'mission' && b.spirits > 0
+  ? { ...b, spirits: b.spirits - 1 } : b;
+
+// paper.ts: LifeCondition += 'bodyguardLast' (lastDay) · 'bodyguardGone' (goneToday)
+```
+
+`computeRewards` and `tier2Rewards` are unchanged: their callers add `buffShares(…).xp` to `xpShares` and `.iron` to `ironShares`, beside Rested and the laws' parts, each rounded per line (GDD §5.5). The shares apply where the coat's Party XP part applies (tier-1 actions and missions, society calls included; §21.1 Q50), so training, chapters, event roles and the exposé's fixed rewards take none.
+
+### 24.6 API (`apps/server`)
+
+```ts
+// Bodyguards
+bodyguard.hire   ({ locationId: z.string().min(1), tier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+                    idempotencyKey: Key })                                     → PoliticalResult (hired)
+bodyguard.renew  ({ weeks: z.union([z.literal(1), z.literal(4)]), idempotencyKey: Key }) → PoliticalResult (renewed)
+// The bar and the dining room
+bar.round        ({ locationId: z.string().min(1), idempotencyKey: Key })    → PoliticalResult (round)
+bar.meal         ({ locationId: z.string().min(1), idempotencyKey: Key })    → PoliticalResult (meal)
+bar.dinner       ({ locationId: z.string().min(1), idempotencyKey: Key })    → PoliticalResult (dinner)
+// Changed
+encounter.choose += choice 'minder'          // refused: NO_MINDER (no row on this encounter), NOT_AGAINST_POLICE
+character.me → CharacterView v9 += {
+  minder: { tier; said: 'doorman' | 'steward' | 'minder'; name; portrait; until: DayKey; state: 'with' | 'last';
+            renew: { week: number; four: number | null /* null when it would pass four weeks ahead */ } } | null,
+  buffs: { wellFedUntil: number | null; tier: MealTier | null; spirits: number } | null,   // the Me tab's line
+}
+city.get → CityView v8: places[].cards += 'hire' | 'bar' | 'dining', with
+  HireCardView { rows: Array<{ tier; said; portrait; week: number; word: OddsWord /* vs a street enforcer at home */;
+    state: 'hire' | 'level' | 'rank' | 'withYou' | 'running' | 'needsIron'; need?: number; name?: string;
+    until?: DayKey; confirm: boolean /* over 1,000 */; renew?: { week; four: number | null } }> }
+  BarCardView { place: string; round: { state: 'ok' | 'today' | 'full' | 'needsIron' | 'needsEnergy'; left: number };
+    plate: { state: 'ok' | 'fed' | 'needsIron' | 'needsEnergy'; until: number | null } }
+  DiningCardView { hotel: string; state: 'ok' | 'notDressed' | 'fed' | 'needsIron' | 'needsEnergy'; until: number | null; cha: 10 }
+RunInView (slice 5) += { minder: { name; portrait; word: OddsWord | null; blocked: 'police' | null } | null }
+```
+
+**Services.**
+
+- **`bodyguardService`**: `hire` and `renew`, each `withRequestKey(kind)` in one transaction on the character (the request log is the second document). The place, the shop and the tier's gate and price are resolved from content and rules; the client sends a place id and a tier.
+- **`barService`**: `round`, `meal` and `dinner`, the same pattern. Energy is spent through the slice-0 lazy writer (value + timestamp, re-based at the tap) and Health through `healHealth`. Worn Charisma for dinner is `wornStats` (with the flat).
+- **Run-ins** (`encounterService.create`, the tier-1 and mission callers): read `bodyguard` in the session that fires the run-in, then write `minder` and `chances.minder` on the encounter. The opponent's side is `sideOf(opponentId) === 'police'`.
+- **`encounterService.choose`** and the auto path (ADR 0032 §5): pass `chances.minder` to `luckChoice` and `resolveRunIn`.
+- The run-in's modal and `RunInView` read the tier's content lines.
+- **Action and mission services**: `personal.buffs` on `LoadedCharacter`. `buffShares` is taken at the act's `at` (a mission resolved after its run-in uses the encounter's `createdAt`). `spendSpirits` goes in the character update that pays the mission.
+- **The settlement**: the stored headlines `bodyguard-last` (the last paid day) and `bodyguard-gone` (the day after); the desk's *Ahead* gets *{Name}'s last day {weekday}* within three days (T16).
+
+### 24.7 The result modal
+
+| Act | Stamp · headline | Knock-ons | `view` |
+|---|---|---|---|
+| `hired` | *Hired* · *{Name} walks with you* | `iron −{week}`, *until {weekday}*, his portrait | `minder` |
+| `renewed` | *Paid* · *{Name} · another week* | `iron −{price}`, *until {weekday}* | `minder` |
+| `round` | *Your round* · *A round for the bar* | `iron −30`, `energy −2`, *In good spirits · your next {n} missions* | `bar` |
+| `meal` | *Fed* · *A plate of something hot* | `iron −100`, `energy −2`, *Well fed until {time}*, `health { before, after }` (*Health +{n}*, the real gain up to max) | `bar` |
+| `dinner` | *Fed* · *Dinner at the {hotel}* | `iron −400`, `energy −2`, *Well fed, properly, until {time}*, `health` | `dining` |
+| a run-in, `minded` | *Got away* · slice 5's headline | his `works` line as the body; `xp +10`; the act's own result as rolled | as slice 5 |
+| a run-in, his row failed | the fight's stamp | his `fails` line, then the fight's text; the reason line *{Name} was pushed aside* | as slice 5 |
+| any act with a buff | as the act | `RewardPart { id: 'buff:wellFed' \| 'buff:spirits', label, amount }` on the XP and Iron lines (*Well fed · +10 % XP*, *In good spirits · +10 % XP · 2 left*) | as the act |
+
+The texts are content and `copy.ts`; the numbers and names are filled by the server and stored with the request key. The full `RunInOutcome` (his chance, the roll, the follow-up) is in the result for the dev panel and QA; the player sees words.
+
+### 24.8 Idempotency and atomicity
+
+- **Hire, renew, a round, a meal, dinner:** one transaction on the character with an ADR 0008 request key. The filter holds `iron ≥ price` and the version. The day's and the meal's limits are read in the session and re-checked by the pure gates, so a double tap writes once and the second replays the stored modal.
+- **His row:** written once, with the encounter, in the transaction that fires the run-in. The choice is ADR 0032's guarded `pending → resolved` and the rolls come from the encounter's seed, so a retry or the auto path gives the same result.
+- **Rounds in hand:** decremented inside the mission's own keyed transaction, under the character's version guard, once per mission.
+- **A lapse or a meal running out:** computed on read, never written.
+
+### 24.9 Test hooks and the dev panel (with T17)
+
+| Route | Body | Does |
+|---|---|---|
+| `POST /api/test/bodyguard` | `{ tier: 1 \| 2 \| 3, daysLeft?: number /* 0 = last day */ }` · `{ lapse: true }` | sets the contract (the name drawn as a hire would) or moves `paidThroughDay` to yesterday |
+| `POST /api/test/buffs` | `{ wellFed?: { tier, minutesLeft }, spirits?: number, rounds?: number }` | sets the buffs and today's rounds |
+| `POST /api/test/force` (extended) | `+ { runIn: 'street-enforcer' \| 'police' \| …, minder?: 'works' \| 'fails' }` | the caller's next act fires a run-in with that opponent; his row's roll forced |
+
+**Dev panel buttons:**
+
+- **Walking with you:** *A doorman for a week*, *A steward*, *A minder*, *Last day*, *Send him home (lapse)*;
+- **The bar:** *Well fed, five minutes left*, *Nine missions in good spirits*, *Rounds used today*.
+
+The dev status gains the contract and his power, his chance against the last opponent, the meal's tier and time left, the rounds in hand and today's.
+
+### 24.10 Questions for the game designer (each has a default; none blocks the build)
+
+1. **"At most four weeks ahead."** Default: four renewal weeks beyond the running one (`paidThroughDay ≤ today + 34`), which parks the economy's 1,600 / 4,800 / 12,000. *Four weeks* is offered only when it fits; otherwise *Another week* until *Paid four weeks ahead*.
+2. **A round at seven or eight in hand.** Default: allowed, and it tops up to nine (the extra is lost); refused only at nine (*Nine missions in hand already*).
+3. **Which missions use up *in good spirits*.** Default: every mission that reaches its rewards, whatever the outcome (its receipt shows the line). A mission refused at the gate does not.
+4. **A meal and a mission whose run-in waits.** Default: the meal counts at the mission's start, so the receipt does not change if the clock runs out while the run-in waits.
+5. **Re-hiring after a lapse.** Default: the same tier brings back the same man (his name is kept); a different tier draws a new name.
+6. **The record's surcharge on a hire.** Default: none (one price, the week; the surcharge is the shops' items').
+7. **Which odds the card shows.** GDD §12.1's *62 % / 50 %* (and 86 / 74) are a **mission's** figures: the street enforcer's power is 22, ×1.1 on a mission = 24. Against a tier-1 tap's run-in he is 68 / 56 (92 / 80). Default: the card's word is computed against the street enforcer on a mission at home (the design's figure). Please add *on a mission* to §12.1's column, or say which you meant.
+
+### 24.11 Testing
+
+- **Scratch scripts (rules):**
+  - the odds table against a street enforcer on a mission (22 × 1.1 = 24; +4 on rival ground): 62 / 50, 86 / 74, 95 / 95; on a tier-1 tap (22): 68 / 56, 92 / 80, 95 / 95; the inspector's −10;
+  - `luckChoice` taking his row; `resolveRunIn` forced both ways (minded: +10 XP and no Health lost; failed: the fight at −10);
+  - `renewed` and `canRenew` at the limit;
+  - every gate's refusal; `buffShares` at `until − 1` and `until`;
+  - a dinner over a plate, and a plate over a dinner refused; spirits 0 → 3 → 6 → 9, refused at nine, eight topped up to nine;
+  - Health +15 at max − 5 gives +5.
+- **Playwright (T32):**
+  - **`bodyguard.spec.ts`** (phone):
+    - a Level 6 member at the party store → **Hire · 400 Iron** → *Hired* → the Me tab's *Walking with you*;
+    - a forced mission run-in against a street enforcer → his row first → **{Name} steps in** (forced to work) → *Got away* with his line and +10 XP, the mission paid;
+    - a forced police run-in → his row dimmed *Not against the police*;
+    - *Last day* (hook) → the desk's *Ahead*;
+    - lapse (hook) → the paper's *{Name} Has Gone Back to the Door* → the row gone, Iron unchanged;
+    - the card hires him again with the same name.
+  - **`bar.spec.ts`** (phone):
+    - a bar → **A plate of something · Buy** → *Fed* with *Health +15*;
+    - a forced-Success mission → *Well fed · +10 % XP* on the receipt;
+    - **Buy a round** → the next mission shows *In good spirits · +10 % XP · 2 left*;
+    - *Well fed, five minutes left* (hook) and the clock moved → the line gone;
+    - the Pier Hotel at worn Charisma 9 → *Not dressed for the dining room*; at 10 → **Dinner** → *Fed*;
+    - a plate now dimmed *Well fed until {time}*.
+- **The playtest report** (§15.2) gains:
+  - contracts by tier and day since joining; renewals and lapses;
+  - his row's share of run-in choices and its success rate;
+  - meals and rounds per player-day;
+  - the share of XP from buff lines.
+
+### 24.12 Risks and what is left out
+
+| Risk | Mitigation |
+|---|---|
+| Rival ground becomes a walk with a steward or a minder | Never against the police (half the night pool); the levers are his power and the police's share (Appendix C #113), one constant each; the report measures his row's share and success |
+| Meals become a chore every session | +10 % only, priced; the levers are the price and then the hours, never the percentage (Appendix C #114); the report measures meals per player-day |
+| A `talked` branch missed for `minded` | T26 greps every `'talked'` reader and adds `'minded'`; the scratch script and `bodyguard.spec.ts` check the act is paid as rolled after his row |
+| The run-in sheet's layout with a fifth row | Screens §18.3's row; T32's layout check at 360 × 640 |
+
+**Left out:**
+
+- the v3.0 bodyguard modifiers (power, Run, damage, hospital avoidance, intercepted ambush);
+- auto-renew;
+- two contracts at once, or replacing one mid-week;
+- Vanguard House's discount (the gym, later);
+- the Black Market's +25 %;
+- *Bribe the barman*, the stimulant and *Faction recruitment*;
+- street food and the society dinner;
+- Health above max;
+- *Lodged* and *Weatherproof*;
+- eliminate mode (v1.5).
 
 ---
 
