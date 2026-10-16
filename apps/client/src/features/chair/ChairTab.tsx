@@ -242,7 +242,9 @@ function LinesPart({ d }: { d: ChairDeskView }) {
               </Link>
               <LineChips label={l.law} value={l.line} pending={act.pending === `line:${l.billId}`} onPick={(v) => setLine(l.billId, v)} />
               <span className="font-mono text-[11px] text-muted">
-                {l.line === null
+                {l.localsFollow === 'unrest'
+                  ? C.localsUnrest(l.locals, lineWord(l.secretaryLine))
+                  : l.line === null
                   ? C.secretarysLine(lineWord(l.secretaryLine))
                   : l.line === 'free'
                     ? C.localsAbstain

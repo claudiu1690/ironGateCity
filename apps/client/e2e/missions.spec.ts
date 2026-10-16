@@ -64,7 +64,9 @@ test('missions: the first, Again, a run-in paid off, the infirmary, the cells, l
 
   // 3. Select a row; the confirm says what it spends.
   await briefing.getByTestId('way-row').first().click();
-  await expect(confirm).toHaveText(/ · 15 Energy$/);
+  // 15, or 13 when Coalport's council rule is Rally Permits (speeches −2): in the full run the
+  // capital's and the council's specs before this one leave a rule in force (slice 7 integration).
+  await expect(confirm).toHaveText(/ · 1[35] Energy$/);
   await confirm.click();
 
   // 4. The result: Success, the receipt, *Missions remember*. The ticket now reads *Again*.

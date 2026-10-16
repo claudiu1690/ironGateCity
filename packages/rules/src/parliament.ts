@@ -108,7 +108,8 @@ export function tableGate(i: {
 export type LocalWhy = 'players' | 'chair' | 'secretary' | 'unrest';
 
 /**
- * Design §4.3 (§22.1 Q9, Q10): a bloc's local deputies. Unrest at home → abstain; else the majority
+ * Design §4.3 (§22.1 Q9, Q10; settled 16 Oct 2026, phase C): a bloc's local deputies. Unrest at
+ * home → the secretary's line (*free* abstains), ahead of the players and the Chair; else the majority
  * of its player deputies who voted (a tie, or none, falls through); else the Chair's line when set
  * (an explicit *free* abstains); else the secretary's line (*free* abstains).
  */
@@ -118,10 +119,10 @@ export function localVote(i: {
   secretaryLine: LineVote;
   unrest: boolean;
 }): { vote: 'for' | 'against' | 'abstain'; why: LocalWhy } {
-  if (i.unrest) return { vote: 'abstain', why: 'unrest' };
+  const asVote = (l: LineVote) => (l === 'free' ? 'abstain' : l);
+  if (i.unrest) return { vote: asVote(i.secretaryLine), why: 'unrest' };
   if (i.players.for !== i.players.against)
     return { vote: i.players.for > i.players.against ? 'for' : 'against', why: 'players' };
-  const asVote = (l: LineVote) => (l === 'free' ? 'abstain' : l);
   if (i.chairLine !== null) return { vote: asVote(i.chairLine), why: 'chair' };
   return { vote: asVote(i.secretaryLine), why: 'secretary' };
 }

@@ -41,6 +41,7 @@ import { ensureSettled, loadCharacter } from './dayService';
 import { runKeyedAction, storedResult } from './keyedAction';
 import { keySeed } from './keyGuard';
 import { placeDescriptor, recordPushInTx } from './chairDeskService';
+import { ordersTargetOf } from './pushTarget';
 import { branchBackIfStanding } from './councilService';
 import { moveOpinion, placeWrites, readPlace } from './place';
 import type { OpinionMove, PlaceCtx } from './place';
@@ -646,6 +647,8 @@ export async function writeTier1(i: {
     scoreboard: placeEffects.scoreboard,
     ...(i.street ? { street: i.street } : ctx.rival ? { street: QUIET_STREET } : {}),
   });
+  // Slice 7 integration: the party's target bar rides on the act's view (it was gone until the next `me`).
+  built.character.orders.target = await ordersTargetOf(content, updated, today, undefined, session);
   await ActionLog.create(
     [
       {

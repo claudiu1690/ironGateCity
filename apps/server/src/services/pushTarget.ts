@@ -34,13 +34,15 @@ export async function ordersTargetOf(
   c: CharacterDoc,
   today: DayKey,
   faction?: FactionStateDoc | null,
+  session: ClientSession | null = null,
 ): Promise<TargetBarView | null> {
   if (c.orders?.day !== today || c.orders.off) return null;
   if (!toOrdersState(c.orders).items.some((i) => i.push)) return null;
-  const fs = faction === undefined ? await FactionState.findById(c.factionId).lean<FactionStateDoc>() : faction;
+  const read = FactionState.findById(c.factionId);
+  const fs = faction === undefined ? await (session ? read.session(session) : read).lean<FactionStateDoc>() : faction;
   const push = fs ? standingOn(fs.orders, today)?.push : null;
   if (!push) return null;
-  const count = await pushCountOf(c.factionId, today);
+  const count = await pushCountOf(c.factionId, today, session);
   return { count, target: push.target, unit: 'doors', place: pushPlaceName(content, push), met: pushMet(count, push.target) };
 }
 

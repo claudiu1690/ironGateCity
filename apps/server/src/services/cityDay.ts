@@ -453,7 +453,8 @@ async function processBoundary(
       }),
       { session },
     );
-    // ADR 0022: +2 per player seat; −3 when nobody voted.
+    // ADR 0022: +2 per player seat; −3 when nobody voted (settled 16 Oct 2026, phase C: only when the
+    // branch had an eligible voter; an empty town is not punished).
     const playerSeats = r.seated.filter((x) => x.kind === 'player').length;
     if (playerSeats > 0) {
       const op = applyPersuasion(shares, {
@@ -464,7 +465,7 @@ async function processBoundary(
       shares = op.shares;
       ledger.push(row('seat', op.applied));
     }
-    if (turnout.voters === 0) {
+    if (turnout.voters === 0 && turnout.eligible > 0) {
       const loss = applyMoraleLoss(shares, home, MORALE.noVoterPenalty);
       shares = loss.shares;
       ledger.push(row('noVoter', -loss.applied));

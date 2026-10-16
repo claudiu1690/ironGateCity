@@ -169,6 +169,10 @@ export async function nationalSection(
   };
 }
 
+/** The council's head: *Mayor* where the city is contested (Irongate, Clearwater), *Governor* at home. */
+export const governorTitle = (content: GameContent, cityId: string): 'Governor' | 'Mayor' =>
+  isContested(content, cityId) ? 'Mayor' : 'Governor';
+
 /** An office in words, for the desk's stipend line and the office cards (*Chair of the Red Collective*). */
 export function officeTitle(content: GameContent, office: Office, cityId: string, factionId: FactionId): string {
   const cityName = content.city(cityId)?.name ?? cityId;

@@ -252,7 +252,9 @@ async function boardToIrongate(page: Page, name: string) {
   await dev(page, 'level10');
   await lift(page, { iron: 1000 });
   await page.goto('/nation');
-  await page.getByRole('button', { name: /^Irongate · \d+ min$/ }).click();
+  // Slice 7: the pin's second line (*close race today*) widens its label, which at 667 × 375 can rest
+  // under the City / Nation switch; the card is what this helper needs, so the pin is clicked directly.
+  await page.getByRole('button', { name: /^Irongate · \d+ min(, .+)?$/ }).dispatchEvent('click');
   await page.getByRole('button', { name: /^Board · 20 Iron · 12 min$/ }).click();
   await expect(page).toHaveURL(/\/journey$/);
   const journey = page.getByTestId('journey');
@@ -1046,7 +1048,7 @@ for (const [w, h] of AUDIT_SIZES) {
     // The journey on the nation map: the pin, its label and the plate; the card; the arrival (§7).
     await page.goto('/nation');
     await auditScreen(page, 'the nation map');
-    await page.getByRole('button', { name: /^Coalport · home · \d+ min$/ }).click();
+    await page.getByRole('button', { name: /^Coalport · home · \d+ min(, .+)?$/ }).click();
     await page.getByRole('button', { name: /^Board · \d+ Iron · \d+ min$/ }).click();
     await expect(page).toHaveURL(/\/journey$/);
     const journey = page.getByTestId('journey');

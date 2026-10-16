@@ -783,7 +783,7 @@ export interface OrdersView {
    * Slice 7 (tech design §11.1 *Party orders*, screens §5.1 item 5): the party's target bar, live,
    * while today's standing orders carry a push and the member's orders hold the pushed item: the
    * faction's attempts at the place today, the target, the place. Null otherwise; absent on the
-   * partial views an act returns (`character.me` and the paper carry it).
+   * partial views most acts return (`character.me`, the paper, an action and a mission carry it).
    */
   target?: TargetBarView | null;
 }

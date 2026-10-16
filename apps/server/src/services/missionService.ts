@@ -37,6 +37,7 @@ import { GameError, gameError } from '../gameError';
 import type { SessionUser } from '../trpc/context';
 import { closeArrivalHere, progressOf, progressSet } from './actionService';
 import { placeDescriptor, recordPushInTx } from './chairDeskService';
+import { ordersTargetOf } from './pushTarget';
 import { branchBackIfStanding } from './councilService';
 import { ensureSettled, loadCharacter } from './dayService';
 import { createStayInTx, heldPlace } from './heldService';
@@ -571,6 +572,8 @@ export async function writeMissionFinal(i: {
     remembered,
     showRolls: i.showRolls,
   });
+  // Slice 7 integration: the party's target bar rides on the act's view (it was gone until the next `me`).
+  built.character.orders.target = await ordersTargetOf(content, updated, today, undefined, session);
   await ActionLog.create(
     [
       {

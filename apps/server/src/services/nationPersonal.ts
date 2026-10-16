@@ -23,7 +23,7 @@ import type {
 import { backersOf, dayStart, signaturesNeeded, termOf } from '@irongate/rules';
 import type { DayKey, FactionId, NationalCondition } from '@irongate/rules';
 import type { ClientSession } from 'mongoose';
-import { ordinalWord } from './nationEdition';
+import { governorTitle, ordinalWord } from './nationEdition';
 import { eligibleResidents } from './petitionService';
 import { weekdayName } from './politicsService';
 
@@ -105,7 +105,8 @@ export async function readPersonalLines(
   const began = (t: OfficeTermDoc) => t.fromDay > settled && t.fromDay <= today && (t.vacatedDay ?? null) === null;
   for (const t of terms) {
     const office = t.office ?? 'council';
-    if (office === 'governor' && began(t)) add('governorTookOffice', { city: cityName(t.cityId) });
+    if (office === 'governor' && began(t))
+      add('governorTookOffice', { city: cityName(t.cityId), title: governorTitle(content, t.cityId) });
     if (office === 'chair' && began(t)) {
       // `{votes}` of the Chair's count: the member's row, else the line is not printed.
       const e = await s(FactionElection.findById(t.electionId)).lean<FactionElectionDoc>();
@@ -124,6 +125,7 @@ export async function readPersonalLines(
       if (issueShort)
         add('addressGiven', {
           issueShort,
+          title: office === 'president' ? 'President' : governorTitle(content, cityId),
           hall: (hallId ? content.location(hallId)?.location.name : undefined) ?? cityName(cityId),
         });
     }
@@ -135,7 +137,8 @@ export async function readPersonalLines(
     if (office === 'council' && t.fromDay === today) {
       const city = await s(City.findById(t.cityId, { council: 1 })).lean<CityDoc>();
       const gov = city?.council?.governor;
-      if (gov?.local && gov.factionId === f) add('governorLocal', { local: gov.name });
+      if (gov?.local && gov.factionId === f)
+        add('governorLocal', { local: gov.name, title: governorTitle(content, t.cityId) });
     }
     // The member's council dissolved by petition (`hl.*.dissolved-councillor`): the seat vacated at
     // the boundary the city's petition closed.

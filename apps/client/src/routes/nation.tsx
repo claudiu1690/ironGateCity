@@ -178,7 +178,10 @@ export function NationPage() {
           <LawChips
             laws={republic.laws}
             onOpen={() => void navigate({ to: '/parliament/laws' })}
-            className={side ? 'h-11 min-w-0 flex-1' : undefined}
+            // Slice 7 integration: on an upright phone 700 px tall or less the chips give way to the
+            // map (as the city's rule line does), so every pin can still be brought clear at 375 × 667
+            // with the paper's banner up; the tickets carry the laws' tags, the bar opens the republic.
+            className={side ? 'h-11 min-w-0 flex-1' : '[@media(max-width:639px)_and_(max-height:700px)]:hidden'}
           />
         </div>
       )}

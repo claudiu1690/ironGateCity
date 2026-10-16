@@ -837,7 +837,19 @@ export function CityPage() {
         className,
       )}
     >
-      {c.ordinance && ruleLine(testId, side ? 'max-w-full' : 'min-w-11 flex-1')}
+      {c.ordinance &&
+        ruleLine(
+          testId,
+          side
+            ? 'max-w-full'
+            : cx(
+                'min-w-11 flex-1',
+                // Slice 7 integration (lane Y's review1 finding): on the home plate the rule's 44 px
+                // target reaches down (6 px up, 27 px down), so the plate's notes keep a 44 px band
+                // over the name; centred, it covered the plate's middle at 375 × 812.
+                testId === 'city-ordinance' && 'after:-top-[6px] after:-bottom-[27px]',
+              ),
+        )}
       {c.ordinance && !side && <span aria-hidden="true">·</span>}
       {/* QA m1: on a phone under 700 px tall the line is beside the plate's name instead (`stackedDusk`). */}
       {!stackedDusk && <DuskLine night={c.night} button={button} className="shrink-0" />}

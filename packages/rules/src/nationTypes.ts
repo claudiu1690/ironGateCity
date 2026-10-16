@@ -143,6 +143,9 @@ export const NATION_PERSONAL_PLACEHOLDERS = [
   'signatures',
   'target',
   'reason',
+  // Settled 16 Oct 2026 (phase C): *Governor* at home, *Mayor* in Irongate and Clearwater (*President*
+  // on the President's Address); filled by `nationPersonal.ts` and the office front page.
+  'title',
   // Shared with the base set: the reader, the faction, the law named in a bill line, the time tokens.
   'name',
   'faction',

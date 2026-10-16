@@ -861,7 +861,7 @@ test('#10 rival ground: the push, the danger, the goal; pushed into Unrest pays 
   // On a phone the goal is one line; the whole sentence opens the Unrest note.
   await expect(plate('plate-goal')).toHaveAttribute(
     'data-goal',
-    /^The goal: Unrest\. Under 60 % the Vanguard's branch drops everything to win the town back, its deputies go quiet, and your work here pays three quarters more\. 5\.0 points to go · your party has pushed \d+(\.\d)? this week\.$/,
+    /^The goal: Unrest\. Under 60 % the Vanguard's branch drops everything to win the town back, its deputies stop taking the Chair's line, and your work here pays three quarters more\. 5\.0 points to go · your party has pushed \d+(\.\d)? this week\.$/,
   );
   await expect(plate('plate-goal').locator('span').filter({ visible: true })).toHaveText(
     /^The goal: Unrest · 5\.0 points to go · your party has pushed \d+(\.\d)? this week$/,

@@ -27,7 +27,7 @@ test('rival ground: board → Papers, please → the plate → Once → the cell
 
   // 1. Nation: Duskwall's card, *Rival ground · Home city of the Vanguard*, Board.
   await page.goto('/nation');
-  await expect(duskwallPin(page)).toHaveAttribute('aria-label', /^Duskwall · rival ground · \d+ min$/);
+  await expect(duskwallPin(page)).toHaveAttribute('aria-label', /^Duskwall · rival ground · \d+ min(, .+)?$/);
   await duskwallPin(page).click();
   const card = page.getByTestId('city-card');
   await expect(card.getByTestId('city-rival')).toHaveText('Rival ground · Home city of the Vanguard');
